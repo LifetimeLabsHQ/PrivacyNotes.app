@@ -1,5 +1,5 @@
 {
-  "placeholder": "Start writing…",
+  "placeholder": "אפשר להתחיל לכתוב…",
   "toolbar": {
     "bold": "מודגש",
     "italic": "נטוי",
@@ -25,9 +25,9 @@
     "image": "תמונה",
     "attachFile": "צירוף קובץ",
     "insert": "הוספה",
-    "highlight": "Highlight",
-    "highlightApply": "Highlight: {{color}}",
-    "pickHighlight": "Choose a highlight color",
+    "highlight": "מדגוש",
+    "highlightApply": "מדגוש: {{color}}",
+    "pickHighlight": "נא לבחור צבע מדגוש",
     "superscript": "כיתוב עילי",
     "subscript": "כיתוב תחתי",
     "math": "נוסחה מתמטית",
@@ -78,7 +78,7 @@
   },
   "color": {
     "remove": "הסרת צבע",
-    "removeHighlight": "Remove highlight",
+    "removeHighlight": "הסרת מדגוש",
     "names": {
       "gray": "אפור",
       "red": "אדום",
@@ -124,11 +124,11 @@
     "hideTitle": "Hide outline (Esc)"
   },
   "topRow": {
-    "add": "Add a line at the top"
+    "add": "הוספת שורה בראש העמוד"
   },
   "link": {
     "popoverLabel": "הוספת קישור",
-    "placeholder": "Paste or type a URL",
+    "placeholder": "נא להדביק או להקליד כתובת",
     "apply": "החלה",
     "addTitle": "הוספת קישור",
     "editTitle": "עריכת קישור",
@@ -136,10 +136,10 @@
     "urlPlaceholder": "https://example.com",
     "errorEnterUrl": "נא להקליד כתובת",
     "errorInvalidUrl": "נא להקליד כתובת תקנית",
-    "textLabel": "Link text",
-    "textPlaceholder": "Optional, leave blank to show URL",
-    "selectedTextHint": "Selected text will be used as the link",
-    "editTextHint": "Edit the link text in the editor",
+    "textLabel": "טקסט קישור",
+    "textPlaceholder": "רשות, אפשר להשאיר ריק בשביל להציג את הכתובת",
+    "selectedTextHint": "הטקסט הנבחר ישמש להצגת הקישור",
+    "editTextHint": "אפשר לערוך את טקסט הקישור בעורך",
     "update": "עדכון"
   },
   "audio": {
@@ -157,14 +157,14 @@
     "words_other": "{{formatted}} מילים",
     "characters_one": "תו ({{formatted}})",
     "characters_other": "{{formatted}} תווים",
-    "tooLargeToSync": ", may be too large to sync, split into a new note",
+    "tooLargeToSync": ", עשויה להיות גדולה מכדי להסתנכרן, נא לפצל להערה חדשה",
     "veryLong": ", very long, may be slow to edit and stutter",
-    "gettingLong": ", getting long, may lag on slower devices",
+    "gettingLong": ", מתארכת, עשויה להיתקע במכשירים איטיים",
     "largeTableWarning": "Large table ({{rows}} rows) can make this note slow to edit, consider splitting it"
   },
   "noteLinkSuggestion": {
-    "noMatches": "No matching notes",
-    "create": "Create \"{{query}}\""
+    "noMatches": "אין הערות תואמות",
+    "create": "יצירת \"{{query}}\""
   },
   "codeBlock": {
     "copy": "העתקה",
