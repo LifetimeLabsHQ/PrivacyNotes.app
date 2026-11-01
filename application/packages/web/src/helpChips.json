@@ -22,6 +22,9 @@
   "storage": [
     "storage-usage"
   ],
+  "images": [
+    "image-quality"
+  ],
   "me": [
     "what-syncs"
   ],
@@ -31,7 +34,7 @@
   ],
   "biometric": [
     "biometric-unlock",
-    "why-no-2fa"
+    "enable-2fa"
   ],
   "phrase": [
     "phrase-vs-password",
@@ -58,5 +61,11 @@
   ],
   "about": [
     "data-location"
+  ],
+  "twoFactor": [
+    "lost-2fa"
+  ],
+  "spaces": [
+    "spaces"
   ]
 }

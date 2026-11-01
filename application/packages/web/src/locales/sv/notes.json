@@ -8,16 +8,23 @@
     "readOnly": "Skrivskyddad",
     "file": "Fil",
     "empty": "Tom",
-    "noContent": "Inget innehåll"
+    "noContent": "Inget innehåll",
+    "notBackedUp": "Inte säkerhetskopierad",
+    "archived": "Arkiverad",
+    "entryDate": "Inläggsdatum",
+    "date": "Datum",
+    "dayOf": "dag {{n}} av {{total}}"
   },
   "header": {
     "new": "Ny",
     "newNote": "Ny anteckning",
-    "newNoteHover": "Ny anteckning ({{hotkey}})",
-    "trash": "Papperskorgen"
+    "trash": "Papperskorgen",
+    "newEvent": "Ny händelse"
   },
   "folderChip": {
-    "clear": "Rensa mappfilter: {{folder}}"
+    "clear": "Rensa mappfilter: {{folder}}",
+    "subfolders": "Undermappar",
+    "subfoldersLabel": "Ta med undermappar"
   },
   "tagChip": {
     "clear": "Rensa taggfilter: {{tag}}"
@@ -26,15 +33,21 @@
     "ariaLabel": "Nytt objekt i valvet",
     "login": "Inloggning",
     "card": "Kreditkort",
-    "sshKey": "SSH-nyckel"
+    "sshKey": "SSH-nyckel",
+    "generator": "Lösenord"
   },
   "newMenu": {
     "note": "Anteckning",
     "task": "Uppgift",
+    "kanban": "Kanbantavla",
     "journal": "Dagbok",
     "login": "Inloggning",
     "file": "Fil",
-    "bookmark": "Bokmärke"
+    "bookmark": "Bokmärke",
+    "clipPage": "Klipp webbsida",
+    "contact": "Kontakt",
+    "event": "Händelse",
+    "quickAdd": "Snabbtillägg"
   },
   "vaultFilter": {
     "all": "Alla",
@@ -43,9 +56,7 @@
     "keys": "Nycklar"
   },
   "journal": {
-    "backfillHover": "Nytt dagboksinlägg för en av de senaste dagarna",
-    "newEntry": "Nytt dagboksinlägg",
-    "newEntryHover": "Nytt dagboksinlägg ({{hotkey}})"
+    "newEntry": "Nytt dagboksinlägg"
   },
   "tasks": {
     "newTitle": "Uppgifter för {{date}}"
@@ -54,12 +65,13 @@
     "empty": "Töm",
     "emptyHover": "Radera alla anteckningar i papperskorgen",
     "storage": "Lagring",
-    "autoDelete": "Autoradering: 30 d"
+    "autoDelete": "Radera automatiskt efter 30 dagar"
   },
   "search": {
     "sortOptions": "Sorterings- och visningsalternativ",
     "placeholderVault": "Sök i valvet…",
-    "placeholderNotes": "Sök bland anteckningar…"
+    "placeholderNotes": "Sök bland anteckningar…",
+    "placeholderEvents": "Sök bland händelser…"
   },
   "selection": {
     "countOf": "{{selected}} av {{total}} markerade",
@@ -70,9 +82,22 @@
     "noMatches": "Inga träffar.",
     "vault": "Valvet är tomt.",
     "notes": "Inga anteckningar än.",
+    "archive": "Inget arkiverat.",
+    "trash": "Papperskorgen är tom.",
     "filtered": "Inga objekt matchar dina filter.",
     "clearFilters": "Rensa filter",
-    "filteredAfter": "för att visa dem."
+    "filteredAfter": "för att visa dem.",
+    "hiddenInAll_other": "{{count}} objekt döljs av filtret Visa i Alla. Öppna filtret bredvid Alla för att visa dem.",
+    "inOtherSpace_other": "{{count}} objekt finns i ditt utrymme {{space}}. Byt till {{space}} i sidofältet för att se dem.",
+    "inOtherSpace_one": "{{count}} objekt finns i ditt utrymme {{space}}. Byt till {{space}} i sidofältet för att se det.",
+    "hiddenInAll_one": "{{count}} objekt döljs av filtret Visa i Alla. Öppna filtret bredvid Alla för att visa det."
+  },
+  "listGroups": {
+    "previous7Days": "Senaste 7 dagarna",
+    "previous30Days": "Senaste 30 dagarna",
+    "other": "Övrigt",
+    "collapseAll": "Fäll ihop alla grupper",
+    "expandAll": "Fäll ut alla grupper"
   },
   "headerLabel": {
     "allItems": "Alla",
@@ -80,14 +105,30 @@
     "journals": "Dagböcker",
     "vault": "Valv",
     "pinned": "Fästa",
-    "notes": "Anteckningar"
+    "archive": "Arkiv",
+    "notes": "Anteckningar",
+    "calendar": "Kalender"
   },
   "footerStats": {
-    "journals": "Dagböcker",
-    "items": "Objekt",
-    "trashed": "I papperskorgen",
-    "notes": "Anteckningar",
-    "bookmarks": "Bokmärken"
+    "journals_one": "dagboksinlägg",
+    "journals_other": "dagboksinlägg",
+    "items_one": "objekt",
+    "items_other": "objekt",
+    "trashed_one": "i papperskorgen",
+    "trashed_other": "i papperskorgen",
+    "notes_one": "anteckning",
+    "notes_other": "anteckningar",
+    "bookmarks_one": "bokmärke",
+    "bookmarks_other": "bokmärken",
+    "contacts_one": "kontakt",
+    "contacts_other": "kontakter",
+    "files_one": "fil",
+    "files_other": "filer",
+    "lists_one": "lista",
+    "lists_other": "listor",
+    "tasks_one": "uppgift",
+    "tasks_other": "uppgifter",
+    "today": "idag"
   },
   "toast": {
     "imageUploadFailed": "Bilduppladdningen misslyckades: {{error}}",
@@ -96,7 +137,8 @@
     "importedSyncing_one": "Importerade {{count}} anteckning. Synkar…",
     "importedSyncing_other": "Importerade {{count}} anteckningar. Synkar…",
     "addedTag_one": "Lade till #{{tag}} på {{count}} objekt",
-    "addedTag_other": "Lade till #{{tag}} på {{count}} objekt"
+    "addedTag_other": "Lade till #{{tag}} på {{count}} objekt",
+    "restoreSummary": "Återställt. {{added}} tillagda, {{updated}} uppdaterade, {{unchanged}} redan aktuella."
   },
   "burn": {
     "mediaOnly": "Den här anteckningen innehåller bara media och kan inte delas via burn-länk.",
@@ -122,8 +164,17 @@
     "collapse": "Fäll ihop anteckningslistan",
     "expand": "Fäll ut anteckningslistan"
   },
+  "split": {
+    "action": "Dela upp anteckning",
+    "done": "Uppdelad i ”{{title}}”",
+    "overLimit": "”{{title}}” är större än 1 MB och stannar på den här enheten",
+    "cannot": "Anteckningen kan inte delas upp här. Placera markören där den nya anteckningen ska börja.",
+    "continuedTitle": "{{title}} (forts.)",
+    "continuedIn": "Fortsätter i {{link}}"
+  },
   "paneResize": {
-    "hintCollapse": "Klicka för att fälla ihop · Dra för att ändra storlek"
+    "hintCollapse": "Klicka för att fälla ihop · Dra för att ändra storlek",
+    "hintExpand": "Klicka för att fälla ut · Dra för att ändra storlek"
   },
   "emptyEditor": {
     "selectFile": "Välj en fil att förhandsgranska",
@@ -133,10 +184,10 @@
   },
   "zen": {
     "exit": "Avsluta Zen",
-    "exitHover": "Avsluta zenläge (Esc)",
+    "exitHover": "Avsluta zenläge",
     "enterHover": "Starta zenläge",
     "proHover": "Zenläge (Pro)",
-    "enterAriaShortcut": "Starta zenläge (⌘⇧F)"
+    "enterAriaShortcut": "Starta zenläge ({{keys}})"
   },
   "editor": {
     "backToList": "Tillbaka till anteckningslistan",
@@ -158,8 +209,10 @@
     "invisiblesShow": "Visa osynliga tecken",
     "invisiblesHide": "Dölj osynliga tecken",
     "findInNote": "Sök i anteckning",
-    "navPrev": "Föregående anteckning",
-    "navNext": "Nästa anteckning",
+    "navPrev": "Föregående",
+    "navNext": "Nästa",
+    "navPrevTab": "Föregående flik",
+    "navNextTab": "Nästa flik",
     "undo": "Ångra",
     "redo": "Gör om",
     "hide": "Dölj",
@@ -170,27 +223,25 @@
     "widthWide": "Bredare",
     "widthFull": "Full bredd",
     "burn": "Dela och bränn efter läsning",
-    "titlePlaceholderLink": "Bokmärkesnamn"
+    "titlePlaceholderLink": "Bokmärkesnamn",
+    "titlePlaceholderContact": "Namn",
+    "notBackedUpTooLarge": "Över gränsen på 1 MB, alltså inte säkerhetskopierad. Flytta bilder till bilagor eller dela upp anteckningen.",
+    "notBackedUpFailed": "Inte säkerhetskopierad. Senaste fel: {{message}}. Försöker igen.",
+    "unknownType": "Det här objektet skapades med en nyare version av PrivacyNotes. Uppdatera appen för att öppna det."
   },
   "share": {
     "hover": "Dela / Exportera",
     "ariaLabel": "Dela eller exportera",
-    "thisNote": "Den här anteckningen",
     "currentMdTitle": "Aktuell anteckning (.md)",
     "currentMdDesc": "Rå markdown med front-matter.",
     "currentHtmlTitle": "Aktuell anteckning (.html)",
     "currentHtmlDesc": "Utskriftsvänlig, markdown renderad på en vit sida.",
     "printTitle": "Skriv ut / Spara som PDF",
     "printDesc": "Öppnar utskriftsdialogen. Spara som PDF eller skicka till en skrivare.",
+    "printTextTitle": "Skriv ut bara text",
+    "printTextDesc": "Behåller titeln. Utelämnar datum, mapp och taggar.",
     "burnTitle": "Dela och bränn efter läsning",
-    "burnDesc": "Publicera den här anteckningen som en länk som bara går att öppna en gång. Länken förstör sig själv efter läsning. Din anteckning ligger kvar tryggt på ditt konto.",
-    "backup": "Säkerhetskopia",
-    "fullBackupTitle": "Fullständig säkerhetskopia (.zip)",
-    "fullBackupDesc": "Allt: anteckningar, dagböcker, valv, uppgifter, bilder, ljud, filer.",
-    "allHtmlTitle": "Alla objekt (.zip med .html)",
-    "allHtmlDesc": "En utskrivbar HTML-fil per objekt. Bra att läsa offline.",
-    "jsonTitle": "Textsäkerhetskopia (.json)",
-    "jsonDesc": "Allt textinnehåll och all metadata, inga bilder eller filer."
+    "burnDesc": "Publicera den här anteckningen som en länk som bara går att öppna en gång. Länken förstör sig själv efter läsning. Din anteckning ligger kvar tryggt på ditt konto."
   },
   "weekReview": {
     "title": "Veckan i återblick",
@@ -206,10 +257,18 @@
     "newNote": "Ny",
     "newNoteHintMac": "Option + Shift + N",
     "newNoteHintOther": "Alt + Shift + N",
+    "newNoteHintMacDesktop": "Kommando + N",
+    "newNoteHintOtherDesktop": "Ctrl + N",
     "openStats": "Öppna statistik",
-    "words": "Ord",
+    "journalCalendar": "Dagbokskalender",
+    "words_one": "ord",
+    "words_other": "ord",
     "zen": "Zenläge",
     "appearance": "Utseende",
+    "lockApp": "Lås appen",
+    "lockAppSetUp": "Ställ in en PIN under Säkerhet först",
+    "goToTop": "Gå till toppen",
+    "goToEnd": "Gå till slutet",
     "signOut": "Logga ut",
     "signingOut": "Loggar ut…",
     "switchToLight": "Byt till ljust läge",
@@ -217,20 +276,28 @@
   },
   "settings": {
     "groupYourNotes": "Dina anteckningar",
+    "groupPreferences": "Preferenser",
     "groupAccount": "Konto och data",
     "groupBrand": "PrivacyNotes",
     "statsLabel": "Statistik",
-    "journalsLabel": "Dagböcker",
     "importLabel": "Import och export",
     "planLabel": "Konto",
     "storageLabel": "Lagring",
+    "imagesLabel": "Bilder",
     "securityLabel": "Säkerhet",
     "accountLabel": "ID och synk",
     "appearanceLabel": "Utseende",
+    "editorLabel": "Redigerare",
+    "formatBarLabel": "Formatfält",
+    "listsLabel": "Listor",
+    "trackersLabel": "Mätvärden",
     "helpLabel": "Hjälp",
     "aboutLabel": "Om",
     "languageLabel": "Språk",
-    "languageDesc": "Välj språket som PrivacyNotes visas på."
+    "dateLabel": "Datum och tid",
+    "dateTabFormat": "Format",
+    "languageDesc": "Välj språket som PrivacyNotes visas på.",
+    "calendarLabel": "Kalender"
   },
   "importStore": {
     "title": "Importera eller lagra?",
@@ -241,8 +308,20 @@
   },
   "bulkTrash": {
     "title": "Flytta till papperskorgen",
-    "body_one": "Flytta <highlight>{{count}} objekt</highlight> till papperskorgen? Du kan återställa det senare.",
-    "body_other": "Flytta <highlight>{{count}} objekt</highlight> till papperskorgen? Du kan återställa dem senare."
+    "body_one": "Flytta <highlight>{{count}} objekt</highlight> till papperskorgen? Du kan återställa objektet senare.",
+    "body_other": "Flytta <highlight>{{count}} objekt</highlight> till papperskorgen? Du kan återställa dem senare.",
+    "readOnlyTitle": "Skrivskyddad",
+    "readOnlyAcknowledge": "Jag förstår",
+    "readOnlyBlocked_one": "Det här objektet är <highlight>skrivskyddat</highlight> och kan därför inte flyttas till papperskorgen. Stäng av skrivskyddet i anteckningsalternativen först.",
+    "readOnlyBlocked_other": "Alla <highlight>{{count}} objekt</highlight> är skrivskyddade, så inget av dem kan flyttas till papperskorgen. Stäng av skrivskyddet i anteckningsalternativen först.",
+    "readOnlySkipped_one": "<highlight>{{count}} objekt</highlight> är skrivskyddat och stannar där det är.",
+    "readOnlySkipped_other": "<highlight>{{count}} objekt</highlight> är skrivskyddade och stannar där de är."
+  },
+  "deleteCheckedTasks": {
+    "title": "Radera markerade punkter?",
+    "confirm": "Radera",
+    "body_one": "<highlight>{{count}} punkt</highlight> raderas från anteckningen. Det går inte att ångra.",
+    "body_other": "<highlight>{{count}} punkter</highlight> raderas från anteckningen, inklusive underpunkter. Det går inte att ångra."
   },
   "bulkDelete": {
     "body_one": "Radera <highlight>{{count}} anteckning</highlight> permanent? Det går inte att ångra.",
@@ -271,5 +350,18 @@
     "title": "Nytt valv skapat",
     "confirm": "Uppfattat",
     "body": "Inget befintligt valv matchade frasen du angav, så ett nytt tomt valv skapades. Om du väntade dig att se dina anteckningar: logga ut och skriv in frasen noggrant igen - ett enda annorlunda ord öppnar ett annat valv."
+  },
+  "ambiguousLink": {
+    "title": "Två anteckningar har den titeln",
+    "body": "Mer än en anteckning heter <highlight>”{{title}}”</highlight>, så den här länken säger inte vilken den menar. Byt namn på den ena, så pekar länken på den andra."
+  },
+  "connections": {
+    "title": "Kopplingar",
+    "hide": "Dölj kopplingar",
+    "linkedFrom": "Länkas från",
+    "linksTo": "Länkar till",
+    "missing": "Inte skapad än",
+    "protectedHidden_one": "{{count}} PIN-skyddat objekt visas inte",
+    "protectedHidden_other": "{{count}} PIN-skyddade objekt visas inte"
   }
 }

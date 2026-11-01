@@ -48,9 +48,13 @@ export const LANGUAGE_META: Record<string, { native: string }> = {
   'zh-TW': { native: '繁體中文' },
   ca: { native: 'Català' },
   cs: { native: 'Čeština' },
+  sk: { native: 'Slovenčina' },
   tr: { native: 'Türkçe' },
   sv: { native: 'Svenska' },
   ar: { native: 'العربية' },
+  uk: { native: 'Українська' },
+  ru: { native: 'Русский' },
+  th: { native: 'ไทย' },
 };
 
 /**
@@ -139,6 +143,20 @@ export function Flag({ code }: { code: string }): ReactNode {
     // same hairline as Poland and Japan or its top edge vanishes on light.
     case 'cs':
       return <svg {...FLAG_BOX}><rect width="60" height="40" fill="#fff" /><rect y="20" width="60" height="20" fill="#D7141A" /><polygon points="0,0 30,20 0,40" fill="#11457E" /><rect x="0.5" y="0.5" width="59" height="39" fill="none" stroke="rgba(0,0,0,0.18)" strokeWidth="1" /></svg>;
+    // Slovakia: white, blue and red bands with the coat of arms toward the
+    // hoist: a red shield, white edged, with the white double cross on three
+    // blue hills. White top band, so it takes the hairline too.
+    case 'sk':
+      return <svg {...FLAG_BOX}>
+        <rect width="60" height="40" fill="#fff" />
+        <rect y="13.3" width="60" height="13.4" fill="#0B4EA2" />
+        <rect y="26.7" width="60" height="13.3" fill="#EE1C25" />
+        <path d="M11,8 H29 V22 C29,29 24,32 20,34 C16,32 11,29 11,22 Z" fill="#fff" />
+        <path d="M12.2,9.2 H27.8 V22 C27.8,28 23.5,30.6 20,32.6 C16.5,30.6 12.2,28 12.2,22 Z" fill="#EE1C25" />
+        <path d="M19.1,11 H20.9 V14 H24.2 V15.6 H20.9 V18 H25.2 V19.6 H20.9 V25.5 H19.1 V19.6 H14.8 V18 H19.1 V15.6 H15.8 V14 H19.1 Z" fill="#fff" />
+        <path d="M12.9,26 C14.5,24.5 16.5,24.5 17.4,25.6 C18.2,24 21.8,24 22.6,25.6 C23.5,24.5 25.5,24.5 27.1,26 C26,29.4 23,31.3 20,32.6 C17,31.3 14,29.4 12.9,26 Z" fill="#0B4EA2" />
+        <rect x="0.5" y="0.5" width="59" height="39" fill="none" stroke="rgba(0,0,0,0.18)" strokeWidth="1" />
+      </svg>;
     // Turkey: the crescent is a white disc with a red disc punched out of it,
     // offset toward the fly, per the flag law's construction (outer r = G/4,
     // inner r = G/5, centres 0.0625G apart on the midline). The star sits at
@@ -162,6 +180,14 @@ export function Flag({ code }: { code: string }): ReactNode {
     // fix.
     case 'ar':
       return <svg {...FLAG_BOX}><rect x="0" y="0" width="15" height="40" fill="#FF0000" /><rect x="15" y="0" width="45" height="13.4" fill="#00843D" /><rect x="15" y="13.4" width="45" height="13.3" fill="#FFFFFF" /><rect x="15" y="26.7" width="45" height="13.3" fill="#000000" /></svg>;
+    case 'uk':
+      return <svg {...FLAG_BOX}><rect width="60" height="40" fill="#FFD700" /><rect width="60" height="20" fill="#0057B7" /></svg>;
+    // White top band, so it takes the same hairline as pl and ja.
+    case 'ru':
+      return <svg {...FLAG_BOX}><rect width="60" height="40" fill="#fff" /><rect y="13.3" width="60" height="13.4" fill="#0039A6" /><rect y="26.7" width="60" height="13.3" fill="#D52B1E" /><rect x="0.5" y="0.5" width="59" height="39" fill="none" stroke="rgba(0,0,0,0.18)" strokeWidth="1" /></svg>;
+    // Thailand: five bands in the ratio 1:1:2:1:1, the blue one double height.
+    case 'th':
+      return <svg {...FLAG_BOX}><rect width="60" height="40" fill="#A51931" /><rect y="6.67" width="60" height="26.66" fill="#F4F5F8" /><rect y="13.33" width="60" height="13.34" fill="#2D2A4A" /></svg>;
     default:
       return <svg {...FLAG_BOX}><rect width="60" height="40" fill="#012169" /><path d="M0,0 60,40 M60,0 0,40" stroke="#fff" strokeWidth="8" /><path d="M0,0 60,40 M60,0 0,40" stroke="#C8102E" strokeWidth="4" /><rect x="25" width="10" height="40" fill="#fff" /><rect y="15" width="60" height="10" fill="#fff" /><rect x="27" width="6" height="40" fill="#C8102E" /><rect y="17" width="60" height="6" fill="#C8102E" /></svg>;
   }

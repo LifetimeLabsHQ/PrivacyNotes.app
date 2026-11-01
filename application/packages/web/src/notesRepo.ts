@@ -2,6 +2,11 @@ import { db, reopenDb, requestPersistence, type LocalNote } from './db';
 import { bumpNotesCreated } from './notesCreated';
 import { perfSpan } from './perf';
 import { clearFaviconCache } from './faviconQueue';
+import { resetPulledClean } from './pullState';
+import { hasMedia, stripMediaReferencesTo } from './imageProcessing';
+import { changesContent } from './editStamp';
+import { recordLedgerWrite, type LedgerWrite } from './dayLedger';
+import { withoutSourceIdentity } from './schedule';
 
 /**
  * Pure Dexie CRUD. No network, and no crypto of its own: wire
@@ -31,24 +36,7 @@ export function normalizeTag(raw: string): string {
     .slice(0, TAG_MAX_LENGTH);
 }
 
-/**
- * A note's tags in reading order: alphabetical, case-insensitive, with
- * digit runs compared as numbers so `tag2` precedes `tag10`. Same collator
- * settings as the folder sibling sorter, so a folder chip and the tag chips
- * beside it order their names by one rule.
- *
- * A DISPLAY order, never a stored one. The array on the note keeps the order
- * the tags were typed in, so nothing is rewritten and no note is marked dirty;
- * every existing note reads sorted from the moment it is drawn. Call it at
- * each place tags are rendered, and derive any position-based action (which
- * chip is last) from the result rather than from the note's own array.
- * Spec: issue #259.
- */
-export function sortTags(tags: string[]): string[] {
-  return tags
-    .slice()
-    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
-}
+export { sortTags } from './tagOrder';
 
 /**
  * Tags out of a YAML front-matter block, in the three shapes Obsidian writes.
@@ -139,6 +127,9 @@ export function extractInlineTags(
     // and neither is one. Found on a real docs folder, where anchors alone
     // invented a dozen tags nobody had written.
     .replace(/\]\([^)]*\)/g, ']()')
+    // Note-link targets. `[[#Setup]]` and `[[Note#Setup]]` point at a
+    // heading; the `#` there is an anchor, not a tag.
+    .replace(/\[\[[^\]\n]*\]\]/g, '[[]]')
     .replace(/^\s{0,3}#{1,6}\s.*$/gm, '');
   // Last, so a code span holding `%%` is already gone and cannot pair up with
   // a later one across ordinary text.
@@ -164,19 +155,22 @@ export function extractInlineTags(
  * be strictly newer than the row's current stamp (a second edit in the same
  * millisecond, a clock that stepped back, a pulled server stamp from a skewed
  * peer) - then one millisecond past the current stamp. Strictly monotonic
- * per-row generations mean the sync guards (push `.lte`, pull-apply skip)
- * never see two of THIS device's generations carrying an equal stamp (#156).
+ * per-row generations mean the pull-apply skip never sees two of THIS
+ * device's generations carrying an equal stamp (#156), and the merge's
+ * later-stamp rule for a detail both devices changed reads a true order.
  */
-function nextStamp(current: string | undefined): string {
+export function nextStamp(current: string | undefined): string {
   const now = Date.now();
   const cur = current ? Date.parse(current) : NaN;
   return new Date(Number.isFinite(cur) && cur >= now ? cur + 1 : now).toISOString();
 }
 
 /**
- * Read-modify-write for single-note edits: bumps `updatedAt` monotonically
- * off the row's current stamp and flags it dirty, inside one transaction so
- * a concurrent writer can't interleave between the read and the write.
+ * Read-modify-write for single-note flag changes: bumps `updatedAt`
+ * monotonically off the row's current stamp and flags it dirty, inside one
+ * transaction so a concurrent writer can't interleave between the read and
+ * the write. A flag is not an edit, so the "last edited" date is written as
+ * it stands, which also fixes it on a row from before that field.
  * No-op when the note doesn't exist.
  */
 async function touchNote(
@@ -189,6 +183,7 @@ async function touchNote(
     await db.notes.update(id, {
       ...patch,
       updatedAt: nextStamp(current.updatedAt),
+      editedAt: current.editedAt ?? current.updatedAt,
       dirty: 1,
     });
   });
@@ -227,6 +222,10 @@ export async function createNote(
   starred = false,
   type: import('@notes/shared').NoteType = 'note',
   folderId: string | null = null,
+  /** False for content brought in from elsewhere (a conflict copy, a
+   *  Markdown-folder copy, a share from another app): it is not writing done
+   *  here, so neither the day ledger nor the created-item counter moves. */
+  { counted = true }: { counted?: boolean } = {},
 ): Promise<LocalNote> {
   // First real write is the contextual moment to ask for persistent
   // storage (no-op after the first call / in demo). See db.ts.
@@ -239,6 +238,7 @@ export async function createNote(
     tags: tags ?? [],
     createdAt: now,
     updatedAt: now,
+    editedAt: now,
     dirty: 1,
     deleted: 0,
     trashed: 0,
@@ -249,24 +249,143 @@ export async function createNote(
     folderId,
   };
   await db.notes.put(note);
-  // Count the create for milestones. Only this path counts - the
-  // importer writes rows directly, so an import never advances it.
-  bumpNotesCreated();
+  // Count the create for milestones and the ledger. The importer writes rows
+  // directly, and the callers that bring content in pass `counted: false`.
+  if (counted) {
+    bumpNotesCreated();
+    recordLedgerWrite({ kind: 'create', body });
+  }
   return note;
 }
 
+/**
+ * Write a patch to one note. Returns true when the row was written, and false
+ * when nothing was: there is no such note, or the patch changes the title, the
+ * body or a login's custom fields of a read-only note. "Read-only" promises no edits until the
+ * switch is turned off, so that refusal belongs to this write rather than to
+ * the routes into it; a read-only note still takes its tags, folder, type and
+ * journal trackers. Tested in tests/lockGateWrites.test.ts.
+ *
+ * The "last edited" date moves to the new stamp when the patch changes the
+ * content (noteMerge.ts changesContent) and no explicit stamp is passed. An
+ * explicit stamp is the app's own bookkeeping, as is `edit: false`, which
+ * still moves `updatedAt`; `editedAt` names the time of a content change made
+ * earlier. Tested in tests/editStamp.test.ts.
+ */
 export async function updateNote(
   id: string,
-  patch: Partial<Pick<LocalNote, 'title' | 'body' | 'tags' | 'type' | 'trackers' | 'folderId'>>,
+  patch: NotePatch,
   /** Pass an explicit timestamp to avoid bumping updatedAt (e.g. derived-title commit). */
-  updatedAt?: string
-): Promise<void> {
+  updatedAt?: string,
+  opts?: UpdateOpts,
+): Promise<boolean> {
   void requestPersistence();
-  if (updatedAt !== undefined) {
-    await db.notes.update(id, { ...patch, updatedAt, dirty: 1 });
-    return;
-  }
-  await touchNote(id, patch);
+  const ledger: LedgerSlot = {};
+  const written = await db.transaction('rw', db.notes, async () => {
+    const current = await db.notes.get(id);
+    if (!current) return false;
+    return writePatch(current, patch, updatedAt, opts, ledger);
+  });
+  // After the transaction, so a count can never hold up or undo the write.
+  if (ledger.write) recordLedgerWrite(ledger.write);
+  return written;
+}
+
+type NotePatch = Partial<Pick<LocalNote, 'title' | 'body' | 'tags' | 'type' | 'trackers' | 'folderId'>>;
+
+type UpdateOpts = {
+  edit?: false;
+  editedAt?: string;
+  /** Told the stamps the write stored, inside its transaction. */
+  onWrite?: (stored: { updatedAt: string; editedAt: string }) => void;
+};
+
+/**
+ * updateNote with the patch built from the row as it stands inside the write's
+ * own transaction, for a change that rewrites a field from its current value
+ * (moving a journal entry rewrites its whole tracker object). A write landing
+ * between a separate read and this one would otherwise be overwritten.
+ * `build` returns null to write nothing. Returns the patch written, or null
+ * when nothing was, a refusal by the read-only rule included.
+ */
+export async function updateNoteFrom(
+  id: string,
+  build: (current: LocalNote) => NotePatch | null,
+  opts?: UpdateOpts,
+): Promise<NotePatch | null> {
+  void requestPersistence();
+  const ledger: LedgerSlot = {};
+  const written = await db.transaction('rw', db.notes, async () => {
+    const current = await db.notes.get(id);
+    if (!current) return null;
+    const patch = build(current);
+    if (!patch) return null;
+    return (await writePatch(current, patch, undefined, opts, ledger)) ? patch : null;
+  });
+  if (ledger.write) recordLedgerWrite(ledger.write);
+  return written;
+}
+
+/** Restore a split and remove its child in one transaction, only while both
+ * still match the split. Tested in tests/qa-2026-10-20/sync-storage-1.test.ts. */
+export async function undoNoteSplit({
+  noteId, newId, head, tail, original, newUpdatedAt,
+}: {
+  noteId: string;
+  newId: string;
+  head: string;
+  tail: string;
+  original: string;
+  newUpdatedAt: string;
+}): Promise<boolean> {
+  if (noteId === newId) return false;
+  const ledger: LedgerSlot = {};
+  const restored = await db.transaction('rw', db.notes, async () => {
+    const current = await db.notes.get(noteId);
+    const child = await db.notes.get(newId);
+    if (!current || !child || current.body !== head || child.body !== tail || child.updatedAt !== newUpdatedAt ||
+      [current, child].some((n) => n.deleted === 1 || n.trashed === 1 || n.locked === 1 || n.pinProtected === 1)) return false;
+    if (!(await writePatch(current, { body: original }, undefined, undefined, ledger))) return false;
+    await db.notes.update(newId, {
+      trashed: 1, deleted: 1, dirty: 1,
+      updatedAt: nextStamp(child.updatedAt),
+      editedAt: child.editedAt ?? child.updatedAt,
+    });
+    return true;
+  });
+  if (ledger.write) recordLedgerWrite(ledger.write);
+  if (restored) await db.editorDocCache.delete(newId).catch(() => { /* best-effort */ });
+  return restored;
+}
+
+/** Where writePatch leaves the day-ledger count for its caller to record. */
+type LedgerSlot = { write?: LedgerWrite };
+
+/** The write behind updateNote and updateNoteFrom, inside their transaction. */
+async function writePatch(current: LocalNote, patch: NotePatch, updatedAt: string | undefined, opts: UpdateOpts | undefined, ledger: LedgerSlot): Promise<boolean> {
+  const changesText =
+    (patch.title !== undefined && patch.title !== current.title) ||
+    (patch.body !== undefined && patch.body !== current.body) ||
+    // A login's custom fields and extra websites are content, not metadata.
+    (patch.trackers !== undefined && current.type === 'login' &&
+      JSON.stringify(patch.trackers?.login) !== JSON.stringify(current.trackers?.login));
+  if (current.locked === 1 && changesText) return false;
+  const stamp = updatedAt ?? nextStamp(current.updatedAt);
+  const edited = updatedAt === undefined && opts?.edit !== false && changesContent(current, patch);
+  const editedAt = edited ? (opts?.editedAt ?? stamp) : (current.editedAt ?? current.updatedAt);
+  await db.notes.update(current.id, { ...patch, updatedAt: stamp, editedAt, dirty: 1 });
+  opts?.onWrite?.({ updatedAt: stamp, editedAt });
+  // The day ledger counts writing: a changed title, body or tag set, by the
+  // person. A tracker, folder or type change alone is not writing (a pill tap
+  // is not), and neither is the app's bookkeeping (an explicit stamp or
+  // `edit: false`). Spec: ops/docs/archive/wellness-statistics.md (section 20)
+  const writing =
+    updatedAt === undefined && opts?.edit !== false &&
+    ((patch.title !== undefined && patch.title !== current.title) ||
+      (patch.body !== undefined && patch.body !== current.body) ||
+      (patch.tags !== undefined && JSON.stringify(patch.tags) !== JSON.stringify(current.tags)));
+  if (writing) ledger.write = { kind: 'edit', prevBody: current.body, nextBody: patch.body ?? current.body };
+  return true;
 }
 
 /**
@@ -277,41 +396,79 @@ export async function trashNote(id: string): Promise<void> {
   await touchNote(id, { trashed: 1 });
 }
 
+/**
+ * Move a draft the person left empty to the trash, deciding "empty" on the
+ * row inside the write's own transaction. A transaction queues behind every
+ * one requested before it, so a save the open editor started (its flush on
+ * New or Close) lands first and is seen here; a separate read ahead of the
+ * write could run before that save and trash a draft whose typing then lands
+ * in the trashed row. A row already trashed or tombstoned is left alone, so
+ * a second pass is a no-op. Returns true when the row was trashed. Tested in
+ * tests/draftDiscard.test.ts.
+ */
+export async function trashIfEmpty(id: string, isEmpty: (n: LocalNote) => boolean): Promise<boolean> {
+  return db.transaction('rw', db.notes, async () => {
+    const current = await db.notes.get(id);
+    if (!current || current.trashed === 1 || current.deleted === 1 || !isEmpty(current)) return false;
+    await db.notes.update(id, {
+      trashed: 1,
+      updatedAt: nextStamp(current.updatedAt),
+      editedAt: current.editedAt ?? current.updatedAt,
+      dirty: 1,
+    });
+    return true;
+  });
+}
+
 /** Restore a trashed note. */
 export async function restoreNote(id: string): Promise<void> {
   await touchNote(id, { trashed: 0 });
 }
 
 /**
- * Permanently delete a single note. Sets the `deleted=1` tombstone so
- * the next sync removes it from the server and then purges it locally.
+ * Permanently delete a single note from the trash. Sets the `deleted=1`
+ * tombstone so the next sync removes it from the server and then purges it
+ * locally. A tombstone is final on every device, so the row is re-read inside
+ * the write: one that is not in the trash (a pull restored it since the
+ * caller looked) or is already a tombstone is left alone. Returns the row
+ * this call tombstoned, the only body the blob GC may take, or null when it
+ * wrote nothing.
  */
-export async function permanentlyDelete(id: string): Promise<void> {
-  await touchNote(id, { deleted: 1 });
+export async function permanentlyDelete(id: string): Promise<{ id: string; body: string } | null> {
+  const deleted = await db.transaction('rw', db.notes, async () => {
+    const current = await db.notes.get(id);
+    if (!current || current.trashed !== 1 || current.deleted === 1) return null;
+    await db.notes.update(id, { deleted: 1, updatedAt: nextStamp(current.updatedAt), dirty: 1 });
+    return { id, body: current.body };
+  });
   // Drop the parsed-doc cache row (#150) - stale rows are harmless (exact
   // body match) but a big note's row is ~3x its body in disk.
-  await db.editorDocCache.delete(id).catch(() => { /* best-effort */ });
+  if (deleted) await db.editorDocCache.delete(id).catch(() => { /* best-effort */ });
+  return deleted;
 }
 
 /** Hard-delete every trashed note. Used by the "Empty trash" button.
- *  Wrapped in a single Dexie transaction so a force-close mid-way
- *  can't leave the trash half-emptied (all-or-nothing). (#91) */
-export async function emptyTrash(): Promise<number> {
-  const trashed = await db.notes
-    .where('trashed')
-    .equals(1)
-    .and((n) => n.deleted === 0)
-    .toArray();
-  if (trashed.length === 0) return 0;
-  await db.transaction('rw', db.notes, async () => {
+ *  One Dexie transaction reads the trash and writes the tombstones, so a
+ *  force-close mid-way can't leave the trash half-emptied (#91) and no write
+ *  can land between the read and the tombstones: a note a pull restored is
+ *  not in the set. Returns the rows it tombstoned, the only ones the blob GC
+ *  may take. */
+export async function emptyTrash(): Promise<Array<{ id: string; body: string }>> {
+  const emptied = await db.transaction('rw', db.notes, async () => {
+    const trashed = await db.notes
+      .where('trashed')
+      .equals(1)
+      .and((n) => n.deleted === 0)
+      .toArray();
     for (const n of trashed) {
       await db.notes.update(n.id, { deleted: 1, updatedAt: nextStamp(n.updatedAt), dirty: 1 });
     }
+    return trashed.map((n) => ({ id: n.id, body: n.body }));
   });
   // Same parsed-doc cache cleanup as permanentlyDelete (#150); outside the
   // transaction on purpose - cache rows are disposable, note tombstones are not.
-  await db.editorDocCache.bulkDelete(trashed.map((n) => n.id)).catch(() => { /* best-effort */ });
-  return trashed.length;
+  await db.editorDocCache.bulkDelete(emptied.map((n) => n.id)).catch(() => { /* best-effort */ });
+  return emptied;
 }
 
 /**
@@ -333,6 +490,8 @@ export async function duplicateNote(id: string): Promise<LocalNote | null> {
     tags: [...src.tags],
     createdAt: now,
     updatedAt: now,
+    // A new note: its last edit is its creation.
+    editedAt: now,
     dirty: 1,
     deleted: 0,
     trashed: 0,
@@ -343,13 +502,51 @@ export async function duplicateNote(id: string): Promise<LocalNote | null> {
     locked: 0,
     pinProtected: src.pinProtected,
     type: src.type ?? 'note',
-    // The duplicate stays in the source note's folder.
+    // The duplicate stays in the source note's folder, and in the archive.
     folderId: src.folderId ?? null,
+    ...(src.archived === 1 ? { archived: 1 } : {}),
     // Deep-copy tracker data so journal duplicates preserve mood/sleep/etc.
-    ...(src.trackers ? { trackers: structuredClone(src.trackers) } : {}),
+    // The copy is another event, so it leaves the source identity behind.
+    ...(src.trackers ? { trackers: structuredClone(withoutSourceIdentity(src.trackers)) } : {}),
   };
   await db.notes.put(copy);
   return copy;
+}
+
+/**
+ * Split an occurrence off a repeating event: a copy of the item with other
+ * tracker values (the occurrence a "This occurrence" or "This and following"
+ * edit splits off) and the series' new tracker values, both built from the
+ * row as it is stored and written in one transaction, so a change synced
+ * after the screen last read it, or between the two writes, is never undone.
+ * The copy keeps title, body, tags, folder and PIN protection; never
+ * read-only. Null when `build` refuses or the series write does not land.
+ * Spec: ops/docs/archive/calendar-pillar-spec.md (step 6)
+ */
+export async function splitOffCopy(
+  id: string,
+  build: (src: LocalNote) => { copy: Record<string, unknown>; series: Record<string, unknown> } | null,
+): Promise<{ copy: LocalNote; series: NotePatch } | null> {
+  const ledger: LedgerSlot = {};
+  const done = await db.transaction('rw', db.notes, async () => {
+    const src = await db.notes.get(id);
+    if (!src || src.deleted === 1) return null;
+    const built = build(src);
+    if (!built) return null;
+    const series: NotePatch = { trackers: built.series };
+    if (!(await writePatch(src, series, undefined, { edit: false }, ledger))) return null;
+    const now = new Date().toISOString();
+    const copy: LocalNote = {
+      id: crypto.randomUUID(), title: src.title, body: src.body, tags: [...src.tags],
+      createdAt: now, updatedAt: now, editedAt: now, dirty: 1, deleted: 0, trashed: 0,
+      starred: src.starred, locked: 0, pinProtected: src.pinProtected, type: src.type ?? 'note',
+      folderId: src.folderId ?? null, trackers: structuredClone(withoutSourceIdentity(built.copy)),
+    };
+    await db.notes.put(copy);
+    return { copy, series };
+  });
+  if (ledger.write) recordLedgerWrite(ledger.write);
+  return done;
 }
 
 /** Toggle or set the starred flag on a note. */
@@ -357,10 +554,18 @@ export async function setStarred(id: string, starred: boolean): Promise<void> {
   await touchNote(id, { starred: starred ? 1 : 0 });
 }
 
+/** Move a note into the archive, or back out. The pin is kept either way. */
+export async function setArchived(id: string, archived: boolean): Promise<void> {
+  // A flag set here is known from now on (sync.ts archiveUnknownOf).
+  await touchNote(id, { archived: archived ? 1 : 0, archivedUnknown: undefined });
+}
+
 /**
  * Pro: move several notes into a folder in one transaction. Used by
- * folder deletion (reparent contents) and the bulk toolbar
- * (fast-follow). Returns the number of notes modified.
+ * folder deletion (reparent contents), the Move dialog and a drop on a
+ * sidebar folder. A note already in the folder is skipped, as `bulkAddTag`
+ * skips a note that has the tag, so a move to where a note is writes and
+ * syncs nothing. Returns the number of notes modified.
  */
 export async function bulkMoveToFolder(ids: string[], folderId: string | null): Promise<number> {
   if (ids.length === 0) return 0;
@@ -369,7 +574,8 @@ export async function bulkMoveToFolder(ids: string[], folderId: string | null): 
     for (const id of ids) {
       const note = await db.notes.get(id);
       if (!note) continue;
-      await db.notes.update(id, { folderId, updatedAt: nextStamp(note.updatedAt), dirty: 1 });
+      if ((note.folderId ?? null) === folderId) continue;
+      await db.notes.update(id, { folderId, updatedAt: nextStamp(note.updatedAt), editedAt: note.editedAt ?? note.updatedAt, dirty: 1 });
       count++;
     }
   });
@@ -409,7 +615,11 @@ export async function bulkTrash(ids: string[]): Promise<number> {
     for (const id of ids) {
       const note = await db.notes.get(id);
       if (!note) continue;
-      await db.notes.update(id, { trashed: 1, updatedAt: nextStamp(note.updatedAt), dirty: 1 });
+      // A read-only note stays out of the trash. The callers filter first,
+      // because only they can say how many items were skipped, but the
+      // check belongs to the write rather than to one route into it.
+      if (note.locked === 1) continue;
+      await db.notes.update(id, { trashed: 1, updatedAt: nextStamp(note.updatedAt), editedAt: note.editedAt ?? note.updatedAt, dirty: 1 });
       count++;
     }
   });
@@ -423,24 +633,77 @@ export async function bulkRestore(ids: string[]): Promise<number> {
     for (const id of ids) {
       const note = await db.notes.get(id);
       if (!note) continue;
-      await db.notes.update(id, { trashed: 0, updatedAt: nextStamp(note.updatedAt), dirty: 1 });
+      await db.notes.update(id, { trashed: 0, updatedAt: nextStamp(note.updatedAt), editedAt: note.editedAt ?? note.updatedAt, dirty: 1 });
       count++;
     }
   });
   return count;
 }
 
-export async function bulkPermanentlyDelete(ids: string[]): Promise<number> {
+/** permanentlyDelete for a selection, in one transaction, with the same
+ *  re-read: rows not in the trash are left alone. Returns the rows it
+ *  tombstoned, the only ones the blob GC may take. */
+export async function bulkPermanentlyDelete(ids: string[]): Promise<Array<{ id: string; body: string }>> {
+  if (ids.length === 0) return [];
+  return db.transaction('rw', db.notes, async () => {
+    const deleted: Array<{ id: string; body: string }> = [];
+    for (const id of ids) {
+      const note = await db.notes.get(id);
+      if (!note || note.trashed !== 1 || note.deleted === 1) continue;
+      await db.notes.update(id, { deleted: 1, updatedAt: nextStamp(note.updatedAt), dirty: 1 });
+      deleted.push({ id, body: note.body });
+    }
+    return deleted;
+  });
+}
+
+/**
+ * Set the read-only flag on every id. The caller decides the target: the
+ * menus turn a selection off only when every item in it is already on,
+ * which is the same rule the pin toggle follows.
+ */
+export async function bulkSetLocked(ids: string[], locked: boolean): Promise<number> {
   if (ids.length === 0) return 0;
+  const value: 0 | 1 = locked ? 1 : 0;
   let count = 0;
   await db.transaction('rw', db.notes, async () => {
     for (const id of ids) {
       const note = await db.notes.get(id);
       if (!note) continue;
-      await db.notes.update(id, { deleted: 1, updatedAt: nextStamp(note.updatedAt), dirty: 1 });
+      await db.notes.update(id, { locked: value, updatedAt: nextStamp(note.updatedAt), editedAt: note.editedAt ?? note.updatedAt, dirty: 1 });
       count++;
     }
   });
+  return count;
+}
+
+/**
+ * Set the PIN-protect flag on every id. Both directions are gated before
+ * this runs: turning protection on needs a PIN to exist, and taking it
+ * off needs the PIN entered, the same bar a single note asks for.
+ */
+export async function bulkSetPinProtected(ids: string[], pinProtected: boolean): Promise<number> {
+  if (ids.length === 0) return 0;
+  const value: 0 | 1 = pinProtected ? 1 : 0;
+  let count = 0;
+  await db.transaction('rw', db.notes, async () => {
+    for (const id of ids) {
+      const note = await db.notes.get(id);
+      if (!note) continue;
+      await db.notes.update(id, { pinProtected: value, updatedAt: nextStamp(note.updatedAt), editedAt: note.editedAt ?? note.updatedAt, dirty: 1 });
+      count++;
+    }
+  });
+  return count;
+}
+
+/** Duplicate every id through the single-note path, so a copy made from a
+ *  selection is the same copy the per-note action makes. */
+export async function bulkDuplicate(ids: string[]): Promise<number> {
+  let count = 0;
+  for (const id of ids) {
+    if (await duplicateNote(id)) count++;
+  }
   return count;
 }
 
@@ -450,14 +713,24 @@ export async function bulkPermanentlyDelete(ids: string[]): Promise<number> {
  * Caller decides the target value - this just applies it.
  */
 export async function bulkSetStarred(ids: string[], starred: boolean): Promise<number> {
+  return bulkSetFlag(ids, 'starred', starred);
+}
+
+/** Archive or unarchive several notes in one transaction. The pins stay. */
+export async function bulkSetArchived(ids: string[], archived: boolean): Promise<number> {
+  return bulkSetFlag(ids, 'archived', archived);
+}
+
+async function bulkSetFlag(ids: string[], field: 'starred' | 'archived', on: boolean): Promise<number> {
   if (ids.length === 0) return 0;
-  const value: 0 | 1 = starred ? 1 : 0;
+  const value: 0 | 1 = on ? 1 : 0;
   let count = 0;
   await db.transaction('rw', db.notes, async () => {
     for (const id of ids) {
       const note = await db.notes.get(id);
       if (!note) continue;
-      await db.notes.update(id, { starred: value, updatedAt: nextStamp(note.updatedAt), dirty: 1 });
+      const patch: Partial<LocalNote> = field === 'starred' ? { starred: value } : { archived: value, archivedUnknown: undefined };
+      await db.notes.update(id, { ...patch, updatedAt: nextStamp(note.updatedAt), editedAt: note.editedAt ?? note.updatedAt, dirty: 1 });
       count++;
     }
   });
@@ -465,32 +738,40 @@ export async function bulkSetStarred(ids: string[], starred: boolean): Promise<n
 }
 
 /**
- * Write a new body to each note in `updates`, in ONE transaction.
+ * Rewrite the body of each note in `ids`, in ONE transaction, from the row as
+ * it stands inside it: `rewrite` returns the new body, or null to leave the
+ * row alone. A body a pull stored after the caller looked is the one
+ * rewritten, never overwritten with a rewrite of the body before it (#497).
  *
  * The rename pass (`useNoteEditing.handleTitleBlur`) is the caller: pointing
  * note-links at a renamed note can touch many notes at once, and a separate
  * `updateNote` per note is a separate transaction per note. Same shape and
- * same reasoning as the bulk helpers above. Returns the number written.
+ * same reasoning as the bulk helpers above. Returns the bodies written.
+ * Nobody edited these notes, so their "last edited" date stays.
  */
-export async function bulkSetBody(
-  updates: Array<{ id: string; body: string }>,
-): Promise<number> {
-  if (updates.length === 0) return 0;
+export async function bulkRewriteBody(
+  ids: string[],
+  rewrite: (current: LocalNote) => string | null,
+): Promise<Array<{ id: string; body: string }>> {
+  if (ids.length === 0) return [];
   void requestPersistence();
-  let count = 0;
-  await db.transaction('rw', db.notes, async () => {
-    for (const { id, body } of updates) {
+  return db.transaction('rw', db.notes, async () => {
+    const written: Array<{ id: string; body: string }> = [];
+    for (const id of ids) {
       const note = await db.notes.get(id);
       if (!note) continue;
+      const body = rewrite(note);
+      if (body === null || body === note.body) continue;
       await db.notes.update(id, {
         body,
         updatedAt: nextStamp(note.updatedAt),
+        editedAt: note.editedAt ?? note.updatedAt,
         dirty: 1,
       });
-      count++;
+      written.push({ id, body });
     }
+    return written;
   });
-  return count;
 }
 
 /**
@@ -509,6 +790,7 @@ export async function bulkAddTag(ids: string[], tag: string): Promise<number> {
       await db.notes.update(id, {
         tags: [...note.tags, tag],
         updatedAt: nextStamp(note.updatedAt),
+        editedAt: note.editedAt ?? note.updatedAt,
         dirty: 1,
       });
       count++;
@@ -528,11 +810,15 @@ export async function bulkAddTag(ids: string[], tag: string): Promise<number> {
  * Each touched note's `updatedAt` bumps and `dirty` gets set so the
  * next sync pushes the change to the server like any other edit.
  *
+ * `inScope` limits this and the two tag writes below to the open space;
+ * without it every note is read. Spec: ops/docs/plans/spaces.md (section 8)
+ *
  * Returns the number of notes modified.
  */
 export async function renameTagEverywhere(
   oldTag: string,
-  newTag: string
+  newTag: string,
+  inScope?: (note: LocalNote) => boolean
 ): Promise<number> {
   let modifiedCount = 0;
   // Full table scan + filter in JS: `tags` isn't a multi-entry index
@@ -542,6 +828,7 @@ export async function renameTagEverywhere(
     const all = await db.notes.toArray();
     for (const note of all) {
       if (!note.tags.includes(oldTag)) continue;
+      if (inScope && !inScope(note)) continue;
       const nextTags: string[] = [];
       for (const t of note.tags) {
         if (t === oldTag) {
@@ -554,6 +841,7 @@ export async function renameTagEverywhere(
       await db.notes.update(note.id, {
         tags: nextTags,
         updatedAt: nextStamp(note.updatedAt),
+        editedAt: note.editedAt ?? note.updatedAt,
         dirty: 1,
       });
       modifiedCount++;
@@ -565,18 +853,22 @@ export async function renameTagEverywhere(
 /**
  * Trash every active (non-trashed, non-deleted) note that carries the
  * given tag. Used by the "Delete tag and notes" action in the tag menu.
+ * A read-only note keeps the tag and stays where it is.
  * Returns the number of notes sent to trash.
  */
-export async function trashNotesWithTag(tag: string): Promise<number> {
+export async function trashNotesWithTag(tag: string, inScope?: (note: LocalNote) => boolean): Promise<number> {
   let trashedCount = 0;
   await db.transaction('rw', db.notes, async () => {
     const all = await db.notes.toArray();
     for (const note of all) {
       if (note.deleted === 1 || note.trashed === 1) continue;
+      if (note.locked === 1) continue;
       if (!note.tags.includes(tag)) continue;
+      if (inScope && !inScope(note)) continue;
       await db.notes.update(note.id, {
         trashed: 1,
         updatedAt: nextStamp(note.updatedAt),
+        editedAt: note.editedAt ?? note.updatedAt,
         dirty: 1,
       });
       trashedCount++;
@@ -590,16 +882,18 @@ export async function trashNotesWithTag(tag: string): Promise<number> {
  * delete the notes themselves - they remain, just with one fewer
  * tag. Returns the number of notes modified.
  */
-export async function deleteTagEverywhere(tag: string): Promise<number> {
+export async function deleteTagEverywhere(tag: string, inScope?: (note: LocalNote) => boolean): Promise<number> {
   let modifiedCount = 0;
   await db.transaction('rw', db.notes, async () => {
     const all = await db.notes.toArray();
     for (const note of all) {
       if (!note.tags.includes(tag)) continue;
+      if (inScope && !inScope(note)) continue;
       const nextTags = note.tags.filter((t) => t !== tag);
       await db.notes.update(note.id, {
         tags: nextTags,
         updatedAt: nextStamp(note.updatedAt),
+        editedAt: note.editedAt ?? note.updatedAt,
         dirty: 1,
       });
       modifiedCount++;
@@ -625,6 +919,9 @@ export async function deleteTagEverywhere(tag: string): Promise<number> {
  * under the new user's key (cross-account leak).
  */
 export async function clearLocalDatabase(opts?: { keepUnsyncedNotes?: boolean }): Promise<void> {
+  // From here the copy stops holding what the last pull brought, so a restore
+  // of our own backup waits for the next one (pullState.ts).
+  resetPulledClean();
   if (opts?.keepUnsyncedNotes) {
     // Forced sign-outs (device revoked, session expired) preserve rows
     // the server has not confirmed (either dirty value, pending
@@ -638,35 +935,40 @@ export async function clearLocalDatabase(opts?: { keepUnsyncedNotes?: boolean })
     // seal middleware would throw on any sealed row. Index reads,
     // primaryKeys() and bulkDelete never touch values. Both dirty
     // values are unsynced data (2 = sealed, invisible to old bundles).
-    // Spec: ops/docs/plans/local-at-rest.md (3.3, the key-free wipe)
+    // Spec: ops/docs/archive/local-at-rest.md (3.3, the key-free wipe)
     const allNoteIds = await db.notes.toCollection().primaryKeys();
     const keepNotes = new Set(await db.notes.where('dirty').anyOf(1, 2).primaryKeys());
     await db.notes.bulkDelete(allNoteIds.filter((id) => !keepNotes.has(id)));
-    // Blobs that never reached the server (pendingUpload=1) are the
-    // same class of data. Keep the dedup record AND its cached bytes
+    // Blobs that never reached the server (pendingUpload=1, or 2 when the
+    // server refused them for good) are the same class of data: the cache
+    // is their only copy. Keep the dedup record AND its cached bytes
     // together - processPendingUploads needs both to finish the upload
     // after the same user signs back in (a dedup row without bytes is
     // deleted as an orphan on init, losing the blob). Everything the
     // server already has is wiped as usual. The dedup tables are never
     // sealed, so value filters are safe THERE; the cache tables are
     // deleted by key for the same reason as the notes above.
-    const pendingImg = await db.imageDedup.filter((r) => r.pendingUpload === 1).toArray();
+    const onlyCopy = (r: { pendingUpload?: number }) => r.pendingUpload === 1 || r.pendingUpload === 2;
+    const pendingImg = await db.imageDedup.filter(onlyCopy).toArray();
     const keepImg = new Set(pendingImg.map((r) => r.uuid));
     const imgIds = await db.imageCache.toCollection().primaryKeys();
     await db.imageCache.bulkDelete(imgIds.filter((id) => !keepImg.has(id)));
-    await db.imageDedup.filter((r) => r.pendingUpload !== 1).delete();
-    const pendingAtt = await db.attachmentDedup.filter((r) => r.pendingUpload === 1).toArray();
+    await db.imageDedup.filter((r) => !onlyCopy(r)).delete();
+    const pendingAtt = await db.attachmentDedup.filter(onlyCopy).toArray();
     const keepAtt = new Set(pendingAtt.map((r) => r.uuid));
     const attIds = await db.attachmentCache.toCollection().primaryKeys();
     await db.attachmentCache.bulkDelete(attIds.filter((id) => !keepAtt.has(id)));
+    await db.attachmentDedup.filter((r) => !onlyCopy(r)).delete();
     // The parsed-doc cache holds note bodies (sealed at rest like the
     // notes) and is rebuildable derived data - clear it on every
     // sign-out, kept dirty rows included (they re-cache on next open).
     await db.editorDocCache.clear();
-    // blobGC has no pendingUpload concept - every queue entry is
-    // deferred-deletion metadata for a blob already gone from the note
-    // body, never something a resuming same-user sign-in needs to
-    // finish uploading. Clear it unconditionally like the wipe below.
+    // Every queue entry is deferred-deletion metadata for a blob already
+    // gone from the note body. One that was still waiting to upload keeps
+    // its bytes and dedup row through the rule above, so once its queue
+    // row is cleared here it uploads after the next sign-in, and if
+    // nothing references it by then the orphan reconcile reclaims it with
+    // its local rows. Cleared unconditionally like the wipe below.
     await db.blobGC.clear();
     // Favicons are derived, never unsynced user data, so a forced sign-out
     // clears them like any other sign-out.
@@ -680,10 +982,49 @@ export async function clearLocalDatabase(opts?: { keepUnsyncedNotes?: boolean })
   await db.attachmentDedup.clear();
   await db.blobGC.clear();
   await db.editorDocCache.clear();
+  // The day ledger is this account's writing history on this device. A forced
+  // sign-out keeps it with the unsynced notes, for the same returning owner.
+  await db.dayLedger.clear();
   // The favicon cache is a separate IndexedDB, so it is not covered by any
   // db.*.clear() above. It holds a per-domain record derived from the user's
   // links, so it must go on sign-out too. See clearFaviconCache.
   await clearFaviconCache();
+}
+
+/**
+ * A chosen sign-out destroys every picture and file the server does not hold
+ * (the full wipe above takes the blob caches). The notes that point at them
+ * have synced, so without this they come back on the next sign-in as entries
+ * that can never open. Run before the sign-out's final flush: it removes each
+ * such reference, and tombstones a Files entry left with no media at all, so
+ * the flush carries the removal to the server. Returns the rows it wrote.
+ */
+export async function dropReferencesToBlobsOnlyHere(): Promise<number> {
+  const onlyHere = (r: { pendingUpload?: number }) => r.pendingUpload === 1 || r.pendingUpload === 2;
+  const lost = new Set([
+    ...(await db.imageDedup.filter(onlyHere).toArray()).map((r) => r.uuid),
+    ...(await db.attachmentDedup.filter(onlyHere).toArray()).map((r) => r.uuid),
+  ]);
+  if (lost.size === 0) return 0;
+  return db.transaction('rw', db.notes, async () => {
+    const rows = await db.notes.where('deleted').equals(0).toArray();
+    let written = 0;
+    for (const n of rows) {
+      const body = stripMediaReferencesTo(n.body, lost);
+      if (body === n.body) continue;
+      const updatedAt = nextStamp(n.updatedAt);
+      // A read-only note is edited too: the content it points at is gone
+      // whatever the switch says. The person did not make that edit, so the
+      // "last edited" date stays.
+      if (n.type === 'file' && !hasMedia(body)) {
+        await db.notes.update(n.id, { deleted: 1, updatedAt, dirty: 1 });
+      } else {
+        await db.notes.update(n.id, { body, updatedAt, editedAt: n.editedAt ?? n.updatedAt, dirty: 1 });
+      }
+      written++;
+    }
+    return written;
+  });
 }
 
 /** Count of local rows with unsynced changes (either dirty value),
@@ -700,6 +1041,7 @@ export async function countUnsyncedNotes(): Promise<number> {
  * and the page must reload.
  */
 export async function deleteEntireLocalDatabase(): Promise<void> {
+  resetPulledClean();
   // db.delete() drops the Dexie database only; the favicon cache is its own
   // IndexedDB and would outlive account deletion by up to 90 days without this.
   await clearFaviconCache();

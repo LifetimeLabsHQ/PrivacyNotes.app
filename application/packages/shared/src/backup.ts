@@ -3,7 +3,7 @@
  * exercised headlessly.
  *
  * Binary layout: [24-byte nonce][xchacha20poly1305 ciphertext]. The plaintext
- * is JSON: { version: 3, exportedAt, notes: [...], folders?: [...] }, the same
+ * is JSON: { version: 3, exportedAt, notes: [...], folders?: [...], itemStyles?: {...}, customThemes?: {...}, factors?: [...] }, the same
  * payload structure the plaintext JSON backup uses. This module is
  * deliberately pure (no DOM, no i18n, no download glue) so
  * tools/backup-kat.mjs can test the REAL encode/decode path in CI instead of
@@ -51,6 +51,11 @@ export interface BackupNote {
   pinProtected?: number;
   trackers?: Record<string, unknown>;
   folderId?: string | null;
+  /** Written sparsely, like `trashed`: present only when 1. */
+  archived?: number;
+  /** The "last edited" date. Written sparsely, only when the row has one, so
+   *  a note without it encodes exactly as before. */
+  editedAt?: string;
 }
 
 export interface BackupPayload {
@@ -60,6 +65,19 @@ export interface BackupPayload {
   /** v3+: folder definitions. The restore flow validates these with
    *  validateFolders() before merging; this module treats them as opaque. */
   folders?: unknown;
+  /** Folder and tag looks, the `itemStyles` settings map. Optional, so the
+   *  version stays 3: an older restore ignores a field it does not know. The
+   *  restore flow validates it with validateItemStyles(); opaque here. */
+  itemStyles?: unknown;
+  /** The custom color themes, the `customThemes` settings map. Optional in
+   *  the same way; the restore validates it with validateCustomThemes(). */
+  customThemes?: unknown;
+  /** The person's own factor names, the `factors` settings list. Optional in
+   *  the same way; the restore reads it with readFactors(). */
+  factors?: unknown;
+  /** The person's own habit questions, the `customHabits` settings list.
+   *  Optional in the same way; the restore reads it with readCustomHabits(). */
+  customHabits?: unknown;
 }
 
 /**
@@ -67,14 +85,19 @@ export interface BackupPayload {
  *
  * Field mapping notes, preserved from the original export code: `type`
  * defaults to 'note' for rows predating note types, `folderId` and `trackers`
- * are omitted rather than written empty, and `folders` is omitted entirely
- * when there are none, so old and new payloads stay byte-compatible.
+ * are omitted rather than written empty, and `folders`, `itemStyles`,
+ * `customThemes`, `factors` and `customHabits` are omitted entirely when there are none, so old and new payloads stay
+ * byte-compatible.
  * `exportedAt` is injectable so tests can build deterministic payloads.
  */
 export function buildBackupPayload(
   notes: BackupNote[],
   folders: unknown[] = [],
   exportedAt: string = new Date().toISOString(),
+  itemStyles: Record<string, unknown> = {},
+  customThemes: Record<string, unknown> = {},
+  factors: unknown[] = [],
+  customHabits: unknown[] = [],
 ): BackupPayload {
   return {
     version: BACKUP_VERSION,
@@ -92,9 +115,15 @@ export function buildBackupPayload(
       locked: n.locked,
       pinProtected: n.pinProtected,
       ...(n.folderId ? { folderId: n.folderId } : {}),
+      ...(n.archived ? { archived: 1 } : {}),
       ...(n.trackers && Object.keys(n.trackers).length > 0 ? { trackers: n.trackers } : {}),
+      ...(n.editedAt ? { editedAt: n.editedAt } : {}),
     })),
     ...(folders.length > 0 ? { folders } : {}),
+    ...(Object.keys(itemStyles).length > 0 ? { itemStyles } : {}),
+    ...(Object.keys(customThemes).length > 0 ? { customThemes } : {}),
+    ...(factors.length > 0 ? { factors } : {}),
+    ...(customHabits.length > 0 ? { customHabits } : {}),
   };
 }
 

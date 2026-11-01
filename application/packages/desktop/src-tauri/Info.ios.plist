@@ -6,26 +6,13 @@
      macOS and iOS alike, and this one carries what must NOT reach the macOS
      bundle.
 
-     Why the URL scheme lives here and not in tauri.conf.json: the deep-link
-     plugin's `plugins.deep-link.desktop.schemes` is translated into
-     CFBundleURLTypes by the macOS bundler, but `plugins.deep-link.mobile` is
-     NOT translated into CFBundleURLTypes on iOS (verified against Tauri CLI
-     2.11.4, 2026-08-15). Without this file the generated iOS Info.plist has no
-     URL scheme at all, and every `privacynotes://auth-callback` return is a
-     silent no-op: Google and Apple sign-in both dead-end after the browser
-     hands control back.
-
-     Why it must not go in the shared Info.plist: macOS already generates its
-     own CFBundleURLTypes entry (CFBundleURLName "app.privacynotes privacynotes")
-     and declaring a second one there risks overriding the bundler's on the
-     shipping DMG, where deep links carry the native OAuth return.
-
-     History, so nobody re-adds the old mechanism: until 2026-08-15 the scheme was
-     spliced into the GENERATED plist by scripts/apply-ios-appearance-icons.sh,
-     which worked but had two weaknesses - it was a string-replace against XML
-     Tauri is free to reformat, and it only ran via `ios:icons`, so an `ios:init`
-     on its own produced a build with no URL scheme and no warning. That script
-     now only asserts the key is present and fails loudly if it is not.
+     The iOS bundle registers NO custom URL scheme, and none may be added
+     here. Any installed app can claim a scheme, so a scheme cannot say which
+     app receives a sign-in. The sign-in sheet returns over the https address
+     that iOS delivers only to the app whose `webcredentials` entitlement names
+     its host, and the tests hold that address in place. Tauri does not turn
+     `plugins.deep-link.mobile` into CFBundleURLTypes on iOS, so this file is
+     the only place a scheme could come back from.
      Spec: ops/docs/macos-ios-setup.md (native Google sign-in / deep links) -->
 <plist version="1.0">
 <dict>
@@ -56,7 +43,7 @@
 
 	     If iOS ever DOES learn to open files, delete `tauri.ios.conf.json` and the
 	     key below, and let the shared fileAssociations flow through.
-	     Spec: ops/docs/plans/markdown-folder-handoff.md (platform matrix) -->
+	     Spec: ops/docs/archive/markdown-folder-handoff.md (platform matrix) -->
 	<!-- ITSAppUsesNonExemptEncryption IS DELIBERATELY ABSENT. Do not add it back
 	     without reading this: setting it to true BREAKS the upload, and that was
 	     proven the hard way on 2026-08-16 with Transporter error 409, "Invalid
@@ -82,18 +69,27 @@
 	     ONLY if a documentation record with a real key value ever exists, which
 	     realistically means France being added back after an ANSSI filing.
 	     Spec: ops/docs/tsu-notification.md (the filing, and what is still open) -->
+	<!-- iOS 27 TERMINATES an app that has not adopted the scene life cycle. The
+	     check is _UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption and
+	     it kills the process during launch, so the app never draws a frame. The
+	     same binary runs on iOS 26.5, which is how the runtime was identified as
+	     the trigger rather than the SDK or the build machine (2026-09-18).
+
+	     tao already implements a scene delegate and an
+	     application:configurationForConnectingSceneSession: that returns it. It
+	     registers neither unless this manifest says multiple scenes are supported,
+	     so the flag below is what switches tao's scene path on. It is a gate, not
+	     a preference: tao reads this exact key.
+
+	     Consequence to know about: on iPad this also permits more than one window
+	     of the app. Nothing here has been exercised with two windows open.
+	     Spec: ops/docs/archive/app-switcher-privacy-screen.md (section 13) -->
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<true/>
+	</dict>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<false/>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>app.privacynotes</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>privacynotes</string>
-			</array>
-		</dict>
-	</array>
 </dict>
 </plist>

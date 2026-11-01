@@ -27,9 +27,9 @@ La barra in alto cambia l'aspetto del testo: **grassetto**, *corsivo*, titoli, l
 
 ## Una cosa da fare oggi
 
-- [ ] Trova la tua **<mark style="background-color: rgba(51, 154, 240, 0.35)">frase di 12 parole</mark>** in **Impostazioni > Sicurezza > La tua frase**, scrivila su carta e mettila al sicuro
+- [ ] Trova la tua **<mark style="background-color: rgba(51, 154, 240, 0.35)">frase di 12 parole</mark>** in **Impostazioni > Sicurezza > Frase**, scrivila su carta e mettila al sicuro
 
 Quella frase è ciò che apre le tue note. Dove vive lo decidi tu, e puoi cambiare idea quando vuoi. [[Come sono protette le tue note]] spiega le tre opzioni.
 
 > [!tip] Qui niente è per sempre
-> Ogni nota in questa cassaforte è un esempio, questa compresa. Modificala, spostala o cancellala.
+> Ogni nota in questa cassaforte è un esempio, questa compresa. Modificala, spostala o eliminala.

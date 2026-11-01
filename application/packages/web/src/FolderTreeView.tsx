@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { OverflowTip } from './OverflowTip';
 import { folderIndentPx, INDENT_PX, MAX_INDENT_LEVEL, useFolderExpansion } from './folderTreeState';
 import { ancestorIds, canMoveFolder, childrenOf, subtreeIds, type FolderDef } from './folders';
-import { CaretDown, DotsSixVertical, Folder } from './icons';
+import { CaretDown, DotsSixVertical } from './icons';
+import { FolderGlyph, LooksContext, sidebarRowTint } from './looks/LookGlyph';
+import { folderColor } from './itemStyles';
+import { SIDEBAR_DROP_INSIDE } from './sidebarUI';
 
 /**
  * The folder tree itself - carets, guide lines, indent, the tinted expanded
@@ -18,7 +21,7 @@ import { CaretDown, DotsSixVertical, Folder } from './icons';
  * them in here would mean a prop per difference, which is harder to
  * maintain, not easier.
  *
- * Spec: ops/docs/ui-patterns.md (section 86)
+ * Spec: ops/docs/archive/ui-patterns.md (section 86)
  */
 
 /** How far from a scroll edge a drag starts pulling the list, and how fast. */
@@ -57,8 +60,13 @@ export interface FolderTreeViewProps {
   sortSiblings?: (list: FolderDef[]) => FolderDef[];
   isActive?: (folder: FolderDef) => boolean;
   isDisabled?: (folder: FolderDef) => boolean;
+  /** Drawn in the muted color: a folder that holds nothing the open section
+   *  shows. It stays a full row, a click and a drop target like any other. */
+  isDimmed?: (folder: FolderDef) => boolean;
   onSelect: (folder: FolderDef) => void;
   onContextMenu?: (e: React.MouseEvent, folder: FolderDef) => void;
+  /** A click on the folder's own icon, in place of `onSelect`. */
+  onGlyphClick?: (folder: FolderDef) => void;
   /** Replaces the folder name, for the inline rename input. */
   renderName?: (folder: FolderDef) => ReactNode;
   /**
@@ -74,6 +82,12 @@ export interface FolderTreeViewProps {
   renderAfter?: (folder: FolderDef, level: number) => ReactNode;
   /** Omit to leave the tree read-only. */
   reorder?: FolderReorder;
+  /**
+   * Lets a dragged list item file into a folder. The rail's list runs the
+   * drop (`useRailItemDrop`) and names the row the pointer is over. The Move
+   * dialog passes nothing, so its rows never advertise a drop.
+   */
+  itemDrop?: { overId: string | null };
   ariaLabel: string;
   mobileTabIndex?: number;
 }
@@ -106,17 +120,21 @@ export function FolderTreeView({
   sortSiblings,
   isActive,
   isDisabled,
+  isDimmed,
   onSelect,
   onContextMenu,
+  onGlyphClick,
   renderName,
   isEditing,
   renderTrailing,
   renderAfter,
   reorder,
+  itemDrop,
   ariaLabel,
   mobileTabIndex,
 }: FolderTreeViewProps) {
   const { t } = useTranslation('shell');
+  const looks = useContext(LooksContext);
   const { isExpanded, toggle, expand } = useFolderExpansion();
   const rowEls = useRef(new Map<string, HTMLElement>());
   const scroller = useRef<HTMLElement | null>(null);
@@ -363,10 +381,12 @@ export function FolderTreeView({
     const expanded = isExpanded(folder);
     const active = isActive?.(folder) ?? false;
     const disabled = isDisabled?.(folder) ?? false;
+    const dimmed = !disabled && !active && (isDimmed?.(folder) ?? false);
     const dragging = drag?.active && drag.id === folder.id;
     const refusedHere = drag?.active && drag.refused.has(folder.id) && drag.id !== folder.id;
     const target = drag?.active && drag.target?.overId === folder.id ? drag.target : null;
     const editing = isEditing?.(folder) ?? false;
+    const takesItems = !!itemDrop && !editing;
 
     const row = (
       <div key={folder.id} role="none">
@@ -375,6 +395,8 @@ export function FolderTreeView({
           aria-level={level + 1}
           aria-selected={active}
           {...(hasKids ? { 'aria-expanded': expanded } : {})}
+          data-drop-folder={takesItems ? folder.id : undefined}
+          data-drop-closed={takesItems && hasKids && !expanded ? '' : undefined}
           ref={(el) => {
             if (el) rowEls.current.set(folder.id, el);
             else rowEls.current.delete(folder.id);
@@ -398,9 +420,14 @@ export function FolderTreeView({
             rail,
             active,
             disabled: disabled || !!refusedHere,
+            dimmed,
             dragging: !!dragging,
-            inside: target?.place === 'inside',
+            inside: target?.place === 'inside' || (takesItems && itemDrop?.overId === folder.id),
           })}
+          // A colored folder tints its row the way a note row takes its
+          // note's color, drawn as an image so the active and hover colors
+          // still show through, and only while note colors are backgrounds.
+          style={sidebarRowTint(folderColor(folder.id, looks.styles), looks)}
         >
           {target?.place === 'before' && <DropLine edge="top" level={target.level} />}
           {target?.place === 'after' && <DropLine edge="bottom" level={target.level} />}
@@ -410,7 +437,7 @@ export function FolderTreeView({
               aria-label={t('folders.reorder', { folder: folder.name })}
               onPointerDown={(e) => beginDrag(e, folder, true)}
               style={{ touchAction: 'none' }}
-              className="pn-ftree-grip shrink-0 inline-flex items-center justify-center w-4 h-6 -ms-0.5 cursor-grab active:cursor-grabbing text-neutral-400 dark:text-neutral-600 hover:text-accent transition"
+              className="pn-ftree-grip shrink-0 inline-flex items-center justify-center w-4 h-6 -ms-0.5 cursor-grab active:cursor-grabbing text-pn-muted hover:text-accent transition"
             >
               <DotsSixVertical size={12} aria-hidden="true" />
             </span>
@@ -426,8 +453,8 @@ export function FolderTreeView({
               data-no-drag
               aria-label={expanded ? t('folders.collapse') : t('folders.expand')}
               className={`shrink-0 inline-flex items-center justify-center ${
-                rail ? 'w-5 h-8 lg:w-4 lg:h-6 ms-0.5' : 'w-4 h-7'
-              } text-neutral-400 dark:text-neutral-600 hover:text-accent transition`}
+                rail ? 'w-5 h-8 ms-0.5' : 'w-4 h-7'
+              } text-pn-muted hover:text-accent transition`}
             >
               <CaretDown
                 size={10}
@@ -436,16 +463,16 @@ export function FolderTreeView({
               />
             </button>
           ) : (
-            <span className={`shrink-0 ${rail ? 'w-5 lg:w-4 ms-0.5' : 'w-4'}`} aria-hidden="true" />
+            <span className={`shrink-0 ${rail ? 'w-5 ms-0.5' : 'w-4'}`} aria-hidden="true" />
           )}
           {editing ? (
             <div
               className={`flex-1 min-w-0 flex items-center ${
-                rail ? 'gap-2 lg:gap-1.5 py-2 lg:py-1 pe-1' : 'gap-2 py-2 pe-1'
+                rail ? 'gap-2 py-2 pe-1' : 'gap-2 py-2 pe-1'
               }`}
             >
-              <span className="inline-flex shrink-0 text-amber-600/80 dark:text-amber-500/80">
-                <Folder size={rail ? 16 : 15} className={rail ? 'lg:w-3.5 lg:h-3.5' : undefined} />
+              <span className="inline-flex shrink-0 text-label">
+                <FolderGlyph folderId={folder.id} size={rail ? 16 : 15} />
               </span>
               {renderName?.(folder)}
             </div>
@@ -455,31 +482,43 @@ export function FolderTreeView({
                 type="button"
                 disabled={disabled}
                 tabIndex={mobileTabIndex}
-                onClick={() => {
+                onClick={(e) => {
                   // The click that ends a drag is not a selection.
                   if (dragged.current) {
                     dragged.current = false;
                     return;
                   }
+                  if (onGlyphClick && (e.target as HTMLElement).closest('[data-folder-glyph]')) {
+                    onGlyphClick(folder);
+                    return;
+                  }
                   onSelect(folder);
                 }}
+                data-row-name={folder.name}
+                aria-current={active || undefined}
                 className={`flex-1 min-w-0 flex items-center text-start ${
-                  rail ? 'gap-2 lg:gap-1.5 py-2 lg:py-1 pe-1' : 'gap-2 py-2 pe-1'
+                  rail ? 'gap-2 py-2 pe-1' : 'gap-2 py-2 pe-1'
                 } ${disabled ? 'cursor-not-allowed' : ''}`}
               >
                 <span
+                  data-folder-glyph
                   className={`inline-flex shrink-0 ${
-                    disabled ? '' : active ? 'text-accent' : 'text-amber-600/80 dark:text-amber-500/80'
-                  }`}
+                    disabled ? '' : active ? 'text-accent' : 'text-label'
+                  }${dimmed ? ' opacity-60' : ''}${onGlyphClick ? ' pn-look-glyph' : ''}`}
                 >
-                  <Folder size={rail ? 16 : 15} className={rail ? 'lg:w-3.5 lg:h-3.5' : undefined} />
+                  <FolderGlyph folderId={folder.id} size={rail ? 16 : 15} />
                 </span>
                 {renderName ? renderName(folder) : <span className="truncate">{folder.name}</span>}
               </button>
             </OverflowTip>
           )}
           {renderTrailing && (
-            <span data-no-drag className="shrink-0 inline-flex items-center">
+            <span
+              data-no-drag
+              // Full row height on touch, so the row menu button inside can
+              // fill it (SIDEBAR_ROW_MENU_BUTTON in sidebarUI.ts).
+              className="shrink-0 inline-flex items-center [@media(hover:none)]:self-stretch"
+            >
               {renderTrailing(folder)}
             </span>
           )}
@@ -533,29 +572,31 @@ function rowClass({
   rail,
   active,
   disabled,
+  dimmed,
   dragging,
   inside,
 }: {
   rail: boolean;
   active: boolean;
   disabled: boolean;
+  dimmed: boolean;
   dragging: boolean;
   inside: boolean;
 }): string {
   const base = `pn-ftree-row relative w-full flex items-center group transition ${
-    rail ? 'rounded text-[15px] lg:text-[13px] font-medium' : 'rounded-md text-[14px] px-1'
+    rail ? 'rounded text-[15px] font-medium' : 'rounded-md text-[14px] px-1'
   }`;
   // "Drop inside" outlines the whole row, because the thing being said is
   // "into this folder", not "between two rows". The line says the other one.
-  if (inside) return `${base} bg-accent/10 ring-1 ring-accent dark:bg-accent/15`;
+  if (inside) return `${base} ${SIDEBAR_DROP_INSIDE}`;
   if (dragging) return `${base} opacity-40`;
-  if (disabled) return `${base} text-neutral-400 dark:text-neutral-600 cursor-not-allowed`;
+  if (disabled) return `${base} text-pn-muted/75 cursor-not-allowed`;
   if (active) {
     return rail
-      ? `${base} bg-accent/15 text-accent dark:bg-accent/20`
-      : `${base} bg-accent/15 text-accent dark:bg-accent/20 hover:bg-accent/20 dark:hover:bg-accent/25`;
+      ? `${base} pn-on-tint bg-accent/15 text-accent-strong dark:bg-accent/20`
+      : `${base} pn-on-tint bg-accent/15 text-accent-strong dark:bg-accent/20 hover:bg-accent/20 dark:hover:bg-accent/25`;
   }
-  return `${base} text-neutral-900 hover:bg-neutral-200/60 dark:text-white dark:hover:bg-neutral-900/60`;
+  return `${base} ${dimmed ? 'text-pn-muted' : 'text-pn'} hover:bg-pn/5`;
 }
 
 /**
@@ -569,7 +610,7 @@ function DropLine({ edge, level }: { edge: 'top' | 'bottom'; level: number }) {
   return (
     <span
       aria-hidden="true"
-      className={`pointer-events-none absolute z-10 h-0.5 rounded-full bg-accent ${
+      className={`pointer-events-none absolute z-10 h-0.5 rounded-full bg-accent-fill ${
         edge === 'top' ? 'top-0 -mt-px' : 'bottom-0 -mb-px'
       }`}
       style={{ insetInlineStart: folderIndentPx(level) + 8, insetInlineEnd: 4 }}

@@ -30,7 +30,9 @@ import {
 } from '@notes/shared';
 import { collectFingerprint, detectDeviceOs, hashFingerprint } from './deviceFingerprint';
 import { isDemoMode } from './demo';
+import { recordSyncFault } from './syncFaults';
 import { db } from './db';
+import { VERSION } from './version';
 
 const DEVICE_SECRET_KEY = 'privacynotes.deviceSecret';
 
@@ -46,6 +48,8 @@ export type DeviceRow = {
   revoked_at: string | null;
   /** Groups browser installs on the same physical device. NULL for legacy rows. */
   device_group: string | null;
+  /** App version the device last reported. NULL for builds that send none. */
+  app_version?: string | null;
 };
 
 export type RegisterResult =
@@ -71,86 +75,6 @@ function getOrCreateDeviceSecret(): Uint8Array {
   return fresh;
 }
 
-/** Hard-reset the local install identity. Next sign-in will register a brand-new device row. */
-export function resetDeviceSecret(): void {
-  window.localStorage.removeItem(DEVICE_SECRET_KEY);
-}
-
-/** Read the stored deviceSecret hex without minting one. Null when this install has none yet. */
-export function getStoredDeviceSecretHex(): string | null {
-  try {
-    const stored = window.localStorage.getItem(DEVICE_SECRET_KEY);
-    return stored && /^[0-9a-f]{64}$/i.test(stored) ? stored.toLowerCase() : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Adopt a deviceSecret carried over from the old origin during the domain
- * move (see migrate.ts). Deliberately overwrites any local secret: the
- * carried identity is the one with the registered device row, so keeping
- * it means register-device derives the SAME device_id and the move does
- * not burn a slot against the free-tier device cap. Rejects anything that
- * is not 32 bytes of hex.
- * Spec: ops/docs/domain-split.md (free plan caps devices at 2, FREE_DEVICE_LIMIT)
- */
-export function importDeviceSecret(hex: string): boolean {
-  if (!/^[0-9a-f]{64}$/i.test(hex)) return false;
-  try {
-    window.localStorage.setItem(DEVICE_SECRET_KEY, hex.toLowerCase());
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// ------------------------------------------------------------------
-// Interrupted-swap journal for the secret import above. The confirm
-// flow must import the carried secret BEFORE signInWithPhrase (the
-// registration inside derives the device_id from it), and it rolls
-// back on a FAILED sign-in - but a tab closed mid-sign-in ran neither
-// path, leaving the install with a device identity it never
-// registered (session audit 2026-08-25). The journal closes that gap:
-// the caller arms it with the PRIOR secret before importing, clears
-// it on a resolved sign-in (either outcome), and the next boot
-// restores any journal it finds - by then the sign-in can only have
-// been interrupted.
-// ------------------------------------------------------------------
-
-const SECRET_SWAP_JOURNAL_KEY = 'privacynotes.deviceSecretSwapJournal';
-
-/** Arm the journal with the pre-import secret ('' = none existed). */
-export function armSecretSwapJournal(priorHex: string | null): void {
-  try {
-    window.localStorage.setItem(SECRET_SWAP_JOURNAL_KEY, priorHex ?? '');
-  } catch { /* ignore */ }
-}
-
-/** The sign-in resolved (ok or failed) - the caller now owns cleanup. */
-export function clearSecretSwapJournal(): void {
-  try {
-    window.localStorage.removeItem(SECRET_SWAP_JOURNAL_KEY);
-  } catch { /* ignore */ }
-}
-
-/**
- * Boot-time recovery: an armed journal means the last confirm never
- * resolved. Put the prior secret back (or remove the imported one when
- * none existed before) and clear the journal. Called once at module
- * init, before anything derives a device id.
- */
-function restoreInterruptedSecretSwap(): void {
-  try {
-    const prior = window.localStorage.getItem(SECRET_SWAP_JOURNAL_KEY);
-    if (prior === null) return;
-    if (prior === '') window.localStorage.removeItem(DEVICE_SECRET_KEY);
-    else window.localStorage.setItem(DEVICE_SECRET_KEY, prior);
-    window.localStorage.removeItem(SECRET_SWAP_JOURNAL_KEY);
-  } catch { /* ignore */ }
-}
-if (typeof window !== 'undefined') restoreInterruptedSecretSwap();
-
 export function getDeviceId(pubkey: string): string {
   return deriveDeviceId(pubkey, getOrCreateDeviceSecret());
 }
@@ -167,9 +91,27 @@ type TauriWindow = Window & {
 export function detectPlatform(): Platform {
   const w = window as TauriWindow;
   if (w.__TAURI__ || w.__TAURI_INTERNALS__) {
+    // The build knows what it is; the browser only has opinions. Tauri sets
+    // TAURI_ENV_PLATFORM while building and vite bakes it in, so this branch
+    // cannot be fooled by a user agent. Everything below it is the fallback
+    // for a native build made outside Tauri's build pipeline.
+    if (__PN_BUILD_PLATFORM__ === 'ios') return 'ios';
+    if (__PN_BUILD_PLATFORM__ === 'android') return 'android';
+    if (__PN_BUILD_PLATFORM__) return 'desktop';
+
     const ua = navigator.userAgent.toLowerCase();
     if (ua.includes('iphone') || ua.includes('ipad')) return 'ios';
     if (ua.includes('android')) return 'android';
+    // An iPad's webview reports a MAC user agent, with no "ipad" anywhere in
+    // it, so the checks above miss it and it used to fall through to
+    // 'desktop'. That handed iPads every desktop code path: the system
+    // browser for OAuth and the web checkout for Pro, which is precisely
+    // what App Review rejected on 2026-09-01 (guideline 4 and 3.1.1) after
+    // the same build passed on iPhone. Touch points are the tell - no Mac
+    // reports any, and this only runs inside a native build, so a desktop
+    // browser on exotic hardware cannot reach it.
+    // Spec: ops/docs/gotchas.md (an iPad reports a Mac user agent)
+    if (ua.includes('macintosh') && navigator.maxTouchPoints > 1) return 'ios';
     return 'desktop';
   }
   return 'web';
@@ -199,7 +141,8 @@ export function buildDeviceName(): string {
   const platform = detectPlatform();
   const os = detectDeviceOs();
   if (platform === 'desktop') return `Desktop app on ${os}`;
-  if (platform === 'ios') return 'iOS app';
+  // The iOS build runs on both, and the device list should tell them apart.
+  if (platform === 'ios') return os === 'iPad' ? 'iPad app' : os === 'iPhone' ? 'iPhone app' : 'iOS app';
   if (platform === 'android') return 'Android app';
   return os;
 }
@@ -252,6 +195,37 @@ export async function invokeFnWithRetry(
     result = await supabase.functions.invoke(name, options);
   }
   return result;
+}
+
+// One-shot per app load: the isolates stay warm for minutes once
+// booted, so re-warming on StrictMode remounts or back-and-forth
+// onboarding navigation would only waste requests.
+let edgeWarmupFired = false;
+
+/**
+ * Boot the sign-in edge functions' isolates once a visitor starts a
+ * sign-in. Cold starts cost 1-3.5s each and sit exactly on the sign-in
+ * critical path (link-pubkey, then register-device). A bare OPTIONS
+ * request only runs each function's CORS branch: no auth, no body, no
+ * database - it exists purely to spin up the isolate so the real calls
+ * during sign-in hit warm instances. Fire-and-forget; failures are
+ * expected offline and must never affect onboarding.
+ *
+ * Call it on intent, never on mount. The marketing pages render the
+ * onboarding component too, and a visitor who only reads them must send
+ * nothing to the sync backend: these URLs name link-pubkey and
+ * register-device, so in a network tab they read as a sign-in that never
+ * happened.
+ */
+export function warmAuthEdgeFunctions(): void {
+  if (edgeWarmupFired || isDemoMode()) return;
+  edgeWarmupFired = true;
+  const base = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+  if (!base) return;
+  const fns = ['link-pubkey', 'register-device'];
+  for (const fn of fns) {
+    void fetch(`${base}/functions/v1/${fn}`, { method: 'OPTIONS' }).catch(() => {});
+  }
 }
 
 /**
@@ -320,7 +294,6 @@ export async function readFnErrorBody(err: FnError): Promise<unknown> {
  *
  * This IS a definitive verdict on the token (never on the user's data), so
  * the caller answers it by re-minting a session, not by wiping anything.
- * Spec: ops/docs/auth-session-audit-2026-08.md (the stale cached token at link-pubkey)
  */
 export function isStaleTokenLinkError(
   err: FnError | null | undefined,
@@ -337,14 +310,49 @@ export function isStaleTokenLinkError(
  * not a verdict"). The right response is to retry the SAME token - it was
  * never judged. Exact-match like its sibling above; any other 503 is not
  * this signal.
- * Spec: ops/docs/auth-session-audit-2026-08.md (the stale cached token at link-pubkey)
  */
+/**
+ * True when link-pubkey answers that the auth backend rate limited the
+ * token check. Distinct from `isAuthUnreachableLinkError` on purpose: that
+ * one means retry the same token shortly, and this one means stop, because
+ * retrying is what the limit is asking you not to do.
+ */
+export function isAuthRateLimitedLinkError(
+  err: FnError | null | undefined,
+  body: unknown,
+): boolean {
+  if (!err || err.context?.status !== 429) return false;
+  return (body as { error?: string } | null)?.error === 'auth_rate_limited';
+}
+
 export function isAuthUnreachableLinkError(
   err: FnError | null | undefined,
   body: unknown,
 ): boolean {
   if (!err || err.context?.status !== 503) return false;
   return (body as { error?: string } | null)?.error === 'auth_unreachable';
+}
+
+/**
+ * True when link-pubkey received no Authorization header at all. The app
+ * sets that header explicitly on every link call, from a token it has
+ * already proven non-empty, so this client cannot produce the refusal on
+ * its own: something between the app and the server removed the header.
+ * A content filter with HTTPS filtering is the known cause - a native
+ * wrapper serves its page from tauri.localhost, so every call to the sync
+ * host counts as third-party, and filters offer a switch that strips the
+ * header on exactly those. Retrying is useless and re-minting is worse, so
+ * the caller answers with words instead of another attempt.
+ *
+ * Exact-match like its siblings: a 401 with any other body is a different
+ * refusal.
+ */
+export function isMissingBearerLinkError(
+  err: FnError | null | undefined,
+  body: unknown,
+): boolean {
+  if (!err || err.context?.status !== 401) return false;
+  return (body as { error?: string } | null)?.error === 'missing_bearer';
 }
 
 export type RegisterDeviceArgs = {
@@ -388,6 +396,7 @@ export async function registerDevice(args: RegisterDeviceArgs): Promise<Register
       device_id: deviceId,
       device_name: buildDeviceName(),
       platform: detectPlatform(),
+      app_version: VERSION,
       signature: bytesToHex(signature),
       fingerprint_hashes: fingerprintHashes,
     },
@@ -404,6 +413,7 @@ export async function registerDevice(args: RegisterDeviceArgs): Promise<Register
         devices: body.devices ?? [],
       };
     }
+    recordSyncFault({ step: 'device', status: (error as FnError).context?.status, code: body?.error ?? error.name });
     throw new Error(
       `register-device failed: ${body?.error ?? (error as Error).message}`,
     );
@@ -621,6 +631,11 @@ export type ManageStorageArgs = {
   action: 'cancel' | 'switch';
   /** Required for 'switch' - the target package's Paddle price ID. */
   priceId?: string;
+  /**
+   * For 'switch': the `quote` of the preview the confirm showed. The server
+   * then charges only while a fresh preview still gives that figure.
+   */
+  quote?: string;
 };
 
 /**
@@ -629,7 +644,7 @@ export type ManageStorageArgs = {
  * resulting Paddle webhook, so callers should refetch after a moment.
  */
 export async function manageStorageSub(args: ManageStorageArgs): Promise<void> {
-  const { supabase, accessToken, authUid, signingPrivateKey, subscriptionId, action, priceId } = args;
+  const { supabase, accessToken, authUid, signingPrivateKey, subscriptionId, action, priceId, quote } = args;
   const signature = await signStorageManageChallenge(
     signingPrivateKey,
     authUid,
@@ -643,6 +658,7 @@ export async function manageStorageSub(args: ManageStorageArgs): Promise<void> {
       subscription_id: subscriptionId,
       action,
       ...(action === 'switch' ? { price_id: priceId } : {}),
+      ...(action === 'switch' && quote ? { quote } : {}),
       signature: bytesToHex(signature),
     },
   });
@@ -650,23 +666,45 @@ export async function manageStorageSub(args: ManageStorageArgs): Promise<void> {
     const body = (await readFnErrorBody(error as FnError)) as
       | { error?: string }
       | null;
-    throw new Error(
-      `manage-storage-sub failed: ${body?.error ?? (error as Error).message}`,
+    throw Object.assign(
+      new Error(`manage-storage-sub failed: ${body?.error ?? (error as Error).message}`),
+      { code: body?.error },
     );
   }
 }
 
 /**
- * Preview an upgrade: returns the real prorated amount due today (formatted,
- * e.g. "$11.40") for switching to priceId, without applying it. Returns null
- * if unavailable - callers should show the dialog without a figure.
+ * True when manage-storage-sub refused a switch because the amount the
+ * confirm showed no longer matched, or could not be checked. Nothing was
+ * charged, and choosing the package again shows the current figure.
+ */
+export function isStorageQuoteRefusal(err: unknown): boolean {
+  const code = (err as { code?: unknown } | null)?.code;
+  return code === 'quote_mismatch' || code === 'preview_unavailable';
+}
+
+/** What an upgrade preview returns: the amount due today, and its quote. */
+export type StorageUpgradeQuote = {
+  /** Formatted for display, e.g. "$11.40". */
+  dueToday: string;
+  /**
+   * The same figure as the server compares it. Handed back with the switch;
+   * absent when the server sent none, and the switch then goes without it.
+   */
+  quote?: string;
+};
+
+/**
+ * Preview an upgrade: the real prorated amount due today for switching to
+ * priceId, without applying it. Returns null if unavailable; the confirm then
+ * offers a retry and never charges without a figure.
  */
 export async function previewStorageUpgrade(args: {
   supabase: SupabaseClient;
   accessToken: string;
   subscriptionId: string;
   priceId: string;
-}): Promise<string | null> {
+}): Promise<StorageUpgradeQuote | null> {
   const { supabase, accessToken, subscriptionId, priceId } = args;
   try {
     const { data, error } = await supabase.functions.invoke('manage-storage-sub', {
@@ -674,8 +712,9 @@ export async function previewStorageUpgrade(args: {
       body: { action: 'preview', subscription_id: subscriptionId, price_id: priceId },
     });
     if (error) return null;
-    const d = data as { ok?: boolean; due_today?: string } | null;
-    return d?.ok && d.due_today ? d.due_today : null;
+    const d = data as { ok?: boolean; due_today?: string; quote?: string } | null;
+    if (!d?.ok || !d.due_today) return null;
+    return typeof d.quote === 'string' ? { dueToday: d.due_today, quote: d.quote } : { dueToday: d.due_today };
   } catch {
     return null;
   }
@@ -685,12 +724,16 @@ export async function previewStorageUpgrade(args: {
 // Direct DB helpers
 // ------------------------------------------------------------------
 
-export async function listDevices(supabase: SupabaseClient): Promise<DeviceRow[]> {
+export async function listDevices(supabase: SupabaseClient, pubkey: string): Promise<DeviceRow[]> {
   // Demo mode has no server-side device rows - never query for them.
   if (isDemoMode()) return [];
+  // RLS already scopes the read to the caller; the explicit owner gives the
+  // planner an index condition on `devices(pubkey)` instead of a table scan.
+  // Spec: ops/docs/archive/supabase-performance-2026-09.md (Capacity check, 2026-10-19)
   const { data, error } = await readWithRetry(() => supabase
     .from('devices')
-    .select('device_id, device_name, platform, created_at, last_seen_at, revoked_at, device_group')
+    .select('device_id, device_name, platform, created_at, last_seen_at, revoked_at, device_group, app_version')
+    .eq('pubkey', pubkey)
     .order('last_seen_at', { ascending: false }));
   if (error) {
     console.error('[devices] list failed', error);
@@ -731,10 +774,12 @@ export async function heartbeat(
     return true; // skip - too soon since last heartbeat
   }
   lastHeartbeatAt = now;
-  const { data, error } = await supabase.rpc('device_heartbeat', {
+  const { data, error, status } = await supabase.rpc('device_heartbeat', {
     p_device_id: deviceId,
+    p_app_version: VERSION,
   });
   if (error) {
+    recordSyncFault({ step: 'device', status, code: error.code || undefined });
     // Fail open. This covers network blips AND the "pubkey not linked"
     // RAISE (migration 0064): a caller that cannot prove who it is has
     // learned nothing about whether its device was revoked, and a
@@ -769,18 +814,44 @@ export type QuotaUsage = {
   quotaExceededSince: string | null;
 };
 
+/**
+ * The usage read did not answer. Distinct from an account that owns nothing,
+ * which is a successful read of zero, and from a limits read that fell back
+ * to the client-side ceiling, which still carries real usage numbers.
+ */
+export class QuotaUnavailableError extends Error {
+  constructor(detail?: string) {
+    super(detail ? `quota unavailable: ${detail}` : 'quota unavailable');
+    this.name = 'QuotaUnavailableError';
+  }
+}
+
 // Spec: ops/docs/pro-features.md (Free: 50 MB combined, 10k notes; Pro: 500 MB combined, 10k notes)
 const FALLBACK_FREE = { maxNotes: 10000, maxTotalBytes: 50 * 1000 * 1000, maxImageBytes: 50 * 1000 * 1000 };
 const FALLBACK_PRO = { maxNotes: 10000, maxTotalBytes: 500 * 1000 * 1000, maxImageBytes: 500 * 1000 * 1000 };
 
 /**
  * Fetch quota usage + dynamic limits from the server.
- * Returns zeroes/defaults if no row exists yet (new account).
  *
- * Tries `get_my_quota_status` first (includes quota_exceeded_since).
- * Falls back to `get_my_quota_limits` if the migration hasn't been applied.
+ * A row that does not exist yet reads as a real zero: a new account owns
+ * nothing, and `maybeSingle` returns no row rather than an error. A read that
+ * FAILED is a different thing and throws, because the consequences of the two
+ * diverge badly. `reconcileOrphanBlobs` compares this count against the local
+ * note count as its proof that the local mirror is complete, so a refused read
+ * that answered `noteCount: 0` would match the zero of a device whose vault is
+ * also empty and clear the pass to delete every aged blob in the account's
+ * bucket. Callers that only paint a number keep their previous figure; the
+ * one caller that deletes stops.
+ *
+ * `get_my_quota_status` is the current RPC. `get_my_quota_limits` is the
+ * pre-migration one, and it is called ONLY when PostgREST says the modern
+ * name does not exist (PGRST202). Every other error - an MFA refusal, an
+ * unlinked pubkey, an outage - means the second call is refused for the same
+ * reason as the first, and asking twice only doubles the refusals in the
+ * server log without ever repairing the authorization state behind them.
  *
  * @param isPro - client-side Pro flag used as fallback when neither RPC exists.
+ * @throws when the usage read fails. Never to report an empty account.
  */
 export async function fetchQuotaUsage(
   supabase: SupabaseClient,
@@ -807,6 +878,7 @@ export async function fetchQuotaUsage(
 
   if (usageRes.error) {
     console.error('[devices] quota fetch failed', usageRes.error);
+    throw new QuotaUnavailableError(usageRes.error.message);
   }
 
   const usage = usageRes.data as Record<string, number> | null;
@@ -818,10 +890,21 @@ export async function fetchQuotaUsage(
   let limits: { maxNotes: number; maxTotalBytes: number; maxImageBytes: number };
   let quotaExceededSince: string | null = null;
 
-  if (statusRes.error || !statusRes.data) {
-    if (statusRes.error) {
-      console.warn('[devices] get_my_quota_status RPC failed, trying fallback', statusRes.error.message);
-    }
+  // A refusal is not a missing function, so it never earns a second attempt
+  // at the same wall. Only PostgREST's "no such function" opens the legacy
+  // path. Any other error makes the whole answer unknown, and that is why it
+  // throws rather than falling back to the client-side ceiling: this RPC owns
+  // `quota_exceeded_since`, the over-quota banner reads it, and a refusal
+  // that returned a null there told the banner the account was back under
+  // quota. An unlinked pubkey produced exactly that pair - the table SELECT
+  // matches no row and reads as an empty account, while the RPC raises - so
+  // the usage check above cannot catch it.
+  const statusMissing = statusRes.error?.code === 'PGRST202';
+  if (statusRes.error && !statusMissing) {
+    console.warn('[devices] get_my_quota_status refused', statusRes.error.message);
+    throw new QuotaUnavailableError(statusRes.error.message);
+  }
+  if (statusMissing || !statusRes.data) {
     // Fallback to old RPC or hardcoded defaults.
     const fallbackRes = await supabase.rpc('get_my_quota_limits');
     if (fallbackRes.error || !fallbackRes.data) {
@@ -873,13 +956,33 @@ const PENDING_GC_RPC_MAX = 5000;
  * call site so no caller can forget it.
  *
  * Call after empty-trash or any bulk-delete sync completes.
+ *
+ * Returns whether the server actually recounted. A caller that paints a
+ * number may ignore it; a caller that DELETES may not, because the recount is
+ * half of its proof that the local reference set is complete. Demo mode
+ * returns false: it makes no server call, so nothing was recounted.
  */
-export async function recalculateQuota(supabase: SupabaseClient): Promise<void> {
-  if (isDemoMode()) return;
+export async function recalculateQuota(supabase: SupabaseClient): Promise<boolean> {
+  if (isDemoMode()) return false;
   const pending = (await db.blobGC.limit(PENDING_GC_RPC_MAX).toArray()).map((e) => e.uuid);
   const { error } = await readWithRetry(() => supabase.rpc('recalculate_my_quota', { p_pending_gc: pending }));
   if (error) {
     // Best-effort - the RPC may not be deployed yet. Log and move on.
     console.warn('[devices] recalculate_my_quota failed:', error.message);
+    return false;
   }
+  return true;
+}
+
+/**
+ * True on builds whose purchases live in a native store account (iOS App
+ * Store, Google Play build). Desktop and the direct Android APK buy through
+ * Paddle, where the entitlement follows the pubkey server-side - there is
+ * nothing device-local to restore, so restore UI must not appear there.
+ * Spec: ops/docs/plans/iap-restore-handoff.md (restore UI only appears on iOS or Play builds, not Paddle purchases)
+ */
+export function isNativeStoreBuild(): boolean {
+  const platform = detectPlatform();
+  if (platform === 'ios') return true;
+  return platform === 'android' && import.meta.env.VITE_ANDROID_DIST !== 'direct';
 }

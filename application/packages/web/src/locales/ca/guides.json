@@ -10,6 +10,43 @@
     "otherGuides": "Altres guies d'importació"
   },
   "guides": {
+    "google-calendar": {
+      "app": "Google Calendar",
+      "title": "Exporta el teu Google Calendar",
+      "metaTitle": "Exportar Google Calendar - PrivacyNotes",
+      "lead": "Google Calendar exporta tots els calendaris que gestiones en un sol .zip des de la configuració, en un ordinador. PrivacyNotes llegeix aquest .zip tal com és, sense necessitat de descomprimir res.",
+      "sections": [
+        {
+          "h": "Exporta tots els calendaris alhora",
+          "steps": [
+            "Obre [Google Calendar](https://calendar.google.com) en un navegador d'un ordinador. L'aplicació del mòbil no té exportació.",
+            "Fes clic a la roda dentada de dalt a la dreta i després a «Settings» (configuració).",
+            "A la llista de l'esquerra, fes clic a «Import & export».",
+            "Sota «Export», fes clic a «Export». El navegador baixa un .zip amb un fitxer .ics per a cada calendari.",
+            "Deixa el .zip tal com és."
+          ],
+          "p": [
+            "El .zip conté tots els calendaris on tens el permís «Make changes and manage sharing», el teu inclòs. Els calendaris que només pots veure, com els de festius o el d'un company, no hi són. En un compte de feina o de centre educatiu, l'administrador pot restringir l'exportació."
+          ]
+        },
+        {
+          "h": "O exporta un sol calendari",
+          "steps": [
+            "A la llista de l'esquerra, sota «My calendars», posa el cursor sobre el nom del calendari, fes clic a «More» (els tres punts) i després a «Settings and sharing».",
+            "Sota «Calendar settings», fes clic a «Export calendar». El navegador baixa un .zip que conté el fitxer .ics d'aquell calendari. Deixa'l tal com és."
+          ]
+        },
+        {
+          "h": "Què hi arriba",
+          "p": [
+            "Cada esdeveniment arriba amb el seu dia, la seva hora i la seva durada, també els que duren diversos dies. Els esdeveniments que es repeteixen conserven la seva regla, i una ocurrència que hagis mogut o suprimit a Google continua moguda o suprimida. Cada calendari es converteix en una carpeta.",
+            "Els recordatoris que has posat en un esdeveniment també hi arriben, els de correu inclosos: [es converteixen en recordatoris de l'app](/ca/help/reminders/), que necessiten PrivacyNotes Pro per sonar. Un esdeveniment que feia servir els recordatoris predeterminats del calendari arriba sense cap, perquè Google no escriu els valors predeterminats al fitxer. El lloc, l'enllaç de la videotrucada, els convidats i la descripció van al text de l'esdeveniment. [Les hores es mostren tal com eren en aquest dispositiu quan vas importar](/ca/help/calendar-time-zones/).",
+            "Un sol fitxer .ics de qualsevol aplicació de calendari també funciona, Apple Calendar i Outlook inclosos.",
+            "Si més endavant importes el mateix fitxer una altra vegada, els esdeveniments que ja hi són s'ometen, així que només s'afegeixen els nous."
+          ]
+        }
+      ]
+    },
     "google-keep": {
       "app": "Google Keep",
       "title": "Exporta les teves notes de Google Keep",
@@ -29,7 +66,7 @@
         {
           "h": "Què hi arriba",
           "p": [
-            "Els títols, el text de les notes i el format arriben intactes. Les llistes de comprovació de Keep es converteixen en llistes de tasques natives de PrivacyNotes, i les etiquetes de Keep hi arriben com a etiquetes.",
+            "Els títols, el text de les notes i el format arriben intactes. Les llistes de comprovació de Keep es converteixen en [llistes de tasques natives de PrivacyNotes](/ca/help/tasks/), i les etiquetes de Keep hi arriben com a etiquetes.",
             "Deixa anar el .zip sencer de Takeout a l'importador. Si ja l'havies descomprimit, també funciona un sol fitxer de nota .json de la carpeta Takeout/Keep."
           ]
         }
@@ -58,7 +95,41 @@
         {
           "h": "Què hi arriba",
           "p": [
-            "L'estructura de carpetes, el text de les notes i les imatges incrustades sobreviuen al viatge. Les notes conserven el títol, i els adjunts aterren a l'emmagatzematge de fitxers xifrat al costat de la seva nota."
+            "L'estructura de carpetes, el text de les notes i les imatges incrustades sobreviuen al viatge. Les notes conserven el títol, i els adjunts aterren a [l'emmagatzematge de fitxers xifrat](/ca/help/attachment-limits/) al costat de la seva nota."
+          ]
+        }
+      ]
+    },
+    "bear": {
+      "app": "Bear",
+      "title": "Exporta les teves notes de Bear",
+      "metaTitle": "Exportar les notes de Bear - PrivacyNotes",
+      "lead": "Bear exporta tota la teva biblioteca en un sol fitxer de còpia de seguretat, i aquest és el fitxer que has de portar: conté totes les notes, amb l'arxiu i la paperera inclosos.",
+      "sections": [
+        {
+          "h": "Fes una còpia de seguretat de Bear",
+          "steps": [
+            "Obre Bear al teu Mac.",
+            "Tria File > Backup Notes...",
+            "Desa el fitxer. Obtens un sol fitxer .bear2bk que conté tota la teva biblioteca.",
+            "Deixa anar aquest .bear2bk tal com és."
+          ]
+        },
+        {
+          "h": "La còpia de seguretat porta més que una exportació",
+          "p": [
+            "File > Export Notes... escriu només les notes de la vista que tens oberta, així que les notes arxivades i les de la paperera es queden fora. La còpia de seguretat les porta totes, i recorda quines notes eren fixades, arxivades, a la paperera o de només lectura.",
+            "Si només tens una exportació en Markdown o en Text Bundle, comprimeix-la en un zip i deixa anar el zip. El teu text, les etiquetes i els adjunts hi arriben, però l'arxiu, la paperera i les notes fixades no, perquè aquestes exportacions mai no ho escriuen.",
+            "Exportes de Bear a mà? Selecciona almenys dues notes. Una sola nota obre un full de desament que pot donar al fitxer una extensió equivocada."
+          ]
+        },
+        {
+          "h": "Què hi arriba",
+          "p": [
+            "Les teves etiquetes arriben com a etiquetes. Les etiquetes niades com #work/projects es reconstrueixen també com a carpetes, i cada nota va a la carpeta de la seva etiqueta més profunda. [Els enllaços entre notes es converteixen en enllaços entre notes](/ca/help/note-links/), i un enllaç a un encapçalament apunta a aquest encapçalament.",
+            "El format sobreviu: encapçalaments, negreta, cursiva, subratllat, ratllat, ressaltats amb els colors de Bear, llistes de tasques, taules, blocs de codi, citacions, requadres destacats, matemàtiques i notes al peu. Les imatges s'obren a tota l'amplada, i els encapçalaments plegats arriben desplegats.",
+            "Les notes fixades continuen fixades, [les notes arxivades van a l'arxiu](/ca/help/archive/), les notes de la paperera van a la paperera, les notes de només lectura continuen de només lectura, i cada nota conserva les seves dates originals.",
+            "Les imatges i els fitxers adjunts a les teves notes s'importen al teu emmagatzematge. Una nota que apunta a un fitxer que la còpia de seguretat no porta s'importa igualment, i la previsualització de la importació t'indica a quants enllaços afecta."
           ]
         }
       ]
@@ -81,9 +152,9 @@
           "h": "Què hi arriba",
           "p": [
             "La teva estructura de carpetes es reconstrueix com a carpetes reals, no pas aplanada en etiquetes, per molt profunda que sigui la imbricació. Una nota a Work/Projects va a parar a una carpeta Work > Projects. Si reimportes el mateix vault, es reutilitzen les carpetes ja creades en lloc de duplicar-les.",
-            "Amb el pla gratuït pots navegar per aquestes carpetes des del primer moment; crear, reanomenar i moure carpetes és una funció Pro, així que una importació d'Obsidian és una bona manera de provar-ho abans de passar a Pro.",
+            "Amb el pla gratuït pots navegar per aquestes carpetes des del primer moment; [crear, reanomenar i moure carpetes és una funció Pro](/ca/help/folders/), així que una importació d'Obsidian és una bona manera de provar-ho abans de passar a Pro.",
             "El frontmatter YAML s'interpreta: les etiquetes, els àlies i les dates de creació es respecten, i les etiquetes en línia amb # dins del cos es fusionen amb el camp d'etiquetes. També pots marcar «Etiqueta també les notes per carpeta» durant la importació per afegir el nom de cada carpeta com a etiqueta, útil si també t'agrada filtrar per etiqueta.",
-            "Els teus enllaços [[...]] continuen funcionant: PrivacyNotes els mostra com a note-links, així que les connexions entre notes sobreviuen a la mudança. La carpeta de configuració .obsidian i la .trash s'ometen automàticament."
+            "Els teus enllaços [[...]] continuen funcionant: [PrivacyNotes els mostra com a enllaços entre notes](/ca/help/note-links/), així que les connexions entre notes sobreviuen a la mudança. La carpeta de configuració .obsidian i la .trash s'ometen automàticament."
           ]
         }
       ]
@@ -92,15 +163,22 @@
       "app": "Standard Notes",
       "title": "Exporta les teves notes de Standard Notes",
       "metaTitle": "Exportar una còpia de Standard Notes - PrivacyNotes",
-      "lead": "Standard Notes ofereix una exportació de còpia de seguretat desxifrada, i aquest és el fitxer que PrivacyNotes llegeix. Un detall important abans de començar: ha de ser la variant desxifrada, no pas la xifrada.",
+      "lead": "Standard Notes exporta el teu compte com una sola còpia de seguretat desxifrada. Hi porta les notes Super amb la seva formatació, a més de les llistes de control, les etiquetes i els codis 2FA.",
       "sections": [
         {
           "h": "Exporta les notes des de Standard Notes",
           "steps": [
             "Obre Standard Notes (la web a app.standardnotes.com o l'aplicació d'escriptori) i inicia la sessió.",
-            "Obre les preferències i després la secció «Backups».",
-            "Baixa una còpia de seguretat de les dades i tria el format desxifrat quan t'ho demani.",
+            "Fes clic a la icona del compte, a baix a l'esquerra, i després a «Account settings» > «Backups».",
+            "A «Data backups», tria «Decrypted» i fes clic a «Download backup». Aquest únic fitxer conté totes les notes, també les notes Super.",
             "Obtens un .zip que conté un fitxer anomenat «Standard Notes Backup and Import File.txt». Deixa el zip tal com és."
+          ]
+        },
+        {
+          "h": "Les notes Super, les llistes de control i els codis 2FA mantenen la forma",
+          "p": [
+            "Les notes Super mantenen la formatació: encapçalaments, llistes, llistes de control, taules, blocs de codi, ressaltats, colors, alineació del text i seccions plegables. [Un enllaç a una altra nota es converteix en un enllaç entre notes](/ca/help/note-links/), i un #hashtag dins del text es converteix en una etiqueta de la nota. Les llistes de control van a Tasques, els fulls de càlcul es converteixen en taules i les entrades de l'autenticador es converteixen en [inicis de sessió a la Caixa forta, amb la seva clau 2FA](/ca/help/vault-totp/). Les etiquetes niades es converteixen en carpetes, i cada nota conserva també les seves etiquetes.",
+            "Els fitxers que vas pujar a Standard Notes es queden al seu servidor, així que la còpia només en guarda els noms. Cada nota importada marca on hi havia un fitxer. Baixa aquests fitxers de Standard Notes i torna'ls a afegir a la nota."
           ]
         },
         {
@@ -152,7 +230,7 @@
         {
           "h": "Què hi arriba",
           "p": [
-            "De les exportacions .docx: la negreta, la cursiva, el subratllat, el ratllat, les llistes de pics i numerades, i les caselles de selecció (que es converteixen en llistes de tasques natives) sobreviuen totes. De les exportacions .txt: el text, i res més.",
+            "De les exportacions .docx: la negreta, la cursiva, el subratllat, el ratllat, les llistes de pics i numerades, i les caselles de selecció (que es converteixen en [llistes de tasques natives](/ca/help/tasks/)) sobreviuen totes. De les exportacions .txt: el text, i res més.",
             "Les imatges incrustades en una nota de Samsung es traslladen a mà: l'importador marca cada nota que en tenia una, així saps exactament on tornar-les a posar. El text, els títols i les dates arriben tots en la mateixa passada."
           ]
         }
@@ -176,8 +254,8 @@
         {
           "h": "On va a parar cada cosa",
           "p": [
-            "Els inicis de sessió es converteixen en entrades d'inici de sessió de la Caixa forta (amb la icona del lloc web), les targetes en entrades de targeta i les claus SSH en entrades de clau SSH, i les notes segures i les identitats arriben com a notes llegibles. Les carpetes de Bitwarden es transformen en etiquetes, i els preferits arriben amb estrella. Les claus d'autenticació (TOTP) també vénen amb tu, així que els teus codis 2FA continuen funcionant.",
-            "El fitxer d'exportació conté les teves contrasenyes en text clar, així que importa'l, comprova que tot hagi arribat i després suprimeix el fitxer com cal. Dins de PrivacyNotes torna a quedar tot xifrat d'extrem a extrem."
+            "Els inicis de sessió es converteixen en [entrades d'inici de sessió de la Caixa forta](/ca/help/vault/) (amb la icona del lloc web), les targetes en entrades de targeta i les claus SSH en entrades de clau SSH, i les notes segures i les identitats arriben com a notes llegibles. Les carpetes de Bitwarden es transformen en etiquetes, i els preferits arriben amb estrella. Les claus d'autenticació (TOTP) també venen amb tu, així que [els teus codis 2FA continuen funcionant](/ca/help/vault-totp/).",
+            "El fitxer d'exportació conté les teves contrasenyes en text clar, així que importa'l, comprova que tot hagi arribat i després suprimeix el fitxer com cal. Dins de PrivacyNotes torna a quedar tot xifrat, al teu dispositiu i de camí al servidor."
           ]
         }
       ]
@@ -227,7 +305,7 @@
         {
           "h": "Què hi arriba i què no",
           "p": [
-            "Les taules, els blocs de codi, el text ressaltat, el subratllat, el color del text i les fórmules sobreviuen tots. Les llistes de comprovació es converteixen en llistes de tasques, els recordatoris de nota es converteixen en una tasca al capdamunt de la nota, els adjunts i les imatges es tornen a xifrar dins del teu emmagatzematge, els retalls web conserven l'URL d'origen i les notes de veu conserven la transcripció. Els enllaços interns es converteixen en note-links, aparellats pel títol de la nota enllaçada, ja que Evernote no exporta cap identificador de nota.",
+            "Les taules, els blocs de codi, el text ressaltat, el subratllat, el color del text i les fórmules sobreviuen tots. [Les llistes de comprovació es converteixen en llistes de tasques](/ca/help/tasks/), els recordatoris de nota es converteixen en una tasca al capdamunt de la nota, els adjunts i les imatges es tornen a xifrar dins del teu emmagatzematge, els retalls web conserven l'URL d'origen i les notes de veu conserven la transcripció. [Els enllaços interns es converteixen en enllaços entre notes](/ca/help/note-links/), aparellats pel títol de la nota enllaçada, ja que Evernote no exporta cap identificador de nota.",
             "Les tasques no hi arriben: l'exportació deixa un marcador «Content not supported» allà on hi havia cada bloc de tasques, sense títols, ni dates de venciment, ni estats de compleció per llegir. Els blocs xifrats continuen xifrats, així que desxifra'ls abans a Evernote. Els tipus de lletra personalitzats, l'alineació del text i la jerarquia d'etiquetes imbricades es descarten."
           ]
         },
@@ -256,7 +334,7 @@
         {
           "h": "Com es llegeixen els fitxers",
           "p": [
-            "El frontmatter YAML es respecta quan hi és: els camps title, created, updated i tags es fan servir tal qual, cosa que converteix aquest camí també en el de restauració de les exportacions Markdown de PrivacyNotes. També es llegeixen les etiquetes escrites com a #hashtags dins del text. Els fitxers simples sense frontmatter fan servir el nom del fitxer com a títol i el contingut com a cos. L'anàlisi és deliberadament tolerant: s'accepten .md, .markdown, .mdown, .mkd i .txt.",
+            "El frontmatter YAML es respecta quan hi és: els camps title, created, updated i tags es fan servir tal qual, cosa que converteix aquest camí també en [el de restauració de les exportacions Markdown de PrivacyNotes](/ca/help/export/). També es llegeixen les etiquetes escrites com a #hashtags dins del text. Els fitxers simples sense frontmatter fan servir el nom del fitxer com a títol i el contingut com a cos. L'anàlisi és deliberadament tolerant: s'accepten .md, .markdown, .mdown, .mkd i .txt.",
             "Comprimeix tota la carpeta i l'estructura hi va inclosa. Les subcarpetes es reconstrueixen com a carpetes de veritat, a qualsevol profunditat, i les imatges i els fitxers als quals enllacen les teves notes s'importen al costat. Allò que no enllaça ningú es queda fora i se't compta, o sigui que una carpeta plena de captures velles no et menja l'emmagatzematge."
           ]
         }
@@ -296,9 +374,9 @@
         {
           "h": "Què hi arriba",
           "p": [
-            "Els teus quaderns es reconstrueixen com a carpetes reals, no pas aplanats en etiquetes, a la profunditat que tinguessin a Notesnook. Una nota a Work > Projects va a parar a una carpeta Work > Projects.",
+            "[Els teus quaderns es reconstrueixen com a carpetes reals](/ca/help/folders/), no pas aplanats en etiquetes, a la profunditat que tinguessin a Notesnook. Una nota a Work > Projects va a parar a una carpeta Work > Projects.",
             "Les notes fixades i les preferides es mantenen marcades. Notesnook manté «Pin» (fixar) i «Favorite» (preferit) com a dues propietats separades; PrivacyNotes té una sola llista de notes fixades, així que una nota que fos qualsevol de les dues coses va a parar allà.",
-            "Els ressaltats, les matemàtiques i l'alineació del text arriben tal com són: el text ressaltat continua ressaltat, les fórmules es tornen a mostrar com a matemàtiques, i els blocs centrats o alineats a la dreta conserven l'alineació. Els tipus de lletra personalitzats, les mides de lletra i els colors de text no tenen equivalent aquí, així que aquest estil es descarta i el text es conserva."
+            "Els ressaltats, els colors de text, les mides de lletra, el superíndex, el subíndex, les matemàtiques i l'alineació del text arriben tal com són: cada color passa al color més proper de la nostra paleta, una mida de lletra que hagis triat esdevé Petita, Gran o Molt gran, les fórmules es tornen a mostrar com a matemàtiques, i els blocs centrats o alineats a la dreta conserven l'alineació. Els tipus de lletra personalitzats no tenen equivalent aquí, així que el tipus de lletra es descarta i el text es conserva."
           ]
         },
         {
@@ -336,15 +414,15 @@
         {
           "h": "Què hi arriba",
           "p": [
-            "Cada entrada aterra a Diaris en lloc de a Notes, datada el dia que Diari mostra a sobre, així que el teu historial manté la seva forma.",
-            "Les fotos i Live Photos s'importen com a imatges, els vídeos i notes de veu com a adjunts. Apple lliura les fotos en HEIC, que la majoria de navegadors no poden mostrar, així que PrivacyNotes converteix cada una a JPEG a l'entrada. Aquesta és la part lenta d'una importació gran: unes quantes centenes de fotos poden trigar diversos minuts, i la línia de progrés les compta per tu.",
+            "[Cada entrada aterra a Diaris](/ca/help/journal/) en lloc de a Notes, datada el dia que Diari mostra a sobre, així que el teu historial manté la seva forma.",
+            "Les fotos i Live Photos s'importen com a imatges, els vídeos i notes de veu com a adjunts. Apple lliura les fotos en HEIC, que la majoria de navegadors no poden mostrar, així que PrivacyNotes [converteix cada una a JPEG a l'entrada](/ca/help/image-quality/). Aquesta és la part lenta d'una importació gran: unes quantes centenes de fotos poden trigar diversos minuts, i la línia de progrés les compta per tu.",
             "La negreta, la cursiva, el subratllat, el ratllat, els colors de text, les llistes amb pics i numerades, i les citacions en bloc sobreviuen totes."
           ]
         },
         {
           "h": "Fotos, vídeos i el teu emmagatzematge",
           "p": [
-            "Un diari ple de fotos és molt més gran que un diari ple de text, i compta contra el teu emmagatzematge igual que qualsevol altra cosa. La previsualització de la importació ho suma tot abans que confirmis, i es nega a començar si no hi cap."
+            "Un diari ple de fotos és molt més gran que un diari ple de text, i [compta contra el teu emmagatzematge igual que qualsevol altra cosa](/ca/help/storage-usage/). La previsualització de la importació ho suma tot abans que confirmis, i es nega a començar si no hi cap."
           ]
         },
         {
@@ -357,14 +435,14 @@
         {
           "h": "Estat d'ànim",
           "p": [
-            "Si vas registrar un Estat d'ànim, PrivacyNotes omple els trackers d'humor i emoció d'aquesta entrada allà on el vocabulari d'Apple coincideix amb un dels nostres. Tot el que no pot fer coincidir, i les àrees de vida que vas etiquetar, es conserven com una línia de text perquè no es perdi res."
+            "Si vas registrar un estat d'ànim amb State of Mind, PrivacyNotes [omple els seguiments d'estat d'ànim i d'emocions](/ca/help/choose-trackers/) d'aquesta entrada allà on el vocabulari d'Apple coincideix amb un dels nostres. Tot el que no pot fer coincidir, i les àrees de vida que vas etiquetar, es conserven com una línia de text perquè no es perdi res."
           ]
         },
         {
           "h": "Què no hi arriba",
           "p": [
             "Les targetes de suggeriment de Diari per a entrenaments, contactes i contingut multimèdia que vas reproduir mantenen el text però no la il·lustració. Les notes de veu arriben com a enregistraments, però no amb la transcripció d'Apple: l'exportador n'elimina tots els espais, així que el que escriu és una tira ininterrompuda de caràcters. Es deixa de banda en lloc d'importar-se il·legible.",
-            "Les notes de veu d'una exportació des de Mac són fitxers CAF, que cap navegador pot reproduir. S'importen i es descarreguen sense problemes, però no les sentiràs a l'app. Una exportació des de l'iPhone escriu els mateixos enregistraments en M4A, que es reprodueix directament, així que fes servir el telèfon si pots triar."
+            "Les notes de veu d'una exportació des de Mac són fitxers CAF, que cap navegador pot reproduir. S'importen i es baixen sense problemes, però no les sentiràs a l'app. Una exportació des de l'iPhone escriu els mateixos enregistraments en M4A, que es reprodueix directament, així que fes servir el telèfon si pots triar."
           ]
         }
       ]
@@ -373,7 +451,7 @@
       "app": "UpNote",
       "title": "Exporta les teves notes d'UpNote",
       "metaTitle": "Exportar notes d'UpNote - PrivacyNotes",
-      "lead": "A UpNote, l'exportació es diu còpia de seguretat: escriu tot el teu compte en una carpeta del disc, pla gratuït inclòs. Comprimeix aquesta carpeta en un zip i tot es trasllada: les notes amb tota la seva formatació, els quaderns, les etiquetes, les notes fixades, els note-links, les imatges i els adjunts.",
+      "lead": "A UpNote, l'exportació es diu còpia de seguretat: escriu tot el teu compte en una carpeta del disc, pla gratuït inclòs. Comprimeix aquesta carpeta en un zip i tot es trasllada: les notes amb tota la seva formatació, els quaderns, les etiquetes, les notes fixades, els enllaços entre notes, les imatges i els adjunts.",
       "sections": [
         {
           "img": {
@@ -429,7 +507,7 @@
           "h": "Què hi arriba",
           "p": [
             "Els teus quaderns es reconstrueixen com a carpetes reals, imbricades tan avall com ho estiguessin a UpNote. Una nota que vivia en diversos quaderns va a parar al primer i porta els altres com a etiquetes.",
-            "Les notes fixades i les de Quick Access arriben com a fixades. Les notes de la paperera van a parar a la paperera, les plantilles s'importen com a notes amb l'etiqueta #template, els enllaços entre notes es converteixen en note-links, i cada nota conserva les seves dates originals.",
+            "Les notes fixades i les de Quick Access arriben com a fixades. Les notes de la paperera van a parar a la paperera, les plantilles s'importen com a notes amb l'etiqueta #template, [els enllaços entre notes es conserven com a enllaços entre notes](/ca/help/note-links/), i cada nota conserva les seves dates originals.",
             "La formatació sobreviu: les llistes de verificació, les taules, els blocs de codi, les matemàtiques, el subratllat, els subíndexs i superíndexs, l'alineació del text i els ressaltats. Les seccions plegables es converteixen en requadres destacats plegables i conserven el seu estat obert o tancat. Els colors de text i els colors de ressaltat es fan coincidir tots dos amb la paleta pròpia de l'editor, de manera que un ressaltat groc continua sent groc i un de verd continua sent verd. Cada nota arriba tal com l'UpNote la va desar per última vegada."
           ]
         },
@@ -437,6 +515,47 @@
           "h": "Si falten imatges o fitxers",
           "p": [
             "Una còpia de seguretat feta abans de marcar «Backup attachments» no conté cap fitxer, i la previsualització de la importació t'avisarà que hi ha notes que fan referència a adjunts que la còpia no porta. Si passa, cancel·la, activa l'opció a UpNote, torna a fer clic a «Backup now», comprimeix la carpeta nova i importa aquesta."
+          ]
+        }
+      ]
+    },
+    "joplin": {
+      "app": "Joplin",
+      "title": "Exporta les teves notes de Joplin",
+      "metaTitle": "Exportar les notes de Joplin en JEX - PrivacyNotes",
+      "lead": "Joplin exporta totes les llibretes alhora en un sol fitxer JEX. Hi porta les teves notes amb les seves llibretes, etiquetes, tasques pendents, enllaços entre notes i adjunts.",
+      "sections": [
+        {
+          "h": "Exporta-ho tot com a JEX",
+          "steps": [
+            "Obre Joplin al teu ordinador.",
+            "Tria File > Export all > «JEX - Joplin Export File».",
+            "Desa el fitxer. Obtens un sol fitxer .jex que conté totes les llibretes, així que no hi ha res per comprimir.",
+            "Deixa anar aquest .jex tal com és."
+          ],
+          "p": [
+            "Tools > Create backup escriu el mateix fitxer, byte per byte, com a all_notebooks.jex dins d'una carpeta JoplinBackup a la teva carpeta personal. Si Joplin ja et fa aquestes còpies de seguretat, la més recent funciona igual de bé."
+          ]
+        },
+        {
+          "h": "Tria JEX, no pas Markdown, HTML ni PDF",
+          "p": [
+            "Export all també ofereix MD, MD + Front Matter, HTML directory i PDF. Són còpies fetes per llegir-les en altres aplicacions. El fitxer JEX és el registre propi de Joplin de cada nota, llibreta, etiqueta i adjunt, i és el que llegim. Si hi deixes anar una de les altres exportacions, t'ho direm en lloc d'importar-ne només una part.",
+            "Si ja has exportat «RAW - Joplin Export Directory», comprimeix aquesta carpeta en un zip i deixa anar el zip. Conté els mateixos elements que el fitxer JEX."
+          ]
+        },
+        {
+          "h": "Treu les notes de la paperera abans d'exportar",
+          "p": [
+            "Joplin deixa la paperera fora de totes les exportacions i de totes les còpies de seguretat. Treu de la paperera qualsevol nota que vulguis conservar abans d'exportar, o es quedarà a Joplin."
+          ]
+        },
+        {
+          "h": "Què hi arriba",
+          "p": [
+            "Les teves llibretes es reconstrueixen com a carpetes de debò, niades tan endins com les va niar Joplin, i cada nota conserva les seves etiquetes i les dates de creació i d'actualització que et mostrava Joplin.",
+            "[Les tasques pendents es converteixen en notes de tasques](/ca/help/tasks/) amb una casella que pots marcar, ja marcada si la tasca estava feta, i una data de venciment es queda escrita al costat del títol. [Els enllaços entre notes es converteixen en enllaços entre notes](/ca/help/note-links/). Les imatges i els adjunts s'importen al teu emmagatzematge i es queden al seu lloc dins de la nota. Les notes desades com a HTML, com ara molts retalls web, es converteixen amb la seva formatació.",
+            "Les notes de la llibreta Conflicts de Joplin arriben etiquetades «conflict», perquè les puguis trobar i ordenar. Si fas servir el xifratge de Joplin, deixa que acabi de desxifrar abans d'exportar: un element que encara és xifrat s'omet, i la previsualització de la importació t'indica quants n'hi ha."
           ]
         }
       ]
@@ -493,10 +612,10 @@
         {
           "h": "Què arriba",
           "p": [
-            "Cada carpeta que tenies arriba igual, imbricada tal com la vas deixar, dins d’una carpeta nova anomenada Adreces d’interès. La barra d’adreces d’interès és l’excepció: el seu contingut puja un nivell en lloc de convertir-se en carpeta, perquè cada navegador anomena aquesta barra d’una manera diferent en cada llengua. Safari no marca res, així que el seu Favorites sí que arriba com a carpeta.",
+            "Cada carpeta que tenies arriba igual, imbricada tal com la vas deixar, dins d’una carpeta nova anomenada Bookmarks. La barra d’adreces d’interès és l’excepció: el seu contingut puja un nivell en lloc de convertir-se en carpeta, perquè cada navegador anomena aquesta barra d’una manera diferent en cada llengua. Safari no marca res, així que el seu Favorites sí que arriba com a carpeta.",
             "El dia que vas desar cada marcador arriba amb ell. Safari és l'únic navegador que no escriu cap data, així que una exportació de Safari arriba amb la data d'avui.",
             "Firefox també és l'únic que desa etiquetes i una paraula clau de la barra d'adreces amb un marcador. Si el teu fitxer en porta, la previsualització t'ofereix una casella per conservar-les, i totes dues arriben aquí com a etiquetes.",
-            "Tres coses queden fora expressament. Les dreceres internes del navegador com Most Visited no són enllaços de debò: es compten i es descarten. Les icones dels llocs tampoc no es llegeixen del fitxer, perquè la còpia que hi ha desada envelleix; PrivacyNotes en recupera una de nova. I una carpeta que no tenia cap adreça d’interès no es torna a crear.",
+            "Tres coses queden fora expressament. Les dreceres internes del navegador com Most Visited no són enllaços de debò: es compten i es descarten. Les icones dels llocs tampoc no es llegeixen del fitxer, perquè la còpia que hi ha desada envelleix; [PrivacyNotes en recupera una de nova](/ca/help/bookmarks/). I una carpeta que no tenia cap adreça d’interès no es torna a crear.",
             "Importar dues vegades el mateix fitxer és segur. Un marcador amb una adreça que ja tens desada s'omet en comptes d'afegir-se un altre cop, i la previsualització et diu quants n'hi havia."
           ]
         },
@@ -560,15 +679,15 @@
         {
           "h": "Què arriba",
           "p": [
-            "Cada fila es converteix en un inici de sessió amb el lloc, el nom d'usuari i la contrasenya, més la nota que el navegador hi guardava. Firefox és l'únic dels tres que escriu dates, així que els seus inicis de sessió conserven el dia en què els vas desar i la resta arriben amb la data d'avui. Safari és l'únic que exporta una clau d'autenticació, i només si guardaves els codis a Safari: quan hi és, el codi continua funcionant aquí.",
-            "Els navegadors desen una entrada per cada pàgina d'accés, així que una exportació gran sovint porta diverses files de la mateixa empresa. Arriben totes, i després les pots ajuntar o esborrar.",
+            "Cada fila es converteix en un inici de sessió amb el lloc, el nom d'usuari i la contrasenya, més la nota que el navegador hi guardava. Firefox és l'únic dels tres que escriu dates, així que els seus inicis de sessió conserven el dia en què els vas desar i la resta arriben amb la data d'avui. Safari és l'únic que exporta una clau d'autenticació, i només si guardaves els codis a Safari: quan hi és, [el codi continua funcionant aquí](/ca/help/vault-totp/).",
+            "Els navegadors desen una entrada per cada pàgina d'accés, així que una exportació gran sovint porta diverses files de la mateixa empresa. Arriben totes, i després les pots ajuntar o suprimir.",
             "Un navegador guarda les contrasenyes en una llista plana, així que no hi ha estructura de carpetes per refer. En comptes d'això, cada inici de sessió arriba etiquetat, cosa que et recupera tot el lot amb un clic."
           ]
         },
         {
           "h": "Esborra el fitxer d'exportació quan acabis: són les teves contrasenyes en text pla",
           "p": [
-            "Al .csv exportat no hi ha res xifrat, tant si arriba dins d’un .zip com si no. Qui l’obri llegeix totes les contrasenyes que has desat, així que guarda’l a la teva màquina, importa’l, comprova que ha arribat tot i després esborra el fitxer i buida la paperera. Dins de PrivacyNotes torna a estar xifrat d’extrem a extrem."
+            "Al .csv exportat no hi ha res xifrat, tant si arriba dins d’un .zip com si no. Qui l’obri llegeix totes les contrasenyes que has desat, així que guarda’l a la teva màquina, importa’l, comprova que ha arribat tot i després esborra el fitxer i buida la paperera. Dins de PrivacyNotes torna a estar xifrat, al teu dispositiu i de camí al servidor."
           ]
         }
       ]
@@ -584,13 +703,13 @@
           "steps": [
             "Troba la carpeta amb els teus fitxers .md. Typora no té biblioteca pròpia, així que és allà on tu vas triar desar-los.",
             "Clic dret a la carpeta i tria Comprimeix (macOS) o Envia a > Carpeta comprimida (Windows).",
-            "Deixa anar el .zip a la importació."
+            "Deixa anar el .zip a l'importador."
           ]
         },
         {
           "h": "Decideix on viuen les imatges abans de comprimir",
           "p": [
-            "Typora pot desar una imatge al costat de la nota, dins d'una subcarpeta assets, o deixar-la on la vas arrossegar des de. Només poden arribar les imatges que són dins de la carpeta que comprimeixes. Obre Preferències > Imatge, posa-ho perquè copiï les imatges a la carpeta assets de la nota, i fes servir \"Format > Imatge > Copia els fitxers d'imatge a...\" a les notes antigues on les imatges encara apunten a un altre lloc."
+            "Typora pot desar una imatge al costat de la nota, dins d'una subcarpeta assets, o deixar-la al lloc des d'on la vas arrossegar. Només poden arribar les imatges que són dins de la carpeta que comprimeixes. Obre Preferences > Image, posa-ho perquè copiï les imatges a la carpeta assets de la nota, i fes servir \"Format > Image > Copy image files to...\" a les notes antigues on les imatges encara apunten a un altre lloc."
           ]
         },
         {
@@ -612,9 +731,9 @@
           "h": "Treu la carpeta d'iCloud i després comprimeix-la",
           "steps": [
             "A iA Writer, clic dret a la carpeta de la barra lateral Library i tria \"Mostra al Finder\".",
-            "Al Finder, clic dret en aquesta carpeta i tria \"Baixa ara\", perquè iCloud es descarregui cada fitxer en comptes de deixar-hi marcadors.",
+            "Al Finder, fes clic dret en aquesta carpeta i tria \"Baixa ara\", perquè iCloud baixi cada fitxer en comptes de deixar-hi marcadors.",
             "Torna-hi amb clic dret i tria Comprimeix.",
-            "Deixa anar el .zip a la importació."
+            "Deixa anar el .zip a l'importador."
           ]
         },
         {
@@ -649,13 +768,13 @@
           "steps": [
             "A Zettlr, clic dret a l'espai de treball de dalt de tot de l'arbre de fitxers i tria \"Mostra al Finder\", o \"Mostra a l'Explorador\" al Windows.",
             "Clic dret a la carpeta d'allà i comprimeix-la.",
-            "Deixa anar el .zip a la importació."
+            "Deixa anar el .zip a l'importador."
           ]
         },
         {
           "h": "Els enllaços Zettelkasten conserven el text, no la destinació",
           "p": [
-            "Zettlr enllaça les notes per identificador, així que un enllaç es llegeix [[20260823120000]]. Nosaltres conservem els note-links exactament tal com són escrits, cosa que vol dir que un enllaç per identificador només troba la seva nota aquí si alguna nota es titula de debò amb aquest identificador. Els enllaços escrits amb el nom del fitxer funcionen amb normalitat: si hi comptes, canvia el format d'enllaç intern al nom de fitxer abans d'exportar.",
+            "Zettlr enllaça les notes per identificador, així que un enllaç es llegeix [[20260823120000]]. [Nosaltres conservem els enllaços entre notes exactament tal com són escrits](/ca/help/note-links/), cosa que vol dir que un enllaç per identificador només troba la seva nota aquí si alguna nota es titula de debò amb aquest identificador. Els enllaços escrits amb el nom del fitxer funcionen amb normalitat: si hi comptes, canvia el format d'enllaç intern al nom de fitxer abans d'exportar.",
             "Les claus de citació com ara [@doe2026] per a nosaltres són text. Arriben sense canvis i deixen de ser clicables."
           ]
         },
@@ -679,7 +798,7 @@
             "Obre Fitxers al teu Nextcloud, des del navegador.",
             "Troba la carpeta Notes. Es diu Notes, tret que l'administració li hagi canviat el nom.",
             "Obre el menú \"...\" de la carpeta i tria Baixa. Nextcloud empaqueta tota la carpeta en un .zip.",
-            "Deixa anar el .zip a la importació."
+            "Deixa anar el .zip a l'importador."
           ]
         },
         {
@@ -693,6 +812,57 @@
           "h": "Les dues extensions van bé",
           "p": [
             "Notes escriu .txt de sèrie i .md quan tu o la teva administració canvieu l'ajust. Aquí llegim totes dues, i també .markdown, .mdown i .mkd, o sigui que abans d'exportar no has de canviar cap nom ni tocar el servidor."
+          ]
+        }
+      ]
+    },
+    "contacts": {
+      "app": "Contactes (vCard)",
+      "title": "Exporta els teus contactes",
+      "metaTitle": "Com exportar els teus contactes com a vCard - PrivacyNotes",
+      "lead": "Tots els telèfons i agendes poden exportar els teus contactes en un sol fitxer .vcf, i PrivacyNotes llegeix aquest fitxer directament, fotos incloses.",
+      "sections": [
+        {
+          "h": "Exporta des de l'iPhone",
+          "steps": [
+            "Obre Contactes i toca «Llistes» a la cantonada de dalt a l'esquerra.",
+            "Mantén premut «Tots els contactes» i tria Exporta.",
+            "Desa el .vcf a Fitxers o envia'l per AirDrop al dispositiu on l'importaràs."
+          ]
+        },
+        {
+          "h": "Exporta des del Mac o d'iCloud",
+          "steps": [
+            "A Contactes, selecciona «Tots els contactes» i prem Ordre-A.",
+            "Tria Fitxer > Exporta > Exporta vCard.",
+            "A [icloud.com/contacts](https://www.icloud.com/contacts), selecciona-ho tot, obre el menú «...» i tria «Exporta vCard»."
+          ]
+        },
+        {
+          "h": "Exporta des d'Android o de Contactes de Google",
+          "steps": [
+            "A l'aplicació Contactes de Google, toca «Corregeix i gestiona» > «Exporta a un fitxer».",
+            "A [contacts.google.com](https://contacts.google.com), tria Exporta i després «vCard (per als Contactes d'iOS)».",
+            "En un telèfon Samsung, obre Contactes > Gestiona els contactes > Importa o exporta contactes > Exporta."
+          ]
+        },
+        {
+          "h": "Tria vCard, no CSV",
+          "p": [
+            "Google ofereix dos formats CSV al costat de vCard. L'importador només llegeix fitxers .vcf, així que un CSV no apareix al selector de fitxers. Torna a exportar i tria vCard."
+          ]
+        },
+        {
+          "h": "Què s'importa",
+          "p": [
+            "S'importen totes les fitxes del fitxer: noms, telèfons, adreces de correu, adreces postals, aniversaris i altres dates, llocs web, perfils socials i notes. Les teves etiquetes es queden tal com les vas escriure, així que «Feina de la mare» continua sent «Feina de la mare».",
+            "Una foto que és dins del fitxer s'importa. Una foto que només és un enllaç web es queda com a enllaç, i no es baixa res. [Si les fotos no caben al teu emmagatzematge](/ca/help/storage-usage/), els contactes s'importen igualment i les fotos es queden fora."
+          ]
+        },
+        {
+          "h": "Importa el mateix fitxer de nou quan vulguis",
+          "p": [
+            "Una segona importació se salta les persones que ja tens. Compara cada fitxa pel seu ID, després pel nom més un telèfon en comú i després per una adreça de correu en comú. Els contactes que ja has desat no canvien, així que les teves edicions aquí estan segures."
           ]
         }
       ]

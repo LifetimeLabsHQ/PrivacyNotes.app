@@ -26,9 +26,13 @@ const SLUG_TO_LOCALE: Record<string, string> = {
   tw: 'zh-TW',
   ca: 'ca',
   cs: 'cs',
+  sk: 'sk',
   tr: 'tr',
   sv: 'sv',
   ar: 'ar',
+  uk: 'uk',
+  ru: 'ru',
+  th: 'th',
 };
 
 export const LOCALE_TO_SLUG: Record<string, string> = {
@@ -46,9 +50,13 @@ export const LOCALE_TO_SLUG: Record<string, string> = {
   'zh-TW': '/tw',
   ca: '/ca',
   cs: '/cs',
+  sk: '/sk',
   tr: '/tr',
   sv: '/sv',
   ar: '/ar',
+  uk: '/uk',
+  ru: '/ru',
+  th: '/th',
 };
 
 /** The locale named by the first path segment (/de, /pt, /br), or null at apex. */

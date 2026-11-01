@@ -18,20 +18,19 @@
 
 import type { FolderDef } from '../folders';
 
-/**
- * Tag applied to notes the source app had archived (Standard Notes,
- * Google Keep). PrivacyNotes has no archive view, and sending them to
- * the trash would hand them to the auto-purge, which permanently deletes
- * anything that outlives the retention window - so an archive would
- * quietly become a 30-day timer. They import as ordinary notes wearing
- * this tag instead, which gives the user a one-click filter that behaves
- * like the archive they came from. Shared so both importers, and the
- * next one that needs it, agree on the name.
- */
-export const ARCHIVED_TAG = 'archived';
-
 /** One note, normalized to the shape PrivacyNotes cares about. */
 export interface ImportedNote {
+  /**
+   * The note's OWN id, set only by the PrivacyNotes backup formats, which
+   * are the only sources whose ids belong to this app.
+   *
+   * It is what makes restoring a backup a repair rather than a second copy
+   * of everything: `applyImport` matches on it and keeps the newer of the
+   * two versions. An importer for another app must leave this unset, so its
+   * ids stay in their own namespace and a re-import still adds everything
+   * again, which is what a person expects from an import.
+   */
+  id?: string;
   title: string;
   body: string;
   /** Already normalized (lowercase, no #, no weird chars). */
@@ -40,10 +39,15 @@ export interface ImportedNote {
   createdAt: string;
   /** ISO 8601. */
   updatedAt: string;
+  /** ISO 8601: the "last edited" date, when the file carries one apart from
+   *  `updatedAt`. Our own .pnbackup does; a restore keeps it. */
+  editedAt?: string;
   /** Optional - only set if the source format has a trash/archive flag. */
   trashed?: boolean;
   /** Optional - only set if the source format has a star/pin flag. */
   starred?: boolean;
+  /** Optional - only set if the source format has an archive flag. */
+  archived?: boolean;
   /** Note type - 'note' | 'login' | 'card' | 'ssh-key'. Defaults to 'note'. */
   type?: import('@notes/shared').NoteType;
   /** Pro: prevent accidental edits. */
@@ -64,9 +68,28 @@ export interface ImportedNote {
    *  address-bar keywords. `withBrowserTags` merges them into `tags`.
    *  Not persisted. */
   browserTags?: string[];
+  /** Transient: a folder and tag color key the source gave the note (Google
+   *  Keep's note colors). The import turns it into a tag named after the
+   *  color, in the reader's language, and gives that tag the color. Not
+   *  persisted on the note. Spec: ops/docs/archive/folder-tag-icons.md (section 4.7) */
+  colorKey?: string;
 }
 
 /** What an importer returns after successfully parsing a file. */
+/**
+ * One blob an importer carries across. `processed` marks a picture the
+ * importer already ran through the image switches, so the shared blob
+ * import does not shrink it a second time.
+ */
+export type ImportBlob = {
+  data: Uint8Array;
+  mime: string;
+  name: string;
+  processed?: boolean;
+  /** A contact photo obeys the contact ceiling on top of the image switches. */
+  ceiling?: 'contact';
+};
+
 export interface ParsedImport {
   notes: ImportedNote[];
   /** Non-fatal issues worth surfacing in the UI ("3 notes had no title", etc.). */
@@ -96,13 +119,24 @@ export interface ParsedImport {
    * (e.g. "Attachments/UUID.jpeg" or "images/photo.jpg").
    * Used by post-apply blob import to store and rewrite references.
    */
-  blobs?: Map<string, { data: Uint8Array; mime: string; name: string }>;
+  blobs?: Map<string, ImportBlob>;
   /**
    * Folder definitions rebuilt from the source's structure (Obsidian
    * subfolders). Merged into the user's settings folder tree at apply
    * time so each note's folderId resolves to a real folder.
    */
   folders?: FolderDef[];
+  /**
+   * Our own full backup only: rebuilt folder id -> the id that folder had in
+   * the account that wrote the backup. The merge reuses a folder still live
+   * under that id before it matches any name (`reconcileImportedFolders`).
+   */
+  originalFolderIds?: Map<string, string>;
+  /**
+   * Our own full backup only: the looks of folders, tags and notes and the
+   * custom themes, as the manifest holds them. Validated at apply time.
+   */
+  settings?: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown };
 }
 
 /** Importer identifiers - add new ones here as adapters land. */
@@ -111,6 +145,8 @@ export type ImporterId =
   | 'google-keep'
   | 'obsidian'
   | 'notesnook'
+  | 'joplin'
+  | 'bear'
   | 'upnote'
   | 'apple-notes'
   | 'apple-journal'
@@ -130,7 +166,9 @@ export type ImporterId =
   | 'privacynotes'
   | 'bitwarden'
   | 'browser-bookmarks'
-  | 'browser-passwords';
+  | 'browser-passwords'
+  | 'vcard'
+  | 'google-calendar';
 
 export interface Importer {
   id: ImporterId;
@@ -154,6 +192,12 @@ export interface Importer {
 }
 
 /** Result of writing a ParsedImport into the local DB. */
+/** What a restore of our own backup did, so the message can say it. */
+export interface RestoreCounts {
+  updated: number;
+  unchanged: number;
+}
+
 export interface ApplyResult {
   imported: number;
   /** Errors encountered per-note, so the user knows if anything was skipped. */
@@ -163,4 +207,10 @@ export interface ApplyResult {
   /** Bookmarks skipped because a bookmark with the same URL already
    *  exists (exact-match, non-trashed). Only ever set for 'link' rows. */
   skippedDuplicates?: number;
+  /** Restoring our own backup: notes the vault already had, where the
+   *  backup's copy was newer and replaced it. */
+  updated?: number;
+  /** Restoring our own backup: notes the vault already had and kept,
+   *  because the copy it holds is the same or newer. */
+  unchanged?: number;
 }

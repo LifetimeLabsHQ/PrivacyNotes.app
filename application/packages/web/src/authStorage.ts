@@ -1,14 +1,18 @@
+import { bytesToHex, deriveSigningKey, phraseToSeed } from '@notes/shared';
 import { db } from './db';
 import {
   hasPinWrappedPhrase,
   hasStoredPhrase,
 } from './biometric';
 import { hasPin } from './pin';
-import { credentialKey } from './demo';
+import { credentialKey, isDemoMode } from './demo';
+import { clearSyncLog } from './syncLog';
+import { clearSyncFaults } from './syncFaults';
+import { clearPlaces } from './notesView/listPlace';
 
 // Demo-bucketed (see credentialKey in demo.ts): a demo session must
 // never read or write a real account's credential keys on the same
-// origin. Session audit 2026-08-25.
+// origin.
 export const PHRASE_STORAGE_KEY = credentialKey('privacynotes.phrase');
 
 // Sticky flag: "this session's phrase was seeded via OAuth, not typed".
@@ -17,11 +21,36 @@ export const PHRASE_STORAGE_KEY = credentialKey('privacynotes.phrase');
 // reminder, etc). Cleared on sign-out.
 export const OAUTH_FLAG_KEY = 'privacynotes.oauth.active';
 
-// Custom URL scheme the native (Tauri) apps register for the OAuth redirect
-// back from the system browser. Must be listed in Supabase Auth's allowed
-// redirect URLs. Web uses window.location.origin instead.
-// Spec: ops/docs/macos-ios-setup.md (native OAuth)
-export const OAUTH_NATIVE_REDIRECT = 'privacynotes://auth-callback';
+// One-shot flag: open Security > Phrase once after an OAuth signup, so the
+// new user sees the words. Demo-bucketed like the credential keys: a
+// `?demo=1` boot on a real install must not consume the real account's
+// reveal.
+export const SHOW_PHRASE_ONCE_KEY = credentialKey('privacynotes.oauth.showPhraseOnce');
+
+// The https address both mobile builds ask providers to return to. A custom
+// scheme is a first-come claim any installed app can make, so a redirect to
+// one can land in an app that is not ours, and no native build asks for one.
+// On Android this is an App Link, delivered by the OS only to the package and
+// signing certificate that the assetlinks.json served on this host names. On
+// iOS the in-app auth sheet completes on it, which iOS grants only to the app
+// whose associated-domains entitlement names the host, checked against the
+// apple-app-site-association file served here. Host and path must match the
+// app-link entry under `plugins.deep-link.mobile` in tauri.conf.json and the
+// entitlement; tests/desktopCapabilities.test.ts holds them together.
+// Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (sections 8.1, 8.2)
+export const OAUTH_APP_LINK_REDIRECT = 'https://use.privacynotes.app/auth/callback';
+
+// Where a DESKTOP sign-in comes back to. No desktop operating system can say
+// which application owns a custom scheme, and none has an equivalent of the
+// mobile app-link bindings, so a desktop build stops asking for an address it
+// cannot own. The browser lands on this page instead, the page shows the
+// one-time code, and the person carries it back to the app, which exchanges
+// it with the verifier it generated before the browser opened. The page is
+// static and deliberately does not load the application bundle, whose client
+// would otherwise spend the code in the browser.
+// Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.3)
+export const OAUTH_DESKTOP_RETURN = 'https://use.privacynotes.app/auth/desktop';
+
 
 // Tracks which pubkey "owns" the local IndexedDB. Compared against the
 // incoming pubkey at the top of every authenticate call; on mismatch
@@ -37,7 +66,7 @@ export const PUBKEY_OWNER_KEY = 'privacynotes.currentPubkey';
 // IndexedDB mirror of PUBKEY_OWNER_KEY (db.kv, key 'ownerPubkey').
 // localStorage can be evicted while the Dexie notes survive, and that
 // asymmetry made the owner-unknown wipe destroy the user's OWN wrapped
-// phrase and unsynced rows (session audit 2026-08-25). The mirror
+// phrase and unsynced rows. The mirror
 // lives with the data it vouches for, so the wipe check can tell "own
 // data, lost marker" from "foreign leftovers". Best-effort on write
 // (auth must not fail on a storage hiccup); null on read means the
@@ -54,6 +83,43 @@ export async function readOwnerMirror(): Promise<string | null> {
     return typeof value === 'string' ? value : null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Does this phrase derive the account this device already holds?
+ *
+ * The marker first, then the mirror, because localStorage can be evicted
+ * while the notes it vouches for survive. An install where both are gone
+ * has no answer to give: refusing there would strand a user whose browser
+ * cleared its storage, so an unknown owner answers true and leaves the
+ * decision to whatever check comes next.
+ *
+ * A value that derives nothing at all answers false rather than throwing,
+ * so a caller can treat this as one question with one answer.
+ */
+/** The account this device holds, from the marker or from its mirror. */
+async function claimedOwner(): Promise<string | null> {
+  // The demo never writes the marker, and a real account on the same origin
+  // does: read here, it refused every demo phrase on the lock screen.
+  if (isDemoMode()) return null;
+  let owner: string | null = null;
+  try {
+    owner = localStorage.getItem(PUBKEY_OWNER_KEY);
+  } catch {
+    /* storage unavailable - the mirror is the fallback */
+  }
+  return owner ?? (await readOwnerMirror());
+}
+
+export async function phraseOwnsThisDevice(phrase: string): Promise<boolean> {
+  const owner = await claimedOwner();
+  if (!owner) return true;
+  try {
+    const { publicKey } = await deriveSigningKey(phraseToSeed(phrase));
+    return bytesToHex(publicKey) === owner;
+  } catch {
+    return false;
   }
 }
 
@@ -89,15 +155,78 @@ export function ownsLocalData(pubkey: string): boolean {
  * previous account had crossed). Both keys are cleared by every wipe
  * path; they live here so the two paths cannot drift apart.
  */
+/**
+ * Remove GoTrue's own session keys from both stores.
+ *
+ * Sign-out asks the auth library to drop the session, and the library can
+ * decline: an expired access token whose refresh fails at the transport
+ * layer returns that error before it reaches its own removal, so the session
+ * survives on disk while the app reports a clean sign-out. A signed-out
+ * device holding a live refresh token signs itself back in on the next boot,
+ * which for a custodial account decrypts the vault with nobody typing
+ * anything. So the removal runs here too, where nothing can decline it.
+ *
+ * Scoped to the `sb-` prefix on purpose. Everything else in these stores has
+ * an owner that decides when it goes: the trust flag survives a sign-out by
+ * design, and the owner marker is what tells the next sign-in whose data
+ * this is.
+ */
+export function clearSupabaseAuthKeys(): void {
+  for (const store of [localStorage, sessionStorage]) {
+    try {
+      for (let i = store.length - 1; i >= 0; i--) {
+        const key = store.key(i);
+        if (key?.startsWith('sb-')) store.removeItem(key);
+      }
+    } catch {
+      /* storage unavailable - there is nothing to remove */
+    }
+  }
+}
+
 export function clearAccountScopedUiState(): void {
+  // When this account's last sync passes ran and which of its steps failed.
+  // Outside the try below: neither throws, and a key that fails to clear
+  // there must not leave either log for the next account's support report.
+  clearSyncLog();
+  clearSyncFaults();
   try {
-    localStorage.removeItem('privacynotes.foldersExpanded'); // FolderTree.tsx
+    // Two folder keys, because the tree switched from storing which folders
+    // are open to storing which are closed, and the retired one is still on
+    // disk wherever an old install wrote it.
+    localStorage.removeItem('privacynotes.folderToggles'); // folderTreeState.ts
+    localStorage.removeItem('privacynotes.foldersExpanded'); // retired
     // Legacy: milestone state moved to UserSettings.milestonesSeen (synced).
     // Still cleared so a pre-move install does not leave it behind.
     localStorage.removeItem('privacynotes.milestonesSeen');
     // Armed by the account that completed a domain-move handoff; the
     // next account on this install must not see its bookmark hint.
     localStorage.removeItem('privacynotes.movedFromApex'); // migrate.ts / MoveBanner.tsx
+    // When this account last verified its sync, and how many rows matched.
+    localStorage.removeItem('privacynotes.verifyStamp'); // verifyStamp.ts
+    // Which items this account had open as tabs: ids only, but this account's.
+    localStorage.removeItem('privacynotes.openTabs'); // notesView/useOpenTabs.ts
+    // The note this account had open at its last quit, and where it was in
+    // each list and note this session.
+    localStorage.removeItem('privacynotes.lastOpen'); // notesView/listPlace.ts
+    clearPlaces();
+    // Which offers this account dismissed: the site announcement, and the
+    // per-pillar import prompt keys an older build wrote. The import prompt
+    // dismissal itself is synced in the settings blob.
+    localStorage.removeItem('privacynotes.announcementsDismissed'); // announcements.ts
+    for (const kind of ['notes', 'journal', 'tasks', 'vault', 'bookmarks', 'contacts']) {
+      localStorage.removeItem(`privacynotes.importPrompt.hidden.${kind}`); // ImportPrompt.tsx
+    }
+    // This account's reminders: the ids a phone handed the OS, in the map
+    // and in the handed list (cancelled before this runs, see
+    // cancelDeviceReminders), its snoozes, what fired, and the bell's item
+    // ids. Whether the OS was asked stays: that is the phone's answer, not
+    // the account's.
+    localStorage.removeItem('privacynotes.reminderScheduled'); // notesView/useReminders.tsx
+    localStorage.removeItem('privacynotes.reminderHanded'); // notesView/useReminders.tsx
+    localStorage.removeItem('privacynotes.reminderSnoozes'); // reminders.ts
+    localStorage.removeItem('privacynotes.reminderFired'); // notesView/useReminders.tsx
+    localStorage.removeItem('privacynotes.calendarUnseenAlerts'); // reminders.ts
   } catch { /* ignore */ }
 }
 
@@ -128,6 +257,28 @@ export async function hasLocalAccountState(): Promise<boolean> {
     if ((await db.notes.count()) > 0) return true;
   } catch { /* ignore */ }
   return false;
+}
+
+/**
+ * True when signing in with this phrase would destroy what is on this
+ * device: the phrase belongs to another account, and there is something
+ * here to lose.
+ *
+ * Both halves matter. A device nobody has claimed answers false, so a
+ * first sign-in is never questioned. So does a signed-out device with
+ * nothing left on it, because a warning about an empty vault is how
+ * people learn to click through warnings.
+ *
+ * One case the wipe covers and this does not: a device carrying data
+ * that neither the marker nor its mirror can name, which the sign-in
+ * clears under a legacy rule. Nothing there can say whose data it is,
+ * so a dialog claiming another account holds this device would be a
+ * sentence nobody can stand behind. The mirror bounds that case to one
+ * boot per install predating it.
+ */
+export async function switchWouldWipe(phrase: string): Promise<boolean> {
+  if (await phraseOwnsThisDevice(phrase)) return false;
+  return hasLocalAccountState();
 }
 
 // Cached account flags for the local-first fast boot. Written on every
@@ -174,8 +325,9 @@ export function writeCachedAccountFlags(flags: CachedAccountFlags): void {
   try {
     localStorage.setItem(ACCOUNT_FLAGS_KEY, JSON.stringify(flags));
   } catch {
-    /* quota or privacy mode - fast boot just won't trigger next time */
+    /* quota or privacy mode - the mirror below still carries the flags */
   }
+  void writeAccountFlagsMirror(flags);
 }
 
 export function clearCachedAccountFlags(): void {
@@ -184,6 +336,41 @@ export function clearCachedAccountFlags(): void {
   } catch {
     /* ignore */
   }
+  void clearAccountFlagsMirror();
+}
+
+/**
+ * IndexedDB mirror of ACCOUNT_FLAGS_KEY (db.kv, key 'accountFlags').
+ *
+ * Both fast-boot gates - the owner marker and these flags - read
+ * localStorage, and an eviction takes every key at once, so mirroring
+ * one without the other buys nothing: the boot still falls through to
+ * the network path with the notes sitting untouched in Dexie. Same
+ * reasoning as the owner mirror above, same storage, same best-effort
+ * write. These are not secrets; the pubkey scoping is what stops one
+ * account reading another's.
+ */
+async function writeAccountFlagsMirror(flags: CachedAccountFlags): Promise<void> {
+  try {
+    await db.kv.put({ key: 'accountFlags', value: JSON.stringify(flags) });
+  } catch { /* ignore */ }
+}
+
+export async function readAccountFlagsMirror(pubkey: string): Promise<CachedAccountFlags | null> {
+  try {
+    const value = (await db.kv.get('accountFlags'))?.value;
+    if (typeof value !== 'string') return null;
+    const parsed = JSON.parse(value) as CachedAccountFlags;
+    return parsed?.pubkey === pubkey ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+async function clearAccountFlagsMirror(): Promise<void> {
+  try {
+    await db.kv.delete('accountFlags');
+  } catch { /* ignore */ }
 }
 
 /** Patch just the custody bit, leaving the Pro flags alone. No-op if
@@ -275,6 +462,18 @@ export function invalidateDeviceRegistration(): void {
   clearRegistrationMarker();
 }
 
+/** The `aal` claim of a JWT payload, or null when unreadable. No verification. */
+export function jwtPayloadAal(token: string): string | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(atob(parts[1]!.replace(/-/g, '+').replace(/_/g, '/')));
+    return typeof payload?.aal === 'string' ? payload.aal : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Decode a JWT's payload (no verification - caller already validated
  * the token via getUser()) and return the `app_metadata.pubkey` claim,
@@ -294,4 +493,23 @@ export function jwtPayloadPubkey(token: string): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * True when a stored session is another account's, so a phrase sign-in
+ * must not reuse it: a pubkey claim that names a different vault, or a
+ * provider login that names none. A provider login stays in storage
+ * after its two-factor prompt is dismissed, and a link from it would
+ * bind the typed vault to that provider account. A claimless phrase
+ * session is this phrase's own unfinished link and stays usable.
+ * tests/foreignSession.test.ts.
+ */
+export function sessionBelongsElsewhere(
+  session: { access_token: string; user?: { app_metadata?: { provider?: unknown } } },
+  pubkey: string,
+): boolean {
+  const claim = jwtPayloadPubkey(session.access_token);
+  if (claim) return claim !== pubkey;
+  const provider = session.user?.app_metadata?.provider;
+  return provider === 'google' || provider === 'apple' || provider === 'github';
 }

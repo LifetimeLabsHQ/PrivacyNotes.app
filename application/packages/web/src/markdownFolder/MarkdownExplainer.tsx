@@ -19,26 +19,13 @@
  * user's to handle, and the honest way to say that is to state where the files
  * are and what we do not do with them.
  *
- * Spec: ops/docs/plans/markdown-folder.md (section 12)
+ * Spec: ops/docs/archive/markdown-folder.md (section 12)
  */
 import { useTranslation } from 'react-i18next';
-import {
-  FileMd,
-  X,
-  Robot,
-  Book,
-  GitBranch,
-  Sparkle,
-  Eye,
-  ListChecks,
-  Tag,
-  Table,
-  Laptop,
-  CloudSlash,
-  Brain,
-} from '../icons';
+import { FileMd, Robot, Book, GitBranch, Sparkle, Eye, ListChecks, Tag, Table, Laptop, CloudSlash, Brain } from '../icons';
 import { useEscapeToClose } from '../useEscapeToClose';
 import { MarkdownDefaultAppRow } from './MarkdownDefaultApp';
+import { CloseButton } from '../ui';
 
 /**
  * The pitch itself, without any modal chrome.
@@ -70,7 +57,7 @@ export function MarkdownPitch({ actions }: { actions?: React.ReactNode }) {
   return (
     <>
         <div className="flex items-center gap-2.5 rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 px-3 py-2.5 mb-3">
-          <Sparkle size={18} className="shrink-0 text-amber-500 dark:text-amber-400" />
+          <Sparkle size={18} className="shrink-0 text-warning" />
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-semibold text-amber-900 dark:text-amber-300 leading-snug">
               {t('markdown.bannerTitle')}
@@ -114,7 +101,7 @@ export function MarkdownPitch({ actions }: { actions?: React.ReactNode }) {
             tick/cross warning list. */}
         <div className="flex items-stretch gap-3 rounded-md border border-divider bg-surface-1 px-3 py-2.5 mb-4">
           <div className="flex flex-1 items-center gap-2">
-            <Laptop size={18} className="shrink-0 text-green-600 dark:text-green-500" />
+            <Laptop size={18} className="shrink-0 text-success" />
             <div className="min-w-0">
               <p className="text-xs font-medium text-pn leading-snug">{t('markdown.localTitle')}</p>
               <p className="text-[11px] text-pn-muted leading-snug">{t('markdown.localSub')}</p>
@@ -122,7 +109,7 @@ export function MarkdownPitch({ actions }: { actions?: React.ReactNode }) {
           </div>
           <div className="border-s border-divider" />
           <div className="flex flex-1 items-center gap-2">
-            <CloudSlash size={18} className="shrink-0 text-red-600 dark:text-red-500" />
+            <CloudSlash size={18} className="shrink-0 text-danger" />
             <div className="min-w-0">
               <p className="text-xs font-medium text-pn leading-snug">{t('markdown.cloudTitle')}</p>
               <p className="text-[11px] text-pn-muted leading-snug">{t('markdown.cloudSub')}</p>
@@ -150,7 +137,7 @@ export function MarkdownPitch({ actions }: { actions?: React.ReactNode }) {
             Below the second-brain line and not above it: everything above is the
             pitch, and this is the one row that changes the machine rather than
             describing the feature.
-            Spec: ops/docs/plans/markdown-folder.md (section 11) */}
+            Spec: ops/docs/archive/markdown-folder.md (section 11) */}
         <MarkdownDefaultAppRow />
     </>
   );
@@ -177,14 +164,7 @@ export function MarkdownExplainer({ onClose }: { onClose: () => void }) {
           <h2 id="markdown-explainer-title" className="flex-1 text-lg font-semibold text-pn">
             {t('markdown.explainTitle')}
           </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t('markdown.close')}
-            className="shrink-0 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition p-1 -m-1"
-          >
-            <X size={18} />
-          </button>
+          <CloseButton onClick={onClose} className="shrink-0" />
         </div>
 
         {/* One dismiss, no confirm. This was also the first-folder-pick gate

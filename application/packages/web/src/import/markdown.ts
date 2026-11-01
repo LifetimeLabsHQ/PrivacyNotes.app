@@ -2,13 +2,17 @@
 // dynamically in parseZip so jszip stays out of the boot-path bundle
 // (NotesView statically imports parseMarkdown for drag-and-drop).
 import type JSZip from 'jszip';
+import { zipEntryText } from './zipEntry';
 import type { FolderDef } from '../folders';
 import { extractInlineTags, normalizeTag } from '../notesRepo';
+import { oneLineTitle } from '../oneLineTitle';
 import { FRONT_MATTER, SUPPORTED_EXT } from '../markdownFolder/adapter';
-import { stripFrontMatterPadding } from '../noteMarkdown';
+import { isUntitledStem } from '../exportNames';
+import { stripFrontMatterPadding, unescapeQuotes } from '../noteMarkdown';
 import { ATTACHMENT_EXT, isBlobReferenced, mimeFromExt } from './blobImport';
 import { buildFolderTree, commonRootPrefix, parseFolderPath } from './folderImport';
 import { linkifyMarkdown } from './linkify';
+import { detailsToFold } from './detailsFold';
 import type { ImportedNote, ParsedImport } from './types';
 
 /**
@@ -68,24 +72,27 @@ function parseTags(raw: string | undefined): string[] {
     .filter(Boolean);
 }
 
-/** Strip surrounding quotes from a YAML string value. */
+/** A YAML string value without its quotes. Only the outer pair goes, so a
+ *  title written as `"'quoted'"` keeps its own single quotes, and a
+ *  double-quoted value also loses the writer's escape (`unescapeQuotes`). */
 function unquote(s: string | undefined): string {
   if (!s) return '';
-  return s.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1');
+  if (s.length < 2) return s;
+  if (s.startsWith('"') && s.endsWith('"')) return unescapeQuotes(s.slice(1, -1));
+  if (s.startsWith("'") && s.endsWith("'")) return s.slice(1, -1);
+  return s;
 }
 
-/** Derive a title from a filename (strip extension, un-slugify). A bare
- * "Untitled.md" (case-insensitive) is treated as "no title" - the common
- * default filename from macOS, Obsidian, Apple Notes exports etc. is a
- * user signal of "didn't name this", not an explicit title choice.
- * Returning "" lets the live first-body-line derivation take over. */
+/** Derive a title from a filename (strip extension, un-slugify). A default
+ * name like "Untitled.md" or "untitled-2.md" is treated as "no title" -
+ * see `isUntitledStem`. Returning "" lets the live first-body-line
+ * derivation take over. */
 function titleFromFilename(name: string): string {
   const stripped = name
     .replace(SUPPORTED_EXT, '')
     .replace(/[-_]+/g, ' ')
     .trim();
-  if (!stripped || stripped.toLowerCase() === 'untitled') return '';
-  return stripped;
+  return isUntitledStem(stripped) ? '' : stripped;
 }
 
 /** One file, plus what it turned out to carry - the transforms line has to
@@ -152,8 +159,8 @@ function parseOneMd(
   if (isNaN(Date.parse(updatedAt))) updatedAt = fallback;
 
   // Trackers ride in the front-matter as one JSON line (see noteMarkdown.ts).
-  // Only `journal` is honoured as a type here: a plain .md exported from a
-  // VAULT item carries the readable `vaultToMarkdown` prose as its body, so
+  // Only `journal`, `task` and `event` are honoured as a type here, the types
+  // whose body is real markdown: a plain .md exported from a VAULT item carries the readable `vaultToMarkdown` prose as its body, so
   // trusting a `type: login` line would restore that prose as a login and
   // hide every field. The backup importer, which reads bodies that really are
   // vault JSON, is the one allowed to rebuild those.
@@ -163,11 +170,14 @@ function parseOneMd(
   // only fills the gap for a single dropped .md, which has no directory.
   const declaredFolder = parseFolderPath(meta['folder']);
   const isJournal = meta['type'] === 'journal' || (trackers !== undefined && !meta['type']);
+  // A task list and an event name themselves; a note is the default.
+  const isTask = meta['type'] === 'task';
+  const isEvent = meta['type'] === 'event';
 
   const note: ImportedNote = {
     ...(declaredFolder.length ? { folderPath: declaredFolder } : {}),
     ...(trackers ? { trackers } : {}),
-    ...(isJournal ? { type: 'journal' as const } : {}),
+    ...(isJournal ? { type: 'journal' as const } : isTask ? { type: 'task' as const } : isEvent ? { type: 'event' as const } : {}),
     title,
     // Bare URLs and emails come in as plain text: tiptap-markdown only builds
     // link nodes from `<...>` autolinks and `[text](url)`, and the Link
@@ -177,7 +187,7 @@ function parseOneMd(
     // Notes importers run the same pass. Newline-only, not `.trim()`: trimming
     // eats the leading spaces of a note that opens with an indented code
     // block, demoting it to a paragraph (#148). See stripFrontMatterPadding.
-    body: linkifyMarkdown(stripFrontMatterPadding(body)),
+    body: linkifyMarkdown(detailsToFold(stripFrontMatterPadding(body))),
     tags,
     createdAt,
     updatedAt,
@@ -240,7 +250,7 @@ async function parseZip(
   let inlineTagCount = 0;
   for (let i = 0; i < mdFiles.length; i++) {
     const [rel, entry] = mdFiles[i]!;
-    const text = await entry.async('string');
+    const text = await zipEntryText(entry);
     const parsed = parseOneMd(text, rel.split('/').pop() ?? rel, entry.date ?? null);
     const note = parsed.note;
     if (parsed.hadFrontMatter) fmCount++;
@@ -299,7 +309,10 @@ function parseSingleMd(file: File, text: string): ParsedOne {
  * nothing the user owns loses its front matter. A copy is a copy.
  */
 export function parseMarkdownFile(filename: string, content: string): ImportedNote {
-  return parseOneMd(content, filename, null).note;
+  const note = parseOneMd(content, filename, null).note;
+  // This door stores through createNote rather than applyImport, so it gives
+  // the title the one-line rule applyImport gives every other import.
+  return { ...note, title: oneLineTitle(note.title) };
 }
 
 export async function parseMarkdown(

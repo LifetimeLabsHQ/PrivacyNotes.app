@@ -10,13 +10,13 @@
  * colour of the surface it sits on (surface-1 in the sidebar, surface-0 in
  * the collapsed rail), or the halo reads as a smudge.
  *
- * Spec: ops/docs/ui-patterns.md (section 46 - update dot)
+ * Spec: ops/docs/archive/ui-patterns.md (section 46 - update dot)
  */
 export function UpdateDot({ ring = 'ring-surface-1' }: { ring?: string }) {
   return (
     <span
       aria-hidden="true"
-      className={`absolute -top-0.5 -end-0.5 w-2 h-2 rounded-full bg-accent ring-2 ${ring}`}
+      className={`absolute -top-0.5 -end-0.5 w-2 h-2 rounded-full bg-accent-fill ring-2 ${ring}`}
     />
   );
 }

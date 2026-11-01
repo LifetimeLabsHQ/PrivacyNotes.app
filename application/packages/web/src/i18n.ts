@@ -36,9 +36,13 @@ export const SUPPORTED_LOCALES = [
   'zh-TW',
   'ca',
   'cs',
+  'sk',
   'tr',
   'sv',
   'ar',
+  'uk',
+  'ru',
+  'th',
 ] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
@@ -59,7 +63,7 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number];
 // load and drops fourteen lazy chunks entirely.
 // Spec: ops/docs/bundle-size.md (build-only catalogs)
 const enModules = import.meta.glob<{ default: Record<string, unknown> }>(
-  ['./locales/en/*.json', '!./locales/en/faq.json', '!./locales/en/guides.json'],
+  ['./locales/en/*.json', '!./locales/en/faq.json', '!./locales/en/guides.json', '!./locales/en/looks.json', '!./locales/en/settingsSearch.json'],
   { eager: true },
 );
 const localeModules = import.meta.glob<{ default: Record<string, unknown> }>([
@@ -67,7 +71,19 @@ const localeModules = import.meta.glob<{ default: Record<string, unknown> }>([
   '!./locales/en/*.json',
   '!./locales/*/faq.json',
   '!./locales/*/guides.json',
+  '!./locales/*/looks.json',
+  '!./locales/*/settingsSearch.json',
 ]);
+// `looks` is the one namespace that loads on its own, English included: the
+// folder and tag look picker is its only reader, and its icon names have no
+// business in any boot. ensureLooksLoaded() fetches it.
+// Spec: ops/docs/archive/folder-tag-icons.md (section 10)
+const looksModules = import.meta.glob<{ default: Record<string, unknown> }>('./locales/*/looks.json');
+const looksLoaded = new Set<string>();
+// `settingsSearch` loads the same way: its keywords and result lines are
+// read only once the settings search field has been focused.
+const settingsSearchModules = import.meta.glob<{ default: Record<string, unknown> }>('./locales/*/settingsSearch.json');
+const settingsSearchLoaded = new Set<string>();
 
 type Catalogs = Record<string, Record<string, unknown>>;
 
@@ -96,6 +112,9 @@ export function normalizeLocale(tag: string | null | undefined): Locale {
   // answer than Traditional. Mirrors seo.ts.
   if (lower.startsWith('zh-hant') || lower === 'zh-hk' || lower === 'zh-mo') return 'zh-TW';
   if (lower.startsWith('zh')) return 'en';
+  // Kazakh reads Russian, the one fallback that crosses languages
+  // (FALLBACK_BEFORE_ENGLISH below says why).
+  if (lower === 'kk' || lower.startsWith('kk-')) return 'ru';
   // Region-stripped match, but only against the bare locales (de-AT -> de).
   const two = lower.slice(0, 2);
   return SUPPORTED_LOCALES.find((l) => !l.includes('-') && l === two) ?? 'en';
@@ -111,6 +130,30 @@ function resolveInitialLocale(): Locale {
   } catch {
     /* storage unavailable - fall through to the browser preference */
   }
+  return normalizeLocale(navigator.language);
+}
+
+/**
+ * The locale on screen right now.
+ *
+ * The ONE accessor for "which language is the UI in". It lives here rather
+ * than beside the language menu because it is built from `normalizeLocale`,
+ * and a second normalizer is how this went wrong: three functions used to
+ * answer this question, each with its own hand-rolled matching, and the
+ * weakest of them resolved zh-HK to English while normalizeLocale resolved it
+ * to zh-TW. Read this, never `i18n.resolvedLanguage` or `i18n.language`.
+ *
+ * `resolvedLanguage` follows i18next's fallback chain, so a zh-HK request that
+ * landed on the zh-TW catalog already reports zh-TW; normalizing again is
+ * belt-and-braces for the window before init resolves anything, where only the
+ * raw requested tag exists.
+ */
+export function activeLocale(): Locale {
+  return normalizeLocale(i18n.resolvedLanguage || i18n.language);
+}
+
+/** The visitor's browser-preferred language, as one of the locales we ship. */
+export function preferredLocale(): Locale {
   return normalizeLocale(navigator.language);
 }
 
@@ -134,6 +177,65 @@ async function catalogsFor(lng: string): Promise<Catalogs> {
 // i18next initializes with English only; the boot locale (if any) is added
 // by `i18nReady` below, which main.tsx waits on before the first render, so
 // a non-English visitor never sees an untranslated frame.
+/**
+ * Where a language looks BEFORE English, for the few that have somewhere to
+ * look. English is not written here: `withEnglish` appends it, and that is the
+ * point of the indirection.
+ *
+ * i18next's `default` entry applies ONLY to a language that has no entry of its
+ * own, so a hand-written `pt: ['pt-PT']` is the WHOLE chain for Portuguese, not
+ * a prefix to the default. It resolved pt-BR to ["pt-BR", "pt", "pt-PT"], and a
+ * key that existed only in `en` rendered its own NAME on screen inside a
+ * Portuguese app. Every Portuguese tag was affected; on the Chinese side only
+ * the three named here were, because zh-TW strips to a bare `zh` with no entry
+ * and so reached the default. Locale parity could never catch it: every key is
+ * in every catalog, so nothing reaches the end of a chain until a key is
+ * English-only, which is exactly the window between approving English copy and
+ * writing the batch.
+ *
+ * Write the real fallbacks here and nothing else. Adding an entry cannot drop
+ * the English tail, because no entry states it.
+ */
+const FALLBACK_BEFORE_ENGLISH: Record<string, string[]> = {
+  // Portuguese is the one language with no bare catalog: we ship pt-PT and
+  // pt-BR, not pt. i18next strips the region before falling back, so without
+  // this every Lusophone region except those two (pt-AO, pt-MZ, pt-CV, pt-TL,
+  // pt-MO, and a bare `pt`) would land straight on English. They all follow the
+  // European norm, so `pt` resolves there. de-AT still falls to de by itself
+  // because a bare `de` catalog exists; Portuguese has no such catalog.
+  // Matches the generic-`pt` hreflang alias in seo.ts.
+  pt: ['pt-PT'],
+  // Chinese is the same shape: we ship Traditional (zh-TW) only. Hong Kong and
+  // Macau read Traditional, and a bare `zh-Hant` should too, so map all three
+  // onto zh-TW. Bare `zh` and `zh-CN` are left to fall through to English on
+  // purpose: they overwhelmingly mean Simplified, and serving Traditional to a
+  // Simplified reader is worse than serving English. Mirrors seo.ts.
+  'zh-Hant': ['zh-TW'],
+  'zh-HK': ['zh-TW'],
+  'zh-MO': ['zh-TW'],
+  // Kazakh readers get Russian before English: Russian is an official language
+  // of Kazakhstan and the one we ship that most of them read. Belarusian gets
+  // no entry on purpose, and falls to English: which language a Belarusian
+  // reader wants is not ours to assume. Mirrored in normalizeLocale.
+  kk: ['ru'],
+  // Slovak reads Czech before English: the two languages are mutually
+  // intelligible, so a key the Slovak catalog lacks is closer in Czech.
+  sk: ['cs'],
+};
+
+/**
+ * The map i18next receives: every chain above, with English appended, plus the
+ * default for every language that named none. Pinned by
+ * `tests/localeResolution.test.ts` against the chain i18next actually walks, so
+ * composing the object by hand again would fail rather than ship quietly.
+ */
+const FALLBACK_LNG: Record<string, string[]> = {
+  ...Object.fromEntries(
+    Object.entries(FALLBACK_BEFORE_ENGLISH).map(([lng, before]) => [lng, [...before, 'en']]),
+  ),
+  default: ['en'],
+};
+
 const resources: Record<string, Catalogs> = { en: enResources };
 const namespaces = Object.keys(enResources);
 
@@ -142,30 +244,11 @@ void i18n
   .use(initReactI18next)
   .init({
     resources,
-    // Portuguese is the one language with no bare catalog: we ship pt-PT and
-    // pt-BR, not pt. i18next strips the region before falling back, so without
-    // this map every Lusophone region except those two (pt-AO, pt-MZ, pt-CV,
-    // pt-TL, pt-MO, and a bare `pt`) lands on English. They all follow the
-    // European norm, so `pt` resolves there. de-AT still falls to de by itself
-    // because a bare `de` catalog exists; Portuguese has no such catalog.
-    // Matches the generic-`pt` hreflang alias in seo.ts.
-    //
-    // Chinese is the same shape: we ship Traditional (zh-TW) only. Hong Kong and
-    // Macau read Traditional, and a bare `zh-Hant` should too, so map all three
-    // onto zh-TW. Bare `zh` and `zh-CN` are left to fall through to English on
-    // purpose: they overwhelmingly mean Simplified, and serving Traditional to a
-    // Simplified reader is worse than serving English. Mirrors seo.ts.
-    //
-    // Arabic needs no entry here: we ship a bare `ar` catalog, so i18next's
-    // built-in region-stripping already resolves ar-SA/ar-AE/ar-EG to `ar`
-    // on its own, the same mechanism that resolves de-AT to de.
-    fallbackLng: {
-      pt: ['pt-PT'],
-      'zh-Hant': ['zh-TW'],
-      'zh-HK': ['zh-TW'],
-      'zh-MO': ['zh-TW'],
-      default: ['en'],
-    },
+    // Composed above, never inline: see FALLBACK_BEFORE_ENGLISH. Arabic needs
+    // no entry at all, because we ship a bare `ar` catalog and i18next's own
+    // region-stripping resolves ar-SA/ar-AE/ar-EG to it, the way it resolves
+    // de-AT to de.
+    fallbackLng: FALLBACK_LNG,
     // A locale URL slug (/de, /pt, /br, ...) wins; apex falls to detection below.
     lng: localeFromPath() ?? undefined,
     // No supportedLngs filter: i18next resolves by what is loaded (pt-BR matches
@@ -205,6 +288,43 @@ export async function ensureLocaleLoaded(tag: string): Promise<void> {
     i18n.addResourceBundle(lng, ns, bundle, true, true);
   }
   loadedLocales.add(lng);
+}
+
+/**
+ * Load the `looks` namespace for the language on screen and for English, its
+ * fallback. Resolves when both are in; a failed fetch leaves the keys to
+ * fall back, and the next call tries again.
+ */
+export async function ensureLooksLoaded(): Promise<void> {
+  const langs = [...new Set<string>(['en', activeLocale()])];
+  await Promise.all(
+    langs.map(async (lng) => {
+      if (looksLoaded.has(lng)) return;
+      const load = looksModules[`./locales/${lng}/looks.json`];
+      if (!load) return;
+      const mod = await load();
+      i18n.addResourceBundle(lng, 'looks', mod.default, true, true);
+      looksLoaded.add(lng);
+    }),
+  );
+}
+
+/**
+ * Load the `settingsSearch` namespace for the language on screen and for
+ * English, as `ensureLooksLoaded` does for `looks`.
+ */
+export async function ensureSettingsSearchLoaded(): Promise<void> {
+  const langs = [...new Set<string>(['en', activeLocale()])];
+  await Promise.all(
+    langs.map(async (lng) => {
+      if (settingsSearchLoaded.has(lng)) return;
+      const load = settingsSearchModules[`./locales/${lng}/settingsSearch.json`];
+      if (!load) return;
+      const mod = await load();
+      i18n.addResourceBundle(lng, 'settingsSearch', mod.default, true, true);
+      settingsSearchLoaded.add(lng);
+    }),
+  );
 }
 
 /**

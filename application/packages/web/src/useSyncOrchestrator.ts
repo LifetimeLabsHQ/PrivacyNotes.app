@@ -5,19 +5,24 @@ import { invalidateDeviceRegistration } from './authStorage';
 import type { SupabaseClient } from '@notes/shared';
 import { createNote, listNotes } from './notesRepo';
 import { db, type LocalNote } from './db';
-import { sync, CaptchaRequiredError, DeviceRevokedError, QuotaExceededError, SessionExpiredError, type NoteConflict } from './sync';
+import { sync, pushConflictAnswer, writeConflictAnswer, CaptchaRequiredError, DeviceRevokedError, QuotaExceededError, SessionExpiredError, type NoteConflict, type PushHalt } from './sync';
 import { logAuthEvent } from './authDiag';
+import { ensureLevel2, isMfaRefusal, MfaUnavailableError } from './mfaStep';
 import { fetchQuotaUsage } from './devices';
-import { hasSettingsPulled, saveLocalSettings, syncUserSettings, type UserSettings } from './userSettings';
+import { hasSettingsPulled, syncUserSettings, updateLocalSettings, type UserSettings } from './userSettings';
 import { syncPinCache } from './pin';
-import { hasPinWrappedPhrase, hydrateLocalPinWrap } from './biometric';
-import { seedOnboardingNotes, SEED_MEDICATION } from './welcomeNote';
-import { mergeTrackers, trackersEqual } from './trackerTypes';
+import { syncPinWrap } from './pinRecovery';
+import { hasLiveSignIn, signInStamp, signedOutSince } from './liveSignIn';
+import { seedOnboardingNotes, SEED_MEDICATION, withSeedFactors } from './welcomeNote';
 import { isDemoMode } from './demo';
 import { reconcileOrphanBlobs, sweepBlobGC } from './imageGC';
+import { pullOpensTrashPurge } from './trashPurge';
+import { markPulledClean, wipeGenerationNow } from './pullState';
+import { publishShareLimit } from './useShareInbox';
 import { perfSpan } from './perf';
-import { setSyncingFlag } from './syncingStore';
+import { beginSyncPass } from './syncingStore';
 import { recordSyncPass } from './syncLog';
+import { classifyPushFailure, recordPassPushFailures } from './pushFailures';
 import { reconcileFlushStash } from './flushStash';
 import type { ImageStore } from './imageStore';
 import type { AttachmentStore } from './attachmentStore';
@@ -27,6 +32,52 @@ import type { AttachmentStore } from './attachmentStore';
 const PENDING_BLOB_RETRY_MS = 30 * 60_000;
 
 type Authed = Extract<AuthState, { status: 'authenticated' }>;
+
+/**
+ * The "Keep both" copy of a conflicted note: the local title and body as a
+ * new note, carrying the protection and the read-only flag of either side.
+ * The flags are written in the same transaction as the row, so no sync pass
+ * can push the copy unprotected, and its list row never shows the body a
+ * protected note keeps behind the PIN. The copy holds the local version's
+ * text, so it keeps that version's "last edited" date. Tested in
+ * tests/lockGateWrites.test.ts and tests/editStamp.test.ts.
+ */
+export async function forkConflictCopy(
+  conflict: NoteConflict,
+  local: LocalNote,
+  title: string,
+  body: string,
+): Promise<LocalNote> {
+  return forkCopy(conflict.localNote, title, body, {
+    pinProtected: local.pinProtected === 1 || conflict.serverPinProtected ? 1 : 0,
+    locked: local.locked === 1 || conflict.serverLocked ? 1 : 0,
+    editedAt: local.editedAt ?? local.updatedAt,
+  });
+}
+
+/**
+ * The copy that keeps the text of an editor whose row was rewritten under it
+ * (#497): a "Keep both" copy of that row, holding the editor's text, written
+ * now, so it carries this moment as its "last edited" date. It keeps the
+ * row's protection but is never read-only, because the stale editor's later
+ * saves go into it until its remount lands.
+ */
+async function forkStaleEditorCopy(row: LocalNote, title: string, body: string): Promise<LocalNote> {
+  return forkCopy(row, title, body, { pinProtected: row.pinProtected === 1 ? 1 : 0, locked: 0 });
+}
+
+async function forkCopy(
+  source: LocalNote,
+  title: string,
+  body: string,
+  flags: { pinProtected: 0 | 1; locked: 0 | 1; editedAt?: string },
+): Promise<LocalNote> {
+  return db.transaction('rw', db.notes, async () => {
+    const copy = await createNote(title, body, source.tags, source.starred === 1, source.type ?? 'note', null, { counted: false });
+    await db.notes.update(copy.id, flags);
+    return { ...copy, ...flags };
+  });
+}
 
 export function useSyncOrchestrator({
   auth,
@@ -41,6 +92,8 @@ export function useSyncOrchestrator({
   editingBodyRef,
   setEditorRevision,
   editorFocusedRef,
+  isNoteLocked,
+  gateCopy,
 }: {
   auth: Authed;
   supabase: SupabaseClient;
@@ -54,13 +107,20 @@ export function useSyncOrchestrator({
   editingBodyRef: { readonly current: Map<string, string> };
   setEditorRevision: Dispatch<SetStateAction<number>>;
   editorFocusedRef: { readonly current: boolean };
+  /** The view's lock predicate, for the conflict copy below. */
+  isNoteLocked: (n: LocalNote) => boolean;
+  /** Keep a new copy gated until the next unlock, as a duplicate is. */
+  gateCopy: (id: string) => void;
 }) {
   const [quotaExceeded, setQuotaExceeded] = useState(false);
   /** ISO timestamp of when the user first exceeded quota (from server). */
   const [quotaExceededSince, setQuotaExceededSince] = useState<string | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
-  /** Per-sync-pass push-error tracking. Cleared at the start of each
-   * `runSync` and populated by the `onPushError` callback. See gap #4. */
+  /** Per-sync-pass push-error tracking for the dismissable banner. Cleared
+   * at the start of each `runSync` and populated by the `onPushError`
+   * callback. Size rejections stay out of it: the banner's "retries
+   * automatically" is false for them, so they surface through
+   * pushFailures.ts (pill, ID & Sync list, editor bar) instead. See gap #4. */
   const [pushErrors, setPushErrors] = useState<{ count: number; lastMessage: string } | null>(null);
   /** Fingerprint of dismissed push errors. When the user dismisses,
    *  we store `count:lastMessage`. Banner stays hidden until the
@@ -87,6 +147,9 @@ export function useSyncOrchestrator({
   // "New vault created" notice for the sign-in-with-existing-phrase
   // path when the server has no data for the derived pubkey.
   const [freshVaultNotice, setFreshVaultNotice] = useState(false);
+  /** True once a pass in this app session ran, finished its notes pull, and
+   *  read the settings from the server. The trash auto-purge waits for it. */
+  const [trashPurgeReady, setTrashPurgeReady] = useState(false);
   // Monotonic counter bumped on every local settings mutation.
   // runSync snapshots it before calling syncUserSettings and skips
   // the setUserSettings write if it changed mid-flight (GitHub #71).
@@ -115,9 +178,45 @@ export function useSyncOrchestrator({
     return all;
   }, []);
 
+  /**
+   * An open editor's save was refused: its row holds a version that arrived
+   * after the editor loaded (#497). Keep the editor's text as a copy, the
+   * same copy "Keep both" makes, then remount the editor on the row, so it
+   * shows the version the row holds. Resolves with the copy, or null when
+   * the editor held nothing the row does not supersede, and says whether the
+   * open editor was remounted.
+   */
+  const keepStaleEditorText = useCallback(async (row: LocalNote, body: string | null): Promise<{ copy: LocalNote | null; remounted: boolean }> => {
+    let copy: LocalNote | null = null;
+    if (body !== null) {
+      copy = await forkStaleEditorCopy(row, (row.title || 'Untitled') + ' (conflict)', body);
+      // Gated by the source's identity, like the Keep both copy: a note
+      // protected in this unlock window is gated by its id, which the copy
+      // does not carry.
+      if (isNoteLocked({ ...row, pinProtected: copy.pinProtected })) gateCopy(copy.id);
+    }
+    // Reload state before the remount, so the new editor mounts on the row.
+    // The copy exists by now, so a failed reload must not lose its id.
+    try {
+      await refresh();
+    } catch (err) {
+      console.error('[edit] reload after a stale save failed', err);
+    }
+    if (selectedIdRef.current !== row.id) return { copy, remounted: false };
+    editingBodyRef.current.delete(row.id);
+    setEditorRevision((r) => r + 1);
+    return { copy, remounted: true };
+  }, [refresh, isNoteLocked, gateCopy, editingBodyRef, setEditorRevision]);
+
   const runSync = useCallback(async () => {
     if (isDemoMode()) return;
     if (!navigator.onLine) return;
+    // A pass belongs to the live sign-in. One that would start after a
+    // sign-out began, while this view stays mounted for the sign-out's
+    // flush, does not start, and `signedInAt` lets one already running stop
+    // before it writes a PIN or the phrase back (liveSignIn.ts).
+    if (!hasLiveSignIn()) return;
+    const signedInAt = signInStamp();
     // Flush any in-flight body edits into React state so the sync
     // picks up the latest content and dirty flags are correct.
     flushEditingBodyRef.current();
@@ -127,10 +226,19 @@ export function useSyncOrchestrator({
     const openNoteId = selectedIdRef.current;
     const openNoteBefore = openNoteId ? await db.notes.get(openNoteId) : undefined;
     const endPass = perfSpan('syncPass');
-    setSyncingFlag(true);
-    // Per-pass error accumulator. The callback below feeds it from sync.ts.
+    const endSyncing = beginSyncPass();
+    // Per-pass error accumulator for the banner. The callback below feeds
+    // it from sync.ts.
     let passErrors: { count: number; lastMessage: string } | null = null;
-    const onPushError = (_id: string, message: string) => {
+    // Every failure of this pass by note id, for pushFailures.ts. Recorded
+    // only after a pass that ran: a skipped pass attempted nothing, so its
+    // empty list says nothing about the notes that failed last time. A pass
+    // whose push halted hands its halt along, for the same reason.
+    const passFailures: Array<{ id: string; message: string }> = [];
+    let passRan = false;
+    let passHalt: PushHalt | null = null;
+    const onPushError = (id: string, message: string) => {
+      passFailures.push({ id, message });
       // An RLS rejection means this session's pubkey link is broken
       // server-side; retrying the push can never succeed. Invalidate
       // the registration throttle so the next boot re-runs the full
@@ -139,6 +247,9 @@ export function useSyncOrchestrator({
       if (message.includes('row-level security')) {
         invalidateDeviceRegistration();
       }
+      // A size rejection has its own surfaces and no retry that can
+      // succeed, so it never reaches the banner's "retries automatically".
+      if (classifyPushFailure(message) === 'too_large') return;
       passErrors = {
         count: (passErrors?.count ?? 0) + 1,
         lastMessage: message,
@@ -160,16 +271,26 @@ export function useSyncOrchestrator({
       const localCount = await db.notes.count();
       const onBatch = localCount === 0 ? refresh : undefined;
       const passStartedAt = Date.now();
+      // Captured before the pass: a wipe that lands while it runs makes its
+      // pull stale, and the mark below is then refused (pullState.ts).
+      const wipeGen = wipeGenerationNow();
       const syncResult = await sync(supabase, auth.pubkey, auth.encryptionKey, auth.deviceId, onBatch, onPushError, enqueueConflict);
+      passRan = syncResult.ran;
+      passHalt = syncResult.halted ?? null;
       // Feed the sync activity log (syncLog.ts). Skipped passes (demo,
       // floor, pause, mutex) report ran: false and are non-events.
       if (syncResult.ran) {
+        // `pushed` counts the rows the server accepted. A note that failed
+        // with a reason of its own reads as failed; the rows a halted push
+        // left behind travel in `halted`, so neither ever reads as "up".
         recordSyncPass({
           at: passStartedAt,
           ms: Date.now() - passStartedAt,
           ok: syncResult.pullOk,
           up: syncResult.pushed ?? 0,
           down: syncResult.pulled ?? 0,
+          failed: new Set(passFailures.map((f) => f.id)).size,
+          ...(syncResult.halted ? { halted: syncResult.halted } : {}),
         });
       }
       // A pass that actually ran proves the session carries this vault's
@@ -184,20 +305,23 @@ export function useSyncOrchestrator({
       // notes first so the user's newest edits land fastest, settings
       // second so a favorites toggle doesn't block a note upload.
       const settingsGen = settingsGenRef.current;
-      let merged = await syncUserSettings(supabase, auth.pubkey, auth.encryptionKey);
+      const settingsPass = { readServer: false };
+      // A sign-out during the notes pull ends the pass here, before the
+      // settings sync could write the cache back; one during the settings
+      // sync is caught by the stamp it is handed.
+      if (signedOutSince(signedInAt)) return;
+      let merged = await syncUserSettings(supabase, auth.pubkey, auth.encryptionKey, settingsPass, signedInAt);
+      // A sign-out that began during this pass, here or in another tab, has
+      // wiped the PIN cache, the PIN wrap and the phrase. Everything below
+      // would read the emptied device as one with no door and write those
+      // credentials back, so a pass that outlives its session stops here.
+      if (signedOutSince(signedInAt)) return;
       syncPinCache(merged);
 
-      // Hydrate local PIN wrap from synced settings if this device
-      // doesn't have it yet. Makes app lock work immediately on new
-      // devices without re-entering the PIN.
-      if (merged.pinWrapSalt && merged.pinWrapIV && merged.pinWrapCiphertext && !hasPinWrappedPhrase()) {
-        hydrateLocalPinWrap({
-          pinWrapSalt: merged.pinWrapSalt,
-          pinWrapIV: merged.pinWrapIV,
-          pinWrapCiphertext: merged.pinWrapCiphertext,
-          pinWrapIterations: merged.pinWrapIterations ?? 100_000,
-        });
-      }
+      // Carries the account's PIN wrap onto this device, and off it again
+      // when the account no longer has one. The phrase goes with it so a
+      // device the removal leaves with no door can put it back at rest.
+      await syncPinWrap(merged, auth.phrase);
 
       // One-shot welcome-note seed. Runs exactly once per user, ever
       // - gated on the synced `welcomeNoteSeeded` flag so a second
@@ -233,9 +357,8 @@ export function useSyncOrchestrator({
         // Set the flag and skip seeding.
         const existingCount = await db.notes.where('deleted').equals(0).count();
         if (existingCount > 0 || hadSyncedBefore) {
-          effective = { ...merged, welcomeNoteSeeded: true };
-          saveLocalSettings(effective);
-          void syncUserSettings(supabase, auth.pubkey, auth.encryptionKey).catch(
+          effective = updateLocalSettings((prev) => ({ ...prev, welcomeNoteSeeded: true }));
+          void syncUserSettings(supabase, auth.pubkey, auth.encryptionKey, undefined, signedInAt).catch(
             (err) => console.error('[welcome] push seeded flag (existing notes) failed:', err)
           );
         } else if (fromPhraseImport && auth.method === 'phrase') {
@@ -246,9 +369,8 @@ export function useSyncOrchestrator({
           // (re)creates an account - but fabricating onboarding content
           // here made a fresh vault look like surviving data. Skip the
           // seed and tell the user explicitly that this vault is new.
-          effective = { ...merged, welcomeNoteSeeded: true };
-          saveLocalSettings(effective);
-          void syncUserSettings(supabase, auth.pubkey, auth.encryptionKey).catch(
+          effective = updateLocalSettings((prev) => ({ ...prev, welcomeNoteSeeded: true }));
+          void syncUserSettings(supabase, auth.pubkey, auth.encryptionKey, undefined, signedInAt).catch(
             (err) => console.error('[welcome] push seeded flag (fresh vault) failed:', err)
           );
           setFreshVaultNotice(true);
@@ -258,25 +380,31 @@ export function useSyncOrchestrator({
             // Tokyo journal, Wellness journal) so every pillar has a live
             // example on first open. Each seed is individually idempotent.
             await seedOnboardingNotes(auth.pubkey);
-            // Seed the example medication template if not already present.
-            // It has to fold back into `merged`: the `welcomeNoteSeeded`
-            // write below is built from `merged`, so a separate save here
-            // was overwritten one line later and the seeded journal
-            // entries referenced a medication that did not exist.
-            if (!merged.medications?.some((m) => m.id === SEED_MEDICATION.id)) {
-              merged = { ...merged, medications: [...(merged.medications ?? []), SEED_MEDICATION] };
-              saveLocalSettings(merged);
-            }
+            // Seed the example medication template if not already present,
+            // adding the one field to whatever the cache holds. Seeding has
+            // just written the starter folder tree into that cache, and this
+            // used to save a whole settings object taken BEFORE the seed,
+            // which dropped every one of those folders a line later. The
+            // seeded journal entries reference this medication, so it has to
+            // exist before they are pushed.
+            merged = updateLocalSettings((prev) => {
+              const withMed = prev.medications?.some((m) => m.id === SEED_MEDICATION.id)
+                ? prev
+                : { ...prev, medications: [...(prev.medications ?? []), SEED_MEDICATION] };
+              return { ...withMed, factors: withSeedFactors(withMed.factors) };
+            });
             // Push the seeded notes to the server BEFORE marking seeding
             // as done. Without this, the flag can land on the server while
             // the notes themselves are still local-only (dirty: 1). If the
             // user signs out before the next sync pass, re-login sees the
             // flag, skips seeding, and the app is empty.
             await sync(supabase, auth.pubkey, auth.encryptionKey, auth.deviceId, undefined, onPushError);
-            effective = { ...merged, welcomeNoteSeeded: true };
-            saveLocalSettings(effective);
+            // Against the cache, like every other settings write: seeding
+            // put the starter folder tree there, and a whole object taken
+            // before it would drop those folders.
+            effective = updateLocalSettings((prev) => ({ ...prev, welcomeNoteSeeded: true }));
             // Push the flag now that the notes are safely on the server.
-            void syncUserSettings(supabase, auth.pubkey, auth.encryptionKey).catch(
+            void syncUserSettings(supabase, auth.pubkey, auth.encryptionKey, undefined, signedInAt).catch(
               (err) => console.error('[welcome] push seeded flag failed:', err)
             );
           } catch (err) {
@@ -302,8 +430,10 @@ export function useSyncOrchestrator({
         settingsGenRef.current === settingsGen &&
         hasSettingsPulled()
       ) {
-        effective = { ...effective, firstSeenAt: new Date().toISOString() };
-        saveLocalSettings(effective);
+        const stampedAt = new Date().toISOString();
+        effective = updateLocalSettings((prev) =>
+          prev.firstSeenAt ? prev : { ...prev, firstSeenAt: stampedAt },
+        );
       }
       // Only apply the sync result if no local settings mutation happened
       // while the async sync was in-flight. A stale result would briefly
@@ -319,6 +449,11 @@ export function useSyncOrchestrator({
           JSON.stringify(prev) === JSON.stringify(effective) ? prev : effective,
         );
       }
+      // Only a pass that read the settings from the server this time opens
+      // the purge: its day count must be the account's, not a cached one
+      // left by an earlier pass (trashPurge.ts).
+      if (pullOpensTrashPurge(syncResult, settingsPass.readServer)) setTrashPurgeReady(true);
+      if (pullOpensTrashPurge(syncResult, settingsPass.readServer)) markPulledClean(wipeGen);
       // Skip the vault-sized rebuild when the pass moved nothing: at a
       // few thousand notes refresh() costs ~300 ms of main-thread work,
       // and the 30 s poller was paying it on every idle tick (#130).
@@ -387,31 +522,48 @@ export function useSyncOrchestrator({
       }
       // Refresh the quota snapshot so image pre-flight checks have
       // up-to-date numbers. Non-blocking - don't hold up the sync.
-      fetchQuotaUsage(supabase, auth.isPro)
-        .then((q) => {
-          quotaRef.current = { usedBytes: q.totalBytes + q.imageBytes, maxBytes: q.maxTotalBytes };
-          if (q.quotaExceededSince) {
-            setQuotaExceeded(true);
-            setQuotaExceededSince(q.quotaExceededSince);
-          } else {
-            // Storage back under quota - clear the banner. Fixes #69.
-            setQuotaExceeded(false);
-            setQuotaExceededSince(null);
-          }
-        })
-        .catch(() => { /* best-effort */ });
-      // Check for past_due storage subs alongside quota. See gap #38.
-      supabase.rpc('get_storage_sub_status')
-        .then(({ data }) => {
-          if (data && Array.isArray(data) && data.length > 0 && data[0].has_past_due) {
-            setStoragePastDue(true);
-          } else if (data && !Array.isArray(data) && (data as { has_past_due?: boolean })?.has_past_due) {
-            setStoragePastDue(true);
-          } else {
-            setStoragePastDue(false);
-            setStoragePastDueDismissed(false);
-          }
-        }, () => { /* best-effort */ });
+      //
+      // Gated on a pass that actually ran and pulled, the same gate the blob
+      // work above uses. Without it, a pass the mutex skipped and a pass whose
+      // pull failed would each fire another pair of account reads, so the
+      // reads a sync does least usefully would be the ones it repeats most: a
+      // device whose claim gate is refused would re-ask on every 30-second
+      // tick, and the server would answer every one with a refusal.
+      if (syncResult.ran && syncResult.pullOk) {
+        fetchQuotaUsage(supabase, auth.isPro)
+          .then((q) => {
+            quotaRef.current = { usedBytes: q.totalBytes + q.imageBytes, maxBytes: q.maxTotalBytes };
+            publishShareLimit(auth.isPro ?? false, q.maxTotalBytes);
+            if (q.quotaExceededSince) {
+              setQuotaExceeded(true);
+              setQuotaExceededSince(q.quotaExceededSince);
+            } else {
+              // Storage back under quota - clear the banner. Fixes #69.
+              setQuotaExceeded(false);
+              setQuotaExceededSince(null);
+            }
+          })
+          // A failed read leaves the banner as it stands: a refusal read as
+          // zero usage and a null exceeded timestamp would look exactly like
+          // an account that got back under its cap, and clear it.
+          .catch(() => { /* unknown is not under quota */ });
+        // Check for past_due storage subs alongside quota. See gap #38.
+        supabase.rpc('get_storage_sub_status')
+          .then(({ data, error }) => {
+            // A refused call carries an `error` and a null `data`; read
+            // without the error, the null would fall through to the else below
+            // and tell the user their payment problem is resolved.
+            if (error) return;
+            if (data && Array.isArray(data) && data.length > 0 && data[0].has_past_due) {
+              setStoragePastDue(true);
+            } else if (data && !Array.isArray(data) && (data as { has_past_due?: boolean })?.has_past_due) {
+              setStoragePastDue(true);
+            } else {
+              setStoragePastDue(false);
+              setStoragePastDueDismissed(false);
+            }
+          }, () => { /* best-effort */ });
+      }
     } catch (err) {
       // A pass that threw still gets a log entry - the activity list is
       // where "why is nothing syncing" gets answered.
@@ -419,6 +571,16 @@ export function useSyncOrchestrator({
       // If the server told us this device was revoked elsewhere, blow
       // up the local session + IndexedDB copy and return the user to
       // onboarding. Any other error is just logged.
+      if (isMfaRefusal(err)) {
+        // A missing factor pauses server access, never the local vault.
+        // Dismissal preserves notes and suppresses repeated background prompts.
+        void ensureLevel2(supabase, { allowLocalUse: true, background: true }).then(
+          () => { void runSync(); },
+          () => { /* dismissed or unreachable: the next sync retries the check */ },
+        );
+        return;
+      }
+      if (err instanceof MfaUnavailableError) return;
       if (err instanceof DeviceRevokedError) {
         await forceSignOut('device revoked');
         return;
@@ -436,7 +598,7 @@ export function useSyncOrchestrator({
         }
         // Verify before the hard-block modal. SessionExpiredError is
         // thrown from ten shape-matched classification sites in sync.ts
-        // with no grace and no retry, and the 2026-08-25 session audit
+        // with no grace and no retry, and a review
         // confirmed transients can wear the right shape (an expired
         // access token seconds before its refresh, clock skew, a
         // proxy-mangled 401 body). One getUser round trip settles it:
@@ -454,7 +616,7 @@ export function useSyncOrchestrator({
             const claimPk = (check.user.app_metadata as { pubkey?: string } | undefined)?.pubkey;
             if (claimPk === auth.pubkey) {
               logAuthEvent('sync:session-expired-suppressed', {
-                reason: 'session verified healthy',
+                reason: 'verified-healthy',
               });
               return;
             }
@@ -494,7 +656,7 @@ export function useSyncOrchestrator({
       console.error('[sync]', err);
     } finally {
       endPass();
-      setSyncingFlag(false);
+      endSyncing();
       // If this pass surfaced push errors, banner them. If it was clean,
       // clear the prior banner and reset the dismissed key so a future
       // error will surface fresh. See gap #42.
@@ -503,13 +665,14 @@ export function useSyncOrchestrator({
         pushErrorsDismissedKey.current = null;
       }
       setPushErrors(passErrors);
+      if (passRan) recordPassPushFailures(passFailures, Date.now(), passHalt);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase, auth.pubkey, auth.encryptionKey, auth.deviceId, auth.isPro, refresh, forceSignOut, enqueueConflict]);
 
   /** Resolve a queued note conflict. Called from ConflictModal. */
   const resolveConflict = useCallback(async (conflict: NoteConflict, resolution: 'local' | 'server' | 'both') => {
-    const { noteId, localNote, serverUpdatedAt } = conflict;
+    const { noteId, localNote } = conflict;
     // One decision per conflict. Every ConflictModal button calls
     // onResolve AND then onClose, and onClose is wired to a second,
     // contradictory 'server' resolution - so "Use mine" force-pushed the
@@ -519,188 +682,94 @@ export function useSyncOrchestrator({
     // conflict has left the queue and the modal is gone.
     if (resolvingConflictsRef.current.has(noteId)) return;
     resolvingConflictsRef.current.add(noteId);
-    const now = new Date().toISOString();
+    // Snapshot the key synchronously, before any await: signOut zeroes
+    // auth.encryptionKey in place, and encrypting with a zeroed key pushes
+    // undecryptable ciphertext the server accepts as valid. (Sync passes
+    // carry their own key copy for the same reason - see sync.ts.)
+    const keySnapshot = new Uint8Array(auth.encryptionKey);
     try {
       if (resolution === 'local') {
-        // Snapshot the key synchronously, before the import await:
-        // signOut zeroes auth.encryptionKey in place, and encrypting
-        // with a zeroed key pushes undecryptable ciphertext the server
-        // accepts as valid. An all-zero snapshot means sign-out already
-        // began - bail; the note stays dirty for the next authenticated
-        // pass to re-detect. (Sync passes carry their own key copy for
-        // the same reason - see sync.ts.)
-        const keySnapshot = new Uint8Array(auth.encryptionKey);
         if (keySnapshot.every((b) => b === 0)) {
+          // Sign-out already began: the note stays dirty for the next
+          // authenticated pass to re-detect.
           console.warn('[conflict] sign-out in progress - keep-mine deferred for', noteId);
           return;
         }
-        // The modal asks which BODY to keep. A journal entry's medication
-        // log is not part of that question, and the losing side's day was
-        // being thrown away with it - so trackers merge field-by-field
-        // whichever body wins. Same rule as sync.ts's auto-merge.
-        const keptTrackers = mergeTrackers(localNote.trackers, conflict.serverTrackers);
-        // Force-push the local version (unconditional update).
-        const { encryptNote: enc, bytesToBase64: b64 } = await import('@notes/shared');
-        const { ciphertext, nonce } = enc(
-          {
-            title: localNote.title,
-            body: localNote.body,
-            tags: localNote.tags,
-            trashed: localNote.trashed === 1,
-            starred: localNote.starred === 1,
-            locked: localNote.locked === 1,
-            pinProtected: localNote.pinProtected === 1,
-            type: localNote.type ?? 'note',
-            trackers: keptTrackers,
-            folderId: localNote.folderId ?? null,
-          },
-          keySnapshot
-        );
-        const { data: forced, error: forceErr } = await supabase
-          .from('notes')
-          .update({
-            ciphertext: b64(ciphertext),
-            nonce: b64(nonce),
-            updated_at: now,
-          })
-          .eq('id', noteId)
-          .eq('user_pubkey', auth.pubkey)
-          .select('id');
-        if (!forceErr && forced && forced.length > 0) {
-          await db.notes.update(noteId, { dirty: 0, updatedAt: now, trackers: keptTrackers, syncedNonce: b64(nonce) });
-        } else {
-          // The write did not land: supabase-js reports network and
-          // HTTP failures via `error` without throwing, and a write to
-          // a row tombstoned while the modal was open is silently
-          // dropped by the 0034 trigger (204, zero rows). Recording
-          // either as synced stranded the kept version on this device
-          // only, forever, under a green Synced check. Keep it dirty
-          // with the fresh timestamp instead: the next pass force-
-          // pushes it through the lte guard, or the tombstone pull
-          // removes it - sync owns the truth either way.
-          console.error('[conflict] keep-mine push did not land for', noteId, forceErr);
-          await db.notes.update(noteId, { dirty: 1, updatedAt: now });
-        }
-      } else if (resolution === 'server') {
-        // Accept the server version - write it locally. The tracker
-        // payload merges rather than being replaced (see the keep-mine
-        // branch above): "use the newer version" is a statement about the
-        // text, not a decision to discard this device's medication log.
-        const mergedTrackers = mergeTrackers(localNote.trackers, conflict.serverTrackers);
-        const trackersDiverged = !trackersEqual(mergedTrackers, conflict.serverTrackers);
-        await db.notes.update(noteId, {
-          title: conflict.serverTitle,
-          body: conflict.serverBody,
-          tags: conflict.serverTags,
-          trackers: mergedTrackers,
-          starred: conflict.serverStarred ? 1 : 0,
-          trashed: conflict.serverTrashed ? 1 : 0,
-          locked: conflict.serverLocked ? 1 : 0,
-          pinProtected: conflict.serverPinProtected ? 1 : 0,
-          type: conflict.serverType,
-          folderId: conflict.serverFolderId,
-          // A merge that added anything is a local change the server has
-          // not seen. Leaving it clean would strand it on this device
-          // under a green tick - the exact shape of the loss reports.
-          updatedAt: trackersDiverged ? now : serverUpdatedAt,
-          dirty: trackersDiverged ? 1 : 0,
+        // The chosen body over the merged rest, pushed over the version
+        // the dialog showed (sync.ts pushConflictAnswer), sealed here with
+        // the snapshot. The shared crypto arrives through a dynamic import:
+        // it is the app's only dynamic import of the shared package, and the
+        // bundler's chunk graph forms around it. A build that imports it
+        // statically here folds the auth chunk into the entry and grows the
+        // entry and NotesView chunks past their budgets.
+        const { encryptNote, bytesToBase64 } = await import('@notes/shared');
+        await pushConflictAnswer(supabase, auth.pubkey, conflict, (fields) => {
+          const { ciphertext, nonce } = encryptNote(fields, keySnapshot);
+          return { ciphertext: bytesToBase64(ciphertext), nonce: bytesToBase64(nonce) };
         });
-        // The editor may still be holding a stale in-flight body for this
-        // note in editingBodyRef - if we leave it, the next flush writes
-        // it back into React state with dirty=1 and re-pushes it, silently
-        // undoing the "use newer" choice. Clear the buffer and reload from
-        // Dexie (same pattern as the history-restore path below) so the
-        // open editor re-renders the server content instead.
-        if (selectedId === noteId) {
-          editingBodyRef.current.delete(noteId);
-        }
-        // Order matters: reload state BEFORE bumping the editor key. The
-        // bump remounts the editor with whatever body React state holds
-        // at that render - bumping first remounted it with the stale
-        // local body, and the fresh server body arriving one render
-        // later was ignored (Editor treats `value` as initial content).
-        await refresh();
-        if (selectedId === noteId) {
-          setEditorRevision((r) => r + 1);
-        }
       } else {
-        // Keep both: accept server version for the original note,
-        // create a duplicate with the local version. Capture the freshest
-        // local content first (buffered keystrokes, else the current Dexie
-        // row, else the conflict snapshot) so the duplicate doesn't lose
-        // anything typed after the conflict was detected.
+        // "Keep both" first captures the freshest local content (buffered
+        // keystrokes, else the current row, else the conflict snapshot) so
+        // the copy keeps anything typed after the conflict was detected.
         const buffered = editingBodyRef.current.get(noteId);
         const row = await db.notes.get(noteId);
         const freshBody = buffered ?? row?.body ?? localNote.body;
         const freshTitle = row?.title ?? localNote.title;
-        // The whole tracker payload lands on the ORIGINAL, merged from
-        // both sides. It used to be overwritten with the server's copy
-        // here and forked into the duplicate from a stale snapshot, so
-        // this device's medication log for the day ended up on neither
-        // note the user was looking at. `row` is the freshest local copy.
-        const keptTrackers = mergeTrackers(
-          (row?.trackers as Record<string, unknown> | undefined) ?? localNote.trackers,
-          conflict.serverTrackers
-        );
-        const trackersDiverged = !trackersEqual(keptTrackers, conflict.serverTrackers);
-        await db.notes.update(noteId, {
-          title: conflict.serverTitle,
-          body: conflict.serverBody,
-          tags: conflict.serverTags,
-          trackers: keptTrackers,
-          starred: conflict.serverStarred ? 1 : 0,
-          trashed: conflict.serverTrashed ? 1 : 0,
-          locked: conflict.serverLocked ? 1 : 0,
-          pinProtected: conflict.serverPinProtected ? 1 : 0,
-          type: conflict.serverType,
-          folderId: conflict.serverFolderId,
-          updatedAt: trackersDiverged ? now : serverUpdatedAt,
-          dirty: trackersDiverged ? 1 : 0,
-        });
-        // Same stale-buffer hazard as the 'server' branch above - clear it
-        // and reload so the open editor shows the resolved server content
-        // rather than the body that just got forked into the duplicate.
-        if (selectedId === noteId) {
-          editingBodyRef.current.delete(noteId);
+        const outcome = await writeConflictAnswer(supabase, auth.pubkey, keySnapshot, conflict, resolution);
+        if (outcome === 'written') {
+          // The editor may still be holding a stale in-flight body for this
+          // note in editingBodyRef - if we leave it, the next flush writes
+          // it back into React state with dirty=1 and re-pushes it, silently
+          // undoing the choice. Clear the buffer and reload from Dexie (same
+          // pattern as the history-restore path) so the open editor
+          // re-renders the chosen content instead.
+          if (selectedId === noteId) {
+            editingBodyRef.current.delete(noteId);
+          }
+          // Order matters: reload state BEFORE bumping the editor key. The
+          // bump remounts the editor with whatever body React state holds
+          // at that render - bumping first remounted it with the stale
+          // local body, and the fresh server body arriving one render
+          // later was ignored (Editor treats `value` as initial content).
+          await refresh();
+          if (selectedId === noteId) {
+            setEditorRevision((r) => r + 1);
+          }
+          if (resolution === 'both') {
+            // The copy holds this device's body, protected and read-only
+            // when either side was, and gated like a duplicate of a note
+            // behind a closed gate. It is deliberately a BODY fork with no
+            // tracker payload: the original already carries both sides'
+            // trackers, and copying them would give a journal entry a twin
+            // with the same `journalDate` - two entries for one calendar
+            // day, which every statistic then has to collapse.
+            const suffix = ' (conflict)';
+            const dupTitle = (freshTitle || 'Untitled') + suffix;
+            const local = row ?? localNote;
+            const dup = await forkConflictCopy(conflict, local, dupTitle, freshBody);
+            if (isNoteLocked({ ...local, pinProtected: dup.pinProtected })) gateCopy(dup.id);
+          }
         }
-        // Reload before the key bump - same ordering rationale as the
-        // 'server' branch above.
-        await refresh();
-        if (selectedId === noteId) {
-          setEditorRevision((r) => r + 1);
-        }
-        // Create the duplicate with local content.
-        const suffix = ' (conflict)';
-        const dupTitle = (freshTitle || 'Untitled') + suffix;
-        const dup = await createNote(
-          dupTitle,
-          freshBody,
-          localNote.tags,
-          localNote.starred === 1,
-          localNote.type ?? 'note',
-        );
-        // The duplicate is deliberately a BODY fork with no tracker
-        // payload. The merge above already carries both sides' trackers
-        // on the original, and copying them here would give a journal
-        // entry a twin with the same `journalDate` - two entries for one
-        // calendar day, which every statistic then has to collapse.
-
       }
     } catch (err) {
       console.error('[conflict] resolution failed for', noteId, err);
     } finally {
+      keySnapshot.fill(0);
       resolvingConflictsRef.current.delete(noteId);
     }
     // Remove from queue.
     setConflictQueue((q) => q.filter((c) => c.noteId !== noteId));
     await refresh();
-  }, [supabase, auth.pubkey, auth.encryptionKey, refresh, selectedId]);
+  }, [supabase, auth.pubkey, auth.encryptionKey, refresh, selectedId, isNoteLocked, gateCopy]);
 
   // Fold back any body edit stashed by the close-flush path
   // (flushStash.ts). Runs once at mount; an applied stash marks the
   // note dirty, so the next pass pushes it like any other edit.
   useEffect(() => {
-    void reconcileFlushStash().then((applied) => {
+    // A stash whose note a pull rewrote keeps its text as the same copy a
+    // stale editor's save makes.
+    // A copy that fails resolves false, and the text waits in the kept slot.
+    void reconcileFlushStash((row, text) => keepStaleEditorText(row, text).then((r) => r.copy !== null).catch(() => false)).then((applied) => {
       if (applied) void refresh();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -739,6 +808,7 @@ export function useSyncOrchestrator({
 
   return {
     refresh,
+    keepStaleEditorText,
     runSync,
     resolveConflict,
     quotaExceeded,
@@ -756,6 +826,7 @@ export function useSyncOrchestrator({
     setStoragePastDueDismissed,
     freshVaultNotice,
     setFreshVaultNotice,
+    trashPurgeReady,
     settingsGenRef,
     quotaRef,
   };

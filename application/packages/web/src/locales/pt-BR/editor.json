@@ -1,14 +1,16 @@
 {
   "placeholder": "Comece a escrever…",
+  "eventPlaceholder": "Adicione uma pauta, um endereço ou notas…",
   "toolbar": {
     "bold": "Negrito",
+    "hideKeyboard": "Ocultar teclado",
     "italic": "Itálico",
     "underline": "Sublinhado",
     "heading": "Título",
     "taskList": "Lista de tarefas",
     "bulletList": "Lista com marcadores",
-    "linkMenu": "Link",
-    "noteLinkMenu": "Note-link",
+    "addLink": "Adicionar link",
+    "noteLink": "Criar link para outra nota (ou digite [[)",
     "numberedList": "Lista numerada",
     "textColor": "Cor do texto",
     "textColorApply": "Cor do texto: {{color}}",
@@ -33,7 +35,14 @@
     "math": "Fórmula",
     "blockMath": "Fórmula em bloco",
     "align": "Alinhamento",
-    "font": "Fonte"
+    "font": "Fonte",
+    "pictureFromFiles": "Imagem de Arquivos",
+    "date": "Data",
+    "dateTime": "Data e hora",
+    "footnote": "Nota de rodapé",
+    "spoiler": "Spoiler",
+    "copyBox": "Caixa de cópia",
+    "customize": "Personalizar a barra de formatação"
   },
   "align": {
     "left": "Alinhar à esquerda",
@@ -61,6 +70,8 @@
   "callout": {
     "pickerLabel": "Inserir aviso",
     "remove": "Remover aviso",
+    "collapse": "Recolher aviso",
+    "expand": "Expandir aviso",
     "types": {
       "info": "Info",
       "success": "Sucesso",
@@ -73,7 +84,24 @@
       "bug": "Bug",
       "note": "Nota",
       "abstract": "Resumo",
-      "failure": "Falha"
+      "failure": "Falha",
+      "fold": "Recolhível",
+      "idea": "Ideia",
+      "important": "Importante",
+      "caution": "Cuidado",
+      "todo": "Tarefa",
+      "goal": "Meta",
+      "decision": "Decisão",
+      "definition": "Definição",
+      "seealso": "Veja também",
+      "box": "Caixa",
+      "panel": "Painel",
+      "update": "Atualização",
+      "time": "Tempo",
+      "steps": "Passos",
+      "place": "Local",
+      "kanban": "Quadro kanban",
+      "column": "Coluna"
     }
   },
   "color": {
@@ -92,6 +120,7 @@
     }
   },
   "insertGroup": {
+    "format": "Formatação",
     "insert": "Inserir",
     "blocks": "Blocos",
     "notation": "Notação"
@@ -101,19 +130,60 @@
     "addRowBelow": "Adicionar linha abaixo",
     "addColumnLeft": "Adicionar coluna à esquerda",
     "addColumnRight": "Adicionar coluna à direita",
+    "toggleHeaderRow": "Ativar ou desativar a linha de cabeçalho",
+    "equalColumnWidths": "Igualar colunas",
+    "resizeHint": "Segure {{shift}} para mudar só esta coluna, {{alt}} para passos menores",
     "deleteRow": "Excluir linha",
     "deleteColumn": "Excluir coluna",
-    "deleteTable": "Excluir tabela"
+    "deleteTable": "Excluir tabela",
+    "insertFormula": "Inserir fórmula",
+    "formulaNoMatch": "Nenhuma fórmula corresponde",
+    "formula": {
+      "SUM": "Somar os valores",
+      "PRODUCT": "Multiplicar os valores",
+      "AVG": "Média dos valores",
+      "AVERAGE": "Média dos valores",
+      "MEDIAN": "Valor do meio",
+      "MIN": "Menor valor",
+      "MAX": "Maior valor",
+      "COUNT": "Quantos números há",
+      "ABS": "Valor sem o sinal",
+      "SQRT": "Raiz quadrada",
+      "SIGN": "Se um valor é positivo ou negativo",
+      "CEIL": "Arredondar para cima até um número inteiro",
+      "FLOOR": "Arredondar para baixo até um número inteiro",
+      "ROUND": "Arredondar para um número inteiro",
+      "LOG": "Logaritmo",
+      "RAND": "Um número aleatório",
+      "PI": "A constante pi",
+      "E": "O número de Euler",
+      "TAU": "A constante tau",
+      "PHI": "A proporção áurea"
+    }
   },
   "find": {
     "placeholder": "Buscar na nota",
     "label": "Buscar na nota",
-    "previous": "Resultado anterior (Shift+Enter)",
-    "previousTitle": "Anterior (Shift+Enter)",
-    "next": "Próximo resultado (Enter)",
-    "nextTitle": "Próximo (Enter)",
+    "previous": "Resultado anterior",
+    "previousTitle": "Anterior",
+    "next": "Próximo resultado",
+    "nextTitle": "Próximo",
     "close": "Fechar busca",
-    "closeTitle": "Fechar (⌘F)"
+    "closeTitle": "Fechar",
+    "replacePlaceholder": "Substituir por",
+    "replaceLabel": "Substituir por",
+    "replace": "Substituir",
+    "replaceTitle": "Substituir esta ocorrência",
+    "replaceAll": "Todas",
+    "replaceAllTitle": "Substituir todas as ocorrências",
+    "caseSensitive": "Diferenciar maiúsculas de minúsculas",
+    "caseSensitiveTitle": "Diferenciar maiúsculas de minúsculas",
+    "closeReplace": "Fechar buscar e substituir",
+    "closeReplaceTitle": "Fechar",
+    "showReplace": "Buscar e substituir",
+    "hideReplace": "Ocultar substituição",
+    "replacedCount_one": "{{count}} substituída",
+    "replacedCount_other": "{{count}} substituídas"
   },
   "outline": {
     "show": "Mostrar estrutura",
@@ -121,10 +191,23 @@
     "title": "Estrutura",
     "ariaLabel": "Estrutura da nota",
     "hide": "Ocultar estrutura",
-    "hideTitle": "Ocultar estrutura (Esc)"
+    "copyHeadingLink": "Copiar link para o título",
+    "copyNoteLink": "Copiar link entre notas",
+    "copyHeadingShortcut": "Copiar atalho para o título",
+    "copied": "Copiado"
+  },
+  "bodyMenu": {
+    "cut": "Recortar",
+    "copyAsPlain": "Copiar como texto simples",
+    "copyAsMarkdown": "Copiar como Markdown",
+    "sortAsc": "Ordenar linhas de A a Z",
+    "sortDesc": "Ordenar linhas de Z a A"
   },
   "topRow": {
     "add": "Adicionar uma linha no topo"
+  },
+  "addLine": {
+    "add": "Adicionar uma linha"
   },
   "link": {
     "popoverLabel": "Adicionar link",
@@ -139,8 +222,11 @@
     "textLabel": "Texto do link",
     "textPlaceholder": "Opcional, deixe em branco para mostrar a URL",
     "selectedTextHint": "O texto selecionado será usado como link",
-    "editTextHint": "Edite o texto do link no editor",
-    "update": "Atualizar"
+    "update": "Atualizar",
+    "menuOpen": "Abrir link",
+    "menuCopy": "Copiar link",
+    "menuEdit": "Editar link",
+    "menuRemove": "Remover link"
   },
   "audio": {
     "uploadingRecording": "Enviando gravação...",
@@ -157,18 +243,126 @@
     "words_other": "{{formatted}} palavras",
     "characters_one": "{{formatted}} caractere",
     "characters_other": "{{formatted}} caracteres",
-    "tooLargeToSync": ", pode ser grande demais para sincronizar, divida em uma nova nota",
+    "tasksChecked_one": "{{done}} de {{formatted}} marcado",
+    "tasksChecked_other": "{{done}} de {{formatted}} marcados",
+    "syncLimit": " · {{share}} do limite de sincronização de 1 MB",
+    "overSyncLimit": " · acima do limite de sincronização de 1 MB, fica neste dispositivo",
+    "split": "Dividir nota",
     "veryLong": ", muito longa, pode ficar lenta para editar e travar",
     "gettingLong": ", está ficando longa, pode travar em dispositivos mais lentos",
     "largeTableWarning": "Uma tabela grande ({{rows}} linhas) pode deixar esta nota lenta para editar, considere dividi-la"
   },
   "noteLinkSuggestion": {
     "noMatches": "Nenhuma nota correspondente",
-    "create": "Criar \"{{query}}\""
+    "create": "Criar \"{{query}}\"",
+    "headingsIn": "Títulos em {{title}}",
+    "noHeadingMatches": "Nenhum título correspondente"
+  },
+  "copyBox": {
+    "placeholder": "Texto para copiar com um clique"
+  },
+  "inlineCode": {
+    "copyHint": "{{key}}+clique para copiar",
+    "copied": "Copiado"
   },
   "codeBlock": {
     "copy": "Copiar",
     "copied": "Copiado",
-    "copyFailed": "Falhou"
+    "copyFailed": "Falhou",
+    "wrap": "Quebrar linhas longas",
+    "showAll_one": "Mostrar {{count}} linha",
+    "showAll_many": "Mostrar todas as {{count}} linhas",
+    "showAll_other": "Mostrar todas as {{count}} linhas",
+    "showLess": "Mostrar menos",
+    "plainText": "Texto simples",
+    "language": "Linguagem do código: {{name}}",
+    "searchLanguages": "Buscar linguagens",
+    "placeholder": "Digite ou cole código. Para ter cores, escolha uma linguagem acima."
+  },
+  "math": {
+    "sourceLabel": "Código LaTeX"
+  },
+  "noteLink": {
+    "open": "Abrir nota",
+    "remove": "Remover link",
+    "linkHeading": "Vincular a um título...",
+    "headingNotFound": "Título não encontrado",
+    "headingsLocked": "Desbloqueie esta nota para ver os títulos dela",
+    "noHeadings": "Esta nota não tem títulos"
+  },
+  "footnote": {
+    "placeholder": "Texto da nota",
+    "back": "Voltar ao texto",
+    "unused": "Não usada no texto",
+    "remove": "Remover nota",
+    "missing": "A nota não tem texto. Clique para adicionar.",
+    "ariaRef": "Nota {{n}}",
+    "ariaSection": "Notas de rodapé"
+  },
+  "formatBar": {
+    "tryIt": "Experimente: organize a barra aqui e veja como fica.",
+    "previewOnly": "Só uma prévia. Seu layout é salvo assim que você tiver o Pro.",
+    "discard": "Descartar",
+    "keepLayout": "Manter este layout",
+    "hintDrag": "Arraste para mover, clique para ver as opções.",
+    "hintTap": "Toque em um botão para ver as opções.",
+    "onBar": "Na barra",
+    "inMenu": "No menu +",
+    "inAttachMenu": "No menu de anexos",
+    "attachMenuEmpty": "Vazio, então o botão de anexar não aparece.",
+    "menuEmpty": "O menu está vazio, então o botão + não aparece.",
+    "hidden": "Ocultos",
+    "hiddenNote": "Eles continuam funcionando por atalho e em Markdown.",
+    "hiddenDrop": "Solte um botão aqui para ocultá-lo.",
+    "arrangeTitle": "Botões",
+    "markdownViewNote": "A visualização Markdown mantém seu próprio conjunto fixo de botões.",
+    "hiddenEmpty": "Nada está oculto.",
+    "alwaysVisible": "Sempre visíveis",
+    "pinned": "Abre um painel, então fica na barra ou oculto",
+    "optionsFor": "Opções de {{item}}",
+    "moveUp": "Mover para cima",
+    "moveDown": "Mover para baixo",
+    "moveLeft": "Mover para a esquerda",
+    "moveRight": "Mover para a direita",
+    "home": {
+      "bar": "Na barra",
+      "menu": "No menu +",
+      "attachMenu": "No menu de anexos",
+      "hidden": "Oculto"
+    },
+    "opensPanel": "abre um painel",
+    "showsRecording": "mostra a gravação",
+    "refuse": {
+      "menuNotAllowed": "{{item}} pode ficar na barra ou oculto, não no menu +.",
+      "attachNotAllowed": "Só os botões de imagem, arquivo e gravação cabem no menu de anexos.",
+      "lastOnBar": "Deixe pelo menos um botão na barra."
+    },
+    "items": {
+      "link": "Link",
+      "notelink": "Link entre notas",
+      "audio": "Gravação",
+      "attachMenu": "Anexar",
+      "separator": "Separador",
+      "markdownView": "Ver markdown"
+    },
+    "positionTitle": "Posição da barra",
+    "positionNote": "Escolha onde a barra de formatação fica no editor.",
+    "positionTop": "Em cima",
+    "positionBottom": "Embaixo"
+  },
+  "kanban": {
+    "todo": "A fazer",
+    "inProgress": "Em andamento",
+    "review": "Em revisão",
+    "done": "Concluído",
+    "color": "Cor",
+    "columns": "Colunas",
+    "columnCount_one": "{{count}} coluna",
+    "columnCount_other": "{{count}} colunas",
+    "cardCount_one": "{{count}} cartão",
+    "cardCount_other": "{{count}} cartões",
+    "addColumn": "Adicionar coluna",
+    "removeBoard": "Remover quadro",
+    "moveTo": "Mover para"
   }
 }

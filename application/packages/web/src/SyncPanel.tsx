@@ -14,9 +14,13 @@ import {
   SealCheck,
   Warning,
   WifiSlash,
+  Laptop,
+  IdentificationCard,
+  Pulse,
 } from './icons';
 import { type SupabaseClient } from '@notes/shared';
 import { isDemoMode } from './demo';
+import { formatInstant, formatRelative } from './intlFormat';
 import { verifySync, resetSyncCursor, type SyncReport } from './syncVerify';
 import { recordCleanVerify } from './verifyStamp';
 import { buildDeviceName } from './devices';
@@ -27,10 +31,18 @@ import { useSyncing } from './syncingStore';
 import { useBelowVersionFloor } from './versionFloor';
 import { setSyncPaused, useSyncPaused } from './syncPause';
 import { setFilesWifiOnly, useFilesWifiOnly, wifiOnlyAvailable } from './wifiOnly';
-import { useSyncLog, lastOkSyncAt, type SyncPassEntry } from './syncLog';
+import { useSyncLog, lastOkSyncAt, pullStanding, type SyncPassEntry } from './syncLog';
+import { usePushFailures, usePushHalt, type PushFailure } from './pushFailures';
+import { db } from './db';
+import { readAuthLog } from './authDiag';
+import { readSyncFaults } from './syncFaults';
+import { buildSupportReport } from './supportReport';
+import { deriveDisplayTitle } from './notesViewUtils';
 import { useVerifyStamp } from './verifyStamp';
-import { formatRelative, SETTINGS_EYEBROW } from './settingsUI';
+import { EYEBROW_ICON_ROW, EyebrowGlyph, SETTINGS_EYEBROW, SETTINGS_BTN_PRIMARY } from './settingsUI';
+import { Switch } from './Switch';
 import { VERSION } from './version';
+import { SwissFlag } from './SwissFlag';
 
 /**
  * The redesigned sync readout: one status word with its age, the recent
@@ -48,6 +60,7 @@ export function SyncPanel({
   onSyncNow,
   supabase,
   autoVerify = false,
+  onOpenNote,
 }: {
   pubkey?: string;
   onSyncNow?: () => void | Promise<void>;
@@ -56,6 +69,9 @@ export function SyncPanel({
   /** Run the verify on mount - set when the footer pill's click IS the
    *  question (was SyncVerifyBlock's autoRun). */
   autoVerify?: boolean;
+  /** Opens a note from the not-backed-up list. Absent where there is no
+   *  editor to open it in. */
+  onOpenNote?: (id: string) => void;
 }) {
   const { t } = useTranslation('settings');
   const online = useOnlineStatus();
@@ -66,6 +82,32 @@ export function SyncPanel({
   const wifi = useFilesWifiOnly();
   const log = useSyncLog();
   const stamp = useVerifyStamp();
+  const failures = usePushFailures();
+  const halt = usePushHalt();
+
+  // Titles for the not-backed-up list, read on demand: the failing notes
+  // are the few the last pass refused, never the whole vault.
+  const [failedNotes, setFailedNotes] = useState<Array<{ id: string; title: string; failure: PushFailure; chars: number }>>([]);
+  useEffect(() => {
+    if (failures.size === 0) {
+      setFailedNotes([]);
+      return;
+    }
+    let cancelled = false;
+    const ids = [...failures.keys()];
+    void db.notes.bulkGet(ids).then((rows) => {
+      if (cancelled) return;
+      setFailedNotes(
+        ids.map((id, i) => {
+          const row = rows[i];
+          return { id, title: row ? deriveDisplayTitle(row) : id.slice(0, 8), failure: failures.get(id)!, chars: row ? row.body.length : 0 };
+        }),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [failures]);
 
   // Re-render every 30 s so "2 min ago" ages without interaction.
   const [, tick] = useReducer((x: number) => x + 1, 0);
@@ -125,25 +167,32 @@ export function SyncPanel({
   // pill (SyncStatus.tsx), and carries the same words the pill does.
   const demo = isDemoMode();
 
-  const state: 'demo' | 'floor' | 'paused' | 'offline' | 'syncing' | 'wifiHold' | 'storageFull' | 'uploading' | 'synced' =
+  // Same rule as the pill: no green check before a clean pull is logged.
+  const standing = pullStanding(log);
+
+  const state: 'demo' | 'floor' | 'paused' | 'offline' | 'syncing' | 'notBackedUp' | 'notSynced' | 'wifiHold' | 'storageFull' | 'uploading' | 'synced' =
     demo ? 'demo'
     : belowFloor ? 'floor'
     : paused ? 'paused'
     : !online ? 'offline'
     : syncing ? 'syncing'
+    : failures.size > 0 || halt ? 'notBackedUp'
+    : standing !== 'ok' ? 'notSynced'
     : pending.count > 0 && wifi.held ? 'wifiHold'
     : pending.count > 0 && pending.blocked >= pending.count ? 'storageFull'
     : pending.count > 0 ? 'uploading'
     : 'synced';
 
-  const amber = 'text-amber-600 dark:text-amber-400';
-  const green = 'text-emerald-600 dark:text-emerald-400';
+  const amber = 'text-warning';
+  const green = 'text-success';
   const heads: Record<typeof state, { icon: React.ReactNode; word: string; cls: string }> = {
     demo: { icon: <CloudSlash size={17} />, word: t('syncStatus.notSaved'), cls: amber },
     floor: { icon: <Warning size={17} />, word: t('syncStatus.updateRequired'), cls: amber },
     paused: { icon: <Pause size={17} weight="bold" />, word: t('syncStatus.paused'), cls: amber },
     offline: { icon: <WifiSlash size={17} />, word: t('syncStatus.offline'), cls: amber },
     syncing: { icon: <CircleNotch size={17} className="animate-spin" />, word: t('syncStatus.syncing'), cls: 'text-accent' },
+    notBackedUp: { icon: <Warning size={17} />, word: t('syncStatus.notBackedUp'), cls: amber },
+    notSynced: { icon: <Warning size={17} />, word: t('syncStatus.notSynced'), cls: amber },
     wifiHold: { icon: <CloudArrowUp size={17} />, word: t('syncStatus.wifiHold'), cls: amber },
     storageFull: { icon: <Warning size={17} />, word: t('syncStatus.storageFull'), cls: amber },
     uploading: { icon: <CircleNotch size={17} className="animate-spin" />, word: t('syncStatus.uploading'), cls: 'text-accent' },
@@ -160,6 +209,12 @@ export function SyncPanel({
     : state === 'floor' ? t('syncStatus.updateRequiredTooltip')
     : state === 'paused' ? t('syncPanel.pausedBody')
     : state === 'offline' ? t('syncStatus.offlineTooltip')
+    : state === 'notBackedUp'
+      ? halt
+        ? t('syncStatus.haltedAria', { count: halt.unreached })
+        : t('syncStatus.notBackedUpAria', { count: failures.size })
+    : state === 'notSynced'
+      ? standing === 'never' ? t('syncStatus.firstSyncPending') : t('syncStatus.pullFailed')
     : state === 'wifiHold' ? t('syncStatus.wifiHoldTooltip')
     : state === 'storageFull' ? t('syncStatus.pendingBlobsBlocked', { count: pending.blocked })
     : state === 'uploading' ? t('syncStatus.pendingBlobs', { count: pending.count })
@@ -193,7 +248,9 @@ export function SyncPanel({
 
         {/* One line, one slot: while a pass runs it narrates, otherwise it
             carries the last clean verify. Same element and size either way,
-            so the hero never changes height when Sync now is clicked. */}
+            and an empty slot holds the line's height in the synced state,
+            so the hero never changes height when a background pass or
+            either button starts one. */}
         {state === 'syncing' ? (
           <p className="mt-1.5 text-sm text-pn-soft">
             {t('syncPanel.passRunning')}
@@ -208,13 +265,15 @@ export function SyncPanel({
           // Soft text, green seal only: the state word above owns the
           // color, this line is a fact with a small anchor, not a second
           // green claim.
-          <p className="mt-1.5 text-sm text-pn-soft inline-flex items-center gap-1.5">
+          <p className="mt-1.5 text-sm text-pn-soft flex items-center gap-1.5">
             {t('syncPanel.verified', {
               ago: formatRelative(new Date(stamp.at).toISOString()),
               count: stamp.items,
             })}
-            <SealCheck size={15} weight="fill" className="text-emerald-500 dark:text-emerald-400" />
+            <SealCheck size={15} weight="fill" className="text-success" />
           </p>
+        ) : state === 'synced' && !demo ? (
+          <p className="mt-1.5 h-5" aria-hidden="true" />
         ) : null}
         {subline && <p className="mt-1.5 text-sm text-pn-soft">{subline}</p>}
         {showWaiting && (
@@ -226,6 +285,38 @@ export function SyncPanel({
 
         {!demo && <PassBars log={log} />}
       </div>
+
+      {/* ── Not backed up: the notes the last pass could not push, with the
+          reason each one was refused. Persistent by design - it clears only
+          when a pass pushes them. */}
+      {failedNotes.length > 0 && !demo && (
+        <div className="rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3">
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+            {t('syncPanel.notBackedUpHeading', { count: failedNotes.length })}
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {failedNotes.map(({ id, title, failure }) => (
+              <li key={id} className="flex items-center gap-2 text-sm">
+                <span className="min-w-0 flex-1 truncate" dir="auto">{title}</span>
+                <span className="shrink-0 text-xs text-warning">
+                  {failure.reason === 'too_large'
+                    ? t('syncPanel.reasonTooLarge')
+                    : t('syncPanel.reasonFailed', { message: failure.message })}
+                </span>
+                {onOpenNote && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenNote(id)}
+                    className="shrink-0 rounded-md border border-amber-300 dark:border-amber-700 px-2 py-0.5 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/40 transition"
+                  >
+                    {t('syncPanel.openNote')}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* ── Controls: the two actions side by side, settings rows under ── */}
       <div className="grid gap-3 sm:grid-cols-2">
@@ -245,22 +336,20 @@ export function SyncPanel({
             type="button"
             onClick={() => void runVerify()}
             disabled={verifyBusy || !online || syncing}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-divider hover:bg-surface-1 px-3 py-2.5 text-sm font-medium transition disabled:opacity-50"
+            className={`relative inline-flex items-center justify-center gap-2 rounded-lg border border-divider hover:bg-surface-1 px-3 py-2.5 text-sm font-medium transition ${
+              verifyBusy ? '' : 'disabled:opacity-50'
+            }`}
           >
-            {/* Keyed spans: the busy swap must REPLACE these nodes, not
-                mutate them - the iOS/Android webviews fold the spinner
-                swap into one paint otherwise (see the old block). */}
-            {verifyBusy ? (
-              <span key="busy" className="inline-flex items-center gap-2">
-                <CloudCheck size={15} className="animate-spin" />
-                {t('sync.verifyRunning')}
-              </span>
-            ) : (
-              <span key="idle" className="inline-flex items-center gap-2">
-                <CloudCheck size={15} className="text-accent" />
-                {t('sync.verifyAction')}
-              </span>
+            {/* While the compare runs, a short accent dash travels the
+                border. The SVG sits on the border's centre line, so the
+                rect's radius is the button's 8px less half the 1px border. */}
+            {verifyBusy && (
+              <svg className="pointer-events-none absolute inset-[-0.5px] h-[calc(100%+1px)] w-[calc(100%+1px)] overflow-visible" aria-hidden="true">
+                <rect className="pn-border-trace" width="100%" height="100%" rx="7.5" pathLength="100" />
+              </svg>
             )}
+            <CloudCheck size={15} className="text-accent" />
+            {verifyBusy ? t('sync.verifyRunning') : t('sync.verifyAction')}
           </button>
         )}
       </div>
@@ -274,7 +363,7 @@ export function SyncPanel({
         <div className="text-sm leading-relaxed">
           {report.verdict === 'in_sync' && (
             pending.count > 0 && pending.blocked >= pending.count ? (
-              <p className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+              <p className="inline-flex items-center gap-1.5 text-warning">
                 <Warning size={14} />
                 {t('sync.verifyInSyncBlockedBlobs', { count: pending.blocked })}
               </p>
@@ -293,14 +382,14 @@ export function SyncPanel({
               measured is probably just data in flight. */}
           {report.verdict === 'busy' && <p className="text-pn-soft">{t('sync.verifyBusy')}</p>}
           {report.verdict === 'failed' && (
-            <p className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+            <p className="inline-flex items-center gap-1.5 text-warning">
               <WifiSlash size={14} />
               {t('sync.verifyFailed')}
             </p>
           )}
           {report.verdict === 'diverged' && (
             <div className="space-y-2">
-              <p className="text-amber-600 dark:text-amber-400">{t('sync.verifyDiverged')}</p>
+              <p className="text-warning">{t('sync.verifyDiverged')}</p>
               <ul className="text-pn-soft space-y-0.5">
                 {report.missingLocally.length > 0 && (
                   <li>{t('sync.verifyMissing', { count: report.missingLocally.length })}</li>
@@ -319,7 +408,7 @@ export function SyncPanel({
                 <button
                   type="button"
                   onClick={repair}
-                  className="rounded-md bg-accent text-white hover:bg-accent-hover px-3 py-1.5 text-sm font-medium transition"
+                  className={SETTINGS_BTN_PRIMARY}
                 >
                   {t('sync.verifyRepairAction')}
                 </button>
@@ -331,8 +420,8 @@ export function SyncPanel({
 
       {/* ── Device + data path ── */}
       <div className="grid gap-3 sm:grid-cols-5">
-        <div className="flex flex-col rounded-lg border border-divider px-3.5 py-3 sm:col-span-2">
-          <span className={`${SETTINGS_EYEBROW} block mb-2`}>{t('syncPanel.thisDevice')}</span>
+        <div data-setting="me.thisDevice" className="flex flex-col rounded-lg border border-divider px-3.5 py-3 sm:col-span-2">
+          <span className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW} mb-2`}><EyebrowGlyph icon={Laptop} />{t('syncPanel.thisDevice')}</span>
           <div className="flex items-center gap-2 text-sm font-medium">
             <span className="relative flex h-2 w-2" aria-hidden="true">
               {state !== 'floor' && state !== 'offline' && state !== 'demo' && (
@@ -353,6 +442,7 @@ export function SyncPanel({
               has, so they would be controls over nothing. */}
           {!demo && (
             <SwitchRow
+              setting="me.pauseSync"
               className="mt-auto border-t border-divider pt-2.5"
               label={t('syncPanel.pauseSync')}
               checked={paused}
@@ -361,6 +451,7 @@ export function SyncPanel({
           )}
           {!demo && wifiOnlyAvailable() && (
             <SwitchRow
+              setting="me.filesWifiOnly"
               className="border-t border-divider pt-2.5 mt-2.5"
               label={t('syncPanel.filesWifiOnly')}
               checked={wifi.enabled}
@@ -369,28 +460,28 @@ export function SyncPanel({
           )}
         </div>
 
-        <div className="flex flex-col rounded-lg border border-divider px-3.5 py-3 sm:col-span-3">
-          <span className={`${SETTINGS_EYEBROW} block mb-2`}>{t('syncPanel.whereTitle')}</span>
+        <div data-setting="me.where" className="flex flex-col rounded-lg border border-divider px-3.5 py-3 sm:col-span-3">
+          <span className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW} mb-2`}><EyebrowGlyph icon={CloudArrowUp} />{t('syncPanel.whereTitle')}</span>
           <div className="flex items-center gap-1.5 flex-wrap text-xs text-pn-soft">
             <span className="rounded-md border border-divider bg-track px-2 py-1 whitespace-nowrap">{t('syncPanel.nodeDevice')}</span>
             <Lock size={12} className="text-pn-muted shrink-0" aria-hidden="true" />
             <span className="rounded-md border border-divider bg-track px-2 py-1 whitespace-nowrap">{t('syncPanel.nodeEncrypted')}</span>
             <CloudArrowUp size={13} className="text-pn-muted shrink-0" aria-hidden="true" />
-            <span className="rounded-md border border-emerald-600/40 bg-track px-2 py-1 whitespace-nowrap">{t('syncPanel.nodeRegion')} {'\u{1F1E8}\u{1F1ED}'}</span>
+            <span className="rounded-md border border-emerald-600/40 bg-track px-2 py-1 whitespace-nowrap">{t('syncPanel.nodeRegion')} <SwissFlag /></span>
           </div>
           {/* No local-at-rest line here: the seal's residuals need
               caveats a settings card has no room for. This card only
               makes the claim the product advertises; THREAT_MODEL.md
               carries the honest detail. */}
-          <p className="mt-2 mb-2.5 text-xs text-pn-muted">{t('syncPanel.sealed')}</p>
-          <p className="mt-auto border-t border-divider pt-2.5 text-xs text-pn-muted">
+          <p className="mt-2 mb-2.5 text-xs text-pn-soft">{t('syncPanel.sealed')}</p>
+          <p className="mt-auto border-t border-divider pt-2.5 text-xs text-pn-soft">
             {t('syncPanel.offlineFact')}
           </p>
         </div>
       </div>
 
       {/* ── Account ID (ID & Sync only) ── */}
-      {pubkey && <AccountIdRow pubkey={pubkey} unsynced={unsynced} pendingCount={pending.count} />}
+      {pubkey && <AccountIdRow pubkey={pubkey} unsynced={unsynced} pendingCount={pending.count} log={log} failed={failedNotes} />}
 
       {/* ── Recent activity ── */}
       {!demo && <ActivityList log={log} />}
@@ -403,38 +494,29 @@ function SwitchRow({
   checked,
   onChange,
   className = '',
+  setting,
 }: {
   label: string;
   checked: boolean;
   onChange: (v: boolean) => void;
   className?: string;
+  setting: string;
 }) {
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
-      <span className="flex-1 text-[13px] font-medium">{label}</span>
-      {/* Same switch idiom as ListPrefsPopover / NotesList - one design. */}
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-        onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${
-          checked ? 'bg-accent' : 'bg-neutral-300 dark:bg-neutral-700'
-        }`}
-      >
-        <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-            checked ? 'translate-x-4 rtl:-translate-x-4' : 'translate-x-0.5 rtl:-translate-x-0.5'
-          }`}
-        />
-      </button>
-    </div>
+    <Switch
+      setting={setting}
+      label={label}
+      checked={checked}
+      onChange={onChange}
+      className={`gap-3 ${className}`}
+      labelClassName="text-[13px] font-medium"
+    />
   );
 }
 
 /**
- * The last passes as small bars, oldest first. Green ran clean, red
+ * The last passes as small bars, oldest first. Green ran clean, amber
+ * left notes behind (refused one by one, or a push that stopped), red
  * failed; height tracks how much the pass moved. Purely glanceable -
  * the exact numbers live in the activity list below.
  */
@@ -444,7 +526,7 @@ function PassBars({ log }: { log: SyncPassEntry[] }) {
   return (
     <div className="mt-2.5 flex items-end gap-[3px] h-5" aria-hidden="true">
       {bars.map((e, i) => {
-        const h = 30 + Math.min(70, (e.up + e.down) * 7);
+        const h = 30 + Math.min(70, (e.up + e.down + (e.failed ?? 0) + (e.halted?.unreached ?? 0)) * 7);
         // Older passes fade: the newest bar is fully opaque, the oldest
         // sits at 45%, so a red failure from hours ago reads as history
         // instead of a live alarm.
@@ -452,7 +534,7 @@ function PassBars({ log }: { log: SyncPassEntry[] }) {
         return (
           <span
             key={`${e.at}-${i}`}
-            className={`flex-1 rounded-[2px] ${e.ok ? 'bg-emerald-500/50' : 'bg-red-500/60'}`}
+            className={`flex-1 rounded-[2px] ${!e.ok ? 'bg-red-500/60' : e.failed || e.halted ? 'bg-amber-500/60' : 'bg-emerald-500/50'}`}
             style={{ height: `${e.ok ? h : 60}%`, opacity: 0.45 + 0.55 * age }}
           />
         );
@@ -465,29 +547,36 @@ function AccountIdRow({
   pubkey,
   unsynced,
   pendingCount,
+  log,
+  failed,
 }: {
   pubkey: string;
   unsynced: number;
   pendingCount: number;
+  /** The recent passes, newest last (syncLog.ts). */
+  log: SyncPassEntry[];
+  /** The notes the last pass could not push. */
+  failed: ReadonlyArray<{ id: string; failure: PushFailure; chars: number }>;
 }) {
   const { t } = useTranslation('settings');
   const [copied, setCopied] = useState<'id' | 'report' | null>(null);
 
   async function copy(kind: 'id' | 'report') {
-    // The support report is deliberately English: it is written for our
-    // support inbox, not for the user, and a fixed shape greps well.
     const text =
       kind === 'id'
         ? pubkey
-        : [
-            'PrivacyNotes support report',
-            `Account: ${pubkey}`,
-            `Device: ${buildDeviceName()}`,
-            `Version: ${VERSION}`,
-            `Unsynced notes: ${unsynced}`,
-            `Pending file uploads: ${pendingCount}`,
-            `Last sync: ${lastOkSyncAt() !== null ? new Date(lastOkSyncAt() as number).toISOString() : 'never'}`,
-          ].join('\n');
+        : buildSupportReport({
+            pubkey,
+            device: buildDeviceName(),
+            version: VERSION,
+            unsynced,
+            pendingUploads: pendingCount,
+            lastOkAt: lastOkSyncAt(),
+            failed: failed.map((f) => ({ id: f.id, reason: f.failure.reason, chars: f.chars })),
+            passes: log,
+            faults: readSyncFaults(),
+            breadcrumbs: readAuthLog(20),
+          });
     try {
       await navigator.clipboard.writeText(text);
       setCopied(kind);
@@ -503,8 +592,8 @@ function AccountIdRow({
     // form: narrow panes give the ID the whole line with the two buttons
     // in a 2-column row beneath (a one-line squeeze truncated the ID to
     // four characters on phones); wide panes keep everything on one line.
-    <div className="pn-account-id rounded-lg border border-divider px-3.5 py-3">
-      <span className={`${SETTINGS_EYEBROW} block mb-2`}>{t('accountId.heading')}</span>
+    <div data-setting="me.accountId" className="pn-account-id rounded-lg border border-divider px-3.5 py-3">
+      <span className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW} mb-2`}><EyebrowGlyph icon={IdentificationCard} />{t('accountId.heading')}</span>
       <div className="pn-account-id-row">
         <code className="min-w-0 rounded bg-track px-2.5 py-1.5 text-xs font-mono truncate">{pubkey}</code>
         {/* Labels never change - only the icon flips to a check - so the
@@ -538,7 +627,7 @@ function CopyButton({
       type="button"
       onClick={onClick}
       className={`inline-flex items-center justify-center gap-1.5 rounded border px-2.5 py-1.5 text-xs whitespace-nowrap transition ${
-        copied ? 'border-accent bg-accent/10 text-accent' : 'border-divider hover:bg-surface-1'
+        copied ? 'border-accent bg-accent/10 text-accent-strong' : 'border-divider hover:bg-surface-1'
       }`}
     >
       {copied ? <Check size={12} weight="bold" /> : <Copy size={12} />}
@@ -557,14 +646,14 @@ function ActivityList({ log }: { log: SyncPassEntry[] }) {
   if (log.length === 0) return null;
   const rows = [...log].reverse().slice(0, 6);
   return (
-    <div className="rounded-lg border border-divider overflow-hidden">
+    <div data-setting="me.activity" className="rounded-lg border border-divider overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className="w-full flex items-center gap-2 px-3.5 py-2.5 hover:bg-surface-1 transition"
       >
-        <span className={SETTINGS_EYEBROW}>{t('syncPanel.activity')}</span>
+        <span className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW}`}><EyebrowGlyph icon={Pulse} />{t('syncPanel.activity')}</span>
         <CaretDown size={16} className={`ms-auto text-pn-muted transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
@@ -573,18 +662,20 @@ function ActivityList({ log }: { log: SyncPassEntry[] }) {
             {rows.map((e, i) => (
               <tr key={`${e.at}-${i}`} className="border-t border-divider">
                 <td className="px-3.5 py-1.5 tabular-nums text-pn-muted">
-                  {new Date(e.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {formatInstant(new Date(e.at), 'time')}
                 </td>
-                <td className={`px-2 py-1.5 ${e.ok ? '' : 'text-red-500 dark:text-red-400'}`}>
+                <td className={`px-2 py-1.5 ${!e.ok ? 'text-danger' : e.failed || e.halted ? 'text-warning' : ''}`}>
                   {!e.ok
                     ? t('syncPanel.passFailed')
-                    : e.up === 0 && e.down === 0
+                    : e.up === 0 && e.down === 0 && !e.failed && !e.halted
                       ? (e.n ?? 1) > 1
                         ? t('syncPanel.passNothingRepeat', { count: e.n })
                         : t('syncPanel.passNothing')
                       : [
                           e.up > 0 ? t('syncPanel.passUp', { count: e.up }) : null,
                           e.down > 0 ? t('syncPanel.passDown', { count: e.down }) : null,
+                          e.failed ? t('syncPanel.passPushFailed', { count: e.failed }) : null,
+                          e.halted ? t('syncPanel.passHalted', { count: e.halted.unreached }) : null,
                         ].filter(Boolean).join(', ')}
                 </td>
                 <td className="px-3.5 py-1.5 text-end tabular-nums text-pn-muted">

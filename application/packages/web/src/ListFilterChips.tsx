@@ -1,7 +1,8 @@
+import { createContext, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListEntryCard } from './ListEntryCard';
 import { OverflowTip } from './OverflowTip';
-import { Backspace, Folder, FunnelSimple, Hash, Prohibit, X } from './icons';
+import { Backspace, Folder, Folders, FunnelSimple, Hash, Prohibit, X } from './icons';
 
 /**
  * Dismissable "this list is filtered" chips - one per active filter.
@@ -12,9 +13,10 @@ import { Backspace, Folder, FunnelSimple, Hash, Prohibit, X } from './icons';
  * folder name and tag, and one click clears that one filter. An empty list can
  * therefore never silently be a forgotten selection.
  *
- * Amber on purpose, and the same amber for both: the chips answer "why am I
- * not seeing everything?", so they must not read as the accent-coloured
- * furniture the rest of the pane is built from.
+ * The theme's warning colour on purpose (amber in the built-in palettes), the
+ * same for both: the chips answer "why am I not seeing everything?", so they
+ * must not read as the accent-coloured furniture the rest of the pane is
+ * built from. A theme code's `warning=` sets it.
  *
  * The folder, the tag and the open view compose into one combined filter, so
  * two chips can stand side by side. They wrap rather than truncate the band.
@@ -27,14 +29,23 @@ import { Backspace, Folder, FunnelSimple, Hash, Prohibit, X } from './icons';
  * Renders nothing when no filter is active, so callers can mount it
  * unconditionally.
  *
- * Spec: ops/docs/ui-patterns.md (section 41)
+ * Spec: ops/docs/archive/ui-patterns.md (section 41)
  */
+
+/**
+ * The Subfolders switch beside the folder chip, or null while the open folder
+ * has no subfolder (and while no folder is open). A context rather than a
+ * prop, because every scoped pillar draws this band and none of them reads
+ * the switch itself. `NotesView` provides it around the list panes.
+ * Spec: ops/docs/archive/folder-subfolders.md (D3)
+ */
+export const SubfoldersSwitchContext = createContext<{ on: boolean; onToggle: () => void } | null>(null);
 
 /** Sentinel for the "Untagged" bucket - notes carrying no tag at all. */
 const UNTAGGED = '__untagged__';
 
 const CHIP_CLASS =
-  'max-w-full inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 ps-2.5 pe-2 py-1 text-[12px] font-medium transition';
+  'max-w-full inline-flex items-center gap-1.5 rounded-full bg-warning/10 hover:bg-warning/20 text-warning ps-2.5 pe-2 py-1 text-[12px] font-medium transition';
 
 export function ListFilterChips({
   folderName,
@@ -48,6 +59,7 @@ export function ListFilterChips({
   onClearTag: () => void;
 }) {
   const { t } = useTranslation('notes');
+  const subfolders = useContext(SubfoldersSwitchContext);
   if (folderName === null && tag === null) return null;
   const untagged = tag === UNTAGGED;
   const tagLabel = untagged ? t('headerLabel.untagged') : tag;
@@ -67,11 +79,30 @@ export function ListFilterChips({
           </button>
         </OverflowTip>
       )}
+      {/* A switch, not a filter: accent rather than amber, and no X, so it
+          never reads as a second chip to dismiss. */}
+      {folderName !== null && subfolders && (
+        <button
+          type="button"
+          onClick={subfolders.onToggle}
+          aria-pressed={subfolders.on}
+          aria-label={t('folderChip.subfoldersLabel')}
+          className={`inline-flex items-center gap-1.5 rounded-full border ps-2.5 pe-2.5 py-1 text-[12px] font-medium transition ${
+            subfolders.on
+              ? 'border-transparent bg-accent-fill hover:bg-accent-fill-hover text-white'
+              : 'border-accent/40 text-accent-strong hover:bg-accent/10'
+          }`}
+        >
+          <Folders size={13} className="shrink-0" aria-hidden="true" />
+          {t('folderChip.subfolders')}
+        </button>
+      )}
       {tagLabel !== null && (
         <OverflowTip text={tagLabel} className="min-w-0 flex">
           <button
             type="button"
             onClick={onClearTag}
+            data-tag-chip={untagged ? undefined : tagLabel}
             aria-label={t('tagChip.clear', { tag: tagLabel })}
             className={CHIP_CLASS}
           >
@@ -105,7 +136,7 @@ export function ListFilterChips({
  * empty search - "No matches." already names its own cause, and the chips
  * above stay visible either way.
  *
- * Spec: ops/docs/ui-patterns.md (section 41)
+ * Spec: ops/docs/archive/ui-patterns.md (section 41)
  */
 export function FilteredEmpty({
   folderName,
@@ -122,27 +153,27 @@ export function FilteredEmpty({
   if (folderName === null && tag === null) return null;
   return (
     <div className="flex flex-col items-center justify-center text-center px-6 py-12">
-      <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-3">
-        <FunnelSimple size={22} className="text-amber-700 dark:text-amber-400" aria-hidden="true" />
+      <div className="w-12 h-12 rounded-full bg-warning/10 flex items-center justify-center mb-3">
+        <FunnelSimple size={22} className="text-warning" aria-hidden="true" />
       </div>
       {/* One sentence with the button inside it: "No items match your
           filters. [Clear filters] To display them." The button is the verb,
           so the copy never has to spell out what to press. Three keys rather
           than one because the fragments sit either side of an element; each
           locale phrases its own half. */}
-      <p className="text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-3">
+      <p className="text-sm font-medium text-pn-soft mb-3">
         {t('empty.filtered')}
       </p>
       <button
         type="button"
         onClick={() => { onClearFolder(); onClearTag(); }}
-        className="text-xs font-medium text-white bg-accent hover:bg-accent-hover px-4 py-1.5 rounded-md transition"
+        className="text-xs font-medium text-white bg-accent-fill hover:bg-accent-fill-hover px-4 py-1.5 rounded-md transition"
       >
         {t('empty.clearFilters')}
       </button>
       {/* Same weight as the line above the button, never muted: the two are
           one sentence, and a muted half reads as a footnote instead. */}
-      <p className="text-sm font-medium text-neutral-600 dark:text-neutral-300 max-w-[260px] mt-3">
+      <p className="text-sm font-medium text-pn-soft max-w-[260px] mt-3">
         {t('empty.filteredAfter')}
       </p>
     </div>
@@ -172,7 +203,7 @@ export function FilteredEmpty({
  * Renders nothing when no filter is active, so a caller can hand it the same
  * props it hands the chips and let it decide.
  *
- * Spec: ops/docs/ui-patterns.md (section 41)
+ * Spec: ops/docs/archive/ui-patterns.md (section 41)
  */
 export function ActiveFilterEntry({
   folderName,
@@ -227,7 +258,7 @@ export function ActiveFilterEntry({
  *
  * Renders nothing when the search box is empty.
  *
- * Spec: ops/docs/ui-patterns.md (section 41)
+ * Spec: ops/docs/archive/ui-patterns.md (section 41)
  */
 export function ActiveSearchEntry({
   search,

@@ -1,14 +1,16 @@
 {
   "placeholder": "Schreib los…",
+  "eventPlaceholder": "Tagesordnung, Adresse oder Notizen hinzufügen…",
   "toolbar": {
     "bold": "Fett",
+    "hideKeyboard": "Tastatur ausblenden",
     "italic": "Kursiv",
     "underline": "Unterstrichen",
     "heading": "Überschrift",
     "taskList": "Aufgabenliste",
     "bulletList": "Aufzählungsliste",
-    "linkMenu": "Link",
-    "noteLinkMenu": "Notiz-Link",
+    "addLink": "Link hinzufügen",
+    "noteLink": "Auf eine andere Notiz verlinken (oder [[ tippen)",
     "numberedList": "Nummerierte Liste",
     "textColor": "Textfarbe",
     "textColorApply": "Textfarbe: {{color}}",
@@ -33,7 +35,14 @@
     "math": "Formel",
     "blockMath": "Formelblock",
     "align": "Ausrichtung",
-    "font": "Schrift"
+    "font": "Schrift",
+    "pictureFromFiles": "Bild aus Dateien",
+    "date": "Datum",
+    "dateTime": "Datum und Uhrzeit",
+    "footnote": "Fußnote",
+    "spoiler": "Spoiler",
+    "copyBox": "Kopierfeld",
+    "customize": "Formatleiste anpassen"
   },
   "align": {
     "left": "Linksbündig",
@@ -61,6 +70,8 @@
   "callout": {
     "pickerLabel": "Hinweisbox einfügen",
     "remove": "Hinweisbox entfernen",
+    "collapse": "Hinweisbox einklappen",
+    "expand": "Hinweisbox ausklappen",
     "types": {
       "info": "Info",
       "success": "Erfolg",
@@ -70,10 +81,27 @@
       "question": "Frage",
       "quote": "Zitat",
       "example": "Beispiel",
-      "bug": "Bug",
+      "bug": "Fehler",
       "note": "Notiz",
       "abstract": "Zusammenfassung",
-      "failure": "Fehler"
+      "failure": "Fehler",
+      "fold": "Aufklappbar",
+      "idea": "Idee",
+      "important": "Wichtig",
+      "caution": "Vorsicht",
+      "todo": "Aufgabe",
+      "goal": "Ziel",
+      "decision": "Entscheidung",
+      "definition": "Definition",
+      "seealso": "Siehe auch",
+      "box": "Kasten",
+      "panel": "Panel",
+      "update": "Aktualisierung",
+      "time": "Zeit",
+      "steps": "Schritte",
+      "place": "Ort",
+      "kanban": "Kanban-Board",
+      "column": "Spalte"
     }
   },
   "color": {
@@ -92,6 +120,7 @@
     }
   },
   "insertGroup": {
+    "format": "Formatierung",
     "insert": "Einfügen",
     "blocks": "Blöcke",
     "notation": "Notation"
@@ -101,19 +130,60 @@
     "addRowBelow": "Zeile unterhalb einfügen",
     "addColumnLeft": "Spalte links einfügen",
     "addColumnRight": "Spalte rechts einfügen",
+    "toggleHeaderRow": "Kopfzeile umschalten",
+    "equalColumnWidths": "Spalten gleich breit machen",
+    "resizeHint": "Halte {{shift}} gedrückt, um nur diese Spalte zu ändern, {{alt}} für feinere Schritte",
     "deleteRow": "Zeile löschen",
     "deleteColumn": "Spalte löschen",
-    "deleteTable": "Tabelle löschen"
+    "deleteTable": "Tabelle löschen",
+    "insertFormula": "Formel einfügen",
+    "formulaNoMatch": "Keine passende Formel",
+    "formula": {
+      "SUM": "Werte addieren",
+      "PRODUCT": "Werte multiplizieren",
+      "AVG": "Durchschnitt der Werte",
+      "AVERAGE": "Durchschnitt der Werte",
+      "MEDIAN": "Mittlerer Wert",
+      "MIN": "Kleinster Wert",
+      "MAX": "Größter Wert",
+      "COUNT": "Anzahl der Zahlen",
+      "ABS": "Wert ohne Vorzeichen",
+      "SQRT": "Quadratwurzel",
+      "SIGN": "Ob ein Wert positiv oder negativ ist",
+      "CEIL": "Auf eine ganze Zahl aufrunden",
+      "FLOOR": "Auf eine ganze Zahl abrunden",
+      "ROUND": "Auf eine ganze Zahl runden",
+      "LOG": "Logarithmus",
+      "RAND": "Eine Zufallszahl",
+      "PI": "Die Kreiszahl",
+      "E": "Eulersche Zahl",
+      "TAU": "Zweimal die Kreiszahl",
+      "PHI": "Der goldene Schnitt"
+    }
   },
   "find": {
     "placeholder": "In Notiz suchen",
     "label": "In Notiz suchen",
-    "previous": "Vorheriger Treffer (Shift+Enter)",
-    "previousTitle": "Zurück (Shift+Enter)",
-    "next": "Nächster Treffer (Enter)",
-    "nextTitle": "Weiter (Enter)",
+    "previous": "Vorheriger Treffer",
+    "previousTitle": "Zurück",
+    "next": "Nächster Treffer",
+    "nextTitle": "Weiter",
     "close": "Suche schließen",
-    "closeTitle": "Schließen (⌘F)"
+    "closeTitle": "Schließen",
+    "replacePlaceholder": "Ersetzen durch",
+    "replaceLabel": "Ersetzen durch",
+    "replace": "Ersetzen",
+    "replaceTitle": "Diesen Treffer ersetzen",
+    "replaceAll": "Alle",
+    "replaceAllTitle": "Alle Treffer ersetzen",
+    "caseSensitive": "Groß-/Kleinschreibung beachten",
+    "caseSensitiveTitle": "Groß-/Kleinschreibung beachten",
+    "closeReplace": "Suchen und Ersetzen schließen",
+    "closeReplaceTitle": "Schließen",
+    "showReplace": "Suchen und ersetzen",
+    "hideReplace": "Ersetzen ausblenden",
+    "replacedCount_one": "{{count}} ersetzt",
+    "replacedCount_other": "{{count}} ersetzt"
   },
   "outline": {
     "show": "Gliederung anzeigen",
@@ -121,10 +191,23 @@
     "title": "Gliederung",
     "ariaLabel": "Notizgliederung",
     "hide": "Gliederung ausblenden",
-    "hideTitle": "Gliederung ausblenden (Esc)"
+    "copyHeadingLink": "Link zur Überschrift kopieren",
+    "copyNoteLink": "Notiz-Link kopieren",
+    "copyHeadingShortcut": "Verknüpfung zur Überschrift kopieren",
+    "copied": "Kopiert"
+  },
+  "bodyMenu": {
+    "cut": "Ausschneiden",
+    "copyAsPlain": "Als reinen Text kopieren",
+    "copyAsMarkdown": "Als Markdown kopieren",
+    "sortAsc": "Zeilen von A bis Z sortieren",
+    "sortDesc": "Zeilen von Z bis A sortieren"
   },
   "topRow": {
     "add": "Zeile am Anfang einfügen"
+  },
+  "addLine": {
+    "add": "Zeile einfügen"
   },
   "link": {
     "popoverLabel": "Link hinzufügen",
@@ -139,8 +222,11 @@
     "textLabel": "Linktext",
     "textPlaceholder": "Optional, leer lassen, um die URL anzuzeigen",
     "selectedTextHint": "Der markierte Text wird als Link verwendet",
-    "editTextHint": "Bearbeite den Linktext im Editor",
-    "update": "Aktualisieren"
+    "update": "Aktualisieren",
+    "menuOpen": "Link öffnen",
+    "menuCopy": "Link kopieren",
+    "menuEdit": "Link bearbeiten",
+    "menuRemove": "Link entfernen"
   },
   "audio": {
     "uploadingRecording": "Aufnahme wird hochgeladen...",
@@ -157,18 +243,125 @@
     "words_other": "{{formatted}} Wörter",
     "characters_one": "{{formatted}} Zeichen",
     "characters_other": "{{formatted}} Zeichen",
-    "tooLargeToSync": ", möglicherweise zu groß zum Synchronisieren, lagere einen Teil in eine neue Notiz aus",
+    "tasksChecked_one": "{{done}} von {{formatted}} abgehakt",
+    "tasksChecked_other": "{{done}} von {{formatted}} abgehakt",
+    "syncLimit": " · {{share}} des Sync-Limits von 1 MB",
+    "overSyncLimit": " · über dem Sync-Limit von 1 MB, bleibt auf diesem Gerät",
+    "split": "Notiz aufteilen",
     "veryLong": ", sehr lang, könnte beim Bearbeiten langsam sein und ruckeln",
     "gettingLong": ", wird lang, könnte auf langsameren Geräten hängen",
     "largeTableWarning": "Eine große Tabelle ({{rows}} Zeilen) kann diese Notiz beim Bearbeiten langsam machen, erwäge sie aufzuteilen"
   },
   "noteLinkSuggestion": {
     "noMatches": "Keine passenden Notizen",
-    "create": "„{{query}}“ erstellen"
+    "create": "„{{query}}“ erstellen",
+    "headingsIn": "Überschriften in {{title}}",
+    "noHeadingMatches": "Keine passenden Überschriften"
+  },
+  "copyBox": {
+    "placeholder": "Text, den du mit einem Klick kopierst"
+  },
+  "inlineCode": {
+    "copyHint": "{{key}}-Klick zum Kopieren",
+    "copied": "Kopiert"
   },
   "codeBlock": {
     "copy": "Kopieren",
     "copied": "Kopiert",
-    "copyFailed": "Fehlgeschlagen"
+    "copyFailed": "Fehlgeschlagen",
+    "wrap": "Lange Zeilen umbrechen",
+    "showAll_one": "{{count}} Zeile anzeigen",
+    "showAll_other": "Alle {{count}} Zeilen anzeigen",
+    "showLess": "Weniger anzeigen",
+    "plainText": "Nur Text",
+    "language": "Sprache des Codes: {{name}}",
+    "searchLanguages": "Sprachen suchen",
+    "placeholder": "Tippe oder füge Code ein. Für Farben wählst du oben eine Sprache."
+  },
+  "math": {
+    "sourceLabel": "LaTeX-Quelltext"
+  },
+  "noteLink": {
+    "open": "Notiz öffnen",
+    "remove": "Link entfernen",
+    "linkHeading": "Auf eine Überschrift verlinken...",
+    "headingNotFound": "Überschrift nicht gefunden",
+    "headingsLocked": "Entsperr diese Notiz, um ihre Überschriften zu sehen",
+    "noHeadings": "Diese Notiz hat keine Überschriften"
+  },
+  "footnote": {
+    "placeholder": "Fußnotentext",
+    "back": "Zurück zum Text",
+    "unused": "Nicht im Text verwendet",
+    "remove": "Fußnote entfernen",
+    "missing": "Kein Fußnotentext. Klicke, um ihn hinzuzufügen.",
+    "ariaRef": "Fußnote {{n}}",
+    "ariaSection": "Fußnoten"
+  },
+  "formatBar": {
+    "tryIt": "Probier es aus: Ordne die Leiste hier an und schau, wie sie sich anfühlt.",
+    "previewOnly": "Nur eine Vorschau. Sobald du Pro hast, wird deine Anordnung gespeichert.",
+    "discard": "Verwerfen",
+    "keepLayout": "Diese Anordnung behalten",
+    "hintDrag": "Zum Verschieben ziehen, zum Öffnen der Optionen klicken.",
+    "hintTap": "Tippe auf eine Schaltfläche, um ihre Optionen zu öffnen.",
+    "onBar": "In der Leiste",
+    "inMenu": "Im +-Menü",
+    "inAttachMenu": "Im Anhängen-Menü",
+    "attachMenuEmpty": "Leer, deshalb wird die Anhängen-Schaltfläche nicht angezeigt.",
+    "menuEmpty": "Das Menü ist leer, deshalb wird die +-Schaltfläche nicht angezeigt.",
+    "hidden": "Ausgeblendet",
+    "hiddenNote": "Sie funktionieren weiter über Tastenkürzel und Markdown.",
+    "hiddenDrop": "Zieh eine Schaltfläche hierher, um sie auszublenden.",
+    "arrangeTitle": "Schaltflächen",
+    "markdownViewNote": "Die Markdown-Ansicht hat ihre eigenen, festen Schaltflächen.",
+    "hiddenEmpty": "Nichts ist ausgeblendet.",
+    "alwaysVisible": "Immer sichtbar",
+    "pinned": "Öffnet ein Fenster, bleibt also in der Leiste oder wird ausgeblendet",
+    "optionsFor": "Optionen für {{item}}",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten",
+    "moveLeft": "Nach links",
+    "moveRight": "Nach rechts",
+    "home": {
+      "bar": "In der Leiste",
+      "menu": "Im +-Menü",
+      "attachMenu": "Im Anhängen-Menü",
+      "hidden": "Ausgeblendet"
+    },
+    "opensPanel": "öffnet ein Fenster",
+    "showsRecording": "zeigt die Aufnahme",
+    "refuse": {
+      "menuNotAllowed": "{{item}} kann in der Leiste oder ausgeblendet sein, nicht im +-Menü.",
+      "attachNotAllowed": "Ins Anhängen-Menü passen nur die Schaltflächen für Bild, Datei und Aufnahme.",
+      "lastOnBar": "Lass mindestens eine Schaltfläche in der Leiste."
+    },
+    "items": {
+      "link": "Link",
+      "notelink": "Notiz-Link",
+      "audio": "Aufnahme",
+      "attachMenu": "Anhängen",
+      "separator": "Senkrechter Trenner",
+      "markdownView": "Markdown anzeigen"
+    },
+    "positionTitle": "Position der Leiste",
+    "positionNote": "Wähle, wo die Formatleiste im Editor sitzt.",
+    "positionTop": "Oben",
+    "positionBottom": "Unten"
+  },
+  "kanban": {
+    "todo": "Zu erledigen",
+    "inProgress": "In Arbeit",
+    "review": "Prüfung",
+    "done": "Erledigt",
+    "color": "Farbe",
+    "columns": "Spalten",
+    "columnCount_one": "{{count}} Spalte",
+    "columnCount_other": "{{count}} Spalten",
+    "cardCount_one": "{{count}} Karte",
+    "cardCount_other": "{{count}} Karten",
+    "addColumn": "Spalte hinzufügen",
+    "removeBoard": "Board entfernen",
+    "moveTo": "Verschieben nach"
   }
 }

@@ -7,13 +7,13 @@ title: Stěhování
 
 Přenést sem můžeš čtyři druhy věcí: poznámky, deníkové zápisy, záložky a hesla.
 
-Všechny začínají na stejném místě: **Nastavení > Import a export**.
+Všechny začínají na stejném místě: **Nastavení > Import & Export**.
 
 ## Co můžeš přenést
 
 | Máš | Dorazí jako | Zachová se |
 | --- | --- | --- |
-| Poznámky z jiné aplikace | Poznámky | Štítky, složky, odkazy mezi poznámkami, přílohy |
+| Poznámky z jiné aplikace | Poznámky | Štítky, složky, odkazy na poznámky, přílohy |
 | Export z Apple Journal | Deníkové zápisy | Fotky, videa, hlasové poznámky, místa |
 | Záložky prohlížeče | Záložky | Názvy a ikony stránek |
 | Export hesel | Položky trezoru | Přihlášení, karty, klíče, kódy 2FA |
@@ -34,14 +34,14 @@ Naše návody k importu najdeš tady: [privacynotes.app/cs/help](https://privacy
 - [ ] Dej složku `AppleJournalEntries` do zipu a přetáhni ho sem
 - [ ] Otevři pohled **Deník** a napiš o dnešku
 
-Deníkový zápis obsahuje víc než text. Nad psacím polem sedí sledované hodnoty: nálada, spánek, energie, kroky a další. Vyplň ty, které tě zajímají, a zbytek ignoruj. Po dvou týdnech ti aplikace začne ukazovat vzorce.
+Záznam v deníku obsahuje víc než text. Nad psacím polem sedí sledované hodnoty: nálada, spánek, energie, kroky a další. Vyplň ty, které tě zajímají, a zbytek ignoruj. Po dvou týdnech ti aplikace začne ukazovat vzorce.
 
 [[Sobota: hora Fudži]] je hotový zápis, se všemi hodnotami.
 
 ## Záložky
 
 - [ ] Vyexportuj záložky z prohlížeče jako soubor `.html`
-- [ ] Naimportuj ten soubor: **Nastavení > Import a export > Import > Záložky prohlížeče**
+- [ ] Naimportuj ten soubor: **Nastavení > Import & Export > Import > Záložky prohlížeče**
 
 Můžeš taky vložit odkaz do prázdné poznámky. Název a ikona stránky dorazí samy: [privacynotes.app/cs/help/import/browser-bookmarks](https://privacynotes.app/cs/help/import/browser-bookmarks)
 

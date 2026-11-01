@@ -15,7 +15,7 @@ title: Välkommen till PrivacyNotes
 
 Klicka i slutet av den här raden och skriv ett ord. Anteckningen sparar sig själv. Det finns ingen sparaknapp.
 
-Fältet ovanför ändrar hur texten ser ut: **fet**, *kursiv*, rubriker, checklistor, <span style="color: #f08c00">färger</span>, <span style="font-size: 1.25em; font-family: ui-serif, Georgia, Cambria, serif">typsnitt</span>, länkar.
+Verktygsfältet ovanför ändrar hur texten ser ut: **fet**, *kursiv*, rubriker, checklistor, <span style="color: #f08c00">färger</span>, <span style="font-size: 1.25em; font-family: ui-serif, Georgia, Cambria, serif">typsnitt</span>, länkar.
 
 ## Tre anteckningar värda att öppna
 
@@ -27,7 +27,7 @@ Fältet ovanför ändrar hur texten ser ut: **fet**, *kursiv*, rubriker, checkli
 
 ## En sak att göra idag
 
-- [ ] Leta fram din **<mark style="background-color: rgba(51, 154, 240, 0.35)">fras på 12 ord</mark>** under **Inställningar > Säkerhet > Din fras**, skriv ner den på papper och lägg den på ett säkert ställe
+- [ ] Leta fram din **<mark style="background-color: rgba(51, 154, 240, 0.35)">fras på 12 ord</mark>** under **Inställningar > Säkerhet > Fras**, skriv ner den på papper och lägg den på ett säkert ställe
 
 Den frasen är det som öppnar dina anteckningar. Var den ligger bestämmer du, och du kan ändra dig när som helst. [[Hur dina anteckningar skyddas]] går igenom de tre alternativen.
 

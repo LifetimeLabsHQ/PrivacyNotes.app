@@ -9,6 +9,10 @@
  * the target note (by title match). If no match is found, the click
  * creates a new note with that title.
  *
+ * A target may name a heading, `[[Note#Heading]]` or `[[#Heading]]` for the
+ * note that holds the link; with no label it shows as "Note › Heading".
+ * The link's menu can point an existing link at one of its note's headings.
+ *
  * Markdown round-trip: stored as `[[target]]` or `[[target|label]]`.
  * The tiptap-markdown integration uses addStorage().markdown for
  * serialization, and an inputRule + pasteRule handle the parse side
@@ -19,8 +23,17 @@ import { InputRule, mergeAttributes, Node } from '@tiptap/core';
 import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import { Fragment, Slice, type Node as PMNode } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
-import { wikiLinkSuggestion } from './NoteLinkSuggestion';
+import { useTranslation } from 'react-i18next';
+import {
+  resolveWikiLinkNote,
+  wikiLinkHasNote,
+  wikiLinkHeadings,
+  wikiLinkSuggestion,
+} from './NoteLinkSuggestion';
 import { HoverLabel } from './HoverLabel';
+import { ContextMenu, useContextMenu, type ContextMenuItem } from './ContextMenu';
+import { iconExternal, iconTrash, Hash } from './icons';
+import { noteLinkDisplayText, noteLinkTarget, parseNoteLinkTarget } from './noteLinks';
 
 /* ------------------------------------------------------------------ */
 /* Navigation callback - set by the host (NotesView) via extension    */
@@ -51,12 +64,20 @@ export function setWikiLinkNavigator(
 function WikiLinkView({
   node,
   editor,
+  deleteNode,
+  updateAttributes,
 }: {
   node: { attrs: { target: string; label: string | null } };
-  editor: { storage: Record<string, Record<string, unknown>>; isEditable: boolean };
+  editor: Parameters<typeof wikiLinkHeadings>[0] & { storage: Record<string, Record<string, unknown>>; isEditable: boolean };
+  deleteNode: () => void;
+  updateAttributes: (attrs: { target: string }) => void;
 }) {
   const { target, label } = node.attrs;
-  const display = label || target;
+  const hasNote = wikiLinkHasNote(editor);
+  const readable = noteLinkDisplayText(target, hasNote);
+  const display = label || readable;
+  const { t } = useTranslation('editor');
+  const menu = useContextMenu();
   const wlStore = editor.storage.wikiLink as Record<string, unknown> | undefined;
   // Read the navigator out of the storage box AT CLICK TIME, never at render
   // time. NotesView rewrites the box on every render, and the navigator it
@@ -70,10 +91,76 @@ function WikiLinkView({
     if (navigate) navigate(target);
   };
 
+  // A link is one uneditable object rather than a run of letters, and that is
+  // what makes it unreachable on a touch screen. A tap follows the link, so it
+  // can never leave a caret beside it, and a long press hands the selection to
+  // the platform's own text-selection layer, which the editor is never told
+  // about - the handles appear around the link while the editor holds no
+  // selection at all, so cut and delete act on nothing. A soft keyboard cannot
+  // rescue it either: with the link selected it reports only that its own input
+  // method is handling the key and sends no input event, so no handler runs.
+  // This menu is the route that owes nothing to the keyboard. It is also why
+  // this is the one place a touch long press does not belong to the platform.
+  // Reported as GitHub #283 (deleting a note-link is stuck on Android).
+  const openMenu = (e: React.MouseEvent) => {
+    if (!editor.isEditable) return;
+    const at = { clientX: e.clientX, clientY: e.clientY, preventDefault() {}, stopPropagation() {} };
+    const parsed = parseNoteLinkTarget(target, hasNote);
+    const found = resolveWikiLinkNote(editor, parsed.note);
+    const linked = found && wikiLinkHeadings(editor, found) !== null ? found : null;
+    const items: ContextMenuItem[] = [
+      { label: t('noteLink.open'), onSelect: go, icon: iconExternal() },
+      ...(linked
+        ? [{
+            label: t('noteLink.linkHeading'),
+            icon: <Hash size={14} />,
+            // The menu closes after this runs, so the heading list opens
+            // on the next tick, in the same place.
+            onSelect: () => window.setTimeout(() => menu.open(at, headingRows(linked)), 0),
+          }]
+        : []),
+      { label: t('noteLink.remove'), onSelect: deleteNode, destructive: true, icon: iconTrash() },
+    ];
+    menu.open(e, items);
+    // The platform starts its own selection on a long press before it asks
+    // whether a menu is wanted, so the highlight and its two drag handles are
+    // already painted over the link by the time this runs. They belong to a
+    // selection the editor does not share and cannot act on, and they land on
+    // top of the menu. Drop them, but only when they are inside this link:
+    // a right click carries a selection the user made somewhere else, and that
+    // one is theirs to keep.
+    const el = e.currentTarget;
+    const sel = el.ownerDocument.getSelection();
+    if (sel && !sel.isCollapsed && sel.anchorNode && el.contains(sel.anchorNode)) {
+      sel.removeAllRanges();
+    }
+  };
+
+  // The headings of the linked note, as rows that point this link at one.
+  // The note part keeps what the link already said, so a link into its own
+  // note stays `[[#Heading]]`.
+  const headingRows = (linked: { id: string; title: string }): ContextMenuItem[] => {
+    const answer = wikiLinkHeadings(editor, linked) ?? [];
+    const header: ContextMenuItem = { type: 'header', label: t('noteLinkSuggestion.headingsIn', { title: linked.title }) };
+    if (answer === 'locked') return [header, { label: t('noteLink.headingsLocked'), onSelect: () => {}, disabled: true }];
+    if (answer.length === 0) return [header, { label: t('noteLink.noHeadings'), onSelect: () => {}, disabled: true }];
+    const notePart = parseNoteLinkTarget(target, hasNote).note;
+    const prefix = notePart ? noteLinkTarget(linked.title) : '';
+    const top = Math.min(...answer.map((h) => h.level));
+    return [
+      header,
+      ...answer.map((h) => ({
+        label: `${'\u2003'.repeat(Math.min(h.level - top, 3))}${h.text}`,
+        onSelect: () => updateAttributes({ target: `${prefix}#${noteLinkTarget(h.text)}` }),
+      })),
+    ];
+  };
+
   const span = (
     <span
       role="link"
       tabIndex={0}
+      onContextMenu={openMenu}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -86,7 +173,7 @@ function WikiLinkView({
         }
       }}
       className="text-accent hover:text-accent-hover underline underline-offset-2 cursor-pointer rounded px-0.5 -mx-0.5 hover:bg-accent/10 transition"
-      aria-label={target !== display ? target : undefined}
+      aria-label={readable !== display ? readable : undefined}
     >
       {display}
     </span>
@@ -94,9 +181,10 @@ function WikiLinkView({
 
   return (
     <NodeViewWrapper as="span" className="inline">
-      {target !== display
-        ? <HoverLabel label={target} position="above" inline>{span}</HoverLabel>
+      {readable !== display
+        ? <HoverLabel label={readable} position="above" inline>{span}</HoverLabel>
         : span}
+      <ContextMenu state={menu.state} onClose={menu.close} />
     </NodeViewWrapper>
   );
 }
@@ -127,7 +215,7 @@ function wikiLinkRule(state: WikiLinkParseState): boolean {
   // does not recognise that shape, so without this guard the `!` is left
   // stranded as literal text and the rest becomes a note-link - which is both
   // wrong on screen and, once serialized back, a rewrite of the user's file.
-  // Spec: ops/docs/plans/markdown-folder.md (section 8, media)
+  // Spec: ops/docs/archive/markdown-folder.md (section 8, media)
   if (pos > 0 && src.charCodeAt(pos - 1) === 0x21) {
     return false;
   }
@@ -205,12 +293,37 @@ export const WikiLink = Node.create({
         'data-target': target,
         'data-label': label || undefined,
       }),
-      label || target,
+      label || noteLinkDisplayText(target),
     ];
   },
 
   addNodeView() {
     return ReactNodeViewRenderer(WikiLinkView as never);
+  },
+
+  addKeyboardShortcuts() {
+    // A note-link is one uneditable pill, and with no handler here the
+    // browser is the one that decides what deleting next to it does.
+    // prosemirror-view carries a workaround for that deletion failing on
+    // Chrome and Firefox for Android, and the workaround only runs when the
+    // browser left the DOM untouched, so the outcome there is a race: the
+    // pill goes, or it stays, or the text around it moves. Claiming both keys
+    // makes the removal one plain transaction on every platform.
+    const removeAdjacent = (before: boolean) => () =>
+      this.editor.commands.command(({ tr, state }) => {
+        const { empty, $anchor } = state.selection;
+        if (!empty) return false;
+        const node = before ? $anchor.nodeBefore : $anchor.nodeAfter;
+        if (!node || node.type !== this.type) return false;
+        const from = before ? $anchor.pos - node.nodeSize : $anchor.pos;
+        tr.delete(from, from + node.nodeSize);
+        return true;
+      });
+
+    return {
+      Backspace: removeAdjacent(true),
+      Delete: removeAdjacent(false),
+    };
   },
 
   addInputRules() {
@@ -237,16 +350,21 @@ export const WikiLink = Node.create({
       // Autocomplete dropdown when user types [[
       wikiLinkSuggestion(this.editor),
       // Paste rule: convert [[...]] in pasted text to wiki-link nodes.
+      // Code is left as text: a code block cannot hold the node, and a
+      // shell character class such as `[[:space:]]` is not a link.
       new Plugin({
         key: new PluginKey('wikiLinkPaste'),
         props: {
-          transformPasted(slice) {
+          transformPasted(slice, view) {
+            if (view.state.selection.$from.parent.type.spec.code) return slice;
             const wikiRe = /\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]/g;
 
             function walkFragment(fragment: Fragment): Fragment {
               const newNodes: PMNode[] = [];
               fragment.forEach((node) => {
-                if (node.isText && node.text) {
+                if (node.type.spec.code || node.marks.some((m) => m.type.spec.code)) {
+                  newNodes.push(node);
+                } else if (node.isText && node.text) {
                   const text = node.text;
                   let lastIdx = 0;
                   let m: RegExpExecArray | null;

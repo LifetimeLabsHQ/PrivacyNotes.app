@@ -15,13 +15,16 @@
  * browser, iOS/Android use IAP)
  */
 
-import { detectPlatform } from './devices';
+import { detectPlatform, isNativeStoreBuild } from './devices';
+
+export { isNativeStoreBuild };
 import { isDemoMode } from './demo';
+import { APEX_ORIGIN } from './hosts';
 
 // The CheckoutLauncher page runs the Paddle overlay on an approved Paddle
 // domain. Desktop sends users here in their system browser.
 // Spec: ops/docs/design-decisions.md (native checkout)
-const WEB_CHECKOUT_ORIGIN = 'https://privacynotes.app';
+const WEB_CHECKOUT_ORIGIN = APEX_ORIGIN;
 
 // Native store product IDs (App Store + Google Play, mirrored). Pro is a
 // non-consumable one-time unlock; storage tiers are auto-renewable subs.
@@ -424,19 +427,6 @@ async function startAppleStoragePurchase(
   onError?: (reason: NativePurchaseError) => void,
 ): Promise<void> {
   return runNativePurchase('appstore-validate', storageProductId(gb), 'subs', pubkey, onSuccess, onError);
-}
-
-/**
- * True on builds whose purchases live in a native store account (iOS App
- * Store, Google Play build). Desktop and the direct Android APK buy through
- * Paddle, where the entitlement follows the pubkey server-side - there is
- * nothing device-local to restore, so restore UI must not appear there.
- * Spec: ops/docs/plans/iap-restore-handoff.md (restore UI only appears on iOS or Play builds, not Paddle purchases)
- */
-export function isNativeStoreBuild(): boolean {
-  const platform = detectPlatform();
-  if (platform === 'ios') return true;
-  return platform === 'android' && import.meta.env.VITE_ANDROID_DIST !== 'direct';
 }
 
 /**

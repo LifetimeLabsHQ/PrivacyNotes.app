@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowsClockwise, Info } from './icons';
+import { ArrowsClockwise, CaretRight, Info } from './icons';
 import { HoverLabel } from './HoverLabel';
 import { formatBytes } from './formatBytes';
 
@@ -17,6 +17,8 @@ type Props = {
   maxBytes: number;
   /** Re-runs the server-side recount (recalculate_my_quota) + refetch. */
   onRefresh: () => Promise<void> | void;
+  /** Opens Settings > Storage from the usage figure and the track. */
+  onOpen?: () => void;
 };
 
 /**
@@ -28,11 +30,16 @@ type Props = {
  * while running, held one full rotation so a fast refresh still
  * visibly runs - see MarkdownListPane's handleRescan for the rationale).
  */
-export function StorageBar({ label, usedBytes, maxBytes, onRefresh }: Props) {
+export function StorageBar({ label, usedBytes, maxBytes, onRefresh, onOpen }: Props) {
   const { t } = useTranslation('common');
   const [busy, setBusy] = useState(false);
   if (maxBytes <= 0) return null;
   const pct = Math.min((usedBytes / maxBytes) * 100, 100);
+  const usage = t('storageBar.usage', {
+    percent: Math.round(pct),
+    used: compactBytes(usedBytes),
+    max: compactBytes(maxBytes),
+  });
 
   async function handleRefresh() {
     if (busy) return;
@@ -50,7 +57,7 @@ export function StorageBar({ label, usedBytes, maxBytes, onRefresh }: Props) {
   return (
     <div className="shrink-0 px-4 pt-2 pb-1">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mb-1.5">
-        <span className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400">
+        <span className="flex items-center gap-1 text-xs text-pn-muted">
           {label}
           <HoverLabel label={t('storageBar.cleanupInfo')} position="below-start" multiline className="flex items-center">
             <span tabIndex={0} aria-label={t('storageBar.cleanupInfo')} className="inline-flex items-center cursor-help">
@@ -59,13 +66,19 @@ export function StorageBar({ label, usedBytes, maxBytes, onRefresh }: Props) {
           </HoverLabel>
         </span>
         <span className="flex items-center gap-2 ml-auto">
-          <span className="text-xs text-neutral-600 dark:text-neutral-400 whitespace-nowrap">
-            {t('storageBar.usage', {
-              percent: Math.round(pct),
-              used: compactBytes(usedBytes),
-              max: compactBytes(maxBytes),
-            })}
-          </span>
+          {onOpen ? (
+            <button
+              type="button"
+              onClick={onOpen}
+              aria-label={`${usage} - ${t('storageBar.open')}`}
+              className="inline-flex items-center gap-0.5 text-xs text-pn-muted whitespace-nowrap hover:text-accent transition cursor-pointer"
+            >
+              {usage}
+              <CaretRight size={12} aria-hidden="true" className="rtl:-scale-x-100" />
+            </button>
+          ) : (
+            <span className="text-xs text-pn-muted whitespace-nowrap">{usage}</span>
+          )}
           <HoverLabel label={t('storageBar.refresh')} position="below-end">
             <button
               type="button"
@@ -82,10 +95,12 @@ export function StorageBar({ label, usedBytes, maxBytes, onRefresh }: Props) {
           </HoverLabel>
         </span>
       </div>
-      <div className="h-2 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+      {/* The track opens the same place for a pointer; the button above is
+          the keyboard's way in, so the track stays out of the tab order. */}
+      <div className={`h-2 rounded-full bg-pn/10 overflow-hidden${onOpen ? ' cursor-pointer' : ''}`} onClick={onOpen} aria-hidden="true">
         <div
           className={`h-full rounded-full transition-all ${
-            pct > 80 ? 'bg-amber-500 dark:bg-amber-400' : 'bg-accent'
+            pct > 80 ? 'bg-amber-500 dark:bg-amber-400' : 'bg-accent-fill'
           }`}
           style={{ width: `${Math.max(pct, 0.5)}%` }}
         />

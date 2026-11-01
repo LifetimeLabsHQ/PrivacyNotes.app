@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { Upload, X } from './icons';
-import { useEscapeToClose } from './useEscapeToClose';
+import { Upload } from './icons';
 import { extractPhraseFromScan } from './qrSignIn';
 import { isLinuxNative } from './devices';
 import { Brand } from './Brand';
+import { Modal } from './ui';
 
 /** Camera QR scanner for sign-in. Dynamically imports `qr-scanner`. */
 export function QrScannerModal({
@@ -154,7 +154,6 @@ export function QrScannerModal({
     };
   }, [onScanned, linuxNative]);
 
-  useEscapeToClose(onClose);
 
   async function handleImageFile(file: File) {
     setHint(null);
@@ -190,24 +189,7 @@ export function QrScannerModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-surface-2 border border-divider rounded-lg max-w-md w-full overflow-hidden text-pn"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-900">
-          <h2 className="text-lg font-semibold">{t('qrScanner.title')}</h2>
-          <button
-            onClick={onClose}
-            aria-label={t('common:actions.close')}
-            className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition p-1 -m-1"
-          >
-            <X size={18} />
-          </button>
-        </div>
+    <Modal onClose={onClose} title={t('qrScanner.title')} header="bar" className="max-w-md overflow-hidden">
 
         <div className="relative bg-black aspect-square flex items-center justify-center">
           <video
@@ -222,19 +204,19 @@ export function QrScannerModal({
             </div>
           )}
           {status === 'error' && (
-            <div className="absolute inset-0 bg-neutral-900 flex flex-col items-center justify-center text-center p-6 text-sm text-neutral-200">
+            <div /* theme-ok: the camera well is dark in every theme */ className="absolute inset-0 bg-neutral-900 flex flex-col items-center justify-center text-center p-6 text-sm text-neutral-200">
               <div className="mb-2 text-red-400 font-medium">
                 {t('qrScanner.cameraUnavailable')}
               </div>
-              <div className="text-xs text-neutral-400">{error}</div>
+              <div /* theme-ok: on the dark camera well */ className="text-xs text-neutral-400">{error}</div>
             </div>
           )}
           {status === 'uploadOnly' && (
-            <div className="absolute inset-0 bg-neutral-900 flex flex-col items-center justify-center text-center p-6 text-sm text-neutral-200">
+            <div /* theme-ok: the camera well is dark in every theme */ className="absolute inset-0 bg-neutral-900 flex flex-col items-center justify-center text-center p-6 text-sm text-neutral-200">
               <div className="mb-2 font-medium">
                 {t('qrScanner.uploadOnlyTitle')}
               </div>
-              <div className="text-xs text-neutral-400">
+              <div /* theme-ok: on the dark camera well */ className="text-xs text-neutral-400">
                 {t('qrScanner.uploadOnlyBody')}
               </div>
             </div>
@@ -247,20 +229,20 @@ export function QrScannerModal({
         </div>
 
         {hint && (
-          <div className="px-5 py-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-t border-amber-200/50 dark:border-amber-900/40">
+          <div className="px-5 py-2 text-xs text-warning bg-amber-50 dark:bg-amber-950/30 border-t border-amber-200/50 dark:border-amber-900/40">
             {hint}
           </div>
         )}
 
-        <div className="px-5 py-3 border-t border-neutral-200 dark:border-neutral-900 flex items-center justify-between gap-3">
-          <div className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+        <div className="px-5 py-3 border-t border-divider flex items-center justify-between gap-3">
+          <div className="text-xs text-pn-muted leading-relaxed">
             {t('qrScanner.uploadHint')}
           </div>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={scanningImage}
-            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded border border-neutral-300 dark:border-neutral-700 hover:bg-surface-1 disabled:opacity-50 transition"
+            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded border border-divider hover:bg-surface-1 disabled:opacity-50 transition"
           >
             <Upload size={14} />
             {t('qrScanner.uploadImage')}
@@ -277,13 +259,12 @@ export function QrScannerModal({
           />
         </div>
 
-        <div className="px-5 py-3 border-t border-neutral-200 dark:border-neutral-900 text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+        <div className="px-5 py-3 border-t border-divider text-xs text-pn-muted leading-relaxed">
           <Trans
             i18nKey="auth:qrScanner.footer"
             components={{ brand: <Brand /> }}
           />
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

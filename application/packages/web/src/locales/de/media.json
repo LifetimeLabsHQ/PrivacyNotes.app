@@ -12,17 +12,25 @@
     "uploadFailed": "Upload fehlgeschlagen: {{message}}",
     "storeUnavailable": "Bildspeicher nicht verfügbar",
     "loadFailed": "Bild konnte nicht geladen werden",
-    "notFound": "Bild nicht gefunden"
+    "notFound": "Bild nicht gefunden",
+    "saveFailed": "Das Speichern ist fehlgeschlagen, die Datei kann also leer oder unvollständig sein.",
+    "viewAria": "Bild ansehen",
+    "copyAria": "Bild kopieren",
+    "copyFailed": "Das Bild konnte nicht kopiert werden.",
+    "picturesLeftOut": "Einige Bilder wurden nicht eingefügt. Kopiere ein Bild einzeln, um es einzufügen."
   },
   "attachment": {
     "fallbackName": "Anhang",
+    "rename": "Umbenennen",
+    "renamePlaceholder": "Dateiname",
+    "saveName": "Namen speichern",
+    "seek": "Wiedergabeposition",
     "imageAlt": "Bild",
     "cantPlay": "Wiedergabe nicht möglich. Zum Anhören herunterladen",
     "downloadingStatus": "wird heruntergeladen...",
     "deleteConfirm": "Löschen?",
     "copied": "Kopiert",
     "download": "Herunterladen",
-    "downloadToPlay": "Zum Abspielen herunterladen",
     "play": "Abspielen",
     "pause": "Pause",
     "fileNotFound": "Datei nicht gefunden",
@@ -33,6 +41,40 @@
     "downloadFailed": "Download fehlgeschlagen",
     "playbackFailed": "Wiedergabe fehlgeschlagen",
     "uploadFailed": "Upload fehlgeschlagen: {{message}}",
-    "unknownError": "Unbekannter Fehler"
+    "unknownError": "Unbekannter Fehler",
+    "view": "Ansehen",
+    "more": "Weitere Aktionen"
+  },
+  "viewer": {
+    "previous": "Vorherige",
+    "next": "Nächste",
+    "position": "{{index}} von {{count}}",
+    "zoomIn": "Vergrößern",
+    "zoomOut": "Verkleinern",
+    "pdfLoading": "PDF wird geöffnet...",
+    "pdfFailed": "Dieses PDF lässt sich nicht öffnen. Lade es herunter, um es in einer anderen App zu öffnen.",
+    "pdfPassword": "Dieses PDF hat ein Passwort. Lade es herunter, um es in einer anderen App zu öffnen.",
+    "saveFailed": "Das Speichern ist fehlgeschlagen, die Datei kann also leer oder unvollständig sein.",
+    "pageCount_one": "{{count}} Seite",
+    "pageCount_other": "{{count}} Seiten",
+    "pageLabel": "{{name}}, Seite {{page}} von {{count}}"
+  },
+  "mail": {
+    "loading": "E-Mail wird geöffnet...",
+    "failed": "Diese E-Mail kann nicht gelesen werden. Lade sie herunter, um sie in einer anderen App zu öffnen.",
+    "from": "Von",
+    "to": "An",
+    "cc": "Cc",
+    "date": "Datum",
+    "noSubject": "(Kein Betreff)",
+    "empty": "Diese E-Mail enthält keinen Text.",
+    "attachments": "Anhänge"
+  },
+  "picker": {
+    "title": "Bilder in Dateien",
+    "search": "Bilder durchsuchen",
+    "empty": "Noch keine Bilder in Dateien. Lade dort eines hoch und füge es dann hier ein.",
+    "noMatch": "Keine Bilder passen zu deiner Suche.",
+    "noCopy": "Ein Bild, das du hier einfügst, verweist auf die Datei in Dateien und belegt keinen zusätzlichen Speicher."
   }
 }

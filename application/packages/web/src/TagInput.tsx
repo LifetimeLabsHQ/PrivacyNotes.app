@@ -15,8 +15,11 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { normalizeTag, sortTags, TAG_MAX_LENGTH } from './notesRepo';
+import { textMatcher } from './textMatch';
+import { isImeComposing } from './imeComposing';
 import { useIsMobile } from './useIsMobile';
 import { useTheme } from './theme';
+import { TagMark } from './looks/LookGlyph';
 
 type Props = {
   tags: string[];
@@ -24,11 +27,13 @@ type Props = {
   /** All existing tags with note counts, for auto-suggest. */
   allTags?: [string, number][];
   /**
-   * Called when the user presses Tab (forward) from the tag input with no
-   * pending draft left to commit. Parent uses this to move focus into the
-   * editor body so title → tags → body flows naturally.
+   * Called when the user presses Tab (forward) from the tag input, after any
+   * draft is committed. Parent uses this to move focus into the editor body
+   * so title → tags → body flows naturally. It returns whether it moved
+   * focus: when it did not (no body to focus), the browser's own Tab runs,
+   * so the key can never leave the caret stuck in the tag field.
    */
-  onTabOut?: () => void;
+  onTabOut?: () => boolean;
   /**
    * Optional element rendered at the right end of the tag row. Used to host
    * the formatting-toolbar Hide/Show toggle so it sits inline with the tags
@@ -42,6 +47,9 @@ type Props = {
    * covering them.
    */
   leading?: ReactNode;
+  /** A click on a tag's name filters the list by that tag, as the sidebar
+   *  does. The remove button beside it keeps its own job. Spec: issue #333. */
+  onSelectTag?: (tag: string) => void;
 };
 
 export type TagInputHandle = {
@@ -51,7 +59,7 @@ export type TagInputHandle = {
 const MAX_SUGGESTIONS = 5;
 
 export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
-  { tags, onChange, allTags, onTabOut, trailing, leading },
+  { tags, onChange, allTags, onTabOut, trailing, leading, onSelectTag },
   ref
 ) {
   const { t } = useTranslation('common');
@@ -98,14 +106,14 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
   // `tags` prop, so the chip a user sees last is the chip Backspace takes.
   const shown = useMemo(() => sortTags(tags), [tags]);
 
-  // Prefix-filtered suggestions, excluding tags already on this note.
+  // Suggestions that start with the draft (rank 3 of the one matcher, so
+  // "sec" suggests "Sécurité"), excluding tags already on this note.
   const suggestions = useMemo(() => {
     if (!allTags || draft.length === 0) return [];
-    const needle = draft.toLowerCase().replace(/^#/, '');
-    if (!needle) return [];
+    const match = textMatcher(draft.replace(/^#/, ''));
     const currentLower = new Set(tags.map((t) => t.toLowerCase()));
     return allTags
-      .filter(([t]) => !currentLower.has(t.toLowerCase()) && t.toLowerCase().startsWith(needle))
+      .filter(([t]) => !currentLower.has(t.toLowerCase()) && match(t)?.rank === 3)
       .sort((a, b) => b[1] - a[1]) // most-used first
       .slice(0, MAX_SUGGESTIONS);
   }, [allTags, draft, tags]);
@@ -179,6 +187,9 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
   }
 
   function handleKey(e: KeyboardEvent<HTMLInputElement>) {
+    // Space, comma and Enter commit a tag, and each one is also a key the
+    // input method uses to convert a reading.
+    if (isImeComposing(e)) return;
     // Arrow nav (desktop only).
     if (!isMobile && hasDropdown) {
       if (e.key === 'ArrowDown') {
@@ -222,9 +233,8 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
     } else if (e.key === 'Tab' && !e.shiftKey) {
       // Tab → body of the note. Commit any pending draft first so a
       // half-typed tag doesn't get lost.
-      e.preventDefault();
       commit();
-      onTabOut?.();
+      if (onTabOut?.()) e.preventDefault();
     } else if (e.key === 'Backspace' && draft === '') {
       const last = shown[shown.length - 1];
       if (!last) return;
@@ -300,8 +310,22 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
     };
   }, []);
 
+  // The part of a suggestion the draft matched, in bold. The offsets come
+  // from the matcher, because the fold changes lengths ("İ", "ß").
+  const prefixMatch = textMatcher(draft.replace(/^#/, ''));
+  function boldPrefix(tag: string) {
+    const match = prefixMatch(tag);
+    if (!match) return tag;
+    return (
+      <>
+        {tag.slice(0, match.start)}
+        <span className="font-semibold">{tag.slice(match.start, match.end)}</span>
+        {tag.slice(match.end)}
+      </>
+    );
+  }
+
   // Render the dropdown via portal.
-  const needle = draft.toLowerCase().replace(/^#/, '');
 
   const dropdown = hasDropdown && dropdownPos
     ? createPortal(
@@ -323,22 +347,13 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
               onClick={() => selectTag(tag)}
               className={`w-full flex items-center gap-2 px-3 text-sm cursor-pointer transition-colors ${
                 i === highlightIndex
-                  ? 'bg-neutral-100 dark:bg-neutral-900'
-                  : 'hover:bg-neutral-50 dark:hover:bg-neutral-900/50'
+                  ? 'bg-track'
+                  : 'hover:bg-pn/5'
               } ${isMobile ? 'min-h-[44px] py-2.5' : 'py-2'}`}
             >
-              <span className="text-neutral-400 dark:text-neutral-600 text-xs">#</span>
-              <span className="text-pn truncate">
-                {needle && tag.toLowerCase().startsWith(needle) ? (
-                  <>
-                    <span className="font-semibold">{tag.slice(0, needle.length)}</span>
-                    {tag.slice(needle.length)}
-                  </>
-                ) : (
-                  tag
-                )}
-              </span>
-              <span className="ml-auto text-xs text-neutral-400 dark:text-neutral-600 tabular-nums shrink-0">
+              <span className="text-pn-muted text-xs">#</span>
+              <span className="text-pn truncate">{boldPrefix(tag)}</span>
+              <span className="ml-auto text-xs text-pn-muted tabular-nums shrink-0">
                 {count}
               </span>
             </button>
@@ -351,10 +366,10 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
               <button
                 type="button"
                 onClick={() => commit()}
-                className={`w-full flex items-center gap-2 px-3 text-sm cursor-pointer transition-colors text-neutral-500 dark:text-neutral-400 ${
+                className={`w-full flex items-center gap-2 px-3 text-sm cursor-pointer transition-colors text-pn-muted ${
                   highlightIndex === suggestions.length
-                    ? 'bg-neutral-100 dark:bg-neutral-900'
-                    : 'hover:bg-neutral-50 dark:hover:bg-neutral-900/50'
+                    ? 'bg-track'
+                    : 'hover:bg-pn/5'
                 } ${isMobile ? 'min-h-[44px] py-2.5' : 'py-2'}`}
               >
                 <span className="text-xs">+</span>
@@ -397,14 +412,21 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
                follows every theme. Round pills here and a square-cornered
                folder chip in the leading slot are the same split as list vs
                container: many labels vs one location.
-               Spec: ops/docs/ui-patterns.md (editor tag row) */
-            className="group inline-flex shrink-0 items-center gap-1 text-xs px-2.5 py-0.5 rounded-full bg-accent/10 text-accent hover:bg-accent/20 transition whitespace-nowrap"
+               Spec: ops/docs/archive/ui-patterns.md (editor tag row) */
+            data-tag-chip={tag}
+            className="group inline-flex shrink-0 items-center gap-1 text-xs px-2.5 py-0.5 rounded-full bg-accent/10 text-accent-strong hover:bg-accent/20 transition whitespace-nowrap"
             dir="auto"
           >
-            #{tag}
+            <span
+              onClick={onSelectTag ? () => onSelectTag(tag) : undefined}
+              className={`inline-flex items-center${onSelectTag ? ' cursor-pointer' : ''}`}
+            >
+              <TagMark tag={tag} size={11} />
+              {tag}
+            </span>
             <button
               onClick={() => remove(tag)}
-              className="text-accent/60 hover:text-red-500 dark:hover:text-red-400 transition text-[11px] leading-none"
+              className="text-accent/60 hover:text-danger transition text-[11px] leading-none"
               aria-label={t('tagInput.removeTag', { tag })}
               tabIndex={-1}
             >
@@ -421,13 +443,14 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
           onFocus={handleFocus}
           onBlur={handleBlur}
           maxLength={TAG_MAX_LENGTH + 5}
+          aria-label={t('tagInput.placeholder')}
           placeholder={
             tags.length === 0 ? t('tagInput.placeholder') : ''
           }
           enterKeyHint="done"
           autoComplete="off"
           spellCheck={spellcheck ? undefined : false}
-          className="flex-1 min-w-[80px] shrink-0 bg-transparent text-xs focus:outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-600 py-0.5"
+          className="flex-1 min-w-[80px] shrink-0 bg-transparent text-xs focus:outline-none placeholder:text-pn-muted py-0.5"
         />
       </div>
       {trailing}

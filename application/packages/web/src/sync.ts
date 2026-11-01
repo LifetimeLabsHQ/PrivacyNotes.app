@@ -1,17 +1,40 @@
 import {
   encryptNote,
+  notePlaintext,
   decryptNote,
   bytesToBase64,
   base64ToBytes,
   type SupabaseClient,
 } from '@notes/shared';
 import { logAuthEvent } from './authDiag';
+import { recordSyncFault } from './syncFaults';
 import { ownsLocalData } from './authStorage';
 import { db, type LocalNote } from './db';
 import { heartbeat } from './devices';
 import { isDemoMode } from './demo';
+import { assertMfaAccess, isMfaRefusal, MfaRequiredError } from './mfaStep';
+import { readSideField } from './localSeal';
+import {
+  buildSyncBase,
+  fieldsEqual,
+  editStampMoves,
+  fieldsOfLocal,
+  fieldsOfPayload,
+  laterStamp,
+  localPatchOf,
+  mergedEditedAt,
+  mergeNoteFields,
+  resolveConflictFields,
+  serverFieldsOf,
+  trustedBase,
+  type MergeSide,
+  type NoteFields,
+  type SyncBase,
+} from './noteMerge';
+import { nextStamp } from './notesRepo';
+import { normalizeSchedule } from './schedule';
+import { sameContent } from './editStamp';
 import { isServerWriteBlocked } from './syncPause';
-import { mergeTrackers } from './trackerTypes';
 
 /* ── Conflict types ─────────────────────────────────────────────── */
 
@@ -19,7 +42,7 @@ import { mergeTrackers } from './trackerTypes';
 export interface NoteConflict {
   noteId: string;
   localNote: LocalNote;
-  /** Decrypted server version (newer updated_at). */
+  /** The server's version, decrypted: the generation the push met. */
   serverTitle: string;
   serverBody: string;
   serverTags: string[];
@@ -30,7 +53,14 @@ export interface NoteConflict {
   serverPinProtected: boolean;
   serverType: import('@notes/shared').NoteType;
   serverFolderId: string | null;
+  serverArchived: boolean;
+  /** True when the server's payload carried no `archived` (a writer before
+   *  Archive): an answer from a device that does not know the flag either
+   *  leaves it out (archiveUnknownOf). */
+  serverArchiveAbsent?: boolean;
   serverUpdatedAt: string;
+  /** The server version's "last edited" stamp, when its payload carries one. */
+  serverEditedAt?: string;
   /** The encrypted row from the server (for re-push after resolution). */
   serverRow: { ciphertext: string; nonce: string; updated_at: string };
 }
@@ -48,6 +78,18 @@ const LAST_SYNC_KEY = 'privacynotes.lastSync';
 const INGESTED_HEAL_KEY = 'privacynotes.ingestedHeal';
 /** One-time full re-pull after migration 0065. See the heal block below. */
 const KEYSET_HEAL_KEY = 'privacynotes.keysetHeal';
+/** One-time full re-pull that records every row's server generation and
+ *  base. See the heal block below. */
+const BASE_HEAL_KEY = 'privacynotes.baseHeal';
+
+/**
+ * The guard a push uses for a row that records no server generation (never
+ * pushed, or last synced before generations were recorded). It matches no
+ * nonce, so the conditional update always misses and the conflict read
+ * decides: an insert when the server lacks the row, a merge with no base
+ * when it holds one. Such a row never writes over a version it has not seen.
+ */
+const UNRECORDED_GENERATION = 'unrecorded';
 
 /** Cursor at the very beginning of time, before any row exists. */
 const EPOCH_CURSOR = '1970-01-01T00:00:00Z';
@@ -69,13 +111,211 @@ function formatCursor(at: string, id: string | null): string {
   return id === null ? at : `${at}|${id}`;
 }
 
-/** Shallow string-array equality check for tag comparison. */
-function arraysEqual(a: string[], b: string[]): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false;
+/**
+ * A row's sync base, when the conflict path may merge against it: the
+ * base must describe the generation the row records as synced
+ * (noteMerge.ts trustedBase). At rest the base sits sealed beside the row,
+ * so this is the one way to read it.
+ */
+function noteBaseOf(note: LocalNote): SyncBase | undefined {
+  return trustedBase(readSideField('notes', note), note.syncedNonce);
+}
+
+/**
+ * A queued conflict describes its row while the row keeps the generation it
+ * was detected on. A row that moved on since (a later pass merged it, or it
+ * is gone) is not the row the dialog asked about, and an answer writes
+ * nothing to it.
+ */
+function stillOpen(conflict: NoteConflict, row: LocalNote | undefined): row is LocalNote {
+  return row !== undefined && row.syncedNonce === conflict.localNote.syncedNonce;
+}
+
+/** A local row as one side of a merge. */
+function localSide(row: LocalNote): MergeSide {
+  return { fields: fieldsOfLocal(row), updatedAt: row.updatedAt, editedAt: row.editedAt };
+}
+
+/**
+ * Every answer applies the chosen body over the rest of the note merged field
+ * by field, exactly as a push merges it, over the row as it stands NOW: a
+ * star or a folder set here while the dialog waited is merged, not
+ * overwritten. The "last edited" date follows the body the answer keeps.
+ */
+function answerFields(
+  row: LocalNote,
+  server: MergeSide,
+  choice: 'local' | 'server' | 'both',
+) {
+  const local = localSide(row);
+  const answer = resolveConflictFields(noteBaseOf(row), local, server, choice);
+  const editedAt = mergedEditedAt(local, server, answer.fields);
+  return { ...answer, sameAsServer: answer.sameAsServer && !editStampMoves(editedAt, server.editedAt), editedAt };
+}
+
+/**
+ * "Use mine": push this device's body over the merged rest, only over the
+ * version the dialog showed, so a third version pushed while the dialog was
+ * open is never replaced unseen. `seal` encrypts the payload with the
+ * dialog's own key snapshot. A push that does not land leaves the row dirty
+ * for the next pass.
+ *
+ * Below the release floor or under the user's pause, nothing goes to the
+ * server. The answer is kept on this device instead: the row takes the
+ * merged fields, dirty, over the generation the dialog showed, so the first
+ * pass after the block lifts pushes it there, or merges it if the server
+ * moved again. The question is not asked twice.
+ */
+export async function pushConflictAnswer(
+  supabase: SupabaseClient,
+  pubkey: string,
+  conflict: NoteConflict,
+  seal: (payload: Omit<NoteFields, 'archived'> & { archived?: boolean; editedAt?: string }) => { ciphertext: string; nonce: string },
+): Promise<'stale' | 'pushed' | 'not-landed' | 'deferred'> {
+  const { noteId } = conflict;
+  const serverNonce = conflict.serverRow.nonce;
+  const fresh = await db.notes.get(noteId);
+  if (!stillOpen(conflict, fresh)) return 'stale';
+  const server: MergeSide = {
+    fields: serverFieldsOf(conflict),
+    updatedAt: conflict.serverUpdatedAt,
+    editedAt: conflict.serverEditedAt,
+  };
+  const { fields, editedAt } = answerFields(fresh, server, 'local');
+  const stamp = nextStamp(laterStamp(fresh.updatedAt, conflict.serverUpdatedAt));
+  if (isServerWriteBlocked()) {
+    const kept = await db.transaction('rw', db.notes, async () => {
+      const cur = await db.notes.get(noteId);
+      if (!stillOpen(conflict, cur)) return false;
+      // Merged over the row as it stands now, so an edit made while the
+      // dialog waited is part of the kept answer.
+      const now = answerFields(cur, server, 'local');
+      await db.notes.update(noteId, {
+        ...localPatchOf(now.fields),
+        editedAt: now.editedAt,
+        dirty: 1,
+        updatedAt: nextStamp(laterStamp(cur.updatedAt, conflict.serverUpdatedAt)),
+        syncedNonce: serverNonce,
+        syncBase: buildSyncBase(server.fields, serverNonce),
+      });
+      return true;
+    });
+    return kept ? 'deferred' : 'stale';
   }
-  return true;
+  const leaveOut = archiveUnknownOf(fresh) && conflict.serverArchiveAbsent === true && !fields.archived;
+  const { ciphertext, nonce } = seal({ ...fields, ...(leaveOut ? { archived: undefined } : {}), editedAt });
+  // `.select('id')` is how a write that did not land shows: supabase-js
+  // reports network and HTTP failures through `error` without throwing, and
+  // a write to a row tombstoned while the dialog was open is dropped by the
+  // 0034 trigger with zero rows. Either one recorded as synced would strand
+  // the kept version on this device under a green check.
+  const { data: forced, error: forceErr } = await supabase
+    .from('notes')
+    .update({ ciphertext, nonce, updated_at: stamp })
+    .eq('id', noteId)
+    .eq('user_pubkey', pubkey)
+    .eq('nonce', serverNonce)
+    .select('id');
+  if (forceErr || !forced || forced.length === 0) {
+    console.error('[conflict] keep-mine push did not land for', noteId, forceErr);
+    return 'not-landed';
+  }
+  await db.transaction('rw', db.notes, async () => {
+    const cur = await db.notes.get(noteId);
+    // An edit that landed during the push stays unsynced, and the next pass
+    // merges it against this generation.
+    if (cur && cur.updatedAt === fresh.updatedAt) {
+      await db.notes.update(noteId, {
+        ...localPatchOf(fields),
+        editedAt,
+        dirty: 0,
+        updatedAt: stamp,
+        syncedNonce: nonce,
+        syncBase: buildSyncBase(fields, nonce),
+      });
+    }
+  });
+  return 'pushed';
+}
+
+/**
+ * "Use the other version", and the original note of "Keep both": the other
+ * device's body over the merged rest, written locally. The server may have
+ * moved while the dialog was open, and a pull skips an unsynced row, so its
+ * cursor has already passed the newer version: the answer therefore applies
+ * to the version the server holds when the person answers, read here, and
+ * merges the rest against that. A result equal to the server's version is
+ * that generation, recorded clean. Anything else is a change the server has
+ * not seen, left dirty over that generation with the server version as its
+ * base, so the next push goes out on it (or merges, if the server moved
+ * again). When the server cannot be read, the version the dialog showed
+ * stands in, never recorded clean, so the next push settles it.
+ */
+export async function writeConflictAnswer(
+  supabase: SupabaseClient,
+  pubkey: string,
+  encryptionKey: Uint8Array,
+  conflict: NoteConflict,
+  choice: 'server' | 'both',
+): Promise<'stale' | 'written'> {
+  const { noteId } = conflict;
+  const shown = {
+    fields: serverFieldsOf(conflict),
+    updatedAt: conflict.serverUpdatedAt,
+    editedAt: conflict.serverEditedAt,
+    nonce: conflict.serverRow.nonce,
+  };
+  let current: typeof shown | null = null;
+  try {
+    const { data, error } = await supabase
+      .from('notes')
+      .select('ciphertext, nonce, updated_at, deleted_at')
+      .eq('id', noteId)
+      .eq('user_pubkey', pubkey)
+      .maybeSingle();
+    // A tombstone holds no content: the shown version stands in, as for an
+    // unreadable row, and the next push drops the note and keeps any copy
+    // "Keep both" made.
+    if (!error && data && !data.deleted_at) {
+      if (data.nonce === shown.nonce) {
+        current = shown;
+      } else {
+        const payload = decryptNote(base64ToBytes(data.ciphertext), base64ToBytes(data.nonce), encryptionKey);
+        current = {
+          fields: fieldsOfPayload(payload, shown.fields.archived),
+          updatedAt: data.updated_at,
+          editedAt: payload.editedAt,
+          nonce: data.nonce,
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('[conflict] could not read the server version for', noteId, err);
+  }
+  const server = current ?? shown;
+  const serverBase = buildSyncBase(server.fields, server.nonce);
+  const written = await db.transaction('rw', db.notes, async () => {
+    const cur = await db.notes.get(noteId);
+    if (!stillOpen(conflict, cur)) return false;
+    const { fields, sameAsServer, editedAt } = answerFields(cur, server, choice);
+    await db.notes.update(noteId, {
+      ...localPatchOf(fields),
+      editedAt,
+      syncedNonce: server.nonce,
+      syncBase: serverBase,
+      ...(sameAsServer && current
+        ? { dirty: 0, updatedAt: server.updatedAt }
+        : { dirty: 1, updatedAt: nextStamp(laterStamp(cur.updatedAt, server.updatedAt)) }),
+    });
+    return true;
+  });
+  return written ? 'written' : 'stale';
+}
+
+/** Whether this device writes the note without an archive flag: it took
+ *  the row from a writer before Archive and has not learned the flag since. */
+function archiveUnknownOf(note: Pick<LocalNote, 'archived' | 'archivedUnknown'>): boolean {
+  return note.archivedUnknown === 1 && note.archived !== 1;
 }
 
 /** Mutex - prevents overlapping sync calls from racing on dirty-flag clears. */
@@ -308,9 +548,30 @@ function isNoteTooLargeError(err: { code?: string; message?: string } | null): b
   return err?.code === '23514' && !!err.message?.includes('notes_ciphertext_max_1mb');
 }
 
+/** The server's per-row ceiling: `octet_length(ciphertext) <= 1048576`.
+ * The column holds base64, which is ASCII, so a JavaScript string length
+ * counts the same bytes the CHECK does. Measuring the row here keeps a
+ * note the server can only refuse off the wire entirely.
+ * Spec: packages/supabase/migrations/history/0009_abuse_limits.sql */
+export const NOTE_MAX_STORED_BYTES = 1_048_576;
+
+/** What a push encrypts for a note: the one place the row's payload is built. */
+export function rowPayloadOf(note: LocalNote) {
+  return { ...fieldsOfLocal(note), ...(archiveUnknownOf(note) ? { archived: undefined } : {}), editedAt: note.editedAt };
+}
+
+/** The exact length of the base64 ciphertext a push sends for the note, the
+ *  number the server's CHECK compares, without encrypting it: the sealed JSON
+ *  plus the 16-byte tag, then base64. */
+export function storedNoteBytes(note: LocalNote): number {
+  const sealed = notePlaintext(rowPayloadOf(note)).length + 16;
+  return 4 * Math.ceil(sealed / 3);
+}
+
 /** Surfaced via onPushError when a note exceeds the 1 MB per-note size
- * limit. Shows in the amber "failed to sync" banner. */
-const NOTE_TOO_LARGE_MSG = 'a note is over the 1 MB size limit';
+ * limit. pushFailures.ts matches this exact string to mark the note
+ * "not backed up" in the pill, the ID & Sync list and the editor. */
+export const NOTE_TOO_LARGE_MSG = 'a note is over the 1 MB size limit';
 
 type RemoteRow = {
   id: string;
@@ -341,25 +602,25 @@ type RemoteRow = {
 };
 
 /**
- * Pull-then-push sync, last-write-wins by updated_at.
+ * Pull-then-push sync.
  *
  * 1. Pull remote rows where `changed_at > cursor`, sweeping ascending
  *    and keyset-paging on `(changed_at, id)` (migration 0065). Rows
  *    with `deleted_at` set are tombstones - we bulkDelete them locally
  *    instead of upserting. For non-tombstones, if remote is newer than
- *    the local copy (or local doesn't exist), overwrite local.
+ *    the local copy (or local doesn't exist), overwrite local. A row
+ *    with an unsynced local change is left for its own push.
  * 2. Push all rows flagged dirty. Hard-deletes (`deleted=1` locally)
  *    become server-side `update({deleted_at: now()})` so other devices
- *    see the tombstone on their next pull. Everything else is upserted.
+ *    see the tombstone on their next pull. Every other row is written
+ *    only over the server generation this device last synced (its
+ *    `syncedNonce`); a row whose generation is behind goes to the
+ *    conflict path, which merges field by field against that synced
+ *    version (noteMerge.ts) and asks the user only when both sides
+ *    changed the body.
  *
- * The `trashed` and `starred` flags live inside the encrypted payload, so
+ * The `trashed`, `starred` and `archived` flags live inside the encrypted payload, so
  * they roundtrip the server without leaking any metadata.
- *
- * As of v0.126.0 (Tier 2): pushes use a conditional update with an
- * `lte('updated_at')` guard. If the server has a newer version, we
- * detect the conflict and either auto-merge (metadata-only changes)
- * or surface a ConflictModal for body-vs-body edits. No data is
- * silently lost. Real CRDT merge still deferred.
  *
  * If an offline device pushes an edit for a row that was tombstoned
  * elsewhere, the server-side BEFORE UPDATE trigger (migration 0034)
@@ -421,7 +682,14 @@ export async function sync(
   const passKey = new Uint8Array(encryptionKey);
   try {
     const inner = await syncInner(supabase, pubkey, passKey, deviceId, onBatch, onPushError, onConflict, opts);
-    return { ran: true, pullOk: inner.pullOk, changed: inner.changed, pushed: inner.pushed ?? 0, pulled: inner.pulled ?? 0 };
+    return {
+      ran: true,
+      pullOk: inner.pullOk,
+      changed: inner.changed,
+      pushed: inner.pushed ?? 0,
+      pulled: inner.pulled ?? 0,
+      ...(inner.halted ? { halted: inner.halted } : {}),
+    };
   } finally {
     passKey.fill(0);
     syncInFlight = false;
@@ -443,7 +711,10 @@ export type SyncResult = {
   /** True when the pull phase completed without errors. Only meaningful
    *  when `ran` is true. */
   pullOk: boolean;
-  /** Dirty rows the push phase attempted this pass (0 when skipped). */
+  /** Rows the server accepted this pass (0 when skipped): inserts and
+   *  updates it confirmed, merges that landed, deletes it confirmed. A row
+   *  it refused, a conflict left for the dialog and a row never sent are
+   *  not counted. */
   pushed?: number;
   /** Rows plus tombstones the pull phase applied locally this pass. */
   pulled?: number;
@@ -451,6 +722,25 @@ export type SyncResult = {
    *  applied, or dirty rows pushed). A clean no-op poll tick reports
    *  false so callers can skip vault-sized post-pass work. */
   changed: boolean;
+  /** Set when the push stopped before it reached every dirty row. The stop
+   *  raises no per-note error, so this is the only record the pass keeps
+   *  of the rows it left behind. */
+  halted?: PushHalt;
+};
+
+/** How a push phase stopped short of its queue. */
+export type PushHalt = {
+  /** 'refused': the server refused a write under row-level security, a
+   *  verdict about this session that no retry of the same rows changes.
+   *  'aborted': the account changed under the pass (the session claim,
+   *  the owner marker or the sync generation), so the rows belong to
+   *  whoever owns the storage at that point. 'blocked': the release floor
+   *  or the user's pause arrived during the pass. */
+  reason: 'refused' | 'aborted' | 'blocked';
+  /** Dirty rows the stop left off the server: the rows of the refused
+   *  write, and every row the pass had not sent yet. All stay dirty for
+   *  the next pass. */
+  unreached: number;
 };
 
 async function syncInner(
@@ -463,7 +753,7 @@ async function syncInner(
   onPushError?: (noteId: string, message: string) => void,
   onConflict?: (conflict: NoteConflict) => void,
   opts?: { flushOnly?: boolean },
-): Promise<{ pullOk: boolean; changed: boolean; pushed?: number; pulled?: number }> {
+): Promise<{ pullOk: boolean; changed: boolean; pushed?: number; pulled?: number; halted?: PushHalt }> {
   // Flush-only mode (sign-out rescue): no heartbeat, no pull, no cursor
   // advance - jump straight to the push phase. See sync() docs.
   const flushOnly = opts?.flushOnly === true;
@@ -528,6 +818,12 @@ async function syncInner(
     throw new SessionExpiredError();
   }
   claimGateBrokenSince = 0;
+  // The table gate raises mfa_required on the first row a request touches,
+  // so a pass learns of a missing factor from its first real read or write,
+  // and an empty answer means no matching row. The sign-out rescue flush
+  // skips the pull and the heartbeat, so it asks before it writes.
+  // tests/sync/scenarios-mfa.test.ts.
+  if (flushOnly) await assertMfaAccess(supabase);
 
   let lastSync =
     localStorage.getItem(LAST_SYNC_KEY) || '1970-01-01T00:00:00Z';
@@ -587,6 +883,25 @@ async function syncInner(
     healFlagsPending.push(KEYSET_HEAL_KEY);
   }
 
+  // One-time full re-read that gives every row its recorded generation and
+  // base. A row last synced before generations were recorded has neither,
+  // so every conflict on it merges with no base: by stamps, with the text
+  // going to the dialog. The re-read takes the server's version for every
+  // clean row that lacks its record, whatever the stamps say, since a clean
+  // row holds nothing the server lacks, and those rows then merge per field
+  // against a base like any other. A row with an unsynced change keeps its
+  // content. Same shape and same safety as the heals above; costs one full
+  // pull, once per device.
+  const healBases = !flushOnly && !localStorage.getItem(BASE_HEAL_KEY);
+  if (healBases) {
+    if (lastSync > EPOCH_CURSOR) {
+      console.warn('[sync] one-time full pull to record every row\'s server generation');
+      lastSync = EPOCH_CURSOR;
+      localStorage.removeItem(LAST_SYNC_KEY);
+    }
+    healFlagsPending.push(BASE_HEAL_KEY);
+  }
+
   // Guard: if IndexedDB is empty but lastSync claims we've synced
   // before, something wiped the local DB without resetting the cursor
   // (browser storage pressure, user clearing site data, session loss
@@ -612,9 +927,10 @@ async function syncInner(
   // a few thousand notes costs a few hundred ms of main-thread work
   // every 30 s while idle (backlog #130).
   let changed = false;
-  // Pass counters for the sync activity log (syncLog.ts). Pushed counts
-  // ATTEMPTS (per-row failures surface through onPushError); pulled counts
-  // rows plus tombstones actually applied.
+  // Pass counters for the sync activity log (syncLog.ts). Pushed counts the
+  // rows the server accepted, added where each acceptance is recorded, so a
+  // row refused, handed to the conflict dialog or never sent is never in
+  // it; pulled counts rows plus tombstones actually applied.
   let pushedCount = 0;
   let pulledCount = 0;
 
@@ -672,9 +988,14 @@ async function syncInner(
       type: import('@notes/shared').NoteType;
       trackers?: Record<string, unknown>;
       folderId: string | null;
+      archived: 0 | 1;
+      editedAt?: string;
       syncedNonce: string;
+      syncBase: SyncBase;
     }>;
     tombstoneIds: string[];
+    /** Rows the base heal takes whatever their stamps, while still clean. */
+    healIds: Set<string>;
   }> {
     const toPut: Array<{
       id: string; title: string; body: string; tags: string[];
@@ -684,9 +1005,13 @@ async function syncInner(
       type: import('@notes/shared').NoteType;
       trackers?: Record<string, unknown>;
       folderId: string | null;
+      archived: 0 | 1;
+      editedAt?: string;
       syncedNonce: string;
+      syncBase: SyncBase;
     }> = [];
     const tombstoneIds: string[] = [];
+    const healIds = new Set<string>();
     // Bulk-fetch local copies to avoid N sequential db.notes.get() calls.
     const ids = rows.map((r) => r.id);
     const locals = await db.notes.bulkGet(ids);
@@ -705,19 +1030,23 @@ async function syncInner(
       const local = localMap.get(row.id);
       // Both dirty values win over a pull: 1 is a plaintext-era unsynced
       // edit, 2 is a sealed unsynced edit (the value old bundles cannot
-      // see). Spec: ops/docs/plans/local-at-rest.md (5.2, the dirty fence)
+      // see). Spec: ops/docs/archive/local-at-rest.md (5.2, the dirty fence)
       if (local && (local.dirty === 1 || local.dirty === 2)) continue;
-      if (local && local.updatedAt > row.updated_at) continue;
+      const heal = healBases && local !== undefined && noteBaseOf(local) === undefined;
+      if (heal) healIds.add(row.id);
+      else if (local && local.updatedAt > row.updated_at) continue;
       // Equal stamps: our own pushed generation echoing back carries the
       // nonce we recorded at push time - skip it, it is our own echo. A
       // DIFFERENT nonce under an equal stamp is another device's write
-      // that won an equal-stamp race on the push guard's `.lte` (#156):
-      // apply it, or this device keeps its losing copy with dirty=0 and
-      // the two sides diverge silently until the next edit. Rows with no
-      // recorded nonce (never synced from this device, pre-upgrade rows)
-      // are still skipped - their equal-stamp case is the harmless echo,
-      // and applying would re-write the whole vault on a cursor heal.
+      // carrying the same stamp (#156), a write that kept its stamp (the
+      // derived-title commit): apply it, or this device keeps its older
+      // copy with dirty=0 and the two sides diverge silently until the
+      // next edit. Rows with no recorded nonce (never synced from
+      // this device, pre-upgrade rows) are still skipped outside the base
+      // heal - their equal-stamp case is the harmless echo, and applying
+      // would re-write the whole vault on every cursor heal.
       if (
+        !heal &&
         local &&
         local.updatedAt === row.updated_at &&
         (local.syncedNonce == null || local.syncedNonce === row.nonce)
@@ -728,6 +1057,26 @@ async function syncInner(
           base64ToBytes(row.nonce),
           encryptionKey
         );
+        const pulled = fieldsOfPayload(decrypted, local?.archived === 1);
+        // A writer that predates Archive dropped the flag this device holds.
+        // Keeping it here is not enough: a device without the row, or one on
+        // the first Archive release, would still read the server copy as
+        // unarchived. The row goes back dirty, so this pass's push restates
+        // the flag over the generation just pulled.
+        const restate = decrypted.archived === undefined && pulled.archived;
+        // Without a row of its own (or one already unsure), this device has
+        // no flag to keep: it marks the flag unknown, and its writes leave it
+        // out rather than state "not archived" over the device that holds it.
+        const archiveUnknown = decrypted.archived === undefined && !pulled.archived && (!local || local.archivedUnknown === 1);
+        // The "last edited" date is the payload's. A payload without one came
+        // from a version before the field, which rebuilds the payload without
+        // it: when that write left the content as this device holds it, the
+        // date this device holds stands, and otherwise the row's stamp, the
+        // time of that write, reads as the date (editedAtOf). Read, never
+        // restated: a restate would push every pulled note again on a heal.
+        const editedAt =
+          decrypted.editedAt ??
+          (local && sameContent(fieldsOfLocal(local), pulled) ? (local.editedAt ?? local.updatedAt) : undefined);
         toPut.push({
           id: row.id,
           title: decrypted.title,
@@ -735,7 +1084,7 @@ async function syncInner(
           tags: decrypted.tags,
           createdAt: row.created_at,
           updatedAt: row.updated_at,
-          dirty: 0,
+          dirty: restate ? 1 : 0,
           deleted: 0,
           trashed: decrypted.trashed ? 1 : 0,
           starred: decrypted.starred ? 1 : 0,
@@ -746,13 +1095,21 @@ async function syncInner(
           type: decrypted.type ?? 'note',
           trackers: decrypted.trackers,
           folderId: decrypted.folderId ?? null,
+          archived: pulled.archived ? 1 : 0,
+          ...(archiveUnknown ? { archivedUnknown: 1 as const } : {}),
+          ...(editedAt ? { editedAt } : {}),
           syncedNonce: row.nonce,
+          // The version this device now holds is the server's: the base
+          // any later conflict on this row merges against.
+          syncBase: buildSyncBase(pulled, row.nonce),
         });
       } catch (err) {
+        healIds.delete(row.id);
         console.error('[sync] decrypt failed for', row.id, err);
+        recordSyncFault({ step: 'pull', code: 'decrypt' });
       }
     }
-    return { toPut, tombstoneIds };
+    return { toPut, tombstoneIds, healIds };
   }
 
   if (!flushOnly) {
@@ -789,9 +1146,27 @@ async function syncInner(
     // of rows share a changed_at to the microsecond. Paging on
     // changed_at alone would skip a whole tie group at a page boundary
     // or spin on it forever.
-    /** One page of the sweep, oldest first. */
+    /**
+     * One page of the sweep, oldest first.
+     *
+     * The owner equality is named here as well as enforced by row level
+     * security, and it is not redundant. A policy expression is a constant
+     * the planner cannot see until the statement runs, so even in its
+     * uncorrelated form it gives an index condition with no row estimate
+     * behind it. A literal gives the planner this account's real statistics,
+     * and that is what lets `notes(user_pubkey, changed_at, id)` serve both
+     * branches of the tie-group OR as index conditions instead of one broad
+     * owner seek plus a filter and a sort. With it, the planner cost of a
+     * page at a recent cursor drops by about two orders of magnitude.
+     *
+     * It never widens anything. The policy still decides what is visible, so
+     * a pubkey that is not the session's returns nothing whatever this says;
+     * the client already holds the vault pubkey and already validated its
+     * session claim before the pass started. The equality is grouped ahead of
+     * the cursor predicate so the OR pair stays one unit.
+     */
     const pullPage = (afterAt: string, afterId: string | null, limit: number) => {
-      const base = supabase.from('notes').select('*');
+      const base = supabase.from('notes').select('*').eq('user_pubkey', pubkey);
       const filtered = afterId === null
         ? base.gt('changed_at', afterAt)
         : base.or(
@@ -816,9 +1191,11 @@ async function syncInner(
       throw new DeviceRevokedError();
     }
 
-    const { data: phase1, error: p1Err } = await phase1Promise;
+    const { data: phase1, error: p1Err, status: p1Status } = await phase1Promise;
 
     if (p1Err) {
+      recordSyncFault({ step: 'pull', status: p1Status, code: p1Err.code || undefined });
+      if (isMfaRefusal(p1Err)) throw new MfaRequiredError();
       if (isAuthError(p1Err)) throw new SessionExpiredError();
       console.error('[sync] phase 1 pull failed:', p1Err);
       batchHadError = true;
@@ -846,15 +1223,15 @@ async function syncInner(
         // way: local storage that another account now owns must not
         // receive this account's decrypted rows.
         if (generation !== syncGeneration || !ownsLocalData(pubkey)) return;
-        const { toPut, tombstoneIds } = await processBatch(rows);
+        const { toPut, tombstoneIds, healIds } = await processBatch(rows);
         if (toPut.length > 0 || tombstoneIds.length > 0) {
           // Re-check inside one transaction before writing: an autosave
           // can land between processBatch's bulkGet snapshot and this
           // write, and blind-putting the server copy would erase the
           // fresh keystrokes AND mark the row clean, so the edit would
-          // never push. The push side has carried the equivalent guard
-          // (clearDirty's timestamp check) from day one; this is the
-          // pull side of the same hazard. Tombstones stay unconditional
+          // never push. The push side carries the equivalent guard
+          // (recordPushed's timestamp check); this is the pull side of
+          // the same hazard. Tombstones stay unconditional
           // - the server says the note is gone.
           await db.transaction('rw', db.notes, async () => {
             const current = await db.notes.bulkGet(toPut.map((n) => n.id));
@@ -862,6 +1239,8 @@ async function syncInner(
               const c = current[i];
               if (!c) return true;
               if (c.dirty === 1 || c.dirty === 2) return false;
+              // A row the base heal re-reads is taken while it stays clean.
+              if (healIds.has(n.id)) return true;
               // Same predicate processBatch applied, re-evaluated against
               // the live row: strictly newer, or the equal-stamp
               // foreign-nonce case (#156).
@@ -912,13 +1291,15 @@ async function syncInner(
             batchHadError = true;
             break;
           }
-          const { data: chunk, error: chunkErr } = await pullPage(
+          const { data: chunk, error: chunkErr, status: chunkStatus } = await pullPage(
             cursorAt,
             cursorId,
             PHASE2_CHUNK,
           );
 
           if (chunkErr) {
+            recordSyncFault({ step: 'pull', status: chunkStatus, code: chunkErr.code || undefined });
+            if (isMfaRefusal(chunkErr)) throw new MfaRequiredError();
             if (isAuthError(chunkErr)) throw new SessionExpiredError();
             console.error('[sync] phase 2 pull failed after', cursorAt, chunkErr);
             batchHadError = true;
@@ -972,7 +1353,16 @@ async function syncInner(
   // boundary below re-checks all three ownership signals and ends the
   // push phase quietly: no error, rows stay dirty, and the storage's
   // rightful owner decides what happens to them (the switch wipe).
+  // The release floor and the user's pause are checked at every boundary
+  // too, not only when the pass started: a floor can arrive while the pull
+  // is in flight, and every write after that moment must wait for the
+  // update like the rest of this client's writes.
+  let blockedMidPass = false;
   const pushOwnershipLost = async (): Promise<boolean> => {
+    if (isServerWriteBlocked()) {
+      blockedMidPass = true;
+      return true;
+    }
     if (generation !== syncGeneration) return true;
     if (!ownsLocalData(pubkey)) return true;
     const { data: liveSession } = await supabase.auth.getSession();
@@ -982,9 +1372,16 @@ async function syncInner(
     return liveClaim !== pubkey;
   };
   let pushEnded = false;
-  const endPush = (stage: string): void => {
+  // What the stop left behind, for SyncResult.halted: the first stop names
+  // the reason, and every stop adds the rows it leaves unsent.
+  let haltReason: PushHalt['reason'] = 'aborted';
+  const unreachedIds = new Set<string>();
+  const endPush = (stage: string, left: Iterable<string>): void => {
+    for (const id of left) unreachedIds.add(id);
     if (pushEnded) return;
     pushEnded = true;
+    haltReason = stage === 'rls-refused' ? 'refused' : blockedMidPass ? 'blocked' : 'aborted';
+    if (haltReason === 'blocked') return;
     logAuthEvent('sync:push-aborted-ownership', {
       stage,
       expectedPk: pubkey.slice(0, 8),
@@ -998,11 +1395,10 @@ async function syncInner(
   const toDelete = dirty.filter((n) => n.deleted === 1);
   const toUpsert = dirty.filter((n) => n.deleted !== 1);
   if (dirty.length > 0) changed = true;
-  pushedCount = dirty.length;
 
   // 2a. Batch tombstone - set deleted_at on the server. Other devices
   // see the tombstone via the changed_at pull sweep and bulkDelete locally.
-  // The pg_cron purge (migration 0034) hard-deletes after 30 days.
+  // The server empties the row and keeps it as a marker for good (0098).
   // `.is('deleted_at', null)` makes the operation idempotent: rows
   // already tombstoned by another device are skipped without error.
   // Chunked in groups of 50 to keep the `.in()` URL under server limits.
@@ -1013,7 +1409,7 @@ async function syncInner(
     const TOMBSTONE_CHUNK = 50;
     for (let i = 0; i < deleteIds.length; i += TOMBSTONE_CHUNK) {
       if (pushEnded || (await pushOwnershipLost())) {
-        endPush('tombstones');
+        endPush('tombstones', deleteIds.slice(i));
         break;
       }
       const chunk = deleteIds.slice(i, i + TOMBSTONE_CHUNK);
@@ -1024,7 +1420,7 @@ async function syncInner(
       // destroyed the only record that the delete was still pending -
       // the note stayed alive on the server, kept counting against the
       // quota, and came back on the next device to pull from epoch.
-      const { data: tombstoned, error } = await supabase
+      const { data: tombstoned, error, status: tombstoneStatus } = await supabase
         .from('notes')
         .update({ deleted_at: new Date().toISOString() })
         .in('id', chunk)
@@ -1042,7 +1438,7 @@ async function syncInner(
         // a successful no-op from here.
         const unaccounted = chunk.filter((id) => !confirmed.has(id));
         if (unaccounted.length > 0) {
-          const { data: survivors, error: checkErr } = await supabase
+          const { data: survivors, error: checkErr, status: checkStatus } = await supabase
             .from('notes')
             .select('id')
             .in('id', unaccounted)
@@ -1050,6 +1446,8 @@ async function syncInner(
           if (checkErr) {
             // Cannot prove they are gone, so keep them dirty and retry
             // on the next pass rather than guess.
+            recordSyncFault({ step: 'push', status: checkStatus, code: checkErr.code || undefined });
+            if (isMfaRefusal(checkErr)) throw new MfaRequiredError();
             if (isAuthError(checkErr)) throw new SessionExpiredError();
             console.error('[sync] tombstone confirmation failed', checkErr);
             if (onPushError) {
@@ -1062,6 +1460,7 @@ async function syncInner(
             for (const id of unaccounted) {
               if (!stillAlive.has(id)) confirmed.add(id);
             }
+            if (stillAlive.size > 0) recordSyncFault({ step: 'push', code: 'delete-refused' });
             if (stillAlive.size > 0 && onPushError) {
               for (const id of stillAlive) {
                 onPushError(id, 'delete not accepted by the server');
@@ -1071,8 +1470,11 @@ async function syncInner(
         }
         if (confirmed.size > 0) {
           await db.notes.bulkDelete([...confirmed]);
+          pushedCount += confirmed.size;
         }
       } else {
+        recordSyncFault({ step: 'push', status: tombstoneStatus, code: error.code || undefined });
+        if (isMfaRefusal(error)) throw new MfaRequiredError();
         if (isAuthError(error)) throw new SessionExpiredError();
         console.error('[sync] batch tombstone failed', error);
         if (onPushError) {
@@ -1085,23 +1487,11 @@ async function syncInner(
     }
   }
 
-  /** Encrypt a note into the row shape the server stores. */
+  /** Encrypt a note into the row shape the server stores. The payload is
+   *  `fieldsOfLocal(note)`, the same fields a base recorded for this push
+   *  describes, plus the "last edited" stamp when the row has one. */
   const buildRow = (note: LocalNote) => {
-    const { ciphertext, nonce } = encryptNote(
-      {
-        title: note.title,
-        body: note.body,
-        tags: note.tags,
-        trashed: note.trashed === 1,
-        starred: note.starred === 1,
-        locked: note.locked === 1,
-        pinProtected: note.pinProtected === 1,
-        type: note.type ?? 'note',
-        trackers: note.trackers,
-        folderId: note.folderId ?? null,
-      },
-      encryptionKey,
-    );
+    const { ciphertext, nonce } = encryptNote(rowPayloadOf(note), encryptionKey);
     return {
       id: note.id,
       user_pubkey: pubkey,
@@ -1112,17 +1502,28 @@ async function syncInner(
     };
   };
 
-  /** Clear the dirty flag for rows the server accepted, keeping the
-   *  per-note timestamp guard so an edit made mid-push stays dirty. */
-  const clearDirty = async (notes: LocalNote[]) => {
+  /** Record rows the server accepted: each takes the generation it was
+   *  pushed as, its nonce and its base. That holds even for a row edited
+   *  while the push was in flight, because the edit was made on the very
+   *  copy that was pushed, so the next push goes out over this generation
+   *  instead of meeting its own write as a conflict. Only a row with no
+   *  such edit (the timestamp guard) is marked clean. */
+  const recordPushed = async (pushed: Array<{ note: LocalNote; nonce: string }>) => {
+    const synced = pushed.map(({ note, nonce }) => ({
+      note,
+      patch: { syncedNonce: nonce, syncBase: buildSyncBase(fieldsOfLocal(note), nonce) },
+    }));
     await db.transaction('rw', db.notes, async () => {
-      for (const note of notes) {
+      for (const { note, patch } of synced) {
         const current = await db.notes.get(note.id);
-        if (current && current.updatedAt === note.updatedAt) {
-          await db.notes.update(note.id, { dirty: 0 });
-        }
+        if (!current) continue;
+        await db.notes.update(
+          note.id,
+          current.updatedAt === note.updatedAt ? { ...patch, dirty: 0 } : patch,
+        );
       }
     });
+    pushedCount += pushed.length;
   };
 
   // 2b-i. Bulk-insert first-time pushes.
@@ -1148,11 +1549,13 @@ async function syncInner(
     let probeOk = true;
     for (let i = 0; i < toUpsert.length && probeOk; i += PROBE_CHUNK) {
       const ids = toUpsert.slice(i, i + PROBE_CHUNK).map((n) => n.id);
-      const { data, error } = await supabase
+      const { data, error, status: probeStatus } = await supabase
         .from('notes')
         .select('id')
         .in('id', ids);
       if (error) {
+        recordSyncFault({ step: 'push', status: probeStatus, code: error.code || undefined });
+        if (isMfaRefusal(error)) throw new MfaRequiredError();
         if (isAuthError(error)) throw new SessionExpiredError();
         // A malformed id 400s the whole chunk, and quietly treating a
         // failed probe as "none of these exist" would bulk-insert over
@@ -1169,65 +1572,76 @@ async function syncInner(
       const retry: LocalNote[] = [];
       for (let i = 0; i < fresh.length; i += INSERT_CHUNK) {
         if (pushEnded || (await pushOwnershipLost())) {
-          endPush('bulk-insert');
+          endPush('bulk-insert', fresh.slice(i).map((n) => n.id));
           break;
         }
         const batch = fresh.slice(i, i + INSERT_CHUNK);
-        const { error } = await supabase.from('notes').insert(batch.map(buildRow));
+        // A row over the per-row ceiling fails the whole chunk and takes
+        // its neighbours down to the slow path with it, every pass, for as
+        // long as the note exists. Hold it back and report it here: that
+        // report is what marks it "not backed up", and it is the only one
+        // this pass makes, because the per-note path never sees it either.
+        const rows: ReturnType<typeof buildRow>[] = [];
+        const sendable: LocalNote[] = [];
+        for (const note of batch) {
+          const built = buildRow(note);
+          if (built.ciphertext.length > NOTE_MAX_STORED_BYTES) {
+            if (onPushError) onPushError(note.id, NOTE_TOO_LARGE_MSG);
+            continue;
+          }
+          rows.push(built);
+          sendable.push(note);
+        }
+        if (rows.length === 0) continue;
+        const { error, status: insertStatus } = await supabase.from('notes').insert(rows);
         if (error) {
+          recordSyncFault({ step: 'push', status: insertStatus, code: error.code || undefined });
+          if (isMfaRefusal(error)) throw new MfaRequiredError();
           if (isAuthError(error)) throw new SessionExpiredError();
           if (isQuotaError(error)) throw new QuotaExceededError(error.message);
           if (isRlsError(error)) {
-            endPush('rls-refused');
+            endPush('rls-refused', [...sendable, ...fresh.slice(i + INSERT_CHUNK)].map((n) => n.id));
             break;
           }
           // One bad row (oversized note, malformed id) fails the whole
           // batch, so hand this chunk to the per-note path where each
           // note gets its own verdict and its own error message.
           console.warn('[sync] batch insert failed, retrying these per note', error);
-          retry.push(...batch);
+          retry.push(...sendable);
           continue;
         }
-        await clearDirty(batch);
+        await recordPushed(sendable.map((note, i) => ({ note, nonce: rows[i]!.nonce })));
       }
       pending = toUpsert.filter((n) => known.has(n.id)).concat(retry);
     }
   }
 
-  // 2b-ii. Conflict-aware push - encrypt each dirty note and push with a
-  // conditional update (lte guard on updated_at). If the server has a
-  // newer version, we detect the conflict instead of silently overwriting.
+  // 2b-ii. Conflict-aware push - encrypt each dirty note and write it only
+  // over the server generation this device last synced. A copy whose
+  // generation is behind goes to the conflict path instead of overwriting.
   const pushOne = async (note: LocalNote) => {
     if (pushEnded || (await pushOwnershipLost())) {
-      endPush('per-note');
+      endPush('per-note', [note.id]);
       return;
     }
-    const { ciphertext, nonce } = encryptNote(
-      {
-        title: note.title,
-        body: note.body,
-        tags: note.tags,
-        trashed: note.trashed === 1,
-        starred: note.starred === 1,
-        locked: note.locked === 1,
-        pinProtected: note.pinProtected === 1,
-        type: note.type ?? 'note',
-        trackers: note.trackers,
-        folderId: note.folderId ?? null,
-      },
-      encryptionKey
-    );
-    const row = {
-      id: note.id,
-      user_pubkey: pubkey,
-      ciphertext: bytesToBase64(ciphertext),
-      nonce: bytesToBase64(nonce),
-      created_at: note.createdAt,
-      updated_at: note.updatedAt,
-    };
+    const row = buildRow(note);
 
-    // Try conditional update: only succeeds if server isn't newer.
-    const { data: updated, error: updateErr } = await supabase
+    // No retry can make this row fit, so it costs nothing but the report.
+    // The note stays dirty and keeps its "not backed up" marking until an
+    // edit brings it under the ceiling, when this check simply passes.
+    if (row.ciphertext.length > NOTE_MAX_STORED_BYTES) {
+      if (onPushError) onPushError(note.id, NOTE_TOO_LARGE_MSG);
+      return;
+    }
+
+    // The update lands only while the server row still carries the nonce
+    // this device recorded as synced. A stamp cannot say that: a copy that
+    // missed another device's edit takes a fresh stamp the moment anyone
+    // stars, retags or files it, and a stamp guard would let its old body
+    // replace the newer one. A row with no recorded generation guards on
+    // UNRECORDED_GENERATION, so its update always misses and the conflict
+    // read below decides.
+    const { data: updated, error: updateErr, status: updateStatus } = await supabase
       .from('notes')
       .update({
         ciphertext: row.ciphertext,
@@ -1236,10 +1650,13 @@ async function syncInner(
       })
       .eq('id', note.id)
       .eq('user_pubkey', pubkey)
-      .lte('updated_at', note.updatedAt)
+      .eq('nonce', note.syncedNonce ?? UNRECORDED_GENERATION)
       .select('id');
 
     if (updateErr) {
+      // The too-large refusal is the "Not backed up" list's to report.
+      if (!isNoteTooLargeError(updateErr)) recordSyncFault({ step: 'push', status: updateStatus, code: updateErr.code || undefined, ref: note.id });
+      if (isMfaRefusal(updateErr)) throw new MfaRequiredError();
       if (isAuthError(updateErr)) throw new SessionExpiredError();
       if (isQuotaError(updateErr)) throw new QuotaExceededError(updateErr.message);
       // One oversized note breaching the per-note 1 MB CHECK is not an
@@ -1264,38 +1681,42 @@ async function syncInner(
     }
 
     if (updated && updated.length > 0) {
-      // Update succeeded - clear dirty flag (with timestamp guard) and
-      // record the pushed nonce so the pull can tell this generation's
-      // echo from a foreign equal-stamp row (#156).
-      await db.transaction('rw', db.notes, async () => {
-        const current = await db.notes.get(note.id);
-        if (current && current.updatedAt === note.updatedAt) {
-          await db.notes.update(note.id, { dirty: 0, syncedNonce: row.nonce });
-        }
-      });
+      await recordPushed([{ note, nonce: row.nonce }]);
       return;
     }
 
-    // 0 rows updated - either conflict (server is newer) or note
-    // doesn't exist on server yet (first push). Check which.
-    const { data: existing, error: fetchErr } = await supabase
+    // 0 rows updated - either the server moved past this device's
+    // generation, or the note does not exist there yet (first push).
+    const { data: existing, error: fetchErr, status: fetchStatus } = await supabase
       .from('notes')
-      .select('ciphertext, nonce, updated_at')
+      .select('ciphertext, nonce, updated_at, deleted_at')
       .eq('id', note.id)
       .eq('user_pubkey', pubkey)
       .maybeSingle();
 
     if (fetchErr) {
+      recordSyncFault({ step: 'push', status: fetchStatus, code: fetchErr.code || undefined, ref: note.id });
+      if (isMfaRefusal(fetchErr)) throw new MfaRequiredError();
       if (isAuthError(fetchErr)) throw new SessionExpiredError();
       console.error('[sync] conflict check failed for', note.id, fetchErr);
       if (onPushError) onPushError(note.id, fetchErr.message ?? 'conflict check failed');
       return;
     }
 
+    // A tombstone that landed after this pass pulled: it wins over the local
+    // edit exactly as it does in the pull, and its row holds no content to
+    // merge against.
+    if (existing?.deleted_at) {
+      await db.notes.delete(note.id);
+      return;
+    }
+
     if (!existing) {
       // No row on server - first-time insert.
-      const { error: insertErr } = await supabase.from('notes').insert(row);
+      const { error: insertErr, status: insertStatus } = await supabase.from('notes').insert(row);
       if (insertErr) {
+        if (!isNoteTooLargeError(insertErr)) recordSyncFault({ step: 'push', status: insertStatus, code: insertErr.code || undefined, ref: note.id });
+        if (isMfaRefusal(insertErr)) throw new MfaRequiredError();
         if (isAuthError(insertErr)) throw new SessionExpiredError();
         if (isQuotaError(insertErr)) throw new QuotaExceededError(insertErr.message);
         if (isNoteTooLargeError(insertErr)) {
@@ -1308,223 +1729,161 @@ async function syncInner(
           return;
         }
         if (isRlsError(insertErr)) {
-          endPush('rls-refused');
+          endPush('rls-refused', [note.id]);
           return;
         }
         console.error('[sync] insert failed for', note.id, insertErr);
         if (onPushError) onPushError(note.id, insertErr.message ?? 'insert failed');
       } else {
-        await db.transaction('rw', db.notes, async () => {
-          const current = await db.notes.get(note.id);
-          if (current && current.updatedAt === note.updatedAt) {
-            await db.notes.update(note.id, { dirty: 0, syncedNonce: row.nonce });
-          }
-        });
+        await recordPushed([{ note, nonce: row.nonce }]);
       }
       return;
     }
 
-    // ── Conflict: server has a newer version ──────────────────────
+    // ── Conflict: the server holds a generation this device never synced ──
     console.warn('[sync] conflict detected for note', note.id);
     try {
-      const serverDecrypted = decryptNote(
+      const serverPayload = decryptNote(
         base64ToBytes(existing.ciphertext),
         base64ToBytes(existing.nonce),
-        encryptionKey
+        encryptionKey,
       );
+      const serverFields = fieldsOfPayload(serverPayload, note.archived === 1);
+      const local = localSide(note);
+      const server: MergeSide = { fields: serverFields, updatedAt: existing.updated_at, editedAt: serverPayload.editedAt };
+      // Field by field against the version this device last synced: a
+      // field only one side changed takes that side, whichever stamp is
+      // newer, and only a body both sides changed is left to the user.
+      const { rest, body } = mergeNoteFields(noteBaseOf(note), local, server);
 
-      // Auto-merge: without a stored pre-edit base we cannot know which
-      // side changed the body, so merge silently only when the bodies
-      // are identical - the local side then carries at most title and
-      // metadata changes, and local wins (the user's most recent intent).
-      const bodyIdentical = note.body === serverDecrypted.body;
-      const titleIdentical = note.title === serverDecrypted.title;
-
-      if (bodyIdentical && titleIdentical) {
-        // Body + title unchanged - only metadata differs. Auto-merge:
-        // local metadata wins (it's the user's latest action on this
-        // device - e.g. they starred or tagged the note).
-        const mergedAt = new Date().toISOString();
-        const mergedTrackers = mergeTrackers(note.trackers, serverDecrypted.trackers);
-        const { ciphertext: mergedCt, nonce: mergedNonce } = encryptNote(
-          {
-            title: note.title,
-            body: note.body,
-            tags: note.tags,
-            trashed: note.trashed === 1,
-            starred: note.starred === 1,
-            locked: note.locked === 1,
-            pinProtected: note.pinProtected === 1,
-            type: note.type ?? 'note',
-            trackers: mergedTrackers,
-            folderId: note.folderId ?? null,
-          },
-          encryptionKey
-        );
-        // Guarded like the main push: `lte` on the version this merge
-        // was computed against, plus `.select('id')` to learn whether
-        // the write landed. Unguarded, this overwrote a NEWER version
-        // pushed by another device in the window since the conflict
-        // read (and a trigger-dropped write to a tombstoned row looked
-        // identical to success).
-        const { data: mergedRows, error: mergeErr } = await supabase
-          .from('notes')
-          .update({
-            ciphertext: bytesToBase64(mergedCt),
-            nonce: bytesToBase64(mergedNonce),
-            updated_at: mergedAt,
-          })
-          .eq('id', note.id)
-          .eq('user_pubkey', pubkey)
-          .lte('updated_at', existing.updated_at)
-          .select('id');
-        if (!mergeErr && mergedRows && mergedRows.length > 0) {
-          await db.transaction('rw', db.notes, async () => {
-            const current = await db.notes.get(note.id);
-            if (current && current.updatedAt === note.updatedAt) {
-              await db.notes.update(note.id, {
-                dirty: 0,
-                updatedAt: mergedAt,
-                // The merged tracker payload has to land locally too. The
-                // row is about to match the server's stamp and nonce, so
-                // the next pull SKIPS it as its own echo - without this
-                // write the device would keep only its own half of the
-                // merge it just pushed, forever.
-                trackers: mergedTrackers,
-                syncedNonce: bytesToBase64(mergedNonce),
-              });
-            }
-          });
-          console.log('[sync] auto-merged metadata for note', note.id);
-        } else if (mergeErr) {
-          console.error('[sync] auto-merge push failed for', note.id, mergeErr);
-          if (onPushError) onPushError(note.id, mergeErr.message ?? 'auto-merge failed');
-        } else {
-          // 0 rows: the server moved again (or the row was tombstoned)
-          // since the conflict read. Stay dirty; the next pass re-runs
-          // conflict detection against the newer row.
-          console.warn('[sync] auto-merge lost a second race for', note.id);
-        }
-      } else if (note.body === serverDecrypted.body) {
-        // Body identical but title differs. Local title wins (more
-        // recent intent), keep server body.
-        const mergedAt = new Date().toISOString();
-        const mergedTrackers = mergeTrackers(note.trackers, serverDecrypted.trackers);
-        const { ciphertext: mergedCt, nonce: mergedNonce } = encryptNote(
-          {
-            title: note.title,
-            body: serverDecrypted.body,
-            tags: note.tags,
-            trashed: note.trashed === 1,
-            starred: note.starred === 1,
-            locked: note.locked === 1,
-            pinProtected: note.pinProtected === 1,
-            type: note.type ?? 'note',
-            trackers: mergedTrackers,
-            folderId: note.folderId ?? null,
-          },
-          encryptionKey
-        );
-        // Same guard as the metadata-only merge above: this write is
-        // computed against `existing` and must not land on anything
-        // newer.
-        const { data: mergedRows, error: mergeErr } = await supabase
-          .from('notes')
-          .update({
-            ciphertext: bytesToBase64(mergedCt),
-            nonce: bytesToBase64(mergedNonce),
-            updated_at: mergedAt,
-          })
-          .eq('id', note.id)
-          .eq('user_pubkey', pubkey)
-          .lte('updated_at', existing.updated_at)
-          .select('id');
-        if (!mergeErr && mergedRows && mergedRows.length > 0) {
-          await db.transaction('rw', db.notes, async () => {
-            const current = await db.notes.get(note.id);
-            if (current && current.updatedAt === note.updatedAt) {
-              await db.notes.update(note.id, {
-                dirty: 0,
-                updatedAt: mergedAt,
-                // The merged tracker payload has to land locally too. The
-                // row is about to match the server's stamp and nonce, so
-                // the next pull SKIPS it as its own echo - without this
-                // write the device would keep only its own half of the
-                // merge it just pushed, forever.
-                trackers: mergedTrackers,
-                syncedNonce: bytesToBase64(mergedNonce),
-              });
-            }
-          });
-          console.log('[sync] auto-merged title+metadata for note', note.id);
-        } else if (mergeErr) {
-          console.error('[sync] auto-merge push failed for', note.id, mergeErr);
-          if (onPushError) onPushError(note.id, mergeErr.message ?? 'auto-merge failed');
-        } else {
-          console.warn('[sync] auto-merge lost a second race for', note.id);
-        }
-      } else if (note.title === serverDecrypted.title && arraysEqual(note.tags, serverDecrypted.tags)) {
-        // Title+tags identical, body differs. Server body is newer
-        // (it has the later updated_at), but local may have edits too.
-        // If server body is strictly newer and local only changed
-        // metadata, we can merge: keep server body, local metadata.
-        // But we can't tell if local changed body without a base copy.
-        // So this is a real body conflict - surface it.
+      if (body === null) {
         if (onConflict) {
           onConflict({
             noteId: note.id,
             localNote: note,
-            serverTitle: serverDecrypted.title,
-            serverBody: serverDecrypted.body,
-            serverTags: serverDecrypted.tags,
-            serverTrackers: serverDecrypted.trackers,
-            serverStarred: serverDecrypted.starred ?? false,
-            serverTrashed: serverDecrypted.trashed ?? false,
-            serverLocked: serverDecrypted.locked ?? false,
-            serverPinProtected: serverDecrypted.pinProtected ?? false,
-            serverType: serverDecrypted.type ?? 'note',
-            serverFolderId: serverDecrypted.folderId ?? null,
+            serverTitle: serverFields.title,
+            serverBody: serverFields.body,
+            serverTags: serverFields.tags,
+            serverTrackers: serverFields.trackers,
+            serverStarred: serverFields.starred,
+            serverTrashed: serverFields.trashed,
+            serverLocked: serverFields.locked,
+            serverPinProtected: serverFields.pinProtected,
+            serverType: serverFields.type,
+            serverFolderId: serverFields.folderId,
+            serverArchived: serverFields.archived,
+            ...(serverPayload.archived === undefined ? { serverArchiveAbsent: true } : {}),
             serverUpdatedAt: existing.updated_at,
+            ...(serverPayload.editedAt ? { serverEditedAt: serverPayload.editedAt } : {}),
             serverRow: existing,
           });
         } else {
-          // No conflict handler - the sign-out rescue flush. Do NOT
-          // fall back to server-wins here: overwriting the local body
-          // and clearing dirty moments before the wipe destroyed the
-          // unsynced edit on both sides (keepUnsyncedNotes can only
-          // rescue rows still flagged dirty). Leave the row dirty; the
-          // next authenticated pass re-detects the conflict with the
-          // modal wired.
+          // No conflict handler - the sign-out rescue flush. Do NOT fall
+          // back to the server's body: overwriting the local one and
+          // clearing dirty moments before the wipe destroyed the unsynced
+          // edit on both sides (keepUnsyncedNotes can only rescue rows
+          // still flagged dirty). Leave the row dirty; the next
+          // authenticated pass re-detects the conflict with the modal wired.
           console.warn('[sync] conflict for', note.id, 'left dirty (no handler)');
         }
+        return;
+      }
+
+      // Two sides can each leave a schedule that holds while their merge does
+      // not (an end day kept from one side before a day moved on the other);
+      // the merge keeps what holds. Spec: ops/docs/archive/calendar-pillar-spec.md (section 4.2)
+      const merged: NoteFields = { ...rest, body, trackers: normalizeSchedule(rest.trackers, rest.type) };
+      const editedAt = mergedEditedAt(local, server, merged);
+      // A server copy that lost the flag to an older writer is not "the
+      // same" as an archived merge: it is written, so the flag is restated.
+      const serverLostArchive = serverPayload.archived === undefined && merged.archived;
+      if (fieldsEqual(merged, serverFields) && !serverLostArchive && !editStampMoves(editedAt, serverPayload.editedAt)) {
+        // Everything this device changed, its edit date included, is already
+        // on the server, or yielded to a later change of the same field: the
+        // server's generation is the result, so record it as synced without
+        // a write.
+        const base = buildSyncBase(serverFields, existing.nonce);
+        await db.transaction('rw', db.notes, async () => {
+          const current = await db.notes.get(note.id);
+          if (current && current.updatedAt === note.updatedAt) {
+            await db.notes.update(note.id, {
+              ...localPatchOf(serverFields),
+              editedAt,
+              dirty: 0,
+              updatedAt: existing.updated_at,
+              syncedNonce: existing.nonce,
+              syncBase: base,
+            });
+          }
+        });
+        return;
+      }
+
+      // Stamped past both sides it merges: a peer pull skips a row older
+      // than the copy it holds, so a merge stamped by a clock running
+      // behind would never reach the devices holding the version it
+      // replaces.
+      const mergedAt = nextStamp(laterStamp(note.updatedAt, existing.updated_at));
+      const keepUnknown = archiveUnknownOf(note) && serverPayload.archived === undefined && !merged.archived;
+      const { ciphertext: mergedCt, nonce: mergedNonceBytes } = encryptNote(
+        { ...merged, ...(keepUnknown ? { archived: undefined } : {}), editedAt },
+        encryptionKey,
+      );
+      const mergedNonce = bytesToBase64(mergedNonceBytes);
+      // Conditional on the generation the merge was computed against, plus
+      // `.select('id')` to learn whether the write landed: a newer push
+      // from another device in the window since the conflict read must not
+      // be overwritten, and a trigger-dropped write to a tombstoned row
+      // looks exactly like success without it.
+      const { data: mergedRows, error: mergeErr, status: mergeStatus } = await supabase
+        .from('notes')
+        .update({
+          ciphertext: bytesToBase64(mergedCt),
+          nonce: mergedNonce,
+          updated_at: mergedAt,
+        })
+        .eq('id', note.id)
+        .eq('user_pubkey', pubkey)
+        .eq('nonce', existing.nonce)
+        .select('id');
+      if (!mergeErr && mergedRows && mergedRows.length > 0) {
+        const base = buildSyncBase(merged, mergedNonce);
+        await db.transaction('rw', db.notes, async () => {
+          const current = await db.notes.get(note.id);
+          // Every merged field lands locally: the row is about to match the
+          // server's stamp and nonce, so the next pull skips it as its own
+          // echo, and a field left stale here would stay stale for good. An
+          // edit made while the merge was in flight sits on a copy that
+          // never held the other side's changes, so that row is left as it
+          // is, and the next pass merges it against this generation.
+          if (current && current.updatedAt === note.updatedAt) {
+            await db.notes.update(note.id, {
+              ...localPatchOf(merged),
+              editedAt,
+              dirty: 0,
+              updatedAt: mergedAt,
+              syncedNonce: mergedNonce,
+              syncBase: base,
+            });
+          }
+        });
+        pushedCount += 1;
+        console.log('[sync] merged note', note.id);
+      } else if (mergeErr) {
+        if (!isNoteTooLargeError(mergeErr)) recordSyncFault({ step: 'push', status: mergeStatus, code: mergeErr.code || undefined, ref: note.id });
+        if (isMfaRefusal(mergeErr)) throw new MfaRequiredError();
+        console.error('[sync] auto-merge push failed for', note.id, mergeErr);
+        if (onPushError) onPushError(note.id, mergeErr.message ?? 'auto-merge failed');
       } else {
-        // Both sides changed body (and possibly title/tags too).
-        // This is a full conflict - surface to the user.
-        if (onConflict) {
-          onConflict({
-            noteId: note.id,
-            localNote: note,
-            serverTitle: serverDecrypted.title,
-            serverBody: serverDecrypted.body,
-            serverTags: serverDecrypted.tags,
-            serverTrackers: serverDecrypted.trackers,
-            serverStarred: serverDecrypted.starred ?? false,
-            serverTrashed: serverDecrypted.trashed ?? false,
-            serverLocked: serverDecrypted.locked ?? false,
-            serverPinProtected: serverDecrypted.pinProtected ?? false,
-            serverType: serverDecrypted.type ?? 'note',
-            serverFolderId: serverDecrypted.folderId ?? null,
-            serverUpdatedAt: existing.updated_at,
-            serverRow: existing,
-          });
-        } else {
-          // No conflict handler (sign-out rescue flush) - keep the row
-          // dirty rather than server-wins. See the branch above.
-          console.warn('[sync] conflict for', note.id, 'left dirty (no handler)');
-        }
+        // 0 rows: the server moved again (or the row was tombstoned)
+        // since the conflict read. Stay dirty; the next pass re-runs
+        // conflict detection against the newer row.
+        console.warn('[sync] auto-merge lost a second race for', note.id);
       }
     } catch (err) {
+      if (err instanceof MfaRequiredError) throw err;
       console.error('[sync] conflict resolution failed for', note.id, err);
+      recordSyncFault({ step: 'push', code: 'merge', ref: note.id });
       if (onPushError) onPushError(note.id, 'conflict resolution failed');
     }
   };
@@ -1540,9 +1899,9 @@ async function syncInner(
   // mutex held: about 40 s at an 80 ms RTT and 100 s at 200 ms, during
   // which the app reports itself as merely "syncing".
   //
-  // Every iteration of pushOne is independent and order-free: the `lte`
-  // guard, the zero-rows conflict probe and the clearDirty timestamp
-  // check are all keyed on one note.id, and no cross-note ordering
+  // Every iteration of pushOne is independent and order-free: the
+  // generation guard, the zero-rows conflict probe and the recordPushed
+  // timestamp check are all keyed on one note.id, and no cross-note ordering
   // exists server-side either - each write gets its own trigger-stamped
   // changed_at (migration 0066) and the pull applies rows one by one.
   // Concurrency therefore changes throughput only, never the outcome of
@@ -1558,7 +1917,7 @@ async function syncInner(
   // loop's throw. Requests already in flight are allowed to settle
   // instead of being abandoned: each carries the same per-note guards
   // as any other pass, so letting them finish is safe, and it keeps
-  // clearDirty from being skipped on a write the server did accept.
+  // recordPushed from being skipped on a write the server did accept.
   let pushAbort: unknown = null;
   let pushCursor = 0;
   const pushWorker = async () => {
@@ -1582,9 +1941,20 @@ async function syncInner(
     ),
   );
   if (pushAbort !== null) throw pushAbort;
+  // A stop also leaves every note no worker claimed: the whole per-note
+  // queue when an earlier stage stopped, since no worker starts after it.
+  if (pushEnded) {
+    for (const note of pending.slice(pushCursor)) unreachedIds.add(note.id);
+  }
 
   // The cursor was already persisted at the end of the pull phase (see
   // the block after `pullOk = !batchHadError`), so a push-phase throw
   // above never costs the pull its progress.
-  return { pullOk, changed, pushed: pushedCount, pulled: pulledCount };
+  return {
+    pullOk,
+    changed,
+    pushed: pushedCount,
+    pulled: pulledCount,
+    ...(pushEnded ? { halted: { reason: haltReason, unreached: unreachedIds.size } } : {}),
+  };
 }

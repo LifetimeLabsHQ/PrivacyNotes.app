@@ -63,18 +63,36 @@
                 <!-- AndroidTV support -->
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
+            <!-- The share sheet: a link, a text or files from any other app.
+                 MainActivity.kt copies what it is given into the share inbox,
+                 and the app takes it after sign-in and the app lock. Never
+                 through fileAssociations, which would also claim VIEW and open
+                 every text file on the phone.
+                 Re-add after any `tauri android init` (re-init wipes this file).
+                 Spec: ops/docs/archive/share-into-app.md -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
             <!-- DEEP LINK PLUGIN. AUTO-GENERATED. DO NOT REMOVE. -->
-            <intent-filter >
+            <intent-filter android:autoVerify="true" >
                 <action android:name="android.intent.action.VIEW" />
                 <!-- ChromeOS ARC++ uses a different action for deep links -->
                 <action android:name="org.chromium.arc.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="privacynotes" />
+                <data android:scheme="https" />
+                <data android:host="use.privacynotes.app" />
                 
                 
-                
-                
+                <data android:pathPrefix="/auth/callback" />
+                <data android:pathPrefix="/note" />
                 
             </intent-filter>
             <!-- DEEP LINK PLUGIN. AUTO-GENERATED. DO NOT REMOVE. -->

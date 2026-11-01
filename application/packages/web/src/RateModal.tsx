@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { LinksModal } from './LinksModal';
 import { useRateLinks, RateOutro } from './rateLinks';
-import { Star } from './icons';
+import { RatingStar } from './RatingStar';
 
 type Props = {
   onClose: () => void;
@@ -11,7 +11,7 @@ type Props = {
 };
 
 // The review platforms where a public rating helps discovery. Opened from the
-// sidebar footer; the About modal's Rating tab renders the same three strings
+// sidebar footer; the About modal's Rating tab renders the same strings
 // and the same list, both from `rateLinks.tsx`.
 export function RateModal({ onClose, onRated }: Props) {
   const { t } = useTranslation('landing');
@@ -20,11 +20,12 @@ export function RateModal({ onClose, onRated }: Props) {
   return (
     <LinksModal
       title={t('rate.title')}
-      titleIcon={<Star size={17} weight="fill" className="shrink-0 text-amber-400" aria-hidden="true" />}
+      titleIcon={<RatingStar size={17} />}
       intro={t('rate.intro')}
       links={links}
       outro={<RateOutro />}
       onLinkClick={onRated}
+      grid
       onClose={onClose}
     />
   );

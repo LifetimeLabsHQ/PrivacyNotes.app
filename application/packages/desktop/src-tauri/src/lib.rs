@@ -7,7 +7,7 @@ mod biometric;
 
 /// Who the OS opens Markdown files with, and pointing it at us on the two
 /// platforms that permit it. Desktop only: neither mobile OS has user-settable
-/// file associations. Spec: ops/docs/plans/markdown-folder.md (section 11)
+/// file associations. Spec: ops/docs/archive/markdown-folder.md (section 11)
 #[cfg(desktop)]
 mod file_assoc;
 
@@ -18,6 +18,36 @@ mod file_assoc;
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 mod print;
 
+/// The cover iOS photographs in place of the notes when the app leaves the
+/// screen. Android does the same job with a window property of its own, set
+/// from MainActivity.kt, so nothing here is compiled for it.
+/// Spec: ops/docs/archive/app-switcher-privacy-screen.md
+mod privacy_screen;
+
+/// No previous, next and Done bar above the iOS keyboard: the note editor's
+/// format bar sits there (GitHub #533).
+#[cfg(target_os = "ios")]
+mod keyboard_accessory;
+
+/// The Windows title bar painted in the app's theme colors.
+/// Spec: ops/docs/color-themes.md (section 1, the Windows title bar)
+#[cfg(desktop)]
+mod title_bar;
+
+/// Links, text and files other apps shared into this one, waiting for the
+/// unlocked app to take them. Compiled everywhere so its tests run on the
+/// host; only the mobile builds expose its commands.
+/// Spec: ops/docs/archive/share-into-app.md
+mod pasteboard;
+use pasteboard::pasteboard_pictures;
+mod share_inbox;
+#[cfg(mobile)]
+use share_inbox::{share_inbox_list, share_inbox_read, share_inbox_remove, share_limit_set};
+/// The web clipper's download, on every native platform.
+/// Spec: ops/docs/archive/web-clipper-stage1.md (section 3.1)
+mod clip_fetch;
+use clip_fetch::clip_fetch;
+
 /// Files the OS asked us to open before the webview was ready to hear about it.
 ///
 /// A cold start from a double-click delivers the path within milliseconds, long
@@ -25,7 +55,7 @@ mod print;
 /// lock. Emitting straight away would drop it on the floor and the user would
 /// be left staring at a login screen wondering why their file did not open, so
 /// the path waits here until the frontend says it is listening.
-/// Spec: ops/docs/plans/markdown-folder.md (section 11)
+/// Spec: ops/docs/archive/markdown-folder.md (section 11)
 #[cfg(desktop)]
 static PENDING_OPEN: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
 
@@ -34,6 +64,27 @@ static PENDING_OPEN: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::
 /// felt like passing - flags, a deep link, a file we never claimed.
 #[cfg(desktop)]
 const OPENABLE_EXT: [&str; 5] = ["md", "markdown", "mdown", "mkd", "txt"];
+
+/// The URL scheme the bundle registers, kept in step with `plugins.deep-link`
+/// in tauri.conf.json and asserted against it by
+/// `tests/desktopCapabilities.test.ts`.
+#[cfg(desktop)]
+const APP_SCHEME: &str = "privacynotes:";
+
+/// True when the argument is one of our own deep links.
+///
+/// Case-insensitively, because a scheme is case-insensitive and the shell
+/// hands over whatever the sender typed. Compared as bytes, because every
+/// launch argument reaches this, argv[0] included, and a range over a `str`
+/// panics when it ends inside a character: a per-user Windows install puts
+/// the profile folder name in argv[0], and for José or 田中 byte 13 is
+/// mid-character.
+#[cfg(desktop)]
+fn announces_app_scheme(arg: &str) -> bool {
+    arg.as_bytes()
+        .get(..APP_SCHEME.len())
+        .is_some_and(|head| head.eq_ignore_ascii_case(APP_SCHEME.as_bytes()))
+}
 
 #[cfg(desktop)]
 fn is_openable(path: &str) -> bool {
@@ -44,39 +95,87 @@ fn is_openable(path: &str) -> bool {
         .unwrap_or(false)
 }
 
+/// True when the argument announces a URL scheme, `file:` included.
+///
+/// Shape, not a parser, and deliberately. A bare Windows path such as
+/// `C:\notes\a.md` parses as a URL with scheme "c", so asking a parser what
+/// the scheme is would mangle every Windows double-click; a drive letter is
+/// one character and a scheme is at least two. And the colon has to come
+/// before any separator, because `/tmp/my:file.md` is a legal name on Unix.
+///
+/// The `://` form is not enough on its own: a scheme can carry an opaque
+/// value after a single colon, which is how `privacynotes:x|...` slipped
+/// past an earlier version of this test.
+#[cfg(desktop)]
+fn has_url_scheme(arg: &str) -> bool {
+    let Some((scheme, _)) = arg.split_once(':') else { return false };
+    if scheme.len() < 2 || scheme.contains('/') || scheme.contains('\\') {
+        return false;
+    }
+    let mut chars = scheme.chars();
+    chars.next().is_some_and(|c| c.is_ascii_alphabetic())
+        && chars.all(|c| c.is_ascii_alphanumeric() || matches!(c, '+' | '-' | '.'))
+}
+
 /// Turn one argv entry into a filesystem path we claimed, or None.
 ///
-/// Two jobs. The extension check is the obvious one - argv carries flags, deep
-/// links and files we never registered. The `file://` unwrapping is the subtle
-/// one: a Linux file manager launching a `%F` desktop entry may hand over a URL
-/// rather than a bare path, and `openPath` on the frontend passes its argument
-/// straight to the fs plugin AS a path. A URL would sail through the extension
-/// check (`.md` parses fine) and then fail to read, which looks exactly like a
-/// broken feature. Percent-encoding is why this goes through a URL parser
-/// instead of a `strip_prefix`: `file:///home/a/my%20note.md` has to come back
-/// as a real space.
+/// The extension check is the obvious job. Two others are not.
+///
+/// A URL is not a file, whatever its last segment looks like: the app's own
+/// scheme arrives on this same argv, and `privacynotes://x/y.md` ends in a
+/// registered extension. The deep-link plugin owns those, and handing one to
+/// the filesystem is how a link somebody else wrote became a path the app
+/// opened.
+///
+/// The one exception is `file://`, which a Linux file manager launching a
+/// `%F` desktop entry may hand over instead of a bare path, and which needs a
+/// parser rather than a `strip_prefix` because `file:///home/a/my%20note.md`
+/// has to come back with a real space. It is scoped away from Windows, which
+/// never sends one: there the single-instance forwarder joins argv with a
+/// pipe and splits the payload on the same character, so one crafted deep
+/// link arrives as several arguments and the second of them was unwrapped
+/// into a path - a local file, or a UNC name pointing at a host of the
+/// sender's choosing.
 #[cfg(desktop)]
 fn openable_path(arg: &str) -> Option<String> {
-    // Only treat an argument as a URL when it says so. A bare Windows path -
-    // `C:\notes\a.md` - parses as a URL with scheme "c", so parsing first and
-    // asking about the scheme afterwards would mangle every Windows double-click.
-    let path = if arg.starts_with("file://") {
-        tauri::Url::parse(arg)
+    #[cfg(not(target_os = "windows"))]
+    if arg.starts_with("file://") {
+        let path = tauri::Url::parse(arg)
             .ok()?
             .to_file_path()
             .ok()?
             .to_string_lossy()
-            .into_owned()
-    } else {
-        arg.to_owned()
-    };
-    is_openable(&path).then_some(path)
+            .into_owned();
+        return is_openable(&path).then_some(path);
+    }
+    if has_url_scheme(arg) {
+        return None;
+    }
+    is_openable(arg).then_some(arg.to_owned())
 }
 
 /// Queue every openable path in an argv-style list. Windows and Linux deliver
 /// file opens this way, both on a cold start and through single-instance.
 #[cfg(desktop)]
 fn queue_from_args<I: IntoIterator<Item = String>>(args: I) {
+    let args: Vec<String> = args.into_iter().collect();
+    // A batch carrying one of our own deep links is a link delivery, not a
+    // file open, and the two must never be mixed. On Windows the
+    // single-instance forwarder joins argv with a pipe and the receiver
+    // splits the payload on the same character, so ONE crafted link arrives
+    // as several arguments and every argument after the first looks exactly
+    // like a file the shell handed over - a local path, or a network name
+    // whose owner learns who opened it.
+    //
+    // Nothing legitimate is lost, because the deep-link plugin refuses that
+    // same batch: it takes the argument after the binary only when there is
+    // no second one (tauri-plugin-deep-link-2.6.1/src/lib.rs:211-218), so a
+    // split payload is already dead as a link before our callback runs. This
+    // closes the delivery rather than the shape, which is why a double-click
+    // on a note that lives on a file server is still an ordinary open.
+    if args.iter().any(|a| announces_app_scheme(a)) {
+        return;
+    }
     let mut queue = PENDING_OPEN.lock().unwrap();
     for arg in args.into_iter().skip(1) {
         if let Some(path) = openable_path(&arg) {
@@ -104,12 +203,16 @@ fn take_pending_opens(app: tauri::AppHandle) -> Vec<String> {
     // Widening happens HERE rather than at queue time because this is the first
     // point that has an AppHandle: the two queue sites are a plugin callback and
     // `std::env::args()`.
-    // Spec: ops/docs/plans/markdown-folder.md (section 11)
+    // Spec: ops/docs/archive/markdown-folder.md (section 11)
     if let Some(scope) = app.try_fs_scope() {
-        for path in &paths {
-            // A path that cannot be granted is still worth returning: the read
-            // will fail with the frontend's own error state rather than being
-            // silently dropped here, which is the more debuggable of the two.
+        // The last one only, which is the one the frontend opens: a
+        // multi-select hands over several, and the widening this grants is
+        // process-wide and permanent, so granting the rest keeps whatever
+        // they name reachable for the life of the run and buys nothing.
+        // A path that cannot be granted is still worth returning: the read
+        // will fail with the frontend's own error state rather than being
+        // silently dropped here, which is the more debuggable of the two.
+        if let Some(path) = paths.last() {
             let _ = scope.allow_file(path);
         }
     }
@@ -133,6 +236,20 @@ fn markdown_assoc_claim(app: tauri::AppHandle) -> Result<(), String> {
     file_assoc::claim(&app)
 }
 
+/// Who opens `.txt` files, or nothing on Linux, where the row is not offered.
+#[tauri::command(async)]
+#[cfg(desktop)]
+fn text_assoc_status(app: tauri::AppHandle) -> Option<file_assoc::AssocStatus> {
+    file_assoc::text_status(&app)
+}
+
+/// Make us the default `.txt` app. macOS only, and only from an explicit click.
+#[tauri::command(async)]
+#[cfg(desktop)]
+fn text_assoc_claim(app: tauri::AppHandle) -> Result<(), String> {
+    file_assoc::text_claim(&app)
+}
+
 /// Open the OS screen where the user sets this themselves. Windows only, where
 /// the OS reserves the choice for the user and answers `settable: false` above.
 #[tauri::command(async)]
@@ -141,8 +258,243 @@ fn markdown_assoc_open_os_settings() -> Result<(), String> {
     file_assoc::open_os_settings()
 }
 
+/// Whether the process holding the single-instance rendezvous is this app.
+///
+/// The desktop app answers "am I already running?" by seeing whether anything
+/// replies at a meeting point, and on macOS that meeting point is a Unix
+/// socket at a fixed path under `/tmp`, a directory every account on the
+/// machine can write to. The plugin's rule is that whatever replies there IS
+/// the running app: it hands that listener this launch's arguments and its
+/// working directory, then exits. So anything that gets there first stops the
+/// app from ever starting and reads the path of the file somebody tried to
+/// open with it.
+///
+/// Two questions, because one test cannot answer both. A socket owned by
+/// another account is not ours and never can be, since nobody else can create
+/// one owned by us. A socket owned by THIS user still proves nothing, because
+/// a program running as the person owns whatever it creates, so the listener
+/// is asked which executable it is and the answer has to be this one.
+///
+/// The order matters. Nothing there at all means the plugin creates the
+/// socket and owns it. A socket nothing listens on is a leftover from a
+/// crash, which the plugin removes before taking the rendezvous over. Past
+/// that point something is listening, and anything short of proof is refused:
+/// the plugin stays unregistered and the app starts. Losing second-launch
+/// forwarding for one run is a far smaller cost than a run that never
+/// happens, and `/tmp`'s sticky bit means removing a squatter's socket was
+/// never an option anyway.
+///
+/// The connection this makes carries nothing. Arguments and the working
+/// directory travel on the plugin's own connect, which happens after this has
+/// decided, so a listener that fails the test learns only that somebody
+/// looked.
+#[cfg(all(desktop, target_os = "macos"))]
+fn rendezvous_is_ours(config: &tauri::Config) -> bool {
+    let identifier = config.identifier.replace(['.', '-'], "_");
+    rendezvous_holder_matches(
+        &format!("/tmp/{identifier}_si.sock"),
+        std::env::current_exe()
+            .and_then(std::fs::canonicalize)
+            .ok(),
+    )
+}
+
+/// The decision itself, with both of its inputs handed in so a test can put
+/// a real socket at a real path and ask about a real process.
+#[cfg(all(desktop, target_os = "macos"))]
+fn rendezvous_holder_matches(path: &str, expected: Option<std::path::PathBuf>) -> bool {
+    use std::os::unix::fs::{FileTypeExt, MetadataExt};
+    use std::os::unix::io::AsRawFd;
+    use std::os::unix::net::UnixStream;
+
+    match std::fs::symlink_metadata(path) {
+        Err(_) => return true,
+        Ok(meta) => {
+            if !meta.file_type().is_socket() || meta.uid() != unsafe { libc::geteuid() } {
+                return false;
+            }
+        }
+    }
+
+    let Ok(stream) = UnixStream::connect(path) else {
+        return true;
+    };
+
+    let mut pid: libc::pid_t = 0;
+    let mut len = std::mem::size_of::<libc::pid_t>() as libc::socklen_t;
+    let asked = unsafe {
+        libc::getsockopt(
+            stream.as_raw_fd(),
+            libc::SOL_LOCAL,
+            libc::LOCAL_PEERPID,
+            std::ptr::addr_of_mut!(pid).cast(),
+            &mut len,
+        )
+    };
+    if asked != 0 || pid <= 0 {
+        return false;
+    }
+
+    let mut buf = vec![0u8; libc::PROC_PIDPATHINFO_MAXSIZE as usize];
+    let written =
+        unsafe { libc::proc_pidpath(pid, buf.as_mut_ptr().cast(), buf.len() as u32) };
+    if written <= 0 {
+        return false;
+    }
+    buf.truncate(written as usize);
+
+    // Both sides are resolved before they are compared, so one of them
+    // arriving through a symbolic link cannot read as a different program.
+    let peer = String::from_utf8(buf)
+        .ok()
+        .and_then(|p| std::fs::canonicalize(p).ok());
+    peer.is_some() && peer == expected
+}
+
+/// The rendezvous decision, every branch of it, against real sockets in a
+/// real directory and a real listening process.
+///
+/// The positive case is the one worth having: the listener is this test
+/// binary, so the peer the kernel names IS the executable asked about, which
+/// is the same proof the app makes of a running copy of itself.
+#[cfg(all(test, desktop, target_os = "macos"))]
+mod rendezvous_tests {
+    use super::rendezvous_holder_matches;
+    use std::os::unix::net::UnixListener;
+    use std::path::PathBuf;
+
+    fn me() -> Option<PathBuf> {
+        std::env::current_exe().and_then(std::fs::canonicalize).ok()
+    }
+
+    fn scratch(name: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join("pn-rendezvous-tests");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join(name);
+        let _ = std::fs::remove_file(&path);
+        path
+    }
+
+    #[test]
+    fn nothing_there_is_ours_to_take() {
+        let path = scratch("absent.sock");
+        assert!(rendezvous_holder_matches(path.to_str().unwrap(), me()));
+    }
+
+    #[test]
+    fn a_plain_file_is_not_a_rendezvous() {
+        let path = scratch("plain");
+        std::fs::write(&path, b"").unwrap();
+        assert!(!rendezvous_holder_matches(path.to_str().unwrap(), me()));
+    }
+
+    #[test]
+    fn a_symbolic_link_is_not_a_rendezvous() {
+        let target = scratch("link-target.sock");
+        let link = scratch("link");
+        let _listener = UnixListener::bind(&target).unwrap();
+        std::os::unix::fs::symlink(&target, &link).unwrap();
+        // The link points at a socket this process is listening on, so only
+        // reading the link itself rather than its target refuses it.
+        assert!(!rendezvous_holder_matches(link.to_str().unwrap(), me()));
+    }
+
+    #[test]
+    fn a_socket_nobody_listens_on_is_a_leftover() {
+        let path = scratch("stale.sock");
+        drop(UnixListener::bind(&path).unwrap());
+        // The file outlives the listener, and the plugin removes it before it
+        // takes the rendezvous over.
+        assert!(rendezvous_holder_matches(path.to_str().unwrap(), me()));
+    }
+
+    #[test]
+    fn a_listener_that_is_this_executable_is_ours() {
+        let path = scratch("live.sock");
+        let _listener = UnixListener::bind(&path).unwrap();
+        assert!(rendezvous_holder_matches(path.to_str().unwrap(), me()));
+    }
+
+    #[test]
+    fn a_listener_that_is_another_executable_is_not() {
+        let path = scratch("impostor.sock");
+        let _listener = UnixListener::bind(&path).unwrap();
+        assert!(!rendezvous_holder_matches(
+            path.to_str().unwrap(),
+            Some(PathBuf::from("/bin/sh")),
+        ));
+    }
+
+    #[test]
+    fn an_unknowable_executable_is_not_ours() {
+        let path = scratch("unknown.sock");
+        let _listener = UnixListener::bind(&path).unwrap();
+        // Nothing to compare against is not the same as a match, and the
+        // wrong answer here hands a stranger this launch's arguments.
+        assert!(!rendezvous_holder_matches(path.to_str().unwrap(), None));
+    }
+}
+
+/// Linux keeps the rendezvous on the session bus and Windows in a named
+/// mutex, and neither is reachable from another account, so there is nothing
+/// here to check.
+#[cfg(all(desktop, not(target_os = "macos")))]
+fn rendezvous_is_ours(_config: &tauri::Config) -> bool {
+    true
+}
+
+/// The arguments to restart with when a launch argument after argv[0] is
+/// not valid Unicode, or None when there is nothing to drop.
+///
+/// argv[0] is never examined. Every argument a restart passes on is a
+/// `String`, so the restarted process always gets None here and a restart
+/// can never lead to another.
+#[cfg(all(desktop, unix))]
+fn restart_without_non_unicode_args(
+    args: impl Iterator<Item = std::ffi::OsString>,
+) -> Option<Vec<String>> {
+    let mut kept = Vec::new();
+    let mut dropped = false;
+    for arg in args.skip(1) {
+        match arg.into_string() {
+            Ok(arg) => kept.push(arg),
+            Err(_) => dropped = true,
+        }
+    }
+    dropped.then_some(kept)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // reqwest is built with `rustls-no-provider` (the clipper pins its own
+    // provider in clip_fetch.rs), and that feature reaches every reqwest
+    // client in the build, Tauri's own included: the dev-server proxy of a
+    // phone dev build, and the updater. A client built with no process-wide
+    // provider panics, so the app installs ring as that provider before any
+    // client exists. An Err only means one was installed already.
+    let _ = rustls::crypto::ring::default_provider().install_default();
+
+    // On Linux and macOS, no launch argument after argv[0] reaches the
+    // builder unless it is valid Unicode. The deep-link plugin (every Linux
+    // launch) and the single-instance plugin (a second launch, on Linux and
+    // macOS) read `std::env::args()` inside `Builder::build`, and it panics
+    // on an argument that will not convert, which a Linux file name is free
+    // to be. Such an argument is dropped and the process restarts without
+    // it: that file does not open, and the app does. `exec` returns only
+    // when the restart failed, and the launch then goes on as it would have.
+    // A failed `current_exe()` skips the restart, and the launch goes on the
+    // same way.
+    // Windows is left out: an argument there fails to convert only when it
+    // carries an unpaired UTF-16 surrogate.
+    #[cfg(all(desktop, unix))]
+    if let Some(kept) = restart_without_non_unicode_args(std::env::args_os()) {
+        if let Ok(exe) = std::env::current_exe() {
+            use std::os::unix::process::CommandExt;
+            let err = std::process::Command::new(exe).args(kept).exec();
+            eprintln!("could not restart without the non-Unicode arguments: {err}");
+        }
+    }
+
     // WebKitGTK's DMA-BUF renderer paints nothing on some Linux GPUs (NVIDIA
     // proprietary drivers, certain Wayland compositors): the window opens but
     // stays blank. Force the stable render path. Must run before any GTK code,
@@ -153,6 +505,10 @@ pub fn run() {
         std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
     }
 
+    // Built here rather than at the end of the chain: the rendezvous check
+    // below reads the identifier out of it.
+    let context = tauri::generate_context!();
+
     let builder = tauri::Builder::default();
 
     // single-instance MUST be the first plugin registered. With the
@@ -161,7 +517,10 @@ pub fn run() {
     // instead of letting that copy launch fresh and swallow the OAuth
     // redirect. Desktop only. Spec: ops/docs/macos-ios-setup.md (native OAuth)
     #[cfg(desktop)]
-    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+    let builder = if !rendezvous_is_ours(context.config()) {
+        builder
+    } else {
+        builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
         use tauri::{Emitter, Manager};
         // A second launch carrying a file path is a double-click while we are
         // already running. The args were discarded here until file
@@ -170,8 +529,9 @@ pub fn run() {
         if let Some(window) = app.get_webview_window("main") {
             let _ = window.set_focus();
         }
-        let _ = app.emit("markdown-open-pending", ());
-    }));
+            let _ = app.emit("markdown-open-pending", ());
+        }))
+    };
 
     let builder = builder
         .plugin(tauri_plugin_opener::init())
@@ -179,7 +539,11 @@ pub fn run() {
         // Save As dialog + file write. The webview has no download handler, so
         // exports/backups/QR saves go through these instead of <a download>.
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_fs::init());
+        .plugin(tauri_plugin_fs::init())
+        // Calendar reminders on every platform: scheduled with the OS on a
+        // phone, shown from the app's own timer on a desktop.
+        // Spec: ops/docs/archive/calendar-pillar-spec.md (section 8)
+        .plugin(tauri_plugin_notification::init());
 
     // Self-updater is desktop-only; iOS/Android update via their stores.
     // process plugin powers the updater's "Restart" button (relaunch()).
@@ -214,6 +578,10 @@ pub fn run() {
     // and does not need to, because our own two commands call it from Rust.
     #[cfg(target_os = "android")]
     let builder = builder.plugin(tauri_plugin_biometric::init());
+    // The bound key's Keystore half (plugins/biometric-key), registered the
+    // same way: no capability entry, reached only from src/biometric.rs.
+    #[cfg(target_os = "android")]
+    let builder = builder.plugin(tauri_plugin_biometric_key::init());
 
     // App-defined commands. These need no ACL/capability entry (only plugin
     // commands do). The biometric pair is registered on every platform and
@@ -223,23 +591,61 @@ pub fn run() {
     #[cfg(desktop)]
     let builder = builder.invoke_handler(tauri::generate_handler![
         can_self_update,
+        is_scoop_install,
         biometric_available,
         biometric_authenticate,
+        biometric_key_create,
+        biometric_key_open,
+        biometric_key_delete,
         print_html,
         take_pending_opens,
         markdown_assoc_status,
         markdown_assoc_claim,
-        markdown_assoc_open_os_settings
+        markdown_assoc_open_os_settings,
+        text_assoc_status,
+        text_assoc_claim,
+        set_privacy_screen,
+        set_capture_block,
+        set_title_bar_colors,
+        pasteboard_pictures,
+        clip_fetch
     ]);
     #[cfg(mobile)]
     let builder = builder.invoke_handler(tauri::generate_handler![
         biometric_available,
         biometric_authenticate,
-        print_html
+        biometric_key_create,
+        biometric_key_open,
+        biometric_key_delete,
+        print_html,
+        set_privacy_screen,
+        set_capture_block,
+        share_inbox_list,
+        share_inbox_read,
+        share_inbox_remove,
+        share_limit_set,
+        pasteboard_pictures,
+        clip_fetch
     ]);
+
+    // A load can replace the web view's content view, so the iOS keyboard bar
+    // is taken off again after each one.
+    #[cfg(target_os = "ios")]
+    let builder = builder.on_page_load(|webview, payload| {
+        if payload.event() == tauri::webview::PageLoadEvent::Finished {
+            keyboard_accessory::hide_in(webview);
+        }
+    });
 
     builder
         .setup(|app| {
+            #[cfg(target_os = "windows")]
+            {
+                use tauri::Manager;
+                if let Some(window) = app.get_webview_window("main") {
+                    disable_browser_accelerator_keys(&window);
+                }
+            }
             // Bring the main window to the foreground on launch. After an
             // updater relaunch() the new process can otherwise come up behind
             // other windows, making it look like the restart did nothing.
@@ -250,14 +656,16 @@ pub fn run() {
                 // is in our own argv. macOS does not use argv for this - it
                 // sends an Apple Event, handled by RunEvent::Opened below.
                 //
-                // `args_os` and not `args`: `std::env::args()` PANICS on any
-                // argument that is not valid Unicode, and a Linux filename is a
-                // byte string with no encoding guarantee at all. Double-clicking
-                // a legally-named file would have taken the app down on launch,
-                // which is a worse failure than not opening it. Arguments that
-                // will not convert are dropped rather than lossily mangled: the
-                // frontend takes a path as a `String`, so a replacement-character
-                // path could not be read anyway and would only fail later, in a
+                // `args_os` and not `args`: `std::env::args()` panics on any
+                // argument that is not valid Unicode, and a Linux file name is a
+                // byte string with no encoding guarantee at all. This read is
+                // not what keeps such a launch alive: the plugins call
+                // `std::env::args()` inside `Builder::build`, before `setup`,
+                // so on Linux and macOS `run()` drops those arguments and
+                // restarts before the builder exists. A path that will not
+                // convert is dropped rather than lossily mangled: the frontend
+                // takes a path as a `String`, so a replacement-character path
+                // could not be read anyway and would only fail later, in a
                 // place that does not name the cause.
                 queue_from_args(std::env::args_os().filter_map(|a| a.into_string().ok()));
                 if let Some(window) = app.get_webview_window("main") {
@@ -297,6 +705,7 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             {
                 use tauri::menu::{Menu, MenuItem, MenuItemKind};
+                use tauri::Manager;
 
                 let menu = Menu::default(app.handle())?;
                 if let Some(MenuItemKind::Submenu(app_submenu)) = menu.items()?.into_iter().next()
@@ -312,24 +721,66 @@ pub fn run() {
                     )?;
                     app_submenu.insert(&about, 0)?;
                 }
-                app.set_menu(menu)?;
-                app.on_menu_event(|app, event| {
-                    if event.id().as_ref() == "about" {
-                        open_about_window(app);
+                // Cmd+W in the main window closes the open item's tab, and the
+                // page handles it, so the menu's Close Window moves to
+                // Shift+Cmd+W. A predefined item keeps its own key, so both
+                // copies (File and Window) are swapped for one of ours. The
+                // About window closes on Cmd+W by itself (AboutWindow.tsx).
+                // Spec: ops/docs/archive/keyboard-shortcuts.md (decision D4)
+                for item in menu.items()? {
+                    let MenuItemKind::Submenu(submenu) = item else { continue };
+                    let items = submenu.items()?;
+                    for (i, entry) in items.iter().enumerate() {
+                        let MenuItemKind::Predefined(p) = entry else { continue };
+                        if p.text()? != "Close Window" {
+                            continue;
+                        }
+                        submenu.remove_at(i)?;
+                        let close = MenuItem::with_id(
+                            app.handle(),
+                            "close-window",
+                            "Close Window",
+                            true,
+                            Some("Shift+CmdOrCtrl+W"),
+                        )?;
+                        submenu.insert(&close, i)?;
                     }
+                }
+                app.set_menu(menu)?;
+                app.on_menu_event(|app, event| match event.id().as_ref() {
+                    "about" => open_about_window(app),
+                    "close-window" => {
+                        if let Some(window) = app
+                            .webview_windows()
+                            .into_values()
+                            .find(|w| w.is_focused().unwrap_or(false))
+                        {
+                            let _ = window.close();
+                        }
+                    }
+                    _ => {}
                 });
             }
+
+            // Start watching for the app leaving the screen. Registered here
+            // rather than on the frontend's first push, because the observers
+            // have to be in place before the first backgrounding and the push
+            // arrives only once the web bundle has booted. They read a flag
+            // that is false until it does, so an early transition covers
+            // nothing, which is the right answer at that point.
+            // Spec: ops/docs/archive/app-switcher-privacy-screen.md
+            privacy_screen::observe();
 
             let _ = &app;
             Ok(())
         })
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("error while building PrivacyNotes")
         .run(|_app, _event| {
             // macOS delivers a file open as an Apple Event, never in argv, so
             // this is the ONLY place a double-click arrives there. Reaching it
             // is why the builder ends in build()+run() rather than run() alone.
-            // Spec: ops/docs/plans/markdown-folder.md (section 11)
+            // Spec: ops/docs/archive/markdown-folder.md (section 11)
             #[cfg(target_os = "macos")]
             if let tauri::RunEvent::Opened { urls } = &_event {
                 use tauri::Emitter;
@@ -350,12 +801,61 @@ pub fn run() {
         });
 }
 
-/// Whether this install can self-update via the Tauri updater. On Linux only the
-/// AppImage can: a .deb lives in root-owned /usr and would re-download the AppImage
-/// payload and fail to apply it every launch, so the frontend skips the check when
-/// this is false. Detected via the APPIMAGE env var the AppImage runtime sets.
-/// Always true on macOS/Windows, which self-update normally.
+/// Whether this executable was unpacked by Scoop rather than installed by our NSIS
+/// installer. Scoop keeps each app under `<root>\apps\<name>\<version>\` and treats that
+/// path as its record of what is installed, so a build written into it out of band makes
+/// the folder name a lie: `scoop list` keeps reporting the old version and the next
+/// `scoop update` puts it back. The root is relocatable, so honour SCOOP and SCOOP_GLOBAL
+/// before falling back to the default layout.
+/// Spec: ops/docs/windows-release.md (a Scoop install updates through Scoop)
+#[cfg(all(desktop, target_os = "windows"))]
+fn unpacked_by_scoop() -> bool {
+    let Ok(exe) = std::env::current_exe() else {
+        // Nothing to match against. Answering "not Scoop" keeps the ordinary NSIS
+        // install self-updating, which is the far more common case.
+        return false;
+    };
+    let exe = exe.to_string_lossy().to_lowercase();
+    for var in ["SCOOP", "SCOOP_GLOBAL"] {
+        let Some(root) = std::env::var_os(var) else { continue };
+        let root = root.to_string_lossy().to_lowercase();
+        let root = root.trim_end_matches('\\');
+        if !root.is_empty() && exe.starts_with(&format!("{root}\\apps\\")) {
+            return true;
+        }
+    }
+    exe.contains("\\scoop\\apps\\")
+}
+
+/// Whether this install can self-update via the Tauri updater.
+///
+/// Two formats cannot, for the same underlying reason: the updater runs an installer
+/// that writes somewhere other than where this copy lives. A Linux .deb sits in
+/// root-owned /usr, so the AppImage payload fails to apply every launch; the APPIMAGE
+/// env var the AppImage runtime sets is what tells the two apart. A Scoop install sits
+/// in Scoop's own directory while our NSIS installer targets %LOCALAPPDATA%\PrivacyNotes,
+/// so self-updating would leave a second copy the user's shortcut never points at.
+/// The frontend nudges instead of installing whenever this is false.
 /// Spec: ops/docs/linux-release.md (deb ships beside the AppImage; only the AppImage self-updates)
+/// WebView2 keeps a browser's own keys unless told otherwise: F5 and Ctrl+R
+/// reload the whole app, Ctrl+P prints the page, Alt+Left goes back, Ctrl+F
+/// opens the browser's find. The app owns its keys, so they are turned off.
+/// Editing keys (copy, paste, cut, select all, undo) are not browser keys in
+/// WebView2's sense and keep working.
+/// Spec: ops/docs/archive/keyboard-shortcuts.md (decision D8)
+#[cfg(target_os = "windows")]
+fn disable_browser_accelerator_keys(window: &tauri::WebviewWindow) {
+    let _ = window.with_webview(|webview| unsafe {
+        use webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2Settings3;
+        use windows::core::Interface;
+        let Ok(core) = webview.controller().CoreWebView2() else { return };
+        let Ok(settings) = core.Settings() else { return };
+        if let Ok(settings) = settings.cast::<ICoreWebView2Settings3>() {
+            let _ = settings.SetAreBrowserAcceleratorKeysEnabled(false);
+        }
+    });
+}
+
 #[cfg(desktop)]
 #[tauri::command]
 fn can_self_update() -> bool {
@@ -363,9 +863,30 @@ fn can_self_update() -> bool {
     {
         std::env::var_os("APPIMAGE").is_some()
     }
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "windows")]
+    {
+        !unpacked_by_scoop()
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
     {
         true
+    }
+}
+
+/// Whether the nudge shown in place of a self-update should name Scoop. Both blocked
+/// formats answer false to can_self_update, and their advice is opposite: a .deb user
+/// fetches a newer package from the website, while a Scoop user must NOT, because the
+/// download there is the NSIS installer that creates the second copy.
+#[cfg(desktop)]
+#[tauri::command]
+fn is_scoop_install() -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        unpacked_by_scoop()
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        false
     }
 }
 
@@ -425,6 +946,91 @@ async fn biometric_authenticate(
     }
 }
 
+/// The bound biometric key: what `biometric_key_create`
+/// hands the web side. `handle` is all it stores; `secret` (hex) is what it
+/// derives the wrap key from, and it is never stored.
+#[derive(serde::Serialize)]
+struct BiometricKey {
+    handle: String,
+    secret: String,
+}
+
+/// Makes a fresh key in the device's secure hardware (Secure Enclave, Android
+/// Keystore, Windows Hello), seals a secret to it, and opens it once behind
+/// the biometric prompt. Errors are the plain codes `unsupported` (said before
+/// any prompt: this device cannot bind, and the web side keeps the presence
+/// gate), `cancelled` and `failed`. A caller gets nothing it could not get by
+/// passing the prompt itself, and every call makes a new key under a new name,
+/// so no call can replace or open an existing enrollment.
+/// Spec: ops/docs/plans/biometric-key-binding.md (section 8.2)
+#[tauri::command]
+async fn biometric_key_create(
+    app: tauri::AppHandle,
+    reason: String,
+    cancel_label: String,
+) -> Result<BiometricKey, String> {
+    #[cfg(native_biometric)]
+    {
+        tauri::async_runtime::spawn_blocking(move || {
+            biometric::key_create(&app, reason, cancel_label)
+                .map(|(handle, secret)| BiometricKey { handle, secret })
+                .map_err(|failure| failure.code().to_owned())
+        })
+        .await
+        .map_err(|_| "failed".to_owned())?
+    }
+    #[cfg(not(native_biometric))]
+    {
+        let _ = (app, reason, cancel_label);
+        Err("unsupported".to_owned())
+    }
+}
+
+/// Opens the secret of a key `biometric_key_create` made, behind the biometric
+/// prompt. Errors: `cancelled`, `gone` (the OS destroyed the key: the device
+/// passcode removed, the key invalidated; it never comes back), `unenrolled`
+/// (no biometric enrolled now; the key may open again once one is) and
+/// `failed`. Without a passed biometric check the hardware releases nothing,
+/// whatever handle a caller sends.
+#[tauri::command]
+async fn biometric_key_open(
+    app: tauri::AppHandle,
+    handle: String,
+    reason: String,
+    cancel_label: String,
+) -> Result<String, String> {
+    #[cfg(native_biometric)]
+    {
+        tauri::async_runtime::spawn_blocking(move || {
+            biometric::key_open(&app, handle, reason, cancel_label)
+                .map_err(|failure| failure.code().to_owned())
+        })
+        .await
+        .map_err(|_| "failed".to_owned())?
+    }
+    #[cfg(not(native_biometric))]
+    {
+        let _ = (app, handle, reason, cancel_label);
+        Err("unsupported".to_owned())
+    }
+}
+
+/// Deletes the hardware key of a handle the web side no longer stores. On
+/// Apple the key lives only in the handle, so there is nothing to delete; on
+/// Android and Windows only a key this app made under its own prefix can be
+/// named. Never fails: an orphan key opens nothing.
+#[tauri::command]
+async fn biometric_key_delete(app: tauri::AppHandle, handle: String) {
+    #[cfg(native_biometric)]
+    {
+        let _ = tauri::async_runtime::spawn_blocking(move || biometric::key_delete(&app, handle)).await;
+    }
+    #[cfg(not(native_biometric))]
+    {
+        let _ = (app, handle);
+    }
+}
+
 /// Prints one note from the standalone HTML document the frontend already
 /// renders for the .html export - same markup, same print CSS, same inlined
 /// images, so a printout matches the browser's on every platform.
@@ -446,6 +1052,42 @@ async fn print_html(app: tauri::AppHandle, html: String, job_name: String) -> Re
         let _ = (app, html, job_name);
         Err("Native printing is only needed on macOS and iOS.".to_owned())
     }
+}
+
+/// Arm or disarm the cover the operating system photographs in place of the
+/// notes. The frontend is the only side that knows whether the app lock is on,
+/// and it pushes from the one place local settings are written.
+///
+/// The cover is black on every theme, so nothing but the switch crosses the
+/// bridge. Spec: ops/docs/archive/app-switcher-privacy-screen.md
+#[tauri::command]
+fn set_privacy_screen(enabled: bool) {
+    privacy_screen::set(enabled);
+}
+
+/// Keep the window out of screenshots, screen recordings and screen sharing,
+/// or let it back in. A device setting: the frontend stores the switch itself
+/// and pushes it at boot and on every change. Android does the same job from
+/// MainActivity.kt, so the command does nothing there.
+/// Spec: ops/docs/archive/app-switcher-privacy-screen.md (section 14)
+#[tauri::command]
+fn set_capture_block(app: tauri::AppHandle, enabled: bool) {
+    privacy_screen::set_capture_block(&app, enabled);
+}
+
+/// Paint the Windows title bar in the app shell's color and text color, and
+/// make it dark or light; `dark: None` follows the system. Takes the window it
+/// was called from and three-byte colors, so a caller can only recolor this
+/// app's own title bar. A no-op off Windows.
+#[cfg(desktop)]
+#[tauri::command]
+fn set_title_bar_colors(
+    window: tauri::WebviewWindow,
+    caption: [u8; 3],
+    text: [u8; 3],
+    dark: Option<bool>,
+) {
+    title_bar::paint(&window, caption, text, dark);
 }
 
 /// Opens (or focuses) the custom About window. The web bundle renders it:
@@ -478,4 +1120,308 @@ fn open_about_window(app: &tauri::AppHandle) {
     .accept_first_mouse(true)
     .center()
     .build();
+}
+
+/// The argv side of the file association, which is the only part of it that
+/// can be reached without an `AppHandle`.
+///
+/// Two refusals live here. A path is claimed
+/// on its extension alone, and a `file://` value is unwrapped through a URL
+/// parser, so a token that is neither still has to be refused. And the
+/// unwrapping is scoped to the platform that needs it: a Linux file manager
+/// launching a `%F` desktop entry may hand over a URL, while on Windows the
+/// same code turned an attacker-supplied deep link into a filesystem path,
+/// because the single-instance forwarder splits one argument into several.
+#[cfg(all(test, desktop))]
+mod tests {
+    use super::*;
+
+    /// `PENDING_OPEN` is one queue for the whole process and the harness
+    /// runs tests on parallel threads, so every test that fills it holds
+    /// this for its whole run. Its poisoning is ignored: a test that fails
+    /// while holding it has already reported that failure.
+    static QUEUE: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    #[test]
+    fn claims_the_registered_extensions_and_nothing_else() {
+        assert_eq!(openable_path("/tmp/a.md").as_deref(), Some("/tmp/a.md"));
+        assert_eq!(openable_path("/tmp/a.MD").as_deref(), Some("/tmp/a.MD"));
+        assert_eq!(openable_path("/tmp/a.txt").as_deref(), Some("/tmp/a.txt"));
+        assert!(openable_path("/tmp/a.pdf").is_none());
+        assert!(openable_path("--flag").is_none());
+        assert!(openable_path("/tmp/noextension").is_none());
+    }
+
+    #[test]
+    fn a_deep_link_is_not_a_file() {
+        // The scheme is the app's own, and the last segment ends in one of the
+        // registered extensions, which is all `is_openable` looks at.
+        assert!(openable_path("privacynotes://x/y.md").is_none());
+        // The opaque form, which is what the Windows forwarder splits.
+        assert!(openable_path("privacynotes:x|file:///tmp/a.md").is_none());
+        assert!(openable_path("https://example.com/a.md").is_none());
+    }
+
+    #[test]
+    fn a_path_that_merely_contains_a_colon_is_still_a_path() {
+        // One character before the colon is a Windows drive, not a scheme.
+        assert_eq!(openable_path("C:\\notes\\a.md").as_deref(), Some("C:\\notes\\a.md"));
+        // And a colon after a separator belongs to the file name.
+        assert_eq!(openable_path("/tmp/my:file.md").as_deref(), Some("/tmp/my:file.md"));
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    #[test]
+    fn unwraps_a_file_url_where_a_file_manager_sends_one() {
+        assert_eq!(openable_path("file:///tmp/a.md").as_deref(), Some("/tmp/a.md"));
+        // Percent-encoding is why this goes through a parser at all.
+        assert_eq!(
+            openable_path("file:///tmp/my%20note.md").as_deref(),
+            Some("/tmp/my note.md"),
+        );
+    }
+
+    /// The Windows refusal, pinned where every platform can run it.
+    ///
+    /// On Windows the `file://` unwrapping is compiled out, so such an
+    /// argument falls to the general rule below, and this is that rule. A
+    /// build for another platform cannot exercise the branch itself, so the
+    /// predicate it depends on is asserted instead.
+    #[test]
+    fn a_file_url_is_a_url_by_the_general_rule() {
+        assert!(has_url_scheme("file:///C:/Users/victim/notes/private.md"));
+        assert!(has_url_scheme("file://attacker.example/share/x.md"));
+        assert!(!has_url_scheme("C:\\notes\\a.md"));
+        assert!(!has_url_scheme("/tmp/my:file.md"));
+        assert!(!has_url_scheme("--flag"));
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn refuses_a_file_url_on_windows() {
+        // Windows never delivers one, and the single-instance forwarder joins
+        // argv with a pipe and splits the payload on the same character, so
+        // one crafted deep link arrives as several arguments. Unwrapping here
+        // turned the second of them into a path the app then opened, local or
+        // a UNC name pointing at a host the sender chose.
+        assert!(openable_path("file:///C:/Users/victim/notes/private.md").is_none());
+        assert!(openable_path("file://attacker.example/share/x.md").is_none());
+    }
+
+    /// The third producer of the queue, and why it needs no scheme check.
+    ///
+    /// macOS delivers a double-click as an Apple Event rather than in argv,
+    /// so `RunEvent::Opened` pushes straight onto the queue without going
+    /// through `openable_path`. It calls `to_file_path()` first, which is a
+    /// stronger rule than the one above rather than a missing one: a URL that
+    /// is not a file URL has no file path to give. Asserted because the claim
+    /// is about a library, not about our code.
+    #[test]
+    fn a_non_file_url_has_no_file_path() {
+        let deep = tauri::Url::parse("privacynotes://x/y.md").unwrap();
+        assert!(deep.to_file_path().is_err());
+        let web = tauri::Url::parse("https://example.com/a.md").unwrap();
+        assert!(web.to_file_path().is_err());
+        let file = tauri::Url::parse("file:///tmp/a.md").unwrap();
+        assert!(file.to_file_path().is_ok());
+    }
+
+    #[test]
+    fn a_batch_carrying_the_app_scheme_queues_nothing() {
+        let _queue = QUEUE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        // What the Windows forwarder produces from one crafted link: the
+        // scheme token, then the payload, which announces nothing and ends in
+        // a registered extension. A UNC name is the sharp one - opening it is
+        // an outbound connection to a host the sender chose.
+        PENDING_OPEN.lock().unwrap().clear();
+        queue_from_args([
+            "app.exe".to_string(),
+            "privacynotes:x".to_string(),
+            "\\\\attacker.example\\share\\x.md".to_string(),
+        ]);
+        assert!(PENDING_OPEN.lock().unwrap().is_empty());
+
+        // And the same batch shape with a local path, which is the same
+        // injection with a quieter payload.
+        queue_from_args([
+            "app.exe".to_string(),
+            "privacynotes://auth-callback".to_string(),
+            "C:\\Users\\victim\\notes\\private.md".to_string(),
+        ]);
+        assert!(PENDING_OPEN.lock().unwrap().is_empty());
+        PENDING_OPEN.lock().unwrap().clear();
+    }
+
+    #[test]
+    fn a_network_path_still_opens_when_nobody_smuggled_it() {
+        let _queue = QUEUE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        // The refusal is about the delivery, not the shape: a double-click on
+        // a note that lives on a real file server is an ordinary open.
+        PENDING_OPEN.lock().unwrap().clear();
+        queue_from_args([
+            "app.exe".to_string(),
+            "\\\\fileserver\\team\\notes.md".to_string(),
+        ]);
+        assert_eq!(
+            PENDING_OPEN.lock().unwrap().clone(),
+            vec!["\\\\fileserver\\team\\notes.md"],
+        );
+        PENDING_OPEN.lock().unwrap().clear();
+    }
+
+    /// What `readDir` reports for a symlink, which is the fact the folder
+    /// scan's refusal rests on.
+    ///
+    /// The plugin derives `isFile`, `isDirectory` and `isSymlink` from one
+    /// `DirEntry::file_type()` call and returns false for all three when it
+    /// cannot stat the entry (tauri-plugin-fs-2.6.0/src/commands.rs:486-499).
+    /// `file_type()` does not traverse a link, so a link reports itself
+    /// rather than its target - which is why the frontend asks for a proven
+    /// file rather than for "not a symlink". Asserted against a real link on
+    /// a real filesystem, because it is an operating-system behaviour and
+    /// the whole guard depends on it.
+    #[test]
+    fn a_symlink_reports_itself_and_not_its_target() {
+        let dir = std::env::temp_dir().join("pn-symlink-filetype-test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let target = dir.join("target.md");
+        std::fs::write(&target, "real bytes").unwrap();
+        let link = dir.join("link.md");
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&target, &link).unwrap();
+        #[cfg(windows)]
+        std::os::windows::fs::symlink_file(&target, &link).unwrap();
+
+        let mut seen = 0;
+        for entry in std::fs::read_dir(&dir).unwrap() {
+            let entry = entry.unwrap();
+            let file_type = entry.file_type().unwrap();
+            match entry.file_name().to_str().unwrap() {
+                "target.md" => {
+                    assert!(file_type.is_file());
+                    assert!(!file_type.is_symlink());
+                    seen += 1;
+                }
+                "link.md" => {
+                    // The two the scan reads: a link is not a file, so asking
+                    // for a proven file refuses it.
+                    assert!(file_type.is_symlink());
+                    assert!(!file_type.is_file());
+                    assert!(!file_type.is_dir());
+                    seen += 1;
+                }
+                other => panic!("unexpected entry {other}"),
+            }
+        }
+        assert_eq!(seen, 2);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn queue_skips_argv_zero_and_keeps_the_order_given() {
+        let _queue = QUEUE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        PENDING_OPEN.lock().unwrap().clear();
+        queue_from_args([
+            "/Applications/PrivacyNotes.app/Contents/MacOS/a.md".to_string(),
+            "/tmp/first.md".to_string(),
+            "--flag".to_string(),
+            "/tmp/second.txt".to_string(),
+        ]);
+        let queued = PENDING_OPEN.lock().unwrap().clone();
+        assert_eq!(queued, vec!["/tmp/first.md", "/tmp/second.txt"]);
+        PENDING_OPEN.lock().unwrap().clear();
+    }
+
+    /// Launch arguments whose byte 13, the scheme's length, falls inside a
+    /// character: argv[0] of a per-user Windows install under each of these
+    /// profile names, and a Linux note path. The first assertion pins that,
+    /// so the fixtures keep testing the boundary if the scheme changes.
+    #[test]
+    fn a_non_ascii_launch_argument_is_not_a_link() {
+        for arg in [
+            "C:\\Users\\José\\AppData\\Local\\PrivacyNotes\\privacynotes.exe",
+            "C:\\Users\\René\\AppData\\Local\\PrivacyNotes\\privacynotes.exe",
+            "C:\\Users\\María\\AppData\\Local\\PrivacyNotes\\privacynotes.exe",
+            "C:\\Users\\田中\\AppData\\Local\\PrivacyNotes\\privacynotes.exe",
+            "C:\\Users\\김철수\\AppData\\Local\\PrivacyNotes\\privacynotes.exe",
+            "C:\\Users\\さくら\\AppData\\Local\\PrivacyNotes\\privacynotes.exe",
+            "/home/wang/文档/note.md",
+        ] {
+            assert!(!arg.is_char_boundary(APP_SCHEME.len()), "{arg}");
+            assert!(!announces_app_scheme(arg), "{arg}");
+        }
+        // Still a scheme test: ASCII case is ignored, and an argument
+        // shorter than the scheme is never a link.
+        assert!(announces_app_scheme("PrivacyNotes://auth-callback"));
+        assert!(!announces_app_scheme("privacynote"));
+    }
+
+    /// The restart decision `run()` acts on before the builder exists, one
+    /// case per outcome.
+    #[cfg(unix)]
+    #[test]
+    fn a_restart_drops_only_non_unicode_arguments_after_argv_zero() {
+        use std::ffi::OsString;
+        use std::os::unix::ffi::OsStringExt;
+
+        // argv[0] is never examined, so a restart cannot lead to another.
+        assert_eq!(
+            restart_without_non_unicode_args(
+                [OsString::from_vec(b"/opt/caf\xe9/privacynotes".to_vec())].into_iter(),
+            ),
+            None,
+        );
+        // The argument that will not convert is dropped, argv[0] is not
+        // passed on, and the rest keep their order.
+        assert_eq!(
+            restart_without_non_unicode_args(
+                [
+                    OsString::from("/usr/bin/privacynotes"),
+                    OsString::from_vec(b"/home/anna/caf\xe9.md".to_vec()),
+                    OsString::from("/home/wang/文档/note.md"),
+                    OsString::from("/home/anna/second.md"),
+                ]
+                .into_iter(),
+            ),
+            Some(vec![
+                "/home/wang/文档/note.md".to_string(),
+                "/home/anna/second.md".to_string(),
+            ]),
+        );
+        // Nothing to drop, no restart.
+        assert_eq!(
+            restart_without_non_unicode_args(
+                [
+                    OsString::from("/usr/bin/privacynotes"),
+                    OsString::from("/home/wang/文档/note.md"),
+                ]
+                .into_iter(),
+            ),
+            None,
+        );
+    }
+
+    /// The same launches end to end: a Windows cold start from a profile
+    /// folder named José, and a Linux double-click on a note in a folder
+    /// named in Cyrillic. Each has to queue its file, not abort the app.
+    #[test]
+    fn a_non_ascii_launch_still_queues_its_file() {
+        let _queue = QUEUE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        PENDING_OPEN.lock().unwrap().clear();
+        queue_from_args([
+            "C:\\Users\\José\\AppData\\Local\\PrivacyNotes\\privacynotes.exe".to_string(),
+            "C:\\Users\\José\\Documents\\note.md".to_string(),
+        ]);
+        queue_from_args([
+            "/usr/bin/privacynotes".to_string(),
+            "/home/max/Документы/x.md".to_string(),
+        ]);
+        let queued = PENDING_OPEN.lock().unwrap().clone();
+        PENDING_OPEN.lock().unwrap().clear();
+        assert_eq!(
+            queued,
+            vec!["C:\\Users\\José\\Documents\\note.md", "/home/max/Документы/x.md"],
+        );
+    }
 }

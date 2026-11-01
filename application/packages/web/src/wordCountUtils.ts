@@ -5,12 +5,24 @@
  *
  * Strips markdown syntax so only visible prose is counted. Covers
  * every format the TipTap toolbar can produce.
+ *
+ * Not `stripToPlainText` (notesViewUtils.ts): a preview masks a spoiler and
+ * names a file in the UI language, but a count must hold every word the
+ * writer typed and stay the same in every language.
  */
 
 import { hasCJK, segmentWords } from './cjkSegment';
+import { isDelimiterRow, tableWidthFromMarker } from './tableDelimiterRow';
 
 export function stripMarkdown(md: string): string {
   return md
+    // A table's delimiter row carries no words, and its dash counts are the
+    // column widths: left in, each column read as a word and every dash as a
+    // character, so resizing a column changed the note's count. The width
+    // marker under a narrower table carries none either.
+    .split('\n')
+    .filter((line) => !isDelimiterRow(line) && tableWidthFromMarker(line) === null)
+    .join('\n')
     // Strip raw HTML the editor emits into the markdown body before counting:
     // the table fallback serializer writes full <table>...</table> HTML, and
     // colored text serializes as <span style="color:...">. Without this every
@@ -26,10 +38,12 @@ export function stripMarkdown(md: string): string {
     .replace(/^---+$/gm, '')                // horizontal rules
     .replace(/```[\s\S]*?```/g, (m) =>      // code blocks → keep inner text
       m.replace(/^```.*\n?/m, '').replace(/\n?```$/m, ''))
+    .replace(/^ {0,3}\[\^[^\s\]]+\]:[ \t]?/gm, '') // footnote definitions → keep their text
+    .replace(/\[\^[^\s\]]+\]/g, '')           // footnote markers
+    .replace(/\^\[([^\]]*)\]/g, '$1')          // inline footnotes → keep their text
     .replace(/!\[.*?\]\(.*?\)/g, '')        // images
     .replace(/\[([^\]]*)\]\(.*?\)/g, '$1')  // links → keep text
     .replace(/\|/g, ' ')                    // table pipes → spaces
-    .replace(/^[ :]-+[ :]$/gm, '')          // table separator rows
     .replace(/[*_~`]+/g, '');               // bold / italic / strikethrough / inline code
 }
 

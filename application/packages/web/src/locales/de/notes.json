@@ -8,16 +8,23 @@
     "readOnly": "Schreibgeschützt",
     "file": "Datei",
     "empty": "Leer",
-    "noContent": "Kein Inhalt"
+    "noContent": "Kein Inhalt",
+    "notBackedUp": "Nicht gesichert",
+    "archived": "Archiviert",
+    "entryDate": "Eintragsdatum",
+    "date": "Datum",
+    "dayOf": "Tag {{n}} von {{total}}"
   },
   "header": {
     "new": "Neu",
     "newNote": "Neue Notiz",
-    "newNoteHover": "Neue Notiz ({{hotkey}})",
-    "trash": "Papierkorb"
+    "trash": "Papierkorb",
+    "newEvent": "Neuer Termin"
   },
   "folderChip": {
-    "clear": "Ordnerfilter aufheben: {{folder}}"
+    "clear": "Ordnerfilter aufheben: {{folder}}",
+    "subfolders": "Unterordner",
+    "subfoldersLabel": "Unterordner einbeziehen"
   },
   "tagChip": {
     "clear": "Tagfilter aufheben: {{tag}}"
@@ -26,15 +33,21 @@
     "ariaLabel": "Neuer Tresor-Eintrag",
     "login": "Login",
     "card": "Kreditkarte",
-    "sshKey": "SSH-Schlüssel"
+    "sshKey": "SSH-Schlüssel",
+    "generator": "Passwort"
   },
   "newMenu": {
     "note": "Notiz",
     "task": "Aufgabe",
+    "kanban": "Kanban-Board",
     "journal": "Tagebuch",
     "login": "Login",
     "file": "Datei",
-    "bookmark": "Lesezeichen"
+    "bookmark": "Lesezeichen",
+    "clipPage": "Seite clippen",
+    "contact": "Kontakt",
+    "event": "Termin",
+    "quickAdd": "Schnell hinzufügen"
   },
   "vaultFilter": {
     "all": "Alle",
@@ -43,9 +56,7 @@
     "keys": "Schlüssel"
   },
   "journal": {
-    "backfillHover": "Neues Tagebuch für einen vergangenen Tag",
-    "newEntry": "Neuer Tagebucheintrag",
-    "newEntryHover": "Neuer Tagebucheintrag ({{hotkey}})"
+    "newEntry": "Neuer Tagebucheintrag"
   },
   "tasks": {
     "newTitle": "Aufgaben für {{date}}"
@@ -54,12 +65,13 @@
     "empty": "Leeren",
     "emptyHover": "Alle Notizen im Papierkorb löschen",
     "storage": "Speicher",
-    "autoDelete": "Autolöschen: 30 Tage"
+    "autoDelete": "Nach 30 Tagen automatisch löschen"
   },
   "search": {
     "sortOptions": "Sortier- und Ansichtsoptionen",
     "placeholderVault": "Tresor durchsuchen…",
-    "placeholderNotes": "Notizen durchsuchen…"
+    "placeholderNotes": "Notizen durchsuchen…",
+    "placeholderEvents": "Termine durchsuchen…"
   },
   "selection": {
     "countOf": "{{selected}} von {{total}} ausgewählt",
@@ -70,9 +82,22 @@
     "noMatches": "Keine Treffer.",
     "vault": "Der Tresor ist leer.",
     "notes": "Noch keine Notizen.",
+    "archive": "Nichts archiviert.",
+    "trash": "Der Papierkorb ist leer.",
     "filtered": "Keine Einträge passen zu deinen Filtern.",
     "clearFilters": "Filter aufheben",
-    "filteredAfter": "damit sie wieder erscheinen."
+    "filteredAfter": "damit sie wieder erscheinen.",
+    "hiddenInAll_other": "{{count}} Einträge sind durch den Filter In „Alle“ anzeigen ausgeblendet. Öffne den Filter neben Alle, um sie anzuzeigen.",
+    "inOtherSpace_other": "{{count}} Einträge sind in deinem Bereich {{space}}. Wechsle in der Seitenleiste zu {{space}}, um sie zu sehen.",
+    "inOtherSpace_one": "{{count}} Eintrag ist in deinem Bereich {{space}}. Wechsle in der Seitenleiste zu {{space}}, um ihn zu sehen.",
+    "hiddenInAll_one": "{{count}} Eintrag ist durch den Filter In „Alle“ anzeigen ausgeblendet. Öffne den Filter neben Alle, um ihn anzuzeigen."
+  },
+  "listGroups": {
+    "previous7Days": "Letzte 7 Tage",
+    "previous30Days": "Letzte 30 Tage",
+    "other": "Sonstige",
+    "collapseAll": "Alle Gruppen einklappen",
+    "expandAll": "Alle Gruppen ausklappen"
   },
   "headerLabel": {
     "allItems": "Alle",
@@ -80,14 +105,30 @@
     "journals": "Tagebücher",
     "vault": "Tresor",
     "pinned": "Angepinnt",
-    "notes": "Notizen"
+    "archive": "Archiv",
+    "notes": "Notizen",
+    "calendar": "Kalender"
   },
   "footerStats": {
-    "journals": "Tagebücher",
-    "items": "Einträge",
-    "trashed": "Im Papierkorb",
-    "notes": "Notizen",
-    "bookmarks": "Lesezeichen"
+    "journals_other": "Einträge",
+    "journals_one": "Eintrag",
+    "items_other": "Einträge",
+    "items_one": "Eintrag",
+    "trashed_other": "im Papierkorb",
+    "trashed_one": "im Papierkorb",
+    "notes_other": "Notizen",
+    "notes_one": "Notiz",
+    "bookmarks_other": "Lesezeichen",
+    "bookmarks_one": "Lesezeichen",
+    "contacts_other": "Kontakte",
+    "files_other": "Dateien",
+    "lists_other": "Listen",
+    "tasks_other": "Aufgaben",
+    "today": "Heute",
+    "tasks_one": "Aufgabe",
+    "lists_one": "Liste",
+    "files_one": "Datei",
+    "contacts_one": "Kontakt"
   },
   "toast": {
     "imageUploadFailed": "Bild-Upload fehlgeschlagen: {{error}}",
@@ -96,10 +137,11 @@
     "importedSyncing_one": "{{count}} Notiz importiert. Wird synchronisiert…",
     "importedSyncing_other": "{{count}} Notizen importiert. Wird synchronisiert…",
     "addedTag_one": "#{{tag}} zu {{count}} Eintrag hinzugefügt",
-    "addedTag_other": "#{{tag}} zu {{count}} Einträgen hinzugefügt"
+    "addedTag_other": "#{{tag}} zu {{count}} Einträgen hinzugefügt",
+    "restoreSummary": "Wiederhergestellt. {{added}} hinzugefügt, {{updated}} aktualisiert, {{unchanged}} bereits aktuell."
   },
   "burn": {
-    "mediaOnly": "Diese Notiz enthält nur Medien und kann nicht per Vernichtungslink geteilt werden.",
+    "mediaOnly": "Diese Notiz enthält nur Medien und kann nicht per Burn-Link geteilt werden.",
     "shareTitle": "Verschlüsselte Notiz"
   },
   "loadError": {
@@ -122,8 +164,17 @@
     "collapse": "Notizliste einklappen",
     "expand": "Notizliste ausklappen"
   },
+  "split": {
+    "action": "Notiz aufteilen",
+    "done": "Aufgeteilt in „{{title}}“",
+    "overLimit": "„{{title}}“ ist größer als 1 MB und bleibt auf diesem Gerät",
+    "cannot": "Diese Notiz kann hier nicht aufgeteilt werden. Setz den Cursor dorthin, wo die neue Notiz beginnen soll.",
+    "continuedTitle": "{{title}} (Fortsetzung)",
+    "continuedIn": "Fortsetzung in {{link}}"
+  },
   "paneResize": {
-    "hintCollapse": "Zum Einklappen klicken · Zum Anpassen ziehen"
+    "hintCollapse": "Zum Einklappen klicken · Zum Anpassen ziehen",
+    "hintExpand": "Zum Ausklappen klicken · Zum Anpassen ziehen"
   },
   "emptyEditor": {
     "selectFile": "Wähle eine Datei zur Vorschau",
@@ -133,10 +184,10 @@
   },
   "zen": {
     "exit": "Zen verlassen",
-    "exitHover": "Zen-Modus verlassen (Esc)",
+    "exitHover": "Zen-Modus verlassen",
     "enterHover": "Zen-Modus starten",
     "proHover": "Zen-Modus (Pro)",
-    "enterAriaShortcut": "Zen-Modus starten (⌘⇧F)"
+    "enterAriaShortcut": "Zen-Modus starten ({{keys}})"
   },
   "editor": {
     "backToList": "Zurück zur Notizliste",
@@ -158,8 +209,10 @@
     "invisiblesShow": "Unsichtbare Zeichen anzeigen",
     "invisiblesHide": "Unsichtbare Zeichen ausblenden",
     "findInNote": "In Notiz suchen",
-    "navPrev": "Vorherige Notiz",
-    "navNext": "Nächste Notiz",
+    "navPrev": "Vorherige",
+    "navNext": "Nächste",
+    "navPrevTab": "Vorheriger Tab",
+    "navNextTab": "Nächster Tab",
     "undo": "Rückgängig",
     "redo": "Wiederholen",
     "hide": "Verbergen",
@@ -170,27 +223,25 @@
     "widthWide": "Breiter",
     "widthFull": "Volle Breite",
     "burn": "Teilen & nach dem Lesen vernichten",
-    "titlePlaceholderLink": "Name des Lesezeichens"
+    "titlePlaceholderLink": "Name des Lesezeichens",
+    "titlePlaceholderContact": "Name",
+    "notBackedUpTooLarge": "Über dem 1-MB-Limit, daher nicht gesichert. Verschiebe Bilder in Anhänge oder teile die Notiz auf.",
+    "notBackedUpFailed": "Nicht gesichert. Letzter Fehler: {{message}}. Neuer Versuch läuft.",
+    "unknownType": "Dieses Element wurde mit einer neueren Version von PrivacyNotes erstellt. Aktualisiere die App, um es zu öffnen."
   },
   "share": {
     "hover": "Teilen / Exportieren",
     "ariaLabel": "Teilen oder exportieren",
-    "thisNote": "Diese Notiz",
     "currentMdTitle": "Aktuelle Notiz (.md)",
     "currentMdDesc": "Rohes Markdown mit Front-Matter.",
     "currentHtmlTitle": "Aktuelle Notiz (.html)",
     "currentHtmlDesc": "Druckfreundlich, Markdown auf weißer Seite gerendert.",
     "printTitle": "Drucken / Als PDF speichern",
     "printDesc": "Öffnet den Druckdialog. Als PDF speichern oder an einen Drucker senden.",
+    "printTextTitle": "Nur Text drucken",
+    "printTextDesc": "Behält den Titel. Lässt Datum, Ordner und Tags weg.",
     "burnTitle": "Teilen & nach dem Lesen vernichten",
-    "burnDesc": "Veröffentliche diese Notiz als Link zum einmaligen Ansehen. Der Link zerstört sich nach dem Lesen selbst. Deine Notiz bleibt sicher in deinem Konto.",
-    "backup": "Backup",
-    "fullBackupTitle": "Komplettes Backup (.zip)",
-    "fullBackupDesc": "Alles: Notizen, Tagebücher, Tresor, Aufgaben, Bilder, Audio, Dateien.",
-    "allHtmlTitle": "Alle Einträge (.zip mit .html)",
-    "allHtmlDesc": "Ein druckbares HTML pro Eintrag. Gut zum Offline-Lesen.",
-    "jsonTitle": "Text-Backup (.json)",
-    "jsonDesc": "Alle Textinhalte und Metadaten, keine Bilder oder Dateien."
+    "burnDesc": "Veröffentliche diese Notiz als Link zum einmaligen Ansehen. Der Link zerstört sich nach dem Lesen selbst. Deine Notiz bleibt sicher in deinem Konto."
   },
   "weekReview": {
     "title": "Wochenrückblick",
@@ -206,10 +257,18 @@
     "newNote": "Neu",
     "newNoteHintMac": "Option + Umschalt + N",
     "newNoteHintOther": "Alt + Umschalt + N",
+    "newNoteHintMacDesktop": "Befehlstaste + N",
+    "newNoteHintOtherDesktop": "Strg + N",
     "openStats": "Statistiken öffnen",
-    "words": "Wörter",
+    "journalCalendar": "Tagebuchkalender",
+    "words_other": "Wörter",
+    "words_one": "Wort",
     "zen": "Zen-Modus",
     "appearance": "Design",
+    "lockApp": "App sperren",
+    "lockAppSetUp": "Lege zuerst unter Sicherheit eine PIN fest",
+    "goToTop": "Zum Anfang",
+    "goToEnd": "Zum Ende",
     "signOut": "Abmelden",
     "signingOut": "Wird abgemeldet…",
     "switchToLight": "Zum hellen Modus wechseln",
@@ -217,20 +276,28 @@
   },
   "settings": {
     "groupYourNotes": "Deine Notizen",
+    "groupPreferences": "Präferenzen",
     "groupAccount": "Konto & Daten",
     "groupBrand": "PrivacyNotes",
     "statsLabel": "Statistiken",
-    "journalsLabel": "Tagebücher",
     "importLabel": "Import & Export",
     "planLabel": "Konto",
     "storageLabel": "Speicher",
+    "imagesLabel": "Bilder",
     "securityLabel": "Sicherheit",
     "accountLabel": "ID & Sync",
     "appearanceLabel": "Design",
+    "editorLabel": "Editor",
+    "formatBarLabel": "Formatleiste",
+    "listsLabel": "Listen",
+    "trackersLabel": "Tracker",
     "helpLabel": "Hilfe",
     "aboutLabel": "Über",
     "languageLabel": "Sprache",
-    "languageDesc": "Wähle die Sprache, in der PrivacyNotes angezeigt wird."
+    "dateLabel": "Datum & Uhrzeit",
+    "dateTabFormat": "Format",
+    "languageDesc": "Wähle die Sprache, in der PrivacyNotes angezeigt wird.",
+    "calendarLabel": "Kalender"
   },
   "importStore": {
     "title": "Importieren oder speichern?",
@@ -241,8 +308,20 @@
   },
   "bulkTrash": {
     "title": "In den Papierkorb",
-    "body_one": "<highlight>{{count}} Eintrag</highlight> in den Papierkorb verschieben? Du kannst ihn später wiederherstellen.",
-    "body_other": "<highlight>{{count}} Einträge</highlight> in den Papierkorb verschieben? Du kannst sie später wiederherstellen."
+    "body_one": "<highlight>{{count}} Eintrag</highlight> in den Papierkorb verschieben? Später kannst du ihn wiederherstellen.",
+    "body_other": "<highlight>{{count}} Einträge</highlight> in den Papierkorb verschieben? Du kannst sie später wiederherstellen.",
+    "readOnlyTitle": "Schreibgeschützt",
+    "readOnlyAcknowledge": "Verstanden",
+    "readOnlyBlocked_one": "Dieser Eintrag ist <highlight>schreibgeschützt</highlight> und kann nicht in den Papierkorb. Schalte den Schreibschutz zuerst in den Notizoptionen aus.",
+    "readOnlyBlocked_other": "Alle <highlight>{{count}} Einträge</highlight> sind schreibgeschützt, also kann keiner in den Papierkorb. Schalte den Schreibschutz zuerst in den Notizoptionen aus.",
+    "readOnlySkipped_one": "<highlight>{{count}} Eintrag</highlight> ist schreibgeschützt und bleibt, wo er ist.",
+    "readOnlySkipped_other": "<highlight>{{count}} Einträge</highlight> sind schreibgeschützt und bleiben, wo sie sind."
+  },
+  "deleteCheckedTasks": {
+    "title": "Abgehakte Einträge löschen?",
+    "confirm": "Löschen",
+    "body_one": "<highlight>{{count}} Eintrag</highlight> wird aus dieser Notiz gelöscht. Das kann nicht rückgängig gemacht werden.",
+    "body_other": "<highlight>{{count}} Einträge</highlight> werden aus dieser Notiz gelöscht, verschachtelte Einträge eingeschlossen. Das kann nicht rückgängig gemacht werden."
   },
   "bulkDelete": {
     "body_one": "<highlight>{{count}} Notiz</highlight> endgültig löschen? Das kann nicht rückgängig gemacht werden.",
@@ -271,5 +350,18 @@
     "title": "Neuer Tresor erstellt",
     "confirm": "Verstanden",
     "body": "Kein vorhandener Tresor passte zu der eingegebenen Phrase, daher wurde ein neuer, leerer erstellt. Falls du deine Notizen erwartet hast, melde dich ab und gib deine Phrase sorgfältig erneut ein - ein einziges anderes Wort öffnet einen anderen Tresor."
+  },
+  "ambiguousLink": {
+    "title": "Zwei Notizen tragen diesen Titel",
+    "body": "Mehr als eine Notiz heißt <highlight>„{{title}}“</highlight>, deshalb sagt dieser Link nicht, welche gemeint ist. Benenne eine davon um, dann zeigt der Link auf die andere."
+  },
+  "connections": {
+    "title": "Verknüpfungen",
+    "hide": "Verknüpfungen ausblenden",
+    "linkedFrom": "Verlinkt von",
+    "linksTo": "Verlinkt auf",
+    "missing": "Noch nicht erstellt",
+    "protectedHidden_one": "{{count}} PIN-geschütztes Element wird nicht angezeigt",
+    "protectedHidden_other": "{{count}} PIN-geschützte Elemente werden nicht angezeigt"
   }
 }

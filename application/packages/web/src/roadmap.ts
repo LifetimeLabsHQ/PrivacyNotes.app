@@ -62,8 +62,10 @@ export type RoadmapIcon =
   | 'graph'
   | 'timer'
   | 'bookmark'
+  | 'contacts'
   | 'sidebar'
-  | 'robot';
+  | 'robot'
+  | 'coin';
 
 export type RoadmapItem = {
   /** Stable slug, used as the anchor id on the /roadmap page. */
@@ -167,7 +169,7 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     title: 'Encryption published',
     status: 'shipped',
     description:
-      'The encryption layer, the database schema and the threat model went public first, so the claims could be checked before the apps that use them followed.',
+      'The encryption layer and the threat model went public first, so the claims could be checked before the apps that use them followed.',
     icon: 'unlock',
   },
   {
@@ -217,7 +219,7 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     title: 'Android app',
     status: 'shipped',
     description:
-      'A native Android app with the same end-to-end encryption, available now as a direct download (APK).',
+      'A native Android app with the same on-device encryption, available now as a direct download (APK).',
     icon: 'android',
   },
   {
@@ -241,7 +243,7 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     title: 'Folders',
     status: 'shipped',
     description:
-      'Organize notes, tasks, journals, and vault items into a nested tree. Folders sync end-to-end encrypted, combine with any view, and deleting one never deletes what is inside it.',
+      'Organize notes, tasks, journals, and vault items into a nested tree. Folders sync encrypted, combine with any view, and deleting one never deletes what is inside it.',
     icon: 'folder',
   },
   {
@@ -372,7 +374,7 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     title: 'The apps are open source',
     status: 'shipped',
     description:
-      'The web, desktop, and mobile clients are published, next to the encryption they use and the database schema behind them.',
+      'The web, desktop, and mobile clients are published, next to the encryption they use and the threat model behind it.',
     icon: 'github',
   },
   {
@@ -385,8 +387,16 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     title: 'iOS app',
     status: 'shipped',
     description:
-      'A native iPhone and iPad app with the same end-to-end encryption, on the App Store.',
+      'A native iPhone and iPad app with the same on-device encryption, on the App Store.',
     icon: 'apple',
+  },
+  {
+    id: 'contacts',
+    title: 'Contacts',
+    status: 'shipped',
+    description:
+      "An address book of its own, for the people who should not be in your phone's. Import everything from one file, keep the numbers you rarely call but never want to lose, and tap one to hand it to your dialer.",
+    icon: 'contacts',
   },
   {
     id: 'adding-features',
@@ -450,6 +460,14 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     description:
       'Arrives together with full pricing: a price that is fair in one country can be a week of pay in another, so Pro will be priced to local purchasing power and shown in your currency, on the website, at checkout, and in the app stores. Buying today still beats waiting - the early adopter price is the lowest Pro will ever cost, in any country.',
     icon: 'globe',
+  },
+  {
+    id: 'crypto-payments',
+    title: 'Paying in crypto',
+    status: 'up-next',
+    description:
+      'Card and app store are the only ways to buy Pro today. Crypto is what people who signed up with a phrase and no email ask for, so we are working out the coins, the processor and the refunds. A way to pay, not a blockchain in the app.',
+    icon: 'coin',
   },
   {
     id: 'faster-everywhere',

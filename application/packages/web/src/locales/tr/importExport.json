@@ -9,49 +9,110 @@
     "tabExport": "Dışa aktar",
     "tabRestore": "Geri yükle",
     "tabVault": "Parolalar",
-    "working": "İşleniyor…"
+    "working": "İşleniyor…",
+    "tabWellness": "Takipler"
   },
   "footer": {
     "exportNote": "Dışa aktarma cihazınızda çalışır. Hiçbir şey yüklenmez.",
     "restoreNote": "Dosyanız cihazınızda okunup şifresi çözülür.",
-    "importNote": "Her şey eşitlenmek üzere cihazınızdan ayrılmadan önce şifrelenir."
+    "importNote": "Her şey cihazınızda da eşitlenirken de her zaman şifrelidir."
   },
   "importPick": {
     "autoTagLabel": "İçe aktarılan notları kaynağına göre etiketle",
     "autoTagDesc": "Google Keep notları <keep>#google</keep>, Obsidian notları <obsidian>#obsidian</obsidian> etiketini alır; gerisi de böyle.",
     "guideAria": "{{app}} için içe aktarma rehberi",
-    "guideLabel": "Kılavuz"
+    "guideLabel": "Kılavuz",
+    "groupGeneral": "Genel",
+    "groupNotes": "Notlar"
   },
   "folderImport": {
     "tagLabel": "Notları klasörüne göre de etiketle",
     "tagDesc": "Klasörleriniz her durumda yeniden oluşturulur. Bu seçenek her klasör adını ayrıca etiket olarak ekler, etikete göre filtrelemeyi de seviyorsanız işinize yarar."
   },
+  "browserImport": {
+    "tagLabel": "Tarayıcınızdaki etiketleri koru",
+    "tagDesc": "Firefox, yer imiyle birlikte etiketleri ve adres çubuğu anahtar sözcüğünü de saklar. İkisi de burada etikete dönüşür."
+  },
+  "contactImport": {
+    "photosLabel": "Fotoğrafları içe aktar",
+    "photosDesc_one": "{{count}} fotoğraf, uygulama küçülttükten sonra yaklaşık {{size}}. Bu, boş olan {{free}} alanın %{{pct}} kadarı.",
+    "photosDesc_other": "{{count}} fotoğraf, uygulama küçülttükten sonra yaklaşık {{size}}. Bu, boş olan {{free}} alanın %{{pct}} kadarı.",
+    "photosDescNoQuota_one": "{{count}} fotoğraf, uygulama küçülttükten sonra yaklaşık {{size}}.",
+    "photosDescNoQuota_other": "{{count}} fotoğraf, uygulama küçülttükten sonra yaklaşık {{size}}.",
+    "photosTooBig_one": "Fotoğraf için yeterli alan yok ({{size}}), bu yüzden dışarıda bırakılır. Diğer her şey aktarılır. {{shortfall}} boşaltın veya depolama ekleyin, sonra getirmek için yeniden içe aktarın.",
+    "photosTooBig_other": "{{count}} fotoğraf için yeterli alan yok ({{size}}), bu yüzden dışarıda bırakılır. Diğer her şey aktarılır. {{shortfall}} boşaltın veya depolama ekleyin, sonra getirmek için yeniden içe aktarın."
+  },
+  "importCalendar": {
+    "location": "Konum",
+    "videoCall": "Görüntülü görüşme",
+    "organizer": "Düzenleyen",
+    "guests": "Katılımcılar",
+    "file": "Dosya",
+    "link": "Bağlantı",
+    "timeZone": "Saat dilimi",
+    "ends": "Bitiş",
+    "repeats": "Tekrar"
+  },
+  "webcal": {
+    "title": "Webcal",
+    "desc": "Bir takvim adresi; örneğin Proton, iCloud, Outlook veya herkese açık bir takvimden alınan webcal:// bağlantısı. Takvim bir kez indirilir; yalnızca yeni etkinlikleri eklemek için adresi daha sonra yeniden yapıştırın.",
+    "fieldLabel": "Takvim adresi",
+    "import": "İçe aktar",
+    "downloading": "İndiriliyor…",
+    "errors": {
+      "invalid": "webcal://, webcals:// veya https:// ile başlayan bir adres yapıştırın.",
+      "refused": "Bu adres açılamıyor.",
+      "wrongType": "Bu adres bir takvim dosyasına yönlendirmiyor.",
+      "tooLarge": "Bu takvim 10 MB'tan büyük.",
+      "timeout": "Takvim sunucusu zamanında yanıt vermedi. Daha sonra yeniden deneyin.",
+      "blocked": "Takvim sunucusu indirmeyi reddetti. Takvimin paylaşılmış veya herkese açık olduğunu kontrol edin.",
+      "offline": "Çevrimdışısınız. Bağlanıp yeniden deneyin.",
+      "limit": "Kısa sürede çok fazla indirme yapıldı. Bir dakika bekleyip yeniden deneyin.",
+      "failed": "Takvim indirilemedi. Adresi kontrol edip yeniden deneyin."
+    }
+  },
   "sourceDesc": {
     "googleKeep": "Google Takeout .zip dosyası (Keep klasörü) veya tek bir .json notu. Kontrol listeleri gerçek görev listesi olarak aktarılır.",
+    "googleCalendar": "Google Calendar'ın Settings > Import & export bölümünden alınan .zip dosyası veya tek bir .ics dosyası. Etkinlikler saatlerini, tekrarlarını ve hatırlatıcılarını korur.",
     "appleNotes": "Ücretsiz Exporter uygulamasıyla Markdown olarak dışa aktarın, sonra .zip dosyasını buraya bırakın.",
     "appleJournal": "Mac veya iPhone'daki Journal uygulamasından dışa aktarın, AppleJournalEntries klasörünü sıkıştırın ve .zip dosyasını bırakın. Kayıtlar fotoğrafları, videoları, ses notları ve konumlarıyla birlikte günlük kaydı olarak içe aktarılır.",
-    "evernote": "Tek başına bir .enex veya birkaçı birlikte sıkıştırılmış hâlde. Biçimlendirmeyi, etiketleri, ekleri, note-link'leri ve not defterlerini korur. Evernote görevleri .enex dosyasına koymaz.",
+    "evernote": "Tek başına bir .enex veya birkaçı birlikte sıkıştırılmış hâlde. Biçimlendirmeyi, etiketleri, ekleri, not bağlantılarını ve not defterlerini korur. Evernote görevleri .enex dosyasına koymaz.",
     "samsungNotes": "Word (.docx) veya Metin (.txt) olarak dışa aktarın. Toplu aktarım için birden fazla dosyayı sıkıştırın.",
     "simplenote": "Simplenote'tan dışa aktarın (Ayarlar -> Araçlar -> Notları Dışa Aktar). .zip dosyasını bırakın.",
-    "standardNotes": "Standard Notes'tan alınmış şifresi çözülmüş .zip veya .txt yedeği (Dosya > Dışa Aktar > Şifresi Çözülmüş).",
+    "standardNotes": "Standard Notes'tan alınmış şifresi çözülmüş .zip veya .txt yedeği (Account settings > Backups > Data backups > Decrypted).",
     "obsidian": "Obsidian kasası .zip olarak. Etiketleri, [[note link]] bağlantılarını, klasör yapısını, metin içi #etiketleri ve gömülü görsel ile dosyaları korur.",
     "notesnook": "Notesnook dışa aktarımı .zip olarak. Biçimlendirmeyi, not defterlerini, etiketleri ve ekleri korumak için dışa aktarırken HTML seçin.",
-    "upnote": "UpNote'ta: Settings > Backup > Backup now, ardından yedek klasöründeki her şeyi zipleyin. Not defterlerini, etiketleri, sabitlemeleri, note-link'leri, biçimlendirmeyi ve ekleri korur. Telefon uygulamalarından tekil not dışa aktarmaları da çalışır - \"Export to HTML\" seçin.",
+    "bear": "Bear'da File > Backup Notes... seçeneğini seçin ve .bear2bk dosyasını buraya bırakın. Etiketler ve iç içe etiketler, sabitlemeler, arşiv, çöp kutusu, renkleriyle vurgular, not bağlantıları ve ekler de gelir.",
+    "joplin": "File > Export all > \"JEX - Joplin Export File\" ile alınan .jex dosyası. Not defterleri klasöre dönüşür; etiketler, yapılacaklar, not bağlantıları ve ekler de gelir.",
+    "upnote": "UpNote'ta: Settings > Backup > Backup now, ardından yedek klasöründeki her şeyi zipleyin. Not defterlerini, etiketleri, sabitlemeleri, not bağlantılarını, biçimlendirmeyi ve ekleri korur. Telefon uygulamalarından tekil not dışa aktarmaları da çalışır - \"Export to HTML\" seçin.",
     "markdownFolder": "Tek tek ya da bir .zip içinde .md veya .txt dosyaları. Ziplenmiş bir klasör alt klasörlerini korur, görsellerini ve eklerini de birlikte getirir.",
     "markdownApp": "Bu notlar zaten bir klasördeki Markdown dosyaları. Klasörü .zip olarak bırakın; alt klasörleri, görselleri ve #etiketleri de birlikte gelsin.",
     "browserBookmarks": "Tarayıcınızdaki \"Export bookmarks\" ile oluşan yer imi dosyası (.html) ya da Safari'nin yazdığı .zip. Chrome, Firefox, Safari, Edge, Opera, Brave ve Vivaldi aynı dosyayı içerir. Klasörler ve tarihler de gelir.",
+    "vcard": "Adres defterinizin dışa aktardığı .vcf dosyası: iCloud veya Kişiler üzerinden iPhone ve Mac, Android, Google Kişiler. Her kart fotoğraflarıyla birlikte aktarılır ve aynı dosyayı ikinci kez içe aktarmak zaten sahip olduğunuz kişileri atlar.",
     "bitwarden": "Bitwarden'dan şifrelenmemiş .json dışa aktarımı (Tools > Export vault > .json). Oturum bilgileri, kartlar, SSH anahtarları, güvenli notlar ve TOTP kodları hep birlikte gelir.",
     "browserPasswords": "Chrome, Edge, Brave, Opera, Vivaldi, Firefox ya da Safari'den gelen parola dosyası (.csv) ya da Safari'nin yazdığı .zip. Her satır bir oturum bilgisine dönüşür. İşiniz bitince dosyayı silin - parolalarınızı düz metin olarak taşır."
+  },
+  "sourceLabel": {
+    "privacynotes": "PrivacyNotes tam yedeği",
+    "browserBookmarks": "Tarayıcı yer imleri",
+    "browserPasswords": "Tarayıcı parolaları",
+    "vcard": "Kişiler (vCard)",
+    "markdownFolder": "Markdown dosyaları"
   },
   "vaultPick": {
     "intro": "Başka bir parola yöneticisinden giriş bilgilerini, kredi kartlarını ve SSH anahtarlarını içe aktarın."
   },
   "restorePick": {
-    "intro": "Daha önce dışa aktardığınız bir PrivacyNotes yedeğini geri yükleyin. Dosyanız cihazınızda okunup şifresi çözülür.",
+    "intro": "Daha önce dışa aktardığınız bir PrivacyNotes yedeğini geri yükleyin.",
     "fullBackupTitle": "Tam yedek (.zip)",
-    "fullBackupDesc": "Notları, günlükleri, kasa öğelerini, görevleri, görselleri, sesleri ve dosyaları geri yükleyin. Her şey yeni öğe olarak aktarılır - mevcut verilerin üzerine yazılmaz.",
+    "fullBackupDesc": "Notları, günlükleri, kasa öğelerini, görevleri, görselleri, sesleri ve dosyaları geri yükleyin. Zaten sahip olduğunuz bir not korunur ya da yedekte daha yeni bir kopyası varsa güncellenir.",
     "encryptedBackupTitle": "Şifreli yedek (.pnbackup, .pnbackupz)",
     "encryptedBackupDesc": "Şifreli bir yedeği ifade anahtarınızla geri yükleyin. Bir .pnbackupz dosyası dosyalar dahil her şeyi geri getirir; .pnbackup yalnızca metin içeriği ve üst verileri içerir. Yedeği oluşturan hesapla giriş yapmış olmanız gerekir."
+  },
+  "restoreGate": {
+    "wait": "Geri yükleme, bu cihaz çevrimiçi olup bir eşitlemeyi tamamlayana kadar bekler; böylece yedeğinizdeki notlar iki kez eklenmek yerine hesabınızda zaten bulunan notlarla eşleştirilir.",
+    "paused": "Geri yükleme eşitlemeyi bekler; böylece yedeğinizdeki notlar hesabınızda zaten bulunan notlarla eşleştirilir. Bu cihazda eşitleme duraklatıldı: Ayarlar > ID & Sync bölümünde “Eşitlemeyi duraklat” seçeneğini kapatın.",
+    "belowFloor": "Geri yükleme eşitlemeyi bekler; böylece yedeğinizdeki notlar hesabınızda zaten bulunan notlarla eşleştirilir. Uygulamanın bu sürümü eşitleme için çok eski: önce uygulamayı güncelleyin."
   },
   "encryptedBackupLabel": "Şifreli yedek",
   "status": {
@@ -64,9 +125,17 @@
   "errors": {
     "genericParse": "Bir şeyler ters gitti.",
     "decryptionFailed": "Şifre çözme başarısız oldu. İfade yanlış veya dosya bozuk.",
-    "blobImportFailed": "Notlarınız aktarıldı, ama görselleri ve dosyaları aktarılmadı: {{detail}} Seçtiğiniz dosyada hiçbir şey değişmedi, yani aktarılan notları silip içe aktarmayı yeniden çalıştırabilirsiniz."
+    "blobImportFailed": "Notlarınız aktarıldı, ama görselleri ve dosyaları aktarılmadı: {{detail}} Seçtiğiniz dosyada hiçbir şey değişmedi, yani aktarılan notları silip içe aktarmayı yeniden çalıştırabilirsiniz.",
+    "blobsNotInBackup_one": "Notlarınız geri yüklendi, ancak yedekte listelenen {{items}} yedeğin içinde yok.",
+    "blobsNotInBackup_other": "Notlarınız geri yüklendi, ancak yedekte listelenen {{items}} yedeğin içinde yok."
   },
   "preview": {
+    "oversize_one": "{{count}} not 1 MB'tan büyük. Bu cihazda kalır ve eşitlenmez.",
+    "oversize_other": "{{count}} not 1 MB'tan büyük. Bu cihazda kalırlar ve eşitlenmezler.",
+    "splitOversize_one": "Eşitlenebilmesi için bu notu başlıklarından daha küçük notlara bölün",
+    "splitOversize_other": "Eşitlenebilmeleri için bu {{count}} notu başlıklarından daha küçük notlara bölün",
+    "partTitle": "{{title}} ({{index}}/{{total}})",
+    "continuedIn": "Devamı: {{link}}",
     "sourceLabel": "Kaynak",
     "uniqueTags": "Benzersiz etiket",
     "empty": "Boş",
@@ -76,11 +145,14 @@
     "andMore": "… ve {{count}} tane daha",
     "headsUpLabel": "Dikkat:",
     "duplicateWarning": "içe aktarma bunları yeni not olarak ekler. Bunu iki kez çalıştırırsanız kopyalar oluşur. Henüz otomatik kopya ayıklama yok.",
+    "duplicateSkipNote": "zaten kaydettiğiniz yer imleri atlanır, bu yüzden ikinci kez çalıştırmak hiçbir şeyi çoğaltmaz.",
+    "contactSkipNote": "zaten kaydettiğiniz kişiler atlanır ve olduğu gibi kalır, bu yüzden iki kez çalıştırmak kimseyi çoğaltmaz.",
+    "eventSkipNote": "zaten içe aktardığınız etkinlikler atlanır ve olduğu gibi kalır, bu yüzden iki kez çalıştırmak onları çoğaltmaz.",
+    "restoreMergeNote": "kendi yedeğinizdeki notlar kimliklerine göre eşleştirilir. Zaten sahip olduğunuz bir not yalnızca yedekteki kopya daha yeniyse güncellenir, çöp kutusundaki bir not da oradan geri alınır.",
     "quotaExceeded": "<strong>Depolama alanı içe aktarmaya yetmiyor.</strong> Tahmini {{needed}} gerekiyor, {{available}} boş. İçe aktarmadan önce yer açın veya yükseltin.",
     "quotaWarning": "Dikkat: bu içe aktarma, kalan {{available}} depolama alanınızın yaklaşık {{needed}} kadarını kullanacak.",
     "oversizeAttachments_one": "1 dosya, planınızdaki {{limit}} dosya başı sınırından büyük. Bu cihaza aktarılır, ama siz yükseltene kadar diğer cihazlarınıza eşitlenmez.",
-    "oversizeAttachments_other": "{{count}} dosya, planınızdaki {{limit}} dosya başı sınırından büyük. Bu cihaza aktarılır, ama siz yükseltene kadar diğer cihazlarınıza eşitlenmez.",
-    "duplicateSkipNote": "zaten kaydettiğiniz yer imleri atlanır, bu yüzden ikinci kez çalıştırmak hiçbir şeyi çoğaltmaz."
+    "oversizeAttachments_other": "{{count}} dosya, planınızdaki {{limit}} dosya başı sınırından büyük. Bu cihaza aktarılır, ama siz yükseltene kadar diğer cihazlarınıza eşitlenmez."
   },
   "counts": {
     "note_one": "not",
@@ -93,6 +165,8 @@
     "card_other": "kart",
     "sshKey_one": "SSH anahtarı",
     "sshKey_other": "SSH anahtarı",
+    "contact_one": "kişi",
+    "contact_other": "kişi",
     "zeroItems": "0 öğe",
     "importButton": "{{counts}} içe aktar"
   },
@@ -118,20 +192,40 @@
     "vaultExportDesc": "Giriş bilgileri, kartlar ve SSH anahtarları Bitwarden uyumlu biçimde. Çoğu parola yöneticisi içe aktarabilir. Düz metin - dikkatli davranın.",
     "bookmarksOnlyHeading": "Yalnızca yer imleri",
     "bookmarksExportTitle": "Yer imi dosyası (.html)",
-    "bookmarksExportDesc": "Her tarayıcının okuduğu standart yer imi dosyası. Klasörlerinizle birlikte Chrome, Firefox, Safari veya Edge içine aktarın."
+    "bookmarksExportDesc": "Her tarayıcının okuduğu standart yer imi dosyası. Klasörlerinizle birlikte Chrome, Firefox, Safari veya Edge içine aktarın.",
+    "contactsOnlyHeading": "Yalnızca kişiler",
+    "contactsExportTitle": "Kişiler dosyası (.vcf)",
+    "contactsExportDesc": "Her telefonun ve adres defterinin okuduğu vCard dosyası. iPhone, Android, Google Kişiler veya Mac'teki Kişiler'e, etiketler ve gruplar bozulmadan aktarın.",
+    "calendarOnlyHeading": "Yalnızca takvim",
+    "calendarExportTitle": "Takvim dosyası (.ics)",
+    "calendarExportDesc": "Google Calendar, Apple Takvim veya Outlook için etkinlikler ile tarihli notlar ve görev listeleri.",
+    "calendarPrivate": "Özel"
   },
   "exportProgress": {
     "failedTitle": "Dışa aktarma başarısız oldu",
     "completeTitle": "Dışa aktarma tamamlandı",
+    "incompleteTitle": "Dışa aktarma eksik",
     "exportingTitle": "Yedek dışa aktarılıyor...",
     "preparing": "Hazırlanıyor...",
     "exporting": "Dışa aktarılıyor...",
     "imagesProgress": "Görseller dışa aktarılıyor... {{total}} görselden {{done}} tanesi",
     "filesProgress": "Dosyalar dışa aktarılıyor... {{total}} dosyadan {{done}} tanesi",
     "building": "Yedek oluşturuluyor...",
-    "compressing": "Sıkıştırılıyor..."
+    "compressing": "Sıkıştırılıyor...",
+    "missingFailed_one": "Bu cihaz şunu indiremedi: {{items}}. Bu yüzden dışa aktarmanızda yok. Bağlantınızı kontrol edip yeniden dışa aktarın.",
+    "missingFailed_other": "Bu cihaz şunları indiremedi: {{items}}. Bu yüzden dışa aktarmanızda yok. Bağlantınızı kontrol edip yeniden dışa aktarın.",
+    "missingNotFound_one": "{{items}} ne bu cihazda ne de sunucuda var, bu yüzden dışa aktarmanızda yok.",
+    "missingNotFound_other": "{{items}} ne bu cihazda ne de sunucuda var, bu yüzden dışa aktarmanızda yok."
+  },
+  "missing": {
+    "pictures_one": "{{count}} görsel",
+    "pictures_other": "{{count}} görsel",
+    "files_one": "{{count}} dosya",
+    "files_other": "{{count}} dosya",
+    "both": "{{pictures}} ve {{files}}"
   },
   "upload": {
+    "discard": "At",
     "completeTitle": "Yükleme tamamlandı",
     "failedTitle": "Yükleme başarısız oldu",
     "partialTitle": "{{done}} yüklendi, {{failed}} başarısız",
@@ -141,6 +235,10 @@
     "statusFailed": "Başarısız",
     "errorStorageFull": "Depolama dolu - bu dosyayı yüklemek için yer açın veya depolama ekleyin.",
     "errorStorageFullKept": "Depolamanıza sığmıyor - bu cihazda tutuldu. Yer açılınca eşitlenecek.",
+    "errorTooLarge": "Dosya çok büyük ({{size}}). En fazla {{limit}} MB.",
+    "errorTooLargeFree": "Dosya çok büyük ({{size}}). Ücretsiz planda en fazla {{limit}} MB.",
+    "batchTitle_one": "{{count}} dosya",
+    "batchTitle_other": "{{count}} dosya",
     "statusUploading": "Yükleniyor...",
     "statusWaiting": "Bekliyor",
     "summaryDone": "{{count}} tamam",
@@ -162,8 +260,16 @@
   "saveErrors": {
     "shortWrite": "{{expected}} baytın yalnızca {{written}} baytı kaydedildi, yani dosya eksik. Tekrar deneyin ve bir bulut klasörü yerine cihazınızın kendi depolamasına kaydedin."
   },
-  "browserImport": {
-    "tagLabel": "Tarayıcınızdaki etiketleri koru",
-    "tagDesc": "Firefox, yer imiyle birlikte etiketleri ve adres çubuğu anahtar sözcüğünü de saklar. İkisi de burada etikete dönüşür."
+  "shareSheet": {
+    "title_one": "PrivacyNotes ile {{count}} öğe paylaşıldı",
+    "title_other": "PrivacyNotes ile {{count}} öğe paylaşıldı",
+    "line": "Siz seçene kadar hiçbir şey kaydedilmez.",
+    "saveAll": "Tümünü kaydet"
+  },
+  "destination": {
+    "label": "Şuraya ekle",
+    "none": "Klasör yok",
+    "newFolder": "Yeni klasör \"{{name}}\"",
+    "help": "Kaynaktaki klasörler seçtiğiniz klasörün içine gider; klasörü olmayan öğeler de doğrudan ona eklenir."
   }
 }

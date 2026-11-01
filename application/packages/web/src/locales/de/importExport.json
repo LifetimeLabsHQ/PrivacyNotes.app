@@ -9,49 +9,110 @@
     "tabExport": "Export",
     "tabRestore": "Wiederherstellung",
     "tabVault": "Passwörter",
-    "working": "Wird verarbeitet…"
+    "working": "Wird verarbeitet…",
+    "tabWellness": "Tracker"
   },
   "footer": {
     "exportNote": "Exporte laufen lokal. Es wird nichts hochgeladen.",
     "restoreNote": "Deine Datei wird lokal gelesen und entschlüsselt.",
-    "importNote": "Alles wird verschlüsselt, bevor es dein Gerät zum Synchronisieren verlässt."
+    "importNote": "Alles ist immer verschlüsselt, auf deinem Gerät und beim Synchronisieren."
   },
   "importPick": {
     "autoTagLabel": "Importierte Notizen nach Quelle taggen",
     "autoTagDesc": "Google-Keep-Notizen erhalten <keep>#google</keep>, Obsidian erhält <obsidian>#obsidian</obsidian> und so weiter.",
     "guideAria": "Import-Anleitung für {{app}}",
-    "guideLabel": "Anleitung"
+    "guideLabel": "Anleitung",
+    "groupGeneral": "Allgemein",
+    "groupNotes": "Notizen"
   },
   "folderImport": {
     "tagLabel": "Notizen zusätzlich nach Ordner taggen",
     "tagDesc": "Deine Ordner werden so oder so wiederhergestellt. Das fügt jeden Ordnernamen zusätzlich als Tag hinzu, praktisch, wenn du auch gern nach Tag filterst."
   },
+  "browserImport": {
+    "tagLabel": "Schlagworte aus deinem Browser behalten",
+    "tagDesc": "Firefox speichert Schlagworte und ein Adressleisten-Stichwort zu jedem Lesezeichen. Beides wird hier zu Schlagworten."
+  },
+  "contactImport": {
+    "photosLabel": "Fotos importieren",
+    "photosDesc_one": "{{count}} Foto, etwa {{size}}, sobald die App es verkleinert hat. Das sind {{pct}} % der {{free}}, die du frei hast.",
+    "photosDesc_other": "{{count}} Fotos, etwa {{size}}, sobald die App sie verkleinert hat. Das sind {{pct}} % der {{free}}, die du frei hast.",
+    "photosDescNoQuota_one": "{{count}} Foto, etwa {{size}}, sobald die App es verkleinert hat.",
+    "photosDescNoQuota_other": "{{count}} Fotos, etwa {{size}}, sobald die App sie verkleinert hat.",
+    "photosTooBig_one": "Nicht genug Platz für das Foto ({{size}}), es bleibt draußen. Alles andere kommt mit. Gib {{shortfall}} frei oder hol dir mehr Speicher und importiere erneut, um es nachzuholen.",
+    "photosTooBig_other": "Nicht genug Platz für die {{count}} Fotos ({{size}}), sie bleiben draußen. Alles andere kommt mit. Gib {{shortfall}} frei oder hol dir mehr Speicher und importiere erneut, um sie nachzuholen."
+  },
+  "importCalendar": {
+    "location": "Ort",
+    "videoCall": "Videoanruf",
+    "organizer": "Organisator",
+    "guests": "Gäste",
+    "file": "Datei",
+    "link": "Link",
+    "timeZone": "Zeitzone",
+    "ends": "Endet",
+    "repeats": "Wiederholung"
+  },
+  "webcal": {
+    "title": "Webcal",
+    "desc": "Eine Kalenderadresse, etwa ein webcal://-Link von Proton, iCloud, Outlook oder einem öffentlichen Kalender. Sie wird einmal heruntergeladen; füge sie später erneut ein, um nur die neuen Termine hinzuzufügen.",
+    "fieldLabel": "Kalenderadresse",
+    "import": "Importieren",
+    "downloading": "Wird heruntergeladen…",
+    "errors": {
+      "invalid": "Füge eine Adresse ein, die mit webcal://, webcals:// oder https:// beginnt.",
+      "refused": "Diese Adresse kann nicht geöffnet werden.",
+      "wrongType": "Diese Adresse führt nicht zu einer Kalenderdatei.",
+      "tooLarge": "Dieser Kalender ist größer als 10 MB.",
+      "timeout": "Der Kalenderserver hat nicht rechtzeitig geantwortet. Versuch es später noch einmal.",
+      "blocked": "Der Kalenderserver hat den Download abgelehnt. Prüfe, ob der Kalender geteilt oder öffentlich ist.",
+      "offline": "Du bist offline. Stell eine Verbindung her und versuch es noch einmal.",
+      "limit": "Zu viele Downloads in kurzer Zeit. Warte eine Minute und versuch es noch einmal.",
+      "failed": "Der Kalender konnte nicht heruntergeladen werden. Prüfe die Adresse und versuch es noch einmal."
+    }
+  },
   "sourceDesc": {
     "googleKeep": "Google-Takeout-.zip (Keep-Ordner) oder eine einzelne .json-Notiz. Checklisten werden als native Aufgabenlisten importiert.",
+    "googleCalendar": "Die .zip aus Google Kalender unter Settings > Import & export oder eine einzelne .ics-Datei. Termine behalten ihre Uhrzeiten, Wiederholungen und Erinnerungen.",
     "appleNotes": "Exportiere über die kostenlose Exporter-App als Markdown und lege dann die .zip hier ab.",
     "appleJournal": "Exportiere aus Journal auf dem Mac oder iPhone, komprimiere den Ordner AppleJournalEntries und lege die .zip hier ab. Einträge werden als Tagebucheinträge importiert, mit ihren Fotos, Videos, Sprachmemos und Orten.",
     "evernote": "Eine einzelne .enex oder mehrere zusammen in einer Zip. Behält Formatierung, Tags, Anhänge, Notiz-Links und Notizbücher. Aufgaben legt Evernote nicht in die .enex.",
     "samsungNotes": "Exportiere als Word (.docx) oder Text (.txt). Packe mehrere Dateien in ein Zip für den Massenimport.",
     "simplenote": "Exportiere aus Simplenote (Einstellungen -> Tools -> Notizen exportieren). Lege die .zip ab.",
-    "standardNotes": "Entschlüsseltes .zip- oder .txt-Backup aus Standard Notes (Datei > Exportieren > Entschlüsselt).",
+    "standardNotes": "Entschlüsseltes .zip- oder .txt-Backup aus Standard Notes (Account settings > Backups > Data backups > Decrypted).",
     "obsidian": "Obsidian-Vault als .zip. Erhält Tags, [[note links]], Ordnerstruktur, inline #tags sowie eingebettete Bilder und Dateien.",
     "notesnook": "Notesnook-Export als .zip. Wähle beim Exportieren HTML, um Formatierung, Notizbücher, Tags und Anhänge zu behalten.",
+    "bear": "Wähle in Bear File > Backup Notes... und lege die .bear2bk-Datei hier ab. Tags und verschachtelte Tags, Pins, das Archiv, der Papierkorb, Hervorhebungen mit ihren Farben, Notiz-Links und Anhänge kommen mit.",
+    "joplin": "Die .jex-Datei aus File > Export all > \"JEX - Joplin Export File\". Notizbücher werden zu Ordnern, und Tags, To-dos, Notiz-Links und Anhänge kommen mit.",
     "upnote": "In UpNote: Settings > Backup > Backup now, dann alles im Backup-Ordner zippen. Behält Notizbücher, Tags, Pins, note-links, Formatierung und Anhänge. Einzel-Exporte aus den Handy-Apps funktionieren auch - wähle \"Export to HTML\".",
     "markdownFolder": ".md- oder .txt-Dateien einzeln oder als .zip. Ein gezippter Ordner behält seine Unterordner und bringt seine Bilder und Anhänge mit.",
     "markdownApp": "Diese Notizen sind schon Markdown-Dateien in einem Ordner. Zieh den Ordner als .zip hinein, dann kommen seine Unterordner, Bilder und #Tags mit.",
     "browserBookmarks": "Die Lesezeichen-Datei (.html) aus \"Export bookmarks\" in deinem Browser, oder die .zip, die Safari schreibt. Chrome, Firefox, Safari, Edge, Opera, Brave und Vivaldi enthalten alle dieselbe Datei. Ordner und Daten kommen mit.",
+    "vcard": "Die .vcf-Datei, die dein Adressbuch exportiert: iPhone und Mac über iCloud oder Kontakte, Android, Google Kontakte. Jede Karte kommt mit, Fotos inklusive, und ein zweiter Import derselben Datei überspringt die Personen, die du schon hast.",
     "bitwarden": "Unverschlüsselter .json-Export aus Bitwarden (Tools > Export vault > .json). Logins, Karten, SSH-Schlüssel, sichere Notizen und TOTP-Codes kommen alle mit.",
     "browserPasswords": "Die Passwort-Datei (.csv) aus Chrome, Edge, Brave, Opera, Vivaldi, Firefox oder Safari, oder die .zip, die Safari schreibt. Jede Zeile wird ein Login. Lösch die Datei, wenn du fertig bist - sie enthält deine Passwörter im Klartext."
+  },
+  "sourceLabel": {
+    "privacynotes": "PrivacyNotes Vollbackup",
+    "browserBookmarks": "Browser-Lesezeichen",
+    "browserPasswords": "Browser-Passwörter",
+    "vcard": "Kontakte (vCard)",
+    "markdownFolder": "Markdown-Dateien"
   },
   "vaultPick": {
     "intro": "Importiere Logins, Kreditkarten und SSH-Schlüssel aus einem anderen Passwortmanager."
   },
   "restorePick": {
-    "intro": "Stelle ein PrivacyNotes-Backup wieder her, das du zuvor exportiert hast. Deine Datei wird lokal gelesen und entschlüsselt.",
+    "intro": "Stelle ein PrivacyNotes-Backup wieder her, das du zuvor exportiert hast.",
     "fullBackupTitle": "Vollständiges Backup (.zip)",
-    "fullBackupDesc": "Stelle Notizen, Tagebücher, Tresor-Einträge, Aufgaben, Bilder, Audio und Dateien wieder her. Alles wird als neue Einträge importiert - vorhandene Daten werden nicht überschrieben.",
+    "fullBackupDesc": "Stelle Notizen, Tagebücher, Tresor-Einträge, Aufgaben, Bilder, Audio und Dateien wieder her. Eine Notiz, die du schon hast, bleibt erhalten oder wird aktualisiert, wenn das Backup eine neuere Fassung davon enthält.",
     "encryptedBackupTitle": "Verschlüsseltes Backup (.pnbackup, .pnbackupz)",
     "encryptedBackupDesc": "Stelle ein verschlüsseltes Backup mit deinem Phrasenschlüssel wieder her. Eine .pnbackupz-Datei bringt alles zurück, Dateien eingeschlossen; eine .pnbackup-Datei enthält nur Textinhalte und Metadaten. Du musst mit demselben Konto angemeldet sein, das es erstellt hat."
+  },
+  "restoreGate": {
+    "wait": "Die Wiederherstellung wartet, bis dieses Gerät online ist und eine Synchronisierung abgeschlossen hat, damit dein Backup mit den Notizen abgeglichen wird, die schon in deinem Konto sind, und sie nicht doppelt angelegt werden.",
+    "paused": "Die Wiederherstellung wartet auf die Synchronisierung, damit dein Backup mit den Notizen abgeglichen wird, die schon in deinem Konto sind. Auf diesem Gerät ist die Synchronisierung pausiert: Schalte „Synchronisierung pausieren“ unter Einstellungen > ID & Sync aus.",
+    "belowFloor": "Die Wiederherstellung wartet auf die Synchronisierung, damit dein Backup mit den Notizen abgeglichen wird, die schon in deinem Konto sind. Diese Version der App ist zu alt, um zu synchronisieren: Aktualisiere zuerst die App."
   },
   "encryptedBackupLabel": "Verschlüsseltes Backup",
   "status": {
@@ -64,9 +125,17 @@
   "errors": {
     "genericParse": "Etwas ist schiefgelaufen.",
     "decryptionFailed": "Entschlüsselung fehlgeschlagen. Falsche Phrase oder beschädigte Datei.",
-    "blobImportFailed": "Deine Notizen wurden importiert, aber ihre Bilder und Dateien nicht: {{detail}} Nichts in der Datei, die du ausgewählt hast, wurde verändert, du kannst die importierten Notizen also löschen und den Import erneut starten."
+    "blobImportFailed": "Deine Notizen wurden importiert, aber ihre Bilder und Dateien nicht: {{detail}} Nichts in der Datei, die du ausgewählt hast, wurde verändert, du kannst die importierten Notizen also löschen und den Import erneut starten.",
+    "blobsNotInBackup_one": "Deine Notizen wurden wiederhergestellt, aber {{items}}, das im Backup aufgeführt ist, fehlt darin.",
+    "blobsNotInBackup_other": "Deine Notizen wurden wiederhergestellt, aber {{items}}, die im Backup aufgeführt sind, fehlen darin."
   },
   "preview": {
+    "oversize_one": "{{count}} Notiz ist größer als 1 MB. Sie bleibt auf diesem Gerät und wird nicht synchronisiert.",
+    "oversize_other": "{{count}} Notizen sind größer als 1 MB. Sie bleiben auf diesem Gerät und werden nicht synchronisiert.",
+    "splitOversize_one": "Diese Notiz an ihren Überschriften in kleinere Notizen aufteilen, damit sie synchronisiert wird",
+    "splitOversize_other": "Diese {{count}} Notizen an ihren Überschriften in kleinere Notizen aufteilen, damit sie synchronisiert werden",
+    "partTitle": "{{title}} ({{index}}/{{total}})",
+    "continuedIn": "Fortsetzung in {{link}}",
     "sourceLabel": "Quelle",
     "uniqueTags": "Eindeutige Tags",
     "empty": "Leer",
@@ -76,11 +145,14 @@
     "andMore": "… und {{count}} weitere",
     "headsUpLabel": "Hinweis:",
     "duplicateWarning": "beim Importieren werden diese als neue Notizen hinzugefügt. Wenn du das zweimal ausführst, erhältst du Duplikate. Eine automatische Duplikaterkennung gibt es noch nicht.",
+    "duplicateSkipNote": "Lesezeichen, die du schon gespeichert hast, werden übersprungen. Ein zweiter Durchlauf legt also nichts doppelt an.",
+    "contactSkipNote": "Personen, die du schon gespeichert hast, werden übersprungen und bleiben, wie sie sind. Ein zweiter Durchlauf legt also niemanden doppelt an.",
+    "eventSkipNote": "Termine, die du schon importiert hast, werden übersprungen und bleiben, wie sie sind. Ein zweiter Durchlauf legt also keine doppelt an.",
+    "restoreMergeNote": "Notizen aus deinem eigenen Backup werden anhand ihrer ID zugeordnet. Eine Notiz, die du schon hast, wird nur aktualisiert, wenn die Fassung im Backup neuer ist, und eine Notiz im Papierkorb wird wieder herausgeholt.",
     "quotaExceeded": "<strong>Zu wenig Speicher zum Importieren.</strong> Geschätzt {{needed}} benötigt, {{available}} verfügbar. Schaffe Platz oder rüste auf, bevor du importierst.",
     "quotaWarning": "Hinweis: Dieser Import wird etwa {{needed}} deines verbleibenden Speichers von {{available}} belegen.",
     "oversizeAttachments_one": "1 Datei ist größer als das {{limit}}-Limit pro Datei deines Tarifs. Sie wird auf dieses Gerät importiert, synchronisiert aber erst mit deinen anderen Geräten, wenn du upgradest.",
-    "oversizeAttachments_other": "{{count}} Dateien sind größer als das {{limit}}-Limit pro Datei deines Tarifs. Sie werden auf dieses Gerät importiert, synchronisieren aber erst mit deinen anderen Geräten, wenn du upgradest.",
-    "duplicateSkipNote": "Lesezeichen, die du schon gespeichert hast, werden übersprungen. Ein zweiter Durchlauf legt also nichts doppelt an."
+    "oversizeAttachments_other": "{{count}} Dateien sind größer als das {{limit}}-Limit pro Datei deines Tarifs. Sie werden auf dieses Gerät importiert, synchronisieren aber erst mit deinen anderen Geräten, wenn du upgradest."
   },
   "counts": {
     "note_one": "Notiz",
@@ -93,6 +165,8 @@
     "card_other": "Karten",
     "sshKey_one": "SSH-Schlüssel",
     "sshKey_other": "SSH-Schlüssel",
+    "contact_one": "Kontakt",
+    "contact_other": "Kontakte",
     "zeroItems": "0 Einträge",
     "importButton": "{{counts}} importieren"
   },
@@ -118,20 +192,40 @@
     "vaultExportDesc": "Logins, Karten und SSH-Schlüssel im Bitwarden-kompatiblen Format. Von den meisten Passwortmanagern importierbar. Klartext - mit Vorsicht behandeln.",
     "bookmarksOnlyHeading": "Nur Lesezeichen",
     "bookmarksExportTitle": "Lesezeichen-Datei (.html)",
-    "bookmarksExportDesc": "Die Standard-Lesezeichendatei, die jeder Browser liest. Importiere sie mit deinen Ordnern in Chrome, Firefox, Safari oder Edge."
+    "bookmarksExportDesc": "Die Standard-Lesezeichendatei, die jeder Browser liest. Importiere sie mit deinen Ordnern in Chrome, Firefox, Safari oder Edge.",
+    "contactsOnlyHeading": "Nur Kontakte",
+    "contactsExportTitle": "Kontaktdatei (.vcf)",
+    "contactsExportDesc": "Die vCard-Datei, die jedes Telefon und jedes Adressbuch liest. Importiere sie in iPhone, Android, Google Kontakte oder Kontakte auf dem Mac, mit allen Labels und Gruppen.",
+    "calendarOnlyHeading": "Nur Kalender",
+    "calendarExportTitle": "Kalenderdatei (.ics)",
+    "calendarExportDesc": "Termine sowie Notizen und Aufgabenlisten mit Datum, für Google Kalender, Apple Kalender oder Outlook.",
+    "calendarPrivate": "Privat"
   },
   "exportProgress": {
     "failedTitle": "Export fehlgeschlagen",
     "completeTitle": "Export abgeschlossen",
+    "incompleteTitle": "Export unvollständig",
     "exportingTitle": "Backup wird exportiert...",
     "preparing": "Wird vorbereitet...",
     "exporting": "Wird exportiert...",
     "imagesProgress": "Bilder werden exportiert... {{done}} von {{total}}",
     "filesProgress": "Dateien werden exportiert... {{done}} von {{total}}",
     "building": "Backup wird erstellt...",
-    "compressing": "Wird komprimiert..."
+    "compressing": "Wird komprimiert...",
+    "missingFailed_one": "Dieses Gerät konnte {{items}} nicht herunterladen, deshalb fehlt es in deinem Export. Prüfe deine Verbindung und exportiere noch einmal.",
+    "missingFailed_other": "Dieses Gerät konnte {{items}} nicht herunterladen, deshalb fehlen sie in deinem Export. Prüfe deine Verbindung und exportiere noch einmal.",
+    "missingNotFound_one": "{{items}} ist weder auf diesem Gerät noch auf dem Server, deshalb fehlt es in deinem Export.",
+    "missingNotFound_other": "{{items}} sind weder auf diesem Gerät noch auf dem Server, deshalb fehlen sie in deinem Export."
+  },
+  "missing": {
+    "pictures_one": "{{count}} Bild",
+    "pictures_other": "{{count}} Bilder",
+    "files_one": "{{count}} Datei",
+    "files_other": "{{count}} Dateien",
+    "both": "{{pictures}} und {{files}}"
   },
   "upload": {
+    "discard": "Verwerfen",
     "completeTitle": "Upload abgeschlossen",
     "failedTitle": "Upload fehlgeschlagen",
     "partialTitle": "{{done}} hochgeladen, {{failed}} fehlgeschlagen",
@@ -141,6 +235,10 @@
     "statusFailed": "Fehlgeschlagen",
     "errorStorageFull": "Speicher voll - schaffe Platz oder füge Speicher hinzu, um diese Datei hochzuladen.",
     "errorStorageFullKept": "Passt nicht in deinen Speicher - bleibt auf diesem Gerät. Sobald Platz frei wird, wird die Datei synchronisiert.",
+    "errorTooLarge": "Datei zu groß ({{size}}). Maximal {{limit}} MB.",
+    "errorTooLargeFree": "Datei zu groß ({{size}}). Maximal {{limit}} MB im kostenlosen Tarif.",
+    "batchTitle_one": "{{count}} Datei",
+    "batchTitle_other": "{{count}} Dateien",
     "statusUploading": "Wird hochgeladen...",
     "statusWaiting": "Wartet",
     "summaryDone": "{{count}} fertig",
@@ -162,8 +260,16 @@
   "saveErrors": {
     "shortWrite": "Es wurden nur {{written}} von {{expected}} Bytes gespeichert, die Datei ist also unvollständig. Versuche es erneut und speichere in den Speicher deines Geräts statt in einen Cloud-Ordner."
   },
-  "browserImport": {
-    "tagLabel": "Schlagworte aus deinem Browser behalten",
-    "tagDesc": "Firefox speichert Schlagworte und ein Adressleisten-Stichwort zu jedem Lesezeichen. Beides wird hier zu Schlagworten."
+  "shareSheet": {
+    "title_one": "{{count}} Element wurde mit PrivacyNotes geteilt",
+    "title_other": "{{count}} Elemente wurden mit PrivacyNotes geteilt",
+    "line": "Nichts wird gespeichert, bis du entscheidest.",
+    "saveAll": "Alle speichern"
+  },
+  "destination": {
+    "label": "Hinzufügen zu",
+    "none": "Ohne Ordner",
+    "newFolder": "Neuer Ordner „{{name}}“",
+    "help": "Ordner aus der Quelle landen in dem Ordner, den du auswählst, und Elemente ohne Ordner kommen direkt hinein."
   }
 }

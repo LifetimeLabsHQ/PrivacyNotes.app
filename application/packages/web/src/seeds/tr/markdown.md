@@ -59,21 +59,28 @@ Ortadaki sütun ortalanmış, sonuncusu sağa hizalanmış. Bir sütunun kenarı
 Bilgi kutusu, okuyucunun kaçırmaması gereken bir şey için renkli bir kutudur.
 
 > [!tip]+ İpucu
-> Bir bilgi kutusunu kapatmak için başlığına tıklayın.
+> Kapatmak için simgesine tıklayın.
 
 > [!warning]+ Uyarı
 > Her türün kendi rengi ve kendi simgesi vardır.
 
 > [!danger]+ Tehlike
-> Dokuz tür var. **Ekle** menüsü hepsini listeler.
+> Pek çok tür var. **Ekle** menüsü hepsini listeler.
+
+> [!fold]- Katlanır
+> Kutu yok, renk yok: siz açana kadar yolunuzdan çekilen bir metin.
 
 ## Alıntılar
 
 > Bir alıntı kenar boşluğundan içeri girer ve yanında renkli bir çizgi taşır.
 
+## Dipnotlar
+
+Dipnot, bir kaynağı ya da ara notu metnin dışında tutar.[^1] Bir kelimeden sonra `[^1]` yazın ya da **Ekle** menüsünden **Dipnot**’u seçin. Nota gitmek için küçük numaraya tıklayın.
+
 ## Kod
 
-Kod boşluklarını korur ve dile göre renklenir.
+Kod boşluklarını korur ve dile göre renklenir. Bloğun üstündeki ad, bloğun dilidir: başka bir dil seçmek için ona tıklayın.
 
 ```js
 export function seal(note, key) {
@@ -86,6 +93,47 @@ export function seal(note, key) {
 def rolling_mean(values, window):
     return [sum(values[i:i + window]) / window
             for i in range(len(values) - window + 1)]
+```
+
+Uzun bir blok daraltılmış olarak açılır, böylece notun geri kalanına ulaşmak için fazla kaydırmanız gerekmez. Altındaki düğme tüm satırları gösterir.
+
+```js
+const WORDS_PER_MINUTE = 200;
+
+export function readingStats(markdown) {
+  const text = markdown
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[#*_~`>|-]/g, ' ');
+
+  const words = text.split(/\s+/).filter(Boolean);
+  const headings = markdown.match(/^#{1,6} /gm) ?? [];
+  const tasks = markdown.match(/^\s*- \[[ x]\] /gm) ?? [];
+  const done = tasks.filter((task) => task.includes('[x]'));
+
+  return {
+    words: words.length,
+    minutes: Math.max(1, Math.round(words.length / WORDS_PER_MINUTE)),
+    headings: headings.length,
+    tasks: tasks.length,
+    done: done.length,
+  };
+}
+
+export function summary(stats) {
+  const parts = [`${stats.words} words`, `${stats.minutes} min read`];
+  if (stats.headings > 0) {
+    parts.push(`${stats.headings} sections`);
+  }
+  if (stats.tasks > 0) {
+    parts.push(`${stats.done} of ${stats.tasks} tasks done`);
+  }
+  return parts.join(' · ');
+}
+
+export function isLongRead(stats) {
+  return stats.minutes >= 10;
+}
 ```
 
 Cümlenin içindeki kısa bir kod parçası bunun yerine şöyle görünür: `bu`.
@@ -109,8 +157,14 @@ Bir görseli nota sürükleyin ya da yapıştırın. Boyutunu değiştirmek ya d
 - Web bağlantısı bir siteyi açar: [privacynotes.app](https://privacynotes.app/tr)
 - Not bağlantısı başka bir notunuzu açar: [[Notlarınız nasıl korunuyor]]
 
-İkisinin de çubukta düğmesi var. Zincir web bağlantısı yapar. Yanındaki düğme notlarınızı listeler, siz de kastettiğinizi seçersiniz.
+İkisinin de çubukta düğmesi var. Zincir web bağlantısı yapar. Köşeli parantezler not bağlantısı yapar: notlarınızı listeler, siz de kastettiğinizi seçersiniz. `[[` yazmak da aynı şeyi yapar.
+
+Bir not bağlantısının metni, notun başlığından farklı olabilir. Not başlığını, ardından dikey çizgiyi (|) ve sayfada görünmesini istediğiniz metni yazın.
+
+Bir not bağlantısı, notu başlıklarından birinde de açabilir. Not başlığından sonra `#` yazın ve başlığı seçin: [[Notlarınız nasıl korunuyor#Anahtarınız kimde]] o notu anahtar bölümünde açar. Ana hattaki bir başlığın yanındaki bağlantı simgesi böyle bir bağlantıyı sizin için kopyalar.
 
 ---
 
 *Zaten markdown yazıyorsanız yazın, yazdıkça biçimlenir. Herhangi bir notun arkasındaki ham metni görmek için bu notun sağ altındaki **Markdown'ı göster** bağlantısına tıklayın.*
+
+[^1]: Not bu. Yanındaki ok sizi yukarı geri götürür.

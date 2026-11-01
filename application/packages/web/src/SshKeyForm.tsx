@@ -1,10 +1,15 @@
-import { useCallback, useMemo, useState } from 'react';
+import { VaultFieldAction } from './ui/VaultFieldAction';
+import { Button } from './ui/Button';
+import { VaultFormActions } from './ui/VaultFormActions';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Copy, Eye, EyeSlash, FloppyDisk, Info } from './icons';
+import { Info, Key, Lock, NotePencil, Shield, Tag } from './icons';
 import { hasPin } from './pin';
 import { PinInfoModal } from './PinInfoModal';
-import { HoverLabel } from './HoverLabel';
 import { useCopyToClipboard } from './clipboard';
+import { PasswordField } from './PasswordText';
+import { FIELD_CLASS, FieldLabel } from './formFields';
+import { storedVaultKeys } from './vaultBody';
 
 /* ────────────────────────────────────────────────────────────────
  * SshKeyData - the JSON blob stored in the note body for ssh-key
@@ -34,8 +39,9 @@ export function parseSshKeyBody(body: string): SshKeyData {
   }
 }
 
-export function serializeSshKeyBody(data: SshKeyData): string {
-  return JSON.stringify(data);
+/** `previous` is the stored body; keys a newer version wrote in it are kept. */
+export function serializeSshKeyBody(data: SshKeyData, previous = ''): string {
+  return JSON.stringify({ ...storedVaultKeys(previous), ...data });
 }
 
 /** Extract comment from an SSH public key (the trailing part after the base64). */
@@ -48,11 +54,13 @@ function extractKeyComment(pubKey: string): string {
  * Ed25519 key pair generation via Web Crypto (or fallback message)
  *
  * Web Crypto doesn't support Ed25519 in all browsers. We attempt
- * it and show a message if it fails. The generated keys are in
- * OpenSSH format for copy-paste convenience.
+ * it and show a message if it fails. Both keys are written in the
+ * OpenSSH formats, the only ones every `ssh` build reads.
  * ──────────────────────────────────────────────────────────────── */
 
-async function generateEd25519Pair(): Promise<{ privateKey: string; publicKey: string } | null> {
+/** The key comment runs to the end of the line, so the label is folded onto one line. An
+ *  empty label writes no comment, which is still a valid public key. */
+export async function generateEd25519Pair(label: string): Promise<{ privateKey: string; publicKey: string } | null> {
   try {
     const kp = await crypto.subtle.generateKey(
       'Ed25519' as unknown as AlgorithmIdentifier, true, ['sign', 'verify']
@@ -60,7 +68,7 @@ async function generateEd25519Pair(): Promise<{ privateKey: string; publicKey: s
     const privRaw = await crypto.subtle.exportKey('pkcs8', kp.privateKey);
     const pubRaw = await crypto.subtle.exportKey('raw', kp.publicKey);
 
-    // OpenSSH public key format: ssh-ed25519 <base64(len+type + len+pubkey)> generated
+    // OpenSSH public key format: ssh-ed25519 <base64(len+type + len+pubkey)> [comment]
     const pubBytes = new Uint8Array(pubRaw);
     const typeStr = 'ssh-ed25519';
     const typeBytes = new TextEncoder().encode(typeStr);
@@ -73,12 +81,14 @@ async function generateEd25519Pair(): Promise<{ privateKey: string; publicKey: s
     view.setUint32(offset, pubBytes.length); offset += 4;
     new Uint8Array(buf, offset, pubBytes.length).set(pubBytes);
     const pubB64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
-    const publicKey = `ssh-ed25519 ${pubB64} generated`;
+    const comment = label.trim().replace(/\s+/g, ' ');
+    const publicKey = comment ? `ssh-ed25519 ${pubB64} ${comment}` : `ssh-ed25519 ${pubB64}`;
 
-    // PEM private key (PKCS#8)
-    const privB64 = btoa(String.fromCharCode(...new Uint8Array(privRaw)));
-    const lines = privB64.match(/.{1,64}/g) ?? [];
-    const privateKey = `-----BEGIN PRIVATE KEY-----\n${lines.join('\n')}\n-----END PRIVATE KEY-----`;
+    // Loaded on use: vaultFields pulls this file onto the boot path.
+    const { ed25519SeedFromPkcs8, openSshEd25519PrivateKey } = await import('./sshKeyFile');
+    const seed = ed25519SeedFromPkcs8(new Uint8Array(privRaw));
+    if (!seed) return null;
+    const privateKey = openSshEd25519PrivateKey(seed, pubBytes, comment).trimEnd();
 
     return { privateKey, publicKey };
   } catch {
@@ -86,22 +96,6 @@ async function generateEd25519Pair(): Promise<{ privateKey: string; publicKey: s
   }
 }
 
-/* ────────────────────────────────────────────────────────────────
- * Copy button (shared)
- * ──────────────────────────────────────────────────────────────── */
-function CopyBtn({ onClick, active, title }: { onClick: () => void; active: boolean; title: string }) {
-  return (
-    <HoverLabel label={title} position="start">
-      <button type="button" onClick={onClick} aria-label={title} className="shrink-0 rounded-md p-2 text-neutral-400 hover:text-accent hover:bg-neutral-100 dark:hover:bg-surface-0 transition">
-        {active ? (
-          <Check size={16} className="text-emerald-500" />
-        ) : (
-          <Copy size={16} />
-        )}
-      </button>
-    </HoverLabel>
-  );
-}
 
 /* ────────────────────────────────────────────────────────────────
  * SshKeyForm - the editor replacement for ssh-key type notes.
@@ -138,19 +132,23 @@ export function SshKeyForm({
   const { t } = useTranslation('common');
   const data = parseSshKeyBody(body);
   const { copy, copied } = useCopyToClipboard();
-  const pinConfigured = useMemo(() => hasPin(), []);
+  // Never memoize this. Settings opens over a mounted form, so a PIN
+  // can appear or vanish while the toggle below is on screen, and
+  // localStorage fires nothing that would refresh a frozen value.
+  const pinConfigured = hasPin();
   const [showPinInfo, setShowPinInfo] = useState(false);
   const [showPrivate, setShowPrivate] = useState(false);
   const [showPassphrase, setShowPassphrase] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState('');
+  const [downloadError, setDownloadError] = useState(false);
 
   const updateBody = useCallback(
     (patch: Partial<SshKeyData>) => {
       const next = { ...data, ...patch };
-      onBodyChange(noteId, serializeSshKeyBody(next));
+      onBodyChange(noteId, serializeSshKeyBody(next, body));
     },
-    [noteId, data, onBodyChange]
+    [noteId, data, body, onBodyChange]
   );
 
   /** Auto-derive title from label on blur. */
@@ -171,7 +169,7 @@ export function SshKeyForm({
   const handleGenerate = useCallback(async () => {
     setGenerating(true);
     setGenError('');
-    const result = await generateEd25519Pair();
+    const result = await generateEd25519Pair(data.label);
     if (result) {
       updateBody({ privateKey: result.privateKey, publicKey: result.publicKey });
       if (!title.trim()) {
@@ -182,11 +180,16 @@ export function SshKeyForm({
       setGenError('Ed25519 not supported in this browser. Paste your keys manually.');
     }
     setGenerating(false);
-  }, [noteId, title, onTitleChange, updateBody]);
+  }, [noteId, title, data.label, onTitleChange, updateBody]);
 
-  const fieldClass =
-    'w-full rounded-md border border-divider bg-surface-1 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-60';
-  const labelClass = 'block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1';
+  const downloadKey = useCallback(async (which: 'private' | 'public') => {
+    setDownloadError(false);
+    const { downloadSshKey } = await import('./sshKeyFile');
+    const saved = await downloadSshKey(which, data);
+    if (!saved.ok && saved.reason === 'failed') setDownloadError(true);
+  }, [data.privateKey, data.publicKey]);
+
+  const fieldClass = FIELD_CLASS;
 
   return (
     /* Width comes from VAULT_COLUMN on the VaultItem wrapper. */
@@ -194,7 +197,7 @@ export function SshKeyForm({
       <div className="space-y-4">
         {/* Label */}
         <div>
-          <label className={labelClass}>{t('sshKeyForm.label')}</label>
+          <FieldLabel icon={<Tag size={13} />}>{t('sshKeyForm.label')}</FieldLabel>
           <input
             type="text"
             value={data.label}
@@ -209,22 +212,17 @@ export function SshKeyForm({
 
         {/* Generate button */}
         {!locked && (
-          <button
-            type="button"
-            onClick={() => void handleGenerate()}
-            disabled={generating}
-            className="text-xs px-3 py-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent font-medium transition disabled:opacity-50"
-          >
+          <Button action="generate" onClick={() => void handleGenerate()} disabled={generating}>
             {generating ? 'Generating...' : 'Generate Ed25519 Key Pair'}
-          </button>
+          </Button>
         )}
         {genError && (
-          <div className="text-xs text-amber-600 dark:text-amber-400">{genError}</div>
+          <div className="text-xs text-warning">{genError}</div>
         )}
 
         {/* Public Key */}
         <div>
-          <label className={labelClass}>Public Key</label>
+          <FieldLabel icon={<Key size={13} />}>{t('sshKeyForm.publicKey')}</FieldLabel>
           <div className="flex gap-1.5 items-start">
             <textarea
               value={data.publicKey}
@@ -235,19 +233,22 @@ export function SshKeyForm({
               rows={3}
               className={`${fieldClass} font-mono text-xs resize-y`}
             />
-            <CopyBtn
+            <VaultFieldAction kind="copy"
               onClick={() => copy(data.publicKey, 'publicKey')}
               active={copied === 'publicKey'}
               title={t('sshKeyForm.copyPublicKey')}
             />
+            {data.publicKey.trim() && (
+              <VaultFieldAction kind="download" onClick={() => void downloadKey('public')} title={t('sshKeyForm.downloadPublicKey')} />
+            )}
           </div>
         </div>
 
         {/* Private Key */}
         <div>
-          <label className={labelClass}>Private Key</label>
+          <FieldLabel icon={<Lock size={13} />}>{t('sshKeyForm.privateKey')}</FieldLabel>
           <div className="flex gap-1.5 items-start">
-            <div className="relative flex-1">
+            <div className="flex-1 min-w-0">
               {showPrivate ? (
                 <textarea
                   value={data.privateKey}
@@ -258,71 +259,47 @@ export function SshKeyForm({
                 />
               ) : (
                 <div
-                  className={`${fieldClass} font-mono text-xs cursor-pointer min-h-[4rem] flex items-center justify-center text-neutral-400`}
+                  className={`${fieldClass} font-mono text-xs cursor-pointer min-h-[4rem] flex items-center justify-center text-pn-muted`}
                   onClick={() => setShowPrivate(true)}
                 >
                   {data.privateKey ? 'Click to reveal private key' : 'No private key stored'}
                 </div>
               )}
-              {data.privateKey && (
-                <div className="absolute end-2 top-2">
-                <HoverLabel label={showPrivate ? 'Hide private key' : 'Show private key'} position="above">
-                <button
-                  type="button"
-                  onClick={() => setShowPrivate(!showPrivate)}
-                  aria-label={showPrivate ? 'Hide private key' : 'Show private key'}
-                  className="rounded p-1 text-neutral-400 hover:text-accent transition"
-                >
-                  {showPrivate ? (
-                    <EyeSlash size={16} />
-                  ) : (
-                    <Eye size={16} />
-                  )}
-                </button>
-                </HoverLabel>
-                </div>
-              )}
             </div>
-            <CopyBtn
+            {data.privateKey && (
+              <VaultFieldAction kind="reveal" active={showPrivate} title={showPrivate ? 'Hide private key' : 'Show private key'} onClick={() => setShowPrivate(!showPrivate)} />
+            )}
+            <VaultFieldAction kind="copy"
               onClick={() => copy(data.privateKey, 'privateKey')}
               active={copied === 'privateKey'}
               title={t('sshKeyForm.copyPrivateKey')}
             />
+            {data.privateKey.trim() && (
+              <VaultFieldAction kind="download" onClick={() => void downloadKey('private')} title={t('sshKeyForm.downloadPrivateKey')} />
+            )}
           </div>
+          {data.privateKey.trim() && (
+            <p className="text-[11px] text-pn-muted mt-1.5">{t('sshKeyForm.downloadHint')}</p>
+          )}
+          {downloadError && (
+            <p className="text-[11px] text-danger mt-1.5">{t('sshKeyForm.downloadFailed')}</p>
+          )}
         </div>
 
         {/* Passphrase */}
         <div>
-          <label className={labelClass}>{t('sshKeyForm.passphrase')}</label>
+          <FieldLabel icon={<Shield size={13} />}>{t('sshKeyForm.passphrase')}</FieldLabel>
           <div className="flex gap-1.5">
-            <div className="relative flex-1">
-              <input
-                type={showPassphrase ? 'text' : 'password'}
-                value={data.passphrase}
-                onChange={(e) => updateBody({ passphrase: e.target.value })}
-                placeholder={t('sshKeyForm.passphrasePlaceholder')}
-                disabled={locked}
-                autoComplete="off"
-                className={`${fieldClass} pe-10`}
-              />
-              <div className="absolute end-1 top-1/2 -translate-y-1/2">
-              <HoverLabel label={showPassphrase ? t('sshKeyForm.hide') : t('sshKeyForm.show')} position="above">
-              <button
-                type="button"
-                onClick={() => setShowPassphrase(!showPassphrase)}
-                aria-label={showPassphrase ? t('sshKeyForm.hide') : t('sshKeyForm.show')}
-                className="rounded p-1 text-neutral-400 hover:text-accent transition"
-              >
-                {showPassphrase ? (
-                  <EyeSlash size={16} />
-                ) : (
-                  <Eye size={16} />
-                )}
-              </button>
-              </HoverLabel>
-              </div>
-            </div>
-            <CopyBtn
+            <PasswordField
+              value={data.passphrase}
+              onChange={(e) => updateBody({ passphrase: e.target.value })}
+              revealed={showPassphrase}
+              disabled={locked}
+              placeholder={t('sshKeyForm.passphrasePlaceholder')}
+              fieldClass={fieldClass}
+            />
+            <VaultFieldAction kind="reveal" active={showPassphrase} title={showPassphrase ? t('sshKeyForm.hide') : t('sshKeyForm.show')} onClick={() => setShowPassphrase(!showPassphrase)} />
+            <VaultFieldAction kind="copy"
               onClick={() => copy(data.passphrase, 'passphrase')}
               active={copied === 'passphrase'}
               title={t('sshKeyForm.copyPassphrase')}
@@ -332,7 +309,7 @@ export function SshKeyForm({
 
         {/* Notes */}
         <div>
-          <label className={labelClass}>{t('sshKeyForm.notes')}</label>
+          <FieldLabel icon={<NotePencil size={13} />}>{t('sshKeyForm.notes')}</FieldLabel>
           <textarea
             value={data.notes}
             onChange={(e) => updateBody({ notes: e.target.value })}
@@ -354,7 +331,7 @@ export function SshKeyForm({
             disabled={!pinConfigured && !pinProtected}
             className="rounded accent-accent"
           />
-          <span className="text-sm text-neutral-600 dark:text-neutral-400">
+          <span className="text-sm text-pn-muted">
             {t('sshKeyForm.requirePin')}
           </span>
           <button
@@ -369,36 +346,12 @@ export function SshKeyForm({
 
         {showPinInfo && <PinInfoModal onClose={() => setShowPinInfo(false)} />}
         {!pinConfigured && !pinProtected && (
-          <p className="text-[11px] text-neutral-400 dark:text-neutral-500 -mt-2">
+          <p className="text-[11px] text-pn-muted -mt-2">
             {t('sshKeyForm.setUpPinFirst')}
           </p>
         )}
 
-        {/* Save / Cancel */}
-        {saveError && (
-          <p className="text-[11px] text-red-600 dark:text-red-400">{saveError}</p>
-        )}
-        {!locked && (
-          <div className="flex gap-2 -mt-2">
-            {!isNew && (
-              <button
-                type="button"
-                onClick={onCancel}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium border border-divider text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-surface-1 transition"
-              >
-                {t('actions.cancel')}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={onSave}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition"
-            >
-              <FloppyDisk />
-              {t('actions.save')}
-            </button>
-          </div>
-        )}
+        <VaultFormActions locked={locked} isNew={isNew} saveError={saveError} onSave={onSave} onCancel={onCancel} />
       </div>
     </div>
   );

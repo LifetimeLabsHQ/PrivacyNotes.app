@@ -1,6 +1,9 @@
 import { db } from '../db';
 import type { AttachmentMeta } from '../attachmentStore';
 import { formatFileSize } from '../attachmentValidation';
+import { contactPhotoOptions, currentImageOptions, processImage } from '../imageProcessing';
+import { withContactPhotoBytes } from '../contactBody';
+import type { ImportBlob, ImportedNote } from './types';
 
 /* ------------------------------------------------------------------ */
 /* SHA-256 helper (was duplicated in appleNotes, googleKeep, privacynotes) */
@@ -39,7 +42,9 @@ export function mimeFromExt(path: string): string {
     opus: 'audio/opus', flac: 'audio/flac',
     mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime',
   };
-  return map[ext] ?? 'application/octet-stream';
+  // An own-property test: an extension like `constructor` must not read a
+  // value inherited from Object.prototype.
+  return Object.hasOwn(map, ext) ? map[ext]! : 'application/octet-stream';
 }
 
 /* ------------------------------------------------------------------ */
@@ -120,14 +125,24 @@ export function isBlobReferenced(key: string, text: string): boolean {
 }
 
 /**
- * Generic post-apply blob import for any importer that populates
- * `ParsedImport.blobs`.
+ * Generic blob import for any importer that populates `ParsedImport.blobs`.
  *
- * 1. Stores each blob in imageCache/imageDedup (images) or
- *    attachmentCache/attachmentDedup (non-images) with pendingUpload=1.
- * 2. Rewrites note bodies: replaces every blob key that appears inside
- *    a markdown image `![…](KEY)` or link `[…](KEY)` with the
- *    corresponding `pn:img/UUID` or `pn:file/UUID` URI.
+ * 1. Returns the notes with every blob key inside a markdown image
+ *    `![...](KEY)` or link `[...](KEY)` swapped for the matching
+ *    `pn:img/UUID` or `pn:file/UUID` URI.
+ * 2. Stores each blob a rewritten body names in imageCache/imageDedup
+ *    (images) or attachmentCache/attachmentDedup (non-images) with
+ *    pendingUpload=1. A blob no body names is never stored or uploaded.
+ *
+ * RUNS BEFORE THE NOTES ARE WRITTEN, and that ordering is load-bearing. A
+ * note row must never exist holding a placeholder key, because sync reads
+ * the row the moment it is written: it takes a snapshot of every unsent
+ * row, sends the bodies in that snapshot, and then clears the unsent flag
+ * on any row whose `updatedAt` still matches. A body swapped after that
+ * snapshot moves no timestamp, so the guard cannot see it, the row is
+ * marked sent, and the placeholder is what every other device receives.
+ * The picture bytes upload with nothing pointing at them, and the orphan
+ * reclaimer deletes them a day later.
  *
  * Blob map keys are opaque strings that must appear literally in the
  * markdown bodies produced by the importer's parse step. Examples:
@@ -135,114 +150,163 @@ export function isBlobReferenced(key: string, text: string): boolean {
  *   - Google Keep: `"keepimg:photo.jpg"`
  *   - Samsung Notes: `"samsungimg:rId2"`
  *
- * Returns counts of images and attachments imported.
+ * Returns the rewritten notes plus counts of images and attachments stored.
  */
 export async function importBlobs(
-  blobs: Map<string, { data: Uint8Array; mime: string; name: string }>,
-  noteIds: string[],
+  blobs: Map<string, ImportBlob>,
+  notes: ImportedNote[],
   onProgress?: (msg: string) => void,
-): Promise<{ images: number; attachments: number }> {
+): Promise<{ images: number; attachments: number; notes: ImportedNote[] }> {
   const now = new Date().toISOString();
-  let imgCount = 0;
-  let attCount = 0;
 
-  // Store each blob and build key -> pn: URI mapping.
+  // Build the key -> pn: URI mapping first and store nothing yet: a blob is
+  // stored only once a rewritten body names it (see the end of this
+  // function). New blobs wait here, keyed by uuid; `newByHash` lets
+  // identical bytes under two keys share one uuid within this import.
   const keyToUri = new Map<string, string>();
+  const fresh = new Map<
+    string,
+    { hash: string; data: Uint8Array; image: boolean; meta: AttachmentMeta }
+  >();
+  const newByHash = new Map<string, string>();
+  // The stored bytes per URI: a contact records its photo's size in its body.
+  const uriToBytes = new Map<string, number>();
   const entries = [...blobs.entries()];
+  const imageOptions = currentImageOptions();
 
   for (let i = 0; i < entries.length; i++) {
-    const [key, { data, mime, name }] = entries[i]!;
-    const hash = await sha256hex(data);
-    const uuid = crypto.randomUUID();
+    const [key, blob] = entries[i]!;
+    const { mime, name } = blob;
+    let data = blob.data;
     const isImage = mime.startsWith('image/');
-
-    if (isImage) {
-      const existing = await db.imageDedup.get(hash);
-      if (existing) {
-        keyToUri.set(key, `pn:img/${existing.uuid}`);
-      } else {
-        await db.imageCache.put({ id: uuid, data, cachedAt: now });
-        await db.imageDedup.put({ hash, uuid, encryptedSize: 0, pendingUpload: 1 });
-        keyToUri.set(key, `pn:img/${uuid}`);
-      }
-      imgCount++;
-    } else {
-      const existing = await db.attachmentDedup.get(hash);
-      if (existing) {
-        keyToUri.set(key, `pn:file/${existing.uuid}`);
-      } else {
-        const meta: AttachmentMeta = { name, mime, size: data.length };
-        await db.attachmentCache.put({ id: uuid, meta, data, cachedAt: now });
-        await db.attachmentDedup.put({ hash, uuid, encryptedSize: 0, pendingUpload: 1 });
-        keyToUri.set(key, `pn:file/${uuid}`);
-      }
-      attCount++;
+    // Every importer's pictures obey the image switches here, in one place.
+    // A picture the module cannot read is stored as it arrived.
+    if (isImage && !blob.processed) {
+      const opts = blob.ceiling === 'contact' ? contactPhotoOptions() : imageOptions;
+      const result = await processImage(new File([data as BlobPart], name, { type: mime }), opts);
+      if (result.ok) data = result.image.data;
     }
+    const hash = await sha256hex(data);
+    const existing = isImage
+      ? await db.imageDedup.get(hash)
+      : await db.attachmentDedup.get(hash);
+    let uuid = existing?.uuid ?? newByHash.get(hash);
+    if (!uuid) {
+      uuid = crypto.randomUUID();
+      newByHash.set(hash, uuid);
+      fresh.set(uuid, { hash, data, image: isImage, meta: { name, mime, size: data.length } });
+    }
+    keyToUri.set(key, `${isImage ? 'pn:img' : 'pn:file'}/${uuid}`);
+    // Same hash, same bytes: the length holds for a deduplicated picture too.
+    if (isImage) uriToBytes.set(keyToUri.get(key)!, data.length);
 
-    if ((i + 1) % 10 === 0) {
+    // A processed picture is a decode per blob, so the line follows every
+    // image rather than every tenth entry.
+    if (isImage || (i + 1) % 10 === 0) {
       onProgress?.(`Importing attachments... ${i + 1} of ${entries.length}`);
     }
   }
 
-  // Rewrite note bodies: replace blob keys with pn: URIs.
-  if (keyToUri.size > 0 && noteIds.length > 0) {
-    onProgress?.('Updating image references...');
-    await db.transaction('rw', db.notes, async () => {
-      for (const noteId of noteIds) {
-        const note = await db.notes.get(noteId);
-        if (!note) continue;
-
-        let body = note.body;
-        let changed = false;
-
-        for (const [key, uri] of keyToUri) {
-          const isImage = uri.startsWith('pn:img/');
-
-          const candidates = blobKeyCandidates(key);
-
-          if (isImage) {
-            // Images: pn:img/<uuid> carries only the uuid, so a literal swap
-            // of the key inside ![alt](key) preserves the alt text. Covers
-            // keepimg: style placeholders and any scheme where the key
-            // appears literally.
-            if (body.includes(key)) {
-              body = body.split(key).join(uri);
-              changed = true;
-              continue;
-            }
-            for (const search of candidates) {
-              const replaced = body.replace(blobRefPattern(search, true), `![$1](${uri})`);
-              if (replaced !== body) { body = replaced; changed = true; }
-            }
-            continue;
-          }
-
-          // Attachments: the editor recovers filename, size, and MIME from
-          // the link TEXT as `name|size|mime` (see EncryptedAttachment
-          // parseHTML). Rebuild the full link from the blob's real metadata
-          // so imported audio/files keep their extension, MIME, and play
-          // back. The source link text (e.g. Apple's "New Recording") is
-          // discarded in favour of the real attachment name.
-          const blob = blobs.get(key);
-          const linkText = blob
-            ? `${blob.name}|${formatFileSize(blob.data.length)}|${blob.mime}`
-            : 'Attachment||';
-          const replacement = `[${linkText}](${uri})`;
-          for (const search of candidates) {
-            // `keepAlt: false` tolerates a leading `!` so a mislabelled
-            // ![text](path) audio ref still becomes a clean attachment link,
-            // not a broken image.
-            const replaced = body.replace(blobRefPattern(search, false), replacement);
-            if (replaced !== body) { body = replaced; changed = true; }
-          }
-        }
-
-        if (changed) {
-          await db.notes.update(noteId, { body, dirty: 1 });
-        }
-      }
-    });
+  if (keyToUri.size === 0) {
+    return { images: 0, attachments: 0, notes };
   }
 
-  return { images: imgCount, attachments: attCount };
+  onProgress?.('Updating image references...');
+  const rewritten = notes.map((note) => {
+    const body = rewriteBlobRefs(note.body, keyToUri, blobs);
+    if (body === null) return note;
+    // A contact records its photo's stored size beside the reference.
+    return {
+      ...note,
+      body:
+        note.type === 'contact'
+          ? withContactPhotoBytes(body, (uri) => uriToBytes.get(uri))
+          : body,
+    };
+  });
+
+  // Store only the blobs a rewritten body names. An importer picks its blobs
+  // from the source markup, and its conversion can still drop a reference
+  // (UpNote flattens media inside a table cell to text). A blob stored with
+  // no note naming it uploads anyway, and no delete ever queues it, so it
+  // counts against the account's storage after every note is gone.
+  const named = new Set<string>();
+  for (const note of rewritten) {
+    for (const m of note.body.matchAll(/pn:(?:img|file)\/([0-9a-f-]{36})/g)) named.add(m[1]!);
+  }
+  for (const [uuid, blob] of fresh) {
+    if (!named.has(uuid)) continue;
+    if (blob.image) {
+      await db.imageCache.put({ id: uuid, data: blob.data, cachedAt: now });
+      await db.imageDedup.put({ hash: blob.hash, uuid, encryptedSize: 0, pendingUpload: 1 });
+    } else {
+      await db.attachmentCache.put({ id: uuid, meta: blob.meta, data: blob.data, cachedAt: now });
+      await db.attachmentDedup.put({ hash: blob.hash, uuid, encryptedSize: 0, pendingUpload: 1 });
+    }
+  }
+
+  let images = 0;
+  let attachments = 0;
+  for (const uri of keyToUri.values()) {
+    if (!named.has(uri.slice(uri.indexOf('/') + 1))) continue;
+    if (uri.startsWith('pn:img/')) images++;
+    else attachments++;
+  }
+  return { images, attachments, notes: rewritten };
+}
+
+/**
+ * Swap every stored blob key inside `body` for the `pn:` URI it landed
+ * under. Returns null when the body names none of them, so the caller can
+ * keep the note object it already has.
+ */
+function rewriteBlobRefs(
+  body: string,
+  keyToUri: Map<string, string>,
+  blobs: Map<string, ImportBlob>,
+): string | null {
+  let out = body;
+  let changed = false;
+
+  for (const [key, uri] of keyToUri) {
+    const isImage = uri.startsWith('pn:img/');
+    const candidates = blobKeyCandidates(key);
+
+    if (isImage) {
+      // Images: pn:img/<uuid> carries only the uuid, so a literal swap of
+      // the key inside ![alt](key) preserves the alt text. Covers keepimg:
+      // style placeholders and any scheme where the key appears literally.
+      if (out.includes(key)) {
+        out = out.split(key).join(uri);
+        changed = true;
+        continue;
+      }
+      for (const search of candidates) {
+        const replaced = out.replace(blobRefPattern(search, true), `![$1](${uri})`);
+        if (replaced !== out) { out = replaced; changed = true; }
+      }
+      continue;
+    }
+
+    // Attachments: the editor recovers filename, size, and MIME from the
+    // link TEXT as `name|size|mime` (see EncryptedAttachment parseHTML).
+    // Rebuild the full link from the blob's real metadata so imported
+    // audio/files keep their extension, MIME, and play back. The source
+    // link text (e.g. Apple's "New Recording") is discarded in favour of
+    // the real attachment name.
+    const blob = blobs.get(key);
+    const linkText = blob
+      ? `${blob.name}|${formatFileSize(blob.data.length)}|${blob.mime}`
+      : 'Attachment||';
+    const replacement = `[${linkText}](${uri})`;
+    for (const search of candidates) {
+      // `keepAlt: false` tolerates a leading `!` so a mislabelled
+      // ![text](path) audio ref still becomes a clean attachment link, not
+      // a broken image.
+      const replaced = out.replace(blobRefPattern(search, false), replacement);
+      if (replaced !== out) { out = replaced; changed = true; }
+    }
+  }
+
+  return changed ? out : null;
 }

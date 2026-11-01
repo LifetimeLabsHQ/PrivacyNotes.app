@@ -1,14 +1,16 @@
 {
   "placeholder": "Start writing…",
+  "eventPlaceholder": "Add an agenda, an address or notes…",
   "toolbar": {
     "bold": "Bold",
+    "hideKeyboard": "Hide keyboard",
     "italic": "Italic",
     "underline": "Underline",
     "heading": "Heading",
     "taskList": "Task list",
     "bulletList": "Bullet list",
-    "linkMenu": "Link",
-    "noteLinkMenu": "Note link",
+    "addLink": "Add link",
+    "noteLink": "Link to another note (or type [[)",
     "numberedList": "Numbered list",
     "textColor": "Text color",
     "textColorApply": "Text color: {{color}}",
@@ -33,7 +35,14 @@
     "math": "Math formula",
     "blockMath": "Block formula",
     "align": "Alignment",
-    "font": "Font"
+    "font": "Font",
+    "pictureFromFiles": "Picture from Files",
+    "date": "Date",
+    "dateTime": "Date and time",
+    "footnote": "Footnote",
+    "spoiler": "Spoiler",
+    "copyBox": "Copy box",
+    "customize": "Customize toolbar"
   },
   "align": {
     "left": "Align left",
@@ -61,6 +70,8 @@
   "callout": {
     "pickerLabel": "Insert callout",
     "remove": "Remove callout",
+    "collapse": "Collapse callout",
+    "expand": "Expand callout",
     "types": {
       "info": "Info",
       "success": "Success",
@@ -73,7 +84,24 @@
       "bug": "Bug",
       "note": "Note",
       "abstract": "Abstract",
-      "failure": "Failure"
+      "failure": "Failure",
+      "fold": "Fold",
+      "idea": "Idea",
+      "important": "Important",
+      "caution": "Caution",
+      "todo": "To-do",
+      "goal": "Goal",
+      "decision": "Decision",
+      "definition": "Definition",
+      "seealso": "See also",
+      "box": "Box",
+      "panel": "Panel",
+      "update": "Update",
+      "time": "Time",
+      "steps": "Steps",
+      "place": "Place",
+      "kanban": "Kanban board",
+      "column": "Column"
     }
   },
   "color": {
@@ -92,6 +120,7 @@
     }
   },
   "insertGroup": {
+    "format": "Formatting",
     "insert": "Insert",
     "blocks": "Blocks",
     "notation": "Notation"
@@ -101,19 +130,60 @@
     "addRowBelow": "Add row below",
     "addColumnLeft": "Add column left",
     "addColumnRight": "Add column right",
+    "toggleHeaderRow": "Toggle header row",
+    "equalColumnWidths": "Make columns equal",
+    "resizeHint": "Hold {{shift}} to change only this column, {{alt}} for finer steps",
     "deleteRow": "Delete row",
     "deleteColumn": "Delete column",
-    "deleteTable": "Delete table"
+    "deleteTable": "Delete table",
+    "insertFormula": "Insert formula",
+    "formulaNoMatch": "No formula matches",
+    "formula": {
+      "SUM": "Add up values",
+      "PRODUCT": "Multiply values",
+      "AVG": "Average of values",
+      "AVERAGE": "Average of values",
+      "MEDIAN": "Middle value",
+      "MIN": "Smallest value",
+      "MAX": "Largest value",
+      "COUNT": "How many numbers",
+      "ABS": "Value without its sign",
+      "SQRT": "Square root",
+      "SIGN": "Whether a value is positive or negative",
+      "CEIL": "Round up to a whole number",
+      "FLOOR": "Round down to a whole number",
+      "ROUND": "Round to a whole number",
+      "LOG": "Logarithm",
+      "RAND": "A random number",
+      "PI": "The constant pi",
+      "E": "Euler's number",
+      "TAU": "The constant tau",
+      "PHI": "The golden ratio"
+    }
   },
   "find": {
     "placeholder": "Find in note",
     "label": "Find in note",
-    "previous": "Previous match (Shift+Enter)",
-    "previousTitle": "Previous (Shift+Enter)",
-    "next": "Next match (Enter)",
-    "nextTitle": "Next (Enter)",
+    "previous": "Previous match",
+    "previousTitle": "Previous",
+    "next": "Next match",
+    "nextTitle": "Next",
     "close": "Close find",
-    "closeTitle": "Close (⌘F)"
+    "closeTitle": "Close",
+    "replacePlaceholder": "Replace with",
+    "replaceLabel": "Replace with",
+    "replace": "Replace",
+    "replaceTitle": "Replace this match",
+    "replaceAll": "All",
+    "replaceAllTitle": "Replace every match",
+    "caseSensitive": "Match case",
+    "caseSensitiveTitle": "Match case",
+    "closeReplace": "Close find and replace",
+    "closeReplaceTitle": "Close",
+    "showReplace": "Find and replace",
+    "hideReplace": "Hide replace",
+    "replacedCount_one": "{{count}} replaced",
+    "replacedCount_other": "{{count}} replaced"
   },
   "outline": {
     "show": "Show outline",
@@ -121,10 +191,23 @@
     "title": "Outline",
     "ariaLabel": "Note outline",
     "hide": "Hide outline",
-    "hideTitle": "Hide outline (Esc)"
+    "copyHeadingLink": "Copy link to heading",
+    "copyNoteLink": "Copy note-link",
+    "copyHeadingShortcut": "Copy shortcut to heading",
+    "copied": "Copied"
+  },
+  "bodyMenu": {
+    "cut": "Cut",
+    "copyAsPlain": "Copy as plain text",
+    "copyAsMarkdown": "Copy as Markdown",
+    "sortAsc": "Sort lines A to Z",
+    "sortDesc": "Sort lines Z to A"
   },
   "topRow": {
     "add": "Add a line at the top"
+  },
+  "addLine": {
+    "add": "Add a line"
   },
   "link": {
     "popoverLabel": "Add link",
@@ -139,8 +222,11 @@
     "textLabel": "Link text",
     "textPlaceholder": "Optional, leave blank to show URL",
     "selectedTextHint": "Selected text will be used as the link",
-    "editTextHint": "Edit the link text in the editor",
-    "update": "Update"
+    "update": "Update",
+    "menuOpen": "Open link",
+    "menuCopy": "Copy link",
+    "menuEdit": "Edit link",
+    "menuRemove": "Remove link"
   },
   "audio": {
     "uploadingRecording": "Uploading recording...",
@@ -157,18 +243,125 @@
     "words_other": "{{formatted}} words",
     "characters_one": "{{formatted}} character",
     "characters_other": "{{formatted}} characters",
-    "tooLargeToSync": ", may be too large to sync, split into a new note",
+    "tasksChecked_one": "{{done}} of {{formatted}} checked",
+    "tasksChecked_other": "{{done}} of {{formatted}} checked",
+    "syncLimit": " · {{share}} of the 1 MB sync limit",
+    "overSyncLimit": " · over the 1 MB sync limit, stays on this device",
+    "split": "Split note",
     "veryLong": ", very long, may be slow to edit and stutter",
     "gettingLong": ", getting long, may lag on slower devices",
     "largeTableWarning": "Large table ({{rows}} rows) can make this note slow to edit, consider splitting it"
   },
   "noteLinkSuggestion": {
     "noMatches": "No matching notes",
-    "create": "Create \"{{query}}\""
+    "create": "Create \"{{query}}\"",
+    "headingsIn": "Headings in {{title}}",
+    "noHeadingMatches": "No matching headings"
+  },
+  "copyBox": {
+    "placeholder": "Text to copy with one click"
+  },
+  "inlineCode": {
+    "copyHint": "{{key}}-click to copy",
+    "copied": "Copied"
   },
   "codeBlock": {
     "copy": "Copy",
     "copied": "Copied",
-    "copyFailed": "Failed"
+    "copyFailed": "Failed",
+    "wrap": "Wrap long lines",
+    "showAll_one": "Show all {{count}} line",
+    "showAll_other": "Show all {{count}} lines",
+    "showLess": "Show less",
+    "plainText": "Plain text",
+    "language": "Code language: {{name}}",
+    "searchLanguages": "Search languages",
+    "placeholder": "Type or paste code. For colors, pick a language above."
+  },
+  "math": {
+    "sourceLabel": "LaTeX source"
+  },
+  "noteLink": {
+    "open": "Open note",
+    "remove": "Remove link",
+    "linkHeading": "Link to a heading...",
+    "headingNotFound": "Heading not found",
+    "headingsLocked": "Unlock this note to see its headings",
+    "noHeadings": "This note has no headings"
+  },
+  "footnote": {
+    "placeholder": "Footnote text",
+    "back": "Back to the text",
+    "unused": "Not used in the text",
+    "remove": "Remove footnote",
+    "missing": "No footnote text. Click to add it.",
+    "ariaRef": "Footnote {{n}}",
+    "ariaSection": "Footnotes"
+  },
+  "formatBar": {
+    "tryIt": "Try it: arrange the bar here and see how it feels.",
+    "previewOnly": "Preview only. Your layout is saved the moment you have Pro.",
+    "discard": "Discard",
+    "keepLayout": "Keep this layout",
+    "hintDrag": "Drag to move, click for options.",
+    "hintTap": "Tap a button for its options.",
+    "onBar": "On the bar",
+    "inMenu": "In the + menu",
+    "inAttachMenu": "In the attach menu",
+    "attachMenuEmpty": "Empty, so the attach button is not shown.",
+    "menuEmpty": "The menu is empty, so the + button is not shown.",
+    "hidden": "Hidden",
+    "hiddenNote": "They still work by shortcut and Markdown.",
+    "hiddenDrop": "Drop a button here to hide it.",
+    "arrangeTitle": "Buttons",
+    "markdownViewNote": "The Markdown view keeps its own fixed set of buttons.",
+    "hiddenEmpty": "Nothing is hidden.",
+    "alwaysVisible": "Always visible",
+    "pinned": "Opens a panel, so it stays on the bar or is hidden",
+    "optionsFor": "Options for {{item}}",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "moveLeft": "Move left",
+    "moveRight": "Move right",
+    "home": {
+      "bar": "On the bar",
+      "menu": "In the + menu",
+      "attachMenu": "In the attach menu",
+      "hidden": "Hidden"
+    },
+    "opensPanel": "opens a panel",
+    "showsRecording": "shows the recording",
+    "refuse": {
+      "menuNotAllowed": "{{item}} can be on the bar or hidden, not in the + menu.",
+      "attachNotAllowed": "Only the picture, file and recording buttons fit in the attach menu.",
+      "lastOnBar": "Keep at least one button on the bar."
+    },
+    "items": {
+      "link": "Link",
+      "notelink": "Note-link",
+      "audio": "Recording",
+      "attachMenu": "Attach",
+      "separator": "Separator",
+      "markdownView": "Show markdown"
+    },
+    "positionTitle": "Bar position",
+    "positionNote": "Choose where the toolbar sits in the editor.",
+    "positionTop": "Top",
+    "positionBottom": "Bottom"
+  },
+  "kanban": {
+    "todo": "To do",
+    "inProgress": "In progress",
+    "review": "Review",
+    "done": "Done",
+    "color": "Color",
+    "columns": "Columns",
+    "columnCount_one": "{{count}} column",
+    "columnCount_other": "{{count}} columns",
+    "cardCount_one": "{{count}} card",
+    "cardCount_other": "{{count}} cards",
+    "addColumn": "Add column",
+    "removeBoard": "Remove board",
+    "moveTo": "Move to"
   }
 }

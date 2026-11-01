@@ -13,7 +13,7 @@
  *     code has something to show, and a demo credit card. These are JSON
  *     bodies rather than markdown, so a `.md` file is the wrong shape.
  *   - the hand-maintained bookmark rows
- *   - the demo folder tree a seed file can file itself into by name, and
+ *   - the starter folder tree a seed file files itself into by name, and
  *     the extra tracker pills the demo switches on to show that data off
  *
  * Tracker VALUES moved into the markdown frontmatter on 2026-08-26, so a
@@ -35,14 +35,20 @@ import { db, type LocalNote } from './db';
 import type {
   BuiltinTrackerId,
   JournalTrackerData,
+  FactorDef,
   MedicationTemplate,
 } from './trackerTypes';
 import { isDemoMode } from './demo';
-import { toLocalIso } from './notesViewUtils';
+import i18n from './i18n';
+import { TASK_LIST_EMPTY_BODY, toLocalIso } from './notesViewUtils';
 import { loadLocalSettings, saveLocalSettings } from './userSettings';
-import type { FolderDef } from './folders';
+import type { SignInStamp } from './liveSignIn';
+import { SEED_FOLDER_IDS, type FolderDef } from './folders';
+import { folderLookKey, seedIcons, tagLookKey } from './itemStyles';
 import { buildLinkBody } from './linkBody';
-import { loadSeeds, type SeedDoc } from './seeds';
+import { buildContactBody, emptyContact } from './contactBody';
+import { setRootSpace } from './spaces';
+import { loadSeeds, seedDayIso, type SeedDoc } from './seeds';
 
 /* ── Vault seed items ─────────────────────────────────────────── */
 
@@ -65,7 +71,11 @@ const TOTP_LOGIN_NOTE_BODY = JSON.stringify({
   notes: 'Example login with a 2FA code. Edit or delete anytime.',
 });
 
-const CARD_NOTE_TITLE = 'Visa ending 4242';
+// Matches what deriveCardTitle() in CardForm.tsx produces for the number
+// below, down to the wording. A hand-written title drifts from the card it
+// describes and the seed then contradicts itself on screen: this one claimed
+// a card ending 4242 while the vault entry beside it read 0366.
+const CARD_NOTE_TITLE = 'Visa ending in 0366';
 
 const CARD_NOTE_BODY = JSON.stringify({
   cardholderName: 'John Doe',
@@ -86,9 +96,28 @@ export const SEED_MEDICATION: MedicationTemplate = {
   name: 'Multivitamin',
   dosage: '1 tablet',
   timing: 'morning',
-  startedAt: new Date().toISOString().slice(0, 10),
+  startedAt: toLocalIso(new Date()),
   dosageHistory: [],
 };
+
+/** The starter factors a fresh vault holds as its own list. The other
+ *  starter names stay suggestions in the Factors tab of the tracker setup. */
+const SEED_FACTOR_KEYS = ['work', 'family', 'travel', 'holiday', 'deadline', 'sick', 'period', 'badWeather'] as const;
+
+/**
+ * The list with the seed factors in it, named in the active language. Only an
+ * untouched list takes them: a removed seed leaves a tombstone, so it never
+ * comes back. Fixed ids, so two devices that both seed merge into one list.
+ */
+export function withSeedFactors(list: readonly FactorDef[] | undefined): FactorDef[] {
+  if (list && list.length > 0) return [...list];
+  const now = new Date().toISOString();
+  return SEED_FACTOR_KEYS.map((key, i) => ({
+    id: `00000000-0000-4000-b100-${String(i + 1).padStart(12, '0')}`,
+    name: i18n.t(`trackers:factors.starter.${key}`),
+    createdAt: now,
+  }));
+}
 
 /**
  * Build a deterministic UUID from the pubkey and a 4-char hex sentinel.
@@ -123,6 +152,7 @@ async function seedNote(
     tags,
     createdAt: now,
     updatedAt: now,
+    editedAt: now,
     dirty: 1,
     deleted: 0,
     trashed: 0,
@@ -138,54 +168,20 @@ async function seedNote(
 }
 
 /**
- * The most recent Friday, Saturday and Sunday, as local ISO dates.
- *
- * The three journal seeds describe one weekend, so they have to LAND on a
- * weekend or the story reads wrong in the calendar. Today counts when today
- * is a Sunday; otherwise this steps back to the Sunday just gone.
- */
-function lastWeekendIso(): { fri: string; sat: string; sun: string } {
-  const today = new Date();
-  const sun = new Date(today);
-  sun.setDate(today.getDate() - today.getDay());
-  const sat = new Date(sun);
-  sat.setDate(sun.getDate() - 1);
-  const fri = new Date(sun);
-  fri.setDate(sun.getDate() - 2);
-  return { fri: toLocalIso(fri), sat: toLocalIso(sat), sun: toLocalIso(sun) };
-}
-
-/**
- * Stamp the entry's `journalDate` onto its tracker values.
- *
- * The VALUES live in the markdown frontmatter, alongside everything else
- * about the note - only the date is computed, because a fixed one would age:
- * a seeded weekend has to be a RECENT weekend or the calendar reads wrong.
- * Without an explicit date all three entries land on the day they were
- * seeded, and the stats collapse them into one tracked day.
+ * The tracker values a seed is born with: the ones in its frontmatter, plus
+ * its `journalDate` when it names a day. The VALUES live in the markdown
+ * beside everything else about the note; only the date is computed, because
+ * a fixed one would age. Without an explicit date the three journal entries
+ * land on the day they were seeded, and the stats collapse them into one
+ * tracked day.
  */
 function seedTrackers(doc: SeedDoc): JournalTrackerData | undefined {
-  if (!doc.trackers) return undefined;
-  const trackers = doc.trackers as JournalTrackerData;
-  const date = journalDayIso(doc);
-  return date ? { ...trackers, journalDate: date } : trackers;
-}
-
-/**
- * The local ISO date a journal seed belongs to, or null when it is not a
- * journal seed.
- *
- * Frontmatter spells the day out; keep that mapping explicit rather than
- * slicing three letters off, so an unknown value falls through to "no date"
- * instead of silently producing one.
- */
-function journalDayIso(doc: SeedDoc): string | null {
-  if (!doc.journalDay) return null;
-  const weekend = lastWeekendIso();
-  return doc.journalDay === 'friday' ? weekend.fri
-    : doc.journalDay === 'saturday' ? weekend.sat
-    : doc.journalDay === 'sunday' ? weekend.sun
-    : null;
+  const date = seedDayIso(doc.journalDay);
+  const end = seedDayIso(doc.journalDayEnd);
+  if (!doc.trackers && !date) return undefined;
+  const trackers = (doc.trackers ?? {}) as JournalTrackerData;
+  if (!date) return trackers;
+  return { ...trackers, journalDate: date, ...(end && end > date && doc.type !== 'journal' ? { dateEnd: end } : {}) } as JournalTrackerData;
 }
 
 /**
@@ -195,10 +191,11 @@ function journalDayIso(doc: SeedDoc): string | null {
  */
 async function seedDoc(pubkey: string, doc: SeedDoc, timestamp: string): Promise<void> {
   // A journal seed is stamped 21:00 on the evening it describes, not on the
-  // moment the vault was seeded. All three carried the seeding time before
-  // this, so the list showed one identical "Modified" date on every entry,
-  // which reads as three copies of one note rather than as a weekend.
-  const day = journalDayIso(doc);
+  // moment the vault was seeded, so the list does not show one identical
+  // "Modified" date on every entry, which reads as three copies of one note
+  // rather than as a weekend. A dated note or task list keeps the seeding
+  // time: its day is a plan, and 21:00 today would lie in the future.
+  const day = doc.type === 'journal' ? seedDayIso(doc.journalDay) : null;
   await seedNote(
     seedId(pubkey, doc.id),
     doc.title,
@@ -208,16 +205,16 @@ async function seedDoc(pubkey: string, doc: SeedDoc, timestamp: string): Promise
     day ? new Date(`${day}T21:00:00`).toISOString() : timestamp,
     seedTrackers(doc),
     doc.type,
-    // Folders are Pro and real vaults start with an empty tree on purpose,
-    // so a `folder:` in frontmatter only files the note in the demo.
-    isDemoMode() && doc.folder ? (DEMO_FOLDERS[doc.folder]?.id ?? null) : null,
+    // A `folder:` in frontmatter files the note in every vault. Browsing
+    // the tree is free; the Pro gate sits on each folder ACTION.
+    doc.folder ? (SEED_FOLDERS[doc.folder]?.id ?? null) : null,
   );
 }
 
 /* ── Bookmark seeds - the rows from the mockup, so the pillar is never
  * empty on first sight. Hand-maintained: edit the list below to change
  * what a new vault links to. Same idempotent seedNote path; bodies use
- * the canonical link-body JSON. Spec: ops/docs/plans/bookmarks-pillar.md */
+ * the canonical link-body JSON. Spec: ops/docs/archive/bookmarks-pillar.md */
 const BOOKMARK_SEEDS: { sentinel: string; title: string; url: string; tags: string[] }[] = [
   { sentinel: '10b1', title: 'Like on AlternativeTo.net', url: 'https://alternativeto.net/software/privacynotes/about/', tags: ['rating'] },
   { sentinel: '10b2', title: 'Rate on PrivacyTools.io', url: 'https://privacytools.io/app/privacynotes', tags: ['privacy', 'rating'] },
@@ -227,10 +224,8 @@ const BOOKMARK_SEEDS: { sentinel: string; title: string; url: string; tags: stri
 ];
 
 async function seedBookmarkNotes(pubkey: string, baseTs: number): Promise<void> {
-  // Same demo-only folder rule the markdown seeds follow: a real vault starts
-  // with an empty tree because folders are Pro, so this only files them in the
-  // demo. All five sit in PrivacyNotes, next to Moving in.
-  const folderId = isDemoMode() ? (DEMO_FOLDERS.PrivacyNotes?.id ?? null) : null;
+  // All five sit in PrivacyNotes, next to Moving in.
+  const folderId = SEED_FOLDERS.PrivacyNotes?.id ?? null;
   await Promise.all(
     BOOKMARK_SEEDS.map((b, i) =>
       seedNote(
@@ -243,6 +238,168 @@ async function seedBookmarkNotes(pubkey: string, baseTs: number): Promise<void> 
         undefined,
         'link',
         folderId,
+      ),
+    ),
+  );
+}
+
+/* ── The contact seeds. The first has every field a card can render
+ * filled in, because the pillar's job on first sight is to show what a
+ * contact holds. She is a joke with a point: the company's head of
+ * security has never shown her face. Her birthday falls six days after the
+ * seeding, so the first weeks of the calendar show a birthday.
+ *
+ * Every value is a placeholder or one of our own public links. The photo
+ * is a static asset rather than a stored blob, the way every other seeded
+ * picture is, so it costs no quota and draws on a device that never ran
+ * the seeding. Spec: ops/docs/archive/contacts-pillar.md */
+// Built at seed time, so the translated sentences read in the active language.
+function contactSeeds(): { sentinel: string; title: string; tags: string[]; body: string }[] {
+  return [
+  {
+    sentinel: '10c1',
+    title: 'Kon Kitsune',
+    tags: ['work'],
+    body: buildContactBody({
+      ...emptyContact(),
+      prefix: 'Agent',
+      first: 'Kon',
+      middle: 'Nine',
+      last: 'Kitsune',
+      suffix: 'IX',
+      nickname: 'Nine-Tails',
+      phonetic: { first: 'kon', middle: '', last: 'kit-su-ne' },
+      photo: '/onboarding/kitsune.webp',
+      photoBytes: 18898,
+      org: 'PrivacyNotes',
+      department: i18n.t('shell:contacts.seedDepartment'),
+      jobTitle: i18n.t('shell:contacts.seedJobTitle'),
+      phones: [
+        { label: 'work', value: '+81 3 9999 0009' },
+        { label: 'mobile', value: '+81 90 9999 0009' },
+      ],
+      emails: [{ label: 'work', value: 'kitsune@example.com' }],
+      addresses: [
+        { label: 'work', street: '9 Fox Alley', city: 'Shibuya', region: 'Tokyo', postal: '150-0001', country: 'Japan' },
+        { label: 'home', street: 'Ninth Torii, Inari Shrine', city: 'Shibuya', region: 'Tokyo', postal: '', country: 'Japan' },
+      ],
+      urls: [
+        { label: 'homepage', value: 'https://privacynotes.app/' },
+        { label: 'Issues', value: 'https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues/' },
+      ],
+      // A profile row only offers an Open button when its value parses as
+      // a link, so these hold the whole URL rather than a bare handle.
+      profiles: [
+        { label: 'X', value: 'https://x.com/PrivacyNotesApp' },
+        { label: 'Reddit', value: 'https://www.reddit.com/r/PrivacyNotes/' },
+        { label: 'Mastodon', value: 'https://mastodon.social/@privacynotes' },
+        { label: 'YouTube', value: 'https://www.youtube.com/@PrivacyNotesApp' },
+        { label: 'Facebook', value: 'https://www.facebook.com/PrivacyNotesApp/' },
+      ],
+      dates: [
+        { label: 'birthday', value: birthdaySoon() },
+        { label: 'anniversary', value: '2019-09-09' },
+      ],
+      related: [
+        { label: 'Familiar', value: 'Tofu the Fox' },
+        { label: 'Colleague', value: 'The Night Shift' },
+      ],
+      notes: i18n.t('shell:contacts.seedNote'),
+    }),
+  },
+  ];
+}
+
+/** A birthday six days after today, as a yearless contact date (`--MM-DD`). */
+function birthdaySoon(now = new Date()): string {
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 6, 12);
+  return `--${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+async function seedContactNotes(pubkey: string, baseTs: number): Promise<void> {
+  await Promise.all(
+    contactSeeds().map((c, i) =>
+      seedNote(
+        seedId(pubkey, c.sentinel),
+        c.title,
+        c.body,
+        c.tags,
+        false,
+        new Date(baseTs - i * 100).toISOString(),
+        undefined,
+        'contact',
+        null,
+      ),
+    ),
+  );
+}
+
+/* ── The demo's Work space: one root folder in Work and a repeating event
+ * in it, so the calendar shows a Work item with its briefcase every week
+ * and the space switch has something to switch. Demo only: a real vault
+ * starts with one space. Spec: ops/docs/archive/calendar-pillar-spec.md (step 2) */
+const DEMO_WORK_FOLDER = { id: 'f01de001-0000-4000-8000-000000000007', name: 'Team', nameKey: 'shell:folders.seedTeam', icon: 'briefcase' };
+
+async function seedWorkEvent(pubkey: string, baseTs: number): Promise<void> {
+  const friday = seedDayIso('friday');
+  if (!friday) return;
+  await seedNote(
+    seedId(pubkey, '10e1'),
+    i18n.t('shell:calendar.seedWeeklyReview'),
+    i18n.t('shell:calendar.seedWeeklyReviewBody'),
+    [],
+    false,
+    new Date(baseTs).toISOString(),
+    { journalDate: friday, time: '16:00', timeEnd: '17:00', repeat: { every: 'week', interval: 1 } } as unknown as JournalTrackerData,
+    'event',
+    DEMO_WORK_FOLDER.id,
+  );
+}
+
+/* ── The demo's calendar: a few weeks of everyday items around today, so
+ * each calendar feature has an example to look at: timed and all-day items,
+ * an alert, two items at the same time, a multi-day trip, a night past
+ * midnight, repeats on chosen weekdays, every other week, on a day of the
+ * month and on the Nth weekday, and a dated task list and note. Demo only,
+ * like the Work event. Spec: ops/docs/archive/calendar-pillar-spec.md (step 2) */
+async function seedCalendarDemo(pubkey: string, baseTs: number, now = new Date()): Promise<void> {
+  const at = (n: number) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + n, 12);
+  const day = (n: number) => toLocalIso(at(n));
+  /** The first day from today that is weekday `wd` (0 = Sunday). */
+  const next = (wd: number) => day((wd - now.getDay() + 7) % 7);
+  /** The first day from today that is the `nth` weekday `wd` of its month. */
+  const nthWeekday = (nth: number, wd: number) => {
+    for (let n = 0; n < 70; n++) if (at(n).getDay() === wd && Math.ceil(at(n).getDate() / 7) === nth) return day(n);
+    return day(0);
+  };
+  const firstOfMonth = toLocalIso(new Date(now.getFullYear(), now.getMonth() + (now.getDate() === 1 ? 0 : 1), 1, 12));
+  const items: [sentinel: string, key: string, type: NoteType, folder: string | null, trackers: Record<string, unknown>][] = [
+    ['10e2', 'lunch', 'event', null, { journalDate: day(0), time: '12:30', timeEnd: '13:30' }],
+    ['10e3', 'dentist', 'event', null, { journalDate: day(1), time: '10:30', timeEnd: '11:15', alerts: [{ before: 60 }] }],
+    ['10e4', 'callAna', 'event', null, { journalDate: day(1), time: '11:00', timeEnd: '11:30' }],
+    ['10e5', 'groceries', 'task', null, { journalDate: day(1), time: '18:00' }],
+    ['10e6', 'concert', 'event', null, { journalDate: day(2), time: '20:00', timeEnd: '23:30' }],
+    ['10e7', 'giftIdeas', 'note', null, { journalDate: day(5) }],
+    ['10e8', 'flight', 'event', null, { journalDate: day(7), time: '18:10', timeEnd: '20:35', alerts: [{ before: 120 }] }],
+    ['10e9', 'conference', 'event', null, { journalDate: day(8), dateEnd: day(10) }],
+    ['10ea', 'nightTrain', 'event', null, { journalDate: day(12), time: '22:30', timeEnd: '06:15' }],
+    ['10eb', 'yoga', 'event', null, { journalDate: [next(1), next(3)].sort()[0], time: '07:00', timeEnd: '08:00', repeat: { every: 'week', interval: 1, weekdays: [1, 3] } }],
+    ['10ec', 'sprint', 'event', DEMO_WORK_FOLDER.id, { journalDate: next(1), time: '10:00', timeEnd: '11:00', repeat: { every: 'week', interval: 2 } }],
+    ['10ed', 'bookClub', 'event', null, { journalDate: nthWeekday(2, 4), time: '19:00', timeEnd: '21:00', repeat: { every: 'month', interval: 1, monthly: 'weekday', nth: 2 } }],
+    ['10ee', 'rent', 'event', null, { journalDate: firstOfMonth, repeat: { every: 'month', interval: 1, monthly: 'day' }, alerts: [{ days: 1, at: '09:00' }] }],
+  ];
+  await Promise.all(
+    items.map(([sentinel, key, type, folder, trackers], i) =>
+      seedNote(
+        seedId(pubkey, sentinel),
+        i18n.t(`shell:calendar.seedDemo.${key}`),
+        type === 'task' ? TASK_LIST_EMPTY_BODY : '',
+        [],
+        false,
+        new Date(baseTs - i * 100).toISOString(),
+        trackers as unknown as JournalTrackerData,
+        type,
+        folder,
       ),
     ),
   );
@@ -312,12 +469,16 @@ async function seedCardNote(
  * The seed list is resolved first, because the files decide the note titles
  * and folders as well as the bodies.
  */
-export async function seedOnboardingNotes(pubkey: string): Promise<void> {
+export async function seedOnboardingNotes(
+  pubkey: string,
+  /** The stamp of a sign-in that is not live yet, for its settings write. */
+  since?: SignInStamp,
+): Promise<void> {
   const docs = (await loadSeeds()).filter((d) => !d.demoOnly || isDemoMode());
   const base = Date.now();
 
-  // The demo folder tree has to exist before its notes are filed into it.
-  await seedDemoFolderTree();
+  // The folder tree has to exist before its notes are filed into it.
+  await seedFolderTree(since);
 
   const vaultBase = base - (docs.length + 1) * 1000;
   await Promise.all([
@@ -329,63 +490,106 @@ export async function seedOnboardingNotes(pubkey: string): Promise<void> {
     seedTotpLoginNote(pubkey, new Date(vaultBase - 500).toISOString()),
     seedCardNote(pubkey, new Date(vaultBase - 1000).toISOString()),
     seedBookmarkNotes(pubkey, vaultBase - 1500),
+    seedContactNotes(pubkey, vaultBase - 2500),
+    ...(isDemoMode() ? [seedWorkEvent(pubkey, vaultBase - 3000), seedCalendarDemo(pubkey, vaultBase - 3500)] : []),
   ]);
 }
 
-/* ── Demo folder tree ──────────────────────────────────────────────
- * Folders is Pro and unlocked in the public demo as a teaser (like zen),
- * so demo visitors get a small pre-built tree. Demo only - real fresh
- * accounts start with an empty tree, deliberately: folders are Pro, and
- * a stranger's filing system is a worse first run than an empty tree
- * with a New folder button.
+/* ── Starter folder tree ────────────────────────────────────────────
+ * Every new vault opens on this tree, the same one the public demo shows.
+ * The ids are in `folders.ts`, because the sidebar recognises a starter
+ * folder by id to decide whether a free account may delete it; the names
+ * and the nesting are here, where the seeding happens.
  *
- * The tree files notes the demo already has rather than inventing notes
+ * The tree files notes the vault already has rather than inventing notes
  * to fill it:
  *
- *   PrivacyNotes        Moving in, plus the five seeded bookmarks
+ *   PrivacyNotes        Welcome, Moving in, Bifana, and the five bookmarks
  *     Markdown          Everything markdown can do here
  *     Security          How your notes are protected
  *   Travel              the three Tokyo journal entries
  *
  * Two things it has to show. Every folder has a count, so nothing looks
  * abandoned; and nesting has a reason, PrivacyNotes being the area and
- * Markdown and Security the two subjects inside it. The Welcome note and
- * the recipe stay unfiled on purpose, so the tree is visibly a choice
- * rather than somewhere every note has to go.
+ * Markdown and Security the two subjects inside it.
  *
  * A seed file joins the tree by naming one of these in its `folder:`
- * frontmatter. IDs are fixed and permanent; adding a folder means adding
- * a row here with a fresh id.
- * Spec: ops/specs/folders.md (demo seed)
+ * frontmatter, and `tools/check-seeds.mjs` fails on a name that is not a
+ * key below. Adding a folder means adding a row here and an id there.
+ *
+ * `PrivacyNotes` and `Markdown` are proper nouns and read the same in
+ * every language. The other two are ordinary words, so they carry a
+ * catalog key and seed in the user's own language. The literal `name`
+ * beside it is the English, and the fallback if the key ever goes.
+ * Spec: ops/specs/folders.md (starter tree)
  */
-const DEMO_FOLDER_PRIVACYNOTES = 'f01de001-0000-4000-8000-000000000004';
+interface SeedFolder {
+  id: string;
+  name: string;
+  /** Catalog key, when the name is a word rather than a proper noun. */
+  nameKey?: string;
+  parentId: string | null;
+  order: number;
+  /** Its look icon (looks/lookIcons.ts), a starting point the user can change. */
+  icon: string;
+}
 
-const DEMO_FOLDERS: Record<string, FolderDef> = {
+const SEED_FOLDERS: Record<string, SeedFolder> = {
   PrivacyNotes: {
-    id: DEMO_FOLDER_PRIVACYNOTES,
+    id: SEED_FOLDER_IDS.PrivacyNotes,
     name: 'PrivacyNotes',
     parentId: null,
     order: 0,
+    icon: 'lock',
   },
   Markdown: {
-    id: 'f01de001-0000-4000-8000-000000000005',
+    id: SEED_FOLDER_IDS.Markdown,
     name: 'Markdown',
-    parentId: DEMO_FOLDER_PRIVACYNOTES,
+    parentId: SEED_FOLDER_IDS.PrivacyNotes,
     order: 0,
+    icon: 'pencil',
   },
   Security: {
-    id: 'f01de001-0000-4000-8000-000000000006',
+    id: SEED_FOLDER_IDS.Security,
     name: 'Security',
-    parentId: DEMO_FOLDER_PRIVACYNOTES,
+    nameKey: 'shell:folders.seedSecurity',
+    parentId: SEED_FOLDER_IDS.PrivacyNotes,
     order: 1,
+    icon: 'shield',
   },
   Travel: {
-    id: 'f01de001-0000-4000-8000-000000000001',
+    id: SEED_FOLDER_IDS.Travel,
     name: 'Travel',
+    nameKey: 'shell:folders.seedTravel',
     parentId: null,
     order: 1,
+    icon: 'airplane',
   },
 };
+
+/**
+ * The look icon of each tag the seeds use. Seed tags are the same English
+ * words in every language, so the keys are fixed.
+ * Spec: ops/docs/archive/folder-tag-icons.md (section 6.2)
+ */
+export const SEED_TAG_ICONS: Record<string, string> = {
+  encryption: 'key',
+  privacy: 'fingerprint',
+  recipes: 'cooking-pot',
+  tokyo: 'map-pin',
+  rating: 'star',
+  work: 'briefcase',
+};
+
+/** The tree as the settings blob stores it, named in the user's language. */
+function seedFolderDefs(): FolderDef[] {
+  return Object.values(SEED_FOLDERS).map((f) => ({
+    id: f.id,
+    name: f.nameKey ? i18n.t(f.nameKey) : f.name,
+    parentId: f.parentId,
+    order: f.order,
+  }));
+}
 
 /**
  * Extra tracker pills switched on for the demo only.
@@ -397,6 +601,7 @@ const DEMO_FOLDERS: Record<string, FolderDef> = {
  * Real vaults keep the quieter default.
  */
 const DEMO_EXTRA_TRACKERS: BuiltinTrackerId[] = [
+  'habits',
   'sleepScore',
   'steps',
   'heartRate',
@@ -407,26 +612,53 @@ const DEMO_EXTRA_TRACKERS: BuiltinTrackerId[] = [
 ];
 
 /**
- * Prepare the demo's settings: the folder tree, and the wider pill set.
- * No-op outside the demo. Idempotent, and additive only - a visitor who
- * removes a folder or switches a pill off keeps that choice for the session.
+ * Prepare the vault's settings: the starter folder tree and the icons of
+ * the starter folders and tags for everyone, and the wider pill set in the
+ * demo.
+ *
+ * Additive by id, so a name, an order or a nesting the user changed is
+ * never reset. It does NOT remember a deletion, which is safe only
+ * because seeding runs once per account (the `welcomeNoteSeeded` flag)
+ * and once per fresh demo tab session. Call it a second time inside one
+ * session and a folder the user deleted comes back.
  */
-async function seedDemoFolderTree(): Promise<void> {
-  if (!isDemoMode()) return;
+async function seedFolderTree(since?: SignInStamp): Promise<void> {
   const settings = loadLocalSettings();
   const have = new Set(settings.folders.map((f) => f.id));
-  const missingFolders = Object.values(DEMO_FOLDERS).filter((f) => !have.has(f.id));
+  // A starter folder the user deleted stays deleted. Seeding runs once per
+  // account, so this only matters on a re-seed, and coming back from the
+  // dead is the one thing a deleted folder must never do.
+  const removed = new Set(settings.foldersDeleted.map((d) => d.id));
+  const demoWork: FolderDef[] = isDemoMode()
+    ? [{ id: DEMO_WORK_FOLDER.id, name: i18n.t(DEMO_WORK_FOLDER.nameKey), parentId: null, order: 2 }]
+    : [];
+  const missingFolders = [...seedFolderDefs(), ...demoWork].filter(
+    (f) => !have.has(f.id) && !removed.has(f.id),
+  );
 
   const active = settings.trackerSettings.activeBuiltins;
-  const missingPills = DEMO_EXTRA_TRACKERS.filter((id) => !active.includes(id));
+  const missingPills = isDemoMode()
+    ? DEMO_EXTRA_TRACKERS.filter((id) => !active.includes(id))
+    : [];
 
-  if (missingFolders.length === 0 && missingPills.length === 0) return;
+  // Icons for the starter folders still in the tree and for the seed tags.
+  const icons: Record<string, string> = {};
+  for (const f of Object.values(SEED_FOLDERS)) {
+    if (!removed.has(f.id)) icons[folderLookKey(f.id)] = f.icon;
+  }
+  for (const [tag, icon] of Object.entries(SEED_TAG_ICONS)) icons[tagLookKey(tag)] = icon;
+  if (demoWork.length && !removed.has(DEMO_WORK_FOLDER.id)) icons[folderLookKey(DEMO_WORK_FOLDER.id)] = DEMO_WORK_FOLDER.icon;
+  let itemStyles = seedIcons(settings.itemStyles, icons);
+  if (demoWork.length && !removed.has(DEMO_WORK_FOLDER.id)) itemStyles = setRootSpace(itemStyles, DEMO_WORK_FOLDER.id, 'work');
+
+  if (missingFolders.length === 0 && missingPills.length === 0 && itemStyles === settings.itemStyles) return;
   saveLocalSettings({
     ...settings,
+    itemStyles,
     folders: [...settings.folders, ...missingFolders],
     trackerSettings: {
       ...settings.trackerSettings,
       activeBuiltins: [...active, ...missingPills],
     },
-  });
+  }, since);
 }

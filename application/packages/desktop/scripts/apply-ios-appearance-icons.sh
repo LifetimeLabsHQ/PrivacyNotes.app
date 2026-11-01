@@ -4,15 +4,9 @@
 # single 1024px icon with Light / Dark / Tinted appearance variants, because
 # `tauri icon` only generates the light one.
 #
-# This script USED to also splice CFBundleURLTypes into the generated Info.plist,
-# because the deep-link plugin does not inject it (`plugins.deep-link.mobile` is
-# not translated into a URL scheme on iOS - only the desktop half is, and only by
-# the macOS bundler). That job moved to `src-tauri/Info.ios.plist` on 2026-08-15,
-# which Tauri merges at init. Two reasons for the move: the plist is declarative
-# rather than a string-replace against generated XML that Tauri is free to
-# reformat, and it applies even when someone runs `ios:init` without `ios:icons`.
-# Do not re-add the splice here - a second writer would be invisible until the
-# day the two disagreed.
+# The iOS bundle registers no URL scheme, and this script must never splice
+# CFBundleURLTypes into the generated Info.plist: any app can claim a scheme.
+# Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 13)
 #
 # Run from packages/desktop:
 #   bash scripts/apply-ios-appearance-icons.sh
@@ -42,16 +36,6 @@ cp "$SRC/Contents.json"           "$DEST/"
 echo "Applied Light/Dark/Tinted app icons to:"
 echo "  $DEST"
 
-# The URL scheme comes from src-tauri/Info.ios.plist, which Tauri merges at BUILD
-# time, not at init - so its absence here is expected and this is a note, not a
-# failure. The check that matters runs against the BUILT bundle; see the iOS
-# section of ops/docs/mobile-dev-runbook.md. Without the scheme, OAuth sign-in
-# dead-ends with no error anywhere, so it is worth confirming before you ship.
-PLIST="$(ls "$HERE"/src-tauri/gen/apple/*_iOS/Info.plist 2>/dev/null | head -1)"
-if [ -n "${PLIST:-}" ] && ! grep -q "CFBundleURLTypes" "$PLIST"; then
-  echo "note: CFBundleURLTypes not in the generated plist yet - Info.ios.plist merges at build."
-fi
-
 # Apple's privacy manifest. It MUST sit at the bundle root: dropping the file in
 # the target's source directory does nothing (xcodegen ignores unknown types
 # there), and gen/apple/assets is a folder reference, so anything inside it lands
@@ -60,6 +44,7 @@ fi
 # whenever gen/apple is deleted, hence this block.
 GEN="$HERE/src-tauri/gen/apple"
 cp "$HERE/src-tauri/PrivacyInfo.xcprivacy" "$GEN/PrivacyInfo.xcprivacy"
+SPEC_CHANGED=0
 if ! grep -q "PrivacyInfo.xcprivacy" "$GEN/project.yml"; then
   python3 - "$GEN/project.yml" <<'PYEOF'
 import sys
@@ -72,13 +57,68 @@ if anchor not in s:
              "Tauri changed its template, re-derive the resource entry by hand")
 open(p, "w").write(s.replace(anchor, anchor + add, 1))
 PYEOF
-  # project.yml is only read by xcodegen, and Tauri already ran it during init -
-  # so the edit above is invisible until xcodegen runs again. Do it here rather
-  # than making the caller remember a second init.
-  (cd "$GEN" && xcodegen generate --spec project.yml >/dev/null)
-  echo "Registered PrivacyInfo.xcprivacy as a bundle resource and regenerated the Xcode project."
+  SPEC_CHANGED=1
+  echo "Registered PrivacyInfo.xcprivacy as a bundle resource."
 else
   echo "PrivacyInfo.xcprivacy already registered in project.yml, skipping."
+fi
+
+# The Externals folder holds the Rust library per configuration. Tauri's
+# template lists it as a plain source folder, so xcodegen copies every
+# libapp.a it finds there into the bundle as a resource, and Xcode refuses
+# the build as soon as a debug and a release artifact both exist. A fresh
+# init never sees that, because the wipe empties the folder; every later
+# xcodegen run does. `buildPhase: none` keeps the folder in the navigator
+# and out of every build phase; the library is linked through
+# LIBRARY_SEARCH_PATHS. tests/desktopCapabilities.test.ts pins the line.
+if ! grep -q "buildPhase: none" "$GEN/project.yml"; then
+  python3 - "$GEN/project.yml" <<'PYEOF'
+import sys
+p = sys.argv[1]
+s = open(p).read()
+anchor = "      - path: Externals\n"
+add = "        buildPhase: none\n"
+if anchor not in s:
+    sys.exit("apply-ios-appearance-icons: project.yml Externals entry not found; "
+             "Tauri changed its template, re-derive the entry by hand")
+open(p, "w").write(s.replace(anchor, anchor + add, 1))
+PYEOF
+  SPEC_CHANGED=1
+  echo "Took the Externals folder out of every build phase."
+else
+  echo "Externals already carries buildPhase: none, skipping."
+fi
+
+# The share extension target, and the app's dependency on it, which is what
+# embeds the extension in the app. Tauri's template knows neither, so a fresh
+# init drops both; the sources stay in src-tauri/ios-share, outside gen/.
+# Spec: ops/docs/archive/share-into-app.md
+if ! grep -q "privacynotes_Share:" "$GEN/project.yml"; then
+  python3 - "$GEN/project.yml" "$HERE/src-tauri/ios-share/target.yml" <<'PYEOF'
+import sys
+p, frag = sys.argv[1], sys.argv[2]
+s = open(p).read()
+anchor = "    dependencies:\n      - framework: libapp.a\n"
+# The fragment is appended, so `targets:` must be the last top-level key.
+top = [l for l in s.splitlines() if l and not l[0].isspace()]
+if anchor not in s or not top or top[-1] != "targets:":
+    sys.exit("apply-ios-appearance-icons: project.yml dependencies anchor not found; "
+             "Tauri changed its template, re-derive the share target by hand")
+s = s.replace(anchor, "    dependencies:\n      - target: privacynotes_Share\n      - framework: libapp.a\n", 1)
+open(p, "w").write(s.rstrip("\n") + "\n" + open(frag).read())
+PYEOF
+  SPEC_CHANGED=1
+  echo "Added the share extension target."
+else
+  echo "Share extension target already in project.yml, skipping."
+fi
+
+# project.yml is only read by xcodegen, and Tauri already ran it during init -
+# so an edit above is invisible until xcodegen runs again. Do it here rather
+# than making the caller remember a second init.
+if [ "$SPEC_CHANGED" = 1 ]; then
+  (cd "$GEN" && xcodegen generate --spec project.yml >/dev/null)
+  echo "Regenerated the Xcode project from the patched spec."
 fi
 
 echo "Rebuild with 'pnpm ios:dev' or in Xcode to see the changes."

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LocalNote } from './db';
 import { parseLinkBody, buildLinkBody, normalizeUrl, linkDomain, duplicateBookmarkId } from './linkBody';
@@ -7,14 +7,30 @@ import { useCopyToClipboard } from './clipboard';
 import { openExternal } from './openExternal';
 import { hasPin } from './pin';
 import { PinInfoModal } from './PinInfoModal';
-import { ArrowSquareOut, CaretDown, Check, Copy, Info } from './icons';
+import { CaretDown, Info, NotePencil, NEW_GLYPHS } from './icons';
+import { isImeComposing } from './imeComposing';
+import { Button, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, Spinner } from './ui';
+import { formatInstant } from './intlFormat';
+import { DEMO_APP_URL } from './demo';
+import { withSource } from './campaignSource';
+import type { ClipJob, ClipNotice } from './clipMessages';
+
+/** Save as note on a bookmark: the note it was clipped into, the clip that
+ *  is running, the last message, and the two actions. */
+export interface BookmarkClip {
+  note?: LocalNote;
+  job?: ClipJob;
+  notice?: ClipNotice;
+  onSave: () => void;
+  onOpenNote: () => void;
+}
 
 /**
  * The bookmark column, the vault's `VAULT_COLUMN` one size up: the URL row
  * carries a long value plus the Copy and Open buttons, so it needs more room
  * than the vault's label + value pairs. Wider than 720 and the field trails a
  * lane of empty space to the buttons.
- * Spec: ops/docs/ui-patterns.md (the vault column)
+ * Spec: ops/docs/archive/ui-patterns.md (the vault column)
  */
 const BOOKMARK_COLUMN = 'w-full max-w-[720px]';
 
@@ -31,7 +47,7 @@ const BOOKMARK_COLUMN = 'w-full max-w-[720px]';
  * the stored body. The duplicate half is the same guard the quick-add bar
  * runs, against the same account-wide key map - editing a bookmark onto a
  * URL you already have was the one way past it (fixed 2026-08-26).
- * Spec: ops/docs/plans/bookmarks-pillar.md (standard-header rework)
+ * Spec: ops/docs/archive/bookmarks-pillar.md (standard-header rework)
  */
 export function BookmarkItem({
   note,
@@ -39,6 +55,7 @@ export function BookmarkItem({
   isTrash,
   onBodyChange,
   onPinProtectedChange,
+  clip,
 }: {
   note: LocalNote;
   /** Every saved bookmark URL in the account, keyed by dedupe key -> note id
@@ -48,15 +65,20 @@ export function BookmarkItem({
   isTrash: boolean;
   onBodyChange: (id: string, body: string) => void;
   onPinProtectedChange: (id: string, pinProtected: boolean) => void;
+  /** Absent in the trash: a trashed bookmark is not clipped. */
+  clip?: BookmarkClip;
 }) {
   const { t } = useTranslation('shell');
   const { copy, copied } = useCopyToClipboard();
-  const pinConfigured = useMemo(() => hasPin(), []);
+  // Never memoize this. Settings opens over a mounted form, so a PIN
+  // can appear or vanish while the toggle below is on screen, and
+  // localStorage fires nothing that would refresh a frozen value.
+  const pinConfigured = hasPin();
   const [showPinInfo, setShowPinInfo] = useState(false);
   /** The website-icon explainer under the URL field, collapsed by default. */
   const [iconHintOpen, setIconHintOpen] = useState(false);
   const pinProtected = note.pinProtected === 1;
-  const savedUrl = parseLinkBody(note.body).url;
+  const { url: savedUrl, keyword: savedKeyword, keywordTag: savedKeywordTag } = parseLinkBody(note.body);
   const [draft, setDraft] = useState(savedUrl);
   const [invalid, setInvalid] = useState(false);
   const [duplicate, setDuplicate] = useState(false);
@@ -87,68 +109,108 @@ export function BookmarkItem({
       return;
     }
     setDuplicate(false);
-    onBodyChange(note.id, buildLinkBody(normalized));
+    onBodyChange(note.id, buildLinkBody(normalized, savedKeyword, savedKeywordTag));
   }
 
   return (
-    <div className={`flex-1 p-6 ${BOOKMARK_COLUMN}`}>
+    <div className={`@container flex-1 p-6 ${BOOKMARK_COLUMN}`}>
       {/* The pane holds one field, so the label carries it as a heading
           rather than the form-label 12px it used to wear. Two steps under
           `pn-note-title` above it - H3 to the title's H1 - because at H2 a
           one-field pane read as two titles competing (reported 2026-08-25). */}
-      <label className="block text-base lg:text-lg font-semibold tracking-tight text-neutral-800 dark:text-neutral-100 mb-3">
+      <label className="block text-base lg:text-lg font-semibold tracking-tight text-pn mb-3">
         {t('bookmarks.urlLabel')}
       </label>
-      <div className="flex items-center gap-1.5">
-        {/* The row chip, in the editor. It is the SAME `SiteChip` the list
-            row draws, so an item looks like itself on both sides of a click,
-            and it is fixed-size in every state (favicon, loading, globe
-            fallback) - the field can never jump when an icon resolves. The
-            domain comes from the SAVED url, so a half-typed value fetches
-            nothing; the icon appears when the edit commits. */}
-        <SiteChip
-          domain={linkDomain(savedUrl)}
-          tall
-          trashTint={isTrash}
-          fallback={isTrash ? 'bookmark' : 'globe'}
-        />
-        <input
-          value={draft}
-          onChange={(e) => { setDraft(e.target.value); setInvalid(false); setDuplicate(false); }}
-          onBlur={() => commit(draft)}
-          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commit(draft); } }}
-          readOnly={isTrash || note.locked === 1}
-          dir="ltr"
-          enterKeyHint="done"
-          className={`w-full rounded-md bg-surface-1 border px-3 py-2 text-sm focus:outline-none focus:border-accent ${invalid ? 'border-red-500' : duplicate ? 'border-amber-500' : 'border-divider'}`}
-        />
-        <button
-          type="button"
+      {/* One row while the pane holds it. Under 30rem the field would be
+          squeezed to a sliver beside two buttons (a phone left it about
+          115px), so the field takes its own line and the buttons share the
+          next one. A container query, because the pane is a column the user
+          drags and a viewport breakpoint cannot see it.
+          Spec: ops/docs/archive/ui-patterns.md (section 77) */}
+      <div className="flex items-center gap-1.5 @max-[30rem]:flex-wrap">
+        {/* The website icon sits inside the field, behind a hairline, where a
+            browser's address bar carries it: no extra line, and the address
+            keeps the width a chip beside the field used to take. It is the
+            SAME `SiteChip` the list row draws, so an item looks like itself
+            on both sides of a click, and it is fixed-size in every state
+            (favicon, loading, globe fallback) - the address can never jump
+            when an icon resolves. The domain comes from the SAVED url, so a
+            half-typed value fetches nothing; the icon appears when the edit
+            commits. */}
+        <div className={`flex items-stretch min-w-0 flex-1 rounded-md bg-surface-1 border focus-within:border-accent ${invalid ? 'border-red-500' : duplicate ? 'border-amber-500' : 'border-divider'} @max-[30rem]:basis-full`}>
+          <span className="shrink-0 flex items-center px-1.5 border-e border-divider">
+            <SiteChip
+              domain={linkDomain(savedUrl)}
+              trashTint={isTrash}
+              fallback={isTrash ? 'bookmark' : 'globe'}
+            />
+          </span>
+          <input
+            value={draft}
+            onChange={(e) => { setDraft(e.target.value); setInvalid(false); setDuplicate(false); }}
+            onBlur={() => commit(draft)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !isImeComposing(e)) { e.preventDefault(); commit(draft); } }}
+            readOnly={isTrash || note.locked === 1}
+            dir="ltr"
+            enterKeyHint="done"
+            className="w-full min-w-0 bg-transparent px-3 py-2 text-sm focus:outline-none"
+          />
+        </div>
+        <Button
+          action={copied === 'url' ? 'done' : 'copy'}
+          variant="secondary"
           onClick={() => copy(savedUrl, 'url')}
-          className="shrink-0 inline-flex items-center gap-1.5 h-9 rounded-md border border-divider bg-surface-1 px-3 text-[13px] text-neutral-600 dark:text-neutral-300 transition hover:text-accent hover:border-accent"
+          className={`shrink-0 @max-[30rem]:flex-1${copied === 'url' ? ' [&_svg]:text-success' : ''}`}
         >
-          {/* The label never changes - a wider "copied" caption resized
-              the button and squeezed the URL field mid-click. The green
-              check is the feedback, the vault's own pattern. */}
-          {copied === 'url' ? <Check size={15} className="text-green-500" /> : <Copy size={15} />}
+          {/* A fixed label keeps clipboard feedback from resizing the URL field. */}
           {t('common:actions.copy')}
-        </button>
-        <button
-          type="button"
-          onClick={() => openExternal(savedUrl)}
-          className="shrink-0 inline-flex items-center gap-1.5 h-9 rounded-md bg-accent/10 px-3 text-[13px] font-semibold text-accent transition hover:bg-accent/20"
-        >
-          <ArrowSquareOut size={15} />
+        </Button>
+        <Button action="open" variant="accent" onClick={() => openExternal(savedUrl)} className="shrink-0 @max-[30rem]:flex-1">
           {t('bookmarks.openAction')}
-        </button>
+        </Button>
+        {clip && savedUrl && (
+          clip.job ? (
+            <Button variant="primary" icon={<Spinner size={15} className="text-white" />} disabled className="shrink-0 @max-[30rem]:basis-full">
+              {t('clipper.saving')}
+            </Button>
+          ) : clip.note ? (
+            <Button variant="primary" icon={<NotePencil size={15} aria-hidden />} onClick={clip.onOpenNote} className="shrink-0 @max-[30rem]:basis-full">
+              {t('clipper.openNote')}
+            </Button>
+          ) : (
+            <Button variant="primary" icon={<NEW_GLYPHS.note size={15} aria-hidden />} onClick={clip.onSave} className="shrink-0 @max-[30rem]:basis-full">
+              {t('clipper.saveAsNote')}
+            </Button>
+          )
+        )}
       </div>
+      {clip?.job && (
+        <p className={`mt-1.5 ${SETTINGS_HELP}`} role="status">
+          {clip.job.step === 'page' ? t('clipper.stepPage') : t('clipper.stepPictures', { done: clip.job.done, total: clip.job.total })}
+        </p>
+      )}
+      {clip?.note && !clip.job && (
+        <p className={`mt-1.5 ${SETTINGS_HELP} text-success`}>
+          {t('clipper.savedOn', { date: formatInstant(clip.note.createdAt, 'date') })}
+        </p>
+      )}
+      {clip?.notice && !clip.job && (
+        <div className="mt-1.5 space-y-2" role="alert">
+          <p className="text-xs font-medium text-warning">{clip.notice.text}</p>
+          {clip.notice.signUp && (
+            <a href={withSource(DEMO_APP_URL)} className={`${SETTINGS_BTN_PRIMARY} inline-flex`}>
+              {t('demoBanner.cta')}
+            </a>
+          )}
+        </div>
+      )}
       {invalid && (
-        <div className="mt-1.5 text-[12px] font-medium text-red-600 dark:text-red-400">{t('bookmarks.urlInvalid')}</div>
+        <div className="mt-1.5 text-[12px] font-medium text-danger">{t('bookmarks.urlInvalid')}</div>
       )}
       {/* Amber, not red: the quick-add bar's colour for the same refusal, so
           "already saved" reads as the same event on both sides of a click. */}
       {duplicate && (
-        <div className="mt-1.5 text-[12px] font-medium text-amber-600 dark:text-amber-400">{t('bookmarks.urlDuplicate')}</div>
+        <div className="mt-1.5 text-[12px] font-medium text-warning">{t('bookmarks.urlDuplicate')}</div>
       )}
 
       {/* Where the icon beside the field comes from, folded away until asked
@@ -190,7 +252,7 @@ export function BookmarkItem({
               disabled={!pinConfigured && !pinProtected}
               className="rounded accent-accent"
             />
-            <span className="text-sm text-neutral-600 dark:text-neutral-400">
+            <span className="text-sm text-pn-muted">
               {t('auth:loginForm.requirePin')}
             </span>
             <button
@@ -204,7 +266,7 @@ export function BookmarkItem({
           </label>
           {showPinInfo && <PinInfoModal onClose={() => setShowPinInfo(false)} />}
           {!pinConfigured && !pinProtected && (
-            <p className="mt-1 text-[11px] text-neutral-400 dark:text-neutral-500">
+            <p className="mt-1 text-[11px] text-pn-muted">
               {t('auth:loginForm.setUpPinFirst')}
             </p>
           )}

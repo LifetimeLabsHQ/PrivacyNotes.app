@@ -6,8 +6,10 @@ import {
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { useEscapeToClose } from './useEscapeToClose';
 import { IconUpgrade } from './UpgradeModal';
 import { Check } from './icons';
+import { matchesKey } from './shortcutMatch';
 
 /**
  * App-wide right-click context menu primitive.
@@ -16,11 +18,17 @@ import { Check } from './icons';
  * menu makes the app feel like a website. We take over right-click on
  * app chrome and list rows, but *intentionally* leave it alone on
  * editable text (inputs, textareas, contenteditable) so copy/paste,
- * spellcheck, and dictionary lookups still work.
+ * spellcheck, and dictionary lookups still work. The note body makes two
+ * exceptions of its own in Editor.tsx: a link, and a click inside a
+ * selection the reader made before the click.
  *
- * This is a right-click affordance only. A touch long-press is the
- * platform's own gesture (select + copy) and the app's multi-select
- * gesture, so it never opens this menu - see isTouchContextMenu.
+ * On touch a long-press is the platform's own gesture (select + copy) and
+ * the app's multi-select gesture on list rows, so it does not open this
+ * menu there - see isTouchContextMenu. Touch reaches it three ways: an
+ * explicit button that calls `open` from its click (the "..." a bookmark
+ * row wears on touch), a note-link's long press (NoteLink.tsx), and a long
+ * press on a URL link in the note body (Editor.tsx), which leaves the
+ * platform's word selection in place.
  *
  * Usage:
  *   const ctx = useContextMenu();
@@ -31,7 +39,7 @@ import { Check } from './icons';
 export type ContextMenuItem =
   | {
       type?: 'item';
-      label: string;
+      label: ReactNode;
       onSelect: () => void;
       shortcut?: string;
       destructive?: boolean;
@@ -43,19 +51,32 @@ export type ContextMenuItem =
       /** A toggle that is currently on. Marked with a check on the trailing
        *  edge, so one label serves both states. */
       checked?: boolean;
+      /** A letter that picks this row while the menu is open. */
+      pick?: string;
     }
   | { type: 'separator' }
-  | { type: 'header'; label: string };
+  /** `keepCase` shows the label as written, for a name such as a username. */
+  | { type: 'header'; label: string; keepCase?: boolean };
 
 export type ContextMenuState = {
   x: number;
   y: number;
   items: ContextMenuItem[];
+  /** Opened from the keyboard: the first row starts highlighted, so Enter picks it. */
+  keyboard?: boolean;
+  /** A band of the viewport the menu must not cover, such as a touch
+   *  selection and its handles. The menu goes below it, or above it when
+   *  there is no room below. Read again when the soft keyboard moves the
+   *  page, so the menu follows the band instead of staying behind the keys. */
+  clear?: () => { top: number; bottom: number };
+  /** The menu's end edge sits at `x` instead of its start edge, for a menu
+   *  opened from a button in a corner that should open beside it. */
+  alignEnd?: boolean;
 } | null;
 
 function isSelectable(it: ContextMenuItem): it is Extract<
   ContextMenuItem,
-  { label: string; onSelect: () => void }
+  { onSelect: () => void }
 > {
   return !('type' in it && (it.type === 'separator' || it.type === 'header'));
 }
@@ -75,14 +96,17 @@ export function isEditableTarget(target: EventTarget | null): boolean {
 /**
  * Right-click suppression rule (Strategy B - partial).
  * Returns true when the browser's native menu should win - editable
- * text (paste, spellcheck), images (Save image as…), and links (Open
- * in new tab, Copy link). Everywhere else, the app menu wins. Spec:
+ * text (paste, spellcheck), a note body even when it is read-only
+ * (Copy), images (Save image as…), and links (Open in new tab, Copy
+ * link). Everywhere else, the app menu wins. Spec:
  * ops/docs/backlog.md #74.
  */
 export function shouldUseBrowserDefault(target: EventTarget | null): boolean {
   if (!target || !(target instanceof HTMLElement)) return false;
   return !!target.closest(
-    'input, textarea, [contenteditable="true"], [contenteditable=""], img, a[href]',
+    // `.ProseMirror` covers a read-only note body, which is
+    // contenteditable="false" and still text a reader wants to copy.
+    'input, textarea, [contenteditable="true"], [contenteditable=""], .ProseMirror, img, a[href]',
   );
 }
 
@@ -93,12 +117,26 @@ export function shouldUseBrowserDefault(target: EventTarget | null): boolean {
  * menu must stay out of its way. Chromium reports `pointerType` on the
  * event; WebKit and Firefox fire a plain MouseEvent, so fall back to
  * asking whether the device has a pointer that can right-click at all.
+ *
+ * Android's WebView fires a second `contextmenu` after the long press has
+ * selected a word, from its own selection controller, and labels that one
+ * `pointerType: "mouse"` with `button: -1`. A mouse right-click reports
+ * button 2, so on a device that cannot hover the second event is the same
+ * long press. Taking it opened the link menu over the new selection and
+ * cancelled it, so a note of links alone could not be selected (issue #454).
  * Spec: ops/docs/backlog.md #74 (issue #208).
  */
 export function isTouchContextMenu(e: React.MouseEvent): boolean {
+  if (isLongPressEcho(e.nativeEvent)) return true;
   const pointerType = (e.nativeEvent as PointerEvent).pointerType;
   if (pointerType) return pointerType !== 'mouse';
   return typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
+}
+
+/** The second `contextmenu` of an Android long press, described above. */
+export function isLongPressEcho(e: MouseEvent): boolean {
+  return (e as PointerEvent).pointerType === 'mouse' && e.button === -1
+    && typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
 }
 
 /**
@@ -112,16 +150,30 @@ export function optsOutOfAppMenu(target: EventTarget | null): boolean {
   return !!target.closest('[data-no-app-menu]');
 }
 
+/** The press that last closed a menu from outside it. A button that opens a
+ *  menu reads it on click: the press on that button already closed its own
+ *  menu, and opening it again would make the button unable to close it. */
+let lastDismiss: { target: Node; at: number } | null = null;
+
+export function closedMenuJustNow(button: Element): boolean {
+  const hit = !!lastDismiss && performance.now() - lastDismiss.at < 1000 && button.contains(lastDismiss.target);
+  if (hit) lastDismiss = null;
+  return hit;
+}
+
 export function useContextMenu() {
   const [state, setState] = useState<ContextMenuState>(null);
   const open = (
     e: { clientX: number; clientY: number; preventDefault: () => void; stopPropagation: () => void },
     items: ContextMenuItem[],
+    keyboard = false,
+    clear?: () => { top: number; bottom: number },
+    alignEnd = false,
   ) => {
     if (items.length === 0) return;
     e.preventDefault();
     e.stopPropagation();
-    setState({ x: e.clientX, y: e.clientY, items });
+    setState({ x: e.clientX, y: e.clientY, items, keyboard, clear, alignEnd });
   };
   const close = () => setState(null);
   return { state, open, close };
@@ -135,8 +187,35 @@ export function ContextMenu({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
+  // Outlives the listener effect below, which runs again on every render.
+  const keyboardMovedAt = useRef(-Infinity);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const [activeIdx, setActiveIdx] = useState<number>(-1);
+  // On the shared Escape stack, which runs before the app's Escape cascade:
+  // a listener of the menu's own would run after it and close the open note
+  // as well.
+  useEscapeToClose(onClose, !!state);
+
+  const place = (st: NonNullable<ContextMenuState>) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const m = 8;
+    const rtl = document.documentElement.dir === 'rtl';
+    let left = st.alignEnd && !rtl ? st.x - rect.width : st.x;
+    let top = st.y;
+    const band = st.clear?.();
+    if (band) {
+      top = band.bottom;
+      if (top + rect.height > vh - m && band.top - rect.height >= m) top = band.top - rect.height;
+    }
+    if (left + rect.width > vw - m) left = Math.max(m, vw - rect.width - m);
+    if (left < m) left = m;
+    if (top + rect.height > vh - m) top = Math.max(m, vh - rect.height - m);
+    setPos({ top, left });
+  };
 
   // For each new menu: reset the highlighted row + measure/flip near
   // viewport edges. Both jobs stay in one layout effect on purpose:
@@ -148,45 +227,76 @@ export function ContextMenu({
       setPos(null);
       return;
     }
-    setActiveIdx(-1);
-    const el = ref.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const m = 8;
-    let left = state.x;
-    let top = state.y;
-    if (left + rect.width > vw - m) left = Math.max(m, vw - rect.width - m);
-    if (top + rect.height > vh - m) top = Math.max(m, vh - rect.height - m);
-    setPos({ top, left });
+    setActiveIdx(state.keyboard ? state.items.findIndex((it) => isSelectable(it) && !it.disabled) : -1);
+    // Opened from the keyboard, the menu takes the focus, so Enter and the
+    // arrows reach it and not the editor behind it.
+    if (state.keyboard) ref.current?.focus({ preventScroll: true });
+    place(state);
   }, [state]);
 
-  // Dismiss on outside mousedown, Escape, scroll, resize, or another
-  // contextmenu elsewhere. Capture phase so we win over list clicks.
+  // Dismiss on outside mousedown, scroll, resize, or another contextmenu
+  // elsewhere (Escape is the hook above). Capture phase so we win over list
+  // clicks.
   useEffect(() => {
     if (!state) return;
 
     const onPointerDown = (e: PointerEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    };
-    const onCtx = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    };
-    const onScroll = () => onClose();
-    const onResize = () => onClose();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        lastDismiss = { target: e.target as Node, at: performance.now() };
         onClose();
+      }
+    };
+    // The long press that opened the menu fires again on Android.
+    const onCtx = (e: MouseEvent) => {
+      if (isLongPressEcho(e)) return;
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    // A scroll inside the menu is the menu being read, not the page moving
+    // under it: a long menu on a short screen scrolls itself.
+    // The keyboard also scrolls the page to keep the caret in view, just
+    // after it resizes the viewport, and that scroll is the same chrome move.
+    const onScroll = (e: Event) => {
+      if (ref.current && e.target instanceof Node && ref.current.contains(e.target)) return;
+      if (performance.now() - keyboardMovedAt.current < 600) {
+        if (state.clear) place(state);
         return;
       }
+      onClose();
+    };
+    // A soft keyboard sliding in or out changes the viewport height and leaves
+    // the width alone. That is chrome moving, not the page under the menu, and
+    // it is the ordinary case on a phone: a long press takes focus off the
+    // editor, the keyboard retracts, and the resize lands about 20ms after the
+    // menu opened. Closing on it makes the menu flash and vanish on the first
+    // try, then work on the second, once the keyboard is already down. A
+    // rotation or a real window resize changes the width, and still closes.
+    let lastWidth = window.innerWidth;
+    const onResize = () => {
+      if (window.innerWidth === lastWidth) {
+        keyboardMovedAt.current = performance.now();
+        if (state.clear) place(state);
+        return;
+      }
+      lastWidth = window.innerWidth;
+      onClose();
+    };
+    const onKey = (e: KeyboardEvent) => {
       const items = state.items;
       const selectableIdx: number[] = [];
       items.forEach((it, i) => {
         if (isSelectable(it) && !it.disabled) selectableIdx.push(i);
       });
-      if (selectableIdx.length === 0) return;
+      if (selectableIdx.length === 0 || e.defaultPrevented) return;
+
+      const picked = items.find(
+        (it) => isSelectable(it) && !it.disabled && it.pick && matchesKey(e, [{ key: it.pick }]),
+      );
+      if (picked && isSelectable(picked)) {
+        e.preventDefault();
+        picked.onSelect();
+        onClose();
+        return;
+      }
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
@@ -255,8 +365,17 @@ export function ContextMenu({
       role="menu"
       tabIndex={-1}
       style={style}
-      onContextMenu={(e) => e.preventDefault()}
-      className="z-[1000] min-w-[220px] py-1 rounded-md border border-divider bg-surface-2/95 backdrop-blur shadow-xl text-[13px] text-pn select-none"
+      // React bubbles a portal's events to the owner's ancestors, so without
+      // the stop a right click on the menu opens the app menu behind it.
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+      // A floor, not a width: no ceiling, so a long translation widens the menu.
+      // Touch opens it from a tap (a bookmark row's "..." button), so the rows
+      // grow to a finger's size there, and a menu taller than the screen
+      // scrolls instead of running off it.
+      className="z-[1000] min-w-[160px] max-h-[calc(100dvh-16px)] overflow-y-auto py-1 rounded-md border border-divider bg-surface-2/95 backdrop-blur shadow-xl text-[13px] [@media(hover:none)]:text-[14px] text-pn select-none"
     >
       {state.items.map((it, i) => {
         if ('type' in it && it.type === 'separator') {
@@ -271,7 +390,7 @@ export function ContextMenu({
           return (
             <div
               key={`hdr-${i}`}
-              className="px-3 pt-1.5 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-500"
+              className={`px-3 pt-1.5 pb-0.5 text-[10px] font-semibold tracking-wider text-pn-muted ${it.keepCase ? '' : 'uppercase'}`}
             >
               {it.label}
             </div>
@@ -280,7 +399,7 @@ export function ContextMenu({
         const item = it;
         const active = activeIdx === i && !item.disabled;
         const base =
-          'w-full text-start flex items-center gap-2.5 px-3 py-1.5 outline-none';
+          'w-full text-start flex items-center gap-2.5 px-3 py-1.5 [@media(hover:none)]:py-2.5 outline-none';
         const tone = item.disabled
           ? 'opacity-40 cursor-default'
           : active
@@ -288,11 +407,11 @@ export function ContextMenu({
               ? 'bg-red-500 text-white dark:bg-red-600'
               : item.success
                 ? 'bg-emerald-500 text-white dark:bg-emerald-600'
-                : 'bg-accent text-white'
+                : 'bg-accent-fill text-white'
             : item.destructive
-              ? 'text-red-600 dark:text-red-400 cursor-pointer'
+              ? 'text-danger cursor-pointer'
               : item.success
-                ? 'text-emerald-600 dark:text-emerald-400 cursor-pointer'
+                ? 'text-success cursor-pointer'
                 : 'cursor-pointer';
         return (
           <button
@@ -314,13 +433,25 @@ export function ContextMenu({
             }}
             className={`${base} ${tone}`}
           >
-            <span className="w-4 h-4 shrink-0 inline-flex items-center justify-center">
+            {/* Accent, like every other menu in the app. Three cases keep the
+                row's own colour instead, because there the colour IS the
+                message: a hovered row (white on a filled band), a destructive
+                row (red) and a success row (green). A glyph that sets its own
+                colour, such as the burn flame, wins over this from inside. */}
+            <span
+              className={`w-4 h-4 shrink-0 inline-flex items-center justify-center ${
+                active || item.destructive || item.success ? '' : 'text-accent'
+              }`}
+            >
               {item.icon}
             </span>
             <span className="flex-1 truncate">{item.label}</span>
+            {/* The word and the rocket turn white on a hovered row for the
+                same reason the check mark does: the band underneath it IS the
+                accent, so an accent word or a Pro colour on it is invisible. */}
             {item.pro && (
-              <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-accent">
-                <IconUpgrade size={12} /> Pro
+              <span className={`shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold ${active ? 'text-white' : 'text-accent'}`}>
+                <IconUpgrade size={12} onFill={active} /> Pro
               </span>
             )}
             {item.checked && (
@@ -333,7 +464,7 @@ export function ContextMenu({
                 className={`text-[11px] ms-4 tabular-nums ${
                   active
                     ? 'text-white/70'
-                    : 'text-neutral-400 dark:text-neutral-500'
+                    : 'text-pn-muted'
                 }`}
               >
                 {item.shortcut}

@@ -1,10 +1,12 @@
 import JSZip from 'jszip';
+import { zipEntryText } from './zipEntry';
 import { normalizeTag } from '../notesRepo';
 import { buildFolderTree } from './folderImport';
 import { linkifyMarkdown } from './linkify';
 import { noteLinkTarget } from '../noteLinks';
 import { importBlobs } from './blobImport';
 import type { ImportedNote, ParsedImport } from './types';
+import { toLocalIso } from '../notesViewUtils';
 
 /**
  * Evernote importer (.enex).
@@ -99,7 +101,7 @@ function parseEnexDate(raw: string | null | undefined): string | null {
 
 /** Local-date label for a reminder line, e.g. "2026-08-05". */
 function dueLabel(iso: string): string {
-  return iso.slice(0, 10);
+  return toLocalIso(new Date(iso));
 }
 
 /** Blob placeholder token. Fixed width so no key is a prefix of another. */
@@ -151,7 +153,9 @@ function colorOf(el: Element, style: string): string | null {
   const c = raw.trim().toLowerCase();
   if (!c) return null;
   if (COLOR_OK.test(c)) return c;
-  return NAMED_COLORS[c] ?? null;
+  // Own property only: the name comes out of the export, and an inherited one
+  // answers with a function that `?? null` cannot see.
+  return Object.hasOwn(NAMED_COLORS, c) ? NAMED_COLORS[c]! : null;
 }
 
 /** Extension for a resource that has no filename, derived from its MIME. */
@@ -986,7 +990,7 @@ async function readInput(
 
   const out: EnexFile[] = [];
   for (const [path, entry] of entries) {
-    out.push({ notebook: notebookName(path), xml: await entry.async('string') });
+    out.push({ notebook: notebookName(path), xml: await zipEntryText(entry) });
   }
   return out;
 }

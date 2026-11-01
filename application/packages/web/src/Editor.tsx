@@ -1,6 +1,7 @@
 import {
   forwardRef,
   useCallback,
+  useContext,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -8,13 +9,17 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { FormatBarContext } from './formatBarContext';
 import { useEditor, EditorContent, type Editor as TipTapEditor, type JSONContent } from '@tiptap/react';
 import { readDocCache, writeDocCache, DOC_CACHE_MIN_BYTES } from './editorDocCache';
 import { perfSpan } from './perf';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
+import { LinkAddressPill } from './LinkAddressPill';
+import { findHeadingPos, headingPosByCode } from './noteHeadings';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
@@ -26,7 +31,9 @@ import 'katex/dist/katex.min.css';
 import { Color } from '@tiptap/extension-color';
 import { FontSize } from '@tiptap/extension-text-style/font-size';
 import { FontFamily } from '@tiptap/extension-text-style/font-family';
-import { TextSelection } from '@tiptap/pm/state';
+import { TextSelection, type EditorState } from '@tiptap/pm/state';
+import { Fragment, type Node as ProseMirrorNode } from '@tiptap/pm/model';
+import { splitIndex } from './noteSplit';
 import { Markdown, type MarkdownStorage } from 'tiptap-markdown';
 
 // TipTap 3 types editor.storage as an empty augmentable interface instead of a
@@ -40,22 +47,41 @@ declare module '@tiptap/core' {
 }
 import { invisibleCharacterBuilders, LazyInvisibleCharacters } from './editorInvisibles';
 import { FaviconChips, refreshFavicons } from './editorFavicons';
-import { EncryptedImage, sanitizePastedHtml } from './EncryptedImage';
-import { EncryptedAttachment } from './EncryptedAttachment';
+import { EncryptedImage, isPictureSelection, sanitizePastedHtml } from './EncryptedImage';
+import { ClipboardSpacing, copySelectionAs } from './clipboardSpacing';
+import { EncryptedAttachment, holdsOneFile, requestAttachmentRename } from './EncryptedAttachment';
 import { WikiLink } from './NoteLink';
 import { AudioRecordingBanner, type AudioRecordingState } from './AudioRecorder';
 import { LinkSheet } from './LinkSheet';
 import { Callout, CalloutTitle } from './Callout';
+import { proUnlocked } from './demo';
+import { stepKanban } from './kanban';
+import { Footnotes, carriedSection } from './footnotes';
 import { useIsMobile } from './useIsMobile';
+import { ContextMenu, useContextMenu, isTouchContextMenu, isLongPressEcho, type ContextMenuItem } from './ContextMenu';
+import {
+  iconCopy, iconEditPencil, iconExternal, iconTrash,
+  ClipboardText, Code, FileMd, Highlighter, Link as LinkGlyph, Plus, Scissors, SortAscending, SortDescending, TextB, TextItalic, TextStrikethrough,
+} from './icons';
+import { Spoiler } from './editorSpoiler';
+import { InlineCodeCopy, inlineCodeHint } from './editorCodeCopy';
+import { AddLineBetweenBlocks } from './editorAddLine';
+import { LinkModifierOpen, MarkdownLinkTyping, SelfLinkTyping, linkHrefAt, linkSelectionIfUrl, openLinkHref } from './editorLinks';
 import { createLongPressGuard } from './softKeyboard';
-import { useTheme } from './theme';
-import { SearchHighlight } from './editorSearch';
-import { mathSourceEdit } from './editorMath';
+import { planLineSort } from './sortLines';
+import { activeLocale } from './i18n';
+import { readColorPref } from './editorPrefs';
+import { DEFAULT_HIGHLIGHT, HIGHLIGHT_COLORS } from './editorColors';
+import { useTheme, readLineSpacing, readCopyFormat } from './theme';
+import { SearchHighlight, setSearchQuery, getSearchInfo, clearSearch } from './editorSearch';
 import { FindBar } from './FindBar';
+import { ReplaceBar } from './ReplaceBar';
 import { OutlinePanel } from './OutlinePanel';
 import { TableControls } from './TableControls';
 import { Toolbar } from './EditorToolbar';
-import { useEditorPanels, EDITOR_TOP_GAP_PX } from './useEditorPanels';
+import { useEditorPanels } from './useEditorPanels';
+import { NodeViewMount } from './editorNodeViewMount';
+import { APP_KEYS, matchesKey } from './shortcutMatch';
 import { useDebouncedMarkdownSave } from './useDebouncedMarkdownSave';
 import {
   TextStyleMarkdown,
@@ -64,26 +90,32 @@ import {
   TaskItemMobileSafe,
   fixEmptyTaskItems,
   collapseMediaGaps,
+  cleanEmptyTaskItems,
   CodeBlockPlainCopy,
   lowlight,
   CodeBlockWithCopy,
   InlineMathWithMarkdown,
   BlockMathWithMarkdown,
   HighlightWithMarkdown,
+  COPY_BOX_LANGUAGE,
   TrailingParagraph,
+  PlainEscape,
   MediaGapCleaner,
   TextAlignOurLeft,
   ParagraphWithMarkdown,
   HeadingWithMarkdown,
+  HardBreakWithMarkdown,
+  TextWithMarkdown,
   TableWithMarkdown,
-  goToAdjacentCell,
+  stepTableCell,
   indentListItem,
+  indentText,
   NbspParagraphCleaner,
   MixedListSplitter,
+  clipboardRenderer,
+  markdownForClipboard,
+  replaceBodyUndoably,
 } from './editorExtensions';
-import { detectPlatform } from './devices';
-
-const IS_DESKTOP = detectPlatform() !== 'web';
 
 type Props = {
   /** Initial markdown content. Only read on mount - use a `key` prop to force reload. */
@@ -93,8 +125,16 @@ type Props = {
   /** Id of the note being edited - enables the synchronous close-flush
    *  stash (flushStash.ts) so a tab closed mid-debounce loses nothing. */
   noteId?: string;
-  /** When true, the editor and toolbar are non-interactive (trash view). */
+  /** When true, nothing edits the note: no toolbar, no "Add a line at
+   *  the top" zone, no replace. Find and the outline stay, because they only read it. */
   readOnly?: boolean;
+  /**
+   * A static rendering: the note history preview. Read-only, and without the
+   * corner, the bars or their shortcuts. The note editor stays mounted
+   * behind that modal, so a second editor claiming Cmd/Ctrl+F would open a
+   * second bar.
+   */
+  preview?: boolean;
   /** Called when the editor gains or loses focus. */
   onFocusChange?: (focused: boolean) => void;
   /**
@@ -102,20 +142,56 @@ type Props = {
    * Hide/Show toggle can live on the tag row. Defaults to visible.
    */
   toolbarVisible?: boolean;
-  /** Whether the user has Pro. Gates the Pro-only callout types. */
+  /** Whether the user has Pro. Gates the replace bar. */
   isPro?: boolean;
-  /** Opens the upgrade modal when a locked Pro callout type is picked. */
-  onOpenUpgrade?: (trigger: 'callout') => void;
+  /** Opens the upgrade modal when a free account asks for the replace bar. */
+  onOpenUpgrade?: (trigger: 'replace' | null) => void;
   /** Hides the encrypted image / attachment / audio group - see Toolbar. */
   hideEncryptedMedia?: boolean;
+  /** Takes the picture and file buttons' files when that group is hidden - see Toolbar. */
+  onInsertFiles?: (files: File[]) => void;
   /**
    * Controls for the BODY, rendered in the top-right slot beside the
    * collapsed outline pill: find, the rich/markdown switch, invisible
    * characters. They are built by NoteEditorPane, which owns their state,
-   * and land here because this is the corner they act on. Hidden while the
-   * find bar is up - the bar owns the corner then, and closes itself.
+   * and land here because this is the corner they act on. Hidden while a
+   * find or replace bar is up - the bar owns the corner then, and closes
+   * itself.
    */
   bodyControls?: ReactNode;
+  /**
+   * The Connections pill and panel, drawn between the other pills and the
+   * outline. Its open state lives here with the outline's, so the corner
+   * shows one panel at a time.
+   */
+  connections?: (open: boolean, onOpenChange: (open: boolean) => void) => ReactNode;
+  /**
+   * Where the format bar goes when it sits at the bottom: a row the pane
+   * keeps under its scrolling column. Nothing is drawn until it exists.
+   */
+  toolbarSlot?: HTMLElement | null;
+  /** The format bar's "Show markdown"; absent where the note has no Markdown view. */
+  onShowMarkdown?: () => void;
+  /**
+   * Called when a file chip in this note is renamed and that note's name
+   * lives outside the document too. Only fires for a note holding exactly
+   * one file - see the wiring below.
+   */
+  onRenameFile?: (name: string) => void;
+  /**
+   * The note is one the Files pillar made. While it holds one file, a picture
+   * or a PDF in it renders as a card showing the file rather than as a chip;
+   * a note of several files keeps its chips.
+   */
+  fileNote?: boolean;
+  /** Whether a ticked task moves below the open ones (the synced
+   *  `sinkCheckedTasks` setting). Defaults to on. */
+  sinkCheckedTasks?: boolean;
+  /** The empty body's hint, when the item type has its own ("Add an agenda..." on an event). */
+  placeholder?: string;
+  /** Called once with the editor after it is created. The history
+   *  comparison adds its decorations through it. */
+  onReady?: (editor: TipTapEditor) => void;
 };
 
 /**
@@ -130,16 +206,43 @@ type Props = {
  * they could type by hand.
  */
 export type EditorHandle = {
-  focus: () => void;
-  toggleTaskList: () => void;
+  /** Focus the body. False when there is no editor to focus yet. */
+  focus: () => boolean;
   /** Open the find-in-note bar, or close it if it is already open. The
-   *  tag-row magnifier and Cmd/Ctrl+F share this one action. */
+   *  corner magnifier and Cmd/Ctrl+F share this one action. */
   toggleFind: () => void;
+  /** Open the find-and-replace bar, or close it if it is already open. The
+   *  "..." menu row and Option/Alt+Cmd/Ctrl+F share this one action, and the
+   *  Pro gate sits behind it (useEditorPanels.ts). */
+  toggleReplace: () => void;
   /** Scroll to the attachment chip / image whose pn:file/pn:img URI contains
    *  `uuid` and flash-highlight it (jump-to-file from the Files pillar). */
   scrollToFile: (uuid: string) => void;
+  /** Jump to the attachment chip holding `uuid` and open its rename field.
+   *  The Files pillar's Rename row, once the note is open. */
+  startRenameFile: (uuid: string) => void;
+  /** Scroll the heading a note-link names to the top and flash it, with the
+   *  caret at its start. `onMissing` runs when the note holds no such heading. */
+  scrollToHeading: (heading: string, onMissing?: () => void) => void;
+  /** The same for a shortcut's heading code. A code that matches no heading
+   *  leaves the note at its top, without a message. */
+  scrollToHeadingCode: (itemId: string, code: string) => void;
+  /** Open the find bar on the first of `candidates` the text holds, hits
+   *  marked: the list search following into the open note (GitHub #288). A
+   *  no-op in the history preview, which has no bar, and when the text as
+   *  written holds none of them. */
+  highlightSearch: (candidates: string[]) => void;
+  /** Close the find bar if the search opened it; a bar the reader opened
+   *  stays. Runs when the list search is emptied. */
+  clearSearchHighlight: () => void;
   /** Raw TipTap editor instance - used by NotesView to wire wiki-link navigation. */
   getEditor: () => TipTapEditor | null;
+  /** Put a rewritten body in as one undoable step (replaceBodyUndoably).
+   *  False when this editor cannot take it, the history preview included. */
+  replaceBody: (md: string) => boolean;
+  /** The note as two Markdown halves for "Split note", cut at `splitIndex`
+   *  (noteSplit.ts) from the cursor. Null when the note cannot be divided. */
+  splitParts: () => { head: string; tail: string } | null;
   /** Serialize and save any pending debounced edit NOW, synchronously.
    *  The editor-mode toggle calls this before it swaps editors: the
    *  unmount flush runs after the replacement has already rendered, so
@@ -148,69 +251,231 @@ export type EditorHandle = {
   flushPendingSave: () => void;
 };
 
+/** Room under a touch selection for the drag handles Android hangs below it. */
+const TOUCH_HANDLE_HEIGHT = 32;
+
 const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }>(function EditorInner(
-  { value, onChange, readOnly = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, cachedDoc, hideEncryptedMedia, bodyControls },
+  { value, onChange, readOnly = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, cachedDoc, hideEncryptedMedia, onInsertFiles, bodyControls, connections, toolbarSlot, onShowMarkdown, onRenameFile, fileNote = false, preview = false, sinkCheckedTasks = true, placeholder, onReady },
   ref
 ) {
   const { t } = useTranslation('editor');
   const { onUpdate, useFlushOnExit, flushNow } = useDebouncedMarkdownSave({ value, onChange, readOnly, noteId });
 
   /**
-   * Back-reference to the editor for extension option callbacks.
-   *
-   * The math extensions' `onClick` is configured inside the `extensions` array
-   * that `useEditor` itself consumes, so the editor does not exist yet at that
-   * point and the callback signature is `(node, pos)` with no editor argument.
-   * This ref is assigned right after and read lazily at click time.
+   * Back-reference to the editor, for callbacks declared above `useEditor`.
+   * The panels hook and the click-to-add-a-line target both need the editor
+   * from a callback that is built before it exists, so they read it lazily.
    */
   const editorRef = useRef<TipTapEditor | null>(null);
 
   /**
-   * Turn a math node back into its own LaTeX source so it can be edited.
-   *
-   * The nodes are atoms - KaTeX output is not editable text, so before this
-   * there was no way to fix a typo in a formula short of deleting it and
-   * retyping from scratch. Clicking now swaps the rendered node for the
-   * `$latex$` / `$$latex$$` that produced it, with the caret in it; finishing
-   * the closing delimiter re-triggers the input rule and it renders again.
-   *
-   * Leaving it as raw text is a safe resting state, not a broken one: that is
-   * exactly the form our markdown-it rules read back, so a note abandoned
-   * mid-edit still renders correctly on the next load.
+   * Stable handle on the rename callback. The extension below captures it
+   * once, when the editor is built, so it has to read the current prop
+   * rather than the one that existed then.
    */
-  const editMathSource = useCallback((node: { attrs: { latex?: string } ; nodeSize: number }, pos: number, block: boolean) => {
-    const ed = editorRef.current;
-    if (!ed || !ed.isEditable) return;
-    const { state } = ed.view;
-    const { schema } = state;
-    const { source, caret } = mathSourceEdit(node.attrs.latex ?? '', pos, block);
+  const onRenameFileRef = useRef(onRenameFile);
+  onRenameFileRef.current = onRenameFile;
+  const sinkCheckedRef = useRef(sinkCheckedTasks);
+  sinkCheckedRef.current = sinkCheckedTasks;
+  const placeholderRef = useRef(placeholder);
+  placeholderRef.current = placeholder;
+  // Read by a Kanban board's Add column, which is Pro.
+  const isProRef = useRef(isPro);
+  isProRef.current = isPro;
+  const onOpenUpgradeRef = useRef(onOpenUpgrade);
+  onOpenUpgradeRef.current = onOpenUpgrade;
 
-    // Build the replacement by hand rather than handing `insertContentAt` a
-    // string. That helper PARSES the string as content, which for a block math
-    // node means it decides on a paragraph wrapper itself - and the resulting
-    // off-by-one put the caret past the end of the new text and into the block
-    // BELOW. Constructing the node here makes the wrapper explicit, which is
-    // what mathSourceEdit's offset is calculated against.
-    const text = schema.text(source);
-    const replacement = block ? schema.nodes['paragraph']?.createAndFill(null, text) : text;
-    if (!replacement) return;
-
-    const tr = state.tr.replaceWith(pos, pos + node.nodeSize, replacement);
-    // Clamp: appendTransaction plugins (TrailingParagraph, MediaGapCleaner)
-    // can still resize the doc around us on the same tick.
-    tr.setSelection(TextSelection.create(tr.doc, Math.min(caret, tr.doc.content.size)));
-    tr.scrollIntoView();
-    ed.view.dispatch(tr);
-    ed.view.focus();
-  }, []);
   const isMobile = useIsMobile();
   const { spellcheck, invisibles, favicons } = useTheme();
+  const barAtBottom = useContext(FormatBarContext).position === 'bottom';
   const rootRef = useRef<HTMLDivElement>(null);
   // Long-press keyboard guard for the body. See the handleDOMEvents block in
   // editorProps; the note title owns a second one in NotesView.
   const longPress = useMemo(createLongPressGuard, []);
   useEffect(() => longPress.cancel, [longPress]);
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
+  const linkBtnRef = useRef<HTMLButtonElement | null>(null);
+  const linkFallbackRef = useRef<HTMLDivElement | null>(null);
+  // The link panel lines up under the toolbar's link button. That button is
+  // absent in two states the shortcut still reaches - the toolbar is hidden,
+  // or the button has folded into the collapsed overflow row - so the anchor
+  // resolves on every measurement instead of being captured once, and falls
+  // back to a zero-height marker at the top of the editor pane.
+  const linkAnchorRef = useMemo(
+    () => ({ get current() { return (linkBtnRef.current ?? linkFallbackRef.current) as HTMLElement | null; } }),
+    [],
+  );
+  /**
+   * The link button and its shortcut, in one place because they answer the
+   * same question and must answer it the same way.
+   *
+   * A selection that is already an address is linked on the spot: the
+   * reader has said where it goes, so the panel would only ask them to
+   * type what they already selected. Everything else opens the panel.
+   */
+  const askForLink = useCallback(() => {
+    const ed = editorRef.current;
+    if (ed && linkSelectionIfUrl(ed)) return;
+    setLinkPopoverOpen(true);
+  }, []);
+
+  const linkMenu = useContextMenu();
+
+  /**
+   * The editor state as it stood before the pointer went down. On macOS a
+   * right click on a word selects that word before `contextmenu` fires, so
+   * only this tells a selection the reader made from a click on a
+   * misspelled word, which keeps the browser menu and its suggestions.
+   */
+  const preClickRef = useRef<EditorState | null>(null);
+  const notePreClickState = () => {
+    preClickRef.current = editorRef.current?.state ?? null;
+  };
+
+  /**
+   * The menu for a right click inside a selection: the clipboard, the marks
+   * of the toolbar, a link, and Sort when the selection is two or more lines
+   * of one kind. Cut and Copy go through the browser so the editor's own
+   * copy path writes the clipboard. "Copy as plain text" and "Copy as Markdown"
+   * write that text alone, so every app pastes what the label says. Highlight applies the colour the
+   * toolbar remembers, or removes a highlight that is already there.
+   */
+  const selectionMenuItems = (ed: TipTapEditor): ContextMenuItem[] => {
+    const remembered = readColorPref('highlight');
+    const highlight = HIGHLIGHT_COLORS.find((c) => c.name.toLowerCase() === remembered) ?? DEFAULT_HIGHLIGHT;
+    const toggleHighlight = () => {
+      const chain = ed.chain().focus();
+      if (ed.isActive('highlight')) chain.unsetHighlight().run();
+      else (highlight.value ? chain.setHighlight({ color: highlight.value }) : chain.setHighlight()).run();
+    };
+    const items: ContextMenuItem[] = [
+      { label: t('bodyMenu.cut'), icon: <Scissors size={14} />, onSelect: () => { ed.commands.focus(); document.execCommand('cut'); } },
+      { label: t('common:actions.copy'), icon: iconCopy(), onSelect: () => { ed.commands.focus(); document.execCommand('copy'); } },
+      { label: t('bodyMenu.copyAsPlain'), icon: <ClipboardText size={14} />, onSelect: () => copySelectionAs(ed, 'plain') },
+      { label: t('bodyMenu.copyAsMarkdown'), icon: <FileMd size={14} />, onSelect: () => copySelectionAs(ed, 'markdown') },
+      { type: 'separator' },
+      { label: t('toolbar.bold'), icon: <TextB size={14} />, checked: ed.isActive('bold'), onSelect: () => ed.chain().focus().toggleBold().run() },
+      { label: t('toolbar.italic'), icon: <TextItalic size={14} />, checked: ed.isActive('italic'), onSelect: () => ed.chain().focus().toggleItalic().run() },
+      { label: t('toolbar.strikethrough'), icon: <TextStrikethrough size={14} />, checked: ed.isActive('strike'), onSelect: () => ed.chain().focus().toggleStrike().run() },
+      { label: t('toolbar.highlight'), icon: <Highlighter size={14} />, checked: ed.isActive('highlight'), onSelect: toggleHighlight },
+      { label: t('toolbar.inlineCode'), icon: <Code size={14} />, checked: ed.isActive('code'), onSelect: () => ed.chain().focus().toggleCode().run() },
+      { label: t('link.popoverLabel'), icon: <LinkGlyph size={14} />, onSelect: askForLink },
+    ];
+    const sort = planLineSort(ed.state, activeLocale(), sinkCheckedRef.current);
+    if (sort) {
+      const doc = ed.state.doc;
+      items.push({ type: 'separator' }, {
+        label: t(sort.direction === 'asc' ? 'bodyMenu.sortAsc' : 'bodyMenu.sortDesc'),
+        icon: sort.direction === 'asc' ? <SortAscending size={14} /> : <SortDescending size={14} />,
+        onSelect: () => {
+          // The plan holds positions in the document it was made for.
+          if (ed.state.doc !== doc) return;
+          ed.view.dispatch(sort.apply(ed.state.tr));
+          ed.commands.focus();
+        },
+      });
+    }
+    return items;
+  };
+
+  /**
+   * Right-click on a URL link: Open, Copy, Edit, Remove.
+   *
+   * This is the one route to a link that does not go through the caret, and
+   * every other route does: the toolbar button and Cmd/Ctrl+Shift+K both
+   * act on the link the cursor is in, so they answer "Add link" for a
+   * cursor anywhere else and offer no Remove at all (GitHub #293).
+   *
+   * `ContextMenu.tsx` states that a link and editable text keep the
+   * browser's own menu, and this is a deliberate exception to both halves,
+   * for the same reason `NoteLink.tsx` is one: nothing in the platform menu
+   * can take a link off a word. A touch long press on a link opens the
+   * same menu, and keeps the word the long press selected (below).
+   */
+  const touchLinkMenuAt = useRef(0);
+  const stopTouchMenuWatch = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    if (!linkMenu.state) stopTouchMenuWatch.current?.();
+  }, [linkMenu.state]);
+  const openBodyMenu = (e: React.MouseEvent) => {
+    const ed = editorRef.current;
+    // Shift + right click always leaves the browser's own menu.
+    if (!ed || readOnly || e.shiftKey) return;
+    // Android fires the long press twice; only the first carries the finger.
+    if (isLongPressEcho(e.nativeEvent)) {
+      if (touchLinkMenuAt.current > performance.now() - 1500) e.preventDefault();
+      return;
+    }
+    const touch = isTouchContextMenu(e);
+    const at = ed.view.posAtCoords({ left: e.clientX, top: e.clientY });
+    if (!at) return;
+    const href = linkHrefAt(ed.state, at.pos);
+    if (touch && !href) return;
+    if (!href) {
+      // Only a click inside a selection that existed before it gets the app
+      // menu. A caret, an empty line, a word and a selected picture keep the
+      // browser menu, with its spelling, Look Up, Paste and Copy image.
+      // Spec: ops/issues/archive/0414.md, ops/issues/0488.md
+      const before = preClickRef.current;
+      const sel = before?.selection;
+      if (!before || !sel || sel.empty || before.doc !== ed.state.doc || at.pos < sel.from || at.pos > sel.to) return;
+      if (isPictureSelection(sel)) return;
+      if (!ed.state.selection.eq(sel)) ed.view.dispatch(ed.state.tr.setSelection(sel));
+      linkMenu.open(e, selectionMenuItems(ed));
+      return;
+    }
+    // A right click does not move the caret in every browser, and Edit and
+    // Remove both act on the mark the caret is in.
+    if (touch) touchLinkMenuAt.current = performance.now();
+    else ed.chain().focus().setTextSelection(at.pos).run();
+    const items: ContextMenuItem[] = [
+      { label: t('link.menuOpen'), onSelect: () => openLinkHref(ed, href), icon: iconExternal() },
+      {
+        label: t('link.menuCopy'),
+        onSelect: () => { void navigator.clipboard.writeText(href).catch(() => { /* denied: no clipboard, no feedback */ }); },
+        icon: iconCopy(),
+      },
+      { label: t('link.menuEdit'), onSelect: () => setLinkPopoverOpen(true), icon: iconEditPencil() },
+      {
+        label: t('link.menuRemove'),
+        onSelect: () => { ed.chain().focus().extendMarkRange('link').unsetLink().run(); },
+        destructive: true,
+        icon: iconTrash(),
+      },
+    ];
+    if (!touch) {
+      linkMenu.open(e, items);
+      return;
+    }
+    // The long press has already selected the word under the finger, and that
+    // selection is the start of a drag over more text (issue #454), so it
+    // stays. The menu opens clear of the word and the handles that hang below
+    // it, and a drag of either handle closes it.
+    const word = window.getSelection();
+    const band = () => {
+      const now = window.getSelection();
+      const box = (now && now.rangeCount ? now.getRangeAt(0) : null)?.getBoundingClientRect()
+        ?? ed.view.coordsAtPos(at.pos);
+      return { top: box.top, bottom: box.bottom + TOUCH_HANDLE_HEIGHT };
+    };
+    linkMenu.open(e, items, false, band);
+    stopTouchMenuWatch.current?.();
+    const start = word && word.rangeCount ? word.getRangeAt(0).cloneRange() : null;
+    const onChange = () => {
+      const now = window.getSelection();
+      const r = now && now.rangeCount ? now.getRangeAt(0) : null;
+      if (start && r && r.startContainer === start.startContainer && r.startOffset === start.startOffset
+        && r.endContainer === start.endContainer && r.endOffset === start.endOffset) return;
+      stopTouchMenuWatch.current?.();
+      linkMenu.close();
+    };
+    document.addEventListener('selectionchange', onChange);
+    stopTouchMenuWatch.current = () => {
+      document.removeEventListener('selectionchange', onChange);
+      stopTouchMenuWatch.current = null;
+    };
+  };
+
   const [audioState, setAudioState] = useState<AudioRecordingState>('idle');
   const [audioDuration, setAudioDuration] = useState(0);
   const audioStopRef = useRef<(() => void) | null>(null);
@@ -233,6 +498,9 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         // Disable StarterKit's codeBlock - we register CodeBlockWithCopy
         // below to get a hover-revealed Copy button.
         codeBlock: false,
+        // Inline code copies on a modifier click (editorCodeCopy); the hint
+        // says so on hover.
+        code: { HTMLAttributes: { title: inlineCodeHint() } },
         // TipTap 3's StarterKit absorbed extensions we already ship our own
         // way. Disable the overlaps so nothing registers twice:
         // - link: our Link.extend below carries the favicon renderHTML and
@@ -253,6 +521,12 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         // HeadingWithMarkdown carries the alignment-aware markdown spec, same
         // reasoning as paragraph above.
         heading: false,
+        // HardBreakWithMarkdown writes the next line's quote prefix early.
+        hardBreak: false,
+        // TextWithMarkdown escapes text so it reads back as itself.
+        text: false,
+        // Footnotes brings a document with room for its section after the body.
+        document: false,
         // Drop indicator for dragged text and files. The library default is a
         // 1px BLACK bar, which is the same "where is it going to land" problem
         // the gap cursor had in dark and sepia - invisible against the surface
@@ -263,6 +537,8 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       }),
       ParagraphWithMarkdown,
       HeadingWithMarkdown,
+      HardBreakWithMarkdown,
+      TextWithMarkdown,
       Underline,
       // TextStyleMarkdown must come before Color: Color sets the `color`
       // attribute on the textStyle mark, so that mark has to exist first.
@@ -273,7 +549,12 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       FontSize,
       FontFamily,
       Placeholder.configure({
-        placeholder: t('placeholder'),
+        placeholder: ({ node }) =>
+          node.type.name !== 'codeBlock'
+            ? (placeholderRef.current ?? t('placeholder'))
+            : node.attrs['language'] === COPY_BOX_LANGUAGE
+              ? t('copyBox.placeholder')
+              : t('codeBlock.placeholder'),
       }),
       Link.extend({
         // TipTap defaults inclusive to the value of autolink (true), which
@@ -284,16 +565,15 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         // silently bleeding into adjacent text.
         inclusive() { return false; },
       }).configure({
-        // Clicking a link in the editor opens it in a new tab (web only).
-        // The `target: '_blank'` + `rel: noopener noreferrer` in
-        // HTMLAttributes keep it safe. Meta/Ctrl-click still opens in a
-        // background tab. In the native wrappers this must stay OFF: the
-        // extension opens via window.open, which Android's WebView turns
-        // into an in-place navigation that replaces the app with the web
-        // page (#241) - WKWebView merely swallows the call. The anchor
-        // interceptor in App.tsx already opens every external link through
-        // the opener plugin on native, so the click still works.
-        openOnClick: !IS_DESKTOP,
+        // Who opens a clicked link is decided in one place, and it is not
+        // here: `LinkModifierOpen` reads the pointer, the modifier and
+        // whether the note is being edited, then hands the URL to
+        // `openExternal`. This option cannot make any of those
+        // distinctions - it is fixed when the editor is built, and it
+        // opens through window.open, which Android's WebView turns into an
+        // in-place navigation that replaces the app with the web page
+        // (#241) while WKWebView merely swallows the call.
+        openOnClick: false,
         autolink: true,
         linkOnPaste: true,
         // protocols omitted - http, https, mailto are defaults.
@@ -305,6 +585,9 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           class: 'text-accent hover:text-accent-hover cursor-pointer',
         },
       }),
+      LinkModifierOpen,
+      SelfLinkTyping,
+      MarkdownLinkTyping,
       TaskListWithMarkdown.configure({
         HTMLAttributes: {
           class: 'task-list',
@@ -315,6 +598,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         HTMLAttributes: {
           class: 'task-item',
         },
+        sinkChecked: () => sinkCheckedRef.current,
       }),
       TaskListInputRule,
       TableWithMarkdown.configure({
@@ -322,6 +606,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         HTMLAttributes: {
           class: 'pn-table',
         },
+        formulasUnlocked: () => proUnlocked(isProRef.current),
       }),
       TableRow,
       TableCell,
@@ -336,16 +621,38 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       // what its name says - a toolbar affordance - and the plaintext boundary
       // is held where it can be held without breaking the document model: the
       // Markdown pane's own paste and drop capture handlers.
-      // Spec: ops/docs/plans/markdown-folder.md (section 5, isolation)
-      EncryptedImage,
-      EncryptedAttachment,
+      // Spec: ops/docs/archive/markdown-folder.md (section 5, isolation)
+      // The paste guard on the upload itself rides on the same flag:
+      // ops/docs/archive/paste-pictures.md (section 3.3)
+      EncryptedImage.configure({ plaintextOnly: !!hideEncryptedMedia }),
+      EncryptedAttachment.configure({
+        onRename: (name: string) => {
+          // A note whose name lives in its title as well holds exactly one
+          // file: that is how the Files pillar creates it. A note holding
+          // several, or a file pasted into a written note, has a title of
+          // its own that a single chip must not overwrite.
+          const ed = editorRef.current;
+          if (!ed || !holdsOneFile(ed.state.doc)) return;
+          onRenameFileRef.current?.(name);
+        },
+        // Read once: the editor is keyed by note, so a note changing type
+        // remounts it with the new value. Whether the note holds one file is
+        // the chip's own question, asked again after every edit.
+        filePreview: fileNote,
+      }),
       WikiLink,
       CalloutTitle,
-      Callout,
+      Callout.configure({
+        kanbanUnlocked: () => proUnlocked(isProRef.current),
+        onUpgrade: () => onOpenUpgradeRef.current?.(null),
+      }),
+      Footnotes,
       TrailingParagraph,
+      PlainEscape,
       MediaGapCleaner,
       NbspParagraphCleaner,
       MixedListSplitter,
+      ClipboardSpacing,
       // defaultLanguage 'plaintext': an untagged fence stays plain instead
       // of lowlight auto-guessing a grammar and tinting random words.
       CodeBlockWithCopy.configure({ lowlight, defaultLanguage: 'plaintext' }),
@@ -356,26 +663,23 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       // plain highlight still stores as ==text== (Obsidian syntax) and a
       // colored one as inline <mark style>, per HighlightWithMarkdown.
       HighlightWithMarkdown.configure({ multicolor: true }),
+      // ||spoiler|| mark, blurred until the caret or a click shows it.
+      Spoiler,
+      InlineCodeCopy,
+      AddLineBetweenBlocks,
       // <sup>/<sub> marks (Mod+. / Mod+,). Same inline-HTML round-trip.
       Superscript,
       // Subscript keeps its toolbar button but loses its default Mod-,
       // shortcut: Cmd+, is the app-wide "open settings" key, and both fired
-      // at once (subscript toggled AND settings opened, caught by the
-      // 2026-08-21 hotkey audit). The toolbar hint for subscript is already
-      // null for the same reason.
+      // at once (subscript toggled AND settings opened). The toolbar hint
+      // for subscript is already null for the same reason.
       Subscript.extend({
         addKeyboardShortcuts() {
           return {};
         },
       }),
-      InlineMathWithMarkdown.configure({
-        katexOptions: { throwOnError: false },
-        onClick: (node, pos) => editMathSource(node, pos, false),
-      }),
-      BlockMathWithMarkdown.configure({
-        katexOptions: { throwOnError: false },
-        onClick: (node, pos) => editMathSource(node, pos, true),
-      }),
+      InlineMathWithMarkdown.configure({ katexOptions: { throwOnError: false } }),
+      BlockMathWithMarkdown.configure({ katexOptions: { throwOnError: false } }),
       // Alignment on the two block types that can carry prose, plus images.
       // Prose is stored as an inline-styled <p>/<h*> by ParagraphWithMarkdown
       // / HeadingWithMarkdown, the same HTML round-trip our colored text uses;
@@ -396,6 +700,8 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       // Website icons on links. Decorations only, and only for icons that
       // actually downloaded - see editorFavicons.
       FaviconChips,
+      // One draw of the note on mount instead of two - see editorNodeViewMount.
+      NodeViewMount,
       Markdown.configure({
         html: true,
         breaks: true,
@@ -420,7 +726,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
     editorProps: {
       attributes: {
         class:
-          'prose prose-neutral dark:prose-invert max-w-none focus:outline-none min-h-[40vh] sm:min-h-[60vh] text-[length:var(--pn-editor-body)] prose-p:text-[length:var(--pn-editor-body)] prose-li:text-[length:var(--pn-editor-body)] prose-blockquote:text-[length:var(--pn-editor-body)]',
+          'prose prose-pn max-w-none focus:outline-none min-h-[40vh] sm:min-h-[60vh] text-[length:var(--pn-editor-body)] prose-p:text-[length:var(--pn-editor-body)] prose-li:text-[length:var(--pn-editor-body)] prose-blockquote:text-[length:var(--pn-editor-body)]',
         // On mobile, remove the editor from the tab order so iOS Safari
         // doesn't show the prev/next form-assistant toolbar above the
         // keyboard. Users still tap to focus - only the automatic chain
@@ -435,13 +741,41 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         // engine's, not ours)
         ...(spellcheck ? {} : { spellcheck: 'false' }),
       },
-      // Strip <img> tags with external/blob sources from pasted HTML so
-      // they don't create broken image nodes. The paste plugin in
-      // EncryptedImage.tsx tries to recover the actual image data first;
-      // this is the safety net for URLs we can't fetch (cross-origin
-      // blob: URLs from WhatsApp, Telegram, etc.).
-      // Spec: GitHub #67 (images pasted from WhatsApp show broken previews)
-      transformPastedHTML: sanitizePastedHtml,
+      // Copying to another app: lines of unformatted text as they show, and
+      // anything else as the note's markdown, with its line breaks written as
+      // two trailing spaces instead of a backslash and only the escapes its
+      // text needs (editorClipboard.ts). tiptap-markdown
+      // supplies this prop too, and editorProps is consulted before any
+      // plugin, so this wins; an empty string falls back to its version, which
+      // is what the first paint before the editor lands would get.
+      clipboardTextSerializer: (slice) => {
+        // `serializer` and `parser` are real but missing from tiptap-markdown's published
+        // types, which declare getMarkdown() alone - and getMarkdown() is no
+        // use here, because it serializes the whole note rather than the
+        // selection. Hence the cast.
+        const md = editorRef.current?.storage.markdown as
+          | {
+              serializer?: { serialize(content: Fragment): string };
+              parser?: Parameters<typeof clipboardRenderer>[0];
+            }
+          | undefined;
+        const ser = md?.serializer;
+        if (!ser) return '';
+        // A copied footnote marker brings its definition along.
+        const footnotes = editorRef.current ? carriedSection(slice.content, editorRef.current.schema) : null;
+        return markdownForClipboard(
+          footnotes ? slice.content.append(Fragment.from(footnotes)) : slice.content,
+          (fragment) => ser.serialize(fragment),
+          readLineSpacing() !== 'normal',
+          readCopyFormat(),
+          md.parser ? clipboardRenderer(md.parser) : undefined,
+        );
+      },
+      // Sort the pictures of pasted HTML: ours stay, the ones whose bytes the
+      // device holds become pending pictures, the rest go, so no broken image
+      // node is ever made. A Markdown folder note stores none of them.
+      // Spec: GitHub #67, ops/docs/archive/paste-pictures.md (section 3.2)
+      transformPastedHTML: (html) => sanitizePastedHtml(html, { store: !hideEncryptedMedia, report: true }),
       // Long-press-to-paste shouldn't drag the keyboard up with it: the user
       // is reaching for the Cut/Copy/Paste bubble, not for the keys, and an
       // accidental long press shouldn't cost them the screen either. The
@@ -477,7 +811,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         // Fix: GitHub #204 (extra blank line pasting from the keyboard clipboard)
         beforeinput: (view, event) => {
           const input = event as InputEvent;
-          if (input.inputType !== 'insertText' || !input.data?.includes('\n')) return false;
+          if (!view.editable || input.inputType !== 'insertText' || !input.data?.includes('\n')) return false;
           // Drop the blank lines the selection happened to start and end on.
           // They are an artifact of how the text was picked up, not content
           // anyone asked for, and on this path a blank line is a real empty
@@ -503,21 +837,20 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       // (numbered) and Mod+Shift+8 (bulleted); 9 extends the sequence for
       // the third list type we ship. Matches Bear / Notion conventions.
       handleKeyDown: (_view, event) => {
-        const mod = event.metaKey || event.ctrlKey;
-        if (mod && event.shiftKey && (event.code === 'Digit9' || event.key === '9')) {
+        if (matchesKey(event, APP_KEYS.taskList)) {
           event.preventDefault();
           editor?.chain().focus().toggleTaskList().run();
           return true;
         }
-        // Cmd/Ctrl+Shift+K opens the link popover. It was plain ⌘K until
+        // Cmd/Ctrl+Shift+K asks for a link. It was plain ⌘K until
         // 2026-08-21; ⌘K now focuses search everywhere (the modern search
         // convention won over the link convention), so link took the
         // shifted variant. Plain ⌘K must NOT be handled here - returning
         // false lets it bubble to the window search listener. Works with
-        // or without a selection; LinkPopover handles all three states.
-        if (mod && event.shiftKey && !event.altKey && (event.code === 'KeyK' || event.key === 'k' || event.key === 'K')) {
+        // or without a selection; LinkSheet handles all three states.
+        if (matchesKey(event, APP_KEYS.insertLink)) {
           event.preventDefault();
-          setLinkPopoverOpen(true);
+          askForLink();
           return true;
         }
         // Tab inside the editor body must NEVER escape focus to the next
@@ -531,19 +864,21 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           event.preventDefault();
           if (!editor) return true;
           // Inside a table, Tab/Shift+Tab moves between cells. Use our own
-          // cell-stepper (goToAdjacentCell) instead of prosemirror-tables'
+          // cell-stepper (stepTableCell) instead of prosemirror-tables'
           // goToNextCell, which gets stuck on image-only cells. See #145.
           if (editor.isActive('table')) {
-            goToAdjacentCell(editor, event.shiftKey ? -1 : 1);
+            stepTableCell(editor, event.shiftKey ? -1 : 1);
             return true;
           }
+          // Inside a Kanban board, Tab steps through titles and cards.
+          if (stepKanban(editor.state, editor.view.dispatch, event.shiftKey ? -1 : 1)) return true;
           // Indent / outdent the item, checkbox lists included - this
           // handler runs BEFORE every plugin keymap, so TaskItem's own Tab
           // shortcut never gets a turn and the type has to be resolved
-          // here. Outside a list it is a no-op: we deliberately do NOT
-          // insert a literal tab character, plain prose does not want tabs,
-          // and the goal here is just "don't jump focus".
-          indentListItem(editor, event.shiftKey ? -1 : 1);
+          // here. Outside a list, a paragraph or a code block takes spaces
+          // (indentText), never a tab character, which Markdown would read
+          // as the start of a code block.
+          if (!indentListItem(editor, event.shiftKey ? -1 : 1)) indentText(editor, event.shiftKey ? -1 : 1);
           return true;
         }
         return false;
@@ -555,6 +890,12 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
   });
   endEditorCreate();
 
+  useEffect(() => {
+    if (editor && onReady) onReady(editor);
+    // Once per editor instance; a new callback identity is not a new editor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor]);
+
   // Sync readOnly prop to TipTap's editable state. The editor is keyed by
   // note id so it doesn't remount when `locked` toggles - this effect
   // makes prevent-editing take effect immediately.
@@ -562,7 +903,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
     if (editor) editor.setEditable(!readOnly);
   }, [editor, readOnly]);
 
-  // Feed the back-reference the math onClick handlers read (see editorRef).
+  // Feed the back-reference declared above (see editorRef).
   useEffect(() => {
     editorRef.current = editor ?? null;
   }, [editor]);
@@ -601,41 +942,54 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
   }, [isMobile, editor]);
 
   const {
-    searchOpen,
-    setSearchOpen,
-    searchFocusTick,
+    bar,
+    setBar,
+    barFocusTick,
     outlineOpen,
     setOutlineOpen,
-    setOutlineReserve,
-    closeFind,
+    connectionsOpen,
+    setConnectionsOpen,
+    setPillsEl,
+    findSeed,
+    openFindWith,
+    closeSeededFind,
+    closeBar,
     toggleFind,
-  } = useEditorPanels({ rootRef, editorRef, editor, isMobile, readOnly, toolbarVisible });
+    toggleReplace,
+    swapBar,
+    swapTerm,
+  } = useEditorPanels({ rootRef, editorRef, editor, readOnly, preview, toolbarVisible, isPro, onOpenUpgrade });
 
   /**
-   * Put the caret on a line above everything else in the note - the action
-   * behind the click row that sits above the body.
+   * Put a new empty line above everything else in the note and the caret on
+   * it - the action behind the "Add a line at the top" zone above the body.
    *
-   * The row exists because the first block is the one place a note can become
-   * unreachable: a leading image, table or quote leaves no line to click, and
-   * the keyboard escape (ArrowUp into a gap cursor) is neither discoverable
-   * nor, since TipTap 3, available above a quote. A row that is always there
-   * answers that for every note without the editor having to guess which
-   * documents need a paragraph inserted into them.
-   *
-   * Nothing is inserted when the note already starts with an empty paragraph
-   * (the common case) - we just go there, so repeated clicks can't stack blank
-   * lines.
+   * A note that starts with an image, a table, a quote or a list has no line
+   * to click above its first block, and the keyboard way in (ArrowUp into a
+   * gap cursor) is neither discoverable nor, since TipTap 3, available above
+   * a quote. A note that starts with a paragraph or a heading needs no help,
+   * so the zone only shows for the others (needsTopLine).
    */
+  const [needsTopLine, setNeedsTopLine] = useState(false);
+  useEffect(() => {
+    if (!editor) return;
+    const check = () => {
+      const first = editor.state.doc.firstChild?.type.name;
+      setNeedsTopLine(first !== undefined && first !== 'paragraph' && first !== 'heading');
+    };
+    check();
+    editor.on('update', check);
+    return () => { editor.off('update', check); };
+  }, [editor]);
+
+  // The zone needs more room than the body's 16px top gap to hold its label
+  // clear of the line above (pn-top-line-pad in index.css).
+  const showTopLine = !readOnly && !preview && needsTopLine;
+
   const addLineAtTop = useCallback(() => {
     const ed = editorRef.current;
     if (!ed || !ed.isEditable) return;
     const { state, view } = ed;
-    const first = state.doc.firstChild;
-    if (first?.type.name === 'paragraph' && first.content.size === 0) {
-      view.dispatch(state.tr.setSelection(TextSelection.create(state.doc, 1)).scrollIntoView());
-      view.focus();
-      return;
-    }
     const paragraph = state.schema.nodes['paragraph']?.create();
     if (!paragraph) return;
     const tr = state.tr.insert(0, paragraph);
@@ -644,144 +998,262 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
     view.focus();
   }, []);
 
+  /**
+   * Bring the node at the position `find` returns into view and flash it.
+   * Shared by the jump to a file from the Files pillar, the rename that
+   * pillar asks for, and a note-link to a heading. Best effort by nature: it
+   * runs on animation frames, which a hidden or throttled tab never
+   * delivers, so no caller may depend on it having finished.
+   */
+  const revealNode = useCallback((
+    find: () => number,
+    block: ScrollLogicalPosition,
+    onMissing?: () => void,
+  ) => {
+    if (!editor) return;
+    // Defer a frame before resolving the position: NodeView portals may
+    // not be in the DOM yet, and the post-parse normalization plugins
+    // (TrailingParagraph, MediaGapCleaner) can shift positions right
+    // after mount, so a position captured now goes stale.
+    requestAnimationFrame(() => {
+      if (editor.isDestroyed) return;
+      const found = find();
+      if (found < 0) { onMissing?.(); return; }
+      const dom = editor.view.nodeDOM(found);
+      if (!(dom instanceof HTMLElement)) return;
+      // Keep the target centered until layout settles: on a freshly
+      // mounted note the NodeView chips hydrate asynchronously, so a
+      // single scrollIntoView lands correctly and is then pushed away
+      // as the content above the target grows. Re-center every frame
+      // until the target's position is stable, then flash.
+      const start = performance.now();
+      let lastTop = Number.NaN;
+      let stableFrames = 0;
+      const step = () => {
+        if (editor.isDestroyed || !dom.isConnected) return;
+        const top = dom.getBoundingClientRect().top;
+        if (Math.abs(top - lastTop) < 1) stableFrames++;
+        else stableFrames = 0;
+        lastTop = top;
+        dom.scrollIntoView({ block, inline: 'nearest' });
+        if (stableFrames >= 5 || performance.now() - start > 1200) {
+          // Remove + reflow so a repeat jump to the same file re-flashes.
+          dom.classList.remove('pn-file-flash');
+          void dom.offsetWidth;
+          dom.classList.add('pn-file-flash');
+          window.setTimeout(() => dom.classList.remove('pn-file-flash'), 1700);
+          return;
+        }
+        requestAnimationFrame(step);
+      };
+      step();
+    });
+  }, [editor]);
+
+  /** Centre the attachment chip or image whose `pn:file/` or `pn:img/` ref
+   *  holds `uuid` and flash it. */
+  const revealFileNode = useCallback((uuid: string) => {
+    if (!editor) return;
+    revealNode(() => {
+      let found = -1;
+      editor.state.doc.descendants((node, pos) => {
+        if (found >= 0) return false;
+        if (node.type.name !== 'attachment' && node.type.name !== 'image') return true;
+        const src = node.attrs['src'] as string | null;
+        if (src && src.includes(uuid)) {
+          found = pos;
+          return false;
+        }
+        return true;
+      });
+      return found;
+    }, 'center');
+  }, [editor, revealNode]);
+
   useImperativeHandle(
     ref,
     () => ({
-      focus: () => editor?.commands.focus(),
-      toggleTaskList: () => {
-        editor?.commands.focus();
-        editor?.commands.toggleTaskList();
-      },
+      focus: () => editor?.commands.focus() ?? false,
       toggleFind,
+      toggleReplace,
       scrollToFile: (uuid: string) => {
-        if (!editor) return;
-        // Defer a frame before resolving the position: NodeView portals may
-        // not be in the DOM yet, and the post-parse normalization plugins
-        // (TrailingParagraph, MediaGapCleaner) can shift positions right
-        // after mount, so a position captured now goes stale.
-        requestAnimationFrame(() => {
-          if (editor.isDestroyed) return;
-          let found = -1;
-          editor.state.doc.descendants((node, pos) => {
-            if (found >= 0) return false;
-            if (node.type.name !== 'attachment' && node.type.name !== 'image') return true;
-            const src = node.attrs['src'] as string | null;
-            if (src && src.includes(uuid)) {
-              found = pos;
-              return false;
-            }
-            return true;
-          });
-          if (found < 0) return;
-          const dom = editor.view.nodeDOM(found);
-          if (!(dom instanceof HTMLElement)) return;
-          // Keep the target centered until layout settles: on a freshly
-          // mounted note the NodeView chips hydrate asynchronously, so a
-          // single scrollIntoView lands correctly and is then pushed away
-          // as the content above the target grows. Re-center every frame
-          // until the target's position is stable, then flash.
-          const start = performance.now();
-          let lastTop = Number.NaN;
-          let stableFrames = 0;
-          const step = () => {
-            if (editor.isDestroyed || !dom.isConnected) return;
-            const top = dom.getBoundingClientRect().top;
-            if (Math.abs(top - lastTop) < 1) stableFrames++;
-            else stableFrames = 0;
-            lastTop = top;
-            dom.scrollIntoView({ block: 'center', inline: 'nearest' });
-            if (stableFrames >= 5 || performance.now() - start > 1200) {
-              // Remove + reflow so a repeat jump to the same file re-flashes.
-              dom.classList.remove('pn-file-flash');
-              void dom.offsetWidth;
-              dom.classList.add('pn-file-flash');
-              window.setTimeout(() => dom.classList.remove('pn-file-flash'), 1700);
-              return;
-            }
-            requestAnimationFrame(step);
-          };
-          step();
-        });
+        revealFileNode(uuid);
       },
+      scrollToHeading: (heading: string, onMissing?: () => void) => {
+        if (!editor) return;
+        revealNode(() => {
+          const pos = findHeadingPos(editor.state.doc, heading);
+          // The caret goes to the heading's start, so typing continues there
+          // and not wherever the note was last left.
+          if (pos >= 0) editor.commands.setTextSelection(pos + 1);
+          return pos;
+        }, 'start', onMissing);
+      },
+      scrollToHeadingCode: (itemId: string, code: string) => {
+        if (!editor) return;
+        revealNode(() => {
+          const pos = headingPosByCode(editor.state.doc, itemId, code);
+          if (pos >= 0) editor.commands.setTextSelection(pos + 1);
+          return pos;
+        }, 'start');
+      },
+      startRenameFile: (uuid: string) => {
+        // The name is written by the chip inside the live editor, never by
+        // rewriting the note body from a list. Centring the chip is a
+        // separate, best-effort courtesy: it runs on animation frames, which
+        // a hidden or throttled tab never delivers, and the field must open
+        // either way. The field autofocuses, which brings it into view on
+        // its own.
+        revealFileNode(uuid);
+        requestAttachmentRename(uuid);
+      },
+      highlightSearch: (candidates: string[]) => {
+        if (!editor || preview || editor.isDestroyed) return;
+        // Synchronous, unlike scrollToFile: the match list is computed from
+        // the ProseMirror document, which is complete once the editor exists,
+        // and the bar scrolls to the current hit itself. A deferred frame
+        // would also never fire in a hidden tab.
+        for (const candidate of candidates) {
+          setSearchQuery(editor.view, candidate);
+          if (getSearchInfo(editor.view).total > 0) {
+            openFindWith(candidate);
+            return;
+          }
+        }
+        // The index folds what the editor does not (Arabic diacritics, for
+        // one), so a word it matched can be absent from the text as written.
+        // No bar beats a bar that opens on a red 0/0.
+        clearSearch(editor.view);
+      },
+      clearSearchHighlight: closeSeededFind,
       getEditor: () => editor,
+      replaceBody: (md: string) => !preview && replaceBodyUndoably(editor, md),
+      splitParts: () => {
+        if (!editor || preview || readOnly) return null;
+        const { doc } = editor.state;
+        const index = splitIndex(doc, editor.state.selection.head);
+        if (index === null) return null;
+        let cut = 0;
+        for (let i = 0; i < index; i++) cut += doc.child(i).nodeSize;
+        const ser = (editor.storage.markdown as { serializer?: { serialize(content: ProseMirrorNode): string } }).serializer;
+        if (!ser) return null;
+        const md = (node: ProseMirrorNode) => collapseMediaGaps(cleanEmptyTaskItems(ser.serialize(node)));
+        return { head: md(doc.cut(0, cut)), tail: md(doc.cut(cut)) };
+      },
       flushPendingSave: () => {
         if (editor) flushNow(editor);
       },
     }),
-    [editor]
+    [editor, preview, readOnly, openFindWith, closeSeededFind]
   );
 
   return (
     <div
       ref={rootRef}
-      // pn-editor-topgapped hands the "start of note" gap to the click row
-      // below, so the body's own top padding doesn't stack on top of it.
-      className={`relative flex flex-col min-h-0${readOnly ? '' : ' pn-editor-topgapped'}`}
+      // pn-editor-topgapped marks a note editor (not the history preview).
+      className={`relative flex flex-col min-h-0${preview ? '' : ' pn-editor-topgapped'}${showTopLine ? ' pn-top-line-pad' : ''}`}
+      onMouseDownCapture={notePreClickState}
+      onContextMenu={openBodyMenu}
     >
       {/* Toolbar must be a direct child of the Editor root - wrapping it
           in a short-height div kills sticky (the toolbar can only stick
-          within its parent's bounds). The desktop LinkSheet needs a
-          positioned ancestor for its absolute positioning, so it gets its
-          own relative wrapper that does NOT contain the toolbar. */}
+          within its parent's bounds). */}
       {/* Toolbar visibility is controlled by the parent (NotesView) so the
           Hide/Show toggle can live on the tag row instead of overlapping
           the note body. */}
-      {!readOnly && toolbarVisible && (
-        <>
-          <Toolbar
-            editor={editor}
-            mobileTabIndex={isMobile ? -1 : undefined}
-            onOpenLinkPopover={() => setLinkPopoverOpen(true)}
-            onAudioStateChange={handleAudioStateChange}
-            audioStopRef={audioStopRef}
-            isPro={isPro}
-            onOpenUpgrade={onOpenUpgrade}
-            hideEncryptedMedia={hideEncryptedMedia}
-          />
-          {editor && linkPopoverOpen && !isMobile && (
-            <div className="relative">
-              <LinkSheet editor={editor} isMobile={false} onClose={() => setLinkPopoverOpen(false)} />
-            </div>
-          )}
-        </>
+      {!readOnly && toolbarVisible && barAtBottom && toolbarSlot && createPortal(
+        // At the bottom the bar lives outside the scrolling column, so it
+        // never moves with the note: a sticky bar inside the column is left
+        // behind by a trackpad bounce (Firefox) and by the page shift iOS
+        // makes for the keyboard.
+        <Toolbar
+          editor={editor}
+          mobileTabIndex={isMobile ? -1 : undefined}
+          onOpenLinkPopover={askForLink}
+          linkBtnRef={linkBtnRef}
+          onAudioStateChange={handleAudioStateChange}
+          audioStopRef={audioStopRef}
+          hideEncryptedMedia={hideEncryptedMedia}
+          onInsertFiles={onInsertFiles}
+          onShowMarkdown={onShowMarkdown}
+        />,
+        toolbarSlot,
       )}
-      {/* Find-in-note bar, pinned top-right just under the toolbar. The
+      {!readOnly && toolbarVisible && !barAtBottom && (
+        <Toolbar
+          editor={editor}
+          mobileTabIndex={isMobile ? -1 : undefined}
+          onOpenLinkPopover={askForLink}
+          linkBtnRef={linkBtnRef}
+          onAudioStateChange={handleAudioStateChange}
+          audioStopRef={audioStopRef}
+          hideEncryptedMedia={hideEncryptedMedia}
+          onInsertFiles={onInsertFiles}
+          onShowMarkdown={onShowMarkdown}
+        />
+      )}
+      {/* Where the link panel falls back to when the link button is not on
+          screen. Zero height, so it marks the top of the note body when the
+          toolbar is hidden and the line under the toolbar when it is not. */}
+      <div ref={linkFallbackRef} aria-hidden="true" />
+      {editor && !readOnly && linkPopoverOpen && !isMobile && (
+        <LinkSheet
+          editor={editor}
+          isMobile={false}
+          anchorRef={linkAnchorRef}
+          onClose={() => setLinkPopoverOpen(false)}
+        />
+      )}
+      {/* Find or replace bar, pinned top-right just under the toolbar. The
           zero-height sticky wrapper keeps it floating over the note content
           (no reserved row) and pinned on scroll; the inner bar handles
           pointer events. Sticky top = tag row + measured toolbar height. */}
-      {searchOpen && !readOnly && editor && (
+      {bar !== 'none' && !preview && editor && (
         <div
           className="sticky z-[5] flex h-0 items-start justify-end overflow-visible pointer-events-none"
           style={{ top: 'calc(var(--pn-tagrow-h, 0px) + var(--pn-editor-toolbar-h, 0px))' }}
         >
-          <FindBar
-            editor={editor}
-            focusTick={searchFocusTick}
-            onClose={closeFind}
-          />
+          {bar === 'find' ? (
+            <FindBar
+              key={findSeed ? `seed-${findSeed.tick}` : 'find'}
+              editor={editor}
+              focusTick={barFocusTick}
+              initialQuery={findSeed?.term}
+              startQuery={swapTerm}
+              onSwap={readOnly ? undefined : swapBar}
+              swapPro={!isPro}
+              onClose={closeBar}
+            />
+          ) : (
+            <ReplaceBar editor={editor} focusTick={barFocusTick} startQuery={swapTerm} onSwap={swapBar} swapPro={!isPro} onClose={closeBar} />
+          )}
         </div>
       )}
-      {/* Outline panel, same top-right sticky slot as the find bar. Hidden
-          while find is open so the two never share the corner; the panel
+      {/* Outline panel, same top-right sticky slot as the bars. Hidden while
+          a bar is open so the two never share the corner; the panel
           renders nothing when the note has no headings. Also hidden while a
           recording is running: the floating pill sits exactly on the
           banner's Stop button otherwise (reported during the TipTap 3
           verification pass). */}
-      {!searchOpen && !readOnly && editor && audioState === 'idle' && (
+      {bar === 'none' && !preview && editor && audioState === 'idle' && (
         <div
           className="sticky z-[5] flex h-0 items-start justify-end gap-1.5 overflow-visible pointer-events-none"
           style={{ top: 'calc(var(--pn-tagrow-h, 0px) + var(--pn-editor-toolbar-h, 0px))' }}
         >
-          {bodyControls}
-          <OutlinePanel
-            editor={editor}
-            open={outlineOpen}
-            onOpenChange={(v) => {
-              setOutlineOpen(v);
-              if (v) setSearchOpen(false);
-            }}
-            onReserve={setOutlineReserve}
-          />
+          {/* Measured, so the first lines of the note wrap beside the
+              pills instead of under them. */}
+          <div ref={setPillsEl} className="flex items-start gap-1.5">
+            {bodyControls}
+            {connections?.(connectionsOpen, setConnectionsOpen)}
+            <OutlinePanel
+              editor={editor}
+              open={outlineOpen}
+              onOpenChange={(v) => {
+                setOutlineOpen(v);
+                if (v) setBar('none');
+              }}
+            />
+          </div>
         </div>
       )}
       {audioState !== 'idle' && (
@@ -791,30 +1263,44 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           onStop={() => audioStopRef.current?.()}
         />
       )}
-      {/* The click row above the body. Always rendered, on every note: it is
-          both the guaranteed way in above a first block you can't type in
-          front of (image, table, quote) and the collapsed outline pill's own
-          row, which is what stops the pill sitting on the note's first lines.
-          onMouseDown is swallowed so focus never leaves the editor - the
-          handler puts the caret where it belongs itself. */}
-      {!readOnly && (
-        <button
-          type="button"
-          tabIndex={isMobile ? -1 : undefined}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={addLineAtTop}
-          aria-label={t('topRow.add')}
-          style={{ height: EDITOR_TOP_GAP_PX }}
-          className="shrink-0 w-full cursor-text rounded-md transition-colors [@media(hover:hover)]:hover:bg-neutral-500/[0.06]"
-        />
+      {/* The "Add a line at the top" zone: it covers the body's top padding,
+          only on a note whose first block has no line to click above it,
+          and shows its label on hover. Zero height in the flow, so a hover
+          moves nothing. onMouseDown is
+          swallowed so focus never leaves the editor - the handler puts the
+          caret where it belongs itself. */}
+      {showTopLine && (
+        <div className="relative h-0">
+          <button
+            type="button"
+            tabIndex={isMobile ? -1 : undefined}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={addLineAtTop}
+            className="pn-top-line group absolute inset-x-0 top-0 z-[1] h-8 cursor-text outline-none"
+          >
+            <span className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center gap-1.5 opacity-0 transition-opacity [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-hover:delay-150 group-focus-visible:opacity-100">
+              <span className="flex items-center gap-1 text-xs leading-none text-pn-muted">
+                <Plus size={14} aria-hidden="true" />
+                {t('topRow.add')}
+              </span>
+              {/* Ends where the corner pills begin. */}
+              <span className="flex-1 border-t border-dashed border-pn-muted/40" style={{ marginInlineEnd: 'var(--pn-outline-fw, 0px)' }} />
+            </span>
+          </button>
+        </div>
       )}
       <EditorContent editor={editor} />
-      {editor && !readOnly && editor.isActive('table') && (
-        <TableControls editor={editor} />
+      <LinkAddressPill rootRef={rootRef} />
+      {/* Always mounted, hidden by itself until the caret is in a table: a
+          gate read here would only be as fresh as the last render of this
+          component, which a transaction does not cause. */}
+      {editor && !readOnly && (
+        <TableControls editor={editor} formulasUnlocked={proUnlocked(isPro)} onUpgrade={() => onOpenUpgradeRef.current?.(null)} />
       )}
       {editor && !readOnly && linkPopoverOpen && isMobile && (
-        <LinkSheet editor={editor} isMobile={true} onClose={() => setLinkPopoverOpen(false)} />
+        <LinkSheet editor={editor} isMobile={true} anchorRef={linkAnchorRef} onClose={() => setLinkPopoverOpen(false)} />
       )}
+      <ContextMenu state={linkMenu.state} onClose={linkMenu.close} />
     </div>
   );
 });
@@ -847,10 +1333,10 @@ export const Editor = forwardRef<EditorHandle, Props>(function Editor(props, ref
     // frame on a cache hit, for the parse duration on a miss.
     return (
       <div className="animate-pulse space-y-4 py-6" aria-hidden="true">
-        <div className="h-4 w-3/4 rounded bg-neutral-200 dark:bg-neutral-800" />
-        <div className="h-4 w-full rounded bg-neutral-200 dark:bg-neutral-800" />
-        <div className="h-4 w-5/6 rounded bg-neutral-200 dark:bg-neutral-800" />
-        <div className="h-4 w-2/3 rounded bg-neutral-200 dark:bg-neutral-800" />
+        <div className="h-4 w-3/4 rounded bg-pn/10" />
+        <div className="h-4 w-full rounded bg-pn/10" />
+        <div className="h-4 w-5/6 rounded bg-pn/10" />
+        <div className="h-4 w-2/3 rounded bg-pn/10" />
       </div>
     );
   }

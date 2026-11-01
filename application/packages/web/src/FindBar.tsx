@@ -1,21 +1,36 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Editor as TipTapEditor } from '@tiptap/react';
-import { MagnifyingGlass, CaretUp, CaretDown, X } from './icons';
+import { MagnifyingGlass, X } from './icons';
 import { HoverLabel } from './HoverLabel';
+import { isImeComposing } from './imeComposing';
+import { BAR_BTN, MatchNav, ReplaceToggle } from './MatchNav';
+import { keyText } from './shortcutMatch';
 import {
   setSearchQuery,
   setActiveMatch,
   clearSearch,
   getSearchInfo,
   scrollToCurrentMatch,
-  getActiveMatchRange,
+  scrollToCurrentMatchUntilSettled,
+  type SearchInfo,
 } from './editorSearch';
 
 type Props = {
   editor: TipTapEditor;
   /** Bumped by the parent on every Cmd/Ctrl+F so the input refocuses + selects. */
   focusTick: number;
+  /** Word to open on when the list search is what opened the bar (GitHub
+   *  #288): the input starts filled, its hits marked, and the caret stays
+   *  where it was. */
+  initialQuery?: string;
+  /** The term to start on when the reader swapped here from the replace bar. */
+  startQuery?: string;
+  /** Grows the bar into the replace bar with the current term. Absent on a
+   *  read-only note, which refuses replace. */
+  onSwap?: (query: string) => void;
+  /** Free account: the swap button carries the Pro rocket. */
+  swapPro?: boolean;
   onClose: () => void;
 };
 
@@ -26,22 +41,27 @@ type Props = {
  * view. Cmd/Ctrl+F or the X closes it and returns focus to the note; Esc
  * deliberately does not (see onKeyDown).
  *
+ * Opened by the list search it starts on the matched word (`initialQuery`)
+ * and then neither reads the selection nor takes focus.
+ *
  * All match-finding and highlighting lives in editorSearch.ts; this is just
- * the control surface.
+ * the control surface. ReplaceBar.tsx is its Pro twin on the same plugin,
+ * and MatchNav.tsx holds the count and arrows both bars draw.
  */
-export function FindBar({ editor, focusTick, onClose }: Props) {
+export function FindBar({ editor, focusTick, initialQuery, startQuery, onSwap, swapPro = false, onClose }: Props) {
   const { t } = useTranslation('editor');
   const inputRef = useRef<HTMLInputElement>(null);
-  const [query, setQuery] = useState('');
-  const [info, setInfo] = useState<{ active: number; total: number }>({ active: -1, total: 0 });
+  const [query, setQuery] = useState(initialQuery || startQuery || '');
+  const [info, setInfo] = useState<SearchInfo>({ active: -1, total: 0, activeIsNode: false });
 
   const refresh = useCallback(() => {
     setInfo(getSearchInfo(editor.view));
   }, [editor]);
 
   // Prefill from the current selection (single line, sane length), the way a
-  // browser find does. Runs once on open.
+  // browser find does. Runs once on open. A seeded open already has its word.
   useEffect(() => {
+    if (initialQuery || startQuery) return;
     const { from, to } = editor.state.selection;
     if (to > from) {
       const sel = editor.state.doc.textBetween(from, to, ' ').trim();
@@ -51,10 +71,13 @@ export function FindBar({ editor, focusTick, onClose }: Props) {
   }, []);
 
   // Push the query into the plugin, refresh the count, jump to the first hit.
+  // The jump keeps re-centering until layout settles: a seeded bar opens on
+  // a note that has just mounted, whose images grow as they decode. The
+  // arrows below scroll once, because by then the note is laid out.
   useEffect(() => {
     setSearchQuery(editor.view, query);
     refresh();
-    if (query) requestAnimationFrame(() => scrollToCurrentMatch(editor.view));
+    if (query) scrollToCurrentMatchUntilSettled(editor.view);
   }, [query, editor, refresh]);
 
   // Keep the count fresh while the note is edited under an open bar.
@@ -68,13 +91,19 @@ export function FindBar({ editor, focusTick, onClose }: Props) {
     return () => { if (!editor.isDestroyed) clearSearch(editor.view); };
   }, [editor]);
 
-  // Focus + select on open and on every subsequent Cmd/Ctrl+F.
+  // Focus + select on open and on every subsequent Cmd/Ctrl+F. A seeded bar
+  // never focuses itself: the reader is typing in the list search box, not
+  // the bar, and on a phone a focused input raises the keyboard over the
+  // hits the bar was opened to show. The tick cannot move while a seeded bar is
+  // mounted (Cmd/Ctrl+F closes it), so the guard is the prop alone, which
+  // also survives StrictMode running the effect twice.
   useEffect(() => {
+    if (initialQuery) return;
     const el = inputRef.current;
     if (!el) return;
     el.focus();
     el.select();
-  }, [focusTick]);
+  }, [focusTick, initialQuery]);
 
   const go = useCallback((dir: 1 | -1) => {
     const { active, total } = getSearchInfo(editor.view);
@@ -97,7 +126,7 @@ export function FindBar({ editor, focusTick, onClose }: Props) {
    * is the mouse equivalent and calls onClose directly.
    */
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !isImeComposing(e)) {
       e.preventDefault();
       go(e.shiftKey ? -1 : 1);
     }
@@ -107,14 +136,9 @@ export function FindBar({ editor, focusTick, onClose }: Props) {
   const noHits = info.total === 0 && hasQuery;
   const count = info.total > 0 ? `${info.active + 1}/${info.total}` : hasQuery ? '0/0' : '';
 
-  const btn =
-    'flex items-center justify-center w-7 h-7 rounded text-neutral-600 dark:text-neutral-300 ' +
-    '[@media(hover:hover)]:hover:bg-neutral-200 [@media(hover:hover)]:dark:hover:bg-neutral-800 ' +
-    'disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition shrink-0 outline-none';
-
   return (
     <div className="pointer-events-auto mt-1 me-2 flex items-center gap-0.5 rounded-lg border border-divider bg-surface-1 shadow-lg px-1.5 py-1">
-      <MagnifyingGlass size={15} className="text-neutral-400 dark:text-neutral-500 shrink-0 ms-0.5 me-0.5" />
+      <MagnifyingGlass size={15} className="text-pn-muted shrink-0 ms-0.5 me-0.5" />
       <input
         ref={inputRef}
         type="text"
@@ -125,41 +149,12 @@ export function FindBar({ editor, focusTick, onClose }: Props) {
         aria-label={t('find.label')}
         spellCheck={false}
         autoComplete="off"
-        className="w-36 sm:w-44 bg-transparent text-sm text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 outline-none px-1"
+        className="w-36 sm:w-44 bg-transparent text-sm text-pn placeholder:text-pn-muted outline-none px-1"
       />
-      <span
-        className={`min-w-[3.5ch] text-center text-xs tabular-nums shrink-0 ${
-          noHits ? 'text-red-500' : 'text-neutral-400 dark:text-neutral-500'
-        }`}
-      >
-        {count}
-      </span>
-      <HoverLabel label={t('find.previousTitle')} position="below">
-        <button
-          type="button"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => go(-1)}
-          disabled={info.total === 0}
-          aria-label={t('find.previous')}
-          className={btn}
-        >
-          <CaretUp size={15} />
-        </button>
-      </HoverLabel>
-      <HoverLabel label={t('find.nextTitle')} position="below">
-        <button
-          type="button"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => go(1)}
-          disabled={info.total === 0}
-          aria-label={t('find.next')}
-          className={btn}
-        >
-          <CaretDown size={15} />
-        </button>
-      </HoverLabel>
+      <MatchNav count={count} noHits={noHits} canStep={info.total > 0} onStep={go} />
+      {onSwap && <ReplaceToggle open={false} pro={swapPro} onClick={() => onSwap(query)} />}
       <div className="w-px h-5 bg-divider mx-0.5 shrink-0" aria-hidden="true" />
-      <HoverLabel label={t('find.closeTitle')} position="below-end">
+      <HoverLabel label={t('find.closeTitle')} keys={keyText('find')} position="below-end">
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
@@ -168,7 +163,7 @@ export function FindBar({ editor, focusTick, onClose }: Props) {
           // type-checking against it and silently did nothing at runtime.
           onClick={onClose}
           aria-label={t('find.close')}
-          className={btn}
+          className={BAR_BTN}
         >
           <X size={15} />
         </button>

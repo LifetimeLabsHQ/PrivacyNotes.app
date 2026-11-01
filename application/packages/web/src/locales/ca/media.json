@@ -12,17 +12,25 @@
     "uploadFailed": "La pujada ha fallat: {{message}}",
     "storeUnavailable": "El magatzem d'imatges no està disponible",
     "loadFailed": "No s'ha pogut carregar la imatge",
-    "notFound": "No s'ha trobat la imatge"
+    "notFound": "No s'ha trobat la imatge",
+    "saveFailed": "No s'ha pogut desar, així que el fitxer pot estar buit o incomplet.",
+    "viewAria": "Mostra la imatge",
+    "copyAria": "Copia la imatge",
+    "copyFailed": "No s'ha pogut copiar la imatge.",
+    "picturesLeftOut": "Algunes imatges no s'han afegit. Copia una imatge sola per enganxar-la."
   },
   "attachment": {
     "fallbackName": "Adjunt",
+    "rename": "Canvia el nom",
+    "renamePlaceholder": "Nom del fitxer",
+    "saveName": "Desa el nom",
+    "seek": "Posició de reproducció",
     "imageAlt": "Imatge",
     "cantPlay": "No es pot reproduir. Baixa'l per escoltar-lo",
     "downloadingStatus": "s'està baixant...",
     "deleteConfirm": "Suprimir?",
     "copied": "Copiat",
     "download": "Baixa",
-    "downloadToPlay": "Baixa'l per reproduir-lo",
     "play": "Reprodueix",
     "pause": "Pausa",
     "fileNotFound": "No s'ha trobat el fitxer",
@@ -33,6 +41,40 @@
     "downloadFailed": "La baixada ha fallat",
     "playbackFailed": "La reproducció ha fallat",
     "uploadFailed": "La pujada ha fallat: {{message}}",
-    "unknownError": "Error desconegut"
+    "unknownError": "Error desconegut",
+    "view": "Mostra",
+    "more": "Més accions"
+  },
+  "viewer": {
+    "previous": "Anterior",
+    "next": "Següent",
+    "position": "{{index}} de {{count}}",
+    "zoomIn": "Amplia",
+    "zoomOut": "Redueix",
+    "pdfLoading": "S'està obrint el PDF...",
+    "pdfFailed": "No es pot obrir aquest PDF. Baixa'l per obrir-lo en una altra app.",
+    "pdfPassword": "Aquest PDF té contrasenya. Baixa'l per obrir-lo en una altra app.",
+    "saveFailed": "No s'ha pogut desar, així que el fitxer pot estar buit o incomplet.",
+    "pageCount_one": "{{count}} pàgina",
+    "pageCount_other": "{{count}} pàgines",
+    "pageLabel": "{{name}}, pàgina {{page}} de {{count}}"
+  },
+  "mail": {
+    "loading": "S'està obrint el correu...",
+    "failed": "No es pot llegir aquest correu. Baixa'l per obrir-lo en una altra app.",
+    "from": "De",
+    "to": "Per a",
+    "cc": "Cc",
+    "date": "Data",
+    "noSubject": "(Sense assumpte)",
+    "empty": "Aquest correu no té text.",
+    "attachments": "Adjunts"
+  },
+  "picker": {
+    "title": "Imatges a Fitxers",
+    "search": "Cerca imatges",
+    "empty": "Encara no hi ha imatges a Fitxers. Puja'n una allà i després afegeix-la aquí.",
+    "noMatch": "Cap imatge no coincideix amb la cerca.",
+    "noCopy": "Una imatge que afegeixes aquí apunta al fitxer de Fitxers, així que no ocupa emmagatzematge addicional."
   }
 }

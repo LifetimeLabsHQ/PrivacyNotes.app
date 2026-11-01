@@ -8,16 +8,23 @@
     "readOnly": "للقراءة فقط",
     "file": "ملف",
     "empty": "فارغة",
-    "noContent": "بلا محتوى"
+    "noContent": "بلا محتوى",
+    "notBackedUp": "غير منسوخة احتياطيًا",
+    "archived": "مؤرشف",
+    "entryDate": "تاريخ التدوينة",
+    "date": "التاريخ",
+    "dayOf": "اليوم {{n}} من {{total}}"
   },
   "header": {
     "new": "جديد",
     "newNote": "ملاحظة جديدة",
-    "newNoteHover": "ملاحظة جديدة ({{hotkey}})",
-    "trash": "المهملات"
+    "trash": "المهملات",
+    "newEvent": "حدث جديد"
   },
   "folderChip": {
-    "clear": "مسح عامل تصفية المجلد: {{folder}}"
+    "clear": "مسح عامل تصفية المجلد: {{folder}}",
+    "subfolders": "المجلدات الفرعية",
+    "subfoldersLabel": "تضمين المجلدات الفرعية"
   },
   "tagChip": {
     "clear": "مسح عامل تصفية الوسم: {{tag}}"
@@ -26,15 +33,21 @@
     "ariaLabel": "عنصر خزنة جديد",
     "login": "بيانات تسجيل الدخول",
     "card": "بطاقة ائتمان",
-    "sshKey": "مفتاح SSH"
+    "sshKey": "مفتاح SSH",
+    "generator": "كلمة مرور"
   },
   "newMenu": {
     "note": "ملاحظة",
     "task": "مهمة",
+    "kanban": "لوحة كانبان",
     "journal": "اليوميات",
     "login": "بيانات تسجيل الدخول",
     "file": "ملف",
-    "bookmark": "إشارة مرجعية"
+    "bookmark": "إشارة مرجعية",
+    "clipPage": "قصّ صفحة",
+    "contact": "جهة اتصال",
+    "event": "حدث",
+    "quickAdd": "إضافة سريعة"
   },
   "vaultFilter": {
     "all": "الكل",
@@ -43,9 +56,7 @@
     "keys": "مفاتيح"
   },
   "journal": {
-    "backfillHover": "يومية جديدة ليوم سابق",
-    "newEntry": "تدوينة يومية جديدة",
-    "newEntryHover": "تدوينة يومية جديدة ({{hotkey}})"
+    "newEntry": "تدوينة يومية جديدة"
   },
   "tasks": {
     "newTitle": "مهام {{date}}"
@@ -54,12 +65,13 @@
     "empty": "إفراغ",
     "emptyHover": "حذف جميع الملاحظات في المهملات",
     "storage": "مساحة التخزين",
-    "autoDelete": "حذف تلقائي: 30 يومًا"
+    "autoDelete": "حذف تلقائي بعد 30 يومًا"
   },
   "search": {
     "sortOptions": "خيارات الفرز والعرض",
     "placeholderVault": "ابحث في الخزنة…",
-    "placeholderNotes": "ابحث في الملاحظات…"
+    "placeholderNotes": "ابحث في الملاحظات…",
+    "placeholderEvents": "ابحث في الأحداث…"
   },
   "selection": {
     "countOf": "{{selected}} من {{total}} محددة",
@@ -70,9 +82,30 @@
     "noMatches": "لا توجد نتائج مطابقة.",
     "vault": "الخزنة فارغة.",
     "notes": "لا توجد ملاحظات بعد.",
+    "archive": "لا يوجد شيء مؤرشف.",
+    "trash": "المهملات فارغة.",
     "filtered": "لا توجد عناصر تطابق عوامل التصفية.",
     "clearFilters": "مسح عوامل التصفية",
-    "filteredAfter": "لعرضها."
+    "filteredAfter": "لعرضها.",
+    "hiddenInAll_zero": "{{count}} عنصر مخفي بخيار العرض في «الكل». افتح عامل التصفية بجوار «الكل» لإظهارها.",
+    "hiddenInAll_one": "عنصر واحد مخفي بخيار العرض في «الكل». افتح عامل التصفية بجوار «الكل» لإظهاره.",
+    "hiddenInAll_two": "عنصران مخفيان بخيار العرض في «الكل». افتح عامل التصفية بجوار «الكل» لإظهارهما.",
+    "hiddenInAll_few": "{{count}} عناصر مخفية بخيار العرض في «الكل». افتح عامل التصفية بجوار «الكل» لإظهارها.",
+    "hiddenInAll_many": "{{count}} عنصرًا مخفيًا بخيار العرض في «الكل». افتح عامل التصفية بجوار «الكل» لإظهارها.",
+    "hiddenInAll_other": "{{count}} عنصر مخفي بخيار العرض في «الكل». افتح عامل التصفية بجوار «الكل» لإظهارها.",
+    "inOtherSpace_zero": "{{count}} عنصر في مساحة «{{space}}». انتقل إلى «{{space}}» في الشريط الجانبي لرؤيتها.",
+    "inOtherSpace_one": "عنصر واحد في مساحة «{{space}}». انتقل إلى «{{space}}» في الشريط الجانبي لرؤيته.",
+    "inOtherSpace_two": "عنصران في مساحة «{{space}}». انتقل إلى «{{space}}» في الشريط الجانبي لرؤيتهما.",
+    "inOtherSpace_few": "{{count}} عناصر في مساحة «{{space}}». انتقل إلى «{{space}}» في الشريط الجانبي لرؤيتها.",
+    "inOtherSpace_many": "{{count}} عنصرًا في مساحة «{{space}}». انتقل إلى «{{space}}» في الشريط الجانبي لرؤيتها.",
+    "inOtherSpace_other": "{{count}} عنصر في مساحة «{{space}}». انتقل إلى «{{space}}» في الشريط الجانبي لرؤيتها."
+  },
+  "listGroups": {
+    "previous7Days": "آخر 7 أيام",
+    "previous30Days": "آخر 30 يومًا",
+    "other": "أخرى",
+    "collapseAll": "طي كل المجموعات",
+    "expandAll": "توسيع كل المجموعات"
   },
   "headerLabel": {
     "allItems": "الكل",
@@ -80,31 +113,84 @@
     "journals": "اليوميات",
     "vault": "الخزنة",
     "pinned": "المثبتة",
-    "notes": "الملاحظات"
+    "archive": "الأرشيف",
+    "notes": "الملاحظات",
+    "calendar": "التقويم"
   },
   "footerStats": {
-    "journals": "اليوميات",
-    "items": "العناصر",
-    "trashed": "في المهملات",
-    "notes": "الملاحظات",
-    "bookmarks": "الإشارات المرجعية"
+    "today": "اليوم",
+    "journals_zero": "يوميات",
+    "journals_one": "يومية",
+    "journals_two": "يوميتان",
+    "journals_few": "يوميات",
+    "journals_many": "يومية",
+    "journals_other": "يومية",
+    "items_zero": "عناصر",
+    "items_one": "عنصر",
+    "items_two": "عنصران",
+    "items_few": "عناصر",
+    "items_many": "عنصرًا",
+    "items_other": "عنصر",
+    "trashed_zero": "في المهملات",
+    "trashed_one": "في المهملات",
+    "trashed_two": "في المهملات",
+    "trashed_few": "في المهملات",
+    "trashed_many": "في المهملات",
+    "trashed_other": "في المهملات",
+    "notes_zero": "ملاحظات",
+    "notes_one": "ملاحظة",
+    "notes_two": "ملاحظتان",
+    "notes_few": "ملاحظات",
+    "notes_many": "ملاحظة",
+    "notes_other": "ملاحظة",
+    "bookmarks_zero": "إشارات مرجعية",
+    "bookmarks_one": "إشارة مرجعية",
+    "bookmarks_two": "إشارتان مرجعيتان",
+    "bookmarks_few": "إشارات مرجعية",
+    "bookmarks_many": "إشارة مرجعية",
+    "bookmarks_other": "إشارة مرجعية",
+    "contacts_zero": "جهات اتصال",
+    "contacts_one": "جهة اتصال",
+    "contacts_two": "جهتا اتصال",
+    "contacts_few": "جهات اتصال",
+    "contacts_many": "جهة اتصال",
+    "contacts_other": "جهة اتصال",
+    "files_zero": "ملفات",
+    "files_one": "ملف",
+    "files_two": "ملفان",
+    "files_few": "ملفات",
+    "files_many": "ملفًا",
+    "files_other": "ملف",
+    "lists_zero": "قوائم",
+    "lists_one": "قائمة",
+    "lists_two": "قائمتان",
+    "lists_few": "قوائم",
+    "lists_many": "قائمة",
+    "lists_other": "قائمة",
+    "tasks_zero": "مهام",
+    "tasks_one": "مهمة",
+    "tasks_two": "مهمتان",
+    "tasks_few": "مهام",
+    "tasks_many": "مهمة",
+    "tasks_other": "مهمة"
   },
   "toast": {
     "imageUploadFailed": "فشل تحميل الصورة: {{error}}",
     "imageError": "خطأ في الصورة: {{error}}",
     "uploadFailedFor": "فشل تحميل «{{filename}}»: {{error}}",
+    "importedSyncing_one": "تم استيراد ملاحظة واحدة. جارٍ المزامنة…",
+    "importedSyncing_other": "تم استيراد {{count}} ملاحظة. جارٍ المزامنة…",
+    "addedTag_one": "تمت إضافة الوسم #{{tag}} إلى عنصر واحد",
+    "addedTag_other": "تمت إضافة الوسم #{{tag}} إلى {{count}} عنصر",
     "importedSyncing_zero": "تم استيراد {{count}} ملاحظات. جارٍ المزامنة…",
-    "importedSyncing_one": "تم استيراد {{count}} ملاحظة. جارٍ المزامنة…",
-    "importedSyncing_two": "تم استيراد {{count}} ملاحظتين. جارٍ المزامنة…",
+    "importedSyncing_two": "تم استيراد ملاحظتين. جارٍ المزامنة…",
     "importedSyncing_few": "تم استيراد {{count}} ملاحظات. جارٍ المزامنة…",
     "importedSyncing_many": "تم استيراد {{count}} ملاحظة. جارٍ المزامنة…",
-    "importedSyncing_other": "تم استيراد {{count}} ملاحظة. جارٍ المزامنة…",
     "addedTag_zero": "تمت إضافة الوسم #{{tag}} إلى {{count}} عناصر",
-    "addedTag_one": "تمت إضافة الوسم #{{tag}} إلى {{count}} عنصر",
-    "addedTag_two": "تمت إضافة الوسم #{{tag}} إلى {{count}} عنصرين",
+    "addedTag_two": "تمت إضافة الوسم #{{tag}} إلى عنصرين",
     "addedTag_few": "تمت إضافة الوسم #{{tag}} إلى {{count}} عناصر",
     "addedTag_many": "تمت إضافة الوسم #{{tag}} إلى {{count}} عنصر",
-    "addedTag_other": "تمت إضافة الوسم #{{tag}} إلى {{count}} عنصر"
+    "restoreSummary": "تمت الاستعادة. أُضيف {{added}}، وحُدِّث {{updated}}، و{{unchanged}} محدَّث بالفعل."
   },
   "burn": {
     "mediaOnly": "تحتوي هذه الملاحظة على وسائط فقط، ولا يمكن مشاركتها عبر رابط الحرق.",
@@ -130,8 +216,17 @@
     "collapse": "طي قائمة الملاحظات",
     "expand": "توسيع قائمة الملاحظات"
   },
+  "split": {
+    "action": "تقسيم الملاحظة",
+    "done": "تم التقسيم إلى «{{title}}»",
+    "overLimit": "«{{title}}» تتجاوز 1 ميغابايت وتبقى على هذا الجهاز",
+    "cannot": "لا يمكن تقسيم هذه الملاحظة هنا. ضع المؤشر حيث يجب أن تبدأ الملاحظة الجديدة.",
+    "continuedTitle": "{{title}} (تتمة)",
+    "continuedIn": "التتمة في {{link}}"
+  },
   "paneResize": {
-    "hintCollapse": "انقر للطي · اسحب لتغيير الحجم"
+    "hintCollapse": "انقر للطي · اسحب لتغيير الحجم",
+    "hintExpand": "انقر للتوسيع · اسحب لتغيير الحجم"
   },
   "emptyEditor": {
     "selectFile": "اختر ملفًا للمعاينة",
@@ -141,10 +236,10 @@
   },
   "zen": {
     "exit": "الخروج من Zen",
-    "exitHover": "الخروج من وضع Zen (Esc)",
+    "exitHover": "الخروج من وضع Zen",
     "enterHover": "الدخول في وضع Zen",
     "proHover": "وضع Zen (Pro)",
-    "enterAriaShortcut": "الدخول في وضع Zen (⌘⇧F)"
+    "enterAriaShortcut": "الدخول في وضع Zen ({{keys}})"
   },
   "editor": {
     "backToList": "العودة إلى قائمة الملاحظات",
@@ -166,8 +261,10 @@
     "invisiblesShow": "إظهار الأحرف غير المرئية",
     "invisiblesHide": "إخفاء الأحرف غير المرئية",
     "findInNote": "بحث في الملاحظة",
-    "navPrev": "الملاحظة السابقة",
-    "navNext": "الملاحظة التالية",
+    "navPrev": "السابق",
+    "navNext": "التالي",
+    "navPrevTab": "علامة التبويب السابقة",
+    "navNextTab": "علامة التبويب التالية",
     "undo": "تراجع",
     "redo": "إعادة",
     "hide": "إخفاء",
@@ -178,27 +275,25 @@
     "widthWide": "أوسع",
     "widthFull": "عرض كامل",
     "burn": "مشاركة وحرق بعد القراءة",
-    "titlePlaceholderLink": "اسم الإشارة المرجعية"
+    "titlePlaceholderLink": "اسم الإشارة المرجعية",
+    "titlePlaceholderContact": "الاسم",
+    "notBackedUpTooLarge": "تتجاوز حد 1 ميغابايت، لذا لم تُنسخ احتياطيًا. انقل الصور إلى المرفقات أو قسّم الملاحظة.",
+    "notBackedUpFailed": "غير منسوخة احتياطيًا. آخر خطأ: {{message}}. تجري إعادة المحاولة.",
+    "unknownType": "أُنشئ هذا العنصر في إصدار أحدث من PrivacyNotes. حدّث التطبيق لفتحه."
   },
   "share": {
     "hover": "مشاركة / تصدير",
     "ariaLabel": "مشاركة أو تصدير",
-    "thisNote": "هذه الملاحظة",
     "currentMdTitle": "الملاحظة الحالية (.md)",
     "currentMdDesc": "Markdown خام مع بيانات وصفية أولية (front-matter).",
     "currentHtmlTitle": "الملاحظة الحالية (.html)",
     "currentHtmlDesc": "مناسب للطباعة، يعرض Markdown على صفحة بيضاء.",
     "printTitle": "طباعة / حفظ كملف PDF",
     "printDesc": "يفتح مربع حوار الطباعة. احفظ كملف PDF أو أرسل إلى طابعة.",
+    "printTextTitle": "طباعة النص فقط",
+    "printTextDesc": "يحتفظ بالعنوان، ويحذف التاريخ والمجلد والوسوم.",
     "burnTitle": "مشاركة وحرق بعد القراءة",
-    "burnDesc": "انشر هذه الملاحظة كرابط عرض لمرة واحدة. يُتلف الرابط نفسه بعد قراءته. تبقى ملاحظتك آمنة في حسابك.",
-    "backup": "نسخة احتياطية",
-    "fullBackupTitle": "نسخة احتياطية كاملة (.zip)",
-    "fullBackupDesc": "كل شيء: الملاحظات، اليوميات، الخزنة، المهام، الصور، التسجيلات الصوتية، الملفات.",
-    "allHtmlTitle": "جميع العناصر (.zip من ملفات .html)",
-    "allHtmlDesc": "ملف HTML واحد قابل للطباعة لكل عنصر. مناسب للقراءة دون اتصال.",
-    "jsonTitle": "نسخة احتياطية نصية (.json)",
-    "jsonDesc": "جميع المحتوى النصي والبيانات الوصفية، دون صور أو ملفات."
+    "burnDesc": "انشر هذه الملاحظة كرابط عرض لمرة واحدة. يُتلف الرابط نفسه بعد قراءته. تبقى ملاحظتك آمنة في حسابك."
   },
   "weekReview": {
     "title": "مراجعة الأسبوع",
@@ -214,10 +309,22 @@
     "newNote": "جديد",
     "newNoteHintMac": "Option + Shift + N",
     "newNoteHintOther": "Alt + Shift + N",
+    "newNoteHintMacDesktop": "Command + N",
+    "newNoteHintOtherDesktop": "Ctrl + N",
     "openStats": "فتح الإحصاءات",
-    "words": "الكلمات",
+    "journalCalendar": "تقويم اليوميات",
+    "words_zero": "كلمات",
+    "words_one": "كلمة",
+    "words_two": "كلمتان",
+    "words_few": "كلمات",
+    "words_many": "كلمة",
+    "words_other": "كلمة",
     "zen": "وضع Zen",
     "appearance": "المظهر",
+    "lockApp": "قفل التطبيق",
+    "lockAppSetUp": "عيّن رمز PIN في «الأمان» أولًا",
+    "goToTop": "الانتقال إلى الأعلى",
+    "goToEnd": "الانتقال إلى النهاية",
     "signOut": "تسجيل الخروج",
     "signingOut": "جارٍ تسجيل الخروج…",
     "switchToLight": "التبديل إلى الوضع الفاتح",
@@ -225,20 +332,28 @@
   },
   "settings": {
     "groupYourNotes": "ملاحظاتك",
+    "groupPreferences": "التفضيلات",
     "groupAccount": "الحساب والبيانات",
     "groupBrand": "PrivacyNotes",
     "statsLabel": "الإحصاءات",
-    "journalsLabel": "اليوميات",
     "importLabel": "الاستيراد والتصدير",
     "planLabel": "الحساب",
     "storageLabel": "مساحة التخزين",
+    "imagesLabel": "الصور",
     "securityLabel": "الأمان",
     "accountLabel": "الهوية والمزامنة",
     "appearanceLabel": "المظهر",
+    "editorLabel": "المحرر",
+    "formatBarLabel": "شريط الأدوات",
+    "listsLabel": "القوائم",
+    "trackersLabel": "المتتبعات",
     "helpLabel": "المساعدة",
     "aboutLabel": "حول",
     "languageLabel": "اللغة",
-    "languageDesc": "اختر اللغة التي يُعرض بها PrivacyNotes."
+    "dateLabel": "التاريخ والوقت",
+    "dateTabFormat": "التنسيق",
+    "languageDesc": "اختر اللغة التي يُعرض بها PrivacyNotes.",
+    "calendarLabel": "التقويم"
   },
   "importStore": {
     "title": "استيراد أم تخزين؟",
@@ -249,20 +364,44 @@
   },
   "bulkTrash": {
     "title": "نقل إلى المهملات",
+    "body_one": "هل تريد نقل <highlight>عنصر واحد</highlight> إلى المهملات؟ يمكنك استعادته في وقت لاحق.",
+    "body_other": "هل تريد نقل <highlight>{{count}} عنصر</highlight> إلى المهملات؟ يمكنك استعادتها لاحقًا.",
     "body_zero": "هل تريد نقل <highlight>{{count}} عناصر</highlight> إلى المهملات؟ يمكنك استعادتها لاحقًا.",
-    "body_one": "هل تريد نقل <highlight>{{count}} عنصر</highlight> إلى المهملات؟ يمكنك استعادته لاحقًا.",
-    "body_two": "هل تريد نقل <highlight>{{count}} عنصرين</highlight> إلى المهملات؟ يمكنك استعادتهما لاحقًا.",
+    "body_two": "هل تريد نقل <highlight>عنصرين</highlight> إلى المهملات؟ يمكنك استعادتهما لاحقًا.",
     "body_few": "هل تريد نقل <highlight>{{count}} عناصر</highlight> إلى المهملات؟ يمكنك استعادتها لاحقًا.",
-    "body_many": "هل تريد نقل <highlight>{{count}} عنصر</highlight> إلى المهملات؟ يمكنك استعادتها لاحقًا.",
-    "body_other": "هل تريد نقل <highlight>{{count}} عنصر</highlight> إلى المهملات؟ يمكنك استعادتها لاحقًا."
+    "body_many": "هل تريد نقل <highlight>{{count}} عنصرًا</highlight> إلى المهملات؟ يمكنك استعادتها لاحقًا.",
+    "readOnlyTitle": "للقراءة فقط",
+    "readOnlyAcknowledge": "فهمت",
+    "readOnlyBlocked_zero": "<highlight>{{count}} عناصر</highlight> للقراءة فقط، لذلك لا يمكن نقل أي منها إلى المهملات. أوقف خيار «للقراءة فقط» من خيارات الملاحظة أولاً.",
+    "readOnlyBlocked_one": "هذا العنصر <highlight>للقراءة فقط</highlight>، لذلك لا يمكن نقله إلى المهملات. أوقف خيار «للقراءة فقط» من خيارات الملاحظة أولاً.",
+    "readOnlyBlocked_two": "<highlight>عنصران</highlight> كلاهما للقراءة فقط، لذلك لا يمكن نقل أي منهما إلى المهملات. أوقف خيار «للقراءة فقط» من خيارات الملاحظة أولاً.",
+    "readOnlyBlocked_few": "<highlight>{{count}} عناصر</highlight> كلها للقراءة فقط، لذلك لا يمكن نقل أي منها إلى المهملات. أوقف خيار «للقراءة فقط» من خيارات الملاحظة أولاً.",
+    "readOnlyBlocked_many": "<highlight>{{count}} عنصرًا</highlight> كلها للقراءة فقط، لذلك لا يمكن نقل أي منها إلى المهملات. أوقف خيار «للقراءة فقط» من خيارات الملاحظة أولاً.",
+    "readOnlyBlocked_other": "<highlight>{{count}} عنصر</highlight> كلها للقراءة فقط، لذلك لا يمكن نقل أي منها إلى المهملات. أوقف خيار «للقراءة فقط» من خيارات الملاحظة أولاً.",
+    "readOnlySkipped_zero": "<highlight>{{count}} عناصر</highlight> للقراءة فقط وتبقى في مكانها.",
+    "readOnlySkipped_one": "<highlight>عنصر واحد</highlight> للقراءة فقط ويبقى في مكانه.",
+    "readOnlySkipped_two": "<highlight>عنصران</highlight> للقراءة فقط ويبقيان في مكانهما.",
+    "readOnlySkipped_few": "<highlight>{{count}} عناصر</highlight> للقراءة فقط وتبقى في مكانها.",
+    "readOnlySkipped_many": "<highlight>{{count}} عنصرًا</highlight> للقراءة فقط وتبقى في مكانها.",
+    "readOnlySkipped_other": "<highlight>{{count}} عنصر</highlight> للقراءة فقط وتبقى في مكانها."
+  },
+  "deleteCheckedTasks": {
+    "title": "هل تريد حذف العناصر المحددة؟",
+    "confirm": "حذف",
+    "body_zero": "سيتم حذف <highlight>{{count}} عناصر</highlight> من هذه الملاحظة. لا يمكن التراجع عن هذا الإجراء.",
+    "body_one": "سيتم حذف <highlight>عنصر واحد</highlight> من هذه الملاحظة. لا يمكن التراجع عن هذا الإجراء.",
+    "body_two": "سيتم حذف <highlight>عنصرين</highlight> من هذه الملاحظة، بما فيها العناصر المتداخلة. لا يمكن التراجع عن هذا الإجراء.",
+    "body_few": "سيتم حذف <highlight>{{count}} عناصر</highlight> من هذه الملاحظة، بما فيها العناصر المتداخلة. لا يمكن التراجع عن هذا الإجراء.",
+    "body_many": "سيتم حذف <highlight>{{count}} عنصر</highlight> من هذه الملاحظة، بما فيها العناصر المتداخلة. لا يمكن التراجع عن هذا الإجراء.",
+    "body_other": "سيتم حذف <highlight>{{count}} عنصر</highlight> من هذه الملاحظة، بما فيها العناصر المتداخلة. لا يمكن التراجع عن هذا الإجراء."
   },
   "bulkDelete": {
+    "body_one": "هل تريد حذف <highlight>ملاحظة واحدة</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.",
+    "body_other": "هل تريد حذف <highlight>{{count}} ملاحظة</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.",
     "body_zero": "هل تريد حذف <highlight>{{count}} ملاحظات</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.",
-    "body_one": "هل تريد حذف <highlight>{{count}} ملاحظة</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.",
-    "body_two": "هل تريد حذف <highlight>{{count}} ملاحظتين</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.",
+    "body_two": "هل تريد حذف <highlight>ملاحظتين</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.",
     "body_few": "هل تريد حذف <highlight>{{count}} ملاحظات</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.",
-    "body_many": "هل تريد حذف <highlight>{{count}} ملاحظة</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.",
-    "body_other": "هل تريد حذف <highlight>{{count}} ملاحظة</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء."
+    "body_many": "هل تريد حذف <highlight>{{count}} ملاحظة</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء."
   },
   "tagConfirm": {
     "mergeTitle": "دمج الوسوم",
@@ -271,24 +410,24 @@
     "mergeConfirm": "دمج",
     "deleteConfirm": "حذف الوسم",
     "moveToTrash": "نقل إلى المهملات",
+    "mergeBody_one": "الوسم <highlight>«{{targetTag}}»</highlight> موجود بالفعل. هل تريد دمج <highlight>ملاحظة واحدة</highlight> موسومة حاليًا بـ «{{tag}}» فيه؟",
+    "mergeBody_other": "الوسم <highlight>«{{targetTag}}»</highlight> موجود بالفعل. هل تريد دمج <highlight>{{count}} ملاحظة</highlight> موسومة حاليًا بـ «{{tag}}» فيه؟",
+    "deleteBody_one": "هل تريد إزالة الوسم <highlight>«{{tag}}»</highlight> من <highlight>ملاحظة واحدة</highlight>؟ لن يتم حذف الملاحظة نفسها.",
+    "deleteBody_other": "هل تريد إزالة الوسم <highlight>«{{tag}}»</highlight> من <highlight>{{count}} ملاحظة</highlight>؟ لن يتم حذف الملاحظات نفسها.",
+    "deleteWithNotesBody_one": "هل تريد حذف الوسم <highlight>«{{tag}}»</highlight> ونقل <highlight>ملاحظة واحدة</highlight> إلى المهملات؟ يمكنك استعادتها من هناك.",
+    "deleteWithNotesBody_other": "هل تريد حذف الوسم <highlight>«{{tag}}»</highlight> ونقل <highlight>{{count}} ملاحظة</highlight> إلى المهملات؟ يمكنك استعادتها من هناك.",
     "mergeBody_zero": "الوسم <highlight>«{{targetTag}}»</highlight> موجود بالفعل. هل تريد دمج <highlight>{{count}} ملاحظات</highlight> موسومة حاليًا بـ «{{tag}}» فيه؟",
-    "mergeBody_one": "الوسم <highlight>«{{targetTag}}»</highlight> موجود بالفعل. هل تريد دمج <highlight>{{count}} ملاحظة</highlight> موسومة حاليًا بـ «{{tag}}» فيه؟",
-    "mergeBody_two": "الوسم <highlight>«{{targetTag}}»</highlight> موجود بالفعل. هل تريد دمج <highlight>{{count}} ملاحظتين</highlight> موسومتين حاليًا بـ «{{tag}}» فيه؟",
+    "mergeBody_two": "الوسم <highlight>«{{targetTag}}»</highlight> موجود بالفعل. هل تريد دمج <highlight>ملاحظتين</highlight> موسومتين حاليًا بـ «{{tag}}» فيه؟",
     "mergeBody_few": "الوسم <highlight>«{{targetTag}}»</highlight> موجود بالفعل. هل تريد دمج <highlight>{{count}} ملاحظات</highlight> موسومة حاليًا بـ «{{tag}}» فيه؟",
     "mergeBody_many": "الوسم <highlight>«{{targetTag}}»</highlight> موجود بالفعل. هل تريد دمج <highlight>{{count}} ملاحظة</highlight> موسومة حاليًا بـ «{{tag}}» فيه؟",
-    "mergeBody_other": "الوسم <highlight>«{{targetTag}}»</highlight> موجود بالفعل. هل تريد دمج <highlight>{{count}} ملاحظة</highlight> موسومة حاليًا بـ «{{tag}}» فيه؟",
     "deleteBody_zero": "هل تريد إزالة الوسم <highlight>«{{tag}}»</highlight> من <highlight>{{count}} ملاحظات</highlight>؟ لن يتم حذف الملاحظات نفسها.",
-    "deleteBody_one": "هل تريد إزالة الوسم <highlight>«{{tag}}»</highlight> من <highlight>{{count}} ملاحظة</highlight>؟ لن يتم حذف الملاحظة نفسها.",
-    "deleteBody_two": "هل تريد إزالة الوسم <highlight>«{{tag}}»</highlight> من <highlight>{{count}} ملاحظتين</highlight>؟ لن يتم حذف الملاحظتين أنفسهما.",
+    "deleteBody_two": "هل تريد إزالة الوسم <highlight>«{{tag}}»</highlight> من <highlight>ملاحظتين</highlight>؟ لن يتم حذف الملاحظتين أنفسهما.",
     "deleteBody_few": "هل تريد إزالة الوسم <highlight>«{{tag}}»</highlight> من <highlight>{{count}} ملاحظات</highlight>؟ لن يتم حذف الملاحظات نفسها.",
     "deleteBody_many": "هل تريد إزالة الوسم <highlight>«{{tag}}»</highlight> من <highlight>{{count}} ملاحظة</highlight>؟ لن يتم حذف الملاحظات نفسها.",
-    "deleteBody_other": "هل تريد إزالة الوسم <highlight>«{{tag}}»</highlight> من <highlight>{{count}} ملاحظة</highlight>؟ لن يتم حذف الملاحظات نفسها.",
     "deleteWithNotesBody_zero": "هل تريد حذف الوسم <highlight>«{{tag}}»</highlight> ونقل <highlight>{{count}} ملاحظات</highlight> إلى المهملات؟ يمكنك استعادتها من هناك.",
-    "deleteWithNotesBody_one": "هل تريد حذف الوسم <highlight>«{{tag}}»</highlight> ونقل <highlight>{{count}} ملاحظة</highlight> إلى المهملات؟ يمكنك استعادتها من هناك.",
-    "deleteWithNotesBody_two": "هل تريد حذف الوسم <highlight>«{{tag}}»</highlight> ونقل <highlight>{{count}} ملاحظتين</highlight> إلى المهملات؟ يمكنك استعادتهما من هناك.",
+    "deleteWithNotesBody_two": "هل تريد حذف الوسم <highlight>«{{tag}}»</highlight> ونقل <highlight>ملاحظتين</highlight> إلى المهملات؟ يمكنك استعادتهما من هناك.",
     "deleteWithNotesBody_few": "هل تريد حذف الوسم <highlight>«{{tag}}»</highlight> ونقل <highlight>{{count}} ملاحظات</highlight> إلى المهملات؟ يمكنك استعادتها من هناك.",
-    "deleteWithNotesBody_many": "هل تريد حذف الوسم <highlight>«{{tag}}»</highlight> ونقل <highlight>{{count}} ملاحظة</highlight> إلى المهملات؟ يمكنك استعادتها من هناك.",
-    "deleteWithNotesBody_other": "هل تريد حذف الوسم <highlight>«{{tag}}»</highlight> ونقل <highlight>{{count}} ملاحظة</highlight> إلى المهملات؟ يمكنك استعادتها من هناك."
+    "deleteWithNotesBody_many": "هل تريد حذف الوسم <highlight>«{{tag}}»</highlight> ونقل <highlight>{{count}} ملاحظة</highlight> إلى المهملات؟ يمكنك استعادتها من هناك."
   },
   "createNote": {
     "title": "إنشاء ملاحظة؟",
@@ -299,5 +438,22 @@
     "title": "تم إنشاء خزنة جديدة",
     "confirm": "فهمت",
     "body": "لم تُطابق أي خزنة موجودة العبارة التي أدخلتها، لذا أُنشئت خزنة جديدة فارغة. إذا كنت تتوقع رؤية ملاحظاتك، فسجّل الخروج وأعد إدخال عبارتك بعناية - فكلمة واحدة مختلفة تفتح خزنة مختلفة تمامًا."
+  },
+  "ambiguousLink": {
+    "title": "ملاحظتان تحملان العنوان نفسه",
+    "body": "أكثر من ملاحظة تحمل العنوان <highlight>«{{title}}»</highlight>، لذلك لا يوضّح هذا الرابط أيّهما يقصد. أعد تسمية إحداهما ليشير الرابط إلى الأخرى."
+  },
+  "connections": {
+    "title": "الصلات",
+    "hide": "إخفاء الصلات",
+    "linkedFrom": "روابط واردة",
+    "linksTo": "روابط صادرة",
+    "missing": "لم تُنشأ بعد",
+    "protectedHidden_zero": "{{count}} عنصر محمي برمز PIN غير معروض",
+    "protectedHidden_one": "عنصر واحد محمي برمز PIN غير معروض",
+    "protectedHidden_two": "عنصران محميان برمز PIN غير معروضين",
+    "protectedHidden_few": "{{count}} عناصر محمية برمز PIN غير معروضة",
+    "protectedHidden_many": "{{count}} عنصرًا محميًا برمز PIN غير معروض",
+    "protectedHidden_other": "{{count}} عنصر محمي برمز PIN غير معروض"
   }
 }

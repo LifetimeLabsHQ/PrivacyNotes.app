@@ -8,16 +8,23 @@
     "readOnly": "Apenas leitura",
     "file": "Ficheiro",
     "empty": "Vazia",
-    "noContent": "Sem conteúdo"
+    "noContent": "Sem conteúdo",
+    "notBackedUp": "Sem cópia de segurança",
+    "archived": "Arquivado",
+    "entryDate": "Data da entrada",
+    "date": "Data",
+    "dayOf": "dia {{n}} de {{total}}"
   },
   "header": {
     "new": "Nova",
     "newNote": "Nova nota",
-    "newNoteHover": "Nova nota ({{hotkey}})",
-    "trash": "Lixo"
+    "trash": "Lixo",
+    "newEvent": "Novo evento"
   },
   "folderChip": {
-    "clear": "Remover o filtro de pasta: {{folder}}"
+    "clear": "Remover o filtro de pasta: {{folder}}",
+    "subfolders": "Subpastas",
+    "subfoldersLabel": "Incluir as subpastas"
   },
   "tagChip": {
     "clear": "Remover o filtro de etiqueta: {{tag}}"
@@ -26,15 +33,21 @@
     "ariaLabel": "Novo item do cofre",
     "login": "Login",
     "card": "Cartão de Crédito",
-    "sshKey": "Chave SSH"
+    "sshKey": "Chave SSH",
+    "generator": "Palavra-passe"
   },
   "newMenu": {
     "note": "Nota",
     "task": "Tarefa",
+    "kanban": "Quadro Kanban",
     "journal": "Diário",
     "login": "Login",
     "file": "Ficheiro",
-    "bookmark": "Marcador"
+    "bookmark": "Marcador",
+    "clipPage": "Recortar página",
+    "contact": "Contacto",
+    "event": "Evento",
+    "quickAdd": "Adição rápida"
   },
   "vaultFilter": {
     "all": "Todos",
@@ -43,9 +56,7 @@
     "keys": "Chaves"
   },
   "journal": {
-    "backfillHover": "Novo diário para um dia recente",
-    "newEntry": "Nova entrada de diário",
-    "newEntryHover": "Nova entrada de diário ({{hotkey}})"
+    "newEntry": "Nova entrada de diário"
   },
   "tasks": {
     "newTitle": "Tarefas de {{date}}"
@@ -54,12 +65,13 @@
     "empty": "Esvaziar",
     "emptyHover": "Eliminar todas as notas do lixo",
     "storage": "Armazenamento",
-    "autoDelete": "Eliminação auto.: 30 d"
+    "autoDelete": "Eliminar após 30 dias"
   },
   "search": {
     "sortOptions": "Opções de ordenação e vista",
     "placeholderVault": "Procurar no cofre…",
-    "placeholderNotes": "Procurar notas…"
+    "placeholderNotes": "Procurar notas…",
+    "placeholderEvents": "Procurar eventos…"
   },
   "selection": {
     "countOf": "{{selected}} de {{total}} selecionados",
@@ -70,9 +82,22 @@
     "noMatches": "Sem resultados.",
     "vault": "O cofre está vazio.",
     "notes": "Ainda não há notas.",
+    "archive": "Nada arquivado.",
+    "trash": "O Lixo está vazio.",
     "filtered": "Nenhum item corresponde aos teus filtros.",
     "clearFilters": "Remover os filtros",
-    "filteredAfter": "para os mostrar."
+    "filteredAfter": "para os mostrar.",
+    "hiddenInAll_other": "{{count}} itens estão ocultos pelo filtro Mostrar em Todos. Abre o filtro ao lado de Todos para os mostrar.",
+    "inOtherSpace_other": "{{count}} itens estão no teu espaço {{space}}. Muda para {{space}} na barra lateral para os veres.",
+    "inOtherSpace_one": "{{count}} item está no teu espaço {{space}}. Muda para {{space}} na barra lateral para o veres.",
+    "hiddenInAll_one": "{{count}} item está oculto pelo filtro Mostrar em Todos. Abre o filtro ao lado de Todos para o mostrar."
+  },
+  "listGroups": {
+    "previous7Days": "Últimos 7 dias",
+    "previous30Days": "Últimos 30 dias",
+    "other": "Outros",
+    "collapseAll": "Recolher todos os grupos",
+    "expandAll": "Expandir todos os grupos"
   },
   "headerLabel": {
     "allItems": "Todos",
@@ -80,14 +105,30 @@
     "journals": "Diários",
     "vault": "Cofre",
     "pinned": "Fixados",
-    "notes": "Notas"
+    "archive": "Arquivo",
+    "notes": "Notas",
+    "calendar": "Calendário"
   },
   "footerStats": {
-    "journals": "Diários",
-    "items": "Itens",
-    "trashed": "No lixo",
-    "notes": "Notas",
-    "bookmarks": "Marcadores"
+    "journals_other": "Diários",
+    "journals_one": "Diário",
+    "items_other": "Itens",
+    "items_one": "Item",
+    "trashed_other": "no Lixo",
+    "trashed_one": "no Lixo",
+    "notes_other": "Notas",
+    "notes_one": "Nota",
+    "bookmarks_other": "Marcadores",
+    "bookmarks_one": "Marcador",
+    "contacts_other": "Contactos",
+    "files_other": "Ficheiros",
+    "lists_other": "Listas",
+    "tasks_other": "Tarefas",
+    "today": "Hoje",
+    "tasks_one": "Tarefa",
+    "lists_one": "Lista",
+    "files_one": "Ficheiro",
+    "contacts_one": "Contacto"
   },
   "toast": {
     "imageUploadFailed": "Falha ao enviar a imagem: {{error}}",
@@ -96,7 +137,8 @@
     "importedSyncing_one": "{{count}} nota importada. A sincronizar…",
     "importedSyncing_other": "{{count}} notas importadas. A sincronizar…",
     "addedTag_one": "#{{tag}} adicionada a {{count}} item",
-    "addedTag_other": "#{{tag}} adicionada a {{count}} itens"
+    "addedTag_other": "#{{tag}} adicionada a {{count}} itens",
+    "restoreSummary": "Restaurado. {{added}} adicionadas, {{updated}} atualizadas, {{unchanged}} já atualizadas."
   },
   "burn": {
     "mediaOnly": "Esta nota contém apenas multimédia e não pode ser partilhada por burn link.",
@@ -122,8 +164,17 @@
     "collapse": "Recolher a lista de notas",
     "expand": "Expandir a lista de notas"
   },
+  "split": {
+    "action": "Dividir nota",
+    "done": "Dividida em “{{title}}”",
+    "overLimit": "“{{title}}” tem mais de 1 MB e fica neste dispositivo",
+    "cannot": "Não é possível dividir esta nota aqui. Coloca o cursor onde a nova nota deve começar.",
+    "continuedTitle": "{{title}} (continuação)",
+    "continuedIn": "Continua em {{link}}"
+  },
   "paneResize": {
-    "hintCollapse": "Clica para recolher · Arrasta para redimensionar"
+    "hintCollapse": "Clica para recolher · Arrasta para redimensionar",
+    "hintExpand": "Clica para expandir · Arrasta para redimensionar"
   },
   "emptyEditor": {
     "selectFile": "Seleciona um ficheiro para pré-visualizar",
@@ -133,10 +184,10 @@
   },
   "zen": {
     "exit": "Sair do Zen",
-    "exitHover": "Sair do modo Zen (Esc)",
+    "exitHover": "Sair do modo Zen",
     "enterHover": "Entrar no modo Zen",
     "proHover": "Modo Zen (Pro)",
-    "enterAriaShortcut": "Entrar no modo Zen (⌘⇧F)"
+    "enterAriaShortcut": "Entrar no modo Zen ({{keys}})"
   },
   "editor": {
     "backToList": "Voltar à lista de notas",
@@ -158,9 +209,11 @@
     "invisiblesShow": "Ver caracteres invisíveis",
     "invisiblesHide": "Ocultar caracteres invisíveis",
     "findInNote": "Procurar na nota",
-    "navPrev": "Nota anterior",
-    "navNext": "Nota seguinte",
-    "undo": "Desfazer",
+    "navPrev": "Anterior",
+    "navNext": "Seguinte",
+    "navPrevTab": "Separador anterior",
+    "navNextTab": "Separador seguinte",
+    "undo": "Anular",
     "redo": "Refazer",
     "hide": "Ocultar",
     "show": "Mostrar",
@@ -170,27 +223,25 @@
     "widthWide": "Mais largo",
     "widthFull": "Largura total",
     "burn": "Partilhar e Queimar Após Ler",
-    "titlePlaceholderLink": "Nome do marcador"
+    "titlePlaceholderLink": "Nome do marcador",
+    "titlePlaceholderContact": "Nome",
+    "notBackedUpTooLarge": "Acima do limite de 1 MB, por isso sem cópia de segurança. Move as imagens para anexos ou divide a nota.",
+    "notBackedUpFailed": "Sem cópia de segurança. Último erro: {{message}}. A tentar novamente.",
+    "unknownType": "Este item foi criado com uma versão mais recente do PrivacyNotes. Atualiza a aplicação para o abrires."
   },
   "share": {
     "hover": "Partilhar / Exportar",
     "ariaLabel": "Partilhar ou exportar",
-    "thisNote": "Esta nota",
     "currentMdTitle": "Nota atual (.md)",
     "currentMdDesc": "Markdown puro com front-matter.",
     "currentHtmlTitle": "Nota atual (.html)",
     "currentHtmlDesc": "Otimizado para impressão, markdown apresentado numa página branca.",
     "printTitle": "Imprimir / Guardar como PDF",
     "printDesc": "Abre a caixa de diálogo de impressão. Guarda como PDF ou envia para uma impressora.",
+    "printTextTitle": "Imprimir só o texto",
+    "printTextDesc": "Mantém o título. Deixa de fora a data, a pasta e as etiquetas.",
     "burnTitle": "Partilhar e Queimar Após Ler",
-    "burnDesc": "Publica esta nota como um link de visualização única. O link autodestrói-se após a leitura. A tua nota fica segura na tua conta.",
-    "backup": "Backup",
-    "fullBackupTitle": "Backup completo (.zip)",
-    "fullBackupDesc": "Tudo: notas, diários, cofre, tarefas, imagens, áudio, ficheiros.",
-    "allHtmlTitle": "Todos os itens (.zip de .html)",
-    "allHtmlDesc": "Um HTML imprimível por item. Bom para ler offline.",
-    "jsonTitle": "Backup de texto (.json)",
-    "jsonDesc": "Todo o conteúdo de texto e os metadados, sem imagens nem ficheiros."
+    "burnDesc": "Publica esta nota como um link de visualização única. O link autodestrói-se após a leitura. A tua nota fica segura na tua conta."
   },
   "weekReview": {
     "title": "Resumo da semana",
@@ -206,10 +257,18 @@
     "newNote": "Novo",
     "newNoteHintMac": "Option + Shift + N",
     "newNoteHintOther": "Alt + Shift + N",
+    "newNoteHintMacDesktop": "Command + N",
+    "newNoteHintOtherDesktop": "Ctrl + N",
     "openStats": "Abrir as estatísticas",
-    "words": "Palavras",
+    "journalCalendar": "Calendário do diário",
+    "words_other": "Palavras",
+    "words_one": "Palavra",
     "zen": "Modo Zen",
     "appearance": "Aspeto",
+    "lockApp": "Bloquear a app",
+    "lockAppSetUp": "Define primeiro um PIN em Segurança",
+    "goToTop": "Ir para o início",
+    "goToEnd": "Ir para o fim",
     "signOut": "Terminar sessão",
     "signingOut": "A terminar sessão…",
     "switchToLight": "Mudar para o modo claro",
@@ -217,20 +276,28 @@
   },
   "settings": {
     "groupYourNotes": "As tuas notas",
+    "groupPreferences": "Preferências",
     "groupAccount": "Conta e dados",
     "groupBrand": "PrivacyNotes",
     "statsLabel": "Estatísticas",
-    "journalsLabel": "Diários",
     "importLabel": "Importar e Exportar",
     "planLabel": "Conta",
     "storageLabel": "Armazenamento",
+    "imagesLabel": "Imagens",
     "securityLabel": "Segurança",
     "accountLabel": "ID & Sync",
     "appearanceLabel": "Aspeto",
+    "editorLabel": "Editor",
+    "formatBarLabel": "Barra de formatação",
+    "listsLabel": "Listas",
+    "trackersLabel": "Registos",
     "helpLabel": "Ajuda",
     "aboutLabel": "Sobre",
     "languageLabel": "Idioma",
-    "languageDesc": "Escolhe o idioma em que o PrivacyNotes é apresentado."
+    "dateLabel": "Data e hora",
+    "dateTabFormat": "Formato",
+    "languageDesc": "Escolhe o idioma em que o PrivacyNotes é apresentado.",
+    "calendarLabel": "Calendário"
   },
   "importStore": {
     "title": "Importar ou guardar?",
@@ -241,8 +308,20 @@
   },
   "bulkTrash": {
     "title": "Mover para o Lixo",
-    "body_one": "Mover <highlight>{{count}} item</highlight> para o lixo? Podes restaurá-lo depois.",
-    "body_other": "Mover <highlight>{{count}} itens</highlight> para o lixo? Podes restaurá-los depois."
+    "body_one": "Mover <highlight>{{count}} item</highlight> para o lixo? Mais tarde podes restaurá-lo.",
+    "body_other": "Mover <highlight>{{count}} itens</highlight> para o lixo? Podes restaurá-los depois.",
+    "readOnlyTitle": "Apenas leitura",
+    "readOnlyAcknowledge": "Percebi",
+    "readOnlyBlocked_one": "Este item é de <highlight>apenas leitura</highlight>, por isso não vai para o lixo. Desativa primeiro o apenas leitura nas opções da nota.",
+    "readOnlyBlocked_other": "Os <highlight>{{count}} itens</highlight> são todos de apenas leitura, por isso nenhum vai para o lixo. Desativa primeiro o apenas leitura nas opções da nota.",
+    "readOnlySkipped_one": "<highlight>{{count}} item</highlight> é de apenas leitura e fica onde está.",
+    "readOnlySkipped_other": "<highlight>{{count}} itens</highlight> são de apenas leitura e ficam onde estão."
+  },
+  "deleteCheckedTasks": {
+    "title": "Eliminar os itens marcados?",
+    "confirm": "Eliminar",
+    "body_one": "<highlight>{{count}} item</highlight> será eliminado desta nota. Isto não pode ser anulado.",
+    "body_other": "<highlight>{{count}} itens</highlight> serão eliminados desta nota, incluindo os itens aninhados. Isto não pode ser anulado."
   },
   "bulkDelete": {
     "body_one": "Eliminar permanentemente <highlight>{{count}} nota</highlight>? Isto não pode ser anulado.",
@@ -271,5 +350,18 @@
     "title": "Novo cofre criado",
     "confirm": "Entendido",
     "body": "Nenhum cofre existente correspondeu à frase que introduziste, por isso foi criado um novo cofre vazio. Se esperavas ver as tuas notas, termina sessão e volta a introduzir a tua frase com cuidado - uma única palavra diferente abre um cofre diferente."
+  },
+  "ambiguousLink": {
+    "title": "Duas notas têm esse título",
+    "body": "Há mais do que uma nota com o título <highlight>“{{title}}”</highlight>, por isso este link não diz qual delas quer dizer. Muda o nome a uma e o link passa a apontar para a outra."
+  },
+  "connections": {
+    "title": "Conexões",
+    "hide": "Ocultar conexões",
+    "linkedFrom": "Ligações de entrada",
+    "linksTo": "Ligações de saída",
+    "missing": "Ainda não criada",
+    "protectedHidden_one": "{{count}} item protegido por PIN não apresentado",
+    "protectedHidden_other": "{{count}} itens protegidos por PIN não apresentados"
   }
 }

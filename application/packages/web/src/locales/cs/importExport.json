@@ -9,49 +9,116 @@
     "tabExport": "Export",
     "tabRestore": "Obnovit",
     "tabVault": "Hesla",
-    "working": "Pracuji…"
+    "working": "Pracuji…",
+    "tabWellness": "Sledované hodnoty"
   },
   "footer": {
     "exportNote": "Export běží lokálně. Nic se nikam nenahrává.",
     "restoreNote": "Tvůj soubor se načte a dešifruje lokálně.",
-    "importNote": "Všechno se zašifruje, ještě než to kvůli synchronizaci opustí tvoje zařízení."
+    "importNote": "Všechno je vždy zašifrované, na tvém zařízení i při synchronizaci."
   },
   "importPick": {
     "autoTagLabel": "Označit importované poznámky podle zdroje",
     "autoTagDesc": "Poznámky z Google Keep dostanou <keep>#google</keep>, poznámky z Obsidianu <obsidian>#obsidian</obsidian> a tak dále.",
     "guideAria": "Průvodce importem pro {{app}}",
-    "guideLabel": "Návod"
+    "guideLabel": "Návod",
+    "groupGeneral": "Obecné",
+    "groupNotes": "Poznámky"
   },
   "folderImport": {
     "tagLabel": "Označit poznámky i podle složky",
     "tagDesc": "Tvoje složky se znovu postaví tak i tak. Tohle navíc přidá název každé složky i jako značku, což se hodí, když filtruješ podle značek."
   },
+  "browserImport": {
+    "tagLabel": "Zachovat štítky z prohlížeče",
+    "tagDesc": "Firefox ukládá k záložce štítky a klíčové slovo pro adresní řádek. Obojí se tady změní na štítky."
+  },
+  "contactImport": {
+    "photosLabel": "Importovat fotky",
+    "photosDesc_one": "{{count}} fotka, zhruba {{size}} po zmenšení aplikací. To je {{pct}} % z {{free}}, které máš volné.",
+    "photosDesc_few": "{{count}} fotky, zhruba {{size}} po zmenšení aplikací. To je {{pct}} % z {{free}}, které máš volné.",
+    "photosDesc_many": "{{count}} fotek, zhruba {{size}} po zmenšení aplikací. To je {{pct}} % z {{free}}, které máš volné.",
+    "photosDesc_other": "{{count}} fotek, zhruba {{size}} po zmenšení aplikací. To je {{pct}} % z {{free}}, které máš volné.",
+    "photosDescNoQuota_one": "{{count}} fotka, zhruba {{size}} po zmenšení aplikací.",
+    "photosDescNoQuota_few": "{{count}} fotky, zhruba {{size}} po zmenšení aplikací.",
+    "photosDescNoQuota_many": "{{count}} fotek, zhruba {{size}} po zmenšení aplikací.",
+    "photosDescNoQuota_other": "{{count}} fotek, zhruba {{size}} po zmenšení aplikací.",
+    "photosTooBig_one": "Na fotku ({{size}}) není dost místa, takže zůstane stranou. Všechno ostatní se importuje. Uvolni {{shortfall}} nebo přikup úložiště a importuj znovu, aby se přidala.",
+    "photosTooBig_few": "Na {{count}} fotky ({{size}}) není dost místa, takže zůstanou stranou. Všechno ostatní se importuje. Uvolni {{shortfall}} nebo přikup úložiště a importuj znovu, aby se přidaly.",
+    "photosTooBig_many": "Na {{count}} fotek ({{size}}) není dost místa, takže zůstanou stranou. Všechno ostatní se importuje. Uvolni {{shortfall}} nebo přikup úložiště a importuj znovu, aby se přidaly.",
+    "photosTooBig_other": "Na {{count}} fotek ({{size}}) není dost místa, takže zůstanou stranou. Všechno ostatní se importuje. Uvolni {{shortfall}} nebo přikup úložiště a importuj znovu, aby se přidaly."
+  },
+  "importCalendar": {
+    "location": "Místo",
+    "videoCall": "Videohovor",
+    "organizer": "Organizátor",
+    "guests": "Hosté",
+    "file": "Soubor",
+    "link": "Odkaz",
+    "timeZone": "Časové pásmo",
+    "ends": "Končí",
+    "repeats": "Opakuje se"
+  },
+  "webcal": {
+    "title": "Webcal",
+    "desc": "Adresa kalendáře, třeba odkaz webcal:// z Protonu, iCloudu, Outlooku nebo veřejného kalendáře. Stáhne se jednou; až ji později vložíš znovu, přidají se jen nové události.",
+    "fieldLabel": "Adresa kalendáře",
+    "import": "Importovat",
+    "downloading": "Stahuji…",
+    "errors": {
+      "invalid": "Vlož adresu, která začíná na webcal://, webcals:// nebo https://.",
+      "refused": "Tuto adresu nejde otevřít.",
+      "wrongType": "Tato adresa nevede na soubor kalendáře.",
+      "tooLarge": "Tento kalendář je větší než 10 MB.",
+      "timeout": "Server kalendáře neodpověděl včas. Zkus to později.",
+      "blocked": "Server kalendáře stažení odmítl. Zkontroluj, že je kalendář sdílený nebo veřejný.",
+      "offline": "Jsi offline. Připoj se a zkus to znovu.",
+      "limit": "Příliš mnoho stahování v krátké době. Počkej minutu a zkus to znovu.",
+      "failed": "Kalendář se nepodařilo stáhnout. Zkontroluj adresu a zkus to znovu."
+    }
+  },
   "sourceDesc": {
     "googleKeep": "Google Takeout .zip (složka Keep) nebo jedna poznámka .json. Zaškrtávací seznamy se importují jako nativní seznamy úkolů.",
+    "googleCalendar": "Soubor .zip z Google Calendar přes Settings > Import & export, nebo jeden soubor .ics. Události si zachovají časy, opakování i připomínky.",
     "appleNotes": "Exportuj přes bezplatnou aplikaci Exporter do Markdownu a pak sem přetáhni .zip.",
     "appleJournal": "Exportuj z Deníku na Macu nebo iPhonu, zkomprimuj složku AppleJournalEntries a přetáhni sem .zip. Záznamy se importují jako záznamy v deníku i s fotkami, videi, hlasovými poznámkami a polohami.",
-    "evernote": "Jeden soubor .enex, nebo víc zabalených do zipu. Zachová formátování, štítky, přílohy, odkazy mezi poznámkami a zápisníky. Úkoly Evernote do .enex nedává.",
+    "evernote": "Jeden soubor .enex, nebo víc zabalených do zipu. Zachová formátování, štítky, přílohy, odkazy na poznámky a zápisníky. Úkoly Evernote do .enex nedává.",
     "samsungNotes": "Exportuj jako Word (.docx) nebo text (.txt). Víc souborů zabal do .zip pro hromadný import.",
     "simplenote": "Exportuj ze Simplenote (Settings -> Tools -> Export Notes). Přetáhni sem .zip.",
-    "standardNotes": "Dešifrovaná záloha .zip nebo .txt ze Standard Notes (File > Export > Decrypted).",
+    "standardNotes": "Dešifrovaná záloha .zip nebo .txt ze Standard Notes (Account settings > Backups > Data backups > Decrypted).",
     "obsidian": "Vault Obsidianu jako .zip. Zachová štítky, [[note links]], strukturu složek, inline #tagy i vložené obrázky a soubory.",
     "notesnook": "Export z Notesnooku jako .zip. Při exportu zvol HTML, aby se zachovalo formátování, zápisníky, značky a přílohy.",
+    "bear": "V Bearu zvol File > Backup Notes... a přetáhni sem soubor .bear2bk. Přejdou s ním značky i vnořené značky, připnutí, archiv, koš, zvýraznění s jejich barvami, odkazy na poznámky i přílohy.",
+    "joplin": "Soubor .jex z File > Export all > „JEX - Joplin Export File“. Zápisníky se stanou složkami a značky, úkoly, odkazy na poznámky i přílohy přejdou s nimi.",
     "upnote": "V UpNote: Settings > Backup > Backup now, pak zabal do zipu všechno ve složce se zálohou. Zachová zápisníky, značky, připnutí, note-linky, formátování a přílohy. Fungují i exporty jednotlivých poznámek z mobilních aplikací - zvol „Export to HTML“.",
     "markdownFolder": "Soubory .md nebo .txt jednotlivě, nebo jako .zip. Zabalená složka si udrží podsložky a vezme s sebou obrázky i přílohy.",
     "markdownApp": "Tyhle poznámky už jsou soubory Markdown ve složce. Přetáhni tu složku jako .zip a přijdou s ní podsložky, obrázky i #štítky.",
     "browserBookmarks": "Soubor se záložkami (.html) z \"Export bookmarks\" v tvém prohlížeči, nebo .zip, který zapíše Safari. Chrome, Firefox, Safari, Edge, Opera, Brave i Vivaldi obsahují stejný soubor. Složky a data přijdou s ním.",
+    "vcard": "Soubor .vcf, který exportuje tvůj adresář: iPhone a Mac přes iCloud nebo Kontakty, Android, Kontakty Google. Každá vizitka se importuje, i s fotkami, a opakovaný import stejného souboru přeskočí lidi, které už máš.",
     "bitwarden": "Nezašifrovaný export .json z Bitwardenu (Tools > Export vault > .json). Přihlášení, karty, SSH klíče, zabezpečené poznámky i kódy TOTP přijdou s sebou.",
     "browserPasswords": "Soubor s hesly (.csv) z Chrome, Edge, Brave, Opery, Vivaldi, Firefoxu nebo Safari, nebo .zip, který zapíše Safari. Z každého řádku bude přihlášení. Až budeš hotový, soubor smaž - jsou v něm tvoje hesla v čitelné podobě."
+  },
+  "sourceLabel": {
+    "privacynotes": "Úplná záloha PrivacyNotes",
+    "browserBookmarks": "Záložky prohlížeče",
+    "browserPasswords": "Hesla z prohlížeče",
+    "vcard": "Kontakty (vCard)",
+    "markdownFolder": "Soubory Markdown"
   },
   "vaultPick": {
     "intro": "Importuj přihlašovací údaje, platební karty a SSH klíče z jiného správce hesel."
   },
   "restorePick": {
-    "intro": "Obnov dříve vytvořenou zálohu PrivacyNotes. Tvůj soubor se načte a dešifruje lokálně.",
+    "intro": "Obnov dříve vytvořenou zálohu PrivacyNotes.",
     "fullBackupTitle": "Kompletní záloha (.zip)",
-    "fullBackupDesc": "Obnoví poznámky, deníky, položky trezoru, úkoly, obrázky, zvuk a soubory. Všechno se importuje jako nové položky - existující data se nepřepíšou.",
+    "fullBackupDesc": "Obnoví poznámky, deníky, položky trezoru, úkoly, obrázky, zvuk a soubory. Poznámka, kterou už máš, zůstane zachována, nebo se aktualizuje, pokud záloha obsahuje její novější verzi.",
     "encryptedBackupTitle": "Šifrovaná záloha (.pnbackup, .pnbackupz)",
     "encryptedBackupDesc": "Obnov šifrovanou zálohu klíčem z tvojí fráze. Soubor .pnbackupz vrátí všechno včetně souborů; .pnbackup obsahuje jen text a metadata. Vyžaduje přihlášení pod stejným účtem, který zálohu vytvořil."
+  },
+  "restoreGate": {
+    "wait": "Obnovení čeká, dokud toto zařízení nebude online a nedokončí synchronizaci, aby se záloha spárovala s poznámkami, které už máš v účtu, a nepřidala je podruhé.",
+    "paused": "Obnovení čeká na synchronizaci, aby se záloha spárovala s poznámkami, které už máš v účtu, a synchronizace je v tomto zařízení pozastavená: vypni „Pozastavit synchronizaci“ v Nastavení > ID & Sync.",
+    "belowFloor": "Obnovení čeká na synchronizaci, aby se záloha spárovala s poznámkami, které už máš v účtu, a tahle verze aplikace je na synchronizaci příliš stará: nejdřív aplikaci aktualizuj."
   },
   "encryptedBackupLabel": "Šifrovaná záloha",
   "status": {
@@ -64,49 +131,68 @@
   "errors": {
     "genericParse": "Něco se pokazilo.",
     "decryptionFailed": "Dešifrování selhalo. Špatná fráze nebo poškozený soubor.",
-    "blobImportFailed": "Tvoje poznámky se naimportovaly, ale jejich obrázky a soubory ne: {{detail}} V souboru, který jsi vybral, se nic nezměnilo, takže naimportované poznámky můžeš smazat a spustit import znovu."
+    "blobImportFailed": "Tvoje poznámky se naimportovaly, ale jejich obrázky a soubory ne: {{detail}} V souboru, který jsi vybral, se nic nezměnilo, takže naimportované poznámky můžeš smazat a spustit import znovu.",
+    "blobsNotInBackup_one": "Tvoje poznámky se obnovily, ale {{items}} uvedený v záloze v ní chybí.",
+    "blobsNotInBackup_few": "Tvoje poznámky se obnovily, ale {{items}} uvedené v záloze v ní chybí.",
+    "blobsNotInBackup_many": "Tvoje poznámky se obnovily, ale {{items}} uvedených v záloze v ní chybí.",
+    "blobsNotInBackup_other": "Tvoje poznámky se obnovily, ale {{items}} uvedených v záloze v ní chybí."
   },
   "preview": {
+    "oversize_one": "{{count}} poznámka má více než 1 MB. Zůstane na tomto zařízení a nebude se synchronizovat.",
+    "oversize_few": "{{count}} poznámky mají více než 1 MB. Zůstanou na tomto zařízení a nebudou se synchronizovat.",
+    "oversize_other": "{{count}} poznámek má více než 1 MB. Zůstanou na tomto zařízení a nebudou se synchronizovat.",
+    "splitOversize_one": "Rozdělit tuto poznámku podle nadpisů na menší poznámky, aby se synchronizovala",
+    "splitOversize_few": "Rozdělit tyto {{count}} poznámky podle nadpisů na menší poznámky, aby se synchronizovaly",
+    "splitOversize_other": "Rozdělit těchto {{count}} poznámek podle nadpisů na menší poznámky, aby se synchronizovaly",
+    "partTitle": "{{title}} ({{index}}/{{total}})",
+    "continuedIn": "Pokračování v {{link}}",
     "sourceLabel": "Zdroj",
     "uniqueTags": "Unikátní značky",
     "empty": "Prázdné",
     "untagged": "Bez značek",
     "items": "Položky",
     "previewLabel": "Náhled",
-    "andMore": "… a {{count}} dalších",
+    "andMore": "… a další ({{count}})",
     "headsUpLabel": "Pozor:",
     "duplicateWarning": "import je přidá jako nové poznámky. Když ho spustíš dvakrát, budeš mít duplikáty. Automatické slučování duplikátů zatím nemáme.",
+    "duplicateSkipNote": "záložky, které už máš uložené, se přeskočí, takže druhý průchod nic nezduplikuje.",
+    "contactSkipNote": "lidé, které už máš uložené, se přeskočí a zůstanou, jak jsou, takže druhé spuštění nikoho nezdvojí.",
+    "eventSkipNote": "události, které už máš naimportované, se přeskočí a zůstanou, jak jsou, takže druhé spuštění je nezdvojí.",
+    "restoreMergeNote": "poznámky z tvé vlastní zálohy se párují podle identifikátoru. Poznámka, kterou už máš, se aktualizuje jen tehdy, když je verze v záloze novější, a poznámka v koši se z něj vrátí.",
     "quotaExceeded": "<strong>Na import máš málo místa.</strong> Odhadem je potřeba {{needed}}, k dispozici je {{available}}. Před importem uvolni místo nebo přejdi na vyšší tarif.",
     "quotaWarning": "Pozor: tento import spotřebuje přibližně {{needed}} z {{available}} zbývajícího místa.",
     "oversizeAttachments_one": "1 soubor je větší než limit {{limit}} na soubor v tvém plánu. Naimportuje se do tohoto zařízení, ale nesynchronizuje se s tvými dalšími zařízeními, dokud nepřejdeš na vyšší tarif.",
-    "oversizeAttachments_few": "{{count}} soubory jsou větší než limit {{limit}} na soubor v tvém plánu. Naimportují se do tohoto zařízení, ale nesynchronizují se s tvými dalšími zařízeními, dokud nepřejdeš na vyšší tarif.",
-    "oversizeAttachments_many": "{{count}} souboru je větší než limit {{limit}} na soubor v tvém plánu. Naimportuje se do tohoto zařízení, ale nesynchronizuje se s tvými dalšími zařízeními, dokud nepřejdeš na vyšší tarif.",
     "oversizeAttachments_other": "{{count}} souborů je větších než limit {{limit}} na soubor v tvém plánu. Naimportují se do tohoto zařízení, ale nesynchronizují se s tvými dalšími zařízeními, dokud nepřejdeš na vyšší tarif.",
-    "duplicateSkipNote": "záložky, které už máš uložené, se přeskočí, takže druhý průchod nic nezduplikuje."
+    "oversizeAttachments_few": "{{count}} soubory jsou větší než limit {{limit}} na soubor v tvém plánu. Naimportují se do tohoto zařízení, ale nesynchronizují se s tvými dalšími zařízeními, dokud nepřejdeš na vyšší tarif.",
+    "oversizeAttachments_many": "{{count}} souboru je větší než limit {{limit}} na soubor v tvém plánu. Naimportuje se do tohoto zařízení, ale nesynchronizuje se s tvými dalšími zařízeními, dokud nepřejdeš na vyšší tarif."
   },
   "counts": {
     "note_one": "poznámka",
-    "note_few": "poznámky",
-    "note_many": "poznámky",
     "note_other": "poznámek",
     "journal_one": "záznam v deníku",
-    "journal_few": "záznamy v deníku",
-    "journal_many": "záznamy v deníku",
     "journal_other": "záznamů v deníku",
     "login_one": "přihlašovací údaj",
-    "login_few": "přihlašovací údaje",
-    "login_many": "přihlašovacího údaje",
     "login_other": "přihlašovacích údajů",
     "card_one": "karta",
-    "card_few": "karty",
-    "card_many": "karty",
     "card_other": "karet",
     "sshKey_one": "SSH klíč",
-    "sshKey_few": "SSH klíče",
-    "sshKey_many": "SSH klíče",
     "sshKey_other": "SSH klíčů",
+    "contact_one": "kontakt",
+    "contact_few": "kontakty",
+    "contact_many": "kontaktů",
+    "contact_other": "kontaktů",
     "zeroItems": "0 položek",
-    "importButton": "Importovat {{counts}}"
+    "importButton": "Importovat {{counts}}",
+    "note_few": "poznámky",
+    "note_many": "poznámky",
+    "journal_few": "záznamy v deníku",
+    "journal_many": "záznamy v deníku",
+    "login_few": "přihlašovací údaje",
+    "login_many": "přihlašovacího údaje",
+    "card_few": "karty",
+    "card_many": "karty",
+    "sshKey_few": "SSH klíče",
+    "sshKey_many": "SSH klíče"
   },
   "errorPhase": {
     "heading": "{{importer}}: import selhal"
@@ -130,31 +216,63 @@
     "vaultExportDesc": "Přihlašovací údaje, karty a SSH klíče ve formátu kompatibilním s Bitwardenem. Naimportuje ho většina správců hesel. Nezašifrovaný text - zacházej s ním opatrně.",
     "bookmarksOnlyHeading": "Jen záložky",
     "bookmarksExportTitle": "Soubor záložek (.html)",
-    "bookmarksExportDesc": "Standardní soubor záložek, který přečte každý prohlížeč. Naimportuj ho i se složkami do Chrome, Firefoxu, Safari nebo Edge."
+    "bookmarksExportDesc": "Standardní soubor záložek, který přečte každý prohlížeč. Naimportuj ho i se složkami do Chrome, Firefoxu, Safari nebo Edge.",
+    "contactsOnlyHeading": "Jen kontakty",
+    "contactsExportTitle": "Soubor kontaktů (.vcf)",
+    "contactsExportDesc": "Soubor vCard, který přečte každý telefon i adresář. Importuj ho do iPhonu, Androidu, Kontaktů Google nebo Kontaktů na Macu, i se štítky a skupinami.",
+    "calendarOnlyHeading": "Jen kalendář",
+    "calendarExportTitle": "Soubor kalendáře (.ics)",
+    "calendarExportDesc": "Události a poznámky a seznamy úkolů s datem, pro Google Calendar, Apple Calendar nebo Outlook.",
+    "calendarPrivate": "Soukromé"
   },
   "exportProgress": {
     "failedTitle": "Export selhal",
     "completeTitle": "Export dokončen",
+    "incompleteTitle": "Export je neúplný",
     "exportingTitle": "Exportuji zálohu...",
     "preparing": "Připravuji...",
     "exporting": "Exportuji...",
     "imagesProgress": "Exportuji obrázky... {{done}} z {{total}}",
     "filesProgress": "Exportuji soubory... {{done}} z {{total}}",
     "building": "Vytvářím zálohu...",
-    "compressing": "Komprimuji..."
+    "compressing": "Komprimuji...",
+    "missingFailed_one": "Toto zařízení nemohlo stáhnout {{items}}, takže v exportu chybí. Zkontroluj připojení a exportuj znovu.",
+    "missingFailed_few": "Toto zařízení nemohlo stáhnout {{items}}, takže v exportu chybí. Zkontroluj připojení a exportuj znovu.",
+    "missingFailed_many": "Toto zařízení nemohlo stáhnout {{items}}, takže v exportu chybí. Zkontroluj připojení a exportuj znovu.",
+    "missingFailed_other": "Toto zařízení nemohlo stáhnout {{items}}, takže v exportu chybí. Zkontroluj připojení a exportuj znovu.",
+    "missingNotFound_one": "{{items}} není ani na tomto zařízení, ani na serveru, takže v exportu chybí.",
+    "missingNotFound_few": "{{items}} nejsou ani na tomto zařízení, ani na serveru, takže v exportu chybí.",
+    "missingNotFound_many": "{{items}} není ani na tomto zařízení, ani na serveru, takže v exportu chybí.",
+    "missingNotFound_other": "{{items}} není ani na tomto zařízení, ani na serveru, takže v exportu chybí."
+  },
+  "missing": {
+    "pictures_one": "{{count}} obrázek",
+    "pictures_few": "{{count}} obrázky",
+    "pictures_many": "{{count}} obrázku",
+    "pictures_other": "{{count}} obrázků",
+    "files_one": "{{count}} soubor",
+    "files_few": "{{count}} soubory",
+    "files_many": "{{count}} souboru",
+    "files_other": "{{count}} souborů",
+    "both": "{{pictures}} a {{files}}"
   },
   "upload": {
+    "discard": "Zahodit",
     "completeTitle": "Nahrávání dokončeno",
     "failedTitle": "Nahrávání selhalo",
     "partialTitle": "{{done}} nahráno, {{failed}} selhalo",
     "uploadingTitle_one": "Nahrávám {{count}} soubor",
-    "uploadingTitle_few": "Nahrávám {{count}} soubory",
-    "uploadingTitle_many": "Nahrávám {{count}} souboru",
     "uploadingTitle_other": "Nahrávám {{count}} souborů",
     "statusDone": "Hotovo",
     "statusFailed": "Selhalo",
     "errorStorageFull": "Úložiště je plné - uvolni místo nebo přidej úložiště, aby bylo možné soubor nahrát.",
     "errorStorageFullKept": "Nevejde se do úložiště - zůstává na tomto zařízení. Jakmile se uvolní místo, soubor se synchronizuje.",
+    "errorTooLarge": "Soubor je příliš velký ({{size}}). Maximum je {{limit}} MB.",
+    "errorTooLargeFree": "Soubor je příliš velký ({{size}}). Maximum je {{limit}} MB v bezplatném tarifu.",
+    "batchTitle_one": "{{count}} soubor",
+    "batchTitle_few": "{{count}} soubory",
+    "batchTitle_many": "{{count}} souboru",
+    "batchTitle_other": "{{count}} souborů",
     "statusUploading": "Nahrává se...",
     "statusWaiting": "Čeká",
     "summaryDone": "{{count}} hotovo",
@@ -164,7 +282,9 @@
     "proPitch": "Pro zvedne limit na 50 MB na soubor.",
     "proPitchCta": "Přejít na Pro",
     "storagePitch": "Rozšíření úložiště ho zvedne na 100 MB na soubor.",
-    "storagePitchCta": "Přidat úložiště"
+    "storagePitchCta": "Přidat úložiště",
+    "uploadingTitle_few": "Nahrávám {{count}} soubory",
+    "uploadingTitle_many": "Nahrávám {{count}} souboru"
   },
   "decryptErrors": {
     "tooSmall": "Tento soubor je prázdný nebo neúplný ({{size}} B), takže není co obnovit. Vyexportuj zálohu znovu a před importem zkontroluj, že má uložený soubor skutečnou velikost.",
@@ -176,8 +296,18 @@
   "saveErrors": {
     "shortWrite": "Uložilo se jen {{written}} z {{expected}} bajtů, takže je soubor neúplný. Zkus to znovu a ulož do úložiště zařízení místo do složky v cloudu."
   },
-  "browserImport": {
-    "tagLabel": "Zachovat štítky z prohlížeče",
-    "tagDesc": "Firefox ukládá k záložce štítky a klíčové slovo pro adresní řádek. Obojí se tady změní na štítky."
+  "shareSheet": {
+    "title_one": "Do PrivacyNotes byla sdílena {{count}} položka",
+    "title_few": "Do PrivacyNotes byly sdíleny {{count}} položky",
+    "title_many": "Do PrivacyNotes bylo sdíleno {{count}} položky",
+    "title_other": "Do PrivacyNotes bylo sdíleno {{count}} položek",
+    "line": "Nic se neuloží, dokud nevybereš.",
+    "saveAll": "Uložit vše"
+  },
+  "destination": {
+    "label": "Přidat do",
+    "none": "Bez složky",
+    "newFolder": "Nová složka „{{name}}“",
+    "help": "Složky ze zdroje se vloží do složky, kterou vybereš, a položky bez složky skončí přímo v ní."
   }
 }

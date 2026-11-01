@@ -12,16 +12,18 @@
  *   - Already running: `single-instance` (Windows, Linux) or `RunEvent::Opened`
  *     (macOS) queues it and emits `markdown-open-pending`.
  *
- * Spec: ops/docs/plans/markdown-folder.md (section 11)
+ * Spec: ops/docs/archive/markdown-folder.md (section 11)
  */
 import { useEffect, useRef } from 'react';
 import { detectPlatform } from '../devices';
 import { openPath } from './fileAccess';
-import { adaptFile } from './adapter';
+import { readOpenedFile } from './adapter';
 import type { OpenedMarkdownFile } from './types';
 
 export function usePendingFileOpens(
-  onOpen: (file: OpenedMarkdownFile) => void,
+  /** `launched` is true when the file is what started the app: the queue was
+   *  already waiting the first time the shell drained it. */
+  onOpen: (file: OpenedMarkdownFile, launched: boolean) => void,
   /** A queued file we could not open. The user double-clicked and the window
    *  came forward, so saying nothing looks like the app simply ignored them. */
   onError: () => void,
@@ -44,30 +46,32 @@ export function usePendingFileOpens(
      *  is already looking at. */
     let queue: Promise<void> = Promise.resolve();
 
-    async function openNext() {
+    async function openNext(launched: boolean) {
       const { invoke } = await import('@tauri-apps/api/core');
       const paths = await invoke<string[]>('take_pending_opens');
       // Only the last one: opening five editors at once from a multi-select is
       // not what anyone means by double-clicking a file, and the list pane can
       // only show one open file anyway.
       const path = paths[paths.length - 1];
+      // A start with no file puts the workspace window back, in case the last
+      // session quit inside a file window (fileWindow.ts).
+      if (!path && launched) void import('./fileWindow').then((m) => m.settleWindowAtStart());
       if (!path || cancelled) return;
       const ref = await openPath(path);
       if (cancelled) return;
       // `openPath` only declines off desktop, which the guard above has already
       // ruled out, so a null here is a path that did not become a file.
       if (!ref) { onErrorRef.current(); return; }
-      const raw = await ref.read();
-      const stamp = await ref.stamp();
+      const opened = await readOpenedFile(ref);
       if (cancelled) return;
-      onOpenRef.current({ ref, raw, stamp, adapted: adaptFile(ref.name, raw), reloadToken: 0 });
+      onOpenRef.current(opened, launched);
     }
 
-    function drain(): Promise<void> {
+    function drain(launched = false): Promise<void> {
       queue = queue.then(async () => {
         if (cancelled) return;
         try {
-          await openNext();
+          await openNext(launched);
         } catch {
           // An unreadable file, a path that moved between the double click and
           // this drain, a permission the OS withheld. All of them end with the
@@ -87,7 +91,7 @@ export function usePendingFileOpens(
       // than leave a listener behind for the rest of the session.
       if (cancelled) { stop(); return; }
       unlisten = stop;
-      await drain();
+      await drain(true);
     })();
 
     return () => { cancelled = true; unlisten?.(); };

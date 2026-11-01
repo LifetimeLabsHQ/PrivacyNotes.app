@@ -8,16 +8,23 @@
     "readOnly": "読み取り専用",
     "file": "ファイル",
     "empty": "空",
-    "noContent": "内容なし"
+    "noContent": "内容なし",
+    "notBackedUp": "未バックアップ",
+    "archived": "アーカイブ済み",
+    "entryDate": "ジャーナルの日付",
+    "date": "日付",
+    "dayOf": "{{n}}/{{total}}日目"
   },
   "header": {
     "new": "新規",
     "newNote": "新規ノート",
-    "newNoteHover": "新規ノート({{hotkey}})",
-    "trash": "ゴミ箱"
+    "trash": "ゴミ箱",
+    "newEvent": "新規予定"
   },
   "folderChip": {
-    "clear": "フォルダの絞り込みを解除: {{folder}}"
+    "clear": "フォルダの絞り込みを解除: {{folder}}",
+    "subfolders": "サブフォルダ",
+    "subfoldersLabel": "サブフォルダを含める"
   },
   "tagChip": {
     "clear": "タグの絞り込みを解除: {{tag}}"
@@ -26,15 +33,21 @@
     "ariaLabel": "新規保管庫アイテム",
     "login": "ログイン",
     "card": "クレジットカード",
-    "sshKey": "SSH鍵"
+    "sshKey": "SSH鍵",
+    "generator": "パスワード"
   },
   "newMenu": {
     "note": "ノート",
     "task": "タスク",
+    "kanban": "カンバンボード",
     "journal": "ジャーナル",
     "login": "ログイン",
     "file": "ファイル",
-    "bookmark": "ブックマーク"
+    "bookmark": "ブックマーク",
+    "clipPage": "ページをクリップ",
+    "contact": "連絡先",
+    "event": "予定",
+    "quickAdd": "クイック追加"
   },
   "vaultFilter": {
     "all": "すべて",
@@ -43,9 +56,7 @@
     "keys": "鍵"
   },
   "journal": {
-    "backfillHover": "過去の日のジャーナルを作成",
-    "newEntry": "新規ジャーナル",
-    "newEntryHover": "新規ジャーナル({{hotkey}})"
+    "newEntry": "新規ジャーナル"
   },
   "tasks": {
     "newTitle": "{{date}} のタスク"
@@ -54,12 +65,13 @@
     "empty": "空にする",
     "emptyHover": "ゴミ箱のノートをすべて削除",
     "storage": "ストレージ",
-    "autoDelete": "30日で自動削除"
+    "autoDelete": "30日後に自動削除"
   },
   "search": {
     "sortOptions": "並び替えと表示オプション",
     "placeholderVault": "保管庫を検索…",
-    "placeholderNotes": "ノートを検索…"
+    "placeholderNotes": "ノートを検索…",
+    "placeholderEvents": "予定を検索…"
   },
   "selection": {
     "countOf": "{{total}}件中{{selected}}件を選択",
@@ -70,9 +82,20 @@
     "noMatches": "一致なし。",
     "vault": "保管庫は空です。",
     "notes": "まだノートがありません。",
+    "archive": "アーカイブした項目はありません。",
+    "trash": "ゴミ箱は空です。",
     "filtered": "フィルターに一致する項目はありません。",
     "clearFilters": "フィルターを解除",
-    "filteredAfter": "すると表示されます。"
+    "filteredAfter": "すると表示されます。",
+    "hiddenInAll_other": "{{count}}件の項目が「すべて」に表示フィルターで非表示になっています。表示するには、「すべて」の横にあるフィルターを開いてください。",
+    "inOtherSpace_other": "{{count}}件の項目が「{{space}}」スペースにあります。表示するには、サイドバーで「{{space}}」に切り替えてください。"
+  },
+  "listGroups": {
+    "previous7Days": "過去7日間",
+    "previous30Days": "過去30日間",
+    "other": "その他",
+    "collapseAll": "すべてのグループを折りたたむ",
+    "expandAll": "すべてのグループを展開"
   },
   "headerLabel": {
     "allItems": "すべて",
@@ -80,21 +103,29 @@
     "journals": "ジャーナル",
     "vault": "保管庫",
     "pinned": "ピン留め",
-    "notes": "ノート"
+    "archive": "アーカイブ",
+    "notes": "ノート",
+    "calendar": "カレンダー"
   },
   "footerStats": {
-    "journals": "ジャーナル",
-    "items": "アイテム",
-    "trashed": "ゴミ箱",
-    "notes": "ノート",
-    "bookmarks": "ブックマーク"
+    "journals_other": "ジャーナル",
+    "items_other": "アイテム",
+    "trashed_other": "ゴミ箱",
+    "notes_other": "ノート",
+    "bookmarks_other": "ブックマーク",
+    "contacts_other": "連絡先",
+    "files_other": "ファイル",
+    "lists_other": "リスト",
+    "tasks_other": "タスク",
+    "today": "今日"
   },
   "toast": {
     "imageUploadFailed": "画像のアップロードに失敗しました: {{error}}",
     "imageError": "画像エラー: {{error}}",
     "uploadFailedFor": "「{{filename}}」のアップロードに失敗しました: {{error}}",
     "importedSyncing_other": "{{count}}件のノートを読み込みました。同期中…",
-    "addedTag_other": "{{count}}件のアイテムに#{{tag}}を追加しました"
+    "addedTag_other": "{{count}}件のアイテムに#{{tag}}を追加しました",
+    "restoreSummary": "復元しました。追加 {{added}}件、更新 {{updated}}件、変更なし {{unchanged}}件。"
   },
   "burn": {
     "mediaOnly": "このノートにはメディアしか含まれていないため、burnリンクでは共有できません。",
@@ -120,8 +151,17 @@
     "collapse": "ノートリストを折りたたむ",
     "expand": "ノートリストを展開"
   },
+  "split": {
+    "action": "ノートを分割",
+    "done": "「{{title}}」に分割しました",
+    "overLimit": "「{{title}}」は1 MBを超えているため、このデバイスに残ります",
+    "cannot": "このノートはここでは分割できません。新しいノートを始めたい位置にカーソルを置いてください。",
+    "continuedTitle": "{{title}}(続き)",
+    "continuedIn": "{{link}}に続く"
+  },
   "paneResize": {
-    "hintCollapse": "クリックで折りたたみ · ドラッグでサイズ変更"
+    "hintCollapse": "クリックで折りたたみ · ドラッグでサイズ変更",
+    "hintExpand": "クリックで展開 · ドラッグでサイズ変更"
   },
   "emptyEditor": {
     "selectFile": "プレビューするファイルを選択",
@@ -131,10 +171,10 @@
   },
   "zen": {
     "exit": "Zenを終了",
-    "exitHover": "Zenモードを終了(Esc)",
+    "exitHover": "Zenモードを終了",
     "enterHover": "Zenモードを開始",
     "proHover": "Zenモード(Pro)",
-    "enterAriaShortcut": "Zenモードを開始(⌘⇧F)"
+    "enterAriaShortcut": "Zenモードを開始({{keys}})"
   },
   "editor": {
     "backToList": "ノートリストに戻る",
@@ -156,8 +196,10 @@
     "invisiblesShow": "編集記号を表示",
     "invisiblesHide": "編集記号を非表示",
     "findInNote": "ノート内を検索",
-    "navPrev": "前のノート",
-    "navNext": "次のノート",
+    "navPrev": "前へ",
+    "navNext": "次へ",
+    "navPrevTab": "前のタブ",
+    "navNextTab": "次のタブ",
     "undo": "元に戻す",
     "redo": "やり直す",
     "hide": "隠す",
@@ -168,27 +210,25 @@
     "widthWide": "もっと広く",
     "widthFull": "全幅",
     "burn": "Burn After Readingで共有",
-    "titlePlaceholderLink": "ブックマーク名"
+    "titlePlaceholderLink": "ブックマーク名",
+    "titlePlaceholderContact": "名前",
+    "notBackedUpTooLarge": "1 MBの上限を超えているため、バックアップされていません。画像を添付ファイルに移すか、ノートを分割してください。",
+    "notBackedUpFailed": "バックアップされていません。直近のエラー: {{message}}。再試行中です。",
+    "unknownType": "このアイテムは新しいバージョンのPrivacyNotesで作成されました。開くには、アプリをアップデートしてください。"
   },
   "share": {
     "hover": "共有 / 書き出し",
     "ariaLabel": "共有または書き出し",
-    "thisNote": "このノート",
     "currentMdTitle": "現在のノート(.md)",
     "currentMdDesc": "フロントマター付きの生のMarkdown。",
     "currentHtmlTitle": "現在のノート(.html)",
     "currentHtmlDesc": "印刷向き。白いページにMarkdownをレンダリング。",
     "printTitle": "印刷 / PDFとして保存",
     "printDesc": "印刷ダイアログを開きます。PDFとして保存するか、プリンタに送信できます。",
+    "printTextTitle": "本文のみ印刷",
+    "printTextDesc": "タイトルは残し、日付・フォルダ・タグを省きます。",
     "burnTitle": "Burn After Readingで共有",
-    "burnDesc": "このノートを、1回だけ閲覧できるリンクとして公開します。リンクは読まれると自己破壊します。元のノートはアカウントに安全に残ります。",
-    "backup": "バックアップ",
-    "fullBackupTitle": "完全バックアップ(.zip)",
-    "fullBackupDesc": "ノート、ジャーナル、保管庫、タスク、画像、音声、ファイルのすべて。",
-    "allHtmlTitle": "全アイテム(.htmlの.zip)",
-    "allHtmlDesc": "アイテムごとに印刷可能なHTMLを1枚。オフラインでの閲覧に。",
-    "jsonTitle": "テキストバックアップ(.json)",
-    "jsonDesc": "すべてのテキスト内容とメタデータ。画像とファイルは含まれません。"
+    "burnDesc": "このノートを、1回だけ閲覧できるリンクとして公開します。リンクは読まれると自己破壊します。元のノートはアカウントに安全に残ります。"
   },
   "weekReview": {
     "title": "週間レビュー",
@@ -204,10 +244,17 @@
     "newNote": "新規",
     "newNoteHintMac": "Option + Shift + N",
     "newNoteHintOther": "Alt + Shift + N",
+    "newNoteHintMacDesktop": "Command + N",
+    "newNoteHintOtherDesktop": "Ctrl + N",
     "openStats": "統計を開く",
-    "words": "単語",
+    "journalCalendar": "ジャーナルカレンダー",
+    "words_other": "単語",
     "zen": "Zenモード",
-    "appearance": "外観",
+    "appearance": "デザイン",
+    "lockApp": "アプリをロック",
+    "lockAppSetUp": "先に「セキュリティ」でPINを設定してください",
+    "goToTop": "先頭へ移動",
+    "goToEnd": "末尾へ移動",
     "signOut": "サインアウト",
     "signingOut": "サインアウト中…",
     "switchToLight": "ライトモードに切り替え",
@@ -215,20 +262,28 @@
   },
   "settings": {
     "groupYourNotes": "あなたのノート",
+    "groupPreferences": "環境設定",
     "groupAccount": "アカウントとデータ",
     "groupBrand": "PrivacyNotes",
     "statsLabel": "統計",
-    "journalsLabel": "ジャーナル",
     "importLabel": "読み込みと書き出し",
     "planLabel": "アカウント",
     "storageLabel": "ストレージ",
+    "imagesLabel": "画像",
     "securityLabel": "セキュリティ",
     "accountLabel": "IDと同期",
-    "appearanceLabel": "外観",
+    "appearanceLabel": "デザイン",
+    "editorLabel": "エディタ",
+    "formatBarLabel": "ツールバー",
+    "listsLabel": "リスト",
+    "trackersLabel": "トラッカー",
     "helpLabel": "ヘルプ",
     "aboutLabel": "概要",
     "languageLabel": "言語",
-    "languageDesc": "PrivacyNotesの表示言語を選択。"
+    "dateLabel": "日付と時刻",
+    "dateTabFormat": "形式",
+    "languageDesc": "PrivacyNotesの表示言語を選択。",
+    "calendarLabel": "カレンダー"
   },
   "importStore": {
     "title": "読み込みますか、保存しますか?",
@@ -239,7 +294,16 @@
   },
   "bulkTrash": {
     "title": "ゴミ箱に移動",
-    "body_other": "<highlight>{{count}}件のアイテム</highlight>をゴミ箱に移動しますか?後で復元できます。"
+    "body_other": "<highlight>{{count}}件のアイテム</highlight>をゴミ箱に移動しますか?後で復元できます。",
+    "readOnlyTitle": "読み取り専用",
+    "readOnlyAcknowledge": "わかりました",
+    "readOnlyBlocked_other": "<highlight>{{count}}件のアイテム</highlight>は読み取り専用のため、ゴミ箱に移動できません。先にノートオプションで読み取り専用を解除してください。",
+    "readOnlySkipped_other": "<highlight>{{count}}件のアイテム</highlight>は読み取り専用のため、そのまま残ります。"
+  },
+  "deleteCheckedTasks": {
+    "title": "チェック済みの項目を削除しますか?",
+    "confirm": "削除",
+    "body_other": "<highlight>{{count}}件の項目</highlight>をこのノートから削除します。入れ子の項目も含まれます。この操作は取り消せません。"
   },
   "bulkDelete": {
     "body_other": "<highlight>{{count}}件のノート</highlight>を完全に削除しますか?この操作は取り消せません。"
@@ -264,5 +328,17 @@
     "title": "新しい保管庫を作成しました",
     "confirm": "OK",
     "body": "入力されたフレーズに一致する既存の保管庫がなかったため、新しい空の保管庫を作成しました。自分のノートが表示されるはずだった場合は、サインアウトして、フレーズを注意深く入力し直してください。1単語でも違うと、別の保管庫が開きます。"
+  },
+  "ambiguousLink": {
+    "title": "同じタイトルのノートが2つあります",
+    "body": "<highlight>「{{title}}」</highlight>というタイトルのノートが複数あるため、このリンクはどちらを指すのかを示せません。どちらかの名前を変えると、リンクはもう一方を指します。"
+  },
+  "connections": {
+    "title": "つながり",
+    "hide": "つながりを隠す",
+    "linkedFrom": "このノートへのリンク",
+    "linksTo": "このノートからのリンク",
+    "missing": "未作成",
+    "protectedHidden_other": "PIN保護された{{count}}件の項目は表示されていません"
   }
 }

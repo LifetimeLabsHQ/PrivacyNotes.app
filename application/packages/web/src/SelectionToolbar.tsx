@@ -1,23 +1,28 @@
 /**
  * Selection toolbar - replaces the NotesView list header while one or
- * more notes are multi-selected. Works in two modes:
+ * more notes are multi-selected, in the list and in the grid alike. Two modes:
  *
- *   - 'normal': bulk Favorite / Tag / Export / Delete (move to trash)
+ *   - 'normal': bulk Export / Pin / Archive / Tag / Move / Delete (move to trash)
  *   - 'trash':  bulk Restore / Delete Forever
  *
- * Layout matches the header it replaces: h-14, same horizontal padding
- * and bottom border, so there's no vertical jump when it swaps in.
+ * Layout matches the header it replaces: h-14 and the same bottom border,
+ * so there's no vertical jump when it swaps in.
+ *
+ * The actions stand in priority order, lowest first. When the pane is too
+ * narrow for all of them, they fold into a "more" menu from the left, so
+ * Delete is always the last to go and every action stays one menu away.
+ * At LIST_WIDTH_MIN (200 px) the row holds the exit X, the menu button,
+ * Move and Delete. Spec: ops/docs/archive/ui-patterns.md (toolbar icon-only buttons)
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { normalizeTag } from './notesRepo';
-import { useEscapeToClose } from './useEscapeToClose';
-import { usePopoverPosition } from './usePopoverPosition';
 import { HoverLabel } from './HoverLabel';
+import { keyText } from './shortcutMatch';
+import { TagPicker } from './TagPicker';
 import { IconUpgrade } from './UpgradeModal';
-import { X, PushPin, Tag, Folder, Download, Trash, ArrowCounterClockwise } from './icons';
+import { ContextMenu, useContextMenu } from './ContextMenu';
+import { X, PushPin, Tag, Folder, Download, Trash, ArrowCounterClockwise, DotsThreeOutlineVertical, iconArchive } from './icons';
 
 type Mode = 'normal' | 'trash';
 
@@ -27,8 +32,11 @@ type Props = {
    *  favorite button label / icon fill. Mixed selections treat as
    *  "not all starred" → clicking favorites all of them. */
   allStarred: boolean;
+  /** True iff every selected note is archived: the button then unarchives. */
+  allArchived: boolean;
   onClear: () => void;
   onFavorite: () => void;
+  onArchive: () => void;
   onTag: (tag: string) => void;
   /** Bulk move to folder (Pro). Opens the shared folder picker, or the
    *  folders upsell when the plan doesn't include them. */
@@ -44,11 +52,39 @@ type Props = {
   allTags?: [string, number][];
 };
 
+type Action = {
+  key: string;
+  label: string;
+  icon: ReactNode;
+  onClick: () => void;
+  tone?: 'default' | 'danger' | 'success';
+  pro?: boolean;
+};
+
+// The row geometry the fold reads: px-3 on each side, the w-8 buttons and the
+// gap-1 between every two of them, the exit X included.
+const PAD = 24;
+const BUTTON = 32;
+const GAP = 4;
+
+/** How many actions stay on the bar, counted from the right, in a row whose
+ *  inner width is `width`. The last action always stays. */
+function fittingCount(width: number, total: number): number {
+  const room = width - PAD - BUTTON - GAP;
+  for (let k = total; k > 1; k--) {
+    const slots = k + (k < total ? 1 : 0);
+    if (slots * BUTTON + (slots - 1) * GAP <= room) return k;
+  }
+  return 1;
+}
+
 export function SelectionToolbar({
   mode,
   allStarred,
+  allArchived,
   onClear,
   onFavorite,
+  onArchive,
   onTag,
   onMoveToFolder,
   foldersUnlocked,
@@ -60,87 +96,117 @@ export function SelectionToolbar({
 }: Props) {
   const { t } = useTranslation('shell');
   const [tagOpen, setTagOpen] = useState(false);
-  const tagBtnRef = useRef<HTMLButtonElement>(null);
+  const rowRef = useRef<HTMLDivElement>(null);
+  const moreRef = useRef<HTMLButtonElement>(null);
+  const menu = useContextMenu();
+
+  const actions: Action[] =
+    mode === 'normal'
+      ? [
+          { key: 'export', label: t('selectionToolbar.export'), onClick: onExport, icon: <Download size={16} /> },
+          {
+            key: 'pin',
+            label: allStarred ? t('selectionToolbar.unpin') : t('selectionToolbar.pin'),
+            onClick: onFavorite,
+            icon: <PushPin size={16} weight={allStarred ? 'fill' : 'bold'} />,
+          },
+          {
+            key: 'archive',
+            label: allArchived ? t('selectionToolbar.unarchive') : t('selectionToolbar.archive'),
+            onClick: onArchive,
+            icon: iconArchive(allArchived, 16),
+          },
+          { key: 'tag', label: t('selectionToolbar.tag'), onClick: () => setTagOpen((v) => !v), icon: <Tag size={16} /> },
+          {
+            key: 'folder',
+            label: t('folders.moveTo'),
+            onClick: onMoveToFolder,
+            pro: !foldersUnlocked,
+            icon: <Folder size={16} />,
+          },
+          { key: 'delete', label: t('selectionToolbar.delete'), tone: 'danger', onClick: onDelete, icon: <Trash size={16} /> },
+        ]
+      : [
+          {
+            key: 'restore',
+            label: t('selectionToolbar.restore'),
+            tone: 'success',
+            onClick: onRestore,
+            icon: <ArrowCounterClockwise size={16} />,
+          },
+          {
+            key: 'deleteForever',
+            label: t('selectionToolbar.deleteForever'),
+            tone: 'danger',
+            onClick: onDeleteForever,
+            icon: <Trash size={16} />,
+          },
+        ];
+
+  const [shown, setShown] = useState(actions.length);
+  const total = actions.length;
+  useLayoutEffect(() => {
+    const el = rowRef.current;
+    if (!el) return;
+    const measure = () => setShown(fittingCount(el.clientWidth, total));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [total]);
+
+  const folded = actions.slice(0, total - shown);
+  const visible = actions.slice(total - shown);
+
+  const openMore = () => {
+    const r = moreRef.current?.getBoundingClientRect();
+    if (!r) return;
+    menu.open(
+      { clientX: r.left, clientY: r.bottom + 4, preventDefault() {}, stopPropagation() {} },
+      folded.map((a) => ({
+        label: a.label,
+        icon: a.icon,
+        pro: a.pro,
+        // The tag picker toggles from the bar; from the menu it only opens.
+        onSelect: a.key === 'tag' ? () => setTagOpen(true) : a.onClick,
+      })),
+    );
+  };
 
   return (
-    <div className="shrink-0 h-14 px-4 border-b border-divider flex items-center justify-between gap-3 bg-accent/5 dark:bg-accent/10">
-      <HoverLabel label={t('selectionToolbar.exitSelectionTooltip')} position="below">
+    <div ref={rowRef} className="shrink-0 h-14 px-3 border-b border-divider flex items-center justify-between gap-1 bg-accent/5 dark:bg-accent/10">
+      <HoverLabel label={t('selectionToolbar.exitSelectionTooltip')} keys={keyText('escape')} position="below">
       <button
         onClick={onClear}
         aria-label={t('selectionToolbar.exitSelection')}
-        className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-md text-neutral-600 hover:bg-neutral-200/70 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-white transition"
+        className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-md text-pn-soft hover:bg-pn/5 hover:text-pn transition"
       >
         <X size={18} />
       </button>
       </HoverLabel>
 
-      <div className="shrink-0 flex items-center gap-1.5">
-        {mode === 'normal' ? (
-          <>
-            <ToolbarButton
-              label={allStarred ? t('selectionToolbar.unpin') : t('selectionToolbar.pin')}
-              onClick={onFavorite}
-              icon={
-                <PushPin size={16} weight={allStarred ? 'fill' : 'bold'} />
-              }
-            />
-            <ToolbarButton
-              ref={tagBtnRef}
-              label={t('selectionToolbar.tag')}
-              onClick={() => setTagOpen((v) => !v)}
-              icon={
-                <Tag size={16} />
-              }
-            />
-            <ToolbarButton
-              label={t('folders.moveTo')}
-              onClick={onMoveToFolder}
-              pro={!foldersUnlocked}
-              icon={
-                <Folder size={16} />
-              }
-            />
-            <ToolbarButton
-              label={t('selectionToolbar.export')}
-              onClick={onExport}
-              icon={
-                <Download size={16} />
-              }
-            />
-            <ToolbarButton
-              label={t('selectionToolbar.delete')}
-              tone="danger"
-              onClick={onDelete}
-              icon={
-                <Trash size={16} />
-              }
-            />
-          </>
-        ) : (
-          <>
-            <ToolbarButton
-              label={t('selectionToolbar.restore')}
-              tone="success"
-              onClick={onRestore}
-              icon={
-                <ArrowCounterClockwise size={16} />
-              }
-            />
-            <ToolbarButton
-              label={t('selectionToolbar.deleteForever')}
-              tone="danger"
-              onClick={onDeleteForever}
-              icon={
-                <Trash size={16} />
-              }
-            />
-          </>
+      <div className="shrink-0 flex items-center gap-1">
+        {folded.length > 0 && (
+          <HoverLabel label={t('selectionToolbar.more')} position="below">
+          <button
+            ref={moreRef}
+            onClick={openMore}
+            aria-label={t('selectionToolbar.more')}
+            aria-haspopup="menu"
+            aria-expanded={!!menu.state}
+            className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-md text-pn-soft hover:bg-pn/5 hover:text-pn transition"
+          >
+            <DotsThreeOutlineVertical size={16} />
+          </button>
+          </HoverLabel>
         )}
+        {visible.map((a) => (
+          <ToolbarButton key={a.key} label={a.label} onClick={a.onClick} icon={a.icon} tone={a.tone} pro={a.pro} />
+        ))}
       </div>
 
       {tagOpen && (
-        <TagPopover
-          anchorRef={tagBtnRef}
+        <TagPicker
           allTags={allTags ?? []}
           onSelect={(tag) => {
             setTagOpen(false);
@@ -149,159 +215,8 @@ export function SelectionToolbar({
           onClose={() => setTagOpen(false)}
         />
       )}
+      <ContextMenu state={menu.state} onClose={menu.close} />
     </div>
-  );
-}
-
-// ── Tag popover ────────────────────────────────────────────────────────
-
-function TagPopover({
-  anchorRef,
-  allTags,
-  onSelect,
-  onClose,
-}: {
-  anchorRef: React.RefObject<HTMLButtonElement | null>;
-  allTags: [string, number][];
-  onSelect: (tag: string) => void;
-  onClose: () => void;
-}) {
-  const { t } = useTranslation('shell');
-  const [filter, setFilter] = useState('');
-  const popoverRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEscapeToClose(onClose);
-
-  // Focus the input on mount.
-  useEffect(() => {
-    const id = setTimeout(() => inputRef.current?.focus(), 50);
-    return () => clearTimeout(id);
-  }, []);
-
-  // Outside-click dismiss (delayed to avoid the opening click).
-  useEffect(() => {
-    function handler(e: PointerEvent) {
-      const target = e.target as Node;
-      if (popoverRef.current && popoverRef.current.contains(target)) return;
-      if (anchorRef.current && anchorRef.current.contains(target)) return;
-      onClose();
-    }
-    const id = setTimeout(
-      () => document.addEventListener('pointerdown', handler),
-      50,
-    );
-    return () => {
-      clearTimeout(id);
-      document.removeEventListener('pointerdown', handler);
-    };
-  }, [onClose, anchorRef]);
-
-  // Position: under the anchor, right edges aligned (the tag button sits in
-  // the toolbar's right-hand cluster). The hook then slides it inward so it
-  // can never spill off the viewport - hand-rolled `left: rect.left` used to
-  // push it half off-screen on a phone, where the anchor is only ~120px from
-  // the right edge and the popover is 200 wide. Spec: ops/docs/ui-patterns.md (also flips above the trigger when there is no room below)
-  const pos = usePopoverPosition(true, anchorRef, popoverRef, {
-    gap: 6,
-    align: 'end',
-  });
-
-  // Filter tags alphabetically.
-  const needle = filter.toLowerCase().replace(/^#/, '').trim();
-  const filtered = useMemo(() => {
-    const sorted = [...allTags].sort((a, b) => a[0].localeCompare(b[0]));
-    if (!needle) return sorted;
-    return sorted.filter(([t]) => t.toLowerCase().includes(needle));
-  }, [allTags, needle]);
-
-  // "Create" row: show when the normalized input doesn't match any
-  // existing tag and isn't empty.
-  const normalizedFilter = normalizeTag(filter);
-  const showCreate =
-    normalizedFilter &&
-    !allTags.some(
-      ([t]) => t.toLowerCase() === normalizedFilter.toLowerCase(),
-    );
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (showCreate) {
-        onSelect(normalizedFilter);
-      } else if (filtered.length === 1 && filtered[0]) {
-        onSelect(filtered[0][0]);
-      }
-    }
-  }
-
-  return createPortal(
-    <div
-      ref={popoverRef}
-      className="fixed bg-surface-2 border border-divider rounded-lg overflow-hidden"
-      style={{
-        top: pos?.top ?? 0,
-        left: pos?.left ?? 0,
-        width: 200,
-        zIndex: 50,
-        visibility: pos ? 'visible' : 'hidden',
-      }}
-    >
-      {/* Search / create input */}
-      <div className="p-2">
-        <input
-          ref={inputRef}
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={t('selectionToolbar.addTagPlaceholder')}
-          autoComplete="off"
-          className="w-full text-sm bg-transparent border border-divider rounded-md px-2.5 py-1.5 focus:outline-none focus:border-accent placeholder:text-neutral-400 dark:placeholder:text-neutral-600 text-pn"
-        />
-      </div>
-
-      <div className="border-t border-divider" />
-
-      {/* Tag list */}
-      <div className="max-h-[200px] overflow-y-auto py-1">
-        {filtered.map(([tag]) => (
-          <button
-            key={tag}
-            type="button"
-            onClick={() => onSelect(tag)}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors min-h-[36px]"
-          >
-            <span className="text-neutral-400 dark:text-neutral-600 text-xs">#</span>
-            <span className="text-pn truncate">
-              {tag}
-            </span>
-          </button>
-        ))}
-
-        {filtered.length === 0 && !showCreate && (
-          <div className="px-3 py-2 text-sm text-neutral-400 dark:text-neutral-600">
-            {t('selectionToolbar.noTagsFound')}
-          </div>
-        )}
-
-        {showCreate && (
-          <>
-            {filtered.length > 0 && (
-              <div className="border-t border-divider" />
-            )}
-            <button
-              type="button"
-              onClick={() => onSelect(normalizedFilter)}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-neutral-500 dark:text-neutral-400 min-h-[36px]"
-            >
-              <span className="text-xs">+</span>
-              <span>{t('selectionToolbar.createTag', { tag: normalizedFilter })}</span>
-            </button>
-          </>
-        )}
-      </div>
-    </div>,
-    document.body,
   );
 }
 
@@ -323,13 +238,13 @@ const ToolbarButton = forwardRef<
   }
 >(function ToolbarButton({ label, onClick, icon, tone = 'default', pro = false }, ref) {
   const base =
-    'relative shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-md transition';
+    'relative shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-md transition';
   const toneClass =
     tone === 'danger'
-      ? 'bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400'
+      ? 'bg-red-500/10 hover:bg-red-500/20 text-danger'
       : tone === 'success'
-        ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-        : 'bg-accent/10 hover:bg-accent/20 text-accent';
+        ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-success'
+        : 'bg-accent/10 hover:bg-accent/20 text-accent-strong';
   return (
     <HoverLabel label={label} position="below">
     <button

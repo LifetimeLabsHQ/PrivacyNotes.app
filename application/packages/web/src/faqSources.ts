@@ -81,6 +81,10 @@ export const FAQ_SOURCES: Readonly<Record<string, readonly FaqSource[]>> = {
     { doc: 'security', heading: 'What the server sees' },
     { doc: 'verify', heading: 'Tier 1: one minute, no tools' },
   ],
+  'us-company': [
+    { doc: 'security', heading: 'What the server sees' },
+    { doc: 'verify', heading: 'Tier 1: one minute, no tools' },
+  ],
   'phrase-vs-password': [{ doc: 'threatModel', heading: 'Key derivation' }],
   'threat-model-levels': [
     { doc: 'threatModel', heading: 'OAuth users' },
@@ -91,7 +95,7 @@ export const FAQ_SOURCES: Readonly<Record<string, readonly FaqSource[]>> = {
     { doc: 'threatModel', heading: 'Key derivation' },
     { doc: 'threatModel', heading: 'Out-of-scope threats' },
   ],
-  'why-no-2fa': [{ doc: 'threatModel', heading: 'Out-of-scope threats' }],
+  'enable-2fa': [{ doc: 'threatModel', heading: 'Two-factor sign-in' }],
   'bip39-wordlist': [{ doc: 'crypto' }],
   'no-ai': [{ doc: 'verify', heading: 'Tier 1: one minute, no tools' }],
   'burn-notes': [{ doc: 'threatModel', heading: 'Burn notes (one-time shares)' }],
@@ -122,6 +126,10 @@ export const FAQ_SOURCES: Readonly<Record<string, readonly FaqSource[]>> = {
   'data-location': [
     { doc: 'security', heading: 'What the server sees' },
     { doc: 'threatModel', heading: 'Local storage at rest' },
+  ],
+  'data-on-disk': [
+    { doc: 'threatModel', heading: 'Local storage at rest' },
+    { doc: 'verify', heading: 'What step 6 showed you, and what it does not buy' },
   ],
   'clear-browser-data': [{ doc: 'threatModel', heading: 'Local storage at rest' }],
   'data-rights': [{ doc: 'security', heading: 'What we measure' }],

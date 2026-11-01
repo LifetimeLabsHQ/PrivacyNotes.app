@@ -9,49 +9,110 @@
     "tabExport": "Exportera",
     "tabRestore": "Återställ",
     "tabVault": "Lösenord",
-    "working": "Arbetar…"
+    "working": "Arbetar…",
+    "tabWellness": "Mätvärden"
   },
   "footer": {
     "exportNote": "Exporter körs lokalt. Ingenting laddas upp.",
     "restoreNote": "Din fil läses och dekrypteras lokalt.",
-    "importNote": "Allt krypteras innan det lämnar din enhet för att synkas."
+    "importNote": "Allt är alltid krypterat, på din enhet och när det synkas."
   },
   "importPick": {
     "autoTagLabel": "Tagga importerade anteckningar efter källa",
     "autoTagDesc": "Anteckningar från Google Keep får <keep>#google</keep>, Obsidian får <obsidian>#obsidian</obsidian>, och så vidare.",
     "guideAria": "Importguide för {{app}}",
-    "guideLabel": "Guide"
+    "guideLabel": "Guide",
+    "groupGeneral": "Allmänt",
+    "groupNotes": "Anteckningar"
   },
   "folderImport": {
     "tagLabel": "Tagga även anteckningar efter mapp",
     "tagDesc": "Dina mappar återskapas oavsett. Det här lägger dessutom till varje mappnamn som en tagg, praktiskt om du också gillar att filtrera på tagg."
   },
+  "browserImport": {
+    "tagLabel": "Behåll taggarna från din webbläsare",
+    "tagDesc": "Firefox sparar taggar och ett adressfältsnyckelord tillsammans med bokmärket. Båda blir taggar här."
+  },
+  "contactImport": {
+    "photosLabel": "Importera foton",
+    "photosDesc_one": "{{count}} foto, ungefär {{size}} när appen har krympt det. Det är {{pct}} % av de {{free}} du har lediga.",
+    "photosDesc_other": "{{count}} foton, ungefär {{size}} när appen har krympt dem. Det är {{pct}} % av de {{free}} du har lediga.",
+    "photosDescNoQuota_one": "{{count}} foto, ungefär {{size}} när appen har krympt det.",
+    "photosDescNoQuota_other": "{{count}} foton, ungefär {{size}} när appen har krympt dem.",
+    "photosTooBig_one": "Inte tillräckligt med plats för fotot ({{size}}), så det lämnas utanför. Allt annat kommer med. Frigör {{shortfall}}, eller lägg till lagring, och importera igen för att ta med det.",
+    "photosTooBig_other": "Inte tillräckligt med plats för de {{count}} fotona ({{size}}), så de lämnas utanför. Allt annat kommer med. Frigör {{shortfall}}, eller lägg till lagring, och importera igen för att ta med dem."
+  },
+  "importCalendar": {
+    "location": "Plats",
+    "videoCall": "Videosamtal",
+    "organizer": "Organisatör",
+    "guests": "Gäster",
+    "file": "Fil",
+    "link": "Länk",
+    "timeZone": "Tidszon",
+    "ends": "Slutar",
+    "repeats": "Upprepas"
+  },
+  "webcal": {
+    "title": "Webcal",
+    "desc": "En kalenderadress, till exempel en webcal://-länk från Proton, iCloud, Outlook eller en offentlig kalender. Den laddas ner en gång; klistra in den igen senare för att bara lägga till de nya händelserna.",
+    "fieldLabel": "Kalenderadress",
+    "import": "Importera",
+    "downloading": "Laddar ner…",
+    "errors": {
+      "invalid": "Klistra in en adress som börjar med webcal://, webcals:// eller https://.",
+      "refused": "Den här adressen kan inte öppnas.",
+      "wrongType": "Den här adressen leder inte till en kalenderfil.",
+      "tooLarge": "Den här kalendern är större än 10 MB.",
+      "timeout": "Kalenderservern svarade inte i tid. Försök igen senare.",
+      "blocked": "Kalenderservern nekade nedladdningen. Kontrollera att kalendern är delad eller offentlig.",
+      "offline": "Du är offline. Anslut och försök igen.",
+      "limit": "För många nedladdningar på kort tid. Vänta en minut och försök igen.",
+      "failed": "Kalendern kunde inte laddas ner. Kontrollera adressen och försök igen."
+    }
+  },
   "sourceDesc": {
     "googleKeep": "Google Takeout .zip (mappen Keep) eller en enskild .json-anteckning. Checklistor importeras som riktiga uppgiftslistor.",
+    "googleCalendar": ".zip-filen från Settings > Import & export i Google Kalender, eller en enskild .ics-fil. Händelserna behåller sina tider, upprepningar och påminnelser.",
     "appleNotes": "Exportera med gratisappen Exporter som Markdown och släpp .zip-filen här.",
     "appleJournal": "Exportera från Journal på Mac eller iPhone, komprimera mappen AppleJournalEntries och släpp .zip-filen här. Posterna importeras som dagboksinlägg med sina foton, videor, röstmemon och platser.",
     "evernote": "En ensam .enex, eller flera zippade tillsammans. Behåller formatering, taggar, bilagor, anteckningslänkar och anteckningsböcker. Evernote tar inte med uppgifter i .enex.",
     "samsungNotes": "Exportera som Word (.docx) eller text (.txt). Zippa flera filer för att importera många på en gång.",
     "simplenote": "Exportera från Simplenote (Inställningar -> Verktyg -> Exportera anteckningar). Släpp .zip-filen här.",
-    "standardNotes": "Dekrypterad .zip- eller .txt-säkerhetskopia från Standard Notes (Arkiv > Exportera > Dekrypterad).",
+    "standardNotes": "Dekrypterad .zip- eller .txt-säkerhetskopia från Standard Notes (Account settings > Backups > Data backups > Decrypted).",
     "obsidian": "Obsidian-valv som .zip. Bevarar taggar, [[note links]], mappstruktur, #taggar i texten samt inbäddade bilder och filer.",
     "notesnook": "Notesnook-export som .zip. Välj HTML vid exporten för att behålla formatering, anteckningsböcker, taggar och bilagor.",
+    "bear": "Välj File > Backup Notes... i Bear och släpp .bear2bk-filen här. Taggar och undertaggar, fästa anteckningar, arkivet, papperskorgen, överstrykningar med sina färger, anteckningslänkar och bilagor följer med.",
+    "joplin": "Filen .jex från File > Export all > ”JEX - Joplin Export File”. Anteckningsböcker blir mappar, och taggar, att göra-punkter, anteckningslänkar och bilagor följer med.",
     "upnote": "I UpNote: Settings > Backup > Backup now, zippa sedan allt i mappen med säkerhetskopian. Behåller anteckningsböcker, taggar, fästa anteckningar, anteckningslänkar, formatering och bilagor. Export av enskilda anteckningar från mobilapparna fungerar också - välj ”Export to HTML”.",
     "markdownFolder": ".md- eller .txt-filer var för sig eller som en .zip. En zippad mapp behåller sina undermappar och tar med sig sina bilder och bilagor.",
     "markdownApp": "De här anteckningarna är redan Markdown-filer i en mapp. Släpp mappen som .zip så följer undermappar, bilder och #taggar med.",
     "browserBookmarks": "Bokmärkesfilen (.html) från \"Export bookmarks\" i din webbläsare, eller .zip:en som Safari skriver. Chrome, Firefox, Safari, Edge, Opera, Brave och Vivaldi innehåller alla samma fil. Mappar och datum följer med.",
+    "vcard": ".vcf-filen som din adressbok exporterar: iPhone och Mac via iCloud eller Kontakter, Android, Google Kontakter. Varje kort kommer med, foton inräknade, och att importera samma fil två gånger hoppar över personerna du redan har.",
     "bitwarden": "Okrypterad .json-export från Bitwarden (Tools > Export vault > .json). Inloggningar, kort, SSH-nycklar, säkra anteckningar och TOTP-koder följer med.",
     "browserPasswords": "Lösenordsfilen (.csv) från Chrome, Edge, Brave, Opera, Vivaldi, Firefox eller Safari, eller .zip:en som Safari skriver. Varje rad blir en inloggning. Radera filen när du är klar - den innehåller dina lösenord i klartext."
+  },
+  "sourceLabel": {
+    "privacynotes": "Fullständig säkerhetskopia av PrivacyNotes",
+    "browserBookmarks": "Webbläsarbokmärken",
+    "browserPasswords": "Lösenord från webbläsaren",
+    "vcard": "Kontakter (vCard)",
+    "markdownFolder": "Markdown-filer"
   },
   "vaultPick": {
     "intro": "Importera inloggningar, kort och SSH-nycklar från en annan lösenordshanterare."
   },
   "restorePick": {
-    "intro": "Återställ en PrivacyNotes-säkerhetskopia som du exporterat tidigare. Din fil läses och dekrypteras lokalt.",
+    "intro": "Återställ en PrivacyNotes-säkerhetskopia som du exporterat tidigare.",
     "fullBackupTitle": "Fullständig säkerhetskopia (.zip)",
-    "fullBackupDesc": "Återställ anteckningar, dagböcker, valvobjekt, uppgifter, bilder, ljud och filer. Allt importeras som nya objekt - befintliga data skrivs inte över.",
+    "fullBackupDesc": "Återställ anteckningar, dagböcker, valvobjekt, uppgifter, bilder, ljud och filer. En anteckning du redan har behålls, eller uppdateras om säkerhetskopian har en nyare version av den.",
     "encryptedBackupTitle": "Krypterad säkerhetskopia (.pnbackup, .pnbackupz)",
     "encryptedBackupDesc": "Återställ en krypterad säkerhetskopia med din frasnyckel. En .pnbackupz tar tillbaka allt, filer inräknade; en .pnbackup innehåller bara text och metadata. Du måste vara inloggad med samma konto som skapade den."
+  },
+  "restoreGate": {
+    "wait": "Återställningen väntar tills den här enheten är online och har slutfört en synkning, så att din säkerhetskopia matchas mot anteckningarna som redan finns i ditt konto i stället för att de läggs till två gånger.",
+    "paused": "Återställningen väntar på synkningen, så att din säkerhetskopia matchas mot anteckningarna som redan finns i ditt konto, och synkningen är pausad på den här enheten: stäng av ”Pausa synkning” under Inställningar > ID & Sync.",
+    "belowFloor": "Återställningen väntar på synkningen, så att din säkerhetskopia matchas mot anteckningarna som redan finns i ditt konto, och den här versionen av appen är för gammal för att synka: uppdatera appen först."
   },
   "encryptedBackupLabel": "Krypterad säkerhetskopia",
   "status": {
@@ -64,9 +125,17 @@
   "errors": {
     "genericParse": "Något gick fel.",
     "decryptionFailed": "Dekrypteringen misslyckades. Fel fras eller skadad fil.",
-    "blobImportFailed": "Dina anteckningar importerades, men inte deras bilder och filer: {{detail}} Ingenting i filen du valde ändrades, så du kan radera de importerade anteckningarna och köra importen igen."
+    "blobImportFailed": "Dina anteckningar importerades, men inte deras bilder och filer: {{detail}} Ingenting i filen du valde ändrades, så du kan radera de importerade anteckningarna och köra importen igen.",
+    "blobsNotInBackup_one": "Dina anteckningar återställdes, men {{items}} som listas i säkerhetskopian saknas i den.",
+    "blobsNotInBackup_other": "Dina anteckningar återställdes, men {{items}} som listas i säkerhetskopian saknas i den."
   },
   "preview": {
+    "oversize_one": "{{count}} anteckning är större än 1 MB. Den stannar på den här enheten och synkas inte.",
+    "oversize_other": "{{count}} anteckningar är större än 1 MB. De stannar på den här enheten och synkas inte.",
+    "splitOversize_one": "Dela upp anteckningen i mindre anteckningar vid dess rubriker, så att den synkas",
+    "splitOversize_other": "Dela upp de här {{count}} anteckningarna i mindre anteckningar vid deras rubriker, så att de synkas",
+    "partTitle": "{{title}} ({{index}}/{{total}})",
+    "continuedIn": "Fortsätter i {{link}}",
     "sourceLabel": "Källa",
     "uniqueTags": "Unika taggar",
     "empty": "Tom",
@@ -76,11 +145,14 @@
     "andMore": "… och {{count}} till",
     "headsUpLabel": "Obs:",
     "duplicateWarning": "importen lägger till de här som nya anteckningar. Kör du den två gånger får du dubbletter. Det finns ingen automatisk dubblettrensning ännu.",
+    "duplicateSkipNote": "bokmärken du redan sparat hoppas över, så att köra det här två gånger dubblerar ingenting.",
+    "contactSkipNote": "personer du redan har sparat hoppas över och lämnas som de är, så att köra det två gånger dubblerar ingen.",
+    "eventSkipNote": "händelser du redan har importerat hoppas över och lämnas som de är, så att köra det två gånger dubblerar dem inte.",
+    "restoreMergeNote": "anteckningar från din egen säkerhetskopia matchas på id. En anteckning du redan har uppdateras bara när säkerhetskopians version är nyare, och en anteckning i papperskorgen tas ut ur den.",
     "quotaExceeded": "<strong>För lite lagring för att importera.</strong> Uppskattningsvis {{needed}} behövs, {{available}} tillgängligt. Frigör utrymme eller uppgradera innan du importerar.",
     "quotaWarning": "Obs: den här importen använder ungefär {{needed}} av ditt återstående lagringsutrymme på {{available}}.",
     "oversizeAttachments_one": "1 fil är större än gränsen på {{limit}} per fil i din plan. Den importeras till den här enheten, men synkas inte till dina andra enheter förrän du uppgraderar.",
-    "oversizeAttachments_other": "{{count}} filer är större än gränsen på {{limit}} per fil i din plan. De importeras till den här enheten, men synkas inte till dina andra enheter förrän du uppgraderar.",
-    "duplicateSkipNote": "bokmärken du redan sparat hoppas över, så att köra det här två gånger dubblerar ingenting."
+    "oversizeAttachments_other": "{{count}} filer är större än gränsen på {{limit}} per fil i din plan. De importeras till den här enheten, men synkas inte till dina andra enheter förrän du uppgraderar."
   },
   "counts": {
     "note_one": "anteckning",
@@ -93,6 +165,8 @@
     "card_other": "kort",
     "sshKey_one": "SSH-nyckel",
     "sshKey_other": "SSH-nycklar",
+    "contact_one": "kontakt",
+    "contact_other": "kontakter",
     "zeroItems": "0 objekt",
     "importButton": "Importera {{counts}}"
   },
@@ -118,20 +192,40 @@
     "vaultExportDesc": "Inloggningar, kort och SSH-nycklar i Bitwarden-kompatibelt format. Kan importeras av de flesta lösenordshanterare. Klartext - hantera varsamt.",
     "bookmarksOnlyHeading": "Endast bokmärken",
     "bookmarksExportTitle": "Bokmärkesfil (.html)",
-    "bookmarksExportDesc": "Standardfilen för bokmärken som varje webbläsare läser. Importera den till Chrome, Firefox, Safari eller Edge med mapparna kvar."
+    "bookmarksExportDesc": "Standardfilen för bokmärken som varje webbläsare läser. Importera den till Chrome, Firefox, Safari eller Edge med mapparna kvar.",
+    "contactsOnlyHeading": "Bara kontakter",
+    "contactsExportTitle": "Kontaktfil (.vcf)",
+    "contactsExportDesc": "vCard-filen som varje telefon och adressbok läser. Importera den i iPhone, Android, Google Kontakter eller Kontakter på Mac, med etiketter och grupper intakta.",
+    "calendarOnlyHeading": "Bara kalender",
+    "calendarExportTitle": "Kalenderfil (.ics)",
+    "calendarExportDesc": "Händelser samt daterade anteckningar och uppgiftslistor, för Google Kalender, Apple Kalender eller Outlook.",
+    "calendarPrivate": "Privat"
   },
   "exportProgress": {
     "failedTitle": "Exporten misslyckades",
     "completeTitle": "Exporten är klar",
+    "incompleteTitle": "Exporten är ofullständig",
     "exportingTitle": "Exporterar säkerhetskopia...",
     "preparing": "Förbereder...",
     "exporting": "Exporterar...",
     "imagesProgress": "Exporterar bilder... {{done}} av {{total}}",
     "filesProgress": "Exporterar filer... {{done}} av {{total}}",
     "building": "Bygger säkerhetskopian...",
-    "compressing": "Komprimerar..."
+    "compressing": "Komprimerar...",
+    "missingFailed_one": "Den här enheten kunde inte ladda ner {{items}}, så din export lämnar den utanför. Kontrollera anslutningen och exportera igen.",
+    "missingFailed_other": "Den här enheten kunde inte ladda ner {{items}}, så din export lämnar dem utanför. Kontrollera anslutningen och exportera igen.",
+    "missingNotFound_one": "{{items}} finns varken på den här enheten eller på servern, så din export lämnar den utanför.",
+    "missingNotFound_other": "{{items}} finns varken på den här enheten eller på servern, så din export lämnar dem utanför."
+  },
+  "missing": {
+    "pictures_one": "{{count}} bild",
+    "pictures_other": "{{count}} bilder",
+    "files_one": "{{count}} fil",
+    "files_other": "{{count}} filer",
+    "both": "{{pictures}} och {{files}}"
   },
   "upload": {
+    "discard": "Släng",
     "completeTitle": "Uppladdningen är klar",
     "failedTitle": "Uppladdningen misslyckades",
     "partialTitle": "{{done}} uppladdade, {{failed}} misslyckades",
@@ -141,6 +235,10 @@
     "statusFailed": "Misslyckades",
     "errorStorageFull": "Lagringen är full - frigör utrymme eller lägg till lagring för att ladda upp den här filen.",
     "errorStorageFullKept": "Får inte plats i din lagring - behålls på den här enheten. Den synkas när utrymme frigörs.",
+    "errorTooLarge": "Filen är för stor ({{size}}). Max {{limit}} MB.",
+    "errorTooLargeFree": "Filen är för stor ({{size}}). Max {{limit}} MB med gratisplanen.",
+    "batchTitle_one": "{{count}} fil",
+    "batchTitle_other": "{{count}} filer",
     "statusUploading": "Laddar upp...",
     "statusWaiting": "Väntar",
     "summaryDone": "{{count}} laddades upp",
@@ -162,8 +260,16 @@
   "saveErrors": {
     "shortWrite": "Bara {{written}} av {{expected}} byte sparades, så filen är ofullständig. Försök igen och spara till enhetens egen lagring i stället för till en molnmapp."
   },
-  "browserImport": {
-    "tagLabel": "Behåll taggarna från din webbläsare",
-    "tagDesc": "Firefox sparar taggar och ett adressfältsnyckelord tillsammans med bokmärket. Båda blir taggar här."
+  "shareSheet": {
+    "title_one": "{{count}} objekt delades till PrivacyNotes",
+    "title_other": "{{count}} objekt delades till PrivacyNotes",
+    "line": "Inget sparas förrän du väljer.",
+    "saveAll": "Spara alla"
+  },
+  "destination": {
+    "label": "Lägg till i",
+    "none": "Ingen mapp",
+    "newFolder": "Ny mapp \"{{name}}\"",
+    "help": "Mappar från källan hamnar i mappen du väljer, och objekt utan mapp läggs direkt i den."
   }
 }

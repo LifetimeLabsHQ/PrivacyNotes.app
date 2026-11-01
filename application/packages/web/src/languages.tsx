@@ -1,4 +1,4 @@
-import i18n, { SUPPORTED_LOCALES, ensureLocaleLoaded } from './i18n';
+import i18n, { activeLocale, preferredLocale, SUPPORTED_LOCALES, ensureLocaleLoaded } from './i18n';
 
 // LANGUAGE_META + Flag moved to languageData.tsx (dependency-free) so the
 // static-page build (faq-page.ts) can share them without importing i18n.
@@ -7,47 +7,56 @@ export { LANGUAGE_META, Flag, sortByNative } from './languageData';
 
 const EXPLICIT_KEY = 'privacynotes.langExplicit';
 
+/** True when the user picked a language rather than following detection. */
+export function hasExplicitLanguage(): boolean {
+  return localStorage.getItem(EXPLICIT_KEY) === '1';
+}
+
 /** The user's explicit choice, or 'system' when following browser detection. */
 export function currentLanguageChoice(): string {
   if (localStorage.getItem(EXPLICIT_KEY) !== '1') return 'system';
   return localStorage.getItem('privacynotes.language') || 'system';
 }
 
-/** The locale actually on screen right now, normalized to a supported code. */
-export function activeLocale(): string {
-  const lng = i18n.resolvedLanguage || i18n.language || 'en';
-  return (
-    SUPPORTED_LOCALES.find((l) => l === lng) ||
-    SUPPORTED_LOCALES.find((l) => lng.startsWith(l)) ||
-    'en'
-  );
-}
+// Both accessors live in ./i18n, which owns `normalizeLocale`. Re-exported
+// here because this is where callers look for anything about language.
+export { activeLocale, preferredLocale };
 
 // Spec: ops/docs/archive/rtl-handoff.md (Arabic numerals: Western digits)
-const ARABIC_INTL_LOCALE = 'ar-u-nu-latn';
+const LATIN_DIGITS = '-u-nu-latn';
 
 /**
  * The BCP-47 tag to pass to any Intl/toLocale* API - `activeLocale()` (or an
  * explicit override, for callers that already resolved a locale elsewhere),
- * except Arabic maps to `ar-u-nu-latn` so the UI renders Western 0-9 digits
- * instead of Intl's Arabic-Indic default. This is the one function that
+ * except an Arabic tag gains `-u-nu-latn` so the UI renders Western 0-9 digits
+ * instead of Intl's Arabic-Indic default. That holds for a tag with a region
+ * too ("ar-EG", which the date locale builds). This is the one function that
  * should ever feed one of those APIs; `activeLocale()` itself stays the
  * comparison/routing value (URL slugs, `lang` params, "is this the current
  * language" checks) and must not be given Intl's `-u-nu-latn` suffix.
  */
 export function intlLocale(locale: string = activeLocale()): string {
-  return locale === 'ar' ? ARABIC_INTL_LOCALE : locale;
+  return locale === 'ar' || locale.startsWith('ar-') ? `${locale}${LATIN_DIGITS}` : locale;
 }
 
-/** The visitor's browser-preferred language, normalized to a supported code. */
-export function preferredLocale(): string {
-  const nav = (navigator.language || 'en').toLowerCase();
-  return (
-    SUPPORTED_LOCALES.find((l) => l.toLowerCase() === nav) ||
-    SUPPORTED_LOCALES.find((l) => nav.startsWith(l.toLowerCase().slice(0, 2))) ||
-    'en'
-  );
+/**
+ * Every locale tag the device states, for the one thing the app language
+ * cannot say: the region a person formats dates in. The runtime's own default
+ * leads, because a system webview takes it from the region set in the
+ * operating system; the browser's preferred languages follow. The tags are
+ * raw, so a Linux box can hand over "C" or "en_US". Every list row asks for
+ * them, so a runtime without a languages list must not throw here.
+ */
+export function deviceLocaleTags(): string[] {
+  // date-ok: reads the device region and formats nothing
+  const tags = [new Intl.DateTimeFormat().resolvedOptions().locale];
+  const preferred: readonly string[] | undefined =
+    typeof navigator === 'undefined' ? undefined : navigator.languages;
+  if (preferred) tags.push(...preferred);
+  return tags;
 }
+
+
 
 /**
  * Apply a language. 'system' clears the override and follows the browser.

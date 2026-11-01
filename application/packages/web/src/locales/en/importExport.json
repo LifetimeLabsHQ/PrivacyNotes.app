@@ -9,18 +9,21 @@
     "tabExport": "Export",
     "tabRestore": "Restore",
     "tabVault": "Passwords",
-    "working": "Working…"
+    "working": "Working…",
+    "tabWellness": "Trackers"
   },
   "footer": {
     "exportNote": "Exports run locally. Nothing is uploaded.",
     "restoreNote": "Your file is read and decrypted locally.",
-    "importNote": "Everything is encrypted before it leaves your device to sync."
+    "importNote": "Everything is always encrypted, on your device and when it syncs."
   },
   "importPick": {
     "autoTagLabel": "Tag imported notes by source",
     "autoTagDesc": "Google Keep notes get <keep>#google</keep>, Obsidian gets <obsidian>#obsidian</obsidian>, and so on.",
     "guideAria": "Import guide for {{app}}",
-    "guideLabel": "Guide"
+    "guideLabel": "Guide",
+    "groupGeneral": "General",
+    "groupNotes": "Notes"
   },
   "folderImport": {
     "tagLabel": "Also tag notes by folder",
@@ -30,32 +33,86 @@
     "tagLabel": "Keep tags from your browser",
     "tagDesc": "Firefox saves tags and an address-bar keyword with a bookmark. Both become tags here."
   },
+  "contactImport": {
+    "photosLabel": "Import photos",
+    "photosDesc_one": "{{count}} photo, about {{size}} once the app sizes it down. That is {{pct}}% of the {{free}} you have free.",
+    "photosDesc_other": "{{count}} photos, about {{size}} once the app sizes them down. That is {{pct}}% of the {{free}} you have free.",
+    "photosDescNoQuota_one": "{{count}} photo, about {{size}} once the app sizes it down.",
+    "photosDescNoQuota_other": "{{count}} photos, about {{size}} once the app sizes them down.",
+    "photosTooBig_one": "Not enough space for the photo ({{size}}), so it is left out. Everything else comes across. Free up {{shortfall}}, or add storage, and import again to bring it in.",
+    "photosTooBig_other": "Not enough space for the {{count}} photos ({{size}}), so they are left out. Everything else comes across. Free up {{shortfall}}, or add storage, and import again to bring them in."
+  },
+  "importCalendar": {
+    "location": "Location",
+    "videoCall": "Video call",
+    "organizer": "Organizer",
+    "guests": "Guests",
+    "file": "File",
+    "link": "Link",
+    "timeZone": "Time zone",
+    "ends": "Ends",
+    "repeats": "Repeats"
+  },
+  "webcal": {
+    "title": "Webcal",
+    "desc": "A calendar address, such as a webcal:// link from Proton, iCloud, Outlook or a public calendar. It is downloaded once; paste it again later to add only the new events.",
+    "fieldLabel": "Calendar address",
+    "import": "Import",
+    "downloading": "Downloading…",
+    "errors": {
+      "invalid": "Paste an address that starts with webcal://, webcals:// or https://.",
+      "refused": "This address cannot be opened.",
+      "wrongType": "This address does not lead to a calendar file.",
+      "tooLarge": "This calendar is larger than 10 MB.",
+      "timeout": "The calendar server did not answer in time. Try again later.",
+      "blocked": "The calendar server refused the download. Check that the calendar is shared or public.",
+      "offline": "You are offline. Connect and try again.",
+      "limit": "Too many downloads in a short time. Wait a minute and try again.",
+      "failed": "The calendar could not be downloaded. Check the address and try again."
+    }
+  },
   "sourceDesc": {
     "googleKeep": "Google Takeout .zip (Keep folder) or a single .json note. Checklists import as native task lists.",
+    "googleCalendar": "The .zip from Google Calendar's Settings > Import & export, or one .ics file. Events keep their times, repeats and reminders.",
     "appleNotes": "Export via the free Exporter app as Markdown, then drop the .zip here.",
     "appleJournal": "Export from Journal on Mac or iPhone, compress the AppleJournalEntries folder, and drop the .zip. Entries import as journal entries with their photos, videos, voice memos, and locations.",
     "evernote": "One .enex on its own, or several zipped together. Keeps formatting, tags, attachments, note links, and notebooks. Evernote leaves tasks out of .enex.",
     "samsungNotes": "Export as Word (.docx) or Text (.txt). Zip multiple files for bulk import.",
     "simplenote": "Export from Simplenote (Settings -> Tools -> Export Notes). Drop the .zip.",
-    "standardNotes": "Decrypted .zip or .txt backup from Standard Notes (File > Export > Decrypted).",
+    "standardNotes": "Decrypted .zip or .txt backup from Standard Notes (Account settings > Backups > Data backups > Decrypted).",
     "obsidian": "Obsidian vault as .zip. Preserves tags, [[note links]], folder structure, inline #tags, and embedded images and files.",
     "notesnook": "Notesnook export as .zip. Pick HTML when exporting to keep formatting, notebooks, tags, and attachments.",
+    "bear": "In Bear, choose File > Backup Notes... and drop the .bear2bk file here. Tags and nested tags, pins, the archive, the trash, highlights with their colors, note-links and attachments come along.",
+    "joplin": "The .jex file from File > Export all > \"JEX - Joplin Export File\". Notebooks become folders, and tags, to-dos, note links and attachments come along.",
     "upnote": "In UpNote: Settings > Backup > Backup now, then zip everything in the backup folder. Keeps notebooks, tags, pins, note links, formatting, and attachments. Per-note exports from the phone apps work too - pick \"Export to HTML\".",
     "markdownFolder": ".md or .txt files individually or as a .zip. A zipped folder keeps its subfolders and brings its images and attachments along.",
     "markdownApp": "These notes are already Markdown files in a folder. Drop that folder in as a .zip and its subfolders, images, and #tags come with it.",
     "browserBookmarks": "The bookmarks .html file from your browser’s \"Export bookmarks\", or the .zip Safari writes. Chrome, Firefox, Safari, Edge, Opera, Brave, and Vivaldi all hold the same file. Folders and dates come along.",
+    "vcard": "The .vcf file your address book exports: iPhone and Mac through iCloud or Contacts, Android, Google Contacts. Every card comes across, photos included, and importing the same file twice skips the people you already have.",
     "bitwarden": "Unencrypted .json vault export from Bitwarden (Tools > Export vault > .json). Logins, cards, SSH keys, secure notes, and TOTP codes all come along.",
     "browserPasswords": "The passwords .csv from Chrome, Edge, Brave, Opera, Vivaldi, Firefox, or Safari, or the .zip Safari writes. Each row becomes a login. Delete the file when you are done - it holds your passwords in plain text."
+  },
+  "sourceLabel": {
+    "privacynotes": "PrivacyNotes full backup",
+    "browserBookmarks": "Browser bookmarks",
+    "browserPasswords": "Browser passwords",
+    "vcard": "Contacts (vCard)",
+    "markdownFolder": "Markdown files"
   },
   "vaultPick": {
     "intro": "Import logins, credit cards, and SSH keys from another password manager."
   },
   "restorePick": {
-    "intro": "Restore a PrivacyNotes backup you exported earlier. Your file is read and decrypted locally.",
+    "intro": "Restore a PrivacyNotes backup you exported earlier.",
     "fullBackupTitle": "Full backup (.zip)",
-    "fullBackupDesc": "Restore notes, journals, vault items, tasks, images, audio, and files. Everything is imported as new items - existing data is not overwritten.",
+    "fullBackupDesc": "Restore notes, journals, vault items, tasks, images, audio, and files. A note you already have is kept, or updated if the backup holds a newer copy of it.",
     "encryptedBackupTitle": "Encrypted backup (.pnbackup, .pnbackupz)",
     "encryptedBackupDesc": "Restore an encrypted backup with your phrase key. A .pnbackupz brings everything back, files included; a .pnbackup carries text content and metadata only. You must be signed in with the same account that created it."
+  },
+  "restoreGate": {
+    "wait": "Restore waits until this device is online and has completed a sync, so your backup is matched to the notes already in your account instead of adding them twice.",
+    "paused": "Restore waits for sync, so your backup is matched to the notes already in your account, and sync is paused on this device: turn off Pause sync in Settings > ID & Sync.",
+    "belowFloor": "Restore waits for sync, so your backup is matched to the notes already in your account, and this version of the app is too old to sync: update the app first."
   },
   "encryptedBackupLabel": "Encrypted backup",
   "status": {
@@ -68,9 +125,17 @@
   "errors": {
     "genericParse": "Something went wrong.",
     "decryptionFailed": "Decryption failed. Wrong phrase or corrupted file.",
-    "blobImportFailed": "Your notes imported, but their images and files did not: {{detail}} Nothing in the file you picked was changed, so you can delete the imported notes and run the import again."
+    "blobImportFailed": "Your notes imported, but their images and files did not: {{detail}} Nothing in the file you picked was changed, so you can delete the imported notes and run the import again.",
+    "blobsNotInBackup_one": "Your notes were restored, but {{items}} listed in the backup is missing from it.",
+    "blobsNotInBackup_other": "Your notes were restored, but {{items}} listed in the backup are missing from it."
   },
   "preview": {
+    "oversize_one": "{{count}} note is over 1 MB. It stays on this device and does not sync.",
+    "oversize_other": "{{count}} notes are over 1 MB. They stay on this device and do not sync.",
+    "splitOversize_one": "Split this note into smaller notes at its headings, so it syncs",
+    "splitOversize_other": "Split these {{count}} notes into smaller notes at their headings, so they sync",
+    "partTitle": "{{title}} ({{index}}/{{total}})",
+    "continuedIn": "Continued in {{link}}",
     "sourceLabel": "Source",
     "uniqueTags": "Unique tags",
     "empty": "Empty",
@@ -81,6 +146,9 @@
     "headsUpLabel": "Heads up:",
     "duplicateWarning": "importing adds these as new notes. If you run this twice, you’ll get duplicates. There’s no automatic dedupe yet.",
     "duplicateSkipNote": "bookmarks you have already saved are skipped, so running this twice will not duplicate anything.",
+    "contactSkipNote": "people you have already saved are skipped and left as they are, so running this twice will not duplicate anyone.",
+    "eventSkipNote": "events you have already imported are skipped and left as they are, so running this twice will not duplicate them.",
+    "restoreMergeNote": "notes from your own backup are matched by id. A note you already have is updated only when the backup's copy is newer, a note in your trash comes back out of it.",
     "quotaExceeded": "<strong>Storage too low to import.</strong> Estimated {{needed}} needed, {{available}} available. Free up space or upgrade before importing.",
     "quotaWarning": "Heads up: this import will use roughly {{needed}} of your {{available}} remaining storage.",
     "oversizeAttachments_one": "1 file is larger than the {{limit}} per-file limit on your plan. It imports to this device, but it will not sync to your other devices until you upgrade.",
@@ -97,6 +165,8 @@
     "card_other": "cards",
     "sshKey_one": "SSH key",
     "sshKey_other": "SSH keys",
+    "contact_one": "contact",
+    "contact_other": "contacts",
     "zeroItems": "0 items",
     "importButton": "Import {{counts}}"
   },
@@ -122,20 +192,40 @@
     "vaultExportDesc": "Logins, cards, and SSH keys in Bitwarden-compatible format. Importable by most password managers. Plaintext - handle with care.",
     "bookmarksOnlyHeading": "Bookmarks only",
     "bookmarksExportTitle": "Bookmarks file (.html)",
-    "bookmarksExportDesc": "The standard bookmarks file every browser reads. Import it into Chrome, Firefox, Safari, or Edge with your folders intact."
+    "bookmarksExportDesc": "The standard bookmarks file every browser reads. Import it into Chrome, Firefox, Safari, or Edge with your folders intact.",
+    "contactsOnlyHeading": "Contacts only",
+    "contactsExportTitle": "Contacts file (.vcf)",
+    "contactsExportDesc": "The vCard file every phone and address book reads. Import it into iPhone, Android, Google Contacts, or Contacts on the Mac, labels and groups intact.",
+    "calendarOnlyHeading": "Calendar only",
+    "calendarExportTitle": "Calendar file (.ics)",
+    "calendarExportDesc": "Events and dated notes and task lists, for Google Calendar, Apple Calendar or Outlook.",
+    "calendarPrivate": "Private"
   },
   "exportProgress": {
     "failedTitle": "Export failed",
     "completeTitle": "Export complete",
+    "incompleteTitle": "Export incomplete",
     "exportingTitle": "Exporting backup...",
     "preparing": "Preparing...",
     "exporting": "Exporting...",
     "imagesProgress": "Exporting images... {{done}} of {{total}}",
     "filesProgress": "Exporting files... {{done}} of {{total}}",
     "building": "Building backup...",
-    "compressing": "Compressing..."
+    "compressing": "Compressing...",
+    "missingFailed_one": "This device could not download {{items}}, so your export leaves it out. Check your connection and export again.",
+    "missingFailed_other": "This device could not download {{items}}, so your export leaves them out. Check your connection and export again.",
+    "missingNotFound_one": "{{items}} is not on this device or on the server, so your export leaves it out.",
+    "missingNotFound_other": "{{items}} are not on this device or on the server, so your export leaves them out."
+  },
+  "missing": {
+    "pictures_one": "{{count}} picture",
+    "pictures_other": "{{count}} pictures",
+    "files_one": "{{count}} file",
+    "files_other": "{{count}} files",
+    "both": "{{pictures}} and {{files}}"
   },
   "upload": {
+    "discard": "Discard",
     "completeTitle": "Upload complete",
     "failedTitle": "Upload failed",
     "partialTitle": "{{done}} uploaded, {{failed}} failed",
@@ -145,6 +235,10 @@
     "statusFailed": "Failed",
     "errorStorageFull": "Storage full - free up space or add storage to upload this file.",
     "errorStorageFullKept": "Doesn't fit in your storage - kept on this device. It will sync once space frees.",
+    "errorTooLarge": "File is too large ({{size}}). Maximum is {{limit}} MB.",
+    "errorTooLargeFree": "File is too large ({{size}}). Maximum is {{limit}} MB on the free plan.",
+    "batchTitle_one": "{{count}} file",
+    "batchTitle_other": "{{count}} files",
     "statusUploading": "Uploading...",
     "statusWaiting": "Waiting",
     "summaryDone": "{{count}} done",
@@ -165,5 +259,17 @@
   },
   "saveErrors": {
     "shortWrite": "Only {{written}} of {{expected}} bytes were saved, so the file is incomplete. Try again and save to your device's own storage rather than a cloud folder."
+  },
+  "shareSheet": {
+    "title_one": "{{count}} item was shared into PrivacyNotes",
+    "title_other": "{{count}} items were shared into PrivacyNotes",
+    "line": "Nothing is saved until you choose.",
+    "saveAll": "Save all"
+  },
+  "destination": {
+    "label": "Add to",
+    "none": "No folder",
+    "newFolder": "New folder \"{{name}}\"",
+    "help": "Folders from the source go inside the folder you pick, and items without a folder go into it."
   }
 }

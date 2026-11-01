@@ -5,6 +5,7 @@ import type { LocalNote } from '../db';
 import { HoverLabel } from '../HoverLabel';
 import { noteActionGuards, type NoteActionGuardDeps } from '../noteActionGuards';
 import { proUnlocked } from '../demo';
+import { isConvertSource } from '../noteTypes';
 
 /**
  * The per-note actions the editor header shows as bare icons once the
@@ -16,7 +17,7 @@ import { proUnlocked } from '../demo';
  * strip stands IN FOR a hidden row, so showing both would repeat it, while
  * this row is a shortcut to a menu the user may keep using exactly as
  * before. Nobody's habit breaks when the window gets wider.
- * Spec: ops/docs/ui-patterns.md (section 80)
+ * Spec: ops/docs/archive/ui-patterns.md (section 80)
  *
  * The markdown/formatted switch is deliberately NOT here. Its glyph is the
  * markdown logo, and the tag row one line below wears the same logo for the
@@ -39,6 +40,7 @@ type Props = {
   tier: QuickActionsTier;
   guards: NoteActionGuardDeps;
   onDuplicate: () => void;
+  /** Open the "..." menu on its Convert to view. */
   onConvertType?: () => void;
 };
 
@@ -54,7 +56,7 @@ export function NoteQuickActions({
   if (tier === 0) return null;
 
   const act = noteActionGuards(guards);
-  const canConvert = !!onConvertType && (note.type === 'note' || note.type === 'journal');
+  const canConvert = !!onConvertType && isConvertSource(note.type);
 
   return (
     <>
@@ -104,9 +106,7 @@ export function NoteQuickActions({
             </QuickButton>
             {canConvert && (
               <QuickButton
-                label={note.type === 'note'
-                  ? t('shell:noteOptionsMenu.convertToJournal')
-                  : t('shell:noteOptionsMenu.convertToNote')}
+                label={t('shell:noteOptionsMenu.convertTo')}
                 onClick={onConvertType}
               >
                 <Repeat size={18} aria-hidden="true" />
@@ -127,7 +127,7 @@ export function NoteQuickActions({
  * already names itself, and a rule announced between them is noise.
  */
 export function HeaderDivider() {
-  return <span aria-hidden="true" className="shrink-0 mx-1 h-4 w-px bg-neutral-300 dark:bg-neutral-700" />;
+  return <span aria-hidden="true" className="shrink-0 mx-1 h-4 w-px bg-pn-muted/35" />;
 }
 
 /** One 32px square. Every button in the editor header wears this box. */
@@ -157,8 +157,8 @@ function QuickButton({
         aria-pressed={active}
         className={`relative shrink-0 flex items-center justify-center w-8 h-8 rounded-md transition disabled:opacity-40 disabled:cursor-not-allowed ${
           active
-            ? 'text-accent bg-accent/15'
-            : 'text-neutral-600 dark:text-neutral-300 [@media(hover:hover)]:hover:text-accent [@media(hover:hover)]:hover:bg-neutral-200 [@media(hover:hover)]:dark:hover:bg-neutral-800 active:scale-95'
+            ? 'text-accent-strong bg-accent/15'
+            : 'text-pn-soft [@media(hover:hover)]:hover:text-accent [@media(hover:hover)]:hover:bg-pn/10 active:scale-95'
         }`}
       >
         {children}

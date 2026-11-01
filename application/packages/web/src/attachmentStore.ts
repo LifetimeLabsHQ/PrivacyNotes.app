@@ -19,9 +19,12 @@ import { db } from './db';
 import { isDemoMode } from './demo';
 import { ownsLocalData } from './authStorage';
 import { logAuthEvent } from './authDiag';
+import { recordStorageFault, recordSyncFault } from './syncFaults';
 import { isServerWriteBlocked } from './syncPause';
 import { uploadsHeldForWifi } from './wifiOnly';
-import { fetchQuotaUsage } from './devices';
+import { fetchQuotaUsage, recalculateQuota } from './devices';
+import { claimRemoval, isAlreadyExists, markIfPending, sameBytes, settleUnlessClaimed } from './blobUploadRecovery';
+import { PENDING_GC_WAIT_MS, settleWithin } from './pendingGcWait';
 
 const BUCKET = 'encrypted-images'; // Same bucket as images - it's all encrypted blobs
 
@@ -88,7 +91,7 @@ async function hashBytes(data: Uint8Array): Promise<string> {
   return hex;
 }
 
-/** Errors that will never succeed on retry - don't keep pendingUpload. */
+/** Errors that will never succeed on retry - mark the row refused. */
 function isPermanentError(msg: string): boolean {
   return (
     msg.includes('exceeded the maximum allowed size') ||
@@ -96,6 +99,11 @@ function isPermanentError(msg: string): boolean {
     msg.includes('413')
   );
 }
+
+/** pendingUpload value for a file the server refused for good: never
+ *  retried or counted as waiting, and still the only copy. Same meaning
+ *  as in imageStore.ts. */
+const UPLOAD_REFUSED = 2;
 
 /** Quota failures are retryable (e.g. after the user frees space or upgrades). */
 function isQuotaError(msg: string): boolean {
@@ -109,24 +117,25 @@ export class AttachmentStore {
   /** Called when a background upload fails permanently. UI should show a toast. */
   onBackgroundError?: (filename: string, error: string) => void;
   /**
-   * UUIDs with a _backgroundUpload currently in flight. The post-sync retry
-   * hook can call processPendingUploads() while a just-uploaded blob's
-   * initial background upload is still running and its dedup row still says
-   * pendingUpload === 1. Without this guard both paths upload the same uuid
-   * concurrently; the second upload hits Storage as an upsert over an object
-   * that already exists and fails with an RLS violation (the bucket has no
-   * UPDATE policy). The in-flight upload owns the pendingUpload bookkeeping,
-   * so a concurrent caller for the same uuid just returns.
+   * UUIDs with an upload or a settle in flight in this instance. The
+   * post-sync retry sweep can reach a uuid whose first background upload is
+   * still running and whose dedup row still says pendingUpload === 1; both
+   * would send the same create-only upload, and the second would answer 409
+   * and settle an object whose first upload has not finished its own
+   * bookkeeping. The in-flight call owns the row, so a second caller for the
+   * same uuid returns.
    */
   private uploading = new Set<string>();
   /**
    * True while a processPendingUploads() sweep is running. The post-sync
-   * retry hook fires on a timer and a sweep can still be in flight from a
-   * previous trigger - without this guard two overlapping sweeps would walk
-   * the same pending rows and race each other into the same RLS failure
-   * the uploading guard above exists to prevent.
+   * retry hook fires on a timer, and a sweep can still be walking the pending
+   * rows from the trigger before; a second sweep would only meet the guard
+   * above row by row.
    */
   private sweepRunning = false;
+  /** UUIDs whose object this instance already asked Storage about during a
+   *  sweep, so a row that does not fit costs one probe per app start. */
+  private probed = new Set<string>();
 
   constructor(
     supabase: SupabaseClient,
@@ -231,8 +240,9 @@ export class AttachmentStore {
 
   /**
    * Upload encrypted blob to Supabase and adjust quota.
-   * On permanent failure: clears pendingUpload but keeps local cache
-   * so restored attachments remain viewable offline.
+   * On permanent failure: marks the row UPLOAD_REFUSED and keeps the
+   * local cache, now the only copy, so restored attachments remain
+   * viewable offline.
    * On transient failure: keeps pendingUpload for retry on next init.
    */
   private async _backgroundUpload(
@@ -246,7 +256,7 @@ export class AttachmentStore {
     if (isDemoMode()) {
       const cached = await db.attachmentDedup.where('uuid').equals(uuid).first();
       if (cached) {
-        await db.attachmentDedup.put({ ...cached, pendingUpload: 0, encryptedSize: encrypted.length });
+        await db.attachmentDedup.update(cached.hash, { pendingUpload: 0, encryptedSize: encrypted.length });
       }
       return;
     }
@@ -269,21 +279,31 @@ export class AttachmentStore {
     try {
       const path = `${this.pubkey}/${uuid}`;
 
+      // A removal claimed after this moment can be of the object a 409
+      // below proves, so the settle compares against it.
+      const attemptAt = Date.now();
       const { error } = await this.supabase.storage
         .from(BUCKET)
         .upload(path, encrypted, {
           contentType: 'application/octet-stream',
-          upsert: true, // idempotent for retries
+          // Create-only, same as images: the bucket grants no UPDATE, so an
+          // upsert over an earlier attempt is refused. blobUploadRecovery.ts.
+          upsert: false,
         });
 
       if (error) {
         const msg = error.message || '';
+        if (isAlreadyExists(error)) {
+          await this._settleExistingObject(uuid, path, encrypted, attemptAt);
+          return;
+        }
+        recordStorageFault('file-up', error, uuid);
         if (isPermanentError(msg)) {
-          // Keep local cache so restored attachments remain viewable offline.
-          // Just clear pendingUpload so we don't retry a doomed upload.
+          // Keep local cache so restored attachments remain viewable offline,
+          // and mark the row refused so the doomed upload is never retried.
           const dedup = await db.attachmentDedup.where('uuid').equals(uuid).first();
           if (dedup) {
-            await db.attachmentDedup.put({ ...dedup, pendingUpload: 0 });
+            await db.attachmentDedup.update(dedup.hash, { pendingUpload: UPLOAD_REFUSED });
           }
           this.onBackgroundError?.(filename, msg);
           console.error('[attachmentStore] permanent upload failure, kept local cache:', uuid, msg);
@@ -293,8 +313,7 @@ export class AttachmentStore {
           // Retryable - pendingUpload stays 1, but still toast the user now.
           // quotaBlocked keeps the retry sweep off the wire while the blob
           // cannot fit (backlog #143).
-          const dedupRec = await db.attachmentDedup.where('uuid').equals(uuid).first();
-          if (dedupRec) await db.attachmentDedup.put({ ...dedupRec, quotaBlocked: 1 });
+          await markIfPending(db.attachmentDedup, uuid, { quotaBlocked: 1 });
           this.onBackgroundError?.(filename, msg);
         }
         // Transient - leave pendingUpload=1 for retry on next init.
@@ -303,39 +322,41 @@ export class AttachmentStore {
       }
 
       if (this.ownershipLost()) return;
-      const { error: rpcErr } = await this.supabase.rpc('adjust_blob_bytes', {
+      const { error: rpcErr, status: rpcStatus } = await this.supabase.rpc('adjust_blob_bytes', {
         delta: encrypted.length,
       });
       if (rpcErr) {
         const msg = rpcErr.message || '';
+        recordSyncFault({ step: 'file-up', status: rpcStatus, code: rpcErr.code || undefined, ref: uuid });
         if (isQuotaError(msg)) {
           // Remove the remote blob we just uploaded (it must not sit in
           // Storage uncounted), but leave pendingUpload=1 so a later pass
           // retries the whole upload. quotaBlocked makes that later pass
           // wait for real headroom instead of re-uploading the full blob
           // just to land back here (backlog #143).
-          await this.supabase.storage.from(BUCKET).remove([path]).catch(() => {});
-          const dedupRec = await db.attachmentDedup.where('uuid').equals(uuid).first();
-          if (dedupRec) await db.attachmentDedup.put({ ...dedupRec, quotaBlocked: 1 });
+          if (await claimRemoval(db.attachmentDedup, uuid)) {
+            await this.supabase.storage.from(BUCKET).remove([path]).catch(() => {});
+          }
+          await markIfPending(db.attachmentDedup, uuid, { quotaBlocked: 1 });
           this.onBackgroundError?.(filename, msg);
           console.error('[attachmentStore] quota exceeded, will retry:', uuid);
           throw new Error(msg);
         }
         if (isPermanentError(msg)) {
-          // Remove the remote blob we just uploaded, but keep local cache.
-          await this.supabase.storage.from(BUCKET).remove([path]).catch(() => {});
-          const dedupRec = await db.attachmentDedup.where('uuid').equals(uuid).first();
-          if (dedupRec) {
-            await db.attachmentDedup.put({ ...dedupRec, pendingUpload: 0 });
+          // Remove the remote blob we just uploaded; the local cache stays,
+          // refused, as the only copy.
+          if (await claimRemoval(db.attachmentDedup, uuid)) {
+            await this.supabase.storage.from(BUCKET).remove([path]).catch(() => {});
           }
+          await markIfPending(db.attachmentDedup, uuid, { pendingUpload: UPLOAD_REFUSED });
           this.onBackgroundError?.(filename, msg);
           console.error('[attachmentStore] permanent upload failure, kept local cache:', uuid, msg);
           throw new Error(msg);
         }
-        // Transient failure: same contract as imageStore - the object is
-        // uploaded (upsert, idempotent) but uncounted, so keep
-        // pendingUpload=1 for the retry sweep instead of silently
-        // understating usage (backlog #131).
+        // Transient failure: same contract as imageStore - the object is in
+        // Storage but uncounted, so keep pendingUpload=1 for the retry sweep
+        // instead of silently understating usage (backlog #131). That sweep
+        // meets a 409 and settles the accounting with a server recount.
         console.warn('[attachmentStore] adjust_blob_bytes failed, will retry:', msg);
         throw new Error(msg);
       }
@@ -344,8 +365,103 @@ export class AttachmentStore {
       // restoreBlobs - now we know the real size after encrypting).
       const dedup = await db.attachmentDedup.where('uuid').equals(uuid).first();
       if (dedup) {
-        await db.attachmentDedup.put({ ...dedup, pendingUpload: 0, quotaBlocked: 0, encryptedSize: encrypted.length });
+        await db.attachmentDedup.update(dedup.hash, { pendingUpload: 0, quotaBlocked: 0, encryptedSize: encrypted.length });
       }
+    } finally {
+      this.uploading.delete(uuid);
+    }
+  }
+
+  /**
+   * An earlier attempt at this uuid already committed. Same contract as
+   * ImageStore._settleExistingObject: prove the object holds our content,
+   * settle the bytes with a server recount rather than re-posting a delta
+   * that may already have been applied, and clear the pending flag only
+   * after both. Anything short of a proven match keeps the row pending and
+   * the local cache, and a plaintext mismatch stops the retries for good.
+   */
+  private async _settleExistingObject(uuid: string, path: string, encrypted: Uint8Array | null, attemptAt: number): Promise<void> {
+    const cached = await db.attachmentCache.get(uuid);
+    const remote = await this._downloadWithRetry(path);
+    if (!remote) {
+      console.warn('[attachmentStore] existing blob could not be read back:', uuid);
+      return;
+    }
+    const remoteBytes = new Uint8Array(await remote.arrayBuffer());
+    // A probe has no ciphertext of its own to compare, only the plaintext.
+    let matches = encrypted !== null && sameBytes(remoteBytes, encrypted);
+    if (!matches && cached) {
+      // A fresh nonce per encryption means identical plaintext yields
+      // different bytes, so the comparison has to be on what they mean. What
+      // an object holds is the PACKED form, metadata header and bytes, which
+      // is what the upload sends and not what the cache row stores. The key
+      // is a COPY, like every other crypto call in this class: sign-out
+      // zeroes the live one in place, and decrypting with zeros would refuse
+      // a blob that is perfectly fine on the server.
+      const passKey = this.keyCopy();
+      if (!passKey) {
+        console.warn('[attachmentStore] sign-out in progress - blob settle deferred:', uuid);
+        return;
+      }
+      try {
+        matches = sameBytes(
+          decryptBlob(remoteBytes, passKey),
+          packAttachment(cached.meta, cached.data),
+        );
+      } catch {
+        matches = false;
+      } finally {
+        passKey.fill(0);
+      }
+    }
+    if (!matches) {
+      // The download and the decrypt were awaits: an account switch inside
+      // them would mark the next account's row.
+      if (this.ownershipLost()) return;
+      const dedup = await db.attachmentDedup.where('uuid').equals(uuid).first();
+      if (dedup) await db.attachmentDedup.update(dedup.hash, { pendingUpload: UPLOAD_REFUSED });
+      console.error('[attachmentStore] blob name holds different content, kept local cache:', uuid);
+      return;
+    }
+    if (!await recalculateQuota(this.supabase)) {
+      console.warn('[attachmentStore] recovered blob not cleared - no server recount:', uuid);
+      return;
+    }
+    // Two awaits have passed since the ownership check at the top of the
+    // upload, and an account switch inside that window would write this
+    // account's hash-to-uuid row into the next account's database.
+    if (this.ownershipLost()) return;
+    // A removal claimed meanwhile by the instance that uploaded the object
+    // leaves the row pending, and the next pass uploads again.
+    if (!await settleUnlessClaimed(db.attachmentDedup, uuid, attemptAt, { pendingUpload: 0, quotaBlocked: 0, encryptedSize: remoteBytes.length })) {
+      console.warn('[attachmentStore] recovered blob not cleared - its uploader is removing it:', uuid);
+    }
+  }
+
+  /**
+   * Settle an object an earlier attempt stored, without uploading again.
+   * True when the object is there, or when Storage did not answer, so the
+   * caller leaves the row unmarked and the next sweep asks again; false only
+   * when Storage says the object is not there.
+   */
+  private async _settleIfStored(uuid: string): Promise<boolean> {
+    if (this.uploading.has(uuid)) return true;
+    this.uploading.add(uuid);
+    try {
+      const path = `${this.pubkey}/${uuid}`;
+      const attemptAt = Date.now();
+      let stored: boolean;
+      try {
+        const { data } = await this.supabase.storage.from(BUCKET).exists(path);
+        stored = data === true;
+      } catch {
+        return true;
+      }
+      this.probed.add(uuid);
+      if (!stored) return false;
+      if (this.ownershipLost()) return true;
+      await this._settleExistingObject(uuid, path, null, attemptAt);
+      return true;
     } finally {
       this.uploading.delete(uuid);
     }
@@ -409,13 +525,19 @@ export class AttachmentStore {
 
             if (freeBytes !== null) {
               if (cached.data.length > freeBytes) {
+                // Headroom is a question for a new upload. An earlier attempt
+                // can have stored this object and lost only its answer, so
+                // each row asks Storage once per store instance and settles
+                // what is there. Once per instance rather than once ever, so
+                // a wrong "not there" heals on the next start.
+                if (!this.probed.has(record.uuid) && await this._settleIfStored(record.uuid)) continue;
                 if (record.quotaBlocked !== 1) {
-                  await db.attachmentDedup.put({ ...record, quotaBlocked: 1 });
+                  await markIfPending(db.attachmentDedup, record.uuid, { quotaBlocked: 1 });
                 }
                 continue;
               }
               if (record.quotaBlocked === 1) {
-                await db.attachmentDedup.put({ ...record, quotaBlocked: 0 });
+                await db.attachmentDedup.update(record.hash, { quotaBlocked: 0 });
               }
               // Reserve the headroom for this attempt so one pass cannot
               // overshoot the cap with several large blobs.
@@ -485,13 +607,16 @@ export class AttachmentStore {
     if (error.message?.includes('Bucket not found')) {
       const { error: refreshErr } = await this.supabase.auth.refreshSession();
       if (refreshErr) {
+        recordStorageFault('file-down', refreshErr, path.slice(path.lastIndexOf('/') + 1));
         throw new Error(`Attachment download failed (session refresh failed): ${refreshErr.message}`);
       }
       const retry = await this.supabase.storage.from(BUCKET).download(path);
       if (retry.error) {
         if (retry.error.message?.includes('not found') || retry.error.message?.includes('404')) {
+          recordStorageFault('file-down', retry.error, path.slice(path.lastIndexOf('/') + 1));
           return null;
         }
+        recordStorageFault('file-down', retry.error, path.slice(path.lastIndexOf('/') + 1));
         throw new Error(`Attachment download failed: ${retry.error.message}`);
       }
       return retry.data ?? null;
@@ -499,9 +624,11 @@ export class AttachmentStore {
 
     // Genuine "object not found".
     if (error.message?.includes('not found') || error.message?.includes('404')) {
+      recordStorageFault('file-down', error, path.slice(path.lastIndexOf('/') + 1));
       return null;
     }
 
+    recordStorageFault('file-down', error, path.slice(path.lastIndexOf('/') + 1));
     throw new Error(`Attachment download failed: ${error.message}`);
   }
 
@@ -523,6 +650,7 @@ export class AttachmentStore {
         .remove([path]);
 
       if (error) {
+        recordStorageFault('file-delete', error, uuid);
         console.warn(`Attachment delete failed for ${uuid}:`, error.message);
       }
     }
@@ -547,21 +675,27 @@ export class AttachmentStore {
    * a clean sync pull has proven the local mirror is complete enough
    * to trust the reference re-check. See imageGC.ts for the full
    * two-phase design.
+   *
+   * A file whose upload is still pending, or was refused for good, keeps
+   * its bytes and dedup row and is queued at size 0, for the reasons
+   * ImageStore.deferDelete gives.
    */
   async deferDelete(uuids: string[]): Promise<void> {
     if (uuids.length === 0) return;
 
-    // Demo mode never uploaded these blobs and makes zero server calls -
-    // fall back to the immediate local-only delete, no queue entry.
-    if (isDemoMode()) {
-      await this.deleteAttachments(uuids);
-      return;
-    }
+    // The demo never uploads and never sweeps, so its cache holds the only
+    // copy of every blob. Nothing is deleted: the demo database is
+    // discarded with the tab session.
+    if (isDemoMode()) return;
 
     let totalSize = 0;
     const now = new Date().toISOString();
     for (const uuid of uuids) {
       const dedup = await db.attachmentDedup.where('uuid').equals(uuid).first();
+      if (dedup?.pendingUpload === 1 || dedup?.pendingUpload === UPLOAD_REFUSED) {
+        await db.blobGC.put({ uuid, kind: 'attachment', size: 0, enqueuedAt: now });
+        continue;
+      }
       const size = dedup?.encryptedSize ?? 0;
       totalSize += size;
 
@@ -576,17 +710,22 @@ export class AttachmentStore {
     if (isServerWriteBlocked()) return;
 
     // Server-side pending set (migration 0068) - same contract as
-    // ImageStore.deferDelete; see the comment there.
+    // ImageStore.deferDelete, awaited for the same reason; see the comment
+    // there.
     // Spec: packages/supabase/migrations/history/0068_pending_blob_gc_server_side.sql
-    this.supabase
-      .from('pending_blob_gc')
-      .upsert(
-        uuids.map((uuid) => ({ user_pubkey: this.pubkey, uuid })),
-        { onConflict: 'user_pubkey,uuid', ignoreDuplicates: true }
-      )
-      .then(({ error: gcErr }) => {
+    await settleWithin(
+      Promise.resolve(
+        this.supabase
+          .from('pending_blob_gc')
+          .upsert(
+            uuids.map((uuid) => ({ user_pubkey: this.pubkey, uuid })),
+            { onConflict: 'user_pubkey,uuid', ignoreDuplicates: true }
+          )
+      ).then(({ error: gcErr }) => {
         if (gcErr) console.warn('[attachmentStore] pending_blob_gc enqueue failed:', gcErr.message);
-      });
+      }),
+      PENDING_GC_WAIT_MS,
+    );
 
     // Decrement image_bytes quota (best-effort) - the blob still counts
     // against Storage until the sweep removes it, but the user's quota
@@ -602,9 +741,9 @@ export class AttachmentStore {
 
   /**
    * Remove Storage objects only - no local row deletion, no quota
-   * adjustment (both already happened at deferDelete time). Used by
-   * sweepBlobGC once a queued uuid has cleared the grace period and
-   * the reference re-check.
+   * adjustment (deferDelete settled quota when it queued the uuid, and
+   * sweepBlobGC drops any local rows it kept). Used by sweepBlobGC once
+   * a queued uuid has cleared the grace period and the reference re-check.
    *
    * The Supabase JS client's storage.remove() reports one aggregate
    * error for the whole batch, not per-path, so on error we can't tell
@@ -625,6 +764,7 @@ export class AttachmentStore {
       return { removed: uuids, failed: [] };
     }
 
+    recordStorageFault('file-delete', error);
     console.warn('[attachmentStore] sweepBlobGC remote removal failed:', error.message);
     return { removed: [], failed: uuids };
   }
@@ -650,6 +790,7 @@ export class AttachmentStore {
         .remove(paths);
 
       if (error) {
+        recordStorageFault('file-delete', error);
         console.warn('Bulk attachment delete failed:', error.message);
       }
     }

@@ -89,7 +89,7 @@ export function deriveEncryptionKey(seed: Uint8Array): Uint8Array {
  * the sync encryption branch so a local ciphertext can never pass as a
  * server row or the reverse. Never stored and never transmitted - it is
  * re-derived from the phrase on every unlock.
- * Spec: ops/docs/plans/local-at-rest.md (HKDF branch, section 3.1)
+ * Spec: ops/docs/archive/local-at-rest.md (HKDF branch, section 3.1)
  */
 export function deriveLocalDataKey(seed: Uint8Array): Uint8Array {
   return hkdf(
@@ -113,6 +113,16 @@ export async function signLinkChallenge(
 ): Promise<Uint8Array> {
   const message = utf8.encode(`link:${authUid}`);
   return ed.signAsync(message, privateKey);
+}
+
+/** The account action has already validated the server nonce and recomputed
+ * this exact challenge from its own session and normalized payload. */
+export async function signAccountLoginsChallenge(privateKey: Uint8Array, challenge: {
+  nonceId: string; authUid: string; sessionId: string; pubkey: string;
+  operation: 'activate' | 'connect' | 'disconnect' | 'enroll-mfa' | 'unenroll-mfa'; bodyDigest: string;
+}): Promise<Uint8Array> {
+  const { nonceId, authUid, sessionId, pubkey, operation, bodyDigest } = challenge;
+  return ed.signAsync(utf8.encode(`account-logins:${nonceId}:${authUid}:${sessionId}:${pubkey}:${operation}:${bodyDigest}`), privateKey);
 }
 
 // ------------------------------------------------------------------
@@ -421,16 +431,16 @@ export function base64urlToBytes(b64url: string): Uint8Array {
  */
 export type EncryptedPayload = Pick<
   DecryptedNote,
-  'title' | 'body' | 'tags' | 'trashed' | 'starred' | 'locked' | 'pinProtected' | 'type' | 'trackers' | 'folderId'
+  'title' | 'body' | 'tags' | 'trashed' | 'starred' | 'locked' | 'pinProtected' | 'type' | 'trackers' | 'folderId' | 'archived' | 'editedAt'
 >;
 
-export function encryptNote(
-  note: EncryptedPayload,
-  key: Uint8Array
-): { ciphertext: Uint8Array; nonce: Uint8Array } {
-  const nonce = randomBytes(24);
-  const cipher = xchacha20poly1305(key, nonce);
-  const plaintext = utf8.encode(
+/**
+ * The bytes encryptNote seals: one JSON document. The ciphertext is these
+ * bytes plus the 16-byte Poly1305 tag, so a caller can size a note's stored
+ * row exactly without encrypting it.
+ */
+export function notePlaintext(note: EncryptedPayload): Uint8Array {
+  return utf8.encode(
     JSON.stringify({
       title: note.title,
       body: note.body,
@@ -442,8 +452,23 @@ export function encryptNote(
       type: note.type,
       ...(note.trackers ? { trackers: note.trackers } : {}),
       ...(note.folderId ? { folderId: note.folderId } : {}),
+      // Stated whenever the writer knows it, so a reader can tell "not
+      // archived" from a payload written by a client that predates Archive
+      // and drops the field. A writer that does not know leaves it out.
+      ...(note.archived === undefined ? {} : { archived: note.archived === true }),
+      // Only when known, so a payload without it stays what it was.
+      ...(note.editedAt ? { editedAt: note.editedAt } : {}),
     })
   );
+}
+
+export function encryptNote(
+  note: EncryptedPayload,
+  key: Uint8Array
+): { ciphertext: Uint8Array; nonce: Uint8Array } {
+  const nonce = randomBytes(24);
+  const cipher = xchacha20poly1305(key, nonce);
+  const plaintext = notePlaintext(note);
   const ciphertext = cipher.encrypt(plaintext);
   return { ciphertext, nonce };
 }
@@ -476,7 +501,27 @@ export function decryptNote(
     type: parsed.type ?? 'note',
     trackers: (parsed as Record<string, unknown>).trackers as Record<string, unknown> | undefined,
     folderId: parsed.folderId ?? null,
+    // Absent means the writer did not carry Archive at all: an older
+    // client that rebuilt the payload without it. Callers decide what an
+    // unknown value means for them (noteMerge.ts fieldsOfPayload).
+    archived: typeof parsed.archived === 'boolean' ? parsed.archived : undefined,
+    // Absent from every payload an older client wrote. The reader decides
+    // what stands in for it (sync.ts processBatch); this never guesses.
+    editedAt: isoInstant(parsed.editedAt),
   };
+}
+
+const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})$/;
+
+/** An ISO 8601 instant, written back in the one form the app writes, so the
+ *  lists can compare two of them as strings; anything else reads as absent,
+ *  a year the written form cannot hold in four digits included. */
+function isoInstant(value: unknown): string | undefined {
+  if (typeof value !== 'string' || !ISO_INSTANT.test(value)) return undefined;
+  const at = Date.parse(value);
+  if (!Number.isFinite(at)) return undefined;
+  const iso = new Date(at).toISOString();
+  return ISO_INSTANT.test(iso) ? iso : undefined;
 }
 
 // ------------------------------------------------------------------
@@ -514,7 +559,7 @@ export function decryptJson<T = unknown>(
 // authentication tag. Used by the local at-rest seal, where the AAD
 // carries the table and row id so a ciphertext moved onto another row
 // or table fails authentication instead of decrypting.
-// Spec: ops/docs/plans/local-at-rest.md (seal format, section 3.2)
+// Spec: ops/docs/archive/local-at-rest.md (seal format, section 3.2)
 // ------------------------------------------------------------------
 
 /** Encrypt raw bytes with associated data. Fresh 24-byte nonce per call. */

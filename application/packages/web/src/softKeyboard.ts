@@ -26,8 +26,27 @@
  * suppresses when the press lands on empty space (paste intent, or an
  * accidental press - the two cases #223 reported).
  *
+ * The attribute is only ever set while the keyboard is down. On Android 16
+ * `inputmode="none"` also CLOSES a keyboard that is up, so a long press to
+ * paste mid-typing dropped the keyboard, the page grew under the finger, and
+ * the paste landed somewhere else (GitHub #452).
+ *
  * Fix: GitHub #153 (checkbox toggle), #222 (undo/redo), #223 (long press)
  */
+
+/**
+ * Whether the on-screen keyboard is up, as `useKeyboardOpen` last measured it.
+ * The hook is mounted for the life of the app shell, so this stays current.
+ */
+let keyboardUp = false;
+
+export function setSoftKeyboardUp(up: boolean): void {
+  keyboardUp = up;
+}
+
+export function isSoftKeyboardUp(): boolean {
+  return keyboardUp;
+}
 
 /**
  * True on touch-first devices (phones, tablets) where moving focus into a
@@ -57,15 +76,22 @@ let suppressed: HTMLElement | null = null;
 
 /**
  * Suppress the on-screen keyboard for the gesture happening right now. No-op
- * with a hardware keyboard.
+ * with a hardware keyboard, and no-op while the keyboard is already up: the
+ * job is to keep a closed keyboard closed, never to close an open one.
  *
  * Call it as the gesture starts (a touchstart handler), not after: the
  * attribute has to be in place before the browser decides to show the IME.
  * A touch screen only reports one gesture at a time, so a single pending
  * restore is enough - a second call re-arms the same window.
+ *
+ * There is no device test here on purpose. `inputmode` reaches an on-screen
+ * keyboard and nothing else, so it costs nothing where there is none, and
+ * asking `(hover: none)` first would refuse the phones that need it most: an
+ * Android with a stylus or a paired mouse reports a hover-capable pointer and
+ * still raises a keyboard over the caller's selection.
  */
 export function suppressSoftKeyboard(el: HTMLElement | null | undefined): void {
-  if (!el || !isSoftKeyboardDevice()) return;
+  if (!el || keyboardUp) return;
   if (restoreTimer !== null) {
     window.clearTimeout(restoreTimer);
     // A different element may still be holding the attribute if the previous

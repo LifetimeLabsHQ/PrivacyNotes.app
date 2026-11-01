@@ -2,8 +2,7 @@
   "dismiss": "Ignora",
   "close": "Chiudi",
   "moveBanner": {
-    "title": "L'app si trasferisce su use.privacynotes.app",
-    "body": "Sposta questa sessione adesso - bastano pochi secondi e le tue note vengono con te.",
+    "bodySignIn": "Accedi lì con la tua frase di recupero o con \"{{scanQr}}\".",
     "cta": "Sposta ora",
     "syncing": "Sincronizzazione delle note…",
     "error": "Non è stato possibile sincronizzare tutto. Controlla la connessione e riprova.",
@@ -15,8 +14,9 @@
   },
   "moveScreen": {
     "title": "L'app si è trasferita su use.privacynotes.app",
-    "body": "Sposta questo dispositivo adesso - bastano pochi secondi e le tue note vengono con te. Qui non viene eliminato nulla.",
+    "bodySignIn": "Accedi lì con la tua frase di recupero di 12 parole o con “{{scanQr}}”. Questo dispositivo sincronizza prima, così tutte le tue note ti aspettano lì, e qui non viene eliminato nulla.",
     "openNotes": "Apri le tue note qui una volta per risolvere il problema",
+    "showPhrase": "Mostra la mia frase di recupero",
     "website": "Sfoglia invece il sito"
   },
   "quota": {
@@ -54,17 +54,47 @@
     "unsyncedWarn_other": "{{count}} note su questo dispositivo non sono ancora sincronizzate. Andranno perse per sempre se non possono essere caricate durante la disconnessione.",
     "unsyncedKept_one": "1 nota su questo dispositivo non è ancora sincronizzata. Resta su questo dispositivo e si sincronizzerà al prossimo accesso.",
     "unsyncedKept_other": "{{count}} note su questo dispositivo non sono ancora sincronizzate. Restano su questo dispositivo e si sincronizzeranno al prossimo accesso.",
+    "unsyncedFilesWarn_one": "{{count}} file su questo dispositivo non è sincronizzato. La disconnessione lo elimina per sempre.",
+    "unsyncedFilesWarn_other": "{{count}} file su questo dispositivo non sono sincronizzati. La disconnessione li elimina per sempre.",
     "dontRemind": "Non ricordarmelo più",
     "showPhrase": "No, mostra la frase",
-    "confirm": "Sì, esci"
+    "confirm": "Sì, esci",
+    "stay": "Resta connesso",
+    "signOutLose_one": "Esci e perdi {{count}} nota",
+    "signOutLose_other": "Esci e perdi {{count}} note",
+    "signOutLoseFiles_one": "Esci e perdi {{count}} file",
+    "signOutLoseFiles_other": "Esci e perdi {{count}} file",
+    "signOutLoseBoth_one": "Esci e perdi {{count}} nota e {{files}}",
+    "signOutLoseBoth_other": "Esci e perdi {{count}} note e {{files}}",
+    "fileCount_one": "{{count}} file",
+    "fileCount_other": "{{count}} file",
+    "neverBackedUp_one": "Solo su questo dispositivo:",
+    "neverBackedUp_other": "Solo su questo dispositivo:",
+    "moreNotes": "e altre {{count}}",
+    "appLockHint": "Dispositivo condiviso? Attiva il blocco app in Impostazioni > Sicurezza."
   },
   "burnShareModal": {
     "title": "Condividi & Burn After Reading",
-    "body": "<lead>La tua nota originale non verrà eliminata.</lead> Resta al sicuro nel tuo account. Il burn link è una copia cifrata separata che si autodistrugge dopo essere stata letta. Il link scade dopo 24 ore, che venga aperto o meno.",
+    "body": "<lead>La tua nota originale non verrà eliminata.</lead> Resta al sicuro nel tuo account. Il burn link è una copia cifrata separata che si autodistrugge dopo essere stata letta.",
+    "readTime": "Tempo di lettura",
+    "readTimeHint": "Poi sparisce dallo schermo",
+    "lifetime": "Il link scade",
+    "lifetimeHint": "Se nessuno lo apre",
+    "minutes_one": "{{count}} minuto",
+    "minutes_other": "{{count}} minuti",
+    "hours_one": "{{count}} ora",
+    "hours_other": "{{count}} ore",
+    "afterHours_one": "Dopo {{count}} ora",
+    "afterHours_other": "Dopo {{count}} ore",
+    "afterDays_one": "Dopo {{count}} giorno",
+    "afterDays_other": "Dopo {{count}} giorni",
+    "create": "Crea e copia il link",
+    "share": "Condividi il link",
     "imagesStripped": "Viene mostrato solo il testo, i file sono nascosti in questa nota.",
     "copied": "Copiato"
   },
   "burnView": {
+    "title": "Burn After Reading",
     "tagline": "Cifrata. Effimera. Solo per i tuoi occhi.",
     "toggleTheme": "Cambia tema",
     "checking": "Verifica in corso...",
@@ -73,7 +103,7 @@
     "footerTagline": "- Note cifrate zero-knowledge, ospitate in Svizzera.",
     "sealed": {
       "heading": "Hai ricevuto una nota cifrata.",
-      "subheading": "Questo messaggio si autodistruggerà dopo la lettura. I link non letti scadono dopo 24 ore.",
+      "subheading": "Questo messaggio si autodistruggerà dopo la lettura. I link non letti scadono da soli.",
       "reveal": "Mostra messaggio",
       "warning": "Il server elimina la nota nel momento in cui la mostri. Nessuna seconda possibilità."
     },
@@ -89,7 +119,7 @@
     },
     "gone": {
       "heading": "Questa nota non c'è più.",
-      "body": "È già stata letta o è scaduta. I burn link possono essere aperti una sola volta e scadono dopo 24 ore."
+      "body": "È già stata letta o è scaduta. I burn link possono essere aperti una sola volta e scadono da soli."
     },
     "error": {
       "heading": "Qualcosa è andato storto.",

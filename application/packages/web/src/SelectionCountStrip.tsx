@@ -13,7 +13,7 @@
  * clearing a mis-click should not also throw you out of the mode you are in.
  * The toolbar's own X is the one that leaves.
  *
- * Spec: ops/docs/ui-patterns.md section 79 (selection count strip)
+ * Spec: ops/docs/archive/ui-patterns.md section 79 (selection count strip)
  */
 
 import { useTranslation } from 'react-i18next';
@@ -37,7 +37,7 @@ export function SelectionCountStrip({
   return (
     <div className="shrink-0 px-4 py-2 border-b border-divider bg-accent/5 dark:bg-accent/10 flex items-center justify-between gap-2 text-[13px]">
       <span className="flex items-center gap-2 min-w-0">
-        <span className="font-medium text-neutral-700 dark:text-neutral-200 tabular-nums truncate">
+        <span className="font-medium text-pn-soft tabular-nums truncate">
           {t('selection.countOf', { selected: selectedCount, total: totalCount })}
         </span>
         <HoverLabel label={t('selection.deselectAll')} position="below">
@@ -45,7 +45,7 @@ export function SelectionCountStrip({
             type="button"
             onClick={onDeselectAll}
             aria-label={t('selection.deselectAll')}
-            className="shrink-0 w-5 h-5 rounded border border-divider bg-surface-1 inline-flex items-center justify-center text-neutral-500 dark:text-neutral-400 transition hover:text-accent hover:border-accent"
+            className="shrink-0 w-5 h-5 rounded border border-divider bg-surface-1 inline-flex items-center justify-center text-pn-muted transition hover:text-accent hover:border-accent"
           >
             <X size={12} />
           </button>

@@ -7,7 +7,8 @@
  */
 
 import { logAuthEvent } from './authDiag';
-import { credentialKey } from './demo';
+import { credentialKey, isDemoMode } from './demo';
+import { assertSessionWrite } from './sessionWriteGuard';
 
 const TRUST_KEY = 'privacynotes.trusted';
 
@@ -49,6 +50,18 @@ export function hasStoredSession(): boolean {
 }
 
 
+// The auth library's own keys (the `sb-` prefix) while the demo runs.
+// `?demo=1` runs on the same origin as a real install, and the demo holds
+// no server session, so a client reading the shared stores would adopt the
+// real account's session and refresh it over the network. In the demo those
+// keys live here instead: the client starts with nothing, and the real
+// session is never read, rotated or removed from a demo tab.
+const demoAuthKeys = new Map<string, string>();
+
+function isDemoAuthKey(key: string): boolean {
+  return key.startsWith('sb-') && isDemoMode();
+}
+
 /** Storage-API-compatible object that supabase-js can consume directly. */
 export const trustAwareStorage: Storage = {
   get length(): number {
@@ -59,13 +72,17 @@ export const trustAwareStorage: Storage = {
     }
   },
   clear(): void {
+    if (isDemoMode()) {
+      demoAuthKeys.clear();
+      return;
+    }
     // Scoped to the auth library's own keys (sb-*) on purpose. This
     // object is handed to supabase-js as its Storage backing; a literal
     // clear() would also destroy the phrase, the wrapped-phrase blobs
     // and the device secret - a total credential wipe from one future
     // library-internal call. Nothing calls this today (it exists to
     // satisfy the Storage interface), which is exactly when to defuse
-    // it. Session audit 2026-08-25.
+    // it.
     for (const store of [sessionStorage, localStorage]) {
       try {
         for (let i = store.length - 1; i >= 0; i--) {
@@ -86,6 +103,7 @@ export const trustAwareStorage: Storage = {
     }
   },
   getItem(key: string): string | null {
+    if (isDemoAuthKey(key)) return demoAuthKeys.get(key) ?? null;
     try {
       const s = sessionStorage.getItem(key);
       if (s != null) return s;
@@ -99,6 +117,17 @@ export const trustAwareStorage: Storage = {
     }
   },
   setItem(key: string, value: string): void {
+    // MFA verification may finish after sign-out or an account switch. The
+    // SDK saves its result before notifying the app, so reject stale writes
+    // here, outside the quota-error catch and before removing either copy.
+    if (key.startsWith('sb-')) {
+      const current = trustAwareStorage.getItem(key);
+      assertSessionWrite(key, current, value);
+    }
+    if (isDemoAuthKey(key)) {
+      demoAuthKeys.set(key, value);
+      return;
+    }
     const trusted = isTrustedDevice();
     // The sibling-store copy dies FIRST, in its own try. The old shape
     // (set, then remove, one try) had a poisonous failure mode: when
@@ -108,7 +137,7 @@ export const trustAwareStorage: Storage = {
     // until GoTrue's reuse detection revoked the whole session family.
     // A dropped write now leaves NO copy (recoverable: the phrase
     // re-mints a session) instead of a stale one (a manufactured
-    // server-side revocation). Session audit 2026-08-25.
+    // server-side revocation).
     const sibling = trusted ? sessionStorage : localStorage;
     try {
       sibling.removeItem(key);
@@ -125,6 +154,10 @@ export const trustAwareStorage: Storage = {
     }
   },
   removeItem(key: string): void {
+    if (isDemoAuthKey(key)) {
+      demoAuthKeys.delete(key);
+      return;
+    }
     try {
       localStorage.removeItem(key);
     } catch {

@@ -2,7 +2,7 @@ import { transformWithOxc, type Plugin } from 'vite';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { THEME_SCRIPT_TAG, THEME_TOGGLE_CSS, themeVarsCss } from './static-page-theme.ts';
+import { THEME_SCRIPT_TAG, THEME_TOGGLE_CSS, themeVarsCss, WASHI_DARK, WASHI_LIGHT } from './static-page-theme.ts';
 import { brandMark, CHROME_CSS, OG_IMAGE_TAGS, ogLocaleTag, SITE_FOOTER, siteNav } from './static-page-chrome.ts';
 // Type-only, so it erases at build time and leaves src/roadmap.ts the
 // import-free module loadRoadmap() transpiles and imports as a data URL.
@@ -21,7 +21,7 @@ import type { RoadmapIcon } from './src/roadmap.ts';
 // A "You are here" marker sits on the boundary.
 //
 // Why zigzag rather than the old single left-aligned column: the shell is
-// 1040px because the header nav needs that room, and a one-sided timeline
+// header-wide because the header nav needs that room, and a one-sided timeline
 // left half of every row empty. This uses the width it already has.
 //
 // Below 860px it folds back to exactly what it was - one column, spine on
@@ -111,8 +111,10 @@ const ICONS: Record<RoadmapIcon, string> = {
   graph: `${S}<circle cx="5.5" cy="6.5" r="2.5"/><circle cx="18.5" cy="7.5" r="2.5"/><circle cx="12" cy="18" r="2.5"/><line x1="7.6" y1="8" x2="10.6" y2="15.7"/><line x1="16.9" y1="9.5" x2="13.6" y2="15.9"/><line x1="8" y1="6.9" x2="16" y2="7.2"/></svg>`,
   timer: `${S}<circle cx="12" cy="13.5" r="7.5"/><line x1="12" y1="9.5" x2="12" y2="13.5"/><line x1="12" y1="13.5" x2="15.2" y2="15.4"/><line x1="9.5" y1="2.8" x2="14.5" y2="2.8"/><line x1="12" y1="2.8" x2="12" y2="6"/></svg>`,
   bookmark: `${S}<path d="M6.5 3.5h11a1 1 0 0 1 1 1v16l-6.5-4.3-6.5 4.3v-16a1 1 0 0 1 1-1z"/></svg>`,
+  contacts: `${S}<rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="9" cy="10.4" r="2.3"/><path d="M5.6 16.3a3.7 3.7 0 0 1 6.8 0"/><line x1="14.8" y1="10" x2="18.3" y2="10"/><line x1="14.8" y1="13.6" x2="18.3" y2="13.6"/></svg>`,
   sidebar: `${S}<rect x="3" y="4.5" width="18" height="15" rx="2"/><line x1="9.5" y1="4.5" x2="9.5" y2="19.5"/><line x1="5.7" y1="9" x2="7.3" y2="9"/><line x1="5.7" y1="12" x2="7.3" y2="12"/><line x1="5.7" y1="15" x2="7.3" y2="15"/></svg>`,
   robot: `${S}<rect x="4" y="8" width="16" height="11" rx="3"/><line x1="12" y1="4.3" x2="12" y2="8"/><circle cx="12" cy="3" r="1.3"/><circle cx="9.2" cy="13" r="1.1" fill="currentColor" stroke="none"/><circle cx="14.8" cy="13" r="1.1" fill="currentColor" stroke="none"/><line x1="2.4" y1="12.2" x2="4" y2="12.2"/><line x1="20" y1="12.2" x2="21.6" y2="12.2"/></svg>`,
+  coin: `${S}<circle cx="9.2" cy="9.2" r="6"/><path d="M15.4 9.6a6 6 0 1 1-5.8 5.8"/></svg>`,
 };
 
 /** Everything not yet shipped and not deferred past 1.0 is the live edge. */
@@ -214,7 +216,7 @@ const PAGE_CSS = `.meter{display:flex;align-items:center;gap:20px;border:1px sol
 .p-live .stub{background:var(--next-fg)}
 
 .card{display:flex;gap:13px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--bg)}
-.ico{flex:0 0 auto;width:36px;height:36px;border-radius:10px;background:var(--rail);color:var(--muted);display:flex;align-items:center;justify-content:center}
+.ico{flex:0 0 auto;width:36px;height:36px;border-radius:10px;background:var(--card);color:var(--muted);display:flex;align-items:center;justify-content:center}
 .txt{min-width:0}
 .badge{display:inline-block;font-size:9.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:20px;margin-bottom:6px}
 .b-shipped{background:var(--done-bg);color:var(--done-fg)}
@@ -227,7 +229,7 @@ const PAGE_CSS = `.meter{display:flex;align-items:center;gap:20px;border:1px sol
 /* Shipped work steps back so attention lands on what is next. Still fully
    legible at 78% - this is de-emphasis, not a grey-out. */
 .p-done{opacity:.78}
-.p-done .card{background:var(--rail)}
+.p-done .card{background:var(--card)}
 .p-live .card{border-color:var(--next-fg);border-width:2px;padding:13px 15px}
 .p-live .ico{background:var(--next-bg);color:var(--next-fg)}
 .p-future .card{border-style:dashed}
@@ -283,8 +285,8 @@ ${THEME_SCRIPT_TAG}
 <script src="/static-pages.js" defer></script>
 <style>
 ${themeVarsCss(
-  '--bg:#fff;--fg:#15171a;--muted:#5b6168;--faint:#8a9099;--line:#e7e9ec;--accent:#1E40AF;--imp-bg:#eff6ff;--mark-fg:#1E40AF;--chip:#eceef1;--rail:#f7f8fa;--on-accent:#fff;--done-bg:#eaf3de;--done-fg:#3b6d11;--prog-bg:#eff6ff;--prog-fg:#0c447c;--rev-bg:#f1e9fb;--rev-fg:#5b2ea6;--next-bg:#faeeda;--next-fg:#8f570b;--next-halo:rgba(239,159,39,.16);--late-bg:#eceef1;--late-fg:#5b6168;--node:#c9ced3;--node-done:#639922',
-  '--bg:#0e1014;--fg:#e7e9ec;--muted:#9aa1aa;--faint:#6b7178;--line:#23262c;--accent:#4A90D9;--imp-bg:#11233a;--mark-fg:#7FB0E4;--chip:#3a4149;--rail:#14171d;--on-accent:#03203E;--done-bg:#1c2a14;--done-fg:#a7cf6f;--prog-bg:#11233a;--prog-fg:#85b7eb;--rev-bg:#251a3a;--rev-fg:#bda2f2;--next-bg:#2e2410;--next-fg:#e3a84e;--next-halo:rgba(227,168,78,.18);--late-bg:#23262c;--late-fg:#9aa1aa;--node:#3a3f47;--node-done:#97c459'
+  `${WASHI_LIGHT};--accent:#1E40AF;--mark-fg:#1E40AF;--on-accent:#fff;--done-bg:#eaf3de;--done-fg:#3b6d11;--prog-bg:#E8EAF2;--prog-fg:#0c447c;--rev-bg:#f1e9fb;--rev-fg:#5b2ea6;--next-bg:#faeeda;--next-fg:#8f570b;--next-halo:rgba(239,159,39,.16);--late-bg:#E6DCBF;--late-fg:#6A6152;--node:#D4C9AA;--node-done:#639922`,
+  `${WASHI_DARK};--accent:#4A90D9;--mark-fg:#7FB0E4;--on-accent:#03203E;--done-bg:#1c2a14;--done-fg:#a7cf6f;--prog-bg:#1D2234;--prog-fg:#85b7eb;--rev-bg:#251a3a;--rev-fg:#bda2f2;--next-bg:#2e2410;--next-fg:#e3a84e;--next-halo:rgba(227,168,78,.18);--late-bg:#2B2419;--late-fg:#A69E8F;--node:#4A4030;--node-done:#97c459`
 )}
 ${THEME_TOGGLE_CSS}
 ${CHROME_CSS}

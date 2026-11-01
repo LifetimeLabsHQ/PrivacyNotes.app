@@ -8,16 +8,23 @@
     "readOnly": "Read-only",
     "file": "File",
     "empty": "Empty",
-    "noContent": "No content"
+    "noContent": "No content",
+    "notBackedUp": "Not backed up",
+    "archived": "Archived",
+    "entryDate": "Entry date",
+    "date": "Date",
+    "dayOf": "day {{n}} of {{total}}"
   },
   "header": {
     "new": "New",
     "newNote": "New note",
-    "newNoteHover": "New note ({{hotkey}})",
-    "trash": "Trash"
+    "trash": "Trash",
+    "newEvent": "New event"
   },
   "folderChip": {
-    "clear": "Clear folder filter: {{folder}}"
+    "clear": "Clear folder filter: {{folder}}",
+    "subfolders": "Subfolders",
+    "subfoldersLabel": "Include subfolders"
   },
   "tagChip": {
     "clear": "Clear tag filter: {{tag}}"
@@ -26,15 +33,21 @@
     "ariaLabel": "New vault item",
     "login": "Login",
     "card": "Credit Card",
-    "sshKey": "SSH Key"
+    "sshKey": "SSH Key",
+    "generator": "Password"
   },
   "newMenu": {
     "note": "Note",
     "task": "Task",
+    "kanban": "Kanban board",
     "journal": "Journal",
     "login": "Login",
     "file": "File",
-    "bookmark": "Bookmark"
+    "bookmark": "Bookmark",
+    "clipPage": "Clip page",
+    "contact": "Contact",
+    "event": "Event",
+    "quickAdd": "Quick add"
   },
   "vaultFilter": {
     "all": "All",
@@ -43,9 +56,7 @@
     "keys": "Keys"
   },
   "journal": {
-    "backfillHover": "New journal for a recent day",
-    "newEntry": "New journal entry",
-    "newEntryHover": "New journal entry ({{hotkey}})"
+    "newEntry": "New journal entry"
   },
   "tasks": {
     "newTitle": "Tasks for {{date}}"
@@ -54,12 +65,13 @@
     "empty": "Empty",
     "emptyHover": "Delete all notes in trash",
     "storage": "Storage",
-    "autoDelete": "30d auto-delete"
+    "autoDelete": "Auto-delete after 30 days"
   },
   "search": {
     "sortOptions": "Sort and view options",
     "placeholderVault": "Search vault…",
-    "placeholderNotes": "Search notes…"
+    "placeholderNotes": "Search notes…",
+    "placeholderEvents": "Search events…"
   },
   "selection": {
     "countOf": "{{selected}} of {{total}} selected",
@@ -70,9 +82,22 @@
     "noMatches": "No matches.",
     "vault": "Vault is empty.",
     "notes": "No notes yet.",
+    "archive": "Nothing archived.",
+    "trash": "Trash is empty.",
     "filtered": "No items match your filters.",
     "clearFilters": "Clear filters",
-    "filteredAfter": "To display them."
+    "filteredAfter": "To display them.",
+    "hiddenInAll_one": "{{count}} item is hidden by the Show in All filter. Open the filter next to All to show it.",
+    "hiddenInAll_other": "{{count}} items are hidden by the Show in All filter. Open the filter next to All to show them.",
+    "inOtherSpace_one": "{{count}} item is in your {{space}} space. Switch to {{space}} in the sidebar to see it.",
+    "inOtherSpace_other": "{{count}} items are in your {{space}} space. Switch to {{space}} in the sidebar to see them."
+  },
+  "listGroups": {
+    "previous7Days": "Previous 7 days",
+    "previous30Days": "Previous 30 days",
+    "other": "Other",
+    "collapseAll": "Collapse all groups",
+    "expandAll": "Expand all groups"
   },
   "headerLabel": {
     "allItems": "All",
@@ -80,14 +105,30 @@
     "journals": "Journals",
     "vault": "Vault",
     "pinned": "Pinned",
-    "notes": "Notes"
+    "archive": "Archive",
+    "notes": "Notes",
+    "calendar": "Calendar"
   },
   "footerStats": {
-    "journals": "Journals",
-    "items": "Items",
-    "trashed": "Trashed",
-    "notes": "Notes",
-    "bookmarks": "Bookmarks"
+    "journals_one": "Journal",
+    "journals_other": "Journals",
+    "items_one": "Item",
+    "items_other": "Items",
+    "trashed_one": "Trashed",
+    "trashed_other": "Trashed",
+    "notes_one": "Note",
+    "notes_other": "Notes",
+    "bookmarks_one": "Bookmark",
+    "bookmarks_other": "Bookmarks",
+    "contacts_one": "Contact",
+    "contacts_other": "Contacts",
+    "files_one": "File",
+    "files_other": "Files",
+    "lists_one": "List",
+    "lists_other": "Lists",
+    "tasks_one": "Task",
+    "tasks_other": "Tasks",
+    "today": "Today"
   },
   "toast": {
     "imageUploadFailed": "Image upload failed: {{error}}",
@@ -96,7 +137,8 @@
     "importedSyncing_one": "Imported {{count}} note. Syncing…",
     "importedSyncing_other": "Imported {{count}} notes. Syncing…",
     "addedTag_one": "Added #{{tag}} to {{count}} item",
-    "addedTag_other": "Added #{{tag}} to {{count}} items"
+    "addedTag_other": "Added #{{tag}} to {{count}} items",
+    "restoreSummary": "Restored. {{added}} added, {{updated}} updated, {{unchanged}} already up to date."
   },
   "burn": {
     "mediaOnly": "This note only contains media and can't be shared via burn link.",
@@ -122,8 +164,17 @@
     "collapse": "Collapse notes list",
     "expand": "Expand notes list"
   },
+  "split": {
+    "action": "Split note",
+    "done": "Split into “{{title}}”",
+    "overLimit": "“{{title}}” is over 1 MB and stays on this device",
+    "cannot": "This note cannot be split here. Put the cursor where the new note should start.",
+    "continuedTitle": "{{title}} (continued)",
+    "continuedIn": "Continued in {{link}}"
+  },
   "paneResize": {
-    "hintCollapse": "Click to collapse · Drag to resize"
+    "hintCollapse": "Click to collapse · Drag to resize",
+    "hintExpand": "Click to expand · Drag to resize"
   },
   "emptyEditor": {
     "selectFile": "Select a file to preview",
@@ -133,10 +184,10 @@
   },
   "zen": {
     "exit": "Exit Zen",
-    "exitHover": "Exit Zen mode (Esc)",
+    "exitHover": "Exit Zen mode",
     "enterHover": "Enter Zen mode",
     "proHover": "Zen mode (Pro)",
-    "enterAriaShortcut": "Enter Zen mode (⌘⇧F)"
+    "enterAriaShortcut": "Enter Zen mode ({{keys}})"
   },
   "editor": {
     "backToList": "Back to notes list",
@@ -158,8 +209,10 @@
     "invisiblesShow": "Show invisible characters",
     "invisiblesHide": "Hide invisible characters",
     "findInNote": "Find in note",
-    "navPrev": "Previous note",
-    "navNext": "Next note",
+    "navPrev": "Previous",
+    "navNext": "Next",
+    "navPrevTab": "Previous tab",
+    "navNextTab": "Next tab",
     "undo": "Undo",
     "redo": "Redo",
     "hide": "Hide",
@@ -170,27 +223,25 @@
     "widthWide": "Wider",
     "widthFull": "Full width",
     "burn": "Share & Burn After Reading",
-    "titlePlaceholderLink": "Bookmark name"
+    "titlePlaceholderLink": "Bookmark name",
+    "titlePlaceholderContact": "Name",
+    "notBackedUpTooLarge": "Over the 1 MB limit, so not backed up. Move pictures to attachments or split the note.",
+    "notBackedUpFailed": "Not backed up. Last error: {{message}}. Retrying.",
+    "unknownType": "This item was made by a newer version of PrivacyNotes. Update the app to open it."
   },
   "share": {
     "hover": "Share / Export",
     "ariaLabel": "Share or export",
-    "thisNote": "This note",
     "currentMdTitle": "Current note (.md)",
     "currentMdDesc": "Raw markdown with front-matter.",
     "currentHtmlTitle": "Current note (.html)",
     "currentHtmlDesc": "Printer-friendly, markdown rendered on a white page.",
     "printTitle": "Print / Save as PDF",
     "printDesc": "Opens the print dialog. Save as PDF or send to a printer.",
+    "printTextTitle": "Print text only",
+    "printTextDesc": "Keeps the title. Leaves out the date, folder and tags.",
     "burnTitle": "Share & Burn After Reading",
-    "burnDesc": "Publish this note as a one-time view link. The link self-destructs after reading. Your note stays safe in your account.",
-    "backup": "Backup",
-    "fullBackupTitle": "Full backup (.zip)",
-    "fullBackupDesc": "Everything: notes, journals, vault, tasks, images, audio, files.",
-    "allHtmlTitle": "All items (.zip of .html)",
-    "allHtmlDesc": "One printable HTML per item. Good for reading offline.",
-    "jsonTitle": "Text backup (.json)",
-    "jsonDesc": "All text content and metadata, no images or files."
+    "burnDesc": "Publish this note as a one-time view link. The link self-destructs after reading. Your note stays safe in your account."
   },
   "weekReview": {
     "title": "Week in review",
@@ -206,10 +257,18 @@
     "newNote": "New",
     "newNoteHintMac": "Option + Shift + N",
     "newNoteHintOther": "Alt + Shift + N",
+    "newNoteHintMacDesktop": "Command + N",
+    "newNoteHintOtherDesktop": "Ctrl + N",
     "openStats": "Open stats",
-    "words": "Words",
+    "journalCalendar": "Journal calendar",
+    "words_one": "Word",
+    "words_other": "Words",
     "zen": "Zen",
-    "appearance": "Appearance",
+    "appearance": "Design",
+    "lockApp": "Lock app",
+    "lockAppSetUp": "Set a PIN in Security first",
+    "goToTop": "Go to top",
+    "goToEnd": "Go to end",
     "signOut": "Sign out",
     "signingOut": "Signing out…",
     "switchToLight": "Switch to light mode",
@@ -217,20 +276,28 @@
   },
   "settings": {
     "groupYourNotes": "Your notes",
+    "groupPreferences": "Preferences",
     "groupAccount": "Account & data",
     "groupBrand": "PrivacyNotes",
     "statsLabel": "Statistics",
-    "journalsLabel": "Journals",
     "importLabel": "Import & Export",
     "planLabel": "Account",
     "storageLabel": "Storage",
+    "imagesLabel": "Images",
     "securityLabel": "Security",
     "accountLabel": "ID & Sync",
-    "appearanceLabel": "Appearance",
+    "appearanceLabel": "Design",
+    "editorLabel": "Editor",
+    "formatBarLabel": "Toolbar",
+    "listsLabel": "Lists",
+    "trackersLabel": "Trackers",
     "helpLabel": "Help",
     "aboutLabel": "About",
     "languageLabel": "Language",
-    "languageDesc": "Choose the language PrivacyNotes is shown in."
+    "dateLabel": "Date & Time",
+    "dateTabFormat": "Format",
+    "languageDesc": "Choose the language PrivacyNotes is shown in.",
+    "calendarLabel": "Calendar"
   },
   "importStore": {
     "title": "Import or store?",
@@ -241,8 +308,20 @@
   },
   "bulkTrash": {
     "title": "Move to Trash",
-    "body_one": "Move <highlight>{{count}} item</highlight> to trash? You can restore them later.",
-    "body_other": "Move <highlight>{{count}} items</highlight> to trash? You can restore them later."
+    "body_one": "Move <highlight>{{count}} item</highlight> to trash? You can restore it later.",
+    "body_other": "Move <highlight>{{count}} items</highlight> to trash? You can restore them later.",
+    "readOnlyTitle": "Read-only",
+    "readOnlyAcknowledge": "Got it",
+    "readOnlyBlocked_one": "This item is <highlight>read-only</highlight>, so it cannot be moved to trash. Turn read-only off in the note options menu first.",
+    "readOnlyBlocked_other": "All <highlight>{{count}} items</highlight> are read-only, so none of them can be moved to trash. Turn read-only off in the note options menu first.",
+    "readOnlySkipped_one": "<highlight>{{count}} item</highlight> is read-only and stays where it is.",
+    "readOnlySkipped_other": "<highlight>{{count}} items</highlight> are read-only and stay where they are."
+  },
+  "deleteCheckedTasks": {
+    "title": "Delete checked items?",
+    "confirm": "Delete",
+    "body_one": "<highlight>{{count}} item</highlight> will be deleted from this note. This cannot be undone.",
+    "body_other": "<highlight>{{count}} items</highlight> will be deleted from this note, nested items included. This cannot be undone."
   },
   "bulkDelete": {
     "body_one": "Permanently delete <highlight>{{count}} note</highlight>? This cannot be undone.",
@@ -271,5 +350,18 @@
     "title": "New vault created",
     "confirm": "Got it",
     "body": "No existing vault matched the phrase you entered, so a new empty one was created. If you expected to see your notes, sign out and re-enter your phrase carefully - a single different word opens a different vault."
+  },
+  "ambiguousLink": {
+    "title": "Two notes share that title",
+    "body": "More than one note is titled <highlight>“{{title}}”</highlight>, so this link does not say which one it means. Rename one of them and the link will point at the other."
+  },
+  "connections": {
+    "title": "Connections",
+    "hide": "Hide connections",
+    "linkedFrom": "Linked from",
+    "linksTo": "Links to",
+    "missing": "Not created yet",
+    "protectedHidden_one": "{{count}} PIN-protected item not shown",
+    "protectedHidden_other": "{{count}} PIN-protected items not shown"
   }
 }

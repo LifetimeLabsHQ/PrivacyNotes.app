@@ -2,9 +2,10 @@ import { type Plugin } from 'vite';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { THEME_SCRIPT_TAG, THEME_TOGGLE_CSS, themeVarsCss } from './static-page-theme.ts';
+import { THEME_SCRIPT_TAG, THEME_TOGGLE_CSS, themeVarsCss, WASHI_DARK, WASHI_LIGHT } from './static-page-theme.ts';
 import { brandMark, CHROME_CSS, OG_IMAGE_TAGS, ogLocaleTag, SITE_FOOTER, siteNav } from './static-page-chrome.ts';
 import { formatBytes } from './src/formatBytes.ts';
+import { DEMO_SCREENSHOTS } from './src/demoScreenshots.ts';
 
 // Pre-renders the static /brand page: brand assets + press kit. Emitted as
 // brand/index.html so Cloudflare serves it directly at /brand, same pattern
@@ -25,11 +26,10 @@ import { formatBytes } from './src/formatBytes.ts';
 // selectable as-is.
 //
 // Wordmark rule (the reason half these files exist): "Privacy" is always
-// blue - Brand Blue #1E40AF on light backgrounds, Fold Blue #4F6BD5 on
-// dark, where #1E40AF is illegible - and "Notes" is always ink, #0A0A0A
-// on light, #FFFFFF on dark. The icon never changes between the light and
-// dark lockups; only the wordmark adapts. Two-tone lives only in the logo,
-// never in running text. Spec: ops/docs/design-decisions.md (brand kit)
+// Fold Blue #4F6BD5, on light and on dark backgrounds, and "Notes" is always
+// ink, #0A0A0A on light, #FFFFFF on dark. The icon never changes between the
+// light and dark lockups; only the ink half adapts. Two-tone lives only in
+// the logo, never in running text. Spec: ops/docs/design-decisions.md (brand kit)
 
 const M = '/marketing';
 const B = `${M}/brand`;
@@ -42,9 +42,11 @@ type Card = {
   file: string;
   title: string;
   tile: Tile;
-  kind: 'lockup' | 'wordmark' | 'icon';
+  kind: 'lockup' | 'wordmark' | 'icon' | 'avatar';
   png: string;
   note?: string;
+  /** Fills its own frame, so the tile must not claim a transparent background. */
+  opaque?: true;
 };
 
 // There is deliberately NO monochrome variant. Knocking the mark down to one
@@ -57,8 +59,26 @@ const LOCKUPS: Card[] = [
   { file: 'privacynotes-lockup-color-dark', title: 'Color, dark backgrounds', tile: 'dark', kind: 'lockup', png: '2048 x 373' },
 ];
 
+// The avatar is the one asset that drops the document outline, and it is not a
+// recolor of the icon. A profile site masks an avatar into a circle, and a
+// near-square outline inside a circle leaves four empty lobes at the poles that
+// no scale removes: the corner fold sits outside every crop large enough to
+// cover the frame. So the page body becomes the whole frame, and the padlock,
+// the check badge and the two blues carry the recognition. The file stays
+// SQUARE with the fold in its top-right corner, because the circular mask cuts
+// that corner into a folded circle, which is why one file serves both shapes.
+// Spec: ops/docs/design-decisions.md (social avatar)
 const ICONS: Card[] = [
   { file: 'privacynotes-icon-color', title: 'Icon, light and dark', tile: 'light', kind: 'icon', png: '943 x 1024' },
+  {
+    file: 'privacynotes-avatar',
+    title: 'Avatar, social profiles',
+    tile: 'light',
+    kind: 'avatar',
+    png: '1024 x 1024',
+    note: 'Square file. Profile sites crop it to a circle.',
+    opaque: true,
+  },
 ];
 
 const WORDMARKS: Card[] = [
@@ -73,32 +93,28 @@ const WORDMARKS: Card[] = [
 // out of native binaries without a second rule.
 const SHOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'public/marketing');
 
-// The pixel size is declared and the byte size is measured, because they go
-// stale at different rates: a re-encode of the same frame moves the bytes and
-// nothing else. Reading the file also makes a renamed capture fail the build
-// instead of shipping a broken tile beside a number that was true once.
-const SHOT_DIMS = '2048 x 1116';
-
-const SHOTS: Array<{ file: string; title: string; saveAs: string }> = [
-  { file: 'demo-app-light', title: 'App, light', saveAs: 'privacynotes-app-light.webp' },
-  { file: 'demo-app-dark', title: 'App, dark', saveAs: 'privacynotes-app-dark.webp' },
+// Dimensions and responsive paths are generated from the same originals.
+// Reading the download also makes a missing capture fail the build.
+const SHOTS = [
+  { ...DEMO_SCREENSHOTS.light, title: 'App, cream', saveAs: 'privacynotes-app-cream.webp' },
+  { ...DEMO_SCREENSHOTS.dark, title: 'App, dark', saveAs: 'privacynotes-app-dark.webp' },
 ];
 
 // `download` names the saved file, because the source names are the homepage's
 // and a press kit should hand over a branded filename.
 function shotCard(s: (typeof SHOTS)[number]): string {
-  const size = formatBytes(fs.statSync(path.join(SHOT_DIR, `${s.file}.webp`)).size);
+  const size = formatBytes(fs.statSync(path.join(SHOT_DIR, path.basename(s.src))).size);
   return `<div class="card">
-<div class="shot"><img src="${M}/${s.file}.webp" alt="PrivacyNotes ${s.title.toLowerCase()}" width="2048" height="1116" loading="lazy"></div>
-<div class="meta"><div><strong>${s.title}</strong><span class="dims">${size}, WebP ${SHOT_DIMS}</span></div>
-<div class="dl"><a class="pill" href="${M}/${s.file}.webp" download="${s.saveAs}">WebP</a></div></div>
+<div class="shot"><img src="${s.src}" srcset="${s.srcSet}" sizes="(max-width: 600px) calc(100vw - 48px), 490px" alt="PrivacyNotes ${s.title.toLowerCase()}" width="${s.width}" height="${s.height}" loading="lazy"></div>
+<div class="meta"><div><strong>${s.title}</strong><span class="dims">${size}, WebP ${s.width} x ${s.height}</span></div>
+<div class="dl"><a class="pill" href="${s.src}" download="${s.saveAs}">WebP</a></div></div>
 </div>`;
 }
 
 function card(c: Card): string {
   const note = c.note ? `<span class="note">${c.note}</span>` : '';
   return `<div class="card">
-<div class="tile t-${c.tile} k-${c.kind}"><img src="${B}/${c.file}.svg" alt="PrivacyNotes ${c.title}" loading="lazy"></div>
+<div class="tile t-${c.tile} k-${c.kind}" data-bg="${c.opaque ? 'opaque' : 'transparent bg'}"><img src="${B}/${c.file}.svg" alt="PrivacyNotes ${c.title}" loading="lazy"></div>
 <div class="meta"><div><strong>${c.title}</strong><span class="dims">SVG + PNG ${c.png}</span>${note}</div>
 <div class="dl"><a class="pill" href="${B}/${c.file}.svg" download>SVG</a><a class="pill" href="${B}/${c.file}.png" download>PNG</a></div></div>
 </div>`;
@@ -110,22 +126,22 @@ const COPY: CopyBlock[] = [
   {
     id: 'cp-oneliner',
     label: 'One-liner',
-    text: 'The end-to-end encrypted home for your notes, tasks, files, and journal.',
+    text: 'The end-to-end encrypted home for your notes, tasks, calendar, files, passwords, journal, bookmarks, and contacts.',
   },
   {
     id: 'cp-short',
     label: 'Short',
-    text: 'An end-to-end encrypted workspace for notes, tasks, files, and journal. A 12-word key only you hold. No trackers, no ads.',
+    text: 'An end-to-end encrypted workspace for notes, tasks, calendar, files, passwords, journal, bookmarks, and contacts, plus a free Markdown editor for folders on your disk. Self-custody: a 12-word key only you hold. No trackers, no ads.',
   },
   {
     id: 'cp-meta',
     label: 'Meta description',
-    text: 'Your notes, encrypted on your device before they ever leave it. A 12-word key only you hold, so not even we can read them. No trackers, no ads, free to start.',
+    text: 'An end-to-end encrypted workspace for notes, tasks, calendar, files, passwords, journal, bookmarks, and contacts. Open source, no trackers, no ads, free to start.',
   },
   {
     id: 'cp-boiler',
     label: 'Boilerplate, press',
-    text: 'PrivacyNotes is an end-to-end encrypted workspace for your notes, tasks, files, and journal. Every note is encrypted on your device before it syncs, and the only key is a 12-word recovery phrase that never leaves your hands. Lifetime Labs stores ciphertext, nothing else: no trackers, no ads, no telemetry. PrivacyNotes runs on the web and as native apps, and its apps are open source: the clients, the encryption layer and the database schema are all published for review. The free tier is free forever; Pro is a one-time purchase.',
+    text: 'PrivacyNotes is an end-to-end encrypted workspace for your notes, tasks, calendar, files, passwords, journal, bookmarks, and contacts, with a free Markdown editor for the folders already on your disk. Everything you store is always encrypted, on your device and on the way to the server, under a key from a 12-word recovery phrase that, with self-custody, never leaves your hands. Lifetime Labs stores your data only as ciphertext, with no trackers, no ads and no analytics of what you write. PrivacyNotes runs on the web and as native apps, and its apps are open source: the clients, the encryption layer and the threat model are all published for review. The free tier is free forever; Pro is a one-time purchase.',
   },
 ];
 
@@ -180,8 +196,7 @@ ${rows}
  * description blocks (they are verbatim strings, and coloring half a string
  * implies the color is part of it), the wrong forms being warned against,
  * and the quoted words "Privacy" / "Notes" in the two-tone rule itself -
- * that sentence names Brand Blue and Fold Blue by hex, and the page accent
- * is neither, so painting them there would state one blue and show another.
+ * there they are words being talked about, not the name.
  */
 
 function copyBlock(c: CopyBlock): string {
@@ -207,8 +222,8 @@ const FACTS: Array<[string, string]> = [
 ];
 
 const SWATCHES: Array<{ name: string; hex: string; rgb: string; cmyk: string; role: string; border?: boolean }> = [
-  { name: 'Brand Blue', hex: '#1E40AF', rgb: '30 64 175', cmyk: '83 63 0 31', role: 'icon body, "Privacy" on light' },
-  { name: 'Fold Blue', hex: '#4F6BD5', rgb: '79 107 213', cmyk: '63 50 0 16', role: 'corner fold, "Privacy" on dark' },
+  { name: 'Brand Blue', hex: '#1E40AF', rgb: '30 64 175', cmyk: '83 63 0 31', role: 'icon body' },
+  { name: 'Fold Blue', hex: '#4F6BD5', rgb: '79 107 213', cmyk: '63 50 0 16', role: 'corner fold, "Privacy"' },
   { name: 'Check Green', hex: '#10B981', rgb: '16 185 129', cmyk: '91 0 30 27', role: 'check badge only' },
   { name: 'Ink', hex: '#0A0A0A', rgb: '10 10 10', cmyk: '0 0 0 96', role: '"Notes" on light' },
   { name: 'Paper', hex: '#FFFFFF', rgb: '255 255 255', cmyk: '0 0 0 0', role: '"Notes" on dark, lock, check', border: true },
@@ -229,14 +244,14 @@ const PAGE_CSS = `h2{font-size:20px;font-weight:750;letter-spacing:-.02em;margin
 .lead strong{color:var(--fg)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .grid.one{grid-template-columns:1fr}
-.card{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--rail)}
+.card{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
 .tile{display:flex;align-items:center;justify-content:center;padding:24px 16px;min-height:110px;border-bottom:1px solid var(--line);position:relative}
-.tile::after{content:"transparent bg";position:absolute;top:7px;right:9px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);opacity:.75}
+.tile::after{content:attr(data-bg);position:absolute;top:7px;right:9px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);opacity:.75}
 .tile img{max-width:100%;height:auto}
 .t-light{background:#fff}.t-dark{background:#0a0d12}
 .t-light::after{color:#8b94a3}.t-dark::after{color:rgba(255,255,255,.45)}
-.k-lockup img{height:38px}.k-wordmark img{height:34px}.k-icon img{height:72px}
-.shot{border-bottom:1px solid var(--line);background:var(--rail)}
+.k-lockup img{height:38px}.k-wordmark img{height:34px}.k-icon img,.k-avatar img{height:72px}
+.shot{border-bottom:1px solid var(--line);background:var(--card)}
 .shot img{display:block;width:100%;height:auto}
 .meta{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;font-size:13px}
 .meta strong{display:block;font-weight:650}
@@ -246,7 +261,7 @@ const PAGE_CSS = `h2{font-size:20px;font-weight:750;letter-spacing:-.02em;margin
 .pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;background:var(--bg);cursor:pointer}
 .pill:hover{border-color:var(--accent);text-decoration:none}
 .cbtn[hidden]{display:none}
-.panel{border:1px solid var(--line);border-radius:12px;background:var(--rail);padding:24px;display:flex;justify-content:center}
+.panel{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:24px;display:flex;justify-content:center}
 .only-dark{display:none}
 :root[data-theme=dark] .only-light{display:none}
 :root[data-theme=dark] .only-dark{display:revert}
@@ -254,24 +269,24 @@ const PAGE_CSS = `h2{font-size:20px;font-weight:750;letter-spacing:-.02em;margin
 :root:not([data-theme=light]) .only-light{display:none}
 :root:not([data-theme=light]) .only-dark{display:revert}
 }
-.minstrip{display:flex;align-items:center;gap:30px;border:1px solid var(--line);border-radius:12px;background:var(--rail);padding:18px 22px;flex-wrap:wrap;margin-top:14px}
+.minstrip{display:flex;align-items:center;gap:30px;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:18px 22px;flex-wrap:wrap;margin-top:14px}
 .ms{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .minstrip span{font-size:11.5px;color:var(--faint)}
 .ms-note{max-width:210px;margin-left:auto}
 .sws{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
-.sw{border:1px solid var(--line);border-radius:12px;background:var(--rail);padding:10px;font-size:12px;display:flex;flex-direction:column;gap:2px}
+.sw{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:10px;font-size:12px;display:flex;flex-direction:column;gap:2px}
 .sw .chip{height:48px;border-radius:8px;margin-bottom:6px}
 .sw code{font-size:12px;color:var(--fg)}
 .sw span{color:var(--muted);font-size:11px}
 .sw .role{color:var(--faint)}
-.cp{border:1px solid var(--line);border-radius:12px;background:var(--rail);padding:12px 16px;margin-bottom:12px}
+.cp{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:12px 16px;margin-bottom:12px}
 .cph{display:flex;align-items:center;gap:10px;margin-bottom:2px}
 .cph strong{font-size:13.5px}
 .cnt{font-size:11px;color:var(--faint);border:1px solid var(--line);border-radius:99px;padding:1px 8px}
 .cph .cbtn{margin-left:auto}
 .cbtn.on{border-color:var(--accent)}
 .cp p{margin:4px 0 2px;font-size:14px}
-.facts{border:1px solid var(--line);border-radius:12px;background:var(--rail);padding:6px 18px;font-size:14px}
+.facts{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:6px 18px;font-size:14px}
 .facts>div{display:flex;gap:14px;padding:9px 0;border-bottom:1px solid var(--line)}
 .facts>div:last-child{border-bottom:none}
 .facts b{flex:0 0 118px;font-weight:650;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding-top:2px}
@@ -280,7 +295,7 @@ const PAGE_CSS = `h2{font-size:20px;font-weight:750;letter-spacing:-.02em;margin
    phone. Let them break mid-token rather than widen the document. */
 .facts>div>span{min-width:0;overflow-wrap:anywhere}
 .dd{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.ddcol{border:1px solid var(--line);border-radius:12px;background:var(--rail);padding:14px 18px;font-size:14px}
+.ddcol{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:14px 18px;font-size:14px}
 .ddcol h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.08em}
 .ddcol.do h3{color:var(--ok)}
 .ddcol.dont h3{color:var(--bad)}
@@ -291,7 +306,7 @@ const PAGE_CSS = `h2{font-size:20px;font-weight:750;letter-spacing:-.02em;margin
 .dont-tile img{height:24px}
 .dont-tile p{margin:10px 0 0;font-size:12px;color:#5b6472}
 .dont-tile::before{content:"\\2715";position:absolute;top:6px;left:10px;color:var(--bad);font-weight:800}
-.trademark{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px}
+.rights{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px}
 @media(max-width:600px){
 .grid,.dd,.donts{grid-template-columns:1fr}
 .sws{grid-template-columns:1fr 1fr}
@@ -332,8 +347,8 @@ ${OG_IMAGE_TAGS}
 ${THEME_SCRIPT_TAG}
 <style>
 ${themeVarsCss(
-  '--bg:#fff;--fg:#15171a;--muted:#5b6168;--faint:#8a9099;--line:#e7e9ec;--accent:#1E40AF;--imp-bg:#eff6ff;--mark-fg:#1E40AF;--chip:#eceef1;--rail:#f7f8fa;--on-accent:#fff;--ok:#3b6d11;--bad:#b3261e',
-  '--bg:#0e1014;--fg:#e7e9ec;--muted:#9aa1aa;--faint:#6b7178;--line:#23262c;--accent:#4A90D9;--imp-bg:#11233a;--mark-fg:#7FB0E4;--chip:#3a4149;--rail:#14171d;--on-accent:#03203E;--ok:#a7cf6f;--bad:#e0655e'
+  `${WASHI_LIGHT};--accent:#1E40AF;--mark-fg:#1E40AF;--on-accent:#fff;--ok:#3b6d11;--bad:#b3261e`,
+  `${WASHI_DARK};--accent:#4A90D9;--mark-fg:#7FB0E4;--on-accent:#03203E;--ok:#a7cf6f;--bad:#e0655e`
 )}
 ${THEME_TOGGLE_CSS}
 ${CHROME_CSS}
@@ -342,7 +357,7 @@ ${PAGE_CSS}
 </head>
 <body data-static-page="brand">
 <div class="wrap">
-${siteNav({ active: 'brand' })}
+${siteNav()}
 <div class="pcols">
 ${sectionRail()}
 <div class="col-head">
@@ -359,13 +374,13 @@ ${LOCKUPS.map(card).join('\n')}
 </div>
 
 ${h2('icon')}
-<p class="lead">For avatars, favicons, app tiles, and anywhere below minimum lockup size. One file, and it holds up on light and dark alike.</p>
-<div class="grid one">
+<p class="lead">The icon is for favicons, app tiles, and anywhere below minimum lockup size. It holds up on light and dark alike. The avatar is a separate file for social profiles, where the site masks whatever you upload into a circle: it fills the frame in Brand Blue and carries the fold in its top-right corner, so the same square file reads as a folded page in a square slot and a folded circle in a round one.</p>
+<div class="grid">
 ${ICONS.map(card).join('\n')}
 </div>
 
 ${h2('wordmark')}
-<p class="lead"><strong>The two-tone rule:</strong> "Privacy" is always blue, Brand Blue on light and Fold Blue on dark. "Notes" is always ink, near-black on light and white on dark. One word, never inverted, never two-toned in running text.</p>
+<p class="lead"><strong>The two-tone rule:</strong> "Privacy" is always Fold Blue, on light and on dark. "Notes" is always ink, near-black on light and white on dark. One word, never inverted, never two-toned in running text.</p>
 <div class="grid">
 ${WORDMARKS.map(card).join('\n')}
 </div>
@@ -396,7 +411,7 @@ ${SHOTS.map(shotCard).join('\n')}
 </div>
 
 ${h2('descriptions')}
-<p class="lead">Always ${brandMark()}: one word, capital P, capital N, with "Privacy" in the accent color wherever the medium allows it. The domain is written the same way, ${brandMark('.app')}, everywhere except inside an actual URL. Never "Privacy Notes", "Privacynotes", or "PN". The App Store listing name "PrivacyNotes - Zero Knowledge" is a store-name workaround, not the brand.</p>
+<p class="lead">Always ${brandMark()}: one word, capital P, capital N, with "Privacy" in Fold Blue wherever the medium allows it. The domain is written the same way, ${brandMark('.app')}, everywhere except inside an actual URL. Never "Privacy Notes", "Privacynotes", or "PN". The App Store listing name "PrivacyNotes - Zero Knowledge" is a store-name workaround, not the brand.</p>
 ${COPY.map(copyBlock).join('\n')}
 
 ${h2('facts')}
@@ -425,7 +440,7 @@ ${h2('usage')}
 <div class="dont-tile"><img src="${B}/dont-invert.svg" alt=""><p>don't invert the two-tone split</p></div>
 </div>
 
-<p class="trademark">${brandMark()} and the document-lock mark are trademarks of Lifetime Labs LLC. The assets on this page may be used to reference ${brandMark()}; they may not be used to imply endorsement.</p>
+<p class="rights">The assets on this page may be used to reference ${brandMark()}; they may not be used to imply endorsement.</p>
 </div>
 </div>
 </div>

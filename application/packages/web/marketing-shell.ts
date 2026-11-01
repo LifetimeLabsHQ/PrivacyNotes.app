@@ -65,6 +65,8 @@ function jsonLd(locale: string): string {
       'https://x.com/PrivacyNotesApp',
       'https://mastodon.social/@privacynotes',
       'https://www.reddit.com/r/PrivacyNotes/',
+      'https://www.youtube.com/@PrivacyNotesApp',
+      'https://www.facebook.com/PrivacyNotesApp/',
       'https://github.com/LifetimeLabsDev/PrivacyNotes.app',
     ],
   };
@@ -149,6 +151,8 @@ const HEAD_BLOCK = /<title>[\s\S]*?<meta name="twitter:image"[^>]*>/;
  * front of it; both are emitted by help-page.ts, which owns those catalogs.
  * /changelog.md is the fourth file in that layer and the only one that says
  * what CHANGED rather than how the app works; changelog-page.ts emits it.
+ * /docs/index.md is the fifth, and the only one that says how the app is
+ * BUILT; publishedDocs.ts emits it and the documents it routes to.
  * The price interpolates from pricing.ts, and the language count from
  * LOCALE_TO_SLUG, so neither can go stale the way a hand-typed number does -
  * the count said 14 for three locale additions.
@@ -163,7 +167,7 @@ function llmsTxt(): string {
   const proPrice = process.env.VITE_PADDLE_BETA_DISCOUNT_ID ? EARLY_PRICE : PRO_PRICE;
   return `# PrivacyNotes
 
-> An end-to-end encrypted notes, tasks, journal and vault app. Everything is encrypted on your device before it is stored or synced, so the server holds ciphertext it cannot read. Hosted in Switzerland, with no tracking and no analytics.
+> An end-to-end encrypted notes, tasks, journal and vault app: your notes are encrypted on your device, before they are stored or synced. The server holds ciphertext, which under self-custody it cannot read. Hosted in Switzerland, with no trackers and no analytics of what you write.
 
 Signing up needs no email address: a new account is a generated 12-word recovery phrase and nothing else. Google, Apple and GitHub sign-in are available for people who want them, and the encryption key is still generated on the reader's own device either way.
 
@@ -184,7 +188,8 @@ The app is open source: the web, desktop and mobile clients, the encryption laye
 - [Question index](${ORIGIN}/llms-index.txt): every help question against the URL that answers it, each one plain text and about 900 bytes. Start here and fetch only what you need.
 - [Every help answer in one file](${ORIGIN}/llms-full.txt): the same content in one fetch, about 17,700 tokens, when a second request is not possible.
 - [Every release in one file](${ORIGIN}/changelog.md): the whole changelog as plain text, newest first. Read it when the question is about what changed, what is new in a version, or where something moved.
-- [Threat model and published encryption code](https://github.com/LifetimeLabsDev/PrivacyNotes.app): what the server can and cannot see, stated precisely.
+- [Security documentation index](${ORIGIN}/docs/index.md): the published security documents as plain text, with the sections of each. Read it when the question is about the encryption, what the server can read, how to verify any of it, or how sync resolves a conflict.
+- [Source, threat model and encryption code](https://github.com/LifetimeLabsDev/PrivacyNotes.app): the repository the documents above are published from, with the clients beside them.
 
 ## Press
 - [Brand assets](${ORIGIN}/brand): logos, wordmarks and usage rules.

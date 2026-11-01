@@ -1,55 +1,36 @@
+import { withMfaAwareTimeout } from './mfaStep';
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { generatePhrase, isValidPhrase } from '@notes/shared';
 import { ArrowLeft, ArrowRight, CaretDown, Check, Copy, FileText, KeyReturn, Lock, Password, QrCode, Scales, Scan, Upload, Warning } from './icons';
 import { QRCodeCanvas } from 'qrcode.react';
+import { buildPhraseFile, PHRASE_FILE_NAME } from './phraseFile';
 import { buildSignInUrl, extractPhraseFromScan } from './qrSignIn';
 import { saveBlob } from './saveFile';
 import { useAuth } from './auth';
 import type { OAuthProvider } from './auth';
 import { QrScannerModal } from './QrScannerModal';
 import { TurnstileWidget } from './TurnstileWidget';
-import { detectPlatform, isLinuxNative } from './devices';
-import { isDemoMode } from './demo';
+import { readResumablePhrase } from './phraseAtRest';
+import { isTrustedDevice } from './trustStorage';
+import { detectPlatform, isLinuxNative, warmAuthEdgeFunctions } from './devices';
 import { isAppHost } from './hosts';
 import { applyStoredTheme } from './theme';
+import { ConfirmModal } from './ConfirmModal';
+import { switchWouldWipe } from './authStorage';
 import { LoadingScreen } from './LoadingScreen';
 import { LandingPage, FX_CSS } from './LandingPage';
 import { LogoIcon } from './LogoIcon';
 import { Brand } from './Brand';
 import { PrivacyLadder } from './PrivacyLadder';
+import { isImeComposing } from './imeComposing';
+import { AppleIcon, GithubIcon, GoogleIcon } from './providerIcons';
 
 /** Native (Tauri) build - desktop or mobile wrapper, not the web app. */
 const IS_DESKTOP = detectPlatform() !== 'web';
 
 /** Native iOS app: surface Sign in with Apple above Google (App Store expectation). */
 const IS_IOS = detectPlatform() === 'ios';
-
-// One-shot per app load: the isolates stay warm for minutes once
-// booted, so re-warming on StrictMode remounts or back-and-forth
-// onboarding navigation would only waste requests.
-let edgeWarmupFired = false;
-
-/**
- * Boot the sign-in edge functions' isolates while the user is still
- * reading the onboarding screens. Cold starts cost 1-3.5s each and sit
- * exactly on the sign-in critical path (link-pubkey, then
- * register-device). A bare OPTIONS
- * request only runs each function's CORS branch: no auth, no body, no
- * database - it exists purely to spin up the isolate so the real calls
- * during sign-in hit warm instances. Fire-and-forget; failures are
- * expected offline and must never affect onboarding.
- */
-function warmAuthEdgeFunctions(): void {
-  if (edgeWarmupFired || isDemoMode()) return;
-  edgeWarmupFired = true;
-  const base = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  if (!base) return;
-  const fns = ['link-pubkey', 'register-device'];
-  for (const fn of fns) {
-    void fetch(`${base}/functions/v1/${fn}`, { method: 'OPTIONS' }).catch(() => {});
-  }
-}
 
 type Mode = 'choose' | 'create' | 'import' | 'signin';
 
@@ -58,7 +39,7 @@ type Mode = 'choose' | 'create' | 'import' | 'signin';
  * Minimal full-screen wrapper for post-OAuth steps (custody choice,
  * phrase entry for returning users). Shows only the logo + a centered
  * card - no hero text, feature pillars, or pricing. Gives the user a
- * clear visual break after the Google redirect.
+ * clear visual break after the provider redirect.
  */
 function OAuthSetupScreen({ children }: { children: ReactNode }) {
   return (
@@ -107,11 +88,6 @@ export function Onboarding({ onAuthedEnterApp }: { onAuthedEnterApp?: () => void
     if (auth.status !== 'loading') setOauthLoading(false);
   }, [auth.status]);
 
-  // Pre-warm the sign-in edge functions - see warmAuthEdgeFunctions.
-  useEffect(() => {
-    warmAuthEdgeFunctions();
-  }, []);
-
   // Returning OAuth users: hydrate sets this flag so we show a focused
   // "enter your phrase" screen instead of the full landing page.
   // Once set, stays true through the entire import->signin flow so the
@@ -141,16 +117,18 @@ export function Onboarding({ onAuthedEnterApp }: { onAuthedEnterApp?: () => void
   // NotesView's useTheme hook runs.
   const inOAuthFlow = oauthLoading || oauthHandoff || auth.status === 'oauth_custody_choice';
 
-  // Warm the NotesView chunk as soon as the visitor commits to an auth
-  // flow (any phrase step, or any OAuth setup screen). The chunk then
-  // downloads in parallel with the sign-in round-trips, so the post-auth
-  // <Suspense> fallback in App.tsx resolves instantly instead of showing
-  // a second full-screen typewriter while the notes app downloads.
-  // Pure marketing visitors never trigger this, so the code-split still
-  // pays off where it matters. Repeat calls hit the module cache.
+  // Warm the NotesView chunk and the sign-in edge functions as soon as the
+  // visitor commits to an auth flow (any phrase step, or any OAuth setup
+  // screen). The chunk then downloads in parallel with the sign-in
+  // round-trips, so the post-auth <Suspense> fallback in App.tsx resolves
+  // instantly instead of showing a second full-screen typewriter while the
+  // notes app downloads. Pure marketing visitors never trigger this, so the
+  // code-split still pays off where it matters and they send nothing to the
+  // sync backend. Repeat calls hit the module cache and the warm-up's guard.
   useEffect(() => {
     if (inOAuthFlow || mode !== 'choose') {
       void import('./NotesView');
+      warmAuthEdgeFunctions();
     }
   }, [inOAuthFlow, mode]);
   useEffect(() => {
@@ -225,7 +203,7 @@ export function Onboarding({ onAuthedEnterApp }: { onAuthedEnterApp?: () => void
   if (oauthHandoff) {
     let content: ReactNode;
     if (mode === 'choose') {
-      // Initial handoff: "Google verified, enter your phrase"
+      // Initial handoff: "sign-in verified, enter your phrase"
       content = <OAuthHandoffStep onEnterPhrase={() => setMode('import')} onBack={() => setOauthHandoff(false)} />;
     } else if (mode === 'import') {
       content = (
@@ -282,6 +260,8 @@ export function Onboarding({ onAuthedEnterApp }: { onAuthedEnterApp?: () => void
  */
 function OAuthHandoffStep({ onEnterPhrase, onBack }: { onEnterPhrase: () => void; onBack: () => void }) {
   const { t } = useTranslation('auth');
+  const provider = useSessionProvider();
+  if (provider === undefined) return <LoadingScreen inline />;
   return (
     <div className="space-y-5">
       {/* Success confirmation */}
@@ -290,7 +270,9 @@ function OAuthHandoffStep({ onEnterPhrase, onBack }: { onEnterPhrase: () => void
           <Check size={18} className="text-white" aria-hidden="true" />
         </div>
         <h3 className="text-lg font-bold text-[var(--wl-ink)] mt-3">
-          {t('oauthHandoff.verifiedTitle')}
+          {provider
+            ? t('oauthHandoff.verifiedTitle', { provider: OAUTH_META[provider].name })
+            : t('oauthHandoff.verifiedTitleGeneric')}
         </h3>
         <p className="text-sm text-[var(--wl-sub)] leading-relaxed">
           {t('oauthHandoff.verifiedBody')}
@@ -323,12 +305,39 @@ function OAuthHandoffStep({ onEnterPhrase, onBack }: { onEnterPhrase: () => void
 
 function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
   const { t } = useTranslation('auth');
-  const { signInWithOAuth } = useAuth();
+  const { signInWithOAuth, completeDesktopOAuth, signInWithPhrase } = useAuth();
   const [oauthPending, setOauthPending] = useState<null | 'google' | 'apple' | 'github'>(
     null
   );
   const [oauthError, setOauthError] = useState<string | null>(null);
   const [ladderOpen, setLadderOpen] = useState(false);
+  // Non-null once a desktop sign-in is waiting for the code the browser is
+  // showing. Desktop gets no callback of its own: no desktop operating system
+  // can say which application owns a custom scheme, so the browser stops on
+  // our own return page and the person carries the code across.
+  // Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.3)
+  const [pastedCode, setPastedCode] = useState<string | null>(null);
+  const [pasteBusy, setPasteBusy] = useState(false);
+  // Set when this install is still holding a usable phrase while showing this
+  // screen. A boot that could not finish its handshake lands here on purpose
+  // and leaves the phrase alone, because an unreachable server is not a
+  // verdict; a deliberate sign-out clears it first and never reaches this.
+  // Without this the app asks for something it already has, and the only way
+  // through is retyping twelve words it is holding.
+  // Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.8)
+  const [resumable, setResumable] = useState<string | null>(null);
+  const [resumeBusy, setResumeBusy] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    void readResumablePhrase().then((p) => {
+      if (cancelled) return;
+      setResumable(p);
+      // A held phrase makes the resume button the likely next click, and
+      // it starts the handshake at once.
+      if (p) warmAuthEdgeFunctions();
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   // Reset "Redirecting..." state when the user navigates back via browser
   // Back button. The OAuth redirect navigates away entirely; if the user
@@ -352,13 +361,48 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
   async function handleOAuth(provider: 'google' | 'apple' | 'github') {
     setOauthError(null);
     setOauthPending(provider);
+    // The handshake follows the provider round trip, which gives the
+    // isolates time to boot.
+    warmAuthEdgeFunctions();
     const result = await signInWithOAuth(provider);
-    // On success the browser navigates away; on failure we surface the
-    // error inline and clear the pending state so the user can retry.
+    // On failure we surface the error inline and clear the pending state so
+    // the user can retry. On success the browser takes over, except on
+    // desktop, where it stops on our return page and hands the code back
+    // through the person: show the box that asks for it, or the button sits
+    // on "Redirecting..." waiting for a callback that never arrives.
     if (!result.ok) {
       setOauthError(result.error);
       setOauthPending(null);
+      return;
     }
+    if (result.awaitPastedCode) {
+      setOauthPending(null);
+      setPastedCode('');
+    }
+  }
+
+  async function handleResume() {
+    if (!resumable || resumeBusy) return;
+    setOauthError(null);
+    setResumeBusy(true);
+    // Trust stays as this device already had it: the phrase is on disk
+    // because a previous sign-in put it there, so carrying on is not a new
+    // trust decision. A failure leaves the offer in place and says why.
+    const ok = await signInWithPhrase(resumable, isTrustedDevice());
+    setResumeBusy(false);
+    if (!ok) setOauthError(t('chooseMode.resumeFailed'));
+  }
+
+  async function handlePastedCode() {
+    if (pasteBusy) return;
+    setOauthError(null);
+    setPasteBusy(true);
+    const result = await completeDesktopOAuth(pastedCode ?? '');
+    setPasteBusy(false);
+    // A success replaces this whole screen, so only a failure needs handling:
+    // keep the box open with the reason beside it, because the person is
+    // looking at the box rather than at the buttons above it.
+    if (!result.ok) setOauthError(result.error);
   }
 
   // ---------- Default: normal login options ----------
@@ -367,6 +411,27 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
       <h3 className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--wl-ink)]">
         {t('chooseMode.welcomeBack')}
       </h3>
+
+      {resumable && (
+        <div className="rounded-2xl border border-[var(--wl-line)] bg-[var(--wl-bg)] shadow-sm p-5 flex flex-col gap-3">
+          <div>
+            <div className="text-sm font-semibold text-[var(--wl-ink)]">
+              {t('chooseMode.resumeTitle')}
+            </div>
+            <div className="text-xs text-[var(--wl-sub)] mt-0.5">
+              {t('chooseMode.resumeSubtitle')}
+            </div>
+          </div>
+          <button
+            type="button"
+            disabled={resumeBusy}
+            onClick={() => void handleResume()}
+            className="w-full rounded-lg bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-3 font-medium transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {resumeBusy ? t('chooseMode.resumeWorking') : t('chooseMode.resumeAction')}
+          </button>
+        </div>
+      )}
 
       <div className="grid sm:grid-cols-2 gap-4">
         {/* Easy & Convenient - OAuth providers */}
@@ -396,8 +461,48 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
               );
             })}
           </div>
+          {pastedCode !== null && (
+            <div className="rounded-lg border border-[var(--wl-line)] bg-[var(--wl-tint)] p-3 space-y-2">
+              <div className="text-sm font-semibold text-[var(--wl-ink)]">
+                {t('chooseMode.desktopCodeTitle')}
+              </div>
+              <div className="text-xs text-[var(--wl-sub)]">
+                {t('chooseMode.desktopCodeHint')}
+              </div>
+              <input
+                type="text"
+                autoFocus
+                spellCheck={false}
+                autoCapitalize="none"
+                autoCorrect="off"
+                value={pastedCode}
+                onChange={(e) => setPastedCode(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !isImeComposing(e)) void handlePastedCode(); }}
+                placeholder={t('chooseMode.desktopCodePlaceholder')}
+                className="w-full rounded-lg border border-[var(--wl-line)] bg-[var(--wl-card)] px-3 py-2 text-sm text-[var(--wl-ink)] font-mono"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={pasteBusy || !pastedCode.trim()}
+                  onClick={() => void handlePastedCode()}
+                  className="flex-1 rounded-lg bg-[var(--wl-pro)] text-white px-3 py-2 text-sm font-medium transition disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {pasteBusy ? t('chooseMode.desktopCodeWorking') : t('chooseMode.desktopCodeContinue')}
+                </button>
+                <button
+                  type="button"
+                  disabled={pasteBusy}
+                  onClick={() => { setPastedCode(null); setOauthError(null); }}
+                  className="rounded-lg border border-[var(--wl-line)] bg-[var(--wl-card)] px-3 py-2 text-sm text-[var(--wl-ink)] transition disabled:opacity-60"
+                >
+                  {t('chooseMode.desktopCodeCancel')}
+                </button>
+              </div>
+            </div>
+          )}
           {oauthError && (
-            <p className="text-sm text-red-500 dark:text-red-400">{oauthError}</p>
+            <p className="text-sm text-danger">{oauthError}</p>
           )}
         </div>
 
@@ -474,39 +579,6 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
   );
 }
 
-function AppleIcon() {
-  return (
-    <svg width="16" height="18" viewBox="0 0 384 512" aria-hidden="true" className="shrink-0">
-      <path
-        fill="currentColor"
-        d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"
-      />
-    </svg>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" className="shrink-0">
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-    </svg>
-  );
-}
-
-function GithubIcon() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 16 16" aria-hidden="true" className="shrink-0">
-      <path
-        fill="currentColor"
-        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"
-      />
-    </svg>
-  );
-}
-
 /**
  * Sign-in order. Native iOS surfaces Sign in with Apple first (App Store
  * expectation); everywhere else Google leads. GitHub is last on both, and
@@ -517,11 +589,43 @@ const OAUTH_ORDER: readonly OAuthProvider[] = IS_IOS
   ? ['apple', 'google', 'github']
   : ['google', 'apple', 'github'];
 
-const OAUTH_META: Record<OAuthProvider, { Icon: () => ReactNode; labelKey: string }> = {
-  google: { Icon: GoogleIcon, labelKey: 'chooseMode.continueGoogle' },
-  apple: { Icon: AppleIcon, labelKey: 'chooseMode.continueApple' },
-  github: { Icon: GithubIcon, labelKey: 'chooseMode.continueGithub' },
+const OAUTH_META: Record<OAuthProvider, {
+  Icon: () => ReactNode;
+  labelKey: string;
+  /** The brand, printed untranslated in every language. */
+  name: string;
+}> = {
+  google: { Icon: GoogleIcon, labelKey: 'chooseMode.continueGoogle', name: 'Google' },
+  apple: { Icon: AppleIcon, labelKey: 'chooseMode.continueApple', name: 'Apple' },
+  github: { Icon: GithubIcon, labelKey: 'chooseMode.continueGithub', name: 'GitHub' },
 };
+
+/**
+ * The provider the OAuth session carries (`app_metadata.provider`, the claim
+ * Settings reads): undefined while the read is in flight, null when it names
+ * no provider offered here. Never a guess: a wrong name can send the reader to
+ * a different, empty account on their next device.
+ */
+function useSessionProvider(): OAuthProvider | null | undefined {
+  const { supabase } = useAuth();
+  const [provider, setProvider] = useState<OAuthProvider | null | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    void supabase.auth.getSession().then(
+      ({ data }) => {
+        const claim = data.session?.user?.app_metadata?.provider;
+        if (!cancelled) setProvider(OAUTH_ORDER.find((p) => p === claim) ?? null);
+      },
+      () => {
+        if (!cancelled) setProvider(null);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
+  return provider;
+}
 
 /**
  * Key custody choice screen for new OAuth users.
@@ -534,6 +638,7 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
   const [choice, setChoice] = useState<'custodial' | 'self-custody'>('custodial');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const provider = useSessionProvider();
 
   async function handleContinue() {
     if (choice === 'self-custody') {
@@ -564,7 +669,7 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
     // App.tsx renders NotesView. No phrase reveal needed.
   }
 
-  if (busy) {
+  if (busy || provider === undefined) {
     return <LoadingScreen inline />;
   }
 
@@ -580,7 +685,9 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
           <Check size={18} className="text-white" aria-hidden="true" />
         </div>
         <h3 className="text-lg font-bold text-[var(--wl-ink)] mt-3">
-          {t('custody.signedInGoogle')}
+          {provider
+            ? t('custody.signedIn', { provider: OAUTH_META[provider].name })
+            : t('custody.signedInGeneric')}
         </h3>
         <p className="text-sm text-[var(--wl-sub)]">
           {t('custody.intro')}
@@ -602,7 +709,7 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
             choice === 'custodial' ? 'border-accent' : 'border-[var(--wl-muted)]/60'
           }`}>
             {choice === 'custodial' && (
-              <div className="w-2.5 h-2.5 rounded-full bg-accent" />
+              <div className="w-2.5 h-2.5 rounded-full bg-accent-fill" />
             )}
           </div>
           <div className="flex-1 min-w-0">
@@ -611,7 +718,7 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
                 {t('custody.simpleTitle')}
               </div>
               {choice === 'custodial' && (
-                <span className="text-[11px] font-medium bg-accent/10 text-accent px-2.5 py-0.5 rounded-md shrink-0">
+                <span className="text-[11px] font-medium bg-accent/10 text-accent-strong px-2.5 py-0.5 rounded-md shrink-0">
                   {t('custody.recommended')}
                 </span>
               )}
@@ -638,7 +745,7 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
             choice === 'self-custody' ? 'border-accent' : 'border-[var(--wl-muted)]/60'
           }`}>
             {choice === 'self-custody' && (
-              <div className="w-2.5 h-2.5 rounded-full bg-accent" />
+              <div className="w-2.5 h-2.5 rounded-full bg-accent-fill" />
             )}
           </div>
           <div>
@@ -653,7 +760,7 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
       </button>
 
       {error && (
-        <p className="text-sm text-red-500 dark:text-red-400">{error}</p>
+        <p className="text-sm text-danger">{error}</p>
       )}
 
       <button
@@ -721,6 +828,10 @@ function CreatePhrase({
   const [phrase] = useState(() => generatePhrase());
   const [confirmed, setConfirmed] = useState(false);
   const [copied, setCopied] = useState(false);
+  // The phrase files whose last save failed. A failed native save can leave an
+  // empty or partial file, so a file's message stays until that same file
+  // saves; a dismissed dialog changes nothing.
+  const [failedFiles, setFailedFiles] = useState<ReadonlySet<string>>(() => new Set());
   const qrWrapperRef = useRef<HTMLDivElement | null>(null);
 
   const words = phrase.split(' ');
@@ -738,24 +849,25 @@ function CreatePhrase({
   // Download only. Never route the phrase through `navigator.share` -
   // it decrypts the entire vault. Direct local save only (same rule as
   // PhraseView's Save QR).
-  function downloadBlob(blob: Blob, filename: string) {
+  async function savePhraseFile(blob: Blob, filename: string) {
     // Direct local save only (web download / native Save As).
-    void saveBlob(blob, filename);
+    const saved = await saveBlob(blob, filename);
+    if (!saved.ok && saved.reason === 'cancelled') return;
+    setFailedFiles((files) => {
+      const next = new Set(files);
+      if (saved.ok) next.delete(filename);
+      else next.add(filename);
+      return next;
+    });
   }
 
-  function handleDownloadTxt() {
-    const lines = [
-      t('createPhrase.txtTitle'),
-      '',
-      ...words.map((w, i) => `${i + 1}. ${w}`),
-      '',
-      t('createPhrase.txtFooter'),
-      '',
-    ];
-    downloadBlob(
-      new Blob([lines.join('\n')], { type: 'text/plain' }),
-      'privacynotes-recovery-phrase.txt'
-    );
+  async function handleDownloadTxt() {
+    const text = buildPhraseFile(phrase, {
+      title: t('createPhrase.txtTitle'),
+      oneLine: t('createPhrase.txtOneLine'),
+      footer: t('createPhrase.txtFooter'),
+    });
+    await savePhraseFile(new Blob([text], { type: 'text/plain' }), PHRASE_FILE_NAME);
   }
 
   async function handleDownloadQR() {
@@ -769,13 +881,13 @@ function CreatePhrase({
       }
     });
     if (!blob) return;
-    downloadBlob(blob, 'privacynotes-phrase-qr.png');
+    await savePhraseFile(blob, 'privacynotes-phrase-qr.png');
   }
 
   return (
     <div className="space-y-4">
       <div className="rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] p-3 text-sm leading-relaxed text-[var(--wl-ink)] flex items-start gap-2.5">
-        <Warning size={18} aria-hidden="true" className="shrink-0 mt-0.5 text-amber-500 dark:text-amber-400" />
+        <Warning size={18} aria-hidden="true" className="shrink-0 mt-0.5 text-warning" />
         <span>
           <Trans i18nKey="auth:createPhrase.warning" components={{ strong: <strong /> }} />
         </span>
@@ -803,7 +915,7 @@ function CreatePhrase({
           onClick={copyPhrase}
           className={`inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm transition ${
             copied
-              ? 'border-accent bg-accent/10 text-accent'
+              ? 'border-accent bg-accent/10 text-accent-strong'
               : 'border-[var(--wl-line)] hover:bg-[var(--wl-tint)]'
           }`}
         >
@@ -820,7 +932,7 @@ function CreatePhrase({
           )}
         </button>
         <button
-          onClick={handleDownloadTxt}
+          onClick={() => { void handleDownloadTxt(); }}
           className="inline-flex items-center justify-center gap-1.5 rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-3 py-2 text-sm transition"
         >
           <FileText aria-hidden="true" />
@@ -834,6 +946,10 @@ function CreatePhrase({
           {t('createPhrase.downloadQr')}
         </button>
       </div>
+
+      {failedFiles.size > 0 && (
+        <p className="text-sm text-danger">{t('createPhrase.saveFailed')}</p>
+      )}
 
       {/* Hidden QR canvas: stays mounted so Download QR can always read
           it. marginSize=4 bakes a spec-compliant quiet zone into the
@@ -957,6 +1073,11 @@ function ImportPhrase({
         placeholder={t('importPhrase.placeholder')}
         rows={3}
         dir="ltr" // rtl-ok: BIP-39 phrase words, always LTR
+        // A phone keyboard must neither rewrite a phrase word nor learn it.
+        spellCheck={false}
+        autoCapitalize="none"
+        autoCorrect="off"
+        autoComplete="off"
         className="w-full rounded-md bg-[var(--wl-bg)] border border-[var(--wl-line)] text-[var(--wl-ink)] focus:border-accent p-3 text-sm font-mono focus:outline-none placeholder:text-[var(--wl-muted)]"
         autoFocus
       />
@@ -995,7 +1116,7 @@ function ImportPhrase({
           if (file) void handleUploadFile(file);
         }}
       />
-      {error && <p className="text-sm text-red-500 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
       <TrustDeviceCheckbox
         trustDevice={trustDevice}
         onTrustDeviceChange={onTrustDeviceChange}
@@ -1055,6 +1176,14 @@ function SignInStep({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Signing in with a phrase this device does not own destroys what is
+  // on it. The question is asked here rather than inside the sign-in,
+  // which also runs on boot paths with no screen to ask from, and only a
+  // person on the signed-out screen ever sees it - which is where
+  // switching accounts is the deliberate act it looks like.
+  const [askSwitch, setAskSwitch] = useState(false);
+  const switchConfirmed = useRef(false);
+
   const [turnstileOk, setTurnstileOk] = useState(false);
   const [turnstileKey, setTurnstileKey] = useState(0);
   const autoFired = useRef(false);
@@ -1112,24 +1241,25 @@ function SignInStep({
   }
 
   async function finish() {
+    // Before the loading screen, which would cover the question.
+    if (!switchConfirmed.current && (await switchWouldWipe(phrase))) {
+      setAskSwitch(true);
+      return;
+    }
     setBusy(true);
     setError(null);
 
     try {
-      const result = await Promise.race([
+      const result = await withMfaAwareTimeout(
         signInWithPhrase(
           phrase,
           trustDevice,
           freshVault,
           captchaTokenRef.current ?? undefined,
         ),
-        new Promise<{ ok: false; error: string; captchaRequired?: boolean }>((resolve) =>
-          setTimeout(
-            () => resolve({ ok: false, error: t('signIn.timedOut') }),
-            SIGNIN_TIMEOUT_MS,
-          ),
-        ),
-      ]);
+        SIGNIN_TIMEOUT_MS,
+        () => ({ ok: false as const, error: t('signIn.timedOut') }),
+      );
       if (!result.ok) {
         // The token is single-use and now spent (or stale) - drop it so
         // the retry path gets a fresh challenge instead of resubmitting
@@ -1179,6 +1309,34 @@ function SignInStep({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [turnstileOk]);
 
+  if (askSwitch) {
+    return (
+      <ConfirmModal
+        title={t('signIn.switchTitle')}
+        confirmLabel={t('signIn.switchConfirm')}
+        variant="info"
+        onConfirm={() => {
+          switchConfirmed.current = true;
+          setAskSwitch(false);
+          void finish();
+        }}
+        // The confirm button runs onConfirm and then onClose, so a plain
+        // `onBack` here answered the question and then walked away from the
+        // answer: the sign-in it had just started was unmounted, the create
+        // step remounted, and a brand new phrase was generated under a user
+        // who had already written the old one down. The dismiss routes -
+        // backdrop, Escape, the cancel button - still go back, which is what
+        // declining the switch means.
+        onClose={() => {
+          if (switchConfirmed.current) return;
+          onBack();
+        }}
+      >
+        {t('signIn.switchBody')}
+      </ConfirmModal>
+    );
+  }
+
   if (busy) {
     return <LoadingScreen inline />;
   }
@@ -1187,6 +1345,8 @@ function SignInStep({
   // isn't stranded - without them the only escape from a failed sign-in
   // is reloading the entire page and re-entering the phrase.
   if (error) {
+    // A published phrase is refused every time, so a retry cannot help.
+    const retryable = error !== t('signIn.publicPhrase');
     return (
       <div className="space-y-4">
         <div className="rounded-md border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20 p-3 text-sm text-red-700 dark:text-red-300 leading-relaxed">
@@ -1196,11 +1356,11 @@ function SignInStep({
           <button
             type="button"
             onClick={onBack}
-            className="rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-4 py-2 text-sm transition"
+            className={`${retryable ? '' : 'flex-1 '}rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-4 py-2 text-sm transition`}
           >
             {t('common:actions.back')}
           </button>
-          <button
+          {retryable && <button
             type="button"
             onClick={() => {
               setError(null);
@@ -1222,7 +1382,7 @@ function SignInStep({
             className="flex-1 rounded-md bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-2 text-sm font-medium transition"
           >
             {t('signIn.tryAgain')}
-          </button>
+          </button>}
         </div>
         {needsChallenge && (
           <TurnstileWidget

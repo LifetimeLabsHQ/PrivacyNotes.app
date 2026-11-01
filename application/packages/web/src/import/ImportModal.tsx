@@ -1,29 +1,44 @@
 import { useMemo, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
+import { isOversizeImport, splitImportedNote } from '../noteSplit';
 import i18n from '../i18n';
 import { IMPORTERS } from './registry';
 import { applyImport } from './apply';
 import { withFolderPathTags } from './folderImport';
 import { withBrowserTags } from './browserBookmarks';
-import type { Importer, ParsedImport, ImportedNote } from './types';
+import { normalizeTag } from '../notesRepo';
+import type { Importer, ParsedImport, ImportedNote, RestoreCounts } from './types';
 import { useAuth } from '../auth';
 import { recordAdminEvent, type ImportSource } from '../adminEvents';
 import type { LocalNote } from '../db';
+import { missingItemsLabel } from '../export';
 import type { FolderDef } from '../folders';
-import { useEscapeToClose } from '../useEscapeToClose';
-import { ArrowCounterClockwise, BookOpenText, BracketsCurly, Check, CircleNotch, Download, FileHtml, FileZip, Key, Lock, Upload, X } from '../icons';
+import { destinationGroups, existingImportFolder, fileUnfiled, type ImportDestination, type ImportTarget } from './destination';
+import { Archive, ArrowCounterClockwise, Heartbeat, BookmarkSimple, BookOpenText, BracketsCurly, CalendarDots, Check, CircleNotch, Download, FileHtml, FileText, FileZip, Globe, Key, Lock, Note, SquaresFour, Tag, Upload, AddressBook } from '../icons';
+import { goesToCalendarFile } from '../schedule';
 import { fetchQuotaUsage, recalculateQuota } from '../devices';
 import { estimateNoteStoredBytes, estimateBlobBytes } from '../notesViewUtils';
 import { proUnlocked } from '../demo';
+import { savedToFinalIds } from '../backupRestore';
+import { RESTORE_WAIT_LINE, restoreGateNow, useRestoreGate, type RestoreGate } from '../pullState';
 import { formatBytes } from '../formatBytes';
 import { perFileLimit } from '../attachmentValidation';
-import { SectionEyebrow, SettingsCallout } from '../settingsUI';
+import { contactPhotoOptions, processImage } from '../imageProcessing';
+import { SETTINGS_HELP, SectionEyebrow, SettingsCallout, SettingsTabStrip, settingsTabClass, ROW_TITLE } from '../settingsUI';
+import { Button, Callout, Checkbox, Modal, Spinner, TextField } from '../ui';
+import { calendarFeedUrl, downloadCalendarFeed } from './calendarFeed';
+import { ClipError, type ClipErrorReason } from '../clipDownload';
 import { activeLocale } from '../languages';
 import { helpPath } from '../localeRoutes';
 import { siteHref } from '../siteLinks';
 import { HoverLabel } from '../HoverLabel';
 import { HelpChip } from '../HelpChip';
+import { Switch } from '../Switch';
+import { WellnessExportTab } from '../stats/WellnessExport';
+import { IconUpgrade } from '../UpgradeModal';
+import { usePaneTab } from '../settingsPaneTab';
 
 /**
  * The `accept` list to hand the file picker, widened on Android.
@@ -67,6 +82,60 @@ type QuotaCheck = {
   availableBytes: number;
   exceeds: boolean;
 };
+
+/**
+ * What an address book's photos will cost once the app sizes them down.
+ * `bytes` is measured from a sample of the actual file, never taken from a
+ * table: contact photo sizes vary by two orders of magnitude between an
+ * OEM contacts app and an iPhone. `fits` is decided BEFORE anything is
+ * written, so the contacts land and the photos are declined as one whole,
+ * never half of them followed by a quota error.
+ * Spec: ops/docs/archive/contacts-pillar.md (section 7.4)
+ */
+type PhotoEstimate = {
+  count: number;
+  bytes: number;
+  /** null when the quota could not be read (offline, demo). */
+  available: number | null;
+  fits: boolean;
+};
+
+/** How many photos the estimate compresses to find the median. */
+const PHOTO_SAMPLE = 20;
+
+async function sampleContactPhotos(parsed: ParsedImport): Promise<{ count: number; bytes: number } | null> {
+  const photos = [...(parsed.blobs?.values() ?? [])].filter((b) => b.ceiling === 'contact');
+  if (photos.length === 0) return null;
+  const step = Math.max(1, Math.floor(photos.length / PHOTO_SAMPLE));
+  const sizes: number[] = [];
+  for (let i = 0; i < photos.length && sizes.length < PHOTO_SAMPLE; i += step) {
+    const b = photos[i]!;
+    const result = await processImage(new File([b.data as BlobPart], b.name, { type: b.mime }), contactPhotoOptions());
+    sizes.push(result.ok ? result.image.sizeBytes : b.data.length);
+  }
+  sizes.sort((a, b) => a - b);
+  const median = sizes[Math.floor(sizes.length / 2)] ?? 0;
+  return { count: photos.length, bytes: estimateBlobBytes(median) * photos.length };
+}
+
+/** The parsed import minus its contact photos: the blobs, and the
+ *  `photo` key each card carries, so no body keeps a dangling reference. */
+function withoutContactPhotos(parsed: ParsedImport): ParsedImport {
+  if (!parsed.blobs) return parsed;
+  const blobs = new Map([...parsed.blobs].filter(([, b]) => b.ceiling !== 'contact'));
+  const notes = parsed.notes.map((n) => {
+    if (n.type !== 'contact') return n;
+    try {
+      const body = JSON.parse(n.body) as Record<string, unknown>;
+      if (!('photo' in body)) return n;
+      delete body.photo;
+      return { ...n, body: JSON.stringify(body) };
+    } catch {
+      return n;
+    }
+  });
+  return { ...parsed, blobs, notes };
+}
 
 // Map importer ids to the short source keys we record in admin_events.
 // The registry uses kebab-case slugs that happen to match 1:1 - this
@@ -117,18 +186,27 @@ export function ImportModal({
   onExportEncrypted,
   onExportVault,
   onExportBookmarks,
+  onExportContacts,
+  onExportCalendar,
   onImportEncrypted,
   onExportEncryptedZip,
   decryptFullBackup,
   onBlobsRestored,
   onImportFolders,
+  onImportSettings,
+  onImportTagColors,
+  importTarget,
+  onCreateImportFolder,
   embedded = false,
+  wellness,
 }: {
   onClose: () => void;
-  onImported: (count: number, skippedDuplicates?: number) => void;
+  onImported: (count: number, skippedDuplicates?: number, repaired?: RestoreCounts) => void;
   /** Render inline as a settings pane (no overlay, no own header/escape). */
   embedded?: boolean;
-  initialTab?: 'import' | 'export' | 'restore' | 'vault';
+  /** The tracker data for the Wellness tab; without it the tab is not shown. */
+  wellness?: Omit<ComponentProps<typeof WellnessExportTab>, 'notes' | 'Row'>;
+  initialTab?: 'import' | 'export' | 'restore' | 'vault' | 'wellness';
   notes: LocalNote[];
   onExportAllMdZip: (ns: LocalNote[]) => void;
   onExportAllHtmlZip: (ns: LocalNote[]) => void;
@@ -136,7 +214,9 @@ export function ImportModal({
   onExportEncrypted: (ns: LocalNote[]) => void;
   onExportVault: (ns: LocalNote[]) => void;
   onExportBookmarks: (ns: LocalNote[]) => void;
-  onImportEncrypted: (file: File) => Promise<number>;
+  onExportContacts: (ns: LocalNote[]) => void;
+  onExportCalendar: (ns: LocalNote[]) => void;
+  onImportEncrypted: (file: File) => Promise<RestoreCounts & { imported: number }>;
   onExportEncryptedZip: (ns: LocalNote[]) => void;
   /** Decrypts a .pnbackupz into the plain full-backup zip; the modal
    *  then runs the normal zip restore flow on the result. */
@@ -145,10 +225,29 @@ export function ImportModal({
    *  Parent should re-trigger processPendingUploads so blobs reach Supabase. */
   onBlobsRestored?: () => void;
   /** Merge folders rebuilt by an importer (Obsidian) into the settings
-   *  folder tree, reusing any existing folder whose path already matches.
-   *  Returns imported-id -> final-id so we can remap each note's folderId
-   *  before writing. */
-  onImportFolders?: (folders: FolderDef[]) => Map<string, string> | void;
+   *  folder tree, reusing any existing folder whose path already matches,
+   *  or, for our own backup, the one still live under its saved id
+   *  (`ParsedImport.originalFolderIds`). Returns imported-id -> final-id so
+   *  we can remap each note's folderId before writing. */
+  onImportFolders?: (
+    folders: FolderDef[],
+    originalIds?: ReadonlyMap<string, string>,
+    rootParent?: string | null,
+  ) => Map<string, string> | void;
+  /** The folders the "Add to" row offers. Absent while folders are locked,
+   *  and then the row does not show. */
+  importTarget?: ImportTarget;
+  /** Makes (or finds) the "Add to" row's new folder; returns its id. */
+  onCreateImportFolder?: (name: string) => string | null;
+  /** Give imported tags their colors (Google Keep's note colors): tag ->
+   *  color key. The parent colors only a tag that has no color yet. */
+  onImportTagColors?: (colors: Map<string, string>) => void;
+  /** Our own full backup: merge the looks and custom themes it carries,
+   *  with each folder look moved from its saved folder id to the final one. */
+  onImportSettings?: (
+    settings: { itemStyles?: unknown; customThemes?: unknown },
+    savedToFinal: ReadonlyMap<string, string>,
+  ) => void;
 }) {
   const { t } = useTranslation('importExport');
   const { auth, supabase } = useAuth();
@@ -160,14 +259,20 @@ export function ImportModal({
     | { kind: 'applying'; importer: Importer }
     | { kind: 'error'; importer: Importer; message: string };
 
-  useEscapeToClose(onClose, !embedded);
-  const [tab, setTab] = useState<'import' | 'export' | 'restore' | 'vault'>(initialTab);
+  const [tab, setTab] = usePaneTab<'import' | 'export' | 'restore' | 'vault' | 'wellness'>('importExport', initialTab);
   const [phase, setPhase] = useState<Phase>({ kind: 'pick' });
+  const restoreGate = useRestoreGate();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   /** Keep the raw file around so restoreBlobs can re-read it after applyImport. */
   const selectedFileRef = useRef<File | null>(null);
   const [activeImporter, setActiveImporter] = useState<Importer | null>(null);
   const [autoTag, setAutoTag] = useState(true);
+  // With Work open, an import goes into a new Work folder: an unfiled item is
+  // always in Personal, so otherwise it would seem to vanish.
+  // Spec: ops/issues/0471.md
+  const [destination, setDestination] = useState<ImportDestination>(
+    importTarget?.openSpace === 'work' ? 'new' : 'none',
+  );
   /** Obsidian only: also add each folder name as a tag. Folders are
    *  rebuilt regardless; this is extra tag-based navigation. Defaults on
    *  for free (folder actions are locked for them) and off for Pro. */
@@ -175,6 +280,17 @@ export function ImportModal({
   // Firefox tags and address-bar keywords. On by default: they are the
   // user's own labels, and dropping data silently is the worse default.
   const [browserTags, setBrowserTags] = useState(true);
+  // Notes too large to sync are cut at their headings unless the person
+  // unticks it in the preview. Spec: ops/docs/plans/note-size-limit.md
+  const [splitOversize, setSplitOversize] = useState(true);
+  const oversizeCount = useMemo(
+    () => (phase.kind === 'preview' ? phase.parsed.notes.filter(isOversizeImport).length : 0),
+    [phase],
+  );
+  /** Contacts: whether the address book's photos come along. On by
+   *  default, forced off when the estimate does not fit the quota. */
+  const [importPhotos, setImportPhotos] = useState(true);
+  const [photoEstimate, setPhotoEstimate] = useState<PhotoEstimate | null>(null);
   /** Quota preflight result. null = not checked yet (e.g. RPC failed,
    *  unauthenticated). Surfaces a warning + blocks the Import button
    *  when the estimated ciphertext exceeds available capacity. */
@@ -227,6 +343,11 @@ export function ImportModal({
       // bites first, but it is true of every importer that ships blobs.
       let oversize = 0;
       let capLabel = '';
+      // Measured before the quota is read, so the row can still show the
+      // count and the size when the quota read fails.
+      const photos = await sampleContactPhotos(parsed);
+      setPhotoEstimate(photos ? { ...photos, available: null, fits: true } : null);
+      setImportPhotos(true);
       try {
         // Recalculate before reading: the counter can trail a delete the
         // user just made, promising space the next recalc takes back.
@@ -239,9 +360,20 @@ export function ImportModal({
         );
         // Blob costs: per-blob encryption overhead when the parsed blob set
         // is available, else the raw byte total.
-        let blobBytes = 0;
+        // A contact photo is shrunk before it is stored, so it costs what the
+        // sample measured, not its raw bytes, and it costs nothing when it is
+        // declined for not fitting.
+        const photosFit = photos ? photos.bytes <= available : true;
+        if (photos) {
+          setPhotoEstimate({ ...photos, available, fits: photosFit });
+          setImportPhotos(photosFit);
+        }
+        let blobBytes = photos && photosFit ? photos.bytes : 0;
         if (parsed.blobs && parsed.blobs.size > 0) {
-          for (const blob of parsed.blobs.values()) blobBytes += estimateBlobBytes(blob.data.length);
+          for (const blob of parsed.blobs.values()) {
+            if (blob.ceiling === 'contact') continue;
+            blobBytes += estimateBlobBytes(blob.data.length);
+          }
         } else {
           blobBytes = parsed.blobBytes ?? 0;
         }
@@ -256,6 +388,7 @@ export function ImportModal({
           usage.maxTotalBytes > 500 * 1000 * 1000,
         );
         for (const blob of parsed.blobs?.values() ?? []) {
+          if (blob.ceiling === 'contact') continue;
           if (blob.data.length > cap) oversize++;
         }
         capLabel = formatBytes(cap);
@@ -283,18 +416,36 @@ export function ImportModal({
     }
   }
 
+  function resolveDestination(importer: Importer): string | null {
+    if (!importTarget || destination === 'none') return null;
+    if (destination === 'new') return onCreateImportFolder?.(sourceLabel(importer, t)) ?? null;
+    return importTarget.folders.some((f) => f.id === destination.folderId) ? destination.folderId : null;
+  }
+
   async function handleConfirm() {
     if (phase.kind !== 'preview') return;
     const { importer, parsed } = phase;
+    // Our own backups match their notes by id against this device's copy, so
+    // they wait for its first clean pull, before the folder merge below or
+    // any other write (pullState.ts).
+    if (importer.id === 'privacynotes') {
+      const gate = restoreGateNow();
+      if (gate !== 'open') {
+        setPhase({ kind: 'error', importer, message: t(RESTORE_WAIT_LINE[gate]) });
+        return;
+      }
+    }
     setPhase({ kind: 'applying', importer });
-    // Obsidian vaults and Notesnook notebooks rebuild a folder tree:
-    // merge it into settings so notes' folderId pointers resolve, then
-    // derive folder tags per the toggle (see folderImport).
+    // Obsidian vaults, Notesnook notebooks and our own backups rebuild a
+    // folder tree: merge it into settings so notes' folderId pointers
+    // resolve, then derive folder tags per the toggle (see folderImport).
     let notesForApply = parsed.notes;
+    // A restore keeps the backup's own folders, so the row is for other apps.
+    const target = importer.id === 'privacynotes' ? null : resolveDestination(importer);
     if (parsed.folders && parsed.folders.length > 0) {
       // Merge the tree into settings (reusing existing folders) and remap
       // note folderIds to the ids that survived reconciliation.
-      const idMap = onImportFolders?.(parsed.folders);
+      const idMap = onImportFolders?.(parsed.folders, parsed.originalFolderIds, target);
       const remapped =
         idMap && idMap.size > 0
           ? parsed.notes.map((n) =>
@@ -303,13 +454,100 @@ export function ImportModal({
                 : n
             )
           : parsed.notes;
-      notesForApply = withFolderPathTags(remapped, folderTags);
+      // The toggle lives on the Import tab. A restore puts notes back as the
+      // backup holds them, and its preview counts no folder tags, so a
+      // backup takes none.
+      notesForApply = importer.id === 'privacynotes'
+        ? remapped
+        : withFolderPathTags(remapped, folderTags);
+      if (parsed.settings) {
+        // A folder look moves with its folder: saved id, to rebuilt id, to
+        // the id the merge kept.
+        onImportSettings?.(parsed.settings, savedToFinalIds(parsed.originalFolderIds, idMap || undefined));
+      }
+    } else if (parsed.settings) {
+      onImportSettings?.(parsed.settings, new Map());
     }
+    notesForApply = fileUnfiled(notesForApply, target);
     notesForApply = withBrowserTags(notesForApply, browserTags);
-    const parsedForApply =
+    // A note color from the source (Google Keep) becomes a tag named after
+    // the color, in the reader's language, and that tag takes the color:
+    // colors live on tags here, never on a note.
+    // Spec: ops/docs/archive/folder-tag-icons.md (section 4.7)
+    const colorTags = new Map<string, string>();
+    if (notesForApply.some((n) => n.colorKey)) {
+      notesForApply = notesForApply.map((n) => {
+        if (!n.colorKey) return n;
+        const tag = normalizeTag(t(`editor:color.names.${n.colorKey}`));
+        if (!tag) return n;
+        colorTags.set(tag, n.colorKey);
+        return n.tags.includes(tag) ? n : { ...n, tags: [...n.tags, tag] };
+      });
+      if (colorTags.size > 0) onImportTagColors?.(colorTags);
+    }
+    if (splitOversize && notesForApply.some(isOversizeImport)) {
+      notesForApply = notesForApply.flatMap((n) =>
+        isOversizeImport(n)
+          ? splitImportedNote(
+              n,
+              (index, total) => t('preview.partTitle', { title: n.title || t('common:state.untitled'), index, total }),
+              (title) => t('preview.continuedIn', { link: `[[${title}]]` }),
+            )
+          : [n],
+      );
+    }
+    let parsedForApply =
       notesForApply === parsed.notes
         ? parsed
         : { ...parsed, notes: notesForApply };
+    // Declined photos leave with their references: a body that still names
+    // a blob nobody stored would carry a dead photo key forever.
+    if (photoEstimate && (!importPhotos || !photoEstimate.fits)) {
+      parsedForApply = withoutContactPhotos(parsedForApply);
+    }
+    // A media failure must never sink into a console.warn: that makes the
+    // worst outcome the quietest one, where the notes land, every image
+    // reference stays an un-rewritten placeholder token, and the modal
+    // closes on a success toast with nothing on screen saying the pictures
+    // are gone. Both blob paths below record the reason, and the modal
+    // stays open on it - the notes land either way, so this is reported ON
+    // TOP of a real import, never instead of one.
+    let mediaError: string | null = null;
+    // A backup that lists a picture or a file and does not carry it is
+    // reported the same way.
+    let missingMessage: string | null = null;
+
+    // Generic blob import: any importer that populates parsed.blobs gets
+    // its images/attachments stored in IndexedDB and its note bodies
+    // rewritten to pn:img/ and pn:file/ URIs. It runs BEFORE the notes are
+    // written, because a row written with a placeholder can be picked up
+    // and sent by a sync pass before the rewrite lands, and the rewrite
+    // moves no timestamp for that pass to notice (see blobImport.ts).
+    // parsedForApply, not parsed: a contact photo the user declined is
+    // filtered out of both by then, so it is never stored either.
+    let storedBlobs = false;
+    if (parsedForApply.blobs && parsedForApply.blobs.size > 0) {
+      setPhase({
+        kind: 'parsing',
+        importer,
+        status: t('status.importingBlobs'),
+      });
+      try {
+        const { importBlobs } = await import('./blobImport');
+        const media = await importBlobs(parsedForApply.blobs, parsedForApply.notes, (msg) =>
+          setPhase((prev) =>
+            prev.kind === 'parsing' ? { ...prev, status: msg } : prev
+          )
+        );
+        parsedForApply = { ...parsedForApply, notes: media.notes };
+        storedBlobs = true;
+      } catch (err) {
+        console.warn('Blob import failed:', err);
+        mediaError = err instanceof Error ? err.message : String(err);
+      }
+      setPhase({ kind: 'applying', importer });
+    }
+
     const tag = autoTag && importer.sourceTag ? importer.sourceTag : undefined;
     const result = await applyImport(parsedForApply, tag);
     if (result.errors.length > 0) {
@@ -320,38 +558,7 @@ export function ImportModal({
       });
       return;
     }
-
-    // A media failure must never sink into a console.warn: that makes the
-    // worst outcome the quietest one, where the notes land, every image
-    // reference stays an un-rewritten placeholder token, and the modal
-    // closes on a success toast with nothing on screen saying the pictures
-    // are gone. Both blob paths below record the reason, and the modal
-    // stays open on it - the notes are already written either way,
-    // so this is reported ON TOP of a real import, never instead of one.
-    let mediaError: string | null = null;
-
-    // Generic blob import: any importer that populates parsed.blobs
-    // gets its images/attachments stored in IndexedDB and body refs
-    // rewritten to pn:img/ and pn:file/ URIs.
-    if (parsed.blobs && parsed.blobs.size > 0) {
-      setPhase({
-        kind: 'parsing',
-        importer,
-        status: t('status.importingBlobs'),
-      });
-      try {
-        const { importBlobs } = await import('./blobImport');
-        await importBlobs(parsed.blobs, result.noteIds, (msg) =>
-          setPhase((prev) =>
-            prev.kind === 'parsing' ? { ...prev, status: msg } : prev
-          )
-        );
-        onBlobsRestored?.();
-      } catch (err) {
-        console.warn('Blob import failed:', err);
-        mediaError = err instanceof Error ? err.message : String(err);
-      }
-    }
+    if (storedBlobs) onBlobsRestored?.();
 
     // For PrivacyNotes full backups, restore images + attachments from
     // the zip (uses manifest-based restoration, not parsed.blobs).
@@ -363,7 +570,7 @@ export function ImportModal({
       });
       try {
         const { restoreBlobs } = await import('./privacynotes');
-        await restoreBlobs(selectedFileRef.current, (msg) =>
+        const restored = await restoreBlobs(selectedFileRef.current, (msg) =>
           setPhase((prev) =>
             prev.kind === 'parsing' ? { ...prev, status: msg } : prev
           )
@@ -372,6 +579,12 @@ export function ImportModal({
         // Without this, blobs sit in local cache but never get uploaded,
         // making them unavailable on other devices.
         onBlobsRestored?.();
+        if (restored.missing.length > 0) {
+          missingMessage = t('errors.blobsNotInBackup', {
+            count: restored.missing.length,
+            items: missingItemsLabel(restored.missing),
+          });
+        }
       } catch (err) {
         // Notes are already imported, so this never rolls anything back -
         // but a backup that restored its notes and lost its images is not
@@ -393,13 +606,12 @@ export function ImportModal({
     // The notes exist locally whatever happened to the media, so the
     // parent hears about them first: the list has to refresh and the sync
     // has to run even when the error phase below keeps the modal open.
-    onImported(result.imported, result.skippedDuplicates);
-    if (mediaError) {
-      setPhase({
-        kind: 'error',
-        importer,
-        message: t('errors.blobImportFailed', { detail: mediaError }),
-      });
+    onImported(result.imported, result.skippedDuplicates, { updated: result.updated ?? 0, unchanged: result.unchanged ?? 0 });
+    const message = mediaError
+      ? t('errors.blobImportFailed', { detail: mediaError })
+      : missingMessage;
+    if (message) {
+      setPhase({ kind: 'error', importer, message });
       return;
     }
     onClose();
@@ -413,69 +625,42 @@ export function ImportModal({
   }
 
   return (
-    <div
-      className={embedded ? 'contents' : 'fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4'}
-      onClick={embedded ? undefined : onClose}
+    <Modal
+      embedded={embedded}
+      embeddedClassName="flex-1 min-h-0 flex flex-col text-pn"
+      onClose={onClose}
+      title={tab === 'import' ? t('shell.importTitle') : tab === 'export' || tab === 'wellness' ? t('shell.exportTitle') : tab === 'restore' ? t('shell.restoreTitle') : t('shell.vaultTitle')}
+      header="bar"
+      className="max-w-lg max-h-[85vh] flex flex-col"
     >
-      <div
-        className={
-          embedded
-            ? 'flex-1 min-h-0 flex flex-col text-pn'
-            : 'bg-surface-2 border border-divider rounded-lg max-w-lg w-full max-h-[85vh] flex flex-col text-pn'
-        }
-        onClick={(e) => e.stopPropagation()}
-      >
-        {!embedded && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-divider">
-            <h2 className="text-lg font-semibold">
-              {tab === 'import' ? t('shell.importTitle') : tab === 'export' ? t('shell.exportTitle') : tab === 'restore' ? t('shell.restoreTitle') : t('shell.vaultTitle')}
-            </h2>
-            <button
-              onClick={onClose}
-              aria-label={t('common:actions.close')}
-              className="text-pn-muted hover:text-pn transition p-1 -m-1"
-            >
-              <X size={18} />
-            </button>
-          </div>
-        )}
-
-        {/* `overflow-x-auto` + `shrink-0` + `whitespace-nowrap` mirror the
-            AboutModal tab strip: four labeled tabs overflow a phone-width
-            modal, and without a scroll container the last tab just clips
-            (reported on an iPhone 2026-08-26, "Passwords" cut off). shrink-0
-            is load-bearing for the same reason as there - a scroll container
-            has an automatic minimum size of 0, so the flex column may
-            otherwise squeeze the strip when a tall tab fills the pane. */}
-        <div
+        <SettingsTabStrip
           role="tablist"
           aria-label={t('shell.tablistLabel')}
-          className="shrink-0 flex items-stretch border-b border-divider px-6 overflow-x-auto"
+          className="shrink-0 px-4 sm:px-6"
         >
           {([
-            { id: 'import' as const, label: t('shell.tabImport'), icon: <Download aria-hidden="true" /> },
-            { id: 'export' as const, label: t('shell.tabExport'), icon: <Upload aria-hidden="true" /> },
-            { id: 'restore' as const, label: t('shell.tabRestore'), icon: <ArrowCounterClockwise aria-hidden="true" /> },
+            { id: 'import' as const, setting: 'import.import', label: t('shell.tabImport'), icon: <Download aria-hidden="true" /> },
+            { id: 'export' as const, setting: 'import.export', label: t('shell.tabExport'), icon: <Upload aria-hidden="true" /> },
+            { id: 'restore' as const, setting: 'import.restore', label: t('shell.tabRestore'), icon: <ArrowCounterClockwise aria-hidden="true" /> },
             // Key, not a padlock: the same glyph the sidebar gives the Vault
             // pillar (PILLAR_GLYPHS.vault), so the two surfaces agree.
-            { id: 'vault' as const, label: t('shell.tabVault'), icon: <Key aria-hidden="true" /> },
+            { id: 'vault' as const, setting: 'import.vault', label: t('shell.tabVault'), icon: <Key aria-hidden="true" /> },
+            // Shown when the pane has the tracker data to export.
+            ...(wellness ? [{ id: 'wellness' as const, setting: 'import.wellness', label: t('shell.tabWellness'), icon: <Heartbeat aria-hidden="true" /> }] : []),
           ]).map((tb) => (
             <button
               key={tb.id}
+              data-setting={tb.setting}
               role="tab"
               aria-selected={tab === tb.id}
               onClick={() => setTab(tb.id)}
-              className={`inline-flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition ${
-                tab === tb.id
-                  ? 'border-accent text-accent'
-                  : 'border-transparent text-pn-soft hover:text-pn'
-              }`}
+              className={settingsTabClass(tab === tb.id)}
             >
               {tb.icon}
-              {tb.label}
+              <span>{tb.label}</span>
             </button>
           ))}
-        </div>
+        </SettingsTabStrip>
 
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {(tab === 'import' || tab === 'vault') ? (
@@ -484,6 +669,12 @@ export function ImportModal({
                 tab === 'import' ? (
                   <ImportPickPhase
                     onPick={handlePickImporter}
+                    onCalendarFeed={(file) => {
+                      const calendar = IMPORTERS.find((i) => i.id === 'google-calendar');
+                      // The Google Calendar importer reads any .ics; the
+                      // preview names the source as the person chose it.
+                      if (calendar) void runParseFlow({ ...calendar, label: t('webcal.title') }, file);
+                    }}
                     autoTag={autoTag}
                     onAutoTagChange={setAutoTag}
                   />
@@ -494,33 +685,47 @@ export function ImportModal({
 
               {phase.kind === 'parsing' && (
                 <ParsingPhase
-                  importerLabel={phase.importer.label}
+                  importerLabel={sourceLabel(phase.importer, t)}
                   status={phase.status}
                 />
               )}
 
               {phase.kind === 'preview' && (
                 <PreviewPhase
-                  importerLabel={phase.importer.label}
+                  importerLabel={sourceLabel(phase.importer, t)}
                   parsed={phase.parsed}
                   quotaCheck={quotaCheck}
                   folderTags={folderTags}
                   browserTags={browserTags}
                   onBrowserTagsChange={setBrowserTags}
                   onFolderTagsChange={setFolderTags}
+                  photoEstimate={photoEstimate}
+                  importPhotos={importPhotos}
+                  onImportPhotosChange={setImportPhotos}
+                  oversizeCount={oversizeCount}
+                  splitOversize={splitOversize}
+                  onSplitOversizeChange={setSplitOversize}
+                  destinationRow={importTarget && phase.importer.id !== 'privacynotes' && (
+                    <DestinationRow
+                      target={importTarget}
+                      newFolderName={sourceLabel(phase.importer, t)}
+                      value={destination}
+                      onChange={setDestination}
+                    />
+                  )}
                 />
               )}
 
               {phase.kind === 'applying' && (
                 <ParsingPhase
-                  importerLabel={phase.importer.label}
+                  importerLabel={sourceLabel(phase.importer, t)}
                   status={t('status.writingNotes')}
                 />
               )}
 
               {phase.kind === 'error' && (
                 <ErrorPhase
-                  importerLabel={phase.importer.label}
+                  importerLabel={sourceLabel(phase.importer, t)}
                   message={phase.message}
                 />
               )}
@@ -529,6 +734,7 @@ export function ImportModal({
             <>
               {phase.kind === 'pick' && (
                 <RestorePickPhase
+                  gate={restoreGate}
                   onPickRestore={handlePickImporter}
                   onImportEncrypted={async (file) => {
                     // A .pnbackupz is the full-backup zip sealed under
@@ -552,8 +758,8 @@ export function ImportModal({
                     }
                     setPhase({ kind: 'parsing', importer: { id: 'privacynotes', label: t('encryptedBackupLabel'), description: '', accept: '.pnbackup', enabled: true, sourceTag: '', parse: async () => { throw new Error(); } }, status: t('status.decryptingBackup') });
                     try {
-                      const count = await onImportEncrypted(file);
-                      onImported(count);
+                      const counts = await onImportEncrypted(file);
+                      onImported(counts.imported, undefined, { updated: counts.updated, unchanged: counts.unchanged });
                       onClose();
                     } catch (err) {
                       setPhase({
@@ -566,120 +772,54 @@ export function ImportModal({
                 />
               )}
               {phase.kind === 'parsing' && (
-                <ParsingPhase importerLabel={phase.importer.label} status={phase.status} />
+                <ParsingPhase importerLabel={sourceLabel(phase.importer, t)} status={phase.status} />
               )}
               {phase.kind === 'preview' && (
-                <PreviewPhase importerLabel={phase.importer.label} parsed={phase.parsed} quotaCheck={quotaCheck} />
+                <PreviewPhase importerLabel={sourceLabel(phase.importer, t)} parsed={phase.parsed} quotaCheck={quotaCheck} />
               )}
               {phase.kind === 'applying' && (
-                <ParsingPhase importerLabel={phase.importer.label} status={t('status.writingNotes')} />
+                <ParsingPhase importerLabel={sourceLabel(phase.importer, t)} status={t('status.writingNotes')} />
               )}
               {phase.kind === 'error' && (
-                <ErrorPhase importerLabel={phase.importer.label} message={phase.message} />
+                <ErrorPhase importerLabel={sourceLabel(phase.importer, t)} message={phase.message} />
               )}
             </>
+          ) : tab === 'wellness' && wellness ? (
+            <WellnessExportTab notes={notes} {...wellness} Row={ActionRow} />
           ) : (
+            // The window stays open after an export: a daily routine writes
+            // more than one backup, and the progress window sits above it.
             <ExportPanel
               notes={notes}
-              onExportAllMdZip={(ns) => {
-                onExportAllMdZip(ns);
-                onClose();
-              }}
-              onExportAllHtmlZip={(ns) => {
-                onExportAllHtmlZip(ns);
-                onClose();
-              }}
-              onExportAllJson={(ns) => {
-                onExportAllJson(ns);
-                onClose();
-              }}
-              onExportEncrypted={(ns) => {
-                onExportEncrypted(ns);
-                onClose();
-              }}
-              onExportEncryptedZip={(ns) => {
-                onExportEncryptedZip(ns);
-                onClose();
-              }}
-              onExportBookmarks={(ns) => {
-                onExportBookmarks(ns);
-                onClose();
-              }}
-              onExportVault={(ns) => {
-                onExportVault(ns);
-                onClose();
-              }}
+              onExportAllMdZip={onExportAllMdZip}
+              onExportAllHtmlZip={onExportAllHtmlZip}
+              onExportAllJson={onExportAllJson}
+              onExportEncrypted={onExportEncrypted}
+              onExportEncryptedZip={onExportEncryptedZip}
+              onExportBookmarks={onExportBookmarks}
+              onExportContacts={onExportContacts}
+              onExportCalendar={onExportCalendar}
+              onExportVault={onExportVault}
             />
           )}
         </div>
 
-        <div className="px-5 py-3 border-t border-divider flex items-center justify-between gap-3">
-          {tab === 'export' ? (
+        {/* A picking tab needs no footer: the X closes the window, and a lone
+            line there reads as stray text. The footer comes back while an
+            import runs, for Back and Import. */}
+        {!(tab === 'export' || tab === 'wellness' || phase.kind === 'pick') && (
+        <div className="px-6 py-3 border-t border-divider flex items-center justify-between gap-3">
+          {phase.kind === 'preview' ? (
             <>
-              <div className="text-xs text-pn-soft">
-                {t('footer.exportNote')}
-              </div>
-              <button
-                onClick={onClose}
-                className="text-sm rounded border border-divider px-3 py-1.5 hover:bg-surface-1 transition"
-              >
-                {t('common:actions.cancel')}
-              </button>
-            </>
-          ) : tab === 'restore' && phase.kind === 'pick' ? (
-            <>
-              <div className="text-xs text-pn-soft">
-                {t('footer.restoreNote')}
-              </div>
-              <button
-                onClick={onClose}
-                className="text-sm rounded border border-divider px-3 py-1.5 hover:bg-surface-1 transition"
-              >
-                {t('common:actions.cancel')}
-              </button>
-            </>
-          ) : phase.kind === 'pick' ? (
-            <>
-              <div className="text-xs text-pn-soft">
-                {t('footer.importNote')}
-              </div>
-              <button
-                onClick={onClose}
-                className="text-sm rounded border border-divider px-3 py-1.5 hover:bg-surface-1 transition"
-              >
-                {t('common:actions.cancel')}
-              </button>
-            </>
-          ) : phase.kind === 'preview' ? (
-            <>
-              <button
-                onClick={handleBackToPick}
-                className="text-sm rounded border border-divider px-3 py-1.5 hover:bg-surface-1 transition"
-              >
-                {t('common:actions.back')}
-              </button>
-              <button
-                onClick={handleConfirm}
-                disabled={quotaCheck?.exceeds === true}
-                className="text-sm rounded bg-accent text-white px-4 py-1.5 hover:bg-accent-hover transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <Button action="back" onClick={handleBackToPick} />
+              <Button action="import" variant="primary" onClick={handleConfirm} disabled={quotaCheck?.exceeds === true}>
                 {t('counts.importButton', { counts: formatTypeCountsShort(phase.parsed.notes) })}
-              </button>
+              </Button>
             </>
           ) : phase.kind === 'error' ? (
             <>
-              <button
-                onClick={handleBackToPick}
-                className="text-sm rounded border border-divider px-3 py-1.5 hover:bg-surface-1 transition"
-              >
-                {t('common:actions.back')}
-              </button>
-              <button
-                onClick={onClose}
-                className="text-sm rounded border border-divider px-3 py-1.5 hover:bg-surface-1 transition"
-              >
-                {t('common:actions.cancel')}
-              </button>
+              <Button action="back" onClick={handleBackToPick} />
+              <Button action="cancel" onClick={onClose} />
             </>
           ) : (
             <div className="text-xs text-pn-muted w-full text-center">
@@ -687,6 +827,7 @@ export function ImportModal({
             </div>
           )}
         </div>
+        )}
 
         {/* Hidden file input - shared by all importer cards. */}
         <input
@@ -696,8 +837,7 @@ export function ImportModal({
           accept={pickerAccept(activeImporter?.accept ?? '')}
           onChange={handleFileSelected}
         />
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -707,6 +847,9 @@ const IMPORT_GLYPH: Record<string, ReactNode> = {
   // A key, matching the sidebar's Vault pillar. No browser logo: the same
   // .csv comes out of all of them.
   'browser-passwords': <Key size={20} aria-hidden="true" />,
+  // The address book, matching the Contacts pillar: every phone writes the
+  // same .vcf, so no vendor's logo fits.
+  'vcard': <AddressBook size={20} aria-hidden="true" />,
 };
 
 /** App icons for the note importers, reused from the /help import guides
@@ -718,14 +861,17 @@ const IMPORT_ICON: Record<string, string> = {
   // asset as the /help guide tile and the homepage import pill.
   'browser-bookmarks': '/help/icons/browser-bookmarks.svg',
   'google-keep': '/help/icons/google-keep.svg',
+  'google-calendar': '/help/icons/google-calendar.svg',
   'apple-notes': '/help/icons/apple-notes.svg',
   'apple-journal': '/help/icons/apple-journal.webp',
+  'bear': '/help/icons/bear.webp',
   'evernote': '/help/icons/evernote.svg',
   'samsung-notes': '/help/icons/samsung-notes.webp',
   'simplenote': '/help/icons/simplenote.svg',
   'standard-notes': '/help/icons/standard-notes.webp',
   'obsidian': '/help/icons/obsidian.svg',
   'notesnook': '/help/icons/notesnook.svg',
+  'joplin': '/help/icons/joplin.svg',
   'upnote': '/help/icons/upnote.svg',
   'markdown-folder': '/help/icons/markdown.svg',
   'bitwarden': '/help/icons/bitwarden.svg',
@@ -741,10 +887,14 @@ const GUIDE_SLUG: Record<string, string> = {
   'apple-journal': 'apple-journal',
   'browser-bookmarks': 'browser-bookmarks',
   'apple-notes': 'apple-notes',
+  'bear': 'bear',
   'bitwarden': 'bitwarden',
   'browser-passwords': 'browser-passwords',
+  'vcard': 'contacts',
   'evernote': 'evernote',
   'google-keep': 'google-keep',
+  'google-calendar': 'google-calendar',
+  'joplin': 'joplin',
   'markdown-folder': 'markdown',
   'typora': 'typora',
   'ia-writer': 'ia-writer',
@@ -759,17 +909,50 @@ const GUIDE_SLUG: Record<string, string> = {
 };
 
 /** Maps importer ids to their description translation key under sourceDesc. */
+/**
+ * The few importer labels that are OUR wording rather than the source
+ * application's own name.
+ *
+ * An importer's `label` renders raw, because "Obsidian" is Obsidian in every
+ * language. Five of them are not brands, and each already had a translation
+ * sitting in `guides.json` for its help page, so the picker said "Browser
+ * bookmarks" while the guide one click away said "Signets du navigateur".
+ * `guides.json` is build-only (the static help site reads it off disk; it is
+ * excluded from the runtime catalog glob in i18n.ts), so the wording is
+ * repeated here in a catalog the app actually loads.
+ *
+ * An id ABSENT from this map is a brand name and renders as written. That is
+ * what makes the map readable: it is the list of labels that are ours.
+ */
+const SOURCE_LABEL_KEY: Record<string, string> = {
+  'privacynotes': 'sourceLabel.privacynotes',
+  'browser-bookmarks': 'sourceLabel.browserBookmarks',
+  'browser-passwords': 'sourceLabel.browserPasswords',
+  'vcard': 'sourceLabel.vcard',
+  'markdown-folder': 'sourceLabel.markdownFolder',
+};
+
+/** An importer's name in the reader's language, or its brand name unchanged. */
+function sourceLabel(imp: Importer, t: TFunction): string {
+  const key = SOURCE_LABEL_KEY[imp.id];
+  return key ? t(key) : imp.label;
+}
+
 const SOURCE_DESC_KEY: Record<string, string> = {
   'browser-bookmarks': 'sourceDesc.browserBookmarks',
+  'vcard': 'sourceDesc.vcard',
   'google-keep': 'sourceDesc.googleKeep',
+  'google-calendar': 'sourceDesc.googleCalendar',
   'apple-notes': 'sourceDesc.appleNotes',
   'apple-journal': 'sourceDesc.appleJournal',
+  'bear': 'sourceDesc.bear',
   'evernote': 'sourceDesc.evernote',
   'samsung-notes': 'sourceDesc.samsungNotes',
   'simplenote': 'sourceDesc.simplenote',
   'standard-notes': 'sourceDesc.standardNotes',
   'obsidian': 'sourceDesc.obsidian',
   'notesnook': 'sourceDesc.notesnook',
+  'joplin': 'sourceDesc.joplin',
   'upnote': 'sourceDesc.upnote',
   'markdown-folder': 'sourceDesc.markdownFolder',
   // One shared line for the four markdown-app aliases: the parser is the
@@ -786,7 +969,7 @@ const SOURCE_DESC_KEY: Record<string, string> = {
 
 /** The 32px plate every Import, Export and Restore row draws its mark on.
  *  `glyph` wins over `src`, so an id must never carry both.
- *  Spec: ops/docs/ui-patterns.md (section 71) */
+ *  Spec: ops/docs/archive/ui-patterns.md (section 71) */
 function RowIcon({ src, glyph }: { src?: string; glyph?: ReactNode }) {
   if (!glyph && !src) return null;
   return (
@@ -815,8 +998,9 @@ function ImporterRow({ imp, onPick }: { imp: Importer; onPick: (imp: Importer) =
     // The border and the rounding sit on the row, not on the button: the guide
     // rail is a second target inside the same frame, and its divider is that
     // frame's only internal line. Do NOT add `overflow-hidden` here - it would
-    // clip the rail's hover tip. Spec: ops/docs/ui-patterns.md (section 18)
+    // clip the rail's hover tip. Spec: ops/docs/archive/ui-patterns.md (section 18)
     <div
+      data-setting={`import.source.${imp.id}`}
       className={`flex items-stretch rounded-lg border transition ${
         imp.enabled ? 'border-divider hover:border-accent' : 'border-divider opacity-40'
       }`}
@@ -830,7 +1014,7 @@ function ImporterRow({ imp, onPick }: { imp: Importer; onPick: (imp: Importer) =
       >
         <RowIcon src={iconSrc} glyph={glyph} />
         <span className="min-w-0">
-          <span className="block font-medium text-sm">{imp.label}</span>
+          <span className="block font-medium text-sm">{sourceLabel(imp, t)}</span>
           <span className="block text-xs text-pn-soft mt-0.5">
             {descKey ? t(descKey) : imp.description}
           </span>
@@ -841,18 +1025,18 @@ function ImporterRow({ imp, onPick }: { imp: Importer; onPick: (imp: Importer) =
           href={siteHref(`${helpPath(activeLocale())}/import/${guideSlug}`)}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={t('importPick.guideAria', { app: imp.label })}
-          className="shrink-0 w-16 flex items-center justify-center border-s border-divider rounded-e-lg bg-accent/5 text-accent hover:bg-accent/10 transition"
+          aria-label={t('importPick.guideAria', { app: sourceLabel(imp, t) })}
+          className="shrink-0 w-16 flex items-center justify-center border-s border-divider rounded-e-lg bg-accent/5 text-accent-strong hover:bg-accent/10 transition"
         >
           {/* The tip still opens toward the row (`start`), which is what keeps
               it clear of the modal's scroller edge. */}
           <HoverLabel
-            label={t('importPick.guideAria', { app: imp.label })}
+            label={t('importPick.guideAria', { app: sourceLabel(imp, t) })}
             position="start"
             className="flex flex-col items-center gap-1"
           >
             <BookOpenText size={18} aria-hidden="true" />
-            <span className="text-[11px] leading-none">{t('importPick.guideLabel')}</span>
+            <span className="max-w-full px-0.5 text-center text-[11px] leading-tight hyphens-auto break-words">{t('importPick.guideLabel')}</span>
           </HoverLabel>
         </a>
       )}
@@ -860,27 +1044,106 @@ function ImporterRow({ imp, onPick }: { imp: Importer; onPick: (imp: Importer) =
   );
 }
 
-/** Import tab - notes & journals only, 1-col with descriptions. */
-function ImportPickPhase({ onPick, autoTag, onAutoTagChange }: { onPick: (imp: Importer) => void; autoTag: boolean; onAutoTagChange: (v: boolean) => void }) {
+/** The message for a calendar address that did not download. */
+const FEED_ERROR: Record<ClipErrorReason, string> = {
+  'refused': 'webcal.errors.refused',
+  'wrong-type': 'webcal.errors.wrongType',
+  'too-large': 'webcal.errors.tooLarge',
+  'timeout': 'webcal.errors.timeout',
+  'blocked': 'webcal.errors.blocked',
+  'offline': 'webcal.errors.offline',
+  'limit': 'webcal.errors.limit',
+  'demo-limit': 'webcal.errors.limit',
+  'failed': 'webcal.errors.failed',
+};
+
+/** The Webcal row: a calendar address, downloaded once and handed to the
+ *  calendar import as a file. The address is never kept or shown back in a
+ *  message. Spec: ops/issues/0548.md (Spec, design A) */
+function CalendarFeedRow({ onFile }: { onFile: (file: File) => void }) {
+  const { t } = useTranslation('importExport');
+  const { supabase } = useAuth();
+  const [address, setAddress] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const url = calendarFeedUrl(address);
+    if (!url) {
+      setError(t('webcal.errors.invalid'));
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const file = await downloadCalendarFeed(url, async () => (await supabase.auth.getSession()).data.session?.access_token ?? null);
+      onFile(file);
+    } catch (err) {
+      setError(t(FEED_ERROR[err instanceof ClipError ? err.reason : 'failed']));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div data-setting="import.webcal" className="rounded-lg border border-divider px-3 py-2.5 flex items-start gap-3">
+      <RowIcon glyph={<Globe size={20} aria-hidden="true" />} />
+      <form onSubmit={submit} noValidate className="min-w-0 flex-1">
+        <span className="block font-medium text-sm">{t('webcal.title')}</span>
+        <span className="block text-xs text-pn-soft mt-0.5">{t('webcal.desc')}</span>
+        <div className="mt-2 flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <TextField
+              size="sm"
+              type="url"
+              inputMode="url"
+              autoComplete="off"
+              spellCheck={false}
+              aria-label={t('webcal.fieldLabel')}
+              placeholder="webcal://"
+              value={address}
+              onChange={(e) => {
+                setAddress(e.target.value);
+                setError(null);
+              }}
+              error={error ?? undefined}
+              className="w-full"
+            />
+          </div>
+          <Button type="submit" variant="primary" icon={busy ? <Spinner size={15} className="text-current" /> : <Download size={15} aria-hidden="true" />} disabled={busy || !address.trim()}>
+            {busy ? t('webcal.downloading') : t('webcal.import')}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+/** Import tab, 1-col with descriptions, in two groups: the general sources
+ *  (bookmarks, contacts, calendars) first, then the note apps. */
+function ImportPickPhase({ onPick, onCalendarFeed, autoTag, onAutoTagChange }: { onPick: (imp: Importer) => void; onCalendarFeed: (file: File) => void; autoTag: boolean; onAutoTagChange: (v: boolean) => void }) {
   const { t } = useTranslation('importExport');
   const importerMap = Object.fromEntries(IMPORTERS.map((i) => [i.id, i]));
-  // Browser bookmarks leads on purpose; everything below it is
-  // alphabetical. It is the only entry that is not a note app, and it is
-  // the one people arrive looking for. Spec: ops/docs/plans/bookmarks-pillar.md
-  const noteIds = ['browser-bookmarks', 'apple-journal', 'apple-notes', 'evernote', 'google-keep', 'ia-writer', 'markdown-folder', 'nextcloud-notes', 'notesnook', 'obsidian', 'samsung-notes', 'simplenote', 'standard-notes', 'typora', 'upnote', 'zettlr'];
+  // Browser bookmarks leads the general group on purpose: it is the one people
+  // arrive looking for. The note apps are alphabetical.
+  // Spec: ops/docs/archive/bookmarks-pillar.md
+  const generalIds = ['browser-bookmarks', 'vcard', 'google-calendar'];
+  const noteIds = ['apple-journal', 'apple-notes', 'bear', 'evernote', 'google-keep', 'ia-writer', 'joplin', 'markdown-folder', 'nextcloud-notes', 'notesnook', 'obsidian', 'samsung-notes', 'simplenote', 'standard-notes', 'typora', 'upnote', 'zettlr'];
+  const rows = (ids: string[]) => ids.map((id) => {
+    const imp = importerMap[id];
+    return imp ? <ImporterRow key={id} imp={imp} onPick={onPick} /> : null;
+  });
 
   return (
     <div className="space-y-3">
-      <label className="flex items-start gap-2 rounded-lg border border-divider p-3 cursor-pointer hover:bg-surface-1 transition">
-        <input
-          type="checkbox"
+      <div data-setting="import.autoTag" className="rounded-lg border border-divider p-3">
+        <Switch
+          label={t('importPick.autoTagLabel')}
+          icon={<Tag size={14} className="text-accent" />}
+          labelClassName={ROW_TITLE}
           checked={autoTag}
-          onChange={(e) => onAutoTagChange(e.target.checked)}
-          className="h-4 w-4 mt-0.5 shrink-0 accent-accent"
-        />
-        <div>
-          <div className="text-sm font-medium">{t('importPick.autoTagLabel')}</div>
-          <div className="text-xs text-pn-soft mt-0.5">
+          onChange={onAutoTagChange}
+          description={
             <Trans
               i18nKey="importExport:importPick.autoTagDesc"
               components={{
@@ -888,17 +1151,20 @@ function ImportPickPhase({ onPick, autoTag, onAutoTagChange }: { onPick: (imp: I
                 obsidian: <span className="font-mono text-accent" />,
               }}
             />
-          </div>
-        </div>
-      </label>
-
-      <div className="space-y-1.5">
-        {noteIds.map((id) => {
-          const imp = importerMap[id];
-          if (!imp) return null;
-          return <ImporterRow key={id} imp={imp} onPick={onPick} />;
-        })}
+          }
+        />
       </div>
+
+      <section className="space-y-1.5">
+        <SectionEyebrow icon={SquaresFour} className="pt-1">{t('importPick.groupGeneral')}</SectionEyebrow>
+        {rows(generalIds)}
+        <CalendarFeedRow onFile={onCalendarFeed} />
+      </section>
+
+      <section className="space-y-1.5">
+        <SectionEyebrow icon={Note} className="pt-1">{t('importPick.groupNotes')}</SectionEyebrow>
+        {rows(noteIds)}
+      </section>
     </div>
   );
 }
@@ -911,11 +1177,9 @@ function VaultPickPhase({ onPick }: { onPick: (imp: Importer) => void }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-pn-soft">
+      <p className={SETTINGS_HELP}>
         {t('vaultPick.intro')}
       </p>
-
-      <HelpChip surface="vault" />
 
       <div className="space-y-1.5">
         {vaultIds.map((id) => {
@@ -924,12 +1188,15 @@ function VaultPickPhase({ onPick }: { onPick: (imp: Importer) => void }) {
           return <ImporterRow key={id} imp={imp} onPick={onPick} />;
         })}
       </div>
+
+      <HelpChip surface="vault" />
     </div>
   );
 }
 
 /** Restore tab pick phase - PrivacyNotes backup restore, 1-col with full descriptions. */
-function RestorePickPhase({ onPickRestore, onImportEncrypted }: {
+function RestorePickPhase({ gate, onPickRestore, onImportEncrypted }: {
+  gate: RestoreGate;
   onPickRestore: (imp: Importer) => void;
   onImportEncrypted: (file: File) => void;
 }) {
@@ -939,27 +1206,31 @@ function RestorePickPhase({ onPickRestore, onImportEncrypted }: {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-pn-soft">
+      <p className={SETTINGS_HELP}>
         {t('restorePick.intro')}
       </p>
 
-      <HelpChip surface="restore" />
+      {gate !== 'open' && <SettingsCallout>{t(RESTORE_WAIT_LINE[gate])}</SettingsCallout>}
 
       <div className="space-y-1.5">
         <ActionRow
+          setting="restore.fullBackup"
           title={t('restorePick.fullBackupTitle')}
           description={t('restorePick.fullBackupDesc')}
           glyph={<FileZip size={20} aria-hidden="true" />}
+          disabled={gate !== 'open'}
           onClick={() => {
             const imp = importerMap['privacynotes'];
             if (imp) onPickRestore(imp);
           }}
         />
         <ActionRow
+          setting="restore.encryptedBackup"
           title={t('restorePick.encryptedBackupTitle')}
           description={t('restorePick.encryptedBackupDesc')}
           locked
           src={PN_ICON}
+          disabled={gate !== 'open'}
           onClick={() => encFileRef.current?.click()}
         />
       </div>
@@ -975,6 +1246,8 @@ function RestorePickPhase({ onPickRestore, onImportEncrypted }: {
           if (file) onImportEncrypted(file);
         }}
       />
+
+      <HelpChip surface="restore" />
     </div>
   );
 }
@@ -1006,17 +1279,20 @@ function computeTypeCounts(notes: ImportedNote[]): { label: string; count: numbe
   let loginCount = 0;
   let cardCount = 0;
   let sshKeyCount = 0;
+  let contactCount = 0;
   for (const n of notes) {
     switch (n.type) {
       case 'journal': journalCount++; break;
       case 'login': loginCount++; break;
       case 'card': cardCount++; break;
       case 'ssh-key': sshKeyCount++; break;
+      case 'contact': contactCount++; break;
       default: noteCount++; break;
     }
   }
   const parts: { label: string; count: number }[] = [];
   if (noteCount > 0) parts.push({ label: i18n.t('importExport:counts.note', { count: noteCount }), count: noteCount });
+  if (contactCount > 0) parts.push({ label: i18n.t('importExport:counts.contact', { count: contactCount }), count: contactCount });
   if (journalCount > 0) parts.push({ label: i18n.t('importExport:counts.journal', { count: journalCount }), count: journalCount });
   if (loginCount > 0) parts.push({ label: i18n.t('importExport:counts.login', { count: loginCount }), count: loginCount });
   if (cardCount > 0) parts.push({ label: i18n.t('importExport:counts.card', { count: cardCount }), count: cardCount });
@@ -1032,6 +1308,62 @@ function formatTypeCountsShort(notes: ImportedNote[]): string {
   return parts.map((p) => `${p.count} ${p.label}`).join(', ');
 }
 
+/** The "Add to" row: where the import puts its items. */
+function DestinationRow({
+  target,
+  newFolderName,
+  value,
+  onChange,
+}: {
+  target: ImportTarget;
+  newFolderName: string;
+  value: ImportDestination;
+  onChange: (v: ImportDestination) => void;
+}) {
+  const { t } = useTranslation('importExport');
+  const groups = destinationGroups(target.folders, target.spaceOf, target.openSpace);
+  const newSpace = target.openSpace ?? 'personal';
+  // A second import from the same source goes into the folder the first one
+  // made, so that folder is selected and no "New folder" is offered.
+  const existing = existingImportFolder(target, newFolderName);
+  const selected = value === 'new' && existing ? `f:${existing}` : typeof value === 'string' ? value : `f:${value.folderId}`;
+  const newOption = !existing && <option value="new">{t('destination.newFolder', { name: newFolderName })}</option>;
+  const folderOptions = (entries: (typeof groups)[number]['entries']) =>
+    entries.map((e) => (
+      <option key={e.id} value={`f:${e.id}`}>{'\u00a0\u00a0'.repeat(e.depth) + e.name}</option>
+    ));
+  return (
+    <div className="rounded-lg border border-divider p-3">
+      <label htmlFor="import-destination" className="text-sm font-medium">{t('destination.label')}</label>
+      <select
+        id="import-destination"
+        value={selected}
+        onChange={(e) => {
+          const v = e.target.value;
+          onChange(v === 'none' || v === 'new' ? v : { folderId: v.slice(2) });
+        }}
+        className="mt-1.5 w-full rounded-md bg-track border border-divider px-2.5 py-1.5 text-sm text-pn focus:border-accent focus:outline-none"
+      >
+        <option value="none">{t('destination.none')}</option>
+        {!target.spaceOf ? (
+          <>
+            {newOption}
+            {groups.flatMap((g) => folderOptions(g.entries))}
+          </>
+        ) : (
+          groups.map((g) => (
+            <optgroup key={g.space} label={t(`shell:spaces.${g.space}`)}>
+              {g.space === newSpace && newOption}
+              {folderOptions(g.entries)}
+            </optgroup>
+          ))
+        )}
+      </select>
+      <div className="text-xs text-pn-soft mt-1.5">{t('destination.help')}</div>
+    </div>
+  );
+}
+
 function PreviewPhase({
   importerLabel,
   parsed,
@@ -1040,6 +1372,13 @@ function PreviewPhase({
   onFolderTagsChange,
   browserTags,
   onBrowserTagsChange,
+  photoEstimate,
+  importPhotos,
+  onImportPhotosChange,
+  oversizeCount = 0,
+  splitOversize,
+  onSplitOversizeChange,
+  destinationRow,
 }: {
   importerLabel: string;
   parsed: ParsedImport;
@@ -1048,6 +1387,14 @@ function PreviewPhase({
   onFolderTagsChange?: (v: boolean) => void;
   browserTags?: boolean;
   onBrowserTagsChange?: (v: boolean) => void;
+  photoEstimate?: PhotoEstimate | null;
+  importPhotos?: boolean;
+  onImportPhotosChange?: (v: boolean) => void;
+  /** Notes over the 1 MB sync limit, and the choice to cut them at headings. */
+  oversizeCount?: number;
+  splitOversize?: boolean;
+  onSplitOversizeChange?: (v: boolean) => void;
+  destinationRow?: ReactNode;
 }) {
   const { t } = useTranslation('importExport');
   const { stats, warnings, transforms, notes } = parsed;
@@ -1055,14 +1402,22 @@ function PreviewPhase({
   const typeCounts = computeTypeCounts(notes);
   const hasMultipleTypes = typeCounts.length > 1;
   // Every importer that rebuilds a folder tree (Obsidian vaults,
-  // Notesnook notebooks) gets the folder-tag toggle. Sources that carry
-  // folderIds without a tree of their own (PrivacyNotes backups) do not
-  // populate parsed.folders, so they fall through unchanged.
+  // Notesnook notebooks) gets the folder-tag toggle. Our own backups
+  // rebuild one too, but the Restore tab passes no toggle and a restore
+  // adds no folder tags.
   const showFolderTags = (parsed.folders?.length ?? 0) > 0;
   // Only Firefox writes these, and only for bookmarks the user labelled,
   // so the toggle appears only when the file actually carries some.
   const showBrowserTags = notes.some((n) => (n.browserTags?.length ?? 0) > 0);
   const allLinks = notes.length > 0 && notes.every((n) => n.type === 'link');
+  const allContacts = notes.length > 0 && notes.every((n) => n.type === 'contact');
+  const allEvents = notes.length > 0 && notes.every((n) => n.type === 'event');
+  // Our own backups carry each note's id, and a restore matches it to the
+  // copy the vault holds. A backup written before ids were carried adds
+  // everything again, so it keeps the duplicates warning. Only the
+  // PrivacyNotes backup formats set an id (ImportedNote.id), so this reads
+  // the file itself rather than the importer that opened it.
+  const allOwn = notes.length > 0 && notes.every((n) => !!n.id);
   // Reflect the folder tags the import is about to add (reactive to the
   // toggle) so the tag counts match what actually lands, not the raw
   // parse-time count. Non-folder imports fall through to notes unchanged.
@@ -1143,6 +1498,20 @@ function PreviewPhase({
         </div>
       )}
 
+      {destinationRow}
+
+      {oversizeCount > 0 && onSplitOversizeChange && (
+        <div className="space-y-2">
+          <Callout tone="warning" title={t('preview.oversize', { count: oversizeCount })} />
+          <Checkbox
+            checked={splitOversize ?? false}
+            onChange={(e) => onSplitOversizeChange(e.target.checked)}
+            label={t('preview.splitOversize', { count: oversizeCount })}
+            className="ms-1.5"
+          />
+        </div>
+      )}
+
       {showFolderTags && onFolderTagsChange && (
         <label className="flex items-start gap-2 rounded-lg border border-divider p-3 cursor-pointer hover:bg-surface-1 transition">
           <input
@@ -1157,6 +1526,40 @@ function PreviewPhase({
             </div>
             <div className="text-xs text-pn-soft mt-0.5">
               {t('folderImport.tagDesc')}
+            </div>
+          </div>
+        </label>
+      )}
+
+      {photoEstimate && onImportPhotosChange && (
+        <label className={`flex items-start gap-2 rounded-lg border p-3 transition ${photoEstimate.fits ? 'border-divider cursor-pointer hover:bg-surface-1' : 'border-amber-300 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-950/20'}`}>
+          <input
+            type="checkbox"
+            checked={photoEstimate.fits && (importPhotos ?? true)}
+            disabled={!photoEstimate.fits}
+            onChange={(e) => onImportPhotosChange(e.target.checked)}
+            className="h-4 w-4 mt-0.5 shrink-0 accent-accent"
+          />
+          <div>
+            <div className="text-sm font-medium">{t('contactImport.photosLabel')}</div>
+            <div className="text-xs text-pn-soft mt-0.5">
+              {!photoEstimate.fits && photoEstimate.available !== null
+                ? t('contactImport.photosTooBig', {
+                    count: photoEstimate.count,
+                    size: formatBytes(photoEstimate.bytes),
+                    shortfall: formatBytes(photoEstimate.bytes - photoEstimate.available),
+                  })
+                : photoEstimate.available !== null
+                  ? t('contactImport.photosDesc', {
+                      count: photoEstimate.count,
+                      size: formatBytes(photoEstimate.bytes),
+                      pct: Math.min(100, Math.round((photoEstimate.bytes / Math.max(1, photoEstimate.available)) * 100)),
+                      free: formatBytes(photoEstimate.available),
+                    })
+                  : t('contactImport.photosDescNoQuota', {
+                      count: photoEstimate.count,
+                      size: formatBytes(photoEstimate.bytes),
+                    })}
             </div>
           </div>
         </label>
@@ -1182,13 +1585,9 @@ function PreviewPhase({
       )}
 
       {warnings.length > 0 && (
-        <div className="rounded-lg border border-amber-400/40 bg-amber-50 dark:bg-amber-900/10 p-3 text-xs space-y-1">
-          {warnings.map((w, i) => (
-            <div key={i} className="text-amber-800 dark:text-amber-300">
-              {w}
-            </div>
-          ))}
-        </div>
+        <Callout tone="warning">
+          <div className="space-y-1">{warnings.map((w, i) => <div key={i}>{w}</div>)}</div>
+        </Callout>
       )}
 
       {sampleTitles.length > 0 && (
@@ -1215,9 +1614,21 @@ function PreviewPhase({
         <strong className="text-pn">
           {t('preview.headsUpLabel')}
         </strong>{' '}
-        {/* Bookmarks are the one source apply.ts dedupes, on exact URL, so
-            the standing "you will get duplicates" line is false for them. */}
-        {allLinks ? t('preview.duplicateSkipNote') : t('preview.duplicateWarning')}
+        {/* Our own backups, bookmarks and contacts are the sources apply.ts
+            matches against the vault, so the standing "you will get
+            duplicates" line is false for them. The id match comes first
+            because apply.ts runs it before the bookmark and contact rules:
+            a newer copy of a contact from our own backup updates its row,
+            it is not skipped as a lookalike. */}
+        {allOwn
+          ? t('preview.restoreMergeNote')
+          : allLinks
+            ? t('preview.duplicateSkipNote')
+            : allContacts
+              ? t('preview.contactSkipNote')
+              : allEvents
+                ? t('preview.eventSkipNote')
+                : t('preview.duplicateWarning')}
       </SettingsCallout>
     </div>
   );
@@ -1256,12 +1667,9 @@ function ErrorPhase({
   const { t } = useTranslation('importExport');
   return (
     <div className="py-6">
-      <SectionEyebrow danger className="mb-1">
-        {t('errorPhase.heading', { importer: importerLabel })}
-      </SectionEyebrow>
-      <div className="text-sm text-pn-soft whitespace-pre-wrap">
-        {message}
-      </div>
+      <Callout tone="danger" title={t('errorPhase.heading', { importer: importerLabel })}>
+        <div className="whitespace-pre-wrap break-words">{message}</div>
+      </Callout>
     </div>
   );
 }
@@ -1282,6 +1690,8 @@ function ExportPanel({
   onExportEncryptedZip,
   onExportVault,
   onExportBookmarks,
+  onExportContacts,
+  onExportCalendar,
 }: {
   notes: LocalNote[];
   onExportAllMdZip: (ns: LocalNote[]) => void;
@@ -1291,8 +1701,12 @@ function ExportPanel({
   onExportEncryptedZip: (ns: LocalNote[]) => void;
   onExportVault: (ns: LocalNote[]) => void;
   onExportBookmarks: (ns: LocalNote[]) => void;
+  onExportContacts: (ns: LocalNote[]) => void;
+  onExportCalendar: (ns: LocalNote[]) => void;
 }) {
   const { t } = useTranslation('importExport');
+  const hasCalendar = notes.some(goesToCalendarFile);
+  const hasContacts = notes.some((n) => n.type === 'contact' && n.trashed !== 1);
   const hasVaultItems = notes.some(
     (n) => n.type === 'login' || n.type === 'card' || n.type === 'ssh-key',
   );
@@ -1303,24 +1717,24 @@ function ExportPanel({
   );
   return (
     <div className="space-y-3">
-      <p className="text-sm text-pn-soft">
+      <p className={SETTINGS_HELP}>
         {t('export.intro')}
       </p>
 
-      <HelpChip surface="export" />
-
       <div>
-        <SectionEyebrow className="mb-1.5">
+        <SectionEyebrow className="mb-1.5" icon={Archive}>
           {t('export.fullBackupHeading')}
         </SectionEyebrow>
         <div className="space-y-1.5">
           <ActionRow
+            setting="export.zipBackup"
             title={t('export.zipBackupTitle')}
             description={t('export.zipBackupDesc')}
             glyph={<FileZip size={20} aria-hidden="true" />}
             onClick={() => onExportAllMdZip(notes)}
           />
           <ActionRow
+            setting="export.encryptedZip"
             title={t('export.encryptedZipBackupTitle')}
             description={t('export.encryptedZipBackupDesc')}
             locked
@@ -1328,6 +1742,7 @@ function ExportPanel({
             onClick={() => onExportEncryptedZip(notes)}
           />
           <ActionRow
+            setting="export.encryptedBackup"
             title={t('export.encryptedBackupTitle')}
             description={t('export.encryptedBackupDesc')}
             locked
@@ -1338,17 +1753,19 @@ function ExportPanel({
       </div>
 
       <div>
-        <SectionEyebrow className="mb-1.5">
+        <SectionEyebrow className="mb-1.5" icon={FileText}>
           {t('export.portableHeading')}
         </SectionEyebrow>
         <div className="space-y-1.5">
           <ActionRow
+            setting="export.htmlArchive"
             title={t('export.htmlArchiveTitle')}
             description={t('export.htmlArchiveDesc')}
             glyph={<FileHtml size={20} aria-hidden="true" />}
             onClick={() => onExportAllHtmlZip(notes)}
           />
           <ActionRow
+            setting="export.textBackup"
             title={t('export.textBackupTitle')}
             description={t('export.textBackupDesc')}
             glyph={<BracketsCurly size={20} aria-hidden="true" />}
@@ -1359,11 +1776,12 @@ function ExportPanel({
 
       {hasBookmarks && (
         <div>
-          <SectionEyebrow className="mb-1.5">
+          <SectionEyebrow className="mb-1.5" icon={BookmarkSimple}>
             {t('export.bookmarksOnlyHeading')}
           </SectionEyebrow>
           <div className="space-y-1.5">
             <ActionRow
+              setting="export.bookmarks"
               title={t('export.bookmarksExportTitle')}
               description={t('export.bookmarksExportDesc')}
               glyph={<FileHtml size={20} aria-hidden="true" />}
@@ -1373,13 +1791,48 @@ function ExportPanel({
         </div>
       )}
 
+      {hasContacts && (
+        <div>
+          <SectionEyebrow className="mb-1.5" icon={AddressBook}>
+            {t('export.contactsOnlyHeading')}
+          </SectionEyebrow>
+          <div className="space-y-1.5">
+            <ActionRow
+              setting="export.contacts"
+              title={t('export.contactsExportTitle')}
+              description={t('export.contactsExportDesc')}
+              glyph={<AddressBook size={20} aria-hidden="true" />}
+              onClick={() => onExportContacts(notes)}
+            />
+          </div>
+        </div>
+      )}
+
+      {hasCalendar && (
+        <div>
+          <SectionEyebrow className="mb-1.5" icon={CalendarDots}>
+            {t('export.calendarOnlyHeading')}
+          </SectionEyebrow>
+          <div className="space-y-1.5">
+            <ActionRow
+              setting="export.calendar"
+              title={t('export.calendarExportTitle')}
+              description={t('export.calendarExportDesc')}
+              glyph={<CalendarDots size={20} aria-hidden="true" />}
+              onClick={() => onExportCalendar(notes)}
+            />
+          </div>
+        </div>
+      )}
+
       {hasVaultItems && (
         <div>
-          <SectionEyebrow className="mb-1.5">
+          <SectionEyebrow className="mb-1.5" icon={Key}>
             {t('export.vaultOnlyHeading')}
           </SectionEyebrow>
           <div className="space-y-1.5">
             <ActionRow
+              setting="export.vault"
               title={t('export.vaultExportTitle')}
               description={t('export.vaultExportDesc')}
               glyph={<BracketsCurly size={20} aria-hidden="true" />}
@@ -1389,8 +1842,9 @@ function ExportPanel({
         </div>
       )}
 
-      {/* The question you leave with, not the one you arrive with, so it
-          sits after the last section rather than beside the choice. */}
+      {/* Help links sit at the foot of a settings pane, after the last
+          section: the question you arrive with, then the one you leave with. */}
+      <HelpChip surface="export" />
       <HelpChip surface="exportEnd" />
     </div>
   );
@@ -1401,24 +1855,36 @@ function ExportPanel({
  *  the mark names the FORMAT (.zip, .html, .json), and our own two formats
  *  take the app icon. */
 function ActionRow({
+  setting,
   title,
   description,
   locked,
+  pro,
   glyph,
   src,
+  disabled,
   onClick,
 }: {
+  /** The settings search id of this row. */
+  setting: string;
   title: string;
   description: string;
   locked?: boolean;
+  /** A Pro action: the rocket after the title, as on every Pro door. */
+  pro?: boolean;
   glyph?: ReactNode;
   src?: string;
+  disabled?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
+      data-setting={setting}
       onClick={onClick}
-      className="w-full text-start rounded-lg border border-divider hover:border-accent hover:bg-accent/5 cursor-pointer px-3 py-2.5 transition flex items-center gap-3"
+      disabled={disabled}
+      className={`w-full text-start rounded-lg border border-divider px-3 py-2.5 transition flex items-center gap-3 ${
+        disabled ? 'opacity-40 cursor-not-allowed' : 'hover:border-accent hover:bg-accent/5 cursor-pointer'
+      }`}
     >
       <RowIcon src={src} glyph={glyph} />
       <span className="min-w-0">
@@ -1427,6 +1893,7 @@ function ActionRow({
           {locked && (
             <Lock size={10} className="text-accent shrink-0" />
           )}
+          {pro && <IconUpgrade size={12} />}
         </span>
         <span className="block text-xs text-pn-soft mt-0.5">{description}</span>
       </span>

@@ -15,6 +15,10 @@
  *   - a rename moves the links with `retargetNoteLinks`, which matches with
  *     that same key, so it moves exactly the links a click would have followed.
  *
+ * A target can also name a HEADING in its note, `[[Note#Heading]]`, or in the
+ * note that holds the link, `[[#Heading]]`: the Obsidian form, which the
+ * parse rules already accept. `parseNoteLinkTarget` splits the two parts.
+ *
  * Pure: no DOM, no I/O, one string in and one string out. `useNoteEditing.ts`
  * owns the rename call site and the rules about WHICH notes are rewritten.
  * The edge cases are pinned by `tests/noteLinks.test.ts`.
@@ -69,6 +73,79 @@ export function noteLinkKey(value: string): string {
   return noteLinkTarget(value).toLowerCase();
 }
 
+/**
+ * Every live note a `[[link]]` could mean, in the order they were given.
+ *
+ * It returns a list rather than a note because the resolver must not choose
+ * between two notes that carry the same title. It used to take the first
+ * match from a newest-first list, and an import is how a stranger gets a
+ * note into somebody's account: imported notes keep the timestamp their file
+ * declares, and the starter notes ship fixed, published titles that link to
+ * one another. No sort order fixes that, because every field the choice
+ * could rank on comes out of the same file. The caller discloses the
+ * ambiguity instead, which is the answer the rename path already gives to
+ * the same question.
+ *
+ * The two passes are the ones the resolver always ran: the exact title
+ * first, so a note whose real title is written out beats a near-miss, then
+ * the key, so a title the syntax cannot hold verbatim still resolves.
+ */
+export function resolveNoteLinkMatches<T extends { title: string }>(
+  notes: readonly T[],
+  target: string,
+  nameOf: (note: T) => string = (n) => n.title,
+): T[] {
+  const lower = target.toLowerCase();
+  const exact = notes.filter((n) => nameOf(n).toLowerCase() === lower);
+  if (exact.length > 0) return exact;
+  const key = noteLinkKey(target);
+  return key ? notes.filter((n) => noteLinkKey(nameOf(n)) === key) : [];
+}
+
+/**
+ * Split a target into the note it names and the heading inside that note.
+ *
+ * A title may hold a `#` ("C# tips", "Issue #42") and links to such notes
+ * must keep working, so the whole target is tried as a title FIRST. Then
+ * each `#` from right to left, so the longest note name wins: `[[C# tips#Setup]]`
+ * is "C# tips" at Setup even when a note "C" exists. An empty note part
+ * (`[[#Heading]]`) means the note that holds the link. When nothing
+ * resolves, or no `hasNote` is given (an export that has no note list), the
+ * first split from the left that looks like one is taken: a `#` with no
+ * space on either side, or at the very start.
+ *
+ * `note` is '' for a link into the same note; `heading` is null for a plain
+ * note-link.
+ */
+export function parseNoteLinkTarget(
+  target: string,
+  hasNote?: (name: string) => boolean,
+): { note: string; heading: string | null } {
+  const whole = target.trim();
+  if (hasNote?.(whole)) return { note: whole, heading: null };
+  const split = (i: number) => ({ note: whole.slice(0, i).trim(), heading: whole.slice(i + 1).trim() });
+  if (hasNote) {
+    for (let i = whole.lastIndexOf('#'); i >= 0; i = i > 0 ? whole.lastIndexOf('#', i - 1) : -1) {
+      const { note, heading } = split(i);
+      if (heading && (note === '' || hasNote(note))) return { note, heading };
+    }
+  }
+  for (let i = whole.indexOf('#'); i >= 0; i = whole.indexOf('#', i + 1)) {
+    const { note, heading } = split(i);
+    const after = whole[i + 1] ?? '';
+    const before = i > 0 ? whole[i - 1]! : '';
+    if (heading && after.trim() && (i === 0 || before.trim())) return { note, heading };
+  }
+  return { note: whole, heading: null };
+}
+
+/** The text a link shows when it carries no label: "Note › Heading". */
+export function noteLinkDisplayText(target: string, hasNote?: (name: string) => boolean): string {
+  const { note, heading } = parseNoteLinkTarget(target, hasNote);
+  if (heading === null) return target;
+  return note ? `${note} \u203a ${heading}` : heading;
+}
+
 type Span = { start: number; end: number };
 
 /** Merged spans of the body that are code. */
@@ -91,9 +168,42 @@ function codeSpans(body: string): Span[] {
 }
 
 /**
+ * Every note-link target in `body`, in order, as written between the
+ * brackets and without its label. Code regions and `![[embeds]]` are skipped,
+ * by the same segmented walk `retargetNoteLinks` uses, so this lists exactly
+ * the links the editor renders.
+ */
+export function noteLinkTargets(body: string): string[] {
+  if (!body || !body.includes('[[')) return [];
+  const out: string[] = [];
+  const scan = (text: string, offset: number) => {
+    NOTE_LINK_RE.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = NOTE_LINK_RE.exec(text)) !== null) {
+      const abs = offset + m.index;
+      if (abs > 0 && body[abs - 1] === '!') continue;
+      const target = (m[1] ?? '').trim();
+      if (target) out.push(target);
+    }
+  };
+  let cursor = 0;
+  for (const span of codeSpans(body)) {
+    if (cursor < span.start) scan(body.slice(cursor, span.start), cursor);
+    cursor = span.end;
+  }
+  if (cursor < body.length) scan(body.slice(cursor), cursor);
+  return out;
+}
+
+/**
  * Point every `[[oldTitle]]` and `[[oldTitle|label]]` in `body` at `newTitle`.
  * A display label is kept as the user wrote it; a link with no label follows
  * the new title, which is the "the text updates itself" half of #238.
+ *
+ * A heading link `[[oldTitle#Heading]]` moves too, and keeps its heading.
+ * `hasOtherNote` names the OTHER live notes, so `[[C# tips]]` stays put when
+ * "C" is renamed and "C# tips" is a note of its own: the same whole-title-
+ * first rule a click follows.
  *
  * Returns the rewritten body and how many links moved, or `null` when nothing
  * changed - so the caller can skip the write instead of marking a note dirty
@@ -103,6 +213,7 @@ export function retargetNoteLinks(
   body: string,
   oldTitle: string,
   newTitle: string,
+  hasOtherNote: (name: string) => boolean = () => false,
 ): { body: string; count: number } | null {
   const from = noteLinkKey(oldTitle);
   const to = noteLinkTarget(newTitle);
@@ -134,10 +245,15 @@ export function retargetNoteLinks(
       if (abs > 0 && body[abs - 1] === '!') continue;
       // Match the way navigation resolves, so this moves exactly the links a
       // click would have followed - no more and no fewer.
-      if (noteLinkKey(m[1] ?? '') !== from) continue;
+      const { note, heading } = parseNoteLinkTarget(
+        m[1] ?? '',
+        (name) => noteLinkKey(name) === from || hasOtherNote(name),
+      );
+      if (noteLinkKey(note) !== from) continue;
+      const dest = heading === null ? to : `${to}#${heading}`;
       const label = m[2]?.trim();
       parts.push(text.slice(last, start));
-      parts.push(label ? `[[${to}|${label}]]` : `[[${to}]]`);
+      parts.push(label ? `[[${dest}|${label}]]` : `[[${dest}]]`);
       last = start + m[0].length;
       count += 1;
     }

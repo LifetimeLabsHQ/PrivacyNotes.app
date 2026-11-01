@@ -13,6 +13,8 @@
  * Spec: ops/docs/backlog.md (#69 - favicon concurrency cap + IDB cache)
  */
 
+import { isDemoMode } from './demo';
+
 // ── Concurrency queue ────────────────────────────────────────────
 
 // Spec: ops/docs/backlog.md (#69 - client concurrency cap of 5)
@@ -34,6 +36,9 @@ const DB_NAME = 'pn-favicons';
 const STORE_NAME = 'icons';
 const DB_VERSION = 1;
 const MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
+// How long clearing the cache waits for the delete. Without a blocking tab
+// it lands at once.
+const DELETE_WAIT_MS = 2000;
 
 interface CachedFavicon {
   blob: Blob;
@@ -44,20 +49,32 @@ let dbPromise: Promise<IDBDatabase> | null = null;
 
 function openDB(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
-  dbPromise = new Promise((resolve, reject) => {
+  const opening = new Promise<IDBDatabase>((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       if (!req.result.objectStoreNames.contains(STORE_NAME)) {
         req.result.createObjectStore(STORE_NAME);
       }
     };
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => {
+      const db = req.result;
+      // A delete of the cache, from this tab or another one, waits until
+      // every connection closes, and each later delete queues behind it
+      // without firing any event. So let go at once; the next lookup opens
+      // the cache again.
+      db.onversionchange = () => {
+        db.close();
+        if (dbPromise === opening) dbPromise = null;
+      };
+      resolve(db);
+    };
     req.onerror = () => {
       dbPromise = null;
       reject(req.error);
     };
   });
-  return dbPromise;
+  dbPromise = opening;
+  return opening;
 }
 
 async function getFromIDB(url: string): Promise<Blob | null> {
@@ -144,20 +161,30 @@ export async function clearFaviconCache(): Promise<void> {
 
   // Then the on-disk store. Close our handle first, or the delete blocks
   // behind the open connection and silently never completes.
-  if (dbPromise) {
-    try { (await dbPromise).close(); } catch { /* opening failed; nothing to close */ }
-    dbPromise = null;
-  }
-  await new Promise<void>((resolve) => {
-    try {
-      const req = indexedDB.deleteDatabase(DB_NAME);
-      req.onsuccess = () => resolve();
-      req.onerror = () => resolve();
-      req.onblocked = () => resolve();
-    } catch {
-      resolve();
+  const open = dbPromise;
+  dbPromise = null;
+  const deletion = (async () => {
+    if (open) {
+      try { (await open).close(); } catch { /* opening failed; nothing to close */ }
     }
-  });
+    await new Promise<void>((resolve) => {
+      try {
+        const req = indexedDB.deleteDatabase(DB_NAME);
+        req.onsuccess = () => resolve();
+        req.onerror = () => resolve();
+        req.onblocked = () => resolve();
+      } catch {
+        resolve();
+      }
+    });
+  })();
+  // A tab that does not let go, such as one still running a build without
+  // the close in openDB, holds the delete back, and a delete queued behind
+  // it fires no event at all. It lands once that tab closes; the sign-out or
+  // account switch awaiting this does not wait for that.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  await Promise.race([deletion, new Promise<void>((resolve) => { timer = setTimeout(resolve, DELETE_WAIT_MS); })]);
+  clearTimeout(timer);
 }
 
 /**
@@ -167,6 +194,10 @@ export async function clearFaviconCache(): Promise<void> {
  * on failure / offline-with-no-cache.
  */
 export async function prefetchFavicon(url: string): Promise<string | null> {
+  // The demo sends nothing, so it has no icons: whatever URL a caller built,
+  // nothing is fetched and nothing cached is read.
+  if (isDemoMode()) return null;
+
   // 1. Already resolved this session - return immediately.
   const existing = blobUrls.get(url);
   if (existing) return existing;

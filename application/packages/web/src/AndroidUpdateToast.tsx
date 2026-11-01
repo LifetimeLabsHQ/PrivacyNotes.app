@@ -4,9 +4,11 @@ import { UpdateToast } from './UpdateToast';
 import { compareSemver } from './versionCheck';
 import { VERSION } from './version';
 import { detectPlatform } from './devices';
+import { RELEASES_ORIGIN } from './hosts';
 import { isUpdateSnoozed, snoozeUpdate } from './updateSnooze';
 import { setUpdateAvailable } from './updateAvailable';
 import { reportVersionFloor } from './versionFloor';
+import { installedByStore } from './androidInstaller';
 
 /**
  * Update prompt for the direct-download Android APK (the off-store channel for
@@ -29,12 +31,16 @@ import { reportVersionFloor } from './versionFloor';
  * must never show this. The bundled frontend ships inside the APK, so a UI
  * change needs a new APK, not a page refresh - hence "download", not "reload".
  *
+ * The same APK also reaches phones through stores that update it themselves
+ * (Zapstore, Obtainium), and those installs get the floor report but no
+ * prompt - androidInstaller.ts is what tells them apart.
+ *
  * Spec: ops/docs/android-update-check.md
  */
 const IS_DIRECT_APK =
   detectPlatform() === 'android' && import.meta.env.VITE_ANDROID_DIST === 'direct';
 
-const MANIFEST_URL = 'https://releases.privacynotes.app/android/latest.json';
+const MANIFEST_URL = `${RELEASES_ORIGIN}/android/latest.json`;
 const POLL_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6h; direct APK releases are infrequent
 const INITIAL_DELAY_MS = 20 * 1000;
 
@@ -56,7 +62,6 @@ export function AndroidUpdateToast() {
   const { t } = useTranslation('common');
   const [update, setUpdate] = useState<AndroidManifest | null>(null);
   const lastCheckRef = useRef(0);
-  const foundRef = useRef(false);
 
   useEffect(() => {
     // Dev-only console hook. The toast is gated on the direct-APK build, so it
@@ -70,7 +75,7 @@ export function AndroidUpdateToast() {
         setUpdateAvailable('999.0.0');
         setUpdate({
           version: '999.0.0',
-          url: 'https://releases.privacynotes.app/latest/PrivacyNotes.apk',
+          url: `${RELEASES_ORIGIN}/latest/PrivacyNotes.apk`,
           minVersion: opts?.required ? '999.0.0' : undefined,
           sizeBytes: 24_100_000,
         });
@@ -82,7 +87,7 @@ export function AndroidUpdateToast() {
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     async function check(): Promise<void> {
-      if (cancelled || foundRef.current) return;
+      if (cancelled) return;
       lastCheckRef.current = Date.now();
       try {
         const res = await fetch(`${MANIFEST_URL}?t=${Date.now()}`, { cache: 'no-store' });
@@ -93,14 +98,24 @@ export function AndroidUpdateToast() {
         // APK exists - report before the version early-return so the sync
         // pause (versionFloor.ts) always tracks the latest published floor.
         reportVersionFloor(typeof m.minVersion === 'string' ? m.minVersion : null);
+        // A store that carries this APK owns the update from here on: it
+        // checks in the background and installs in place, because every
+        // release carries the same signing certificate. Prompting anyway
+        // would send its users to a manual browser download, the slower path
+        // to the same build, and below the floor that prompt cannot even be
+        // dismissed. Keep reporting the floor above, because the sync pause
+        // is right either way and SyncStatus carries its explanation
+        // permanently; only this toast and the rail's Downloads dot are
+        // wrong, and both are skipped by returning here.
+        if (installedByStore()) return;
         if (compareSemver(m.version, VERSION) <= 0) return;
         // Badge the rail's Downloads button first, so the dot stays put even
         // when the toast below is snoozed away.
         setUpdateAvailable(m.version);
-        // Dismissed within the last 48h: stay quiet, but do NOT set foundRef -
-        // polling has to continue so the toast returns once the snooze lapses.
+        // Dismissed within the last 48h: stay quiet. Polling never stops
+        // once a toast is up either: a floor raised later in the session
+        // must still reach versionFloor.ts and turn the toast required.
         if (!isRequired(m) && isUpdateSnoozed(m.version)) return;
-        foundRef.current = true;
         setUpdate(m);
       } catch {
         // Offline or manifest missing - ignore and try again next poll.
@@ -119,7 +134,7 @@ export function AndroidUpdateToast() {
     // visibilitychange rather than focus: Android WebView fires it reliably on
     // background/resume, while window focus does not.
     const onVisible = (): void => {
-      if (document.hidden || foundRef.current) return;
+      if (document.hidden) return;
       if (Date.now() - lastCheckRef.current < POLL_INTERVAL_MS) return;
       void check();
     };
@@ -157,8 +172,6 @@ export function AndroidUpdateToast() {
           : () => {
               snoozeUpdate(update.version);
               setUpdate(null);
-              // Let polling resume so the toast can return after the snooze.
-              foundRef.current = false;
             }
       }
     />

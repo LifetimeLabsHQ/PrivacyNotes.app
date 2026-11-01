@@ -24,13 +24,16 @@
 // decides it. Human-readable explanation of the per-locale model, and how to
 // change a key: ops/docs/i18n-spec.md section 10b.
 // Design rationale + the CJK unlock: ops/docs/i18n-cjk-plan.md section 3.
-import i18n from './i18n';
+import { activeLocale } from './i18n';
 
 export const FORCE_EN = { lng: 'en' } as const;
 
 const CJK = ['ja', 'ko', 'zh-TW'] as const;
-// The Latin target locales (en is the source and always shows its own text).
-const LATIN = ['de', 'fr', 'it', 'es', 'nl', 'pl', 'pt-PT', 'pt-BR', 'ca', 'cs', 'tr', 'sv'] as const;
+// The target locales whose labels are measured slot by slot: Latin script,
+// plus Cyrillic and Thai, which run as long or as wide. The name predates the
+// non-Latin ones, and tools/check-help-paths.mjs and tools/locale-review.mjs
+// read the list by it. (en is the source and always shows its own text.)
+const LATIN = ['de', 'fr', 'it', 'es', 'nl', 'pl', 'pt-PT', 'pt-BR', 'ca', 'cs', 'sk', 'tr', 'sv', 'uk', 'ru', 'th'] as const;
 // Every translated locale EXCEPT the few whose translation overflows a given
 // slot. CJK forms are short and always fit, so they are always included.
 const allBut = (...tooWide: string[]): readonly string[] => [
@@ -50,19 +53,11 @@ const allBut = (...tooWide: string[]): readonly string[] => [
 // Export) are English in all Latin because their slots are too tight to measure
 // reliably. Spec: ops/docs/i18n-spec.md section 10b.
 const RENDER_TRANSLATED: Record<string, readonly string[]> = {
-  // The Brave "enable the flag" card, whole. Listed here so the review
-  // dashboard marks every cell dead; the runtime forcing is done by
-  // ENGLISH_EVERYWHERE below, which unlike `[]` also covers Arabic.
-  'shell:markdown.braveTitle': [],
-  'shell:markdown.braveSteps': [],
-  'shell:markdown.braveCopy': [],
-  'shell:markdown.braveCopied': [],
-  'shell:markdown.braveAppAlternative': [],
-
   // Product terms and dev-facing jargon: English in every locale, CJK included.
   'notes:vaultNew.sshKey': [], // "SSH Key" in the vault New menu
   'shell:vaultItem.badgeSshKey': [], // "SSH Key" vault row badge
   'notes:settings.accountLabel': [], // "ID & Sync" - product term
+  'settings:syncStatus.notSynced': [], // footer pill word; the slot is narrow and ID & Sync carries the translation
   'notes:vaultFilter.keys': [], // Vault "Keys" filter chip, pairs with the SSH badge
   'shell:tagsRail.viewAuto': [], // "Auto" view mode
   'settings:appearance.viewAuto': [], // "Auto" view mode
@@ -83,7 +78,8 @@ const RENDER_TRANSLATED: Record<string, readonly string[]> = {
   // <=8ch, and cs "Import") fit. Everywhere else both translate.
   // tr "Geri bildirim" is 13 glyphs over two words, the same shape that got cs
   // excluded. sv takes the loanword "Feedback" (8), as de/it/nl/pt-PT already do.
-  'shell:tagsRail.feedback': allBut('es', 'ca', 'cs', 'tr'),
+  // sk "Spätná väzba" is the cs shape, 12 glyphs over two words.
+  'shell:tagsRail.feedback': allBut('es', 'ca', 'cs', 'sk', 'tr'),
   // tr "İçe aktar" is two words in a slot where nl's single 10-glyph
   // "Importeren" already overflows; sv "Importera" (9) sits just under it.
   'shell:tagsRail.import': allBut('nl', 'tr'),
@@ -97,7 +93,9 @@ const RENDER_TRANSLATED: Record<string, readonly string[]> = {
   // re-measure in-browser (2026-07-21 method) if the row layout changes.
   // sv "Nedladdningar" (13) lands in the fr/pt-PT class here; tr "İndirmeler"
   // (10) matches cs "Ke stažení" (10), which already fits this pill.
-  'shell:tagsRail.downloads': allBut('fr', 'pt-PT', 'sv'),
+  // uk "Завантаження" (12) joins the sv class; ru "Загрузки" (8) fits.
+  // sk "Na stiahnutie" (13, two words) joins it too.
+  'shell:tagsRail.downloads': allBut('fr', 'pt-PT', 'sv', 'sk', 'uk'),
 
   // The footer Settings label, the sync-status pill beside it, and the settings
   // rail "Import & Export" label are English in EVERY Latin locale (translated
@@ -120,14 +118,6 @@ const RENDER_TRANSLATED: Record<string, readonly string[]> = {
   'settings:syncStatus.storageFull': CJK,
 };
 
-// The active locale used for the fit test. resolvedLanguage follows i18next's
-// fallback chain (so a zh-HK request resolved to the zh-TW catalog reports
-// zh-TW). The zh-HK and zh-MO mappings onto zh-TW are explicit in i18n.ts's
-// fallbackLng table and in normalizeLocale.
-function activeLocale(): string {
-  return i18n.resolvedLanguage || i18n.language || 'en';
-}
-
 function fits(allow: readonly string[]): boolean {
   const loc = activeLocale();
   // Arabic is never forced to English, for any key - including the
@@ -140,51 +130,12 @@ function fits(allow: readonly string[]): boolean {
 }
 
 /**
- * English in EVERY locale, Arabic included - the one thing `[]` cannot express.
- *
- * `[]` means "no locale renders the translation", but `fits()` waves Arabic
- * through ahead of the allow list, so an `[]` key still shows its Arabic form.
- * That is deliberate for the product-jargon keys above (Arabic has real
- * translations for them and its terms are compact), and wrong for a string that
- * is English for a reason unrelated to width.
- *
- * The Brave card is that case: it walks the reader through a browser flags page
- * whose own labels Chromium ships in English in every language, so a translated
- * card would describe a screen that does not exist in that language. We hold the
- * whole card in English rather than mix languages inside it (decided
- * 2026-08-14); the flag name itself is separately pinned as a constant.
- *
- * Keys here MUST also appear in RENDER_TRANSLATED with `[]`, which is what the
- * review dashboard parses to grey their cells out.
- */
-const ENGLISH_EVERYWHERE = new Set([
-  'shell:markdown.braveTitle',
-  'shell:markdown.braveSteps',
-  'shell:markdown.braveCopy',
-  'shell:markdown.braveCopied',
-  'shell:markdown.braveAppAlternative',
-]);
-
-/**
  * Options for t() on an overflow-prone key: FORCE_EN when the active locale
  * would overflow this slot, otherwise undefined (render the real translation).
  */
 export function exemptOpts(qualifiedKey: string): typeof FORCE_EN | undefined {
-  // Ahead of everything, including the Arabic pass-through inside `fits()`.
-  if (ENGLISH_EVERYWHERE.has(qualifiedKey)) return FORCE_EN;
   const allow = RENDER_TRANSLATED[qualifiedKey];
   // A key not in the map is not exempt at all: render its real translation.
   // (Only keys listed above are ever forced to English.)
   return allow === undefined || fits(allow) ? undefined : FORCE_EN;
-}
-
-// The "New" action button (notes:header.new + shell:tasksList.new). German "Neu"
-// and Czech "Nova"/"Novy" (4ch) fit where every other Latin locale's translation
-// overflows; the CJK forms (新規 / 추가 / 新增) fit too. Kept as its own helper
-// because it is the one key whose Latin allow list is non-empty.
-// sv "Ny" (2) is shorter than German "Neu"; tr "Yeni" (4) matches Czech "Nový".
-const NEW_BUTTON_FITS = ['de', 'cs', 'tr', 'sv', ...CJK] as const;
-
-export function newButtonOpts(): typeof FORCE_EN | undefined {
-  return fits(NEW_BUTTON_FITS) ? undefined : FORCE_EN;
 }

@@ -4,6 +4,8 @@ import { googleKeepImporter } from './googleKeep';
 import { parseMarkdown } from './markdown';
 import { parseObsidian } from './obsidian';
 import { parseNotesnook } from './notesnook';
+import { parseJoplin } from './joplin';
+import { parseBear } from './bear';
 import { parseUpNote } from './upnote';
 import { parseAppleNotes } from './appleNotes';
 import { parseAppleJournal } from './appleJournal';
@@ -14,6 +16,8 @@ import { bitwardenImporter } from './bitwarden';
 import { passwordCsvImporter } from './passwordCsv';
 import { simplenoteImporter } from './simplenote';
 import { parseBrowserBookmarks } from './browserBookmarks';
+import { parseVcard } from './vcard';
+import { parseGoogleCalendar } from './googleCalendar';
 
 /**
  * Registry of available importers, keyed by id at every call site. Each
@@ -52,13 +56,37 @@ export const IMPORTERS: Importer[] = [
     label: 'Browser bookmarks',
     // Deliberately no sourceTag: the recreated folder tree already answers
     // "where did this come from", so an auto tag would only add noise.
-    // Spec: ops/docs/plans/bookmarks-pillar.md (import mapping)
+    // Spec: ops/docs/archive/bookmarks-pillar.md (import mapping)
     description:
       'Chrome, Firefox, Safari, or Edge - the bookmarks .html file from "Export bookmarks", or the .zip Safari writes. Folders come along, dates survive, and re-importing the same file skips what you already have.',
     accept: '.html,.htm,.zip',
     enabled: true,
     sourceTag: '',
     parse: parseBrowserBookmarks,
+  },
+  {
+    id: 'vcard',
+    label: 'Contacts (vCard)',
+    // No sourceTag: the groups on the phone arrive as tags already.
+    // Spec: ops/docs/archive/contacts-pillar.md (section 7.3, CATEGORIES become tags)
+    description:
+      'The .vcf file your phone or address book exports: iPhone and Mac through iCloud or Contacts, Android, Google Contacts. Every card comes across, photos included, and importing the same file twice skips the people you already have.',
+    accept: '.vcf,.vcard',
+    enabled: true,
+    sourceTag: '',
+    parse: parseVcard,
+  },
+  {
+    id: 'google-calendar',
+    label: 'Google Calendar',
+    // No sourceTag: each calendar arrives as a folder already.
+    // Spec: ops/docs/archive/google-calendar-import.md (section 4)
+    description:
+      'The .zip from Settings > Import & export, or one .ics file. Events keep their times, repeats and reminders.',
+    accept: '.ics,.zip',
+    enabled: true,
+    sourceTag: '',
+    parse: parseGoogleCalendar,
   },
   {
     id: 'evernote',
@@ -123,6 +151,26 @@ export const IMPORTERS: Importer[] = [
     enabled: true,
     sourceTag: 'notesnook',
     parse: parseNotesnook,
+  },
+  {
+    id: 'joplin',
+    label: 'Joplin',
+    description:
+      'In Joplin: File > Export all > "JEX - Joplin Export File", then drop the .jex file here. Keeps notebooks as folders, tags, to-dos, note links, and attachments.',
+    accept: '.jex,.zip',
+    enabled: true,
+    sourceTag: 'joplin',
+    parse: parseJoplin,
+  },
+  {
+    id: 'bear',
+    label: 'Bear',
+    description:
+      'In Bear: File > Backup Notes..., then drop the .bear2bk file here. Keeps tags, nested tags, pins, the archive, the trash, highlights, note-links, and attachments. A zipped Markdown or Text Bundle export works too.',
+    accept: '.bear2bk,.zip',
+    enabled: true,
+    sourceTag: 'bear',
+    parse: parseBear,
   },
   {
     id: 'upnote',

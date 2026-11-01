@@ -1,12 +1,16 @@
 import {
   Fragment,
   useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
   type ChangeEvent,
+  type PointerEvent as ReactPointerEvent,
   type MutableRefObject,
+  type ReactElement,
+  type RefObject,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -15,205 +19,71 @@ import {
   TextItalic as ItalicIcon,
   TextUnderline as UnderlineIcon,
   TextStrikethrough as StrikethroughIcon,
-  Code as CodeIcon,
-  TextAa as BaselineIcon,
+  TextAUnderline as TextColorIcon,
+  TextH,
+  TextHOne,
+  TextHTwo,
+  TextHThree,
+  TextHFour,
+  TextHFive,
+  TextHSix,
   TextT as FontIcon,
   CaretDown as ChevronDownIcon,
+  CaretLineDown as HideKeyboardIcon,
   ListChecks as ListChecksIcon,
-  ListBullets as ListIcon,
-  ListNumbers as ListOrderedIcon,
-  Quotes as QuoteIcon,
-  CodeBlock as SquareCodeIcon,
-  GridFour as TableIcon,
-  Minus as MinusIcon,
   Link as LinkIcon,
   BracketsSquare as BracketsIcon,
-  Image as ImageIcon,
-  Paperclip as PaperclipIcon,
   DotsThree as MoreIcon,
   Plus as PlusIcon,
   Highlighter as HighlighterIcon,
-  TextSuperscript as SuperscriptIcon,
-  TextSubscript as SubscriptIcon,
-  MathOperations as MathIcon,
   TextAlignLeft as TextAlignLeftIcon,
   TextAlignCenter as TextAlignCenterIcon,
   TextAlignRight as TextAlignRightIcon,
   TextAlignJustify as TextAlignJustifyIcon,
-  Trash as TrashIcon,
-  Prohibit as ProhibitIcon,
   Megaphone as MegaphoneIcon,
-  RocketLaunch as RocketIcon,
 } from './icons';
 import { useEditorState, type Editor as TipTapEditor } from '@tiptap/react';
 import { triggerAttachmentUpload } from './EncryptedAttachment';
+import { insertFootnote } from './footnotes';
+import { copySelectionAs } from './clipboardSpacing';
+import { openPicturePicker } from './mediaRefs';
 import { HoverLabel } from './HoverLabel';
 import { AudioRecorder, type AudioRecordingState } from './AudioRecorder';
 import { isLinuxNative } from './devices';
-import { TEXT_COLORS, HIGHLIGHT_COLORS, DEFAULT_HIGHLIGHT, FONT_FAMILIES, FONT_SIZES } from './editorColors';
-import { CALLOUT_TYPES } from './calloutTypes';
-import { proUnlocked } from './demo';
+import { TEXT_COLORS, HIGHLIGHT_COLORS, DEFAULT_HIGHLIGHT } from './editorColors';
 import { usePopoverPosition } from './usePopoverPosition';
-import { readColorPref, writeColorPref } from './editorPrefs';
-import { toggleCodeBlockSmart, ALIGNMENT_VALUES } from './editorExtensions';
+import { suppressSoftKeyboard } from './softKeyboard';
+import { readColorPref } from './editorPrefs';
+import { toggleCodeBlockSmart, ALIGNMENT_VALUES, COPY_BOX_LANGUAGE } from './editorExtensions';
 import { useEscapeToClose } from './useEscapeToClose';
+import { keyText } from './shortcutMatch';
+import { insertDateText } from './editorCommands';
+import { insertKanbanBoard } from './KanbanBoard';
+import { FormatBarContext } from './formatBarContext';
+import { formatBarItem } from './formatBar';
+import { FORMAT_BAR_LOOK } from './formatBarItems';
 
-/**
- * Compare two CSS colors as the swatch grid needs to: the value we wrote
- * into the mark comes back from the DOM re-spelled (`rgba(64,192,87,.35)`
- * vs `rgba(64, 192, 87, 0.35)`), so a raw === would show no swatch as
- * selected on a note reopened from storage. Whitespace and case are the
- * only differences the browser introduces between two spellings of the
- * same palette entry, which is all this has to absorb.
- */
-function normalizeCssColor(value: string | undefined): string {
-  return (value ?? '').replace(/\s+/g, '').toLowerCase();
-}
-
-/**
- * The colour strip under a split colour button's glyph. It names the colour
- * the button's main half will apply, so a reader can see it without opening
- * the popover. Rendered even when there is nothing to show - transparent -
- * so the glyph above it does not shift when the first colour is picked.
- *
- * `className` carries `pn-hl-default` for the highlight palette's default
- * entry, which has no stored colour and takes its themed pair from CSS.
- */
-function ColorBar({ color, className = '' }: { color?: string | null; className?: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={`block w-4 h-[3px] rounded-full ${className}`}
-      style={color ? { background: color } : undefined}
-    />
-  );
-}
-// ------------------------------------------------------------------
-// Smart heading toggle - splits hard breaks into separate paragraphs
-// before applying heading so only the cursor's line is affected.
-// Fixes: H1/H2/H3 applying to entire note when content has hard breaks
-// (from paste, Shift+Enter, or imported single-newline text).
-// ------------------------------------------------------------------
-
-function smartToggleHeading(editor: TipTapEditor, level: 1 | 2 | 3 | 4 | 5 | 6) {
-  const { state } = editor;
-  const { $from } = state.selection;
-  const parent = $from.parent;
-
-  // Collect hard-break offsets within the parent block
-  const hbOffsets: number[] = [];
-  parent.forEach((node, offset) => {
-    if (node.type.name === 'hardBreak') hbOffsets.push(offset);
-  });
-
-  if (hbOffsets.length === 0) {
-    // No hard breaks - standard toggle on the current block
-    editor.chain().focus().toggleHeading({ level }).run();
-    return;
-  }
-
-  // Split hard breaks into separate paragraphs (end-to-start for stable positions)
-  const blockContentStart = $from.start(); // position right after opening tag
-  const tr = state.tr;
-  for (let i = hbOffsets.length - 1; i >= 0; i--) {
-    const mapped = tr.mapping.map(blockContentStart + hbOffsets[i]!);
-    tr.delete(mapped, mapped + 1); // remove the hardBreak node
-    tr.split(mapped);              // split into two blocks
-  }
-  editor.view.dispatch(tr);
-
-  // Now the cursor is in one of the resulting paragraphs - toggle heading
-  editor.chain().focus().toggleHeading({ level }).run();
-}
-
-// ------------------------------------------------------------------
-// Toolbar button & divider - module-level so React identity is stable
-// across Toolbar re-renders (prevents CSS :hover flicker on keystrokes).
-// ------------------------------------------------------------------
-
-// Chip button system: uniform 36px rounded-square tap target, ghost at
-// rest, subtle neutral fill on hover, ACCENT TINT when toggled on - a
-// low-opacity accent wash plus an accent-colored icon, not a solid fill.
-// Solid fills were too loud: several marks are commonly active at once
-// (bold + italic + a list), and a row of saturated chips read as noise
-// rather than state. The tint still separates "on" from "hover" - hover
-// is neutral, on is colored - while staying quiet at four active chips.
-//
-// BASE carries LAYOUT ONLY; REST and ACTIVE each own their colors and are
-// mutually exclusive. Do not move a color back into BASE: rest and active
-// colors then collide at equal specificity inside the same variant, and
-// the winner is decided by Tailwind's internal utility order rather than
-// by anything in this file. That is not theoretical - the old solid-fill
-// active state paired `dark:text-white` against a BASE `dark:text-neutral-300`
-// and silently lost, which nobody caught because #d4d4d4 and #fff are
-// indistinguishable on a saturated blue chip. On a 15% tint the same loss
-// is glaring: the wash appears but the icon stays grey.
-const TB_BTN_BASE =
-  'flex items-center justify-center w-8 h-8 rounded-md active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed outline-none shrink-0';
-const TB_BTN_REST =
-  'text-neutral-600 dark:text-neutral-300 [@media(hover:hover)]:hover:bg-neutral-200 [@media(hover:hover)]:dark:hover:bg-neutral-800';
-const TB_BTN_ACTIVE = 'bg-accent/15 text-accent [@media(hover:hover)]:hover:bg-accent/25';
-// The two halves of a colour button. The wide half keeps the standard 32px
-// box and glyph, so the row still reads as one instrument; the caret takes
-// the extra width. Only the outer corners round, so the pair reads as a
-// single control, and the corners are logical, so the caret stays on the
-// trailing side under RTL.
-//
-// The caret is 20px under a mouse and 24px under a finger, and the hairline is
-// what makes the pair read as one control rather than as two neighbours.
-//
-// Both numbers were measured on a Pixel 10 rather than chosen. A 32px caret,
-// matching every other button in the row, is the most tappable option and it
-// looks broken: the glyph centres in its own box, which leaves 18px between the
-// two GLYPHS against 19px between two unrelated buttons. Pushing the glyph to
-// the near edge closes that gap and moves the dead space to the far side, where
-// it reads as a hole in the row. 24px is the width where the caret carries no
-// visible slack on either side, and the hairline then does the grouping that
-// spacing alone cannot. Spec: ops/docs/ui-patterns.md (split colour buttons)
-const TB_SPLIT_MAIN =
-  'flex flex-col items-center justify-center gap-px w-8 h-8 rounded-s-md active:scale-95 transition outline-none shrink-0';
-const TB_SPLIT_CARET =
-  "relative flex items-center justify-center w-5 [@media(hover:none)]:w-6 h-8 rounded-e-md active:scale-95 transition outline-none shrink-0 " +
-  "before:content-[''] before:absolute before:start-0 before:top-2 before:bottom-2 before:w-px before:bg-divider";
-// Matches HEADER_ICON in notesView/NoteEditorPane.tsx: the two header rows
-// and this toolbar are one instrument, so they share a box and a glyph size.
-// Weight comes from the IconDefaults provider.
-const TB_ICON = 18;
-
-function ToolbarBtn({
-  onClick,
-  active,
-  label,
-  tabIndex,
-  children,
-}: {
-  onClick: () => void;
-  active?: boolean;
-  label: string;
-  tabIndex?: number;
-  children: React.ReactNode;
-}) {
-  return (
-    <HoverLabel label={label} position="below">
-      <button
-        type="button"
-        tabIndex={tabIndex}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={onClick}
-        aria-label={label}
-        className={`${TB_BTN_BASE} ${active ? TB_BTN_ACTIVE : TB_BTN_REST} shrink-0`}
-      >
-        {children}
-      </button>
-    </HoverLabel>
-  );
-}
-
-// Groups are separated by whitespace, not vertical rules - cleaner and
-// less visual noise than dividers (the bar reads as grouped clusters).
-function ToolbarDivider() {
-  return <div className="w-2.5 shrink-0" aria-hidden="true" />;
-}
+const AttachIcon = FORMAT_BAR_LOOK.attachMenu!.Icon;
+import { useIsMobile, useIsTouchDevice } from './useIsMobile';
+import { useKeyboardOpen } from './useKeyboardOpen';
+import {
+  ColorBar,
+  MORE_TOGGLE_W,
+  TB_BTN_ACTIVE,
+  TB_BTN_BASE,
+  TB_BTN_REST,
+  TB_CARET,
+  TB_ICON,
+  TB_SPLIT_CARET,
+  TB_SPLIT_MAIN,
+  TipSideContext,
+  ToolbarBtn,
+  endComposition,
+  normalizeCssColor,
+  runOnCaretWord,
+  useToolbarPopover,
+} from './editorToolbarParts';
+import { AlignPanel, CalloutPanel, FontPanel, HeadingPanel, HighlightPanel, TextColorPanel } from './editorToolbarPopovers';
 
 // ------------------------------------------------------------------
 // Toolbar
@@ -225,6 +95,12 @@ type ToolbarProps = {
   mobileTabIndex?: number;
   /** Opens the URL link popover (chain icon / Cmd+K). */
   onOpenLinkPopover: () => void;
+  /**
+   * Anchor for that popover. The link button is the only toolbar control a
+   * popover outside this file has to line up with, so the ref comes in rather
+   * than the panel guessing at a position.
+   */
+  linkBtnRef?: RefObject<HTMLButtonElement | null>;
   onAudioStateChange?: (state: AudioRecordingState, duration: number) => void;
   /**
    * Hides the image / attachment / audio group.
@@ -234,21 +110,52 @@ type ToolbarProps = {
    * Markdown folder - the file would be unreadable in Obsidian, in git, and in
    * the folder itself. The Markdown pillar writes real files next to the note
    * instead, so it turns this group off rather than letting it corrupt a vault.
-   * Spec: ops/docs/plans/markdown-folder.md (section 8, media)
+   * Spec: ops/docs/archive/markdown-folder.md (section 8, media)
    */
   hideEncryptedMedia?: boolean;
+  /**
+   * Where the picture and file buttons hand their files when the encrypted
+   * group is hidden. The Markdown pillar writes them as real files next to
+   * the note; without this prop the two buttons stay hidden too. The
+   * recorder and "from Files" stay hidden either way: both only exist as
+   * encrypted blobs.
+   */
+  onInsertFiles?: (files: File[]) => void;
   /** Ref that gets set to the stop function when recording starts. */
   audioStopRef?: MutableRefObject<(() => void) | null>;
-  /** Whether the user has Pro - gates the Pro-only callout types. */
-  isPro?: boolean;
-  /** Opens the upgrade modal when a locked Pro callout type is picked. */
-  onOpenUpgrade?: (trigger: 'callout') => void;
+  /** Switches the note to its Markdown view; absent where the note has none. */
+  onShowMarkdown?: () => void;
 };
 
-export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStateChange, audioStopRef, isPro = false, onOpenUpgrade, hideEncryptedMedia = false }: ToolbarProps) {
+// The heading button's glyph for the level the caret is in, 0 for body text.
+const HEADING_ICONS = [TextH, TextHOne, TextHTwo, TextHThree, TextHFour, TextHFive, TextHSix] as const;
+
+export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef, onAudioStateChange, audioStopRef, hideEncryptedMedia = false, onInsertFiles, onShowMarkdown }: ToolbarProps) {
   const { t } = useTranslation('editor');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
+  // The person's arrangement of the bar and the + menu, and the gear's door
+  // to Settings > Toolbar. Spec: ops/docs/archive/format-bar.md
+  const { layout, onCustomize, position } = useContext(FormatBarContext);
+  // A touch screen gets one strip that scrolls sideways; a pointer gets the
+  // measured row with the ••• overflow. The swipe decides it, not the width.
+  const strip = useIsTouchDevice();
+  // The iOS app removes the system Done bar above the keyboard (GitHub #533),
+  // so the strip carries the only control that closes it. It sits outside
+  // the arrangeable items: a person who could hide it could lose the way out.
+  const keyboardUp = useKeyboardOpen();
+  // The gear needs room the phone bar does not have; there the door is the
+  // Settings row.
+  const wide = !useIsMobile();
+  // The person can put the bar at the bottom of the note (section 7 of the
+  // plan): the last item of the editor's column, sticky to the bottom of the
+  // scroll view, and on a phone above the keyboard. Its labels then open
+  // above it, and the ••• row opens above the main row.
+  // bottom-[-0.5rem] reaches past the note view's 0.5rem bottom padding, so no
+  // text scrolls into a gap under the bar.
+  const atBottom = position === 'bottom';
+  const tipSide = atBottom ? 'above' : 'below';
+  const [recording, setRecording] = useState(false);
 
   /**
    * Subscribe the toolbar to the editor state it displays.
@@ -282,6 +189,7 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
       link: e.isActive('link'),
       superscript: e.isActive('superscript'),
       subscript: e.isActive('subscript'),
+      spoiler: e.isActive('spoiler'),
       blockquote: e.isActive('blockquote'),
       bulletList: e.isActive('bulletList'),
       orderedList: e.isActive('orderedList'),
@@ -301,6 +209,12 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
   const handleImagePick = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length || !editor) return;
+    // Never the encrypted upload where that store is off limits.
+    if (hideEncryptedMedia) {
+      onInsertFiles?.(Array.from(files));
+      e.target.value = '';
+      return;
+    }
     // On mobile, file.type is often empty even for valid images picked
     // from the gallery. Since the input already has accept="image/*",
     // trust that the OS only offered image files - don't filter on MIME.
@@ -313,11 +227,16 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
     }
     // Reset so the same file can be picked again.
     e.target.value = '';
-  }, [editor]);
+  }, [editor, hideEncryptedMedia, onInsertFiles]);
 
   const handleAttachmentPick = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length || !editor) return;
+    if (hideEncryptedMedia) {
+      onInsertFiles?.(Array.from(files));
+      e.target.value = '';
+      return;
+    }
     const view = editor.view;
     // Everything from the attachment picker goes through the attachment
     // pipeline - even images. The dedicated image button exists for
@@ -326,34 +245,42 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
       void triggerAttachmentUpload(file, view);
     }
     e.target.value = '';
-  }, [editor]);
+  }, [editor, hideEncryptedMedia, onInsertFiles]);
 
   if (!editor) return null;
 
   const isActive = (name: string, attrs?: Record<string, unknown>) =>
     editor.isActive(name, attrs);
 
-  const [headingOpen, setHeadingOpen] = useState(false);
-  const headingRef = useRef<HTMLDivElement>(null);
-  const headingBtnRef = useRef<HTMLButtonElement>(null);
-  const headingDropdownRef = useRef<HTMLDivElement>(null);
-  const headingDropdownPos = usePopoverPosition(headingOpen, headingBtnRef, headingDropdownRef);
+  /**
+   * How a popover trigger in the row acts. Under a mouse it acts on
+   * pointerdown, which keeps the outside-pointerdown close of the open
+   * popover from fighting the toggle. In a touch strip a swipe can start on
+   * any button, so the trigger acts on the click the browser fires after a
+   * tap and never after a scroll; pointerdown still keeps the focus in the
+   * note. A press on the open trigger lands inside its wrapper, so the
+   * outside check lets it through and the click closes it.
+   *
+   * Android raises a closed keyboard for a tap that leaves a focused note
+   * focused, and the page then shrinks under the popover the tap opened, so
+   * the strip arms the keyboard guard as the tap starts (GitHub #490).
+   *
+   * Every press first ends a keyboard composition, so a command that
+   * redraws the block never makes the keyboard type its word twice.
+   */
+  const press = (act: () => void) => strip
+    ? {
+        onPointerDown: (e: ReactPointerEvent) => {
+          e.preventDefault();
+          endComposition(editor);
+          suppressSoftKeyboard(editor.view.dom);
+        },
+        onClick: act,
+      }
+    : { onPointerDown: (e: ReactPointerEvent) => { e.preventDefault(); endComposition(editor); act(); } };
 
-  // Close heading dropdown on outside click. The dropdown is portaled
-  // to document.body so we check both the trigger and the dropdown.
-  useEffect(() => {
-    if (!headingOpen) return;
-    function handler(e: PointerEvent) {
-      const target = e.target as Node;
-      if (
-        headingRef.current?.contains(target) ||
-        headingDropdownRef.current?.contains(target)
-      ) return;
-      setHeadingOpen(false);
-    }
-    document.addEventListener('pointerdown', handler);
-    return () => document.removeEventListener('pointerdown', handler);
-  }, [headingOpen]);
+  const { open: headingOpen, setOpen: setHeadingOpen, wrapRef: headingRef, btnRef: headingBtnRef, popoverRef: headingDropdownRef, pos: headingDropdownPos } =
+    useToolbarPopover('button');
 
   // Text color swatch popover. Same portal + outside-click pattern as the
   // heading dropdown so it escapes the toolbar's overflow clipping.
@@ -361,30 +288,14 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
   // The wrapper is the popover's anchor rather than a button, because the
   // trigger is a two-part control: the popover lines up with the whole
   // thing, not with the caret half that opens it.
-  const [colorOpen, setColorOpen] = useState(false);
-  const colorWrapRef = useRef<HTMLDivElement>(null);
-  const colorPopoverRef = useRef<HTMLDivElement>(null);
-  const colorPos = usePopoverPosition(colorOpen, colorWrapRef, colorPopoverRef);
-
-  useEffect(() => {
-    if (!colorOpen) return;
-    function handler(e: PointerEvent) {
-      const target = e.target as Node;
-      if (
-        colorWrapRef.current?.contains(target) ||
-        colorPopoverRef.current?.contains(target)
-      ) return;
-      setColorOpen(false);
-    }
-    document.addEventListener('pointerdown', handler);
-    return () => document.removeEventListener('pointerdown', handler);
-  }, [colorOpen]);
+  const { open: colorOpen, setOpen: setColorOpen, wrapRef: colorWrapRef, popoverRef: colorPopoverRef, pos: colorPos } =
+    useToolbarPopover('wrap');
 
   const currentColor = (editor.getAttributes('textStyle').color as string | undefined) || undefined;
 
   // The swatch picked here last, so the button's main half can apply it
   // again in one press. Held in React state beside localStorage so the
-  // strip under the glyph repaints the moment a swatch is picked.
+  // bar of the glyph repaints the moment a swatch is picked.
   const [textMemory, setTextMemory] = useState<string | null>(() => readColorPref('text'));
   const rememberedTextColor =
     TEXT_COLORS.find((c) => c.name.toLowerCase() === textMemory)?.value ?? null;
@@ -392,24 +303,8 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
   // Highlight swatch popover. Twin of the text color one above, down to the
   // two-ref outside-click check, and it reuses the same `color.names.*`
   // strings - HIGHLIGHT_COLORS carries the same nine names.
-  const [highlightOpen, setHighlightOpen] = useState(false);
-  const highlightWrapRef = useRef<HTMLDivElement>(null);
-  const highlightPopoverRef = useRef<HTMLDivElement>(null);
-  const highlightPos = usePopoverPosition(highlightOpen, highlightWrapRef, highlightPopoverRef);
-
-  useEffect(() => {
-    if (!highlightOpen) return;
-    function handler(e: PointerEvent) {
-      const target = e.target as Node;
-      if (
-        highlightWrapRef.current?.contains(target) ||
-        highlightPopoverRef.current?.contains(target)
-      ) return;
-      setHighlightOpen(false);
-    }
-    document.addEventListener('pointerdown', handler);
-    return () => document.removeEventListener('pointerdown', handler);
-  }, [highlightOpen]);
+  const { open: highlightOpen, setOpen: setHighlightOpen, wrapRef: highlightWrapRef, popoverRef: highlightPopoverRef, pos: highlightPos } =
+    useToolbarPopover('wrap');
 
   // The color attribute is absent on a plain highlight, which is the
   // palette's first entry rather than "nothing selected" - so the two
@@ -439,30 +334,23 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
       setColorOpen(true);
       return;
     }
-    const chain = editor.chain().focus();
-    if (normalizeCssColor(currentColor) === normalizeCssColor(rememberedTextColor)) {
-      chain.unsetColor().run();
-    } else {
-      chain.setColor(rememberedTextColor).run();
-    }
+    const same = normalizeCssColor(currentColor) === normalizeCssColor(rememberedTextColor);
+    runOnCaretWord(editor, (chain) => (same ? chain.unsetColor() : chain.setColor(rememberedTextColor)));
   };
 
   const applyRememberedHighlight = () => {
-    const chain = editor.chain().focus();
     const same =
       highlightOn &&
       normalizeCssColor(currentHighlight) === normalizeCssColor(rememberedHighlight.value ?? undefined);
-    if (same) {
-      chain.unsetHighlight().run();
-      return;
-    }
     // setHighlight MERGES onto an active mark, so the default entry has to
     // clear the old colour rather than omit one - the same trap the popover
     // swatches work around.
-    (rememberedHighlight.value
-      ? chain.setHighlight({ color: rememberedHighlight.value })
-      : chain.unsetHighlight().setHighlight()
-    ).run();
+    runOnCaretWord(editor, (chain) => {
+      if (same) return chain.unsetHighlight();
+      return rememberedHighlight.value
+        ? chain.setHighlight({ color: rememberedHighlight.value })
+        : chain.unsetHighlight().setHighlight();
+    });
   };
 
   // Font family + size share ONE popover and one toolbar button. Two reasons:
@@ -470,25 +358,8 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
   // writing toggle into the ••• row; and the natural icon for a font-family
   // control is a letterform, which is already spoken for by the text-color
   // button (TextAa). One "Font" entry on TextT avoids both problems.
-  const [fontOpen, setFontOpen] = useState(false);
-  const fontWrapRef = useRef<HTMLDivElement>(null);
-  const fontBtnRef = useRef<HTMLButtonElement>(null);
-  const fontPopoverRef = useRef<HTMLDivElement>(null);
-  const fontPos = usePopoverPosition(fontOpen, fontBtnRef, fontPopoverRef);
-
-  useEffect(() => {
-    if (!fontOpen) return;
-    function handler(e: PointerEvent) {
-      const target = e.target as Node;
-      if (
-        fontWrapRef.current?.contains(target) ||
-        fontPopoverRef.current?.contains(target)
-      ) return;
-      setFontOpen(false);
-    }
-    document.addEventListener('pointerdown', handler);
-    return () => document.removeEventListener('pointerdown', handler);
-  }, [fontOpen]);
+  const { open: fontOpen, setOpen: setFontOpen, wrapRef: fontWrapRef, btnRef: fontBtnRef, popoverRef: fontPopoverRef, pos: fontPos } =
+    useToolbarPopover('button');
 
   // Undefined means the run carries no font attribute, the same
   // no-value-is-not-a-default distinction the alignment control makes.
@@ -499,54 +370,30 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
   // is already measured-and-clipped, and four more always-on buttons would push
   // the writing toggles people actually use into the ••• row. Same shape as the
   // color picker above it.
-  const [alignOpen, setAlignOpen] = useState(false);
-  const alignWrapRef = useRef<HTMLDivElement>(null);
-  const alignBtnRef = useRef<HTMLButtonElement>(null);
-  const alignPopoverRef = useRef<HTMLDivElement>(null);
-  const alignPos = usePopoverPosition(alignOpen, alignBtnRef, alignPopoverRef);
+  const { open: alignOpen, setOpen: setAlignOpen, wrapRef: alignWrapRef, btnRef: alignBtnRef, popoverRef: alignPopoverRef, pos: alignPos } =
+    useToolbarPopover('button');
 
-  useEffect(() => {
-    if (!alignOpen) return;
-    function handler(e: PointerEvent) {
-      const target = e.target as Node;
-      if (
-        alignWrapRef.current?.contains(target) ||
-        alignPopoverRef.current?.contains(target)
-      ) return;
-      setAlignOpen(false);
-    }
-    document.addEventListener('pointerdown', handler);
-    return () => document.removeEventListener('pointerdown', handler);
-  }, [alignOpen]);
+  // The attach menu behind the paperclip: the picture, file and recording
+  // items a person put there. Spec: ops/issues/0534.md
+  const { open: attachOpen, setOpen: setAttachOpen, wrapRef: attachWrapRef, btnRef: attachBtnRef, popoverRef: attachPopoverRef, pos: attachPos } =
+    useToolbarPopover('button');
+  // Starts a recording from the attach menu, where no recorder button shows.
+  const audioStartRef = useRef<(() => void) | null>(null);
 
-  // The '+' menu's wrapper. Declared here rather than beside the rest of the
-  // insert state because the callout picker below anchors on it: the callout
-  // entry lives in that menu, so the menu's trigger is the only element the
-  // panel can align to.
+  // The '+' menu's wrapper, read by the menu's own outside-click check below.
   const insertWrapRef = useRef<HTMLDivElement>(null);
 
   // Callout type picker. Same portal + outside-click pattern as the color
   // swatch so it escapes the toolbar's overflow clipping.
-  const [calloutOpen, setCalloutOpen] = useState(false);
-  const calloutPopoverRef = useRef<HTMLDivElement>(null);
-  const calloutPos = usePopoverPosition(calloutOpen, insertWrapRef, calloutPopoverRef);
-
-  useEffect(() => {
-    if (!calloutOpen) return;
-    function handler(e: PointerEvent) {
-      const target = e.target as Node;
-      if (
-        insertWrapRef.current?.contains(target) ||
-        calloutPopoverRef.current?.contains(target)
-      ) return;
-      setCalloutOpen(false);
-    }
-    document.addEventListener('pointerdown', handler);
-    return () => document.removeEventListener('pointerdown', handler);
-  }, [calloutOpen]);
-
-  // Demo unlocks every callout type as a teaser, same as Zen. Spec: ops/docs/callouts.md
-  const calloutUnlocked = proUnlocked(isPro);
+  //
+  // The trigger belongs in this row, inside calloutWrapRef and beside the panel
+  // it opens. A popover whose trigger sits in a menu that closes on the same
+  // pointerdown cannot survive its own opening press: the menu unmounts the
+  // pressed row, the event reaches this listener carrying a target that is no
+  // longer in the document, no wrapper contains it, and the check reads an
+  // outside click. The link popover has the same requirement.
+  const { open: calloutOpen, setOpen: setCalloutOpen, wrapRef: calloutWrapRef, btnRef: calloutBtnRef, popoverRef: calloutPopoverRef, pos: calloutPos } =
+    useToolbarPopover('button');
 
   // '+' insert menu: the newer marks (highlight, superscript, subscript)
   // and math live in a labeled dropdown instead of growing the format
@@ -568,7 +415,9 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
     return () => document.removeEventListener('pointerdown', handler);
   }, [insertOpen]);
 
-  // Escape closes whichever popover is open, for all seven at once.
+  // Escape closes whichever popover is open. Six of the seven register
+  // through useToolbarPopover; the '+' menu, anchored to the whole right
+  // cluster, registers here.
   //
   // They each had an outside-pointerdown check and nothing else, so the one
   // key every other overlay in the app answers to did nothing here. The hook
@@ -586,12 +435,6 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
   //
   // Registering here also hands these popovers to the Android back button,
   // which walks the same stack via closeTopOverlay().
-  useEscapeToClose(() => setHeadingOpen(false), headingOpen);
-  useEscapeToClose(() => setColorOpen(false), colorOpen);
-  useEscapeToClose(() => setHighlightOpen(false), highlightOpen);
-  useEscapeToClose(() => setFontOpen(false), fontOpen);
-  useEscapeToClose(() => setAlignOpen(false), alignOpen);
-  useEscapeToClose(() => setCalloutOpen(false), calloutOpen);
   useEscapeToClose(() => setInsertOpen(false), insertOpen);
 
   // Overflow expand/collapse. Collapsed (default), the format buttons fill
@@ -611,52 +454,103 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
   // '+' button, and end-aligned: the menu is wider than the cluster, so this
   // lines its right edge up with the media cluster (and the toolbar's right
   // padding) instead of leaving it a few px short of the buttons above it.
-  const insertPos = usePopoverPosition(insertOpen, rightClusterRef, insertMenuRef, { align: 'end' });
+  const insertPos = usePopoverPosition(insertOpen, rightClusterRef, insertMenuRef, { align: 'end', shrink: true });
   const itemWidthsRef = useRef<number[]>([]);
   const overflowRef = useRef(false);
+  const recomputeFitRef = useRef<() => void>(() => {});
+  // The widths cache is indexed by position, so a new arrangement starts it
+  // over: position 3 now names another button. The fit measures the buttons
+  // in the row, so until it has measured this arrangement every button is
+  // drawn; otherwise a button that was behind the ••• before the change
+  // would never be measured and never shown.
+  const barSig = layout.bar.join(',');
+  const [measuredSig, setMeasuredSig] = useState<string | null>(null);
   useLayoutEffect(() => {
     const row = formatRowRef.current;
     const flexRow = row?.parentElement;
     if (!row || !flexRow) return;
+    itemWidthsRef.current = [];
+    overflowRef.current = false;
+    if (strip) {
+      // Every button renders and the row scrolls; a fade on the edge that has
+      // more to show says so. Logical edges: in RTL the start is on the right
+      // and scrollLeft counts down from 0.
+      recomputeFitRef.current = () => {};
+      setVisibleCount(99);
+      setHasOverflow(false);
+      setFormatExpanded(false);
+      const fade = () => {
+        const max = row.scrollWidth - row.clientWidth;
+        const pos = Math.abs(row.scrollLeft);
+        const start = pos > 1;
+        const end = pos < max - 1;
+        row.dataset.fade = start && end ? 'both' : start ? 'start' : end ? 'end' : '';
+      };
+      fade();
+      row.addEventListener('scroll', fade, { passive: true });
+      const ro = new ResizeObserver(fade);
+      ro.observe(row);
+      return () => { row.removeEventListener('scroll', fade); ro.disconnect(); };
+    }
+    delete row.dataset.fade;
     const recompute = () => {
       const kids = Array.from(row.children) as HTMLElement[];
-      // Capture every button's width once, while all are rendered in row 1.
+      // Every button's width, captured while all of them are still in row 1.
+      // Later passes see only the ones that fit, so they refresh that prefix
+      // in place, and each entry keeps the WIDEST width it has been measured
+      // at. The heading button is why: its glyph reads H in body copy and H1
+      // to H6 inside a heading, so it grows by a digit as the caret moves.
+      // Reserving the wider spelling is what stops the row dropping a button
+      // the moment somebody puts the caret in a title.
       if (kids.length > itemWidthsRef.current.length) {
         itemWidthsRef.current = kids.map((k) => k.getBoundingClientRect().width);
+      } else {
+        kids.forEach((k, i) => {
+          itemWidthsRef.current[i] = Math.max(itemWidthsRef.current[i] ?? 0, k.getBoundingClientRect().width);
+        });
       }
       const widths = itemWidthsRef.current;
       const total = widths.length;
       if (!total) return;
+      // A button width is fractional - the heading button's glyph decides its
+      // own - while the row's box is whole pixels, so a button whose last
+      // fraction of a pixel lands outside still reads as fitting: the clip
+      // takes a sliver of a rounded corner nobody can see. Hold that slack
+      // open, because a 0.8px overhang otherwise costs a whole button.
+      const SUBPIXEL = 1;
       const fit = (cap: number) => {
         let used = 0;
         let n = 0;
         for (; n < total; n++) {
           used += widths[n]! + (n ? 2 : 0);
-          if (used > cap) break;
+          if (used - cap > SUBPIXEL) break;
         }
         return n;
       };
-      // row.clientWidth is the exact width flexbox allotted row 1 (it already
-      // accounts for the right cluster, including ••• when present). Fitting
-      // against it directly is precise; -6 keeps a hair of safety so the last
-      // button never touches the cluster.
-      const avail = row.clientWidth - 6;
+      // The row's own box is the width flexbox allotted it, and it already
+      // accounts for the right cluster, including ••• when that is present.
+      // The 6px gap to the cluster is part of the layout, so nothing is held
+      // back for it here: a margin on top of that gap buys no space a reader
+      // can see and costs the last button its place.
+      const avail = row.getBoundingClientRect().width;
       let n = fit(avail);
       const overflow = n < total;
       // On the transition into overflow the ••• isn't in the cluster yet, so
       // reserve its width now - otherwise a button would clip for one frame
       // before the observer re-measures the (now wider) cluster.
-      if (overflow && !overflowRef.current) n = Math.max(1, fit(avail - 42));
+      if (overflow && !overflowRef.current) n = Math.max(1, fit(avail - MORE_TOGGLE_W));
       overflowRef.current = overflow;
       setVisibleCount(overflow ? n : total);
       setHasOverflow(overflow);
+      setMeasuredSig(barSig);
     };
+    recomputeFitRef.current = recompute;
     recompute();
     const ro = new ResizeObserver(recompute);
     ro.observe(flexRow);
     if (rightClusterRef.current) ro.observe(rightClusterRef.current);
     return () => ro.disconnect();
-  }, []);
+  }, [strip, barSig]);
 
   // All six levels, menu and detection alike. The schema always allowed
   // every level (imports and ###### markdown produce H6) and detection
@@ -670,16 +564,17 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
     : isActive('heading', { level: 5 }) ? 5
     : isActive('heading', { level: 6 }) ? 6
     : 0;
+  const HeadingIcon = HEADING_ICONS[activeHeading];
 
   // Format buttons in priority order. They fill the bar; whatever doesn't
   // fit wraps below and is clipped (max-h) until ••• expands it.
   const bold = (
-    <ToolbarBtn key="bold" onClick={() => editor.chain().focus().toggleBold().run()} active={isActive('bold')} label={t('toolbar.bold')} tabIndex={mobileTabIndex}>
+    <ToolbarBtn key="bold" onClick={() => editor.chain().focus().toggleBold().run()} active={isActive('bold')} label={t('toolbar.bold')} keys={keyText('bold')} tabIndex={mobileTabIndex}>
       <BoldIcon size={TB_ICON} />
     </ToolbarBtn>
   );
   const italic = (
-    <ToolbarBtn key="italic" onClick={() => editor.chain().focus().toggleItalic().run()} active={isActive('italic')} label={t('toolbar.italic')} tabIndex={mobileTabIndex}>
+    <ToolbarBtn key="italic" onClick={() => editor.chain().focus().toggleItalic().run()} active={isActive('italic')} label={t('toolbar.italic')} keys={keyText('italic')} tabIndex={mobileTabIndex}>
       <ItalicIcon size={TB_ICON} />
     </ToolbarBtn>
   );
@@ -687,349 +582,156 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
   // where every other editor puts it, and priority order is also clipping
   // order, so parking it at the end would drop it into the ••• row first.
   const underline = (
-    <ToolbarBtn key="underline" onClick={() => editor.chain().focus().toggleUnderline().run()} active={isActive('underline')} label={t('toolbar.underline')} tabIndex={mobileTabIndex}>
+    <ToolbarBtn key="underline" onClick={() => editor.chain().focus().toggleUnderline().run()} active={isActive('underline')} label={t('toolbar.underline')} keys={keyText('underline')} tabIndex={mobileTabIndex}>
       <UnderlineIcon size={TB_ICON} />
     </ToolbarBtn>
   );
   const heading = (
     <div key="heading" ref={headingRef} className="relative shrink-0">
-      <HoverLabel label={t('toolbar.heading')} position="below">
+      <HoverLabel label={t('toolbar.heading')} position={tipSide}>
         <button
           ref={headingBtnRef}
           type="button"
           tabIndex={mobileTabIndex}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            setHeadingOpen((prev) => !prev);
-          }}
+          {...press(() => setHeadingOpen((prev) => !prev))}
           aria-label={t('toolbar.heading')}
-          className={`flex items-center justify-center gap-0.5 h-9 w-auto px-2 rounded-lg active:scale-95 transition outline-none shrink-0 ${activeHeading ? TB_BTN_ACTIVE : TB_BTN_REST}`}
+          className={`${TB_BTN_BASE} ${activeHeading ? TB_BTN_ACTIVE : TB_BTN_REST}`}
         >
-          <span className="font-bold text-sm px-0.5">H{activeHeading || ''}</span>
-          <ChevronDownIcon size={12} />
+          {/* A plain button box with no caret: its one press opens the level
+              list, as alignment, font and callout do. The glyph names the
+              level the caret is in, so the box never changes width.
+              Spec: ops/docs/archive/ui-patterns.md (section 23 - editor toolbar fit) */}
+          <HeadingIcon size={TB_ICON} />
         </button>
       </HoverLabel>
-      {headingOpen && createPortal(
-        <div
-          ref={headingDropdownRef}
-          className="fixed z-50 bg-surface-1 border border-divider rounded-lg shadow-lg py-1 w-40"
-          style={{
-            top: headingDropdownPos?.top ?? 0,
-            left: headingDropdownPos?.left ?? 0,
-            visibility: headingDropdownPos ? 'visible' : 'hidden',
-          }}
-        >
-          <button
-            type="button"
-            onPointerDown={(e) => {
-              e.preventDefault();
-              editor.chain().focus().setParagraph().run();
-              setHeadingOpen(false);
-            }}
-            className={`w-full text-start px-3 py-1.5 text-sm [@media(hover:hover)]:hover:bg-neutral-100 [@media(hover:hover)]:dark:hover:bg-neutral-800 active:bg-neutral-100 dark:active:bg-neutral-800 transition ${
-              activeHeading === 0 ? 'text-accent' : 'text-neutral-700 dark:text-neutral-200'
-            }`}
-          >
-            {t('heading.normalText')}
-          </button>
-          {([1, 2, 3, 4, 5, 6] as const).map((level) => (
-            <button
-              key={level}
-              type="button"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                smartToggleHeading(editor, level);
-                setHeadingOpen(false);
-              }}
-              className={`w-full text-start px-3 py-1.5 text-sm [@media(hover:hover)]:hover:bg-neutral-100 [@media(hover:hover)]:dark:hover:bg-neutral-800 active:bg-neutral-100 dark:active:bg-neutral-800 transition ${
-                activeHeading === level ? 'text-accent' : 'text-neutral-700 dark:text-neutral-200'
-              }`}
-            >
-              {t('heading.level', { level })}
-            </button>
-          ))}
-        </div>,
-        document.body,
+      {headingOpen && (
+        <HeadingPanel
+          popoverRef={headingDropdownRef}
+          pos={headingDropdownPos}
+          onClose={() => setHeadingOpen(false)}
+          editor={editor}
+          activeHeading={activeHeading}
+        />
       )}
     </div>
   );
   const tasks = (
-    <ToolbarBtn key="tasks" onClick={() => editor.chain().focus().toggleTaskList().run()} active={isActive('taskList')} label={t('toolbar.taskList')} tabIndex={mobileTabIndex}>
+    <ToolbarBtn key="tasks" onClick={() => editor.chain().focus().toggleTaskList().run()} active={isActive('taskList')} label={t('toolbar.taskList')} keys={keyText('taskList')} tabIndex={mobileTabIndex}>
       <ListChecksIcon size={TB_ICON} />
     </ToolbarBtn>
   );
-  const bullets = (
-    <ToolbarBtn key="bullets" onClick={() => editor.chain().focus().toggleBulletList().run()} active={isActive('bulletList')} label={t('toolbar.bulletList')} tabIndex={mobileTabIndex}>
-      <ListIcon size={TB_ICON} />
+  const link = (
+    <ToolbarBtn key="link" onClick={onOpenLinkPopover} active={isActive('link')} label={t('toolbar.addLink')} keys={keyText('insertLink')} tabIndex={mobileTabIndex} btnRef={linkBtnRef}>
+      <LinkIcon size={TB_ICON} />
     </ToolbarBtn>
   );
-  const numbered = (
-    <ToolbarBtn key="numbered" onClick={() => editor.chain().focus().toggleOrderedList().run()} active={isActive('orderedList')} label={t('toolbar.numberedList')} tabIndex={mobileTabIndex}>
-      <ListOrderedIcon size={TB_ICON} />
+  // The two kinds of link are one pair and sit together: the chain reaches a
+  // site, the brackets reach another note. This one only types "[[" and leaves
+  // the rest to the suggestion plugin, so it could live in the '+' menu as
+  // well - it sits in the row because its twin has to, and a pair split across
+  // two homes reads as two unrelated controls.
+  const noteLink = (
+    <ToolbarBtn key="notelink" onClick={() => { editor.chain().focus().insertContent('[[').run(); }} label={t('toolbar.noteLink')} tabIndex={mobileTabIndex}>
+      <BracketsIcon size={TB_ICON} />
     </ToolbarBtn>
   );
   // Split control: the wide half applies the remembered colour, the caret
   // opens the palette. Both halves paint the same rest state so the pair
-  // reads as one button, and the strip under the glyph shows either the
-  // colour of the run the caret sits in or the one a press would apply.
+  // reads as one button, and the bar of the A shows either the colour of
+  // the run the caret sits in or the one a press would apply.
   const colorApplyLabel = rememberedTextColor
     ? t('toolbar.textColorApply', { color: t(`color.names.${textMemory}`) })
     : t('toolbar.textColor');
   const color = (
     <div key="color" ref={colorWrapRef} className="relative shrink-0 flex items-stretch">
-      <HoverLabel label={colorApplyLabel} position="below">
+      <HoverLabel label={colorApplyLabel} position={tipSide}>
         <button
           type="button"
           tabIndex={mobileTabIndex}
           onMouseDown={(e) => e.preventDefault()}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            applyRememberedTextColor();
-          }}
+          {...press(applyRememberedTextColor)}
           aria-label={colorApplyLabel}
           className={`${TB_SPLIT_MAIN} ${TB_BTN_REST}`}
         >
-          <BaselineIcon size={TB_ICON} />
-          <ColorBar color={currentColor ?? rememberedTextColor} />
+          <TextColorIcon size={TB_ICON} />
+          <ColorBar place="underline" color={currentColor ?? rememberedTextColor} />
         </button>
       </HoverLabel>
-      <HoverLabel label={t('toolbar.pickColor')} position="below">
+      <HoverLabel label={t('toolbar.pickColor')} position={tipSide}>
         <button
           type="button"
           tabIndex={mobileTabIndex}
           onMouseDown={(e) => e.preventDefault()}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            setColorOpen((prev) => !prev);
-          }}
+          {...press(() => setColorOpen((prev) => !prev))}
           aria-label={t('toolbar.pickColor')}
           aria-expanded={colorOpen}
           className={`${TB_SPLIT_CARET} ${TB_BTN_REST}`}
         >
-          <ChevronDownIcon size={11} />
+          <ChevronDownIcon size={TB_CARET} />
         </button>
       </HoverLabel>
-      {colorOpen && createPortal(
-        <div
-          ref={colorPopoverRef}
-          className="fixed z-50 bg-surface-1 border border-divider rounded-lg shadow-lg p-2 w-[168px]"
-          style={{
-            top: colorPos?.top ?? 0,
-            left: colorPos?.left ?? 0,
-            visibility: colorPos ? 'visible' : 'hidden',
-          }}
-        >
-          <div className="grid grid-cols-5 gap-1.5">
-            {TEXT_COLORS.map((c) => {
-              const selected = currentColor?.toLowerCase() === c.value.toLowerCase();
-              const colorName = t(`color.names.${c.name.toLowerCase()}`);
-              return (
-                <HoverLabel key={c.value} label={colorName} position="above">
-                  <button
-                    type="button"
-                    aria-label={colorName}
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      editor.chain().focus().setColor(c.value).run();
-                      // Every pick trains the button. Remove does not: it is
-                      // not a choice of colour.
-                      setTextMemory(c.name.toLowerCase());
-                      writeColorPref('text', c.name.toLowerCase());
-                      setColorOpen(false);
-                    }}
-                    className={`block w-6 h-6 rounded-full transition [@media(hover:hover)]:hover:scale-110 ${
-                      selected ? 'ring-2 ring-offset-1 ring-accent ring-offset-surface-1' : 'border border-divider'
-                    }`}
-                    style={{ background: c.value }}
-                  />
-                </HoverLabel>
-              );
-            })}
-            <HoverLabel label={t('color.remove')} position="above">
-              <button
-                type="button"
-                aria-label={t('color.remove')}
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  editor.chain().focus().unsetColor().run();
-                  setColorOpen(false);
-                }}
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-neutral-500 dark:text-neutral-400 transition [@media(hover:hover)]:hover:scale-110 ${
-                  currentColor ? 'border border-divider' : 'ring-2 ring-offset-1 ring-accent ring-offset-surface-1 border border-divider'
-                }`}
-              >
-                <ProhibitIcon size={13} />
-              </button>
-            </HoverLabel>
-          </div>
-        </div>,
-        document.body,
+      {colorOpen && (
+        <TextColorPanel
+          popoverRef={colorPopoverRef}
+          pos={colorPos}
+          onClose={() => setColorOpen(false)}
+          editor={editor}
+          currentColor={currentColor}
+          setTextMemory={setTextMemory}
+        />
       )}
     </div>
   );
-  /**
-   * The callout type picker, detached from any toolbar button: the callout
-   * entry lives in the + menu, so the panel anchors on that menu's own
-   * trigger and is mounted from the toolbar's own render rather than from
-   * inside a button. No callout button exists in the row to park it in, and
-   * a popover mounted inside an element that never renders shows nothing.
-   */
-  const calloutPopover = calloutOpen && createPortal(
-    <div
-      ref={calloutPopoverRef}
-      role="menu"
-      aria-label={t('callout.pickerLabel')}
-      className="fixed z-50 bg-surface-1 border border-divider rounded-lg shadow-lg p-2 w-[224px]"
-      style={{
-        top: calloutPos?.top ?? 0,
-        left: calloutPos?.left ?? 0,
-        visibility: calloutPos ? 'visible' : 'hidden',
-      }}
-    >
-      <div className="grid grid-cols-3 gap-1">
-        {CALLOUT_TYPES.map((c) => {
-          const locked = c.pro && !calloutUnlocked;
-          const CalloutIcon = c.icon;
-          return (
-            <button
-              key={c.type}
-              type="button"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                setCalloutOpen(false);
-                if (locked) { onOpenUpgrade?.('callout'); return; }
-                if (editor.isActive('callout')) {
-                  editor.chain().focus().setCalloutType(c.type).run();
-                } else {
-                  editor.chain().focus().insertCallout(c.type).run();
-                }
-              }}
-              className="relative flex flex-col items-center gap-1 rounded-md px-1 py-2 text-neutral-700 dark:text-neutral-200 [@media(hover:hover)]:hover:bg-neutral-100 [@media(hover:hover)]:dark:hover:bg-neutral-800 transition"
-            >
-              <CalloutIcon size={18} weight="bold" color={c.color} />
-              <span className="text-[11px] leading-none">{t(`callout.types.${c.type}`)}</span>
-              {locked && (
-                <RocketIcon size={11} weight="fill" className="text-pro absolute top-1 end-1" />
-              )}
-            </button>
-          );
-        })}
-      </div>
-      {/* When the cursor is inside a callout, offer an explicit way to remove
-          it - the picker is where users look to change or undo a callout, and
-          this covers touch platforms with no Backspace-at-start gesture. */}
-      {isActive('callout') && (
-        <div className="mt-1.5 pt-1.5 border-t border-divider">
-          <button
-            type="button"
-            onPointerDown={(e) => {
-              e.preventDefault();
-              setCalloutOpen(false);
-              editor.chain().focus().removeCallout().run();
-            }}
-            className="flex w-full items-center justify-center gap-2 rounded-md px-2 py-2 text-[13px] text-neutral-700 dark:text-neutral-200 [@media(hover:hover)]:hover:bg-neutral-100 [@media(hover:hover)]:dark:hover:bg-neutral-800 transition"
-          >
-            <TrashIcon size={16} className="text-red-500 dark:text-red-400" />
-            <span>{t('callout.remove')}</span>
-          </button>
-        </div>
+  const callout = (
+    <div key="callout" ref={calloutWrapRef} className="relative shrink-0">
+      <HoverLabel label={t('toolbar.callout')} position={tipSide}>
+        <button
+          ref={calloutBtnRef}
+          type="button"
+          tabIndex={mobileTabIndex}
+          onMouseDown={(e) => e.preventDefault()}
+          {...press(() => setCalloutOpen((prev) => !prev))}
+          aria-label={t('toolbar.callout')}
+          className={`${TB_BTN_BASE} ${isActive('callout') ? TB_BTN_ACTIVE : TB_BTN_REST} shrink-0`}
+        >
+          <MegaphoneIcon size={TB_ICON} />
+        </button>
+      </HoverLabel>
+      {calloutOpen && (
+        <CalloutPanel
+          popoverRef={calloutPopoverRef}
+          pos={calloutPos}
+          onClose={() => setCalloutOpen(false)}
+          editor={editor}
+          isActive={isActive}
+        />
       )}
-    </div>,
-    document.body,
+    </div>
   );
   const font = (
     <div key="font" ref={fontWrapRef} className="relative shrink-0">
-      <HoverLabel label={t('toolbar.font')} position="below">
+      <HoverLabel label={t('toolbar.font')} position={tipSide}>
         <button
           ref={fontBtnRef}
           type="button"
           tabIndex={mobileTabIndex}
           onMouseDown={(e) => e.preventDefault()}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            setFontOpen((prev) => !prev);
-          }}
+          {...press(() => setFontOpen((prev) => !prev))}
           aria-label={t('toolbar.font')}
           className={`${TB_BTN_BASE} ${currentFontFamily || currentFontSize ? TB_BTN_ACTIVE : TB_BTN_REST} shrink-0`}
         >
           <FontIcon size={TB_ICON} />
         </button>
       </HoverLabel>
-      {fontOpen && createPortal(
-        <div
-          ref={fontPopoverRef}
-          className="fixed z-50 bg-surface-1 border border-divider rounded-lg shadow-lg py-1 w-44"
-          style={{
-            top: fontPos?.top ?? 0,
-            left: fontPos?.left ?? 0,
-            visibility: fontPos ? 'visible' : 'hidden',
-          }}
-        >
-          {FONT_FAMILIES.map((f) => {
-            const selected = currentFontFamily === f.value;
-            return (
-              <button
-                key={f.value}
-                type="button"
-                aria-pressed={selected}
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  if (selected) editor.chain().focus().unsetFontFamily().run();
-                  else editor.chain().focus().setFontFamily(f.value).run();
-                  setFontOpen(false);
-                }}
-                className={`w-full flex items-center justify-between text-start px-3 py-1.5 text-sm [@media(hover:hover)]:hover:bg-neutral-100 [@media(hover:hover)]:dark:hover:bg-neutral-800 active:bg-neutral-100 dark:active:bg-neutral-800 transition ${
-                  selected ? 'text-accent' : 'text-neutral-700 dark:text-neutral-200'
-                }`}
-                style={{ fontFamily: f.value }}
-              >
-                {t(`font.families.${f.name.toLowerCase()}`)}
-              </button>
-            );
-          })}
-          <div className="my-1 h-px bg-divider" aria-hidden="true" />
-          {FONT_SIZES.map((s) => {
-            const selected = currentFontSize === s.value;
-            return (
-              <button
-                key={s.value}
-                type="button"
-                aria-pressed={selected}
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  if (selected) editor.chain().focus().unsetFontSize().run();
-                  else editor.chain().focus().setFontSize(s.value).run();
-                  setFontOpen(false);
-                }}
-                className={`w-full flex items-center justify-between text-start px-3 py-1.5 [@media(hover:hover)]:hover:bg-neutral-100 [@media(hover:hover)]:dark:hover:bg-neutral-800 active:bg-neutral-100 dark:active:bg-neutral-800 transition ${
-                  selected ? 'text-accent' : 'text-neutral-700 dark:text-neutral-200'
-                }`}
-                style={{ fontSize: `calc(0.875rem * ${parseFloat(s.value)})` }}
-              >
-                {t(`font.sizes.${s.name.toLowerCase()}`)}
-              </button>
-            );
-          })}
-          {/* One reset for both axes - the two "unset" paths above only clear
-              the entry you re-picked, and a run can carry either or both. */}
-          {(currentFontFamily || currentFontSize) && (
-            <>
-              <div className="my-1 h-px bg-divider" aria-hidden="true" />
-              <button
-                type="button"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  editor.chain().focus().unsetFontFamily().unsetFontSize().run();
-                  setFontOpen(false);
-                }}
-                className="w-full text-start px-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-200 [@media(hover:hover)]:hover:bg-neutral-100 [@media(hover:hover)]:dark:hover:bg-neutral-800 active:bg-neutral-100 dark:active:bg-neutral-800 transition"
-              >
-                {t('font.reset')}
-              </button>
-            </>
-          )}
-        </div>,
-        document.body,
+      {fontOpen && (
+        <FontPanel
+          popoverRef={fontPopoverRef}
+          pos={fontPos}
+          onClose={() => setFontOpen(false)}
+          editor={editor}
+          currentFontFamily={currentFontFamily}
+          currentFontSize={currentFontSize}
+        />
       )}
     </div>
   );
@@ -1058,59 +760,28 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
 
   const align = (
     <div key="align" ref={alignWrapRef} className="relative shrink-0">
-      <HoverLabel label={t('toolbar.align')} position="below">
+      <HoverLabel label={t('toolbar.align')} position={tipSide}>
         <button
           ref={alignBtnRef}
           type="button"
           tabIndex={mobileTabIndex}
           onMouseDown={(e) => e.preventDefault()}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            setAlignOpen((prev) => !prev);
-          }}
+          {...press(() => setAlignOpen((prev) => !prev))}
           aria-label={t('toolbar.align')}
           className={`${TB_BTN_BASE} ${currentAlign === null ? TB_BTN_REST : TB_BTN_ACTIVE} shrink-0`}
         >
           <CurrentAlignIcon size={TB_ICON} />
         </button>
       </HoverLabel>
-      {alignOpen && createPortal(
-        <div
-          ref={alignPopoverRef}
-          className="fixed z-50 bg-surface-1 border border-divider rounded-lg shadow-lg p-1 flex items-center gap-0.5"
-          style={{
-            top: alignPos?.top ?? 0,
-            left: alignPos?.left ?? 0,
-            visibility: alignPos ? 'visible' : 'hidden',
-          }}
-        >
-          {ALIGNMENTS.map(({ value, Icon }) => (
-            <HoverLabel key={value} label={t(`align.${value}`)} position="above">
-              <button
-                type="button"
-                aria-label={t(`align.${value}`)}
-                aria-pressed={currentAlign === value}
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  // 'left' unsets rather than sets - it is the unstyled default,
-                  // and storing it would only add an HTML blob to the markdown
-                  // source. Re-picking the active alignment also clears it, so
-                  // the block goes back to inheriting.
-                  if (value === 'left' || currentAlign === value) {
-                    editor.chain().focus().unsetTextAlign().run();
-                  } else {
-                    editor.chain().focus().setTextAlign(value).run();
-                  }
-                  setAlignOpen(false);
-                }}
-                className={`${TB_BTN_BASE} ${currentAlign === value ? TB_BTN_ACTIVE : TB_BTN_REST}`}
-              >
-                <Icon size={TB_ICON} />
-              </button>
-            </HoverLabel>
-          ))}
-        </div>,
-        document.body,
+      {alignOpen && (
+        <AlignPanel
+          popoverRef={alignPopoverRef}
+          pos={alignPos}
+          onClose={() => setAlignOpen(false)}
+          editor={editor}
+          alignments={ALIGNMENTS}
+          currentAlign={currentAlign}
+        />
       )}
     </div>
   );
@@ -1121,15 +792,12 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
   });
   const highlight = (
     <div key="highlight" ref={highlightWrapRef} className="relative shrink-0 flex items-stretch">
-      <HoverLabel label={highlightApplyLabel} position="below">
+      <HoverLabel label={highlightApplyLabel} position={tipSide}>
         <button
           type="button"
           tabIndex={mobileTabIndex}
           onMouseDown={(e) => e.preventDefault()}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            applyRememberedHighlight();
-          }}
+          {...press(applyRememberedHighlight)}
           aria-label={highlightApplyLabel}
           className={`${TB_SPLIT_MAIN} ${highlightOn ? TB_BTN_ACTIVE : TB_BTN_REST}`}
         >
@@ -1137,159 +805,335 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
           {/* The strip shows the run's own wash while the caret sits inside
               one, and the colour a press would apply everywhere else. */}
           {highlightOn && currentHighlight
-            ? <ColorBar color={currentHighlight} />
+            ? <ColorBar place="below" color={currentHighlight} />
             : <ColorBar
+                place="below"
                 color={rememberedHighlight.value}
                 className={rememberedHighlight.value ? '' : 'pn-hl-default'}
               />}
         </button>
       </HoverLabel>
-      <HoverLabel label={t('toolbar.pickHighlight')} position="below">
+      <HoverLabel label={t('toolbar.pickHighlight')} position={tipSide}>
         <button
           type="button"
           tabIndex={mobileTabIndex}
           onMouseDown={(e) => e.preventDefault()}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            setHighlightOpen((prev) => !prev);
-          }}
+          {...press(() => setHighlightOpen((prev) => !prev))}
           aria-label={t('toolbar.pickHighlight')}
           aria-expanded={highlightOpen}
           className={`${TB_SPLIT_CARET} ${highlightOn ? TB_BTN_ACTIVE : TB_BTN_REST}`}
         >
-          <ChevronDownIcon size={11} />
+          <ChevronDownIcon size={TB_CARET} />
         </button>
       </HoverLabel>
-      {highlightOpen && createPortal(
-        <div
-          ref={highlightPopoverRef}
-          className="fixed z-50 bg-surface-1 border border-divider rounded-lg shadow-lg p-2 w-[168px]"
-          style={{
-            top: highlightPos?.top ?? 0,
-            left: highlightPos?.left ?? 0,
-            visibility: highlightPos ? 'visible' : 'hidden',
-          }}
-        >
-          <div className="grid grid-cols-5 gap-1.5">
-            {HIGHLIGHT_COLORS.map((c) => {
-              // A swatch is selected only when the run is actually
-              // highlighted: without that check the palette's first entry
-              // (color === null) would read as selected on unhighlighted text.
-              const selected = highlightOn && normalizeCssColor(currentHighlight) === normalizeCssColor(c.value ?? undefined);
-              const colorName = t(`color.names.${c.name.toLowerCase()}`);
-              return (
-                <HoverLabel key={c.name} label={colorName} position="above">
-                  <button
-                    type="button"
-                    aria-label={colorName}
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      // setHighlight MERGES attributes onto an active mark, so
-                      // the default entry has to clear the old color rather
-                      // than omit one: picking Yellow over a green run would
-                      // otherwise leave it green.
-                      const chain = editor.chain().focus();
-                      (c.value
-                        ? chain.setHighlight({ color: c.value })
-                        : chain.unsetHighlight().setHighlight()
-                      ).run();
-                      setHighlightMemory(c.name.toLowerCase());
-                      writeColorPref('highlight', c.name.toLowerCase());
-                      setHighlightOpen(false);
-                    }}
-                    className={`block w-6 h-6 rounded-full transition [@media(hover:hover)]:hover:scale-110 ${
-                      c.value ? '' : 'pn-hl-default '
-                    }${
-                      selected ? 'ring-2 ring-offset-1 ring-accent ring-offset-surface-1' : 'border border-divider'
-                    }`}
-                    // The wash is translucent by design, so the swatch shows
-                    // it over the popover's own surface - which is the same
-                    // light-or-dark ground it will sit on in the note. The
-                    // default entry has no stored color and takes its themed
-                    // pair from the .pn-hl-default class instead.
-                    style={c.value ? { background: c.value } : undefined}
-                  />
-                </HoverLabel>
-              );
-            })}
-            <HoverLabel label={t('color.removeHighlight')} position="above">
-              <button
-                type="button"
-                aria-label={t('color.removeHighlight')}
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  editor.chain().focus().unsetHighlight().run();
-                  setHighlightOpen(false);
-                }}
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-neutral-500 dark:text-neutral-400 transition [@media(hover:hover)]:hover:scale-110 ${
-                  highlightOn ? 'border border-divider' : 'ring-2 ring-offset-1 ring-accent ring-offset-surface-1 border border-divider'
-                }`}
-              >
-                <ProhibitIcon size={13} />
-              </button>
-            </HoverLabel>
-          </div>
-        </div>,
-        document.body,
+      {highlightOpen && (
+        <HighlightPanel
+          popoverRef={highlightPopoverRef}
+          pos={highlightPos}
+          onClose={() => setHighlightOpen(false)}
+          editor={editor}
+          highlightOn={highlightOn}
+          currentHighlight={currentHighlight}
+          setHighlightMemory={setHighlightMemory}
+        />
       )}
     </div>
   );
   const strike = (
-    <ToolbarBtn key="strike" onClick={() => editor.chain().focus().toggleStrike().run()} active={isActive('strike')} label={t('toolbar.strikethrough')} tabIndex={mobileTabIndex}>
+    <ToolbarBtn key="strike" onClick={() => editor.chain().focus().toggleStrike().run()} active={isActive('strike')} label={t('toolbar.strikethrough')} keys={keyText('strikethrough')} tabIndex={mobileTabIndex}>
       <StrikethroughIcon size={TB_ICON} />
     </ToolbarBtn>
   );
 
-  // Priority order (1 = first to show, last to be clipped). The row holds the
-  // toggles reached while writing a sentence. Everything a person goes LOOKING
-  // for lives in the '+' menu: the block inserts, the rare notation marks, both
-  // link kinds, quote and callout. Numbered sits beside bullets (list family),
-  // highlight beside text color (paint family).
-  //
-  // Link, note link, quote and callout moved out on 2026-08-30. A Pixel 10
-  // fits five buttons in this row, so sixteen entries wrapped the overflow row
-  // onto two lines; twelve wrap onto one. Strikethrough stays: it is a mark
-  // applied to a selection, which is what this row is for.
-  const formatButtons = [
-    bold, italic, underline, heading, tasks, bullets, numbered,
-    // Text-styling trio, kept adjacent and in this order: color, alignment,
-    // font. They are the three attribute-driven popovers and read as one group.
-    color, align, font,
-    highlight, strike,
-  ];
+  // What a press does for every item that can sit in the + menu, and for the
+  // plain marks a person can move there. The look (icon, label) comes from
+  // formatBarItems.tsx; the group from formatBar.ts. `hint` is the Markdown or
+  // the key that does the same, which the menu shows beside the label.
+  type MenuAction = { hint: string | null; active: boolean; run: () => void };
+  const actions: Record<string, MenuAction> = {
+    bold: { hint: '**x**', active: isActive('bold'), run: () => editor.chain().focus().toggleBold().run() },
+    italic: { hint: '*x*', active: isActive('italic'), run: () => editor.chain().focus().toggleItalic().run() },
+    underline: { hint: keyText('underline'), active: isActive('underline'), run: () => editor.chain().focus().toggleUnderline().run() },
+    tasks: { hint: '[]', active: isActive('taskList'), run: () => editor.chain().focus().toggleTaskList().run() },
+    notelink: { hint: '[[', active: false, run: () => { editor.chain().focus().insertContent('[[').run(); } },
+    customize: { hint: null, active: false, run: () => onCustomize?.() },
+    markdownView: { hint: keyText('markdownView'), active: false, run: () => onShowMarkdown?.() },
+    strike: { hint: '~~x~~', active: isActive('strike'), run: () => editor.chain().focus().toggleStrike().run() },
+    // A header row is what a pipe table needs to exist at all: the markdown
+    // serializer falls back to raw HTML for a table whose first row is plain
+    // cells, so a headerless one is stored as a wall of markup and travels to
+    // other apps as markup too. The bar under the table turns it off for
+    // anyone who wants a grid instead.
+    table: { hint: null, active: isActive('table'), run: () => editor.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: true }).run() },
+    hr: { hint: '---', active: false, run: () => editor.chain().focus().setHorizontalRule().run() },
+    // The hint column teaches the list prefixes, and the prefix is faster
+    // than any button.
+    bullets: { hint: '-', active: isActive('bulletList'), run: () => editor.chain().focus().toggleBulletList().run() },
+    numbered: { hint: '1.', active: isActive('orderedList'), run: () => editor.chain().focus().toggleOrderedList().run() },
+    date: { hint: keyText('insertDate'), active: false, run: () => insertDateText(editor, 'date') },
+    dateTime: { hint: keyText('insertDateTime'), active: false, run: () => insertDateText(editor, 'dateTime') },
+    quote: { hint: '>', active: isActive('blockquote'), run: () => editor.chain().focus().toggleBlockquote().run() },
+    codeblock: {
+      hint: '```',
+      active: isActive('codeBlock') && !isActive('codeBlock', { language: COPY_BOX_LANGUAGE }),
+      run: () => toggleCodeBlockSmart(editor),
+    },
+    copybox: {
+      hint: '```copy',
+      active: isActive('codeBlock', { language: COPY_BOX_LANGUAGE }),
+      run: () => toggleCodeBlockSmart(editor, COPY_BOX_LANGUAGE),
+    },
+    kanban: { hint: null, active: false, run: () => insertKanbanBoard(editor, t) },
+    inlinecode: { hint: '`x`', active: isActive('code'), run: () => editor.chain().focus().toggleCode().run() },
+    // The selected text becomes the formula. The insert commands do not
+    // replace a selection, so it is deleted first.
+    math: {
+      hint: '$x$',
+      active: false,
+      run: () => {
+        const { from, to, empty } = editor.state.selection;
+        const latex = empty ? 'x^2' : editor.state.doc.textBetween(from, to, ' ');
+        editor.chain().focus().deleteSelection().insertInlineMath({ latex }).run();
+      },
+    },
+    // Block math is its own node in @tiptap/extension-mathematics, so it has
+    // its own entry.
+    blockmath: {
+      hint: '$$x$$',
+      active: false,
+      run: () => {
+        const { from, to, empty } = editor.state.selection;
+        const latex = empty ? 'x^2' : editor.state.doc.textBetween(from, to, ' ');
+        editor.chain().focus().deleteSelection().insertBlockMath({ latex }).run();
+      },
+    },
+    superscript: { hint: null, active: isActive('superscript'), run: () => editor.chain().focus().toggleSuperscript().run() },
+    subscript: { hint: null, active: isActive('subscript'), run: () => editor.chain().focus().toggleSubscript().run() },
+    spoiler: { hint: '||x||', active: isActive('spoiler'), run: () => editor.chain().focus().toggleSpoiler().run() },
+    footnote: { hint: '[^1]', active: false, run: () => insertFootnote(editor) },
+    // The touch home of the selection menu's "Copy as ..." entries (#546).
+    copyAsPlain: { hint: null, active: false, run: () => copySelectionAs(editor, 'plain') },
+    copyAsMarkdown: { hint: null, active: false, run: () => copySelectionAs(editor, 'markdown') },
+  };
+  // A picture already in Files, shown without a copy (#330). A modal, so the
+  // menu closing under the press cannot close it. Absent where the media
+  // buttons are: a Markdown folder cannot hold a reference to our encrypted
+  // store.
+  // The picture and file pickers run as a command, so they can sit in the
+  // menu as well as on the bar.
+  if (!hideEncryptedMedia || onInsertFiles) {
+    actions.image = { hint: null, active: false, run: () => fileInputRef.current?.click() };
+    actions.attach = { hint: null, active: false, run: () => attachmentInputRef.current?.click() };
+  }
+  if (!hideEncryptedMedia) {
+    actions.fromFiles = {
+      hint: null,
+      active: false,
+      run: () => {
+        const view = editor.view;
+        openPicturePicker({
+          onPick: (ref) => {
+            void import('./EncryptedImage').then(({ insertPictureRef }) => insertPictureRef(view, ref));
+          },
+        });
+      },
+    };
+  }
+
+  const lookLabel = (key: string) => t(FORMAT_BAR_LOOK[key]!.label);
+
+  // The recording and "from Files" buttons only make an encrypted blob, which
+  // a Markdown folder note cannot hold; the picture and file buttons stay when
+  // the folder takes their files (`onInsertFiles`). The Linux app has no
+  // recorder (getUserMedia is dead in WebKitGTK; ops/docs/gotchas.md). An item
+  // this editor does not offer is left out wherever it was placed.
+  const MEDIA = new Set(onInsertFiles ? ['audio', 'fromFiles'] : ['image', 'attach', 'audio', 'fromFiles']);
+  // "Customize toolbar" is the door to Settings > Toolbar, where this bar is
+  // arranged: an item like the others, so a person can hide it there. Only
+  // where there is room for it; on a phone that tab is reached through
+  // Settings. No Pro mark on it: the tab says what Pro adds.
+  const offered = (key: string) =>
+    !(hideEncryptedMedia && MEDIA.has(key)) && !(key === 'audio' && isLinuxNative()) &&
+    !(key === 'customize' && !(wide && onCustomize)) &&
+    !(key === 'markdownView' && !onShowMarkdown);
+
+  // What the attach menu offers here. Its items count only while the
+  // paperclip is on the bar; with one item left, the paperclip gives way to
+  // that item's own button.
+  const onBarOrEnd = (key: string) => layout.bar.includes(key) || layout.end.includes(key);
+  const attachKeys = onBarOrEnd('attachMenu')
+    ? layout.attachMenu.filter((k) => offered(k) && (k === 'audio' || actions[k]))
+    : [];
+  const soloAttach = attachKeys.length === 1 ? attachKeys[0]! : null;
+  // The recorder shows its idle button only where the person placed it on
+  // the bar. In the attach menu it stays mounted with no button, so a
+  // recording started from the menu keeps its stop button on the bar.
+  const recorderShown = onBarOrEnd('audio') || soloAttach === 'audio';
+  if (attachKeys.includes('audio')) {
+    actions.audio = { hint: null, active: false, run: () => audioStartRef.current?.() };
+  }
+
+  // A menu item the person moved onto the bar: a plain button whose tip
+  // carries the shortcut the menu row showed.
+  const promoted = (key: string) => {
+    const action = actions[key];
+    if (!action) return null;
+    const { Icon } = FORMAT_BAR_LOOK[key]!;
+    return (
+      <ToolbarBtn key={key} onClick={action.run} active={action.active} label={lookLabel(key)} keys={action.hint ?? undefined} tabIndex={mobileTabIndex}>
+        <Icon size={TB_ICON} />
+      </ToolbarBtn>
+    );
+  };
+
+  // The bar's own controls. Their stock order, and why each item starts where
+  // it does, is in formatBar.ts.
+  const recorder = (
+    <AudioRecorder
+      key="audio"
+      editorView={editor.view}
+      tabIndex={mobileTabIndex}
+      onStateChange={(state, duration) => {
+        setRecording(state !== 'idle');
+        onAudioStateChange?.(state, duration);
+      }}
+      stopRef={audioStopRef}
+      startRef={audioStartRef}
+      idleHidden={!recorderShown}
+      tipSide={tipSide}
+    />
+  );
+  const attachMenu = attachKeys.length === 0 ? null
+    : soloAttach === 'audio' ? recorder
+    : soloAttach ? promoted(soloAttach)
+    : (
+      <div key="attachMenu" ref={attachWrapRef} className="relative shrink-0">
+        <HoverLabel label={lookLabel('attachMenu')} position={tipSide}>
+          <button
+            ref={attachBtnRef}
+            type="button"
+            tabIndex={mobileTabIndex}
+            onMouseDown={(e) => e.preventDefault()}
+            {...press(() => setAttachOpen((prev) => !prev))}
+            aria-label={lookLabel('attachMenu')}
+            aria-haspopup="menu"
+            aria-expanded={attachOpen}
+            className={`${TB_BTN_BASE} ${attachOpen ? TB_BTN_ACTIVE : TB_BTN_REST} shrink-0`}
+          >
+            <AttachIcon size={TB_ICON} />
+          </button>
+        </HoverLabel>
+        {attachOpen && createPortal(
+          <div
+            ref={attachPopoverRef}
+            role="menu"
+            aria-label={lookLabel('attachMenu')}
+            className="fixed z-50 bg-surface-1 border border-divider rounded-lg shadow-lg py-1 w-48"
+            style={{ top: attachPos?.top ?? 0, left: attachPos?.left ?? 0, visibility: attachPos ? 'visible' : 'hidden' }}
+          >
+            {attachKeys.map((key) => {
+              const { Icon } = FORMAT_BAR_LOOK[key]!;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  role="menuitem"
+                  {...press(() => {
+                    setAttachOpen(false);
+                    actions[key]!.run();
+                  })}
+                  className="w-full flex items-center gap-2.5 text-start px-3 py-1.5 text-sm text-pn-soft [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition"
+                >
+                  <Icon size={TB_ICON} />
+                  <span className="flex-1">{lookLabel(key)}</span>
+                </button>
+              );
+            })}
+          </div>,
+          document.body,
+        )}
+      </div>
+    );
+  // A thin line the person places between buttons to group them.
+  const separatorLine = (key: string) => (
+    <span key={key} aria-hidden="true" className="shrink-0 -mx-0.5 h-4 w-px bg-pn-muted/35" />
+  );
+  const rowControls: Record<string, ReactElement> = {
+    bold, italic, underline, heading, tasks, link, notelink: noteLink,
+    color, align, font, highlight, callout, strike, audio: recorder,
+    separator1: separatorLine('separator1'), separator2: separatorLine('separator2'),
+    separator3: separatorLine('separator3'), separator4: separatorLine('separator4'),
+  };
+  const controls = (keys: string[]) => keys
+    .filter(offered)
+    .map((key) => (key === 'attachMenu' ? attachMenu : rowControls[key] ?? promoted(key)))
+    .filter((el): el is ReactElement => el !== null);
+  const formatButtons = controls(layout.bar);
+  // The end of the bar, after the '+': it never gives way behind the •••.
+  // A hidden or moved-away recorder stays here while it records, so a change
+  // to the bar never cuts a recording off. One in the attach menu stays here
+  // at rest too, with no button, so the menu can start it.
+  const endKeys = !onBarOrEnd('audio') && soloAttach !== 'audio' && (recording || attachKeys.includes('audio'))
+    ? [...layout.end, 'audio']
+    : layout.end;
+  const endButtons = controls(endKeys);
+  // A recorder that sits in row 2 keeps row 2 open while it records: closing
+  // the ••• would unmount it, and its button with it.
+  const audioAt = formatButtons.indexOf(recorder);
+  const holdOpen = recording && audioAt >= 0 && measuredSig === barSig && audioAt >= visibleCount;
+  const rowTwoOpen = formatExpanded || holdOpen;
+  const menuKeys = layout.menu.filter((key) => actions[key] && offered(key));
 
   return (
-    <div className="pn-editor-toolbar sticky top-[var(--pn-tagrow-h,0px)] z-10 -mx-4 sm:-mx-6 border-b border-divider bg-surface-2/90 backdrop-blur [overscroll-behavior:contain]">
+    <TipSideContext.Provider value={tipSide}>
+    <div className={`pn-editor-toolbar border-divider ${
+      atBottom ? 'pn-toolbar-bottom flex flex-col-reverse' : 'sticky z-10 -mx-4 sm:-mx-6 bg-surface-2/90 backdrop-blur [overscroll-behavior:contain] top-[var(--pn-tagrow-h,0px)] border-b'
+    }`}>
       <div className="flex items-start gap-1.5 px-4 sm:px-6 py-1">
-        {/* Row 1: as many priority buttons as fit (measured). Clipped to a
-            single line; the overflow lives in the full-width row 2 below. */}
-        {/* overflow-x-clip (not -hidden) hides transient button spill during
+        {/* Row 1 under a pointer: as many buttons as fit (measured), clipped
+            to a single line; the overflow lives in the full-width row 2 below.
+            overflow-x-clip (not -hidden) hides transient button spill during
             resize measurement while letting the hover labels, which render
-            below the buttons, escape vertically. That same clip cuts the
-            horizontal overhang of the end buttons' centered hover labels, so
-            pn-format-row edge-aligns those two tips in index.css - the last
-            button changes with width, so it can't be a per-button prop. */}
-        <div ref={formatRowRef} className="pn-format-row flex-1 min-w-0 flex items-center gap-0.5 overflow-x-clip">
-          {formatButtons.slice(0, visibleCount)}
+            below the buttons, escape vertically. A label that would hang past
+            the clip moves back inside it as it shows (HoverLabel's fitTip).
+            On a touch screen it is one strip that scrolls (pn-format-strip in
+            index.css); touch shows no hover labels, so nothing needs to
+            escape it. */}
+        <div ref={formatRowRef} className={`pn-format-row flex-1 min-w-0 flex items-center gap-0.5 ${strip ? 'pn-format-strip' : 'overflow-x-clip'}`}>
+          {formatButtons.slice(0, measuredSig === barSig ? visibleCount : formatButtons.length)}
         </div>
 
         {/* Right cluster: ••• overflow toggle (only when something overflows)
             + accent media cluster (image / attach / audio), always on row 1. */}
         <div ref={rightClusterRef} className="shrink-0 flex items-center gap-1.5">
-          {/* '+' insert menu: block inserts (hr, table, code block) plus
-              the rare notation marks (inline code, sup/sub, math). Labeled
-              entries with syntax hints - the menu teaches while the format
-              row keeps only the always-on writing toggles. */}
+          {/* The ••• sits next to the row it extends, before the '+'. */}
+          {hasOverflow && (
+            <ToolbarBtn
+              onClick={() => { if (!holdOpen) setFormatExpanded((v) => !v); }}
+              active={rowTwoOpen}
+              label={rowTwoOpen ? t('toolbar.fewerFormatting') : t('toolbar.moreFormatting')}
+              tabIndex={mobileTabIndex}
+            >
+              <MoreIcon size={TB_ICON} />
+            </ToolbarBtn>
+          )}
+          {/* '+' insert menu: block inserts (table, divider, code block, the
+              bullet and numbered lists) plus the rare notation marks (inline
+              code, sup/sub, math). Labeled entries with syntax hints - the
+              menu teaches while the format row keeps the marks a live
+              selection is waiting for. */}
+          {/* An empty menu has no button: everything is on the bar or hidden. */}
+          {menuKeys.length > 0 && (
           <div ref={insertWrapRef} className="relative shrink-0">
-            <HoverLabel label={t('toolbar.insert')} position="below">
+            <HoverLabel label={t('toolbar.insert')} position={tipSide}>
               <button
                 type="button"
                 tabIndex={mobileTabIndex}
                 onMouseDown={(e) => e.preventDefault()}
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  setInsertOpen((prev) => !prev);
-                }}
+                // On touch the menu opens on the click after the tap. Opened
+                // on pointerdown, a menu placed over the button took the release
+                // of the same tap and ran the entry under the finger.
+                {...press(() => setInsertOpen((prev) => !prev))}
                 aria-label={t('toolbar.insert')}
                 className={`${TB_BTN_BASE} ${insertOpen ? TB_BTN_ACTIVE : TB_BTN_REST} shrink-0`}
               >
@@ -1299,218 +1143,84 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
             {insertOpen && createPortal(
               <div
                 ref={insertMenuRef}
-                className="fixed z-50 bg-surface-1 border border-divider rounded-lg shadow-lg py-1 w-56"
+                // An arranged menu can hold every movable item, so it scrolls
+                // rather than run off the screen.
+                className="fixed z-50 bg-surface-1 border border-divider rounded-lg shadow-lg py-1 w-56 overflow-y-auto overscroll-contain"
                 style={{
                   top: insertPos?.top ?? 0,
                   left: insertPos?.left ?? 0,
+                  maxHeight: insertPos?.maxHeight ?? `calc(100dvh - ${insertPos?.top ?? 0}px - 8px)`,
                   visibility: insertPos ? 'visible' : 'hidden',
                 }}
               >
-                {[
-                  {
-                    // Link and note link lead the menu: they are the two
-                    // entries somebody opens this menu FOR. Spec:
-                    // ops/docs/ui-patterns.md (the insert menu is grouped by
-                    // reach, not by node kind)
-                    key: 'link',
-                    group: 'insert',
-                    Icon: LinkIcon,
-                    // A menu row is not a tooltip: the row says what the entry
-                    // makes and the hint column carries the shortcut, rather
-                    // than the icon button's parenthesised label.
-                    label: t('toolbar.linkMenu'),
-                    hint: 'Cmd+Shift+K',
-                    active: isActive('link'),
-                    run: onOpenLinkPopover,
-                  },
-                  {
-                    key: 'notelink',
-                    group: 'insert',
-                    Icon: BracketsIcon,
-                    label: t('toolbar.noteLinkMenu'),
-                    hint: '[[',
-                    active: false,
-                    run: () => { editor.chain().focus().insertContent('[[').run(); },
-                  },
-                  {
-                    key: 'table',
-                    group: 'insert',
-                    Icon: TableIcon,
-                    label: t('toolbar.table'),
-                    hint: null,
-                    active: isActive('table'),
-                    run: () => editor.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: false }).run(),
-                  },
-                  {
-                    key: 'hr',
-                    group: 'insert',
-                    Icon: MinusIcon,
-                    label: t('toolbar.divider'),
-                    hint: '---',
-                    active: false,
-                    run: () => editor.chain().focus().setHorizontalRule().run(),
-                  },
-                  {
-                    key: 'quote',
-                    group: 'blocks',
-                    Icon: QuoteIcon,
-                    label: t('toolbar.quote'),
-                    hint: '>',
-                    active: isActive('blockquote'),
-                    run: () => editor.chain().focus().toggleBlockquote().run(),
-                  },
-                  {
-                    key: 'callout',
-                    group: 'blocks',
-                    Icon: MegaphoneIcon,
-                    label: t('toolbar.callout'),
-                    hint: null,
-                    active: isActive('callout'),
-                    run: () => setCalloutOpen(true),
-                  },
-                  {
-                    key: 'codeblock',
-                    group: 'blocks',
-                    Icon: SquareCodeIcon,
-                    label: t('toolbar.codeBlock'),
-                    hint: '```',
-                    active: isActive('codeBlock'),
-                    run: () => toggleCodeBlockSmart(editor),
-                  },
-                  {
-                    key: 'inlinecode',
-                    group: 'notation',
-                    Icon: CodeIcon,
-                    label: t('toolbar.inlineCode'),
-                    hint: '`x`',
-                    active: isActive('code'),
-                    run: () => editor.chain().focus().toggleCode().run(),
-                  },
-                  {
-                    key: 'math',
-                    group: 'notation',
-                    Icon: MathIcon,
-                    label: t('toolbar.math'),
-                    hint: '$x$',
-                    active: false,
-                    run: () => {
-                      const { from, to, empty } = editor.state.selection;
-                      const latex = empty
-                        ? 'x^2'
-                        : editor.state.doc.textBetween(from, to, ' ');
-                      editor.chain().focus().insertInlineMath({ latex }).run();
-                    },
-                  },
-                  {
-                    // Block math is its own node since the move to
-                    // @tiptap/extension-mathematics, so it needs its own entry -
-                    // the inline one above can no longer reach it via a display
-                    // attribute the way the old extension did.
-                    key: 'blockmath',
-                    group: 'notation',
-                    Icon: MathIcon,
-                    label: t('toolbar.blockMath'),
-                    hint: '$$x$$',
-                    active: false,
-                    run: () => {
-                      const { from, to, empty } = editor.state.selection;
-                      const latex = empty
-                        ? 'x^2'
-                        : editor.state.doc.textBetween(from, to, ' ');
-                      editor.chain().focus().insertBlockMath({ latex }).run();
-                    },
-                  },
-                  {
-                    key: 'superscript',
-                    group: 'notation',
-                    Icon: SuperscriptIcon,
-                    label: t('toolbar.superscript'),
-                    hint: null,
-                    active: isActive('superscript'),
-                    run: () => editor.chain().focus().toggleSuperscript().run(),
-                  },
-                  {
-                    key: 'subscript',
-                    group: 'notation',
-                    Icon: SubscriptIcon,
-                    label: t('toolbar.subscript'),
-                    hint: null,
-                    active: isActive('subscript'),
-                    run: () => editor.chain().focus().toggleSubscript().run(),
-                  },
-                ].map((item, i, all) => (
+                {menuKeys.map((key, i, all) => {
+                  const item = { key, group: formatBarItem(key)!.group, Icon: FORMAT_BAR_LOOK[key]!.Icon, label: lookLabel(key), ...actions[key]! };
+                  return (
                   <Fragment key={item.key}>
                     {/* A header opens each run of entries sharing a group. The
-                        list is authored in group order, so comparing with the
-                        previous entry is enough and no second array can fall
-                        out of step with this one. */}
-                    {(i === 0 || all[i - 1]?.group !== item.group) && (
-                      <div className="px-3 pt-2 pb-0.5 text-[11px] uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
+                        arrangement is grouped (resolveFormatBar), so comparing
+                        with the previous entry is enough, and a group with no
+                        entry left shows no header. */}
+                    {(i === 0 || formatBarItem(all[i - 1]!)!.group !== item.group) && (
+                      <div className="px-3 pt-2 pb-0.5 text-[11px] uppercase tracking-wide text-pn-muted">
                         {t(`insertGroup.${item.group}`)}
                       </div>
                     )}
                     <button
                       type="button"
-                      onPointerDown={(e) => {
-                        e.preventDefault();
+                      // On touch a press that becomes a scroll of the menu
+                      // must not run an entry.
+                      {...press(() => {
                         item.run();
                         setInsertOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-2.5 text-start px-3 py-1.5 text-sm [@media(hover:hover)]:hover:bg-neutral-100 [@media(hover:hover)]:dark:hover:bg-neutral-800 active:bg-neutral-100 dark:active:bg-neutral-800 transition ${
-                        item.active ? 'text-accent' : 'text-neutral-700 dark:text-neutral-200'
+                      })}
+                      className={`w-full flex items-center gap-2.5 text-start px-3 py-1.5 text-sm [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition ${
+                        item.active ? 'text-accent' : 'text-pn-soft'
                       }`}
                     >
                       <item.Icon size={TB_ICON} />
                       <span className="flex-1">{item.label}</span>
                       {item.hint && (
-                        <span className="text-[11px] font-mono text-neutral-400 dark:text-neutral-500">{item.hint}</span>
+                        <span className="text-[11px] font-mono text-pn-muted">{item.hint}</span>
                       )}
                     </button>
                   </Fragment>
-                ))}
+                  );
+                })}
               </div>,
               document.body,
             )}
           </div>
-          {hasOverflow && (
-            <ToolbarBtn
-              onClick={() => setFormatExpanded((v) => !v)}
-              active={formatExpanded}
-              label={formatExpanded ? t('toolbar.fewerFormatting') : t('toolbar.moreFormatting')}
-              tabIndex={mobileTabIndex}
-            >
-              <MoreIcon size={TB_ICON} />
-            </ToolbarBtn>
           )}
-          {!hideEncryptedMedia && (
+          {endButtons.length > 0 && (
           <>
           {/* Hairline, not a tinted box. An accent fill here would be the only
               filled container in the editor's three control rows, reading as a
               different kind of control rather than the last group in a row.
-              Spec: ops/docs/ui-patterns.md (section 80) */}
-          <span aria-hidden="true" className="shrink-0 mx-0.5 h-4 w-px bg-neutral-300 dark:bg-neutral-700" />
+              Spec: ops/docs/archive/ui-patterns.md (section 80) */}
+          <span aria-hidden="true" className="shrink-0 mx-0.5 h-4 w-px bg-pn-muted/35" />
           <div className="flex items-center gap-0.5">
-            <ToolbarBtn onClick={() => fileInputRef.current?.click()} label={t('toolbar.image')} tabIndex={mobileTabIndex}>
-              <ImageIcon size={TB_ICON} />
-            </ToolbarBtn>
-            <ToolbarBtn onClick={() => attachmentInputRef.current?.click()} label={t('toolbar.attachFile')} tabIndex={mobileTabIndex}>
-              <PaperclipIcon size={TB_ICON} />
-            </ToolbarBtn>
-            {/* Camera/mic getUserMedia is dead in the Linux (WebKitGTK) app with no fallback, so hide the recorder there. See ops/docs/gotchas.md. */}
-            {!isLinuxNative() && (
-              <AudioRecorder editorView={editor.view} tabIndex={mobileTabIndex} onStateChange={onAudioStateChange} stopRef={audioStopRef} />
-            )}
+            {endButtons}
           </div>
           </>
+          )}
+          {strip && keyboardUp && (
+            <>
+              <span aria-hidden="true" className="shrink-0 mx-0.5 h-4 w-px bg-pn-muted/35" />
+              <ToolbarBtn onClick={() => editor.commands.blur()} label={t('toolbar.hideKeyboard')} tabIndex={mobileTabIndex}>
+                <HideKeyboardIcon size={TB_ICON} />
+              </ToolbarBtn>
+            </>
           )}
         </div>
       </div>
 
-      {calloutPopover}
-
-      {/* Row 2: the overflow buttons, full width, revealed by •••. */}
-      {formatExpanded && hasOverflow && (
-        <div className="flex flex-wrap items-center gap-0.5 px-4 sm:px-6 py-1 border-t border-divider">
+      {/* Row 2: the overflow buttons, full width, revealed by •••. Only once
+          the fit has measured this arrangement: before that row 1 draws every
+          button, and drawing some of them here as well would mount a control
+          twice and leave its popover anchor empty. */}
+      {measuredSig === barSig && rowTwoOpen && hasOverflow && (
+        <div className={`flex flex-wrap items-center gap-0.5 px-4 sm:px-6 py-1 border-divider ${atBottom ? 'border-b' : 'border-t'}`}>
           {formatButtons.slice(visibleCount)}
         </div>
       )}
@@ -1531,5 +1241,6 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, onAudioStat
         onChange={handleAttachmentPick}
       />
     </div>
+    </TipSideContext.Provider>
   );
 }

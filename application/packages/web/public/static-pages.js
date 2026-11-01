@@ -9,12 +9,17 @@
 // Wired from help-page.ts, changelog-page.ts and brand-page.ts via
 // <script src="/static-pages.js" defer>. Which behavior applies is
 // selected by <body data-static-page="help|help-leaf|help-guide|changelog|
-// brand|landing|cheatsheet">.
+// brand|landing|cheatsheet|auth-desktop">.
 (function () {
   'use strict';
 
-  function norm(s) {
-    return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  // The app's own matcher (src/textMatch.ts), bundled into /search-core.js,
+  // which the pages that search load before this file: a query folds here as
+  // it does in every list of the app. Null for an empty query, and when that
+  // script did not load, so a search then shows everything instead of failing.
+  function matcher(query) {
+    var core = window.pnSearch;
+    return query && core ? core.textMatcher(query) : null;
   }
 
   function fill(template, vars) {
@@ -34,27 +39,28 @@
     root.normalize();
   }
 
+  // Marks every hit in the text under `root`, at the offsets the matcher
+  // gives, so a hit the fold found ("securite" in "Sécurité") is marked too.
   function markIn(root, query) {
-    var q = query.toLowerCase();
-    if (!q) return;
+    var match = matcher(query);
+    if (!match) return;
     var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     var nodes = [];
     while (walker.nextNode()) nodes.push(walker.currentNode);
     nodes.forEach(function (node) {
       if (node.parentElement && node.parentElement.tagName === 'MARK') return;
-      var text = node.textContent;
-      var idx = text.toLowerCase().indexOf(q);
-      if (idx < 0) return;
+      var rest = node.textContent;
+      var hit = match(rest);
+      if (!hit) return;
       var frag = document.createDocumentFragment();
-      var rest = text;
       var guard = 0;
-      while (idx >= 0 && guard < 20) {
-        frag.appendChild(document.createTextNode(rest.slice(0, idx)));
+      while (hit && guard < 20) {
+        frag.appendChild(document.createTextNode(rest.slice(0, hit.start)));
         var mark = document.createElement('mark');
-        mark.textContent = rest.slice(idx, idx + q.length);
+        mark.textContent = rest.slice(hit.start, hit.end);
         frag.appendChild(mark);
-        rest = rest.slice(idx + q.length);
-        idx = rest.toLowerCase().indexOf(q);
+        rest = rest.slice(hit.end);
+        hit = rest ? match(rest) : null;
         guard++;
       }
       frag.appendChild(document.createTextNode(rest));
@@ -161,6 +167,14 @@
         var link = e.target.closest ? e.target.closest('a[data-lang]') : null;
         if (!link) return;
         persistLanguage(link.getAttribute('data-lang'));
+        // The English-only pages' menu lands on a homepage. System there
+        // resolves to the reader's own homepage, never the bare apex, which
+        // drops a signed-in reader into the app.
+        if (link.hasAttribute('data-system-home') && langLocales) {
+          var own = preferredLocale(Object.keys(langLocales)) || 'en';
+          e.preventDefault();
+          location.assign(langLocales[own] || '/en');
+        }
       });
     });
 
@@ -248,9 +262,10 @@
   }
 
   // A leaf answers one question, so there is nothing on the page to filter:
-  // its box searches question TITLES across the whole FAQ and jumps you
-  // straight to the one you pick. The form still GETs the hub when JS is
-  // off, or when the query wants the full-text search over answer bodies.
+  // its box searches the whole FAQ and jumps you straight to the one you
+  // pick. Titles answer at once from the inline index; the answer text
+  // arrives with search-index.json on the first keystroke, and its hits
+  // list after every title hit. The form still GETs the hub when JS is off.
   function initLeafSearch() {
     var form = document.getElementById('faq-lform');
     var input = document.getElementById('faq-lq');
@@ -263,34 +278,75 @@
       return;
     }
     if (!rows.length) return;
-    var hay = rows.map(function (r) {
-      return norm(r[0]);
-    });
     var allTpl = form.getAttribute('data-search-all') || '';
     var hubPath = form.getAttribute('action') || '/help';
     var clear = document.getElementById('faq-lclear');
     var active = -1;
 
+    // [href, folded question and answer] per entry. A failed fetch leaves
+    // it null, and the box keeps answering from titles alone.
+    var fullPath = form.getAttribute('data-full');
+    var full = null;
+    var fullRequested = false;
+    function loadFull() {
+      if (fullRequested || !fullPath || !window.fetch) return;
+      fullRequested = true;
+      fetch(fullPath)
+        .then(function (r) {
+          return r.ok ? r.json() : null;
+        })
+        .then(function (data) {
+          if (!Array.isArray(data)) return;
+          full = data;
+          if (input.value.trim()) render(input.value);
+        })
+        .catch(function () {});
+    }
+    var titleOf = {};
+    rows.forEach(function (row) {
+      titleOf[row[1]] = row[0];
+    });
+
     function render(raw) {
       var typed = raw.trim();
-      var q = norm(typed);
       form.classList.toggle('has-q', raw.length > 0);
       out.textContent = '';
       active = -1;
-      if (!q) {
+      if (!typed) {
         out.hidden = true;
         return;
       }
-      var shown = 0;
-      for (var i = 0; i < rows.length && shown < 8; i++) {
-        if (hay[i].indexOf(q) < 0) continue;
+      // The list keeps eight, so the best rank goes first: a title that
+      // starts with the query is never cut for one that holds it inside a
+      // word. Array sort is stable.
+      var match = matcher(typed);
+      var hits = [];
+      var seen = {};
+      rows.forEach(function (row) {
+        var m = match ? match(row[0]) : { rank: 1 };
+        if (m) {
+          hits.push({ row: row, rank: m.rank });
+          seen[row[1]] = true;
+        }
+      });
+      // An answer hit ranks below every title hit; word starts still first.
+      if (full && match) {
+        full.forEach(function (entry) {
+          if (seen[entry[0]] || !titleOf[entry[0]]) return;
+          var m = match(entry[1]);
+          if (m) hits.push({ row: [titleOf[entry[0]], entry[0]], rank: m.rank - 3 });
+        });
+      }
+      hits.sort(function (a, b) {
+        return b.rank - a.rank;
+      });
+      hits.slice(0, 8).forEach(function (h) {
         var hit = document.createElement('a');
         hit.className = 'sr-item';
-        hit.href = rows[i][1];
-        hit.textContent = rows[i][0];
+        hit.href = h.row[1];
+        hit.textContent = h.row[0];
         out.appendChild(hit);
-        shown++;
-      }
+      });
       // Always last, hit or miss: titles are only half the index, so the
       // way out of a leaf search is never a dead end.
       var all = document.createElement('a');
@@ -309,7 +365,9 @@
       items[active].scrollIntoView({ block: 'nearest' });
     }
 
+    input.addEventListener('focus', loadFull);
     input.addEventListener('input', function () {
+      loadFull();
       render(input.value);
     });
     if (clear)
@@ -367,44 +425,463 @@
     if (pick && map[pick]) link.setAttribute('href', map[pick]);
   })();
 
+  // On a phone the section links scroll sideways in a strip of their own, so
+  // the current page's link can start out of view. Center it, moving the strip
+  // only; the position difference works in right-to-left pages too.
+  (function () {
+    var strip = document.querySelector('.nav-secs');
+    var on = strip && strip.querySelector('.on');
+    if (!on || strip.scrollWidth <= strip.clientWidth) return;
+    var delta = on.getBoundingClientRect().left - strip.getBoundingClientRect().left;
+    strip.scrollLeft += delta - (strip.clientWidth - on.offsetWidth) / 2;
+  })();
+
   var page = document.body.getAttribute('data-static-page');
   if (page && page.indexOf('help') === 0) { initAsk(); initCopyRows(); }
   if (page === 'help') initFaq();
   if (page === 'help-leaf') initLeafSearch();
-  if (page === 'changelog') initChangelog();
+  if (page === 'changelog') { initChangelog(); initShots(); }
   if (page === 'brand') { initBrand(); initBrandRail(); }
+  if (page === 'themes') { initBrand(); initThemeMore(); initThemeShots(); }
   if (page === 'landing') initLanding();
   if (page === 'cheatsheet') initCheatSheet();
+  if (page === 'auth-desktop') initAuthDesktop();
 
-  // The printable hotkey cheat sheet (help-page.ts). Two enhancements, and
-  // the page renders complete without either: the Print button, and the
-  // platform swap - the sheet is pre-rendered with Mac symbols (so no-JS
-  // and crawlers get the same sheet the legend describes), and off-Mac each
-  // keycap is rewritten to Ctrl/Alt/Shift words, mirroring renderKey() in
-  // HotkeysModal.tsx. The legend flips with it: the "⌘ is Ctrl" line hides
-  // and the reverse "Ctrl is ⌘" line shows.
+  // The printable hotkey cheat sheet (help-page.ts): the Print button. The
+  // key sets are initHotkeySets below.
+  // ---- changelog screenshots ---------------------------------------------
+  // Every picture is already a link to its file, so without JS a click opens
+  // the image. With JS a thumbnail swaps the hero, and the hero or an item's
+  // photo chip opens a lightbox that steps through the release's shots.
+  // The full-screen screenshot viewer of /changelog and /themes, the one
+  // gallery both pages share (its CSS is LIGHTBOX_CSS in
+  // static-page-chrome.ts). Built once per page; returns open(shots, i, back),
+  // where back is the element focus returns to on close. A shot is
+  // { src, dark, alt } and, on /themes, also:
+  //   code   the theme code: the caption turns into a headline over a Copy
+  //          code button, and the C key copies it
+  //   mode   "Light" or "Dark", beside the count
+  //   by     { name, href } for the credit, votes { count, href } for its thread
+  //   desc   the author's description
+  //   hash   the URL hash while the shot shows, so the address can be shared
+  //   el     the card's link, which gets focus on close, so the reader lands
+  //          on the theme they stepped to
+  // Arrows, the arrow keys and a sideways swipe step through the shots.
+  function shotIcon(d) {
+    return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+  }
+  // A sideways swipe on a touch screen calls step(1) or step(-1). Returns
+  // swiped(), true once after a swipe: a swipe ends in a click, and that
+  // click must not act.
+  function onSwipe(el, step) {
+    var x0 = null;
+    var y0 = null;
+    var swiped = false;
+    el.addEventListener('touchstart', function (e) {
+      // Two fingers pinch the picture; they do not step.
+      if (e.touches.length > 1) { x0 = null; return; }
+      x0 = e.touches[0].clientX;
+      y0 = e.touches[0].clientY;
+    }, { passive: true });
+    el.addEventListener('touchend', function (e) {
+      if (x0 === null) return;
+      var dx = e.changedTouches[0].clientX - x0;
+      var dy = e.changedTouches[0].clientY - y0;
+      x0 = null;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+        swiped = true;
+        step(dx < 0 ? 1 : -1);
+      }
+    });
+    return function () {
+      var was = swiped;
+      swiped = false;
+      return was;
+    };
+  }
+  var lightboxOpen = null;
+  function lightbox() {
+    if (lightboxOpen) return lightboxOpen;
+    function isDark() {
+      var t = document.documentElement.getAttribute('data-theme');
+      if (t) return t === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    function srcOf(shot) {
+      return isDark() && shot.dark ? shot.dark : shot.src;
+    }
+
+    var lb = document.createElement('div');
+    lb.className = 'cl-lb';
+    lb.hidden = true;
+    lb.setAttribute('role', 'dialog');
+    lb.setAttribute('aria-modal', 'true');
+    lb.setAttribute('aria-label', 'Screenshot');
+    // The card's COPY_ICON and DONE_ICON in themes-page.ts.
+    var copyIcons =
+      '<svg class="ic-copy" width="15" height="15" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg>' +
+      '<svg class="ic-done" width="15" height="15" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>';
+    lb.innerHTML =
+      // The dock under the picture: the name, one meta line and the whole
+      // description, then Copy code and Upvote. It wraps by its own width
+      // (a container query), and the picture gives up the height it needs.
+      '<div class="lb-fig"><img alt=""><div class="lb-dock"><div class="lb-in"><div class="lb-info"><div class="lb-head"><p class="lb-t"></p><p class="lb-m"></p></div><p class="lb-d"></p></div>' +
+      '<div class="lb-acts"><button type="button" class="lb-btn lb-copy" data-label-done="Copied" aria-keyshortcuts="C" hidden>' + copyIcons + '<span class="cl">Copy code</span><kbd>C</kbd></button>' +
+      '<a class="lb-btn lb-vote" target="_blank" rel="noopener noreferrer nofollow" hidden>' +
+      // The card's P_ARROW_UP in themes-page.ts.
+      '<svg width="15" height="15" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M205.66,117.66a8,8,0,0,1-11.32,0L136,59.31V216a8,8,0,0,1-16,0V59.31L61.66,117.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0l72,72A8,8,0,0,1,205.66,117.66Z"/></svg>' +
+      '<span>Upvote</span><kbd class="lb-vc"></kbd></a></div></div></div></div>' +
+      '<button type="button" class="lb-x" aria-label="Close">' + shotIcon('<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>') + '</button>' +
+      '<button type="button" class="lb-p" aria-label="Previous screenshot">' + shotIcon('<polyline points="15 18 9 12 15 6"/>') + '</button>' +
+      '<button type="button" class="lb-n" aria-label="Next screenshot">' + shotIcon('<polyline points="9 18 15 12 9 6"/>') + '</button>';
+    document.body.appendChild(lb);
+    var lbImg = lb.querySelector('img');
+    var lbCap = lb.querySelector('.lb-t');
+    var lbBy = lb.querySelector('.lb-m');
+    var lbDesc = lb.querySelector('.lb-d');
+    var lbCopy = lb.querySelector('.lb-copy');
+    var lbVote = lb.querySelector('.lb-vote');
+    var lbDock = lb.querySelector('.lb-dock');
+    var lbPrev = lb.querySelector('.lb-p');
+    var lbNext = lb.querySelector('.lb-n');
+    var lbClose = lb.querySelector('.lb-x');
+    var cur = { shots: [], i: 0, back: null };
+
+    function link(href, text, cls) {
+      var a = document.createElement('a');
+      a.href = href;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer nofollow';
+      a.textContent = text;
+      if (cls) a.className = cls;
+      return a;
+    }
+    function setHash(hash) {
+      var url = location.pathname + location.search + (hash ? '#' + hash : '');
+      if (url !== location.pathname + location.search + location.hash) history.replaceState(null, '', url);
+    }
+    function show(i) {
+      cur.i = (i + cur.shots.length) % cur.shots.length;
+      var shot = cur.shots[cur.i];
+      lbImg.src = srcOf(shot);
+      lbImg.alt = shot.alt;
+      lbCap.textContent = shot.alt;
+      // The meta line: the place, the mode and the credit.
+      var meta = [];
+      if (cur.shots.length > 1) meta.push(cur.i + 1 + ' / ' + cur.shots.length);
+      if (shot.mode) meta.push(shot.mode);
+      lbBy.textContent = meta.join(' \u00b7 ');
+      if (shot.by) {
+        lbBy.append((meta.length ? ' \u00b7 ' : '') + 'by ', link(shot.by.href, '@' + shot.by.name));
+      } else if (shot.code) {
+        lbBy.append((meta.length ? ' \u00b7 ' : '') + 'by the team');
+      }
+      lbBy.hidden = !lbBy.textContent;
+      lbDesc.textContent = shot.desc || '';
+      lbDesc.hidden = !shot.desc;
+      lbVote.hidden = !shot.votes;
+      if (shot.votes) {
+        lbVote.href = shot.votes.href;
+        lbVote.querySelector('.lb-vc').textContent = shot.votes.count;
+        lbVote.setAttribute('aria-label', 'Upvote on GitHub, ' + shot.votes.count + (shot.votes.count === '1' ? ' vote' : ' votes'));
+      }
+      // The headline caption of /themes (the theme's name). The homepage's
+      // Ninja shots ask for it with `big`: their caption is the whole story.
+      lb.classList.toggle('lb-code', !!shot.code || !!shot.big);
+      clearTimeout(lbCopy._pnCopied);
+      lbCopy.classList.remove('on');
+      if (lbCopy._pnLabel) lbCopy.querySelector('.cl').textContent = lbCopy._pnLabel;
+      lbCopy.hidden = !shot.code || !navigator.clipboard;
+      lbPrev.hidden = lbNext.hidden = cur.shots.length < 2;
+      if (shot.hash) setHash(shot.hash);
+      fit();
+    }
+    // The picture takes what the dock leaves. The dock is as wide as the
+    // picture, so a narrower picture can make it taller: two passes settle it.
+    function fit() {
+      if (lb.hidden) return;
+      lb.style.setProperty('--lb-dock', lbDock.offsetHeight + 'px');
+      lb.style.setProperty('--lb-dock', lbDock.offsetHeight + 'px');
+    }
+    window.addEventListener('resize', fit);
+    lbImg.addEventListener('load', fit);
+    function open(shots, i, back) {
+      cur.shots = shots;
+      cur.back = back;
+      show(i);
+      lb.hidden = false;
+      fit();
+      document.documentElement.style.overflow = 'hidden';
+      lbClose.focus();
+    }
+    function close() {
+      lb.hidden = true;
+      lbImg.removeAttribute('src');
+      document.documentElement.style.overflow = '';
+      var shot = cur.shots[cur.i];
+      if (shot.hash) setHash('');
+      var back = shot.el || cur.back;
+      if (back) back.focus();
+    }
+    function copy() {
+      if (lbCopy.hidden) return;
+      navigator.clipboard.writeText(cur.shots[cur.i].code).then(function () {
+        showCopied(lbCopy);
+      // A refused clipboard shows nothing, which is the honest answer.
+      }).catch(function () {});
+    }
+    var swiped = onSwipe(lb, function (by) {
+      if (cur.shots.length > 1) show(cur.i + by);
+    });
+    lbClose.addEventListener('click', close);
+    lbCopy.addEventListener('click', copy);
+    lbPrev.addEventListener('click', function () { show(cur.i - 1); });
+    lbNext.addEventListener('click', function () { show(cur.i + 1); });
+    lb.addEventListener('click', function (e) {
+      if (swiped()) return;
+      if (e.target === lb) close();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (lb.hidden) return;
+      if (e.key === 'Escape') close();
+      else if (e.key === 'ArrowLeft') show(cur.i - 1);
+      else if (e.key === 'ArrowRight') show(cur.i + 1);
+      else if ((e.key === 'c' || e.key === 'C') && !e.metaKey && !e.ctrlKey && !e.altKey) copy();
+      else if (e.key === 'Tab') {
+        // Keep focus inside the open dialog: the buttons and the credit links.
+        var f = [lbClose].concat(Array.prototype.slice.call(lbBy.querySelectorAll('a')), [lbCopy, lbVote, lbPrev, lbNext]).filter(function (b) { return !b.hidden; });
+        var at = f.indexOf(document.activeElement);
+        e.preventDefault();
+        f[(at + (e.shiftKey ? f.length - 1 : 1)) % f.length].focus();
+      }
+    });
+    lightboxOpen = open;
+    return open;
+  }
+
+  // /themes: a card's screenshot is a link to its file, so without JS a click
+  // opens the image. With JS it opens the viewer, which steps through the
+  // cards the filters show, in page order. The card's id is the theme's
+  // hash: the viewer writes it while the theme shows, and a page opened with
+  // one opens the viewer on that theme.
+  function initThemeShots() {
+    var links = Array.prototype.slice.call(document.querySelectorAll('.shot a[data-shot]'));
+    if (!links.length) return;
+    var open = lightbox();
+    function shotOf(l) {
+      var card = l.closest('.tc');
+      var code = card.querySelector('code.code');
+      var credit = card.querySelector('.by a:not(.vote)');
+      var vote = card.querySelector('.by .vote');
+      var desc = card.querySelector('.desc');
+      return {
+        src: l.getAttribute('href'),
+        dark: null,
+        alt: l.getAttribute('data-alt') || '',
+        code: code ? code.textContent : '',
+        mode: card.getAttribute('data-mode') === 'dark' ? 'Dark' : 'Light',
+        // Read from the card at open, because the Worker writes the live
+        // vote counts into it.
+        by: credit ? { name: credit.textContent.replace(/^@/, ''), href: credit.href } : null,
+        votes: vote ? { count: vote.querySelector('.vc').textContent, href: vote.href } : null,
+        desc: desc ? desc.textContent : '',
+        hash: card.id,
+        el: l
+      };
+    }
+    function openAt(a) {
+      var shown = links.filter(function (l) { return l.offsetParent !== null; });
+      open(shown.map(shotOf), Math.max(0, shown.indexOf(a)), a);
+    }
+    links.forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        openAt(a);
+      });
+    });
+    var id = decodeURIComponent(location.hash.slice(1));
+    var card = id && document.getElementById(id);
+    var a = card && card.classList.contains('tc') && card.querySelector('.shot a[data-shot]');
+    if (!a) return;
+    // A card past the first page waits behind Load more.
+    var more = card.parentElement.nextElementSibling;
+    for (var n = 0; card.classList.contains('tc-more') && more && !more.hidden && n < 50; n++) more.click();
+    card.scrollIntoView({ block: 'center' });
+    openAt(a);
+  }
+
+  // /themes: each list shows its first data-page cards and a Load more button
+  // that adds as many again. The count follows what the reader sees: the Mode
+  // filter hides cards with CSS and the Order switch reorders them with CSS
+  // `order`, so a change of either starts the list over at one page.
+  function initThemeMore() {
+    var grids = Array.prototype.slice.call(document.querySelectorAll('.tgrid[data-page]'));
+    grids.forEach(function (grid) {
+      var step = Number(grid.getAttribute('data-page'));
+      var btn = grid.nextElementSibling;
+      if (!(step > 0) || !btn || !btn.hasAttribute('data-more')) return;
+      var cards = Array.prototype.slice.call(grid.querySelectorAll('.tc'));
+      var limit = step;
+      function apply() {
+        cards.forEach(function (c) { c.classList.remove('tc-more'); });
+        var seen = cards
+          .map(function (c, i) { return { c: c, i: i, o: Number(getComputedStyle(c).order) || 0 }; })
+          .filter(function (x) { return x.c.getClientRects().length > 0; })
+          .sort(function (a, b) { return a.o - b.o || a.i - b.i; });
+        seen.forEach(function (x, k) { if (k >= limit) x.c.classList.add('tc-more'); });
+        btn.hidden = seen.length <= limit;
+      }
+      btn.addEventListener('click', function () {
+        limit += step;
+        apply();
+      });
+      document.addEventListener('change', function (e) {
+        if (e.target.classList && e.target.classList.contains('tfi')) {
+          limit = step;
+          apply();
+        }
+      });
+      apply();
+    });
+  }
+
+  function initShots() {
+    var gals = Array.prototype.slice.call(document.querySelectorAll('.cl-gal[data-shots]'));
+    if (!gals.length) return;
+
+    var open = lightbox();
+
+    gals.forEach(function (gal) {
+      var shots;
+      try {
+        shots = JSON.parse(gal.getAttribute('data-shots'));
+      } catch (err) {
+        return;
+      }
+      var hero = gal.querySelector('.cl-hero');
+      var thumbs = Array.prototype.slice.call(gal.querySelectorAll('.cl-th'));
+      var rel = gal.closest('.release');
+
+      function setHero(i) {
+        var shot = shots[i];
+        hero.setAttribute('data-i', String(i));
+        hero.href = shot.src;
+        // Rebuild both theme copies: the CSS shows the right one.
+        var imgs = hero.querySelectorAll('img');
+        var light = imgs[0];
+        light.src = shot.src;
+        light.alt = shot.alt;
+        light.removeAttribute('width');
+        light.removeAttribute('height');
+        light.className = shot.dark ? 'sl' : '';
+        var dark = imgs[1];
+        if (shot.dark) {
+          if (!dark) {
+            dark = document.createElement('img');
+            dark.className = 'sd';
+            dark.decoding = 'async';
+            hero.appendChild(dark);
+          }
+          dark.src = shot.dark;
+          dark.alt = shot.alt;
+          dark.removeAttribute('width');
+          dark.removeAttribute('height');
+        } else if (dark) {
+          hero.removeChild(dark);
+        }
+        thumbs.forEach(function (t) {
+          t.classList.toggle('on', t.getAttribute('data-i') === String(i));
+        });
+      }
+
+      thumbs.forEach(function (t) {
+        t.addEventListener('click', function (e) {
+          e.preventDefault();
+          setHero(Number(t.getAttribute('data-i')));
+        });
+      });
+
+      // Step through a release's shots on the page itself: arrows beside the
+      // picture, and a sideways swipe on a touch screen.
+      var swiped = function () { return false; };
+      function step(by) {
+        var n = shots.length;
+        setHero(((Number(hero.getAttribute('data-i')) || 0) + by + n) % n);
+      }
+      var stage = gal.querySelector('.cl-stage');
+      if (stage && shots.length > 1) {
+        [['prev', -1, 'Previous screenshot', '<polyline points="15 18 9 12 15 6"/>'],
+         ['next', 1, 'Next screenshot', '<polyline points="9 18 15 12 9 6"/>']].forEach(function (d) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'cl-step ' + d[0];
+          b.setAttribute('aria-label', d[2]);
+          b.innerHTML = shotIcon(d[3]);
+          b.addEventListener('click', function () { step(d[1]); });
+          stage.appendChild(b);
+        });
+        swiped = onSwipe(stage, step);
+      }
+      hero.addEventListener('click', function (e) {
+        e.preventDefault();
+        // A swipe ends in a click on touch screens; it changed the picture, it
+        // did not ask for the lightbox.
+        if (swiped()) return;
+        open(shots, Number(hero.getAttribute('data-i')) || 0, hero);
+      });
+      if (rel)
+        Array.prototype.slice.call(rel.querySelectorAll('.shotchip')).forEach(function (chip) {
+          chip.addEventListener('click', function (e) {
+            e.preventDefault();
+            open(shots, Number(chip.getAttribute('data-i')) || 0, chip);
+          });
+        });
+    });
+  }
+
   function initCheatSheet() {
     var btn = document.getElementById('cs-print');
     if (btn) btn.addEventListener('click', function () { window.print(); });
-    var mac = /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent);
-    if (mac) return;
-    var map = { '⌘': 'Ctrl', '⌥': 'Alt', '⇧': 'Shift', '⌫': 'Backspace' };
-    var caps = document.querySelectorAll('.s-cap');
-    for (var i = 0; i < caps.length; i++) {
-      var t = caps[i].textContent;
-      if (!/[⌘⌥⇧⌫]/.test(t)) continue;
-      // Each symbol becomes its word plus a joining "+", then the trailing
-      // "+" is trimmed: "⌘" -> "Ctrl". Caps are single symbols since the
-      // range split in help-page.ts keyCaps; the "+" join is kept for any
-      // future multi-symbol cap.
-      t = t.replace(/[⌘⌥⇧⌫]/g, function (m) { return map[m] + '+'; });
-      caps[i].textContent = t.replace(/\+$/, '');
-    }
-    var legendMac = document.getElementById('cs-legend-mac');
-    var legendPc = document.getElementById('cs-legend-pc');
-    if (legendMac) legendMac.hidden = true;
-    if (legendPc) legendPc.hidden = false;
   }
+
+  // The cheat sheet renders four key sets (Mac or Windows and Linux,
+  // browser or desktop app) and shows one through data-hk-os and data-hk-app on their root. The page
+  // is complete without this: it opens on the Mac browser set. Here the OS
+  // follows the reader's platform, "?app=desktop" (the desktop app's link)
+  // opens the desktop set, "?os=pc" or "?os=mac" picks the OS, and the two
+  // switches change either.
+  function initHotkeySets() {
+    var roots = document.querySelectorAll('[data-hk-os]');
+    if (!roots.length) return;
+    var mac = /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent);
+    var os = /[?&]os=(mac|pc)\b/.exec(location.search);
+    var state = {
+      os: os ? os[1] : mac ? 'mac' : 'pc',
+      app: /[?&]app=desktop\b/.test(location.search) ? 'desktop' : 'web'
+    };
+    var buttons = document.querySelectorAll('[data-hk-set]');
+    function apply() {
+      for (var i = 0; i < roots.length; i++) {
+        roots[i].setAttribute('data-hk-os', state.os);
+        roots[i].setAttribute('data-hk-app', state.app);
+      }
+      for (var j = 0; j < buttons.length; j++) {
+        var b = buttons[j];
+        b.setAttribute('aria-pressed', String(state[b.getAttribute('data-hk-set')] === b.getAttribute('data-value')));
+      }
+    }
+    for (var k = 0; k < buttons.length; k++) {
+      buttons[k].addEventListener('click', function (e) {
+        var b = e.currentTarget;
+        state[b.getAttribute('data-hk-set')] = b.getAttribute('data-value');
+        apply();
+      });
+    }
+    var picks = document.querySelectorAll('.hk-picks, .bar-picks');
+    for (var m = 0; m < picks.length; m++) picks[m].hidden = false;
+    apply();
+  }
+  initHotkeySets();
 
   // SEO landing pages (landing-pages.ts): the sticky bottom CTA and the
   // typing-editor hero. Both are extras on top of a complete page: the
@@ -536,6 +1013,20 @@
     });
   }
 
+  // An icon copy button (/themes, its viewer) turns its icon into a check and
+  // its words into "Copied" for two seconds, the app's copy pattern.
+  function showCopied(btn) {
+    var text = btn.querySelector('.cl');
+    var label = btn._pnLabel || (btn._pnLabel = text ? text.textContent : '');
+    if (text) text.textContent = btn.getAttribute('data-label-done') || 'Copied';
+    btn.classList.add('on');
+    clearTimeout(btn._pnCopied);
+    btn._pnCopied = setTimeout(function () {
+      btn.classList.remove('on');
+      if (text) text.textContent = label;
+    }, 2000);
+  }
+
   // /brand: reveal the copy buttons and wire them to their text blocks.
   // The buttons ship hidden; without JS the text stays selectable as-is.
   function initBrand() {
@@ -546,7 +1037,12 @@
       btn.addEventListener('click', function () {
         var src = document.getElementById(btn.getAttribute('data-copy'));
         if (!src) return;
-        navigator.clipboard.writeText(src.innerText).then(function () {
+        // textContent, because a code inside a closed <details> is not rendered.
+        navigator.clipboard.writeText(btn.hasAttribute('data-copy-icon') ? src.textContent : src.innerText).then(function () {
+          if (btn.hasAttribute('data-copy-icon')) {
+            showCopied(btn);
+            return;
+          }
           var old = btn.textContent;
           btn.textContent = 'Copied';
           btn.classList.add('on');
@@ -554,7 +1050,8 @@
             btn.textContent = old;
             btn.classList.remove('on');
           }, 900);
-        });
+        // A refused clipboard shows nothing, which is the honest answer.
+        }).catch(function () {});
       });
     });
   }
@@ -593,17 +1090,17 @@
     // --- copy-link button per answer -------------------------------------
     var copyLabel = search.getAttribute('data-copy') || 'Copy link';
     var copiedLabel = search.getAttribute('data-copied') || 'Copied';
-    // Same chain link the entry's own permalink anchor draws (LINK_ICON in
-    // static-page-chrome.ts), one size down to sit in the copy row.
+    // The chain link of LINK_ICON in static-page-chrome.ts, one size down to
+    // match the "Open this answer" arrow beside it in the .a-acts row.
     var linkIcon =
-      '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
     if (navigator.clipboard) {
       entries.forEach(function (entry) {
         var body = entry.querySelector('.a');
         if (!body) return;
         var btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'copybtn';
+        btn.className = 'a-act';
         btn.innerHTML = linkIcon + '<span>' + copyLabel + '</span>';
         // Copy the entry's LEAF page URL (its own indexable landing page),
         // not a #fragment: nicer to share, and every share seeds Google
@@ -622,7 +1119,7 @@
             btn.querySelector('span').textContent = copyLabel;
           }
         );
-        body.appendChild(btn);
+        (body.querySelector('.a-acts') || body).appendChild(btn);
       });
     }
 
@@ -694,7 +1191,8 @@
     }
 
     function applyFilter(raw) {
-      var q = norm(raw.trim());
+      var typed = raw.trim();
+      var match = matcher(typed);
       search.classList.toggle('has-q', raw.length > 0);
 
       autoOpened.forEach(function (entry) {
@@ -706,7 +1204,7 @@
         entry.hidden = false;
       });
 
-      if (!q) {
+      if (!match) {
         groups.forEach(function (g) {
           g.hidden = false;
           setRail(g, null);
@@ -721,7 +1219,7 @@
 
       var shown = 0;
       entries.forEach(function (entry) {
-        var hit = (entry.getAttribute('data-s') || '').indexOf(q) >= 0;
+        var hit = !!match(entry.getAttribute('data-s') || '');
         entry.hidden = !hit;
         if (hit) shown++;
       });
@@ -733,19 +1231,19 @@
       });
 
       guideItems.forEach(function (r) {
-        r.classList.toggle('dim', (r.getAttribute('data-s') || '').indexOf(q) < 0);
+        r.classList.toggle('dim', !match(r.getAttribute('data-s') || ''));
       });
 
       var visible = entries.filter(function (e) {
         return !e.hidden;
       });
       visible.forEach(function (entry) {
-        markIn(entry, raw.trim());
+        markIn(entry, typed);
         // Auto-expand when the evidence would otherwise be invisible: the
         // match sits in the answer body, not the (always visible) question.
         // With 3 or fewer matches, expand everything.
         var qEl = entry.querySelector('.q');
-        var qHit = qEl && norm(qEl.textContent).indexOf(q) >= 0;
+        var qHit = qEl && match(qEl.textContent);
         if ((visible.length <= 3 || !qHit) && !entry.open) {
           entry.open = true;
           autoOpened.push(entry);
@@ -895,10 +1393,18 @@
       });
     }
 
+    // "With screenshots" is a type row too, but it selects on the shot
+    // marker rather than on the New / Improved / Fixed label.
+    function itemShown(li) {
+      if (state.t === 'all') return true;
+      if (state.t === 'shots') return li.hasAttribute('data-shot');
+      return li.getAttribute('data-t') === state.t;
+    }
+
     // --- the one filter -----------------------------------------------------
     function apply(opts) {
-      var q = norm(state.q.trim());
       var raw = state.q.trim();
+      var match = matcher(raw);
 
       typeRows.forEach(function (r) {
         r.classList.toggle('on', r.getAttribute('data-t') === state.t);
@@ -910,12 +1416,12 @@
       // Item rows come and go with the type filter; the query decides which
       // releases survive at all.
       items.forEach(function (li) {
-        li.hidden = state.t !== 'all' && li.getAttribute('data-t') !== state.t;
+        li.hidden = !itemShown(li);
       });
 
       releases.forEach(function (rel) {
         unmark(rel);
-        var hit = !q || (rel.getAttribute('data-s') || '').indexOf(q) >= 0;
+        var hit = !match || !!match(rel.getAttribute('data-s') || '');
         var inMonth = !state.m || rel.getAttribute('data-m') === state.m;
         var hasItems = rel.querySelector('li.item:not([hidden])') != null;
         rel.hidden = !(hit && inMonth && hasItems);
@@ -956,12 +1462,12 @@
         var key = r.getAttribute('data-m');
         var n = releases.filter(function (rel) {
           if (rel.getAttribute('data-m') !== key) return false;
-          if (q && (rel.getAttribute('data-s') || '').indexOf(q) < 0) return false;
-          return state.t === 'all' || rel.querySelector('li.item[data-t="' + state.t + '"]') != null;
+          if (match && !match(rel.getAttribute('data-s') || '')) return false;
+          return state.t === 'all' || rel.querySelector(state.t === 'shots' ? 'li.item[data-shot]' : 'li.item[data-t="' + state.t + '"]') != null;
         }).length;
         r.classList.toggle('dim', n === 0);
         var ct = r.querySelector('.rct');
-        if (ct) ct.textContent = q || state.t !== 'all' ? String(n) : ct.getAttribute('data-full');
+        if (ct) ct.textContent = raw || state.t !== 'all' ? String(n) : ct.getAttribute('data-full');
       });
 
       var totalMatched = matched.length;
@@ -975,11 +1481,11 @@
 
       search.classList.toggle('has-q', state.q.length > 0);
 
-      if (!q && state.t === 'all' && !state.m) {
+      if (!raw && state.t === 'all' && !state.m) {
         count.textContent = total + ' releases';
       } else if (!totalMatched) {
         count.textContent = '';
-      } else if (q) {
+      } else if (raw) {
         // A query matches a RELEASE (its title, its changes, its version or
         // its date), so report releases. Reporting "82 changes" here would
         // be counting every change in the 9 releases that matched, which
@@ -1124,7 +1630,7 @@
       state.q = q0;
       input.value = q0;
     }
-    if (t0 && ['new', 'improved', 'fixed'].indexOf(t0) >= 0) state.t = t0;
+    if (t0 && ['new', 'improved', 'fixed', 'shots'].indexOf(t0) >= 0) state.t = t0;
     if (m0 && /^\d{4}-\d{2}$/.test(m0)) state.m = m0;
     apply({ resetPage: true });
 
@@ -1157,4 +1663,82 @@
       if (el) io.observe(el);
     });
   }
+
+  // /auth/desktop: show the one-time sign-in code the desktop app asks for.
+  //
+  // The page is the return address a desktop sign-in uses, because no desktop
+  // operating system can say which application owns a custom scheme. The code
+  // is read here and shown for the person to carry back to the app; it is
+  // never sent anywhere and never stored.
+  //
+  // The page ships with the code block hidden and a plain sentence visible
+  // that points at the address bar, so a browser with scripting off still
+  // tells the truth instead of showing an empty box.
+  // Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.3)
+  function initAuthDesktop() {
+    function role(name) {
+      return document.querySelector('[data-role="' + name + '"]');
+    }
+    var nojs = role('nojs');
+    if (nojs) nojs.hidden = true;
+
+    var code = null;
+    try {
+      code = new URL(window.location.href).searchParams.get('code');
+    } catch (e) {
+      code = null;
+    }
+
+    if (!code) {
+      var missing = role('missing');
+      if (missing) missing.hidden = false;
+      return;
+    }
+
+    var out = role('code');
+    if (out) out.textContent = code;
+    ['lede', 'codebox', 'steps'].forEach(function (n) {
+      var el = role(n);
+      if (el) el.hidden = false;
+    });
+
+    var btn = role('copy');
+    if (!btn) return;
+    var label = btn.textContent;
+    var timer = null;
+    btn.addEventListener('click', function () {
+      function done(ok) {
+        btn.textContent = ok ? 'Copied' : 'Press Ctrl+C';
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(function () {
+          btn.textContent = label;
+        }, 2000);
+      }
+      // A clipboard write needs a secure context and a permission the browser
+      // may refuse, so selecting the code is the fallback: it leaves the
+      // person one keystroke away rather than with a button that did nothing.
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(function () { done(true); }, function () { selectCode(); done(false); });
+      } else {
+        selectCode();
+        done(false);
+      }
+    });
+
+    function selectCode() {
+      if (!out) return;
+      try {
+        var range = document.createRange();
+        range.selectNodeContents(out);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } catch (e) { /* selection is a convenience, never a requirement */ }
+    }
+  }
+
+  // The homepage (LandingPage.tsx, a React page) loads this file on the first
+  // click on a Ninja screenshot and opens the same viewer through this handle,
+  // so /changelog, /themes and the homepage share one lightbox.
+  window.pnLightbox = lightbox;
 })();

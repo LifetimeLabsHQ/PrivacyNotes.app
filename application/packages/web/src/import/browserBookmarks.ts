@@ -13,7 +13,7 @@
  * stack: <DT><H3 ...>name</H3> opens a folder, <DT><A ...>name</A> is a
  * bookmark, </DL> closes the current folder.
  *
- * Mapping (decided 2026-08-22, ops/docs/plans/bookmarks-pillar.md):
+ * Mapping (decided 2026-08-22, ops/docs/archive/bookmarks-pillar.md):
  *   - The folder tree imports as REAL folders under one "Bookmarks" root.
  *   - Container roots are dropped and their children merge one level up.
  *     Detection is ATTRIBUTE-based (PERSONAL_TOOLBAR_FOLDER,
@@ -31,6 +31,8 @@
  *   - Firefox TAGS= and SHORTCUTURL= (the address-bar keyword) are both
  *     user-authored labels, so they land in one list that the import
  *     modal's checkbox keeps or drops. Chromium and Safari write neither.
+ *     The keyword is also kept in the link body, whatever the checkbox
+ *     says, so the export can write SHORTCUTURL back for Firefox.
  *   - The embedded ICON= data URIs are ignored: stale snapshots, and the
  *     live favicon proxy already does this job.
  *   - <DD> descriptions are NOT read. Firefox dropped the description
@@ -76,7 +78,13 @@ const ENTITY = /&(?:#(\d{1,7})|#[xX]([0-9a-fA-F]{1,6})|([a-z]+));/gi;
  */
 function decodeEntities(s: string): string {
   return s.replace(ENTITY, (whole, dec: string | undefined, hex: string | undefined, name: string | undefined) => {
-    if (name !== undefined) return NAMED_ENTITY[name.toLowerCase()] ?? whole;
+    if (name !== undefined) {
+      // Own property only: the name comes out of the file, and an inherited
+      // one answers with a function that `?? whole` cannot see, so the
+      // function's own source text would land in the title.
+      const key = name.toLowerCase();
+      return Object.hasOwn(NAMED_ENTITY, key) ? NAMED_ENTITY[key]! : whole;
+    }
     const code = dec !== undefined ? Number(dec) : parseInt(hex!, 16);
     // Reject nothing, the surrogate range, and anything past the last
     // plane, all of which would make fromCodePoint throw.
@@ -106,7 +114,7 @@ function toIso(raw: string | null): string | null {
  * its address-bar keyword, normalized and de-duplicated into one list.
  * Kept transient on the note - `withBrowserTags` decides whether they
  * become real tags, so the preview checkbox can flip without re-parsing.
- * Spec: ops/docs/plans/bookmarks-pillar.md (section 9)
+ * Spec: ops/docs/archive/bookmarks-pillar.md (section 9)
  */
 function browserTagsOf(attrs: string): string[] {
   const out: string[] = [];
@@ -194,9 +202,13 @@ export async function parseBrowserBookmarks(file: File): Promise<ParsedImport> {
     const created = toIso(attr(attrs, 'ADD_DATE'));
     const folderPath = [ROOT_FOLDER, ...path()];
     const browserTags = browserTagsOf(attrs);
+    const keyword = attr(attrs, 'SHORTCUTURL')?.trim() ?? '';
+    // Whether Firefox ALSO had a tag of the keyword's name: the export leaves
+    // out a tag that only the keyword made, and keeps this one.
+    const keywordTag = !!keyword && (attr(attrs, 'TAGS') ?? '').split(',').some((t) => normalizeTag(t) === normalizeTag(keyword));
     notes.push({
       title: name,
-      body: buildLinkBody(href),
+      body: buildLinkBody(href, keyword || undefined, keywordTag),
       tags: [],
       createdAt: created ?? now,
       updatedAt: created ?? now,

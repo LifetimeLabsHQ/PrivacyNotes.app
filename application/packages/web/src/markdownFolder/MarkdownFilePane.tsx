@@ -5,18 +5,26 @@
  * comment somewhere: nothing is written unless the user actually typed, and
  * nothing is written over a file that changed underneath us.
  *
- * Spec: ops/docs/plans/markdown-folder.md (section 7)
+ * Spec: ops/docs/archive/markdown-folder.md (section 7)
  */
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MarkdownSourceEditor } from '../MarkdownSourceEditor';
 import { WordCount } from '../WordCount';
-import { Editor } from '../Editor';
-import { ArrowLeft, FileMd, FileTxt, Lock, Trash, X } from '../icons';
+import { Editor, type EditorHandle } from '../Editor';
+import { FormatBarContext } from '../formatBarContext';
+import { setWikiLinkNavigator } from '../NoteLink';
+import { setWikiLinkNoteContext, setWikiLinkNoteTitles } from '../NoteLinkSuggestion';
+import { setLocalLinkOpener } from '../editorLinks';
+import { ArrowLeft, FileMd, FileTxt, Lock, MagnifyingGlass, Swap, Trash, X } from '../icons';
+import { EditorSlotPill } from '../EditorSlotPill';
+import { editorCommands } from '../editorCommands';
 import { HoverLabel } from '../HoverLabel';
-import { adaptFile, isTextFile } from './adapter';
+import { keyText } from '../shortcutMatch';
+import { adaptFile, isTextFile, tidyRichSave } from './adapter';
 import { stampsMatch } from './fileAccess';
 import { applyAssets, restoreAssets, useAssets } from './useAssets';
+import { isLocalHref, noteLinkPathFor, resolveNoteLinkPath, resolveRelativeLinkPath } from './links';
 import type { OpenedMarkdownDir, OpenedMarkdownFile, SaveState } from './types';
 
 /** Idle gap before an edit reaches the disk. Longer than the encrypted
@@ -27,6 +35,15 @@ const SAVE_DEBOUNCE_MS = 900;
 /** Source mode swaps nothing in, so it has nothing to put back. Shared rather
  *  than built per render so it cannot churn the editor's props. */
 const EMPTY_ASSETS: Map<string, string> = new Map();
+// The pillar is free, all of it, so the editor runs with every feature open:
+// callouts, find and replace. Nothing here prices anything, and no upgrade
+// pitch can open from this pane.
+// Spec: ops/docs/pro-features.md (Markdown folder)
+const SOURCE_SEARCH = { isPro: true };
+// The find pill shows only on a file longer than the pane, with a line of
+// slack so it does not blink while a line wraps. The notes pane's value.
+// Spec: ops/docs/design-decisions.md (the editor corner holds only controls that can hide themselves)
+const OVERFLOW_SLACK_PX = 40;
 
 /** The reading column, the same one the encrypted editor uses. `NoteEditorPane`
  *  holds its own copy of this string and importing it from there would drag the
@@ -54,6 +71,7 @@ export function MarkdownFilePane({
   onImportToNotes,
   onClose,
   gridMode,
+  onNotice,
 }: {
   opened: OpenedMarkdownFile;
   onUpdated: (next: OpenedMarkdownFile) => void;
@@ -80,6 +98,8 @@ export function MarkdownFilePane({
    * boundary stays one-way by construction, not by care.
    */
   onImportToNotes: (filename: string, raw: string) => void;
+  /** A short message for the app's toast: a link that leads nowhere. */
+  onNotice: (message: string) => void;
 }) {
   const { t } = useTranslation('shell');
   const [state, setState] = useState<SaveState>({ kind: 'idle' });
@@ -95,6 +115,10 @@ export function MarkdownFilePane({
    * the mode to reach for the moment a file looks reformatted.
    */
   const [mode, setMode] = useState<'rich' | 'source'>(opened.adapted.editorMode);
+  // The format bar at the bottom gets a row under the scrolling column,
+  // as in the note editor (see Editor's toolbarSlot).
+  const barBelow = useContext(FormatBarContext).position === 'bottom' && mode === 'rich';
+  const [barSlot, setBarSlot] = useState<HTMLDivElement | null>(null);
   /** Mirrors the editor's current text so the counter moves while typing,
    *  rather than only after a save lands. Same job as NotesView's `wcBody`. */
   // Seeded from the BODY: the rich editor shows exactly that, and counting a
@@ -119,6 +143,133 @@ export function MarkdownFilePane({
   openedRef.current = opened;
   const onUpdatedRef = useRef(onUpdated);
   onUpdatedRef.current = onUpdated;
+  const editorRef = useRef<EditorHandle>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  // The scroller for a pane resize, the content for the text growing. The
+  // column is `min-h-full` under a header that scrolls with it, so its own
+  // height overflows on every file; what counts is what its children need.
+  const [bodyOverflows, setBodyOverflows] = useState(false);
+  useEffect(() => {
+    const node = scrollerRef.current;
+    if (!node) return;
+    const measure = () => {
+      const col = contentRef.current;
+      if (!col) return;
+      const style = getComputedStyle(col);
+      const needed = [...col.children].reduce((h, c) => h + (c as HTMLElement).offsetHeight, 0)
+        + parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      setBodyOverflows(node.scrollHeight - col.offsetHeight + needed - node.clientHeight > OVERFLOW_SLACK_PX);
+    };
+    const ro = new ResizeObserver(measure);
+    ro.observe(node);
+    if (contentRef.current) ro.observe(contentRef.current);
+    measure();
+    return () => ro.disconnect();
+  }, []);
+  /** Blob URLs of files just pasted, dropped or picked in rich mode, by the
+   *  relative path the file is written under. The editor shows the blob until
+   *  the save lands and `useAssets` resolves the path itself; until then this
+   *  is what turns the blob back into the path on the way to disk. */
+  const pastedAssets = useRef(new Map<string, string>());
+  useEffect(() => {
+    const urls = pastedAssets.current;
+    return () => {
+      for (const url of urls.values()) URL.revokeObjectURL(url);
+      urls.clear();
+    };
+  }, [opened.ref.location]);
+
+  // Links resolve inside this folder and nowhere else: a local file never
+  // names an encrypted note, and an encrypted note never names a file.
+  // Spec: ops/docs/archive/markdown-folder.md (section 3, note-links)
+  const relPaths = useMemo(() => (dir?.entries ?? []).map((e) => e.relPath), [dir]);
+  const linkTitles = useMemo(
+    () => relPaths.map((rel) => ({ id: rel, title: noteLinkPathFor(rel) })),
+    [relPaths],
+  );
+
+  /** Open another file of the folder in this pane. A pending edit to the
+   *  file on screen still lands in it: the flush below names its own file. */
+  async function openLinked(relPath: string) {
+    const entry = dir?.entries.find((e) => e.relPath === relPath);
+    if (!entry || entry.ref.location === openedRef.current.ref.location) return;
+    try {
+      const raw = await entry.ref.read();
+      onUpdatedRef.current({ ref: entry.ref, raw, stamp: await entry.ref.stamp(), adapted: adaptFile(entry.ref.name, raw), reloadToken: 0 });
+    } catch {
+      onNotice(t('markdown.openFailed'));
+    }
+  }
+
+  /** The file on screen as a path in the scan, or null for a lone file. */
+  function currentRelPath(): string | null {
+    const loc = openedRef.current.ref.location;
+    return dir?.entries.some((e) => e.relPath === loc) ? loc : null;
+  }
+
+  /** A heading to scroll to once the linked file is on screen. */
+  const pendingHeadingRef = useRef<{ relPath: string; heading: string } | null>(null);
+
+  function scrollToHeading(heading: string) {
+    editorRef.current?.scrollToHeading(heading, () => onNotice(t('editor:noteLink.headingNotFound')));
+  }
+
+  function followNoteLink(target: string) {
+    // `[[bar#Part]]` opens bar at the heading Part; `[[#Part]]` is the
+    // heading in the file on screen, which needs no folder.
+    const hash = target.indexOf('#');
+    const heading = hash >= 0 ? target.slice(hash + 1).trim() : '';
+    if (hash >= 0 && !target.slice(0, hash).trim() && heading) {
+      scrollToHeading(heading);
+      return;
+    }
+    const from = currentRelPath();
+    if (from === null) {
+      onNotice(t('markdown.linkNeedsFolder'));
+      return;
+    }
+    const hit = resolveNoteLinkPath(relPaths, target);
+    if (!hit) {
+      onNotice(t('markdown.linkNotFound', { target: target.split('#')[0]!.trim() }));
+      return;
+    }
+    if (hit === from) {
+      if (heading) scrollToHeading(heading);
+      return;
+    }
+    pendingHeadingRef.current = heading ? { relPath: hit, heading } : null;
+    void openLinked(hit);
+  }
+
+  function followRelativeLink(href: string): boolean {
+    if (!isLocalHref(href)) return false;
+    const from = currentRelPath();
+    if (from === null) {
+      onNotice(t('markdown.linkNeedsFolder'));
+      return true;
+    }
+    const hit = resolveRelativeLinkPath(relPaths, from, href);
+    if (hit) void openLinked(hit);
+    else onNotice(t('markdown.linkNotFound', { target: href }));
+    return true;
+  }
+
+  // Re-installed on every render, because the handlers close over the
+  // current folder and file. The editor reads them at click time.
+  useEffect(() => {
+    const ed = editorRef.current?.getEditor() ?? null;
+    setWikiLinkNavigator(ed, followNoteLink);
+    setWikiLinkNoteTitles(ed, linkTitles);
+    setLocalLinkOpener(ed, followRelativeLink);
+    const rel = currentRelPath();
+    setWikiLinkNoteContext(ed, rel === null ? null : { id: rel, title: noteLinkPathFor(rel) });
+    const pending = pendingHeadingRef.current;
+    if (ed && pending && pending.relPath === rel) {
+      pendingHeadingRef.current = null;
+      scrollToHeading(pending.heading);
+    }
+  });
 
   // A different file is a different save state, and a different default mode.
   // Without this, opening a second file from the list inherits the first one's
@@ -215,7 +366,7 @@ export function MarkdownFilePane({
     // Put the front matter back, from the bytes it arrived as. `target`, never
     // `openedRef`: this also runs from the outgoing editor's flush, when the
     // pane has already moved to a different file with different front matter.
-    const text = bodyOnly ? target.adapted.frontMatterRaw + restored : restored;
+    const text = bodyOnly ? target.adapted.frontMatterRaw + tidyRichSave(restored, target.adapted.body) : restored;
     // Rule 2 holds by construction: this only ever runs from an editor change
     // event, so a file that is merely opened and read is never written.
     //
@@ -272,7 +423,7 @@ export function MarkdownFilePane({
    * One body for both entry points on purpose: paste and drop reach the same
    * TipTap plugins and would otherwise be two chances to get this wrong.
    */
-  async function attachFiles(files: File[]) {
+  async function attachFiles(files: File[], at?: { x: number; y: number }) {
     const dirRef = dir?.ref;
     // Nothing to write into: a lone file opened without a folder has nowhere to
     // put an attachment. The handlers have already blocked the event by the time
@@ -288,21 +439,76 @@ export function MarkdownFilePane({
     // Seeded from the scan and added to as we go: files dropped together are
     // not in `entries` yet, and would otherwise all claim the same name.
     const taken = new Set((dir?.entries ?? []).map((x) => x.relPath));
+    // The scan lists notes only, so an image already in `attachments/` is not
+    // in `taken`: ask the folder too, or a second paste into the same note
+    // overwrites the first picture under the same name.
+    const isFree = async (path: string) => {
+      if (taken.has(path)) return false;
+      const url = await dirRef.resolveAsset(path).catch(() => null);
+      if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
+      return url === null;
+    };
     const refs: string[] = [];
+    // The same references as the editor shows them: an image by a blob URL,
+    // because the editor cannot load a path from the folder itself.
+    const shown: string[] = [];
     try {
       for (const file of files) {
         const fromName = file.name.includes('.') ? file.name.slice(file.name.lastIndexOf('.') + 1) : '';
         const ext = (fromName || file.type.split('/')[1] || 'bin').replace('jpeg', 'jpg');
         let rel = `attachments/${stem}.${ext}`;
-        for (let i = 2; taken.has(`${noteFolder}${rel}`); i++) rel = `attachments/${stem}-${i}.${ext}`;
+        for (let i = 2; !(await isFree(`${noteFolder}${rel}`)); i++) rel = `attachments/${stem}-${i}.${ext}`;
         taken.add(`${noteFolder}${rel}`);
         await dirRef.writeAsset(`${noteFolder}${rel}`, new Uint8Array(await file.arrayBuffer()));
         // An image embeds, anything else becomes a plain link - both are ordinary
         // markdown that any other editor resolves the same way we do.
-        refs.push(file.type.startsWith('image/') ? `![${stem}](${rel})` : `[${file.name}](${rel})`);
+        if (file.type.startsWith('image/')) {
+          const url = URL.createObjectURL(file);
+          pastedAssets.current.set(rel, url);
+          refs.push(`![${stem}](${rel})`);
+          shown.push(`![${stem}](${url})`);
+        } else {
+          refs.push(`[${file.name}](${rel})`);
+          shown.push(`[${file.name}](${rel})`);
+        }
       }
-      // One save for the whole batch: a save per file would each start from the
-      // same unchanged `raw` and only the last reference would survive.
+      // At the caret, or where the files were dropped, through the editor on
+      // screen, so its own change event saves the file with every edit still
+      // waiting in the debounce. Building the file from `raw` instead put the
+      // files at the end and, in source mode, behind a textarea that never
+      // showed them, so the next keystroke saved them away again.
+      if (current.ref.location === openedRef.current.ref.location) {
+        const ed = mode === 'rich' ? editorRef.current?.getEditor() : null;
+        if (ed && !ed.isDestroyed) {
+          const pos = at ? ed.view.posAtCoords({ left: at.x, top: at.y })?.pos : undefined;
+          const chain = ed.chain().focus();
+          if (pos !== undefined) chain.setTextSelection(pos);
+          // On a line of its own, as the notes editor places a picture: a
+          // line with text in it is split at the caret first.
+          chain.command(({ state, commands }) => (state.selection.$from.parent.content.size > 0 ? commands.splitBlock() : true));
+          chain.insertContent(shown.join('\n\n')).run();
+          return;
+        }
+        const area = mode === 'source' ? contentRef.current?.querySelector<HTMLTextAreaElement>('textarea[data-pn-source]') : null;
+        if (area) {
+          // A blank line on each side, unless the caret already has one.
+          const before = area.value.slice(0, area.selectionStart);
+          const after = area.value.slice(area.selectionEnd);
+          const lead = before === '' || before.endsWith('\n\n') ? '' : before.endsWith('\n') ? '\n' : '\n\n';
+          const trail = after === '' || after.startsWith('\n\n') ? '' : after.startsWith('\n') ? '\n' : '\n\n';
+          const text = lead + refs.join('\n\n') + trail;
+          area.focus();
+          if (!document.execCommand?.('insertText', false, text)) {
+            area.setRangeText(text, area.selectionStart, area.selectionEnd, 'end');
+            area.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          return;
+        }
+      }
+      // No editor to take them (the file was switched away mid-write): one save
+      // for the whole batch at the end of the file. A save per file would each
+      // start from the same unchanged `raw` and only the last reference would
+      // survive.
       //
       // `current` is the target because this text was built from ITS `raw`; a
       // paste is synchronous with the file on screen, so the two agree today,
@@ -346,7 +552,7 @@ export function MarkdownFilePane({
     if (files.length === 0) return;
     e.preventDefault();
     e.stopPropagation();
-    void attachFiles(files);
+    void attachFiles(files, { x: e.clientX, y: e.clientY });
   }
 
   async function reloadFromDisk() {
@@ -369,7 +575,8 @@ export function MarkdownFilePane({
   }
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto">
+    <div className="flex-1 min-h-0 flex flex-col">
+    <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto">
       {state.kind === 'stale' && (
         <div className="flex items-center gap-3 px-6 py-2 text-[12.5px] bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-b border-amber-200 dark:border-amber-900">
           <span>{t('markdown.changedOnDisk')}</span>
@@ -385,7 +592,7 @@ export function MarkdownFilePane({
           renamed on disk, not typed over here - so it truncates instead of
           scroll-fading. The only addition is the open padlock, which is the
           whole point of this pillar.
-          Spec: ops/docs/ui-patterns.md (editor header) */}
+          Spec: ops/docs/archive/ui-patterns.md (editor header) */}
       <div className="flex justify-center min-h-11 sm:min-h-14 py-1.5 sm:py-0 sm:h-14 border-b border-divider shrink-0">
         <div className="flex items-center gap-2 px-4 sm:px-6 pn-content-col">
           {/* The way back, in the one slot every editor in this app puts it.
@@ -399,7 +606,7 @@ export function MarkdownFilePane({
                 type="button"
                 onClick={onClose}
                 aria-label={t('notes:editor.backToGrid')}
-                className="rounded p-1.5 -ms-1 text-neutral-600 hover:bg-neutral-200 hover:text-accent dark:text-neutral-400 dark:hover:bg-neutral-900 transition shrink-0"
+                className="rounded p-1.5 -ms-1 text-pn-muted hover:bg-pn/10 hover:text-accent transition shrink-0"
               >
                 <X size={18} />
               </button>
@@ -409,7 +616,7 @@ export function MarkdownFilePane({
               type="button"
               onClick={onClose}
               aria-label={t('notes:editor.backToList')}
-              className="md:hidden rounded p-1.5 -ms-1 text-neutral-600 hover:bg-neutral-200 dark:text-neutral-400 dark:hover:bg-neutral-900 transition shrink-0"
+              className="md:hidden rounded p-1.5 -ms-1 text-pn-muted hover:bg-pn/10 transition shrink-0"
             >
               <ArrowLeft size={18} />
             </button>
@@ -428,6 +635,19 @@ export function MarkdownFilePane({
           {isTextFile(opened.ref.name)
             ? <FileTxt size={18} className="shrink-0 text-pn-muted" />
             : <FileMd size={18} className="shrink-0 text-pn-muted" />}
+          {/* Find and replace has no "..." menu to live in here, so it sits in
+              the header, for both modes. Cmd/Ctrl+F and Option+Cmd+F reach the
+              same bars. */}
+          <HoverLabel label={t('noteOptionsMenu.findReplace')} keys={keyText('findReplace')} position="below">
+            <button
+              type="button"
+              onClick={() => (mode === 'rich' ? editorRef.current?.toggleReplace() : editorCommands.findReplace?.())}
+              aria-label={t('noteOptionsMenu.findReplace')}
+              className="rounded-md p-2.5 text-pn-muted hover:text-accent hover:bg-accent/10 transition shrink-0"
+            >
+              <Swap size={20} />
+            </button>
+          </HoverLabel>
           <HoverLabel label={t('markdown.saveToNotes')} position="below">
             <button
               type="button"
@@ -476,6 +696,7 @@ export function MarkdownFilePane({
           padding or the footer is handled by the browser, which navigates the
           webview to the dropped file and takes the pane with it. */}
       <div
+        ref={contentRef}
         className="pn-content-col px-4 sm:px-6 py-4 flex flex-col min-h-full"
         onPasteCapture={handlePasteFile}
         onDragOverCapture={(e) => { if (e.dataTransfer.types.includes('Files')) e.preventDefault(); }}
@@ -483,6 +704,7 @@ export function MarkdownFilePane({
       >
         {mode === 'rich' ? (
           <Editor
+            ref={editorRef}
             key={`rich:${opened.ref.location}:${opened.reloadToken}:${assets.size}`}
             // The BODY, not the raw file. A front-matter block rendered as
             // body text comes out as a horizontal rule followed by a setext
@@ -496,8 +718,20 @@ export function MarkdownFilePane({
             // `opened` and `assets` from THIS render, not from a ref - see
             // `scheduleSave`. The editor flushes on unmount, which happens after
             // the pane has already moved to the next file.
-            onChange={(text) => scheduleSave(text, opened, assets, true)}
+            // A file just pasted shows by its own blob URL until `assets`
+            // resolves it, so that map is undone first; one merged map would
+            // lose a URL whenever both name the same path.
+            onChange={(text) => scheduleSave(restoreAssets(text, pastedAssets.current), opened, assets, true)}
             hideEncryptedMedia
+            // The magnifier beside the outline pill, as on a note.
+            bodyControls={bodyOverflows ? (
+              <EditorSlotPill label={t('notes:editor.findInNote')} keys={keyText('find')} onClick={() => editorRef.current?.toggleFind()}>
+                <MagnifyingGlass size={17} />
+              </EditorSlotPill>
+            ) : null}
+            onInsertFiles={(files) => void attachFiles(files)}
+            isPro
+            toolbarSlot={barSlot}
           />
         ) : (
           // Source mode shows the file's real text, images included. Swapping
@@ -509,6 +743,7 @@ export function MarkdownFilePane({
             // Source mode never swapped anything in, so an empty map restores
             // nothing - the text is already exactly what the file says.
             onChange={(text) => scheduleSave(text, opened, EMPTY_ASSETS, false)}
+            search={SOURCE_SEARCH}
           />
         )}
         {/* Same footer row as the encrypted editor: counts on the left, the
@@ -522,7 +757,7 @@ export function MarkdownFilePane({
           <button
             type="button"
             onClick={() => setMode(mode === 'source' ? 'rich' : 'source')}
-            className="shrink-0 select-none text-xs text-neutral-400 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-400 hover:underline transition"
+            className="shrink-0 select-none text-xs text-pn-muted hover:text-pn-soft hover:underline transition"
           >
             {/* The notes namespace, because this is the encrypted editor's own
                 link and its wording must not fork from it. */}
@@ -530,6 +765,12 @@ export function MarkdownFilePane({
           </button>
         </div>
       </div>
+    </div>
+    {barBelow && (
+      <div className="shrink-0 border-t border-divider bg-surface-2">
+        <div ref={setBarSlot} className="pn-content-col" />
+      </div>
+    )}
     </div>
   );
 }

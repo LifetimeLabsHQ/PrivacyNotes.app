@@ -10,6 +10,43 @@
     "otherGuides": "Andra importguider"
   },
   "guides": {
+    "google-calendar": {
+      "app": "Google Kalender",
+      "title": "Exportera din Google Kalender",
+      "metaTitle": "Så exporterar du din Google Kalender - PrivacyNotes",
+      "lead": "Google Kalender exporterar alla kalendrar du hanterar som en enda .zip från inställningarna, på en dator. PrivacyNotes läser den .zip-filen som den är, ingen uppackning behövs.",
+      "sections": [
+        {
+          "h": "Exportera alla dina kalendrar på en gång",
+          "steps": [
+            "Öppna [Google Kalender](https://calendar.google.com) i en webbläsare på en dator. Mobilappen har ingen export.",
+            "Klicka på kugghjulet uppe till höger och sedan på ”Settings”.",
+            "Klicka på ”Import & export” i listan till vänster.",
+            "Klicka på ”Export” under ”Export”. Webbläsaren laddar ner en .zip med en .ics-fil för varje kalender.",
+            "Låt .zip-filen vara som den är."
+          ],
+          "p": [
+            "Zipfilen innehåller varje kalender där du har behörigheten ”Make changes and manage sharing”, din egen inräknad. Kalendrar du bara kan se, till exempel helgdagar eller en kollegas kalender, finns inte med. På ett jobb- eller skolkonto kan din administratör begränsa exporten."
+          ]
+        },
+        {
+          "h": "Eller exportera en enda kalender",
+          "steps": [
+            "Peka på kalenderns namn under ”My calendars” i listan till vänster, klicka på ”More” (de tre prickarna) och sedan på ”Settings and sharing”.",
+            "Klicka på ”Export calendar” under ”Calendar settings”. Webbläsaren laddar ner en .zip med den kalenderns .ics-fil. Låt den vara som den är."
+          ]
+        },
+        {
+          "h": "Vad som följer med",
+          "p": [
+            "Varje händelse kommer med sin dag, sin tid och hur länge den varar, även händelser som sträcker sig över flera dagar. Upprepade händelser behåller sin regel, och en förekomst som du flyttade eller raderade i Google förblir flyttad eller raderad. Varje kalender blir en mapp.",
+            "Påminnelser du ställt in på en händelse kommer också med, även e-postpåminnelser: [de blir påminnelser i appen](/sv/help/reminders/), som kräver PrivacyNotes Pro för att ringa. En händelse som använde kalenderns standardpåminnelser kommer utan påminnelse, eftersom Google inte skriver in standardvärden i filen. Platsen, länken till videosamtalet, gästerna och beskrivningen hamnar i händelsens text. [Tider visas som de gjorde på den här enheten när du importerade](/sv/help/calendar-time-zones/).",
+            "En enskild .ics-fil från vilken kalenderapp som helst fungerar också, Apple Kalender och Outlook inräknade.",
+            "Importerar du samma fil igen senare hoppas de händelser som redan finns här över, så bara nya läggs till."
+          ]
+        }
+      ]
+    },
     "google-keep": {
       "app": "Google Keep",
       "title": "Exportera dina Google Keep-anteckningar",
@@ -20,16 +57,16 @@
           "h": "Exportera dina anteckningar från Google Keep",
           "steps": [
             "Gå till [takeout.google.com](https://takeout.google.com) och logga in med Google-kontot som äger dina anteckningar.",
-            "Klicka på ”Avmarkera alla”, bläddra sedan ner i produktlistan och kryssa bara i ”Keep”.",
-            "Klicka på ”Nästa steg” och behåll standardinställningarna: exportera en gång, .zip-fil.",
-            "Klicka på ”Skapa export”. Google förbereder arkivet och mejlar dig en nedladdningslänk; med bara Keep tar det oftast minuter, inte timmar.",
+            "Klicka på ”Deselect all”, bläddra sedan ner i produktlistan och kryssa bara i ”Keep”.",
+            "Klicka på ”Next step” och behåll standardinställningarna: exportera en gång, .zip-fil.",
+            "Klicka på ”Create export”. Google förbereder arkivet och mejlar dig en nedladdningslänk; med bara Keep tar det oftast minuter, inte timmar.",
             "Ladda ner .zip-filen. Du kan lämna den precis som den är."
           ]
         },
         {
           "h": "Vad som följer med",
           "p": [
-            "Titlar, anteckningstext och formatering kommer in intakta. Checklistor från Keep blir riktiga uppgiftslistor i PrivacyNotes, och dina Keep-etiketter kommer in som taggar.",
+            "Titlar, anteckningstext och formatering kommer in intakta. Checklistor från Keep blir [riktiga uppgiftslistor i PrivacyNotes](/sv/help/tasks/), och dina Keep-etiketter kommer in som taggar.",
             "Släpp hela Takeout-zipfilen i importverktyget. Har du redan packat upp den fungerar en enskild .json-anteckningsfil från mappen Takeout/Keep lika bra."
           ]
         }
@@ -58,7 +95,41 @@
         {
           "h": "Vad som följer med",
           "p": [
-            "Mappstruktur, anteckningstext och inbäddade bilder överlever flytten. Anteckningarna behåller sina titlar, och bilagor hamnar i det krypterade fillagret bredvid sin anteckning."
+            "Mappstruktur, anteckningstext och inbäddade bilder överlever flytten. Anteckningarna behåller sina titlar, och bilagor hamnar i [det krypterade fillagret](/sv/help/attachment-limits/) bredvid sin anteckning."
+          ]
+        }
+      ]
+    },
+    "bear": {
+      "app": "Bear",
+      "title": "Exportera dina Bear-anteckningar",
+      "metaTitle": "Exportera dina Bear-anteckningar - PrivacyNotes",
+      "lead": "Bear exporterar hela ditt bibliotek som en enda säkerhetskopia, och det är den filen du ska ta med: den innehåller varje anteckning, arkivet och papperskorgen inräknade.",
+      "sections": [
+        {
+          "h": "Skapa en Bear-säkerhetskopia",
+          "steps": [
+            "Öppna Bear på din Mac.",
+            "Välj File > Backup Notes...",
+            "Spara filen. Du får en .bear2bk-fil som innehåller hela ditt bibliotek.",
+            "Släpp in den .bear2bk-filen som den är."
+          ]
+        },
+        {
+          "h": "Säkerhetskopian rymmer mer än en export",
+          "p": [
+            "File > Export Notes... skriver bara ut anteckningarna i den vy du har öppen, så arkiverade anteckningar och anteckningar i papperskorgen lämnas utanför. Säkerhetskopian innehåller alla, och den minns vilka anteckningar som var fästa, arkiverade, i papperskorgen eller skrivskyddade.",
+            "Har du bara en export som Markdown eller Text Bundle, zippa den och släpp in zipfilen. Din text, dina taggar och dina bilagor följer med, men inte arkivet, papperskorgen eller de fästa anteckningarna, eftersom de exporterna aldrig skriver ut dem.",
+            "Exporterar du från Bear för hand? Markera minst två anteckningar. En enda anteckning öppnar en sparruta som kan ge filen fel filändelse."
+          ]
+        },
+        {
+          "h": "Vad som följer med",
+          "p": [
+            "Dina taggar följer med som taggar. Nästlade taggar som #work/projects byggs också upp som mappar, och varje anteckning hamnar i mappen för sin djupaste tagg. [Länkar mellan anteckningar blir anteckningslänkar](/sv/help/note-links/), och en länk till en rubrik pekar på just den rubriken.",
+            "Formateringen finns kvar: rubriker, fet stil, kursiv, understruken text, genomstruken text, markeringar i sina Bear-färger, uppgiftslistor, tabeller, kodblock, citat, informationsrutor, matematik och fotnoter. Bilder öppnas i full bredd, och hopfällda rubriker kommer in uppfällda.",
+            "Fästa anteckningar förblir fästa, [arkiverade anteckningar hamnar i arkivet](/sv/help/archive/), anteckningar i papperskorgen hamnar i papperskorgen, skrivskyddade anteckningar förblir skrivskyddade, och varje anteckning behåller sina ursprungliga datum.",
+            "Bilder och filer som sitter på dina anteckningar importeras till din lagring. En anteckning som pekar på en fil som säkerhetskopian inte innehåller importeras ändå, och importförhandsgranskningen berättar hur många länkar det gäller."
           ]
         }
       ]
@@ -81,9 +152,9 @@
           "h": "Vad som följer med",
           "p": [
             "Din mappstruktur återskapas som riktiga mappar, inte utplattad till taggar, oavsett hur djupt den är nästlad. En anteckning i Work/Projects hamnar i mappen Work > Projects. Importerar du samma valv igen, återanvänds mapparna som redan skapades i stället för att dubbleras.",
-            "I gratisplanen kan du bläddra bland de här mapparna direkt; att skapa, byta namn på och flytta mappar är en Pro-funktion, så en Obsidian-import är ett bra sätt att prova den innan du uppgraderar.",
+            "I gratisplanen kan du bläddra bland de här mapparna direkt; [att skapa, byta namn på och flytta mappar är en Pro-funktion](/sv/help/folders/), så en Obsidian-import är ett bra sätt att prova den innan du uppgraderar.",
             "YAML-frontmatter tolkas: taggar, alias och skapandedatum respekteras, och #taggar i löptexten slås ihop med taggfältet. Du kan också kryssa i ”Tagga även anteckningar efter mapp” under importen för att lägga till varje mappnamn som en tagg, praktiskt om du gillar att filtrera på tagg också.",
-            "Dina [[...]]-länkar fortsätter fungera: PrivacyNotes visar dem som anteckningslänkar, så kopplingarna mellan anteckningarna överlever flytten. Konfigurationsmappen .obsidian och .trash hoppas över automatiskt."
+            "Dina [[...]]-länkar fortsätter fungera: [PrivacyNotes visar dem som anteckningslänkar](/sv/help/note-links/), så kopplingarna mellan anteckningarna överlever flytten. Konfigurationsmappen .obsidian och .trash hoppas över automatiskt."
           ]
         }
       ]
@@ -92,15 +163,22 @@
       "app": "Standard Notes",
       "title": "Exportera dina Standard Notes",
       "metaTitle": "Exportera en Standard Notes-säkerhetskopia - PrivacyNotes",
-      "lead": "Standard Notes har en dekrypterad säkerhetskopia att exportera, och det är den filen PrivacyNotes läser. En viktig detalj direkt: det måste vara den dekrypterade varianten, inte den krypterade.",
+      "lead": "Standard Notes exporterar ditt konto som en enda dekrypterad säkerhetskopia. Den tar med Super-anteckningar med sin formatering, plus checklistor, taggar och 2FA-koder.",
       "sections": [
         {
           "h": "Exportera dina anteckningar från Standard Notes",
           "steps": [
             "Öppna Standard Notes (webben på app.standardnotes.com, eller skrivbordsappen) och logga in.",
-            "Öppna Preferences och sedan avsnittet Backups.",
-            "Ladda ner en säkerhetskopia av dina data och välj det dekrypterade formatet när du blir tillfrågad.",
+            "Klicka på kontoikonen längst ned till vänster och sedan på Account settings > Backups.",
+            "Välj Decrypted under Data backups och klicka sedan på Download backup. Den enda filen innehåller alla anteckningar, även Super-anteckningar.",
             "Du får en .zip som innehåller en fil som heter ”Standard Notes Backup and Import File.txt”. Låt zipfilen vara som den är."
+          ]
+        },
+        {
+          "h": "Super-anteckningar, checklistor och 2FA-koder behåller sin form",
+          "p": [
+            "Super-anteckningar behåller sin formatering: rubriker, listor, checklistor, tabeller, kodblock, markeringar, färger, textjustering och hopfällbara avsnitt. [En länk till en annan anteckning blir en anteckningslänk](/sv/help/note-links/), och en #hashtag i texten blir en tagg på anteckningen. Checklistor hamnar i Uppgifter, kalkylblad blir tabeller och poster från autentiseraren blir [inloggningar i Valvet, med sin 2FA-nyckel](/sv/help/vault-totp/). Nästlade taggar blir mappar, och varje anteckning behåller även sina taggar.",
+            "Filer som du har laddat upp till Standard Notes ligger kvar på deras server, så säkerhetskopian innehåller bara deras namn. Varje importerad anteckning visar var en fil fanns. Ladda ner filerna från Standard Notes och lägg till dem i anteckningen igen."
           ]
         },
         {
@@ -143,16 +221,16 @@
         {
           "h": "Exportera dina anteckningar från Samsung Notes",
           "steps": [
-            "Håll in fingret i Samsung Notes för att markera de anteckningar du vill ha (eller Markera alla).",
-            "Tryck på trepunktsmenyn och välj ”Spara som fil”.",
-            "Välj ”Microsoft Word-fil” (.docx) för formaterade anteckningar, eller ”Textfil” (.txt) för ren text.",
+            "Håll in fingret i Samsung Notes för att markera de anteckningar du vill ha (eller Select all).",
+            "Tryck på trepunktsmenyn och välj ”Save as file”.",
+            "Välj ”Microsoft Word file” (.docx) för formaterade anteckningar, eller ”Text file” (.txt) för ren text.",
             "Samsung sparar en fil per anteckning i enhetens lagring. Samla ihop dem i en enda .zip (markera dem i filhanteraren och komprimera) om du exporterade mer än en handfull."
           ]
         },
         {
           "h": "Vad som följer med",
           "p": [
-            "Från .docx-exporter överlever fet och kursiv stil, understrykning, genomstrykning, punktlistor och numrerade listor samt kryssrutor (som blir riktiga uppgiftslistor). Från .txt-exporter: texten, inget annat.",
+            "Från .docx-exporter överlever fet och kursiv stil, understrykning, genomstrykning, punktlistor och numrerade listor samt kryssrutor (som blir [riktiga uppgiftslistor](/sv/help/tasks/)). Från .txt-exporter: texten, inget annat.",
             "Bilder som är inbäddade i en Samsung-anteckning flyttas för hand: importverktyget flaggar varje anteckning som hade en, så du vet exakt var du ska lägga tillbaka dem. Texten, rubrikerna och datumen kommer in i samma omgång."
           ]
         }
@@ -176,8 +254,8 @@
         {
           "h": "Var sakerna hamnar",
           "p": [
-            "Inloggningar blir inloggningsposter i Valvet (med sina webbplatsikoner), kort blir kortposter, SSH-nycklar blir SSH-nyckelposter, och säkra anteckningar och identiteter kommer in som läsbara anteckningar. Mappar från Bitwarden blir taggar, och favoriter kommer in stjärnmärkta. Autentiseringsnycklar (TOTP) följer också med, så dina 2FA-koder fortsätter att fungera.",
-            "Exportfilen innehåller dina lösenord i klartext, så importera den, kontrollera att allt kom fram och radera sedan filen ordentligt. Inne i PrivacyNotes är alltihop totalsträckskrypterat igen."
+            "Inloggningar blir [inloggningsposter i Valvet](/sv/help/vault/) (med sina webbplatsikoner), kort blir kortposter, SSH-nycklar blir SSH-nyckelposter, och säkra anteckningar och identiteter kommer in som läsbara anteckningar. Mappar från Bitwarden blir taggar, och favoriter kommer in stjärnmärkta. Autentiseringsnycklar (TOTP) följer också med, så [dina 2FA-koder fortsätter att fungera](/sv/help/vault-totp/).",
+            "Exportfilen innehåller dina lösenord i klartext, så importera den, kontrollera att allt kom fram och radera sedan filen ordentligt. Inne i PrivacyNotes är alltihop krypterat igen, på din enhet och på vägen till servern."
           ]
         }
       ]
@@ -227,7 +305,7 @@
         {
           "h": "Vad som kommer med, och vad som inte gör det",
           "p": [
-            "Tabeller, kodblock, överstrykningar, understrykning, textfärg och formler överlever flytten. Checklistor blir uppgiftslistor, en påminnelse på en anteckning blir en uppgift högst upp i anteckningen, bilagor och bilder krypteras om och läggs i ditt lagringsutrymme, webbklipp behåller sin käll-URL, och röstanteckningar behåller sin transkribering. Interna länkar blir anteckningslänkar, matchade på den länkade anteckningens titel, eftersom Evernote inte exporterar några antecknings-id:n.",
+            "Tabeller, kodblock, överstrykningar, understrykning, textfärg och formler överlever flytten. [Checklistor blir uppgiftslistor](/sv/help/tasks/), en påminnelse på en anteckning blir en uppgift högst upp i anteckningen, bilagor och bilder krypteras om och läggs i ditt lagringsutrymme, webbklipp behåller sin käll-URL, och röstanteckningar behåller sin transkribering. [Interna länkar blir anteckningslänkar](/sv/help/note-links/), matchade på den länkade anteckningens titel, eftersom Evernote inte exporterar några antecknings-id:n.",
             "Uppgifter kommer inte med: exporten lämnar en platshållare med texten ”Content not supported” där varje uppgiftsblock satt, utan några titlar, förfallodatum eller status kvar att läsa. Krypterade block förblir krypterade, så dekryptera dem i Evernote först. Egna teckensnitt, textjustering och nästlade tagghierarkier faller bort."
           ]
         },
@@ -256,7 +334,7 @@
         {
           "h": "Så läses filerna",
           "p": [
-            "YAML-frontmatter respekteras när den finns: fälten title, created, updated och tags används rakt av, vilket också gör det här till vägen tillbaka för PrivacyNotes egna Markdown-exporter. Taggar skrivna som #hashtaggar i texten läses också. Vanliga filer utan frontmatter använder filnamnet som titel och innehållet som brödtext. Tolkningen är medvetet tillåtande: .md, .markdown, .mdown, .mkd och .txt tas alla emot.",
+            "YAML-frontmatter respekteras när den finns: fälten title, created, updated och tags används rakt av, vilket också gör det här till [vägen tillbaka för PrivacyNotes egna Markdown-exporter](/sv/help/export/). Taggar skrivna som #hashtaggar i texten läses också. Vanliga filer utan frontmatter använder filnamnet som titel och innehållet som brödtext. Tolkningen är medvetet tillåtande: .md, .markdown, .mdown, .mkd och .txt tas alla emot.",
             "Zippa hela mappen så följer strukturen med. Undermappar byggs upp som riktiga mappar, hur djupt de än ligger, och bilderna och filerna som dina anteckningar länkar till importeras jämsides. Det som ingenting länkar till lämnas kvar och räknas, så en mapp full av gamla skärmbilder äter inte upp ditt utrymme."
           ]
         }
@@ -296,9 +374,9 @@
         {
           "h": "Vad som följer med",
           "p": [
-            "Dina anteckningsböcker återskapas som riktiga mappar, inte utplattade till taggar, på samma djup som de var nästlade i Notesnook. En anteckning i Work > Projects hamnar i mappen Work > Projects.",
+            "[Dina anteckningsböcker återskapas som riktiga mappar](/sv/help/folders/), inte utplattade till taggar, på samma djup som de var nästlade i Notesnook. En anteckning i Work > Projects hamnar i mappen Work > Projects.",
             "Fästa och favoritmarkerade anteckningar förblir markerade. Notesnook håller Pin och Favorite som två separata egenskaper; PrivacyNotes har en enda lista med Fästa, så en anteckning som var det ena eller det andra hamnar där.",
-            "Överstrykningar, matematik och textjustering kommer över som sig själva: överstruken text förblir överstruken, formler renderas på nytt som matematik, och centrerade eller högerjusterade block behåller sin justering. Egna teckensnitt, teckenstorlekar och textfärger har ingen motsvarighet här, så den stilen faller bort medan själva texten behålls."
+            "Överstrykningar, textfärger, teckenstorlekar, upphöjd text, nedsänkt text, matematik och textjustering kommer över som sig själva: varje färg flyttas till närmaste färg i vår palett, en teckenstorlek du valt blir Liten, Stor eller Enorm, formler renderas på nytt som matematik, och centrerade eller högerjusterade block behåller sin justering. Egna teckensnitt har ingen motsvarighet här, så teckensnittet faller bort medan själva texten behålls."
           ]
         },
         {
@@ -336,28 +414,28 @@
         {
           "h": "Vad som kommer med",
           "p": [
-            "Varje inlägg hamnar i Dagböcker i stället för Anteckningar, daterat den dag Journal visar ovanför det, så din historik behåller sin form.",
-            "Foton och Live Photos importeras som bilder, videor och röstmemon som bilagor. Apple levererar foton som HEIC, som de flesta webbläsare inte kan visa, så PrivacyNotes konverterar vart och ett till JPEG på vägen in. Det är den långsamma delen av en stor import: några hundra foton kan ta flera minuter, och förloppsraden räknar dem åt dig.",
+            "[Varje inlägg hamnar i Dagböcker](/sv/help/journal/) i stället för Anteckningar, daterat den dag Journal visar ovanför det, så din historik behåller sin form.",
+            "Foton och Live Photos importeras som bilder, videor och röstmemon som bilagor. Apple levererar foton som HEIC, som de flesta webbläsare inte kan visa, så PrivacyNotes [konverterar vart och ett till JPEG på vägen in](/sv/help/image-quality/). Det är den långsamma delen av en stor import: några hundra foton kan ta flera minuter, och förloppsraden räknar dem åt dig.",
             "Fet och kursiv stil, understrykning, genomstrykning, textfärger, punktlistor och numrerade listor samt blockcitat överlever flytten."
           ]
         },
         {
           "h": "Foton, videor och ditt lagringsutrymme",
           "p": [
-            "En dagbok full av foton är mycket större än en dagbok full av text, och den räknas mot ditt lagringsutrymme precis som allt annat. Importförhandsvisningen summerar det innan du bestämmer dig, och vägrar starta om det inte skulle få plats."
+            "En dagbok full av foton är mycket större än en dagbok full av text, och [den räknas mot ditt lagringsutrymme precis som allt annat](/sv/help/storage-usage/). Importförhandsvisningen summerar det innan du bestämmer dig, och vägrar starta om det inte skulle få plats."
           ]
         },
         {
           "h": "Vart dina platser tar vägen",
           "p": [
-            "Journal registrerar var ett inlägg skrevs, och PrivacyNotes har ingen egen karta, så varje plats blir en länk i en Platser-lista i slutet av inlägget.",
+            "Journal registrerar platsen för ett inlägg, och PrivacyNotes har ingen egen karta, så varje plats blir en länk i listan Places i slutet av inlägget.",
             "Platser som Journal registrerade med koordinater öppnar en nål på exakt den punkten i OpenStreetMap. Platser som bara fick ett namn öppnar en sökning på det namnet i stället. Ingenting skickas någonstans förrän du klickar på en."
           ]
         },
         {
           "h": "Sinnesstämning",
           "p": [
-            "Har du loggat en sinnesstämning (State of Mind), fyller PrivacyNotes i mätvärdena för humör och känslor på det inlägget överallt där Apples formulering matchar en av våra. Allt som inte går att matcha, och de livsområden du taggade, behålls som en rad text så att ingenting går förlorat."
+            "Har du loggat en sinnesstämning (State of Mind), fyller PrivacyNotes i [mätvärdena för humör och känslor](/sv/help/choose-trackers/) på det inlägget överallt där Apples formulering matchar en av våra. Allt som inte går att matcha, och de livsområden du taggade, behålls som en rad text så att ingenting går förlorat."
           ]
         },
         {
@@ -400,7 +478,7 @@
           "h": "Zippa allt i den mappen",
           "steps": [
             "Markera allt i mappen med säkerhetskopian: data, files och vad som än ligger bredvid dem.",
-            "Komprimera det markerade: högerklicka > Komprimera på macOS, eller Skicka till > Komprimerad zip-mapp på Windows.",
+            "Komprimera det markerade: högerklicka > Komprimera på macOS, eller Skicka till > Komprimerad (zippad) mapp på Windows.",
             "Den .zip-filen är din importfil."
           ],
           "p": [
@@ -429,7 +507,7 @@
           "h": "Vad som följer med",
           "p": [
             "Dina anteckningsböcker återskapas som riktiga mappar, nästlade så djupt som de var i UpNote. En anteckning som låg i flera anteckningsböcker hamnar i den första och bär de andra som taggar.",
-            "Fästa anteckningar och Quick Access-anteckningar kommer fram som Fästa. Anteckningar i papperskorgen hamnar i papperskorgen, mallar importeras som anteckningar taggade #template, länkar mellan anteckningar blir anteckningslänkar, och varje anteckning behåller sina ursprungliga datum.",
+            "Fästa anteckningar och Quick Access-anteckningar kommer fram som Fästa. Anteckningar i papperskorgen hamnar i papperskorgen, mallar importeras som anteckningar taggade #template, [länkar mellan anteckningar blir anteckningslänkar](/sv/help/note-links/), och varje anteckning behåller sina ursprungliga datum.",
             "Formateringen överlever: checklistor, tabeller, kodblock, matematik, understrykning, nedsänkt och upphöjd text, textjustering och överstrykningar. Hopfällbara avsnitt blir fällbara informationsrutor och behåller sitt öppna eller stängda läge. Textfärger och överstrykningsfärger matchas båda mot redigerarens egen palett, så en gul överstrykning förblir gul och en grön förblir grön. Varje anteckning kommer in precis som UpNote senast sparade den."
           ]
         },
@@ -437,6 +515,47 @@
           "h": "Om bilder eller filer saknas",
           "p": [
             "En säkerhetskopia som gjordes innan du bockade i ”Backup attachments” innehåller inga filer, och importförhandsvisningen varnar då för att anteckningar hänvisar till bilagor som säkerhetskopian inte bär på. Händer det: avbryt, slå på inställningen i UpNote, klicka på ”Backup now” igen, zippa den färska mappen och importera den i stället."
+          ]
+        }
+      ]
+    },
+    "joplin": {
+      "app": "Joplin",
+      "title": "Exportera dina Joplin-anteckningar",
+      "metaTitle": "Exportera dina Joplin-anteckningar som JEX - PrivacyNotes",
+      "lead": "Joplin exporterar alla anteckningsböcker på en gång som en enda JEX-fil. Den tar med dina anteckningar med deras anteckningsböcker, taggar, to-dos, anteckningslänkar och bilagor.",
+      "sections": [
+        {
+          "h": "Exportera allt som JEX",
+          "steps": [
+            "Öppna Joplin på din dator.",
+            "Välj File > Export all > \"JEX - Joplin Export File\".",
+            "Spara filen. Du får en enda .jex-fil som innehåller varje anteckningsbok, så det finns inget att zippa.",
+            "Släpp in den .jex-filen som den är."
+          ],
+          "p": [
+            "Tools > Create backup skriver exakt samma fil, byte för byte, som all_notebooks.jex i en mapp som heter JoplinBackup i din hemmapp. Om Joplin redan gör de säkerhetskopiorna åt dig fungerar den senaste lika bra."
+          ]
+        },
+        {
+          "h": "Välj JEX, inte Markdown, HTML eller PDF",
+          "p": [
+            "Export all erbjuder också MD, MD + Front Matter, HTML directory och PDF. Det är kopior som görs för läsning i andra appar. JEX-filen är Joplins egen förteckning över varje anteckning, anteckningsbok, tagg och bilaga, och det är den vi läser. Släpper du in någon av de andra exporterna säger vi det i stället för att importera hälften av den.",
+            "Har du redan exporterat \"RAW - Joplin Export Directory\", zippa mappen och släpp in zipfilen. Den innehåller samma poster som JEX-filen."
+          ]
+        },
+        {
+          "h": "Ta ut anteckningar ur papperskorgen innan du exporterar",
+          "p": [
+            "Joplin lämnar papperskorgen utanför varje export och varje säkerhetskopia. Flytta ut de anteckningar du vill behålla ur papperskorgen innan du exporterar, annars blir de kvar i Joplin."
+          ]
+        },
+        {
+          "h": "Vad som följer med",
+          "p": [
+            "Dina anteckningsböcker byggs upp som riktiga mappar, nästlade lika djupt som Joplin nästlade dem, och varje anteckning behåller sina taggar och de skapande- och ändringsdatum som Joplin visade dig.",
+            "[To-dos blir uppgiftsanteckningar](/sv/help/tasks/) med en kryssruta du kan bocka av, redan avbockad när to-don var klar, och ett förfallodatum står kvar bredvid titeln. [Länkar mellan anteckningar blir anteckningslänkar](/sv/help/note-links/). Bilder och bilagor importeras till din lagring och ligger kvar på sin plats i anteckningen. Anteckningar som sparats som HTML, till exempel många webbklipp, konverteras med sin formatering.",
+            "Anteckningar från Joplins Conflicts-anteckningsbok kommer in med taggen \"conflict\", så att du kan hitta och sortera dem. Använder du Joplins kryptering, låt den bli klar med dekrypteringen innan du exporterar: en post som fortfarande är krypterad hoppas över, och importförhandsgranskningen berättar hur många."
           ]
         }
       ]
@@ -458,7 +577,7 @@
         {
           "h": "Exportera från Firefox",
           "steps": [
-            "Tryck Ctrl+Skift+O, eller Cmd+Skift+O på en Mac, för att öppna Bibliotek-fönstret.",
+            "Tryck Ctrl+Skift+O, eller Cmd+Skift+O på en Mac, för att öppna Library-fönstret.",
             "Klicka på \"Import and Backup\" i verktygsfältet och välj \"Export Bookmarks to HTML...\".",
             "Spara den. Filen heter bookmarks.html."
           ]
@@ -493,10 +612,10 @@
         {
           "h": "Vad som följer med",
           "p": [
-            "Varje mapp du hade följer med och ligger kvar precis som du lämnade den, inuti en ny mapp som heter Bokmärken. Bokmärkesfältet är undantaget: innehållet flyttas upp en nivå i stället för att bli en mapp, eftersom varje webbläsare kallar fältet något eget på varje språk. Safari märker ingenting alls, så dess Favorites kommer faktiskt in som en mapp.",
+            "Varje mapp du hade följer med och ligger kvar precis som du lämnade den, inuti en ny mapp som heter Bookmarks. Bokmärkesfältet är undantaget: innehållet flyttas upp en nivå i stället för att bli en mapp, eftersom varje webbläsare kallar fältet något eget på varje språk. Safari märker ingenting alls, så dess Favorites kommer faktiskt in som en mapp.",
             "Dagen du sparade varje bokmärke följer med. Safari är den enda webbläsaren som inte skriver några datum alls, så en export från Safari kommer in med dagens datum.",
             "Firefox är också den enda som sparar taggar och ett adressfältsnyckelord tillsammans med ett bokmärke. Har din fil med dem erbjuder förhandsgranskningen en ruta för att behålla dem, och båda kommer in som taggar här.",
-            "Tre saker lämnas medvetet kvar. Webbläsarens egna genvägar som Most Visited är inte riktiga länkar, så de räknas och hoppas över. Webbplatsikoner läses inte heller ur filen, eftersom kopian som sparats där blir gammal; PrivacyNotes hämtar en färsk. Och en mapp som inte innehöll några bokmärken skapas inte om.",
+            "Tre saker lämnas medvetet kvar. Webbläsarens egna genvägar som Most Visited är inte riktiga länkar, så de räknas och hoppas över. Webbplatsikoner läses inte heller ur filen, eftersom kopian som sparats där blir gammal; [PrivacyNotes hämtar en färsk](/sv/help/bookmarks/). Och en mapp som inte innehöll några bokmärken skapas inte om.",
             "Att importera samma fil två gånger är ofarligt. Ett bokmärke vars adress du redan sparat hoppas över i stället för att läggas till igen, och förhandsgranskningen säger hur många."
           ]
         },
@@ -560,7 +679,7 @@
         {
           "h": "Vad som följer med",
           "p": [
-            "Varje rad blir en inloggning med sajt, användarnamn och lösenord, plus anteckningen som webbläsaren sparade intill. Firefox är den enda av de tre som skriver datum, så dess inloggningar behåller dagen du sparade dem medan de andra kommer in med dagens datum. Safari är den enda som exporterar en autentiseringsnyckel, och bara om du hade koderna i Safari - då fortsätter koden fungera här.",
+            "Varje rad blir en inloggning med sajt, användarnamn och lösenord, plus anteckningen som webbläsaren sparade intill. Firefox är den enda av de tre som skriver datum, så dess inloggningar behåller dagen du sparade dem medan de andra kommer in med dagens datum. Safari är den enda som exporterar en autentiseringsnyckel, och bara om du hade koderna i Safari - då [fortsätter koden fungera här](/sv/help/vault-totp/).",
             "Webbläsare sparar en egen post per inloggningssida, så en stor export innehåller ofta flera rader för samma företag. Alla följer med, och du kan slå ihop eller radera dem efteråt.",
             "En webbläsare håller lösenorden i en platt lista, så det finns ingen mappstruktur att bygga upp igen. I stället kommer varje inloggning in taggad, vilket får upp hela bunten med ett klick."
           ]
@@ -568,7 +687,7 @@
         {
           "h": "Radera exportfilen när du är klar: den är dina lösenord i klartext",
           "p": [
-            "Inget i den exporterade .csv-filen är krypterat, vare sig den kommer i en .zip eller inte. Den som öppnar den läser varje lösenord du har sparat, så ha den bara på din egen dator, importera den, kontrollera att allt kom fram och radera den sedan och töm papperskorgen. Inuti PrivacyNotes är allt ändpunkt-till-ändpunkt-krypterat igen."
+            "Inget i den exporterade .csv-filen är krypterat, vare sig den kommer i en .zip eller inte. Den som öppnar den läser varje lösenord du har sparat, så ha den bara på din egen dator, importera den, kontrollera att allt kom fram och radera den sedan och töm papperskorgen. Inuti PrivacyNotes är allt krypterat igen, på din enhet och på vägen till servern."
           ]
         }
       ]
@@ -590,7 +709,7 @@
         {
           "h": "Bestäm var bilderna bor innan du zippar",
           "p": [
-            "Typora kan lägga en bild bredvid anteckningen, i en assets-undermapp, eller låta den ligga kvar där du drog den ifrån. Bara bilder inuti mappen du zippar kan följa med. Öppna Inställningar > Bild, ställ in att bilder kopieras till anteckningens egen assets-mapp, och använd \"Format > Bild > Kopiera bildfiler till...\" på äldre anteckningar vars bilder fortfarande pekar någon annanstans."
+            "Typora kan lägga en bild bredvid anteckningen, i en assets-undermapp, eller låta den ligga kvar där du drog den ifrån. Bara bilder inuti mappen du zippar kan följa med. Öppna Preferences > Image, ställ in att bilder kopieras till anteckningens egen assets-mapp, och använd \"Format > Image > Copy image files to...\" på äldre anteckningar vars bilder fortfarande pekar någon annanstans."
           ]
         },
         {
@@ -647,7 +766,7 @@
         {
           "h": "Zippa arbetsytan",
           "steps": [
-            "Högerklicka i Zettlr på arbetsytan högst upp i filträdet och välj \"Visa i Finder\", eller \"Visa i Utforskaren\" på Windows.",
+            "Högerklicka i Zettlr på arbetsytan högst upp i filträdet och välj \"Show in Finder\", eller \"Show in Explorer\" på Windows.",
             "Högerklicka på mappen där och komprimera den.",
             "Släpp .zip-filen i importen."
           ]
@@ -655,7 +774,7 @@
         {
           "h": "Zettelkasten-länkar behåller sin text, inte sitt mål",
           "p": [
-            "Zettlr länkar anteckningar via ID, så en länk läses [[20260823120000]]. Vi behåller note-links precis som de är skrivna, vilket betyder att en ID-länk bara hittar sin anteckning här om någon anteckning faktiskt heter det ID:t. Länkar skrivna med filnamnet fungerar som vanligt, så byt ditt interna länkformat till filnamn innan du exporterar om du förlitar dig på dem.",
+            "Zettlr länkar anteckningar via ID, så en länk läses [[20260823120000]]. [Vi behåller anteckningslänkar precis som de är skrivna](/sv/help/note-links/), vilket betyder att en ID-länk bara hittar sin anteckning här om någon anteckning faktiskt heter det ID:t. Länkar skrivna med filnamnet fungerar som vanligt, så byt ditt interna länkformat till filnamn innan du exporterar om du förlitar dig på dem.",
             "Citatnycklar som [@doe2026] är text för oss. De kommer med oförändrade och slutar vara klickbara."
           ]
         },
@@ -693,6 +812,57 @@
           "h": "Båda filändelserna fungerar",
           "p": [
             "Notes skriver .txt från början, och .md så snart du eller din administratör ändrar inställningen. Vi läser båda här, och även .markdown, .mdown och .mkd, så du behöver varken döpa om något eller röra servern innan du exporterar."
+          ]
+        }
+      ]
+    },
+    "contacts": {
+      "app": "Kontakter (vCard)",
+      "title": "Exportera dina kontakter",
+      "metaTitle": "Så exporterar du dina kontakter som vCard - PrivacyNotes",
+      "lead": "Alla telefoner och adressböcker kan exportera dina kontakter som en enda .vcf-fil, och PrivacyNotes läser den filen direkt, foton inräknade.",
+      "sections": [
+        {
+          "h": "Exportera från din iPhone",
+          "steps": [
+            "Öppna Kontakter och tryck på ”Listor” uppe till vänster.",
+            "Håll in fingret på ”Alla kontakter” och välj sedan Exportera.",
+            "Spara .vcf-filen i Filer, eller skicka den med AirDrop till enheten du importerar på."
+          ]
+        },
+        {
+          "h": "Exportera från din Mac eller iCloud",
+          "steps": [
+            "Markera ”Alla kontakter” i Kontakter och tryck på Kommando-A.",
+            "Välj Arkiv > Exportera > Exportera vCard.",
+            "På [icloud.com/contacts](https://www.icloud.com/contacts) markerar du alla, öppnar menyn ”...” och väljer ”Exportera vCard”."
+          ]
+        },
+        {
+          "h": "Exportera från Android eller Google Kontakter",
+          "steps": [
+            "Tryck på ”Fix & manage” > ”Export to file” i appen Google Kontakter.",
+            "På [contacts.google.com](https://contacts.google.com) väljer du Export och sedan ”vCard (for iOS Contacts)”.",
+            "På en Samsung-telefon öppnar du Contacts > Manage contacts > Import or export contacts > Export."
+          ]
+        },
+        {
+          "h": "Välj vCard, inte CSV",
+          "p": [
+            "Google erbjuder två CSV-format bredvid vCard. Importverktyget läser bara .vcf-filer, så en CSV-fil syns inte i filväljaren. Exportera igen och välj vCard."
+          ]
+        },
+        {
+          "h": "Vad som följer med",
+          "p": [
+            "Varje kort i filen följer med: namn, telefonnummer, e-postadresser, postadresser, födelsedagar och andra datum, webbplatser, sociala profiler och anteckningar. Dina egna etiketter står kvar som du skrev dem, så ”Mammas jobbnummer” förblir ”Mammas jobbnummer”.",
+            "Ett foto som ligger i filen följer med. Ett foto som bara är en webblänk förblir en länk, och inget laddas ner. [Om fotona inte får plats i din lagring](/sv/help/storage-usage/) importeras kontakterna ändå och fotona lämnas utanför."
+          ]
+        },
+        {
+          "h": "Importera samma fil igen när du vill",
+          "p": [
+            "En andra import hoppar över de personer du redan har. Den matchar varje kort efter dess ID, sedan efter namn plus ett gemensamt telefonnummer och sedan efter en gemensam e-postadress. Kontakter du redan har sparat ändras inte, så dina ändringar här är i säkerhet."
           ]
         }
       ]

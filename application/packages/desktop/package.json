@@ -8,7 +8,7 @@
     "build": "tauri build",
     "tauri": "tauri",
     "sync-version": "node scripts/sync-version.mjs",
-    "icon": "tauri icon ../web/icon/1024px-750px-whitespace-height.png --ios-color '#ffffff' && bash scripts/apply-desktop-icon.sh && bash scripts/apply-android-icons.sh",
+    "icon": "python3 scripts/make-app-icons.py && bash scripts/apply-desktop-icon.sh && bash scripts/apply-android-icons.sh",
     "ios:init": "tauri ios init",
     "ios:icons": "bash scripts/apply-ios-appearance-icons.sh",
     "ios:dev": "tauri ios dev --host --features devtools",
@@ -21,9 +21,9 @@
     "android:build:direct": "VITE_ANDROID_DIST=direct tauri android build --apk"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.11.4"
+    "@tauri-apps/cli": "^2.12.1"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.11.1"
+    "@tauri-apps/api": "^2.12.1"
   }
 }

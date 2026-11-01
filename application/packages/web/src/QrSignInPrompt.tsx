@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEscapeToClose } from './useEscapeToClose';
 import { TurnstileWidget } from './TurnstileWidget';
+import { Modal } from './ui';
 
 /**
  * Confirmation modal shown when the app boots with a `#phrase=…` fragment
@@ -44,7 +44,6 @@ export function QrSignInPrompt({
   onTrustDeviceChange: (v: boolean) => void;
 }) {
   const { t } = useTranslation('auth');
-  useEscapeToClose(onCancel, !busy);
   const [revealed, setRevealed] = useState(false);
   const words = phrase.split(' ');
 
@@ -84,24 +83,14 @@ export function QrSignInPrompt({
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4"
-      onClick={busy ? undefined : onCancel}
-    >
-      <div
-        className="bg-surface-2 border border-divider rounded-lg max-w-md w-full p-5 space-y-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div>
-          <h2 className="text-lg font-semibold">{t('qrSignInPrompt.title')}</h2>
-          <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            {t('qrSignInPrompt.body')}
-          </p>
-        </div>
+    <Modal onClose={onCancel} escape={!busy} closeOnBackdrop={!busy} title={t('qrSignInPrompt.title')} className="max-w-md p-6 space-y-4">
+        <p className="text-xs text-pn-muted leading-relaxed">
+          {t('qrSignInPrompt.body')}
+        </p>
 
         <div className="rounded-lg border border-divider p-3">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-[10px] uppercase tracking-wide text-neutral-500 dark:text-neutral-600">
+            <div className="text-[10px] uppercase tracking-wide text-pn-muted">
               {t('qrSignInPrompt.scannedPhrase')}
             </div>
             <button
@@ -118,9 +107,9 @@ export function QrSignInPrompt({
               {words.map((w, i) => (
                 <div
                   key={i}
-                  className="rounded bg-neutral-100 dark:bg-neutral-900 border border-divider px-2 py-1 text-[11px] font-mono truncate"
+                  className="rounded bg-track border border-divider px-2 py-1 text-[11px] font-mono truncate"
                 >
-                  <span className="text-neutral-400 dark:text-neutral-600 me-1">
+                  <span className="text-pn-muted me-1">
                     {i + 1}.
                   </span>
                   {w}
@@ -128,13 +117,13 @@ export function QrSignInPrompt({
               ))}
             </div>
           ) : (
-            <div className="font-mono text-xs text-neutral-500 dark:text-neutral-500 tracking-wider select-none">
+            <div className="font-mono text-xs text-pn-muted tracking-wider select-none">
               •••• •••• •••• •••• •••• •••• •••• •••• •••• •••• •••• ••••
             </div>
           )}
         </div>
 
-        <label className="flex items-start gap-2 text-xs text-neutral-700 dark:text-neutral-300 cursor-pointer rounded-md border border-divider bg-neutral-50 dark:bg-neutral-900/40 p-2.5">
+        <label className="flex items-start gap-2 text-xs text-pn-soft cursor-pointer rounded-md border border-divider bg-surface-1 p-2.5">
           <input
             type="checkbox"
             checked={trustDevice}
@@ -144,7 +133,7 @@ export function QrSignInPrompt({
           />
           <span>
             <span className="font-medium">{t('trustDevice.label')}</span>
-            <span className="block text-[11px] text-neutral-500 dark:text-neutral-500 mt-0.5 leading-relaxed">
+            <span className="block text-[11px] text-pn-muted mt-0.5 leading-relaxed">
               {t('trustDevice.descriptionRestarts')}
             </span>
           </span>
@@ -170,7 +159,7 @@ export function QrSignInPrompt({
             type="button"
             disabled={busy}
             onClick={onCancel}
-            className="text-sm rounded border border-neutral-300 dark:border-neutral-800 px-3 py-1.5 hover:bg-surface-1 transition disabled:opacity-50"
+            className="text-sm rounded border border-divider px-3 py-1.5 hover:bg-surface-1 transition disabled:opacity-50"
           >
             {t('common:actions.cancel')}
           </button>
@@ -186,12 +175,11 @@ export function QrSignInPrompt({
               setTurnstileKey((k) => k + 1);
               onConfirm(token);
             }}
-            className="text-sm rounded bg-accent text-white px-4 py-1.5 hover:bg-accent-hover transition font-medium disabled:opacity-50"
+            className="text-sm rounded bg-accent-fill text-white px-4 py-1.5 hover:bg-accent-fill-hover transition font-medium disabled:opacity-50"
           >
             {busy ? t('signIn.signingIn') : t('qrSignInPrompt.signIn')}
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

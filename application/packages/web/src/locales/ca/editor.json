@@ -1,14 +1,16 @@
 {
   "placeholder": "Comença a escriure…",
+  "eventPlaceholder": "Afegeix un ordre del dia, una adreça o notes…",
   "toolbar": {
     "bold": "Negreta",
+    "hideKeyboard": "Amaga el teclat",
     "italic": "Cursiva",
     "underline": "Subratllat",
     "heading": "Encapçalament",
     "taskList": "Llista de tasques",
     "bulletList": "Llista de pics",
-    "linkMenu": "Enllaç",
-    "noteLinkMenu": "Enllaç a una nota",
+    "addLink": "Afegeix un enllaç",
+    "noteLink": "Enllaça a una altra nota (o escriu [[)",
     "numberedList": "Llista numerada",
     "textColor": "Color del text",
     "textColorApply": "Color del text: {{color}}",
@@ -33,7 +35,14 @@
     "math": "Fórmula matemàtica",
     "blockMath": "Fórmula en bloc",
     "align": "Alineació",
-    "font": "Lletra"
+    "font": "Lletra",
+    "pictureFromFiles": "Imatge de Fitxers",
+    "date": "Data",
+    "dateTime": "Data i hora",
+    "footnote": "Nota a peu de pàgina",
+    "spoiler": "Espòiler",
+    "copyBox": "Quadre per copiar",
+    "customize": "Personalitza la barra de format"
   },
   "align": {
     "left": "Alinea a l’esquerra",
@@ -61,6 +70,8 @@
   "callout": {
     "pickerLabel": "Insereix un requadre destacat",
     "remove": "Elimina el requadre destacat",
+    "collapse": "Replega el requadre destacat",
+    "expand": "Desplega el requadre destacat",
     "types": {
       "info": "Informació",
       "success": "Èxit",
@@ -73,7 +84,24 @@
       "bug": "Error",
       "note": "Nota",
       "abstract": "Resum",
-      "failure": "Fallada"
+      "failure": "Fallada",
+      "fold": "Plegable",
+      "idea": "Idea",
+      "important": "Important",
+      "caution": "Precaució",
+      "todo": "Tasca",
+      "goal": "Objectiu",
+      "decision": "Decisió",
+      "definition": "Definició",
+      "seealso": "Vegeu també",
+      "box": "Marc",
+      "panel": "Panell",
+      "update": "Actualització",
+      "time": "Temps",
+      "steps": "Passos",
+      "place": "Lloc",
+      "kanban": "Tauler Kanban",
+      "column": "Columna"
     }
   },
   "color": {
@@ -92,6 +120,7 @@
     }
   },
   "insertGroup": {
+    "format": "Format",
     "insert": "Insereix",
     "blocks": "Blocs",
     "notation": "Notació"
@@ -101,19 +130,61 @@
     "addRowBelow": "Afegeix una fila a sota",
     "addColumnLeft": "Afegeix una columna a l'esquerra",
     "addColumnRight": "Afegeix una columna a la dreta",
+    "toggleHeaderRow": "Activa o desactiva la fila de capçalera",
+    "equalColumnWidths": "Iguala les columnes",
+    "resizeHint": "Mantén premuda {{shift}} per canviar només aquesta columna, {{alt}} per a passos més fins",
     "deleteRow": "Suprimeix la fila",
     "deleteColumn": "Suprimeix la columna",
-    "deleteTable": "Suprimeix la taula"
+    "deleteTable": "Suprimeix la taula",
+    "insertFormula": "Insereix una fórmula",
+    "formulaNoMatch": "Cap fórmula coincideix",
+    "formula": {
+      "SUM": "Suma els valors",
+      "PRODUCT": "Multiplica els valors",
+      "AVG": "Mitjana dels valors",
+      "AVERAGE": "Mitjana dels valors",
+      "MEDIAN": "Valor central",
+      "MIN": "Valor més petit",
+      "MAX": "Valor més gran",
+      "COUNT": "Quants nombres hi ha",
+      "ABS": "Valor sense signe",
+      "SQRT": "Arrel quadrada",
+      "SIGN": "Si un valor és positiu o negatiu",
+      "CEIL": "Arrodoneix cap amunt al nombre enter",
+      "FLOOR": "Arrodoneix cap avall al nombre enter",
+      "ROUND": "Arrodoneix al nombre enter",
+      "LOG": "Logaritme",
+      "RAND": "Un nombre aleatori",
+      "PI": "La constant pi",
+      "E": "El nombre d'Euler",
+      "TAU": "La constant tau",
+      "PHI": "La proporció àuria"
+    }
   },
   "find": {
     "placeholder": "Cerca dins la nota",
     "label": "Cerca dins la nota",
-    "previous": "Coincidència anterior (Maj+Retorn)",
-    "previousTitle": "Anterior (Maj+Retorn)",
-    "next": "Coincidència següent (Retorn)",
-    "nextTitle": "Següent (Retorn)",
+    "previous": "Coincidència anterior",
+    "previousTitle": "Anterior",
+    "next": "Coincidència següent",
+    "nextTitle": "Següent",
     "close": "Tanca la cerca",
-    "closeTitle": "Tanca (⌘F)"
+    "closeTitle": "Tanca",
+    "replacePlaceholder": "Substitueix per",
+    "replaceLabel": "Substitueix per",
+    "replace": "Substitueix",
+    "replaceTitle": "Substitueix aquesta coincidència",
+    "replaceAll": "Totes",
+    "replaceAllTitle": "Substitueix totes les coincidències",
+    "caseSensitive": "Distingeix majúscules i minúscules",
+    "caseSensitiveTitle": "Distingeix majúscules i minúscules",
+    "closeReplace": "Tanca cerca i substitueix",
+    "closeReplaceTitle": "Tanca",
+    "showReplace": "Cerca i substitueix",
+    "hideReplace": "Amaga la substitució",
+    "replacedCount_one": "{{count}} substituïda",
+    "replacedCount_many": "{{count}} substituïdes",
+    "replacedCount_other": "{{count}} substituïdes"
   },
   "outline": {
     "show": "Mostra l'esquema",
@@ -121,10 +192,23 @@
     "title": "Esquema",
     "ariaLabel": "Esquema de la nota",
     "hide": "Amaga l'esquema",
-    "hideTitle": "Amaga l'esquema (Esc)"
+    "copyHeadingLink": "Copia l'enllaç a l'encapçalament",
+    "copyNoteLink": "Copia l'enllaç entre notes",
+    "copyHeadingShortcut": "Copia la drecera a l'encapçalament",
+    "copied": "Copiat"
+  },
+  "bodyMenu": {
+    "cut": "Retalla",
+    "copyAsPlain": "Copia com a text pla",
+    "copyAsMarkdown": "Copia com a Markdown",
+    "sortAsc": "Ordena les línies de la A a la Z",
+    "sortDesc": "Ordena les línies de la Z a la A"
   },
   "topRow": {
     "add": "Afegeix una línia a dalt"
+  },
+  "addLine": {
+    "add": "Afegeix una línia"
   },
   "link": {
     "popoverLabel": "Afegeix un enllaç",
@@ -139,8 +223,11 @@
     "textLabel": "Text de l'enllaç",
     "textPlaceholder": "Opcional; deixa-ho en blanc per mostrar l'URL",
     "selectedTextHint": "El text seleccionat es farà servir com a enllaç",
-    "editTextHint": "Edita el text de l'enllaç a l'editor",
-    "update": "Actualitza"
+    "update": "Actualitza",
+    "menuOpen": "Obre l'enllaç",
+    "menuCopy": "Copia l'enllaç",
+    "menuEdit": "Edita l'enllaç",
+    "menuRemove": "Elimina l'enllaç"
   },
   "audio": {
     "uploadingRecording": "S'està pujant l'enregistrament...",
@@ -159,18 +246,127 @@
     "characters_one": "{{formatted}} caràcter",
     "characters_many": "{{formatted}} caràcters",
     "characters_other": "{{formatted}} caràcters",
-    "tooLargeToSync": ", potser és massa gran per sincronitzar-se, divideix-la en una nota nova",
+    "tasksChecked_one": "{{done}} de {{formatted}} marcat",
+    "tasksChecked_many": "{{done}} de {{formatted}} marcats",
+    "tasksChecked_other": "{{done}} de {{formatted}} marcats",
+    "syncLimit": " · {{share}} del límit de sincronització d’1 MB",
+    "overSyncLimit": " · supera el límit de sincronització d’1 MB, es queda en aquest dispositiu",
+    "split": "Divideix la nota",
     "veryLong": ", molt llarga, pot anar lenta en editar-la i encallar-se",
     "gettingLong": ", es va fent llarga, pot anar lenta en dispositius més lents",
     "largeTableWarning": "Una taula gran ({{rows}} files) pot fer que aquesta nota vagi lenta en editar-la; considera dividir-la"
   },
   "noteLinkSuggestion": {
     "noMatches": "Cap nota coincident",
-    "create": "Crea \"{{query}}\""
+    "create": "Crea \"{{query}}\"",
+    "headingsIn": "Encapçalaments de {{title}}",
+    "noHeadingMatches": "Cap encapçalament coincident"
+  },
+  "copyBox": {
+    "placeholder": "Text per copiar amb un clic"
+  },
+  "inlineCode": {
+    "copyHint": "{{key}}+clic per copiar",
+    "copied": "Copiat"
   },
   "codeBlock": {
     "copy": "Copia",
     "copied": "Copiat",
-    "copyFailed": "Ha fallat"
+    "copyFailed": "Ha fallat",
+    "wrap": "Ajusta les línies llargues",
+    "showAll_one": "Mostra {{count}} línia",
+    "showAll_many": "Mostra les {{count}} línies",
+    "showAll_other": "Mostra les {{count}} línies",
+    "showLess": "Mostra’n menys",
+    "plainText": "Text pla",
+    "language": "Llenguatge del codi: {{name}}",
+    "searchLanguages": "Cerca llenguatges",
+    "placeholder": "Escriu o enganxa codi. Per tenir colors, tria un llenguatge a dalt."
+  },
+  "math": {
+    "sourceLabel": "Codi LaTeX"
+  },
+  "noteLink": {
+    "open": "Obre la nota",
+    "remove": "Elimina l'enllaç",
+    "linkHeading": "Enllaça amb un encapçalament...",
+    "headingNotFound": "No s'ha trobat l'encapçalament",
+    "headingsLocked": "Desbloqueja aquesta nota per veure'n els encapçalaments",
+    "noHeadings": "Aquesta nota no té encapçalaments"
+  },
+  "footnote": {
+    "placeholder": "Text de la nota",
+    "back": "Torna al text",
+    "unused": "No s’usa al text",
+    "remove": "Elimina la nota",
+    "missing": "La nota no té text. Fes clic per afegir-lo.",
+    "ariaRef": "Nota {{n}}",
+    "ariaSection": "Notes a peu de pàgina"
+  },
+  "formatBar": {
+    "tryIt": "Prova-ho: organitza la barra aquí i mira com et va.",
+    "previewOnly": "Només és una vista prèvia. La teva disposició es desa en el moment que tinguis Pro.",
+    "discard": "Descarta",
+    "keepLayout": "Conserva aquesta disposició",
+    "hintDrag": "Arrossega per moure, fes clic per a les opcions.",
+    "hintTap": "Toca un botó per veure’n les opcions.",
+    "onBar": "A la barra",
+    "inMenu": "Al menú +",
+    "inAttachMenu": "Al menú d’adjuntar",
+    "attachMenuEmpty": "És buit, per això el botó d’adjuntar no es mostra.",
+    "menuEmpty": "El menú és buit, per això el botó + no es mostra.",
+    "hidden": "Amagats",
+    "hiddenNote": "Continuen funcionant amb la drecera i en Markdown.",
+    "hiddenDrop": "Deixa anar un botó aquí per amagar-lo.",
+    "arrangeTitle": "Botons",
+    "markdownViewNote": "La vista Markdown té el seu propi conjunt fix de botons.",
+    "hiddenEmpty": "No hi ha res amagat.",
+    "alwaysVisible": "Sempre visibles",
+    "pinned": "Obre un tauler, així que es queda a la barra o amagat",
+    "optionsFor": "Opcions de {{item}}",
+    "moveUp": "Mou amunt",
+    "moveDown": "Mou avall",
+    "moveLeft": "Mou a l'esquerra",
+    "moveRight": "Mou a la dreta",
+    "home": {
+      "bar": "A la barra",
+      "menu": "Al menú +",
+      "attachMenu": "Al menú d’adjuntar",
+      "hidden": "Amagat"
+    },
+    "opensPanel": "obre un tauler",
+    "showsRecording": "mostra l'enregistrament",
+    "refuse": {
+      "menuNotAllowed": "{{item}} pot ser a la barra o amagat, no al menú +.",
+      "attachNotAllowed": "Al menú d’adjuntar només hi caben els botons d’imatge, de fitxer i d’enregistrament.",
+      "lastOnBar": "Deixa almenys un botó a la barra."
+    },
+    "items": {
+      "link": "Enllaç",
+      "notelink": "Enllaç entre notes",
+      "audio": "Enregistrament",
+      "attachMenu": "Adjunta",
+      "separator": "Separador",
+      "markdownView": "Mostra el markdown"
+    },
+    "positionTitle": "Posició de la barra",
+    "positionNote": "Tria on va la barra de format a l’editor.",
+    "positionTop": "A dalt",
+    "positionBottom": "A baix"
+  },
+  "kanban": {
+    "todo": "Per fer",
+    "inProgress": "En curs",
+    "review": "Revisió",
+    "done": "Fet",
+    "color": "Color",
+    "columns": "Columnes",
+    "columnCount_other": "{{count}} columnes",
+    "cardCount_other": "{{count}} targetes",
+    "addColumn": "Afegeix una columna",
+    "removeBoard": "Elimina el tauler",
+    "moveTo": "Mou a",
+    "cardCount_one": "{{count}} targeta",
+    "columnCount_one": "{{count}} columna"
   }
 }

@@ -1,0 +1,780 @@
+{
+  "0.560": {
+    "checklist-menu": {
+      "w": 1444,
+      "h": 1800,
+      "bytes": 87372,
+      "sha256": "9c9839863c17783158e50d9324e0e8114d1f4beb7b7c8e48f84eaea2137f8408"
+    },
+    "tasks-pane": {
+      "w": 1104,
+      "h": 1800,
+      "bytes": 76296,
+      "sha256": "893f16f90aff7b9444100183947e0063585dd0fe3f418533683b1465f47b5776"
+    }
+  },
+  "0.565": {
+    "app-lock": {
+      "w": 1802,
+      "h": 1318,
+      "bytes": 76858,
+      "sha256": "af5fe3ceadaf2b755077a5429e531f1688e35ae83cb83eecabf28796f4f69a9f"
+    },
+    "feedback": {
+      "w": 1352,
+      "h": 658,
+      "bytes": 36144,
+      "sha256": "911ad4111a49a3da22abe9d989d4624aaa263574e0dff928f8e22b1496137e65"
+    },
+    "storage-addons": {
+      "w": 1792,
+      "h": 1312,
+      "bytes": 83768,
+      "sha256": "02a75418f536567503efeb45a1a98c4318eaef379e155375341f73ca5a170c55"
+    }
+  },
+  "0.566": {
+    "contact-photo": {
+      "w": 1444,
+      "h": 1600,
+      "bytes": 47464,
+      "sha256": "700fd1350f60e34b0da4447724f153f5a93ac3c2a159f3cbadef34cab9a70b4e"
+    },
+    "picture-zoom": {
+      "w": 2000,
+      "h": 1250,
+      "bytes": 1224298,
+      "sha256": "8f5d6d7bac9dec88db41abbc41df0accd573b8bd180d3f65a5ecb4041d4c1aba"
+    }
+  },
+  "0.570": {
+    "hotkeys": {
+      "w": 1792,
+      "h": 1312,
+      "bytes": 63950,
+      "sha256": "fe353a84b38be89c660e41f8b4275b865a219d40d0b70e07c273344455b52abe"
+    }
+  },
+  "0.589": {
+    "copied-text": {
+      "w": 1792,
+      "h": 1312,
+      "bytes": 73880,
+      "sha256": "ec80c4a1e91c17f87936a73090dd6aa0681a0c6bc08dff290859a4f5a814e41a"
+    },
+    "heading-link": {
+      "w": 1488,
+      "h": 1022,
+      "bytes": 28928,
+      "sha256": "421e326fc9555f9371f2c3b4a391617d657f9bffdd7817d9c95703029dbf9dc4"
+    },
+    "link-address": {
+      "w": 1444,
+      "h": 1600,
+      "bytes": 224124,
+      "sha256": "3df933631f4a861e5a32ee4584c7ecafbe88976ada0ccebc10478a18019eda28"
+    },
+    "outline-fold": {
+      "w": 1444,
+      "h": 1600,
+      "bytes": 89496,
+      "sha256": "7b1ca664720663cdfadf18bea219df8b604ad527cff6fe051e6d3abf7f5d1c0d"
+    },
+    "print-text-only": {
+      "w": 1444,
+      "h": 1600,
+      "bytes": 547778,
+      "sha256": "97d121ab638109bd90849e317ded671b705f252fadc0790a430e382181085498"
+    },
+    "sort-lines": {
+      "w": 1488,
+      "h": 1264,
+      "bytes": 50496,
+      "sha256": "d2b37d23ba6cdd75942749a2ab31961dbf8fe11b78296380b0892f66cdba9542"
+    }
+  },
+  "0.592": {
+    "code-fold": {
+      "w": 1488,
+      "h": 1340,
+      "bytes": 62430,
+      "sha256": "c18a7fd07ef01d7f9b727bab20a42ef38cc51a3b5e79a5612ace9d76e7ca90ad"
+    },
+    "copy-box": {
+      "w": 1444,
+      "h": 928,
+      "bytes": 37916,
+      "sha256": "4615ce83cabd08ad4296bb804d0fda17945d5dd27857d6806f8470eba9198b3b"
+    },
+    "footnotes": {
+      "w": 1488,
+      "h": 494,
+      "bytes": 32420,
+      "sha256": "c14e46444031bcd1f90b943f6f2973d7d6e39114b22886c591dc7f308cf1a40b"
+    },
+    "spoiler": {
+      "w": 1444,
+      "h": 732,
+      "bytes": 30194,
+      "sha256": "1ded0229576b04550c5556c5a21f6ebbba288257b42a38959a04f21b17eed30c"
+    }
+  },
+  "0.593": {
+    "open-note-folder": {
+      "w": 1104,
+      "h": 1800,
+      "bytes": 79336,
+      "sha256": "bbebf88d8e046da1551c4be612f99f947c29312e379cc42c63bceec6f437820c"
+    },
+    "section-tags": {
+      "w": 1104,
+      "h": 1800,
+      "bytes": 77738,
+      "sha256": "2d405e34e216e129e228b5a44aa66a503cdfb830b7ab682c50186a1ed4141a8a"
+    },
+    "subfolders": {
+      "w": 1104,
+      "h": 1800,
+      "bytes": 86248,
+      "sha256": "2f74c174c7f79e0cae5789e798c3eb19485c5acf5eb827adeb9370d3f2a3bd92"
+    }
+  },
+  "0.594": {
+    "explore": {
+      "w": 1322,
+      "h": 2178,
+      "bytes": 67090,
+      "sha256": "4faf057b0791b56e1ce858d7ed7448fe60086cfa134beafd30693536e0a3549b"
+    },
+    "medication": {
+      "w": 1310,
+      "h": 1542,
+      "bytes": 58836,
+      "sha256": "092952663169a90afcfc078e29a91d7946c31c6f447e388473b369c9f449376f"
+    },
+    "milestones": {
+      "w": 1318,
+      "h": 1492,
+      "bytes": 43900,
+      "sha256": "8e0215576b8bb55b9da09092b36051091e0583f807d7f6e4f427cbe8504e00c0"
+    },
+    "overview": {
+      "w": 1324,
+      "h": 2190,
+      "bytes": 90106,
+      "sha256": "0a49a0a7b7629d50d9d3299dc6be2da20bf7f4f6eb11a114f5c826d0550b9546"
+    },
+    "patterns": {
+      "w": 1314,
+      "h": 2172,
+      "bytes": 65404,
+      "sha256": "45e15b7d60317925daf8b083f811b9f4e5117b953f1f86889838aa3d161d0851"
+    },
+    "trackers": {
+      "w": 1312,
+      "h": 2098,
+      "bytes": 99782,
+      "sha256": "20a42c3e66281d6c5d9939dd0993def37d671c18e7d79a81a943ac1aa3c491ab"
+    },
+    "wellness-all": {
+      "w": 1314,
+      "h": 2194,
+      "bytes": 89726,
+      "sha256": "4ce3aed3f75a5ec35e3f805695a4c99edd4b5df3b763efd190bc12ff28cb76e1"
+    }
+  },
+  "0.595": {
+    "calendar-new-menu": {
+      "w": 1128,
+      "h": 1046,
+      "bytes": 48364,
+      "sha256": "aef435a73c90899afd0a6cfba0f71645fd8fe34fd28ba30b4396897e80dd4b6d"
+    },
+    "date-settings": {
+      "w": 1792,
+      "h": 1312,
+      "bytes": 52596,
+      "sha256": "b1ba33d92d3a3cbf9f6c4177d34163fd7ebf7be30c46dddc9569ea639b5e521a"
+    },
+    "entry-date": {
+      "w": 1444,
+      "h": 1800,
+      "bytes": 982016,
+      "sha256": "65a863f289c1b8340c6b2f0f1ca324a4047ab1413668d2e16630c9f58339eb1a"
+    },
+    "footer-calendar": {
+      "w": 806,
+      "h": 714,
+      "bytes": 33932,
+      "sha256": "bb705c5de35417c60861e582d5f36fe26a07a221d241c9c4788568f2b95a4181"
+    }
+  },
+  "0.596": {
+    "dark-themes": {
+      "w": 2000,
+      "h": 1192,
+      "bytes": 712850,
+      "sha256": "e7748c35ff02800ca4a1aadc5878d548b06e01fb96e3be57391446ddb435ad38"
+    },
+    "light-themes": {
+      "w": 2000,
+      "h": 1192,
+      "bytes": 733408,
+      "sha256": "1b94d830be1eaf6a5519480e43e017ef8ff23d8a735da1fb066c7af2aca1ca44"
+    },
+    "oled": {
+      "w": 2000,
+      "h": 1250,
+      "bytes": 550654,
+      "sha256": "4e761aa396cde293fc17cc4e2f37ab9f775da11ce926f1f4d4c0a5467529ff71"
+    },
+    "sage": {
+      "w": 2000,
+      "h": 1250,
+      "bytes": 576776,
+      "sha256": "192e92547e91f0b71e33975ba08084f6da7591f27d4cd5568ccb5988f35a78bf"
+    },
+    "theme-builder": {
+      "w": 660,
+      "h": 798,
+      "bytes": 27300,
+      "sha256": "b54c935b6f7c0763eaf7c087eb2dfba8069a5f026ed76368ce8da146b377e1f5"
+    },
+    "themes-tab": {
+      "w": 1792,
+      "h": 1312,
+      "bytes": 68300,
+      "sha256": "ad85bf63349060db52857d60a9b072ab45252cb846a4a02f23f64f5aefce6e24"
+    }
+  },
+  "0.597": {
+    "command-mode": {
+      "w": 1138,
+      "h": 1460,
+      "bytes": 36474,
+      "sha256": "613451f9ee2159846d8ac13321809d17eca805306c5eec1ad0ab07f508dd6d82"
+    },
+    "switcher-recent": {
+      "w": 2000,
+      "h": 1383,
+      "bytes": 264194,
+      "sha256": "bb9db5fb9e123d4b13a30e0e368bf18cf29d6d32d9ab3817ae18182481a1c836"
+    },
+    "switcher-search": {
+      "w": 1168,
+      "h": 1482,
+      "bytes": 60482,
+      "sha256": "783fb181d91fc4ce5f88324a6868b60807a36d3bd5b3430e0f41082189bebf67"
+    },
+    "switcher-settings": {
+      "w": 1166,
+      "h": 930,
+      "bytes": 35942,
+      "sha256": "a9f374276b08f5b53f6b2ce42880ae63ffc299e2b949040b21854f274424d2d5"
+    }
+  },
+  "0.600": {
+    "whats-new": {
+      "w": 2000,
+      "h": 1407,
+      "bytes": 149714,
+      "sha256": "a210c9faa810d53e98d539bf1e8ccc4c6b894fbe652c9b047dff05e6183cc0b1"
+    }
+  },
+  "0.602": {
+    "ssh-download": {
+      "w": 1008,
+      "h": 660,
+      "bytes": 29906,
+      "sha256": "5493c2aab9a5a3fc8c59b83533c2c7939a99dfc8d87d6e8714bb9b42e2b98e48"
+    }
+  },
+  "0.606": {
+    "add-line-top": {
+      "w": 1444,
+      "h": 1044,
+      "bytes": 667432,
+      "sha256": "c0a4cc0c78862e73f4d84cf647b4df2ea4312a4a3e88bbff3ff0591b1d17e2d9"
+    },
+    "dim-folders": {
+      "w": 1104,
+      "h": 1800,
+      "bytes": 55676,
+      "sha256": "a3a16eee751239adf076c5f3eb1d10e5dd4528e3602587d00226e9e39cbcb29e"
+    }
+  },
+  "0.608": {
+    "design-menu": {
+      "w": 648,
+      "h": 1070,
+      "bytes": 32264,
+      "sha256": "f7b9a415d04a6d9908727b13f765a05ee062a74c758a951854739dd2ea578b7c"
+    },
+    "settings-groups": {
+      "w": 2000,
+      "h": 1407,
+      "bytes": 133842,
+      "sha256": "73e7a1f6f9607c2c288ce6f49e43dbab910c7684028eff550e8a6c7c217d9675"
+    }
+  },
+  "0.609": {
+    "convert-to": {
+      "w": 1444,
+      "h": 1120,
+      "bytes": 65854,
+      "sha256": "bc8e996c2bb7438b1cd7f497abecef5291055382dce76a957d73d299df43b946"
+    }
+  },
+  "0.610": {
+    "compact-rows": {
+      "w": 2000,
+      "h": 1407,
+      "bytes": 465318,
+      "sha256": "11097fc766a350296d26373f6e5d1e52860dd058d0454f089e20b59d67e95c65"
+    }
+  },
+  "0.611": {
+    "list-groups": {
+      "w": 1104,
+      "h": 1800,
+      "bytes": 75938,
+      "sha256": "b4548674e5b0c5595f058827e2aeae7b6c74c65fd957110f319a7a1e97b5b0ca"
+    }
+  },
+  "0.612": {
+    "markdown-replace": {
+      "w": 1444,
+      "h": 1800,
+      "bytes": 77480,
+      "sha256": "bcfbd15a792f6251c1f2b84049dbb643a410cdec7770290ee4a1e564a9ed26da"
+    }
+  },
+  "0.614": {
+    "callout-types": {
+      "w": 2000,
+      "h": 1081,
+      "bytes": 58874,
+      "sha256": "8b8510df3d40b5ac106e858ca3eda8044e51e9dc8573d2ab558f79198ebc0958"
+    },
+    "fold": {
+      "w": 1488,
+      "h": 946,
+      "bytes": 26738,
+      "sha256": "d534d262b1d3a48101ccd790059335ed0134c4b035053c18c28bfc110b048260"
+    }
+  },
+  "0.615": {
+    "community-themes": {
+      "w": 2000,
+      "h": 1407,
+      "bytes": 139402,
+      "sha256": "9cf7a108004e54ba9a8f62e7d1164a809bef39e9c3df2261664d867632b92500"
+    }
+  },
+  "0.616": {
+    "favorite-themes": {
+      "w": 2000,
+      "h": 1407,
+      "bytes": 135950,
+      "sha256": "403b75170c04062172db2f3ae79ecf31b00d7534d7f679855fbfd21c4e468da1"
+    },
+    "folder-tag-colors": {
+      "w": 2000,
+      "h": 1407,
+      "bytes": 124268,
+      "sha256": "75fb2955108ff377bd1de499ad9ab5e39bb01870d1f20143dbea372ba0510c17"
+    }
+  },
+  "0.617": {
+    "bar-bottom": {
+      "w": 1444,
+      "h": 960,
+      "bytes": 31722,
+      "sha256": "7111b041a7dd762b808d78388ebc06be209965edf06145825f527290253328ec"
+    },
+    "toolbar-board": {
+      "w": 2000,
+      "h": 1407,
+      "bytes": 125510,
+      "sha256": "cb12700df395718067ae231aacf1fc939639ed7f7e1fea6bcdbc442b47cdf439"
+    }
+  },
+  "0.619": {
+    "heading-shortcut": {
+      "w": 1444,
+      "h": 1106,
+      "bytes": 81318,
+      "sha256": "86ef91a0d2981fd3ba376a99e7ee0f5bffc7461d05b209e4a95ac48d187e0ae7"
+    },
+    "share-shortcut": {
+      "w": 1444,
+      "h": 1240,
+      "bytes": 95636,
+      "sha256": "ca1b8acd35b8089b502cfb6c09b60aeb0b32607164df0705d59ce64bac2db1f6"
+    }
+  },
+  "0.620": {
+    "move-to-work": {
+      "w": 1104,
+      "h": 1800,
+      "bytes": 85550,
+      "sha256": "11afcdd4935e0e671ab13237a89e78e396b1cbf79eb82299492d7fb398876eb3"
+    },
+    "spaces": {
+      "w": 1104,
+      "h": 1800,
+      "bytes": 58074,
+      "sha256": "2cf9f42a1ccb25b955c09378d0b4bbdadd2b3606dd4ef02098712b224a9a27c9"
+    }
+  },
+  "0.646": {
+    "bear-import": {
+      "w": 2000,
+      "h": 1407,
+      "bytes": 190676,
+      "sha256": "a665828b9c2cf690f131903a14867a9ff269cf3ef43760f4afa6c962948de846"
+    }
+  },
+  "0.647": {
+    "jump-tags": {
+      "w": 1248,
+      "h": 932,
+      "bytes": 51430,
+      "sha256": "3e9163f6e6406b9f8eb66ad5da42fea35d4cad12529748fd946daf54cc7cb667"
+    }
+  },
+  "0.648": {
+    "markdown-toolbar": {
+      "w": 1444,
+      "h": 1720,
+      "bytes": 90216,
+      "sha256": "5eec2afd00f6175a5ea1d46f1f58dcf31400b1ccb320bcd9a92731247edb4e19"
+    }
+  },
+  "0.649": {
+    "passcode": {
+      "w": 2000,
+      "h": 1524,
+      "bytes": 152804,
+      "sha256": "69cfa57de334da6f47c9f9f25d72a2fda3671d5f71984507de021a6b96275f62"
+    }
+  },
+  "0.650": {
+    "phone-bar": {
+      "w": 780,
+      "h": 1688,
+      "bytes": 47456,
+      "sha256": "b17380fca7ff40adb161fed2569f8df373e8a82de5f88acee52680d664236f83"
+    }
+  },
+  "0.651": {
+    "history-code": {
+      "w": 2000,
+      "h": 1280,
+      "bytes": 134154,
+      "sha256": "a3a2c74a117b3a36ac00f2457a5505373280c8434cae167ee60f534234380a89"
+    },
+    "history-tasks": {
+      "w": 2000,
+      "h": 1280,
+      "bytes": 83562,
+      "sha256": "1695b0a6871c13d55f16a0307e0660df5266f184037eac5a913172e287a34249"
+    },
+    "history-text": {
+      "w": 2000,
+      "h": 1280,
+      "bytes": 484352,
+      "sha256": "20a51e2ecabf6380934670b351a313efbbc1526d30bba5e9b32f46be2804ce89"
+    }
+  },
+  "0.652": {
+    "qa-event": {
+      "w": 1248,
+      "h": 936,
+      "bytes": 44734,
+      "sha256": "1e29b71794567b15aae28a3c0a7df648bee6e38842137c8a254675a8492c2cfd"
+    },
+    "qa-german": {
+      "w": 1248,
+      "h": 936,
+      "bytes": 48174,
+      "sha256": "d398a05dfc2c3edef3970830c0acc4603d47b5af3dccd09ea6949e184d187162"
+    },
+    "qa-month": {
+      "w": 1248,
+      "h": 936,
+      "bytes": 51560,
+      "sha256": "ac7c919417e58a33f2e4b1420298ba470f13be094b95f68b5abacd4804cb5ed6"
+    },
+    "qa-repeat": {
+      "w": 1248,
+      "h": 936,
+      "bytes": 51214,
+      "sha256": "9f2013a17009e11dc3fc3e969131e0cdb44c59cf0ed65c632b34566edd529153"
+    },
+    "qa-syntax": {
+      "w": 1248,
+      "h": 1140,
+      "bytes": 47358,
+      "sha256": "3c4b92f5255639255d8f0e90eb330e87b34e0871e27dfefb566ffa22cf2ca7eb"
+    },
+    "qa-tag": {
+      "w": 1248,
+      "h": 936,
+      "bytes": 50482,
+      "sha256": "ce038ebd09b8b2d0c9a82c42594c87cb6ea2ce4594c6d172f30a1293165e52fd"
+    },
+    "qa-task": {
+      "w": 1248,
+      "h": 936,
+      "bytes": 48024,
+      "sha256": "9b0d716f6807e967c1f5bb72c26dfc579be7de6bdc24b09ef0c44792840b95e6"
+    }
+  },
+  "0.653": {
+    "calendar": {
+      "w": 2000,
+      "h": 1250,
+      "bytes": 135132,
+      "sha256": "2c42c7f43b2c84385b289e61ce4c3c9725e247317242b76049db7bd3820ed0a5"
+    },
+    "google-calendar": {
+      "w": 2000,
+      "h": 1407,
+      "bytes": 182868,
+      "sha256": "9d37fbcb170885501130a5f8c4f18413d4883265d7731db15868c0e032b1e57a"
+    },
+    "mini-calendar": {
+      "w": 1104,
+      "h": 1720,
+      "bytes": 73350,
+      "sha256": "aa7fca6006858ece3074b1830a5a645e8bc713390bc9a31d8055d0658eb42e81"
+    },
+    "schedule": {
+      "w": 1444,
+      "h": 1720,
+      "bytes": 48882,
+      "sha256": "5b163132fd1ce23fff043afc1ea48e5ce671b3027701288af3ff16c316f2c1c7"
+    }
+  },
+  "0.680": {
+    "more-themes": {
+      "w": 2000,
+      "h": 1524,
+      "bytes": 157502,
+      "sha256": "a31df42fe5a8b0c17b2535b7908dc4a801d8808882a963639fde2756b0f51480"
+    }
+  },
+  "0.681": {
+    "copy-as": {
+      "w": 1444,
+      "h": 1600,
+      "bytes": 49198,
+      "sha256": "a37a801a655e9e41afedf7f512d12acf6be46623e15825f7c4f2b43f18d46073"
+    }
+  },
+  "0.682": {
+    "tooltip-keys": {
+      "w": 1444,
+      "h": 660,
+      "bytes": 17616,
+      "sha256": "b9c1b91a9d27b2239b67bca757b10f05eef9cc26583ea9b110d771a28006f444"
+    }
+  },
+  "0.683": {
+    "note-icon": {
+      "w": 768,
+      "h": 1288,
+      "bytes": 34644,
+      "sha256": "db3d74232e29038016cb43ff0899787afa9dd1d67f0b58a4d8d2f1d47cf179d3"
+    },
+    "note-icons-list": {
+      "w": 1104,
+      "h": 1720,
+      "bytes": 78366,
+      "sha256": "838d83379f04c314cbff500523d5d3cffbc5dc5a75114c72bce29c2b82a35410"
+    }
+  },
+  "0.684": {
+    "day-panel": {
+      "w": 1104,
+      "h": 1720,
+      "bytes": 76812,
+      "sha256": "e5a7d2349c28379610a9fc871403153e7bb9fb81b4bd024f62179451d685bb85"
+    },
+    "event-card": {
+      "w": 1444,
+      "h": 1062,
+      "bytes": 28436,
+      "sha256": "1803d4233a822397a9f2ecb2be5ba9792aac6e3ef443f75a74d3c7f52bd6e722"
+    },
+    "webcal": {
+      "w": 2000,
+      "h": 1407,
+      "bytes": 198792,
+      "sha256": "cdf1d81d1d80ead90aeeb628c678ef5eda897c65bc9dfec3e4aefb1f23d8617b"
+    }
+  },
+  "0.686": {
+    "lock-screen": {
+      "w": 1256,
+      "h": 932,
+      "bytes": 17884,
+      "sha256": "362b310bfb0f3865c623718ad585351798a8b11cc4851878d71ccafad867c873"
+    }
+  },
+  "0.687": {
+    "medication": {
+      "w": 2000,
+      "h": 1524,
+      "bytes": 175488,
+      "sha256": "790aa85e2ab9be895bfdcc725614af92e3d40c40ddd78a1de33a26e0a079424f"
+    },
+    "meds-pill": {
+      "w": 1104,
+      "h": 1720,
+      "bytes": 72252,
+      "sha256": "33d1a0fd02d8fc51ce7516cd4a79c31c767d046f6189a31586fa86de9fc3c435"
+    }
+  },
+  "0.688": {
+    "stats-insights": {
+      "w": 2000,
+      "h": 1524,
+      "bytes": 130014,
+      "sha256": "85c9c71d9bee31b35a3eb239fa0a41955cbb1cf3f07e101731ed9bc3ea4c2546"
+    },
+    "stats-recap": {
+      "w": 2000,
+      "h": 1524,
+      "bytes": 134570,
+      "sha256": "12fde30ec2a9504cb212df9295f997178e2335c349655d62c6826a7736d599f5"
+    },
+    "stats-trackers": {
+      "w": 2000,
+      "h": 1524,
+      "bytes": 132892,
+      "sha256": "84a8acabc01646b0e9a43ef33f29359ac6759898099feda86bb34e76810b5f6a"
+    }
+  },
+  "0.689": {
+    "connections": {
+      "w": 1444,
+      "h": 1600,
+      "bytes": 498406,
+      "sha256": "1ef5ecd119dfb172f24c4bbbde1b27f48be0f09c20eb67e68f84dcf86f89f312"
+    }
+  },
+  "0.690": {
+    "check-in": {
+      "w": 1104,
+      "h": 1720,
+      "bytes": 76098,
+      "sha256": "be9fef79c84b5caa7ebf1c9550f4f99326d8692a13b8b051aba6ca63aa25c489"
+    },
+    "check-in-done": {
+      "w": 1104,
+      "h": 1720,
+      "bytes": 81068,
+      "sha256": "822b3c0fdd9694330f5a37b23c0b7fe6a5f04fd715360dcdf1913967f6f17fa2"
+    },
+    "habits": {
+      "w": 2000,
+      "h": 1407,
+      "bytes": 160450,
+      "sha256": "39aff373c65304080addf912fd22c404094c3f574eba3b80a9617dac74cefe48"
+    }
+  },
+  "0.691": {
+    "clip-note": {
+      "w": 1444,
+      "h": 1800,
+      "bytes": 323578,
+      "sha256": "194d88ee4843d29d9dc1e8ead6d8a1dee1703727efda32689118857de3fbbf9a"
+    },
+    "clip-page": {
+      "w": 904,
+      "h": 866,
+      "bytes": 38856,
+      "sha256": "1578622411314c3bfcb2638d79be5556a1f48e15342f62695a25733659345bec"
+    }
+  },
+  "0.692": {
+    "kanban": {
+      "w": 1764,
+      "h": 1184,
+      "bytes": 39022,
+      "sha256": "4968d9d2927c0d2f1c2babb5ed9e127dd49c77e4d14882af6e8122c4a11f05f8"
+    }
+  },
+  "0.693": {
+    "formula-edit": {
+      "w": 1444,
+      "h": 1196,
+      "bytes": 30566,
+      "sha256": "8130579c00d23c3833f258c169076cb8f29e7e1f7898e3da45d4bb9b73d19a94"
+    },
+    "formula-markdown": {
+      "w": 1444,
+      "h": 884,
+      "bytes": 28540,
+      "sha256": "ed1b0bd5a411c5ff92ff71aaddfd93469b1bc7f1f89744185e4237c221133fc9"
+    },
+    "formula-menu": {
+      "w": 1444,
+      "h": 1400,
+      "bytes": 37504,
+      "sha256": "1d1c7aab893429aaa830dbd78ba5e0db18e8111416e1269fc03943f96ca27d58"
+    },
+    "formulas": {
+      "w": 1444,
+      "h": 1196,
+      "bytes": 28644,
+      "sha256": "7482e8d4f8243a54670a22c04a18b2dbbb00669a626a71dcabe7881da86ce7f7"
+    }
+  },
+  "0.694": {
+    "append": {
+      "w": 1296,
+      "h": 904,
+      "bytes": 56596,
+      "sha256": "9d6c5f40602356a07975553269ee31c3b77efb116bd41cac85122e2e745fa56e"
+    },
+    "bestmatch": {
+      "w": 1296,
+      "h": 1054,
+      "bytes": 73008,
+      "sha256": "130bf4844a988c33eb0ac17bd7c02c99647272aa024334c1df691a5b87502baa"
+    },
+    "day": {
+      "w": 1296,
+      "h": 1054,
+      "bytes": 65902,
+      "sha256": "61b5ee02b686a9e403858ea6869941996e2c3a7958a018209e3561e6cf640146"
+    },
+    "event": {
+      "w": 1296,
+      "h": 1054,
+      "bytes": 68492,
+      "sha256": "3c030f244ebdd6d89aa6bc2cb24b672b8f1a4e8541fce963641cdf6e51125983"
+    },
+    "features": {
+      "w": 1296,
+      "h": 1054,
+      "bytes": 70822,
+      "sha256": "ffa056b6d9f5253f6cdae3465cc856b3ca2b52c200485b6e80ccbce277f2de0c"
+    },
+    "find": {
+      "w": 1296,
+      "h": 1054,
+      "bytes": 68648,
+      "sha256": "4c51302f3a0df7e3c1b3516d0d1cf57ed6672e983525f7a937d39f4c5c9833b7"
+    },
+    "theme": {
+      "w": 1296,
+      "h": 1054,
+      "bytes": 56326,
+      "sha256": "4321061acd86214265a7352cbf347bb6cc76ed26ab45872eab718efc0d105b76"
+    }
+  }
+}

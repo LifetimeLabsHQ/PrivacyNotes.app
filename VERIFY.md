@@ -4,9 +4,9 @@ You should not have to take our word for any of this.
 
 This page is three ways to check that PrivacyNotes encrypts your notes on your device before they reach our server. They take about a minute, about ten minutes, and about a weekend. The first one needs nothing but a browser, and it is the one that actually settles the question.
 
-Accurate as of v0.488.3 (2026-08-31). The payloads below are real, captured from an actual sync.
+Accurate as of v0.530.2 (2026-09-25). The payloads below are real, captured from an actual sync.
 
-**One caveat before you start.** Everything below describes self-custody, the default. If you signed up with Google, Apple or GitHub and chose the custodial option, the server holds your phrase and can decrypt your notes - the trade is spelled out in [SECURITY.md](SECURITY.md) - though tier 1 still shows you ciphertext on the wire either way.
+**One caveat before you start.** Everything below describes self-custody, which every phrase sign-up uses. A sign-up with Google, Apple or GitHub preselects the custodial option instead, and if your account uses it, the server holds your phrase and can decrypt your notes - the trade is spelled out in [SECURITY.md](SECURITY.md) - though tier 1 still shows you ciphertext on the wire either way.
 
 ---
 
@@ -68,7 +68,7 @@ Be suspicious of anyone who shows you only the good part, so here is the rest of
 
 - **`user_pubkey`** is your public identity, derived from your phrase. The server needs it to know which rows are yours. It also rides in the query string of update and fetch requests, for the same reason.
 - **`id`, `created_at`, `updated_at`** are the note's id and timestamps, in the clear. Our server therefore knows how many notes you have and when you touched them. It cannot know what any of them say.
-- **`nonce`** is a fresh 24 random bytes for every single write. It is not secret and it is not a key.
+- **`nonce`** is a fresh 24 random bytes for every single write. It is not secret and it is not a key. An update also carries the previous write's nonce in its query string, so it lands only on the version this device last synced.
 
 That is the complete list. The full accounting of what our server can observe, including device records and quota counters, is in [THREAT_MODEL.md](THREAT_MODEL.md).
 
@@ -76,7 +76,7 @@ That is the complete list. The full accounting of what our server can observe, i
 
 The rows in that store are not your notes. Each one carries `sv: 1` and a `sealed` field holding a nonce and a ciphertext, and the title, body, tags and tracker data live inside that ciphertext. That is why the search came back empty. The rows are sealed with XChaCha20-Poly1305 under a key derived from your phrase (the `privacynotes-local-at-rest-v1` branch in the same key table below), and the ciphertext is bound to its own row and table, so a blob moved onto another row fails to open instead of decrypting.
 
-One panel over, in **Local Storage**, sits the root secret: the key `privacynotes.phrase`. Its value starts with `pnwrap1:` - an AES-GCM envelope, not your twelve words. The key that opens it lives in IndexedDB as a non-extractable WebCrypto key, which the browser will use but never hand to script, so a copied localStorage file or a storage backup does not carry your phrase in readable form. With the PIN app lock enabled, that envelope is removed entirely and the phrase exists only wrapped under your PIN.
+One panel over, in **Local Storage**, sits the root secret: the key `privacynotes.phrase`. Its value starts with `pnwrap1:` - an AES-GCM envelope, not your twelve words. The key that opens it lives in IndexedDB as a non-extractable WebCrypto key, which the browser will use but never hand to script, so a copied localStorage file or a storage backup does not carry your phrase in readable form. With the app lock enabled, that envelope is removed entirely and the phrase is stored only under the app lock's own wraps: one under your PIN or passcode, one under biometric unlock, or both. Biometric unlock that is not tied to a passkey keeps its key in the same storage, so while it is on, a copy of that storage opens the phrase without the biometric check, the PIN or the passcode.
 
 Be clear about what all of this does not buy, because the honest limits have not moved: code running in the app's origin on your machine can use the keys; someone with your live browser profile boots the app signed in; and while the app runs, your notes are plaintext in memory - that is what an app that shows you your notes is. Two timing caveats worth knowing: existing rows seal on the first unlock after the update that introduced sealing, and browser storage engines keep old values in free disk pages for a while after rewriting, so "everything on disk is ciphertext" becomes fully true a little after it becomes mostly true. What protects an unlocked machine is still OS disk encryption and your screen lock. The full accounting, including every field that stays readable for the indexes, is "Local storage at rest" in [THREAT_MODEL.md](THREAT_MODEL.md).
 
@@ -84,14 +84,14 @@ Be clear about what all of this does not buy, because the honest limits have not
 
 ## Tier 2: ten minutes, reading code
 
-About 560 lines decide everything. They are in [`crypto/crypto.ts`](crypto/crypto.ts), and these functions are the whole story:
+About 590 lines decide everything. They are in [`crypto/crypto.ts`](crypto/crypto.ts), and these functions are the whole story:
 
 | Function | What to check |
 | :--- | :--- |
 | `phraseToSeed` | Your 12 words become a 64-byte BIP-39 seed. Standard, offline, no network. |
 | `deriveEncryptionKey` | HKDF-SHA256 over that seed with the info string `privacynotes-encryption-v1` produces the 32-byte content key. Same phrase, same key, on every device, with nothing to fetch. |
 | `deriveLocalDataKey` | The same HKDF construction under `privacynotes-local-at-rest-v1` produces the key that seals rows in your own browser storage. Disjoint from the sync key by its info string, so a local ciphertext can never pass as a server row or the reverse. |
-| `encryptNote` | XChaCha20-Poly1305. A fresh random 24-byte nonce per write. Title, body, tags, flags, tracker data and folder id all go inside one JSON blob before encryption, so none of them leak as separate fields. |
+| `encryptNote` | XChaCha20-Poly1305. A fresh random 24-byte nonce per write. Title, body, tags, flags, tracker data, folder id and the "last edited" date the lists show all go inside one JSON blob before encryption, so none of them leak as separate fields. |
 | `decryptNote` | The inverse. Wrong key or tampered ciphertext throws on the Poly1305 authentication check rather than returning garbage. |
 
 Identity works the same way: `deriveSigningKey` derives an Ed25519 keypair from the same seed under a different info string, and the public half is your user id. Signatures authenticate sensitive operations like registering or revoking a device.
@@ -120,7 +120,9 @@ pnpm build          # the web app
 pnpm desktop:build  # the desktop app, for the machine you are on
 ```
 
-No secrets, no signing keys, no cooperation from us. Run what you built, point your network tab at it, and tier 1 applies to your own binary. Separately, every release we ship is signed and published with hashes, so you can confirm a downloaded file is the file we built.
+No secrets, no signing keys, no cooperation from us. Run what you built, point your network tab at it, and tier 1 applies to your own binary. Separately, every release we ship is published with hashes, and the macOS, Windows, AppImage, deb and Android builds are signed, so you can confirm a downloaded file is the file we built. The deb's signature is the `.minisig` file published next to it; check it with minisign against the updater public key in `tauri.conf.json` (`plugins.updater.pubkey`, a base64-encoded minisign public key).
+
+**What each check proves, weakest to strongest.** The source is published: you can read what we say we ship. A hash matches: the file you hold is the file we uploaded. A signature verifies: that file came from our key, not a stranger's. A tag names a version: the commit it marks carries that version's source, because the source is pushed to the public repo before a release is built; releases before 2026-09-15 were tagged before their source landed, and their release notes name the commit that carries it. A reproducible build: the file you hold was built from that source, byte for byte. Only the last one ties a binary to the code, and it is not shipped yet.
 
 **What that does not prove.** It does not prove that the binary we ship came from the source you just read. Answering that needs reproducible builds, where your build and ours land on byte-identical output. We consider the Android APK and the Linux AppImage the realistic targets, and it is on the roadmap rather than shipped. We will say so on this page when that changes, and not before.
 
@@ -135,11 +137,10 @@ No secrets, no signing keys, no cooperation from us. Run what you built, point y
 | Encryption layer (`crypto/`) | Published |
 | Threat model | Published |
 | Full client source (web, desktop, mobile) | Published, in [`application/`](application/) |
-| Sync protocol specification | Published, in [`docs/`](docs/) |
 | Third-party security audit report | Planned, published in full or in summary when it is done |
-| Sync backend, including the database schema | Closed. See the note under this table |
+| Sync backend, including the database schema and the protocol | Closed. See the note under this table |
 
-The sync backend is closed because the hosted service is what funds the product, and the database schema is part of it. Nothing in the three tiers depends on either. The client you can read encrypts before upload, and tier 1 shows you from the outside exactly what reaches the server: ciphertext, nonces, a public key and timestamps, and nothing else. That is a stronger check than reading our table definitions, because it measures what actually leaves your machine rather than what we say we store. If self-hosting ever ships, the schema ships with it.
+The sync backend is closed because the hosted service is what funds the product, and the database schema is part of it. Nothing in the three tiers depends on either. The client you can read encrypts your notes on your device, and tier 1 shows you from the outside exactly what reaches the server: ciphertext, nonces, a public key and timestamps, and nothing else. That is a stronger check than reading our table definitions, because it measures what actually leaves your machine rather than what we say we store. If self-hosting ever ships, the schema ships with it.
 
 
 ---

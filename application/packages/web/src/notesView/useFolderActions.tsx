@@ -1,11 +1,13 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CaretDown, Folder } from '../icons';
+import { FolderGlyph } from '../looks/LookGlyph';
 import { IconUpgrade } from '../UpgradeModal';
 import type { LocalNote } from '../db';
 import {
   applyFolderPlacement,
+  canDeleteFolder,
   createFolder,
   deleteFolder,
   folderCounts as computeFolderCounts,
@@ -15,6 +17,9 @@ import {
   validateFolders,
   type FolderDef,
 } from '../folders';
+import { dropFolderLooks } from '../itemStyles';
+import { carrySpaces, folderSpaces, setRootSpace, type Space } from '../spaces';
+import { liveItemIds } from '../itemDrag';
 import { bulkMoveToFolder } from '../notesRepo';
 import type { UserSettings } from '../userSettings';
 import type { View } from '../views';
@@ -24,6 +29,7 @@ export function useFolderActions({
   mutateSettings,
   notes,
   activeNotes,
+  listedNotes,
   selectedIds,
   refresh,
   runSync,
@@ -38,11 +44,16 @@ export function useFolderActions({
   setSelectedFolder,
   view,
   setView,
+  activeSpace,
 }: {
   userSettings: UserSettings;
   mutateSettings: (updater: (prev: UserSettings) => UserSettings) => void;
+  /** The space a new root folder lands in ('personal' while spaces are off). */
+  activeSpace: Space;
   notes: LocalNote[];
   activeNotes: LocalNote[];
+  /** What the folder counts show: the items the All list holds. */
+  listedNotes: LocalNote[];
   selectedIds: Set<string>;
   refresh: () => Promise<LocalNote[]>;
   runSync: () => Promise<void>;
@@ -61,13 +72,31 @@ export function useFolderActions({
   view: View;
   setView: Dispatch<SetStateAction<View>>;
 }) {
+  // Every folder edit goes through here, so a folder that becomes a root
+  // keeps its space and a new root lands in the active one.
+  // Spec: ops/docs/plans/spaces.md (section 3)
+  const spaceRef = useRef(activeSpace);
+  spaceRef.current = activeSpace;
+  // `space` overrides the active space for a caller that decided it earlier.
+  const mutateFolders = useCallback(
+    (updater: (prev: UserSettings) => UserSettings, space?: Space) => mutateSettings((prev) => {
+      const next = updater(prev);
+      if (next === prev || next.folders === prev.folders) return next;
+      const itemStyles = carrySpaces(prev.folders, next.folders, next.itemStyles, space ?? spaceRef.current, prev.itemStyles);
+      return itemStyles === next.itemStyles ? next : { ...next, itemStyles };
+    }),
+    [mutateSettings],
+  );
+
   const { t } = useTranslation('notes');
 
   /** Folder picker modal - filing note(s) or re-parenting a folder. */
   const [folderPicker, setFolderPicker] = useState<
     // currentFolderId is undefined for a mixed multi-select: the picker then
     // marks nothing as current, rather than falsely claiming "Unfiled".
-    | { mode: 'note'; noteIds: string[]; currentFolderId: string | null | undefined }
+    // `space`: "Move to Work" or "Move to Personal", which shows only that
+    // space's folders.
+    | { mode: 'note'; noteIds: string[]; currentFolderId: string | null | undefined; space?: Space }
     | { mode: 'folder'; folderId: string }
     | null
   >(null);
@@ -76,24 +105,51 @@ export function useFolderActions({
 
   // Merge folders rebuilt by an importer (Obsidian) into the settings tree.
   // Reuses any existing folder whose path already matches (so re-importing
-  // the same vault does not duplicate the tree) and returns imported-id ->
-  // final-id so the caller can remap each note's folderId. Free accounts can
-  // browse the imported folders (folder actions stay Pro-gated); an upgrade
-  // unlocks editing them with no re-import.
+  // the same vault does not duplicate the tree), or, for our own backup, the
+  // folder still live under the id the backup saved for it, and returns
+  // imported-id -> final-id so the caller can remap each note's folderId.
+  // Free accounts can browse the imported folders (folder actions stay
+  // Pro-gated); an upgrade unlocks editing them with no re-import.
+  // `rootParent` is the folder the import window's "Add to" row names.
   const mergeImportedFolders = useCallback(
-    (incoming: FolderDef[]): Map<string, string> => {
+    (incoming: FolderDef[], originalIds?: ReadonlyMap<string, string>, rootParent: string | null = null): Map<string, string> => {
       if (incoming.length === 0) return new Map();
-      const { folders, idMap } = reconcileImportedFolders(
-        userSettings.folders,
-        incoming
-      );
-      mutateSettings((prev) => ({
-        ...prev,
-        folders: validateFolders(folders),
-      }));
+      // Reconciled against the tree the updater is handed, never against a
+      // copy from render: that copy can predate the first pull, and a tree
+      // rebuilt from it would replace every folder it did not know about.
+      // mutateSettings runs the updater before it returns, so the map is
+      // filled by the time the caller reads it.
+      let idMap = new Map<string, string>();
+      mutateFolders((prev) => {
+        const merged = reconcileImportedFolders(prev.folders, incoming, originalIds, rootParent);
+        idMap = merged.idMap;
+        return { ...prev, folders: validateFolders(merged.folders) };
+      });
       return idMap;
     },
-    [userSettings.folders, mutateSettings]
+    [mutateFolders]
+  );
+
+  // The "Add to" row's new folder, named after the source, at the top of the
+  // open space (or of `space`, when the caller decided it before an await).
+  // A second import from the same source reuses it.
+  const createImportFolder = useCallback(
+    (name: string, space?: Space): string | null => {
+      const into = space ?? spaceRef.current;
+      let id: string | null = null;
+      mutateFolders((prev) => {
+        const res = createFolder(prev.folders, name, null);
+        if (!res) return prev;
+        const spaces = folderSpaces(prev.folders, prev.itemStyles);
+        const same = prev.folders.find(
+          (f) => !f.parentId && f.name === res.created.name && (spaces.get(f.id) ?? 'personal') === into,
+        );
+        id = same?.id ?? res.created.id;
+        return same ? prev : { ...prev, folders: res.folders };
+      }, into);
+      return id;
+    },
+    [mutateFolders]
   );
 
   // ── Folders (Pro) ───────────────────────────────────────────────
@@ -142,20 +198,29 @@ export function useFolderActions({
       openFoldersUpsell();
       return null;
     }
-    const result = createFolder(userSettings.folders, name, parentId);
-    if (!result) return null;
-    mutateSettings((prev) => ({ ...prev, folders: [...prev.folders, result.created] }));
+    // Built inside the updater, against the tree the cache holds. Sibling
+    // order and the depth check both read the existing tree, and a copy
+    // taken from React can be older than the cache on a device whose first
+    // sync has just landed.
+    let created: FolderDef | null = null;
+    mutateFolders((prev) => {
+      const result = createFolder(prev.folders, name, parentId);
+      if (!result) return prev;
+      created = result.created;
+      return { ...prev, folders: result.folders };
+    });
+    if (!created) return null;
     scheduleFolderSync();
-    return result.created.id;
+    return (created as FolderDef).id;
   }
 
   /** Push the settings blob promptly after a folder mutation instead of
-   *  waiting for the 30s poller, so the tree lands on other devices
-   *  right away. Delayed one tick: mutateSettings persists inside the
-   *  React state updater, which runs on the next render pass - a
-   *  synchronous runSync would race it and see a clean (undirty) blob. */
+   *  waiting for the 30s poller, so the tree lands on other devices right
+   *  away. `mutateSettings` has already written the cache by the time this
+   *  runs, and the sync pass reads that cache, so there is nothing to wait
+   *  for. */
   function scheduleFolderSync() {
-    window.setTimeout(() => void runSync(), 250);
+    void runSync();
   }
 
   function handleRenameFolder(id: string, name: string) {
@@ -163,7 +228,17 @@ export function useFolderActions({
       openFoldersUpsell();
       return;
     }
-    mutateSettings((prev) => ({ ...prev, folders: renameFolder(prev.folders, id, name) }));
+    mutateFolders((prev) => ({ ...prev, folders: renameFolder(prev.folders, id, name) }));
+    scheduleFolderSync();
+  }
+
+  /** Put a root folder, its subfolders and their items in a space. */
+  function handleMoveFolderToSpace(id: string, space: Space) {
+    if (!foldersUnlocked) {
+      openFoldersUpsell();
+      return;
+    }
+    mutateSettings((prev) => ({ ...prev, itemStyles: setRootSpace(prev.itemStyles, id, space) }));
     scheduleFolderSync();
   }
 
@@ -172,7 +247,7 @@ export function useFolderActions({
       openFoldersUpsell();
       return;
     }
-    mutateSettings((prev) => ({ ...prev, folders: moveFolder(prev.folders, id, newParentId) }));
+    mutateFolders((prev) => ({ ...prev, folders: moveFolder(prev.folders, id, newParentId) }));
     scheduleFolderSync();
   }
 
@@ -193,27 +268,47 @@ export function useFolderActions({
       openFoldersUpsell();
       return;
     }
-    mutateSettings((prev) => ({
+    mutateFolders((prev) => ({
       ...prev,
       folders: applyFolderPlacement(prev.folders, id, parentId, orderedIds),
     }));
     scheduleFolderSync();
   }
 
-  /** Delete a folder: subfolders and notes move up to its parent. */
-  async function handleDeleteFolder(id: string) {
-    if (!foldersUnlocked) {
+  /** Delete a folder: its notes move up to its parent, and its subfolders
+   *  move up too, or with `withSubfolders` are deleted with it. */
+  async function handleDeleteFolder(id: string, withSubfolders = false) {
+    if (!canDeleteFolder(id, foldersUnlocked)) {
       openFoldersUpsell();
       return;
     }
-    const { reparentTo } = deleteFolder(userSettings.folders, id);
-    const memberIds = activeNotes.filter((n) => n.folderId === id).map((n) => n.id);
-    mutateSettings((prev) => ({ ...prev, folders: deleteFolder(prev.folders, id).folders }));
+    // One call, against the tree the updater is handed, so the tombstones,
+    // the folders whose notes move and the parent they move to describe the
+    // same delete. mutateSettings runs the updater before it returns, so
+    // both are set by the line after it.
+    let reparentTo: string | null = null;
+    let removed = new Set<string>([id]);
+    mutateFolders((prev) => {
+      const next = deleteFolder({ folders: prev.folders, deleted: prev.foldersDeleted }, id, withSubfolders);
+      reparentTo = next.reparentTo;
+      removed = next.removed;
+      return {
+        ...prev,
+        folders: next.folders,
+        foldersDeleted: next.deleted,
+        itemStyles: dropFolderLooks(prev.itemStyles, next.removed),
+      };
+    });
+    // Every note of every removed folder, in one move, so none is left
+    // pointing at a folder that no longer exists. The trash too: a restored
+    // note on a dead id is in no folder view, not in Unfiled, and reads as
+    // Personal whatever space the folder was in.
+    const memberIds = notes.filter((n) => n.folderId && removed.has(n.folderId)).map((n) => n.id);
     if (memberIds.length > 0) {
       await bulkMoveToFolder(memberIds, reparentTo);
       await refresh();
     }
-    if (selectedFolder === id) setSelectedFolder(reparentTo);
+    if (selectedFolder && removed.has(selectedFolder)) setSelectedFolder(reparentTo);
     void runSync();
   }
 
@@ -228,25 +323,38 @@ export function useFolderActions({
     void runSync();
   }
 
-  const folderCounts = useMemo(() => computeFolderCounts(activeNotes), [activeNotes]);
+  /**
+   * A list item dropped on a sidebar folder (an id) or on Unfiled (null).
+   * Only live notes move, and only into a folder that still exists: a sync
+   * can delete one during the drag. The move then takes the Move dialog's
+   * path, so a free account gets the same upgrade window.
+   * Spec: ops/docs/archive/drag-to-folder-and-tag.md (section 6)
+   */
+  function handleDropOnFolder(ids: string[], folderId: string | null) {
+    const live = liveItemIds(ids, activeNotes);
+    if (live.length === 0) return;
+    if (folderId !== null && !userSettings.folders.some((f) => f.id === folderId)) return;
+    void handleMoveNotesToFolder(live, folderId);
+  }
+
+  const folderCounts = useMemo(() => computeFolderCounts(listedNotes), [listedNotes]);
 
   /** Folder chip for the editor tag bar (filing method E) - shows where
    *  the note lives, click opens the shared picker. Used by both the
-   *  markdown/task tag row and the vault item tag row. */
+   *  markdown/task tag row and the vault item tag row. A free account
+   *  gets no chip: it cannot file a note, so the chip was an empty slot
+   *  that only opened the upsell. The sidebar keeps its Folders entry. */
   const folderChipFor = (note: LocalNote) => {
+    if (!foldersUnlocked) return null;
     const noteFolder = note.folderId
       ? userSettings.folders.find((f) => f.id === note.folderId)
       : undefined;
     return (
       <button
         type="button"
-        onClick={() => {
-          if (!foldersUnlocked) {
-            openFoldersUpsell();
-            return;
-          }
-          setFolderPicker({ mode: 'note', noteIds: [note.id], currentFolderId: note.folderId ?? null });
-        }}
+        onClick={() =>
+          setFolderPicker({ mode: 'note', noteIds: [note.id], currentFolderId: note.folderId ?? null })
+        }
         aria-label={t('shell:folders.moveTo')}
         /* Square corners and a border, against the round accent pills the
            tags use: the folder is the ONE place a note lives, the tags are
@@ -257,24 +365,32 @@ export function useFolderActions({
            note no longer changes the chip's height. Unfiled keeps a DASHED
            border for "no folder yet" but in accent rather than grey - a grey
            dashed ghost read as a disabled control.
-           Spec: ops/docs/ui-patterns.md (editor tag row) */
+           Spec: ops/docs/archive/ui-patterns.md (editor tag row) */
         className={`shrink-0 inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md border transition ${
           noteFolder
-            ? 'border-accent/40 bg-accent/15 text-accent hover:bg-accent/25'
-            : 'border-dashed border-accent/40 bg-accent/8 text-accent hover:bg-accent/15 hover:border-accent/60'
+            ? 'border-accent/40 bg-accent/15 text-accent-strong hover:bg-accent/25'
+            : 'border-dashed border-accent/40 bg-accent/8 text-accent-strong hover:bg-accent/15 hover:border-accent/60'
         }`}
       >
         {/* The sidebar's folder mark, unchanged: same amber, same default
             weight. One folder looks like a folder everywhere, and the chip
             is not the place to fork that. */}
-        <Folder size={12} className="shrink-0 text-amber-600/80 dark:text-amber-500/80" />
+        {noteFolder ? (
+          <FolderGlyph
+            folderId={noteFolder.id}
+            size={12}
+            className="shrink-0 text-label"
+          />
+        ) : (
+          <Folder size={12} className="shrink-0 text-label" />
+        )}
         <span className="truncate max-w-[120px]">
           {noteFolder ? noteFolder.name : t('shell:folders.chipUnfiled')}
         </span>
         <CaretDown size={9} className="shrink-0 opacity-70" />
         {/* Same trailing gold rocket the Folders segment carries in the
-            sidebar rail: filing a note is a Pro action, and this chip is
-            the one control that does it from the editor. */}
+            sidebar rail. Only the demo reaches it: the demo unlocks folders
+            as a teaser and still labels them Pro. */}
         {!isPro && <span className="shrink-0 inline-flex"><IconUpgrade size={11} /></span>}
       </button>
     );
@@ -303,6 +419,7 @@ export function useFolderActions({
 
   return {
     mergeImportedFolders,
+    createImportFolder,
     folderPicker,
     setFolderPicker,
     folderDeleteConfirm,
@@ -314,9 +431,11 @@ export function useFolderActions({
     handleCreateFolder,
     handleRenameFolder,
     handleMoveFolder,
+    handleMoveFolderToSpace,
     handleReorderFolders,
     handleDeleteFolder,
     handleMoveNotesToFolder,
+    handleDropOnFolder,
     folderCounts,
     folderChipFor,
     handleBulkMoveToFolder,

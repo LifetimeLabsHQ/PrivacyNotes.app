@@ -1,4 +1,13 @@
 import type { LocalNote } from './db';
+import { oneLineTitle } from './oneLineTitle';
+
+/**
+ * A front-matter value a reader would not hand back as the text it is: one
+ * that looks quoted, a list, an object, a boolean or a number. Front-matter
+ * readers type an unquoted value, so a folder path like that is written
+ * quoted, and a root folder named 2024 stays a name.
+ */
+const READS_AS_DATA = /^(?:["'[{]|(?:true|false|-?\d+(?:\.\d+)?)$)/;
 
 /**
  * Serialize a note as markdown with YAML front-matter.
@@ -13,10 +22,16 @@ import type { LocalNote } from './db';
  * test from reaching an export that only a test consumes.
  *
  * The grammar, since three parsers depend on it:
- *   - `title` is always quoted, with inner `"` backslash-escaped.
+ *   - `title` is always quoted and on one line (`oneLineTitle`), with each
+ *     inner `"` backslash-escaped and nothing else (`unescapeQuotes` is the
+ *     readers' inverse).
  *   - `created` / `updated` are ISO strings.
  *   - `tags` is `[a, b]`, comma-joined and UNQUOTED. Safe because
  *     `normalizeTag` strips commas, so no tag can contain the separator.
+ *   - `folder` is the name path joined with `/`, a slash or a backslash
+ *     inside a name escaped with a backslash. It is quoted, inner `"`
+ *     escaped, when it would read as anything but text (`READS_AS_DATA`).
+ *     `parseFolderPath` in `import/folderImport.ts` is the exact inverse.
  *   - The fullMeta block is emitted only for the full backup zip, and only
  *     `import/privacynotes.ts` reads it. `folderId` and `trackers` are
  *     omitted entirely when absent rather than written empty.
@@ -31,18 +46,28 @@ export function noteToMarkdown(
   folderPath: string[] = [],
 ): string {
   const fm: string[] = ['---'];
-  fm.push(`title: "${note.title.replace(/"/g, '\\"')}"`);
+  fm.push(`title: "${oneLineTitle(note.title).replace(/"/g, '\\"')}"`);
   fm.push(`created: ${note.createdAt}`);
-  fm.push(`updated: ${note.updatedAt}`);
+  // The last edit, the date other apps read as "modified" (editedAtOf). A
+  // restore compares it with the local sync stamp, so it overwrites less,
+  // never more.
+  fm.push(`updated: ${note.editedAt ?? note.updatedAt}`);
   if (note.tags.length) fm.push(`tags: [${note.tags.join(', ')}]`);
   // The PORTABLE folder membership: names, not the UUID. `folderId` below is
   // the right key for restoring into the same account and a meaningless
-  // string anywhere else, so both are written when both are known. Slashes
-  // in a name are escaped, since the path itself is slash-separated.
+  // string anywhere else, so both are written when both are known. The path
+  // itself is slash-separated, so a slash or a backslash inside a name gets
+  // a backslash before it.
   if (folderPath.length > 0) {
-    fm.push(`folder: ${folderPath.map((n) => n.replace(/\//g, '\\/')).join('/')}`);
+    const path = folderPath.map((n) => n.replace(/[\\/]/g, '\\$&')).join('/');
+    fm.push(`folder: ${READS_AS_DATA.test(path) ? `"${path.replace(/"/g, '\\"')}"` : path}`);
   }
   if (fullMeta) {
+    // The note's own id, backup flavour only. A restore matches on it and
+    // keeps the newer of the two copies, so restoring repairs a vault rather
+    // than filling it with a second version of every note. The portable
+    // export leaves it out: an id from this app means nothing in another one.
+    fm.push(`id: ${note.id}`);
     fm.push(`type: ${note.type || 'note'}`);
     fm.push(`starred: ${note.starred === 1}`);
     // A full backup carries the trash: without this line every trashed
@@ -52,26 +77,42 @@ export function noteToMarkdown(
     fm.push(`trashed: ${note.trashed === 1}`);
     fm.push(`locked: ${note.locked === 1}`);
     fm.push(`pinProtected: ${note.pinProtected === 1}`);
+    if (note.archived === 1) fm.push('archived: true');
     if (note.folderId) fm.push(`folderId: ${note.folderId}`);
-  } else if (note.type === 'journal') {
-    // The ONE type a single .md may declare. A journal's body is its real
-    // markdown, so restoring it as a journal is lossless - and without the
-    // line its trackers would come back attached to a plain note, where the
-    // app never shows them. Vault types stay unwritten here on purpose: a
-    // login exports as the READABLE `vaultToMarkdown` text, so declaring the
+  } else if (note.type === 'journal' || note.type === 'task' || note.type === 'event') {
+    // The types whose body is their real markdown, so a single .md restores
+    // them losslessly - and trackers with no type read back as a journal
+    // entry, which never repeats. Vault types stay unwritten here on purpose:
+    // a login exports as the READABLE `vaultToMarkdown` text, so declaring the
     // type would restore that prose as a login and hide every field. See
     // exportSingleMarkdown.
-    fm.push('type: journal');
+    fm.push(`type: ${note.type}`);
+  } else if ((note.type ?? 'note') === 'note') {
+    // A note is the default, so it names itself only when it carries trackers.
+    if (note.trackers && Object.keys(note.trackers).length > 0) fm.push('type: note');
   }
   // Written for every export, not only the full backup: trackers are the one
   // field a single exported journal entry would otherwise lose silently - the
   // body and tags round-trip intact, so nothing flags the missing mood, sleep
-  // and step counts.
-  if (note.trackers && Object.keys(note.trackers).length > 0) {
+  // and step counts. A login's are the exception: the readable export already
+  // prints its custom fields, and the raw map would print them a second time.
+  if (note.trackers && Object.keys(note.trackers).length > 0 && (fullMeta || note.type !== 'login')) {
     fm.push(`trackers: ${JSON.stringify(note.trackers)}`);
   }
   fm.push('---');
   return `${fm.join('\n')}\n\n${note.body}\n`;
+}
+
+/**
+ * The inside of a quoted front-matter value with the writer's escape taken
+ * off: each `\"` reads as `"`, and nothing else changes. That is the exact
+ * inverse of the escape on a title above, which escapes a quote and never a
+ * backslash, so a backslash the title holds for itself comes back as itself.
+ * Not `JSON.parse`, which would read the `\n` of an exported `C:\notes` as a
+ * line feed.
+ */
+export function unescapeQuotes(inner: string): string {
+  return inner.replace(/\\"/g, '"');
 }
 
 /**
@@ -94,5 +135,24 @@ export function noteToMarkdown(
  * compounds, because the padded body is what the next export serializes.
  */
 export function stripFrontMatterPadding(body: string): string {
-  return body.replace(/^(?:\r?\n)+/, '').replace(/(?:\r?\n)+$/, '');
+  // Walked rather than matched. The two anchored patterns this replaces
+  // backtrack: a long run of newlines that does not reach the end of the
+  // string made the trailing one try and fail at every position, which is
+  // quadratic, and every imported file passes through here on the main
+  // thread before anybody has agreed to the import. The unit is an optional
+  // carriage return followed by a line feed, exactly as before, so a lone
+  // carriage return is not padding and survives.
+  let start = 0;
+  const len = body.length;
+  while (start < len) {
+    if (body[start] === '\n') start += 1;
+    else if (body[start] === '\r' && body[start + 1] === '\n') start += 2;
+    else break;
+  }
+  let end = len;
+  while (end > start) {
+    if (body[end - 1] !== '\n') break;
+    end -= body[end - 2] === '\r' ? 2 : 1;
+  }
+  return start === 0 && end === len ? body : body.slice(start, end);
 }

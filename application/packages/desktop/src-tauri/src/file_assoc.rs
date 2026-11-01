@@ -20,7 +20,7 @@
 //! default at install time or at launch, unlike the `privacynotes://` scheme
 //! registration in lib.rs: a scheme nobody else wants is not a hijack, and a
 //! Markdown association taken from Obsidian or VS Code very much is.
-//! Spec: ops/docs/plans/markdown-folder.md (section 11)
+//! Spec: ops/docs/archive/markdown-folder.md (section 11)
 
 /// What the frontend needs to render the control. Four fields rather than a
 /// boolean because "we are not the default" splits into cases that want
@@ -40,6 +40,11 @@ pub struct AssocStatus {
     /// Display name of the app that currently owns Markdown, when the OS will
     /// tell us. Cosmetic: `None` just means the UI says "another app".
     pub other_name: Option<String>,
+    /// macOS only: another app opens Markdown on a double-click, but our app
+    /// already holds the Editor role. LaunchServices then treats a claim as a
+    /// change to nothing and skips it, so only the person can fix it, with
+    /// Get Info > Open with > Change All in Finder.
+    pub finder_only: bool,
 }
 
 impl AssocStatus {
@@ -49,6 +54,7 @@ impl AssocStatus {
             settable: SETTABLE,
             owner,
             other_name,
+            finder_only: false,
         }
     }
 
@@ -81,9 +87,9 @@ const SETTABLE: bool = !cfg!(target_os = "windows");
 /// Who opens Markdown files right now.
 pub fn status(app: &tauri::AppHandle) -> AssocStatus {
     #[cfg(target_os = "macos")]
-    return apple::status(app);
+    return apple::status(app, apple::MARKDOWN_UTI);
     #[cfg(target_os = "windows")]
-    return windows_assoc::status();
+    return windows_assoc::status(windows_assoc::EXT_MD);
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     return linux::status(app);
 }
@@ -94,7 +100,7 @@ pub fn status(app: &tauri::AppHandle) -> AssocStatus {
 /// success.
 pub fn claim(app: &tauri::AppHandle) -> Result<(), String> {
     #[cfg(target_os = "macos")]
-    return apple::claim(app);
+    return apple::claim(app, apple::MARKDOWN_UTI);
     #[cfg(target_os = "windows")]
     {
         let _ = app;
@@ -102,6 +108,38 @@ pub fn claim(app: &tauri::AppHandle) -> Result<(), String> {
     }
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     return linux::claim(app);
+}
+
+/// Who opens `.txt` files right now. None on Linux, where the row is not
+/// offered: `text/plain` is the type of every README, log and config file, and
+/// the plain-text claim on macOS takes extensionless text files too, which the
+/// UI says in so many words.
+// Spec: ops/docs/plans/default-app-settings.md (section 6)
+pub fn text_status(app: &tauri::AppHandle) -> Option<AssocStatus> {
+    #[cfg(target_os = "macos")]
+    return Some(apple::status(app, apple::PLAIN_TEXT_UTI));
+    #[cfg(target_os = "windows")]
+    {
+        let _ = app;
+        return Some(windows_assoc::status(windows_assoc::EXT_TXT));
+    }
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    {
+        let _ = app;
+        None
+    }
+}
+
+/// Make us the default for `.txt`. macOS only: Windows leaves the choice to
+/// the user, and Linux has no Text row.
+pub fn text_claim(app: &tauri::AppHandle) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    return apple::claim(app, apple::PLAIN_TEXT_UTI);
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = app;
+        Err("Only macOS lets the app claim .txt files.".to_owned())
+    }
 }
 
 /// Open the OS screen where the user can set this themselves. Windows only:
@@ -112,6 +150,88 @@ pub fn open_os_settings() -> Result<(), String> {
     return windows_assoc::open_default_apps_settings();
     #[cfg(not(target_os = "windows"))]
     Err("Only Windows needs the system settings detour.".to_owned())
+}
+
+/// Escape one executable path for a double-quoted `Exec=` argument of a Linux
+/// desktop entry, or refuse a path the format cannot carry.
+///
+/// Not inside the Linux module, and not behind its `cfg`: it is pure string
+/// work that decides what lands in a file, so it is testable on whatever
+/// machine the tests run on.
+///
+/// The Desktop Entry spec asks for two things, and skipping either produces an
+/// entry the launcher silently rejects while `xdg-mime` still reports success -
+/// so `claim()` would return Ok and the interface would state that Markdown
+/// files open with this app over a handler that opens nothing.
+///
+/// 1. A literal `%` must be doubled, because `%` introduces a field code.
+///    `~/Downloads/PrivacyNotes%20arm64.AppImage` is the case that matters:
+///    browsers hand out percent-encoded filenames routinely, and `%20` reads as
+///    the unknown field code `%2` followed by `0`, which invalidates the whole
+///    `Exec` line.
+/// 2. Inside a quoted argument, `"`, backtick, `$` and backslash must each be
+///    preceded by a backslash.
+///
+/// Order matters: the backslash rule has to run before the `%` rule, or the
+/// backslashes it inserts get counted by the `%` pass.
+///
+/// A newline gets no escape, because the format has none: a desktop entry is
+/// line-oriented, so a path carrying one would end the `Exec` line and start
+/// whatever follows as another key. The answer is to refuse the path, which is
+/// why this returns an Option. A path reaches here from the `APPIMAGE`
+/// environment variable or from `current_exe`, so an attacker needs to be
+/// setting this process's environment already; the refusal is here because the
+/// writer cannot express the alternative, not because the caller is untrusted.
+///
+/// Pinned by the tests at the end of this file. Compiled for Linux, which is
+/// the only platform that writes one of these files, and for any test build,
+/// which is what lets the escaping be checked on a machine that is not Linux.
+#[cfg(any(test, not(any(target_os = "macos", target_os = "windows"))))]
+fn escape_exec_arg(path: &str) -> Option<String> {
+    if path.contains(['\n', '\r']) {
+        return None;
+    }
+    let mut out = String::with_capacity(path.len() + 8);
+    for ch in path.chars() {
+        match ch {
+            '"' | '`' | '$' | '\\' => {
+                out.push('\\');
+                out.push(ch);
+            }
+            '%' => out.push_str("%%"),
+            _ => out.push(ch),
+        }
+    }
+    Some(out)
+}
+
+/// Whether a value from `xdg-mime query default` is a desktop entry id we may
+/// join onto a directory and read.
+///
+/// A desktop entry id is a bare filename. The value here is whatever the user's
+/// `mimeapps.list` holds, and `Path::join` follows what it is given: a relative
+/// id can walk upwards, and an absolute one replaces the directory entirely, so
+/// the "read Name= out of the handler" lookup would read a file somebody else
+/// chose and hand its first `Name=` line back to the interface.
+///
+/// Positive shape rather than a denylist: a name, ending in `.desktop`, with no
+/// separator and no dot-dot. Whatever else arrives is refused, which costs the
+/// interface one cosmetic word - the app that owns Markdown then reads as
+/// "another app" instead of by name.
+///
+/// Reaching this needs the ability to write the user's own configuration, which
+/// is already outside what the threat model defends. It is validated anyway
+/// because the value crosses from a file into a path join, and that is the one
+/// shape where a comment is not enough.
+///
+/// Pinned by the tests at the end of this file.
+#[cfg(any(test, not(any(target_os = "macos", target_os = "windows"))))]
+fn is_desktop_entry_id(id: &str) -> bool {
+    !id.is_empty()
+        && id.ends_with(".desktop")
+        && !id.contains(['/', '\\', '\0'])
+        && id != ".desktop"
+        && !id.split('.').any(|part| part == "..")
 }
 
 /// macOS: LaunchServices, bound with raw `extern "C"` and `msg_send!` rather
@@ -127,10 +247,15 @@ mod apple {
 
     use super::AssocStatus;
 
-    /// `kLSRolesEditor` from LSConstants.h (0x4, NOT 0x2 - Viewer is 0x2 and
-    /// None is 0x1). Editor rather than `kLSRolesAll` because that is the role
-    /// `CFBundleDocumentTypes` claims for Markdown, and LaunchServices matches
-    /// the role asked about against the role the bundle declares.
+    /// `kLSRolesAll` from LSConstants.h. A double-click in Finder opens the
+    /// handler of this role, and Get Info > Change All writes it. A claim of
+    /// the Editor role alone leaves the double-click with whichever app holds
+    /// All, while Finder's "Open With" menu labels us "(default)".
+    // Spec: ops/docs/plans/default-app-settings.md (section 5.1)
+    const LS_ROLES_ALL: u32 = 0xFFFF_FFFF;
+    /// `kLSRolesEditor` (0x4). Read only, to find a Mac where an Editor-role
+    /// claim already names us: there a claim of All is skipped without a
+    /// dialog and still returns 0.
     const LS_ROLES_EDITOR: u32 = 0x0000_0004;
 
     /// The established UTI for Markdown, declared by every Markdown editor on
@@ -147,8 +272,11 @@ mod apple {
     /// UTIs on most systems, so they stay openable through
     /// `CFBundleTypeExtensions` but cannot have a default set - which is why the
     /// UI says "Markdown files" and never enumerates four extensions.
-    // Spec: ops/docs/plans/markdown-folder.md (section 11)
-    const MARKDOWN_UTI: &str = "net.daringfireball.markdown";
+    // Spec: ops/docs/archive/markdown-folder.md (section 11)
+    pub const MARKDOWN_UTI: &str = "net.daringfireball.markdown";
+    /// The type of `.txt`, and of every text file with no extension of its
+    /// own (README, LICENSE), which is why the Text row says so.
+    pub const PLAIN_TEXT_UTI: &str = "public.plain-text";
 
     // CoreServices.framework is linked in build.rs. Both functions are
     // API_DEPRECATED in the SDK with no removal version (API_TO_BE_DEPRECATED)
@@ -176,14 +304,14 @@ mod apple {
         ) -> i32;
     }
 
-    /// Current default handler's bundle id, or None when the type has none.
-    fn current_handler() -> Option<Retained<NSString>> {
-        let uti = NSString::from_str(MARKDOWN_UTI);
+    /// Default handler's bundle id for `role`, or None when the type has none.
+    fn current_handler(uti: &str, role: u32) -> Option<Retained<NSString>> {
+        let uti = NSString::from_str(uti);
         // SAFETY: `uti` outlives the call, and the result is a +1 reference that
         // `Retained::from_raw` takes ownership of - matching the Core Foundation
         // Copy rule, so this neither leaks nor over-releases.
         unsafe {
-            let raw = LSCopyDefaultRoleHandlerForContentType(&*uti, LS_ROLES_EDITOR);
+            let raw = LSCopyDefaultRoleHandlerForContentType(&*uti, role);
             Retained::from_raw(raw)
         }
     }
@@ -210,26 +338,32 @@ mod apple {
         Some(name.strip_suffix(".app").unwrap_or(&name).to_owned())
     }
 
-    pub fn status(app: &tauri::AppHandle) -> AssocStatus {
-        let Some(handler) = current_handler() else {
-            return AssocStatus::new("none", None);
-        };
+    pub fn status(app: &tauri::AppHandle, uti: &str) -> AssocStatus {
         // Bundle ids are case-insensitive to LaunchServices, so the comparison
         // has to be too - otherwise a differently-cased registration reads as
         // "some other app" and the UI offers to fix what is already right.
-        if handler.to_string().eq_ignore_ascii_case(&app.config().identifier) {
+        let ours = |h: &NSString| h.to_string().eq_ignore_ascii_case(&app.config().identifier);
+        let Some(handler) = current_handler(uti, LS_ROLES_ALL) else {
+            return AssocStatus::new("none", None);
+        };
+        if ours(&handler) {
             return AssocStatus::new("ours", None);
         }
-        AssocStatus::new("other", display_name(&handler))
+        let mut status = AssocStatus::new("other", display_name(&handler));
+        status.finder_only = current_handler(uti, LS_ROLES_EDITOR).is_some_and(|h| ours(&h));
+        status
     }
 
-    pub fn claim(app: &tauri::AppHandle) -> Result<(), String> {
-        let uti = NSString::from_str(MARKDOWN_UTI);
+    pub fn claim(app: &tauri::AppHandle, uti: &str) -> Result<(), String> {
+        let uti = NSString::from_str(uti);
         let bundle_id = NSString::from_str(&app.config().identifier);
         // SAFETY: both strings outlive the call and the function copies what it
         // needs. It returns an OSStatus rather than writing through a pointer.
+        // The call returns as soon as macOS shows its confirmation dialog, and
+        // returns 0 whether the person accepts or declines, so 0 is not proof.
+        // The frontend re-reads when the window gets focus back.
         let os_status =
-            unsafe { LSSetDefaultRoleHandlerForContentType(&*uti, LS_ROLES_EDITOR, &*bundle_id) };
+            unsafe { LSSetDefaultRoleHandlerForContentType(&*uti, LS_ROLES_ALL, &*bundle_id) };
         if os_status == 0 {
             return Ok(());
         }
@@ -261,7 +395,7 @@ mod linux {
     /// still emitted by older desktops. Both are claimed, and `text/plain` very
     /// deliberately is NOT - taking the default for all plain text would make
     /// us the editor for every README, log and config file on the machine.
-    // Spec: ops/docs/plans/markdown-folder.md (section 11)
+    // Spec: ops/docs/archive/markdown-folder.md (section 11)
     const MARKDOWN_MIMES: [&str; 2] = ["text/markdown", "text/x-markdown"];
 
     /// `~/.local/share/applications`, where a per-user handler belongs.
@@ -303,6 +437,9 @@ mod linux {
     /// ini crate to read one key would be the larger change, and every failure
     /// path here just returns None.
     fn desktop_entry_name(app: &tauri::AppHandle, id: &str) -> Option<String> {
+        if !super::is_desktop_entry_id(id) {
+            return None;
+        }
         let mut dirs: Vec<PathBuf> = Vec::new();
         if let Some(dir) = user_applications_dir(app) {
             dirs.push(dir);
@@ -389,40 +526,7 @@ mod linux {
     /// `NoDisplay` is deliberately absent, unlike the deep-link plugin's
     /// scheme-handler file: this entry is a real Markdown editor the user chose,
     /// and it has to appear in a file manager's "Open with" list.
-    // Spec: ops/docs/plans/markdown-folder.md (section 11)
-    /// Escape one executable path for a double-quoted `Exec=` argument.
-    ///
-    /// The Desktop Entry spec asks for two separate things, and skipping either
-    /// produces an entry the launcher silently rejects while `xdg-mime` still
-    /// reports success - so `claim()` would return Ok and the UI would flip to the
-    /// permanent "Markdown files open with PrivacyNotes" statement over a handler
-    /// that opens nothing.
-    ///
-    /// 1. A literal `%` must be doubled, because `%` introduces a field code.
-    ///    `~/Downloads/PrivacyNotes%20arm64.AppImage` is the case that matters:
-    ///    browsers hand out percent-encoded filenames routinely, and `%20` reads
-    ///    as the unknown field code `%2` followed by `0`, which invalidates the
-    ///    whole `Exec` line.
-    /// 2. Inside a quoted argument, `"`, backtick, `$` and backslash must each be
-    ///    preceded by a backslash.
-    ///
-    /// Order matters: the backslash rule has to run before the `%` rule, or the
-    /// backslashes it inserts get counted by the `%` pass.
-    fn escape_exec_arg(path: &str) -> String {
-        let mut out = String::with_capacity(path.len() + 8);
-        for ch in path.chars() {
-            match ch {
-                '"' | '`' | '$' | '\\' => {
-                    out.push('\\');
-                    out.push(ch);
-                }
-                '%' => out.push_str("%%"),
-                _ => out.push(ch),
-            }
-        }
-        out
-    }
-
+    // Spec: ops/docs/archive/markdown-folder.md (section 11)
     fn write_handler_desktop_file(app: &tauri::AppHandle, id: &str) -> Result<(), String> {
         use tauri::Manager;
         let dir = user_applications_dir(app)
@@ -435,6 +539,9 @@ mod linux {
             Some(path) => PathBuf::from(path),
             None => std::env::current_exe().map_err(|e| e.to_string())?,
         };
+        let escaped = super::escape_exec_arg(&exec.to_string_lossy()).ok_or_else(|| {
+            "This build's own path cannot be written into a desktop entry.".to_owned()
+        })?;
         let body = format!(
             "[Desktop Entry]\n\
              Type=Application\n\
@@ -444,7 +551,7 @@ mod linux {
              Terminal=false\n\
              Categories=Office;TextEditor;\n\
              MimeType={};\n",
-            escape_exec_arg(&exec.to_string_lossy()),
+            escaped,
             MARKDOWN_MIMES.join(";"),
         );
         std::fs::write(dir.join(id), body).map_err(|e| e.to_string())?;
@@ -471,7 +578,8 @@ mod windows_assoc {
     /// The extension we ask about. One rather than all four: Windows resolves
     /// defaults per extension, and `.md` is the one every Markdown file on a
     /// real machine actually uses.
-    const EXT: PCWSTR = w!(".md");
+    pub const EXT_MD: PCWSTR = w!(".md");
+    pub const EXT_TXT: PCWSTR = w!(".txt");
     const VERB: PCWSTR = w!("open");
 
     /// Deep link straight to our own page in Settings, rather than the generic
@@ -499,14 +607,14 @@ mod windows_assoc {
     /// first run for anyone without another Markdown editor installed. The flag
     /// says "ignore the Unknown ProgID, fail instead", which is what the empty
     /// length check below is written to expect.
-    fn assoc_string(kind: ASSOCSTR) -> Option<String> {
+    fn assoc_string(ext: PCWSTR, kind: ASSOCSTR) -> Option<String> {
         let mut len: u32 = 0;
         // First call sizes the buffer: with a null `pszOut` the function writes the
         // required character count (including the terminator) into `pcchOut` and
         // returns a non-success HRESULT to say so. The return value is therefore
         // deliberately ignored and only the length is trusted.
         unsafe {
-            let _ = AssocQueryStringW(ASSOCF_INIT_IGNOREUNKNOWN, kind, EXT, VERB, None, &mut len);
+            let _ = AssocQueryStringW(ASSOCF_INIT_IGNOREUNKNOWN, kind, ext, VERB, None, &mut len);
         }
         if len == 0 {
             return None;
@@ -519,7 +627,7 @@ mod windows_assoc {
             AssocQueryStringW(
                 ASSOCF_INIT_IGNOREUNKNOWN,
                 kind,
-                EXT,
+                ext,
                 VERB,
                 Some(PWSTR(buf.as_mut_ptr())),
                 &mut len,
@@ -535,8 +643,8 @@ mod windows_assoc {
         (!s.is_empty()).then_some(s)
     }
 
-    pub fn status() -> AssocStatus {
-        let Some(exe) = assoc_string(ASSOCSTR_EXECUTABLE) else {
+    pub fn status(ext: PCWSTR) -> AssocStatus {
+        let Some(exe) = assoc_string(ext, ASSOCSTR_EXECUTABLE) else {
             // No handler at all. Windows shows "How do you want to open this
             // file?" in this state, which is the "none" case exactly.
             return AssocStatus::new("none", None);
@@ -556,7 +664,7 @@ mod windows_assoc {
                 return AssocStatus::new("ours", None);
             }
         }
-        AssocStatus::new("other", assoc_string(ASSOCSTR_FRIENDLYAPPNAME))
+        AssocStatus::new("other", assoc_string(ext, ASSOCSTR_FRIENDLYAPPNAME))
     }
 
     /// Open Settings on our Default apps page. The user makes the change; we
@@ -579,5 +687,65 @@ mod windows_assoc {
             return Err("Windows could not open the Default apps settings page.".to_owned());
         }
         Ok(())
+    }
+}
+
+/// The desktop-entry escaping, which decides what lands in a file on Linux.
+///
+/// Ungated on purpose: the function is pure string work, so a build for any
+/// platform can check it. Every case here is a property its comment states,
+/// and none of them was pinned by anything until these three commands were
+/// read for the first time.
+#[cfg(test)]
+mod escape_tests {
+    use super::escape_exec_arg;
+
+    #[test]
+    fn doubles_a_percent_so_a_field_code_is_not_invented() {
+        assert_eq!(
+            escape_exec_arg("/home/a/PrivacyNotes%20arm64.AppImage").unwrap(),
+            "/home/a/PrivacyNotes%%20arm64.AppImage",
+        );
+    }
+
+    #[test]
+    fn escapes_what_a_quoted_argument_reserves() {
+        assert_eq!(escape_exec_arg(r#"/a/"b"/c"#).unwrap(), r#"/a/\"b\"/c"#);
+        assert_eq!(escape_exec_arg("/a/$b/c").unwrap(), "/a/\\$b/c");
+        assert_eq!(escape_exec_arg("/a/`b`/c").unwrap(), "/a/\\`b\\`/c");
+    }
+
+    #[test]
+    fn escapes_the_backslash_before_it_counts_percents() {
+        // The documented ordering: a backslash this inserts must not be seen by
+        // the percent pass.
+        assert_eq!(escape_exec_arg(r"/a\%b").unwrap(), r"/a\\%%b");
+    }
+
+    #[test]
+    fn an_entry_id_is_a_bare_filename() {
+        use super::is_desktop_entry_id;
+        assert!(is_desktop_entry_id("PrivacyNotes.desktop"));
+        assert!(is_desktop_entry_id("org.gnome.gedit.desktop"));
+        // The value comes out of the user's own configuration and is joined
+        // onto a directory, so an absolute id would replace the directory and a
+        // relative one would walk out of it.
+        assert!(!is_desktop_entry_id("/etc/passwd"));
+        assert!(!is_desktop_entry_id("/etc/shadow.desktop"));
+        assert!(!is_desktop_entry_id("../../../etc/hosts.desktop"));
+        assert!(!is_desktop_entry_id("..\\evil.desktop"));
+        assert!(!is_desktop_entry_id(""));
+        assert!(!is_desktop_entry_id(".desktop"));
+        assert!(!is_desktop_entry_id("notes.txt"));
+    }
+
+    #[test]
+    fn refuses_a_newline_rather_than_opening_a_new_key() {
+        // A desktop entry is line-oriented, so a path carrying a newline would
+        // end the Exec line and start whatever follows as another key. There is
+        // no escape for it in the format.
+        assert!(escape_exec_arg("/tmp/a\nExec=/bin/sh\n.AppImage").is_none());
+        assert!(escape_exec_arg("/tmp/a\rb.AppImage").is_none());
+        assert!(escape_exec_arg("/tmp/ordinary.AppImage").is_some());
     }
 }

@@ -1,8 +1,10 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { NoteType } from '@notes/shared';
 import type { AttachmentMeta } from './attachmentStore';
+import type { SyncBase } from './noteMerge';
 import { isDemoMode, DEMO_DB_NAME } from './demo';
 import { localSealMiddleware } from './localSeal';
+import type { LedgerRow } from './dayLedger';
 
 /**
  * Local shape of a note - decrypted, ready for the UI to use.
@@ -21,6 +23,9 @@ import { localSealMiddleware } from './localSeal';
  * - `starred = 1`      → marked favorite; appears in the Starred view.
  * - `locked = 1`       → Pro: note is read-only. Toggle off in note options to edit again.
  * - `pinProtected = 1` → Pro: note is gated behind the user's PIN.
+ * - `archived = 1`     → kept but out of sight; listed only in the Archive
+ *                         view. Absent on rows written before the field, so
+ *                         read it as `archived === 1`, never `=== 0`.
  */
 export interface LocalNote {
   id: string;
@@ -41,15 +46,43 @@ export interface LocalNote {
   trackers?: Record<string, unknown>;
   /** Pro: id of the folder this note lives in, or null when unfiled. */
   folderId: string | null;
+  /** Not indexed, so the field needed no schema version. */
+  archived?: number;
+  /**
+   * 1 when this device took the row from a payload with no `archived` (a
+   * writer before Archive) and held no row of its own to keep the flag
+   * from. Its writes then leave the flag out instead of stating "not
+   * archived", so a device that holds the flag restates it. Cleared once the
+   * flag is set here or a payload states it. Not indexed.
+   */
+  archivedUnknown?: 1;
+  /**
+   * When the title, the body or a tracker value last changed (ISO instant):
+   * the date the lists call "Modified". `updatedAt` stays the sync clock.
+   * Plain at rest like `updatedAt`, and not indexed, so it needed no schema
+   * version. Absent on rows written before the field: read it through
+   * `editedAtOf()` in notesViewUtils.
+   */
+  editedAt?: string;
   /**
    * Nonce (base64) of the server generation this row is known to match -
    * recorded on push success and on pull apply. Lets the pull tell its own
    * echo from a foreign row carrying an EQUAL updated_at stamp (#156):
    * same stamp + same nonce = our own push coming back, skip; same stamp +
    * different nonce = another device won an equal-stamp race, apply it.
-   * Absent on rows that never synced (pre-upgrade rows included).
+   * The per-note push is guarded by it. Absent on rows that never synced
+   * from this device, whose push always meets the conflict read.
    */
   syncedNonce?: string;
+  /**
+   * What this device last synced of the note, field by field (noteMerge.ts),
+   * bound to the generation `syncedNonce` names; the conflict path merges
+   * against it. Recorded wherever `syncedNonce` is. Written in this plain
+   * form, but at rest the seal keeps it in an envelope beside the row
+   * (localSeal.ts), so a read finds it only through `noteBaseOf` in sync.ts.
+   * Absent on rows that never synced from this device.
+   */
+  syncBase?: SyncBase;
 }
 
 /**
@@ -72,12 +105,17 @@ interface ImageDedup {
   uuid: string;
   /** Encrypted blob size in bytes (for image_bytes quota tracking). */
   encryptedSize?: number;
-  /** 1 = blob cached locally but not yet uploaded to Supabase. */
+  /** 1 = cached locally and not yet uploaded; 2 = the server refused it for
+   *  good, so the cache is its only copy and the GC keeps it while the retry
+   *  sweep skips it; 0 or absent = uploaded. */
   pendingUpload?: number;
   /** 1 = pending upload known not to fit the storage quota. The retry
    *  sweep skips it without touching the wire and the status surfaces
    *  say "doesn't fit" instead of "uploading" (backlog #143). */
   quotaBlocked?: number;
+  /** When an instance claimed the removal of its own just-uploaded object;
+   *  a settle does not clear the row while it stands (blobUploadRecovery.ts). */
+  removingAt?: number;
 }
 
 /**
@@ -99,10 +137,14 @@ interface AttachmentDedup {
   hash: string;
   uuid: string;
   encryptedSize?: number;
-  /** 1 = blob cached locally but not yet uploaded to Supabase. */
+  /** 1 = cached locally and not yet uploaded; 2 = the server refused it for
+   *  good, so the cache is its only copy and the GC keeps it while the retry
+   *  sweep skips it; 0 or absent = uploaded. */
   pendingUpload?: number;
   /** 1 = pending upload known not to fit the storage quota - see ImageDedup. */
   quotaBlocked?: number;
+  /** A removal claim - see ImageDedup. */
+  removingAt?: number;
 }
 
 /**
@@ -133,6 +175,8 @@ interface EditorDocCacheEntry {
   body: string;
   /** The ProseMirror doc as TipTap JSON. */
   json: unknown;
+  /** EDITOR_PARSE_VERSION of the parse that made `json`; absent on older rows. */
+  parser?: number;
   /** Epoch ms, for pruning the oldest rows. */
   cachedAt: number;
 }
@@ -145,7 +189,7 @@ interface EditorDocCacheEntry {
  * calls. So demo keeps its snapshots here, in the throwaway demo database,
  * in the same plaintext form the notes themselves are stored in locally.
  * They die with the tab session like everything else in that database.
- * Spec: ops/docs/pro-features.md (note history: Pro-only, 20 versions per note)
+ * Spec: ops/docs/pro-features.md (note history: Pro-only, 50 versions per note)
  */
 interface DemoNoteVersion {
   id: string;
@@ -155,6 +199,10 @@ interface DemoNoteVersion {
   title: string;
   body: string;
   tags: string[];
+  /** A login's extras, as noteVersions.ts records them. Unindexed. */
+  login?: unknown;
+  /** A journal entry's tracker values, as noteVersions.ts records them. Unindexed. */
+  trackers?: Record<string, unknown>;
 }
 
 /**
@@ -162,7 +210,7 @@ interface DemoNoteVersion {
  * eviction. First tenant: the pubkey-owner mirror (`ownerPubkey`) -
  * the localStorage owner marker can be evicted while the notes in
  * IndexedDB survive, and that asymmetry made the owner-unknown wipe
- * destroy the user's own credentials (session audit 2026-08-25).
+ * destroy the user's own credentials.
  * Second tenant: the phrase wrap key (`phraseWrapKey`) - a
  * NON-EXTRACTABLE CryptoKey persisted as an object via structured
  * clone, never as exported bytes (phraseAtRest.ts). No schema change:
@@ -184,12 +232,27 @@ class NotesDb extends Dexie {
   blobGC!: EntityTable<BlobGCEntry, 'uuid'>;
   editorDocCache!: EntityTable<EditorDocCacheEntry, 'noteId'>;
   kv!: EntityTable<KvEntry, 'key'>;
+  dayLedger!: EntityTable<LedgerRow, 'date'>;
 
   constructor(raw = false) {
     // Demo mode uses a separate, throwaway database so demo data never
     // shares storage with a real install. See demo.ts.
     super(isDemoMode() ? DEMO_DB_NAME : 'privacynotes');
 
+    // Sealed rows (localSeal.ts) can sit in a database at version 13 or later:
+    // the seal shipped with no version bump. Every upgrade declared after 13
+    // runs when such a database opens, and the app opens it at boot, before
+    // the phrase has given the local data key. So an upgrade after 13 never
+    // reads or backfills the rows of notes, editorDocCache, imageCache or
+    // attachmentCache: through the seal middleware the read throws
+    // LocalSealKeyMissing and the app cannot open its database, and on the raw
+    // rows the sealed fields are absent, and a default written beside the
+    // blob is dropped by the next sealed write. The v2, v5, v7, v8 and v9
+    // upgrades read or backfill content and are safe only because they run
+    // below 13. A change to sealed
+    // content runs after unlock instead, the way the sweep does.
+    // Test: tests/dbUpgradeSealed.test.ts
+    // Spec: ops/docs/archive/local-at-rest.md (section 5.1)
     // v1 - original schema.
     this.version(1).stores({
       notes: 'id, updatedAt, dirty, deleted',
@@ -390,12 +453,28 @@ class NotesDb extends Dexie {
       kv: 'key',
     });
 
+    // v14 - the day ledger (dayLedger.ts): counts per local day, never note
+    // text, so it is not sealed. New table, nothing to back-fill.
+    // Spec: ops/docs/archive/wellness-statistics.md (section 20)
+    this.version(14).stores({
+      notes: 'id, updatedAt, dirty, deleted, trashed, starred, type, folderId',
+      imageCache: 'id, cachedAt',
+      imageDedup: 'hash, uuid',
+      attachmentCache: 'id, cachedAt',
+      attachmentDedup: 'hash, uuid',
+      blobGC: 'uuid, enqueuedAt',
+      editorDocCache: 'noteId, cachedAt',
+      demoVersions: 'id, noteId, createdAt',
+      kv: 'key',
+      dayLedger: 'date',
+    });
+
     // The at-rest seal layer. Read surfaces open sealed rows wherever
     // they exist; writes stay plaintext until the writer release turns
     // sealed writes on. Inert in demo mode. The raw escape hatch below
     // skips it for exactly two callers with a legitimate need to see
     // stored bytes: the sweep's scan and its conversions.
-    // Spec: ops/docs/plans/local-at-rest.md (section 3.3)
+    // Spec: ops/docs/archive/local-at-rest.md (section 3.3)
     if (!raw) this.use(localSealMiddleware());
   }
 }

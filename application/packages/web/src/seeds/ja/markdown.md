@@ -59,21 +59,28 @@ title: Markdownでここまでできます
 コールアウトは、読み手に見落としてほしくないことを入れる色つきの箱です。
 
 > [!tip]+ ヒント
-> コールアウトの見出しをクリックすると閉じられます。
+> アイコンをクリックすると閉じられます。
 
 > [!warning]+ 注意
 > 種類ごとに色とアイコンが違います。
 
 > [!danger]+ 危険
-> 全部で9種類あります。**挿入**メニューに一覧があります。
+> 種類はたくさんあります。**挿入**メニューに一覧があります。
+
+> [!fold]- 折りたたみ
+> 枠も色もなく、開くまで邪魔にならないテキストです。
 
 ## 引用
 
 > 引用は余白から一段入って、横に色つきの線がつきます。
 
+## 脚注
+
+脚注を使うと、出典や補足を本文の外に置けます。[^1] 単語のあとに `[^1]` と入力するか、**挿入**メニューで**脚注**を選びます。小さな番号をクリックすると脚注に移動します。
+
 ## コード
 
-コードは字下げがそのまま残り、言語ごとに色がつきます。
+コードは字下げがそのまま残り、言語ごとに色がつきます。ブロックの上にある名前がその言語です。クリックすると別の言語を選べます。
 
 ```js
 export function seal(note, key) {
@@ -86,6 +93,47 @@ export function seal(note, key) {
 def rolling_mean(values, window):
     return [sum(values[i:i + window]) / window
             for i in range(len(values) - window + 1)]
+```
+
+長いブロックは折りたたまれた状態で開くので、ノートの続きがすぐそこにあります。下のボタンを押すと全行が表示されます。
+
+```js
+const WORDS_PER_MINUTE = 200;
+
+export function readingStats(markdown) {
+  const text = markdown
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[#*_~`>|-]/g, ' ');
+
+  const words = text.split(/\s+/).filter(Boolean);
+  const headings = markdown.match(/^#{1,6} /gm) ?? [];
+  const tasks = markdown.match(/^\s*- \[[ x]\] /gm) ?? [];
+  const done = tasks.filter((task) => task.includes('[x]'));
+
+  return {
+    words: words.length,
+    minutes: Math.max(1, Math.round(words.length / WORDS_PER_MINUTE)),
+    headings: headings.length,
+    tasks: tasks.length,
+    done: done.length,
+  };
+}
+
+export function summary(stats) {
+  const parts = [`${stats.words} words`, `${stats.minutes} min read`];
+  if (stats.headings > 0) {
+    parts.push(`${stats.headings} sections`);
+  }
+  if (stats.tasks > 0) {
+    parts.push(`${stats.done} of ${stats.tasks} tasks done`);
+  }
+  return parts.join(' · ');
+}
+
+export function isLongRead(stats) {
+  return stats.minutes >= 10;
+}
 ```
 
 文中の短いコードは、代わりにこう見えます: `これ`。
@@ -109,8 +157,14 @@ $$i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi$$
 - ウェブリンクはサイトを開きます: [privacynotes.app](https://privacynotes.app/ja)
 - ノートリンクは自分の別のノートを開きます: [[ノートはどう守られているか]]
 
-どちらもツールバーにボタンがあります。鎖のアイコンがウェブリンクです。その隣のボタンはノートの一覧を出すので、そこから選びます。
+どちらもツールバーにボタンがあります。鎖のアイコンがウェブリンクです。角かっこのボタンはノートリンクで、ノートの一覧を出すので、そこから選びます。`[[` と入力しても同じです。
+
+ノートリンクに表示する文字は、ノートのタイトルでなくてもかまいません。タイトル、縦線、ページに表示したい言葉の順に入力します: [[ノートはどう守られているか|この言葉]] でそのノートが開きます。
+
+ノートリンクは、ノートを見出しの位置で開くこともできます。タイトルの後に `#` を入力して見出しを選びます: [[ノートはどう守られているか#鍵を誰が持つか]] は、そのノートを鍵の節で開きます。アウトラインの見出しにあるリンクアイコンで、このリンクをコピーすることもできます。
 
 ---
 
 *すでにMarkdownを書いているなら、そのまま打てば打ちながら整います。どのノートでも、右下の**Markdownを表示**から元のテキストを見られます。*
+
+[^1]: これが脚注です。横の矢印で上に戻れます。

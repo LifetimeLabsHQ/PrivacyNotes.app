@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { TFunction } from 'i18next';
 import { useAuth } from './auth';
 import type { DeviceRow } from './devices';
+import { shortDeviceId } from './deviceSlots';
+import { formatRelative } from './intlFormat';
 import { isPaddleConfigured, isBetaPricing } from './paddle';
 import { startProCheckout } from './billing';
 import { PRO_PRICE, EARLY_PRICE } from './pricing';
 import { PhraseView } from './security/PhraseView';
+import { Modal } from './ui';
 
 /**
  * Blocking modal shown immediately after sign-in when the free-tier
@@ -33,7 +35,7 @@ export function DeviceLimitModal() {
   // down loses the vault on one keypress. That is the exact
   // Escape-to-wipe pattern backlog #121 removed from
   // SessionExpiredModal; the explicit button below (next to the phrase
-  // backup link) is the only way out. Session audit 2026-08-25.
+  // backup link) is the only way out.
 
   // A paid checkout whose webhook outlives refreshProStatus's ~15 s poll
   // dispatches pro-activation-pending - and the only other listener
@@ -85,21 +87,15 @@ export function DeviceLimitModal() {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center p-4 z-50">
-      <div className="bg-surface-2 border border-divider text-pn rounded-lg max-w-lg w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
-        <div>
-          <h2 className="text-lg font-semibold mb-1">
-            {t('deviceLimit.title')}
-          </h2>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            {t('deviceLimit.body', { limit: auth.limit, count: activeDevices.length })}
-          </p>
-        </div>
+    <Modal title={t('deviceLimit.title')} className="max-w-lg p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+        <p className="text-sm text-pn-muted leading-relaxed">
+          {t('deviceLimit.body', { limit: auth.limit, count: activeDevices.length })}
+        </p>
 
         {/* Active devices */}
         {activeDevices.length > 0 && (
           <div className="space-y-2">
-            <div className="text-[11px] uppercase tracking-wide text-neutral-500 dark:text-neutral-600">
+            <div className="text-[11px] uppercase tracking-wide text-pn-muted">
               {t('deviceLimit.activeDevices')}
             </div>
             {activeDevices.map((d) => (
@@ -118,20 +114,20 @@ export function DeviceLimitModal() {
         {/* Recently removed devices - informational, do not occupy a slot. */}
         {cooldownDevices.length > 0 && (
           <div className="space-y-2">
-            <div className="text-[11px] uppercase tracking-wide text-neutral-500 dark:text-neutral-600">
+            <div className="text-[11px] uppercase tracking-wide text-pn-muted">
               {t('deviceLimit.recentlyRemoved')}
             </div>
             {cooldownDevices.map((d) => (
               <div
                 key={d.device_id}
-                className="flex items-center justify-between gap-3 rounded-md border border-neutral-200/60 dark:border-neutral-800/60 px-3 py-2 opacity-60"
+                className="flex items-center justify-between gap-3 rounded-md border border-divider px-3 py-2 opacity-60"
               >
                 <div className="min-w-0">
-                  <div className="text-sm font-medium truncate text-neutral-500 dark:text-neutral-500">
+                  <div className="text-sm font-medium truncate text-pn-muted">
                     {d.device_name}
                   </div>
-                  <div className="text-[11px] text-neutral-400 dark:text-neutral-600">
-                    {t('deviceLimit.removedAt', { when: formatRelative(d.revoked_at!, t) })}
+                  <div className="text-[11px] text-pn-muted">
+                    {t('deviceLimit.removedAt', { when: formatRelative(d.revoked_at!) })}
                   </div>
                 </div>
               </div>
@@ -156,12 +152,12 @@ export function DeviceLimitModal() {
         {configured ? (
           <div className="rounded-md border border-accent/40 bg-accent/5 dark:bg-accent/10 p-4 space-y-2">
             <div className="text-sm font-medium">{t('deviceLimit.upgradeHeading')}</div>
-            <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+            <p className="text-xs text-pn-muted leading-relaxed">
               {t('deviceLimit.upgradeBody')}
             </p>
             <button
               type="button"
-              className="w-full rounded-md bg-accent hover:bg-accent-hover text-white text-sm font-medium px-3 py-2 transition disabled:opacity-50"
+              className="w-full rounded-md bg-accent-fill hover:bg-accent-fill-hover text-white text-sm font-medium px-3 py-2 transition disabled:opacity-50"
               // Also locked while a paid checkout awaits its webhook: the
               // one-time Pro product has no server-side dedupe, so a live
               // button here invites a second charge.
@@ -196,16 +192,16 @@ export function DeviceLimitModal() {
           // Paddle isn't configured (e.g. self-host, dev environment).
           // Without this fallback the modal is a dead end: revoke or
           // sign out, no third option. See gap #24.
-          <div className="rounded-md border border-divider bg-neutral-50 dark:bg-neutral-900/40 p-4 space-y-2">
+          <div className="rounded-md border border-divider bg-surface-1 p-4 space-y-2">
             <div className="text-sm font-medium">{t('deviceLimit.needMoreHeading')}</div>
-            <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+            <p className="text-xs text-pn-muted leading-relaxed">
               {t('deviceLimit.needMoreBody')}
             </p>
             <a
               href="https://lifetimelabs.dev/contact/"
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full text-center rounded-md border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-sm font-medium px-3 py-2 transition"
+              className="block w-full text-center rounded-md border border-divider hover:bg-pn/5 text-sm font-medium px-3 py-2 transition"
             >
               {t('deviceLimit.contactSupport')}
             </a>
@@ -246,13 +242,12 @@ export function DeviceLimitModal() {
         <button
           type="button"
           onClick={() => void signOut({ keepUnsyncedNotes: true })}
-          className="w-full rounded-md border border-neutral-300 hover:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-900 text-sm px-3 py-2 transition"
+          className="w-full rounded-md border border-divider hover:bg-pn/5 text-sm px-3 py-2 transition"
           disabled={busy !== null}
         >
           {t('deviceLimit.signOut')}
         </button>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -275,14 +270,15 @@ function DeviceRowView({
       <div className="min-w-0">
         <div className="text-sm font-medium truncate">
           {device.device_name}
+          <span className="ms-2 font-mono text-[11px] font-normal text-pn-muted">{shortDeviceId(device.device_id)}</span>
           {isCurrent && (
             <span className="ms-2 text-[10px] uppercase tracking-wide text-accent">
               {t('deviceLimit.thisDevice')}
             </span>
           )}
         </div>
-        <div className="text-[11px] text-neutral-500 dark:text-neutral-500">
-          {t('deviceLimit.lastActive', { platform: device.platform, when: formatRelative(device.last_seen_at, t) })}
+        <div className="text-[11px] text-pn-muted">
+          {t('deviceLimit.lastActive', { platform: device.platform, when: formatRelative(device.last_seen_at) })}
         </div>
       </div>
       <button
@@ -295,17 +291,4 @@ function DeviceRowView({
       </button>
     </div>
   );
-}
-
-function formatRelative(iso: string, t: TFunction): string {
-  const then = new Date(iso).getTime();
-  if (Number.isNaN(then)) return iso;
-  const diff = Date.now() - then;
-  const m = Math.floor(diff / 60_000);
-  if (m < 1) return t('deviceLimit.relative.justNow');
-  if (m < 60) return t('deviceLimit.relative.minutes', { count: m });
-  const h = Math.floor(m / 60);
-  if (h < 24) return t('deviceLimit.relative.hours', { count: h });
-  const d = Math.floor(h / 24);
-  return t('deviceLimit.relative.days', { count: d });
 }

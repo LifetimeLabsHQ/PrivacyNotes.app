@@ -1,14 +1,17 @@
 /**
  * Drag-to-resize for the sidebar and notes-list panes (GitHub #211).
  *
- * The EXPANDED collapse strips double as drag handles: pointer down
- * plus movement under the threshold is a click (collapse, exactly the
- * behaviour the strips always had), movement past it is a resize that
+ * The EXPANDED collapse strips double as drag handles: pointer down and
+ * release with movement under the threshold is a click (collapse, exactly
+ * the behaviour the strips always had), movement past it is a resize that
  * clamps to [min, max] - dragging below the minimum just pins at min.
  * Arrow keys resize in 16px steps when the strip is focused, Enter/Space
- * collapses, Escape cancels an in-flight drag (width snaps back). Collapse
- * is click/keyboard ONLY: drag-to-collapse (snap past the minimum) was
- * tried and cut as twitchy (design call, #211). The COLLAPSED expand
+ * collapses, Escape cancels an in-flight drag (width snaps back). A drag
+ * that carries the pointer well past the limit on the collapsing side is
+ * magnetic: the badge names the collapse, and a RELEASE there collapses the
+ * pane. The width never jumps during the drag, it stays at the limit, so
+ * the snap only happens once and on release; the sidebar divider between
+ * Content and the tags works the same way (useSidebarSplit.ts). The COLLAPSED expand
  * strips stay plain click-to-expand buttons with no resize affordance: a
  * drag there would act on an unmounted pane with no visual feedback, so
  * advertising it would mislead (design call, #211).
@@ -20,6 +23,11 @@
  * (e.g. the strip unmounting mid-drag - Cmd+Shift+F zen during a drag),
  * and Escape cancels. Without this, one missed pointerup left the global
  * col-resize cursor stuck until the next strip click (first-round bug).
+ * The four are not equal, though: only a RELEASE can collapse. A pointer
+ * the platform cancels or a capture that dies ends the drag and leaves
+ * the pane alone, because neither is a click - a touch device cancels
+ * the finger resting on the strip every time it rotates, and a collapse
+ * there is both unasked for and persisted.
  *
  * Perf contract: during a drag the width is written imperatively as a CSS
  * variable on NotesView's root div (one style write per move) plus the
@@ -34,28 +42,28 @@
  * keeps its session-only xl reseed; the stored width simply applies
  * whenever the pane is expanded.
  *
- * Spec: ops/docs/design-decisions.md (pane resize), ops/docs/ui-patterns.md section 56
+ * Spec: ops/docs/design-decisions.md (pane resize), ops/docs/archive/ui-patterns.md section 56
  */
 import { useEffect, useRef, type RefObject } from 'react';
-import { hasOpenOverlay, closeTopOverlay } from './useEscapeToClose';
+import { closeTopAnchoredOverlay } from './useEscapeToClose';
 
-// Clamps. Sidebar min equals the current w-60: the TagsRail footer-pill
-// width math is tuned to exactly 240px (ui-patterns section 46), so the
-// sidebar only grows. The vw caps guarantee the editor keeps a usable
-// column at every window size; they are duplicated in the pane className
-// strings in NotesView (min(var(...), 420px, 30vw) / min(var(...), 620px, 40vw)).
+// Clamps. The sidebar narrows to 200: below 230 the `pn-sb-wide` extras (the
+// version badge, the Jump to shortcut, the tab icons) leave through a
+// container query in index.css, so every label keeps its words. The vw caps
+// guarantee the editor keeps a usable column at every window size; they are
+// duplicated in the pane className strings in NotesView
+// (min(var(...), 420px, 30vw) / min(var(...), 620px, 40vw)).
 // Spec: ops/docs/design-decisions.md (pane resize clamps)
 export const SIDEBAR_WIDTH_DEFAULT = 240;
-export const SIDEBAR_WIDTH_MIN = 240;
+export const SIDEBAR_WIDTH_MIN = 200;
 export const SIDEBAR_WIDTH_MAX = 420;
 export const SIDEBAR_VIEWPORT_CAP = 0.3;
 export const LIST_WIDTH_DEFAULT = 288;
-// The list floor is the SelectionToolbar's intrinsic width, not a taste
-// call: px-4 padding (32) + the exit X (32) + gap-3 (12) + five 36px
-// action buttons with four 6px gaps (204) = 280. Both toolbar clusters
-// are shrink-0, so anything narrower clipped the last action - the
-// delete button - straight off the pane edge.
-export const LIST_WIDTH_MIN = 280;
+// The list floor is the narrowest row that still reads: a title of a few
+// words, one line of preview, the date. The SelectionToolbar no longer sets
+// it: its actions fold into a "more" menu as the pane narrows, and at 200 the
+// row holds the exit X, the menu, Move and Delete.
+export const LIST_WIDTH_MIN = 200;
 export const LIST_WIDTH_MAX = 620;
 export const LIST_VIEWPORT_CAP = 0.4;
 // Docked grid mode (>=1400px with a note open) inverts the flex roles:
@@ -67,7 +75,7 @@ export const LIST_VIEWPORT_CAP = 0.4;
 // mode already ships ~456px editors at the md breakpoint - the old 830
 // floor made the divider barely draggable. GRID_DOCK_MIN is 320 so two
 // tiles sit side by side (the pn-list container query flips to 2 columns
-// at 320); 240 + 24 + 320 + 480 = 1064 < 1400, so the full floor holds at
+// at 320); 200 + 24 + 320 + 480 = 1024 < 1400, so the full floor holds at
 // every docked window (the min() formula in --pn-grid-min stays as a
 // guard for future constant changes). The system is closed: the sidebar's
 // docked cap subtracts the editor MINIMUM and the full grid floor, while
@@ -87,8 +95,17 @@ export const GRID_DOCK_MIN = 320;
 // Spec: ops/docs/design-decisions.md (pane resize clamps)
 const STRIP_W = 12;
 export const STRIPS_W = STRIP_W * 2;
+// Derived reserves for the docked-grid clamp system. DOCK_SIDEBAR_RESERVE caps
+// the sidebar (strips + full grid floor + editor min); DOCK_GRID_RESERVE is what
+// the grid-floor formula subtracts (sidebar min + strips + editor min).
+// Spec: ops/docs/design-decisions.md (pane resize clamps)
+export const DOCK_SIDEBAR_RESERVE = STRIPS_W + GRID_DOCK_MIN + EDITOR_DOCK_MIN;
+export const DOCK_GRID_RESERVE = SIDEBAR_WIDTH_MIN + STRIPS_W + EDITOR_DOCK_MIN;
 const DRAG_THRESHOLD_PX = 4;
 const KEY_STEP_PX = 16;
+// How far past the limit the pointer travels before a release collapses.
+// Spec: ops/docs/archive/ui-patterns.md section 56
+const SNAP_PX = 56;
 
 type DragState = {
   pointerId: number;
@@ -96,6 +113,8 @@ type DragState = {
   startWidth: number;
   moved: boolean;
   lastWidth: number | null;
+  /** The pointer is past the limit: a release collapses. */
+  snap: boolean;
   /** The strip element captured at pointerdown - cleanup must not depend
       on a later event delivering the same currentTarget. */
   el: HTMLElement;
@@ -128,6 +147,12 @@ export function usePaneResize(cfg: {
   width: number;
   onCommitWidth: (w: number) => void;
   onCollapse: () => void;
+  /** The badge text while a release would collapse the pane. */
+  snapLabel: string;
+  /** Which end collapses: 'min' for a pane that shrinks away (sidebar,
+      list), 'max' when growing this pane squeezes out its neighbour (the
+      docked editor, whose growth collapses the grid). */
+  snapAt: 'min' | 'max';
 }): { stripProps: PaneResizeStripProps } {
   const dragRef = useRef<DragState | null>(null);
 
@@ -153,6 +178,7 @@ export function usePaneResize(cfg: {
     dragRef.current = null;
     drag.removeWindowListeners();
     delete drag.el.dataset.dragging;
+    delete drag.el.dataset.snap;
     cfg.rootRef.current?.classList.remove('pn-col-dragging');
     const b = cfg.badgeRef.current;
     if (b) delete b.dataset.on;
@@ -164,13 +190,23 @@ export function usePaneResize(cfg: {
     return drag;
   };
 
-  /** Normal end: commit the width (or treat as click if never moved). */
-  const finishDrag = () => {
+  /** Normal end: commit the width (or treat as click if never moved).
+      A press that never moved collapses only when the pointer was
+      RELEASED. A pointer the platform cancels is not a click, and on
+      touch the platform cancels the finger resting on the strip every
+      time the device rotates, where a collapse is both unasked for and
+      persisted. Termination is unconditional either way; only the
+      collapse waits for a real release. */
+  const finishDrag = (released: boolean) => {
     const drag = teardown();
     if (!drag) return;
     if (!drag.moved) {
       // Clean click: the strip's historical collapse toggle.
-      cfg.onCollapse();
+      if (released) cfg.onCollapse();
+      return;
+    }
+    if (drag.snap) {
+      if (released) cfg.onCollapse();
       return;
     }
     if (drag.lastWidth !== null) cfg.onCommitWidth(drag.lastWidth);
@@ -187,7 +223,7 @@ export function usePaneResize(cfg: {
   // mid-drag (view switch, zen), end it gracefully.
   const finishRef = useRef(finishDrag);
   finishRef.current = finishDrag;
-  useEffect(() => () => finishRef.current(), []);
+  useEffect(() => () => finishRef.current(false), []);
 
   const onPointerDown = (e: React.PointerEvent<HTMLElement>) => {
     if (e.button !== 0 || dragRef.current) return;
@@ -197,7 +233,7 @@ export function usePaneResize(cfg: {
     // (focus steal, release outside the window, DOM churn) must still
     // end the drag, or the col-resize cursor stays stuck globally.
     const onWinEnd = (ev: PointerEvent) => {
-      if (dragRef.current?.pointerId === ev.pointerId) finishDrag();
+      if (dragRef.current?.pointerId === ev.pointerId) finishDrag(ev.type === 'pointerup');
     };
     const onWinKey = (ev: KeyboardEvent) => {
       if (ev.key === 'Escape') {
@@ -214,6 +250,7 @@ export function usePaneResize(cfg: {
       startWidth: cfg.width,
       moved: false,
       lastWidth: null,
+      snap: false,
       el,
       removeWindowListeners: () => {
         window.removeEventListener('pointerup', onWinEnd, true);
@@ -239,17 +276,22 @@ export function usePaneResize(cfg: {
       drag.moved = true;
       // Anchored popovers only reposition on window resize, which a pane
       // drag never fires - close them instead of letting them float.
-      if (hasOpenOverlay()) closeTopOverlay();
+      closeTopAnchoredOverlay();
       cfg.rootRef.current?.classList.add('pn-col-dragging');
       drag.el.dataset.dragging = '1';
     }
-    const w = clampWidth(drag.startWidth + dx);
+    const raw = drag.startWidth + dx;
+    const w = clampWidth(raw);
+    drag.snap = cfg.snapAt === 'min' ? raw < cfg.min - SNAP_PX : raw > cfg.getMax() + SNAP_PX;
+    if (drag.snap) drag.el.dataset.snap = '1';
+    else delete drag.el.dataset.snap;
     drag.lastWidth = w;
     setVar(w);
-    badge(e, `${w}px`);
+    badge(e, drag.snap ? cfg.snapLabel : `${w}px`);
   };
 
-  const onEnd = () => finishDrag();
+  const onRelease = () => finishDrag(true);
+  const onAbandon = () => finishDrag(false);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -267,10 +309,67 @@ export function usePaneResize(cfg: {
     stripProps: {
       onPointerDown,
       onPointerMove,
-      onPointerUp: onEnd,
-      onPointerCancel: onEnd,
-      onLostPointerCapture: onEnd,
+      onPointerUp: onRelease,
+      onPointerCancel: onAbandon,
+      onLostPointerCapture: onAbandon,
       onKeyDown,
+    },
+  };
+}
+
+/**
+ * A collapsed pane's strip: a click expands it, and so does a drag outward
+ * past the snap distance, released. The pane is not mounted, so there is no
+ * width to show during the drag; the strip's accent line says "let go and it
+ * opens", and the pane opens at its stored width.
+ * Spec: ops/docs/archive/ui-patterns.md section 56
+ */
+export function useExpandDrag(onExpand: () => void, direction: 1 | -1) {
+  const drag = useRef<{ pointerId: number; startX: number; el: HTMLElement; ready: boolean } | null>(null);
+  const dragged = useRef(false);
+  const end = (release: boolean) => {
+    const d = drag.current;
+    if (!d) return;
+    drag.current = null;
+    delete d.el.dataset.dragging;
+    try {
+      d.el.releasePointerCapture(d.pointerId);
+    } catch {
+      /* capture already gone */
+    }
+    if (release && d.ready) {
+      dragged.current = true;
+      onExpand();
+    }
+  };
+  return {
+    onPointerDown: (e: React.PointerEvent<HTMLElement>) => {
+      if (e.button !== 0) return;
+      dragged.current = false;
+      drag.current = { pointerId: e.pointerId, startX: e.clientX, el: e.currentTarget, ready: false };
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        /* the release still ends the drag */
+      }
+    },
+    onPointerMove: (e: React.PointerEvent<HTMLElement>) => {
+      const d = drag.current;
+      if (!d || d.pointerId !== e.pointerId) return;
+      d.ready = (e.clientX - d.startX) * direction > SNAP_PX / 2;
+      if (d.ready) d.el.dataset.dragging = '1';
+      else delete d.el.dataset.dragging;
+    },
+    onPointerUp: () => end(true),
+    onPointerCancel: () => end(false),
+    onLostPointerCapture: () => end(false),
+    onClick: () => {
+      // The release of a drag already expanded; its click must not act twice.
+      if (dragged.current) {
+        dragged.current = false;
+        return;
+      }
+      onExpand();
     },
   };
 }

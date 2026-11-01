@@ -2,8 +2,7 @@
   "dismiss": "Dispensar",
   "close": "Fechar",
   "moveBanner": {
-    "title": "O app está de mudança para use.privacynotes.app",
-    "body": "Mova esta sessão agora - leva poucos segundos e suas notas vão junto.",
+    "bodySignIn": "Entre lá com a sua frase de recuperação ou com \"{{scanQr}}\".",
     "cta": "Mudar agora",
     "syncing": "Sincronizando suas notas…",
     "error": "Não foi possível sincronizar tudo agora. Verifique sua conexão e tente de novo.",
@@ -15,8 +14,9 @@
   },
   "moveScreen": {
     "title": "O app se mudou para use.privacynotes.app",
-    "body": "Mova este dispositivo agora - leva poucos segundos e suas notas vão junto. Nada é apagado aqui.",
+    "bodySignIn": "Entre lá com a sua frase de recuperação de 12 palavras ou com \"{{scanQr}}\". Este dispositivo sincroniza primeiro, então todas as suas notas estarão esperando por você lá, e nada é apagado aqui.",
     "openNotes": "Abra suas notas aqui uma vez para resolver isso",
+    "showPhrase": "Mostrar minha frase de recuperação",
     "website": "Ver o site em vez disso"
   },
   "quota": {
@@ -54,17 +54,47 @@
     "unsyncedWarn_other": "{{count}} notas neste dispositivo ainda não foram sincronizadas. Elas serão perdidas para sempre se não puderem ser enviadas ao sair.",
     "unsyncedKept_one": "1 nota neste dispositivo ainda não foi sincronizada. Ela fica neste dispositivo e sincroniza quando você entrar de novo.",
     "unsyncedKept_other": "{{count}} notas neste dispositivo ainda não foram sincronizadas. Elas ficam neste dispositivo e sincronizam quando você entrar de novo.",
+    "unsyncedFilesWarn_one": "{{count}} arquivo neste dispositivo não foi sincronizado. Ao sair, ele é excluído para sempre.",
+    "unsyncedFilesWarn_other": "{{count}} arquivos neste dispositivo não foram sincronizados. Ao sair, eles são excluídos para sempre.",
     "dontRemind": "Não me lembrar de novo",
     "showPhrase": "Não, mostrar frase",
-    "confirm": "Sim, sair"
+    "confirm": "Sim, sair",
+    "stay": "Continuar conectado",
+    "signOutLose_one": "Sair e perder {{count}} nota",
+    "signOutLose_other": "Sair e perder {{count}} notas",
+    "signOutLoseFiles_one": "Sair e perder {{count}} arquivo",
+    "signOutLoseFiles_other": "Sair e perder {{count}} arquivos",
+    "signOutLoseBoth_one": "Sair e perder {{count}} nota e {{files}}",
+    "signOutLoseBoth_other": "Sair e perder {{count}} notas e {{files}}",
+    "fileCount_one": "{{count}} arquivo",
+    "fileCount_other": "{{count}} arquivos",
+    "neverBackedUp_one": "Só neste dispositivo:",
+    "neverBackedUp_other": "Só neste dispositivo:",
+    "moreNotes": "e mais {{count}}",
+    "appLockHint": "Dispositivo compartilhado? Ative o bloqueio do app em Configurações > Segurança."
   },
   "burnShareModal": {
     "title": "Compartilhar e Queimar Após Ler",
-    "body": "<lead>Sua nota original não será excluída.</lead> Ela continua segura na sua conta. O burn link é uma cópia criptografada separada que se autodestrói depois de lida. O link expira após 24 horas, aberto ou não.",
+    "body": "<lead>Sua nota original não será excluída.</lead> Ela continua segura na sua conta. O burn link é uma cópia criptografada separada que se autodestrói depois de lida.",
+    "readTime": "Tempo de leitura",
+    "readTimeHint": "Depois some da tela",
+    "lifetime": "O link expira",
+    "lifetimeHint": "Se ninguém abrir",
+    "minutes_one": "{{count}} minuto",
+    "minutes_other": "{{count}} minutos",
+    "hours_one": "{{count}} hora",
+    "hours_other": "{{count}} horas",
+    "afterHours_one": "Após {{count}} hora",
+    "afterHours_other": "Após {{count}} horas",
+    "afterDays_one": "Após {{count}} dia",
+    "afterDays_other": "Após {{count}} dias",
+    "create": "Criar e copiar link",
+    "share": "Compartilhar link",
     "imagesStripped": "Apenas o texto é exibido, os arquivos ficam ocultos nesta nota.",
     "copied": "Copiado"
   },
   "burnView": {
+    "title": "Queimar Após Ler",
     "tagline": "Criptografada. Efêmera. Só para seus olhos.",
     "toggleTheme": "Alternar tema",
     "checking": "Verificando...",
@@ -73,7 +103,7 @@
     "footerTagline": "- Notas com criptografia de zero conhecimento, hospedadas na Suíça.",
     "sealed": {
       "heading": "Você recebeu uma nota criptografada.",
-      "subheading": "Esta mensagem vai se autodestruir após a leitura. Links não lidos expiram após 24 horas.",
+      "subheading": "Esta mensagem vai se autodestruir após a leitura. Links não lidos expiram sozinhos.",
       "reveal": "Revelar mensagem",
       "warning": "O servidor exclui a nota no momento em que você a revela. Não há segunda chance."
     },
@@ -89,7 +119,7 @@
     },
     "gone": {
       "heading": "Esta nota se foi.",
-      "body": "Ela já foi lida ou expirou. Burn links só podem ser abertos uma vez e expiram após 24 horas."
+      "body": "Ela já foi lida ou expirou. Burn links só podem ser abertos uma vez e expiram sozinhos."
     },
     "error": {
       "heading": "Algo deu errado.",

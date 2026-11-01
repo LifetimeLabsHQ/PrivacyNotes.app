@@ -19,19 +19,19 @@ Bu bizim Zürih'teki gerçek veritabanımız, çizimi değil. Notunuz `ciphertex
 
 ## Anahtarınız kimde
 
-Her seçenek notlarınızı uçtan uca şifreli tutar. Aralarındaki fark, ifadenizin nerede durduğudur.
+Her seçenekte notlarınız cihazınızda şifrelenir. Aralarındaki fark, ifadenizin nerede durduğudur.
 
 | Seçenek | İfadeniz nerede durur | Size ne kazandırır |
 | --- | --- | --- |
 | **Giriş, anahtar bizde** | Sunucumuzda, şifreli | Yeni bir cihaz yalnızca o hesapla girer |
 | **Giriş, anahtar cihazınızda** | Sizde, başka hiçbir yerde | Google, Apple ya da GitHub ile girin, anahtar yine sizde kalsın |
-| **Yalnızca ifade, giriş yok** | Sizde, başka hiçbir yerde | E-posta yok, ad yok, hesap yok |
+| **Yalnızca ifade, giriş yok** | Sizde, başka hiçbir yerde | E-posta yok, ad yok, hiç giriş yok |
 
 Alttaki ikisinde, zorlansak bile bir notu okuyamayız. İlki bunu rahatlığa takas eder: ifadeniz bizim bir anahtarımızın altında sunucumuzda durur, böylece yeni bir cihaza hesabınızdan başka bir şey gerekmez. Sunucumuz bir gün ele geçirilirse o anahtar açığa çıkabilir.
 
-Seçtiğiniz seçeneğe bağlı kalmak zorunda değilsiniz. **Ayarlar > Güvenlik > Kurtarma ifadeniz** altından değiştirin.
+Google, Apple veya GitHub ile mi giriş yaptınız? İlk ikisi arasında daha sonra **Ayarlar > Hesap > Anahtar saklama** altından geçiş yapabilirsiniz. Yalnızca ifadeyle açılmış bir hesapta ifade her zaman sizde kalır.
 
-> [!warning] İfadenin kendi kopyanızı saklayın
+> [!warning] İfadenin bir kopyasını kendiniz saklayın
 > İfadeniz notlarınızı açar. Kaybederseniz kimse geri getiremez, biz de dahil. <span style="color: #e03131">Bugün kâğıda yazın.</span>
 
 ## Kendiniz kontrol edin
@@ -44,7 +44,7 @@ Seçtiğiniz seçeneğe bağlı kalmak zorunda değilsiniz. **Ayarlar > Güvenli
 | Ne | Nerede |
 | --- | --- |
 | Şifrelemenin kendisi | [crypto.ts](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/crypto/crypto.ts) |
-| Veritabanının yapısı | [schema.sql](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/schema/schema.sql) |
+| Sunucumuzun aldıkları | [VERIFY.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/VERIFY.md#tier-1-one-minute-no-tools) |
 | Bir saldırganın yapabildikleri ve yapamadıkları | [THREAT_MODEL.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/THREAT_MODEL.md) |
 | Bir açığı nasıl bildirirsiniz | [SECURITY.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/SECURITY.md) |
 

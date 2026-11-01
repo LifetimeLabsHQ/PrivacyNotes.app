@@ -7,9 +7,17 @@
  * encrypted payload; the definitions here never touch the server in
  * plaintext either (they ride the encrypted user_settings blob).
  *
- * Everything in this module is pure: helpers take a folder array and
- * return a new one. Callers apply results through NotesView's
- * `mutateSettings` so the settings generation guard stays intact.
+ * A folder is as precious as a note and merges like one. Two devices that
+ * each hold part of the tree end up with all of it: `mergeFolderTrees`
+ * unions by id, the later edit stamp wins a shared id, and a deletion is
+ * carried as a tombstone so it can propagate without a device's mere
+ * ignorance of a folder ever counting as a request to remove it. The array
+ * used to be replaced wholesale by whichever device wrote last, which is
+ * how one stale copy could take an account's whole filing system with it.
+ *
+ * The helpers are pure apart from the edit stamp they read off the clock.
+ * Callers apply results through NotesView's `mutateSettings` so the
+ * settings generation guard stays intact.
  */
 
 import type { LocalNote } from './db';
@@ -21,6 +29,86 @@ export interface FolderDef {
   parentId: string | null;
   /** Sibling sort index (ascending). */
   order: number;
+  /**
+   * When this folder was last edited, ISO. Absent on a folder written by a
+   * client that predates the field, which reads as "older than any stamped
+   * copy" - see `mergeFolderTrees`.
+   */
+  updatedAt?: string;
+}
+
+/**
+ * A folder the user deleted. Deletion has to be a RECORD rather than an
+ * absence, because the tree merges across devices: a device that simply
+ * lacks a folder is indistinguishable from one that never heard of it, and
+ * guessing wrong either resurrects a deleted folder or destroys a live one.
+ * These live in `UserSettings.foldersDeleted`, beside the live tree rather
+ * than inside it, so every reader of `folders` still sees exactly the
+ * folders a person would expect and needs no filter of its own.
+ */
+export interface FolderTombstone {
+  id: string;
+  deletedAt: string;
+}
+
+/** The pair that travels together: the live tree and its tombstones. */
+export interface FolderTree {
+  folders: FolderDef[];
+  deleted: FolderTombstone[];
+}
+
+/**
+ * How long a tombstone is kept. A device that has been offline for longer
+ * than this still holds the folder as live, and with the tombstone gone the
+ * merge would take it back, so the window has to outlast any plausible
+ * absence. Six months does; a week would not.
+ * Spec: ops/docs/design-decisions.md (folder tombstone retention)
+ */
+export const TOMBSTONE_RETENTION_MS = 180 * 24 * 60 * 60 * 1000;
+
+/** Upper bound on the tombstone list, newest kept. The blob is pushed whole
+ *  on every settings change, so an unbounded list is a growing tax on it. */
+const TOMBSTONE_MAX = 1000;
+
+/** Now, as the stamp every folder edit carries. */
+function stamp(): string {
+  return new Date().toISOString();
+}
+
+/* ── Starter folder tree ────────────────────────────────────────────
+ * Every new vault opens on a small tree, the same one the public demo
+ * shows. The ids live here and the rest of the table lives in
+ * `welcomeNote.ts`, which seeds it: the sidebar needs to recognise a
+ * starter folder, and it should not carry the names and the nesting into
+ * the boot path to do that.
+ *
+ * The ids are fixed and permanent. They are what an already-seeded vault
+ * matches on, what a seed file's `folder:` frontmatter resolves through,
+ * and what the delete rule below tests against.
+ * Spec: ops/specs/folders.md (starter tree)
+ */
+export const SEED_FOLDER_IDS = {
+  PrivacyNotes: 'f01de001-0000-4000-8000-000000000004',
+  Markdown: 'f01de001-0000-4000-8000-000000000005',
+  Security: 'f01de001-0000-4000-8000-000000000006',
+  Travel: 'f01de001-0000-4000-8000-000000000001',
+} as const;
+
+/**
+ * May this account delete this folder?
+ *
+ * Deleting is Pro like every other folder action, with one exception: a
+ * locked account may take apart the starter tree. It was given that tree
+ * rather than asked for it, and it cannot create a folder to replace one,
+ * so a tree it cannot delete is a tree it is stuck with. A folder made
+ * while subscribed stays put after a downgrade, because that one is the
+ * user's own work.
+ *
+ * Both gates read this: the row menu decides whether to open at all, and
+ * the handler that does the work checks again.
+ */
+export function canDeleteFolder(id: string, foldersUnlocked: boolean): boolean {
+  return foldersUnlocked || (Object.values(SEED_FOLDER_IDS) as string[]).includes(id);
 }
 
 /**
@@ -81,13 +169,25 @@ export const FOLDER_NAME_MAX_LENGTH = 40;
 export const UNFILED_ID = '__unfiled__';
 
 /** Trim + collapse whitespace + cap length. Returns '' when unusable. */
-function normalizeFolderName(raw: string): string {
+export function normalizeFolderName(raw: string): string {
   return raw.trim().replace(/\s+/g, ' ').slice(0, FOLDER_NAME_MAX_LENGTH);
 }
 
-/** 1-based depth of a folder (root = 1). 0 when the id is unknown. */
-function folderDepth(folders: FolderDef[], id: string): number {
-  const byId = new Map(folders.map((f) => [f.id, f]));
+/**
+ * 1-based depth of a folder (root = 1). 0 when the id is unknown.
+ *
+ * `byId` is the caller's index when the caller has one. Built here otherwise,
+ * which is right for a single lookup and quadratic inside a loop: rebuilding
+ * it per folder is what made validating an imported tree cost 369 ms at four
+ * thousand folders and tens of seconds at forty, on every boot rather than
+ * once.
+ */
+function folderDepth(
+  folders: FolderDef[],
+  id: string,
+  index?: ReadonlyMap<string, FolderDef>,
+): number {
+  const byId = index ?? new Map(folders.map((f) => [f.id, f]));
   let depth = 0;
   let current = byId.get(id);
   const seen = new Set<string>();
@@ -121,6 +221,49 @@ export function subtreeIds(folders: FolderDef[], id: string): Set<string> {
     }
   }
   return ids;
+}
+
+/**
+ * The folder half of the list filter: which `folderId` values belong in the
+ * list of the open folder. Off, a folder holds its direct members only; on,
+ * it holds its whole branch. Unfiled has no branch, so the switch never
+ * reaches it. The branch is built once here, not once per note.
+ * Spec: ops/docs/archive/folder-subfolders.md (section 4)
+ */
+export function folderScope(
+  folders: FolderDef[],
+  selected: string,
+  includeSubfolders: boolean,
+): (folderId: string | null | undefined) => boolean {
+  if (selected === UNFILED_ID) return (folderId) => !folderId;
+  if (!includeSubfolders) return (folderId) => folderId === selected;
+  const branch = subtreeIds(folders, selected);
+  return (folderId) => !!folderId && branch.has(folderId);
+}
+
+/**
+ * The chip label of every folder below `rootId`: its path under the open
+ * folder, so two subfolders that share a name read apart in a combined list.
+ * More than two levels down, the leading levels give way to an ellipsis,
+ * because the chip truncates and its leaf is the part that matters.
+ * Spec: ops/docs/archive/folder-subfolders.md (D4)
+ */
+export function branchPathLabels(folders: FolderDef[], rootId: string): Map<string, string> {
+  const byId = new Map(folders.map((f) => [f.id, f]));
+  const labels = new Map<string, string>();
+  for (const id of subtreeIds(folders, rootId)) {
+    if (id === rootId) continue;
+    const names: string[] = [];
+    const seen = new Set<string>();
+    let current = byId.get(id);
+    while (current && current.id !== rootId && !seen.has(current.id)) {
+      seen.add(current.id);
+      names.unshift(current.name);
+      current = current.parentId ? byId.get(current.parentId) : undefined;
+    }
+    labels.set(id, names.length > 2 ? ['…', ...names.slice(-2)].join(' / ') : names.join(' / '));
+  }
+  return labels;
 }
 
 /** Can a new subfolder be created under `parentId`? (null = root, always ok) */
@@ -169,6 +312,7 @@ export function createFolder(
     name,
     parentId,
     order: nextOrder(folders, parentId),
+    updatedAt: stamp(),
   };
   return { folders: [...folders, created], created };
 }
@@ -177,7 +321,8 @@ export function createFolder(
 export function renameFolder(folders: FolderDef[], id: string, rawName: string): FolderDef[] {
   const name = normalizeFolderName(rawName);
   if (!name) return folders;
-  return folders.map((f) => (f.id === id ? { ...f, name } : f));
+  const at = stamp();
+  return folders.map((f) => (f.id === id ? { ...f, name, updatedAt: at } : f));
 }
 
 /** Re-parent a folder (appends at the end of the new sibling list). */
@@ -188,7 +333,10 @@ export function moveFolder(
 ): FolderDef[] {
   if (!canMoveFolder(folders, id, newParentId)) return folders;
   const order = nextOrder(folders, newParentId);
-  return folders.map((f) => (f.id === id ? { ...f, parentId: newParentId, order } : f));
+  const at = stamp();
+  return folders.map((f) =>
+    f.id === id ? { ...f, parentId: newParentId, order, updatedAt: at } : f,
+  );
 }
 
 /**
@@ -227,6 +375,7 @@ export function applyFolderPlacement(
   if (new Set(orderedIds).size !== orderedIds.length) return folders;
   if (orderedIds.some((each) => !expected.has(each))) return folders;
 
+  const at = stamp();
   const destination = new Map(orderedIds.map((each, i) => [each, i]));
   // The folder leaves a hole behind it; close that list up too, so a later
   // drop into the old parent is not numbering against stale gaps.
@@ -245,8 +394,14 @@ export function applyFolderPlacement(
       const order = destination.get(id) ?? f.order;
       if (f.parentId === newParentId && f.order === order) return f;
       changed = true;
-      return { ...f, parentId: newParentId, order };
+      return { ...f, parentId: newParentId, order, updatedAt: at };
     }
+    // Only the dragged folder is stamped. A sibling whose index shifted was
+    // not edited by anyone, and one stamp covers the name, the parent and
+    // the order together, so stamping it here would let a drag win a name
+    // conflict against a real rename made on another device. The cost is
+    // that a shifted index can lose a merge, which the next drag corrects;
+    // the alternative costs a name the user typed.
     const wanted = f.parentId === newParentId ? destination.get(f.id) : source.get(f.id);
     if (wanted === undefined || f.order === wanted) return f;
     changed = true;
@@ -258,23 +413,40 @@ export function applyFolderPlacement(
 }
 
 /**
- * Delete a folder. Child folders move up to the deleted folder's
- * parent; the caller must move the folder's notes to `reparentTo`
+ * Delete a folder. Child folders move up to the deleted folder's parent,
+ * or, with `withSubfolders`, go too, the whole branch at once. The caller
+ * must move the notes of every folder in `removed` to `reparentTo`
  * (bulkMoveToFolder). Notes are never deleted here.
+ *
+ * `deleted` gains one tombstone per removed folder, which carries the
+ * deletion to the other devices. Removing a folder from the array is not
+ * enough on its own: every other device would read the absence as a gap in
+ * this device's knowledge and hand the folder back on the next merge.
  */
 export function deleteFolder(
-  folders: FolderDef[],
-  id: string
-): { folders: FolderDef[]; reparentTo: string | null } {
-  const target = folders.find((f) => f.id === id);
+  tree: FolderTree,
+  id: string,
+  withSubfolders = false,
+): { folders: FolderDef[]; deleted: FolderTombstone[]; reparentTo: string | null; removed: Set<string> } {
+  const target = tree.folders.find((f) => f.id === id);
   const reparentTo = target?.parentId ?? null;
-  const next = folders
-    .filter((f) => f.id !== id)
+  const at = stamp();
+  const removed = target && withSubfolders ? subtreeIds(tree.folders, id) : new Set([id]);
+  // The children keep their own stamps. Being moved up is something that
+  // HAPPENED to them, not an edit their owner made, and a stamp here would
+  // beat a genuine rename of the same folder on another device. If the
+  // re-parent is lost in a merge, `validateFolders` puts the folder at the
+  // root rather than dropping it.
+  const next = tree.folders
+    .filter((f) => !removed.has(f.id))
     .map((f) => (f.parentId === id ? { ...f, parentId: reparentTo } : f));
-  return { folders: next, reparentTo };
+  const deleted = target
+    ? [...tree.deleted.filter((d) => !removed.has(d.id)), ...[...removed].map((r) => ({ id: r, deletedAt: at }))]
+    : tree.deleted;
+  return { folders: next, deleted, reparentTo, removed };
 }
 
-/** Direct-member note counts per folder id (v1: no recursive rollup). */
+/** Direct-member note counts per folder id. `folderTotals` rolls them up. */
 export function folderCounts(notes: LocalNote[]): Map<string, number> {
   const counts = new Map<string, number>();
   for (const n of notes) {
@@ -282,6 +454,39 @@ export function folderCounts(notes: LocalNote[]): Map<string, number> {
     counts.set(n.folderId, (counts.get(n.folderId) ?? 0) + 1);
   }
   return counts;
+}
+
+/**
+ * Per folder, its own items plus every descendant's. A closed row shows this
+ * number, an open row its direct count, because its subfolders show theirs
+ * below it. One pass over a parent-to-children map: calling `subtreeIds` per
+ * folder would be quadratic on a large tree.
+ */
+export function folderTotals(folders: FolderDef[], counts: Map<string, number>): Map<string, number> {
+  const kids = new Map<string, string[]>();
+  for (const f of folders) {
+    if (f.parentId === null) continue;
+    const list = kids.get(f.parentId);
+    if (list) list.push(f.id);
+    else kids.set(f.parentId, [f.id]);
+  }
+  const totals = new Map<string, number>();
+  // `validateFolders` breaks cycles; the visiting set keeps a bad tree from
+  // recursing forever anyway.
+  const visiting = new Set<string>();
+  const total = (id: string): number => {
+    const known = totals.get(id);
+    if (known !== undefined) return known;
+    if (visiting.has(id)) return 0;
+    visiting.add(id);
+    let sum = counts.get(id) ?? 0;
+    for (const child of kids.get(id) ?? []) sum += total(child);
+    visiting.delete(id);
+    totals.set(id, sum);
+    return sum;
+  };
+  for (const f of folders) total(f.id);
+  return totals;
 }
 
 /** Ancestor ids of a folder, nearest first. Empty for roots/unknown ids. */
@@ -323,18 +528,37 @@ export function folderNamePath(folders: FolderDef[], id: string | null): string[
  * imported folder id to its final id in the merged tree, so callers can
  * remap every note's folderId.
  *
- * Precondition: `imported` lists parents before children (buildFolderTree
- * creates ancestors first), so a folder's parent is already mapped when we
- * reach it.
+ * `originalIds` comes from our own backup: the id each imported folder had
+ * in the account that wrote it. A folder `existing` still holds under that
+ * id is that folder, renamed or moved since or not, and is reused before any
+ * name is compared, which is the only thing that tells two same-named
+ * siblings apart. A deleted folder is not in `existing`, so its id never
+ * comes back; the name path builds a new folder in its place.
+ *
+ * `rootParent` is the folder the person chose to add the import to: the
+ * source's top-level folders go under it, and the name match runs among its
+ * children, so an import never joins a same-named folder elsewhere.
+ *
+ * Precondition: `imported` lists parents before children (every importer's
+ * tree builder creates ancestors first), so a folder's parent is already
+ * mapped when we reach it.
  */
 export function reconcileImportedFolders(
   existing: FolderDef[],
-  imported: FolderDef[]
+  imported: FolderDef[],
+  originalIds?: ReadonlyMap<string, string>,
+  rootParent: string | null = null,
 ): { folders: FolderDef[]; idMap: Map<string, string> } {
   let folders = [...existing];
+  const live = new Set(existing.map((f) => f.id));
   const idMap = new Map<string, string>();
   for (const inc of imported) {
-    const parentId = inc.parentId ? idMap.get(inc.parentId) ?? null : null;
+    const original = originalIds?.get(inc.id);
+    if (original && live.has(original)) {
+      idMap.set(inc.id, original);
+      continue;
+    }
+    const parentId = inc.parentId ? idMap.get(inc.parentId) ?? rootParent : rootParent;
     const match = folders.find(
       (f) => f.parentId === parentId && f.name === inc.name
     );
@@ -355,9 +579,13 @@ export function reconcileImportedFolders(
 }
 
 /**
- * Sanitize a raw folders array from a settings blob. Drops entries with
- * missing/empty names, unknown parents, or cycles; coerces a bad `order`
- * to append. Used by userSettings hydrate and by the backup restore merge.
+ * Sanitize a raw folders array from a settings blob. Drops an entry with no
+ * id, a repeated id or an empty name, and coerces a bad `order` to append.
+ * A folder whose parent is missing from the set, or that sits in a cycle, is
+ * kept and moved to the root, never dropped: a merge in which one device
+ * deleted the parent while another edited the child leaves the child pointing
+ * at nothing, and `deleteFolder` relies on this when its re-parent is lost
+ * that way.
  */
 export function validateFolders(raw: unknown): FolderDef[] {
   if (!Array.isArray(raw)) return [];
@@ -371,14 +599,192 @@ export function validateFolders(raw: unknown): FolderDef[] {
     if (!name) continue;
     const parentId = typeof f.parentId === 'string' && f.parentId ? f.parentId : null;
     const order = typeof f.order === 'number' && Number.isFinite(f.order) ? f.order : Number.MAX_SAFE_INTEGER;
+    const updatedAt = typeof f.updatedAt === 'string' && f.updatedAt ? f.updatedAt : undefined;
     seenIds.add(f.id);
-    cleaned.push({ id: f.id, name, parentId, order });
+    cleaned.push({ id: f.id, name, parentId, order, ...(updatedAt ? { updatedAt } : {}) });
   }
   // Orphaned parents become roots (parent id not in the set).
   const idSet = new Set(cleaned.map((f) => f.id));
   const reparented = cleaned.map((f) =>
     f.parentId && !idSet.has(f.parentId) ? { ...f, parentId: null } : f
   );
-  // Drop cycles.
-  return reparented.filter((f) => folderDepth(reparented, f.id) > 0);
+  // Break cycles, in one pass over the whole set rather than one walk per
+  // folder. A shared index alone is not enough: the walk itself is as long as
+  // the chain, so a single deep tree stays quadratic. Each ancestor's depth is
+  // remembered as it is resolved, so every folder is visited once.
+  //
+  // A folder in a cycle is moved to the root rather than dropped. Two devices
+  // that each drag one folder into the other produce a cycle neither of them
+  // made, and deleting the pair would take a real folder, and every note
+  // filed in it, for a conflict the person never saw. A folder at the root is
+  // wrong about where it sits and right about existing.
+  const byId = new Map(reparented.map((f) => [f.id, f]));
+  const depth = new Map<string, number>();
+  for (const start of reparented) {
+    if (depth.has(start.id)) continue;
+    // The chain from this folder up to something already known, a root, or a
+    // repeat. A repeat is a cycle, and every folder on the way into it is
+    // invalid too, which is what the 0 records.
+    const chain: FolderDef[] = [];
+    const onPath = new Set<string>();
+    let current: FolderDef | undefined = start;
+    let base = 0;
+    while (current) {
+      const known = depth.get(current.id);
+      if (known !== undefined) {
+        base = known;
+        break;
+      }
+      if (onPath.has(current.id)) {
+        base = 0;
+        for (const f of chain) depth.set(f.id, 0);
+        break;
+      }
+      onPath.add(current.id);
+      chain.push(current);
+      current = current.parentId ? byId.get(current.parentId) : undefined;
+    }
+    if (base === 0 && chain.some((f) => depth.get(f.id) === 0)) continue;
+    for (let i = chain.length - 1; i >= 0; i--) {
+      base += 1;
+      depth.set(chain[i]!.id, base);
+    }
+  }
+  return reparented.map((f) => ((depth.get(f.id) ?? 0) > 0 ? f : { ...f, parentId: null }));
+}
+
+/**
+ * Sanitize a raw tombstone list from a settings blob, newest first, with
+ * anything past the retention window or the length cap dropped.
+ */
+export function validateFolderTombstones(raw: unknown, now = Date.now()): FolderTombstone[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const cleaned: FolderTombstone[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') continue;
+    const t = entry as Partial<FolderTombstone>;
+    if (typeof t.id !== 'string' || !t.id || seen.has(t.id)) continue;
+    if (typeof t.deletedAt !== 'string' || !t.deletedAt) continue;
+    const at = Date.parse(t.deletedAt);
+    if (Number.isNaN(at)) continue;
+    // A stamp from the future belongs to a device with a wrong clock. It is
+    // kept rather than dropped, because dropping it resurrects the folder,
+    // which is the worse of the two mistakes.
+    if (now - at > TOMBSTONE_RETENTION_MS) continue;
+    seen.add(t.id);
+    cleaned.push({ id: t.id, deletedAt: t.deletedAt });
+  }
+  cleaned.sort((a, b) => (a.deletedAt < b.deletedAt ? 1 : a.deletedAt > b.deletedAt ? -1 : 0));
+  return cleaned.slice(0, TOMBSTONE_MAX);
+}
+
+/**
+ * Merge two copies of the folder tree, neither of which is authoritative.
+ *
+ * The rules, in the order they are applied:
+ * - A tombstone on either side deletes the folder, for good. Nothing brings a
+ *   deleted folder back except creating a new one.
+ * - A folder only one side holds is KEPT. This is the whole point: absence
+ *   is not evidence, so a device cannot remove a folder by being unaware of
+ *   it, and an older client that writes the array wholesale is healed by the
+ *   next device to merge rather than believed.
+ * - A folder both sides hold resolves to the later edit stamp. A stamped
+ *   copy beats an unstamped one, because a client that records edits wrote
+ *   it later than one that does not. With neither stamped, `unstampedWinner`
+ *   decides, and the caller knows which side can be hiding an unpushed edit.
+ *
+ * A folder that a tombstone removes takes its children with it only insofar
+ * as `validateFolders` re-parents them to the root; nothing here deletes a
+ * folder the user did not delete.
+ */
+export function mergeFolderTrees(
+  local: FolderTree,
+  remote: FolderTree,
+  unstampedWinner: 'local' | 'remote',
+  now = Date.now(),
+): FolderTree {
+  const deleted = new Map<string, FolderTombstone>();
+  for (const t of [...remote.deleted, ...local.deleted]) {
+    const existing = deleted.get(t.id);
+    if (!existing || t.deletedAt > existing.deletedAt) deleted.set(t.id, t);
+  }
+
+  const live = new Map<string, FolderDef>();
+  for (const f of remote.folders) live.set(f.id, f);
+  for (const f of local.folders) {
+    const existing = live.get(f.id);
+    if (!existing) {
+      live.set(f.id, f);
+      continue;
+    }
+    if (f.updatedAt || existing.updatedAt) {
+      if ((f.updatedAt ?? '') > (existing.updatedAt ?? '')) live.set(f.id, f);
+    } else if (unstampedWinner === 'local') {
+      live.set(f.id, f);
+    }
+  }
+  // A tombstone is final. No edit stamp outranks it: a rename or a drag is
+  // not a request to bring back something deleted elsewhere, and a drag
+  // renumbers every sibling, so an edit that could outrank a deletion would
+  // resurrect whatever was deleted on another device an hour ago.
+  for (const id of deleted.keys()) live.delete(id);
+
+  return {
+    folders: validateFolders([...live.values()]),
+    deleted: validateFolderTombstones([...deleted.values()], now),
+  };
+}
+
+/** Whether two trees hold the same folders and the same tombstones. Used to
+ *  decide whether a merge actually changed anything worth pushing. */
+export function folderTreesEqual(a: FolderTree, b: FolderTree): boolean {
+  if (a.folders.length !== b.folders.length) return false;
+  if (a.deleted.length !== b.deleted.length) return false;
+  const byId = new Map(b.folders.map((f) => [f.id, f]));
+  for (const f of a.folders) {
+    const other = byId.get(f.id);
+    if (!other) return false;
+    if (
+      other.name !== f.name ||
+      other.parentId !== f.parentId ||
+      other.order !== f.order ||
+      other.updatedAt !== f.updatedAt
+    ) {
+      return false;
+    }
+  }
+  const byTomb = new Map(b.deleted.map((d) => [d.id, d.deletedAt]));
+  return a.deleted.every((d) => byTomb.get(d.id) === d.deletedAt);
+}
+
+/**
+ * Put folders from a backup back into a tree.
+ *
+ * Additive by id: a folder that is already there keeps whatever it looks
+ * like now, so restoring twice does nothing the second time and a restore
+ * never overwrites a rename made since the backup.
+ *
+ * A folder this account has DELETED stays deleted. Its tombstone is final,
+ * so putting the folder back would only have it removed again by the next
+ * device that still holds the deletion, which reads as the restore silently
+ * failing. Skipping it is the honest outcome, and the count says how many.
+ */
+export function applyRestoredFolders(
+  prev: FolderTree,
+  restored: FolderDef[],
+): { tree: FolderTree; added: number; skipped: number } {
+  const have = new Set(prev.folders.map((f) => f.id));
+  const gone = new Set(prev.deleted.map((d) => d.id));
+  const incoming = restored.filter((f) => !have.has(f.id) && !gone.has(f.id));
+  const skipped = restored.filter((f) => !have.has(f.id) && gone.has(f.id)).length;
+  if (incoming.length === 0) return { tree: prev, added: 0, skipped };
+  return {
+    tree: {
+      folders: validateFolders([...prev.folders, ...incoming]),
+      deleted: prev.deleted,
+    },
+    added: incoming.length,
+    skipped,
+  };
 }

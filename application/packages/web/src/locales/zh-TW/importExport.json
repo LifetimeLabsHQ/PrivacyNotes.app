@@ -9,49 +9,107 @@
     "tabExport": "匯出",
     "tabRestore": "還原",
     "tabVault": "密碼",
-    "working": "處理中…"
+    "working": "處理中…",
+    "tabWellness": "追蹤項目"
   },
   "footer": {
     "exportNote": "匯出在本機執行，不會上傳任何資料。",
     "restoreNote": "你的檔案會在本機讀取並解密。",
-    "importNote": "所有內容都會先在你的裝置上加密，才離開裝置進行同步。"
+    "importNote": "所有內容無論在你的裝置上還是同步時，都始終保持加密。"
   },
   "importPick": {
     "autoTagLabel": "依來源為匯入的筆記加上標籤",
     "autoTagDesc": "Google Keep 筆記會加上 <keep>#google</keep>，Obsidian 加上 <obsidian>#obsidian</obsidian>，依此類推。",
     "guideAria": "{{app}} 匯入指南",
-    "guideLabel": "指南"
+    "guideLabel": "指南",
+    "groupGeneral": "一般",
+    "groupNotes": "筆記"
   },
   "folderImport": {
     "tagLabel": "同時依資料夾加上標籤",
     "tagDesc": "無論如何都會重建你的資料夾。這個選項會把每個資料夾名稱也加成標籤，如果你也喜歡用標籤篩選會很方便。"
   },
+  "browserImport": {
+    "tagLabel": "保留瀏覽器的標籤",
+    "tagDesc": "Firefox 會把標籤和網址列關鍵字一起存在書籤裡，兩者在這裡都會變成標籤。"
+  },
+  "contactImport": {
+    "photosLabel": "匯入照片",
+    "photosDesc_other": "{{count}} 張照片，經 app 縮小後約 {{size}}，佔你可用空間 {{free}} 的 {{pct}}%。",
+    "photosDescNoQuota_other": "{{count}} 張照片，經 app 縮小後約 {{size}}。",
+    "photosTooBig_other": "空間不足以放下這 {{count}} 張照片（{{size}}），所以照片會略過，其他內容全部匯入。清出 {{shortfall}} 或加購空間後再匯入一次，就能把照片帶進來。"
+  },
+  "importCalendar": {
+    "location": "地點",
+    "videoCall": "視訊通話",
+    "organizer": "主辦人",
+    "guests": "邀請對象",
+    "file": "檔案",
+    "link": "連結",
+    "timeZone": "時區",
+    "ends": "結束",
+    "repeats": "重複"
+  },
+  "webcal": {
+    "title": "Webcal",
+    "desc": "日曆網址，例如來自 Proton、iCloud、Outlook 或公開日曆的 webcal:// 連結。只會下載一次；之後再貼上一次，即可只新增新的活動。",
+    "fieldLabel": "日曆網址",
+    "import": "匯入",
+    "downloading": "下載中…",
+    "errors": {
+      "invalid": "請貼上以 webcal://、webcals:// 或 https:// 開頭的網址。",
+      "refused": "無法開啟這個網址。",
+      "wrongType": "這個網址指向的不是日曆檔案。",
+      "tooLarge": "這個日曆超過 10 MB。",
+      "timeout": "日曆伺服器未及時回應。請稍後再試。",
+      "blocked": "日曆伺服器拒絕了下載。請確認日曆已分享或已公開。",
+      "offline": "你目前離線。請連線後再試一次。",
+      "limit": "短時間內下載次數過多。請等一分鐘後再試。",
+      "failed": "無法下載日曆。請檢查網址後再試一次。"
+    }
+  },
   "sourceDesc": {
     "googleKeep": "Google Takeout 的 .zip（Keep 資料夾）或單一 .json 筆記。核取清單會匯入為原生任務清單。",
+    "googleCalendar": "Google 日曆的 Settings > Import & export 匯出的 .zip，或單一 .ics 檔案。活動會保留時間、重複設定與提醒。",
     "appleNotes": "用免費的 Exporter 應用程式匯出為 Markdown，然後把 .zip 拖進來。",
     "appleJournal": "從 Mac 或 iPhone 的日誌匯出，把 AppleJournalEntries 資料夾壓縮起來，再把 .zip 拖進來。項目會連同相片、影片、語音備忘錄與位置資訊一起匯入為日誌項目。",
     "evernote": "單一 .enex 檔案，或多個壓成一個 zip 都可以。保留格式、標籤、附件、筆記連結與筆記本。Evernote 不會把任務寫進 .enex。",
     "samsungNotes": "匯出為 Word（.docx）或文字（.txt）。多個檔案可壓成 zip 批次匯入。",
     "simplenote": "從 Simplenote 匯出（Settings -> Tools -> Export Notes），把 .zip 拖進來。",
-    "standardNotes": "Standard Notes 的已解密 .zip 或 .txt 備份（File > Export > Decrypted）。",
+    "standardNotes": "Standard Notes 的已解密 .zip 或 .txt 備份（Account settings > Backups > Data backups > Decrypted）。",
     "obsidian": "Obsidian vault 的 .zip。保留標籤、[[note links]]、資料夾結構、內文中的 #tags，以及嵌入的圖片和檔案。",
     "notesnook": "Notesnook 匯出的 .zip。匯出時選 HTML 可保留格式、筆記本、標籤與附件。",
+    "bear": "在 Bear 中選擇 File > Backup Notes...，然後把 .bear2bk 檔拖到這裡。標籤與巢狀標籤、釘選、封存、垃圾桶、帶顏色的螢光標記、筆記連結與附件都會一起帶過來。",
+    "joplin": "從 File > Export all >「JEX - Joplin Export File」匯出的 .jex 檔。筆記本會變成資料夾，標籤、待辦事項、筆記連結與附件也會一起帶過來。",
     "upnote": "在 UpNote 中：Settings > Backup >「Backup now」，然後把備份資料夾裡的所有內容壓成 zip。保留筆記本、標籤、釘選、筆記連結、格式與附件。手機應用程式的逐篇匯出也可以：請選「Export to HTML」。",
     "markdownFolder": "單獨的 .md 或 .txt 檔，或是一個 .zip。壓成 zip 的資料夾會保留子資料夾，並把圖片和附件一起帶過來。",
     "markdownApp": "這些筆記本來就是資料夾裡的 Markdown 檔。把那個資料夾壓成 .zip 拖進來，子資料夾、圖片和 #標籤都會跟著過來。",
     "browserBookmarks": "瀏覽器「Export bookmarks」產生的書籤檔（.html），或 Safari 寫出的 .zip。Chrome、Firefox、Safari、Edge、Opera、Brave 和 Vivaldi 裝的都是同一種檔案，資料夾和日期都會一起帶過來。",
+    "vcard": "通訊錄匯出的 .vcf 檔：iPhone 和 Mac 透過 iCloud 或聯絡人，Android，Google 聯絡人。每張名片都會匯入，照片也一起，同一個檔案匯入第二次會略過你已經有的人。",
     "bitwarden": "Bitwarden 未加密的 .json 匯出檔（Tools > Export vault > .json）。登入資料、卡片、SSH 金鑰、安全筆記與 TOTP 驗證碼都會一起帶進來。",
-    "browserPasswords": "來自 Chrome、Edge、Brave、Opera、Vivaldi、Firefox 或 Safari 的密碼檔（.csv），或 Safari 寫出的 .zip。每一列都會變成一組登入資料。用完請把檔案刪掉 - 裡面是你的明文密碼。"
+    "browserPasswords": "來自 Chrome、Edge、Brave、Opera、Vivaldi、Firefox 或 Safari 的密碼檔（.csv），或 Safari 寫出的 .zip。每一列都會變成一組登入資料。用完請把檔案刪除 - 裡面是你的明文密碼。"
+  },
+  "sourceLabel": {
+    "privacynotes": "PrivacyNotes 完整備份",
+    "browserBookmarks": "瀏覽器書籤",
+    "browserPasswords": "瀏覽器密碼",
+    "vcard": "聯絡人 (vCard)",
+    "markdownFolder": "Markdown 檔案"
   },
   "vaultPick": {
     "intro": "從其他密碼管理器匯入登入資訊、信用卡與 SSH 金鑰。"
   },
   "restorePick": {
-    "intro": "還原你先前匯出的 PrivacyNotes 備份。你的檔案會在本機讀取並解密。",
+    "intro": "還原你先前匯出的 PrivacyNotes 備份。",
     "fullBackupTitle": "完整備份（.zip）",
-    "fullBackupDesc": "還原筆記、日誌、保險庫項目、任務、圖片、音訊與檔案。所有內容都會匯入為新項目，不會覆寫既有資料。",
+    "fullBackupDesc": "還原筆記、日誌、保險庫項目、任務、圖片、音訊與檔案。已有的筆記會保留，只有當備份中有較新版本時才會更新。",
     "encryptedBackupTitle": "加密備份（.pnbackup、.pnbackupz）",
     "encryptedBackupDesc": "以你的助憶詞金鑰還原加密備份。.pnbackupz 會還原全部內容，包含檔案；.pnbackup 只含文字內容與中繼資料。必須以建立備份時的同一個帳號登入。"
+  },
+  "restoreGate": {
+    "wait": "還原會等到這台裝置連上網路並完成一次同步，這樣你的備份才能與帳號中已有的筆記比對，而不會重複新增。",
+    "paused": "還原會等待同步完成，這樣你的備份才能與帳號中已有的筆記比對。這台裝置的同步已暫停，請到「設定 > ID & Sync」關閉「暫停同步」。",
+    "belowFloor": "還原會等待同步完成，這樣你的備份才能與帳號中已有的筆記比對。這個版本的應用程式太舊，無法同步，請先更新應用程式。"
   },
   "encryptedBackupLabel": "加密備份",
   "status": {
@@ -64,9 +122,14 @@
   "errors": {
     "genericParse": "發生錯誤。",
     "decryptionFailed": "解密失敗。助憶詞錯誤或檔案已損毀。",
-    "blobImportFailed": "你的筆記已經匯入，但圖片與檔案沒有：{{detail}} 你選取的檔案內容完全沒有變動，所以可以刪除已匯入的筆記，再重新匯入一次。"
+    "blobImportFailed": "你的筆記已經匯入，但圖片與檔案沒有：{{detail}} 你選取的檔案內容完全沒有變動，所以可以刪除已匯入的筆記，再重新匯入一次。",
+    "blobsNotInBackup_other": "你的筆記已還原，但備份清單中列出的{{items}}並不在備份裡。"
   },
   "preview": {
+    "oversize_other": "{{count}} 則筆記超過 1 MB，只會保留在這台裝置上，不會同步。",
+    "splitOversize_other": "依標題將這 {{count}} 則筆記拆成較小的筆記，以便同步",
+    "partTitle": "{{title}}（{{index}}/{{total}}）",
+    "continuedIn": "接續於 {{link}}",
     "sourceLabel": "來源",
     "uniqueTags": "不重複標籤",
     "empty": "空白",
@@ -76,10 +139,13 @@
     "andMore": "…還有 {{count}} 個",
     "headsUpLabel": "提醒：",
     "duplicateWarning": "匯入會把這些內容新增為新筆記。執行兩次就會出現重複項目，目前還沒有自動去重。",
+    "duplicateSkipNote": "已經存過的書籤會自動略過，所以重跑一次也不會重複。",
+    "contactSkipNote": "已經存過的人會略過並保持原樣，所以執行兩次不會讓任何人重複。",
+    "eventSkipNote": "已經匯入過的活動會略過並保持原樣，所以執行兩次也不會重複。",
+    "restoreMergeNote": "你自己的備份中的筆記會依 ID 比對。已有的筆記只有在備份中的副本較新時才會更新；垃圾桶裡的筆記會移出垃圾桶。",
     "quotaExceeded": "<strong>儲存空間不足，無法匯入。</strong>預估需要 {{needed}}，目前可用 {{available}}。請先釋出空間或升級再匯入。",
     "quotaWarning": "提醒：這次匯入大約會用掉 {{needed}}，你剩餘的儲存空間為 {{available}}。",
-    "oversizeAttachments_other": "{{count}} 個檔案超過你方案的單檔上限 {{limit}}。它們會匯入到這台裝置，但在你升級之前不會同步到你的其他裝置。",
-    "duplicateSkipNote": "已經存過的書籤會自動略過，所以重跑一次也不會重複。"
+    "oversizeAttachments_other": "{{count}} 個檔案超過你方案的單檔上限 {{limit}}。它們會匯入到這台裝置，但在你升級之前不會同步到你的其他裝置。"
   },
   "counts": {
     "note_other": "筆記",
@@ -87,6 +153,7 @@
     "login_other": "登入資訊",
     "card_other": "卡片",
     "sshKey_other": "SSH 金鑰",
+    "contact_other": "聯絡人",
     "zeroItems": "0 個項目",
     "importButton": "匯入 {{counts}}"
   },
@@ -112,20 +179,36 @@
     "vaultExportDesc": "登入資訊、卡片與 SSH 金鑰，Bitwarden 相容格式，多數密碼管理器都能匯入。內容為明文，請小心保管。",
     "bookmarksOnlyHeading": "僅書籤",
     "bookmarksExportTitle": "書籤檔案 (.html)",
-    "bookmarksExportDesc": "每個瀏覽器都讀得懂的標準書籤檔案，可以連同資料夾一起匯入 Chrome、Firefox、Safari 或 Edge。"
+    "bookmarksExportDesc": "每個瀏覽器都讀得懂的標準書籤檔案，可以連同資料夾一起匯入 Chrome、Firefox、Safari 或 Edge。",
+    "contactsOnlyHeading": "只有聯絡人",
+    "contactsExportTitle": "聯絡人檔案 (.vcf)",
+    "contactsExportDesc": "每支手機和通訊錄都能讀的 vCard 檔。可以匯入 iPhone、Android、Google 聯絡人或 Mac 的聯絡人，標籤和群組都保留。",
+    "calendarOnlyHeading": "只有日曆",
+    "calendarExportTitle": "日曆檔案 (.ics)",
+    "calendarExportDesc": "活動，以及有日期的筆記和任務清單，可匯入 Google 日曆、Apple 日曆或 Outlook。",
+    "calendarPrivate": "私人"
   },
   "exportProgress": {
     "failedTitle": "匯出失敗",
     "completeTitle": "匯出完成",
+    "incompleteTitle": "匯出不完整",
     "exportingTitle": "正在匯出備份…",
     "preparing": "準備中…",
     "exporting": "匯出中…",
     "imagesProgress": "正在匯出圖片… {{done}}/{{total}}",
     "filesProgress": "正在匯出檔案… {{done}}/{{total}}",
     "building": "正在建立備份…",
-    "compressing": "壓縮中…"
+    "compressing": "壓縮中…",
+    "missingFailed_other": "這台裝置無法下載 {{items}}，所以匯出時略過了。請檢查連線後再匯出一次。",
+    "missingNotFound_other": "{{items}}不在這台裝置上，也不在伺服器上，所以匯出時略過了。"
+  },
+  "missing": {
+    "pictures_other": "{{count}} 張圖片",
+    "files_other": "{{count}} 個檔案",
+    "both": "{{pictures}}和{{files}}"
   },
   "upload": {
+    "discard": "捨棄",
     "completeTitle": "上傳完成",
     "failedTitle": "上傳失敗",
     "partialTitle": "{{done}} 個成功，{{failed}} 個失敗",
@@ -134,6 +217,9 @@
     "statusFailed": "失敗",
     "errorStorageFull": "儲存空間已滿。清出空間或加購儲存空間後即可上傳這個檔案。",
     "errorStorageFullKept": "超出你的儲存空間，先保留在這部裝置上。空間釋出後就會同步。",
+    "errorTooLarge": "檔案太大({{size}})。上限為 {{limit}} MB。",
+    "errorTooLargeFree": "檔案太大({{size}})。免費方案上限為 {{limit}} MB。",
+    "batchTitle_other": "{{count}} 個檔案",
     "statusUploading": "上傳中…",
     "statusWaiting": "等待中",
     "summaryDone": "{{count}} 個完成",
@@ -155,8 +241,15 @@
   "saveErrors": {
     "shortWrite": "{{expected}} 位元組中只儲存了 {{written}} 位元組，檔案並不完整。請再試一次，並存到裝置本機儲存空間而非雲端資料夾。"
   },
-  "browserImport": {
-    "tagLabel": "保留瀏覽器的標籤",
-    "tagDesc": "Firefox 會把標籤和網址列關鍵字一起存在書籤裡，兩者在這裡都會變成標籤。"
+  "shareSheet": {
+    "title_other": "有 {{count}} 個項目分享到 PrivacyNotes",
+    "line": "在你選擇之前，不會儲存任何內容。",
+    "saveAll": "全部儲存"
+  },
+  "destination": {
+    "label": "加入至",
+    "none": "不放入資料夾",
+    "newFolder": "新資料夾「{{name}}」",
+    "help": "來源中的資料夾會放進你選的資料夾裡，沒有資料夾的項目也會放進這個資料夾。"
   }
 }

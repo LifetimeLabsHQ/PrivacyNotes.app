@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import type { PushHalt } from './sync';
 
 /**
  * Device-local log of the last sync passes, for the sync panel: the
@@ -7,8 +8,10 @@ import { useSyncExternalStore } from 'react';
  * Written by useSyncOrchestrator around each real pass (demo, floor,
  * pause and mutex skips never log - they are non-events). Persisted so
  * the panel can answer "when did this device last sync" across a
- * restart. Counts are taken from SyncResult: `up` is the dirty rows the
- * push phase attempted, `down` is rows plus tombstones the pull applied.
+ * restart. Counts are taken from SyncResult: `up` is the rows the server
+ * accepted, `down` is rows plus tombstones the pull applied, `failed` is
+ * the notes the pass could not push, each with its own reason, and
+ * `halted` is a push that stopped before it reached every dirty row.
  */
 
 export type SyncPassEntry = {
@@ -18,10 +21,18 @@ export type SyncPassEntry = {
   ms: number;
   /** False when the pull failed or the pass threw. */
   ok: boolean;
+  /** Rows the server accepted. */
   up: number;
   down: number;
   /** Coalesced "nothing to do" streak length (see recordSyncPass). */
   n?: number;
+  /** Notes this pass could not push, each with a reason of its own: the
+   *  notes the "Not backed up" list names. A pass that failed every push
+   *  reads as "3 failed", never as "No changes". */
+  failed?: number;
+  /** The push stopped before it reached every dirty row, and how many it
+   *  left behind. Such a pass reads as stopped, never as "No changes". */
+  halted?: PushHalt;
 };
 
 const STORAGE_KEY = 'privacynotes.syncLog';
@@ -48,13 +59,26 @@ function readStored(): SyncPassEntry[] {
 let entries: SyncPassEntry[] = readStored();
 const listeners = new Set<() => void>();
 
+/** Forget this account's passes, in memory and on disk. A sign-out does not
+ *  reload the page, so the copy in memory would show the next account the
+ *  log and write it back with its first pass. */
+export function clearSyncLog(): void {
+  entries = [];
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Storage blocked: the in-memory copy is gone, which is what shows.
+  }
+  for (const cb of listeners) cb();
+}
+
 export function recordSyncPass(entry: SyncPassEntry): void {
   // Coalesce idle polling: a clean pass that moved nothing lands on top
   // of a previous one as a refreshed timestamp with a streak counter,
   // instead of filling the log with one "nothing to do" row per 30s
   // tick. The list then only grows when something actually happened.
   const last = entries[entries.length - 1];
-  const isNoop = (e: SyncPassEntry) => e.ok && e.up === 0 && e.down === 0;
+  const isNoop = (e: SyncPassEntry) => e.ok && e.up === 0 && e.down === 0 && !(e.failed && e.failed > 0) && !e.halted;
   if (last && isNoop(entry) && isNoop(last)) {
     entries = [...entries.slice(0, -1), { ...entry, n: (last.n ?? 1) + 1 }];
   } else {
@@ -79,6 +103,20 @@ export function lastOkSyncAt(): number | null {
     if (e && e.ok) return e.at;
   }
   return null;
+}
+
+/**
+ * Whether the log lets a status say "Synced". 'never': no pass on this
+ * device has finished a clean pull, so the local vault can be anything
+ * from empty to half a download. 'pullFailed': the newest pass could not
+ * read the server. A pass that only ran tells nothing about what this
+ * device holds; a finished clean pull is the least a green check needs.
+ */
+export function pullStanding(log: readonly SyncPassEntry[]): 'ok' | 'never' | 'pullFailed' {
+  const last = log[log.length - 1];
+  if (!last) return 'never';
+  if (last.ok) return 'ok';
+  return log.some((e) => e.ok) ? 'pullFailed' : 'never';
 }
 
 function subscribe(cb: () => void) {

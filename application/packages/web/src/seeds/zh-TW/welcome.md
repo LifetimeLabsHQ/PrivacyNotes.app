@@ -15,7 +15,7 @@ title: 歡迎使用 PrivacyNotes
 
 點一下這一行的結尾，隨便打一個字。筆記會自己存檔，沒有儲存按鈕。
 
-上面那排工具會改變文字的樣子：**粗體**、*斜體*、標題、待辦清單、<span style="color: #f08c00">顏色</span>、<span style="font-size: 1.25em; font-family: ui-serif, Georgia, Cambria, serif">字體</span>、連結。
+上面那排工具會改變文字的樣子：**粗體**、*斜體*、標題、任務清單、<span style="color: #f08c00">顏色</span>、<span style="font-size: 1.25em; font-family: ui-serif, Georgia, Cambria, serif">字體</span>、連結。
 
 ## 三則值得打開的筆記
 
@@ -27,9 +27,9 @@ title: 歡迎使用 PrivacyNotes
 
 ## 今天要做的一件事
 
-- [ ] 到 **設定 > 安全性 > 你的助憶詞** 找出你的 **<mark style="background-color: rgba(51, 154, 240, 0.35)">12 個字的助憶詞</mark>**，抄在紙上，放到安全的地方
+- [ ] 到 **設定 > 安全性 > 助憶詞** 找出你的 **<mark style="background-color: rgba(51, 154, 240, 0.35)">12 個字的助憶詞</mark>**，抄在紙上，放到安全的地方
 
 那組助憶詞就是打開筆記的鑰匙。它放在哪裡由你決定，而且隨時可以改。[[你的筆記如何受到保護]] 說明了三種做法。
 
 > [!tip] 這裡沒有什麼是永久的
-> 這個保險庫裡的每一則筆記都是範例，包括這一則。你可以改它、搬它，或直接刪掉。
+> 這個保險庫裡的每一則筆記都是範例，包括這一則。你可以改它、搬它，或直接刪除。

@@ -2,8 +2,7 @@
   "dismiss": "Avfärda",
   "close": "Stäng",
   "moveBanner": {
-    "title": "Appen flyttar till use.privacynotes.app",
-    "body": "Flytta över den här sessionen nu - det tar några sekunder och dina anteckningar följer med.",
+    "bodySignIn": "Logga in där med din återställningsfras eller via ”{{scanQr}}”.",
     "cta": "Flytta nu",
     "syncing": "Synkar dina anteckningar…",
     "error": "Kunde inte synka allt just nu. Kontrollera din anslutning och försök igen.",
@@ -15,8 +14,9 @@
   },
   "moveScreen": {
     "title": "Appen har flyttat till use.privacynotes.app",
-    "body": "Flytta över den här enheten nu - det tar några sekunder och dina anteckningar följer med. Inget raderas här.",
+    "bodySignIn": "Logga in där med din återställningsfras på 12 ord eller via ”{{scanQr}}”. Den här enheten synkar först, så alla dina anteckningar väntar på dig där, och inget raderas här.",
     "openNotes": "Öppna dina anteckningar här en gång för att fixa det",
+    "showPhrase": "Visa min återställningsfras",
     "website": "Besök webbplatsen i stället"
   },
   "quota": {
@@ -54,17 +54,47 @@
     "unsyncedWarn_other": "{{count}} anteckningar på den här enheten har inte synkats än. De går förlorade för alltid om de inte kan laddas upp när du loggar ut.",
     "unsyncedKept_one": "1 anteckning på den här enheten har inte synkats än. Den stannar på enheten och synkas när du loggar in igen.",
     "unsyncedKept_other": "{{count}} anteckningar på den här enheten har inte synkats än. De stannar på enheten och synkas när du loggar in igen.",
+    "unsyncedFilesWarn_one": "{{count}} fil på den här enheten har inte synkats. Om du loggar ut raderas den för alltid.",
+    "unsyncedFilesWarn_other": "{{count}} filer på den här enheten har inte synkats. Om du loggar ut raderas de för alltid.",
     "dontRemind": "Påminn mig inte igen",
     "showPhrase": "Nej, visa frasen",
-    "confirm": "Ja, logga ut"
+    "confirm": "Ja, logga ut",
+    "stay": "Förbli inloggad",
+    "signOutLose_one": "Logga ut och förlora {{count}} anteckning",
+    "signOutLose_other": "Logga ut och förlora {{count}} anteckningar",
+    "signOutLoseFiles_one": "Logga ut och förlora {{count}} fil",
+    "signOutLoseFiles_other": "Logga ut och förlora {{count}} filer",
+    "signOutLoseBoth_one": "Logga ut och förlora {{count}} anteckning och {{files}}",
+    "signOutLoseBoth_other": "Logga ut och förlora {{count}} anteckningar och {{files}}",
+    "fileCount_one": "{{count}} fil",
+    "fileCount_other": "{{count}} filer",
+    "neverBackedUp_one": "Bara på den här enheten:",
+    "neverBackedUp_other": "Bara på den här enheten:",
+    "moreNotes": "och {{count}} till",
+    "appLockHint": "Delad enhet? Slå på applåset under Inställningar > Säkerhet."
   },
   "burnShareModal": {
     "title": "Dela och bränn efter läsning",
-    "body": "<lead>Din ursprungliga anteckning raderas inte.</lead> Den ligger kvar tryggt på ditt konto. Burn-länken är en separat krypterad kopia som självförstörs efter att den lästs. Länken går ut efter 24 timmar, oavsett om den öppnas eller inte.",
+    "body": "<lead>Din ursprungliga anteckning raderas inte.</lead> Den ligger kvar tryggt på ditt konto. Burn-länken är en separat krypterad kopia som självförstörs efter att den lästs.",
+    "readTime": "Lästid",
+    "readTimeHint": "Rensas sedan från skärmen",
+    "lifetime": "Länken går ut",
+    "lifetimeHint": "Om ingen öppnar den",
+    "minutes_one": "{{count}} minut",
+    "minutes_other": "{{count}} minuter",
+    "hours_one": "{{count}} timme",
+    "hours_other": "{{count}} timmar",
+    "afterHours_one": "Efter {{count}} timme",
+    "afterHours_other": "Efter {{count}} timmar",
+    "afterDays_one": "Efter {{count}} dag",
+    "afterDays_other": "Efter {{count}} dagar",
+    "create": "Skapa och kopiera länk",
+    "share": "Dela länk",
     "imagesStripped": "Bara text visas, filer döljs i den här anteckningen.",
     "copied": "Kopierad"
   },
   "burnView": {
+    "title": "Bränn efter läsning",
     "tagline": "Krypterad. Flyktig. Endast för dina ögon.",
     "toggleTheme": "Växla tema",
     "checking": "Kontrollerar...",
@@ -73,7 +103,7 @@
     "footerTagline": "- Zero-knowledge-krypterade anteckningar, med servrar i Schweiz.",
     "sealed": {
       "heading": "Du har fått en krypterad anteckning.",
-      "subheading": "Det här meddelandet självförstörs efter läsning. Olästa länkar går ut efter 24 timmar.",
+      "subheading": "Det här meddelandet självförstörs efter läsning. Olästa länkar går ut av sig själva.",
       "reveal": "Visa meddelandet",
       "warning": "Servern raderar anteckningen i samma stund som du visar den. Du får ingen andra chans."
     },
@@ -89,7 +119,7 @@
     },
     "gone": {
       "heading": "Den här anteckningen är borta.",
-      "body": "Den har redan lästs eller gått ut. Burn-länkar kan bara öppnas en gång och går ut efter 24 timmar."
+      "body": "Den har redan lästs eller gått ut. Burn-länkar kan bara öppnas en gång och går ut av sig själva."
     },
     "error": {
       "heading": "Något gick fel.",

@@ -5,9 +5,9 @@ title: De verhuizing
 
 ![Een stille straat bij nacht. Eén winkelpui brandt, met een papieren lampion bij de deur.](/onboarding/moving-in.webp)
 
-Je kunt vier soorten dingen meenemen: notities, dagboekstukken, bladwijzers en wachtwoorden.
+Je kunt vier soorten dingen meenemen: notities, dagboeknotities, bladwijzers en wachtwoorden.
 
-Ze beginnen allemaal op dezelfde plek: **Instellingen > Importeren & exporteren**.
+Ze beginnen allemaal op dezelfde plek: **Instellingen > Import & Export**.
 
 ## Wat je mee kunt nemen
 
@@ -34,14 +34,14 @@ Onze importgidsen vind je hier: [privacynotes.app/nl/help](https://privacynotes.
 - [ ] Stop je map `AppleJournalEntries` in een zipbestand en sleep het hierheen
 - [ ] Open de weergave **Dagboek** en schrijf over vandaag
 
-Een dagboekstuk bevat meer dan tekst. Boven het schrijfvak staan de trackers: stemming, slaap, energie, stappen en meer. Vul in wat je interesseert en laat de rest. Na twee weken begint de app je patronen te laten zien.
+Een dagboeknotitie bevat meer dan tekst. Boven het schrijfvak staan de trackers: stemming, slaap, energie, stappen en meer. Vul in wat je interesseert en laat de rest. Na twee weken begint de app je patronen te laten zien.
 
 [[Zaterdag: de Fuji]] is een afgemaakt stuk, met alle trackers erbij.
 
 ## Bladwijzers
 
 - [ ] Exporteer de bladwijzers van je browser als `.html`-bestand
-- [ ] Importeer dat bestand: **Instellingen > Importeren & exporteren > Importeren > Browserbladwijzers**
+- [ ] Importeer dat bestand: **Instellingen > Import & Export > Importeren > Browserbladwijzers**
 
 Je kunt ook een link in een lege notitie plakken. De titel en het site-icoon komen vanzelf: [privacynotes.app/nl/help/import/browser-bookmarks](https://privacynotes.app/nl/help/import/browser-bookmarks)
 

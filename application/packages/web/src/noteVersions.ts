@@ -2,15 +2,15 @@
  * Client helpers for Pro note-history (server-backed snapshots).
  *
  * Each saved version is an encrypted snapshot of the note's
- * title/body/tags at the moment of save. The server never sees
+ * title/body/tags at the moment of save, plus a login's custom fields
+ * and extra websites, and a journal entry's tracker values. The server never sees
  * plaintext. Versions live in the `note_versions` table with a
- * BEFORE INSERT trigger that caps each note at 20 rows.
+ * BEFORE INSERT trigger that caps each note at 50 rows and trims the
+ * account's oldest versions once their bytes pass its storage quota.
  *
- * Version creation is debounced at the call site: we only snapshot
- * after the user has been idle for a few seconds AND the content
- * hashes out different from the previous version. Hash-compare
- * prevents burning capacity on no-op saves (the editor calls
- * updateNote on every keystroke-ish debounce).
+ * When a version is made is decided at the call site: the state before
+ * an edit, once per editing session (versionSchedule.ts, wired in
+ * useNoteEditing.ts), and the state a restore replaces (NotesView.tsx).
  */
 
 import {
@@ -24,15 +24,16 @@ import { db, type LocalNote } from './db';
 import { computeSnapshotTotalSize } from './notesViewUtils';
 import { isServerWriteBlocked } from './syncPause';
 import { isDemoMode } from './demo';
+import { trackerContent } from './editStamp';
 
 const TABLE = 'note_versions';
 
 /**
  * Rows the server's BEFORE INSERT trigger keeps per note. The demo path
  * below enforces the same number itself, so the two behave alike.
- * Spec: ops/docs/pro-features.md (also a 60s min gap, enforced in useNoteEditing.ts)
+ * Spec: ops/docs/pro-features.md (Note history row)
  */
-const MAX_VERSIONS = 20;
+const MAX_VERSIONS = 50;
 
 /** Compact shape the UI panel renders. `bodyBytes` drives the
  *  "how much changed" hint without exposing the plaintext body. */
@@ -43,8 +44,31 @@ export type NoteVersion = {
   title: string;
   body: string;
   tags: string[];
+  /** A login's custom fields and extra websites as recorded: undefined when
+   *  the version did not record them (an older client, or not a login), null
+   *  when it recorded none. */
+  login?: unknown;
+  /** A journal entry's tracker values as recorded, bookkeeping keys left
+   *  out: undefined when the version did not record them (an older client,
+   *  or not a journal entry). */
+  trackers?: Record<string, unknown>;
   bodyBytes: number;
 };
+
+/** What a snapshot records beside the title, body and tags: for a login,
+ *  its extras, with null standing for "recorded, and there were none". */
+function loginOf(note: LocalNote): { login?: unknown } {
+  return note.type === 'login' ? { login: note.trackers?.login ?? null } : {};
+}
+
+/** A journal entry's tracker values, which a version records beside its text. */
+function journalOf(note: LocalNote): { trackers?: Record<string, unknown> } {
+  return note.type === 'journal' ? { trackers: trackerContent(note.trackers) } : {};
+}
+
+function loginFromTrackers(trackers: Record<string, unknown> | undefined): { login?: unknown } {
+  return trackers && Object.prototype.hasOwnProperty.call(trackers, 'login') ? { login: trackers.login } : {};
+}
 
 type RemoteRow = {
   id: string;
@@ -68,8 +92,7 @@ export type CreateNoteVersionResult =
  * Write a new version snapshot for `note`. Returns a structured
  * result so the caller can detect the Pro-lapsed RLS rejection
  * (code 42501) and surface a one-time toast. Other errors are
- * logged. The caller is expected to debounce + dedupe before
- * calling this.
+ * logged. The caller decides when, and dedupes, before calling this.
  */
 export async function createNoteVersion(
   supabase: SupabaseClient,
@@ -97,6 +120,8 @@ export async function createNoteVersion(
         title: note.title,
         body: note.body,
         tags: note.tags,
+        ...loginOf(note),
+        ...journalOf(note),
       });
       const ids = await db.demoVersions.where('noteId').equals(note.id).sortBy('createdAt');
       if (ids.length > MAX_VERSIONS) {
@@ -117,6 +142,8 @@ export async function createNoteVersion(
         starred: note.starred === 1,
         locked: note.locked === 1,
         pinProtected: note.pinProtected === 1,
+        type: note.type,
+        ...(note.type === 'login' ? { trackers: loginOf(note) } : journalOf(note)),
       },
       encryptionKey
     );
@@ -140,6 +167,13 @@ export async function createNoteVersion(
 /**
  * List all versions for a note, newest first. Decrypted in memory
  * so the caller can render previews without a second round trip.
+ *
+ * A read that fails throws; an empty list means the note has no
+ * versions. The blob GC depends on that difference: it skips when the
+ * read throws, because history it could not read may still hold a blob.
+ * postgrest-js reports a failed fetch, offline included, as an error
+ * object rather than a rejection, so the check below is what turns it
+ * into a throw.
  */
 export async function listNoteVersions(
   supabase: SupabaseClient,
@@ -155,6 +189,8 @@ export async function listNoteVersions(
       title: v.title,
       body: v.body,
       tags: v.tags,
+      ...(v.login !== undefined ? { login: v.login } : {}),
+      ...(v.trackers !== undefined ? { trackers: v.trackers } : {}),
       bodyBytes: computeSnapshotTotalSize(v.title, v.body, v.tags),
     }));
   }
@@ -165,7 +201,7 @@ export async function listNoteVersions(
     .order('created_at', { ascending: false });
   if (error) {
     console.error('[note_versions] list failed:', error);
-    return [];
+    throw new Error(error.message || 'note_versions list failed');
   }
   const rows = (data ?? []) as RemoteRow[];
   const out: NoteVersion[] = [];
@@ -183,6 +219,8 @@ export async function listNoteVersions(
         title: decrypted.title,
         body: decrypted.body,
         tags: decrypted.tags,
+        ...loginFromTrackers(decrypted.trackers),
+        ...(decrypted.type === 'journal' && decrypted.trackers ? { trackers: decrypted.trackers as Record<string, unknown> } : {}),
         bodyBytes: computeSnapshotTotalSize(
           decrypted.title ?? '', decrypted.body ?? '', decrypted.tags ?? [],
         ),

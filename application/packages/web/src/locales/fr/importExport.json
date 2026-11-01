@@ -9,49 +9,110 @@
     "tabExport": "Exporter",
     "tabRestore": "Restaurer",
     "tabVault": "Mots de passe",
-    "working": "En cours…"
+    "working": "En cours…",
+    "tabWellness": "Suivis"
   },
   "footer": {
     "exportNote": "Les exports se font en local. Rien n'est envoyé.",
     "restoreNote": "Ton fichier est lu et déchiffré en local.",
-    "importNote": "Tout est chiffré avant de quitter ton appareil pour se synchroniser."
+    "importNote": "Tout est toujours chiffré, sur ton appareil et pendant la synchronisation."
   },
   "importPick": {
     "autoTagLabel": "Étiqueter les notes importées par source",
     "autoTagDesc": "Les notes Google Keep reçoivent <keep>#google</keep>, Obsidian reçoit <obsidian>#obsidian</obsidian>, et ainsi de suite.",
     "guideAria": "Guide d'import pour {{app}}",
-    "guideLabel": "Guide"
+    "guideLabel": "Guide",
+    "groupGeneral": "Général",
+    "groupNotes": "Notes"
   },
   "folderImport": {
     "tagLabel": "Étiqueter aussi les notes par dossier",
     "tagDesc": "Tes dossiers sont recréés dans tous les cas. Ceci ajoute aussi chaque nom de dossier comme étiquette, pratique si tu aimes filtrer par étiquette."
   },
+  "browserImport": {
+    "tagLabel": "Garder les étiquettes de ton navigateur",
+    "tagDesc": "Firefox enregistre des étiquettes et un mot-clé de barre d'adresse avec chaque signet. Les deux deviennent des étiquettes ici."
+  },
+  "contactImport": {
+    "photosLabel": "Importer les photos",
+    "photosDesc_one": "{{count}} photo, environ {{size}} une fois réduite par l'app. C'est {{pct}} % des {{free}} dont tu disposes.",
+    "photosDesc_other": "{{count}} photos, environ {{size}} une fois réduites par l'app. C'est {{pct}} % des {{free}} dont tu disposes.",
+    "photosDescNoQuota_one": "{{count}} photo, environ {{size}} une fois réduite par l'app.",
+    "photosDescNoQuota_other": "{{count}} photos, environ {{size}} une fois réduites par l'app.",
+    "photosTooBig_one": "Pas assez d'espace pour la photo ({{size}}), elle est laissée de côté. Tout le reste passe. Libère {{shortfall}}, ou ajoute du stockage, puis importe à nouveau pour la récupérer.",
+    "photosTooBig_other": "Pas assez d'espace pour les {{count}} photos ({{size}}), elles sont laissées de côté. Tout le reste passe. Libère {{shortfall}}, ou ajoute du stockage, puis importe à nouveau pour les récupérer."
+  },
+  "importCalendar": {
+    "location": "Lieu",
+    "videoCall": "Appel vidéo",
+    "organizer": "Organisateur",
+    "guests": "Invités",
+    "file": "Fichier",
+    "link": "Lien",
+    "timeZone": "Fuseau horaire",
+    "ends": "Fin",
+    "repeats": "Répétition"
+  },
+  "webcal": {
+    "title": "Webcal",
+    "desc": "Une adresse de calendrier, comme un lien webcal:// de Proton, iCloud, Outlook ou d'un calendrier public. Le calendrier est téléchargé une seule fois ; colle l'adresse à nouveau plus tard pour n'ajouter que les nouveaux événements.",
+    "fieldLabel": "Adresse du calendrier",
+    "import": "Importer",
+    "downloading": "Téléchargement…",
+    "errors": {
+      "invalid": "Colle une adresse qui commence par webcal://, webcals:// ou https://.",
+      "refused": "Impossible d'ouvrir cette adresse.",
+      "wrongType": "Cette adresse ne mène pas à un fichier de calendrier.",
+      "tooLarge": "Ce calendrier dépasse 10 Mo.",
+      "timeout": "Le serveur du calendrier n'a pas répondu à temps. Réessaie plus tard.",
+      "blocked": "Le serveur du calendrier a refusé le téléchargement. Vérifie que le calendrier est partagé ou public.",
+      "offline": "Tu es hors ligne. Connecte-toi et réessaie.",
+      "limit": "Trop de téléchargements en peu de temps. Attends une minute et réessaie.",
+      "failed": "Impossible de télécharger le calendrier. Vérifie l'adresse et réessaie."
+    }
+  },
   "sourceDesc": {
     "googleKeep": "Google Takeout .zip (dossier Keep) ou une seule note .json. Les listes de contrôle s'importent en listes de tâches natives.",
+    "googleCalendar": "Le .zip de Settings > Import & export dans Google Calendar, ou un seul fichier .ics. Les événements gardent leurs horaires, leurs répétitions et leurs rappels.",
     "appleNotes": "Exporte via l'app gratuite Exporter au format Markdown, puis dépose le .zip ici.",
     "appleJournal": "Exporte depuis Journal sur Mac ou iPhone, compresse le dossier AppleJournalEntries, puis dépose le .zip. Les entrées s'importent comme des entrées de journal avec leurs photos, vidéos, mémos vocaux et lieux.",
     "evernote": "Un seul .enex, ou plusieurs regroupés dans un zip. Conserve la mise en forme, les étiquettes, les pièces jointes, les liens entre notes et les carnets. Evernote laisse les tâches hors du .enex.",
     "samsungNotes": "Exporte en Word (.docx) ou Texte (.txt). Compresse plusieurs fichiers pour un import groupé.",
     "simplenote": "Exporte depuis Simplenote (Réglages -> Outils -> Exporter les notes). Dépose le .zip.",
-    "standardNotes": "Sauvegarde .zip ou .txt déchiffrée depuis Standard Notes (Fichier > Exporter > Déchiffré).",
+    "standardNotes": "Sauvegarde .zip ou .txt déchiffrée depuis Standard Notes (Account settings > Backups > Data backups > Decrypted).",
     "obsidian": "Coffre Obsidian en .zip. Conserve les tags, les [[note links]], la structure de dossiers, les #tags en ligne, ainsi que les images et fichiers intégrés.",
     "notesnook": "Export Notesnook en .zip. Choisis HTML à l'export pour garder la mise en forme, les carnets, les étiquettes et les pièces jointes.",
+    "bear": "Dans Bear, choisis File > Backup Notes... et dépose ici le fichier .bear2bk. Les étiquettes et étiquettes imbriquées, les épingles, les archives, la corbeille, les surlignages avec leurs couleurs, les liens de note et les pièces jointes suivent.",
+    "joplin": "Le fichier .jex de File > Export all > \"JEX - Joplin Export File\". Les carnets deviennent des dossiers, et les étiquettes, les tâches à faire, les liens de note et les pièces jointes suivent.",
     "upnote": "Dans UpNote : Settings > Backup > Backup now, puis zippe tout le contenu du dossier de sauvegarde. Conserve les carnets, les étiquettes, les épingles, les liens entre notes, la mise en forme et les pièces jointes. Les exports note par note depuis les apps mobiles fonctionnent aussi - choisis \"Export to HTML\".",
     "markdownFolder": "Fichiers .md ou .txt à l'unité ou en .zip. Un dossier zippé garde ses sous-dossiers et amène ses images et ses pièces jointes.",
     "markdownApp": "Ces notes sont déjà des fichiers Markdown dans un dossier. Dépose ce dossier en .zip et ses sous-dossiers, ses images et ses #tags viennent avec.",
     "browserBookmarks": "Le fichier de favoris (.html) issu de \"Export bookmarks\" dans ton navigateur, ou le .zip que Safari écrit. Chrome, Firefox, Safari, Edge, Opera, Brave et Vivaldi contiennent tous le même fichier. Les dossiers et les dates suivent.",
+    "vcard": "Le fichier .vcf que ton carnet d'adresses exporte : iPhone et Mac via iCloud ou Contacts, Android, Google Contacts. Chaque fiche passe, photos comprises, et importer deux fois le même fichier ignore les personnes que tu as déjà.",
     "bitwarden": "Export .json non chiffré de Bitwarden (Tools > Export vault > .json). Identifiants, cartes, clés SSH, notes sécurisées et codes TOTP suivent tous.",
     "browserPasswords": "Le fichier de mots de passe (.csv) de Chrome, Edge, Brave, Opera, Vivaldi, Firefox ou Safari, ou le .zip que Safari écrit. Chaque ligne devient un identifiant. Supprime le fichier quand tu as fini - il contient tes mots de passe en clair."
+  },
+  "sourceLabel": {
+    "privacynotes": "Sauvegarde complète PrivacyNotes",
+    "browserBookmarks": "Signets du navigateur",
+    "browserPasswords": "Mots de passe du navigateur",
+    "vcard": "Contacts (vCard)",
+    "markdownFolder": "Fichiers Markdown"
   },
   "vaultPick": {
     "intro": "Importe des identifiants, cartes bancaires et clés SSH depuis un autre gestionnaire de mots de passe."
   },
   "restorePick": {
-    "intro": "Restaure une sauvegarde PrivacyNotes que tu as exportée plus tôt. Ton fichier est lu et déchiffré en local.",
+    "intro": "Restaure une sauvegarde PrivacyNotes que tu as exportée plus tôt.",
     "fullBackupTitle": "Sauvegarde complète (.zip)",
-    "fullBackupDesc": "Restaure notes, journaux, éléments du coffre, tâches, images, audio et fichiers. Tout est importé comme de nouveaux éléments - les données existantes ne sont pas écrasées.",
+    "fullBackupDesc": "Restaure notes, journaux, éléments du coffre, tâches, images, audio et fichiers. Une note que tu as déjà est conservée, ou mise à jour si la sauvegarde en contient une version plus récente.",
     "encryptedBackupTitle": "Sauvegarde chiffrée (.pnbackup, .pnbackupz)",
     "encryptedBackupDesc": "Restaure une sauvegarde chiffrée avec la clé de ta phrase. Un .pnbackupz ramène tout, fichiers compris ; un .pnbackup ne contient que le texte et les métadonnées. Tu dois être connecté avec le même compte que celui qui l'a créée."
+  },
+  "restoreGate": {
+    "wait": "La restauration attend que cet appareil soit en ligne et ait terminé une synchronisation, pour que ta sauvegarde soit mise en correspondance avec les notes déjà présentes dans ton compte au lieu de les ajouter en double.",
+    "paused": "La restauration attend la synchronisation, pour que ta sauvegarde soit mise en correspondance avec les notes déjà présentes dans ton compte, et la synchronisation est en pause sur cet appareil : désactive « Mettre en pause » dans Paramètres > ID & Sync.",
+    "belowFloor": "La restauration attend la synchronisation, pour que ta sauvegarde soit mise en correspondance avec les notes déjà présentes dans ton compte, et cette version de l'application est trop ancienne pour synchroniser : mets d'abord l'application à jour."
   },
   "encryptedBackupLabel": "Sauvegarde chiffrée",
   "status": {
@@ -64,9 +125,17 @@
   "errors": {
     "genericParse": "Une erreur s'est produite.",
     "decryptionFailed": "Le déchiffrement a échoué. Mauvaise phrase ou fichier corrompu.",
-    "blobImportFailed": "Tes notes ont été importées, mais pas leurs images ni leurs fichiers : {{detail}} Rien n'a été modifié dans le fichier que tu as choisi, tu peux donc supprimer les notes importées et relancer l'import."
+    "blobImportFailed": "Tes notes ont été importées, mais pas leurs images ni leurs fichiers : {{detail}} Rien n'a été modifié dans le fichier que tu as choisi, tu peux donc supprimer les notes importées et relancer l'import.",
+    "blobsNotInBackup_one": "Tes notes ont été restaurées, mais {{items}} manque dans la sauvegarde, qui en indique pourtant la présence.",
+    "blobsNotInBackup_other": "Tes notes ont été restaurées, mais {{items}} manquent dans la sauvegarde, qui en indique pourtant la présence."
   },
   "preview": {
+    "oversize_one": "{{count}} note dépasse 1 Mo. Elle reste sur cet appareil et ne se synchronise pas.",
+    "oversize_other": "{{count}} notes dépassent 1 Mo. Elles restent sur cet appareil et ne se synchronisent pas.",
+    "splitOversize_one": "Scinder cette note en notes plus petites à ses titres, pour qu'elle se synchronise",
+    "splitOversize_other": "Scinder ces {{count}} notes en notes plus petites à leurs titres, pour qu'elles se synchronisent",
+    "partTitle": "{{title}} ({{index}}/{{total}})",
+    "continuedIn": "Suite dans {{link}}",
     "sourceLabel": "Source",
     "uniqueTags": "Étiquettes uniques",
     "empty": "Vide",
@@ -76,11 +145,14 @@
     "andMore": "… et {{count}} de plus",
     "headsUpLabel": "Attention :",
     "duplicateWarning": "l'import les ajoute comme de nouvelles notes. Si tu le lances deux fois, tu auras des doublons. Il n'y a pas encore de déduplication automatique.",
+    "duplicateSkipNote": "les signets que tu as déjà enregistrés sont ignorés, donc relancer cet import ne crée aucun doublon.",
+    "contactSkipNote": "les personnes déjà enregistrées sont ignorées et restent telles quelles, donc un second passage ne créera aucun doublon.",
+    "eventSkipNote": "les événements que tu as déjà importés sont ignorés et restent tels quels, donc relancer cet import ne crée aucun doublon.",
+    "restoreMergeNote": "les notes de ta propre sauvegarde sont associées par identifiant. Une note que tu as déjà n'est mise à jour que si la copie de la sauvegarde est plus récente, et une note de ta corbeille en ressort.",
     "quotaExceeded": "<strong>Stockage trop faible pour importer.</strong> Environ {{needed}} nécessaires, {{available}} disponibles. Libère de l'espace ou passe à la version supérieure avant d'importer.",
     "quotaWarning": "Attention : cet import utilisera environ {{needed}} de tes {{available}} de stockage restant.",
     "oversizeAttachments_one": "1 fichier dépasse la limite de {{limit}} par fichier de ton offre. Il s'importe sur cet appareil, mais ne se synchronisera pas vers tes autres appareils tant que tu ne passes pas à Pro.",
-    "oversizeAttachments_other": "{{count}} fichiers dépassent la limite de {{limit}} par fichier de ton offre. Ils s'importent sur cet appareil, mais ne se synchroniseront pas vers tes autres appareils tant que tu ne passes pas à Pro.",
-    "duplicateSkipNote": "les signets que tu as déjà enregistrés sont ignorés, donc relancer cet import ne crée aucun doublon."
+    "oversizeAttachments_other": "{{count}} fichiers dépassent la limite de {{limit}} par fichier de ton offre. Ils s'importent sur cet appareil, mais ne se synchroniseront pas vers tes autres appareils tant que tu ne passes pas à Pro."
   },
   "counts": {
     "note_one": "note",
@@ -93,6 +165,8 @@
     "card_other": "cartes",
     "sshKey_one": "clé SSH",
     "sshKey_other": "clés SSH",
+    "contact_one": "contact",
+    "contact_other": "contacts",
     "zeroItems": "0 élément",
     "importButton": "Importer {{counts}}"
   },
@@ -118,20 +192,40 @@
     "vaultExportDesc": "Identifiants, cartes et clés SSH au format compatible Bitwarden. Importable par la plupart des gestionnaires de mots de passe. En clair - à manipuler avec précaution.",
     "bookmarksOnlyHeading": "Signets uniquement",
     "bookmarksExportTitle": "Fichier de signets (.html)",
-    "bookmarksExportDesc": "Le fichier de signets standard que tout navigateur lit. Importe-le dans Chrome, Firefox, Safari ou Edge sans perdre tes dossiers."
+    "bookmarksExportDesc": "Le fichier de signets standard que tout navigateur lit. Importe-le dans Chrome, Firefox, Safari ou Edge sans perdre tes dossiers.",
+    "contactsOnlyHeading": "Contacts seulement",
+    "contactsExportTitle": "Fichier de contacts (.vcf)",
+    "contactsExportDesc": "Le fichier vCard que chaque téléphone et chaque carnet d'adresses lit. Importe-le dans iPhone, Android, Google Contacts ou Contacts sur Mac, étiquettes et groupes compris.",
+    "calendarOnlyHeading": "Calendrier seulement",
+    "calendarExportTitle": "Fichier de calendrier (.ics)",
+    "calendarExportDesc": "Les événements, ainsi que les notes et listes de tâches datées, pour Google Calendar, Apple Calendar ou Outlook.",
+    "calendarPrivate": "Privé"
   },
   "exportProgress": {
     "failedTitle": "L'export a échoué",
     "completeTitle": "Export terminé",
+    "incompleteTitle": "Export incomplet",
     "exportingTitle": "Export de la sauvegarde...",
     "preparing": "Préparation...",
     "exporting": "Export...",
     "imagesProgress": "Export des images... {{done}} sur {{total}}",
     "filesProgress": "Export des fichiers... {{done}} sur {{total}}",
     "building": "Construction de la sauvegarde...",
-    "compressing": "Compression..."
+    "compressing": "Compression...",
+    "missingFailed_one": "Cet appareil n'a pas pu télécharger {{items}}, donc ton export ne l'inclut pas. Vérifie ta connexion et exporte à nouveau.",
+    "missingFailed_other": "Cet appareil n'a pas pu télécharger {{items}}, donc ton export ne les inclut pas. Vérifie ta connexion et exporte à nouveau.",
+    "missingNotFound_one": "{{items}} n'est ni sur cet appareil ni sur le serveur, donc ton export ne l'inclut pas.",
+    "missingNotFound_other": "{{items}} ne sont ni sur cet appareil ni sur le serveur, donc ton export ne les inclut pas."
+  },
+  "missing": {
+    "pictures_one": "{{count}} image",
+    "pictures_other": "{{count}} images",
+    "files_one": "{{count}} fichier",
+    "files_other": "{{count}} fichiers",
+    "both": "{{pictures}} et {{files}}"
   },
   "upload": {
+    "discard": "Ignorer",
     "completeTitle": "Envoi terminé",
     "failedTitle": "L'envoi a échoué",
     "partialTitle": "{{done}} envoyés, {{failed}} échoués",
@@ -141,6 +235,11 @@
     "statusFailed": "Échoué",
     "errorStorageFull": "Stockage plein - libère de l'espace ou ajoute du stockage pour envoyer ce fichier.",
     "errorStorageFullKept": "Ne tient pas dans ton stockage - conservé sur cet appareil. Le fichier se synchronisera dès qu'il y aura de la place.",
+    "errorTooLarge": "Fichier trop volumineux ({{size}}). Maximum {{limit}} Mo.",
+    "errorTooLargeFree": "Fichier trop volumineux ({{size}}). Maximum {{limit}} Mo avec le forfait gratuit.",
+    "batchTitle_one": "{{count}} fichier",
+    "batchTitle_many": "{{count}} fichiers",
+    "batchTitle_other": "{{count}} fichiers",
     "statusUploading": "Envoi...",
     "statusWaiting": "En attente",
     "summaryDone": "{{count}} terminés",
@@ -162,8 +261,16 @@
   "saveErrors": {
     "shortWrite": "Seuls {{written}} octets sur {{expected}} ont été enregistrés, le fichier est donc incomplet. Réessaie en enregistrant dans le stockage de ton appareil plutôt que dans un dossier cloud."
   },
-  "browserImport": {
-    "tagLabel": "Garder les étiquettes de ton navigateur",
-    "tagDesc": "Firefox enregistre des étiquettes et un mot-clé de barre d'adresse avec chaque signet. Les deux deviennent des étiquettes ici."
+  "shareSheet": {
+    "title_one": "{{count}} élément a été partagé avec PrivacyNotes",
+    "title_other": "{{count}} éléments ont été partagés avec PrivacyNotes",
+    "line": "Rien n'est enregistré tant que tu n'as pas choisi.",
+    "saveAll": "Tout enregistrer"
+  },
+  "destination": {
+    "label": "Ajouter à",
+    "none": "Sans dossier",
+    "newFolder": "Nouveau dossier « {{name}} »",
+    "help": "Les dossiers de la source sont placés dans le dossier choisi, et les éléments sans dossier y sont ajoutés."
   }
 }

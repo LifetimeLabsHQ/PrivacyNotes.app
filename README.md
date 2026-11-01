@@ -1,6 +1,3 @@
-> [!IMPORTANT]
-> **The apps are now open source.** As of August 31, 2026, the full client code for web, desktop and mobile is in [`application/`](application/), licensed under AGPL-3.0. If you came to check our claims, start with [VERIFY.md](VERIFY.md).
-
 <div align="center">
 
 <picture>
@@ -10,7 +7,7 @@
 <br><br>
 
 **End-to-end encrypted notes, tasks, and journal.**<br>
-Your 12-word phrase is your identity and your key. No email, no password, no account to leak.
+Your 12-word phrase is your identity and your key. With a phrase sign-up there is no email, no password and no account to leak.
 
 [**Website**](https://privacynotes.app/en) &nbsp;·&nbsp; [**Try it, no account**](https://try.privacynotes.app) &nbsp;·&nbsp; [**Verify it yourself**](VERIFY.md) &nbsp;·&nbsp; [**Security**](SECURITY.md) &nbsp;·&nbsp; [**Threat model**](THREAT_MODEL.md)
 
@@ -18,47 +15,51 @@ Signed apps for [**macOS**](https://privacynotes.app/en#downloads), [**Windows**
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL--3.0-1E40AF.svg)](LICENSE)
 [![Encryption](https://img.shields.io/badge/Encryption-XChaCha20--Poly1305-10B981.svg)](crypto/crypto.ts)
-[![Identity](https://img.shields.io/badge/Identity-Ed25519-4F6BD5.svg)](crypto/crypto.ts)
-[![Audit](https://img.shields.io/badge/Third--party%20audit-not%20yet-lightgrey.svg)](#security-contact)
+[![Release](https://img.shields.io/github/v/release/LifetimeLabsDev/PrivacyNotes.app)](https://github.com/LifetimeLabsDev/PrivacyNotes.app/releases)
+[![Stars](https://img.shields.io/github/stars/LifetimeLabsDev/PrivacyNotes.app)](https://github.com/LifetimeLabsDev/PrivacyNotes.app/stargazers)
 [![GitGem](https://gitgem.org/api/badge/github/LifetimeLabsDev/PrivacyNotes.app.svg)](https://gitgem.org/github/LifetimeLabsDev/PrivacyNotes.app)
-
-</div>
 
 <br>
 
-<div align="center">
-
-<a href="https://try.privacynotes.app"><img src="assets/app.webp" alt="The PrivacyNotes editor" width="820"></a>
+<a href="https://try.privacynotes.app">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/app-dark.webp">
+  <img src="assets/app.webp" alt="The PrivacyNotes app" width="820">
+</picture>
+</a>
 
 <em>This screenshot is a link. It opens the <a href="https://try.privacynotes.app">live demo</a> in your browser:<br>
 no account, nothing saved, the real app with the real encryption.</em>
 
-</div>
-
 <br>
-
-<div align="center">
 
 ### What your data looks like on our server
 
-<img src="assets/database.webp" alt="Real rows from the notes table, containing only ciphertext the server cannot read" width="760">
+<img src="assets/database.webp" alt="Real rows from the notes table, containing only ciphertext" width="760">
 
 <em>Real rows from the <code>notes</code> table in production. A public key, a ciphertext, a nonce.<br>
-No title, no body, no tags. Just bytes we cannot read.</em>
+No title, no body, no tags. Just bytes that only your phrase opens.</em>
 
 <br>
 
 **Do not take our word for it.** [**Check it yourself in about a minute**](VERIFY.md), with nothing but your browser's network tab.
 
-</div>
-
 <br>
+
+<a href="https://privacytools.io/app/privacynotes">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://privacytools.io/stats/privacynotes.dark.svg">
+    <img src="https://privacytools.io/stats/privacynotes.light.svg" alt="PrivacyNotes GitHub stats on PrivacyTools.io" width="100%">
+  </picture>
+</a>
+
+</div>
 
 ---
 
 ## What PrivacyNotes is
 
-An end-to-end encrypted notes, tasks and journal app for macOS, Windows, Linux, Android, iOS and the browser. You get a 12-word phrase instead of an account, and everything you write is encrypted on your device under a key only you hold, on disk and on the way to us. Notes, journal entries, tasks, a password vault, and file attachments all live under that one key.
+An end-to-end encrypted notes, tasks and journal app for macOS, Windows, Linux, Android, iOS and the browser. You get a 12-word phrase instead of an account, and everything you write is encrypted on your device under a key derived from it, on disk and on the way to us. Under self-custody, that key is yours alone. Notes, journal entries, tasks, a password vault, and file attachments all live under that one key.
 
 ---
 
@@ -70,13 +71,13 @@ Three claims we make, and where to check each one without taking our word for it
 
 | The claim | Check it here |
 | :--- | :--- |
-| Your phrase never leaves your device | [`crypto/crypto.ts`](crypto/crypto.ts), and the derivation strings in the live bundle |
-| Notes are encrypted before they touch our server | [`crypto/crypto.ts`](crypto/crypto.ts), the XChaCha20-Poly1305 path |
+| Under self-custody, your phrase never leaves your device | [`crypto/crypto.ts`](crypto/crypto.ts), and the derivation strings in the live bundle |
+| Your notes are encrypted on your device, at rest and on the way to us | [`crypto/crypto.ts`](crypto/crypto.ts), the XChaCha20-Poly1305 path |
 | The server stores only ciphertext | [VERIFY.md](VERIFY.md) tier 1: watch your own notes leave in your browser's network tab |
 
 If any of those stops holding, the claim is broken and you can prove it. That is the entire point of this repo.
 
-The first claim has one exception, chosen at signup and off unless you pick it: [custodial mode](#custodial-mode-the-exception-to-the-first-claim).
+The first claim holds under self-custody, which every phrase sign-up uses. Its exception is [custodial mode](#custodial-mode-the-exception-to-the-first-claim), which a sign-up with Google, Apple or GitHub preselects.
 
 ---
 
@@ -85,7 +86,7 @@ The first claim has one exception, chosen at signup and off unless you pick it: 
 | Path | What it is |
 | :--- | :--- |
 | [`application/`](application/) | The client applications, as we build them: the web app, the desktop and mobile shells, and the shared crypto package. `cd application && pnpm install && pnpm build`. |
-| [`crypto/crypto.ts`](crypto/crypto.ts) | Key derivation and note encryption, about 560 lines, commented step by step. Not a reference implementation. The production code, copied here so the link is short; the canonical file is `application/packages/shared/src/crypto.ts`. Attachments and images use the same cipher through [`crypto/blob.ts`](crypto/blob.ts), which is another 50 lines. |
+| [`crypto/crypto.ts`](crypto/crypto.ts) | Key derivation and note encryption, about 590 lines, commented step by step. Not a reference implementation. The production code, copied here so the link is short; the canonical file is `application/packages/shared/src/crypto.ts`. Attachments and images use the same cipher through [`crypto/blob.ts`](crypto/blob.ts), which is another 50 lines. |
 | [`SECURITY.md`](SECURITY.md) | What we protect against, what we do not, and what the server can see. Written for users. |
 | [`THREAT_MODEL.md`](THREAT_MODEL.md) | Trust boundaries, cryptographic detail, and known limitations, including the unflattering ones. Written for auditors. **Start here if you are reviewing the project.** |
 
@@ -155,9 +156,9 @@ Every honest end-to-end encrypted project has these. Here are ours.
 
 ### Custodial mode, the exception to the first claim
 
-By default your phrase never leaves your device. At OAuth signup (Google, Apple or GitHub) you can instead ask us to store it, so a new device is one click instead of twelve words. Pick that and the phrase sits on our servers encrypted under a key WE hold: a valid legal order, a deep enough compromise, or a dishonest future version of us could reach your plaintext. We count capabilities, not intentions, and that capability is on our side. Self-custody users are exposed to none of it.
+Sign up with a phrase and you get self-custody: the phrase never leaves your device. Sign up with Google, Apple or GitHub and the next screen asks where your phrase lives, and it preselects our storing it, which makes a new device one click instead of twelve words. Keep that choice and the phrase sits on our servers encrypted under a key WE hold: a valid legal order, a deep enough compromise, or a dishonest future version of us could reach your plaintext. We count capabilities, not intentions, and that capability is on our side. Self-custody users are exposed to none of it.
 
-The choice is reversible either way from Settings > Security > Your Phrase, both directions signed with your own account key. [SECURITY.md](SECURITY.md) is the full statement of what each mode protects and what it does not. If you want the version of PrivacyNotes this document describes, use the phrase flow.
+The choice is reversible either way from Settings > Account > Key custody, both directions signed with your own account key. [SECURITY.md](SECURITY.md) is the full statement of what each mode protects and what it does not. If you want the version of PrivacyNotes this document describes, use the phrase flow.
 
 ### Metadata
 
@@ -169,7 +170,7 @@ Sign in with Google, Apple or GitHub and the email the provider shares with us i
 
 ### Browser-delivered code
 
-Published source does not prove that the JavaScript your browser ran today came from it: anyone controlling our hosting could serve modified code, per user or per region. That is structural to every web app. What narrows it: the signed native builds (macOS notarized, Windows Authenticode, Linux signed AppImage and deb, Android certificate-pinned APK) are fixed artifacts that cannot change under you between visits - **if your threat model includes us being coerced, prefer them** - and the derivation constants stay findable in the served bundle, as above. Subresource Integrity and reproducible web builds have not shipped yet.
+Published source does not prove that the JavaScript your browser ran today came from it: anyone controlling our hosting could serve modified code, per user or per region. That is structural to every web app. What narrows it: the signed native builds (macOS notarized, Windows Authenticode, Linux signed AppImage, Android certificate-pinned APK) are fixed artifacts that cannot change under you between visits - **if your threat model includes us being coerced, prefer them** - and the derivation constants stay findable in the served bundle, as above. Subresource Integrity and reproducible web builds have not shipped yet.
 
 ### Things we cannot help with
 
@@ -177,40 +178,11 @@ Losing your phrase, under self-custody, means losing your notes. There is no res
 
 ---
 
-## Coming from another app
-
-The importer already reads your export:
-
-| Coming from | What to drop in |
-| :--- | :--- |
-| [Evernote](https://privacynotes.app/help/import/evernote) | `.enex`, on its own or several zipped. Keeps formatting, tags, attachments, note links and notebooks |
-| [Apple Notes](https://privacynotes.app/help/import/apple-notes) | `.zip` of a Markdown export |
-| [Apple Journal](https://privacynotes.app/help/import/apple-journal) | `.zip` of `AppleJournalEntries`, with photos, videos, voice memos and locations |
-| [Obsidian](https://privacynotes.app/help/import/obsidian) | vault `.zip`, keeping tags, `[[note links]]` and folder structure |
-| [Notesnook](https://privacynotes.app/help/import/notesnook) | `.zip` HTML export or `.nnbackupz` |
-| [Standard Notes](https://privacynotes.app/help/import/standard-notes) | `.zip` or `.txt` backup |
-| [Simplenote](https://privacynotes.app/help/import/simplenote) | `.zip` or `.json` export |
-| [Google Keep](https://privacynotes.app/help/import/google-keep) | Takeout `.zip` or `.json` |
-| [Samsung Notes](https://privacynotes.app/help/import/samsung-notes) | `.zip`, `.docx` or `.txt` |
-| [UpNote](https://privacynotes.app/help/import/upnote) | `.zip` export |
-| [Nextcloud Notes](https://privacynotes.app/help/import/nextcloud-notes) | `.zip` of the notes folder from your server |
-| [iA Writer](https://privacynotes.app/help/import/ia-writer) | `.zip` of the library, or the `.md` files |
-| [Typora](https://privacynotes.app/help/import/typora) | the `.md` files, individually or zipped |
-| [Zettlr](https://privacynotes.app/help/import/zettlr) | `.zip` of the workspace folder |
-| [Bitwarden](https://privacynotes.app/help/import/bitwarden) | `.json` export, into the password vault |
-| [Browser passwords](https://privacynotes.app/help/import/browser-passwords) | `.csv` export from Chrome, Firefox, Safari or Edge, into the password vault |
-| [Browser bookmarks](https://privacynotes.app/help/import/browser-bookmarks) | the exported `.html` bookmarks file |
-| [Anything else](https://privacynotes.app/help/import/markdown) | `.md` files, individually or zipped |
-
-Nothing in that list is uploaded for conversion. The parser runs in your browser and the result is encrypted on the device, which is the only reason importing a decade of Evernote into a service like this is a reasonable thing to do.
-
----
-
 ## Security contact
 
-Found a flaw in the crypto, the derivation, or the client? Email **privacynotes@lifetimelabs.dev** rather than opening a public issue, so it can be fixed before it is public.
+Found a flaw in the crypto, the derivation, or the client? [**Report it privately on GitHub**](https://github.com/LifetimeLabsDev/PrivacyNotes.app/security/advisories/new) rather than opening a public issue, so it can be fixed before it is public. A private report there reaches us fastest and keeps the whole exchange in one place.
 
-That address is published in our PGP-signed [security.txt](https://privacynotes.app/.well-known/security.txt) so you can confirm it is really us, and our [public key](https://privacynotes.app/.well-known/pgp-key.txt) is there if you want to encrypt the report. If a fix needs coordination we will work with you on timing before disclosure. There is no paid bounty program yet.
+If you cannot use GitHub, email **privacynotes@lifetimelabs.dev** as a backup. That address is published in our PGP-signed [security.txt](https://privacynotes.app/.well-known/security.txt) so you can confirm it is really us, and our [public key](https://privacynotes.app/.well-known/pgp-key.txt) is there if you want to encrypt the report. If a fix needs coordination we will work with you on timing before disclosure. There is no paid bounty program yet.
 
 **No third-party audit has been performed yet.** The first serious spend out of revenue is one, with Cure53 as the target firm.
 

@@ -24,10 +24,12 @@
  *     puts it back on every save - byte for byte, fences and line endings
  *     included.
  *
- * Spec: ops/docs/plans/markdown-folder.md (section 6, data model)
+ * Spec: ops/docs/archive/markdown-folder.md (section 6, data model)
  */
 import { extractInlineTags, normalizeTag, parseYamlTags } from '../notesRepo';
 import type { LocalNote } from '../db';
+import type { OpenedFileRef } from './fileAccess';
+import type { OpenedMarkdownFile } from './types';
 
 /** Extensions we open in the rich editor. All are plain markdown. */
 const MARKDOWN_EXTENSIONS = ['md', 'markdown', 'mdown', 'mkd'];
@@ -164,10 +166,10 @@ function headingTitle(body: string): string | null {
  * open, including CRLF and the trailing-whitespace forms that carry meaning
  * (two spaces is a hard break, four is a code block).
  *
- * Saving currently writes the editor's raw text straight back, so nothing here
- * reassembles the pieces. A composer is only needed once something edits the
- * front-matter structurally - writing a tag from the UI, say - and it lands
- * with that, not before.
+ * Source mode saves its text as it is. A rich-mode save puts `frontMatterRaw`
+ * back in front of the serialized body (`scheduleSave` in MarkdownFilePane.tsx)
+ * after `tidyRichSave` below. A composer for the front matter itself is only
+ * needed once something edits it structurally - writing a tag from the UI, say.
  */
 export function adaptFile(filename: string, raw: string): AdaptedFile {
   const match = raw.match(FRONT_MATTER);
@@ -190,6 +192,20 @@ export function adaptFile(filename: string, raw: string): AdaptedFile {
     tags: [...new Set(tags)],
     editorMode: TEXT_EXT.test(filename) ? 'source' : 'rich',
   };
+}
+
+/**
+ * The rich editor's serialized body, minus what the editor adds that the file
+ * never had. The editor keeps an empty last paragraph after a table or a code
+ * block so the caret has somewhere to go, and it serializes as `&nbsp;`: a
+ * junk line in every file that ends in a table. The serializer also drops the
+ * final newline. `body` is the file's body as read, which decides both.
+ */
+export function tidyRichSave(serialized: string, body: string): string {
+  let out = serialized;
+  if (!/&nbsp;\s*$/.test(body)) out = out.replace(/(?:\s*&nbsp;)+\s*$/, '');
+  const eol = body.match(/\r?\n$/)?.[0] ?? '';
+  return out.replace(/(?:\r?\n)+$/, '') + eol;
 }
 
 /**
@@ -238,4 +254,14 @@ export function entryToNote(
     type: 'note',
     folderId: null,
   };
+}
+
+/**
+ * Read a file from disk into the shape the file pane opens. The list pane's
+ * rows, the operating system's "Open with" and the quick switcher all open a
+ * file this one way.
+ */
+export async function readOpenedFile(ref: OpenedFileRef): Promise<OpenedMarkdownFile> {
+  const raw = await ref.read();
+  return { ref, raw, stamp: await ref.stamp(), adapted: adaptFile(ref.name, raw), reloadToken: 0 };
 }

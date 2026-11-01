@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, type CSSProperties } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Fire, Lock, Moon, Sun } from './icons';
 import { RevealGate } from './RevealGate';
-import { useTheme } from './theme';
+import { isLineSpacing, lineHeightCss, paragraphGapCss, useTheme, type LineSpacing } from './theme';
 import { decryptJson, hexToBytes, createSupabaseClient } from '@notes/shared';
-import { renderMarkdown, prepareRender } from './markdownRender';
+import { renderMarkdownSafe, renderNoteBody, prepareRender } from './markdownRender';
 import { marketingHomeHref } from './siteLinks';
 import { Brand } from './Brand';
+import { readBurnSeconds } from './burnOptions';
 
 /**
  * Burn-After-Reading viewer - renders at /burn.
@@ -65,7 +66,7 @@ export default function BurnNote() {
   const { t } = useTranslation('notesChrome');
   const { theme, setTheme } = useTheme();
   const [phase, setPhase] = useState<Phase>('sealed');
-  const [note, setNote] = useState<{ title: string; body: string; fields: BurnField[] } | null>(null);
+  const [note, setNote] = useState<{ title: string; body: string; fields: BurnField[]; spacing: LineSpacing } | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -130,7 +131,7 @@ export default function BurnNote() {
       const key = hexToBytes(keyHex);
       const nonce = raw.slice(0, 24);
       const ciphertext = raw.slice(24);
-      const result = decryptJson<{ title?: unknown; body?: unknown; fields?: unknown }>(
+      const result = decryptJson<{ title?: unknown; body?: unknown; fields?: unknown; spacing?: unknown; readSeconds?: unknown }>(
         ciphertext,
         nonce,
         key,
@@ -146,9 +147,12 @@ export default function BurnNote() {
         title: typeof result.title === 'string' ? result.title : '',
         body: typeof result.body === 'string' ? result.body : '',
         fields: readFields(result.fields),
+        // The sender's line spacing, so the note lays out as they saw it. A
+        // link made before it was sent reads as Compact, the app's default.
+        spacing: isLineSpacing(result.spacing) ? result.spacing : 'compact',
       });
       setPhase('revealed');
-      setCountdown(120);
+      setCountdown(readBurnSeconds(result.readSeconds));
     } catch {
       setErrorMsg(t('burnView.error.network'));
       setPhase('error');
@@ -185,8 +189,8 @@ export default function BurnNote() {
   // Memoize rendered markdown so the 1Hz countdown tick doesn't
   // re-render the body HTML every second.
   const bodyHtml = useMemo(
-    () => (note?.body ? renderMarkdown(note.body) : ''),
-    [note?.body, renderReady],
+    () => (note?.body ? renderNoteBody(renderMarkdownSafe(note.body), note.spacing) : ''),
+    [note?.body, note?.spacing, renderReady],
   );
 
   // A shared note can contain math or fenced code, and rendering those needs
@@ -212,13 +216,13 @@ export default function BurnNote() {
             {/* Flame icon */}
             <Fire size={28} className="text-orange-500" />
             <div>
-              <h1 className="text-xl font-bold tracking-tight">Burn After Reading</h1>
-              <p className="text-xs text-neutral-500">{t('burnView.tagline')}</p>
+              <h1 className="text-xl font-bold tracking-tight">{t('burnView.title')}</h1>
+              <p className="text-xs text-pn-muted">{t('burnView.tagline')}</p>
             </div>
           </div>
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition"
+            className="text-pn-muted hover:text-pn-soft transition"
             aria-label={t('burnView.toggleTheme')}
           >
             {theme === 'dark' ? (
@@ -231,8 +235,8 @@ export default function BurnNote() {
 
         {/* Loading - checking if the note still exists */}
         {checking && (
-          <div className="rounded-lg border border-divider bg-neutral-50 dark:bg-neutral-900 p-8 text-center">
-            <p className="text-neutral-500 animate-pulse">{t('burnView.checking')}</p>
+          <div className="rounded-lg border border-divider bg-surface-1 p-8 text-center">
+            <p className="text-pn-muted animate-pulse">{t('burnView.checking')}</p>
           </div>
         )}
 
@@ -251,8 +255,8 @@ export default function BurnNote() {
 
         {/* Revealing - brief loading state */}
         {phase === 'revealing' && (
-          <div className="rounded-lg border border-divider bg-neutral-50 dark:bg-neutral-900 p-8 text-center">
-            <p className="text-neutral-500 animate-pulse">{t('burnView.revealing')}</p>
+          <div className="rounded-lg border border-divider bg-surface-1 p-8 text-center">
+            <p className="text-pn-muted animate-pulse">{t('burnView.revealing')}</p>
           </div>
         )}
 
@@ -261,7 +265,7 @@ export default function BurnNote() {
           <div className="space-y-4">
             {/* Self-destruct banner */}
             <div className="flex items-center justify-between rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 px-4 py-2.5">
-              <span className="text-sm text-red-600 dark:text-red-400 font-mono">
+              <span className="text-sm text-danger font-mono">
                 {t('burnView.revealed.countdown', { time: formatTime(countdown ?? 0) })}
               </span>
               <button
@@ -272,8 +276,11 @@ export default function BurnNote() {
               </button>
             </div>
 
-            {/* Note content */}
-            <div className="rounded-lg border border-divider bg-surface-2 overflow-hidden">
+            {/* Note content. `contain: paint` makes the card the containing
+                block and stacking context for everything inside it, so a
+                stranger's note can never place a fixed layer over the page,
+                whatever CSS path it finds past the sanitizer. */}
+            <div className="rounded-lg border border-divider bg-surface-2 overflow-hidden [contain:paint]">
               {note.title && (
                 <div className="px-6 pt-5 pb-2">
                   <h2 className="text-xl font-bold tracking-tight">{note.title}</h2>
@@ -307,17 +314,20 @@ export default function BurnNote() {
                 )}
                 {note.body ? (
                   <div
-                    className="prose prose-neutral dark:prose-invert max-w-none prose-headings:tracking-tight prose-p:leading-relaxed prose-img:rounded-md"
+                    className="prose prose-pn max-w-none prose-headings:tracking-tight prose-img:rounded-md"
+                    // The sender's rhythm, on this block only: the page root
+                    // carries the reader's own spacing if they use the app.
+                    style={{ '--pn-para-gap': paragraphGapCss(note.spacing), lineHeight: lineHeightCss(note.spacing) } as CSSProperties}
                     dangerouslySetInnerHTML={{ __html: bodyHtml }}
                   />
                 ) : note.fields.length === 0 ? (
-                  <span className="text-neutral-400 italic">{t('burnView.revealed.emptyNote')}</span>
+                  <span className="text-pn-muted italic">{t('burnView.revealed.emptyNote')}</span>
                 ) : null}
               </div>
             </div>
 
             {/* Self-destruct footer */}
-            <p className="text-center text-xs text-neutral-500 dark:text-neutral-600 italic">
+            <p className="text-center text-xs text-pn-muted italic">
               {t('burnView.revealed.deletedNotice')}
             </p>
           </div>
@@ -325,12 +335,12 @@ export default function BurnNote() {
 
         {/* Destroyed - plaintext cleared from memory */}
         {phase === 'destroyed' && (
-          <div className="rounded-lg border border-divider bg-neutral-50 dark:bg-neutral-900 p-8 text-center space-y-4">
-            <div className="text-neutral-400 mx-auto">
+          <div className="rounded-lg border border-divider bg-surface-1 p-8 text-center space-y-4">
+            <div className="text-pn-muted mx-auto">
               <Fire size={48} weight="duotone" className="mx-auto" />
             </div>
             <p className="text-lg font-semibold">{t('burnView.destroyed.heading')}</p>
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-pn-muted">
               {t('burnView.destroyed.body')}
             </p>
             <a
@@ -347,12 +357,12 @@ export default function BurnNote() {
 
         {/* Gone - already consumed or expired */}
         {phase === 'gone' && (
-          <div className="rounded-lg border border-divider bg-neutral-50 dark:bg-neutral-900 p-8 text-center space-y-4">
-            <div className="text-neutral-400 mx-auto">
+          <div className="rounded-lg border border-divider bg-surface-1 p-8 text-center space-y-4">
+            <div className="text-pn-muted mx-auto">
               <Fire size={48} weight="duotone" className="mx-auto" />
             </div>
             <p className="text-lg font-semibold">{t('burnView.gone.heading')}</p>
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-pn-muted">
               {t('burnView.gone.body')}
             </p>
             <a
@@ -370,10 +380,10 @@ export default function BurnNote() {
         {/* Error state */}
         {phase === 'error' && (
           <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-8 text-center space-y-3">
-            <p className="text-lg font-semibold text-red-600 dark:text-red-400">
+            <p className="text-lg font-semibold text-danger">
               {t('burnView.error.heading')}
             </p>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            <p className="text-sm text-pn-muted">
               {errorMsg || t('burnView.error.fallback')}
             </p>
           </div>
@@ -381,9 +391,9 @@ export default function BurnNote() {
 
         {/* No payload in the URL */}
         {!checking && phase === 'sealed' && !hasPayload && (
-          <div className="rounded-lg border border-divider bg-neutral-50 dark:bg-neutral-900 p-8 text-center space-y-3">
+          <div className="rounded-lg border border-divider bg-surface-1 p-8 text-center space-y-3">
             <p className="text-lg font-semibold">{t('burnView.noPayload.heading')}</p>
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-pn-muted">
               {t('burnView.noPayload.body')}
             </p>
             <a
@@ -399,7 +409,7 @@ export default function BurnNote() {
         )}
 
         {/* Footer */}
-        <div className="mt-8 text-center text-xs text-neutral-400 dark:text-neutral-600">
+        <div className="mt-8 text-center text-xs text-pn-muted">
           {/* Every link on this page, this one and the "go to PrivacyNotes"
               links above, lands on the localized marketing homepage: a burn
               reader is a stranger who followed a shared link, so the app host

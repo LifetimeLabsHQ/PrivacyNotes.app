@@ -8,16 +8,23 @@
     "readOnly": "Alleen-lezen",
     "file": "Bestand",
     "empty": "Leeg",
-    "noContent": "Geen inhoud"
+    "noContent": "Geen inhoud",
+    "notBackedUp": "Geen back-up",
+    "archived": "Gearchiveerd",
+    "entryDate": "Dagboekdatum",
+    "date": "Datum",
+    "dayOf": "dag {{n}} van {{total}}"
   },
   "header": {
     "new": "Nieuw",
     "newNote": "Nieuwe notitie",
-    "newNoteHover": "Nieuwe notitie ({{hotkey}})",
-    "trash": "Prullenbak"
+    "trash": "Prullenbak",
+    "newEvent": "Nieuwe afspraak"
   },
   "folderChip": {
-    "clear": "Mapfilter wissen: {{folder}}"
+    "clear": "Mapfilter wissen: {{folder}}",
+    "subfolders": "Submappen",
+    "subfoldersLabel": "Submappen meenemen"
   },
   "tagChip": {
     "clear": "Tagfilter wissen: {{tag}}"
@@ -26,15 +33,21 @@
     "ariaLabel": "Nieuw kluisitem",
     "login": "Login",
     "card": "Creditcard",
-    "sshKey": "SSH-sleutel"
+    "sshKey": "SSH-sleutel",
+    "generator": "Wachtwoord"
   },
   "newMenu": {
     "note": "Notitie",
     "task": "Taak",
+    "kanban": "Kanbanbord",
     "journal": "Dagboek",
     "login": "Login",
     "file": "Bestand",
-    "bookmark": "Bladwijzer"
+    "bookmark": "Bladwijzer",
+    "clipPage": "Pagina clippen",
+    "contact": "Contact",
+    "event": "Afspraak",
+    "quickAdd": "Snel toevoegen"
   },
   "vaultFilter": {
     "all": "Alles",
@@ -43,9 +56,7 @@
     "keys": "Sleutels"
   },
   "journal": {
-    "backfillHover": "Nieuw dagboek voor een recente dag",
-    "newEntry": "Nieuwe dagboeknotitie",
-    "newEntryHover": "Nieuwe dagboeknotitie ({{hotkey}})"
+    "newEntry": "Nieuwe dagboeknotitie"
   },
   "tasks": {
     "newTitle": "Taken voor {{date}}"
@@ -54,12 +65,13 @@
     "empty": "Legen",
     "emptyHover": "Alle notities in de prullenbak verwijderen",
     "storage": "Opslag",
-    "autoDelete": "Auto-verwijderen: 30 d"
+    "autoDelete": "Na 30 dagen automatisch verwijderen"
   },
   "search": {
     "sortOptions": "Sorteer- en weergaveopties",
     "placeholderVault": "Kluis doorzoeken…",
-    "placeholderNotes": "Notities zoeken…"
+    "placeholderNotes": "Notities zoeken…",
+    "placeholderEvents": "Afspraken zoeken…"
   },
   "selection": {
     "countOf": "{{selected}} van {{total}} geselecteerd",
@@ -70,9 +82,22 @@
     "noMatches": "Geen resultaten.",
     "vault": "De kluis is leeg.",
     "notes": "Nog geen notities.",
+    "archive": "Niets gearchiveerd.",
+    "trash": "De prullenbak is leeg.",
     "filtered": "Geen items voldoen aan je filters.",
     "clearFilters": "Filters wissen",
-    "filteredAfter": "om ze te tonen."
+    "filteredAfter": "om ze te tonen.",
+    "hiddenInAll_other": "{{count}} items zijn verborgen door het filter Tonen in Alles. Open het filter naast Alles om ze te tonen.",
+    "inOtherSpace_other": "{{count}} items staan in je ruimte {{space}}. Schakel in de zijbalk over naar {{space}} om ze te zien.",
+    "inOtherSpace_one": "{{count}} item staat in je ruimte {{space}}. Schakel in de zijbalk over naar {{space}} om het te zien.",
+    "hiddenInAll_one": "{{count}} item is verborgen door het filter Tonen in Alles. Open het filter naast Alles om het te tonen."
+  },
+  "listGroups": {
+    "previous7Days": "Afgelopen 7 dagen",
+    "previous30Days": "Afgelopen 30 dagen",
+    "other": "Overig",
+    "collapseAll": "Alle groepen inklappen",
+    "expandAll": "Alle groepen uitklappen"
   },
   "headerLabel": {
     "allItems": "Alles",
@@ -80,14 +105,30 @@
     "journals": "Dagboeken",
     "vault": "Kluis",
     "pinned": "Vastgezet",
-    "notes": "Notities"
+    "archive": "Archief",
+    "notes": "Notities",
+    "calendar": "Agenda"
   },
   "footerStats": {
-    "journals": "Dagboeken",
-    "items": "Items",
-    "trashed": "In prullenbak",
-    "notes": "Notities",
-    "bookmarks": "Bladwijzers"
+    "journals_other": "Dagboeknotities",
+    "journals_one": "Dagboeknotitie",
+    "items_other": "Items",
+    "items_one": "Item",
+    "trashed_other": "In prullenbak",
+    "trashed_one": "In prullenbak",
+    "notes_other": "Notities",
+    "notes_one": "Notitie",
+    "bookmarks_other": "Bladwijzers",
+    "bookmarks_one": "Bladwijzer",
+    "contacts_other": "Contacten",
+    "files_other": "Bestanden",
+    "lists_other": "Lijsten",
+    "tasks_other": "Taken",
+    "today": "Vandaag",
+    "tasks_one": "Taak",
+    "lists_one": "Lijst",
+    "files_one": "Bestand",
+    "contacts_one": "Contact"
   },
   "toast": {
     "imageUploadFailed": "Uploaden van afbeelding mislukt: {{error}}",
@@ -96,7 +137,8 @@
     "importedSyncing_one": "{{count}} notitie geïmporteerd. Synchroniseren…",
     "importedSyncing_other": "{{count}} notities geïmporteerd. Synchroniseren…",
     "addedTag_one": "#{{tag}} toegevoegd aan {{count}} item",
-    "addedTag_other": "#{{tag}} toegevoegd aan {{count}} items"
+    "addedTag_other": "#{{tag}} toegevoegd aan {{count}} items",
+    "restoreSummary": "Hersteld. {{added}} toegevoegd, {{updated}} bijgewerkt, {{unchanged}} al up-to-date."
   },
   "burn": {
     "mediaOnly": "Deze notitie bevat alleen media en kan niet via een burn-link worden gedeeld.",
@@ -122,8 +164,17 @@
     "collapse": "Notitielijst inklappen",
     "expand": "Notitielijst uitklappen"
   },
+  "split": {
+    "action": "Notitie splitsen",
+    "done": "Gesplitst in “{{title}}”",
+    "overLimit": "“{{title}}” is groter dan 1 MB en blijft op dit apparaat",
+    "cannot": "Deze notitie kan hier niet worden gesplitst. Zet de cursor waar de nieuwe notitie moet beginnen.",
+    "continuedTitle": "{{title}} (vervolg)",
+    "continuedIn": "Verder in {{link}}"
+  },
   "paneResize": {
-    "hintCollapse": "Klik om in te klappen · Sleep om de grootte aan te passen"
+    "hintCollapse": "Klik om in te klappen · Sleep om de grootte aan te passen",
+    "hintExpand": "Klik om uit te klappen · Sleep om de grootte aan te passen"
   },
   "emptyEditor": {
     "selectFile": "Kies een bestand om te bekijken",
@@ -133,10 +184,10 @@
   },
   "zen": {
     "exit": "Zen verlaten",
-    "exitHover": "Zen-modus verlaten (Esc)",
+    "exitHover": "Zen-modus verlaten",
     "enterHover": "Zen-modus starten",
     "proHover": "Zen-modus (Pro)",
-    "enterAriaShortcut": "Zen-modus starten (⌘⇧F)"
+    "enterAriaShortcut": "Zen-modus starten ({{keys}})"
   },
   "editor": {
     "backToList": "Terug naar notitielijst",
@@ -158,8 +209,10 @@
     "invisiblesShow": "Onzichtbare tekens tonen",
     "invisiblesHide": "Onzichtbare tekens verbergen",
     "findInNote": "Zoeken in notitie",
-    "navPrev": "Vorige notitie",
-    "navNext": "Volgende notitie",
+    "navPrev": "Vorige",
+    "navNext": "Volgende",
+    "navPrevTab": "Vorig tabblad",
+    "navNextTab": "Volgend tabblad",
     "undo": "Ongedaan maken",
     "redo": "Opnieuw",
     "hide": "Verbergen",
@@ -170,27 +223,25 @@
     "widthWide": "Breder",
     "widthFull": "Volledige breedte",
     "burn": "Delen & vernietigen na lezen",
-    "titlePlaceholderLink": "Naam van bladwijzer"
+    "titlePlaceholderLink": "Naam van bladwijzer",
+    "titlePlaceholderContact": "Naam",
+    "notBackedUpTooLarge": "Boven de limiet van 1 MB, dus geen back-up. Verplaats afbeeldingen naar bijlagen of splits de notitie.",
+    "notBackedUpFailed": "Geen back-up. Laatste fout: {{message}}. Nieuwe poging bezig.",
+    "unknownType": "Dit item is gemaakt met een nieuwere versie van PrivacyNotes. Werk de app bij om het te openen."
   },
   "share": {
     "hover": "Delen / exporteren",
     "ariaLabel": "Delen of exporteren",
-    "thisNote": "Deze notitie",
     "currentMdTitle": "Huidige notitie (.md)",
     "currentMdDesc": "Kale markdown met front-matter.",
     "currentHtmlTitle": "Huidige notitie (.html)",
     "currentHtmlDesc": "Printvriendelijk, markdown weergegeven op een witte pagina.",
     "printTitle": "Afdrukken / opslaan als PDF",
     "printDesc": "Opent het afdrukvenster. Sla op als PDF of stuur naar een printer.",
+    "printTextTitle": "Alleen tekst afdrukken",
+    "printTextDesc": "Houdt de titel. Laat de datum, map en tags weg.",
     "burnTitle": "Delen & vernietigen na lezen",
-    "burnDesc": "Publiceer deze notitie als link die één keer te bekijken is. De link vernietigt zichzelf na het lezen. Je notitie blijft veilig in je account.",
-    "backup": "Back-up",
-    "fullBackupTitle": "Volledige back-up (.zip)",
-    "fullBackupDesc": "Alles: notities, dagboeken, kluis, taken, afbeeldingen, audio, bestanden.",
-    "allHtmlTitle": "Alle items (.zip met .html)",
-    "allHtmlDesc": "Eén printbare HTML per item. Handig om offline te lezen.",
-    "jsonTitle": "Tekstback-up (.json)",
-    "jsonDesc": "Alle tekst en metagegevens, geen afbeeldingen of bestanden."
+    "burnDesc": "Publiceer deze notitie als link die één keer te bekijken is. De link vernietigt zichzelf na het lezen. Je notitie blijft veilig in je account."
   },
   "weekReview": {
     "title": "Week in beeld",
@@ -206,10 +257,18 @@
     "newNote": "Nieuw",
     "newNoteHintMac": "Option + Shift + N",
     "newNoteHintOther": "Alt + Shift + N",
+    "newNoteHintMacDesktop": "Command + N",
+    "newNoteHintOtherDesktop": "Ctrl + N",
     "openStats": "Statistieken openen",
-    "words": "Woorden",
+    "journalCalendar": "Dagboekkalender",
+    "words_other": "Woorden",
+    "words_one": "Woord",
     "zen": "Zen-modus",
     "appearance": "Weergave",
+    "lockApp": "App vergrendelen",
+    "lockAppSetUp": "Stel eerst een PIN in bij Beveiliging",
+    "goToTop": "Naar boven",
+    "goToEnd": "Naar het einde",
     "signOut": "Afmelden",
     "signingOut": "Afmelden…",
     "switchToLight": "Overschakelen naar lichte modus",
@@ -217,20 +276,28 @@
   },
   "settings": {
     "groupYourNotes": "Je notities",
+    "groupPreferences": "Voorkeuren",
     "groupAccount": "Account & gegevens",
     "groupBrand": "PrivacyNotes",
     "statsLabel": "Statistieken",
-    "journalsLabel": "Dagboeken",
     "importLabel": "Importeren & exporteren",
     "planLabel": "Account",
     "storageLabel": "Opslag",
+    "imagesLabel": "Afbeeldingen",
     "securityLabel": "Beveiliging",
     "accountLabel": "ID & synchronisatie",
     "appearanceLabel": "Weergave",
+    "editorLabel": "Editor",
+    "formatBarLabel": "Opmaakbalk",
+    "listsLabel": "Lijsten",
+    "trackersLabel": "Trackers",
     "helpLabel": "Help",
     "aboutLabel": "Over",
     "languageLabel": "Taal",
-    "languageDesc": "Kies de taal waarin PrivacyNotes wordt getoond."
+    "dateLabel": "Datum en tijd",
+    "dateTabFormat": "Notatie",
+    "languageDesc": "Kies de taal waarin PrivacyNotes wordt getoond.",
+    "calendarLabel": "Agenda"
   },
   "importStore": {
     "title": "Importeren of opslaan?",
@@ -241,8 +308,20 @@
   },
   "bulkTrash": {
     "title": "Naar prullenbak",
-    "body_one": "<highlight>{{count}} item</highlight> naar de prullenbak verplaatsen? Je kunt het later herstellen.",
-    "body_other": "<highlight>{{count}} items</highlight> naar de prullenbak verplaatsen? Je kunt ze later herstellen."
+    "body_one": "<highlight>{{count}} item</highlight> naar de prullenbak verplaatsen? Je kunt het later nog herstellen.",
+    "body_other": "<highlight>{{count}} items</highlight> naar de prullenbak verplaatsen? Je kunt ze later herstellen.",
+    "readOnlyTitle": "Alleen-lezen",
+    "readOnlyAcknowledge": "Begrepen",
+    "readOnlyBlocked_one": "Dit item is <highlight>alleen-lezen</highlight> en kan dus niet naar de prullenbak. Zet alleen-lezen eerst uit in de notitieopties.",
+    "readOnlyBlocked_other": "Alle <highlight>{{count}} items</highlight> zijn alleen-lezen, dus geen enkel item kan naar de prullenbak. Zet alleen-lezen eerst uit in de notitieopties.",
+    "readOnlySkipped_one": "<highlight>{{count}} item</highlight> is alleen-lezen en blijft waar het is.",
+    "readOnlySkipped_other": "<highlight>{{count}} items</highlight> zijn alleen-lezen en blijven waar ze zijn."
+  },
+  "deleteCheckedTasks": {
+    "title": "Afgevinkte items verwijderen?",
+    "confirm": "Verwijderen",
+    "body_one": "<highlight>{{count}} item</highlight> wordt uit deze notitie verwijderd. Dit kan niet ongedaan worden gemaakt.",
+    "body_other": "<highlight>{{count}} items</highlight> worden uit deze notitie verwijderd, geneste items inbegrepen. Dit kan niet ongedaan worden gemaakt."
   },
   "bulkDelete": {
     "body_one": "<highlight>{{count}} notitie</highlight> definitief verwijderen? Dit kan niet ongedaan worden gemaakt.",
@@ -271,5 +350,18 @@
     "title": "Nieuwe kluis aangemaakt",
     "confirm": "Duidelijk",
     "body": "Geen bestaande kluis kwam overeen met de herstelzin die je invoerde, dus is er een nieuwe lege kluis aangemaakt. Verwachtte je je notities te zien, meld je dan af en voer je herstelzin zorgvuldig opnieuw in - één ander woord opent een andere kluis."
+  },
+  "ambiguousLink": {
+    "title": "Twee notities hebben die titel",
+    "body": "Meer dan één notitie heet <highlight>“{{title}}”</highlight>, dus deze link zegt niet welke hij bedoelt. Geef er een andere naam aan, dan wijst de link naar de andere."
+  },
+  "connections": {
+    "title": "Verbanden",
+    "hide": "Verbanden verbergen",
+    "linkedFrom": "Gelinkt vanuit",
+    "linksTo": "Linkt naar",
+    "missing": "Nog niet aangemaakt",
+    "protectedHidden_one": "{{count}} met PIN beveiligd item niet getoond",
+    "protectedHidden_other": "{{count}} met PIN beveiligde items niet getoond"
   }
 }

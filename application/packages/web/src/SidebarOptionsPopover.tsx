@@ -3,9 +3,6 @@ import { usePopoverPosition } from './usePopoverPosition';
 import { useEscapeToClose } from './useEscapeToClose';
 import { Check, type Icon } from './icons';
 import type { View } from './views';
-import { markdownSupport } from './markdownFolder/capability';
-import { PILLAR_GLYPHS } from './icons';
-import type { TFunction } from 'i18next';
 
 export interface SidebarOption {
   /** The view this row switches. Also the React key. */
@@ -32,7 +29,7 @@ export interface SidebarOption {
  * when the popover's own height changes, which happens here on every tick:
  * the rail behind it shortens as rows switch off.
  *
- * Spec: ops/docs/plans/sidebar-views.md
+ * Spec: ops/docs/archive/sidebar-views.md
  */
 export function SidebarOptionsPopover({
   title,
@@ -78,7 +75,7 @@ export function SidebarOptionsPopover({
         visibility: pos ? 'visible' : 'hidden',
       }}
     >
-      <div className="px-3 pb-1.5 text-[10px] font-semibold tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
+      <div className="px-3 pb-1.5 text-[10px] font-semibold tracking-wider uppercase text-pn-muted">
         {title}
       </div>
       {options.map((o) => (
@@ -88,7 +85,7 @@ export function SidebarOptionsPopover({
           role="checkbox"
           aria-checked={o.checked}
           onClick={() => onToggle(o.key)}
-          className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[14px] text-pn hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+          className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[14px] text-pn hover:bg-pn/5 transition"
         >
           <o.icon size={16} className="shrink-0 text-accent" aria-hidden="true" />
           <span className="flex-1 min-w-0 text-start truncate">{o.label}</span>
@@ -97,40 +94,6 @@ export function SidebarOptionsPopover({
       ))}
     </div>
   );
-}
-
-/**
- * The rows both option surfaces offer, in sidebar order.
- *
- * 'home' is in neither list: All cannot be hidden (the collapsed rail's logo
- * goes there) and cannot be removed from itself. Markdown appears only where
- * the platform can open a folder, and never in the All list at all - those
- * files live on the user's disk and never enter the encrypted store.
- *
- * Takes a `t` bound to the SHELL namespace: the labels are the sidebar's own
- * strings, so a menu and the row beside it can never disagree in any language.
- * Spec: ops/docs/plans/sidebar-views.md
- */
-export function sidebarViewRows(t: TFunction): SidebarRow[] {
-  return [
-    { key: 'starred', label: t('tagsRail.pinned'), icon: PILLAR_GLYPHS.pinned },
-    { key: 'all', label: t('tagsRail.notes'), icon: PILLAR_GLYPHS.notes },
-    { key: 'tasks', label: t('tagsRail.tasks'), icon: PILLAR_GLYPHS.tasks },
-    { key: 'vault', label: t('tagsRail.vault'), icon: PILLAR_GLYPHS.vault },
-    { key: 'files', label: t('tagsRail.files'), icon: PILLAR_GLYPHS.files },
-    { key: 'journal', label: t('tagsRail.journals'), icon: PILLAR_GLYPHS.journals },
-    ...(markdownSupport() !== 'unavailable'
-      ? [{ key: 'markdown' as View, label: t('tagsRail.markdown'), icon: PILLAR_GLYPHS.markdown }]
-      : []),
-    { key: 'bookmarks', label: t('tagsRail.bookmarks'), icon: PILLAR_GLYPHS.bookmarks },
-  ];
-}
-
-export type SidebarRow = { key: View; label: string; icon: SidebarOption['icon'] };
-
-/** The rows that can be switched off in the All list. */
-export function allViewRows(t: TFunction): SidebarRow[] {
-  return sidebarViewRows(t).filter((r) => r.key !== 'starred' && r.key !== 'markdown');
 }
 
 /**
@@ -144,7 +107,7 @@ export function ViewCheckBox({ checked }: { checked: boolean }) {
     <span
       aria-hidden="true"
       className={`shrink-0 w-4 h-4 rounded border inline-flex items-center justify-center transition ${
-        checked ? 'bg-accent border-accent text-white' : 'border-neutral-300 dark:border-neutral-600'
+        checked ? 'bg-accent-fill border-accent-fill text-white' : 'border-pn-muted/50'
       }`}
     >
       {checked && <Check size={11} weight="bold" />}

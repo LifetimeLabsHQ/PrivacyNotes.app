@@ -2,8 +2,7 @@
   "dismiss": "Ignorer",
   "close": "Fermer",
   "moveBanner": {
-    "title": "L'application déménage sur use.privacynotes.app",
-    "body": "Transfère cette session maintenant - ça ne prend que quelques secondes et tes notes t'accompagnent.",
+    "bodySignIn": "Connecte-toi là-bas avec ta phrase de récupération ou via « {{scanQr}} ».",
     "cta": "Déménager maintenant",
     "syncing": "Synchronisation de tes notes…",
     "error": "Impossible de tout synchroniser pour le moment. Vérifie ta connexion et réessaie.",
@@ -15,8 +14,9 @@
   },
   "moveScreen": {
     "title": "L'application a déménagé sur use.privacynotes.app",
-    "body": "Transfère cet appareil maintenant - ça ne prend que quelques secondes et tes notes t'accompagnent. Rien n'est supprimé ici.",
+    "bodySignIn": "Connecte-toi là-bas avec ta phrase de récupération de 12 mots ou via « {{scanQr}} ». Cet appareil synchronise d'abord, donc toutes tes notes t'y attendent, et rien n'est supprimé ici.",
     "openNotes": "Ouvre tes notes ici une fois pour corriger le problème",
+    "showPhrase": "Afficher ma phrase de récupération",
     "website": "Parcourir le site à la place"
   },
   "quota": {
@@ -54,17 +54,47 @@
     "unsyncedWarn_other": "{{count}} notes sur cet appareil ne sont pas encore synchronisées. Elles seront définitivement perdues si elles ne peuvent pas être envoyées pendant la déconnexion.",
     "unsyncedKept_one": "1 note sur cet appareil n'est pas encore synchronisée. Elle reste sur cet appareil et se synchronisera quand tu te reconnecteras.",
     "unsyncedKept_other": "{{count}} notes sur cet appareil ne sont pas encore synchronisées. Elles restent sur cet appareil et se synchroniseront quand tu te reconnecteras.",
+    "unsyncedFilesWarn_one": "{{count}} fichier sur cet appareil n'est pas synchronisé. La déconnexion le supprime définitivement.",
+    "unsyncedFilesWarn_other": "{{count}} fichiers sur cet appareil ne sont pas synchronisés. La déconnexion les supprime définitivement.",
     "dontRemind": "Ne plus me le rappeler",
     "showPhrase": "Non, afficher la phrase",
-    "confirm": "Oui, me déconnecter"
+    "confirm": "Oui, me déconnecter",
+    "stay": "Rester connecté",
+    "signOutLose_one": "Se déconnecter et perdre {{count}} note",
+    "signOutLose_other": "Se déconnecter et perdre {{count}} notes",
+    "signOutLoseFiles_one": "Se déconnecter et perdre {{count}} fichier",
+    "signOutLoseFiles_other": "Se déconnecter et perdre {{count}} fichiers",
+    "signOutLoseBoth_one": "Se déconnecter et perdre {{count}} note et {{files}}",
+    "signOutLoseBoth_other": "Se déconnecter et perdre {{count}} notes et {{files}}",
+    "fileCount_one": "{{count}} fichier",
+    "fileCount_other": "{{count}} fichiers",
+    "neverBackedUp_one": "Uniquement sur cet appareil :",
+    "neverBackedUp_other": "Uniquement sur cet appareil :",
+    "moreNotes": "et {{count}} de plus",
+    "appLockHint": "Appareil partagé ? Active le verrouillage de l'app dans Paramètres > Sécurité."
   },
   "burnShareModal": {
     "title": "Partager en burn note",
-    "body": "<lead>Ta note d'origine ne sera pas supprimée.</lead> Elle reste en sécurité dans ton compte. Le lien burn est une copie chiffrée distincte qui s'autodétruit après lecture. Le lien expire après 24 heures, qu'il soit ouvert ou non.",
+    "body": "<lead>Ta note d'origine ne sera pas supprimée.</lead> Elle reste en sécurité dans ton compte. Le lien burn est une copie chiffrée distincte qui s'autodétruit après lecture.",
+    "readTime": "Temps de lecture",
+    "readTimeHint": "Disparaît ensuite de l'écran",
+    "lifetime": "Expiration du lien",
+    "lifetimeHint": "Si personne ne l'ouvre",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "hours_one": "{{count}} heure",
+    "hours_other": "{{count}} heures",
+    "afterHours_one": "Après {{count}} heure",
+    "afterHours_other": "Après {{count}} heures",
+    "afterDays_one": "Après {{count}} jour",
+    "afterDays_other": "Après {{count}} jours",
+    "create": "Créer et copier le lien",
+    "share": "Partager le lien",
     "imagesStripped": "Seul le texte est affiché, les fichiers sont masqués dans cette note.",
     "copied": "Copié"
   },
   "burnView": {
+    "title": "Burn After Reading",
     "tagline": "Chiffré. Éphémère. Rien que pour tes yeux.",
     "toggleTheme": "Basculer le thème",
     "checking": "Vérification...",
@@ -73,7 +103,7 @@
     "footerTagline": "- Notes chiffrées en zero-knowledge, hébergées en Suisse.",
     "sealed": {
       "heading": "Tu as reçu une note chiffrée.",
-      "subheading": "Ce message s'autodétruira après lecture. Les liens non lus expirent après 24 heures.",
+      "subheading": "Ce message s'autodétruira après lecture. Les liens non lus expirent d'eux-mêmes.",
       "reveal": "Révéler le message",
       "warning": "Le serveur supprime la note dès que tu la révèles. Pas de seconde chance."
     },
@@ -89,7 +119,7 @@
     },
     "gone": {
       "heading": "Cette note a disparu.",
-      "body": "Elle a déjà été lue ou a expiré. Les liens burn ne peuvent être ouverts qu'une fois et expirent après 24 heures."
+      "body": "Elle a déjà été lue ou a expiré. Les liens burn ne peuvent être ouverts qu'une fois et expirent d'eux-mêmes."
     },
     "error": {
       "heading": "Une erreur s'est produite.",

@@ -7,28 +7,29 @@
  * encrypted store, so no later change can leak content across the boundary by
  * forgetting a filter.
  *
- * Spec: ops/docs/plans/markdown-folder.md (note-links never cross the boundary; a title must not leak)
+ * Spec: ops/docs/archive/markdown-folder.md (note-links never cross the boundary; a title must not leak)
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListNav } from '../notesView/ListNav';
 import { ListSearchInput } from '../ListSearchInput';
 import { ListPrefsPopover } from '../ListPrefsPopover';
-import NoteRow from '../NoteRow';
-import NoteCard from '../NoteCard';
+import MarkdownItem from './MarkdownItem';
 import { formatBytes } from '../formatBytes';
 import { useProgressiveReveal } from '../useProgressiveReveal';
+import { itemGridClass, routeItemClick, useScrollRestore } from '../itemList';
 import { compareNotes } from '../notesViewUtils';
 import { HoverLabel } from '../HoverLabel';
-import { X, CheckSquare, FileMd, FileTxt, Folder, NotePencil, Question, Trash, FunnelSimple, Lock, Copy, ArrowsClockwise, NEW_GLYPHS, PILLAR_GLYPHS } from '../icons';
+import { X, CheckSquare, FileMd, FileTxt, Folder, NotePencil, Question, Trash, FunnelSimple, Lock, Copy, ArrowsClockwise, PILLAR_GLYPHS } from '../icons';
+import { NewButton } from '../NewButton';
 import type { ListPrefs, ListPrefsStore } from '../listPrefs';
 import type { View } from '../views';
 import type { ContextMenuItem } from '../ContextMenu';
 import { markdownSupport } from './capability';
 import { MarkdownDefaultAppPopover } from './MarkdownDefaultApp';
-import { useMarkdownDefaultApp } from './defaultApp';
+import { useDefaultApp } from './defaultApp';
 import { forgetFolder, rememberFolder } from './folderMemory';
-import { adaptFile, entryToNote, isSupportedFile, isTextFile } from './adapter';
+import { adaptFile, entryToNote, isSupportedFile, isTextFile, readOpenedFile } from './adapter';
 import {
   FileExistsError,
   hasRealPath,
@@ -39,7 +40,13 @@ import {
 } from './fileAccess';
 import type { FileMeta } from './useTagIndex';
 import { MarkdownEmptyState } from './MarkdownEmptyState';
+import { LooksContext, NO_LOOKS } from '../looks/LookGlyph';
+import { textMatcher } from '../textMatch';
+import { isImeComposing } from '../imeComposing';
 import type { OpenedMarkdownDir, OpenedMarkdownFile } from './types';
+
+/** A file on disk carries no PIN flag, so no row in this pane is ever behind the gate. */
+const DISK_FILE_LOCKED = false;
 
 export function MarkdownListPane({
   onSelectView,
@@ -49,6 +56,7 @@ export function MarkdownListPane({
   onDir,
   dirFilter,
   tagFilter,
+  initialFilter,
   tagsByPath,
   tagsScanned,
   listPrefs,
@@ -76,6 +84,9 @@ export function MarkdownListPane({
    *  renders in a different part of the shell. */
   dirFilter: string | null;
   tagFilter: string | null;
+  /** The filter the pane opens with: the All search's text, when the list's
+   *  Markdown entry brought the reader here. */
+  initialFilter?: string;
   tagsByPath: Map<string, FileMeta>;
   /** False while the background tag pass is still reading files, which is the
    *  difference between "no files have this tag" and "not read yet". */
@@ -91,11 +102,11 @@ export function MarkdownListPane({
   opened: OpenedMarkdownFile | null;
   onOpened: (file: OpenedMarkdownFile | null) => void;
   /** List or grid, from the shell's one setting - the pillar does not get its
-   *  own toggle. Grid swaps `NoteRow` for `NoteCard`, which is the same swap
-   *  `NotesList` makes; both take `NoteRowProps`, so nothing else changes. */
+   *  own toggle. `MarkdownItem` draws the row or the tile from one item, the
+   *  same pair `NotesList` uses. */
   viewMode: 'list' | 'grid';
   /** Open the reference card behind the `?`. Owned by the shell because the
-   *  modal is the shell's to render. Spec: ops/docs/plans/markdown-folder.md (12) */
+   *  modal is the shell's to render. Spec: ops/docs/archive/markdown-folder.md (12) */
   onExplain: () => void;
   /** A remembered folder awaiting the click that re-grants its permission. */
   reopenName: string | null;
@@ -116,13 +127,12 @@ export function MarkdownListPane({
   const support = markdownSupport();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [filter, setFilter] = useState('');
+  const [filter, setFilter] = useState(initialFilter ?? '');
   const reveal = useProgressiveReveal();
+  // The scroll position across a hide and show of the pane (#186); a new
+  // folder or filter starts at the top.
+  const scroll = useScrollRestore([dir, filter, dirFilter, tagFilter]);
   const gridMode = viewMode === 'grid';
-  /** The same swap `NotesList` makes. Both components take `NoteRowProps`, so
-   *  every handler, the selection gestures and the MD icon override carry over
-   *  unchanged - there is no second row component to keep in sync. */
-  const ItemComponent = gridMode ? NoteCard : NoteRow;
   const [showListPrefs, setShowListPrefs] = useState(false);
   const [showDefaultApp, setShowDefaultApp] = useState(false);
   /**
@@ -131,7 +141,7 @@ export function MarkdownListPane({
    * absent once it is, which in grid mode with nothing open is the only thing on
    * screen that says so. One shared fetch backs both - see `defaultApp.ts`.
    */
-  const defaultApp = useMarkdownDefaultApp();
+  const defaultApp = useDefaultApp('markdown');
   /**
    * Multi-select, mirrored rather than reused.
    *
@@ -149,8 +159,7 @@ export function MarkdownListPane({
   const defaultAppButtonRef = useRef<HTMLButtonElement | null>(null);
 
   async function openRef(ref: OpenedFileRef) {
-    const raw = await ref.read();
-    onOpened({ ref, raw, stamp: await ref.stamp(), adapted: adaptFile(ref.name, raw), reloadToken: 0 });
+    onOpened(await readOpenedFile(ref));
   }
 
   async function handleOpenFile() {
@@ -178,7 +187,7 @@ export function MarkdownListPane({
    * the picker anyway - "Outside our vault / No sync, encryption or backup"
    * sits two inches above the button - and the full card is one click away
    * on the `?`.
-   * Spec: ops/docs/plans/markdown-folder.md (section 12)
+   * Spec: ops/docs/archive/markdown-folder.md (section 12)
    */
   async function handleOpenFolder() {
     setError(null);
@@ -415,7 +424,7 @@ export function MarkdownListPane({
   useEffect(() => {
     if (!selectionMode) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') exitSelection();
+      if (e.key === 'Escape' && !isImeComposing(e)) exitSelection();
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -455,6 +464,7 @@ export function MarkdownListPane({
 
   /** Bytes on disk, formatted, once the background pass has read the file. */
   const sizeOf = (entry: DirectoryEntry) => {
+    if (!listPrefs.showSize) return null;
     const bytes = tagsByPath.get(entry.relPath)?.size;
     return bytes != null ? formatBytes(bytes) : null;
   };
@@ -463,13 +473,14 @@ export function MarkdownListPane({
   // a whole index and belongs with one, not with a keystroke handler.
   const matches = useMemo(() => {
     if (!dir) return [];
-    const q = filter.trim().toLowerCase();
+    const q = filter.trim();
+    const match = q ? textMatcher(q) : null;
     const filtered = dir.entries.filter((e) => {
       // A folder selection includes everything beneath it, which is what
       // clicking a folder means to anyone who has used a file manager.
       if (dirFilter !== null && !e.dir.startsWith(dirFilter)) return false;
       if (tagFilter !== null && !(tagsByPath.get(e.relPath)?.tags ?? []).includes(tagFilter)) return false;
-      if (q && !e.relPath.toLowerCase().includes(q)) return false;
+      if (match && !match(e.relPath)) return false;
       return true;
     });
 
@@ -550,7 +561,7 @@ export function MarkdownListPane({
     <div className="flex flex-col h-full min-h-0 bg-surface-1">
       {/* Byte-for-byte the title row `NotesList` uses, so this pillar's header
           is the same control rather than a lookalike. */}
-      <div className="shrink-0 h-14 px-4 border-b border-divider flex items-center justify-between gap-3">
+      <div className="shrink-0 h-11 md:h-14 px-4 border-b border-divider flex items-center justify-between gap-3">
         <ListNav
           hiddenViews={hiddenViews}
           view="markdown"
@@ -559,18 +570,7 @@ export function MarkdownListPane({
           icon={<PILLAR_GLYPHS.markdown size={26} className="text-accent shrink-0" aria-hidden="true" />}
           title={t('markdown.title')}
         />
-        <div className="shrink-0 flex items-center gap-1.5">
-          {dir && (
-            <button
-              type="button"
-              onClick={() => void handleNew()}
-              className="inline-flex items-center gap-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent font-semibold px-3 py-1.5 text-lg tracking-tight transition cursor-pointer"
-            >
-              <NEW_GLYPHS.note size={18} />
-              {t('markdown.new')}
-            </button>
-          )}
-        </div>
+        {dir && <NewButton onClick={() => void handleNew()} label={t('markdown.new')} />}
       </div>
 
       {dir && (
@@ -592,7 +592,7 @@ export function MarkdownListPane({
                 onClick={() => void handleOpenFolder()}
                 className="inline-flex items-center gap-2 h-8 min-w-0 max-w-full rounded-md border border-divider bg-surface-2 px-2 hover:border-accent transition cursor-pointer"
               >
-                {/* Amber, the same `text-amber-600/80 dark:text-amber-500/80` the
+                {/* Amber, the same `text-label` the
                     rail gives its folder glyphs - the app's "this is on your own
                     disk" colour. Accent blue here made it read as a control. */}
                 <Folder size={16} className="text-amber-600/90 dark:text-amber-500/90 shrink-0" />
@@ -679,7 +679,7 @@ export function MarkdownListPane({
                 `below-end` and not `below`: a centred tip on the second-to-last
                 control in the row collided with the `?`'s own tip beside it. Same
                 position as that one, for the same reason it has it.
-                Spec: ops/docs/plans/markdown-folder.md (section 11) */}
+                Spec: ops/docs/archive/markdown-folder.md (section 11) */}
             {defaultApp && defaultApp.owner !== 'ours' && (
               <HoverLabel label={t('markdown.assocTitle')} position="below-end" className="shrink-0">
                 <button
@@ -690,8 +690,8 @@ export function MarkdownListPane({
                   aria-expanded={showDefaultApp}
                   className={`inline-flex items-center justify-center w-8 h-8 rounded-md border transition cursor-pointer ${
                     showDefaultApp
-                      ? 'bg-accent/10 border-accent text-accent'
-                      : 'bg-surface-2 border-green-600/50 dark:border-green-500/50 text-green-600 dark:text-green-500 hover:border-green-600 dark:hover:border-green-500 hover:bg-green-600/5'
+                      ? 'bg-accent/10 border-accent text-accent-strong'
+                      : 'bg-surface-2 border-green-600/50 dark:border-green-500/50 text-success hover:border-green-600 dark:hover:border-green-500 hover:bg-green-600/5'
                   }`}
                 >
                   <FileMd size={16} />
@@ -752,7 +752,7 @@ export function MarkdownListPane({
                 aria-expanded={showListPrefs}
                 className={`shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-md border transition ${
                   showListPrefs
-                    ? 'bg-accent/10 border-accent text-accent'
+                    ? 'bg-accent/10 border-accent text-accent-strong'
                     : 'bg-surface-2 border-divider text-pn-muted hover:border-accent hover:text-accent'
                 }`}
               >
@@ -771,6 +771,7 @@ export function MarkdownListPane({
                 onClose={() => setShowListPrefs(false)}
                 anchorRef={listPrefsButtonRef}
                 className="absolute start-0 top-full mt-1 z-20"
+                showSizeToggle
               />
             )}
           </div>
@@ -779,7 +780,7 @@ export function MarkdownListPane({
               until this existed those two actions failed in silence. Both
               clear it before they try again, so it never outlives the attempt
               it describes. */}
-          {error && <p className="mt-1.5 text-[12px] text-red-600 dark:text-red-400">{error}</p>}
+          {error && <p className="mt-1.5 text-[12px] text-danger">{error}</p>}
         </div>
       )}
 
@@ -796,7 +797,7 @@ export function MarkdownListPane({
           stay worth reaching mid-selection. The X is the toolbar's Clear. */}
       {selectionMode && selected.size > 0 && (
         <div className="shrink-0 px-4 py-2 border-b border-divider bg-accent/5 dark:bg-accent/10 flex items-center justify-between gap-2 text-[13px]">
-          <span className="font-medium text-neutral-700 dark:text-neutral-200 tabular-nums">
+          <span className="font-medium text-pn-soft tabular-nums">
             {t('markdown.selectedCount', { selected: selected.size, total: matches.length })}
           </span>
           <div className="flex items-center gap-3 shrink-0">
@@ -820,7 +821,7 @@ export function MarkdownListPane({
               // clearing the selection now would throw it away on cancel. The
               // prune effect drops the rows once the delete actually lands.
               onClick={() => onRequestDeleteMany([...selected])}
-              className="font-semibold text-red-600 dark:text-red-400 hover:underline"
+              className="font-semibold text-danger hover:underline"
             >
               {t('markdown.delete')}
             </button>
@@ -828,7 +829,7 @@ export function MarkdownListPane({
               type="button"
               onClick={exitSelection}
               aria-label={t('markdown.exitSelection')}
-              className="text-neutral-500 hover:text-accent dark:text-neutral-400"
+              className="text-pn-muted hover:text-accent"
             >
               <X size={14} />
             </button>
@@ -836,14 +837,16 @@ export function MarkdownListPane({
         </div>
       )}
       <div
+        ref={scroll.ref as React.RefObject<HTMLDivElement>}
         className="flex-1 min-h-0 overflow-y-auto"
         onScroll={(e) => {
+          scroll.onScroll(e.currentTarget);
           reveal.onScroll(e.currentTarget, matches.length);
         }}
       >
         {dir ? (
           matches.length === 0 ? (
-            <p className="p-4 text-[13px] text-neutral-500 dark:text-neutral-400 text-center">
+            <p className="p-4 text-[13px] text-pn-muted text-center">
               {/* A tag filter with the index still running is "not read yet",
                   not "nothing matches" - saying the latter would be wrong for
                   as long as the pass takes on a large vault. */}
@@ -854,9 +857,11 @@ export function MarkdownListPane({
                   : t('markdown.folderEmpty')}
             </p>
           ) : (
-            <ul className={gridMode ? 'grid content-start gap-3 p-4 pn-notes-grid' : ''}>
+            // A file's tags are its own, so no vault tag lends it a look.
+            <LooksContext.Provider value={NO_LOOKS}>
+            <ul className={itemGridClass(gridMode)}>
               {matches.slice(0, reveal.visible).map(({ entry, note }) => (
-                <ItemComponent
+                <MarkdownItem
                   key={entry.relPath}
                   note={note}
                   isOpen={opened?.ref.location === entry.ref.location}
@@ -864,26 +869,17 @@ export function MarkdownListPane({
                   // suppressed until it finishes rather than rendering a blank
                   // line and an empty date for every unread file.
                   listPrefs={{ ...listPrefs, showPreview: listPrefs.showPreview && tagsScanned, showDate: listPrefs.showDate && tagsScanned }}
-                  isNoteLocked={false}
-                  // The routing `useMultiSelect.handleRowClick` does, mirrored:
-                  // shift extends the range once a selection exists, Cmd/Ctrl
-                  // toggles and is the mouse's way INTO selection mode (the
-                  // long-press below is touch-only, so without this the bulk
-                  // verbs were unreachable on a desktop), and a plain click
-                  // opens the file.
-                  onClick={(e) => {
-                    if (e.shiftKey && selectionMode) {
-                      e.preventDefault();
-                      rangeSelect(entry.relPath);
-                      return;
-                    }
-                    if (e.metaKey || e.ctrlKey || selectionMode) {
-                      e.preventDefault();
-                      toggleSelected(entry.relPath);
-                      return;
-                    }
-                    void openRef(entry.ref);
-                  }}
+                  isNoteLocked={DISK_FILE_LOCKED}
+                  // The list's one routing. Cmd/Ctrl is the mouse's way INTO
+                  // selection mode: the long-press below is touch-only, so
+                  // without it the bulk verbs were unreachable on a desktop.
+                  onClick={(e) =>
+                    routeItemClick(e, selectionMode, {
+                      range: () => rangeSelect(entry.relPath),
+                      toggle: () => toggleSelected(entry.relPath),
+                      open: () => void openRef(entry.ref),
+                    })
+                  }
                   selectionMode={selectionMode}
                   isMultiSelected={selected.has(entry.relPath)}
                   onToggleSelect={(e) => {
@@ -894,24 +890,14 @@ export function MarkdownListPane({
                   onTouchMove={cancelLongPress}
                   onTouchCancel={cancelLongPress}
                   showTypeIcons
-                  sizeLabel={sizeOf(entry) ?? undefined}
+                  size={sizeOf(entry)}
                   onContextMenu={(e) => { e.stopPropagation(); onContextMenu(e, rowMenu(entry)); }}
-                  iconOverride={
-                    // The glyph reports the extension, because that is the one
-                    // thing about a row the filename stem does not say: we strip
-                    // it to make the title, so `notes.md` and `notes.txt` are two
-                    // identical rows without this. Same square either way - it is
-                    // the same pillar, not a second kind of file.
-                    <span className="shrink-0 w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
-                      {isTextFile(entry.ref.name) ? <FileTxt size={18} /> : <FileMd size={18} />}
-                    </span>
-                  }
-                  // Same choice for the mini tile, which draws a bare glyph
-                  // instead of the boxed icon above - see `glyphOverride`.
-                  glyphOverride={isTextFile(entry.ref.name) ? FileTxt : FileMd}
+                  grid={gridMode}
+                  text={isTextFile(entry.ref.name)}
                 />
               ))}
             </ul>
+            </LooksContext.Provider>
           )
         ) : opened ? (
           <SingleFileCard opened={opened} onClose={() => onOpened(null)} onOpenFile={() => void handleOpenFile()} />
@@ -952,13 +938,13 @@ function SingleFileCard({
             : <FileMd size={14} className="text-accent shrink-0" />}
           <span className="text-[13px] font-medium truncate">{opened.adapted.title}</span>
         </div>
-        <p className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400 truncate mb-2">
+        <p className="font-mono text-[11px] text-pn-muted truncate mb-2">
           {opened.ref.location}
         </p>
         {opened.adapted.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
             {opened.adapted.tags.map((tag) => (
-              <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-full border border-divider text-neutral-500 dark:text-neutral-400">
+              <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-full border border-divider text-pn-muted">
                 #{tag}
               </span>
             ))}

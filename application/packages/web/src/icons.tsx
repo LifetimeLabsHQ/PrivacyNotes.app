@@ -1,6 +1,6 @@
 // Central icon module - the ONLY file that imports @phosphor-icons/react.
 // Components import icons from here so the sitewide style stays in one place.
-// Style guide: ops/docs/ui-patterns.md (icon weights and sizes).
+// Style guide: ops/docs/archive/ui-patterns.md (icon weights and sizes).
 //
 // - Default UI icons: ICON_WEIGHT (bold) at 14px via IconDefaults provider.
 // - Active/toggled states (starred, pinned, selected): weight "fill".
@@ -10,19 +10,30 @@ import type { ReactNode } from 'react';
 import type { IconProps } from '@phosphor-icons/react';
 import { IconContext } from '@phosphor-icons/react';
 import {
+  AddressBook,
+  CalendarDots,
+  CalendarPlus,
+  Archive,
+  BoxArrowDown,
+  BoxArrowUp,
   ArrowCounterClockwise,
   ArrowSquareOut,
+  UserPlus,
   Bookmark as PhBookmark,
   Bookmarks as PhBookmarks,
   BookmarkSimple,
   CheckFat,
+  Kanban,
   FileMd,
+  FileText,
   Files as PhFiles,
-  Notebook,
   NotePencil,
+  PenNib,
   PencilSimple,
   PlusSquare,
+  Scissors,
   ShieldPlus,
+  Browsers,
   SquaresFour,
   ArrowElbowDownRight as PhArrowElbowDownRight,
   ArrowLeft as PhArrowLeft,
@@ -35,6 +46,8 @@ import {
   Copy,
   Download,
   Fire,
+  FileHtml,
+  Printer,
   Folder,
   Gear,
   Key,
@@ -42,13 +55,14 @@ import {
   PencilSimpleSlash,
   PushPin,
   Shield,
+  Tag,
   Sidebar,
   SignOut,
   Trash,
   Upload,
 } from '@phosphor-icons/react';
 
-// Spec: ops/docs/ui-patterns.md (sitewide icon style)
+// Spec: ops/docs/archive/ui-patterns.md (sitewide icon style)
 const ICON_WEIGHT = 'bold' as const;
 const ICON_WEIGHT_ACTIVE = 'fill' as const;
 const ICON_SIZE = 14;
@@ -116,9 +130,16 @@ export const PILLAR_GLYPHS = {
   tasks: CheckFat,
   vault: Key,
   files: PhFiles,
-  journals: Notebook,
+  // A nib, not a notebook. Files and Journals both used a rounded rectangle
+  // with interior detail, so at rail size the two rows read as the same
+  // silhouette and the pair was reported as indistinguishable. A nib shares
+  // its outline with nothing else in the set.
+  journals: PenNib,
   markdown: FileMd,
   bookmarks: PhBookmarks,
+  contacts: AddressBook,
+  calendar: CalendarDots,
+  archive: Archive,
   trash: Trash,
 } as const;
 
@@ -130,10 +151,31 @@ export const NEW_GLYPHS = {
   generic: PlusSquare,
   note: NotePencil,
   task: CheckFat,
+  kanban: Kanban,
   login: ShieldPlus,
   file: Upload,
-  journal: Notebook,
+  journal: PenNib,
+  event: CalendarPlus,
   bookmark: PhBookmark,
+  contact: UserPlus,
+  clip: Scissors,
+} as const;
+
+/**
+ * Glyphs for "get this note out of the app": the share menu and the note
+ * context menu both list the same three destinations, and they drew different
+ * pictures for them - the share menu named each format, the context menu used
+ * one download arrow three times. One map, so a person learns each format once.
+ * Sizes stay with the caller; the two menus draw at different scales.
+ */
+export const EXPORT_GLYPHS = {
+  markdown: FileMd,
+  html: FileHtml,
+  print: Printer,
+  printText: FileText,
+  /** Not accent, and deliberately: the flame is the one entry here that
+   *  publishes something outside the account. */
+  burn: Fire,
 } as const;
 
 export function iconNote() {
@@ -141,6 +183,9 @@ export function iconNote() {
 }
 export function iconBookmark() {
   return <NEW_GLYPHS.bookmark size={14} />;
+}
+export function iconFile() {
+  return <NEW_GLYPHS.file size={14} />;
 }
 export function iconNewTask() {
   return <NEW_GLYPHS.task size={14} />;
@@ -154,11 +199,18 @@ export function iconNewJournal() {
 export function iconExternal() {
   return <ArrowSquareOut size={14} />;
 }
+export function iconOpenInTab() {
+  return <Browsers size={14} />;
+}
 export function iconEditPencil() {
   return <PencilSimple size={14} />;
 }
 export function iconPin(filled: boolean) {
   return <PushPin size={14} weight={filled ? ICON_WEIGHT_ACTIVE : ICON_WEIGHT} />;
+}
+/** Archive (box, arrow in) or Unarchive (box, arrow out): the action, never the view. */
+export function iconArchive(archived: boolean, size = 14) {
+  return archived ? <BoxArrowUp size={size} /> : <BoxArrowDown size={size} />;
 }
 export function iconCopy() {
   return <Copy size={14} />;
@@ -180,7 +232,7 @@ export function iconCheckbox() {
 }
 export function iconRestore() {
   return (
-    <span className="text-emerald-600 dark:text-emerald-400">
+    <span className="text-success">
       <ArrowCounterClockwise size={14} />
     </span>
   );
@@ -199,6 +251,9 @@ export function iconFolder() {
 }
 export function iconSettings() {
   return <Gear size={14} />;
+}
+export function iconTag() {
+  return <Tag size={14} />;
 }
 export function iconReadOnly() {
   return <PencilSimpleSlash size={14} />;

@@ -100,12 +100,12 @@ export const VS_ROWS: Record<string, VsRow> = {
   'verifiable-crypto': {
     label: 'Published, verifiable encryption',
     group: 'privacy',
-    us: { v: 'yes', note: 'Published: crypto, schema, threat model' },
+    us: { v: 'yes', note: 'Published: clients, crypto, threat model' },
   },
   'open-source': {
     label: 'Fully open-source clients and server',
     group: 'privacy',
-    us: { v: 'partial', note: 'Clients, encryption, schema and threat model published' },
+    us: { v: 'partial', note: 'Clients, encryption and threat model published' },
   },
   notes: {
     label: 'Notes with tags and instant search',
@@ -155,7 +155,7 @@ export const VS_ROWS: Record<string, VsRow> = {
   history: {
     label: 'Note history and version restore',
     group: 'editor',
-    us: { v: 'pro', note: 'Last 20 versions, part of the one-time Pro' },
+    us: { v: 'pro', note: 'Last 50 versions, part of the one-time Pro' },
   },
   'pin-protect': {
     label: 'Protect individual notes',
@@ -181,7 +181,7 @@ export const VS_ROWS: Record<string, VsRow> = {
     label: 'Useful free tier',
     small: 'What you get without paying, forever',
     group: 'price',
-    us: { v: 'yes', note: 'All seven pillars including markdown, 2 devices' },
+    us: { v: 'yes', note: 'Every pillar including markdown, 2 devices' },
   },
   export: {
     label: 'Export everything to plain files',
@@ -200,7 +200,7 @@ export const VS_GROUP_LABELS: Record<VsRow['group'], string> = {
 export const SHARED_FAQS = {
   'verify-encryption': {
     q: 'Do I have to trust you on the encryption?',
-    a: 'No. Notes are encrypted on your device with XChaCha20-Poly1305, keys derived from your phrase, and the encryption code, database schema and threat model are published. You can watch the ciphertext leave your own browser in the network tab.',
+    a: 'No. Notes are encrypted on your device with XChaCha20-Poly1305, keys derived from your phrase, and the encryption code and threat model are published. You can watch the ciphertext leave your own browser in the network tab.',
   },
   'lose-phrase': {
     q: 'What if I lose my 12-word phrase?',
@@ -212,6 +212,6 @@ export const SHARED_FAQS = {
   },
   'account-needed': {
     q: 'Do I need an account?',
-    a: 'Not to try it: the demo is a full app with no signup. To keep notes and sync them you create a vault, which needs a 12-word phrase, or a Google or Apple sign-in if you prefer. An email address is never required.',
+    a: 'Not to try it: the demo is a full app with no signup. To keep notes and sync them you create a vault, which needs a 12-word phrase, or a Google, Apple, or GitHub sign-in if you prefer. An email address is never required.',
   },
 } as const;

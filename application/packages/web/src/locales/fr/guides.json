@@ -2,7 +2,7 @@
   "page": {
     "importTitle": "Importer dans PrivacyNotes",
     "importSteps": [
-      "Ouvre PrivacyNotes et va dans Réglages > Import & Export.",
+      "Ouvre PrivacyNotes et va dans Paramètres > Import & Export.",
       "Choisis **{{app}}** comme source.",
       "Dépose le fichier que tu viens d'exporter, ou clique pour le sélectionner.",
       "Regarde ce que l'aperçu annonce, puis lance l'import."
@@ -10,6 +10,43 @@
     "otherGuides": "Autres guides d'import"
   },
   "guides": {
+    "google-calendar": {
+      "app": "Google Calendar",
+      "title": "Exporter ton Google Calendar",
+      "metaTitle": "Comment exporter ton Google Calendar - PrivacyNotes",
+      "lead": "Google Calendar exporte tous les calendriers que tu gères dans un seul .zip, depuis ses paramètres, sur un ordinateur. PrivacyNotes lit ce .zip tel quel, sans qu'il soit nécessaire de le décompresser.",
+      "sections": [
+        {
+          "h": "Exporter tous tes calendriers d'un coup",
+          "steps": [
+            "Ouvre [Google Calendar](https://calendar.google.com) dans un navigateur sur un ordinateur. L'appli mobile n'a pas d'export.",
+            "Clique sur la roue dentée en haut à droite, puis sur \"Settings\".",
+            "Dans la liste à gauche, clique sur \"Import & export\".",
+            "Sous \"Export\", clique sur \"Export\". Ton navigateur télécharge un .zip avec un fichier .ics pour chaque calendrier.",
+            "Garde le .zip tel quel."
+          ],
+          "p": [
+            "Le .zip contient chaque calendrier pour lequel tu as l'autorisation \"Make changes and manage sharing\", y compris le tien. Les calendriers que tu peux seulement consulter, comme les jours fériés ou le calendrier d'un collègue, n'y figurent pas. Avec un compte professionnel ou scolaire, ton administrateur peut restreindre l'export."
+          ]
+        },
+        {
+          "h": "Ou exporter un seul calendrier",
+          "steps": [
+            "Dans la liste à gauche, sous \"My calendars\", pointe le nom du calendrier, clique sur \"More\" (les trois points), puis sur \"Settings and sharing\".",
+            "Sous \"Calendar settings\", clique sur \"Export calendar\". Ton navigateur télécharge un .zip qui contient le fichier .ics de ce calendrier. Garde-le tel quel."
+          ]
+        },
+        {
+          "h": "Ce qui fait le voyage",
+          "p": [
+            "Chaque événement arrive avec son jour, son heure et sa durée, y compris les événements qui s'étendent sur plusieurs jours. Les événements récurrents gardent leur règle, et une occurrence que tu as déplacée ou supprimée dans Google reste déplacée ou supprimée. Chaque calendrier devient un dossier.",
+            "Les rappels que tu as réglés sur un événement arrivent aussi, rappels par e-mail compris : [ils deviennent des rappels de l'app](/fr/help/reminders/), qui ont besoin de PrivacyNotes Pro pour sonner. Un événement qui utilisait les rappels par défaut de ton calendrier arrive sans rappel, car Google n'écrit pas les valeurs par défaut dans le fichier. Le lieu, le lien de visioconférence, les invités et la description vont dans le texte de l'événement. [Les heures s'affichent comme elles s'affichaient sur cet appareil au moment de l'import](/fr/help/calendar-time-zones/).",
+            "Un seul fichier .ics issu de n'importe quelle appli de calendrier fonctionne aussi, Apple Calendar et Outlook compris.",
+            "Si tu importes plus tard le même fichier, les événements déjà présents sont ignorés, donc seuls les nouveaux sont ajoutés."
+          ]
+        }
+      ]
+    },
     "google-keep": {
       "app": "Google Keep",
       "title": "Exporter tes notes Google Keep",
@@ -29,7 +66,7 @@
         {
           "h": "Ce qui fait le voyage",
           "p": [
-            "Titres, texte des notes et mise en forme arrivent intacts. Les checklists Keep deviennent de vraies listes de tâches PrivacyNotes, et tes libellés Keep arrivent en étiquettes.",
+            "Titres, texte des notes et mise en forme arrivent intacts. Les checklists Keep deviennent de [vraies listes de tâches PrivacyNotes](/fr/help/tasks/), et tes libellés Keep arrivent en étiquettes.",
             "Dépose le .zip Takeout entier dans l'importateur. Si tu l'as déjà décompressé, un fichier .json isolé du dossier Takeout/Keep fonctionne aussi."
           ]
         }
@@ -58,7 +95,41 @@
         {
           "h": "Ce qui fait le voyage",
           "p": [
-            "La structure de dossiers, le texte des notes et les images intégrées survivent au déménagement. Les notes gardent leur titre, et les pièces jointes atterrissent dans le stockage de fichiers chiffré à côté de leur note."
+            "La structure de dossiers, le texte des notes et les images intégrées survivent au déménagement. Les notes gardent leur titre, et les pièces jointes atterrissent dans [le stockage de fichiers chiffré](/fr/help/attachment-limits/) à côté de leur note."
+          ]
+        }
+      ]
+    },
+    "bear": {
+      "app": "Bear",
+      "title": "Exporter tes notes Bear",
+      "metaTitle": "Exporter tes notes Bear - PrivacyNotes",
+      "lead": "Bear exporte toute ta bibliothèque dans un seul fichier de sauvegarde, et c'est ce fichier qu'il faut apporter : il contient chaque note, archives et corbeille compris.",
+      "sections": [
+        {
+          "h": "Faire une sauvegarde Bear",
+          "steps": [
+            "Ouvre Bear sur ton Mac.",
+            "Choisis File > Backup Notes...",
+            "Enregistre le fichier. Tu obtiens un seul fichier .bear2bk qui contient toute ta bibliothèque.",
+            "Dépose ce .bear2bk tel quel."
+          ]
+        },
+        {
+          "h": "La sauvegarde contient plus qu'un export",
+          "p": [
+            "File > Export Notes... n'écrit que les notes de la vue ouverte : les notes archivées et celles de la corbeille sont laissées de côté. La sauvegarde les contient toutes, et elle sait quelles notes étaient épinglées, archivées, à la corbeille ou en lecture seule.",
+            "Si tu n'as qu'un export Markdown ou Text Bundle, compresse-le en zip et dépose le zip. Ton texte, tes étiquettes et tes pièces jointes arrivent, mais pas les archives, la corbeille ni les épingles, car ces exports ne les écrivent jamais.",
+            "Tu exportes depuis Bear à la main ? Sélectionne au moins deux notes. Une seule note ouvre une fenêtre d'enregistrement qui peut donner la mauvaise extension au fichier."
+          ]
+        },
+        {
+          "h": "Ce qui fait le voyage",
+          "p": [
+            "Tes étiquettes arrivent comme étiquettes. Les étiquettes imbriquées comme #work/projects sont aussi reconstruites en dossiers, et chaque note se range dans le dossier de son étiquette la plus profonde. [Les liens entre notes deviennent des liens de note](/fr/help/note-links/), et un lien vers un titre pointe vers ce titre.",
+            "La mise en forme survit : titres, gras, italique, souligné, barré, surlignages dans leurs couleurs Bear, listes de tâches, tableaux, blocs de code, citations, encadrés, formules et notes de bas de page. Les images s'ouvrent en pleine largeur, et les titres repliés arrivent dépliés.",
+            "Les notes épinglées restent épinglées, [les notes archivées vont dans les archives](/fr/help/archive/), celles de la corbeille vont dans la corbeille, les notes en lecture seule restent en lecture seule, et chaque note garde ses dates d'origine.",
+            "Les images et les fichiers joints à tes notes sont importés dans ton stockage. Une note qui pointe vers un fichier absent de la sauvegarde s'importe quand même, et l'aperçu de l'import t'indique combien de liens sont concernés."
           ]
         }
       ]
@@ -81,9 +152,9 @@
           "h": "Ce qui fait le voyage",
           "p": [
             "Ta structure de dossiers est reconstruite en vrais dossiers, pas aplatie en étiquettes, quelle que soit la profondeur de l'imbrication. Une note dans Work/Projects se retrouve dans un dossier Work > Projects. Si tu réimportes le même coffre, les dossiers déjà créés sont réutilisés au lieu d'être dupliqués.",
-            "Dans l'offre gratuite, tu peux parcourir ces dossiers tout de suite ; créer, renommer et déplacer des dossiers est une fonctionnalité Pro, un import Obsidian est donc une bonne façon de l'essayer avant de passer à Pro.",
-            "Le frontmatter YAML est compris : tags, alias et dates de création sont pris en compte, et les #tags du corps sont fusionnés dans le champ tags. À l'import, tu peux aussi activer l'étiquetage des notes par nom de dossier, pratique si tu aimes filtrer par étiquettes.",
-            "Tes liens [[...]] continuent de fonctionner : PrivacyNotes les affiche comme des note-links, les connexions entre notes survivent donc au déménagement. Le dossier de configuration .obsidian et .trash sont ignorés automatiquement."
+            "Dans le forfait gratuit, tu peux parcourir ces dossiers tout de suite ; [créer, renommer et déplacer des dossiers est une fonctionnalité Pro](/fr/help/folders/), un import Obsidian est donc une bonne façon de l'essayer avant de passer à Pro.",
+            "Le frontmatter YAML est compris : tags, alias et dates de création sont pris en compte, et les #tags du corps sont fusionnés dans le champ des étiquettes. À l'import, tu peux aussi cocher \"Étiqueter aussi les notes par dossier\" pour ajouter chaque nom de dossier comme étiquette, pratique si tu aimes filtrer par étiquettes.",
+            "Tes liens [[...]] continuent de fonctionner : [PrivacyNotes les affiche comme des liens de note](/fr/help/note-links/), les connexions entre notes survivent donc au déménagement. Le dossier de configuration .obsidian et .trash sont ignorés automatiquement."
           ]
         }
       ]
@@ -92,15 +163,22 @@
       "app": "Standard Notes",
       "title": "Exporter tes notes Standard Notes",
       "metaTitle": "Exporter une sauvegarde Standard Notes - PrivacyNotes",
-      "lead": "Standard Notes propose un export de sauvegarde déchiffrée, et c'est ce fichier que PrivacyNotes lit. Un détail important d'emblée : il faut la variante déchiffrée, pas la chiffrée.",
+      "lead": "Standard Notes exporte ton compte dans une seule sauvegarde déchiffrée. Elle fait passer les notes Super avec leur mise en forme, ainsi que les listes de contrôle, les étiquettes et les codes 2FA.",
       "sections": [
         {
           "h": "Exporter tes notes depuis Standard Notes",
           "steps": [
             "Ouvre Standard Notes (sur le web à app.standardnotes.com, ou l'appli de bureau) et connecte-toi.",
-            "Ouvre les Préférences, puis la section Backups.",
-            "Télécharge une sauvegarde de données et choisis le format déchiffré (decrypted) quand on te le demande.",
+            "Clique sur l'icône du compte en bas à gauche, puis sur Account settings > Backups.",
+            "Sous Data backups, choisis Decrypted, puis clique sur Download backup. Ce seul fichier contient toutes les notes, y compris les notes Super.",
             "Tu obtiens un .zip contenant un fichier nommé \"Standard Notes Backup and Import File.txt\". Garde le zip tel quel."
+          ]
+        },
+        {
+          "h": "Les notes Super, les listes de contrôle et les codes 2FA gardent leur forme",
+          "p": [
+            "Les notes Super gardent leur mise en forme : titres, listes, listes de contrôle, tableaux, blocs de code, surlignages, couleurs, alignement du texte et sections repliables. [Un lien vers une autre note devient un lien de note](/fr/help/note-links/), et un #hashtag dans le texte devient une étiquette de la note. Les listes de contrôle arrivent dans Tâches, les feuilles de calcul deviennent des tableaux, et les entrées de l'authentificateur deviennent des [identifiants dans le Coffre, avec leur clé 2FA](/fr/help/vault-totp/). Les étiquettes imbriquées deviennent des dossiers, et chaque note garde aussi ses étiquettes.",
+            "Les fichiers que tu as envoyés sur Standard Notes restent sur leur serveur : la sauvegarde ne contient que leurs noms. Chaque note importée indique où se trouvait un fichier. Télécharge ces fichiers depuis Standard Notes et ajoute-les de nouveau à la note."
           ]
         },
         {
@@ -143,16 +221,16 @@
         {
           "h": "Exporter tes notes depuis Samsung Notes",
           "steps": [
-            "Dans Samsung Notes, sélectionne les notes voulues par appui long (ou Tout sélectionner).",
-            "Touche le menu à trois points et choisis \"Enregistrer en tant que fichier\".",
-            "Prends \"Fichier Microsoft Word\" (.docx) pour les notes mises en forme, ou \"Fichier texte\" (.txt) pour le texte brut.",
+            "Dans Samsung Notes, sélectionne les notes voulues par appui long (ou Select all).",
+            "Touche le menu à trois points et choisis \"Save as file\".",
+            "Prends \"Microsoft Word file\" (.docx) pour les notes mises en forme, ou \"Text file\" (.txt) pour le texte brut.",
             "Samsung enregistre un fichier par note dans le stockage de l'appareil. Regroupe-les dans un seul .zip (sélection dans le gestionnaire de fichiers puis compression) si tu en as plus que quelques-uns."
           ]
         },
         {
           "h": "Ce qui fait le voyage",
           "p": [
-            "Depuis les exports .docx : gras, italique, souligné, barré, listes à puces et numérotées, et cases à cocher (qui deviennent de vraies listes de tâches) survivent tous. Depuis les exports .txt : le texte, rien d'autre.",
+            "Depuis les exports .docx : gras, italique, souligné, barré, listes à puces et numérotées, et cases à cocher (qui deviennent de [vraies listes de tâches](/fr/help/tasks/)) survivent tous. Depuis les exports .txt : le texte, rien d'autre.",
             "Les images intégrées dans une note Samsung se rapatrient à la main : l'importateur signale chaque note qui en contenait une, donc tu sais exactement où les remettre. Le texte, les titres et les dates arrivent dans la même passe."
           ]
         }
@@ -176,8 +254,8 @@
         {
           "h": "Où les choses atterrissent",
           "p": [
-            "Les identifiants deviennent des entrées de connexion du Coffre (avec l'icône de leur site), les cartes des entrées carte, les clés SSH des entrées clé SSH, et les notes sécurisées plus les identités arrivent en notes lisibles. Les dossiers Bitwarden deviennent des étiquettes, les favoris arrivent étoilés. Les clés d'authentification (TOTP) suivent aussi, tes codes 2FA continuent donc de fonctionner.",
-            "Le fichier d'export contient tes mots de passe en clair, alors importe-le, vérifie que tout est arrivé, puis supprime le fichier proprement. Dans PrivacyNotes, tout est de nouveau chiffré de bout en bout."
+            "Les identifiants deviennent des [entrées Identifiant du Coffre](/fr/help/vault/) (avec l'icône de leur site), les cartes des entrées carte, les clés SSH des entrées clé SSH, et les notes sécurisées plus les identités arrivent en notes lisibles. Les dossiers Bitwarden deviennent des étiquettes, les favoris arrivent étoilés. Les clés d'authentification (TOTP) suivent aussi, [tes codes 2FA continuent donc de fonctionner](/fr/help/vault-totp/).",
+            "Le fichier d'export contient tes mots de passe en clair, alors importe-le, vérifie que tout est arrivé, puis supprime le fichier proprement. Dans PrivacyNotes, tout est de nouveau chiffré, sur ton appareil et en route vers le serveur."
           ]
         }
       ]
@@ -227,7 +305,7 @@
         {
           "h": "Ce qui fait le voyage, et ce qui reste",
           "p": [
-            "Tableaux, blocs de code, surlignages, souligné, couleur du texte et formules survivent tous. Les checklists deviennent des listes de tâches, un rappel de note devient une tâche en haut de la note, les pièces jointes et les images sont rechiffrées dans ton stockage, les captures web gardent leur URL d'origine et les notes vocales gardent leur transcription. Les liens internes deviennent des note-links, rapprochés par le titre de la note visée, puisque Evernote n'exporte aucun identifiant de note.",
+            "Tableaux, blocs de code, surlignages, souligné, couleur du texte et formules survivent tous. [Les checklists deviennent des listes de tâches](/fr/help/tasks/), un rappel de note devient une tâche en haut de la note, les pièces jointes et les images sont rechiffrées dans ton stockage, les captures web gardent leur URL d'origine et les notes vocales gardent leur transcription. [Les liens internes deviennent des liens de note](/fr/help/note-links/), rapprochés par le titre de la note visée, puisque Evernote n'exporte aucun identifiant de note.",
             "Les tâches ne font pas le voyage : l'export laisse un espace réservé \"Content not supported\" là où se trouvait chaque bloc de tâches, sans titre, sans échéance ni état d'avancement à lire. Les blocs chiffrés restent chiffrés, déchiffre-les donc dans Evernote d'abord. Les polices personnalisées, l'alignement du texte et la hiérarchie imbriquée des étiquettes sont abandonnés."
           ]
         },
@@ -256,7 +334,7 @@
         {
           "h": "Comment les fichiers sont lus",
           "p": [
-            "Le frontmatter YAML est pris en compte quand il est là : les champs title, created, updated et tags sont utilisés tels quels, ce qui fait aussi de cette voie le chemin de restauration des exports Markdown de PrivacyNotes. Les tags écrits en #hashtags dans le texte sont lus aussi. Les fichiers simples sans frontmatter utilisent le nom de fichier comme titre et le contenu comme corps. L'analyse est volontairement tolérante : .md, .markdown, .mdown, .mkd et .txt sont tous acceptés.",
+            "Le frontmatter YAML est pris en compte quand il est là : les champs title, created, updated et tags sont utilisés tels quels, ce qui fait aussi de cette voie [le chemin de restauration des exports Markdown de PrivacyNotes](/fr/help/export/). Les étiquettes écrites en #hashtags dans le texte sont lues aussi. Les fichiers simples sans frontmatter utilisent le nom de fichier comme titre et le contenu comme corps. L'analyse est volontairement tolérante : .md, .markdown, .mdown, .mkd et .txt sont tous acceptés.",
             "Zippe le dossier entier et la structure vient avec. Les sous-dossiers sont reconstruits en vrais dossiers, à n'importe quelle profondeur, et les images et fichiers liés par tes notes sont importés en même temps. Ce que rien ne référence reste sur place et t'est signalé : un dossier plein de vieilles captures d'écran ne dévore donc pas ton espace."
           ]
         }
@@ -296,9 +374,9 @@
         {
           "h": "Ce qui fait le voyage",
           "p": [
-            "Tes carnets sont reconstruits en vrais dossiers, pas aplatis en étiquettes, à la profondeur exacte où Notesnook les avait imbriqués. Une note dans Work > Projects se retrouve dans un dossier Work > Projects.",
+            "[Tes carnets sont reconstruits en vrais dossiers](/fr/help/folders/), pas aplatis en étiquettes, à la profondeur exacte où Notesnook les avait imbriqués. Une note dans Work > Projects se retrouve dans un dossier Work > Projects.",
             "Les notes épinglées et les favorites restent marquées. Notesnook garde Pin et Favorite comme deux propriétés distinctes ; PrivacyNotes a une seule liste Épinglés, une note qui était l'une ou l'autre y atterrit donc.",
-            "Le surlignage, les maths et l'alignement du texte arrivent tels quels : le texte surligné reste surligné, les formules s'affichent de nouveau comme des maths, et les blocs centrés ou alignés à droite gardent leur alignement. Les polices personnalisées, les tailles de police et les couleurs de texte n'ont pas d'équivalent ici, ce style est donc abandonné et le texte est conservé."
+            "Le surlignage, les couleurs de texte, les tailles de police, l'exposant, l'indice, les maths et l'alignement du texte arrivent tels quels : chaque couleur est remplacée par la couleur la plus proche de notre palette, une taille de police choisie devient Petit, Grand ou Très grand, les formules s'affichent de nouveau comme des maths, et les blocs centrés ou alignés à droite gardent leur alignement. Les polices personnalisées n'ont pas d'équivalent ici, la police est donc abandonnée et le texte est conservé."
           ]
         },
         {
@@ -318,7 +396,7 @@
         {
           "h": "Exporter ton journal sur un Mac",
           "steps": [
-            "Ouvre Journal et choisis Fichier > Exporter dans la barre de menus.",
+            "Ouvre Journal et choisis File > Export dans la barre de menus.",
             "Choisis une destination. Journal écrit un dossier nommé AppleJournalEntries, contenant un dossier Entries et un dossier Resources.",
             "Fais un clic droit sur ce dossier et choisis Compresser. AppleJournalEntries.zip apparaît à côté, et c'est ce fichier qu'il faut importer."
           ]
@@ -326,8 +404,8 @@
         {
           "h": "Exporter depuis un iPhone ou un iPad",
           "steps": [
-            "Ouvre Journal. Sous l'intitulé Journaux, appuie sur ton journal pour l'ouvrir (il s'appelle Journal sauf si tu l'as renommé, et affiche le nombre d'entrées qu'il contient).",
-            "Dans la liste des entrées, appuie sur le bouton … en haut à droite, choisis Exporter, puis confirme avec le bouton Exporter.",
+            "Ouvre Journal. Sous l'intitulé Journals, appuie sur ton journal pour l'ouvrir (il s'appelle Journal sauf si tu l'as renommé, et affiche le nombre d'entrées qu'il contient).",
+            "Dans la liste des entrées, appuie sur le bouton … en haut à droite, choisis Export, puis confirme avec le bouton Export.",
             "Enregistre-le sur ton téléphone.",
             "Ouvre l'app Fichiers et trouve le dossier créé, nommé AppleJournalEntries.",
             "Appuie longuement sur ce dossier et choisis Compresser. Le .zip qui apparaît à côté est le fichier à importer."
@@ -336,28 +414,28 @@
         {
           "h": "Ce qui fait le voyage",
           "p": [
-            "Chaque entrée atterrit dans Journaux plutôt que dans Notes, datée du jour indiqué par Journal au-dessus, pour que ton historique garde sa forme.",
-            "Les photos et Live Photos sont importées comme images, les vidéos et mémos vocaux comme pièces jointes. Apple livre les photos en HEIC, que la plupart des navigateurs ne savent pas afficher, donc PrivacyNotes convertit chacune en JPEG à l'entrée. C'est la partie lente d'un gros import : quelques centaines de photos peuvent prendre plusieurs minutes, et la ligne de progression les compte pour toi.",
+            "[Chaque entrée atterrit dans Journaux](/fr/help/journal/) plutôt que dans Notes, datée du jour indiqué par Journal au-dessus, pour que ton historique garde sa forme.",
+            "Les photos et Live Photos sont importées comme images, les vidéos et mémos vocaux comme pièces jointes. Apple livre les photos en HEIC, que la plupart des navigateurs ne savent pas afficher, donc PrivacyNotes [convertit chacune en JPEG à l'entrée](/fr/help/image-quality/). C'est la partie lente d'un gros import : quelques centaines de photos peuvent prendre plusieurs minutes, et la ligne de progression les compte pour toi.",
             "Le gras, l'italique, le souligné, le barré, les couleurs de texte, les listes à puces et numérotées, et les citations en bloc survivent tous."
           ]
         },
         {
           "h": "Photos, vidéos et ton stockage",
           "p": [
-            "Un journal plein de photos est bien plus volumineux qu'un journal plein de texte, et il compte sur ton stockage comme tout le reste. L'aperçu d'import fait le total avant que tu valides, et refuse de démarrer si ça ne rentre pas."
+            "Un journal plein de photos est bien plus volumineux qu'un journal plein de texte, et [il occupe de l'espace de stockage comme tout le reste](/fr/help/storage-usage/). L'aperçu d'import fait le total avant que tu valides, et refuse de démarrer si ça ne rentre pas."
           ]
         },
         {
           "h": "Où vont tes lieux",
           "p": [
-            "Journal enregistre où une entrée s'est passée, et PrivacyNotes n'a pas de carte à lui, donc chaque lieu devient un lien dans une liste \"Places\" à la fin de l'entrée.",
+            "Journal enregistre le lieu associé à chaque entrée, et PrivacyNotes n'a pas de carte à lui, donc chaque lieu devient un lien dans une liste \"Places\" à la fin de l'entrée.",
             "Les lieux que Journal a enregistrés avec des coordonnées ouvrent un repère sur cet endroit précis sur OpenStreetMap. Les lieux qu'il n'a que nommés ouvrent plutôt une recherche pour ce nom. Rien n'est envoyé nulle part avant que tu cliques sur l'un d'eux."
           ]
         },
         {
           "h": "État d'esprit",
           "p": [
-            "Si tu as enregistré un état d'esprit, PrivacyNotes remplit les trackers d'humeur et d'émotion sur cette entrée partout où le vocabulaire d'Apple correspond à l'un des nôtres. Tout ce qu'il ne peut pas faire correspondre, ainsi que les domaines de vie que tu as tagués, sont conservés comme une ligne de texte pour que rien ne se perde."
+            "Si tu as enregistré un état d'esprit, PrivacyNotes [remplit les suivis d'humeur et d'émotion](/fr/help/choose-trackers/) sur cette entrée partout où le vocabulaire d'Apple correspond à l'un des nôtres. Tout ce qu'il ne peut pas faire correspondre, ainsi que les domaines de vie que tu as tagués, sont conservés comme une ligne de texte pour que rien ne se perde."
           ]
         },
         {
@@ -429,7 +507,7 @@
           "h": "Ce qui fait le voyage",
           "p": [
             "Tes carnets sont reconstruits en vrais dossiers, imbriqués aussi profondément qu'ils l'étaient dans UpNote. Une note qui vivait dans plusieurs carnets atterrit dans le premier et porte les autres en étiquettes.",
-            "Les notes épinglées et celles en Quick Access arrivent dans la liste Épinglés. Les notes à la corbeille atterrissent dans la corbeille, les modèles s'importent en notes étiquetées #template, les liens entre notes deviennent des note-links, et chaque note garde ses dates d'origine.",
+            "Les notes épinglées et celles en Quick Access arrivent dans la liste Épinglés. Les notes à la corbeille atterrissent dans la corbeille, les modèles s'importent en notes étiquetées #template, [les liens vers d'autres notes deviennent des liens de note](/fr/help/note-links/), et chaque note garde ses dates d'origine.",
             "La mise en forme survit : listes de contrôle, tableaux, blocs de code, maths, souligné, indices et exposants, alignement du texte et surlignage. Les sections repliables deviennent des encadrés pliables et gardent leur état ouvert ou fermé. Les couleurs de texte et les couleurs de surlignage sont toutes deux rapprochées de la palette de l'éditeur, si bien qu'un surlignage jaune reste jaune et un vert reste vert. Chaque note arrive telle qu'UpNote l'a enregistrée en dernier."
           ]
         },
@@ -437,6 +515,47 @@
           "h": "Si des images ou des fichiers manquent",
           "p": [
             "Une sauvegarde faite avant d'avoir activé \"Backup attachments\" ne contient aucun fichier, et l'aperçu d'import te préviendra que des notes référencent des pièces jointes que la sauvegarde ne transporte pas. Si c'est le cas, annule, active le réglage dans UpNote, clique à nouveau sur \"Backup now\", zippe le dossier tout frais et importe celui-là à la place."
+          ]
+        }
+      ]
+    },
+    "joplin": {
+      "app": "Joplin",
+      "title": "Exporter tes notes Joplin",
+      "metaTitle": "Exporter tes notes Joplin au format JEX - PrivacyNotes",
+      "lead": "Joplin exporte tous tes carnets d'un coup dans un seul fichier JEX. Il fait passer tes notes avec leurs carnets, étiquettes, to-dos, liens entre notes et pièces jointes.",
+      "sections": [
+        {
+          "h": "Tout exporter en JEX",
+          "steps": [
+            "Ouvre Joplin sur ton ordinateur.",
+            "Choisis File > Export all > \"JEX - Joplin Export File\".",
+            "Enregistre le fichier. Tu obtiens un seul fichier .jex qui contient chaque carnet, il n'y a donc rien à compresser.",
+            "Dépose ce .jex tel quel."
+          ],
+          "p": [
+            "Tools > Create backup écrit le même fichier, octet pour octet, sous le nom all_notebooks.jex dans un dossier JoplinBackup de ton dossier personnel. Si Joplin fait déjà ces sauvegardes pour toi, la plus récente convient tout aussi bien."
+          ]
+        },
+        {
+          "h": "Choisis JEX, pas Markdown, HTML ou PDF",
+          "p": [
+            "Export all propose aussi MD, MD + Front Matter, HTML directory et PDF. Ce sont des copies faites pour être lues dans d'autres applis. Le fichier JEX est le relevé propre à Joplin de chaque note, carnet, étiquette et pièce jointe, et c'est lui que nous lisons. Dépose l'un des autres exports et on te le dira plutôt que d'en importer la moitié.",
+            "Si tu as déjà exporté \"RAW - Joplin Export Directory\", compresse ce dossier en zip et dépose le zip. Il contient les mêmes éléments que le fichier JEX."
+          ]
+        },
+        {
+          "h": "Sors les notes de la corbeille avant d'exporter",
+          "p": [
+            "Joplin laisse la corbeille hors de chaque export et de chaque sauvegarde. Sors de la corbeille toute note que tu veux garder avant d'exporter, sinon elle reste dans Joplin."
+          ]
+        },
+        {
+          "h": "Ce qui fait le voyage",
+          "p": [
+            "Tes carnets sont reconstruits en vrais dossiers, imbriqués aussi profondément que dans Joplin, et chaque note garde ses étiquettes ainsi que les dates de création et de modification que Joplin t'affichait.",
+            "[Les to-dos deviennent des notes de tâche](/fr/help/tasks/) avec une case à cocher, déjà cochée quand le to-do était terminé, et une échéance reste écrite à côté du titre. [Les liens entre notes deviennent des liens de note](/fr/help/note-links/). Les images et les pièces jointes sont importées dans ton stockage et restent en place dans la note. Les notes enregistrées en HTML, comme beaucoup de captures web, sont converties avec leur mise en forme.",
+            "Les notes du carnet Conflicts de Joplin arrivent avec l'étiquette \"conflict\", pour que tu puisses les retrouver et les trier. Si tu utilises le chiffrement de Joplin, laisse-le finir de déchiffrer avant d'exporter : un élément encore chiffré est ignoré, et l'aperçu de l'import t'indique combien."
           ]
         }
       ]
@@ -458,7 +577,7 @@
         {
           "h": "Exporter depuis Firefox",
           "steps": [
-            "Appuie sur Ctrl+Maj+O, ou Cmd+Maj+O sur un Mac, pour ouvrir la fenêtre Bibliothèque.",
+            "Appuie sur Ctrl+Maj+O, ou Cmd+Maj+O sur un Mac, pour ouvrir la fenêtre Library.",
             "Clique sur \"Import and Backup\" dans sa barre d'outils et choisis \"Export Bookmarks to HTML...\".",
             "Enregistre-le. Le fichier s'appelle bookmarks.html."
           ]
@@ -493,17 +612,17 @@
         {
           "h": "Ce qui suit",
           "p": [
-            "Chaque dossier que tu avais arrive intact, imbriqué comme tu l’as laissé, dans un nouveau dossier appelé Favoris. La barre des favoris fait exception : son contenu remonte d’un niveau au lieu de devenir un dossier, parce que chaque navigateur nomme cette barre autrement dans chaque langue. Safari ne marque rien, donc son Favorites arrive bel et bien comme un dossier.",
+            "Chaque dossier que tu avais arrive intact, imbriqué comme tu l’as laissé, dans un nouveau dossier appelé Bookmarks. La barre des favoris fait exception : son contenu remonte d’un niveau au lieu de devenir un dossier, parce que chaque navigateur nomme cette barre autrement dans chaque langue. Safari ne marque rien, donc son Favorites arrive bel et bien comme un dossier.",
             "Le jour où tu as enregistré chaque signet arrive avec lui. Safari est le seul navigateur qui n'écrit aucune date, un export Safari porte donc la date du jour.",
             "Firefox est aussi le seul à enregistrer des étiquettes et un mot-clé de barre d'adresse avec un signet. Si ton fichier en contient, l'aperçu te propose une case pour les garder, et les deux arrivent ici sous forme d'étiquettes.",
-            "Trois choses restent volontairement de côté. Les raccourcis internes du navigateur comme Most Visited ne sont pas de vrais liens : ils sont comptés puis ignorés. Les icônes de sites ne sont pas lues dans le fichier non plus, parce que la copie qui y est enregistrée vieillit ; PrivacyNotes en récupère une fraîche. Et un dossier qui ne contenait aucun favori n’est pas recréé.",
+            "Trois choses restent volontairement de côté. Les raccourcis internes du navigateur comme Most Visited ne sont pas de vrais liens : ils sont comptés puis ignorés. Les icônes de sites ne sont pas lues dans le fichier non plus, parce que la copie qui y est enregistrée vieillit ; [PrivacyNotes en récupère une fraîche](/fr/help/bookmarks/). Et un dossier qui ne contenait aucun favori n’est pas recréé.",
             "Importer deux fois le même fichier ne pose aucun problème. Un signet dont tu as déjà enregistré l'adresse est ignoré plutôt qu'ajouté une seconde fois, et l'aperçu t'indique combien."
           ]
         },
         {
           "h": "Les récupérer",
           "p": [
-            "Va dans Réglages > Import & Export > Exporter et choisis \"Fichier de signets (.html)\". Tu obtiens le même fichier standard, dossiers compris, que tout navigateur sait lire. Tes signets ne sont jamais enfermés ici."
+            "Va dans Paramètres > Import & Export > Exporter et choisis \"Fichier de signets (.html)\". Tu obtiens le même fichier standard, dossiers compris, que tout navigateur sait lire. Tes signets ne sont jamais enfermés ici."
           ]
         }
       ]
@@ -560,7 +679,7 @@
         {
           "h": "Ce qui suit",
           "p": [
-            "Chaque ligne devient un identifiant avec son site, son nom d'utilisateur et son mot de passe, plus la note que le navigateur gardait avec. Firefox est le seul des trois à écrire des dates, donc ses identifiants gardent le jour où tu les as enregistrés, les autres arrivent datés d'aujourd'hui. Safari est le seul à exporter une clé d'authentification, et seulement si tu gardais tes codes dans Safari - dans ce cas le code continue de fonctionner ici.",
+            "Chaque ligne devient un identifiant avec son site, son nom d'utilisateur et son mot de passe, plus la note que le navigateur gardait avec. Firefox est le seul des trois à écrire des dates, donc ses identifiants gardent le jour où tu les as enregistrés, les autres arrivent datés d'aujourd'hui. Safari est le seul à exporter une clé d'authentification, et seulement si tu gardais tes codes dans Safari - dans ce cas [le code continue de fonctionner ici](/fr/help/vault-totp/).",
             "Les navigateurs enregistrent une entrée par page de connexion, donc un gros export contient souvent plusieurs lignes pour la même entreprise. Elles arrivent toutes, et tu peux les fusionner ou les supprimer ensuite.",
             "Un navigateur garde les mots de passe dans une liste à plat, il n'y a donc aucune arborescence à reconstruire. Chaque identifiant arrive étiqueté à la place, ce qui te ramène tout le lot en un clic."
           ]
@@ -568,7 +687,7 @@
         {
           "h": "Supprime le fichier d'export quand tu as fini : ce sont tes mots de passe en clair",
           "p": [
-            "Rien n’est chiffré dans le .csv exporté, qu’il arrive dans un .zip ou non. Qui l’ouvre lit tous les mots de passe que tu as enregistrés : garde-le sur ta propre machine, importe-le, vérifie que tout est bien arrivé, puis supprime le fichier et vide la corbeille. Dans PrivacyNotes, tout est de nouveau chiffré de bout en bout."
+            "Rien n’est chiffré dans le .csv exporté, qu’il arrive dans un .zip ou non. Qui l’ouvre lit tous les mots de passe que tu as enregistrés : garde-le sur ta propre machine, importe-le, vérifie que tout est bien arrivé, puis supprime le fichier et vide la corbeille. Dans PrivacyNotes, tout est de nouveau chiffré, sur ton appareil et en route vers le serveur."
           ]
         }
       ]
@@ -588,16 +707,16 @@
           ]
         },
         {
-          "h": "Décide où vivent tes images avant de zipper",
+          "h": "Décide où ranger tes images avant de zipper",
           "p": [
-            "Typora peut garder une image à côté de la note, dans un sous-dossier assets, ou la laisser là où tu l'as glissée depuis. Seules les images situées dans le dossier que tu zippes peuvent arriver ici. Ouvre Préférences > Image, règle-le pour copier les images dans le dossier assets de la note, et utilise \"Format > Image > Copier les fichiers image vers...\" sur les anciennes notes dont les images pointent encore ailleurs."
+            "Typora peut garder une image à côté de la note, dans un sous-dossier assets, ou la laisser à son emplacement d'origine. Seules les images situées dans le dossier que tu zippes peuvent arriver ici. Ouvre Preferences > Image, règle-le pour copier les images dans le dossier assets de la note, et utilise \"Format > Image > Copy image files to...\" sur les anciennes notes dont les images pointent encore ailleurs."
           ]
         },
         {
           "h": "Ce qui arrive",
           "p": [
-            "Les sous-dossiers deviennent de vrais dossiers, à n'importe quelle profondeur. Titres, tableaux, listes de tâches, blocs de code, notes de bas de page, formules et surlignages survivent, et les URL nues deviennent des liens cliquables. Le frontmatter YAML est lu pour le titre, les dates et les tags.",
-            "Les tags arrivent des deux façons : depuis le frontmatter YAML et depuis les #hashtags écrits dans le texte. Un hashtag dans un bloc de code reste du code, et un simple nombre comme #4711 reste un numéro de ticket."
+            "Les sous-dossiers deviennent de vrais dossiers, à n'importe quelle profondeur. Titres, tableaux, listes de tâches, blocs de code, notes de bas de page, formules et surlignages survivent, et les URL nues deviennent des liens cliquables. Le frontmatter YAML est lu pour le titre, les dates et les étiquettes.",
+            "Les étiquettes arrivent des deux façons : depuis le frontmatter YAML et depuis les #hashtags écrits dans le texte. Un hashtag dans un bloc de code reste du code, et un simple nombre comme #4711 reste un numéro de ticket."
           ]
         }
       ]
@@ -611,7 +730,7 @@
         {
           "h": "Sors le dossier d'iCloud, puis zippe-le",
           "steps": [
-            "Dans iA Writer, clic droit sur le dossier dans la barre latérale Library, puis \"Afficher dans le Finder\".",
+            "Dans iA Writer, clic droit sur le dossier dans la barre latérale Library, puis \"Show in Finder\".",
             "Dans le Finder, clic droit sur ce dossier, puis \"Télécharger maintenant\", pour qu'iCloud récupère chaque fichier au lieu de laisser des substituts.",
             "Clic droit à nouveau, puis Compresser.",
             "Dépose le .zip dans l'import."
@@ -632,7 +751,7 @@
         {
           "h": "Ce qui arrive",
           "p": [
-            "Les dossiers de la bibliothèque deviennent de vrais dossiers, à n'importe quelle profondeur, et les images et fichiers liés par tes notes viennent avec. Titres, tableaux, listes de tâches, blocs de code et notes de bas de page survivent, et les URL nues deviennent des liens cliquables. Le frontmatter est lu pour le titre, les dates et les tags.",
+            "Les dossiers de la bibliothèque deviennent de vrais dossiers, à n'importe quelle profondeur, et les images et fichiers liés par tes notes viennent avec. Titres, tableaux, listes de tâches, blocs de code et notes de bas de page survivent, et les URL nues deviennent des liens cliquables. Le frontmatter est lu pour le titre, les dates et les étiquettes.",
             "Les blocs de contenu, qui tirent un fichier dans un autre pendant l'écriture, arrivent sous la forme du lien tel qu'il est écrit, et non du texte qu'ils allaient chercher."
           ]
         }
@@ -647,22 +766,22 @@
         {
           "h": "Zippe l'espace de travail",
           "steps": [
-            "Dans Zettlr, clic droit sur l'espace de travail en haut de l'arborescence, puis \"Afficher dans le Finder\", ou \"Afficher dans l'Explorateur\" sous Windows.",
+            "Dans Zettlr, clic droit sur l'espace de travail en haut de l'arborescence, puis \"Show in Finder\", ou \"Show in Explorer\" sous Windows.",
             "Clic droit sur le dossier là-bas et compresse-le.",
-            "Dépose le .zip dans l'import."
+            "Dépose le .zip dans l'importateur."
           ]
         },
         {
           "h": "Les liens Zettelkasten gardent leur texte, pas leur cible",
           "p": [
-            "Zettlr relie les notes par identifiant, un lien s'écrit donc [[20260823120000]]. Nous gardons les note-links exactement tels qu'ils sont écrits, ce qui veut dire qu'un lien par identifiant ne retombe sur sa note ici que si une note porte réellement cet identifiant comme titre. Les liens écrits avec le nom de fichier fonctionnent normalement : passe ton format de lien interne au nom de fichier avant d'exporter si tu comptes dessus.",
+            "Zettlr relie les notes par identifiant, un lien s'écrit donc [[20260823120000]]. [Nous gardons les liens de note exactement tels qu'ils sont écrits](/fr/help/note-links/), ce qui veut dire qu'un lien par identifiant ne retombe sur sa note ici que si une note porte réellement cet identifiant comme titre. Les liens écrits avec le nom de fichier fonctionnent normalement : passe ton format de lien interne au nom de fichier avant d'exporter si tu comptes dessus.",
             "Les clés de citation comme [@doe2026] sont du texte pour nous. Elles arrivent intactes et cessent d'être cliquables."
           ]
         },
         {
           "h": "Ce qui arrive",
           "p": [
-            "Les sous-dossiers de l'espace de travail deviennent de vrais dossiers, à n'importe quelle profondeur, et les images et fichiers liés par tes notes viennent avec. Titres, tableaux, listes de tâches, blocs de code, notes de bas de page, formules et surlignages survivent tous. Les tags sont lus depuis le frontmatter YAML et depuis les #hashtags écrits dans le texte, un Zettelkasten bâti sur les hashtags garde donc son classement."
+            "Les sous-dossiers de l'espace de travail deviennent de vrais dossiers, à n'importe quelle profondeur, et les images et fichiers liés par tes notes viennent avec. Titres, tableaux, listes de tâches, blocs de code, notes de bas de page, formules et surlignages survivent tous. Les étiquettes sont lues depuis le frontmatter YAML et depuis les #hashtags écrits dans le texte, un Zettelkasten bâti sur les hashtags garde donc son classement."
           ]
         }
       ]
@@ -678,21 +797,72 @@
           "steps": [
             "Ouvre Fichiers dans ton Nextcloud, depuis un navigateur.",
             "Trouve le dossier Notes. Il s'appelle Notes, sauf si ton administration l'a renommé.",
-            "Ouvre le menu \"...\" du dossier et choisis Télécharger. Nextcloud emballe le dossier entier en .zip.",
-            "Dépose le .zip dans l'import."
+            "Ouvre le menu \"...\" du dossier et choisis Download. Nextcloud emballe le dossier entier en .zip.",
+            "Dépose le .zip dans l'importateur."
           ]
         },
         {
           "h": "Ce qui arrive",
           "p": [
             "Les catégories sont stockées en sous-dossiers, elles arrivent donc en vrais dossiers. Les dates des notes viennent des fichiers eux-mêmes, pas du moment de l'import. Titres, tableaux, listes de tâches, blocs de code, notes de bas de page et formules survivent, et les URL nues deviennent des liens cliquables.",
-            "Ceci importe une copie. Rien n'est supprimé de ton Nextcloud, et rien ne resynchronise en sens inverse. Garde le serveur comme archive tant que tu n'es pas satisfait de ce qui a atterri ici."
+            "Ceci importe une copie. Rien n'est supprimé de ton Nextcloud, et rien ne se synchronise en sens inverse. Garde le serveur comme archive tant que tu n'es pas satisfait de ce qui a atterri ici."
           ]
         },
         {
           "h": "Les deux extensions fonctionnent",
           "p": [
-            "Notes écrit du .txt par défaut, et du .md dès que toi ou ton administration changez le réglage. Les deux sont lus ici, tout comme .markdown, .mdown et .mkd. Tu n'as donc rien à renommer ni à toucher sur le serveur avant d'exporter."
+            "Notes écrit du .txt par défaut, et du .md dès que toi ou ton administrateur changez le réglage. Les deux sont lus ici, tout comme .markdown, .mdown et .mkd. Tu n'as donc rien à renommer ni à toucher sur le serveur avant d'exporter."
+          ]
+        }
+      ]
+    },
+    "contacts": {
+      "app": "Contacts (vCard)",
+      "title": "Exporter tes contacts",
+      "metaTitle": "Exporter tes contacts en vCard - PrivacyNotes",
+      "lead": "Chaque téléphone et chaque carnet d'adresses peut exporter tes contacts dans un seul fichier .vcf, et PrivacyNotes lit ce fichier directement, photos comprises.",
+      "sections": [
+        {
+          "h": "Exporter depuis ton iPhone",
+          "steps": [
+            "Ouvre Contacts et touche \"Lists\" en haut à gauche.",
+            "Maintiens le doigt sur \"All Contacts\", puis choisis Export.",
+            "Enregistre le .vcf dans Fichiers, ou envoie-le par AirDrop à l'appareil sur lequel tu importes."
+          ]
+        },
+        {
+          "h": "Exporter depuis ton Mac ou iCloud",
+          "steps": [
+            "Dans Contacts, sélectionne \"All Contacts\" et appuie sur Commande-A.",
+            "Choisis File > Export > Export vCard.",
+            "Sur [icloud.com/contacts](https://www.icloud.com/contacts), sélectionne tout, puis ouvre le menu \"...\" et choisis \"Export vCard\"."
+          ]
+        },
+        {
+          "h": "Exporter depuis Android ou Google Contacts",
+          "steps": [
+            "Dans l'appli Google Contacts, touche \"Fix & manage\" > \"Export to file\".",
+            "Sur [contacts.google.com](https://contacts.google.com), choisis Export, puis prends \"vCard (for iOS Contacts)\".",
+            "Sur un téléphone Samsung, ouvre Contacts > Manage contacts > Import or export contacts > Export."
+          ]
+        },
+        {
+          "h": "Choisis vCard, pas CSV",
+          "p": [
+            "Google propose deux formats CSV à côté de vCard. L'importateur ne lit que les fichiers .vcf, donc un CSV n'apparaît pas dans le sélecteur de fichiers. Exporte à nouveau et choisis vCard."
+          ]
+        },
+        {
+          "h": "Ce qui fait le voyage",
+          "p": [
+            "Chaque fiche du fichier fait le voyage : noms, téléphones, adresses e-mail, adresses postales, anniversaires et autres dates, sites web, profils sociaux et notes. Tes propres libellés restent tels que tu les as tapés, donc \"Ligne pro de maman\" reste \"Ligne pro de maman\".",
+            "Une photo contenue dans le fichier fait le voyage. Une photo qui n'est qu'un lien web reste un lien, et rien n'est téléchargé. [Si les photos ne tiennent pas dans ton stockage](/fr/help/storage-usage/), les contacts sont quand même importés et les photos restent de côté."
+          ]
+        },
+        {
+          "h": "Réimporte le même fichier quand tu veux",
+          "p": [
+            "Un second import ignore les personnes que tu as déjà. Il associe chaque fiche par son identifiant, puis par le nom avec un numéro de téléphone commun, puis par une adresse e-mail commune. Les contacts que tu as déjà enregistrés ne sont pas modifiés, donc tes modifications ici restent intactes."
           ]
         }
       ]

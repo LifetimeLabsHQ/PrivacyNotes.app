@@ -8,10 +8,9 @@
  * IndexedDB (db.kv). IndexedDB persists the CryptoKey OBJECT via
  * structured clone; the raw key bytes never exist in script-readable
  * form, so a copied localStorage file or a serialized backup of the
- * databases cannot recover the phrase (pre-launch audit 2026-08-28,
- * findings 8 and 9). An attacker who can RUN CODE in this origin on
- * this machine can still use the key - that boundary is documented in
- * THREAT_MODEL.md.
+ * databases cannot recover the phrase. An attacker who can RUN CODE
+ * in this origin on this machine can still use the key - that boundary
+ * is documented in THREAT_MODEL.md.
  *
  * The envelope reuses the phrase's own storage key. Every presence
  * check (hasStoredSession, the app-lock gate, sign-out removal, the
@@ -21,19 +20,27 @@
  * Failure policy, in one line: the wrap is best effort and the phrase
  * wins. If IndexedDB or WebCrypto is unavailable, persist falls back
  * to the old plaintext behavior with a breadcrumb - a storage hiccup
- * must never cost anyone their session (auth session audit 2026-08-25,
- * section 0). A lost wrap key (envelope present, key gone) demotes to
- * the sign-in screen, where re-entering the phrase repairs everything.
+ * must never cost anyone their session. A lost wrap key (envelope
+ * present, key gone) demotes to the sign-in screen, where re-entering
+ * the phrase repairs everything.
  *
  * Spec: THREAT_MODEL.md (phrase wrapped at rest under a
  * non-extractable device key)
  */
 
+import { isValidPhrase } from '@notes/shared';
 import { db, reopenDb } from './db';
 import { PHRASE_STORAGE_KEY } from './authStorage';
 import { trustAwareStorage } from './trustStorage';
-import { aesGcmEncrypt, aesGcmDecrypt } from './biometric';
+import {
+  aesGcmEncrypt,
+  aesGcmDecrypt,
+  hasBiometricCredential,
+  hasPinWrappedPhrase,
+} from './biometric';
+import { settingsLocalKey } from './settingsLocalKey';
 import { logAuthEvent } from './authDiag';
+import { isLivePhrase, signInStamp, signedOutSince } from './liveSignIn';
 
 // Version-prefixed so a future format change can coexist with old
 // envelopes during a migration. A BIP-39 phrase is lowercase words and
@@ -100,6 +107,48 @@ async function readWrapKey(): Promise<CryptoKey | null> {
 }
 
 /**
+ * True when the app lock is the only door: the setting is on AND a PIN
+ * or biometric wrap exists to open it.
+ *
+ * Arming the lock strips the device-key phrase envelope on purpose, so a
+ * sign-in that writes the phrase back re-creates the door the lock
+ * removed - permanently, and silently. The test therefore belongs to the
+ * write rather than to one sign-in path: both the phrase sign-in and the
+ * custodial OAuth sign-in reach persistStoredPhrase with a lock possibly
+ * armed, and only the first one used to ask.
+ *
+ * It is deliberately NOT inside persistStoredPhrase. Two callers write
+ * the phrase back precisely BECAUSE they are removing a lock factor -
+ * pinRecovery.ts when clearing a PIN leaves no other door, and
+ * BiometricTab.tsx when removing a fingerprint leaves no PIN wrap - and
+ * both run while the settings flag is still on. A guard inside the write
+ * would strand those devices with no phrase and no door, which is the
+ * defect v0.507.16 closed.
+ */
+export function appLockArmed(): boolean {
+  if (!hasPinWrappedPhrase() && !hasBiometricCredential()) return false;
+  // Raw read of the cached settings blob rather than loadLocalSettings,
+  // following bumpNotesCreated: the userSettings import chain reads
+  // browser globals at module load, and this module is imported by the
+  // OAuth path, which must stay light. Only one boolean is needed, and
+  // anything other than a stored true answers "not armed", which is the
+  // safe side here - the write it gates is what restores a lost session.
+  try {
+    const raw = localStorage.getItem(settingsLocalKey());
+    if (!raw) return false;
+    const cache = JSON.parse(raw) as { settings?: { appLockEnabled?: unknown } };
+    return cache.settings?.appLockEnabled === true;
+  } catch {
+    return false;
+  }
+}
+
+function refuseStaleWrite(): false {
+  logAuthEvent('auth:phrase-persist-refused');
+  return false;
+}
+
+/**
  * Persist the session phrase into trust-aware storage as a wrapped
  * envelope. Replaces every former plaintext write site, including the
  * boot-time migration of an existing plaintext value (same slot, so
@@ -113,8 +162,23 @@ async function readWrapKey(): Promise<CryptoKey | null> {
  * plaintext write with a breadcrumb, which is exactly the pre-wrap
  * behavior: a degraded browser keeps the account usable and never
  * strands the user (auth session audit, section 0).
+ *
+ * A phrase that is not the live sign-in's is refused, before the wrap
+ * and again before the write, and so is a write that a sign-out overtook,
+ * even when the same phrase has signed in again meanwhile (liveSignIn.ts
+ * says why).
+ *
+ * Answers whether the phrase is at rest afterwards, read back the way
+ * the next start reads it. trustAwareStorage swallows a refused write
+ * (quota, storage switched off), so a caller about to remove this
+ * device's last lock door, or to commit the flag that stops the lock
+ * screen, acts on this answer and never on the call having returned.
+ * Pinned by tests/phraseAtRest.test.ts.
  */
-export async function persistStoredPhrase(phrase: string): Promise<void> {
+export async function persistStoredPhrase(phrase: string): Promise<boolean> {
+  const stamp = signInStamp();
+  if (!isLivePhrase(phrase)) return refuseStaleWrite();
+  let value: string;
   try {
     await getOrCreateWrapKey();
     // Re-read through the committed transaction: encrypt with the key
@@ -127,18 +191,29 @@ export async function persistStoredPhrase(phrase: string): Promise<void> {
     // brick the stored session where plaintext would have worked.
     const back = await aesGcmDecrypt(key, ciphertext, iv);
     if (back !== phrase) throw new Error('wrap round trip mismatch');
-    trustAwareStorage.setItem(
-      PHRASE_STORAGE_KEY,
-      `${ENVELOPE_PREFIX}${toB64(iv)}:${toB64(ciphertext)}`,
-    );
+    value = `${ENVELOPE_PREFIX}${toB64(iv)}:${toB64(ciphertext)}`;
   } catch (err) {
     // Fallback IS the old behavior. Breadcrumbed so a device that
     // cannot wrap is visible in the auth log, never silent.
     logAuthEvent('auth:phrase-wrap-fallback', {
       message: (err as Error | null)?.message,
     });
-    trustAwareStorage.setItem(PHRASE_STORAGE_KEY, phrase);
+    value = phrase;
   }
+  // The wrap awaited IndexedDB and WebCrypto, and a sign-out can have
+  // begun meanwhile.
+  if (signedOutSince(stamp) || !isLivePhrase(phrase)) return refuseStaleWrite();
+  trustAwareStorage.setItem(PHRASE_STORAGE_KEY, value);
+  // Asked again once written. Another tab runs alongside this one, and its
+  // notice and removal can fall between the check above and the write: then
+  // this write undoes itself, unless a newer one already replaced it.
+  if (signedOutSince(stamp) || !isLivePhrase(phrase)) {
+    if (trustAwareStorage.getItem(PHRASE_STORAGE_KEY) === value) trustAwareStorage.removeItem(PHRASE_STORAGE_KEY);
+    return refuseStaleWrite();
+  }
+  if ((await readResumablePhrase()) === phrase) return true;
+  logAuthEvent('auth:phrase-persist-unconfirmed');
+  return false;
 }
 
 /**
@@ -184,4 +259,36 @@ export async function unwrapStoredEnvelope(value: string): Promise<string | null
     }
   }
   return null;
+}
+
+/**
+ * The phrase this install is holding, when it is holding a usable one.
+ *
+ * An install can sit on the sign-in screen with a phrase still on disk: a
+ * boot that cannot finish its handshake demotes there on purpose, because an
+ * unreachable server or a storage hiccup is not a verdict, and re-entering the
+ * phrase repairs everything. A deliberate sign-out is NOT one of those cases:
+ * it removes the phrase before that screen appears, and persistStoredPhrase
+ * refuses every later write from the session it ended.
+ *
+ * In that state the app asks for something it is already holding. This reader
+ * is what lets the sign-in screen offer to carry on instead. It answers null
+ * for anything it cannot use: nothing stored, an envelope that will not open,
+ * or a value that is not a phrase. The app lock needs no special case here,
+ * because arming it removes this copy and the lock screen owns the unlock.
+ * Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.8)
+ */
+export async function readResumablePhrase(): Promise<string | null> {
+  let stored: string | null = null;
+  try {
+    stored = trustAwareStorage.getItem(PHRASE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+  if (!stored) return null;
+  if (isWrappedEnvelope(stored)) {
+    const opened = await unwrapStoredEnvelope(stored).catch(() => null);
+    return opened && isValidPhrase(opened) ? opened : null;
+  }
+  return isValidPhrase(stored) ? stored : null;
 }

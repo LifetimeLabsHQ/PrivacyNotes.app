@@ -11,15 +11,19 @@
  */
 
 import { detectPlatform } from './devices';
+import { isDemoMode } from './demo';
+import { APEX_ORIGIN, usesOfficialServer } from './hosts';
 
 /**
  * On the web the app is served by the same Worker that answers /favicon, so
  * a root-relative path resolves straight to the proxy. Native builds (Tauri
  * desktop + mobile) are served from tauri://localhost with no Worker, so a
  * relative /favicon 404s - they must call the hosted proxy by absolute URL.
+ * A native build that syncs with another server gets no icons: the lookup
+ * would send us the domain of every link and login it holds.
  */
 // Spec: ops/docs/gotchas.md (native builds have no local /favicon Worker; use the hosted proxy)
-const PROXY_ORIGIN = 'https://privacynotes.app';
+const PROXY_ORIGIN = APEX_ORIGIN;
 
 /**
  * True for hosts that can never have a public favicon: loopback, private
@@ -51,11 +55,18 @@ function isPrivateHost(host: string): boolean {
  * Return a favicon URL for the given domain (proxied through our Worker),
  * or '' when there is no point asking. Callers must treat '' as "no icon"
  * and fall back to their placeholder.
+ *
+ * The demo always gets '': it promises its visitor that nothing leaves the
+ * browser, and a lookup would send the domain of every link and login in it
+ * to our Worker and on to the icon source.
  */
 export function faviconUrl(domain: string): string {
+  if (isDemoMode()) return '';
   const d = domain.replace(/^www\./, '').toLowerCase().trim();
   if (!d || isPrivateHost(d)) return '';
-  const base = detectPlatform() === 'web' ? '' : PROXY_ORIGIN;
+  const native = detectPlatform() !== 'web';
+  if (native && !usesOfficialServer()) return '';
+  const base = native ? PROXY_ORIGIN : '';
   return `${base}/favicon?domain=${encodeURIComponent(d)}`;
 }
 

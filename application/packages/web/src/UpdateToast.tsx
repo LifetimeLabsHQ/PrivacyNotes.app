@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowUp, ArrowClockwise } from './icons';
 
@@ -22,6 +23,10 @@ export function UpdateToast({
   onDismiss,
   required = false,
   sizeBytes,
+  title,
+  icon,
+  meta,
+  secondary,
 }: {
   /** Omitted by the store builds (Play/iOS), which only know the floor, not
    *  what the store will install - the meta line then collapses away. */
@@ -32,16 +37,24 @@ export function UpdateToast({
   onDismiss?: () => void;
   required?: boolean;
   sizeBytes?: number;
+  /** The calendar reminder's variant: its own title, glyph and meta line,
+   *  and Snooze beside Open. Spec: ops/docs/archive/calendar-pillar-spec.md (step 7) */
+  title?: string;
+  icon?: ReactNode;
+  meta?: string;
+  secondary?: { label: string; onAction: () => void };
 }) {
   const { t } = useTranslation('common');
   // Decimal MB, matching how every store and download page quotes an APK size.
   const size = sizeBytes ? `${Math.round(sizeBytes / 1_000_000)} MB` : null;
-  const hasMeta = !!(version || size || onChangelog);
+  const hasMeta = !!(version || size || onChangelog || meta);
   return (
     <div
       role="status"
       aria-live="polite"
-      className="fixed z-[100] start-4 end-4 sm:start-auto sm:end-4 sm:max-w-sm pn-toast-in"
+      // A second button leaves a narrow toast no room for its title, so the
+      // reminder's variant is wider: a question or an item title stays on one line.
+      className={`fixed z-[100] start-4 end-4 sm:start-auto sm:end-4 ${secondary ? 'sm:max-w-lg' : 'sm:max-w-sm'} pn-toast-in`}
       // Account for the iPhone home-indicator stripe (and any other bottom
       // safe-area inset). On platforms without a safe area env() returns 0,
       // so this collapses to a plain 1rem.
@@ -59,17 +72,20 @@ export function UpdateToast({
             required ? 'bg-amber-500/10' : 'bg-accent/10'
           }`}
         >
-          <ArrowUp
-            className={`w-4 h-4 ${required ? 'text-amber-600 dark:text-amber-400' : 'text-accent'}`}
-            aria-hidden="true"
-          />
+          {icon ?? (
+            <ArrowUp
+              className={`w-4 h-4 ${required ? 'text-warning' : 'text-accent'}`}
+              aria-hidden="true"
+            />
+          )}
         </div>
         <div className="flex-1 min-w-0 leading-tight">
           <div className="text-sm font-medium text-pn">
-            {t(required ? 'updateToast.required' : 'updateToast.available')}
+            {title ?? t(required ? 'updateToast.required' : 'updateToast.available')}
           </div>
           {hasMeta && (
             <div className="text-xs text-pn-muted mt-0.5">
+              {meta}
               {version && `v${version}`}
               {size && (version ? ` · ${size}` : size)}
               {onChangelog && (
@@ -87,12 +103,21 @@ export function UpdateToast({
             </div>
           )}
         </div>
+        {secondary && (
+          <button
+            type="button"
+            onClick={secondary.onAction}
+            className="shrink-0 px-2.5 py-1.5 rounded-lg border border-divider text-sm font-medium text-pn hover:bg-pn/5 transition"
+          >
+            {secondary.label}
+          </button>
+        )}
         <button
           type="button"
           onClick={onAction}
-          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition"
+          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-fill text-white text-sm font-medium hover:bg-accent-fill-hover transition"
         >
-          <ArrowClockwise className="w-3.5 h-3.5" aria-hidden="true" />
+          {!icon && <ArrowClockwise className="w-3.5 h-3.5" aria-hidden="true" />}
           {actionLabel}
         </button>
         {onDismiss && (

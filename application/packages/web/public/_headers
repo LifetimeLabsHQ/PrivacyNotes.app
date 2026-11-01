@@ -9,12 +9,27 @@
 /version.json
   Cache-Control: no-cache
 
+/auth/connect*
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
+
+# Apple's app-site-association file, which iOS fetches to check that the app
+# may complete a sign-in on this host. It has no extension, so the assets
+# layer sends no type at all, and Apple wants JSON.
+/.well-known/apple-app-site-association
+  Content-Type: application/json
+
 # The plain-text twins of the help pages (help-page.ts), for AI agents.
 # Markdown is the format, but text/plain is the transport on purpose: with
 # text/markdown a browser downloads the file instead of showing it, and
 # X-Content-Type-Options: nosniff below leaves it no way to recover. Every
 # agent reads text/plain, and the .md extension still names the format.
 /help/*.md
+  Content-Type: text/plain; charset=utf-8
+
+# The published security documents, served as plain text (publishedDocs.ts),
+# same reason as the help twins above them.
+/docs/*.md
   Content-Type: text/plain; charset=utf-8
 
 # The plain-text twin of the changelog page (changelog-page.ts), same reason
@@ -47,4 +62,4 @@
   # own: relying on _headers precedence for a security header is a bad trade,
   # and this way a Worker that failed to run breaks checkout visibly instead of
   # loosening the app silently. Keep in sync with cspFor(false) in worker.ts.
-  Content-Security-Policy: default-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://sync.privacynotes.app https://releases.privacynotes.app https://challenges.cloudflare.com; img-src 'self' data: blob: https://sync.privacynotes.app; frame-src https://challenges.cloudflare.com; font-src 'self' data:; media-src 'self' blob:; worker-src 'self' blob:; manifest-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; connect-src 'self' data: blob: https://sync.privacynotes.app https://releases.privacynotes.app https://challenges.cloudflare.com; img-src 'self' data: blob: https://sync.privacynotes.app; frame-src https://challenges.cloudflare.com; font-src 'self' data:; media-src 'self' blob:; worker-src 'self' blob:; manifest-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'

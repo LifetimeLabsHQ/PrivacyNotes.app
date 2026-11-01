@@ -15,24 +15,33 @@ import type { ListPrefs, ListPrefsStore } from './listPrefs';
 import { resolvePrefs, setPillarPrefs } from './listPrefs';
 import { formatBytes } from './formatBytes';
 import { StorageBar } from './StorageBar';
-import { mimeToLabel, formatModifiedShort } from './notesViewUtils';
+import { editedAtOf, mimeToLabel } from './notesViewUtils';
+import { formatInstant, useDateFormatKey } from './intlFormat';
 import { CardGlyph, FileTileIcon, TagChips } from './NoteRow';
-import { iconPin, iconTrash, Check, CloudSlash, Folder, Upload, FunnelSimple, PushPin, Shield, PencilSimpleSlash, Files, PILLAR_GLYPHS } from './icons';
+import { ItemFlags, ItemRow, ItemTile, applyCompactRows, type ItemFlag, type ItemRootProps, type ItemState, type ListItem } from './listItem';
+import { itemLookDraw, useNoteLook } from './looks/LookGlyph';
+import { itemGridClass, routeItemClick, useContextTarget, useItemList } from './itemList';
+import { useCompactRows } from './viewMode';
+import { iconPin, iconTrash, iconEditPencil, Check, Folder, LinkSimple, Upload, FunnelSimple, Files, PILLAR_GLYPHS } from './icons';
+import { NewButton } from './NewButton';
 import { HoverLabel } from './HoverLabel';
 import { SelectionToolbar } from './SelectionToolbar';
 import { suppressShiftTextSelection } from './useMultiSelect';
 import { ListSearchInput } from './ListSearchInput';
+import { Switch } from './Switch';
 import { ActiveFilterEntry, ActiveSearchEntry, FilteredEmpty, ListFilterChips } from './ListFilterChips';
 import type { View } from './views';
 import { ListNav } from './notesView/ListNav';
 import { ListPrefsPopover } from './ListPrefsPopover';
 import { IconUpgrade } from './UpgradeModal';
-import { isStorageConfigured } from './paddle';
 import { proUnlocked } from './demo';
-import { STORAGE_PACKAGES } from './pricing';
-import { FILE_SIZE_LIMIT_PRO, FILE_SIZE_LIMIT_STORAGE } from './attachmentValidation';
-import { loadEncryptedImageUrl } from './EncryptedImage';
+import { LazyPdfCover, LazyPicture } from './LazyPicture';
+import { isMail, isPdf, isPictureMime, openMediaViewer, type MediaRef } from './mediaRefs';
 import { useQuotaBlockedUuids } from './usePendingUploads';
+import { unescapeMarkdownText } from './fileNames';
+import { textMatcher } from './textMatch';
+import { setItemDragImage, writeItemDrag } from './itemDrag';
+import { isShortcutId } from './noteShortcut';
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -55,8 +64,8 @@ export interface FileItem {
   noteId: string;
   /** Parent note title */
   noteTitle: string;
-  /** Parent note updatedAt */
-  updatedAt: string;
+  /** The parent note's "last edited" date */
+  editedAt: string;
   /** Parent note createdAt */
   createdAt: string;
   /** true when the parent note is a dedicated file container (body is
@@ -125,7 +134,7 @@ export function extractFileItems(notes: LocalNote[]): FileItem[] {
         sizeLabel: '',
         noteId: note.id,
         noteTitle,
-        updatedAt: note.updatedAt,
+        editedAt: editedAtOf(note),
         createdAt: note.createdAt,
         standalone: false, // images are always embedded via the editor
         starred: note.starred === 1,
@@ -142,13 +151,17 @@ export function extractFileItems(notes: LocalNote[]): FileItem[] {
       items.push({
         uuid: m[4]!,
         kind: 'attachment',
-        name: m[1]! || 'Attachment',
+        // The body text is markdown, so a name holding a bracket or an
+        // asterisk arrives escaped. The editor's chip reads the parsed
+        // document and never sees the backslashes; this row reads the raw
+        // body and would show them.
+        name: unescapeMarkdownText(m[1]!) || 'Attachment',
         mime: m[3]! || 'application/octet-stream',
         size: parseSizeToBytes(sizeStr),
         sizeLabel: sizeStr.trim(),
         noteId: note.id,
         noteTitle,
-        updatedAt: note.updatedAt,
+        editedAt: editedAtOf(note),
         createdAt: note.createdAt,
         standalone: isStandaloneFile,
         starred: note.starred === 1,
@@ -159,14 +172,97 @@ export function extractFileItems(notes: LocalNote[]): FileItem[] {
       });
     }
   }
-  // Sort by parent note updatedAt descending
-  items.sort((a, b) => (a.updatedAt > b.updatedAt ? -1 : a.updatedAt < b.updatedAt ? 1 : 0));
+  // Sort by the parent note's last edit, newest first
+  items.sort((a, b) => (a.editedAt > b.editedAt ? -1 : a.editedAt < b.editedAt ? 1 : 0));
   return items;
+}
+
+/**
+ * The Files rows of notes the PIN guards right now: one per note, named by the
+ * note's title and carrying nothing its body says about the files in it - no
+ * file name, size, type or picture, and no count of them. The title stays
+ * visible here as it does in every other list, and a click opens the gate.
+ * Tested in tests/lockGateLists.test.ts.
+ */
+function listedWhileGated(items: FileItem[], gated: ReadonlySet<string>): FileItem[] {
+  if (gated.size === 0) return items;
+  const seen = new Set<string>();
+  const out: FileItem[] = [];
+  for (const item of items) {
+    if (!gated.has(item.noteId)) out.push(item);
+    else if (!seen.has(item.noteId)) {
+      seen.add(item.noteId);
+      out.push({ ...item, kind: 'attachment', name: item.noteTitle, mime: '', size: 0, sizeLabel: '' });
+    }
+  }
+  return out;
+}
+
+/** The rows the Files list draws before its type filter, search and sort: the
+ *  gate, the "files in other items" switch and the locked and protected
+ *  switches. The status bar counts these rows, so the two never disagree. */
+export function visibleFileItems(
+  items: FileItem[],
+  gated: ReadonlySet<string>,
+  prefs: { showAttachedNotes: boolean; showLocked: boolean; showProtected: boolean },
+): FileItem[] {
+  let out = listedWhileGated(items, gated);
+  if (!prefs.showAttachedNotes) out = out.filter((f) => f.standalone);
+  if (!prefs.showLocked) out = out.filter((f) => !f.locked);
+  if (!prefs.showProtected) out = out.filter((f) => !f.pinProtected);
+  return out;
+}
+
+/** A picture the grid can draw and the viewer can show. */
+export function isPictureFileItem(item: FileItem): boolean {
+  return item.kind === 'image' || isPictureMime(item.mime);
+}
+
+/** A stored PDF: the grid draws its first page, and the viewer reads it. */
+function isPdfFileItem(item: FileItem): boolean {
+  return item.kind === 'attachment' && isPdf(item.mime, item.name);
+}
+
+/** A file whose grid tile shows the file itself: a picture or a PDF's first page. */
+function hasCoverFileItem(item: FileItem): boolean {
+  return isPictureFileItem(item) || isPdfFileItem(item);
+}
+
+/** Anything the viewer can open: a picture, a PDF or a saved email. */
+function isViewableFileItem(item: FileItem): boolean {
+  return hasCoverFileItem(item) || (item.kind === 'attachment' && isMail(item.mime, item.name));
+}
+
+/** The reference a note stores for this file. */
+/**
+ * The note ids a drag of `item` carries, or none when it does not drag. Only
+ * a standalone file drags; in selection mode only a selected one, and it
+ * carries every selected standalone file in `shown`.
+ */
+export function fileDragIds(
+  item: FileItem,
+  shown: readonly FileItem[],
+  isSelected: (f: FileItem) => boolean,
+  selecting: boolean,
+): string[] {
+  if (!item.standalone) return [];
+  if (!selecting) return [item.noteId];
+  if (!isSelected(item)) return [];
+  return [...new Set(shown.filter((f) => f.standalone && isSelected(f)).map((f) => f.noteId))];
+}
+
+export function fileItemMediaRef(item: FileItem): MediaRef {
+  return item.kind === 'image'
+    ? { src: `pn:img/${item.uuid}`, name: item.name, mime: '' }
+    : { src: `pn:file/${item.uuid}`, name: item.name, mime: item.mime };
 }
 
 // ── Component ──────────────────────────────────────────────────────────
 
 interface FilesListProps {
+  /** The view and space this list draws, so a return lands where it was;
+   *  null under a search. Spec: ops/docs/archive/keep-my-place.md */
+  place?: string | null;
   fileItems: FileItem[];
   filesCount: number;
   /** Pro folders: active folder filter, rendered as a dismissable chip
@@ -187,7 +283,13 @@ interface FilesListProps {
   filter: FileType;
   onFilterChange: (f: FileType) => void;
   onOpenNote: (noteId: string, fileUuid?: string) => void;
-  onUploadFiles: (filter?: FileType) => void;
+  /** Rename a stored file: opens its note and puts the chip into rename
+   *  mode. The name is only ever written by the chip in the live editor,
+   *  so a pending edit there cannot overwrite it. */
+  onRenameFile: (noteId: string, fileUuid: string) => void;
+  /** Copy the shortcut to a standalone file item. */
+  onCopyShortcut: (noteId: string) => void;
+  onUploadFiles: () => void;
   mobileTabIndex?: number;
   quotaUsedBytes: number;
   quotaMaxBytes: number;
@@ -214,6 +316,7 @@ interface FilesListProps {
   selectionMode: boolean;
   selectedIds: Set<string>;
   selectionAllStarred: boolean;
+  selectionAllArchived: boolean;
   onRowClick: (e: React.MouseEvent, noteId: string) => void;
   onToggleSelected: (id: string) => void;
   onRangeSelect: (id: string) => void;
@@ -223,6 +326,7 @@ interface FilesListProps {
   onDeselectAll: () => void;
   onSelectAllVisible: () => void;
   onBulkFavorite: () => void;
+  onBulkArchive: () => void;
   onBulkExport: () => void;
   onBulkMoveToFolder: () => void;
   foldersUnlocked: boolean;
@@ -238,6 +342,11 @@ interface FilesListProps {
   onTrash: (noteId: string) => void;
   /** Look up parent note starred status. */
   isNoteStarred: (noteId: string) => boolean;
+  /** Notes the PIN still guards. Their files open the note's gate, never the
+   *  viewer, never join the viewer's list, draw no picture on a grid tile,
+   *  and list as one row named by the note's title (listedWhileGated) - the
+   *  rule the note list applies to a guarded note's preview. */
+  gatedNoteIds: () => Set<string>;
 }
 
 /** Derive a short filetype label from mime or filename extension. */
@@ -271,12 +380,12 @@ function ProUpsell({ onUpgrade, className = '' }: { onUpgrade: () => void; class
     <div className={`w-full ${className}`}>
       {rows.map((r) => (
         <div key={r.label} className="flex items-center justify-between gap-2 text-[11px] py-0.5">
-          <span className="text-neutral-500 dark:text-neutral-400">{r.label}</span>
+          <span className="text-pn-muted">{r.label}</span>
           <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-            <span className="text-neutral-400 dark:text-neutral-500">
+            <span className="text-pn-muted">
               {r.free} MB <span className="text-[9px] uppercase tracking-wide">{t('filesList.free')}</span>
             </span>
-            <span className="text-neutral-400 dark:text-neutral-500" aria-hidden="true">{'→'}</span>
+            <span className="text-pn-muted" aria-hidden="true">{'→'}</span>
             <span className="text-accent font-medium">
               {r.pro} MB <span className="text-[9px] uppercase tracking-wide">Pro</span>
             </span>
@@ -286,7 +395,7 @@ function ProUpsell({ onUpgrade, className = '' }: { onUpgrade: () => void; class
       <button
         type="button"
         onClick={onUpgrade}
-        className="mt-2 w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent font-medium text-xs px-3 py-2 transition"
+        className="mt-2 w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent-strong font-medium text-xs px-3 py-2 transition"
       >
         <IconUpgrade size={12} /> {t('filesList.upgradeToPro')}
       </button>
@@ -294,93 +403,8 @@ function ProUpsell({ onUpgrade, className = '' }: { onUpgrade: () => void; class
   );
 }
 
-// Storage upsell shown to Pro users without a storage subscription (Files
-// view). Pitches capacity only - the per-file bump ships later alongside the
-// storage-backend change. Spec: ops/docs/file-size-storage-upsell.md (final per-file cap numbers still open; flat 100 MB is the plan)
-function StorageUpsell({
-  onManage,
-  currentMaxBytes,
-  className = '',
-}: {
-  onManage: () => void;
-  currentMaxBytes: number;
-  className?: string;
-}) {
-  const { t } = useTranslation('shell');
-  // Spec: ops/docs/design-decisions.md (Pro base 500 MB storage)
-  const MB = 1000 * 1000;
-  const GB = 1000 * MB;
-  const base = currentMaxBytes > 0 ? currentMaxBytes : 500 * MB;
-  const maxAddonGb = Math.max(...STORAGE_PACKAGES.map((p) => p.gb));
-  const fromLabel = base >= GB ? `${Math.round((base / GB) * 10) / 10} GB` : `${Math.round(base / MB)} MB`;
-  const targetLabel = `${Math.round((base / GB + maxAddonGb) * 10) / 10} GB`;
-  const perFileFrom = `${Math.round(FILE_SIZE_LIMIT_PRO / MB)} MB`;
-  const perFileTo = `${Math.round(FILE_SIZE_LIMIT_STORAGE / MB)} MB`;
-  return (
-    <div className={`w-full ${className}`}>
-      <div className="flex items-center justify-between gap-2 text-[11px] py-0.5">
-        <span className="text-neutral-500 dark:text-neutral-400">{t('filesList.perFile')}</span>
-        <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-          <span className="text-neutral-400 dark:text-neutral-500">{perFileFrom}</span>
-          <span className="text-neutral-400 dark:text-neutral-500" aria-hidden="true">{'→'}</span>
-          <span className="text-accent font-medium">{perFileTo}</span>
-        </span>
-      </div>
-      <div className="flex items-center justify-between gap-2 text-[11px] py-0.5">
-        <span className="text-neutral-500 dark:text-neutral-400">{t('filesList.storage')}</span>
-        <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-          <span className="text-neutral-400 dark:text-neutral-500">{fromLabel}</span>
-          <span className="text-neutral-400 dark:text-neutral-500" aria-hidden="true">{'→'}</span>
-          <span className="text-accent font-medium">{t('filesList.upToMax', { max: targetLabel })}</span>
-        </span>
-      </div>
-      <button
-        type="button"
-        onClick={onManage}
-        className="mt-2 w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent font-medium text-xs px-3 py-2 transition"
-      >
-        <IconUpgrade size={12} /> {t('filesList.addStorage')}
-      </button>
-    </div>
-  );
-}
-
-/** Lazy-loaded encrypted image background for image file tiles in grid mode.
- *  Decrypts + shows the image only once the tile scrolls near the viewport. */
-function FileTileImageBg({ uuid }: { uuid: string }) {
-  const [url, setUrl] = useState<string | null>(null);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    let cancelled = false;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          io.disconnect();
-          void loadEncryptedImageUrl(uuid).then((u) => {
-            if (!cancelled) setUrl(u);
-          });
-        }
-      },
-      { rootMargin: '300px' },
-    );
-    io.observe(el);
-    return () => {
-      cancelled = true;
-      io.disconnect();
-    };
-  }, [uuid]);
-  return (
-    <div ref={ref} className="absolute inset-0 bg-neutral-200 dark:bg-neutral-800">
-      {url && (
-        <img src={url} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
-      )}
-    </div>
-  );
-}
-
 export function FilesList({
+  place = null,
   fileItems,
   filesCount,
   activeFolderName,
@@ -394,6 +418,8 @@ export function FilesList({
   filter,
   onFilterChange: setFilter,
   onOpenNote,
+  onRenameFile,
+  onCopyShortcut,
   onUploadFiles,
   mobileTabIndex,
   quotaUsedBytes,
@@ -409,6 +435,7 @@ export function FilesList({
   selectionMode,
   selectedIds,
   selectionAllStarred,
+  selectionAllArchived,
   onRowClick,
   onToggleSelected,
   onRangeSelect,
@@ -418,6 +445,7 @@ export function FilesList({
   onDeselectAll,
   onSelectAllVisible,
   onBulkFavorite,
+  onBulkArchive,
   onBulkExport,
   onBulkMoveToFolder,
   foldersUnlocked,
@@ -432,8 +460,11 @@ export function FilesList({
   viewMode,
   listPrefsStore,
   onListPrefsChange,
+  gatedNoteIds,
 }: FilesListProps) {
   const { t } = useTranslation(['shell', 'notes', 'media']);
+  // The rows format their dates inline: a new date setting renders them again.
+  useDateFormatKey();
   const showNote = listPrefs.showAttachedNotes;
   /** Blobs kept local because they do not fit the storage quota - the
    *  rows wear the same amber chip as the attachment card (#151). */
@@ -445,7 +476,7 @@ export function FilesList({
   };
   const [sortOpen, setSortOpen] = useState(false);
 
-  // Read sort from shared prefs. Map 'modified' → updatedAt, 'title' → name.
+  // Read sort from shared prefs. Map 'modified' → editedAt, 'title' → name.
   const sortField = listPrefs.sortField;
   const sortDir = listPrefs.sortDir;
   /** Composite key for a file row: "noteId:uuid". Content-hash dedup
@@ -456,7 +487,7 @@ export function FilesList({
 
   /** Composite key of the file row that was right-clicked - highlighted
    *  while the context menu is open. */
-  const [contextTargetId, setContextTargetId] = useState<string | null>(null);
+  const [contextTargetId, setContextTargetId] = useContextTarget();
   /** Composite key of the last-clicked file - only this file highlights,
    *  not all siblings from the same parent note (#67) or same-content
    *  files across notes (#50). */
@@ -468,7 +499,7 @@ export function FilesList({
   // doesn't highlight both. We keep a local composite-key set for
   // visual state. The parent's selectedIds (noteIds), which is what the
   // bulk actions read, is re-derived from it on every change - see
-  // applyFileSelection. Spec: ops/docs/ui-patterns.md section 61.
+  // applyFileSelection. Spec: ops/docs/archive/ui-patterns.md section 61.
   const [selectedFileIds, setSelectedFileIds] = useState<Set<string>>(new Set());
   /** Anchor for shift-click range select - the last file toggled on its
    *  own. Mirrors `lastSelectedId` in useMultiSelect, in file-key space. */
@@ -578,15 +609,6 @@ export function FilesList({
     }
   }
   const sortBtnRef = useRef<HTMLButtonElement | null>(null);
-  const listRef = useRef<HTMLDivElement>(null);
-
-  // Clear the context-target highlight on any click (menu close, click elsewhere).
-  useEffect(() => {
-    if (!contextTargetId) return;
-    const clear = () => setContextTargetId(null);
-    window.addEventListener('click', clear, true);
-    return () => window.removeEventListener('click', clear, true);
-  }, [contextTargetId]);
 
   /** Small checkmark icon for active menu items. */
   const checkIcon = (
@@ -642,6 +664,23 @@ export function FilesList({
         icon: iconPin(starred),
         onSelect: () => onToggleStar(item.noteId, !starred),
       },
+      // Images carry no name a reader ever sees here, so there is nothing
+      // to rename on one yet.
+      ...(item.kind === 'attachment' && !item.locked
+        ? [{
+            label: t('filesList.menuRename'),
+            icon: iconEditPencil(),
+            onSelect: () => onRenameFile(item.noteId, item.uuid),
+          }]
+        : []),
+      // A file inside a note is part of that note, which has its own row.
+      ...(item.standalone && isShortcutId(item.noteId)
+        ? [{
+            label: t('shell:shortcut.copyItem'),
+            icon: <LinkSimple size={14} aria-hidden="true" />,
+            onSelect: () => onCopyShortcut(item.noteId),
+          }]
+        : []),
       {
         label: t('filesList.menuMoveToTrash'),
         icon: iconTrash(),
@@ -650,25 +689,21 @@ export function FilesList({
       },
     ];
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, showNote, selectedFileIds, isNoteStarred, onToggleStar, onTrash]);
+  }, [filter, showNote, selectedFileIds, isNoteStarred, onToggleStar, onTrash, onRenameFile, onCopyShortcut]);
 
-  /** Base items after the showNote + read-only/protected filters.
-   *  When a type filter is active, bypass the standalone check so ALL
-   *  files of that type appear regardless of the toggle (#92). The
-   *  standalone/showNote toggle only applies to the "All" view. */
-  const visibleItems = useMemo(() => {
-    let items = fileItems;
-    // Standalone filter only applies when viewing all files.
-    // Type-filtered views (Images/Audio/Files) show every item of that
-    // type so files don't vanish just because the user added text to the
-    // parent note.
-    if (filter === 'all' && !showNote) {
-      items = items.filter((f) => f.standalone);
-    }
-    if (!listPrefs.showLocked) items = items.filter((f) => !f.locked);
-    if (!listPrefs.showProtected) items = items.filter((f) => !f.pinProtected);
-    return items;
-  }, [fileItems, filter, showNote, listPrefs.showLocked, listPrefs.showProtected]);
+  /** Notes the PIN guards right now, and a key that changes when they do. */
+  const gatedNow = gatedNoteIds();
+  const gatedKey = [...gatedNow].sort().join(' ');
+  /** Base items after the gate and the three list settings. All three hold
+   *  on every tab: the type tabs pick which files are listed, not which
+   *  settings apply. `standalone` marks a file that is its own note, so with
+   *  the toggle off only files uploaded as files remain. */
+  const visibleItems = useMemo(
+    () => visibleFileItems(fileItems, gatedNow, listPrefs),
+    // gatedKey stands in for gatedNow, which is a fresh Set on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fileItems, gatedKey, showNote, listPrefs.showLocked, listPrefs.showProtected],
+  );
 
   const filtered = useMemo(() => {
     let items = visibleItems;
@@ -676,13 +711,10 @@ export function FilesList({
       items = items.filter((f) => fileCategory(f) === filter);
     }
     // Apply search - match on file name or parent note title.
-    const q = search.trim().toLowerCase();
+    const q = search.trim();
     if (q) {
-      items = items.filter(
-        (f) =>
-          f.name.toLowerCase().includes(q) ||
-          f.noteTitle.toLowerCase().includes(q)
-      );
+      const match = textMatcher(q);
+      items = items.filter((f) => match(f.name) || match(f.noteTitle));
     }
     // Sort - pinned files always float to top, then user's chosen sort within each group.
     const dir = sortDir === 'asc' ? 1 : -1;
@@ -691,11 +723,37 @@ export function FilesList({
       if (sortField === 'title') return dir * a.name.localeCompare(b.name);
       if (sortField === 'size') return dir * (a.size - b.size);
       if (sortField === 'created') return dir * (a.createdAt > b.createdAt ? 1 : a.createdAt < b.createdAt ? -1 : 0);
-      // modified - by parent note updatedAt
-      return dir * (a.updatedAt > b.updatedAt ? 1 : a.updatedAt < b.updatedAt ? -1 : 0);
+      // modified - by the parent note's last edit
+      return dir * (a.editedAt > b.editedAt ? 1 : a.editedAt < b.editedAt ? -1 : 0);
     });
     return items;
   }, [visibleItems, filter, search, sortField, sortDir]);
+  // The files arrive in slices of 200; a different list - a new type filter,
+  // search, folder or tag - starts at its top.
+  const list = useItemList([filter, search, activeFolderName, activeTag, showNote], filtered.length, place);
+  const compactRows = useCompactRows();
+
+  /**
+   * A standalone file drags its note onto a sidebar folder or tag: the file
+   * IS that note. A picture or attachment inside a note does not drag, since
+   * the drop would move or tag the whole host note. In selection mode a
+   * selected standalone file drags every selected standalone file the list
+   * shows. Ids only, so a drop into an editor makes nothing.
+   * Spec: ops/docs/archive/drag-to-folder-and-tag.md (section 13)
+   */
+  const fileDragProps = (item: FileItem) => {
+    const ids = () => fileDragIds(item, filtered, (f) => selectedFileIds.has(fileKey(f)), selectedFileIds.size > 0);
+    if (ids().length === 0) return {};
+    return {
+      draggable: true,
+      'data-file-drag': '',
+      onDragStart: (e: React.DragEvent<HTMLElement>) => {
+        const carried = ids();
+        writeItemDrag(e.dataTransfer, carried, '');
+        setItemDragImage(e.dataTransfer, e.currentTarget, carried.length);
+      },
+    };
+  };
 
   /* The two standing "here is why you see less" entries, shared with the
      other scoped pillars (ListFilterChips.tsx owns both). "Clear search"
@@ -706,7 +764,38 @@ export function FilesList({
      stands beside results. Both step aside while files are selected, for the
      reason the import offer does elsewhere: neither is a selectable item. */
   const showSearchEntry = search.trim().length > 0 && filtered.length === 0;
-  const showFilterEntry = (activeFolderName !== null || activeTag !== null) && selectedFileIds.size === 0;
+  // Held back until the revealed slice covers the whole list, so a long
+  // filtered list never draws it mid-scroll and then pushes it down again.
+  const showFilterEntry =
+    (activeFolderName !== null || activeTag !== null) && selectedFileIds.size === 0 && list.reveal.visible >= filtered.length;
+
+  /**
+   * A click on a picture or a PDF opens its note, as every file click does,
+   * and the viewer over it. The viewer moves through this list as it stands,
+   * sorted, filtered and searched, and on close the pane follows it to the
+   * note of the file that was on screen. A file in a note the PIN still
+   * guards opens the gate instead, and never joins the list.
+   * Spec: ops/docs/archive/ui-patterns.md (section 98, the picture viewer)
+   */
+  function openViewerAt(item: FileItem) {
+    if (!isViewableFileItem(item)) return;
+    const gated = gatedNoteIds();
+    if (gated.has(item.noteId)) return;
+    const shown = filtered.filter((f) => isViewableFileItem(f) && !gated.has(f.noteId));
+    const index = shown.indexOf(item);
+    if (index < 0) return;
+    const startKey = fileKey(item);
+    openMediaViewer({
+      items: shown.map(fileItemMediaRef),
+      index,
+      onClose: (last) => {
+        const landed = shown[last];
+        if (!landed || fileKey(landed) === startKey) return;
+        setActiveFileId(fileKey(landed));
+        onOpenNote(landed.noteId, landed.uuid);
+      },
+    });
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -715,8 +804,10 @@ export function FilesList({
         <SelectionToolbar
           mode="normal"
           allStarred={selectionAllStarred}
+          allArchived={selectionAllArchived}
           onClear={clearFileSelection}
           onFavorite={onBulkFavorite}
+          onArchive={onBulkArchive}
           onTag={onBulkTag}
           onMoveToFolder={onBulkMoveToFolder}
           foldersUnlocked={foldersUnlocked}
@@ -727,7 +818,7 @@ export function FilesList({
           allTags={allTags}
         />
       ) : (
-      <div className="shrink-0 h-14 px-4 border-b border-divider flex items-center justify-between gap-3">
+      <div className="shrink-0 h-11 md:h-14 px-4 border-b border-divider flex items-center justify-between gap-3">
 
         <ListNav
           hiddenViews={hiddenViews}
@@ -737,15 +828,11 @@ export function FilesList({
           title={t('filesList.title')}
           icon={<PILLAR_GLYPHS.files size={26} className="text-accent shrink-0" aria-hidden="true" />}
         />
-        <button
-          type="button"
-          onClick={() => onUploadFiles(filter)}
+        <NewButton
+          onClick={() => onUploadFiles()}
           tabIndex={mobileTabIndex}
-          className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent font-semibold px-3 py-1.5 text-lg tracking-tight transition"
-        >
-          <Upload size={18} />
-          {t('filesList.upload')}
-        </button>
+          label={t('filesList.upload')}
+        />
       </div>
       )}
 
@@ -760,7 +847,7 @@ export function FilesList({
       {/* ── Selection count strip ──────────────────────────────── */}
       {selectedFileIds.size > 0 && (
         <div className="shrink-0 px-4 py-2 border-b border-divider bg-accent/5 dark:bg-accent/10 flex items-center justify-between gap-2 text-[13px]">
-          <span className="font-medium text-neutral-700 dark:text-neutral-200 tabular-nums">
+          <span className="font-medium text-pn-soft tabular-nums">
             {t('filesList.selectedOf', { selected: selectedFileIds.size, total: filtered.length })}
           </span>
           {filtered.length > 0 && (
@@ -774,28 +861,23 @@ export function FilesList({
         </div>
       )}
 
-      {/* ── Storage bar ──────────────────────────────────────────── */}
+      {/* ── Storage bar: one line that opens Settings > Storage; the
+          Free-vs-Pro comparison stays below it for a free account. The
+          add-ons live in Settings only, where somebody goes to look. ── */}
       {quotaMaxBytes > 0 && (
         <StorageBar
           label={t('filesList.storage')}
           usedBytes={quotaUsedBytes}
           maxBytes={quotaMaxBytes}
           onRefresh={onRefreshStorage}
+          onOpen={onManageStorage}
         />
       )}
-
-      {/* ── Supported types hint (Pro) / Free-vs-Pro upsell (free) ── */}
-      <div className="shrink-0 px-4 pb-1">
-        {!isPro ? (
+      {!isPro && (
+        <div className="shrink-0 px-4 pb-1">
           <ProUpsell onUpgrade={onOpenUpgrade} />
-        ) : !hasStorageSub && isStorageConfigured() ? (
-          <StorageUpsell onManage={onManageStorage} currentMaxBytes={quotaMaxBytes} />
-        ) : (
-          <p className="text-[11px] text-neutral-600 dark:text-neutral-300 leading-relaxed">
-            {t('filesList.supportedTypesHint', { max: hasStorageSub ? '100' : '50' })}
-          </p>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ── Type filter tabs ─────────────────────────────────────── */}
       <div className="shrink-0 px-3 pt-2 pb-1 flex gap-1.5">
@@ -809,11 +891,12 @@ export function FilesList({
             key={key}
             type="button"
             onClick={() => setFilter(key)}
+            aria-pressed={filter === key}
             tabIndex={mobileTabIndex}
             className={`text-xs px-2.5 py-1 rounded-full transition font-medium ${
               filter === key
-                ? 'bg-accent text-white'
-                : 'bg-surface-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-surface-2'
+                ? 'bg-accent-fill text-white'
+                : 'bg-surface-1 text-pn-muted hover:bg-pn/10'
             }`}
           >
             {label}
@@ -822,7 +905,7 @@ export function FilesList({
       </div>
 
       {/* ── Search row + sort button - matches NotesList layout ───── */}
-      <div className="shrink-0 p-3 border-b border-divider relative">
+      <div className="shrink-0 px-3 py-2 md:p-3 border-b border-divider relative">
         <div className="flex items-stretch gap-2">
           <HoverLabel label={t('filesList.sortOptions')} position="above-start">
           <button
@@ -834,8 +917,8 @@ export function FilesList({
             aria-expanded={sortOpen}
             className={`shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-md border transition ${
               sortOpen
-                ? 'bg-accent/10 border-accent text-accent'
-                : 'bg-surface-2 border-divider text-neutral-600 hover:border-accent hover:text-accent dark:text-neutral-300'
+                ? 'bg-accent/10 border-accent text-accent-strong'
+                : 'bg-surface-2 border-divider text-pn-soft hover:border-accent hover:text-accent'
             }`}
           >
             <FunnelSimple size={18} />
@@ -858,32 +941,29 @@ export function FilesList({
             className="absolute start-3 top-full mt-1"
             titleLabel={t('filesList.sortName')}
             pillar="files"
+            showSizeToggle
           />
         )}
       </div>
 
       {/* ── Attachment toggle - inline like Trash's auto-delete ──── */}
       <div className="shrink-0 px-4 py-2 border-b border-divider">
-        <label className="flex items-center justify-between gap-2 cursor-pointer select-none">
-          <span className="text-xs text-neutral-600 dark:text-neutral-400">{t('filesList.showNotesWithAttachments')}</span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={showNote}
-            onClick={() => setShowNote((v) => !v)}
-            className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${
-              showNote ? 'bg-accent' : 'bg-neutral-300 dark:bg-neutral-700'
-            }`}
-          >
-            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-              showNote ? 'translate-x-4 rtl:-translate-x-4' : 'translate-x-0.5 rtl:-translate-x-0.5'
-            }`} />
-          </button>
-        </label>
+        <Switch
+          label={t('filesList.showNotesWithAttachments')}
+          checked={showNote}
+          onChange={setShowNote}
+          className="gap-2 select-none"
+          labelClassName="text-xs text-pn-muted"
+        />
       </div>
 
       {/* ── File list ─────────────────────────────────────────────── */}
-      <div ref={listRef} className="flex-1 overflow-y-auto" onMouseDown={suppressShiftTextSelection}>
+      <div
+        ref={list.ref as React.RefObject<HTMLDivElement>}
+        onScroll={(e) => list.onScroll(e.currentTarget)}
+        className="flex-1 overflow-y-auto"
+        onMouseDown={suppressShiftTextSelection}
+      >
         {filtered.length === 0 && !search.trim() && (activeFolderName !== null || activeTag !== null) ? (
           /* Filtered down to nothing. The empty state below invites the user
              to upload their first file, which is wrong and alarming for
@@ -896,10 +976,10 @@ export function FilesList({
           />
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-6 py-12">
-            <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4">
-              <Folder size={28} className="text-neutral-400 dark:text-neutral-600" />
+            <div className="w-16 h-16 rounded-full bg-track flex items-center justify-center mb-4">
+              <Folder size={28} className="text-pn-muted" />
             </div>
-            <p className="text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-1">
+            <p className="text-sm font-medium text-pn-soft mb-1">
               {search.trim()
                 ? t('filesList.noMatches')
                 : filter === 'all'
@@ -908,7 +988,7 @@ export function FilesList({
             </p>
             {!search.trim() && (
               <>
-                <p className="text-xs text-neutral-400 dark:text-neutral-600 max-w-[220px] mb-4">
+                <p className="text-xs text-pn-muted max-w-[220px] mb-4">
                   {/* States the real cap, so it follows proUnlocked (the demo
                       uploads at the Pro limit). The free-vs-Pro table above
                       is the upsell and stays keyed off isPro. */}
@@ -916,8 +996,8 @@ export function FilesList({
                 </p>
                 <button
                   type="button"
-                  onClick={() => onUploadFiles(filter)}
-                  className="text-xs font-medium text-white bg-accent hover:bg-accent-hover px-4 py-1.5 rounded-md transition"
+                  onClick={() => onUploadFiles()}
+                  className="text-xs font-medium text-white bg-accent-fill hover:bg-accent-fill-hover px-4 py-1.5 rounded-md transition"
                 >
                   {t('filesList.uploadFiles')}
                 </button>
@@ -945,14 +1025,8 @@ export function FilesList({
             )}
           </div>
         ) : (
-          <div
-            className={
-              viewMode === 'grid'
-                ? 'grid gap-3 p-4 pn-notes-grid'
-                : ''
-            }
-          >
-            {filtered.map((item, idx) => {
+          <div className={itemGridClass(viewMode === 'grid')}>
+            {filtered.slice(0, list.reveal.visible).map((item, idx) => {
               const fk = fileKey(item);
               const isSelected = selectedFileIds.has(fk);
               const isOpen = activeFileId === fk;
@@ -964,232 +1038,127 @@ export function FilesList({
               // filter changes (#92). Suffix the array index to guarantee
               // uniqueness; fk still drives selection/highlight state.
               const rowKey = `${fk}::${idx}`;
-              // Image thumbnails only in grid mode; list view keeps the
-              // compact icon row (previews were too heavy/odd inline).
-              const isImageBg = item.kind === 'image' && viewMode === 'grid';
-              // Preview / meta / tags are identical in both layouts, only their
-              // ORDER differs: the grid keeps tags above the meta row so the date
-              // can pin to the tile bottom (margin-top:auto), the list puts tags
-              // last to match NoteRow.
-              const previewEl = listPrefs.showPreview && (
-                <div className="text-[13px] text-neutral-500 dark:text-neutral-400 truncate mt-0.5">
-                  {/* Type word only for a standalone file. Size belongs on the
-                      meta line for both row kinds: appending it here would put
-                      a standalone row's size and a note-attached row's size in
-                      two different places. */}
-                  {item.standalone ? mimeToLabel(item.mime) : item.noteTitle}
-                </div>
-              );
-              // TagChips rather than a local copy of the same markup: it also
-              // owns the folder chip, so a file row cannot drift from a note row.
-              const tagsEl = listPrefs.showTags && (
-                <TagChips tags={item.tags} folderId={item.folderId} />
-              );
-              // Meta line (Concept D): date, then the status icons beside it -
-              // keeps them off the title row so narrow tiles never crowd, and
-              // anchored to the date rather than the right edge so widening
-              // the pane doesn't strand them (same rule as NoteRow).
-              // Every list row, standalone or note-attached: one list must not
-              // show its sizes in two places, and the preview line carries
-              // none. Grid stays out: its tiles carry their own badge beside
-              // the content column, where it costs no title width.
-              const showRowSize = viewMode !== 'grid' && item.size > 0;
-              // Same amber chip as the attachment card's meta line (#151):
-              // the blob is kept local because it does not fit the quota.
+              // Picture thumbnails only in grid mode; list view keeps the
+              // compact icon row (previews were too heavy/odd inline). An
+              // uploaded picture is an attachment, and it gets one too, and a
+              // PDF tile shows its first page the same way. A note the PIN
+              // still guards shows neither, the way the note list hides its
+              // preview: its tiles keep the file icon, like any other file.
+              const isImageBg = viewMode === 'grid' && !gatedNow.has(item.noteId) && hasCoverFileItem(item);
+              // Same amber chip as the attachment card's meta line (#151): the
+              // blob is kept local because it does not fit the quota.
               const localOnly = quotaBlockedUuids.has(item.uuid);
-              const metaEl = (listPrefs.showDate || showRowSize || localOnly || (item.starred && selectedFileIds.size === 0) || item.pinProtected || item.locked) && (
-                <div className="pn-card-meta flex items-center gap-1.5 mt-0.5">
-                  {listPrefs.showDate && (
-                    <span className="pn-card-date min-w-0 text-[12px] text-neutral-400 dark:text-neutral-600 whitespace-nowrap overflow-hidden text-ellipsis">
-                      {t('noteRow.modified', { ns: 'notes' })} {formatModifiedShort(item.updatedAt)}
-                    </span>
-                  )}
-                  <span className="pn-card-status shrink-0 flex items-center gap-1.5 text-accent">
-                    {item.starred && selectedFileIds.size === 0 && (
-                      <PushPin size={12} />
-                    )}
-                    {item.pinProtected && (
-                      <Shield size={12} aria-label={t('filesList.pinProtected')} />
-                    )}
-                    {item.locked && (
-                      <PencilSimpleSlash size={12} aria-label={t('filesList.readOnly')} />
-                    )}
-                    {/* Icon-only, like the status icons beside it - the WHY
-                        lives on the attachment card's amber line (#151). */}
-                    {localOnly && (
-                      <CloudSlash size={12} className="text-amber-600 dark:text-amber-400" aria-label={t('attachment.localOnly', { ns: 'media' })} />
-                    )}
-                  </span>
-                  {/* Anchored to the date, like the status icons beside it and
-                      like NoteRow - not `ms-auto`. Off the title row because a
-                      narrow pane made the badge truncate the filename, which is
-                      the one thing the row exists to show; off the right edge
-                      because section 66 of ui-patterns.md is exactly about a
-                      value stranded there when the pane widens. */}
-                  {showRowSize && (
-                    <span className="shrink-0 text-[11px] text-neutral-400 dark:text-neutral-500 font-medium tabular-nums">
-                      {formatBytes(item.size)}
-                    </span>
-                  )}
-                </div>
-              );
-              const selectBox = (
-                <span
-                  role="checkbox"
-                  aria-checked={isSelected}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (e.shiftKey) rangeSelectFiles(item);
-                    else toggleFileSelected(item);
-                  }}
-                  className={`shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition ${
-                    viewMode === 'grid' ? 'mt-0.5' : ''
-                  } ${
-                    isSelected
-                      ? 'bg-accent border-accent text-white'
-                      : 'border-neutral-300 dark:border-neutral-600'
-                  }`}
-                >
-                  {isSelected && (
-                    <Check size={12} />
-                  )}
-                </span>
-              );
+              const flags: ItemFlag[] = [];
+              if (item.starred && selectedFileIds.size === 0) flags.push('pinned');
+              if (item.pinProtected) flags.push('pinProtected');
+              if (item.locked) flags.push('readOnly');
+              if (localOnly) flags.push('localOnly');
+              const rootProps: ItemRootProps = {
+                type: 'button',
+                onClick: (e) =>
+                  routeItemClick(e, selectedFileIds.size > 0, {
+                    range: () => rangeSelectFiles(item),
+                    toggle: () => toggleFileSelected(item),
+                    open: () => {
+                      setActiveFileId(fk);
+                      onOpenNote(item.noteId, item.uuid);
+                      openViewerAt(item);
+                    },
+                  }),
+                onContextMenu: (e) => {
+                  setContextTargetId(fk);
+                  onContextMenu(e, buildFileMenu(item));
+                },
+                onTouchStart: () => beginFileLongPress(item),
+                onTouchEnd: cancelFileLongPress,
+                onTouchMove: cancelFileLongPress,
+                onTouchCancel: cancelFileLongPress,
+                ...fileDragProps(item),
+                tabIndex: mobileTabIndex,
+              };
+              if (!isImageBg) {
+                const gated = gatedNow.has(item.noteId);
+                const listItem: Omit<ListItem, 'look'> = {
+                  icon: <FileTileIcon mime={item.mime} />,
+                  glyph: <CardGlyph type="file" />,
+                  title: item.name,
+                  // The type word only for a standalone file; a file inside a
+                  // note names that note. A note the PIN still guards shows
+                  // neither, the way the note list hides its preview.
+                  preview: listPrefs.showPreview && !gated
+                    ? { text: item.standalone ? mimeToLabel(item.mime) : item.noteTitle, long: false, dir: 'auto' }
+                    : null,
+                  date: listPrefs.showDate
+                    ? { label: t('noteRow.modified', { ns: 'notes' }), row: formatInstant(item.editedAt, 'row'), tile: formatInstant(item.editedAt, 'tile') }
+                    : null,
+                  // One switch governs the size on every row and tile.
+                  size: listPrefs.showSize && item.size > 0 ? formatBytes(item.size) : null,
+                  flags,
+                  chips: listPrefs.showTags ? <TagChips tags={item.tags} folderId={item.folderId} /> : null,
+                  ribbon: false,
+                };
+                return (
+                  <FileEntry
+                    key={rowKey}
+                    item={listItem}
+                    file={item}
+                    grid={viewMode === 'grid'}
+                    compact={compactRows}
+                    state={{ selectionMode: selectedFileIds.size > 0, selected: isSelected, open: isOpen, contextTarget: contextTargetId === fk }}
+                    rootProps={rootProps}
+                    onToggleSelect={(e) => {
+                      if (e.shiftKey) rangeSelectFiles(item);
+                      else toggleFileSelected(item);
+                    }}
+                  />
+                );
+              }
+              // A picture or a PDF in the grid: the first page or the picture
+              // fills the tile, and the name, the flags and the size sit on it.
               return (
                 <button
                   key={rowKey}
+                  {...rootProps}
                   type="button"
-                  onClick={(e) => {
-                    // Same gesture set as the notes list (handleRowClick in
-                    // useMultiSelect): shift extends the live selection,
-                    // Cmd/Ctrl toggles one and enters selection mode, a plain
-                    // click toggles while a selection is live and otherwise
-                    // opens the file.
-                    if (e.shiftKey && selectedFileIds.size > 0) {
-                      rangeSelectFiles(item);
-                    } else if (selectedFileIds.size > 0 || e.metaKey || e.ctrlKey) {
-                      toggleFileSelected(item);
-                    } else {
-                      setActiveFileId(fk);
-                      onOpenNote(item.noteId, item.uuid);
-                    }
-                  }}
-                  onContextMenu={(e) => {
-                    setContextTargetId(fk);
-                    onContextMenu(e, buildFileMenu(item));
-                  }}
-                  onTouchStart={() => beginFileLongPress(item)}
-                  onTouchEnd={cancelFileLongPress}
-                  onTouchMove={cancelFileLongPress}
-                  onTouchCancel={cancelFileLongPress}
-                  tabIndex={mobileTabIndex}
-                  className={
-                    isImageBg
-                      ? `${viewMode === 'grid' ? 'pn-lazy-card' : 'pn-lazy-row'} relative overflow-hidden text-start border transition group ${
-                          viewMode === 'grid' ? 'rounded-xl min-h-[132px]' : 'w-full border-x-0 border-t-0 min-h-[64px]'
-                        } ${
-                          isSelected
-                            ? 'border-accent ring-2 ring-accent z-[1]'
-                            : isOpen
-                              ? 'border-accent ring-2 ring-accent/50 z-[1]'
-                              : contextTargetId === fk
-                                ? 'border-accent/70'
-                                : 'border-divider hover:border-accent/60'
-                        }`
-                      : viewMode === 'grid'
-                        ? `pn-card pn-lazy-card text-start p-3 rounded-xl border transition flex items-start gap-2.5 group ${
-                            isSelected
-                              ? 'bg-accent/15 border-accent dark:bg-accent/20'
-                              : isOpen
-                                ? 'bg-accent/10 border-accent dark:bg-accent/15'
-                                : contextTargetId === fk
-                                  ? 'bg-neutral-200/70 border-divider dark:bg-neutral-800/70'
-                                  : 'bg-surface-2 border-divider hover:border-accent/60 dark:hover:bg-neutral-900/40'
-                          }`
-                        : `pn-lazy-row w-full text-start px-4 py-3 transition group border-b border-divider/50 ${
-                            isSelected
-                              ? 'bg-accent/15 hover:bg-accent/20 border-s-2 border-s-accent dark:bg-accent/20 dark:hover:bg-accent/25'
-                              : isOpen
-                                ? 'bg-accent/10 hover:bg-accent/15 border-s-2 border-s-accent dark:bg-accent/15 dark:hover:bg-accent/20'
-                                : contextTargetId === fk
-                                  ? 'bg-neutral-200/70 hover:bg-neutral-200/80 dark:bg-neutral-800/70 dark:hover:bg-neutral-800/80'
-                                  : 'hover:bg-neutral-200/50 dark:hover:bg-neutral-900/50'
-                          }`
-                  }
+                  className={`pn-lazy-card relative overflow-hidden text-start border transition group rounded-xl min-h-[132px] ${
+                    isSelected
+                      ? 'border-accent ring-2 ring-accent z-[1]'
+                      : isOpen
+                        ? 'border-accent ring-2 ring-accent/50 z-[1]'
+                        : contextTargetId === fk
+                          ? 'border-accent/70'
+                          : 'border-divider hover:border-accent/60'
+                  }`}
                 >
-                  {isImageBg ? (
-                    <>
-                      <FileTileImageBg uuid={item.uuid} />
-                      <div className={`absolute inset-0 pointer-events-none ${viewMode === 'grid' ? 'bg-gradient-to-t from-black/85 via-black/30 to-black/10' : 'bg-gradient-to-r from-black/80 via-black/55 to-black/25'}`} />
-                      <div className={`absolute ${viewMode === 'grid' ? 'inset-x-0 bottom-0 p-2.5' : 'inset-0 px-4 py-2.5 flex flex-col justify-center'}`}>
-                        <div className="text-[13px] font-semibold text-white truncate flex items-center gap-1.5">
-                          {item.starred && selectedFileIds.size === 0 && <PushPin size={11} className="shrink-0" />}
-                          {item.pinProtected && <Shield size={11} className="shrink-0" aria-label={t('filesList.pinProtected')} />}
-                          {item.locked && <PencilSimpleSlash size={11} className="shrink-0" aria-label={t('filesList.readOnly')} />}
-                          {localOnly && <CloudSlash size={11} className="shrink-0 text-amber-400" aria-label={t('attachment.localOnly', { ns: 'media' })} />}
-                          <span className="truncate" dir="auto">{item.name}</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-2 mt-0.5">
-                          <span className="text-[11px] text-white/85 truncate">{item.standalone ? getFileTypeLabel(item) : item.noteTitle}</span>
-                          {item.size > 0 && <span className="text-[11px] text-white/85 shrink-0">{formatBytes(item.size)}</span>}
-                        </div>
-                      </div>
-                      {selectedFileIds.size > 0 && (
-                        <span
-                          role="checkbox"
-                          aria-checked={isSelected}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (e.shiftKey) rangeSelectFiles(item);
-                            else toggleFileSelected(item);
-                          }}
-                          className={`absolute start-2 top-2 z-10 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition ${
-                            isSelected ? 'bg-accent border-accent text-white' : 'border-white/80 bg-black/30'
-                          }`}
-                        >
-                          {isSelected && <Check size={12} />}
-                        </span>
-                      )}
-                    </>
-                  ) : viewMode === 'list' ? (
-                  /* List rows mirror NoteRow: icon + name + size on the title
-                     line, then preview / meta / tags spanning the FULL row
-                     width. Nesting them beside the icon (as the grid tile does)
-                     cost ~90px of text width per line, so previews and dates
-                     truncated far earlier here than in the notes list. */
-                  <>
-                    <div className="flex items-center gap-2.5">
-                      {selectedFileIds.size > 0 ? selectBox : <FileTileIcon mime={item.mime} />}
-                      <div className="min-w-0 flex-1 text-sm font-semibold truncate text-neutral-900 dark:text-white" dir="auto">
-                        {item.name}
-                      </div>
+                  {isPdfFileItem(item)
+                    ? <LazyPdfCover uuid={item.uuid} />
+                    : <LazyPicture src={fileItemMediaRef(item).src} />}
+                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
+                  <div className="absolute inset-x-0 bottom-0 p-2.5">
+                    <div className="text-[13px] font-semibold text-white truncate flex items-center gap-1.5">
+                      <ItemFlags flags={flags} size={11} onImage />
+                      <span data-slot="title" className="truncate" dir="auto">{item.name}</span>
                     </div>
-                    {previewEl}
-                    {metaEl}
-                    {tagsEl}
-                  </>
-                  ) : (
-                  <>
-                  {selectedFileIds.size > 0 ? selectBox : (
-                    <FileTileIcon mime={item.mime} className="pn-card-icbox" />
-                  )}
-                  {/* flex-col + self-stretch lets the meta row's margin-top:auto
-                      (grid only, see index.css) pin the date to the tile bottom. */}
-                  <div className="min-w-0 flex-1 flex flex-col self-stretch">
-                    <div className="pn-card-title text-sm font-semibold truncate flex items-center gap-1.5 text-neutral-900 dark:text-white">
-                      <CardGlyph type="file" />
-                      <span className="pn-card-titletext truncate" dir="auto">{item.name}</span>
+                    <div className="flex items-center justify-between gap-2 mt-0.5">
+                      <span className="text-[11px] text-white/85 truncate">{item.standalone ? getFileTypeLabel(item) : item.noteTitle}</span>
+                      {listPrefs.showSize && item.size > 0 && <span className="text-[11px] text-white/85 shrink-0">{formatBytes(item.size)}</span>}
                     </div>
-                    {previewEl}
-                    {/* Tags sit above the meta row so the date can pin to the
-                        tile bottom (margin-top:auto). */}
-                    {tagsEl}
-                    {metaEl}
                   </div>
-                  {item.size > 0 && !item.standalone && (
-                    <span className="pn-file-size shrink-0 text-[11px] text-neutral-400 dark:text-neutral-500 font-medium mt-0.5">{formatBytes(item.size)}</span>
-                  )}
-                  </>
+                  {selectedFileIds.size > 0 && (
+                    <span
+                      role="checkbox"
+                      aria-checked={isSelected}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (e.shiftKey) rangeSelectFiles(item);
+                        else toggleFileSelected(item);
+                      }}
+                      className={`absolute start-2 top-2 z-10 w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition ${
+                        isSelected ? 'bg-accent-fill border-accent-fill text-white' : 'border-white/80 bg-black/30'
+                      }`}
+                    >
+                      {isSelected && <Check size={12} />}
+                    </span>
                   )}
                 </button>
               );
@@ -1216,5 +1185,32 @@ export function FilesList({
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * A file as a list row or a grid tile: the item the Files pane builds, with
+ * the color of the parent note's tags or folder, which a file shares with it.
+ * Spec: ops/docs/plans/list-grid-parity.md (section 5)
+ */
+function FileEntry({ item, file, grid, compact, state, rootProps, onToggleSelect }: {
+  item: Omit<ListItem, 'look'>;
+  file: FileItem;
+  grid: boolean;
+  compact: boolean;
+  state: ItemState;
+  rootProps: ItemRootProps;
+  onToggleSelect: (e: React.MouseEvent) => void;
+}) {
+  const look = useNoteLook(file.noteId, file.tags, file.folderId);
+  const Layout = grid ? ItemTile : ItemRow;
+  return (
+    <Layout
+      as="button"
+      item={applyCompactRows({ ...item, look: look ? { color: look.color, style: look.style, css: itemLookDraw(look).row } : null }, compact)}
+      state={state}
+      rootProps={rootProps}
+      onToggleSelect={onToggleSelect}
+    />
   );
 }

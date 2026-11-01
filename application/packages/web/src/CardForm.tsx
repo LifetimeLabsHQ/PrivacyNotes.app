@@ -1,10 +1,13 @@
-import { useCallback, useMemo, useState } from 'react';
+import { VaultFieldAction } from './ui/VaultFieldAction';
+import { VaultFormActions } from './ui/VaultFormActions';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { hasPin } from './pin';
 import { PinInfoModal } from './PinInfoModal';
-import { HoverLabel } from './HoverLabel';
-import { Check, Copy, Eye, EyeSlash, Info, FloppyDisk } from './icons';
+import { Calendar, CreditCard, Info, Lock, MapPin, NotePencil, User } from './icons';
 import { useCopyToClipboard } from './clipboard';
+import { FIELD_CLASS, FieldLabel } from './formFields';
+import { storedVaultKeys } from './vaultBody';
 
 /* ────────────────────────────────────────────────────────────────
  * CardData - the JSON blob stored in the note body for card-type
@@ -39,8 +42,9 @@ export function parseCardBody(body: string): CardData {
   }
 }
 
-export function serializeCardBody(data: CardData): string {
-  return JSON.stringify(data);
+/** `previous` is the stored body; keys a newer version wrote in it are kept. */
+export function serializeCardBody(data: CardData, previous = ''): string {
+  return JSON.stringify({ ...storedVaultKeys(previous), ...data });
 }
 
 /** Detect card network from the first digits (BIN). */
@@ -81,23 +85,6 @@ function deriveCardTitle(data: CardData): string {
 }
 
 /* ────────────────────────────────────────────────────────────────
- * Copy button (shared)
- * ──────────────────────────────────────────────────────────────── */
-function CopyBtn({ onClick, active, title }: { onClick: () => void; active: boolean; title: string }) {
-  return (
-    <HoverLabel label={title} position="start">
-      <button type="button" onClick={onClick} aria-label={title} className="shrink-0 rounded-md p-2 text-neutral-400 hover:text-accent hover:bg-neutral-100 dark:hover:bg-surface-0 transition">
-        {active ? (
-          <Check size={16} className="text-emerald-500" />
-        ) : (
-          <Copy size={16} />
-        )}
-      </button>
-    </HoverLabel>
-  );
-}
-
-/* ────────────────────────────────────────────────────────────────
  * CardForm - the editor replacement for card-type notes.
  * ──────────────────────────────────────────────────────────────── */
 interface CardFormProps {
@@ -132,7 +119,10 @@ export function CardForm({
   const { t } = useTranslation('common');
   const data = parseCardBody(body);
   const { copy, copied } = useCopyToClipboard();
-  const pinConfigured = useMemo(() => hasPin(), []);
+  // Never memoize this. Settings opens over a mounted form, so a PIN
+  // can appear or vanish while the toggle below is on screen, and
+  // localStorage fires nothing that would refresh a frozen value.
+  const pinConfigured = hasPin();
   const [showPinInfo, setShowPinInfo] = useState(false);
   const [showNumber, setShowNumber] = useState(false);
   const [numberFocused, setNumberFocused] = useState(false);
@@ -141,9 +131,9 @@ export function CardForm({
   const updateBody = useCallback(
     (patch: Partial<CardData>) => {
       const next = { ...data, ...patch };
-      onBodyChange(noteId, serializeCardBody(next));
+      onBodyChange(noteId, serializeCardBody(next, body));
     },
-    [noteId, data, onBodyChange]
+    [noteId, data, body, onBodyChange]
   );
 
   /** Auto-derive title from card number on blur. */
@@ -166,9 +156,7 @@ export function CardForm({
     return false;
   })();
 
-  const fieldClass =
-    'w-full rounded-md border border-divider bg-surface-1 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-60';
-  const labelClass = 'block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1';
+  const fieldClass = FIELD_CLASS;
 
   const maskedNumber = data.cardNumber.replace(/\D/g, '').length > 4
     ? '•••• '.repeat(Math.floor((data.cardNumber.replace(/\D/g, '').length - 4) / 4)) +
@@ -184,7 +172,7 @@ export function CardForm({
       <div className="space-y-4">
         {/* Cardholder Name */}
         <div>
-          <label className={labelClass}>{t('cardForm.cardholderName')}</label>
+          <FieldLabel icon={<User size={13} />}>{t('cardForm.cardholderName')}</FieldLabel>
           <input
             type="text"
             value={data.cardholderName}
@@ -198,9 +186,8 @@ export function CardForm({
 
         {/* Card Number */}
         <div>
-          <label className={labelClass}>{t('cardForm.cardNumber')}</label>
+          <FieldLabel icon={<CreditCard size={13} />}>{t('cardForm.cardNumber')}</FieldLabel>
           <div className="flex gap-1.5">
-            <div className="relative flex-1">
               <input
                 type="text"
                 value={showNumber || numberFocused ? formatCardNumber(data.cardNumber) : maskedNumber}
@@ -215,26 +202,10 @@ export function CardForm({
                 disabled={locked}
                 autoComplete="off"
                 inputMode="numeric"
-                className={`${fieldClass} font-mono pe-10`}
+                className={`${fieldClass} font-mono`}
               />
-              <div className="absolute end-1 top-1/2 -translate-y-1/2">
-              <HoverLabel label={showNumber ? t('cardForm.hideNumber') : t('cardForm.showNumber')} position="above">
-              <button
-                type="button"
-                onClick={() => setShowNumber(!showNumber)}
-                aria-label={showNumber ? t('cardForm.hideNumber') : t('cardForm.showNumber')}
-                className="rounded p-1 text-neutral-400 hover:text-accent transition"
-              >
-                {showNumber ? (
-                  <EyeSlash size={16} />
-                ) : (
-                  <Eye size={16} />
-                )}
-              </button>
-              </HoverLabel>
-              </div>
-            </div>
-            <CopyBtn
+              <VaultFieldAction kind="reveal" active={showNumber} title={showNumber ? t('cardForm.hideNumber') : t('cardForm.showNumber')} onClick={() => setShowNumber(!showNumber)} />
+            <VaultFieldAction kind="copy"
               onClick={() => copy(data.cardNumber, 'number')}
               active={copied === 'number'}
               title={t('cardForm.copyCardNumber')}
@@ -246,11 +217,11 @@ export function CardForm({
             const tooShort = digits.length > 0 && digits.length < 13;
             return (
               <>
-                <div className="mt-1 text-xs text-neutral-400">
+                <div className="mt-1 text-xs text-pn-muted">
                   {network || t('cardForm.unknownNetwork')}
                 </div>
                 {tooShort && (
-                  <div className="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">
+                  <div className="mt-0.5 text-[11px] text-warning">
                     {t('cardForm.numberTooShort', { count: digits.length, expected: maxDigitsForNetwork(digits) })}
                   </div>
                 )}
@@ -262,7 +233,7 @@ export function CardForm({
         {/* Expiry + CVV row */}
         <div className="flex gap-3">
           <div className="flex-1">
-            <label className={labelClass}>{t('cardForm.expiry')}</label>
+            <FieldLabel icon={<Calendar size={13} />}>{t('cardForm.expiry')}</FieldLabel>
             <div className="flex gap-1.5">
               <select
                 value={data.expMonth}
@@ -291,7 +262,7 @@ export function CardForm({
             </div>
           </div>
           <div className="w-28">
-            <label className={labelClass}>{t('cardForm.cvv')}</label>
+            <FieldLabel icon={<Lock size={13} />}>{t('cardForm.cvv')}</FieldLabel>
             <div className="flex gap-1.5">
               <input
                 type={showCvv ? 'text' : 'password'}
@@ -304,31 +275,18 @@ export function CardForm({
                 maxLength={4}
                 className={`${fieldClass} font-mono`}
               />
-              <HoverLabel label={showCvv ? t('cardForm.hideCvv') : t('cardForm.showCvv')} position="above">
-              <button
-                type="button"
-                onClick={() => setShowCvv(!showCvv)}
-                aria-label={showCvv ? t('cardForm.hideCvv') : t('cardForm.showCvv')}
-                className="shrink-0 rounded-md p-2 text-neutral-400 hover:text-accent transition"
-              >
-                {showCvv ? (
-                  <EyeSlash size={16} />
-                ) : (
-                  <Eye size={16} />
-                )}
-              </button>
-              </HoverLabel>
+              <VaultFieldAction kind="reveal" active={showCvv} title={showCvv ? t('cardForm.hideCvv') : t('cardForm.showCvv')} onClick={() => setShowCvv(!showCvv)} />
             </div>
           </div>
         </div>
 
         {isExpired && (
-          <p className="text-[11px] text-amber-600 dark:text-amber-400 -mt-2">{t('cardForm.expiredHint')}</p>
+          <p className="text-[11px] text-warning -mt-2">{t('cardForm.expiredHint')}</p>
         )}
 
         {/* Billing Zip */}
         <div>
-          <label className={labelClass}>{t('cardForm.billingZip')}</label>
+          <FieldLabel icon={<MapPin size={13} />}>{t('cardForm.billingZip')}</FieldLabel>
           <input
             type="text"
             value={data.billingZip}
@@ -342,7 +300,7 @@ export function CardForm({
 
         {/* Notes */}
         <div>
-          <label className={labelClass}>{t('cardForm.notes')}</label>
+          <FieldLabel icon={<NotePencil size={13} />}>{t('cardForm.notes')}</FieldLabel>
           <textarea
             value={data.notes}
             onChange={(e) => updateBody({ notes: e.target.value })}
@@ -364,7 +322,7 @@ export function CardForm({
             disabled={!pinConfigured && !pinProtected}
             className="rounded accent-accent"
           />
-          <span className="text-sm text-neutral-600 dark:text-neutral-400">
+          <span className="text-sm text-pn-muted">
             {t('cardForm.requirePin')}
           </span>
           <button
@@ -379,36 +337,12 @@ export function CardForm({
 
         {showPinInfo && <PinInfoModal onClose={() => setShowPinInfo(false)} />}
         {!pinConfigured && !pinProtected && (
-          <p className="text-[11px] text-neutral-400 dark:text-neutral-500 -mt-2">
+          <p className="text-[11px] text-pn-muted -mt-2">
             {t('cardForm.setUpPinFirst')}
           </p>
         )}
 
-        {/* Save / Cancel */}
-        {saveError && (
-          <p className="text-[11px] text-red-600 dark:text-red-400">{saveError}</p>
-        )}
-        {!locked && (
-          <div className="flex gap-2 -mt-2">
-            {!isNew && (
-              <button
-                type="button"
-                onClick={onCancel}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium border border-divider text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-surface-1 transition"
-              >
-                {t('actions.cancel')}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={onSave}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium bg-accent text-white hover:bg-accent-hover transition"
-            >
-              <FloppyDisk />
-              {t('actions.save')}
-            </button>
-          </div>
-        )}
+        <VaultFormActions locked={locked} isNew={isNew} saveError={saveError} onSave={onSave} onCancel={onCancel} />
       </div>
     </div>
   );

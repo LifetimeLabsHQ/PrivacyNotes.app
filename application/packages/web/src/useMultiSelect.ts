@@ -8,9 +8,16 @@ import {
   bulkRestore,
   bulkPermanentlyDelete,
   bulkSetStarred,
+  bulkSetArchived,
+  bulkSetLocked,
+  bulkSetPinProtected,
+  bulkDuplicate,
   bulkAddTag,
+  duplicateNote,
 } from './notesRepo';
 import { gcOnNotesDelete } from './imageGC';
+import { routeItemClick } from './itemList';
+import type { PinGatePurpose } from './ProtectedNoteGate';
 
 interface UseMultiSelectArgs {
   notes: LocalNote[];
@@ -18,6 +25,8 @@ interface UseMultiSelectArgs {
   setSelectedId: (id: string | null) => void;
   view: View;
   selectedTag: string | null;
+  /** The open space (Personal or Work); a switch ends the selection. */
+  activeSpace: string;
   imageStoreRef: React.RefObject<ImageStore | null>;
   attachmentStoreRef: React.RefObject<AttachmentStore | null>;
   refresh: () => Promise<LocalNote[]>;
@@ -28,16 +37,31 @@ interface UseMultiSelectArgs {
   refreshStorage: () => void;
   handleSelectNote: (id: string) => Promise<void>;
   exportAllMarkdownZip: (notes: LocalNote[]) => Promise<void>;
+  exportAllHtmlZip: (notes: LocalNote[]) => Promise<void>;
   /** Returns true if the note is currently PIN-locked. */
   isNoteLocked: (n: LocalNote) => boolean;
-  /** Show PIN modal; resolves when user verifies or rejects. */
-  requestPinGate: (action: () => Promise<void>) => void;
+  /** Show the PIN modal, worded for `purpose`; runs `action` once the PIN
+   *  is verified. */
+  requestPinGate: (action: () => Promise<void>, purpose: PinGatePurpose) => void;
+  /** Keep a new copy gated until the next unlock (a copy of a gated note). */
+  gateCopy: (id: string) => void;
 }
+
+/** What the trash modal is asking about: the ids that can move to trash,
+ *  and how many of the requested items are read-only and stay where they
+ *  are. Empty ids with a non-zero skipped count is the refusal case, where
+ *  the modal explains rather than asks. */
+type TrashRequest = { ids: string[]; skipped: number };
 
 interface UseMultiSelectReturn {
   selectionMode: boolean;
   selectedIds: Set<string>;
   selectionAllStarred: boolean;
+  selectionAllArchived: boolean;
+  /** True when every item in the selection already carries the flag. The
+   *  menus read these to decide which way their toggles go. */
+  selectionAllLocked: boolean;
+  selectionAllProtected: boolean;
   displayNotesRef: React.MutableRefObject<LocalNote[]>;
   clearSelection: () => void;
   deselectAll: () => void;
@@ -47,8 +71,9 @@ interface UseMultiSelectReturn {
   handleRowClick: (e: React.MouseEvent, id: string) => void;
   beginLongPress: (id: string) => void;
   cancelLongPress: () => void;
-  bulkTrashPending: string[] | null;
+  bulkTrashPending: TrashRequest | null;
   requestBulkTrash: () => void;
+  requestTrash: (ids: string[]) => void;
   executeBulkTrash: () => Promise<void>;
   dismissBulkTrash: () => void;
   handleBulkRestore: () => Promise<void>;
@@ -57,8 +82,15 @@ interface UseMultiSelectReturn {
   executeBulkDelete: () => Promise<void>;
   dismissBulkDelete: () => void;
   handleBulkFavorite: () => Promise<void>;
+  handleBulkArchive: () => Promise<void>;
   handleBulkExport: () => Promise<void>;
   handleBulkAddTag: (tag: string) => Promise<number>;
+  handleAddTagTo: (ids: string[], tag: string) => Promise<number>;
+  handleBulkSetLocked: (locked: boolean) => Promise<void>;
+  handleBulkSetPinProtected: (pinProtected: boolean) => Promise<void>;
+  requestBulkUnprotect: () => void;
+  handleBulkDuplicate: () => Promise<void>;
+  handleBulkExportHtml: () => Promise<void>;
 }
 
 /** Shift-click is the range-select gesture, so the browser must not also
@@ -67,7 +99,7 @@ interface UseMultiSelectReturn {
  *  event, long before the click handler's `preventDefault()` runs. Attach to
  *  a list's scroll container so every row is covered by one handler - it
  *  fires only while shift is held, so ordinary text selection is untouched.
- *  Spec: ops/docs/ui-patterns.md section 53. */
+ *  Spec: ops/docs/archive/ui-patterns.md section 53. */
 export function suppressShiftTextSelection(e: React.MouseEvent) {
   if (e.shiftKey) e.preventDefault();
 }
@@ -78,6 +110,7 @@ export function useMultiSelect({
   setSelectedId,
   view,
   selectedTag,
+  activeSpace,
   imageStoreRef,
   attachmentStoreRef,
   refresh,
@@ -85,8 +118,10 @@ export function useMultiSelect({
   refreshStorage,
   handleSelectNote,
   exportAllMarkdownZip,
+  exportAllHtmlZip,
   isNoteLocked,
   requestPinGate,
+  gateCopy,
 }: UseMultiSelectArgs): UseMultiSelectReturn {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
@@ -174,20 +209,12 @@ export function useMultiSelect({
    *  is a navigation (open the note) or a selection gesture based on
    *  modifiers + current selectionMode. */
   const handleRowClick = useCallback(
-    (e: React.MouseEvent, id: string) => {
-      const mod = e.metaKey || e.ctrlKey;
-      if (e.shiftKey && selectionMode) {
-        e.preventDefault();
-        rangeSelect(id);
-        return;
-      }
-      if (mod || selectionMode) {
-        e.preventDefault();
-        toggleSelected(id);
-        return;
-      }
-      void handleSelectNoteRef.current(id);
-    },
+    (e: React.MouseEvent, id: string) =>
+      routeItemClick(e, selectionMode, {
+        range: () => rangeSelect(id),
+        toggle: () => toggleSelected(id),
+        open: () => void handleSelectNoteRef.current(id),
+      }),
     [selectionMode, rangeSelect, toggleSelected]
   );
 
@@ -216,16 +243,34 @@ export function useMultiSelect({
   // Bulk trash uses the same two-step pattern as bulk delete:
   // requestBulkTrash stores pending IDs, the caller renders a
   // ConfirmModal, and executeBulkTrash runs the actual trash on confirm.
-  const [bulkTrashPending, setBulkTrashPending] = useState<string[] | null>(null);
+  const [bulkTrashPending, setBulkTrashPending] = useState<TrashRequest | null>(null);
+
+  /** Read-only items never reach the trash, so they are held back here and
+   *  counted, which is what lets the modal name how many stayed behind. */
+  function splitTrashable(ids: string[]): TrashRequest {
+    const movable = ids.filter((id) => notes.find((n) => n.id === id)?.locked !== 1);
+    return { ids: movable, skipped: ids.length - movable.length };
+  }
 
   function requestBulkTrash() {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
-    setBulkTrashPending(ids);
+    setBulkTrashPending(splitTrashable(ids));
+  }
+
+  /**
+   * Ask about named notes rather than the current selection, so a single
+   * note trashed from a menu gets the same question, the same wording and
+   * the same PIN gate as a whole selection. One item reads "1 item"
+   * through the plural form the modal already carries.
+   */
+  function requestTrash(ids: string[]) {
+    if (ids.length === 0) return;
+    setBulkTrashPending(splitTrashable(ids));
   }
 
   async function executeBulkTrash() {
-    const ids = bulkTrashPending;
+    const ids = bulkTrashPending?.ids;
     setBulkTrashPending(null);
     if (!ids || ids.length === 0) return;
     // If any selected notes are protected and currently locked, require PIN first.
@@ -237,7 +282,7 @@ export function useMultiSelect({
         clearSelection();
         await refresh();
         void runSync();
-      });
+      }, 'delete');
       return;
     }
     await bulkTrash(ids);
@@ -275,20 +320,18 @@ export function useMultiSelect({
     const ids = bulkDeletePending;
     setBulkDeletePending(null);
     if (!ids || ids.length === 0) return;
-    // GC blobs before deleting the notes - one batch call, so a blob
-    // shared by two selected notes cannot hide behind its batch-mate in
-    // the reference check.
-    if (imageStoreRef.current) {
-      const batch = ids
-        .map((id) => notes.find((n) => n.id === id))
-        .filter((n): n is NonNullable<typeof n> => n != null)
-        .map((n) => ({ id: n.id, body: n.body }));
-      void gcOnNotesDelete(imageStoreRef.current, batch, attachmentStoreRef.current);
-    }
-    await bulkPermanentlyDelete(ids);
+    const deleted = await bulkPermanentlyDelete(ids);
     if (selectedId && ids.includes(selectedId)) setSelectedId(null);
     clearSelection();
     await refresh();
+    // GC after the write and only over the rows it tombstoned: a selected
+    // note a pull restored keeps its images and files. One batch call, so a
+    // blob shared by two of them cannot hide behind its batch-mate in the
+    // reference check. Awaited before the sync, so the recount after it
+    // already leaves them out.
+    if (imageStoreRef.current && deleted.length > 0) {
+      await gcOnNotesDelete(imageStoreRef.current, deleted, attachmentStoreRef.current);
+    }
     // Storage counters only settle once the tombstones have reached the
     // server, so this chains off the sync rather than racing it - same
     // ordering as handlePermanentlyDelete and confirmEmptyTrash.
@@ -308,16 +351,40 @@ export function useMultiSelect({
     void runSync();
   }
 
-  async function handleBulkExport() {
+  /** Same rule as the pin: all archived unarchives, anything else archives
+   *  all. The items leave the list they sit in, so the selection ends. */
+  async function handleBulkArchive() {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
     const picked = notes.filter((n) => selectedIds.has(n.id));
-    if (picked.length === 0) return;
-    await exportAllMarkdownZip(picked);
+    const allArchived = picked.length > 0 && picked.every((n) => n.archived === 1);
+    await bulkSetArchived(ids, !allArchived);
+    clearSelection();
+    await refresh();
+    void runSync();
   }
 
-  async function handleBulkAddTag(tag: string): Promise<number> {
-    const ids = Array.from(selectedIds);
+  /** A selection holding a note the PIN guards leaves the device only after
+   *  the PIN, the same bar Trash sets for it. Tested in
+   *  tests/lockGateReads.test.ts. */
+  async function exportPicked(picked: LocalNote[], exportZip: (notes: LocalNote[]) => Promise<void>) {
+    if (picked.length === 0) return;
+    if (picked.some(isNoteLocked)) {
+      requestPinGate(() => exportZip(picked), 'unlock');
+      return;
+    }
+    await exportZip(picked);
+  }
+
+  async function handleBulkExport() {
+    await exportPicked(notes.filter((n) => selectedIds.has(n.id)), exportAllMarkdownZip);
+  }
+
+  async function handleBulkExportHtml() {
+    await exportPicked(notes.filter((n) => selectedIds.has(n.id)), exportAllHtmlZip);
+  }
+
+  async function handleAddTagTo(ids: string[], tag: string): Promise<number> {
     if (ids.length === 0) return 0;
     const count = await bulkAddTag(ids, tag);
     await refresh();
@@ -325,14 +392,63 @@ export function useMultiSelect({
     return count;
   }
 
-  // When the active view changes (trash↔all↔starred↔tag) drop the
-  // selection - acting on notes you can no longer see would be
+  function handleBulkAddTag(tag: string): Promise<number> {
+    return handleAddTagTo(Array.from(selectedIds), tag);
+  }
+
+  async function handleBulkSetLocked(locked: boolean) {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    await bulkSetLocked(ids, locked);
+    await refresh();
+    void runSync();
+  }
+
+  async function handleBulkSetPinProtected(pinProtected: boolean) {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    await bulkSetPinProtected(ids, pinProtected);
+    await refresh();
+    void runSync();
+  }
+
+  /** Taking protection off a whole selection asks for the PIN once, which
+   *  is the same bar a single note's remove screen sets. */
+  function requestBulkUnprotect() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    requestPinGate(async () => {
+      await bulkSetPinProtected(ids, false);
+      await refresh();
+      void runSync();
+    }, 'unlock');
+  }
+
+  /** A copy of a note the PIN guards right now is made one at a time, so it
+   *  can be gated the way the single-note Duplicate gates its copy. Tested
+   *  in tests/lockGateWrites.test.ts. */
+  async function handleBulkDuplicate() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    const gated = new Set(notes.filter((n) => selectedIds.has(n.id) && isNoteLocked(n)).map((n) => n.id));
+    await bulkDuplicate(ids.filter((id) => !gated.has(id)));
+    for (const id of gated) {
+      const copy = await duplicateNote(id);
+      if (copy) gateCopy(copy.id);
+    }
+    clearSelection();
+    await refresh();
+    void runSync();
+  }
+
+  // When the active view changes (trash↔all↔starred↔tag, or the space)
+  // drop the selection - acting on notes you can no longer see would be
   // confusing. Runs imperatively (not state-derived) so the reset only
   // fires on actual filter changes, not every render.
   useEffect(() => {
     if (selectionMode) clearSelection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, selectedTag]);
+  }, [view, selectedTag, activeSpace]);
 
   // Drop selected IDs whose note left the current list - trashed from a
   // normal view, restored out of the trash, permanently deleted, or
@@ -369,10 +485,26 @@ export function useMultiSelect({
       .filter((n) => selectedIds.has(n.id))
       .every((n) => n.starred === 1);
 
+  const selectionAllArchived =
+    selectedIds.size > 0 &&
+    notes.filter((n) => selectedIds.has(n.id)).every((n) => n.archived === 1);
+
+  // Same rule for the two per-note switches the selection menu carries:
+  // the toggle turns a flag off only when every item already has it on.
+  const selectionAllLocked =
+    selectedIds.size > 0 &&
+    notes.filter((n) => selectedIds.has(n.id)).every((n) => n.locked === 1);
+  const selectionAllProtected =
+    selectedIds.size > 0 &&
+    notes.filter((n) => selectedIds.has(n.id)).every((n) => n.pinProtected === 1);
+
   return {
     selectionMode,
     selectedIds,
     selectionAllStarred,
+    selectionAllArchived,
+    selectionAllLocked,
+    selectionAllProtected,
     displayNotesRef,
     clearSelection,
     deselectAll,
@@ -384,6 +516,7 @@ export function useMultiSelect({
     cancelLongPress,
     bulkTrashPending,
     requestBulkTrash,
+    requestTrash,
     executeBulkTrash,
     dismissBulkTrash,
     handleBulkRestore,
@@ -392,7 +525,14 @@ export function useMultiSelect({
     executeBulkDelete,
     dismissBulkDelete: () => setBulkDeletePending(null),
     handleBulkFavorite,
+    handleBulkArchive,
     handleBulkExport,
     handleBulkAddTag,
+    handleAddTagTo,
+    handleBulkSetLocked,
+    handleBulkSetPinProtected,
+    requestBulkUnprotect,
+    handleBulkDuplicate,
+    handleBulkExportHtml,
   };
 }

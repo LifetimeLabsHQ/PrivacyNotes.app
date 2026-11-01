@@ -9,49 +9,116 @@
     "tabExport": "Eksport",
     "tabRestore": "Przywracanie",
     "tabVault": "Hasła",
-    "working": "Pracuję…"
+    "working": "Pracuję…",
+    "tabWellness": "Trackery"
   },
   "footer": {
     "exportNote": "Eksport działa lokalnie. Nic nie jest wysyłane.",
     "restoreNote": "Twój plik jest odczytywany i odszyfrowywany lokalnie.",
-    "importNote": "Wszystko jest szyfrowane, zanim opuści Twoje urządzenie w celu synchronizacji."
+    "importNote": "Wszystko jest zawsze zaszyfrowane, na Twoim urządzeniu i podczas synchronizacji."
   },
   "importPick": {
     "autoTagLabel": "Oznacz zaimportowane notatki tagiem źródła",
     "autoTagDesc": "Notatki z Google Keep dostają <keep>#google</keep>, Obsidian dostaje <obsidian>#obsidian</obsidian> i tak dalej.",
     "guideAria": "Przewodnik importu dla {{app}}",
-    "guideLabel": "Poradnik"
+    "guideLabel": "Poradnik",
+    "groupGeneral": "Ogólne",
+    "groupNotes": "Notatki"
   },
   "folderImport": {
     "tagLabel": "Oznacz notatki też tagiem folderu",
     "tagDesc": "Twoje foldery i tak zostaną odtworzone. To dodaje nazwę każdego folderu również jako tag, przydatne, jeśli lubisz też filtrować po tagach."
   },
+  "browserImport": {
+    "tagLabel": "Zachowaj tagi z przeglądarki",
+    "tagDesc": "Firefox zapisuje przy zakładce tagi i słowo kluczowe paska adresu. Jedno i drugie trafia tutaj jako tagi."
+  },
+  "contactImport": {
+    "photosLabel": "Importuj zdjęcia",
+    "photosDesc_one": "{{count}} zdjęcie, około {{size}} po zmniejszeniu przez aplikację. To {{pct}} % z {{free}}, które masz wolne.",
+    "photosDesc_few": "{{count}} zdjęcia, około {{size}} po zmniejszeniu przez aplikację. To {{pct}} % z {{free}}, które masz wolne.",
+    "photosDesc_many": "{{count}} zdjęć, około {{size}} po zmniejszeniu przez aplikację. To {{pct}} % z {{free}}, które masz wolne.",
+    "photosDesc_other": "{{count}} zdjęć, około {{size}} po zmniejszeniu przez aplikację. To {{pct}} % z {{free}}, które masz wolne.",
+    "photosDescNoQuota_one": "{{count}} zdjęcie, około {{size}} po zmniejszeniu przez aplikację.",
+    "photosDescNoQuota_few": "{{count}} zdjęcia, około {{size}} po zmniejszeniu przez aplikację.",
+    "photosDescNoQuota_many": "{{count}} zdjęć, około {{size}} po zmniejszeniu przez aplikację.",
+    "photosDescNoQuota_other": "{{count}} zdjęć, około {{size}} po zmniejszeniu przez aplikację.",
+    "photosTooBig_one": "Za mało miejsca na zdjęcie ({{size}}), więc zostaje pominięte. Cała reszta się importuje. Zwolnij {{shortfall}} albo dokup miejsce i zaimportuj ponownie, żeby je dodać.",
+    "photosTooBig_few": "Za mało miejsca na {{count}} zdjęcia ({{size}}), więc zostają pominięte. Cała reszta się importuje. Zwolnij {{shortfall}} albo dokup miejsce i zaimportuj ponownie, żeby je dodać.",
+    "photosTooBig_many": "Za mało miejsca na {{count}} zdjęć ({{size}}), więc zostają pominięte. Cała reszta się importuje. Zwolnij {{shortfall}} albo dokup miejsce i zaimportuj ponownie, żeby je dodać.",
+    "photosTooBig_other": "Za mało miejsca na {{count}} zdjęć ({{size}}), więc zostają pominięte. Cała reszta się importuje. Zwolnij {{shortfall}} albo dokup miejsce i zaimportuj ponownie, żeby je dodać."
+  },
+  "importCalendar": {
+    "location": "Lokalizacja",
+    "videoCall": "Rozmowa wideo",
+    "organizer": "Organizator",
+    "guests": "Goście",
+    "file": "Plik",
+    "link": "Link",
+    "timeZone": "Strefa czasowa",
+    "ends": "Koniec",
+    "repeats": "Powtarzanie"
+  },
+  "webcal": {
+    "title": "Webcal",
+    "desc": "Adres kalendarza, na przykład link webcal:// z Proton, iCloud, Outlook lub z kalendarza publicznego. Jest pobierany raz; wklej go ponownie później, aby dodać tylko nowe wydarzenia.",
+    "fieldLabel": "Adres kalendarza",
+    "import": "Importuj",
+    "downloading": "Pobieranie…",
+    "errors": {
+      "invalid": "Wklej adres zaczynający się od webcal://, webcals:// lub https://.",
+      "refused": "Nie można otworzyć tego adresu.",
+      "wrongType": "Ten adres nie prowadzi do pliku kalendarza.",
+      "tooLarge": "Ten kalendarz jest większy niż 10 MB.",
+      "timeout": "Serwer kalendarza nie odpowiedział na czas. Spróbuj ponownie później.",
+      "blocked": "Serwer kalendarza odmówił pobrania. Sprawdź, czy kalendarz jest udostępniony lub publiczny.",
+      "offline": "Jesteś offline. Połącz się i spróbuj ponownie.",
+      "limit": "Za dużo pobrań w krótkim czasie. Odczekaj minutę i spróbuj ponownie.",
+      "failed": "Nie udało się pobrać kalendarza. Sprawdź adres i spróbuj ponownie."
+    }
+  },
   "sourceDesc": {
     "googleKeep": "Plik .zip z Google Takeout (folder Keep) lub pojedyncza notatka .json. Listy kontrolne importują się jako natywne listy zadań.",
+    "googleCalendar": "Plik .zip z Settings > Import & export w Google Calendar albo pojedynczy plik .ics. Wydarzenia zachowują godziny, powtarzanie i przypomnienia.",
     "appleNotes": "Wyeksportuj darmową aplikacją Exporter jako Markdown, a potem upuść tutaj plik .zip.",
     "appleJournal": "Eksportuj z Dziennika na Macu lub iPhonie, skompresuj folder AppleJournalEntries i upuść tutaj plik .zip. Wpisy importują się jako wpisy w dzienniku razem ze zdjęciami, filmami, notatkami głosowymi i lokalizacjami.",
-    "evernote": "Pojedynczy plik .enex albo kilka spakowanych w zip. Zachowuje formatowanie, tagi, załączniki, linki między notatkami i notatniki. Zadań Evernote nie zapisuje w .enex.",
+    "evernote": "Pojedynczy plik .enex albo kilka spakowanych w zip. Zachowuje formatowanie, tagi, załączniki, linki do notatek i notatniki. Zadań Evernote nie zapisuje w .enex.",
     "samsungNotes": "Wyeksportuj jako Word (.docx) lub tekst (.txt). Spakuj wiele plików w .zip do importu zbiorczego.",
     "simplenote": "Wyeksportuj z Simplenote (Settings -> Tools -> Export Notes). Upuść plik .zip.",
-    "standardNotes": "Odszyfrowana kopia .zip lub .txt ze Standard Notes (File > Export > Decrypted).",
+    "standardNotes": "Odszyfrowana kopia .zip lub .txt ze Standard Notes (Account settings > Backups > Data backups > Decrypted).",
     "obsidian": "Sejf Obsidiana jako .zip. Zachowuje tagi, [[note links]], strukturę folderów, tagi #inline oraz osadzone obrazki i pliki.",
     "notesnook": "Eksport Notesnook jako .zip. Przy eksporcie wybierz HTML, aby zachować formatowanie, notesy, tagi i załączniki.",
+    "bear": "W Bear wybierz File > Backup Notes... i upuść tutaj plik .bear2bk. Tagi i zagnieżdżone tagi, przypięcia, archiwum, kosz, wyróżnienia z ich kolorami, linki do notatek i załączniki przechodzą razem z nimi.",
+    "joplin": "Plik .jex z File > Export all > „JEX - Joplin Export File”. Notesy stają się folderami, a tagi, zadania do zrobienia, linki do notatek i załączniki przechodzą razem z nimi.",
     "upnote": "W UpNote: Settings > Backup > Backup now, potem spakuj wszystko z folderu kopii zapasowej do .zip. Zachowuje notesy, tagi, przypięcia, linki do notatek, formatowanie i załączniki. Eksporty pojedynczych notatek z aplikacji na telefon też działają - wybierz „Export to HTML”.",
     "markdownFolder": "Pliki .md albo .txt pojedynczo lub w .zip. Spakowany folder zachowuje podfoldery i zabiera ze sobą obrazki oraz załączniki.",
     "markdownApp": "Te notatki już są plikami Markdown w folderze. Przeciągnij ten folder jako .zip, a razem z nim przyjdą podfoldery, obrazki i #tagi.",
     "browserBookmarks": "Plik zakładek (.html) z \"Export bookmarks\" w twojej przeglądarce albo .zip, który zapisuje Safari. Chrome, Firefox, Safari, Edge, Opera, Brave i Vivaldi zawierają ten sam plik. Foldery i daty przychodzą razem z nim.",
+    "vcard": "Plik .vcf, który eksportuje twoja książka adresowa: iPhone i Mac przez iCloud lub Kontakty, Android, Kontakty Google. Każda wizytówka się importuje, ze zdjęciami, a ponowny import tego samego pliku pomija osoby, które już masz.",
     "bitwarden": "Niezaszyfrowany eksport .json z Bitwarden (Tools > Export vault > .json). Loginy, karty, klucze SSH, bezpieczne notatki i kody TOTP przychodzą razem.",
     "browserPasswords": "Plik haseł (.csv) z Chrome, Edge, Brave, Opery, Vivaldi, Firefoksa lub Safari albo .zip, który zapisuje Safari. Każdy wiersz staje się loginem. Usuń plik, gdy skończysz - są w nim twoje hasła jawnym tekstem."
+  },
+  "sourceLabel": {
+    "privacynotes": "Pełna kopia zapasowa PrivacyNotes",
+    "browserBookmarks": "Zakładki przeglądarki",
+    "browserPasswords": "Hasła z przeglądarki",
+    "vcard": "Kontakty (vCard)",
+    "markdownFolder": "Pliki Markdown"
   },
   "vaultPick": {
     "intro": "Zaimportuj loginy, karty kredytowe i klucze SSH z innego menedżera haseł."
   },
   "restorePick": {
-    "intro": "Przywróć kopię zapasową PrivacyNotes wyeksportowaną wcześniej. Twój plik jest odczytywany i odszyfrowywany lokalnie.",
+    "intro": "Przywróć kopię zapasową PrivacyNotes wyeksportowaną wcześniej.",
     "fullBackupTitle": "Pełna kopia zapasowa (.zip)",
-    "fullBackupDesc": "Przywróć notatki, dzienniki, elementy sejfu, zadania, obrazy, dźwięk i pliki. Wszystko jest importowane jako nowe elementy - istniejące dane nie są nadpisywane.",
+    "fullBackupDesc": "Przywróć notatki, dzienniki, elementy sejfu, zadania, obrazy, dźwięk i pliki. Notatka, którą już masz, zostaje zachowana albo zaktualizowana, jeśli kopia zawiera jej nowszą wersję.",
     "encryptedBackupTitle": "Zaszyfrowana kopia zapasowa (.pnbackup, .pnbackupz)",
     "encryptedBackupDesc": "Przywróć zaszyfrowaną kopię zapasową kluczem z Twojej frazy. Plik .pnbackupz przywraca wszystko, razem z plikami; .pnbackup zawiera tylko tekst i metadane. Musisz być zalogowany na tym samym koncie, które ją utworzyło."
+  },
+  "restoreGate": {
+    "wait": "Przywracanie czeka, aż to urządzenie będzie online i ukończy synchronizację, żeby dopasować kopię zapasową do notatek, które już są na Twoim koncie, zamiast dodawać je po raz drugi.",
+    "paused": "Przywracanie czeka na synchronizację, żeby dopasować kopię zapasową do notatek, które już są na Twoim koncie, a synchronizacja jest na tym urządzeniu wstrzymana: wyłącz „Wstrzymaj synchronizację” w Ustawienia > ID & Sync.",
+    "belowFloor": "Przywracanie czeka na synchronizację, żeby dopasować kopię zapasową do notatek, które już są na Twoim koncie, a ta wersja aplikacji jest za stara, aby synchronizować: najpierw zaktualizuj aplikację."
   },
   "encryptedBackupLabel": "Zaszyfrowana kopia zapasowa",
   "status": {
@@ -64,9 +131,21 @@
   "errors": {
     "genericParse": "Coś poszło nie tak.",
     "decryptionFailed": "Odszyfrowywanie nie powiodło się. Zła fraza lub uszkodzony plik.",
-    "blobImportFailed": "Twoje notatki zaimportowały się, ale ich obrazy i pliki nie: {{detail}} Nic w pliku, który wybrałeś, nie zostało zmienione, więc możesz usunąć zaimportowane notatki i uruchomić import ponownie."
+    "blobImportFailed": "Twoje notatki zaimportowały się, ale ich obrazy i pliki nie: {{detail}} Nic w pliku, który wybrałeś, nie zostało zmienione, więc możesz usunąć zaimportowane notatki i uruchomić import ponownie.",
+    "blobsNotInBackup_one": "Twoje notatki zostały przywrócone, ale w kopii zapasowej brakuje wymienionego w niej elementu: {{items}}.",
+    "blobsNotInBackup_few": "Twoje notatki zostały przywrócone, ale w kopii zapasowej brakuje wymienionych w niej elementów: {{items}}.",
+    "blobsNotInBackup_many": "Twoje notatki zostały przywrócone, ale w kopii zapasowej brakuje wymienionych w niej elementów: {{items}}.",
+    "blobsNotInBackup_other": "Twoje notatki zostały przywrócone, ale w kopii zapasowej brakuje wymienionych w niej elementów: {{items}}."
   },
   "preview": {
+    "oversize_one": "{{count}} notatka ma ponad 1 MB. Zostaje na tym urządzeniu i się nie synchronizuje.",
+    "splitOversize_one": "Podziel tę notatkę na mniejsze notatki według nagłówków, aby się synchronizowała",
+    "partTitle": "{{title}} ({{index}}/{{total}})",
+    "continuedIn": "Ciąg dalszy w {{link}}",
+    "splitOversize_few": "Podziel te {{count}} notatki na mniejsze notatki według nagłówków, aby się synchronizowały",
+    "splitOversize_many": "Podziel tych {{count}} notatek na mniejsze notatki według nagłówków, aby się synchronizowały",
+    "oversize_few": "{{count}} notatki mają ponad 1 MB. Zostają na tym urządzeniu i się nie synchronizują.",
+    "oversize_many": "{{count}} notatek ma ponad 1 MB. Zostają na tym urządzeniu i się nie synchronizują.",
     "sourceLabel": "Źródło",
     "uniqueTags": "Unikalne tagi",
     "empty": "Puste",
@@ -76,37 +155,44 @@
     "andMore": "… i jeszcze {{count}}",
     "headsUpLabel": "Uwaga:",
     "duplicateWarning": "import dodaje je jako nowe notatki. Jeśli uruchomisz go dwa razy, dostaniesz duplikaty. Nie ma jeszcze automatycznego usuwania duplikatów.",
+    "duplicateSkipNote": "zakładki, które już masz zapisane, zostaną pominięte, więc powtórzenie tego importu niczego nie zduplikuje.",
+    "contactSkipNote": "osoby, które już zapisałeś, są pomijane i zostają bez zmian, więc drugie uruchomienie nikogo nie zduplikuje.",
+    "eventSkipNote": "wydarzenia, które już zaimportowano, są pomijane i zostają bez zmian, więc drugie uruchomienie ich nie zduplikuje.",
+    "restoreMergeNote": "notatki z Twojej własnej kopii zapasowej są dopasowywane po identyfikatorze. Notatka, którą już masz, zostaje zaktualizowana tylko wtedy, gdy wersja z kopii jest nowsza, a notatka z kosza wraca z niego.",
     "quotaExceeded": "<strong>Za mało pamięci, aby zaimportować.</strong> Szacowane zapotrzebowanie: {{needed}}, dostępne: {{available}}. Zwolnij miejsce lub przejdź na wyższy plan przed importem.",
     "quotaWarning": "Uwaga: ten import zajmie mniej więcej {{needed}} z Twoich {{available}} pozostałej pamięci.",
     "oversizeAttachments_one": "1 plik jest większy niż limit {{limit}} na plik w Twoim planie. Zaimportuje się na to urządzenie, ale nie zsynchronizuje się z innymi urządzeniami, dopóki nie przejdziesz na wyższy plan.",
-    "oversizeAttachments_few": "{{count}} pliki są większe niż limit {{limit}} na plik w Twoim planie. Zaimportują się na to urządzenie, ale nie zsynchronizują się z innymi urządzeniami, dopóki nie przejdziesz na wyższy plan.",
-    "oversizeAttachments_many": "{{count}} plików jest większych niż limit {{limit}} na plik w Twoim planie. Zaimportują się na to urządzenie, ale nie zsynchronizują się z innymi urządzeniami, dopóki nie przejdziesz na wyższy plan.",
     "oversizeAttachments_other": "{{count}} pliku jest większe niż limit {{limit}} na plik w Twoim planie. Zaimportuje się na to urządzenie, ale nie zsynchronizuje się z innymi urządzeniami, dopóki nie przejdziesz na wyższy plan.",
-    "duplicateSkipNote": "zakładki, które już masz zapisane, zostaną pominięte, więc powtórzenie tego importu niczego nie zduplikuje."
+    "oversizeAttachments_few": "{{count}} pliki są większe niż limit {{limit}} na plik w Twoim planie. Zaimportują się na to urządzenie, ale nie zsynchronizują się z innymi urządzeniami, dopóki nie przejdziesz na wyższy plan.",
+    "oversizeAttachments_many": "{{count}} plików jest większych niż limit {{limit}} na plik w Twoim planie. Zaimportują się na to urządzenie, ale nie zsynchronizują się z innymi urządzeniami, dopóki nie przejdziesz na wyższy plan."
   },
   "counts": {
     "note_one": "notatka",
-    "note_few": "notatki",
-    "note_many": "notatek",
     "note_other": "notatki",
     "journal_one": "wpis w dzienniku",
-    "journal_few": "wpisy w dzienniku",
-    "journal_many": "wpisów w dzienniku",
     "journal_other": "wpisy w dzienniku",
     "login_one": "login",
-    "login_few": "loginy",
-    "login_many": "loginów",
     "login_other": "loginu",
     "card_one": "karta",
-    "card_few": "karty",
-    "card_many": "kart",
     "card_other": "karty",
     "sshKey_one": "klucz SSH",
-    "sshKey_few": "klucze SSH",
-    "sshKey_many": "kluczy SSH",
     "sshKey_other": "klucza SSH",
+    "contact_one": "kontakt",
+    "contact_few": "kontakty",
+    "contact_many": "kontaktów",
+    "contact_other": "kontaktów",
     "zeroItems": "0 elementów",
-    "importButton": "Importuj ({{counts}})"
+    "importButton": "Importuj ({{counts}})",
+    "note_few": "notatki",
+    "note_many": "notatek",
+    "journal_few": "wpisy w dzienniku",
+    "journal_many": "wpisów w dzienniku",
+    "login_few": "loginy",
+    "login_many": "loginów",
+    "card_few": "karty",
+    "card_many": "kart",
+    "sshKey_few": "klucze SSH",
+    "sshKey_many": "kluczy SSH"
   },
   "errorPhase": {
     "heading": "{{importer}}: import nie powiódł się"
@@ -130,31 +216,63 @@
     "vaultExportDesc": "Loginy, karty i klucze SSH w formacie zgodnym z Bitwarden. Można je zaimportować w większości menedżerów haseł. Tekst jawny - obchodź się z nim ostrożnie.",
     "bookmarksOnlyHeading": "Tylko zakładki",
     "bookmarksExportTitle": "Plik zakładek (.html)",
-    "bookmarksExportDesc": "Standardowy plik zakładek, który czyta każda przeglądarka. Zaimportuj go do Chrome, Firefoksa, Safari albo Edge razem z folderami."
+    "bookmarksExportDesc": "Standardowy plik zakładek, który czyta każda przeglądarka. Zaimportuj go do Chrome, Firefoksa, Safari albo Edge razem z folderami.",
+    "contactsOnlyHeading": "Tylko kontakty",
+    "contactsExportTitle": "Plik kontaktów (.vcf)",
+    "contactsExportDesc": "Plik vCard, który czyta każdy telefon i każda książka adresowa. Zaimportuj go do iPhone'a, Androida, Kontaktów Google albo Kontaktów na Macu, z etykietami i grupami.",
+    "calendarOnlyHeading": "Tylko kalendarz",
+    "calendarExportTitle": "Plik kalendarza (.ics)",
+    "calendarExportDesc": "Wydarzenia oraz notatki i listy zadań z datą, dla Google Calendar, Kalendarza Apple albo Outlooka.",
+    "calendarPrivate": "Prywatne"
   },
   "exportProgress": {
     "failedTitle": "Eksport nie powiódł się",
     "completeTitle": "Eksport zakończony",
+    "incompleteTitle": "Eksport niekompletny",
     "exportingTitle": "Eksportowanie kopii zapasowej...",
     "preparing": "Przygotowywanie...",
     "exporting": "Eksportowanie...",
     "imagesProgress": "Eksportowanie obrazów... {{done}} z {{total}}",
     "filesProgress": "Eksportowanie plików... {{done}} z {{total}}",
     "building": "Tworzenie kopii zapasowej...",
-    "compressing": "Kompresowanie..."
+    "compressing": "Kompresowanie...",
+    "missingFailed_one": "To urządzenie nie mogło pobrać: {{items}}. Twój eksport tego nie zawiera. Sprawdź połączenie i wyeksportuj ponownie.",
+    "missingFailed_few": "To urządzenie nie mogło pobrać: {{items}}. Twój eksport ich nie zawiera. Sprawdź połączenie i wyeksportuj ponownie.",
+    "missingFailed_many": "To urządzenie nie mogło pobrać: {{items}}. Twój eksport ich nie zawiera. Sprawdź połączenie i wyeksportuj ponownie.",
+    "missingFailed_other": "To urządzenie nie mogło pobrać: {{items}}. Twój eksport ich nie zawiera. Sprawdź połączenie i wyeksportuj ponownie.",
+    "missingNotFound_one": "Nie ma na tym urządzeniu ani na serwerze: {{items}}. Twój eksport tego nie zawiera.",
+    "missingNotFound_few": "Nie ma na tym urządzeniu ani na serwerze: {{items}}. Twój eksport ich nie zawiera.",
+    "missingNotFound_many": "Nie ma na tym urządzeniu ani na serwerze: {{items}}. Twój eksport ich nie zawiera.",
+    "missingNotFound_other": "Nie ma na tym urządzeniu ani na serwerze: {{items}}. Twój eksport ich nie zawiera."
+  },
+  "missing": {
+    "pictures_one": "{{count}} obraz",
+    "pictures_few": "{{count}} obrazy",
+    "pictures_many": "{{count}} obrazów",
+    "pictures_other": "{{count}} obrazu",
+    "files_one": "{{count}} plik",
+    "files_few": "{{count}} pliki",
+    "files_many": "{{count}} plików",
+    "files_other": "{{count}} pliku",
+    "both": "{{pictures}} i {{files}}"
   },
   "upload": {
+    "discard": "Odrzuć",
     "completeTitle": "Przesyłanie zakończone",
     "failedTitle": "Przesyłanie nie powiodło się",
     "partialTitle": "Przesłano: {{done}}, nieudane: {{failed}}",
     "uploadingTitle_one": "Przesyłanie {{count}} pliku",
-    "uploadingTitle_few": "Przesyłanie {{count}} plików",
-    "uploadingTitle_many": "Przesyłanie {{count}} plików",
     "uploadingTitle_other": "Przesyłanie {{count}} pliku",
     "statusDone": "Gotowe",
     "statusFailed": "Niepowodzenie",
-    "errorStorageFull": "Magazyn pełny - zwolnij miejsce lub dokup magazyn, aby przesłać ten plik.",
-    "errorStorageFullKept": "Nie mieści się w magazynie - zostaje na tym urządzeniu. Zsynchronizuje się, gdy zwolni się miejsce.",
+    "errorStorageFull": "Pamięć pełna - zwolnij miejsce lub dokup pamięć, aby przesłać ten plik.",
+    "errorStorageFullKept": "Nie mieści się w pamięci - zostaje na tym urządzeniu. Zsynchronizuje się, gdy zwolni się miejsce.",
+    "errorTooLarge": "Plik jest za duży ({{size}}). Maksimum to {{limit}} MB.",
+    "errorTooLargeFree": "Plik jest za duży ({{size}}). Maksimum w darmowym planie to {{limit}} MB.",
+    "batchTitle_one": "{{count}} plik",
+    "batchTitle_few": "{{count}} pliki",
+    "batchTitle_many": "{{count}} plików",
+    "batchTitle_other": "{{count}} pliku",
     "statusUploading": "Przesyłanie...",
     "statusWaiting": "Oczekiwanie",
     "summaryDone": "gotowe: {{count}}",
@@ -164,7 +282,9 @@
     "proPitch": "Pro podnosi limit do 50 MB na plik.",
     "proPitchCta": "Przejdź na Pro",
     "storagePitch": "Plan pamięci podnosi go do 100 MB na plik.",
-    "storagePitchCta": "Dokup pamięć"
+    "storagePitchCta": "Dokup pamięć",
+    "uploadingTitle_few": "Przesyłanie {{count}} plików",
+    "uploadingTitle_many": "Przesyłanie {{count}} plików"
   },
   "decryptErrors": {
     "tooSmall": "Ten plik jest pusty lub niekompletny ({{size}} B), więc nie ma czego przywracać. Wyeksportuj kopię jeszcze raz i przed importem sprawdź, czy zapisany plik ma realny rozmiar.",
@@ -176,8 +296,18 @@
   "saveErrors": {
     "shortWrite": "Zapisano tylko {{written}} z {{expected}} bajtów, więc plik jest niekompletny. Spróbuj ponownie i zapisz w pamięci urządzenia zamiast w folderze w chmurze."
   },
-  "browserImport": {
-    "tagLabel": "Zachowaj tagi z przeglądarki",
-    "tagDesc": "Firefox zapisuje przy zakładce tagi i słowo kluczowe paska adresu. Jedno i drugie trafia tutaj jako tagi."
+  "shareSheet": {
+    "title_one": "Do PrivacyNotes udostępniono {{count}} element",
+    "title_few": "Do PrivacyNotes udostępniono {{count}} elementy",
+    "title_many": "Do PrivacyNotes udostępniono {{count}} elementów",
+    "title_other": "Do PrivacyNotes udostępniono {{count}} elementu",
+    "line": "Nic nie zostanie zapisane, dopóki nie wybierzesz.",
+    "saveAll": "Zapisz wszystko"
+  },
+  "destination": {
+    "label": "Dodaj do",
+    "none": "Bez folderu",
+    "newFolder": "Nowy folder „{{name}}”",
+    "help": "Foldery ze źródła trafią do wybranego przez ciebie folderu, a elementy bez folderu trafią bezpośrednio do niego."
   }
 }

@@ -12,27 +12,69 @@
     "uploadFailed": "L'envoi a échoué : {{message}}",
     "storeUnavailable": "Stockage d'images indisponible",
     "loadFailed": "Échec du chargement de l'image",
-    "notFound": "Image introuvable"
+    "notFound": "Image introuvable",
+    "saveFailed": "L'enregistrement a échoué, donc le fichier peut être vide ou incomplet.",
+    "viewAria": "Afficher l'image",
+    "copyAria": "Copier l'image",
+    "copyFailed": "Impossible de copier l'image.",
+    "picturesLeftOut": "Certaines images n'ont pas été ajoutées. Copie une image seule pour la coller."
   },
   "attachment": {
     "fallbackName": "Pièce jointe",
+    "rename": "Renommer",
+    "renamePlaceholder": "Nom du fichier",
+    "saveName": "Enregistrer le nom",
+    "seek": "Position de lecture",
     "imageAlt": "Image",
     "cantPlay": "Lecture impossible. Télécharge pour écouter",
     "downloadingStatus": "téléchargement...",
     "deleteConfirm": "Supprimer ?",
     "copied": "Copié",
     "download": "Télécharger",
-    "downloadToPlay": "Télécharger pour lire",
     "play": "Lire",
     "pause": "Pause",
     "fileNotFound": "Fichier introuvable",
     "localOnly": "Sur cet appareil uniquement",
     "localOnlyTip": "Ne tient pas dans ton stockage. Pas de sauvegarde : effacer les données du navigateur ou de l'app supprime le fichier. Il se synchronisera dès qu'il y aura de la place.",
-    "notUploaded": "Pas encore téléversé",
+    "notUploaded": "Pas encore envoyé",
     "notUploadedTip": "Ce fichier n'a pas encore été téléversé depuis l'appareil où il a été ajouté - souvent parce que le stockage y est plein. Il s'ouvrira ici dès qu'il sera synchronisé.",
     "downloadFailed": "Le téléchargement a échoué",
     "playbackFailed": "La lecture a échoué",
     "uploadFailed": "L'envoi a échoué : {{message}}",
-    "unknownError": "Erreur inconnue"
+    "unknownError": "Erreur inconnue",
+    "view": "Afficher",
+    "more": "Plus d'actions"
+  },
+  "viewer": {
+    "previous": "Précédent",
+    "next": "Suivant",
+    "position": "{{index}} sur {{count}}",
+    "zoomIn": "Zoom avant",
+    "zoomOut": "Zoom arrière",
+    "pdfLoading": "Ouverture du PDF...",
+    "pdfFailed": "Impossible d'ouvrir ce PDF. Télécharge-le pour l'ouvrir dans une autre app.",
+    "pdfPassword": "Ce PDF est protégé par un mot de passe. Télécharge-le pour l'ouvrir dans une autre app.",
+    "saveFailed": "L'enregistrement a échoué, donc le fichier peut être vide ou incomplet.",
+    "pageCount_one": "{{count}} page",
+    "pageCount_other": "{{count}} pages",
+    "pageLabel": "{{name}}, page {{page}} sur {{count}}"
+  },
+  "mail": {
+    "loading": "Ouverture de l'e-mail...",
+    "failed": "Impossible de lire cet e-mail. Télécharge-le pour l'ouvrir dans une autre app.",
+    "from": "De",
+    "to": "À",
+    "cc": "Cc",
+    "date": "Date",
+    "noSubject": "(Sans objet)",
+    "empty": "Cet e-mail ne contient aucun texte.",
+    "attachments": "Pièces jointes"
+  },
+  "picker": {
+    "title": "Images dans Fichiers",
+    "search": "Rechercher des images",
+    "empty": "Pas encore d'images dans Fichiers. Importes-en une là-bas, puis ajoute-la ici.",
+    "noMatch": "Aucune image ne correspond à ta recherche.",
+    "noCopy": "Une image ajoutée ici renvoie au fichier dans Fichiers, elle n'occupe donc pas d'espace de stockage en plus."
   }
 }

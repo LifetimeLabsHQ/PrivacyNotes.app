@@ -12,17 +12,25 @@
     "uploadFailed": "Uppladdningen misslyckades: {{message}}",
     "storeUnavailable": "Bildlagringen är inte tillgänglig",
     "loadFailed": "Kunde inte ladda bilden",
-    "notFound": "Bilden hittades inte"
+    "notFound": "Bilden hittades inte",
+    "saveFailed": "Det gick inte att spara, så filen kan vara tom eller ofullständig.",
+    "viewAria": "Visa bild",
+    "copyAria": "Kopiera bild",
+    "copyFailed": "Det gick inte att kopiera bilden.",
+    "picturesLeftOut": "Vissa bilder lades inte till. Kopiera en bild för sig för att klistra in den."
   },
   "attachment": {
     "fallbackName": "Bilaga",
+    "rename": "Byt namn",
+    "renamePlaceholder": "Filnamn",
+    "saveName": "Spara namnet",
+    "seek": "Uppspelningsposition",
     "imageAlt": "Bild",
     "cantPlay": "Kan inte spelas upp. Ladda ner för att lyssna",
     "downloadingStatus": "laddar ner...",
     "deleteConfirm": "Radera?",
     "copied": "Kopierad",
     "download": "Ladda ner",
-    "downloadToPlay": "Ladda ner för att spela upp",
     "play": "Spela upp",
     "pause": "Pausa",
     "fileNotFound": "Filen hittades inte",
@@ -33,6 +41,40 @@
     "downloadFailed": "Nedladdningen misslyckades",
     "playbackFailed": "Uppspelningen misslyckades",
     "uploadFailed": "Uppladdningen misslyckades: {{message}}",
-    "unknownError": "Okänt fel"
+    "unknownError": "Okänt fel",
+    "view": "Visa",
+    "more": "Fler åtgärder"
+  },
+  "viewer": {
+    "previous": "Föregående",
+    "next": "Nästa",
+    "position": "{{index}} av {{count}}",
+    "zoomIn": "Zooma in",
+    "zoomOut": "Zooma ut",
+    "pdfLoading": "Öppnar PDF...",
+    "pdfFailed": "Den här PDF:en går inte att öppna. Ladda ner den för att öppna den i en annan app.",
+    "pdfPassword": "Den här PDF:en har ett lösenord. Ladda ner den för att öppna den i en annan app.",
+    "saveFailed": "Det gick inte att spara, så filen kan vara tom eller ofullständig.",
+    "pageCount_one": "{{count}} sida",
+    "pageCount_other": "{{count}} sidor",
+    "pageLabel": "{{name}}, sida {{page}} av {{count}}"
+  },
+  "mail": {
+    "loading": "Öppnar e-post...",
+    "failed": "Det går inte att läsa det här e-postmeddelandet. Ladda ner det för att öppna det i en annan app.",
+    "from": "Från",
+    "to": "Till",
+    "cc": "Kopia",
+    "date": "Datum",
+    "noSubject": "(Inget ämne)",
+    "empty": "Det här e-postmeddelandet har ingen text.",
+    "attachments": "Bilagor"
+  },
+  "picker": {
+    "title": "Bilder i Filer",
+    "search": "Sök bilder",
+    "empty": "Inga bilder i Filer än. Ladda upp en där och lägg sedan till den här.",
+    "noMatch": "Inga bilder matchar din sökning.",
+    "noCopy": "En bild som du lägger till här pekar på filen i Filer, så den tar inget extra lagringsutrymme."
   }
 }

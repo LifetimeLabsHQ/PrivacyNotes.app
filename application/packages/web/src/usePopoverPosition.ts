@@ -4,6 +4,8 @@ import type { RefObject } from 'react';
 export interface PopoverPos {
   top: number;
   left: number;
+  /** Set only with `shrink`, when the popover fits on neither side. */
+  maxHeight?: number;
 }
 
 interface PopoverPositionOptions {
@@ -13,10 +15,19 @@ interface PopoverPositionOptions {
   margin?: number;
   /**
    * Horizontal alignment to the trigger: 'start' aligns their left edges
-   * (default), 'end' aligns their right edges. Either way the popover then
+   * (default), 'end' aligns their right edges, 'center' centers the popover
+   * over the trigger. Either way the popover then
    * shifts inward so it never spills off a viewport edge.
    */
-  align?: 'start' | 'end';
+  align?: 'start' | 'end' | 'center';
+  /**
+   * For a popover that scrolls: when it fits neither below nor above the
+   * trigger, keep it on the side with more room and return a `maxHeight`
+   * for that room, instead of sliding it over the trigger. With an on-screen
+   * keyboard up the viewport is short, and a menu laid over its own button
+   * hides the toolbar it belongs to.
+   */
+  shrink?: boolean;
 }
 
 /**
@@ -29,14 +40,14 @@ interface PopoverPositionOptions {
  *
  * Returns null until the first measurement. Render the popover while `open` is
  * true and give it `visibility: pos ? 'visible' : 'hidden'` so it never flashes
- * at a stale position before it is placed. Spec: ops/docs/ui-patterns.md
+ * at a stale position before it is placed. Spec: ops/docs/archive/ui-patterns.md
  * (scroll listener uses capture phase to catch scrollable ancestors, not just window)
  */
 export function usePopoverPosition<A extends HTMLElement, P extends HTMLElement>(
   open: boolean,
   anchorRef: RefObject<A | null>,
   popoverRef: RefObject<P | null>,
-  { gap = 4, margin = 8, align = 'start' }: PopoverPositionOptions = {},
+  { gap = 4, margin = 8, align = 'start', shrink = false }: PopoverPositionOptions = {},
 ): PopoverPos | null {
   const [pos, setPos] = useState<PopoverPos | null>(null);
 
@@ -50,20 +61,37 @@ export function usePopoverPosition<A extends HTMLElement, P extends HTMLElement>
     const vh = window.innerHeight;
 
     // Horizontal: align to the trigger's chosen edge, then slide inward to fit.
-    let left = align === 'end' ? a.right - p.width : a.left;
+    let left = align === 'end' ? a.right - p.width : align === 'center' ? a.left + (a.width - p.width) / 2 : a.left;
     if (left + p.width > vw - margin) left = vw - p.width - margin;
     left = Math.max(margin, left);
 
     // Vertical: open below the trigger; flip above when the bottom would clip;
     // if neither side fits (very short viewport), shift up to the last spot.
+    // A shrinking popover is measured at its full content height, because the
+    // height it renders at is the room it was given last time.
+    const height = shrink ? pop.scrollHeight + (p.height - pop.clientHeight) : p.height;
     let top = a.bottom + gap;
-    if (top + p.height > vh - margin) {
-      const above = a.top - p.height - gap;
-      top = above >= margin ? above : Math.max(margin, vh - p.height - margin);
+    let maxHeight: number | undefined;
+    if (top + height > vh - margin) {
+      const above = a.top - height - gap;
+      if (above >= margin) {
+        top = above;
+      } else if (shrink) {
+        const roomBelow = vh - margin - top;
+        const roomAbove = a.top - gap - margin;
+        if (roomBelow >= roomAbove) {
+          maxHeight = roomBelow;
+        } else {
+          top = margin;
+          maxHeight = roomAbove;
+        }
+      } else {
+        top = Math.max(margin, vh - p.height - margin);
+      }
     }
 
-    setPos({ top, left });
-  }, [anchorRef, popoverRef, gap, margin, align]);
+    setPos({ top, left, maxHeight });
+  }, [anchorRef, popoverRef, gap, margin, align, shrink]);
 
   useLayoutEffect(() => {
     if (!open) {
@@ -102,7 +130,7 @@ export function usePopoverPosition<A extends HTMLElement, P extends HTMLElement>
  * `point` is the desired top-left corner in viewport coordinates (pass null
  * when the menu is closed). Returns null until measured; render the menu and
  * set `visibility: pos ? 'visible' : 'hidden'` to avoid a flash at the raw,
- * pre-clamp point. Spec: ops/docs/ui-patterns.md section 15 (measure the real
+ * pre-clamp point. Spec: ops/docs/archive/ui-patterns.md section 15 (measure the real
  * menu rather than a hardcoded height/width guess)
  */
 export function usePointMenuPosition<P extends HTMLElement>(

@@ -49,8 +49,28 @@ export function useIsMobile(): boolean {
  * a chip row that scrolls sideways with its scrollbar hidden. A finger
  * swipes it; a pointer cannot reach it at all, because the scrollbar is
  * gone and a vertical wheel does not move a horizontal scroller.
- * Spec: ops/docs/ui-patterns.md section 85 (hidden sideways scroll).
+ * Spec: ops/docs/archive/ui-patterns.md section 85 (hidden sideways scroll).
  */
+/** The phone bar is on screen: below the md breakpoint, where an open item
+ *  fills the screen, and taller than the 320px at which the bar hides. */
+export function useHasPhoneBar(): boolean {
+  return useMediaQuery('(max-width: 767px) and (min-height: 321px)');
+}
+
 export function useIsTouchDevice(): boolean {
   return useMediaQuery(TOUCH_MQ);
+}
+
+/**
+ * The same question outside React, asked at the moment it matters: a DOM
+ * listener and a ProseMirror plugin both decide what a click means, and
+ * neither can hold a hook. Asking per event also means a tablet that gains
+ * a mouse is not stuck with the answer from boot.
+ */
+export function isTouchPointer(): boolean {
+  try {
+    return window.matchMedia(TOUCH_MQ).matches;
+  } catch {
+    return false;
+  }
 }

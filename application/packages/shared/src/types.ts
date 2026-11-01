@@ -35,11 +35,16 @@ export interface StoredNote {
  *   - 'card'    - credit/debit card (CardForm)
  *   - 'ssh-key' - SSH key pair (SshKeyForm)
  *   - 'link'    - bookmark; body is a small JSON document holding the URL
+ *   - 'contact' - address-book entry; body is a JSON document of labelled
+ *                 rows, the title is the display name (ContactForm)
+ *   - 'event'   - calendar event: a markdown note whose schedule (day, end,
+ *                 time, repeat, alerts) lives in `trackers`, listed under
+ *                 Calendar (TipTap editor)
  *
  * Stored inside the encrypted payload so the server never learns what
  * kind of data the user is storing.
  */
-export type NoteType = 'note' | 'task' | 'journal' | 'file' | 'login' | 'card' | 'ssh-key' | 'link';
+export type NoteType = 'note' | 'task' | 'journal' | 'file' | 'login' | 'card' | 'ssh-key' | 'link' | 'contact' | 'event';
 
 export interface DecryptedNote {
   id: string;
@@ -54,6 +59,11 @@ export interface DecryptedNote {
   locked?: boolean;
   /** Pro: gate this note behind the user's PIN. */
   pinProtected?: boolean;
+  /**
+   * Kept but out of sight: listed only in the Archive view. Optional, and
+   * written only when true, so older ciphertexts decrypt without it.
+   */
+  archived?: boolean;
   /**
    * Note type. Defaults to 'note' for backward compatibility -
    * ciphertexts written before this field existed decrypt without it.
@@ -72,4 +82,11 @@ export interface DecryptedNote {
    * compatibility - older ciphertexts won't have this field.
    */
   folderId?: string | null;
+  /**
+   * When the title, the body or a tracker value last changed: the "last
+   * edited" date people read. `updatedAt` stays the sync clock, which a pin,
+   * a move or the trash also moves. Optional, and written only when known,
+   * so older ciphertexts decrypt without it.
+   */
+  editedAt?: string;
 }

@@ -8,16 +8,23 @@
     "readOnly": "Tylko do odczytu",
     "file": "Plik",
     "empty": "Pusta",
-    "noContent": "Brak treści"
+    "noContent": "Brak treści",
+    "notBackedUp": "Bez kopii zapasowej",
+    "archived": "Zarchiwizowane",
+    "entryDate": "Data wpisu",
+    "date": "Data",
+    "dayOf": "dzień {{n}} z {{total}}"
   },
   "header": {
     "new": "Nowa",
     "newNote": "Nowa notatka",
-    "newNoteHover": "Nowa notatka ({{hotkey}})",
-    "trash": "Kosz"
+    "trash": "Kosz",
+    "newEvent": "Nowe wydarzenie"
   },
   "folderChip": {
-    "clear": "Usuń filtr folderu: {{folder}}"
+    "clear": "Usuń filtr folderu: {{folder}}",
+    "subfolders": "Podfoldery",
+    "subfoldersLabel": "Uwzględnij podfoldery"
   },
   "tagChip": {
     "clear": "Usuń filtr tagu: {{tag}}"
@@ -26,15 +33,21 @@
     "ariaLabel": "Nowy element sejfu",
     "login": "Login",
     "card": "Karta kredytowa",
-    "sshKey": "Klucz SSH"
+    "sshKey": "Klucz SSH",
+    "generator": "Hasło"
   },
   "newMenu": {
     "note": "Notatka",
     "task": "Zadanie",
+    "kanban": "Tablica kanban",
     "journal": "Dziennik",
     "login": "Login",
     "file": "Plik",
-    "bookmark": "Zakładka"
+    "bookmark": "Zakładka",
+    "clipPage": "Przechwyć stronę",
+    "contact": "Kontakt",
+    "event": "Wydarzenie",
+    "quickAdd": "Szybkie dodawanie"
   },
   "vaultFilter": {
     "all": "Wszystko",
@@ -43,9 +56,7 @@
     "keys": "Klucze"
   },
   "journal": {
-    "backfillHover": "Nowy dziennik za miniony dzień",
-    "newEntry": "Nowy wpis w dzienniku",
-    "newEntryHover": "Nowy wpis w dzienniku ({{hotkey}})"
+    "newEntry": "Nowy wpis w dzienniku"
   },
   "tasks": {
     "newTitle": "Zadania na {{date}}"
@@ -54,12 +65,13 @@
     "empty": "Opróżnij",
     "emptyHover": "Usuń wszystkie notatki z kosza",
     "storage": "Pamięć",
-    "autoDelete": "Auto-usuwanie: 30 dni"
+    "autoDelete": "Automatycznie usuwaj po 30 dniach"
   },
   "search": {
     "sortOptions": "Opcje sortowania i widoku",
     "placeholderVault": "Szukaj w sejfie…",
-    "placeholderNotes": "Szukaj notatek…"
+    "placeholderNotes": "Szukaj notatek…",
+    "placeholderEvents": "Szukaj wydarzeń…"
   },
   "selection": {
     "countOf": "zaznaczono {{selected}} z {{total}}",
@@ -70,9 +82,24 @@
     "noMatches": "Brak dopasowań.",
     "vault": "Sejf jest pusty.",
     "notes": "Brak notatek.",
+    "archive": "Nic nie zarchiwizowano.",
+    "trash": "Kosz jest pusty.",
     "filtered": "Żadne elementy nie pasują do Twoich filtrów.",
     "clearFilters": "Usuń filtry",
-    "filteredAfter": "aby je wyświetlić."
+    "filteredAfter": "aby je wyświetlić.",
+    "hiddenInAll_one": "{{count}} element jest ukryty przez filtr Pokaż w widoku Wszystkie. Otwórz filtr obok Wszystkie, aby go pokazać.",
+    "inOtherSpace_one": "{{count}} element jest w przestrzeni {{space}}. Przełącz na przestrzeń {{space}} na pasku bocznym, aby go zobaczyć.",
+    "inOtherSpace_few": "{{count}} elementy są w przestrzeni {{space}}. Przełącz na przestrzeń {{space}} na pasku bocznym, aby je zobaczyć.",
+    "inOtherSpace_many": "{{count}} elementów jest w przestrzeni {{space}}. Przełącz na przestrzeń {{space}} na pasku bocznym, aby je zobaczyć.",
+    "hiddenInAll_few": "{{count}} elementy są ukryte przez filtr Pokaż w widoku Wszystkie. Otwórz filtr obok Wszystkie, aby je pokazać.",
+    "hiddenInAll_many": "{{count}} elementów jest ukrytych przez filtr Pokaż w widoku Wszystkie. Otwórz filtr obok Wszystkie, aby je pokazać."
+  },
+  "listGroups": {
+    "previous7Days": "Ostatnie 7 dni",
+    "previous30Days": "Ostatnie 30 dni",
+    "other": "Inne",
+    "collapseAll": "Zwiń wszystkie grupy",
+    "expandAll": "Rozwiń wszystkie grupy"
   },
   "headerLabel": {
     "allItems": "Wszystkie",
@@ -80,27 +107,53 @@
     "journals": "Dzienniki",
     "vault": "Sejf",
     "pinned": "Przypięte",
-    "notes": "Notatki"
+    "archive": "Archiwum",
+    "notes": "Notatki",
+    "calendar": "Kalendarz"
   },
   "footerStats": {
-    "journals": "Dzienniki",
-    "items": "Elementy",
-    "trashed": "W koszu",
-    "notes": "Notatki",
-    "bookmarks": "Zakładki"
+    "journals_one": "Dziennik",
+    "journals_few": "Dzienniki",
+    "journals_many": "Dzienników",
+    "items_one": "Element",
+    "items_few": "Elementy",
+    "items_many": "Elementów",
+    "trashed_one": "W koszu",
+    "trashed_few": "W koszu",
+    "trashed_many": "W koszu",
+    "notes_one": "Notatka",
+    "notes_few": "Notatki",
+    "notes_many": "Notatek",
+    "bookmarks_one": "Zakładka",
+    "bookmarks_few": "Zakładki",
+    "bookmarks_many": "Zakładek",
+    "contacts_one": "Kontakt",
+    "files_one": "Plik",
+    "lists_one": "Lista",
+    "tasks_one": "Zadanie",
+    "today": "Dzisiaj",
+    "tasks_few": "Zadania",
+    "tasks_many": "Zadań",
+    "lists_few": "Listy",
+    "lists_many": "List",
+    "files_few": "Pliki",
+    "files_many": "Plików",
+    "contacts_few": "Kontakty",
+    "contacts_many": "Kontaktów"
   },
   "toast": {
     "imageUploadFailed": "Przesyłanie obrazu nie powiodło się: {{error}}",
     "imageError": "Błąd obrazu: {{error}}",
     "uploadFailedFor": "Przesyłanie nie powiodło się dla „{{filename}}”: {{error}}",
     "importedSyncing_one": "Zaimportowano {{count}} notatkę. Synchronizowanie…",
-    "importedSyncing_few": "Zaimportowano {{count}} notatki. Synchronizowanie…",
-    "importedSyncing_many": "Zaimportowano {{count}} notatek. Synchronizowanie…",
     "importedSyncing_other": "Zaimportowano {{count}} notatki. Synchronizowanie…",
     "addedTag_one": "Dodano #{{tag}} do {{count}} elementu",
+    "addedTag_other": "Dodano #{{tag}} do {{count}} elementu",
+    "importedSyncing_few": "Zaimportowano {{count}} notatki. Synchronizowanie…",
+    "importedSyncing_many": "Zaimportowano {{count}} notatek. Synchronizowanie…",
     "addedTag_few": "Dodano #{{tag}} do {{count}} elementów",
     "addedTag_many": "Dodano #{{tag}} do {{count}} elementów",
-    "addedTag_other": "Dodano #{{tag}} do {{count}} elementu"
+    "restoreSummary": "Przywrócono. Dodano: {{added}}, zaktualizowano: {{updated}}, aktualnych: {{unchanged}}."
   },
   "burn": {
     "mediaOnly": "Ta notatka zawiera tylko multimedia i nie można jej udostępnić linkiem do spalenia.",
@@ -126,8 +179,17 @@
     "collapse": "Zwiń listę notatek",
     "expand": "Rozwiń listę notatek"
   },
+  "split": {
+    "action": "Podziel notatkę",
+    "done": "Podzielono, nowa notatka: „{{title}}”",
+    "overLimit": "„{{title}}” ma ponad 1 MB i zostaje na tym urządzeniu",
+    "cannot": "Tej notatki nie można tu podzielić. Umieść kursor tam, gdzie ma się zaczynać nowa notatka.",
+    "continuedTitle": "{{title}} (ciąg dalszy)",
+    "continuedIn": "Ciąg dalszy w {{link}}"
+  },
   "paneResize": {
-    "hintCollapse": "Kliknij, aby zwinąć · Przeciągnij, aby zmienić rozmiar"
+    "hintCollapse": "Kliknij, aby zwinąć · Przeciągnij, aby zmienić rozmiar",
+    "hintExpand": "Kliknij, aby rozwinąć · Przeciągnij, aby zmienić rozmiar"
   },
   "emptyEditor": {
     "selectFile": "Wybierz plik, aby zobaczyć podgląd",
@@ -137,10 +199,10 @@
   },
   "zen": {
     "exit": "Wyjdź z Zen",
-    "exitHover": "Wyjdź z trybu Zen (Esc)",
+    "exitHover": "Wyjdź z trybu Zen",
     "enterHover": "Włącz tryb Zen",
     "proHover": "Tryb Zen (Pro)",
-    "enterAriaShortcut": "Włącz tryb Zen (⌘⇧F)"
+    "enterAriaShortcut": "Włącz tryb Zen ({{keys}})"
   },
   "editor": {
     "backToList": "Wróć do listy notatek",
@@ -162,8 +224,10 @@
     "invisiblesShow": "Pokaż znaki niedrukowalne",
     "invisiblesHide": "Ukryj znaki niedrukowalne",
     "findInNote": "Znajdź w notatce",
-    "navPrev": "Poprzednia notatka",
-    "navNext": "Następna notatka",
+    "navPrev": "Poprzedni",
+    "navNext": "Następny",
+    "navPrevTab": "Poprzednia karta",
+    "navNextTab": "Następna karta",
     "undo": "Cofnij",
     "redo": "Ponów",
     "hide": "Ukryj",
@@ -174,27 +238,25 @@
     "widthWide": "Szerzej",
     "widthFull": "Pełna szerokość",
     "burn": "Udostępnij i spal po przeczytaniu",
-    "titlePlaceholderLink": "Nazwa zakładki"
+    "titlePlaceholderLink": "Nazwa zakładki",
+    "titlePlaceholderContact": "Imię i nazwisko",
+    "notBackedUpTooLarge": "Powyżej limitu 1 MB, więc bez kopii zapasowej. Przenieś obrazy do załączników lub podziel notatkę.",
+    "notBackedUpFailed": "Bez kopii zapasowej. Ostatni błąd: {{message}}. Ponawianie.",
+    "unknownType": "Ten element został utworzony w nowszej wersji PrivacyNotes. Zaktualizuj aplikację, aby go otworzyć."
   },
   "share": {
     "hover": "Udostępnij / eksportuj",
     "ariaLabel": "Udostępnij lub eksportuj",
-    "thisNote": "Ta notatka",
     "currentMdTitle": "Bieżąca notatka (.md)",
     "currentMdDesc": "Surowy markdown z front-matter.",
     "currentHtmlTitle": "Bieżąca notatka (.html)",
     "currentHtmlDesc": "Przyjazna dla druku, markdown wyrenderowany na białej stronie.",
     "printTitle": "Drukuj / zapisz jako PDF",
     "printDesc": "Otwiera okno drukowania. Zapisz jako PDF lub wyślij na drukarkę.",
+    "printTextTitle": "Drukuj tylko tekst",
+    "printTextDesc": "Zachowuje tytuł. Pomija datę, folder i tagi.",
     "burnTitle": "Udostępnij i spal po przeczytaniu",
-    "burnDesc": "Opublikuj tę notatkę jako link do jednorazowego wglądu. Link niszczy się po przeczytaniu. Twoja notatka zostaje bezpiecznie na koncie.",
-    "backup": "Kopia zapasowa",
-    "fullBackupTitle": "Pełna kopia zapasowa (.zip)",
-    "fullBackupDesc": "Wszystko: notatki, dzienniki, sejf, zadania, obrazy, dźwięk, pliki.",
-    "allHtmlTitle": "Wszystkie elementy (.zip z plikami .html)",
-    "allHtmlDesc": "Jeden plik HTML gotowy do druku na element. Dobre do czytania offline.",
-    "jsonTitle": "Kopia tekstowa (.json)",
-    "jsonDesc": "Cała treść tekstowa i metadane, bez obrazów i plików."
+    "burnDesc": "Opublikuj tę notatkę jako link do jednorazowego wglądu. Link niszczy się po przeczytaniu. Twoja notatka zostaje bezpiecznie na koncie."
   },
   "weekReview": {
     "title": "Podsumowanie tygodnia",
@@ -210,10 +272,19 @@
     "newNote": "Nowy",
     "newNoteHintMac": "Option + Shift + N",
     "newNoteHintOther": "Alt + Shift + N",
+    "newNoteHintMacDesktop": "Command + N",
+    "newNoteHintOtherDesktop": "Ctrl + N",
     "openStats": "Otwórz statystyki",
-    "words": "Słowa",
+    "journalCalendar": "Kalendarz dziennika",
+    "words_one": "Słowo",
+    "words_few": "Słowa",
+    "words_many": "Słów",
     "zen": "Tryb Zen",
     "appearance": "Wygląd",
+    "lockApp": "Zablokuj aplikację",
+    "lockAppSetUp": "Najpierw ustaw PIN w sekcji Bezpieczeństwo",
+    "goToTop": "Przejdź na górę",
+    "goToEnd": "Przejdź na koniec",
     "signOut": "Wyloguj się",
     "signingOut": "Wylogowywanie…",
     "switchToLight": "Przełącz na tryb jasny",
@@ -221,20 +292,28 @@
   },
   "settings": {
     "groupYourNotes": "Twoje notatki",
+    "groupPreferences": "Preferencje",
     "groupAccount": "Konto i dane",
     "groupBrand": "PrivacyNotes",
     "statsLabel": "Statystyki",
-    "journalsLabel": "Dzienniki",
     "importLabel": "Import i eksport",
     "planLabel": "Konto",
     "storageLabel": "Pamięć",
+    "imagesLabel": "Obrazy",
     "securityLabel": "Bezpieczeństwo",
     "accountLabel": "ID i synchronizacja",
     "appearanceLabel": "Wygląd",
+    "editorLabel": "Edytor",
+    "formatBarLabel": "Pasek formatowania",
+    "listsLabel": "Listy",
+    "trackersLabel": "Trackery",
     "helpLabel": "Pomoc",
     "aboutLabel": "O aplikacji",
     "languageLabel": "Język",
-    "languageDesc": "Wybierz język, w którym wyświetla się PrivacyNotes."
+    "dateLabel": "Data i godzina",
+    "dateTabFormat": "Format",
+    "languageDesc": "Wybierz język, w którym wyświetla się PrivacyNotes.",
+    "calendarLabel": "Kalendarz"
   },
   "importStore": {
     "title": "Zaimportować czy zapisać?",
@@ -245,16 +324,34 @@
   },
   "bulkTrash": {
     "title": "Przenieś do kosza",
-    "body_one": "Przenieść <highlight>{{count}} element</highlight> do kosza? Możesz go później przywrócić.",
+    "body_one": "Przenieść <highlight>{{count}} element</highlight> do kosza? Później możesz go przywrócić.",
+    "body_other": "Przenieść <highlight>{{count}} elementu</highlight> do kosza? Możesz je później przywrócić.",
     "body_few": "Przenieść <highlight>{{count}} elementy</highlight> do kosza? Możesz je później przywrócić.",
     "body_many": "Przenieść <highlight>{{count}} elementów</highlight> do kosza? Możesz je później przywrócić.",
-    "body_other": "Przenieść <highlight>{{count}} elementu</highlight> do kosza? Możesz je później przywrócić."
+    "readOnlyTitle": "Tylko do odczytu",
+    "readOnlyAcknowledge": "Rozumiem",
+    "readOnlyBlocked_one": "Ten element jest <highlight>tylko do odczytu</highlight>, więc nie trafi do kosza. Najpierw wyłącz tryb tylko do odczytu w opcjach notatki.",
+    "readOnlyBlocked_other": "Wszystkie <highlight>{{count}} elementy</highlight> są tylko do odczytu, więc żaden nie trafi do kosza. Najpierw wyłącz tryb tylko do odczytu w opcjach notatki.",
+    "readOnlySkipped_one": "<highlight>{{count}} element</highlight> jest tylko do odczytu i zostaje na miejscu.",
+    "readOnlySkipped_other": "<highlight>{{count}} elementy</highlight> są tylko do odczytu i zostają na miejscu.",
+    "readOnlyBlocked_few": "Wszystkie <highlight>{{count}} elementy</highlight> są tylko do odczytu, więc żaden nie trafi do kosza. Najpierw wyłącz tryb tylko do odczytu w opcjach notatki.",
+    "readOnlyBlocked_many": "<highlight>{{count}} elementów</highlight> jest tylko do odczytu, więc żaden nie trafi do kosza. Najpierw wyłącz tryb tylko do odczytu w opcjach notatki.",
+    "readOnlySkipped_few": "<highlight>{{count}} elementy</highlight> są tylko do odczytu i zostają na miejscu.",
+    "readOnlySkipped_many": "<highlight>{{count}} elementów</highlight> jest tylko do odczytu i zostaje na miejscu."
+  },
+  "deleteCheckedTasks": {
+    "title": "Usunąć zaznaczone elementy?",
+    "confirm": "Usuń",
+    "body_one": "<highlight>{{count}} element</highlight> zostanie usunięty z tej notatki. Tej operacji nie można cofnąć.",
+    "body_few": "<highlight>{{count}} elementy</highlight> zostaną usunięte z tej notatki, razem z zagnieżdżonymi. Tej operacji nie można cofnąć.",
+    "body_many": "<highlight>{{count}} elementów</highlight> zostanie usuniętych z tej notatki, razem z zagnieżdżonymi. Tej operacji nie można cofnąć.",
+    "body_other": "<highlight>{{count}} elementu</highlight> zostanie usunięte z tej notatki, razem z zagnieżdżonymi. Tej operacji nie można cofnąć."
   },
   "bulkDelete": {
     "body_one": "Trwale usunąć <highlight>{{count}} notatkę</highlight>? Tej operacji nie można cofnąć.",
+    "body_other": "Trwale usunąć <highlight>{{count}} notatki</highlight>? Tej operacji nie można cofnąć.",
     "body_few": "Trwale usunąć <highlight>{{count}} notatki</highlight>? Tej operacji nie można cofnąć.",
-    "body_many": "Trwale usunąć <highlight>{{count}} notatek</highlight>? Tej operacji nie można cofnąć.",
-    "body_other": "Trwale usunąć <highlight>{{count}} notatki</highlight>? Tej operacji nie można cofnąć."
+    "body_many": "Trwale usunąć <highlight>{{count}} notatek</highlight>? Tej operacji nie można cofnąć."
   },
   "tagConfirm": {
     "mergeTitle": "Scal tagi",
@@ -264,17 +361,17 @@
     "deleteConfirm": "Usuń tag",
     "moveToTrash": "Przenieś do kosza",
     "mergeBody_one": "Tag <highlight>„{{targetTag}}”</highlight> już istnieje. Scalić z nim <highlight>{{count}} notatkę</highlight> oznaczoną obecnie tagiem „{{tag}}”?",
-    "mergeBody_few": "Tag <highlight>„{{targetTag}}”</highlight> już istnieje. Scalić z nim <highlight>{{count}} notatki</highlight> oznaczone obecnie tagiem „{{tag}}”?",
-    "mergeBody_many": "Tag <highlight>„{{targetTag}}”</highlight> już istnieje. Scalić z nim <highlight>{{count}} notatek</highlight> oznaczonych obecnie tagiem „{{tag}}”?",
     "mergeBody_other": "Tag <highlight>„{{targetTag}}”</highlight> już istnieje. Scalić z nim <highlight>{{count}} notatki</highlight> oznaczonej obecnie tagiem „{{tag}}”?",
     "deleteBody_one": "Usunąć tag <highlight>„{{tag}}”</highlight> z <highlight>{{count}} notatki</highlight>? Same notatki nie zostaną usunięte.",
-    "deleteBody_few": "Usunąć tag <highlight>„{{tag}}”</highlight> z <highlight>{{count}} notatek</highlight>? Same notatki nie zostaną usunięte.",
-    "deleteBody_many": "Usunąć tag <highlight>„{{tag}}”</highlight> z <highlight>{{count}} notatek</highlight>? Same notatki nie zostaną usunięte.",
     "deleteBody_other": "Usunąć tag <highlight>„{{tag}}”</highlight> z <highlight>{{count}} notatki</highlight>? Same notatki nie zostaną usunięte.",
     "deleteWithNotesBody_one": "Usunąć tag <highlight>„{{tag}}”</highlight> i przenieść <highlight>{{count}} notatkę</highlight> do kosza? Możesz ją stamtąd przywrócić.",
+    "deleteWithNotesBody_other": "Usunąć tag <highlight>„{{tag}}”</highlight> i przenieść <highlight>{{count}} notatki</highlight> do kosza? Możesz je stamtąd przywrócić.",
+    "mergeBody_few": "Tag <highlight>„{{targetTag}}”</highlight> już istnieje. Scalić z nim <highlight>{{count}} notatki</highlight> oznaczone obecnie tagiem „{{tag}}”?",
+    "mergeBody_many": "Tag <highlight>„{{targetTag}}”</highlight> już istnieje. Scalić z nim <highlight>{{count}} notatek</highlight> oznaczonych obecnie tagiem „{{tag}}”?",
+    "deleteBody_few": "Usunąć tag <highlight>„{{tag}}”</highlight> z <highlight>{{count}} notatek</highlight>? Same notatki nie zostaną usunięte.",
+    "deleteBody_many": "Usunąć tag <highlight>„{{tag}}”</highlight> z <highlight>{{count}} notatek</highlight>? Same notatki nie zostaną usunięte.",
     "deleteWithNotesBody_few": "Usunąć tag <highlight>„{{tag}}”</highlight> i przenieść <highlight>{{count}} notatki</highlight> do kosza? Możesz je stamtąd przywrócić.",
-    "deleteWithNotesBody_many": "Usunąć tag <highlight>„{{tag}}”</highlight> i przenieść <highlight>{{count}} notatek</highlight> do kosza? Możesz je stamtąd przywrócić.",
-    "deleteWithNotesBody_other": "Usunąć tag <highlight>„{{tag}}”</highlight> i przenieść <highlight>{{count}} notatki</highlight> do kosza? Możesz je stamtąd przywrócić."
+    "deleteWithNotesBody_many": "Usunąć tag <highlight>„{{tag}}”</highlight> i przenieść <highlight>{{count}} notatek</highlight> do kosza? Możesz je stamtąd przywrócić."
   },
   "createNote": {
     "title": "Utworzyć notatkę?",
@@ -285,5 +382,19 @@
     "title": "Utworzono nowy sejf",
     "confirm": "Rozumiem",
     "body": "Żaden istniejący sejf nie pasował do wpisanej frazy, więc utworzyliśmy nowy, pusty. Jeśli spodziewałeś się zobaczyć swoje notatki, wyloguj się i wpisz frazę jeszcze raz, uważnie - jedno inne słowo otwiera zupełnie inny sejf."
+  },
+  "ambiguousLink": {
+    "title": "Dwie notatki mają ten tytuł",
+    "body": "Więcej niż jedna notatka nosi tytuł <highlight>„{{title}}”</highlight>, więc ten link nie mówi, o którą chodzi. Zmień nazwę jednej z nich, a link wskaże drugą."
+  },
+  "connections": {
+    "title": "Powiązania",
+    "hide": "Ukryj powiązania",
+    "linkedFrom": "Linki przychodzące",
+    "linksTo": "Linki wychodzące",
+    "missing": "Jeszcze nie utworzono",
+    "protectedHidden_one": "{{count}} element chroniony PIN-em nie jest wyświetlany",
+    "protectedHidden_few": "{{count}} elementy chronione PIN-em nie są wyświetlane",
+    "protectedHidden_many": "{{count}} elementów chronionych PIN-em nie jest wyświetlanych"
   }
 }

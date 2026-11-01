@@ -9,49 +9,112 @@ import {
 } from './icons';
 import { type Editor as TipTapEditor } from '@tiptap/react';
 import { HoverLabel } from './HoverLabel';
+import { clearTableWidths, tableWidths } from './tableColumnResize';
+import { useProGate } from './ui';
+import { caretCell } from './tableFormulaInsert';
 
 // ------------------------------------------------------------------
 // Table Controls (floating toolbar glued below the active table)
 // ------------------------------------------------------------------
 
-export function TableControls({ editor }: { editor: TipTapEditor }) {
+/** Document position of the table the caret sits in, or -1 when it is outside one. */
+function activeTablePos(editor: TipTapEditor): number {
+  const { $anchor } = editor.state.selection;
+  for (let depth = $anchor.depth; depth > 0; depth--) {
+    if ($anchor.node(depth).type.name === 'table') return $anchor.before(depth);
+  }
+  return -1;
+}
+
+export function TableControls({ editor, formulasUnlocked, onUpgrade }: { editor: TipTapEditor; formulasUnlocked: boolean; onUpgrade?: () => void }) {
   const { t } = useTranslation('editor');
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const equalRef = useRef<HTMLSpanElement>(null);
+  const proGate = useProGate(formulasUnlocked, onUpgrade);
 
-  // Position imperatively - no state, no re-render loop.
-  // Runs on every render (parent re-renders on editor state changes).
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  /**
+   * The button types `=` into the cell and lets the suggestion plugin take
+   * over, so the toolbar and the keyboard open the SAME menu with the same
+   * ranked list and the same range guessing. Building a second popover here
+   * would have been a second set of behaviour to keep in step.
+   *
+   * It empties the cell first: a formula has to be the whole cell, and the
+   * menu only opens at the cell's start.
+   */
+  const insertFormula = proGate(() => {
+    const here = caretCell(editor.state);
+    if (!here) return;
+    const { $anchor } = editor.state.selection;
+    const start = $anchor.start();
+    const end = $anchor.end();
+    editor.chain().focus().insertContentAt({ from: start, to: end }, '=').run();
+  });
+
+  /**
+   * Visibility and position both come from the editor, never from a React
+   * render.
+   *
+   * A transaction does not re-render this tree: TipTap 3 leaves
+   * `shouldRerenderOnTransaction` off, and the Editor component it lives in is
+   * not memoized, so a render happens when some unrelated state happens to
+   * change. Reading the caret at render time therefore answered whatever was
+   * true at that unrelated moment - the bar stayed after the caret left the
+   * table, refused to appear after it entered, and kept its old spot over the
+   * new last row after Add row below. Subscribing to `transaction` covers every
+   * caret move and every edit; the observer covers geometry that shifts with no
+   * transaction at all, such as a window resize or an image above the table
+   * finishing its load.
+   *
+   * The bar is hidden with `display: none` and measured against its own parent
+   * rather than `offsetParent`, which is null while an element is hidden. That
+   * makes the Editor root's `relative` a requirement of this component: keep
+   * the bar a direct child of it.
+   */
   useEffect(() => {
     const toolbar = toolbarRef.current;
     if (!toolbar) return;
-    if (!(editor.view as any).docView) { toolbar.style.display = 'none'; return; }
+    let frame = 0;
 
-    const { $anchor } = editor.state.selection;
-    let depth = $anchor.depth;
-    let tablePos = -1;
-    while (depth > 0) {
-      if ($anchor.node(depth).type.name === 'table') {
-        tablePos = $anchor.before(depth);
-        break;
-      }
-      depth--;
-    }
-    if (tablePos < 0) { toolbar.style.display = 'none'; return; }
+    const hide = () => { toolbar.style.display = 'none'; };
 
-    let tableDOM: Node | null | undefined;
-    try { tableDOM = editor.view.nodeDOM(tablePos); } catch { toolbar.style.display = 'none'; return; }
-    if (!(tableDOM instanceof HTMLElement)) { toolbar.style.display = 'none'; return; }
+    const place = () => {
+      frame = 0;
+      if (editor.isDestroyed || !(editor.view as any).docView) return hide();
 
-    // Position relative to offsetParent (the editor wrapper with position:relative)
-    const wrapper = toolbar.offsetParent as HTMLElement | null;
-    if (!wrapper) { toolbar.style.display = 'none'; return; }
-    const wrapperRect = wrapper.getBoundingClientRect();
-    const tableRect = tableDOM.getBoundingClientRect();
+      const tablePos = activeTablePos(editor);
+      if (tablePos < 0) return hide();
 
-    toolbar.style.display = '';
-    toolbar.style.top = `${tableRect.bottom - wrapperRect.top}px`;
-    toolbar.style.left = `${tableRect.left - wrapperRect.left}px`;
-  });
+      let tableDOM: Node | null | undefined;
+      try { tableDOM = editor.view.nodeDOM(tablePos); } catch { return hide(); }
+      if (!(tableDOM instanceof HTMLElement)) return hide();
+
+      const wrapper = toolbar.parentElement;
+      if (!wrapper) return hide();
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const tableRect = tableDOM.getBoundingClientRect();
+
+      // "Make columns equal" shows only on a table that has widths to reset.
+      const table = editor.state.doc.nodeAt(tablePos);
+      if (equalRef.current) equalRef.current.style.display = table && tableWidths(table) ? 'contents' : 'none';
+
+      toolbar.style.display = '';
+      toolbar.style.top = `${tableRect.bottom - wrapperRect.top}px`;
+      toolbar.style.left = `${tableRect.left - wrapperRect.left}px`;
+    };
+
+    // One measurement per frame, however many transactions land in it.
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(place); };
+
+    place();
+    editor.on('transaction', schedule);
+    const observer = new ResizeObserver(schedule);
+    observer.observe(editor.view.dom);
+    return () => {
+      editor.off('transaction', schedule);
+      observer.disconnect();
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [editor]);
 
   return (
     <div
@@ -59,7 +122,7 @@ export function TableControls({ editor }: { editor: TipTapEditor }) {
       className="pn-table-toolbar"
       contentEditable={false}
       suppressContentEditableWarning
-      style={{ position: 'absolute', zIndex: 10 }}
+      style={{ position: 'absolute', zIndex: 10, display: 'none' }}
     >
       {/* + Row above */}
       <HoverLabel label={t('table.addRowAbove')} position="below">
@@ -86,6 +149,33 @@ export function TableControls({ editor }: { editor: TipTapEditor }) {
           <ArrowRightIcon size={16} />
         </button>
       </HoverLabel>
+      <div className="pn-table-toolbar-divider" />
+      {/* Insert formula. Pro, and it stays clickable for a free account:
+          clicking opens the upgrade window rather than doing nothing. The
+          arithmetic itself is free, so a free account can still type
+          `=SUM(B2:B4)` by hand and see the total. */}
+      <HoverLabel label={t('table.insertFormula')} position="below">
+        <button type="button" className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); insertFormula(); }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 5H7l6 7-6 7h11"/></svg>
+        </button>
+      </HoverLabel>
+      <div className="pn-table-toolbar-divider" />
+      {/* Header row on/off. New tables carry one, and it is what lets a table
+          be written as a pipe table rather than as raw HTML, so turning it off
+          is a choice worth being able to reverse. */}
+      <HoverLabel label={t('table.toggleHeaderRow')} position="below">
+        <button type="button" className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().toggleHeaderRow().run(); }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16v4H4z" fill="currentColor" stroke="none"/><rect x="3" y="4" width="18" height="16" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="12" y1="9" x2="12" y2="20"/></svg>
+        </button>
+      </HoverLabel>
+      {/* Column widths back to equal shares; hidden while they already are. */}
+      <span ref={equalRef} style={{ display: 'none' }}>
+        <HoverLabel label={t('table.equalColumnWidths')} position="below">
+          <button type="button" className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); const pos = activeTablePos(editor); if (pos >= 0) clearTableWidths(editor.view, pos); editor.commands.focus(); }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="1"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/></svg>
+          </button>
+        </HoverLabel>
+      </span>
       <div className="pn-table-toolbar-divider" />
       {/* Delete row */}
       <HoverLabel label={t('table.deleteRow')} position="below">

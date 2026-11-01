@@ -1,31 +1,59 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useAuth } from './auth';
 import { deleteAccountServer } from './devices';
 import { deleteEntireLocalDatabase } from './notesRepo';
+import { useOnlyOnThisDevice } from './neverBackedUp';
 import { setDeletingAccount } from './sync';
 import { SectionEyebrow } from './settingsUI';
-import { isDemoMode } from './demo';
+import { isDemoMode, isDemoOwnedKey } from './demo';
+import { settingsLocalKey } from './settingsLocalKey';
 import { HelpChip } from './HelpChip';
+import { ensureLevel2, MfaCancelledError, mfaSessionIdentity } from './mfaStep';
+import { jwtPayloadPubkey } from './authStorage';
+import { announceSignOut, endLiveSignIn } from './liveSignIn';
+import { cancelDeviceReminders, remindersTeardownSettled, REMINDER_TO_CANCEL_KEY } from './notesView/useReminders';
+
+/** How long the reload after a wipe waits for the reminders' teardown. */
+const RELOAD_WAIT_MS = 10_000;
 
 // ------------------------------------------------------------------
 // Danger zone - account & data deletion
 // ------------------------------------------------------------------
 
 /**
- * Wipe every `privacynotes.*` key from both localStorage and
- * sessionStorage. Catches per-key to avoid one bad key blocking the rest.
+ * Wipe this session's keys from both localStorage and sessionStorage.
+ * Catches per-key to avoid one bad key blocking the rest.
+ *
+ * The demo runs on the SAME origin as a real install whenever the URL
+ * carries `?demo=1`, and it renders this panel with the local half
+ * already ticked. A prefix sweep there removes the real account's phrase
+ * envelope, PIN wrap, biometric wrap and Supabase session, none of which
+ * the demo owns: every credential the demo writes goes into a `.demo`
+ * bucket for exactly this reason, and this was the one sweep that did
+ * not respect it. So in demo the sweep is the bucket plus the demo
+ * settings key, which is the same set clearFreshDemoCredentials drops on
+ * a fresh tab, and nothing else is touched.
  */
 function clearAllStorageKeys(): void {
+  const demo = isDemoMode();
+  const demoSettings = settingsLocalKey();
   for (const store of [localStorage, sessionStorage]) {
     const keys: string[] = [];
     for (let i = 0; i < store.length; i++) {
       const k = store.key(i);
+      if (!k) continue;
       // Clear app keys AND Supabase auth session keys. Without the
       // sb- prefix, a stale OAuth session survives account deletion
       // and hydrateFromOAuthSession treats the deleted user as
       // existing on the next page load.
-      if (k?.startsWith('privacynotes.') || k?.startsWith('sb-')) keys.push(k);
+      const owned = demo
+        ? isDemoOwnedKey(k) || k === demoSettings
+        : k.startsWith('privacynotes.') || k.startsWith('sb-');
+      // One key stays: the reminder ids the teardown has not seen cancelled
+      // yet, ids only, which exists only until that cancel went out, and
+      // which the next start cancels when the reload came first.
+      if (owned && k !== REMINDER_TO_CANCEL_KEY) keys.push(k);
     }
     for (const k of keys) {
       try { store.removeItem(k); } catch { /* ignore */ }
@@ -50,6 +78,8 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
   const [hasActiveSub, setHasActiveSub] = useState<boolean | null>(null);
 
   const authed = auth.status === 'authenticated' ? auth : null;
+  const authRef = useRef(authed);
+  authRef.current = authed;
 
   // Preflight when the danger zone expands. Cheap RPC, returns boolean.
   useEffect(() => {
@@ -75,12 +105,29 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
     return () => { cancelled = true; };
   }, [expanded, authed, supabase]);
 
+  // What the local wipe destroys outright. Live while the panel is open,
+  // and released before the wipe starts.
+  const atStake = useOnlyOnThisDevice(expanded && authed !== null && !busy);
+
   if (!authed) return null;
 
   // Deleting the server account always implies wiping local state too -
   // without a valid auth.users row the local session is dead anyway.
   const effectiveDeleteLocal = deleteLocal || deleteServer;
   const blockedByStorageSub = deleteServer && hasActiveSub === true;
+  // "Delete local data" on its own pushes nothing first, so it names the
+  // notes and files that exist only on this device before the DELETE field.
+  // An account deletion takes the server copy as well, and says so above.
+  const localOnly = deleteLocal && !deleteServer;
+  const notesAtStake = t('danger.unsyncedNotes', { count: atStake.notes });
+  const filesAtStake = t('danger.unsyncedFiles', { count: atStake.files });
+  const itemsAtStake =
+    atStake.notes > 0 && atStake.files > 0
+      ? t('danger.unsyncedBoth', { notes: notesAtStake, files: filesAtStake })
+      : atStake.notes > 0 ? notesAtStake : filesAtStake;
+  const totalAtStake = atStake.notes + atStake.files;
+  const atStakeLine =
+    totalAtStake > 0 ? t('danger.localUnsynced', { count: totalAtStake, items: itemsAtStake }) : null;
   const canDelete =
     confirmText.toUpperCase() === 'DELETE' &&
     (deleteLocal || deleteServer) &&
@@ -94,6 +141,13 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
     try {
       // Server deletion first (while we still have credentials).
       if (deleteServer) {
+        // A person may take longer than the network timeout to find a code.
+        // Keep this prompt before the timed deletion and bind its result to
+        // the same vault/session before touching data. tests/dangerZoneMfa.test.ts.
+        const before = (await supabase.auth.getSession()).data.session;
+        const identity = mfaSessionIdentity(before);
+        if (!identity || !before || jwtPayloadPubkey(before.access_token) !== authed.pubkey) throw new MfaCancelledError();
+        await ensureLevel2(supabase, { force: true, allowLocalUse: true });
         // Re-poll storage sub status right before deleting - the user may
         // have cancelled their sub in another tab since the DangerZone
         // expanded. Catches multi-tab races before the 409. See gap #44.
@@ -108,6 +162,7 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
         if (!session?.access_token || !session.user?.id) {
           throw new Error(t('danger.noSession'));
         }
+        if (authRef.current?.pubkey !== authed.pubkey || mfaSessionIdentity(session) !== identity || jwtPayloadPubkey(session.access_token) !== authed.pubkey) throw new MfaCancelledError();
 
         // Block any further sync calls before we kick off deletion. An
         // in-flight `sync()` started before this click can still land
@@ -151,6 +206,16 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
       // Local wipe - always runs when server is deleted (the session
       // is gone), and optionally runs on its own ("wipe this device").
       if (effectiveDeleteLocal) {
+        if (authRef.current?.pubkey !== authed.pubkey) throw new MfaCancelledError();
+        // A sync pass already in flight must not write the phrase back
+        // between this wipe and the reload, here or in another tab of this
+        // browser (liveSignIn.ts).
+        endLiveSignIn();
+        announceSignOut();
+        // A phone's scheduled reminders, while the map that names them
+        // exists: the sweep below removes it, and the OS would ring them with
+        // this account's titles after it is gone.
+        await cancelDeviceReminders();
         // Zero key material.
         authed.encryptionKey.fill(0);
         authed.signingPrivateKey.fill(0);
@@ -158,11 +223,23 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
         // side user is already gone so we only clear locally; without
         // this the sb-* session key survives and hydrateFromOAuthSession
         // treats a re-signup as a returning user.
-        await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+        //
+        // Not in demo: the demo holds no session of its own, so the only
+        // row this could clear belongs to the real account signed in on
+        // the same origin.
+        if (!isDemoMode()) {
+          await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+        }
         // Nuke IndexedDB (notes, images, attachments, dedup tables).
         await deleteEntireLocalDatabase();
         // Wipe all localStorage/sessionStorage privacynotes.* + sb-* keys.
         clearAllStorageKeys();
+        // The sweep took the sign-out notice too, and a stamp taken before
+        // any notice existed would read as current again without one.
+        announceSignOut();
+        // The reload below drops the page, and with it the reminders'
+        // second cancel if the OS was slow to answer; it goes first.
+        await remindersTeardownSettled(RELOAD_WAIT_MS);
       }
 
       onDeleteStarted();
@@ -193,7 +270,7 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="w-full rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium px-3 py-2.5 transition"
+          className="w-full rounded-md border border-transparent bg-red-500/10 hover:bg-red-500/20 text-danger text-sm font-medium px-3 py-1.5 transition"
         >
           {t('danger.deleteCta')}
         </button>
@@ -203,7 +280,7 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
 
   return (
     <div className="rounded-md border border-red-300 dark:border-red-900/60 p-4 space-y-3">
-      <SectionEyebrow danger>
+      <SectionEyebrow danger setting="plan.dangerZone">
         {t('danger.heading')}
       </SectionEyebrow>
 
@@ -214,7 +291,7 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
       <HelpChip surface="deleteAccount" />
 
       {blockedByStorageSub && (
-        <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 text-xs leading-relaxed px-3 py-2">
+        <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 text-warning text-xs leading-relaxed px-3 py-2">
           {t('danger.blockedByStorage')}
         </div>
       )}
@@ -227,7 +304,7 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
           disabled={busy || deleteServer}
           className="mt-0.5 accent-red-600"
         />
-        <span className={`${deleteServer && !deleteLocal ? 'text-pn-muted/75' : 'text-pn-soft'}`}>
+        <span className={`${deleteServer && !deleteLocal ? 'text-pn-muted' : 'text-pn-soft'}`}>
           {t('danger.localLabel')}
           <span className="block text-xs text-pn-soft">
             {t('danger.localDesc')}
@@ -254,11 +331,17 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
       </label>
       )}
 
+      {localOnly && atStakeLine && (
+        <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 text-warning text-xs leading-relaxed px-3 py-2">
+          {atStakeLine}
+        </div>
+      )}
+
       <div>
         <label className="block text-xs text-pn-soft mb-1">
           <Trans
             i18nKey="settings:danger.confirmPrompt"
-            components={{ kbd: <span className="font-mono font-semibold text-red-600 dark:text-red-400" /> }}
+            components={{ kbd: <span className="font-mono font-semibold text-danger" /> }}
           />
         </label>
         <input

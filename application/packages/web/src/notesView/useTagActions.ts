@@ -9,10 +9,14 @@ import {
   trashNotesWithTag,
 } from '../notesRepo';
 import type { UserSettings } from '../userSettings';
+import { tagAfterScopedChange } from '../spaces';
 import type { View } from '../views';
 
 export function useTagActions({
   activeNotes,
+  liveNotes,
+  inScope,
+  folderForNewItem,
   selectedId,
   setSelectedId,
   selectedTag,
@@ -22,13 +26,21 @@ export function useTagActions({
   setDrawerOpen,
   setCreatingTag,
   setNewTagDraft,
-  pendingTitleFocus,
+  pendingFocus,
   discardIfEmpty,
   mutateSettings,
   refresh,
   runSync,
 }: {
+  /** The items of the open space; every count and check reads these. */
   activeNotes: LocalNote[];
+  /** Every live item, whatever the space. */
+  liveNotes: LocalNote[];
+  /** The open space while Spaces is on: every tag write stays inside it.
+   *  Spec: ops/docs/plans/spaces.md (section 8) */
+  inScope: ((note: LocalNote) => boolean) | undefined;
+  /** The folder a new item files into, so a note made in Work stays in Work. */
+  folderForNewItem: () => string | null;
   selectedId: string | null;
   setSelectedId: Dispatch<SetStateAction<string | null>>;
   selectedTag: string | null;
@@ -38,7 +50,7 @@ export function useTagActions({
   setDrawerOpen: Dispatch<SetStateAction<boolean>>;
   setCreatingTag: Dispatch<SetStateAction<boolean>>;
   setNewTagDraft: Dispatch<SetStateAction<string>>;
-  pendingTitleFocus: MutableRefObject<boolean>;
+  pendingFocus: MutableRefObject<'title' | 'body' | null>;
   discardIfEmpty: (id: string | null) => Promise<boolean>;
   mutateSettings: (updater: (prev: UserSettings) => UserSettings) => void;
   refresh: () => Promise<LocalNote[]>;
@@ -103,6 +115,12 @@ export function useTagActions({
     };
   }, [openTagMenu]);
 
+  /** Whether an item outside the open space carries the tag. */
+  const usedOutside = useCallback(
+    (tag: string) => !!inScope && liveNotes.some((n) => n.tags.includes(tag) && !inScope(n)),
+    [inScope, liveNotes],
+  );
+
   const commitRenameTag = useCallback(
     async (oldTag: string, rawNew: string) => {
       const normalized = normalizeTag(rawNew);
@@ -119,20 +137,17 @@ export function useTagActions({
       const conflictsWithExisting = !isCaseChangeOnly
         && [...existingTags].some((t) => t.toLowerCase() === normalized.toLowerCase());
       const doRename = async () => {
-        await renameTagEverywhere(oldTag, normalized);
-        // Migrate favorite flag too: if the old slug was starred, the
-        // new slug inherits it (unless the new slug was already a
-        // favorite, in which case nothing changes).
-        mutateSettings((prev) => {
-          if (!prev.favoriteTags.includes(oldTag)) return prev;
-          const next = prev.favoriteTags.filter((t) => t !== oldTag);
-          if (!next.includes(normalized)) next.push(normalized);
-          return { ...prev, favoriteTags: next };
-        });
-        // If the currently selected tag filter was the old slug, point
-        // it at the new one so the user keeps seeing the same notes.
-        if (selectedTag === oldTag) setSelectedTag(normalized);
+        const usedElsewhere = usedOutside(oldTag);
+        await renameTagEverywhere(oldTag, normalized, inScope);
+        // The star and the look follow the new name; a merge target keeps a
+        // look of its own, and the old name keeps both while the other
+        // space still carries it.
+        mutateSettings((prev) => tagAfterScopedChange(prev, oldTag, normalized, usedElsewhere));
         await refresh();
+        // If the currently selected tag filter was the old slug, point
+        // it at the new one so the user keeps seeing the same notes. After
+        // the refresh: the sidebar clears a filter on a tag no item carries.
+        if (selectedTag === oldTag) setSelectedTag(normalized);
         void runSync();
       };
 
@@ -150,7 +165,7 @@ export function useTagActions({
 
       await doRename();
     },
-    [activeNotes, mutateSettings, refresh, runSync, selectedTag]
+    [activeNotes, inScope, usedOutside, mutateSettings, refresh, runSync, selectedTag]
   );
 
   const handleDeleteTag = useCallback(
@@ -162,11 +177,9 @@ export function useTagActions({
         count,
         onConfirm: () => {
           void (async () => {
-            await deleteTagEverywhere(tag);
-            mutateSettings((prev) => {
-              if (!prev.favoriteTags.includes(tag)) return prev;
-              return { ...prev, favoriteTags: prev.favoriteTags.filter((t) => t !== tag) };
-            });
+            const usedElsewhere = usedOutside(tag);
+            await deleteTagEverywhere(tag, inScope);
+            mutateSettings((prev) => tagAfterScopedChange(prev, tag, null, usedElsewhere));
             if (selectedTag === tag) {
               setSelectedTag(null);
               setView('all');
@@ -177,7 +190,7 @@ export function useTagActions({
         },
       });
     },
-    [activeNotes, mutateSettings, refresh, runSync, selectedTag]
+    [activeNotes, inScope, usedOutside, mutateSettings, refresh, runSync, selectedTag]
   );
 
   /** Trash every note that carries a given tag, plus drop the tag from
@@ -185,18 +198,20 @@ export function useTagActions({
       action is recoverable via the Trash view. */
   const handleDeleteTagAndNotes = useCallback(
     (tag: string) => {
-      const count = activeNotes.filter((n) => n.tags.includes(tag)).length;
+      // Read-only notes keep their tag and stay put, so they are counted
+      // apart: the modal asks about the rest and names how many stayed.
+      const tagged = activeNotes.filter((n) => n.tags.includes(tag));
+      const movable = tagged.filter((n) => n.locked !== 1);
       setTagConfirm({
         type: 'delete-with-notes',
         tag,
-        count,
+        count: movable.length,
+        skipped: tagged.length - movable.length,
         onConfirm: () => {
           void (async () => {
-            await trashNotesWithTag(tag);
-            mutateSettings((prev) => {
-              if (!prev.favoriteTags.includes(tag)) return prev;
-              return { ...prev, favoriteTags: prev.favoriteTags.filter((t) => t !== tag) };
-            });
+            const usedElsewhere = usedOutside(tag);
+            await trashNotesWithTag(tag, inScope);
+            mutateSettings((prev) => tagAfterScopedChange(prev, tag, null, usedElsewhere));
             if (selectedTag === tag) {
               setSelectedTag(null);
               setView('all');
@@ -207,7 +222,7 @@ export function useTagActions({
         },
       });
     },
-    [activeNotes, mutateSettings, refresh, runSync, selectedTag]
+    [activeNotes, inScope, usedOutside, mutateSettings, refresh, runSync, selectedTag]
   );
 
   /**
@@ -231,14 +246,14 @@ export function useTagActions({
     setNewTagDraft('');
     if (!tag) return;
     const previousId = selectedId;
-    const note = await createNote('', '', [tag]);
+    const note = await createNote('', '', [tag], false, 'note', folderForNewItem());
     const discarded = await discardIfEmpty(previousId);
     if (discarded) await refresh();
     else await refresh();
     setView('home');
     setSelectedTag(tag);
     setSelectedFolder(null);
-    pendingTitleFocus.current = true;
+    pendingFocus.current = 'body';
     setSelectedId(note.id);
     setDrawerOpen(false);
   }
@@ -249,6 +264,8 @@ export function useTagActions({
     tag: string;
     targetTag?: string;
     count: number;
+    /** Read-only notes held back from a delete-with-notes action. */
+    skipped?: number;
     onConfirm: () => void;
   } | null>(null);
 

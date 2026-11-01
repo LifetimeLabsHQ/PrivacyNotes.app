@@ -2,8 +2,7 @@
   "dismiss": "Schließen",
   "close": "Schließen",
   "moveBanner": {
-    "title": "Die App zieht um auf use.privacynotes.app",
-    "body": "Zieh diese Sitzung jetzt um - es dauert nur ein paar Sekunden und deine Notizen kommen mit.",
+    "bodySignIn": "Melde dich dort mit deiner Wiederherstellungsphrase oder über \"{{scanQr}}\" an.",
     "cta": "Jetzt umziehen",
     "syncing": "Deine Notizen werden synchronisiert…",
     "error": "Es konnte gerade nicht alles synchronisiert werden. Prüf deine Verbindung und versuch es nochmal.",
@@ -15,8 +14,9 @@
   },
   "moveScreen": {
     "title": "Die App ist umgezogen auf use.privacynotes.app",
-    "body": "Zieh dieses Gerät jetzt um - es dauert nur ein paar Sekunden und deine Notizen kommen mit. Hier wird nichts gelöscht.",
+    "bodySignIn": "Melde dich dort mit deiner Wiederherstellungsphrase aus 12 Wörtern oder über \"{{scanQr}}\" an. Dieses Gerät synchronisiert zuerst, also warten alle deine Notizen dort auf dich, und hier wird nichts gelöscht.",
     "openNotes": "Öffne deine Notizen einmal hier, um das zu beheben",
+    "showPhrase": "Meine Wiederherstellungsphrase anzeigen",
     "website": "Stattdessen die Website ansehen"
   },
   "quota": {
@@ -54,17 +54,47 @@
     "unsyncedWarn_other": "{{count}} Notizen auf diesem Gerät sind noch nicht synchronisiert. Sie gehen dauerhaft verloren, wenn sie beim Abmelden nicht hochgeladen werden können.",
     "unsyncedKept_one": "1 Notiz auf diesem Gerät ist noch nicht synchronisiert. Sie bleibt auf diesem Gerät und wird synchronisiert, sobald du dich wieder anmeldest.",
     "unsyncedKept_other": "{{count}} Notizen auf diesem Gerät sind noch nicht synchronisiert. Sie bleiben auf diesem Gerät und werden synchronisiert, sobald du dich wieder anmeldest.",
+    "unsyncedFilesWarn_one": "{{count}} Datei auf diesem Gerät ist nicht synchronisiert. Beim Abmelden wird sie endgültig gelöscht.",
+    "unsyncedFilesWarn_other": "{{count}} Dateien auf diesem Gerät sind nicht synchronisiert. Beim Abmelden werden sie endgültig gelöscht.",
     "dontRemind": "Mich nicht erneut erinnern",
     "showPhrase": "Nein, Phrase anzeigen",
-    "confirm": "Ja, abmelden"
+    "confirm": "Ja, abmelden",
+    "stay": "Angemeldet bleiben",
+    "signOutLose_one": "Abmelden und {{count}} Notiz verlieren",
+    "signOutLose_other": "Abmelden und {{count}} Notizen verlieren",
+    "signOutLoseFiles_one": "Abmelden und {{count}} Datei verlieren",
+    "signOutLoseFiles_other": "Abmelden und {{count}} Dateien verlieren",
+    "signOutLoseBoth_one": "Abmelden und {{count}} Notiz und {{files}} verlieren",
+    "signOutLoseBoth_other": "Abmelden und {{count}} Notizen und {{files}} verlieren",
+    "fileCount_one": "{{count}} Datei",
+    "fileCount_other": "{{count}} Dateien",
+    "neverBackedUp_one": "Nur auf diesem Gerät:",
+    "neverBackedUp_other": "Nur auf diesem Gerät:",
+    "moreNotes": "und {{count}} weitere",
+    "appLockHint": "Geteiltes Gerät? Schalte die App-Sperre unter Einstellungen > Sicherheit ein."
   },
   "burnShareModal": {
     "title": "Teilen und nach dem Lesen vernichten",
-    "body": "<lead>Deine ursprüngliche Notiz wird nicht gelöscht.</lead> Sie bleibt sicher in deinem Konto. Der Burn-Link ist eine separate verschlüsselte Kopie, die sich nach dem Lesen selbst zerstört. Der Link läuft nach 24 Stunden ab, ob geöffnet oder nicht.",
+    "body": "<lead>Deine ursprüngliche Notiz wird nicht gelöscht.</lead> Sie bleibt sicher in deinem Konto. Der Burn-Link ist eine separate verschlüsselte Kopie, die sich nach dem Lesen selbst zerstört.",
+    "readTime": "Lesezeit",
+    "readTimeHint": "Verschwindet danach vom Bildschirm",
+    "lifetime": "Link läuft ab",
+    "lifetimeHint": "Wenn ihn niemand öffnet",
+    "minutes_one": "{{count}} Minute",
+    "minutes_other": "{{count}} Minuten",
+    "hours_one": "{{count}} Stunde",
+    "hours_other": "{{count}} Stunden",
+    "afterHours_one": "Nach {{count}} Stunde",
+    "afterHours_other": "Nach {{count}} Stunden",
+    "afterDays_one": "Nach {{count}} Tag",
+    "afterDays_other": "Nach {{count}} Tagen",
+    "create": "Link erstellen und kopieren",
+    "share": "Link teilen",
     "imagesStripped": "Es wird nur Text angezeigt, Dateien sind in dieser Notiz ausgeblendet.",
     "copied": "Kopiert"
   },
   "burnView": {
+    "title": "Nach dem Lesen vernichten",
     "tagline": "Verschlüsselt. Vergänglich. Nur für deine Augen.",
     "toggleTheme": "Design umschalten",
     "checking": "Wird geprüft...",
@@ -73,7 +103,7 @@
     "footerTagline": "- Zero-Knowledge-verschlüsselte Notizen, gehostet in der Schweiz.",
     "sealed": {
       "heading": "Du hast eine verschlüsselte Notiz erhalten.",
-      "subheading": "Diese Nachricht zerstört sich nach dem Lesen selbst. Ungelesene Links laufen nach 24 Stunden ab.",
+      "subheading": "Diese Nachricht zerstört sich nach dem Lesen selbst. Ungelesene Links laufen von selbst ab.",
       "reveal": "Nachricht anzeigen",
       "warning": "Der Server löscht die Notiz in dem Moment, in dem du sie anzeigst. Keine zweite Chance."
     },
@@ -89,7 +119,7 @@
     },
     "gone": {
       "heading": "Diese Notiz ist weg.",
-      "body": "Sie wurde bereits gelesen oder ist abgelaufen. Burn-Links können nur einmal geöffnet werden und laufen nach 24 Stunden ab."
+      "body": "Sie wurde bereits gelesen oder ist abgelaufen. Burn-Links können nur einmal geöffnet werden und laufen von selbst ab."
     },
     "error": {
       "heading": "Etwas ist schiefgelaufen.",

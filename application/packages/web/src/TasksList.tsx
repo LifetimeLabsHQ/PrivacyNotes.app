@@ -1,26 +1,44 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { TaskCheckbox } from './ui';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { itemGridClass, useContextTarget, useItemList } from './itemList';
 import type { LocalNote } from './db';
-import type { ListPrefs, ListPrefsStore } from './listPrefs';
+import { setPillarPrefs, type ListPrefs, type ListPrefsStore } from './listPrefs';
 import type { UserSettings } from './userSettings';
 import { selectTaskNotes, type TaskItem } from './tasks';
-import NoteRow from './NoteRow';
-import NoteCard from './NoteCard';
-import { compareNotes, stripToPlainText } from './notesViewUtils';
+import { itemDragSelection } from './NoteRow';
+import { WindowedNoteRow as NoteRow, WindowedNoteCard as NoteCard } from './WindowedNoteItem';
+import { compareNotes, stripToPlainText, type DayIndex } from './notesViewUtils';
 import type { ContextMenuItem } from './ContextMenu';
 import { HoverLabel } from './HoverLabel';
 import { SelectionToolbar } from './SelectionToolbar';
 import { suppressShiftTextSelection } from './useMultiSelect';
 import { ListSearchInput } from './ListSearchInput';
+import { JournalCalendarCard, useJournalCalendarShown, type CalendarCardExtras } from './JournalCalendar';
+import type { Space } from './spaces';
+import { toLocalIso } from './intlFormat';
 import { ActiveFilterEntry, ActiveSearchEntry, FilteredEmpty, ListFilterChips } from './ListFilterChips';
 import { ListPrefsPopover } from './ListPrefsPopover';
-import { Check, CheckSquare, CheckFat, NotePencil, Eye, EyeSlash, Plus, PushPin, FunnelSimple, PILLAR_GLYPHS, NEW_GLYPHS } from './icons';
-import { newButtonOpts } from './i18nExempt';
+import { CheckSquare, CheckFat, NotePencil, Eye, EyeSlash, Plus, PushPin, FunnelSimple, PILLAR_GLYPHS, NEW_GLYPHS } from './icons';
+import { NewDropdown } from './NewButton';
+import { keyText } from './shortcutMatch';
 import type { View } from './views';
 import { ListNav } from './notesView/ListNav';
-import { ImportPromptEntry, useImportPrompt } from './ImportPrompt';
+import { ImportPromptEntry, importPromptFor, type ImportOffer } from './ImportPrompt';
+import { textMatcher } from './textMatch';
+import { isImeComposing } from './imeComposing';
+import { Switch } from './Switch';
+import { useListGroups } from './ListGroupHeader';
 
 export interface TasksListProps {
+  /** The view and space this list draws, so a return lands where it was;
+   *  null under a search. Spec: ops/docs/archive/keep-my-place.md */
+  place?: string | null;
+  /** The calendar card, while a task list in the open space has a day.
+   *  Spec: ops/docs/archive/note-date.md (section 4) */
+  calendar?: ({ entries: DayIndex; onOpen: (id: string, occurrence?: string) => void; onCreate: (isoDate: string) => void; onEvent: (isoDate: string) => void } & CalendarCardExtras) | null;
+  /** With Spaces on, the space that is not open, for the calendar switch. */
+  otherSpace?: Space | null;
   allTasks: TaskItem[];
   activeNotes: LocalNote[];
   selectedId: string | null;
@@ -33,6 +51,8 @@ export interface TasksListProps {
   onSelectView: (next: View) => void;
   /** Passed straight to ListNav; see userSettings.hiddenViews. */
   hiddenViews?: import('./views').View[] | undefined;
+  /** The synced import-offer dismissal; see ImportPrompt.tsx. */
+  importOffer: ImportOffer;
   onOpenDrawer: () => void;
   onClearFolder: () => void;
   onClearTag: () => void;
@@ -42,7 +62,6 @@ export interface TasksListProps {
   onListPrefsChange: (next: ListPrefsStore) => void;
   /** Global layout: narrow rows ('list') or full-width tiles ('grid'). */
   viewMode: 'list' | 'grid';
-  tasksView: UserSettings['tasksView'];
   showDoneTasks: boolean;
   search: string;
   setSearch: (v: string) => void;
@@ -50,15 +69,15 @@ export interface TasksListProps {
   taskInputRef: React.RefObject<HTMLInputElement | null>;
   searchInputRef?: React.RefObject<HTMLInputElement | null>;
   mobileTabIndex: number | undefined;
-  hotkeyLabel: string;
   isNoteLocked: (n: LocalNote) => boolean;
-  onTasksViewChange: (v: UserSettings['tasksView']) => void;
   onSetShowDoneTasks: (updater: boolean | ((v: boolean) => boolean)) => void;
   onSetTaskDraft: (v: string) => void;
   onToggleTask: (task: TaskItem, checked: boolean) => void;
   onOpenTaskSource: (task: TaskItem) => void;
   onAddQuickTask: (text: string) => void;
   onNew: () => void;
+  /** A new task that starts as a Kanban board. */
+  onNewKanban: () => void;
   /** Open the import modal - the standing import entry at the end of the list. */
   onOpenImport: () => void;
   onSelectNote: (id: string) => void;
@@ -69,6 +88,7 @@ export interface TasksListProps {
   selectionMode: boolean;
   selectedIds: Set<string>;
   selectionAllStarred: boolean;
+  selectionAllArchived: boolean;
   onRowClick: (e: React.MouseEvent, id: string) => void;
   onToggleSelected: (id: string) => void;
   onRangeSelect: (id: string) => void;
@@ -77,6 +97,7 @@ export interface TasksListProps {
   onClearSelection: () => void;
   onSelectAllVisible: () => void;
   onBulkFavorite: () => void;
+  onBulkArchive: () => void;
   onBulkTag: (tag: string) => void;
   onBulkMoveToFolder: () => void;
   foldersUnlocked: boolean;
@@ -85,15 +106,15 @@ export interface TasksListProps {
   allTags?: [string, number][];
 }
 
-const HYBRID_COLLAPSED_COUNT = 3;
-
 export default function TasksList({
+  place = null,
   allTasks,
   activeNotes,
   selectedId,
   activeFolderName,
   onSelectView,
   hiddenViews,
+  importOffer,
   onOpenDrawer,
   onClearFolder,
   onClearTag,
@@ -102,7 +123,6 @@ export default function TasksList({
   listPrefsStore,
   onListPrefsChange,
   viewMode,
-  tasksView,
   showDoneTasks,
   search,
   setSearch,
@@ -110,15 +130,14 @@ export default function TasksList({
   taskInputRef,
   searchInputRef,
   mobileTabIndex,
-  hotkeyLabel,
   isNoteLocked,
-  onTasksViewChange,
   onSetShowDoneTasks,
   onSetTaskDraft,
   onToggleTask,
   onOpenTaskSource,
   onAddQuickTask,
   onNew,
+  onNewKanban,
   onOpenImport,
   onSelectNote,
   onContextMenu,
@@ -126,6 +145,7 @@ export default function TasksList({
   selectionMode,
   selectedIds,
   selectionAllStarred,
+  selectionAllArchived,
   onRowClick,
   onToggleSelected,
   onRangeSelect,
@@ -134,26 +154,39 @@ export default function TasksList({
   onClearSelection,
   onSelectAllVisible,
   onBulkFavorite,
+  onBulkArchive,
   onBulkTag,
   onBulkMoveToFolder,
   foldersUnlocked,
   onBulkExport,
   onBulkTrash,
   allTags,
+  calendar,
+  otherSpace = null,
 }: TasksListProps) {
+  const taskActions = useRef({ onToggleTask, onOpenTaskSource });
+  useLayoutEffect(() => { taskActions.current = { onToggleTask, onOpenTaskSource }; }, [onToggleTask, onOpenTaskSource]);
   const { t: tr } = useTranslation('shell');
-  const [tasksHybridExpanded, setTasksHybridExpanded] = useState(false);
+  const { t } = useTranslation('notes');
   const [showListPrefs, setShowListPrefs] = useState(false);
   const listPrefsButtonRef = useRef<HTMLButtonElement | null>(null);
 
   /** ID of the note row that was right-clicked - highlighted while context menu is open. */
-  const [contextTargetId, setContextTargetId] = useState<string | null>(null);
-  useEffect(() => {
-    if (!contextTargetId) return;
-    const clear = () => setContextTargetId(null);
-    window.addEventListener('click', clear, true);
-    return () => window.removeEventListener('click', clear, true);
-  }, [contextTargetId]);
+  const [contextTargetId, setContextTargetId] = useContextTarget();
+  const calendarShown = useJournalCalendarShown();
+  const calendarCard = calendar && calendarShown && !search.trim() ? (
+    <JournalCalendarCard
+      grid={viewMode === 'grid'}
+      entries={calendar.entries}
+      onOpen={calendar.onOpen}
+      onPick={calendar.onCreate}
+      onToday={() => calendar.onCreate(toLocalIso(new Date()))}
+      creates="task"
+      onEvent={calendar.onEvent}
+      onExpand={calendar.onExpand}
+      drop={calendar.drop}
+    />
+  ) : null;
 
   // Parent notes by id. The aggregate groups tasks by note, so it orders
   // and badges each group through the note it came from - same pinned
@@ -164,33 +197,38 @@ export default function TasksList({
     return m;
   }, [activeNotes]);
 
-  // Group tasks by parent note for the Tasks view.
+  // Group tasks by parent note for the Tasks view. The task lines of a note
+  // the PIN guards right now are its content, so they stay out of the list
+  // entirely; the note's own row, with its title and shield, is where it
+  // opens the gate.
   const taskGroups = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = search.trim();
+    const match = q ? textMatcher(q) : null;
     const groups = new Map<
       string,
-      { noteId: string; noteTitle: string; updatedAt: string; tasks: TaskItem[] }
+      { noteId: string; noteTitle: string; editedAt: string; tasks: TaskItem[] }
     >();
+    const openTasks = allTasks.filter((t) => {
+      const n = notesById.get(t.noteId);
+      if (n === undefined || isNoteLocked(n)) return false;
+      return listPrefs.showNoteTasks || n.type === 'task';
+    });
     const doneFiltered = showDoneTasks
-      ? allTasks
-      : allTasks.filter((t) => !t.checked);
-    const searchFiltered = q
-      ? doneFiltered.filter(
-          (t) =>
-            t.text.toLowerCase().includes(q) ||
-            t.noteTitle.toLowerCase().includes(q)
-        )
+      ? openTasks
+      : openTasks.filter((t) => !t.checked);
+    const searchFiltered = match
+      ? doneFiltered.filter((t) => match(t.text) || match(t.noteTitle))
       : doneFiltered;
     for (const t of searchFiltered) {
       const g = groups.get(t.noteId);
       if (g) {
         g.tasks.push(t);
-        if (t.updatedAt > g.updatedAt) g.updatedAt = t.updatedAt;
+        if (t.editedAt > g.editedAt) g.editedAt = t.editedAt;
       } else {
         groups.set(t.noteId, {
           noteId: t.noteId,
           noteTitle: t.noteTitle,
-          updatedAt: t.updatedAt,
+          editedAt: t.editedAt,
           tasks: [t],
         });
       }
@@ -199,16 +237,25 @@ export default function TasksList({
       const na = notesById.get(a.noteId);
       const nb = notesById.get(b.noteId);
       if (na && nb) return compareNotes(na, nb, listPrefs);
-      return a.updatedAt < b.updatedAt ? 1 : -1;
+      return a.editedAt < b.editedAt ? 1 : -1;
     });
-  }, [allTasks, showDoneTasks, search, notesById, listPrefs]);
+  }, [allTasks, showDoneTasks, search, notesById, listPrefs, isNoteLocked]);
 
   // Notes that belong in the Tasks pillar. Shared with NotesView, which
   // needs the identical list for multi-select - see selectTaskNotes.
   const taskContainingNotes = useMemo(
-    () => selectTaskNotes(activeNotes, allTasks, search, listPrefs),
-    [activeNotes, allTasks, search, listPrefs]
+    () => selectTaskNotes(activeNotes, allTasks, search, listPrefs, isNoteLocked),
+    [activeNotes, allTasks, search, listPrefs, isNoteLocked]
   );
+
+  /* The pillar's two kinds of content. A note typed 'task' is a list made in
+     here, with the New button or the quick-add bar; everything else is an
+     ordinary note that happens to carry a checkbox. The aggregate draws them
+     as two bands so a recipe never sits among the to-dos, and the switch above
+     drops the second band entirely. The header appears only when both kinds
+     are present, because a label that separates needs two things to separate. */
+  const ownGroups = taskGroups.filter((g) => notesById.get(g.noteId)?.type === 'task');
+  const fromGroups = taskGroups.filter((g) => notesById.get(g.noteId)?.type !== 'task');
 
   /**
    * Takes the place of every "nothing here" message below when the pane is
@@ -226,14 +273,18 @@ export default function TasksList({
       />
     ) : null;
 
+  /** The whole selection as note-links, in list order, for a drag. */
+  const dragSelection = () => itemDragSelection(taskContainingNotes.filter((n) => selectedIds.has(n.id)), isNoteLocked);
+
   const ItemComp = viewMode === 'grid' ? NoteCard : NoteRow;
 
   /* The standing import entry, shared with the other pillars
-     (ImportPrompt.tsx owns the rules and the storage keys). Tasks live inside
+     (ImportPrompt.tsx owns the rules). Tasks live inside
      notes, so the count that decides whether the offer has had its chance is
      the notes that hold them, which is exactly what this pane lists. */
-  const importPrompt = useImportPrompt('tasks', {
+  const importPrompt = importPromptFor('tasks', {
     count: taskContainingNotes.length,
+    offer: importOffer,
     suppressed:
       selectionMode || search.trim().length > 0 || activeFolderName !== null || activeTag !== null,
   });
@@ -278,6 +329,7 @@ export default function TasksList({
 
   const renderTaskNoteRow = (n: LocalNote) => (
     <ItemComp
+      windowed={taskContainingNotes.length > 100}
       key={n.id}
       note={n}
       isOpen={selectedId === n.id && !selectionMode}
@@ -294,6 +346,8 @@ export default function TasksList({
       onTouchMove={onLongPressEnd}
       onTouchCancel={onLongPressEnd}
       selectionMode={selectionMode}
+      itemDrag
+      dragSelection={dragSelection}
       isMultiSelected={selectedIds.has(n.id)}
       onToggleSelect={(e) => {
         if (e.shiftKey) onRangeSelect(n.id);
@@ -304,23 +358,60 @@ export default function TasksList({
     />
   );
 
-  const aggregatedTasksSection = (
-    <>
-      {taskGroups.length === 0 && (filteredEmpty ?? (
-        <div className="p-6 text-[13px] text-neutral-500 dark:text-neutral-600 text-center">
-          {search.trim()
-            ? tr('tasksList.noMatches')
-            : showDoneTasks
-              ? tr('tasksList.noTasksYet')
-              : tr('tasksList.noOpenTasks')}
-        </div>
-      ))}
-      {taskGroups.map((g) => {
+  /* Group headers (#448) over the notes that hold tasks, in the grid and in
+     the list's first band. The "All tasks" section stays grouped by note.
+     Spec: ops/docs/archive/list-groups.md */
+  const grouping = useListGroups({
+    notes: taskContainingNotes,
+    listPrefs,
+    search,
+    scope: 'tasks',
+    entryDays: false,
+    selectionMode,
+    selectedId,
+    isNoteLocked,
+    onContextMenu,
+  });
+  // Both bands arrive in slices, like every other list (useProgressiveReveal):
+  // one budget counts the item rows first, then the task lines, so a vault
+  // with thousands of checklist lines no longer builds all of them on open.
+  // The scroll position across a hide and show of the pane (#186) rides
+  // along; a new search or filter starts at the top.
+  const noteItemCount = grouping.entries ? grouping.entries.length : taskContainingNotes.length;
+  const taskLineCount = viewMode === 'grid' ? 0 : taskGroups.reduce((sum, g) => sum + g.tasks.length, 0);
+  const revealTotal = noteItemCount + taskLineCount;
+  const list = useItemList([search, activeFolderName, activeTag, viewMode], revealTotal, place);
+  const reveal = list.reveal;
+  const revealedAll = reveal.visible >= revealTotal;
+  useEffect(() => {
+    if (!selectedId) return;
+    reveal.ensure(
+      grouping.entries
+        ? grouping.entries.findIndex((e) => e.kind === 'note' && e.note.id === selectedId)
+        : taskContainingNotes.findIndex((n) => n.id === selectedId),
+    );
+  }, [grouping.entries, taskContainingNotes, selectedId, reveal]);
+
+  const taskNoteItems = (grid: boolean) =>
+    grouping.entries
+      ? grouping.entries.slice(0, reveal.visible).map((e) => (e.kind === 'header' ? grouping.header(e, grid) : renderTaskNoteRow(e.note)))
+      : taskContainingNotes.slice(0, reveal.visible).map(renderTaskNoteRow);
+
+  // The task lines the budget still covers after the item rows, handed out
+  // group by group in drawing order: the own lists, then the other items.
+  let lineBudget = Math.max(0, reveal.visible - noteItemCount);
+  const takeLines = (g: { tasks: TaskItem[] }) => {
+    const n = Math.min(lineBudget, g.tasks.length);
+    lineBudget -= n;
+    return n;
+  };
+
+  const renderTaskGroup = (g: { noteId: string; noteTitle: string; editedAt: string; tasks: TaskItem[] }, shown: number) => {
         const groupActive = selectedId === g.noteId;
         return (
         <div
           key={g.noteId}
-          className={`border-b border-neutral-200/50 dark:border-divider/50 ${
+          className={`border-b border-divider/50 ${
             groupActive ? 'bg-accent/10 border-s-2 border-s-accent dark:bg-accent/15' : ''
           }`}
         >
@@ -333,13 +424,13 @@ export default function TasksList({
                 lineIdx: g.tasks[0]?.lineIdx ?? 0,
                 text: '',
                 checked: false,
-                updatedAt: g.updatedAt,
+                editedAt: g.editedAt,
               })
             }
             className={`w-full flex items-center gap-1.5 text-start px-4 pt-3 pb-1 text-[11px] uppercase tracking-wide font-semibold transition ${
               groupActive
                 ? 'text-accent dark:text-accent'
-                : 'text-neutral-500 dark:text-neutral-500 hover:text-accent dark:hover:text-accent'
+                : 'text-pn-muted hover:text-accent dark:hover:text-accent'
             }`}
             aria-label={tr('tasksList.openNote', { title: g.noteTitle })}
           >
@@ -350,43 +441,46 @@ export default function TasksList({
           </button>
           </HoverLabel>
           <ul className="pb-2">
-            {g.tasks.map((t) => (
-              <li
-                key={`${t.noteId}:${t.lineIdx}`}
-                className="pn-lazy-row group flex items-start gap-2.5 px-4 py-1.5 hover:bg-surface-1/60 transition"
-              >
-                <button
-                  onClick={() => void onToggleTask(t, !t.checked)}
-                  aria-label={t.checked ? tr('tasksList.markIncomplete') : tr('tasksList.markComplete')}
-                  className={`mt-0.5 shrink-0 w-[18px] h-[18px] rounded border flex items-center justify-center transition ${
-                    t.checked
-                      ? 'bg-accent border-accent text-white'
-                      : 'border-neutral-400 dark:border-neutral-600 hover:border-accent'
-                  }`}
-                >
-                  {t.checked && (
-                    <Check size={12} />
-                  )}
-                </button>
-                <ClampedTaskText
-                  text={t.text}
-                  checked={t.checked}
-                  onClick={() => void onOpenTaskSource(t)}
-                />
-              </li>
+            {g.tasks.slice(0, shown).map((t) => (
+              <TaskLine key={`${t.noteId}:${t.lineIdx}`} task={t} actions={taskActions} />
             ))}
           </ul>
         </div>
         );
+  };
+
+  /* The label between the two bands. Drawn by the list and the aggregate, so
+     the hybrid shape inherits it through the aggregate it already renders. */
+  const bandHeader = (
+    <div className="px-4 pt-3 pb-1 text-[11px] uppercase tracking-wide font-semibold text-pn-muted border-t border-divider">
+      {tr('tasksList.tasksFromOtherItems')}
+    </div>
+  );
+
+  const aggregatedTasksSection = (
+    <>
+      {taskGroups.length === 0 && (filteredEmpty ?? (
+        <div className="p-6 text-[13px] text-pn-muted text-center">
+          {search.trim()
+            ? tr('tasksList.noMatches')
+            : !listPrefs.showNoteTasks
+              ? tr('tasksList.noTaskListsYet')
+              : showDoneTasks
+                ? tr('tasksList.noTasksYet')
+                : tr('tasksList.noOpenTasks')}
+        </div>
+      ))}
+      {ownGroups.map((g) => {
+        const shown = takeLines(g);
+        return shown > 0 && renderTaskGroup(g, shown);
+      })}
+      {ownGroups.length > 0 && fromGroups.length > 0 && lineBudget > 0 && bandHeader}
+      {fromGroups.map((g) => {
+        const shown = takeLines(g);
+        return shown > 0 && renderTaskGroup(g, shown);
       })}
     </>
   );
-
-  const hybridTopNotes = tasksHybridExpanded
-    ? taskContainingNotes
-    : taskContainingNotes.slice(0, HYBRID_COLLAPSED_COUNT);
-  const hybridCanExpand =
-    taskContainingNotes.length > HYBRID_COLLAPSED_COUNT;
 
   return (
     <>
@@ -395,8 +489,10 @@ export default function TasksList({
         <SelectionToolbar
           mode="normal"
           allStarred={selectionAllStarred}
+          allArchived={selectionAllArchived}
           onClear={onClearSelection}
           onFavorite={onBulkFavorite}
+          onArchive={onBulkArchive}
           onTag={onBulkTag}
           onMoveToFolder={onBulkMoveToFolder}
           foldersUnlocked={foldersUnlocked}
@@ -407,7 +503,7 @@ export default function TasksList({
           allTags={allTags}
         />
       ) : (
-      <div className="shrink-0 h-14 px-4 border-b border-neutral-200 dark:border-divider flex items-center justify-between gap-3">
+      <div className="shrink-0 h-11 md:h-14 px-4 border-b border-divider flex items-center justify-between gap-3">
         <ListNav
           hiddenViews={hiddenViews}
           view="tasks"
@@ -416,16 +512,13 @@ export default function TasksList({
           title={tr('tasksList.title')}
           icon={<PILLAR_GLYPHS.tasks size={26} className="text-accent shrink-0" aria-hidden="true" />}
         />
-        <HoverLabel label={tr('tasksList.newTaskNoteWithHotkey', { hotkey: hotkeyLabel })} position="above">
-        <button
-          onClick={() => void onNew()}
-          aria-label={tr('tasksList.newTaskNote')}
-          className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent font-semibold px-3 py-1.5 text-lg tracking-tight transition"
-        >
-          <NEW_GLYPHS.task size={18} />
-          {tr('tasksList.new', newButtonOpts())}
-        </button>
-        </HoverLabel>
+        <NewDropdown
+          label={tr('tasksList.newTaskNote')}
+          options={[
+            { key: 'task', label: t('newMenu.task'), icon: <NEW_GLYPHS.task />, onSelect: () => onNew(), keys: keyText('newNote') },
+            { key: 'kanban', label: t('newMenu.kanban'), icon: <NEW_GLYPHS.kanban />, onSelect: () => onNewKanban() },
+          ]}
+        />
       </div>
       )}
 
@@ -437,34 +530,8 @@ export default function TasksList({
         onClearTag={onClearTag}
       />
 
-      {/* Row 2 -- layout pills. Hidden in grid mode - the tabs don't change the tile grid. */}
-      {viewMode !== 'grid' && (
-      <div className="shrink-0 px-3 pt-2 pb-1 flex gap-1.5 border-b border-neutral-200 dark:border-divider">
-        {(['hybrid', 'aggregated', 'list'] as const).map((v) => {
-          const active = tasksView === v;
-          const label =
-            v === 'hybrid' ? tr('tasksList.viewHybrid') : v === 'aggregated' ? tr('tasksList.viewAggregated') : tr('tasksList.viewList');
-          return (
-            <button
-              key={v}
-              type="button"
-              onClick={() => onTasksViewChange(v)}
-              aria-pressed={active}
-              className={`text-xs px-2.5 py-1 rounded-full transition font-medium ${
-                active
-                  ? 'bg-accent text-white'
-                  : 'bg-surface-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-surface-2'
-              }`}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
-      )}
-
       {/* Row 3 -- show/hide done + sort/view prefs + search */}
-      <div className="shrink-0 p-3 border-b border-neutral-200 dark:border-divider relative">
+      <div className="shrink-0 px-3 py-2 md:p-3 border-b border-divider relative">
         <div className="flex items-stretch gap-2">
           <HoverLabel label={showDoneTasks ? tr('tasksList.hideCompleted') : tr('tasksList.showCompleted')} position="above">
           <button
@@ -474,8 +541,8 @@ export default function TasksList({
             aria-pressed={showDoneTasks}
             className={`shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-md border transition ${
               showDoneTasks
-                ? 'bg-accent/10 border-accent text-accent'
-                : 'bg-surface-2 border-divider text-neutral-600 hover:border-accent hover:text-accent dark:text-neutral-300'
+                ? 'bg-accent/10 border-accent text-accent-strong'
+                : 'bg-surface-2 border-divider text-pn-soft hover:border-accent hover:text-accent'
             }`}
           >
             {showDoneTasks ? <EyeSlash size={18} /> : <Eye size={18} />}
@@ -490,8 +557,8 @@ export default function TasksList({
             aria-expanded={showListPrefs}
             className={`shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-md border transition ${
               showListPrefs
-                ? 'bg-accent/10 border-accent text-accent'
-                : 'bg-surface-2 border-divider text-neutral-600 hover:border-accent hover:text-accent dark:text-neutral-300'
+                ? 'bg-accent/10 border-accent text-accent-strong'
+                : 'bg-surface-2 border-divider text-pn-soft hover:border-accent hover:text-accent'
             }`}
           >
             <FunnelSimple size={18} />
@@ -511,21 +578,36 @@ export default function TasksList({
             onClose={() => setShowListPrefs(false)}
             anchorRef={listPrefsButtonRef}
             className="absolute start-3 top-full mt-1"
+            pillar="tasks"
+            calendarRows
+            otherSpace={otherSpace}
+            showGroupsToggle
           />
         )}
       </div>
 
+      {/* Tasks-from-notes toggle - the Bookmarks pillar's inline row */}
+      <div className="shrink-0 px-4 py-2 border-b border-divider">
+        <Switch
+          label={tr('listPrefs.showNoteTasks')}
+          checked={listPrefs.showNoteTasks}
+          onChange={(on) => onListPrefsChange(setPillarPrefs(listPrefsStore, 'tasks', { ...listPrefs, showNoteTasks: on }))}
+          className="gap-2 select-none"
+          labelClassName="text-xs text-pn-muted"
+        />
+      </div>
+
       {/* Row 4 -- Quick-add */}
-      <div className="shrink-0 p-3 border-b border-neutral-200 dark:border-divider">
+      <div className="shrink-0 p-3 border-b border-divider">
         <div className="flex items-center gap-2 rounded-md bg-surface-2 border border-divider px-3 py-2 focus-within:border-accent">
-          <Plus size={16} className="text-neutral-400 shrink-0" />
+          <Plus size={16} className="text-pn-muted shrink-0" />
           <input
             ref={taskInputRef}
             tabIndex={mobileTabIndex}
             value={taskDraft}
             onChange={(e) => onSetTaskDraft(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && taskDraft.trim()) {
+              if (e.key === 'Enter' && taskDraft.trim() && !isImeComposing(e)) {
                 e.preventDefault();
                 const text = taskDraft;
                 onSetTaskDraft('');
@@ -534,78 +616,66 @@ export default function TasksList({
             }}
             placeholder={tr('tasksList.quickAddPlaceholder')}
             enterKeyHint="done"
-            className="flex-1 bg-transparent text-[15px] focus:outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-600"
+            className="flex-1 min-w-0 bg-transparent text-[15px] focus:outline-none placeholder:text-pn-muted"
           />
         </div>
       </div>
 
-      {/* Content -- switches on tasksView */}
-      <div className="flex-1 overflow-y-auto" onMouseDown={suppressShiftTextSelection}>
+      {/* Content -- the tile grid, or the pane's one list shape */}
+      <div
+        ref={list.ref as React.RefObject<HTMLDivElement>}
+        onScroll={(e) => list.onScroll(e.currentTarget)}
+        className="flex-1 overflow-y-auto"
+        onMouseDown={suppressShiftTextSelection}
+      >
+        {viewMode !== 'grid' && calendarCard && <ul>{calendarCard}</ul>}
         {viewMode === 'grid' ? (
           <>
             {taskContainingNotes.length === 0 && (filteredEmpty ?? (
-              <div className="p-6 text-[13px] text-neutral-500 dark:text-neutral-600 text-center">
-                {search.trim() ? tr('tasksList.noMatches') : tr('tasksList.noNotesWithTasks')}
+              <div className="p-6 text-[13px] text-pn-muted text-center">
+                {search.trim()
+                  ? tr('tasksList.noMatches')
+                  : !listPrefs.showNoteTasks
+                    ? tr('tasksList.noTaskListsYet')
+                    : tr('tasksList.noItemsWithTasks')}
               </div>
             ))}
             {(taskContainingNotes.length > 0 || importEntry || searchEntry || filterEntry) && (
-              <ul className="grid gap-3 p-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
-                {taskContainingNotes.map(renderTaskNoteRow)}
+              <ul className={itemGridClass(true)}>
+                {calendarCard}
+                {taskNoteItems(true)}
                 {searchEntry}
-                {filterEntry}
-                {importEntry}
+                {revealedAll && filterEntry}
+                {revealedAll && importEntry}
               </ul>
             )}
           </>
         ) : (
           <>
-        {tasksView === 'list' && (
-          <>
-            {taskContainingNotes.length === 0 ? (filteredEmpty ?? (
-              <div className="p-6 text-[13px] text-neutral-500 dark:text-neutral-600 text-center">
-                {search.trim()
-                  ? tr('tasksList.noMatches')
-                  : tr('tasksList.noNotesWithTasks')}
-              </div>
-            )) : (
-              <ul>{taskContainingNotes.map(renderTaskNoteRow)}</ul>
-            )}
-          </>
-        )}
-
-        {tasksView === 'hybrid' && (
-          <>
             {taskContainingNotes.length > 0 && (
-              <div className="border-b border-neutral-200 dark:border-divider">
-                <div className="px-4 pt-3 pb-1 text-[11px] uppercase tracking-wide font-semibold text-neutral-500 dark:text-neutral-500">
-                  {tr('tasksList.recentNotesWithTasks')}
+              <div className="border-b border-divider">
+                <div className="px-4 pt-3 pb-1 text-[11px] uppercase tracking-wide font-semibold text-pn-muted">
+                  {tr('tasksList.itemsWithTasks')}
                 </div>
-                <ul>{hybridTopNotes.map(renderTaskNoteRow)}</ul>
-                {hybridCanExpand && (
-                  <button
-                    type="button"
-                    onClick={() => setTasksHybridExpanded((v) => !v)}
-                    className="w-full text-center px-4 py-2 text-[13px] font-medium text-accent hover:bg-accent/5 transition border-t border-neutral-200/50 dark:border-divider/50"
-                  >
-                    {tasksHybridExpanded
-                      ? tr('tasksList.showLess')
-                      : tr('tasksList.loadMore', { count: taskContainingNotes.length - HYBRID_COLLAPSED_COUNT })}
-                  </button>
-                )}
+                <ul>{taskNoteItems(false)}</ul>
               </div>
             )}
-            <div className="px-4 pt-3 pb-1 text-[11px] uppercase tracking-wide font-semibold text-neutral-500 dark:text-neutral-500">
-              {tr('tasksList.tasksByNote')}
-            </div>
+            {/* The heading names the groups under it, so it stays away when
+                there are none and the pane's own empty line stands alone. */}
+            {taskGroups.length > 0 && (
+              <div className="px-4 pt-3 pb-1 text-[11px] uppercase tracking-wide font-semibold text-pn-muted">
+                {tr('tasksList.allTasks')}
+              </div>
+            )}
             {aggregatedTasksSection}
-          </>
-        )}
 
-        {tasksView === 'aggregated' && aggregatedTasksSection}
-
-        {/* One entry for all three list shapes, at the end of whatever the
+        {/* One entry for both list shapes, at the end of whatever the
             pane just drew. The grid puts its own tile inside the grid. */}
-        {(searchEntry || filterEntry || importEntry) && <ul>{searchEntry}{filterEntry}{importEntry}</ul>}
+        {/* Held back until the slice covers the whole list, so an entry is
+            never drawn mid-list and then pushed down by the next slice. */}
+        {(searchEntry || (revealedAll && (filterEntry || importEntry))) && (
+          <ul>{searchEntry}{revealedAll && filterEntry}{revealedAll && importEntry}</ul>
+        )}
           </>
         )}
       </div>
@@ -613,9 +683,67 @@ export default function TasksList({
   );
 }
 
+type TaskActions = Pick<TasksListProps, 'onToggleTask' | 'onOpenTaskSource'>;
+
+const TaskLine = memo(function TaskLine({ task: t, actions }: {
+  task: TaskItem;
+  actions: React.RefObject<TaskActions>;
+}) {
+  const { t: tr } = useTranslation('shell');
+  return (
+    <li
+      className="pn-lazy-row group flex items-start gap-2.5 px-4 py-1.5 hover:bg-surface-1/60 transition"
+    >
+      <TaskCheckbox
+        checked={t.checked}
+        onChange={(event) => void actions.current.onToggleTask(t, event.target.checked)}
+        aria-label={t.checked ? tr('tasksList.markIncomplete') : tr('tasksList.markComplete')}
+        className="mt-0.5"
+      />
+      <ClampedTaskText
+        text={t.text}
+        checked={t.checked}
+        onClick={() => void actions.current.onOpenTaskSource(t)}
+      />
+    </li>
+  );
+});
+
 /* ── Clamped task text with See more / See less ──────────────── */
 
-const CLAMP_LINES = 2;
+/** Only visible text participates in layout reads, including on resize. */
+const clampMeasures = new Set<() => void>();
+const clampTargets = new Map<Element, () => void>();
+const runClampMeasures = () => clampMeasures.forEach((m) => m());
+let clampObserver: IntersectionObserver | null = null;
+function watchClamp(el: Element, measure: () => void): () => void {
+  if (clampTargets.size === 0) window.addEventListener('resize', runClampMeasures);
+  clampTargets.set(el, measure);
+  if (typeof IntersectionObserver === 'undefined') {
+    clampMeasures.add(measure);
+    measure();
+  } else {
+    clampObserver ??= new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const read = clampTargets.get(entry.target);
+        if (!read) continue;
+        if (entry.isIntersecting) { clampMeasures.add(read); read(); }
+        else clampMeasures.delete(read);
+      }
+    });
+    clampObserver.observe(el);
+  }
+  return () => {
+    clampMeasures.delete(measure);
+    clampTargets.delete(el);
+    clampObserver?.unobserve(el);
+    if (!clampTargets.size) {
+      window.removeEventListener('resize', runClampMeasures);
+      clampObserver?.disconnect();
+      clampObserver = null;
+    }
+  };
+}
 
 function ClampedTaskText({ text, checked, onClick }: {
   text: string;
@@ -626,19 +754,18 @@ function ClampedTaskText({ text, checked, onClick }: {
   const textRef = useRef<HTMLSpanElement>(null);
   const [clamped, setClamped] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const plainText = useMemo(() => stripToPlainText(text), [text]);
 
   // Detect whether the text overflows the clamp.
   const measure = useCallback(() => {
     const el = textRef.current;
-    if (!el) return;
+    if (!el || expanded) return;
     setClamped(el.scrollHeight > el.clientHeight + 1);
-  }, []);
+  }, [expanded]);
 
   useEffect(() => {
-    measure();
-    // Re-measure on resize (font size, container width changes).
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
+    const el = textRef.current;
+    if (el) return watchClamp(el, measure);
   }, [measure, text]);
 
   // Reset expansion when text changes (e.g. task toggled).
@@ -650,8 +777,8 @@ function ClampedTaskText({ text, checked, onClick }: {
         onClick={onClick}
         className={`w-full text-start text-[15px] leading-snug ${
           checked
-            ? 'text-neutral-400 dark:text-neutral-600 line-through'
-            : 'text-neutral-800 dark:text-neutral-200'
+            ? 'text-pn-muted line-through'
+            : 'text-pn'
         }`}
         aria-label={tr('tasksList.openSourceNote')}
       >
@@ -660,7 +787,7 @@ function ClampedTaskText({ text, checked, onClick }: {
           className={expanded ? '' : 'line-clamp-2'}
           dir="auto"
         >
-          {text ? stripToPlainText(text) : <span className="text-neutral-400 italic">{tr('tasksList.empty')}</span>}
+          {text ? plainText : <span className="text-pn-muted italic">{tr('tasksList.empty')}</span>}
         </span>
       </button>
       {clamped && !expanded && (

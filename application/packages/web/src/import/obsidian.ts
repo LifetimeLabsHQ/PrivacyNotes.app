@@ -1,11 +1,14 @@
 import JSZip from 'jszip';
+import { zipEntryText } from './zipEntry';
 import type { FolderDef } from '../folders';
 import { extractInlineTags, parseYamlTags } from '../notesRepo';
 import { FRONT_MATTER } from '../markdownFolder/adapter';
 import { ATTACHMENT_EXT, isBlobReferenced, mimeFromExt } from './blobImport';
 import { buildFolderTree, commonRootPrefix } from './folderImport';
 import { linkifyMarkdown } from './linkify';
+import { detailsToFold } from './detailsFold';
 import { noteLinkTarget } from '../noteLinks';
+import { isUntitledStem } from '../exportNames';
 import type { ImportedNote, ParsedImport } from './types';
 
 /**
@@ -95,12 +98,13 @@ function parseFrontMatter(content: string): {
 /* ------------------------------------------------------------------ */
 
 /**
- * Convert Obsidian-specific markdown extensions to standard markdown
- * that tiptap-markdown can render. Runs before linkify so we don't
- * accidentally touch URLs or code content.
+ * Convert the Obsidian syntax the editor does not read into syntax it
+ * does. Runs before linkify so we don't accidentally touch URLs or code
+ * content.
  *
- * Handles: ==highlight==, $math$, $$math blocks$$, %% comments %%,
- * [^N] footnote refs, [^N]: footnote definitions.
+ * Handles: %% comments %%, attachment embeds, qualified [[note links]].
+ * Highlights (`==x==`), math (`$x$`, `$$x$$`) and footnotes (`[^1]`) pass
+ * through as they are: the editor reads all three.
  */
 function preprocessObsidianMarkdown(body: string): string {
   // Step 1: Pull fenced code blocks out so we don't mangle them.
@@ -141,16 +145,17 @@ function preprocessObsidianMarkdown(body: string): string {
     },
   );
 
-  // Obsidian's qualified note targets, which our resolver cannot match: a
-  // vault writes `[[folder/Note]]` to disambiguate, `[[Note#Heading]]` to
-  // point at a section and `[[Note#^b1c2]]` at a block, while a note here is
-  // found by its title alone. Left as they were, every one of those imported
-  // as a link that resolves to nothing and offers to create a junk note.
+  // Obsidian's qualified note targets. A vault writes `[[folder/Note]]` to
+  // disambiguate and `[[Note#^b1c2]]` to point at a block, while a note here
+  // is found by its title alone and a block is not a target. Left as they
+  // were, both imported as links that resolve to nothing and offer to create
+  // a junk note. A heading, `[[Note#Heading]]` or `[[#Heading]]`, IS a target
+  // here and keeps its heading.
   //
-  // The target is reduced to the note name; the text the vault SHOWED is kept
-  // as the display label, so the note reads exactly as it did in Obsidian and
-  // only the destination changes. `[[#Heading]]`, a link into the same note,
-  // has no target left and becomes plain text rather than a dangling link.
+  // The folder path and a block part are dropped from the target; the text
+  // the vault SHOWED is kept as the display label, so the note reads exactly
+  // as it did in Obsidian and only the destination changes. `[[#^b1c2]]`, a
+  // block in the same note, has no target left and becomes plain text.
   text = text.replace(
     /(?<!!)\[\[([^\]\n]+)\]\]/g,
     (whole: string, inner: string) => {
@@ -158,44 +163,17 @@ function preprocessObsidianMarkdown(body: string): string {
       const path = (pipe >= 0 ? inner.slice(0, pipe) : inner).trim();
       const alias = pipe >= 0 ? inner.slice(pipe + 1).trim() : '';
       const hash = path.indexOf('#');
-      const name = noteLinkTarget((hash >= 0 ? path.slice(0, hash) : path).split('/').pop() ?? '');
-      if (!name) return alias || path.replace(/^#\^?/, '');
-      if (name === path) return whole;
-      const label = alias || path;
-      return `[[${name}|${label}]]`;
+      const notePath = hash >= 0 ? path.slice(0, hash) : path;
+      const anchor = hash >= 0 ? path.slice(hash + 1).trim() : '';
+      const name = noteLinkTarget(notePath.split('/').pop() ?? '');
+      const heading = anchor && !anchor.startsWith('^') ? noteLinkTarget(anchor) : '';
+      if (!name && !heading) return alias || path.replace(/^#\^?/, '');
+      const dest = heading ? `${name}#${heading}` : name;
+      if (dest === path) return whole;
+      const label = alias || (heading && !notePath.includes('/') ? '' : path);
+      return label ? `[[${dest}|${label}]]` : `[[${dest}]]`;
     },
   );
-
-  // Convert $$...$$ display math blocks to fenced code blocks.
-  text = text.replace(/\$\$\n([\s\S]*?)\n\$\$/g, '```\n$1\n```');
-
-  // Convert ==highlight== to **bold** (no Highlight extension in editor).
-  text = text.replace(/==([^=]+)==/g, '**$1**');
-
-  // Convert $inline math$ to `inline code` (no math renderer).
-  // Avoid matching $$ (display math) or $ in isolation.
-  text = text.replace(/(?<!\$)\$(?!\$)([^\n$]+?)\$(?!\$)/g, '`$1`');
-
-  // Collect footnote definitions [^N]: text - we'll append them at the end.
-  const footnoteDefs = new Map<string, string>();
-  text = text.replace(/^\[\^([^\]]+)\]:\s*(.+)$/gm, (_m, id: string, def: string) => {
-    footnoteDefs.set(id, def.trim());
-    return ''; // remove the definition line
-  });
-
-  // Convert footnote references [^N] to (N) inline.
-  text = text.replace(/\[\^([^\]]+)\]/g, '($1)');
-
-  // If there were footnote definitions, append them as a numbered section.
-  if (footnoteDefs.size > 0) {
-    const lines: string[] = ['\n---\n'];
-    let i = 1;
-    for (const [id, def] of footnoteDefs) {
-      lines.push(`${i}. (${id}) ${def}`);
-      i++;
-    }
-    text += lines.join('\n');
-  }
 
   // Restore inline code spans.
   text = text.replace(/\x00C(\d+)\x00/g, (_m, i: string) => codeSpans[Number(i)] ?? '');
@@ -234,9 +212,11 @@ function parseOneObsidian(
   const filenameTitle = filename
     .replace(/\.md$/i, '')
     .trim();
-  const title =
-    meta.title ||
-    (filenameTitle.toLowerCase() === 'untitled' ? '' : filenameTitle);
+  // An Obsidian note has no title field: the filename IS the name, so it is
+  // the right fallback here. The exception is the name Obsidian itself gives
+  // a note the user never named - "Untitled", then "Untitled 1" - which is a
+  // stand-in rather than a name. See `isUntitledStem`.
+  const title = meta.title || (isUntitledStem(filenameTitle) ? '' : filenameTitle);
 
   // Tags: frontmatter + inline #tags. The subfolder structure becomes
   // real folders in parseZip, not tags (that was the #178 bug).
@@ -253,7 +233,7 @@ function parseOneObsidian(
   const updatedAt = meta.updatedAt ?? meta.createdAt ?? fallback;
 
   // Convert Obsidian-specific syntax, then linkify bare URLs.
-  const processedBody = linkifyMarkdown(preprocessObsidianMarkdown(body.trim()));
+  const processedBody = linkifyMarkdown(detailsToFold(preprocessObsidianMarkdown(body.trim())));
 
   return {
     title,
@@ -335,7 +315,7 @@ async function parseZip(
   const notes: ImportedNote[] = [];
   for (let i = 0; i < mdFiles.length; i++) {
     const [rel, entry] = mdFiles[i]!;
-    const text = await entry.async('string');
+    const text = await zipEntryText(entry);
     const note = parseOneObsidian(text, rel, entry.date ?? null);
     const dir = dirOf(rel);
     if (dir) {

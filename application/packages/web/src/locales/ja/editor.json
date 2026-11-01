@@ -1,14 +1,16 @@
 {
   "placeholder": "書き始めましょう…",
+  "eventPlaceholder": "議題、住所、メモなどを追加しましょう…",
   "toolbar": {
     "bold": "太字",
+    "hideKeyboard": "キーボードを閉じる",
     "italic": "斜体",
     "underline": "下線",
     "heading": "見出し",
     "taskList": "タスクリスト",
     "bulletList": "箇条書き",
-    "linkMenu": "リンク",
-    "noteLinkMenu": "ノートリンク",
+    "addLink": "リンクを追加",
+    "noteLink": "別のノートへリンク([[ の入力でも可)",
     "numberedList": "番号付きリスト",
     "textColor": "文字色",
     "textColorApply": "文字色: {{color}}",
@@ -33,7 +35,14 @@
     "math": "数式",
     "blockMath": "ブロック数式",
     "align": "配置",
-    "font": "フォント"
+    "font": "フォント",
+    "pictureFromFiles": "ファイルから画像",
+    "date": "日付",
+    "dateTime": "日付と時刻",
+    "footnote": "脚注",
+    "spoiler": "ネタバレ",
+    "copyBox": "コピー用ボックス",
+    "customize": "ツールバーをカスタマイズ"
   },
   "align": {
     "left": "左揃え",
@@ -61,6 +70,8 @@
   "callout": {
     "pickerLabel": "コールアウトを挿入",
     "remove": "コールアウトを削除",
+    "collapse": "コールアウトを折りたたむ",
+    "expand": "コールアウトを展開",
     "types": {
       "info": "情報",
       "success": "成功",
@@ -73,7 +84,24 @@
       "bug": "バグ",
       "note": "メモ",
       "abstract": "要約",
-      "failure": "失敗"
+      "failure": "失敗",
+      "fold": "折りたたみ",
+      "idea": "アイデア",
+      "important": "重要",
+      "caution": "注意",
+      "todo": "ToDo",
+      "goal": "目標",
+      "decision": "決定",
+      "definition": "定義",
+      "seealso": "関連項目",
+      "box": "ボックス",
+      "panel": "パネル",
+      "update": "更新",
+      "time": "時間",
+      "steps": "手順",
+      "place": "場所",
+      "kanban": "カンバンボード",
+      "column": "列"
     }
   },
   "color": {
@@ -92,6 +120,7 @@
     }
   },
   "insertGroup": {
+    "format": "書式",
     "insert": "挿入",
     "blocks": "ブロック",
     "notation": "記法"
@@ -101,19 +130,59 @@
     "addRowBelow": "下に行を追加",
     "addColumnLeft": "左に列を追加",
     "addColumnRight": "右に列を追加",
+    "toggleHeaderRow": "見出し行を切り替え",
+    "equalColumnWidths": "列の幅をそろえる",
+    "resizeHint": "{{shift}} を押しながらドラッグでこの列だけを変更、{{alt}} で細かく調整",
     "deleteRow": "行を削除",
     "deleteColumn": "列を削除",
-    "deleteTable": "表を削除"
+    "deleteTable": "表を削除",
+    "insertFormula": "数式を挿入",
+    "formulaNoMatch": "一致する数式がありません",
+    "formula": {
+      "SUM": "値を合計",
+      "PRODUCT": "値を掛け合わせる",
+      "AVG": "値の平均",
+      "AVERAGE": "値の平均",
+      "MEDIAN": "真ん中の値",
+      "MIN": "最も小さい値",
+      "MAX": "最も大きい値",
+      "COUNT": "数値の個数",
+      "ABS": "符号を除いた値",
+      "SQRT": "平方根",
+      "SIGN": "値が正か負か",
+      "CEIL": "整数に切り上げ",
+      "FLOOR": "整数に切り捨て",
+      "ROUND": "整数に四捨五入",
+      "LOG": "対数",
+      "RAND": "ランダムな数値",
+      "PI": "円周率",
+      "E": "自然対数の底",
+      "TAU": "円周率の2倍",
+      "PHI": "黄金比"
+    }
   },
   "find": {
     "placeholder": "ノート内を検索",
     "label": "ノート内を検索",
-    "previous": "前の一致(Shift+Enter)",
-    "previousTitle": "前へ(Shift+Enter)",
-    "next": "次の一致(Enter)",
-    "nextTitle": "次へ(Enter)",
+    "previous": "前の一致",
+    "previousTitle": "前へ",
+    "next": "次の一致",
+    "nextTitle": "次へ",
     "close": "検索を閉じる",
-    "closeTitle": "閉じる(⌘F)"
+    "closeTitle": "閉じる",
+    "replacePlaceholder": "置換後の文字列",
+    "replaceLabel": "置換後の文字列",
+    "replace": "置換",
+    "replaceTitle": "この一致を置換",
+    "replaceAll": "すべて",
+    "replaceAllTitle": "すべての一致を置換",
+    "caseSensitive": "大文字と小文字を区別",
+    "caseSensitiveTitle": "大文字と小文字を区別",
+    "closeReplace": "検索と置換を閉じる",
+    "closeReplaceTitle": "閉じる",
+    "showReplace": "検索と置換",
+    "hideReplace": "置換を隠す",
+    "replacedCount_other": "{{count}}件を置換しました"
   },
   "outline": {
     "show": "アウトラインを表示",
@@ -121,10 +190,23 @@
     "title": "アウトライン",
     "ariaLabel": "ノートのアウトライン",
     "hide": "アウトラインを隠す",
-    "hideTitle": "アウトラインを隠す(Esc)"
+    "copyHeadingLink": "見出しへのリンクをコピー",
+    "copyNoteLink": "ノートリンクをコピー",
+    "copyHeadingShortcut": "見出しへのショートカットをコピー",
+    "copied": "コピーしました"
+  },
+  "bodyMenu": {
+    "cut": "切り取り",
+    "copyAsPlain": "プレーンテキストとしてコピー",
+    "copyAsMarkdown": "Markdownとしてコピー",
+    "sortAsc": "行を昇順に並び替え",
+    "sortDesc": "行を降順に並び替え"
   },
   "topRow": {
     "add": "先頭に行を追加"
+  },
+  "addLine": {
+    "add": "行を追加"
   },
   "link": {
     "popoverLabel": "リンクを追加",
@@ -139,8 +221,11 @@
     "textLabel": "リンクテキスト",
     "textPlaceholder": "任意。空欄の場合はURLを表示",
     "selectedTextHint": "選択中のテキストがリンクになります",
-    "editTextHint": "リンクテキストはエディタで編集してください",
-    "update": "更新"
+    "update": "更新",
+    "menuOpen": "リンクを開く",
+    "menuCopy": "リンクをコピー",
+    "menuEdit": "リンクを編集",
+    "menuRemove": "リンクを削除"
   },
   "audio": {
     "uploadingRecording": "録音をアップロード中...",
@@ -155,18 +240,121 @@
   "wordCount": {
     "words_other": "{{formatted}}語",
     "characters_other": "{{formatted}}文字",
-    "tooLargeToSync": "、同期には大きすぎる可能性があります。新しいノートに分割してください",
+    "tasksChecked_other": "{{formatted}}件中{{done}}件チェック済み",
+    "syncLimit": " · 同期の上限1 MBの{{share}}",
+    "overSyncLimit": " · 同期の上限1 MBを超えているため、このデバイスにのみ保存されます",
+    "split": "ノートを分割",
     "veryLong": "、非常に長いため、編集が重くなったりカクつくことがあります",
     "gettingLong": "、長くなってきました。遅いデバイスでは重くなることがあります",
     "largeTableWarning": "大きな表({{rows}}行)があるため、このノートは編集が重くなることがあります。分割を検討してください"
   },
   "noteLinkSuggestion": {
     "noMatches": "一致するノートがありません",
-    "create": "「{{query}}」を作成"
+    "create": "「{{query}}」を作成",
+    "headingsIn": "{{title}} の見出し",
+    "noHeadingMatches": "一致する見出しがありません"
+  },
+  "copyBox": {
+    "placeholder": "ワンクリックでコピーするテキスト"
+  },
+  "inlineCode": {
+    "copyHint": "{{key}}+クリックでコピー",
+    "copied": "コピーしました"
   },
   "codeBlock": {
     "copy": "コピー",
     "copied": "コピーしました",
-    "copyFailed": "失敗しました"
+    "copyFailed": "失敗しました",
+    "wrap": "長い行を折り返す",
+    "showAll_other": "{{count}}行すべて表示",
+    "showLess": "折りたたむ",
+    "plainText": "プレーンテキスト",
+    "language": "コードの言語: {{name}}",
+    "searchLanguages": "言語を検索",
+    "placeholder": "コードを入力するか貼り付けます。色を付けるには、上で言語を選びます。"
+  },
+  "math": {
+    "sourceLabel": "LaTeX ソース"
+  },
+  "noteLink": {
+    "open": "ノートを開く",
+    "remove": "リンクを削除",
+    "linkHeading": "見出しにリンク...",
+    "headingNotFound": "見出しが見つかりません",
+    "headingsLocked": "見出しを表示するには、このノートのロックを解除してください",
+    "noHeadings": "このノートには見出しがありません"
+  },
+  "footnote": {
+    "placeholder": "脚注のテキスト",
+    "back": "本文に戻る",
+    "unused": "本文で使われていません",
+    "remove": "脚注を削除",
+    "missing": "脚注のテキストがありません。クリックして追加します。",
+    "ariaRef": "脚注 {{n}}",
+    "ariaSection": "脚注"
+  },
+  "formatBar": {
+    "tryIt": "試してみましょう。ここでバーを並べ替えて、使い心地を確かめられます。",
+    "previewOnly": "プレビューのみです。Proにした時点で、このレイアウトが保存されます。",
+    "discard": "破棄",
+    "keepLayout": "このレイアウトを残す",
+    "hintDrag": "ドラッグで移動、クリックでオプションを開きます。",
+    "hintTap": "ボタンをタップしてオプションを開きます。",
+    "onBar": "バー",
+    "inMenu": "+ メニュー",
+    "inAttachMenu": "添付メニュー",
+    "attachMenuEmpty": "空なので、添付ボタンは表示されません。",
+    "menuEmpty": "メニューが空なので、+ ボタンは表示されません。",
+    "hidden": "非表示",
+    "hiddenNote": "ショートカットとMarkdownで引き続き使えます。",
+    "hiddenDrop": "ボタンをここにドロップすると非表示になります。",
+    "arrangeTitle": "ボタン",
+    "markdownViewNote": "Markdown表示には独自の固定ボタンセットがあります。",
+    "hiddenEmpty": "非表示のものはありません。",
+    "alwaysVisible": "常に表示",
+    "pinned": "パネルを開くため、バーに置くか非表示にします",
+    "optionsFor": "{{item}} のオプション",
+    "moveUp": "上へ移動",
+    "moveDown": "下へ移動",
+    "moveLeft": "左へ移動",
+    "moveRight": "右へ移動",
+    "home": {
+      "bar": "バー",
+      "menu": "+ メニュー",
+      "attachMenu": "添付メニュー",
+      "hidden": "非表示"
+    },
+    "opensPanel": "パネルを開きます",
+    "showsRecording": "録音を表示します",
+    "refuse": {
+      "menuNotAllowed": "{{item}} はバーに置くか非表示にできます。+ メニューには入れられません。",
+      "attachNotAllowed": "添付メニューに入れられるのは、画像、ファイル、録音のボタンだけです。",
+      "lastOnBar": "バーに少なくとも1つボタンを残してください。"
+    },
+    "items": {
+      "link": "リンク",
+      "notelink": "ノートリンク",
+      "audio": "録音",
+      "attachMenu": "添付",
+      "separator": "縦の区切り線",
+      "markdownView": "Markdownを表示"
+    },
+    "positionTitle": "バーの位置",
+    "positionNote": "エディタ内のツールバーの位置を選びます。",
+    "positionTop": "上",
+    "positionBottom": "下"
+  },
+  "kanban": {
+    "todo": "未着手",
+    "inProgress": "進行中",
+    "review": "レビュー",
+    "done": "完了",
+    "color": "色",
+    "columns": "列",
+    "columnCount_other": "{{count}}列",
+    "cardCount_other": "{{count}}枚のカード",
+    "addColumn": "列を追加",
+    "removeBoard": "ボードを削除",
+    "moveTo": "移動先"
   }
 }
