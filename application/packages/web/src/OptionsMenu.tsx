@@ -4,7 +4,7 @@
  * the same. The frame is a dropdown at its "..." button that stays on
  * screen, closes on a click outside, steps back from a second view on
  * Escape before it closes, and moves between rows with the arrow keys.
- * Spec: ops/docs/archive/ui-patterns.md section 15
+ * Spec: docs/internal/design/ui-patterns.md section 15
  */
 
 import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
@@ -122,7 +122,7 @@ const ROW_TEXT: Record<Tone, string> = {
 };
 
 /** Compact with a mouse, a full 44px finger target on a touch screen. */
-const ROW = 'w-full flex items-center gap-3 px-4 min-h-9 py-1.5 [@media(hover:none)]:min-h-11 text-start text-sm outline-none transition';
+const ROW = 'w-full flex items-center gap-3 px-4 min-h-9 py-1.5 [@media(hover:none)]:min-h-11 text-start text-body outline-none transition';
 
 /** One block between two hairlines. The dividers come from the parent. */
 export function Group({ children }: { children: React.ReactNode }) {
@@ -132,7 +132,7 @@ export function Group({ children }: { children: React.ReactNode }) {
 /** The quiet Pro marker: grey, no icon, never louder than the label. */
 export function ProBadge() {
   return (
-    <span className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-none bg-pn/10 text-pn-soft">
+    <span className="shrink-0 rounded-md px-1.5 py-0.5 text-meta font-medium leading-none bg-pn/10 text-pn-soft">
       Pro
     </span>
   );
@@ -205,11 +205,11 @@ export function ActionItem({
       <span className="flex-1 min-w-0 truncate">{label}</span>
       {pro && <ProBadge />}
       {value !== undefined && (
-        <span className="shrink min-w-0 max-w-[45%] text-[13px] text-pn-muted">
+        <span className="shrink min-w-0 max-w-[45%] text-compact text-pn-muted">
           {value}
         </span>
       )}
-      {chevron && <CaretRight size={14} aria-hidden="true" className="shrink-0 text-pn-muted" />}
+      {chevron && <CaretRight aria-hidden="true" className="shrink-0 text-pn-muted" />}
     </button>
   );
 }

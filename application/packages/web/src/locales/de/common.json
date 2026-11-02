@@ -26,14 +26,11 @@
     "noResults": "Keine Ergebnisse"
   },
   "deleteNote": {
-    "title": "Endgültig löschen",
     "confirm": "Endgültig löschen",
-    "untitled": "Ohne Titel",
     "body": "<highlight>„{{title}}“</highlight> endgültig löschen? Das kann nicht rückgängig gemacht werden."
   },
   "emptyTrash": {
     "title": "Papierkorb leeren",
-    "confirm": "Endgültig löschen",
     "body_one": "<highlight>{{count}} Notiz</highlight> endgültig löschen? Das kann nicht rückgängig gemacht werden.",
     "body_other": "<highlight>{{count}} Notizen</highlight> endgültig löschen? Das kann nicht rückgängig gemacht werden."
   },
@@ -61,7 +58,6 @@
   },
   "palette": {
     "label": "Befehle",
-    "open": "Befehle",
     "empty": "Kein passender Befehl",
     "groups": {
       "features": "Funktionen",
@@ -86,7 +82,7 @@
       "insertDate": "Datum einfügen",
       "insertDateTime": "Datum und Uhrzeit einfügen",
       "clearFilters": "Filter aufheben",
-      "moveToTrash": "Notiz in den Papierkorb",
+      "moveToTrash": "Notiz löschen",
       "closeTab": "Tab oder Notiz schließen",
       "nextTab": "Nächster Tab",
       "previousTab": "Vorheriger Tab",
@@ -109,10 +105,8 @@
     "move": "bewegen",
     "open": "öffnen",
     "openInTab": "im Tab öffnen",
-    "openLink": "Öffnen",
     "edit": "bearbeiten",
     "close": "schließen",
-    "tags": "Tags",
     "folders": "Ordner",
     "tagItems_one": "{{count}} Eintrag",
     "tagItems_other": "{{count}} Einträge",
@@ -175,17 +169,14 @@
     "downloadPublicKey": "Öffentlichen Schlüssel herunterladen",
     "downloadPrivateKey": "Privaten Schlüssel herunterladen",
     "downloadHint": "Verschiebe den heruntergeladenen Schlüssel nach ~/.ssh und führe chmod 600 darauf aus, sonst lehnt ssh ihn ab.",
+    "downloadHintDesktop": "PrivacyNotes speichert nicht in ~/.ssh, damit die Schlüssel dort sicher bleiben. Speichere den Schlüssel woanders, verschiebe ihn nach ~/.ssh und führe chmod 600 darauf aus, sonst lehnt ssh ihn ab.",
+    "downloadHintWindows": "PrivacyNotes speichert nicht in deinen .ssh-Ordner, damit die Schlüssel dort sicher bleiben. Speichere den Schlüssel woanders und verschiebe ihn nach %USERPROFILE%\\.ssh. Unter Windows ist kein chmod nötig.",
     "downloadFailed": "Die Schlüsseldatei konnte nicht gespeichert werden. Prüfe die Datei und versuch es noch einmal.",
     "passphrase": "Passphrase",
     "passphrasePlaceholder": "Passphrase des Schlüssels (falls vorhanden)",
     "show": "Anzeigen",
     "hide": "Verbergen",
-    "copyPassphrase": "Passphrase kopieren",
-    "notes": "Notizen",
-    "notesPlaceholder": "Weitere Notizen (optional)",
-    "requirePin": "PIN zum Anzeigen verlangen",
-    "whatDoesThisDo": "Was bewirkt das?",
-    "setUpPinFirst": "Richte zuerst eine PIN in den Sicherheitseinstellungen ein."
+    "copyPassphrase": "Passphrase kopieren"
   },
   "tagInput": {
     "placeholder": "Tags hinzufügen… mit Komma, # oder Enter trennen",
@@ -257,7 +248,6 @@
       "öffne leise den tresor",
       "lokal entschlüsselt. global ignoriert",
       "entschlüsseln, geht keinen was an",
-      "lokal angebauter klartext",
       "verwandle gedanken in unlesbaren brei",
       "das nächste verschlüsselte meisterwerk kommt",
       "schaffe ordnung im verschlüsselten chaos",
@@ -281,17 +271,14 @@
     "changesSome_other": "{{count}} dieser Notizen haben Änderungen, die nicht gesichert sind und verloren gehen würden."
   },
   "ninja": {
-    "recent": "Zuletzt",
     "topHit": "Bester Treffer",
     "trashEmpty": "Der Papierkorb ist leer",
     "allThemes": "Alle Designs",
     "features": {
       "stats": {
-        "label": "Statistiken",
         "detail": "Dein Schreiben, deine Serien und Tracker im Zeitverlauf"
       },
       "trackers": {
-        "label": "Tracker",
         "detail": "Stimmung, Gewohnheiten, Faktoren und Medikamente"
       },
       "medication": {
@@ -311,7 +298,6 @@
         "detail": "Ein starkes Passwort oder eine Passphrase, bereit zum Kopieren"
       },
       "themes": {
-        "label": "Designs",
         "detail": "Farbdesigns für hell und dunkel"
       }
     },
@@ -322,7 +308,6 @@
     "commands": {
       "syncResume": "Synchronisierung fortsetzen",
       "changelog": "Was ist neu",
-      "help": "Hilfe",
       "themesPage": "Community-Designs",
       "website": "PrivacyNotes-Website"
     },

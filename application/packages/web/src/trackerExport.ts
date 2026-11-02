@@ -131,7 +131,7 @@ export function trackerRows(
     const ids = [...HABIT_IDS.filter((id) => id in answers), ...Object.keys(answers).filter((k) => !(HABIT_IDS as readonly string[]).includes(k))];
     add('habits', ids
       .filter((id) => typeof answers[id] === 'boolean')
-      .map((id) => `${habitLabel(id, custom)} ${answers[id] ? t('habits.yes') : t('habits.no')}`)
+      .map((id) => `${habitLabel(id, custom)} ${answers[id] ? t('custom.yes') : t('custom.no')}`)
       .join(', '));
   }
 
@@ -193,5 +193,5 @@ export function trackerRows(
 
 /** The section heading. Reuses the tracker panel's own translated title. */
 export function trackerHeading(): string {
-  return i18n.t('trackers:config.title');
+  return i18n.t('notes:settings.trackersLabel');
 }

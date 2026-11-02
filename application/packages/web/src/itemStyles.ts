@@ -11,7 +11,7 @@
  * The validator keeps key kinds and register names it does not know for the
  * same reason, so a later version's additions survive this one.
  *
- * Spec: ops/docs/archive/folder-tag-icons.md (section 5)
+ * Spec: docs/internal/specs/folder-tag-icons.md (section 5)
  */
 import { subtreeIds, type FolderDef, type FolderTombstone } from './folders';
 import {
@@ -329,7 +329,7 @@ export interface ColorFilter {
  * Otherwise the first colored tag in the order its tag chips show, else its
  * folder's own color. A tag comes first because it is a choice about this
  * note; a folder is the default for everything in it.
- * Spec: ops/docs/archive/folder-tag-icons.md (section 4.4)
+ * Spec: docs/internal/specs/folder-tag-icons.md (section 4.4)
  */
 export function resolveItemColor(
   tags: readonly string[],
@@ -406,7 +406,7 @@ export type NoteColorChoice = NoteColorStyle | 'off';
 export const NOTE_COLOR_CHOICES: readonly NoteColorChoice[] = ['background', 'accent', 'off'];
 /** The `settings` namespace key of each button, for both places it shows. */
 export const NOTE_COLOR_LABEL: Record<NoteColorChoice, string> = {
-  background: 'appearance.noteColorsBackground',
+  background: 'settings:appearance.custom.seed.background',
   accent: 'appearance.noteColorsAccent',
   off: 'appearance.noteColorsOff',
 };
@@ -437,7 +437,7 @@ export interface NoteLook {
  * choice: it is one deliberate pick for one note, made so that note stands
  * out, while Accent and Off exist to quiet the colors a folder or tag spreads
  * over many notes at once.
- * Spec: ops/docs/archive/note-color-style.md (decision N2)
+ * Spec: docs/internal/specs/note-color-style.md (decision N2)
  */
 export function resolveNoteLook(
   noteId: string,

@@ -110,7 +110,7 @@ export function detectPlatform(): Platform {
     // the same build passed on iPhone. Touch points are the tell - no Mac
     // reports any, and this only runs inside a native build, so a desktop
     // browser on exotic hardware cannot reach it.
-    // Spec: ops/docs/gotchas.md (an iPad reports a Mac user agent)
+    // Spec: docs/contrib/gotchas.md (an iPad reports a Mac user agent)
     if (ua.includes('macintosh') && navigator.maxTouchPoints > 1) return 'ios';
     return 'desktop';
   }
@@ -123,7 +123,7 @@ export function detectPlatform(): Platform {
  * mic) is denied with no prompt. Linux *web* browsers are unaffected, so this
  * is scoped to the desktop (Tauri) build, not any Linux user.
  */
-// Spec: ops/docs/gotchas.md (Linux WebKitGTK getUserMedia is dead - camera + mic denied with no prompt)
+// Spec: docs/contrib/gotchas.md (Linux WebKitGTK getUserMedia is dead - camera + mic denied with no prompt)
 export function isLinuxNative(): boolean {
   return detectPlatform() === 'desktop' && detectDeviceOs() === 'Linux';
 }
@@ -365,7 +365,7 @@ export type RegisterDeviceArgs = {
    * Per-user fingerprint pepper, derived from the BIP-39 seed. Used to
    * hash the device fingerprint signals client-side before they reach
    * the server. Required as of v0.155.0.
-   * Spec: ops/docs/device-fingerprint-hash.md (four separate hashes keep server-side fuzzy matching working)
+   * Spec: docs/internal/specs/device-fingerprint-hash.md (four separate hashes keep server-side fuzzy matching working)
    */
   fpPepper: Uint8Array;
 };
@@ -387,7 +387,7 @@ export async function registerDevice(args: RegisterDeviceArgs): Promise<Register
     deviceId,
   );
 
-  // Spec: ops/docs/device-fingerprint-hash.md (phase 2: hashes only, no raw)
+  // Spec: docs/internal/specs/device-fingerprint-hash.md (phase 2: hashes only, no raw)
   const fingerprintHashes = hashFingerprint(collectFingerprint(), fpPepper);
 
   const { data, error } = await invokeFnWithRetry(supabase, 'register-device', {
@@ -729,7 +729,7 @@ export async function listDevices(supabase: SupabaseClient, pubkey: string): Pro
   if (isDemoMode()) return [];
   // RLS already scopes the read to the caller; the explicit owner gives the
   // planner an index condition on `devices(pubkey)` instead of a table scan.
-  // Spec: ops/docs/archive/supabase-performance-2026-09.md (Capacity check, 2026-10-19)
+  // Spec: docs/internal/specs/supabase-performance-2026-09.md (Capacity check, 2026-10-19)
   const { data, error } = await readWithRetry(() => supabase
     .from('devices')
     .select('device_id, device_name, platform, created_at, last_seen_at, revoked_at, device_group, app_version')
@@ -826,7 +826,7 @@ export class QuotaUnavailableError extends Error {
   }
 }
 
-// Spec: ops/docs/pro-features.md (Free: 50 MB combined, 10k notes; Pro: 500 MB combined, 10k notes)
+// Spec: docs/internal/pro-features.md (Free: 50 MB combined, 10k notes; Pro: 500 MB combined, 10k notes)
 const FALLBACK_FREE = { maxNotes: 10000, maxTotalBytes: 50 * 1000 * 1000, maxImageBytes: 50 * 1000 * 1000 };
 const FALLBACK_PRO = { maxNotes: 10000, maxTotalBytes: 500 * 1000 * 1000, maxImageBytes: 500 * 1000 * 1000 };
 
@@ -937,7 +937,7 @@ export async function fetchQuotaUsage(
  * request. The queue is drained by sweepBlobGC, so it only grows this far if
  * the sweep is failing; past the cap the excess blobs simply keep counting
  * until they are swept, which is the pre-0066 behaviour rather than a new
- * failure. Spec: ops/docs/design-decisions.md (deferred blob GC). */
+ * failure. Spec: docs/internal/design-decisions.md (deferred blob GC). */
 const PENDING_GC_RPC_MAX = 5000;
 
 /**
@@ -979,10 +979,23 @@ export async function recalculateQuota(supabase: SupabaseClient): Promise<boolea
  * Store, Google Play build). Desktop and the direct Android APK buy through
  * Paddle, where the entitlement follows the pubkey server-side - there is
  * nothing device-local to restore, so restore UI must not appear there.
- * Spec: ops/docs/plans/iap-restore-handoff.md (restore UI only appears on iOS or Play builds, not Paddle purchases)
+ * Spec: docs/internal/specs/iap-restore-handoff.md (restore UI only appears on iOS or Play builds, not Paddle purchases)
  */
 export function isNativeStoreBuild(): boolean {
   const platform = detectPlatform();
   if (platform === 'ios') return true;
   return platform === 'android' && import.meta.env.VITE_ANDROID_DIST !== 'direct';
+}
+
+/** The same test as `isMacPlatform` in notesViewUtils.ts, kept here so a
+ *  click rule does not pull the note-list utilities, and i18n behind them,
+ *  into the editor or the app shell. Asked per click rather than at import. */
+export function isMac(): boolean {
+  return typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+}
+
+/** Cmd on a Mac, Ctrl everywhere else. A Ctrl-click on a Mac is a right
+ *  click: it opens the link menu, and must never open the URL as well. */
+export function isOpenLinkModifier(event: { metaKey: boolean; ctrlKey: boolean }): boolean {
+  return isMac() ? event.metaKey : event.ctrlKey;
 }

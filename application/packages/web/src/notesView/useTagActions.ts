@@ -37,7 +37,7 @@ export function useTagActions({
   /** Every live item, whatever the space. */
   liveNotes: LocalNote[];
   /** The open space while Spaces is on: every tag write stays inside it.
-   *  Spec: ops/docs/plans/spaces.md (section 8) */
+   *  Spec: docs/internal/specs/spaces.md (section 8) */
   inScope: ((note: LocalNote) => boolean) | undefined;
   /** The folder a new item files into, so a note made in Work stays in Work. */
   folderForNewItem: () => string | null;

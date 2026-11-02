@@ -7,6 +7,7 @@ import { foldText } from './textFold';
 import { foldForMatch, textMatcher } from './textMatch';
 import { perfSpan } from './perf';
 import { contactSearchText, parseContactBody } from './contactBody';
+import { parseScene, sceneText } from './drawing/scene';
 import { isPublicField, loginExtrasOf } from './loginExtras';
 
 /**
@@ -19,7 +20,7 @@ import { isPublicField, loginExtrasOf } from './loginExtras';
 // through Intl.Segmenter word segmentation instead; leave everything else on the
 // exact default so Latin tokenization is unchanged. Used for both indexing and
 // querying (see below) so documents and queries segment identically.
-// Spec: ops/docs/i18n-cjk-plan.md (CJK tokenization)
+// Spec: docs/internal/specs/i18n-cjk-plan.md (CJK tokenization)
 const defaultTokenize = MiniSearch.getDefault('tokenize') as (
   text: string,
   fieldName?: string,
@@ -66,6 +67,11 @@ export function indexedBodyText(n: LocalNote): string {
   // "0176" finds "+49 176 ..."), its emails and its notes; never the uid,
   // the photo or the unmodelled extras.
   if (n.type === 'contact') return contactSearchText(parseContactBody(n.body));
+  // A drawing indexes the words of its text boxes, never the scene JSON.
+  if (n.type === 'drawing') {
+    const scene = parseScene(n.body);
+    return scene ? sceneText(scene) : '';
+  }
   // A type this build does not know is opaque: its body is neither indexed
   // nor kept for the find bar, so a field a newer pillar keeps private is
   // not searchable on a build that cannot read it.

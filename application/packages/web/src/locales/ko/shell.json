@@ -1,18 +1,14 @@
 {
   "pillars": {
-    "trash": "휴지통",
-    "bookmarks": "북마크",
-    "contacts": "연락처"
+    "trash": "휴지통"
   },
   "tasksList": {
-    "title": "할 일",
     "newTaskNote": "새 할 일 노트",
     "hideCompleted": "완료한 할 일 숨기기",
     "showCompleted": "완료한 할 일 표시",
     "searchPlaceholder": "할 일 검색…",
     "sortOptions": "정렬 옵션",
     "quickAddPlaceholder": "빠르게 할 일 추가",
-    "noMatches": "일치하는 항목이 없어요.",
     "itemsWithTasks": "할 일이 있는 항목",
     "allTasks": "모든 할 일",
     "tasksFromOtherItems": "다른 항목의 할 일",
@@ -29,45 +25,27 @@
     "seeLess": "접기"
   },
   "filesList": {
-    "title": "파일",
     "upload": "업로드",
     "selectedOf": "{{total}}개 중 {{selected}}개 선택됨",
-    "deselectAll": "전체 선택 해제",
-    "selectAll": "전체 선택",
-    "storage": "저장 공간",
     "perFile": "파일당",
     "free": "무료",
-    "upgradeToPro": "Pro로 업그레이드",
     "filterAll": "전체",
-    "filterImages": "이미지",
     "filterAudio": "오디오",
     "filterFiles": "파일",
-    "sortOptions": "정렬 옵션",
     "searchPlaceholder": "파일 검색…",
     "sortName": "이름",
     "showNotesWithAttachments": "다른 항목의 파일 표시",
-    "noMatches": "일치하는 항목이 없어요.",
     "pinProtected": "PIN 보호됨",
-    "readOnly": "읽기 전용",
     "noFilesYet": "아직 파일이 없어요.",
     "noDocuments": "문서가 없어요.",
     "noImages": "이미지가 없어요.",
     "noAudioFiles": "오디오 파일이 없어요.",
     "emptyTypesHint": "이미지, 문서, 오디오, 비디오, zip 파일. 파일당 최대 {{max}} MB.",
     "uploadFiles": "파일 업로드",
-    "menuDeselect": "선택 해제",
-    "menuSelect": "선택",
     "menuShow": "표시",
     "menuAllFiles": "모든 파일",
-    "menuImages": "이미지",
-    "menuAudio": "오디오",
     "menuDocuments": "문서",
-    "menuHideNoteAttachments": "다른 항목의 파일 숨기기",
-    "menuShowNoteAttachments": "다른 항목의 파일 표시",
-    "menuUnpin": "고정 해제",
-    "menuPin": "고정",
-    "menuRename": "이름 바꾸기",
-    "menuMoveToTrash": "휴지통으로 이동"
+    "menuHideNoteAttachments": "다른 항목의 파일 숨기기"
   },
   "vaultItem": {
     "badgeLogin": "로그인",
@@ -78,7 +56,6 @@
     "untitledKey": "제목 없는 키",
     "copied": "복사됨!",
     "copyField": "{{label}} 복사",
-    "hide": "숨기기",
     "reveal": "표시",
     "fieldUrl": "URL",
     "fieldUser": "아이디",
@@ -91,14 +68,11 @@
     "fieldLabel": "라벨",
     "fieldPublic": "공개 키",
     "fieldPrivate": "개인 키",
-    "fieldTotp": "2FA 코드",
     "totpInvalid": "잘못된 키",
     "copyCode": "코드 복사",
     "totpUnlockCta": "Pro로 2FA 코드 잠금 해제",
     "totpProNote": "키는 저장되고 동기화돼요. Pro가 필요한 건 코드뿐이에요.",
     "copyAll": "URL, 아이디, 비밀번호 복사",
-    "open": "열기",
-    "notesHeading": "메모",
     "fillOneField": "저장하려면 최소 한 칸은 입력하세요.",
     "expiryNeedsBoth": "유효기간은 월과 연도를 모두 입력하거나 둘 다 비워 두세요.",
     "customField": "사용자 지정 필드",
@@ -127,20 +101,18 @@
   },
   "tagsRail": {
     "showAllItems": "모든 항목 표시",
-    "changelog": "Changelog",
     "closeMenu": "메뉴 닫기",
-    "close": "닫기",
     "views": "콘텐츠",
     "resizeSplit": "콘텐츠와 태그 또는 폴더 크기 조절",
     "sidebarOptions": "사이드바 옵션",
     "showInSidebar": "사이드바에 표시",
     "allOptions": "전체 옵션",
     "showInAll": "전체에 표시",
-    "viewList": "목록",
-    "viewGrid": "그리드",
     "viewAuto": "자동",
     "allItemsTooltip": "모든 노트, 저널, 보관함 항목",
     "allItems": "전체",
+    "dashboard": "홈",
+    "dashboardTooltip": "위젯을 한눈에 보기",
     "pinnedTooltip": "고정된 항목",
     "pinned": "고정됨",
     "archive": "아카이브",
@@ -148,6 +120,7 @@
     "notes": "노트",
     "tasksTooltip": "모든 노트의 할 일",
     "tasks": "할 일",
+    "drawings": "드로잉",
     "vaultTooltip": "로그인, 신용카드, 키",
     "vault": "보관함",
     "filesTooltip": "모든 파일과 첨부 파일",
@@ -155,7 +128,6 @@
     "journalsTooltip": "매일의 저널 항목",
     "journals": "저널",
     "actionsForTag": "{{tag}} 태그 작업",
-    "renameTag": "이름 바꾸기",
     "removeFavorite": "즐겨찾기 해제",
     "markAsFavorite": "즐겨찾기",
     "deleteTag": "태그 삭제",
@@ -163,7 +135,6 @@
     "tags": "태그",
     "sortTags": "태그 정렬",
     "sort": "정렬",
-    "sortBy": "정렬 기준",
     "sortEntries": "항목 수",
     "sortName": "이름",
     "sortCustom": "사용자 지정",
@@ -174,11 +145,9 @@
     "createTag": "새 태그",
     "untagged": "태그 없음",
     "trashTooltip": "삭제된 항목",
-    "trash": "휴지통",
     "feedback": "피드백",
     "import": "가져오기",
     "downloads": "다운로드",
-    "help": "도움말",
     "rate": "평가",
     "markdown": "Markdown",
     "markdownTip": "암호화 안 함",
@@ -203,7 +172,6 @@
     "deleteConfirmBranchRoot": "\"{{folder}}\" 폴더와 하위 폴더가 삭제돼요. 안의 노트는 최상위로 이동해요. 노트는 삭제되지 않아요.",
     "deleteConfirmBranchNested": "\"{{folder}}\" 폴더와 하위 폴더가 삭제돼요. 안의 노트는 \"{{parent}}\" 아래로 이동해요. 노트는 삭제되지 않아요.",
     "deleteSubfolders_other": "하위 폴더 {{count}}개도 함께 삭제",
-    "moveTo": "폴더로 이동",
     "searchPlaceholder": "폴더 검색",
     "sortFolders": "폴더 정렬",
     "chipUnfiled": "폴더",
@@ -224,7 +192,6 @@
     "seedTeam": "팀"
   },
   "collapsedSidebar": {
-    "newNote": "새 노트",
     "expandSidebar": "사이드바 펼치기"
   },
   "mobileHeader": {
@@ -239,26 +206,14 @@
     "colorFromTag": "태그에서: #{{name}}",
     "colorOwnHint": "여기서 고른 색은 이 노트의 배경을 채워요. <setting>폴더와 태그 색상</setting>으로는 바뀌지 않아요.",
     "details": "세부 정보",
-    "readOnly": "읽기 전용",
     "readOnlyDescription": "다시 끌 때까지 편집할 수 없어요.",
     "protect": "보호",
     "convertTo": "다음으로 전환",
-    "typeNote": "노트",
     "typeJournal": "저널",
-    "typeTask": "할 일",
-    "unpin": "고정 해제",
-    "pin": "고정",
-    "archive": "아카이브",
-    "unarchive": "아카이브 해제",
     "burn": "Burn",
     "share": "공유",
     "trash": "휴지통",
-    "duplicate": "복제",
-    "restore": "복원",
-    "deleteForever": "영구 삭제",
-    "moveToFolder": "폴더로 이동",
     "noteHistory": "히스토리",
-    "findReplace": "찾기 및 바꾸기",
     "uncheckAllTasks": "모든 항목 체크 해제",
     "deleteCheckedTasks": "체크된 항목 삭제",
     "sortTasksByStatus": "상태별로 항목 정렬",
@@ -274,27 +229,17 @@
     "schedule": "날짜 및 시간",
     "ends": "종료",
     "sameDay": "같은 날",
-    "allDay": "종일",
     "starts": "시작",
     "endsAt": "종료 시간",
     "noEnd": "없음",
     "removeFromCalendar": "캘린더에서 제거",
     "makeEvent": "반복하려면 <b>일정</b>으로 전환하세요",
-    "typeEvent": "일정",
     "repeatRemoved": "반복이 제거돼요"
   },
   "selectionToolbar": {
-    "exitSelectionTooltip": "선택 종료",
     "exitSelection": "선택 종료",
-    "unpin": "고정 해제",
-    "pin": "고정",
-    "archive": "아카이브",
-    "unarchive": "아카이브 해제",
     "tag": "태그",
     "export": "내보내기",
-    "delete": "삭제",
-    "restore": "복원",
-    "deleteForever": "영구 삭제",
     "more": "추가 작업",
     "addTagPlaceholder": "태그 추가...",
     "noTagsFound": "태그를 찾을 수 없어요",
@@ -317,6 +262,7 @@
     "showTags": "폴더 및 태그 표시",
     "showCalendar": "캘린더 표시",
     "showCheckIn": "체크인 카드 표시",
+    "showMedication": "복약 표시",
     "showWorkItems": "<b>업무</b> 항목 표시",
     "showPersonalItems": "<b>개인</b> 항목 표시",
     "other": "기타",
@@ -339,7 +285,6 @@
     "moodCalendar": "캘린더에 기분 표시"
   },
   "backfillPopover": {
-    "calendarLabel": "저널 캘린더",
     "today": "오늘",
     "chooseEntry": "{{date}}의 항목"
   },
@@ -359,6 +304,7 @@
     "newNote": "새 노트",
     "newTask": "새 할 일",
     "newKanban": "새 칸반 보드",
+    "newDrawing": "새 드로잉",
     "newLogin": "새 로그인",
     "newJournal": "새 저널",
     "newFile": "새 파일",
@@ -383,32 +329,24 @@
     "duplicate": "복제",
     "moveToFolder": "폴더로 이동",
     "exportAsMarkdown": "Markdown으로 내보내기",
-    "shareBurnAfterReading": "공유 & Burn After Reading",
     "exportAsHtml": "HTML로 내보내기",
-    "printSaveAsPdf": "인쇄 / PDF로 저장",
-    "moveToTrash": "휴지통으로 이동",
-    "newBookmark": "새 북마크",
     "newContact": "새 연락처",
-    "openBookmark": "열기",
     "copyBookmarkUrl": "URL 복사",
     "editBookmark": "북마크 편집",
     "saveAsNote": "노트로 저장",
-    "openClippedNote": "노트 열기",
     "openInTab": "탭에서 열기",
     "openInTabHint": "{{key}}+클릭",
+    "openInTabHintMiddle": "휠 클릭",
     "closeTab": "탭 닫기",
     "closeOtherTabs": "다른 탭 닫기",
     "closeAllTabs": "모든 탭 닫기",
     "pinTab": "탭 고정",
     "unpinTab": "탭 고정 해제",
-    "newEvent": "새 일정",
-    "quickAdd": "빠른 추가"
+    "newEvent": "새 일정"
   },
   "demoBanner": {
     "title": "부담 없이 사용해 보세요",
-    "description": "여기서는 아무것도 저장되지 않아요. 나만의 암호화된 노트를 무료로 만들어 보세요.",
-    "cta": "계정 만들기",
-    "dismiss": "닫기"
+    "description": "여기서는 아무것도 저장되지 않아요. 나만의 암호화된 노트를 무료로 만들어 보세요."
   },
   "markdown": {
     "title": "Markdown",
@@ -446,20 +384,17 @@
     "fileCount_other": "파일 {{count}}개",
     "railFolders": "Markdown 폴더",
     "railTags": "Markdown 태그",
-    "allFiles": "모든 파일",
     "modeRich": "서식",
     "modeSource": "Markdown",
     "reopenPrompt": "새로고침하고 나면 브라우저가 권한을 다시 물어봐요. 폴더는 기억해 두니까 한 번만 누르면 돼요.",
     "reopenFolder": "{{name}} 다시 열기",
     "new": "새로 만들기",
-    "delete": "삭제",
     "saveToNotes": "내 노트에 저장",
     "createFailed": "파일을 만들지 못했어요.",
     "deleteFailed": "파일을 휴지통으로 옮기지 못했어요.",
     "importedToast": "\"{{title}}\" 파일을 암호화된 노트에 저장했어요. 원본 파일은 그대로예요.",
     "deleteTitle": "폴더 휴지통으로 옮길까요?",
     "deleteBody": "\"{{name}}\" 파일은 Markdown 폴더 안의 .trash 폴더로 옮겨져요. 마음이 바뀌면 파일 관리자에서 되돌리면 돼요.",
-    "deleteConfirm": "휴지통으로 이동",
     "explainTitle": "내 Markdown 폴더",
     "explainDone": "알겠어요",
     "bannerTitle": "고급 Markdown 에디터",
@@ -468,7 +403,6 @@
     "explainIntro": ".md와 .txt 파일이 든 폴더를 고르세요. 하위 폴더는 저절로 나타나고, 수정은 그 자리에 저장되고, 아무것도 변환되지 않아요",
     "chipPreview": "실시간 미리보기",
     "chipTasks": "할 일",
-    "chipTags": "태그",
     "chipTables": "표",
     "useAgent": "AI 에이전트에게 내 노트 접근 권한 주기",
     "useObsidian": "Obsidian이나 Logseq에서도 같은 파일",
@@ -496,7 +430,6 @@
     "assocWorking": "시스템에 물어보는 중…",
     "copyPath": "경로 복사",
     "selectedCount": "{{total}}개 중 {{selected}}개 선택됨",
-    "selectAll": "전체 선택",
     "exitSelection": "선택 종료",
     "deleteManyTitle_other": "파일 {{count}}개를 폴더 휴지통으로 옮길까요?",
     "deleteManyBody": "Markdown 폴더 안의 .trash 폴더로 옮겨져요. 마음이 바뀌면 파일 관리자에서 되돌리면 돼요.",
@@ -517,15 +450,11 @@
   "bookmarks": {
     "newBookmark": "새 북마크",
     "searchPlaceholder": "북마크 검색…",
-    "sortOptions": "정렬 옵션",
     "quickAddPlaceholder": "링크를 붙여넣거나 입력하세요…",
     "urlLabel": "북마크(URL)",
     "urlInvalid": "example.com 또는 https://example.com/page 같은 웹 주소를 입력하세요.",
     "urlDuplicate": "다른 북마크가 이미 이 URL을 쓰고 있어서 변경 사항이 저장되지 않았어요.",
-    "openAction": "열기",
     "copiedUrl": "링크를 복사했어요",
-    "moveToTrash": "휴지통으로 이동",
-    "rowMenu": "추가 작업",
     "emptyNone": "아직 북마크가 없어요.",
     "emptyTitle": "간직할 만한 사이트를 저장하세요",
     "emptyAdd": "북마크 추가",
@@ -539,11 +468,9 @@
     "new": "추가"
   },
   "contacts": {
-    "new": "새로 만들기",
     "searchPlaceholder": "연락처 검색…",
-    "sortOptions": "정렬 옵션",
     "emptyNone": "아직 연락처가 없어요.",
-    "emptyTitle": "나만 읽을 수 있는 주소록",
+    "emptyTitle": "기기에서 암호화되는 주소록",
     "emptyAdd": "연락처 추가",
     "emptyImport": "연락처 가져오기",
     "noMatches": "일치하는 연락처가 없어요.",
@@ -562,15 +489,12 @@
     "company": "회사",
     "department": "부서",
     "jobTitle": "직함",
-    "groupName": "이름",
     "groupPhone": "전화",
     "groupEmail": "이메일",
     "groupAddress": "주소",
     "groupWebsite": "웹사이트",
-    "groupProfile": "프로필",
     "groupDates": "날짜",
     "groupRelated": "관계",
-    "groupNote": "메모",
     "addPhone": "전화 추가",
     "addEmail": "이메일 추가",
     "addWebsite": "웹사이트 추가",
@@ -585,7 +509,6 @@
     "notePlaceholder": "이 사람에 대한 메모",
     "labelNone": "라벨",
     "labelCustom": "사용자 지정 라벨…",
-    "removeRow": "제거",
     "call": "전화",
     "message": "메시지",
     "sendEmail": "이메일 보내기",
@@ -605,15 +528,8 @@
     "menuPersonal": "개인",
     "menuName": "이름",
     "menuText": "텍스트",
-    "itemAddress": "주소",
-    "itemWebsite": "웹사이트",
-    "itemProfile": "프로필",
-    "itemCompany": "회사",
-    "itemJobTitle": "직함",
-    "itemBirthday": "생일",
     "itemDate": "날짜",
     "itemRelated": "관계된 사람",
-    "itemNickname": "별명",
     "itemNameParts": "중간 이름, 접두어, 접미어",
     "itemPhonetic": "발음 이름",
     "itemNote": "메모",
@@ -740,8 +656,10 @@
       "note": "노트",
       "task": "할 일 목록",
       "journal": "저널 항목",
-      "contact": "생일"
+      "contact": "생일과 날짜"
     },
+    "birthdays": "생일",
+    "contactDate": "{{name}}: {{label}}",
     "dragEnd": "드래그해서 종료일 변경",
     "previousDay": "이전 날",
     "nextDay": "다음 날",
@@ -819,7 +737,6 @@
     "onDayAt": "당일 {{time}}",
     "daysBeforeAt_other": "{{count}}일 전 {{time}}",
     "custom": "사용자 지정",
-    "add": "추가",
     "max": "알림은 최대 5개까지예요.",
     "units": {
       "minutes": "분",
@@ -831,11 +748,9 @@
     "remove": "{{alert}} 제거",
     "reminder": "미리 알림",
     "medication": "복약 미리 알림",
-    "open": "열기",
     "snooze": "10분 후 다시 알림",
     "offOnPhone": "이 휴대폰에서 미리 알림이 꺼져 있어요",
-    "turnOn": "켜기",
-    "openSettings": "설정 열기"
+    "turnOn": "켜기"
   },
   "quickAdd": {
     "group": "만들기",
@@ -846,6 +761,14 @@
     "appendHintDetail": ">>를 입력한 다음 이름의 앞부분을 입력하세요",
     "appendNone": "아직 추가할 할 일 목록이나 노트가 없어요",
     "appendNoneDetail": ">> 다음에 이름을 입력하면 그 이름으로 할 일 목록을 만들어요",
+    "cannotAdd": "{{title}}에 추가할 수 없어요",
+    "blocked": {
+      "trash": "휴지통에 있어요.",
+      "pin": "PIN으로 잠겨 있어요. 열어서 추가하세요.",
+      "readOnly": "읽기 전용이에요.",
+      "board": "칸반 보드예요. 보드에서 카드를 추가하세요.",
+      "archived": "아카이브된 항목이에요. 아카이브 해제한 뒤 추가하세요."
+    },
     "linkGroup": "이 링크 저장",
     "linkDetail": {
       "bookmark": "주소를 저장해요. 이름은 다음에 정해요.",
@@ -863,6 +786,7 @@
       "task": "새 할 일 목록",
       "journal": "새 저널 항목",
       "kanban": "새 칸반 보드",
+      "drawing": "새 드로잉",
       "login": "새 로그인 항목",
       "file": "파일 업로드",
       "contact": "새 연락처",
@@ -895,8 +819,8 @@
       },
       "length": {
         "label": "길이",
-        "examples": "총 30분 · 총 3일 · 금요일 ~ 일요일",
-        "insert": "총 1시간"
+        "examples": "15:00 총 30분 · 총 3일 · 금요일 ~ 일요일",
+        "insert": "15:00 총 1시간"
       },
       "repeat": {
         "label": "반복",
@@ -942,17 +866,14 @@
     "backToToday": "오늘로 돌아가기",
     "options": "체크인 옵션",
     "skipToday": "오늘 건너뛰기",
-    "hide": "이 카드 숨기기",
+    "hide": "숨기기",
     "change": "기분 바꾸기",
     "saved": "저장됨",
     "chooseTrackers": "트래커 고르기",
-    "settings": "체크인 설정",
     "skipped": "오늘은 건너뛰었어요.",
     "startOver": "처음부터 다시",
     "cleared": "체크인을 지웠어요.",
     "hidden": "카드를 숨겼어요. 목록 설정의 '체크인 카드 표시'에서 다시 켤 수 있어요.",
-    "undo": "실행 취소",
-    "done": "완료",
     "write": "오늘에 대해 쓰기",
     "writeOn": "{{date}}에 대해 쓰기",
     "streak": "{{n}}일 연속",
@@ -965,19 +886,25 @@
     "hiddenCount_other": "체크인 {{count}}개가 숨겨져 있어요.",
     "showThem": "표시"
   },
+  "medicationCard": {
+    "title": "복약 기록",
+    "options": "복약 옵션",
+    "edit": "오늘의 복약 변경",
+    "hidden": "카드를 숨겼어요. 목록 설정이나 설정 > 트래커 > 복약에서 다시 켤 수 있어요."
+  },
   "clipper": {
-    "saveAsNote": "노트로 저장",
     "saving": "노트로 저장 중…",
     "stepPage": "페이지 다운로드 중",
     "stepPictures": "이미지 저장 중, {{total}}개 중 {{done}}개",
-    "openNote": "노트 열기",
     "alreadySaved": "이 페이지는 이미 노트로 저장되어 있어요({{date}}).",
     "savedOn": "{{date}}에 노트로 저장됨",
-    "windowTitle": "페이지 스크랩",
     "addressLabel": "웹 주소",
     "addressPlaceholder": "링크를 붙여넣으세요…",
     "savePictures": "이미지 저장",
     "savePicturesHint": "이미지를 최대 20개까지 노트와 함께 보관해요. 저장 공간에 포함돼요.",
+    "extensionTipTitle": "브라우저에서 스크랩하면 결과가 더 좋아요",
+    "extensionTip": "브라우저 확장 프로그램은 보이는 그대로 페이지를 저장하고, 로그인해야 볼 수 있는 페이지도 저장해요.",
+    "extensionTipSetUp": "확장 프로그램 설정",
     "downloading": "페이지 다운로드 중…",
     "downloadingPictures": "이미지 다운로드 중, {{total}}개 중 {{done}}개",
     "picturesLine_other": "이미지 {{count}}개 · {{size}}, 노트와 함께 저장됨",
@@ -1007,5 +934,164 @@
     "until": "{{day}}까지",
     "noAlert": "알림 없음",
     "endsLater": "다른 날에 종료"
+  },
+  "apps": {
+    "railLabel": "확장 프로그램",
+    "title": "브라우저 확장 프로그램",
+    "subtitle": "Chrome, Firefox, Edge에서 쓰는 웹 클리퍼이자 비밀번호 관리자예요. 확장 프로그램은 노트를 여는 키를 절대 갖지 않아요.",
+    "stepInstall": "확장 프로그램 설치",
+    "stepFeatures": "할 수 있는 일 선택",
+    "stepConnect": "연결",
+    "makeCode": "코드 만들기",
+    "connectHint": "일회용 코드를 만들어 확장 프로그램에 붙여넣으세요.",
+    "thisBrowser": "이 브라우저",
+    "otherApps": "데스크톱 앱과 휴대폰 앱:",
+    "desktopAll": "모든 다운로드",
+    "extensionComputersOnly": "확장 프로그램은 컴퓨터의 Chrome, Firefox, Edge용이에요.",
+    "demoSignUp": "브라우저를 연결하려면 가입하세요"
+  },
+  "extensionConnect": {
+    "clips": "웹 클리퍼",
+    "clipsHint": "웹사이트를 노트로 저장해요.",
+    "loginsHint": "지금 있는 사이트의 로그인 항목, 카드, SSH 키, 북마크를 복사만 할 수 있어요. 별도의 PIN이나 패스코드로 잠겨요.",
+    "pickOne": "하나 이상 켜세요.",
+    "codeLabel": "확장 프로그램용 코드",
+    "oneUse": "10분 동안 한 번만 쓸 수 있어요.",
+    "usedBy": "{{name}}에서 이 코드를 사용해 연결되었어요. 본인이 아니라면 아래에서 제거하세요.",
+    "newCode": "새 코드",
+    "tooManyCodes": "대기 중인 코드가 너무 많아요. 그중 하나를 쓰거나 10분 기다리세요.",
+    "tooManyExtensions": "이 계정에는 최대치인 10개의 브라우저가 연결되어 있어요. 먼저 하나를 제거하세요.",
+    "keyElsewhere": "로그인 항목 키가 다른 기기에 있어요. 그 기기에서 PrivacyNotes를 열어 동기화한 뒤 다시 시도하세요.",
+    "failed": "코드를 만들지 못했어요. 인터넷 연결을 확인하고 다시 시도하세요."
+  },
+  "dashboard": {
+    "taskReadOnly": "이 노트는 읽기 전용이에요. 할 일을 체크하려면 노트 옵션에서 읽기 전용을 꺼 주세요.",
+    "addWidget": "위젯 추가",
+    "catalogTitle": "위젯 추가",
+    "layouts": "레이아웃",
+    "layoutChanged": "레이아웃을 바꿨어요",
+    "full": "홈이 가득 찼어요. 먼저 위젯을 하나 제거하세요.",
+    "added": "홈에 추가했어요",
+    "removed": "홈에서 제거했어요",
+    "showOnHome": "홈에 표시",
+    "removeFromHome": "홈에서 제거",
+    "resize": "{{name}} 크기 조절",
+    "narrower": "더 좁게",
+    "taller": "더 높게",
+    "shorter": "더 낮게",
+    "moveEarlier": "앞으로 이동",
+    "moveLater": "뒤로 이동",
+    "chooseNote": "노트 선택",
+    "chooseTag": "태그 선택",
+    "chooseFolder": "폴더 선택",
+    "chooseTracker": "트래커 선택",
+    "choose": "선택",
+    "gone": "더 이상 없어요",
+    "otherSpace": "다른 공간에 있어요",
+    "proLocked": "Pro 기능",
+    "noneToChoose": "아직 선택할 항목이 없어요",
+    "headerEvents_other": "오늘 일정 {{formatted}}개",
+    "headerTasks_other": "남은 할 일 {{formatted}}개",
+    "startToday": "오늘 항목 시작",
+    "groups": {
+      "keep": "보관하는 것들"
+    },
+    "layout": {
+      "everyday": "일상",
+      "planner": "플래너",
+      "writer": "작가"
+    },
+    "w": {
+      "checkIn": {
+        "name": "체크인",
+        "help": "오늘의 기분과 트래커"
+      },
+      "calendar": {
+        "help": "항목과 일정이 점으로 표시된 이번 달"
+      },
+      "upcoming": {
+        "name": "다가오는 일정",
+        "help": "오늘과 앞으로 7일"
+      },
+      "today": {
+        "name": "오늘 항목",
+        "help": "오늘의 저널 항목, 또는 새로 시작하기"
+      },
+      "tasks": {
+        "name": "남은 할 일",
+        "help": "노트에서 체크하지 않은 할 일"
+      },
+      "recent": {
+        "name": "최근 편집",
+        "help": "마지막으로 작업한 항목"
+      },
+      "pinned": {
+        "help": "고정한 항목"
+      },
+      "note": {
+        "name": "노트 하나",
+        "help": "직접 고른 노트 하나를 홈에 표시"
+      },
+      "tag": {
+        "name": "태그 하나",
+        "help": "한 태그의 최신 항목"
+      },
+      "folder": {
+        "name": "폴더 하나",
+        "help": "한 폴더의 최신 항목"
+      },
+      "onThisDay": {
+        "name": "이날의 기록",
+        "help": "지난 몇 년간 같은 날의 저널 항목"
+      },
+      "week": {
+        "help": "단어 수, 활동한 날, 항목, 체크인"
+      },
+      "streak": {
+        "help": "연속으로 글을 쓴 날"
+      },
+      "checkInStreak": {
+        "help": "연속으로 체크인한 날"
+      },
+      "rhythm": {
+        "name": "나의 리듬",
+        "help": "26주간의 글쓰기와 기분"
+      },
+      "milestone": {
+        "name": "다음 마일스톤",
+        "help": "다음 마일스톤까지 얼마나 남았는지"
+      },
+      "tracker": {
+        "name": "트래커 하나",
+        "help": "트래커 하나의 수치와 기록한 날"
+      },
+      "weekRecap": {
+        "help": "카드 한 장에 담은 한 주"
+      },
+      "files": {
+        "name": "최근 파일",
+        "help": "가장 최근의 이미지와 파일"
+      },
+      "bookmarks": {
+        "help": "가장 최근의 북마크"
+      },
+      "birthdays": {
+        "help": "앞으로 30일 안의 생일"
+      }
+    },
+    "empty": {
+      "upcoming": "앞으로 7일 동안 일정이 없어요",
+      "tasks": "남은 할 일이 없어요",
+      "recent": "아직 아무것도 없어요",
+      "pinned": "아직 고정한 항목이 없어요",
+      "tag": "이 태그가 붙은 항목이 없어요",
+      "folder": "이 폴더가 비어 있어요",
+      "onThisDay": "지난 몇 년간 이날의 항목이 없어요",
+      "files": "아직 파일이 없어요",
+      "bookmarks": "아직 북마크가 없어요",
+      "birthdays": "앞으로 30일 안에 생일이 없어요",
+      "tracker": "아직 기록이 없어요",
+      "milestone": "모든 마일스톤을 달성했어요"
+    }
   }
 }

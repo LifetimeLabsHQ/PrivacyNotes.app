@@ -13,7 +13,7 @@ import { ArrowUp, ArrowClockwise } from './icons';
  * .deb): the caller passes it when the running build is below the release
  * floor, which swaps the title and tints the toast amber. It only changes how
  * the toast LOOKS - whether a dismiss button exists is decided by the caller
- * passing onDismiss or not. Spec: ops/docs/android-update-check.md (a missing or unreachable policy must fail open to optional).
+ * passing onDismiss or not. Spec: docs/internal/android-update-check.md (a missing or unreachable policy must fail open to optional).
  */
 export function UpdateToast({
   version,
@@ -38,7 +38,7 @@ export function UpdateToast({
   required?: boolean;
   sizeBytes?: number;
   /** The calendar reminder's variant: its own title, glyph and meta line,
-   *  and Snooze beside Open. Spec: ops/docs/archive/calendar-pillar-spec.md (step 7) */
+   *  and Snooze beside Open. Spec: docs/internal/specs/calendar-pillar-spec.md (step 7) */
   title?: string;
   icon?: ReactNode;
   meta?: string;
@@ -80,11 +80,11 @@ export function UpdateToast({
           )}
         </div>
         <div className="flex-1 min-w-0 leading-tight">
-          <div className="text-sm font-medium text-pn">
+          <div className="text-body font-medium text-pn">
             {title ?? t(required ? 'updateToast.required' : 'updateToast.available')}
           </div>
           {hasMeta && (
-            <div className="text-xs text-pn-muted mt-0.5">
+            <div className="text-small text-pn-muted mt-0.5">
               {meta}
               {version && `v${version}`}
               {size && (version ? ` · ${size}` : size)}
@@ -107,7 +107,7 @@ export function UpdateToast({
           <button
             type="button"
             onClick={secondary.onAction}
-            className="shrink-0 px-2.5 py-1.5 rounded-lg border border-divider text-sm font-medium text-pn hover:bg-pn/5 transition"
+            className="shrink-0 px-2.5 py-1.5 rounded-lg border border-divider text-body font-medium text-pn hover:bg-pn/5 transition"
           >
             {secondary.label}
           </button>
@@ -115,7 +115,7 @@ export function UpdateToast({
         <button
           type="button"
           onClick={onAction}
-          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-fill text-white text-sm font-medium hover:bg-accent-fill-hover transition"
+          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-fill text-white text-body font-medium hover:bg-accent-fill-hover transition"
         >
           {!icon && <ArrowClockwise className="w-3.5 h-3.5" aria-hidden="true" />}
           {actionLabel}
@@ -125,7 +125,7 @@ export function UpdateToast({
             type="button"
             onClick={onDismiss}
             aria-label={t('updateToast.dismiss')}
-            className="shrink-0 text-pn-muted hover:text-pn px-1 text-lg leading-none -me-0.5"
+            className="shrink-0 text-pn-muted hover:text-pn px-1 text-heading leading-none -me-0.5"
           >
             ×
           </button>

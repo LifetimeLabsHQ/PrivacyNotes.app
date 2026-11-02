@@ -9,6 +9,8 @@ import { noteFaviconDomain, typeGlyph } from '../NoteRow';
 import { Favicon } from '../VaultItem';
 import { OverflowTip } from '../OverflowTip';
 import { HoverLabel } from '../HoverLabel';
+import { isItemDrag, readItemDrag } from '../itemDrag';
+import { DRAG_SOURCE, DropLine, halfOf, nearestRow, usePointerReorder } from '../ui';
 
 /** The width of a pinned tab, which is its icon alone (`w-10` on the tab). */
 const PINNED_WIDTH = 40;
@@ -21,7 +23,7 @@ const PINNED_WIDTH = 40;
  * out of view and opens a list of them. In zen mode the strip is quiet
  * (titles only, on the editor surface, the active tab marked by its text and a
  * thin underline), with the same widths, count and list: only the look changes.
- * Spec: ops/docs/archive/note-tabs.md (section 3)
+ * Spec: docs/internal/specs/note-tabs.md (section 3)
  */
 export default function TabStrip({
   tabs,
@@ -35,6 +37,7 @@ export default function TabStrip({
   onCloseAll,
   onTogglePin,
   onMove,
+  onOpenItems,
   onContextMenu,
   zen = false,
 }: {
@@ -50,6 +53,10 @@ export default function TabStrip({
   onCloseAll: () => void;
   onTogglePin: (id: string) => void;
   onMove: (id: string, beforeId: string | null) => void;
+  /** List items dropped on the strip: each opens as a tab before `beforeId`
+   *  (null: at the end). The trackpad's way to open a tab where Alt-click is
+   *  taken (#625), as a link dragged onto a browser's tab bar. */
+  onOpenItems: (ids: string[], beforeId: string | null) => void;
   onContextMenu: (e: React.MouseEvent, items: ContextMenuItem[]) => void;
   /** The zen look: no icons, pin marks, dividers, tints or raised card. */
   zen?: boolean;
@@ -59,24 +66,66 @@ export default function TabStrip({
   const pinnedRef = useRef<HTMLDivElement | null>(null);
   // Pinned tabs come first in `tabs`, so they are its first `pinnedCount`.
   const pinnedCount = tabs.filter((n) => pinnedIds.has(n.id)).length;
-  const [dragId, setDragId] = useState<string | null>(null);
-  /** Where the dragged tab would land: beside which tab, on which side. The
-   *  marker is drawn on that edge so the drop is visible before it happens. */
-  const [dropAt, setDropAt] = useState<{ id: string; side: 'before' | 'after' } | null>(null);
-  const endDrag = () => { setDragId(null); setDropAt(null); };
-  const drop = () => {
-    if (!dragId || !dropAt) { endDrag(); return; }
-    const at = tabs.findIndex((n) => n.id === dropAt.id);
-    const beforeId = dropAt.side === 'before' ? dropAt.id : (tabs[at + 1]?.id ?? null);
-    if (beforeId !== dragId) onMove(dragId, beforeId);
-    endDrag();
+  type Slot = { id: string; side: 'before' | 'after' };
+  /** The tab a slot puts the dragged one in front of; null is the end. */
+  const beforeIdOf = (slot: Slot | null): string | null => {
+    if (!slot) return null;
+    const at = tabs.findIndex((n) => n.id === slot.id);
+    return slot.side === 'before' ? slot.id : (tabs[at + 1]?.id ?? null);
   };
+  /**
+   * Where a point over the strip lands. A tab never crosses the pinned
+   * boundary, so over the other group the slot sits on that boundary, where
+   * the tab will land. `dragPinned` is null for list items, which open as
+   * unpinned tabs.
+   */
+  const slotAt = (x: number, y: number, dragPinned: boolean): Slot | null => {
+    const el = nearestRow(stripRef.current, x, y, 'x');
+    const id = el?.dataset.reorderId;
+    if (!el || !id) return null;
+    let slot: Slot = { id, side: halfOf(el, x, y, 'x') };
+    if (pinnedIds.has(id) !== dragPinned) {
+      const group = tabs.filter((n) => pinnedIds.has(n.id) === dragPinned);
+      const edge = dragPinned ? group[group.length - 1] : group[0];
+      if (edge) slot = { id: edge.id, side: dragPinned ? 'after' : 'before' };
+    }
+    return slot;
+  };
+  // A tab moves on the shared reorder engine (ui/reorder.tsx), like every
+  // list a person arranges.
+  const { drag, pressProps, endedDrag } = usePointerReorder<Slot>({
+    resolve: (id, x, y) => {
+      const slot = slotAt(x, y, pinnedIds.has(id));
+      const before = beforeIdOf(slot);
+      const at = tabs.findIndex((n) => n.id === id);
+      // A slot that leaves the tab where it is draws no line.
+      return !slot || before === id || before === (tabs[at + 1]?.id ?? null) ? null : slot;
+    },
+    targetKey: (slot) => `${slot.id}:${slot.side}`,
+    onDrop: (id, slot) => onMove(id, beforeIdOf(slot)),
+  });
+  /** Items from a list over the strip: an HTML5 drag, since its data comes
+   *  from another part of the app. They open as unpinned tabs. */
+  const [itemAt, setItemAt] = useState<Slot | null>(null);
+  const takeItems = (e: React.DragEvent): boolean => {
+    if (!isItemDrag(e.dataTransfer)) return false;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    const next = slotAt(e.clientX, e.clientY, false);
+    if (next?.id !== itemAt?.id || next?.side !== itemAt?.side) setItemAt(next);
+    return true;
+  };
+  const dropAt = drag ? drag.target : itemAt;
 
   useEffect(() => {
-    if (!activeId) return;
-    stripRef.current
-      ?.querySelector<HTMLElement>(`[data-tab-id="${CSS.escape(activeId)}"]`)
+    const strip = stripRef.current;
+    if (!activeId || !strip) return;
+    strip
+      .querySelector<HTMLElement>(`[data-tab-id="${CSS.escape(activeId)}"]`)
       ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    // The active tab's extra pixel (-mb-px) makes block 'nearest' lift the
+    // strip by 1 px; a strip only scrolls sideways.
+    strip.scrollTop = 0;
   }, [activeId, tabs.length]);
 
   // A pinned tab offers no way to close it; the bulk rows appear only while
@@ -85,11 +134,11 @@ export default function TabStrip({
     const pinned = pinnedIds.has(id);
     const closable = tabs.filter((n) => !pinnedIds.has(n.id));
     const items: ContextMenuItem[] = [
-      { label: t(pinned ? 'contextMenu.unpinTab' : 'contextMenu.pinTab'), icon: <PushPin size={14} weight={pinned ? 'fill' : 'bold'} />, onSelect: () => onTogglePin(id) },
+      { label: t(pinned ? 'contextMenu.unpinTab' : 'contextMenu.pinTab'), icon: <PushPin weight={pinned ? 'fill' : 'bold'} />, onSelect: () => onTogglePin(id) },
     ];
-    if (!pinned) items.push({ label: t('contextMenu.closeTab'), icon: <X size={14} />, onSelect: () => onClose(id) });
-    if (closable.some((n) => n.id !== id)) items.push({ label: t('contextMenu.closeOtherTabs'), icon: <ArrowsInLineHorizontal size={14} />, onSelect: () => onCloseOthers(id) });
-    if (closable.length > 0) items.push({ label: t('contextMenu.closeAllTabs'), icon: <XSquare size={14} />, onSelect: onCloseAll });
+    if (!pinned) items.push({ label: t('contextMenu.closeTab'), icon: <X />, onSelect: () => onClose(id) });
+    if (closable.some((n) => n.id !== id)) items.push({ label: t('contextMenu.closeOtherTabs'), icon: <ArrowsInLineHorizontal />, onSelect: () => onCloseOthers(id) });
+    if (closable.length > 0) items.push({ label: t('contextMenu.closeAllTabs'), icon: <XSquare />, onSelect: onCloseAll });
     return items;
   };
 
@@ -134,7 +183,7 @@ export default function TabStrip({
 
   const moreTabs = (): ContextMenuItem[] => tabs.filter((n) => hidden.includes(n.id)).map((n) => {
     const { Icon } = typeGlyph(n.type);
-    return { label: titleOf(n), icon: <Icon size={14} />, onSelect: () => onActivate(n.id) };
+    return { label: titleOf(n), icon: <Icon />, onSelect: () => onActivate(n.id) };
   });
 
   const activeAt = tabs.findIndex((n) => n.id === activeId);
@@ -159,26 +208,13 @@ export default function TabStrip({
           divider={!zen && i < tabs.length - 1 && plain(i) && plain(i + 1)}
           zen={zen}
           cutOff={hidden.includes(n.id)}
-          dragging={dragId === n.id}
-          dropSide={dragId && dropAt?.id === n.id ? dropAt.side : null}
+          dragging={drag?.id === n.id}
+          dropSide={dropAt?.id === n.id ? dropAt.side : null}
           closeLabel={t('tabStrip.close', { title: titleOf(n) })}
-          onActivate={() => onActivate(n.id)}
+          onActivate={() => { if (!endedDrag()) onActivate(n.id); }}
           onClose={() => onClose(n.id)}
           onContextMenu={(e) => onContextMenu(e, menuFor(n.id))}
-          onDragStart={() => setDragId(n.id)}
-          onDragEnd={endDrag}
-          onDragOverSide={dragId ? (side) => {
-            // A tab never crosses the pinned boundary, so over the other group
-            // the marker sits on that boundary, where the tab will land.
-            const dragPinned = pinnedIds.has(dragId);
-            let next = { id: n.id, side };
-            if (pinnedIds.has(n.id) !== dragPinned) {
-              const group = tabs.filter((x) => pinnedIds.has(x.id) === dragPinned);
-              const edge = dragPinned ? group[group.length - 1] : group[0];
-              if (edge) next = { id: edge.id, side: dragPinned ? 'after' : 'before' };
-            }
-            if (dropAt?.id !== next.id || dropAt.side !== next.side) setDropAt(next);
-          } : null}
+          press={pressProps(n.id)}
         />
   );
 
@@ -205,19 +241,26 @@ export default function TabStrip({
       ref={stripRef}
       role="tablist"
       aria-label={t('tabStrip.label')}
-      className="flex-1 min-w-0 flex items-end overflow-x-auto scrollbar-none pt-1"
+      // overflow-y stays hidden: overflow-x-auto alone makes it auto too, and
+      // the active tab's extra pixel (-mb-px) then scrolls the strip by 1 px.
+      className="flex-1 min-w-0 flex items-end overflow-x-auto overflow-y-hidden scrollbar-none pt-1"
       // A tab scrolled into view stops beside the pinned group, not under it.
       style={pinnedCount > 0 ? { scrollPaddingInlineStart: pinnedCount * PINNED_WIDTH } : undefined}
-      onDragOver={(e) => {
-        if (!dragId) return;
-        e.preventDefault();
-        // Past the last tab: the end of the strip, or of the pinned group for
-        // a pinned tab, which cannot leave it.
-        const group = pinnedIds.has(dragId) ? tabs.filter((x) => pinnedIds.has(x.id)) : tabs;
-        const last = group[group.length - 1];
-        if (e.target === e.currentTarget && last) setDropAt({ id: last.id, side: 'after' });
+      onDragOver={takeItems}
+      // Taken on entry too: a quick drop can come before the first dragover.
+      onDragEnter={takeItems}
+      // An item drag has no dragend here, so leaving the strip clears its marker.
+      onDragLeave={(e) => {
+        if (itemAt && !e.currentTarget.contains(e.relatedTarget as Node | null)) setItemAt(null);
       }}
-      onDrop={(e) => { if (dragId) { e.preventDefault(); drop(); } }}
+      onDrop={(e) => {
+        if (!isItemDrag(e.dataTransfer)) return;
+        e.preventDefault();
+        const ids = readItemDrag(e.dataTransfer);
+        // No marker (a drop on the strip's bare end): the items go last.
+        if (ids.length > 0) onOpenItems(ids, beforeIdOf(itemAt));
+        setItemAt(null);
+      }}
     >
       {pinnedCount > 0 && (
         // The pinned tabs stay at the start while the rest scroll, as in a
@@ -236,9 +279,9 @@ export default function TabStrip({
           type="button"
           aria-label={t('tabStrip.moreTabs')}
           onClick={(e) => onContextMenu(e, moreTabs())}
-          className={`flex items-center gap-0.5 h-7 mb-0.5 mx-1 px-2 rounded-md text-[12px] tabular-nums text-pn-muted hover:text-pn ${zen ? '' : 'hover:bg-pn/5'}`}
+          className={`flex items-center gap-0.5 h-7 mb-0.5 mx-1 px-2 rounded-md text-small tabular-nums text-pn-muted hover:text-pn ${zen ? '' : 'hover:bg-pn/5'}`}
         >
-          <CaretDown size={12} aria-hidden="true" />
+          <CaretDown aria-hidden="true" />
           {hidden.length}
         </button>
       </HoverLabel>
@@ -253,7 +296,7 @@ export default function TabStrip({
  */
 function Tab({
   note: n, title, gated, look, active, pinned, divider, zen, cutOff, dragging, dropSide, closeLabel,
-  onActivate, onClose, onContextMenu, onDragStart, onDragEnd, onDragOverSide,
+  onActivate, onClose, onContextMenu, press,
 }: {
   note: LocalNote;
   title: string;
@@ -273,11 +316,8 @@ function Tab({
   onActivate: () => void;
   onClose: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
-  onDragStart: () => void;
-  onDragEnd: () => void;
-  /** Set while a tab is dragged: reports which half of this tab is under the
-   *  pointer. The drop itself is handled by the strip. */
-  onDragOverSide: ((side: 'before' | 'after') => void) | null;
+  /** The press that starts a reorder drag (ui/reorder.tsx). */
+  press: Record<string, unknown>;
 }) {
   const { Icon, color: glyphColor } = typeGlyph(n.type);
   // The note's own icon wins over its site icon, so a pinned tab can be told
@@ -319,7 +359,6 @@ function Tab({
         />
       ) : (!domain || noIcon) && (
         <Icon
-          size={14}
           aria-hidden="true"
           className={`shrink-0 ${plainGlyph ? '' : color ? '' : active ? glyphColor : 'opacity-80'}`}
           style={!plainGlyph && color ? { color: ink } : undefined}
@@ -334,24 +373,9 @@ function Tab({
       aria-selected={active}
       tabIndex={active ? 0 : -1}
       data-tab-id={n.id}
+      data-reorder-id={n.id}
       aria-label={title}
-      draggable
-      onDragStart={(e) => {
-        onDragStart();
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', title);
-      }}
-      onDragEnd={onDragEnd}
-      onDragOver={(e) => {
-        if (!onDragOverSide) return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        const r = e.currentTarget.getBoundingClientRect();
-        const firstHalf = e.clientX < r.left + r.width / 2;
-        // In a right-to-left strip the first half is the right one.
-        const rtl = getComputedStyle(e.currentTarget).direction === 'rtl';
-        onDragOverSide(firstHalf !== rtl ? 'before' : 'after');
-      }}
+      {...press}
       onClick={onActivate}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onActivate(); }
@@ -367,13 +391,13 @@ function Tab({
         // One soft line for every active tab, colored or not.
         ...(active ? { boxShadow: `inset 0 2px 0 color-mix(in srgb, ${ink} 55%, transparent)` } : {}),
       }}
-      className={`group relative flex items-center gap-2 h-8 ${pinned ? 'w-10 flex-none justify-center' : 'min-w-[110px] max-w-[220px] flex-[0_1_220px] ps-3 pe-1.5'} rounded-t-[9px] text-[13px] cursor-pointer select-none transition-colors ${
+      className={`group relative flex items-center gap-2 h-8 ${pinned ? 'w-10 flex-none justify-center' : 'min-w-[110px] max-w-[220px] flex-[0_1_220px] ps-3 pe-1.5'} rounded-t-[9px] text-compact cursor-pointer select-none transition-colors ${
         zen
           ? active ? 'text-pn' : 'text-pn-muted hover:text-pn'
           : active
             ? 'bg-surface-2 border border-b-0 border-divider text-pn -mb-px h-[calc(2rem+1px)] z-10'
             : 'border border-transparent border-b-0 text-pn-muted hover:bg-pn/5 hover:text-pn'
-      } ${dragging ? 'opacity-50' : ''}`}
+      } ${dragging ? DRAG_SOURCE : ''}`}
     >
       {pinned ? (
         // A pinned tab is its icon alone, as in a browser, in zen too, so
@@ -395,6 +419,7 @@ function Tab({
           {!cutOff && <button
             type="button"
             aria-label={closeLabel}
+            data-no-drag
             onClick={(e) => { e.stopPropagation(); onClose(); }}
             className={`flex items-center justify-center w-5 h-5 rounded-md hover:bg-pn/10 ${
               active ? 'shrink-0' : 'absolute end-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
@@ -404,14 +429,7 @@ function Tab({
           </button>}
         </>
       )}
-      {dropSide && (
-        <span
-          aria-hidden="true"
-          className={`absolute top-0.5 bottom-0.5 w-[3px] rounded-full bg-accent-fill z-20 pointer-events-none ${
-            dropSide === 'before' ? '-start-px' : '-end-px'
-          }`}
-        />
-      )}
+      {dropSide && <DropLine edge={dropSide === 'before' ? 'start' : 'end'} />}
       {/* The zen mark of the active tab: inside the tab, because the strip
           scrolls sideways and so cuts anything drawn over its hairline. */}
       {zen && active && (

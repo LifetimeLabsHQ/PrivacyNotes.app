@@ -25,7 +25,7 @@ export default React.memo(function MarkdownItem(
     ...base,
     icon: (
       <span className="shrink-0 w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center text-accent-strong">
-        <Glyph size={18} />
+        <Glyph />
       </span>
     ),
     glyph: <CardGlyph type="note" override={Glyph} />,

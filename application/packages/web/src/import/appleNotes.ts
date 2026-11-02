@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { zipEntryText } from './zipEntry';
+import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
 import { normalizeTag } from '../notesRepo';
 import { linkifyMarkdown } from './linkify';
 import { importBlobs } from './blobImport';
@@ -207,6 +207,7 @@ interface ParseZipResult {
   strippedUnderline: number;
   blobs: Map<string, { data: Uint8Array; mime: string; name: string }>;
   blobBytes: number;
+  tooLarge: number;
 }
 
 async function parseZip(
@@ -271,12 +272,17 @@ async function parseZip(
   // Extract attachment/image blobs
   const blobs = new Map<string, { data: Uint8Array; mime: string; name: string }>();
   let blobBytes = 0;
+  let tooLarge = 0;
   if (blobFiles.length > 0) {
     onProgress?.(`Extracting ${blobFiles.length} attachment${blobFiles.length === 1 ? '' : 's'}...`);
   }
   for (let i = 0; i < blobFiles.length; i++) {
     const [rel, entry] = blobFiles[i]!;
-    const data = new Uint8Array(await entry.async('uint8array'));
+    const data = await zipEntryMedia(entry);
+    if (!data) {
+      tooLarge++;
+      continue;
+    }
     const name = rel.split('/').pop() ?? rel;
     blobs.set(rel, { data, mime: mimeFromExt(rel), name });
     blobBytes += data.length;
@@ -285,7 +291,7 @@ async function parseZip(
     }
   }
 
-  return { notes, strippedUnderline, blobs, blobBytes };
+  return { notes, strippedUnderline, blobs, blobBytes, tooLarge };
 }
 
 /* ------------------------------------------------------------------ */
@@ -296,7 +302,7 @@ export async function parseAppleNotes(
   file: File,
   onProgress?: (msg: string) => void,
 ): Promise<ParsedImport> {
-  const { notes, strippedUnderline, blobs, blobBytes } = await parseZip(file, onProgress);
+  const { notes, strippedUnderline, blobs, blobBytes, tooLarge } = await parseZip(file, onProgress);
 
   const uniqueTags = new Set(notes.flatMap((n) => n.tags));
   const emptyNotes = notes.filter(
@@ -313,6 +319,7 @@ export async function parseAppleNotes(
   }
 
   const warnings: string[] = [];
+  if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
 
   const transforms: string[] = [];
   const withTags = notes.filter((n) => n.tags.length > 0).length;

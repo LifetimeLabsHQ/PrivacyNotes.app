@@ -67,7 +67,7 @@ export function isSoftKeyboardDevice(): boolean {
  * How long `inputmode="none"` stays on after a suppressed gesture. Long enough
  * to outlast Chrome's own show-keyboard decision, which trails the tap by a
  * frame or two, and short enough that the next deliberate tap types normally.
- * Spec: ops/docs/design-decisions.md (Soft keyboard suppression)
+ * Spec: docs/internal/design-decisions.md (Soft keyboard suppression)
  */
 const RESTORE_MS = 400;
 
@@ -112,7 +112,7 @@ export function suppressSoftKeyboard(el: HTMLElement | null | undefined): void {
  * Android's own long-press threshold (~500ms) on purpose, so the suppression
  * is already in place by the time the gesture is recognized, and far above an
  * ordinary tap (50-150ms) so typing is unaffected.
- * Spec: ops/docs/design-decisions.md (Soft keyboard suppression)
+ * Spec: docs/internal/design-decisions.md (Soft keyboard suppression)
  */
 const LONG_PRESS_MS = 350;
 
@@ -122,7 +122,7 @@ const LONG_PRESS_MS = 350;
  * a word still means that word. Kept small on purpose: the caret lookup
  * below snaps to the NEAREST text position, so without a tight box check a
  * press half a screen below the last line would still count as "on text".
- * Spec: ops/docs/design-decisions.md (Soft keyboard suppression)
+ * Spec: docs/internal/design-decisions.md (Soft keyboard suppression)
  */
 const TEXT_HIT_SLOP_PX = 12;
 

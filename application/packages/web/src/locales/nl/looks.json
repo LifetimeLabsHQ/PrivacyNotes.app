@@ -1,11 +1,9 @@
 {
   "captionFolder": "Map",
   "captionTag": "Tag",
-  "captionNote": "Notitie",
   "captionTracker": "Tracker",
   "useDefault": "Standaard gebruiken",
   "color": "Kleur",
-  "noColor": "Geen kleur",
   "applyToSubfolders": "Kleur toepassen op submappen",
   "icon": "Icoon",
   "searchPlaceholder": "Zoek iconen",

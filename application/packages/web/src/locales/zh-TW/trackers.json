@@ -50,8 +50,6 @@
   },
   "mood": {
     "prompt": "現在感覺如何？（1-10）",
-    "low": "糟透了",
-    "high": "超棒",
     "anchor": {
       "1": "糟透了",
       "3": "不太好",
@@ -137,8 +135,6 @@
     "editMedication": "編輯藥物",
     "removeMedication": "移除藥物",
     "confirmRemove": "要移除 <highlight>{{name}}</highlight> 嗎？",
-    "yes": "是",
-    "no": "否",
     "taken": "已服",
     "skip": "略過",
     "editList": "變更這些藥物",
@@ -238,16 +234,15 @@
   },
   "config": {
     "configureTrackers": "設定追蹤項目",
-    "title": "追蹤項目",
-    "tabGeneral": "一般",
     "tabCustom": "自訂",
-    "chooseTrackers": "選擇追蹤項目",
     "factorsTitle": "你的因素",
     "factorsHelp": "你在「因素」追蹤項目中點選的一天組成部分。移除的因素在含有它的日子仍保留名稱。",
     "renameFactor": "重新命名 {{name}}",
     "addFactor": "新增因素",
     "medicationsTitle": "你的藥物",
     "medicationsHelp": "「用藥」追蹤項目會詢問的藥物。移除的藥物仍保留其歷史。",
+    "medicationCard": "用藥卡片",
+    "medicationCardHelp": "在這台裝置上詢問「你服藥了嗎？」，只在有藥物需要服用的日子顯示。",
     "customHelp": "你自己命名的追蹤項目：量表、數值，或是／否。最多 {{max}} 個。",
     "yourCustomTrackers": "你的自訂追蹤項目",
     "categoryMoodMind": "心情與心理",
@@ -272,23 +267,17 @@
     "kindBuild": "想養成",
     "kindWatch": "想留意",
     "editHabit": "編輯 {{name}}",
-    "removeHabit": "移除 {{name}}",
     "ownHabitsFull": "你已有 {{max}} 個自己的習慣，已達上限。",
     "addCustomTrackerHint": "想追蹤什麼都可以",
     "maxReached": "自訂追蹤項目已達上限（{{max}} 個）。",
     "customTrackers": "自訂追蹤項目",
-    "newCustomTracker": "新的自訂追蹤項目",
-    "newMedication": "新的藥物",
     "newMedicationHelp": "「用藥」追蹤項目會從開始日起，在你設定的時間詢問它。",
     "trackerNamePlaceholder": "追蹤項目名稱",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "名稱",
     "typeLabel": "類型",
-    "colorLabel": "顏色",
     "preview": "預覽",
     "startFromLast": "記住上次的輸入",
     "chooseIcon": "選擇圖示",
-    "iconLabel": "圖示",
     "startFromLastHelp": "適合很少變動的項目，例如體重或每日劑量。"
   },
   "factors": {
@@ -296,7 +285,6 @@
     "count_other": "{{count}} 個因素",
     "remove": "移除 {{name}}",
     "placeholder": "訪客、偏頭痛、加班",
-    "add": "新增",
     "empty": "加入影響你日常的事物，之後在任何一天點選即可。",
     "commaHint": "可一次新增多個，用逗號分隔。",
     "editList": "變更這些因素",
@@ -319,8 +307,6 @@
   "habits": {
     "prompt": "你今天做了什麼？",
     "count": "{{yes}}/{{total}}",
-    "yes": "是",
-    "no": "否",
     "empty": "在追蹤項目設定中選擇問題。",
     "changeQuestions": "更改這些問題",
     "q": {
@@ -379,9 +365,7 @@
     "prompt": "你攝取了多少咖啡因？"
   },
   "flow": {
-    "next": "下一步",
     "finish": "完成",
-    "done": "完成",
     "step": "追蹤項目 {{n}}/{{total}}"
   }
 }

@@ -1,4 +1,4 @@
-import { buildPool, mountTypewriter, type TypewriterLook } from './typewriter';
+import { buildPool, mountTypewriter, type TypewriterLook } from './typewriter.ts';
 
 // The typewriter lines as the site footer's closing line (owner, 2026-10-23,
 // variant B of the mockups, moved onto the seam 2026-10-23): a pill with the
@@ -38,9 +38,9 @@ export const FOOTER_LINES_SCRIPT_TAG = `<script src="${FOOTER_LINES_SRC}" defer>
 const PAUSED_KEY = 'privacynotes.footerLinesPaused';
 
 const PAUSE_ICON =
-  '<svg width="12" height="12" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><rect x="52" y="36" width="56" height="184" rx="12"/><rect x="148" y="36" width="56" height="184" rx="12"/></svg>';
+  '<svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><rect x="52" y="36" width="56" height="184" rx="12"/><rect x="148" y="36" width="56" height="184" rx="12"/></svg>';
 const PLAY_ICON =
-  '<svg width="12" height="12" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M72 39.9v176.2a8 8 0 0 0 12.2 6.8l140.9-88.1a8 8 0 0 0 0-13.6L84.2 33.1A8 8 0 0 0 72 39.9Z"/></svg>';
+  '<svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M72 39.9v176.2a8 8 0 0 0 12.2 6.8l140.9-88.1a8 8 0 0 0 0-13.6L84.2 33.1A8 8 0 0 0 72 39.9Z"/></svg>';
 
 /** The footer is a dark slab in both themes, so the colors are literals. */
 const FOOTER_LOOK: TypewriterLook = {
@@ -59,7 +59,7 @@ const FOOTER_LOOK: TypewriterLook = {
  * the page on a phone.
  */
 export const FOOTER_LINES_CSS = `.fl{position:relative;z-index:1;height:0;display:flex;align-items:flex-start;justify-content:center;padding:0 16px}
-.fl-pill{display:flex;align-items:center;gap:10px;width:min(100%,calc(var(--fl-ch,49) * 1ch + 70px));padding:5px 5px 5px 16px;border:1px solid #3D362A;border-radius:20px;background:var(--wl-footer,var(--footer,#161210));transform:translateY(-50%);font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#A69E8F}
+.fl-pill{display:flex;align-items:center;gap:10px;width:min(100%,calc(var(--fl-ch,49) * 1ch + 70px));padding:5px 5px 5px 16px;border:1px solid #3D362A;border-radius:20px;background:var(--wl-footer,var(--footer,#161210));transform:translateY(-50%);font:var(--fs-body)/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#A69E8F}
 .fl-line{flex:1 1 auto;min-width:0;min-height:1.5em;text-align:center;overflow-wrap:anywhere;user-select:none;-webkit-user-select:none}
 .fl-caret{background:#A69E8F}
 .fl-blink{animation:fl-blink 1.1s steps(1,end) infinite}
@@ -71,10 +71,10 @@ export const FOOTER_LINES_CSS = `.fl{position:relative;z-index:1;height:0;displa
 .fl-btn{position:relative;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:1px solid #2E2820;border-radius:50%;background:transparent;color:#A69E8F;cursor:pointer;transition:color .15s,border-color .15s}
 .fl-btn:hover{color:#fff;border-color:#3D362A}
 .fl-btn:focus-visible{outline:2px solid #4F6BD5;outline-offset:2px}
-.fl-btn::after{content:attr(aria-label);position:absolute;right:-6px;bottom:calc(100% + 10px);padding:5px 9px;border:1px solid #3D362A;border-radius:6px;background:#161210;color:#F2EEE6;font:500 12px/1.3 Inter,system-ui,sans-serif;white-space:nowrap;opacity:0;transform:translateY(4px);pointer-events:none;transition:opacity .15s,transform .15s}
+.fl-btn::after{content:attr(aria-label);position:absolute;right:-6px;bottom:calc(100% + 10px);padding:5px 9px;border:1px solid #3D362A;border-radius:6px;background:#161210;color:#F2EEE6;font:500 var(--fs-small)/1.3 Inter,system-ui,sans-serif;white-space:nowrap;opacity:0;transform:translateY(4px);pointer-events:none;transition:opacity .15s,transform .15s}
 .fl-btn:hover::after,.fl-btn:focus-visible::after{opacity:1;transform:none}
 @media (hover:none){.fl-btn:hover::after{opacity:0}}
-@media (max-width:639px){.fl{margin-bottom:10px}.fl-pill{gap:8px;padding-left:12px;font-size:12px}}
+@media (max-width:639px){.fl{margin-bottom:10px}.fl-pill{gap:8px;padding-left:12px;font-size:var(--fs-small)}}
 @media (prefers-reduced-motion:reduce){.fl-blink{animation:none}.fl-btn::after{transition:none}}`;
 
 function esc(value: string): string {

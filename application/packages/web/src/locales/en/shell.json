@@ -1,18 +1,14 @@
 {
   "pillars": {
-    "trash": "Trash",
-    "bookmarks": "Bookmarks",
-    "contacts": "Contacts"
+    "trash": "Trash"
   },
   "tasksList": {
-    "title": "Tasks",
     "newTaskNote": "New task note",
     "hideCompleted": "Hide completed tasks",
     "showCompleted": "Show completed tasks",
     "searchPlaceholder": "Search tasks…",
     "sortOptions": "Sort options",
     "quickAddPlaceholder": "Add a quick task",
-    "noMatches": "No matches.",
     "tasksFromOtherItems": "Tasks in other items",
     "noTaskListsYet": "No task lists yet. Tasks in other items are hidden.",
     "noTasksYet": "No tasks yet. Use the input above or type `- [ ] …` in any note.",
@@ -29,45 +25,27 @@
     "seeLess": "See less"
   },
   "filesList": {
-    "title": "Files",
     "upload": "Upload",
     "selectedOf": "{{selected}} of {{total}} selected",
-    "deselectAll": "Deselect all",
-    "selectAll": "Select all",
-    "storage": "Storage",
     "perFile": "Per file",
     "free": "Free",
-    "upgradeToPro": "Upgrade to Pro",
     "filterAll": "All",
-    "filterImages": "Images",
     "filterAudio": "Audio",
     "filterFiles": "Files",
-    "sortOptions": "Sort options",
     "searchPlaceholder": "Search files…",
     "sortName": "Name",
     "showNotesWithAttachments": "Show files in other items",
-    "noMatches": "No matches.",
     "pinProtected": "PIN-protected",
-    "readOnly": "Read-only",
     "noFilesYet": "No files yet.",
     "noDocuments": "No documents.",
     "noImages": "No images.",
     "noAudioFiles": "No audio files.",
     "emptyTypesHint": "Images, documents, audio, video, and zip files. Up to {{max}} MB per file.",
     "uploadFiles": "Upload files",
-    "menuDeselect": "Deselect",
-    "menuSelect": "Select",
     "menuShow": "Show",
     "menuAllFiles": "All files",
-    "menuImages": "Images",
-    "menuAudio": "Audio",
     "menuDocuments": "Documents",
-    "menuHideNoteAttachments": "Hide files in other items",
-    "menuShowNoteAttachments": "Show files in other items",
-    "menuUnpin": "Unpin",
-    "menuPin": "Pin",
-    "menuRename": "Rename",
-    "menuMoveToTrash": "Move to Trash"
+    "menuHideNoteAttachments": "Hide files in other items"
   },
   "vaultItem": {
     "badgeLogin": "Login",
@@ -78,7 +56,6 @@
     "untitledKey": "Untitled key",
     "copied": "Copied!",
     "copyField": "Copy {{label}}",
-    "hide": "Hide",
     "reveal": "Reveal",
     "fieldUrl": "URL",
     "fieldUser": "User",
@@ -91,14 +68,11 @@
     "fieldLabel": "Label",
     "fieldPublic": "Public",
     "fieldPrivate": "Private",
-    "fieldTotp": "2FA code",
     "totpInvalid": "Invalid key",
     "copyCode": "Copy code",
     "totpUnlockCta": "Unlock 2FA codes with Pro",
     "totpProNote": "The key is saved and synced. Only the code is behind Pro.",
     "copyAll": "Copy URL, user and password",
-    "open": "Open",
-    "notesHeading": "Notes",
     "fillOneField": "Fill in at least one field before saving.",
     "expiryNeedsBoth": "Expiry needs both month and year, or leave both empty.",
     "customField": "Custom field",
@@ -128,20 +102,18 @@
   },
   "tagsRail": {
     "showAllItems": "Show all items",
-    "changelog": "Changelog",
     "closeMenu": "Close menu",
-    "close": "Close",
     "views": "Content",
     "resizeSplit": "Resize Content and the tags or folders",
     "sidebarOptions": "Sidebar options",
     "showInSidebar": "Show in sidebar",
     "allOptions": "All options",
     "showInAll": "Show in All",
-    "viewList": "List",
-    "viewGrid": "Grid",
     "viewAuto": "Auto",
     "allItemsTooltip": "All notes, journals, and vault items",
     "allItems": "All",
+    "dashboard": "Home",
+    "dashboardTooltip": "Your widgets at a glance",
     "pinnedTooltip": "Pinned items",
     "pinned": "Pinned",
     "archive": "Archive",
@@ -149,6 +121,7 @@
     "notes": "Notes",
     "tasksTooltip": "Tasks across all notes",
     "tasks": "Tasks",
+    "drawings": "Drawings",
     "vaultTooltip": "Logins, credit cards, and keys",
     "vault": "Vault",
     "filesTooltip": "All files and attachments",
@@ -156,7 +129,6 @@
     "journalsTooltip": "Daily journal entries",
     "journals": "Journals",
     "actionsForTag": "Actions for tag {{tag}}",
-    "renameTag": "Rename",
     "removeFavorite": "Unfavorite",
     "markAsFavorite": "Favorite",
     "deleteTag": "Delete Tag",
@@ -164,7 +136,6 @@
     "tags": "Tags",
     "sortTags": "Sort tags",
     "sort": "Sort",
-    "sortBy": "Sort by",
     "sortEntries": "Entries",
     "sortName": "Name",
     "sortCustom": "Custom",
@@ -175,11 +146,9 @@
     "createTag": "New tag",
     "untagged": "Untagged",
     "trashTooltip": "Deleted items",
-    "trash": "Trash",
     "feedback": "Feedback",
     "import": "Import",
     "downloads": "Downloads",
-    "help": "Help",
     "rate": "Rate",
     "markdown": "Markdown",
     "markdownTip": "Unencrypted",
@@ -205,7 +174,6 @@
     "deleteConfirmBranchNested": "\"{{folder}}\" and its subfolders will be deleted. Their notes move to \"{{parent}}\". No notes are deleted.",
     "deleteSubfolders_one": "Also delete its subfolder",
     "deleteSubfolders_other": "Also delete its {{count}} subfolders",
-    "moveTo": "Move to folder",
     "searchPlaceholder": "Search folders",
     "sortFolders": "Sort folders",
     "chipUnfiled": "Folder",
@@ -226,7 +194,6 @@
     "seedTeam": "Team"
   },
   "collapsedSidebar": {
-    "newNote": "New note",
     "expandSidebar": "Expand sidebar"
   },
   "mobileHeader": {
@@ -241,26 +208,14 @@
     "colorFromTag": "From tag: #{{name}}",
     "colorOwnHint": "A color picked here fills this note's background. <setting>Folder and tag colors</setting> do not change it.",
     "details": "Details",
-    "readOnly": "Read-only",
     "readOnlyDescription": "No edits until you toggle it off.",
     "protect": "Protect",
     "convertTo": "Convert to",
-    "typeNote": "Note",
     "typeJournal": "Journal",
-    "typeTask": "Task",
-    "unpin": "Unpin",
-    "pin": "Pin",
-    "archive": "Archive",
-    "unarchive": "Unarchive",
     "burn": "Burn",
     "share": "Share",
     "trash": "Trash",
-    "duplicate": "Duplicate",
-    "restore": "Restore",
-    "deleteForever": "Delete forever",
-    "moveToFolder": "Move to folder",
     "noteHistory": "History",
-    "findReplace": "Find and replace",
     "uncheckAllTasks": "Uncheck all items",
     "deleteCheckedTasks": "Delete checked items",
     "sortTasksByStatus": "Sort items by status",
@@ -277,27 +232,17 @@
     "schedule": "Schedule",
     "ends": "Ends",
     "sameDay": "Same day",
-    "allDay": "All day",
     "starts": "Starts",
     "endsAt": "Ends at",
     "noEnd": "None",
     "removeFromCalendar": "Remove from calendar",
     "makeEvent": "Convert to <b>Event</b> to repeat it",
-    "typeEvent": "Event",
     "repeatRemoved": "The repeat is removed"
   },
   "selectionToolbar": {
-    "exitSelectionTooltip": "Exit selection",
     "exitSelection": "Exit selection",
-    "unpin": "Unpin",
-    "pin": "Pin",
-    "archive": "Archive",
-    "unarchive": "Unarchive",
     "tag": "Tag",
     "export": "Export",
-    "delete": "Delete",
-    "restore": "Restore",
-    "deleteForever": "Delete forever",
     "more": "More actions",
     "addTagPlaceholder": "Add a tag...",
     "noTagsFound": "No tags found",
@@ -320,6 +265,7 @@
     "showTags": "Show folder & tags",
     "showCalendar": "Show calendar",
     "showCheckIn": "Show check-in",
+    "showMedication": "Show medication",
     "showWorkItems": "Show <b>Work</b> items",
     "showPersonalItems": "Show <b>Personal</b> items",
     "other": "Other",
@@ -342,7 +288,6 @@
     "moodCalendar": "Show moods in the calendar"
   },
   "backfillPopover": {
-    "calendarLabel": "Journal calendar",
     "today": "Today",
     "chooseEntry": "Items on {{date}}"
   },
@@ -363,6 +308,7 @@
     "newNote": "New Note",
     "newTask": "New Task",
     "newKanban": "New Kanban board",
+    "newDrawing": "New drawing",
     "newLogin": "New Login",
     "newJournal": "New Journal",
     "newFile": "New File",
@@ -388,32 +334,24 @@
     "duplicate": "Duplicate",
     "moveToFolder": "Move to folder",
     "exportAsMarkdown": "Export as Markdown",
-    "shareBurnAfterReading": "Share & Burn After Reading",
     "exportAsHtml": "Export as HTML",
-    "printSaveAsPdf": "Print / Save as PDF",
-    "moveToTrash": "Move to Trash",
-    "newBookmark": "New Bookmark",
     "newContact": "New Contact",
-    "openBookmark": "Open",
     "copyBookmarkUrl": "Copy URL",
     "editBookmark": "Edit bookmark",
     "saveAsNote": "Save as note",
-    "openClippedNote": "Open note",
     "openInTab": "Open in tab",
     "openInTabHint": "{{key}}-click",
+    "openInTabHintMiddle": "Middle-click",
     "closeTab": "Close tab",
     "closeOtherTabs": "Close other tabs",
     "closeAllTabs": "Close all tabs",
     "pinTab": "Pin tab",
     "unpinTab": "Unpin tab",
-    "newEvent": "New Event",
-    "quickAdd": "Quick add"
+    "newEvent": "New Event"
   },
   "demoBanner": {
     "title": "Try it with zero risk",
-    "description": "Nothing's saved here. Get your own encrypted notebook, free.",
-    "cta": "Create account",
-    "dismiss": "Dismiss"
+    "description": "Nothing's saved here. Get your own encrypted notebook, free."
   },
   "markdown": {
     "title": "Markdown",
@@ -452,20 +390,17 @@
     "fileCount_other": "{{count}} files",
     "railFolders": "Markdown folders",
     "railTags": "Markdown tags",
-    "allFiles": "All files",
     "modeRich": "Rich",
     "modeSource": "Markdown",
     "reopenPrompt": "Your browser needs permission again after a reload. Your folder is remembered, so this is one click.",
     "reopenFolder": "Reopen {{name}}",
     "new": "New",
-    "delete": "Delete",
     "saveToNotes": "Save to my notes",
     "createFailed": "Couldn't create the file.",
     "deleteFailed": "Couldn't move the file to the trash.",
     "importedToast": "Saved \"{{title}}\" to your encrypted notes. The original file is untouched.",
     "deleteTitle": "Move to the folder trash?",
     "deleteBody": "\"{{name}}\" moves to a .trash folder inside your Markdown folder. Restore it from your file manager if you change your mind.",
-    "deleteConfirm": "Move to trash",
     "explainTitle": "Your Markdown folder",
     "explainDone": "Got it",
     "bannerTitle": "Advanced Markdown editor",
@@ -474,7 +409,6 @@
     "explainIntro": "Pick a folder of .md and .txt files - subfolders show up automatically, edits save in place, and nothing is converted",
     "chipPreview": "Live preview",
     "chipTasks": "Tasks",
-    "chipTags": "Tags",
     "chipTables": "Tables",
     "useAgent": "Give AI agents access to your notes",
     "useObsidian": "Same files in Obsidian or Logseq",
@@ -502,7 +436,6 @@
     "assocWorking": "Asking your system…",
     "copyPath": "Copy path",
     "selectedCount": "{{selected}} of {{total}} selected",
-    "selectAll": "Select all",
     "exitSelection": "Exit selection",
     "deleteManyTitle_one": "Move {{count}} file to the folder trash?",
     "deleteManyTitle_other": "Move {{count}} files to the folder trash?",
@@ -525,15 +458,11 @@
   "bookmarks": {
     "newBookmark": "New Bookmark",
     "searchPlaceholder": "Search bookmarks…",
-    "sortOptions": "Sort options",
     "quickAddPlaceholder": "Paste or type a link…",
     "urlLabel": "Bookmark (URL)",
     "urlInvalid": "Enter a web address, like example.com or https://example.com/page.",
     "urlDuplicate": "Another bookmark already has this URL, so the change was not saved.",
-    "openAction": "Open",
     "copiedUrl": "Link copied",
-    "moveToTrash": "Move to Trash",
-    "rowMenu": "More actions",
     "emptyNone": "No bookmarks yet.",
     "emptyTitle": "Save the sites worth keeping",
     "emptyAdd": "Add a bookmark",
@@ -548,11 +477,9 @@
     "new": "New"
   },
   "contacts": {
-    "new": "New",
     "searchPlaceholder": "Search contacts…",
-    "sortOptions": "Sort options",
     "emptyNone": "No contacts yet.",
-    "emptyTitle": "An address book only you can read",
+    "emptyTitle": "An address book, encrypted on your device",
     "emptyAdd": "Add a contact",
     "emptyImport": "Import contacts",
     "noMatches": "No matches.",
@@ -571,15 +498,12 @@
     "company": "Company",
     "department": "Department",
     "jobTitle": "Job title",
-    "groupName": "Name",
     "groupPhone": "Phone",
     "groupEmail": "Email",
     "groupAddress": "Address",
     "groupWebsite": "Website",
-    "groupProfile": "Profile",
     "groupDates": "Dates",
     "groupRelated": "Related",
-    "groupNote": "Note",
     "addPhone": "Add phone",
     "addEmail": "Add email",
     "addWebsite": "Add website",
@@ -594,7 +518,6 @@
     "notePlaceholder": "Notes about this person",
     "labelNone": "Label",
     "labelCustom": "Custom label…",
-    "removeRow": "Remove",
     "call": "Call",
     "message": "Message",
     "sendEmail": "Send email",
@@ -615,15 +538,8 @@
     "menuPersonal": "Personal",
     "menuName": "Name",
     "menuText": "Text",
-    "itemAddress": "Address",
-    "itemWebsite": "Website",
-    "itemProfile": "Profile",
-    "itemCompany": "Company",
-    "itemJobTitle": "Job title",
-    "itemBirthday": "Birthday",
     "itemDate": "Date",
     "itemRelated": "Related name",
-    "itemNickname": "Nickname",
     "itemNameParts": "Middle, prefix, suffix",
     "itemPhonetic": "Phonetic name",
     "itemNote": "Note",
@@ -753,8 +669,10 @@
       "note": "Notes",
       "task": "Task lists",
       "journal": "Journal entries",
-      "contact": "Birthdays"
+      "contact": "Birthdays and dates"
     },
+    "birthdays": "Birthdays",
+    "contactDate": "{{name}}: {{label}}",
     "dragEnd": "Drag to change the end day",
     "previousDay": "Previous day",
     "nextDay": "Next day",
@@ -848,7 +766,6 @@
     "daysBeforeAt_one": "{{count}} day before at {{time}}",
     "daysBeforeAt_other": "{{count}} days before at {{time}}",
     "custom": "Custom",
-    "add": "Add",
     "max": "Up to five alerts.",
     "units": {
       "minutes": "minutes",
@@ -860,11 +777,9 @@
     "remove": "Remove {{alert}}",
     "reminder": "Reminder",
     "medication": "Medication reminder",
-    "open": "Open",
     "snooze": "Snooze 10 min",
     "offOnPhone": "Reminders are off on this phone",
-    "turnOn": "Turn on",
-    "openSettings": "Open settings"
+    "turnOn": "Turn on"
   },
   "quickAdd": {
     "group": "Create",
@@ -876,6 +791,14 @@
     "appendHintDetail": "Types >>, then the start of its name",
     "appendNone": "No task list or note to add to yet",
     "appendNoneDetail": "Type a name after >> to make a task list of that name",
+    "cannotAdd": "Cannot add to {{title}}",
+    "blocked": {
+      "trash": "It is in the Trash.",
+      "pin": "It is behind your PIN. Open it to add.",
+      "readOnly": "It is read only.",
+      "board": "It is a Kanban board. Add cards on the board.",
+      "archived": "It is archived. Unarchive it to add."
+    },
     "linkGroup": "Save this link",
     "linkDetail": {
       "bookmark": "Keeps the address. You name it next.",
@@ -894,6 +817,7 @@
       "task": "New task list",
       "journal": "New journal entry",
       "kanban": "New kanban board",
+      "drawing": "New drawing",
       "login": "New login",
       "file": "Upload a file",
       "contact": "New contact",
@@ -926,8 +850,8 @@
       },
       "length": {
         "label": "Length",
-        "examples": "for 30m · for 3 days · fri to sun",
-        "insert": "for 1h"
+        "examples": "3pm for 30m · for 3 days · fri to sun",
+        "insert": "3pm for 1h"
       },
       "repeat": {
         "label": "Repeat",
@@ -973,17 +897,14 @@
     "backToToday": "Back to today",
     "options": "Check-in options",
     "skipToday": "Skip today",
-    "hide": "Hide this card",
+    "hide": "Hide",
     "change": "Change mood",
     "saved": "Saved",
     "chooseTrackers": "Choose trackers",
-    "settings": "Check-in settings",
     "skipped": "Skipped for today.",
     "startOver": "Start over",
     "cleared": "Check-in cleared.",
     "hidden": "Card hidden. Show check-in in the list options turns it back on.",
-    "undo": "Undo",
-    "done": "Done",
     "write": "Write about today",
     "writeOn": "Write about {{date}}",
     "streak": "Day {{n}} in a row",
@@ -997,19 +918,25 @@
     "hiddenCount_other": "{{count}} check-ins are hidden.",
     "showThem": "Show"
   },
+  "medicationCard": {
+    "title": "Medication tracking",
+    "options": "Medication options",
+    "edit": "Change today's medication",
+    "hidden": "Card hidden. Turn it back on in the list options or in Settings > Trackers > Medication."
+  },
   "clipper": {
-    "saveAsNote": "Save as note",
     "saving": "Saving as note…",
     "stepPage": "Downloading the page",
     "stepPictures": "Saving pictures, {{done}} of {{total}}",
-    "openNote": "Open note",
     "alreadySaved": "This page is already saved as a note ({{date}}).",
     "savedOn": "Saved as a note {{date}}",
-    "windowTitle": "Clip page",
     "addressLabel": "Web address",
     "addressPlaceholder": "Paste a link…",
     "savePictures": "Save pictures",
     "savePicturesHint": "Up to 20 pictures, stored with the note. They count toward your storage.",
+    "extensionTipTitle": "Clip from your browser for a better result",
+    "extensionTip": "The browser extension saves the page as you see it, also pages behind a sign-in.",
+    "extensionTipSetUp": "Set up the extension",
     "downloading": "Downloading the page…",
     "downloadingPictures": "Downloading pictures, {{done}} of {{total}}",
     "picturesLine_one": "{{count}} picture · {{size}}, saved with the note",
@@ -1042,5 +969,166 @@
     "until": "Until {{day}}",
     "noAlert": "No alert",
     "endsLater": "Ends another day"
+  },
+  "apps": {
+    "railLabel": "Extension",
+    "title": "Browser extension",
+    "subtitle": "Web clipper and password manager in Chrome, Firefox and Edge. The extension never holds the key that opens your notes.",
+    "stepInstall": "Install the extension",
+    "stepFeatures": "Choose what it can do",
+    "stepConnect": "Connect",
+    "makeCode": "Make a code",
+    "connectHint": "Make a one-time code and paste it in the extension.",
+    "thisBrowser": "This browser",
+    "otherApps": "Desktop and phone apps:",
+    "desktopAll": "All downloads",
+    "extensionComputersOnly": "The extension is for Chrome, Firefox and Edge on a computer.",
+    "demoSignUp": "Sign up to connect a browser"
+  },
+  "extensionConnect": {
+    "clips": "Web clipper",
+    "clipsHint": "Save websites as notes.",
+    "loginsHint": "Logins, cards, SSH keys and bookmarks for the site you are on, copy only. Locked with its own PIN or passcode.",
+    "pickOne": "Turn on at least one.",
+    "codeLabel": "Code for the extension",
+    "oneUse": "Works once, for 10 minutes.",
+    "usedBy": "{{name}} used this code and is connected. If that was not you, remove it below.",
+    "newCode": "New code",
+    "tooManyCodes": "Too many codes are waiting. Use one of them, or wait 10 minutes.",
+    "tooManyExtensions": "This account has 10 browsers connected, the most it can have. Remove one first.",
+    "keyElsewhere": "Your logins key is on another of your devices. Open PrivacyNotes there and let it sync, then try again.",
+    "failed": "Could not make a code. Check your connection and try again."
+  },
+  "dashboard": {
+    "taskReadOnly": "This note is read-only. Turn read-only off in the note options menu to tick its tasks.",
+    "addWidget": "Add widget",
+    "catalogTitle": "Add a widget",
+    "layouts": "Layouts",
+    "layoutChanged": "Layout changed",
+    "full": "Home is full. Remove a widget first.",
+    "added": "Added to Home",
+    "removed": "Removed from Home",
+    "showOnHome": "Show on Home",
+    "removeFromHome": "Remove from Home",
+    "resize": "Resize {{name}}",
+    "narrower": "Narrower",
+    "taller": "Taller",
+    "shorter": "Shorter",
+    "moveEarlier": "Move earlier",
+    "moveLater": "Move later",
+    "chooseNote": "Choose a note",
+    "chooseTag": "Choose a tag",
+    "chooseFolder": "Choose a folder",
+    "chooseTracker": "Choose a tracker",
+    "choose": "Choose",
+    "gone": "No longer here",
+    "otherSpace": "In the other space",
+    "proLocked": "Part of Pro",
+    "noneToChoose": "Nothing to choose yet",
+    "headerEvents_one": "{{formatted}} event today",
+    "headerEvents_other": "{{formatted}} events today",
+    "headerTasks_one": "{{formatted}} open task",
+    "headerTasks_other": "{{formatted}} open tasks",
+    "startToday": "Start today's entry",
+    "groups": {
+      "keep": "Things you keep"
+    },
+    "layout": {
+      "everyday": "Everyday",
+      "planner": "Planner",
+      "writer": "Writer"
+    },
+    "w": {
+      "checkIn": {
+        "name": "Check-in",
+        "help": "How you are today, and your trackers"
+      },
+      "calendar": {
+        "help": "The month, with entry and event dots"
+      },
+      "upcoming": {
+        "name": "Coming up",
+        "help": "Today and the next 7 days"
+      },
+      "today": {
+        "name": "Today's entry",
+        "help": "Today's journal entry, or a start"
+      },
+      "tasks": {
+        "name": "Open tasks",
+        "help": "Unchecked tasks from your notes"
+      },
+      "recent": {
+        "name": "Recently edited",
+        "help": "The items you worked on last"
+      },
+      "pinned": {
+        "help": "Your pinned items"
+      },
+      "note": {
+        "name": "A note",
+        "help": "One note you choose, on Home"
+      },
+      "tag": {
+        "name": "A tag",
+        "help": "The newest items with one tag"
+      },
+      "folder": {
+        "name": "A folder",
+        "help": "The newest items in one folder"
+      },
+      "onThisDay": {
+        "name": "On this day",
+        "help": "Journal entries from earlier years"
+      },
+      "week": {
+        "help": "Words, active days, items and check-ins"
+      },
+      "streak": {
+        "help": "Days in a row you wrote"
+      },
+      "checkInStreak": {
+        "help": "Days in a row you checked in"
+      },
+      "rhythm": {
+        "name": "Your rhythm",
+        "help": "26 weeks of writing and mood"
+      },
+      "milestone": {
+        "name": "Next milestone",
+        "help": "How close the next one is"
+      },
+      "tracker": {
+        "name": "A tracker",
+        "help": "One tracker: its number and its days"
+      },
+      "weekRecap": {
+        "help": "Your week, in one card"
+      },
+      "files": {
+        "name": "Recent files",
+        "help": "Your newest pictures and files"
+      },
+      "bookmarks": {
+        "help": "Your newest bookmarks"
+      },
+      "birthdays": {
+        "help": "Birthdays in the next 30 days"
+      }
+    },
+    "empty": {
+      "upcoming": "Nothing in the next 7 days",
+      "tasks": "No open tasks",
+      "recent": "Nothing here yet",
+      "pinned": "Nothing pinned yet",
+      "tag": "No items with this tag",
+      "folder": "Nothing in this folder",
+      "onThisDay": "No entries on this day in earlier years",
+      "files": "No files yet",
+      "bookmarks": "No bookmarks yet",
+      "birthdays": "No birthdays in the next 30 days",
+      "tracker": "Nothing logged yet",
+      "milestone": "Every milestone reached"
+    }
   }
 }

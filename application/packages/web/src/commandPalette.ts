@@ -14,7 +14,7 @@ import { textMatcher } from './textMatch';
  * NotesView builds the entries and hands them to the switcher; the context
  * only tells the list search which field it is and how to open command mode.
  *
- * Spec: ops/docs/archive/keyboard-shortcuts.md (decisions D5 and D15)
+ * Spec: docs/internal/specs/keyboard-shortcuts.md (decisions D5 and D15)
  */
 
 export type PaletteGroup = 'features' | 'new' | 'goTo' | 'commands' | 'themes';

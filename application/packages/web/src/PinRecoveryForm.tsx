@@ -17,7 +17,7 @@ import { saveCredential, type UserSettings } from './userSettings';
  * The lock screen does NOT use this. There the phrase is the sign-in, so
  * recovery rides the phrase screen it already has.
  *
- * Spec: ops/docs/archive/pin-recovery.md
+ * Spec: docs/internal/specs/pin-recovery.md
  */
 export function PinRecoveryForm({
   kind = 'pin',
@@ -68,7 +68,7 @@ export function PinRecoveryForm({
 
   return (
     <div className="space-y-3 text-start">
-      <p className="text-xs text-pn-soft leading-relaxed">
+      <p className="text-small text-pn-soft leading-relaxed">
         {kind === 'passcode' ? t('pinRecovery.introPasscode') : t('pinRecovery.intro')}
       </p>
       <textarea
@@ -77,7 +77,7 @@ export function PinRecoveryForm({
           setInput(e.target.value);
           setError(null);
         }}
-        placeholder={t('lockScreen.phrasePlaceholder')}
+        placeholder={t('auth:importPhrase.placeholder')}
         // A phone keyboard must neither rewrite a phrase word nor learn it.
         spellCheck={false}
         autoCapitalize="none"
@@ -86,19 +86,19 @@ export function PinRecoveryForm({
         rows={3}
         dir="ltr" // rtl-ok: BIP-39 phrase words, always LTR
         autoFocus
-        className="w-full rounded-md bg-surface-1 border border-divider text-pn focus:border-accent p-2.5 text-sm font-mono focus:outline-none placeholder:text-pn-muted"
+        className="w-full rounded-md bg-surface-1 border border-divider text-pn focus:border-accent p-2.5 text-body font-mono focus:outline-none placeholder:text-pn-muted"
       />
-      <p className="text-xs text-pn-soft leading-relaxed">
+      <p className="text-small text-pn-soft leading-relaxed">
         {kind === 'passcode' ? t('pinRecovery.consequencePasscode') : t('pinRecovery.consequence')}
       </p>
       {error && (
-        <p className="text-sm text-danger">{error}</p>
+        <p className="text-body text-danger">{error}</p>
       )}
       <div className="flex gap-2">
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-sm transition"
+          className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-body transition"
         >
           {t('common:actions.cancel')}
         </button>
@@ -106,7 +106,7 @@ export function PinRecoveryForm({
           type="button"
           onClick={() => void submit()}
           disabled={!input.trim()}
-          className="flex-1 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover px-3 py-2 text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover px-3 py-2 text-body font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {kind === 'passcode' ? t('pinRecovery.clearPasscode') : t('pinRecovery.clearPin')}
         </button>
@@ -122,7 +122,7 @@ export function ForgotPinLink({ onClick, kind = 'pin' }: { onClick: () => void; 
     <button
       type="button"
       onClick={onClick}
-      className="w-full text-sm text-accent hover:underline py-1 transition"
+      className="w-full text-body text-accent hover:underline py-1 transition"
     >
       {kind === 'passcode' ? t('pinRecovery.forgotPasscode') : t('pinRecovery.forgotPin')}
     </button>

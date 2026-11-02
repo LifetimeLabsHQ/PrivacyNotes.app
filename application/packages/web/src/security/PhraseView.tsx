@@ -24,7 +24,7 @@ import { saveBlob, type SaveResult } from '../saveFile';
 
 /**
  * How long the words stay on screen once the reader asks for them.
- * Spec: ops/docs/design-decisions.md (recovery phrase: reveal gate and auto-hide)
+ * Spec: docs/internal/design-decisions.md (recovery phrase: reveal gate and auto-hide)
  */
 const AUTO_HIDE_SECONDS = 60;
 export function PhraseView({
@@ -156,8 +156,8 @@ export function PhraseView({
   return (
     <div className="space-y-3">
       {showCallout && (
-        <div className="rounded-md border border-divider bg-track p-3 text-sm leading-relaxed text-pn flex items-start gap-2.5">
-          <Warning size={18} aria-hidden="true" className="shrink-0 mt-0.5 text-warning" />
+        <div className="rounded-md border border-divider bg-track p-3 text-body leading-relaxed text-pn flex items-start gap-2.5">
+          <Warning aria-hidden="true" className="shrink-0 mt-0.5 text-warning" />
           <span>
             <Trans i18nKey="security:phraseView.calloutWords" components={{ strong: <strong /> }} />
           </span>
@@ -186,7 +186,7 @@ export function PhraseView({
             {words.map((w, i) => (
               <div
                 key={i}
-                className="rounded bg-track border border-divider text-pn px-2 py-1 text-xs font-mono"
+                className="rounded bg-track border border-divider text-pn px-2 py-1 text-small font-mono"
               >
                 <span className="text-pn-muted me-1">
                   {i + 1}.
@@ -209,7 +209,7 @@ export function PhraseView({
                 setShowQR(false);
                 setSealed(true);
               }}
-              className="w-full overflow-hidden rounded-md border border-divider hover:bg-surface-1 text-sm text-pn-soft transition"
+              className="w-full overflow-hidden rounded-md border border-divider hover:bg-surface-1 text-body text-pn-soft transition"
             >
               <span className="flex items-center justify-center gap-1.5 px-3 py-2">
                 <EyeSlash aria-hidden="true" />
@@ -231,14 +231,14 @@ export function PhraseView({
               data-setting="security.qrCode"
               onClick={() => setShowQR((s) => !s)}
               aria-expanded={showQR}
-              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-divider hover:bg-surface-1 px-2 py-2 text-sm text-pn-soft transition"
+              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-divider hover:bg-surface-1 px-2 py-2 text-body text-pn-soft transition"
             >
               <CaretDown aria-hidden="true" className={`transition-transform ${showQR ? 'rotate-180' : ''}`} />
               {showQR ? t('phraseView.hideQr') : t('phraseView.showQr')}
             </button>
             <button
               onClick={() => { void handleDownloadTxt(); }}
-              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-divider hover:bg-surface-1 px-2 py-2 text-sm text-pn-soft transition"
+              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-divider hover:bg-surface-1 px-2 py-2 text-body text-pn-soft transition"
             >
               <FileText aria-hidden="true" />
               {t('auth:createPhrase.downloadTxt')}
@@ -271,7 +271,7 @@ export function PhraseView({
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={handleDownloadQR}
-              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-divider hover:bg-surface-1 px-2 py-2 text-sm transition"
+              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-divider hover:bg-surface-1 px-2 py-2 text-body transition"
             >
               {iconDownload()}
               {t('phraseView.saveQr')}
@@ -280,7 +280,7 @@ export function PhraseView({
             <button
               onClick={handleCopy}
               data-setting="security.copyPhrase"
-              className={`inline-flex items-center justify-center gap-1.5 rounded-md border px-2 py-2 text-sm transition ${
+              className={`inline-flex items-center justify-center gap-1.5 rounded-md border px-2 py-2 text-body transition ${
                 copied
                   ? 'bg-accent/10 text-accent-strong border-accent'
                   : 'border-divider hover:bg-surface-1'
@@ -289,7 +289,7 @@ export function PhraseView({
               {copied ? (
                 <>
                   <Check aria-hidden="true" />
-                  {t('phraseView.copied')}
+                  {t('auth:createPhrase.copied')}
                 </>
               ) : (
                 <>
@@ -301,13 +301,13 @@ export function PhraseView({
           </div>
 
           {failedFiles.size > 0 && (
-            <p className="text-sm text-danger">{t('auth:createPhrase.saveFailed')}</p>
+            <p className="text-body text-danger">{t('auth:createPhrase.saveFailed')}</p>
           )}
 
           {!hideDismiss && (
             <button
               onClick={onCancel}
-              className="w-full rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-sm transition"
+              className="w-full rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-body transition"
             >
               {cancelLabel ?? t('common:actions.done')}
             </button>

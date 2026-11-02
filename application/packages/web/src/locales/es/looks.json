@@ -1,11 +1,9 @@
 {
   "captionFolder": "Carpeta",
   "captionTag": "Etiqueta",
-  "captionNote": "Nota",
   "captionTracker": "Registro",
   "useDefault": "Usar predeterminado",
   "color": "Color",
-  "noColor": "Sin color",
   "applyToSubfolders": "Aplicar el color a las subcarpetas",
   "icon": "Icono",
   "searchPlaceholder": "Buscar iconos",

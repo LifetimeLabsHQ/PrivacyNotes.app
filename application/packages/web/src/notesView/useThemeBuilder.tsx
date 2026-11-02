@@ -23,7 +23,7 @@ export type ThemeBuilderTarget = {
  * syncs a slot can point at a theme that another device edited (it repaints
  * with the new colors) or deleted (it goes back to Default). Before the
  * first pull the list is not the account's yet, so nothing is dropped.
- * Spec: ops/docs/color-themes.md (section 6)
+ * Spec: docs/contrib/color-themes.md (section 6)
  */
 export function useThemeBuilder({
   customThemes,

@@ -10,7 +10,7 @@
 //!   and local ranges, and the connection goes to the address that was
 //!   checked, so a second DNS answer cannot move it;
 //! - redirects are followed by hand, at most five, each hop checked the same
-//!   way;
+//!   way, and a chain that reached https never steps down to http;
 //! - an address assigned to this device is refused too, which catches a
 //!   global IPv6 address that routes back to it;
 //! - the ports browsers refuse (the Fetch standard's bad-port list) are
@@ -23,7 +23,7 @@
 //! The answer goes back as raw bytes: four bytes of header length (big
 //! endian), a JSON header `{ url, contentType }`, then the body. A refusal is
 //! an error string of one opaque code, mapped to a message by the web view.
-//! Spec: ops/docs/archive/web-clipper-stage1.md (section 3.1)
+//! Spec: docs/internal/specs/web-clipper-stage1.md (section 3.1)
 
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::sync::Arc;
@@ -34,13 +34,13 @@ use reqwest::Url;
 
 const MAX_REDIRECTS: usize = 5;
 const DEADLINE: Duration = Duration::from_secs(20);
-/// Spec: ops/docs/archive/web-clipper-stage1.md (section 3.1, page: 5 MB)
+/// Spec: docs/internal/specs/web-clipper-stage1.md (section 3.1, page: 5 MB)
 const PAGE_MAX_BYTES: usize = 5 * 1024 * 1024;
 /// One picture may be as large as the per-clip picture budget.
-/// Spec: ops/docs/archive/web-clipper-stage1.md (section 3.3, 10 MB per clip)
+/// Spec: docs/internal/specs/web-clipper-stage1.md (section 3.3, 10 MB per clip)
 const IMAGE_MAX_BYTES: usize = 10_000_000;
 /// A public calendar feed of several years is a few MB.
-/// Spec: ops/issues/0548.md (Spec, design A)
+/// Spec: docs/internal/issues/0548.md (Spec, design A)
 const CALENDAR_MAX_BYTES: usize = 10_000_000;
 const USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15";
 
@@ -222,6 +222,16 @@ pub fn check_url(raw: &str) -> Result<Url, &'static str> {
     Ok(url)
 }
 
+/// The next hop of a redirect from `from`: checked like the first address,
+/// and never from https down to http.
+fn redirect_target(from: &Url, location: &str) -> Result<Url, &'static str> {
+    let next = from.join(location).map_err(|_| "bad-redirect")?;
+    if from.scheme() == "https" && next.scheme() == "http" {
+        return Err("bad-redirect");
+    }
+    check_url(next.as_str())
+}
+
 /// Resolve the host of `url` and return the one address to connect to. Every
 /// answer must pass, not only the one used: a host that also points inside
 /// the network is refused.
@@ -300,8 +310,7 @@ async fn fetch_inner(raw: &str, kind: Kind, guard: &Guard) -> Result<Fetched, St
                 .get(LOCATION)
                 .and_then(|v| v.to_str().ok())
                 .ok_or("bad-redirect")?;
-            let next = url.join(location).map_err(|_| "bad-redirect")?;
-            url = check_url(next.as_str())?;
+            url = redirect_target(&url, location)?;
             continue;
         }
         if !status.is_success() {
@@ -506,6 +515,16 @@ mod tests {
             let err = fetch(&format!("http://{addr}/"), Kind::Page, &Guard { allow: Some(addr) }).await.err();
             assert_eq!(err.as_deref(), Some("blocked-address"));
         });
+    }
+
+    #[test]
+    fn never_steps_down_from_https_to_http() {
+        let https = Url::parse("https://a.example/start").unwrap();
+        assert_eq!(redirect_target(&https, "http://a.example/plain").err(), Some("bad-redirect"));
+        assert_eq!(redirect_target(&https, "//a.example/same").unwrap().as_str(), "https://a.example/same");
+        let http = Url::parse("http://a.example/start").unwrap();
+        assert_eq!(redirect_target(&http, "https://a.example/secure").unwrap().as_str(), "https://a.example/secure");
+        assert_eq!(redirect_target(&http, "/next").unwrap().as_str(), "http://a.example/next");
     }
 
     #[test]

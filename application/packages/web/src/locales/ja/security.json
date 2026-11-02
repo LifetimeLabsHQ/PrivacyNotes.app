@@ -1,6 +1,5 @@
 {
   "modal": {
-    "title": "セキュリティ",
     "tabPin": "PIN",
     "tabBiometricShort": "ロック",
     "tabBiometric": "生体認証ロック",
@@ -9,9 +8,10 @@
     "tabTwoFactor": "2FA"
   },
   "pinTab": {
+    "changeLost": "PINの変更は保存されませんでした。先に別のデバイスでPINが変更されています。",
+    "phraseUnwrapped": "このブラウザでは、このデバイスが保存しているリカバリーフレーズを保護できなかったため、フレーズは暗号化されないままここに保存されています。このデバイスのストレージのコピーを持っている人なら、だれでもフレーズを読めます。「ロック」タブでアプリロックをオンにすると、フレーズはPINまたはパスコードの内側にだけ保存されます。",
     "enterCurrent": "変更するには、現在のPINを入力してください。",
     "currentPin": "現在のPIN",
-    "checking": "確認中...",
     "verify": "確認",
     "replaceExisting": "新しい4桁のPINを入力してください。既存のPINと置き換えられます。",
     "setIntro": "4桁のPINで、保護されたノートとリカバリーフレーズを開きます。PINはすべてのデバイスに同期されます。",
@@ -42,10 +42,8 @@
     "setPin": "PINを設定",
     "removePin": "PINを削除",
     "reaskAfter": "PINを再要求するまでの時間",
-    "reaskHint": "フレーズの表示と、PINで保護されたすべてのノートに適用されます。",
+    "reaskHint": "このデバイスでのフレーズの表示と、PINで保護されたすべてのノートに適用されます。",
     "incorrectPin": "PINが正しくありません。",
-    "incorrectPinRetry": "PINが正しくありません。もう一度お試しください。",
-    "tooManyAttempts": "試行回数が多すぎます。{{seconds}}秒後にもう一度お試しください。",
     "pinFourDigits": "PINは4桁で入力してください。",
     "pinsDoNotMatch": "PINが一致しません。",
     "passcodeIntro": "パスコードで、保護されたノートとリカバリーフレーズを開きます。パスコードはすべてのデバイスに同期されます。",
@@ -61,8 +59,7 @@
     "ruleNotDigits": "数字だけにしない",
     "ruleMax": "{{max}}文字以内",
     "passcodesDoNotMatch": "パスコードが一致しません。",
-    "incorrectPasscode": "パスコードが正しくありません。",
-    "incorrectPasscodeRetry": "パスコードが正しくありません。もう一度お試しください。"
+    "incorrectPasscode": "パスコードが正しくありません。"
   },
   "timeout": {
     "min1": "1分",
@@ -76,16 +73,11 @@
     "browserRestart": "ブラウザの再起動時"
   },
   "pinInfo": {
-    "title": "表示にPINを要求",
     "body": "有効にすると、アプリのロックが解除されていても、この項目を開くたびにPINの入力が必要になります。席を外すあいだも保護しておきたい大切な項目に使ってください。"
   },
   "removePinDialog": {
-    "title": "PINを削除",
     "introWithBio": "削除を確認するため、現在のPINを入力してください。生体認証によるロック解除は有効のままですが、その代替手段はリカバリーフレーズだけになります。",
     "introNoBio": "削除を確認するため、現在のPINを入力してください。今後、リカバリーフレーズの画面はPINなしで開きます。",
-    "verifying": "確認中...",
-    "removePin": "PINを削除",
-    "titlePasscode": "パスコードを削除",
     "introWithBioPasscode": "削除を確認するため、現在のパスコードを入力してください。生体認証によるロック解除は有効のままですが、その代替手段はリカバリーフレーズだけになります。",
     "introNoBioPasscode": "削除を確認するため、現在のパスコードを入力してください。今後、リカバリーフレーズの画面はパスコードなしで開きます。",
     "removePasscode": "パスコードを削除"
@@ -109,16 +101,10 @@
   },
   "phraseGate": {
     "enterToView": "フレーズを表示するには、4桁のPINを入力してください。",
-    "incorrectPinRetry": "PINが正しくありません。もう一度お試しください。",
-    "tooManyAttempts": "試行回数が多すぎます。{{seconds}}秒後にもう一度お試しください。",
-    "lockedFor": "ロック中: あと{{seconds}}秒",
-    "checking": "確認中...",
-    "unlock": "ロック解除",
     "enterToChangeCustody": "鍵の管理方法を変更するには、4桁のPINを入力してください。",
     "checkFailed": "PINを確認できませんでした。もう一度お試しください。",
     "enterToViewPasscode": "フレーズを表示するには、パスコードを入力してください。",
     "enterToChangeCustodyPasscode": "鍵の管理方法を変更するには、パスコードを入力してください。",
-    "incorrectPasscodeRetry": "パスコードが正しくありません。もう一度お試しください。",
     "checkFailedPasscode": "パスコードを確認できませんでした。もう一度お試しください。"
   },
   "phraseView": {
@@ -133,11 +119,9 @@
     "hideQr": "QRコードを隠す",
     "showQr": "QRコードを表示",
     "saveQr": "QRを保存",
-    "copied": "コピーしました",
     "copyPhrase": "フレーズをコピー"
   },
   "custody": {
-    "eyebrow": "鍵の管理",
     "current": "現在",
     "rowDevice": "新しいデバイス",
     "rowDeviceCustodial": "{{provider}} でサインイン、入力なし",
@@ -152,7 +136,6 @@
     "releaseWarning": "先に12単語のフレーズをPrivacyNotes以外に保存してください。当社のコピーを削除したあとは、新しいデバイスでフレーズが必要になります。",
     "challengePrompt": "上のリストから次の単語を入力して、手元にあることを確認してください。",
     "wordLabel": "{{position}} 番目の単語",
-    "busy": "保存中...",
     "releaseConfirm": "サーバーから削除",
     "adoptConfirm": "コピーを預ける",
     "releaseDone": "完了しました。フレーズのコピーはもう保管していません。新しいデバイスではこの12単語かQRコードの読み取りが必要になります。",
@@ -189,6 +172,7 @@
     "boundStatus": "生体認証によるロック解除は、パスキーに結び付けられています。",
     "boundStatusNative": "生体認証によるロック解除は、このデバイスのセキュアなハードウェアに結び付けられています。",
     "setUpAgain": "より強力なロックのために設定し直す",
+    "unboundWeaker": "このデバイスでは、生体認証によるロック解除は近くにいる人を止めるための関門にすぎず、ロックではありません。このデバイスのストレージのコピーを持っている人は、あなたの指紋や顔を使わずにノートを開けます。",
     "cannotBind": "このブラウザのパスキーアプリでは、より強力なロックを作成できません。生体認証によるロック解除は、これまでどおり使えます。パスワードマネージャーにパスキーを保存している場合は、そのパスキー機能をオフにしてから、生体認証によるロック解除をいったんオフにして再びオンにすると、デバイス本体のパスキー保存先を使えます。",
     "bindOffer": "このデバイスの生体認証によるロック解除は、まだパスキーに結び付けられていませんが、このブラウザでは結び付けられます。一度設定し直すと、その鍵はこのデバイスのストレージではなく、パスキーとともに保管されます。",
     "bindOfferLater": "今はしない",
@@ -196,14 +180,14 @@
     "settingUp": "設定中...",
     "enable": "生体認証によるロック解除を有効にする",
     "lockOnOpen": "起動時にアプリをロック",
-    "lockOnOpenHint": "アプリを開くときに、生体認証またはPINを要求します。",
+    "lockOnOpenHint": "このデバイスでアプリを開くときに、生体認証またはPINを要求します。",
     "lockHidesOnSwitch": "アプリを切り替えるときにも、ノートを隠します。",
     "lockNeedsCredential": "アプリロックには、このデバイスでPINまたは生体認証によるロック解除が必要です。",
     "setUpPin": "PINを設定",
     "confirmPinForLock": "オンにするには、PINを入力してください。リカバリーフレーズのコピーをロックし、PINだけがアプリを開けるようにします。",
     "confirmPasscodeForLock": "オンにするには、パスコードを入力してください。リカバリーフレーズのコピーをロックし、パスコードだけがアプリを開けるようにします。",
     "relockAfter": "再ロックまでの時間",
-    "relockHint": "アプリロック画面にのみ適用されます。",
+    "relockHint": "このデバイスのアプリロック画面にのみ適用されます。",
     "blockCapture": "画面キャプチャから隠す",
     "blockCaptureHint": "デバイスが対応している場合、スクリーンショット、画面収録、画面共有にノートが写らないようにします。このデバイスにのみ適用されます。",
     "perDeviceNote": "生体認証によるロック解除は、PINと同じノートを開きます。このデバイスに残り、同期されることはありません。",
@@ -216,31 +200,19 @@
     "phraseNotSaved": "このデバイスではリカバリーフレーズを保存できなかったため、何も変更されていません。もう一度お試しください。"
   },
   "pinSetup": {
-    "title": "PINを設定",
     "description": "リカバリーフレーズを表示するときに、4桁のPINが必要になります。任意ですが、共有スペースではおすすめです。",
-    "newPin": "新しいPIN",
-    "confirmPin": "PINを確認",
-    "skipForNow": "今はスキップ",
-    "saving": "保存中…",
-    "setPin": "PINを設定",
-    "pinFourDigits": "PINは4桁で入力してください。",
-    "pinsDoNotMatch": "PINが一致しません。"
+    "skipForNow": "今はスキップ"
   },
   "pinInput": {
-    "ariaLabel": "PIN",
     "digitAriaLabel": "{{index}}桁目"
   },
   "passcodeInput": {
-    "ariaLabel": "パスコード",
     "show": "パスコードを表示",
     "hide": "パスコードを非表示"
   },
   "protectedGate": {
-    "biometricFailed": "生体認証に失敗したか、キャンセルされました。",
     "protectedItem": "保護されたアイテム",
     "biometricSubtitle": "このアイテムのロックを解除するには、指紋または顔を使用してください。",
-    "verifying": "確認中...",
-    "unlock": "ロック解除",
     "usePinInstead": "代わりにPINを使う",
     "useBiometricInstead": "代わりに生体認証を使う",
     "disableProtection": "保護を無効にする",
@@ -248,18 +220,10 @@
     "disableSubtitle": "ノートはそのまま残ります。ロックだけが外れます。",
     "disableBiometricSubtitle": "指紋または顔で確認してください。",
     "verifySubtitle": "このアイテムのロックを解除するには、4桁のPINを入力してください。ロック解除は、セキュリティ設定で指定した時間だけ有効です。",
-    "incorrectPinRetry": "PINが正しくありません。もう一度お試しください。",
-    "tooManyAttempts": "試行回数が多すぎます。{{seconds}}秒後にもう一度お試しください。",
     "lockedFor": "ロック中: あと{{seconds}}秒",
-    "checking": "確認中...",
     "bootstrapTitle": "PINを設定",
     "bootstrapSubtitle": "このアイテムはPINで保護されていますが、このデバイスにはPINが設定されていません。ロックを解除するには4桁のPINを設定してください。PINはすべてのデバイスに同期されます。",
     "bootstrapWarning": "ここでのPIN設定に、以前のPINを知っている必要はありません。リカバリーフレーズを持っている人なら誰でも、新しいデバイスで同じことができます。本当に機密性の高い内容には、代わりにフレーズのみの認証を使ってください。",
-    "newPin": "新しいPIN",
-    "confirmPin": "PINを確認",
-    "pinFourDigits": "PINは4桁で入力してください。",
-    "pinsDoNotMatch": "PINが一致しません。",
-    "saving": "保存中...",
     "setPinUnlock": "PINを設定してロック解除",
     "pinRequired": "PINが必要です",
     "deleteSubtitle": "この保護されたアイテムを削除するには、PINを入力してください。",
@@ -267,7 +231,6 @@
     "usePasscodeInstead": "代わりにパスコードを使う",
     "disableTitlePasscode": "パスコードを入力して保護を無効にする",
     "verifySubtitlePasscode": "このアイテムのロックを解除するには、パスコードを入力してください。ロック解除は、セキュリティ設定で指定した時間だけ有効です。",
-    "incorrectPasscodeRetry": "パスコードが正しくありません。もう一度お試しください。",
     "passcodeRequired": "パスコードが必要です",
     "deleteSubtitlePasscode": "この保護されたアイテムを削除するには、パスコードを入力してください。"
   },
@@ -294,19 +257,14 @@
     "checking": "確認中...",
     "unlock": "ロック解除",
     "recoveryPhrase": "リカバリーフレーズ",
-    "recoveryPhraseSubtitle": "ロックを解除するには、12単語のリカバリーフレーズを入力してください。",
-    "invalidPhrase": "フレーズが正しくありません。つづりと単語の順序を確認してください。",
-    "phrasePlaceholder": "word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12"
+    "recoveryPhraseSubtitle": "ロックを解除するには、12単語のリカバリーフレーズを入力してください。"
   },
   "deviceLimit": {
     "title": "デバイス数の上限に達しました",
     "body": "無料アカウントで同時に同期できるのは{{limit}}台までです。現在すでに{{count}}台あります。このデバイスで続けるには1台削除するか、アップグレードしてデバイス無制限にしてください。",
     "activeDevices": "アクティブなデバイス",
-    "recentlyRemoved": "最近削除",
-    "removedAt": "削除: {{when}}",
     "upgradeHeading": "またはProにアップグレード",
     "upgradeBody": "買い切りで、サブスクリプションはありません。無制限のデバイスに加えて、画像、ノート履歴なども使えます。",
-    "openingCheckout": "チェックアウトを開いています...",
     "upgradeCta": "${{price}}でProにアップグレード",
     "needMoreHeading": "デバイスを増やしたいですか?",
     "needMoreBody": "このビルドではProへのアップグレードを利用できません。本当に3台目が必要な場合は、ご連絡いただければ対応します。",
@@ -315,8 +273,6 @@
     "saveRecoveryBody": "OAuthでサインインしています。12単語のフレーズも書き留めておいてください。OAuthが使えなくなったときや、全デバイスからロックアウトされたときの備えになります。",
     "hide": "隠す",
     "viewRecoveryPhrase": "リカバリーフレーズを表示",
-    "signOut": "サインアウト",
-    "thisDevice": "このデバイス",
     "lastActive": "{{platform}} · 最終アクティブ{{when}}",
     "removing": "削除中..."
   },
@@ -329,9 +285,9 @@
     "bitcoinBody": "同じ種類の12単語のフレーズで守られています。",
     "universeTitle": "宇宙の年齢の700倍",
     "universeBody": "毎秒100京回の速さで、すべてを試すのにかかる時間です。",
-    "twinTitle": "あなたと同じフレーズの人は地球上にいません",
+    "twinTitle": "地球上のほかの誰も、同じフレーズを手にすることはありません",
     "twinBody": "80億人全員がPrivacyNotesを使っても同じです。",
-    "keepPrivate": "入る方法は、あなたの実際の12単語だけです。誰にも見せないでください。"
+    "keepPrivate": "推測では入れません。12単語は誰にも見せないでください。"
   },
   "connectedAccounts": {
     "title": "連携済みアカウント",
@@ -355,13 +311,10 @@
     "connectAnotherProvider": "別の {{provider}} アカウントを連携",
     "updateTitle": "この保管庫のサインインを更新",
     "updateDescription": "保存したフレーズと連携済みアカウントで二要素認証を使う準備をし、連携済みアカウントを管理できるようにします。ノートや鍵の管理方法は変わりません。",
-    "updateDevices": "続行する前に、他のデバイスのアプリを更新してください。それらのデバイスでサインインし直す必要がある場合があります。",
-    "updateAcknowledgment": "他のデバイスのPrivacyNotesを更新しました。",
     "updateAction": "サインインを更新",
     "setupTitle": "Google、Apple、GitHubを連携",
     "setupDescription": "最初の連携では、この保管庫を一度だけ更新する必要があります。ノートと鍵の管理方法は変わりません。",
     "setupAction": "連携済みアカウントを設定",
-    "closed": "アカウントの連携と解除はまもなく利用できます。それまでは、今の方法でサインインしてください。",
     "repairTitle": "サインインの更新を完了",
     "repairDescription": "この保管庫ではすでに更新後のサインインを使っています。ここですでにロック解除済みのフレーズを使って、このデバイスを再接続してください。ローカルのノートは引き続き使えます。",
     "repairAction": "この保管庫に進む",
@@ -379,7 +332,6 @@
     "rateLimited": "アカウントの変更を試みた回数が多すぎます。少し待ってから再試行してください。",
     "connectionMissing": "このアカウントはすでに連携されていません。現在のアカウント一覧を確認してから再試行してください。",
     "noAccounts": "外部サービスのアカウントは連携されていません。保存したフレーズがサインイン方法です。",
-    "actionFailed": "変更を確認できませんでした。接続を確認して再試行してください。",
     "retry": "アカウントを再確認",
     "connectDone": "この保管庫にアカウントを連携しました。鍵の管理方法は変わりません。",
     "disconnectDone": "アカウントの連携を解除しました。ノートや鍵の管理方法は変わりません。",
@@ -389,7 +341,6 @@
     "freshMfa": "この変更を確認するには、認証アプリの新しいコードが必要です。変更後も二要素認証は有効なままです。",
     "continueProvider": "{{provider}} で続ける",
     "working": "処理中...",
-    "cancel": "キャンセル",
     "confirmDisconnect": "{{provider}} の連携を解除しますか？",
     "account": "このアカウント",
     "lastCustodial": "これが最後の連携済みアカウントです。別のアカウントを先に連携するか、フレーズを保存して自己管理に切り替えてから解除してください。",
@@ -445,10 +396,7 @@
       "key": "キーを保存",
       "confirm": "確認"
     },
-    "next": "次へ",
-    "back": "戻る",
     "stepOf": "ステップ {{step}}/3",
-    "working": "処理中...",
     "scan": "認証アプリでこのコードを読み取ってください。",
     "qrLabel": "認証アプリ用のQRコード",
     "openAuthenticator": "このスマートフォンの場合は、認証アプリを開く",
@@ -462,9 +410,7 @@
     "backupWarning": "スマートフォンをなくしても、このキーでコードを取り戻せます。PrivacyNotes以外の安全な場所に保管してください。",
     "savedAcknowledgment": "バックアップキーを保存しました。",
     "confirmBackup": "前のステップのバックアップキーをもう一度入力してから、アプリのコードを入力してください。",
-    "reenterBackup": "バックアップキー",
     "codeLabel": "アプリのコード",
-    "activate": "2FAをオンにする",
     "cancelSetup": "キャンセル",
     "enabled": "2FAはオンです",
     "authenticatorRow": "認証アプリ",
@@ -484,11 +430,6 @@
     "overview": "概要",
     "keyCustody": "鍵の管理",
     "accounts": "アカウント"
-  },
-  "beta": {
-    "label": "ベータ",
-    "notice": "この機能はベータ版です。",
-    "reportBug": "バグを報告"
   },
   "demoTeaser": {
     "accounts": "アカウントを作成すると、Google、Apple、GitHubを保管庫に連携できます。",

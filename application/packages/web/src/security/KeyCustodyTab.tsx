@@ -27,7 +27,7 @@ export function KeyCustodyTab({ phrase, pubkey, hasPin, pinCredential, pinTimeou
     recovery={userSettings && onSettingsChange ? { phrase, userSettings, onSettingsChange } : undefined}>
     <div className="space-y-4">
       <CustodyPanel phrase={phrase} onReleaseCheckChange={onReleaseCheckChange} onOpenConnectedAccounts={onOpenConnectedAccounts} />
-      <button type="button" className="inline-flex items-center gap-2 text-sm text-accent hover:underline" onClick={onOpenPhrase}><Key size={16} className="shrink-0" aria-hidden="true" />{t('custody.openPhrase')}</button>
+      <button type="button" className="inline-flex items-center gap-2 text-body text-accent hover:underline" onClick={onOpenPhrase}><Key className="shrink-0" aria-hidden="true" />{t('custody.openPhrase')}</button>
     </div>
   </PhrasePinGate>;
 }

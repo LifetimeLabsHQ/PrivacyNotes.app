@@ -177,7 +177,7 @@ export function useEditorPanels({
    * the same upgrade pitch from either. `proUnlocked`, so the public demo
    * hands the feature out like every other client-side gate. A read-only
    * note refuses before the pitch: it cannot take the action at all.
-   * Spec: ops/docs/pro-features.md (Find and replace)
+   * Spec: docs/internal/pro-features.md (Find and replace)
    */
   const openReplace = useCallback((term = '') => {
     if (readOnly) return;

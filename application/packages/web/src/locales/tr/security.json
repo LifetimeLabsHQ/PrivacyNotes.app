@@ -1,6 +1,5 @@
 {
   "modal": {
-    "title": "Güvenlik",
     "tabPin": "PIN",
     "tabBiometricShort": "Kilit",
     "tabBiometric": "Biyometrik kilit",
@@ -9,9 +8,10 @@
     "tabTwoFactor": "2FA"
   },
   "pinTab": {
+    "changeLost": "PIN değişikliğiniz kaydedilmedi: PIN önce başka bir cihazda değiştirildi.",
+    "phraseUnwrapped": "Bu tarayıcı, bu cihazın sakladığı kurtarma ifadesini koruyamadı; bu yüzden ifade burada şifrelenmeden saklanıyor. Bu cihazın deposunun bir kopyasına sahip olan herkes onu okuyabilir. İfadeyi yalnızca PIN'inizin ya da geçiş kodunuzun arkasında tutmak için Kilit sekmesinden uygulama kilidini açın.",
     "enterCurrent": "Değişiklik yapmak için mevcut PIN'inizi girin.",
     "currentPin": "Mevcut PIN",
-    "checking": "Kontrol ediliyor...",
     "verify": "Doğrula",
     "replaceExisting": "Yeni bir 4 haneli PIN girin. Bu, mevcut PIN'inizin yerini alır.",
     "setIntro": "4 haneli PIN, korumalı notlarınızı ve kurtarma ifadenizi açar. Tüm cihazlarınıza eşitlenir.",
@@ -42,10 +42,8 @@
     "setPin": "PIN oluştur",
     "removePin": "PIN'i kaldır",
     "reaskAfter": "PIN'in yeniden sorulma süresi",
-    "reaskHint": "İfade görünümü ve PIN korumalı notlar için geçerlidir.",
+    "reaskHint": "Bu cihazdaki ifade görünümü ve PIN korumalı notlar için geçerlidir.",
     "incorrectPin": "PIN yanlış.",
-    "incorrectPinRetry": "PIN yanlış. Tekrar deneyin.",
-    "tooManyAttempts": "Çok fazla deneme. {{seconds}} sn sonra tekrar deneyin.",
     "pinFourDigits": "PIN 4 haneli olmalı.",
     "pinsDoNotMatch": "PIN'ler eşleşmiyor.",
     "passcodeIntro": "Geçiş kodu korumalı notlarınızı ve kurtarma ifadenizi açar. Tüm cihazlarınıza eşitlenir.",
@@ -61,8 +59,7 @@
     "ruleNotDigits": "Yalnızca rakamlardan oluşmamalı",
     "ruleMax": "En fazla {{max}} karakter",
     "passcodesDoNotMatch": "Geçiş kodları eşleşmiyor.",
-    "incorrectPasscode": "Geçiş kodu yanlış.",
-    "incorrectPasscodeRetry": "Geçiş kodu yanlış. Tekrar deneyin."
+    "incorrectPasscode": "Geçiş kodu yanlış."
   },
   "timeout": {
     "min1": "1 dakika",
@@ -76,16 +73,11 @@
     "browserRestart": "Tarayıcı yeniden başlatıldığında"
   },
   "pinInfo": {
-    "title": "Görüntülemek için PIN iste",
     "body": "Bu açıkken, uygulama zaten kilidi açık olsa bile bu ögeyi her açtığınızda PIN istenir. Başınızdan ayrıldığınızda korunmaya devam etmesi gereken hassas ögeler için kullanın."
   },
   "removePinDialog": {
-    "title": "PIN'i kaldır",
     "introWithBio": "Kaldırmayı onaylamak için mevcut PIN'inizi girin. Biyometrik kilit açma etkin kalır, ancak tek yedek yönteminiz kurtarma ifadeniz olur.",
     "introNoBio": "Kaldırmayı onaylamak için mevcut PIN'inizi girin. Kurtarma ifadeniz bundan sonra PIN olmadan açılır.",
-    "verifying": "Doğrulanıyor...",
-    "removePin": "PIN'i kaldır",
-    "titlePasscode": "Geçiş kodunu kaldır",
     "introWithBioPasscode": "Kaldırmayı onaylamak için mevcut geçiş kodunuzu girin. Biyometrik kilit açma etkin kalır, ancak tek yedek yönteminiz kurtarma ifadeniz olur.",
     "introNoBioPasscode": "Kaldırmayı onaylamak için mevcut geçiş kodunuzu girin. Kurtarma ifadeniz bundan sonra geçiş kodu olmadan açılır.",
     "removePasscode": "Geçiş kodunu kaldır"
@@ -109,16 +101,10 @@
   },
   "phraseGate": {
     "enterToView": "İfadenizi görmek için 4 haneli PIN'inizi girin.",
-    "incorrectPinRetry": "PIN yanlış. Tekrar deneyin.",
-    "tooManyAttempts": "Çok fazla deneme. {{seconds}} sn sonra tekrar deneyin.",
-    "lockedFor": "{{seconds}} sn kilitli",
-    "checking": "Kontrol ediliyor...",
-    "unlock": "Kilidi aç",
     "enterToChangeCustody": "Anahtar saklama ayarını değiştirmek için 4 haneli PIN kodunuzu girin.",
     "checkFailed": "PIN kodunuz kontrol edilemedi. Tekrar deneyin.",
     "enterToViewPasscode": "İfadenizi görmek için geçiş kodunuzu girin.",
     "enterToChangeCustodyPasscode": "Anahtar saklama ayarını değiştirmek için geçiş kodunuzu girin.",
-    "incorrectPasscodeRetry": "Geçiş kodu yanlış. Tekrar deneyin.",
     "checkFailedPasscode": "Geçiş kodunuz kontrol edilemedi. Tekrar deneyin."
   },
   "phraseView": {
@@ -133,11 +119,9 @@
     "hideQr": "QR kodunu gizle",
     "showQr": "QR kodunu göster",
     "saveQr": "QR'ı kaydet",
-    "copied": "Kopyalandı",
     "copyPhrase": "İfadeyi kopyala"
   },
   "custody": {
-    "eyebrow": "Anahtar saklama",
     "current": "Mevcut",
     "rowDevice": "Yeni cihaz",
     "rowDeviceCustodial": "{{provider}} ile giriş yapın, yazacak bir şey yok",
@@ -152,7 +136,6 @@
     "releaseWarning": "Önce 12 kelimelik ifadenizi PrivacyNotes dışında kaydedin. Kopyamızı sildikten sonra yeni cihazlarda ona ihtiyacınız olacak.",
     "challengePrompt": "Kelimelerin sizde olduğunu doğrulamak için yukarıdaki listeden şunları yazın.",
     "wordLabel": "{{position}}. kelime",
-    "busy": "Kaydediliyor...",
     "releaseConfirm": "Sunucudan sil",
     "adoptConfirm": "Bir kopyayı bizde sakla",
     "releaseDone": "Tamamdır. Artık ifadenizin bir kopyasını tutmuyoruz. Yeni cihazlar bu 12 kelimeyi ya da bir QR okutmasını isteyecek.",
@@ -189,6 +172,7 @@
     "boundStatus": "Biyometrik kilit açma, geçiş anahtarınıza bağlı.",
     "boundStatusNative": "Biyometrik kilit açma, bu cihazın güvenli donanımına bağlı.",
     "setUpAgain": "Daha güçlü bir kilit için yeniden ayarla",
+    "unboundWeaker": "Bu cihazda biyometrik kilit açma bir kilit değil, yakındaki kişilere karşı bir engeldir: bu cihazın depolamasının bir kopyasına sahip olan biri, notlarınızı parmak iziniz veya yüzünüz olmadan açabilir.",
     "cannotBind": "Bu tarayıcıdaki geçiş anahtarı uygulaması daha güçlü kilidi oluşturamıyor. Biyometrik kilit açma eskisi gibi çalışmaya devam ediyor. Geçiş anahtarlarınızı bir parola yöneticisi kaydediyorsa, onun geçiş anahtarı seçeneğini kapatın, ardından cihazınızın kendi geçiş anahtarı deposunu kullanmak için biyometrik kilit açmayı kapatıp yeniden açın.",
     "bindOffer": "Bu cihazdaki biyometrik kilit açma henüz geçiş anahtarınıza bağlı değil ve bu tarayıcı onu bağlayabilir. Bir kez yeniden ayarlayın; böylece anahtarı bu cihazın depolamasında değil, geçiş anahtarınızda kalır.",
     "bindOfferLater": "Şimdi değil",
@@ -196,14 +180,14 @@
     "settingUp": "Ayarlanıyor...",
     "enable": "Biyometrik kilit açmayı etkinleştir",
     "lockOnOpen": "Açılışta uygulamayı kilitle",
-    "lockOnOpenHint": "Uygulama açılırken biyometrik doğrulama ya da PIN ister.",
+    "lockOnOpenHint": "Uygulama bu cihazda açılırken biyometrik doğrulama ya da PIN ister.",
     "lockHidesOnSwitch": "Uygulama değiştirirken notlarınızı da gizler.",
     "lockNeedsCredential": "Uygulama kilidi bu cihazda bir PIN ya da biyometrik kilit açma gerektirir.",
     "setUpPin": "PIN oluştur",
     "confirmPinForLock": "Bunu açmak için PIN'inizi girin. Kurtarma ifadenizin bir kopyasını kilitler, böylece uygulamayı yalnızca PIN'iniz açabilir.",
     "confirmPasscodeForLock": "Bunu açmak için geçiş kodunuzu girin. Kurtarma ifadenizin bir kopyasını kilitler, böylece uygulamayı yalnızca geçiş kodunuz açabilir.",
     "relockAfter": "Tekrar kilitlenme süresi",
-    "relockHint": "Yalnızca uygulama kilit ekranı için geçerlidir.",
+    "relockHint": "Yalnızca bu cihazdaki uygulama kilit ekranı için geçerlidir.",
     "blockCapture": "Ekran yakalamada gizle",
     "blockCaptureHint": "Cihazınızın izin verdiği ölçüde notlarınızı ekran görüntülerinin, kayıtların ve ekran paylaşımının dışında tutar. Yalnızca bu cihaz için geçerlidir.",
     "perDeviceNote": "Biyometrik kilit açma, PIN ile aynı notları açar. Bu cihazda kalır ve hiçbir zaman eşitlenmez.",
@@ -216,31 +200,19 @@
     "phraseNotSaved": "Bu cihaz kurtarma ifadenizi kaydedemedi, bu yüzden hiçbir şey değişmedi. Yeniden deneyin."
   },
   "pinSetup": {
-    "title": "Bir PIN oluşturun",
     "description": "Kurtarma ifadenizi görüntülemek için 4 haneli bir PIN gerekecek. İsteğe bağlı, ama ortak alanlarda tavsiye edilir.",
-    "newPin": "Yeni PIN",
-    "confirmPin": "PIN tekrarı",
-    "skipForNow": "Şimdilik geç",
-    "saving": "Kaydediliyor…",
-    "setPin": "PIN oluştur",
-    "pinFourDigits": "PIN 4 haneli olmalı.",
-    "pinsDoNotMatch": "PIN'ler eşleşmiyor."
+    "skipForNow": "Şimdilik geç"
   },
   "pinInput": {
-    "ariaLabel": "PIN",
     "digitAriaLabel": "{{index}}. hane"
   },
   "passcodeInput": {
-    "ariaLabel": "Geçiş kodu",
     "show": "Geçiş kodunu göster",
     "hide": "Geçiş kodunu gizle"
   },
   "protectedGate": {
-    "biometricFailed": "Biyometrik doğrulama başarısız oldu ya da iptal edildi.",
     "protectedItem": "Korumalı öğe",
     "biometricSubtitle": "Bu öğenin kilidini açmak için parmak izinizi veya yüzünüzü kullanın.",
-    "verifying": "Doğrulanıyor...",
-    "unlock": "Kilidi aç",
     "usePinInstead": "Bunun yerine PIN kullan",
     "useBiometricInstead": "Bunun yerine biyometri kullan",
     "disableProtection": "Korumayı devre dışı bırak",
@@ -248,18 +220,10 @@
     "disableSubtitle": "Not olduğu yerde kalır. Yalnızca kilit kalkar.",
     "disableBiometricSubtitle": "Parmak iziniz veya yüzünüzle onaylayın.",
     "verifySubtitle": "Bu öğenin kilidini açmak için 4 haneli PIN'inizi girin. Kilit açma, Güvenlik'te belirlediğiniz süre boyunca geçerli olur.",
-    "incorrectPinRetry": "PIN yanlış. Tekrar deneyin.",
-    "tooManyAttempts": "Çok fazla deneme. {{seconds}} sn sonra tekrar deneyin.",
     "lockedFor": "{{seconds}} sn kilitli",
-    "checking": "Kontrol ediliyor...",
     "bootstrapTitle": "Bir PIN oluşturun",
     "bootstrapSubtitle": "Bu öğe PIN korumalı, ancak bu cihazda ayarlı bir PIN yok. Kilidini açmak için 4 haneli bir PIN oluşturun. PIN'iniz tüm cihazlarınızla eşitlenir.",
     "bootstrapWarning": "Burada PIN oluşturmak için önceki PIN'i bilmek gerekmez. Kurtarma ifadeniz elinde olan herkes bunu yeni bir cihazda yapabilir. Gerçekten hassas içerikler için yalnızca ifadeyle kimlik doğrulamayı tercih edin.",
-    "newPin": "Yeni PIN",
-    "confirmPin": "PIN tekrarı",
-    "pinFourDigits": "PIN 4 haneli olmalı.",
-    "pinsDoNotMatch": "PIN'ler eşleşmiyor.",
-    "saving": "Kaydediliyor...",
     "setPinUnlock": "PIN oluştur ve kilidi aç",
     "pinRequired": "PIN gerekli",
     "deleteSubtitle": "Bu korumalı öğeyi silmek için PIN'inizi girin.",
@@ -267,7 +231,6 @@
     "usePasscodeInstead": "Bunun yerine geçiş kodu kullan",
     "disableTitlePasscode": "Korumayı devre dışı bırakmak için geçiş kodu girin",
     "verifySubtitlePasscode": "Bu öğenin kilidini açmak için geçiş kodunuzu girin. Kilit açma, Güvenlik'te belirlediğiniz süre boyunca geçerli olur.",
-    "incorrectPasscodeRetry": "Geçiş kodu yanlış. Tekrar deneyin.",
     "passcodeRequired": "Geçiş kodu gerekli",
     "deleteSubtitlePasscode": "Bu korumalı öğeyi silmek için geçiş kodunuzu girin."
   },
@@ -294,19 +257,14 @@
     "checking": "Kontrol ediliyor...",
     "unlock": "Kilidi aç",
     "recoveryPhrase": "Kurtarma ifadesi",
-    "recoveryPhraseSubtitle": "Kilidi açmak için 12 kelimelik kurtarma ifadenizi girin.",
-    "invalidPhrase": "Geçersiz ifade. Yazımı ve kelime sırasını kontrol edin.",
-    "phrasePlaceholder": "kelime1 kelime2 kelime3 kelime4 kelime5 kelime6 kelime7 kelime8 kelime9 kelime10 kelime11 kelime12"
+    "recoveryPhraseSubtitle": "Kilidi açmak için 12 kelimelik kurtarma ifadenizi girin."
   },
   "deviceLimit": {
     "title": "Cihaz sınırına ulaşıldı",
     "body": "Ücretsiz hesaplar aynı anda en fazla {{limit}} cihazda eşitlenebilir. Şu anda {{count}} cihazınız var. Bu cihazda devam etmek için birini kaldırın ya da sınırsız cihaz için Pro'ya yükseltin.",
     "activeDevices": "Etkin cihazlar",
-    "recentlyRemoved": "Son kaldırılanlar",
-    "removedAt": "{{when}} kaldırıldı",
     "upgradeHeading": "Ya da Pro'ya yükseltin",
     "upgradeBody": "Tek seferlik ödeme, abonelik yok. Sınırsız cihazın yanı sıra görseller, not geçmişi ve dahası.",
-    "openingCheckout": "Ödeme sayfası açılıyor...",
     "upgradeCta": "Pro'ya yükselt ({{price}} $)",
     "needMoreHeading": "Daha fazla cihaz mı lazım?",
     "needMoreBody": "Bu sürümde Pro yükseltmesi yapılamıyor. Gerçekten üçüncü bir cihaza ihtiyacınız varsa bize yazın, hallederiz.",
@@ -315,8 +273,6 @@
     "saveRecoveryBody": "OAuth ile giriş yaptınız. 12 kelimelik ifadenizi de bir yere yazın. OAuth bir gün çalışmazsa ya da tüm cihazlarınızdan kilitlenirseniz yedek planınız o olacak.",
     "hide": "Gizle",
     "viewRecoveryPhrase": "Kurtarma ifadesini göster",
-    "signOut": "Çıkış yap",
-    "thisDevice": "Bu cihaz",
     "lastActive": "{{platform}} · son etkinlik {{when}}",
     "removing": "Kaldırılıyor..."
   },
@@ -329,9 +285,9 @@
     "bitcoinBody": "İnsanlar onu aynı türden 12 kelimelik bir ifadeyle korur.",
     "universeTitle": "Evrenin yaşının 700 katı",
     "universeBody": "Saniyede milyar kere milyar tahminle her ifadeyi denemek için.",
-    "twinTitle": "Dünyada kimsede sizin ifadeniz yok",
+    "twinTitle": "Dünyada başka hiç kimse aynı ifadeyi almayacak",
     "twinBody": "8 milyar kişinin hepsi PrivacyNotes kullansa bile.",
-    "keepPrivate": "Tek giriş yolu gerçek 12 kelimenizdir. Onları gizli tutun."
+    "keepPrivate": "Tahmin etmek bir giriş yolu değildir. 12 kelimenizi gizli tutun."
   },
   "connectedAccounts": {
     "title": "Bağlı hesaplar",
@@ -355,13 +311,10 @@
     "connectAnotherProvider": "Başka bir {{provider}} hesabı bağla",
     "updateTitle": "Bu kasanın girişini güncelle",
     "updateDescription": "Bu işlem, kayıtlı ifadenizi ve bağlı hesaplarınızı iki faktörlü girişe hazırlar ve bağlı hesapları yönetmenizi sağlar. Notlarınız ve anahtar saklama ayarınız değişmez.",
-    "updateDevices": "Devam etmeden önce diğer cihazlarınızdaki uygulamayı güncelleyin. Bu cihazlarda yeniden giriş yapmanız gerekebilir.",
-    "updateAcknowledgment": "Diğer cihazlarımda PrivacyNotes'u güncelledim.",
     "updateAction": "Girişi güncelle",
     "setupTitle": "Google, Apple veya GitHub bağla",
     "setupDescription": "İlk bağlantı için bu kasanın bir kez güncellenmesi gerekir. Notlarınız ve anahtar saklama ayarınız aynı kalır.",
     "setupAction": "Bağlı hesapları kur",
-    "closed": "Hesap bağlama ve kaldırma yakında açılacak. O zamana kadar şimdiki gibi giriş yapın.",
     "repairTitle": "Giriş güncellemesini tamamla",
     "repairDescription": "Bu kasa zaten güncellenmiş girişi kullanıyor. Burada kilidi açılmış olan ifadeyle bu cihazı yeniden bağlayın. Yerel notlarınız kullanılabilir kalır.",
     "repairAction": "Bu kasaya devam et",
@@ -379,7 +332,6 @@
     "rateLimited": "Çok fazla hesap değişikliği denendi. Biraz bekleyip tekrar deneyin.",
     "connectionMissing": "Bu hesap artık bağlı değil. Tekrar denemeden önce güncel hesap listesini kontrol edin.",
     "noAccounts": "Bağlı sağlayıcı hesabı yok. Kayıtlı ifadeniz giriş yönteminizdir.",
-    "actionFailed": "Değişiklik doğrulanamadı. Bağlantınızı kontrol edip tekrar deneyin.",
     "retry": "Hesapları yeniden kontrol et",
     "connectDone": "Hesap bu kasaya bağlandı. Anahtar saklama ayarı değişmedi.",
     "disconnectDone": "Hesabın bağlantısı kaldırıldı. Notlarınız ve anahtar saklama ayarınız değişmedi.",
@@ -389,7 +341,6 @@
     "freshMfa": "Bu değişikliği onaylamak için doğrulama uygulamanızdan yeni bir kod gerekir. İki faktörlü giriş sonrasında açık kalır.",
     "continueProvider": "{{provider}} ile devam et",
     "working": "İşleniyor...",
-    "cancel": "İptal",
     "confirmDisconnect": "{{provider}} bağlantısı kaldırılsın mı?",
     "account": "bu hesap",
     "lastCustodial": "Bu, bağlı son hesabınız. Önce başka bir hesap bağlayın veya bunu kaldırmadan önce ifadenizi kaydedip kendi saklama moduna geçin.",
@@ -445,10 +396,7 @@
       "key": "Anahtarı kaydet",
       "confirm": "Onayla"
     },
-    "next": "İleri",
-    "back": "Geri",
     "stepOf": "Adım {{step}} / 3",
-    "working": "İşleniyor...",
     "scan": "Bu kodu doğrulama uygulamanızla tarayın.",
     "qrLabel": "Doğrulama uygulamanız için QR kodu",
     "openAuthenticator": "Bu telefonda mısınız? Doğrulama uygulamanızı açın",
@@ -462,9 +410,7 @@
     "backupWarning": "Telefonunuzu mu kaybettiniz? Bu anahtar kodlarınızı geri getirir. PrivacyNotes dışında güvenli bir yerde saklayın.",
     "savedAcknowledgment": "Yedek anahtarı kaydettim.",
     "confirmBackup": "Önceki adımdaki yedek anahtarınızı tekrar yazın, ardından uygulamanızdaki kodu girin.",
-    "reenterBackup": "Yedek anahtar",
     "codeLabel": "Uygulamanızdaki kod",
-    "activate": "2FA'yı aç",
     "cancelSetup": "İptal",
     "enabled": "2FA açık",
     "authenticatorRow": "Doğrulama uygulaması",
@@ -484,11 +430,6 @@
     "overview": "Genel bakış",
     "keyCustody": "Anahtar saklama",
     "accounts": "Hesaplar"
-  },
-  "beta": {
-    "label": "Beta",
-    "notice": "Bu özellik beta aşamasında.",
-    "reportBug": "Hata bildir"
   },
   "demoTeaser": {
     "accounts": "Kasanıza Google, Apple veya GitHub bağlamak için bir hesap oluşturun.",

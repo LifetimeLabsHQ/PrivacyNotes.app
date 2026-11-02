@@ -15,7 +15,7 @@ import { X } from './icons';
  * than decoration: amber says "a filter is on" everywhere in the pane, accent
  * is the app's own colour and reads as furniture.
  *
- * Spec: ops/docs/archive/ui-patterns.md (section 41)
+ * Spec: docs/internal/design/ui-patterns.md (section 41)
  */
 export function ListEntryCard({
   variant,
@@ -58,9 +58,9 @@ export function ListEntryCard({
       >
         <button type="button" onClick={onClick} className="flex flex-col items-center gap-2">
           <span className={`inline-flex h-9 w-9 items-center justify-center rounded-full ${glyphClass}`}>
-            <Icon size={17} />
+            <Icon />
           </span>
-          <span className="text-[13px] font-medium">{label}</span>
+          <span className="text-compact font-medium">{label}</span>
         </button>
         {onDismiss && (
           <button
@@ -69,7 +69,7 @@ export function ListEntryCard({
             aria-label={dismissLabel}
             className={`absolute end-1.5 top-1.5 h-6 w-6 ${dismissClass}`}
           >
-            <X size={12} />
+            <X />
           </button>
         )}
       </Tag>
@@ -80,9 +80,9 @@ export function ListEntryCard({
     <Tag className="flex items-center gap-2 border-b border-divider/50 px-4 py-3 transition hover:bg-pn/5">
       <button type="button" onClick={onClick} className="flex min-w-0 flex-1 items-center gap-3 text-start">
         <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${glyphClass}`}>
-          <Icon size={16} />
+          <Icon />
         </span>
-        <span className="min-w-0 truncate text-[14px] font-medium">{label}</span>
+        <span className="min-w-0 truncate text-body font-medium">{label}</span>
       </button>
       {onDismiss && (
         <button
@@ -91,7 +91,7 @@ export function ListEntryCard({
           aria-label={dismissLabel}
           className={`h-7 w-7 ${dismissClass}`}
         >
-          <X size={14} />
+          <X />
         </button>
       )}
     </Tag>

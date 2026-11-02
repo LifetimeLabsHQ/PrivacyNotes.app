@@ -13,7 +13,7 @@
  *
  * The end of a session needs no version: it is the note itself, and the
  * next session's first edit records it.
- * Spec: ops/docs/supabase.md (Note history: when a version is made)
+ * Spec: docs/contrib/supabase.md (Note history: when a version is made)
  */
 
 export const SESSION_IDLE_MS = 5 * 60_000;

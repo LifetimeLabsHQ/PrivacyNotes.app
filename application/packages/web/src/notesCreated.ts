@@ -52,7 +52,11 @@ export function bumpNotesCreated(): void {
     const rev = s.settingsRev;
     s.settingsRev =
       (typeof rev === 'number' && Number.isFinite(rev) && rev >= 0 ? Math.floor(rev) : 0) + 1;
-    cache.updatedAt = new Date().toISOString();
+    // A split envelope keeps this bundle's stamp beside the fence for older
+    // bundles, which must stay as it is (SplitMeta in userSettings.ts).
+    const split = (cache as { split?: { updatedAt?: unknown } }).split;
+    if (split && typeof split === 'object') split.updatedAt = new Date().toISOString();
+    else cache.updatedAt = new Date().toISOString();
     cache.dirty = true;
     localStorage.setItem(key, JSON.stringify(cache));
     if (!allowed()) localStorage.removeItem(key);

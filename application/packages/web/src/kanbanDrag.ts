@@ -8,7 +8,7 @@ import { CARD_MENU_EVENT, cardPlace, moveCard, type CardMenuDetail } from './kan
  * the board's Move to menu, which is the path on a phone, where a long press
  * selects text, and from the keyboard. One transaction on release, so undo
  * takes the move back.
- * Spec: ops/issues/0270.md (Spec, move a card)
+ * Spec: docs/internal/issues/0270.md (Spec, move a card)
  */
 
 /** The board and column of a top-level card, or null for any other task. */

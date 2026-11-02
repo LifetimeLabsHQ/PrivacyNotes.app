@@ -39,7 +39,7 @@ fn main() {
     // and `ios build`, which is also when the plugin writes. The host is the
     // one in OAUTH_APP_LINK_REDIRECT (packages/web/src/authStorage.ts), and
     // tests/desktopCapabilities.test.ts holds the two together.
-    // Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.2)
+    // Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.2)
     if target_os == "ios" {
         claim_associated_domains();
     }
@@ -92,7 +92,7 @@ fn claim_associated_domains() {
         // The share extension writes into this group's folder and the app
         // reads it (src/share_inbox.rs). Written here for the same reason as
         // the domains: xcodegen blanks the file.
-        // Spec: ops/docs/archive/share-into-app.md
+        // Spec: docs/internal/specs/share-into-app.md
         entitlements.insert(
             "com.apple.security.application-groups".into(),
             plist::Value::Array(vec![plist::Value::String("group.app.privacynotes".into())]),

@@ -72,7 +72,7 @@ function withoutAccents(word: string): string {
  * has made half-width katakana full width. NFKC has already composed the
  * text, so a Hangul syllable or a voiced kana stays whole. Pure ASCII takes
  * the short path, which gives the same result.
- * Spec: ops/docs/design-decisions.md (search folding)
+ * Spec: docs/internal/design-decisions.md (search folding)
  */
 export function foldText(text: string): string {
   if (ASCII_ONLY.test(text)) return text.toLowerCase();

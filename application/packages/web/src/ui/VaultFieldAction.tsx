@@ -21,7 +21,7 @@ export function VaultFieldAction({ kind, active = false, title, onClick }: {
   return <HoverLabel label={title} position={kind === 'reveal' ? 'above' : 'start'}>
     <button type="button" onClick={onClick} aria-label={title}
       aria-pressed={kind === 'reveal' ? active : undefined} className={FIELD_BUTTON}>
-      <Glyph size={16} aria-hidden="true" className={kind === 'copy' && active ? 'text-success' : undefined} />
+      <Glyph aria-hidden="true" className={kind === 'copy' && active ? 'text-success' : undefined} />
     </button>
   </HoverLabel>;
 }

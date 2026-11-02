@@ -27,6 +27,7 @@ import {
   PencilSimple,
   Prohibit,
   Trash,
+  PILLAR_GLYPHS,
   type Icon,
 } from './icons';
 
@@ -93,9 +94,13 @@ export interface FolderTreeProps {
   itemDrop?: FolderTreeViewProps['itemDrop'];
   /** The root folder menu's "Move to Work" or "Move to Personal" item for a
    *  folder, and the empty tree's text, while spaces are on.
-   *  Spec: ops/docs/plans/spaces.md */
+   *  Spec: docs/internal/specs/spaces.md */
   spaceMove?: (id: string) => { label: React.ReactNode; icon: Icon; run: () => void };
   emptyText?: string;
+  /** Home's "Show on Home" row: whether a widget shows the folder, and the
+   *  toggle. Absent while the layout cannot be written.
+   *  Spec: docs/internal/specs/dashboard.md (section 6) */
+  home?: { has: (id: string) => boolean; toggle: (id: string) => void };
   /** Sibling sort (persisted per-device in NotesView, like tag sort). */
   sortField: FolderSortField;
   sortDir: FolderSortDir;
@@ -123,6 +128,7 @@ export function FolderTree({
   itemDrop,
   spaceMove,
   emptyText,
+  home,
   sortField,
   sortDir,
   mobileTabIndex,
@@ -221,7 +227,7 @@ export function FolderTree({
   return (
     <>
       {folders.length === 0 && creatingUnder === undefined && (
-        <div className="text-[13px] text-pn-muted px-2 py-1">
+        <div className="text-compact text-pn-muted px-2 py-1">
           {emptyText ?? t('folders.noFoldersYet')}
         </div>
       )}
@@ -287,7 +293,7 @@ export function FolderTree({
               >
                 <DotsThree />
               </button>
-              <span className="text-xs text-pn-muted tabular-nums ms-1 me-2 shrink-0">
+              <span className="text-small text-pn-muted tabular-nums ms-1 me-2 shrink-0">
                 {(isExpanded(f) ? counts : totals).get(f.id) ?? 0}
               </span>
             </>
@@ -299,11 +305,11 @@ export function FolderTree({
               className="border-s border-divider"
               style={{ marginInlineStart: level + 1 < MAX_INDENT_LEVEL ? INDENT_PX : 0 }}
             >
-              <div className="w-full rounded text-[15px] font-medium flex items-center text-pn">
+              <div className="w-full rounded text-row font-medium flex items-center text-pn">
                 <span className="shrink-0 w-5 ms-0.5" aria-hidden="true" />
                 <div className="flex-1 min-w-0 flex items-center gap-2 py-2 pe-2">
                   <span className="inline-flex shrink-0 text-label">
-                    <Folder size={16} />
+                    <Folder />
                   </span>
                   <FolderNameInput
                     value={createDraft}
@@ -332,7 +338,7 @@ export function FolderTree({
           tabIndex={mobileTabIndex}
           onClick={() => onSelectFolder(selectedFolder === UNFILED_ID ? null : UNFILED_ID)}
           data-drop-folder={itemDrop ? UNFILED_ID : undefined}
-          className={`w-full text-start px-2 py-2 rounded text-[15px] font-medium transition flex justify-between items-center ${
+          className={`w-full text-start px-2 py-2 rounded text-row font-medium transition flex justify-between items-center ${
             itemDrop?.overId === UNFILED_ID
               ? `${SIDEBAR_DROP_INSIDE} text-pn`
               : selectedFolder === UNFILED_ID
@@ -342,23 +348,23 @@ export function FolderTree({
         >
           <span className="flex items-center gap-2 min-w-0">
             <span className="inline-flex shrink-0">
-              <Prohibit size={16} />
+              <Prohibit />
             </span>
             <span className={`truncate${openNoteFolder === null ? ' font-bold' : ''}`}>
               {t('folders.unfiled')}
             </span>
           </span>
-          <span className="text-xs tabular-nums">
+          <span className="text-small tabular-nums">
             {unfiledCount}
           </span>
         </button>
       )}
 
       {creatingUnder === null ? (
-        <div className="w-full rounded text-[15px] font-medium flex items-center text-pn">
+        <div className="w-full rounded text-row font-medium flex items-center text-pn">
           <div className="flex-1 min-w-0 flex items-center gap-2 px-2 py-2">
             <span className="inline-flex shrink-0 text-accent">
-              <Folder size={16} />
+              <Folder />
             </span>
             <FolderNameInput
               value={createDraft}
@@ -387,10 +393,10 @@ export function FolderTree({
              read as one more folder. Same FolderPlus mark and amber tint as
              the folder picker's own "New folder" button, so the two say the
              same thing in the two places they appear.
-             Spec: ops/docs/archive/ui-patterns.md (section 76) */
-          className="w-full mt-2 rounded-md border border-dashed border-divider hover:border-accent/50 text-[15px] font-medium transition flex items-center justify-start gap-2 ps-[7px] pe-2 py-2 text-pn-muted hover:text-accent"
+             Spec: docs/internal/design/ui-patterns.md (section 76) */
+          className="w-full mt-2 rounded-md border border-dashed border-divider hover:border-accent/50 text-row font-medium transition flex items-center justify-start gap-2 ps-[7px] pe-2 py-2 text-pn-muted hover:text-accent"
         >
-          <FolderPlus size={16} className="shrink-0 text-label" />
+          <FolderPlus className="shrink-0 text-label" />
           <span className="truncate">{t('folders.new')}</span>
         </button>
       )}
@@ -422,7 +428,7 @@ export function FolderTree({
                       setCreatingUnder(menuFolder.id);
                       expand(folders, menuFolder.id);
                     }}
-                    className="w-full text-start px-3 py-1.5 text-[13px] text-pn-soft hover:bg-surface-1 flex items-center gap-2"
+                    className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
                   >
                     <FolderPlus className="text-accent" />
                     {t('folders.newSubfolder')}
@@ -433,7 +439,7 @@ export function FolderTree({
                     setMenu(null);
                     onRequestMove(menuFolder.id);
                   }}
-                  className="w-full text-start px-3 py-1.5 text-[13px] text-pn-soft hover:bg-surface-1 flex items-center gap-2"
+                  className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
                 >
                   <ArrowElbowDownRight className="text-accent" />
                   {t('folders.move')}
@@ -446,7 +452,7 @@ export function FolderTree({
                         setMenu(null);
                         move.run();
                       }}
-                      className="w-full text-start px-3 py-1.5 text-[13px] text-pn-soft hover:bg-surface-1 flex items-center gap-2"
+                      className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
                     >
                       <move.icon className="text-accent" />
                       {move.label}
@@ -459,7 +465,7 @@ export function FolderTree({
                     setRenameBuffer(menuFolder.name);
                     setRenamingId(menuFolder.id);
                   }}
-                  className="w-full text-start px-3 py-1.5 text-[13px] text-pn-soft hover:bg-surface-1 flex items-center gap-2"
+                  className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
                 >
                   <PencilSimple className="text-accent" />
                   {t('folders.rename')}
@@ -470,11 +476,23 @@ export function FolderTree({
                       setMenu(null);
                       onEditLook(menuFolder.id);
                     }}
-                    className="w-full text-start px-3 py-1.5 text-[13px] text-pn-soft hover:bg-surface-1 flex items-center gap-2"
+                    className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
                   >
                     <Palette className="text-accent" />
                     <span className="flex-1">{t('looks.menu')}</span>
                     {looksProMark && <ProMark />}
+                  </button>
+                )}
+                {home && (
+                  <button
+                    onClick={() => {
+                      setMenu(null);
+                      home.toggle(menuFolder.id);
+                    }}
+                    className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
+                  >
+                    <PILLAR_GLYPHS.dashboard className="text-accent" />
+                    {t(home.has(menuFolder.id) ? 'dashboard.removeFromHome' : 'dashboard.showOnHome')}
                   </button>
                 )}
                 <div className="my-1 border-t border-divider" />
@@ -483,7 +501,7 @@ export function FolderTree({
                     setMenu(null);
                     expandAll(folders);
                   }}
-                  className="w-full text-start px-3 py-1.5 text-[13px] text-pn-soft hover:bg-surface-1 flex items-center gap-2"
+                  className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
                 >
                   <ArrowsOutLineVertical className="text-accent" />
                   {t('folders.expandAll')}
@@ -493,7 +511,7 @@ export function FolderTree({
                     setMenu(null);
                     collapseAll(folders);
                   }}
-                  className="w-full text-start px-3 py-1.5 text-[13px] text-pn-soft hover:bg-surface-1 flex items-center gap-2"
+                  className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
                 >
                   <ArrowsInLineVertical className="text-accent" />
                   {t('folders.collapseAll')}
@@ -506,7 +524,7 @@ export function FolderTree({
                 setMenu(null);
                 onRequestDelete(menuFolder.id);
               }}
-              className="w-full text-start px-3 py-1.5 text-[13px] text-danger hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2"
+              className="w-full text-start px-3 py-1.5 text-compact text-danger hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2"
             >
               <Trash />
               {t('folders.delete')}

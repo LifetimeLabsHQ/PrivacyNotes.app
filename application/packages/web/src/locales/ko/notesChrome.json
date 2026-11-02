@@ -1,6 +1,4 @@
 {
-  "dismiss": "닫기",
-  "close": "닫기",
   "moveBanner": {
     "bodySignIn": "거기에서 복구 문구나 \"{{scanQr}}\"로 로그인하세요.",
     "cta": "지금 옮기기",
@@ -46,7 +44,7 @@
   },
   "signOutConfirm": {
     "title": "12단어 문구를 저장해 두셨나요?",
-    "body": "문구는 다시 들어올 수 있는 <only>유일한</only> 방법이에요. 이메일 재설정도, 고객센터 전화도 없어요. 저희는 당신이 누군지 몰라요. 그렇게 설계했으니까요. 아직 적어 두지 않았다면 <action>아니요, 문구 보기</action>를 누르세요. 지금 바로 열어 드릴게요.",
+    "body": "문구는 다시 들어올 수 있는 <only>유일한</only> 방법이에요. 이메일 재설정도, 고객센터 전화도 없어요. 아직 적어 두지 않았다면 <action>아니요, 문구 보기</action>를 누르세요. 지금 바로 열어 드릴게요.",
     "unsyncedWarn_other": "이 기기에 아직 동기화되지 않은 노트가 {{count}}개 있어요. 로그아웃할 때 업로드하지 못하면 영구적으로 사라져요.",
     "unsyncedKept_other": "이 기기에 아직 동기화되지 않은 노트가 {{count}}개 있어요. 노트는 이 기기에 남아 있다가 다시 로그인하면 동기화돼요.",
     "unsyncedFilesWarn_other": "이 기기에 동기화되지 않은 파일이 {{count}}개 있어요. 로그아웃하면 영구적으로 삭제돼요.",
@@ -62,6 +60,12 @@
     "moreNotes": "외 {{count}}개",
     "appLockHint": "공유 기기인가요? 설정 > 보안에서 앱 잠금을 켜 주세요."
   },
+  "signOutUpload": {
+    "uploading": "마지막 변경 사항을 업로드하는 중…",
+    "title": "아직 업로드되지 않은 변경 사항이 있어요",
+    "body": "지금 로그아웃하면 마지막 동기화 이후 이 기기에서 한 변경 사항이 사라져요. 변경 사항을 지키려면 인터넷에 연결하세요.",
+    "signOutAnyway": "그래도 로그아웃"
+  },
   "burnShareModal": {
     "title": "공유 & Burn After Reading",
     "body": "<lead>원본 노트는 삭제되지 않아요.</lead> 계정에 안전하게 남아요. burn 링크는 읽힌 뒤 스스로 파기되는 별도의 암호화 사본이에요.",
@@ -75,17 +79,15 @@
     "afterDays_other": "{{count}}일 후",
     "create": "링크 만들고 복사",
     "share": "링크 공유",
-    "imagesStripped": "이 노트에서는 텍스트만 표시되고 파일은 숨겨져요.",
-    "copied": "복사됨"
+    "imagesStripped": "이 노트에서는 텍스트만 표시되고 파일은 숨겨져요."
   },
   "burnView": {
     "title": "Burn After Reading",
     "tagline": "암호화됨. 한순간뿐. 당신 눈에만.",
     "toggleTheme": "테마 전환",
-    "checking": "확인 중...",
     "revealing": "가져와서 복호화하는 중...",
     "goToApp": "<brand/>으로 가기",
-    "footerTagline": "- 영지식 암호화 노트, 스위스에서 호스팅.",
+    "footerTagline": "- 암호화된 노트, 스위스에서 호스팅.",
     "sealed": {
       "heading": "암호화된 노트를 받았어요.",
       "subheading": "이 메시지는 읽으면 자동으로 파기돼요. 읽지 않은 링크는 저절로 만료돼요.",
@@ -123,5 +125,17 @@
     "demo": "burn 링크는 서버에 저장되는데, 데모는 서버와 통신하지 않아요. 실제 burn 링크를 만들려면 가입하세요.",
     "tooLarge": "노트가 너무 커서 burn 링크로 공유할 수 없어요({{size}}KB). 최대 {{max}}KB예요.",
     "storeFailed": "서버에 burn note를 저장하지 못했어요."
+  },
+  "dms": {
+    "returnTitle": "서버 사본이 삭제됐어요",
+    "returnBody_other": "데드맨 스위치가 {{date}}에 서버에서 노트를 삭제했어요. 이 기기에는 아직 노트 {{count}}개가 있어요. 보관하고 싶다면 백업을 다운로드한 다음 이 기기에서 삭제하세요.",
+    "returnBackup": "백업 다운로드",
+    "returnDelete": "이 기기에서 삭제"
+  },
+  "massDelete": {
+    "title": "다른 기기에서 노트가 삭제됐어요",
+    "body_other": "직접 또는 다른 기기에서 노트 {{count}}개를 삭제했어요. 이 기기에는 아직 남아 있어요. 직접 삭제했다면 여기서도 삭제하세요. 직접 삭제하지 않았다면 누군가 계정에 접근할 수 있을지도 몰라요. 노트를 유지하면 모든 기기에 다시 돌아와요.",
+    "keep": "노트 유지",
+    "delete": "여기서도 삭제"
   }
 }

@@ -519,17 +519,17 @@
     lb.setAttribute('aria-label', 'Screenshot');
     // The card's COPY_ICON and DONE_ICON in themes-page.ts.
     var copyIcons =
-      '<svg class="ic-copy" width="15" height="15" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg>' +
-      '<svg class="ic-done" width="15" height="15" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>';
+      '<svg data-ic class="ic-copy" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg>' +
+      '<svg data-ic class="ic-done" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>';
     lb.innerHTML =
       // The dock under the picture: the name, one meta line and the whole
       // description, then Copy code and Upvote. It wraps by its own width
       // (a container query), and the picture gives up the height it needs.
-      '<div class="lb-fig"><img alt=""><div class="lb-dock"><div class="lb-in"><div class="lb-info"><div class="lb-head"><p class="lb-t"></p><p class="lb-m"></p></div><p class="lb-d"></p></div>' +
+      '<div class="lb-fig"><img alt=""><div class="lb-dock"><div class="lb-in"><div class="lb-info"><div class="lb-head"><p class="lb-t"></p><p class="lb-m"></p><p class="lb-m lb-tap">Tap the picture to zoom</p></div><p class="lb-d"></p></div>' +
       '<div class="lb-acts"><button type="button" class="lb-btn lb-copy" data-label-done="Copied" aria-keyshortcuts="C" hidden>' + copyIcons + '<span class="cl">Copy code</span><kbd>C</kbd></button>' +
       '<a class="lb-btn lb-vote" target="_blank" rel="noopener noreferrer nofollow" hidden>' +
       // The card's P_ARROW_UP in themes-page.ts.
-      '<svg width="15" height="15" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M205.66,117.66a8,8,0,0,1-11.32,0L136,59.31V216a8,8,0,0,1-16,0V59.31L61.66,117.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0l72,72A8,8,0,0,1,205.66,117.66Z"/></svg>' +
+      '<svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M205.66,117.66a8,8,0,0,1-11.32,0L136,59.31V216a8,8,0,0,1-16,0V59.31L61.66,117.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0l72,72A8,8,0,0,1,205.66,117.66Z"/></svg>' +
       '<span>Upvote</span><kbd class="lb-vc"></kbd></a></div></div></div></div>' +
       '<button type="button" class="lb-x" aria-label="Close">' + shotIcon('<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>') + '</button>' +
       '<button type="button" class="lb-p" aria-label="Previous screenshot">' + shotIcon('<polyline points="15 18 9 12 15 6"/>') + '</button>' +
@@ -562,6 +562,7 @@
     }
     function show(i) {
       cur.i = (i + cur.shots.length) % cur.shots.length;
+      unzoom();
       var shot = cur.shots[cur.i];
       lbImg.src = srcOf(shot);
       lbImg.alt = shot.alt;
@@ -616,6 +617,7 @@
     }
     function close() {
       lb.hidden = true;
+      unzoom();
       lbImg.removeAttribute('src');
       document.documentElement.style.overflow = '';
       var shot = cur.shots[cur.i];
@@ -630,8 +632,41 @@
       // A refused clipboard shows nothing, which is the honest answer.
       }).catch(function () {});
     }
+    // A picture drawn smaller than its own size (a desktop shot on a phone)
+    // opens at its full size on a tap, with the spot under the finger kept in
+    // place, and the dialog scrolls to pan it; a second tap fits it again.
+    // Pinch zoom is not enough on its own: the homepage, which shows the
+    // Ninja shots in this viewer, turns page zoom off. Shots are captured at
+    // 2x, so half the file's pixels is the full size, never less than twice
+    // the fitted width.
+    function zoomable() {
+      return lbImg.naturalWidth > 0 && lbImg.getBoundingClientRect().width < lbImg.naturalWidth / 2 - 8;
+    }
+    function unzoom() {
+      lb.classList.remove('lb-zoom');
+      lbImg.style.width = '';
+      lbImg.classList.toggle('lb-zoomable', zoomable());
+    }
+    lbImg.addEventListener('click', function (e) {
+      if (swiped()) return;
+      if (lb.classList.contains('lb-zoom')) { unzoom(); fit(); return; }
+      if (!zoomable()) return;
+      var r = lbImg.getBoundingClientRect();
+      var fx = (e.clientX - r.left) / r.width;
+      var fy = (e.clientY - r.top) / r.height;
+      var w = Math.max(lbImg.naturalWidth / 2, r.width * 2);
+      lb.classList.add('lb-zoom');
+      lbImg.style.width = w + 'px';
+      var h = w * (lbImg.naturalHeight / lbImg.naturalWidth);
+      lb.scrollLeft = fx * w - e.clientX;
+      lb.scrollTop = fy * h - e.clientY;
+    });
+    lbImg.addEventListener('load', function () { lbImg.classList.toggle('lb-zoomable', zoomable()); });
     var swiped = onSwipe(lb, function (by) {
-      if (cur.shots.length > 1) show(cur.i + by);
+      // Zoomed in, a sideways drag pans the picture: not a step, and not a
+      // swipe for the next tap to swallow.
+      if (lb.classList.contains('lb-zoom')) swiped();
+      else if (cur.shots.length > 1) show(cur.i + by);
     });
     lbClose.addEventListener('click', close);
     lbCopy.addEventListener('click', copy);
@@ -643,7 +678,7 @@
     });
     document.addEventListener('keydown', function (e) {
       if (lb.hidden) return;
-      if (e.key === 'Escape') close();
+      if (e.key === 'Escape') { if (lb.classList.contains('lb-zoom')) { unzoom(); fit(); } else close(); }
       else if (e.key === 'ArrowLeft') show(cur.i - 1);
       else if (e.key === 'ArrowRight') show(cur.i + 1);
       else if ((e.key === 'c' || e.key === 'C') && !e.metaKey && !e.ctrlKey && !e.altKey) copy();
@@ -699,7 +734,9 @@
         openAt(a);
       });
     });
-    var id = decodeURIComponent(location.hash.slice(1));
+    // A malformed hash (#%) throws in decodeURIComponent: read it as no card.
+    var id = '';
+    try { id = decodeURIComponent(location.hash.slice(1)); } catch (_) { /* no card */ }
     var card = id && document.getElementById(id);
     var a = card && card.classList.contains('tc') && card.querySelector('.shot a[data-shot]');
     if (!a) return;
@@ -848,26 +885,32 @@
   // browser or desktop app) and shows one through data-hk-os and data-hk-app on their root. The page
   // is complete without this: it opens on the Mac browser set. Here the OS
   // follows the reader's platform, "?app=desktop" (the desktop app's link)
-  // opens the desktop set, "?os=pc" or "?os=mac" picks the OS, and the two
-  // switches change either.
+  // opens the desktop set, "?app=drawing" the drawing canvas's keys (a page
+  // of their own), "?os=pc" or "?os=mac" picks the OS, and the three switches
+  // (OS, browser or desktop app, notes or drawing) change them.
   function initHotkeySets() {
     var roots = document.querySelectorAll('[data-hk-os]');
     if (!roots.length) return;
     var mac = /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent);
     var os = /[?&]os=(mac|pc)\b/.exec(location.search);
+    var app = (/[?&]app=(desktop|drawing)\b/.exec(location.search) || [0, 'web'])[1];
     var state = {
       os: os ? os[1] : mac ? 'mac' : 'pc',
-      app: /[?&]app=desktop\b/.test(location.search) ? 'desktop' : 'web'
+      app: app === 'desktop' ? 'desktop' : 'web',
+      sheet: app === 'drawing' ? 'drawing' : 'notes'
     };
     var buttons = document.querySelectorAll('[data-hk-set]');
     function apply() {
       for (var i = 0; i < roots.length; i++) {
         roots[i].setAttribute('data-hk-os', state.os);
-        roots[i].setAttribute('data-hk-app', state.app);
+        roots[i].setAttribute('data-hk-app', state.sheet === 'drawing' ? 'drawing' : state.app);
       }
       for (var j = 0; j < buttons.length; j++) {
         var b = buttons[j];
-        b.setAttribute('aria-pressed', String(state[b.getAttribute('data-hk-set')] === b.getAttribute('data-value')));
+        var set = b.getAttribute('data-hk-set');
+        b.setAttribute('aria-pressed', String(state[set] === b.getAttribute('data-value')));
+        // The drawing keys are one set in the browser and the desktop app.
+        if (set === 'app') b.disabled = state.sheet === 'drawing';
       }
     }
     for (var k = 0; k < buttons.length; k++) {
@@ -1093,7 +1136,7 @@
     // The chain link of LINK_ICON in static-page-chrome.ts, one size down to
     // match the "Open this answer" arrow beside it in the .a-acts row.
     var linkIcon =
-      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+      '<svg data-ic viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
     if (navigator.clipboard) {
       entries.forEach(function (entry) {
         var body = entry.querySelector('.a');
@@ -1674,7 +1717,7 @@
   // The page ships with the code block hidden and a plain sentence visible
   // that points at the address bar, so a browser with scripting off still
   // tells the truth instead of showing an empty box.
-  // Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.3)
+  // Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.3)
   function initAuthDesktop() {
     function role(name) {
       return document.querySelector('[data-role="' + name + '"]');
@@ -1701,6 +1744,12 @@
       var el = role(n);
       if (el) el.hidden = false;
     });
+    // The code is on the page now, so the address drops it: left there, it
+    // stays in the history and in a synced history. A reload then shows the
+    // missing-code text, which is right for a code that works once.
+    try {
+      history.replaceState(null, '', location.pathname);
+    } catch (e) { /* the code still works; only the address keeps it */ }
 
     var btn = role('copy');
     if (!btn) return;

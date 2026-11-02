@@ -1,11 +1,9 @@
 {
   "captionFolder": "Ordner",
   "captionTag": "Tag",
-  "captionNote": "Notiz",
   "captionTracker": "Tracker",
   "useDefault": "Standard verwenden",
   "color": "Farbe",
-  "noColor": "Keine Farbe",
   "applyToSubfolders": "Farbe auf Unterordner übertragen",
   "icon": "Symbol",
   "searchPlaceholder": "Symbole suchen",

@@ -38,7 +38,7 @@ function shift(day: string, n: number): string {
  * The Writing tab: how much, when and what a person writes. Tiles that
  * follow the range, two facts for fun, words per day, the writing year,
  * weekday by hour, top tags, note lengths, the longest notes, milestones.
- * Spec: ops/docs/archive/wellness-statistics.md (section 22)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 22)
  */
 export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeenAt }: {
   notes: LocalNote[];
@@ -90,7 +90,7 @@ export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeen
     if (before === 0) return null;
     const delta = percent ? Math.round(((now - before) / before) * 100) : now - before;
     const text = percent ? `${delta >= 0 ? '+' : '-'}${Math.abs(delta)}%` : `${delta >= 0 ? '+' : '-'}${fmt(Math.abs(delta))}`;
-    return <span className={delta > 0 ? 'text-success' : delta < 0 ? 'text-danger' : ''}>{t('writingTab.vsBefore', { delta: text })}</span>;
+    return <span className={delta > 0 ? 'text-success' : delta < 0 ? 'text-danger' : ''}>{t('stats:home.delta', { delta: text })}</span>;
   };
 
   // Words per day, or per week on the long ranges.
@@ -181,17 +181,17 @@ export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeen
       <div data-setting="stats.writing">
         <SectionEyebrow className="mb-2" icon={PencilSimple}>{t('writingTab.inOneLook')}</SectionEyebrow>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <Tile label={<span className="inline-flex items-center gap-1"><TextAa size={12} aria-hidden="true" />{t('writingTab.wordsWritten')}</span>} value={ledger ? fmt(words) : '-'} sub={change(words, wordsBefore, true)} />
-          <Tile label={<span className="inline-flex items-center gap-1"><CalendarBlank size={12} aria-hidden="true" />{t('writingTab.daysWrote')}</span>} value={t('overview.daysLoggedOf', { logged: writtenDays, days: span })} sub={writtenDays > 0 ? t('writingTab.perDay', { words: fmt(words / writtenDays) }) : undefined} />
-          <Tile label={<span className="inline-flex items-center gap-1"><FileText size={12} aria-hidden="true" />{t('writingTab.notesStarted')}</span>} value={fmt(started)} sub={change(started, startedBefore, false)} />
+          <Tile label={<span className="inline-flex items-center gap-1"><TextAa aria-hidden="true" />{t('stats:overview.words')}</span>} value={ledger ? fmt(words) : '-'} sub={change(words, wordsBefore, true)} />
+          <Tile label={<span className="inline-flex items-center gap-1"><CalendarBlank aria-hidden="true" />{t('writingTab.daysWrote')}</span>} value={t('overview.daysLoggedOf', { logged: writtenDays, days: span })} sub={writtenDays > 0 ? t('writingTab.perDay', { words: fmt(words / writtenDays) }) : undefined} />
+          <Tile label={<span className="inline-flex items-center gap-1"><FileText aria-hidden="true" />{t('writingTab.notesStarted')}</span>} value={fmt(started)} sub={change(started, startedBefore, false)} />
           <div data-setting="stats.streak" className="min-w-0">
-            <Tile label={<span className="inline-flex items-center gap-1"><Fire size={12} aria-hidden="true" />{t('writing.currentStreak')}</span>} value={t('writing.streakValue', { count: stats.currentStreak })} sub={t('overview.longestStreak', { count: stats.longestStreak })} />
+            <Tile label={<span className="inline-flex items-center gap-1"><Fire aria-hidden="true" />{t('writing.currentStreak')}</span>} value={t('stats:wellness.units.days', { count: stats.currentStreak })} sub={t('overview.longestStreak', { count: stats.longestStreak })} />
           </div>
         </div>
         <div className="flex flex-wrap gap-1.5 mt-2">
-          {readMinutes > 0 && <StatPill tone="neutral" icon={<Timer size={12} aria-hidden="true" />}>{readMinutes >= 60 ? t('writingTab.readHours', { count: Math.round(readMinutes / 60) }) : t('writingTab.readTime', { count: readMinutes })}</StatPill>}
-          {novels >= 0.1 && <StatPill tone="neutral" icon={<Books size={12} aria-hidden="true" />}>{t('writingTab.novels', { count: Math.round(novels * 10) / 10 })}</StatPill>}
-          <StatPill tone="neutral" icon={<Hash size={12} aria-hidden="true" />}>{t('writingTab.tagsUsed', { count: stats.uniqueTags, used: tagsUsed })}</StatPill>
+          {readMinutes > 0 && <StatPill tone="neutral" icon={<Timer aria-hidden="true" />}>{readMinutes >= 60 ? t('writingTab.readHours', { count: Math.round(readMinutes / 60) }) : t('writingTab.readTime', { count: readMinutes })}</StatPill>}
+          {novels >= 0.1 && <StatPill tone="neutral" icon={<Books aria-hidden="true" />}>{t('writingTab.novels', { count: Math.round(novels * 10) / 10 })}</StatPill>}
+          <StatPill tone="neutral" icon={<Hash aria-hidden="true" />}>{t('writingTab.tagsUsed', { count: stats.uniqueTags, used: tagsUsed })}</StatPill>
         </div>
       </div>
 
@@ -199,16 +199,16 @@ export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeen
         <div>
           <div className="flex items-center justify-between gap-2 mb-2">
             <SectionEyebrow icon={ChartLineUp}>{t(weekly ? 'writingTab.wordsPerWeek' : 'writingTab.wordsPerDay')}</SectionEyebrow>
-            {!weekly && <span className="hidden sm:inline text-[11px] text-pn-muted">{t('home.moodLegend')}</span>}
+            {!weekly && <span className="hidden sm:inline text-small text-pn-muted">{t('home.moodLegend')}</span>}
           </div>
           <div className="rounded-lg border border-divider bg-surface-2 p-3 space-y-2">
             <TrackerChart spec={{ form: 'bars', series, color: WRITING_GREEN, min: 0 }} height={96} average={!weekly} ariaLabel={t('writingTab.wordsPerDay')} />
-            <div className="flex justify-between text-[11px] text-pn-muted">
+            <div className="flex justify-between text-meta text-pn-muted">
               <span>{formatDay(from, 'dayMonth')}</span>
               <span>{formatDay(today, 'dayMonth')}</span>
             </div>
             {biggest && bestWeekday !== null && (
-              <p className="text-sm text-pn">{t('writingTab.biggest', { day: formatDay(biggest.d, 'date'), words: fmt(biggest.w), weekday: weekdayLabel(weekdayDate(bestWeekday), 'long') })}</p>
+              <p className="text-body text-pn">{t('writingTab.biggest', { day: formatDay(biggest.d, 'date'), words: fmt(biggest.w), weekday: weekdayLabel(weekdayDate(bestWeekday), 'long') })}</p>
             )}
           </div>
         </div>
@@ -217,7 +217,7 @@ export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeen
       <div>
         <div className="flex items-center justify-between gap-2 mb-2">
           <SectionEyebrow icon={CalendarBlank}>{t('writingTab.year')}</SectionEyebrow>
-          <span className="text-[11px] text-pn-muted">{t('writingTab.yearHint')}</span>
+          <span className="text-small text-pn-muted">{t('writingTab.yearHint')}</span>
         </div>
         <div className="rounded-lg border border-divider bg-surface-2 p-3" dir="ltr">
           <svg viewBox={`0 0 ${YEAR_WEEKS * 12} ${7 * 12}`} width="100%" role="img" aria-label={t('writingTab.year')} style={{ display: 'block' }}>
@@ -230,7 +230,7 @@ export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeen
               );
             })}
           </svg>
-          <div className="flex justify-between text-[11px] text-pn-muted mt-1">
+          <div className="flex justify-between text-meta text-pn-muted mt-1">
             <span>{formatDay(year[0]!.date, 'dayMonth')}</span>
             <span>{formatDay(today, 'dayMonth')}</span>
           </div>
@@ -241,7 +241,7 @@ export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeen
         <div>
           <div className="flex items-center justify-between gap-2 mb-2">
             <SectionEyebrow icon={Clock}>{t('overview.hours')}</SectionEyebrow>
-            <span className="text-[11px] text-pn-muted">{t('writingTab.hoursHint')}</span>
+            <span className="text-small text-pn-muted">{t('writingTab.hoursHint')}</span>
           </div>
           <div className="rounded-lg border border-divider bg-surface-2 p-3" dir="ltr">
             <svg viewBox={`0 0 ${24 * 14 + 16} ${7 * 14 + 12}`} width="100%" role="img" aria-label={t('overview.hours')} style={{ display: 'block' }}>
@@ -266,11 +266,11 @@ export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeen
             <div className="rounded-lg border border-divider bg-surface-2 px-3 py-2 space-y-2">
               {tags.map(([tag, n]) => (
                 <div key={tag} className="grid grid-cols-[minmax(0,8rem)_1fr_auto] items-center gap-2">
-                  <span title={`#${tag}`} className="justify-self-start inline-flex max-w-full items-center text-[11px] px-1.5 py-0.5 rounded pn-chip text-accent-strong">
+                  <span title={`#${tag}`} className="justify-self-start inline-flex max-w-full items-center text-meta px-1.5 py-0.5 rounded pn-chip text-accent-strong">
                     <span className="truncate" dir="auto">#{tag}</span>
                   </span>
                   <span aria-hidden="true" className="block h-1.5 rounded-full bg-accent-fill" style={{ width: `${(n / tags[0]![1]) * 100}%` }} />
-                  <span className="text-[11px] tabular-nums text-pn-muted">{fmt(n)}</span>
+                  <span className="text-meta tabular-nums text-pn-muted">{fmt(n)}</span>
                 </div>
               ))}
             </div>
@@ -285,8 +285,8 @@ export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeen
                   <span key={i} title={String(c)} className="flex-1 rounded-t-sm bg-accent-fill" style={{ height: `${Math.max(4, (c / Math.max(...buckets, 1)) * 100)}%`, opacity: 0.85 }} />
                 ))}
               </div>
-              <div className="flex justify-between text-[11px] text-pn-muted"><span>{t('writingTab.short')}</span><span>1k</span><span>5k+</span></div>
-              {median !== null && <p className="text-xs text-pn">{t('writingTab.median', { words: fmt(median) })}</p>}
+              <div className="flex justify-between text-meta text-pn-muted"><span>{t('writingTab.short')}</span><span>1k</span><span>5k+</span></div>
+              {median !== null && <p className="text-small text-pn">{t('writingTab.median', { words: fmt(median) })}</p>}
             </div>
           </div>
         )}
@@ -297,9 +297,9 @@ export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeen
           <SectionEyebrow className="mb-2" icon={BookOpen}>{t('writingTab.longest')}</SectionEyebrow>
           <div className="rounded-lg border border-divider bg-surface-2 px-3 divide-y divide-divider">
             {longest.map(({ n, w }) => (
-              <div key={n.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+              <div key={n.id} className="flex items-center justify-between gap-3 py-2 text-body">
                 <span className="truncate text-pn" dir="auto">{n.title || t('common:state.untitled')}</span>
-                <span className="shrink-0 text-[11px] text-pn-muted tabular-nums">{t('writingTab.words', { count: w, formatted: fmt(w) })}</span>
+                <span className="shrink-0 text-meta text-pn-muted tabular-nums">{t('editor:wordCount.words', { count: w, formatted: fmt(w) })}</span>
               </div>
             ))}
           </div>
@@ -309,20 +309,20 @@ export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeen
       <div data-setting="stats.milestones">
         <div className="flex items-center justify-between gap-2 mb-2">
           <SectionEyebrow icon={Trophy}>{t('milestones.heading')}</SectionEyebrow>
-          {reached.length > 0 && <span className="text-[11px] text-pn-muted">{t('milestones.reached', { count: reached.length })}</span>}
+          {reached.length > 0 && <span className="text-meta text-pn-muted">{t('milestones.reached', { count: reached.length })}</span>}
         </div>
         <div className="rounded-lg border border-divider bg-surface-2 p-3 space-y-2.5">
           {meters.filter((row) => row.next !== null).map((row) => (
             <div key={row.family} className="flex items-center gap-3">
-              <span className="w-40 shrink-0 truncate text-xs text-pn">{t('milestones.next', { label: milestoneLabel(row.family, row.next!) })}</span>
+              <span className="w-40 shrink-0 truncate text-small text-pn">{t('milestones.next', { label: milestoneLabel(row.family, row.next!) })}</span>
               <span className="flex-1 h-1.5 rounded-full bg-surface-0 overflow-hidden"><span className="block h-full rounded-full bg-accent-fill" style={{ width: `${Math.round(row.progress * 100)}%` }} /></span>
-              <span className="shrink-0 text-[11px] text-pn-muted tabular-nums">{t('milestones.ofTarget', { current: fmt(row.current), target: fmt(row.next!) })}</span>
+              <span className="shrink-0 text-meta text-pn-muted tabular-nums">{t('milestones.ofTarget', { current: fmt(row.current), target: fmt(row.next!) })}</span>
             </div>
           ))}
           {topReached.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-1">
               {topReached.map(({ family, v }) => (
-                <StatPill key={family} icon={<Check size={12} aria-hidden="true" />}>{milestoneLabel(family, v)}</StatPill>
+                <StatPill key={family} icon={<Check aria-hidden="true" />}>{milestoneLabel(family, v)}</StatPill>
               ))}
             </div>
           )}

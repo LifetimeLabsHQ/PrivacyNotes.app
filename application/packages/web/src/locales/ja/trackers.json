@@ -50,8 +50,6 @@
   },
   "mood": {
     "prompt": "今の気分は?(1〜10)",
-    "low": "最悪",
-    "high": "最高",
     "anchor": {
       "1": "最悪",
       "3": "つらい",
@@ -137,8 +135,6 @@
     "editMedication": "薬を編集",
     "removeMedication": "薬を削除",
     "confirmRemove": "<highlight>{{name}}</highlight>を削除しますか?",
-    "yes": "はい",
-    "no": "いいえ",
     "taken": "服用",
     "skip": "スキップ",
     "editList": "薬の一覧を変更",
@@ -238,16 +234,15 @@
   },
   "config": {
     "configureTrackers": "トラッカーを設定",
-    "title": "トラッカー",
-    "tabGeneral": "一般",
     "tabCustom": "カスタム",
-    "chooseTrackers": "トラッカーを選択",
     "factorsTitle": "あなたの要因",
     "factorsHelp": "「要因」ボタンでタップする、1日を形づくる要素です。削除した要因も、それを記録した日には名前が残ります。",
     "renameFactor": "{{name}}の名前を変更",
     "addFactor": "要因を追加",
     "medicationsTitle": "あなたの薬",
     "medicationsHelp": "「薬」ボタンで尋ねる薬です。削除した薬も履歴は残ります。",
+    "medicationCard": "服薬カード",
+    "medicationCardHelp": "このデバイスで「薬を飲みましたか?」と尋ねます。薬の予定がある日だけ表示されます。",
     "customHelp": "自分で名前を付けるトラッカーです。スケール、数値、はい/いいえから選べます。最大{{max}}個まで。",
     "yourCustomTrackers": "あなたのカスタムトラッカー",
     "categoryMoodMind": "気分とこころ",
@@ -272,23 +267,17 @@
     "kindBuild": "身につけたい",
     "kindWatch": "気をつけたい",
     "editHabit": "{{name}}を編集",
-    "removeHabit": "{{name}}を削除",
     "ownHabitsFull": "自分の習慣は{{max}}件あり、これが上限です。",
     "addCustomTrackerHint": "何でも好きなものを記録",
     "maxReached": "カスタムトラッカーは最大{{max}}個までです。",
     "customTrackers": "カスタムトラッカー",
-    "newCustomTracker": "新規カスタムトラッカー",
-    "newMedication": "新しい薬",
     "newMedicationHelp": "開始日から、設定した時刻に「薬」ボタンで尋ねます。",
     "trackerNamePlaceholder": "トラッカー名",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "名前",
     "typeLabel": "種類",
-    "colorLabel": "色",
     "preview": "プレビュー",
     "startFromLast": "前回の記録を引き継ぐ",
     "chooseIcon": "アイコンを選択",
-    "iconLabel": "アイコン",
     "startFromLastHelp": "体重や毎日の服用量など、めったに変わらないものに便利です。"
   },
   "factors": {
@@ -296,7 +285,6 @@
     "count_other": "{{count}}件の要因",
     "remove": "{{name}}を削除",
     "placeholder": "来客、片頭痛、残業",
-    "add": "追加",
     "empty": "毎日に影響する要素を追加して、どの日でもタップして記録しましょう。",
     "commaHint": "カンマで区切ると、複数をまとめて追加できます。",
     "editList": "要因の一覧を変更",
@@ -319,8 +307,6 @@
   "habits": {
     "prompt": "今日は何をしましたか?",
     "count": "{{yes}}/{{total}}",
-    "yes": "はい",
-    "no": "いいえ",
     "empty": "トラッカーの設定で質問を選んでください。",
     "changeQuestions": "質問を変更",
     "q": {
@@ -379,9 +365,7 @@
     "prompt": "カフェインをどれくらいとりましたか?"
   },
   "flow": {
-    "next": "次へ",
     "finish": "終了",
-    "done": "完了",
     "step": "トラッカー {{n}}/{{total}}"
   }
 }

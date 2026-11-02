@@ -28,10 +28,10 @@ export function labelTotpUri(uri: URL, account: string): string {
   params.set('issuer', TOTP_ISSUER);
   return `otpauth://totp/${encodeURIComponent(TOTP_ISSUER)}:${encodeURIComponent(account)}?${params.toString()}`;
 }
-// Button tiers: ops/docs/archive/ui-patterns.md section 16, in theme tokens.
+// Button tiers: docs/internal/design/ui-patterns.md section 16, in theme tokens.
 const primary = SETTINGS_BTN_PRIMARY;
-const secondary = 'inline-flex items-center justify-center gap-1.5 rounded-md border border-divider text-pn hover:bg-surface-1 px-4 py-2 text-sm transition disabled:opacity-40 disabled:cursor-not-allowed';
-const field = 'w-full rounded-md bg-surface-1 border border-divider text-pn px-3 py-2.5 text-sm focus:border-accent focus:outline-none';
+const secondary = 'inline-flex items-center justify-center gap-1.5 rounded-md border border-divider text-pn hover:bg-surface-1 px-4 py-2 text-body transition disabled:opacity-40 disabled:cursor-not-allowed';
+const field = 'w-full rounded-md bg-surface-1 border border-divider text-pn px-3 py-2.5 text-body focus:border-accent focus:outline-none';
 
 function normalizeKey(value: string): string { return value.toUpperCase().replace(/[\s-]/g, ''); }
 
@@ -276,8 +276,8 @@ export function TwoFactorTab() {
   return (
     <div className="space-y-4">
       <SectionEyebrow icon={ShieldCheck}>{t('twoFactor.title')}</SectionEyebrow>
-      {error && <p role="alert" className="text-sm text-danger">{t(error)}</p>}
-      {notice && <p role="status" className="text-sm text-accent">{t(notice)}</p>}
+      {error && <p role="alert" className="text-body text-danger">{t(error)}</p>}
+      {notice && <p role="status" className="text-body text-accent">{t(notice)}</p>}
       {!status ? (
         <button type="button" className={secondary} onClick={() => void run(async () => { await readState(); })} disabled={busy}>{t(error ? 'twoFactor.retry' : 'twoFactor.loading')}</button>
       ) : status.available && status.wrong_login ? (
@@ -290,10 +290,10 @@ export function TwoFactorTab() {
             {STEPS.map((name, index) => {
               const at = STEPS.indexOf(step);
               return <li key={name} className={`flex items-center gap-2 ${index < STEPS.length - 1 ? 'flex-1' : ''}`} aria-current={index === at ? 'step' : undefined}>
-                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${index < at ? 'bg-accent/15 text-accent-strong' : index === at ? 'bg-accent-fill text-white' : 'border border-divider text-pn-muted'}`}>
+                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-small font-medium ${index < at ? 'bg-accent/15 text-accent-strong' : index === at ? 'bg-accent-fill text-white' : 'border border-divider text-pn-muted'}`}>
                   {index < at ? <Check size={12} aria-hidden="true" /> : index + 1}
                 </span>
-                <span className={`text-xs ${index === at ? 'text-pn font-medium' : 'text-pn-soft'}`}>{t(`twoFactor.step.${name}`)}</span>
+                <span className={`text-small ${index === at ? 'text-pn font-medium' : 'text-pn-soft'}`}>{t(`twoFactor.step.${name}`)}</span>
                 {index < STEPS.length - 1 && <span className={`h-px flex-1 ${index < at ? 'bg-accent/40' : 'bg-divider'}`} aria-hidden="true" />}
               </li>;
             })}
@@ -304,15 +304,15 @@ export function TwoFactorTab() {
               <div className="w-fit mx-auto rounded-md bg-white p-3" role="img" aria-label={t('twoFactor.qrLabel')}>
                 <QRCodeCanvas value={setup.uri} size={176} level="M" />
               </div>
-              <a href={setup.uri} className="block text-center text-sm text-accent hover:underline">{t('twoFactor.openAuthenticator')}</a>
+              <a href={setup.uri} className="block text-center text-body text-accent hover:underline">{t('twoFactor.openAuthenticator')}</a>
               <div className="flex gap-2">
                 <button type="button" onClick={cancelSetup} disabled={busy} className={`${secondary} flex-1`}>{t('twoFactor.cancelSetup')}</button>
-                <button type="button" onClick={() => setStep('key')} disabled={busy} className={`${primary} flex-1`}>{t('twoFactor.next')}</button>
+                <button type="button" onClick={() => setStep('key')} disabled={busy} className={`${primary} flex-1`}>{t('common:actions.next')}</button>
               </div>
             </>
           ) : step === 'key' ? (
             <>
-              <label className="block text-sm font-medium" htmlFor={`${ids}-secret`}>{t('twoFactor.backupKey')}</label>
+              <label className="block text-body font-medium" htmlFor={`${ids}-secret`}>{t('twoFactor.backupKey')}</label>
               <input id={`${ids}-secret`} readOnly value={setup.secret.match(/.{1,4}/g)?.join(' ') ?? setup.secret} dir="ltr" className={`${field} font-mono text-center`} autoComplete="off" spellCheck={false} />
               <div className="grid grid-cols-2 gap-2">
                 <button type="button" onClick={() => void copyKey()} disabled={busy} className={secondary}>
@@ -325,29 +325,29 @@ export function TwoFactorTab() {
                 </button>
               </div>
               <SettingsCallout>{t('twoFactor.backupWarning')}</SettingsCallout>
-              <label className="flex items-start gap-2.5 text-sm leading-relaxed cursor-pointer">
+              <label className="flex items-start gap-2.5 text-body leading-relaxed cursor-pointer">
                 <input type="checkbox" checked={backupSaved} onChange={(event) => setBackupSaved(event.target.checked)} disabled={busy} className="mt-1 accent-accent" />
                 <span>{t('twoFactor.savedAcknowledgment')}</span>
               </label>
               <div className="flex gap-2">
-                <button type="button" onClick={() => setStep('scan')} disabled={busy} className={`${secondary} flex-1`}>{t('twoFactor.back')}</button>
-                <button type="button" onClick={() => setStep('confirm')} disabled={busy || !backupSaved} className={`${primary} flex-1`}>{t('twoFactor.next')}</button>
+                <button type="button" onClick={() => setStep('scan')} disabled={busy} className={`${secondary} flex-1`}>{t('common:actions.back')}</button>
+                <button type="button" onClick={() => setStep('confirm')} disabled={busy || !backupSaved} className={`${primary} flex-1`}>{t('common:actions.next')}</button>
               </div>
             </>
           ) : (
             <form className="space-y-3" onSubmit={(event) => { event.preventDefault(); activate(); }}>
               <p className={SETTINGS_HELP}>{t('twoFactor.confirmBackup')}</p>
-              <label className="block text-sm font-medium" htmlFor={`${ids}-backup`}>{t('twoFactor.reenterBackup')}</label>
+              <label className="block text-body font-medium" htmlFor={`${ids}-backup`}>{t('security:twoFactor.backupKey')}</label>
               <input id={`${ids}-backup`} autoFocus type="password" autoComplete="off" spellCheck={false} autoCapitalize="characters" value={backupAnswer} onChange={(event) => setBackupAnswer(event.target.value)} disabled={busy} dir="ltr" className={`${field} font-mono`} />
-              <p className="text-sm font-medium">{t('twoFactor.codeLabel')}</p>
+              <p className="text-body font-medium">{t('twoFactor.codeLabel')}</p>
               <PinInput value={code} onChange={setCode} length={6} reveal compact ariaLabel={t('twoFactor.codeLabel')} disabled={busy} />
               <div className="flex items-start gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
                 <ShieldCheck size={28} weight="fill" className="shrink-0 text-success" aria-hidden="true" />
-                <p className="text-sm text-pn leading-relaxed">{t('twoFactor.warning')}</p>
+                <p className="text-body text-pn leading-relaxed">{t('twoFactor.warning')}</p>
               </div>
               <div className="flex gap-2">
-                <button type="button" onClick={() => { setBackupAnswer(''); setCode(''); setStep('key'); }} disabled={busy} className={`${secondary} flex-1`}>{t('twoFactor.back')}</button>
-                <button type="submit" className={`${primary} flex-1`} disabled={busy || !backupSaved || normalizeKey(backupAnswer) !== setup.secret || code.length !== 6}>{t(busy ? 'mfaPrompt.verifying' : 'twoFactor.activate')}</button>
+                <button type="button" onClick={() => { setBackupAnswer(''); setCode(''); setStep('key'); }} disabled={busy} className={`${secondary} flex-1`}>{t('common:actions.back')}</button>
+                <button type="submit" className={`${primary} flex-1`} disabled={busy || !backupSaved || normalizeKey(backupAnswer) !== setup.secret || code.length !== 6}>{t(busy ? 'mfaPrompt.verifying' : 'security:twoFactor.start')}</button>
               </div>
             </form>
           )}
@@ -358,20 +358,20 @@ export function TwoFactorTab() {
           <div className="flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white"><ShieldCheck size={22} weight="fill" aria-hidden="true" /></span>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-success">{t('twoFactor.enabled')}</p>
-              <p className="text-xs text-emerald-700/80 dark:text-emerald-400/80">{t('twoFactor.enabledHelp')}</p>
+              <p className="text-body font-semibold text-success">{t('twoFactor.enabled')}</p>
+              <p className="text-small text-emerald-700/80 dark:text-emerald-400/80">{t('twoFactor.enabledHelp')}</p>
             </div>
           </div>
           {!status.satisfied && <button type="button" className={`${primary} w-full`} disabled={busy} onClick={() => void run(async () => { await ensureLevel2(supabase, { allowLocalUse: true }); await readState(); })}>{t('mfaPrompt.verify')}</button>}
           <div className="divide-y divide-divider rounded-md border border-divider">
             {verified.map((factor) => <div key={factor.id} className="flex items-center justify-between gap-3 p-3">
-              <span className="flex items-center gap-2 text-sm text-pn"><DeviceMobile size={16} className="text-accent" aria-hidden="true" />{t('twoFactor.authenticatorRow')}</span>
-              {factor.created_at && <span className="text-xs text-pn-muted">{t('twoFactor.addedOn', { date: formatInstant(factor.created_at, 'date') })}</span>}
+              <span className="flex items-center gap-2 text-body text-pn"><DeviceMobile className="text-accent" aria-hidden="true" />{t('twoFactor.authenticatorRow')}</span>
+              {factor.created_at && <span className="text-small text-pn-muted">{t('twoFactor.addedOn', { date: formatInstant(factor.created_at, 'date') })}</span>}
             </div>)}
             <div className="p-3"><MfaRecoveryHelp /></div>
           </div>
           {verified.length > 1 && <p className={SETTINGS_HELP}>{t('twoFactor.multipleFactors', { count: verified.length })}</p>}
-          {removable && <Button icon={<ShieldSlash size={15} aria-hidden="true" className="shrink-0" />} disabled={busy} onClick={() => removeFactor(removable.id)}>{t(busy ? 'twoFactor.working' : verified.length > 1 ? 'twoFactor.removeFactor' : 'twoFactor.disable')}</Button>}
+          {removable && <Button icon={<ShieldSlash aria-hidden="true" className="shrink-0" />} disabled={busy} onClick={() => removeFactor(removable.id)}>{t(busy ? 'security:connectedAccounts.working' : verified.length > 1 ? 'twoFactor.removeFactor' : 'twoFactor.disable')}</Button>}
           <HelpChip surface="twoFactor" className="pt-3 border-t border-divider" />
         </div>
       ) : !status.can_enroll && status.reason === 'mfa_managed_account_required' ? (
@@ -383,16 +383,16 @@ export function TwoFactorTab() {
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-success"><ShieldPlus size={22} aria-hidden="true" /></span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-pn">{t('twoFactor.offTitle')}</p>
+              <p className="text-body font-semibold text-pn">{t('twoFactor.offTitle')}</p>
               <p className={SETTINGS_HELP}>{t('twoFactor.offTime')}</p>
             </div>
-            <span className="shrink-0 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-warning">{t('twoFactor.offBadge')}</span>
+            <span className="shrink-0 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-0.5 text-small font-medium text-warning">{t('twoFactor.offBadge')}</span>
           </div>
           <ul className="space-y-2">
             {([[DeviceMobile, 'benefitCode'], [Key, 'benefitPhrase'], [AppWindow, 'benefitApps']] as const).map(([Icon, key]) =>
-              <li key={key} className="flex items-start gap-2.5 text-sm text-pn-soft"><Icon size={16} className="mt-0.5 shrink-0 text-success" aria-hidden="true" />{t(`twoFactor.${key}`)}</li>)}
+              <li key={key} className="flex items-start gap-2.5 text-body text-pn-soft"><Icon className="mt-0.5 shrink-0 text-success" aria-hidden="true" />{t(`twoFactor.${key}`)}</li>)}
           </ul>
-          <button type="button" className={`${primary} w-full`} disabled={busy} onClick={startSetup}>{t(busy ? 'twoFactor.working' : 'twoFactor.start')}</button>
+          <button type="button" className={`${primary} w-full`} disabled={busy} onClick={startSetup}>{t(busy ? 'security:connectedAccounts.working' : 'twoFactor.start')}</button>
         </div>
       )}
     </div>

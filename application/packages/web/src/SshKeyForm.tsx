@@ -9,40 +9,11 @@ import { PinInfoModal } from './PinInfoModal';
 import { useCopyToClipboard } from './clipboard';
 import { PasswordField } from './PasswordText';
 import { FIELD_CLASS, FieldLabel } from './formFields';
-import { storedVaultKeys } from './vaultBody';
+import { saveFailureText } from './saveFile';
+import { detectPlatform } from './devices';
 
-/* ────────────────────────────────────────────────────────────────
- * SshKeyData - the JSON blob stored in the note body for ssh-key
- * type notes. The note's `title` field serves as the display name
- * (e.g. "user@host") and is auto-derived from the key comment.
- * ──────────────────────────────────────────────────────────────── */
-export interface SshKeyData {
-  label: string;
-  privateKey: string;
-  publicKey: string;
-  passphrase: string;
-  notes: string;
-}
-
-export function parseSshKeyBody(body: string): SshKeyData {
-  try {
-    const p = JSON.parse(body);
-    return {
-      label: typeof p.label === 'string' ? p.label : '',
-      privateKey: typeof p.privateKey === 'string' ? p.privateKey : '',
-      publicKey: typeof p.publicKey === 'string' ? p.publicKey : '',
-      passphrase: typeof p.passphrase === 'string' ? p.passphrase : '',
-      notes: typeof p.notes === 'string' ? p.notes : '',
-    };
-  } catch {
-    return { label: '', privateKey: '', publicKey: '', passphrase: '', notes: '' };
-  }
-}
-
-/** `previous` is the stored body; keys a newer version wrote in it are kept. */
-export function serializeSshKeyBody(data: SshKeyData, previous = ''): string {
-  return JSON.stringify({ ...storedVaultKeys(previous), ...data });
-}
+export { parseSshKeyBody, serializeSshKeyBody, type SshKeyData } from './sshKeyBody';
+import { parseSshKeyBody, serializeSshKeyBody, type SshKeyData } from './sshKeyBody';
 
 /** Extract comment from an SSH public key (the trailing part after the base64). */
 function extractKeyComment(pubKey: string): string {
@@ -115,6 +86,13 @@ interface SshKeyFormProps {
   saveError?: string;
 }
 
+/** A browser download lands wherever the browser puts it; the desktop app
+ *  never writes into ~/.ssh, and Windows has no chmod (issue #673). */
+function sshKeyDownloadHint() {
+  if (detectPlatform() !== 'desktop') return 'sshKeyForm.downloadHint';
+  return __PN_BUILD_PLATFORM__ === 'windows' ? 'sshKeyForm.downloadHintWindows' : 'sshKeyForm.downloadHintDesktop';
+}
+
 export function SshKeyForm({
   noteId,
   title,
@@ -141,7 +119,7 @@ export function SshKeyForm({
   const [showPassphrase, setShowPassphrase] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState('');
-  const [downloadError, setDownloadError] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const updateBody = useCallback(
     (patch: Partial<SshKeyData>) => {
@@ -183,11 +161,11 @@ export function SshKeyForm({
   }, [noteId, title, data.label, onTitleChange, updateBody]);
 
   const downloadKey = useCallback(async (which: 'private' | 'public') => {
-    setDownloadError(false);
+    setDownloadError(null);
     const { downloadSshKey } = await import('./sshKeyFile');
     const saved = await downloadSshKey(which, data);
-    if (!saved.ok && saved.reason === 'failed') setDownloadError(true);
-  }, [data.privateKey, data.publicKey]);
+    if (!saved.ok && saved.reason === 'failed') setDownloadError(saveFailureText(saved, t('sshKeyForm.downloadFailed')));
+  }, [data.privateKey, data.publicKey, t]);
 
   const fieldClass = FIELD_CLASS;
 
@@ -197,7 +175,7 @@ export function SshKeyForm({
       <div className="space-y-4">
         {/* Label */}
         <div>
-          <FieldLabel icon={<Tag size={13} />}>{t('sshKeyForm.label')}</FieldLabel>
+          <FieldLabel icon={<Tag />}>{t('sshKeyForm.label')}</FieldLabel>
           <input
             type="text"
             value={data.label}
@@ -217,12 +195,12 @@ export function SshKeyForm({
           </Button>
         )}
         {genError && (
-          <div className="text-xs text-warning">{genError}</div>
+          <div className="text-small text-warning">{genError}</div>
         )}
 
         {/* Public Key */}
         <div>
-          <FieldLabel icon={<Key size={13} />}>{t('sshKeyForm.publicKey')}</FieldLabel>
+          <FieldLabel icon={<Key />}>{t('sshKeyForm.publicKey')}</FieldLabel>
           <div className="flex gap-1.5 items-start">
             <textarea
               value={data.publicKey}
@@ -231,7 +209,7 @@ export function SshKeyForm({
               placeholder="ssh-ed25519 AAAA..."
               disabled={locked}
               rows={3}
-              className={`${fieldClass} font-mono text-xs resize-y`}
+              className={`${fieldClass} font-mono text-small resize-y`}
             />
             <VaultFieldAction kind="copy"
               onClick={() => copy(data.publicKey, 'publicKey')}
@@ -246,7 +224,7 @@ export function SshKeyForm({
 
         {/* Private Key */}
         <div>
-          <FieldLabel icon={<Lock size={13} />}>{t('sshKeyForm.privateKey')}</FieldLabel>
+          <FieldLabel icon={<Lock />}>{t('sshKeyForm.privateKey')}</FieldLabel>
           <div className="flex gap-1.5 items-start">
             <div className="flex-1 min-w-0">
               {showPrivate ? (
@@ -255,11 +233,11 @@ export function SshKeyForm({
                   onChange={(e) => updateBody({ privateKey: e.target.value })}
                   disabled={locked}
                   rows={6}
-                  className={`${fieldClass} font-mono text-xs resize-y`}
+                  className={`${fieldClass} font-mono text-small resize-y`}
                 />
               ) : (
                 <div
-                  className={`${fieldClass} font-mono text-xs cursor-pointer min-h-[4rem] flex items-center justify-center text-pn-muted`}
+                  className={`${fieldClass} font-mono text-small cursor-pointer min-h-[4rem] flex items-center justify-center text-pn-muted`}
                   onClick={() => setShowPrivate(true)}
                 >
                   {data.privateKey ? 'Click to reveal private key' : 'No private key stored'}
@@ -279,16 +257,16 @@ export function SshKeyForm({
             )}
           </div>
           {data.privateKey.trim() && (
-            <p className="text-[11px] text-pn-muted mt-1.5">{t('sshKeyForm.downloadHint')}</p>
+            <p className="text-meta text-pn-muted mt-1.5">{t(sshKeyDownloadHint())}</p>
           )}
           {downloadError && (
-            <p className="text-[11px] text-danger mt-1.5">{t('sshKeyForm.downloadFailed')}</p>
+            <p className="text-meta text-danger mt-1.5">{downloadError}</p>
           )}
         </div>
 
         {/* Passphrase */}
         <div>
-          <FieldLabel icon={<Shield size={13} />}>{t('sshKeyForm.passphrase')}</FieldLabel>
+          <FieldLabel icon={<Shield />}>{t('sshKeyForm.passphrase')}</FieldLabel>
           <div className="flex gap-1.5">
             <PasswordField
               value={data.passphrase}
@@ -309,11 +287,11 @@ export function SshKeyForm({
 
         {/* Notes */}
         <div>
-          <FieldLabel icon={<NotePencil size={13} />}>{t('sshKeyForm.notes')}</FieldLabel>
+          <FieldLabel icon={<NotePencil />}>{t('common:cardForm.notes')}</FieldLabel>
           <textarea
             value={data.notes}
             onChange={(e) => updateBody({ notes: e.target.value })}
-            placeholder={t('sshKeyForm.notesPlaceholder')}
+            placeholder={t('common:cardForm.notesPlaceholder')}
             disabled={locked}
             rows={3}
             className={`${fieldClass} resize-y`}
@@ -331,14 +309,14 @@ export function SshKeyForm({
             disabled={!pinConfigured && !pinProtected}
             className="rounded accent-accent"
           />
-          <span className="text-sm text-pn-muted">
-            {t('sshKeyForm.requirePin')}
+          <span className="text-body text-pn-muted">
+            {t('common:cardForm.requirePin')}
           </span>
           <button
             type="button"
             onClick={(e) => { e.preventDefault(); setShowPinInfo(true); }}
             className="text-accent/60 hover:text-accent transition p-1 -m-1"
-            aria-label={t('sshKeyForm.whatDoesThisDo')}
+            aria-label={t('common:cardForm.whatDoesThisDo')}
           >
             <Info />
           </button>
@@ -346,8 +324,8 @@ export function SshKeyForm({
 
         {showPinInfo && <PinInfoModal onClose={() => setShowPinInfo(false)} />}
         {!pinConfigured && !pinProtected && (
-          <p className="text-[11px] text-pn-muted -mt-2">
-            {t('sshKeyForm.setUpPinFirst')}
+          <p className="text-meta text-pn-muted -mt-2">
+            {t('common:cardForm.setUpPinFirst')}
           </p>
         )}
 

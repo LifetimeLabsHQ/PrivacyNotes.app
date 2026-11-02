@@ -86,8 +86,8 @@ export function BiometricTab({
   // (in the apps) gives the key, and nothing beside the wrap opens it. An
   // unbound browser enrollment is offered a set-up-again; an unbound app
   // enrollment converts on its next unlock.
-  // Spec: ops/docs/plans/app-lock-passcode.md (section 4.6),
-  // ops/docs/plans/biometric-key-binding.md (section 8.2)
+  // Spec: docs/internal/plans/app-lock-passcode.md (section 4.6),
+  // docs/internal/plans/biometric-key-binding.md (section 8.2)
   const [bound, setBound] = useState(() => isBiometricKeyBound());
   const [canAgain, setCanAgain] = useState(() => canSetUpBiometricAgain());
   const [againBusy, setAgainBusy] = useState(false);
@@ -200,7 +200,7 @@ export function BiometricTab({
     // is not enough: removing the last door puts the phrase back at rest, and
     // every later start opens without a prompt. A hardware key the OS
     // destroyed has nothing left to ask, so it goes without one.
-    // Spec: ops/docs/biometric-unlock.md (Disabling biometric)
+    // Spec: docs/contrib/biometric-unlock.md (Disabling biometric)
     const proof = await unlockWithBiometricDetailed(t('biometricTab.disable'), t('common:actions.cancel'));
     if (!proof.phrase && proof.failure !== 'gone') {
       setError(t('lockScreen.biometricFailed'));
@@ -239,7 +239,7 @@ export function BiometricTab({
     // it at submit time and records its failures like the others do.
     const lockout = getPinLockoutState();
     if (lockout.locked) {
-      setPinConfirmError(t('pinTab.tooManyAttempts', { seconds: lockout.secondsLeft }));
+      setPinConfirmError(t('security:lockScreen.tooManyAttempts', { seconds: lockout.secondsLeft }));
       setPinConfirmValue('');
       pinConfirmRef.current?.clear();
       return;
@@ -260,7 +260,7 @@ export function BiometricTab({
     if (!valid) {
       const state = recordPinFailure();
       setPinConfirmError(state.locked
-        ? t('pinTab.tooManyAttempts', { seconds: state.secondsLeft })
+        ? t('security:lockScreen.tooManyAttempts', { seconds: state.secondsLeft })
         : pinConfirmKind === 'passcode' ? t('pinTab.incorrectPasscode') : t('pinTab.incorrectPin'));
       setPinConfirmValue('');
       pinConfirmRef.current?.clear();
@@ -331,7 +331,7 @@ export function BiometricTab({
 
   if (deviceSupported === null) {
     return (
-      <div className="py-8 text-center text-sm text-pn-muted">
+      <div className="py-8 text-center text-body text-pn-muted">
         {t('biometricTab.checkingSupport')}
       </div>
     );
@@ -344,22 +344,22 @@ export function BiometricTab({
       </p>
 
       {!trusted && (
-        <div className="rounded-md border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 p-3 text-sm text-amber-800 dark:text-amber-200">
+        <div className="rounded-md border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 p-3 text-body text-amber-800 dark:text-amber-200">
           {t('biometricTab.trustFirst')}
         </div>
       )}
 
       {!deviceSupported && (
-        <div className="rounded-md border border-divider bg-track p-3 text-sm text-pn-soft">
+        <div className="rounded-md border border-divider bg-track p-3 text-body text-pn-soft">
           {t('biometricTab.notAvailable')}
         </div>
       )}
 
       {error && (
-        <p className="text-sm text-danger">{error}</p>
+        <p className="text-body text-danger">{error}</p>
       )}
       {successFlash && (
-        <p className="text-sm text-accent text-center">{t('biometricTab.enabledFlash')}</p>
+        <p className="text-body text-accent text-center">{t('biometricTab.enabledFlash')}</p>
       )}
 
       {deviceSupported && trusted && (
@@ -367,8 +367,8 @@ export function BiometricTab({
           <div className="space-y-4">
             <div className="flex items-center justify-between rounded-md border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/20 p-3">
               <div className="flex items-center gap-2">
-                <Check size={16} className="text-success" />
-                <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">{t('biometricTab.enrolledOnDevice')}</span>
+                <Check className="text-success" />
+                <span className="text-body font-medium text-emerald-800 dark:text-emerald-200">{t('biometricTab.enrolledOnDevice')}</span>
               </div>
             </div>
 
@@ -376,6 +376,11 @@ export function BiometricTab({
               <p className={`${SETTINGS_HELP} leading-relaxed`}>
                 {t(detectPlatform() === 'web' ? 'biometricTab.boundStatus' : 'biometricTab.boundStatusNative')}
               </p>
+            )}
+            {/* Unbound, the wrap key sits in storage beside the phrase it opens:
+                a gate for people nearby, not a lock for a copy of the device. */}
+            {!bound && (
+              <SettingsCallout>{t('biometricTab.unboundWeaker')}</SettingsCallout>
             )}
             {canAgain && (
               <div data-setting="security.biometricSetUpAgain">
@@ -388,13 +393,13 @@ export function BiometricTab({
                         disabled={againBusy}
                         className={SETTINGS_BTN_PRIMARY}
                       >
-                        <Fingerprint size={14} />
+                        <Fingerprint />
                         {againBusy ? t('biometricTab.settingUp') : t('biometricTab.setUpAgain')}
                       </button>
                       <button
                         onClick={answerOffer}
                         disabled={againBusy}
-                        className="rounded-md border border-divider text-pn-soft hover:bg-surface-1 hover:text-pn px-3 py-1.5 text-xs transition disabled:opacity-50"
+                        className="rounded-md border border-divider text-pn-soft hover:bg-surface-1 hover:text-pn px-3 py-1.5 text-small transition disabled:opacity-50"
                       >
                         {t('biometricTab.bindOfferLater')}
                       </button>
@@ -404,9 +409,9 @@ export function BiometricTab({
                   <button
                     onClick={() => void handleSetUpAgain()}
                     disabled={againBusy}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-divider text-pn hover:bg-surface-1 px-3 py-2 text-sm transition disabled:opacity-50"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-divider text-pn hover:bg-surface-1 px-3 py-2 text-body transition disabled:opacity-50"
                   >
-                    <Fingerprint size={16} />
+                    <Fingerprint />
                     {againBusy ? t('biometricTab.settingUp') : t('biometricTab.setUpAgain')}
                   </button>
                 )}
@@ -417,7 +422,7 @@ export function BiometricTab({
             )}
 
             {/* The quiet look: it only opens the confirm, which carries the danger. */}
-            <Button icon={<ShieldSlash size={15} aria-hidden="true" className="shrink-0" />} className="w-full justify-center" onClick={() => setShowDisableConfirm(true)}>
+            <Button icon={<ShieldSlash aria-hidden="true" className="shrink-0" />} className="w-full justify-center" onClick={() => setShowDisableConfirm(true)}>
               {t('biometricTab.disable')}
             </Button>
           </div>
@@ -429,7 +434,7 @@ export function BiometricTab({
               disabled={busy}
               className={`w-full ${SETTINGS_BTN_PRIMARY}`}
             >
-              <Fingerprint size={16} />
+              <Fingerprint />
               {busy ? t('biometricTab.settingUp') : t('biometricTab.enable')}
             </button>
           </div>
@@ -443,14 +448,15 @@ export function BiometricTab({
           to turn one off. */}
       {(trusted || userSettings.appLockEnabled) && (
         <div className="pt-4 border-t border-divider">
-          {/* The switch shows what this device does, not what the synced
-              flag says. The flag can arrive from another device and sit
-              true here with nothing to open the lock with, where the lock
-              never engages - a switch reading "on" over a line explaining
-              that it cannot work is the confusing half of that state. */}
+          {/* The switch shows what this device does, not what the flag
+              says. The flag is this device's own (#662), but a first pull
+              copies the account's value, so it can sit true here with
+              nothing to open the lock with, where the lock never engages -
+              a switch reading "on" over a line explaining that it cannot
+              work is the confusing half of that state. */}
           <Switch
             setting="security.appLock"
-            icon={<LockKey size={14} className="text-accent" />}
+            icon={<LockKey className="text-accent" />}
             label={t('biometricTab.lockOnOpen')}
             labelClassName={`${ROW_TITLE} ${lockReady ? 'text-pn' : 'text-pn-muted'}`}
             description={
@@ -459,7 +465,7 @@ export function BiometricTab({
                 {/* Phone only. The desktop apps and the browser show no stored
                     picture of a backgrounded app, so there is nothing to cover
                     and the sentence would be untrue on three platforms.
-                    Spec: ops/docs/archive/app-switcher-privacy-screen.md */}
+                    Spec: docs/internal/specs/app-switcher-privacy-screen.md */}
                 {COVERS_ON_SWITCH && (
                   <span className="block mt-0.5">{t('biometricTab.lockHidesOnSwitch')}</span>
                 )}
@@ -514,7 +520,7 @@ export function BiometricTab({
             />
           </div>
           {pinConfirmError && (
-            <p className="text-sm text-danger text-center">
+            <p className="text-body text-danger text-center">
               {pinConfirmError}
             </p>
           )}
@@ -525,7 +531,7 @@ export function BiometricTab({
               disabled={!secretReady(pinConfirmKind, pinConfirmValue) || pinConfirmBusy}
               className={`flex-1 ${SETTINGS_BTN_PRIMARY}`}
             >
-              {pinConfirmBusy ? t('pinTab.checking') : t('pinTab.verify')}
+              {pinConfirmBusy ? t('security:lockScreen.checking') : t('pinTab.verify')}
             </button>
             <button
               type="button"
@@ -534,7 +540,7 @@ export function BiometricTab({
                 setPinConfirmValue('');
                 setPinConfirmError(null);
               }}
-              className="flex-1 rounded-md border border-divider hover:bg-surface-2 px-3 py-2 text-sm transition"
+              className="flex-1 rounded-md border border-divider hover:bg-surface-2 px-3 py-2 text-body transition"
             >
               {t('common:actions.cancel')}
             </button>
@@ -559,7 +565,7 @@ export function BiometricTab({
                 </option>
               ))}
             </select>
-            <p className="text-xs text-pn-soft mt-1.5 leading-relaxed">
+            <p className="text-small text-pn-soft mt-1.5 leading-relaxed">
               {t('biometricTab.relockHint')}
             </p>
           </label>
@@ -570,7 +576,7 @@ export function BiometricTab({
           is offered only where the platform can honour it. One text for every
           platform, so it promises no more than the weakest of them, iOS, whose
           screenshot block rests on an undocumented layer an update can end.
-          Spec: ops/docs/archive/app-switcher-privacy-screen.md (section 14) */}
+          Spec: docs/internal/specs/app-switcher-privacy-screen.md (section 14) */}
       {CAPTURE_BLOCK_SUPPORTED && (
         <div className="pt-4 border-t border-divider">
           <Switch
@@ -583,7 +589,7 @@ export function BiometricTab({
         </div>
       )}
 
-      <p className="text-xs text-pn-soft leading-relaxed">
+      <p className="text-small text-pn-soft leading-relaxed">
         {t('biometricTab.perDeviceNote')}
       </p>
 

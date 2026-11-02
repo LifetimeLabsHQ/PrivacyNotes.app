@@ -5,11 +5,18 @@
  * Worker talks to GitHub, with a read-only token, so a visitor never does.
  * At most one GitHub request per edge cache per day, and any failure leaves
  * the baked counts in place.
- * Spec: ops/docs/community-themes.md
+ * Spec: docs/contrib/community-themes.md
  */
 
-const QUERY =
-  'query{repository(owner:"LifetimeLabsDev",name:"PrivacyNotes.app"){discussions(first:100,orderBy:{field:CREATED_AT,direction:DESC}){nodes{number upvoteCount category{slug}}}}}';
+/** The Themes category, so other discussions never push a theme thread out
+ *  of the page (GitHub #657). Read once with
+ *  `gh api graphql -f query='query{repository(owner:"LifetimeLabsHQ",name:"PrivacyNotes.app"){discussionCategory(slug:"themes"){id}}}'`. */
+const THEMES_CATEGORY = 'DIC_kwDOSS8DwM4DHd8x';
+/** One page of Themes threads, after `cursor` when given. */
+const query = (cursor: string | null) =>
+  `query{repository(owner:"LifetimeLabsHQ",name:"PrivacyNotes.app"){discussions(first:100,categoryId:"${THEMES_CATEGORY}"${cursor ? `,after:${JSON.stringify(cursor)}` : ''}){nodes{number upvoteCount category{slug}} pageInfo{hasNextPage endCursor}}}}`;
+/** Pages read at most per refresh: 1,000 theme threads. */
+const MAX_PAGES = 10;
 const CACHE_KEY = 'https://privacynotes.app/_edge/theme-votes?_cv=v1';
 const TTL = 24 * 60 * 60;
 /** After a failed read, wait this long before this isolate asks GitHub again. */
@@ -65,18 +72,31 @@ export async function liveVotes(
   }
   if (Date.now() - failedAt < RETRY_MS) return null;
   try {
-    const res = await fetch('https://api.github.com/graphql', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'User-Agent': 'PrivacyNotes-Theme-Votes/1.0',
-      },
-      body: JSON.stringify({ query: QUERY }),
-      signal: AbortSignal.timeout(3000),
-    });
-    if (!res.ok) throw new Error(String(res.status));
-    const body: unknown = await res.json();
+    // Every page of the category, joined into one answer of the shape a
+    // single page has, so the cache and parseVotes read it as before.
+    const nodes: unknown[] = [];
+    let cursor: string | null = null;
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const res = await fetch('https://api.github.com/graphql', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'User-Agent': 'PrivacyNotes-Theme-Votes/1.0',
+        },
+        body: JSON.stringify({ query: query(cursor) }),
+        signal: AbortSignal.timeout(3000),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      const answer = (await res.json()) as { data?: { repository?: { discussions?: { nodes?: unknown; pageInfo?: { hasNextPage?: unknown; endCursor?: unknown } } } } };
+      const found = answer?.data?.repository?.discussions;
+      if (!Array.isArray(found?.nodes)) throw new Error('shape');
+      nodes.push(...found.nodes);
+      const next = found.pageInfo?.hasNextPage === true && typeof found.pageInfo.endCursor === 'string' ? found.pageInfo.endCursor : null;
+      if (!next) break;
+      cursor = next;
+    }
+    const body = { data: { repository: { discussions: { nodes } } } };
     const votes = parseVotes(body);
     if (!votes) throw new Error('shape');
     ctx.waitUntil(

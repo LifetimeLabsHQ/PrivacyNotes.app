@@ -9,8 +9,8 @@ import { PencilSimpleSlash } from './icons';
 export function ReadOnlySkipNotice({ count }: { count: number }) {
   if (count === 0) return null;
   return (
-    <div className="mt-3 flex items-start gap-2 rounded-md border border-divider bg-surface-1 text-[13px] leading-snug p-3">
-      <PencilSimpleSlash size={16} className="shrink-0 mt-0.5" />
+    <div className="mt-3 flex items-start gap-2 rounded-md border border-divider bg-surface-1 text-compact leading-snug p-3">
+      <PencilSimpleSlash className="shrink-0 mt-0.5" />
       <span>
         <Trans
           i18nKey="notes:bulkTrash.readOnlySkipped"

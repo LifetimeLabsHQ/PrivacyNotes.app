@@ -1,11 +1,9 @@
 {
   "captionFolder": "Folder",
   "captionTag": "Tag",
-  "captionNote": "Note",
   "captionTracker": "Tracker",
   "useDefault": "Use default",
   "color": "Color",
-  "noColor": "No color",
   "applyToSubfolders": "Apply color to subfolders",
   "icon": "Icon",
   "searchPlaceholder": "Search icons",

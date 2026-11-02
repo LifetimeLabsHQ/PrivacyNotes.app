@@ -7,7 +7,7 @@
  * The board menu holds Color, Columns (3, 4, Add column) and Remove board;
  * the column menu holds Move left, Move right and Delete column; a tap on a
  * card's grip opens Move to. Add column is Pro.
- * Spec: ops/issues/0270.md (Spec)
+ * Spec: docs/internal/issues/0270.md (Spec)
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -23,6 +23,7 @@ import { ActionItem, Group, OptionsMenu } from './OptionsMenu';
 import type { LookColor } from './itemStyles';
 import { ArrowLeft, ArrowRight, Check, Columns, DotsThree, Kanban, Palette, Plus, Trash, XSquare } from './icons';
 import { isColumnColor } from './calloutKeywords';
+import { BlockGrip } from './BlockGrip';
 import { writeKanbanPref } from './editorPrefs';
 import { DEFAULT_COLORS, slotName, startLayout } from './kanbanLayout';
 import {
@@ -176,11 +177,11 @@ export function KanbanBoardView({ node, editor, getPos, extension }: NodeViewPro
     >
       {menu === 'color' ? (
         <>
-          <BackRow title={t('kanban.color')} onBack={() => setMenu('main')} />
+          <BackRow title={t('shell:noteOptionsMenu.color')} onBack={() => setMenu('main')} />
           <div className="px-4 py-3 flex flex-col gap-3">
             {columns.map((col, i) => (
               <div key={i} className="flex flex-col gap-1.5">
-                <span className="text-[13px] text-pn-muted truncate" dir="auto">{columnName(col, t)}</span>
+                <span className="text-compact text-pn-muted truncate" dir="auto">{columnName(col, t)}</span>
                 <ColorSwatchRow
                   selected={isColumnColor(col.attrs.meta) ? (col.attrs.meta as LookColor) : 'none'}
                   noneLabel={t('color.remove')}
@@ -195,8 +196,8 @@ export function KanbanBoardView({ node, editor, getPos, extension }: NodeViewPro
         <>
           <Group>
             <ActionItem
-              label={t('kanban.color')}
-              icon={<Palette size={16} aria-hidden="true" />}
+              label={t('shell:noteOptionsMenu.color')}
+              icon={<Palette aria-hidden="true" />}
               value={colorDots}
               chevron
               onClick={() => setMenu('color')}
@@ -207,8 +208,8 @@ export function KanbanBoardView({ node, editor, getPos, extension }: NodeViewPro
               <ActionItem
                 key={n}
                 label={t('kanban.columnCount', { count: n })}
-                icon={<Columns size={16} aria-hidden="true" />}
-                value={count === n ? <Check size={14} aria-hidden="true" className="text-accent" /> : undefined}
+                icon={<Columns aria-hidden="true" />}
+                value={count === n ? <Check aria-hidden="true" className="text-accent" /> : undefined}
                 onClick={() => {
                   edit((tr, pos) => setColumnCount(tr, pos, n, (c, slot) => slotName(t, c, slot)));
                   closeMenu();
@@ -217,7 +218,7 @@ export function KanbanBoardView({ node, editor, getPos, extension }: NodeViewPro
             ))}
             <ActionItem
               label={t('kanban.addColumn')}
-              icon={<Plus size={16} aria-hidden="true" />}
+              icon={<Plus aria-hidden="true" />}
               pro={!unlocked}
               disabled={count >= MAX_COLUMNS}
               onClick={() => {
@@ -230,7 +231,7 @@ export function KanbanBoardView({ node, editor, getPos, extension }: NodeViewPro
           <Group>
             <ActionItem
               label={t('kanban.removeBoard')}
-              icon={<XSquare size={16} aria-hidden="true" />}
+              icon={<XSquare aria-hidden="true" />}
               tone="danger"
               onClick={() => {
                 closeMenu();
@@ -254,7 +255,7 @@ export function KanbanBoardView({ node, editor, getPos, extension }: NodeViewPro
       style={{ ['--kanban-cols' as string]: Math.max(1, count) } as React.CSSProperties}
     >
       <span className="pn-kanban-icon" contentEditable={false} aria-hidden="true">
-        <Kanban size={18} weight="bold" />
+        <Kanban weight="bold" />
       </span>
       {titleEmpty && (
         <span className="pn-callout-placeholder pn-kanban-placeholder" contentEditable={false} aria-hidden="true">
@@ -263,6 +264,7 @@ export function KanbanBoardView({ node, editor, getPos, extension }: NodeViewPro
       )}
       {editable && (
         <span className="pn-kanban-tools" contentEditable={false} ref={dotsRef}>
+          <BlockGrip editor={editor} getPos={getPos} className="pn-kanban-grip" />
           <IconButton
             label={t('formatBar.optionsFor', { item: t('callout.types.kanban') })}
             position="start"
@@ -271,7 +273,7 @@ export function KanbanBoardView({ node, editor, getPos, extension }: NodeViewPro
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => setMenu((m) => (m ? null : 'main'))}
           >
-            <DotsThree size={18} weight="bold" />
+            <DotsThree weight="bold" />
           </IconButton>
         </span>
       )}
@@ -345,13 +347,13 @@ export function KanbanColumnView({ node, editor, getPos }: NodeViewProps) {
       <Group>
         <ActionItem
           label={t('formatBar.moveLeft')}
-          icon={<ArrowLeft size={16} aria-hidden="true" />}
+          icon={<ArrowLeft aria-hidden="true" />}
           disabled={p.index === 0}
           onClick={() => pick((tr, b, i) => moveColumn(tr, b, i, -1))}
         />
         <ActionItem
           label={t('formatBar.moveRight')}
-          icon={<ArrowRight size={16} aria-hidden="true" />}
+          icon={<ArrowRight aria-hidden="true" />}
           disabled={p.index >= total - 1}
           onClick={() => pick((tr, b, i) => moveColumn(tr, b, i, 1))}
         />
@@ -359,7 +361,7 @@ export function KanbanColumnView({ node, editor, getPos }: NodeViewProps) {
       <Group>
         <ActionItem
           label={t('table.deleteColumn')}
-          icon={<Trash size={16} aria-hidden="true" />}
+          icon={<Trash aria-hidden="true" />}
           tone="danger"
           disabled={total <= MIN_COLUMNS}
           onClick={() => pick((tr, b, i) => deleteColumn(tr, b, i))}
@@ -394,7 +396,7 @@ export function KanbanColumnView({ node, editor, getPos }: NodeViewProps) {
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => setMenuOpen((o) => !o)}
           >
-            <DotsThree size={16} weight="bold" />
+            <DotsThree weight="bold" />
           </IconButton>
         )}
       </span>

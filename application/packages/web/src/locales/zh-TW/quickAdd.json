@@ -39,6 +39,16 @@
     "ordinal": "日, 號, 号, .",
     "work": "工作, 公司",
     "personal": "個人, 私人, 家",
-    "in": "後"
+    "in": "後",
+    "weekend": "週末, 周末",
+    "endOfMonth": "月底, 月末",
+    "morning": "早上, 早晨",
+    "afternoon": "下午",
+    "evening": "晚上, 傍晚",
+    "biweekly": "雙週, 每兩週, 每兩周",
+    "quarterly": "每季, 每季度, 每三個月",
+    "halfPast": "half past",
+    "numbers": "one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve",
+    "a": "一個"
   }
 }

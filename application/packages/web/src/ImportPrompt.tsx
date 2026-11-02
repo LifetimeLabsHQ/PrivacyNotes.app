@@ -12,7 +12,7 @@ import { Download } from './icons';
  * use the pillar at all. Every pillar that has an importer gets the same
  * entry, differing only in its label and in the tab it opens.
  *
- * Spec: ops/docs/design-decisions.md (bookmarks import prompt)
+ * Spec: docs/internal/design-decisions.md (bookmarks import prompt)
  */
 
 export type ImportPromptKind = 'notes' | 'journal' | 'tasks' | 'vault' | 'bookmarks' | 'contacts';
@@ -24,7 +24,7 @@ export type ImportPromptKind = 'notes' | 'journal' | 'tasks' | 'vault' | 'bookma
  * passwords arrive by the hundred and in one file, so 50 is still early days
  * for someone who has not imported yet. Notes, tasks and journals are written
  * one at a time, so 25 of them already say the pillar is in use.
- * Spec: ops/docs/design-decisions.md (bookmarks import prompt)
+ * Spec: docs/internal/design-decisions.md (bookmarks import prompt)
  */
 const IMPORT_PROMPT_MAX_ITEMS: Record<ImportPromptKind, number> = {
   notes: 25,

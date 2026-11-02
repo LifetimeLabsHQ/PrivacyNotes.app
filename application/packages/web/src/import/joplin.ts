@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { zipEntryBytes } from './zipEntry';
+import { mediaTooLargeWarning, zipEntryBytes, zipEntryMedia } from './zipEntry';
 import { normalizeTag } from '../notesRepo';
 import { createFolder, type FolderDef } from '../folders';
 import { IMPORT_FOLDER_LIMIT } from './folderImport';
@@ -143,20 +143,27 @@ function readTar(buf: Uint8Array): Map<string, Uint8Array> {
   return files;
 }
 
-async function readZip(file: File): Promise<Map<string, Uint8Array>> {
+async function readZip(file: File): Promise<{ files: Map<string, Uint8Array>; tooLarge: number }> {
   const zip = await JSZip.loadAsync(file);
   const entries = Object.values(zip.files).filter((f) => !f.dir);
   // A zipped export directory usually has one folder around it.
   const roots = new Set(entries.map((f) => (f.name.includes('/') ? f.name.split('/')[0] : '')));
   const strip = roots.size === 1 && !roots.has('') && !roots.has('resources') ? `${[...roots][0]}/` : '';
   const files = new Map<string, Uint8Array>();
+  let tooLarge = 0;
   for (const entry of entries) {
     const path = strip && entry.name.startsWith(strip) ? entry.name.slice(strip.length) : entry.name;
-    // Item files are text and keep the shared text bound; only attachments
-    // under resources/ inflate unbounded, as zipEntry.ts says binary media does.
-    files.set(path, await zipEntryBytes(entry, path.startsWith('resources/') ? Infinity : undefined));
+    // Item files are text and keep the shared text bound; attachments under
+    // resources/ are media, bounded at the largest upload.
+    if (!path.startsWith('resources/')) {
+      files.set(path, await zipEntryBytes(entry));
+      continue;
+    }
+    const data = await zipEntryMedia(entry);
+    if (data) files.set(path, data);
+    else tooLarge++;
   }
-  return files;
+  return { files, tooLarge };
 }
 
 function isoOr(value: string | undefined, fallback: string): string {
@@ -168,9 +175,9 @@ function isoOr(value: string | undefined, fallback: string): string {
 export async function parseJoplin(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
   onProgress?.('Reading file…');
   const lower = file.name.toLowerCase();
-  const files = lower.endsWith('.zip')
+  const { files, tooLarge } = lower.endsWith('.zip')
     ? await readZip(file)
-    : readTar(new Uint8Array(await file.arrayBuffer()));
+    : { files: readTar(new Uint8Array(await file.arrayBuffer())), tooLarge: 0 };
 
   onProgress?.('Reading items…');
   const decoder = new TextDecoder();
@@ -430,6 +437,7 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
 
   const transforms: string[] = [];
   const warnings: string[] = [];
+  if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   const s = (n: number, one = '', many = 's') => (n === 1 ? one : many);
   if (folderDefs.length > 0) transforms.push(`Rebuilt ${folderDefs.length} notebook${s(folderDefs.length)} as folders.`);
   if (blobs.size > 0) transforms.push(`Imported ${blobs.size} attachment${s(blobs.size)}.`);

@@ -53,8 +53,6 @@
   },
   "mood": {
     "prompt": "Hoe voel je je? (1-10)",
-    "low": "vreselijk",
-    "high": "geweldig",
     "anchor": {
       "1": "vreselijk",
       "3": "moeizaam",
@@ -142,8 +140,6 @@
     "editMedication": "Medicijn bewerken",
     "removeMedication": "Medicijn verwijderen",
     "confirmRemove": "<highlight>{{name}}</highlight> verwijderen?",
-    "yes": "Ja",
-    "no": "Nee",
     "taken": "Ingenomen",
     "skip": "Overslaan",
     "editList": "Deze medicijnen wijzigen",
@@ -257,16 +253,15 @@
   },
   "config": {
     "configureTrackers": "Trackers instellen",
-    "title": "Trackers",
-    "tabGeneral": "Algemeen",
     "tabCustom": "Eigen",
-    "chooseTrackers": "Trackers kiezen",
     "factorsTitle": "Je factoren",
     "factorsHelp": "De dingen uit je dag die je aantikt onder de knop Factoren. Een verwijderde factor houdt zijn naam op de dagen waarop hij staat.",
     "renameFactor": "Naam van {{name}} wijzigen",
     "addFactor": "Factor toevoegen",
     "medicationsTitle": "Je medicijnen",
     "medicationsHelp": "De medicijnen waarnaar de knop Medicijnen vraagt. Een verwijderd medicijn houdt zijn geschiedenis.",
+    "medicationCard": "Medicatiekaart",
+    "medicationCardHelp": "\"Heb je je medicijnen ingenomen?\" op dit apparaat, alleen op een dag dat er een medicijn aan de beurt is.",
     "customHelp": "Trackers die je zelf een naam geeft: een schaal, een getal of ja of nee. Maximaal {{max}}.",
     "yourCustomTrackers": "Je eigen trackers",
     "categoryMoodMind": "Stemming & geest",
@@ -291,23 +286,17 @@
     "kindBuild": "Om op te bouwen",
     "kindWatch": "Om in de gaten te houden",
     "editHabit": "{{name}} bewerken",
-    "removeHabit": "{{name}} verwijderen",
     "ownHabitsFull": "Je hebt {{max}} eigen gewoonten, het maximum.",
     "addCustomTrackerHint": "Houd bij wat je maar wilt",
     "maxReached": "Maximum van {{max}} eigen trackers bereikt.",
     "customTrackers": "Eigen trackers",
-    "newCustomTracker": "Nieuwe eigen tracker",
-    "newMedication": "Nieuw medicijn",
     "newMedicationHelp": "De knop Medicijnen vraagt ernaar vanaf de startdag, op de tijden die je instelt.",
     "trackerNamePlaceholder": "Naam van tracker",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "Naam",
     "typeLabel": "Type",
-    "colorLabel": "Kleur",
     "preview": "Voorbeeld",
     "startFromLast": "Laatste invoer onthouden",
     "chooseIcon": "Pictogram kiezen",
-    "iconLabel": "Pictogram",
     "startFromLastHelp": "Handig voor dingen die zelden veranderen, zoals je gewicht of een dagelijkse dosis."
   },
   "factors": {
@@ -315,7 +304,6 @@
     "count_other": "{{count}} factoren",
     "remove": "{{name}} verwijderen",
     "placeholder": "bezoek, migraine, overwerk",
-    "add": "Toevoegen",
     "empty": "Voeg de dingen toe die je dagen vormen en tik ze dan aan op elke dag.",
     "commaHint": "Voeg er meerdere tegelijk toe, gescheiden door komma's.",
     "editList": "Deze factoren wijzigen",
@@ -339,8 +327,6 @@
   "habits": {
     "prompt": "Wat heb je vandaag gedaan?",
     "count": "{{yes}}/{{total}}",
-    "yes": "Ja",
-    "no": "Nee",
     "empty": "Kies de vragen bij het instellen van je trackers.",
     "changeQuestions": "Deze vragen wijzigen",
     "q": {
@@ -399,9 +385,7 @@
     "prompt": "Hoeveel cafeïne heb je gehad?"
   },
   "flow": {
-    "next": "Volgende",
     "finish": "Afronden",
-    "done": "Klaar",
     "step": "Tracker {{n}} van {{total}}"
   }
 }

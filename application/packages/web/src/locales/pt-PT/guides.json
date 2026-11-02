@@ -153,7 +153,7 @@
           "p": [
             "A tua estrutura de pastas é reconstruída como pastas a sério, não achatada em etiquetas, por mais fundo que esteja aninhada. Uma nota em Work/Projects vai parar a uma pasta Work > Projects. Se voltares a importar o mesmo vault, as pastas já criadas são reutilizadas em vez de duplicadas.",
             "No plano gratuito podes navegar por estas pastas de imediato; [criar, mudar o nome e mover pastas é uma funcionalidade Pro](/pt/help/folders/), por isso uma importação do Obsidian é uma boa forma de a experimentares antes de passares para Pro.",
-            "O frontmatter YAML é entendido: tags, aliases e datas de criação são respeitados, e as #tags inline no corpo são juntadas ao campo de etiquetas. Durante a importação podes também assinalar \"Etiquetar também as notas por pasta\" para adicionares o nome de cada pasta como etiqueta, prático se gostares de filtrar por etiqueta.",
+            "O frontmatter YAML é entendido: `tags`, `aliases` e datas de criação são respeitados, e as #hashtags inline no corpo são juntadas ao campo de etiquetas. Durante a importação podes também assinalar \"Etiquetar também as notas por pasta\" para adicionares o nome de cada pasta como etiqueta, prático se gostares de filtrar por etiqueta.",
             "Os teus links [[...]] continuam a funcionar: [o PrivacyNotes apresenta-os como ligações entre notas](/pt/help/note-links/), por isso as relações entre as notas sobrevivem à mudança. A pasta de configuração .obsidian e a .trash são ignoradas automaticamente."
           ]
         }
@@ -334,7 +334,7 @@
         {
           "h": "Como os ficheiros são lidos",
           "p": [
-            "O frontmatter YAML é respeitado quando existe: os campos title, created, updated e tags são usados tal como estão, o que faz deste também [o caminho de reposição das exportações Markdown do próprio PrivacyNotes](/pt/help/export/). Também lemos as etiquetas escritas como #hashtags no texto. Os ficheiros simples sem frontmatter usam o nome do ficheiro como título e o conteúdo como corpo. A análise é deliberadamente tolerante: aceitamos .md, .markdown, .mdown, .mkd e .txt.",
+            "O frontmatter YAML é respeitado quando existe: os campos `title`, `created`, `updated` e `tags` são usados tal como estão, o que faz deste também [o caminho de reposição das exportações Markdown do próprio PrivacyNotes](/pt/help/export/). Também lemos as etiquetas escritas como #hashtags no texto. Os ficheiros simples sem frontmatter usam o nome do ficheiro como título e o conteúdo como corpo. A análise é deliberadamente tolerante: aceitamos .md, .markdown, .mdown, .mkd e .txt.",
             "Comprime a pasta inteira e a estrutura vem com ela. As subpastas são reconstruídas como pastas a sério, a qualquer profundidade, e as imagens e ficheiros para onde as tuas notas apontam são importados ao lado delas. Aquilo para onde nada aponta fica para trás e é contado, por isso uma pasta cheia de capturas de ecrã antigas não te come o armazenamento."
           ]
         }

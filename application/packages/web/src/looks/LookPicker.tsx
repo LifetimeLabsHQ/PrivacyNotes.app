@@ -19,7 +19,7 @@
  * grid scrolls, and a hover label above a cell would be clipped by it. A
  * query in the search field swaps the groups for one list of hits; with no
  * query, the icons the folders and tags already wear lead as one row.
- * Spec: ops/docs/archive/folder-tag-icons.md (section 6)
+ * Spec: docs/internal/specs/folder-tag-icons.md (section 6)
  */
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
@@ -195,7 +195,7 @@ export function LookPicker({
     : target.kind === 'folder'
       ? t('captionFolder')
       : target.kind === 'note'
-        ? t('captionNote')
+        ? t('notes:newMenu.note')
         : target.kind === 'tracker'
           ? t('captionTracker')
           : t('captionTag');
@@ -296,16 +296,16 @@ export function LookPicker({
         )}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-pn truncate" dir="auto">
+        <p className="text-body font-medium text-pn truncate" dir="auto">
           {target.kind === 'tag' ? `#${target.name}` : target.name}
         </p>
-        <p className="text-[11px] text-pn-muted truncate" aria-live="polite">{caption}</p>
+        <p className="text-meta text-pn-muted truncate" aria-live="polite">{caption}</p>
       </div>
       <button
         type="button"
         onClick={() => onPick(reset)}
         disabled={!resettable}
-        className="shrink-0 text-[12px] font-medium px-2 py-1 rounded-md text-accent hover:bg-accent/10 disabled:opacity-40 disabled:hover:bg-transparent transition"
+        className="shrink-0 text-small font-medium px-2 py-1 rounded-md text-accent hover:bg-accent/10 disabled:opacity-40 disabled:hover:bg-transparent transition"
       >
         {t('useDefault')}
       </button>
@@ -354,7 +354,7 @@ export function LookPicker({
       <div className="mt-4">
         <ColorSwatchRow
           selected={ownColor ?? 'none'}
-          noneLabel={t('noColor')}
+          noneLabel={tShell('noteOptionsMenu.colorNone')}
           colorLabel={(c) => tEditor(`color.names.${c}`)}
           labelSide="below"
           onPick={(c) => onPick({ color: c })}
@@ -375,8 +375,8 @@ export function LookPicker({
             tag's picker it otherwise reads as a setting of that tag, and the
             example shows the picked color under the chosen option. */}
         <div className="py-2.5">
-          <p className="text-sm font-medium flex items-center gap-1.5">
-            <Globe size={14} className="shrink-0 text-pn-muted" aria-hidden="true" />
+          <p className="text-body font-medium flex items-center gap-1.5">
+            <Globe className="shrink-0 text-pn-muted" aria-hidden="true" />
             {tSettings('appearance.noteColorsPickerTitle')}
           </p>
           <p className={`${SETTINGS_HELP} mt-0.5`}>{tSettings('appearance.noteColorsDesc')}</p>
@@ -403,9 +403,9 @@ export function LookPicker({
                 source={
                   <>
                     {target.kind === 'folder' ? (
-                      <Folder size={11} weight="fill" style={inkStyle(ownColor)} aria-hidden="true" />
+                      <Folder weight="fill" style={inkStyle(ownColor)} aria-hidden="true" />
                     ) : (
-                      <Hash size={11} style={inkStyle(ownColor)} aria-hidden="true" />
+                      <Hash style={inkStyle(ownColor)} aria-hidden="true" />
                     )}
                     <span className="truncate">{target.name}</span>
                   </>
@@ -468,7 +468,7 @@ export function LookPicker({
         hits.length > 0 ? (
           <div className={`mt-2 ${cellGrid}`}>{hits.map(iconButton)}</div>
         ) : (
-          <p className="mt-4 text-center text-[13px] text-pn-muted" role="status">
+          <p className="mt-4 text-center text-compact text-pn-muted" role="status">
             {tCommon('state.noResults')}
           </p>
         )

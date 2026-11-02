@@ -70,7 +70,7 @@ export function UploadProgressModal({ entries, isPro, hasStorageSub, onOpenUpgra
       <div className="w-[360px] max-h-[80vh] bg-surface-2 rounded-lg border border-divider flex flex-col overflow-hidden text-pn">
         {/* Header */}
         <div className="px-6 py-4 border-b border-divider flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-heading font-semibold">
             {allDone
               ? counts.failed > 0
                 ? counts.done > 0
@@ -87,7 +87,7 @@ export function UploadProgressModal({ entries, isPro, hasStorageSub, onOpenUpgra
           {entries.map((entry, i) => (
             <div key={`${entry.name}-${i}`}>
               <div className="flex items-center justify-between gap-2 mb-1">
-                <span className={`text-[13px] truncate flex-1 ${
+                <span className={`text-compact truncate flex-1 ${
                   entry.discarded
                     ? 'text-pn-muted line-through'
                     : entry.status === 'failed'
@@ -100,12 +100,12 @@ export function UploadProgressModal({ entries, isPro, hasStorageSub, onOpenUpgra
                   <button
                     type="button"
                     onClick={() => { void entry.discard?.().catch((err) => console.warn('[upload] discard failed:', err)); }}
-                    className="shrink-0 text-[12px] px-2 py-0.5 rounded-md border border-divider text-pn-soft hover:bg-pn/10"
+                    className="shrink-0 text-small px-2 py-0.5 rounded-md border border-divider text-pn-soft hover:bg-pn/10"
                   >
                     {t('upload.discard')}
                   </button>
                 )}
-                <span className={`text-[12px] shrink-0 ${
+                <span className={`text-small shrink-0 ${
                   entry.status === 'done'
                     ? 'text-success'
                     : entry.status === 'failed'
@@ -127,7 +127,7 @@ export function UploadProgressModal({ entries, isPro, hasStorageSub, onOpenUpgra
                 tone={entry.status === 'done' ? 'success' : entry.status === 'failed' ? 'danger' : 'info'}
               />
               {entry.status === 'failed' && (entry.errorCode || entry.error) && (
-                <p className="text-[11px] text-danger mt-0.5 leading-tight">
+                <p className="text-meta text-danger mt-0.5 leading-tight">
                   {/* Structured codes first; the raw-text quota sniff stays as
                       a backstop because server accounting strings ("image
                       storage N bytes > limit M bytes") must never reach the
@@ -148,7 +148,7 @@ export function UploadProgressModal({ entries, isPro, hasStorageSub, onOpenUpgra
         {/* Footer - summary + close */}
         <div className="px-5 py-3 border-t border-divider">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[12px] text-pn-muted">
+            <span className="text-small text-pn-muted">
               {counts.done > 0 && t('upload.summaryDone', { count: counts.done })}
               {counts.done > 0 && (active > 0 || counts.failed > 0) && ', '}
               {active > 0 && t('upload.summaryUploading', { count: active })}
@@ -166,25 +166,25 @@ export function UploadProgressModal({ entries, isPro, hasStorageSub, onOpenUpgra
           {!proUnlocked(isPro) ? (
             <div className="mt-2 flex items-center gap-2 rounded-md bg-accent/10 px-2.5 py-1.5">
               <span className="shrink-0"><IconUpgrade size={13} /></span>
-              <span className="flex-1 text-[11.5px] text-pn-soft leading-tight">
+              <span className="flex-1 text-small text-pn-soft leading-tight">
                 {t('upload.proPitch')}
               </span>
-              <button type="button" onClick={onOpenUpgrade} className="shrink-0 text-[11.5px] font-medium text-accent hover:underline">
+              <button type="button" onClick={onOpenUpgrade} className="shrink-0 text-small font-medium text-accent hover:underline">
                 {t('upload.proPitchCta')}
               </button>
             </div>
           ) : !hasStorageSub && isStorageConfigured() ? (
             <div className="mt-2 flex items-center gap-2 rounded-md bg-accent/10 px-2.5 py-1.5">
               <span className="shrink-0"><IconUpgrade size={13} /></span>
-              <span className="flex-1 text-[11.5px] text-pn-soft leading-tight">
+              <span className="flex-1 text-small text-pn-soft leading-tight">
                 {t('upload.storagePitch')}
               </span>
-              <button type="button" onClick={onManageStorage} className="shrink-0 text-[11.5px] font-medium text-accent hover:underline">
+              <button type="button" onClick={onManageStorage} className="shrink-0 text-small font-medium text-accent hover:underline">
                 {t('upload.storagePitchCta')}
               </button>
             </div>
           ) : (
-            <p className="text-[11px] text-pn-muted mt-2 leading-relaxed">
+            <p className="text-meta text-pn-muted mt-2 leading-relaxed">
               {t('upload.typesHint', { limit: hasStorageSub ? '100' : '50' })}
             </p>
           )}

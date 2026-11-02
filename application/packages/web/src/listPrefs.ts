@@ -25,7 +25,7 @@ export type ListPrefs = {
    * Whether a row carries its preview line - the note's first words, a
    * bookmark's URL, a login's username. Default true, but three pillars
    * start it off; see PILLAR_DEFAULTS.
-   * Spec: ops/docs/design-decisions.md (per-pillar list settings)
+   * Spec: docs/internal/design-decisions.md (per-pillar list settings)
    */
   showPreview: boolean;
   /**
@@ -38,7 +38,7 @@ export type ListPrefs = {
   /**
    * Whether a row carries its date. Default true, off in the pillars whose
    * rows say it already; see PILLAR_DEFAULTS.
-   * Spec: ops/docs/design-decisions.md (per-pillar list settings)
+   * Spec: docs/internal/design-decisions.md (per-pillar list settings)
    */
   showDate: boolean;
   /**
@@ -78,21 +78,21 @@ export type ListPrefs = {
    * Bookmarks pillar only: mix in read-only rows derived from URLs found
    * inside note bodies. Computed locally, never stored. Off in Global, on
    * from the start in the bookmarks pillar (PILLAR_DEFAULTS).
-   * Spec: ops/docs/archive/bookmarks-pillar.md (section 8)
+   * Spec: docs/internal/specs/bookmarks-pillar.md (section 8)
    */
   showNoteLinks: boolean;
   /**
    * Tasks pillar only: list the notes that merely carry a checkbox line
    * alongside the task lists made in the pillar itself. Off leaves only the
    * notes typed 'task', so a recipe or a packing list stays out of the way.
-   * Spec: ops/docs/plans/issue-batches.md (batch 17)
+   * Spec: docs/internal/plans/issue-batches.md (batch 17)
    */
   showNoteTasks: boolean;
   /**
    * Whether the list draws group headers. The sort decides the groups: date
    * buckets for a date sort, first letters for the title sort, none for size.
    * Default false. Only the panes that draw groups offer the switch.
-   * Spec: ops/docs/archive/list-groups.md
+   * Spec: docs/internal/specs/list-groups.md
    */
   showGroups: boolean;
 };
@@ -168,14 +168,14 @@ export const DEFAULT_STORE: ListPrefsStore = {
  *     the date goes.
  * Notes and Tasks are deliberately absent: a preview line is how you tell two
  * untitled notes apart.
- * Spec: ops/docs/design-decisions.md (per-pillar list settings)
+ * Spec: docs/internal/design-decisions.md (per-pillar list settings)
  */
 const PILLAR_DEFAULTS: Partial<Record<Pillar, Partial<ListPrefs>>> = {
   bookmarks: { showDate: false, showTags: false, showNoteLinks: true },
   // Contacts: a person's row says who they are and how to reach them; the
   // date of the last edit is noise there. Sort stays the global default
   // (date modified), by decision, and A to Z is one click away.
-  // Spec: ops/docs/archive/contacts-pillar.md (section 10, PILLAR_DEFAULTS)
+  // Spec: docs/internal/specs/contacts-pillar.md (section 10, PILLAR_DEFAULTS)
   contacts: { showDate: false },
   files: { showPreview: false, showDate: false },
   journal: { showDate: false, sortField: 'created' },

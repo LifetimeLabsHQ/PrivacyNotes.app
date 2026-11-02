@@ -25,7 +25,7 @@ import { waterText, type TrackerUnits } from './trackerExport';
  * The daily check-in (GitHub #439): which entry a day's check-in writes to,
  * how its values read on one line, the device-local "Skip today", and the
  * device-local daily reminder.
- * Spec: ops/issues/0439.md (Spec, Reminder plan)
+ * Spec: docs/internal/issues/0439.md (Spec, Reminder plan)
  */
 
 /** The entry a check-in for `day` reads and writes: the newest live journal
@@ -52,7 +52,7 @@ export function checkInEntry(notes: readonly LocalNote[], day: string): LocalNot
  * (the streaks plan's definition), so a sleep-only day keeps the run. An
  * entry the PIN guards is not read, so its day does not count. The run has
  * no cap; the week is always seven days, so a long run never widens the strip.
- * Spec: ops/docs/plans/milestones-and-streaks.md (D2, section 4)
+ * Spec: docs/internal/plans/milestones-and-streaks.md (D2, section 4)
  */
 export function checkInStreak(
   notes: readonly LocalNote[],

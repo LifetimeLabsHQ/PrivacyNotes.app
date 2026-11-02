@@ -1,11 +1,9 @@
 {
   "captionFolder": "Folder",
   "captionTag": "Tag",
-  "captionNote": "Notatka",
   "captionTracker": "Tracker",
   "useDefault": "Przywróć domyślne",
   "color": "Kolor",
-  "noColor": "Bez koloru",
   "applyToSubfolders": "Zastosuj kolor do podfolderów",
   "icon": "Ikona",
   "searchPlaceholder": "Szukaj ikon",

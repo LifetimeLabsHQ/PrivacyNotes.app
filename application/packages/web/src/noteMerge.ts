@@ -8,11 +8,11 @@
  * when the person answers the conflict dialog, over the row as it stands
  * then.
  *
- * Spec: ops/docs/sync-protocol.md (section 2, step 4)
+ * Spec: docs/contrib/sync-protocol.md (section 2, step 4)
  */
 import type { EncryptedPayload, NoteType } from '@notes/shared';
 import type { LocalNote } from './db';
-import { mergeTrackers, trackersEqual } from './trackerTypes';
+import { isMergedTrackerKey, mergeTrackers, trackersEqual } from './trackerTypes';
 import { sameContent } from './editStamp';
 
 /** A note's encrypted payload with every field present, flags as booleans. */
@@ -313,6 +313,19 @@ export function laterStamp(a: string, b: string): string {
   return ta >= tb ? a : b;
 }
 
+/** Two stamps compared as instants: negative when `a` is earlier, 0 for the
+ *  same moment, positive when later. A server stamp (`...581+00:00`) and a
+ *  local one (`...581Z`) spell one moment differently, and an imported date
+ *  (`3 Jan 2024`) sorts after every `2026-...` stamp as text, so a string
+ *  compare skipped real edits (external report, 2026-10-24). A stamp that does
+ *  not parse falls back to the text order it had before. */
+export function compareStamps(a: string, b: string): number {
+  const ta = Date.parse(a);
+  const tb = Date.parse(b);
+  if (Number.isFinite(ta) && Number.isFinite(tb)) return ta - tb;
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
 /** One side of a merge: its payload and the stamps its row carries. */
 export interface MergeSide {
   fields: NoteFields;
@@ -429,7 +442,13 @@ export function mergeNoteFields(
       const sf = st?.[key] === undefined ? undefined : fingerprint(st[key]);
       if (lf === sf) continue;
       const was = Object.hasOwn(base.k, key) ? base.k[key] : undefined;
-      const from = lf !== was && sf === was ? lt : sf !== was && lf === was ? st : null;
+      // Both changed the key. A value mergeTrackers merges keeps its answer;
+      // a plain value (an event's time or repeat rule, a mood, an alert)
+      // comes from the device that edited the note last, the rule every
+      // other field follows. mergeTrackers alone kept this device's value
+      // whatever its age, so an old offline edit undid a later one
+      // (external report, 2026-10-24, bug report 16).
+      const from = lf !== was && sf === was ? lt : sf !== was && lf === was ? st : isMergedTrackerKey(key) ? null : localLater ? lt : st;
       if (!from) continue;
       if (from[key] === undefined) delete merged[key];
       else merged[key] = from[key];

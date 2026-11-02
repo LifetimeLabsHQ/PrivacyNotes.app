@@ -24,7 +24,8 @@
       "replace": "Find and replace is a Pro feature. Upgrade to replace one match or every match in a note at once.",
       "passphrase": "Passphrases are a Pro feature. Generate a phrase of random words that is easy to type and to say.",
       "default": "One upgrade unlocks everything below. One-time payment.",
-      "alerts": "Reminders are a Pro feature. Your devices ring at the time you pick, and nothing about the item leaves them."
+      "alerts": "Reminders are a Pro feature. Each device rings on its own at the time you pick, so no push service sees the item.",
+      "vaultFiles": "Files on vault items are a Pro feature. Keep recovery codes, a backup key or a scan with the login, card or key it belongs to."
     },
     "features": {
       "devices": "Sync unlimited devices, every platform",
@@ -80,7 +81,6 @@
     "loadFailed": "Could not load the history. Check your connection and try again.",
     "selectPrompt": "Select a version to preview.",
     "emptyBody": "(empty)",
-    "restore": "Restore",
     "restoring": "Restoring…",
     "restoreSnapshotFailed": "Could not save the current version first, so nothing was restored. Check your connection and try again.",
     "restoreFailed": "Could not restore this version. Try again.",

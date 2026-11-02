@@ -9,7 +9,7 @@ import type { SharedItem } from './useShareInbox';
  * into it. Any installed app can send a share with no step by the person, so
  * nothing is saved until they choose: Save all, Discard, or neither (the
  * window closed), which leaves the items for the next time the app opens.
- * Spec: ops/docs/archive/share-into-app.md
+ * Spec: docs/internal/specs/share-into-app.md
  */
 /** Text from another app, with the direction controls that could make it
  *  show something other than what it holds taken out. */
@@ -32,10 +32,10 @@ export function ShareApprovalModal({ items, onChoice }: {
       onCancel={() => onChoice('discard')}
       onClose={() => onChoice('later')}
     >
-      <p className="text-[13px] text-pn-muted mb-2">{t('shareSheet.line')}</p>
+      <p className="text-compact text-pn-muted mb-2">{t('shareSheet.line')}</p>
       <ul className="max-h-60 overflow-y-auto divide-y divide-divider border-y border-divider">
         {items.map((item) => (
-          <li key={item.id} className="flex items-center gap-2 py-1.5 text-[13px] text-pn min-w-0">
+          <li key={item.id} className="flex items-center gap-2 py-1.5 text-compact text-pn min-w-0">
             <span className="shrink-0 text-pn-muted" aria-hidden="true">
               {item.kind === 'url' ? iconBookmark() : item.kind === 'file' ? iconFile() : iconNote()}
             </span>
@@ -43,7 +43,7 @@ export function ShareApprovalModal({ items, onChoice }: {
               {stripBidiControls(item.kind === 'url' ? item.url : item.kind === 'file' ? item.name : item.text)}
             </span>
             {item.kind === 'file' && item.size !== undefined && (
-              <span className="shrink-0 text-[12px] text-pn-muted tabular-nums">{formatFileSize(item.size)}</span>
+              <span className="shrink-0 text-small text-pn-muted tabular-nums">{formatFileSize(item.size)}</span>
             )}
           </li>
         ))}

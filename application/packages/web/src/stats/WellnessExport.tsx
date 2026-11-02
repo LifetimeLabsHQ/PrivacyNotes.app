@@ -29,7 +29,7 @@ export type ExportRow = ComponentType<{
  * Settings > Import & Export > Trackers: the tracker exports, over a range
  * picked here. The range is the one Statistics > Trackers shows, so both
  * places agree on what "the last 30 days" holds.
- * Spec: ops/docs/archive/wellness-statistics.md (section 3)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 3)
  */
 export function WellnessExportTab({ notes, isNoteLocked, trackerSettings, factors = NO_FACTORS, medications, isPro, onOpenUpgrade, Row }: {
   notes: LocalNote[];
@@ -44,8 +44,6 @@ export function WellnessExportTab({ notes, isNoteLocked, trackerSettings, factor
   const { t } = useTranslation('stats');
   const [rangeId, setRangeId] = useState<RangeId>(readWellnessRange);
   const [copied, setCopied] = useState(false);
-  // The copied prompt stays readable in the pane, so the person knows what left the clipboard.
-  const [promptText, setPromptText] = useState<string | null>(null);
   // A failed native save can leave an empty or partial file, so the message
   // stays until a save succeeds; a dismissed dialog changes nothing.
   const [saveFailed, setSaveFailed] = useState(false);
@@ -60,6 +58,13 @@ export function WellnessExportTab({ notes, isNoteLocked, trackerSettings, factor
     const allTime = computeTrackerStats(notes, medications, isNoteLocked);
     return { ...computeTrackerStats(journalsInRange(notes, model.range), medications, isNoteLocked), weekInReview: allTime.weekInReview };
   }, [notes, model.range, medications, isNoteLocked]);
+  // Pro and the demo see the prompt open under the rows, for the range picked,
+  // so they know what the button puts on the clipboard. Free users get the
+  // upgrade door instead.
+  const promptText = useMemo(
+    () => (unlocked && model.entries.length > 0 ? generateAIPrompt(stats, medications, t, model) : null),
+    [unlocked, stats, medications, t, model],
+  );
   const definitions = useMemo(() => ({ customTrackers: trackerSettings.customTrackers, medications, factors }), [trackerSettings, medications, factors]);
 
   const handleExportJSON = useCallback(async () => {
@@ -81,14 +86,12 @@ export function WellnessExportTab({ notes, isNoteLocked, trackerSettings, factor
   }, [model, t]);
 
   const handleCopyAIPrompt = useCallback(() => {
-    if (!unlocked) { onOpenUpgrade?.(); return; }
-    const prompt = generateAIPrompt(stats, medications, t, model);
-    setPromptText(prompt);
-    void navigator.clipboard.writeText(prompt).then(() => {
+    if (promptText === null) { onOpenUpgrade?.(); return; }
+    void navigator.clipboard.writeText(promptText).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
-  }, [unlocked, stats, medications, model, t, onOpenUpgrade]);
+  }, [promptText, onOpenUpgrade]);
 
   const handleReport = useCallback(async () => {
     if (!unlocked) { onOpenUpgrade?.(); return; }
@@ -128,20 +131,17 @@ export function WellnessExportTab({ notes, isNoteLocked, trackerSettings, factor
           <Row setting="wellness.doctorReport" title={t('wellness.export.doctorPDF')} description={t('wellness.export.doctorDesc')} glyph={glyph(FilePdf)} pro={!isPro} onClick={() => void handleReport()} />
           <Row setting="wellness.json" title={t('wellness.export.downloadJSON')} description={t('wellness.export.jsonDesc')} glyph={glyph(BracketsCurly)} onClick={() => void handleExportJSON()} />
           <Row setting="wellness.csv" title={t('wellness.export.downloadCSV')} description={t('wellness.export.csvDesc')} glyph={glyph(FileCsv)} onClick={() => void handleExportCSV()} />
-          <Row setting="wellness.aiPrompt" title={copied ? t('wellness.export.copied') : t('wellness.export.copyAIPrompt')} description={t('wellness.export.aiPromptDesc')} glyph={glyph(Sparkle)} pro={!isPro} onClick={handleCopyAIPrompt} />
+          <Row setting="wellness.aiPrompt" title={copied ? t('shell:vaultItem.copied') : t('wellness.export.copyAIPrompt')} description={t('wellness.export.aiPromptDesc')} glyph={glyph(Sparkle)} pro={!isPro} onClick={handleCopyAIPrompt} />
         </div>
       )}
 
       {promptText !== null && (
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] text-pn-muted">{t('wellness.export.promptShown')}</span>
-            <button type="button" onClick={() => setPromptText(null)} className="text-[11px] text-accent hover:underline">{t('wellness.export.hidePrompt')}</button>
-          </div>
-          <textarea readOnly value={promptText} className="w-full h-56 rounded-md border border-divider bg-surface-0 text-xs text-pn-soft p-2 font-mono resize-y" />
+          <p className="text-meta text-pn-muted mb-1">{t('wellness.export.promptShown')}</p>
+          <textarea readOnly value={promptText} className="w-full h-56 rounded-md border border-divider bg-surface-0 text-small text-pn-soft p-2 font-mono resize-y" />
         </div>
       )}
-      {saveFailed && <p className="text-xs text-danger">{t('wellness.export.saveFailed')}</p>}
+      {saveFailed && <p className="text-small text-danger">{t('wellness.export.saveFailed')}</p>}
     </div>
   );
 }

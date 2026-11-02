@@ -12,7 +12,7 @@
  * one, is set on the glyph itself and so wins over the caller's amber; an
  * active row keeps its colored glyph, because its background already says
  * that it is active.
- * Spec: ops/docs/archive/folder-tag-icons.md (section 7)
+ * Spec: docs/internal/specs/folder-tag-icons.md (section 7)
  */
 import { createContext, useContext, useMemo, type CSSProperties } from 'react';
 import { Folder, Hash, Star } from '../icons';
@@ -79,7 +79,7 @@ function tintStyle(color: LookColor | null): CSSProperties | undefined {
 
 /** A folder or tag row in the sidebar wears its tint only with the
  *  Background choice; with Accent or Off, its icon carries the color alone.
- *  Spec: ops/docs/archive/note-color-style.md (decision N4) */
+ *  Spec: docs/internal/specs/note-color-style.md (decision N4) */
 export function sidebarRowTint(
   color: LookColor | null,
   { tintNotes, noteColorStyle }: Pick<LooksValue, 'tintNotes' | 'noteColorStyle'>,
@@ -92,7 +92,7 @@ export function sidebarRowTint(
  * variables that index.css hands to the item's icon (`[data-color-style]`),
  * so the icon wears the color as the tab and the settings example show it;
  * a background adds the tint (tintStyle) on the whole row.
- * Spec: ops/docs/archive/note-color-style.md (section 3.1)
+ * Spec: docs/internal/specs/note-color-style.md (section 3.1)
  */
 function noteLookStyle(look: NoteLook | null): CSSProperties | undefined {
   if (!look) return undefined;
@@ -108,7 +108,7 @@ function noteLookStyle(look: NoteLook | null): CSSProperties | undefined {
  * item (list row, grid tile, calendar, quick switcher, connections). The icon
  * wears the ink at both strengths; `row` adds the tint for a background look
  * and carries the variables index.css hands to a `[data-slot='icon']` box.
- * Spec: ops/docs/archive/note-color-style.md (section 3.1)
+ * Spec: docs/internal/specs/note-color-style.md (section 3.1)
  */
 export type ItemLookDraw = {
   look: NoteLook | null;

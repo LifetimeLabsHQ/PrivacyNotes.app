@@ -4,7 +4,7 @@
  * browser (macOS Finder, GNOME Files) and cloud storage show. Single source
  * of truth for every size the user sees, so per-file sizes and the storage
  * quota can never drift apart.
- * Spec: ops/docs/design-decisions.md (decimal storage units)
+ * Spec: docs/internal/design-decisions.md (decimal storage units)
  */
 export function formatBytes(bytes: number): string {
   if (bytes < 1000) return `${bytes} B`;

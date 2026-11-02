@@ -14,15 +14,19 @@
  * seeing it: a few hundred compressed bytes that expand into gigabytes of
  * text. Every text entry is parsed whole on the UI thread, so such an entry
  * freezes the app before any preview appears, and no real export carries a
- * single text file of that size. Binary entries stay unbounded on purpose: an
- * attachment above the per-file ladder is refused at upload, and one long
- * video in a journal export must not abort the rest of the import.
+ * single text file of that size. A picture or file is read through
+ * `zipEntryMedia`, bounded at the largest file any plan can upload: a few
+ * gigabytes of one inflated attachment took the tab down (#656), and a file
+ * past that limit could never sync anyway. It is skipped rather than refused,
+ * because one long video in a journal export must not abort the rest of the
+ * import; the importer counts it and says so with `mediaTooLargeWarning`.
  *
  * The UpNote snapshot is compressed twice, a gzip member inside the zip, and
  * the inner layer declares no size, so it is counted the same way.
  */
 
 import type JSZip from 'jszip';
+import { perFileLimit } from '../attachmentValidation';
 import { formatBytes } from '../formatBytes';
 
 /** The most text one zip entry may expand to before the import refuses it. */
@@ -110,6 +114,28 @@ export async function zipEntryText(entry: JSZip.JSZipObject, limit = ZIP_TEXT_EN
  */
 export async function zipEntryBytes(entry: JSZip.JSZipObject, limit = ZIP_TEXT_ENTRY_LIMIT): Promise<Uint8Array<ArrayBuffer>> {
   return inflateBounded(entry, limit);
+}
+
+/** The largest picture or file an import reads; nothing past it can upload on any plan. */
+const mediaEntryLimit = (): number => perFileLimit(true, true);
+
+/**
+ * The bytes of one picture or file, or null when it declares or produces more
+ * than the largest upload. Any other failure still throws.
+ */
+export async function zipEntryMedia(entry: JSZip.JSZipObject): Promise<Uint8Array<ArrayBuffer> | null> {
+  try {
+    return await inflateBounded(entry, mediaEntryLimit());
+  } catch (err) {
+    if (err instanceof ImportTooLargeError) return null;
+    throw err;
+  }
+}
+
+/** The import warning for the files `zipEntryMedia` skipped. */
+export function mediaTooLargeWarning(count: number): string {
+  const files = count === 1 ? '1 file' : `${count} files`;
+  return `Skipped ${files} larger than ${formatBytes(mediaEntryLimit())}, the largest file any plan can sync.`;
 }
 
 /**

@@ -52,11 +52,11 @@ export function Modal({
   const head = (
     <div className={`flex items-start justify-between gap-3${header === 'bar' ? ' shrink-0 border-b border-divider px-6 py-4' : ''}`}>
       <div className="min-w-0">
-        <h2 id={titleId} className="flex items-center gap-2 text-lg font-semibold text-pn">
+        <h2 id={titleId} className="flex items-center gap-2 text-heading font-semibold text-pn">
           {icon && <span className="shrink-0 text-accent" aria-hidden="true">{icon}</span>}
           <span className="min-w-0">{title}</span>
         </h2>
-        {subtitle && <p className="mt-0.5 text-sm text-pn-muted">{subtitle}</p>}
+        {subtitle && <p className="mt-0.5 text-body text-pn-muted">{subtitle}</p>}
       </div>
       {onClose && escape && <CloseButton onClick={onClose} className="-me-2 -mt-1" />}
     </div>

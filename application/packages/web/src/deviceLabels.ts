@@ -18,7 +18,7 @@
  * server's device list would turn one failed or partial list read into a
  * deletion that travels to every device.
  *
- * Spec: ops/docs/design-decisions.md (device labels live in the settings blob)
+ * Spec: docs/internal/design-decisions.md (device labels live in the settings blob)
  */
 import {
   mergeRegisterMaps,

@@ -1,6 +1,4 @@
 {
-  "dismiss": "Ignora",
-  "close": "Chiudi",
   "moveBanner": {
     "bodySignIn": "Accedi lì con la tua frase di recupero o con \"{{scanQr}}\".",
     "cta": "Sposta ora",
@@ -49,7 +47,7 @@
   },
   "signOutConfirm": {
     "title": "Hai salvato la tua frase di 12 parole?",
-    "body": "La tua frase è l'<only>unico</only> modo per rientrare. Nessuna reimpostazione via email, nessuna linea di assistenza. Non sappiamo chi sei, per scelta. Se non l'hai ancora annotata, tocca <action>No, mostra la frase</action> e te la apriamo subito.",
+    "body": "La tua frase è l'<only>unico</only> modo per rientrare. Nessuna reimpostazione via email, nessuna linea di assistenza. Se non l'hai ancora annotata, tocca <action>No, mostra la frase</action> e te la apriamo subito.",
     "unsyncedWarn_one": "1 nota su questo dispositivo non è ancora sincronizzata. Andrà persa per sempre se non può essere caricata durante la disconnessione.",
     "unsyncedWarn_other": "{{count}} note su questo dispositivo non sono ancora sincronizzate. Andranno perse per sempre se non possono essere caricate durante la disconnessione.",
     "unsyncedKept_one": "1 nota su questo dispositivo non è ancora sincronizzata. Resta su questo dispositivo e si sincronizzerà al prossimo accesso.",
@@ -73,6 +71,12 @@
     "moreNotes": "e altre {{count}}",
     "appLockHint": "Dispositivo condiviso? Attiva il blocco app in Impostazioni > Sicurezza."
   },
+  "signOutUpload": {
+    "uploading": "Caricamento delle tue ultime modifiche…",
+    "title": "Alcune modifiche non sono ancora state caricate",
+    "body": "Se esci ora, le modifiche fatte su questo dispositivo dall'ultima sincronizzazione andranno perse. Connettiti a Internet per conservarle.",
+    "signOutAnyway": "Esci comunque"
+  },
   "burnShareModal": {
     "title": "Condividi & Burn After Reading",
     "body": "<lead>La tua nota originale non verrà eliminata.</lead> Resta al sicuro nel tuo account. Il burn link è una copia cifrata separata che si autodistrugge dopo essere stata letta.",
@@ -90,17 +94,15 @@
     "afterDays_other": "Dopo {{count}} giorni",
     "create": "Crea e copia il link",
     "share": "Condividi il link",
-    "imagesStripped": "Viene mostrato solo il testo, i file sono nascosti in questa nota.",
-    "copied": "Copiato"
+    "imagesStripped": "Viene mostrato solo il testo, i file sono nascosti in questa nota."
   },
   "burnView": {
     "title": "Burn After Reading",
     "tagline": "Cifrata. Effimera. Solo per i tuoi occhi.",
     "toggleTheme": "Cambia tema",
-    "checking": "Verifica in corso...",
     "revealing": "Recupero e decifratura...",
     "goToApp": "Vai su <brand/>",
-    "footerTagline": "- Note cifrate zero-knowledge, ospitate in Svizzera.",
+    "footerTagline": "- Note cifrate, ospitate in Svizzera.",
     "sealed": {
       "heading": "Hai ricevuto una nota cifrata.",
       "subheading": "Questo messaggio si autodistruggerà dopo la lettura. I link non letti scadono da soli.",
@@ -138,5 +140,19 @@
     "demo": "I burn link vengono salvati su un server, e la demo non ne contatta nessuno. Registrati per creare veri burn link.",
     "tooLarge": "La nota è troppo grande per essere condivisa tramite burn link ({{size}}KB). Il massimo è {{max}}KB.",
     "storeFailed": "Impossibile archiviare la burn note sul server."
+  },
+  "dms": {
+    "returnTitle": "La tua copia sul server è stata eliminata",
+    "returnBody_other": "Il tuo dead man's switch ha eliminato le tue note dal server il {{date}}. Questo dispositivo ha ancora {{count}} note. Scarica un backup se vuoi tenerle, poi eliminale da questo dispositivo.",
+    "returnBackup": "Scarica un backup",
+    "returnDelete": "Elimina da questo dispositivo",
+    "returnBody_one": "Il tuo dead man's switch ha eliminato le tue note dal server il {{date}}. Questo dispositivo ha ancora {{count}} nota. Scarica un backup se vuoi tenerla, poi eliminala da questo dispositivo."
+  },
+  "massDelete": {
+    "title": "Note eliminate su un altro dispositivo",
+    "body_one": "{{count}} nota ancora presente su questo dispositivo è stata eliminata da te o da un altro dei tuoi dispositivi. Se l'hai fatto tu, eliminala anche qui. Se non l'hai fatto tu, qualcuno potrebbe avere accesso al tuo account: tienila per rimetterla su tutti i tuoi dispositivi.",
+    "body_other": "{{count}} note ancora presenti su questo dispositivo sono state eliminate da te o da un altro dei tuoi dispositivi. Se l'hai fatto tu, eliminale anche qui. Se non l'hai fatto tu, qualcuno potrebbe avere accesso al tuo account: tienile per rimetterle su tutti i tuoi dispositivi.",
+    "keep": "Tieni le mie note",
+    "delete": "Eliminale anche qui"
   }
 }

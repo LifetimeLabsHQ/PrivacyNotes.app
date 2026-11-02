@@ -14,7 +14,7 @@
  * it and the editor must not load theme.ts, which reads storage the moment
  * it is imported. theme.ts paints it at boot and resets it on an account
  * switch. The toggle is the button in the code block (editorCodeBlock.ts).
- * Spec: ops/docs/design-decisions.md (code blocks wrap by default)
+ * Spec: docs/internal/design-decisions.md (code blocks wrap by default)
  */
 const CODE_WRAP_KEY = 'privacynotes.codeWrap';
 

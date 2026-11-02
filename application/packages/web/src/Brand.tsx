@@ -7,7 +7,7 @@
  * carries color alone. Hand-written copies of the two spans drift apart in
  * weight, in blue and in the catalog tag name used for the "Notes" half.
  *
- * Spec: ops/docs/design-decisions.md (PrivacyNotes brand spelling)
+ * Spec: docs/internal/design-decisions.md (PrivacyNotes brand spelling)
  */
 
 // Fold Blue, the blue of the logo files, on every ground. The one exception is
@@ -27,7 +27,7 @@ const TONE = {
   // A permanently dark slab: the site footer.
   dark: 'text-white',
   // A homepage slab painted `bg-[var(--wl-slab)]`: ink in light, a raised
-  // sumi surface in dark (Spec: ops/docs/design-decisions.md, washi landing
+  // sumi surface in dark (Spec: docs/internal/design-decisions.md, washi landing
   // palette). The ink half takes the slab's text color.
   invert: 'text-[var(--wl-on-slab)]',
 } as const;

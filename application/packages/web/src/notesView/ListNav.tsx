@@ -26,7 +26,7 @@ import { isViewShown, type View } from '../views';
  * (NotesView), because the topmost element on a phone is no longer a single
  * fixed bar - it is whichever of the banners, the list pane, or the editor
  * happens to render first. Keep it on the root, not here.
- * Spec: ops/docs/archive/ui-patterns.md section 51.
+ * Spec: docs/internal/design/ui-patterns.md section 51.
  *
  * The switcher is live at every width. Below lg it is the only pillar control,
  * because the rail sits behind the drawer. At lg and above it stands beside the
@@ -46,7 +46,7 @@ export function ListNav({
   onSelectView: (next: View) => void;
   /** Views switched off in the sidebar options menu. This dropdown honours the
    *  same setting the rail does, so one hidden view is hidden in both.
-   *  Spec: ops/docs/archive/sidebar-views.md */
+   *  Spec: docs/internal/specs/sidebar-views.md */
   hiddenViews?: View[] | undefined;
   onOpenDrawer: () => void;
   /** The list's own view icon - each pillar keeps the glyph it already used. */
@@ -81,7 +81,7 @@ export function ListNav({
         className="flex items-center gap-2 min-w-0 cursor-pointer rounded-lg px-1.5 py-1 -mx-1.5 transition-colors [@media(hover:hover)]:hover:bg-pn/5"
       >
         {icon}
-        <h2 className="text-lg font-semibold tracking-tight truncate">{title}</h2>
+        <h2 className="text-heading font-semibold tracking-tight truncate">{title}</h2>
         <CaretDown className={`shrink-0 text-pn-muted transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
@@ -96,7 +96,7 @@ export function ListNav({
       {/* The quick switcher below lg, where the sidebar and its "Jump to" row
           sit behind the drawer. At the cluster's end, so it lands beside the
           pane's own button on the right.
-          Spec: ops/docs/archive/keyboard-shortcuts.md (decision D15) */}
+          Spec: docs/internal/specs/keyboard-shortcuts.md (decision D15) */}
       {palette && (
         <button
           type="button"

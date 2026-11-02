@@ -1,27 +1,29 @@
 import { useTranslation } from 'react-i18next';
-import { ArrowLineDown, BellRinging, BellSimple, CalendarDots, Cake, Clock, Devices, Hash, Eye, Sun } from './icons';
-import { ROW_TITLE, RowTitle, SectionEyebrow, SETTINGS_HELP, SETTINGS_ROW, SETTINGS_SELECT, SettingsCallout, ResetDefaultsButton } from './settingsUI';
+import { ArrowLineDown, BellRinging, BellSimple, CalendarCheck, CalendarDots, Cake, Clock, Devices, Hash, Eye, Sun } from './icons';
+import { ROW_TITLE, RowTitle, SectionEyebrow, SETTINGS_HELP, SETTINGS_ROW, SETTINGS_SELECT, SETTINGS_TRACK, settingsSegClass, SettingsCallout, ResetDefaultsButton } from './settingsUI';
 import { Switch } from './Switch';
 import { ProMark } from './UpgradeModal';
-import { formatDay, toLocalIso } from './intlFormat';
+import { formatDay, toLocalIso, weekdayDate, weekdayLabel, WEEK_STARTS, WEEK_START_DAY, type WeekStart } from './intlFormat';
+import { intlLocale } from './languages';
+import { firstWeekday } from './MonthGrid';
 import { isTime } from './schedule';
 import { TimeInput as TimeField } from './TimeInput';
 import { alertLabel, ALL_DAY_ALERTS, TIMED_ALERTS } from './scheduleText';
 import type { CalendarSettings as Settings } from './userSettings';
-import { defaultCalendarSettings } from './userSettingsShape';
+import { defaultCalendarSettings, defaultSettings } from './userSettingsShape';
 import { ReminderPermissionControl, useReminderPermission, useRemindersThrough, REMINDER_PLATFORM } from './notesView/useReminders';
 
 /**
  * Settings › Date & Time › Calendar: the default alerts (Pro), whether a reminder shows the
- * title, where reminders ring on this device, the week numbers and the hours
- * the hour grid opens on. Every value syncs; where a reminder rings is this
- * device's own answer.
- * Spec: ops/docs/archive/calendar-pillar-spec.md (decisions 11, 12, 15; step 7)
+ * title, where reminders ring on this device, the first day of the week, the
+ * hours the hour grid opens on and the week numbers. Every value syncs; where
+ * a reminder rings is this device's own answer.
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (decisions 11, 12, 15; step 7)
  */
 
 // The end padding keeps the browser's own arrow off the border.
 const SELECT = SETTINGS_SELECT;
-const FIELD = 'w-24 rounded-md bg-track border border-divider px-2.5 py-1.5 text-sm text-pn text-center tabular-nums focus:border-accent focus:outline-none';
+const FIELD = 'w-24 rounded-md bg-track border border-divider px-2.5 py-1.5 text-body text-pn text-center tabular-nums focus:border-accent focus:outline-none';
 const NONE = 'none';
 
 /** A time field of a settings row; it cannot be emptied. */
@@ -29,9 +31,12 @@ export function TimeInput({ value, onCommit, label }: { value: string; onCommit:
   return <TimeField value={value} label={label} onCommit={(t) => t && onCommit(t)} className={FIELD} />;
 }
 
-export function CalendarSettings({ value, onChange, alertsUnlocked, showPro, onUpgrade }: {
+export function CalendarSettings({ value, onChange, weekStart, onWeekStartChange, alertsUnlocked, showPro, onUpgrade }: {
   value: Settings;
   onChange: (next: Settings) => void;
+  /** A top-level synced key, not part of `value`: an older client copies it through. */
+  weekStart: WeekStart;
+  onWeekStartChange: (weekStart: WeekStart) => void;
   alertsUnlocked: boolean;
   showPro: boolean;
   onUpgrade: () => void;
@@ -44,11 +49,17 @@ export function CalendarSettings({ value, onChange, alertsUnlocked, showPro, onU
   const set = (patch: Partial<Settings>) => onChange({ ...value, ...patch });
   const pro = showPro ? <ProMark /> : null;
   const guard = (fn: () => void) => () => (alertsUnlocked ? fn() : onUpgrade());
+  // The weekday names come from Intl, so the choices need no strings of their own.
+  const starts = WEEK_STARTS.map((v) => ({
+    value: v,
+    label: v === 'auto' ? t('language.automatic') : weekdayLabel(weekdayDate(WEEK_START_DAY[v]), 'long'),
+  }));
+  const firstDay = weekdayLabel(weekdayDate(firstWeekday(intlLocale(), weekStart)), 'long');
 
   const dayAlertRow = (icon: typeof Sun, title: string, current: { days: number; at: string } | null, write: (v: { days: number; at: string } | null) => void) => (
     <div className={SETTINGS_ROW}>
       <RowTitle icon={icon}>{title}</RowTitle>
-      <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center gap-2 text-body">
         <select
           value={current === null ? NONE : String(current.days)}
           onChange={(e) => guard(() => write(e.target.value === NONE ? null : { days: Number(e.target.value), at: current?.at ?? '09:00' }))()}
@@ -70,18 +81,21 @@ export function CalendarSettings({ value, onChange, alertsUnlocked, showPro, onU
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto text-pn">
-      <SectionEyebrow icon={CalendarDots} className="px-6 pt-4">{t('calendar.groupView')}</SectionEyebrow>
+      <SectionEyebrow icon={CalendarDots} className="px-6 pt-4">{t('shell:listPrefs.view')}</SectionEyebrow>
       <div className="px-6 divide-y divide-divider">
-        <Switch
-          setting="calendar.weekNumbers"
-          label={t('calendar.weekNumbers')}
-          icon={<Hash size={14} className="text-accent" />}
-          labelClassName={ROW_TITLE}
-          description={t('calendar.weekNumbersHelp')}
-          checked={value.weekNumbers}
-          onChange={(on) => set({ weekNumbers: on })}
-          className="py-3"
-        />
+        <div data-setting="calendar.weekStart" className={SETTINGS_ROW}>
+          <div className="min-w-0">
+            <RowTitle icon={CalendarCheck}>{t('calendar.weekStart')}</RowTitle>
+            <p className={`${SETTINGS_HELP} mt-0.5`}>{t('calendar.weekStartHelp', { day: firstDay })}</p>
+          </div>
+          <div className={SETTINGS_TRACK}>
+            {starts.map(({ value: v, label }) => (
+              <button key={v} type="button" onClick={() => onWeekStartChange(v)} aria-pressed={weekStart === v} className={settingsSegClass(weekStart === v)}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div data-setting="calendar.hours" className={SETTINGS_ROW}>
           <div className="min-w-0">
             <RowTitle icon={ArrowLineDown}>{t('calendar.hours')}</RowTitle>
@@ -89,6 +103,16 @@ export function CalendarSettings({ value, onChange, alertsUnlocked, showPro, onU
           </div>
           <TimeInput value={value.hourStart} label={t('calendar.hours')} onCommit={(v) => isTime(v) && set({ hourStart: v })} />
         </div>
+        <Switch
+          setting="calendar.weekNumbers"
+          label={t('calendar.weekNumbers')}
+          icon={<Hash className="text-accent" />}
+          labelClassName={ROW_TITLE}
+          description={t('calendar.weekNumbersHelp')}
+          checked={value.weekNumbers}
+          onChange={(on) => set({ weekNumbers: on })}
+          className="py-3"
+        />
       </div>
       <SectionEyebrow icon={BellRinging} className="px-6 pt-6">{t('calendar.groupReminders')}</SectionEyebrow>
       <div className="px-6 divide-y divide-divider">
@@ -105,7 +129,7 @@ export function CalendarSettings({ value, onChange, alertsUnlocked, showPro, onU
         <Switch
           setting="calendar.reminderTitles"
           label={t('calendar.reminderTitles')}
-          icon={<Eye size={14} className="text-accent" />}
+          icon={<Eye className="text-accent" />}
           labelClassName={ROW_TITLE}
           description={t('calendar.reminderTitlesHelp')}
           checked={value.reminderTitles}
@@ -131,11 +155,11 @@ export function CalendarSettings({ value, onChange, alertsUnlocked, showPro, onU
           </select>
         </div>
         <div data-setting="calendar.alertAllDay">{dayAlertRow(Sun, t('calendar.alertAllDay'), value.alertAllDay, (v) => set({ alertAllDay: v }))}</div>
-        <div data-setting="calendar.alertBirthday">{dayAlertRow(Cake, t('calendar.alertBirthday'), value.alertBirthday, (v) => set({ alertBirthday: v }))}</div>
+        <div data-setting="calendar.alertBirthday">{dayAlertRow(Cake, ts('calendar.birthdays'), value.alertBirthday, (v) => set({ alertBirthday: v }))}</div>
       </div>
       {/* The device's own reminder switch is not a synced setting, so the reset leaves it. */}
       <div className="px-6 pb-6">
-        <ResetDefaultsButton onReset={() => onChange(defaultCalendarSettings())} />
+        <ResetDefaultsButton onReset={() => { onChange(defaultCalendarSettings()); onWeekStartChange(defaultSettings().weekStart); }} />
       </div>
     </div>
   );

@@ -40,11 +40,13 @@ export interface StoredNote {
  *   - 'event'   - calendar event: a markdown note whose schedule (day, end,
  *                 time, repeat, alerts) lives in `trackers`, listed under
  *                 Calendar (TipTap editor)
+ *   - 'drawing' - Excalidraw drawing; body is the scene JSON, its pictures
+ *                 as `pn:img/` references (DrawingItem)
  *
  * Stored inside the encrypted payload so the server never learns what
  * kind of data the user is storing.
  */
-export type NoteType = 'note' | 'task' | 'journal' | 'file' | 'login' | 'card' | 'ssh-key' | 'link' | 'contact' | 'event';
+export type NoteType = 'note' | 'task' | 'journal' | 'file' | 'login' | 'card' | 'ssh-key' | 'link' | 'contact' | 'event' | 'drawing';
 
 export interface DecryptedNote {
   id: string;

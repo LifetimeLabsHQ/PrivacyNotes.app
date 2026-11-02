@@ -6,7 +6,7 @@
 </picture>
 <br><br>
 
-**End-to-end encrypted notes, tasks, and journal.**<br>
+**Notes, tasks, and journal, encrypted on your device.**<br>
 Your 12-word phrase is your identity and your key. With a phrase sign-up there is no email, no password and no account to leak.
 
 [**Website**](https://privacynotes.app/en) &nbsp;·&nbsp; [**Try it, no account**](https://try.privacynotes.app) &nbsp;·&nbsp; [**Verify it yourself**](VERIFY.md) &nbsp;·&nbsp; [**Security**](SECURITY.md) &nbsp;·&nbsp; [**Threat model**](THREAT_MODEL.md)
@@ -15,9 +15,9 @@ Signed apps for [**macOS**](https://privacynotes.app/en#downloads), [**Windows**
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL--3.0-1E40AF.svg)](LICENSE)
 [![Encryption](https://img.shields.io/badge/Encryption-XChaCha20--Poly1305-10B981.svg)](crypto/crypto.ts)
-[![Release](https://img.shields.io/github/v/release/LifetimeLabsDev/PrivacyNotes.app)](https://github.com/LifetimeLabsDev/PrivacyNotes.app/releases)
-[![Stars](https://img.shields.io/github/stars/LifetimeLabsDev/PrivacyNotes.app)](https://github.com/LifetimeLabsDev/PrivacyNotes.app/stargazers)
-[![GitGem](https://gitgem.org/api/badge/github/LifetimeLabsDev/PrivacyNotes.app.svg)](https://gitgem.org/github/LifetimeLabsDev/PrivacyNotes.app)
+[![Release](https://img.shields.io/github/v/release/LifetimeLabsHQ/PrivacyNotes.app)](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/releases)
+[![Stars](https://img.shields.io/github/stars/LifetimeLabsHQ/PrivacyNotes.app)](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/stargazers)
+[![GitGem](https://gitgem.org/api/badge/github/LifetimeLabsHQ/PrivacyNotes.app.svg)](https://gitgem.org/github/LifetimeLabsHQ/PrivacyNotes.app)
 
 <br>
 
@@ -59,7 +59,7 @@ No title, no body, no tags. Just bytes that only your phrase opens.</em>
 
 ## What PrivacyNotes is
 
-An end-to-end encrypted notes, tasks and journal app for macOS, Windows, Linux, Android, iOS and the browser. You get a 12-word phrase instead of an account, and everything you write is encrypted on your device under a key derived from it, on disk and on the way to us. Under self-custody, that key is yours alone. Notes, journal entries, tasks, a password vault, and file attachments all live under that one key.
+A notes, tasks and journal app for macOS, Windows, Linux, Android, iOS and the browser, encrypted on your device. You get a 12-word phrase instead of an account, and everything you write is encrypted on your device under a key derived from it, on disk and on the way to us. Under self-custody, that key is yours alone. Notes, journal entries, tasks, a password vault, and file attachments all live under that one key.
 
 ---
 
@@ -152,37 +152,26 @@ Two lines of that output are the ones that matter. `Deterministic: true` says th
 
 ## The parts that are not absolute
 
-Every honest end-to-end encrypted project has these. Here are ours.
+[SECURITY.md](SECURITY.md) states each one in full, and [THREAT_MODEL.md](THREAT_MODEL.md) says how it works.
 
 ### Custodial mode, the exception to the first claim
 
-Sign up with a phrase and you get self-custody: the phrase never leaves your device. Sign up with Google, Apple or GitHub and the next screen asks where your phrase lives, and it preselects our storing it, which makes a new device one click instead of twelve words. Keep that choice and the phrase sits on our servers encrypted under a key WE hold: a valid legal order, a deep enough compromise, or a dishonest future version of us could reach your plaintext. We count capabilities, not intentions, and that capability is on our side. Self-custody users are exposed to none of it.
+A sign-up with Google, Apple or GitHub preselects custodial mode: your phrase is kept on our server under a key we hold, so we could decrypt your notes. A phrase sign-up never uses it, and Settings > Account > Key custody switches either way. [SECURITY.md](SECURITY.md#oauth-and-custodial-mode) has the full trade.
 
-The choice is reversible either way from Settings > Account > Key custody, both directions signed with your own account key. [SECURITY.md](SECURITY.md) is the full statement of what each mode protects and what it does not. If you want the version of PrivacyNotes this document describes, use the phrase flow.
+### The rest, one line each
 
-### Metadata
-
-Encryption protects content, not the fact that content exists. Even with every note encrypted, the server sees your public key (a stable pseudonymous ID), ciphertext length, row timestamps, note counts, request IPs, and sync patterns. This is structural to running a sync server and it is the same shape of leak every app of this kind has. Tor or a VPN handles the IP part. The rest is the cost of sync.
-
-### OAuth attaches a name to your key
-
-Sign in with Google, Apple or GitHub and the email the provider shares with us is linked to your pubkey, custodial or not. Phrase-only users have no such link.
-
-### Browser-delivered code
-
-Published source does not prove that the JavaScript your browser ran today came from it: anyone controlling our hosting could serve modified code, per user or per region. That is structural to every web app. What narrows it: the signed native builds (macOS notarized, Windows Authenticode, Linux signed AppImage, Android certificate-pinned APK) are fixed artifacts that cannot change under you between visits - **if your threat model includes us being coerced, prefer them** - and the derivation constants stay findable in the served bundle, as above. Subresource Integrity and reproducible web builds have not shipped yet.
-
-### Things we cannot help with
-
-Losing your phrase, under self-custody, means losing your notes. There is no reset, because a reset is a backdoor with better branding. Malware on your device reads what you read. A targeted attacker with your unlocked browser session can reach your keys in memory.
+- **Metadata.** The server sees your public key, ciphertext sizes, timestamps, note counts, request IPs and sync patterns.
+- **OAuth.** A Google, Apple or GitHub sign-in links that provider's email to your key, custodial or not.
+- **Web code.** A browser fetches the app's code again on every visit, so if your threat model includes us being coerced, prefer the signed native apps.
+- **Your device.** Malware on your device reads what you read, and a lost phrase under self-custody means lost notes.
 
 ---
 
 ## Security contact
 
-Found a flaw in the crypto, the derivation, or the client? [**Report it privately on GitHub**](https://github.com/LifetimeLabsDev/PrivacyNotes.app/security/advisories/new) rather than opening a public issue, so it can be fixed before it is public. A private report there reaches us fastest and keeps the whole exchange in one place.
+Found a flaw in the crypto, the derivation, or the client? [**Report it privately on GitHub**](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/security/advisories/new) rather than opening a public issue, so it can be fixed before it is public. A private report there reaches us fastest and keeps the whole exchange in one place.
 
-If you cannot use GitHub, email **privacynotes@lifetimelabs.dev** as a backup. That address is published in our PGP-signed [security.txt](https://privacynotes.app/.well-known/security.txt) so you can confirm it is really us, and our [public key](https://privacynotes.app/.well-known/pgp-key.txt) is there if you want to encrypt the report. If a fix needs coordination we will work with you on timing before disclosure. There is no paid bounty program yet.
+If you cannot use GitHub, email **sec@lifetimelabs.dev** as a backup. That address is also published in our [security.txt](https://privacynotes.app/.well-known/security.txt) on our own domain, so you can confirm it is really us. If a fix needs coordination we will work with you on timing before disclosure. There is no paid bounty program yet.
 
 **No third-party audit has been performed yet.** The first serious spend out of revenue is one, with Cure53 as the target firm.
 
@@ -199,3 +188,5 @@ The name PrivacyNotes, the wordmark and the icon are not part of that grant. A f
 Writing about PrivacyNotes? The square app icon is [`assets/icon.svg`](assets/icon.svg), and the full brand kit, with lockups and usage rules, is at [privacynotes.app/brand](https://privacynotes.app/brand). [NOTICE.md](NOTICE.md) says what the license grant does not cover.
 
 A note on the earlier MIT releases of the encryption files is in [`crypto/README.md`](crypto/README.md).
+
+The app is built on other open source software. Every package, font and crate it includes, each with its license, is listed at [privacynotes.app/licenses](https://privacynotes.app/licenses).

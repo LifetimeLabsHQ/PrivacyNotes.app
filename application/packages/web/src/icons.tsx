@@ -1,8 +1,9 @@
 // Central icon module - the ONLY file that imports @phosphor-icons/react.
 // Components import icons from here so the sitewide style stays in one place.
-// Style guide: ops/docs/archive/ui-patterns.md (icon weights and sizes).
+// Style guide: docs/internal/design/ui-patterns.md (icon weights and sizes).
 //
-// - Default UI icons: ICON_WEIGHT (bold) at 14px via IconDefaults provider.
+// - Default UI icons: ICON_WEIGHT (bold), sized by the type role around them
+//   (IconDefaults; docs/contrib/design/type-scale.md).
 // - Active/toggled states (starred, pinned, selected): weight "fill".
 // - Large decorative icons (empty states, heroes): weight "duotone".
 
@@ -32,9 +33,11 @@ import {
   PencilSimple,
   PlusSquare,
   Scissors,
+  Scribble,
   ShieldPlus,
   Browsers,
   SquaresFour,
+  Layout as PhLayout,
   ArrowElbowDownRight as PhArrowElbowDownRight,
   ArrowLeft as PhArrowLeft,
   ArrowRight as PhArrowRight,
@@ -47,6 +50,7 @@ import {
   Download,
   Fire,
   FileHtml,
+  FileImage,
   Printer,
   Folder,
   Gear,
@@ -62,15 +66,18 @@ import {
   Upload,
 } from '@phosphor-icons/react';
 
-// Spec: ops/docs/archive/ui-patterns.md (sitewide icon style)
+// Spec: docs/internal/design/ui-patterns.md (sitewide icon style)
 const ICON_WEIGHT = 'bold' as const;
 const ICON_WEIGHT_ACTIVE = 'fill' as const;
-const ICON_SIZE = 14;
+/** No size: an icon without one draws no width attribute, so the svg rule in
+ *  index.css sizes it from the type role around it (--icon-size). The data
+ *  attribute is what that rule matches. Spec: docs/contrib/design/type-scale.md */
+const ICON_DEFAULTS = { weight: ICON_WEIGHT, color: 'currentColor', 'data-pn-icon': '' } as IconProps;
 
 /** Wraps the app root; sets sitewide icon defaults for every Phosphor icon. */
 export function IconDefaults({ children }: { children: ReactNode }) {
   return (
-    <IconContext.Provider value={{ size: ICON_SIZE, weight: ICON_WEIGHT, color: 'currentColor' }}>
+    <IconContext.Provider value={ICON_DEFAULTS}>
       {children}
     </IconContext.Provider>
   );
@@ -124,6 +131,8 @@ export function ArrowElbowDownRight(props: IconProps) {
  * Row/type glyphs (RowIcon, CardGlyph) are deliberately separate.
  */
 export const PILLAR_GLYPHS = {
+  // Home, the page of widgets. Not the house: the Personal space has it.
+  dashboard: PhLayout,
   all: SquaresFour,
   pinned: PushPin,
   notes: NotePencil,
@@ -139,6 +148,7 @@ export const PILLAR_GLYPHS = {
   bookmarks: PhBookmarks,
   contacts: AddressBook,
   calendar: CalendarDots,
+  drawings: Scribble,
   archive: Archive,
   trash: Trash,
 } as const;
@@ -152,6 +162,7 @@ export const NEW_GLYPHS = {
   note: NotePencil,
   task: CheckFat,
   kanban: Kanban,
+  drawing: Scribble,
   login: ShieldPlus,
   file: Upload,
   journal: PenNib,
@@ -176,31 +187,37 @@ export const EXPORT_GLYPHS = {
   /** Not accent, and deliberately: the flame is the one entry here that
    *  publishes something outside the account. */
   burn: Fire,
+  /** A drawing as a file Excalidraw opens, and as a picture. */
+  drawing: Scribble,
+  png: FileImage,
 } as const;
 
 export function iconNote() {
-  return <NEW_GLYPHS.note size={14} />;
+  return <NEW_GLYPHS.note />;
 }
 export function iconBookmark() {
-  return <NEW_GLYPHS.bookmark size={14} />;
+  return <NEW_GLYPHS.bookmark />;
 }
 export function iconFile() {
-  return <NEW_GLYPHS.file size={14} />;
+  return <NEW_GLYPHS.file />;
 }
 export function iconNewTask() {
-  return <NEW_GLYPHS.task size={14} />;
+  return <NEW_GLYPHS.task />;
 }
 export function iconNewLogin() {
-  return <NEW_GLYPHS.login size={14} />;
+  return <NEW_GLYPHS.login />;
 }
 export function iconNewJournal() {
-  return <NEW_GLYPHS.journal size={14} />;
+  return <NEW_GLYPHS.journal />;
 }
 export function iconExternal() {
   return <ArrowSquareOut size={14} />;
 }
 export function iconOpenInTab() {
   return <Browsers size={14} />;
+}
+export function iconHome() {
+  return <PILLAR_GLYPHS.dashboard size={14} />;
 }
 export function iconEditPencil() {
   return <PencilSimple size={14} />;

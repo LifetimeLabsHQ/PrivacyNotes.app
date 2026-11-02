@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowsOutSimple, BellSimple, Calendar, Gift, Repeat } from './icons';
@@ -14,6 +14,7 @@ import type { DayEntry, DayIndex } from './notesViewUtils';
 import type { Space } from './spaces';
 import { dayNumber } from './schedule';
 import { PathGlyph, useItemLook } from './looks/LookGlyph';
+import { SelectBox, itemStateClass } from './listItem';
 
 /**
  * Everything the calendar of dated items does, in one module: the pick rule,
@@ -29,7 +30,7 @@ import { PathGlyph, useItemLook } from './looks/LookGlyph';
  * new-entry path inherits the open folder, the active tag and the pinned
  * state of the list the user is standing in, and a dated entry deliberately
  * inherits none of that.
- * Spec: ops/docs/archive/journal-calendar.md, ops/docs/archive/note-date.md (section 4)
+ * Spec: docs/internal/specs/journal-calendar.md, docs/internal/specs/note-date.md (section 4)
  */
 type Props = {
   /** Every dated item, by day. */
@@ -59,7 +60,7 @@ type DayHandlers = Pick<Props, 'entries' | 'onOpen' | 'onPick' | 'onToday' | 'cr
 
 /** What the host's create button does on a day: today is the host's
  *  ordinary new item, any other day a dated one.
- *  Spec: ops/docs/archive/note-date.md (section 4), ops/issues/0552.md (Spec) */
+ *  Spec: docs/internal/specs/note-date.md (section 4), docs/internal/issues/0552.md (Spec) */
 export function createOnDay(day: string, { onPick, onToday }: Pick<DayHandlers, 'onPick' | 'onToday'>): void {
   if (day === toLocalIso(new Date())) onToday();
   else onPick(day);
@@ -71,7 +72,7 @@ export function createOnDay(day: string, { onPick, onToday }: Pick<DayHandlers, 
  * day can take a new item, whatever it already holds. Each button wears its
  * type's icon and color. The first button takes
  * the focus, so Enter creates; Escape folds the panel.
- * Spec: ops/issues/0552.md (Spec)
+ * Spec: docs/internal/issues/0552.md (Spec)
  */
 function DayPanel({ day, handlers, onDone, onFold, inline = false }: { day: string; handlers: DayHandlers; onDone: () => void; onFold: () => void; inline?: boolean }) {
   const { t } = useTranslation(['notes', 'shell']);
@@ -84,14 +85,14 @@ function DayPanel({ day, handlers, onDone, onFold, inline = false }: { day: stri
   const held = handlers.entries.entriesOf(day).length > 0;
   return (
     <div ref={panel} className="mt-2 pt-2 border-t border-divider">
-      <p className="text-[13px] font-medium text-pn">{formatDay(day, 'weekdayDate')}</p>
+      <p className="text-compact font-medium text-pn">{formatDay(day, 'weekdayDate')}</p>
       <div className="mt-1.5 grid grid-cols-2 gap-2">
         {([handlers.creates, 'event'] as const).map((kind) => {
           const { Icon, color } = typeGlyph(kind);
           return (
             <Button
               key={kind}
-              icon={<Icon size={15} aria-hidden="true" className={`shrink-0 ${color}`} />}
+              icon={<Icon aria-hidden="true" className={`shrink-0 ${color}`} />}
               aria-label={t(`shell:quickAdd.types.${kind}`)}
               onClick={() => {
                 if (kind === 'event') handlers.onEvent(day);
@@ -147,7 +148,7 @@ function entryWhen(entry: DayEntry, day: string, t: (key: string, opts?: Record<
  * stored title only, so an item behind a PIN shows nothing from inside it,
  * then its time, a bell for alerts, the repeat glyph, and on a day that mixes
  * the spaces its space's icon.
- * Spec: ops/docs/archive/note-date.md (section 4), ops/docs/archive/calendar-pillar-spec.md (section 5)
+ * Spec: docs/internal/specs/note-date.md (section 4), docs/internal/specs/calendar-pillar-spec.md (section 5)
  */
 const NO_TAGS: readonly string[] = [];
 
@@ -156,19 +157,22 @@ export function useEntryLook(entry: DayEntry) {
   return useItemLook(entry.id, entry.tags ?? NO_TAGS, entry.folderId ?? null);
 }
 
-export function CalendarItemRow({ entry, day, mixed, onOpen, onMenu, onKeyDown, rowRef, size = 'small', dragProps }: {
+export function CalendarItemRow({ entry, day, mixed, onOpen, onMenu, onKeyDown, rowRef, size = 'small', dragProps, select }: {
   entry: DayEntry;
   /** The item's right-click menu, as every list row has it. */
   onMenu?: (e: React.MouseEvent, entry: DayEntry) => void;
   /** The day the row stands on, for its time and "day 2 of 3". */
   day: string;
   mixed: boolean;
-  onOpen: (entry: DayEntry) => void;
+  onOpen: (entry: DayEntry, e: React.MouseEvent) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
   rowRef?: (el: HTMLButtonElement | null) => void;
   /** `agenda` is the taller row of the list pane. */
   size?: 'small' | 'agenda';
   dragProps?: React.HTMLAttributes<HTMLButtonElement> & { draggable?: boolean };
+  /** The agenda in selection mode: the list's check box and selected tint.
+   *  Absent for a row that cannot be selected. */
+  select?: { selected: boolean; onToggle: (e: React.MouseEvent) => void };
 }) {
   const { t } = useTranslation(['shell', 'common', 'notes']);
   const { Icon: TypeGlyph } = typeGlyph(entry.kind);
@@ -179,7 +183,7 @@ export function CalendarItemRow({ entry, day, mixed, onOpen, onMenu, onKeyDown, 
   const { row, icon: ink, iconPaths } = useEntryLook(entry);
   const icon = iconPaths
     ? <PathGlyph paths={iconPaths} size={14} className={color} style={ink} />
-    : <Glyph size={14} aria-hidden="true" className={color} style={ink} />;
+    : <Glyph aria-hidden="true" className={color} style={ink} />;
   const title = entry.title || t('common:state.untitled');
   const when = entryWhen(entry, day, t);
   const start = entry.time && !entry.span ? timeLabel(day, entry.time) : when;
@@ -187,8 +191,8 @@ export function CalendarItemRow({ entry, day, mixed, onOpen, onMenu, onKeyDown, 
   const SpaceGlyph = mixed && entry.space !== null ? SPACE_ICONS[entry.space] : null;
   const marks = entry.alerted || entry.repeating || SpaceGlyph ? (
     <span className={`shrink-0 inline-flex items-center gap-1.5 ${size === 'agenda' ? 'text-pn-muted' : 'text-accent'}`}>
-      {entry.alerted && <BellSimple size={12} aria-hidden="true" />}
-      {entry.repeating && <Repeat size={12} aria-hidden="true" />}
+      {entry.alerted && <BellSimple aria-hidden="true" />}
+      {entry.repeating && <Repeat aria-hidden="true" />}
       {SpaceGlyph && <SpaceGlyph size={13} aria-hidden="true" />}
     </span>
   ) : null;
@@ -196,16 +200,20 @@ export function CalendarItemRow({ entry, day, mixed, onOpen, onMenu, onKeyDown, 
     <button
       ref={rowRef}
       type="button"
-      onClick={() => onOpen(entry)}
+      onClick={(e) => onOpen(entry, e)}
       onContextMenu={onMenu ? (e) => onMenu(e, entry) : undefined}
       onKeyDown={onKeyDown}
       aria-label={[title, when, spaceLabel].filter(Boolean).join(', ')}
+      aria-pressed={select ? select.selected : undefined}
       {...dragProps}
-      style={row}
-      className={`shrink-0 flex w-full rounded-md px-2 text-pn hover:bg-pn/5 focus-visible:bg-pn/5 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
-        size === 'agenda' ? 'items-stretch gap-2.5 py-2 text-[14px]' : '@container/row items-center gap-2 py-1.5 text-[13px]'
+      style={select?.selected ? undefined : row}
+      className={`relative shrink-0 flex w-full rounded-md px-2 text-pn outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
+        select?.selected ? itemStateClass({ selectionMode: true, selected: true, open: false, contextTarget: false }, 'row') : 'hover:bg-pn/5 focus-visible:bg-pn/5'
+      } ${select ? 'ps-10' : ''} ${
+        size === 'agenda' ? 'items-stretch gap-2.5 py-2 text-body' : '@container/row items-center gap-2 py-1.5 text-compact'
       }`}
     >
+      {select && <SelectBox selected={select.selected} onToggle={select.onToggle} layout="row" />}
       {size === 'agenda' ? (
         // The agenda reads like a timetable: the start time (and the end
         // under it) in a column of its own, a bar in the type's color, then
@@ -216,11 +224,14 @@ export function CalendarItemRow({ entry, day, mixed, onOpen, onMenu, onKeyDown, 
         // and the time and the marks move to a small line under it.
         <>
           <span className="hidden @min-[270px]/agenda:flex w-[4.25rem] shrink-0 flex-col text-start tabular-nums leading-5">
-            <span className={`text-[12.5px] whitespace-nowrap ${entry.time && !entry.span ? 'font-medium text-pn' : 'text-pn-muted'}`}>
+            {/* A time stays on one line. "All day" wraps instead: Tutto il giorno
+                and Toute la journée are wider than the column, and the column
+                keeps one width so the color bars line up row after row. */}
+            <span className={`text-compact ${entry.time && !entry.span ? 'whitespace-nowrap font-medium text-pn' : 'break-words text-pn-muted'}`}>
               {entry.time && !entry.span ? timeLabel(day, entry.time) : t('calendar.allDay')}
             </span>
             {entry.time && entry.timeEnd && !entry.span && (
-              <span className="text-[12px] text-pn-muted whitespace-nowrap">{timeLabel(day, entry.timeEnd)}</span>
+              <span className="text-small text-pn-muted whitespace-nowrap">{timeLabel(day, entry.timeEnd)}</span>
             )}
           </span>
           <span aria-hidden="true" className={`w-[3px] shrink-0 rounded-full bg-current opacity-80 ${color}`} />
@@ -234,7 +245,7 @@ export function CalendarItemRow({ entry, day, mixed, onOpen, onMenu, onKeyDown, 
             </span>
             {(entry.span || entry.time || marks) && (
               // The time keeps its line whole; the marks wrap under it when both do not fit.
-              <span className={`ps-5 items-center flex-wrap gap-x-2 min-w-0 text-[12px] text-pn-muted ${entry.span ? 'flex' : 'flex @min-[270px]/agenda:hidden'}`}>
+              <span className={`ps-5 items-center flex-wrap gap-x-2 min-w-0 text-small text-pn-muted ${entry.span ? 'flex' : 'flex @min-[270px]/agenda:hidden'}`}>
                 {(entry.span || entry.time) && (
                   <span className={`tabular-nums whitespace-nowrap max-w-full truncate ${entry.span ? '' : '@min-[270px]/agenda:hidden'}`}>{when}</span>
                 )}
@@ -254,10 +265,10 @@ export function CalendarItemRow({ entry, day, mixed, onOpen, onMenu, onKeyDown, 
                 the first thing to give way. */}
             {when && start !== when ? (
               <>
-                <span className="hidden @min-[300px]/row:inline text-xs tabular-nums whitespace-nowrap">{when}</span>
-                <span className="@min-[300px]/row:hidden text-xs tabular-nums whitespace-nowrap">{start}</span>
+                <span className="hidden @min-[300px]/row:inline text-small tabular-nums whitespace-nowrap">{when}</span>
+                <span className="@min-[300px]/row:hidden text-small tabular-nums whitespace-nowrap">{start}</span>
               </>
-            ) : when && <span className="text-[12px] tabular-nums whitespace-nowrap">{when}</span>}
+            ) : when && <span className="text-small tabular-nums whitespace-nowrap">{when}</span>}
             {marks}
           </span>
         </>
@@ -271,7 +282,7 @@ export function CalendarItemRow({ entry, day, mixed, onOpen, onMenu, onKeyDown, 
  * open space first, the first row focused. A long day scrolls inside its own
  * band, so the card never pushes the list away. Up and Down move, Enter opens,
  * Escape folds it back.
- * Spec: ops/docs/archive/note-date.md (section 4), ops/docs/plans/spaces.md (section 9)
+ * Spec: docs/internal/specs/note-date.md (section 4), docs/internal/specs/spaces.md (section 9)
  */
 export function DayChooser({ day, entries, onOpen, onFold, bare = false, inline = false }: { day: string; entries: DayIndex; onOpen: (entry: DayEntry) => void; onFold: () => void; bare?: boolean; inline?: boolean }) {
   const { t } = useTranslation(['shell', 'common']);
@@ -341,7 +352,7 @@ export const [useJournalCalendarShown, setJournalCalendarShown] = deviceSwitch('
 
 /** Whether the Journals calendar shows moods instead of dots. Off by default,
  *  device-local like the calendar switch above it; nothing turns it on by
- *  itself. The key holds '1' while it is on. Spec: ops/issues/0439.md (Spec) */
+ *  itself. The key holds '1' while it is on. Spec: docs/internal/issues/0439.md (Spec) */
 const moodLook = (() => {
   const key = 'privacynotes.journalCalendarMood';
   const listeners = new Set<() => void>();
@@ -380,7 +391,7 @@ const otherSpaceSwitches: Record<Space, [() => boolean, (on: boolean) => void]> 
  *  default: an item in the other space is the one people think lost.
  *  Device-local, switched in the list options ("Show Work items" or "Show
  *  Personal items", named for the space that is not open), shown only with
- *  Spaces on. Spec: ops/docs/archive/note-date.md (section 4) */
+ *  Spaces on. Spec: docs/internal/specs/note-date.md (section 4) */
 export function useCalendarShowsOther(open: Space): boolean {
   const personal = otherSpaceSwitches.personal[0]();
   const work = otherSpaceSwitches.work[0]();
@@ -404,10 +415,11 @@ function readSize(): 1 | 6 {
 
 /** Whether the month fits beside an open check-in card in the same grid row.
  *  The room is the card's own content height, not the row's, so the
- *  calendar's own height and span never feed back into the answer. The
- *  month's height is the week's content plus five more rows, until the month
- *  has been shown once and its real height is known. */
-function useRoomForMonth(on: boolean): { ref: (el: HTMLLIElement | null) => void; fits: boolean } {
+ *  calendar's own height and span never feed back into the answer. On Home
+ *  (`boxed`) the layout sets the tile's height, so the room is the tile
+ *  itself. The month's height is the week's content plus five more rows,
+ *  until the month has been shown once and its real height is known. */
+function useRoomForMonth(on: boolean, boxed: boolean): { ref: (el: HTMLLIElement | null) => void; fits: boolean } {
   const [el, setEl] = useState<HTMLLIElement | null>(null);
   const [fits, setFits] = useState(false);
   const monthNeed = useRef(0);
@@ -423,19 +435,26 @@ function useRoomForMonth(on: boolean): { ref: (el: HTMLLIElement | null) => void
       const days = content?.querySelector('[role="group"]');
       if (!content || !days) return;
       const top = el.getBoundingClientRect().top;
-      const frame = content.getBoundingClientRect().top - top + frameOf(el);
+      // On Home the content is centred in the tile, so its offset is not the
+      // frame: the padding and border are.
+      const cs = getComputedStyle(el);
+      const frame = boxed
+        ? parseFloat(cs.paddingTop) + parseFloat(cs.borderTopWidth) + frameOf(el)
+        : content.getBoundingClientRect().top - top + frameOf(el);
       if (days.children.length > 14) {
         monthNeed.current = content.offsetHeight + frame;
       } else {
         const row = (days.lastElementChild as HTMLElement | null)?.offsetHeight ?? 0;
         monthNeed.current = Math.max(monthNeed.current, content.offsetHeight + frame + 5 * (row + 2));
       }
-      const card = list.querySelector<HTMLElement>(':scope > [data-checkin-card]');
+      const card = boxed ? null : list.querySelector<HTMLElement>(':scope > [data-checkin-card]');
       const last = card?.lastElementChild;
       const cardTop = card?.getBoundingClientRect().top;
-      const room = card && last && Math.abs((cardTop ?? 0) - top) < 1
-        ? last.getBoundingClientRect().bottom - (cardTop ?? 0) + frameOf(card)
-        : 0;
+      const room = boxed
+        ? el.getBoundingClientRect().height
+        : card && last && Math.abs((cardTop ?? 0) - top) < 1
+          ? last.getBoundingClientRect().bottom - (cardTop ?? 0) + frameOf(card)
+          : 0;
       setFits(room >= monthNeed.current);
     };
     measure();
@@ -444,7 +463,7 @@ function useRoomForMonth(on: boolean): { ref: (el: HTMLLIElement | null) => void
     const mo = new MutationObserver(measure);
     mo.observe(list, { childList: true, subtree: true });
     return () => { ro.disconnect(); mo.disconnect(); };
-  }, [el, on]);
+  }, [el, on, boxed]);
   return { ref: setEl, fits: on && fits };
 }
 
@@ -453,7 +472,7 @@ function useRoomForMonth(on: boolean): { ref: (el: HTMLLIElement | null) => void
  * first row; in the grid it is the first tile, one cell wide, and the month spans
  * two rows. On a phone it is the one way to the calendar, because the footer
  * there has no room for its button.
- * Spec: ops/docs/archive/journal-calendar.md (section 4b)
+ * Spec: docs/internal/specs/journal-calendar.md (section 4b)
  */
 /** What a card offers beyond its days: the expand button that opens the
  *  Calendar pillar at the card's month, and a list row dropped on a day. */
@@ -462,7 +481,18 @@ export type CalendarCardExtras = {
   drop?: { accepts: (e: React.DragEvent) => boolean; onDrop: (day: string, e: React.DragEvent) => void };
 };
 
-export function JournalCalendarCard({ grid, onExpand, drop, moodOf, ...handlers }: DayHandlers & CalendarCardExtras & { grid: boolean; moodOf?: (day: string) => number | 'written' | undefined }) {
+export function JournalCalendarCard({ grid, home = false, onExpand, drop, moodOf, style, controls, reorderId, ...handlers }: DayHandlers & CalendarCardExtras & {
+  grid: boolean;
+  /** On Home: the layout sets the tile's box, and the month shows when it fits there. */
+  home?: boolean;
+  moodOf?: (day: string) => number | 'written' | undefined;
+  /** Home's placement of the tile in its grid. */
+  style?: CSSProperties;
+  /** Home's arranging tools (the grip tab, the resize corner), drawn in the tile. */
+  controls?: ReactNode;
+  /** Home's id for the tile, which its reorder finds by. */
+  reorderId?: string;
+}) {
   const { t } = useTranslation('shell');
   const [weeks, setWeeks] = useState<1 | 6>(readSize);
   const [choosing, setChoosing] = useState<string | null>(null);
@@ -470,7 +500,7 @@ export function JournalCalendarCard({ grid, onExpand, drop, moodOf, ...handlers 
   // Beside an open check-in card the month shows without a click, in one
   // row; a click on the title folds it to the week until the card closes.
   // Elsewhere the month is a choice that spans two rows.
-  const roomy = useRoomForMonth(grid);
+  const roomy = useRoomForMonth(grid, home);
   const [keepWeek, setKeepWeek] = useState(false);
   useEffect(() => { if (!roomy.fits) setKeepWeek(false); }, [roomy.fits]);
   const shown = roomy.fits ? (keepWeek ? 1 : 6) : weeks;
@@ -495,9 +525,11 @@ export function JournalCalendarCard({ grid, onExpand, drop, moodOf, ...handlers 
   return (
     <li
       ref={roomy.ref}
+      style={style}
+      data-reorder-id={reorderId}
       className={
         grid
-          ? `pn-grid-cal rounded-xl border border-divider bg-surface-2 p-2 ${weeks === 6 && !roomy.fits ? 'row-span-2' : ''}`
+          ? `pn-grid-cal rounded-xl border border-divider bg-surface-2 p-2 ${home ? 'relative flex flex-col justify-center' : weeks === 6 && !roomy.fits ? 'row-span-2' : ''}`
           : 'px-4 pt-1 pb-1.5 md:pt-2 md:pb-3 bg-surface-2 border-b border-divider'
       }
     >
@@ -519,7 +551,7 @@ export function JournalCalendarCard({ grid, onExpand, drop, moodOf, ...handlers 
               aria-label={t('calendar.open')}
               className="inline-flex items-center justify-center w-8 h-8 [@media(hover:none)]:w-10 [@media(hover:none)]:h-10 rounded-md text-accent hover:bg-pn/5 transition"
             >
-              <ArrowsOutSimple size={14} aria-hidden="true" />
+              <ArrowsOutSimple aria-hidden="true" />
             </button>
           </HoverLabel>
         )}
@@ -527,6 +559,7 @@ export function JournalCalendarCard({ grid, onExpand, drop, moodOf, ...handlers 
       {choosing && (
         <DayPanel inline day={choosing} handlers={handlers} onDone={() => setChoosing(null)} onFold={() => setChoosing(null)} />
       )}
+      {controls}
     </li>
   );
 }
@@ -560,7 +593,7 @@ export function JournalCalendarPopover({ entries, onOpen, onPick, onToday, creat
     <div
       ref={popoverRef}
       role="dialog"
-      aria-label={t('backfillPopover.calendarLabel')}
+      aria-label={t('notes:footer.journalCalendar')}
       style={{ top: pos?.top ?? 0, left: pos?.left ?? 0, visibility: pos ? 'visible' : 'hidden' }}
       className="fixed z-50 max-w-[calc(100vw-16px)] max-h-[calc(100dvh-16px)] overflow-y-auto overscroll-contain rounded-md border border-divider bg-surface-2 shadow-lg p-2"
     >
@@ -596,7 +629,7 @@ export function JournalCalendarButton(handlers: DayHandlers) {
           aria-expanded={open}
           className={`inline-flex items-center rounded-md p-1 transition ${open ? 'text-accent' : 'text-pn-muted hover:text-accent'}`}
         >
-          <Calendar size={14} />
+          <Calendar />
         </button>
       </HoverLabel>
       {open && <JournalCalendarPopover {...handlers} onClose={() => setOpen(false)} anchorRef={ref} align="center" todayRow={false} />}

@@ -26,7 +26,7 @@ import { DotsThreeOutlineVertical, PencilSimple, Trash } from './icons';
  * title (GitHub #339), and a bookmark row cannot be the way in instead:
  * tapping it opens the website.
  *
- * Spec: ops/docs/archive/ui-patterns.md (sections 74 and 104)
+ * Spec: docs/internal/design/ui-patterns.md (sections 74 and 104)
  */
 export function BookmarkRowActions({
   note,
@@ -57,10 +57,10 @@ export function BookmarkRowActions({
         // The row's long press selects it; a finger resting on this button
         // is aiming at the menu, not at the row.
         onTouchStart={(e) => e.stopPropagation()}
-        aria-label={t('bookmarks.rowMenu')}
+        aria-label={t('shell:selectionToolbar.more')}
         className="w-7 h-7 rounded-md border border-divider bg-surface-1 text-pn-muted inline-flex items-center justify-center transition active:scale-95"
       >
-        <DotsThreeOutlineVertical size={14} />
+        <DotsThreeOutlineVertical />
       </button>
     );
   }
@@ -87,11 +87,11 @@ export function BookmarkRowActions({
            ON the title - `dark:bg-red-950/30` let the title read straight
            through the armed pill, worst on a mini tile where the two overlap
            almost completely (reported 2026-08-23).
-           Spec: ops/docs/archive/ui-patterns.md (section 74) */
-        className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 transition hover:bg-red-100 dark:border-red-900 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900"
+           Spec: docs/internal/design/ui-patterns.md (section 74) */
+        className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-small font-medium text-red-600 transition hover:bg-red-100 dark:border-red-900 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900"
       >
-        <Trash size={13} />
-        {t('media:attachment.deleteConfirm')}
+        <Trash />
+        {t('common:actions.deleteConfirm')}
       </button>
     );
   }
@@ -105,22 +105,22 @@ export function BookmarkRowActions({
           aria-label={t('common:actions.edit')}
           className="w-7 h-7 rounded-md border border-divider bg-surface-1 text-pn-muted inline-flex items-center justify-center transition hover:text-accent hover:border-accent"
         >
-          <PencilSimple size={14} />
+          <PencilSimple />
         </button>
       </HoverLabel>
-      <HoverLabel label={t('bookmarks.moveToTrash')} position={tipPos}>
+      <HoverLabel label={t('common:actions.delete')} position={tipPos}>
         <button
           type="button"
           onClick={arm}
-          aria-label={t('bookmarks.moveToTrash')}
+          aria-label={t('common:actions.delete')}
           /* Opaque on hover, for the same reason the armed pill above is:
              this cluster leaves the flow and sits ON the row title, so a
              tinted `dark:hover:bg-red-950/30` let the title read straight
              through the button (reported 2026-08-25).
-             Spec: ops/docs/archive/ui-patterns.md (section 74) */
+             Spec: docs/internal/design/ui-patterns.md (section 74) */
           className="w-7 h-7 rounded-md border border-divider bg-surface-1 text-danger inline-flex items-center justify-center transition hover:border-red-400 hover:bg-red-50 dark:hover:bg-red-950"
         >
-          <Trash size={14} />
+          <Trash />
         </button>
       </HoverLabel>
     </>

@@ -3,7 +3,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   type ChangeEvent,
@@ -56,19 +55,20 @@ import { suppressSoftKeyboard } from './softKeyboard';
 import { readColorPref } from './editorPrefs';
 import { toggleCodeBlockSmart, ALIGNMENT_VALUES, COPY_BOX_LANGUAGE } from './editorExtensions';
 import { useEscapeToClose } from './useEscapeToClose';
-import { keyText } from './shortcutMatch';
+import { bindingKeyText, keyText } from './shortcutMatch';
 import { insertDateText } from './editorCommands';
 import { insertKanbanBoard } from './KanbanBoard';
 import { FormatBarContext } from './formatBarContext';
 import { formatBarItem } from './formatBar';
 import { FORMAT_BAR_LOOK } from './formatBarItems';
+import { indentListItem, indentText } from './editorIndent';
 
 const AttachIcon = FORMAT_BAR_LOOK.attachMenu!.Icon;
 import { useIsMobile, useIsTouchDevice } from './useIsMobile';
+import { useToolbarFit } from './useToolbarFit';
 import { useKeyboardOpen } from './useKeyboardOpen';
 import {
   ColorBar,
-  MORE_TOGGLE_W,
   TB_BTN_ACTIVE,
   TB_BTN_BASE,
   TB_BTN_REST,
@@ -110,7 +110,7 @@ type ToolbarProps = {
    * Markdown folder - the file would be unreadable in Obsidian, in git, and in
    * the folder itself. The Markdown pillar writes real files next to the note
    * instead, so it turns this group off rather than letting it corrupt a vault.
-   * Spec: ops/docs/archive/markdown-folder.md (section 8, media)
+   * Spec: docs/internal/specs/markdown-folder.md (section 8, media)
    */
   hideEncryptedMedia?: boolean;
   /**
@@ -135,7 +135,7 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
   const fileInputRef = useRef<HTMLInputElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
   // The person's arrangement of the bar and the + menu, and the gear's door
-  // to Settings > Toolbar. Spec: ops/docs/archive/format-bar.md
+  // to Settings > Toolbar. Spec: docs/internal/specs/format-bar.md
   const { layout, onCustomize, position } = useContext(FormatBarContext);
   // A touch screen gets one strip that scrolls sideways; a pointer gets the
   // measured row with the ••• overflow. The swipe decides it, not the width.
@@ -374,7 +374,7 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
     useToolbarPopover('button');
 
   // The attach menu behind the paperclip: the picture, file and recording
-  // items a person put there. Spec: ops/issues/0534.md
+  // items a person put there. Spec: docs/internal/issues/0534.md
   const { open: attachOpen, setOpen: setAttachOpen, wrapRef: attachWrapRef, btnRef: attachBtnRef, popoverRef: attachPopoverRef, pos: attachPos } =
     useToolbarPopover('button');
   // Starts a recording from the attach menu, where no recorder button shows.
@@ -437,120 +437,20 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
   // which walks the same stack via closeTopOverlay().
   useEscapeToClose(() => setInsertOpen(false), insertOpen);
 
-  // Overflow expand/collapse. Collapsed (default), the format buttons fill
-  // row 1 and any that don't fit are clipped; the ••• toggle reveals them by
-  // letting the bar wrap to more rows. On a wide editor everything fits, so
-  // collapsing hides nothing - we only hide the tail when there's no space.
-  const [formatExpanded, setFormatExpanded] = useState(false);
-  // Responsive fill: row 1 shows as many priority buttons as fit at the
-  // current width; the rest overflow into a full-width row 2 revealed by •••.
-  // visibleCount is measured. When everything fits, hasOverflow is false and
-  // the ••• toggle is hidden (nothing to reveal).
-  const [visibleCount, setVisibleCount] = useState(99);
-  const [hasOverflow, setHasOverflow] = useState(false);
-  const formatRowRef = useRef<HTMLDivElement>(null);
-  const rightClusterRef = useRef<HTMLDivElement>(null);
+  // Row 1 shows as many buttons as fit; the rest wait behind the ••• in a
+  // full-width row 2. On a touch screen it is one strip that scrolls.
+  // Shared with the drawing canvas's toolbar (useToolbarFit.ts).
+  const barSig = layout.bar.join(',');
+  const fitState = useToolbarFit(strip, barSig);
+  const { visibleCount, hasOverflow, expanded: formatExpanded, setExpanded: setFormatExpanded } = fitState;
+  const formatRowRef = fitState.rowRef;
+  const rightClusterRef = fitState.clusterRef;
+  const measuredSig = fitState.measured ? barSig : null;
   // The insert menu is anchored to the whole right cluster, not to its own
   // '+' button, and end-aligned: the menu is wider than the cluster, so this
   // lines its right edge up with the media cluster (and the toolbar's right
   // padding) instead of leaving it a few px short of the buttons above it.
   const insertPos = usePopoverPosition(insertOpen, rightClusterRef, insertMenuRef, { align: 'end', shrink: true });
-  const itemWidthsRef = useRef<number[]>([]);
-  const overflowRef = useRef(false);
-  const recomputeFitRef = useRef<() => void>(() => {});
-  // The widths cache is indexed by position, so a new arrangement starts it
-  // over: position 3 now names another button. The fit measures the buttons
-  // in the row, so until it has measured this arrangement every button is
-  // drawn; otherwise a button that was behind the ••• before the change
-  // would never be measured and never shown.
-  const barSig = layout.bar.join(',');
-  const [measuredSig, setMeasuredSig] = useState<string | null>(null);
-  useLayoutEffect(() => {
-    const row = formatRowRef.current;
-    const flexRow = row?.parentElement;
-    if (!row || !flexRow) return;
-    itemWidthsRef.current = [];
-    overflowRef.current = false;
-    if (strip) {
-      // Every button renders and the row scrolls; a fade on the edge that has
-      // more to show says so. Logical edges: in RTL the start is on the right
-      // and scrollLeft counts down from 0.
-      recomputeFitRef.current = () => {};
-      setVisibleCount(99);
-      setHasOverflow(false);
-      setFormatExpanded(false);
-      const fade = () => {
-        const max = row.scrollWidth - row.clientWidth;
-        const pos = Math.abs(row.scrollLeft);
-        const start = pos > 1;
-        const end = pos < max - 1;
-        row.dataset.fade = start && end ? 'both' : start ? 'start' : end ? 'end' : '';
-      };
-      fade();
-      row.addEventListener('scroll', fade, { passive: true });
-      const ro = new ResizeObserver(fade);
-      ro.observe(row);
-      return () => { row.removeEventListener('scroll', fade); ro.disconnect(); };
-    }
-    delete row.dataset.fade;
-    const recompute = () => {
-      const kids = Array.from(row.children) as HTMLElement[];
-      // Every button's width, captured while all of them are still in row 1.
-      // Later passes see only the ones that fit, so they refresh that prefix
-      // in place, and each entry keeps the WIDEST width it has been measured
-      // at. The heading button is why: its glyph reads H in body copy and H1
-      // to H6 inside a heading, so it grows by a digit as the caret moves.
-      // Reserving the wider spelling is what stops the row dropping a button
-      // the moment somebody puts the caret in a title.
-      if (kids.length > itemWidthsRef.current.length) {
-        itemWidthsRef.current = kids.map((k) => k.getBoundingClientRect().width);
-      } else {
-        kids.forEach((k, i) => {
-          itemWidthsRef.current[i] = Math.max(itemWidthsRef.current[i] ?? 0, k.getBoundingClientRect().width);
-        });
-      }
-      const widths = itemWidthsRef.current;
-      const total = widths.length;
-      if (!total) return;
-      // A button width is fractional - the heading button's glyph decides its
-      // own - while the row's box is whole pixels, so a button whose last
-      // fraction of a pixel lands outside still reads as fitting: the clip
-      // takes a sliver of a rounded corner nobody can see. Hold that slack
-      // open, because a 0.8px overhang otherwise costs a whole button.
-      const SUBPIXEL = 1;
-      const fit = (cap: number) => {
-        let used = 0;
-        let n = 0;
-        for (; n < total; n++) {
-          used += widths[n]! + (n ? 2 : 0);
-          if (used - cap > SUBPIXEL) break;
-        }
-        return n;
-      };
-      // The row's own box is the width flexbox allotted it, and it already
-      // accounts for the right cluster, including ••• when that is present.
-      // The 6px gap to the cluster is part of the layout, so nothing is held
-      // back for it here: a margin on top of that gap buys no space a reader
-      // can see and costs the last button its place.
-      const avail = row.getBoundingClientRect().width;
-      let n = fit(avail);
-      const overflow = n < total;
-      // On the transition into overflow the ••• isn't in the cluster yet, so
-      // reserve its width now - otherwise a button would clip for one frame
-      // before the observer re-measures the (now wider) cluster.
-      if (overflow && !overflowRef.current) n = Math.max(1, fit(avail - MORE_TOGGLE_W));
-      overflowRef.current = overflow;
-      setVisibleCount(overflow ? n : total);
-      setHasOverflow(overflow);
-      setMeasuredSig(barSig);
-    };
-    recomputeFitRef.current = recompute;
-    recompute();
-    const ro = new ResizeObserver(recompute);
-    ro.observe(flexRow);
-    if (rightClusterRef.current) ro.observe(rightClusterRef.current);
-    return () => ro.disconnect();
-  }, [strip, barSig]);
 
   // All six levels, menu and detection alike. The schema always allowed
   // every level (imports and ###### markdown produce H6) and detection
@@ -600,7 +500,7 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
           {/* A plain button box with no caret: its one press opens the level
               list, as alignment, font and callout do. The glyph names the
               level the caret is in, so the box never changes width.
-              Spec: ops/docs/archive/ui-patterns.md (section 23 - editor toolbar fit) */}
+              Spec: docs/internal/design/ui-patterns.md (section 23 - editor toolbar fit) */}
           <HeadingIcon size={TB_ICON} />
         </button>
       </HoverLabel>
@@ -870,6 +770,10 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
     // than any button.
     bullets: { hint: '-', active: isActive('bulletList'), run: () => editor.chain().focus().toggleBulletList().run() },
     numbered: { hint: '1.', active: isActive('orderedList'), run: () => editor.chain().focus().toggleOrderedList().run() },
+    // Tab and Shift+Tab for a phone, which has neither key (#614): the list
+    // item moves a level, and elsewhere the line takes or loses spaces.
+    indent: { hint: bindingKeyText({ key: 'Tab' }), active: false, run: () => { if (!indentListItem(editor, 1)) indentText(editor, 1); } },
+    outdent: { hint: bindingKeyText({ shift: true, key: 'Tab' }), active: false, run: () => { if (!indentListItem(editor, -1)) indentText(editor, -1); } },
     date: { hint: keyText('insertDate'), active: false, run: () => insertDateText(editor, 'date') },
     dateTime: { hint: keyText('insertDateTime'), active: false, run: () => insertDateText(editor, 'dateTime') },
     quote: { hint: '>', active: isActive('blockquote'), run: () => editor.chain().focus().toggleBlockquote().run() },
@@ -945,7 +849,7 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
   // The recording and "from Files" buttons only make an encrypted blob, which
   // a Markdown folder note cannot hold; the picture and file buttons stay when
   // the folder takes their files (`onInsertFiles`). The Linux app has no
-  // recorder (getUserMedia is dead in WebKitGTK; ops/docs/gotchas.md). An item
+  // recorder (getUserMedia is dead in WebKitGTK; docs/contrib/gotchas.md). An item
   // this editor does not offer is left out wherever it was placed.
   const MEDIA = new Set(onInsertFiles ? ['audio', 'fromFiles'] : ['image', 'attach', 'audio', 'fromFiles']);
   // "Customize toolbar" is the door to Settings > Toolbar, where this bar is
@@ -1042,7 +946,7 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
                     setAttachOpen(false);
                     actions[key]!.run();
                   })}
-                  className="w-full flex items-center gap-2.5 text-start px-3 py-1.5 text-sm text-pn-soft [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition"
+                  className="w-full flex items-center gap-2.5 text-start px-3 py-1.5 text-body text-pn-soft [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition"
                 >
                   <Icon size={TB_ICON} />
                   <span className="flex-1">{lookLabel(key)}</span>
@@ -1162,7 +1066,7 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
                         with the previous entry is enough, and a group with no
                         entry left shows no header. */}
                     {(i === 0 || formatBarItem(all[i - 1]!)!.group !== item.group) && (
-                      <div className="px-3 pt-2 pb-0.5 text-[11px] uppercase tracking-wide text-pn-muted">
+                      <div className="px-3 pt-2 pb-0.5 text-meta uppercase tracking-wide text-pn-muted">
                         {t(`insertGroup.${item.group}`)}
                       </div>
                     )}
@@ -1174,14 +1078,14 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
                         item.run();
                         setInsertOpen(false);
                       })}
-                      className={`w-full flex items-center gap-2.5 text-start px-3 py-1.5 text-sm [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition ${
+                      className={`w-full flex items-center gap-2.5 text-start px-3 py-1.5 text-body [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition ${
                         item.active ? 'text-accent' : 'text-pn-soft'
                       }`}
                     >
                       <item.Icon size={TB_ICON} />
                       <span className="flex-1">{item.label}</span>
                       {item.hint && (
-                        <span className="text-[11px] font-mono text-pn-muted">{item.hint}</span>
+                        <span className="text-meta font-mono text-pn-muted">{item.hint}</span>
                       )}
                     </button>
                   </Fragment>
@@ -1197,7 +1101,7 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
           {/* Hairline, not a tinted box. An accent fill here would be the only
               filled container in the editor's three control rows, reading as a
               different kind of control rather than the last group in a row.
-              Spec: ops/docs/archive/ui-patterns.md (section 80) */}
+              Spec: docs/internal/design/ui-patterns.md (section 80) */}
           <span aria-hidden="true" className="shrink-0 mx-0.5 h-4 w-px bg-pn-muted/35" />
           <div className="flex items-center gap-0.5">
             {endButtons}

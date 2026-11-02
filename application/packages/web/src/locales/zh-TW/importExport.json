@@ -3,14 +3,12 @@
     "importTitle": "匯入你的資料",
     "exportTitle": "匯出你的資料",
     "restoreTitle": "還原你的資料",
-    "vaultTitle": "匯入你的密碼",
-    "tablistLabel": "匯入、匯出、還原或密碼",
+    "tablistLabel": "匯入、匯出、還原或追蹤項目",
     "tabImport": "匯入",
     "tabExport": "匯出",
     "tabRestore": "還原",
     "tabVault": "密碼",
-    "working": "處理中…",
-    "tabWellness": "追蹤項目"
+    "working": "處理中…"
   },
   "footer": {
     "exportNote": "匯出在本機執行，不會上傳任何資料。",
@@ -18,12 +16,11 @@
     "importNote": "所有內容無論在你的裝置上還是同步時，都始終保持加密。"
   },
   "importPick": {
-    "autoTagLabel": "依來源為匯入的筆記加上標籤",
-    "autoTagDesc": "Google Keep 筆記會加上 <keep>#google</keep>，Obsidian 加上 <obsidian>#obsidian</obsidian>，依此類推。",
     "guideAria": "{{app}} 匯入指南",
     "guideLabel": "指南",
-    "groupGeneral": "一般",
-    "groupNotes": "筆記"
+    "searchPlaceholder": "尋找你的應用程式",
+    "groupCalendar": "日曆、聯絡人與書籤",
+    "noMatch": "沒有符合的應用程式。大多數筆記應用程式都能匯出 Markdown 檔案，而 Markdown 檔案可以在這裡匯入。"
   },
   "folderImport": {
     "tagLabel": "同時依資料夾加上標籤",
@@ -73,6 +70,7 @@
     "googleCalendar": "Google 日曆的 Settings > Import & export 匯出的 .zip，或單一 .ics 檔案。活動會保留時間、重複設定與提醒。",
     "appleNotes": "用免費的 Exporter 應用程式匯出為 Markdown，然後把 .zip 拖進來。",
     "appleJournal": "從 Mac 或 iPhone 的日誌匯出，把 AppleJournalEntries 資料夾壓縮起來，再把 .zip 拖進來。項目會連同相片、影片、語音備忘錄與位置資訊一起匯入為日誌項目。",
+    "excalidraw": "從 excalidraw.com 儲存的繪圖：單一 .excalidraw 檔案，或多個壓成一個 zip 都可以。Obsidian 的 Excalidraw 外掛所產生的 .excalidraw.md 繪圖也能匯入。繪圖中的圖片會一起帶過來。",
     "evernote": "單一 .enex 檔案，或多個壓成一個 zip 都可以。保留格式、標籤、附件、筆記連結與筆記本。Evernote 不會把任務寫進 .enex。",
     "samsungNotes": "匯出為 Word（.docx）或文字（.txt）。多個檔案可壓成 zip 批次匯入。",
     "simplenote": "從 Simplenote 匯出（Settings -> Tools -> Export Notes），把 .zip 拖進來。",
@@ -96,9 +94,6 @@
     "vcard": "聯絡人 (vCard)",
     "markdownFolder": "Markdown 檔案"
   },
-  "vaultPick": {
-    "intro": "從其他密碼管理器匯入登入資訊、信用卡與 SSH 金鑰。"
-  },
   "restorePick": {
     "intro": "還原你先前匯出的 PrivacyNotes 備份。",
     "fullBackupTitle": "完整備份（.zip）",
@@ -120,8 +115,8 @@
     "restoringBlobs": "正在還原圖片與檔案…"
   },
   "errors": {
-    "genericParse": "發生錯誤。",
     "decryptionFailed": "解密失敗。助憶詞錯誤或檔案已損毀。",
+    "importNothingChanged": "沒有匯入任何內容，你的筆記、資料夾和檔案都維持原樣。{{detail}}",
     "blobImportFailed": "你的筆記已經匯入，但圖片與檔案沒有：{{detail}} 你選取的檔案內容完全沒有變動，所以可以刪除已匯入的筆記，再重新匯入一次。",
     "blobsNotInBackup_other": "你的筆記已還原，但備份清單中列出的{{items}}並不在備份裡。"
   },
@@ -129,11 +124,7 @@
     "oversize_other": "{{count}} 則筆記超過 1 MB，只會保留在這台裝置上，不會同步。",
     "splitOversize_other": "依標題將這 {{count}} 則筆記拆成較小的筆記，以便同步",
     "partTitle": "{{title}}（{{index}}/{{total}}）",
-    "continuedIn": "接續於 {{link}}",
-    "sourceLabel": "來源",
     "uniqueTags": "不重複標籤",
-    "empty": "空白",
-    "untagged": "無標籤",
     "items": "項目",
     "previewLabel": "預覽",
     "andMore": "…還有 {{count}} 個",
@@ -144,8 +135,13 @@
     "eventSkipNote": "已經匯入過的活動會略過並保持原樣，所以執行兩次也不會重複。",
     "restoreMergeNote": "你自己的備份中的筆記會依 ID 比對。已有的筆記只有在備份中的副本較新時才會更新；垃圾桶裡的筆記會移出垃圾桶。",
     "quotaExceeded": "<strong>儲存空間不足，無法匯入。</strong>預估需要 {{needed}}，目前可用 {{available}}。請先釋出空間或升級再匯入。",
-    "quotaWarning": "提醒：這次匯入大約會用掉 {{needed}}，你剩餘的儲存空間為 {{available}}。",
-    "oversizeAttachments_other": "{{count}} 個檔案超過你方案的單檔上限 {{limit}}。它們會匯入到這台裝置，但在你升級之前不會同步到你的其他裝置。"
+    "oversizeAttachments_other": "{{count}} 個檔案超過你方案的單檔上限 {{limit}}。它們會匯入到這台裝置，但在你升級之前不會同步到你的其他裝置。",
+    "title": "匯入前先檢查",
+    "sourceTagLabel": "為每篇筆記加上標籤 <tag>{{tag}}</tag>",
+    "sourceTagDesc": "關閉：不為來源加上標籤。筆記中原有的標籤無論如何都會一併帶入。",
+    "storageLine": "這次匯入大約需要 {{needed}}。你還有 {{available}} 可用空間。",
+    "nothingWritten": "在你按下「匯入」之前，不會寫入任何資料。",
+    "whatComesIn": "會匯入的內容"
   },
   "counts": {
     "note_other": "筆記",
@@ -154,6 +150,7 @@
     "card_other": "卡片",
     "sshKey_other": "SSH 金鑰",
     "contact_other": "聯絡人",
+    "drawing_other": "繪圖",
     "zeroItems": "0 個項目",
     "importButton": "匯入 {{counts}}"
   },
@@ -165,14 +162,14 @@
     "fullBackupHeading": "完整備份",
     "portableHeading": "可攜匯出",
     "vaultOnlyHeading": "僅保險庫",
-    "zipBackupTitle": "PrivacyNotes 備份（.zip）",
-    "zipBackupDesc": "全部內容：筆記、日誌、保險庫項目、任務、圖片、音訊與檔案。適合完整備份帳號，或搬到新裝置。裡面的檔案未加密，請把 zip 存放在安全的地方。",
-    "encryptedZipBackupTitle": "加密完整備份（.pnbackupz）",
-    "encryptedZipBackupDesc": "zip 備份包含的一切（筆記、保險庫項目、圖片、音訊與檔案）都以你的助憶詞金鑰封存。在任何裝置上都能用助憶詞還原。存放在哪裡都安全。",
-    "encryptedBackupTitle": "加密備份（.pnbackup）",
-    "encryptedBackupDesc": "所有文字內容與中繼資料，以你的助憶詞金鑰加密。不含圖片或檔案。存放在哪裡都安全：沒有助憶詞就無法讀取。",
+    "zipBackupTitle": "全部內容，未加密（.zip）",
+    "zipBackupDesc": "你的筆記、日誌、保險庫項目、任務、圖片、音訊與檔案，以及用藥和追蹤項目。不需要助憶詞就能在任何電腦上開啟，所以請存放在安全的地方。不包含筆記歷史與應用程式鎖定的 PIN 碼。",
+    "encryptedZipBackupTitle": "全部內容，已加密（.pnbackupz）",
+    "encryptedZipBackupDesc": "內容與 zip 相同，以你的助憶詞金鑰封存。在任何裝置上都能用助憶詞還原。存放在哪裡都安全。",
+    "encryptedBackupTitle": "僅文字，已加密（.pnbackup）",
+    "encryptedBackupDesc": "所有文字內容與中繼資料，不含圖片或檔案。檔案很小，以你的助憶詞金鑰封存。存放在哪裡都安全。",
     "htmlArchiveTitle": "HTML 封存（.zip）",
-    "htmlArchiveDesc": "每篇筆記一頁可列印的 HTML。適合離線閱讀或封存，不適合用來還原。",
+    "htmlArchiveDesc": "每篇筆記一頁可列印的 HTML，登入資訊、卡片與金鑰都以明文包含在內。適合離線閱讀或封存，不適合用來還原。請存放在安全的地方。",
     "textBackupTitle": "文字備份（.json）",
     "textBackupDesc": "所有文字內容與中繼資料，純 JSON 格式。不含圖片或檔案。請存放在你信任的地方：這份備份未加密。",
     "vaultExportTitle": "保險庫匯出（.json）",
@@ -186,6 +183,8 @@
     "calendarOnlyHeading": "只有日曆",
     "calendarExportTitle": "日曆檔案 (.ics)",
     "calendarExportDesc": "活動，以及有日期的筆記和任務清單，可匯入 Google 日曆、Apple 日曆或 Outlook。",
+    "drawingsExportTitle": "繪圖 (.zip)",
+    "drawingsExportDesc": "每份繪圖各自存成一個 .excalidraw 檔案，內含圖片，可用於 excalidraw.com 和 Obsidian。",
     "calendarPrivate": "私人"
   },
   "exportProgress": {
@@ -194,11 +193,8 @@
     "incompleteTitle": "匯出不完整",
     "exportingTitle": "正在匯出備份…",
     "preparing": "準備中…",
-    "exporting": "匯出中…",
-    "imagesProgress": "正在匯出圖片… {{done}}/{{total}}",
-    "filesProgress": "正在匯出檔案… {{done}}/{{total}}",
-    "building": "正在建立備份…",
-    "compressing": "壓縮中…",
+    "showInFolder": "在資料夾中顯示",
+    "zipStep": "壓縮",
     "missingFailed_other": "這台裝置無法下載 {{items}}，所以匯出時略過了。請檢查連線後再匯出一次。",
     "missingNotFound_other": "{{items}}不在這台裝置上，也不在伺服器上，所以匯出時略過了。"
   },
@@ -239,7 +235,8 @@
     "generic": "匯出的檔案無法儲存。請再試一次，或改選其他資料夾。"
   },
   "saveErrors": {
-    "shortWrite": "{{expected}} 位元組中只儲存了 {{written}} 位元組，檔案並不完整。請再試一次，並存到裝置本機儲存空間而非雲端資料夾。"
+    "shortWrite": "{{expected}} 位元組中只儲存了 {{written}} 位元組，檔案並不完整。請再試一次，並存到裝置本機儲存空間而非雲端資料夾。",
+    "protectedFolder": "PrivacyNotes 不會存進 {{folder}}，因為那個資料夾存放著金鑰、設定或程式。請把檔案存到別的地方，再自行移過去。"
   },
   "shareSheet": {
     "title_other": "有 {{count}} 個項目分享到 PrivacyNotes",
@@ -247,7 +244,6 @@
     "saveAll": "全部儲存"
   },
   "destination": {
-    "label": "加入至",
     "none": "不放入資料夾",
     "newFolder": "新資料夾「{{name}}」",
     "help": "來源中的資料夾會放進你選的資料夾裡，沒有資料夾的項目也會放進這個資料夾。"

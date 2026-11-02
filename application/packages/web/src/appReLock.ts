@@ -7,7 +7,7 @@
  * open, on every platform, for as long as the page lived. On a phone that is
  * the whole threat the feature exists for - the app is open, the phone is put
  * down, and anyone who picks it up is already inside.
- * Spec: ops/docs/biometric-unlock.md (section 3.3 re-lock)
+ * Spec: docs/contrib/biometric-unlock.md (section 3.3 re-lock)
  *
  * Two triggers, one rule. The window is measured from the last real user
  * input, so a timer covers the app sitting untouched in front of someone, and

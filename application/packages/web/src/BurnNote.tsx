@@ -74,7 +74,11 @@ export default function BurnNote() {
   const fragment = window.location.hash.slice(1);
   const params = new URLSearchParams(fragment);
   const noteId = params.get('id');
-  const keyHex = params.get('k');
+  // A link cut short by a mail or chat app loses the end of `k`, and the reveal
+  // destroys the row before the key is used. So a key that is not the 32-byte
+  // key createBurnLink writes reads as no payload, and the note stays.
+  const rawKey = params.get('k');
+  const keyHex = rawKey && /^[0-9a-fA-F]{64}$/.test(rawKey) ? rawKey : null;
   const hasPayload = Boolean(noteId && keyHex);
   const [checking, setChecking] = useState(hasPayload);
 
@@ -126,18 +130,16 @@ export default function BurnNote() {
         return;
       }
 
-      // data is the ciphertext (base64-encoded nonce + ciphertext).
-      const raw = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
-      const key = hexToBytes(keyHex);
-      const nonce = raw.slice(0, 24);
-      const ciphertext = raw.slice(24);
-      const result = decryptJson<{ title?: unknown; body?: unknown; fields?: unknown; spacing?: unknown; readSeconds?: unknown }>(
-        ciphertext,
-        nonce,
-        key,
-      );
-
-      if (!result) {
+      // data is the ciphertext (base64-encoded nonce + ciphertext). A failed
+      // decrypt throws, so it is caught here and not read as a network error.
+      let result: { title?: unknown; body?: unknown; fields?: unknown; spacing?: unknown; readSeconds?: unknown } | null;
+      try {
+        const raw = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
+        result = decryptJson(raw.slice(24), raw.slice(0, 24), hexToBytes(keyHex));
+      } catch {
+        result = null;
+      }
+      if (!result || typeof result !== 'object') {
         setErrorMsg(t('burnView.error.decryption'));
         setPhase('error');
         return;
@@ -216,8 +218,8 @@ export default function BurnNote() {
             {/* Flame icon */}
             <Fire size={28} className="text-orange-500" />
             <div>
-              <h1 className="text-xl font-bold tracking-tight">{t('burnView.title')}</h1>
-              <p className="text-xs text-pn-muted">{t('burnView.tagline')}</p>
+              <h1 className="text-display font-bold tracking-tight">{t('burnView.title')}</h1>
+              <p className="text-small text-pn-muted">{t('burnView.tagline')}</p>
             </div>
           </div>
           <button
@@ -226,9 +228,9 @@ export default function BurnNote() {
             aria-label={t('burnView.toggleTheme')}
           >
             {theme === 'dark' ? (
-              <Sun size={16} />
+              <Sun />
             ) : (
-              <Moon size={16} />
+              <Moon />
             )}
           </button>
         </div>
@@ -236,7 +238,7 @@ export default function BurnNote() {
         {/* Loading - checking if the note still exists */}
         {checking && (
           <div className="rounded-lg border border-divider bg-surface-1 p-8 text-center">
-            <p className="text-pn-muted animate-pulse">{t('burnView.checking')}</p>
+            <p className="text-pn-muted animate-pulse">{t('security:lockScreen.checking')}</p>
           </div>
         )}
 
@@ -265,12 +267,12 @@ export default function BurnNote() {
           <div className="space-y-4">
             {/* Self-destruct banner */}
             <div className="flex items-center justify-between rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 px-4 py-2.5">
-              <span className="text-sm text-danger font-mono">
+              <span className="text-body text-danger font-mono">
                 {t('burnView.revealed.countdown', { time: formatTime(countdown ?? 0) })}
               </span>
               <button
                 onClick={handleDestroy}
-                className="text-xs font-medium text-red-500 hover:text-red-700 dark:hover:text-red-300 transition"
+                className="text-small font-medium text-red-500 hover:text-red-700 dark:hover:text-red-300 transition"
               >
                 {t('burnView.revealed.clearNow')}
               </button>
@@ -283,14 +285,14 @@ export default function BurnNote() {
             <div className="rounded-lg border border-divider bg-surface-2 overflow-hidden [contain:paint]">
               {note.title && (
                 <div className="px-6 pt-5 pb-2">
-                  <h2 className="text-xl font-bold tracking-tight">{note.title}</h2>
+                  <h2 className="text-display font-bold tracking-tight">{note.title}</h2>
                 </div>
               )}
               <div className="px-6 py-4 space-y-4">
                 {/* Vault rows first, then whatever notes the item carries -
                     the same order the HTML and PDF exports print. */}
                 {note.fields.length > 0 && (
-                  <table className="w-full table-fixed border border-divider text-sm">
+                  <table className="w-full table-fixed border border-divider text-body">
                     <tbody>
                       {note.fields.map((f, i) => (
                         <tr key={i} className={i > 0 ? 'border-t border-divider' : undefined}>
@@ -303,7 +305,7 @@ export default function BurnNote() {
                           </th>
                           <td
                             dir="auto"
-                            className={`px-3 py-2 align-top whitespace-pre-wrap break-words ${f.mono ? 'font-mono text-xs' : ''}`}
+                            className={`px-3 py-2 align-top whitespace-pre-wrap break-words ${f.mono ? 'font-mono text-small' : ''}`}
                           >
                             {f.value}
                           </td>
@@ -327,7 +329,7 @@ export default function BurnNote() {
             </div>
 
             {/* Self-destruct footer */}
-            <p className="text-center text-xs text-pn-muted italic">
+            <p className="text-center text-small text-pn-muted italic">
               {t('burnView.revealed.deletedNotice')}
             </p>
           </div>
@@ -339,13 +341,13 @@ export default function BurnNote() {
             <div className="text-pn-muted mx-auto">
               <Fire size={48} weight="duotone" className="mx-auto" />
             </div>
-            <p className="text-lg font-semibold">{t('burnView.destroyed.heading')}</p>
-            <p className="text-sm text-pn-muted">
+            <p className="text-heading font-semibold">{t('burnView.destroyed.heading')}</p>
+            <p className="text-body text-pn-muted">
               {t('burnView.destroyed.body')}
             </p>
             <a
               href={marketingHomeHref()}
-              className="inline-block mt-2 text-sm text-accent hover:underline"
+              className="inline-block mt-2 text-body text-accent hover:underline"
             >
               <Trans
                 i18nKey="notesChrome:burnView.goToApp"
@@ -361,13 +363,13 @@ export default function BurnNote() {
             <div className="text-pn-muted mx-auto">
               <Fire size={48} weight="duotone" className="mx-auto" />
             </div>
-            <p className="text-lg font-semibold">{t('burnView.gone.heading')}</p>
-            <p className="text-sm text-pn-muted">
+            <p className="text-heading font-semibold">{t('burnView.gone.heading')}</p>
+            <p className="text-body text-pn-muted">
               {t('burnView.gone.body')}
             </p>
             <a
               href={marketingHomeHref()}
-              className="inline-block mt-2 text-sm text-accent hover:underline"
+              className="inline-block mt-2 text-body text-accent hover:underline"
             >
               <Trans
                 i18nKey="notesChrome:burnView.goToApp"
@@ -380,10 +382,10 @@ export default function BurnNote() {
         {/* Error state */}
         {phase === 'error' && (
           <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-8 text-center space-y-3">
-            <p className="text-lg font-semibold text-danger">
+            <p className="text-heading font-semibold text-danger">
               {t('burnView.error.heading')}
             </p>
-            <p className="text-sm text-pn-muted">
+            <p className="text-body text-pn-muted">
               {errorMsg || t('burnView.error.fallback')}
             </p>
           </div>
@@ -392,13 +394,13 @@ export default function BurnNote() {
         {/* No payload in the URL */}
         {!checking && phase === 'sealed' && !hasPayload && (
           <div className="rounded-lg border border-divider bg-surface-1 p-8 text-center space-y-3">
-            <p className="text-lg font-semibold">{t('burnView.noPayload.heading')}</p>
-            <p className="text-sm text-pn-muted">
+            <p className="text-heading font-semibold">{t('burnView.noPayload.heading')}</p>
+            <p className="text-body text-pn-muted">
               {t('burnView.noPayload.body')}
             </p>
             <a
               href={marketingHomeHref()}
-              className="inline-block mt-2 text-sm text-accent hover:underline"
+              className="inline-block mt-2 text-body text-accent hover:underline"
             >
               <Trans
                 i18nKey="notesChrome:burnView.goToApp"
@@ -409,14 +411,14 @@ export default function BurnNote() {
         )}
 
         {/* Footer */}
-        <div className="mt-8 text-center text-xs text-pn-muted">
+        <div className="mt-8 text-center text-small text-pn-muted">
           {/* Every link on this page, this one and the "go to PrivacyNotes"
               links above, lands on the localized marketing homepage: a burn
               reader is a stranger who followed a shared link, so the app host
               would drop them on a sign-in wall for an account they don't have.
               Never the bare apex either - that is the smart entry, so it opens
               the app on the OLD origin and greets a signed-in reader with the
-              move banner. Spec: ops/docs/domain-split.md */}
+              move banner. Spec: docs/internal/domain-split.md */}
           <a href={marketingHomeHref()} className="text-pn transition">
             <Brand suffix=".app" />
           </a>

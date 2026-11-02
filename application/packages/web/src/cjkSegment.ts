@@ -18,7 +18,7 @@
 // prefix matching already absorbs particle agglutination. Routing it through the
 // segmenter would change established behavior for no gain.
 //
-// Spec: ops/docs/i18n-cjk-plan.md (CJK tokenization)
+// Spec: docs/internal/specs/i18n-cjk-plan.md (CJK tokenization)
 
 // Han (unified + ext A + compatibility ideographs), Hiragana, Katakana,
 // halfwidth Katakana, and the Thai block (Thai spaces clauses, never words, so

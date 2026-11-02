@@ -19,7 +19,7 @@ import { countTasks } from './tasks';
  *  sync" banner. */
 const SYNC_LIMIT_BYTES = 1_048_576;
 // From here the line says how much of the 1 MB sync limit the note uses and
-// offers "Split note". Spec: ops/docs/plans/note-size-limit.md
+// offers "Split note". Spec: docs/internal/specs/note-size-limit.md
 const SYNC_FRACTION = 0.7;
 const SLOW_FRACTION = 0.62; // amber: ~75k words, editing drags
 const INFO_FRACTION = 0.41; // grey: ~50k words, gentle heads-up
@@ -33,7 +33,7 @@ const WORD_COUNT_DEBOUNCE_MS = 600;
  *  ~5,800 live DOM nodes and a ~150 ms paste-parse. Past this we surface a
  *  heads-up suggesting the note be split, the editor-perf sibling of the
  *  sync-size warnings above.
- *  Spec: ops/docs/design-decisions.md (large-table editor warning) */
+ *  Spec: docs/internal/design-decisions.md (large-table editor warning) */
 const BIG_TABLE_ROWS = 200;
 
 export function WordCount({
@@ -89,24 +89,24 @@ export function WordCount({
 
   // Spacing is owned by the footer row in NotesView (2-col: counts on the
   // left, editor-mode link on the right).
-  // Spec: ops/specs/editor-mode-toggle.md (per-note override is session-scoped, never synced)
+  // Spec: docs/internal/specs/editor-mode-toggle.md (per-note override is session-scoped, never synced)
   return (
     <div className="select-none space-y-0.5">
       {display.label && (
-        <div className={`text-xs ${display.colorClass}`}>
+        <div className={`text-small ${display.colorClass}`}>
           {display.label + taskPart + display.warning}
           {display.nearLimit && onSplit && (
             <>
               {' '}
               <button type="button" onClick={onSplit} className="underline text-accent hover:text-accent-strong">
-                {i18n.t('editor:wordCount.split')}
+                {i18n.t('notes:split.action')}
               </button>
             </>
           )}
         </div>
       )}
       {display.tableWarning && (
-        <div className="text-xs text-warning">
+        <div className="text-small text-warning">
           {display.tableWarning}
         </div>
       )}

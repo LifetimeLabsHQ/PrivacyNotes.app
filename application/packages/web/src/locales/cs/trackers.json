@@ -56,8 +56,6 @@
   },
   "mood": {
     "prompt": "Jak se cítíš? (1-10)",
-    "low": "hrozně",
-    "high": "skvěle",
     "anchor": {
       "1": "hrozně",
       "3": "špatně",
@@ -149,8 +147,6 @@
     "editMedication": "Upravit lék",
     "removeMedication": "Odebrat lék",
     "confirmRemove": "Odebrat <highlight>{{name}}</highlight>?",
-    "yes": "Ano",
-    "no": "Ne",
     "taken": "Užito",
     "skip": "Vynechat",
     "editList": "Upravit tyto léky",
@@ -278,16 +274,15 @@
   },
   "config": {
     "configureTrackers": "Nastavit sledování",
-    "title": "Sledované hodnoty",
-    "tabGeneral": "Obecné",
     "tabCustom": "Vlastní",
-    "chooseTrackers": "Vybrat sledované hodnoty",
     "factorsTitle": "Tvoje faktory",
     "factorsHelp": "Části dne, které ťukáním vybíráš ve štítku Faktory. Odebraný faktor si ve dnech, kde je zapsaný, ponechá svůj název.",
     "renameFactor": "Přejmenovat {{name}}",
     "addFactor": "Přidat faktor",
     "medicationsTitle": "Tvoje léky",
     "medicationsHelp": "Léky, na které se ptá štítek Léky. Odebraný lék si ponechá svou historii.",
+    "medicationCard": "Karta léků",
+    "medicationCardHelp": "„Jsou dnešní léky užité?“ na tomto zařízení, jen v den, kdy je na řadě nějaký lék.",
     "customHelp": "Sledované hodnoty, které si pojmenuješ: stupnice, číslo nebo ano či ne. Až {{max}}.",
     "yourCustomTrackers": "Tvoje vlastní sledované hodnoty",
     "categoryMoodMind": "Nálada a mysl",
@@ -312,23 +307,17 @@
     "kindBuild": "Budovat",
     "kindWatch": "Hlídat",
     "editHabit": "Upravit {{name}}",
-    "removeHabit": "Odebrat {{name}}",
     "ownHabitsFull": "Máš {{max}} vlastních návyků, víc jich být nemůže.",
     "addCustomTrackerHint": "Sleduj si, co chceš",
     "maxReached": "Dosaženo maxima {{max}} vlastních hodnot.",
     "customTrackers": "Vlastní sledované hodnoty",
-    "newCustomTracker": "Nová vlastní hodnota",
-    "newMedication": "Nový lék",
     "newMedicationHelp": "Štítek Léky se na něj ptá od dne začátku, v časech, které nastavíš.",
     "trackerNamePlaceholder": "Název hodnoty",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "Název",
     "typeLabel": "Typ",
-    "colorLabel": "Barva",
     "preview": "Náhled",
     "startFromLast": "Pamatovat si poslední záznam",
     "chooseIcon": "Vybrat ikonu",
-    "iconLabel": "Ikona",
     "startFromLastHelp": "Hodí se pro věci, které se mění jen zřídka, třeba tvoje váha nebo denní dávka."
   },
   "factors": {
@@ -338,7 +327,6 @@
     "count_other": "{{count}} faktorů",
     "remove": "Odebrat {{name}}",
     "placeholder": "návštěva, migréna, přesčas",
-    "add": "Přidat",
     "empty": "Přidej věci, které utvářejí tvoje dny, a pak je v kterýkoli den ťukáním vyber.",
     "commaHint": "Více najednou přidáš, když je oddělíš čárkami.",
     "editList": "Upravit tyto faktory",
@@ -361,8 +349,6 @@
   "habits": {
     "prompt": "Co se dnes dělo?",
     "count": "{{yes}}/{{total}}",
-    "yes": "Ano",
-    "no": "Ne",
     "empty": "Otázky vyber v nastavení sledování.",
     "changeQuestions": "Změnit tyto otázky",
     "q": {
@@ -421,9 +407,7 @@
     "prompt": "Kolik kofeinu dnes?"
   },
   "flow": {
-    "next": "Další",
     "finish": "Dokončit",
-    "done": "Hotovo",
     "step": "Sledovaná hodnota {{n}} z {{total}}"
   }
 }

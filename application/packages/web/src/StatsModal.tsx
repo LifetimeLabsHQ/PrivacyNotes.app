@@ -48,7 +48,7 @@ export type Tab = 'overview' | 'wellness' | 'writing' | 'medication' | 'mood';
 /**
  * The Statistics pane: one page of days logged, what stands out, every
  * tracker and the writing numbers; a row opens its own page.
- * Spec: ops/docs/archive/wellness-statistics.md (section 22)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 22)
  */
 export function StatsModal({ notes, isNoteLocked, onClose, medications, isPro, onOpenUpgrade, weekReflection, onWeekReflectionChange, embedded = false, initialTab = 'overview', notesCreated, firstSeenAt, trackerSettings, factors = NO_FACTORS, onOpenDay, onOpenWellnessExport }: Props) {
   const { t } = useTranslation('stats');
@@ -64,7 +64,7 @@ export function StatsModal({ notes, isNoteLocked, onClose, medications, isPro, o
   // Literal markers: the settings search test reads them from the source.
   const tabs = [
     { id: 'overview', icon: SquaresFour, label: t('tabs.overview'), setting: undefined },
-    { id: 'wellness', icon: Heartbeat, label: t('tabs.wellness'), setting: undefined },
+    { id: 'wellness', icon: Heartbeat, label: t('notes:settings.trackersLabel'), setting: undefined },
     { id: 'writing', icon: PencilSimple, label: t('tabs.writing'), setting: 'stats.writing' },
   ] as const;
 
@@ -73,7 +73,7 @@ export function StatsModal({ notes, isNoteLocked, onClose, medications, isPro, o
       embedded={embedded}
       embeddedClassName="flex-1 min-h-0 overflow-hidden flex flex-col text-pn"
       onClose={onClose}
-      title={t('title')}
+      title={t('notes:settings.statsLabel')}
       header="bar"
       className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
     >

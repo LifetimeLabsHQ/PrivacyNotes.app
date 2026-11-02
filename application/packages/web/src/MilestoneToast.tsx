@@ -25,16 +25,16 @@ export function MilestoneToast({ milestone, onDismiss }: Props) {
       className="fixed bottom-4 end-4 sm:bottom-6 sm:end-6 bg-surface-2 border border-divider text-pn rounded-lg ps-5 pe-3 py-3 shadow-xl z-40 max-w-xs flex items-start gap-3"
     >
       <div className="min-w-0">
-        <div className="text-[10px] text-accent uppercase tracking-wide mb-1">
+        <div className="text-meta text-accent uppercase tracking-wide mb-1">
           {t('milestoneToast.unlocked')}
         </div>
-        <div className="text-sm font-medium">{milestone.label}</div>
+        <div className="text-body font-medium">{milestone.label}</div>
       </div>
       <button
         type="button"
         onClick={onDismiss}
         aria-label={t('common:updateToast.dismiss')}
-        className="shrink-0 text-pn-muted hover:text-pn px-1 text-lg leading-none -me-0.5"
+        className="shrink-0 text-pn-muted hover:text-pn px-1 text-heading leading-none -me-0.5"
       >
         ×
       </button>

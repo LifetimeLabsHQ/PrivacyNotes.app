@@ -11,7 +11,7 @@ import { activeLocale } from './languages';
 // The homepage header rail: the same structure, sections, labels and glyphs
 // as the static-page rail (siteNav() in ../static-page-chrome.ts), drawn in
 // the washi palette. Sections come from NAV_SECTIONS in footerData.ts; only
-// Downloads is the homepage's own. Spec: ops/docs/archive/ui-patterns.md
+// Downloads and Price (the price calculator) are the homepage's own. Spec: docs/internal/design/ui-patterns.md
 // section 49.
 
 /**
@@ -33,7 +33,7 @@ export type NavItem = {
   label: string;
   /** One line under the label in the Explore panel. */
   line?: string;
-  /** Folds into Explore in `fold`; everything but Downloads folds in `foldAll`. */
+  /** Folds into Explore in `fold`; everything but Downloads and Price folds in `foldAll`. */
   fold: boolean;
   /** An on-page anchor: the overlay scrolls to it after closing. */
   section?: string;
@@ -52,6 +52,9 @@ export function useNavItems(): NavItem[] {
   };
   return [
     { key: 'download', href: '#downloads', label: t('header.downloads'), fold: false, section: 'downloads' },
+    // Price never folds, like Downloads: the two on-page sections are the
+    // ones a visitor comes for (owner, 2026-10-24).
+    { key: 'price', href: '#price', label: t('header.price'), line: t('header.priceLine'), fold: false, section: 'price' },
     ...NAV_SECTIONS.map((l) => ({
       key: l.icon,
       href: l.icon === 'faq' ? helpPath(activeLocale()) : l.href,
@@ -99,9 +102,9 @@ function Explore({ items, measure }: { items: NavItem[]; measure?: boolean }) {
         aria-controls={measure ? undefined : 'pn-explore'}
         className={`${GHOST} cursor-pointer ${open ? 'bg-[var(--wl-card)] text-accent' : ''}`}
       >
-        <Compass size={15} className={GLYPH} aria-hidden="true" />
+        <Compass className={GLYPH} aria-hidden="true" />
         {t('header.explore')}
-        {open ? <CaretUp size={11} aria-hidden="true" /> : <CaretDown size={11} aria-hidden="true" />}
+        {open ? <CaretUp aria-hidden="true" /> : <CaretDown aria-hidden="true" />}
       </button>
       {open && (
         <div
@@ -112,8 +115,8 @@ function Explore({ items, measure }: { items: NavItem[]; measure?: boolean }) {
             <a key={l.key} href={l.href} onClick={() => setOpen(false)} className="group flex items-start gap-2.5 rounded-lg p-2 transition hover:bg-[var(--wl-tint)]">
               <span className="mt-px text-accent"><FooterGlyph icon={l.key} size={16} /></span>
               <span>
-                <span className="block text-[13px] font-semibold leading-tight text-[var(--wl-ink)]">{l.label}</span>
-                {l.line && <span className="mt-0.5 block text-xs leading-snug text-[var(--wl-sub)]">{l.line}</span>}
+                <span className="block text-compact font-semibold leading-tight text-[var(--wl-ink)]">{l.label}</span>
+                {l.line && <span className="mt-0.5 block text-small leading-snug text-[var(--wl-sub)]">{l.line}</span>}
               </span>
             </a>
           ))}
@@ -141,7 +144,7 @@ export function HeaderRail({ mode, items, measure, themeToggle, onApp, onMenu, m
   const folded = mode === 'fold' ? items.filter((l) => l.fold) : mode === 'foldAll' ? items.filter((l) => !l.section) : [];
   const tight = mode === 'micro';
   return (
-    <div data-nav={measure ? undefined : mode} className={`flex items-center gap-0.5 whitespace-nowrap rounded-[11px] bg-[var(--wl-tint)] ${tight ? 'px-0.5 py-1' : 'p-1'} text-[13px] leading-none text-[var(--wl-ink)]`}>
+    <div data-nav={measure ? undefined : mode} className={`flex items-center gap-0.5 whitespace-nowrap rounded-[11px] bg-[var(--wl-tint)] ${tight ? 'px-0.5 py-1' : 'p-1'} text-compact leading-none text-[var(--wl-ink)]`}>
       {shown.length > 0 && (
         <>
           <nav aria-label={measure ? undefined : t('header.sections')} className="flex items-center gap-0.5">
@@ -164,7 +167,7 @@ export function HeaderRail({ mode, items, measure, themeToggle, onApp, onMenu, m
           className="ms-0.5 inline-flex items-center gap-1.5 rounded-lg border border-[var(--wl-amber-border)] bg-[var(--wl-tint-amber)] px-[11px] py-[6px] font-semibold text-[var(--wl-amber-text)] transition hover:brightness-95"
         >
           {t('hero.tryDemo')}
-          <ArrowUpRight size={13} aria-hidden="true" />
+          <ArrowUpRight aria-hidden="true" />
         </a>
       )}
       {/* "App" is a deliberate literal, not a locale key: see the comment
@@ -175,11 +178,11 @@ export function HeaderRail({ mode, items, measure, themeToggle, onApp, onMenu, m
         className={`pn-fx-conic-btn inline-flex cursor-pointer items-center gap-1.5 rounded-lg ${tight ? 'px-[9px]' : 'ms-0.5 px-[12px]'} py-[5px] font-semibold text-[var(--wl-bg)]`}
       >
         App
-        {mode !== 'tiny' && mode !== 'micro' && <SignIn size={15} aria-hidden="true" />}
+        {mode !== 'tiny' && mode !== 'micro' && <SignIn aria-hidden="true" />}
       </button>
       {hasMenu(mode) && (
         <button type="button" onClick={onMenu} aria-label={t('header.menuLabel')} aria-expanded={menuOpen} className={`${ICON_BTN} ${tight ? 'w-[26px]' : 'w-[30px]'}`}>
-          <List size={18} />
+          <List />
         </button>
       )}
     </div>

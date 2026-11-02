@@ -22,7 +22,7 @@ import { isAppHost } from './hosts';
  * and on the dedicated app host; relative on web on the apex.
  */
 export function siteHref(path: string): string {
-  // Spec: ops/docs/gotchas.md (canonical no-www domain)
+  // Spec: docs/contrib/gotchas.md (canonical no-www domain)
   return detectPlatform() !== 'web' || isDemoMode() || isAppHost()
     ? `https://privacynotes.app${path}`
     : path;

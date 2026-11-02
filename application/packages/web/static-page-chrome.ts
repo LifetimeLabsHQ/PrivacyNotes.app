@@ -14,6 +14,7 @@
 // ink (`--footer` from static-page-theme.ts, `--wl-footer` on the homepage).
 
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ArrowUpRight, SignIn } from '@phosphor-icons/react';
@@ -41,6 +42,7 @@ const P = {
   file: 'M216.49,79.52l-56-56A12,12,0,0,0,152,20H56A20,20,0,0,0,36,40V216a20,20,0,0,0,20,20H200a20,20,0,0,0,20-20V88A12,12,0,0,0,216.49,79.52ZM160,57l23,23H160ZM60,212V44h76V92a12,12,0,0,0,12,12h48V212Zm112-80a12,12,0,0,1-12,12H96a12,12,0,0,1,0-24h64A12,12,0,0,1,172,132Zm0,40a12,12,0,0,1-12,12H96a12,12,0,0,1,0-24h64A12,12,0,0,1,172,172Z',
   refund: 'M228,128a100,100,0,0,1-98.66,100H128a99.39,99.39,0,0,1-68.62-27.29,12,12,0,0,1,16.48-17.45,76,76,0,1,0-1.57-109c-.13.13-.25.25-.39.37L54.89,92H72a12,12,0,0,1,0,24H24a12,12,0,0,1-12-12V56a12,12,0,0,1,24,0V76.72L57.48,57.06A100,100,0,0,1,228,128Z',
   scales: 'M243.14,131.54l-32-80h0a12,12,0,0,0-13.73-7.25L140,57V40a12,12,0,0,0-24,0V62.37L53.4,76.29a12,12,0,0,0-8.54,7.25h0l0,0v0l-32,79.92A12,12,0,0,0,12,168c0,12.13,6.2,22.43,17.45,29A55,55,0,0,0,56,204a55,55,0,0,0,26.55-7C93.8,190.43,100,180.13,100,168a12,12,0,0,0-.86-4.46L72.38,96.65,116,87V204H104a12,12,0,0,0,0,24h48a12,12,0,0,0,0-24H140V81.63l40.42-9-23.56,58.9A12,12,0,0,0,156,136c0,12.13,6.2,22.43,17.45,29a53.78,53.78,0,0,0,53.1,0C237.8,158.43,244,148.13,244,136A12,12,0,0,0,243.14,131.54ZM56,180c-3.71,0-18-1.87-19.81-10.18L56,120.31l19.81,49.51C74,178.13,59.71,180,56,180Zm144-32c-3.71,0-18-1.87-19.81-10.18L200,88.31l19.81,49.51C218,146.13,203.71,148,200,148Z',
+  tag: 'M246.15,133.18,146.83,33.86A19.85,19.85,0,0,0,132.69,28H40A12,12,0,0,0,28,40v92.69a19.85,19.85,0,0,0,5.86,14.14l99.32,99.32a20,20,0,0,0,28.28,0l84.69-84.69A20,20,0,0,0,246.15,133.18Zm-98.83,93.17L52,131V52h79l95.32,95.32ZM104,88A16,16,0,1,1,88,72,16,16,0,0,1,104,88Z',
   download: 'M228,144v64a12,12,0,0,1-12,12H40a12,12,0,0,1-12-12V144a12,12,0,0,1,24,0v52H204V144a12,12,0,0,1,24,0Zm-108.49,8.49a12,12,0,0,0,17,0l40-40a12,12,0,0,0-17-17L140,115V32a12,12,0,0,0-24,0v83L96.49,95.51a12,12,0,0,0-17,17Z',
   palette: 'M203.57,51A107.9,107.9,0,0,0,20,128c0,44.72,27.6,82.25,72,97.94A36,36,0,0,0,140,192a12,12,0,0,1,12-12h46.21a35.79,35.79,0,0,0,35.1-28A108.6,108.6,0,0,0,236,127.09,107.23,107.23,0,0,0,203.57,51Zm6.34,95.67a11.91,11.91,0,0,1-11.7,9.3H152a36,36,0,0,0-36,36,12,12,0,0,1-16,11.3c-16.65-5.88-30.65-15.76-40.48-28.56A76,76,0,0,1,44,128a84,84,0,0,1,83.13-84H128a84.35,84.35,0,0,1,84,83.29A84.72,84.72,0,0,1,209.91,146.71ZM144,76a16,16,0,1,1-16-16A16,16,0,0,1,144,76Zm-44,24A16,16,0,1,1,84,84,16,16,0,0,1,100,100Zm0,56a16,16,0,1,1-16-16A16,16,0,0,1,100,156Zm88-56a16,16,0,1,1-16-16A16,16,0,0,1,188,100Z',
   shapes: 'M71.49,60.55a12,12,0,0,0-23,0l-36,120A12,12,0,0,0,24,196H96a12,12,0,0,0,11.49-15.45ZM40.13,172,60,105.76,79.87,172ZM212,74a54,54,0,1,0-54,54A54.06,54.06,0,0,0,212,74Zm-84,0a30,30,0,1,1,30,30A30,30,0,0,1,128,74Zm96,70H136a12,12,0,0,0-12,12v52a12,12,0,0,0,12,12h88a12,12,0,0,0,12-12V156A12,12,0,0,0,224,144Zm-12,52H148V168h64Z',
@@ -50,7 +52,7 @@ const P = {
 
 /** Attribute-safe text. The nav's slug payload is JSON inside an attribute. */
 function esc(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;');
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
 }
 
 function ph(path: string, size = 18): string {
@@ -59,19 +61,19 @@ function ph(path: string, size = 18): string {
 
 // Switzerland flag uses its own viewBox.
 const CH_FLAG =
-  '<svg width="13" height="13" viewBox="0 0 32 32" aria-hidden="true" style="vertical-align:-1.5px;border-radius:2px"><rect width="32" height="32" fill="#da291c"/><rect x="13" y="6" width="6" height="20" fill="#fff"/><rect x="6" y="13" width="20" height="6" fill="#fff"/></svg>';
+  '<svg data-ic viewBox="0 0 32 32" aria-hidden="true" style="vertical-align:-1.5px;border-radius:2px"><rect width="32" height="32" fill="#da291c"/><rect x="13" y="6" width="6" height="20" fill="#fff"/><rect x="6" y="13" width="20" height="6" fill="#fff"/></svg>';
 
 // Every brand mark (header logo, footer wordmark) points at the marketing
 // homepage in the page's own language, and has to name the locale slug to do
 // it: the apex '/' is the smart entry, so it drops a signed-in reader into
 // their account instead of the homepage. Opening the app is the App button's
 // job, and it names the app host.
-// Spec: ops/docs/domain-split.md
+// Spec: docs/internal/domain-split.md
 const HOME_EN = '/en';
 
 // The 24-box stroke family of the rail rows below.
 const ICON =
-  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+  '<svg data-ic viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
 
 // The homepage rail's own Phosphor glyphs (bold, the app-wide weight), so the
 // demo pill and the App button draw the same marks on both headers.
@@ -94,7 +96,7 @@ export const BUG_ICON = `${ICON}<path d="M8 9a4 4 0 0 1 8 0"/><rect x="7" y="9" 
  * affordance, and the Help side used to draw a pilcrow for it, which names a
  * paragraph rather than a link.
  */
-export const LINK_ICON = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
+export const LINK_ICON = `<svg data-ic viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
 
 /**
  * GitHub mark for the /changelog rail's closed-issues row. The Phosphor fill
@@ -119,7 +121,7 @@ export const TEXT_ICON = `${ICON}<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2
  * like the homepage rail in that language. A missing key falls back to
  * English, like i18next does on the homepage.
  */
-type HeaderText = Record<'downloads' | 'help' | 'changelog' | 'themes' | 'roadmap' | 'sections' | 'tryDemo', string>;
+type HeaderText = Record<'downloads' | 'price' | 'help' | 'changelog' | 'themes' | 'roadmap' | 'sections' | 'tryDemo', string>;
 const headerTextCache = new Map<string, HeaderText>();
 function headerText(locale: string): HeaderText {
   const hit = headerTextCache.get(locale);
@@ -136,6 +138,7 @@ function headerText(locale: string): HeaderText {
   const pick = (group: string, key: string): string => esc(own[group]?.[key] ?? en[group]?.[key] ?? key);
   const text: HeaderText = {
     downloads: pick('header', 'downloads'),
+    price: pick('header', 'price'),
     help: pick('header', 'help'),
     changelog: pick('header', 'changelog'),
     themes: pick('header', 'themes'),
@@ -148,9 +151,9 @@ function headerText(locale: string): HeaderText {
 }
 
 const CARET_ICON =
-  '<svg class="lm-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+  '<svg data-ic class="lm-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
 const CHECK_ICON =
-  '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+  '<svg data-ic viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
 const SYSTEM_ICON =
   '<svg width="26" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="padding:2px 6px"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>';
 
@@ -238,7 +241,7 @@ export function ogLocaleTag(locale = 'en'): string {
  * one that lands on the homepage in the picked language, like the homepage
  * menu. `helpLocale` is the page's locale, when it has one.
  *
- * Spec: ops/docs/archive/ui-patterns.md section 50.
+ * Spec: docs/internal/design/ui-patterns.md section 50.
  */
 export function siteNav(opts: {
   active?: NavSection;
@@ -260,7 +263,7 @@ export function siteNav(opts: {
   // its nav link carries a locale. Translated pages know theirs at build time
   // (helpLocale); the English-only pages cannot, so they ship /help plus the
   // slug table and static-pages.js re-points it at the reader's own language.
-  // Spec: ops/docs/archive/ui-patterns.md section 50.
+  // Spec: docs/internal/design/ui-patterns.md section 50.
   const helpSlugs = JSON.stringify(
     Object.fromEntries(Object.keys(LOCALE_TO_SLUG).map((l) => [l, helpPath(l)]))
   );
@@ -285,6 +288,7 @@ export function siteNav(opts: {
 <div class="actions">
 <nav class="nav-secs" aria-label="${text.sections}">
 <a class="btn btn-ghost" href="${home}#downloads">${iconSvg('download', 15)}${text.downloads}</a>
+<a class="btn btn-ghost" href="${home}#price">${iconSvg('price', 15)}${text.price}</a>
 ${sectionLinks}
 </nav>
 <span class="nav-div" aria-hidden="true"></span>
@@ -320,6 +324,7 @@ function iconSvg(icon: FooterIcon, size = 18): string {
     case 'refund': return ph(P.refund, size);
     case 'scales': return ph(P.scales, size);
     case 'download': return ph(P.download, size);
+    case 'price': return ph(P.tag, size);
     case 'brand': return ph(P.shapes, size);
     case 'themes': return ph(P.palette, size);
     case 'print': return ph(P.printer, size);
@@ -426,7 +431,7 @@ export const SITE_FOOTER = siteFooterFor('/help');
  * is the logo set in text and the mark beside it is Inter Bold 700.
  *
  * @param suffix The display domain form, `.app`. Nothing else belongs here.
- * Spec: ops/docs/design-decisions.md (PrivacyNotes brand spelling)
+ * Spec: docs/internal/design-decisions.md (PrivacyNotes brand spelling)
  */
 export function brandMark(suffix = ''): string {
   return `<span class="pn-mark"><span class="pn-mark-a">Privacy</span>Notes${suffix}</span>`;
@@ -472,16 +477,27 @@ export const BRAND_CSS = `.pn-mark{font-weight:700;color:var(--fg)}
  *
  * The header controls sit in one recessed rail (.actions): everything
  * inside loses its border, so the App button is the only filled control
- * on the page. Spec: ops/docs/archive/ui-patterns.md section 50.
+ * on the page. Spec: docs/internal/design/ui-patterns.md section 50.
  */
 /** The full-screen screenshot viewer of /changelog and /themes, opened by
  *  the lightbox in static-pages.js. */
 export { LIGHTBOX_CSS } from './src/lightboxCss.ts';
 
-export const CHROME_CSS = `${BRAND_CSS}
+/** The type and icon sizes of the app (src/typeScale.css), inlined so every
+ *  static page reads the same numbers as the app. Comments are dropped to
+ *  keep the pages small. Spec: docs/contrib/design/type-scale.md */
+const TYPE_SCALE_URL = new URL('./src/typeScale.css', import.meta.url).href;
+export const TYPE_SCALE_CSS = fs
+  // A test in jsdom sees this module at an http: URL whose path is relative to the repo root.
+  .readFileSync(TYPE_SCALE_URL.startsWith('file:') ? fileURLToPath(TYPE_SCALE_URL) : decodeURIComponent(new URL(TYPE_SCALE_URL).pathname).slice(1), 'utf8')
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .replace(/\s*\n\s*/g, '');
+
+export const CHROME_CSS = `${TYPE_SCALE_CSS}
+${BRAND_CSS}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6;font-size:16px}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6;font-size:var(--fs-title)}
 a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
 /* One width for every static page: the homepage header row (1216px, its
@@ -504,11 +520,11 @@ a:hover{text-decoration:underline}
 .brand{display:flex;align-items:center;gap:12px;margin-bottom:6px;text-decoration:none;color:var(--fg);width:max-content}
 .brand:hover{text-decoration:none}
 .brand img{width:64px;height:64px}
-.brand .name{font-size:36px;line-height:40px;letter-spacing:-.025em}
-h1{font-size:30px;font-weight:800;margin:10px 0 4px;letter-spacing:-.03em;text-wrap:balance}
+.brand .name{font-size:var(--fs-display-4);line-height:40px;letter-spacing:-.025em}
+h1{font-size:var(--fs-display-3);font-weight:800;margin:10px 0 4px;letter-spacing:-.03em;text-wrap:balance}
 h2,h3{text-wrap:balance}
 p{text-wrap:pretty}
-.sub{margin:0;color:var(--muted);font-size:15px}
+.sub{margin:0;color:var(--muted);font-size:var(--fs-row)}
 /* Language menu, base rules. They live here rather than in help-page.ts
    because the menu now renders TWICE per page - once in the header rail,
    once in the footer - exactly like the homepage, whose LanguageMenu sits
@@ -516,19 +532,19 @@ p{text-wrap:pretty}
    the rail (.actions ...) and the black footer (.site-footer ...) follow
    below; both out-specify these. */
 .langmenu{position:relative}
-.langmenu summary{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border:1px solid var(--line);border-radius:99px;font-size:13px;font-weight:600;cursor:pointer;color:var(--fg)}
+.langmenu summary{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border:1px solid var(--line);border-radius:99px;font-size:var(--fs-compact);font-weight:600;cursor:pointer;color:var(--fg)}
 .langmenu summary:hover{border-color:var(--faint)}
 .langmenu summary::-webkit-details-marker{display:none}
 .langmenu summary svg:first-child{border-radius:2px}
 .lm-caret{color:var(--faint)}
 .langlist{position:absolute;right:0;top:calc(100% + 8px);z-index:10;width:192px;display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:5px;box-shadow:0 10px 30px rgba(0,0,0,.14)}
-.langlist a{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;font-size:13.5px;color:var(--fg);text-decoration:none}
+.langlist a{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;font-size:var(--fs-body);color:var(--fg);text-decoration:none}
 .langlist a:hover{background:var(--imp-bg);text-decoration:none}
 .langlist a svg:first-child{width:22px;height:16px;border-radius:2px;flex:0 0 auto}
 .langlist a span{flex:1}
 .langlist a.on{color:var(--accent);font-weight:600}
-.actions{display:flex;align-items:center;gap:2px;min-width:0;background:var(--rail);border-radius:11px;padding:4px;font-size:13px;line-height:1}
-.btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;line-height:1;padding:8px 14px;border-radius:8px;text-decoration:none;white-space:nowrap}
+.actions{display:flex;align-items:center;gap:2px;min-width:0;background:var(--rail);border-radius:11px;padding:4px;font-size:var(--fs-compact);line-height:1}
+.btn{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-compact);line-height:1;padding:8px 14px;border-radius:8px;text-decoration:none;white-space:nowrap}
 .btn:hover{text-decoration:none}
 .btn svg{flex:0 0 auto}
 .btn-primary{background:var(--accent);color:var(--on-accent);font-weight:600}
@@ -543,7 +559,7 @@ p{text-wrap:pretty}
    fill on the page - just the same tinted chip the rail rows use. */
 .actions .btn-ghost.on{background:var(--imp-bg);color:var(--accent);font-weight:600}
 .actions #theme-toggle{width:30px;height:29px;padding:0;justify-content:center}
-.actions .langmenu summary{border:0;height:29px;padding:0 8px;gap:4px;font-weight:400;font-size:13px}
+.actions .langmenu summary{border:0;height:29px;padding:0 8px;gap:4px;font-weight:400;font-size:var(--fs-compact)}
 .actions .langmenu summary:hover{color:var(--accent)}
 .actions .langmenu summary .lm-caret{color:currentColor}
 /* Try the demo and App, in the homepage rail's amber and ink. The amber pair
@@ -564,13 +580,13 @@ p{text-wrap:pretty}
    ("Portugues (Brasil)") pushed the rail past the page width - it
    overlapped the Brand link on a desktop monitor, not just a narrow one. The
    flag names the language, and the list one click away spells every one of
-   them out. Spec: ops/docs/archive/ui-patterns.md section 50. */
+   them out. Spec: docs/internal/design/ui-patterns.md section 50. */
 .actions .langmenu summary .lm-name{display:none}
-/* Two columns that mirror the header row: the rail sits under the brand,
-   and the content column ends under the App button, so it starts about
-   where the nav rail starts. The space between them grows on wide screens,
-   which keeps the text at a reading measure without a gap on the right. */
-.pcols{display:grid;grid-template-columns:minmax(208px,272px) minmax(0,800px);justify-content:space-between;grid-template-rows:auto auto 1fr;grid-template-areas:'rail crumb' 'rail head' 'rail body';column-gap:44px;align-items:start;margin-top:4px}
+/* Two columns: the rail sits under the brand and the content follows it at
+   a fixed gutter. The content stops at a reading measure; any spare width
+   on wide screens goes to the right of it, never between the columns, where
+   it read as the rail and the text belonging to different pages. */
+.pcols{display:grid;grid-template-columns:minmax(208px,240px) minmax(0,840px);justify-content:start;grid-template-rows:auto auto 1fr;grid-template-areas:'rail crumb' 'rail head' 'rail body';column-gap:56px;align-items:start;margin-top:4px}
 .col-head{grid-area:head;min-width:0}
 .col-body{grid-area:body;min-width:0}
 .col-head h1{margin:0 0 6px;text-wrap:pretty}
@@ -596,7 +612,7 @@ p{text-wrap:pretty}
 .rail{display:flex;flex-direction:column;gap:2px}
 .rail .eyebrow{margin:0 4px 8px}
 .rail .rail-sep{margin-top:22px}
-.ritem{display:flex;align-items:center;gap:9px;padding:6px 10px;border-radius:8px;font-size:13.5px;color:var(--muted);text-decoration:none}
+.ritem{display:flex;align-items:center;gap:9px;padding:6px 10px;border-radius:8px;font-size:var(--fs-body);color:var(--muted);text-decoration:none}
 .ritem:hover{background:var(--imp-bg);color:var(--accent);text-decoration:none}
 .ritem.on{background:var(--imp-bg);color:var(--accent);font-weight:600}
 .ritem.dim{opacity:.45}
@@ -606,24 +622,24 @@ p{text-wrap:pretty}
 .ichip{flex:0 0 auto;width:22px;height:22px;border-radius:6px;background:var(--chip);display:inline-flex;align-items:center;justify-content:center}
 .ichip img{width:18px;height:18px;object-fit:contain}
 .rlbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rct{flex:0 0 auto;color:var(--faint);font-size:12px;font-variant-numeric:tabular-nums}
+.rct{flex:0 0 auto;color:var(--faint);font-size:var(--fs-small);font-variant-numeric:tabular-nums}
 .search{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:18px 0 0;background:var(--bg)}
 .search[hidden]{display:none}
 .search:focus-within{border-color:var(--accent)}
 .search svg{flex:0 0 auto;color:var(--faint)}
-.search input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--fg);font-size:15px;font-family:inherit}
+.search input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--fg);font-size:var(--fs-row);font-family:inherit}
 .search input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
-.search kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--faint);border:1px solid var(--line);border-radius:5px;padding:2px 7px}
+.search kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-meta);color:var(--faint);border:1px solid var(--line);border-radius:5px;padding:2px 7px}
 .sclear{flex:0 0 auto;display:none;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:0;border-radius:7px;background:none;color:var(--faint);cursor:pointer}
 .sclear:hover{background:var(--chip);color:var(--fg)}
 .search.has-q .sclear{display:inline-flex}
 mark{background:var(--imp-bg);color:var(--mark-fg);border-radius:3px;padding:0 1px}
-.count{font-size:13px;color:var(--faint);margin:10px 2px 4px;min-height:18px}
+.count{font-size:var(--fs-compact);color:var(--faint);margin:10px 2px 4px;min-height:18px}
 .noresults{margin:6px 0 0}
-.noresults p{margin:0 0 14px;font-size:15.5px;color:var(--muted)}
+.noresults p{margin:0 0 14px;font-size:var(--fs-title);color:var(--muted)}
 .noresults .btn{background:none;font-family:inherit;cursor:pointer}
 /* Mid widths: the text needs the room more than the rail does. */
-@media(max-width:1099px){.pcols{grid-template-columns:208px minmax(0,1fr)}}
+@media(max-width:1099px){.pcols{grid-template-columns:208px minmax(0,1fr);column-gap:44px}}
 @media(max-width:860px){
 .pcols{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:'head' 'rail' 'body';margin-top:2px}
 /* Un-stick the rail. In one column it is a band between the title and the
@@ -639,30 +655,30 @@ mark{background:var(--imp-bg);color:var(--mark-fg);border-radius:3px;padding:0 1
    and the heading read as a label for the pills ABOVE it. */
 .rail + .rail{margin-top:16px}
 .rail .rail-sep{margin-top:0}
-.ritem{flex:0 0 auto;white-space:nowrap;border:1px solid var(--line);border-radius:99px;padding:5px 11px;font-size:12.5px;gap:7px}
-.ritem .rct{font-size:11px}
+.ritem{flex:0 0 auto;white-space:nowrap;border:1px solid var(--line);border-radius:99px;padding:5px 11px;font-size:var(--fs-compact);gap:7px}
+.ritem .rct{font-size:var(--fs-meta)}
 .rlbl{flex:none;overflow:visible}
 .ritem.on{border-color:transparent}
 .ichip{width:18px;height:18px;border-radius:5px}
 .ichip img{width:15px;height:15px}
 }
-.eyebrow{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.16em;color:var(--faint);margin:0}
+.eyebrow{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-meta);font-weight:600;text-transform:uppercase;letter-spacing:.16em;color:var(--faint);margin:0}
 .site-footer{background:var(--footer,#161210);border-top:1px solid var(--line);margin-top:64px}
 .f-inner{max-width:1264px;margin:0 auto;padding:44px 24px 40px}
 .f-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:28px 24px}
 .f-col{display:flex;flex-direction:column;align-items:flex-start;gap:9px}
-.f-brand{display:flex;align-items:center;gap:9px;font-weight:700;color:#fff;text-decoration:none;font-size:15px}
+.f-brand{display:flex;align-items:center;gap:9px;font-weight:700;color:#fff;text-decoration:none;font-size:var(--fs-row)}
 .f-brand:hover{text-decoration:none}
-.f-ver{display:inline-flex;align-items:center;gap:7px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#A69E8F;text-decoration:none;border:1px solid #2E2820;border-radius:999px;padding:4px 10px}
+.f-ver{display:inline-flex;align-items:center;gap:7px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-meta);color:#A69E8F;text-decoration:none;border:1px solid #2E2820;border-radius:999px;padding:4px 10px}
 .f-ver:hover{color:#fff;border-color:#3D362A;text-decoration:none}
 .f-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.15);flex:0 0 auto}
 .f-latest{color:#8F8776}
-.f-head{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.18em;color:#8F8776;margin:6px 0 2px}
+.f-head{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-meta);font-weight:600;text-transform:uppercase;letter-spacing:.18em;color:#8F8776;margin:6px 0 2px}
 .f-col:first-child .f-head{margin-top:14px}
-.f-link{display:inline-flex;align-items:center;gap:8px;color:#A69E8F;font-size:14px;text-decoration:none}
+.f-link{display:inline-flex;align-items:center;gap:8px;color:#A69E8F;font-size:var(--fs-body);text-decoration:none}
 .f-link:hover{color:#fff;text-decoration:none}
 .f-link svg{flex:0 0 auto}
-.f-bottom{margin-top:36px;padding-top:24px;border-top:1px solid #2E2820;font-size:13px;color:#A69E8F;display:flex;flex-direction:column;gap:16px}
+.f-bottom{margin-top:36px;padding-top:24px;border-top:1px solid #2E2820;font-size:var(--fs-compact);color:#A69E8F;display:flex;flex-direction:column;gap:16px}
 .f-bottom p{margin:0 0 4px}
 .f-bottom p:last-child{margin-bottom:0}
 /* Scoped to .f-legal, NOT .f-bottom: the row now also holds the language
@@ -690,7 +706,7 @@ mark{background:var(--imp-bg);color:var(--mark-fg);border-radius:3px;padding:0 1
 @media(max-width:1023px){
 .brand{gap:8px}
 .brand img{width:32px;height:32px}
-.brand .name{font-size:18px;line-height:28px}
+.brand .name{font-size:var(--fs-heading);line-height:28px}
 }
 /* Once the sections no longer fit beside the brand and the controls, they
    drop to their own full-width strip that scrolls horizontally, and the rail
@@ -705,7 +721,7 @@ mark{background:var(--imp-bg);color:var(--mark-fg);border-radius:3px;padding:0 1
    section is added - the brand-row element's scrollWidth is the number.
    NOTE: no backticks in this comment - it lives inside a template literal,
    and a stray one closes it and breaks the whole config load.
-   Spec: ops/docs/archive/ui-patterns.md section 50. */
+   Spec: docs/internal/design/ui-patterns.md section 50. */
 @media(max-width:1279px){
 .brand-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:14px 12px}
 .actions{display:contents}
@@ -717,7 +733,7 @@ mark{background:var(--imp-bg);color:var(--mark-fg);border-radius:3px;padding:0 1
    instead of scrolling inside itself. */
 .nav-secs{grid-column:1/-1;grid-row:2;min-width:0;overflow-x:auto;scrollbar-width:none;gap:6px;padding-bottom:2px}
 .nav-secs::-webkit-scrollbar{display:none}
-.nav-secs .btn{flex:0 0 auto;border:1px solid var(--line);border-radius:99px;padding:5px 11px;font-size:12.5px;gap:7px;color:var(--muted)}
+.nav-secs .btn{flex:0 0 auto;border:1px solid var(--line);border-radius:99px;padding:5px 11px;font-size:var(--fs-compact);gap:7px;color:var(--muted)}
 .nav-secs .btn-ghost.on{background:var(--imp-bg);color:var(--accent);border-color:transparent;font-weight:600}
 .nav-secs .btn-ghost.on svg{color:var(--accent)}
 }
@@ -731,7 +747,7 @@ mark{background:var(--imp-bg);color:var(--mark-fg);border-radius:3px;padding:0 1
 }
 @media(max-width:600px){
 .wrap{padding:28px 18px 56px}
-h1{font-size:26px}
+h1{font-size:var(--fs-display-2)}
 .f-grid{grid-template-columns:repeat(2,1fr);gap:28px 20px}
 /* width:max-content on the base .brand rule beats min-width:0, so the name
    would not shrink and rode over the controls at 320px. Both are needed. */

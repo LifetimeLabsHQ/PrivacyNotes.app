@@ -12,7 +12,7 @@ type FolderActions = ReturnType<typeof useFolderActions>;
 /**
  * Moving folders and items between the Personal and Work spaces, and the
  * space switch the sidebar draws. Spaces filter the lists only; nothing here
- * touches sync or export. Spec: ops/docs/plans/spaces.md
+ * touches sync or export. Spec: docs/internal/specs/spaces.md
  */
 export function useSpaceMoves({
   t,
@@ -103,14 +103,14 @@ export function useSpaceMoves({
         const to = moveTarget(ids);
         if (!to) return undefined;
         const Glyph = SPACE_ICONS[to];
-        return { label: <SpaceMoveLabel to={to} />, icon: <Glyph size={16} aria-hidden="true" />, run: (picked: string[]) => moveItemsToSpace(picked, to) };
+        return { label: <SpaceMoveLabel to={to} />, icon: <Glyph aria-hidden="true" />, run: (picked: string[]) => moveItemsToSpace(picked, to) };
       }
     : undefined;
   /** The same move for one item to a named space, as a menu row draws it. */
   const spaceMoveTo = spacesOn
     ? (to: Space) => {
         const Glyph = SPACE_ICONS[to];
-        return { label: <SpaceMoveLabel to={to} />, icon: <Glyph size={14} aria-hidden="true" />, run: (ids: string[]) => moveItemsToSpace(ids, to) };
+        return { label: <SpaceMoveLabel to={to} />, icon: <Glyph aria-hidden="true" />, run: (ids: string[]) => moveItemsToSpace(ids, to) };
       }
     : undefined;
   // A free account sees the switch too, on All: Personal and Work close the

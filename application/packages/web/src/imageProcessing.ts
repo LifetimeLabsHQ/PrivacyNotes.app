@@ -16,6 +16,11 @@
  *                   cut out by a lossless container walk (imageMetadata.ts)
  *                   or left in place.
  *
+ * A GIF keeps its source bytes in both states (up to the re-encode
+ * ceiling), because the canvas draws one frame and an animation would
+ * come back a still. A vault item's files never come here at all: they
+ * keep the bytes and name they arrived with, like a PDF.
+ *
  * HEIC and TIFF have no raw state: the browser cannot draw either and the
  * lossless walk has no reader for them, so both are always converted at
  * the space-saver ceiling. Backup restore never comes through here; it
@@ -33,10 +38,11 @@
  * All processing happens in the browser via canvas. No unprocessed image
  * data ever leaves the client.
  *
- * Spec: ops/docs/archive/image-quality-handoff.md
+ * Spec: docs/internal/specs/image-quality-handoff.md
  */
 
 import type { ImageFormat } from './imageMetadata';
+import { MEDIA_FILE, MEDIA_PICTURE, markdownLinks, replaceMatches, type LinkMatch } from './linkScan';
 
 // The container walkers load on the first image operation, not at boot:
 // every editor session carries this module, and most sessions never
@@ -67,6 +73,12 @@ function isHeic(file: File): boolean {
   return ext === 'heic' || ext === 'heif';
 }
 
+/** Whether a File says it is a GIF (by MIME or extension). */
+function isGifName(file: File): boolean {
+  if (file.type) return file.type === 'image/gif';
+  return file.name.split('.').pop()?.toLowerCase() === 'gif';
+}
+
 /** Formats that can carry an alpha channel. Others (JPEG, BMP) never do,
  *  so we skip the per-pixel transparency scan for them. */
 const ALPHA_CAPABLE_TYPES = new Set(['image/png', 'image/webp', 'image/gif']);
@@ -95,17 +107,17 @@ function canvasHasAlpha(
 }
 
 /** The longest edge a space-saved image fits inside, in pixels. */
-// Spec: ops/docs/archive/image-quality-handoff.md (section 3, space saver)
+// Spec: docs/internal/specs/image-quality-handoff.md (section 3, space saver)
 export const IMAGE_FIT_PX = 2048;
 
 /** JPEG quality (0-1). 0.85 is roughly Google Photos "Storage saver". */
-// Spec: ops/docs/archive/image-quality-handoff.md (section 3, space saver)
+// Spec: docs/internal/specs/image-quality-handoff.md (section 3, space saver)
 export const IMAGE_JPEG_QUALITY = 0.85;
 
 /** The box a contact photo fits inside while "Keep contact photos small"
  *  is on: a ceiling, never a target, and never an upscale. The largest
  *  size the app draws a contact photo. */
-// Spec: ops/docs/archive/contacts-pillar.md (section 7.4, one photo per contact)
+// Spec: docs/internal/specs/contacts-pillar.md (section 7.4, one photo per contact)
 export const CONTACT_PHOTO_PX = 512;
 
 /**
@@ -114,7 +126,7 @@ export const CONTACT_PHOTO_PX = 512;
  * picture stored as it arrived is capped by the per-file tier ladder at
  * the door instead (attachmentValidation.ts), the same cap every other
  * file obeys.
- * Spec: ops/docs/design-decisions.md (image size limits: one ladder, not two)
+ * Spec: docs/internal/design-decisions.md (image size limits: one ladder, not two)
  */
 const MAX_PROCESSED_BYTES = 5 * 1000 * 1000;
 
@@ -168,6 +180,9 @@ const MIME_EXTENSIONS: Record<string, string[]> = {
 export type ImageOptions = {
   fitBox: number | null;
   stripMetadata: boolean;
+  /** Always decode and draw again, a GIF too: a stranger's picture (the
+   *  clipper) and a contact photo, which must fit its box. */
+  redraw?: boolean;
 };
 
 type ImagePolicy = { spaceSaver: boolean; stripMetadata: boolean; contactCeiling: boolean };
@@ -198,11 +213,11 @@ export function currentImageOptions(overrides: Partial<ImageOptions> = {}): Imag
  * The options a contact photo passes: the space-saver options with the box
  * pulled in to CONTACT_PHOTO_PX while "Keep contact photos small" is on.
  * Off, a contact photo is any other image.
- * Spec: ops/docs/archive/image-quality-handoff.md (section 7)
+ * Spec: docs/internal/specs/image-quality-handoff.md (section 7)
  */
 export function contactPhotoOptions(): ImageOptions {
   const base = currentImageOptions();
-  return policy.contactCeiling ? { ...base, fitBox: CONTACT_PHOTO_PX } : base;
+  return policy.contactCeiling ? { ...base, fitBox: CONTACT_PHOTO_PX, redraw: true } : base;
 }
 
 /**
@@ -263,11 +278,16 @@ export async function processImage(file: File, opts: ImageOptions): Promise<Imag
   }
 
   try {
-    if (opts.fitBox === null) {
+    // A GIF keeps its source bytes whatever the space saver says: the
+    // canvas draws one frame, so a re-encode turns an animation into a
+    // still. One larger than the re-encode ceiling is still re-encoded, and
+    // so is any GIF a caller asks to redraw.
+    const gifKept = opts.fitBox !== null && !opts.redraw && isGifName(file) && file.size <= MAX_PROCESSED_BYTES;
+    if (opts.fitBox === null || gifKept) {
       const meta = await loadMetadata();
       const bytes = new Uint8Array(await file.arrayBuffer());
       const format = meta.sniffImageFormat(bytes);
-      const kept = keepSource(meta, bytes, format, opts.stripMetadata);
+      const kept = opts.fitBox === null || format === 'gif' ? keepSource(meta, bytes, format, opts.stripMetadata) : null;
       if (kept && format !== 'unknown') {
         const mime = FORMAT_MIME[format];
         return {
@@ -277,7 +297,7 @@ export async function processImage(file: File, opts: ImageOptions): Promise<Imag
       }
       // No raw state for this container: convert at the ceiling and keep
       // the metadata choice.
-      return await reencode(file, { fitBox: IMAGE_FIT_PX, stripMetadata: opts.stripMetadata }, bytes);
+      return await reencode(file, { fitBox: opts.fitBox ?? IMAGE_FIT_PX, stripMetadata: opts.stripMetadata }, bytes);
     }
     return await reencode(file, { fitBox: opts.fitBox, stripMetadata: opts.stripMetadata }, null);
   } catch (err) {
@@ -438,9 +458,8 @@ export function hasMedia(body: string): boolean {
  * one and leave its `!` and size suffix behind.
  */
 export function stripMediaReferences(body: string): string {
-  return body
-    .replace(/!\[[^\]]*\]\(pn:(?:img|file)\/[0-9a-f-]{36}\)(?:\{[^}]*\})?\n?/g, '')
-    .replace(/\[[^\]]*\]\(pn:file\/[0-9a-f-]{36}\)\n?/g, '')
+  const pictures = replaceMatches(body, markdownLinks(body, MEDIA_PICTURE), () => '');
+  return replaceMatches(pictures, markdownLinks(pictures, MEDIA_FILE), () => '')
     // Clean up orphaned hard-break markers (\ on a line by itself)
     // left behind when the stripped media was preceded by a hard break.
     .replace(/^\\\s*$/gm, '')
@@ -451,10 +470,9 @@ export function stripMediaReferences(body: string): string {
 /** stripMediaReferences limited to the blobs in `ids`; every other
  *  reference stays. Returns the body unchanged when none of them occurs. */
 export function stripMediaReferencesTo(body: string, ids: ReadonlySet<string>): string {
-  const drop = (whole: string, id: string) => (ids.has(id) ? '' : whole);
-  const next = body
-    .replace(/!\[[^\]]*\]\(pn:(?:img|file)\/([0-9a-f-]{36})\)(?:\{[^}]*\})?\n?/g, drop)
-    .replace(/\[[^\]]*\]\(pn:file\/([0-9a-f-]{36})\)\n?/g, drop);
+  const drop = (link: LinkMatch) => (ids.has(link.target.slice(link.target.indexOf('/') + 1)) ? '' : null);
+  const pictures = replaceMatches(body, markdownLinks(body, MEDIA_PICTURE), drop);
+  const next = replaceMatches(pictures, markdownLinks(pictures, MEDIA_FILE), drop);
   if (next === body) return body;
   return next.replace(/^\\\s*$/gm, '').replace(/\n{3,}/g, '\n\n').trim();
 }

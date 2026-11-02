@@ -19,7 +19,7 @@ import {
 // @noble/@scure v2+ require the explicit `.js` on subpath imports, and sha256 folded into
 // sha2. Dropping the suffix, or reaching for '@noble/hashes/sha256', is a build error, not a
 // silent fallback. Verified 2026-07-16: these paths produce byte-identical keys to the v1
-// ones (see tools/crypto-kat.mjs). Spec: ops/docs/dependency-migration.md (run `pnpm test:crypto` to verify)
+// ones (see tools/crypto-kat.mjs). Spec: docs/internal/dependency-migration.md (run `pnpm test:crypto` to verify)
 import { wordlist } from '@scure/bip39/wordlists/english.js';
 import { hkdf } from '@noble/hashes/hkdf.js';
 import { hmac } from '@noble/hashes/hmac.js';
@@ -89,7 +89,7 @@ export function deriveEncryptionKey(seed: Uint8Array): Uint8Array {
  * the sync encryption branch so a local ciphertext can never pass as a
  * server row or the reverse. Never stored and never transmitted - it is
  * re-derived from the phrase on every unlock.
- * Spec: ops/docs/archive/local-at-rest.md (HKDF branch, section 3.1)
+ * Spec: docs/internal/specs/local-at-rest.md (HKDF branch, section 3.1)
  */
 export function deriveLocalDataKey(seed: Uint8Array): Uint8Array {
   return hkdf(
@@ -254,10 +254,10 @@ export async function signStorageManageChallenge(
 //   - The same pubkey on the same hardware produces consistent hashes,
 //     so per-user device dedup still works.
 //
-// Spec: ops/docs/device-fingerprint-hash.md
+// Spec: docs/internal/specs/device-fingerprint-hash.md
 
 /** Per-user fingerprint pepper. Same seed → same pepper, forever. */
-// Spec: ops/docs/device-fingerprint-hash.md (HKDF info "privacynotes-fp-pepper-v1")
+// Spec: docs/internal/specs/device-fingerprint-hash.md (HKDF info "privacynotes-fp-pepper-v1")
 export function deriveFpPepper(seed: Uint8Array): Uint8Array {
   return hkdf(
     sha256,
@@ -293,7 +293,7 @@ export function deriveFpPepper(seed: Uint8Array): Uint8Array {
 //     input), which is what keeps the THREAT_MODEL invariant intact:
 //     nothing here can present an attacker-chosen email as confirmed.
 //
-// Spec: ops/docs/design-decisions.md (phrase-derived auth credential)
+// Spec: docs/internal/design-decisions.md (phrase-derived auth credential)
 
 /** Domain part of the derived auth email. Not a mail domain: no MX,
  * never receives anything, exists so GoTrue has a unique, deterministic
@@ -559,7 +559,7 @@ export function decryptJson<T = unknown>(
 // authentication tag. Used by the local at-rest seal, where the AAD
 // carries the table and row id so a ciphertext moved onto another row
 // or table fails authentication instead of decrypting.
-// Spec: ops/docs/archive/local-at-rest.md (seal format, section 3.2)
+// Spec: docs/internal/specs/local-at-rest.md (seal format, section 3.2)
 // ------------------------------------------------------------------
 
 /** Encrypt raw bytes with associated data. Fresh 24-byte nonce per call. */

@@ -18,7 +18,7 @@ val tauriProperties = Properties().apply {
 // drives BOTH the JS build flavor and the signing key, so they can never mismatch.
 // The direct channel has no Play App Signing safety net: its key must stay the same
 // forever or sideloaded users cannot update in place.
-// Spec: ops/docs/android-setup.md (dual keystore: Play upload vs direct channel)
+// Spec: docs/internal/android-setup.md (dual keystore: Play upload vs direct channel)
 val isDirectBuild = System.getenv("VITE_ANDROID_DIST") == "direct"
 val keystoreProperties = Properties().apply {
     val propFile = rootProject.file(if (isDirectBuild) "keystore.direct.properties" else "keystore.properties")
@@ -31,7 +31,13 @@ val keystoreProperties = Properties().apply {
 }
 
 android {
-    compileSdk = 36
+    // Android 17 is API 37.1: a minor SDK level, platform folder android-37.1.
+    // targetSdk stays 36 until Android 17's behavior changes are tested on a phone.
+    // Spec: docs/internal/android-setup.md (toolchain versions)
+    compileSdk = 37
+    compileSdkMinor = 1
+    // AGP 9.5 defaults to Build-Tools 36.0.0 and downloads it when it is missing.
+    buildToolsVersion = "37.0.0"
     namespace = "app.privacynotes"
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "false"
@@ -71,13 +77,17 @@ android {
             )
         }
     }
+    // AGP 9 compiles Java for 11 by default; Kotlin below targets 1.8, and the two must match.
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
     buildFeatures {
         buildConfig = true
     }
 }
 
-// The compilerOptions form, which Kotlin 2.2 requires and Kotlin 1.9 accepts:
-// the release job scaffolds gen/android with the current Tauri templates.
+// The compilerOptions form, which Kotlin 2 requires.
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)

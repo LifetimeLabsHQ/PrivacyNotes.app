@@ -1,8 +1,9 @@
 # Tauri
 src-tauri/target/
-# gen/ is regenerated scratch EXCEPT four hand-customized files: three on
-# Android (CAMERA permission + soft-keyboard fix + dual-keystore signing block)
-# and the iOS Info.plist. Git can't re-include a file whose parent dir is
+# gen/ is regenerated scratch EXCEPT the hand-customized files: on Android
+# the manifest (CAMERA permission, soft-keyboard fix, backup and transfer
+# rules), the data extraction rules beside it and the dual-keystore signing
+# block, and the iOS Info.plist. Git can't re-include a file whose parent dir is
 # excluded, hence the level-by-level carve-out below. Keystore properties,
 # build output, the rest of gen/apple and wry's generated/ stay ignored.
 #
@@ -45,6 +46,11 @@ src-tauri/gen/android/app/src/*
 !src-tauri/gen/android/app/src/main/
 src-tauri/gen/android/app/src/main/*
 !src-tauri/gen/android/app/src/main/AndroidManifest.xml
+!src-tauri/gen/android/app/src/main/res/
+src-tauri/gen/android/app/src/main/res/*
+!src-tauri/gen/android/app/src/main/res/xml/
+src-tauri/gen/android/app/src/main/res/xml/*
+!src-tauri/gen/android/app/src/main/res/xml/data_extraction_rules.xml
 !src-tauri/gen/android/app/src/main/java/
 src-tauri/gen/android/app/src/main/java/*
 !src-tauri/gen/android/app/src/main/java/app/

@@ -53,8 +53,6 @@
   },
   "mood": {
     "prompt": "Kendinizi nasıl hissediyorsunuz? (1-10)",
-    "low": "berbat",
-    "high": "harika",
     "anchor": {
       "1": "berbat",
       "3": "zorlu",
@@ -142,8 +140,6 @@
     "editMedication": "İlacı düzenle",
     "removeMedication": "İlacı kaldır",
     "confirmRemove": "<highlight>{{name}}</highlight> kaldırılsın mı?",
-    "yes": "Evet",
-    "no": "Hayır",
     "taken": "Alındı",
     "skip": "Atla",
     "editList": "Bu ilaçları değiştir",
@@ -257,16 +253,15 @@
   },
   "config": {
     "configureTrackers": "Takipleri yapılandır",
-    "title": "Takipler",
-    "tabGeneral": "Genel",
     "tabCustom": "Özel",
-    "chooseTrackers": "Takipleri seç",
     "factorsTitle": "Etkenleriniz",
     "factorsHelp": "Etkenler takibinde dokunduğunuz, gününüzün parçaları. Kaldırılan bir etken, içerdiği günlerde adını korur.",
     "renameFactor": "{{name}} adını değiştir",
     "addFactor": "Etken ekle",
     "medicationsTitle": "İlaçlarınız",
     "medicationsHelp": "İlaçlar takibinin sorduğu ilaçlar. Kaldırılan bir ilaç geçmişini korur.",
+    "medicationCard": "İlaç kartı",
+    "medicationCardHelp": "Bu cihazda, yalnızca ilaç alınması gereken bir günde \"İlacınızı aldınız mı?\" sorusu.",
     "customHelp": "Kendi adlandırdığınız takipler: bir ölçek, bir sayı ya da evet veya hayır. En fazla {{max}} tane.",
     "yourCustomTrackers": "Özel takipleriniz",
     "categoryMoodMind": "Ruh hali ve zihin",
@@ -291,23 +286,17 @@
     "kindBuild": "Edinilecek",
     "kindWatch": "Göz kulak olunacak",
     "editHabit": "{{name}} düzenle",
-    "removeHabit": "{{name}} kaldır",
     "ownHabitsFull": "Kendinize ait {{max}} alışkanlığınız var, bu olabilecek en fazla sayı.",
     "addCustomTrackerHint": "Ne isterseniz takip edin",
     "maxReached": "{{max}} özel takip sınırına ulaşıldı.",
     "customTrackers": "Özel takipler",
-    "newCustomTracker": "Yeni özel takip",
-    "newMedication": "Yeni ilaç",
     "newMedicationHelp": "İlaçlar takibi, başlangıç gününden itibaren belirlediğiniz saatlerde bunu sorar.",
     "trackerNamePlaceholder": "Takip adı",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "Ad",
     "typeLabel": "Tür",
-    "colorLabel": "Renk",
     "preview": "Önizleme",
     "startFromLast": "Son girişi hatırla",
     "chooseIcon": "Simge seç",
-    "iconLabel": "Simge",
     "startFromLastHelp": "Kiloniz ya da günlük bir doz gibi nadiren değişen şeyler için uygundur."
   },
   "factors": {
@@ -315,7 +304,6 @@
     "count_other": "{{count}} etken",
     "remove": "{{name}} kaldır",
     "placeholder": "misafirler, migren, fazla mesai",
-    "add": "Ekle",
     "empty": "Günlerinizi şekillendiren şeyleri ekleyin, sonra herhangi bir günde onlara dokunun.",
     "commaHint": "Virgülle ayırarak birkaçını aynı anda ekleyin.",
     "editList": "Bu etkenleri değiştir",
@@ -339,8 +327,6 @@
   "habits": {
     "prompt": "Bugün ne yaptınız?",
     "count": "{{yes}}/{{total}}",
-    "yes": "Evet",
-    "no": "Hayır",
     "empty": "Soruları takip ayarlarından seçin.",
     "changeQuestions": "Bu soruları değiştir",
     "q": {
@@ -399,9 +385,7 @@
     "prompt": "Ne kadar kafein aldınız?"
   },
   "flow": {
-    "next": "İleri",
     "finish": "Bitir",
-    "done": "Tamam",
     "step": "Takip {{n}} / {{total}}"
   }
 }

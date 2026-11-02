@@ -57,11 +57,11 @@ export function StorageBar({ label, usedBytes, maxBytes, onRefresh, onOpen }: Pr
   return (
     <div className="shrink-0 px-4 pt-2 pb-1">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mb-1.5">
-        <span className="flex items-center gap-1 text-xs text-pn-muted">
+        <span className="flex items-center gap-1 text-small text-pn-muted">
           {label}
           <HoverLabel label={t('storageBar.cleanupInfo')} position="below-start" multiline className="flex items-center">
             <span tabIndex={0} aria-label={t('storageBar.cleanupInfo')} className="inline-flex items-center cursor-help">
-              <Info size={13} />
+              <Info />
             </span>
           </HoverLabel>
         </span>
@@ -71,13 +71,13 @@ export function StorageBar({ label, usedBytes, maxBytes, onRefresh, onOpen }: Pr
               type="button"
               onClick={onOpen}
               aria-label={`${usage} - ${t('storageBar.open')}`}
-              className="inline-flex items-center gap-0.5 text-xs text-pn-muted whitespace-nowrap hover:text-accent transition cursor-pointer"
+              className="inline-flex items-center gap-0.5 text-small text-pn-muted whitespace-nowrap hover:text-accent transition cursor-pointer"
             >
               {usage}
-              <CaretRight size={12} aria-hidden="true" className="rtl:-scale-x-100" />
+              <CaretRight aria-hidden="true" className="rtl:-scale-x-100" />
             </button>
           ) : (
-            <span className="text-xs text-pn-muted whitespace-nowrap">{usage}</span>
+            <span className="text-small text-pn-muted whitespace-nowrap">{usage}</span>
           )}
           <HoverLabel label={t('storageBar.refresh')} position="below-end">
             <button
@@ -88,7 +88,6 @@ export function StorageBar({ label, usedBytes, maxBytes, onRefresh, onOpen }: Pr
               className="group inline-flex items-center justify-center w-7 h-7 shrink-0 rounded-md border border-divider bg-surface-2 text-pn-muted hover:border-accent hover:text-accent disabled:opacity-50 transition cursor-pointer"
             >
               <ArrowsClockwise
-                size={15}
                 className={busy ? 'animate-spin' : 'transition-transform duration-300 group-hover:rotate-180'}
               />
             </button>

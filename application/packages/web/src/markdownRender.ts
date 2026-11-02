@@ -15,10 +15,12 @@
 import { joinParagraphLinesHtml } from './paragraphLines';
 import type { LineSpacing } from './theme';
 import { faviconUrl } from './favicon';
-import { unescapeMarkdownText } from './fileNames';
+import { attachmentLinks, unescapeMarkdownText } from './fileNames';
+import { RENDER_LINK, RENDER_PICTURE, SRC_PICTURE, markdownLinks, replaceMatches } from './linkScan';
 import { getFavicons } from './theme';
 import { widthsFromTableLines } from './tableColumnWidths';
-import { tableWidthFromMarker } from './tableDelimiterRow';
+import { fillAt, tableFillsFromMarker, tableWidthFromMarker } from './tableDelimiterRow';
+import { cellFillColor } from './editorColors';
 import { noteLinkDisplayText } from './noteLinks';
 import { orderFootnotes, replaceMarkers, scanFootnotes } from './footnoteScan';
 import { isSameOriginPath } from './sameOriginPath';
@@ -186,7 +188,7 @@ function domainFromHref(href: string): string | null {
  * The import is DYNAMIC and only happens for markdown that actually contains
  * a `$`. KaTeX is ~82 KB gz and today lives only in the editor chunk; a
  * static import here would put it in the burn viewer's chunk too, which is
- * the one page a stranger loads from a link. See ops/docs/bundle-size.md.
+ * the one page a stranger loads from a link. See docs/contrib/bundle-size.md.
  *
  * Callers await prepareMath(body) before renderMarkdown(body). Skipping that
  * is not fatal: renderTex returns null and the formula falls back to the
@@ -281,7 +283,7 @@ function renderFenceCode(code: string, lang: string): string | null {
  * Runs before the backslash-escape pass in renderInline, which would
  * otherwise eat the `\{`, `\}` and `\\` that LaTeX is made of.
  */
-function extractInlineMath(raw: string, keep: (html: string) => string): string {
+function extractInlineMath(raw: string, keep: (html: string, source: string) => string): string {
   let out = '';
   let i = 0;
   while (i < raw.length) {
@@ -333,7 +335,7 @@ function extractInlineMath(raw: string, keep: (html: string) => string): string 
       i = open + 1;
       continue;
     }
-    out += keep(html);
+    out += keep(html, raw.slice(open, close + 1));
     i = close + 1;
   }
   return out;
@@ -358,9 +360,11 @@ function renderInline(raw: string): string {
   // made of the tags escapeHtml would turn into visible text. Held behind a
   // sentinel until every pass has run, then restored raw.
   const mathHtml: string[] = [];
-  raw = extractInlineMath(raw, (html: string) => {
+  const mathSource: string[] = [];
+  raw = extractInlineMath(raw, (html: string, source: string) => {
     const idx = mathHtml.length;
     mathHtml.push(html);
+    mathSource.push(source);
     return `\x01M${idx}\x01`;
   });
 
@@ -383,6 +387,14 @@ function renderInline(raw: string): string {
     codeSpans.push(code);
     return `\x01C${idx}\x01`;
   });
+
+  // An attribute value holds text, never markup. Math or a code span inside
+  // an image's alt or a link's target goes back as its own source there,
+  // because the MathML or <code> restored at the end would close the
+  // attribute early (GitHub #659).
+  const attrText = (s: string): string => s
+    .replace(/\x01M(\d+)\x01/g, (_m: string, i: string) => escapeHtml(mathSource[Number(i)] ?? ''))
+    .replace(/\x01C(\d+)\x01/g, (_m: string, i: string) => `\`${codeSpans[Number(i)] ?? ''}\``);
 
   // The editor saves a typed `&`, `<` or `>` as an entity reference, which a
   // markdown reader decodes outside code. Escaped once above, a reference
@@ -408,14 +420,15 @@ function renderInline(raw: string): string {
   // Images ![alt](src) or ![alt](src){width=N} - must come before link
   // handling since the syntax is similar. Optional {width=N} suffix from
   // tiptap-markdown is captured and applied as an inline style.
-  t = t.replace(
-    /!\[([^\]]*)\]\(([^)\s]+)\)(?:\{([^}]*)\})?/g,
-    (match: string, alt: string, src: string, attrs: string | undefined) => {
-      const clean = sanitizeImageSrc(src);
-      if (clean === null) return match; // leave raw - safer than emitting a broken <img>
+  t = replaceMatches(t, markdownLinks(t, RENDER_PICTURE),
+    ({ text: rawAlt, target: src, suffix: attrs }) => {
+      const alt = attrText(rawAlt);
+      const clean = sanitizeImageSrc(attrText(src));
+      if (clean === null) return null; // leave raw - safer than emitting a broken <img>
       // Parse width from {width=N} attribute block if present. The editor
-      // stores image width as a percentage of the container (presets
-      // 25/50/75/100) and serializes it as a bare number, e.g. {width=50}.
+      // stores image width as a percentage of the container (any whole
+      // percent from 10 to 100, imageWidth.ts) and serializes it as a bare
+      // number, e.g. {width=50}.
       // A unit-less value is therefore a percentage, not pixels - emitting
       // px here made XS/S/M collapse to 25/50/75px (near-identical thumbs)
       // in HTML/PDF export. Spec: GitHub #103.
@@ -431,25 +444,29 @@ function renderInline(raw: string): string {
         : align === 'right' ? 'display:block;margin-left:auto;margin-right:0;'
         : '';
       return stash(`<img src="${clean}" alt="${alt}" style="max-width:100%;border-radius:4px;${widthStyle}${alignStyle}" />`);
-    }
+    },
   );
 
   // Encrypted file attachments [name|size|mime](pn:file/<uuid>) - render
   // as a descriptive label since the encrypted blob can't be resolved
   // outside the app. Includes a tooltip explaining why.
-  t = t.replace(
-    /\[([^|]*)\|([^|]*)\|([^\]]*)\]\(pn:file\/[0-9a-f-]{36}\)/g,
-    (_m: string, rawName: string, size: string, _mime: string) => {
+  t = replaceMatches(t, attachmentLinks(t, { acrossLines: true }),
+    ({ name: rawName, size }) => {
       // Raw body text, so the name arrives markdown-escaped.
       const name = unescapeMarkdownText(rawName);
       return stash(`<span title="This attachment is encrypted and only accessible within PrivacyNotes. Use the full backup (zip) export to include file attachments." style="display:inline-flex;align-items:center;gap:0.4em;padding:0.15em 0.5em;background:#f3f3f3;border-radius:4px;font-size:0.9em;cursor:help">&#128206; ${name} (${size})</span>`);
-    }
+    },
   );
 
   // Note-links [[target]] or [[target|label]] - render as plain text
   // since note-to-note links can't work outside the app.
-  t = t.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, (_m: string, _target: string, label: string) => `<em>${label}</em>`);
-  t = t.replace(/\[\[([^\]]+)\]\]/g, (_m: string, target: string) => `<em>${noteLinkDisplayText(target)}</em>`);
+  // The second branch of each keeps a `[[` that opens none, up to where one
+  // opening inside it would fail the same way, so a run of `[` is not read
+  // again from every bracket (external report, 2026-10-24).
+  t = t.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]|\[\[[^\]|]*/g, (run: string, _target?: string, label?: string) =>
+    label === undefined ? run : `<em>${label}</em>`);
+  t = t.replace(/\[\[([^\]]+)\]\]|\[\[[^\]]*/g, (run: string, target?: string) =>
+    target === undefined ? run : `<em>${noteLinkDisplayText(target)}</em>`);
 
   // Links [text](url). URL itself is already HTML-escaped by the
   // initial pass, which is fine for href attribute safety.
@@ -464,9 +481,9 @@ function renderInline(raw: string): string {
   // only passes that let a tag back through rebuild it from a fixed list
   // and validate every value, so a burn note cannot smuggle markup in
   // through a link label. Spec: GitHub #328.
-  t = t.replace(
-    /\[([^\]]+)\]\(([^)\s]+)\)/g,
-    (_m: string, label: string, href: string) => {
+  t = replaceMatches(t, markdownLinks(t, RENDER_LINK),
+    ({ text: label, target: rawHref }) => {
+      const href = attrText(rawHref);
       const domain = domainFromHref(href);
       const fav = domain && getFavicons() ? faviconUrl(domain) : '';
       const favicon = fav
@@ -488,7 +505,8 @@ function renderInline(raw: string): string {
   t = t.replace(
     /&lt;(https?:\/\/(?:[^&\s]|&amp;)+)&gt;/g,
     (_m: string, url: string) => {
-      const domain = domainFromHref(url);
+      const href = attrText(url);
+      const domain = domainFromHref(href);
       const fav = domain && getFavicons() ? faviconUrl(domain) : '';
       const favicon = fav
         ? `<img src="${fav}" width="14" height="14" style="display:inline-block;vertical-align:middle;margin:0 3px 0 0;border-radius:2px;max-width:none" onerror="this.style.display='none'" />`
@@ -501,9 +519,9 @@ function renderInline(raw: string): string {
       // pattern guarantees the URL opens with `h`, never with a markdown
       // marker that a split would tear in half. Spec: GitHub #328.
       const text = favicon
-        ? `<span style="white-space:nowrap">${favicon}${url.slice(0, 1)}</span>${url.slice(1)}`
-        : url;
-      return stash(`<a href="${sanitizeLinkHref(url)}" target="_blank" rel="noopener noreferrer">${text}</a>`);
+        ? `<span style="white-space:nowrap">${favicon}${href.slice(0, 1)}</span>${href.slice(1)}`
+        : href;
+      return stash(`<a href="${sanitizeLinkHref(href)}" target="_blank" rel="noopener noreferrer">${text}</a>`);
     }
   );
 
@@ -643,11 +661,11 @@ function renderInline(raw: string): string {
  * markdown source view), so it is scrubbed on the way through.
  *
  * On the app origin the CSP does the heavy lifting already: `script-src`
- * carries no `unsafe-inline`, so an `onclick` never fires there. This
- * covers the two places that CSP does not reach - an exported .html file
- * opened from disk, where nothing constrains inline handlers - and the
- * one attack CSP was never going to stop: a `position: fixed` overlay
- * impersonating the app's own UI.
+ * carries no `unsafe-inline`, so an `onclick` never fires there. An exported
+ * .html file carries its own policy (`export.ts`, `default-src 'none'`), so
+ * the scrub is the second wall there, and the only one in a viewer that
+ * ignores a meta policy. It is also the one defence against what no CSP
+ * stops: a `position: fixed` overlay impersonating the app's own UI.
  *
  * Deliberately a denylist rather than an allowlist. Everything here is
  * something no editor feature emits; an allowlist would silently drop the
@@ -698,6 +716,12 @@ function cssUnescape(text: string): string {
 // same overlay the style denylist refuses.
 const KEPT_CLASSES = new Set(['pn-spoiler', 'pn-spoiler-text']);
 
+// Attributes that open an element in the browser's top layer, above every
+// container, so `contain: paint` on the burn card does not hold them: a
+// stranger's note covered the whole page after one click. The editor writes
+// none of them.
+const TOP_LAYER_ATTRS = new Set(['popover', 'popovertarget', 'popovertargetaction', 'command', 'commandfor', 'interestfor']);
+
 function sanitizeEditorHtml(html: string): string {
   const doc = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html');
   // `noscript` is here for a reason the others are not: this parser runs with
@@ -705,15 +729,20 @@ function sanitizeEditorHtml(html: string): string {
   // attribute inside it as an attribute, while the browser that renders the
   // serialized output reads the same bytes as text. Anything left inside one
   // therefore re-parses differently on the other side, handlers included.
+  //
+  // `template` too: its content is a separate fragment the walk below never
+  // enters, and a file opened from disk activates a declarative shadow root,
+  // so a form or a handler inside one came back whole in an HTML export.
+  // `dialog` opens in the top layer like a popover.
   doc.body
     .querySelectorAll(
-      'script,style,iframe,object,embed,link,meta,base,form,input[type="image"],noscript',
+      'script,style,iframe,object,embed,link,meta,base,form,input[type="image"],noscript,template,dialog',
     )
     .forEach((el) => el.remove());
   doc.body.querySelectorAll('*').forEach((el) => {
     for (const attr of [...el.attributes]) {
       const name = attr.name.toLowerCase();
-      if (name.startsWith('on')) {
+      if (name.startsWith('on') || TOP_LAYER_ATTRS.has(name)) {
         el.removeAttribute(attr.name);
       } else if (
         (name === 'href' || name === 'src' || name === 'xlink:href') &&
@@ -751,6 +780,10 @@ function sanitizeEditorHtml(html: string): string {
         else el.removeAttribute('class');
       }
     }
+    // `rel="opener"` hands the page a link opens a handle on this tab, which
+    // it can send to a copy of the sign-in. Every link gets the rel the
+    // renderer writes on its own.
+    if (el.tagName === 'A' || el.tagName === 'AREA') el.setAttribute('rel', 'noopener noreferrer');
   });
   return doc.body.innerHTML;
 }
@@ -759,12 +792,15 @@ function sanitizeEditorHtml(html: string): string {
  * The editor's checkbox, restated as inline styles for the export and the
  * burn viewer: an appearance:none rounded box (the editor's 1.45em /
  * 0.33em / 1.5px proportions), filled with the brand accent and a white
- * check when checked. The editor fills with the active theme's accent; a
+ * check when checked. The box centres on the first line of text, as the
+ * editor's label does (1lh is the line height it inherits through
+ * `font:inherit`); a baseline nudge put it a third of a line too high.
+ * The editor fills with the active theme's accent; a
  * standalone exported file has no theme, so it gets the brand default.
  * Checked task TEXT dims and strikes through exactly as in the editor -
  * on an inner span only, so a nested sub-list under a checked task does
  * not inherit the strike (the editor scopes it the same way).
- * Spec: ops/docs/design-decisions.md (brand accent)
+ * Spec: docs/internal/design-decisions.md (brand accent)
  */
 const TASK_CHECK_SVG =
   "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><path d=%22M3.5 8.5l3 3 6-7%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%222.4%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>')";
@@ -773,7 +809,7 @@ const TASK_DONE_TEXT = 'text-decoration:line-through;color:#a3a3a3';
 
 function taskCheckboxHtml(checked: boolean): string {
   const base =
-    'appearance:none;-webkit-appearance:none;flex-shrink:0;width:1.45em;height:1.45em;margin:0;transform:translateY(0.15em);border-radius:0.33em;border:1.5px solid #a3a3a3;background:transparent';
+    'appearance:none;-webkit-appearance:none;flex-shrink:0;font:inherit;width:1.45em;height:1.45em;margin:calc((1lh - 1.45em) / 2) 0 0;border-radius:0.33em;border:1.5px solid #a3a3a3;background:transparent';
   const fill = `background-color:#1e40af;border-color:#1e40af;background-image:${TASK_CHECK_SVG};background-size:0.82em;background-position:center;background-repeat:no-repeat`;
   return `<input type="checkbox" disabled${checked ? ' checked' : ''} style="${base}${checked ? `;${fill}` : ''}" />`;
 }
@@ -809,7 +845,7 @@ function renderTaskListHtml(block: string): string | null {
       : align === 'right' ? ';justify-content:flex-end'
       : '';
     return (
-      `<li style="list-style:none;display:flex;align-items:baseline;gap:0.5em;margin:0.2em 0${justify}">` +
+      `<li style="list-style:none;display:flex;align-items:flex-start;gap:0.5em;margin:0.2em 0${justify}">` +
         taskCheckboxHtml(checked) +
         taskTextHtml(checked, inner, '') +
       `</li>`
@@ -973,7 +1009,7 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
     if (item.isTask) {
       hasTask = true;
       items.push(
-        `<li style="list-style:none;display:flex;align-items:baseline;gap:0.5em;margin:0.2em 0${
+        `<li style="list-style:none;display:flex;align-items:flex-start;gap:0.5em;margin:0.2em 0${
           align === 'center' ? ';justify-content:center' : align === 'right' ? ';justify-content:flex-end' : ''
         }">` +
           taskCheckboxHtml(item.checked) +
@@ -1023,7 +1059,7 @@ export function renderMarkdown(md: string): string {
  * links both ways. Each marker becomes a sentinel before the blocks render,
  * because renderInline escapes everything it does not know. The ids carry a
  * per-render prefix, so two notes in one HTML export never share `#fn-1`.
- * Spec: ops/docs/archive/footnotes.md (section 8)
+ * Spec: docs/internal/specs/footnotes.md (section 8)
  */
 function renderWithFootnotes(text: string): string {
   const scan = scanFootnotes(text);
@@ -1073,6 +1109,11 @@ function splitUnescapedPipes(row: string): string[] {
   return cells;
 }
 
+/** The text a table cell shows once its inline markdown is rendered. */
+function shownText(cell: string): string {
+  return new DOMParser().parseFromString(`<body>${renderInline(cell)}</body>`, 'text/html').body.textContent ?? '';
+}
+
 function renderBlocks(text: string): string {
 
   // Pull fenced code blocks out of the flow first so nothing inside
@@ -1081,11 +1122,23 @@ function renderBlocks(text: string): string {
   // the editor emits); a bare fence, an unknown language, or an unloaded
   // highlighter all fall back to the plain escaped block.
   const fences: string[] = [];
+  // The markdown each placeholder stood for, for a callout or a quote whose
+  // body goes through renderMarkdown again: that call drops the sentinel
+  // bytes, so it is handed the fence itself instead.
+  const fenceSource: string[] = [];
+  const unplace = (md: string) => md.replace(/\x02F(\d+)\x02/g, (_m: string, n: string) => fenceSource[Number(n)] ?? '');
   const withoutFences = text.replace(
     /```([^\n]*)\n([\s\S]*?)```/g,
-    (_m: string, lang: string, body: string) => {
+    (_m: string, lang: string, body: string, offset: number) => {
       const idx = fences.length;
-      const code = body.replace(/\n$/, '');
+      // A fence inside a list item, a task, a callout or a card is written
+      // with the container's prefix (`  `, `> `) on every line: take it off
+      // the code, as the editor shows it.
+      const prefix = text.slice(text.lastIndexOf('\n', offset - 1) + 1, offset);
+      const lines = body.replace(/\n$/, '').split('\n');
+      const dedent = /^[ \t>]+$/.test(prefix) && lines.every((l) => l.startsWith(prefix) || l.trim() === '');
+      const code = dedent ? lines.map((l) => l.slice(prefix.length)).join('\n') : lines.join('\n');
+      fenceSource.push('```' + lang + '\n' + code + '\n```');
       const langId = lang.trim().split(/\s+/)[0] ?? '';
       const highlighted = renderFenceCode(code, langId);
       fences.push(`<pre><code>${highlighted ?? escapeHtml(code)}</code></pre>`);
@@ -1109,6 +1162,7 @@ function renderBlocks(text: string): string {
       // A block-level wrapper, centred inline because the exported document
       // has no stylesheet of ours to lean on.
       fences.push(`<div style="text-align:center;margin:1em 0">${html}</div>`);
+      fenceSource.push(whole);
       return `\x02F${idx}\x02`;
     }
   );
@@ -1184,11 +1238,15 @@ function renderBlocks(text: string): string {
       // serializes tables as raw HTML without styling. The export CSS
       // covers it via class selectors, but the burn viewer (Tailwind
       // prose) needs inline styles for consistent dark-mode borders.
+      // A colored cell (data-fill, #616) already carries a style, its
+      // background, so the border goes in front of it there.
       if (tag === 'table') {
         block = block
           .replace(/<table(?![^>]*style)/gi, '<table style="border-collapse:collapse;width:100%;margin:1em 0"')
           .replace(/<th(?![^>]*style)/gi, '<th style="border:1px solid #d4d4d4;padding:6px 10px;text-align:left;font-weight:600"')
-          .replace(/<td(?![^>]*style)/gi, '<td style="border:1px solid #d4d4d4;padding:6px 10px"');
+          .replace(/<td(?![^>]*style)/gi, '<td style="border:1px solid #d4d4d4;padding:6px 10px"')
+          .replace(/(<th\b[^>]*\bdata-fill="[a-z]+"[^>]*\bstyle=")(?!border)/gi, '$1border:1px solid #d4d4d4;padding:6px 10px;text-align:left;font-weight:600;')
+          .replace(/(<td\b[^>]*\bdata-fill="[a-z]+"[^>]*\bstyle=")(?!border)/gi, '$1border:1px solid #d4d4d4;padding:6px 10px;');
       }
       out.push(block);
       continue;
@@ -1238,7 +1296,7 @@ function renderBlocks(text: string): string {
         const tint = rgb.replace(/ /g, ',');
         const title = callout[4]!.trim();
         const titleHtml = title ? renderInline(title) : escapeHtml(CALLOUT_LABELS[canon]);
-        const bodyMd = buf.slice(1).join('\n');
+        const bodyMd = unplace(buf.slice(1).join('\n'));
         const bodyHtml = bodyMd.trim() === '' ? '' : renderMarkdown(bodyMd);
         // Fold has no box and no accent: the caret and the title in the text
         // color. Box frames it with a gray title strip over a plain body;
@@ -1270,7 +1328,7 @@ function renderBlocks(text: string): string {
         );
         continue;
       }
-      out.push(`<blockquote>${renderMarkdown(buf.join('\n'))}</blockquote>`);
+      out.push(`<blockquote>${renderMarkdown(unplace(buf.join('\n')))}</blockquote>`);
       continue;
     }
 
@@ -1357,9 +1415,22 @@ function renderBlocks(text: string): string {
       // fixed layout goes inline because the burn viewer has no stylesheet
       // rule for it, and without it the cols are only a hint.
       const widths = hasSep ? widthsFromTableLines(rows[0]!, rows[1]!) : null;
-      // A table narrower than the note carries its width on the next line.
+      // A table narrower than the note carries its width on the next line,
+      // and a table with colored cells their names on the line after it.
       const tableWidth = tableWidthFromMarker(lines[i] ?? '');
       if (tableWidth) i++;
+      const fills = tableFillsFromMarker(lines[i] ?? '');
+      if (fills) i++;
+      // data-fill lets the export stylesheet keep the color in print.
+      const fillAttr = (row: number, col: number): string => {
+        const name = fillAt(fills, row, col);
+        const color = cellFillColor(name);
+        return color ? ` data-fill="${name}"` : '';
+      };
+      const fillStyle = (row: number, col: number): string => {
+        const color = cellFillColor(fillAt(fills, row, col));
+        return color ? `;background-color:${color}` : '';
+      };
       const width = `width:${tableWidth ?? 100}%`;
       const tableHtml: string[] = [
         widths
@@ -1369,7 +1440,7 @@ function renderBlocks(text: string): string {
       if (hasSep) {
         tableHtml.push('<thead><tr>');
         headerRow.forEach((cell, idx) => {
-          tableHtml.push(`<th style="border:1px solid #d4d4d4;padding:6px 10px;text-align:${aligns[idx] ?? 'left'};font-weight:600">${renderInline(cell)}</th>`);
+          tableHtml.push(`<th${fillAttr(0, idx)} style="border:1px solid #d4d4d4;padding:6px 10px;text-align:${aligns[idx] ?? 'left'};font-weight:600${fillStyle(0, idx)}">${renderInline(cell)}</th>`);
         });
         tableHtml.push('</tr></thead>');
       }
@@ -1382,7 +1453,14 @@ function renderBlocks(text: string): string {
       // INCLUDING the header, because a reference counts the header as row 1.
       const bodyCells = startRows.map(parseCells);
       const grid = hasSep ? [headerRow, ...bodyCells] : bodyCells;
-      const computed = grid.some((row) => row.some(isFormulaText)) ? evaluateTable(grid) : null;
+      // The engine reads what a cell SHOWS, as the editor does with its
+      // textContent: the raw line held `**1,200**`, `[12](...)` and the
+      // serializer's `\-50`, which no number check accepts, so the export's
+      // totals left them out while the app counted them (external report,
+      // 2026-10-24, bug report 27).
+      const computed = grid.some((row) => row.some(isFormulaText))
+        ? evaluateTable(grid.map((row) => row.map((cell) => (isFormulaText(cell) ? cell : shownText(cell)))))
+        : null;
       const headerOffset = hasSep ? 1 : 0;
       startRows.forEach((row, rowIdx) => {
         const cells = bodyCells[rowIdx] ?? [];
@@ -1397,7 +1475,8 @@ function renderBlocks(text: string): string {
           // editor passes the app language; an export is read wherever it
           // lands.
           const body = result && 'value' in result ? escapeHtml(formatFormulaValue(result.value)) : renderInline(cell);
-          tableHtml.push(`<td style="border:1px solid #d4d4d4;padding:6px 10px${align}">${body}</td>`);
+          const row = rowIdx + headerOffset;
+          tableHtml.push(`<td${fillAttr(row, idx)} style="border:1px solid #d4d4d4;padding:6px 10px${align}${fillStyle(row, idx)}">${body}</td>`);
         });
         tableHtml.push('</tr>');
       });
@@ -1440,7 +1519,11 @@ function renderBlocks(text: string): string {
     out.push(`<p>${renderInline(withBreaks).replace(/\x02B/g, '<br />')}</p>`);
   }
 
-  return out.join('\n');
+  // A placeholder that did not stand on a line of its own (a fence inside a
+  // list item, a task, a callout or a Kanban card) reached the paragraph path
+  // and printed as `F0` in place of the code (external report, 2026-10-24,
+  // bug report 26). Every one left goes back as its block here.
+  return out.join('\n').replace(/\x02F(\d+)\x02/g, (_m: string, n: string) => fences[Number(n)] ?? '');
 }
 
 // ─── Same-origin image inlining ────────────────────────────────────────
@@ -1492,13 +1575,11 @@ export async function inlineSameOriginImages(
   body: string,
   maxTotalBytes?: number,
 ): Promise<string> {
-  const re = /!\[([^\]]*)\]\(([^)\s]+)\)/g;
+  const pictures = markdownLinks(body, SRC_PICTURE);
   const seen = new Set<string>();
   const targets: string[] = [];
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(body)) !== null) {
-    const src = m[2];
-    if (!src || seen.has(src)) continue;
+  for (const { target: src } of pictures) {
+    if (seen.has(src)) continue;
     if (!isSameOriginSrc(src)) continue;
     seen.add(src);
     targets.push(src);
@@ -1523,17 +1604,20 @@ export async function inlineSameOriginImages(
   if (resolved.size === 0) return body;
 
   let projected = body.length;
-  return body.replace(re, (match: string, _alt: string, src: string) => {
+  return replaceMatches(body, pictures, ({ index, end, target: src }) => {
     const data = resolved.get(src);
-    if (!data) return match;
+    if (!data) return null;
     const delta = data.length - src.length;
     if (maxTotalBytes !== undefined && projected + delta > maxTotalBytes) {
-      return match; // would overflow the cap - keep the URL ref
+      return null; // would overflow the cap - keep the URL ref
     }
     projected += delta;
-    return match.replace(src, data);
+    return body.slice(index, end).replace(src, data);
   });
 }
+
+// Spec: packages/web/worker.ts (RASTER_TYPES, the types the icon route serves)
+const INLINE_ICON_URI = /^data:image\/(?:x-icon|vnd\.microsoft\.icon|png|jpeg|gif|webp);base64,[A-Za-z0-9+/]*={0,2}$/;
 
 /**
  * Inline `/favicon?domain=...` images in rendered HTML as data URIs.
@@ -1557,6 +1641,10 @@ export async function inlineRenderedFavicons(html: string): Promise<string> {
         if (!res.ok) return;
         const blob = await res.blob();
         const dataUri = await blobToDataUri(blob);
+        // Written into `src="..."` as it is, so it has to be one of the
+        // raster types the Worker serves and plain base64: a type that holds a
+        // quote would otherwise end the attribute and add markup to the export.
+        if (!INLINE_ICON_URI.test(dataUri)) return;
         resolved.set(domain, dataUri);
       } catch {
         // Silent - leave the URL ref.

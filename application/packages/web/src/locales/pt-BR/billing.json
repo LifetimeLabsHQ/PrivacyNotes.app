@@ -24,7 +24,8 @@
       "replace": "Buscar e substituir é um recurso Pro. Faça upgrade para substituir uma ocorrência ou todas as ocorrências de uma nota de uma vez.",
       "passphrase": "As frases-senha são um recurso Pro. Gere uma frase de palavras aleatórias, fácil de digitar e de falar.",
       "default": "Um upgrade libera tudo abaixo. Pagamento único.",
-      "alerts": "Lembretes são um recurso Pro. Seus dispositivos tocam no horário que você escolher, e nada sobre o item sai deles."
+      "alerts": "Lembretes são um recurso Pro. Cada dispositivo toca sozinho no horário que você escolher, então nenhum serviço de notificações push vê o item.",
+      "vaultFiles": "Arquivos em itens do cofre são um recurso Pro. Guarde códigos de recuperação, uma chave de backup ou uma digitalização junto com o login, o cartão ou a chave a que pertencem."
     },
     "features": {
       "devices": "Sincronize dispositivos ilimitados, em todas as plataformas",
@@ -80,7 +81,6 @@
     "loadFailed": "Não foi possível carregar o histórico. Verifique a conexão e tente de novo.",
     "selectPrompt": "Selecione uma versão para visualizar.",
     "emptyBody": "(vazia)",
-    "restore": "Restaurar",
     "restoring": "Restaurando…",
     "restoreSnapshotFailed": "Não foi possível salvar a versão atual antes, então nada foi restaurado. Verifique a conexão e tente de novo.",
     "restoreFailed": "Não foi possível restaurar esta versão. Tente de novo.",

@@ -47,7 +47,7 @@ class MainActivity : TauriActivity() {
   private var printWebView: WebView? = null
   // Whether the app lock is on, pushed by the web layer through the
   // __pnPrivacy bridge below. Decides whether the recents card shows the
-  // notes. Spec: ops/docs/archive/app-switcher-privacy-screen.md
+  // notes. Spec: docs/internal/specs/app-switcher-privacy-screen.md
   private var privacyScreenArmed = false
   // Whether the user turned on the capture block, pushed through the same
   // bridge. While true, FLAG_SECURE stays up even with the app in focus, so a
@@ -79,7 +79,7 @@ class MainActivity : TauriActivity() {
   // silently swallow the entire cascade. Registering on webview
   // creation keeps ours on top of the dispatcher stack.
   // Tracked in git; restore after any `tauri android init`.
-  // Spec: ops/docs/android-setup.md (re-apply checklist)
+  // Spec: docs/internal/android-setup.md (re-apply checklist)
   override fun onWebViewCreate(webView: WebView) {
     // Bar-color bridge (#205). wry calls setWebView() before it loads the
     // app URL, so the interface is in place for the very first document
@@ -122,7 +122,7 @@ class MainActivity : TauriActivity() {
     // 3-button navigation. Against a strip we color ourselves that reads as a
     // seam between the app's bottom bar and the bar below it, so opt out.
     // Tracked in git; restore after any `tauri android init`.
-    // Spec: ops/docs/android-setup.md (re-apply checklist)
+    // Spec: docs/internal/android-setup.md (re-apply checklist)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       window.isNavigationBarContrastEnforced = false
     }
@@ -155,7 +155,7 @@ class MainActivity : TauriActivity() {
    * is copied with a byte cap under a .tmp- name, and the items of one share
    * are renamed into place together once every copy is done: the app is in
    * front while this runs, and a drain must see the whole share or none of it.
-   * Spec: ops/docs/archive/share-into-app.md
+   * Spec: docs/internal/specs/share-into-app.md
    */
   private fun takeShare(intent: Intent?) {
     val action = intent?.action
@@ -356,7 +356,7 @@ class MainActivity : TauriActivity() {
    * the flag up.
    *
    * Tracked in git; restore after any `tauri android init`.
-   * Spec: ops/docs/android-setup.md (re-apply checklist)
+   * Spec: docs/internal/android-setup.md (re-apply checklist)
    */
   override fun onWindowFocusChanged(hasFocus: Boolean) {
     super.onWindowFocusChanged(hasFocus)
@@ -451,7 +451,7 @@ class MainActivity : TauriActivity() {
    * Android's WebView ignores JavaScript's `window.print()` exactly the way
    * WKWebView does - it returns, throws nothing, logs nothing, and no dialog
    * appears - so the frontend's hidden-iframe print path was dead here too
-   * (see ops/docs/gotchas.md). Printing on Android belongs to the app: only
+   * (see docs/contrib/gotchas.md). Printing on Android belongs to the app: only
    * PrintManager can start a job, and only a WebView can turn HTML into
    * printable pages. wry has no Android print of its own (its `print()` is an
    * empty stub), so unlike macOS and iOS there is nothing to reach from Rust
@@ -495,14 +495,14 @@ class MainActivity : TauriActivity() {
    * alone whether anything else is going to update this app. Android knows,
    * and this is the only way to ask: androidInstaller.ts turns the answer
    * into "a store keeps this current" and suppresses the update prompt on a
-   * true. Spec: ops/docs/android-update-check.md (store-installed APKs)
+   * true. Spec: docs/internal/android-update-check.md (store-installed APKs)
    *
    * An empty string means nobody claimed the install, which is what a raw
    * sideload looks like. getInstallSourceInfo arrived in API 30 and the app
    * runs from API 24, hence the deprecated call underneath it.
    *
    * Tracked in git; restore after any `tauri android init`.
-   * Spec: ops/docs/android-setup.md (re-apply checklist)
+   * Spec: docs/internal/android-setup.md (re-apply checklist)
    */
   private inner class InstallerBridge {
     @JavascriptInterface

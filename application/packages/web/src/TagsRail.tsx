@@ -2,6 +2,7 @@ import { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from '
 import { useTranslation } from 'react-i18next';
 import { usePointMenuPosition } from './usePopoverPosition';
 import { VERSION } from './version';
+import { isBetaHost } from './hosts';
 import { LogoIcon } from './LogoIcon';
 import { Brand } from './Brand';
 import { HoverLabel } from './HoverLabel';
@@ -73,6 +74,9 @@ interface OpenTagMenu {
 }
 
 export interface TagsRailProps {
+  /** Home's "Show on Home" rows in the tag and folder menus. Absent while
+   *  the layout cannot be written. Spec: docs/internal/specs/dashboard.md (section 6) */
+  home?: { has: (kind: 'tag' | 'folder', target: string) => boolean; toggle: (kind: 'tag' | 'folder', target: string) => void };
   // View state
   view: View;
   selectedTag: string | null;
@@ -87,7 +91,7 @@ export interface TagsRailProps {
 
   /** The space switch, and the root folder move while spaces are on. A free
    *  account gets the switch alone, as the upgrade door.
-   *  Spec: ops/docs/plans/spaces.md */
+   *  Spec: docs/internal/specs/spaces.md */
   spaces?: {
     active: SpaceView;
     onChange: (view: SpaceView) => void;
@@ -100,7 +104,7 @@ export interface TagsRailProps {
   };
 
   // About modal
-  setShowAbout: (v: false | { tab?: 'about' | 'hotkeys' | 'rating' }) => void;
+  setShowAbout: (v: false | { tab?: 'about' | 'rating' }) => void;
 
   // Feedback modal
   onFeedback: () => void;
@@ -116,7 +120,7 @@ export interface TagsRailProps {
    *  count at all, which is not the same as a zero: the Markdown pillar scans
    *  nothing until a folder is chosen, and a "0" there would read as an empty
    *  folder rather than an unconfigured one.
-   *  Spec: ops/docs/archive/start-view.md (one counts object) */
+   *  Spec: docs/internal/specs/start-view.md (one counts object) */
   viewCounts: Partial<Record<View, number>>;
   trashedCount: number;
 
@@ -205,9 +209,9 @@ export interface TagsRailProps {
   /** Owned by NotesView, because switching off the OPEN view also leaves it -
    *  a decision the rail cannot make on its own. Shared with the Appearance
    *  table so the two surfaces cannot drift.
-   *  Spec: ops/docs/archive/sidebar-views.md (moves the user to All first, so the row leaves at once) */
+   *  Spec: docs/internal/specs/sidebar-views.md (moves the user to All first, so the row leaves at once) */
   onToggleHidden: (field: 'hiddenViews' | 'hiddenInAll', key: View) => void;
-  setImportExportModal: (v: { open: false } | { open: true; tab: 'import' | 'export' | 'restore' | 'vault' }) => void;
+  setImportExportModal: (v: { open: false } | { open: true; tab: 'import' | 'export' | 'restore' }) => void;
 
   // Mobile tab index
   mobileTabIndex: number | undefined;
@@ -221,7 +225,7 @@ export interface TagsRailProps {
 // ── Helpers ────────────────────────────────────────────────────────────
 
 function viewBtnClass(active: boolean) {
-  return `w-full text-start px-2 py-2 rounded text-[15px] font-medium transition flex justify-between items-center ${
+  return `w-full text-start px-2 py-2 rounded text-row font-medium transition flex justify-between items-center ${
     active
       ? SIDEBAR_ACTIVE
       : 'text-pn hover:bg-pn/5'
@@ -236,7 +240,7 @@ function viewBtnClass(active: boolean) {
 // touch devices get icons only - five labels do not fit the drawer cells
 // (tried as 10px captions, truncated even in English) - so the aria-label
 // carries the name. Pill-width i18n exemptions: i18nExempt.ts.
-// Spec: ops/docs/archive/ui-patterns.md section 46 (4 collapsed icons plus widest expanded pill must fit 216px).
+// Spec: docs/internal/design/ui-patterns.md section 46 (4 collapsed icons plus widest expanded pill must fit 216px).
 function FooterAction({
   icon: ActionIcon,
   label,
@@ -275,8 +279,8 @@ function FooterAction({
   const inner = (
     <>
       <span className="relative inline-flex shrink-0">
-        <ActionIcon size={16} className="group-hover:hidden" />
-        <ActionIcon size={16} weight="fill" className="hidden group-hover:inline-flex" />
+        <ActionIcon className="group-hover:hidden" />
+        <ActionIcon weight="fill" className="hidden group-hover:inline-flex" />
         {badge && <UpdateDot />}
       </span>
       {/* Pointer devices only: the label expands inline while hovered.
@@ -285,7 +289,7 @@ function FooterAction({
           button's name and the news, so the word isn't on screen twice. */}
       {!badge && (
         <span className="pn-sb-wide grid grid-cols-[0fr] transition-[grid-template-columns] duration-200 group-hover:grid-cols-[1fr] [@media(hover:none)]:hidden">
-          <span className="overflow-hidden whitespace-nowrap text-[12px] font-medium opacity-0 transition-[opacity,padding] duration-200 group-hover:opacity-100 group-hover:ps-1">{label}</span>
+          <span className="overflow-hidden whitespace-nowrap text-small font-medium opacity-0 transition-[opacity,padding] duration-200 group-hover:opacity-100 group-hover:ps-1">{label}</span>
         </span>
       )}
     </>
@@ -445,6 +449,13 @@ export function TagsRail(props: TagsRailProps) {
     return id ? [...subtreeIds(folders, id)].filter((f) => f !== id) : [];
   }, [folders, lookEdit]);
   const foldersById = useMemo(() => new Map(folders.map((f) => [f.id, f])), [folders]);
+  // Favorites follow the tag sort, like every other tag. The list from the
+  // settings keeps the order the tags were starred in; there is no hand-made
+  // order (#626 declined). Spec: GitHub #644.
+  const sortedFavoriteTags = useMemo(() => {
+    const favorites = new Set(favoriteTagsList.map(([tag]) => tag));
+    return tagCounts.tags.filter(([tag]) => favorites.has(tag));
+  }, [favoriteTagsList, tagCounts.tags]);
   // One row in the sort popover folds the whole tree back to its top level,
   // or opens it all when nothing is open. Locked accounts browse the tree
   // too, so it is not only in the row menu, which is their upsell gate.
@@ -488,7 +499,7 @@ export function TagsRail(props: TagsRailProps) {
   // The two sidebar option menus: the gear beside the Views caption (which
   // rows the rail draws) and the funnel in the All row (which item types the
   // All list holds). One at a time - opening either closes the other.
-  // Spec: ops/docs/archive/sidebar-views.md
+  // Spec: docs/internal/specs/sidebar-views.md
   const [viewsMenuOpen, setViewsMenuOpen] = useState(false);
   const [allMenuOpen, setAllMenuOpen] = useState(false);
   const viewsMenuBtnRef = useRef<HTMLButtonElement>(null);
@@ -538,11 +549,11 @@ export function TagsRail(props: TagsRailProps) {
       >
         <span className="flex items-center gap-2">
           <span className="text-accent inline-flex">
-            <Trash size={16} />
+            <Trash />
           </span>
-          {t('tagsRail.trash')}
+          {t('shell:pillars.trash')}
         </span>
-        <span className="text-xs text-pn-muted tabular-nums">
+        <span className="text-small text-pn-muted tabular-nums">
           {trashedCount}
         </span>
       </button>
@@ -579,7 +590,7 @@ export function TagsRail(props: TagsRailProps) {
               setOpenTagMenu(null);
               toggleFavoriteTag(tag);
             }}
-            className="w-full text-start px-3 py-1.5 text-[13px] text-pn-soft hover:bg-surface-1 flex items-center gap-2"
+            className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
           >
             <Star weight={isFavorite ? 'fill' : 'bold'} className={isFavorite ? 'text-amber-400' : 'text-accent'} />
             {isFavorite ? t('tagsRail.removeFavorite') : t('tagsRail.markAsFavorite')}
@@ -594,29 +605,41 @@ export function TagsRail(props: TagsRailProps) {
               setRenameBuffer(tag);
               setRenamingTag(tag);
             }}
-            className="w-full text-start px-3 py-1.5 text-[13px] text-pn-soft hover:bg-surface-1 flex items-center gap-2"
+            className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
           >
             <PencilSimple className="text-accent" />
-            {t('tagsRail.renameTag')}
+            {t('common:actions.rename')}
           </button>
           <button
             onClick={() => {
               setOpenTagMenu(null);
               openLook({ kind: 'tag', lookKey: tagLookKey(tag), name: tag, favorite: isFavorite });
             }}
-            className="w-full text-start px-3 py-1.5 text-[13px] text-pn-soft hover:bg-surface-1 flex items-center gap-2"
+            className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
           >
             <Palette className="text-accent" />
             <span className="flex-1">{t('looks.menu')}</span>
             {!isPro && <ProMark />}
           </button>
+          {props.home && (
+            <button
+              onClick={() => {
+                setOpenTagMenu(null);
+                props.home!.toggle('tag', tag);
+              }}
+              className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
+            >
+              <PILLAR_GLYPHS.dashboard className="text-accent" />
+              {props.home.has('tag', tag) ? t('dashboard.removeFromHome') : t('dashboard.showOnHome')}
+            </button>
+          )}
           <button
             onClick={() => {
               setOpenTagMenu(null);
               setNewTagDraft('');
               setCreatingTag(true);
             }}
-            className="w-full text-start px-3 py-1.5 text-[13px] text-pn-soft hover:bg-surface-1 flex items-center gap-2"
+            className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
           >
             <Plus className="text-accent" />
             {t('tagsRail.createTag')}
@@ -627,7 +650,7 @@ export function TagsRail(props: TagsRailProps) {
               setOpenTagMenu(null);
               void handleDeleteTag(tag);
             }}
-            className="w-full text-start px-3 py-1.5 text-[13px] text-danger hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2"
+            className="w-full text-start px-3 py-1.5 text-compact text-danger hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2"
           >
             <Trash />
             {t('tagsRail.deleteTag')}
@@ -640,7 +663,7 @@ export function TagsRail(props: TagsRailProps) {
               setOpenTagMenu(null);
               void handleDeleteTagAndNotes(tag);
             }}
-            className="w-full text-start px-3 py-1.5 text-[13px] text-danger hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2"
+            className="w-full text-start px-3 py-1.5 text-compact text-danger hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2"
           >
             <Trash />
             {t('tagsRail.deleteTagAndNotes')}
@@ -663,7 +686,7 @@ export function TagsRail(props: TagsRailProps) {
     // that is taller and heavier than a folder row reads as a different
     // component rather than the same list of filters.
     const dropHere = railDrop.over?.kind === 'tag' && railDrop.over.key === tag;
-    const rowClass = `w-full rounded text-[15px] font-medium transition flex items-center group ${
+    const rowClass = `w-full rounded text-row font-medium transition flex items-center group ${
       dropHere
         ? `${SIDEBAR_DROP_INSIDE} text-pn`
         : active
@@ -739,7 +762,7 @@ export function TagsRail(props: TagsRailProps) {
                 }}
                 onBlur={() => setRenamingTag(null)}
                 onClick={(e) => e.stopPropagation()}
-                className="min-w-0 flex-1 bg-transparent border-b border-accent/50 focus:border-accent outline-none text-[15px] font-medium text-pn"
+                className="min-w-0 flex-1 bg-transparent border-b border-accent/50 focus:border-accent outline-none text-row font-medium text-pn"
               />
             ) : (
               <span className="truncate">{tag}</span>
@@ -763,7 +786,7 @@ export function TagsRail(props: TagsRailProps) {
             </button>
           )}
           {!isRenaming && (
-            <span className="text-xs text-pn-muted tabular-nums ms-2 me-2 shrink-0">
+            <span className="text-small text-pn-muted tabular-nums ms-2 me-2 shrink-0">
               {count}
             </span>
           )}
@@ -787,7 +810,7 @@ export function TagsRail(props: TagsRailProps) {
       {renderTagMenu()}
       {/* Brand row */}
       <div className="group shrink-0 min-h-[3.5rem] lg:min-h-0 lg:h-14 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] lg:pt-0 border-b border-divider flex items-center gap-2">
-        <h1 className="text-lg tracking-tight truncate m-0">
+        <h1 className="text-heading tracking-tight truncate m-0">
           <HoverLabel label={t('tagsRail.showAllItems')} keys={sectionKeyText(1)} position="end">
           <button
             type="button"
@@ -800,21 +823,22 @@ export function TagsRail(props: TagsRailProps) {
           </button>
           </HoverLabel>
         </h1>
-        <HoverLabel label={t('tagsRail.changelog')} position="end">
+        <HoverLabel label={t('common:updateToast.changelog')} position="end">
         <a
           href={latestChangelogHref()}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={t('tagsRail.changelog')}
-          className="pn-sb-wide hidden lg:inline-flex text-[9px] font-mono px-1 py-px rounded bg-accent/10 border border-accent/30 text-accent-strong shrink-0 hover:bg-accent/20 transition focus:outline-none focus:ring-2 focus:ring-accent/40"
+          aria-label={t('common:updateToast.changelog')}
+          data-type-exempt=""
+          className={`pn-sb-wide hidden lg:flex text-[9px] font-mono px-1 py-px rounded shrink-0 transition focus:outline-none focus:ring-2 ${isBetaHost() ? 'font-bold tracking-wider bg-amber-400 text-black hover:bg-amber-300 focus:ring-amber-400/40' : 'bg-accent/10 border border-accent/30 text-accent-strong hover:bg-accent/20 focus:ring-accent/40'}`} // type-scale: exempt - a stamp; at the meta size it pushes the brand out of the rail
         >
-          v{VERSION}
+          {isBetaHost() ? 'BETA' : `v${VERSION}`}
         </a>
         </HoverLabel>
         <button
           onClick={() => setDrawerOpen(false)}
           aria-label={t('tagsRail.closeMenu')}
-          className="ml-auto lg:hidden inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-pn-muted hover:bg-pn/10 transition shrink-0"
+          className="ml-auto lg:hidden inline-flex items-center gap-1 rounded px-2 py-1 text-small font-medium text-pn-muted hover:bg-pn/10 transition shrink-0"
         >
           <X />
           <span>{t('common:actions.close')}</span>
@@ -830,7 +854,7 @@ export function TagsRail(props: TagsRailProps) {
       )}
       {/* The quick switcher's button, from lg up. Below lg the list header
           carries it (ListNav), so the drawer does not repeat it.
-          Spec: ops/docs/archive/keyboard-shortcuts.md (decision D15) */}
+          Spec: docs/internal/specs/keyboard-shortcuts.md (decision D15) */}
       <div className="pn-jump-row hidden lg:flex items-center gap-1.5 shrink-0 px-3 pt-3">
         {/* The tint of the "+ New" button, so the app's two main actions
             read as one family. The Ninja mark, not a magnifier: the list
@@ -852,9 +876,9 @@ export function TagsRail(props: TagsRailProps) {
                 <span className="pn-jump-charge" aria-hidden="true" />
                 <NinjaIcon size={24} className="shrink-0" />
                 <span aria-hidden="true" className="pn-sb-wide grid grid-cols-[0fr] transition-[grid-template-columns] duration-200 group-hover:grid-cols-[1fr] group-focus-visible:grid-cols-[1fr] [@media(hover:none)]:hidden">
-                  <span className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap text-[13px] font-semibold opacity-0 transition-[opacity,padding] duration-200 group-hover:opacity-100 group-hover:ps-1.5 group-focus-visible:opacity-100 group-focus-visible:ps-1.5">
+                  <span className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap text-compact font-semibold opacity-0 transition-[opacity,padding] duration-200 group-hover:opacity-100 group-hover:ps-1.5 group-focus-visible:opacity-100 group-focus-visible:ps-1.5">
                     {t('common:quickSwitcher.jumpTo')}
-                    <kbd dir="ltr" className="rounded border border-accent/30 px-1 font-sans text-[11px] font-normal leading-4">{keyText('quickSwitcher')}</kbd>
+                    <kbd dir="ltr" className="rounded border border-accent/30 px-1 font-sans text-meta font-normal leading-4">{keyText('quickSwitcher')}</kbd>
                   </span>
                 </span>
               </button>
@@ -865,12 +889,12 @@ export function TagsRail(props: TagsRailProps) {
           <button
             type="button"
             onClick={onJump}
-            className="pn-jump flex-1 min-w-0 h-8 flex items-center gap-2 rounded-md bg-accent/10 ps-2.5 pe-1.5 text-[14px] font-semibold text-accent-strong transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="pn-jump flex-1 min-w-0 h-8 flex items-center gap-2 rounded-md bg-accent/10 ps-2.5 pe-1.5 text-body font-semibold text-accent-strong transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             <span className="pn-jump-charge" aria-hidden="true" />
             <NinjaIcon size={24} className="shrink-0" />
             <span className="flex-1 truncate text-start">{t('common:quickSwitcher.jumpTo')}</span>
-            <kbd dir="ltr" className="pn-sb-wide shrink-0 rounded border border-accent/30 px-1.5 font-sans text-[11px] font-normal leading-5">
+            <kbd dir="ltr" className="pn-sb-wide shrink-0 rounded border border-accent/30 px-1.5 font-sans text-meta font-normal leading-5">
               {keyText('quickSwitcher')}
             </kbd>
           </button>
@@ -883,7 +907,7 @@ export function TagsRail(props: TagsRailProps) {
           Markdown row inside opens its tip upwards). Inside the box the tip
           survived while the list was long and was cut the moment the list
           folded, because the box then shrank to the caption itself (reported
-          2026-08-22). Spec: ops/docs/archive/sidebar-views.md */}
+          2026-08-22). Spec: docs/internal/specs/sidebar-views.md */}
       <div
         ref={contentSectionRef}
         className={`min-h-0 flex flex-col py-3 ${keyboardUp ? 'hidden' : ''} ${markdownRail ? 'shrink border-b border-divider' : split.folded ? 'flex-1' : 'shrink'}`}
@@ -894,21 +918,21 @@ export function TagsRail(props: TagsRailProps) {
             list) and a button cannot contain another one. The gear sits outside
             the fold below, so the one control that brings a hidden row back
             never disappears together with the rows.
-            Spec: ops/docs/archive/sidebar-views.md */}
+            Spec: docs/internal/specs/sidebar-views.md */}
         <HoverLabel label={t('tagsRail.sidebarOptions')} position="below-end" disabled={viewsMenuOpen} className="w-full flex items-center gap-1 px-2 mb-1">
           <button
             type="button"
             onClick={() => setViewsCollapsed((v) => !v)}
             aria-expanded={!viewsCollapsed}
-            className="flex-1 min-w-0 flex items-center gap-1 text-[13px] font-bold text-pn-soft hover:text-accent dark:hover:text-accent transition"
+            className="flex-1 min-w-0 flex items-center gap-1 text-compact font-bold text-pn-soft hover:text-accent dark:hover:text-accent transition"
           >
-            <CaretDown size={10} className={`transition-transform ${viewsCollapsed ? '-rotate-90' : ''}`} aria-hidden="true" />
+            <CaretDown className={`transition-transform ${viewsCollapsed ? '-rotate-90' : ''}`} aria-hidden="true" />
             <span>{t('tagsRail.views')}</span>
           </button>
           {/* The tip belongs to the WHOLE caption row, not to this 18px glyph:
               hovering anywhere from the caret to the eye names the control, so
               a person who never aims at the icon still learns it is there.
-              Spec: ops/docs/archive/sidebar-views.md */}
+              Spec: docs/internal/specs/sidebar-views.md */}
           <button
             ref={viewsMenuBtnRef}
             type="button"
@@ -921,7 +945,7 @@ export function TagsRail(props: TagsRailProps) {
                 : 'text-pn-muted hover:text-accent dark:hover:text-accent'
             }`}
           >
-            <Eye size={14} aria-hidden="true" />
+            <Eye aria-hidden="true" />
           </button>
           {viewsMenuOpen && (
             <SidebarOptionsPopover
@@ -942,14 +966,14 @@ export function TagsRail(props: TagsRailProps) {
         {/* Source of truth for creatable-pillar ORDER. The two "New" menus
             (NotesList.tsx allNewOptions + contextMenus.tsx buildGlobalMenu) MUST
             list types in this same order. Reorder all three together, never one.
-            Spec: ops/docs/archive/ui-patterns.md section 45 (New-menu order invariant) */}
+            Spec: docs/internal/design/ui-patterns.md section 45 (New-menu order invariant) */}
         {/* All is the one row with no count, which is what makes room for the
             funnel: it filters this list, and it is the same glyph the list
             panes already use for their options button. The funnel is a SIBLING
             of the row button (a button cannot nest), absolutely placed in the
             slot every other row spends on its count, and it takes the accent
             colour whenever the row is hovered rather than only the glyph
-            itself. Spec: ops/docs/archive/sidebar-views.md (this filter never runs in a single-type pillar or Trash) */}
+            itself. Spec: docs/internal/specs/sidebar-views.md (this filter never runs in a single-type pillar or Trash) */}
         <div className="relative group">
           <button
             onClick={() => handleSelectView('home')}
@@ -957,9 +981,9 @@ export function TagsRail(props: TagsRailProps) {
           >
             <span className="flex items-center gap-2">
               <span className="text-accent inline-flex">
-                <PILLAR_GLYPHS.all size={16} />
+                <PILLAR_GLYPHS.all />
               </span>
-              {t('tagsRail.allItems')}
+              {t('shell:tagsRail.allItems')}
             </span>
           </button>
           {/* The positioning div is OUTSIDE HoverLabel on purpose. HoverLabel's
@@ -980,7 +1004,7 @@ export function TagsRail(props: TagsRailProps) {
                   : 'text-pn-muted group-hover:text-accent hover:text-accent dark:group-hover:text-accent dark:hover:text-accent'
               }`}
             >
-              <FunnelSimple size={14} aria-hidden="true" />
+              <FunnelSimple aria-hidden="true" />
             </button>
           </HoverLabel>
           </span>
@@ -1004,7 +1028,7 @@ export function TagsRail(props: TagsRailProps) {
             and count. All is not here at all - it sits above with the funnel,
             and the shared list leaves it out because it cannot be hidden from
             itself.
-            Spec: ops/docs/archive/start-view.md (one row list, one label namespace) */}
+            Spec: docs/internal/specs/start-view.md (one row list, one label namespace) */}
         {sidebarViewRows(t).map((r) => {
           if (!showRow(r.key)) return null;
           // Pinned and Archive hide at zero (same rule as Untagged further
@@ -1026,19 +1050,19 @@ export function TagsRail(props: TagsRailProps) {
               {/* rtl-ok: a key sequence never reorders. The section key shows
                   on hover only, as a menu shows a shortcut. */}
               {sectionKey && (
-                <span dir="ltr" className="hidden [@media(hover:hover)]:group-hover/sec:inline ms-auto me-2 text-xs text-pn-muted">
+                <span dir="ltr" className="hidden [@media(hover:hover)]:group-hover/sec:inline ms-auto me-2 text-small text-pn-muted">
                   {sectionKey}
                 </span>
               )}
               {r.key === 'calendar' && calendarBell ? (
                 // A reminder fired and its item is not opened yet: the count
                 // takes the accent fill and the bell until it is.
-                <span className="inline-flex items-center gap-0.5 rounded-full bg-accent-fill text-white px-1.5 text-xs font-semibold tabular-nums">
-                  <BellSimple size={10} weight="fill" aria-hidden="true" />
+                <span className="inline-flex items-center gap-0.5 rounded-full bg-accent-fill text-white px-1.5 text-small font-semibold tabular-nums">
+                  <BellSimple weight="fill" aria-hidden="true" />
                   {count}
                 </span>
               ) : count !== undefined && (
-                <span className="text-xs text-pn-muted tabular-nums">
+                <span className="text-small text-pn-muted tabular-nums">
                   {count}
                 </span>
               )}
@@ -1108,7 +1132,7 @@ export function TagsRail(props: TagsRailProps) {
                   aria-expanded
                   className="w-8 h-8 rounded-md inline-flex items-center justify-center transition bg-surface-2 text-accent-strong ring-1 ring-inset ring-accent/40"
                 >
-                  <FunnelSimple size={16} aria-hidden="true" />
+                  <FunnelSimple aria-hidden="true" />
                 </button>
               ) : (
                 <HoverLabel label={sortLabel} position="end">
@@ -1124,7 +1148,7 @@ export function TagsRail(props: TagsRailProps) {
                     aria-expanded={false}
                     className="w-8 h-8 rounded-md inline-flex items-center justify-center transition bg-accent/10 text-accent-strong/70 hover:text-accent-strong hover:bg-accent/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
                   >
-                    <FunnelSimple size={16} aria-hidden="true" />
+                    <FunnelSimple aria-hidden="true" />
                   </button>
                 </HoverLabel>
               )}
@@ -1135,8 +1159,8 @@ export function TagsRail(props: TagsRailProps) {
                   className="absolute start-0 top-full mt-1 z-50 w-52 rounded-lg border border-divider bg-surface-2 shadow-lg"
                 >
                   <div className="px-4 pt-3 pb-2">
-                    <div className="text-[10px] font-semibold tracking-wider text-pn-muted uppercase mb-1.5 mt-1">
-                      {t('tagsRail.sortBy')}
+                    <div className="text-meta font-semibold tracking-wider text-pn-muted uppercase mb-1.5 mt-1">
+                      {t('shell:listPrefs.sortBy')}
                     </div>
                     {browseMode === 'tags' ? (
                       <div className="space-y-0.5">
@@ -1201,7 +1225,7 @@ export function TagsRail(props: TagsRailProps) {
                             else folderExpansion.expandAll(folders);
                             setTagSortOpen(false);
                           }}
-                          className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-[13px] text-pn-soft hover:bg-surface-1 transition"
+                          className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-compact text-pn-soft hover:bg-surface-1 transition"
                         >
                           {anyFolderOpen ? (
                             <ArrowsInLineVertical className="text-accent" aria-hidden="true" />
@@ -1259,11 +1283,11 @@ export function TagsRail(props: TagsRailProps) {
                     }`}
                   >
                     <ProGlyph pro={pro}>
-                      <ModeIcon size={16} weight={on ? filled : 'regular'} className={on ? '' : 'group-hover:hidden'} aria-hidden="true" />
-                      {!on && <ModeIcon size={16} weight={filled} className="hidden group-hover:inline-flex" aria-hidden="true" />}
+                      <ModeIcon weight={on ? filled : 'regular'} className={on ? '' : 'group-hover:hidden'} aria-hidden="true" />
+                      {!on && <ModeIcon weight={filled} className="hidden group-hover:inline-flex" aria-hidden="true" />}
                     </ProGlyph>
                     <span aria-hidden="true" className="pn-sb-wide pn-browse-name">
-                      <span className="text-[13px] font-semibold">{label}</span>
+                      <span className="text-compact font-semibold">{label}</span>
                     </span>
                   </button>
                 </HoverLabel>
@@ -1301,17 +1325,18 @@ export function TagsRail(props: TagsRailProps) {
               return { label: <SpaceMoveLabel to={to} />, icon: SPACE_ICONS[to], run: () => spaces.onMoveFolder?.(id, to) };
             })}
             emptyText={spaces?.active === 'work' ? t('spaces.workEmpty') : undefined}
+            home={props.home && { has: (id) => props.home!.has('folder', id), toggle: (id) => props.home!.toggle('folder', id) }}
             sortField={folderSortField}
             sortDir={folderSortDir}
             mobileTabIndex={mobileTabIndex}
           />
         ) : (<>
         {tagCounts.tags.length === 0 && !creatingTag && (
-          <div className="text-[13px] text-pn-muted px-2 py-1">
+          <div className="text-compact text-pn-muted px-2 py-1">
             {t('tagsRail.noTagsYet')}
           </div>
         )}
-        {favoriteTagsList.map(([tag, count]) =>
+        {sortedFavoriteTags.map(([tag, count]) =>
           renderTagRow(tag, count, true)
         )}
         {nonFavoriteTagsList.map(([tag, count]) =>
@@ -1320,7 +1345,7 @@ export function TagsRail(props: TagsRailProps) {
         {tagCounts.untagged > 0 && (
           <button
             onClick={() => handleSelectTag(selectedTag === '__untagged__' ? null : '__untagged__')}
-            className={`w-full text-start px-2 py-2 rounded text-[15px] font-medium transition flex justify-between items-center ${
+            className={`w-full text-start px-2 py-2 rounded text-row font-medium transition flex justify-between items-center ${
               selectedTag === '__untagged__'
                 ? SIDEBAR_ACTIVE
                 : 'text-pn-muted hover:bg-pn/5 hover:text-pn-soft'
@@ -1328,20 +1353,20 @@ export function TagsRail(props: TagsRailProps) {
           >
             <span className="flex items-center gap-2 min-w-0">
               <span className="inline-flex shrink-0">
-                <Prohibit size={16} />
+                <Prohibit />
               </span>
               <span className="truncate">{t('tagsRail.untagged')}</span>
             </span>
-            <span className="text-xs tabular-nums">
+            <span className="text-small tabular-nums">
               {tagCounts.untagged}
             </span>
           </button>
         )}
         {creatingTag ? (
-          <div className="w-full rounded text-[15px] font-medium transition flex items-center text-pn">
+          <div className="w-full rounded text-row font-medium transition flex items-center text-pn">
             <div className="flex-1 min-w-0 flex items-center gap-2 px-2 py-2">
               <span className="inline-flex shrink-0 text-accent">
-                <Hash size={16} />
+                <Hash />
               </span>
               <input
                 ref={newTagInputRef}
@@ -1370,7 +1395,7 @@ export function TagsRail(props: TagsRailProps) {
                 maxLength={TAG_MAX_LENGTH + 5}
                 placeholder={t('tagsRail.tagNamePlaceholder')}
                 enterKeyHint="done"
-                className="min-w-0 flex-1 bg-transparent border-b border-accent/50 focus:border-accent outline-none text-[15px] font-medium text-pn placeholder:text-pn-muted"
+                className="min-w-0 flex-1 bg-transparent border-b border-accent/50 focus:border-accent outline-none text-row font-medium text-pn placeholder:text-pn-muted"
               />
             </div>
           </div>
@@ -1385,10 +1410,10 @@ export function TagsRail(props: TagsRailProps) {
                rows above are places you go, this is a thing you make, and a
                plain row reads as one more tag. The two rails share one slot
                behind one toggle, so they share this button too.
-               Spec: ops/docs/archive/ui-patterns.md (section 76) */
-            className="w-full mt-2 rounded-md border border-dashed border-divider hover:border-accent/50 text-[15px] font-medium transition flex items-center justify-start gap-2 ps-[7px] pe-2 py-2 text-pn-muted hover:text-accent"
+               Spec: docs/internal/design/ui-patterns.md (section 76) */
+            className="w-full mt-2 rounded-md border border-dashed border-divider hover:border-accent/50 text-row font-medium transition flex items-center justify-start gap-2 ps-[7px] pe-2 py-2 text-pn-muted hover:text-accent"
           >
-            <Plus size={16} className="shrink-0 text-label" />
+            <Plus className="shrink-0 text-label" />
             <span className="truncate">{t('tagsRail.createTag')}</span>
           </button>
         )}
@@ -1408,11 +1433,11 @@ export function TagsRail(props: TagsRailProps) {
           footer) so the primary nav keeps room. The row inset plus the
           button's own px-1 puts the first and last glyph 20px from the
           sidebar edges, the inset of the sidebar rows and of the app
-          footer's Settings zone below. Spec: ops/docs/archive/ui-patterns.md section 46 (legacy guard, predates the height-tier scale) */}
+          footer's Settings zone below. Spec: docs/internal/design/ui-patterns.md section 46 (legacy guard, predates the height-tier scale) */}
       <div className="shrink-0 border-t border-divider px-4 py-1 flex items-stretch justify-between gap-0.5 [@media(max-height:450px)]:hidden">
         <FooterAction
           icon={Question}
-          label={t('tagsRail.help')}
+          label={t('notes:settings.helpLabel')}
           href={siteHref(helpPath(activeLocale()))}
           tip="above-start"
         />

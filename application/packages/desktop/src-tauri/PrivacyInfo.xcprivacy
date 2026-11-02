@@ -5,7 +5,7 @@
      website: this file is what the binary itself declares, the website form is
      what the product page shows, and Apple compares them. Keep the two in sync.
 
-     Every value below mirrors ops/docs/marketing/store-privacy-disclosures.md,
+     Every value below mirrors docs/internal/marketing/store-privacy-disclosures.md,
      which is the reviewed source of truth for both. Change that doc and this
      file together, never one alone.
 
@@ -26,7 +26,7 @@
      names a category not listed here, add it with the reason that matches the
      actual use - do NOT add categories speculatively, since an over-declaration
      is its own inaccuracy.
-     Spec: ops/docs/marketing/store-privacy-disclosures.md -->
+     Spec: docs/internal/marketing/store-privacy-disclosures.md -->
 <plist version="1.0">
 <dict>
 	<key>NSPrivacyTracking</key>

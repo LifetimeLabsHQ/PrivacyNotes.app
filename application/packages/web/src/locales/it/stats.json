@@ -1,9 +1,7 @@
 {
-  "title": "Statistiche",
   "tabs": {
     "overview": "Panoramica",
-    "writing": "Scrittura",
-    "wellness": "Tracker"
+    "writing": "Scrittura"
   },
   "writing": {
     "notes": "Note",
@@ -11,9 +9,6 @@
     "tags": "Tag",
     "currentStreak": "Serie attuale",
     "longestStreak": "Serie più lunga",
-    "streakValue_one": "{{count}} giorno",
-    "streakValue_many": "{{count}} giorni",
-    "streakValue_other": "{{count}} giorni",
     "timeRangeAria": "Intervallo di tempo dell'attività",
     "modeActivity": "Attività",
     "modeMood": "Umore",
@@ -82,20 +77,17 @@
       "hint": "Apri una pagina di diario e registra il tuo umore per iniziare."
     },
     "export": {
-      "heading": "Esporta",
       "downloadJSON": "Scarica JSON",
       "downloadCSV": "Scarica CSV",
       "csvDate": "Data",
       "doctorPDF": "PDF per il medico",
       "copyAIPrompt": "Mostra e copia prompt per IA",
-      "copied": "Copiato!",
       "saveFailed": "Il salvataggio non è riuscito, quindi il file potrebbe essere vuoto o incompleto. Riprova, oppure scegli un'altra cartella.",
       "proBadge": "PRO",
       "usesRange": "Usa l'intervallo qui sopra",
-      "promptShown": "Il prompt che hai copiato. Incollalo nel chatbot che preferisci.",
-      "hidePrompt": "Nascondi",
+      "promptShown": "Il tuo prompt per l'intervallo qui sopra. Copialo con il pulsante, poi incollalo nel chatbot che preferisci.",
       "intro": "I valori dei tuoi tracker dalle pagine di diario, nell'intervallo che scegli.",
-      "aiPromptDesc": "Un riepilogo dei tuoi tracker da incollare in un chatbot. Compare qui e viene copiato negli appunti.",
+      "aiPromptDesc": "Un riepilogo dei tuoi tracker da incollare in un chatbot. Compare qui sotto e viene copiato negli appunti.",
       "doctorDesc": "Un referto stampabile di umore, sonno, farmaci e andamenti, da portare a una visita.",
       "jsonDesc": "Ogni valore dei tracker con la sua data e la sua definizione, per un'altra app o per le tue analisi.",
       "csvDesc": "Una riga per giorno e una colonna per tracker, per un foglio di calcolo.",
@@ -113,7 +105,6 @@
       "changedTo": "Passato a {{dosage}}"
     },
     "patterns": {
-      "heading": "Cosa muove il tuo umore",
       "insights": "Approfondimenti",
       "proBadge": "PRO",
       "insightsLocked_one": "{{count}} approfondimento rilevato. Passa a Pro per visualizzarlo",
@@ -125,21 +116,18 @@
     "week": {
       "range": "{{start}} - {{end}}",
       "daysLogged": "{{count}}/7 giorni registrati",
-      "avgMood": "Umore medio",
       "moodDelta": "{{delta}} rispetto alla settimana scorsa",
-      "avgSleep": "Sonno medio",
-      "medsTaken": "Farmaci assunti",
       "topActivity": "Attività principale",
       "topEmotions": "Emozioni principali",
       "reflection": "Riflessione",
       "reflectionPlaceholder": "Com'è andata questa settimana nel complesso? Pensieri da annotare...",
-      "heading": "Riepilogo della settimana",
       "proBadge": "PRO",
       "locked": "Passa a Pro per vedere il riepilogo settimanale dei tuoi tracker"
     },
     "units": {
       "days_one": "{{count}} giorno",
-      "days_other": "{{count}} giorni"
+      "days_other": "{{count}} giorni",
+      "days_many": "{{count}} giorni"
     },
     "insights": {
       "dayOfWeek": "Il tuo giorno migliore tende a essere {{best}} (media {{bestAvg}}), il più duro {{worst}} (media {{worstAvg}}).",
@@ -162,7 +150,6 @@
     },
     "aiPrompt": {
       "intro": "Tengo un diario quotidiano con dei tracker. Qui sotto trovi i miei dati. L'umore è un mio voto da 1 (pessimo) a 10 (fantastico). Un giorno senza valore significa che non l'ho registrato, non uno zero.",
-      "overview": "Panoramica",
       "daysTracked": "Giorni monitorati: {{days}}",
       "avgMood": "Umore medio: {{mood}}/10",
       "avgSleep": "Sonno medio: {{hours}} h",
@@ -172,12 +159,7 @@
       "columnDate": "Data",
       "columnMood": "Umore",
       "columnAverage": "Media su 7 giorni",
-      "sleepDistribution": "Distribuzione della qualità del sonno",
-      "activityDistribution": "Distribuzione del livello di attività",
-      "adherenceHeading": "Aderenza ai farmaci",
       "adherenceLine": "{{name}}: {{taken}} di {{total}} dosi programmate assunte ({{pct}}%)",
-      "dosageTimeline": "Cronologia del dosaggio",
-      "patterns": "Schemi rilevati",
       "questions": "Come rispondere",
       "question1": "Comincia dalle tre osservazioni più importanti, ognuna con i numeri che la sostengono.",
       "question2": "Tieni separato ciò che mostrano i dati da ciò che ipotizzi. Due tracker che si muovono insieme non provano che uno causi l'altro.",
@@ -187,11 +169,8 @@
       "question6": "Se i dati ti lasciano dei dubbi, fammi prima fino a tre domande.",
       "footer": "Generato con PrivacyNotes (privacynotes.app)",
       "period": "Periodo: da {{from}} a {{to}}",
-      "daysLogged": "Giorni registrati: {{logged}} su {{days}}",
-      "trackers": "Tracker",
       "trackerLine": "{{name}}: media {{avg}}, minimo {{low}}, massimo {{high}}, {{count}} giorni",
       "trackerYesLine": "{{name}}: sì in {{yes}} giorni su {{count}}",
-      "effects": "Umore nei giorni con e senza",
       "effectLine": "{{name}} ({{rule}}): {{a}} con, {{b}} senza, differenza {{delta}}, {{na}} / {{nb}} giorni",
       "customQuestion": "Controlla anche se {{name}} è legato al mio umore, lo stesso giorno o il giorno dopo."
     },
@@ -199,12 +178,10 @@
       "documentTitle": "Report sul benessere",
       "heading": "Report su umore e benessere",
       "meta": "Generato il {{date}} | Periodo: da {{from}} a {{to}} | Giorni monitorati: {{days}}",
-      "overview": "Panoramica",
       "columnMetric": "Indicatore",
       "columnValue": "Valore",
       "avgMood": "Umore medio",
       "avgSleep": "Sonno medio",
-      "adherence": "Aderenza ai farmaci",
       "daysTracked": "Giorni monitorati",
       "moodTrend": "Andamento dell'umore (ultimi 90 giorni)",
       "legend": "Rosso = 1-2, Arancione = 3-4, Giallo = 5-6, Verde = 7-8, Blu = 9-10",
@@ -224,13 +201,12 @@
       "unknownDose": "dose sconosciuta",
       "topEmotions": "Emozioni più frequenti",
       "patterns": "Schemi rilevati",
-      "footer": "Generato con PrivacyNotes - privacynotes.app",
+      "footer": "Monitorato e generato con PrivacyNotes.app",
       "period": "Periodo: da {{from}} a {{to}}, {{days}} giorni",
       "daysLogged": "Giorni registrati: {{logged}} su {{days}}",
       "moodHeading": "Umore, una barra per giorno",
       "moodLegend": "Barre: 1-2 rosso, 3-4 arancione, 5-6 giallo, 7-8 verde, 9-10 blu. Linea: media a 7 giorni. Triangolo: un cambio di dose. Uno spazio vuoto è un giorno senza voce.",
       "previous": "i {{days}} giorni prima: {{value}}",
-      "trackers": "Tracker",
       "columnTracker": "Tracker",
       "columnAverage": "Media",
       "columnLowHigh": "Min / max",
@@ -238,20 +214,15 @@
       "effects": "Umore nei giorni con e senza",
       "columnFactor": "Fattore",
       "columnRule": "Regola",
-      "columnWith": "Con",
-      "columnWithout": "Senza",
       "columnDifference": "Differenza",
       "nextDaySuffix": "{{name}}, giorno dopo",
       "effectsNote": "Medie dei giorni registrati. Una differenza è un'osservazione, non una causa.",
       "medCalendar": "Calendario",
       "doseChanges": "Cambi di dose",
-      "columnDoseChanges": "Cambi di dose",
       "yesOn": "sì in {{count}}",
       "total": "{{value}} in totale"
     },
     "tiles": {
-      "daysLogged": "Giorni registrati",
-      "daysLoggedOf": "{{logged}} su {{days}}",
       "avgMood": "Umore medio",
       "moodDelta": "{{delta}} rispetto ai {{days}} giorni prima",
       "avgSleep": "Sonno medio",
@@ -263,7 +234,6 @@
       "dose": "{{name}} {{dosage}}"
     },
     "pixels": {
-      "heading": "L'anno in pixel",
       "aria": "Umore di ogni giorno del {{year}}, un quadratino per giorno",
       "hint": "Un quadratino per giorno, nei colori dell'umore.",
       "hintTap": "Un quadratino per giorno, nei colori dell'umore. Un tocco apre il giorno.",
@@ -272,7 +242,6 @@
       "nextYear": "Anno successivo"
     },
     "trackers": {
-      "heading": "Tracker",
       "tapHint": "Un tocco apre Esplora",
       "stopped": "Interrotti",
       "deleted": "Eliminato",
@@ -389,20 +358,14 @@
   "overview": {
     "week": "La tua settimana",
     "streak": "Serie di scrittura",
-    "streakDays_one": "{{count}} giorno",
-    "streakDays_other": "{{count}} giorni",
     "streakNudge": "Ancora niente oggi. Basta una riga per non perderla.",
     "streakKept": "Oggi è fatta.",
     "words": "Parole scritte",
     "wordsDelta": "{{delta}} rispetto alla settimana prima",
-    "mood": "Umore",
-    "moodDelta": "{{delta}} rispetto alla settimana prima",
     "daysLogged": "Giorni registrati",
     "daysLoggedOf": "{{logged}} su {{days}}",
     "rhythm": "Il tuo ritmo, {{weeks}} settimane",
     "layerBoth": "Entrambi",
-    "layerWriting": "Scrittura",
-    "layerMood": "Umore",
     "rhythmLegend": "Cella: quanto hai scritto quel giorno. Punto: com'è andata la giornata.",
     "hours": "Quando scrivi",
     "hoursSub": "modifiche per ora, {{days}} giorni",
@@ -424,19 +387,12 @@
     "vault": "La tua cassaforte",
     "vaultSub": "questa settimana, in breve",
     "done": "{{count}} completate",
-    "milestones": "Traguardi",
     "longestStreak": "Serie più lunga: {{count}} giorni",
     "openWriting": "Apri Scrittura",
     "openWellness": "Apri Tracker",
     "computed": "calcolato su questo dispositivo",
     "pillars": {
-      "notes": "Note",
-      "journals": "Diari",
-      "tasks": "Attività",
-      "files": "File",
-      "bookmarks": "Segnalibri",
-      "contacts": "Contatti",
-      "logins": "Accessi"
+      "journals": "Diari"
     },
     "ledgerEstimated": "Stimato dalle tue note finché non parte il conteggio.",
     "today": "Oggi, {{date}}",
@@ -465,7 +421,6 @@
     "wordsToday_one": "{{formatted}} parola oggi"
   },
   "recap": {
-    "thisWeek": "Questa settimana",
     "previous": "Settimana precedente",
     "next": "Settimana successiva",
     "bestWorst": "{{best}} è stato il tuo giorno migliore ({{bestMood}}), {{worst}} il più difficile ({{worstMood}}).",
@@ -476,11 +431,9 @@
   },
   "writingTab": {
     "inOneLook": "Questo intervallo in un colpo d'occhio",
-    "wordsWritten": "Parole scritte",
     "daysWrote": "Giorni in cui hai scritto",
     "perDay": "{{words}} parole al giorno",
     "notesStarted": "Note iniziate",
-    "vsBefore": "{{delta}} rispetto ai giorni precedenti",
     "readTime_other": "Circa {{count}} minuti di lettura scritti",
     "novels_other": "L'equivalente di {{count}} romanzi, da sempre",
     "tagsUsed": "{{count}} tag, {{used}} usati in questo intervallo",
@@ -495,10 +448,8 @@
     "short": "Brevi",
     "median": "Metà delle tue note ha meno di {{words}} parole.",
     "longest": "Le tue note più lunghe",
-    "words_other": "{{formatted}} parole",
     "readHours_other": "Circa {{count}} ore di lettura scritte",
     "readHours_one": "Circa {{count}} ora di lettura scritta",
-    "words_one": "{{formatted}} parola",
     "novels_one": "L'equivalente di {{count}} romanzo, da sempre",
     "readTime_one": "Circa {{count}} minuto di lettura scritto"
   }

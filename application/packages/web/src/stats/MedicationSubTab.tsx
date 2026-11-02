@@ -22,7 +22,7 @@ const CALENDAR_HEIGHT = 7 * 14 + 6 * 2;
 function Legend({ t, dose, round }: { t: TFunction; dose?: boolean; round?: boolean }) {
   const shape = round ? 'rounded-full' : 'rounded-[2px]';
   return (
-    <div className="flex flex-wrap gap-3 mt-1 text-[10px] text-pn-muted">
+    <div className="flex flex-wrap gap-3 mt-1 text-meta text-pn-muted">
       <span className="inline-flex items-center gap-1"><span className={`w-2.5 h-2.5 ${shape} bg-pn-soft`} />{t('wellness.medCalendar.taken')}</span>
       <span className="inline-flex items-center gap-1"><span className={`w-2.5 h-2.5 ${shape} ${round ? 'border-2 border-pn-soft' : 'bg-pn-soft opacity-30'}`} />{t('wellness.medCalendar.skipped')}, {t('wellness.medCalendar.missed')}</span>
       <span className="inline-flex items-center gap-1"><span className={`w-2.5 h-2.5 ${shape} border border-divider`} />{t('wellness.medCalendar.noEntry')}</span>
@@ -48,12 +48,12 @@ function MedTimeline({ medications }: { medications: MedicationTemplate[] }) {
         events.sort((a, b) => a.date.localeCompare(b.date));
         return (
           <div key={med.id} className="ps-2 border-s-2 border-divider space-y-1.5">
-            <span className="text-xs font-medium text-pn-soft">{med.name}</span>
+            <span className="text-small font-medium text-pn-soft">{med.name}</span>
             {events.map((ev, i) => (
               <div key={i} className="flex items-center gap-2 ms-2">
                 <div className="w-2 h-2 rounded-full bg-accent-fill -ms-[13px]" />
-                <span className="text-[10px] text-pn-muted tabular-nums w-20">{formatDay(ev.date, 'date')}</span>
-                <span className="text-[11px] text-pn-muted">{ev.label}</span>
+                <span className="text-meta text-pn-muted tabular-nums w-20">{formatDay(ev.date, 'date')}</span>
+                <span className="text-meta text-pn-muted">{ev.label}</span>
               </div>
             ))}
           </div>
@@ -63,7 +63,7 @@ function MedTimeline({ medications }: { medications: MedicationTemplate[] }) {
   );
 }
 
-/** Spec: ops/docs/archive/wellness-statistics.md (section 10) */
+/** Spec: docs/internal/specs/wellness-statistics.md (section 10) */
 export function MedicationSubTab({ model, stats, medications, unlocked, isPro, onOpenDay }: {
   model: WellnessModel;
   stats: TrackerStats;
@@ -95,8 +95,8 @@ export function MedicationSubTab({ model, stats, medications, unlocked, isPro, o
   if (stats.medBreakdown.length === 0 && meds.length === 0) {
     return (
       <div className="text-center py-8 text-pn-muted">
-        <p className="text-sm">{t('wellness.medication.empty.title')}</p>
-        <p className="text-xs mt-1">{t('wellness.medication.empty.hint')}</p>
+        <p className="text-body">{t('wellness.medication.empty.title')}</p>
+        <p className="text-small mt-1">{t('wellness.medication.empty.hint')}</p>
       </div>
     );
   }
@@ -109,11 +109,11 @@ export function MedicationSubTab({ model, stats, medications, unlocked, isPro, o
         <div className="space-y-1.5">
           {stats.medBreakdown.map((m) => (
             <div key={m.id} className="flex items-center gap-2">
-              <span className="text-xs text-pn-soft flex-1 truncate">{m.name}</span>
+              <span className="text-small text-pn-soft flex-1 truncate">{m.name}</span>
               <div className="w-24 h-3 bg-surface-0 rounded overflow-hidden">
                 <div className="h-full rounded" style={{ width: `${m.pct}%`, backgroundColor: m.pct >= 80 ? PALETTE.green : m.pct >= 50 ? PALETTE.yellow : PALETTE.red }} />
               </div>
-              <span className="text-[11px] text-pn-muted w-12 text-end">{m.pct}%</span>
+              <span className="text-meta text-pn-muted w-12 text-end">{m.pct}%</span>
             </div>
           ))}
         </div>
@@ -126,7 +126,7 @@ export function MedicationSubTab({ model, stats, medications, unlocked, isPro, o
           <div className="space-y-1.5">
             {meds.map(({ d, series }) => (
               <div key={d.id} className="flex items-center gap-3">
-                <span className="text-xs text-pn-soft w-24 flex-none truncate">{d.name}</span>
+                <span className="text-small text-pn-soft w-24 flex-none truncate">{d.name}</span>
                 <div className="flex-1 min-w-0">
                   <TrackerChart
                     spec={{ form: 'strip', series, color: d.color }}
@@ -145,14 +145,14 @@ export function MedicationSubTab({ model, stats, medications, unlocked, isPro, o
                 <span
                   key={m.date + m.label}
                   title={`${formatDay(m.date, 'date')}: ${m.label}`}
-                  className="absolute -translate-x-1/2 text-[10px] leading-none"
+                  className="absolute -translate-x-1/2 text-meta leading-none"
                   style={{ left: `${((daysBetween(model.range.from, m.date) + 0.5) / model.rangeDays) * 100}%`, color: PALETTE.orange }}
                 >
                   &#9650;
                 </span>
               ))}
             </div>
-            <div className="flex justify-between text-[11px] text-pn-muted">
+            <div className="flex justify-between text-meta text-pn-muted">
               <span>{formatDay(model.range.from, 'dayMonth')}</span>
               <span>{formatDay(model.range.to, 'dayMonth')}</span>
             </div>
@@ -184,7 +184,7 @@ export function MedicationSubTab({ model, stats, medications, unlocked, isPro, o
           {unlocked && (
             <div className="space-y-1.5">
               {lenses.map((l) => (
-                <div key={l.medicationId + l.date} className="rounded-md bg-track border border-divider px-3 py-2 text-xs text-pn-soft">
+                <div key={l.medicationId + l.date} className="rounded-md bg-track border border-divider px-3 py-2 text-small text-pn-soft">
                   <span className="text-pn-muted">{formatDay(l.date, 'date')}, {[l.name, l.dosage].filter(Boolean).join(' ')}: </span>
                   {l.before.n >= MIN_PER_SIDE && l.after.n >= MIN_PER_SIDE && l.before.mean !== null && l.after.mean !== null
                     ? t('wellness.medCalendar.doseLens', { before: formatNumber(l.before.mean), nBefore: l.before.n, after: formatNumber(l.after.mean), nAfter: l.after.n })

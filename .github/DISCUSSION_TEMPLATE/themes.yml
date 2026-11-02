@@ -1,5 +1,4 @@
 title: "[Theme]: "
-labels: [theme]
 body:
   - type: markdown
     attributes:

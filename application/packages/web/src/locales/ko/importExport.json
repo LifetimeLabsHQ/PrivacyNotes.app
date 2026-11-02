@@ -3,14 +3,12 @@
     "importTitle": "데이터 가져오기",
     "exportTitle": "데이터 내보내기",
     "restoreTitle": "데이터 복원",
-    "vaultTitle": "비밀번호 가져오기",
-    "tablistLabel": "가져오기, 내보내기, 복원 또는 비밀번호",
+    "tablistLabel": "가져오기, 내보내기, 복원 또는 트래커",
     "tabImport": "가져오기",
     "tabExport": "내보내기",
     "tabRestore": "복원",
     "tabVault": "비밀번호",
-    "working": "작업 중…",
-    "tabWellness": "트래커"
+    "working": "작업 중…"
   },
   "footer": {
     "exportNote": "내보내기는 로컬에서 실행돼요. 아무것도 업로드되지 않아요.",
@@ -18,12 +16,11 @@
     "importNote": "모든 데이터는 기기에서도, 동기화할 때도 항상 암호화돼 있어요."
   },
   "importPick": {
-    "autoTagLabel": "가져온 노트에 출처 태그 달기",
-    "autoTagDesc": "Google Keep 노트에는 <keep>#google</keep>, Obsidian에는 <obsidian>#obsidian</obsidian> 태그가 붙는 식이에요.",
     "guideAria": "{{app}} 가져오기 가이드",
     "guideLabel": "가이드",
-    "groupGeneral": "일반",
-    "groupNotes": "노트"
+    "searchPlaceholder": "앱 찾기",
+    "groupCalendar": "캘린더, 연락처, 북마크",
+    "noMatch": "일치하는 앱이 없어요. 대부분의 노트 앱은 Markdown 파일로 내보낼 수 있고, Markdown 파일은 여기서 가져올 수 있어요."
   },
   "folderImport": {
     "tagLabel": "폴더 이름도 태그로 달기",
@@ -73,6 +70,7 @@
     "googleCalendar": "Google Calendar의 Settings > Import & export에서 받은 .zip, 또는 .ics 파일 하나. 일정은 시간, 반복, 미리 알림을 그대로 유지해요.",
     "appleNotes": "무료 Exporter 앱으로 Markdown 내보내기를 한 뒤 .zip을 여기에 놓으세요.",
     "appleJournal": "Mac이나 iPhone의 일기에서 내보낸 뒤 AppleJournalEntries 폴더를 압축해서 .zip을 여기에 놓으세요. 항목은 사진, 동영상, 음성 메모, 위치 정보와 함께 저널 항목으로 가져와요.",
+    "excalidraw": "excalidraw.com에서 저장한 드로잉이에요. .excalidraw 파일 하나, 또는 여러 개를 zip으로 묶어도 돼요. Obsidian의 Excalidraw 플러그인으로 만든 .excalidraw.md 파일도 가져올 수 있어요. 드로잉 안의 이미지도 함께 가져와요.",
     "evernote": ".enex 파일 하나만 넣어도 되고, 여러 개를 zip으로 묶어도 돼요. 서식, 태그, 첨부 파일, 노트 링크, 노트북을 유지해요. Evernote는 작업을 .enex에 넣지 않아요.",
     "samsungNotes": "Word(.docx) 또는 텍스트(.txt)로 내보내세요. 여러 파일은 zip으로 묶으면 한 번에 가져올 수 있어요.",
     "simplenote": "Simplenote에서 내보내세요(Settings -> Tools -> Export Notes). .zip을 여기에 놓으세요.",
@@ -96,9 +94,6 @@
     "vcard": "연락처 (vCard)",
     "markdownFolder": "Markdown 파일"
   },
-  "vaultPick": {
-    "intro": "다른 비밀번호 관리자에서 로그인, 신용카드, SSH 키를 가져오세요."
-  },
   "restorePick": {
     "intro": "이전에 내보낸 PrivacyNotes 백업을 복원하세요.",
     "fullBackupTitle": "전체 백업 (.zip)",
@@ -120,8 +115,8 @@
     "restoringBlobs": "이미지와 파일 복원 중..."
   },
   "errors": {
-    "genericParse": "문제가 발생했어요.",
     "decryptionFailed": "복호화에 실패했어요. 문구가 틀렸거나 파일이 손상됐어요.",
+    "importNothingChanged": "아무것도 가져오지 않았어요. 노트, 폴더, 파일은 그대로예요. {{detail}}",
     "blobImportFailed": "노트는 가져왔지만 이미지와 파일은 가져오지 못했어요: {{detail}} 선택한 파일 안의 내용은 전혀 바뀌지 않았으니, 가져온 노트를 지우고 다시 가져오기를 실행해도 괜찮아요.",
     "blobsNotInBackup_other": "노트는 복원됐지만, 백업에 적힌 {{items}}이(가) 백업 안에 없어요."
   },
@@ -129,11 +124,7 @@
     "oversize_other": "노트 {{count}}개가 1MB를 넘어요. 이 기기에만 남고 동기화되지 않아요.",
     "splitOversize_other": "이 노트 {{count}}개를 제목 위치에서 더 작은 노트로 나눠 동기화되게 하기",
     "partTitle": "{{title}} ({{index}}/{{total}})",
-    "continuedIn": "{{link}}에서 이어져요",
-    "sourceLabel": "출처",
     "uniqueTags": "고유 태그",
-    "empty": "비어 있음",
-    "untagged": "태그 없음",
     "items": "항목",
     "previewLabel": "미리보기",
     "andMore": "… 외 {{count}}개",
@@ -144,8 +135,13 @@
     "eventSkipNote": "이미 가져온 일정은 건너뛰고 그대로 두기 때문에 두 번 실행해도 중복되지 않아요.",
     "restoreMergeNote": "직접 만든 백업의 노트는 ID로 대조돼요. 이미 있는 노트는 백업의 사본이 더 새로울 때만 업데이트하고, 휴지통에 있는 노트는 다시 꺼내요.",
     "quotaExceeded": "<strong>저장 공간이 부족해서 가져올 수 없어요.</strong> 약 {{needed}} 필요, {{available}} 사용 가능. 공간을 확보하거나 업그레이드한 뒤 가져오세요.",
-    "quotaWarning": "참고: 이번 가져오기는 남은 저장 공간 {{available}} 중 약 {{needed}}를 사용해요.",
-    "oversizeAttachments_other": "{{count}}개의 파일이 플랜의 파일당 한도 {{limit}}보다 커요. 이 기기에는 가져오지만, 업그레이드하기 전까지는 다른 기기와 동기화되지 않아요."
+    "oversizeAttachments_other": "{{count}}개의 파일이 플랜의 파일당 한도 {{limit}}보다 커요. 이 기기에는 가져오지만, 업그레이드하기 전까지는 다른 기기와 동기화되지 않아요.",
+    "title": "가져오기 전에 확인하세요",
+    "sourceTagLabel": "모든 노트에 <tag>{{tag}}</tag> 태그 달기",
+    "sourceTagDesc": "끄면 출처 태그를 달지 않아요. 노트에 이미 있는 태그는 어느 쪽이든 함께 가져와요.",
+    "storageLine": "이번 가져오기에는 약 {{needed}}이(가) 필요해요. 남은 공간은 {{available}}이에요.",
+    "nothingWritten": "가져오기를 누르기 전까지는 아무것도 저장되지 않아요.",
+    "whatComesIn": "가져올 내용"
   },
   "counts": {
     "note_other": "노트",
@@ -154,6 +150,7 @@
     "card_other": "카드",
     "sshKey_other": "SSH 키",
     "contact_other": "연락처",
+    "drawing_other": "드로잉",
     "zeroItems": "항목 0개",
     "importButton": "{{counts}} 가져오기"
   },
@@ -165,14 +162,14 @@
     "fullBackupHeading": "전체 백업",
     "portableHeading": "이동용 내보내기",
     "vaultOnlyHeading": "보관함만",
-    "zipBackupTitle": "PrivacyNotes 백업 (.zip)",
-    "zipBackupDesc": "노트, 저널, 보관함 항목, 할 일, 이미지, 오디오, 파일까지 전부예요. 계정 전체를 백업하거나 새 기기로 옮길 때 사용하세요. 안에 든 파일은 암호화되어 있지 않으니 zip 파일을 안전한 곳에 보관하세요.",
-    "encryptedZipBackupTitle": "암호화 전체 백업 (.pnbackupz)",
-    "encryptedZipBackupDesc": "zip 백업에 담기는 모든 것(노트, 보관함 항목, 이미지, 오디오, 파일)을 문구 키로 봉인해요. 어느 기기에서든 문구로 복원할 수 있어요. 어디에 보관해도 안전해요.",
-    "encryptedBackupTitle": "암호화 백업 (.pnbackup)",
-    "encryptedBackupDesc": "모든 텍스트 콘텐츠와 메타데이터를 문구 키로 암호화해요. 이미지와 파일은 제외예요. 문구 없이는 읽을 수 없으니 어디에 보관해도 안전해요.",
+    "zipBackupTitle": "전체, 암호화 안 됨 (.zip)",
+    "zipBackupDesc": "노트, 저널, 보관함 항목, 할 일, 이미지, 오디오, 파일에 복약과 트래커 기록까지 담겨요. 문구 없이 어느 컴퓨터에서든 열리니 안전한 곳에 보관하세요. 노트 히스토리와 앱 잠금 PIN은 포함되지 않아요.",
+    "encryptedZipBackupTitle": "전체, 암호화됨 (.pnbackupz)",
+    "encryptedZipBackupDesc": "zip과 같은 내용을 문구 키로 봉인해요. 어느 기기에서든 문구로 복원할 수 있어요. 어디에 보관해도 안전해요.",
+    "encryptedBackupTitle": "텍스트만, 암호화됨 (.pnbackup)",
+    "encryptedBackupDesc": "모든 텍스트 콘텐츠와 메타데이터예요. 이미지와 파일은 제외돼요. 문구 키로 봉인한 작은 파일이에요. 어디에 보관해도 안전해요.",
     "htmlArchiveTitle": "HTML 아카이브 (.zip)",
-    "htmlArchiveDesc": "노트마다 인쇄 가능한 HTML 페이지 하나씩. 오프라인 열람이나 보관용으로 좋고, 복원용은 아니에요.",
+    "htmlArchiveDesc": "노트마다 인쇄 가능한 HTML 페이지 하나씩이며, 로그인 항목, 카드, 키도 평문으로 들어가요. 오프라인 열람이나 보관용으로 좋고, 복원용은 아니에요. 안전한 곳에 보관하세요.",
     "textBackupTitle": "텍스트 백업 (.json)",
     "textBackupDesc": "모든 텍스트 콘텐츠와 메타데이터를 일반 JSON으로. 이미지와 파일은 제외예요. 암호화되지 않으니 신뢰할 수 있는 곳에 보관하세요.",
     "vaultExportTitle": "보관함 내보내기 (.json)",
@@ -186,6 +183,8 @@
     "calendarOnlyHeading": "캘린더만",
     "calendarExportTitle": "캘린더 파일(.ics)",
     "calendarExportDesc": "Google Calendar, Apple 캘린더, Outlook용 일정과 날짜가 지정된 노트 및 할 일 목록이에요.",
+    "drawingsExportTitle": "드로잉(.zip)",
+    "drawingsExportDesc": "모든 드로잉을 이미지가 포함된 개별 .excalidraw 파일로 내보내요. excalidraw.com과 Obsidian에서 열 수 있어요.",
     "calendarPrivate": "비공개"
   },
   "exportProgress": {
@@ -194,11 +193,8 @@
     "incompleteTitle": "내보내기 미완료",
     "exportingTitle": "백업 내보내는 중...",
     "preparing": "준비 중...",
-    "exporting": "내보내는 중...",
-    "imagesProgress": "이미지 내보내는 중... {{total}}개 중 {{done}}개",
-    "filesProgress": "파일 내보내는 중... {{total}}개 중 {{done}}개",
-    "building": "백업 만드는 중...",
-    "compressing": "압축 중...",
+    "showInFolder": "폴더에서 보기",
+    "zipStep": "압축",
     "missingFailed_other": "이 기기에서 {{items}}을(를) 다운로드하지 못해서 내보내기에 빠져 있어요. 연결을 확인하고 다시 내보내세요.",
     "missingNotFound_other": "{{items}}은(는) 이 기기에도 서버에도 없어서 내보내기에 빠져 있어요."
   },
@@ -239,7 +235,8 @@
     "generic": "내보낸 파일을 저장하지 못했어요. 다시 시도하거나 다른 폴더를 선택해 보세요."
   },
   "saveErrors": {
-    "shortWrite": "{{expected}}바이트 중 {{written}}바이트만 저장돼서 파일이 불완전해요. 클라우드 폴더 대신 기기 저장소에 저장해서 다시 시도해 보세요."
+    "shortWrite": "{{expected}}바이트 중 {{written}}바이트만 저장돼서 파일이 불완전해요. 클라우드 폴더 대신 기기 저장소에 저장해서 다시 시도해 보세요.",
+    "protectedFolder": "{{folder}} 폴더에는 키, 설정, 프로그램이 들어 있어서 PrivacyNotes가 저장하지 않아요. 파일을 다른 곳에 저장한 뒤 직접 옮기세요."
   },
   "shareSheet": {
     "title_other": "항목 {{count}}개가 PrivacyNotes로 공유되었어요",
@@ -247,7 +244,6 @@
     "saveAll": "모두 저장"
   },
   "destination": {
-    "label": "추가할 위치",
     "none": "폴더 없음",
     "newFolder": "새 폴더 \"{{name}}\"",
     "help": "원본 앱의 폴더는 고른 폴더 안으로 들어가고, 폴더가 없는 항목도 그 폴더에 들어가요."

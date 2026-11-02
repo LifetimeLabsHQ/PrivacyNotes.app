@@ -2,6 +2,7 @@ import Highlight from '@tiptap/extension-highlight';
 import { InlineMath, BlockMath } from '@tiptap/extension-mathematics';
 import { InputRule } from '@tiptap/core';
 import { mathNodeView } from './editorMath';
+import { skipDelimiterTrim } from './editorTextStyle';
 
 /** Minimal typing for the markdown-it inline state the math rule touches. */
 interface MathParseState {
@@ -362,7 +363,8 @@ export const HighlightWithMarkdown = Highlight.extend({
     return {
       markdown: {
         serialize: {
-          open(_state: unknown, mark: { attrs: { color?: string | null } }) {
+          open(state: unknown, mark: { attrs: { color?: string | null } }) {
+            skipDelimiterTrim(state);
             const color = mark.attrs.color;
             if (!color) return '==';
             return `<mark style="background-color: ${color.replace(/"/g, '&quot;')}">`;

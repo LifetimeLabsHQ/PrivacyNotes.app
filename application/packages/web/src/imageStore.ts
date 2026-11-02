@@ -23,6 +23,7 @@ import { uploadsHeldForWifi } from './wifiOnly';
 import { fetchQuotaUsage, recalculateQuota } from './devices';
 import { claimRemoval, isAlreadyExists, markIfPending, sameBytes, settleUnlessClaimed } from './blobUploadRecovery';
 import { PENDING_GC_WAIT_MS, settleWithin } from './pendingGcWait';
+import { BlobDamagedError } from './blobDamaged';
 
 const BUCKET = 'encrypted-images';
 
@@ -92,6 +93,20 @@ export async function rememberImageSizes(sizes: Record<string, number>): Promise
 
 /** Storage returns at most this many names per listing call. */
 const LIST_PAGE = 1000;
+
+/** Pending-GC ids per request. Every id rides the `.in()` filter in the URL,
+ *  about 39 bytes each, and a proxy refuses a URL past about 8 KB (200 ids):
+ *  one cancel for a large batch failed on every pass, and the server purge
+ *  then deleted files that notes use. Same chunk as the tombstone push in
+ *  sync.ts. A cancel that fails part way answers null, and the retry treats
+ *  the ids an earlier chunk took as gone and uploads them again: safe. */
+const GC_CHUNK = 50;
+
+function gcChunks(uuids: string[]): string[][] {
+  const out: string[][] = [];
+  for (let i = 0; i < uuids.length; i += GC_CHUNK) out.push(uuids.slice(i, i + GC_CHUNK));
+  return out;
+}
 
 
 /**
@@ -600,7 +615,14 @@ export class ImageStore {
     if (!result) return null;
 
     const encrypted = new Uint8Array(await result.arrayBuffer());
-    const decrypted = decryptBlob(encrypted, this.encryptionKey);
+    // Bytes that do not open are told apart from a failed request; nothing
+    // is cached or deleted for them. See blobDamaged.ts.
+    let decrypted: Uint8Array;
+    try {
+      decrypted = decryptBlob(encrypted, this.encryptionKey);
+    } catch {
+      throw new BlobDamagedError(uuid);
+    }
 
     // Cache for next time.
     await db.imageCache.put({ id: uuid, data: decrypted, cachedAt: new Date().toISOString() });
@@ -787,14 +809,19 @@ export class ImageStore {
    * cancel that did not land must be tried again.
    */
   async clearPendingGC(uuids: string[]): Promise<boolean> {
-    if (uuids.length === 0) return true;
-    const { error } = await this.supabase
-      .from('pending_blob_gc')
-      .delete()
-      .eq('user_pubkey', this.pubkey)
-      .in('uuid', uuids);
-    if (error) console.warn('[imageStore] pending_blob_gc clear failed:', error.message);
-    return !error;
+    let ok = true;
+    for (const chunk of gcChunks(uuids)) {
+      const { error } = await this.supabase
+        .from('pending_blob_gc')
+        .delete()
+        .eq('user_pubkey', this.pubkey)
+        .in('uuid', chunk);
+      if (error) {
+        console.warn('[imageStore] pending_blob_gc clear failed:', error.message);
+        ok = false;
+      }
+    }
+    return ok;
   }
 
   /**
@@ -804,18 +831,21 @@ export class ImageStore {
    * after the purge its object is gone or going; the caller restores it.
    */
   async cancelPendingGC(uuids: string[]): Promise<Set<string> | null> {
-    if (uuids.length === 0) return new Set();
-    const { data, error } = await this.supabase
-      .from('pending_blob_gc')
-      .delete()
-      .eq('user_pubkey', this.pubkey)
-      .in('uuid', uuids)
-      .select('uuid');
-    if (error) {
-      console.warn('[imageStore] pending_blob_gc cancel failed:', error.message);
-      return null;
+    const taken = new Set<string>();
+    for (const chunk of gcChunks(uuids)) {
+      const { data, error } = await this.supabase
+        .from('pending_blob_gc')
+        .delete()
+        .eq('user_pubkey', this.pubkey)
+        .in('uuid', chunk)
+        .select('uuid');
+      if (error) {
+        console.warn('[imageStore] pending_blob_gc cancel failed:', error.message);
+        return null;
+      }
+      for (const r of (data ?? []) as { uuid: string }[]) taken.add(r.uuid);
     }
-    return new Set(((data ?? []) as { uuid: string }[]).map((r) => r.uuid));
+    return taken;
   }
 
   /** The uuids of this account's server-side pending-GC rows, or null when

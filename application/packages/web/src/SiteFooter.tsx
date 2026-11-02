@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowCounterClockwise, DownloadSimple, FacebookLogo, FileText, GithubLogo, ListBullets, Lock, MastodonLogo, Palette, Printer, Question, RedditLogo, Scales, Shapes, ShieldCheck, XLogo, YoutubeLogo } from './icons';
+import { ArrowCounterClockwise, DownloadSimple, Tag, FacebookLogo, FileText, GithubLogo, ListBullets, Lock, MastodonLogo, Palette, Printer, Question, RedditLogo, Scales, Shapes, ShieldCheck, XLogo, YoutubeLogo } from './icons';
 import { LogoIcon } from './LogoIcon';
 import { Brand } from './Brand';
 import { LanguageMenu } from './LanguageMenu';
@@ -11,7 +11,7 @@ import { helpPath } from './localeRoutes';
 import { marketingHomeHref } from './siteLinks';
 import { FOOTER_LINES_CSS, footerLinesHtml, mountFooterLines } from './footerLines';
 
-const KICKER = 'font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8F8776]';
+const KICKER = 'font-mono text-meta font-semibold uppercase tracking-[0.18em] text-[#8F8776]';
 
 // Homepage footer. Link columns come from the shared ./footerData module,
 // the single source also used by the static /faq + /changelog pages
@@ -32,6 +32,8 @@ export function FooterGlyph({ icon, size = 18 }: { icon: FooterIcon; size?: numb
       return <ShieldCheck size={size} className="shrink-0" />;
     case 'download':
       return <DownloadSimple size={size} className="shrink-0" />;
+    case 'price':
+      return <Tag size={size} className="shrink-0" />;
     case 'x':
       return <XLogo size={size} weight="fill" className="shrink-0" />;
     case 'reddit':
@@ -107,7 +109,7 @@ export function SiteFooter() {
     <footer className="bg-[var(--wl-footer)] border-t border-[var(--wl-line)] mt-16">
       <FooterLines />
       <div className="mx-auto max-w-5xl xl:max-w-7xl px-5 sm:px-8 py-10 sm:py-14">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10 text-sm">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10 text-body">
           {FOOTER_COLUMNS.map((col, i) => (
             <div key={col.heading}>
               {i === 0 && (
@@ -121,7 +123,7 @@ export function SiteFooter() {
                       fact, not an update check. */}
                   <a
                     href="/changelog"
-                    className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#2E2820] px-2.5 py-1 font-mono text-[11px] text-[#A69E8F] hover:text-white hover:border-[#3D362A] transition"
+                    className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#2E2820] px-2.5 py-1 font-mono text-meta text-[#A69E8F] hover:text-white hover:border-[#3D362A] transition"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_0_3px_rgba(74,222,128,0.15)]" />
                     v{VERSION}
@@ -165,10 +167,10 @@ export function SiteFooter() {
               flag (the header rail's trigger) and sits beside the legal
               lines instead of taking a row of its own. */}
           <div className="flex items-start justify-between gap-4 sm:items-center">
-          <div className="min-w-0 text-sm text-[#A69E8F] space-y-1">
+          <div className="min-w-0 text-body text-[#A69E8F] space-y-1">
             <p>
               Data Stored in{' '}
-              <svg width="13" height="13" viewBox="0 0 32 32" aria-hidden="true" className="inline-block align-[-1.5px] rounded-[2px]">
+              <svg data-ic="" viewBox="0 0 32 32" aria-hidden="true" className="inline-block align-[-1.5px] rounded-[2px]">
                 <rect width="32" height="32" fill="#da291c" />
                 <rect x="13" y="6" width="6" height="20" fill="#fff" />
                 <rect x="6" y="13" width="20" height="6" fill="#fff" />

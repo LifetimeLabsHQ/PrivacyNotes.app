@@ -6,24 +6,30 @@ import { hydrateListPrefsStore } from './listPrefs';
 import { CAFFEINE_UNITS, defaultTrackerSettings, readFactors, readHabits, WATER_UNITS, type CaffeineUnit, WEIGHT_UNITS, type WaterUnit, type FactorDef, type TrackerSettings, type WeightUnit, type CustomTrackerTemplate, type MedicationTemplate } from './trackerTypes';
 import { isColorTheme, isLineSpacing } from './theme';
 import { isJournalTitleFormat, JOURNAL_SUFFIX_MAX } from './notesViewUtils';
-import { isClock, isDateOrder } from './intlFormat';
+import { isClock, isDateOrder, isWeekStart } from './intlFormat';
 import { credentialKey, isDemoMode } from './demo';
 import { settingsLocalKey } from './settingsLocalKey';
 import { applyPrivacyScreen } from './privacyScreen';
 import { isTrustedDevice } from './trustStorage';
-import { hasPinWrap } from './pin';
+import { hasPinWrap, PIN_CHANGE_LOST_KEY } from './pin';
 import type { View } from './views';
 import { isServerWriteBlocked } from './syncPause';
+import { dmsGate, dropForeignDmsHold } from './dms';
 import { logAuthEvent } from './authDiag';
 import { recordSyncFault } from './syncFaults';
 import { mayWriteUnstamped, signInStamp, signedOutSince, type SignInStamp } from './liveSignIn';
 import { folderTreesEqual, isFolderSortField, mergeFolderTrees, validateFolders, validateFolderTombstones } from './folders';
 import { deletedFolderIds, isNoteColorStyle, itemStylesEqual, mergeItemStyles, validateItemStyles } from './itemStyles';
 import { deviceLabelsEqual, mergeDeviceLabels, validateDeviceLabels } from './deviceLabels';
+import { extensionKeysEqual, mergeExtensionKeys, validateExtensionKeys } from './extensionKeys';
 import { customThemesEqual, mergeCustomThemes, validateCustomThemes } from './customThemes';
 import { formatBarSettingsEqual, mergeFormatBarSettings, validateFormatBarSetting } from './formatBar';
+import { dashboardSettingsEqual, mergeDashboardSettings, validateDashboardSetting } from './dashboard/dashboardLayout';
 import { CREDENTIAL_FIELDS, defaultCalendarSettings, defaultCheckInSettings, defaultSettings, type CalendarSettings, type CheckInSettings, type UserSettings } from './userSettingsShape';
 import { isTime, type Alert } from './schedule';
+import { fromLockedRead, pickSealed, readSealedSettings, removeSealedSettings, settingsSealOn, stripSealed, withPlaceholders, writeSealedSettings } from './settingsSeal';
+import { localDataKeyCopy } from './localKey';
+import { readPwGen } from './passwordGen';
 
 /**
  * Synced user settings.
@@ -117,6 +123,12 @@ function hydrate(raw: unknown): UserSettings {
   if (typeof obj.taskConfetti === 'boolean') {
     base.taskConfetti = obj.taskConfetti;
   }
+  if (typeof obj.typedSymbols === 'boolean') {
+    base.typedSymbols = obj.typedSymbols;
+  }
+  if (typeof obj.confirmTrash === 'boolean') {
+    base.confirmTrash = obj.confirmTrash;
+  }
   if (typeof obj.spaces === 'boolean') {
     base.spaces = obj.spaces;
   }
@@ -186,6 +198,9 @@ function hydrate(raw: unknown): UserSettings {
   // client that dropped a value it did not recognise would silently un-hide
   // a newer client's row on its next write; unknown members are ignored at
   // render instead. Same shape as favoriteTags above.
+  if (Array.isArray(obj.viewOrder)) {
+    base.viewOrder = obj.viewOrder.filter((v) => typeof v === 'string') as View[];
+  }
   if (Array.isArray(obj.hiddenViews)) {
     base.hiddenViews = obj.hiddenViews.filter((v) => typeof v === 'string') as View[];
   }
@@ -218,6 +233,7 @@ function hydrate(raw: unknown): UserSettings {
   }
   if (isDateOrder(obj.dateOrder)) base.dateOrder = obj.dateOrder;
   if (isClock(obj.clock)) base.clock = obj.clock;
+  if (isWeekStart(obj.weekStart)) base.weekStart = obj.weekStart;
   if (typeof obj.journalTitlePattern === 'string') {
     base.journalTitlePattern = obj.journalTitlePattern.slice(0, JOURNAL_SUFFIX_MAX);
   }
@@ -242,11 +258,17 @@ function hydrate(raw: unknown): UserSettings {
   if (obj.deviceLabels !== undefined) {
     base.deviceLabels = validateDeviceLabels(obj.deviceLabels);
   }
+  if (obj.extensionKeys !== undefined) {
+    base.extensionKeys = validateExtensionKeys(obj.extensionKeys);
+  }
   if (obj.customThemes !== undefined) {
     base.customThemes = validateCustomThemes(obj.customThemes);
   }
   if (obj.formatBar !== undefined) {
     base.formatBar = validateFormatBarSetting(obj.formatBar);
+  }
+  if (obj.dashboard !== undefined) {
+    base.dashboard = validateDashboardSetting(obj.dashboard);
   }
   if (typeof obj.tintNotes === 'boolean') {
     base.tintNotes = obj.tintNotes;
@@ -289,6 +311,9 @@ function hydrate(raw: unknown): UserSettings {
   if (typeof obj.importPromptDismissed === 'boolean') {
     base.importPromptDismissed = obj.importPromptDismissed;
   }
+  if (typeof obj.clipperHintDismissed === 'boolean') {
+    base.clipperHintDismissed = obj.clipperHintDismissed;
+  }
   // Anything that is not a finite, non-negative number reads as 0, which is
   // the value a blob written before this field existed effectively carries.
   if (typeof obj.settingsRev === 'number' && Number.isFinite(obj.settingsRev) && obj.settingsRev >= 0) {
@@ -301,23 +326,7 @@ function hydrate(raw: unknown): UserSettings {
   ) {
     base.notesCreated = Math.floor(obj.notesCreated);
   }
-  if (obj.pwGen && typeof obj.pwGen === 'object') {
-    const pg = obj.pwGen as Partial<UserSettings['pwGen']>;
-    const dpg = base.pwGen;
-    if (typeof pg.length === 'number' && pg.length >= 8 && pg.length <= 64) dpg.length = pg.length;
-    if (typeof pg.lowercase === 'boolean') dpg.lowercase = pg.lowercase;
-    if (typeof pg.uppercase === 'boolean') dpg.uppercase = pg.uppercase;
-    if (typeof pg.numbers === 'boolean') dpg.numbers = pg.numbers;
-    if (typeof pg.symbols === 'boolean') dpg.symbols = pg.symbols;
-    if (typeof pg.exactNumbers === 'number' && pg.exactNumbers >= 0 && pg.exactNumbers <= 9) dpg.exactNumbers = pg.exactNumbers;
-    if (typeof pg.exactSymbols === 'number' && pg.exactSymbols >= 0 && pg.exactSymbols <= 9) dpg.exactSymbols = pg.exactSymbols;
-    if (pg.mode === 'password' || pg.mode === 'passphrase') dpg.mode = pg.mode;
-    if (typeof pg.words === 'number' && Number.isInteger(pg.words) && pg.words >= 3 && pg.words <= 20) dpg.words = pg.words;
-    if (pg.separator === '-' || pg.separator === '.' || pg.separator === '_' || pg.separator === ' ') dpg.separator = pg.separator;
-    if (typeof pg.capitalize === 'boolean') dpg.capitalize = pg.capitalize;
-    if (typeof pg.addNumber === 'boolean') dpg.addNumber = pg.addNumber;
-    if (typeof pg.addSymbol === 'boolean') dpg.addSymbol = pg.addSymbol;
-  }
+  base.pwGen = readPwGen(obj.pwGen);
   return base;
 }
 
@@ -365,7 +374,7 @@ export function alertDefaults(s: Pick<UserSettings, 'calendar'>): { timed: Alert
  * stands. A merged collection needs no entry: its merge never reads absence
  * as a reset.
  */
-const NEWER_SCALARS = ['tintNotes', 'noteColorStyle', 'archivedInAll', 'includeSubfolders', 'sinkCheckedTasks', 'taskConfetti', 'spaces', 'dateOrder', 'clock', 'journalTitlePattern', 'calendar', 'checkIn'] as const;
+const NEWER_SCALARS = ['tintNotes', 'noteColorStyle', 'archivedInAll', 'includeSubfolders', 'sinkCheckedTasks', 'taskConfetti', 'typedSymbols', 'confirmTrash', 'spaces', 'dateOrder', 'clock', 'weekStart', 'viewOrder', 'journalTitlePattern', 'calendar', 'checkIn'] as const;
 
 /**
  * Whether the blob lacks a newer scalar this device holds at a value of its
@@ -469,16 +478,18 @@ type LocalCache = {
   // and treating them as never-pulled would revert their next genuine
   // scalar edit.
   everPulled: boolean;
-  // Whether this tab does NOT know the account's PIN wrap. The four wrap
-  // fields are a durable copy of the phrase under four digits, so a device
-  // the user marked untrusted keeps them out of localStorage the way it
-  // keeps the phrase out: the envelope on disk carries them as null there,
-  // and the real values live in a sessionStorage side key for as long as
-  // the tab does. With no side key the fields are unknown, which is NOT the
-  // same as the account holding none: syncPinWrap does nothing with an
-  // unknown wrap, and the push takes the four fields from the server row it
-  // reads rather than sending nulls over the account's wrap. Never written
-  // to disk. Always false on a trusted device, whose envelope is unchanged.
+  // Whether this tab does NOT know the account's PIN fields. The four wrap
+  // fields are a durable copy of the phrase under four digits, and the PIN's
+  // own salt and hash give the four digits up to an offline search in
+  // minutes, so a device the user marked untrusted keeps all of them out of
+  // localStorage the way it keeps the phrase out: the envelope on disk
+  // carries them as null there, and the real values live in a sessionStorage
+  // side key for as long as the tab does. With no side key the fields are
+  // unknown, which is NOT the same as the account holding none: syncPinWrap
+  // does nothing with an unknown wrap, and the push takes the fields from the
+  // server row it reads rather than sending nulls over the account's PIN.
+  // Never written to disk. Always false on a trusted device, whose envelope
+  // is unchanged.
   wrapWithheld: boolean;
   // The account's freshness counter as of the last completed sync: the row
   // this device last adopted or pushed. The restore of unknown wrap fields
@@ -488,14 +499,188 @@ type LocalCache = {
   // on an untrusted device, where the restore can run; a trusted envelope
   // keeps its shape.
   syncedRev: number;
+  // A fingerprint per top-level setting of the values as last synced (the row
+  // this device last adopted or pushed), so a push sends only what changed
+  // here and keeps the server's value for everything else. Absent on a cache
+  // written before this shipped, which pushes as before until its next sync.
+  // The PIN group has one fingerprint under PIN_GROUP_KEY, kept off the disk
+  // of an untrusted device with the fields themselves.
+  syncedKeys?: Record<string, string>;
+  // Whether the sealed part of the cache (settingsSeal.ts) was locked when
+  // this cache was read: no local data key yet, at the boot or on the lock
+  // screen. Its settings are then placeholders, a write keeps the sealed part
+  // as it is, and no settings pass runs. Never written to disk.
+  sealedLocked?: boolean;
 };
 
-type PinWrapFields = Pick<
+/**
+ * The lock settings each device keeps for itself (#662): a phone can lock
+ * sooner than a computer at home. They stay in this cache like any other
+ * setting, and the sync never moves them: a pull keeps this device's values,
+ * and a push carries the server's, so the account row keeps the value it held
+ * before this shipped. A device that has never pulled takes the account's
+ * values with its first pull, which is how each device copied its own at the
+ * first start after the update. Spec: docs/contrib/biometric-unlock.md (section 5)
+ */
+export const DEVICE_SETTINGS = ['appLockEnabled', 'appLockTimeoutMinutes', 'pinTimeoutMinutes'] as const;
+
+/** `s` with the device settings of `from`. */
+function withDeviceSettings(s: UserSettings, from: UserSettings): UserSettings {
+  return {
+    ...s,
+    appLockEnabled: from.appLockEnabled,
+    appLockTimeoutMinutes: from.appLockTimeoutMinutes,
+    pinTimeoutMinutes: from.pinTimeoutMinutes,
+  };
+}
+
+/** The credential fields that change together: a hash from one edit beside a
+ *  wrap from another opens nothing. */
+const PIN_GROUP = [
+  'pinSalt', 'pinHash', 'pinIterations',
+  'pinWrapSalt', 'pinWrapIV', 'pinWrapCiphertext', 'pinWrapIterations',
+] as const;
+const PIN_GROUP_KEY = '#pin';
+// The group as it was before the app lock switch became a device setting. A
+// base written then fingerprints this shape, so a group that matches either
+// shape is unchanged; the next sync writes the new one.
+const LEGACY_PIN_GROUP = [...PIN_GROUP, 'appLockEnabled'] as const;
+
+/** Settings the push merges by their own rule (a union, a tree merge, a
+ *  maximum, a flag that never goes back), never by the per-key base. */
+const OWN_RULE_KEYS = new Set<string>([
+  'settingsRev', 'notesCreated', 'folders', 'foldersDeleted', 'itemStyles', 'deviceLabels', 'extensionKeys',
+  'customThemes', 'formatBar', 'dashboard', 'factors', 'customHabits', 'medications', 'trackerSettings',
+  'favoriteTags', 'dismissedAnnouncements', 'welcomeNoteSeeded', 'importHintDismissed',
+  'milestonesSeen', 'firstSeenAt', 'ratingDone', 'importPromptDismissed', 'clipperHintDismissed', ...PIN_GROUP,
+  ...DEVICE_SETTINGS,
+]);
+
+/** FNV-1a over canonical JSON: a change marker, not a secret. */
+function fingerprint(value: unknown): string {
+  const text = canonicalJson(value);
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(16) + ':' + text.length;
+}
+
+function canonicalJson(value: unknown): string {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'undefined';
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  const keys = Object.keys(value as Record<string, unknown>).filter((k) => (value as Record<string, unknown>)[k] !== undefined).sort();
+  return `{${keys.map((k) => `${JSON.stringify(k)}:${canonicalJson((value as Record<string, unknown>)[k])}`).join(',')}}`;
+}
+
+/** The group in a fixed order, an absent field written as null, so two
+ *  devices holding the same group always read the same marker. */
+function pinGroupOf(s: UserSettings): unknown[] {
+  return PIN_GROUP.map((k) => s[k] ?? null);
+}
+
+/** Whether `s` holds a PIN group other than the one the base fingerprints. */
+function pinGroupChanged(s: UserSettings, base: string): boolean {
+  return fingerprint(pinGroupOf(s)) !== base
+    && fingerprint(LEGACY_PIN_GROUP.map((k) => s[k] ?? null)) !== base;
+}
+
+/** The per-key base of a settings object this device has just synced. The
+ *  PIN group's marker only where the fields themselves are known. */
+function syncedKeysOf(s: UserSettings, wrapKnown: boolean): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(s)) {
+    if (!OWN_RULE_KEYS.has(key)) out[key] = fingerprint(value);
+  }
+  if (wrapKnown) out[PIN_GROUP_KEY] = fingerprint(pinGroupOf(s));
+  return out;
+}
+
+/**
+ * The blob a dirty device pushes over the server's: each setting this device
+ * changed since its last sync keeps its value, and every other setting takes
+ * the server's. A device that was offline while another changed a setting
+ * used to push its whole copy, and creating one note counts as a settings
+ * write, so the Trash auto-delete or the PIN came back the way they were.
+ * Spec: docs/internal/design-decisions.md (Settings merge key by key)
+ *
+ * The PIN group moves whole. Only one side changed it: that side's. Both:
+ * the server's, never the newer one, because a device clock can lie and an
+ * offline device would put an old PIN back; the loss is logged. Fields this
+ * tab does not know (an untrusted device) are not a change: the server's.
+ */
+function perKeyMerge(
+  local: UserSettings,
+  merged: UserSettings,
+  server: UserSettings,
+  base: Record<string, string> | undefined,
+  wrapWithheld: boolean,
+): UserSettings {
+  if (!base) return merged;
+  const out = { ...merged } as Record<string, unknown>;
+  const localRec = local as unknown as Record<string, unknown>;
+  const serverRec = server as unknown as Record<string, unknown>;
+  for (const key of new Set([...Object.keys(localRec), ...Object.keys(serverRec)])) {
+    if (OWN_RULE_KEYS.has(key)) continue;
+    const was = base[key];
+    // A setting the base does not know (newer than this cache) keeps the
+    // merge's answer.
+    if (was === undefined) continue;
+    if (fingerprint(localRec[key]) !== was) out[key] = localRec[key];
+    else if (key in serverRec) out[key] = serverRec[key];
+  }
+  const pinBase = base[PIN_GROUP_KEY];
+  const localPin = !wrapWithheld && pinBase !== undefined && pinGroupChanged(local, pinBase);
+  const serverPin = pinBase === undefined || pinGroupChanged(server, pinBase);
+  if (wrapWithheld || !localPin) {
+    for (const key of PIN_GROUP) out[key] = server[key];
+  } else if (!serverPin) {
+    // Set whole, not left to the loop above: the group never mixes sides.
+    for (const key of PIN_GROUP) out[key] = local[key];
+  } else {
+    for (const key of PIN_GROUP) out[key] = server[key];
+    markPinChangeLost();
+    logAuthEvent('settings:credential-change-lost');
+    console.warn('[settings] a PIN change made here lost to one made on another device');
+  }
+  return out as unknown as UserSettings;
+}
+
+// Set when a PIN change made on this device lost to one made on another;
+// the PIN tab says so once (takePinChangeLost). Not a secret; the key is
+// bucketed and cleared with the PIN cache (pin.ts).
+function markPinChangeLost(): void {
+  try {
+    localStorage.setItem(PIN_CHANGE_LOST_KEY, '1');
+  } catch {
+    /* the message is lost with it, the PIN is not */
+  }
+}
+
+/** Whether a PIN change made here lost to another device's since the PIN tab
+ *  last said so; reading it clears it. */
+export function takePinChangeLost(): boolean {
+  try {
+    const lost = localStorage.getItem(PIN_CHANGE_LOST_KEY) === '1';
+    localStorage.removeItem(PIN_CHANGE_LOST_KEY);
+    return lost;
+  } catch {
+    return false;
+  }
+}
+
+type PinHashFields = Pick<UserSettings, 'pinSalt' | 'pinHash' | 'pinIterations'>;
+
+type PinWrapFields = PinHashFields & Pick<
   UserSettings,
   'pinWrapSalt' | 'pinWrapIV' | 'pinWrapCiphertext' | 'pinWrapIterations'
 >;
 
 const NULL_WRAP: PinWrapFields = {
+  pinSalt: null,
+  pinHash: null,
+  pinIterations: null,
   pinWrapSalt: null,
   pinWrapIV: null,
   pinWrapCiphertext: null,
@@ -505,14 +690,24 @@ const NULL_WRAP: PinWrapFields = {
 // Credential-bucketed like the wrap keys biometric.ts writes, so a demo
 // session's copy is swept with the rest of the `.demo` bucket.
 const wrapSideKey = () => credentialKey('privacynotes.settings.pinWrap');
+// The PIN group's base marker on an untrusted device: in the tab, with the
+// wrap it describes, never on the disk.
+const pinMarkerSideKey = () => credentialKey('privacynotes.settings.pinMarker');
 
 function pickWrap(s: UserSettings): PinWrapFields {
   return {
+    pinSalt: s.pinSalt,
+    pinHash: s.pinHash,
+    pinIterations: s.pinIterations,
     pinWrapSalt: s.pinWrapSalt,
     pinWrapIV: s.pinWrapIV,
     pinWrapCiphertext: s.pinWrapCiphertext,
     pinWrapIterations: s.pinWrapIterations,
   };
+}
+
+function pickHash(s: UserSettings): PinHashFields {
+  return { pinSalt: s.pinSalt, pinHash: s.pinHash, pinIterations: s.pinIterations };
 }
 
 function readWrapSideKey(): PinWrapFields | null {
@@ -521,6 +716,9 @@ function readWrapSideKey(): PinWrapFields | null {
     if (!raw) return null;
     const p = JSON.parse(raw) as Partial<PinWrapFields>;
     return {
+      pinSalt: typeof p.pinSalt === 'string' ? p.pinSalt : null,
+      pinHash: typeof p.pinHash === 'string' ? p.pinHash : null,
+      pinIterations: typeof p.pinIterations === 'number' ? p.pinIterations : null,
       pinWrapSalt: typeof p.pinWrapSalt === 'string' ? p.pinWrapSalt : null,
       pinWrapIV: typeof p.pinWrapIV === 'string' ? p.pinWrapIV : null,
       pinWrapCiphertext: typeof p.pinWrapCiphertext === 'string' ? p.pinWrapCiphertext : null,
@@ -537,6 +735,12 @@ function readWrapSideKey(): PinWrapFields | null {
  * it once, so the ciphertext leaves the disk on the first read. Otherwise the
  * side key says what this tab knows, present or known absent, and no side
  * key means unknown.
+ *
+ * An envelope can also predate the withheld PIN hash, with the wrap already
+ * nulled beside it and a side key that holds the wrap only. Its hash is the
+ * account's as this device last knew it, so it fills in what the side key
+ * lacks, and the rewrite takes it off the disk. The wrap stays as the side
+ * key says: present, known absent, or unknown.
  */
 function untrustedView(cache: LocalCache): LocalCache {
   if (hasPinWrap(cache.settings)) {
@@ -544,14 +748,31 @@ function untrustedView(cache: LocalCache): LocalCache {
     writeLocal(known);
     return known;
   }
+  const legacyHash = cache.settings.pinHash ? pickHash(cache.settings) : null;
   const side = readWrapSideKey();
-  if (side) {
-    return { ...cache, settings: { ...cache.settings, ...side }, wrapWithheld: false };
-  }
-  return { ...cache, settings: { ...cache.settings, ...NULL_WRAP }, wrapWithheld: true };
+  const marker = side ? readRaw(sessionStorage, pinMarkerSideKey()) : null;
+  const syncedKeys = cache.syncedKeys && marker ? { ...cache.syncedKeys, [PIN_GROUP_KEY]: marker } : cache.syncedKeys;
+  const view: LocalCache = side
+    ? { ...cache, settings: { ...cache.settings, ...side, ...(side.pinHash ? {} : legacyHash) }, wrapWithheld: false, ...(syncedKeys ? { syncedKeys } : {}) }
+    : { ...cache, settings: { ...cache.settings, ...NULL_WRAP }, wrapWithheld: true };
+  if (legacyHash) writeLocal(view);
+  return view;
 }
 
 const EPOCH = '1970-01-01T00:00:00.000Z';
+
+/** The base as an untrusted envelope keeps it: no marker of the PIN group. */
+function withoutPinMarker(keys: Record<string, string>): Record<string, string> {
+  const { [PIN_GROUP_KEY]: _pin, ...rest } = keys;
+  return rest;
+}
+
+function readSyncedKeys(raw: unknown): { syncedKeys?: Record<string, string> } {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) if (typeof v === 'string') out[k] = v;
+  return { syncedKeys: out };
+}
 
 function readLocal(): LocalCache {
   const trusted = isTrustedDevice();
@@ -561,11 +782,17 @@ function readLocal(): LocalCache {
       return { settings: defaultSettings(), updatedAt: EPOCH, dirty: false, everPulled: false, wrapWithheld: !trusted, syncedRev: 0 };
     }
     const parsed = JSON.parse(raw) as Partial<LocalCache>;
-    const settings = hydrate(parsed.settings);
+    const opened = openSealedPart(parsed);
+    const hydrated = hydrate(opened.settings);
+    const settings = opened.locked
+      ? withPlaceholders(hydrated)
+      : opened.absorbed
+        ? { ...hydrated, settingsRev: hydrated.settingsRev + 1 }
+        : hydrated;
     const cache: LocalCache = {
       settings,
-      updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : EPOCH,
-      dirty: parsed.dirty === true,
+      updatedAt: opened.absorbed ? new Date().toISOString() : typeof opened.updatedAt === 'string' ? opened.updatedAt : EPOCH,
+      dirty: parsed.dirty === true || opened.absorbed,
       // Legacy caches (no field): a CLEAN one belongs to a device whose
       // last pass completed, so it has pulled; a DIRTY one is ambiguous -
       // it can be a healthy device with a pending offline edit, or a
@@ -575,10 +802,7 @@ function readLocal(): LocalCache {
       // that reverts its pending scalar edit, while the worst case of
       // the opposite guess is the full account wipe. One completed pass
       // writes the field explicitly and retires this heuristic.
-      everPulled:
-        parsed.everPulled === undefined
-          ? parsed.dirty !== true
-          : parsed.everPulled === true,
+      everPulled: everPulledOf(opened.everPulled, parsed.dirty),
       wrapWithheld: false,
       // An envelope without the field predates it, or was written by a
       // trusted device: treating every local increment as synced is the
@@ -588,19 +812,145 @@ function readLocal(): LocalCache {
         typeof parsed.syncedRev === 'number' && Number.isFinite(parsed.syncedRev) && parsed.syncedRev >= 0
           ? Math.floor(parsed.syncedRev)
           : settings.settingsRev,
+      ...(readSyncedKeys(parsed.syncedKeys)),
+      ...(opened.locked ? { sealedLocked: true } : {}),
     };
-    if (!trusted) return untrustedView(cache);
-    // A trusted reader of an envelope an untrusted session wrote: the four
-    // nulls are that session's withholding, not the account's state, and
-    // the side key it kept them in belongs to a tab that is gone. Unknown,
-    // until a pass reads the row and writes the trusted shape back.
-    if (parsed.wrapWithheld === true) {
-      return { ...cache, settings: { ...cache.settings, ...NULL_WRAP }, wrapWithheld: true };
-    }
-    return cache;
+    const view = viewFor(cache, parsed, trusted);
+    // A cache that still holds the sealed settings in the clear, or that
+    // took the sealed part back in, goes to the disk split on this read.
+    if (opened.rewrite && localDataKeyCopy() !== null && mayWriteUnstamped()) writeLocal(view);
+    return view;
   } catch {
     return { settings: defaultSettings(), updatedAt: EPOCH, dirty: false, everPulled: false, wrapWithheld: !trusted, syncedRev: 0 };
   }
+}
+
+function everPulledOf(value: unknown, dirty: unknown): boolean {
+  return value === undefined ? dirty !== true : value === true;
+}
+
+/** The parsed envelope as this tab may see it: the PIN fields an untrusted
+ *  device withholds, and the nulls a trusted reader must not believe. */
+function viewFor(cache: LocalCache, parsed: Partial<LocalCache>, trusted: boolean): LocalCache {
+  if (!trusted) return untrustedView(cache);
+  // A trusted reader of an envelope an untrusted session wrote: the four
+  // nulls are that session's withholding, not the account's state, and
+  // the side key it kept them in belongs to a tab that is gone. Unknown,
+  // until a pass reads the row and writes the trusted shape back.
+  if (parsed.wrapWithheld === true) {
+    return { ...cache, settings: { ...cache.settings, ...NULL_WRAP }, wrapWithheld: true };
+  }
+  return cache;
+}
+
+/**
+ * The fields this bundle keeps beside the fence on a split envelope. The
+ * envelope's own `updatedAt` and `everPulled` are written as the epoch and
+ * false, for the bundles before the split: they read the readable part,
+ * whose sealed settings are missing, as a device that never pulled, so their
+ * pass takes the server copy and never pushes the empty lists over it.
+ * Spec: docs/internal/specs/local-at-rest.md (section 3.4, the fence)
+ */
+type SplitMeta = { v: 1; updatedAt: string; everPulled: boolean };
+
+function readSplitMeta(raw: unknown): SplitMeta | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const m = raw as Partial<SplitMeta>;
+  if (m.v !== 1 || typeof m.updatedAt !== 'string' || typeof m.everPulled !== 'boolean') return null;
+  return { v: 1, updatedAt: m.updatedAt, everPulled: m.everPulled };
+}
+
+type OpenedEnvelope = {
+  /** The settings to hydrate. */
+  settings: unknown;
+  updatedAt: unknown;
+  everPulled: unknown;
+  /** The sealed part is there and no key is registered. */
+  locked: boolean;
+  /** The sealed part merged back into a readable cache, with a change. */
+  absorbed: boolean;
+  /** Write the cache back split once read. */
+  rewrite: boolean;
+};
+
+let sealedUnreadableLogged = false;
+
+/**
+ * Join the readable envelope and the sealed part. Four cases:
+ * - A split envelope and a sealed part that opens: one cache.
+ * - A split envelope and no key: the readable part, the sealed one locked.
+ * - A split envelope and a sealed part that is gone or does not open: the
+ *   readable part as a device that never pulled, so the next pass takes the
+ *   server copy. Only an unsynced sealed change is lost, and only here.
+ * - A readable envelope: from before the split, or written since by an older
+ *   bundle on this device (a downgrade, an old tab). A sealed part beside it
+ *   merges in as a second device would, so a change that waited in it
+ *   survives the older bundle.
+ */
+function openSealedPart(parsed: Partial<LocalCache> & { split?: unknown }): OpenedEnvelope {
+  const split = readSplitMeta(parsed.split);
+  const plain: OpenedEnvelope = {
+    settings: parsed.settings,
+    updatedAt: parsed.updatedAt,
+    everPulled: parsed.everPulled,
+    locked: false,
+    absorbed: false,
+    rewrite: false,
+  };
+  if (!split && !settingsSealOn()) return plain;
+  const sealed = readSealedSettings();
+  if (split) {
+    const meta = { updatedAt: split.updatedAt, everPulled: split.everPulled };
+    if (sealed.state === 'open') {
+      return { ...plain, ...meta, settings: { ...(parsed.settings as object), ...sealed.fields } };
+    }
+    if (sealed.state === 'locked') return { ...plain, ...meta, locked: true };
+    if (!sealedUnreadableLogged) {
+      sealedUnreadableLogged = true;
+      logAuthEvent('settings:sealed-unreadable', { state: sealed.state });
+    }
+    return { ...plain, updatedAt: EPOCH, everPulled: false, rewrite: true };
+  }
+  if (sealed.state === 'locked') return plain;
+  if (sealed.state !== 'open') return { ...plain, rewrite: true };
+  const plainPulled = everPulledOf(parsed.everPulled, parsed.dirty);
+  // A sealed part with nothing unsynced holds only what the server has, and
+  // the older bundle has read the server since: its copy stands whole, so a
+  // removal made there (a favorite, a template) is not undone by a union.
+  if (!sealed.dirty && plainPulled) return { ...plain, rewrite: true };
+  const settings = absorbSealedPart(parsed.settings, sealed.fields, sealed.base, sealed.dirty, plainPulled);
+  const absorbed = canonicalJson(pickSealed(hydrate(settings))) !== canonicalJson(pickSealed(hydrate(parsed.settings)));
+  return { ...plain, settings, absorbed, rewrite: true };
+}
+
+/**
+ * The readable cache an older bundle wrote, and the sealed part this bundle
+ * left beside it: two copies of one device, merged as two devices merge, so
+ * neither side's folder, template or pick is dropped. A plain sealed setting
+ * this bundle changed and never pushed stands: its value differs from the
+ * base sealed with it, or, with no base for it, the sealed part held an
+ * unpushed change. Any other follows the older bundle once it has read the
+ * server row; before that the older bundle holds the defaults it hydrated,
+ * and the sealed part's stand.
+ */
+function absorbSealedPart(
+  plainRaw: unknown,
+  sealedFields: Record<string, unknown>,
+  sealedBase: Record<string, string>,
+  sealedDirty: boolean,
+  plainPulled: boolean,
+): UserSettings {
+  const plain = hydrate(plainRaw);
+  const sealed = hydrate({ ...(plainRaw as object), ...sealedFields });
+  const merged = plainPulled ? mergeSettings(sealed, plain) : mergeSettings(plain, sealed);
+  const out = { ...plain, ...pickSealed(merged) } as Record<string, unknown>;
+  const sealedRec = sealed as unknown as Record<string, unknown>;
+  for (const k of Object.keys(sealedFields)) {
+    if (OWN_RULE_KEYS.has(k)) continue;
+    const was = sealedBase[k];
+    if (was === undefined ? sealedDirty : fingerprint(sealedRec[k]) !== was) out[k] = sealedRec[k];
+  }
+  return out as unknown as UserSettings;
 }
 
 /**
@@ -618,9 +968,10 @@ function writeLocal(cache: LocalCache): void {
   // arrives from another device, and the recovery paths. Arming on one of
   // them and disarming on none is the half of this that breaks in silence, so
   // the cover follows the value from the single place the value is written.
-  // Spec: ops/docs/archive/app-switcher-privacy-screen.md
+  // Spec: docs/internal/specs/app-switcher-privacy-screen.md
   applyPrivacyScreen(cache.settings.appLockEnabled);
-  const { wrapWithheld, syncedRev, ...stored } = cache;
+  const { wrapWithheld, syncedRev, sealedLocked: _locked, ...stored } = cache;
+  const toDisk = diskShape(cache);
   const trusted = isTrustedDevice();
   // A trusted device that knows its wrap writes exactly the shape it always
   // had. Every other write carries the four fields as null plus a marker
@@ -630,7 +981,7 @@ function writeLocal(cache: LocalCache): void {
   // marker outlives the flag; a pass that reads the row clears it.
   if (trusted && !wrapWithheld) {
     try {
-      localStorage.setItem(localKey(), JSON.stringify(stored));
+      localStorage.setItem(localKey(), JSON.stringify(toDisk(stored)));
     } catch {
       /* storage full / disabled - we fall back to in-memory only */
     }
@@ -639,12 +990,13 @@ function writeLocal(cache: LocalCache): void {
   try {
     localStorage.setItem(
       localKey(),
-      JSON.stringify({
+      JSON.stringify(toDisk({
         ...stored,
         settings: { ...stored.settings, ...NULL_WRAP },
+        ...(stored.syncedKeys ? { syncedKeys: withoutPinMarker(stored.syncedKeys) } : {}),
         syncedRev,
         wrapWithheld: true,
-      }),
+      })),
     );
   } catch {
     /* storage full / disabled - we fall back to in-memory only */
@@ -655,11 +1007,33 @@ function writeLocal(cache: LocalCache): void {
   if (trusted || wrapWithheld) return;
   try {
     sessionStorage.setItem(wrapSideKey(), JSON.stringify(pickWrap(cache.settings)));
+    const marker = cache.syncedKeys?.[PIN_GROUP_KEY];
+    if (marker) sessionStorage.setItem(pinMarkerSideKey(), marker);
+    else sessionStorage.removeItem(pinMarkerSideKey());
   } catch {
     // A dropped side key reads as unknown on the next read, which is the
     // safe side: the device then sends nothing for these fields until a
     // pass has read them from the server.
   }
+}
+
+/**
+ * How an envelope goes to the disk: whole, or split, with the sealed settings
+ * sealed first beside it and the fence for older bundles on the envelope
+ * (SplitMeta). Whole when the seal is off, and when no key is registered for
+ * a cache read in the clear: a sealed part already there stays as it is, and
+ * the next read with a key merges it back. A locked cache never seals: its
+ * sealed settings are placeholders, so the sealed part on the disk stands.
+ */
+function diskShape(cache: LocalCache): <T extends { settings: UserSettings; updatedAt: string; everPulled: boolean }>(env: T) => T {
+  if (!settingsSealOn() || !(cache.sealedLocked || writeSealedSettings(cache.settings, cache.syncedKeys, cache.dirty))) return (env) => env;
+  return (env) => ({
+    ...env,
+    settings: stripSealed(env.settings),
+    updatedAt: EPOCH,
+    everPulled: false,
+    split: { v: 1, updatedAt: env.updatedAt, everPulled: env.everPulled } satisfies SplitMeta,
+  });
 }
 
 /**
@@ -702,6 +1076,9 @@ export function saveLocalSettings(next: UserSettings, since?: SignInStamp): User
   // overwrites - exactly the rules syncUserSettings applies remotely.
   const current = readLocal();
   const stored = current.settings;
+  // Built from a read while the sealed part was locked: its sealed settings
+  // are placeholders, never the person's, so the ones this device holds stand.
+  if (fromLockedRead(next)) next = { ...next, ...pickSealed(stored) };
   if (stored.notesCreated > next.notesCreated) {
     next = { ...next, notesCreated: stored.notesCreated };
   }
@@ -721,6 +1098,9 @@ export function saveLocalSettings(next: UserSettings, since?: SignInStamp): User
   if (stored.importPromptDismissed && !next.importPromptDismissed) {
     next = { ...next, importPromptDismissed: true };
   }
+  if (stored.clipperHintDismissed && !next.clipperHintDismissed) {
+    next = { ...next, clipperHintDismissed: true };
+  }
   // The freshness counter is derived here rather than trusted from the caller,
   // which hands us whole settings objects out of React state that can predate
   // another write. It only ever moves up.
@@ -736,6 +1116,9 @@ export function saveLocalSettings(next: UserSettings, since?: SignInStamp): User
     // is what lets the removal travel.
     wrapWithheld: current.wrapWithheld && !hasPinWrap(next),
     syncedRev: current.syncedRev,
+    // A save changes values, never the base they are measured against.
+    ...(current.syncedKeys ? { syncedKeys: current.syncedKeys } : {}),
+    ...(current.sealedLocked ? { sealedLocked: true } : {}),
   };
   writeLocal(cache);
   // Asked again once written: another tab's sign-out can fall between the
@@ -792,6 +1175,7 @@ export function clearLocalSettings(): void {
   } catch {
     /* ignore */
   }
+  removeSealedSettings();
   clearTabPinWrapCopy();
 }
 
@@ -800,6 +1184,7 @@ export function clearLocalSettings(): void {
 export function clearTabPinWrapCopy(): void {
   try {
     sessionStorage.removeItem(wrapSideKey());
+    sessionStorage.removeItem(pinMarkerSideKey());
   } catch {
     /* ignore */
   }
@@ -840,6 +1225,7 @@ export function saveCredential(
   const changed = CREDENTIAL_FIELDS.filter((k) => next[k] !== base[k]);
   const priorEnvelope = readRaw(localStorage, localKey());
   const priorSide = readRaw(sessionStorage, wrapSideKey());
+  const priorMarker = readRaw(sessionStorage, pinMarkerSideKey());
   onSettingsChange(next, base);
   const saved = readLocal().settings;
   if (changed.every((k) => saved[k] === next[k])) return true;
@@ -852,6 +1238,7 @@ export function saveCredential(
   if (settingsWriteAllowed()) {
     putRaw(localStorage, localKey(), priorEnvelope);
     putRaw(sessionStorage, wrapSideKey(), priorSide);
+    putRaw(sessionStorage, pinMarkerSideKey(), priorMarker);
   }
   return false;
 }
@@ -1042,7 +1429,7 @@ function mergeTrackerSettings(
 }
 
 /** The fields `mergeAtEverySyncPoint` owns. */
-type EntryMerged = 'folders' | 'foldersDeleted' | 'itemStyles' | 'deviceLabels' | 'customThemes' | 'formatBar' | 'factors' | 'customHabits';
+type EntryMerged = 'folders' | 'foldersDeleted' | 'itemStyles' | 'deviceLabels' | 'extensionKeys' | 'customThemes' | 'formatBar' | 'dashboard' | 'factors' | 'customHabits';
 
 /**
  * The folder tree, the folder and tag looks, the device labels, the custom
@@ -1067,8 +1454,10 @@ function mergeAtEverySyncPoint(
     foldersDeleted: tree.deleted,
     itemStyles: mergeItemStyles(local.itemStyles, remote.itemStyles, deletedFolderIds(tree.deleted)),
     deviceLabels: mergeDeviceLabels(local.deviceLabels, remote.deviceLabels),
+    extensionKeys: mergeExtensionKeys(local.extensionKeys, remote.extensionKeys),
     customThemes: mergeCustomThemes(local.customThemes, remote.customThemes),
     formatBar: mergeFormatBarSettings(local.formatBar, remote.formatBar),
+    dashboard: mergeDashboardSettings(local.dashboard, remote.dashboard),
     factors: mergeTemplates<FactorDef>(local.factors, remote.factors, unstampedWinner),
     customHabits: mergeTemplates<CustomHabitDef>(local.customHabits, remote.customHabits, unstampedWinner),
   };
@@ -1131,6 +1520,7 @@ function mergeSettings(
 
   if (local.ratingDone) merged.ratingDone = true;
   if (local.importPromptDismissed) merged.importPromptDismissed = true;
+  if (local.clipperHintDismissed) merged.clipperHintDismissed = true;
 
   // Monotonic, like notesCreated: a merged blob must never push a number
   // lower than one either side has already seen, or its own push reads as a
@@ -1199,6 +1589,7 @@ export async function syncUserSettings(
   };
   // Below the release floor server writes pause (see sync.ts). Local settings
   // keep working; the dirty flag survives, so they push after the update.
+  dropForeignDmsHold(pubkey);
   if (isServerWriteBlocked()) return readLocal().settings;
   // The session must carry THIS vault's pubkey claim before any read. Under
   // a missing or foreign claim the row policies raise nothing: they filter
@@ -1221,6 +1612,11 @@ export async function syncUserSettings(
     return readLocal().settings;
   }
   claimGateLogged = false;
+  // The dead man's switch gate the notes pass awaits too: no settings read or
+  // write before this device knows whether the account was wiped since it
+  // last looked. A pass that slipped in before the hold would find the row
+  // gone and write this cache back. Spec: docs/internal/specs/dead-mans-switch.md (6)
+  if ((await dmsGate(supabase, pubkey)) !== 'run') return readLocal().settings;
   // No separate 2FA check: the table gate raises mfa_required on the row
   // itself, so a missing row is never a refused one, and every read and
   // write below turns that refusal into MfaRequiredError.
@@ -1235,7 +1631,17 @@ export async function syncUserSettings(
     console.warn('[settings] sign-out in progress - sync deferred');
     return readLocal().settings;
   }
-  const local = readLocal();
+  let local = readLocal();
+  // The sealed settings are placeholders until the phrase opens: a pass now
+  // would push them, or merge the server row over them. The next one runs.
+  if (local.sealedLocked) return local.settings;
+  // A clean cache holds what it last synced, or the defaults where no row
+  // exists yet, so it is its own base. This gives one to a cache written
+  // before the base shipped, and to a device that has only ever seen no row.
+  if (!local.dirty && !local.syncedKeys) {
+    local = { ...local, syncedKeys: syncedKeysOf(local.settings, !local.wrapWithheld) };
+    commit(local);
+  }
 
   try {
   // ── 1. PULL ────────────────────────────────────────────────────
@@ -1265,8 +1671,13 @@ export async function syncUserSettings(
     // A cache that does not know the account's wrap is not as fresh as the
     // row whatever its stamp says: adopting the row is what puts the wrap
     // back into memory for this tab.
+    // A clean cache holds the stamp of the row it last synced, so any other
+    // stamp is a row written since, read as instants. "Strictly newer" let a
+    // device whose clock runs ahead skip every other device's settings for
+    // as long as its own stamps stayed ahead. An older row is
+    // still refused by the counter check below.
     const remoteWins =
-      !local.dirty && (row.updated_at > local.updatedAt || local.wrapWithheld);
+      !local.dirty && (Date.parse(row.updated_at) !== Date.parse(local.updatedAt) || local.wrapWithheld);
     if (remoteWins) {
       try {
         const remoteRaw = decryptJson(
@@ -1274,7 +1685,10 @@ export async function syncUserSettings(
           base64ToBytes(row.nonce),
           passKey
         );
-        const remoteSettings = hydrateOver(local.settings, remoteRaw);
+        // A device that has pulled keeps its own lock settings.
+        const remoteSettings = local.everPulled
+          ? withDeviceSettings(hydrateOver(local.settings, remoteRaw), local.settings)
+          : hydrateOver(local.settings, remoteRaw);
         const scalarsKept = keptNewerScalar(local.settings, remoteRaw);
         // Rollback refusal. `updated_at` is a column the server writes, so a
         // server that serves an OLD ciphertext with a NEW stamp passes the
@@ -1330,6 +1744,7 @@ export async function syncUserSettings(
         );
         if (local.settings.ratingDone) remoteSettings.ratingDone = true;
         if (local.settings.importPromptDismissed) remoteSettings.importPromptDismissed = true;
+        if (local.settings.clipperHintDismissed) remoteSettings.clipperHintDismissed = true;
         // Folders and their looks merge on the way in as well as on the way
         // out. The server copy is newer, but newer is not the same as
         // complete: it can have been written by a device that never knew
@@ -1346,8 +1761,10 @@ export async function syncUserSettings(
         const looksRepaired =
           !itemStylesEqual(pulled.itemStyles, remoteSettings.itemStyles) ||
           !deviceLabelsEqual(pulled.deviceLabels, remoteSettings.deviceLabels) ||
+          !extensionKeysEqual(pulled.extensionKeys, remoteSettings.extensionKeys) ||
           !customThemesEqual(pulled.customThemes, remoteSettings.customThemes) ||
           !formatBarSettingsEqual(pulled.formatBar, remoteSettings.formatBar) ||
+          !dashboardSettingsEqual(pulled.dashboard, remoteSettings.dashboard) ||
           JSON.stringify(pulled.factors) !== JSON.stringify(remoteSettings.factors) ||
           JSON.stringify(pulled.customHabits) !== JSON.stringify(remoteSettings.customHabits);
         Object.assign(remoteSettings, pulled);
@@ -1373,6 +1790,7 @@ export async function syncUserSettings(
           // The row is the account's, wrap fields included.
           wrapWithheld: false,
           syncedRev: remoteSettings.settingsRev,
+          syncedKeys: syncedKeysOf(remoteSettings, true),
         };
         // A settings write that landed while the pull was in flight is newer
         // than anything this pass read, so it stands and the pass leaves the
@@ -1441,6 +1859,9 @@ export async function syncUserSettings(
     // a never-pulled device takes the server row as its base instead - see
     // the everPulled branch below and the field doc on LocalCache.
     let outgoing = effective.settings;
+    // The row's lock settings, which the push carries instead of this
+    // device's (DEVICE_SETTINGS). Null where no row was read.
+    let account: UserSettings | null = null;
     const { data: preRow, error: preErr, status: preStatus } = await supabase
       .from('user_settings')
       .select('ciphertext, nonce')
@@ -1475,6 +1896,7 @@ export async function syncUserSettings(
             passKey
           )
         );
+        account = serverSettings;
         if (!effective.everPulled) {
           // This device has NEVER seen the server blob, and the row it is
           // about to overwrite is the account's real settings (folders,
@@ -1537,15 +1959,17 @@ export async function syncUserSettings(
             ratingDone: effective.settings.ratingDone || serverSettings.ratingDone,
             importPromptDismissed:
               effective.settings.importPromptDismissed || serverSettings.importPromptDismissed,
+            clipperHintDismissed:
+              effective.settings.clipperHintDismissed || serverSettings.clipperHintDismissed,
             // Never lower, as in mergeSettings: a count below the row's reads
             // as a rollback to the device that wrote it, and that device then
             // pushes its own settings back over this change.
             settingsRev: Math.max(effective.settings.settingsRev, serverSettings.settingsRev),
           };
-          // The cache withheld the wrap and no pass has read it in this tab,
-          // so the four nulls in `effective.settings` mean "unknown", and
-          // pushing them would clear the account's wrap from a device that
-          // never held it. The row this pass just read is the source, under
+          // The cache withheld the PIN fields and no pass has read them in
+          // this tab, so the nulls in `effective.settings` mean "unknown", and
+          // pushing them would clear the account's PIN and wrap from a device
+          // that never held them. The row this pass just read is the source, under
           // the same rollback rule as the pull: an older row is not one, and
           // the push waits for a pass that reads a current row.
           if (effective.wrapWithheld) {
@@ -1554,6 +1978,12 @@ export async function syncUserSettings(
               return effective.settings;
             }
             outgoing = { ...outgoing, ...pickWrap(serverSettings) };
+          }
+          // A row older than the one this device last synced is a rollback, not
+          // a change made elsewhere: its values must not stand in for the
+          // settings this device left alone, and the push puts ours back.
+          if (serverSettings.settingsRev >= effective.syncedRev) {
+            outgoing = perKeyMerge(effective.settings, outgoing, serverSettings, effective.syncedKeys, effective.wrapWithheld);
           }
         }
       } catch (err) {
@@ -1573,7 +2003,10 @@ export async function syncUserSettings(
       }
     }
 
-    const { ciphertext, nonce } = encryptJson(outgoing, passKey);
+    // The merges above take the row's lock settings; this device keeps its
+    // own, and a never-pulled device takes the row's as its first copy.
+    if (effective.everPulled) outgoing = withDeviceSettings(outgoing, effective.settings);
+    const { ciphertext, nonce } = encryptJson(account ? withDeviceSettings(outgoing, account) : outgoing, passKey);
     const payload = {
       user_pubkey: pubkey,
       ciphertext: bytesToBase64(ciphertext),
@@ -1622,7 +2055,7 @@ export async function syncUserSettings(
           if (!savedSince(snapshot)) {
             // The insert proves the server held no row - nothing existed
             // for this device to have missed.
-            const cleaned: LocalCache = { ...current, dirty: false, everPulled: true, wrapWithheld: false, syncedRev: current.settings.settingsRev };
+            const cleaned: LocalCache = { ...current, dirty: false, everPulled: true, wrapWithheld: false, syncedRev: current.settings.settingsRev, syncedKeys: syncedKeysOf(current.settings, true) };
             commit(cleaned);
             effective = cleaned;
           }
@@ -1662,11 +2095,18 @@ export async function syncUserSettings(
           // folders and their looks merge: refusing the server's SCALARS is
           // not a reason to drop a folder or a pick the server holds and this
           // device has not seen.
+          // A device that has pulled keeps the settings it changed since its
+          // last sync and takes the server's for the rest; mergeSettings
+          // alone took every plain setting from the server, this device's
+          // own edits included.
           const merged = rolledBack
             ? { ...outgoing, ...mergeAtEverySyncPoint(outgoing, serverSettings, 'local') }
-            : mergeSettings(outgoing, serverSettings, effective.everPulled ? 'local' : 'remote');
+            : effective.everPulled
+              ? perKeyMerge(effective.settings, mergeSettings(outgoing, serverSettings, 'local'), serverSettings, effective.syncedKeys, effective.wrapWithheld)
+              : mergeSettings(outgoing, serverSettings, 'remote');
           const mergedAt = new Date().toISOString();
-          const enc = encryptJson(merged, passKey);
+          const enc = encryptJson(withDeviceSettings(merged, serverSettings), passKey);
+          const kept = effective.everPulled ? withDeviceSettings(merged, outgoing) : merged;
           // Guarded on the row this merge was built from, like the notes
           // merge in sync.ts: a device that wrote after the conflict read
           // would otherwise lose that write to a merge that never saw it.
@@ -1689,7 +2129,7 @@ export async function syncUserSettings(
             console.warn('[settings] the row changed again during the merge - the next pass retries');
           } else if (!savedSince(snapshot)) {
             // A save that landed during the merge stays in the cache, dirty.
-            effective = { settings: merged, updatedAt: mergedAt, dirty: false, everPulled: true, wrapWithheld: false, syncedRev: merged.settingsRev };
+            effective = { settings: kept, updatedAt: mergedAt, dirty: false, everPulled: true, wrapWithheld: false, syncedRev: kept.settingsRev, syncedKeys: syncedKeysOf(kept, true) };
             commit(effective);
           }
         } catch (err) {
@@ -1708,7 +2148,7 @@ export async function syncUserSettings(
       if (!savedSince(snapshot)) {
         // Either the pre-push merge above decrypted the server row, or no
         // row existed - both count as having seen the server.
-        const cleaned: LocalCache = { settings: outgoing, updatedAt: current.updatedAt, dirty: false, everPulled: true, wrapWithheld: false, syncedRev: outgoing.settingsRev };
+        const cleaned: LocalCache = { settings: outgoing, updatedAt: current.updatedAt, dirty: false, everPulled: true, wrapWithheld: false, syncedRev: outgoing.settingsRev, syncedKeys: syncedKeysOf(outgoing, true) };
         commit(cleaned);
         effective = cleaned;
       }

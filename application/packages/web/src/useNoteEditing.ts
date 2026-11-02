@@ -3,10 +3,11 @@ import type { SupabaseClient } from '@notes/shared';
 import type { LocalNote } from './db';
 import type { JournalTrackerData } from './trackerTypes';
 import { bulkRewriteBody, getNote, updateNote, updateNoteFrom } from './notesRepo';
-import { createNoteVersion } from './noteVersions';
+import { createNoteVersion, queueNoteVersion, unqueueNoteVersion } from './noteVersions';
 import { isDemoMode, proUnlocked } from './demo';
 import { gcOnBodyChange, holdBlobsForVersion, markVersionActivity } from './imageGC';
 import { noteLinkKey, retargetNoteLinks } from './noteLinks';
+import { attachmentLinks, fileNameForTitle, requestAttachmentName, unescapeMarkdownText } from './fileNames';
 import { hasStructuredBody, noteLinkName } from './notesViewUtils';
 import { changesContent, trackerContent } from './editStamp';
 import { dropPendingEdit, setEditorBaseLookup, settlePendingEdit, stashGeneration } from './flushStash';
@@ -288,6 +289,30 @@ export function useNoteEditing({
   }
 
   /** Resolves once every version save of this note started so far is done. */
+  /**
+   * Blob GC for a saved body: the pictures and files `oldBody` named and
+   * `body` does not. Called after the write, so a refused save never collects
+   * a blob the row still shows, and it waits for the note's version saves, so
+   * the history it reads holds them. A state still waiting to be saved again
+   * holds its blobs through holdBlobsForVersion.
+   */
+  function collectRemovedBlobs(id: string, oldBody: string, body: string) {
+    const imageStore = imageStoreRef.current;
+    if (!imageStore) return;
+    const attachmentStore = attachmentStoreRef.current;
+    void (async () => {
+      await versionSavesSettled(id);
+      await gcOnBodyChange(
+        imageStore,
+        oldBody,
+        body,
+        id,
+        auth.isPro ? { supabase, encryptionKey: auth.encryptionKey, noteId: id } : undefined,
+        attachmentStore,
+      );
+    })();
+  }
+
   async function versionSavesSettled(id: string): Promise<void> {
     await Promise.all(versionSavesRef.current.get(id) ?? []);
   }
@@ -303,7 +328,11 @@ export function useNoteEditing({
     // both the push and the pull stamp it. A note born a moment ago has no
     // earlier state worth keeping anyway. The demo never syncs and keeps its
     // versions locally, so it has no parent to wait for.
-    if (note.syncedNonce == null && !isDemoMode()) return;
+    if (note.syncedNonce == null && !isDemoMode()) {
+      // Kept until the note has synced; drainVersionQueue sends it then.
+      if (!auth.encryptionKey.every((b) => b === 0)) await queueNoteVersion(note, auth.encryptionKey, await contentHash(note));
+      return;
+    }
     // Only the kept state itself leaves the retry slot: a newer state that
     // saves says nothing about the older one.
     const settle = () => {
@@ -322,6 +351,7 @@ export function useNoteEditing({
       const result = await createNoteVersion(supabase, auth.pubkey, auth.encryptionKey, note);
       if (result.ok) {
         markVersionActivity();
+        void unqueueNoteVersion(h);
         return settle();
       }
       if (prevHash === undefined) lastVersionHashRef.current.delete(id);
@@ -333,6 +363,9 @@ export function useNoteEditing({
         onSnapshotForbidden?.();
         return;
       }
+      // Every state that failed also goes into the lasting queue, which a
+      // reload does not empty; a later send of the same state removes it.
+      if (!auth.encryptionKey.every((b) => b === 0)) await queueNoteVersion(note, auth.encryptionKey, h);
       // One slot, holding the oldest state that failed: a later version cannot
       // stand in for it. A newer failure waits for the next edit to recur.
       const kept = pendingVersionRef.current.get(id);
@@ -384,6 +417,20 @@ export function useNoteEditing({
   }
 
   /**
+   * A file item holding one file keeps its file name with its title, as a
+   * chip rename already sets the title (#610). A note of several files, or
+   * one with a picture beside its file, keeps its file names.
+   */
+  function nameSoleFile(id: string, title: string) {
+    const note = currentNote(id);
+    if (!note || note.type !== 'file' || note.body.includes('pn:img/')) return;
+    const links = attachmentLinks(note.body);
+    if (links.length !== 1) return;
+    const next = fileNameForTitle(title, unescapeMarkdownText(links[0]!.name));
+    if (next) requestAttachmentName(links[0]!.uuid, next);
+  }
+
+  /**
    * Point every note-link that named the old title at the new one, so a
    * rename does not orphan the links into that note (#238). Returns the
    * number of LINKS moved, not notes, because that is what the user just
@@ -395,6 +442,7 @@ export function useNoteEditing({
     if (from === undefined) return 0;
     const renamed = notes.find((n) => n.id === id);
     const to = renamed ? noteLinkName(renamed) : '';
+    if (to && from !== to) nameSoleFile(id, to);
     if (!from || !to || from === to) return 0;
 
     // Ambiguous rename: another live note still carries the old title, so a
@@ -634,25 +682,7 @@ export function useNoteEditing({
     // be the only thing still naming an image the edit removed.
     if (written) recordEdit(id, rowBefore as LocalNote | undefined, body);
     // Image GC: diff against the original body from before editing started.
-    // After the write, so a refused save never collects an image the row
-    // still shows, and after the note's version saves, so the history it
-    // reads holds them. A state still waiting to be saved again holds its
-    // blobs through holdBlobsForVersion.
-    const imageStore = imageStoreRef.current;
-    if (imageStore) {
-      const attachmentStore = attachmentStoreRef.current;
-      void (async () => {
-        await versionSavesSettled(id);
-        await gcOnBodyChange(
-          imageStore,
-          gcOldBody,
-          body,
-          id,
-          auth.isPro ? { supabase, encryptionKey: auth.encryptionKey, noteId: id } : undefined,
-          attachmentStore,
-        );
-      })();
-    }
+    collectRemovedBlobs(id, gcOldBody, body);
     // A STRUCTURED body is not a live editor document. A bookmark's `{url}`,
     // a login, a card and an SSH key are each committed once, by a form, and
     // every surface that draws them renders from the notes array: the row's
@@ -726,6 +756,8 @@ export function useNoteEditing({
     patchLocal(id, patch, new Date().toISOString());
     scheduleSync();
     recordEdit(id, before, body);
+    // A file removed from a login, card or SSH key (#563).
+    if (before) collectRemovedBlobs(id, before.body, body);
     return true;
   }
 

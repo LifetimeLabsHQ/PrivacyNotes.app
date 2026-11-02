@@ -109,13 +109,13 @@
       "q": "¿Qué puede ver PrivacyNotes de mis notas?",
       "a": [
         "Las notas, títulos, etiquetas y adjuntos están siempre cifrados, en tu dispositivo y de camino al servidor. [Con autocustodia](/es/help/threat-model-levels/), el modo inicial de toda cuenta creada con una frase, no tenemos ninguna clave de descifrado. Si te registras con Google, Apple o GitHub, se te pregunta dónde vive tu clave y se parte de \"Mantenlo simple y cómodo\", que guarda tu frase en nuestro servidor, cifrada con una clave nuestra. En ese modo, nuestro servidor puede descifrar la frase y, por tanto, tus notas. Ajustes > Cuenta > Custodia de claves muestra tu modo actual y te permite cambiarlo.",
-        "Lo que sí vemos es la información necesaria para operar el servicio: cuánto almacenamiento cifrado usas, cuántos dispositivos tienes vinculados y las marcas de tiempo de sincronización. Si solo usas tu frase y [no has conectado una cuenta de Google, Apple o GitHub](/es/help/connected-logins/), no conocemos tu correo electrónico."
+        "Lo que vemos es la información necesaria para operar el servicio: la clave pública que genera tu frase, cuántos elementos y cuánto almacenamiento cifrado tienes, cuántos dispositivos tienes vinculados y las marcas de tiempo de sincronización. Nuestros límites de frecuencia también ven la dirección IP de cada petición, que no escribimos en tu cuenta. Si solo usas tu frase y [no has conectado una cuenta de Google, Apple o GitHub](/es/help/connected-logins/), no conocemos tu correo electrónico."
       ]
     },
     "us-company": {
       "q": "PrivacyNotes la dirige una empresa de EE. UU. ¿Pone eso en riesgo mis notas?",
       "a": [
-        "Tus notas se cifran en tu dispositivo, y con la [autocustodia](/es/help/threat-model-levels/) el servidor no guarda nada que las abra. Lo que escribes le llega solo como texto cifrado, así que una orden legal en cualquier país solo consigue texto cifrado, esté donde esté registrada la empresa. Compruébalo: el código es [open source en GitHub](https://github.com/LifetimeLabsDev/PrivacyNotes.app), y la pestaña de red de tu navegador muestra que tus palabras salen solo como texto cifrado.",
+        "Tus notas se cifran en tu dispositivo, y con la [autocustodia](/es/help/threat-model-levels/) el servidor no guarda nada que las abra. Lo que escribes le llega solo como texto cifrado, así que una orden legal en cualquier país solo consigue texto cifrado, esté donde esté registrada la empresa. Compruébalo: el código es [open source en GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), y la pestaña de red de tu navegador muestra que tus palabras salen solo como texto cifrado.",
         "Lifetime Labs LLC es una empresa de EE. UU. porque era la forma más rápida de reunir nuestros proyectos bajo un solo nombre. Nadie del equipo vive en EE. UU., y tus notas sincronizadas se guardan en Zúrich, Suiza.",
         "Lo que la ley puede alcanzar son los datos que el servicio necesita: tu clave pública, las marcas de tiempo de sincronización, el tamaño de almacenamiento, registros del servidor de corta vida y, si conectas Google, Apple o GitHub, ese correo. Con «Mantenlo simple y cómodo», tu frase de recuperación también se guarda en nuestro servidor, y abre tus notas. Ajustes > Cuenta > Custodia de claves te cambia a la autocustodia. [Qué puede ver PrivacyNotes](/es/help/what-can-you-see/) enumera más."
       ]
@@ -123,7 +123,7 @@
     "app-privacy-label": {
       "q": "¿Por qué la etiqueta de privacidad de la App Store dice que mis datos están vinculados a mí?",
       "a": [
-        "Porque Apple pide una sola etiqueta que cubra todo lo que puede llegar a nuestro servidor, aunque llegue cifrado y aunque solo lo envíen algunas cuentas. Vinculados a ti significa asociados a una cuenta, y la cuenta detrás de un registro con frase es una clave, no un nombre. Nada se usa para rastrear, y la app no incluye analíticas, anuncios ni informes de errores. Cada línea de la etiqueta significa una sola cosa:",
+        "Porque Apple pide una sola etiqueta que cubra todo lo que puede llegar a nuestro servidor, aunque llegue cifrado y aunque solo lo envíen algunas cuentas. Vinculados a ti significa asociados a una cuenta, y la cuenta detrás de un registro con frase es una clave, no un nombre. Nada se usa para rastrear, y la app no incluye anuncios, ni informes de errores, ni analíticas de lo que escribes. Cada línea de la etiqueta significa una sola cosa:",
         "- **Contenido del usuario**: tus notas y archivos, cifrados en tu dispositivo. [Con autocustodia](/es/help/threat-model-levels/), el servidor no guarda nada que los abra.\n- **Identificadores**: una clave pública derivada de tu frase de recuperación, y un hash del dispositivo calculado en tu dispositivo que solo aplica [el límite de dispositivos del plan gratuito](/es/help/device-limit/).\n- **Información de contacto**: una dirección de correo, solo si inicias sesión con Google, Apple o GitHub.\n- **Compras**: si tu cuenta tiene Pro. Apple gestiona el pago y nunca vemos tu tarjeta.",
         "Para que esa lista sea lo más corta posible en tu cuenta, [regístrate con una frase de recuperación](/es/help/signup-options/) en lugar de con Google, Apple o GitHub, y mantén la autocustodia. Ajustes > Cuenta > Custodia de claves muestra tu modo actual. [Qué puede ver PrivacyNotes](/es/help/what-can-you-see/) explica el resto."
       ]
@@ -183,7 +183,7 @@
       "a": [
         "Sí, la lista BIP-39 estándar (en inglés): 2048 palabras, exactamente la misma lista que usan las carteras Bitcoin. Generamos las frases con [@scure/bip39](https://github.com/paulmillr/scure-bip39), una biblioteca open source auditada. Sin listas caseras y sin criptografía inventada.",
         "La lista está diseñada para escribirla a mano: las primeras cuatro letras de cada palabra son únicas, así que una palabra borrosa o abreviada sigue siendo inequívoca, y las palabras de aspecto parecido se excluyeron a propósito.",
-        "Al ser la lista estándar, puedes verificar tu frase contra cualquier referencia BIP-39 pública, y nuestro código de cifrado es [open source](https://github.com/LifetimeLabsDev/PrivacyNotes.app), así que puedes revisar la implementación tú mismo."
+        "Al ser la lista estándar, puedes verificar tu frase contra cualquier referencia BIP-39 pública, y nuestro código de cifrado es [open source](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), así que puedes revisar la implementación tú mismo."
       ]
     },
     "search-local": {
@@ -203,22 +203,23 @@
     "burn-notes": {
       "q": "¿Qué son las burn notes?",
       "a": [
-        "Una burn note es una forma autodestructiva de [compartir una nota con alguien que no usa PrivacyNotes](/es/help/share-with-someone/). La app cifra el contenido con una clave de un solo uso y te da un enlace. La clave viaja en el fragmento del enlace, que los navegadores nunca envían a los servidores - nuestro servidor guarda, por tanto, texto cifrado que no puede leer.",
+        "Una burn note es una forma autodestructiva de [compartir una nota con alguien que no usa PrivacyNotes](/es/help/share-with-someone/). La app cifra el contenido con una clave de un solo uso y te da un enlace. La clave viaja en el fragmento del enlace, que los navegadores nunca envían a los servidores, así que nuestro servidor solo guarda texto cifrado, nunca la clave que lo abre.",
         "La primera vez que se abre el enlace, el servidor entrega el texto cifrado y lo borra en el mismo paso: una lectura, y desaparece. Los enlaces sin abrir caducan solos cuando pasa el tiempo que elige quien los envía, de 1 hora a 7 días. En cualquier caso, no queda nada rondando."
       ]
     },
     "open-source": {
       "q": "¿PrivacyNotes es open source?",
       "a": [
-        "Sí. Las apps web, de escritorio y móvil están publicadas en [GitHub](https://github.com/LifetimeLabsDev/PrivacyNotes.app), junto con el código de cifrado que vuelve ilegibles tus notas y el modelo de amenazas que detalla qué protege cada pieza. Es el mismo código con el que compilamos nuestras versiones.",
-        "Eso es lo que convierte una promesa en algo que puedes comprobar. Lee el cifrado de una sentada, abre la pestaña de red de tu navegador y [mira cómo tus notas salen como texto ilegible](/es/help/what-can-you-see/), o compila la app tú mismo y [compárala con la que distribuimos](/es/help/verify-download/). No tienes que creernos ni una palabra."
+        "Sí. Las apps web, de escritorio y móvil están publicadas en [GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), junto con el código de cifrado que vuelve ilegibles tus notas y el modelo de amenazas que detalla qué protege cada pieza. Es el mismo código con el que compilamos nuestras versiones.",
+        "Eso es lo que convierte una promesa en algo que puedes comprobar. Lee el cifrado de una sentada, abre la pestaña de red de tu navegador y [mira cómo tus notas salen como texto ilegible](/es/help/what-can-you-see/), o compila la app tú mismo y [compárala con la que distribuimos](/es/help/verify-download/). Con autocustodia, no tienes que creernos ni una palabra."
       ]
     },
     "report-vulnerability": {
       "q": "He encontrado una vulnerabilidad de seguridad. ¿Cómo la reporto?",
       "a": [
-        "Escribe a privacynotes@lifetimelabs.dev. La misma dirección está publicada en nuestro [security.txt](https://privacynotes.app/.well-known/security.txt) firmado con PGP, así que puedes confirmar que es auténtica antes de escribir, y ahí está también nuestra [clave pública](https://privacynotes.app/.well-known/pgp-key.txt) por si prefieres cifrar el informe.",
-        "Respondemos, y cuando una corrección necesita coordinación acordamos contigo los tiempos de divulgación antes de hacer nada público. Los informes llegan directamente a quienes escribieron el código, y quien quiera crédito lo recibe. [Prueba contra la demo en try.privacynotes.app](/es/help/try-before-signup/) o una cuenta desechable, nunca contra las notas de otra persona."
+        "Infórmalo de forma privada [en GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/security/advisories/new). Si no puedes usar GitHub, escribe a sec@lifetimelabs.dev. Esa dirección también está publicada en nuestro [security.txt](https://privacynotes.app/.well-known/security.txt), en nuestro propio dominio, así que puedes confirmar que es auténtica antes de escribir.",
+        "Respondemos, y cuando una corrección necesita coordinación acordamos contigo los tiempos de divulgación antes de hacer nada público. Los informes llegan directamente a quienes escribieron el código, y quien quiera crédito lo recibe. [Prueba contra la demo en try.privacynotes.app](/es/help/try-before-signup/) o una cuenta desechable, nunca contra las notas de otra persona.",
+        "Antes de enviarlo, compruébalo con la versión actual y con nuestro [modelo de amenazas](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md), que enumera los límites que ya conocemos y aceptamos. Las herramientas de IA son bienvenidas, pero confirma tú mismo cada afirmación en la app, di si una herramienta ayudó a redactar el informe y nunca publiques primero un hallazgo sin comprobar: una afirmación pública errónea preocupa a la gente antes de que nadie pueda verificarla. Las indicaciones completas están en [SECURITY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/SECURITY.md#reporting-a-vulnerability). Las preguntas sobre cómo funciona la app son bienvenidas en cualquier lugar, formuladas como preguntas."
       ]
     },
     "lost-phrase": {
@@ -262,8 +263,8 @@
     "what-syncs": {
       "q": "¿Qué se sincroniza exactamente entre mis dispositivos y qué se queda en local?",
       "a": [
-        "Todo lo que esperarías, y todo ello cifrado en tu dispositivo: notas, tareas, entradas de diario, [tu bóveda](/es/help/vault/) y los archivos que contiene. Tus ajustes también te siguen - etiquetas favoritas, preferencias de orden y vista, tema de color, tu PIN (como hash con sal, nunca el PIN en sí), bloqueo de la app, configuración de registros y medicación, y [el vaciado automático de la papelera](/es/help/trash-auto-delete/). Configúralo una vez y cada dispositivo lo adopta.",
-        "Unas pocas cosas se quedan a propósito en cada dispositivo: modo claro u oscuro (cada dispositivo sigue su propio ajuste del sistema), desbloqueo biométrico (ligado al hardware de cada equipo), [el espacio que muestra la barra lateral](/es/help/spaces/) y tu estado de desbloqueo (cerrar la app siempre vuelve a bloquear). El servidor solo almacena blobs cifrados y no puede leer nada de ello."
+        "Todo lo que esperarías, y todo ello cifrado en tu dispositivo: notas, tareas, entradas de diario, [tu bóveda](/es/help/vault/) y los archivos que contiene. Tus ajustes también te siguen - etiquetas favoritas, preferencias de orden y vista, tema de color, tu PIN (como hash con sal, nunca el PIN en sí), configuración de registros y medicación, y [el vaciado automático de la papelera](/es/help/trash-auto-delete/). Configúralo una vez y cada dispositivo lo adopta.",
+        "Unas pocas cosas se quedan a propósito en cada dispositivo: modo claro u oscuro (cada dispositivo sigue su propio ajuste del sistema), desbloqueo biométrico (ligado al hardware de cada equipo), el bloqueo de la app y cuánto tardan la app y tu PIN en volver a preguntar (así un móvil puede bloquearse antes que un ordenador en casa), [el espacio que muestra la barra lateral](/es/help/spaces/) y tu estado de desbloqueo (cerrar la app siempre vuelve a bloquear). Todo lo que se sincroniza, el servidor solo lo almacena cifrado."
       ]
     },
     "offline": {
@@ -290,8 +291,8 @@
       "q": "¿Dónde se guardan mis datos?",
       "a": [
         "Primero en tu dispositivo, y esa es la copia con la que trabajas: la app es local-first, así que [tus notas se abren y se editan sin conexión](/es/help/offline/). La copia de sincronización vive en servidores de Zúrich, Suiza. Allí están tu clave pública, blobs cifrados de tus notas, archivos y ajustes, más las marcas de tiempo y los tamaños que necesita una sincronización. Ningún título, ningún texto, ninguna etiqueta.",
-        "El país importa menos que el cifrado. Todo está siempre cifrado, en tu dispositivo y de camino al servidor, así que esa copia sería ilegible estuviera donde estuviera: Suiza es un extra, no la promesa. [Qué se sincroniza](/es/help/what-syncs/) lo detalla punto por punto.",
-        "La copia de tu dispositivo también está cifrada. [Las notas se sellan en el disco](/es/help/data-on-disk/) con una clave derivada de tu frase de recuperación al desbloquear, así que una copia del almacenamiento de la app en tu dispositivo, o una copia de seguridad robada de ese almacenamiento, contiene datos cifrados, no tus notas."
+        "El país importa menos que el cifrado. Todo está siempre cifrado, en tu dispositivo y de camino al servidor, así que esa copia es texto cifrado esté donde esté, y con autocustodia nada en el servidor puede abrirla. Suiza es un extra, no la promesa. [Qué se sincroniza](/es/help/what-syncs/) lo detalla punto por punto.",
+        "La copia de tu dispositivo también está cifrada: [las notas se sellan en el disco](/es/help/data-on-disk/) con una clave derivada de tu frase de recuperación al desbloquear."
       ]
     },
     "data-on-disk": {
@@ -299,14 +300,14 @@
       "a": [
         "En una carpeta por instalación, dentro del área de datos de apps de tu cuenta. Dónde está esa carpeta depende de la plataforma:",
         "- **macOS**: `~/Library/WebKit/app.privacynotes/WebsiteData/`\n- **Windows**: `%LOCALAPPDATA%\\app.privacynotes`\n- **Linux**: `~/.local/share/app.privacynotes`, o `app.privacynotes.appimage` en el AppImage, que trae su propio motor web y por eso mantiene su propio perfil\n- **Android, iOS**: el almacenamiento privado de la app, que ninguna otra app puede abrir\n- **Navegador**: tu perfil de navegador, en `use.privacynotes.app`",
-        "Lo que hay ahí son datos cifrados. Cada nota es un bloque sellado con el título, el texto y las etiquetas dentro, que abre una clave derivada de tu frase de recuperación al desbloquear, así que una carpeta copiada no contiene nada legible. En claro solo queda lo que necesita el índice local: identificadores, fechas, el tipo de elemento y marcas como fijada o eliminada.",
-        "Para llevar tus notas a otro dispositivo, o guardar una copia propia, usa **Ajustes > Import & Export > Exportar** y elige \"Copia de seguridad completa cifrada (.pnbackupz)\". Lo contiene todo, está cifrada con la clave de tu frase y [se restaura con tu frase en cualquier dispositivo](/es/help/restore-backup/). [Más sobre copias de seguridad](/es/help/backup-strategy/)."
+        "Cada nota es ahí un bloque sellado con el título, el texto y las etiquetas dentro, que abre una clave derivada de tu frase de recuperación al desbloquear. En claro solo queda lo que necesita el índice local: identificadores, fechas, el tipo de elemento y marcas como fijada o eliminada. Tus ajustes también están sellados ahí, salvo lo que la pantalla de bloqueo necesita antes de desbloquear, como el interruptor del bloqueo de la app y los colores y el nombre del tema que usas. La carpeta también guarda tu frase de recuperación, así que la app se abre sin pedírtela. Si alguien pudiera copiar esa carpeta, activa el bloqueo de la app en Ajustes > Seguridad, que entonces guarda la frase solo detrás del bloqueo.",
+        "Para llevar tus notas a otro dispositivo, o guardar una copia propia, usa **Ajustes > Import & Export > Exportar** y elige \"Todo, cifrado (.pnbackupz)\". Contiene tus notas, archivos y ajustes (el historial de notas y el PIN del bloqueo de la app quedan fuera), está cifrada con la clave de tu frase y [se restaura con tu frase en cualquier dispositivo](/es/help/restore-backup/). [Más sobre copias de seguridad](/es/help/backup-strategy/)."
       ]
     },
     "export": {
       "q": "¿Puedo exportar mis notas o estoy atrapado?",
       "a": [
-        "Puedes exportarlo todo en cualquier momento, generado por completo en tu dispositivo: archivos Markdown en un zip con los adjuntos incluidos, JSON simple, o HTML autónomo - por nota o para toda la cuenta. El zip es la \"Copia de seguridad de PrivacyNotes (.zip)\", [y se puede restaurar](/es/help/restore-backup/), igual que las copias cifradas; JSON y HTML sirven para leer y para tu próxima app. [Los elementos de la bóveda tienen su propia vía](/es/help/vault/), \"Exportación de la bóveda (.json)\", que escribe el formato de Bitwarden y lleva tus nombres de usuario, contraseñas, URL, datos de tarjeta y claves 2FA a Bitwarden, 1Password o KeePass.",
+        "Puedes exportarlo todo en cualquier momento, generado por completo en tu dispositivo: archivos Markdown en un zip con los adjuntos incluidos, JSON simple, o HTML autónomo - por nota o para toda la cuenta. El zip es \"Todo, sin cifrar (.zip)\", [y se puede restaurar](/es/help/restore-backup/), igual que las copias cifradas; JSON y HTML sirven para leer y para tu próxima app. [Los elementos de la bóveda tienen su propia vía](/es/help/vault/), \"Exportación de la bóveda (.json)\", que escribe el formato de Bitwarden y lleva tus nombres de usuario, contraseñas, URL, datos de tarjeta y claves 2FA a Bitwarden, 1Password o KeePass.",
         "Todo está en Ajustes > Import & Export > Exportar. La importación funciona igual, desde Obsidian, Evernote, Apple Notes, Standard Notes, Bitwarden y más: la lista completa está en [llegar desde otra app](/es/help/import-from-other-apps/). El bloqueo no forma parte del modelo de negocio."
       ]
     },
@@ -336,7 +337,7 @@
       "q": "¿Qué pasa con mis notas si PrivacyNotes cierra?",
       "a": [
         "Las conservas. Tus notas, tareas, entradas de diario y elementos de la bóveda viven en tu dispositivo porque la app es local-first, y [exportarlos a Markdown, JSON o HTML funciona sin conexión](/es/help/export/). Una imagen o un archivo se queda en un dispositivo en cuanto lo añades o lo abres allí, y uno que este dispositivo nunca abrió se descarga cuando lo abres, así que [guarda una copia de seguridad completa](/es/help/backup-strategy/): descarga cada imagen y cada archivo que le falta a este dispositivo, y te avisa si alguno no se puede descargar.",
-        "El código de cifrado también es [open source](https://github.com/LifetimeLabsDev/PrivacyNotes.app): el formato sigue siendo legible de forma independiente incluso en un mundo donde nuestros servidores desaparecieran de la noche a la mañana."
+        "El código de cifrado también es [open source](https://github.com/LifetimeLabsHQ/PrivacyNotes.app): el formato sigue siendo legible de forma independiente incluso en un mundo donde nuestros servidores desaparecieran de la noche a la mañana."
       ]
     },
     "free-vs-pro": {
@@ -402,7 +403,7 @@
       "a": [
         "A menudo unos días. Las peticiones pequeñas y los informes de errores suelen entrar en la siguiente versión, y publicamos versiones casi cada semana en lugar de dos o tres veces al año. El [changelog](/changelog) es la prueba: cada entrada lleva fecha, está escrita en lenguaje claro y dice qué cambió. Lee un mes y sabrás exactamente qué esperar de nosotros antes de confiarle nada a la aplicación.",
         "Ese ritmo viene de cómo repartimos el trabajo. El núcleo de cifrado, el protocolo de sincronización y el inicio de sesión los escribieron personas, al margen de sus trabajos, mucho antes de que la app tuviera nombre, y el núcleo criptográfico se sigue manteniendo así; nada automatizado se le acerca. Cuando esa base estuvo sólida, en la primavera de 2026, empezamos a usar herramientas de IA para programar bajo un protocolo fijo: primero para las [traducciones](/es/help/translation-quality/), luego los artículos de ayuda, luego funciones de interfaz y correcciones de errores no críticos, donde se les da bien acotar casos raros que de otro modo llevarían semanas, y escribir los scripts de prueba que obligan a varios desarrolladores a seguir un mismo estándar. Por eso merece la pena implementar lo que pide una sola persona en vez de dejar su petición esperando detrás de las primeras de la lista.",
-        "Todo lo que toca el cifrado, la sincronización o el inicio de sesión se queda en manos de desarrolladores con experiencia que escriben cada línea, y ese código es [público](https://github.com/LifetimeLabsDev/PrivacyNotes.app) para que puedas leerlo en vez de creernos. Más sobre el equipo y cómo trabajamos en nuestra [página de presentación](https://lifetimelabs.dev/about).",
+        "Todo lo que toca el cifrado, la sincronización o el inicio de sesión se queda en manos de desarrolladores con experiencia que escriben cada línea, y ese código es [público](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) para que puedas leerlo en vez de creernos. Más sobre el equipo y cómo trabajamos en nuestra [página de presentación](https://lifetimelabs.dev/about).",
         "La aplicación en sí no tiene funciones de IA y nunca envía tus notas a ninguna parte ([detalles](/es/help/no-ai/)). Esa promesa va aparte, y no cambia."
       ]
     },
@@ -417,9 +418,9 @@
       "q": "¿Cómo instalo la app de Android con Obtainium?",
       "a": [
         "Obtainium es una app de Android gratuita y open source que instala otras apps directamente desde sus páginas de versiones. Ahora es la forma que recomendamos para instalar PrivacyNotes en Android, porque es la única vía que se mantiene al día sola. ¿Ya la tienes? Toca el botón de Obtainium para que añada PrivacyNotes por ti.",
-        "[![Consíguelo en Obtainium](/marketing/badge-obtainium.webp)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22app.privacynotes%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FLifetimeLabsDev%2FPrivacyNotes.app%22%2C%22author%22%3A%22LifetimeLabsDev%22%2C%22name%22%3A%22PrivacyNotes%22%7D)",
+        "[![Consíguelo en Obtainium](/marketing/badge-obtainium.webp)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22app.privacynotes%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FLifetimeLabsHQ%2FPrivacyNotes.app%22%2C%22author%22%3A%22LifetimeLabsDev%22%2C%22name%22%3A%22PrivacyNotes%22%7D)",
         "¿Aún no? Instala primero [Obtainium](https://obtainium.imranr.dev/), añade una app y pega esto:",
-        "`https://github.com/LifetimeLabsDev/PrivacyNotes.app`",
+        "`https://github.com/LifetimeLabsHQ/PrivacyNotes.app`",
         "Obtainium lee nuestras versiones, elige el APK e instala cada versión nueva en cuanto sale. No interviene ninguna cuenta de Google en ningún momento.",
         "Obtainium no es una app nuestra, y Android sigue pidiéndote que confirmes cada instalación, así que una actualización llega como notificación y un toque, no en silencio. El APK es la misma compilación que sirve nuestra página de descarga, [firmada con la misma clave](/es/help/verify-download/), así que Obtainium adopta una app que ya instalaste por sideload: no tienes que desinstalar nada ni volver a iniciar sesión. Sin él, la app solo puede [avisarte dentro de la app](/es/help/android-updates/) de que hay una versión lista."
       ]
@@ -428,14 +429,14 @@
       "q": "¿Qué idiomas habla la app?",
       "a": [
         "Inglés, alemán, francés, italiano, español, neerlandés, polaco, checo, eslovaco, catalán, turco, sueco, ucraniano, ruso, japonés, coreano, chino tradicional, tailandés, árabe y portugués, en sus variantes europea y brasileña. La app sigue por defecto el idioma de tu sistema, o puedes fijar uno explícitamente en Ajustes > Idioma en cada dispositivo.",
-        "[Las traducciones son gratis para todos](/es/help/translation-quality/), no una ventaja Pro. Hay más idiomas en camino; si falta el tuyo, dínoslo en [GitHub](https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues) o [Reddit](https://www.reddit.com/r/PrivacyNotes/)."
+        "[Las traducciones son gratis para todos](/es/help/translation-quality/), no una ventaja Pro. Hay más idiomas en camino; si falta el tuyo, dínoslo en [GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues) o [Reddit](https://www.reddit.com/r/PrivacyNotes/)."
       ]
     },
     "translation-quality": {
       "q": "¿Cómo se hacen las traducciones de la app?",
       "a": [
         "Primero escribimos el inglés. [Después, un agente de IA traduce cada idioma](/es/help/languages/) con un glosario compartido, en el registro fijado para ese idioma, y un segundo agente revisa cada lote en cuanto a precisión, terminología y registro antes de publicarlo. Hablantes nativos revisan una muestra, empezando por los idiomas más nuevos y los textos de seguridad, inicio de sesión y facturación, y dos comprobaciones automáticas hacen fallar la compilación mientras falte alguna traducción o esté desactualizada. Las traducciones están en todos los planes, nunca son un extra de Pro.",
-        "Puedes mejorar cualquiera de ellas. Si una frase suena rara en tu idioma, [informa de la traducción](https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues/new?template=translation.yml): tu idioma, la pantalla en la que aparece y lo que debería decir. Las correcciones salen en la siguiente versión."
+        "Puedes mejorar cualquiera de ellas. Si una frase suena rara en tu idioma, [informa de la traducción](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues/new?template=translation.yml): tu idioma, la pantalla en la que aparece y lo que debería decir. Las correcciones salen en la siguiente versión."
       ]
     },
     "markdown-syntax": {
@@ -463,14 +464,30 @@
       "q": "¿Puedo guardar los marcadores de mi navegador en PrivacyNotes?",
       "a": [
         "Sí. Los marcadores son un pilar propio en la barra lateral, junto a notas, tareas y diarios, y son gratis en todos los planes. Pega un enlace en la barra de añadido rápido para guardar uno, o después de `+` en [Ninja](/es/help/ninja/), que también ofrece guardar la página como nota o iniciar un inicio de sesión con ella. Para traer los tuyos, exporta un archivo de marcadores (.html) desde tu navegador y suéltalo en Ajustes > Import & Export > Importar > \"Marcadores del navegador\". Chrome, Firefox, Safari, Edge, Opera, Brave y Vivaldi contienen el mismo archivo, y tus carpetas y fechas vienen con él. Safari lo envuelve en un .zip, que puedes soltar sin abrirlo.",
-        "Tus direcciones nunca salen de tu dispositivo: no cargamos la página que hay detrás de un enlace salvo que elijas Guardar como nota ([guardar una página](/es/help/save-page-as-note/)), y por eso un marcador que añades a mano lleva su dominio como nombre hasta que escribes uno. Los iconos de sitio son la única excepción, y puedes desactivarlos. La exportación escribe el mismo archivo .html estándar, así que tus marcadores se van tan fácil como llegaron ([guía de importación](/es/help/import/browser-bookmarks/))."
+        "Tus direcciones nunca salen de tu dispositivo: no cargamos la página que hay detrás de un enlace salvo que elijas Guardar como nota ([guardar una página](/es/help/save-page-as-note/)), y por eso un marcador que añades a mano lleva su dominio como nombre hasta que escribes uno. Los iconos de sitio son la única excepción, y puedes desactivarlos. La exportación escribe el mismo archivo .html estándar, así que tus marcadores se van tan fácil como llegaron ([guía de importación](/es/help/import/browser-bookmarks/)).",
+        "La [extensión del navegador](/es/help/browser-extension/) también carga una página, cuando eliges en ella Guardar página enlazada como nota."
       ]
     },
     "save-page-as-note": {
       "q": "¿Puedo guardar una página web como nota?",
       "a": [
         "Sí. [Abre un marcador](/es/help/bookmarks/) y elige Guardar como nota, o elige Recortar página en el menú + y pega un enlace. El texto principal de la página se convierte en una nota normal en Notas, enlazada a su marcador, y hasta 20 de sus imágenes se guardan con la nota, cifradas como cualquier imagen que añadas tú, salvo que desactives Guardar imágenes en la ventana Recortar página. Guardar páginas es gratis en todos los planes, y [las imágenes cuentan para tu almacenamiento](/es/help/storage-usage/).",
-        "Las apps de escritorio y de móvil descargan la página y sus imágenes directamente desde tu dispositivo. La app web las descarga a través de nuestro servidor, que las reenvía y no guarda ni la página, ni las imágenes, ni sus direcciones. Las páginas que piden iniciar sesión y las que se construyen con scripts pueden llegar vacías: guárdalas como marcador."
+        "Las apps de escritorio y de móvil descargan la página y sus imágenes directamente desde tu dispositivo. La app web las descarga a través de nuestro servidor, que las reenvía y no guarda ni la página, ni las imágenes, ni sus direcciones. Las páginas que piden iniciar sesión y las que se construyen con scripts pueden llegar vacías: guárdalas como marcador.",
+        "Con la [extensión del navegador](/es/help/browser-extension/) también puedes guardar la página que estás leyendo, incluidas las páginas que piden iniciar sesión."
+      ]
+    },
+    "browser-extension": {
+      "q": "¿Hay una extensión de PrivacyNotes para el navegador?",
+      "a": [
+        "Sí, para Chrome, Edge y Firefox en un ordenador, y es gratis. Guarda la página que estás leyendo como nota, con su texto principal y sus imágenes, o como marcador, y puede mostrar los inicios de sesión, las tarjetas, las claves SSH y los marcadores del sitio en el que estás, solo para copiar. Nunca rellena formularios por sí sola.",
+        "Abre Ajustes > Extensión, añade la extensión desde la tienda de tu navegador, elige qué puede hacer y luego elige Generar un código. Copia el código de un solo uso y pégalo en la extensión. Para quitarla, elige Quitar junto a ella, en Extensiones del navegador, en la misma página. Una extensión no ocupa una de tus plazas de dispositivo. [Cómo protege tus notas](/es/help/browser-extension-security/)."
+      ]
+    },
+    "browser-extension-security": {
+      "q": "¿Puede la extensión del navegador leer mis notas?",
+      "a": [
+        "No. La extensión nunca tiene la clave que abre tus notas. Cifra cada recorte antes de que salga de tu navegador, y una de tus apps lo convierte en nota en su siguiente sincronización.",
+        "Si activas los inicios de sesión, la extensión ve tus inicios de sesión, tus tarjetas, la mitad pública de tus claves SSH y tus marcadores, nunca el texto de una nota ni una clave privada. Los protege un PIN o un código de acceso que defines para la extensión, distinto del de la app. Tras 10 intentos fallidos el navegador se desconecta, así que una copia de tu navegador no se puede abrir a base de probar. Los inicios de sesión se bloquean tras 5 minutos sin uso y al cerrar el navegador. Los detalles están en nuestro [modelo de amenazas](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
     "contacts": {
@@ -491,7 +508,7 @@
     "keyboard-shortcuts": {
       "q": "¿Qué atajos de teclado hay?",
       "a": [
-        "Pulsa ? en cualquier parte de la app para ver la chuleta integrada, también disponible en Ajustes > Acerca de. Pulsa Cmd+K o Ctrl+K para abrir [Ninja](/es/help/ninja/), que abre cualquier cosa y ejecuta cualquier comando, y Q para añadir un elemento con palabras normales. Los atajos cubren navegación, acciones sobre notas, formato y vistas - y en Windows y Linux, cada Cmd se lee como Ctrl y Option como Alt.",
+        "Pulsa ? en cualquier parte de la app para ver la chuleta integrada, también disponible en Ajustes > Atajos. Pulsa Cmd+K o Ctrl+K para abrir [Ninja](/es/help/ninja/), que abre cualquier cosa y ejecuta cualquier comando, y Q para añadir un elemento con palabras normales. Los atajos cubren navegación, acciones sobre notas, formato y vistas - y en Windows y Linux, cada Cmd se lee como Ctrl y Option como Alt.",
         "La [chuleta imprimible](/help/keyboard-shortcuts/cheat-sheet) recoge todos los atajos en una sola página A4, para Mac o para Windows y Linux, y para el navegador o las apps de escritorio. Se genera a partir de la misma lista que muestra la app, así que siempre coincide con la versión que usas."
       ]
     },
@@ -499,7 +516,7 @@
       "q": "¿Hay una chuleta imprimible con los atajos?",
       "a": [
         "Sí. La [chuleta para imprimir](/help/keyboard-shortcuts/cheat-sheet) reúne todos los atajos en una sola página A4, a dos columnas, lista para colgarla junto a tu pantalla. Se genera a partir de la misma lista que muestra la app, así que nunca puede quedarse atrás respecto a una versión.",
-        "Ábrela y pulsa el botón Print (o Cmd+P / Ctrl+P). Para quedarte con un archivo en lugar de papel, elige PDF como destino en el diálogo de impresión. La chuleta también está enlazada encima y debajo de [la lista de atajos de la app](/es/help/keyboard-shortcuts/) (Ajustes > Acerca de > Atajos) y en el pie de esta web."
+        "Ábrela y pulsa el botón Print (o Cmd+P / Ctrl+P). Para quedarte con un archivo en lugar de papel, elige PDF como destino en el diálogo de impresión. La chuleta también está enlazada encima y debajo de [la lista de atajos de la app](/es/help/keyboard-shortcuts/) en Ajustes > Atajos y en el pie de esta web."
       ]
     },
     "ask-an-ai": {
@@ -527,7 +544,7 @@
     "phrase-compromised": {
       "q": "Mi frase de recuperación se filtró. ¿Qué hago?",
       "a": [
-        "Da la bóveda por perdida. Una frase no se puede cambiar ni rotar, porque la frase es la llave con la que se cifra todo - así que la solución es mudarte a una bóveda nueva. Primero, en la cuenta antigua, exporta todo: Ajustes > Import & Export > Exportar > \"Copia de seguridad de PrivacyNotes (.zip)\".",
+        "Da la bóveda por perdida. Una frase no se puede cambiar ni rotar, porque la frase es la llave con la que se cifra todo - así que la solución es mudarte a una bóveda nueva. Primero, en la cuenta antigua, exporta todo: Ajustes > Import & Export > Exportar > \"Todo, sin cifrar (.zip)\".",
         "Cierra sesión, crea una bóveda nueva (12 palabras nuevas) y vuelve a traer la exportación desde Ajustes > Import & Export > Restaurar > \"Copia de seguridad completa (.zip)\". Luego [elimina la cuenta antigua](/es/help/delete-account/) desde cualquier dispositivo que siga con la sesión iniciada en ella: Ajustes > Cuenta > \"Eliminar cuenta y datos...\". Eso borra sus datos sincronizados y deja fuera a cualquiera que tenga la frase antigua. Si iniciaste sesión con Google, Apple o GitHub, elimina primero la cuenta antigua y luego vuelve a iniciar sesión con esa misma cuenta de Google, Apple o GitHub para empezar la bóveda nueva.",
         "Dos cosas antes de nada: [cancela un complemento de almacenamiento activo](/es/help/manage-storage-addon/), porque la eliminación lo exige, y ten en cuenta que [Pro se queda en la cuenta donde se compró](/es/help/pro-after-leak/) en lugar de pasar a la bóveda nueva. Después guarda la frase nueva en un gestor de contraseñas y en ningún otro sitio: eso es toda la prevención que hace falta."
       ]
@@ -556,8 +573,8 @@
     "backup-strategy": {
       "q": "¿Cuál es la mejor forma de hacer copia de seguridad de mis notas?",
       "a": [
-        "Exporta \"Copia de seguridad completa cifrada (.pnbackupz)\" en Ajustes > Import & Export > Exportar. Cifra todo - notas, diarios, elementos de la bóveda, tareas, imágenes, audio y archivos - con la clave de tu frase, así que puedes dejarla en la nube o en un USB, y [se restaura con tu frase en cualquier dispositivo](/es/help/restore-backup/).",
-        "Se abre con la frase que la creó, así que guarda al lado una \"Copia de seguridad de PrivacyNotes (.zip)\" por si algún día [cambias a una frase nueva](/es/help/phrase-compromised/): mismo contenido, se restaura en cualquier bóveda y legible en el disco, así que guárdala en un lugar de confianza. \"Copia de seguridad cifrada (.pnbackup)\" cubre texto y metadatos en lugar de imágenes y archivos, y \"Copia de seguridad de texto (.json)\" y el archivo HTML son formatos de portabilidad más que de restauración.",
+        "Exporta \"Todo, cifrado (.pnbackupz)\" en Ajustes > Import & Export > Exportar. Cifra todo - notas, diarios, elementos de la bóveda, tareas, imágenes, audio y archivos - con la clave de tu frase, así que puedes dejarla en la nube o en un USB, y [se restaura con tu frase en cualquier dispositivo](/es/help/restore-backup/).",
+        "Se abre con la frase que la creó, así que guarda al lado una copia \"Todo, sin cifrar (.zip)\" por si algún día [cambias a una frase nueva](/es/help/phrase-compromised/): mismo contenido, se restaura en cualquier bóveda y legible en el disco, así que guárdala en un lugar de confianza. \"Solo texto, cifrado (.pnbackup)\" cubre texto y metadatos en lugar de imágenes y archivos, y \"Copia de seguridad de texto (.json)\" y el archivo HTML son formatos de portabilidad más que de restauración.",
         "¿Para qué conservar copias locales, si todo se sincroniza? Porque la sincronización no es una copia de seguridad: propaga fielmente las eliminaciones, incluidas las de un servidor comprometido que tus dispositivos luego replican. Una copia en tu propio disco es la única que ningún incidente del servidor puede tocar. Exporta antes de importaciones grandes, [antes de marcharte](/es/help/leaving/), y con una regularidad que vayas a mantener."
       ]
     },
@@ -571,7 +588,7 @@
     "image-quality": {
       "q": "¿PrivacyNotes cambia o comprime mis imágenes?",
       "a": [
-        "Sí. Los dos ajustes vienen activados porque queremos a nuestros usuarios: queremos que [ahorres espacio](/es/help/storage-usage/) y conserves tu privacidad. Ahorro de espacio reduce una imagen grande a 2048 píxeles y la guarda como JPEG al 85 % de calidad, que conserva todo el detalle que una pantalla puede mostrar. Quitar datos de ubicación elimina los metadatos EXIF que una cámara escribe en una foto, incluida la posición GPS, antes de guardar la imagen. Los dos se aplican a cada imagen de la app: pegada en una nota, añadida como archivo o importada.",
+        "Sí. Los dos ajustes vienen activados porque queremos a nuestros usuarios: queremos que [ahorres espacio](/es/help/storage-usage/) y conserves tu privacidad. Ahorro de espacio reduce una imagen grande a 2048 píxeles y la guarda como JPEG al 85 % de calidad, que conserva todo el detalle que una pantalla puede mostrar. Quitar datos de ubicación elimina los metadatos EXIF que una cámara escribe en una foto, incluida la posición GPS, antes de guardar la imagen. Los dos se aplican a cada imagen de la app: pegada en una nota, añadida como archivo o importada. Dos excepciones: un GIF conserva su tamaño para que su animación siga funcionando, y un archivo adjunto a un elemento de la Bóveda se guarda exactamente como estaba.",
         "Desactiva cualquiera de los dos en **Ajustes > Almacenamiento > Imágenes**, donde las fotos de contacto tienen un tercer interruptor que las mantiene en 512 píxeles. Los ajustes solo afectan a las imágenes nuevas; los archivos que no son imágenes se guardan exactamente como están. Las imágenes HEIC y TIFF se convierten a JPEG, porque solo Safari puede mostrarlas. [Una copia de seguridad que restaures](/es/help/restore-backup/) se escribe byte a byte."
       ]
     },
@@ -596,10 +613,18 @@
         "Eliminado de forma permanente significa que desapareció: ningún dispositivo ni nadie de nuestro lado puede recuperarlo, [solo una copia de seguridad que hicieras antes](/es/help/backup-strategy/). Si usas la papelera como un montón de \"quizá algún día\", desactiva el borrado automático o restaura las notas antes del día 30. Hasta entonces, las notas en la papelera siguen contando para [tu almacenamiento](/es/help/storage-usage/) - \"Vaciar\" en la misma vista libera ese espacio al instante."
       ]
     },
+    "dead-mans-switch": {
+      "q": "¿Qué elimina el interruptor de hombre muerto y qué se queda en mis dispositivos?",
+      "a": [
+        "Solo la copia del servidor. Cuando el interruptor está activado y ninguno de tus dispositivos se conecta durante el periodo que elegiste, de 1 mes a 5 años, el servidor elimina tus notas cifradas, su historial, tus archivos y tus ajustes. Cuando termina el periodo, espera dos semanas más antes de eliminar nada, como margen de seguridad: un dispositivo que se conecte durante esas dos semanas también detiene la eliminación. Tu cuenta se mantiene, así que tu frase de recuperación sigue iniciando sesión, y Pro se mantiene. Una suscripción de almacenamiento también se mantiene y se sigue renovando. No hay aviso por correo electrónico y la eliminación no se puede deshacer.",
+        "Tus dispositivos conservan sus notas. Cuando un dispositivo vuelve a conectarse después de una eliminación, deja de sincronizar y te pregunta primero: descarga una copia de seguridad de todo lo que contiene, que puedes [restaurar](/es/help/restore-backup/) más adelante, y luego quita las notas de ese dispositivo. Se cierra la sesión, y el siguiente inicio de sesión empieza en la cuenta vacía. Un archivo que este dispositivo nunca abrió puede haber desaparecido ya del servidor, y entonces la copia de seguridad lo indica como que falta. Mantén la app actualizada en todos tus dispositivos, porque una versión anterior no puede preguntar primero.",
+        "Actívalo en Ajustes > ID & Sync > \"Interruptor de hombre muerto\" y elige el periodo. Abrir la app con conexión en cualquiera de tus dispositivos vuelve a iniciar el plazo, y la fecha \"Se elimina el\" de esa pestaña muestra el primer día en que puede producirse la eliminación, con las dos semanas incluidas. Desactiva el interruptor cuando quieras para detenerlo."
+      ]
+    },
     "leaving": {
       "q": "¿Cómo abandono PrivacyNotes por completo?",
       "a": [
-        "[Exporta primero](/es/help/export/), elimina después - ambas cosas de autoservicio. Ajustes > Import & Export > Exportar cubre todas las vías de salida: \"Copia de seguridad de PrivacyNotes (.zip)\" para una copia completa, Markdown y HTML portables para tu próxima app de notas, y \"Exportación de la bóveda (.json)\" en formato compatible con Bitwarden para tu próximo gestor de contraseñas. Las exportaciones se generan en tu dispositivo.",
+        "[Exporta primero](/es/help/export/), elimina después - ambas cosas de autoservicio. Ajustes > Import & Export > Exportar cubre todas las vías de salida: \"Todo, sin cifrar (.zip)\" para una copia completa, Markdown y HTML portables para tu próxima app de notas, y \"Exportación de la bóveda (.json)\" en formato compatible con Bitwarden para tu próximo gestor de contraseñas. Las exportaciones se generan en tu dispositivo.",
         "Luego Ajustes > Cuenta > \"Eliminar cuenta y datos...\": escribe DELETE, y tus notas sincronizadas, archivos, dispositivos, ajustes y la cuenta misma se eliminan de forma permanente. Se conservan los registros de una suscripción de almacenamiento y un identificador de seguridad mínimo, y las copias de seguridad hechas antes de la eliminación caducan a los siete días ([detalles](/es/help/delete-account/)). [Un complemento de almacenamiento activo debe cancelarse antes](/es/help/manage-storage-addon/) en Ajustes > Almacenamiento. Sin patrones oscuros ni correos para recuperarte - tus datos son tuyos, también a la salida."
       ]
     },
@@ -622,7 +647,7 @@
       "q": "Pagué por Pro pero no está activo. ¿Y ahora qué?",
       "a": [
         "Dale un minuto y luego recarga la app. Tras el pago, la app consulta durante unos 20 segundos y se desbloquea sola, y una recarga vuelve a comprobar el estado de Pro al arrancar. Si el pago llegó pero la activación se retrasa, un banner dice \"Pago recibido, pero la activación de Pro está tardando más de lo habitual\" - ese estado se resuelve solo en casi todos los casos. [En las versiones de tienda](/es/help/store-purchases/), una compra que no consigue validarse se reintenta al reiniciar la app, y una compra que nunca se activa la reembolsa la tienda automáticamente en un plazo de 3 días.",
-        "¿Sigue bloqueado? Casi siempre es un desajuste de cuenta: Pro se vincula a la cuenta que tenía la sesión iniciada al comprar, así que una frase distinta - o un inicio de sesión con Google, Apple o GitHub en vez de tu bóveda de frase - es una cuenta distinta. Compara el ID de cuenta en Ajustes > ID & Sync en el dispositivo que hizo la compra. Si está de verdad atascado, [repórtalo](https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues) e incluye ese ID de cuenta: identifica la compra y no revela nada sobre tus notas."
+        "¿Sigue bloqueado? Casi siempre es un desajuste de cuenta: Pro se vincula a la cuenta que tenía la sesión iniciada al comprar, así que una frase distinta - o un inicio de sesión con Google, Apple o GitHub en vez de tu bóveda de frase - es una cuenta distinta. Compara el ID de cuenta en Ajustes > ID & Sync en el dispositivo que hizo la compra. Si está de verdad atascado, [repórtalo](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues) e incluye ese ID de cuenta: identifica la compra y no revela nada sobre tus notas."
       ]
     },
     "manage-storage-addon": {
@@ -637,13 +662,13 @@
       "q": "¿Las compras se trasladan entre la web, Google Play y la App Store?",
       "a": [
         "Sí. Pro y el almacenamiento se vinculan a tu cuenta, no a una plataforma o tienda. Compra en la web y todas las apps en las que inicies sesión serán Pro, incluidas las versiones de tienda; compra dentro de una versión de tienda y las apps web y de escritorio se desbloquean igual. Iniciar sesión es la restauración, porque el derecho sigue a la cuenta. Una versión de tienda lleva además un botón **Restaurar compras** en Ajustes > Cuenta, que pregunta a Apple o Google qué tienes y lo vuelve a desbloquear tras una reinstalación.",
-        "La única diferencia es quién te cobra. Las compras web pasan por Paddle y [se gestionan en la app](/es/help/manage-storage-addon/) en Ajustes > Almacenamiento. Las compras hechas dentro de una versión de tienda (la App Store hoy, [Google Play cuando salga esa app](/es/help/play-vs-apk/)) las cobra esa tienda: el almacenamiento recurrente se cancela en los ajustes de suscripción de la tienda, y los reembolsos siguen el proceso de la tienda. En cualquier caso es la misma cuenta y el mismo Pro en todas partes - incluidas plataformas que aún no existen."
+        "La única diferencia es quién te cobra. Las compras web pasan por Paddle y [se gestionan en la app](/es/help/manage-storage-addon/) en Ajustes > Almacenamiento. Las compras hechas dentro de una versión de tienda (la App Store y [Google Play](/es/help/play-vs-apk/)) las cobra esa tienda: el almacenamiento recurrente se cancela en los ajustes de suscripción de la tienda, y los reembolsos siguen el proceso de la tienda. En cualquier caso es la misma cuenta y el mismo Pro en todas partes - incluidas plataformas que aún no existen."
       ]
     },
     "play-vs-apk": {
       "q": "Obtainium, APK directo o Google Play: ¿qué descarga de Android?",
       "a": [
-        "Coge [Obtainium](/es/help/obtainium/) si quieres que la app se mantenga al día sola, y [el APK directo](/es/help/android-updates/) si prefieres no tener una segunda app para eso. Google Play todavía no está activo, así que hoy la elección es entre esos dos. Te entregan el mismo archivo firmado con la misma clave, así que puedes cambiar en cualquier dirección cuando quieras: Obtainium adopta un APK que ya instalaste por sideload, y el APK de la web se instala sobre uno de Obtainium.",
+        "Coge Google Play si quieres la vía habitual: instala y actualiza la app como cualquier otra, y las compras dentro de la app las cobra Google. Coge [Obtainium](/es/help/obtainium/) si quieres que la app se mantenga al día sola y sin cuenta de Google, y [el APK directo](/es/help/android-updates/) si prefieres no tener una segunda app para eso. Obtainium y el APK te entregan el mismo archivo firmado con la misma clave, así que puedes cambiar entre esos dos cuando quieras: Obtainium adopta un APK que ya instalaste por sideload, y el APK de la web se instala sobre uno de Obtainium. La versión de Play está firmada con otra clave, así que pasar de Play a cualquiera de los otros dos, o al revés, obliga a desinstalar primero.",
         "Puedes cambiar de idea más adelante sin complicaciones. Antes de cualquier cambio que obligue a desinstalar primero, confirma que la app muestra \"Synced\" y ten a mano tus 12 palabras o [un QR de inicio de sesión de otro dispositivo](/es/help/add-second-device/), porque desinstalar borra la copia local."
       ]
     },
@@ -707,7 +732,7 @@
       "q": "¿Puedo compartir una nota con alguien o trabajar en ella a dos?",
       "a": [
         "Manda una [burn note](/es/help/burn-notes/): convierte cualquier nota en un enlace cifrado de un solo uso que se destruye en cuanto se lee, y eso cubre una contraseña, una dirección o un borrador. Para algo que la otra persona se quede, [exporta la nota como Markdown, HTML o PDF](/es/help/export/) y envíale el archivo.",
-        "Una nota que dos personas editan en vivo sería otro producto: exigiría que el servidor repartiera claves entre personas, y mantener al servidor lejos de tus claves es aquí todo el diseño. Una cuenta es una persona con una frase, y [con autocustodia](/es/help/threat-model-levels/) el servidor no guarda nada que abra tus notas."
+        "Una nota que dos personas editan en vivo sería otro producto: exigiría que el servidor repartiera claves entre personas, algo que este diseño evita. Una cuenta es una persona con una frase, y [con autocustodia](/es/help/threat-model-levels/) el servidor no guarda nada que abra tus notas."
       ]
     },
     "add-second-device": {
@@ -742,7 +767,7 @@
       "q": "¿Mis notas están en la copia de seguridad de mi teléfono Android?",
       "a": [
         "No. La app de Android mantiene sus datos fuera de la copia de seguridad en la nube del teléfono, así que nada de eso llega a Google Drive. El motivo es la clave, no las notas: donde elegiste **Confiar en este dispositivo**, tus 12 palabras se guardan en ese dispositivo para mantener tu sesión iniciada, y una copia en la nube no es sitio para la clave que descifra tus notas.",
-        "Un teléfono nuevo empieza por tanto vacío: instala la app, [inicia sesión con tus 12 palabras](/es/help/add-second-device/) y llega todo lo que se sincronizó. La restauración espera a esa primera sincronización, así que una copia que traigas se empareja con lo que tiene la cuenta en lugar de añadirse dos veces. Lo que nunca se sincronizó vive solo en el teléfono viejo, así que comprueba primero que el pie de página dice \"Synced\", o llévate una \"Copia de seguridad de PrivacyNotes (.zip)\" desde Ajustes > Import & Export > Exportar ([qué copia hacer](/es/help/backup-strategy/)).",
+        "Un teléfono nuevo empieza por tanto vacío: instala la app, [inicia sesión con tus 12 palabras](/es/help/add-second-device/) y llega todo lo que se sincronizó. La restauración espera a esa primera sincronización, así que una copia que traigas se empareja con lo que tiene la cuenta en lugar de añadirse dos veces. Lo que nunca se sincronizó vive solo en el teléfono viejo, así que comprueba primero que el pie de página dice \"Synced\", o llévate una copia \"Todo, sin cifrar (.zip)\" desde Ajustes > Import & Export > Exportar ([qué copia hacer](/es/help/backup-strategy/)).",
         "Una transferencia directa de teléfono a teléfono durante la configuración es otra cosa: algunos teléfonos mueven ahí los datos de las apps, y Android no da a una app ninguna forma fiable de negarse. Esa copia nunca sale de tus dos dispositivos, así que borra el teléfono viejo después."
       ]
     },
@@ -771,7 +796,7 @@
       "q": "¿Cómo compruebo que la app que descargué es auténtica?",
       "a": [
         "Cada build que publicamos va firmado, y tu sistema operativo comprueba esa firma antes de ejecutar nada. Los builds de macOS están firmados y notarizados por Apple. Los instaladores de Windows llevan una firma Authenticode que puedes leer en Propiedades > Firmas digitales. El APK de Android está firmado con nuestra propia clave, y por eso Android rechaza cualquier actualización que no venga de nosotros. La app para iPhone y iPad está firmada por Apple y solo se instala desde la App Store. [Las apps de escritorio también rechazan una actualización](/es/help/desktop-updates/) que no esté firmada con nuestra clave.",
-        "Descarga solo desde PrivacyNotes.app o desde nuestras [versiones en GitHub](https://github.com/LifetimeLabsDev/PrivacyNotes.app/releases), donde está cada versión. La firma es la comprobación que cuenta, y tu sistema la hace por ti: se contrasta con una clave que no está en ninguna parte de nuestra web, así que un archivo cambiado falla esa comprobación diga lo que diga la página de al lado."
+        "Descarga solo desde PrivacyNotes.app o desde nuestras [versiones en GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/releases), donde está cada versión. La firma es la comprobación que cuenta, y tu sistema la hace por ti: se contrasta con una clave que no está en ninguna parte de nuestra web, así que un archivo cambiado falla esa comprobación diga lo que diga la página de al lado."
       ]
     },
     "family-sharing": {
@@ -784,7 +809,7 @@
     "pro-after-leak": {
       "q": "Mi frase de recuperación se filtró. ¿Pierdo Pro?",
       "a": [
-        "Pro se queda en la cuenta en la que lo compraste, y tu frase de recuperación es la única llave de esa cuenta. Si la frase se filtra y te mudas a una bóveda nueva, Pro no se muda contigo, y nadie puede moverlo a mano, ni siquiera nosotros. La app lo dice al registrarte y otra vez antes de cerrar sesión: las 12 palabras son la única forma de entrar.",
+        "Pro se queda en la cuenta en la que lo compraste, y esa cuenta pertenece a tu frase de recuperación. Si la frase se filtra y te mudas a una bóveda nueva, Pro no se muda contigo, y nadie puede moverlo a mano, ni siquiera nosotros. La app lo advierte al registrarte y otra vez antes de cerrar sesión.",
         "Si compraste Pro en los últimos 30 días, puedes pedir un [reembolso completo](/es/help/refunds/) y volver a comprarlo en la bóveda nueva. Cada reembolso nos cuesta comisiones de pago, así que resérvalo para una filtración real, por favor. Los pasos para mover tus notas y cerrar la bóveda antigua están en [qué hacer cuando tu frase se filtra](/es/help/phrase-compromised/). Guarda la frase nueva en un gestor de contraseñas y no la escribas en ningún otro sitio."
       ]
     },
@@ -888,7 +913,7 @@
       "q": "¿Qué fechas y horas puedo escribir en Ninja?",
       "a": [
         "Ninja lee las fechas como se las dirías a una persona. Escribe solo una fecha, como `mañana` o `31 oct`, y la primera fila abre el calendario en ese día. Después de `+`, las mismas palabras fijan el día de un elemento nuevo:",
-        "- Días: `esta noche`, `este sábado`, `pasado mañana`, `dentro de 3 días`, `31 oct`, `2026-12-24`\n- Horas y duraciones: `mediodía`, `15:00`, `9-17`, `durante 30 min`, `durante 3 días`\n- Intervalos: `del viernes al domingo`, `20-25 oct`\n- Repeticiones: `cada lunes y miércoles`, `último viernes de cada mes`, `cada viernes hasta el 20 dic`, `cada lunes 10 veces`\n- Alertas: `1h antes`, `alerta 1 día y 1 hora`",
+        "- Días: `esta noche`, `este sábado`, `pasado mañana`, `dentro de 3 días`, `31 oct`, `2026-12-24`\n- Horas y duraciones: `mediodía`, `15:00`, `9-17`, `15:00 durante 30 min`, `durante 3 días`\n- Intervalos: `del viernes al domingo`, `20-25 oct`\n- Repeticiones: `cada lunes y miércoles`, `último viernes de cada mes`, `cada viernes hasta el 20 dic`, `cada lunes 10 veces`\n- Alertas: `1h antes`, `alerta 1 día y 1 hora`",
         "Una fecha en cifras sigue el **Formato de fecha** de Ajustes > Fecha y hora, así que `24/12` se lee con el mes primero o con el día primero según lo que hayas elegido. Un año sigue siendo un año: `31 oct 2027` nunca son las 20:27. Las palabras de fecha siguen el idioma de la app, y la palabra `añadir` funciona como `+` en inglés y en tu idioma. [Ninja es gratis](/es/help/ninja/)."
       ]
     },
@@ -924,7 +949,7 @@
       "q": "¿Puedo vaciar, ordenar o reordenar una lista de tareas?",
       "a": [
         "Sí. El menú \"...\" de la nota tiene **Desmarcar todos los elementos** para reutilizar una lista, **Eliminar elementos marcados** para quitar los hechos y **Ordenar elementos por estado** para mover los elementos marcados debajo del resto. Cada opción aparece solo cuando cambiaría algo. Eliminar pregunta antes, y Ordenar y Desmarcar se pueden deshacer con Cmd+Z o Ctrl+Z. La parte inferior de la nota cuenta tu progreso, por ejemplo \"3 de 6 marcados\".",
-        "Para reordenar a mano, arrastra el asa al final de un elemento. Los elementos anidados se mueven con él, y Esc cancela el arrastre. El asa aparece al pasar el puntero en un ordenador y se queda ligeramente visible en una pantalla táctil. Por defecto, un elemento marcado baja por debajo de los no marcados de su lista; desactívalo con **Mover hacia abajo los elementos marcados** en Ajustes > Listas. Todo es gratis."
+        "Para reordenar a mano, arrastra el asa al final de un elemento. Los elementos anidados se mueven con él, y Esc cancela el arrastre. El asa aparece al pasar el puntero en un ordenador y se queda ligeramente visible en una pantalla táctil. Por defecto, un elemento marcado baja por debajo de los no marcados de su lista; desactívalo con **Mover hacia abajo los elementos marcados** en Ajustes > Editor. Todo es gratis."
       ]
     },
     "find-in-note": {
@@ -951,14 +976,14 @@
     "calendar": {
       "q": "¿Hay un calendario y qué aparece en él?",
       "a": [
-        "Sí. Calendario, en la barra lateral, muestra en un solo lugar todos los elementos con fecha: eventos, [entradas del diario](/es/help/journal/), notas y listas de tareas con fecha, y [los cumpleaños de tus contactos](/es/help/contacts/). La lista de al lado es la agenda de los próximos días, y la vista grande cambia entre Día, Semana y Mes. Haz clic en un día vacío, o arrastra sobre horas vacías, y Ninja se abre con ese día y esa hora ya fijados, o arrastra un elemento a otro día.",
+        "Sí. Calendario, en la barra lateral, muestra en un solo lugar todos los elementos con fecha: eventos, [entradas del diario](/es/help/journal/), notas y listas de tareas con fecha, y [los cumpleaños y otras fechas de tus contactos](/es/help/contacts/). La lista de al lado es la agenda de los próximos días, y la vista grande cambia entre Día, Semana y Mes. Haz clic en un día vacío, o arrastra sobre horas vacías, y Ninja se abre con ese día y esa hora ya fijados, o arrastra un elemento a otro día.",
         "Un evento es un tipo de elemento propio: una nota con un día, un día final, una hora y una repetición. Escribe una línea entera en [Ninja](/es/help/ninja-quick-add/) después de `+`, por ejemplo `+Dentista vie 15:00 1h antes`, y Ninja lee el día, la hora y [la alerta por ti](/es/help/reminders/). Escribe solo un día, como `31 oct`, para abrir el calendario ahí. Una nota o una lista de tareas también puede llevar un día, una hora y un día final, desde la fila Programación de su menú \"...\". El calendario es gratuito."
       ]
     },
     "reminders": {
       "q": "¿Funcionan los recordatorios del calendario con la app cerrada?",
       "a": [
-        "En un teléfono, sí: hasta 64 alertas, con hasta 400 días de antelación, se entregan al propio teléfono, así que suenan aunque PrivacyNotes esté cerrado; abrir y desbloquear la app entrega más. En la app de escritorio, un recordatorio suena mientras la app se ejecuta, y en un navegador, mientras PrivacyNotes está abierto en una pestaña. Cada dispositivo programa sus recordatorios a partir de los elementos que guarda, así que el servidor nunca conoce un título, una hora ni un día.",
+        "En un teléfono, sí: hasta 64 alertas, con hasta 400 días de antelación, se entregan al propio teléfono, así que suenan aunque PrivacyNotes esté cerrado; abrir y desbloquear la app entrega más. En la app de escritorio, un recordatorio suena mientras la app se ejecuta, y en un navegador, mientras PrivacyNotes está abierto en una pestaña. Cada dispositivo programa sus recordatorios a partir de los elementos que guarda, así que ningún recordatorio viene del servidor, y el título, la hora y el día de un elemento solo se sincronizan dentro del elemento cifrado.",
         "Añade una alerta desde la fila Alerta de la vista Programación de un elemento, hasta cinco por elemento, y define las predeterminadas en Ajustes > Fecha y hora > Calendario, donde también está \"Mostrar títulos en los recordatorios\". [Un elemento protegido con tu PIN](/es/help/locked-vs-protected/) siempre suena como \"Recordatorio\" y la hora, igual que toda alerta programada mientras el bloqueo de la app está activado. Una entregada antes de activar el bloqueo puede conservar su título hasta que suene. Los recordatorios forman parte de Pro; [el calendario en sí es gratuito](/es/help/calendar/)."
       ]
     },
@@ -1112,7 +1137,7 @@
     "tracker-privacy": {
       "q": "¿Quién puede leer los datos de mis registros y mi medicación?",
       "a": [
-        "Los valores de tus registros viven dentro de tus entradas del diario y tu lista de medicación en tus ajustes, y ambos están cifrados en tu dispositivo y siguen cifrados cuando se sincronizan. Las estadísticas, [el PDF para el médico](/es/help/doctor-pdf/), [el prompt de IA](/es/help/ai-prompt/) y las dos descargas se calculan en tu dispositivo.",
+        "Los valores de tus registros viven dentro de tus entradas del diario, que están cifradas en tu dispositivo y siguen cifradas cuando se sincronizan. Tu lista de medicación y tus registros personalizados viven en tus ajustes. Se sincronizan cifrados como tus notas, pero la copia que este dispositivo guarda de ellos todavía no está sellada, así que el cifrado del disco y el bloqueo de pantalla son lo que la protege allí. Las estadísticas, [el PDF para el médico](/es/help/doctor-pdf/), [el prompt de IA](/es/help/ai-prompt/) y las dos descargas se calculan en tu dispositivo.",
         "[Con autocustodia, el servidor no guarda nada que los abra](/es/help/threat-model-levels/). Si te registraste con Google, Apple o GitHub y elegiste \"Mantenlo simple y cómodo\", tu frase se guarda en nuestro servidor bajo una clave nuestra; Ajustes > Cuenta > Custodia de claves muestra tu modo y te deja cambiarlo. Más en [qué puede ver PrivacyNotes](/es/help/what-can-you-see/)."
       ]
     },
@@ -1148,7 +1173,7 @@
       "q": "¿Cómo actualizo la app de escritorio?",
       "a": [
         "No tienes que hacer nada. Las apps para Mac y Windows y el AppImage de Linux buscan una actualización al arrancar y cuando vuelves a ellas, como mucho cada 12 horas, y la descargan en segundo plano. Luego un aviso muestra **Actualización disponible**, con **Reiniciar** para terminar y **Changelog** para ver las novedades.",
-        "El paquete .deb de Linux se actualiza con una descarga nueva: su aviso ofrece **Descargar**, que abre la [sección de descargas](https://privacynotes.app/es#downloads), e instalas el paquete nuevo encima del antiguo. Un .deb demasiado antiguo para sincronizar de forma segura pausa la sincronización hasta que lo hagas. Si instalaste la app con Scoop en Windows, ejecuta `scoop update privacynotes`, y el aviso tiene **Copiar comando** para ello. En un Mac, Homebrew no necesita ningún comando de actualización, porque la app se actualiza sola."
+        "El paquete .deb de Linux se actualiza con una descarga nueva: su aviso ofrece **Descargar**, que abre la [sección de descargas](https://privacynotes.app/es#downloads), e instalas el paquete nuevo encima del antiguo. Un .deb demasiado antiguo para sincronizar de forma segura pausa la sincronización hasta que lo hagas. Si instalaste la app con Scoop en Windows, te recomendamos pasar a winget, porque entonces la app se actualiza sola. El aviso tiene **Copiar comando** para `winget install LifetimeLabs.PrivacyNotes; scoop uninstall privacynotes`: cierra la app y pégalo en PowerShell. Tus notas y ajustes se quedan en el dispositivo. En un Mac, Homebrew no necesita ningún comando de actualización, porque la app se actualiza sola."
       ]
     }
   }

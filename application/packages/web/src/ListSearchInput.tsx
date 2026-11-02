@@ -110,7 +110,7 @@ export function ListSearchInput({
         enterKeyHint="search"
         className={`pn-search-well w-full h-10 rounded-md bg-surface-2 border border-divider ps-3 ${
           draft || commandsHere ? 'pe-10' : 'pe-3'
-        } text-[15px] focus:outline-none focus:border-accent placeholder:text-pn-muted`}
+        } text-row focus:outline-none focus:border-accent placeholder:text-pn-muted`}
       />
       {/* The way into command mode without the ">" key. It shows only on an
           empty field: once there is text, the clear button takes its place.
@@ -119,18 +119,18 @@ export function ListSearchInput({
           wrapper centres with inset and flex, never a transform: a transform
           makes a stacking context, and the list rows below then paint over
           the tip.
-          Spec: ops/docs/archive/keyboard-shortcuts.md (decision D5) */}
+          Spec: docs/internal/specs/keyboard-shortcuts.md (decision D5) */}
       {!draft && commandsHere && (
         <span className="absolute end-1 inset-y-0 flex items-center">
-          <HoverLabel label={t('palette.open')} keys={keyText('commandMode')} position="below-end" className="flex">
+          <HoverLabel label={t('common:palette.label')} keys={keyText('commandMode')} position="below-end" className="flex">
             <button
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={openCommands}
-              aria-label={t('palette.open')}
+              aria-label={t('common:palette.label')}
               className="inline-flex items-center justify-center w-8 h-8 rounded-md text-pn-muted hover:text-accent hover:bg-pn/5 transition"
             >
-              <Terminal size={15} aria-hidden="true" />
+              <Terminal aria-hidden="true" />
             </button>
           </HoverLabel>
         </span>
@@ -143,7 +143,7 @@ export function ListSearchInput({
           aria-label={t('actions.clearSearch')}
           className="absolute end-1 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-8 h-8 rounded-md text-pn-muted hover:text-pn hover:bg-pn/5 transition"
         >
-          <X size={14} />
+          <X />
         </button>
       )}
     </div>

@@ -38,22 +38,22 @@ interface CollapsedSidebarProps {
   /** Item count per pillar row, for the hover labels. An absent entry draws
    *  no count, which is not a zero: the Markdown pillar scans nothing until a
    *  folder is chosen.
-   *  Spec: ops/docs/archive/start-view.md (one counts object) */
+   *  Spec: docs/internal/specs/start-view.md (one counts object) */
   viewCounts: Partial<Record<View, number>>;
   trashedCount: number;
   /** Views switched off in the sidebar options menu; the wide rail hides the
-   *  same rows. Spec: ops/docs/archive/sidebar-views.md */
+   *  same rows. Spec: docs/internal/specs/sidebar-views.md */
   hiddenViews: View[];
 }
 
-// Spec: ops/docs/design-decisions.md (sidebar collapsed icon rail)
+// Spec: docs/internal/design-decisions.md (sidebar collapsed icon rail)
 
 /**
  * Fit tiers, cheapest first. Each one buys height back: `shed` drops the
  * `.pn-rail-optional` items, `compact` shrinks the buttons and the gaps, and
  * `scroll` is the floor - a scrolling rail cannot paint over the footer below
  * it, whatever it holds. `index.css` carries what each tier does.
- * Spec: ops/docs/archive/ui-patterns.md section 40 (rail fit tiers)
+ * Spec: docs/internal/design/ui-patterns.md section 40 (rail fit tiers)
  */
 const RAIL_FIT_TIERS = ['full', 'shed', 'compact', 'scroll'] as const;
 
@@ -152,7 +152,7 @@ export function CollapsedSidebar({
       </div>
 
       {/* The quick switcher, as the wide rail's "Jump to" row.
-          Spec: ops/docs/archive/keyboard-shortcuts.md (decision D15) */}
+          Spec: docs/internal/specs/keyboard-shortcuts.md (decision D15) */}
       <HoverLabel label={t('common:quickSwitcher.jumpTo')} keys={`${keyText('quickSwitcher')} · ${KATANA_LINE}`}>
         <button
           type="button"
@@ -168,14 +168,14 @@ export function CollapsedSidebar({
       {spaces && <SpaceSwitch active={spaces.active} onChange={spaces.onChange} locked={spaces.locked} noAll={spaces.noAll} vertical />}
 
       {/* New note */}
-      <HoverLabel label={t('collapsedSidebar.newNote')} keys={keyText('newNote')}>
+      <HoverLabel label={t('notes:header.newNote')} keys={keyText('newNote')}>
         <button
           type="button"
           onClick={onNew}
-          aria-label={t('collapsedSidebar.newNote')}
+          aria-label={t('notes:header.newNote')}
           className="w-9 h-9 flex items-center justify-center rounded-lg text-pn hover:bg-pn/5 hover:text-accent dark:hover:text-accent transition"
         >
-          <Plus size={18} />
+          <Plus />
         </button>
       </HoverLabel>
 
@@ -184,7 +184,7 @@ export function CollapsedSidebar({
       {/* Views, from the same shared list the wide rail draws. Collapsing the
           sidebar must not change which rows exist or what they are called, so
           neither surface keeps a list of its own.
-          Spec: ops/docs/archive/start-view.md (one row list, one label namespace) */}
+          Spec: docs/internal/specs/start-view.md (one row list, one label namespace) */}
       {viewRows(t)
         // All is never hideable - the logo above goes there too. Pinned and
         // Archive hide at zero, the same rule as the expanded rail.
@@ -204,7 +204,7 @@ export function CollapsedSidebar({
       {/* Tags - click expands sidebar scrolled to tags */}
       <HoverLabel label={t('tagsRail.tags')}>
         <button type="button" onClick={onExpandToTags} className={iconBtn(selectedTag !== null && selectedTag !== '__untagged__')} aria-label={t('tagsRail.tags')}>
-          <Hash size={18} />
+          <Hash />
         </button>
       </HoverLabel>
 
@@ -217,7 +217,7 @@ export function CollapsedSidebar({
           className={iconBtn(selectedFolder !== null)}
           aria-label={t('browseToggle.folders')}
         >
-          <ProGlyph pro={!isPro}><Folder size={18} /></ProGlyph>
+          <ProGlyph pro={!isPro}><Folder /></ProGlyph>
         </button>
       </HoverLabel>
 
@@ -226,7 +226,7 @@ export function CollapsedSidebar({
       {/* Trash */}
       <HoverLabel label={t('pillars.trash')} count={trashedCount}>
         <button type="button" onClick={() => handleSelectView('trash')} className={dimIconBtn(view === 'trash')} aria-label={t('pillars.trash')}>
-          <Trash size={18} />
+          <Trash />
         </button>
       </HoverLabel>
 
@@ -253,21 +253,21 @@ export function CollapsedSidebar({
             aria-label={`${updateTipLabel} (v${updateVersion})`}
             className="relative w-9 h-9 flex items-center justify-center rounded-lg text-pn-muted hover:bg-pn/5 hover:text-accent dark:hover:text-accent transition"
           >
-            <Devices size={16} />
+            <Devices />
             {/* surface-0, not surface-1: this rail sits on the darker column. */}
             <UpdateDot ring="ring-surface-0" />
           </a>
         </HoverLabel>
       ) : (
-        <HoverLabel label={t('tagsRail.help')} className="pn-rail-optional">
+        <HoverLabel label={t('notes:settings.helpLabel')} className="pn-rail-optional">
           <a
             href={siteHref(helpPath(activeLocale()))}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={t('tagsRail.help')}
+            aria-label={t('notes:settings.helpLabel')}
             className="w-9 h-9 flex items-center justify-center rounded-lg text-pn-muted hover:bg-pn/5 hover:text-accent dark:hover:text-accent transition"
           >
-            <Question size={16} />
+            <Question />
           </a>
         </HoverLabel>
       )}
@@ -281,7 +281,7 @@ export function CollapsedSidebar({
           aria-label={t('collapsedSidebar.expandSidebar')}
           className="w-9 h-9 flex items-center justify-center rounded-lg text-pn-muted hover:bg-pn/5 hover:text-accent dark:hover:text-accent transition"
         >
-          <CaretRight size={16} />
+          <CaretRight />
         </button>
       </HoverLabel>
     </div>

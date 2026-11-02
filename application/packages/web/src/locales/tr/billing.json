@@ -24,7 +24,8 @@
       "replace": "Bul ve değiştir bir Pro özelliğidir. Bir nottaki tek bir eşleşmeyi veya tüm eşleşmeleri tek seferde değiştirmek için yükseltin.",
       "passphrase": "Parola cümleleri bir Pro özelliğidir. Yazması ve söylemesi kolay, rastgele sözcüklerden bir cümle oluşturun.",
       "default": "Tek bir yükseltme aşağıdaki her şeyin kilidini açar. Tek seferlik ödeme.",
-      "alerts": "Hatırlatıcılar bir Pro özelliğidir. Cihazlarınız seçtiğiniz saatte çalar ve öğeyle ilgili hiçbir şey cihazlarınızdan çıkmaz."
+      "alerts": "Hatırlatıcılar bir Pro özelliğidir. Her cihaz seçtiğiniz saatte kendi başına çalar, böylece hiçbir anlık bildirim hizmeti öğeyi görmez.",
+      "vaultFiles": "Kasa öğelerindeki dosyalar bir Pro özelliğidir. Kurtarma kodlarını, bir yedek anahtarı veya bir taramayı ait olduğu giriş bilgisi, kart ya da anahtarla birlikte saklayın."
     },
     "features": {
       "devices": "Sınırsız cihazda, her platformda eşitleme",
@@ -80,7 +81,6 @@
     "loadFailed": "Geçmiş yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.",
     "selectPrompt": "Önizlemek için bir sürüm seçin.",
     "emptyBody": "(boş)",
-    "restore": "Geri yükle",
     "restoring": "Geri yükleniyor…",
     "restoreSnapshotFailed": "Önce geçerli sürüm kaydedilemedi, bu yüzden hiçbir şey geri yüklenmedi. Bağlantınızı kontrol edip tekrar deneyin.",
     "restoreFailed": "Bu sürüm geri yüklenemedi. Tekrar deneyin.",

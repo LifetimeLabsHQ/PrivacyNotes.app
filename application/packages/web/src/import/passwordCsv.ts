@@ -95,8 +95,10 @@ export const passwordCsvImporter: Importer = {
 
       const url = cell(row, columns.url);
       const username = cell(row, columns.username);
-      const password = cell(row, columns.password);
-      const totp = cell(row, columns.totp);
+      // A password and a TOTP secret are taken byte for byte: a space at
+      // either end is part of the secret, and trimming it locked the user out.
+      const password = rawCell(row, columns.password);
+      const totp = rawCell(row, columns.totp);
       if (!password) noPassword++;
       if (totp) totpCount++;
 
@@ -260,8 +262,12 @@ function resolveColumns(header: string[]): ColumnMap {
 }
 
 function cell(row: string[], index: number): string {
+  return rawCell(row, index).trim();
+}
+
+function rawCell(row: string[], index: number): string {
   if (index < 0) return '';
-  return (row[index] ?? '').trim();
+  return row[index] ?? '';
 }
 
 /** Firefox writes its three timestamps as epoch milliseconds. */

@@ -202,7 +202,7 @@ const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>(
     if (items.length === 0 && !showCreate) {
       return (
         <div className="z-50 w-64 rounded-lg border border-divider bg-surface-2 shadow-lg overflow-hidden">
-          <div className="px-3 py-2 text-sm text-pn-muted">
+          <div className="px-3 py-2 text-body text-pn-muted">
             {t('noteLinkSuggestion.noMatches')}
           </div>
         </div>
@@ -218,7 +218,7 @@ const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>(
           ref={listRef}
           className="z-50 w-72 max-h-64 overflow-y-auto rounded-lg border border-divider bg-surface-2 shadow-lg"
         >
-          <div className="px-3 pt-2 pb-1 text-xs text-pn-muted truncate" dir="auto">
+          <div className="px-3 pt-2 pb-1 text-small text-pn-muted truncate" dir="auto">
             {t('noteLinkSuggestion.headingsIn', { title: 'note' in first ? first.note : '' })}
           </div>
           {items.map((item, index) =>
@@ -230,7 +230,7 @@ const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>(
                 onClick={() => pick(item)}
                 onMouseEnter={() => setSelectedIndex(index)}
                 style={{ paddingInlineStart: `${12 + (item.level - top) * 12}px` }}
-                className={`w-full text-start pe-3 py-1.5 text-sm truncate transition ${
+                className={`w-full text-start pe-3 py-1.5 text-body truncate transition ${
                   index === selectedIndex
                     ? 'bg-accent/10 text-accent-strong dark:bg-accent/20'
                     : 'text-pn hover:bg-pn/5'
@@ -239,7 +239,7 @@ const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>(
                 {highlightMatch(item.title, filter)}
               </button>
             ) : (
-              <div key={item.id} className="px-3 py-2 text-sm text-pn-muted">
+              <div key={item.id} className="px-3 py-2 text-body text-pn-muted">
                 {item.title}
               </div>
             ),
@@ -260,7 +260,7 @@ const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>(
             data-selected={index === selectedIndex}
             onClick={() => pick(item)}
             onMouseEnter={() => setSelectedIndex(index)}
-            className={`w-full text-start px-3 py-2 text-sm truncate transition ${
+            className={`w-full text-start px-3 py-2 text-body truncate transition ${
               index === selectedIndex
                 ? 'bg-accent/10 text-accent-strong dark:bg-accent/20'
                 : 'text-pn hover:bg-pn/5'
@@ -279,7 +279,7 @@ const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>(
               data-selected={selectedIndex === items.length}
               onClick={() => command({ target: query.trim() })}
               onMouseEnter={() => setSelectedIndex(items.length)}
-              className={`w-full text-start px-3 py-2 text-sm transition ${
+              className={`w-full text-start px-3 py-2 text-body transition ${
                 selectedIndex === items.length
                   ? 'bg-accent/10 text-accent-strong dark:bg-accent/20'
                   : 'text-pn-muted hover:bg-pn/5'

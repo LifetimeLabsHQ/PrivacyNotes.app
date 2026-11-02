@@ -3,14 +3,12 @@
     "importTitle": "Deine Daten importieren",
     "exportTitle": "Deine Daten exportieren",
     "restoreTitle": "Deine Daten wiederherstellen",
-    "vaultTitle": "Deine Passwörter importieren",
-    "tablistLabel": "Import, Export, Wiederherstellung oder Passwörter",
+    "tablistLabel": "Import, Export, Wiederherstellung oder Tracker",
     "tabImport": "Import",
     "tabExport": "Export",
     "tabRestore": "Wiederherstellung",
     "tabVault": "Passwörter",
-    "working": "Wird verarbeitet…",
-    "tabWellness": "Tracker"
+    "working": "Wird verarbeitet…"
   },
   "footer": {
     "exportNote": "Exporte laufen lokal. Es wird nichts hochgeladen.",
@@ -18,12 +16,11 @@
     "importNote": "Alles ist immer verschlüsselt, auf deinem Gerät und beim Synchronisieren."
   },
   "importPick": {
-    "autoTagLabel": "Importierte Notizen nach Quelle taggen",
-    "autoTagDesc": "Google-Keep-Notizen erhalten <keep>#google</keep>, Obsidian erhält <obsidian>#obsidian</obsidian> und so weiter.",
     "guideAria": "Import-Anleitung für {{app}}",
     "guideLabel": "Anleitung",
-    "groupGeneral": "Allgemein",
-    "groupNotes": "Notizen"
+    "searchPlaceholder": "Finde deine App",
+    "groupCalendar": "Kalender, Kontakte und Lesezeichen",
+    "noMatch": "Keine App passt. Die meisten Notiz-Apps können Markdown-Dateien exportieren, und Markdown-Dateien lassen sich hier importieren."
   },
   "folderImport": {
     "tagLabel": "Notizen zusätzlich nach Ordner taggen",
@@ -76,6 +73,7 @@
     "googleCalendar": "Die .zip aus Google Kalender unter Settings > Import & export oder eine einzelne .ics-Datei. Termine behalten ihre Uhrzeiten, Wiederholungen und Erinnerungen.",
     "appleNotes": "Exportiere über die kostenlose Exporter-App als Markdown und lege dann die .zip hier ab.",
     "appleJournal": "Exportiere aus Journal auf dem Mac oder iPhone, komprimiere den Ordner AppleJournalEntries und lege die .zip hier ab. Einträge werden als Tagebucheinträge importiert, mit ihren Fotos, Videos, Sprachmemos und Orten.",
+    "excalidraw": "Zeichnungen, gespeichert auf excalidraw.com: eine .excalidraw-Datei oder mehrere zusammen in einer Zip. Zeichnungen aus dem Excalidraw-Plugin von Obsidian funktionieren auch, als .excalidraw.md-Dateien. Bilder in einer Zeichnung kommen mit.",
     "evernote": "Eine einzelne .enex oder mehrere zusammen in einer Zip. Behält Formatierung, Tags, Anhänge, Notiz-Links und Notizbücher. Aufgaben legt Evernote nicht in die .enex.",
     "samsungNotes": "Exportiere als Word (.docx) oder Text (.txt). Packe mehrere Dateien in ein Zip für den Massenimport.",
     "simplenote": "Exportiere aus Simplenote (Einstellungen -> Tools -> Notizen exportieren). Lege die .zip ab.",
@@ -84,7 +82,7 @@
     "notesnook": "Notesnook-Export als .zip. Wähle beim Exportieren HTML, um Formatierung, Notizbücher, Tags und Anhänge zu behalten.",
     "bear": "Wähle in Bear File > Backup Notes... und lege die .bear2bk-Datei hier ab. Tags und verschachtelte Tags, Pins, das Archiv, der Papierkorb, Hervorhebungen mit ihren Farben, Notiz-Links und Anhänge kommen mit.",
     "joplin": "Die .jex-Datei aus File > Export all > \"JEX - Joplin Export File\". Notizbücher werden zu Ordnern, und Tags, To-dos, Notiz-Links und Anhänge kommen mit.",
-    "upnote": "In UpNote: Settings > Backup > Backup now, dann alles im Backup-Ordner zippen. Behält Notizbücher, Tags, Pins, note-links, Formatierung und Anhänge. Einzel-Exporte aus den Handy-Apps funktionieren auch - wähle \"Export to HTML\".",
+    "upnote": "In UpNote: Settings > Backup > Backup now, dann alles im Backup-Ordner zippen. Behält Notizbücher, Tags, Pins, Notiz-Links, Formatierung und Anhänge. Einzel-Exporte aus den Handy-Apps funktionieren auch - wähle \"Export to HTML\".",
     "markdownFolder": ".md- oder .txt-Dateien einzeln oder als .zip. Ein gezippter Ordner behält seine Unterordner und bringt seine Bilder und Anhänge mit.",
     "markdownApp": "Diese Notizen sind schon Markdown-Dateien in einem Ordner. Zieh den Ordner als .zip hinein, dann kommen seine Unterordner, Bilder und #Tags mit.",
     "browserBookmarks": "Die Lesezeichen-Datei (.html) aus \"Export bookmarks\" in deinem Browser, oder die .zip, die Safari schreibt. Chrome, Firefox, Safari, Edge, Opera, Brave und Vivaldi enthalten alle dieselbe Datei. Ordner und Daten kommen mit.",
@@ -98,9 +96,6 @@
     "browserPasswords": "Browser-Passwörter",
     "vcard": "Kontakte (vCard)",
     "markdownFolder": "Markdown-Dateien"
-  },
-  "vaultPick": {
-    "intro": "Importiere Logins, Kreditkarten und SSH-Schlüssel aus einem anderen Passwortmanager."
   },
   "restorePick": {
     "intro": "Stelle ein PrivacyNotes-Backup wieder her, das du zuvor exportiert hast.",
@@ -123,8 +118,8 @@
     "restoringBlobs": "Bilder und Dateien werden wiederhergestellt..."
   },
   "errors": {
-    "genericParse": "Etwas ist schiefgelaufen.",
     "decryptionFailed": "Entschlüsselung fehlgeschlagen. Falsche Phrase oder beschädigte Datei.",
+    "importNothingChanged": "Es wurde nichts importiert, und deine Notizen, Ordner und Dateien sind unverändert. {{detail}}",
     "blobImportFailed": "Deine Notizen wurden importiert, aber ihre Bilder und Dateien nicht: {{detail}} Nichts in der Datei, die du ausgewählt hast, wurde verändert, du kannst die importierten Notizen also löschen und den Import erneut starten.",
     "blobsNotInBackup_one": "Deine Notizen wurden wiederhergestellt, aber {{items}}, das im Backup aufgeführt ist, fehlt darin.",
     "blobsNotInBackup_other": "Deine Notizen wurden wiederhergestellt, aber {{items}}, die im Backup aufgeführt sind, fehlen darin."
@@ -135,11 +130,7 @@
     "splitOversize_one": "Diese Notiz an ihren Überschriften in kleinere Notizen aufteilen, damit sie synchronisiert wird",
     "splitOversize_other": "Diese {{count}} Notizen an ihren Überschriften in kleinere Notizen aufteilen, damit sie synchronisiert werden",
     "partTitle": "{{title}} ({{index}}/{{total}})",
-    "continuedIn": "Fortsetzung in {{link}}",
-    "sourceLabel": "Quelle",
     "uniqueTags": "Eindeutige Tags",
-    "empty": "Leer",
-    "untagged": "Ohne Tag",
     "items": "Einträge",
     "previewLabel": "Vorschau",
     "andMore": "… und {{count}} weitere",
@@ -150,9 +141,14 @@
     "eventSkipNote": "Termine, die du schon importiert hast, werden übersprungen und bleiben, wie sie sind. Ein zweiter Durchlauf legt also keine doppelt an.",
     "restoreMergeNote": "Notizen aus deinem eigenen Backup werden anhand ihrer ID zugeordnet. Eine Notiz, die du schon hast, wird nur aktualisiert, wenn die Fassung im Backup neuer ist, und eine Notiz im Papierkorb wird wieder herausgeholt.",
     "quotaExceeded": "<strong>Zu wenig Speicher zum Importieren.</strong> Geschätzt {{needed}} benötigt, {{available}} verfügbar. Schaffe Platz oder rüste auf, bevor du importierst.",
-    "quotaWarning": "Hinweis: Dieser Import wird etwa {{needed}} deines verbleibenden Speichers von {{available}} belegen.",
     "oversizeAttachments_one": "1 Datei ist größer als das {{limit}}-Limit pro Datei deines Tarifs. Sie wird auf dieses Gerät importiert, synchronisiert aber erst mit deinen anderen Geräten, wenn du upgradest.",
-    "oversizeAttachments_other": "{{count}} Dateien sind größer als das {{limit}}-Limit pro Datei deines Tarifs. Sie werden auf dieses Gerät importiert, synchronisieren aber erst mit deinen anderen Geräten, wenn du upgradest."
+    "oversizeAttachments_other": "{{count}} Dateien sind größer als das {{limit}}-Limit pro Datei deines Tarifs. Sie werden auf dieses Gerät importiert, synchronisieren aber erst mit deinen anderen Geräten, wenn du upgradest.",
+    "title": "Vor dem Import prüfen",
+    "sourceTagLabel": "Jede Notiz mit <tag>{{tag}}</tag> taggen",
+    "sourceTagDesc": "Aus: kein Tag für die Quelle. Tags, die schon in den Notizen stehen, kommen so oder so mit.",
+    "storageLine": "Dieser Import braucht etwa {{needed}}. Du hast {{available}} frei.",
+    "nothingWritten": "Nichts wird gespeichert, bis du auf Importieren drückst.",
+    "whatComesIn": "Was importiert wird"
   },
   "counts": {
     "note_one": "Notiz",
@@ -167,6 +163,8 @@
     "sshKey_other": "SSH-Schlüssel",
     "contact_one": "Kontakt",
     "contact_other": "Kontakte",
+    "drawing_other": "Zeichnungen",
+    "drawing_one": "Zeichnung",
     "zeroItems": "0 Einträge",
     "importButton": "{{counts}} importieren"
   },
@@ -178,14 +176,14 @@
     "fullBackupHeading": "Vollständiges Backup",
     "portableHeading": "Portabler Export",
     "vaultOnlyHeading": "Nur Tresor",
-    "zipBackupTitle": "PrivacyNotes-Backup (.zip)",
-    "zipBackupDesc": "Alles: Notizen, Tagebücher, Tresor-Einträge, Aufgaben, Bilder, Audio und Dateien. Nutze dies für ein vollständiges Konto-Backup oder den Umzug auf ein neues Gerät. Die Dateien darin sind nicht verschlüsselt, bewahre das Zip also an einem sicheren Ort auf.",
-    "encryptedZipBackupTitle": "Verschlüsseltes Voll-Backup (.pnbackupz)",
-    "encryptedZipBackupDesc": "Alles, was das Zip-Backup enthält - Notizen, Tresor-Einträge, Bilder, Audio und Dateien - versiegelt mit deinem Phrasenschlüssel. Lässt sich mit deiner Phrase auf jedem Gerät wiederherstellen. Überall sicher aufzubewahren.",
-    "encryptedBackupTitle": "Verschlüsseltes Backup (.pnbackup)",
-    "encryptedBackupDesc": "Alle Textinhalte und Metadaten, verschlüsselt mit deinem Phrasenschlüssel. Keine Bilder oder Dateien. Überall sicher aufzubewahren - ohne deine Phrase nicht lesbar.",
+    "zipBackupTitle": "Alles, unverschlüsselt (.zip)",
+    "zipBackupDesc": "Deine Notizen, Tagebücher, Tresor-Einträge, Aufgaben, Bilder, Audio und Dateien, dazu deine Medikamente und Tracker. Lässt sich auf jedem Computer ohne Phrase öffnen, bewahre es also an einem sicheren Ort auf. Der Notizverlauf und die PIN der App-Sperre sind nicht enthalten.",
+    "encryptedZipBackupTitle": "Alles, verschlüsselt (.pnbackupz)",
+    "encryptedZipBackupDesc": "Dasselbe wie das Zip, versiegelt mit deinem Phrasenschlüssel. Lässt sich mit deiner Phrase auf jedem Gerät wiederherstellen. Überall sicher aufzubewahren.",
+    "encryptedBackupTitle": "Nur Text, verschlüsselt (.pnbackup)",
+    "encryptedBackupDesc": "Alle Textinhalte und Metadaten, ohne Bilder oder Dateien. Eine kleine Datei, versiegelt mit deinem Phrasenschlüssel. Überall sicher aufzubewahren.",
     "htmlArchiveTitle": "HTML-Archiv (.zip)",
-    "htmlArchiveDesc": "Eine druckbare HTML-Seite pro Notiz. Gut zum Offline-Lesen oder Archivieren, nicht zum Wiederherstellen.",
+    "htmlArchiveDesc": "Eine druckbare HTML-Seite pro Notiz, Logins, Karten und Schlüssel im Klartext eingeschlossen. Gut zum Offline-Lesen oder Archivieren, nicht zum Wiederherstellen. Bewahre es an einem sicheren Ort auf.",
     "textBackupTitle": "Text-Backup (.json)",
     "textBackupDesc": "Alle Textinhalte und Metadaten als einfaches JSON. Keine Bilder oder Dateien. Bewahre es an einem vertrauenswürdigen Ort auf - dies ist nicht verschlüsselt.",
     "vaultExportTitle": "Tresor-Export (.json)",
@@ -199,6 +197,8 @@
     "calendarOnlyHeading": "Nur Kalender",
     "calendarExportTitle": "Kalenderdatei (.ics)",
     "calendarExportDesc": "Termine sowie Notizen und Aufgabenlisten mit Datum, für Google Kalender, Apple Kalender oder Outlook.",
+    "drawingsExportTitle": "Zeichnungen (.zip)",
+    "drawingsExportDesc": "Jede Zeichnung als eigene .excalidraw-Datei, mit ihren Bildern, für excalidraw.com und Obsidian.",
     "calendarPrivate": "Privat"
   },
   "exportProgress": {
@@ -207,11 +207,8 @@
     "incompleteTitle": "Export unvollständig",
     "exportingTitle": "Backup wird exportiert...",
     "preparing": "Wird vorbereitet...",
-    "exporting": "Wird exportiert...",
-    "imagesProgress": "Bilder werden exportiert... {{done}} von {{total}}",
-    "filesProgress": "Dateien werden exportiert... {{done}} von {{total}}",
-    "building": "Backup wird erstellt...",
-    "compressing": "Wird komprimiert...",
+    "showInFolder": "Im Ordner anzeigen",
+    "zipStep": "Zip",
     "missingFailed_one": "Dieses Gerät konnte {{items}} nicht herunterladen, deshalb fehlt es in deinem Export. Prüfe deine Verbindung und exportiere noch einmal.",
     "missingFailed_other": "Dieses Gerät konnte {{items}} nicht herunterladen, deshalb fehlen sie in deinem Export. Prüfe deine Verbindung und exportiere noch einmal.",
     "missingNotFound_one": "{{items}} ist weder auf diesem Gerät noch auf dem Server, deshalb fehlt es in deinem Export.",
@@ -258,7 +255,8 @@
     "generic": "Der Export konnte nicht gespeichert werden. Versuche es noch einmal oder wähle einen anderen Ordner."
   },
   "saveErrors": {
-    "shortWrite": "Es wurden nur {{written}} von {{expected}} Bytes gespeichert, die Datei ist also unvollständig. Versuche es erneut und speichere in den Speicher deines Geräts statt in einen Cloud-Ordner."
+    "shortWrite": "Es wurden nur {{written}} von {{expected}} Bytes gespeichert, die Datei ist also unvollständig. Versuche es erneut und speichere in den Speicher deines Geräts statt in einen Cloud-Ordner.",
+    "protectedFolder": "PrivacyNotes speichert nicht in {{folder}}, weil dieser Ordner Schlüssel, Einstellungen oder Programme enthält. Speichere die Datei woanders und verschiebe sie selbst dorthin."
   },
   "shareSheet": {
     "title_one": "{{count}} Element wurde mit PrivacyNotes geteilt",
@@ -267,7 +265,6 @@
     "saveAll": "Alle speichern"
   },
   "destination": {
-    "label": "Hinzufügen zu",
     "none": "Ohne Ordner",
     "newFolder": "Neuer Ordner „{{name}}“",
     "help": "Ordner aus der Quelle landen in dem Ordner, den du auswählst, und Elemente ohne Ordner kommen direkt hinein."

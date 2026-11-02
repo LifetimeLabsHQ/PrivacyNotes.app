@@ -15,7 +15,7 @@ const plain = (e: KeyboardEvent) => !e.metaKey && !e.ctrlKey && !e.altKey && !e.
  * a focus ring behind. `canOpen` is false in multi-select, where a click on
  * a row picks it instead of opening it.
  *
- * Spec: ops/docs/archive/keyboard-shortcuts.md (section 6)
+ * Spec: docs/internal/specs/keyboard-shortcuts.md (section 6)
  */
 export function useListKeys(
   inputRef: RefObject<HTMLInputElement | null>,

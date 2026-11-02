@@ -1,6 +1,5 @@
 {
   "modal": {
-    "title": "Bezpieczeństwo",
     "tabPin": "PIN",
     "tabBiometricShort": "Blokada",
     "tabBiometric": "Blokada biometryczna",
@@ -9,9 +8,10 @@
     "tabTwoFactor": "2FA"
   },
   "pinTab": {
+    "changeLost": "Zmiana PIN-u nie została zapisana: PIN został wcześniej zmieniony na innym urządzeniu.",
+    "phraseUnwrapped": "Ta przeglądarka nie mogła ochronić frazy odzyskiwania przechowywanej na tym urządzeniu, więc fraza jest tu zapisana bez szyfrowania. Każdy, kto ma kopię pamięci tego urządzenia, może ją odczytać. Włącz blokadę aplikacji na karcie Blokada, aby trzymać frazę wyłącznie za PIN-em lub kodem dostępu.",
     "enterCurrent": "Wpisz obecny PIN, aby wprowadzić zmiany.",
     "currentPin": "Obecny PIN",
-    "checking": "Sprawdzanie...",
     "verify": "Zweryfikuj",
     "replaceExisting": "Wpisz nowy 4-cyfrowy PIN. Zastąpi on obecny PIN.",
     "setIntro": "4-cyfrowy PIN otwiera twoje chronione notatki i frazę odzyskiwania. Synchronizuje się na wszystkich urządzeniach.",
@@ -42,10 +42,8 @@
     "setPin": "Ustaw PIN",
     "removePin": "Usuń PIN",
     "reaskAfter": "Pytaj ponownie o PIN po",
-    "reaskHint": "Dotyczy widoku frazy i wszystkich notatek chronionych PIN-em.",
+    "reaskHint": "Dotyczy widoku frazy i wszystkich notatek chronionych PIN-em na tym urządzeniu.",
     "incorrectPin": "Nieprawidłowy PIN.",
-    "incorrectPinRetry": "Nieprawidłowy PIN. Spróbuj ponownie.",
-    "tooManyAttempts": "Zbyt wiele prób. Spróbuj ponownie za {{seconds}} s.",
     "pinFourDigits": "PIN musi mieć 4 cyfry.",
     "pinsDoNotMatch": "PIN-y nie są zgodne.",
     "passcodeIntro": "Kod dostępu otwiera twoje chronione notatki i frazę odzyskiwania. Synchronizuje się na każde urządzenie.",
@@ -61,8 +59,7 @@
     "ruleNotDigits": "Nie same cyfry",
     "ruleMax": "Najwyżej {{max}} znaków",
     "passcodesDoNotMatch": "Kody dostępu nie są zgodne.",
-    "incorrectPasscode": "Nieprawidłowy kod dostępu.",
-    "incorrectPasscodeRetry": "Nieprawidłowy kod dostępu. Spróbuj ponownie."
+    "incorrectPasscode": "Nieprawidłowy kod dostępu."
   },
   "timeout": {
     "min1": "1 minuta",
@@ -76,16 +73,11 @@
     "browserRestart": "Po ponownym uruchomieniu przeglądarki"
   },
   "pinInfo": {
-    "title": "Wymagaj PIN-u do podglądu",
     "body": "Gdy ta opcja jest włączona, PIN jest wymagany za każdym razem, gdy otwierasz ten element, nawet jeśli aplikacja jest już odblokowana. Używaj jej do wrażliwych elementów, które mają pozostać chronione, gdy odchodzisz od urządzenia."
   },
   "removePinDialog": {
-    "title": "Usuń PIN",
     "introWithBio": "Wpisz obecny PIN, aby potwierdzić usunięcie. Odblokowanie biometryczne pozostanie aktywne, ale Twoim jedynym zapasowym sposobem będzie fraza odzyskiwania.",
     "introNoBio": "Wpisz obecny PIN, aby potwierdzić usunięcie. Ekran frazy odzyskiwania będzie się potem otwierał bez PIN-u.",
-    "verifying": "Weryfikowanie...",
-    "removePin": "Usuń PIN",
-    "titlePasscode": "Usuń kod dostępu",
     "introWithBioPasscode": "Wpisz obecny kod dostępu, aby potwierdzić usunięcie. Odblokowanie biometryczne pozostanie aktywne, ale twoim jedynym zapasowym sposobem będzie fraza odzyskiwania.",
     "introNoBioPasscode": "Wpisz obecny kod dostępu, aby potwierdzić usunięcie. Ekran frazy odzyskiwania będzie się potem otwierał bez kodu dostępu.",
     "removePasscode": "Usuń kod dostępu"
@@ -109,16 +101,10 @@
   },
   "phraseGate": {
     "enterToView": "Wpisz swój 4-cyfrowy PIN, aby zobaczyć frazę.",
-    "incorrectPinRetry": "Nieprawidłowy PIN. Spróbuj ponownie.",
-    "tooManyAttempts": "Zbyt wiele prób. Spróbuj ponownie za {{seconds}} s.",
-    "lockedFor": "Zablokowane na {{seconds}} s",
-    "checking": "Sprawdzanie...",
-    "unlock": "Odblokuj",
     "enterToChangeCustody": "Wpisz czterocyfrowy PIN, aby zmienić sposób przechowywania klucza.",
     "checkFailed": "Nie udało się sprawdzić PIN-u. Spróbuj ponownie.",
     "enterToViewPasscode": "Wpisz swój kod dostępu, aby zobaczyć frazę.",
     "enterToChangeCustodyPasscode": "Wpisz kod dostępu, aby zmienić sposób przechowywania klucza.",
-    "incorrectPasscodeRetry": "Nieprawidłowy kod dostępu. Spróbuj ponownie.",
     "checkFailedPasscode": "Nie udało się sprawdzić kodu dostępu. Spróbuj ponownie."
   },
   "phraseView": {
@@ -133,11 +119,9 @@
     "hideQr": "Ukryj kod QR",
     "showQr": "Pokaż kod QR",
     "saveQr": "Zapisz QR",
-    "copied": "Skopiowano",
     "copyPhrase": "Kopiuj frazę"
   },
   "custody": {
-    "eyebrow": "Zarządzanie kluczem",
     "current": "Obecnie",
     "rowDevice": "Nowe urządzenie",
     "rowDeviceCustodial": "Logowanie przez {{provider}}, bez wpisywania",
@@ -152,7 +136,6 @@
     "releaseWarning": "Najpierw zapisz frazę składającą się z 12 słów poza PrivacyNotes. Po usunięciu naszej kopii będzie potrzebna na nowych urządzeniach.",
     "challengePrompt": "Przepisz te słowa z listy powyżej, aby potwierdzić, że je masz.",
     "wordLabel": "Słowo {{position}}",
-    "busy": "Zapisywanie...",
     "releaseConfirm": "Usuń z serwera",
     "adoptConfirm": "Powierz nam kopię",
     "releaseDone": "Gotowe. Nie przechowujemy już kopii Twojej frazy. Nowe urządzenia poproszą o te 12 słów albo o zeskanowanie kodu QR.",
@@ -189,6 +172,7 @@
     "boundStatus": "Odblokowanie biometryczne jest powiązane z twoim passkey.",
     "boundStatusNative": "Odblokowanie biometryczne jest powiązane z bezpiecznym sprzętem tego urządzenia.",
     "setUpAgain": "Skonfiguruj ponownie, aby uzyskać silniejszą blokadę",
+    "unboundWeaker": "Na tym urządzeniu odblokowanie biometryczne jest barierą dla osób w pobliżu, a nie blokadą: ktoś, kto ma kopię pamięci tego urządzenia, może otworzyć twoje notatki bez twojego odcisku palca czy twarzy.",
     "cannotBind": "Aplikacja passkey w tej przeglądarce nie może utworzyć silniejszej blokady. Odblokowanie biometryczne działa dalej tak jak wcześniej. Jeśli twoje passkey zapisuje menedżer haseł, wyłącz w nim opcję passkey, a potem wyłącz i ponownie włącz odblokowanie biometryczne, aby używać własnego magazynu passkey twojego urządzenia.",
     "bindOffer": "Odblokowanie biometryczne na tym urządzeniu nie jest jeszcze powiązane z twoim passkey, a ta przeglądarka może je powiązać. Skonfiguruj je ponownie jeden raz, aby jego klucz był przechowywany razem z twoim passkey zamiast w pamięci tego urządzenia.",
     "bindOfferLater": "Nie teraz",
@@ -196,14 +180,14 @@
     "settingUp": "Konfigurowanie...",
     "enable": "Włącz odblokowanie biometryczne",
     "lockOnOpen": "Blokuj aplikację przy uruchomieniu",
-    "lockOnOpenHint": "Wymagaj biometrii lub PIN-u przy otwieraniu aplikacji.",
+    "lockOnOpenHint": "Wymagaj biometrii lub PIN-u przy otwieraniu aplikacji na tym urządzeniu.",
     "lockHidesOnSwitch": "Ukrywa też twoje notatki przy przełączaniu aplikacji.",
     "lockNeedsCredential": "Blokada aplikacji wymaga PIN-u lub odblokowania biometrycznego na tym urządzeniu.",
     "setUpPin": "Ustaw PIN",
     "confirmPinForLock": "Wpisz swój PIN, aby to włączyć. Zamyka on kopię Twojej frazy odzyskiwania, więc tylko Twój PIN może otworzyć aplikację.",
     "confirmPasscodeForLock": "Wpisz swój kod dostępu, aby to włączyć. Zamyka on kopię twojej frazy odzyskiwania, więc tylko twój kod dostępu może otworzyć aplikację.",
     "relockAfter": "Zablokuj ponownie po",
-    "relockHint": "Dotyczy tylko ekranu blokady aplikacji.",
+    "relockHint": "Dotyczy tylko ekranu blokady aplikacji na tym urządzeniu.",
     "blockCapture": "Ukrywaj przed przechwytywaniem ekranu",
     "blockCaptureHint": "Nie pokazuje twoich notatek na zrzutach ekranu, nagraniach i przy udostępnianiu ekranu, jeśli urządzenie na to pozwala. Dotyczy tylko tego urządzenia.",
     "perDeviceNote": "Odblokowanie biometryczne otwiera te same notatki co PIN. Zostaje na tym urządzeniu i nigdy się nie synchronizuje.",
@@ -216,31 +200,19 @@
     "phraseNotSaved": "To urządzenie nie mogło zapisać twojej frazy odzyskiwania, więc nic nie zostało zmienione. Spróbuj ponownie."
   },
   "pinSetup": {
-    "title": "Ustaw PIN",
     "description": "4-cyfrowy PIN będzie wymagany do zobaczenia frazy odzyskiwania. Opcjonalny, ale zalecany we wspólnych przestrzeniach.",
-    "newPin": "Nowy PIN",
-    "confirmPin": "Potwierdź PIN",
-    "skipForNow": "Pomiń na razie",
-    "saving": "Zapisywanie…",
-    "setPin": "Ustaw PIN",
-    "pinFourDigits": "PIN musi mieć 4 cyfry.",
-    "pinsDoNotMatch": "PIN-y nie są zgodne."
+    "skipForNow": "Pomiń na razie"
   },
   "pinInput": {
-    "ariaLabel": "PIN",
     "digitAriaLabel": "Cyfra {{index}}"
   },
   "passcodeInput": {
-    "ariaLabel": "Kod dostępu",
     "show": "Pokaż kod dostępu",
     "hide": "Ukryj kod dostępu"
   },
   "protectedGate": {
-    "biometricFailed": "Weryfikacja biometryczna nie powiodła się lub została anulowana.",
     "protectedItem": "Chroniony element",
     "biometricSubtitle": "Użyj odcisku palca lub twarzy, aby odblokować ten element.",
-    "verifying": "Weryfikowanie...",
-    "unlock": "Odblokuj",
     "usePinInstead": "Użyj PIN-u zamiast tego",
     "useBiometricInstead": "Użyj zamiast tego biometrii",
     "disableProtection": "Wyłącz ochronę",
@@ -248,18 +220,10 @@
     "disableSubtitle": "Notatka zostaje na miejscu. Znika tylko blokada.",
     "disableBiometricSubtitle": "Potwierdź odciskiem palca lub twarzą.",
     "verifySubtitle": "Wpisz swój 4-cyfrowy PIN, aby odblokować ten element. Odblokowanie trwa tyle, ile ustawiłeś w sekcji Bezpieczeństwo.",
-    "incorrectPinRetry": "Nieprawidłowy PIN. Spróbuj ponownie.",
-    "tooManyAttempts": "Zbyt wiele prób. Spróbuj ponownie za {{seconds}} s.",
     "lockedFor": "Zablokowane na {{seconds}} s",
-    "checking": "Sprawdzanie...",
     "bootstrapTitle": "Ustaw PIN",
     "bootstrapSubtitle": "Ten element jest chroniony PIN-em, ale na tym urządzeniu nie ustawiono PIN-u. Ustaw 4-cyfrowy PIN, aby go odblokować. Twój PIN synchronizuje się na wszystkich Twoich urządzeniach.",
     "bootstrapWarning": "Ustawienie PIN-u tutaj nie wymaga znajomości poprzedniego PIN-u. Każdy, kto ma Twoją frazę odzyskiwania, może zrobić to samo na nowym urządzeniu. Przy naprawdę wrażliwych treściach polegaj wyłącznie na uwierzytelnianiu frazą.",
-    "newPin": "Nowy PIN",
-    "confirmPin": "Potwierdź PIN",
-    "pinFourDigits": "PIN musi mieć 4 cyfry.",
-    "pinsDoNotMatch": "PIN-y nie są zgodne.",
-    "saving": "Zapisywanie...",
     "setPinUnlock": "Ustaw PIN i odblokuj",
     "pinRequired": "Wymagany PIN",
     "deleteSubtitle": "Wpisz PIN, aby usunąć ten chroniony element.",
@@ -267,7 +231,6 @@
     "usePasscodeInstead": "Użyj kodu dostępu zamiast tego",
     "disableTitlePasscode": "Wpisz kod dostępu, aby wyłączyć ochronę",
     "verifySubtitlePasscode": "Wpisz swój kod dostępu, aby odblokować ten element. Odblokowanie trwa tyle, ile ustawiono w sekcji Bezpieczeństwo.",
-    "incorrectPasscodeRetry": "Nieprawidłowy kod dostępu. Spróbuj ponownie.",
     "passcodeRequired": "Wymagany kod dostępu",
     "deleteSubtitlePasscode": "Wpisz kod dostępu, aby usunąć ten chroniony element."
   },
@@ -294,19 +257,14 @@
     "checking": "Sprawdzanie...",
     "unlock": "Odblokuj",
     "recoveryPhrase": "Fraza odzyskiwania",
-    "recoveryPhraseSubtitle": "Wpisz swoją frazę odzyskiwania z 12 słów, aby odblokować.",
-    "invalidPhrase": "Nieprawidłowa fraza. Sprawdź pisownię i kolejność słów.",
-    "phrasePlaceholder": "słowo1 słowo2 słowo3 słowo4 słowo5 słowo6 słowo7 słowo8 słowo9 słowo10 słowo11 słowo12"
+    "recoveryPhraseSubtitle": "Wpisz swoją frazę odzyskiwania z 12 słów, aby odblokować."
   },
   "deviceLimit": {
     "title": "Osiągnięto limit urządzeń",
     "body": "Darmowe konta mogą synchronizować się na maksymalnie {{limit}} urządzeniach naraz. Masz już {{count}}. Usuń jedno, aby kontynuować na tym urządzeniu, albo przejdź na Pro, aby mieć nieograniczoną liczbę urządzeń.",
     "activeDevices": "Aktywne urządzenia",
-    "recentlyRemoved": "Niedawno usunięte",
-    "removedAt": "Usunięto {{when}}",
     "upgradeHeading": "Albo przejdź na Pro",
     "upgradeBody": "Płatność jednorazowa, bez subskrypcji. Nieograniczona liczba urządzeń plus obrazy, historia notatek i więcej.",
-    "openingCheckout": "Otwieranie płatności...",
     "upgradeCta": "Przejdź na Pro za {{price}} $",
     "needMoreHeading": "Potrzebujesz więcej urządzeń?",
     "needMoreBody": "Ulepszenia do Pro nie są dostępne w tej wersji. Jeśli naprawdę potrzebujesz trzeciego urządzenia, napisz do nas, a coś wymyślimy.",
@@ -315,8 +273,6 @@
     "saveRecoveryBody": "Zalogowałeś się przez OAuth. Zapisz też swoją frazę z 12 słów. To Twoje zabezpieczenie na wypadek awarii OAuth albo utraty dostępu na wszystkich urządzeniach.",
     "hide": "Ukryj",
     "viewRecoveryPhrase": "Zobacz frazę odzyskiwania",
-    "signOut": "Wyloguj się",
-    "thisDevice": "To urządzenie",
     "lastActive": "{{platform}} · ostatnio aktywne {{when}}",
     "removing": "Usuwanie..."
   },
@@ -329,9 +285,9 @@
     "bitcoinBody": "Ludzie chronią go taką samą frazą z 12 słów.",
     "universeTitle": "700 razy wiek wszechświata",
     "universeBody": "Na sprawdzenie każdej frazy przy miliardzie miliardów prób na sekundę.",
-    "twinTitle": "Nikt na Ziemi nie ma Twojej frazy",
+    "twinTitle": "Nikt inny na Ziemi nie dostanie tej samej frazy",
     "twinBody": "Nawet gdyby każdy z 8 miliardów ludzi używał PrivacyNotes.",
-    "keepPrivate": "Wejść można tylko z Twoimi prawdziwymi 12 słowami. Zachowaj je dla siebie."
+    "keepPrivate": "Zgadywaniem nie da się wejść. Zachowaj swoje 12 słów dla siebie."
   },
   "connectedAccounts": {
     "title": "Połączone konta",
@@ -350,13 +306,10 @@
     "connectAnotherProvider": "Połącz inne konto {{provider}}",
     "updateTitle": "Zaktualizuj logowanie do tego sejfu",
     "updateDescription": "To przygotuje zapisaną frazę i połączone konta do logowania dwuskładnikowego oraz umożliwi zarządzanie połączonymi kontami. Notatki i sposób przechowywania klucza się nie zmienią.",
-    "updateDevices": "Zanim przejdziesz dalej, zaktualizuj aplikację na innych urządzeniach. Mogą wymagać ponownego zalogowania.",
-    "updateAcknowledgment": "Na innych urządzeniach mam aktualną wersję PrivacyNotes.",
     "updateAction": "Zaktualizuj logowanie",
     "setupTitle": "Połącz Google, Apple lub GitHub",
     "setupDescription": "Pierwsze połączenie wymaga jednorazowej aktualizacji tego sejfu. Notatki i sposób przechowywania klucza się nie zmienią.",
     "setupAction": "Skonfiguruj połączone konta",
-    "closed": "Łączenie i usuwanie kont będzie dostępne wkrótce. Do tego czasu logujesz się tak jak teraz.",
     "repairTitle": "Dokończ aktualizację logowania",
     "repairDescription": "Ten sejf korzysta już z nowego logowania. Połącz to urządzenie ponownie za pomocą odblokowanej tu frazy. Lokalne notatki pozostają dostępne.",
     "repairAction": "Przejdź do tego sejfu",
@@ -374,7 +327,6 @@
     "rateLimited": "Podjęto zbyt wiele prób zmiany kont. Poczekaj chwilę i spróbuj ponownie.",
     "connectionMissing": "To konto nie jest już połączone. Sprawdź aktualną listę kont przed kolejną próbą.",
     "noAccounts": "Żadne konta dostawców nie są połączone. Twoją metodą logowania jest zapisana fraza.",
-    "actionFailed": "Nie udało się potwierdzić zmiany. Sprawdź połączenie i spróbuj ponownie.",
     "retry": "Sprawdź konta ponownie",
     "connectDone": "Konto połączone z tym sejfem. Sposób przechowywania klucza się nie zmienił.",
     "disconnectDone": "Konto odłączone. Notatki i sposób przechowywania klucza się nie zmieniły.",
@@ -384,7 +336,6 @@
     "freshMfa": "Do potwierdzenia tej zmiany potrzebny będzie nowy kod z aplikacji uwierzytelniającej. Logowanie dwuskładnikowe pozostanie włączone.",
     "continueProvider": "Kontynuuj z {{provider}}",
     "working": "Przetwarzanie...",
-    "cancel": "Anuluj",
     "confirmDisconnect": "Odłączyć {{provider}}?",
     "account": "to konto",
     "lastCustodial": "To Twoje ostatnie połączone konto. Najpierw połącz inne konto albo zapisz frazę i przejdź na samodzielne przechowywanie przed jego usunięciem.",
@@ -445,10 +396,7 @@
       "key": "Zapisz klucz",
       "confirm": "Potwierdź"
     },
-    "next": "Dalej",
-    "back": "Wstecz",
     "stepOf": "Krok {{step}} z 3",
-    "working": "Przetwarzanie...",
     "scan": "Zeskanuj ten kod aplikacją uwierzytelniającą.",
     "qrLabel": "Kod QR dla aplikacji uwierzytelniającej",
     "openAuthenticator": "Na tym telefonie? Otwórz aplikację uwierzytelniającą",
@@ -462,9 +410,7 @@
     "backupWarning": "Zgubiony telefon? Ten klucz przywróci Twoje kody. Przechowuj go w bezpiecznym miejscu poza PrivacyNotes.",
     "savedAcknowledgment": "Klucz zapasowy jest zapisany.",
     "confirmBackup": "Wpisz ponownie klucz zapasowy z poprzedniego kroku, a potem kod z aplikacji.",
-    "reenterBackup": "Klucz zapasowy",
     "codeLabel": "Kod z aplikacji",
-    "activate": "Włącz 2FA",
     "cancelSetup": "Anuluj",
     "enabled": "2FA jest włączone",
     "authenticatorRow": "Aplikacja uwierzytelniająca",
@@ -484,11 +430,6 @@
     "overview": "Przegląd",
     "keyCustody": "Zarządzanie kluczem",
     "accounts": "Konta"
-  },
-  "beta": {
-    "label": "Beta",
-    "notice": "Ta funkcja jest w wersji beta.",
-    "reportBug": "Zgłoś błąd"
   },
   "demoTeaser": {
     "accounts": "Utwórz konto, aby połączyć Google, Apple lub GitHub ze swoim sejfem.",

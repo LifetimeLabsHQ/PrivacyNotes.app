@@ -1,18 +1,14 @@
 {
   "pillars": {
-    "trash": "垃圾桶",
-    "bookmarks": "書籤",
-    "contacts": "聯絡人"
+    "trash": "垃圾桶"
   },
   "tasksList": {
-    "title": "任務",
     "newTaskNote": "新增任務筆記",
     "hideCompleted": "隱藏已完成任務",
     "showCompleted": "顯示已完成任務",
     "searchPlaceholder": "搜尋任務…",
     "sortOptions": "排序選項",
     "quickAddPlaceholder": "快速新增任務",
-    "noMatches": "沒有符合的結果。",
     "itemsWithTasks": "有任務的項目",
     "allTasks": "所有任務",
     "tasksFromOtherItems": "其他項目中的任務",
@@ -29,45 +25,27 @@
     "seeLess": "收起"
   },
   "filesList": {
-    "title": "檔案",
     "upload": "上傳",
     "selectedOf": "已選取 {{selected}}/{{total}} 項",
-    "deselectAll": "取消全選",
-    "selectAll": "全選",
-    "storage": "儲存空間",
     "perFile": "單檔",
     "free": "免費",
-    "upgradeToPro": "升級至 Pro",
     "filterAll": "全部",
-    "filterImages": "圖片",
     "filterAudio": "音訊",
     "filterFiles": "檔案",
-    "sortOptions": "排序選項",
     "searchPlaceholder": "搜尋檔案…",
     "sortName": "名稱",
     "showNotesWithAttachments": "顯示其他項目中的檔案",
-    "noMatches": "沒有符合的結果。",
     "pinProtected": "PIN 碼保護",
-    "readOnly": "唯讀",
     "noFilesYet": "還沒有檔案。",
     "noDocuments": "沒有文書檔案。",
     "noImages": "沒有圖片。",
     "noAudioFiles": "沒有音訊檔。",
     "emptyTypesHint": "圖片、文書、音訊、影片與 zip 檔。單檔最大 {{max}} MB。",
     "uploadFiles": "上傳檔案",
-    "menuDeselect": "取消選取",
-    "menuSelect": "選取",
     "menuShow": "顯示",
     "menuAllFiles": "所有檔案",
-    "menuImages": "圖片",
-    "menuAudio": "音訊",
     "menuDocuments": "文書",
-    "menuHideNoteAttachments": "隱藏其他項目中的檔案",
-    "menuShowNoteAttachments": "顯示其他項目中的檔案",
-    "menuUnpin": "取消釘選",
-    "menuPin": "釘選",
-    "menuRename": "重新命名",
-    "menuMoveToTrash": "移至垃圾桶"
+    "menuHideNoteAttachments": "隱藏其他項目中的檔案"
   },
   "vaultItem": {
     "badgeLogin": "登入",
@@ -78,7 +56,6 @@
     "untitledKey": "未命名金鑰",
     "copied": "已複製！",
     "copyField": "複製{{label}}",
-    "hide": "隱藏",
     "reveal": "顯示",
     "fieldUrl": "URL",
     "fieldUser": "使用者",
@@ -91,14 +68,11 @@
     "fieldLabel": "名稱",
     "fieldPublic": "公鑰",
     "fieldPrivate": "私鑰",
-    "fieldTotp": "2FA 驗證碼",
     "totpInvalid": "金鑰無效",
     "copyCode": "複製驗證碼",
     "totpUnlockCta": "升級 Pro 解鎖 2FA 驗證碼",
     "totpProNote": "金鑰會儲存並同步，只有驗證碼需要 Pro。",
     "copyAll": "複製 URL、使用者名稱與密碼",
-    "open": "開啟",
-    "notesHeading": "備註",
     "fillOneField": "儲存前至少填寫一個欄位。",
     "expiryNeedsBoth": "有效期限需要同時填月份與年份，或兩者都留空。",
     "customField": "自訂欄位",
@@ -127,20 +101,18 @@
   },
   "tagsRail": {
     "showAllItems": "顯示所有項目",
-    "changelog": "Changelog",
     "closeMenu": "關閉選單",
-    "close": "關閉",
     "views": "內容",
     "resizeSplit": "調整內容與標籤或資料夾的大小",
     "sidebarOptions": "側邊欄選項",
     "showInSidebar": "顯示於側邊欄",
     "allOptions": "「全部」選項",
     "showInAll": "顯示於「全部」",
-    "viewList": "清單",
-    "viewGrid": "格狀",
     "viewAuto": "自動",
     "allItemsTooltip": "所有筆記、日誌與保險庫項目",
     "allItems": "全部",
+    "dashboard": "首頁",
+    "dashboardTooltip": "一眼看到你的小工具",
     "pinnedTooltip": "已釘選項目",
     "pinned": "已釘選",
     "archive": "封存",
@@ -148,6 +120,7 @@
     "notes": "筆記",
     "tasksTooltip": "所有筆記中的任務",
     "tasks": "任務",
+    "drawings": "繪圖",
     "vaultTooltip": "登入資訊、信用卡與金鑰",
     "vault": "保險庫",
     "filesTooltip": "所有檔案與附件",
@@ -155,7 +128,6 @@
     "journalsTooltip": "每日日誌",
     "journals": "日誌",
     "actionsForTag": "標籤 {{tag}} 的動作",
-    "renameTag": "重新命名",
     "removeFavorite": "移除最愛",
     "markAsFavorite": "加入最愛",
     "deleteTag": "刪除標籤",
@@ -163,7 +135,6 @@
     "tags": "標籤",
     "sortTags": "排序標籤",
     "sort": "排序",
-    "sortBy": "排序方式",
     "sortEntries": "項目數",
     "sortName": "名稱",
     "sortCustom": "自訂",
@@ -174,11 +145,9 @@
     "createTag": "新增標籤",
     "untagged": "無標籤",
     "trashTooltip": "已刪除項目",
-    "trash": "垃圾桶",
     "feedback": "回饋",
     "import": "匯入",
     "downloads": "下載",
-    "help": "說明",
     "rate": "評分",
     "markdown": "Markdown",
     "markdownTip": "未加密",
@@ -203,7 +172,6 @@
     "deleteConfirmBranchRoot": "「{{folder}}」及其子資料夾將被刪除。其中的筆記會移到最上層。不會刪除任何筆記。",
     "deleteConfirmBranchNested": "「{{folder}}」及其子資料夾將被刪除。其中的筆記會移到「{{parent}}」。不會刪除任何筆記。",
     "deleteSubfolders_other": "同時刪除其中的 {{count}} 個子資料夾",
-    "moveTo": "移至資料夾",
     "searchPlaceholder": "搜尋資料夾",
     "sortFolders": "排序資料夾",
     "chipUnfiled": "資料夾",
@@ -224,7 +192,6 @@
     "seedTeam": "團隊"
   },
   "collapsedSidebar": {
-    "newNote": "新增筆記",
     "expandSidebar": "展開側邊欄"
   },
   "mobileHeader": {
@@ -239,26 +206,14 @@
     "colorFromTag": "來自標籤：#{{name}}",
     "colorOwnHint": "在這裡選的顏色會填滿這則筆記的背景。<setting>資料夾與標籤顏色</setting>不會改變它。",
     "details": "詳細資料",
-    "readOnly": "唯讀",
     "readOnlyDescription": "關掉之前都不能編輯。",
     "protect": "保護",
     "convertTo": "轉換為",
-    "typeNote": "筆記",
     "typeJournal": "日誌",
-    "typeTask": "任務",
-    "unpin": "取消釘選",
-    "pin": "釘選",
-    "archive": "封存",
-    "unarchive": "取消封存",
     "burn": "Burn",
     "share": "分享",
     "trash": "垃圾桶",
-    "duplicate": "建立副本",
-    "restore": "還原",
-    "deleteForever": "永久刪除",
-    "moveToFolder": "移至資料夾",
     "noteHistory": "歷史記錄",
-    "findReplace": "尋找與取代",
     "uncheckAllTasks": "取消勾選所有項目",
     "deleteCheckedTasks": "刪除已勾選的項目",
     "sortTasksByStatus": "依狀態排序項目",
@@ -274,27 +229,17 @@
     "schedule": "排程",
     "ends": "結束",
     "sameDay": "同一天",
-    "allDay": "全天",
     "starts": "開始",
     "endsAt": "結束時間",
     "noEnd": "無",
     "removeFromCalendar": "從日曆移除",
     "makeEvent": "轉換為<b>活動</b>即可重複",
-    "typeEvent": "活動",
     "repeatRemoved": "重複設定會被移除"
   },
   "selectionToolbar": {
-    "exitSelectionTooltip": "離開選取",
     "exitSelection": "離開選取",
-    "unpin": "取消釘選",
-    "pin": "釘選",
-    "archive": "封存",
-    "unarchive": "取消封存",
     "tag": "標籤",
     "export": "匯出",
-    "delete": "刪除",
-    "restore": "還原",
-    "deleteForever": "永久刪除",
     "more": "更多動作",
     "addTagPlaceholder": "新增標籤…",
     "noTagsFound": "找不到標籤",
@@ -317,6 +262,7 @@
     "showTags": "顯示資料夾與標籤",
     "showCalendar": "顯示行事曆",
     "showCheckIn": "顯示打卡卡片",
+    "showMedication": "顯示用藥卡片",
     "showWorkItems": "顯示<b>工作</b>項目",
     "showPersonalItems": "顯示<b>個人</b>項目",
     "other": "其他",
@@ -339,7 +285,6 @@
     "moodCalendar": "在日曆中顯示心情"
   },
   "backfillPopover": {
-    "calendarLabel": "日誌行事曆",
     "today": "今天",
     "chooseEntry": "{{date}} 的項目"
   },
@@ -359,6 +304,7 @@
     "newNote": "新增筆記",
     "newTask": "新增任務",
     "newKanban": "新增看板",
+    "newDrawing": "新增繪圖",
     "newLogin": "新增登入資訊",
     "newJournal": "新增日誌",
     "newFile": "新增檔案",
@@ -383,32 +329,24 @@
     "duplicate": "建立副本",
     "moveToFolder": "移至資料夾",
     "exportAsMarkdown": "匯出為 Markdown",
-    "shareBurnAfterReading": "分享與 Burn After Reading",
     "exportAsHtml": "匯出為 HTML",
-    "printSaveAsPdf": "列印／另存為 PDF",
-    "moveToTrash": "移至垃圾桶",
-    "newBookmark": "新增書籤",
     "newContact": "新增聯絡人",
-    "openBookmark": "開啟",
     "copyBookmarkUrl": "複製網址",
     "editBookmark": "編輯書籤",
     "saveAsNote": "存成筆記",
-    "openClippedNote": "開啟筆記",
     "openInTab": "在分頁中開啟",
     "openInTabHint": "{{key}}-點按",
+    "openInTabHintMiddle": "中鍵點按",
     "closeTab": "關閉分頁",
     "closeOtherTabs": "關閉其他分頁",
     "closeAllTabs": "關閉所有分頁",
     "pinTab": "釘選分頁",
     "unpinTab": "取消釘選分頁",
-    "newEvent": "新增活動",
-    "quickAdd": "快速新增"
+    "newEvent": "新增活動"
   },
   "demoBanner": {
     "title": "零風險試用",
-    "description": "這裡不會儲存任何內容。免費擁有你自己的加密筆記本。",
-    "cta": "建立帳號",
-    "dismiss": "忽略"
+    "description": "這裡不會儲存任何內容。免費擁有你自己的加密筆記本。"
   },
   "markdown": {
     "title": "Markdown",
@@ -446,20 +384,17 @@
     "fileCount_other": "{{count}} 個檔案",
     "railFolders": "Markdown 資料夾",
     "railTags": "Markdown 標籤",
-    "allFiles": "所有檔案",
     "modeRich": "排版",
     "modeSource": "Markdown",
     "reopenPrompt": "重新載入之後，瀏覽器會再要一次權限。你的資料夾已經記住了，所以按一下就好。",
     "reopenFolder": "重新開啟 {{name}}",
     "new": "新增",
-    "delete": "刪除",
     "saveToNotes": "存進我的筆記",
     "createFailed": "無法建立檔案。",
     "deleteFailed": "無法把檔案移到垃圾桶。",
     "importedToast": "已把「{{title}}」存進你加密的筆記。原始檔案完全沒動。",
     "deleteTitle": "移到資料夾垃圾桶？",
     "deleteBody": "「{{name}}」會移到 Markdown 資料夾裡的 .trash 資料夾。改變主意的話，用檔案管理員把它還原就好。",
-    "deleteConfirm": "移到垃圾桶",
     "explainTitle": "你的 Markdown 資料夾",
     "explainDone": "了解",
     "bannerTitle": "進階 Markdown 編輯器",
@@ -468,7 +403,6 @@
     "explainIntro": "挑一個放著 .md 與 .txt 檔的資料夾，子資料夾會自動出現，編輯直接存回原檔，而且什麼都不會被轉換",
     "chipPreview": "即時預覽",
     "chipTasks": "任務",
-    "chipTags": "標籤",
     "chipTables": "表格",
     "useAgent": "讓 AI 代理讀寫你的筆記",
     "useObsidian": "同一批檔案也能在 Obsidian 或 Logseq 開",
@@ -496,7 +430,6 @@
     "assocWorking": "正在詢問系統…",
     "copyPath": "複製路徑",
     "selectedCount": "已選取 {{selected}}/{{total}} 項",
-    "selectAll": "全選",
     "exitSelection": "離開選取",
     "deleteManyTitle_other": "把 {{count}} 個檔案移到資料夾垃圾桶？",
     "deleteManyBody": "它們會移到 Markdown 資料夾裡的 .trash 資料夾。改變主意的話，用檔案管理員把它們還原就好。",
@@ -517,15 +450,11 @@
   "bookmarks": {
     "newBookmark": "新增書籤",
     "searchPlaceholder": "搜尋書籤…",
-    "sortOptions": "排序選項",
     "quickAddPlaceholder": "貼上或輸入連結…",
     "urlLabel": "書籤（URL）",
     "urlInvalid": "請輸入網址，例如 example.com 或 https://example.com/page。",
     "urlDuplicate": "另一個書籤已經使用這個網址，所以沒有儲存變更。",
-    "openAction": "開啟",
     "copiedUrl": "已複製連結",
-    "moveToTrash": "移至垃圾桶",
-    "rowMenu": "更多動作",
     "emptyNone": "還沒有書籤。",
     "emptyTitle": "把值得留下的網站存起來",
     "emptyAdd": "新增書籤",
@@ -539,11 +468,9 @@
     "new": "新增"
   },
   "contacts": {
-    "new": "新增",
     "searchPlaceholder": "搜尋聯絡人…",
-    "sortOptions": "排序選項",
     "emptyNone": "還沒有聯絡人。",
-    "emptyTitle": "只有你能讀的通訊錄",
+    "emptyTitle": "在你的裝置上加密的通訊錄",
     "emptyAdd": "新增聯絡人",
     "emptyImport": "匯入聯絡人",
     "noMatches": "沒有符合的結果。",
@@ -562,15 +489,12 @@
     "company": "公司",
     "department": "部門",
     "jobTitle": "職稱",
-    "groupName": "姓名",
     "groupPhone": "電話",
     "groupEmail": "電子郵件",
     "groupAddress": "地址",
     "groupWebsite": "網站",
-    "groupProfile": "個人檔案",
     "groupDates": "日期",
     "groupRelated": "相關人物",
-    "groupNote": "備註",
     "addPhone": "新增電話",
     "addEmail": "新增電子郵件",
     "addWebsite": "新增網站",
@@ -585,7 +509,6 @@
     "notePlaceholder": "關於這個人的備註",
     "labelNone": "標籤",
     "labelCustom": "自訂標籤…",
-    "removeRow": "移除",
     "call": "撥打",
     "message": "傳訊息",
     "sendEmail": "寄電子郵件",
@@ -605,15 +528,8 @@
     "menuPersonal": "個人",
     "menuName": "姓名",
     "menuText": "文字",
-    "itemAddress": "地址",
-    "itemWebsite": "網站",
-    "itemProfile": "個人檔案",
-    "itemCompany": "公司",
-    "itemJobTitle": "職稱",
-    "itemBirthday": "生日",
     "itemDate": "日期",
     "itemRelated": "相關人物",
-    "itemNickname": "暱稱",
     "itemNameParts": "中間名、稱謂、後綴",
     "itemPhonetic": "拼音姓名",
     "itemNote": "備註",
@@ -740,8 +656,10 @@
       "note": "筆記",
       "task": "任務清單",
       "journal": "日誌紀錄",
-      "contact": "生日"
+      "contact": "生日與日期"
     },
+    "birthdays": "生日",
+    "contactDate": "{{name}}：{{label}}",
     "dragEnd": "拖曳以變更結束日",
     "previousDay": "前一天",
     "nextDay": "後一天",
@@ -819,7 +737,6 @@
     "onDayAt": "當天 {{time}}",
     "daysBeforeAt_other": "{{count}} 天前的 {{time}}",
     "custom": "自訂",
-    "add": "新增",
     "max": "最多五個提醒。",
     "units": {
       "minutes": "分鐘",
@@ -831,11 +748,9 @@
     "remove": "移除 {{alert}}",
     "reminder": "提醒",
     "medication": "用藥提醒",
-    "open": "開啟",
     "snooze": "10 分鐘後再提醒",
     "offOnPhone": "這支手機上的提醒已關閉",
-    "turnOn": "啟用",
-    "openSettings": "開啟設定"
+    "turnOn": "啟用"
   },
   "quickAdd": {
     "group": "建立",
@@ -846,6 +761,14 @@
     "appendHintDetail": "輸入 >>，再輸入它名稱的開頭",
     "appendNone": "還沒有可以新增的任務清單或筆記",
     "appendNoneDetail": "在 >> 後輸入名稱，即可建立該名稱的任務清單",
+    "cannotAdd": "無法新增至「{{title}}」",
+    "blocked": {
+      "trash": "它在垃圾桶中。",
+      "pin": "它受你的 PIN 碼保護。請先開啟它再新增。",
+      "readOnly": "它是唯讀的。",
+      "board": "它是看板。請在看板上新增卡片。",
+      "archived": "它已封存。請取消封存後再新增。"
+    },
     "linkGroup": "儲存這個連結",
     "linkDetail": {
       "bookmark": "保留網址。接著由你命名。",
@@ -863,6 +786,7 @@
       "task": "新增任務清單",
       "journal": "新增日誌紀錄",
       "kanban": "新增看板",
+      "drawing": "新增繪圖",
       "login": "新增登入資訊",
       "file": "上傳檔案",
       "contact": "新增聯絡人",
@@ -895,8 +819,8 @@
       },
       "length": {
         "label": "長度",
-        "examples": "持續 30分鐘 · 持續 3天 · 週五 到 週日",
-        "insert": "持續 1小時"
+        "examples": "15:00 持續 30分鐘 · 持續 3天 · 週五 到 週日",
+        "insert": "15:00 持續 1小時"
       },
       "repeat": {
         "label": "重複",
@@ -942,17 +866,14 @@
     "backToToday": "回到今天",
     "options": "打卡選項",
     "skipToday": "今天略過",
-    "hide": "隱藏這張卡片",
+    "hide": "隱藏",
     "change": "更改心情",
     "saved": "已儲存",
     "chooseTrackers": "選擇追蹤項目",
-    "settings": "打卡設定",
     "skipped": "今天已略過。",
     "startOver": "重新開始",
     "cleared": "已清除打卡。",
     "hidden": "卡片已隱藏。在清單偏好設定中開啟「顯示打卡卡片」即可重新顯示。",
-    "undo": "復原",
-    "done": "完成",
     "write": "寫下今天",
     "writeOn": "寫下 {{date}}",
     "streak": "連續第 {{n}} 天",
@@ -965,19 +886,25 @@
     "hiddenCount_other": "已隱藏 {{count}} 筆打卡。",
     "showThem": "顯示"
   },
+  "medicationCard": {
+    "title": "用藥追蹤",
+    "options": "用藥選項",
+    "edit": "更改今天的用藥",
+    "hidden": "卡片已隱藏。在清單偏好設定或「設定 > 追蹤項目 > 藥物」中即可重新開啟。"
+  },
   "clipper": {
-    "saveAsNote": "存成筆記",
     "saving": "正在存成筆記…",
     "stepPage": "正在下載網頁",
     "stepPictures": "正在儲存圖片，第 {{done}} 張，共 {{total}} 張",
-    "openNote": "開啟筆記",
     "alreadySaved": "這個網頁已經存成筆記了（{{date}}）。",
     "savedOn": "已於 {{date}} 存成筆記",
-    "windowTitle": "擷取網頁",
     "addressLabel": "網址",
     "addressPlaceholder": "貼上連結…",
     "savePictures": "儲存圖片",
     "savePicturesHint": "最多 20 張圖片，與筆記一起儲存，並計入你的儲存空間。",
+    "extensionTipTitle": "從瀏覽器擷取，效果更好",
+    "extensionTip": "瀏覽器擴充功能會照你看到的樣子儲存網頁，需要登入才能看的網頁也可以。",
+    "extensionTipSetUp": "設定擴充功能",
     "downloading": "正在下載網頁…",
     "downloadingPictures": "正在下載圖片，第 {{done}} 張，共 {{total}} 張",
     "picturesLine_other": "{{count}} 張圖片 · {{size}}，與筆記一起儲存",
@@ -1007,5 +934,164 @@
     "until": "直到 {{day}}",
     "noAlert": "無提醒",
     "endsLater": "於另一天結束"
+  },
+  "apps": {
+    "railLabel": "擴充功能",
+    "title": "瀏覽器擴充功能",
+    "subtitle": "Chrome、Firefox 和 Edge 上的網頁擷取工具與密碼管理器。擴充功能從不持有開啟你筆記的金鑰。",
+    "stepInstall": "安裝擴充功能",
+    "stepFeatures": "選擇它能做什麼",
+    "stepConnect": "連結",
+    "makeCode": "產生代碼",
+    "connectHint": "產生一組一次性代碼，貼到擴充功能中。",
+    "thisBrowser": "這個瀏覽器",
+    "otherApps": "桌面與手機應用程式：",
+    "desktopAll": "所有下載",
+    "extensionComputersOnly": "擴充功能適用於電腦上的 Chrome、Firefox 和 Edge。",
+    "demoSignUp": "註冊以連結瀏覽器"
+  },
+  "extensionConnect": {
+    "clips": "網頁擷取工具",
+    "clipsHint": "把網站存成筆記。",
+    "loginsHint": "你所在網站的登入資訊、卡片、SSH 金鑰與書籤，僅供複製。以它自己的 PIN 碼或通行碼鎖定。",
+    "pickOne": "請至少開啟一項。",
+    "codeLabel": "擴充功能的代碼",
+    "oneUse": "只能使用一次，有效 10 分鐘。",
+    "usedBy": "{{name}} 已使用這組代碼並完成連結。如果不是你，請在下方移除。",
+    "newCode": "新代碼",
+    "tooManyCodes": "等待使用的代碼太多。請使用其中一組，或等 10 分鐘。",
+    "tooManyExtensions": "這個帳號已連結 10 個瀏覽器，已達上限。請先移除一個。",
+    "keyElsewhere": "你的登入資訊金鑰在你的另一台裝置上。請在那台裝置開啟 PrivacyNotes 並讓它同步，然後再試一次。",
+    "failed": "無法產生代碼。請檢查網路連線後再試一次。"
+  },
+  "dashboard": {
+    "taskReadOnly": "這則筆記是唯讀的。若要勾選它的任務，請在「筆記選項」選單中關閉唯讀。",
+    "addWidget": "新增小工具",
+    "catalogTitle": "新增小工具",
+    "layouts": "版面配置",
+    "layoutChanged": "版面配置已變更",
+    "full": "首頁已滿。請先移除一個小工具。",
+    "added": "已加入首頁",
+    "removed": "已從首頁移除",
+    "showOnHome": "顯示在首頁",
+    "removeFromHome": "從首頁移除",
+    "resize": "調整 {{name}} 的大小",
+    "narrower": "更窄",
+    "taller": "更高",
+    "shorter": "更矮",
+    "moveEarlier": "往前移",
+    "moveLater": "往後移",
+    "chooseNote": "選擇筆記",
+    "chooseTag": "選擇標籤",
+    "chooseFolder": "選擇資料夾",
+    "chooseTracker": "選擇追蹤項目",
+    "choose": "選擇",
+    "gone": "已不在這裡",
+    "otherSpace": "在另一個空間中",
+    "proLocked": "Pro 的一部分",
+    "noneToChoose": "目前還沒有可選擇的項目",
+    "headerEvents_other": "今天有 {{formatted}} 個活動",
+    "headerTasks_other": "{{formatted}} 個未完成任務",
+    "startToday": "開始今天的日誌",
+    "groups": {
+      "keep": "你保存的東西"
+    },
+    "layout": {
+      "everyday": "日常",
+      "planner": "規劃",
+      "writer": "寫作"
+    },
+    "w": {
+      "checkIn": {
+        "name": "打卡",
+        "help": "你今天的狀態，以及你的追蹤項目"
+      },
+      "calendar": {
+        "help": "整個月份，標出有日誌與活動的日期"
+      },
+      "upcoming": {
+        "name": "即將到來",
+        "help": "今天和接下來 7 天"
+      },
+      "today": {
+        "name": "今天的日誌",
+        "help": "今天的日誌紀錄，或從這裡開始寫"
+      },
+      "tasks": {
+        "name": "未完成任務",
+        "help": "筆記中尚未勾選的任務"
+      },
+      "recent": {
+        "name": "最近編輯",
+        "help": "你最近處理過的項目"
+      },
+      "pinned": {
+        "help": "你釘選的項目"
+      },
+      "note": {
+        "name": "一則筆記",
+        "help": "你選擇的一則筆記，放在首頁上"
+      },
+      "tag": {
+        "name": "一個標籤",
+        "help": "某個標籤下最新的項目"
+      },
+      "folder": {
+        "name": "一個資料夾",
+        "help": "某個資料夾中最新的項目"
+      },
+      "onThisDay": {
+        "name": "歷史上的今天",
+        "help": "往年同一天的日誌紀錄"
+      },
+      "week": {
+        "help": "字數、活躍天數、項目與打卡"
+      },
+      "streak": {
+        "help": "你連續寫作的天數"
+      },
+      "checkInStreak": {
+        "help": "你連續打卡的天數"
+      },
+      "rhythm": {
+        "name": "你的節奏",
+        "help": "26 週的寫作與心情"
+      },
+      "milestone": {
+        "name": "下一個里程碑",
+        "help": "離下一個里程碑還有多遠"
+      },
+      "tracker": {
+        "name": "一個追蹤項目",
+        "help": "一個追蹤項目：它的數字和記錄的日子"
+      },
+      "weekRecap": {
+        "help": "你的一週，濃縮在一張卡片裡"
+      },
+      "files": {
+        "name": "最近的檔案",
+        "help": "你最新的圖片與檔案"
+      },
+      "bookmarks": {
+        "help": "你最新的書籤"
+      },
+      "birthdays": {
+        "help": "接下來 30 天內的生日"
+      }
+    },
+    "empty": {
+      "upcoming": "接下來 7 天沒有任何安排",
+      "tasks": "沒有未完成任務",
+      "recent": "這裡還沒有任何項目",
+      "pinned": "還沒有釘選任何項目",
+      "tag": "沒有帶這個標籤的項目",
+      "folder": "這個資料夾是空的",
+      "onThisDay": "往年的這一天沒有日誌紀錄",
+      "files": "還沒有檔案",
+      "bookmarks": "還沒有書籤",
+      "birthdays": "接下來 30 天內沒有生日",
+      "tracker": "還沒有任何記錄",
+      "milestone": "所有里程碑都已達成"
+    }
   }
 }

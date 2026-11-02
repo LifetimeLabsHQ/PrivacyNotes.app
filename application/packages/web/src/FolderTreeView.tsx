@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useContext, useEffect, useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { OverflowTip } from './OverflowTip';
 import { folderIndentPx, INDENT_PX, MAX_INDENT_LEVEL, useFolderExpansion } from './folderTreeState';
@@ -6,7 +6,7 @@ import { ancestorIds, canMoveFolder, childrenOf, subtreeIds, type FolderDef } fr
 import { CaretDown, DotsSixVertical } from './icons';
 import { FolderGlyph, LooksContext, sidebarRowTint } from './looks/LookGlyph';
 import { folderColor } from './itemStyles';
-import { SIDEBAR_DROP_INSIDE } from './sidebarUI';
+import { DRAG_SOURCE, DROP_INSIDE, DropLine, usePointerReorder } from './ui';
 
 /**
  * The folder tree itself - carets, guide lines, indent, the tinted expanded
@@ -21,19 +21,9 @@ import { SIDEBAR_DROP_INSIDE } from './sidebarUI';
  * them in here would mean a prop per difference, which is harder to
  * maintain, not easier.
  *
- * Spec: ops/docs/archive/ui-patterns.md (section 86)
+ * Spec: docs/internal/design/ui-patterns.md (section 86)
  */
 
-/** How far from a scroll edge a drag starts pulling the list, and how fast. */
-const AUTOSCROLL_EDGE_PX = 36;
-const AUTOSCROLL_STEP_PX = 8;
-/**
- * Pointer travel before a press becomes a drag rather than a stray tap.
- * Generous on purpose: the row is a click target too, so a shaky click that
- * crossed a tight threshold would arm a drag and then be swallowed as one -
- * a folder that "sometimes does not open" and never on demand.
- */
-const DRAG_THRESHOLD_PX = 8;
 /**
  * Share of a row's height at each end that means "between the rows" rather
  * than "into this folder". A quarter each way leaves the middle half as the
@@ -41,6 +31,8 @@ const DRAG_THRESHOLD_PX = 8;
  * smaller and re-parenting is a pixel hunt, any larger and reordering is.
  */
 const EDGE_BAND = 0.25;
+/** How long a drag rests on a closed folder before it opens, as a note drag does. */
+const SPRING_OPEN_MS = 600;
 
 interface FolderReorder {
   /**
@@ -105,15 +97,6 @@ interface DropTarget {
   orderedIds: string[];
 }
 
-interface DragState {
-  id: string;
-  /** Every row the drag may not land on: itself and its own descendants. */
-  refused: Set<string>;
-  target: DropTarget | null;
-  pointerY: number;
-  active: boolean;
-}
-
 export function FolderTreeView({
   folders,
   density,
@@ -137,22 +120,6 @@ export function FolderTreeView({
   const looks = useContext(LooksContext);
   const { isExpanded, toggle, expand } = useFolderExpansion();
   const rowEls = useRef(new Map<string, HTMLElement>());
-  const scroller = useRef<HTMLElement | null>(null);
-  const dragStartY = useRef(0);
-  /** Set while a drag is live, so the click it ends on does not also select. */
-  const dragged = useRef(false);
-  /**
-   * The live drag, mirrored in a ref because the handlers must READ it and
-   * ACT on it. Doing that inside a `setState` updater would put the commit
-   * (and the expand beside it) inside a function React is free to call
-   * twice, which in development it does.
-   */
-  const dragRef = useRef<DragState | null>(null);
-  /** The row the press started on, and its pointer, for the late capture. */
-  const dragEl = useRef<HTMLElement | null>(null);
-  const dragPointer = useRef(0);
-  const [drag, setDrag] = useState<DragState | null>(null);
-  const dragActive = !!drag?.active;
   const rail = density === 'rail';
 
   /** The rendered children of one parent, in on-screen order. */
@@ -173,7 +140,8 @@ export function FolderTreeView({
    * re-filing, and neither needs a second drop target somewhere else.
    */
   const resolveTarget = useCallback(
-    (id: string, refused: Set<string>, y: number): DropTarget | null => {
+    (id: string, y: number): DropTarget | null => {
+      const refused = subtreeIds(folders, id);
       /** Depth of a destination parent: 0 is the top level. */
       const depthOf = (parentId: string | null) =>
         parentId === null ? 0 : ancestorIds(folders, parentId).length + 1;
@@ -211,19 +179,28 @@ export function FolderTreeView({
       let hit: { folder: FolderDef; place: 'before' | 'inside' | 'after' } | null = null;
       let lastEl: { id: string; bottom: number } | null = null;
       let firstEl: { id: string; top: number } | null = null;
+      // A point in the gap between two branches takes the nearer row, so the
+      // line does not blink off while it crosses the gap.
+      let near: { folder: FolderDef; gap: number; place: 'before' | 'after' } | null = null;
       for (const [rowId, el] of rowEls.current) {
         const folder = folders.find((f) => f.id === rowId);
         if (!folder) continue;
         const box = el.getBoundingClientRect();
         if (!lastEl || box.bottom > lastEl.bottom) lastEl = { id: rowId, bottom: box.bottom };
         if (!firstEl || box.top < firstEl.top) firstEl = { id: rowId, top: box.top };
-        if (y < box.top || y > box.bottom) continue;
+        if (y < box.top || y > box.bottom) {
+          const gap = y < box.top ? box.top - y : y - box.bottom;
+          if (!near || gap < near.gap) near = { folder, gap, place: y < box.top ? 'before' : 'after' };
+          continue;
+        }
         const offset = (y - box.top) / box.height;
         hit = {
           folder,
           place: offset < EDGE_BAND ? 'before' : offset > 1 - EDGE_BAND ? 'after' : 'inside',
         };
       }
+      const inside = firstEl && lastEl && y >= firstEl.top && y <= lastEl.bottom;
+      if (!hit && inside && near) hit = { folder: near.folder, place: near.place };
 
       // Past the last row, or above the first, the pointer is over no row at
       // all - and that empty space is the ONLY way to reach the top level
@@ -248,132 +225,43 @@ export function FolderTreeView({
       // and the rows are already greyed out to say so.
       if (refused.has(hit.folder.id)) return null;
 
+      // The bottom band of an OPEN parent is the slot above its first child:
+      // that is where the line sits, so that is where the folder lands.
+      if (hit.place === 'after' && isExpanded(hit.folder)) {
+        const first = renderedChildren(hit.folder.id).find((f) => f.id !== id);
+        if (first) return land(first.id, 'before', hit.folder.id, first.id);
+      }
+
       return hit.place === 'inside'
         ? land(hit.folder.id, 'inside', hit.folder.id, null)
         : land(hit.folder.id, hit.place, hit.folder.parentId, hit.folder.id);
     },
-    [folders, renderedChildren],
+    [folders, renderedChildren, isExpanded],
   );
 
-  // Auto-scroll while a drag sits near either edge of the scrolling rail.
-  // Without it a tree taller than the pane can only be reordered as far as
-  // the visible window, which on a phone is three or four rows. The target
-  // is recomputed on every frame, not only on pointer movement, because
-  // during an auto-scroll the rows move under a pointer that is holding
-  // still.
-  useEffect(() => {
-    if (!dragActive) return;
-    let frame = 0;
-    const step = () => {
-      const live = dragRef.current;
-      const el = scroller.current;
-      if (live?.active && el) {
-        const box = el.getBoundingClientRect();
-        const before = el.scrollTop;
-        if (live.pointerY < box.top + AUTOSCROLL_EDGE_PX) el.scrollTop -= AUTOSCROLL_STEP_PX;
-        else if (live.pointerY > box.bottom - AUTOSCROLL_EDGE_PX) el.scrollTop += AUTOSCROLL_STEP_PX;
-        if (el.scrollTop !== before) {
-          updateDrag({ ...live, target: resolveTarget(live.id, live.refused, live.pointerY) });
-        }
-      }
-      frame = requestAnimationFrame(step);
-    };
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
-    // The pointer position is read from the ref inside the loop, so this
-    // starts ONCE per drag instead of restarting on every pointermove.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dragActive, resolveTarget]);
-
-  function updateDrag(next: DragState | null) {
-    dragRef.current = next;
-    setDrag(next);
-  }
-
-  function beginDrag(e: React.PointerEvent, folder: FolderDef, captureNow = false) {
-    // Left button only. A right-click used to arm a drag AND open the row
-    // menu, and the drag then hung until the next click.
-    if (!reorder || (e.pointerType === 'mouse' && e.button !== 0)) return;
-    const el = e.currentTarget as HTMLElement;
-    // NOTE: no `setPointerCapture` here. Capturing at pointerdown retargets
-    // the CLICK that follows to the capturing element, so every press on a
-    // control inside the row - the caret, the "..." menu - was delivered to
-    // the row instead and silently did nothing (reported 2026-08-27). The
-    // capture is taken at the moment the drag actually activates, by which
-    // point no click is coming.
-    dragStartY.current = e.clientY;
-    dragPointer.current = e.pointerId;
-    dragEl.current = el;
-    // The GRIP is the exception: it owns no click, so capturing there
-    // immediately costs nothing and buys the touch path its reliability -
-    // `touch-action: none` covers the grip alone, and a fast flick that
-    // leaves it before the threshold would otherwise hand the movement back
-    // to the rail as a scroll.
-    if (captureNow) {
-      try {
-        el.setPointerCapture(e.pointerId);
-      } catch {
-        // Not fatal - the tree's own handlers still see the drag.
-      }
-    }
-    dragged.current = false;
-    scroller.current = findScroller(el);
-    updateDrag({
-      id: folder.id,
-      refused: subtreeIds(folders, folder.id),
-      target: null,
-      pointerY: e.clientY,
-      active: false,
-    });
-  }
-
-  function moveDrag(e: React.PointerEvent) {
-    const state = dragRef.current;
-    if (!state) return;
-    const active = state.active || Math.abs(e.clientY - dragStartY.current) > DRAG_THRESHOLD_PX;
-    if (!active) {
-      updateDrag({ ...state, pointerY: e.clientY });
-      return;
-    }
-    if (!state.active) {
-      // Capture from here on, so the drag survives the pointer leaving the
-      // row - and only from here, because before this a click is still
-      // possible and capture would steal its target.
-      try {
-        dragEl.current?.setPointerCapture(dragPointer.current);
-      } catch {
-        // Not fatal: the tree's own move handler still sees everything that
-        // happens inside it, which is where a folder can be dropped anyway.
-      }
-    }
-    dragged.current = true;
-    updateDrag({
-      ...state,
-      active,
-      pointerY: e.clientY,
-      target: resolveTarget(state.id, state.refused, e.clientY),
-    });
-  }
-
-  function endDrag() {
-    const state = dragRef.current;
-    updateDrag(null);
-    if (state?.active && state.target) {
-      const { parentId, orderedIds } = state.target;
-      reorder?.onReorder(state.id, parentId, orderedIds);
+  const { drag, pressProps, endedDrag } = usePointerReorder<DropTarget>({
+    enabled: !!reorder,
+    resolve: (id, _x, y) => resolveTarget(id, y),
+    targetKey: (tg) => `${tg.overId}:${tg.place}:${tg.parentId}`,
+    onDrop: (id, { parentId, orderedIds }) => {
+      reorder?.onReorder(id, parentId, orderedIds);
       // A folder dropped into a closed one would otherwise vanish behind
       // its caret with nothing to say where it went.
       if (parentId) expand(folders, parentId);
-    }
-    // The click that follows this pointerup must not also select, but a drag
-    // released over empty space produces NO click at all - and a flag left
-    // standing then eats the next real one, which reads as a folder that
-    // stopped responding to clicks. Timers run after the click, so clearing
-    // on one covers both endings.
-    setTimeout(() => {
-      dragged.current = false;
-    }, 0);
-  }
+    },
+  });
+  const refused = drag ? subtreeIds(folders, drag.id) : null;
+
+  // A drag that rests on a closed folder opens it, so a folder can be filed
+  // into a subfolder that was closed when the drag began.
+  const springId = drag?.target?.place === 'inside' ? drag.target.overId : null;
+  useEffect(() => {
+    if (!springId) return;
+    const folder = folders.find((f) => f.id === springId);
+    if (!folder || isExpanded(folder) || childrenOf(folders, springId).length === 0) return;
+    const timer = setTimeout(() => expand(folders, springId), SPRING_OPEN_MS);
+    return () => clearTimeout(timer);
+  }, [springId, folders, isExpanded, expand]);
 
   const renderRow = (folder: FolderDef, level: number): React.JSX.Element => {
     const kids = renderedChildren(folder.id);
@@ -382,9 +270,9 @@ export function FolderTreeView({
     const active = isActive?.(folder) ?? false;
     const disabled = isDisabled?.(folder) ?? false;
     const dimmed = !disabled && !active && (isDimmed?.(folder) ?? false);
-    const dragging = drag?.active && drag.id === folder.id;
-    const refusedHere = drag?.active && drag.refused.has(folder.id) && drag.id !== folder.id;
-    const target = drag?.active && drag.target?.overId === folder.id ? drag.target : null;
+    const dragging = drag?.id === folder.id;
+    const refusedHere = !!refused?.has(folder.id) && !dragging;
+    const target = drag?.target?.overId === folder.id ? drag.target : null;
     const editing = isEditing?.(folder) ?? false;
     const takesItems = !!itemDrop && !editing;
 
@@ -407,15 +295,7 @@ export function FolderTreeView({
           // stop the rail scrolling. Controls that own their own click are
           // marked `data-no-drag` and never arm one - the caret and whatever
           // the caller puts in the trailing slot.
-          onPointerDown={
-            reorder && !editing
-              ? (e) => {
-                  if (e.pointerType === 'touch') return;
-                  if ((e.target as HTMLElement).closest('[data-no-drag]')) return;
-                  beginDrag(e, folder);
-                }
-              : undefined
-          }
+          {...(editing ? {} : pressProps(folder.id))}
           className={rowClass({
             rail,
             active,
@@ -429,17 +309,16 @@ export function FolderTreeView({
           // still show through, and only while note colors are backgrounds.
           style={sidebarRowTint(folderColor(folder.id, looks.styles), looks)}
         >
-          {target?.place === 'before' && <DropLine edge="top" level={target.level} />}
-          {target?.place === 'after' && <DropLine edge="bottom" level={target.level} />}
+          {target?.place === 'before' && <DropLine edge="top" inset={folderIndentPx(target.level) + 8} />}
+          {target?.place === 'after' && <DropLine edge="bottom" inset={folderIndentPx(target.level) + 8} />}
           {reorder && !editing && (
             <span
               role="button"
               aria-label={t('folders.reorder', { folder: folder.name })}
-              onPointerDown={(e) => beginDrag(e, folder, true)}
-              style={{ touchAction: 'none' }}
+              {...pressProps(folder.id, { grip: true })}
               className="pn-ftree-grip shrink-0 inline-flex items-center justify-center w-4 h-6 -ms-0.5 cursor-grab active:cursor-grabbing text-pn-muted hover:text-accent transition"
             >
-              <DotsSixVertical size={12} aria-hidden="true" />
+              <DotsSixVertical aria-hidden="true" />
             </span>
           )}
           {hasKids ? (
@@ -457,7 +336,6 @@ export function FolderTreeView({
               } text-pn-muted hover:text-accent transition`}
             >
               <CaretDown
-                size={10}
                 className={`transition-transform ${expanded ? '' : '-rotate-90'}`}
                 aria-hidden="true"
               />
@@ -484,10 +362,7 @@ export function FolderTreeView({
                 tabIndex={mobileTabIndex}
                 onClick={(e) => {
                   // The click that ends a drag is not a selection.
-                  if (dragged.current) {
-                    dragged.current = false;
-                    return;
-                  }
+                  if (endedDrag()) return;
                   if (onGlyphClick && (e.target as HTMLElement).closest('[data-folder-glyph]')) {
                     onGlyphClick(folder);
                     return;
@@ -551,18 +426,9 @@ export function FolderTreeView({
   };
 
   return (
-    // The move and release handlers live HERE, not on each row: before the
-    // drag activates there is no pointer capture, so a fast press-and-yank
-    // would leave the starting row before it ever crossed the threshold and
-    // the drag would die on the spot. Every row's events bubble through
-    // this one element.
-    <div
-      role="tree"
-      aria-label={ariaLabel}
-      onPointerMove={reorder ? moveDrag : undefined}
-      onPointerUp={reorder ? endDrag : undefined}
-      onPointerCancel={reorder ? endDrag : undefined}
-    >
+    // The drag itself listens on the window (ui/reorder.tsx), so a release
+    // outside the tree still ends it.
+    <div role="tree" aria-label={ariaLabel}>
       {renderedChildren(null).map((folder) => renderRow(folder, 0))}
     </div>
   );
@@ -583,13 +449,13 @@ function rowClass({
   dragging: boolean;
   inside: boolean;
 }): string {
-  const base = `pn-ftree-row relative w-full flex items-center group transition ${
-    rail ? 'rounded text-[15px] font-medium' : 'rounded-md text-[14px] px-1'
+  const base = `pn-ftree-row relative w-full flex items-center group select-none transition ${
+    rail ? 'rounded text-row font-medium' : 'rounded-md text-body px-1'
   }`;
   // "Drop inside" outlines the whole row, because the thing being said is
   // "into this folder", not "between two rows". The line says the other one.
-  if (inside) return `${base} ${SIDEBAR_DROP_INSIDE}`;
-  if (dragging) return `${base} opacity-40`;
+  if (inside) return `${base} ${DROP_INSIDE}`;
+  if (dragging) return `${base} ${DRAG_SOURCE}`;
   if (disabled) return `${base} text-pn-muted/75 cursor-not-allowed`;
   if (active) {
     return rail
@@ -597,42 +463,4 @@ function rowClass({
       : `${base} pn-on-tint bg-accent/15 text-accent-strong dark:bg-accent/20 hover:bg-accent/20 dark:hover:bg-accent/25`;
   }
   return `${base} ${dimmed ? 'text-pn-muted' : 'text-pn'} hover:bg-pn/5`;
-}
-
-/**
- * The landing slot. Absolutely positioned ON the row rather than inserted
- * between rows: in the flow it added its own height mid-drag, which moved
- * every row below it, which moved the midpoints the drop is measured
- * against - so the indicator flickered between two slots while the pointer
- * held still.
- */
-function DropLine({ edge, level }: { edge: 'top' | 'bottom'; level: number }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={`pointer-events-none absolute z-10 h-0.5 rounded-full bg-accent-fill ${
-        edge === 'top' ? 'top-0 -mt-px' : 'bottom-0 -mb-px'
-      }`}
-      style={{ insetInlineStart: folderIndentPx(level) + 8, insetInlineEnd: 4 }}
-    />
-  );
-}
-
-/**
- * Nearest scrollable ancestor, so a drag can pull a long tree past its pane.
- * The walk stops at a dialog boundary: a tree that is too short to scroll
- * would otherwise hand the auto-scroll whatever container sits OUTSIDE the
- * modal, and a drag near the screen edge would scroll the app behind it.
- */
-function findScroller(el: HTMLElement): HTMLElement | null {
-  let node: HTMLElement | null = el.parentElement;
-  while (node) {
-    const overflow = getComputedStyle(node).overflowY;
-    if ((overflow === 'auto' || overflow === 'scroll') && node.scrollHeight > node.clientHeight) {
-      return node;
-    }
-    if (node.getAttribute('role') === 'dialog') return null;
-    node = node.parentElement;
-  }
-  return null;
 }

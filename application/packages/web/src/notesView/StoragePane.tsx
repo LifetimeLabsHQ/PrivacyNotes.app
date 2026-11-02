@@ -11,7 +11,7 @@ type Section = 'storage' | 'images';
  * other. Images moved in from a category of their own (2026-10-22), because
  * what they decide is how much room pictures take. `storage` gets the way to
  * the Images tab, for its "image settings" links.
- * Spec: ops/docs/archive/image-quality-handoff.md (section 9)
+ * Spec: docs/internal/specs/image-quality-handoff.md (section 9)
  */
 export function StoragePane({
   initialTab,
@@ -29,7 +29,7 @@ export function StoragePane({
   // search for "images" still lands on it.
   const tabs = [
     { id: 'storage', setting: undefined, label: t('settings.storageLabel'), Icon: Database },
-    { id: 'images', setting: 'storage.images', label: t('settings.imagesLabel'), Icon: ImageIcon },
+    { id: 'images', setting: 'storage.images', label: t('notes:settings.imagesLabel'), Icon: ImageIcon },
   ] as const;
   return (
     <div className="flex-1 min-h-0 flex flex-col">

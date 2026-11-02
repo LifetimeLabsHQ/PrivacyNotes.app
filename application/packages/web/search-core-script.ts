@@ -8,7 +8,7 @@ import { build, type Plugin } from 'vite';
 // into one same-origin script that sets `window.pnSearch`, and the pages load
 // it before /static-pages.js. It is a file and not an inline script, because
 // the pages run under `script-src 'self'`. Web build only, like the pages.
-// Spec: ops/docs/design-decisions.md (search core)
+// Spec: docs/internal/design-decisions.md (search core)
 
 const ENTRY = path.join(path.dirname(fileURLToPath(import.meta.url)), 'src/textMatch.ts');
 

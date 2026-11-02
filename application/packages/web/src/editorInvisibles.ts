@@ -22,7 +22,7 @@
  * positioned at block boundaries, where staying outside the inline marks is
  * what we want.
  *
- * Spec: ops/docs/design-decisions.md (Invisible characters toggle)
+ * Spec: docs/internal/design-decisions.md (Invisible characters toggle)
  */
 
 import { Decoration, DecorationSet } from '@tiptap/pm/view';

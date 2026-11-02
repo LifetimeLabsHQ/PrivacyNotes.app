@@ -65,8 +65,6 @@
   },
   "mood": {
     "prompt": "كيف تشعر؟ (1-10)",
-    "low": "سيئ جدًا",
-    "high": "رائع",
     "anchor": {
       "1": "سيئ جدًا",
       "3": "صعب",
@@ -162,8 +160,6 @@
     "editMedication": "تعديل الدواء",
     "removeMedication": "إزالة الدواء",
     "confirmRemove": "هل تريد إزالة <highlight>{{name}}</highlight>؟",
-    "yes": "نعم",
-    "no": "لا",
     "taken": "تم تناوله",
     "skip": "تخطي",
     "editList": "تغيير هذه الأدوية",
@@ -333,16 +329,15 @@
   },
   "config": {
     "configureTrackers": "إعداد المتتبعات",
-    "title": "المتتبعات",
-    "tabGeneral": "عام",
     "tabCustom": "مخصص",
-    "chooseTrackers": "اختيار المتتبعات",
     "factorsTitle": "عواملك",
     "factorsHelp": "جوانب يومك التي تنقرها في زر «العوامل». العامل المحذوف يحتفظ باسمه في الأيام التي يظهر فيها.",
     "renameFactor": "إعادة تسمية {{name}}",
     "addFactor": "إضافة عامل",
     "medicationsTitle": "أدويتك",
     "medicationsHelp": "الأدوية التي يسأل عنها زر «الأدوية». الدواء المحذوف يحتفظ بسجله.",
+    "medicationCard": "بطاقة الدواء",
+    "medicationCardHelp": "«هل تناولت دواءك؟» على هذا الجهاز، فقط في يوم يحين فيه موعد دواء.",
     "customHelp": "متتبعات تسمّيها بنفسك: مقياس أو رقم أو نعم ولا. حتى {{max}}.",
     "yourCustomTrackers": "متتبعاتك المخصصة",
     "categoryMoodMind": "المزاج والذهن",
@@ -367,23 +362,17 @@
     "kindBuild": "للبناء",
     "kindWatch": "للمراقبة",
     "editHabit": "تعديل {{name}}",
-    "removeHabit": "إزالة {{name}}",
     "ownHabitsFull": "لديك {{max}} من عاداتك الخاصة، وهو الحد الأقصى.",
     "addCustomTrackerHint": "تتبع أي شيء تريده",
     "maxReached": "تم الوصول إلى الحد الأقصى وهو {{max}} من المتتبعات المخصصة.",
     "customTrackers": "المتتبعات المخصصة",
-    "newCustomTracker": "متتبع مخصص جديد",
-    "newMedication": "دواء جديد",
     "newMedicationHelp": "يسأل عنه زر «الأدوية» بدءًا من يوم بدئه، في الأوقات التي تحددها.",
     "trackerNamePlaceholder": "اسم المتتبع",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "الاسم",
     "typeLabel": "النوع",
-    "colorLabel": "اللون",
     "preview": "معاينة",
     "startFromLast": "تذكّر آخر إدخال",
     "chooseIcon": "اختيار أيقونة",
-    "iconLabel": "الأيقونة",
     "startFromLastHelp": "مناسب لما نادرًا ما يتغير، مثل وزنك أو جرعة يومية."
   },
   "factors": {
@@ -396,7 +385,6 @@
     "count_other": "{{count}} عامل",
     "remove": "إزالة {{name}}",
     "placeholder": "زوار، صداع نصفي، عمل إضافي",
-    "add": "إضافة",
     "empty": "أضف الأشياء التي تشكّل أيامك، ثم انقرها في أي يوم.",
     "commaHint": "أضف عدة عوامل دفعة واحدة، مفصولة بفواصل.",
     "editList": "تغيير هذه العوامل",
@@ -419,8 +407,6 @@
   "habits": {
     "prompt": "ماذا فعلت اليوم؟",
     "count": "{{yes}}/{{total}}",
-    "yes": "نعم",
-    "no": "لا",
     "empty": "اختر الأسئلة من إعداد المتتبعات.",
     "changeQuestions": "تغيير هذه الأسئلة",
     "q": {
@@ -479,9 +465,7 @@
     "prompt": "كم تناولت من الكافيين؟"
   },
   "flow": {
-    "next": "التالي",
     "finish": "إنهاء",
-    "done": "تم",
     "step": "المتتبع {{n}} من {{total}}"
   }
 }

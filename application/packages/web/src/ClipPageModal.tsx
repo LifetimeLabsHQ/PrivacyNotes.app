@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Callout, Modal, ModalFooter, ROW_TITLE, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, Switch, TextField } from './ui';
-import { Image as ImageIcon, NEW_GLYPHS } from './icons';
+import { Image as ImageIcon, NEW_GLYPHS, PuzzlePiece, X } from './icons';
 import { normalizeUrl } from './linkBody';
 import { isImeComposing } from './imeComposing';
 import { renderMarkdownSafe } from './markdownRender';
@@ -12,19 +12,23 @@ import type { ClipErrorReason } from './clipDownload';
 import type { ClipDraft, ClipSource, SavedClip } from './clipPage';
 import type { LocalNote } from './db';
 import { formatInstant } from './intlFormat';
+import { isTouchOnly } from './touchOnly';
+import { useAuth } from './auth';
+import { loadExtensionState } from './extensionApi';
+import { extensionOffered } from './extensionRelease';
 import { clipLabels, noticeFor, readClipPictures, writeClipPictures, type ClipNotice } from './clipMessages';
 
 /** How many characters of the note the preview renders. */
 const PREVIEW_CHARS = 900;
 
 /**
- * Clip page, from the + menu: an address, a preview of the note once the
+ * Web clipper, from the + menu: an address, a preview of the note once the
  * page is downloaded, whether to keep its pictures, and Save. The clip is the
  * page's main text; a bookmark is only the fallback when the page cannot be
  * clipped, and the window saves it then and says so. The preview renders the
  * clip's Markdown through the app's sanitizing renderer with its pictures
  * left out, never the page's own HTML.
- * Spec: ops/docs/archive/web-clipper-stage1.md (section 5.2, D11)
+ * Spec: docs/internal/specs/web-clipper-stage1.md (section 5.2, D11)
  */
 export default function ClipPageModal({
   token,
@@ -34,6 +38,7 @@ export default function ClipPageModal({
   onOpenNote,
   onOpenImageSettings,
   initialUrl = '',
+  extensionTip,
   onClose,
 }: {
   token: () => Promise<string | null>;
@@ -48,6 +53,9 @@ export default function ClipPageModal({
   onOpenImageSettings: () => void;
   /** The address to start with, from the quick add. */
   initialUrl?: string;
+  /** The browser extension tip under the buttons: the synced dismissal and
+   *  the door to Settings > Extension. */
+  extensionTip: { dismissed: boolean; onDismiss: () => void; onSetUp: () => void };
   onClose: () => void;
 }) {
   const { t } = useTranslation(['shell', 'settings']);
@@ -69,6 +77,7 @@ export default function ClipPageModal({
    *  downloads that one only, never a half-typed address. */
   const [committed, setCommitted] = useState<string | null>(null);
   const run = useRef(0);
+  const tip = useExtensionTip(extensionTip.dismissed);
 
   const url = normalizeUrl(address);
   /** A page clipped before is opened, not clipped a second time. */
@@ -209,9 +218,10 @@ export default function ClipPageModal({
   const stored = ready ? ready.held.filter((h) => 'bytes' in h).length : 0;
 
   return (
-    <Modal onClose={saving ? undefined : onClose} title={t('clipper.windowTitle')} className="max-w-md p-6 space-y-4">
+    <Modal onClose={saving ? undefined : onClose} title={t('extensionConnect.clips')} icon={<NEW_GLYPHS.clip />} className="max-w-md p-6 space-y-4">
       <TextField
-        label={t('clipper.addressLabel')}
+        // The window's one field reads as a row title, like Save pictures below.
+        label={<span className={`${ROW_TITLE} text-pn`}>{t('clipper.addressLabel')}</span>}
         value={address}
         autoFocus
         dir="ltr"
@@ -241,9 +251,9 @@ export default function ClipPageModal({
       />
       {ready && (
         <div className="max-h-56 overflow-y-auto rounded-md border border-dashed border-divider bg-surface-1 px-3 py-2">
-          <p className="text-sm font-semibold text-pn">{ready.clip.title || url}</p>
+          <p className="text-body font-semibold text-pn">{ready.clip.title || url}</p>
           <div
-            className="prose prose-pn prose-sm max-w-none text-[13px] [&_a]:pointer-events-none"
+            className="prose prose-pn prose-sm max-w-none text-compact [&_a]:pointer-events-none"
             // Rendered from the clip's Markdown by the app's sanitizing
             // renderer, pictures removed; never the downloaded HTML.
             dangerouslySetInnerHTML={{ __html: preview }}
@@ -254,7 +264,7 @@ export default function ClipPageModal({
         <Callout
           tone="warning"
           action={(
-            <Button icon={<NEW_GLYPHS.bookmark size={15} aria-hidden="true" />} onClick={() => void keepBookmark()}>
+            <Button icon={<NEW_GLYPHS.bookmark aria-hidden="true" />} onClick={() => void keepBookmark()}>
               {t('clipper.keepBookmark')}
             </Button>
           )}
@@ -275,7 +285,7 @@ export default function ClipPageModal({
               </button>
             </>
           )}
-        icon={<ImageIcon size={14} className="text-accent" />}
+        icon={<ImageIcon className="text-accent" />}
         labelClassName={ROW_TITLE}
         checked={pictures}
         disabled={ended || saving}
@@ -286,16 +296,16 @@ export default function ClipPageModal({
       />
       {busy && <p className={SETTINGS_HELP} role="status">{busy}</p>}
       {existing && (
-        <p className="text-sm text-pn-soft" role="status">
+        <p className="text-body text-pn-soft" role="status">
           {t('clipper.alreadySaved', { date: formatInstant(existing.createdAt, 'date') })}
         </p>
       )}
       {notice && (
         <div className="space-y-2" role="alert">
-          <p className="text-sm text-warning">{notice.text}</p>
+          <p className="text-body text-warning">{notice.text}</p>
           {notice.signUp && (
             <a href={withSource(DEMO_APP_URL)} className={`${SETTINGS_BTN_PRIMARY} inline-flex`}>
-              {t('demoBanner.cta')}
+              {t('security:demoTeaser.createAccount')}
             </a>
           )}
         </div>
@@ -305,7 +315,7 @@ export default function ClipPageModal({
         <ModalFooter>
           <Button action="cancel" onClick={onClose} disabled={saving} />
           {existing ? (
-            <Button action="open" variant="primary" onClick={() => onOpenNote(existing)}>{t('clipper.openNote')}</Button>
+            <Button action="open" variant="primary" onClick={() => onOpenNote(existing)}>{t('editor:noteLink.open')}</Button>
           ) : (
             <Button action="save" onClick={() => void save()} disabled={saving || !url || busy !== null}>
               {ready && short ? t('clipper.saveAnyway') : undefined}
@@ -313,6 +323,43 @@ export default function ClipPageModal({
           )}
         </ModalFooter>
       )}
+      {tip && (
+        <Callout
+          title={t('clipper.extensionTipTitle')}
+          action={(
+            <>
+              <Button icon={<PuzzlePiece aria-hidden="true" />} onClick={extensionTip.onSetUp}>{t('clipper.extensionTipSetUp')}</Button>
+              <Button icon={<X aria-hidden="true" />} onClick={extensionTip.onDismiss}>{t('common:updateToast.dismiss')}</Button>
+            </>
+          )}
+        >
+          {t('clipper.extensionTip')}
+        </Callout>
+      )}
     </Modal>
   );
+}
+
+/**
+ * The browser extension tip shows on a computer only, once the extension is
+ * offered (extensionRelease.ts), until it is dismissed
+ * (synced, once for every device) or a browser is connected. It waits for the
+ * connected list, so it never shows and then vanishes.
+ */
+function useExtensionTip(dismissed: boolean): boolean {
+  const { supabase, auth } = useAuth();
+  const pubkey = auth.status === 'authenticated' ? auth.pubkey : '';
+  const eligible = !dismissed && !isTouchOnly() && extensionOffered();
+  const [connected, setConnected] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!eligible) return;
+    // The demo has no account, so nothing is connected there.
+    if (!pubkey) { setConnected(false); return; }
+    let live = true;
+    loadExtensionState(supabase, pubkey)
+      .then((s) => { if (live) setConnected(s.extensions.length > 0); })
+      .catch(() => { if (live) setConnected(true); });
+    return () => { live = false; };
+  }, [eligible, supabase, pubkey]);
+  return eligible && connected === false;
 }

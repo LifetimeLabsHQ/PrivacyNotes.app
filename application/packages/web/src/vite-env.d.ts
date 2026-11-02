@@ -8,3 +8,5 @@
  */
 declare const __PN_BUILD_PLATFORM__: string;
 declare const __PN_LATEST_RELEASE__: { version: string; date: string; title: string };
+/** Where the drawing canvas loads its fonts: `/excalidraw/<version>/`. */
+declare const __PN_EXCALIDRAW_ASSET_PATH__: string;

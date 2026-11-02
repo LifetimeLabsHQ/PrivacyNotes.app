@@ -2,6 +2,8 @@
   "header": {
     "betaBadge": "beta",
     "downloads": "Nedladdningar",
+    "price": "Pris",
+    "priceLine": "Vad dina appar kostar, sammanlagt",
     "pricing": "Priser",
     "roadmap": "Roadmap",
     "createVault": "Skapa ditt valv",
@@ -39,14 +41,13 @@
       "clipper": "Din <w>webbklippare</w>.",
       "markdown": "Din <w>Markdown</w>."
     },
-    "subhead": "Anteckningar, uppgifter, lösenord, filer, bokmärken, en kalender, uppföljning av humör och medicin och en Markdown-redigerare. En privat app.",
+    "subhead": "Anteckningar, uppgifter, lösenord, dagbok, filer, kalender, kontakter och bokmärken, med uppföljning av humör och medicin. En privat app.",
     "tryDemo": "Testa demot",
     "microcopy": "Gratis för alltid. Inget kreditkort. Logga in med Google, Apple, GitHub eller bara en fras på 12 ord.",
     "alreadyHaveVault": "Har du redan ett valv? Logga in",
     "trustSigned": "Signerade utgåvor på GitHub"
   },
   "heroCard": {
-    "passwords": "Lösenord",
     "today": "I dag",
     "tripTitle": "Packlista för resan",
     "taskPassport": "Pass + biljetter",
@@ -57,45 +58,85 @@
     "encrypted": "Krypterad",
     "moodWeek": "Humör · den här veckan"
   },
+  "heroApp": {
+    "label": "Appens delar",
+    "notes": {
+      "meta": "Redigerad för 2 min sedan",
+      "markdown": "MD",
+      "day": "Lördag",
+      "body": "Spårvagn 28 tidigt, <b>före folkmassorna</b>. Lunch på stället som <ref>Ana</ref> hela tiden pratar om.",
+      "tag1": "#resor",
+      "tag2": "#mat"
+    },
+    "vault": {
+      "meta": "3 objekt, en nyckel",
+      "password": "correct-horse-battery",
+      "card": "Resekort",
+      "ssh": "Jobbdator"
+    },
+    "journal": {
+      "med": "D-vitamin, 08:00",
+      "entry": "Lång promenad längs floden. Sov gott, äntligen."
+    },
+    "files": {
+      "meta": "Filer, krypterade",
+      "file1": "pass.pdf",
+      "file2": "strand.heic",
+      "file3": "röstmemo.m4a",
+      "file4": "hyresavtal.pdf",
+      "storage": "46 MB av 500 MB"
+    },
+    "calendar": {
+      "ev4": "Anas födelsedag",
+      "empty": "Inget planerat"
+    },
+    "contacts": {
+      "initials": "AM",
+      "name": "Ana Martins",
+      "place": "Lissabon",
+      "birthday": "Födelsedag, {{date}}"
+    },
+    "bookmarks": {
+      "reading": "Läsning",
+      "bm1": "Spårvagn 28 - Wikipedia",
+      "bm2": "Lissabon på OpenStreetMap",
+      "bm3": "Recept på pastel de nata",
+      "bm4": "Markdown-guide",
+      "bm5": "Källkoden till PrivacyNotes",
+      "clipped": "Sparad som anteckning"
+    },
+    "mood": {
+      "insight": "De bästa dagarna följer på 7 h sömn"
+    }
+  },
   "announcement": {
     "ossText": "Nu öppen källkod: hela klientkoden. Webb, desktop och mobil.",
     "ossTextNarrow": "Nu öppen källkod: hela klientkoden.",
     "ossCta": "Ge oss en stjärna på GitHub",
-    "ossCtaNarrow": "GitHub",
     "dismiss": "Stäng meddelandet"
   },
   "pillars": {
     "kicker": "Allt under en nyckel - och en redigerare på din disk",
-    "notesName": "Anteckningar",
     "notesBlurb": "Formaterad live-redigerare, taggar, direktsökning.",
-    "tasksName": "Uppgifter",
     "tasksBlurb": "Varje kryssruta, en enda vy.",
-    "vaultName": "Valv",
     "vaultBlurb": "Lösenord, kort, SSH-nycklar.",
     "journalName": "Dagbok",
     "journalBlurb": "Humör, sömn, medicin. Forskningsbaserade taggar, export till läkaren.",
-    "filesName": "Filer",
     "filesBlurb": "Krypterade bilder, dokument, ljud och video.",
     "bookmarksName": "Bokmärkessynk",
     "bookmarksBlurb": "Sparade länkar med webbplatsikoner. Importera dina bokmärken från webbläsaren.",
-    "contactsName": "Kontakter",
     "contactsBlurb": "Nummer, e-post, adresser. Importera hela din adressbok.",
-    "calendarName": "Kalender",
-    "calendarBlurb": "Händelser och påminnelser. Dag-, vecko- och månadsvy.",
-    "markdownFree": "Gratis"
+    "calendarBlurb": "Händelser och påminnelser. Dag-, vecko- och månadsvy."
   },
   "mdEditor": {
     "title": "En gratis Markdown-redigerare. Dina filer lämnar aldrig din disk.",
     "body": "Peka ut en mapp med .md- och .txt-filer - undermappar dyker upp automatiskt, ändringar sparas direkt, och inget konverteras. Samma redigerare som för dina anteckningar: live-förhandsgranskning, uppgifter, taggar och tabeller.",
-    "chipObsidian": "Samma filer i Obsidian eller Logseq",
-    "chipGit": "Ett git-repo som du synkar själv",
-    "chipAgents": "Ge AI-agenter tillgång till dina anteckningar",
     "platforms": "I skrivbordsappen eller i vilken Chromium-webbläsare som helst.",
     "sampleTitle": "Projektidéer för helgen",
     "sampleTask1": "Koppla in trädgårdssensorn",
     "sampleTask2": "Skissa på blogginlägget",
     "sampleTag": "#pyssel",
-    "savedToDisk": "Sparad till disk"
+    "saving": "Sparar"
   },
   "meds": {
     "tileName": "Medicinspårning",
@@ -119,7 +160,7 @@
     "med4": "Melatonin",
     "dose4": "2 mg",
     "kicker": "Medicinspårning",
-    "heading": "Ta den i tid. Behåll anteckningarna för dig själv.",
+    "heading": "Missa aldrig en dos. Dina piller angår ingen annan.",
     "intro": "Lägg till en medicin en gång, med dos och tider. Varje dag kräver ett tryck: tagen, överhoppad eller missad. Påminnelsen ringer i din telefon. Listan, doserna och de överhoppade dagarna är krypterade på din enhet, och de förblir det när de synkas.",
     "todayLabel": "I dag. Tryck på en dos.",
     "todayCount": "{{taken}} av {{total}} tagna",
@@ -146,7 +187,6 @@
     "refillBy": "Beställ nytt om {{days}} dagar"
   },
   "ninja": {
-    "tileName": "Ninja",
     "tileTagline": "Alfred för dina anteckningar.",
     "tileLead": "Lyder order. Blixtsnabbt.",
     "tileBlurb": "Tryck {{key}} och skriv. Några bokstäver tar dig vart som helst, + skapar vad som helst med vanliga ord, > kör ett kommando. Händerna lämnar aldrig tangentbordet.",
@@ -157,11 +197,6 @@
     "chipDay": "Gå till en dag",
     "chipLink": "Klistra in en länk",
     "placeholder": "Skriv en titel, + för att lägga till eller > för kommandon",
-    "recent": "Senaste",
-    "inText": "I texten",
-    "create": "Skapa",
-    "addTo": "Lägg till i",
-    "commands": "Kommandon",
     "recent1": "Idéer för helgprojekt",
     "recent1Meta": "Anteckningar · för 2 h sedan",
     "recent2": "Inköpslista",
@@ -185,15 +220,10 @@
     "q2Row3": "Ny uppgiftslista: Tandläkare",
     "q3": "mjölk, ägg >> inköp",
     "q3Row1": "Lägg till 2 uppgifter i Inköpslista",
-    "q3Row1Meta": "Uppgifter",
     "q3Row2": "Ny händelse: mjölk, ägg",
     "q4": "zen",
     "q4Row1": "Starta zenläge",
     "q4Row2": "Inställningar: Zenläge",
-    "hintOpen": "öppna",
-    "hintActions": "åtgärder",
-    "hintTab": "öppna i en flik",
-    "hintClose": "stäng",
     "tryDemo": "Testa i demot",
     "seeShots": "Skärmbilder",
     "shots": {
@@ -223,8 +253,7 @@
       "theme": "Skriv ”theme”: varje tema med sina färger. Enter byter till det, ljust eller mörkt."
     },
     "q1Row1Meta": "Anteckningar · för 2 dagar sedan",
-    "q1Row2Meta": "Mapp · 4 objekt",
-    "hintMove": "flytta"
+    "q1Row2Meta": "Mapp · 4 objekt"
   },
   "demoShot": {
     "kicker": "Se det live",
@@ -246,15 +275,14 @@
     "rls": "Radnivåsäkerhet"
   },
   "downloads": {
-    "kicker": "Nedladdningar",
     "heading": "Ladda ner PrivacyNotes",
     "tileAria": "Ladda ner för {{name}}",
+    "playDesc": "Uppdateras via Play Butik. Köp i appen faktureras av Google.",
     "apkDesc": "Varje uppdatering är en nedladdning och en installation du gör själv.",
     "obtainiumDesc": "Installerar varje ny version från vårt repo.",
     "obtainiumBadgeAlt": "Hämta på Obtainium",
     "appStore": "App Store",
     "recommended": "Rekommenderas",
-    "comingSoon": "Kommer snart",
     "apkFootnote": "Kräver Android 7.0 eller nyare. Zapstore, Obtainium och APK-filen behöver varken Google-konto eller Google-betalning: Pro låses upp via kassan på webben. APK-filen säger till i appen när en ny version finns.",
     "linuxRequirement": "Båda formaten kräver webkit2gtk 4.1: Ubuntu 22.04 eller nyare, Debian 12 eller nyare, eller en motsvarande utgåva från 2023 och framåt. Äldre distributioner levererar bara webkit2gtk 4.0 och kan inte köra de här byggena.",
     "linuxArchX86": "Intel / AMD (x86_64)",
@@ -271,12 +299,12 @@
     "pkgToggle": "Installera med en pakethanterare ({{platforms}})",
     "pkgBrewDesc": "Appen uppdaterar sig själv, inte brew upgrade.",
     "pkgWingetDesc": "Inbyggt i Windows 10 och 11.",
-    "pkgScoopDesc": "Scoop uppdaterar aldrig av sig själv. Kör scoop update privacynotes.",
     "pkgFootnote": "Var och en installerar samma signerade bygge.",
     "githubLink": "Alla utgåvor på GitHub",
     "githubNote": "Signerad · Offentlig · Verifierbar · Varenda utgåva",
     "zapstoreDesc": "<rec>Rekommenderas.</rec> Kontrollerar vår signatur innan den installerar.",
     "zapstoreBadgeAlt": "Hämta på Zapstore",
+    "playBadgeAlt": "Hämta på Google Play",
     "autoUpdates": "Uppdaterar sig själv",
     "manualUpdates": "Manuella uppdateringar"
   },
@@ -284,37 +312,13 @@
     "getStarted": "Kom igång"
   },
   "pricing": {
-    "freeLabel": "Gratis för alltid",
     "freeSubLabel": "Inget kreditkort krävs, ingen tidsgräns.",
-    "freeAllPillars": "Anteckningar, uppgifter, kalender, filer, valv, dagbok, kontakter och bokmärken",
+    "freeAllPillars": "Anteckningar, uppgifter, lösenord, dagbok, filer, kalender, kontakter och bokmärken, med uppföljning av humör och medicin",
     "freeSync": "Synk mellan 2 enheter",
     "freeVault": "50 MB lagring, upp till 5 MB per fil",
-    "freeSearch": "Fritextsökning + taggar",
     "freeImport": "Import och export, inklusive Keep och Obsidian",
-    "freeBurn": "Bränn efter läsning",
-    "freeMood": "Spårning av humör och välmående",
-    "freeTheme": "Mörkt och ljust läge",
     "freeAnon": "Anonym inloggning, utan e-post",
-    "freeGoogle": "Inloggning med Google, Apple eller GitHub",
-    "noSubscription": "Ingen prenumeration",
-    "proLabel": "Pro · Betala en gång",
-    "earlyAdopterBadge": "Tidig användare",
-    "oneTime": "engångsbetalning",
-    "proOnceDesc": "Du betalar <b>en gång</b> och äger det för alltid.",
-    "proCompareBeta": "Betala {{earlyPrice}} $ en gång. Obsidian Sync kostar 48 $/år, varje år. Standard Notes tar 90 $/år. Pris för tidiga användare, låst innan det höjs till {{proPrice}} $.",
-    "proCompare": "Betala {{proPrice}} $ en gång och äg det för alltid. Obsidian Sync kostar 48 $/år och Standard Notes 90 $/år, varenda år.",
-    "proEverythingFree": "Allt i Gratis, plus:",
-    "proSync": "Synk mellan obegränsat antal enheter",
-    "proHistory": "Anteckningshistorik, upp till 50 versioner",
-    "proLock": "Skrivskyddade anteckningar",
-    "proPin": "PIN-skydda anteckningar",
-    "proAnalytics": "Välmåendeanalys och export",
-    "proZen": "Zenläge och fler teman",
-    "proStorage": "500 MB lagring, upp till 50 MB per fil, <expand>utbyggbart</expand>"
-  },
-  "storageAddon": {
-    "heading": "Behöver du mer lagring?",
-    "body": "Pro innehåller 500 MB. Behöver du mer lägger du till extra lagring från {{price}} $/år. Det är den enda återkommande kostnaden i <brand/>. Själva Pro-uppgraderingen är en engångsbetalning, för alltid."
+    "earlyAdopterBadge": "Tidig användare"
   },
   "underHood": {
     "heading": "Under huven",
@@ -322,17 +326,14 @@
     "cipherDesc": "Nycklar härleds på din enhet",
     "phraseTerm": "BIP-39-fraser",
     "phraseDesc": "12 ord, signering med Ed25519",
-    "rlsTerm": "Radnivåsäkerhet",
     "rlsDesc": "RLS knuten till din publika nyckel",
     "trackingTerm": "Noll spårare",
     "trackingDesc": "Inga pixlar, inga spårare från tredje part",
     "authTerm": "Anonym inloggning",
     "authDesc": "Ingen e-post, inget lösenord",
-    "serversTerm": "Schweiziska servrar",
     "serversDesc": "Zürich, Schweiz",
     "sshTerm": "Valv för SSH-nycklar",
     "sshDesc": "Ed25519-generering inbyggd",
-    "pwgenTerm": "Lösenordsgenerator",
     "pwgenDesc": "crypto.getRandomValues()",
     "opensourceTerm": "Öppen källkod",
     "opensourceDesc": "Appar och kryptering på GitHub"
@@ -361,9 +362,7 @@
       "social": "En kväll ute",
       "custom": "Allt du räknar, med Pro"
     },
-    "cardPatternsTitle": "Mönster",
     "cardPatternsBody": "Varje mätvärde rangordnat efter vad det gör med ditt humör, med slutsatsen utskriven i klartext.",
-    "cardExploreTitle": "Utforska",
     "cardExploreBody": "Ett mätvärde mot ditt humör, samma dag eller nästa. Sömnen i natt, humöret i morgon.",
     "cardMedsTitle": "Medicin",
     "cardMedsBody": "Tagen eller överhoppad, dosändringar på en tidslinje och följsamheten ställd mot ditt humör.",
@@ -374,27 +373,34 @@
     "vizReport": "Läkarrapport",
     "vizPrompt": "AI-prompt",
     "encryptedHeading": "Därför fungerar det här bara krypterat",
-    "encryptedBody": "Ingen antecknar sin antidepressiva dos i Notion. Ingen loggar hopplösa dagar i ett Google-dokument. Så känsliga uppgifter kräver zero-knowledge-kryptering, och så är PrivacyNotes byggt."
+    "encryptedBody": "Ingen antecknar sin antidepressiva dos i Notion. Ingen loggar hopplösa dagar i ett Google-dokument. Så känsliga uppgifter kräver kryptering på enheten, och så är PrivacyNotes byggt."
   },
   "comparison": {
     "kicker": "Räkna på det",
-    "heading": "Varför betala för tre appar när en gör allt, krypterat?",
-    "typicalSetup": "Typisk uppsättning",
-    "themStandardNotes": "Standard Notes, 90 $/år",
-    "themObsidian": "Obsidian Sync, 48 $/år",
-    "themDayOne": "Day One, 36 $/år",
-    "themPasswordManager": "Bitwarden / 1Password, 10-36 $/år",
-    "themLunatask": "Lunatask, 72 $/år",
-    "themDaylio": "Daylio, 48 $/år (okrypterade humördata)",
-    "themSeparate": "Separata appar, återkommande avgifter",
-    "usAllInOne": "Anteckningar, uppgifter, kalender, filer, valv, dagbok, kontakter, bokmärken. En app",
-    "usTracking": "Spårning av humör, energi, sömn och medicin",
-    "usEncrypted": "Krypterat på din enhet, synkat till Schweiz",
-    "usSignIn": "Anonym inloggning, eller inloggning med Google, Apple eller GitHub, samma kryptering hur du än väljer",
-    "usExport": "Mönsterigenkänning + PDF-export till läkaren",
-    "usSync": "Dator + mobil, obegränsad synk",
-    "usPriceBeta": "Gratis för alltid, eller {{earlyPrice}} $ en gång för Pro (pris för tidiga användare)",
-    "usPrice": "Gratis för alltid, eller {{proPrice}} $ en gång för Pro"
+    "headingLive": "Dina appar kostar <cost>{{amount}}</cost> om året.<br />Vår börjar <free>gratis</free>. Pro kostar <free>{{pro}}, en gång</free>.",
+    "pick": "Tryck på det du betalar för i dag",
+    "group": {
+      "mood": "Humör och välmående",
+      "files": "Filer och lagring",
+      "bookmarks": "Bokmärken och läs senare"
+    },
+    "barThem_one": "De andra, {{count}} år",
+    "barThem_other": "De andra, {{count}} år",
+    "barUs": "<brand/> Pro",
+    "receipt": "Din räkning",
+    "receiptCount_one": "{{count}} prenumeration",
+    "receiptCount_other": "{{count}} prenumerationer",
+    "receiptRenews": "Förnyas varje år",
+    "perYear": "Totalt per år",
+    "keepLabel": "Du sparar",
+    "keepLine_one": "på {{count}} år, även om du köper Pro.",
+    "keepLine_other": "på {{count}} år, även om du köper Pro.",
+    "pickNone": "Tryck på apparna du betalar för.",
+    "checked": "Årspriser vid årsvis betalning, från varje apps prissida, {{date}}.",
+    "usKicker": "Allt i en app, krypterat på din enhet.",
+    "usFreeBig": "gratis för alltid",
+    "usProOnce": "en gång, din för livet",
+    "usProLine": "Alla enheter, 50 versioner av varje anteckning, PIN-låsta anteckningar, insikter om välmående och 10 gånger så mycket lagring. Mer utrymme från ${{price}} om året, det enda vi tar betalt för per år."
   },
   "extras": {
     "kicker": "Och dessutom",
@@ -414,20 +420,25 @@
     "weekInReview": "Veckan i återblick",
     "selfDestruct": "Självförstörande anteckningar",
     "anonAccounts": "Anonyma konton",
-    "zenMode": "Zenläge",
     "darkMode": "Mörkt läge"
   },
   "whyPrivacy": {
     "kicker": "Därför spelar det roll",
-    "heading": "De flesta anteckningsappar läser dina anteckningar.<accent>Vår kan inte.</accent>",
-    "para1": "De flesta anteckningsappar gräver i ditt innehåll. Lägg till ”köp en ny tv” i inköpslistan och de närmaste sidorna du besöker fylls med tv-annonser. Din matlista, din dagbok, dina privata tankar, allt matas in i annonsmaskineriet, profileras och säljs vidare. Det är affärsmodellen för varje ”gratis” anteckningsapp som lever på reklam.",
-    "para2": "Även appar som inte visar annonser lagrar dina anteckningar i klartext på sina servrar, läsbara för anställda, åtkomliga vid intrång och tillgängliga för var och en med ett domstolsbeslut. Dina uppgifter blir deras påtryckningsmedel.",
+    "heading": "Skriv ”köp en ny tv”. <accent>Se tv-apparater i en månad.</accent>",
+    "lead": "Så betalar de flesta gratis anteckningsappar sina räkningar: det du skriver läses, profileras och säljs, och annonserna följer efter dig.",
+    "step": {
+      "type": "Du skriver det",
+      "typeSub": "”köp en ny tv”",
+      "read": "Appen läser det",
+      "readSub": "intresse: elektronik",
+      "ads": "Annonserna följer dig",
+      "adsSub": "på varje webbplats du besöker"
+    },
     "differenceLabel": "Skillnaden",
-    "differenceBody": "<brand/> krypterar dina anteckningar på din enhet, och med egen förvaring lämnar nyckeln den aldrig, så varken vi eller våra servrar kan läsa ett enda ord. Det finns inga annonser, inga pixlar, inga spårare från tredje part och ingen analys av det du skriver, och det kommer det aldrig att göra. Vår webbplats räknar klick på sina nedladdnings- och partnerlänkar per land, utan någon identifierare. Det du skriver förblir ditt.",
+    "differenceBody": "<brand/> krypterar dina anteckningar på din enhet. Det finns inga annonser, inga pixlar, inga spårare från tredje part och ingen analys av det du skriver, och det kommer det aldrig att göra. Koden är öppen källkod, så du kan kontrollera det själv.",
     "keyboardNote": "<b>En kommentar om tangentbord på enheten.</b> Tredjepartstangentbord (som Gboard, SwiftKey eller Samsung Keyboard) kan skicka det du skriver till sina egna servrar. Det sker på operativsystemsnivå, utanför alla appars kontroll. Överväg att stänga av molnfunktioner i tangentbordets inställningar, eller att använda ett tangentbord som bara kör offline."
   },
   "readIt": {
-    "kicker": "Öppen källkod",
     "heading": "Lita inte på oss. Läs koden.",
     "body": "Appen du använder är publicerad, tillsammans med krypteringen i den. Börja med enminuterskontrollen som inte kräver några verktyg, eller gå direkt till koden.",
     "cta": "Se källkoden på GitHub",
@@ -437,30 +448,25 @@
     "crypto": "Själva krypteringen"
   },
   "wontFind": {
-    "kicker": "Det du inte hittar i appen",
-    "noTracking": "Inga spårare",
-    "noAds": "Inga annonser",
-    "noHarvesting": "Ingen datainsamling",
-    "noAiTraining": "Ingen AI-träning",
-    "noLockIn": "Ingen inlåsning",
-    "noEmail": "Ingen e-post krävs",
-    "noTelemetry": "Ingen analys av dina anteckningar",
-    "noCookieBanner": "Ingen cookiebanner",
-    "noPasswords": "Inga lösenord",
-    "noDarkPatterns": "Inga dark patterns",
-    "noVc": "Inget riskkapital",
-    "noBlockchain": "Ingen blockkedja",
-    "noBackdoor": "Ingen hemlig bakväg"
+    "kicker": "Utelämnat med flit",
+    "noTracking": "Spårare",
+    "noAds": "Annonser",
+    "noHarvesting": "Datainsamling",
+    "noAiTraining": "AI-träning",
+    "noLockIn": "Inlåsning",
+    "noEmail": "Krav på e-post",
+    "noDarkPatterns": "Dark patterns",
+    "noBackdoor": "Bakdörrar"
   },
   "noRecovery": {
     "heading": "Din fras är din nyckel",
-    "body": "Ingen fras, inga anteckningar. Vi kan inte återställa dem, och det kan ingen annan heller. Det är priset för egen förvaring: du är den enda som har nyckeln, så det hjälper inte att skriva till vårt team för att få tillbaka dina anteckningar.",
+    "body": "Med egen förvaring betyder ingen fras inga anteckningar: ingen kan återställa dem. Det är priset för att ha den enda nyckeln, så det hjälper inte att skriva till vårt team för att få tillbaka dina anteckningar.",
     "noRecoveryTerm": "Ingen återställning",
-    "noRecoveryDesc": "Tappar du frasen tappar du anteckningarna",
+    "noRecoveryDesc": "Med egen förvaring tappar du anteckningarna om du tappar frasen",
     "deviceTerm": "Skapad på enheten",
     "deviceDesc": "Med egen förvaring rör din fras aldrig våra servrar",
     "zkTerm": "Zero-knowledge",
-    "zkDesc": "Med egen förvaring kan vi varken läsa eller återställa dina data",
+    "zkDesc": "Med egen förvaring har servern inget som öppnar dina anteckningar",
     "writeTerm": "Skriv ner den",
     "writeDesc": "Säkerhetskopia på papper, förvarad tryggt",
     "printTerm": "Skriv ut från inställningarna",
@@ -471,22 +477,20 @@
   "closing": {
     "kicker": "Redo när du är det",
     "heading": "Ditt valv står klart på under en minut.",
-    "importNote": "Byter du app? Exportera från vilken som helst av de här och importera på några minuter:"
+    "importNote": "Byter du app? Exportera från vilken som helst av de här och importera på några minuter:",
+    "importDemoTitle": "Prova din egen import i demot först",
+    "importDemoBody": "Din fil läses i din webbläsare, inget skickas till våra servrar, och när du stänger fliken rensas den."
   },
   "about": {
     "tabs": {
       "about": "Om",
-      "changelog": "Changelog",
-      "roadmap": "Roadmap",
       "hotkeys": "Kortkommandon",
       "rating": "Betyg"
     },
-    "modalTitle": "Om",
-    "intro": "<brand/> samlar dina anteckningar, uppgifter, dagbok, lösenord, filer, bokmärken och kontakter på ett ställe. Allt krypteras på din enhet med en nyckel som skapas från dina 12 ord, och förblir krypterat på våra servrar i <nowrap>Schweiz</nowrap>. Det fungerar offline, och appen har öppen källkod.",
+    "intro": "<brand/> samlar dina anteckningar, uppgifter, lösenord, dagbok, filer, kalender, kontakter och bokmärken på ett ställe, med uppföljning av humör och medicin. Allt krypteras på din enhet med en nyckel som skapas från dina 12 ord, och förblir krypterat på våra servrar i <nowrap>Schweiz</nowrap>. Det fungerar offline, och appen har öppen källkod.",
     "versionHeading": "Version",
     "windowVersion": "Version {{version}}",
     "windowHelp": "Hjälpcenter",
-    "windowWhatsNew": "Changelog",
     "whatsNew": "Nyheter",
     "seeWhatsNew": "Alla ändringar med skärmbilder på PrivacyNotes.app",
     "feedbackHeading": "Feedback",
@@ -495,14 +499,13 @@
     "termsOfService": "Användarvillkor",
     "refundPolicy": "Återbetalningspolicy",
     "tagline": "Inga prenumerationer. Bara mjukvara. Inte en tjänst.",
-    "hotkeysFootnote": "De flesta kortkommandon ignoreras medan du skriver i ett textfält, så vanliga tangenter som J och K skriver fortfarande J och K.",
     "singleKeysTitle": "Kortkommandon med en tangent",
     "singleKeysDesc": "Använd J, K, Q, / och ?, samt T, D, W, M och N i Kalendern, utan att hålla ned Cmd eller Ctrl."
   },
   "trust": {
     "openSourceHeading": "Öppen källkod",
     "openSourceLink": "Läs källkoden på GitHub.com",
-    "openSourceBody": "Appen och krypteringen i den är publicerade, så vem som helst kan kontrollera våra zero-knowledge-påståenden.",
+    "openSourceBody": "Appen och krypteringen i den är publicerade, så vem som helst kan kontrollera hur dina anteckningar krypteras.",
     "dataStorageHeading": "Datalagring",
     "dataStorageBody": "Krypterade datablock lagrade i Zürich, <flag/> Schweiz.",
     "faviconsHeading": "Webbplatsikoner",
@@ -524,6 +527,7 @@
     "outro": "Vi läser varenda recension, och några ord från någon som använder appen varje dag är det som håller oss igång.",
     "descGithub": "Ge oss en stjärna på GitHub",
     "descAppStore": "Betygsätt PrivacyNotes i App Store",
+    "descPlay": "Betygsätt PrivacyNotes på Google Play",
     "descAlternativeTo": "Gilla och recensera på AlternativeTo",
     "descCapterra": "Betygsätt PrivacyNotes på Capterra",
     "descSaasHub": "Gilla och recensera på SaaSHub",

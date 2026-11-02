@@ -53,8 +53,6 @@
   },
   "mood": {
     "prompt": "Come ti senti? (1-10)",
-    "low": "pessimo",
-    "high": "fantastico",
     "anchor": {
       "1": "pessimo",
       "3": "difficile",
@@ -142,8 +140,6 @@
     "editMedication": "Modifica farmaco",
     "removeMedication": "Rimuovi farmaco",
     "confirmRemove": "Rimuovere <highlight>{{name}}</highlight>?",
-    "yes": "Sì",
-    "no": "No",
     "taken": "Assunto",
     "skip": "Salta",
     "editList": "Modifica questi farmaci",
@@ -257,16 +253,15 @@
   },
   "config": {
     "configureTrackers": "Configura i tracker",
-    "title": "Tracker",
-    "tabGeneral": "Generale",
     "tabCustom": "Personalizzati",
-    "chooseTrackers": "Scegli i tracker",
     "factorsTitle": "I tuoi fattori",
     "factorsHelp": "Gli elementi di una giornata che tocchi in Fattori. Un fattore rimosso conserva il suo nome nei giorni che lo contengono.",
     "renameFactor": "Rinomina {{name}}",
     "addFactor": "Aggiungi fattore",
     "medicationsTitle": "I tuoi farmaci",
     "medicationsHelp": "I farmaci di cui Farmaci ti chiede. Uno rimosso conserva la sua cronologia.",
+    "medicationCard": "Scheda dei farmaci",
+    "medicationCardHelp": "\"Hai preso i tuoi farmaci?\" su questo dispositivo, solo nei giorni in cui è prevista una dose.",
     "customHelp": "Tracker a cui dai tu il nome: una scala, un numero o un sì o no. Fino a {{max}}.",
     "yourCustomTrackers": "I tuoi tracker personalizzati",
     "categoryMoodMind": "Umore e mente",
@@ -291,23 +286,17 @@
     "kindBuild": "Da costruire",
     "kindWatch": "Da tenere d'occhio",
     "editHabit": "Modifica {{name}}",
-    "removeHabit": "Rimuovi {{name}}",
     "ownHabitsFull": "Hai {{max}} abitudini tue, il massimo possibile.",
     "addCustomTrackerHint": "Tieni traccia di tutto ciò che vuoi",
     "maxReached": "Raggiunto il massimo di {{max}} tracker personalizzati.",
     "customTrackers": "Tracker personalizzati",
-    "newCustomTracker": "Nuovo tracker personalizzato",
-    "newMedication": "Nuovo farmaco",
     "newMedicationHelp": "Farmaci te lo chiede dal giorno di inizio, agli orari che imposti.",
     "trackerNamePlaceholder": "Nome del tracker",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "Nome",
     "typeLabel": "Tipo",
-    "colorLabel": "Colore",
     "preview": "Anteprima",
     "startFromLast": "Ricorda l'ultimo valore",
     "chooseIcon": "Scegli l'icona",
-    "iconLabel": "Icona",
     "startFromLastHelp": "Utile per le cose che cambiano di rado, come il peso o una dose giornaliera."
   },
   "factors": {
@@ -315,7 +304,6 @@
     "count_other": "{{count}} fattori",
     "remove": "Rimuovi {{name}}",
     "placeholder": "ospiti, emicrania, straordinari",
-    "add": "Aggiungi",
     "empty": "Aggiungi le cose che danno forma alle tue giornate, poi toccale in qualsiasi giorno.",
     "commaHint": "Aggiungine diversi insieme, separati da virgole.",
     "editList": "Modifica questi fattori",
@@ -339,8 +327,6 @@
   "habits": {
     "prompt": "Cosa hai fatto oggi?",
     "count": "{{yes}}/{{total}}",
-    "yes": "Sì",
-    "no": "No",
     "empty": "Scegli le domande nella configurazione dei tracker.",
     "changeQuestions": "Cambia queste domande",
     "q": {
@@ -399,9 +385,7 @@
     "prompt": "Quanta caffeina hai assunto?"
   },
   "flow": {
-    "next": "Avanti",
     "finish": "Termina",
-    "done": "Fatto",
     "step": "Tracker {{n}} di {{total}}"
   }
 }

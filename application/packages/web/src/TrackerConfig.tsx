@@ -6,7 +6,7 @@
  * entry's pill row, its "+ Custom" button, the check-in card's gear, the
  * Habits panel's "Change these questions"); there is no second dialog.
  * Changes apply as they are made, like every other settings pane.
- * Spec: ops/docs/archive/ui-patterns.md section 141
+ * Spec: docs/internal/design/ui-patterns.md section 141
  */
 
 import { lazy, Suspense, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
@@ -29,7 +29,7 @@ import { Switch } from './Switch';
 import { EYEBROW_ICON_ROW, EyebrowGlyph, ROW_TITLE, RowTitle, SETTINGS_BTN, SETTINGS_BTN_PRIMARY, SETTINGS_EYEBROW, SETTINGS_HELP, SETTINGS_ROW, SETTINGS_SELECT, SectionEyebrow, SettingsSegmented, SettingsTabStrip, settingsTabClass, settingsChipClass, ResetDefaultsButton } from './settingsUI';
 import { Badge, Button, DeleteButton, EditRow, GlyphTile, IconButton, ItemSwitcher, SubViewHeader, TextField, type SwitcherItem } from './ui';
 import { TimeInput } from './CalendarSettings';
-import { setCheckInCardShown } from './checkInCardSwitch';
+import { setCheckInCardShown, setMedicationCardShown, useMedicationCardShown } from './checkInCardSwitch';
 import { DEFAULT_CHECK_IN_TIME, setCheckInReminder, useCheckInReminder } from './checkIn';
 import { REMINDER_PLATFORM, askForRemindersOnce } from './notesView/useReminders';
 import { adoptFactor, adoptFactors, removeFactor, renameFactor } from './factorList';
@@ -67,7 +67,7 @@ type Tab = 'general' | 'factors' | 'medications' | 'custom';
 
 /** The most custom trackers one account can have. They cost nothing to
  *  keep; the cap keeps the check-in pass, the pill row and the statistics
- *  page a usable size. Spec: ops/docs/mood-wellness-tracker.md section 16.4 */
+ *  page a usable size. Spec: docs/internal/mood-wellness-tracker.md section 16.4 */
 const CUSTOM_MAX = 20;
 
 /** The glyph of each custom tracker type in the setup's type chips: a gauge
@@ -132,14 +132,14 @@ export function TrackerSettingsPane(p: TrackerSettingsPaneProps) {
   const door = p.initialTab as TrackerSetupTab | undefined;
   const [tab, setTab] = usePaneTab<Tab>('trackers', door === 'custom' || door === 'factors' || door === 'medications' ? door : 'general');
   const tabs: { id: Tab; label: string; icon: ReactNode; pro?: boolean }[] = [
-    { id: 'general', label: t('config.tabGeneral'), icon: <SlidersHorizontal aria-hidden="true" /> },
+    { id: 'general', label: t('settings:appearance.listsTabGeneral'), icon: <SlidersHorizontal aria-hidden="true" /> },
     { id: 'factors', label: t('labels.factors'), icon: <PuzzlePiece aria-hidden="true" /> },
     { id: 'medications', label: t('labels.medication'), icon: <Pill aria-hidden="true" /> },
     { id: 'custom', label: t('config.tabCustom'), icon: <Plus aria-hidden="true" />, pro: true },
   ];
   return (
     <div className="flex-1 min-h-0 flex flex-col">
-      <SettingsTabStrip role="tablist" aria-label={t('config.title')} className="shrink-0 px-4 sm:px-6">
+      <SettingsTabStrip role="tablist" aria-label={t('notes:settings.trackersLabel')} className="shrink-0 px-4 sm:px-6">
         {tabs.map((tb) => (
           <button key={tb.id} type="button" data-setting={`trackers.tab.${tb.id}`} role="tab" aria-selected={tab === tb.id}
             onClick={() => setTab(tb.id)} className={settingsTabClass(tab === tb.id)}>
@@ -280,7 +280,7 @@ function TrackersSection({ settings, onChange, door, customHabits, onCustomHabit
  * The person's own habit questions, below the built-in chips: one row each
  * with rename and remove, the Factors tab's rows, and a form that adds one
  * as a habit to build or to watch, switched on at once.
- * Spec: ops/issues/0439.md (Spec)
+ * Spec: docs/internal/issues/0439.md (Spec)
  */
 function OwnHabits({ list, locked, showPro, onOpenUpgrade, onChange, onAdded }: {
   list: CustomHabitDef[];
@@ -346,7 +346,7 @@ function OwnHabits({ list, locked, showPro, onOpenUpgrade, onChange, onAdded }: 
           <Button
             type="submit"
             disabled={!cleanHabitName(draft) && !locked}
-            icon={<Plus size={15} aria-hidden="true" />}
+            icon={<Plus aria-hidden="true" />}
             pro={showPro}
             className={HABIT_ACTIONS}
           >
@@ -387,14 +387,14 @@ function OwnHabits({ list, locked, showPro, onOpenUpgrade, onChange, onAdded }: 
         }
         return (
           <div key={h.id} className="col-span-full flex min-h-9 items-center gap-2 @2xl:contents">
-            <span className="min-w-0 flex-1 truncate text-sm text-pn @2xl:ps-2.5">{h.name}</span>
-            <span className="min-w-0 truncate text-xs text-pn-muted @2xl:ps-2.5">{h.short}</span>
-            <span className="shrink-0 text-xs text-pn-muted @2xl:ps-2.5">{t(h.kind === 'watch' ? 'config.kindWatch' : 'config.kindBuild')}</span>
+            <span className="min-w-0 flex-1 truncate text-body text-pn @2xl:ps-2.5">{h.name}</span>
+            <span className="min-w-0 truncate text-small text-pn-muted @2xl:ps-2.5">{h.short}</span>
+            <span className="shrink-0 text-small text-pn-muted @2xl:ps-2.5">{t(h.kind === 'watch' ? 'config.kindWatch' : 'config.kindBuild')}</span>
             <div className={`${HABIT_ACTIONS} flex justify-end gap-1`}>
               <IconButton label={t('config.editHabit', { name: h.name })} onClick={() => setEditing({ id: h.id, name: h.name, short: h.short ?? '', kind: h.kind })}>
-                <PencilSimple size={14} aria-hidden="true" />
+                <PencilSimple aria-hidden="true" />
               </IconButton>
-              <DeleteButton kind="remove" label={t('config.removeHabit', { name: h.name })} onConfirm={() => onChange(removeCustomHabit(list, h.id))} />
+              <DeleteButton kind="remove" label={t('trackers:factors.remove', { name: h.name })} onConfirm={() => onChange(removeCustomHabit(list, h.id))} />
             </div>
           </div>
         );
@@ -426,7 +426,7 @@ function CustomTab({ settings, onChange, isPro, onOpenUpgrade }: TrackerSettings
   return (
     <TrackerListTab
       setting="trackers.custom"
-      newTitle={t('config.newCustomTracker')}
+      newTitle={t('common:ninja.new.customTracker')}
       newHelp={t('config.customHelp', { max: CUSTOM_MAX })}
       form={canAddMore ? (
         <AddCustomView
@@ -443,7 +443,7 @@ function CustomTab({ settings, onChange, isPro, onOpenUpgrade }: TrackerSettings
           locked={!unlocked}
         />
       ) : (
-        <p className="text-[12px] text-pn-muted">{t('config.maxReached', { max: CUSTOM_MAX })}</p>
+        <p className="text-small text-pn-muted">{t('config.maxReached', { max: CUSTOM_MAX })}</p>
       )}
       listIcon={SlidersHorizontal}
       listTitle={t('config.yourCustomTrackers')}
@@ -484,16 +484,16 @@ function CustomTab({ settings, onChange, isPro, onOpenUpgrade }: TrackerSettings
             <>
               {ct.stoppedAt ? (
                 <IconButton position="start" label={t('config.resume')} onClick={() => patchCustom(ct.id, { stoppedAt: undefined })}>
-                  <Play size={14} aria-hidden="true" />
+                  <Play aria-hidden="true" />
                 </IconButton>
               ) : (
                 <IconButton position="start" label={t('config.pause')} onClick={() => patchCustom(ct.id, { stoppedAt: now() })}>
-                  <Pause size={14} aria-hidden="true" />
+                  <Pause aria-hidden="true" />
                 </IconButton>
               )}
               {/* Editing is for a Pro account (the demo unlocks it), as creating is. */}
               <IconButton position="start" label={t('common:actions.edit')} onClick={() => (unlocked ? setEditingId(ct.id) : onOpenUpgrade())}>
-                <PencilSimple size={14} aria-hidden="true" />
+                <PencilSimple aria-hidden="true" />
               </IconButton>
               {/* Tombstone, never splice: the merge would bring the row back,
                   and the journal values that name this id would lose their name. */}
@@ -557,13 +557,13 @@ function FactorsTab({ factors, onChange }: { factors: FactorDef[]; onChange: (ne
             );
           }
           return (
-            <span key={f.id} className="inline-flex items-center h-8 ps-2.5 rounded-md border border-accent/30 bg-accent/10 text-xs font-medium text-accent-strong">
-              <Check size={12} aria-hidden="true" className="me-1.5 shrink-0" />
+            <span key={f.id} className="inline-flex items-center h-8 ps-2.5 rounded-md border border-accent/30 bg-accent/10 text-small font-medium text-accent-strong">
+              <Check aria-hidden="true" className="me-1.5 shrink-0" />
               <span className="me-1">{f.name}</span>
               {/* The tools sit behind a hairline, quiet until a pointer reaches the chip. */}
               <span className="inline-flex items-center border-s border-accent/20 [@media(hover:hover)]:opacity-50 hover:opacity-100 focus-within:opacity-100 transition-opacity">
                 <IconButton label={t('config.renameFactor', { name: f.name })} onClick={() => setEditing({ id: f.id, name: f.name })}>
-                  <PencilSimple size={12} aria-hidden="true" />
+                  <PencilSimple aria-hidden="true" />
                 </IconButton>
                 <DeleteButton kind="remove" label={t('factors.remove', { name: f.name })} onConfirm={() => onChange(removeFactor(factors, f.id))} />
               </span>
@@ -572,7 +572,7 @@ function FactorsTab({ factors, onChange }: { factors: FactorDef[]; onChange: (ne
         })}
         {suggestions.map((name) => (
           <button key={name} type="button" aria-pressed={false} onClick={() => adopt(name)} className={`${settingsChipClass(false)} gap-1.5`}>
-            <Plus size={12} aria-hidden="true" />
+            <Plus aria-hidden="true" />
             {name}
           </button>
         ))}
@@ -608,7 +608,7 @@ function MedicationsTab({ medications, onChange, isPro, onOpenUpgrade }: { medic
   const unlocked = proUnlocked(isPro);
   const pro = { unlocked, showPro: !isPro, onUpgrade: onOpenUpgrade };
   const live = activeMedications(medications);
-  // Spec: ops/docs/mood-wellness-tracker.md section 6.7
+  // Spec: docs/internal/mood-wellness-tracker.md section 6.7
   const [formKey, setFormKey] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const ringing = useMedicationReminders();
@@ -630,11 +630,26 @@ function MedicationsTab({ medications, onChange, isPro, onOpenUpgrade }: { medic
     setEditingId(null);
   };
   const editing = live.find((m) => m.id === editingId);
+  const cardShown = useMedicationCardShown();
 
   return (
     <TrackerListTab
       setting="trackers.medications"
-      newTitle={t('config.newMedication')}
+      // The medication card's switch, this device's (checkInCardSwitch.ts):
+      // the way back after its "Hide this card". GitHub #649
+      lead={live.length > 0 && (
+        <Switch
+          setting="trackers.medicationCard"
+          icon={<Pill className="text-accent" />}
+          labelClassName={ROW_TITLE}
+          label={t('config.medicationCard')}
+          description={t('config.medicationCardHelp')}
+          checked={cardShown}
+          onChange={setMedicationCardShown}
+          className="py-3 mb-4 border-b border-divider"
+        />
+      )}
+      newTitle={t('common:ninja.new.medication')}
       newHelp={live.length > 0 ? t('config.newMedicationHelp') : t('config.medicationsHelp')}
       form={<MedicationEditor key={formKey} initial={draft} remind={false} supply={null} {...pro} onSave={add} />}
       listIcon={Pill}
@@ -686,7 +701,7 @@ function MedicationsTab({ medications, onChange, isPro, onOpenUpgrade }: { medic
             muted={!!state}
             meta={(
               <>
-                {unlocked && ringing.includes(m.id) && !m.asNeeded && <BellSimple size={11} className="shrink-0" aria-label={t('medication.remind')} />}
+                {unlocked && ringing.includes(m.id) && !m.asNeeded && <BellSimple className="shrink-0" aria-label={t('medication.remind')} />}
                 <span className="truncate">{state ? `${state} · ${meta}` : meta}</span>
               </>
             )}
@@ -694,7 +709,7 @@ function MedicationsTab({ medications, onChange, isPro, onOpenUpgrade }: { medic
               <>
                 {unlocked && left !== null && <Badge>{t('medication.leftShort', { count: left })}</Badge>}
                 <IconButton position="start" label={t('medication.editMedication')} onClick={() => setEditingId(m.id)}>
-                  <PencilSimple size={14} aria-hidden="true" />
+                  <PencilSimple aria-hidden="true" />
                 </IconButton>
                 <DeleteButton position="start" kind="remove" label={t('medication.removeMedication')} onConfirm={() => { onChange(removeMedication(medications, m.id)); setMedicationReminder(m.id, false); }} />
               </>
@@ -713,8 +728,10 @@ function MedicationsTab({ medications, onChange, isPro, onOpenUpgrade }: { medic
 // item switcher. Back, Cancel and Save all return to the list.
 // ------------------------------------------------------------------
 
-function TrackerListTab({ setting, newTitle, newHelp, form, listIcon, listTitle, listHelp, rows, switchItems, onEdit, edit }: {
+function TrackerListTab({ setting, lead, newTitle, newHelp, form, listIcon, listTitle, listHelp, rows, switchItems, onEdit, edit }: {
   setting: string;
+  /** Above the form in the list view: a switch that belongs to the whole tab. */
+  lead?: ReactNode;
   newTitle: string;
   newHelp: string;
   form: ReactNode;
@@ -757,6 +774,7 @@ function TrackerListTab({ setting, newTitle, newHelp, form, listIcon, listTitle,
   }
   return (
     <div ref={top} data-setting={setting} className="flex flex-col pt-4">
+      {lead}
       {/* The form leads, so it is in view without a scroll past the list. */}
       <SectionEyebrow icon={Plus} className="mb-1">{newTitle}</SectionEyebrow>
       <p className={`${SETTINGS_HELP} mb-4`}>{newHelp}</p>
@@ -788,10 +806,10 @@ function ListRow({ mark, title, aside, meta, muted, actions }: {
       {mark}
       <div className={`min-w-0 flex-1 ${muted ? 'opacity-60' : ''}`}>
         <span className="flex items-center gap-1.5 min-w-0">
-          <span className="truncate text-sm font-medium text-pn">{title}</span>
-          {aside && <span className="shrink-0 text-[11px] text-pn-muted">{aside}</span>}
+          <span className="truncate text-body font-medium text-pn">{title}</span>
+          {aside && <span className="shrink-0 text-meta text-pn-muted">{aside}</span>}
         </span>
-        <span className="flex items-center gap-1.5 min-w-0 text-[11px] text-pn-muted">{meta}</span>
+        <span className="flex items-center gap-1.5 min-w-0 text-meta text-pn-muted">{meta}</span>
       </div>
       {actions}
     </div>
@@ -810,13 +828,13 @@ function CheckInSection() {
     <div className="divide-y divide-divider pt-1">
       {/* The daily reminder: this device only, one time per day, off by
           default, free. A phone asks its permission from the switch, the
-          moment the reason is plain. Spec: ops/issues/0439.md (Reminder plan) */}
+          moment the reason is plain. Spec: docs/internal/issues/0439.md (Reminder plan) */}
       {/* One item of the divided list: the switch and, while it is on, its
           time, so no hairline cuts the reminder from its own time. */}
       <div>
         <Switch
           setting="calendar.checkInReminder"
-          icon={<BellSimple size={14} className="text-accent" />}
+          icon={<BellSimple className="text-accent" />}
           labelClassName={ROW_TITLE}
           label={t('calendar.checkInReminder')}
           description={t('calendar.checkInReminderHelp')}
@@ -961,7 +979,7 @@ function AddCustomView({
       <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 -mx-1 px-1 pb-1">
         {/* The count sits inside the field, at its end, so it reads as part of it. */}
         <div className="flex flex-col gap-1.5">
-        <RowTitle icon={TextT}>{t('config.nameLabel')}</RowTitle>
+        <RowTitle icon={TextT}>{t('shell:filesList.sortName')}</RowTitle>
         <div className="relative">
           <input
             type="text"
@@ -969,11 +987,11 @@ function AddCustomView({
             aria-label={t('config.trackerNamePlaceholder')}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full h-9 ps-3 pe-14 rounded-md text-[13px] border border-divider bg-surface-0 text-pn outline-none focus:border-accent"
+            className="w-full h-9 ps-3 pe-14 rounded-md text-compact border border-divider bg-surface-0 text-pn outline-none focus:border-accent"
             maxLength={24}
             onKeyDown={(e) => { if (e.key === 'Enter' && !isImeComposing(e)) handleSubmit(); }}
           />
-          <span className={`pointer-events-none absolute inset-y-0 end-3 flex items-center text-[11px] tabular-nums ${name.length >= 24 ? 'text-danger' : 'text-pn-muted'}`}>
+          <span className={`pointer-events-none absolute inset-y-0 end-3 flex items-center text-meta tabular-nums ${name.length >= 24 ? 'text-danger' : 'text-pn-muted'}`}>
             {t('config.nameCount', { count: name.length, max: 24 })}
           </span>
         </div>
@@ -985,8 +1003,8 @@ function AddCustomView({
         <div className="flex flex-col gap-1.5">
           <RowTitle icon={Eye}>{t('config.preview')}</RowTitle>
           <div className="rounded-md border border-divider bg-surface-0/60 p-3">
-            <p className="flex items-center gap-2 text-[13px] font-semibold text-pn mb-2 min-w-0">
-              <TrackerMark icon={icon} color={color} />
+            <p className="flex items-center gap-2 text-compact font-semibold text-pn mb-2 min-w-0">
+              <TrackerMark icon={icon} color={color} size={16} />
               <span className={`truncate ${name.trim() ? '' : 'text-pn-muted font-normal'}`}>{name.trim() || t('config.trackerNamePlaceholder')}</span>
             </p>
             <PreviewInput key={type} name={name.trim() || t('config.trackerNamePlaceholder')} type={type} />
@@ -999,7 +1017,7 @@ function AddCustomView({
             type, so the row then holds the icon alone. */}
         <div className="flex flex-wrap items-end gap-x-4 gap-y-4">
           <div className="flex flex-col gap-1.5">
-            <RowTitle icon={Shapes}>{t('config.iconLabel')}</RowTitle>
+            <RowTitle icon={Shapes}>{t('shell:noteOptionsMenu.icon')}</RowTitle>
             <Button icon={<TrackerMark icon={icon} color={color} size={15} />} onClick={() => setPicking(true)}>
               {t('config.chooseIcon')}
             </Button>
@@ -1019,7 +1037,7 @@ function AddCustomView({
                   const Glyph = TYPE_GLYPHS[k];
                   return (
                     <button key={k} type="button" aria-pressed={type === k} onClick={() => setType(k)} className={`${settingsChipClass(type === k)} gap-1.5 whitespace-nowrap`}>
-                      <Glyph size={12} aria-hidden="true" className="shrink-0" />
+                      <Glyph aria-hidden="true" className="shrink-0" />
                       {t(`custom.typeLabels.${k}`)}
                     </button>
                   );
@@ -1031,7 +1049,7 @@ function AddCustomView({
 
         {hasStart && (
           <Switch
-            icon={<ClockCounterClockwise size={14} className="text-accent" />}
+            icon={<ClockCounterClockwise className="text-accent" />}
             labelClassName={ROW_TITLE}
             label={t('config.startFromLast')}
             description={t('config.startFromLastHelp')}
@@ -1042,7 +1060,7 @@ function AddCustomView({
 
         <div className="flex flex-wrap items-end gap-x-4 gap-y-4">
           <div className="flex flex-col gap-1.5">
-            <RowTitle icon={Palette}>{t('config.colorLabel')}</RowTitle>
+            <RowTitle icon={Palette}>{t('shell:noteOptionsMenu.color')}</RowTitle>
             {/* The round swatch of the note menu's color row, with its tooltip. */}
             <div className="flex flex-wrap items-center gap-1.5 min-h-9">
               {TEXT_COLORS.map(({ name: colorName, value: c }, i) => (

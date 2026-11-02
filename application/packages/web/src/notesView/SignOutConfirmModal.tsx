@@ -77,20 +77,20 @@ export function SignOutConfirmModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between">
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-heading font-semibold">
             {t('signOutConfirm.title')}
           </h2>
           <CloseButton onClick={dismiss} />
         </div>
-        <p className="text-sm text-pn-muted leading-relaxed">
+        <p className="text-body text-pn-muted leading-relaxed">
           <Trans
             i18nKey="notesChrome:signOutConfirm.body"
             components={{ only: <strong />, action: <strong /> }}
           />
         </p>
         {(unsyncedCount > 0 || filesAtRisk) && (
-          <div className="flex items-start gap-2 rounded-md border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-[13px] leading-snug p-3">
-            <WarningCircle size={16} className="shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2 rounded-md border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-compact leading-snug p-3">
+            <WarningCircle className="shrink-0 mt-0.5" />
             <div className="space-y-2">
               {unsyncedCount > 0 && (
                 <p>
@@ -115,7 +115,7 @@ export function SignOutConfirmModal({
             </div>
           </div>
         )}
-        <label className="flex items-center gap-2 text-[13px] text-pn-muted cursor-pointer select-none">
+        <label className="flex items-center gap-2 text-compact text-pn-muted cursor-pointer select-none">
           <input
             type="checkbox"
             checked={dontRemind}
@@ -131,20 +131,20 @@ export function SignOutConfirmModal({
             <div className="flex gap-2">
               <button
                 onClick={onShowPhrase}
-                className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-4 py-2 text-sm transition"
+                className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-4 py-2 text-body transition"
               >
                 {t('signOutConfirm.showPhrase')}
               </button>
               <button
                 onClick={onStay}
-                className="flex-1 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover px-4 py-2 text-sm font-medium transition"
+                className="flex-1 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover px-4 py-2 text-body font-medium transition"
               >
                 {t('signOutConfirm.stay')}
               </button>
             </div>
             <button
               onClick={onConfirmSignOut}
-              className="w-full rounded-md border border-red-300 dark:border-red-900 text-danger hover:bg-red-50 dark:hover:bg-red-950/30 px-4 py-2 text-sm transition"
+              className="w-full rounded-md border border-red-300 dark:border-red-900 text-danger hover:bg-red-50 dark:hover:bg-red-950/30 px-4 py-2 text-body transition"
             >
               {loseLabel}
             </button>
@@ -153,13 +153,13 @@ export function SignOutConfirmModal({
           <div className="flex gap-2 pt-2">
             <button
               onClick={onShowPhrase}
-              className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-4 py-2 text-sm transition"
+              className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-4 py-2 text-body transition"
             >
               {t('signOutConfirm.showPhrase')}
             </button>
             <button
               onClick={onConfirmSignOut}
-              className="flex-1 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover px-4 py-2 text-sm font-medium transition"
+              className="flex-1 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover px-4 py-2 text-body font-medium transition"
             >
               {t('signOutConfirm.confirm')}
             </button>

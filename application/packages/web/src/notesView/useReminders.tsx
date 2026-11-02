@@ -30,8 +30,8 @@ import {
  * items, on foreground and on launch; Pro locked (a refund) plans nothing,
  * which cancels everything this device scheduled. The daily check-in
  * reminder is one more item of the same plan, free, with no private text.
- * Spec: ops/docs/archive/calendar-pillar-spec.md (step 7, section 8);
- * ops/issues/0439.md (Reminder plan)
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (step 7, section 8);
+ * docs/internal/issues/0439.md (Reminder plan)
  */
 
 const NATIVE_MOBILE = __PN_BUILD_PLATFORM__ === 'ios' || __PN_BUILD_PLATFORM__ === 'android';
@@ -197,13 +197,13 @@ export function ReminderPermissionHint() {
   return (
     <div className="shrink-0 mx-3 mt-2 flex items-center gap-2.5 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2">
       <BellSimple className="w-4 h-4 shrink-0 text-accent" aria-hidden="true" />
-      <p className="flex-1 min-w-0 text-[12.5px] text-pn">{t('alerts.offOnPhone')}</p>
+      <p className="flex-1 min-w-0 text-compact text-pn">{t('alerts.offOnPhone')}</p>
       <button
         type="button"
         onClick={() => void (denied ? openReminderSettings() : askReminderPermission()).catch(() => {})}
-        className="shrink-0 rounded-md bg-accent-fill text-white px-2.5 py-1 text-[12.5px] font-medium hover:bg-accent-fill-hover transition"
+        className="shrink-0 rounded-md bg-accent-fill text-white px-2.5 py-1 text-compact font-medium hover:bg-accent-fill-hover transition"
       >
-        {t(denied ? 'alerts.openSettings' : 'alerts.turnOn')}
+        {t(denied ? 'common:palette.commands.openSettings' : 'alerts.turnOn')}
       </button>
     </div>
   );
@@ -541,7 +541,7 @@ export function ReminderPermissionControl() {
       <button
         type="button"
         onClick={() => void askReminderPermission().catch(() => {})}
-        className="shrink-0 rounded-md bg-accent-fill text-white px-3 py-1.5 text-sm font-medium hover:bg-accent-fill-hover transition"
+        className="shrink-0 rounded-md bg-accent-fill text-white px-3 py-1.5 text-body font-medium hover:bg-accent-fill-hover transition"
       >
         {t('calendar.permissionAsk')}
       </button>
@@ -549,8 +549,8 @@ export function ReminderPermissionControl() {
   }
   if (permission === 'granted') {
     return (
-      <span role="status" className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-track px-3 py-1.5 text-sm text-pn-muted">
-        <Check size={14} aria-hidden="true" />
+      <span role="status" className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-track px-3 py-1.5 text-body text-pn-muted">
+        <Check aria-hidden="true" />
         {t('calendar.permissionGranted')}
       </span>
     );
@@ -560,9 +560,9 @@ export function ReminderPermissionControl() {
       <button
         type="button"
         onClick={() => void openReminderSettings().catch(() => {})}
-        className="shrink-0 rounded-md border border-divider px-3 py-1.5 text-sm font-medium text-pn hover:bg-track transition"
+        className="shrink-0 rounded-md border border-divider px-3 py-1.5 text-body font-medium text-pn hover:bg-track transition"
       >
-        {t('calendar.permissionOpenSettings')}
+        {t('common:palette.commands.openSettings')}
       </button>
     );
   }
@@ -783,7 +783,7 @@ export function useReminders({
       title={shown.title}
       meta={shown.body}
       icon={<BellSimple className="w-4 h-4 text-accent" aria-hidden="true" />}
-      actionLabel={t('alerts.open')}
+      actionLabel={t('shell:contacts.open')}
       onAction={() => { const s = shown; setShown(null); onOpenRef.current(s.itemId, s.occurrence); }}
       secondary={{ label: t('alerts.snooze'), onAction: () => { snooze(shown.key); setShown(null); setTick((n) => n + 1); } }}
       onDismiss={() => setShown(null)}

@@ -214,11 +214,11 @@ async function seedDoc(pubkey: string, doc: SeedDoc, timestamp: string): Promise
 /* ── Bookmark seeds - the rows from the mockup, so the pillar is never
  * empty on first sight. Hand-maintained: edit the list below to change
  * what a new vault links to. Same idempotent seedNote path; bodies use
- * the canonical link-body JSON. Spec: ops/docs/archive/bookmarks-pillar.md */
+ * the canonical link-body JSON. Spec: docs/internal/specs/bookmarks-pillar.md */
 const BOOKMARK_SEEDS: { sentinel: string; title: string; url: string; tags: string[] }[] = [
   { sentinel: '10b1', title: 'Like on AlternativeTo.net', url: 'https://alternativeto.net/software/privacynotes/about/', tags: ['rating'] },
   { sentinel: '10b2', title: 'Rate on PrivacyTools.io', url: 'https://privacytools.io/app/privacynotes', tags: ['privacy', 'rating'] },
-  { sentinel: '10b3', title: 'Star ⭐ on Github.com', url: 'https://github.com/LifetimeLabsDev/PrivacyNotes.app', tags: ['rating'] },
+  { sentinel: '10b3', title: 'Star ⭐ on Github.com', url: 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app', tags: ['rating'] },
   { sentinel: '10b4', title: 'Review on SaasHub.com', url: 'https://www.saashub.com/privacynotes-alternatives', tags: ['rating'] },
   { sentinel: '10b5', title: 'Review on Capterra.com', url: 'https://www.capterra.com/p/10050664/PrivacyNotes/', tags: ['rating'] },
 ];
@@ -252,7 +252,7 @@ async function seedBookmarkNotes(pubkey: string, baseTs: number): Promise<void> 
  * Every value is a placeholder or one of our own public links. The photo
  * is a static asset rather than a stored blob, the way every other seeded
  * picture is, so it costs no quota and draws on a device that never ran
- * the seeding. Spec: ops/docs/archive/contacts-pillar.md */
+ * the seeding. Spec: docs/internal/specs/contacts-pillar.md */
 // Built at seed time, so the translated sentences read in the active language.
 function contactSeeds(): { sentinel: string; title: string; tags: string[]; body: string }[] {
   return [
@@ -285,7 +285,7 @@ function contactSeeds(): { sentinel: string; title: string; tags: string[]; body
       ],
       urls: [
         { label: 'homepage', value: 'https://privacynotes.app/' },
-        { label: 'Issues', value: 'https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues/' },
+        { label: 'Issues', value: 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues/' },
       ],
       // A profile row only offers an Open button when its value parses as
       // a link, so these hold the whole URL rather than a bare handle.
@@ -337,7 +337,7 @@ async function seedContactNotes(pubkey: string, baseTs: number): Promise<void> {
 /* ── The demo's Work space: one root folder in Work and a repeating event
  * in it, so the calendar shows a Work item with its briefcase every week
  * and the space switch has something to switch. Demo only: a real vault
- * starts with one space. Spec: ops/docs/archive/calendar-pillar-spec.md (step 2) */
+ * starts with one space. Spec: docs/internal/specs/calendar-pillar-spec.md (step 2) */
 const DEMO_WORK_FOLDER = { id: 'f01de001-0000-4000-8000-000000000007', name: 'Team', nameKey: 'shell:folders.seedTeam', icon: 'briefcase' };
 
 async function seedWorkEvent(pubkey: string, baseTs: number): Promise<void> {
@@ -361,7 +361,7 @@ async function seedWorkEvent(pubkey: string, baseTs: number): Promise<void> {
  * an alert, two items at the same time, a multi-day trip, a night past
  * midnight, repeats on chosen weekdays, every other week, on a day of the
  * month and on the Nth weekday, and a dated task list and note. Demo only,
- * like the Work event. Spec: ops/docs/archive/calendar-pillar-spec.md (step 2) */
+ * like the Work event. Spec: docs/internal/specs/calendar-pillar-spec.md (step 2) */
 async function seedCalendarDemo(pubkey: string, baseTs: number, now = new Date()): Promise<void> {
   const at = (n: number) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + n, 12);
   const day = (n: number) => toLocalIso(at(n));
@@ -521,7 +521,7 @@ export async function seedOnboardingNotes(
  * every language. The other two are ordinary words, so they carry a
  * catalog key and seed in the user's own language. The literal `name`
  * beside it is the English, and the fallback if the key ever goes.
- * Spec: ops/specs/folders.md (starter tree)
+ * Spec: docs/internal/specs/folders.md (starter tree)
  */
 interface SeedFolder {
   id: string;
@@ -570,7 +570,7 @@ const SEED_FOLDERS: Record<string, SeedFolder> = {
 /**
  * The look icon of each tag the seeds use. Seed tags are the same English
  * words in every language, so the keys are fixed.
- * Spec: ops/docs/archive/folder-tag-icons.md (section 6.2)
+ * Spec: docs/internal/specs/folder-tag-icons.md (section 6.2)
  */
 export const SEED_TAG_ICONS: Record<string, string> = {
   encryption: 'key',

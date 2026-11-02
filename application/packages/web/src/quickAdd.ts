@@ -1,5 +1,5 @@
 import { foldForMatch } from './textMatch';
-import { shiftDay, weekdayOf, dayNumber, parseTimeText, minutesOf, timeFromMinutes, nextOccurrence, type Alert, type Repeat } from './schedule';
+import { shiftDay, weekdayOf, dayNumber, parseTimeText, minutesOf, timeFromMinutes, nextOccurrence, scheduleOf, MAX_ALERTS, type Alert, type Repeat } from './schedule';
 
 /**
  * Quick add: a title with a day, a span, a time, a range, a duration, a
@@ -11,7 +11,7 @@ import { shiftDay, weekdayOf, dayNumber, parseTimeText, minutesOf, timeFromMinut
  * day; a month name alone is never a date; everything read leaves the title,
  * and the rest is the title. Pure: the caller hands in the words, the locale
  * and today.
- * Spec: ops/docs/archive/calendar-pillar-spec.md (step 8)
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (step 8)
  */
 
 export type QuickAddType = 'event' | 'note' | 'task' | 'journal';
@@ -45,7 +45,19 @@ export type QuickAddWords = Record<
   /** Before an amount of days or weeks ("in 3 days"), or after it where the language puts it there. */
   | 'in'
   /** Typed first with a space, it opens the quick add in the switcher, as "+" does. */
-  | 'add',
+  | 'add'
+  /** "this weekend" (its Saturday), "end of month" (its last day). */
+  | 'weekend' | 'endOfMonth'
+  /** A part of the day after a day or "this": "tomorrow morning", "this evening". */
+  | 'morning' | 'afternoon' | 'evening'
+  /** Every 2 weeks ("biweekly", "fortnightly") and every 3 months ("quarterly"). */
+  | 'biweekly' | 'quarterly'
+  /** "half past 3": 30 minutes after the hour. */
+  | 'halfPast'
+  /** Number words before a unit, in order from one, one word each ("every two weeks"). */
+  | 'numbers'
+  /** A word that counts as one before a unit: "in a week". */
+  | 'a',
   string[]
 >;
 
@@ -205,8 +217,9 @@ function buildEngineWords(locale: string, order: 'dmy' | 'mdy' | 'ymd'): EngineW
 
 // ── Tokens ────────────────────────────────────────────────────────
 
-/** `group`: the pieces of one typed word that a script without spaces split. */
-type Token = { raw: string; f: string; used: boolean; quoted: boolean; group?: number };
+/** `group`: the pieces of one typed word that a script without spaces split.
+ *  `glued`: typed with no space before it, as the comma in `"Friday", party`. */
+type Token = { raw: string; f: string; used: boolean; quoted: boolean; group?: number; glued?: boolean };
 
 function tokenize(input: string): Token[] {
   const out: Token[] = [];
@@ -215,9 +228,23 @@ function tokenize(input: string): Token[] {
   while ((m = re.exec(input))) {
     const quoted = m[4] === undefined;
     const raw = quoted ? (m[1] ?? m[2] ?? m[3] ?? '') : m[4]!;
-    out.push({ raw, f: quoted ? '' : strip(raw), used: false, quoted });
+    const glued = m.index > 0 && !/\s/.test(input[m.index - 1]!);
+    // "#school,": the comma is no part of the tag; it stays in the title.
+    const tag = quoted ? null : /^(#[^\s#]*[^\s#.,;:!?])([.,;:!?]+)$/.exec(raw);
+    if (tag) {
+      out.push({ raw: tag[1]!, f: strip(tag[1]!), used: false, quoted, glued });
+      out.push({ raw: tag[2]!, f: strip(tag[2]!), used: false, quoted, glued: true });
+      continue;
+    }
+    out.push({ raw, f: quoted ? '' : strip(raw), used: false, quoted, glued });
   }
   return out;
+}
+
+/** The words of a line joined again: a piece of a word with no spaces, or a
+ *  token typed glued to the one before, with no space between them. */
+function joinTokens(list: Token[]): string {
+  return list.map((x, k) => (k > 0 && (x.glued || (x.group !== undefined && x.group === list[k - 1]!.group)) ? '' : ' ') + x.raw).join('').trim();
 }
 
 /** Scripts written without a space between words, and Korean, which glues
@@ -325,7 +352,7 @@ function prepare(tokens: Token[], W: QuickAddWords, E: EngineWords): Token[] {
     group++;
     pieces.forEach(([a, b], k) => {
       const raw = tk.raw.slice(at[a]!, k === pieces.length - 1 ? tk.raw.length : at[b]!);
-      split.push({ raw, f: strip(raw), used: false, quoted: false, group });
+      split.push({ raw, f: strip(raw), used: false, quoted: false, group, glued: k === 0 ? tk.glued : undefined });
     });
   }
   const out: Token[] = [];
@@ -333,7 +360,7 @@ function prepare(tokens: Token[], W: QuickAddWords, E: EngineWords): Token[] {
     const hit = split[i]!.quoted ? undefined : v.phrases.find((p) => p.every((w, k) => split[i + k] && !split[i + k]!.quoted && split[i + k]!.f === w));
     if (!hit) { out.push(split[i]!); continue; }
     const parts = split.slice(i, i + hit.length);
-    out.push({ raw: parts.map((p) => p.raw).join(' '), f: hit.join(' '), used: false, quoted: false });
+    out.push({ raw: parts.map((p) => p.raw).join(' '), f: hit.join(' '), used: false, quoted: false, glued: parts[0]!.glued });
     i += hit.length - 1;
   }
   return out;
@@ -344,34 +371,52 @@ const YEAR_REACH = 30;
 
 const UNIT_MINUTES = { minute: 1, hour: 60, day: 1440, week: 10080 } as const;
 
+type QuickAddCtx = {
+  words: QuickAddWords;
+  engine: EngineWords;
+  today: string;
+  defaultDay?: string;
+  folders?: readonly { id: string; name: string }[];
+  /** The local clock, "HH:MM": "in 2 hours", and a time already gone today
+   *  ("fri 3pm" typed on a Friday at 16:00) moving on. Without it neither reads. */
+  now?: string;
+  /** The type the caller makes the item as when no type word is typed. */
+  as?: QuickAddType;
+};
+
 /**
  * Read a quick-add line. `today` is the local ISO day, `defaultDay` the day
  * a calendar cell gave (or today); `folders` the names that `/Name` finds.
+ * What is read is what the item keeps: a phrase the schedule cannot hold
+ * ("5w before", "for 999 days", a repeat on a task list) is read again as
+ * text, so it stays in the title.
  */
-export function parseQuickAdd(
-  input: string,
-  ctx: {
-    words: QuickAddWords;
-    engine: EngineWords;
-    today: string;
-    defaultDay?: string;
-    folders?: readonly { id: string; name: string }[];
-  },
-): QuickAdd {
+export function parseQuickAdd(input: string, ctx: QuickAddCtx): QuickAdd {
+  const literal = new Set<number>();
+  for (let pass = 0; ; pass++) {
+    const { res, drop } = readOnce(input, ctx, literal);
+    if (!drop.length || pass === 3) return res;
+    for (const k of drop) literal.add(k);
+  }
+}
+
+/** One read, with the tokens at `literal` kept as text. Returns what was read
+ *  and the tokens of what the schedule cannot keep, to read again as text. */
+function readOnce(input: string, ctx: QuickAddCtx, literal: ReadonlySet<number>): { res: QuickAdd; drop: number[] } {
   const { words: W, engine: E, today } = ctx;
   const t = prepare(tokenize(input), W, E);
+  for (const k of literal) if (k < t.length) t[k]!.quoted = true;
   const res: QuickAdd = { title: '', type: null, alerts: [], tags: [], folderId: null, space: null, parts: [] };
+  /** The tokens each part came from, by the part's index. */
+  const spans: [number, number][] = [];
   const free = (i: number) => i >= 0 && i < t.length && !t[i]!.used && !t[i]!.quoted;
   const is = (i: number, list: string[]) => free(i) && list.includes(t[i]!.f);
   /** The words typed from `from`, the pieces of one word with no space between them. */
-  const textOf = (from: number, len: number): string => {
-    let text = '';
-    for (let k = from; k < from + len; k++) text += (k > from && !(t[k]!.group !== undefined && t[k]!.group === t[k - 1]!.group) ? ' ' : '') + t[k]!.raw;
-    return text;
-  };
-  const take = (from: number, len: number, kind: QuickAddPartKind) => {
+  const textOf = (from: number, len: number): string => joinTokens(t.slice(from, from + len));
+  const take = (from: number, len: number, kind: QuickAddPartKind): number => {
     for (let k = from; k < from + len; k++) t[k]!.used = true;
-    res.parts.push({ kind, text: textOf(from, len) });
+    spans.push([from, len]);
+    return res.parts.push({ kind, text: textOf(from, len) }) - 1;
   };
   /** How many a unit word alone means: one, or two for an Arabic dual
    *  ("ساعتين", two hours), which is the singular with "ين" after it. */
@@ -407,9 +452,12 @@ export function parseQuickAdd(
       const hit = units.find(([k]) => W[k].includes(glued[2]!));
       if (hit) return { len: 1, n: Number(glued[1]), unit: hit[1] };
     }
-    if (/^\d{1,3}$/.test(t[i]!.f) && free(i + 1)) {
+    // "3 days", and a number word: "two weeks", "a week".
+    const f = t[i]!.f;
+    const n = /^\d{1,3}$/.test(f) ? Number(f) : W.a.includes(f) ? 1 : W.numbers.indexOf(f) + 1;
+    if (n && free(i + 1)) {
       const hit = units.find(([k]) => W[k].includes(t[i + 1]!.f));
-      if (hit) return { len: 2, n: Number(t[i]!.f), unit: hit[1] };
+      if (hit) return { len: 2, n, unit: hit[1] };
     }
     return null;
   };
@@ -468,18 +516,42 @@ export function parseQuickAdd(
   };
   /** The days a month and day with no year gave, read as the next time they come. */
   const guessed = new Set<string>();
-  /** A month and day, in the year typed at `k` ("2027") or else the next time it comes.
-   *  Only a near year counts, so "oct 20 1500" keeps its time. */
-  const inYear = (month: number, d: number, k: number): { day: string; len: number } | null => {
-    const near = free(k) && /^\d{4}$/.test(t[k]!.f) && Math.abs(Number(t[k]!.f) - Number(today.slice(0, 4))) <= YEAR_REACH;
-    const y = near ? t[k]!.f : null;
+  /** A year at `k` near enough to be one ("2027"); a far one ("2057") is text. */
+  const yearAt = (k: number): string | null =>
+    free(k) && /^\d{4}$/.test(t[k]!.f) && Math.abs(Number(t[k]!.f) - Number(today.slice(0, 4))) <= YEAR_REACH ? t[k]!.f : null;
+  /** A month and day, in the year typed before it (`year`), at `k` ("2027"), or
+   *  else the next time it comes. A day the year has not ("feb 29 2027") is no date. */
+  const inYear = (month: number, d: number, k: number, year: string | null): { day: string; len: number } | null => {
+    const y = year ?? yearAt(k);
     if (!y) {
       const day = upcoming(month, d);
       if (day) guessed.add(day);
       return day ? { day, len: 0 } : null;
     }
     const iso = `${y}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    return shiftDay(iso, 0) === iso ? { day: iso, len: 1 } : null;
+    return shiftDay(iso, 0) === iso ? { day: iso, len: year ? 0 : 1 } : null;
+  };
+  /** "16 Oct", "Oct 16", "16th of October" at `j`: a month name only with a day.
+   *  A year after it is that year ("Oct 31 2027"), never a time. */
+  const monthDate = (j: number, year: string | null): { len: number; day: string } | null => {
+    const d1 = ordinalDay(j);
+    if (d1 !== null) {
+      const of = is(j + 1, W.on) ? 1 : 0;
+      const m = monthAt(j + 1 + of);
+      if (m !== null) {
+        const day = inYear(m, d1, j + 2 + of, year);
+        if (day) return { len: 2 + of + day.len, day: day.day };
+      }
+    }
+    const m2 = monthAt(j);
+    if (m2 !== null) {
+      const d2 = ordinalDay(j + 1);
+      if (d2 !== null) {
+        const day = inYear(m2, d2, j + 2, year);
+        if (day) return { len: 2 + day.len, day: day.day };
+      }
+    }
+    return null;
   };
   /** This year's start of a span inside one month that began before today
    *  and ends today or later: "oct 20-25" on the 23rd is the trip under way. */
@@ -489,10 +561,13 @@ export function parseQuickAdd(
     const end = at(to);
     return shiftDay(start, 0) === start && shiftDay(end, 0) === end && start < today && end >= today ? start : null;
   };
+  /** The Monday of next week: tomorrow on a Sunday. */
+  const nextMonday = () => shiftDay(today, (8 - weekdayOf(today)) % 7 || 7);
   const numericDate = (raw: string): string | null => {
-    const iso = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/.exec(raw);
+    // "2026-12-24", "2026/12/24", "2026.12.24".
+    const iso = /^(\d{4})([-/.])(\d{1,2})\2(\d{1,2})$/.exec(raw);
     if (iso) {
-      const out = `${iso[1]}-${iso[2]!.padStart(2, '0')}-${iso[3]!.padStart(2, '0')}`;
+      const out = `${iso[1]}-${iso[3]!.padStart(2, '0')}-${iso[4]!.padStart(2, '0')}`;
       return shiftDay(out, 0) === out ? out : null;
     }
     // "24.12" with no closing dot: the clock read "10.30" before a date can.
@@ -518,7 +593,7 @@ export function parseQuickAdd(
   const dateAt = (i: number): { len: number; day: string; kind?: 'weekday' | 'month' } | null => {
     if (!free(i)) return null;
     let lead = 0;
-    if (is(i, W.on)) lead = 1;
+    while (is(i + lead, W.on)) lead++;
     const j = i + lead;
     if (!free(j)) return null;
     // A relative day of several words ("pasado mañana") is one token by now.
@@ -526,7 +601,16 @@ export function parseQuickAdd(
     if (rel !== undefined) return { len: lead + 1, day: shiftDay(today, rel) };
     // "day after tomorrow": a catalog phrase, for a language whose engine writes "in 2 days".
     if (is(j, W.dayAfter)) return { len: lead + 1, day: shiftDay(today, 2) };
-    if (E.nextWeek.length > 1 && is(j, [E.nextWeek.join(' ')])) return { len: lead + 1, day: shiftDay(today, 7) };
+    // "next week" is its Monday.
+    if (E.nextWeek.length > 1 && is(j, [E.nextWeek.join(' ')])) return { len: lead + 1, day: nextMonday() };
+    // "next month", "next year": the first day of it.
+    if (is(j, W.next) && (is(j + 1, W.month) || is(j + 1, W.year))) {
+      return { len: lead + 2, day: is(j + 1, W.month) ? addMonths(`${today.slice(0, 8)}01`, 1) : `${Number(today.slice(0, 4)) + 1}-01-01` };
+    }
+    // "this weekend": its Saturday, or today on a Saturday or Sunday.
+    if (is(j, W.this) && is(j + 1, W.weekend)) return { len: lead + 2, day: shiftDay(today, weekdayOf(today) === 0 ? 0 : 6 - weekdayOf(today)) };
+    // "end of month": its last day.
+    if (is(j, W.endOfMonth)) return { len: lead + 1, day: shiftDay(addMonths(`${today.slice(0, 8)}01`, 1), -1) };
     for (const [list, per] of [[E.inDays, 1], [E.inWeeks, 7]] as const) {
       for (const p of list) {
         const hit = phraseAt(j, p);
@@ -538,14 +622,25 @@ export function parseQuickAdd(
       const days = (a: ReturnType<typeof amountAt>) => (a && (a.unit === 'day' || a.unit === 'week') ? a.n * (a.unit === 'week' ? 7 : 1) : null);
       const before = is(j, W.in) ? days(amountAt(j + 1)) : null;
       if (before !== null) return { len: lead + 1 + amountAt(j + 1)!.len, day: shiftDay(today, before) };
+      // "in 2 months", "in a year": the same day then, or the month's last.
+      const months = is(j, W.in) ? amountAt(j + 1) : null;
+      if (months && (months.unit === 'month' || months.unit === 'year')) {
+        return { len: lead + 1 + months.len, day: addMonths(today, months.n * (months.unit === 'year' ? 12 : 1)) };
+      }
       // The "in" word was read as "on" (Arabic "في").
       const asLead = lead && W.in.includes(t[i]!.f) ? days(amountAt(j)) : null;
       if (asLead !== null) return { len: lead + amountAt(j)!.len, day: shiftDay(today, asLead) };
       const a = E.postposed ? amountAt(j) : null;
       if (a && days(a) !== null && is(j + a.len, W.in)) return { len: lead + a.len + 1, day: shiftDay(today, days(a)!) };
     }
-    // "next friday" is a week on; "this friday" is the coming one, as "friday" is.
-    // Either word may come after the name: "dilluns vinent", "ศุกร์นี้".
+    // "last friday": the one before today.
+    if (is(j, W.last)) {
+      const back = weekdayAt(j + 1);
+      if (back !== null) return { len: lead + 2, day: shiftDay(today, -((weekdayOf(today) - back + 7) % 7 || 7)), kind: 'weekday' };
+    }
+    // "next friday" is the Friday of next week (weeks from Monday); "this
+    // friday" is the coming one, as "friday" is. Either word may come after
+    // the name: "dilluns vinent", "ศุกร์นี้", where it is a week after the coming one.
     const nextWord = is(j, W.next);
     const thisWord = !nextWord && is(j, W.this) && weekdayAt(j + 1) !== null;
     const w = weekdayAt(j + (nextWord || thisWord ? 1 : 0));
@@ -556,7 +651,8 @@ export function parseQuickAdd(
       const postNext = !nextWord && !thisWord && is(after, W.next) && !unitAfter(after + 1);
       if (postNext || (!nextWord && !thisWord && is(after, W.this) && !unitAfter(after + 1))) len++;
       const ahead = (w - weekdayOf(today) + 7) % 7;
-      return { len, day: shiftDay(today, ahead + (nextWord || postNext ? 7 : 0)), kind: 'weekday' };
+      if (nextWord) return { len, day: shiftDay(nextMonday(), (w + 6) % 7), kind: 'weekday' };
+      return { len, day: shiftDay(today, ahead + (postNext ? 7 : 0)), kind: 'weekday' };
     }
     const num = numericDate(t[j]!.raw.replace(/,$/, ''));
     if (num) return { len: lead + 1, day: num };
@@ -565,24 +661,18 @@ export function parseQuickAdd(
       const two = numericDate(`${t[j]!.raw}${t[j + 1]!.raw}`);
       if (two) return { len: lead + 2, day: two };
     }
-    // "16 Oct", "Oct 16", "16th of October": a month name only with a day.
-    // A year after it is that year ("Oct 31 2027"), never a time.
-    const d1 = ordinalDay(j);
-    if (d1 !== null) {
-      const of = is(j + 1, W.on) ? 1 : 0;
-      const m = monthAt(j + 1 + of);
-      if (m !== null) {
-        const day = inYear(m, d1, j + 2 + of);
-        if (day) return { len: lead + 2 + of + day.len, day: day.day, kind: 'month' };
-      }
-    }
-    const m2 = monthAt(j);
-    if (m2 !== null) {
-      const d2 = ordinalDay(j + 1);
-      if (d2 !== null) {
-        const day = inYear(m2, d2, j + 2);
-        if (day) return { len: lead + 2 + day.len, day: day.day, kind: 'month' };
-      }
+    const md = monthDate(j, null);
+    if (md) return { len: lead + md.len, day: md.day, kind: 'month' };
+    // A year before the date: "2027 oct 31".
+    const y = yearAt(j);
+    const after = y ? monthDate(j + 1, y) : null;
+    if (after) return { len: lead + 1 + after.len, day: after.day, kind: 'month' };
+    // "on the 15th": the next 15th. A bare number is never a day, so only with
+    // an "on" word and an ordinal, and not before a weekday ("the 2nd tuesday").
+    const nth = lead ? /^(\d{1,2})(\D+)$/.exec(t[j]!.f) : null;
+    if (nth && nth[2] !== '.' && W.ordinal.includes(nth[2]!) && weekdayAt(j + 1) === null) {
+      const d = Number(nth[1]);
+      if (d >= 1 && d <= 31) return { len: lead + 1, day: nextMonthDay(today, d) };
     }
     return null;
   };
@@ -590,19 +680,23 @@ export function parseQuickAdd(
   // ── Times ──
   const timeToken = (raw: string, strict: boolean): string | null => {
     const f = foldForMatch(raw);
-    // A bare number is a time only after "at" or before "o'clock"; a date in
-    // digits with a closing dot ("16.10.") is a date.
-    if (strict && /^\d{1,2}\.?$/.test(f)) return null;
+    // A bare number is a time only after "at" or before "o'clock", four
+    // digits too ("2027" is a year, "1500" an amount; "at 1530" is a time); a
+    // date in digits with a closing dot ("16.10.") is a date.
+    if (strict && /^(\d{1,2}\.?|\d{4})$/.test(f)) return null;
     if (/^\d{1,2}\.\d{1,2}\./.test(f)) return null;
     return parseTimeText(f.replace(/\.$/, ''));
   };
+  /** Where a run of "at" words from `i` ends, each run walked once: a pasted
+   *  run of thousands costs no stack and no time for each word in it. */
+  const runEnd: number[] = [];
   const timeAt = (i: number, afterAt = false): { len: number; time: string } | null => {
     if (!free(i)) return null;
-    // "at 3pm", and a run of "at" words ("a las 12"): skipped in a loop, so a
-    // pasted run of thousands costs no stack.
+    // "at 3pm", and a run of "at" words ("a las 12").
     if (!afterAt && is(i, W.at)) {
-      let k = i + 1;
-      while (free(k) && is(k, W.at)) k++;
+      let k = runEnd[i] ?? i + 1;
+      while (free(k) && is(k, W.at)) k = runEnd[k] ?? k + 1;
+      for (let m = i; m < k && runEnd[m] === undefined; m++) runEnd[m] = k;
       // A number before a day or week word is a date ("o 5 dní", Slovak for
       // "in 5 days", where "o" is also "at"), never a clock time.
       if (free(k) && !(is(k + 1, W.day) || is(k + 1, W.week))) {
@@ -653,6 +747,12 @@ export function parseQuickAdd(
       if (h2 && after) return { len: h2.len + 1, time: shift(h2.time, after) };
       if (h2 && glued) return { len: h2.len, time: shift(h2.time, E.dayPeriods.pm.includes(glued) ? 'pm' : E.dayPeriods.am.includes(glued) ? 'am' : null) };
     }
+    // "half past 3": 03:30, and 15:30 with "pm".
+    if (is(i, W.halfPast) && free(i + 1)) {
+      const pm = /^(am|pm)$/.test(t[i + 2]?.f ?? '') && free(i + 2) ? 1 : 0;
+      const h = /^\d{1,2}(am|pm)?$/.test(t[i + 1]!.f) ? parseTimeText(t[i + 1]!.f + (pm ? t[i + 2]!.f : '')) : null;
+      if (h) return { len: 2 + pm, time: timeFromMinutes(minutesOf(h) + 30) };
+    }
     // "noon", "midnight", a language's phrase for them ("منتصف الليل"), and
     // an "on" word before them ("w południe").
     for (const [list, time] of [[W.noon, '12:00'], [W.midnight, '00:00']] as const) {
@@ -662,6 +762,15 @@ export function parseQuickAdd(
     const single = timeToken(t[i]!.raw, true);
     return single ? { len: 1, time: single } : null;
   };
+  /** "11-1pm": the pm of the end applies to a start with none when that keeps
+   *  the start before the end, within 12 hours ("3:30-4:15pm" is 15:30); else
+   *  the start is morning ("9-5pm" is 09:00). */
+  const startBefore = (a: string, end: string): string => {
+    const later = timeFromMinutes(minutesOf(a) + 720);
+    return minutesOf(a) < 720 && minutesOf(later) < minutesOf(end) ? later : a;
+  };
+  /** A clock time in a word that is not four bare digits, which only "at" makes one. */
+  const clockOf = (f: string): string | null => (/^\d{4}$/.test(f) ? null : parseTimeText(f));
   const rangeAt = (i: number): { len: number; time: string; end: string } | null => {
     if (!free(i)) return null;
     // "3-4pm", "15:00-16:00", "9:30-10".
@@ -669,16 +778,16 @@ export function parseQuickAdd(
     const m = /^(\d{1,2}(?::\d{2})?)h?\s*(am|pm)?[-–](\d{1,2}(?::\d{2})?)h?\s*(am|pm)?$/i.exec(t[i]!.f);
     if (m) {
       const half = m[4] ?? m[2] ?? '';
-      const a = parseTimeText(`${m[1]}${m[2] ?? (m[4] && !m[1]!.includes(':') ? m[4] : '')}`) ?? parseTimeText(m[1]!);
+      let a = parseTimeText(`${m[1]}${m[2] ?? ''}`);
       let b = parseTimeText(`${m[3]}${half}`);
+      if (a && b && !m[2] && m[4]?.toLowerCase() === 'pm') a = startBefore(a, b);
       // "9-5" with no am or pm is a working day: an end before the start
       // that the afternoon puts after it ends then ("22-6" stays a night).
       if (a && b && !m[2] && !m[4] && minutesOf(b) < minutesOf(a) && minutesOf(b) + 720 > minutesOf(a)) {
         b = timeFromMinutes(minutesOf(b) + 720);
       }
       if (a && b) {
-        // "11-1pm": a start after its pm end reads as morning. "14-15 Uhr"
-        // carries its clock word after the range.
+        // "14-15 Uhr" carries its clock word after the range.
         return { len: is(i + 1, W.oclock) ? 2 : 1, time: a, end: b };
       }
     }
@@ -691,19 +800,22 @@ export function parseQuickAdd(
     // After "from", a bare hour is a time: "de 9 a 17", "с 9 до 17".
     const bare = (k: number) => (fromWord && free(k) && /^\d{1,2}$/.test(t[k]!.f) && parseTimeText(t[k]!.f) ? { len: 1, time: parseTimeText(t[k]!.f)! } : null);
     const a = timeAt(i + fromWord) ?? bare(i + fromWord);
+    // A start typed as a plain number ("from 3 to 4pm"), which a pm end may move.
+    const plain = !!a && a.len === 1 && /^\d{1,2}([:.]\d{2})?$/.test(t[i + fromWord]!.f);
     if (!a) return null;
     const k = i + fromWord + a.len;
     const sep = free(k) && (W.to.includes(t[k]!.f) || t[k]!.f === '-') ? 1 : 0;
     if (!sep) return null;
     // A day written with dots ("20.", "20.12.") after "to" is an end day, never a time.
     const endIsDay = free(k + 1) && /^\d{1,2}\.(\d{1,2}\.?)?$/.test(t[k + 1]!.raw.trim());
-    const b = endIsDay ? null : timeAt(k + 1) ?? (free(k + 1) && parseTimeText(t[k + 1]!.f) ? { len: 1, time: parseTimeText(t[k + 1]!.f)! } : null);
+    const b = endIsDay ? null : timeAt(k + 1) ?? (free(k + 1) && clockOf(t[k + 1]!.f) ? { len: 1, time: clockOf(t[k + 1]!.f)! } : null);
     if (!b) return null;
-    return { len: fromWord + a.len + sep + b.len, time: a.time, end: b.time };
+    const pmEnd = /p\.?m?\.?$/.test(textOf(k + 1, b.len)) || E.dayPeriods.pm.some((p) => textOf(k + 1, b.len).includes(p));
+    return { len: fromWord + a.len + sep + b.len, time: plain && pmEnd ? startBefore(a.time, b.time) : a.time, end: b.time };
   };
 
   // ── Reading, longest patterns first, left to right ──
-  const out: { day?: string; end?: string; time?: string; timeEnd?: string; durationMin?: number; durationDays?: number; tonight?: boolean } = {};
+  const out: { day?: string; end?: string; time?: string; timeEnd?: string; durationMin?: number; durationDays?: number; tonight?: boolean; dayPart?: string } = {};
 
   /** "of the month" after a monthly rule, at `j`: "v měsíci", "im monat",
    *  "do mês". How many words it takes. */
@@ -713,6 +825,13 @@ export function parseQuickAdd(
     if (!free(k) || t[k]!.f.length < 2 || /\d/.test(t[k]!.f)) return null;
     const hit = (['minute', 'hour', 'day', 'week'] as const).find((u) => W[u].includes(t[k]!.f));
     return hit ? { len: 1, n: unitCount(t[k]!.f, W[hit]), unit: hit } : null;
+  };
+
+  /** The minutes of an alert amount the schedule keeps (28 days at most), or null. */
+  const alertOf = (a: ReturnType<typeof amountAt>): number | null => {
+    if (!a || a.unit === 'month' || a.unit === 'year') return null;
+    const before = a.n * UNIT_MINUTES[a.unit];
+    return scheduleOf({ journalDate: today, alerts: [{ before }] }, 'event')?.alerts ? before : null;
   };
 
   /** A monthly rule after "every month" or "monthly", at `j0`: "on the 1st",
@@ -743,7 +862,17 @@ export function parseQuickAdd(
     }
   }
 
-  let untilAfter: { day: string; from: number; len: number; part: number } | null = null;
+  /** "until" and its date, read before or after the repeat: `word` is where the until word is. */
+  let until: { day: string; word: number; part: number } | null = null;
+  /** The parts a duration and an end day came from. */
+  let durationPart = -1;
+  let endPart = -1;
+  /** The time came from "midnight", from these words; the day from a weekday name. */
+  let midnight = false;
+  let timeText = '';
+  let weekdayDay = false;
+  /** Where the date read last ends: a part of the day may follow it. */
+  let dateEnd = -1;
   for (let i = 0; i < t.length; i++) {
     if (!free(i)) continue;
     const raw = t[i]!.raw;
@@ -780,15 +909,16 @@ export function parseQuickAdd(
       for (;;) {
         // A unit word with no number is one of it: "за час", "قبل يوم".
         const a = amountAt(k) ?? (found.length === 0 ? unitOnly(k) : null);
-        if (!a || a.unit === 'month' || a.unit === 'year') break;
-        found.push(a.n * UNIT_MINUTES[a.unit]);
-        k += a.len;
+        const before = alertOf(a);
+        if (before === null || res.alerts.length + found.length >= MAX_ALERTS) break;
+        found.push(before);
+        k += a!.len;
         if (is(k, W.before)) k++;
         const sep = is(k, W.and) || (free(k) && t[k]!.f === ',') ? 1 : 0;
         // "1d, 1h": the comma came with the word before it.
         const glued = !sep && t[k - 1]!.raw.endsWith(',');
-        const next = sep || glued ? amountAt(k + sep) : null;
-        if (!next || next.unit === 'month' || next.unit === 'year') break;
+        const next = sep || glued ? alertOf(amountAt(k + sep)) : null;
+        if (next === null || res.alerts.length + found.length >= MAX_ALERTS) break;
         k += sep;
       }
       if (found.length) {
@@ -803,10 +933,11 @@ export function parseQuickAdd(
       let k = i;
       for (;;) {
         const a = amountAt(k);
-        if (!a || a.unit === 'month' || a.unit === 'year') break;
-        found.push(a.n * UNIT_MINUTES[a.unit]);
-        k += a.len;
-        if (!(is(k, W.and) || (free(k) && t[k]!.f === ',')) || !amountAt(k + 1)) break;
+        const before = alertOf(a);
+        if (before === null || res.alerts.length + found.length >= MAX_ALERTS) break;
+        found.push(before);
+        k += a!.len;
+        if (!(is(k, W.and) || (free(k) && t[k]!.f === ',')) || alertOf(amountAt(k + 1)) === null) break;
         k++;
       }
       if (found.length && is(k, W.before)) {
@@ -824,15 +955,15 @@ export function parseQuickAdd(
       if (a && a.unit !== 'month' && a.unit !== 'year') {
         if (a.unit === 'day' || a.unit === 'week') out.durationDays = a.n * (a.unit === 'week' ? 7 : 1);
         else out.durationMin = a.n * UNIT_MINUTES[a.unit];
-        take(i, 1 + a.len, 'duration');
+        durationPart = take(i, 1 + a.len, 'duration');
         continue;
       }
     }
     // Repeats.
     // "Weekly review": a repeat word that opens the line is its title.
-    if (i > 0 && (is(i, W.daily) || is(i, W.weekly) || is(i, W.monthly) || is(i, W.yearly))) {
-      const every: Repeat['every'] = is(i, W.daily) ? 'day' : is(i, W.weekly) ? 'week' : is(i, W.monthly) ? 'month' : 'year';
-      res.repeat = { every, interval: 1 };
+    if (i > 0 && (is(i, W.daily) || is(i, W.weekly) || is(i, W.monthly) || is(i, W.yearly) || is(i, W.biweekly) || is(i, W.quarterly))) {
+      const every: Repeat['every'] = is(i, W.daily) ? 'day' : is(i, W.weekly) || is(i, W.biweekly) ? 'week' : is(i, W.monthly) || is(i, W.quarterly) ? 'month' : 'year';
+      res.repeat = { every, interval: is(i, W.biweekly) ? 2 : is(i, W.quarterly) ? 3 : 1 };
       let len = 1;
       // "monthly on the 1st", as after "every month".
       const rule = every === 'month' ? monthRule(i + 1) : null;
@@ -858,8 +989,11 @@ export function parseQuickAdd(
       // "every other week", "every second friday": twice the step. A word in
       // both lists says it alone: "varannan", "cada dos", "隔週".
       const self = W.other.includes(t[i]!.f);
-      const other = self || is(i + 1, W.other) ? 1 : 0;
-      const step = self ? 0 : other;
+      // "every 2nd friday", "every 3rd week": an ordinal is the step too.
+      const nth = self ? null : /^(\d{1,2})(\D+)$/.exec(free(i + 1) ? t[i + 1]!.f : '');
+      const ordinal = nth && nth[2] !== '.' && W.ordinal.includes(nth[2]!) && Number(nth[1]) >= 2 ? Number(nth[1]) - 1 : 0;
+      const other = self || is(i + 1, W.other) ? 1 : ordinal;
+      const step = self ? 0 : other && 1;
       // "every last friday": the last one of each month, and "of the month"
       // after it ("každý poslední pátek v měsíci").
       if (!other && is(i + 1, W.last)) {
@@ -913,16 +1047,16 @@ export function parseQuickAdd(
         continue;
       }
     }
-    if (res.repeat && is(i, W.until)) {
+    // "until dec 20" ends a repeat read before or after it.
+    if (is(i, W.until) && !until) {
       const d = dateAt(i + 1);
       if (d) {
-        res.repeat = { ...res.repeat, until: d.day };
-        take(i, 1 + d.len, 'repeat');
+        until = { day: d.day, word: i, part: take(i, 1 + d.len, 'repeat') };
         continue;
       }
     }
     if (res.repeat && is(i, W.for)) {
-      const n = free(i + 1) && /^\d{1,3}$/.test(t[i + 1]!.f) && is(i + 2, W.times) ? Number(t[i + 1]!.f) : null;
+      const n = free(i + 1) && /^\d{1,3}$/.test(t[i + 1]!.f) && is(i + 2, W.times) && Number(t[i + 1]!.f) > 0 ? Number(t[i + 1]!.f) : null;
       if (n) {
         res.repeat = { ...res.repeat, count: n };
         take(i, 3, 'repeat');
@@ -930,7 +1064,7 @@ export function parseQuickAdd(
       }
     }
     // "10 times" after a repeat, with or without "for", and glued: "10krát", "10-krát", "10회".
-    if (res.repeat && free(i) && /^\d{1,3}$/.test(t[i]!.f) && is(i + 1, W.times)) {
+    if (res.repeat && free(i) && /^\d{1,3}$/.test(t[i]!.f) && Number(t[i]!.f) > 0 && is(i + 1, W.times)) {
       res.repeat = { ...res.repeat, count: Number(t[i]!.f) };
       take(i, 2, 'repeat');
       continue;
@@ -988,7 +1122,7 @@ export function parseQuickAdd(
         if (start && end && shiftDay(end, 0) === end) {
           out.day = start;
           out.end = end;
-          take(i, hit.one ? 1 : 2, 'span');
+          endPart = take(i, hit.one ? 1 : 2, 'span');
           continue;
         }
       }
@@ -1003,7 +1137,29 @@ export function parseQuickAdd(
       if (d1 !== null && e?.kind === 'month' && d1 < Number(e.day.slice(8))) {
         out.day = `${e.day.slice(0, 8)}${String(d1).padStart(2, '0')}`;
         out.end = e.day;
-        take(i, lead + 2 + e.len, 'span');
+        endPart = take(i, lead + 2 + e.len, 'span');
+        continue;
+      }
+    }
+    // "in 2 hours", "in 30 minutes": from the clock, so only with one.
+    if (ctx.now && !out.time && !out.day && is(i, W.in)) {
+      const a = amountAt(i + 1);
+      if (a && (a.unit === 'minute' || a.unit === 'hour')) {
+        const at = minutesOf(ctx.now) + a.n * UNIT_MINUTES[a.unit];
+        out.day = shiftDay(today, Math.floor(at / 1440));
+        out.time = timeFromMinutes(at);
+        take(i, 1 + a.len, 'time');
+        continue;
+      }
+    }
+    // "tomorrow morning", "fri evening", "this afternoon": a part of the day
+    // after a day or "this" (a time typed with it wins, as with "tonight").
+    {
+      const lead = is(i, W.this) ? 1 : 0;
+      const part = lead || i === dateEnd ? (is(i + lead, W.morning) ? '09:00' : is(i + lead, W.afternoon) ? '15:00' : is(i + lead, W.evening) ? '19:00' : null) : null;
+      if (part && !out.dayPart) {
+        out.dayPart = part;
+        take(i, lead + 1, 'time');
         continue;
       }
     }
@@ -1013,12 +1169,15 @@ export function parseQuickAdd(
     if (r) {
       out.time = r.time;
       out.timeEnd = r.end;
+      timeText = textOf(i, r.len);
       take(i, r.len, 'time');
       continue;
     }
     const tm = out.time ? null : timeAt(i);
     if (tm) {
       out.time = tm.time;
+      timeText = textOf(i, tm.len);
+      midnight = tm.time === '00:00' && !/\d/.test(timeText);
       take(i, tm.len, 'time');
       continue;
     }
@@ -1043,7 +1202,7 @@ export function parseQuickAdd(
           if (shiftDay(end, 0) === end) {
             out.day = d.day;
             out.end = end;
-            take(i, lead + d.len + 2, 'span');
+            endPart = take(i, lead + d.len + 2, 'span');
             continue;
           }
         }
@@ -1055,7 +1214,7 @@ export function parseQuickAdd(
         if (e && e.day > d.day) {
           out.day = d.day;
           out.end = e.day;
-          take(i, lead + d.len + 1 + e.len, 'span');
+          endPart = take(i, lead + d.len + 1 + e.len, 'span');
           continue;
         }
       }
@@ -1068,44 +1227,44 @@ export function parseQuickAdd(
       if (lead) continue;
       // "12月20日 まで", "20 Aralık'a kadar": "until" after the date, where the
       // language puts it there. It ends a repeat read before or after it.
-      if (E.postposed && is(k, W.until) && !untilAfter) {
-        untilAfter = { day: d.day, from: i, len: d.len + 1, part: res.parts.length };
-        take(i, d.len + 1, 'repeat');
+      if (E.postposed && is(k, W.until) && !until) {
+        until = { day: d.day, word: k, part: take(i, d.len + 1, 'repeat') };
         continue;
       }
       if (!out.day) {
         out.day = d.day;
         if (guessed.has(d.day)) res.guessedYear = true;
+        weekdayDay = d.kind === 'weekday';
+        dateEnd = i + d.len;
         take(i, d.len, 'date');
         continue;
       }
     }
   }
 
-  if (untilAfter) {
-    if (res.repeat) res.repeat = { ...res.repeat, until: untilAfter.day };
-    else {
-      // No repeat: the date is the day, and the word stays in the title.
-      t[untilAfter.from + untilAfter.len - 1]!.used = false;
-      res.parts[untilAfter.part] = { kind: 'date', text: textOf(untilAfter.from, untilAfter.len - 1) };
-      out.day ??= untilAfter.day;
-    }
-  }
+  if (until && res.repeat) res.repeat = { ...res.repeat, until: until.day };
   // The pieces of one word with no spaces join again with no space between them.
-  res.title = t.filter((x) => !x.used).map((x, k, all) => (k > 0 && x.group !== undefined && x.group === all[k - 1]!.group ? '' : ' ') + x.raw).join('').trim();
+  res.title = joinTokens(t.filter((x) => !x.used));
   // A dangling "at" or "on" read nothing; it stays text only inside the title.
 
-  // "tonight": an evening time; "tonight at 8" is 8 in the evening.
-  if (out.tonight) {
-    if (!out.time) out.time = '19:00';
-    else {
-      const h = Number(out.time.slice(0, 2));
-      const text = res.parts.find((p) => p.kind === 'time')?.text ?? '';
-      if (h >= 1 && h < 12 && !/\d\s*a/i.test(text)) out.time = timeFromMinutes(minutesOf(out.time) + 720);
-      // Midnight tonight is where today ends, not where it began.
-      if (out.time === '00:00' && (out.day ?? today) === today && !res.repeat) out.day = shiftDay(today, 1);
+  // "tonight", "this evening", "tomorrow morning": the part's time. A time
+  // typed with an afternoon or evening is then: "tonight at 8" is 20:00.
+  const part = out.tonight ? '19:00' : out.dayPart;
+  if (part && !out.time) {
+    out.time = part;
+    // Typed after 19:00, "tonight" is the next full hour.
+    if (out.tonight && ctx.now && ctx.now >= part && (out.day ?? today) === today) {
+      const at = (Math.floor(minutesOf(ctx.now) / 60) + 1) * 60;
+      out.day = shiftDay(today, Math.floor(at / 1440));
+      out.time = timeFromMinutes(at);
     }
+  } else if (part) {
+    const h = Number(out.time!.slice(0, 2));
+    if (part >= '12:00' && h >= 1 && h < 12 && !/\d\s*a/i.test(timeText)) out.time = timeFromMinutes(minutesOf(out.time!) + 720);
+    // Midnight tonight is where today ends, not where it began.
+    if (out.tonight && out.time === '00:00' && (out.day ?? today) === today && !res.repeat) out.day = shiftDay(today, 1);
   }
+  const rangeHasEnd = !!out.timeEnd;
   if (out.durationMin && out.time && !out.timeEnd) out.timeEnd = timeFromMinutes(minutesOf(out.time) + out.durationMin);
   // A weekly repeat on named weekdays starts on the first of them from the
   // day typed: "every other friday in 3 days" begins on a Friday.
@@ -1121,13 +1280,40 @@ export function parseQuickAdd(
     out.day = res.repeat.until ? start : (nextOccurrence(start, undefined, start) ?? start);
   }
   if (out.tonight && !out.day) out.day = today;
+  // "midnight" with no day typed is the one where today ends.
+  if (midnight && ctx.now && !out.day && (ctx.defaultDay ?? today) === today) out.day = shiftDay(today, 1);
   if ((out.time || res.alerts.length || out.durationDays) && !out.day) out.day = ctx.defaultDay ?? today;
+  // A weekday whose time is gone today is next week's: "fri 3pm" on a Friday at 16:00.
+  if (ctx.now && weekdayDay && !res.repeat && out.day === today && out.time && out.time < ctx.now) out.day = shiftDay(today, 7);
+  const spanEnd = out.end;
   if (out.durationDays && out.day && !out.end && out.durationDays > 1) out.end = shiftDay(out.day, out.durationDays - 1);
   if (out.day) res.day = out.day;
   if (out.end) res.end = out.end;
   if (out.time) res.time = out.time;
   if (out.timeEnd && out.time && out.timeEnd !== out.time) res.timeEnd = out.timeEnd;
-  return res;
+
+  // What the schedule cannot keep is read again as text (normalizeSchedule in schedule.ts).
+  const drop: number[] = [];
+  const dropPart = (p: number) => {
+    if (p < 0) return;
+    const [from, len] = spans[p]!;
+    for (let k = from; k < from + len; k++) drop.push(k);
+  };
+  const type = res.type ?? ctx.as ?? 'event';
+  // "until" with no repeat: the word stays text, its date is the day.
+  if (until && !res.repeat) drop.push(until.word);
+  // Only an event repeats: the whole phrase stays, "every friday" with its weekday.
+  else if (type !== 'event') res.parts.forEach((p, k) => p.kind === 'repeat' && dropPart(k));
+  // A series that would end before it starts.
+  else if (until && res.day && until.day < res.day) dropPart(until.part);
+  // "for 30m" after a range, which has its end already, or with no time to
+  // start from: an all-day item has no length.
+  if (out.durationMin && (rangeHasEnd || !out.time)) dropPart(durationPart);
+  // "for 3 days" after a span that ends already.
+  if (out.durationDays && spanEnd) dropPart(durationPart);
+  // A journal entry has no end day, and a span ends within a year of its day.
+  if (res.end && (type === 'journal' || !scheduleOf({ journalDate: res.day, dateEnd: res.end }, 'event')?.end)) dropPart(spanEnd ? endPart : durationPart);
+  return { res, drop };
 }
 
 /** The next `nth` (1..4, or -1 for the last) weekday `wd` of a month, from today on. */
@@ -1149,4 +1335,14 @@ function nextMonthDay(today: string, d: number): string {
     if (shiftDay(iso, 0) === iso && iso >= today) return iso;
   }
   return today;
+}
+
+/** The same day `n` months on, or the last day of that month when it is shorter. */
+function addMonths(day: string, n: number): string {
+  const mo = Number(day.slice(0, 4)) * 12 + Number(day.slice(5, 7)) - 1 + n;
+  const head = `${Math.floor(mo / 12)}-${String((mo % 12) + 1).padStart(2, '0')}-`;
+  for (let d = Number(day.slice(8)); ; d--) {
+    const iso = `${head}${String(d).padStart(2, '0')}`;
+    if (shiftDay(iso, 0) === iso) return iso;
+  }
 }

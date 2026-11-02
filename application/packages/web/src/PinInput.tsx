@@ -63,7 +63,7 @@ const HIDDEN_TEXT = { color: 'transparent', caretColor: 'transparent' } as const
  * keyboard, and the keyboard handler then scrolls it back: the page jumped
  * at each digit. With the keyboard up, `useKeyboardOpen` keeps the box in
  * view inside its own column; without one, it is brought into view here.
- * Spec: ops/docs/mobile-dev-runbook.md (agent build on a physical iPhone)
+ * Spec: docs/contrib/mobile-dev-runbook.md (agent build on a physical iPhone)
  */
 function focusBox(el: HTMLInputElement | null | undefined): void {
   if (!el) return;
@@ -92,7 +92,7 @@ export const PinInput = forwardRef<PinInputHandle, Props>(function PinInput(
 ) {
   const mask = !reveal;
   const { t } = useTranslation('security');
-  const groupLabel = ariaLabel ?? t('pinInput.ariaLabel');
+  const groupLabel = ariaLabel ?? t('security:modal.tabPin');
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
 
   useImperativeHandle(ref, () => ({
@@ -219,7 +219,7 @@ export const PinInput = forwardRef<PinInputHandle, Props>(function PinInput(
             disabled={disabled}
             style={mask ? HIDDEN_TEXT : undefined}
             aria-label={t('pinInput.digitAriaLabel', { index: i + 1 })}
-            className={`peer w-full h-full rounded-md bg-track text-pn border border-divider focus:border-accent dark:focus:border-accent text-center font-mono focus:outline-none disabled:cursor-not-allowed ${compact ? 'text-xl' : 'text-2xl'}`}
+            className={`peer w-full h-full rounded-md bg-track text-pn border border-divider focus:border-accent dark:focus:border-accent text-center font-mono focus:outline-none disabled:cursor-not-allowed ${compact ? 'text-display' : 'text-display-2'}`}
           />
           {!d && mask && (
             // The caret the field no longer draws: its own is transparent with
@@ -237,7 +237,7 @@ export const PinInput = forwardRef<PinInputHandle, Props>(function PinInput(
             // family the browser used, so the boxes look untouched.
             <span
               aria-hidden="true"
-              className={`pointer-events-none absolute inset-0 flex items-center justify-center text-pn font-mono ${compact ? 'text-xl' : 'text-2xl'}`}
+              className={`pointer-events-none absolute inset-0 flex items-center justify-center text-pn font-mono ${compact ? 'text-display' : 'text-display-2'}`}
             >
               &bull;
             </span>

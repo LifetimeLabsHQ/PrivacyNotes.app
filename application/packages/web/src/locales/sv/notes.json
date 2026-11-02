@@ -6,19 +6,18 @@
     "deselect": "Avmarkera anteckning",
     "pinProtected": "PIN-skyddad",
     "readOnly": "Skrivskyddad",
-    "file": "Fil",
     "empty": "Tom",
     "noContent": "Inget innehåll",
     "notBackedUp": "Inte säkerhetskopierad",
     "archived": "Arkiverad",
-    "entryDate": "Inläggsdatum",
     "date": "Datum",
-    "dayOf": "dag {{n}} av {{total}}"
+    "dayOf": "dag {{n}} av {{total}}",
+    "reminders_one": "{{count}} påminnelse",
+    "reminders_other": "{{count}} påminnelser"
   },
   "header": {
     "new": "Ny",
     "newNote": "Ny anteckning",
-    "trash": "Papperskorgen",
     "newEvent": "Ny händelse"
   },
   "folderChip": {
@@ -31,7 +30,6 @@
   },
   "vaultNew": {
     "ariaLabel": "Nytt objekt i valvet",
-    "login": "Inloggning",
     "card": "Kreditkort",
     "sshKey": "SSH-nyckel",
     "generator": "Lösenord"
@@ -39,15 +37,14 @@
   "newMenu": {
     "note": "Anteckning",
     "task": "Uppgift",
-    "kanban": "Kanbantavla",
+    "kanban": "Kanban",
+    "drawing": "Teckning",
     "journal": "Dagbok",
     "login": "Inloggning",
-    "file": "Fil",
     "bookmark": "Bokmärke",
     "clipPage": "Klipp webbsida",
     "contact": "Kontakt",
-    "event": "Händelse",
-    "quickAdd": "Snabbtillägg"
+    "event": "Händelse"
   },
   "vaultFilter": {
     "all": "Alla",
@@ -64,14 +61,14 @@
   "trash": {
     "empty": "Töm",
     "emptyHover": "Radera alla anteckningar i papperskorgen",
-    "storage": "Lagring",
     "autoDelete": "Radera automatiskt efter 30 dagar"
   },
   "search": {
     "sortOptions": "Sorterings- och visningsalternativ",
     "placeholderVault": "Sök i valvet…",
     "placeholderNotes": "Sök bland anteckningar…",
-    "placeholderEvents": "Sök bland händelser…"
+    "placeholderEvents": "Sök bland händelser…",
+    "placeholderDrawings": "Sök bland teckningar…"
   },
   "selection": {
     "countOf": "{{selected}} av {{total}} markerade",
@@ -82,10 +79,11 @@
     "noMatches": "Inga träffar.",
     "vault": "Valvet är tomt.",
     "notes": "Inga anteckningar än.",
+    "drawings": "Inga teckningar än.",
+    "drawingsLine": "Skissa, planera eller kartlägg en idé. Teckningar kan länka till dina anteckningar, men visar inte vad som står i dem.",
     "archive": "Inget arkiverat.",
     "trash": "Papperskorgen är tom.",
     "filtered": "Inga objekt matchar dina filter.",
-    "clearFilters": "Rensa filter",
     "filteredAfter": "för att visa dem.",
     "hiddenInAll_other": "{{count}} objekt döljs av filtret Visa i Alla. Öppna filtret bredvid Alla för att visa dem.",
     "inOtherSpace_other": "{{count}} objekt finns i ditt utrymme {{space}}. Byt till {{space}} i sidofältet för att se dem.",
@@ -98,16 +96,6 @@
     "other": "Övrigt",
     "collapseAll": "Fäll ihop alla grupper",
     "expandAll": "Fäll ut alla grupper"
-  },
-  "headerLabel": {
-    "allItems": "Alla",
-    "untagged": "Otaggade",
-    "journals": "Dagböcker",
-    "vault": "Valv",
-    "pinned": "Fästa",
-    "archive": "Arkiv",
-    "notes": "Anteckningar",
-    "calendar": "Kalender"
   },
   "footerStats": {
     "journals_one": "dagboksinlägg",
@@ -122,6 +110,8 @@
     "bookmarks_other": "bokmärken",
     "contacts_one": "kontakt",
     "contacts_other": "kontakter",
+    "drawings_one": "teckning",
+    "drawings_other": "teckningar",
     "files_one": "fil",
     "files_other": "filer",
     "lists_one": "lista",
@@ -149,7 +139,6 @@
     "reload": "Ladda om"
   },
   "banner": {
-    "dismiss": "Avfärda",
     "proActivationPending": "Betalningen är mottagen, men Pro-aktiveringen tar längre tid än vanligt. Ladda om om en minut, eller hör av dig till supporten om det inte slår på.",
     "snapshotPaused": "Anteckningshistoriken är pausad. Din Pro-plan verkar inaktiv. Nya ändringar sparas inte som versioner förrän Pro är återställt.",
     "restorePro": "Återställ Pro",
@@ -157,8 +146,7 @@
     "updateCard": "Uppdatera kort"
   },
   "sidebar": {
-    "collapse": "Fäll ihop sidofältet",
-    "expand": "Fäll ut sidofältet"
+    "collapse": "Fäll ihop sidofältet"
   },
   "notesList": {
     "collapse": "Fäll ihop anteckningslistan",
@@ -195,24 +183,11 @@
     "titlePlaceholder": "Utan titel (klicka för att redigera, eller låt den skapas automatiskt)",
     "titlePlaceholderLogin": "t.ex. GitHub",
     "titlePlaceholderCard": "t.ex. Visa som slutar på 4242",
-    "titlePlaceholderSshKey": "t.ex. GitHub-distributionsnyckel",
-    "pin": "Fäst",
-    "unpin": "Lossa",
-    "restore": "Återställ",
-    "deleteForever": "Radera för alltid",
-    "moveToTrash": "Flytta till papperskorgen",
-    "noteOptions": "Anteckningsalternativ",
     "readOnlyToggle": "Skrivskyddad. Stäng av i",
     "menu": "Meny",
-    "showMarkdown": "Visa markdown",
     "showFormatted": "Visa formaterat",
     "invisiblesShow": "Visa osynliga tecken",
     "invisiblesHide": "Dölj osynliga tecken",
-    "findInNote": "Sök i anteckning",
-    "navPrev": "Föregående",
-    "navNext": "Nästa",
-    "navPrevTab": "Föregående flik",
-    "navNextTab": "Nästa flik",
     "undo": "Ångra",
     "redo": "Gör om",
     "hide": "Dölj",
@@ -222,9 +197,7 @@
     "widthDefault": "Standardbredd",
     "widthWide": "Bredare",
     "widthFull": "Full bredd",
-    "burn": "Dela och bränn efter läsning",
     "titlePlaceholderLink": "Bokmärkesnamn",
-    "titlePlaceholderContact": "Namn",
     "notBackedUpTooLarge": "Över gränsen på 1 MB, alltså inte säkerhetskopierad. Flytta bilder till bilagor eller dela upp anteckningen.",
     "notBackedUpFailed": "Inte säkerhetskopierad. Senaste fel: {{message}}. Försöker igen.",
     "unknownType": "Det här objektet skapades med en nyare version av PrivacyNotes. Uppdatera appen för att öppna det."
@@ -241,15 +214,17 @@
     "printTextTitle": "Skriv ut bara text",
     "printTextDesc": "Behåller titeln. Utelämnar datum, mapp och taggar.",
     "burnTitle": "Dela och bränn efter läsning",
-    "burnDesc": "Publicera den här anteckningen som en länk som bara går att öppna en gång. Länken förstör sig själv efter läsning. Din anteckning ligger kvar tryggt på ditt konto."
+    "burnDesc": "Publicera den här anteckningen som en länk som bara går att öppna en gång. Länken förstör sig själv efter läsning. Din anteckning ligger kvar tryggt på ditt konto.",
+    "drawingFileTitle": "Teckning (.excalidraw)",
+    "drawingFileDesc": "Öppnas i Excalidraw och Obsidian, med sina bilder.",
+    "drawingPngTitle": "Bild (.png)",
+    "drawingPngDesc": "Hela teckningen som en enda bild."
   },
   "weekReview": {
     "title": "Veckan i återblick",
     "daysLogged": "{{count}}/7 loggade",
     "mood": "Humör",
-    "sleep": "Sömn",
-    "meds": "Medicin",
-    "activity": "Aktivitet"
+    "meds": "Medicin"
   },
   "footer": {
     "settings": "Inställningar",
@@ -264,12 +239,10 @@
     "words_one": "ord",
     "words_other": "ord",
     "zen": "Zenläge",
-    "appearance": "Utseende",
     "lockApp": "Lås appen",
     "lockAppSetUp": "Ställ in en PIN under Säkerhet först",
     "goToTop": "Gå till toppen",
     "goToEnd": "Gå till slutet",
-    "signOut": "Logga ut",
     "signingOut": "Loggar ut…",
     "switchToLight": "Byt till ljust läge",
     "switchToDark": "Byt till mörkt läge"
@@ -307,10 +280,11 @@
     "bodyMulti": "De här {{count}} filerna ser ut att vara markdown. Vill du importera dem som anteckningar så att du kan läsa och redigera dem, eller lagra dem som krypterade filbilagor?"
   },
   "bulkTrash": {
-    "title": "Flytta till papperskorgen",
-    "body_one": "Flytta <highlight>{{count}} objekt</highlight> till papperskorgen? Du kan återställa objektet senare.",
-    "body_other": "Flytta <highlight>{{count}} objekt</highlight> till papperskorgen? Du kan återställa dem senare.",
-    "readOnlyTitle": "Skrivskyddad",
+    "body_one": "Radera <highlight>{{count}} objekt</highlight>? Flytta det till papperskorgen för att återställa det senare, eller radera det för alltid.",
+    "body_other": "Radera <highlight>{{count}} objekt</highlight>? Flytta dem till papperskorgen för att återställa dem senare, eller radera dem för alltid.",
+    "confirm": "Flytta till papperskorgen",
+    "keys": "Utanför det här fönstret flyttar <kbd>{{trash}}</kbd> ett objekt till papperskorgen direkt, och <kbd>{{ask}}</kbd> öppnar det här fönstret även efter Fråga inte igen.",
+    "dontAskAgain": "Fråga inte igen",
     "readOnlyAcknowledge": "Jag förstår",
     "readOnlyBlocked_one": "Det här objektet är <highlight>skrivskyddat</highlight> och kan därför inte flyttas till papperskorgen. Stäng av skrivskyddet i anteckningsalternativen först.",
     "readOnlyBlocked_other": "Alla <highlight>{{count}} objekt</highlight> är skrivskyddade, så inget av dem kan flyttas till papperskorgen. Stäng av skrivskyddet i anteckningsalternativen först.",
@@ -319,21 +293,12 @@
   },
   "deleteCheckedTasks": {
     "title": "Radera markerade punkter?",
-    "confirm": "Radera",
     "body_one": "<highlight>{{count}} punkt</highlight> raderas från anteckningen. Det går inte att ångra.",
     "body_other": "<highlight>{{count}} punkter</highlight> raderas från anteckningen, inklusive underpunkter. Det går inte att ångra."
   },
-  "bulkDelete": {
-    "body_one": "Radera <highlight>{{count}} anteckning</highlight> permanent? Det går inte att ångra.",
-    "body_other": "Radera <highlight>{{count}} anteckningar</highlight> permanent? Det går inte att ångra."
-  },
   "tagConfirm": {
     "mergeTitle": "Slå ihop taggar",
-    "deleteTitle": "Radera tagg",
-    "deleteWithNotesTitle": "Radera tagg och anteckningar",
     "mergeConfirm": "Slå ihop",
-    "deleteConfirm": "Radera tagg",
-    "moveToTrash": "Flytta till papperskorgen",
     "mergeBody_one": "Taggen <highlight>”{{targetTag}}”</highlight> finns redan. Vill du slå ihop <highlight>{{count}} anteckning</highlight> som är taggad ”{{tag}}” med den?",
     "mergeBody_other": "Taggen <highlight>”{{targetTag}}”</highlight> finns redan. Vill du slå ihop <highlight>{{count}} anteckningar</highlight> som är taggade ”{{tag}}” med den?",
     "deleteBody_one": "Ta bort taggen <highlight>”{{tag}}”</highlight> från <highlight>{{count}} anteckning</highlight>? Själva anteckningen raderas inte.",
@@ -363,5 +328,35 @@
     "missing": "Inte skapad än",
     "protectedHidden_one": "{{count}} PIN-skyddat objekt visas inte",
     "protectedHidden_other": "{{count}} PIN-skyddade objekt visas inte"
+  },
+  "drawing": {
+    "fullScreen": "Helskärm",
+    "frame": "Ram",
+    "laser": "Laserpekare",
+    "bar": {
+      "hiddenNote": "De fungerar fortfarande med sina kortkommandon."
+    },
+    "resetTitle": "Rensa ritytan?",
+    "resetBody": "Det här tar bort allt på ritytan. Ångra tar tillbaka det.",
+    "hotkeysTitle": "Kortkommandon för teckningar",
+    "tools": {
+      "label": "Ritverktyg",
+      "keepTool": "Behåll verktyget efter ritning",
+      "hand": "Flytta ritytan",
+      "rectangle": "Rektangel",
+      "diamond": "Romb",
+      "ellipse": "Ellips",
+      "arrow": "Pil",
+      "line": "Linje",
+      "pen": "Penna",
+      "text": "Textruta",
+      "eraser": "Suddgummi",
+      "resetZoom": "Återställ zoom",
+      "open": "Öppna en teckningsfil",
+      "reset": "Rensa ritytan",
+      "style": "Stil",
+      "more": "Fler verktyg",
+      "fewer": "Färre verktyg"
+    }
   }
 }

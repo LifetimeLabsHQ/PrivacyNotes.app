@@ -15,7 +15,7 @@
  * Also Paddle's default-payment-link target: Paddle-sent emails (update
  * payment method, dunning for the storage subs) append `?_ptxn=<txn>`,
  * and Paddle.js auto-opens that transaction's checkout once initialized.
- * Spec: ops/docs/domain-split.md (Paddle default payment link -> /checkout)
+ * Spec: docs/internal/domain-split.md (Paddle default payment link -> /checkout)
  */
 
 import { Children, useEffect, useState, type ReactNode } from 'react';
@@ -96,7 +96,7 @@ export default function CheckoutLauncher() {
     // No confirm step here: the person is answering their own dunning
     // email about a subscription they already hold, and the transaction
     // names the account rather than the URL.
-    // Spec: ops/docs/domain-split.md (Paddle default payment link -> /checkout)
+    // Spec: docs/internal/domain-split.md (Paddle default payment link -> /checkout)
     if (params.get('_ptxn')) {
       initPaddleForTransaction(onDone).catch(() => setState('error'));
       return;
@@ -147,7 +147,7 @@ export default function CheckoutLauncher() {
   // The page is always the cream paper of the homepage, whatever the system
   // theme: a purchase should read as a welcome, and the dark neutral of the
   // app shell read as a warning. The values are the washi light set.
-  // Spec: ops/docs/design-decisions.md (washi landing palette)
+  // Spec: docs/internal/design-decisions.md (washi landing palette)
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F7F1E1] text-[#1C1917] [--brand-ink:#1C1917] [--color-accent:#1E40AF] p-6">
       {state === 'confirm' && purchase ? (
@@ -158,13 +158,13 @@ export default function CheckoutLauncher() {
               <Confetti size={34} weight="fill" className="text-[#5DCAA5]" />
               <Sparkle size={20} weight="fill" className="text-[#ED93B1]" />
             </div>
-            <h1 className="mt-1.5 text-xl font-semibold">
+            <h1 className="mt-1.5 text-display font-semibold">
               {t('checkout.title')}
             </h1>
           </div>
 
           <div className="px-4 py-4">
-            <p className="text-sm">
+            <p className="text-body">
               <Trans
                 t={t}
                 i18nKey={purchase.kind === 'pro' ? 'checkout.proLine' : 'checkout.storageLine'}
@@ -193,10 +193,10 @@ export default function CheckoutLauncher() {
               )}
             </ul>
 
-            <div className="mt-4 border-t border-[#E0D7BD] pt-3 text-start text-xs leading-relaxed text-[#6A6152]">
+            <div className="mt-4 border-t border-[#E0D7BD] pt-3 text-start text-small leading-relaxed text-[#6A6152]">
               <p className="flex items-center gap-2">
                 {t('checkout.yourAccount')}
-                <span className="rounded-md bg-[#E8EAF2] px-2 py-0.5 font-mono text-sm text-[#1E40AF]">
+                <span className="rounded-md bg-[#E8EAF2] px-2 py-0.5 font-mono text-body text-[#1E40AF]">
                   {purchase.pubkey.slice(0, 8)}
                 </span>
               </p>
@@ -220,14 +220,14 @@ export default function CheckoutLauncher() {
             <button
               type="button"
               onClick={start}
-              className="group flex w-full items-center justify-center gap-2.5 rounded-xl bg-white px-4 py-3 text-[15px] font-semibold text-[#1E40AF] transition duration-200 hover:-translate-y-0.5 hover:ring-[3px] hover:ring-[#5DCAA5] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#5DCAA5] active:translate-y-0 active:scale-[0.98] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+              className="group flex w-full items-center justify-center gap-2.5 rounded-xl bg-white px-4 py-3 text-row font-semibold text-[#1E40AF] transition duration-200 hover:-translate-y-0.5 hover:ring-[3px] hover:ring-[#5DCAA5] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#5DCAA5] active:translate-y-0 active:scale-[0.98] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             >
               {t('checkout.confirmButton')}
               <span className={ARROW_NUDGE}>
-                <ArrowRight size={14} weight="bold" aria-hidden="true" />
+                <ArrowRight weight="bold" aria-hidden="true" />
               </span>
             </button>
-            <ol aria-label={t('checkout.stepsLabel')} className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-[#B5D4F4]">
+            <ol aria-label={t('checkout.stepsLabel')} className="mt-2.5 flex items-center justify-center gap-1.5 text-small text-[#B5D4F4]">
               <li className="text-white" aria-current="step">1 {t('checkout.stepCheck')}</li>
               <li aria-hidden="true">›</li>
               <li>2 {t('checkout.stepPay')}</li>
@@ -240,18 +240,18 @@ export default function CheckoutLauncher() {
         <div className="max-w-sm w-full text-center space-y-3">
           {state === 'error' ? (
             <>
-              <h1 className="text-lg font-semibold">{t('checkout.invalidTitle')}</h1>
-              <p className="text-sm text-[#6A6152]">{t('checkout.invalidBody')}</p>
+              <h1 className="text-heading font-semibold">{t('checkout.invalidTitle')}</h1>
+              <p className="text-body text-[#6A6152]">{t('checkout.invalidBody')}</p>
             </>
           ) : state === 'done' ? (
             <>
-              <h1 className="text-lg font-semibold">{t('checkout.completeTitle')}</h1>
-              <p className="text-sm text-[#6A6152]">{t('checkout.completeBody')}</p>
+              <h1 className="text-heading font-semibold">{t('checkout.completeTitle')}</h1>
+              <p className="text-body text-[#6A6152]">{t('checkout.completeBody')}</p>
             </>
           ) : (
             <>
-              <h1 className="text-lg font-semibold">{t('checkout.openingTitle')}</h1>
-              <p className="text-sm text-[#6A6152]">{t('checkout.openingBody')}</p>
+              <h1 className="text-heading font-semibold">{t('checkout.openingTitle')}</h1>
+              <p className="text-body text-[#6A6152]">{t('checkout.openingBody')}</p>
             </>
           )}
         </div>
@@ -285,9 +285,9 @@ function Benefit({ title, sub }: { title: string; sub: string }) {
       <span className="mt-0.5 flex size-[18px] shrink-0 items-center justify-center rounded-full bg-[#10B981] text-white" aria-hidden="true">
         <CheckFat size={11} weight="fill" />
       </span>
-      <span className="text-sm leading-snug">
+      <span className="text-body leading-snug">
         <span className="block font-semibold">{title}</span>
-        <span className="block text-xs text-[#6A6152]">{sub}</span>
+        <span className="block text-small text-[#6A6152]">{sub}</span>
       </span>
     </li>
   );

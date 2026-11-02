@@ -22,8 +22,8 @@
 // "exempt" string ever looks unexpectedly translated (or unexpectedly
 // English), the answer is in the RENDER_TRANSLATED map below - nothing else
 // decides it. Human-readable explanation of the per-locale model, and how to
-// change a key: ops/docs/i18n-spec.md section 10b.
-// Design rationale + the CJK unlock: ops/docs/i18n-cjk-plan.md section 3.
+// change a key: docs/contrib/i18n-spec.md section 10b.
+// Design rationale + the CJK unlock: docs/internal/specs/i18n-cjk-plan.md section 3.
 import { activeLocale } from './i18n';
 
 export const FORCE_EN = { lng: 'en' } as const;
@@ -51,7 +51,7 @@ const allBut = (...tooWide: string[]): readonly string[] => [
 // the Tags|Folders toggle. `upload` translates everywhere; `import` everywhere
 // but Dutch. The three footer/rail slots below (Settings, sync pill, Import &
 // Export) are English in all Latin because their slots are too tight to measure
-// reliably. Spec: ops/docs/i18n-spec.md section 10b.
+// reliably. Spec: docs/contrib/i18n-spec.md section 10b.
 const RENDER_TRANSLATED: Record<string, readonly string[]> = {
   // Product terms and dev-facing jargon: English in every locale, CJK included.
   'notes:vaultNew.sshKey': [], // "SSH Key" in the vault New menu

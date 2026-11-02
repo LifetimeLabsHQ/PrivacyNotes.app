@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nothing of this app's data leaves the device in a backup or a transfer
+     to a new phone. The data folder holds the webview's storage: the wrapped
+     recovery phrase on a trusted device and the key material that opens it,
+     so a copy is the profile-copy case THREAT_MODEL.md treats as recoverable.
+     allowBackup="false" covers cloud backup only from Android 12 on; these
+     rules cover device-to-device transfer too.
+     Spec: docs/internal/android-setup.md (re-apply checklist) -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </device-transfer>
+</data-extraction-rules>

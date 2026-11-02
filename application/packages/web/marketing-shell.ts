@@ -16,7 +16,7 @@
 //
 // Copy comes from src/marketingMeta.ts, which seo.ts also reads, so the two
 // cannot drift. Nothing here invents a string.
-// Spec: ops/docs/design-decisions.md (per-locale marketing shells)
+// Spec: docs/internal/design-decisions.md (per-locale marketing shells)
 
 import type { Plugin } from 'vite';
 import fs from 'node:fs';
@@ -45,7 +45,7 @@ function esc(s: string): string {
  * the price from pricing.ts, the beta/list choice from the same env var
  * isBetaPricing() reads in paddle.ts, so the offer can never contradict the
  * price on the page. Platforms are the ones actually shipped
- * (ops/docs/mobile-release-status.md).
+ * (docs/internal/mobile-release-status.md).
  * No aggregateRating: we have no review corpus, and inventing one is a
  * manual-action risk, not a shortcut.
  */
@@ -67,7 +67,7 @@ function jsonLd(locale: string): string {
       'https://www.reddit.com/r/PrivacyNotes/',
       'https://www.youtube.com/@PrivacyNotesApp',
       'https://www.facebook.com/PrivacyNotesApp/',
-      'https://github.com/LifetimeLabsDev/PrivacyNotes.app',
+      'https://github.com/LifetimeLabsHQ/PrivacyNotes.app',
     ],
   };
   const data = {
@@ -189,7 +189,7 @@ The app is open source: the web, desktop and mobile clients, the encryption laye
 - [Every help answer in one file](${ORIGIN}/llms-full.txt): the same content in one fetch, about 17,700 tokens, when a second request is not possible.
 - [Every release in one file](${ORIGIN}/changelog.md): the whole changelog as plain text, newest first. Read it when the question is about what changed, what is new in a version, or where something moved.
 - [Security documentation index](${ORIGIN}/docs/index.md): the published security documents as plain text, with the sections of each. Read it when the question is about the encryption, what the server can read, how to verify any of it, or how sync resolves a conflict.
-- [Source, threat model and encryption code](https://github.com/LifetimeLabsDev/PrivacyNotes.app): the repository the documents above are published from, with the clients beside them.
+- [Source, threat model and encryption code](https://github.com/LifetimeLabsHQ/PrivacyNotes.app): the repository the documents above are published from, with the clients beside them.
 
 ## Press
 - [Brand assets](${ORIGIN}/brand): logos, wordmarks and usage rules.

@@ -3,7 +3,7 @@
  * render order. The strings live in `src/locales/<lng>/faq.json`, with
  * English as the source of truth.
  *
- * RULE BOOK: `ops/docs/help-center.md`. Adding, writing, ordering and
+ * RULE BOOK: `docs/contrib/help-center.md`. Adding, writing, ordering and
  * retiring an entry are all covered there, including the two rules that
  * matter most here: an id is the public URL `/help/<id>/`, and
  * entries sharing a group must stay adjacent below.
@@ -103,6 +103,7 @@ export const FAQ_STRUCTURE: ReadonlyArray<{ id: string; group: FaqGroupKey }> = 
   { id: 'share-with-someone', group: 'securityPrivacy' },
   { id: 'burn-notes', group: 'securityPrivacy' },
   { id: 'report-vulnerability', group: 'securityPrivacy' },
+  { id: 'browser-extension-security', group: 'securityPrivacy' },
   { id: 'lost-phrase', group: 'accountRecovery' },
   { id: 'forgot-pin', group: 'accountRecovery' },
   { id: 'lost-device', group: 'accountRecovery' },
@@ -126,6 +127,7 @@ export const FAQ_STRUCTURE: ReadonlyArray<{ id: string; group: FaqGroupKey }> = 
   { id: 'data-location', group: 'yourData' },
   { id: 'data-on-disk', group: 'yourData' },
   { id: 'trash-auto-delete', group: 'yourData' },
+  { id: 'dead-mans-switch', group: 'yourData' },
   { id: 'archive', group: 'yourData' },
   { id: 'note-history', group: 'yourData' },
   { id: 'vault', group: 'yourData' },
@@ -166,6 +168,7 @@ export const FAQ_STRUCTURE: ReadonlyArray<{ id: string; group: FaqGroupKey }> = 
   { id: 'languages', group: 'appsPlatforms' },
   { id: 'translation-quality', group: 'appsPlatforms' },
   { id: 'feature-requests', group: 'appsPlatforms' },
+  { id: 'browser-extension', group: 'appsPlatforms' },
   { id: 'statistics', group: 'statsTrackers' },
   { id: 'daily-check-in', group: 'statsTrackers' },
   { id: 'choose-trackers', group: 'statsTrackers' },

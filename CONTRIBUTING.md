@@ -16,7 +16,7 @@ What we DO want, today:
 
 - **Bug reports.** An [issue](../../issues) with steps beats a patch we cannot take.
 - **Translation feedback.** If something reads wrong in your language, open a [translation issue](../../issues/new?template=translation.yml). The wrong gender, a robotic phrasing, a word nobody says. You see it instantly and we never would. Do not send catalog edits: a catalog has to move in every language at once, so those are made upstream in one pass.
-- **Security reports.** Never as a public issue: [SECURITY.md](SECURITY.md) has the address and the PGP key.
+- **Security reports.** Never as a public issue: [SECURITY.md](SECURITY.md) has the address.
 
 ## Build it yourself
 

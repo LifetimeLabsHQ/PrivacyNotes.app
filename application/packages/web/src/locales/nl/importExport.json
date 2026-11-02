@@ -3,14 +3,12 @@
     "importTitle": "Je gegevens importeren",
     "exportTitle": "Je gegevens exporteren",
     "restoreTitle": "Je gegevens herstellen",
-    "vaultTitle": "Je wachtwoorden importeren",
-    "tablistLabel": "Importeren, exporteren, herstellen of wachtwoorden",
+    "tablistLabel": "Importeren, exporteren, herstellen of trackers",
     "tabImport": "Importeren",
     "tabExport": "Exporteren",
     "tabRestore": "Herstellen",
     "tabVault": "Wachtwoorden",
-    "working": "Bezig…",
-    "tabWellness": "Trackers"
+    "working": "Bezig…"
   },
   "footer": {
     "exportNote": "Exporteren gebeurt lokaal. Er wordt niets geüpload.",
@@ -18,12 +16,11 @@
     "importNote": "Alles is altijd versleuteld, op je apparaat en tijdens het synchroniseren."
   },
   "importPick": {
-    "autoTagLabel": "Geïmporteerde notities taggen per bron",
-    "autoTagDesc": "Notities uit Google Keep krijgen <keep>#google</keep>, Obsidian krijgt <obsidian>#obsidian</obsidian>, enzovoort.",
     "guideAria": "Importgids voor {{app}}",
     "guideLabel": "Gids",
-    "groupGeneral": "Algemeen",
-    "groupNotes": "Notities"
+    "searchPlaceholder": "Zoek je app",
+    "groupCalendar": "Agenda, contacten en bladwijzers",
+    "noMatch": "Geen app gevonden. De meeste notitie-apps kunnen Markdown-bestanden exporteren, en Markdown-bestanden kun je hier importeren."
   },
   "folderImport": {
     "tagLabel": "Notities ook taggen per map",
@@ -76,6 +73,7 @@
     "googleCalendar": "De .zip uit Google Calendar via Settings > Import & export, of één los .ics-bestand. Afspraken behouden hun tijden, herhalingen en herinneringen.",
     "appleNotes": "Exporteer via de gratis Exporter-app als Markdown en sleep de .zip hierheen.",
     "appleJournal": "Exporteer vanuit Dagboek op Mac of iPhone, comprimeer de map AppleJournalEntries en sleep de .zip hierheen. Items worden geïmporteerd als dagboeknotities met hun foto's, video's, spraakmemo's en locaties.",
+    "excalidraw": "Tekeningen opgeslagen vanaf excalidraw.com: één .excalidraw-bestand, of meerdere samen in een zip. Tekeningen uit de Excalidraw-plug-in van Obsidian werken ook, als .excalidraw.md-bestanden. Afbeeldingen in een tekening gaan mee.",
     "evernote": "Eén .enex los, of meerdere samen in een zip. Behoudt opmaak, tags, bijlagen, notitiekoppelingen en notitieblokken. Taken laat Evernote uit de .enex weg.",
     "samsungNotes": "Exporteer als Word (.docx) of tekst (.txt). Zip meerdere bestanden om ze in één keer te importeren.",
     "simplenote": "Exporteer uit Simplenote (Settings -> Tools -> Export Notes). Sleep de .zip hierheen.",
@@ -99,9 +97,6 @@
     "vcard": "Contacten (vCard)",
     "markdownFolder": "Markdown-bestanden"
   },
-  "vaultPick": {
-    "intro": "Importeer logins, creditcards en SSH-sleutels uit een andere wachtwoordmanager."
-  },
   "restorePick": {
     "intro": "Herstel een PrivacyNotes-back-up die je eerder hebt geëxporteerd.",
     "fullBackupTitle": "Volledige back-up (.zip)",
@@ -123,8 +118,8 @@
     "restoringBlobs": "Afbeeldingen en bestanden herstellen..."
   },
   "errors": {
-    "genericParse": "Er ging iets mis.",
     "decryptionFailed": "Ontsleutelen mislukt. Verkeerde herstelzin of beschadigd bestand.",
+    "importNothingChanged": "Er is niets geïmporteerd, en je notities, mappen en bestanden zijn gebleven zoals ze waren. {{detail}}",
     "blobImportFailed": "Je notities zijn geïmporteerd, maar hun afbeeldingen en bestanden niet: {{detail}} Er is niets veranderd in het bestand dat je hebt gekozen, dus je kunt de geïmporteerde notities verwijderen en de import opnieuw uitvoeren.",
     "blobsNotInBackup_one": "Je notities zijn hersteld. {{items}} staat vermeld in de back-up, maar ontbreekt erin.",
     "blobsNotInBackup_other": "Je notities zijn hersteld, maar {{items}} die in de back-up staan vermeld, ontbreken erin."
@@ -135,11 +130,7 @@
     "splitOversize_one": "Deze notitie bij de koppen splitsen in kleinere notities, zodat ze synchroniseert",
     "splitOversize_other": "Deze {{count}} notities bij hun koppen splitsen in kleinere notities, zodat ze synchroniseren",
     "partTitle": "{{title}} ({{index}}/{{total}})",
-    "continuedIn": "Verder in {{link}}",
-    "sourceLabel": "Bron",
     "uniqueTags": "Unieke tags",
-    "empty": "Leeg",
-    "untagged": "Zonder tag",
     "items": "Items",
     "previewLabel": "Voorbeeld",
     "andMore": "… en nog {{count}}",
@@ -150,9 +141,14 @@
     "eventSkipNote": "afspraken die je al hebt geïmporteerd worden overgeslagen en blijven zoals ze zijn, dus twee keer draaien maakt geen dubbele afspraken.",
     "restoreMergeNote": "notities uit je eigen back-up worden op id gekoppeld. Een notitie die je al hebt wordt alleen bijgewerkt als de versie in de back-up nieuwer is, en een notitie in je prullenbak komt er weer uit.",
     "quotaExceeded": "<strong>Te weinig opslag om te importeren.</strong> Naar schatting {{needed}} nodig, {{available}} beschikbaar. Maak ruimte vrij of upgrade voordat je importeert.",
-    "quotaWarning": "Let op: deze import gebruikt ongeveer {{needed}} van je resterende {{available}} opslag.",
     "oversizeAttachments_one": "1 bestand is groter dan de limiet van {{limit}} per bestand op je abonnement. Het wordt op dit apparaat geïmporteerd, maar synchroniseert pas naar je andere apparaten als je upgrade.",
-    "oversizeAttachments_other": "{{count}} bestanden zijn groter dan de limiet van {{limit}} per bestand op je abonnement. Ze worden op dit apparaat geïmporteerd, maar synchroniseren pas naar je andere apparaten als je upgrade."
+    "oversizeAttachments_other": "{{count}} bestanden zijn groter dan de limiet van {{limit}} per bestand op je abonnement. Ze worden op dit apparaat geïmporteerd, maar synchroniseren pas naar je andere apparaten als je upgrade.",
+    "title": "Controleer voordat je importeert",
+    "sourceTagLabel": "Elke notitie de tag <tag>{{tag}}</tag> geven",
+    "sourceTagDesc": "Uit: geen tag voor de bron. Tags die al in de notities staan, komen hoe dan ook mee.",
+    "storageLine": "Deze import heeft ongeveer {{needed}} nodig. Je hebt {{available}} vrij.",
+    "nothingWritten": "Er wordt niets opgeslagen tot je op Importeren drukt.",
+    "whatComesIn": "Wat er binnenkomt"
   },
   "counts": {
     "note_one": "notitie",
@@ -167,6 +163,8 @@
     "sshKey_other": "SSH-sleutels",
     "contact_one": "contact",
     "contact_other": "contacten",
+    "drawing_one": "tekening",
+    "drawing_other": "tekeningen",
     "zeroItems": "0 items",
     "importButton": "{{counts}} importeren"
   },
@@ -178,14 +176,14 @@
     "fullBackupHeading": "Volledige back-up",
     "portableHeading": "Overdraagbare export",
     "vaultOnlyHeading": "Alleen kluis",
-    "zipBackupTitle": "PrivacyNotes-back-up (.zip)",
-    "zipBackupDesc": "Alles: notities, dagboeken, kluisitems, taken, afbeeldingen, audio en bestanden. Gebruik dit voor een complete back-up van je account of om naar een nieuw apparaat te verhuizen. De bestanden erin zijn niet versleuteld, bewaar de zip dus op een veilige plek.",
-    "encryptedZipBackupTitle": "Versleutelde volledige back-up (.pnbackupz)",
-    "encryptedZipBackupDesc": "Alles wat de zip-back-up bevat - notities, kluisitems, afbeeldingen, audio en bestanden - verzegeld met de sleutel van je herstelzin. Te herstellen met je herstelzin op elk apparaat. Overal veilig te bewaren.",
-    "encryptedBackupTitle": "Versleutelde back-up (.pnbackup)",
-    "encryptedBackupDesc": "Alle tekst en metagegevens, versleuteld met de sleutel van je herstelzin. Geen afbeeldingen of bestanden. Overal veilig te bewaren - onleesbaar zonder je herstelzin.",
+    "zipBackupTitle": "Alles, niet versleuteld (.zip)",
+    "zipBackupDesc": "Je notities, dagboeken, kluisitems, taken, afbeeldingen, audio en bestanden, met je medicatie en trackers. Te openen op elke computer zonder herstelzin, bewaar hem dus op een veilige plek. Notitiegeschiedenis en de PIN van je app-vergrendeling zitten er niet in.",
+    "encryptedZipBackupTitle": "Alles, versleuteld (.pnbackupz)",
+    "encryptedZipBackupDesc": "Hetzelfde als de zip, verzegeld met de sleutel van je herstelzin. Te herstellen met je herstelzin op elk apparaat. Overal veilig te bewaren.",
+    "encryptedBackupTitle": "Alleen tekst, versleuteld (.pnbackup)",
+    "encryptedBackupDesc": "Alle tekst en metagegevens, zonder afbeeldingen of bestanden. Een klein bestand, verzegeld met de sleutel van je herstelzin. Overal veilig te bewaren.",
     "htmlArchiveTitle": "HTML-archief (.zip)",
-    "htmlArchiveDesc": "Eén printbare HTML-pagina per notitie. Handig om offline te lezen of te archiveren, niet om te herstellen.",
+    "htmlArchiveDesc": "Eén printbare HTML-pagina per notitie, met logins, kaarten en sleutels onversleuteld erin. Handig om offline te lezen of te archiveren, niet om te herstellen. Bewaar hem op een veilige plek.",
     "textBackupTitle": "Tekstback-up (.json)",
     "textBackupDesc": "Alle tekst en metagegevens als gewone JSON. Geen afbeeldingen of bestanden. Bewaar het op een plek die je vertrouwt - dit is niet versleuteld.",
     "vaultExportTitle": "Kluisexport (.json)",
@@ -199,6 +197,8 @@
     "calendarOnlyHeading": "Alleen agenda",
     "calendarExportTitle": "Agendabestand (.ics)",
     "calendarExportDesc": "Afspraken en notities en takenlijsten met een datum, voor Google Calendar, Apple Agenda of Outlook.",
+    "drawingsExportTitle": "Tekeningen (.zip)",
+    "drawingsExportDesc": "Elke tekening als een eigen .excalidraw-bestand, met de afbeeldingen erin, voor excalidraw.com en Obsidian.",
     "calendarPrivate": "Privé"
   },
   "exportProgress": {
@@ -207,11 +207,8 @@
     "incompleteTitle": "Export onvolledig",
     "exportingTitle": "Back-up exporteren...",
     "preparing": "Voorbereiden...",
-    "exporting": "Exporteren...",
-    "imagesProgress": "Afbeeldingen exporteren... {{done}} van {{total}}",
-    "filesProgress": "Bestanden exporteren... {{done}} van {{total}}",
-    "building": "Back-up samenstellen...",
-    "compressing": "Comprimeren...",
+    "showInFolder": "Tonen in map",
+    "zipStep": "Zip",
     "missingFailed_one": "Dit apparaat kon {{items}} niet downloaden, dus je export laat het weg. Controleer je verbinding en exporteer opnieuw.",
     "missingFailed_other": "Dit apparaat kon {{items}} niet downloaden, dus je export laat ze weg. Controleer je verbinding en exporteer opnieuw.",
     "missingNotFound_one": "{{items}} staat niet op dit apparaat en niet op de server, dus je export laat het weg.",
@@ -258,7 +255,8 @@
     "generic": "De export kon niet worden opgeslagen. Probeer het opnieuw of kies een andere map."
   },
   "saveErrors": {
-    "shortWrite": "Er zijn maar {{written}} van de {{expected}} bytes opgeslagen, dus het bestand is onvolledig. Probeer het opnieuw en sla op in de opslag van je apparaat in plaats van in een cloudmap."
+    "shortWrite": "Er zijn maar {{written}} van de {{expected}} bytes opgeslagen, dus het bestand is onvolledig. Probeer het opnieuw en sla op in de opslag van je apparaat in plaats van in een cloudmap.",
+    "protectedFolder": "PrivacyNotes slaat niet op in {{folder}}, omdat die map sleutels, instellingen of programma's bevat. Sla het bestand ergens anders op en verplaats het daar zelf naartoe."
   },
   "shareSheet": {
     "title_one": "{{count}} item is gedeeld met PrivacyNotes",
@@ -267,7 +265,6 @@
     "saveAll": "Alles bewaren"
   },
   "destination": {
-    "label": "Toevoegen aan",
     "none": "Geen map",
     "newFolder": "Nieuwe map \"{{name}}\"",
     "help": "Mappen uit de bron komen in de map die je kiest, en items zonder map komen erin terecht."

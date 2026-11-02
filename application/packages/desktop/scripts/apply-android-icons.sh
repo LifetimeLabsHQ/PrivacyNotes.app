@@ -14,7 +14,7 @@
 # without it, Android 8+ launchers mask the legacy PNG instead of using the
 # proper foreground/background adaptive icon.
 #
-# Spec: ops/docs/android-setup.md (launcher icons)
+# Spec: docs/internal/android-setup.md (launcher icons)
 
 set -euo pipefail
 

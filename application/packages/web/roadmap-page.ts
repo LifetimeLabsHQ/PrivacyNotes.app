@@ -186,7 +186,7 @@ const PAGE_CSS = `.meter{display:flex;align-items:center;gap:20px;border:1px sol
 .bar{flex:1;min-width:0;height:8px;border-radius:99px;background:var(--late-bg);overflow:hidden;display:flex}
 .bar-done{background:var(--node-done)}
 .bar-live{background:var(--next-fg)}
-.legend{display:flex;gap:16px;font-size:12.5px;white-space:nowrap;flex-wrap:wrap}
+.legend{display:flex;gap:16px;font-size:var(--fs-compact);white-space:nowrap;flex-wrap:wrap}
 .lg::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
 .lg-done{color:var(--done-fg)}.lg-done::before{background:var(--node-done)}
 .lg-live{color:var(--next-fg)}.lg-live::before{background:var(--next-fg)}
@@ -218,14 +218,14 @@ const PAGE_CSS = `.meter{display:flex;align-items:center;gap:20px;border:1px sol
 .card{display:flex;gap:13px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--bg)}
 .ico{flex:0 0 auto;width:36px;height:36px;border-radius:10px;background:var(--card);color:var(--muted);display:flex;align-items:center;justify-content:center}
 .txt{min-width:0}
-.badge{display:inline-block;font-size:9.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:20px;margin-bottom:6px}
+.badge{display:inline-block;font-size:var(--fs-meta);font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:20px;margin-bottom:6px}
 .b-shipped{background:var(--done-bg);color:var(--done-fg)}
 .b-in-progress{background:var(--prog-bg);color:var(--prog-fg)}
 .b-in-review{background:var(--rev-bg);color:var(--rev-fg)}
 .b-up-next{background:var(--next-bg);color:var(--next-fg)}
 .b-final{background:var(--late-bg);color:var(--late-fg)}
-.t{font-size:15px;font-weight:650;letter-spacing:-.01em;margin:0 0 3px}
-.d{font-size:13px;color:var(--muted);margin:0}
+.t{font-size:var(--fs-row);font-weight:650;letter-spacing:-.01em;margin:0 0 3px}
+.d{font-size:var(--fs-compact);color:var(--muted);margin:0}
 /* Shipped work steps back so attention lands on what is next. Still fully
    legible at 78% - this is de-emphasis, not a grey-out. */
 .p-done{opacity:.78}
@@ -235,7 +235,7 @@ const PAGE_CSS = `.meter{display:flex;align-items:center;gap:20px;border:1px sol
 .p-future .card{border-style:dashed}
 
 .mark{position:relative;display:flex;justify-content:center;margin:26px 0 20px;z-index:3}
-.mark span{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;padding:5px 16px;border-radius:99px;background:var(--bg)}
+.mark span{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-meta);font-weight:600;letter-spacing:.16em;text-transform:uppercase;padding:5px 16px;border-radius:99px;background:var(--bg)}
 .mark-now span{background:var(--next-bg);color:var(--next-fg)}
 .mark-later span{color:var(--faint);border:1px dashed var(--node)}
 
@@ -271,10 +271,10 @@ export function renderHtml(items: RoadmapItem[], labels: Record<RoadmapStatus, s
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Roadmap - PrivacyNotes</title>
-<meta name="description" content="Where PrivacyNotes is headed: native apps for every platform, then opening the full codebase and an independent security audit.">
+<meta name="description" content="Where PrivacyNotes is headed: native apps for every platform and an independent security audit.">
 <link rel="canonical" href="https://privacynotes.app/roadmap">
 <meta property="og:title" content="Roadmap - PrivacyNotes">
-<meta property="og:description" content="Where PrivacyNotes is headed: native apps for every platform, then opening the full codebase and an independent security audit.">
+<meta property="og:description" content="Where PrivacyNotes is headed: native apps for every platform and an independent security audit.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://privacynotes.app/roadmap">
 <meta property="og:site_name" content="PrivacyNotes">

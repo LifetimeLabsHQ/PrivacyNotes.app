@@ -24,7 +24,8 @@
       "replace": "Cerca i substitueix és una funció Pro. Millora per substituir una coincidència o totes les d'una nota d'un sol cop.",
       "passphrase": "Les frases de pas són una funció Pro. Genera una frase de paraules a l'atzar, fàcil d'escriure i de dir.",
       "default": "Una sola millora desbloqueja tot això. Pagament únic.",
-      "alerts": "Els recordatoris són una funció Pro. Els teus dispositius sonen a l'hora que triïs, i res de l'element no en surt."
+      "alerts": "Els recordatoris són una funció Pro. Cada dispositiu sona pel seu compte a l'hora que triïs, així que cap servei de notificacions push no veu l'element.",
+      "vaultFiles": "Els fitxers als elements de la caixa forta són una funció Pro. Guarda codis de recuperació, una clau de còpia de seguretat o un escaneig amb l'inici de sessió, la targeta o la clau a què pertanyen."
     },
     "features": {
       "devices": "Sincronitza dispositius il·limitats, a totes les plataformes",
@@ -80,7 +81,6 @@
     "loadFailed": "No s'ha pogut carregar l'historial. Comprova la connexió i torna-ho a provar.",
     "selectPrompt": "Selecciona una versió per previsualitzar-la.",
     "emptyBody": "(buida)",
-    "restore": "Restaura",
     "restoring": "S'està restaurant…",
     "restoreSnapshotFailed": "No s'ha pogut desar primer la versió actual, així que no s'ha restaurat res. Comprova la connexió i torna-ho a provar.",
     "restoreFailed": "No s'ha pogut restaurar aquesta versió. Torna-ho a provar.",

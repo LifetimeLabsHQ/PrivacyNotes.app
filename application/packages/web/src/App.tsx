@@ -18,20 +18,22 @@ import {
 } from './biometric';
 import { shouldPromptForAppLock, markAppUnlocked, clearPinUnlock, hasPin } from './pin';
 import { clearPin, phraseMatches } from './pinRecovery';
-import { phraseOwnsThisDevice } from './authStorage';
+import { phraseOwnsThisDevice, switchWouldWipe } from './authStorage';
 import { clearManualLock, lockCurtainIsStale, manualLockArmed, startReLockWatch } from './appReLock';
 import { applyPrivacyScreen } from './privacyScreen';
 import { loadLocalSettings, saveLocalSettings } from './userSettings';
 import { hasStoredSession, isTrustedDevice } from './trustStorage';
 import { isDemoMode } from './demo';
-import { detectPlatform, warmAuthEdgeFunctions } from './devices';
+import { detectPlatform, isOpenLinkModifier, warmAuthEdgeFunctions } from './devices';
 import { isApexHost, usesOfficialServer } from './hosts';
 import { isTouchPointer } from './useIsMobile';
+import { readLinkModifier } from './theme';
 import { isComputerBrowser, openShortcutInApp, peekPendingShortcut } from './noteShortcut';
 import { localeFromPath } from './localeRoutes';
 import { setLanguage } from './languages';
 import { applyMarketingSeo } from './seo';
 import i18n from './i18n';
+import { ConfirmModal } from './ConfirmModal';
 
 /** Native (Tauri) apps never show the marketing page; see LandingPage. */
 const IS_DESKTOP = detectPlatform() !== 'web';
@@ -43,7 +45,7 @@ const IS_DESKTOP = detectPlatform() !== 'web';
 // MoveScreen's stuck-state escape hatch, so the retirement metric
 // (NotesView-chunk fetches on the apex) counts only sessions that
 // genuinely cannot move yet. Demo (?demo=1) keeps its own behavior.
-// Spec: ops/docs/domain-split.md (retirement phase)
+// Spec: docs/internal/domain-split.md (retirement phase)
 const APEX_APP_RETIRED =
   isApexHost() && !isDemoMode() && detectPlatform() === 'web';
 
@@ -100,7 +102,7 @@ if (hasStoredSession()) {
 }
 
 // Loaded only when a shortcut waits for sign-in in a computer browser.
-// Spec: ops/docs/archive/note-shortcuts.md (6.2)
+// Spec: docs/internal/specs/note-shortcuts.md (6.2)
 const ShortcutSignInCard = lazy(() => import('./ShortcutOffer').then((m) => ({ default: m.ShortcutSignInCard })));
 
 export default function App() {
@@ -163,7 +165,7 @@ export default function App() {
   // (auth.tsx) and the updater (DesktopUpdater.tsx) already call openUrl
   // directly; this covers every other link (note content, footer,
   // About/Feedback/Donation modals, etc.).
-  // Spec: ops/docs/macos-ios-setup.md (native flows use the same opener plugin)
+  // Spec: docs/internal/macos-ios-setup.md (native flows use the same opener plugin)
   useEffect(() => {
     if (!IS_DESKTOP) return;
     const onClick = (e: MouseEvent) => {
@@ -172,15 +174,17 @@ export default function App() {
       const href = anchor?.getAttribute('href');
       // tel: and sms: ride along with mailto:: a contact's number is a
       // handoff to the dialer, which the WebView cannot make on its own.
-      // Spec: ops/docs/archive/contacts-pillar.md (section 9, tap to call)
+      // Spec: docs/internal/specs/contacts-pillar.md (section 9, tap to call)
       if (!href || !/^(https?:|mailto:|tel:|sms:)/i.test(href)) return;
       // A mouse click on a link inside a note being written is opened by
       // `editorLinks.ts`, which also knows a file link from an address.
       // A finger keeps this route.
       if (!isTouchPointer() && anchor?.closest('[contenteditable="true"]')) return;
       e.preventDefault();
+      // "Open links with Cmd-click" covers a read-only note too (GitHub #633).
+      if (readLinkModifier() && !isTouchPointer() && !isOpenLinkModifier(e) && anchor?.closest('.ProseMirror')) return;
       // A shortcut to an item of this vault opens in place.
-      // Spec: ops/docs/archive/note-shortcuts.md (5.4)
+      // Spec: docs/internal/specs/note-shortcuts.md (5.4)
       if (openShortcutInApp(href)) return;
       // iOS presents web links in an in-app SFSafariViewController sheet
       // ('inAppBrowser' is built into the opener plugin) instead of
@@ -267,9 +271,9 @@ export default function App() {
     // Wrapped-only state: enabling app lock strips the stored
     // phrase, so after a reload the ONLY path back into the session
     // runs through an unlock - the phrase exists nowhere else. That
-    // holds whatever the flag says. The flag is synced, and switching
-    // the lock off on another device writes the phrase back there, not
-    // here; unlocked, this device would boot to the sign-in screen with
+    // holds whatever the flag says. A version before #662 synced the
+    // flag, and switching the lock off on another device wrote the
+    // phrase back there, not here; unlocked, this device would boot to the sign-in screen with
     // a wrap on disk that nothing opens. Locked, the unlock's sign-in
     // finds the lock no longer armed and writes the phrase back, so the
     // next start is a normal one. The re-lock window must not excuse
@@ -288,7 +292,7 @@ export default function App() {
   // Arm the native cover the operating system photographs in place of the
   // notes. Settings writes carry it from then on (writeLocal in
   // userSettings.ts); a cold start writes nothing, so it starts here.
-  // Spec: ops/docs/archive/app-switcher-privacy-screen.md
+  // Spec: docs/internal/specs/app-switcher-privacy-screen.md
   useEffect(() => {
     applyPrivacyScreen(loadLocalSettings().appLockEnabled);
   }, []);
@@ -297,7 +301,7 @@ export default function App() {
   // open and signed in: locking a lock screen is a no-op, and locking a
   // half-booted session would fight the boot check above. The watch itself
   // decides whether this device has a door back in.
-  // Spec: ops/docs/biometric-unlock.md (section 3.3 re-lock)
+  // Spec: docs/contrib/biometric-unlock.md (section 3.3 re-lock)
   useEffect(() => {
     if (locked || auth.status !== 'authenticated') return;
     return startReLockWatch(() => setLocked(true));
@@ -376,7 +380,7 @@ export default function App() {
    * last door and the phrase did not read back at rest. The PIN then stays
    * and the unlock goes ahead: the phrase has already proved itself, and
    * the next lock screen offers the same door.
-   * Spec: ops/docs/archive/pin-recovery.md
+   * Spec: docs/internal/specs/pin-recovery.md
    */
   async function applyPinRecovery(phrase: string) {
     const cleared = await clearPin(loadLocalSettings(), phrase);
@@ -491,7 +495,7 @@ export default function App() {
   // blanks the fragment out of the address bar immediately - we don't
   // want the master secret sitting in the URL longer than needed.
   // A shortcut that waits for sign-in offers the desktop app first, in a
-  // computer browser. Spec: ops/docs/archive/note-shortcuts.md (6.2)
+  // computer browser. Spec: docs/internal/specs/note-shortcuts.md (6.2)
   // Read on every render, so a target the notes view already opened never
   // shows on a later sign-in screen.
   const [shortcutCardOpen, setShortcutCardOpen] = useState(isComputerBrowser);
@@ -532,8 +536,20 @@ export default function App() {
     }
   }, [pendingSignIn, auth.status]);
 
+  // A sign-in link carries somebody's phrase, so opening one on a device that
+  // holds another account's data would clear that data with no question:
+  // the three other doors ask through `switchWouldWipe`, and this one did
+  // not. Asked here rather than in the provider for the reason the phrase
+  // screen asks in its own component (auth.tsx, askAccountSwitch).
+  const [askPendingSwitch, setAskPendingSwitch] = useState(false);
+  const pendingSwitchConfirmed = useRef(false);
+
   async function handleConfirmPendingPhrase(captchaToken?: string) {
     if (!pendingSignIn) return;
+    if (!pendingSwitchConfirmed.current && (await switchWouldWipe(pendingSignIn))) {
+      setAskPendingSwitch(true);
+      return;
+    }
     setPromptBusy(true);
     setPromptError(null);
     const result = await signInWithPhrase(pendingSignIn, promptTrustDevice, false, captchaToken);
@@ -634,7 +650,27 @@ export default function App() {
             <ShortcutSignInCard target={shortcutCard} onSignIn={() => setShortcutCardOpen(false)} />
           </Suspense>
         )}
-        {pendingSignIn && (
+        {pendingSignIn && askPendingSwitch && (
+          <ConfirmModal
+            title={i18n.t('auth:signIn.switchTitle')}
+            confirmLabel={i18n.t('auth:signIn.switchConfirm')}
+            variant="info"
+            onConfirm={() => {
+              pendingSwitchConfirmed.current = true;
+              setAskPendingSwitch(false);
+              void handleConfirmPendingPhrase();
+            }}
+            // The confirm button runs onConfirm and then onClose
+            // (Onboarding.tsx has the same guard).
+            onClose={() => {
+              if (pendingSwitchConfirmed.current) return;
+              setAskPendingSwitch(false);
+            }}
+          >
+            {i18n.t('auth:signIn.switchBody')}
+          </ConfirmModal>
+        )}
+        {pendingSignIn && !askPendingSwitch && (
           <QrSignInPrompt
             phrase={pendingSignIn}
             onConfirm={handleConfirmPendingPhrase}

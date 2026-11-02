@@ -7,7 +7,7 @@
  * line with the Markdown marks stripped, and the pane scrolls that place to
  * where the block was. The percent stays as the estimate that picks between
  * two places with the same words, and as the fallback when nothing matches.
- * Spec: ops/issues/0493.md (Reading position)
+ * Spec: docs/internal/issues/0493.md (Reading position)
  */
 
 import { stripToPlainText } from './notesViewUtils';

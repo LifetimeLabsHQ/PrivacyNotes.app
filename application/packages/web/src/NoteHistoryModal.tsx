@@ -21,7 +21,6 @@ import { loadLocalSettings } from './userSettings';
 // Its own chunk: the vault rows pull in the vault forms and the detail
 // rows, which the plain note preview never needs.
 const VaultVersionPreview = lazyPart(() => import('./VaultVersionPreview').then((m) => m.VaultVersionPreview));
-
 /**
  * Pro: browse + restore note versions.
  *
@@ -85,6 +84,10 @@ type Props = {
   onClose: () => void;
   /** Apply the selected version's content to the live note. */
   onRestore: (v: NoteVersion) => Promise<void> | void;
+  /** A drawing's version, drawn by the canvas (DrawingVersion in
+   *  drawing/DrawingItem.tsx). Handed down: this lazy chunk imports none of
+   *  the drawing code (docs/contrib/bundle-size.md section 8). */
+  drawingVersion?: (body: string) => React.ReactNode;
 };
 
 export function NoteHistoryModal({
@@ -94,6 +97,7 @@ export function NoteHistoryModal({
   encryptionKey,
   onClose,
   onRestore,
+  drawingVersion,
 }: Props) {
   const { t } = useTranslation('billing');
   const [versions, setVersions] = useState<NoteVersion[] | null>(null);
@@ -104,7 +108,8 @@ export function NoteHistoryModal({
   const [err, setErr] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const canCompare = !VAULT_TYPES.has(noteType);
+  // A drawing has no words to compare: its versions are pictures.
+  const canCompare = !VAULT_TYPES.has(noteType) && noteType !== 'drawing';
   // On by default where the two sides fit next to each other (the lg width
   // the layout below switches at); a narrow screen opens on the preview.
   const [compare, setCompare] = useState(() => window.matchMedia?.('(min-width: 1024px)').matches ?? false);
@@ -195,16 +200,16 @@ export function NoteHistoryModal({
               growing or shrinking with the script a locale is written in. */}
           <div className="max-h-52 sm:max-h-none sm:w-56 shrink-0 border-b sm:border-b-0 sm:border-e border-divider overflow-y-auto">
             {versions === null && !err && !loadFailed && (
-              <div className="p-4 text-[13px] text-pn-muted">{t('common:state.loading')}</div>
+              <div className="p-4 text-compact text-pn-muted">{t('common:state.loading')}</div>
             )}
             {loadFailed && (
-              <div className="p-4 text-[13px] text-danger">{t('history.loadFailed')}</div>
+              <div className="p-4 text-compact text-danger">{t('history.loadFailed')}</div>
             )}
             {err && (
-              <div className="p-4 text-[13px] text-danger">{err}</div>
+              <div className="p-4 text-compact text-danger">{err}</div>
             )}
             {versions && versions.length === 0 && (
-              <div className="p-4 text-[13px] text-pn-muted leading-relaxed">
+              <div className="p-4 text-compact text-pn-muted leading-relaxed">
                 {t('history.empty')}
               </div>
             )}
@@ -224,13 +229,13 @@ export function NoteHistoryModal({
                         : 'hover:bg-surface-1/60'
                     }`}
                   >
-                    <div className="text-[13px] font-medium tabular-nums">
+                    <div className="text-compact font-medium tabular-nums">
                       {formatInstant(v.createdAt, 'dateTime')}
                     </div>
-                    <div className="text-[11px] text-pn-muted mt-0.5 truncate">
+                    <div className="text-meta text-pn-muted mt-0.5 truncate">
                       {versionName(noteType, v) || t('common:state.untitled')}
                     </div>
-                    <div className="text-[11px] text-pn-muted tabular-nums mt-0.5">
+                    <div className="text-meta text-pn-muted tabular-nums mt-0.5">
                       {formatBytes(v.bodyBytes)}
                     </div>
                   </button>
@@ -251,7 +256,7 @@ export function NoteHistoryModal({
               <>
                 <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-divider shrink-0">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="text-sm text-pn-muted">
+                    <div className="text-body text-pn-muted">
                       {formatInstant(selected.createdAt, 'dateTime')}
                     </div>
                     {canCompare && (
@@ -262,7 +267,7 @@ export function NoteHistoryModal({
                           setCompare(!compare);
                           setDiff(undefined);
                         }}
-                        className={`shrink-0 rounded-md border px-2.5 py-1 text-[12px] transition ${
+                        className={`shrink-0 rounded-md border px-2.5 py-1 text-small transition ${
                           compare ? 'border-accent bg-accent/10 text-pn' : 'border-divider hover:bg-pn/5 text-pn-soft'
                         }`}
                       >
@@ -270,7 +275,7 @@ export function NoteHistoryModal({
                       </button>
                     )}
                   </div>
-                  <h3 className="text-base sm:text-lg font-semibold truncate mt-0.5">
+                  <h3 className="text-title sm:text-heading font-semibold truncate mt-0.5">
                     {versionName(noteType, selected) || t('common:state.untitled')}
                   </h3>
                   {selected.tags.length > 0 && (
@@ -279,7 +284,7 @@ export function NoteHistoryModal({
                         <span
                           key={t}
                           dir="auto"
-                          className="text-[11px] px-1.5 py-0.5 rounded bg-pn/10 text-pn-soft"
+                          className="text-meta px-1.5 py-0.5 rounded bg-pn/10 text-pn-soft"
                         >
                           #{t}
                         </span>
@@ -295,7 +300,7 @@ export function NoteHistoryModal({
                     cleanly instead of trying to diff it. */}
                 {comparing ? (
                   <>
-                    <div className="px-4 sm:px-6 py-2 border-b border-divider shrink-0 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px]">
+                    <div className="px-4 sm:px-6 py-2 border-b border-divider shrink-0 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-small">
                       <div role="group" className="lg:hidden inline-flex rounded-md border border-divider overflow-hidden">
                         {(['older', 'current'] as const).map((s) => (
                           <button
@@ -331,7 +336,7 @@ export function NoteHistoryModal({
                         aria-label={t('history.thisVersion')}
                         className={`${side === 'older' ? 'flex' : 'hidden'} lg:flex flex-col flex-1 min-w-0 lg:border-e border-divider`}
                       >
-                        <div className="hidden lg:block px-6 pt-3 text-[12px] font-medium text-pn-muted">
+                        <div className="hidden lg:block px-6 pt-3 text-small font-medium text-pn-muted">
                           {t('history.thisVersion')}
                         </div>
                         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
@@ -342,7 +347,7 @@ export function NoteHistoryModal({
                         aria-label={t('history.currentNote')}
                         className={`${side === 'current' ? 'flex' : 'hidden'} lg:flex flex-col flex-1 min-w-0`}
                       >
-                        <div className="hidden lg:block px-6 pt-3 text-[12px] font-medium text-pn-muted">
+                        <div className="hidden lg:block px-6 pt-3 text-small font-medium text-pn-muted">
                           {t('history.currentNote')}
                         </div>
                         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
@@ -357,34 +362,36 @@ export function NoteHistoryModal({
                     <Suspense fallback={null}>
                       <VaultVersionPreview key={selected.id} version={selected} type={noteType} />
                     </Suspense>
+                  ) : noteType === 'drawing' && drawingVersion ? (
+                    <div key={selected.id} className="contents">{drawingVersion(selected.body)}</div>
                   ) : readableBody(noteType, selected.body, selected.trackers).trim() ? (
                     <Editor key={selected.id} value={readableBody(noteType, selected.body, selected.trackers)} onChange={noop} readOnly preview />
                   ) : (
                     <div className="text-pn-muted italic">{t('history.emptyBody')}</div>
                   )}
                   {noteType === 'journal' && selected.trackers === undefined && (
-                    <p className="mt-3 text-[12px] text-pn-muted">{t('history.trackersNotRecorded')}</p>
+                    <p className="mt-3 text-small text-pn-muted">{t('history.trackersNotRecorded')}</p>
                   )}
                 </div>
                 )}
                 <div className="px-4 sm:px-6 py-3 border-t border-divider flex items-center justify-end gap-2 shrink-0">
                   <button
                     onClick={onClose}
-                    className="rounded-md border border-divider hover:bg-pn/5 px-3 py-2 text-sm transition"
+                    className="rounded-md border border-divider hover:bg-pn/5 px-3 py-2 text-body transition"
                   >
                     {t('common:actions.cancel')}
                   </button>
                   <button
                     onClick={() => void handleRestore()}
                     disabled={busy}
-                    className="rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover disabled:opacity-50 px-3 py-2 text-sm font-medium transition whitespace-nowrap"
+                    className="rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover disabled:opacity-50 px-3 py-2 text-body font-medium transition whitespace-nowrap"
                   >
-                    {busy ? t('history.restoring') : t('history.restore')}
+                    {busy ? t('history.restoring') : t('shell:contextMenu.restore')}
                   </button>
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-[13px] text-pn-muted">
+              <div className="flex-1 flex items-center justify-center text-compact text-pn-muted">
                 {t('history.selectPrompt')}
               </div>
             )}

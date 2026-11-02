@@ -1,11 +1,9 @@
 {
   "captionFolder": "Klasör",
   "captionTag": "Etiket",
-  "captionNote": "Not",
   "captionTracker": "Takip",
   "useDefault": "Varsayılanı kullan",
   "color": "Renk",
-  "noColor": "Renksiz",
   "applyToSubfolders": "Rengi alt klasörlere uygula",
   "icon": "Simge",
   "searchPlaceholder": "Simgelerde ara",

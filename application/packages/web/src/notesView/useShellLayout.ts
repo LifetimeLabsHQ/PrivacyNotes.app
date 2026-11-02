@@ -49,7 +49,7 @@ export function useShellLayout(view: View, t: TFunction) {
   // below xl as a session override; crossing the xl line resets the
   // sidebar to its width default, so the choice is deliberately NOT
   // persisted anymore.
-  // Spec: ops/docs/archive/ui-patterns.md section 40 (canonical breakpoints)
+  // Spec: docs/internal/design/ui-patterns.md section 40 (canonical breakpoints)
   const [xlScreen, setXlScreen] = useState<boolean>(
     () => typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches,
   );
@@ -63,7 +63,7 @@ export function useShellLayout(view: View, t: TFunction) {
   // reseed the sidebar does at the xl line above. The mount read is gated
   // too, so a device that is already stuck heals on its next launch
   // instead of painting one blank frame first.
-  // Spec: ops/docs/archive/ui-patterns.md section 56 (pane resize strips)
+  // Spec: docs/internal/design/ui-patterns.md section 56 (pane resize strips)
   const [mdScreen, setMdScreen] = useState<boolean>(
     () => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches,
   );
@@ -87,7 +87,7 @@ export function useShellLayout(view: View, t: TFunction) {
    *  the list by hand ends it, and leaving the Calendar or widening the window
    *  past lg restores the list. A window narrowed below lg folds it too. The
    *  calendar header's agenda button opens and folds it by hand.
-   *  Spec: ops/docs/archive/calendar-pillar-spec.md (step 3, responsiveness) */
+   *  Spec: docs/internal/specs/calendar-pillar-spec.md (step 3, responsiveness) */
   const calendarFoldRef = useRef<boolean | null>(null);
   const [viewsCollapsed, setViewsCollapsed] = useState<boolean>(
     () => readUiBool('privacynotes.ui.viewsCollapsed', false)
@@ -97,7 +97,7 @@ export function useShellLayout(view: View, t: TFunction) {
   // collapse boolean, collapsing never rewrites a width, and the stored
   // width simply applies whenever the pane is expanded (so it survives
   // the sidebar's session-only xl reseed below).
-  // Spec: ops/docs/design-decisions.md (pane resize)
+  // Spec: docs/internal/design-decisions.md (pane resize)
   const [sidebarWidth, setSidebarWidth] = useState<number>(
     () => readUiPx('privacynotes.ui.sidebarWidth', SIDEBAR_WIDTH_DEFAULT, SIDEBAR_WIDTH_MIN, SIDEBAR_WIDTH_MAX)
   );

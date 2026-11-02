@@ -5,6 +5,7 @@ import {
   ArrowDown as ArrowDownIcon,
   ArrowLeft as ArrowLeftIcon,
   ArrowRight as ArrowRightIcon,
+  PaintBucket as PaintBucketIcon,
   Trash as TrashIcon,
 } from './icons';
 import { type Editor as TipTapEditor } from '@tiptap/react';
@@ -12,6 +13,9 @@ import { HoverLabel } from './HoverLabel';
 import { clearTableWidths, tableWidths } from './tableColumnResize';
 import { useProGate } from './ui';
 import { caretCell } from './tableFormulaInsert';
+import { caretCellFill } from './editorTables';
+import { useToolbarPopover } from './editorToolbarParts';
+import { CellFillPanel } from './editorToolbarPopovers';
 
 // ------------------------------------------------------------------
 // Table Controls (floating toolbar glued below the active table)
@@ -31,6 +35,11 @@ export function TableControls({ editor, formulasUnlocked, onUpgrade }: { editor:
   const toolbarRef = useRef<HTMLDivElement>(null);
   const equalRef = useRef<HTMLSpanElement>(null);
   const proGate = useProGate(formulasUnlocked, onUpgrade);
+  // The cell color panel (#616). It closes with the bar, so a caret that
+  // leaves the table by keyboard does not leave it floating.
+  const fill = useToolbarPopover('wrap');
+  const closeFill = useRef(fill.setOpen);
+  closeFill.current = fill.setOpen;
 
   /**
    * The button types `=` into the cell and lets the suggestion plugin take
@@ -75,7 +84,7 @@ export function TableControls({ editor, formulasUnlocked, onUpgrade }: { editor:
     if (!toolbar) return;
     let frame = 0;
 
-    const hide = () => { toolbar.style.display = 'none'; };
+    const hide = () => { toolbar.style.display = 'none'; closeFill.current(false); };
 
     const place = () => {
       frame = 0;
@@ -127,26 +136,26 @@ export function TableControls({ editor, formulasUnlocked, onUpgrade }: { editor:
       {/* + Row above */}
       <HoverLabel label={t('table.addRowAbove')} position="below">
         <button type="button" className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().addRowBefore().run(); }}>
-          <ArrowUpIcon size={16} />
+          <ArrowUpIcon />
         </button>
       </HoverLabel>
       {/* + Row below */}
       <HoverLabel label={t('table.addRowBelow')} position="below">
         <button type="button" className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().addRowAfter().run(); }}>
-          <ArrowDownIcon size={16} />
+          <ArrowDownIcon />
         </button>
       </HoverLabel>
       <div className="pn-table-toolbar-divider" />
       {/* + Col left */}
       <HoverLabel label={t('table.addColumnLeft')} position="below">
         <button type="button" className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().addColumnBefore().run(); }}>
-          <ArrowLeftIcon size={16} />
+          <ArrowLeftIcon />
         </button>
       </HoverLabel>
       {/* + Col right */}
       <HoverLabel label={t('table.addColumnRight')} position="below">
         <button type="button" className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().addColumnAfter().run(); }}>
-          <ArrowRightIcon size={16} />
+          <ArrowRightIcon />
         </button>
       </HoverLabel>
       <div className="pn-table-toolbar-divider" />
@@ -160,6 +169,18 @@ export function TableControls({ editor, formulasUnlocked, onUpgrade }: { editor:
         </button>
       </HoverLabel>
       <div className="pn-table-toolbar-divider" />
+      {/* Cell color: the highlight palette, for the selected cells or the
+          caret's cell. The header row is cells too, so it takes any color. */}
+      <div ref={fill.wrapRef} className="flex">
+        <HoverLabel label={t('table.cellColor')} position="below">
+          <button type="button" aria-label={t('table.cellColor')} aria-expanded={fill.open} className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); fill.setOpen(!fill.open); }}>
+            <PaintBucketIcon />
+          </button>
+        </HoverLabel>
+      </div>
+      {fill.open && (
+        <CellFillPanel popoverRef={fill.popoverRef} pos={fill.pos} onClose={() => fill.setOpen(false)} editor={editor} current={caretCellFill(editor)} />
+      )}
       {/* Header row on/off. New tables carry one, and it is what lets a table
           be written as a pipe table rather than as raw HTML, so turning it off
           is a choice worth being able to reverse. */}
@@ -193,7 +214,7 @@ export function TableControls({ editor, formulasUnlocked, onUpgrade }: { editor:
       {/* Delete table */}
       <HoverLabel label={t('table.deleteTable')} position="below">
         <button type="button" className="pn-table-toolbar-btn pn-table-toolbar-danger" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().deleteTable().run(); }}>
-          <TrashIcon size={16} />
+          <TrashIcon />
         </button>
       </HoverLabel>
     </div>

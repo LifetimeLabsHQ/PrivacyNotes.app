@@ -13,7 +13,7 @@ import { LogoIcon } from './LogoIcon';
  * This screen makes the failure visible and recoverable: retry against
  * the current session, or give up and return to the sign-in options.
  * Nothing is wiped either way.
- * Spec: ops/docs/domain-split.md (pre-cutover gate)
+ * Spec: docs/internal/domain-split.md (pre-cutover gate)
  */
 export function OAuthRetryScreen({ trust }: { trust: boolean }) {
   const { t } = useTranslation('auth');
@@ -27,8 +27,8 @@ export function OAuthRetryScreen({ trust }: { trust: boolean }) {
           <LogoIcon size={40} />
         </div>
         <div className="space-y-2">
-          <h1 className="text-lg font-semibold">{t('hydrateError.title')}</h1>
-          <p className="text-sm text-pn-muted leading-relaxed">
+          <h1 className="text-heading font-semibold">{t('hydrateError.title')}</h1>
+          <p className="text-body text-pn-muted leading-relaxed">
             {t('hydrateError.body')}
           </p>
         </div>
@@ -47,7 +47,7 @@ export function OAuthRetryScreen({ trust }: { trust: boolean }) {
           type="button"
           disabled={busy}
           onClick={() => void abandonOAuthHydration()}
-          className="w-full text-sm text-pn-muted hover:text-pn transition"
+          className="w-full text-body text-pn-muted hover:text-pn transition"
         >
           {t('oauthHandoff.backToOptions')}
         </button>

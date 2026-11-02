@@ -48,7 +48,7 @@ export function EmotionsPill({
         <PanelQuestion>{t('emotions.prompt')}</PanelQuestion>
         {(['positive', 'neutral', 'negative'] as const).map((valence) => (
           <div key={valence}>
-            <span className={`block text-[11px] font-medium mb-1 ${
+            <span className={`block text-meta font-medium mb-1 ${
               valence === 'positive'
                 ? 'text-success'
                 : valence === 'neutral'
@@ -97,7 +97,7 @@ function TagChip({
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={`inline-flex items-center h-7 px-2.5 rounded-md border text-[12px] font-medium transition-colors ${
+      className={`inline-flex items-center h-7 px-2.5 rounded-md border text-small font-medium transition-colors ${
         selected
           ? `${colorClass} border-current/25`
           : 'border-transparent bg-surface-0 text-pn-soft hover:bg-pn/10 hover:text-pn'

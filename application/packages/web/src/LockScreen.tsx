@@ -13,14 +13,14 @@
  * The PIN field is the one the wrap was made with: four boxes for a PIN, one
  * field for a passcode. It reads the wrap's own salt, never the cached hash,
  * because the two can come from different writes and the wrap is what this
- * screen opens. Spec: ops/docs/plans/app-lock-passcode.md (section 4.2)
+ * screen opens. Spec: docs/internal/plans/app-lock-passcode.md (section 4.2)
  *
  * The phrase opens two different doors, so the screen asks which one. Plain
  * re-entry unlocks and leaves the PIN alone, for somebody who simply
  * prefers typing the words. "Forgot your PIN?" unlocks and clears the PIN,
  * which is the only route out of one nobody remembers - the hash is synced,
  * so signing out and back in restores it.
- * Spec: ops/docs/archive/pin-recovery.md
+ * Spec: docs/internal/specs/pin-recovery.md
  *
  * The lock screen unwraps the phrase from an encrypted blob and
  * passes it back to the parent via `onUnlock(phrase)`. No note
@@ -160,7 +160,7 @@ export function LockScreen({ onUnlock, signInState = 'idle', onRetrySignIn, onWr
       // pressing the button again cannot help. A cancel says nothing then.
       // A hardware key the OS destroyed never comes back: the button goes, and
       // the line says biometric unlock must be set up again. The doors below
-      // stay. Spec: ops/docs/plans/biometric-key-binding.md (D6)
+      // stay. Spec: docs/internal/plans/biometric-key-binding.md (D6)
       if (failure === 'gone') {
         setBiometricAvailable(false);
         setBiometricError(t('lockScreen.biometricGone'));
@@ -181,12 +181,12 @@ export function LockScreen({ onUnlock, signInState = 'idle', onRetrySignIn, onWr
       <LockShell>
         <div className="space-y-4 text-center">
           {signInState === 'busy' ? (
-            <p className="text-sm text-pn-muted">
+            <p className="text-body text-pn-muted">
               {t('lockScreen.signingIn')}
             </p>
           ) : (
             <>
-              <p className="text-sm text-danger">
+              <p className="text-body text-danger">
                 {t('lockScreen.signInFailed')}
               </p>
               <Button action="retry" variant="primary" onClick={onRetrySignIn} className="w-full">
@@ -218,13 +218,13 @@ export function LockScreen({ onUnlock, signInState = 'idle', onRetrySignIn, onWr
         <LockLines />
 
         <div>
-          <h1 className="text-lg font-semibold text-pn">
+          <h1 className="text-heading font-semibold text-pn">
             <Trans
               i18nKey="security:lockScreen.unlockApp"
               components={{ brand: <Brand /> }}
             />
           </h1>
-          <p className="text-sm text-pn-muted mt-1">
+          <p className="text-body text-pn-muted mt-1">
             {kind === 'passcode'
               ? biometricAvailable ? t('lockScreen.subtitleWithBioPasscode') : t('lockScreen.subtitleNoBioPasscode')
               : biometricAvailable ? t('lockScreen.subtitleWithBio') : t('lockScreen.subtitleNoBio')}
@@ -232,7 +232,7 @@ export function LockScreen({ onUnlock, signInState = 'idle', onRetrySignIn, onWr
         </div>
 
         {biometricError && (
-          <p className="text-sm text-danger">{biometricError}</p>
+          <p className="text-body text-danger">{biometricError}</p>
         )}
 
         <div className="space-y-3">
@@ -245,7 +245,7 @@ export function LockScreen({ onUnlock, signInState = 'idle', onRetrySignIn, onWr
             <Button
               autoFocus
               variant="primary"
-              icon={<Fingerprint size={15} aria-hidden="true" className="shrink-0" />}
+              icon={<Fingerprint aria-hidden="true" className="shrink-0" />}
               onClick={() => void handleBiometric(false)}
               disabled={biometricBusy}
               className="w-full"
@@ -274,10 +274,10 @@ export function LockScreen({ onUnlock, signInState = 'idle', onRetrySignIn, onWr
           <button
             type="button"
             onClick={() => setView('phrase')}
-            className="w-full inline-flex items-center justify-center gap-1 text-sm text-pn-muted hover:text-pn hover:underline py-2 transition"
+            className="w-full inline-flex items-center justify-center gap-1 text-body text-pn-muted hover:text-pn hover:underline py-2 transition"
           >
             {t('lockScreen.signInWithPhrase')}
-            <ArrowRight size={14} aria-hidden="true" className="shrink-0" />
+            <ArrowRight aria-hidden="true" className="shrink-0" />
           </button>
 
         </div>
@@ -329,8 +329,10 @@ function LockLines() {
           upward and nothing below it moves. */}
       <div className="relative left-1/2 flex min-h-10 w-[calc(100vw-3rem)] max-w-xl -translate-x-1/2 items-end justify-center">
         {/* A person typing, not the loading screen's machine: calmer, and it
-            does not pull the eye from the PIN. */}
-        <TypewriterRotation paused={paused} human />
+            does not pull the eye from the PIN. Every line once, then the
+            last one stays: a lock screen up all night must not animate all
+            night (issue #643). */}
+        <TypewriterRotation paused={paused} human once />
       </div>
       <div className="mx-auto flex w-32 items-center gap-2">
         <span className="h-px flex-1 bg-divider" />
@@ -340,7 +342,7 @@ function LockLines() {
           onClick={toggle}
           className="!h-7 !w-7 !rounded-full border border-divider bg-surface-1"
         >
-          {paused ? <Play size={12} aria-hidden="true" /> : <Pause size={12} aria-hidden="true" />}
+          {paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
         </IconButton>
         <span className="h-px flex-1 bg-divider" />
       </div>
@@ -499,12 +501,12 @@ function PinUnlock({
       />
 
       {error && (
-        <p className="w-0 min-w-full text-sm text-danger text-center">{error}</p>
+        <p className="w-0 min-w-full text-body text-danger text-center">{error}</p>
       )}
 
         <Button
           variant={quiet ? 'secondary' : 'primary'}
-          icon={<LockKeyOpen size={15} aria-hidden="true" className="shrink-0" />}
+          icon={<LockKeyOpen aria-hidden="true" className="shrink-0" />}
           onClick={() => void submit(value)}
           disabled={!secretReady(kind, value) || busy || lockout.locked}
           className="w-full"
@@ -518,10 +520,10 @@ function PinUnlock({
       <button
         type="button"
         onClick={onForgotPin}
-        className="w-full inline-flex items-center justify-center gap-1 text-sm text-accent hover:underline py-1 transition"
+        className="w-full inline-flex items-center justify-center gap-1 text-body text-accent hover:underline py-1 transition"
       >
         {kind === 'passcode' ? t('pinRecovery.titlePasscode') : t('pinRecovery.title')}
-        <ArrowRight size={14} aria-hidden="true" className="shrink-0" />
+        <ArrowRight aria-hidden="true" className="shrink-0" />
       </button>
     </div>
   );
@@ -548,7 +550,7 @@ function PhraseUnlock({
   async function handleSubmit() {
     const trimmed = input.trim().toLowerCase();
     if (!isValidPhrase(trimmed)) {
-      setError(t('lockScreen.invalidPhrase'));
+      setError(t('auth:importPhrase.invalidPhrase'));
       return;
     }
     // Two different refusals, and they must not share a line. The checksum
@@ -563,12 +565,12 @@ function PhraseUnlock({
     <div className="space-y-5">
       {/* One way out, Cancel below: a Back link here did the same. */}
       <div className="text-center space-y-2">
-        <h2 className="text-lg font-semibold text-pn">
+        <h2 className="text-heading font-semibold text-pn">
           {!recover
             ? t('lockScreen.recoveryPhrase')
             : kind === 'passcode' ? t('pinRecovery.titlePasscode') : t('pinRecovery.title')}
         </h2>
-        <p className="text-sm text-pn-muted text-balance">
+        <p className="text-body text-pn-muted text-balance">
           {!recover
             ? t('lockScreen.recoveryPhraseSubtitle')
             : kind === 'passcode' ? t('pinRecovery.lockIntroPasscode') : t('pinRecovery.lockIntro')}
@@ -581,7 +583,7 @@ function PhraseUnlock({
           setInput(e.target.value);
           setError(null);
         }}
-        placeholder={t('lockScreen.phrasePlaceholder')}
+        placeholder={t('auth:importPhrase.placeholder')}
         // A phone keyboard must neither rewrite a phrase word nor learn it.
         spellCheck={false}
         autoCapitalize="none"
@@ -589,19 +591,19 @@ function PhraseUnlock({
         autoComplete="off"
         rows={3}
         dir="ltr" // rtl-ok: BIP-39 phrase words, always LTR
-        className="w-full rounded-md bg-surface-1 border border-divider text-pn focus:border-accent p-3 text-sm font-mono focus:outline-none placeholder:text-pn-muted"
+        className="w-full rounded-md bg-surface-1 border border-divider text-pn focus:border-accent p-3 text-body font-mono focus:outline-none placeholder:text-pn-muted"
         autoFocus
       />
 
       {error && (
-        <p className="text-sm text-danger">{error}</p>
+        <p className="text-body text-danger">{error}</p>
       )}
 
       <div className="flex gap-2">
         <Button action="cancel" onClick={onBack} className="flex-1" />
         <Button
           variant="primary"
-          icon={<LockKeyOpen size={15} aria-hidden="true" className="shrink-0" />}
+          icon={<LockKeyOpen aria-hidden="true" className="shrink-0" />}
           onClick={() => void handleSubmit()}
           disabled={!input.trim()}
           className="flex-1"

@@ -5,7 +5,7 @@
  * the clipper's download path, and read by the Google Calendar importer.
  * Nothing is kept: a private calendar address is as secret as a password, so
  * it never goes into a log, a message or the import summary.
- * Spec: ops/issues/0548.md (Spec, design A)
+ * Spec: docs/internal/issues/0548.md (Spec, design A)
  */
 import { clipDownload, type TokenSource } from '../clipDownload';
 

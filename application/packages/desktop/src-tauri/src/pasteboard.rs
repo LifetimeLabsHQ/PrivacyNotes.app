@@ -12,7 +12,7 @@
 //! bindings, so no new package enters Cargo.lock - the same trade
 //! `file_assoc.rs` and `biometric.rs` make.
 //!
-//! Spec: ops/docs/archive/paste-pictures.md (section 3.4)
+//! Spec: docs/internal/specs/paste-pictures.md (section 3.4)
 
 use serde::Serialize;
 

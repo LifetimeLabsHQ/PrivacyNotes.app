@@ -1,6 +1,4 @@
 {
-  "dismiss": "Sluiten",
-  "close": "Sluiten",
   "moveBanner": {
     "bodySignIn": "Meld je daar aan met je herstelzin of via \"{{scanQr}}\".",
     "cta": "Nu verhuizen",
@@ -49,7 +47,7 @@
   },
   "signOutConfirm": {
     "title": "Heb je je 12-woordenzin opgeslagen?",
-    "body": "Je herstelzin is de <only>enige</only> manier om weer binnen te komen. Geen e-mailherstel, geen helpdesk. We weten niet wie je bent, en dat is met opzet. Heb je hem nog niet opgeschreven, tik dan op <action>Nee, toon herstelzin</action> en we openen hem meteen voor je.",
+    "body": "Je herstelzin is de <only>enige</only> manier om weer binnen te komen. Geen e-mailherstel, geen helpdesk. Heb je hem nog niet opgeschreven, tik dan op <action>Nee, toon herstelzin</action> en we openen hem meteen voor je.",
     "unsyncedWarn_one": "1 notitie op dit apparaat is nog niet gesynchroniseerd. Die gaat definitief verloren als uploaden tijdens het afmelden mislukt.",
     "unsyncedWarn_other": "{{count}} notities op dit apparaat zijn nog niet gesynchroniseerd. Die gaan definitief verloren als uploaden tijdens het afmelden mislukt.",
     "unsyncedKept_one": "1 notitie op dit apparaat is nog niet gesynchroniseerd. Die blijft op dit apparaat staan en synchroniseert zodra je je weer aanmeldt.",
@@ -73,6 +71,12 @@
     "moreNotes": "en nog {{count}}",
     "appLockHint": "Gedeeld apparaat? Zet de app-vergrendeling aan onder Instellingen > Beveiliging."
   },
+  "signOutUpload": {
+    "uploading": "Je laatste wijzigingen uploaden…",
+    "title": "Sommige wijzigingen zijn nog niet geüpload",
+    "body": "Als je je nu afmeldt, gaan de wijzigingen die je sinds de laatste synchronisatie op dit apparaat hebt gemaakt verloren. Maak verbinding met internet om ze te bewaren.",
+    "signOutAnyway": "Toch afmelden"
+  },
   "burnShareModal": {
     "title": "Delen & vernietigen na lezen",
     "body": "<lead>Je oorspronkelijke notitie wordt niet verwijderd.</lead> Die blijft veilig in je account. De burn-link is een aparte versleutelde kopie die zichzelf vernietigt zodra hij gelezen is.",
@@ -90,17 +94,15 @@
     "afterDays_other": "Na {{count}} dagen",
     "create": "Link maken en kopiëren",
     "share": "Link delen",
-    "imagesStripped": "Alleen tekst wordt getoond, bestanden in deze notitie blijven verborgen.",
-    "copied": "Gekopieerd"
+    "imagesStripped": "Alleen tekst wordt getoond, bestanden in deze notitie blijven verborgen."
   },
   "burnView": {
     "title": "Vernietigen na lezen",
     "tagline": "Versleuteld. Vluchtig. Alleen voor jouw ogen.",
     "toggleTheme": "Thema wisselen",
-    "checking": "Controleren...",
     "revealing": "Ophalen en ontsleutelen...",
     "goToApp": "Ga naar <brand/>",
-    "footerTagline": "- Zero-knowledge versleutelde notities, gehost in Zwitserland.",
+    "footerTagline": "- Versleutelde notities, gehost in Zwitserland.",
     "sealed": {
       "heading": "Je hebt een versleutelde notitie ontvangen.",
       "subheading": "Dit bericht vernietigt zichzelf na het lezen. Ongelezen links verlopen vanzelf.",
@@ -138,5 +140,19 @@
     "demo": "Burn-links worden op een server opgeslagen, en de demo neemt met geen enkele server contact op. Meld je aan om echte burn-links te maken.",
     "tooLarge": "De notitie is te groot om via een burn-link te delen ({{size}}KB). Maximaal is {{max}}KB.",
     "storeFailed": "Kon de burn-notitie niet op de server opslaan."
+  },
+  "dms": {
+    "returnTitle": "Je kopie op de server is verwijderd",
+    "returnBody_other": "Je dodemansknop heeft op {{date}} je notities van de server verwijderd. Dit apparaat heeft nog {{count}} notities. Download een back-up als je ze wilt bewaren en verwijder ze daarna van dit apparaat.",
+    "returnBackup": "Back-up downloaden",
+    "returnDelete": "Verwijderen van dit apparaat",
+    "returnBody_one": "Je dodemansknop heeft op {{date}} je notities van de server verwijderd. Dit apparaat heeft nog {{count}} notitie. Download een back-up als je die wilt bewaren en verwijder hem daarna van dit apparaat."
+  },
+  "massDelete": {
+    "title": "Notities verwijderd op een ander apparaat",
+    "body_one": "{{count}} notitie die dit apparaat nog heeft, is verwijderd door jou of door een ander apparaat van je. Deed jij dat, verwijder hem dan hier ook. Was jij het niet, dan heeft iemand misschien toegang tot je account: bewaar hem om hem terug te zetten op al je apparaten.",
+    "body_other": "{{count}} notities die dit apparaat nog heeft, zijn verwijderd door jou of door een ander apparaat van je. Deed jij dat, verwijder ze dan hier ook. Was jij het niet, dan heeft iemand misschien toegang tot je account: bewaar ze om ze terug te zetten op al je apparaten.",
+    "keep": "Mijn notities bewaren",
+    "delete": "Hier ook verwijderen"
   }
 }

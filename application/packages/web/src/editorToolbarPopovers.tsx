@@ -10,6 +10,7 @@ import { CALLOUT_PICKER_TYPES } from './calloutTypes';
 import { writeColorPref } from './editorPrefs';
 import type { ALIGNMENT_VALUES } from './editorExtensions';
 import type { PopoverPos } from './usePopoverPosition';
+import { setCellFill } from './editorTables';
 import { TB_BTN_ACTIVE, TB_BTN_BASE, TB_BTN_REST, TB_ICON, normalizeCssColor, runOnCaretWord, smartToggleHeading } from './editorToolbarParts';
 
 // The panels the toolbar's popovers open. Each is portaled to document.body
@@ -60,7 +61,7 @@ export function HeadingPanel({ popoverRef, pos, onClose, editor, activeHeading }
           editor.chain().focus().setParagraph().run();
           onClose();
         }}
-        className={`w-full text-start px-3 py-1.5 text-sm [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition ${
+        className={`w-full text-start px-3 py-1.5 text-body [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition ${
           activeHeading === 0 ? 'text-accent' : 'text-pn-soft'
         }`}
       >
@@ -75,7 +76,7 @@ export function HeadingPanel({ popoverRef, pos, onClose, editor, activeHeading }
             smartToggleHeading(editor, level);
             onClose();
           }}
-          className={`w-full text-start px-3 py-1.5 text-sm [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition ${
+          className={`w-full text-start px-3 py-1.5 text-body [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition ${
             activeHeading === level ? 'text-accent' : 'text-pn-soft'
           }`}
         >
@@ -158,8 +159,8 @@ export function CalloutPanel({ popoverRef, pos, onClose, editor, isActive }: {
               }}
               className="relative flex flex-col items-center gap-1 rounded-md px-1 py-2 text-pn-soft [@media(hover:hover)]:hover:bg-pn/5 transition"
             >
-              <CalloutIcon size={18} weight="bold" color={c.color || undefined} />
-              <span className="max-w-full text-center text-[11px] leading-tight hyphens-auto break-words">{t(`callout.types.${c.type}`)}</span>
+              <CalloutIcon weight="bold" color={c.color || undefined} />
+              <span className="max-w-full text-center text-meta leading-tight hyphens-auto break-words">{t(`callout.types.${c.type}`)}</span>
             </button>
           );
         })}
@@ -176,9 +177,9 @@ export function CalloutPanel({ popoverRef, pos, onClose, editor, isActive }: {
               onClose();
               editor.chain().focus().removeCallout().run();
             }}
-            className="flex w-full items-center justify-center gap-2 rounded-md px-2 py-2 text-[13px] text-pn-soft [@media(hover:hover)]:hover:bg-pn/5 transition"
+            className="flex w-full items-center justify-center gap-2 rounded-md px-2 py-2 text-compact text-pn-soft [@media(hover:hover)]:hover:bg-pn/5 transition"
           >
-            <TrashIcon size={16} className="text-danger" />
+            <TrashIcon className="text-danger" />
             <span>{t('callout.remove')}</span>
           </button>
         </div>
@@ -211,7 +212,7 @@ export function FontPanel({ popoverRef, pos, onClose, editor, currentFontFamily,
               else editor.chain().focus().setFontFamily(f.value).run();
               onClose();
             }}
-            className={`w-full flex items-center justify-between text-start px-3 py-1.5 text-sm [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition ${
+            className={`w-full flex items-center justify-between text-start px-3 py-1.5 text-body [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition ${
               selected ? 'text-accent' : 'text-pn-soft'
             }`}
             style={{ fontFamily: f.value }}
@@ -255,7 +256,7 @@ export function FontPanel({ popoverRef, pos, onClose, editor, currentFontFamily,
               editor.chain().focus().unsetFontFamily().unsetFontSize().run();
               onClose();
             }}
-            className="w-full text-start px-3 py-1.5 text-sm text-pn-soft [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition"
+            className="w-full text-start px-3 py-1.5 text-body text-pn-soft [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition"
           >
             {t('font.reset')}
           </button>
@@ -305,6 +306,52 @@ export function AlignPanel({ popoverRef, pos, onClose, editor, alignments, curre
   );
 }
 
+/**
+ * The highlight palette as a swatch grid with the "no color" swatch last.
+ * The highlight panel and the table's cell color panel both draw it, so a
+ * cell and a highlighted word in it pick from the same colors.
+ */
+function HighlightSwatchGrid({ isSelected, onPick, noneLabel, noneSelected, onNone }: {
+  isSelected: (c: (typeof HIGHLIGHT_COLORS)[number]) => boolean;
+  onPick: (c: (typeof HIGHLIGHT_COLORS)[number]) => void;
+  noneLabel: string;
+  noneSelected: boolean;
+  onNone: () => void;
+}) {
+  const { t } = useTranslation('editor');
+  return (
+    <div className="grid grid-cols-5 gap-1.5">
+      {HIGHLIGHT_COLORS.map((c) => (
+        <ColorSwatch
+          key={c.name}
+          label={t(`color.names.${c.name.toLowerCase()}`)}
+          // The wash is translucent by design, so the swatch shows
+          // it over the popover's own surface - which is the same
+          // light-or-dark ground it will sit on in the note. The
+          // default entry has no stored color and takes its themed
+          // pair from the .pn-hl-default class instead.
+          background={c.value ?? undefined}
+          className={c.value ? '' : 'pn-hl-default'}
+          selected={isSelected(c)}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            onPick(c);
+          }}
+        />
+      ))}
+      <ColorSwatch
+        label={noneLabel}
+        none
+        selected={noneSelected}
+        onPointerDown={(e) => {
+          e.preventDefault();
+          onNone();
+        }}
+      />
+    </div>
+  );
+}
+
 export function HighlightPanel({ popoverRef, pos, onClose, editor, highlightOn, currentHighlight, setHighlightMemory }: {
   popoverRef: RefObject<HTMLDivElement | null>;
   pos: PopoverPos | null;
@@ -317,51 +364,62 @@ export function HighlightPanel({ popoverRef, pos, onClose, editor, highlightOn, 
   const { t } = useTranslation('editor');
   return (
     <ToolbarPanel popoverRef={popoverRef} pos={pos} className="bg-surface-1 border border-divider rounded-lg shadow-lg p-2 w-[168px]">
-      <div className="grid grid-cols-5 gap-1.5">
-        {HIGHLIGHT_COLORS.map((c) => {
-          // A swatch is selected only when the run is actually
-          // highlighted: without that check the palette's first entry
-          // (color === null) would read as selected on unhighlighted text.
-          const selected = highlightOn && normalizeCssColor(currentHighlight) === normalizeCssColor(c.value ?? undefined);
-          return (
-            <ColorSwatch
-              key={c.name}
-              label={t(`color.names.${c.name.toLowerCase()}`)}
-              // The wash is translucent by design, so the swatch shows
-              // it over the popover's own surface - which is the same
-              // light-or-dark ground it will sit on in the note. The
-              // default entry has no stored color and takes its themed
-              // pair from the .pn-hl-default class instead.
-              background={c.value ?? undefined}
-              className={c.value ? '' : 'pn-hl-default'}
-              selected={selected}
-              onPointerDown={(e) => {
-                e.preventDefault();
-                // setHighlight MERGES attributes onto an active mark, so
-                // the default entry has to clear the old color rather
-                // than omit one: picking Yellow over a green run would
-                // otherwise leave it green.
-                runOnCaretWord(editor, (chain) => (c.value
-                  ? chain.setHighlight({ color: c.value })
-                  : chain.unsetHighlight().setHighlight()));
-                setHighlightMemory(c.name.toLowerCase());
-                writeColorPref('highlight', c.name.toLowerCase());
-                onClose();
-              }}
-            />
-          );
-        })}
-        <ColorSwatch
-          label={t('color.removeHighlight')}
-          none
-          selected={!highlightOn}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            runOnCaretWord(editor, (chain) => chain.unsetHighlight());
-            onClose();
-          }}
-        />
-      </div>
+      <HighlightSwatchGrid
+        // A swatch is selected only when the run is actually
+        // highlighted: without that check the palette's first entry
+        // (color === null) would read as selected on unhighlighted text.
+        isSelected={(c) => highlightOn && normalizeCssColor(currentHighlight) === normalizeCssColor(c.value ?? undefined)}
+        onPick={(c) => {
+          // setHighlight MERGES attributes onto an active mark, so
+          // the default entry has to clear the old color rather
+          // than omit one: picking Yellow over a green run would
+          // otherwise leave it green.
+          runOnCaretWord(editor, (chain) => (c.value
+            ? chain.setHighlight({ color: c.value })
+            : chain.unsetHighlight().setHighlight()));
+          setHighlightMemory(c.name.toLowerCase());
+          writeColorPref('highlight', c.name.toLowerCase());
+          onClose();
+        }}
+        noneLabel={t('color.removeHighlight')}
+        noneSelected={!highlightOn}
+        onNone={() => {
+          runOnCaretWord(editor, (chain) => chain.unsetHighlight());
+          onClose();
+        }}
+      />
+    </ToolbarPanel>
+  );
+}
+
+/**
+ * The table bar's cell color panel (#616): the highlight swatches, painting
+ * the selected cells or the caret's cell. `current` is read when it opens.
+ * Spec: docs/internal/specs/table-cell-colors.md
+ */
+export function CellFillPanel({ popoverRef, pos, onClose, editor, current }: {
+  popoverRef: RefObject<HTMLDivElement | null>;
+  pos: PopoverPos | null;
+  onClose: () => void;
+  editor: TipTapEditor;
+  current: string | null;
+}) {
+  const { t } = useTranslation('editor');
+  return (
+    <ToolbarPanel popoverRef={popoverRef} pos={pos} role="group" aria-label={t('table.cellColor')} className="bg-surface-1 border border-divider rounded-lg shadow-lg p-2 w-[168px]">
+      <HighlightSwatchGrid
+        isSelected={(c) => current === c.name.toLowerCase()}
+        onPick={(c) => {
+          setCellFill(editor, c.name.toLowerCase());
+          onClose();
+        }}
+        noneLabel={t('color.remove')}
+        noneSelected={!current}
+        onNone={() => {
+          setCellFill(editor, null);
+          onClose();
+        }}
+      />
     </ToolbarPanel>
   );
 }

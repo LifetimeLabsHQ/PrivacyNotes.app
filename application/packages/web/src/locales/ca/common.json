@@ -26,14 +26,11 @@
     "noResults": "Cap resultat"
   },
   "deleteNote": {
-    "title": "Suprimeix per sempre",
     "confirm": "Suprimeix per sempre",
-    "untitled": "Sense títol",
     "body": "Vols suprimir permanentment <highlight>“{{title}}”</highlight>? Aquesta acció no es pot desfer."
   },
   "emptyTrash": {
     "title": "Buida la paperera",
-    "confirm": "Suprimeix per sempre",
     "body_one": "Vols suprimir permanentment <highlight>{{count}} nota</highlight>? Aquesta acció no es pot desfer.",
     "body_many": "Vols suprimir permanentment <highlight>{{count}} notes</highlight>? Aquesta acció no es pot desfer.",
     "body_other": "Vols suprimir permanentment <highlight>{{count}} notes</highlight>? Aquesta acció no es pot desfer."
@@ -62,7 +59,6 @@
   },
   "palette": {
     "label": "Ordres",
-    "open": "Ordres",
     "empty": "Cap ordre coincident",
     "groups": {
       "features": "Funcions",
@@ -87,7 +83,7 @@
       "insertDate": "Insereix la data",
       "insertDateTime": "Insereix la data i l'hora",
       "clearFilters": "Neteja els filtres",
-      "moveToTrash": "Mou la nota a la paperera",
+      "moveToTrash": "Suprimeix la nota",
       "closeTab": "Tanca la pestanya o la nota",
       "nextTab": "Pestanya següent",
       "previousTab": "Pestanya anterior",
@@ -110,10 +106,8 @@
     "move": "mou",
     "open": "obre",
     "openInTab": "obre en una pestanya",
-    "openLink": "Obre",
     "edit": "edita",
     "close": "tanca",
-    "tags": "Etiquetes",
     "folders": "Carpetes",
     "tagItems_one": "{{count}} element",
     "tagItems_other": "{{count}} elements",
@@ -177,17 +171,14 @@
     "downloadPublicKey": "Baixa la clau pública",
     "downloadPrivateKey": "Baixa la clau privada",
     "downloadHint": "Mou la clau baixada a ~/.ssh i executa-hi chmod 600, o ssh la rebutjarà.",
+    "downloadHintDesktop": "PrivacyNotes no desa res a ~/.ssh, per protegir les claus que hi ha. Desa la clau en un altre lloc, mou-la a ~/.ssh i executa-hi chmod 600, o ssh la rebutjarà.",
+    "downloadHintWindows": "PrivacyNotes no desa res a la teva carpeta .ssh, per protegir les claus que hi ha. Desa la clau en un altre lloc i mou-la a %USERPROFILE%\\.ssh. Windows no necessita chmod.",
     "downloadFailed": "No s'ha pogut desar el fitxer de la clau. Revisa el fitxer i torna-ho a provar.",
     "passphrase": "Frase de pas",
     "passphrasePlaceholder": "Frase de pas de la clau (si en té)",
     "show": "Mostra",
     "hide": "Amaga",
-    "copyPassphrase": "Copia la frase de pas",
-    "notes": "Notes",
-    "notesPlaceholder": "Notes addicionals (opcional)",
-    "requirePin": "Requereix el PIN per veure-ho",
-    "whatDoesThisDo": "Què fa això?",
-    "setUpPinFirst": "Primer, configura un PIN a la configuració de seguretat."
+    "copyPassphrase": "Copia la frase de pas"
   },
   "tagInput": {
     "placeholder": "Afegeix etiquetes… separa-les amb comes, # o retorn",
@@ -259,7 +250,6 @@
       "obrint la caixa forta sense fer soroll",
       "desxifrat localment. ignorat globalment",
       "desxifrant com si no fos assumpte de ningú",
-      "text en clar de proximitat",
       "convertint pensaments en sopa il·legible",
       "arriba una altra obra mestra xifrada",
       "posant ordre al caos xifrat",
@@ -283,17 +273,14 @@
     "changesSome_other": "{{count}} d'aquestes notes tenen canvis sense còpia de seguretat que es perdrien."
   },
   "ninja": {
-    "recent": "Recents",
     "topHit": "Millor coincidència",
     "trashEmpty": "La paperera és buida",
     "allThemes": "Tots els temes",
     "features": {
       "stats": {
-        "label": "Estadístiques",
         "detail": "La teva escriptura, les ratxes i els seguiments al llarg del temps"
       },
       "trackers": {
-        "label": "Seguiments",
         "detail": "Estat d'ànim, hàbits, factors i medicació"
       },
       "medication": {
@@ -313,7 +300,6 @@
         "detail": "Una contrasenya o frase de pas forta, a punt per copiar"
       },
       "themes": {
-        "label": "Temes",
         "detail": "Temes de color per a clar i fosc"
       }
     },
@@ -324,7 +310,6 @@
     "commands": {
       "syncResume": "Reprèn la sincronització",
       "changelog": "Novetats",
-      "help": "Ajuda",
       "themesPage": "Temes de la comunitat",
       "website": "Lloc web de PrivacyNotes"
     },

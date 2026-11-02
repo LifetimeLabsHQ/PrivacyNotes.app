@@ -9,7 +9,7 @@
  *
  * Used by the editor's copy, the burn viewer and the HTML and PDF export.
  * No imports, so the burn viewer's chunk stays small.
- * Spec: ops/docs/design-decisions.md (editor paragraph rhythm)
+ * Spec: docs/internal/design-decisions.md (editor paragraph rhythm)
  */
 
 /** Marks a joined paragraph and the break that stands for each paragraph

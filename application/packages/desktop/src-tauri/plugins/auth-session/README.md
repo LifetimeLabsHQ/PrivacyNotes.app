@@ -10,5 +10,6 @@ What changed from upstream, and why:
 - The `ephemeral` option is gone; the app never set it.
 - iOS only. The macOS and Android halves, the guest JavaScript package and the Android project are removed, because this app compiles the crate for the iOS target alone: Android keeps the system browser and an App Link, and desktop returns to a page.
 - `objc2-authentication-services` gains the `ASWebAuthenticationSessionCallback` feature, which the upstream manifest does not enable.
+- The presentation anchor falls back to a bare `UIWindow` when no scene has a window, where upstream panics: with `panic = "abort"` a panic inside the Objective-C callback ends the app, and the bare window makes the sheet fail with an error that ends only the sign-in.
 
-Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.2)
+Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.2)

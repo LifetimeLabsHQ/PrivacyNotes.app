@@ -7,9 +7,9 @@
 # publish and blocks any later release that does not match it, so the pin and
 # the store agree by construction.
 #
-# Spec: ops/docs/android-setup.md (Zapstore listing)
+# Spec: docs/internal/android-setup.md (Zapstore listing)
 
-repository: https://github.com/LifetimeLabsDev/PrivacyNotes.app
+repository: https://github.com/LifetimeLabsHQ/PrivacyNotes.app
 
 # Auto-whitelisting: Zapstore checks this key against the repository owner.
 pubkey: npub1dhzrs20zh3eehq96fe8ewgatfr8u4gjzdh97z6p8n5qurkwqt7wsl7z3k9
@@ -68,16 +68,16 @@ website: https://privacynotes.app
 # The social profile avatar, not the icon from the press kit. A store tile is
 # full bleed and draws its own corners, so it wants the square opaque artwork
 # rather than the mark floated on white with its own padding.
-# Spec: ops/docs/design-decisions.md (social avatar)
+# Spec: docs/internal/design-decisions.md (social avatar)
 icon: https://privacynotes.app/marketing/brand/privacynotes-avatar.png
 
 # Phone screenshots, fetched over HTTP at publish time. They live in this
-# repository (ops/mirror/store in the private tree) rather than on the web
+# repository (docs/public/assets/store in the private tree) rather than on the web
 # app's origin, so a megabyte of store artwork stays out of every app
 # download. Order is the order Zapstore shows them in, strongest first.
 images:
-  - https://raw.githubusercontent.com/LifetimeLabsDev/PrivacyNotes.app/main/assets/store/01-editor.webp
-  - https://raw.githubusercontent.com/LifetimeLabsDev/PrivacyNotes.app/main/assets/store/02-journal.webp
-  - https://raw.githubusercontent.com/LifetimeLabsDev/PrivacyNotes.app/main/assets/store/03-vault.webp
-  - https://raw.githubusercontent.com/LifetimeLabsDev/PrivacyNotes.app/main/assets/store/04-language.webp
-  - https://raw.githubusercontent.com/LifetimeLabsDev/PrivacyNotes.app/main/assets/store/05-appearance.webp
+  - https://raw.githubusercontent.com/LifetimeLabsHQ/PrivacyNotes.app/main/assets/store/01-editor.webp
+  - https://raw.githubusercontent.com/LifetimeLabsHQ/PrivacyNotes.app/main/assets/store/02-journal.webp
+  - https://raw.githubusercontent.com/LifetimeLabsHQ/PrivacyNotes.app/main/assets/store/03-vault.webp
+  - https://raw.githubusercontent.com/LifetimeLabsHQ/PrivacyNotes.app/main/assets/store/04-language.webp
+  - https://raw.githubusercontent.com/LifetimeLabsHQ/PrivacyNotes.app/main/assets/store/05-appearance.webp

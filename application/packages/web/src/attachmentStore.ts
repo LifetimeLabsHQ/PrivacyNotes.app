@@ -25,6 +25,7 @@ import { uploadsHeldForWifi } from './wifiOnly';
 import { fetchQuotaUsage, recalculateQuota } from './devices';
 import { claimRemoval, isAlreadyExists, markIfPending, sameBytes, settleUnlessClaimed } from './blobUploadRecovery';
 import { PENDING_GC_WAIT_MS, settleWithin } from './pendingGcWait';
+import { BlobDamagedError } from './blobDamaged';
 
 const BUCKET = 'encrypted-images'; // Same bucket as images - it's all encrypted blobs
 
@@ -575,8 +576,14 @@ export class AttachmentStore {
     if (!result) return null;
 
     const encrypted = new Uint8Array(await result.arrayBuffer());
-    const decrypted = decryptBlob(encrypted, this.encryptionKey);
-    const attachment = unpackAttachment(decrypted);
+    // Bytes that do not open, or open to no readable header, are told apart
+    // from a failed request; nothing is cached or deleted. See blobDamaged.ts.
+    let attachment: DecryptedAttachment;
+    try {
+      attachment = unpackAttachment(decryptBlob(encrypted, this.encryptionKey));
+    } catch {
+      throw new BlobDamagedError(uuid);
+    }
 
     // Cache for next time.
     await db.attachmentCache.put({

@@ -5,7 +5,9 @@ import { oneLineTitle } from '../oneLineTitle';
 import { linkDedupeKey, parseLinkBody } from '../linkBody';
 import { addToContactMatchIndex, contactMatches, emptyContactMatchIndex } from '../contactBody';
 import { SOURCE_IDENTITY_KEY } from '../schedule';
-import type { ApplyResult, ImportedNote, ParsedImport } from './types';
+import { normalizeJournalTrackers } from '../trackerTypes';
+import { compareStamps } from '../noteMerge';
+import type { ApplyResult, ImportedNote, ParsedImport, StagedBlob } from './types';
 
 /**
  * Write a ParsedImport into the local Dexie store with dirty=1, so the next
@@ -35,11 +37,14 @@ import type { ApplyResult, ImportedNote, ParsedImport } from './types';
  *
  * We write in one Dexie transaction so the import is atomic - either
  * every note lands, or (on error) the whole thing rolls back and the
- * local DB is unchanged.
+ * local DB is unchanged. The pictures and files `importBlobs` staged for
+ * these notes are written in the same transaction, so a failed write keeps
+ * none of them either (backlog 217).
  */
 export async function applyImport(
   parsed: ParsedImport,
-  sourceTag?: string
+  sourceTag?: string,
+  staged: readonly StagedBlob[] = [],
 ): Promise<ApplyResult> {
   const errors: string[] = [];
   const now = new Date().toISOString();
@@ -56,7 +61,10 @@ export async function applyImport(
   const stampFromPast = (iso: string | undefined): string | null => {
     if (!iso) return null;
     const at = Date.parse(iso);
-    return Number.isNaN(at) || at > nowMs ? null : iso;
+    // Stored in the app's own form: sync and the restore check below read
+    // stamps as instants now, but an older client still compares the text,
+    // where "3 Jan 2024" sorts after every 2026 stamp.
+    return Number.isNaN(at) || at > nowMs ? null : new Date(at).toISOString();
   };
 
   // Every title is stored on one line, whichever importer read it and from
@@ -111,7 +119,7 @@ export async function applyImport(
   // while the old day stays live in the series. An event the .ics writer
   // named after one of this vault's items (`<id>@privacynotes.app`) is that
   // item. Skipped, never merged, like the two rules above.
-  // Spec: ops/docs/archive/google-calendar-import.md (section 4.10)
+  // Spec: docs/internal/specs/google-calendar-import.md (section 4.10)
   if (incoming.some((n) => n.type === 'event' && !ownsId(n) && icsUidOf(n.trackers))) {
     const held = new Set(
       (await db.notes.filter((n) => n.type === 'event' && n.deleted !== 1 && n.trashed !== 1).toArray())
@@ -193,7 +201,7 @@ export async function applyImport(
       // repairing what is missing, so it never overwrites something the user
       // has edited since the backup was taken.
       const incomingAt = n.trashed ? '' : (stamp ?? '');
-      if (!(incomingAt > mine.updatedAt)) {
+      if (!(incomingAt && compareStamps(incomingAt, mine.updatedAt) > 0)) {
         // Moving a note to the trash stamps it, so a copy trashed after the
         // backup always reads as the newer one, and a restore is how a
         // person gets that note back. It leaves the trash with its own
@@ -256,7 +264,11 @@ export async function applyImport(
       // it: the backup wrote "not archived" for it only because the export
       // has no third state (sync.ts archiveUnknownOf).
       ...(!n.archived && mine?.archivedUnknown === 1 ? { archivedUnknown: 1 as const } : {}),
-      ...(n.trackers && Object.keys(n.trackers).length > 0 ? { trackers: n.trackers } : {}),
+      // A file's JSON goes up to the account as it lands here, and a device on
+      // an older build reads it without the read-side check (db.ts).
+      ...(n.trackers && Object.keys(n.trackers).length > 0
+        ? { trackers: (n.type || 'note') === 'journal' ? normalizeJournalTrackers(n.trackers) : n.trackers }
+        : {}),
       // A copy that replaces the local row keeps that row's record of the
       // server version it last synced, and the base beside it: its push
       // then merges field by field against that version like any edit,
@@ -272,7 +284,16 @@ export async function applyImport(
   });
 
   try {
-    await db.transaction('rw', db.notes, async () => {
+    await db.transaction('rw', [db.notes, db.imageCache, db.imageDedup, db.attachmentCache, db.attachmentDedup], async () => {
+      for (const blob of staged) {
+        if (blob.image) {
+          await db.imageCache.put({ id: blob.uuid, data: blob.data, cachedAt: now });
+          await db.imageDedup.put({ hash: blob.hash, uuid: blob.uuid, encryptedSize: 0, pendingUpload: 1 });
+        } else {
+          await db.attachmentCache.put({ id: blob.uuid, meta: blob.meta, data: blob.data, cachedAt: now });
+          await db.attachmentDedup.put({ hash: blob.hash, uuid: blob.uuid, encryptedSize: 0, pendingUpload: 1 });
+        }
+      }
       await db.notes.bulkPut(rows);
     });
   } catch (err) {

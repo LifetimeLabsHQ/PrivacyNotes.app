@@ -1,18 +1,14 @@
 {
   "pillars": {
-    "trash": "Lixeira",
-    "bookmarks": "Marcadores",
-    "contacts": "Contatos"
+    "trash": "Lixeira"
   },
   "tasksList": {
-    "title": "Tarefas",
     "newTaskNote": "Nova nota de tarefas",
     "hideCompleted": "Ocultar tarefas concluídas",
     "showCompleted": "Mostrar tarefas concluídas",
     "searchPlaceholder": "Buscar tarefas…",
     "sortOptions": "Opções de ordenação",
     "quickAddPlaceholder": "Adicionar uma tarefa rápida",
-    "noMatches": "Nenhum resultado.",
     "itemsWithTasks": "Itens com tarefas",
     "allTasks": "Todas as tarefas",
     "tasksFromOtherItems": "Tarefas em outros itens",
@@ -29,45 +25,27 @@
     "seeLess": "Ver menos"
   },
   "filesList": {
-    "title": "Arquivos",
     "upload": "Enviar",
     "selectedOf": "{{selected}} de {{total}} selecionados",
-    "deselectAll": "Desmarcar todos",
-    "selectAll": "Selecionar todos",
-    "storage": "Armazenamento",
     "perFile": "Por arquivo",
     "free": "Grátis",
-    "upgradeToPro": "Fazer upgrade para o Pro",
     "filterAll": "Todos",
-    "filterImages": "Imagens",
     "filterAudio": "Áudio",
     "filterFiles": "Arquivos",
-    "sortOptions": "Opções de ordenação",
     "searchPlaceholder": "Buscar arquivos…",
     "sortName": "Nome",
     "showNotesWithAttachments": "Mostrar arquivos em outros itens",
-    "noMatches": "Nenhum resultado.",
     "pinProtected": "Protegido por PIN",
-    "readOnly": "Somente leitura",
     "noFilesYet": "Nenhum arquivo ainda.",
     "noDocuments": "Nenhum documento.",
     "noImages": "Nenhuma imagem.",
     "noAudioFiles": "Nenhum arquivo de áudio.",
     "emptyTypesHint": "Imagens, documentos, áudio, vídeo e arquivos zip. Até {{max}} MB por arquivo.",
     "uploadFiles": "Enviar arquivos",
-    "menuDeselect": "Desmarcar",
-    "menuSelect": "Selecionar",
     "menuShow": "Mostrar",
     "menuAllFiles": "Todos os arquivos",
-    "menuImages": "Imagens",
-    "menuAudio": "Áudio",
     "menuDocuments": "Documentos",
-    "menuHideNoteAttachments": "Ocultar arquivos em outros itens",
-    "menuShowNoteAttachments": "Mostrar arquivos em outros itens",
-    "menuUnpin": "Desafixar",
-    "menuPin": "Fixar",
-    "menuRename": "Renomear",
-    "menuMoveToTrash": "Mover para a Lixeira"
+    "menuHideNoteAttachments": "Ocultar arquivos em outros itens"
   },
   "vaultItem": {
     "badgeLogin": "Login",
@@ -78,7 +56,6 @@
     "untitledKey": "Chave sem título",
     "copied": "Copiado!",
     "copyField": "Copiar {{label}}",
-    "hide": "Ocultar",
     "reveal": "Revelar",
     "fieldUrl": "URL",
     "fieldUser": "Usuário",
@@ -91,14 +68,11 @@
     "fieldLabel": "Rótulo",
     "fieldPublic": "Pública",
     "fieldPrivate": "Privada",
-    "fieldTotp": "Código 2FA",
     "totpInvalid": "Chave inválida",
     "copyCode": "Copiar código",
     "totpUnlockCta": "Desbloqueie códigos 2FA com o Pro",
     "totpProNote": "A chave é salva e sincronizada. Só o código exige Pro.",
     "copyAll": "Copiar URL, usuário e senha",
-    "open": "Abrir",
-    "notesHeading": "Notas",
     "fillOneField": "Preencha pelo menos um campo antes de salvar.",
     "expiryNeedsBoth": "A validade precisa de mês e ano, ou deixe os dois em branco.",
     "customField": "Campo personalizado",
@@ -128,20 +102,18 @@
   },
   "tagsRail": {
     "showAllItems": "Mostrar todos os itens",
-    "changelog": "Changelog",
     "closeMenu": "Fechar menu",
-    "close": "Fechar",
     "views": "Conteúdo",
     "resizeSplit": "Redimensionar Conteúdo e etiquetas ou pastas",
     "sidebarOptions": "Opções da barra lateral",
     "showInSidebar": "Mostrar na barra lateral",
     "allOptions": "Opções de Todos",
     "showInAll": "Mostrar em Todos",
-    "viewList": "Lista",
-    "viewGrid": "Grade",
     "viewAuto": "Auto",
     "allItemsTooltip": "Todas as notas, diários e itens do cofre",
     "allItems": "Todos",
+    "dashboard": "Início",
+    "dashboardTooltip": "Seus widgets num relance",
     "pinnedTooltip": "Itens fixados",
     "pinned": "Fixados",
     "archive": "Arquivo",
@@ -149,6 +121,7 @@
     "notes": "Notas",
     "tasksTooltip": "Tarefas de todas as notas",
     "tasks": "Tarefas",
+    "drawings": "Desenhos",
     "vaultTooltip": "Logins, cartões de crédito e chaves",
     "vault": "Cofre",
     "filesTooltip": "Todos os arquivos e anexos",
@@ -156,7 +129,6 @@
     "journalsTooltip": "Entradas diárias do diário",
     "journals": "Diários",
     "actionsForTag": "Ações para a etiqueta {{tag}}",
-    "renameTag": "Renomear",
     "removeFavorite": "Remover favorito",
     "markAsFavorite": "Favorito",
     "deleteTag": "Excluir Etiqueta",
@@ -164,7 +136,6 @@
     "tags": "Etiquetas",
     "sortTags": "Ordenar etiquetas",
     "sort": "Ordenar",
-    "sortBy": "Ordenar por",
     "sortEntries": "Entradas",
     "sortName": "Nome",
     "sortCustom": "Personalizada",
@@ -175,11 +146,9 @@
     "createTag": "Nova etiqueta",
     "untagged": "Sem etiqueta",
     "trashTooltip": "Itens excluídos",
-    "trash": "Lixeira",
     "feedback": "Feedback",
     "import": "Importar",
     "downloads": "Downloads",
-    "help": "Ajuda",
     "rate": "Avaliar",
     "markdown": "Markdown",
     "markdownTip": "Não criptografado",
@@ -205,7 +174,6 @@
     "deleteConfirmBranchNested": "\"{{folder}}\" e suas subpastas serão excluídas. As notas delas serão movidas para \"{{parent}}\". Nenhuma nota será excluída.",
     "deleteSubfolders_one": "Excluir também a subpasta",
     "deleteSubfolders_other": "Excluir também as {{count}} subpastas",
-    "moveTo": "Mover para pasta",
     "searchPlaceholder": "Buscar pastas",
     "sortFolders": "Ordenar pastas",
     "chipUnfiled": "Pasta",
@@ -226,7 +194,6 @@
     "seedTeam": "Equipe"
   },
   "collapsedSidebar": {
-    "newNote": "Nova nota",
     "expandSidebar": "Expandir barra lateral"
   },
   "mobileHeader": {
@@ -241,26 +208,14 @@
     "colorFromTag": "Da etiqueta: #{{name}}",
     "colorOwnHint": "Uma cor escolhida aqui preenche o fundo desta nota. <setting>Cores de pastas e etiquetas</setting> não a alteram.",
     "details": "Detalhes",
-    "readOnly": "Somente leitura",
     "readOnlyDescription": "Sem edições até você desativar.",
     "protect": "Proteger",
     "convertTo": "Converter em",
-    "typeNote": "Nota",
     "typeJournal": "Diário",
-    "typeTask": "Tarefa",
-    "unpin": "Desafixar",
-    "pin": "Fixar",
-    "archive": "Arquivar",
-    "unarchive": "Desarquivar",
     "burn": "Queimar",
     "share": "Compartilhar",
     "trash": "Lixeira",
-    "duplicate": "Duplicar",
-    "restore": "Restaurar",
-    "deleteForever": "Excluir para sempre",
-    "moveToFolder": "Mover para pasta",
     "noteHistory": "Histórico",
-    "findReplace": "Buscar e substituir",
     "uncheckAllTasks": "Desmarcar todos os itens",
     "deleteCheckedTasks": "Excluir itens marcados",
     "sortTasksByStatus": "Ordenar itens por status",
@@ -277,27 +232,17 @@
     "schedule": "Agenda",
     "ends": "Termina",
     "sameDay": "No mesmo dia",
-    "allDay": "Dia inteiro",
     "starts": "Começa",
     "endsAt": "Termina às",
     "noEnd": "Nenhum",
     "removeFromCalendar": "Remover do calendário",
     "makeEvent": "Converter em <b>Evento</b> para repetir",
-    "typeEvent": "Evento",
     "repeatRemoved": "A repetição foi removida"
   },
   "selectionToolbar": {
-    "exitSelectionTooltip": "Sair da seleção",
     "exitSelection": "Sair da seleção",
-    "unpin": "Desafixar",
-    "pin": "Fixar",
-    "archive": "Arquivar",
-    "unarchive": "Desarquivar",
     "tag": "Etiquetar",
     "export": "Exportar",
-    "delete": "Excluir",
-    "restore": "Restaurar",
-    "deleteForever": "Excluir para sempre",
     "more": "Mais ações",
     "addTagPlaceholder": "Adicionar uma etiqueta...",
     "noTagsFound": "Nenhuma etiqueta encontrada",
@@ -320,6 +265,7 @@
     "showTags": "Mostrar pasta e etiquetas",
     "showCalendar": "Mostrar calendário",
     "showCheckIn": "Mostrar check-in",
+    "showMedication": "Mostrar medicação",
     "showWorkItems": "Mostrar itens de <b>Trabalho</b>",
     "showPersonalItems": "Mostrar itens de <b>Pessoal</b>",
     "other": "Outros",
@@ -342,7 +288,6 @@
     "moodCalendar": "Mostrar o humor no calendário"
   },
   "backfillPopover": {
-    "calendarLabel": "Calendário do diário",
     "today": "Hoje",
     "chooseEntry": "Itens de {{date}}"
   },
@@ -363,6 +308,7 @@
     "newNote": "Nova Nota",
     "newTask": "Nova Tarefa",
     "newKanban": "Novo quadro kanban",
+    "newDrawing": "Novo desenho",
     "newLogin": "Novo Login",
     "newJournal": "Novo Diário",
     "newFile": "Novo arquivo",
@@ -388,32 +334,24 @@
     "duplicate": "Duplicar",
     "moveToFolder": "Mover para pasta",
     "exportAsMarkdown": "Exportar como Markdown",
-    "shareBurnAfterReading": "Compartilhar e Queimar Após Ler",
     "exportAsHtml": "Exportar como HTML",
-    "printSaveAsPdf": "Imprimir / Salvar como PDF",
-    "moveToTrash": "Mover para a Lixeira",
-    "newBookmark": "Novo marcador",
     "newContact": "Novo contato",
-    "openBookmark": "Abrir",
     "copyBookmarkUrl": "Copiar URL",
     "editBookmark": "Editar marcador",
     "saveAsNote": "Salvar como nota",
-    "openClippedNote": "Abrir nota",
     "openInTab": "Abrir em uma aba",
     "openInTabHint": "{{key}}-clique",
+    "openInTabHintMiddle": "Clique do meio",
     "closeTab": "Fechar aba",
     "closeOtherTabs": "Fechar as outras abas",
     "closeAllTabs": "Fechar todas as abas",
     "pinTab": "Fixar aba",
     "unpinTab": "Desafixar aba",
-    "newEvent": "Novo evento",
-    "quickAdd": "Adição rápida"
+    "newEvent": "Novo evento"
   },
   "demoBanner": {
     "title": "Experimente sem risco nenhum",
-    "description": "Nada é salvo aqui. Tenha seu próprio caderno criptografado, de graça.",
-    "cta": "Criar conta",
-    "dismiss": "Dispensar"
+    "description": "Nada é salvo aqui. Tenha seu próprio caderno criptografado, de graça."
   },
   "markdown": {
     "title": "Markdown",
@@ -452,20 +390,17 @@
     "fileCount_other": "{{count}} arquivos",
     "railFolders": "Pastas Markdown",
     "railTags": "Etiquetas Markdown",
-    "allFiles": "Todos os arquivos",
     "modeRich": "Formatado",
     "modeSource": "Markdown",
     "reopenPrompt": "Seu navegador precisa de permissão de novo depois de recarregar. Sua pasta fica memorizada, então é um clique só.",
     "reopenFolder": "Reabrir {{name}}",
     "new": "Novo",
-    "delete": "Excluir",
     "saveToNotes": "Salvar nas minhas notas",
     "createFailed": "Não foi possível criar o arquivo.",
     "deleteFailed": "Não foi possível mover o arquivo para a lixeira.",
     "importedToast": "\"{{title}}\" foi salvo nas suas notas criptografadas. O arquivo original fica intacto.",
     "deleteTitle": "Mover para a lixeira da pasta?",
     "deleteBody": "\"{{name}}\" vai para uma pasta .trash dentro da sua pasta Markdown. Recupere pelo seu gerenciador de arquivos se mudar de ideia.",
-    "deleteConfirm": "Mover para a lixeira",
     "explainTitle": "Sua pasta Markdown",
     "explainDone": "Entendi",
     "bannerTitle": "Editor de Markdown avançado",
@@ -474,7 +409,6 @@
     "explainIntro": "Escolha uma pasta de arquivos .md e .txt - as subpastas aparecem automaticamente, as alterações são salvas no próprio arquivo, e nada é convertido",
     "chipPreview": "Pré-visualização ao vivo",
     "chipTasks": "Tarefas",
-    "chipTags": "Etiquetas",
     "chipTables": "Tabelas",
     "useAgent": "Dê aos agentes de IA acesso às suas notas",
     "useObsidian": "Os mesmos arquivos no Obsidian ou no Logseq",
@@ -502,7 +436,6 @@
     "assocWorking": "Perguntando ao seu sistema…",
     "copyPath": "Copiar caminho",
     "selectedCount": "{{selected}} de {{total}} selecionados",
-    "selectAll": "Selecionar todos",
     "exitSelection": "Sair da seleção",
     "deleteManyTitle_one": "Mover {{count}} arquivo para a lixeira da pasta?",
     "deleteManyTitle_other": "Mover {{count}} arquivos para a lixeira da pasta?",
@@ -525,15 +458,11 @@
   "bookmarks": {
     "newBookmark": "Novo marcador",
     "searchPlaceholder": "Buscar marcadores…",
-    "sortOptions": "Opções de ordenação",
     "quickAddPlaceholder": "Cole ou digite um link…",
     "urlLabel": "Marcador (URL)",
     "urlInvalid": "Digite um endereço web, como example.com ou https://example.com/page.",
     "urlDuplicate": "Outro marcador já tem esta URL, então a alteração não foi salva.",
-    "openAction": "Abrir",
     "copiedUrl": "Link copiado",
-    "moveToTrash": "Mover para a Lixeira",
-    "rowMenu": "Mais ações",
     "emptyNone": "Ainda não há marcadores.",
     "emptyTitle": "Salve os sites que valem a pena",
     "emptyAdd": "Adicionar um marcador",
@@ -548,11 +477,9 @@
     "new": "Novo"
   },
   "contacts": {
-    "new": "Novo",
     "searchPlaceholder": "Buscar contatos…",
-    "sortOptions": "Opções de ordenação",
     "emptyNone": "Nenhum contato ainda.",
-    "emptyTitle": "Uma agenda que só você consegue ler",
+    "emptyTitle": "Uma agenda criptografada no seu dispositivo",
     "emptyAdd": "Adicionar contato",
     "emptyImport": "Importar contatos",
     "noMatches": "Nenhum resultado.",
@@ -571,15 +498,12 @@
     "company": "Empresa",
     "department": "Departamento",
     "jobTitle": "Cargo",
-    "groupName": "Nome",
     "groupPhone": "Telefone",
     "groupEmail": "E-mail",
     "groupAddress": "Endereço",
     "groupWebsite": "Site",
-    "groupProfile": "Perfil",
     "groupDates": "Datas",
     "groupRelated": "Relacionados",
-    "groupNote": "Nota",
     "addPhone": "Adicionar telefone",
     "addEmail": "Adicionar e-mail",
     "addWebsite": "Adicionar site",
@@ -594,7 +518,6 @@
     "notePlaceholder": "Notas sobre esta pessoa",
     "labelNone": "Etiqueta",
     "labelCustom": "Etiqueta personalizada…",
-    "removeRow": "Remover",
     "call": "Ligar",
     "message": "Mensagem",
     "sendEmail": "Enviar e-mail",
@@ -615,15 +538,8 @@
     "menuPersonal": "Pessoal",
     "menuName": "Nome",
     "menuText": "Texto",
-    "itemAddress": "Endereço",
-    "itemWebsite": "Site",
-    "itemProfile": "Perfil",
-    "itemCompany": "Empresa",
-    "itemJobTitle": "Cargo",
-    "itemBirthday": "Aniversário",
     "itemDate": "Data",
     "itemRelated": "Pessoa relacionada",
-    "itemNickname": "Apelido",
     "itemNameParts": "Nome do meio, prefixo, sufixo",
     "itemPhonetic": "Nome fonético",
     "itemNote": "Nota",
@@ -753,8 +669,10 @@
       "note": "Notas",
       "task": "Listas de tarefas",
       "journal": "Entradas de diário",
-      "contact": "Aniversários"
+      "contact": "Aniversários e datas"
     },
+    "birthdays": "Aniversários",
+    "contactDate": "{{name}}: {{label}}",
     "dragEnd": "Arraste para mudar o dia final",
     "previousDay": "Dia anterior",
     "nextDay": "Próximo dia",
@@ -848,7 +766,6 @@
     "daysBeforeAt_one": "{{count}} dia antes, às {{time}}",
     "daysBeforeAt_other": "{{count}} dias antes, às {{time}}",
     "custom": "Personalizado",
-    "add": "Adicionar",
     "max": "Até cinco alertas.",
     "units": {
       "minutes": "minutos",
@@ -860,11 +777,9 @@
     "remove": "Remover {{alert}}",
     "reminder": "Lembrete",
     "medication": "Lembrete de medicação",
-    "open": "Abrir",
     "snooze": "Adiar 10 min",
     "offOnPhone": "Os lembretes estão desligados neste celular",
-    "turnOn": "Ativar",
-    "openSettings": "Abrir configurações"
+    "turnOn": "Ativar"
   },
   "quickAdd": {
     "group": "Criar",
@@ -876,6 +791,14 @@
     "appendHintDetail": "Digite >> e depois o começo do nome dela",
     "appendNone": "Ainda não há lista de tarefas ou nota para adicionar",
     "appendNoneDetail": "Digite um nome depois de >> para criar uma lista de tarefas com esse nome",
+    "cannotAdd": "Não é possível adicionar a {{title}}",
+    "blocked": {
+      "trash": "Está na Lixeira.",
+      "pin": "Está protegido pelo seu PIN. Abra para adicionar.",
+      "readOnly": "Está em somente leitura.",
+      "board": "É um quadro kanban. Adicione cartões no quadro.",
+      "archived": "Está arquivado. Desarquive para adicionar."
+    },
     "linkGroup": "Salvar este link",
     "linkDetail": {
       "bookmark": "Guarda o endereço. Você dá o nome em seguida.",
@@ -894,6 +817,7 @@
       "task": "Nova lista de tarefas",
       "journal": "Nova entrada de diário",
       "kanban": "Novo quadro kanban",
+      "drawing": "Novo desenho",
       "login": "Novo login",
       "file": "Enviar um arquivo",
       "contact": "Novo contato",
@@ -926,8 +850,8 @@
       },
       "length": {
         "label": "Duração",
-        "examples": "por 30 min · por 3 dias · sex a dom",
-        "insert": "por 1h"
+        "examples": "15h por 30 min · por 3 dias · sex a dom",
+        "insert": "15h por 1h"
       },
       "repeat": {
         "label": "Repetição",
@@ -973,17 +897,14 @@
     "backToToday": "Voltar para hoje",
     "options": "Opções do check-in",
     "skipToday": "Pular hoje",
-    "hide": "Ocultar este cartão",
+    "hide": "Ocultar",
     "change": "Alterar humor",
     "saved": "Salvo",
     "chooseTrackers": "Escolher rastreadores",
-    "settings": "Configurações do check-in",
     "skipped": "Pulado hoje.",
     "startOver": "Recomeçar",
     "cleared": "Check-in apagado.",
     "hidden": "Cartão oculto. A opção Mostrar check-in nas preferências da lista o ativa de novo.",
-    "undo": "Desfazer",
-    "done": "Concluído",
     "write": "Escrever sobre hoje",
     "writeOn": "Escrever sobre {{date}}",
     "streak": "Dia {{n}} seguido",
@@ -997,19 +918,25 @@
     "hiddenCount_other": "{{count}} check-ins estão ocultos.",
     "showThem": "Mostrar"
   },
+  "medicationCard": {
+    "title": "Controle de medicação",
+    "options": "Opções de medicação",
+    "edit": "Alterar a medicação de hoje",
+    "hidden": "Cartão oculto. Ative-o de novo nas preferências da lista ou em Configurações > Rastreadores > Medicação."
+  },
   "clipper": {
-    "saveAsNote": "Salvar como nota",
     "saving": "Salvando como nota…",
     "stepPage": "Baixando a página",
     "stepPictures": "Salvando imagens, {{done}} de {{total}}",
-    "openNote": "Abrir nota",
     "alreadySaved": "Esta página já está salva como nota ({{date}}).",
     "savedOn": "Salva como nota em {{date}}",
-    "windowTitle": "Recortar página",
     "addressLabel": "Endereço web",
     "addressPlaceholder": "Cole um link…",
     "savePictures": "Salvar imagens",
     "savePicturesHint": "Até 20 imagens, guardadas com a nota. Elas contam no seu armazenamento.",
+    "extensionTipTitle": "Recorte pelo navegador para um resultado melhor",
+    "extensionTip": "A extensão do navegador salva a página como você a vê, inclusive páginas que exigem login.",
+    "extensionTipSetUp": "Configurar a extensão",
     "downloading": "Baixando a página…",
     "downloadingPictures": "Baixando imagens, {{done}} de {{total}}",
     "picturesLine_one": "{{count}} imagem · {{size}}, salva com a nota",
@@ -1042,5 +969,166 @@
     "until": "Até {{day}}",
     "noAlert": "Sem alerta",
     "endsLater": "Termina em outro dia"
+  },
+  "apps": {
+    "railLabel": "Extensão",
+    "title": "Extensão do navegador",
+    "subtitle": "Recorte web e gerenciador de senhas no Chrome, Firefox e Edge. A extensão nunca guarda a chave que abre suas notas.",
+    "stepInstall": "Instale a extensão",
+    "stepFeatures": "Escolha o que ela pode fazer",
+    "stepConnect": "Conecte",
+    "makeCode": "Gerar um código",
+    "connectHint": "Gere um código de uso único e cole-o na extensão.",
+    "thisBrowser": "Este navegador",
+    "otherApps": "Apps para computador e celular:",
+    "desktopAll": "Todos os downloads",
+    "extensionComputersOnly": "A extensão é para Chrome, Firefox e Edge em um computador.",
+    "demoSignUp": "Cadastre-se para conectar um navegador"
+  },
+  "extensionConnect": {
+    "clips": "Recorte web",
+    "clipsHint": "Salve sites como notas.",
+    "loginsHint": "Logins, cartões, chaves SSH e marcadores do site em que você está, só para copiar. Bloqueado com PIN ou código de acesso próprio.",
+    "pickOne": "Ative pelo menos um.",
+    "codeLabel": "Código para a extensão",
+    "oneUse": "Funciona uma vez, por 10 minutos.",
+    "usedBy": "O navegador {{name}} usou este código e está conectado. Se não foi você, remova-o abaixo.",
+    "newCode": "Novo código",
+    "tooManyCodes": "Há códigos demais esperando. Use um deles ou espere 10 minutos.",
+    "tooManyExtensions": "Esta conta tem 10 navegadores conectados, o máximo possível. Remova um primeiro.",
+    "keyElsewhere": "A chave dos seus logins está em outro dispositivo seu. Abra o PrivacyNotes nele e deixe sincronizar, depois tente novamente.",
+    "failed": "Não foi possível gerar um código. Verifique sua conexão e tente novamente."
+  },
+  "dashboard": {
+    "taskReadOnly": "Esta nota é somente leitura. Desative somente leitura nas opções da nota para marcar as tarefas dela.",
+    "addWidget": "Adicionar widget",
+    "catalogTitle": "Adicionar um widget",
+    "layouts": "Layouts",
+    "layoutChanged": "Layout alterado",
+    "full": "O Início está cheio. Remova um widget primeiro.",
+    "added": "Adicionado ao Início",
+    "removed": "Removido do Início",
+    "showOnHome": "Mostrar no Início",
+    "removeFromHome": "Remover do Início",
+    "resize": "Redimensionar {{name}}",
+    "narrower": "Mais estreito",
+    "taller": "Mais alto",
+    "shorter": "Mais baixo",
+    "moveEarlier": "Mover para antes",
+    "moveLater": "Mover para depois",
+    "chooseNote": "Escolha uma nota",
+    "chooseTag": "Escolha uma etiqueta",
+    "chooseFolder": "Escolha uma pasta",
+    "chooseTracker": "Escolha um rastreador",
+    "choose": "Escolher",
+    "gone": "Não está mais aqui",
+    "otherSpace": "No outro espaço",
+    "proLocked": "Parte do Pro",
+    "noneToChoose": "Ainda não há nada para escolher",
+    "headerEvents_one": "{{formatted}} evento hoje",
+    "headerEvents_other": "{{formatted}} eventos hoje",
+    "headerTasks_one": "{{formatted}} tarefa aberta",
+    "headerTasks_other": "{{formatted}} tarefas abertas",
+    "startToday": "Começar a entrada de hoje",
+    "groups": {
+      "keep": "O que você guarda"
+    },
+    "layout": {
+      "everyday": "Dia a dia",
+      "planner": "Planejador",
+      "writer": "Escritor"
+    },
+    "w": {
+      "checkIn": {
+        "name": "Check-in",
+        "help": "Como você está hoje, e seus rastreadores"
+      },
+      "calendar": {
+        "help": "O mês, com pontos de entradas e eventos"
+      },
+      "upcoming": {
+        "name": "Em breve",
+        "help": "Hoje e os próximos 7 dias"
+      },
+      "today": {
+        "name": "Entrada de hoje",
+        "help": "A entrada de diário de hoje, ou um começo"
+      },
+      "tasks": {
+        "name": "Tarefas abertas",
+        "help": "Tarefas não marcadas das suas notas"
+      },
+      "recent": {
+        "name": "Editados recentemente",
+        "help": "Os itens em que você trabalhou por último"
+      },
+      "pinned": {
+        "help": "Seus itens fixados"
+      },
+      "note": {
+        "name": "Uma nota",
+        "help": "Uma nota que você escolhe, no Início"
+      },
+      "tag": {
+        "name": "Uma etiqueta",
+        "help": "Os itens mais novos com uma etiqueta"
+      },
+      "folder": {
+        "name": "Uma pasta",
+        "help": "Os itens mais novos de uma pasta"
+      },
+      "onThisDay": {
+        "name": "Neste dia",
+        "help": "Entradas de diário de anos anteriores"
+      },
+      "week": {
+        "help": "Palavras, dias ativos, itens e check-ins"
+      },
+      "streak": {
+        "help": "Dias seguidos em que você escreveu"
+      },
+      "checkInStreak": {
+        "help": "Dias seguidos em que você fez check-in"
+      },
+      "rhythm": {
+        "name": "Seu ritmo",
+        "help": "26 semanas de escrita e humor"
+      },
+      "milestone": {
+        "name": "Próximo marco",
+        "help": "Quão perto está o próximo"
+      },
+      "tracker": {
+        "name": "Um rastreador",
+        "help": "Um rastreador: seu número e seus dias"
+      },
+      "weekRecap": {
+        "help": "Sua semana, em um cartão"
+      },
+      "files": {
+        "name": "Arquivos recentes",
+        "help": "Suas imagens e arquivos mais novos"
+      },
+      "bookmarks": {
+        "help": "Seus marcadores mais novos"
+      },
+      "birthdays": {
+        "help": "Aniversários nos próximos 30 dias"
+      }
+    },
+    "empty": {
+      "upcoming": "Nada nos próximos 7 dias",
+      "tasks": "Nenhuma tarefa aberta",
+      "recent": "Ainda não há nada aqui",
+      "pinned": "Nada fixado ainda",
+      "tag": "Nenhum item com esta etiqueta",
+      "folder": "Nada nesta pasta",
+      "onThisDay": "Nenhuma entrada neste dia em anos anteriores",
+      "files": "Ainda não há arquivos",
+      "bookmarks": "Ainda não há marcadores",
+      "birthdays": "Nenhum aniversário nos próximos 30 dias",
+      "tracker": "Nada registrado ainda",
+      "milestone": "Todos os marcos alcançados"
+    }
   }
 }

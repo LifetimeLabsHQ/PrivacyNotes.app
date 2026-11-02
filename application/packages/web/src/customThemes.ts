@@ -13,7 +13,7 @@
  * Which theme a device shows stays on the device (theme.ts); this list is
  * only the themes on offer.
  *
- * Spec: ops/docs/color-themes.md (section 6)
+ * Spec: docs/contrib/color-themes.md (section 6)
  */
 import {
   mergeRegisterMaps,

@@ -7,7 +7,7 @@
  * The menu offers no automatic guess: highlight.js detection read an HTML
  * block with inline styles as CSS and a line of prose as Kotlin, so a
  * "detected" row would mislead on exactly the blocks that need it.
- * Spec: ops/docs/design-decisions.md (code blocks name their language)
+ * Spec: docs/internal/design-decisions.md (code blocks name their language)
  */
 import i18n from './i18n';
 import { isImeComposing } from './imeComposing';
@@ -15,8 +15,9 @@ import { isSoftKeyboardDevice } from './softKeyboard';
 import { textMatcher } from './textMatch';
 import { pushEscapeHandler } from './useEscapeToClose';
 
-/** Every grammar in lowlight's `common` set, as the fence the menu writes
- *  and the name it shows. Order is the menu's order after the popular ones. */
+/** Every grammar in lowlight's `common` set and in codeGrammars.ts, as the
+ *  fence the menu writes and the name it shows. Order is the menu's order
+ *  after the popular ones. */
 const LANGUAGES: { fence: string; label: string; aliases?: string[] }[] = [
   { fence: 'html', label: 'HTML', aliases: ['htm', 'xhtml'] },
   { fence: 'css', label: 'CSS' },
@@ -26,28 +27,45 @@ const LANGUAGES: { fence: string; label: string; aliases?: string[] }[] = [
   { fence: 'json', label: 'JSON', aliases: ['jsonc'] },
   { fence: 'sql', label: 'SQL' },
   { fence: 'bash', label: 'Bash', aliases: ['sh', 'zsh'] },
+  { fence: 'apache', label: 'Apache config', aliases: ['apacheconf'] },
   { fence: 'arduino', label: 'Arduino', aliases: ['ino'] },
   { fence: 'c', label: 'C', aliases: ['h'] },
+  { fence: 'clojure', label: 'Clojure', aliases: ['clj', 'edn'] },
+  { fence: 'cmake', label: 'CMake', aliases: ['cmake.in'] },
   { fence: 'cpp', label: 'C++', aliases: ['c++', 'cc', 'cxx', 'hpp'] },
   { fence: 'csharp', label: 'C#', aliases: ['cs', 'c#'] },
+  { fence: 'dart', label: 'Dart' },
   { fence: 'diff', label: 'Diff', aliases: ['patch'] },
+  { fence: 'dockerfile', label: 'Dockerfile', aliases: ['docker'] },
+  { fence: 'dos', label: 'Batch (Windows)', aliases: ['bat', 'cmd'] },
+  { fence: 'elixir', label: 'Elixir', aliases: ['ex', 'exs'] },
   { fence: 'go', label: 'Go', aliases: ['golang'] },
   { fence: 'graphql', label: 'GraphQL', aliases: ['gql'] },
+  { fence: 'groovy', label: 'Groovy' },
+  { fence: 'haskell', label: 'Haskell', aliases: ['hs'] },
   { fence: 'ini', label: 'INI / TOML', aliases: ['toml'] },
   { fence: 'java', label: 'Java', aliases: ['jsp'] },
+  { fence: 'julia', label: 'Julia' },
   { fence: 'kotlin', label: 'Kotlin', aliases: ['kt', 'kts'] },
+  { fence: 'latex', label: 'LaTeX', aliases: ['tex'] },
   { fence: 'less', label: 'Less' },
   { fence: 'lua', label: 'Lua' },
   { fence: 'makefile', label: 'Makefile', aliases: ['mk', 'mak', 'make'] },
   { fence: 'markdown', label: 'Markdown', aliases: ['md', 'mkdown', 'mkd'] },
-  { fence: 'objectivec', label: 'Objective-C', aliases: ['objc', 'mm', 'obj-c'] },
+  { fence: 'matlab', label: 'MATLAB' },
+  { fence: 'nginx', label: 'Nginx config', aliases: ['nginxconf'] },
+  { fence: 'objectivec', label: 'Objective-C', aliases: ['objc', 'mm', 'obj-c', 'objective-c'] },
   { fence: 'perl', label: 'Perl', aliases: ['pl', 'pm'] },
   { fence: 'php', label: 'PHP' },
   { fence: 'php-template', label: 'PHP template' },
+  { fence: 'powershell', label: 'PowerShell', aliases: ['pwsh', 'ps', 'ps1'] },
+  { fence: 'properties', label: 'Java properties' },
+  { fence: 'protobuf', label: 'Protocol Buffers', aliases: ['proto'] },
   { fence: 'python-repl', label: 'Python REPL', aliases: ['pycon'] },
   { fence: 'r', label: 'R' },
   { fence: 'ruby', label: 'Ruby', aliases: ['rb', 'gemspec', 'podspec', 'thor', 'irb'] },
   { fence: 'rust', label: 'Rust', aliases: ['rs'] },
+  { fence: 'scala', label: 'Scala' },
   { fence: 'scss', label: 'SCSS' },
   { fence: 'shell', label: 'Shell session', aliases: ['console', 'shellsession'] },
   { fence: 'swift', label: 'Swift' },
@@ -70,7 +88,7 @@ export function codeLanguageLabel(language: string | null | undefined): string |
 
 const MENU =
   'pn-code-lang-menu fixed z-[1000] w-56 rounded-md border border-divider bg-surface-2/95 backdrop-blur ' +
-  'shadow-xl text-[13px] [@media(hover:none)]:text-[14px] text-pn select-none flex flex-col overflow-hidden';
+  'shadow-xl text-compact [@media(hover:none)]:text-body text-pn select-none flex flex-col overflow-hidden';
 const ROW = 'flex w-full items-center gap-2 px-3 py-1.5 [@media(hover:none)]:py-2 text-start transition';
 
 /** Phosphor's X, for the clear button. A node view is plain DOM, so the
@@ -136,7 +154,7 @@ export function openCodeLanguageMenu(
   menu.append(field, list);
 
   type Row = { fence: string | null; label: string };
-  const plain: Row = { fence: null, label: i18n.t('editor:codeBlock.plainText') };
+  const plain: Row = { fence: null, label: i18n.t('settings:appearance.copyFormatPlain') };
   const all: Row[] = [plain, ...LANGUAGES.map((l) => ({ fence: l.fence, label: l.label }))];
   const isCurrent = (row: Row) => row.label === (currentLabel ?? plain.label);
   // With no query the current language is the row the keys start from, so
@@ -155,7 +173,7 @@ export function openCodeLanguageMenu(
     const q = input.value.trim();
     input.className =
       `w-full h-8 rounded border border-divider bg-surface-1 ps-2 ${q ? 'pe-8' : 'pe-2'} ` +
-      'text-[13px] text-pn outline-none focus:border-accent placeholder:text-pn-muted';
+      'text-compact text-pn outline-none focus:border-accent placeholder:text-pn-muted';
     clearBtn.hidden = !input.value;
     list.replaceChildren();
     if (q) {

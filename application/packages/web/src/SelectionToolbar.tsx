@@ -12,7 +12,7 @@
  * narrow for all of them, they fold into a "more" menu from the left, so
  * Delete is always the last to go and every action stays one menu away.
  * At LIST_WIDTH_MIN (200 px) the row holds the exit X, the menu button,
- * Move and Delete. Spec: ops/docs/archive/ui-patterns.md (toolbar icon-only buttons)
+ * Move and Delete. Spec: docs/internal/design/ui-patterns.md (toolbar icon-only buttons)
  */
 
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
@@ -103,43 +103,43 @@ export function SelectionToolbar({
   const actions: Action[] =
     mode === 'normal'
       ? [
-          { key: 'export', label: t('selectionToolbar.export'), onClick: onExport, icon: <Download size={16} /> },
+          { key: 'export', label: t('selectionToolbar.export'), onClick: onExport, icon: <Download /> },
           {
             key: 'pin',
-            label: allStarred ? t('selectionToolbar.unpin') : t('selectionToolbar.pin'),
+            label: allStarred ? t('shell:contextMenu.unpin') : t('shell:contextMenu.pin'),
             onClick: onFavorite,
-            icon: <PushPin size={16} weight={allStarred ? 'fill' : 'bold'} />,
+            icon: <PushPin weight={allStarred ? 'fill' : 'bold'} />,
           },
           {
             key: 'archive',
-            label: allArchived ? t('selectionToolbar.unarchive') : t('selectionToolbar.archive'),
+            label: allArchived ? t('shell:contextMenu.unarchive') : t('shell:contextMenu.archive'),
             onClick: onArchive,
             icon: iconArchive(allArchived, 16),
           },
-          { key: 'tag', label: t('selectionToolbar.tag'), onClick: () => setTagOpen((v) => !v), icon: <Tag size={16} /> },
+          { key: 'tag', label: t('selectionToolbar.tag'), onClick: () => setTagOpen((v) => !v), icon: <Tag /> },
           {
             key: 'folder',
-            label: t('folders.moveTo'),
+            label: t('shell:contextMenu.moveToFolder'),
             onClick: onMoveToFolder,
             pro: !foldersUnlocked,
-            icon: <Folder size={16} />,
+            icon: <Folder />,
           },
-          { key: 'delete', label: t('selectionToolbar.delete'), tone: 'danger', onClick: onDelete, icon: <Trash size={16} /> },
+          { key: 'delete', label: t('common:actions.delete'), tone: 'danger', onClick: onDelete, icon: <Trash /> },
         ]
       : [
           {
             key: 'restore',
-            label: t('selectionToolbar.restore'),
+            label: t('shell:contextMenu.restore'),
             tone: 'success',
             onClick: onRestore,
-            icon: <ArrowCounterClockwise size={16} />,
+            icon: <ArrowCounterClockwise />,
           },
           {
             key: 'deleteForever',
-            label: t('selectionToolbar.deleteForever'),
+            label: t('shell:contextMenu.deleteForever'),
             tone: 'danger',
             onClick: onDeleteForever,
-            icon: <Trash size={16} />,
+            icon: <Trash />,
           },
         ];
 
@@ -175,13 +175,13 @@ export function SelectionToolbar({
 
   return (
     <div ref={rowRef} className="shrink-0 h-14 px-3 border-b border-divider flex items-center justify-between gap-1 bg-accent/5 dark:bg-accent/10">
-      <HoverLabel label={t('selectionToolbar.exitSelectionTooltip')} keys={keyText('escape')} position="below">
+      <HoverLabel label={t('shell:selectionToolbar.exitSelection')} keys={keyText('escape')} position="below">
       <button
         onClick={onClear}
         aria-label={t('selectionToolbar.exitSelection')}
         className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-md text-pn-soft hover:bg-pn/5 hover:text-pn transition"
       >
-        <X size={18} />
+        <X />
       </button>
       </HoverLabel>
 
@@ -196,7 +196,7 @@ export function SelectionToolbar({
             aria-expanded={!!menu.state}
             className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-md text-pn-soft hover:bg-pn/5 hover:text-pn transition"
           >
-            <DotsThreeOutlineVertical size={16} />
+            <DotsThreeOutlineVertical />
           </button>
           </HoverLabel>
         )}

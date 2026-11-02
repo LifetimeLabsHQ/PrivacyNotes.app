@@ -18,7 +18,7 @@
  * re-run: each pass fingerprints what it knows and only reads what is new or
  * has changed underneath us.
  *
- * Spec: ops/docs/archive/markdown-folder.md (section 9)
+ * Spec: docs/internal/specs/markdown-folder.md (section 9)
  */
 import { useEffect, useRef, useState } from 'react';
 import { adaptFile } from './adapter';
@@ -32,6 +32,13 @@ const CONCURRENCY = 8;
 /** Results are published every this many files rather than per file, so a big
  *  vault does not re-render the rail thousands of times. */
 const PUBLISH_EVERY = 50;
+/** A file larger than this is listed but not read by the pass. Every pattern
+ *  the pass runs reads the whole body on the main thread, and one 50 MB file
+ *  blocked it for half a minute and then took the desktop webview down,
+ *  before any file was opened, on every launch while the folder was
+ *  remembered (external report, 2026-10-24, bug report 34). Far above any
+ *  note a person writes; a log or an export is what crosses it. */
+const TAG_PASS_MAX_BYTES = 4 * 1024 * 1024;
 
 /** Everything the list needs about a file that only its CONTENTS can answer.
  *  Gathered in the same pass, because having read the file already is what
@@ -141,7 +148,9 @@ export function useTagIndex(entries: DirectoryEntry[] | null): TagIndex {
           const stamp = await entry.ref.stamp();
           if (cancelled) return;
           const known = read.get(entry.relPath);
-          if (!known || !stampsMatch(stampOf(known), stamp)) {
+          if (stamp && stamp.size > TAG_PASS_MAX_BYTES) {
+            read.set(entry.relPath, { tags: [], excerpt: '', mtime: stamp.mtime, size: stamp.size, words: 0 });
+          } else if (!known || !stampsMatch(stampOf(known), stamp)) {
             const raw = await entry.ref.read();
             if (cancelled) return;
             const { tags, body } = adaptFile(entry.ref.name, raw);

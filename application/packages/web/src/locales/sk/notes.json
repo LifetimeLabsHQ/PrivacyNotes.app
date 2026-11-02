@@ -6,19 +6,19 @@
     "deselect": "Zrušiť výber poznámky",
     "pinProtected": "Chránené PIN-om",
     "readOnly": "Iba na čítanie",
-    "file": "Súbor",
     "empty": "Prázdne",
     "noContent": "Bez obsahu",
     "notBackedUp": "Bez zálohy",
     "archived": "Archivované",
-    "entryDate": "Dátum záznamu",
     "date": "Dátum",
-    "dayOf": "deň {{n}} z {{total}}"
+    "dayOf": "deň {{n}} z {{total}}",
+    "reminders_one": "{{count}} pripomienka",
+    "reminders_few": "{{count}} pripomienky",
+    "reminders_other": "{{count}} pripomienok"
   },
   "header": {
     "new": "Nové",
     "newNote": "Nová poznámka",
-    "trash": "Kôš",
     "newEvent": "Nová udalosť"
   },
   "folderChip": {
@@ -31,7 +31,6 @@
   },
   "vaultNew": {
     "ariaLabel": "Nová položka trezoru",
-    "login": "Prihlasovacie údaje",
     "card": "Kreditná karta",
     "sshKey": "Kľúč SSH",
     "generator": "Heslo"
@@ -39,15 +38,14 @@
   "newMenu": {
     "note": "Poznámka",
     "task": "Úloha",
-    "kanban": "Kanbanová tabuľa",
+    "kanban": "Kanban",
+    "drawing": "Kresba",
     "journal": "Denník",
     "login": "Prihlasovacie údaje",
-    "file": "Súbor",
     "bookmark": "Záložka",
     "clipPage": "Uložiť stránku",
     "contact": "Kontakt",
-    "event": "Udalosť",
-    "quickAdd": "Rýchle pridanie"
+    "event": "Udalosť"
   },
   "vaultFilter": {
     "all": "Všetko",
@@ -64,14 +62,14 @@
   "trash": {
     "empty": "Vyprázdniť",
     "emptyHover": "Odstrániť všetky poznámky v koši",
-    "storage": "Úložisko",
     "autoDelete": "Automatické odstránenie po 30 dňoch"
   },
   "search": {
     "sortOptions": "Možnosti zoradenia a zobrazenia",
     "placeholderVault": "Hľadať v trezore…",
     "placeholderNotes": "Hľadať v poznámkach…",
-    "placeholderEvents": "Hľadať udalosti…"
+    "placeholderEvents": "Hľadať udalosti…",
+    "placeholderDrawings": "Hľadať kresby…"
   },
   "selection": {
     "countOf": "Vybrané: {{selected}} z {{total}}",
@@ -82,10 +80,11 @@
     "noMatches": "Žiadne výsledky.",
     "vault": "Trezor je prázdny.",
     "notes": "Zatiaľ žiadne poznámky.",
+    "drawings": "Zatiaľ žiadne kresby.",
+    "drawingsLine": "Načrtni, naplánuj alebo zmapuj nápad. Kresby môžu odkazovať na tvoje poznámky, no neukazujú, čo je v nich.",
     "archive": "V archíve nič nie je.",
     "trash": "Kôš je prázdny.",
     "filtered": "Tvojim filtrom nezodpovedajú žiadne položky.",
-    "clearFilters": "Zrušiť filtre",
     "filteredAfter": "a zobraziť položky.",
     "hiddenInAll_one": "{{count}} položku skrýva filter Zobraziť v zobrazení Všetko. Zobrazíš ju vo filtri vedľa Všetko.",
     "hiddenInAll_few": "{{count}} položky skrýva filter Zobraziť v zobrazení Všetko. Zobrazíš ich vo filtri vedľa Všetko.",
@@ -100,16 +99,6 @@
     "other": "Ostatné",
     "collapseAll": "Zbaliť všetky skupiny",
     "expandAll": "Rozbaliť všetky skupiny"
-  },
-  "headerLabel": {
-    "allItems": "Všetko",
-    "untagged": "Bez značky",
-    "journals": "Denníky",
-    "vault": "Trezor",
-    "pinned": "Pripnuté",
-    "archive": "Archív",
-    "notes": "Poznámky",
-    "calendar": "Kalendár"
   },
   "footerStats": {
     "journals_one": "Denník",
@@ -130,6 +119,9 @@
     "contacts_one": "Kontakt",
     "contacts_few": "Kontakty",
     "contacts_other": "Kontaktov",
+    "drawings_one": "Kresba",
+    "drawings_few": "Kresby",
+    "drawings_other": "Kresieb",
     "files_one": "Súbor",
     "files_few": "Súbory",
     "files_other": "Súborov",
@@ -164,7 +156,6 @@
     "reload": "Načítať znova"
   },
   "banner": {
-    "dismiss": "Zavrieť",
     "proActivationPending": "Platba bola prijatá, ale aktivácia Pro trvá dlhšie ako zvyčajne. O minútu obnov stránku alebo kontaktuj podporu, ak sa Pro nezapne.",
     "snapshotPaused": "História poznámky je pozastavená. Tvoj tarif Pro vyzerá neaktívny. Nové úpravy sa nebudú ukladať ako verzie, kým sa Pro neobnoví.",
     "restorePro": "Obnoviť Pro",
@@ -172,8 +163,7 @@
     "updateCard": "Aktualizovať kartu"
   },
   "sidebar": {
-    "collapse": "Zbaliť bočný panel",
-    "expand": "Rozbaliť bočný panel"
+    "collapse": "Zbaliť bočný panel"
   },
   "notesList": {
     "collapse": "Zbaliť zoznam poznámok",
@@ -210,24 +200,11 @@
     "titlePlaceholder": "Bez názvu (klikni a uprav, alebo nechaj vygenerovať automaticky)",
     "titlePlaceholderLogin": "napr. GitHub",
     "titlePlaceholderCard": "napr. Visa končiaca na 4242",
-    "titlePlaceholderSshKey": "napr. kľúč na nasadenie GitHub",
-    "pin": "Pripnúť",
-    "unpin": "Odopnúť",
-    "restore": "Obnoviť",
-    "deleteForever": "Odstrániť navždy",
-    "moveToTrash": "Presunúť do koša",
-    "noteOptions": "Možnosti poznámky",
     "readOnlyToggle": "Iba na čítanie. Vypnúť sa to dá v",
     "menu": "ponuke",
-    "showMarkdown": "Zobraziť markdown",
     "showFormatted": "Zobraziť formátovaný text",
     "invisiblesShow": "Zobraziť neviditeľné znaky",
     "invisiblesHide": "Skryť neviditeľné znaky",
-    "findInNote": "Hľadať v poznámke",
-    "navPrev": "Predchádzajúce",
-    "navNext": "Ďalšie",
-    "navPrevTab": "Predchádzajúca karta",
-    "navNextTab": "Ďalšia karta",
     "undo": "Vrátiť späť",
     "redo": "Znova",
     "hide": "Skryť",
@@ -237,9 +214,7 @@
     "widthDefault": "Predvolená šírka",
     "widthWide": "Širšie",
     "widthFull": "Plná šírka",
-    "burn": "Zdieľať a spáliť po prečítaní",
     "titlePlaceholderLink": "Názov záložky",
-    "titlePlaceholderContact": "Meno",
     "notBackedUpTooLarge": "Prekračuje limit 1 MB, preto nie je zálohovaná. Presuň obrázky do príloh alebo poznámku rozdeľ.",
     "notBackedUpFailed": "Bez zálohy. Posledná chyba: {{message}}. Skúša sa znova.",
     "unknownType": "Túto položku vytvorila novšia verzia PrivacyNotes. Na jej otvorenie aktualizuj aplikáciu."
@@ -256,15 +231,17 @@
     "printTextTitle": "Tlačiť iba text",
     "printTextDesc": "Zachová názov. Vynechá dátum, priečinok a značky.",
     "burnTitle": "Zdieľať a spáliť po prečítaní",
-    "burnDesc": "Zverejni túto poznámku ako odkaz na jedno zobrazenie. Odkaz sa po prečítaní sám zničí. Tvoja poznámka zostane v bezpečí v tvojom účte."
+    "burnDesc": "Zverejni túto poznámku ako odkaz na jedno zobrazenie. Odkaz sa po prečítaní sám zničí. Tvoja poznámka zostane v bezpečí v tvojom účte.",
+    "drawingFileTitle": "Kresba (.excalidraw)",
+    "drawingFileDesc": "Otvorí sa v aplikáciách Excalidraw a Obsidian aj so svojimi obrázkami.",
+    "drawingPngTitle": "Obrázok (.png)",
+    "drawingPngDesc": "Celá kresba ako jeden obrázok."
   },
   "weekReview": {
     "title": "Prehľad týždňa",
     "daysLogged": "{{count}}/7 zaznamenaných",
     "mood": "Nálada",
-    "sleep": "Spánok",
-    "meds": "Lieky",
-    "activity": "Aktivita"
+    "meds": "Lieky"
   },
   "footer": {
     "settings": "Nastavenia",
@@ -280,12 +257,10 @@
     "words_few": "Slová",
     "words_other": "Slov",
     "zen": "Zen",
-    "appearance": "Vzhľad",
     "lockApp": "Zamknúť aplikáciu",
     "lockAppSetUp": "Najprv nastav PIN v časti Zabezpečenie",
     "goToTop": "Na začiatok",
     "goToEnd": "Na koniec",
-    "signOut": "Odhlásiť sa",
     "signingOut": "Odhlasovanie…",
     "switchToLight": "Prepnúť na svetlý režim",
     "switchToDark": "Prepnúť na tmavý režim"
@@ -323,12 +298,13 @@
     "bodyMulti": "Tieto súbory ({{count}}) vyzerajú ako markdown. Importovať ich ako poznámky, ktoré môžeš čítať a upravovať, alebo ich uložiť ako šifrované prílohy?"
   },
   "bulkTrash": {
-    "title": "Presunúť do koša",
-    "body_one": "Presunúť <highlight>{{count}} položku</highlight> do koša? Môžeš ju neskôr obnoviť.",
-    "body_few": "Presunúť <highlight>{{count}} položky</highlight> do koša? Neskôr ich môžeš obnoviť.",
+    "body_one": "Odstrániť <highlight>{{count}} položku</highlight>? Presuň ju do koša, ak ju chceš neskôr obnoviť, alebo ju odstráň navždy.",
+    "body_few": "Odstrániť <highlight>{{count}} položky</highlight>? Presuň ich do koša, ak ich chceš neskôr obnoviť, alebo ich odstráň navždy.",
     "body_many": "Presunúť <highlight>{{count}} položky</highlight> do koša? Neskôr ich môžeš obnoviť.",
-    "body_other": "Presunúť <highlight>{{count}} položiek</highlight> do koša? Neskôr ich môžeš obnoviť.",
-    "readOnlyTitle": "Iba na čítanie",
+    "body_other": "Odstrániť <highlight>{{count}} položiek</highlight>? Presuň ich do koša, ak ich chceš neskôr obnoviť, alebo ich odstráň navždy.",
+    "confirm": "Presunúť do koša",
+    "keys": "Mimo tohto okna <kbd>{{trash}}</kbd> presunie položku do koša okamžite a <kbd>{{ask}}</kbd> otvorí toto okno aj po voľbe „Už sa nepýtať“.",
+    "dontAskAgain": "Už sa nepýtať",
     "readOnlyAcknowledge": "Rozumiem",
     "readOnlyBlocked_one": "Táto položka je <highlight>iba na čítanie</highlight>, preto sa nedá presunúť do koša. Najprv vypni režim iba na čítanie v ponuke Možnosti poznámky.",
     "readOnlyBlocked_few": "Všetky <highlight>{{count}} položky</highlight> sú iba na čítanie, takže žiadnu z nich nemožno presunúť do koša. Najprv vypni režim iba na čítanie v ponuke Možnosti poznámky.",
@@ -341,25 +317,14 @@
   },
   "deleteCheckedTasks": {
     "title": "Odstrániť zaškrtnuté položky?",
-    "confirm": "Odstrániť",
     "body_one": "<highlight>{{count}} položka</highlight> sa z tejto poznámky odstráni. Toto sa nedá vrátiť späť.",
     "body_few": "<highlight>{{count}} položky</highlight> sa z tejto poznámky odstránia vrátane vnorených položiek. Toto sa nedá vrátiť späť.",
     "body_many": "<highlight>{{count}} položky</highlight> sa z tejto poznámky odstráni vrátane vnorených položiek. Toto sa nedá vrátiť späť.",
     "body_other": "<highlight>{{count}} položiek</highlight> sa z tejto poznámky odstráni vrátane vnorených položiek. Toto sa nedá vrátiť späť."
   },
-  "bulkDelete": {
-    "body_one": "Navždy odstrániť <highlight>{{count}} poznámku</highlight>? Toto sa nedá vrátiť späť.",
-    "body_few": "Navždy odstrániť <highlight>{{count}} poznámky</highlight>? Toto sa nedá vrátiť späť.",
-    "body_many": "Navždy odstrániť <highlight>{{count}} poznámky</highlight>? Toto sa nedá vrátiť späť.",
-    "body_other": "Navždy odstrániť <highlight>{{count}} poznámok</highlight>? Toto sa nedá vrátiť späť."
-  },
   "tagConfirm": {
     "mergeTitle": "Zlúčiť značky",
-    "deleteTitle": "Odstrániť značku",
-    "deleteWithNotesTitle": "Odstrániť značku a poznámky",
     "mergeConfirm": "Zlúčiť",
-    "deleteConfirm": "Odstrániť značku",
-    "moveToTrash": "Presunúť do koša",
     "mergeBody_one": "Značka <highlight>„{{targetTag}}“</highlight> už existuje. Zlúčiť do nej <highlight>{{count}} poznámku</highlight>, ktorá má teraz značku „{{tag}}“?",
     "mergeBody_few": "Značka <highlight>„{{targetTag}}“</highlight> už existuje. Zlúčiť do nej <highlight>{{count}} poznámky</highlight>, ktoré majú teraz značku „{{tag}}“?",
     "mergeBody_many": "Značka <highlight>„{{targetTag}}“</highlight> už existuje. Zlúčiť do nej <highlight>{{count}} poznámky</highlight> so značkou „{{tag}}“?",
@@ -396,5 +361,35 @@
     "protectedHidden_one": "{{count}} položka chránená PIN-om sa nezobrazuje",
     "protectedHidden_few": "{{count}} položky chránené PIN-om sa nezobrazujú",
     "protectedHidden_other": "{{count}} položiek chránených PIN-om sa nezobrazuje"
+  },
+  "drawing": {
+    "fullScreen": "Celá obrazovka",
+    "frame": "Rám",
+    "laser": "Laserové ukazovadlo",
+    "bar": {
+      "hiddenNote": "Stále fungujú cez svoje klávesy."
+    },
+    "resetTitle": "Vymazať plátno?",
+    "resetBody": "Odstráni sa všetko na plátne. Cez Vrátiť späť sa to dá obnoviť.",
+    "hotkeysTitle": "Klávesové skratky kreslenia",
+    "tools": {
+      "label": "Nástroje na kreslenie",
+      "keepTool": "Ponechať nástroj po kreslení",
+      "hand": "Posúvať plátno",
+      "rectangle": "Obdĺžnik",
+      "diamond": "Kosoštvorec",
+      "ellipse": "Elipsa",
+      "arrow": "Šípka",
+      "line": "Čiara",
+      "pen": "Pero",
+      "text": "Textové pole",
+      "eraser": "Guma",
+      "resetZoom": "Vynulovať priblíženie",
+      "open": "Otvoriť súbor s kresbou",
+      "reset": "Vymazať plátno",
+      "style": "Štýl",
+      "more": "Viac nástrojov",
+      "fewer": "Menej nástrojov"
+    }
   }
 }

@@ -1,18 +1,14 @@
 {
   "pillars": {
-    "trash": "ถังขยะ",
-    "bookmarks": "บุ๊กมาร์ก",
-    "contacts": "รายชื่อติดต่อ"
+    "trash": "ถังขยะ"
   },
   "tasksList": {
-    "title": "งาน",
     "newTaskNote": "โน้ตงานใหม่",
     "hideCompleted": "ซ่อนงานที่เสร็จแล้ว",
     "showCompleted": "แสดงงานที่เสร็จแล้ว",
     "searchPlaceholder": "ค้นหางาน…",
     "sortOptions": "ตัวเลือกการเรียง",
     "quickAddPlaceholder": "เพิ่มงานอย่างรวดเร็ว",
-    "noMatches": "ไม่พบรายการที่ตรงกัน",
     "itemsWithTasks": "รายการที่มีงาน",
     "allTasks": "งานทั้งหมด",
     "tasksFromOtherItems": "งานในรายการอื่น",
@@ -29,45 +25,27 @@
     "seeLess": "ดูน้อยลง"
   },
   "filesList": {
-    "title": "ไฟล์",
     "upload": "อัปโหลด",
     "selectedOf": "เลือกแล้ว {{selected}} จาก {{total}}",
-    "deselectAll": "ยกเลิกการเลือกทั้งหมด",
-    "selectAll": "เลือกทั้งหมด",
-    "storage": "พื้นที่จัดเก็บ",
     "perFile": "ต่อไฟล์",
     "free": "ฟรี",
-    "upgradeToPro": "อัปเกรดเป็น Pro",
     "filterAll": "ทั้งหมด",
-    "filterImages": "รูปภาพ",
     "filterAudio": "เสียง",
     "filterFiles": "ไฟล์",
-    "sortOptions": "ตัวเลือกการเรียง",
     "searchPlaceholder": "ค้นหาไฟล์…",
     "sortName": "ชื่อ",
     "showNotesWithAttachments": "แสดงไฟล์ในรายการอื่น",
-    "noMatches": "ไม่พบรายการที่ตรงกัน",
     "pinProtected": "ป้องกันด้วย PIN",
-    "readOnly": "อ่านอย่างเดียว",
     "noFilesYet": "ยังไม่มีไฟล์",
     "noDocuments": "ไม่มีเอกสาร",
     "noImages": "ไม่มีรูปภาพ",
     "noAudioFiles": "ไม่มีไฟล์เสียง",
     "emptyTypesHint": "รูปภาพ เอกสาร เสียง วิดีโอ และไฟล์ zip สูงสุด {{max}} MB ต่อไฟล์",
     "uploadFiles": "อัปโหลดไฟล์",
-    "menuDeselect": "ยกเลิกการเลือก",
-    "menuSelect": "เลือก",
     "menuShow": "แสดง",
     "menuAllFiles": "ไฟล์ทั้งหมด",
-    "menuImages": "รูปภาพ",
-    "menuAudio": "เสียง",
     "menuDocuments": "เอกสาร",
-    "menuHideNoteAttachments": "ซ่อนไฟล์ในรายการอื่น",
-    "menuShowNoteAttachments": "แสดงไฟล์ในรายการอื่น",
-    "menuUnpin": "เลิกปักหมุด",
-    "menuPin": "ปักหมุด",
-    "menuRename": "เปลี่ยนชื่อ",
-    "menuMoveToTrash": "ย้ายไปที่ถังขยะ"
+    "menuHideNoteAttachments": "ซ่อนไฟล์ในรายการอื่น"
   },
   "vaultItem": {
     "badgeLogin": "ล็อกอิน",
@@ -78,7 +56,6 @@
     "untitledKey": "คีย์ที่ไม่มีชื่อ",
     "copied": "คัดลอกแล้ว!",
     "copyField": "คัดลอก {{label}}",
-    "hide": "ซ่อน",
     "reveal": "แสดง",
     "fieldUrl": "URL",
     "fieldUser": "ผู้ใช้",
@@ -91,14 +68,11 @@
     "fieldLabel": "ป้ายกำกับ",
     "fieldPublic": "สาธารณะ",
     "fieldPrivate": "ส่วนตัว",
-    "fieldTotp": "รหัส 2FA",
     "totpInvalid": "คีย์ไม่ถูกต้อง",
     "copyCode": "คัดลอกรหัส",
     "totpUnlockCta": "ปลดล็อกรหัส 2FA ด้วย Pro",
     "totpProNote": "คีย์ถูกบันทึกและซิงค์แล้ว มีเพียงรหัสที่ต้องใช้ Pro",
     "copyAll": "คัดลอก URL ชื่อผู้ใช้ และรหัสผ่าน",
-    "open": "เปิด",
-    "notesHeading": "โน้ต",
     "fillOneField": "กรอกอย่างน้อยหนึ่งช่องก่อนบันทึก",
     "expiryNeedsBoth": "วันหมดอายุต้องมีทั้งเดือนและปี หรือเว้นว่างทั้งสองช่อง",
     "customField": "ช่องที่กำหนดเอง",
@@ -127,20 +101,18 @@
   },
   "tagsRail": {
     "showAllItems": "แสดงรายการทั้งหมด",
-    "changelog": "Changelog",
     "closeMenu": "ปิดเมนู",
-    "close": "ปิด",
     "views": "เนื้อหา",
     "resizeSplit": "ปรับขนาดเนื้อหาและแท็กหรือโฟลเดอร์",
     "sidebarOptions": "ตัวเลือกแถบด้านข้าง",
     "showInSidebar": "แสดงในแถบด้านข้าง",
     "allOptions": "ตัวเลือกของรายการทั้งหมด",
     "showInAll": "แสดงในทั้งหมด",
-    "viewList": "รายการ",
-    "viewGrid": "ตาราง",
     "viewAuto": "อัตโนมัติ",
     "allItemsTooltip": "โน้ต บันทึกประจำวัน และรายการในตู้นิรภัยทั้งหมด",
     "allItems": "ทั้งหมด",
+    "dashboard": "หน้าแรก",
+    "dashboardTooltip": "วิดเจ็ตของคุณในหน้าเดียว",
     "pinnedTooltip": "รายการที่ปักหมุด",
     "pinned": "ปักหมุด",
     "archive": "เก็บถาวร",
@@ -148,6 +120,7 @@
     "notes": "โน้ต",
     "tasksTooltip": "งานจากทุกโน้ต",
     "tasks": "งาน",
+    "drawings": "ภาพวาด",
     "vaultTooltip": "ล็อกอิน บัตรเครดิต และคีย์",
     "vault": "ตู้นิรภัย",
     "filesTooltip": "ไฟล์และไฟล์แนบทั้งหมด",
@@ -155,7 +128,6 @@
     "journalsTooltip": "บันทึกประจำวัน",
     "journals": "บันทึกประจำวัน",
     "actionsForTag": "การดำเนินการสำหรับแท็ก {{tag}}",
-    "renameTag": "เปลี่ยนชื่อ",
     "removeFavorite": "เลิกเป็นรายการโปรด",
     "markAsFavorite": "เพิ่มเป็นรายการโปรด",
     "deleteTag": "ลบแท็ก",
@@ -163,7 +135,6 @@
     "tags": "แท็ก",
     "sortTags": "เรียงแท็ก",
     "sort": "เรียง",
-    "sortBy": "เรียงตาม",
     "sortEntries": "จำนวนรายการ",
     "sortName": "ชื่อ",
     "sortCustom": "กำหนดเอง",
@@ -174,11 +145,9 @@
     "createTag": "แท็กใหม่",
     "untagged": "ไม่มีแท็ก",
     "trashTooltip": "รายการที่ลบ",
-    "trash": "ถังขยะ",
     "feedback": "ความคิดเห็น",
     "import": "นำเข้า",
     "downloads": "ดาวน์โหลด",
-    "help": "ความช่วยเหลือ",
     "rate": "ให้คะแนน",
     "markdown": "Markdown",
     "markdownTip": "ไม่เข้ารหัส",
@@ -203,7 +172,6 @@
     "deleteConfirmBranchRoot": "“{{folder}}” และโฟลเดอร์ย่อยจะถูกลบ โน้ตในโฟลเดอร์เหล่านั้นจะย้ายไปที่ระดับบนสุด ไม่มีโน้ตใดถูกลบ",
     "deleteConfirmBranchNested": "“{{folder}}” และโฟลเดอร์ย่อยจะถูกลบ โน้ตในโฟลเดอร์เหล่านั้นจะย้ายไปที่ “{{parent}}” ไม่มีโน้ตใดถูกลบ",
     "deleteSubfolders_other": "ลบโฟลเดอร์ย่อย {{count}} โฟลเดอร์ของโฟลเดอร์นี้ด้วย",
-    "moveTo": "ย้ายไปที่โฟลเดอร์",
     "searchPlaceholder": "ค้นหาโฟลเดอร์",
     "sortFolders": "เรียงโฟลเดอร์",
     "chipUnfiled": "โฟลเดอร์",
@@ -224,7 +192,6 @@
     "seedTeam": "ทีม"
   },
   "collapsedSidebar": {
-    "newNote": "โน้ตใหม่",
     "expandSidebar": "ขยายแถบด้านข้าง"
   },
   "mobileHeader": {
@@ -239,26 +206,14 @@
     "colorFromTag": "จากแท็ก: #{{name}}",
     "colorOwnHint": "สีที่เลือกตรงนี้จะเติมพื้นหลังของโน้ตนี้ <setting>สีของโฟลเดอร์และแท็ก</setting>ไม่มีผลต่อสีนี้",
     "details": "รายละเอียด",
-    "readOnly": "อ่านอย่างเดียว",
     "readOnlyDescription": "แก้ไขไม่ได้จนกว่าจะปิดตัวเลือกนี้",
     "protect": "ป้องกัน",
     "convertTo": "แปลงเป็น",
-    "typeNote": "โน้ต",
     "typeJournal": "บันทึกประจำวัน",
-    "typeTask": "งาน",
-    "unpin": "เลิกปักหมุด",
-    "pin": "ปักหมุด",
-    "archive": "เก็บถาวร",
-    "unarchive": "เลิกเก็บถาวร",
     "burn": "เผา",
     "share": "แชร์",
     "trash": "ถังขยะ",
-    "duplicate": "ทำสำเนา",
-    "restore": "กู้คืน",
-    "deleteForever": "ลบถาวร",
-    "moveToFolder": "ย้ายไปที่โฟลเดอร์",
     "noteHistory": "ประวัติ",
-    "findReplace": "ค้นหาและแทนที่",
     "uncheckAllTasks": "ยกเลิกการเลือกทุกรายการ",
     "deleteCheckedTasks": "ลบรายการที่ทำเครื่องหมายแล้ว",
     "sortTasksByStatus": "เรียงรายการตามสถานะ",
@@ -274,27 +229,17 @@
     "schedule": "กำหนดการ",
     "ends": "สิ้นสุด",
     "sameDay": "วันเดียวกัน",
-    "allDay": "ทั้งวัน",
     "starts": "เริ่ม",
     "endsAt": "สิ้นสุดเวลา",
     "noEnd": "ไม่มี",
     "removeFromCalendar": "นำออกจากปฏิทิน",
     "makeEvent": "แปลงเป็น<b>กิจกรรม</b>เพื่อให้ทำซ้ำได้",
-    "typeEvent": "กิจกรรม",
     "repeatRemoved": "นำการทำซ้ำออกแล้ว"
   },
   "selectionToolbar": {
-    "exitSelectionTooltip": "ออกจากการเลือก",
     "exitSelection": "ออกจากการเลือก",
-    "unpin": "เลิกปักหมุด",
-    "pin": "ปักหมุด",
-    "archive": "เก็บถาวร",
-    "unarchive": "เลิกเก็บถาวร",
     "tag": "แท็ก",
     "export": "ส่งออก",
-    "delete": "ลบ",
-    "restore": "กู้คืน",
-    "deleteForever": "ลบถาวร",
     "more": "การดำเนินการเพิ่มเติม",
     "addTagPlaceholder": "เพิ่มแท็ก...",
     "noTagsFound": "ไม่พบแท็ก",
@@ -317,6 +262,7 @@
     "showTags": "แสดงโฟลเดอร์และแท็ก",
     "showCalendar": "แสดงปฏิทิน",
     "showCheckIn": "แสดงการ์ดเช็กอิน",
+    "showMedication": "แสดงการ์ดยา",
     "showWorkItems": "แสดงรายการใน<b>ที่ทำงาน</b>",
     "showPersonalItems": "แสดงรายการใน<b>ส่วนตัว</b>",
     "other": "อื่น ๆ",
@@ -339,7 +285,6 @@
     "moodCalendar": "แสดงอารมณ์ในปฏิทิน"
   },
   "backfillPopover": {
-    "calendarLabel": "ปฏิทินบันทึกประจำวัน",
     "today": "วันนี้",
     "chooseEntry": "รายการวันที่ {{date}}"
   },
@@ -359,6 +304,7 @@
     "newNote": "โน้ตใหม่",
     "newTask": "งานใหม่",
     "newKanban": "บอร์ดคัมบังใหม่",
+    "newDrawing": "ภาพวาดใหม่",
     "newLogin": "ล็อกอินใหม่",
     "newJournal": "บันทึกประจำวันใหม่",
     "newFile": "ไฟล์ใหม่",
@@ -383,32 +329,24 @@
     "duplicate": "ทำสำเนา",
     "moveToFolder": "ย้ายไปที่โฟลเดอร์",
     "exportAsMarkdown": "ส่งออกเป็น Markdown",
-    "shareBurnAfterReading": "แชร์และเผาหลังอ่าน",
     "exportAsHtml": "ส่งออกเป็น HTML",
-    "printSaveAsPdf": "พิมพ์ / บันทึกเป็น PDF",
-    "moveToTrash": "ย้ายไปที่ถังขยะ",
-    "newBookmark": "บุ๊กมาร์กใหม่",
     "newContact": "ผู้ติดต่อใหม่",
-    "openBookmark": "เปิด",
     "copyBookmarkUrl": "คัดลอก URL",
     "editBookmark": "แก้ไขบุ๊กมาร์ก",
     "saveAsNote": "บันทึกเป็นโน้ต",
-    "openClippedNote": "เปิดโน้ต",
     "openInTab": "เปิดในแท็บ",
     "openInTabHint": "{{key}}+คลิก",
+    "openInTabHintMiddle": "คลิกกลาง",
     "closeTab": "ปิดแท็บ",
     "closeOtherTabs": "ปิดแท็บอื่น",
     "closeAllTabs": "ปิดแท็บทั้งหมด",
     "pinTab": "ปักหมุดแท็บ",
     "unpinTab": "เลิกปักหมุดแท็บ",
-    "newEvent": "กิจกรรมใหม่",
-    "quickAdd": "เพิ่มด่วน"
+    "newEvent": "กิจกรรมใหม่"
   },
   "demoBanner": {
     "title": "ลองใช้ได้โดยไม่มีความเสี่ยง",
-    "description": "ที่นี่ไม่มีอะไรถูกบันทึก รับสมุดโน้ตเข้ารหัสของคุณเองได้ฟรี",
-    "cta": "สร้างบัญชี",
-    "dismiss": "ปิด"
+    "description": "ที่นี่ไม่มีอะไรถูกบันทึก รับสมุดโน้ตเข้ารหัสของคุณเองได้ฟรี"
   },
   "markdown": {
     "title": "Markdown",
@@ -446,20 +384,17 @@
     "fileCount_other": "{{count}} ไฟล์",
     "railFolders": "โฟลเดอร์ Markdown",
     "railTags": "แท็ก Markdown",
-    "allFiles": "ไฟล์ทั้งหมด",
     "modeRich": "แบบจัดรูปแบบ",
     "modeSource": "Markdown",
     "reopenPrompt": "หลังโหลดหน้าใหม่ เบราว์เซอร์ต้องขอสิทธิ์อีกครั้ง ระบบจำโฟลเดอร์ของคุณไว้แล้ว จึงใช้แค่คลิกเดียว",
     "reopenFolder": "เปิด {{name}} อีกครั้ง",
     "new": "สร้าง",
-    "delete": "ลบ",
     "saveToNotes": "บันทึกลงโน้ตของฉัน",
     "createFailed": "สร้างไฟล์ไม่ได้",
     "deleteFailed": "ย้ายไฟล์ไปที่ถังขยะไม่ได้",
     "importedToast": "บันทึก “{{title}}” ลงโน้ตที่เข้ารหัสแล้ว ไฟล์ต้นฉบับไม่ถูกแตะต้อง",
     "deleteTitle": "ย้ายไปที่ถังขยะของโฟลเดอร์หรือไม่?",
     "deleteBody": "“{{name}}” จะย้ายไปที่โฟลเดอร์ .trash ภายในโฟลเดอร์ Markdown ของคุณ หากเปลี่ยนใจ กู้คืนได้จากตัวจัดการไฟล์",
-    "deleteConfirm": "ย้ายไปที่ถังขยะ",
     "explainTitle": "โฟลเดอร์ Markdown ของคุณ",
     "explainDone": "เข้าใจแล้ว",
     "bannerTitle": "ตัวแก้ไข Markdown ขั้นสูง",
@@ -468,7 +403,6 @@
     "explainIntro": "เลือกโฟลเดอร์ที่มีไฟล์ .md และ .txt โฟลเดอร์ย่อยจะแสดงอัตโนมัติ การแก้ไขบันทึกลงไฟล์เดิม และไม่มีการแปลงไฟล์",
     "chipPreview": "แสดงผลทันที",
     "chipTasks": "งาน",
-    "chipTags": "แท็ก",
     "chipTables": "ตาราง",
     "useAgent": "ให้ AI agent เข้าถึงโน้ตของคุณ",
     "useObsidian": "ไฟล์ชุดเดียวกันใน Obsidian หรือ Logseq",
@@ -496,7 +430,6 @@
     "assocWorking": "กำลังสอบถามระบบ…",
     "copyPath": "คัดลอกพาธ",
     "selectedCount": "เลือกแล้ว {{selected}} จาก {{total}}",
-    "selectAll": "เลือกทั้งหมด",
     "exitSelection": "ออกจากการเลือก",
     "deleteManyTitle_other": "ย้าย {{count}} ไฟล์ไปที่ถังขยะของโฟลเดอร์หรือไม่?",
     "deleteManyBody": "ไฟล์จะย้ายไปที่โฟลเดอร์ .trash ภายในโฟลเดอร์ Markdown ของคุณ หากเปลี่ยนใจ กู้คืนได้จากตัวจัดการไฟล์",
@@ -517,15 +450,11 @@
   "bookmarks": {
     "newBookmark": "บุ๊กมาร์กใหม่",
     "searchPlaceholder": "ค้นหาบุ๊กมาร์ก…",
-    "sortOptions": "ตัวเลือกการเรียง",
     "quickAddPlaceholder": "วางหรือพิมพ์ลิงก์…",
     "urlLabel": "บุ๊กมาร์ก (URL)",
     "urlInvalid": "ใส่ที่อยู่เว็บ เช่น example.com หรือ https://example.com/page",
     "urlDuplicate": "มีบุ๊กมาร์กอื่นใช้ URL นี้อยู่แล้ว จึงไม่ได้บันทึกการเปลี่ยนแปลง",
-    "openAction": "เปิด",
     "copiedUrl": "คัดลอกลิงก์แล้ว",
-    "moveToTrash": "ย้ายไปที่ถังขยะ",
-    "rowMenu": "การดำเนินการเพิ่มเติม",
     "emptyNone": "ยังไม่มีบุ๊กมาร์ก",
     "emptyTitle": "เก็บเว็บไซต์ที่ควรเก็บไว้",
     "emptyAdd": "เพิ่มบุ๊กมาร์ก",
@@ -539,11 +468,9 @@
     "new": "สร้าง"
   },
   "contacts": {
-    "new": "สร้าง",
     "searchPlaceholder": "ค้นหารายชื่อติดต่อ…",
-    "sortOptions": "ตัวเลือกการเรียง",
     "emptyNone": "ยังไม่มีรายชื่อติดต่อ",
-    "emptyTitle": "สมุดรายชื่อที่มีแค่คุณอ่านได้",
+    "emptyTitle": "สมุดรายชื่อที่เข้ารหัสบนอุปกรณ์ของคุณ",
     "emptyAdd": "เพิ่มผู้ติดต่อ",
     "emptyImport": "นำเข้ารายชื่อติดต่อ",
     "noMatches": "ไม่พบรายการที่ตรงกัน",
@@ -562,15 +489,12 @@
     "company": "บริษัท",
     "department": "แผนก",
     "jobTitle": "ตำแหน่งงาน",
-    "groupName": "ชื่อ",
     "groupPhone": "โทรศัพท์",
     "groupEmail": "อีเมล",
     "groupAddress": "ที่อยู่",
     "groupWebsite": "เว็บไซต์",
-    "groupProfile": "โปรไฟล์",
     "groupDates": "วันที่",
     "groupRelated": "บุคคลที่เกี่ยวข้อง",
-    "groupNote": "โน้ต",
     "addPhone": "เพิ่มโทรศัพท์",
     "addEmail": "เพิ่มอีเมล",
     "addWebsite": "เพิ่มเว็บไซต์",
@@ -585,7 +509,6 @@
     "notePlaceholder": "โน้ตเกี่ยวกับบุคคลนี้",
     "labelNone": "ป้ายกำกับ",
     "labelCustom": "ป้ายกำกับแบบกำหนดเอง…",
-    "removeRow": "นำออก",
     "call": "โทร",
     "message": "ส่งข้อความ",
     "sendEmail": "ส่งอีเมล",
@@ -605,15 +528,8 @@
     "menuPersonal": "ส่วนตัว",
     "menuName": "ชื่อ",
     "menuText": "ข้อความ",
-    "itemAddress": "ที่อยู่",
-    "itemWebsite": "เว็บไซต์",
-    "itemProfile": "โปรไฟล์",
-    "itemCompany": "บริษัท",
-    "itemJobTitle": "ตำแหน่งงาน",
-    "itemBirthday": "วันเกิด",
     "itemDate": "วันที่",
     "itemRelated": "ชื่อบุคคลที่เกี่ยวข้อง",
-    "itemNickname": "ชื่อเล่น",
     "itemNameParts": "ชื่อกลาง คำนำหน้า คำต่อท้าย",
     "itemPhonetic": "ชื่อตามการออกเสียง",
     "itemNote": "โน้ต",
@@ -740,8 +656,10 @@
       "note": "โน้ต",
       "task": "รายการงาน",
       "journal": "บันทึกประจำวัน",
-      "contact": "วันเกิด"
+      "contact": "วันเกิดและวันสำคัญ"
     },
+    "birthdays": "วันเกิด",
+    "contactDate": "{{name}}: {{label}}",
     "dragEnd": "ลากเพื่อเปลี่ยนวันสิ้นสุด",
     "previousDay": "วันก่อนหน้า",
     "nextDay": "วันถัดไป",
@@ -819,7 +737,6 @@
     "onDayAt": "ในวันนั้น เวลา {{time}}",
     "daysBeforeAt_other": "ก่อน {{count}} วัน เวลา {{time}}",
     "custom": "กำหนดเอง",
-    "add": "เพิ่ม",
     "max": "การแจ้งเตือนได้สูงสุดห้ารายการ",
     "units": {
       "minutes": "นาที",
@@ -831,11 +748,9 @@
     "remove": "นำ {{alert}} ออก",
     "reminder": "การเตือน",
     "medication": "การเตือนทานยา",
-    "open": "เปิด",
     "snooze": "เลื่อนเตือน 10 นาที",
     "offOnPhone": "การเตือนปิดอยู่บนโทรศัพท์เครื่องนี้",
-    "turnOn": "เปิดใช้",
-    "openSettings": "เปิดการตั้งค่า"
+    "turnOn": "เปิดใช้"
   },
   "quickAdd": {
     "group": "สร้าง",
@@ -846,6 +761,14 @@
     "appendHintDetail": "พิมพ์ >> แล้วตามด้วยส่วนต้นของชื่อ",
     "appendNone": "ยังไม่มีรายการงานหรือโน้ตให้เพิ่ม",
     "appendNoneDetail": "พิมพ์ชื่อหลัง >> เพื่อสร้างรายการงานที่ใช้ชื่อนั้น",
+    "cannotAdd": "เพิ่มไปยัง {{title}} ไม่ได้",
+    "blocked": {
+      "trash": "อยู่ในถังขยะ",
+      "pin": "ป้องกันด้วย PIN ของคุณ เปิดก่อนจึงจะเพิ่มได้",
+      "readOnly": "เป็นแบบอ่านอย่างเดียว",
+      "board": "เป็นบอร์ดคัมบัง เพิ่มการ์ดบนบอร์ด",
+      "archived": "เก็บถาวรอยู่ เลิกเก็บถาวรก่อนจึงจะเพิ่มได้"
+    },
     "linkGroup": "บันทึกลิงก์นี้",
     "linkDetail": {
       "bookmark": "เก็บที่อยู่ไว้ แล้วตั้งชื่อในขั้นถัดไป",
@@ -863,6 +786,7 @@
       "task": "รายการงานใหม่",
       "journal": "บันทึกประจำวันใหม่",
       "kanban": "บอร์ดคัมบังใหม่",
+      "drawing": "ภาพวาดใหม่",
       "login": "ล็อกอินใหม่",
       "file": "อัปโหลดไฟล์",
       "contact": "ผู้ติดต่อใหม่",
@@ -895,8 +819,8 @@
       },
       "length": {
         "label": "ระยะเวลา",
-        "examples": "นาน 30 นาที · นาน 3 วัน · ศุกร์ ถึง อาทิตย์",
-        "insert": "นาน 1 ชั่วโมง"
+        "examples": "15:00 นาน 30 นาที · นาน 3 วัน · ศุกร์ ถึง อาทิตย์",
+        "insert": "15:00 นาน 1 ชั่วโมง"
       },
       "repeat": {
         "label": "ทำซ้ำ",
@@ -942,17 +866,14 @@
     "backToToday": "กลับไปวันนี้",
     "options": "ตัวเลือกเช็กอิน",
     "skipToday": "ข้ามวันนี้",
-    "hide": "ซ่อนการ์ดนี้",
+    "hide": "ซ่อน",
     "change": "เปลี่ยนอารมณ์",
     "saved": "บันทึกแล้ว",
     "chooseTrackers": "เลือกตัวติดตาม",
-    "settings": "การตั้งค่าเช็กอิน",
     "skipped": "ข้ามวันนี้แล้ว",
     "startOver": "เริ่มใหม่",
     "cleared": "ล้างเช็กอินแล้ว",
     "hidden": "ซ่อนการ์ดแล้ว เปิดกลับได้ด้วย แสดงการ์ดเช็กอิน ในการตั้งค่ารายการ",
-    "undo": "เลิกทำ",
-    "done": "เสร็จสิ้น",
     "write": "เขียนเกี่ยวกับวันนี้",
     "writeOn": "เขียนเกี่ยวกับวันที่ {{date}}",
     "streak": "วันที่ {{n}} ติดต่อกัน",
@@ -965,19 +886,25 @@
     "hiddenCount_other": "ซ่อนเช็กอินอยู่ {{count}} รายการ",
     "showThem": "แสดง"
   },
+  "medicationCard": {
+    "title": "ติดตามการทานยา",
+    "options": "ตัวเลือกยา",
+    "edit": "เปลี่ยนการทานยาของวันนี้",
+    "hidden": "ซ่อนการ์ดแล้ว เปิดกลับได้ในการตั้งค่ารายการ หรือใน การตั้งค่า > ตัวติดตาม > การใช้ยา"
+  },
   "clipper": {
-    "saveAsNote": "บันทึกเป็นโน้ต",
     "saving": "กำลังบันทึกเป็นโน้ต…",
     "stepPage": "กำลังดาวน์โหลดหน้าเว็บ",
     "stepPictures": "กำลังบันทึกรูปภาพ {{done}} จาก {{total}}",
-    "openNote": "เปิดโน้ต",
     "alreadySaved": "หน้านี้บันทึกเป็นโน้ตไว้แล้ว ({{date}})",
     "savedOn": "บันทึกเป็นโน้ตแล้ว {{date}}",
-    "windowTitle": "ตัดเก็บหน้าเว็บ",
     "addressLabel": "ที่อยู่เว็บ",
     "addressPlaceholder": "วางลิงก์…",
     "savePictures": "บันทึกรูปภาพ",
     "savePicturesHint": "สูงสุด 20 รูป จัดเก็บไว้กับโน้ต และนับรวมในพื้นที่จัดเก็บของคุณ",
+    "extensionTipTitle": "ตัดเก็บจากเบราว์เซอร์เพื่อผลลัพธ์ที่ดีกว่า",
+    "extensionTip": "ส่วนขยายเบราว์เซอร์บันทึกหน้าเว็บตามที่คุณเห็น รวมถึงหน้าที่ต้องลงชื่อเข้าใช้ก่อน",
+    "extensionTipSetUp": "ตั้งค่าส่วนขยาย",
     "downloading": "กำลังดาวน์โหลดหน้าเว็บ…",
     "downloadingPictures": "กำลังดาวน์โหลดรูปภาพ {{done}} จาก {{total}}",
     "picturesLine_other": "รูปภาพ {{count}} รูป · {{size}} บันทึกไว้กับโน้ต",
@@ -1007,5 +934,164 @@
     "until": "ถึง {{day}}",
     "noAlert": "ไม่มีการแจ้งเตือน",
     "endsLater": "สิ้นสุดวันอื่น"
+  },
+  "apps": {
+    "railLabel": "ส่วนขยาย",
+    "title": "ส่วนขยายเบราว์เซอร์",
+    "subtitle": "ตัวตัดเก็บหน้าเว็บและตัวจัดการรหัสผ่านใน Chrome, Firefox และ Edge ส่วนขยายไม่เคยถือกุญแจที่ใช้เปิดโน้ตของคุณ",
+    "stepInstall": "ติดตั้งส่วนขยาย",
+    "stepFeatures": "เลือกสิ่งที่ส่วนขยายทำได้",
+    "stepConnect": "เชื่อมต่อ",
+    "makeCode": "สร้างโค้ด",
+    "connectHint": "สร้างโค้ดใช้ครั้งเดียวแล้ววางในส่วนขยาย",
+    "thisBrowser": "เบราว์เซอร์นี้",
+    "otherApps": "แอปเดสก์ท็อปและโทรศัพท์:",
+    "desktopAll": "ดาวน์โหลดทั้งหมด",
+    "extensionComputersOnly": "ส่วนขยายนี้ใช้กับ Chrome, Firefox และ Edge บนคอมพิวเตอร์",
+    "demoSignUp": "สมัครเพื่อเชื่อมต่อเบราว์เซอร์"
+  },
+  "extensionConnect": {
+    "clips": "ตัวตัดเก็บหน้าเว็บ",
+    "clipsHint": "บันทึกเว็บไซต์เป็นโน้ต",
+    "loginsHint": "ล็อกอิน บัตร คีย์ SSH และบุ๊กมาร์กของเว็บไซต์ที่คุณเปิดอยู่ คัดลอกได้อย่างเดียว ล็อกด้วย PIN หรือรหัสล็อกของตัวเอง",
+    "pickOne": "เปิดอย่างน้อยหนึ่งอย่าง",
+    "codeLabel": "โค้ดสำหรับส่วนขยาย",
+    "oneUse": "ใช้ได้ครั้งเดียว ภายใน 10 นาที",
+    "usedBy": "{{name}} ใช้โค้ดนี้และเชื่อมต่อแล้ว หากไม่ใช่คุณ นำออกได้ที่ด้านล่าง",
+    "newCode": "โค้ดใหม่",
+    "tooManyCodes": "มีโค้ดที่รอใช้อยู่มากเกินไป ใช้โค้ดใดโค้ดหนึ่ง หรือรอ 10 นาที",
+    "tooManyExtensions": "บัญชีนี้เชื่อมต่อเบราว์เซอร์ครบ 10 ตัวแล้ว ซึ่งเป็นจำนวนสูงสุด นำออกหนึ่งตัวก่อน",
+    "keyElsewhere": "กุญแจล็อกอินของคุณอยู่ในอุปกรณ์อื่นของคุณ เปิด PrivacyNotes ที่นั่นแล้วรอให้ซิงค์ จากนั้นลองอีกครั้ง",
+    "failed": "สร้างโค้ดไม่ได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง"
+  },
+  "dashboard": {
+    "taskReadOnly": "โน้ตนี้เป็นแบบอ่านอย่างเดียว ปิดอ่านอย่างเดียวในเมนูตัวเลือกโน้ตเพื่อติ๊กงานในโน้ตนี้",
+    "addWidget": "เพิ่มวิดเจ็ต",
+    "catalogTitle": "เพิ่มวิดเจ็ต",
+    "layouts": "เลย์เอาต์",
+    "layoutChanged": "เปลี่ยนเลย์เอาต์แล้ว",
+    "full": "หน้าแรกเต็มแล้ว นำวิดเจ็ตออกก่อน",
+    "added": "เพิ่มในหน้าแรกแล้ว",
+    "removed": "นำออกจากหน้าแรกแล้ว",
+    "showOnHome": "แสดงในหน้าแรก",
+    "removeFromHome": "นำออกจากหน้าแรก",
+    "resize": "ปรับขนาด {{name}}",
+    "narrower": "แคบลง",
+    "taller": "สูงขึ้น",
+    "shorter": "เตี้ยลง",
+    "moveEarlier": "ย้ายขึ้นก่อน",
+    "moveLater": "ย้ายไปทีหลัง",
+    "chooseNote": "เลือกโน้ต",
+    "chooseTag": "เลือกแท็ก",
+    "chooseFolder": "เลือกโฟลเดอร์",
+    "chooseTracker": "เลือกตัวติดตาม",
+    "choose": "เลือก",
+    "gone": "ไม่มีอยู่แล้ว",
+    "otherSpace": "อยู่ในพื้นที่อื่น",
+    "proLocked": "เป็นส่วนหนึ่งของ Pro",
+    "noneToChoose": "ยังไม่มีอะไรให้เลือก",
+    "headerEvents_other": "วันนี้มี {{formatted}} กิจกรรม",
+    "headerTasks_other": "งานที่ยังไม่เสร็จ {{formatted}} รายการ",
+    "startToday": "เริ่มบันทึกประจำวันของวันนี้",
+    "groups": {
+      "keep": "สิ่งที่คุณเก็บไว้"
+    },
+    "layout": {
+      "everyday": "ทุกวัน",
+      "planner": "นักวางแผน",
+      "writer": "นักเขียน"
+    },
+    "w": {
+      "checkIn": {
+        "name": "เช็กอิน",
+        "help": "วันนี้คุณเป็นอย่างไร และตัวติดตามของคุณ"
+      },
+      "calendar": {
+        "help": "ทั้งเดือน พร้อมจุดแสดงบันทึกประจำวันและกิจกรรม"
+      },
+      "upcoming": {
+        "name": "กำลังจะมาถึง",
+        "help": "วันนี้และอีก 7 วันข้างหน้า"
+      },
+      "today": {
+        "name": "บันทึกประจำวันของวันนี้",
+        "help": "บันทึกประจำวันของวันนี้ หรือจุดเริ่มต้นสำหรับเขียน"
+      },
+      "tasks": {
+        "name": "งานที่ยังไม่เสร็จ",
+        "help": "งานที่ยังไม่ได้ทำเครื่องหมายจากโน้ตของคุณ"
+      },
+      "recent": {
+        "name": "แก้ไขล่าสุด",
+        "help": "รายการที่คุณทำล่าสุด"
+      },
+      "pinned": {
+        "help": "รายการที่คุณปักหมุดไว้"
+      },
+      "note": {
+        "name": "โน้ตหนึ่งรายการ",
+        "help": "โน้ตหนึ่งรายการที่คุณเลือก แสดงในหน้าแรก"
+      },
+      "tag": {
+        "name": "แท็กหนึ่งแท็ก",
+        "help": "รายการใหม่ล่าสุดที่มีแท็กหนึ่งแท็ก"
+      },
+      "folder": {
+        "name": "โฟลเดอร์หนึ่งโฟลเดอร์",
+        "help": "รายการใหม่ล่าสุดในโฟลเดอร์หนึ่งโฟลเดอร์"
+      },
+      "onThisDay": {
+        "name": "วันนี้ในอดีต",
+        "help": "บันทึกประจำวันจากปีก่อน ๆ"
+      },
+      "week": {
+        "help": "จำนวนคำ วันที่ใช้งาน รายการ และเช็กอิน"
+      },
+      "streak": {
+        "help": "จำนวนวันติดต่อกันที่คุณเขียน"
+      },
+      "checkInStreak": {
+        "help": "จำนวนวันติดต่อกันที่คุณเช็กอิน"
+      },
+      "rhythm": {
+        "name": "จังหวะของคุณ",
+        "help": "การเขียนและอารมณ์ 26 สัปดาห์"
+      },
+      "milestone": {
+        "name": "หลักชัยถัดไป",
+        "help": "อีกแค่ไหนจะถึงหลักชัยถัดไป"
+      },
+      "tracker": {
+        "name": "ตัวติดตามหนึ่งตัว",
+        "help": "ตัวติดตามหนึ่งตัว: ตัวเลขและวันของตัวติดตามนั้น"
+      },
+      "weekRecap": {
+        "help": "สัปดาห์ของคุณในการ์ดเดียว"
+      },
+      "files": {
+        "name": "ไฟล์ล่าสุด",
+        "help": "รูปภาพและไฟล์ใหม่ล่าสุดของคุณ"
+      },
+      "bookmarks": {
+        "help": "บุ๊กมาร์กใหม่ล่าสุดของคุณ"
+      },
+      "birthdays": {
+        "help": "วันเกิดในอีก 30 วันข้างหน้า"
+      }
+    },
+    "empty": {
+      "upcoming": "ไม่มีอะไรในอีก 7 วันข้างหน้า",
+      "tasks": "ไม่มีงานที่ยังไม่เสร็จ",
+      "recent": "ยังไม่มีอะไรที่นี่",
+      "pinned": "ยังไม่มีรายการที่ปักหมุด",
+      "tag": "ไม่มีรายการที่มีแท็กนี้",
+      "folder": "ไม่มีอะไรในโฟลเดอร์นี้",
+      "onThisDay": "ไม่มีบันทึกประจำวันในวันนี้ของปีก่อน ๆ",
+      "files": "ยังไม่มีไฟล์",
+      "bookmarks": "ยังไม่มีบุ๊กมาร์ก",
+      "birthdays": "ไม่มีวันเกิดในอีก 30 วันข้างหน้า",
+      "tracker": "ยังไม่มีการบันทึก",
+      "milestone": "ถึงทุกหลักชัยแล้ว"
+    }
   }
 }

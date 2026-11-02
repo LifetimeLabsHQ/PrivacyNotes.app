@@ -39,6 +39,16 @@
     "ordinal": "er, re, e, ème, eme, .",
     "work": "travail, boulot, pro",
     "personal": "perso, personnel, maison",
-    "in": "dans"
+    "in": "dans",
+    "weekend": "week-end, weekend, week end",
+    "endOfMonth": "fin du mois, fin de mois",
+    "morning": "matin, matinée",
+    "afternoon": "après-midi, après midi, aprèm, aprem",
+    "evening": "soirée, en soirée",
+    "biweekly": "toutes les deux semaines, toutes les 2 semaines, une semaine sur deux, quinzomadaire",
+    "quarterly": "trimestriel, trimestrielle, trimestriellement",
+    "halfPast": "et demie",
+    "numbers": "un, deux, trois, quatre, cinq, six, sept, huit, neuf, dix, onze, douze",
+    "a": "un, une"
   }
 }

@@ -7,7 +7,7 @@
  * stored file, and never a picture from a PIN-protected note that is still
  * locked (NotesView builds it).
  *
- * Spec: ops/docs/archive/ui-patterns.md (section 107, the file card and the picker)
+ * Spec: docs/internal/design/ui-patterns.md (section 107, the file card and the picker)
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -55,7 +55,7 @@ export function PicturePicker({ items, onPick, onClose }: {
     >
       <div className="bg-surface-2 border border-divider text-pn rounded-lg w-full max-w-lg flex flex-col max-h-[calc(100dvh-2rem)]">
         <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3">
-          <h2 className="text-lg font-semibold">{t('picker.title')}</h2>
+          <h2 className="text-heading font-semibold">{t('picker.title')}</h2>
           <CloseButton onClick={onClose} className="shrink-0" />
         </div>
         {items.length > 0 && (
@@ -70,9 +70,9 @@ export function PicturePicker({ items, onPick, onClose }: {
         )}
         <div className="flex-1 min-h-0 overflow-y-auto px-5 pb-3">
           {items.length === 0 ? (
-            <p className="py-10 text-sm text-center text-pn-muted">{t('picker.empty')}</p>
+            <p className="py-10 text-body text-center text-pn-muted">{t('picker.empty')}</p>
           ) : shown.length === 0 ? (
-            <p className="py-10 text-sm text-center text-pn-muted">{t('picker.noMatch')}</p>
+            <p className="py-10 text-body text-center text-pn-muted">{t('picker.noMatch')}</p>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
               {shown.map((it) => (
@@ -85,7 +85,7 @@ export function PicturePicker({ items, onPick, onClose }: {
                 >
                   <LazyPicture src={it.src} />
                   <span
-                    className="absolute inset-x-0 bottom-0 block px-1.5 pb-1 pt-4 bg-gradient-to-t from-black/80 to-transparent text-[11px] text-white text-start truncate"
+                    className="absolute inset-x-0 bottom-0 block px-1.5 pb-1 pt-4 bg-gradient-to-t from-black/80 to-transparent text-meta text-white text-start truncate"
                     dir="auto"
                   >
                     {it.name}
@@ -96,7 +96,7 @@ export function PicturePicker({ items, onPick, onClose }: {
           )}
         </div>
         {items.length > 0 && (
-          <p className="px-5 py-3 border-t border-divider text-xs text-pn-muted">
+          <p className="px-5 py-3 border-t border-divider text-small text-pn-muted">
             {t('picker.noCopy')}
           </p>
         )}

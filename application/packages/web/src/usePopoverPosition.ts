@@ -31,6 +31,16 @@ interface PopoverPositionOptions {
 }
 
 /**
+ * The bottom of what can be seen. iOS lays the keyboard over the layout
+ * without shrinking `innerHeight`, so a menu under a bar that sits on the
+ * keyboard opened behind it (GitHub #623).
+ */
+function visibleBottom(): number {
+  const vv = window.visualViewport;
+  return vv ? Math.min(window.innerHeight, vv.offsetTop + vv.height) : window.innerHeight;
+}
+
+/**
  * Position a portal-rendered popover anchored under a trigger button so it can
  * never be clipped by the viewport, no matter where the trigger sits.
  *
@@ -40,7 +50,7 @@ interface PopoverPositionOptions {
  *
  * Returns null until the first measurement. Render the popover while `open` is
  * true and give it `visibility: pos ? 'visible' : 'hidden'` so it never flashes
- * at a stale position before it is placed. Spec: ops/docs/archive/ui-patterns.md
+ * at a stale position before it is placed. Spec: docs/internal/design/ui-patterns.md
  * (scroll listener uses capture phase to catch scrollable ancestors, not just window)
  */
 export function usePopoverPosition<A extends HTMLElement, P extends HTMLElement>(
@@ -58,7 +68,7 @@ export function usePopoverPosition<A extends HTMLElement, P extends HTMLElement>
     const a = anchor.getBoundingClientRect();
     const p = pop.getBoundingClientRect();
     const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const vh = visibleBottom();
 
     // Horizontal: align to the trigger's chosen edge, then slide inward to fit.
     let left = align === 'end' ? a.right - p.width : align === 'center' ? a.left + (a.width - p.width) / 2 : a.left;
@@ -130,7 +140,7 @@ export function usePopoverPosition<A extends HTMLElement, P extends HTMLElement>
  * `point` is the desired top-left corner in viewport coordinates (pass null
  * when the menu is closed). Returns null until measured; render the menu and
  * set `visibility: pos ? 'visible' : 'hidden'` to avoid a flash at the raw,
- * pre-clamp point. Spec: ops/docs/archive/ui-patterns.md section 15 (measure the real
+ * pre-clamp point. Spec: docs/internal/design/ui-patterns.md section 15 (measure the real
  * menu rather than a hardcoded height/width guess)
  */
 export function usePointMenuPosition<P extends HTMLElement>(
@@ -147,7 +157,7 @@ export function usePointMenuPosition<P extends HTMLElement>(
     if (px == null || py == null || !menu) return;
     const m = menu.getBoundingClientRect();
     const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const vh = visibleBottom();
     let left = px;
     let top = py;
     if (left + m.width > vw - margin) left = Math.max(margin, vw - m.width - margin);

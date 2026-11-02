@@ -18,9 +18,9 @@ export function BackRow({ title, onBack, wide = false }: { title: string; onBack
         className="w-full flex items-center gap-1 px-1.5 py-1 text-start rounded-md hover:bg-surface-1 focus-visible:bg-surface-1 outline-none transition"
       >
         <span className="shrink-0 inline-flex items-center justify-center w-9 h-9 [@media(hover:none)]:w-11 [@media(hover:none)]:h-11 text-accent">
-          <CaretLeft size={16} aria-hidden="true" />
+          <CaretLeft aria-hidden="true" />
         </span>
-        <span className="text-[14px] font-medium text-pn">{title}</span>
+        <span className="text-body font-medium text-pn">{title}</span>
       </button>
     );
   }
@@ -32,9 +32,9 @@ export function BackRow({ title, onBack, wide = false }: { title: string; onBack
         aria-label={t('actions.back')}
         className="shrink-0 inline-flex items-center justify-center w-9 h-9 [@media(hover:none)]:w-11 [@media(hover:none)]:h-11 rounded-md text-accent hover:bg-surface-1 focus-visible:bg-surface-1 outline-none transition"
       >
-        <CaretLeft size={16} aria-hidden="true" />
+        <CaretLeft aria-hidden="true" />
       </button>
-      <span className="text-[14px] font-medium text-pn">{title}</span>
+      <span className="text-body font-medium text-pn">{title}</span>
     </div>
   );
 }

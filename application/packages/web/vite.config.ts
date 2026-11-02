@@ -8,6 +8,7 @@ import { changelogPagePlugin } from './changelog-page.ts';
 import { PUBLIC_CHANGELOG } from './src/publicChangelog.ts';
 import { helpPagePlugin } from './help-page.ts';
 import { roadmapPagePlugin } from './roadmap-page.ts';
+import { licensesPagePlugin } from './licenses-page.ts';
 import { themesPagePlugin } from './themes-page.ts';
 import { searchCoreScriptPlugin } from './search-core-script.ts';
 import { footerLinesScriptPlugin } from './footer-lines-script.ts';
@@ -38,7 +39,7 @@ const host = process.env.TAURI_DEV_HOST;
 // shell prefix in tauri.conf.json (Windows CI runs that command through
 // cmd, where `FOO=1 pnpm ...` is a syntax error). PN_APP_BUILD=1 forces
 // the same path by hand; PN_WEB_BUILD=1 forces the site back in.
-// Spec: ops/docs/bundle-size.md (static site out of the app payload)
+// Spec: docs/contrib/bundle-size.md (static site out of the app payload)
 const isAppBuild =
   process.env.PN_WEB_BUILD !== '1' &&
   (process.env.PN_APP_BUILD === '1' || !!process.env.TAURI_ENV_PLATFORM);
@@ -54,7 +55,7 @@ const isAppBuild =
  * Runs for EVERY target, app builds included: the chip is in the app, and
  * unlike the marketing plugins below it is not web-only.
  *
- * Spec: ops/docs/help-center.md (section 9 - the in-app help chip)
+ * Spec: docs/contrib/help-center.md (section 9 - the in-app help chip)
  */
 function syncHelpQuestions(): Plugin {
   return {
@@ -127,7 +128,7 @@ function announceBuildTarget(): Plugin {
 // and evergreen browsers, all of which read woff2. Drop the legacy pair
 // before Vite resolves the url() references, so the files are never
 // emitted in the first place.
-// Spec: ops/docs/bundle-size.md (KaTeX fonts)
+// Spec: docs/contrib/bundle-size.md (KaTeX fonts)
 function katexWoff2Only(): Plugin {
   const LEGACY = /,url\(fonts\/[^)]+\.woff\) format\("woff"\),url\(fonts\/[^)]+\.ttf\) format\("truetype"\)/g;
   return {
@@ -160,7 +161,7 @@ function katexWoff2Only(): Plugin {
 // file and throws on a mismatch: a Phosphor bump that changes the defs
 // format fails the build instead of silently rendering blank icons. Build
 // only, so dev keeps the untouched library.
-// Spec: ops/docs/bundle-size.md (Phosphor icon weights)
+// Spec: docs/contrib/bundle-size.md (Phosphor icon weights)
 const PHOSPHOR_WEIGHTS = ['thin', 'light', 'regular', 'bold', 'fill', 'duotone'] as const;
 const PHOSPHOR_DROP_WEIGHTS: readonly string[] = ['thin', 'light'];
 
@@ -207,7 +208,7 @@ function phosphorTrimWeights(): Plugin {
 // would be dead weight in every binary. Vite copies publicDir into
 // dist/ after the bundle is written, so the app build removes them
 // again in closeBundle.
-// Spec: ops/docs/bundle-size.md (static site out of the app payload)
+// Spec: docs/contrib/bundle-size.md (static site out of the app payload)
 function stripMarketingAssets(): Plugin {
   return {
     name: 'pn-strip-marketing-assets',
@@ -231,6 +232,12 @@ function stripMarketingAssets(): Plugin {
 // The version in the path keeps a new pdf.js from meeting a cached old decoder.
 // Spec: packages/web/src/PdfPages.tsx (header)
 const PDFJS_DECODERS = ['openjpeg_nowasm_fallback.js', 'jbig2_nowasm_fallback.js'];
+
+// Where the drawing canvas finds its fonts (see excalidrawFonts below).
+const EXCALIDRAW_VERSION = (JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, 'node_modules/@excalidraw/excalidraw/package.json'), 'utf8'),
+) as { version: string }).version;
+const EXCALIDRAW_ASSET_DIR = `excalidraw/${EXCALIDRAW_VERSION}/`;
 
 function pdfjsDecoders(): Plugin {
   const pkgFile = path.resolve(__dirname, 'node_modules/pdfjs-dist/package.json');
@@ -256,6 +263,146 @@ function pdfjsDecoders(): Plugin {
           source: fs.readFileSync(path.join(sourceDir, name)),
         });
       }
+    },
+  };
+}
+
+// Excalidraw (the drawing canvas) loads its fonts from a CDN unless
+// `window.EXCALIDRAW_ASSET_PATH` names our own copy. This copies them to
+// excalidraw/<version>/fonts/ in the build and serves them there in dev,
+// every family but Xiaolai: its 209 files (12.5 MB) draw Chinese and
+// Japanese in the hand-drawn style, and `dist/` is in every app download,
+// so such text uses the system font instead. The version in the path keeps
+// a new Excalidraw from meeting a cached old font. Assistant, the interface
+// font, stays out too: the app draws that interface in its own font
+// (excalidrawWithoutAssistant below).
+// Spec: docs/internal/specs/drawing.md (section 7, Fonts)
+const EXCALIDRAW_FONTS_LEFT_OUT = ['Xiaolai', 'Assistant'];
+
+function excalidrawFonts(): Plugin {
+  const pkgFile = path.resolve(__dirname, 'node_modules/@excalidraw/excalidraw/package.json');
+  const fontsDir = path.join(path.dirname(fs.realpathSync(pkgFile)), 'dist/prod/fonts');
+  const urlDir = `${EXCALIDRAW_ASSET_DIR}fonts/`;
+  const files = fs.readdirSync(fontsDir, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && !EXCALIDRAW_FONTS_LEFT_OUT.includes(d.name))
+    .flatMap((d) => fs.readdirSync(path.join(fontsDir, d.name)).map((f) => `${d.name}/${f}`));
+  return {
+    name: 'pn-excalidraw-fonts',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const pathname = (req.url ?? '').split('?')[0]!;
+        const name = pathname.startsWith(`/${urlDir}`) ? pathname.slice(urlDir.length + 1) : '';
+        if (!files.includes(name)) return next();
+        res.setHeader('Content-Type', 'font/woff2');
+        res.end(fs.readFileSync(path.join(fontsDir, name)));
+      });
+    },
+    generateBundle() {
+      for (const name of files) {
+        this.emitFile({ type: 'asset', fileName: `${urlDir}${name}`, source: fs.readFileSync(path.join(fontsDir, name)) });
+      }
+    },
+  };
+}
+
+// The other half of leaving Xiaolai out: Excalidraw registers the family at
+// start and adds its faces back to the page before every font load, so the
+// browser would still ask for the files the build does not ship whenever
+// Chinese or Japanese text appears. This drops the one registration call
+// (the family name constant, then `register(<that constant>, ...faces)`),
+// so Excalidraw never builds those faces and such text falls back to the
+// system font. It rewrites a third-party module, so it throws when the
+// shape is not exactly that: an Excalidraw bump must re-check it. Build only,
+// like the other rewrites: the dev server pre-bundles dependencies, and there
+// the request still happens and fails on this origin.
+// Spec: docs/internal/specs/drawing.md (section 7, Fonts)
+function excalidrawWithoutXiaolai(): Plugin {
+  return {
+    name: 'pn-excalidraw-no-xiaolai',
+    enforce: 'pre',
+    apply: 'build',
+    transform(code, id) {
+      if (!id.includes('/@excalidraw/excalidraw/dist/') || !code.includes('"Xiaolai"')) return null;
+      const name = /\b([\w$]+)\s*=\s*"Xiaolai"/.exec(code)?.[1];
+      const call = name ? new RegExp(`\\b[\\w$.]+\\(${name.replace(/\$/g, '\\$')},\\s*\\.\\.\\.[\\w$]+\\)[,;]`, 'g') : null;
+      const found = call ? code.match(call) ?? [] : [];
+      if (found.length !== 1) {
+        throw new Error(
+          `pn-excalidraw-no-xiaolai: expected one Xiaolai registration in ${id}, found ${found.length}. ` +
+            'Excalidraw changed how it registers its fonts - re-check this plugin before shipping.'
+        );
+      }
+      return code.replace(call!, '');
+    },
+  };
+}
+
+// Assistant is Excalidraw's interface font; the app draws that interface in
+// its own font (`--ui-font` in drawing.css). Excalidraw also names Assistant
+// directly in a few rules (the search field, the export dialog, a frame's
+// name box), so this points each of them at `--ui-font` and drops the four
+// `@font-face` rules, and the build emits no Assistant file. It rewrites a
+// third-party module, so it throws when a mention of Assistant survives: an
+// Excalidraw bump must re-check it. Build only: the dev server still loads
+// Assistant for those few parts.
+// Spec: docs/internal/specs/drawing.md (section 7, Fonts)
+function excalidrawWithoutAssistant(): Plugin {
+  const FACE = /@font-face\{font-family:Assistant;src:url\("\.\/fonts\/Assistant\/Assistant-\w+\.woff2"\) format\("woff2"\);[^}]*\}/g;
+  return {
+    name: 'pn-excalidraw-no-assistant',
+    enforce: 'pre',
+    apply: 'build',
+    transform(code, id) {
+      if (!id.includes('/@excalidraw/excalidraw/dist/') || !code.includes('Assistant')) return null;
+      const faces = code.match(FACE)?.length ?? 0;
+      const out = code
+        .replace(FACE, '')
+        .replace(/font-family:Assistant([;}])/g, 'font-family:var(--ui-font)$1')
+        .replace(/--ui-font: Assistant, /g, '--ui-font: ')
+        .replace(/fontFamily:"Assistant"/g, 'fontFamily:"var(--ui-font)"');
+      if (out.includes('Assistant') || (id.split('?')[0]!.endsWith('.css') && faces !== 4)) {
+        throw new Error(
+          `pn-excalidraw-no-assistant: ${id} still names Assistant after the rewrite, or does not declare its four faces. ` +
+            'Excalidraw changed how it uses its interface font - re-check this plugin before shipping.'
+        );
+      }
+      return out;
+    },
+  };
+}
+
+// Two parts of Excalidraw that the app never runs, each in chunks of their
+// own: the font subsetter (about 600 KB brotli, WebAssembly inside JS; only
+// an SVG export with inlined fonts reaches it) and every UI translation but
+// English (54 chunks, about 360 KB; the canvas gets no `langCode`). Each
+// import resolves to `stubs/excalidraw-unused-chunk.js`, which throws, so
+// Excalidraw takes its own fallback. It throws when the set of matching
+// imports changes: an Excalidraw bump must re-check it. Build only.
+// Spec: docs/internal/specs/drawing.md (section 7, Bundle)
+const EXCALIDRAW_UNUSED_CHUNK = /^\.\/(subset-(worker|shared)\.chunk|locales\/(?!en-)[\w-]+)\.js$/;
+const EXCALIDRAW_UNUSED_CHUNKS = 56;
+
+function excalidrawWithoutUnusedChunks(): Plugin {
+  const stub = path.resolve(__dirname, 'stubs/excalidraw-unused-chunk.js');
+  const stubbed = new Set<string>();
+  let reached = false;
+  return {
+    name: 'pn-excalidraw-no-unused-chunks',
+    enforce: 'pre',
+    apply: 'build',
+    resolveId(source, importer) {
+      if (!importer?.includes('/@excalidraw/excalidraw/dist/')) return null;
+      reached = true;
+      if (!EXCALIDRAW_UNUSED_CHUNK.test(source)) return null;
+      stubbed.add(source);
+      return stub;
+    },
+    buildEnd(error) {
+      if (error || !reached || stubbed.size === EXCALIDRAW_UNUSED_CHUNKS) return;
+      throw new Error(
+        `pn-excalidraw-no-unused-chunks: expected ${EXCALIDRAW_UNUSED_CHUNKS} subset and translation imports in Excalidraw, found ${stubbed.size}. ` +
+          'Excalidraw changed how it loads them - re-check this plugin before shipping.'
+      );
     },
   };
 }
@@ -322,7 +469,7 @@ function preloadOnboarding(): Plugin {
 //
 // gzip level 9 is a fixed yardstick for comparing builds, not a prediction of
 // what the CDN serves.
-// Spec: ops/docs/bundle-size.md (section 6)
+// Spec: docs/contrib/bundle-size.md (section 6)
 const BOOT_PATH_STEP_KB = 5;
 const BOOT_PATH_CEILING_KB = 1400;
 
@@ -350,7 +497,7 @@ const ENV_SPREAD_KB = 1.5;
 // commit 5ac8b15e), so take the newest measurement and round up. Windows sits
 // at ubuntu parity. A platform nobody has measured corrects by zero, because a
 // guess that runs high fails builds for bytes that do not exist.
-// Spec: ops/docs/bundle-size.md (section 6)
+// Spec: docs/contrib/bundle-size.md (section 6)
 const PLATFORM_SPREAD_KB: Record<string, number> = {
   darwin: 3.8,
   win32: 0,
@@ -499,7 +646,7 @@ function chunkBudgets(): Plugin {
         over.push(
           `boot path ${gatedKb.toFixed(2)} kB is over the ceiling of ${BOOT_PATH_CEILING_KB} kB. ` +
             'The ceiling is a product decision: ask the owner before raising BOOT_PATH_CEILING_KB, ' +
-            'and look for code to move off the boot path first (ops/docs/bundle-size.md section 9).'
+            'and look for code to move off the boot path first (docs/contrib/bundle-size.md section 9).'
         );
       }
 
@@ -537,7 +684,7 @@ function chunkBudgets(): Plugin {
 // previous deployment live, which is exactly the wanted outcome. Do not
 // harmonize the two. A red here means: fix the graph, usually by keeping the
 // severed module with its package via advancedChunks - never silence the
-// check. Spec: ops/docs/bundle-size.md (section 10, chunk cycle gate)
+// check. Spec: docs/contrib/bundle-size.md (section 10, chunk cycle gate)
 function chunkCycles(): Plugin {
   return {
     name: 'pn-chunk-cycles',
@@ -608,7 +755,7 @@ function chunkCycles(): Plugin {
           'uninitialised bindings and throws before first render (2026-08-20: a ' +
           'six-hour white page). Fix the graph - usually keep the severed module ' +
           'with its package via build.rollupOptions.output.advancedChunks - and ' +
-          'never silence this check. Recipe: ops/docs/bundle-size.md section 10.'
+          'never silence this check. Recipe: docs/contrib/bundle-size.md section 10.'
       );
     },
   };
@@ -623,12 +770,14 @@ export default defineConfig({
   // browser for sign-in and the web checkout for Pro. App Review rejected
   // 0.491.2 on both counts (guideline 4 and 3.1.1, 2026-09-01) after passing
   // on iPhone, because only the iPad hit it.
-  // Spec: ops/docs/gotchas.md (an iPad reports a Mac user agent)
+  // Spec: docs/contrib/gotchas.md (an iPad reports a Mac user agent)
   define: {
     __PN_BUILD_PLATFORM__: JSON.stringify(process.env.TAURI_ENV_PLATFORM ?? ''),
     // The About tab shows only the newest release and links to /changelog
     // for the rest, so the app bundle carries one entry, not the history.
     __PN_LATEST_RELEASE__: JSON.stringify((({ version, date, title }) => ({ version, date, title }))(PUBLIC_CHANGELOG[0])),
+    // The drawing canvas reads its fonts from here (excalidrawFonts below).
+    __PN_EXCALIDRAW_ASSET_PATH__: JSON.stringify(`/${EXCALIDRAW_ASSET_DIR}`),
   },
   plugins: [
     react(),
@@ -637,6 +786,10 @@ export default defineConfig({
     katexWoff2Only(),
     phosphorTrimWeights(),
     pdfjsDecoders(),
+    excalidrawFonts(),
+    excalidrawWithoutXiaolai(),
+    excalidrawWithoutAssistant(),
+    excalidrawWithoutUnusedChunks(),
     // See isAppBuild above: the native apps embed dist/ wholesale, and the
     // static site is web-only.
     announceBuildTarget(),
@@ -644,7 +797,7 @@ export default defineConfig({
     preloadOnboarding(),
     ...(isAppBuild
       ? []
-      : [changelogPagePlugin(), helpPagePlugin(), roadmapPagePlugin(), themesPagePlugin(), brandPagePlugin(), marketingShellPlugin(), landingPagesPlugin(), authDesktopPagePlugin(), authConnectPagePlugin(), searchCoreScriptPlugin(), footerLinesScriptPlugin()]),
+      : [changelogPagePlugin(), helpPagePlugin(), roadmapPagePlugin(), licensesPagePlugin(), themesPagePlugin(), brandPagePlugin(), marketingShellPlugin(), landingPagesPlugin(), authDesktopPagePlugin(), authConnectPagePlugin(), searchCoreScriptPlugin(), footerLinesScriptPlugin()]),
     chunkBudgets(),
     chunkCycles(),
   ],
@@ -662,8 +815,11 @@ export default defineConfig({
       // supabase-js re-exports it, which is how it looked "unused").
       // 0.264.0 stubbed it and every attachment upload/download threw
       // until 0.267.2 (#202).
-      // Spec: ops/docs/bundle-size.md (section 5)
+      // Spec: docs/contrib/bundle-size.md (section 5)
       '@supabase/realtime-js': path.resolve(__dirname, 'stubs/realtime-js.js'),
+      // The drawing canvas's Mermaid import, and Mermaid with it. See the stub.
+      // Spec: docs/internal/specs/drawing.md (section 7, Bundle)
+      '@excalidraw/mermaid-to-excalidraw': path.resolve(__dirname, 'stubs/mermaid-to-excalidraw.js'),
     },
   },
   build: {
@@ -700,12 +856,15 @@ export default defineConfig({
         // their importers into the same chunk instead of splitting across the
         // boundary. The group is a leaf by construction - shared imports only
         // vendor crypto and never app code - so it cannot form a new cycle.
-        // Spec: ops/docs/bundle-size.md (chunk budgets)
+        // Spec: docs/contrib/bundle-size.md (chunk budgets)
         advancedChunks: {
           groups: [
             {
               name: 'shared',
-              test: /[\\/](?:packages|node_modules)[\\/]shared[\\/]dist[\\/]/,
+              // The browser extension's crypto (X25519, Argon2id) is its own
+              // entry, which the barrel never re-exports, so it stays out of
+              // this boot-path chunk and loads with the extension's code.
+              test: /[\\/](?:packages|node_modules)[\\/]shared[\\/]dist[\\/](?!extension\.js)/,
             },
           ],
         },

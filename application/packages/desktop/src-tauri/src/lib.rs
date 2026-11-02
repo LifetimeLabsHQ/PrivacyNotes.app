@@ -1,13 +1,13 @@
 /// Native biometric gate: Touch ID / Face ID on macOS + iOS, Windows Hello on
 /// Windows, BiometricPrompt on Android. `native_biometric` is set by build.rs
 /// for exactly those targets; Linux falls through to the WebAuthn path.
-/// Spec: ops/docs/biometric-unlock.md, backlog #101 (LAContext must run on the main thread; Windows Hello must not)
+/// Spec: docs/contrib/biometric-unlock.md, backlog #101 (LAContext must run on the main thread; Windows Hello must not)
 #[cfg(native_biometric)]
 mod biometric;
 
 /// Who the OS opens Markdown files with, and pointing it at us on the two
 /// platforms that permit it. Desktop only: neither mobile OS has user-settable
-/// file associations. Spec: ops/docs/archive/markdown-folder.md (section 11)
+/// file associations. Spec: docs/internal/specs/markdown-folder.md (section 11)
 #[cfg(desktop)]
 mod file_assoc;
 
@@ -21,30 +21,33 @@ mod print;
 /// The cover iOS photographs in place of the notes when the app leaves the
 /// screen. Android does the same job with a window property of its own, set
 /// from MainActivity.kt, so nothing here is compiled for it.
-/// Spec: ops/docs/archive/app-switcher-privacy-screen.md
+/// Spec: docs/internal/specs/app-switcher-privacy-screen.md
 mod privacy_screen;
 
 /// No previous, next and Done bar above the iOS keyboard: the note editor's
 /// format bar sits there (GitHub #533).
 #[cfg(target_os = "ios")]
 mod keyboard_accessory;
+/// Tap the iOS status bar to take the note or list to the top (GitHub #617).
+#[cfg(target_os = "ios")]
+mod status_bar_tap;
 
 /// The Windows title bar painted in the app's theme colors.
-/// Spec: ops/docs/color-themes.md (section 1, the Windows title bar)
+/// Spec: docs/contrib/color-themes.md (section 1, the Windows title bar)
 #[cfg(desktop)]
 mod title_bar;
 
 /// Links, text and files other apps shared into this one, waiting for the
 /// unlocked app to take them. Compiled everywhere so its tests run on the
 /// host; only the mobile builds expose its commands.
-/// Spec: ops/docs/archive/share-into-app.md
+/// Spec: docs/internal/specs/share-into-app.md
 mod pasteboard;
 use pasteboard::pasteboard_pictures;
 mod share_inbox;
 #[cfg(mobile)]
 use share_inbox::{share_inbox_list, share_inbox_read, share_inbox_remove, share_limit_set};
 /// The web clipper's download, on every native platform.
-/// Spec: ops/docs/archive/web-clipper-stage1.md (section 3.1)
+/// Spec: docs/internal/specs/web-clipper-stage1.md (section 3.1)
 mod clip_fetch;
 use clip_fetch::clip_fetch;
 
@@ -55,7 +58,7 @@ use clip_fetch::clip_fetch;
 /// lock. Emitting straight away would drop it on the floor and the user would
 /// be left staring at a login screen wondering why their file did not open, so
 /// the path waits here until the frontend says it is listening.
-/// Spec: ops/docs/archive/markdown-folder.md (section 11)
+/// Spec: docs/internal/specs/markdown-folder.md (section 11)
 #[cfg(desktop)]
 static PENDING_OPEN: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
 
@@ -203,7 +206,7 @@ fn take_pending_opens(app: tauri::AppHandle) -> Vec<String> {
     // Widening happens HERE rather than at queue time because this is the first
     // point that has an AppHandle: the two queue sites are a plugin callback and
     // `std::env::args()`.
-    // Spec: ops/docs/archive/markdown-folder.md (section 11)
+    // Spec: docs/internal/specs/markdown-folder.md (section 11)
     if let Some(scope) = app.try_fs_scope() {
         // The last one only, which is the one the frontend opens: a
         // multi-select hands over several, and the widening this grants is
@@ -464,6 +467,23 @@ fn restart_without_non_unicode_args(
     dropped.then_some(kept)
 }
 
+/// Shows the hidden main window once: on its first finished page load, or from
+/// the fallback timer in `setup`, whichever comes first. A later reload must not
+/// show a window the user has hidden since.
+#[cfg(desktop)]
+fn show_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use tauri::Manager;
+    static SHOWN: AtomicBool = AtomicBool::new(false);
+    if SHOWN.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // reqwest is built with `rustls-no-provider` (the clipper pins its own
@@ -499,7 +519,7 @@ pub fn run() {
     // proprietary drivers, certain Wayland compositors): the window opens but
     // stays blank. Force the stable render path. Must run before any GTK code,
     // and stays overridable so a user can re-enable the fast path for debugging.
-    // Spec: ops/docs/gotchas.md (Linux blank window / WebKitGTK DMA-BUF)
+    // Spec: docs/contrib/gotchas.md (Linux blank window / WebKitGTK DMA-BUF)
     #[cfg(target_os = "linux")]
     if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
         std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
@@ -515,7 +535,7 @@ pub fn run() {
     // deep-link feature it forwards a privacynotes:// callback caught by a
     // second on-disk copy of the app to the already-running instance,
     // instead of letting that copy launch fresh and swallow the OAuth
-    // redirect. Desktop only. Spec: ops/docs/macos-ios-setup.md (native OAuth)
+    // redirect. Desktop only. Spec: docs/internal/macos-ios-setup.md (native OAuth)
     #[cfg(desktop)]
     let builder = if !rendezvous_is_ours(context.config()) {
         builder
@@ -542,7 +562,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         // Calendar reminders on every platform: scheduled with the OS on a
         // phone, shown from the app's own timer on a desktop.
-        // Spec: ops/docs/archive/calendar-pillar-spec.md (section 8)
+        // Spec: docs/internal/specs/calendar-pillar-spec.md (section 8)
         .plugin(tauri_plugin_notification::init());
 
     // Self-updater is desktop-only; iOS/Android update via their stores.
@@ -554,15 +574,22 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .plugin(
+            // VISIBLE stays out: the main window starts hidden and
+            // `show_main_window` shows it, and a restored "visible" would show
+            // it before the page paints.
             tauri_plugin_window_state::Builder::default()
                 .with_denylist(&["about"])
+                .with_state_flags(
+                    tauri_plugin_window_state::StateFlags::all()
+                        & !tauri_plugin_window_state::StateFlags::VISIBLE,
+                )
                 .build(),
         );
 
     // Native in-app purchase (StoreKit on iOS, Play Billing on Android). One
     // plugin covers both; the desktop DMG never compiles it. The macOS App
     // Store build adds it for macOS under the `mas` feature (MAS track).
-    // Spec: ops/docs/billing-integration.md (also drives Android storage-tier upgrades via subscriptionReplacementMode)
+    // Spec: docs/internal/billing-integration.md (also drives Android storage-tier upgrades via subscriptionReplacementMode)
     #[cfg(mobile)]
     let builder = builder.plugin(tauri_plugin_iap::init());
 
@@ -629,16 +656,79 @@ pub fn run() {
     ]);
 
     // A load can replace the web view's content view, so the iOS keyboard bar
-    // is taken off again after each one.
-    #[cfg(target_os = "ios")]
+    // is taken off again after each one. The status bar tap rides along: it
+    // needs the web view, and adding it again does nothing. On desktop the
+    // first finished load shows the main window (see `show_main_window`).
+    // One handler for both: a second `on_page_load` replaces the first.
+    #[cfg(any(target_os = "ios", desktop))]
     let builder = builder.on_page_load(|webview, payload| {
         if payload.event() == tauri::webview::PageLoadEvent::Finished {
-            keyboard_accessory::hide_in(webview);
+            #[cfg(target_os = "ios")]
+            {
+                keyboard_accessory::hide_in(webview);
+                status_bar_tap::listen_in(webview);
+            }
+            #[cfg(desktop)]
+            if webview.label() == "main" {
+                use tauri::Manager;
+                show_main_window(webview.app_handle());
+            }
         }
     });
 
     builder
         .setup(|app| {
+            // The main window is built here and not from tauri.conf.json, whose
+            // entry says `create: false`, so a desktop build can start it hidden.
+            // A webview paints white until the page loads, and that showed as a
+            // white window at every start (#665). By the time the page has
+            // loaded, initTheme has set the theme on <html>, so the window
+            // appears in the app's own background. Mobile keeps a visible
+            // window: its launch screen covers the load already.
+            {
+                let config = app
+                    .config()
+                    .app
+                    .windows
+                    .iter()
+                    .find(|w| w.label == "main")
+                    .cloned()
+                    .ok_or("tauri.conf.json has no main window")?;
+                let builder = tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?;
+                #[cfg(desktop)]
+                let builder = builder.visible(false);
+                builder.build()?;
+                // A page that never finishes loading must still leave a window
+                // to look at.
+                #[cfg(desktop)]
+                {
+                    let handle = app.handle().clone();
+                    std::thread::spawn(move || {
+                        std::thread::sleep(std::time::Duration::from_secs(5));
+                        show_main_window(&handle);
+                    });
+                }
+            }
+            // The webview keeps its storage, the wrapped phrase and the key
+            // beside it included, in the app's own folders. Linux creates a
+            // folder readable by every account on the computer (0755 under
+            // the usual umask), so they are owner-only, and set again at every
+            // start so a folder an earlier build made is closed too. macOS and
+            // Windows keep a user's app data to that user already; there this
+            // changes nothing.
+            #[cfg(all(unix, desktop))]
+            {
+                use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
+                use tauri::Manager;
+                let paths = app.path();
+                for dir in [paths.app_local_data_dir(), paths.app_data_dir(), paths.app_cache_dir(), paths.app_config_dir()]
+                    .into_iter()
+                    .flatten()
+                {
+                    let _ = std::fs::DirBuilder::new().recursive(true).mode(0o700).create(&dir);
+                    let _ = std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o700));
+                }
+            }
             #[cfg(target_os = "windows")]
             {
                 use tauri::Manager;
@@ -686,7 +776,7 @@ pub fn run() {
             // pointed at itself. Off-thread because it shells out to
             // update-desktop-database and xdg-mime, and a failure (neither
             // tool installed) must never block startup.
-            // Spec: ops/docs/gotchas.md (Linux registers privacynotes:// at runtime)
+            // Spec: docs/contrib/gotchas.md (Linux registers privacynotes:// at runtime)
             #[cfg(target_os = "linux")]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
@@ -726,7 +816,7 @@ pub fn run() {
                 // Shift+Cmd+W. A predefined item keeps its own key, so both
                 // copies (File and Window) are swapped for one of ours. The
                 // About window closes on Cmd+W by itself (AboutWindow.tsx).
-                // Spec: ops/docs/archive/keyboard-shortcuts.md (decision D4)
+                // Spec: docs/internal/specs/keyboard-shortcuts.md (decision D4)
                 for item in menu.items()? {
                     let MenuItemKind::Submenu(submenu) = item else { continue };
                     let items = submenu.items()?;
@@ -768,7 +858,7 @@ pub fn run() {
             // arrives only once the web bundle has booted. They read a flag
             // that is false until it does, so an early transition covers
             // nothing, which is the right answer at that point.
-            // Spec: ops/docs/archive/app-switcher-privacy-screen.md
+            // Spec: docs/internal/specs/app-switcher-privacy-screen.md
             privacy_screen::observe();
 
             let _ = &app;
@@ -780,7 +870,7 @@ pub fn run() {
             // macOS delivers a file open as an Apple Event, never in argv, so
             // this is the ONLY place a double-click arrives there. Reaching it
             // is why the builder ends in build()+run() rather than run() alone.
-            // Spec: ops/docs/archive/markdown-folder.md (section 11)
+            // Spec: docs/internal/specs/markdown-folder.md (section 11)
             #[cfg(target_os = "macos")]
             if let tauri::RunEvent::Opened { urls } = &_event {
                 use tauri::Emitter;
@@ -807,7 +897,7 @@ pub fn run() {
 /// the folder name a lie: `scoop list` keeps reporting the old version and the next
 /// `scoop update` puts it back. The root is relocatable, so honour SCOOP and SCOOP_GLOBAL
 /// before falling back to the default layout.
-/// Spec: ops/docs/windows-release.md (a Scoop install updates through Scoop)
+/// Spec: docs/internal/windows-release.md (Scoop is off the homepage; a Scoop install is offered winget)
 #[cfg(all(desktop, target_os = "windows"))]
 fn unpacked_by_scoop() -> bool {
     let Ok(exe) = std::env::current_exe() else {
@@ -836,13 +926,13 @@ fn unpacked_by_scoop() -> bool {
 /// in Scoop's own directory while our NSIS installer targets %LOCALAPPDATA%\PrivacyNotes,
 /// so self-updating would leave a second copy the user's shortcut never points at.
 /// The frontend nudges instead of installing whenever this is false.
-/// Spec: ops/docs/linux-release.md (deb ships beside the AppImage; only the AppImage self-updates)
+/// Spec: docs/internal/linux-release.md (deb ships beside the AppImage; only the AppImage self-updates)
 /// WebView2 keeps a browser's own keys unless told otherwise: F5 and Ctrl+R
 /// reload the whole app, Ctrl+P prints the page, Alt+Left goes back, Ctrl+F
 /// opens the browser's find. The app owns its keys, so they are turned off.
 /// Editing keys (copy, paste, cut, select all, undo) are not browser keys in
 /// WebView2's sense and keep working.
-/// Spec: ops/docs/archive/keyboard-shortcuts.md (decision D8)
+/// Spec: docs/internal/specs/keyboard-shortcuts.md (decision D8)
 #[cfg(target_os = "windows")]
 fn disable_browser_accelerator_keys(window: &tauri::WebviewWindow) {
     let _ = window.with_webview(|webview| unsafe {
@@ -876,7 +966,8 @@ fn can_self_update() -> bool {
 /// Whether the nudge shown in place of a self-update should name Scoop. Both blocked
 /// formats answer false to can_self_update, and their advice is opposite: a .deb user
 /// fetches a newer package from the website, while a Scoop user must NOT, because the
-/// download there is the NSIS installer that creates the second copy.
+/// download there is the NSIS installer that creates the second copy. Scoop is off the
+/// homepage, so that user is handed the command that moves the install to winget.
 #[cfg(desktop)]
 #[tauri::command]
 fn is_scoop_install() -> bool {
@@ -900,7 +991,7 @@ fn is_scoop_install() -> bool {
 /// the OS has no gate to offer (Linux); the frontend then falls back to the
 /// WebAuthn check. Async so the OS round trip never stalls the main thread
 /// (a sync command would run there); it touches no UI.
-/// Spec: ops/docs/biometric-unlock.md, backlog #101 (must check the same biometric class the prompt will request)
+/// Spec: docs/contrib/biometric-unlock.md, backlog #101 (must check the same biometric class the prompt will request)
 #[tauri::command(async)]
 fn biometric_available(app: tauri::AppHandle) -> bool {
     #[cfg(native_biometric)]
@@ -962,7 +1053,7 @@ struct BiometricKey {
 /// gate), `cancelled` and `failed`. A caller gets nothing it could not get by
 /// passing the prompt itself, and every call makes a new key under a new name,
 /// so no call can replace or open an existing enrollment.
-/// Spec: ops/docs/plans/biometric-key-binding.md (section 8.2)
+/// Spec: docs/internal/plans/biometric-key-binding.md (section 8.2)
 #[tauri::command]
 async fn biometric_key_create(
     app: tauri::AppHandle,
@@ -1059,7 +1150,7 @@ async fn print_html(app: tauri::AppHandle, html: String, job_name: String) -> Re
 /// and it pushes from the one place local settings are written.
 ///
 /// The cover is black on every theme, so nothing but the switch crosses the
-/// bridge. Spec: ops/docs/archive/app-switcher-privacy-screen.md
+/// bridge. Spec: docs/internal/specs/app-switcher-privacy-screen.md
 #[tauri::command]
 fn set_privacy_screen(enabled: bool) {
     privacy_screen::set(enabled);
@@ -1069,7 +1160,7 @@ fn set_privacy_screen(enabled: bool) {
 /// or let it back in. A device setting: the frontend stores the switch itself
 /// and pushes it at boot and on every change. Android does the same job from
 /// MainActivity.kt, so the command does nothing there.
-/// Spec: ops/docs/archive/app-switcher-privacy-screen.md (section 14)
+/// Spec: docs/internal/specs/app-switcher-privacy-screen.md (section 14)
 #[tauri::command]
 fn set_capture_block(app: tauri::AppHandle, enabled: bool) {
     privacy_screen::set_capture_block(&app, enabled);

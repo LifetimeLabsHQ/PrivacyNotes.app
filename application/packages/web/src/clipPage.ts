@@ -8,11 +8,11 @@
  * the Clip page window can show their count and size before anything lands
  * in the account. A picture that is not stored stays as a text link that
  * nothing loads.
- * Spec: ops/docs/archive/web-clipper-stage1.md (sections 3.2 and 3.3)
+ * Spec: docs/internal/specs/web-clipper-stage1.md (sections 3.2 and 3.3)
  */
 import type { Clip, ClipMode, PictureOutcome } from '@notes/clipper';
 import { clipDownload, decodePage, ClipError, type TokenSource } from './clipDownload';
-import { storePictureQuietly } from './EncryptedImage';
+import type { storePictureQuietly } from './EncryptedImage';
 
 export type { ClipMode } from '@notes/clipper';
 
@@ -101,13 +101,18 @@ export interface SavedClip {
   failed: number;
 }
 
+/** How a picture is stored: `storePictureQuietly` in the app. */
+export type StorePicture = typeof storePictureQuietly;
+
 /** Store the held pictures and write the note body. */
 export async function finishClip(
   draft: ClipDraft,
   labels: { source: string; image: string; formatDate: (d: Date) => string },
   onProgress?: (done: number, total: number) => void,
+  storePicture?: StorePicture,
 ): Promise<SavedClip> {
   const { bodyFits, clipNoteBody, countFailures, isSafeMarkdown, placePictures } = await engine();
+  const store = storePicture ?? (await import('./EncryptedImage')).storePictureQuietly;
   const outcomes: PictureOutcome[] = [];
   let full = false;
   let reserved = 0;
@@ -124,7 +129,7 @@ export async function finishClip(
       continue;
     }
     const name = pictureName(draft.clip.images[i]?.src ?? '', h.contentType);
-    const out = await storePictureQuietly(new File([h.bytes as BlobPart], name, { type: h.contentType.split(';')[0]!.trim() }), reserved);
+    const out = await store(new File([h.bytes as BlobPart], name, { type: h.contentType.split(';')[0]!.trim() }), reserved);
     if ('failure' in out) {
       if (out.failure === 'storage') full = true;
       outcomes.push(out);

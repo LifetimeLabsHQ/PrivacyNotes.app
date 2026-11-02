@@ -37,7 +37,7 @@ function ConnectionRow({ note, title, onOpen }: { note: LocalNote; title: string
       >
         {paths
           ? <PathGlyph paths={paths} size={16} className={iconClass} style={icon} />
-          : <Icon size={16} aria-hidden="true" className={iconClass} style={icon} />}
+          : <Icon aria-hidden="true" className={iconClass} style={icon} />}
         <span className="truncate" dir="auto">{title}</span>
       </button>
     </li>
@@ -47,7 +47,7 @@ function ConnectionRow({ note, title, onOpen }: { note: LocalNote; title: string
 /**
  * The open Connections panel. A file of its own, loaded the first time a
  * reader opens it: the closed pill is on every note, the panel is not.
- * Spec: ops/issues/0351.md (Spec)
+ * Spec: docs/internal/issues/0351.md (Spec)
  */
 export function ConnectionsPanel({
   lists,
@@ -77,8 +77,8 @@ export function ConnectionsPanel({
     body: ReactNode,
   ) => count === 0 && !body ? null : (
     <section className={`mx-0.5 border-s-[3px] ${tone.bar}`}>
-      <p className="flex items-center gap-2 px-2 pt-1 pb-0.5 text-sm font-semibold text-pn">
-        <GroupIcon size={16} weight="bold" aria-hidden="true" className={`shrink-0 ${tone.text}`} />
+      <p className="flex items-center gap-2 px-2 pt-1 pb-0.5 text-body font-semibold text-pn">
+        <GroupIcon weight="bold" aria-hidden="true" className={`shrink-0 ${tone.text}`} />
         {label}
         <span className={`font-normal ${SLOT_BADGE}`}>{count}</span>
       </p>
@@ -93,7 +93,7 @@ export function ConnectionsPanel({
   return (
     <EditorSlotPanel
       label={t('connections.title')}
-      icon={<Graph size={16} />}
+      icon={<Graph />}
       title={t('connections.title')}
       closeLabel={t('connections.hide')}
       closeKeys={keyText('connections')}
@@ -103,8 +103,8 @@ export function ConnectionsPanel({
         <>
           <ul>{lists.from.map(row)}</ul>
           {lists.hidden > 0 && (
-            <p className="flex items-center gap-2 px-2 py-1 text-xs text-pn-muted">
-              <LockSimple size={14} aria-hidden="true" className="shrink-0" />
+            <p className="flex items-center gap-2 px-2 py-1 text-small text-pn-muted">
+              <LockSimple aria-hidden="true" className="shrink-0" />
               {t('connections.protectedHidden', { count: lists.hidden })}
             </p>
           )}
@@ -115,10 +115,10 @@ export function ConnectionsPanel({
         <ul>
           {lists.to.map(row)}
           {lists.missing.map((name) => (
-            <li key={name} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-pn-muted">
-              <FileDashed size={16} aria-hidden="true" className="shrink-0" />
+            <li key={name} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-body text-pn-muted">
+              <FileDashed aria-hidden="true" className="shrink-0" />
               <span className="truncate" dir="auto" title={name}>{name}</span>
-              <span className="ms-auto shrink-0 text-xs">{t('connections.missing')}</span>
+              <span className="ms-auto shrink-0 text-small">{t('connections.missing')}</span>
             </li>
           ))}
         </ul>

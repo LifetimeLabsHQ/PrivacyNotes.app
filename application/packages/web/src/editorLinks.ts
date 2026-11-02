@@ -2,7 +2,8 @@
  * What a URL link does inside a note: which click opens it, what the link
  * button makes of a selection, and which text counts as an address.
  *
- * A click or a tap on a link opens it, in a note being edited too. The
+ * A click or a tap on a link opens it, in a note being edited too, unless
+ * the reader turned on "Open links with Cmd-click" (`readLinkModifier`). The
  * actions that need the link to stay put - Copy, Edit, Remove - live in
  * the link menu in `Editor.tsx`, which a right click or a long press opens,
  * so reaching them never depends on landing the caret in the link
@@ -19,24 +20,12 @@ import { Extension, InputRule, getMarkRange } from '@tiptap/core';
 import type { Editor } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorState } from '@tiptap/pm/state';
-import { detectPlatform } from './devices';
+import { detectPlatform, isOpenLinkModifier } from './devices';
 import { openExternal } from './openExternal';
+import { readLinkModifier } from './theme';
 import { isTouchPointer } from './useIsMobile';
 
 const IS_NATIVE = detectPlatform() !== 'web';
-
-/** The same test as `isMacPlatform` in notesViewUtils.ts, kept here so a
- *  click rule does not pull the note-list utilities, and i18n behind them,
- *  into the editor. Asked per click rather than at import. */
-export function isMac(): boolean {
-  return typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
-}
-
-/** Cmd on a Mac, Ctrl everywhere else. A Ctrl-click on a Mac is a right
- *  click: it opens the link menu, and must never open the URL as well. */
-export function isOpenLinkModifier(event: { metaKey: boolean; ctrlKey: boolean }): boolean {
-  return isMac() ? event.metaKey : event.ctrlKey;
-}
 
 /**
  * The href of the link mark covering `pos`, or null where there is none.
@@ -110,6 +99,10 @@ export const LinkModifierOpen = Extension.create<object, LinkOpenStorage>({
             if (event.button !== 0) return false;
             const href = linkHrefAt(view.state, pos);
             if (!href) return false;
+            // "Open links with Cmd-click" (GitHub #633): a plain mouse click
+            // places the caret in a note being edited, and does nothing in a
+            // read-only one, where the anchor would follow itself otherwise.
+            if (readLinkModifier() && !isTouchPointer() && !isOpenLinkModifier(event)) return !view.editable;
             // A file link skips the native hand-off: the anchor interceptor
             // only takes addresses, so nothing else would open it.
             if (storage.openLocal?.(href)) return true;

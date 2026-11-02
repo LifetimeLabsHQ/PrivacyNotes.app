@@ -68,7 +68,7 @@ const PROVIDER_LABEL: Record<OAuthProviderName, string> = {
  * Provider linking is a separate action. Storing a phrase still needs
  * explicit consent and an eligible session for this exact vault.
  *
- * Spec: ops/docs/custodial-key-spec.md. Backlog #112.
+ * Spec: docs/contrib/custodial-key-spec.md. Backlog #112.
  */
 export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAccounts }: {
   phrase: string;
@@ -293,13 +293,13 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
           >
             {active && <span className="w-1.5 h-1.5 rounded-full bg-accent-fill" />}
           </span>
-          <span className="text-sm font-medium text-pn min-w-0">
+          <span className="text-body font-medium text-pn min-w-0">
             {mode === 'custodial'
               ? tAuth('custody.simpleTitle')
               : tAuth('custody.maxSecurityTitle')}
           </span>
           {current === mode && (
-            <span className="ml-auto mt-0.5 text-[11px] text-pn-muted shrink-0">
+            <span className="ml-auto mt-0.5 text-meta text-pn-muted shrink-0">
               {t('custody.current')}
             </span>
           )}
@@ -310,8 +310,8 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
         <div className="space-y-1.5">
           {ROWS.map((row) => (
             <div key={row.label}>
-              <span className="block text-[11px] text-pn-muted">{row.label}</span>
-              <span className="block text-xs text-pn-soft leading-snug">
+              <span className="block text-meta text-pn-muted">{row.label}</span>
+              <span className="block text-small text-pn-soft leading-snug">
                 {mode === 'custodial' ? row.custodial : row.self}
               </span>
             </div>
@@ -341,13 +341,13 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
     // forces the common desktop case to stack in order to tidy a
     // cosmetic wrap in some languages.
     <div className="@container space-y-2.5">
-      <SectionEyebrow setting="security.custody" icon={Vault}>{t('custody.eyebrow')}</SectionEyebrow>
+      <SectionEyebrow setting="security.custody" icon={Vault}>{t('security:accountTabs.keyCustody')}</SectionEyebrow>
 
       {sessionState.kind === 'loading' && <p className={SETTINGS_HELP} role="status">{t('custody.checkingSession')}</p>}
       {sessionState.kind === 'error' && (
         <div className="space-y-2">
           <p className={SETTINGS_HELP} role="alert">{t('custody.sessionUnavailable')}</p>
-          <button type="button" onClick={() => void readSession()} disabled={busy} className="text-sm text-accent">{t('custody.retrySession')}</button>
+          <button type="button" onClick={() => void readSession()} disabled={busy} className="text-body text-accent">{t('custody.retrySession')}</button>
         </div>
       )}
       {(sessionState.kind === 'signedOut' || sessionState.kind === 'wrongVault') && (
@@ -361,18 +361,18 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
           <p className={SETTINGS_HELP}>{t(accountLogins.error === 'account_setup_unavailable'
             ? 'connectedAccounts.unavailable'
             : accountLogins.error ? 'custody.connectionsUnavailable' : 'custody.checkingConnections')}</p>
-          {accountLogins.error && <button type="button" className="text-sm text-accent" disabled={busy || accountLogins.loading}
+          {accountLogins.error && <button type="button" className="text-body text-accent" disabled={busy || accountLogins.loading}
             onClick={() => void accountLogins.refresh().catch(() => {})}>{t('connectedAccounts.retry')}</button>}
         </div>
       )}
       <p className={SETTINGS_HELP}>{t('custody.connectingIsSeparate')}</p>
       <p className={SETTINGS_HELP}>{t('custody.mfaStillApplies')}</p>
       {onOpenConnectedAccounts && (
-        <button type="button" className="inline-flex items-center gap-2 text-sm text-accent hover:underline" disabled={busy} onClick={onOpenConnectedAccounts}><SignIn size={16} className="shrink-0" aria-hidden="true" />{t('custody.connectedAccounts')}</button>
+        <button type="button" className="inline-flex items-center gap-2 text-body text-accent hover:underline" disabled={busy} onClick={onOpenConnectedAccounts}><SignIn className="shrink-0" aria-hidden="true" />{t('custody.connectedAccounts')}</button>
       )}
 
       {done && (
-        <p className="text-[13px] leading-relaxed text-pn flex items-start gap-2">
+        <p className="text-compact leading-relaxed text-pn flex items-start gap-2">
           <Check aria-hidden="true" className="shrink-0 mt-0.5 text-accent" />
           <span>
             {done === 'custodial'
@@ -393,8 +393,8 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
 
           {changing && pick === 'self-custody' && (
             <>
-              <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 px-3 py-2.5 text-[13px] leading-relaxed text-warning flex items-start gap-2.5">
-                <Warning size={16} aria-hidden="true" className="shrink-0 mt-0.5" />
+              <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 px-3 py-2.5 text-compact leading-relaxed text-warning flex items-start gap-2.5">
+                <Warning aria-hidden="true" className="shrink-0 mt-0.5" />
                 <span>{t('custody.releaseWarning')}</span>
               </div>
               {!releaseCheck ? (
@@ -402,7 +402,7 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
                   type="button"
                   disabled={busy || words.length !== 12}
                   onClick={() => { setReleaseCheck(true); onReleaseCheckChange(true); setAnswers(['', '', '']); }}
-                  className="rounded-md border border-divider px-3 py-2 text-sm text-pn-soft hover:bg-surface-1 transition"
+                  className="rounded-md border border-divider px-3 py-2 text-body text-pn-soft hover:bg-surface-1 transition"
                 >
                   {t('custody.checkSavedPhrase')}
                 </button>
@@ -429,19 +429,19 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
                       autoCapitalize="none"
                       autoCorrect="off"
                       spellCheck={false}
-                      className="w-full rounded-md border border-divider bg-track text-sm font-mono px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-accent"
+                      className="w-full rounded-md border border-divider bg-track text-body font-mono px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-accent"
                     />
                   </label>
                 ))}
                 </div>
-                <button type="button" disabled={busy} className="text-sm text-accent" onClick={resetRelease}>{t('common:actions.cancel')}</button>
+                <button type="button" disabled={busy} className="text-body text-accent" onClick={resetRelease}>{t('common:actions.cancel')}</button>
                 </>
               )}
             </>
           )}
 
           {error && (
-            <div role="alert" className="rounded-md border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-xs p-2">
+            <div role="alert" className="rounded-md border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-small p-2">
               {error}
             </div>
           )}
@@ -472,7 +472,7 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
                   which way the save goes. */}
               <FloppyDisk aria-hidden="true" />
               {busy
-                ? t('custody.busy')
+                ? t('common:state.saving')
                 : !changing
                   ? t('common:actions.save')
                   : pick === 'custodial'
@@ -484,7 +484,7 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
               onClick={() => setLadderOpen((v) => !v)}
               aria-expanded={ladderOpen}
               aria-controls="pn-custody-ladder"
-              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-divider px-3 py-2 text-sm text-pn-soft hover:bg-surface-2 transition"
+              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-divider px-3 py-2 text-body text-pn-soft hover:bg-surface-2 transition"
             >
               <Scales aria-hidden="true" />
               {tAuth('chooseMode.compareOptions')}

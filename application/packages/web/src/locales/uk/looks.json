@@ -1,11 +1,9 @@
 {
   "captionFolder": "Папка",
   "captionTag": "Тег",
-  "captionNote": "Нотатка",
   "captionTracker": "Трекер",
   "useDefault": "Скинути",
   "color": "Колір",
-  "noColor": "Без кольору",
   "applyToSubfolders": "Застосовувати колір до підпапок",
   "icon": "Значок",
   "searchPlaceholder": "Пошук значків",

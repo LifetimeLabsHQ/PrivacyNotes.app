@@ -6,7 +6,7 @@ import { FACTORS_MAX, activeFactors, cleanFactorName, type FactorDef } from './t
  * Factors tab of Settings > Trackers so both write the same rows. Every edit
  * stamps `updatedAt`, and a removal is a tombstone, because the list merges
  * by id across devices and a day that holds a removed factor keeps its name.
- * Spec: ops/issues/0439.md (Spec)
+ * Spec: docs/internal/issues/0439.md (Spec)
  */
 
 /** A live factor with the same name, case and accents aside. */

@@ -1,6 +1,5 @@
 {
   "modal": {
-    "title": "보안",
     "tabPin": "PIN",
     "tabBiometricShort": "잠금",
     "tabBiometric": "생체 인증 잠금",
@@ -9,9 +8,10 @@
     "tabTwoFactor": "2FA"
   },
   "pinTab": {
+    "changeLost": "PIN 변경이 저장되지 않았어요. 다른 기기에서 PIN이 먼저 변경됐어요.",
+    "phraseUnwrapped": "이 브라우저가 이 기기에 보관된 복구 문구를 보호하지 못해서, 문구가 암호화되지 않은 채 여기에 저장돼 있어요. 이 기기 저장소의 사본을 가진 사람은 누구나 문구를 읽을 수 있어요. 잠금 탭에서 앱 잠금을 켜면 문구가 PIN이나 패스코드 뒤에만 보관돼요.",
     "enterCurrent": "변경하려면 현재 PIN을 입력하세요.",
     "currentPin": "현재 PIN",
-    "checking": "확인 중...",
     "verify": "확인",
     "replaceExisting": "새 4자리 PIN을 입력하세요. 기존 PIN을 대체해요.",
     "setIntro": "4자리 PIN으로 보호된 노트와 복구 문구를 열어요. PIN은 모든 기기에 동기화돼요.",
@@ -42,10 +42,8 @@
     "setPin": "PIN 설정",
     "removePin": "PIN 제거",
     "reaskAfter": "PIN 다시 묻기 주기",
-    "reaskHint": "문구 보기와 PIN 보호 노트에 적용돼요.",
+    "reaskHint": "이 기기의 문구 보기와 PIN 보호 노트에 적용돼요.",
     "incorrectPin": "PIN이 틀렸어요.",
-    "incorrectPinRetry": "PIN이 틀렸어요. 다시 시도하세요.",
-    "tooManyAttempts": "시도가 너무 많았어요. {{seconds}}초 후 다시 시도하세요.",
     "pinFourDigits": "PIN은 4자리여야 해요.",
     "pinsDoNotMatch": "PIN이 일치하지 않아요.",
     "passcodeIntro": "패스코드로 보호된 노트와 복구 문구를 열어요. 모든 기기에 동기화돼요.",
@@ -61,8 +59,7 @@
     "ruleNotDigits": "숫자만으로는 안 돼요",
     "ruleMax": "{{max}}자 이하",
     "passcodesDoNotMatch": "패스코드가 일치하지 않아요.",
-    "incorrectPasscode": "패스코드가 틀렸어요.",
-    "incorrectPasscodeRetry": "패스코드가 틀렸어요. 다시 시도하세요."
+    "incorrectPasscode": "패스코드가 틀렸어요."
   },
   "timeout": {
     "min1": "1분",
@@ -76,16 +73,11 @@
     "browserRestart": "브라우저 재시작 시"
   },
   "pinInfo": {
-    "title": "볼 때 PIN 요구",
     "body": "켜 두면 앱이 이미 잠금 해제되어 있어도 이 항목을 열 때마다 PIN을 입력해야 해요. 자리를 비울 때도 보호해야 하는 민감한 항목에 사용하세요."
   },
   "removePinDialog": {
-    "title": "PIN 제거",
     "introWithBio": "제거를 확정하려면 현재 PIN을 입력하세요. 생체 인증 잠금 해제는 유지되지만, 유일한 대안은 복구 문구뿐이에요.",
     "introNoBio": "제거를 확정하려면 현재 PIN을 입력하세요. 앞으로 복구 문구 화면은 PIN 없이 열려요.",
-    "verifying": "확인 중...",
-    "removePin": "PIN 제거",
-    "titlePasscode": "패스코드 제거",
     "introWithBioPasscode": "제거를 확정하려면 현재 패스코드를 입력하세요. 생체 인증 잠금 해제는 유지되지만, 유일한 대안은 복구 문구뿐이에요.",
     "introNoBioPasscode": "제거를 확정하려면 현재 패스코드를 입력하세요. 앞으로 복구 문구 화면은 패스코드 없이 열려요.",
     "removePasscode": "패스코드 제거"
@@ -109,16 +101,10 @@
   },
   "phraseGate": {
     "enterToView": "문구를 보려면 4자리 PIN을 입력하세요.",
-    "incorrectPinRetry": "PIN이 틀렸어요. 다시 시도하세요.",
-    "tooManyAttempts": "시도가 너무 많았어요. {{seconds}}초 후 다시 시도하세요.",
-    "lockedFor": "{{seconds}}초 동안 잠김",
-    "checking": "확인 중...",
-    "unlock": "잠금 해제",
     "enterToChangeCustody": "키 관리 방식을 바꾸려면 4자리 PIN을 입력해 주세요.",
     "checkFailed": "PIN을 확인하지 못했어요. 다시 시도해 주세요.",
     "enterToViewPasscode": "문구를 보려면 패스코드를 입력하세요.",
     "enterToChangeCustodyPasscode": "키 관리 방식을 바꾸려면 패스코드를 입력해 주세요.",
-    "incorrectPasscodeRetry": "패스코드가 틀렸어요. 다시 시도하세요.",
     "checkFailedPasscode": "패스코드를 확인하지 못했어요. 다시 시도해 주세요."
   },
   "phraseView": {
@@ -133,11 +119,9 @@
     "hideQr": "QR 코드 숨기기",
     "showQr": "QR 코드 표시",
     "saveQr": "QR 저장",
-    "copied": "복사됨",
     "copyPhrase": "문구 복사"
   },
   "custody": {
-    "eyebrow": "키 관리",
     "current": "현재",
     "rowDevice": "새 기기",
     "rowDeviceCustodial": "{{provider}}(으)로 로그인, 입력할 것 없음",
@@ -152,7 +136,6 @@
     "releaseWarning": "먼저 12단어 문구를 PrivacyNotes 밖에 저장해 주세요. 저희 사본을 삭제한 뒤에는 새 기기에서 문구가 필요해요.",
     "challengePrompt": "위 목록에서 아래 단어들을 입력해 가지고 있는지 확인해 주세요.",
     "wordLabel": "{{position}}번째 단어",
-    "busy": "저장 중...",
     "releaseConfirm": "서버에서 삭제",
     "adoptConfirm": "사본 맡기기",
     "releaseDone": "완료했어요. 이제 문구 사본을 보관하지 않아요. 새 기기에서는 이 12단어나 QR 스캔이 필요해요.",
@@ -189,6 +172,7 @@
     "boundStatus": "생체 인증 잠금 해제가 패스키에 연결돼 있어요.",
     "boundStatusNative": "생체 인증 잠금 해제가 이 기기의 보안 하드웨어에 연결돼 있어요.",
     "setUpAgain": "더 강한 잠금으로 다시 설정",
+    "unboundWeaker": "이 기기에서 생체 인증 잠금 해제는 잠금이 아니라 주변 사람을 막는 관문일 뿐이에요. 이 기기 저장소의 복사본을 가진 사람은 지문이나 얼굴 없이도 노트를 열 수 있어요.",
     "cannotBind": "이 브라우저의 패스키 앱에서는 더 강한 잠금을 만들 수 없어요. 생체 인증 잠금 해제는 전처럼 계속 작동해요. 비밀번호 관리자가 패스키를 저장하고 있다면 그 패스키 옵션을 끈 다음, 생체 인증 잠금 해제를 껐다가 다시 켜서 기기 자체의 패스키 저장소를 사용하세요.",
     "bindOffer": "이 기기의 생체 인증 잠금 해제는 아직 패스키에 연결되지 않았지만, 이 브라우저에서는 연결할 수 있어요. 한 번 다시 설정하면 그 키가 이 기기 저장소가 아니라 패스키와 함께 보관돼요.",
     "bindOfferLater": "나중에",
@@ -196,14 +180,14 @@
     "settingUp": "설정 중...",
     "enable": "생체 인증 잠금 해제 켜기",
     "lockOnOpen": "열 때 앱 잠금",
-    "lockOnOpenHint": "앱을 열 때 생체 인증 또는 PIN을 요구해요.",
+    "lockOnOpenHint": "이 기기에서 앱을 열 때 생체 인증 또는 PIN을 요구해요.",
     "lockHidesOnSwitch": "앱을 전환할 때도 노트를 가려요.",
     "lockNeedsCredential": "앱 잠금을 쓰려면 이 기기에 PIN이나 생체 인증 잠금 해제가 필요해요.",
     "setUpPin": "PIN 설정",
     "confirmPinForLock": "이 기능을 켜려면 PIN을 입력하세요. 복구 문구 사본을 잠가서 PIN으로만 앱을 열 수 있게 해요.",
     "confirmPasscodeForLock": "이 기능을 켜려면 패스코드를 입력하세요. 복구 문구 사본을 잠가서 패스코드로만 앱을 열 수 있게 해요.",
     "relockAfter": "다시 잠그기까지",
-    "relockHint": "앱 잠금 화면에만 적용돼요.",
+    "relockHint": "이 기기의 앱 잠금 화면에만 적용돼요.",
     "blockCapture": "화면 캡처에서 숨기기",
     "blockCaptureHint": "기기가 지원하는 경우 스크린샷, 화면 녹화, 화면 공유에 노트가 보이지 않게 해요. 이 기기에만 적용돼요.",
     "perDeviceNote": "생체 인증 잠금 해제는 PIN과 같은 노트를 열어요. 이 기기에만 남고 동기화되지 않아요.",
@@ -216,31 +200,19 @@
     "phraseNotSaved": "이 기기에서 복구 문구를 저장하지 못해서 아무것도 바뀌지 않았어요. 다시 시도해 주세요."
   },
   "pinSetup": {
-    "title": "PIN 설정",
     "description": "복구 문구를 볼 때 4자리 PIN이 필요해져요. 선택 사항이지만 함께 쓰는 공간에서는 권장해요.",
-    "newPin": "새 PIN",
-    "confirmPin": "PIN 확인",
-    "skipForNow": "지금은 건너뛰기",
-    "saving": "저장 중…",
-    "setPin": "PIN 설정",
-    "pinFourDigits": "PIN은 4자리여야 해요.",
-    "pinsDoNotMatch": "PIN이 일치하지 않아요."
+    "skipForNow": "지금은 건너뛰기"
   },
   "pinInput": {
-    "ariaLabel": "PIN",
     "digitAriaLabel": "{{index}}번째 자리"
   },
   "passcodeInput": {
-    "ariaLabel": "패스코드",
     "show": "패스코드 보기",
     "hide": "패스코드 숨기기"
   },
   "protectedGate": {
-    "biometricFailed": "생체 인증에 실패했거나 취소됐어요.",
     "protectedItem": "보호된 항목",
     "biometricSubtitle": "지문이나 얼굴로 이 항목의 잠금을 해제하세요.",
-    "verifying": "확인 중...",
-    "unlock": "잠금 해제",
     "usePinInstead": "대신 PIN 사용",
     "useBiometricInstead": "대신 생체 인증 사용",
     "disableProtection": "보호 해제",
@@ -248,18 +220,10 @@
     "disableSubtitle": "노트는 그대로 있어요. 잠금만 풀려요.",
     "disableBiometricSubtitle": "지문이나 얼굴로 확인하세요.",
     "verifySubtitle": "이 항목의 잠금을 해제하려면 4자리 PIN을 입력하세요. 잠금 해제는 보안 설정에서 정한 시간 동안 유지돼요.",
-    "incorrectPinRetry": "PIN이 틀렸어요. 다시 시도하세요.",
-    "tooManyAttempts": "시도가 너무 많았어요. {{seconds}}초 후 다시 시도하세요.",
     "lockedFor": "{{seconds}}초 동안 잠김",
-    "checking": "확인 중...",
     "bootstrapTitle": "PIN 설정",
     "bootstrapSubtitle": "이 항목은 PIN으로 보호되어 있지만 이 기기에는 PIN이 설정되어 있지 않아요. 잠금을 해제하려면 4자리 PIN을 설정하세요. PIN은 모든 기기에 동기화돼요.",
     "bootstrapWarning": "여기서 PIN을 설정할 때 이전 PIN을 알 필요는 없어요. 복구 문구를 가진 사람이라면 누구나 새 기기에서 이렇게 할 수 있어요. 정말 민감한 내용이라면 문구 전용 인증에 의존하세요.",
-    "newPin": "새 PIN",
-    "confirmPin": "PIN 확인",
-    "pinFourDigits": "PIN은 4자리여야 해요.",
-    "pinsDoNotMatch": "PIN이 일치하지 않아요.",
-    "saving": "저장 중...",
     "setPinUnlock": "PIN 설정 후 잠금 해제",
     "pinRequired": "PIN 필요",
     "deleteSubtitle": "이 보호된 항목을 삭제하려면 PIN을 입력하세요.",
@@ -267,7 +231,6 @@
     "usePasscodeInstead": "대신 패스코드 사용",
     "disableTitlePasscode": "패스코드를 입력해 보호를 해제하세요",
     "verifySubtitlePasscode": "이 항목의 잠금을 해제하려면 패스코드를 입력하세요. 잠금 해제는 보안 설정에서 정한 시간 동안 유지돼요.",
-    "incorrectPasscodeRetry": "패스코드가 틀렸어요. 다시 시도하세요.",
     "passcodeRequired": "패스코드 필요",
     "deleteSubtitlePasscode": "이 보호된 항목을 삭제하려면 패스코드를 입력하세요."
   },
@@ -294,19 +257,14 @@
     "checking": "확인 중...",
     "unlock": "잠금 해제",
     "recoveryPhrase": "복구 문구",
-    "recoveryPhraseSubtitle": "잠금을 해제하려면 12단어 복구 문구를 입력하세요.",
-    "invalidPhrase": "잘못된 문구예요. 철자와 단어 순서를 확인하세요.",
-    "phrasePlaceholder": "word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12"
+    "recoveryPhraseSubtitle": "잠금을 해제하려면 12단어 복구 문구를 입력하세요."
   },
   "deviceLimit": {
     "title": "기기 한도 도달",
     "body": "무료 계정은 한 번에 최대 기기 {{limit}}대까지 동기화할 수 있어요. 이미 {{count}}대를 쓰고 있어요. 이 기기에서 계속하려면 하나를 제거하거나, 무제한 기기로 업그레이드하세요.",
     "activeDevices": "활성 기기",
-    "recentlyRemoved": "최근 제거됨",
-    "removedAt": "{{when}} 제거됨",
     "upgradeHeading": "또는 Pro로 업그레이드",
     "upgradeBody": "1회 결제, 구독 없음. 무제한 기기에 이미지, 노트 히스토리 등이 더해져요.",
-    "openingCheckout": "결제 창 여는 중...",
     "upgradeCta": "${{price}}에 Pro로 업그레이드",
     "needMoreHeading": "기기가 더 필요한가요?",
     "needMoreBody": "이 빌드에서는 Pro 업그레이드를 제공하지 않아요. 세 번째 기기가 정말 필요하면 연락 주세요. 해결해 드릴게요.",
@@ -315,8 +273,6 @@
     "saveRecoveryBody": "OAuth로 로그인했어요. 12단어 문구도 함께 적어 두세요. OAuth에 문제가 생기거나 모든 기기에서 잠겼을 때의 대비책이에요.",
     "hide": "숨기기",
     "viewRecoveryPhrase": "복구 문구 보기",
-    "signOut": "로그아웃",
-    "thisDevice": "이 기기",
     "lastActive": "{{platform}} · 마지막 활동 {{when}}",
     "removing": "제거 중..."
   },
@@ -329,9 +285,9 @@
     "bitcoinBody": "같은 방식의 12단어 문구로 보호되고 있어요.",
     "universeTitle": "우주 나이의 700배",
     "universeBody": "초당 100경 번씩 시도해도 전부 시도하는 데 걸려요.",
-    "twinTitle": "지구상 누구도 같은 문구가 없어요",
+    "twinTitle": "지구상 누구도 같은 문구를 받지 않아요",
     "twinBody": "80억 명 모두 PrivacyNotes를 써도 마찬가지예요.",
-    "keepPrivate": "들어오는 방법은 실제 12단어뿐이에요. 남에게 보여 주지 마세요."
+    "keepPrivate": "추측으로는 들어올 수 없어요. 12단어는 남에게 보여 주지 마세요."
   },
   "connectedAccounts": {
     "title": "연결된 계정",
@@ -355,13 +311,10 @@
     "connectAnotherProvider": "다른 {{provider}} 계정 연결",
     "updateTitle": "이 보관함의 로그인 업데이트",
     "updateDescription": "저장한 문구와 연결된 계정으로 2단계 로그인을 사용할 준비를 하고, 연결된 계정을 관리할 수 있게 해요. 노트와 키 관리 방식은 바뀌지 않아요.",
-    "updateDevices": "계속하기 전에 다른 기기의 앱을 업데이트하세요. 해당 기기에서 다시 로그인해야 할 수 있어요.",
-    "updateAcknowledgment": "다른 기기의 PrivacyNotes를 업데이트했어요.",
     "updateAction": "로그인 업데이트",
     "setupTitle": "Google, Apple 또는 GitHub 연결",
     "setupDescription": "처음 연결할 때 이 보관함을 한 번 업데이트해야 해요. 노트와 키 관리 방식은 그대로예요.",
     "setupAction": "연결된 계정 설정",
-    "closed": "계정 연결과 해제는 곧 열려요. 그때까지는 지금처럼 로그인하세요.",
     "repairTitle": "로그인 업데이트 완료",
     "repairDescription": "이 보관함은 이미 업데이트된 로그인을 사용하고 있어요. 여기서 이미 잠금 해제된 문구를 사용해 이 기기를 다시 연결하세요. 로컬 노트는 계속 사용할 수 있어요.",
     "repairAction": "이 보관함으로 계속",
@@ -379,7 +332,6 @@
     "rateLimited": "계정 변경 시도가 너무 많아요. 잠시 기다렸다가 다시 시도하세요.",
     "connectionMissing": "이 계정은 더 이상 연결되어 있지 않아요. 다시 시도하기 전에 현재 계정 목록을 확인하세요.",
     "noAccounts": "연결된 외부 서비스 계정이 없어요. 저장한 문구가 로그인 수단이에요.",
-    "actionFailed": "변경을 확인하지 못했어요. 연결을 확인하고 다시 시도하세요.",
     "retry": "계정 다시 확인",
     "connectDone": "이 보관함에 계정을 연결했어요. 키 관리 방식은 바뀌지 않았어요.",
     "disconnectDone": "계정 연결을 해제했어요. 노트와 키 관리 방식은 바뀌지 않았어요.",
@@ -389,7 +341,6 @@
     "freshMfa": "이 변경을 확인하려면 인증 앱의 새 코드가 필요해요. 변경 후에도 2단계 로그인은 켜진 상태로 유지돼요.",
     "continueProvider": "{{provider}}(으)로 계속",
     "working": "처리 중...",
-    "cancel": "취소",
     "confirmDisconnect": "{{provider}} 연결을 해제할까요?",
     "account": "이 계정",
     "lastCustodial": "연결된 계정이 이것 하나뿐이에요. 먼저 다른 계정을 연결하거나, 문구를 저장하고 자가 보관으로 전환한 뒤 이 계정을 제거하세요.",
@@ -445,10 +396,7 @@
       "key": "키 저장",
       "confirm": "확인"
     },
-    "next": "다음",
-    "back": "뒤로",
     "stepOf": "{{step}}/3단계",
-    "working": "처리 중...",
     "scan": "인증 앱으로 이 코드를 스캔하세요.",
     "qrLabel": "인증 앱용 QR 코드",
     "openAuthenticator": "이 휴대폰에서 보고 있나요? 인증 앱 열기",
@@ -462,9 +410,7 @@
     "backupWarning": "휴대폰을 잃어버렸나요? 이 키로 코드를 되찾을 수 있어요. PrivacyNotes 밖의 안전한 곳에 보관하세요.",
     "savedAcknowledgment": "백업 키를 저장했어요.",
     "confirmBackup": "이전 단계의 백업 키를 다시 입력한 뒤 앱의 코드를 입력하세요.",
-    "reenterBackup": "백업 키",
     "codeLabel": "앱의 코드",
-    "activate": "2FA 켜기",
     "cancelSetup": "취소",
     "enabled": "2FA가 켜져 있어요",
     "authenticatorRow": "인증 앱",
@@ -484,11 +430,6 @@
     "overview": "개요",
     "keyCustody": "키 관리",
     "accounts": "계정"
-  },
-  "beta": {
-    "label": "베타",
-    "notice": "이 기능은 베타 버전이에요.",
-    "reportBug": "버그 신고"
   },
   "demoTeaser": {
     "accounts": "계정을 만들면 Google, Apple 또는 GitHub를 보관함에 연결할 수 있어요.",

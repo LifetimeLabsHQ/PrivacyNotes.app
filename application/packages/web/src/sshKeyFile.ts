@@ -1,5 +1,6 @@
 /**
- * The text of an SSH key as a file that `ssh` accepts.
+ * The text of an SSH key as a file that `ssh` accepts, and what `ssh-keygen`
+ * says about a public key line: its type and its fingerprint.
  *
  * OpenSSH reads an Ed25519 private key only in its own format on every build:
  * the LibreSSL build macOS ships refuses a PKCS#8 "BEGIN PRIVATE KEY" file as

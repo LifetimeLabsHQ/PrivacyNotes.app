@@ -12,6 +12,8 @@
     "addLink": "Bağlantı ekle",
     "noteLink": "Başka bir nota bağlan (veya [[ yazın)",
     "numberedList": "Numaralı liste",
+    "indent": "Girintiyi artır",
+    "outdent": "Girintiyi azalt",
     "textColor": "Metin rengi",
     "textColorApply": "Metin rengi: {{color}}",
     "pickColor": "Metin rengi seç",
@@ -72,6 +74,7 @@
     "remove": "Bilgi kutusunu kaldır",
     "collapse": "Bilgi kutusunu daralt",
     "expand": "Bilgi kutusunu genişlet",
+    "dragGrip": "Sürükle",
     "types": {
       "info": "Bilgi",
       "success": "Başarılı",
@@ -132,6 +135,9 @@
     "addColumnRight": "Sağa sütun ekle",
     "toggleHeaderRow": "Başlık satırını aç/kapat",
     "equalColumnWidths": "Sütunları eşitle",
+    "cellColor": "Hücre rengi",
+    "sortAscending": "A'dan Z'ye sırala",
+    "sortDescending": "Z'den A'ya sırala",
     "resizeHint": "Yalnızca bu sütunu değiştirmek için {{shift}}, daha ince adımlar için {{alt}} tuşunu basılı tutun",
     "deleteRow": "Satırı sil",
     "deleteColumn": "Sütunu sil",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "Notta bulun",
-    "label": "Notta bul",
     "previous": "Önceki eşleşme",
     "previousTitle": "Önceki",
     "next": "Sonraki eşleşme",
     "nextTitle": "Sonraki",
     "close": "Aramayı kapat",
-    "closeTitle": "Kapat",
     "replacePlaceholder": "Şununla değiştir",
     "replaceLabel": "Şununla değiştir",
     "replace": "Değiştir",
@@ -177,10 +180,7 @@
     "replaceAll": "Tümü",
     "replaceAllTitle": "Tüm eşleşmeleri değiştir",
     "caseSensitive": "Büyük/küçük harfe duyarlı",
-    "caseSensitiveTitle": "Büyük/küçük harfe duyarlı",
     "closeReplace": "Bul ve değiştir çubuğunu kapat",
-    "closeReplaceTitle": "Kapat",
-    "showReplace": "Bul ve değiştir",
     "hideReplace": "Değiştirmeyi gizle",
     "replacedCount_one": "{{count}} değiştirildi",
     "replacedCount_other": "{{count}} değiştirildi"
@@ -192,9 +192,7 @@
     "ariaLabel": "Not ana hattı",
     "hide": "Ana hattı gizle",
     "copyHeadingLink": "Başlık bağlantısını kopyala",
-    "copyNoteLink": "Not bağlantısını kopyala",
-    "copyHeadingShortcut": "Başlık kısayolunu kopyala",
-    "copied": "Kopyalandı"
+    "copyHeadingShortcut": "Başlık kısayolunu kopyala"
   },
   "bodyMenu": {
     "cut": "Kes",
@@ -210,11 +208,8 @@
     "add": "Bir satır ekle"
   },
   "link": {
-    "popoverLabel": "Bağlantı ekle",
     "placeholder": "Bir URL yapıştırın veya yazın",
     "apply": "Uygula",
-    "addTitle": "Bağlantı ekle",
-    "editTitle": "Bağlantıyı düzenle",
     "urlLabel": "URL",
     "urlPlaceholder": "https://example.com",
     "errorEnterUrl": "Bir URL girin",
@@ -230,7 +225,6 @@
   },
   "audio": {
     "uploadingRecording": "Kayıt yükleniyor...",
-    "uploading": "Yükleniyor...",
     "stopRecording": "Kaydı durdur",
     "recordAudio": "Ses kaydet",
     "savingRecording": "Kayıt kaydediliyor...",
@@ -247,7 +241,6 @@
     "tasksChecked_other": "{{formatted}} öğeden {{done}} tanesi işaretli",
     "syncLimit": " · 1 MB eşitleme sınırının {{share}} kadarı",
     "overSyncLimit": " · 1 MB eşitleme sınırını aşıyor, bu cihazda kalır",
-    "split": "Notu böl",
     "veryLong": ", çok uzun, düzenlemesi yavaş olabilir ve takılabilir",
     "gettingLong": ", uzuyor, yavaş cihazlarda takılabilir",
     "largeTableWarning": "Büyük tablo ({{rows}} satır) bu notun düzenlenmesini yavaşlatabilir, bölmeyi düşünün"
@@ -262,18 +255,14 @@
     "placeholder": "Tek tıkla kopyalanacak metin"
   },
   "inlineCode": {
-    "copyHint": "Kopyalamak için {{key}}+tıklayın",
-    "copied": "Kopyalandı"
+    "copyHint": "Kopyalamak için {{key}}+tıklayın"
   },
   "codeBlock": {
-    "copy": "Kopyala",
-    "copied": "Kopyalandı",
     "copyFailed": "Başarısız",
     "wrap": "Uzun satırları kaydır",
     "showAll_one": "{{count}} satırın tümünü göster",
     "showAll_other": "{{count}} satırın tümünü göster",
     "showLess": "Daha az göster",
-    "plainText": "Düz metin",
     "language": "Kod dili: {{name}}",
     "searchLanguages": "Dil arayın",
     "placeholder": "Kodu yazın veya yapıştırın. Renk için yukarıdan bir dil seçin."
@@ -354,7 +343,6 @@
     "inProgress": "Devam ediyor",
     "review": "İnceleme",
     "done": "Tamamlandı",
-    "color": "Renk",
     "columns": "Sütunlar",
     "columnCount_other": "{{count}} sütun",
     "cardCount_other": "{{count}} kart",

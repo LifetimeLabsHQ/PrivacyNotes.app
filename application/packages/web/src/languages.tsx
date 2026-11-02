@@ -22,7 +22,7 @@ export function currentLanguageChoice(): string {
 // here because this is where callers look for anything about language.
 export { activeLocale, preferredLocale };
 
-// Spec: ops/docs/archive/rtl-handoff.md (Arabic numerals: Western digits)
+// Spec: docs/internal/specs/rtl-handoff.md (Arabic numerals: Western digits)
 const LATIN_DIGITS = '-u-nu-latn';
 
 /**

@@ -26,7 +26,7 @@ export const PillCloseOutsideContext = createContext(true);
  * stays on the charts and the calendar dots, where it tells trackers apart;
  * on one row of logged pills it only shouted. `mark` replaces the icon on a
  * logged pill (the Mood pill's number chip).
- * Spec: ops/docs/archive/ui-patterns.md section 141
+ * Spec: docs/internal/design/ui-patterns.md section 141
  */
 export function PillShell({
   label,
@@ -94,7 +94,7 @@ export function PillShell({
           aria-expanded={expanded}
           aria-label={ariaLabel}
           disabled={readOnly}
-          className={`pn-pill inline-flex items-center gap-1.5 rounded-md border px-2 h-7 [@media(hover:none)]:h-8 text-[12px] font-medium transition-colors ${
+          className={`pn-pill inline-flex items-center gap-1.5 rounded-md border px-2 h-7 [@media(hover:none)]:h-8 text-small font-medium transition-colors ${
             filled
               ? 'border-transparent bg-success/10 text-success'
               : expanded

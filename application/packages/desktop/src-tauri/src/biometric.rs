@@ -8,7 +8,7 @@
 //! `isUserVerifyingPlatformAuthenticatorAvailable()` resolves to false and the
 //! web biometric path is dead in every native build. Security > Biometric Lock
 //! claimed "not available on this device" on hardware that very much has it.
-//! Spec: ops/docs/biometric-unlock.md (section 3.2 native path), backlog #101.
+//! Spec: docs/contrib/biometric-unlock.md (section 3.2 native path), backlog #101.
 //!
 //! Security level is unchanged from the web path by design: biometrics are a
 //! *presence gate*, not a key source. The phrase stays wrapped with a random
@@ -62,7 +62,7 @@ pub use windows_hello::{authenticate, available, key_create, key_delete, key_ope
 // bind, and the web side then keeps the presence gate. `open` answers Gone only
 // when the OS has destroyed the key for good, which the lock screen turns into
 // "set up again" while the PIN and the phrase stay.
-// Spec: ops/docs/plans/biometric-key-binding.md (section 8.2)
+// Spec: docs/internal/plans/biometric-key-binding.md (section 8.2)
 // ---------------------------------------------------------------------------
 
 /// Why a key operation gave no secret. The string is what the web side reads.
@@ -673,7 +673,7 @@ mod windows_hello {
     // `OpenAsync` reports as NotFound: Gone. Enrollment shows two prompts
     // (create, then sign). There is no window-parented entry point for these
     // calls in a Win32 process, so the dialog is the system's own.
-    // Spec: ops/docs/plans/biometric-key-binding.md (section 8.2)
+    // Spec: docs/internal/plans/biometric-key-binding.md (section 8.2)
     use super::{from_hex, to_hex, KeyFailure};
     use windows::Security::Credentials::{
         KeyCredential, KeyCredentialCreationOption, KeyCredentialManager, KeyCredentialStatus,

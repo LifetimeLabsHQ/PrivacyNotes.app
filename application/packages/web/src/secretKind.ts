@@ -10,7 +10,7 @@
  *
  * No imports: `pin.ts` and `biometric.ts` both read it, and tests mock each of
  * those on its own.
- * Spec: ops/docs/plans/app-lock-passcode.md (section 4.1)
+ * Spec: docs/internal/plans/app-lock-passcode.md (section 4.1)
  */
 
 import { base64ToBytes } from '@notes/shared';
@@ -20,7 +20,7 @@ export type SecretKind = 'pin' | 'passcode';
 const PIN_SALT_BYTES = 16;
 const PASSCODE_SALT_BYTES = 24;
 
-// Spec: ops/docs/plans/app-lock-passcode.md (section 5, passcode length)
+// Spec: docs/internal/plans/app-lock-passcode.md (section 5, passcode length)
 export const PASSCODE_MIN_CHARS = 8;
 export const PASSCODE_MAX_CHARS = 256;
 

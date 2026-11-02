@@ -11,15 +11,15 @@ import { detectDeviceOs } from './deviceFingerprint';
  * app already knows the real answer, so it should supply it and let the reporter write prose.
  *
  * GitHub issue forms prefill from query params keyed on each field's `id`, so these keys
- * MUST stay in sync with `ops/github/ISSUE_TEMPLATE/bug_report.yml` (`id: version`,
+ * MUST stay in sync with `docs/public/github/ISSUE_TEMPLATE/bug_report.yml` (`id: version`,
  * `id: where`). A dropdown value that does not match an option string exactly is silently
  * ignored by GitHub - no error, the field just renders empty - so WHERE_OPTIONS below is a
  * verbatim copy of that file's option list. Change one, change both.
  *
- * Spec: ops/docs/gotchas.md (not every channel auto-updates).
+ * Spec: docs/contrib/gotchas.md (not every channel auto-updates).
  */
 
-const REPO = 'https://github.com/LifetimeLabsDev/PrivacyNotes.app';
+const REPO = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app';
 
 /** Verbatim from bug_report.yml's `Where?` dropdown. Order irrelevant, spelling is not. */
 const WHERE_OPTIONS = {

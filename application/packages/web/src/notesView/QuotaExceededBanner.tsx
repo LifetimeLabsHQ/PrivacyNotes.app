@@ -52,7 +52,7 @@ export function QuotaExceededBanner({
   const ctaLabel = storageConfigured ? t('quota.manageStorage') : t('quota.viewUsage');
 
   return (
-    <div className={`flex items-center justify-between gap-2 border-b text-sm px-4 py-2 ${
+    <div className={`flex items-center justify-between gap-2 border-b text-body px-4 py-2 ${
       syncFrozen
         ? 'bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-800 text-red-800 dark:text-red-300'
         : 'bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300'
@@ -62,7 +62,7 @@ export function QuotaExceededBanner({
         <button
           type="button"
           onClick={onManageStorage}
-          className="text-xs font-medium underline hover:no-underline"
+          className="text-small font-medium underline hover:no-underline"
         >
           {ctaLabel}
         </button>
@@ -73,7 +73,7 @@ export function QuotaExceededBanner({
             className={syncFrozen
               ? 'text-danger hover:text-red-900 dark:hover:text-red-200'
               : 'text-warning hover:text-amber-900 dark:hover:text-amber-200'}
-            aria-label={t('dismiss')}
+            aria-label={t('common:updateToast.dismiss')}
           >
             ×
           </button>

@@ -12,6 +12,8 @@
     "addLink": "Link toevoegen",
     "noteLink": "Naar een andere notitie linken (of typ [[)",
     "numberedList": "Genummerde lijst",
+    "indent": "Inspringing vergroten",
+    "outdent": "Inspringing verkleinen",
     "textColor": "Tekstkleur",
     "textColorApply": "Tekstkleur: {{color}}",
     "pickColor": "Tekstkleur kiezen",
@@ -72,6 +74,7 @@
     "remove": "Aandachtsblok verwijderen",
     "collapse": "Aandachtsblok inklappen",
     "expand": "Aandachtsblok uitklappen",
+    "dragGrip": "Slepen",
     "types": {
       "info": "Info",
       "success": "Gelukt",
@@ -132,6 +135,9 @@
     "addColumnRight": "Kolom rechts invoegen",
     "toggleHeaderRow": "Koprij in- of uitschakelen",
     "equalColumnWidths": "Kolommen even breed maken",
+    "cellColor": "Celkleur",
+    "sortAscending": "Sorteren van A tot Z",
+    "sortDescending": "Sorteren van Z tot A",
     "resizeHint": "Houd {{shift}} ingedrukt om alleen deze kolom te wijzigen, {{alt}} voor kleinere stappen",
     "deleteRow": "Rij verwijderen",
     "deleteColumn": "Kolom verwijderen",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "Zoeken in notitie",
-    "label": "Zoeken in notitie",
     "previous": "Vorige overeenkomst",
     "previousTitle": "Vorige",
     "next": "Volgende overeenkomst",
     "nextTitle": "Volgende",
     "close": "Zoeken sluiten",
-    "closeTitle": "Sluiten",
     "replacePlaceholder": "Vervangen door",
     "replaceLabel": "Vervangen door",
     "replace": "Vervangen",
@@ -177,10 +180,7 @@
     "replaceAll": "Alles",
     "replaceAllTitle": "Alle overeenkomsten vervangen",
     "caseSensitive": "Hoofdlettergevoelig",
-    "caseSensitiveTitle": "Hoofdlettergevoelig",
     "closeReplace": "Zoeken en vervangen sluiten",
-    "closeReplaceTitle": "Sluiten",
-    "showReplace": "Zoeken en vervangen",
     "hideReplace": "Vervangen verbergen",
     "replacedCount_one": "{{count}} vervangen",
     "replacedCount_other": "{{count}} vervangen"
@@ -192,9 +192,7 @@
     "ariaLabel": "Notitie-overzicht",
     "hide": "Overzicht verbergen",
     "copyHeadingLink": "Link naar kop kopiëren",
-    "copyNoteLink": "Notitielink kopiëren",
-    "copyHeadingShortcut": "Snelkoppeling naar kop kopiëren",
-    "copied": "Gekopieerd"
+    "copyHeadingShortcut": "Snelkoppeling naar kop kopiëren"
   },
   "bodyMenu": {
     "cut": "Knippen",
@@ -210,11 +208,8 @@
     "add": "Regel toevoegen"
   },
   "link": {
-    "popoverLabel": "Link toevoegen",
     "placeholder": "Plak of typ een URL",
     "apply": "Toepassen",
-    "addTitle": "Link toevoegen",
-    "editTitle": "Link bewerken",
     "urlLabel": "URL",
     "urlPlaceholder": "https://example.com",
     "errorEnterUrl": "Voer een URL in",
@@ -230,7 +225,6 @@
   },
   "audio": {
     "uploadingRecording": "Opname uploaden...",
-    "uploading": "Uploaden...",
     "stopRecording": "Opname stoppen",
     "recordAudio": "Audio opnemen",
     "savingRecording": "Opname opslaan...",
@@ -247,7 +241,6 @@
     "tasksChecked_other": "{{done}} van {{formatted}} afgevinkt",
     "syncLimit": " · {{share}} van de synchronisatielimiet van 1 MB",
     "overSyncLimit": " · boven de synchronisatielimiet van 1 MB, blijft op dit apparaat",
-    "split": "Notitie splitsen",
     "veryLong": ", erg lang, bewerken kan traag worden en haperen",
     "gettingLong": ", wordt lang, kan haperen op tragere apparaten",
     "largeTableWarning": "Een grote tabel ({{rows}} rijen) kan deze notitie traag maken om te bewerken, overweeg om te splitsen"
@@ -262,18 +255,14 @@
     "placeholder": "Tekst om met één klik te kopiëren"
   },
   "inlineCode": {
-    "copyHint": "{{key}}-klik om te kopiëren",
-    "copied": "Gekopieerd"
+    "copyHint": "{{key}}-klik om te kopiëren"
   },
   "codeBlock": {
-    "copy": "Kopiëren",
-    "copied": "Gekopieerd",
     "copyFailed": "Mislukt",
     "wrap": "Lange regels afbreken",
     "showAll_one": "{{count}} regel tonen",
     "showAll_other": "Alle {{count}} regels tonen",
     "showLess": "Minder tonen",
-    "plainText": "Platte tekst",
     "language": "Programmeertaal: {{name}}",
     "searchLanguages": "Talen zoeken",
     "placeholder": "Typ of plak code. Kies hierboven een taal voor kleuren."
@@ -354,7 +343,6 @@
     "inProgress": "Bezig",
     "review": "Controle",
     "done": "Klaar",
-    "color": "Kleur",
     "columns": "Kolommen",
     "columnCount_one": "{{count}} kolom",
     "columnCount_other": "{{count}} kolommen",

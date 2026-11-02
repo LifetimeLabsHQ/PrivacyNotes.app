@@ -186,17 +186,17 @@ export function SyncPanel({
   const amber = 'text-warning';
   const green = 'text-success';
   const heads: Record<typeof state, { icon: React.ReactNode; word: string; cls: string }> = {
-    demo: { icon: <CloudSlash size={17} />, word: t('syncStatus.notSaved'), cls: amber },
-    floor: { icon: <Warning size={17} />, word: t('syncStatus.updateRequired'), cls: amber },
-    paused: { icon: <Pause size={17} weight="bold" />, word: t('syncStatus.paused'), cls: amber },
-    offline: { icon: <WifiSlash size={17} />, word: t('syncStatus.offline'), cls: amber },
-    syncing: { icon: <CircleNotch size={17} className="animate-spin" />, word: t('syncStatus.syncing'), cls: 'text-accent' },
-    notBackedUp: { icon: <Warning size={17} />, word: t('syncStatus.notBackedUp'), cls: amber },
-    notSynced: { icon: <Warning size={17} />, word: t('syncStatus.notSynced'), cls: amber },
-    wifiHold: { icon: <CloudArrowUp size={17} />, word: t('syncStatus.wifiHold'), cls: amber },
-    storageFull: { icon: <Warning size={17} />, word: t('syncStatus.storageFull'), cls: amber },
-    uploading: { icon: <CircleNotch size={17} className="animate-spin" />, word: t('syncStatus.uploading'), cls: 'text-accent' },
-    synced: { icon: <Check size={17} weight="bold" />, word: t('syncStatus.synced'), cls: green },
+    demo: { icon: <CloudSlash />, word: t('syncStatus.notSaved'), cls: amber },
+    floor: { icon: <Warning />, word: t('common:updateToast.required'), cls: amber },
+    paused: { icon: <Pause weight="bold" />, word: t('syncStatus.paused'), cls: amber },
+    offline: { icon: <WifiSlash />, word: t('syncStatus.offline'), cls: amber },
+    syncing: { icon: <CircleNotch className="animate-spin" />, word: t('syncStatus.syncing'), cls: 'text-accent' },
+    notBackedUp: { icon: <Warning />, word: t('syncStatus.notBackedUp'), cls: amber },
+    notSynced: { icon: <Warning />, word: t('syncStatus.notSynced'), cls: amber },
+    wifiHold: { icon: <CloudArrowUp />, word: t('syncStatus.wifiHold'), cls: amber },
+    storageFull: { icon: <Warning />, word: t('syncStatus.storageFull'), cls: amber },
+    uploading: { icon: <CircleNotch className="animate-spin" />, word: t('syncStatus.uploading'), cls: 'text-accent' },
+    synced: { icon: <Check weight="bold" />, word: t('syncStatus.synced'), cls: green },
   };
   const head = heads[state];
 
@@ -236,9 +236,9 @@ export function SyncPanel({
       >
         <div className="flex items-center gap-2">
           <span className={`inline-flex ${head.cls}`}>{head.icon}</span>
-          <span className={`text-base font-semibold ${head.cls}`}>{head.word}</span>
+          <span className={`text-title font-semibold ${head.cls}`}>{head.word}</span>
           {!demo && (
-            <span className="ms-auto text-xs text-pn-muted whitespace-nowrap">
+            <span className="ms-auto text-small text-pn-muted whitespace-nowrap">
               {lastOk !== null
                 ? t('syncPanel.lastSync', { ago: formatRelative(new Date(lastOk).toISOString()) })
                 : t('syncPanel.neverSynced')}
@@ -252,32 +252,32 @@ export function SyncPanel({
             so the hero never changes height when a background pass or
             either button starts one. */}
         {state === 'syncing' ? (
-          <p className="mt-1.5 text-sm text-pn-soft">
+          <p className="mt-1.5 text-help text-pn-soft">
             {t('syncPanel.passRunning')}
           </p>
         ) : verifyBusy ? (
           // The compare narrates in the same slot the sync does - a
           // click on either action always answers in this line.
-          <p className="mt-1.5 text-sm text-pn-soft">
+          <p className="mt-1.5 text-help text-pn-soft">
             {t('syncPanel.compareRunning')}
           </p>
         ) : stamp && !demo ? (
           // Soft text, green seal only: the state word above owns the
           // color, this line is a fact with a small anchor, not a second
           // green claim.
-          <p className="mt-1.5 text-sm text-pn-soft flex items-center gap-1.5">
+          <p className="mt-1.5 text-help text-pn-soft flex items-center gap-1.5">
             {t('syncPanel.verified', {
               ago: formatRelative(new Date(stamp.at).toISOString()),
               count: stamp.items,
             })}
-            <SealCheck size={15} weight="fill" className="text-success" />
+            <SealCheck weight="fill" className="text-success" />
           </p>
         ) : state === 'synced' && !demo ? (
           <p className="mt-1.5 h-5" aria-hidden="true" />
         ) : null}
-        {subline && <p className="mt-1.5 text-sm text-pn-soft">{subline}</p>}
+        {subline && <p className="mt-1.5 text-help text-pn-soft">{subline}</p>}
         {showWaiting && (
-          <p className="mt-1.5 text-sm text-pn-soft">
+          <p className="mt-1.5 text-help text-pn-soft">
             {t('syncPanel.waitingNotes', { count: unsynced })}
             {pending.count > 0 && <>{' · '}{t('syncPanel.waitingFiles', { count: pending.count })}</>}
           </p>
@@ -291,14 +291,14 @@ export function SyncPanel({
           when a pass pushes them. */}
       {failedNotes.length > 0 && !demo && (
         <div className="rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3">
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-            {t('syncPanel.notBackedUpHeading', { count: failedNotes.length })}
+          <p className="text-body font-medium text-amber-800 dark:text-amber-300">
+            {t('settings:syncStatus.notBackedUpAria', { count: failedNotes.length })}
           </p>
           <ul className="mt-2 space-y-1.5">
             {failedNotes.map(({ id, title, failure }) => (
-              <li key={id} className="flex items-center gap-2 text-sm">
+              <li key={id} className="flex items-center gap-2 text-body">
                 <span className="min-w-0 flex-1 truncate" dir="auto">{title}</span>
-                <span className="shrink-0 text-xs text-warning">
+                <span className="shrink-0 text-small text-warning">
                   {failure.reason === 'too_large'
                     ? t('syncPanel.reasonTooLarge')
                     : t('syncPanel.reasonFailed', { message: failure.message })}
@@ -307,9 +307,9 @@ export function SyncPanel({
                   <button
                     type="button"
                     onClick={() => onOpenNote(id)}
-                    className="shrink-0 rounded-md border border-amber-300 dark:border-amber-700 px-2 py-0.5 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/40 transition"
+                    className="shrink-0 rounded-md border border-amber-300 dark:border-amber-700 px-2 py-0.5 text-small font-medium hover:bg-amber-100 dark:hover:bg-amber-900/40 transition"
                   >
-                    {t('syncPanel.openNote')}
+                    {t('shell:contacts.open')}
                   </button>
                 )}
               </li>
@@ -325,9 +325,9 @@ export function SyncPanel({
             type="button"
             onClick={() => void onSyncNow()}
             disabled={!online || syncing || belowFloor || paused || verifyBusy}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-divider hover:bg-surface-1 px-3 py-2.5 text-sm font-medium transition disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-divider hover:bg-surface-1 px-3 py-2.5 text-body font-medium transition disabled:opacity-50"
           >
-            <ArrowsClockwise size={15} className={syncing ? 'animate-spin' : 'text-accent'} />
+            <ArrowsClockwise className={syncing ? 'animate-spin' : 'text-accent'} />
             {t('syncPanel.syncNow')}
           </button>
         )}
@@ -336,7 +336,7 @@ export function SyncPanel({
             type="button"
             onClick={() => void runVerify()}
             disabled={verifyBusy || !online || syncing}
-            className={`relative inline-flex items-center justify-center gap-2 rounded-lg border border-divider hover:bg-surface-1 px-3 py-2.5 text-sm font-medium transition ${
+            className={`relative inline-flex items-center justify-center gap-2 rounded-lg border border-divider hover:bg-surface-1 px-3 py-2.5 text-body font-medium transition ${
               verifyBusy ? '' : 'disabled:opacity-50'
             }`}
           >
@@ -348,7 +348,7 @@ export function SyncPanel({
                 <rect className="pn-border-trace" width="100%" height="100%" rx="7.5" pathLength="100" />
               </svg>
             )}
-            <CloudCheck size={15} className="text-accent" />
+            <CloudCheck className="text-accent" />
             {verifyBusy ? t('sync.verifyRunning') : t('sync.verifyAction')}
           </button>
         )}
@@ -357,19 +357,19 @@ export function SyncPanel({
       {/* ── Verify outcome - only the answers the hero line cannot carry:
           divergence, busy, failed, files still queued, the repair. ── */}
       {repaired && (
-        <p className="text-sm text-pn-soft leading-relaxed">{t('sync.verifyRepairQueued')}</p>
+        <p className="text-body text-pn-soft leading-relaxed">{t('sync.verifyRepairQueued')}</p>
       )}
       {report && (
-        <div className="text-sm leading-relaxed">
+        <div className="text-body leading-relaxed">
           {report.verdict === 'in_sync' && (
             pending.count > 0 && pending.blocked >= pending.count ? (
               <p className="inline-flex items-center gap-1.5 text-warning">
-                <Warning size={14} />
+                <Warning />
                 {t('sync.verifyInSyncBlockedBlobs', { count: pending.blocked })}
               </p>
             ) : pending.count > 0 ? (
               <p className="inline-flex items-center gap-1.5">
-                <ArrowsClockwise size={14} className="animate-spin" />
+                <ArrowsClockwise className="animate-spin" />
                 {t('sync.verifyInSyncPendingBlobs', { count: pending.count })}
               </p>
             ) : (
@@ -383,7 +383,7 @@ export function SyncPanel({
           {report.verdict === 'busy' && <p className="text-pn-soft">{t('sync.verifyBusy')}</p>}
           {report.verdict === 'failed' && (
             <p className="inline-flex items-center gap-1.5 text-warning">
-              <WifiSlash size={14} />
+              <WifiSlash />
               {t('sync.verifyFailed')}
             </p>
           )}
@@ -421,8 +421,8 @@ export function SyncPanel({
       {/* ── Device + data path ── */}
       <div className="grid gap-3 sm:grid-cols-5">
         <div data-setting="me.thisDevice" className="flex flex-col rounded-lg border border-divider px-3.5 py-3 sm:col-span-2">
-          <span className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW} mb-2`}><EyebrowGlyph icon={Laptop} />{t('syncPanel.thisDevice')}</span>
-          <div className="flex items-center gap-2 text-sm font-medium">
+          <span className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW} mb-2`}><EyebrowGlyph icon={Laptop} />{t('settings:devices.thisDevice')}</span>
+          <div className="flex items-center gap-2 text-body font-medium">
             <span className="relative flex h-2 w-2" aria-hidden="true">
               {state !== 'floor' && state !== 'offline' && state !== 'demo' && (
                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-40 ${state === 'paused' ? 'bg-amber-400' : 'bg-emerald-400'}`} />
@@ -431,7 +431,7 @@ export function SyncPanel({
             </span>
             {buildDeviceName()} - v{VERSION}
           </div>
-          <p className={`mt-1 mb-2.5 text-xs ${state === 'paused' || state === 'floor' || state === 'demo' ? amber : 'text-pn-muted'}`}>
+          <p className={`mt-1 mb-2.5 text-small ${state === 'paused' || state === 'floor' || state === 'demo' ? amber : 'text-pn-muted'}`}>
             {state === 'demo' ? t('syncPanel.rhythmDemo')
               : state === 'paused' ? t('syncPanel.rhythmPaused')
               : state === 'floor' ? t('syncPanel.rhythmFloor')
@@ -462,19 +462,19 @@ export function SyncPanel({
 
         <div data-setting="me.where" className="flex flex-col rounded-lg border border-divider px-3.5 py-3 sm:col-span-3">
           <span className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW} mb-2`}><EyebrowGlyph icon={CloudArrowUp} />{t('syncPanel.whereTitle')}</span>
-          <div className="flex items-center gap-1.5 flex-wrap text-xs text-pn-soft">
-            <span className="rounded-md border border-divider bg-track px-2 py-1 whitespace-nowrap">{t('syncPanel.nodeDevice')}</span>
-            <Lock size={12} className="text-pn-muted shrink-0" aria-hidden="true" />
+          <div className="flex items-center gap-1.5 flex-wrap text-small text-pn-soft">
+            <span className="rounded-md border border-divider bg-track px-2 py-1 whitespace-nowrap">{t('settings:devices.thisDevice')}</span>
+            <Lock className="text-pn-muted shrink-0" aria-hidden="true" />
             <span className="rounded-md border border-divider bg-track px-2 py-1 whitespace-nowrap">{t('syncPanel.nodeEncrypted')}</span>
-            <CloudArrowUp size={13} className="text-pn-muted shrink-0" aria-hidden="true" />
+            <CloudArrowUp className="text-pn-muted shrink-0" aria-hidden="true" />
             <span className="rounded-md border border-emerald-600/40 bg-track px-2 py-1 whitespace-nowrap">{t('syncPanel.nodeRegion')} <SwissFlag /></span>
           </div>
           {/* No local-at-rest line here: the seal's residuals need
               caveats a settings card has no room for. This card only
               makes the claim the product advertises; THREAT_MODEL.md
               carries the honest detail. */}
-          <p className="mt-2 mb-2.5 text-xs text-pn-soft">{t('syncPanel.sealed')}</p>
-          <p className="mt-auto border-t border-divider pt-2.5 text-xs text-pn-soft">
+          <p className="mt-2 mb-2.5 text-help text-pn-soft">{t('syncPanel.sealed')}</p>
+          <p className="mt-auto border-t border-divider pt-2.5 text-help text-pn-soft">
             {t('syncPanel.offlineFact')}
           </p>
         </div>
@@ -509,7 +509,7 @@ function SwitchRow({
       checked={checked}
       onChange={onChange}
       className={`gap-3 ${className}`}
-      labelClassName="text-[13px] font-medium"
+      labelClassName="text-compact font-medium"
     />
   );
 }
@@ -595,7 +595,7 @@ function AccountIdRow({
     <div data-setting="me.accountId" className="pn-account-id rounded-lg border border-divider px-3.5 py-3">
       <span className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW} mb-2`}><EyebrowGlyph icon={IdentificationCard} />{t('accountId.heading')}</span>
       <div className="pn-account-id-row">
-        <code className="min-w-0 rounded bg-track px-2.5 py-1.5 text-xs font-mono truncate">{pubkey}</code>
+        <code className="min-w-0 rounded bg-track px-2.5 py-1.5 text-small font-mono truncate">{pubkey}</code>
         {/* Labels never change - only the icon flips to a check - so the
             buttons cannot resize under the click. */}
         <CopyButton
@@ -626,11 +626,11 @@ function CopyButton({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-1.5 rounded border px-2.5 py-1.5 text-xs whitespace-nowrap transition ${
+      className={`inline-flex items-center justify-center gap-1.5 rounded border px-2.5 py-1.5 text-small whitespace-nowrap transition ${
         copied ? 'border-accent bg-accent/10 text-accent-strong' : 'border-divider hover:bg-surface-1'
       }`}
     >
-      {copied ? <Check size={12} weight="bold" /> : <Copy size={12} />}
+      {copied ? <Check weight="bold" /> : <Copy />}
       {label}
     </button>
   );
@@ -654,10 +654,10 @@ function ActivityList({ log }: { log: SyncPassEntry[] }) {
         className="w-full flex items-center gap-2 px-3.5 py-2.5 hover:bg-surface-1 transition"
       >
         <span className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW}`}><EyebrowGlyph icon={Pulse} />{t('syncPanel.activity')}</span>
-        <CaretDown size={16} className={`ms-auto text-pn-muted transition-transform ${open ? 'rotate-180' : ''}`} />
+        <CaretDown className={`ms-auto text-pn-muted transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <table className="w-full text-xs text-pn-soft">
+        <table className="w-full text-small text-pn-soft">
           <tbody>
             {rows.map((e, i) => (
               <tr key={`${e.at}-${i}`} className="border-t border-divider">

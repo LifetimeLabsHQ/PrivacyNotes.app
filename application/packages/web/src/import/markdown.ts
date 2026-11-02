@@ -2,7 +2,7 @@
 // dynamically in parseZip so jszip stays out of the boot-path bundle
 // (NotesView statically imports parseMarkdown for drag-and-drop).
 import type JSZip from 'jszip';
-import { zipEntryText } from './zipEntry';
+import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
 import type { FolderDef } from '../folders';
 import { extractInlineTags, normalizeTag } from '../notesRepo';
 import { oneLineTitle } from '../oneLineTitle';
@@ -49,7 +49,8 @@ function parseFrontMatter(content: string): {
     return { meta: {}, body: content };
   }
 
-  const meta: Record<string, string> = {};
+  // No prototype: a `__proto__:` line is then an ordinary key (#656).
+  const meta: Record<string, string> = Object.create(null);
   for (const line of fmMatch[1].split('\n')) {
     const colonIdx = line.indexOf(':');
     if (colonIdx < 0) continue;
@@ -200,7 +201,7 @@ function parseOneMd(
 }
 
 /** Directories, hidden files and the junk a Mac leaves in a zip. */
-function shouldSkip(path: string): boolean {
+export function shouldSkip(path: string): boolean {
   if (path.startsWith('__MACOSX/') || path.includes('/__MACOSX/')) return true;
   if (path.startsWith('.')) return true;
   const name = path.split('/').pop() ?? '';
@@ -215,6 +216,7 @@ async function parseZip(
   folders: FolderDef[];
   blobs: Map<string, { data: Uint8Array; mime: string; name: string }>;
   skippedAttachments: number;
+  tooLarge: number;
   fmCount: number;
   inlineTagCount: number;
 }> {
@@ -271,6 +273,7 @@ async function parseZip(
   const bodies = notes.map((n) => n.body).join('\n');
   const blobs = new Map<string, { data: Uint8Array; mime: string; name: string }>();
   let skippedAttachments = 0;
+  let tooLarge = 0;
   for (const [rel, entry] of attachments) {
     if (!isBlobReferenced(rel, bodies)) {
       skippedAttachments++;
@@ -279,14 +282,19 @@ async function parseZip(
     if (blobs.size % 10 === 0) {
       onProgress?.(`Reading attachments... ${blobs.size + 1} of ${attachments.length}`);
     }
+    const data = await zipEntryMedia(entry);
+    if (!data) {
+      tooLarge++;
+      continue;
+    }
     blobs.set(rel, {
-      data: await entry.async('uint8array'),
+      data,
       mime: mimeFromExt(rel),
       name: rel.split('/').pop() ?? rel,
     });
   }
 
-  return { notes, folders, blobs, skippedAttachments, fmCount, inlineTagCount };
+  return { notes, folders, blobs, skippedAttachments, tooLarge, fmCount, inlineTagCount };
 }
 
 function parseSingleMd(file: File, text: string): ParsedOne {
@@ -323,7 +331,7 @@ export async function parseMarkdown(
     file.name.toLowerCase().endsWith('.zip') ||
     file.type === 'application/zip';
 
-  const { notes, folders, blobs, skippedAttachments, fmCount, inlineTagCount } = isZip
+  const { notes, folders, blobs, skippedAttachments, tooLarge, fmCount, inlineTagCount } = isZip
     ? await parseZip(file, onProgress)
     : await (async () => {
         const one = parseSingleMd(file, await file.text());
@@ -332,6 +340,7 @@ export async function parseMarkdown(
           folders: [] as FolderDef[],
           blobs: new Map<string, { data: Uint8Array; mime: string; name: string }>(),
           skippedAttachments: 0,
+          tooLarge: 0,
           fmCount: one.hadFrontMatter ? 1 : 0,
           inlineTagCount: one.hadInlineTags ? 1 : 0,
         };
@@ -375,6 +384,7 @@ export async function parseMarkdown(
       `Skipped ${skippedAttachments} attachment${skippedAttachments === 1 ? '' : 's'} that none of your notes link to.`
     );
   }
+  if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
 
   return {
     notes,

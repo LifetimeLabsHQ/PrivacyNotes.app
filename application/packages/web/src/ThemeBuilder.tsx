@@ -23,7 +23,7 @@ import { CloseButton } from './ui';
  * The panel keeps the colors the app had when it opened, so an experiment
  * that makes the app unreadable never hides Save or Cancel: it sets the
  * resolved `--color-*` values, which every color utility reads, on itself.
- * Spec: ops/docs/color-themes.md (section 6)
+ * Spec: docs/contrib/color-themes.md (section 6)
  */
 
 const PINNED = [
@@ -233,14 +233,14 @@ export function ThemeBuilder({
           {owned.length > 0 && (
             <span className="pointer-events-none absolute top-1 end-1 flex rounded bg-surface-2/90 p-0.5">
               {fails ? (
-                <Warning size={10} weight="fill" className="text-warning" aria-hidden="true" />
+                <Warning weight="fill" className="text-warning" aria-hidden="true" />
               ) : (
-                <Check size={10} weight="bold" className="text-success" aria-hidden="true" />
+                <Check weight="bold" className="text-success" aria-hidden="true" />
               )}
             </span>
           )}
         </label>
-        <p className="mt-1 text-[11px] text-pn-soft">{label}</p>
+        <p className="mt-1 text-meta text-pn-soft">{label}</p>
         <HexField value={hex} label={label} onChange={(h) => set(key, h)} wide />
       </div>
     );
@@ -257,7 +257,7 @@ export function ThemeBuilder({
         aria-label={t('appearance.custom.colorField', { label })}
         className="h-6 w-6 shrink-0 cursor-pointer rounded border border-divider bg-transparent p-0"
       />
-      <span className="min-w-0 flex-1 truncate text-xs text-pn-soft">{label}</span>
+      <span className="min-w-0 flex-1 truncate text-small text-pn-soft">{label}</span>
       <HoverLabel label={t('appearance.custom.reset')} position="above" disabled={!overridden} className="shrink-0">
         <button
           type="button"
@@ -266,14 +266,14 @@ export function ThemeBuilder({
           aria-label={t('appearance.custom.reset')}
           className="flex rounded p-0.5 text-accent hover:bg-pn/5 disabled:invisible"
         >
-          <ArrowCounterClockwise size={14} aria-hidden="true" />
+          <ArrowCounterClockwise aria-hidden="true" />
         </button>
       </HoverLabel>
       <HexField value={value(key)} label={label} onChange={(hex) => set(key, hex)} />
     </div>
   );
 
-  const fixButton = 'rounded border border-divider px-2 py-0.5 text-[11px] font-medium text-accent hover:bg-pn/5';
+  const fixButton = 'rounded border border-divider px-2 py-0.5 text-meta font-medium text-accent hover:bg-pn/5';
   const summaryText =
     summary.state === 'pass'
       ? t('appearance.custom.contrastPass')
@@ -292,33 +292,33 @@ export function ThemeBuilder({
     >
       <div className="p-3 pb-0">
         <div className="flex items-center gap-2">
-          <h2 className="flex-1 text-sm font-semibold">{title}</h2>
+          <h2 className="flex-1 text-body font-semibold">{title}</h2>
           <HoverLabel label={t('appearance.custom.modeHint')} position="below-end" multiline>
-            <span className="rounded-full bg-pn/10 px-2 py-0.5 text-[11px] text-pn-soft">
-              {resolved.mode === 'dark' ? t('appearance.custom.modeDark') : t('appearance.custom.modeLight')}
+            <span className="rounded-full bg-pn/10 px-2 py-0.5 text-meta text-pn-soft">
+              {resolved.mode === 'dark' ? t('common:ninja.themes.dark') : t('common:ninja.themes.light')}
             </span>
           </HoverLabel>
-          <HoverLabel label={copied ? t('appearance.custom.copiedShort') : t('appearance.custom.copyCode')} position="below-end">
+          <HoverLabel label={copied ? t('auth:createPhrase.copied') : t('appearance.custom.copyCode')} position="below-end">
             <button
               type="button"
               onClick={copy}
               disabled={name === null}
-              aria-label={copied ? t('appearance.custom.copiedShort') : t('appearance.custom.copyCode')}
+              aria-label={copied ? t('auth:createPhrase.copied') : t('appearance.custom.copyCode')}
               className="flex rounded p-1 text-pn-muted hover:text-pn disabled:opacity-50"
             >
-              <Copy size={16} aria-hidden="true" />
+              <Copy aria-hidden="true" />
             </button>
           </HoverLabel>
           <CloseButton onClick={onClose} />
         </div>
-        <p className="mt-1 flex items-center gap-1 text-[11px] text-pn-muted">
-          <Eye size={12} aria-hidden="true" className="shrink-0" /> {t('appearance.custom.previewHint')}
+        <p className="mt-1 flex items-center gap-1 text-meta text-pn-muted">
+          <Eye aria-hidden="true" className="shrink-0" /> {t('appearance.custom.previewHint')}
         </p>
 
         {/* For a person with no palette in mind: keep the accent, and let the
             app pick the other five for a light or a dark theme. */}
-        <div className="mt-3 flex items-center gap-2 rounded-md bg-pn/5 px-2 py-1.5 text-[11px] text-pn-soft">
-          <MagicWand size={14} aria-hidden="true" className="shrink-0 text-accent" />
+        <div className="mt-3 flex items-center gap-2 rounded-md bg-pn/5 px-2 py-1.5 text-meta text-pn-soft">
+          <MagicWand aria-hidden="true" className="shrink-0 text-accent" />
           <span className="min-w-0 flex-1">{t('appearance.custom.suggestTitle')}</span>
           {(['light', 'dark'] as const).map((m) => (
             <button
@@ -338,25 +338,25 @@ export function ThemeBuilder({
           type="button"
           onClick={() => setMoreOpen((o) => !o)}
           aria-expanded={moreOpen}
-          className="mt-3 flex w-full items-center gap-1 border-t border-divider pt-2 text-xs font-medium text-pn-soft hover:text-pn"
+          className="mt-3 flex w-full items-center gap-1 border-t border-divider pt-2 text-small font-medium text-pn-soft hover:text-pn"
         >
-          {moreOpen ? <CaretDown size={12} /> : <CaretRight size={12} />}
+          {moreOpen ? <CaretDown /> : <CaretRight />}
           {t('appearance.custom.more')}
-          {!moreOpen && moreFails && <Warning size={12} weight="fill" className="ms-auto text-warning" aria-hidden="true" />}
+          {!moreOpen && moreFails && <Warning weight="fill" className="ms-auto text-warning" aria-hidden="true" />}
         </button>
         {moreOpen && (
           <>
-            <p className="mt-1 text-[11px] text-pn-muted">{t('appearance.custom.moreHelp')}</p>
+            <p className="mt-1 text-meta text-pn-muted">{t('appearance.custom.moreHelp')}</p>
             <div className="mt-1">{MORE.map((k) => row(k, t(`appearance.custom.moreKey.${k}`), draft.overrides[k] !== undefined))}</div>
           </>
         )}
 
         {/* The theme decides the logo: the accent, as every palette but
             Default, or the original colors, saved in its code as
-            logo=original. Spec: ops/docs/color-themes.md (section 6) */}
+            logo=original. Spec: docs/contrib/color-themes.md (section 6) */}
         <div className="mt-3 border-t border-divider pt-2">
           <div className="flex items-center gap-2">
-            <span className="min-w-0 flex-1 text-xs font-medium text-pn-soft">{t('appearance.custom.logoTitle')}</span>
+            <span className="min-w-0 flex-1 text-small font-medium text-pn-soft">{t('appearance.custom.logoTitle')}</span>
             <div role="group" aria-label={t('appearance.custom.logoTitle')} className="flex flex-wrap gap-0.5 rounded-md p-0.5 bg-track">
               {([undefined, 'original'] as const).map((v) => (
                 <button
@@ -364,23 +364,23 @@ export function ThemeBuilder({
                   type="button"
                   aria-pressed={draft.logo === v}
                   onClick={() => setDraft((d) => (d ? tc.withLogo(d, v) : d))}
-                  className={`px-2 py-0.5 rounded text-[11px] transition ${draft.logo === v ? 'bg-surface-2 shadow-sm text-pn font-semibold' : 'text-pn-soft hover:text-pn font-medium'}`}
+                  className={`px-2 py-0.5 rounded text-meta transition ${draft.logo === v ? 'bg-surface-2 shadow-sm text-pn font-semibold' : 'text-pn-soft hover:text-pn font-medium'}`}
                 >
-                  {t(v === 'original' ? 'appearance.custom.logoOriginal' : 'appearance.custom.logoTint')}
+                  {t(v === 'original' ? 'appearance.custom.logoOriginal' : 'settings:appearance.custom.seed.accent')}
                 </button>
               ))}
             </div>
           </div>
-          <p className="mt-1 text-[11px] text-pn-muted">{t('appearance.custom.logoHelp')}</p>
+          <p className="mt-1 text-meta text-pn-muted">{t('appearance.custom.logoHelp')}</p>
         </div>
 
         <div className="mt-3 border-t border-divider pt-2">
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center gap-2 text-small">
             <span className={`flex min-w-0 flex-1 items-center gap-1 ${summary.state === 'pass' ? 'text-success' : 'text-warning'}`}>
               {summary.state === 'pass' ? (
-                <Check size={12} weight="bold" aria-hidden="true" className="shrink-0" />
+                <Check weight="bold" aria-hidden="true" className="shrink-0" />
               ) : (
-                <Warning size={12} weight="fill" aria-hidden="true" className="shrink-0" />
+                <Warning weight="fill" aria-hidden="true" className="shrink-0" />
               )}
               <span className="min-w-0">{summaryText}</span>
             </span>
@@ -394,7 +394,7 @@ export function ThemeBuilder({
                 {t('appearance.custom.fixAll')}
               </button>
             )}
-            <button type="button" onClick={() => setAllChecks((o) => !o)} aria-expanded={allChecks} className="shrink-0 text-[11px] text-accent hover:underline">
+            <button type="button" onClick={() => setAllChecks((o) => !o)} aria-expanded={allChecks} className="shrink-0 text-meta text-accent hover:underline">
               {allChecks ? t('appearance.custom.hideDetails') : t('appearance.custom.details')}
             </button>
           </div>
@@ -403,7 +403,7 @@ export function ThemeBuilder({
               <SettingsCallout className="mt-1.5 mb-1">{t('appearance.custom.contrastHelp')}</SettingsCallout>
               <ul className="mt-1 space-y-1">
                 {checks.map((c) => (
-                  <li key={c.id} className="text-xs">
+                  <li key={c.id} className="text-small">
                     <div className="flex items-center gap-2">
                       <span className="min-w-0 flex-1 truncate text-pn-soft">{checkLabel(c.id)}</span>
                       {c.ratio !== null ? (
@@ -411,7 +411,7 @@ export function ThemeBuilder({
                           {c.ratio.toFixed(1)}:1
                         </span>
                       ) : (
-                        c.pass && <Check size={12} weight="bold" aria-hidden="true" className="shrink-0 text-success" />
+                        c.pass && <Check weight="bold" aria-hidden="true" className="shrink-0 text-success" />
                       )}
                       {!c.pass && c.fix && (
                         <button type="button" onClick={() => fix(c.fix!)} className={fixButton}>
@@ -419,7 +419,7 @@ export function ThemeBuilder({
                         </button>
                       )}
                     </div>
-                    {!c.pass && !c.fix && <p className="mt-0.5 text-[11px] text-pn-muted">{advice(c)}</p>}
+                    {!c.pass && !c.fix && <p className="mt-0.5 text-meta text-pn-muted">{advice(c)}</p>}
                   </li>
                 ))}
               </ul>
@@ -434,8 +434,8 @@ export function ThemeBuilder({
           the end, Cancel before Save, as in every dialog. */}
       <div className="sticky bottom-0 mt-3 border-t border-divider bg-surface-2 px-3 py-2.5">
         <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-2">
-          <label htmlFor="pn-theme-name" className="px-1 text-xs font-medium text-pn-muted">
-            {t('appearance.custom.name')}
+          <label htmlFor="pn-theme-name" className="px-1 text-small font-medium text-pn-muted">
+            {t('shell:filesList.sortName')}
           </label>
           <input
             id="pn-theme-name"
@@ -444,15 +444,15 @@ export function ThemeBuilder({
             maxLength={tc.THEME_NAME_INPUT_MAX}
             dir="auto"
             placeholder={t('appearance.custom.namePlaceholder')}
-            className="min-w-0 rounded-md border border-divider bg-track px-2 py-1.5 text-sm text-pn"
+            className="min-w-0 rounded-md border border-divider bg-track px-2 py-1.5 text-body text-pn"
           />
           {/* Optional credit, written into the code as `by=`, so a code shared
               with friends names its maker and tells us how to credit it on
               /themes. A GitHub username, because that page links to it. */}
-          <label htmlFor="pn-theme-credit" className="px-1 text-xs font-medium text-pn-muted">
+          <label htmlFor="pn-theme-credit" className="px-1 text-small font-medium text-pn-muted">
             {t('appearance.custom.credit')}
           </label>
-          <div className="flex min-w-0 items-center rounded-md border border-divider bg-track ps-2 text-sm text-pn" dir="ltr">
+          <div className="flex min-w-0 items-center rounded-md border border-divider bg-track ps-2 text-body text-pn" dir="ltr">
             <span className="text-pn-muted" aria-hidden="true">@</span>
             <input
               id="pn-theme-credit"
@@ -474,9 +474,9 @@ export function ThemeBuilder({
           {canSave ? (
             <button type="button" onClick={save} disabled={!ready} className={SETTINGS_BTN_PRIMARY}>
               {justSaved ? (
-                <Check key={justSaved} size={16} weight="bold" aria-hidden="true" className="pn-pop" />
+                <Check key={justSaved}  weight="bold" aria-hidden="true" className="pn-pop" />
               ) : (
-                <FloppyDisk size={16} aria-hidden="true" />
+                <FloppyDisk aria-hidden="true" />
               )}
               {t('common:actions.save')}
             </button>
@@ -487,10 +487,10 @@ export function ThemeBuilder({
             </button>
           )}
         </div>
-        {!authorOk && <p className="mt-1 text-[11px] text-danger">{t('appearance.custom.creditInvalid')}</p>}
-        {full && <p className="mt-1 text-[11px] text-danger" role="alert">{t('appearance.custom.themeLimit', { max: CUSTOM_THEME_MAX })}</p>}
-        {name === null && <p className="mt-1 text-[11px] text-danger">{t('appearance.custom.nameInvalid')}</p>}
-        {name !== null && canSave && !ready && <p className="mt-1 text-[11px] text-pn-muted">{t('appearance.custom.saveHint')}</p>}
+        {!authorOk && <p className="mt-1 text-meta text-danger">{t('appearance.custom.creditInvalid')}</p>}
+        {full && <p className="mt-1 text-meta text-danger" role="alert">{t('appearance.custom.themeLimit', { max: CUSTOM_THEME_MAX })}</p>}
+        {name === null && <p className="mt-1 text-meta text-danger">{t('appearance.custom.nameInvalid')}</p>}
+        {name !== null && canSave && !ready && <p className="mt-1 text-meta text-pn-muted">{t('appearance.custom.saveHint')}</p>}
       </div>
     </div>
   );
@@ -518,7 +518,7 @@ function HexField({ value, label, onChange, wide = false }: { value: string; lab
       spellCheck={false}
       dir="ltr"
       aria-label={t('appearance.custom.hexField', { label })}
-      className={`${wide ? 'mt-0.5 w-full' : 'w-[76px]'} shrink-0 rounded border bg-track px-1.5 py-0.5 font-mono text-[11px] text-pn ${
+      className={`${wide ? 'mt-0.5 w-full' : 'w-[76px]'} shrink-0 rounded border bg-track px-1.5 py-0.5 font-mono text-meta text-pn ${
         focused && !readHex(text) ? 'border-red-500/60' : 'border-divider'
       }`}
     />

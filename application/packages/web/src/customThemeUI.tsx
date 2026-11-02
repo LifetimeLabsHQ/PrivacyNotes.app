@@ -23,7 +23,7 @@ import { ArrowSquareOut, Copy, PencilSimple, Trash } from './icons';
  * the Paste theme code field. A lazy chunk, with the theme code module in it,
  * so none of it is on the boot path: the built-in cards show first and these
  * join them a moment later.
- * Spec: ops/docs/color-themes.md (section 6)
+ * Spec: docs/contrib/color-themes.md (section 6)
  */
 
 export interface CustomThemeEntry {
@@ -158,11 +158,11 @@ export function ExtraThemeCards({ mode, compact, ctx, madeBy = 'all', sort = 'ne
   function openMenu(e: MouseEvent<HTMLButtonElement>, entry: CustomThemeEntry) {
     const copyItems: ContextMenuItem[] = [
       {
-        label: t('appearance.custom.makeCopy'),
-        icon: <PencilSimple size={14} />,
+        label: t('shell:contextMenu.duplicate'),
+        icon: <PencilSimple />,
         onSelect: () => ctx.openBuilder?.({ code: serializeThemeCode({ ...entry.theme, name: ctx.copyName(entry.theme.name) }) }),
       },
-      { label: t('appearance.custom.copyCode'), icon: <Copy size={14} />, onSelect: () => copyCode(entry) },
+      { label: t('appearance.custom.copyCode'), icon: <Copy />, onSelect: () => copyCode(entry) },
     ];
     // The credit heads the menu, in the case its author wrote it.
     const credit: ContextMenuItem[] = entry.theme.author
@@ -179,7 +179,7 @@ export function ExtraThemeCards({ mode, compact, ctx, madeBy = 'all', sort = 'ne
               { type: 'separator' },
               {
                 label: t('appearance.custom.vote'),
-                icon: <ArrowSquareOut size={14} />,
+                icon: <ArrowSquareOut />,
                 onSelect: () => openExternal(`${THEME_DISCUSSIONS_URL}/${thread}`),
               },
             ]
@@ -191,12 +191,12 @@ export function ExtraThemeCards({ mode, compact, ctx, madeBy = 'all', sort = 'ne
       ...credit,
       {
         label: t('common:actions.edit'),
-        icon: <PencilSimple size={14} />,
+        icon: <PencilSimple />,
         onSelect: () => ctx.openBuilder?.({ id: entry.id, code: entry.snapshot.code }),
       },
       ...copyItems,
       { type: 'separator' },
-      { label: t('common:actions.delete'), icon: <Trash size={14} />, destructive: true, onSelect: () => setDeleting(entry) },
+      { label: t('common:actions.delete'), icon: <Trash />, destructive: true, onSelect: () => setDeleting(entry) },
     ]);
   }
 
@@ -284,7 +284,7 @@ function CustomThemeCard({
           {author && <CommunityCorner />}
           {marked && !onStar && <QuickCorner />}
         </span>
-        <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} font-medium text-pn-muted flex items-center gap-1 max-w-full`}>
+        <span className={`${compact ? 'text-meta' : 'text-meta'} font-medium text-pn-muted flex items-center gap-1 max-w-full`}>
           <span className="line-clamp-2 text-center break-words" dir="auto">{entry.theme.name}</span>
         </span>
       </button>
@@ -376,10 +376,10 @@ export function ThemePasteField({ ctx, onClose }: { ctx: ThemeGalleryCtx; onClos
     onClose();
   }
 
-  const button = 'rounded-md px-3 py-1.5 text-xs font-medium transition';
+  const button = 'rounded-md px-3 py-1.5 text-small font-medium transition';
   return (
     <div className="mt-3 rounded-lg border border-divider bg-track p-3">
-      <label className="block text-xs font-medium text-pn-soft" htmlFor="pn-theme-code">
+      <label className="block text-small font-medium text-pn-soft" htmlFor="pn-theme-code">
         {t('appearance.custom.pasteLabel')}
       </label>
       <input
@@ -392,18 +392,18 @@ export function ThemePasteField({ ctx, onClose }: { ctx: ThemeGalleryCtx; onClos
         autoComplete="off"
         autoFocus
         dir="ltr"
-        className="mt-1 w-full rounded-md border border-divider bg-surface-2 px-2 py-1.5 font-mono text-xs text-pn placeholder:text-pn-muted"
+        className="mt-1 w-full rounded-md border border-divider bg-surface-2 px-2 py-1.5 font-mono text-small text-pn placeholder:text-pn-muted"
       />
-      {text.trim() && !theme && <p className="mt-2 text-xs text-danger">{t('appearance.custom.pasteInvalid')}</p>}
-      {full && <p className="mt-2 text-xs text-danger" role="alert">{t('appearance.custom.themeLimit', { max: CUSTOM_THEME_MAX })}</p>}
+      {text.trim() && !theme && <p className="mt-2 text-small text-danger">{t('appearance.custom.pasteInvalid')}</p>}
+      {full && <p className="mt-2 text-small text-danger" role="alert">{t('appearance.custom.themeLimit', { max: CUSTOM_THEME_MAX })}</p>}
       {entry && passes && (
-        <p className="mt-2 text-xs text-pn-soft">
+        <p className="mt-2 text-small text-pn-soft">
           {t(entry.snapshot.mode === 'dark' ? 'appearance.custom.pasteDark' : 'appearance.custom.pasteLight', {
             name: entry.theme.name,
           })}
         </p>
       )}
-      {entry && !passes && <p className="mt-1 text-xs text-warning">{t('appearance.custom.pasteHard')}</p>}
+      {entry && !passes && <p className="mt-1 text-small text-warning">{t('appearance.custom.pasteHard')}</p>}
       <div className="mt-2 flex flex-wrap gap-2">
         {entry && passes && savable && (
           <button type="button" onClick={save} className={`${button} bg-accent-fill text-white hover:bg-accent-fill-hover`}>

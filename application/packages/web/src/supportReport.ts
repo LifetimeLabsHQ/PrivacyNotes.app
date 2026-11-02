@@ -64,7 +64,7 @@ export function buildSupportReport(input: {
   breadcrumbs: Breadcrumb[];
 }): string {
   const { pubkey, failed, passes, faults, breadcrumbs } = input;
-  // Spec: ops/docs/archive/sync-diagnostics.md (decision D1: first 6, last 4)
+  // Spec: docs/internal/specs/sync-diagnostics.md (decision D1: first 6, last 4)
   const account = `${pubkey.slice(0, 6)}...${pubkey.slice(-4)}`;
   return [
     'PrivacyNotes support report',

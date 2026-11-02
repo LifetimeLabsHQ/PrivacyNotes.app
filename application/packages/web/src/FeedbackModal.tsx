@@ -20,7 +20,7 @@ export function FeedbackModal({ onClose }: Props) {
       label: t('feedback.labelReportBug'),
       desc: t('feedback.descReportBug'),
       rel: 'noopener noreferrer',
-      icon: <Bug size={16} weight="fill" className="shrink-0" />,
+      icon: <Bug weight="fill" className="shrink-0" />,
     },
     {
       // The template picker, not the issue list: it shows every template plus the security
@@ -29,14 +29,14 @@ export function FeedbackModal({ onClose }: Props) {
       label: 'GitHub',
       desc: t('feedback.descGithub'),
       rel: 'noopener noreferrer',
-      icon: <GithubLogo size={16} weight="fill" className="shrink-0" />,
+      icon: <GithubLogo weight="fill" className="shrink-0" />,
     },
   ];
 
   return (
     <LinksModal
       title={t('feedback.title')}
-      titleIcon={<Chat size={17} weight="fill" className="shrink-0 text-accent" aria-hidden="true" />}
+      titleIcon={<Chat weight="fill" className="shrink-0 text-accent" aria-hidden="true" />}
       intro={t('feedback.intro')}
       links={links}
       outro={
@@ -45,7 +45,7 @@ export function FeedbackModal({ onClose }: Props) {
           components={{
             contact: (
               <a
-                href="https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/SECURITY.md"
+                href="https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/SECURITY.md"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-accent hover:underline"
@@ -57,7 +57,7 @@ export function FeedbackModal({ onClose }: Props) {
       grid
       onClose={onClose}
     >
-      <h3 className="mt-4 mb-2 text-xs font-medium text-pn-muted">{t('feedback.followHeading')}</h3>
+      <h3 className="mt-4 mb-2 text-small font-medium text-pn-muted">{t('feedback.followHeading')}</h3>
       {/* Deliberately smaller than the two GitHub cards above: these read as
           updates, not as a second inbox. Five across once the container is wide enough for "Mastodon" to fit a tile, three
           across below that (a phone). A container query for the same reason as LinksList. */}
@@ -72,7 +72,7 @@ export function FeedbackModal({ onClose }: Props) {
               className="flex flex-col items-center gap-1 px-1 py-2.5 rounded-lg border border-divider hover:bg-surface-1 transition group"
             >
               <span className="text-pn-muted group-hover:text-accent transition"><l.Icon {...FOLLOW_ICON} /></span>
-              <span className="max-w-full truncate text-xs font-medium text-accent">{l.label}</span>
+              <span className="max-w-full truncate text-small font-medium text-accent">{l.label}</span>
             </a>
           ))}
         </div>

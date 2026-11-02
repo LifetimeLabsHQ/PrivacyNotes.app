@@ -602,7 +602,7 @@ function noteKind(c: SnContent, legacyEditorId: string | undefined): SnNoteKind 
  * blank line becomes an empty paragraph, and leading spaces stay as
  * non-breaking ones. A paragraph carries no gap on the default line spacing,
  * so this draws the note line for line as Standard Notes did.
- * Spec: ops/docs/design-decisions.md (editor paragraph rhythm)
+ * Spec: docs/internal/design-decisions.md (editor paragraph rhythm)
  */
 function plainTextToMarkdown(text: string): { markdown: string; links: number } {
   const out: string[] = [];

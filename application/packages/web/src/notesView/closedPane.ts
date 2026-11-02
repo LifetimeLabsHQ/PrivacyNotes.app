@@ -3,7 +3,7 @@
  * its first item back at once, so the pane stays empty while the list keeps
  * the scope it had at the close: a sync refresh or a re-sort keeps it empty,
  * and a new view, folder, tag, space or search lets the list pick again.
- * Spec: ops/issues/0568.md (Spec)
+ * Spec: docs/internal/issues/0568.md (Spec)
  */
 export function listScopeKey(
   view: string,

@@ -5,7 +5,7 @@ import { moodColor } from './moodColors';
  * color of its band (`moodColor`), the same five colors the month grid
  * paints. The anchors (1, 3, 5, 7, 10) name the bands with a word; a 6 reads
  * "okay" and an 8 reads "good", the lower anchor on a tie.
- * Spec: ops/issues/0439.md (Spec), ops/docs/archive/ui-patterns.md section 141
+ * Spec: docs/internal/issues/0439.md (Spec), docs/internal/design/ui-patterns.md section 141
  */
 export const MOOD_ANCHOR_VALUES = [1, 3, 5, 7, 10] as const;
 
@@ -45,6 +45,8 @@ export function MoodMark({ mood, size = 24, className = '' }: { mood: number; si
   return (
     <span
       aria-hidden="true"
+      // A picture of the mood whose number scales with the chip, not text: outside the type roles.
+      data-type-exempt=""
       className={`inline-flex shrink-0 items-center justify-center rounded-md font-semibold tabular-nums leading-none ${className}`}
       style={{ width: size, height: size, background: moodColor(mood), color: moodInk(mood), fontSize: Math.round(size * 0.5) }}
     >

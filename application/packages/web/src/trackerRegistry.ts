@@ -23,7 +23,7 @@ import type { TrackerDescriptor, TrackerValue } from './wellnessTypes';
  * custom template (stopped and deleted included, so an old value always
  * resolves to a name), and every medication template. The engine never
  * filters; the UI does, through `visibleInUi`.
- * Spec: ops/docs/archive/wellness-statistics.md (section 4)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 4)
  */
 
 type NumericField =

@@ -19,7 +19,7 @@
  * user's to handle, and the honest way to say that is to state where the files
  * are and what we do not do with them.
  *
- * Spec: ops/docs/archive/markdown-folder.md (section 12)
+ * Spec: docs/internal/specs/markdown-folder.md (section 12)
  */
 import { useTranslation } from 'react-i18next';
 import { FileMd, Robot, Book, GitBranch, Sparkle, Eye, ListChecks, Tag, Table, Laptop, CloudSlash, Brain } from '../icons';
@@ -43,35 +43,35 @@ export function MarkdownPitch({ actions }: { actions?: React.ReactNode }) {
   const { t } = useTranslation('shell');
 
   const chips: [React.ReactNode, string][] = [
-    [<Eye size={13} key="a" />, t('markdown.chipPreview')],
-    [<ListChecks size={13} key="b" />, t('markdown.chipTasks')],
-    [<Tag size={13} key="c" />, t('markdown.chipTags')],
-    [<Table size={13} key="d" />, t('markdown.chipTables')],
+    [<Eye key="a" />, t('markdown.chipPreview')],
+    [<ListChecks key="b" />, t('markdown.chipTasks')],
+    [<Tag key="c" />, t('shell:tagsRail.tags')],
+    [<Table key="d" />, t('markdown.chipTables')],
   ];
   const uses: [React.ReactNode, string][] = [
-    [<Robot size={18} key="a" />, t('markdown.useAgent')],
-    [<Book size={18} key="b" />, t('markdown.useObsidian')],
-    [<GitBranch size={18} key="c" />, t('markdown.useGit')],
+    [<Robot key="a" />, t('markdown.useAgent')],
+    [<Book key="b" />, t('markdown.useObsidian')],
+    [<GitBranch key="c" />, t('markdown.useGit')],
   ];
 
   return (
     <>
         <div className="flex items-center gap-2.5 rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 px-3 py-2.5 mb-3">
-          <Sparkle size={18} className="shrink-0 text-warning" />
+          <Sparkle className="shrink-0 text-warning" />
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-semibold text-amber-900 dark:text-amber-300 leading-snug">
+            <p className="text-compact font-semibold text-amber-900 dark:text-amber-300 leading-snug">
               {t('markdown.bannerTitle')}
             </p>
-            <p className="text-xs text-amber-700 dark:text-amber-400/80 leading-snug">
+            <p className="text-small text-amber-700 dark:text-amber-400/80 leading-snug">
               {t('markdown.bannerSub')}
             </p>
           </div>
-          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 rounded-full px-2 py-0.5">
+          <span className="shrink-0 text-meta font-semibold uppercase tracking-wide bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 rounded-full px-2 py-0.5">
             {t('markdown.bannerFree')}
           </span>
         </div>
 
-        <p className="text-xs text-pn-muted text-center mb-3">
+        <p className="text-small text-pn-muted text-center mb-3">
           {t('markdown.explainIntro')}
         </p>
 
@@ -79,7 +79,7 @@ export function MarkdownPitch({ actions }: { actions?: React.ReactNode }) {
           {chips.map(([icon, label]) => (
             <span
               key={label}
-              className="inline-flex items-center gap-1.5 rounded-full border border-divider px-2.5 py-1 text-xs text-pn-soft"
+              className="inline-flex items-center gap-1.5 rounded-full border border-divider px-2.5 py-1 text-small text-pn-soft"
             >
               <span className="text-pn-muted">{icon}</span>
               {label}
@@ -91,7 +91,7 @@ export function MarkdownPitch({ actions }: { actions?: React.ReactNode }) {
           {uses.map(([icon, label]) => (
             <div key={label} className="rounded-md bg-surface-1 px-2 py-2.5 text-center">
               <span className="flex justify-center text-pn-muted">{icon}</span>
-              <p className="mt-1.5 text-[11px] leading-snug text-pn-soft">{label}</p>
+              <p className="mt-1.5 text-meta leading-snug text-pn-soft">{label}</p>
             </div>
           ))}
         </div>
@@ -101,18 +101,18 @@ export function MarkdownPitch({ actions }: { actions?: React.ReactNode }) {
             tick/cross warning list. */}
         <div className="flex items-stretch gap-3 rounded-md border border-divider bg-surface-1 px-3 py-2.5 mb-4">
           <div className="flex flex-1 items-center gap-2">
-            <Laptop size={18} className="shrink-0 text-success" />
+            <Laptop className="shrink-0 text-success" />
             <div className="min-w-0">
-              <p className="text-xs font-medium text-pn leading-snug">{t('markdown.localTitle')}</p>
-              <p className="text-[11px] text-pn-muted leading-snug">{t('markdown.localSub')}</p>
+              <p className="text-small font-medium text-pn leading-snug">{t('markdown.localTitle')}</p>
+              <p className="text-meta text-pn-muted leading-snug">{t('markdown.localSub')}</p>
             </div>
           </div>
           <div className="border-s border-divider" />
           <div className="flex flex-1 items-center gap-2">
-            <CloudSlash size={18} className="shrink-0 text-danger" />
+            <CloudSlash className="shrink-0 text-danger" />
             <div className="min-w-0">
-              <p className="text-xs font-medium text-pn leading-snug">{t('markdown.cloudTitle')}</p>
-              <p className="text-[11px] text-pn-muted leading-snug">{t('markdown.cloudSub')}</p>
+              <p className="text-small font-medium text-pn leading-snug">{t('markdown.cloudTitle')}</p>
+              <p className="text-meta text-pn-muted leading-snug">{t('markdown.cloudSub')}</p>
             </div>
           </div>
         </div>
@@ -123,8 +123,8 @@ export function MarkdownPitch({ actions }: { actions?: React.ReactNode }) {
             - intro, chips and tiles above it are all centred - so it centres
             too rather than sitting alone against the left edge. */}
         <div className={`flex items-center gap-2 ${actions ? '' : 'justify-center'}`}>
-          <Brain size={16} className="shrink-0 text-pn-muted" />
-          <p className={`min-w-0 text-xs text-pn-muted leading-snug ${actions ? 'flex-1' : 'text-center'}`}>
+          <Brain className="shrink-0 text-pn-muted" />
+          <p className={`min-w-0 text-small text-pn-muted leading-snug ${actions ? 'flex-1' : 'text-center'}`}>
             {t('markdown.secondBrain')}
           </p>
           {actions}
@@ -137,7 +137,7 @@ export function MarkdownPitch({ actions }: { actions?: React.ReactNode }) {
             Below the second-brain line and not above it: everything above is the
             pitch, and this is the one row that changes the machine rather than
             describing the feature.
-            Spec: ops/docs/archive/markdown-folder.md (section 11) */}
+            Spec: docs/internal/specs/markdown-folder.md (section 11) */}
         <MarkdownDefaultAppRow />
     </>
   );
@@ -161,7 +161,7 @@ export function MarkdownExplainer({ onClose }: { onClose: () => void }) {
       >
         <div className="flex items-center gap-2.5 mb-3">
           <FileMd size={20} className="text-pn-muted shrink-0" />
-          <h2 id="markdown-explainer-title" className="flex-1 text-lg font-semibold text-pn">
+          <h2 id="markdown-explainer-title" className="flex-1 text-heading font-semibold text-pn">
             {t('markdown.explainTitle')}
           </h2>
           <CloseButton onClick={onClose} className="shrink-0" />
@@ -176,7 +176,7 @@ export function MarkdownExplainer({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={onClose}
-              className="shrink-0 text-[13px] px-3 py-1.5 rounded-md border border-divider hover:bg-surface-1 transition"
+              className="shrink-0 text-compact px-3 py-1.5 rounded-md border border-divider hover:bg-surface-1 transition"
             >
               {t('markdown.explainDone')}
             </button>

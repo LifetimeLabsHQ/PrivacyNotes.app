@@ -67,5 +67,8 @@
   ],
   "spaces": [
     "spaces"
+  ],
+  "dms": [
+    "dead-mans-switch"
   ]
 }

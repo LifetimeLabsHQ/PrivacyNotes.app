@@ -7,7 +7,7 @@ import { useLookIcons } from '../looks/lookIconsLoader';
  * A custom tracker's own icon, from the look icon catalog that notes, folders
  * and tags pick from. Without one, and while the catalog loads, it draws the
  * Trackers heartbeat, the glyph of Settings > Trackers.
- * Spec: ops/docs/mood-wellness-tracker.md (section 16.3)
+ * Spec: docs/internal/mood-wellness-tracker.md (section 16.3)
  */
 export function CustomTrackerGlyph({ icon, size = 12, className, style }: {
   icon?: string;

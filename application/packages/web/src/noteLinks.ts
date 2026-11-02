@@ -28,8 +28,14 @@
  * What counts as a note-link. Mirrors the paste rule in `NoteLink.tsx`, and
  * the two must agree: a shape the editor turns into a link but this pass does
  * not recognise is a link that silently stops following its target.
+ *
+ * The last branch is no link: it steps over a `[[` that opens none, up to the
+ * next `]`, because a link opening at a later bracket before that `]` would
+ * fail the same way. Without it a long run of `[` was rescanned from every
+ * bracket (external report, 2026-10-24, bug report 23.1). A match from it has
+ * no groups, and the loops below skip it.
  */
-const NOTE_LINK_RE = /\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]/g;
+const NOTE_LINK_RE = /\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]|\[\[[^\]|][^\]]*/g;
 
 /**
  * Regions markdown treats as code, where `[[x]]` is literal text the editor
@@ -103,6 +109,14 @@ export function resolveNoteLinkMatches<T extends { title: string }>(
 }
 
 /**
+ * The longest note part `parseNoteLinkTarget` asks `hasNote` about. Each
+ * question costs its length, and asking at every `#` of a long run of them was
+ * quadratic (external report, 2026-10-24, bug report 23.2). The title field
+ * takes 200 characters; a longer part falls to the split from the left.
+ */
+const NOTE_PART_MAX = 1000;
+
+/**
  * Split a target into the note it names and the heading inside that note.
  *
  * A title may hold a `#` ("C# tips", "Issue #42") and links to such notes
@@ -116,6 +130,10 @@ export function resolveNoteLinkMatches<T extends { title: string }>(
  *
  * `note` is '' for a link into the same note; `heading` is null for a plain
  * note-link.
+ *
+ * Both walks test a split by index, since `whole` is trimmed: the heading is
+ * empty only at the last character, the note only at 0. Building both halves
+ * at every `#` of a long run of them was quadratic.
  */
 export function parseNoteLinkTarget(
   target: string,
@@ -124,17 +142,17 @@ export function parseNoteLinkTarget(
   const whole = target.trim();
   if (hasNote?.(whole)) return { note: whole, heading: null };
   const split = (i: number) => ({ note: whole.slice(0, i).trim(), heading: whole.slice(i + 1).trim() });
+  const end = whole.length - 1;
   if (hasNote) {
-    for (let i = whole.lastIndexOf('#'); i >= 0; i = i > 0 ? whole.lastIndexOf('#', i - 1) : -1) {
-      const { note, heading } = split(i);
-      if (heading && (note === '' || hasNote(note))) return { note, heading };
+    for (let i = whole.lastIndexOf('#', NOTE_PART_MAX); i >= 0; i = i > 0 ? whole.lastIndexOf('#', i - 1) : -1) {
+      if (i === end) continue;
+      if (i === 0 || hasNote(whole.slice(0, i).trim())) return split(i);
     }
   }
   for (let i = whole.indexOf('#'); i >= 0; i = whole.indexOf('#', i + 1)) {
-    const { note, heading } = split(i);
     const after = whole[i + 1] ?? '';
     const before = i > 0 ? whole[i - 1]! : '';
-    if (heading && after.trim() && (i === 0 || before.trim())) return { note, heading };
+    if (after.trim() && (i === 0 || before.trim())) return split(i);
   }
   return { note: whole, heading: null };
 }
@@ -180,6 +198,7 @@ export function noteLinkTargets(body: string): string[] {
     NOTE_LINK_RE.lastIndex = 0;
     let m: RegExpExecArray | null;
     while ((m = NOTE_LINK_RE.exec(text)) !== null) {
+      if (m[1] === undefined) continue;
       const abs = offset + m.index;
       if (abs > 0 && body[abs - 1] === '!') continue;
       const target = (m[1] ?? '').trim();
@@ -238,6 +257,7 @@ export function retargetNoteLinks(
     let last = 0;
     let m: RegExpExecArray | null;
     while ((m = NOTE_LINK_RE.exec(text)) !== null) {
+      if (m[1] === undefined) continue;
       const start = m.index;
       const abs = offset + start;
       // `![[x]]` is Obsidian's EMBED, a different thing from a note-link - the

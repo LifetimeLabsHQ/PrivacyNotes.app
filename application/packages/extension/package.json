@@ -1,0 +1,37 @@
+{
+  "name": "extension",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "locales": "node scripts/gen-locales.mjs",
+    "build": "pnpm run build:chrome && pnpm run build:firefox && pnpm run build:edge",
+    "build:chrome": "node scripts/gen-locales.mjs && wxt build -b chrome",
+    "build:firefox": "node scripts/gen-locales.mjs && wxt build -b firefox --mv3",
+    "build:edge": "node scripts/gen-locales.mjs && wxt build -b edge",
+    "zip:firefox": "node scripts/gen-locales.mjs && wxt zip -b firefox --mv3",
+    "check:source-zip": "node scripts/check-source-zip.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@notes/clipper": "workspace:*",
+    "@notes/shared": "workspace:*",
+    "@phosphor-icons/react": "^2.1.7",
+    "i18next": "^26.5.7",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-i18next": "^17.1.5",
+    "tldts": "7.4.10"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "postcss": "^8.5.31",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "wxt": "0.21.5"
+  }
+}

@@ -5,7 +5,7 @@ import { Callout } from './ui/feedback';
 
 /**
  * Settings pane typography tokens - the single source of truth.
- * See ops/docs/archive/ui-patterns.md section 36. Every pane rendered inside
+ * See docs/internal/design/ui-patterns.md section 36. Every pane rendered inside
  * SettingsShell uses these so section headers and helper text can never
  * drift back into per-pane styles.
  *
@@ -25,25 +25,27 @@ import { Callout } from './ui/feedback';
  * a shared row label), keep the element and apply the constant.
  */
 export const SETTINGS_EYEBROW =
-  'text-[11px] font-semibold uppercase tracking-wide text-accent';
+  'text-meta font-semibold uppercase tracking-wide text-accent';
 const SETTINGS_EYEBROW_DANGER =
-  'text-[11px] font-semibold uppercase tracking-wide text-danger';
-export const SETTINGS_HELP = 'text-xs text-pn-soft';
+  'text-meta font-semibold uppercase tracking-wide text-danger';
+export const SETTINGS_HELP = 'text-help text-pn-soft';
 
 /** A section heading's glyph: 13px, in the heading's own color. The heading
  *  takes `EYEBROW_ICON_ROW` so the glyph and the words sit on one line. */
 export const EYEBROW_ICON_ROW = 'flex items-center gap-1.5';
 export function EyebrowGlyph({ icon: Glyph }: { icon: Icon }) {
-  return <Glyph size={13} className="shrink-0" aria-hidden="true" />;
+  return <Glyph className="shrink-0" aria-hidden="true" />;
 }
 
-/** A setting row's title with its glyph: a 14px accent icon before the
- *  words. Every row title in Settings carries one. */
-export const ROW_TITLE = 'text-sm font-medium flex items-center gap-1.5';
+/** A setting row's title with its glyph: an accent icon sized by the body
+ *  role, larger than the words. Every row title in Settings carries one; the
+ *  glyph a `Switch` wraps in a span takes the same size, so call sites need
+ *  not size it. Spec: docs/contrib/design/type-scale.md */
+export const ROW_TITLE = 'text-body font-medium flex items-center gap-1.5';
 export function RowTitle({ icon: Glyph, children }: { icon: Icon; children: ReactNode }) {
   return (
     <p className={ROW_TITLE}>
-      <Glyph size={14} className="text-accent shrink-0" aria-hidden="true" />
+      <Glyph className="text-accent shrink-0" aria-hidden="true" />
       {children}
     </p>
   );
@@ -59,7 +61,7 @@ export const SETTINGS_TRACK = 'flex gap-1 rounded-md p-1 bg-track';
 /** `fill` keeps the options sharing the track at every width; without it a
  *  wide pane lets them hug their labels. */
 export const settingsSegClass = (on: boolean, fill = false) =>
-  `flex-1 ${fill ? '' : 'lg:flex-none '}px-3 text-xs py-1.5 rounded transition ${on ? 'bg-surface-2 shadow-sm text-pn font-semibold' : 'text-pn-soft hover:text-pn font-medium'}`;
+  `flex-1 ${fill ? '' : 'lg:flex-none '}px-3 text-small py-1.5 rounded transition ${on ? 'bg-surface-2 shadow-sm text-pn font-semibold' : 'text-pn-soft hover:text-pn font-medium'}`;
 
 /** A segmented control: the track and option states above, for a choice
  *  that sits in a chart header or a toolbar instead of a setting row. The
@@ -89,7 +91,7 @@ export function SettingsSegmented<T extends string>({
           aria-pressed={o.value === value}
           title={o.title}
           onClick={() => onChange(o.value)}
-          className={`px-3 text-xs py-1.5 rounded transition ${o.value === value ? 'bg-surface-2 shadow-sm text-pn font-semibold' : 'text-pn-soft hover:text-pn font-medium'}`}
+          className={`px-3 text-small py-1.5 rounded transition ${o.value === value ? 'bg-surface-2 shadow-sm text-pn font-semibold' : 'text-pn-soft hover:text-pn font-medium'}`}
         >
           {o.label}
         </button>
@@ -102,24 +104,25 @@ export function SettingsSegmented<T extends string>({
  *  four; width is the caller's (add `w-full` for a full-width action).
  *  Upgrade is the upgrade window's own amber, so a door to it and the
  *  window read as one action. */
-const BTN_BASE = 'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition disabled:opacity-40 disabled:cursor-not-allowed';
+const BTN_BASE = 'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-body transition disabled:opacity-40 disabled:cursor-not-allowed';
 export const SETTINGS_BTN = `${BTN_BASE} border border-divider font-medium text-pn-soft hover:text-pn hover:bg-surface-1`;
 export const SETTINGS_BTN_PRIMARY = `${BTN_BASE} border border-transparent bg-accent-fill hover:bg-accent-fill-hover font-semibold text-white`;
 export const SETTINGS_BTN_UPGRADE = `${BTN_BASE} border border-transparent bg-amber-700 hover:bg-amber-800 font-semibold text-white`;
 export const SETTINGS_BTN_DANGER = `${BTN_BASE} border border-transparent bg-danger hover:opacity-90 font-semibold text-white`;
 
 /** A select or a short text field in a settings pane. */
-export const SETTINGS_SELECT = 'rounded-md bg-track border border-divider ps-2.5 pe-3.5 py-1.5 text-sm text-pn focus:border-accent focus:outline-none';
+export const SETTINGS_SELECT = 'rounded-md bg-track border border-divider ps-2.5 pe-3.5 py-1.5 text-body text-pn focus:border-accent focus:outline-none';
 
 /** One number with its label, as the Statistics tabs show a summary: a card,
- *  the label above, the value below, an optional line under it. */
-export function StatTile({ label, value, sub, children }: { label: ReactNode; value: ReactNode; sub?: ReactNode; children?: ReactNode }) {
+ *  the label above, the value below, an optional line under it. `bare` drops
+ *  the card for a tile that is already one (a Home widget). */
+export function StatTile({ label, value, sub, children, bare = false }: { label: ReactNode; value: ReactNode; sub?: ReactNode; children?: ReactNode; bare?: boolean }) {
   return (
-    <div className="min-w-0 rounded-lg border border-divider bg-surface-2 px-3 py-2.5">
-      <div className="text-[11px] text-pn-muted truncate">{label}</div>
-      <div className="text-xl font-semibold tabular-nums mt-0.5 truncate">{value}</div>
+    <div className={bare ? 'min-w-0' : 'min-w-0 rounded-lg border border-divider bg-surface-2 px-3 py-2.5'}>
+      <div className="text-meta text-pn-muted truncate">{label}</div>
+      <div className="text-display font-semibold tabular-nums mt-0.5 truncate">{value}</div>
       {children}
-      {sub && <div className="text-[11px] text-pn-soft mt-1">{sub}</div>}
+      {sub && <div className="text-small text-pn-soft mt-1">{sub}</div>}
     </div>
   );
 }
@@ -151,26 +154,26 @@ export function ResetDefaultsButton({ onReset, className = 'pt-4' }: { onReset: 
       <button
         type="button"
         onClick={click}
-        className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition ${
+        className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-body font-medium transition ${
           armed
             ? 'border-red-500/40 text-danger'
             : 'border-divider text-pn-soft hover:text-pn'
         }`}
       >
-        <ClockClockwise size={15} aria-hidden="true" />
+        <ClockClockwise aria-hidden="true" />
         {armed ? t('appearance.resetDefaultsConfirm') : t('appearance.resetDefaults')}
       </button>
     </div>
   );
 }
 
-const SETTINGS_TAB_STRIP = 'pn-tab-strip grid grid-flow-col auto-cols-fr border-b border-divider';
+const SETTINGS_TAB_STRIP = 'pn-tab-strip grid grid-flow-col auto-cols-[minmax(min-content,1fr)] border-b border-divider';
 /** Must match `.pn-tab-strip[data-row] > .pn-tab` in index.css. */
 const ROW_GAP = 6;
 const ROW_PAD = 8;
 
 /**
- * Equal-width settings tabs. Callers own spacing, semantics and navigation;
+ * Settings tabs that share the strip width. Callers own spacing, semantics and navigation;
  * each child is a button styled by settingsTabClass, with an icon and a
  * <span> label.
  *
@@ -180,10 +183,16 @@ const ROW_PAD = 8;
  * set at a breakpoint: a viewport breakpoint switched a narrow pane to the
  * row layout and broke long labels mid-word. Below 640px the strip always
  * stacks (index.css).
+ *
+ * A label wraps only between words: a column grows to its longest word and
+ * the others share what is left, so "Passwords" never splits into
+ * "Password / s". Only when the longest words together are wider than the
+ * strip does it set data-tight, and index.css lets a word break anywhere.
  */
 export function SettingsTabStrip({ className = '', children, ...rest }: HTMLAttributes<HTMLDivElement>) {
   const ref = useRef<HTMLDivElement>(null);
   const [row, setRow] = useState(false);
+  const [tight, setTight] = useState(false);
 
   // No dependency list: a re-render can carry new labels (a language change),
   // and the check is a handful of text measurements.
@@ -193,16 +202,29 @@ export function SettingsTabStrip({ className = '', children, ...rest }: HTMLAttr
     const ctx = document.createElement('canvas').getContext('2d');
     if (!ctx) return;
     const check = () => {
-      const fits = Array.from(strip.children).every((tab) => {
+      // Both answers come from the strip's width and the text alone, never
+      // from the current column widths, which each answer changes.
+      const ss = getComputedStyle(strip);
+      const tabs = Array.from(strip.children);
+      const width = strip.clientWidth - parseFloat(ss.paddingLeft) - parseFloat(ss.paddingRight);
+      const share = width / Math.max(tabs.length, 1);
+      let words = 0;
+      let fits = true;
+      for (const tab of tabs) {
         const label = tab.querySelector('span');
-        if (!label) return true;
+        const icon = tab.querySelector('svg')?.getBoundingClientRect().width ?? 0;
+        const ts = getComputedStyle(tab);
+        const pad = parseFloat(ts.paddingLeft) + parseFloat(ts.paddingRight);
+        if (!label) { words += icon + pad; continue; }
         const cs = getComputedStyle(label);
         ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-        const icon = tab.querySelector('svg')?.getBoundingClientRect().width ?? 0;
-        const text = ctx.measureText(label.textContent ?? '').width;
-        return icon + ROW_GAP + text + ROW_PAD * 2 <= tab.clientWidth;
-      });
+        const text = label.textContent ?? '';
+        const longest = Math.max(0, ...text.split(/\s+/).map((w) => ctx.measureText(w).width));
+        words += Math.max(icon, longest) + pad;
+        if (icon + ROW_GAP + ctx.measureText(text).width + ROW_PAD * 2 > share) fits = false;
+      }
       setRow(fits);
+      setTight(words > width);
     };
     check();
     const observer = new ResizeObserver(check);
@@ -211,15 +233,44 @@ export function SettingsTabStrip({ className = '', children, ...rest }: HTMLAttr
   });
 
   return (
-    <div ref={ref} {...rest} data-row={row || undefined} className={`${SETTINGS_TAB_STRIP} ${className}`}>
+    <div ref={ref} {...rest} data-row={row || undefined} data-tight={tight || undefined} className={`${SETTINGS_TAB_STRIP} ${className}`}>
       {children}
     </div>
   );
 }
 
 export function settingsTabClass(active: boolean) {
-  return `pn-tab inline-flex flex-col items-center justify-start gap-1 min-w-0 px-1 max-[400px]:px-0 py-2 -mb-px text-sm max-[400px]:text-[11px] leading-tight font-medium border-b-2 transition [overflow-wrap:anywhere] hyphens-auto [&>span]:min-w-0 [&>svg]:shrink-0 [&>svg]:text-accent ${active ? 'border-accent text-pn' : 'border-transparent text-pn-soft hover:text-pn'}`;
+  return `pn-tab inline-flex flex-col items-center justify-start gap-1 min-w-0 px-1 max-[400px]:px-0 py-2 -mb-px text-body max-[400px]:text-meta leading-tight font-medium border-b-2 transition [&>span]:min-w-0 [&>svg]:shrink-0 [&>svg]:text-accent ${active ? 'border-accent text-pn' : 'border-transparent text-pn-soft hover:text-pn'}`;
 }
+
+/** The 32px plate a settings card or row draws its mark on: a vendor logo
+ *  (`src`, from public/help/icons) or a glyph. `glyph` wins over `src`, so an
+ *  id must never carry both.
+ *  Spec: docs/internal/design/ui-patterns.md (section 71) */
+export function SettingsCardIcon({ src, glyph }: { src?: string; glyph?: ReactNode }) {
+  if (!glyph && !src) return null;
+  return (
+    <span className="shrink-0 w-8 h-8 rounded-md bg-track flex items-center justify-center overflow-hidden text-pn-soft">
+      {glyph ?? (
+        <img src={src} alt="" width={20} height={20} className="w-5 h-5 object-contain" loading="lazy" />
+      )}
+    </span>
+  );
+}
+
+/** The settings card look (Import, Export, Settings > Extension): a grid that
+ *  fits as many 9.5rem columns as there is room for (two on a phone), and a
+ *  framed card with the mark beside the name and one line under it.
+ *  `SETTINGS_CARD_ON` marks the open or current card.
+ *  Spec: docs/internal/design/patterns/151-160.md (section 157) */
+export const SETTINGS_CARD_GRID = 'grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] grid-flow-dense gap-1.5';
+export const SETTINGS_CARD = 'min-w-0 rounded-lg border px-2 py-2 flex items-center gap-2.5 text-start transition';
+export const SETTINGS_CARD_REST = 'border-divider hover:border-accent hover:bg-accent/5 cursor-pointer';
+export const SETTINGS_CARD_ON = 'border-accent bg-accent/5';
+
+/** A framed group of rows with a line between them (the import check step,
+ *  Settings > Extension). */
+export const SETTINGS_GROUP = 'rounded-lg border border-divider divide-y divide-divider';
 
 /** Standard uppercase section header for a settings pane. */
 export function SectionEyebrow({
@@ -287,7 +338,7 @@ export function SettingsCallout({
  *  medication's form): on takes the accent tint every selected option in
  *  Settings takes, not the logged green of the journal pills. */
 export function settingsChipClass(on: boolean): string {
-  return `inline-flex items-center h-7 px-2.5 rounded-md border text-xs font-medium transition-colors ${
+  return `inline-flex items-center h-7 px-2.5 rounded-md border text-small font-medium transition-colors ${
     on ? 'border-accent/30 bg-accent/10 text-accent-strong' : 'border-transparent bg-surface-0 text-pn-soft hover:bg-pn/10 hover:text-pn'
   }`;
 }

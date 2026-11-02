@@ -17,6 +17,7 @@ export type FooterIcon =
   | 'github'
   | 'shield'
   | 'download'
+  | 'price'
   | 'faq'
   | 'changelog'
   | 'roadmap'
@@ -74,12 +75,12 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
       { label: 'All platforms', href: '/en#downloads', icon: 'download' },
       // "Open source on GitHub" wrapped to two lines in the 151px mobile
       // column; the GitHub mark already says where the link goes.
-      { label: 'Open source', href: 'https://github.com/LifetimeLabsDev/PrivacyNotes.app', icon: 'github', external: true },
+      { label: 'Open source', href: 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app', icon: 'github', external: true },
       // The one deep link in the footer, and it earns the place: this is the
       // only row that answers "prove it" rather than "here it is". Every
       // static page carries this footer, so the help center, the changelog,
       // the roadmap and the brand page all gain the route in one edit.
-      { label: 'Verify it yourself', href: 'https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/VERIFY.md', icon: 'shield', external: true },
+      { label: 'Verify it yourself', href: 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md', icon: 'shield', external: true },
     ],
   },
   {
@@ -99,7 +100,7 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
       // Bug reports and feature requests go to GitHub and nowhere else, so
       // the one way to send them sits with help, apart from the channels to
       // follow. The template picker also lists the private security contact.
-      { label: 'Report an issue', href: 'https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues/new/choose', icon: 'github', external: true },
+      { label: 'Report an issue', href: 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues/new/choose', icon: 'github', external: true },
     ],
   },
   {
@@ -122,10 +123,9 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
       { label: 'Privacy Policy', href: 'https://lifetimelabs.dev/privacy/', icon: 'lock', external: true },
       { label: 'Terms of Service', href: 'https://lifetimelabs.dev/terms/', icon: 'file', external: true },
       { label: 'Refund Policy', href: 'https://lifetimelabs.dev/terms/#refunds', icon: 'refund', external: true },
-      // The one place product copy names the app license. Links to the
-      // repo root, where GitHub surfaces the license itself; never a
-      // LICENSE deep link.
-      { label: 'Licensed AGPL-3.0', href: 'https://github.com/LifetimeLabsDev/PrivacyNotes.app', icon: 'scales', external: true },
+      // The third-party licenses page (licenses-page.ts). Our own license
+      // is on GitHub, linked from that page's Source code row.
+      { label: 'Licenses', href: '/licenses', icon: 'scales' },
     ],
   },
 ];

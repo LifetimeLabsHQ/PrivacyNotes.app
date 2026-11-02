@@ -126,7 +126,7 @@ export async function createBurnLink(
   // https origin. On native platforms window.location.origin is tauri://localhost
   // (broken once shared), so use the canonical web origin; on web keep the live
   // origin (for local dev) but strip www to avoid a redirect hop.
-  // Spec: ops/docs/gotchas.md (canonical domain privacynotes.app, no www)
+  // Spec: docs/contrib/gotchas.md (canonical domain privacynotes.app, no www)
   const origin =
     detectPlatform() === 'web'
       ? window.location.origin.replace('://www.', '://')
@@ -147,6 +147,9 @@ export async function createBurnLink(
 export function prepareBurnPayload(
   note: LocalNote,
 ): { body: string; stripped: boolean; fields?: VaultField[] } | null {
+  // A drawing has no text a burn viewer can show.
+  // Spec: docs/internal/specs/drawing.md (section 4, no burn link)
+  if (note.type === 'drawing') return null;
   // A vault item's body is the JSON blob its form reads, so send the
   // labelled rows instead and let the item's own notes be the body.
   const vault = vaultContent(note);

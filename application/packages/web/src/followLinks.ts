@@ -13,4 +13,4 @@ export const FOLLOW_LINKS = [
 ] as const;
 
 /** The GitHub template picker: every issue template plus the security contact. */
-export const GITHUB_NEW_ISSUE = 'https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues/new/choose';
+export const GITHUB_NEW_ISSUE = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues/new/choose';

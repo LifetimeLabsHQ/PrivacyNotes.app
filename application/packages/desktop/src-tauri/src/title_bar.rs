@@ -12,7 +12,7 @@
 //! exact theme color. `dark: None` hands the theme back to the system: the
 //! window theme also sets `prefers-color-scheme` in the web view, so pinning it
 //! while the app follows the system would freeze the app on the pinned mode.
-//! Spec: ops/docs/color-themes.md (section 1, the Windows title bar)
+//! Spec: docs/contrib/color-themes.md (section 1, the Windows title bar)
 
 #[cfg(target_os = "windows")]
 pub fn paint(window: &tauri::WebviewWindow, caption: [u8; 3], text: [u8; 3], dark: Option<bool>) {

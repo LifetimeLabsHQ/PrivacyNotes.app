@@ -6,7 +6,7 @@ import type { JournalTrackerData } from './trackerTypes';
  * one tracker against an outcome, and the chart geometry. Each module owns
  * its functions; the shapes they exchange live here so none of them imports
  * another for a type.
- * Spec: ops/docs/archive/wellness-statistics.md (sections 4 to 7)
+ * Spec: docs/internal/specs/wellness-statistics.md (sections 4 to 7)
  */
 
 export type TrackerKind = 'scale' | 'measure' | 'yesno' | 'ordinal' | 'set' | 'medication';

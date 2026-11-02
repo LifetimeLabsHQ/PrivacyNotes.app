@@ -109,13 +109,13 @@
       "q": "PrivacyNotes notlarım hakkında ne görebilir?",
       "a": [
         "Notlar, başlıklar, etiketler ve ekler her zaman şifrelidir: cihazınızda da, sunucuya giderken de. İfadeyle açılan her hesabın başlangıç modu olan [kendi saklama modunda](/tr/help/threat-model-levels/), bizde şifre çözme anahtarı bulunmaz. Google, Apple veya GitHub ile kayıt olurken anahtarınızın nerede saklanacağını sorarız; başlangıçta \"Basit ve pratik olsun\" seçilidir. Bu seçenek ifadenizi bize ait bir anahtarla şifreleyerek sunucumuzda saklar. Bu modda sunucumuz ifadenizin, dolayısıyla notlarınızın şifresini çözebilir. Ayarlar > Hesap > Anahtar saklama mevcut modunuzu gösterir ve değiştirmenizi sağlar.",
-        "Görebildiğimiz bilgiler hizmeti çalıştırmak için gerekenlerdir: ne kadar şifreli depolama kullandığınız, kaç cihaz bağladığınız ve eşitleme zamanları. Yalnızca ifadenizi kullanıyor ve [bir Google, Apple veya GitHub hesabı bağlamadıysanız](/tr/help/connected-logins/) e-posta adresinizi bilmeyiz."
+        "Görebildiğimiz bilgiler hizmeti çalıştırmak için gerekenlerdir: ifadenizin ürettiği açık anahtar, kaç öğeniz olduğu ve ne kadar şifreli depolama kullandığınız, kaç cihaz bağladığınız ve eşitleme zamanları. Hız sınırlarımız her isteğin IP adresini de görür, ancak bunu hesabınıza yazmayız. Yalnızca ifadenizi kullanıyor ve [bir Google, Apple veya GitHub hesabı bağlamadıysanız](/tr/help/connected-logins/) e-posta adresinizi bilmeyiz."
       ]
     },
     "us-company": {
       "q": "PrivacyNotes bir ABD şirketi tarafından işletiliyor. Bu, notlarımı riske sokar mı?",
       "a": [
-        "Notlarınız cihazınızda şifrelenir ve [kendi saklama](/tr/help/threat-model-levels/) modunda sunucuda bunları açan hiçbir şey bulunmaz. Yazdıklarınız sunucuya yalnızca şifreli metin olarak ulaşır; bu yüzden şirket nerede kayıtlı olursa olsun, herhangi bir ülkeden gelen yasal talep de yalnızca şifreli metin elde eder. Kendiniz doğrulayın: kod [GitHub'da açık kaynak](https://github.com/LifetimeLabsDev/PrivacyNotes.app) ve tarayıcınızın ağ sekmesi, yazdıklarınızın cihazınızdan yalnızca şifreli metin olarak çıktığını gösterir.",
+        "Notlarınız cihazınızda şifrelenir ve [kendi saklama](/tr/help/threat-model-levels/) modunda sunucuda bunları açan hiçbir şey bulunmaz. Yazdıklarınız sunucuya yalnızca şifreli metin olarak ulaşır; bu yüzden şirket nerede kayıtlı olursa olsun, herhangi bir ülkeden gelen yasal talep de yalnızca şifreli metin elde eder. Kendiniz doğrulayın: kod [GitHub'da açık kaynak](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) ve tarayıcınızın ağ sekmesi, yazdıklarınızın cihazınızdan yalnızca şifreli metin olarak çıktığını gösterir.",
         "Lifetime Labs LLC, projelerimizi tek bir isim altında toplamanın en hızlı yolu olduğu için bir ABD şirketi. Ekipte kimse ABD'de yaşamıyor ve eşitlenen notlarınız İsviçre'nin Zürih şehrinde saklanıyor.",
         "Yasanın ulaşabildiği şey hizmetin ihtiyaç duyduğu verilerdir: açık anahtarınız, eşitleme zaman damgaları, depolama boyutu, kısa ömürlü sunucu günlükleri ve Google, Apple veya GitHub bağlarsanız o e-posta. “Basit ve pratik olsun” modunda kurtarma ifadeniz de sunucumuzda saklanır ve notlarınızı açar. Ayarlar > Hesap > Anahtar saklama sizi kendi saklama moduna geçirir. [PrivacyNotes neleri görebilir](/tr/help/what-can-you-see/) daha fazlasını listeler."
       ]
@@ -123,7 +123,7 @@
     "app-privacy-label": {
       "q": "App Store gizlilik etiketi neden verilerimin benimle bağlantılı olduğunu söylüyor?",
       "a": [
-        "Çünkü Apple, şifreli ulaşsa ve yalnızca bazı hesaplar gönderse bile sunucumuza ulaşabilecek her şeyi kapsayan tek bir etiket ister. Sizinle bağlantılı, bir hesaba bağlı demektir; ifadeyle açılan bir hesabın arkasında bir isim değil, bir anahtar vardır. Hiçbir şey izleme için kullanılmaz ve uygulamada analiz, reklam veya çökme raporu yoktur. Etiketteki her satır tek bir şeyi ifade eder:",
+        "Çünkü Apple, şifreli ulaşsa ve yalnızca bazı hesaplar gönderse bile sunucumuza ulaşabilecek her şeyi kapsayan tek bir etiket ister. Sizinle bağlantılı, bir hesaba bağlı demektir; ifadeyle açılan bir hesabın arkasında bir isim değil, bir anahtar vardır. Hiçbir şey izleme için kullanılmaz; uygulamada reklam, çökme raporu ve yazdıklarınıza dair hiçbir analiz yoktur. Etiketteki her satır tek bir şeyi ifade eder:",
         "- **Kullanıcı İçeriği**: notlarınız ve dosyalarınız, cihazınızda şifrelenir. [Kendi saklama modunda](/tr/help/threat-model-levels/) sunucuda bunları açacak hiçbir şey bulunmaz.\n- **Tanımlayıcılar**: kurtarma ifadenizden türetilen bir açık anahtar ve cihazınızda hesaplanan, yalnızca [ücretsiz sürümün cihaz sınırını](/tr/help/device-limit/) uygulayan bir cihaz özeti.\n- **İletişim Bilgileri**: bir e-posta adresi, yalnızca Google, Apple veya GitHub ile giriş yaparsanız.\n- **Satın Alımlar**: hesabınızda Pro olup olmadığı. Ödemeyi Apple yürütür ve kartınızı hiçbir zaman görmeyiz.",
         "Bu listeyi kendi hesabınız için olabildiğince kısa tutmak isterseniz Google, Apple veya GitHub girişi yerine [bir kurtarma ifadesiyle kaydolun](/tr/help/signup-options/) ve kendi saklama modunda kalın. Ayarlar > Hesap > Anahtar saklama mevcut modunuzu gösterir. [PrivacyNotes neleri görebilir](/tr/help/what-can-you-see/) gerisini anlatır."
       ]
@@ -183,7 +183,7 @@
       "a": [
         "Evet, standart BIP-39 İngilizce kelime listesi: 2048 kelime, Bitcoin cüzdanlarının kullandığı listenin aynısı. İfadeleri denetimden geçmiş, açık kaynaklı [@scure/bip39](https://github.com/paulmillr/scure-bip39) kütüphanesiyle üretiyoruz. Özel kelime listesi yok, ev yapımı kriptografi yok.",
         "Liste elle yazmaya göre tasarlanmıştır: her kelimenin ilk dört harfi benzersizdir, yani lekelenmiş ya da kısaltılmış bir kelime bile belirsiz kalmaz ve birbirine benzeyen kelimeler bilerek dışarıda bırakılmıştır.",
-        "Standart liste olduğu için ifadenizi herkese açık herhangi bir BIP-39 kaynağıyla doğrulayabilirsiniz; şifreleme kodumuz da [açık kaynak](https://github.com/LifetimeLabsDev/PrivacyNotes.app) olduğu için uygulamayı kendiniz inceleyebilirsiniz."
+        "Standart liste olduğu için ifadenizi herkese açık herhangi bir BIP-39 kaynağıyla doğrulayabilirsiniz; şifreleme kodumuz da [açık kaynak](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) olduğu için uygulamayı kendiniz inceleyebilirsiniz."
       ]
     },
     "search-local": {
@@ -203,22 +203,23 @@
     "burn-notes": {
       "q": "Burn note nedir?",
       "a": [
-        "Burn note, bir notu [PrivacyNotes kullanmayan biriyle paylaşmanın](/tr/help/share-with-someone/) kendi kendini imha eden yoludur. Uygulama içeriği tek kullanımlık bir anahtarla şifreler ve size bir bağlantı verir. Anahtar, tarayıcıların sunuculara hiç göndermediği bağlantı parçasında taşınır, yani sunucumuz okuyamadığı şifreli veriyi saklar.",
+        "Burn note, bir notu [PrivacyNotes kullanmayan biriyle paylaşmanın](/tr/help/share-with-someone/) kendi kendini imha eden yoludur. Uygulama içeriği tek kullanımlık bir anahtarla şifreler ve size bir bağlantı verir. Anahtar, tarayıcıların sunuculara hiç göndermediği bağlantı parçasında taşınır, bu yüzden sunucumuz yalnızca şifreli veriyi saklar, onu açan anahtarı asla.",
         "Bağlantı ilk kez açıldığında sunucu şifreli veriyi teslim eder ve aynı adımda siler: bir okuma, sonrası yok. Açılmayan bağlantılar, gönderenin seçtiği süre (1 saatten 7 güne) dolunca kendiliğinden sona erer. Her hâlükârda geride bir şey kalmaz."
       ]
     },
     "open-source": {
       "q": "PrivacyNotes açık kaynak mı?",
       "a": [
-        "Evet. Web, masaüstü ve mobil uygulamalar [GitHub](https://github.com/LifetimeLabsDev/PrivacyNotes.app) üzerinde yayımlanıyor; notlarınızı okunamaz hale getiren şifreleme kodu ve hangi parçanın neyi koruduğunu anlatan tehdit modeli de öyle. Sürümlerimizi derlediğimiz kodun aynısı.",
-        "Bir sözü kendi gözünüzle doğrulayabileceğiniz bir şeye çeviren de budur. Şifrelemeyi tek oturuşta okuyabilir, tarayıcınızın ağ sekmesini açıp [kendi notlarınızın okunamaz metin olarak çıktığını görebilir](/tr/help/what-can-you-see/) ya da uygulamayı kendiniz derleyip [dağıttığımızla karşılaştırabilirsiniz](/tr/help/verify-download/). Söylediklerimizin hiçbirine inanmak zorunda değilsiniz."
+        "Evet. Web, masaüstü ve mobil uygulamalar [GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) üzerinde yayımlanıyor; notlarınızı okunamaz hale getiren şifreleme kodu ve hangi parçanın neyi koruduğunu anlatan tehdit modeli de öyle. Sürümlerimizi derlediğimiz kodun aynısı.",
+        "Bir sözü kendi gözünüzle doğrulayabileceğiniz bir şeye çeviren de budur. Şifrelemeyi tek oturuşta okuyabilir, tarayıcınızın ağ sekmesini açıp [kendi notlarınızın okunamaz metin olarak çıktığını görebilir](/tr/help/what-can-you-see/) ya da uygulamayı kendiniz derleyip [dağıttığımızla karşılaştırabilirsiniz](/tr/help/verify-download/). Kendi saklama modunda bunların hiçbirinde sözümüze güvenmek zorunda değilsiniz."
       ]
     },
     "report-vulnerability": {
       "q": "Bir güvenlik açığı buldum. Nasıl bildiririm?",
       "a": [
-        "privacynotes@lifetimelabs.dev adresine yazın. Aynı adres PGP ile imzalanmış [security.txt](https://privacynotes.app/.well-known/security.txt) dosyamızda da yayımlanıyor, böylece yazmadan önce gerçek olduğunu doğrulayabilirsiniz; bildiriminizi şifrelemeyi tercih ederseniz [açık anahtarımız](https://privacynotes.app/.well-known/pgp-key.txt) da orada duruyor.",
-        "Yanıt veriyoruz ve bir düzeltme eşgüdüm gerektiriyorsa, herhangi bir şey kamuya açılmadan önce açıklama zamanlamasını sizinle birlikte belirliyoruz. Bildirimler doğrudan kodu yazan kişilere ulaşır ve teşekkür isteyen alır. [Denemelerinizi try.privacynotes.app adresindeki tanıtım sürümünde](/tr/help/try-before-signup/) veya tek kullanımlık bir hesapta yapın, asla başkasının notları üzerinde yapmayın."
+        "Özel olarak [GitHub üzerinden](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/security/advisories/new) bildirin. GitHub kullanamıyorsanız sec@lifetimelabs.dev adresine yazın. Bu adres kendi alan adımızdaki [security.txt](https://privacynotes.app/.well-known/security.txt) dosyamızda da yayımlanıyor, böylece yazmadan önce gerçek olduğunu doğrulayabilirsiniz.",
+        "Yanıt veriyoruz ve bir düzeltme eşgüdüm gerektiriyorsa, herhangi bir şey kamuya açılmadan önce açıklama zamanlamasını sizinle birlikte belirliyoruz. Bildirimler doğrudan kodu yazan kişilere ulaşır ve teşekkür isteyen alır. [Denemelerinizi try.privacynotes.app adresindeki tanıtım sürümünde](/tr/help/try-before-signup/) veya tek kullanımlık bir hesapta yapın, asla başkasının notları üzerinde yapmayın.",
+        "Göndermeden önce güncel sürümde ve zaten bildiğimiz ve kabul ettiğimiz sınırları listeleyen [tehdit modelimizde](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md) kontrol edin. Yapay zekâ araçları memnuniyetle karşılanır, ancak her iddiayı uygulamada kendiniz doğrulayın, raporun yazılmasına bir aracın yardım edip etmediğini belirtin ve doğrulanmamış bir bulguyu asla önce herkese açık yerde paylaşmayın: yanlış bir kamuya açık iddia, kimse kontrol edemeden insanları endişelendirir. Tam yönergeler [SECURITY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/SECURITY.md#reporting-a-vulnerability) dosyasındadır. Uygulamanın nasıl çalıştığına dair sorular her yerde memnuniyetle karşılanır, soru olarak sorulması yeter."
       ]
     },
     "lost-phrase": {
@@ -262,8 +263,8 @@
     "what-syncs": {
       "q": "Cihazlarım arasında tam olarak ne eşitlenir, ne yerel kalır?",
       "a": [
-        "Beklediğiniz her şey ve hepsi cihazınızda şifrelenmiş olarak: notlar, görevler, günlük kayıtları, [kasanız](/tr/help/vault/) ve içindeki dosyalar. Ayarlarınız da sizinle gelir - favori etiketler, sıralama ve görünüm tercihleri, renk teması, PIN'iniz (tuzlanmış özet olarak, asla PIN'in kendisi değil), uygulama kilidi, takip ve ilaç ayarları, [çöp kutusu otomatik silme](/tr/help/trash-auto-delete/). Bir kez ayarlayın, her cihaz devralsın.",
-        "Birkaç şey bilerek cihaza özel kalır: açık ya da koyu mod (her cihaz kendi sistem tercihini izler), biyometrik kilit açma (her cihazın donanımına bağlıdır), [kenar çubuğunun gösterdiği alan](/tr/help/spaces/) ve kilit durumunuz (uygulamayı kapatmak her zaman yeniden kilitler). Sunucu yalnızca şifreli veri yığınları saklar ve hiçbirini okuyamaz."
+        "Beklediğiniz her şey ve hepsi cihazınızda şifrelenmiş olarak: notlar, görevler, günlük kayıtları, [kasanız](/tr/help/vault/) ve içindeki dosyalar. Ayarlarınız da sizinle gelir - favori etiketler, sıralama ve görünüm tercihleri, renk teması, PIN'iniz (tuzlanmış özet olarak, asla PIN'in kendisi değil), takip ve ilaç ayarları, [çöp kutusu otomatik silme](/tr/help/trash-auto-delete/). Bir kez ayarlayın, her cihaz devralsın.",
+        "Birkaç şey bilerek cihaza özel kalır: açık ya da koyu mod (her cihaz kendi sistem tercihini izler), biyometrik kilit açma (her cihazın donanımına bağlıdır), uygulama kilidi ve uygulamanın ve PIN'inizin ne kadar sonra yeniden soracağı (böylece bir telefon evdeki bir bilgisayardan daha erken kilitlenebilir), [kenar çubuğunun gösterdiği alan](/tr/help/spaces/) ve kilit durumunuz (uygulamayı kapatmak her zaman yeniden kilitler). Eşitlenen her şeyi sunucu yalnızca şifreli olarak saklar."
       ]
     },
     "offline": {
@@ -290,8 +291,8 @@
       "q": "Verilerim nerede saklanıyor?",
       "a": [
         "Önce cihazınızda ve asıl çalıştığınız kopya odur: uygulama yerel öncelikli, yani [notlarınız çevrimdışıyken de açılır ve düzenlenir](/tr/help/offline/). Eşitleme kopyası İsviçre'nin Zürih şehrindeki sunucularda durur. Orada duran şey açık anahtarınız, notlarınızın, dosyalarınızın ve ayarlarınızın şifreli blobları, bir de eşitlemenin ihtiyaç duyduğu zaman damgaları ile boyutlardır. Başlık yok, metin yok, etiket yok.",
-        "Ülke, şifrelemeden daha az önemli. Her şey cihazınızda da sunucuya giderken de her zaman şifrelidir, yani o kopya nerede dursa okunamaz olurdu: İsviçre bir ekstra, verilen söz değil. [Neler eşitlenir](/tr/help/what-syncs/) bunu tek tek sayıyor.",
-        "Cihazınızdaki kopya da şifrelidir. [Notlar diskte mühürlenir](/tr/help/data-on-disk/): kilidi açtığınızda kurtarma ifadenizden türetilen bir anahtarla. Bu yüzden cihazınızdaki uygulama depolamasının bir kopyası ya da onun çalınmış bir yedeği, notlarınızı değil şifreli veriyi taşır."
+        "Ülke, şifrelemeden daha az önemli. Her şey cihazınızda da sunucuya giderken de her zaman şifrelidir; yani o kopya nerede dururse dursun şifreli veridir ve kendi saklama modunda sunucudaki hiçbir şey onu açamaz. İsviçre bir ekstra, verilen söz değil. [Neler eşitlenir](/tr/help/what-syncs/) bunu tek tek sayıyor.",
+        "Cihazınızdaki kopya da şifrelidir: [notlar diskte mühürlenir](/tr/help/data-on-disk/), kilidi açtığınızda kurtarma ifadenizden türetilen bir anahtarla."
       ]
     },
     "data-on-disk": {
@@ -299,14 +300,14 @@
       "a": [
         "Kurulum başına tek bir klasörde, hesabınızın uygulama verisi alanında. Bu klasörün yeri platforma göre değişir:",
         "- **macOS**: `~/Library/WebKit/app.privacynotes/WebsiteData/`\n- **Windows**: `%LOCALAPPDATA%\\app.privacynotes`\n- **Linux**: `~/.local/share/app.privacynotes`, AppImage için `app.privacynotes.appimage`; AppImage kendi web motorunu taşıdığı için kendi profilini de ayrı tutar\n- **Android, iOS**: uygulamanın özel deposu, başka hiçbir uygulama açamaz\n- **Tarayıcı**: `use.privacynotes.app` altındaki tarayıcı profiliniz",
-        "Orada duran şey şifreli veridir. Her not, başlığı, metni ve etiketleri içinde taşıyan mühürlü tek bir bloktur ve kilidi açtığınızda kurtarma ifadenizden türetilen bir anahtarla açılır; bu yüzden kopyalanan bir klasörde okunabilir hiçbir şey olmaz. Açıkta yalnızca yerel dizinin ihtiyaç duyduğu şeyler kalır: kimlikler, zaman damgaları, öğenin türü ve sabitlenmiş ya da silinmiş gibi işaretler.",
-        "Notlarınızı başka bir cihaza taşımak ya da kendinize bir kopya saklamak için **Ayarlar > Import & Export > Dışa aktar** altından “Şifreli tam yedek (.pnbackupz)” seçeneğini seçin. Her şeyi içerir, ifade anahtarınızla şifrelenir ve [ifadenizle her cihazda geri yüklenir](/tr/help/restore-backup/). [Yedekler hakkında daha fazlası](/tr/help/backup-strategy/)."
+        "Oradaki her not, başlığı, metni ve etiketleri içinde taşıyan mühürlü tek bir bloktur ve kilidi açtığınızda kurtarma ifadenizden türetilen bir anahtarla açılır. Açıkta yalnızca yerel dizinin ihtiyaç duyduğu şeyler kalır: kimlikler, zaman damgaları, öğenin türü ve sabitlenmiş ya da silinmiş gibi işaretler. Ayarlarınız da orada mühürlüdür; yalnızca kilit ekranının siz kilidi açmadan önce ihtiyaç duyduğu şeyler hariç, örneğin uygulama kilidinin açık olup olmadığı ile kullandığınız temanın renkleri ve adı. Klasör kurtarma ifadenizi de saklar; böylece uygulama sizden istemeden açılır. Biri o klasörü kopyalayabilecekse, Ayarlar > Güvenlik bölümünden uygulama kilidini açın; ifade o zaman yalnızca kilidin arkasında tutulur.",
+        "Notlarınızı başka bir cihaza taşımak ya da kendinize bir kopya saklamak için **Ayarlar > Import & Export > Dışa aktar** altından “Her şey, şifreli (.pnbackupz)” seçeneğini seçin. Notlarınızı, dosyalarınızı ve ayarlarınızı içerir (not geçmişi ve uygulama kilidi PIN'iniz dışarıda kalır), ifade anahtarınızla şifrelenir ve [ifadenizle her cihazda geri yüklenir](/tr/help/restore-backup/). [Yedekler hakkında daha fazlası](/tr/help/backup-strategy/)."
       ]
     },
     "export": {
       "q": "Notlarımı dışa aktarabilir miyim, yoksa bu uygulamaya bağımlı mı kalırım?",
       "a": [
-        "Her şeyi istediğiniz zaman dışa aktarabilirsiniz ve hepsi cihazınızda üretilir: ekleriyle birlikte zip içinde Markdown dosyaları, düz JSON ya da kendi kendine yeten HTML - not başına veya tüm hesap için. Zip, “PrivacyNotes yedeği (.zip)” biçimidir ve şifreli yedekler gibi [geri yüklenebilir](/tr/help/restore-backup/); JSON ve HTML okumak ve bir sonraki uygulamanız içindir. [Kasa öğelerinin kendi yolu var](/tr/help/vault/): “Kasa dışa aktarımı (.json)” Bitwarden biçiminde yazar ve kullanıcı adlarınızı, parolalarınızı, adreslerinizi, kart bilgilerinizi ve 2FA anahtarlarınızı Bitwarden, 1Password veya KeePass tarafına taşır.",
+        "Her şeyi istediğiniz zaman dışa aktarabilirsiniz ve hepsi cihazınızda üretilir: ekleriyle birlikte zip içinde Markdown dosyaları, düz JSON ya da kendi kendine yeten HTML - not başına veya tüm hesap için. Zip, “Her şey, şifresiz (.zip)” biçimidir ve şifreli yedekler gibi [geri yüklenebilir](/tr/help/restore-backup/); JSON ve HTML okumak ve bir sonraki uygulamanız içindir. [Kasa öğelerinin kendi yolu var](/tr/help/vault/): “Kasa dışa aktarımı (.json)” Bitwarden biçiminde yazar ve kullanıcı adlarınızı, parolalarınızı, adreslerinizi, kart bilgilerinizi ve 2FA anahtarlarınızı Bitwarden, 1Password veya KeePass tarafına taşır.",
         "Hepsi Ayarlar > Import & Export > Dışa aktar altında. İçe aktarma da aynı şekilde çalışır: Obsidian, Evernote, Apple Notes, Standard Notes, Bitwarden ve daha fazlası. Tam liste [başka bir uygulamadan taşınma](/tr/help/import-from-other-apps/) sayfasında. Sizi uygulamaya bağımlı kılmak iş modelimizin parçası değil."
       ]
     },
@@ -336,7 +337,7 @@
       "q": "PrivacyNotes kapanırsa notlarıma ne olur?",
       "a": [
         "Onlar sizde kalır. Uygulama yerel öncelikli olduğu için notlarınız, görevleriniz, günlük kayıtlarınız ve kasa öğeleriniz cihazınızda durur ve [bunları Markdown, JSON veya HTML'e dışa aktarmak çevrimdışı çalışır](/tr/help/export/). Bir görsel ya da dosya, onu bir cihazda eklediğiniz ya da açtığınız anda orada kalır; bu cihazın hiç açmadığı biri ise siz açtığınızda indirilir. Bu yüzden [tam bir yedek alın](/tr/help/backup-strategy/): bu cihazda eksik olan her görseli ve dosyayı indirir ve indirilemeyen olursa bunu söyler.",
-        "Şifreleme kodu da [açık kaynak](https://github.com/LifetimeLabsDev/PrivacyNotes.app), yani sunucularımızın bir gecede yok olduğu bir dünyada bile format bağımsız olarak okunabilir kalır."
+        "Şifreleme kodu da [açık kaynak](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), yani sunucularımızın bir gecede yok olduğu bir dünyada bile format bağımsız olarak okunabilir kalır."
       ]
     },
     "free-vs-pro": {
@@ -402,7 +403,7 @@
       "a": [
         "Çoğu zaman birkaç gün. Küçük istekler ve hata bildirimleri genellikle bir sonraki sürüme giriyor ve sürümler yılda birkaç kez değil, neredeyse her hafta çıkıyor. [Changelog](/changelog) bunun kaydıdır: her madde tarihlidir, sade bir dille yazılmıştır ve neyin değiştiğini söyler. Bir aylık kısmını okuyun, uygulamaya bir şey emanet etmeden önce bizden ne bekleyeceğinizi tam olarak bilirsiniz.",
         "Bu hız, işin nasıl bölündüğünden geliyor. Şifreleme çekirdeği, eşitleme protokolü ve giriş akışı, uygulamanın daha adı yokken, insanlar tarafından günlük işlerinin yanında yazıldı ve kripto çekirdeğinin bakımı bugün de aynı şekilde yapılıyor; otomatik hiçbir şey yanına yaklaşmıyor. O temel 2026 baharında sağlamlaşınca, sabit bir protokol altında yapay zekâ kodlama araçlarını kullanmaya başladık: önce [çeviriler](/tr/help/translation-quality/) için, sonra yardım makaleleri, sonra arayüz özellikleri ve kritik olmayan hata düzeltmeleri için; bu araçlar, aksi halde haftalar alacak nadir uç durumları saptamakta ve birden fazla geliştiriciyi tek bir standartta tutan test betiklerini yazmakta iyi. Bu yüzden, tek bir kişinin isteğini bile listenin üst sıralarındaki isteklerin arkasında bekletmek yerine hayata geçirmeye değer buluyoruz.",
-        "Şifrelemeye, eşitlemeye veya girişe dokunan her şey, her satırı yazan deneyimli geliştiricilerin sorumluluğunda kalıyor ve bu kod [herkese açık](https://github.com/LifetimeLabsDev/PrivacyNotes.app); bize inanmak yerine kendiniz okuyabilirsiniz. Ekip ve nasıl çalıştığımız hakkında daha fazlası [hakkımızda sayfasında](https://lifetimelabs.dev/about).",
+        "Şifrelemeye, eşitlemeye veya girişe dokunan her şey, her satırı yazan deneyimli geliştiricilerin sorumluluğunda kalıyor ve bu kod [herkese açık](https://github.com/LifetimeLabsHQ/PrivacyNotes.app); bize inanmak yerine kendiniz okuyabilirsiniz. Ekip ve nasıl çalıştığımız hakkında daha fazlası [hakkımızda sayfasında](https://lifetimelabs.dev/about).",
         "Uygulamanın kendisinde yapay zekâ özelliği yoktur ve notlarınızı hiçbir yere göndermez ([ayrıntılar](/tr/help/no-ai/)). Bu söz ayrı durur ve değişmez."
       ]
     },
@@ -417,9 +418,9 @@
       "q": "Android uygulamasını Obtainium ile nasıl kurarım?",
       "a": [
         "Obtainium, başka uygulamaları doğrudan sürüm sayfalarından kuran ücretsiz ve açık kaynaklı bir Android uygulamasıdır. Kendini güncel tutan tek yol olduğu için, PrivacyNotes'u Android'e kurmanın artık önerdiğimiz yolu budur. Zaten kurulu mu? Rozete dokunun, PrivacyNotes'u sizin için ekler.",
-        "[![Obtainium'da Edin](/marketing/badge-obtainium.webp)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22app.privacynotes%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FLifetimeLabsDev%2FPrivacyNotes.app%22%2C%22author%22%3A%22LifetimeLabsDev%22%2C%22name%22%3A%22PrivacyNotes%22%7D)",
+        "[![Obtainium'da Edin](/marketing/badge-obtainium.webp)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22app.privacynotes%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FLifetimeLabsHQ%2FPrivacyNotes.app%22%2C%22author%22%3A%22LifetimeLabsDev%22%2C%22name%22%3A%22PrivacyNotes%22%7D)",
         "Henüz kurulu değil mi? Önce [Obtainium](https://obtainium.imranr.dev/) uygulamasını kurun, bir uygulama ekleyin ve şunu yapıştırın:",
-        "`https://github.com/LifetimeLabsDev/PrivacyNotes.app`",
+        "`https://github.com/LifetimeLabsHQ/PrivacyNotes.app`",
         "Obtainium sürümlerimizi okur, APK dosyasını seçer ve her yeni sürümü çıktığı anda kurar. Hiçbir aşamada Google hesabı devreye girmez.",
         "Obtainium bizim uygulamamız değil ve Android her kurulumu onaylamanızı istemeye devam ediyor, dolayısıyla güncelleme sessizce değil, bir bildirim ve tek dokunuşla geliyor. APK, indirme sayfamızın sunduğu derlemenin aynısıdır ve [aynı anahtarla imzalanmıştır](/tr/help/verify-download/), dolayısıyla uygulamayı daha önce elle kurduysanız Obtainium o kurulumu devralır: kaldıracak bir şey yok, yeniden giriş yapmanız da gerekmiyor. Obtainium olmadan uygulama size yeni bir sürümün hazır olduğunu yalnızca [uygulama içinde bildirebilir](/tr/help/android-updates/)."
       ]
@@ -428,14 +429,14 @@
       "q": "Uygulama hangi dilleri konuşuyor?",
       "a": [
         "İngilizce, Almanca, Fransızca, İtalyanca, İspanyolca, Felemenkçe, Lehçe, Çekçe, Slovakça, Katalanca, Türkçe, İsveççe, Ukraynaca, Rusça, Japonca, Korece, Geleneksel Çince, Tayca, Arapça ve hem Avrupa hem Brezilya varyantıyla Portekizce. Uygulama varsayılan olarak sistem dilinizi izler ya da her cihazda Ayarlar > Dil altında bir dili sabitleyebilirsiniz.",
-        "[Çeviriler bir Pro ayrıcalığı değil, herkes için ücretsiz](/tr/help/translation-quality/). Daha fazla dil planlanıyor; sizinki eksikse [GitHub](https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues) veya [Reddit](https://www.reddit.com/r/PrivacyNotes/) üzerinden bize söyleyin."
+        "[Çeviriler bir Pro ayrıcalığı değil, herkes için ücretsiz](/tr/help/translation-quality/). Daha fazla dil planlanıyor; sizinki eksikse [GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues) veya [Reddit](https://www.reddit.com/r/PrivacyNotes/) üzerinden bize söyleyin."
       ]
     },
     "translation-quality": {
       "q": "Uygulamanın çevirileri nasıl yapılıyor?",
       "a": [
         "Önce İngilizceyi yazıyoruz. [Ardından bir yapay zekâ ajanı her dili](/tr/help/languages/) ortak bir sözlüğe göre, o dil için belirlenmiş üslupla çeviriyor ve ikinci bir ajan her grubu yayımlanmadan önce doğruluk, terim ve üslup açısından inceliyor. Ana dili konuşanlar bir örneklemi gözden geçiriyor; önce en yeni diller ile güvenlik, giriş ve ödeme metinleri geliyor. İki otomatik denetim de herhangi bir çeviri eksik ya da güncel değilken derlemeyi durduruyor. Çeviriler her planda vardır, hiçbir zaman Pro ek özelliği değildir.",
-        "Herhangi birini iyileştirebilirsiniz. Bir cümle dilinizde kulağa ters geliyorsa [çeviriyi bildirin](https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues/new?template=translation.yml): diliniz, cümlenin göründüğü ekran ve orada ne yazması gerektiği. Düzeltmeler bir sonraki sürümde çıkıyor."
+        "Herhangi birini iyileştirebilirsiniz. Bir cümle dilinizde kulağa ters geliyorsa [çeviriyi bildirin](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues/new?template=translation.yml): diliniz, cümlenin göründüğü ekran ve orada ne yazması gerektiği. Düzeltmeler bir sonraki sürümde çıkıyor."
       ]
     },
     "markdown-syntax": {
@@ -463,14 +464,30 @@
       "q": "Tarayıcı yer imlerimi PrivacyNotes’a kaydedebilir miyim?",
       "a": [
         "Evet. Yer imleri kenar çubuğunda kendi başına bir sütun; notların, görevlerin ve günlüklerin yanında durur ve her planda ücretsizdir. Bir bağlantıyı kaydetmek için hızlı ekleme çubuğuna yapıştırın ya da [Ninja](/tr/help/ninja/) içinde `+` işaretinden sonra yapıştırın; Ninja sayfayı not olarak kaydetmeyi veya onunla bir giriş bilgisi başlatmayı da önerir. Mevcut yer imlerinizi taşımak için tarayıcınızdan bir yer imi dosyası (.html) dışa aktarın ve Ayarlar > Import & Export > İçe aktar > \"Tarayıcı yer imleri\" alanına bırakın. Chrome, Firefox, Safari, Edge, Opera, Brave ve Vivaldi aynı dosyayı içerir; klasörleriniz ve tarihleriniz de birlikte gelir. Safari onu bir .zip içine koyar; o .zip'i açmadan bırakabilirsiniz.",
-        "Adresleriniz cihazınızdan hiç çıkmaz: siz Not olarak kaydet'i seçmedikçe ([bir sayfayı kaydetme](/tr/help/save-page-as-note/)) bir bağlantının arkasındaki sayfayı getirmeyiz, bu yüzden elle eklediğiniz bir yer imi siz bir ad yazana kadar alan adını taşır. Site simgeleri tek istisnadır ve onları kapatabilirsiniz. Dışa aktarma da aynı standart .html dosyasını yazar, yani yer imleriniz geldikleri kolaylıkla çıkar ([içe aktarma kılavuzu](/tr/help/import/browser-bookmarks/))."
+        "Adresleriniz cihazınızdan hiç çıkmaz: siz Not olarak kaydet'i ([bir sayfayı kaydetme](/tr/help/save-page-as-note/)) seçmedikçe bir bağlantının arkasındaki sayfayı getirmeyiz, bu yüzden elle eklediğiniz bir yer imi siz bir ad yazana kadar alan adını taşır. Site simgeleri tek istisnadır ve onları kapatabilirsiniz. Dışa aktarma da aynı standart .html dosyasını yazar, yani yer imleriniz geldikleri kolaylıkla çıkar ([içe aktarma kılavuzu](/tr/help/import/browser-bookmarks/)).",
+        "[Tarayıcı uzantısı](/tr/help/browser-extension/) de, içinde Bağlantılı sayfayı not olarak kaydet'i seçtiğinizde bir sayfayı getirir."
       ]
     },
     "save-page-as-note": {
       "q": "Bir web sayfasını not olarak kaydedebilir miyim?",
       "a": [
         "Evet. [Bir yer imini açıp](/tr/help/bookmarks/) Not olarak kaydet'i seçin ya da + menüsünde Sayfayı kırp'ı seçip bir bağlantı yapıştırın. Sayfanın ana metni, yer imine bağlı sıradan bir not olarak Notlar'a eklenir ve sayfanın en fazla 20 görseli, kendiniz eklediğiniz her görsel gibi şifreli olarak notla birlikte saklanır; Sayfayı kırp penceresinde Görselleri kaydet'i kapatırsanız saklanmaz. Sayfa kaydetmek her planda ücretsizdir ve [görseller depolama alanınızdan düşülür](/tr/help/storage-usage/).",
-        "Masaüstü ve telefon uygulamaları sayfayı ve görsellerini doğrudan cihazınızdan indirir. Web uygulaması bunları sunucumuz üzerinden indirir; sunucu bunları yalnızca iletir ve ne sayfayı, ne görselleri ne de adreslerini saklar. Giriş gerektiren sayfalar ve betiklerle oluşturulan sayfalar boş gelebilir: bunları yer imi olarak tutun."
+        "Masaüstü ve telefon uygulamaları sayfayı ve görsellerini doğrudan cihazınızdan indirir. Web uygulaması bunları sunucumuz üzerinden indirir; sunucu bunları yalnızca iletir ve ne sayfayı, ne görselleri ne de adreslerini saklar. Giriş gerektiren sayfalar ve betiklerle oluşturulan sayfalar boş gelebilir: bunları yer imi olarak tutun.",
+        "[Tarayıcı uzantısıyla](/tr/help/browser-extension/) okuduğunuz sayfayı da kaydedebilirsiniz; giriş gerektiren sayfalar dahil."
+      ]
+    },
+    "browser-extension": {
+      "q": "PrivacyNotes için bir tarayıcı uzantısı var mı?",
+      "a": [
+        "Evet, bilgisayarda Chrome, Edge ve Firefox için var ve ücretsiz. Okuduğunuz sayfayı ana metni ve görselleriyle not olarak ya da yer imi olarak kaydeder; bulunduğunuz site için giriş bilgilerini, kartları, SSH anahtarlarını ve yer imlerini de yalnızca kopyalamanız için gösterebilir. Formları kendiliğinden asla doldurmaz.",
+        "Ayarlar > Uzantı bölümünü açın, uzantıyı tarayıcınızın mağazasından ekleyin, neler yapabileceğini seçin, ardından Kod oluştur'u seçin. Tek kullanımlık kodu kopyalayıp uzantıya yapıştırın. Uzantıyı kaldırmak için aynı sayfada Tarayıcı uzantıları altında yanındaki Kaldır'ı seçin. Bir uzantı cihaz yuvalarınızdan birini kullanmaz. [Notlarınızı nasıl güvende tuttuğu](/tr/help/browser-extension-security/)."
+      ]
+    },
+    "browser-extension-security": {
+      "q": "Tarayıcı uzantısı notlarımı okuyabilir mi?",
+      "a": [
+        "Hayır. Uzantı notlarınızı açan anahtara hiçbir zaman sahip olmaz. Her kırpmayı tarayıcınızdan çıkmadan önce kilitler ve uygulamalarınızdan biri onu bir sonraki eşitlemede nota dönüştürür.",
+        "Giriş bilgilerini açarsanız uzantı giriş bilgilerinizi, kartlarınızı, SSH anahtarlarınızın herkese açık yarısını ve yer imlerinizi görür; bir notun metnini ve özel bir anahtarı asla görmez. Bunlar, uzantı için belirlediğiniz ve uygulamanınkinden ayrı olan bir PIN veya geçiş koduyla korunur. 10 yanlış denemeden sonra tarayıcının bağlantısı kesilir, böylece tarayıcınızın bir kopyası tahmin yoluyla açılamaz. Giriş bilgileri 5 dakika kullanılmazsa ve tarayıcı kapanınca kilitlenir. Ayrıntılar [tehdit modelimizde](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md) yer alır."
       ]
     },
     "contacts": {
@@ -491,7 +508,7 @@
     "keyboard-shortcuts": {
       "q": "Hangi klavye kısayolları var?",
       "a": [
-        "Uygulamanın herhangi bir yerinde ? tuşuna basın, yerleşik kısayol kartı açılır; Ayarlar > Hakkında altında da bulunur. [Ninja](/tr/help/ninja/) için Cmd+K ya da Ctrl+K'ye basın: her öğeyi açar ve her komutu çalıştırır; Q ise düz sözcüklerle öğe ekler. Kısayollar gezinmeyi, not işlemlerini, biçimlendirmeyi ve görünümleri kapsar - Windows ve Linux'ta her Cmd Ctrl, her Option Alt olarak okunur.",
+        "Uygulamanın herhangi bir yerinde ? tuşuna basın, yerleşik kısayol kartı açılır; Ayarlar > Kısayollar altında da bulunur. [Ninja](/tr/help/ninja/) için Cmd+K ya da Ctrl+K'ye basın: her öğeyi açar ve her komutu çalıştırır; Q ise düz sözcüklerle öğe ekler. Kısayollar gezinmeyi, not işlemlerini, biçimlendirmeyi ve görünümleri kapsar - Windows ve Linux'ta her Cmd Ctrl, her Option Alt olarak okunur.",
         "[Yazdırılabilir kısayol kartı](/help/keyboard-shortcuts/cheat-sheet), tüm kısayolları Mac için ya da Windows ve Linux için, tarayıcı ya da masaüstü uygulamaları için tek bir A4 sayfasında listeler. Uygulamanın gösterdiği listenin aynısından üretilir, bu yüzden her zaman kullandığınız sürümle eşleşir."
       ]
     },
@@ -499,7 +516,7 @@
       "q": "Kısayolların yazdırılabilir bir kartı var mı?",
       "a": [
         "Evet. [Yazdırılabilir kısayol kartı](/help/keyboard-shortcuts/cheat-sheet) tüm kısayolları tek bir A4 sayfasında, iki sütun halinde toplar - ekranınızın yanına asmaya hazır. Uygulamanın gösterdiği listeden üretilir, bu yüzden hiçbir sürümün gerisinde kalamaz.",
-        "Kartı açın ve Print düğmesine basın (veya Cmd+P / Ctrl+P). Kâğıt yerine dosya isterseniz yazdırma penceresinde hedef olarak PDF'yi seçin. Kartın bağlantısı ayrıca [uygulamadaki kısayol listesinin](/tr/help/keyboard-shortcuts/) (Ayarlar > Hakkında > Kısayollar) üstünde ve altında, bir de bu sitenin alt bilgisinde bulunur."
+        "Kartı açın ve Print düğmesine basın (veya Cmd+P / Ctrl+P). Kâğıt yerine dosya isterseniz yazdırma penceresinde hedef olarak PDF'yi seçin. Kartın bağlantısı ayrıca [uygulamadaki kısayol listesinin](/tr/help/keyboard-shortcuts/) (Ayarlar > Kısayollar) üstünde ve altında, bir de bu sitenin alt bilgisinde bulunur."
       ]
     },
     "ask-an-ai": {
@@ -527,7 +544,7 @@
     "phrase-compromised": {
       "q": "Kurtarma ifadem sızdı. Ne yapmalıyım?",
       "a": [
-        "Kasayı ele geçirilmiş kabul edin. Bir ifade değiştirilemez ya da döndürülemez, çünkü ifade her şeyin şifrelenmesinde kullanılan anahtardır - dolayısıyla çözüm yeni bir kasaya taşınmaktır. Önce eski hesapta her şeyi dışa aktarın: Ayarlar > Import & Export > Dışa aktar > “PrivacyNotes yedeği (.zip)”.",
+        "Kasayı ele geçirilmiş kabul edin. Bir ifade değiştirilemez ya da döndürülemez, çünkü ifade her şeyin şifrelenmesinde kullanılan anahtardır - dolayısıyla çözüm yeni bir kasaya taşınmaktır. Önce eski hesapta her şeyi dışa aktarın: Ayarlar > Import & Export > Dışa aktar > “Her şey, şifresiz (.zip)”.",
         "Çıkış yapın, yeni bir kasa oluşturun (yeni 12 kelime) ve dışa aktarımı Ayarlar > Import & Export > Geri yükle > “Tam yedek (.zip)” ile geri getirin. Ardından hâlâ giriş yapılmış herhangi bir cihazdan [eski hesabı silin](/tr/help/delete-account/): Ayarlar > Hesap > “Hesabı ve verileri sil...”. Bu, eşitlenen verisini kaldırır ve eski ifadeyi elinde tutan herkesin kapısını kapatır. Google, Apple veya GitHub ile giriş yaptıysanız önce eski hesabı silin, sonra yeni kasayı başlatmak için aynı Google, Apple veya GitHub hesabıyla tekrar giriş yapın.",
         "Önce iki iş: [etkin bir depolama eklentisini iptal edin](/tr/help/manage-storage-addon/), çünkü silme bunu gerektirir; ayrıca [Pro'nun yeni kasaya geçmek yerine satın alındığı hesapta kaldığını](/tr/help/pro-after-leak/) hesaba katın. Ardından yeni ifadeyi bir parola yöneticisinde tutun, başka hiçbir yerde: bütün önlem bundan ibaret."
       ]
@@ -556,8 +573,8 @@
     "backup-strategy": {
       "q": "Notlarımı yedeklemenin en iyi yolu nedir?",
       "a": [
-        "Ayarlar > Import & Export > Dışa aktar altından “Şifreli tam yedek (.pnbackupz)” dosyasını dışa aktarın. Her şeyi - notlar, günlükler, kasa ögeleri, görevler, görseller, ses ve dosyalar - ifade anahtarınızla şifreler, yani bulutta ya da bir USB bellekte tutabilirsiniz ve [ifadenizle her cihazda geri yüklenir](/tr/help/restore-backup/).",
-        "Onu oluşturan ifadeyle açılır, o yüzden bir gün [yeni bir ifadeye geçerseniz](/tr/help/phrase-compromised/) diye yanında bir “PrivacyNotes yedeği (.zip)” tutun: aynı içerik, her kasaya geri yüklenir ve diskte okunabilir, o yüzden güvendiğiniz bir yerde saklayın. “Şifreli yedek (.pnbackup)” görsel ve dosya yerine metni ve üst verileri kapsar; “Metin yedeği (.json)” ve HTML arşivi ise geri yükleme değil taşınabilirlik formatlarıdır.",
+        "Ayarlar > Import & Export > Dışa aktar altından “Her şey, şifreli (.pnbackupz)” dosyasını dışa aktarın. Her şeyi - notlar, günlükler, kasa ögeleri, görevler, görseller, ses ve dosyalar - ifade anahtarınızla şifreler, yani bulutta ya da bir USB bellekte tutabilirsiniz ve [ifadenizle her cihazda geri yüklenir](/tr/help/restore-backup/).",
+        "Onu oluşturan ifadeyle açılır, o yüzden bir gün [yeni bir ifadeye geçerseniz](/tr/help/phrase-compromised/) diye yanında bir “Her şey, şifresiz (.zip)” tutun: aynı içerik, her kasaya geri yüklenir ve diskte okunabilir, o yüzden güvendiğiniz bir yerde saklayın. “Yalnızca metin, şifreli (.pnbackup)” görsel ve dosya yerine metni ve üst verileri kapsar; “Metin yedeği (.json)” ve HTML arşivi ise geri yükleme değil taşınabilirlik formatlarıdır.",
         "Her şey eşitleniyorken neden yerel yedek tutasınız? Çünkü eşitleme bir yedek değildir: silmeleri sadakatle yayar; ele geçirilmiş bir sunucu verileri sildiğinde cihazlarınız da bu silmeleri uygular. Kendi diskinizdeki bir kopya, hiçbir sunucu olayının dokunamayacağı tek kopyadır. Büyük içe aktarımlardan önce, [ayrılmadan önce](/tr/help/leaving/) ve sürdürebileceğiniz bir ritimde dışa aktarın."
       ]
     },
@@ -571,7 +588,7 @@
     "image-quality": {
       "q": "PrivacyNotes görsellerimi değiştiriyor veya sıkıştırıyor mu?",
       "a": [
-        "Evet. İki ayar da varsayılan olarak açık, çünkü kullanıcılarımızı seviyoruz: [depolama alanından tasarruf etmenizi](/tr/help/storage-usage/) ve gizliliğinizi korumanızı istiyoruz. Alan tasarrufu büyük bir görseli 2048 piksele sığdırır ve %85 kalitede JPEG olarak kaydeder; bu, bir ekranın gösterebileceği tüm ayrıntıyı korur. Konum verisini kaldır, bir kameranın fotoğrafa yazdığı EXIF meta verisini, GPS konumu dahil, görsel kaydedilmeden önce siler. İkisi de uygulamadaki her görsel için geçerli: bir nota yapıştırılan, dosya olarak eklenen veya içe aktarılan.",
+        "Evet. İki ayar da varsayılan olarak açık, çünkü kullanıcılarımızı seviyoruz: [depolama alanından tasarruf etmenizi](/tr/help/storage-usage/) ve gizliliğinizi korumanızı istiyoruz. Alan tasarrufu büyük bir görseli 2048 piksele sığdırır ve %85 kalitede JPEG olarak kaydeder; bu, bir ekranın gösterebileceği tüm ayrıntıyı korur. Konum verisini kaldır, bir kameranın fotoğrafa yazdığı EXIF meta verisini, GPS konumu dahil, görsel kaydedilmeden önce siler. İkisi de uygulamadaki her görsel için geçerli: bir nota yapıştırılan, dosya olarak eklenen veya içe aktarılan. İki istisna var: bir GIF, animasyonu oynamaya devam etsin diye boyutunu korur ve bir kasa öğesine eklenen dosya tam olarak olduğu gibi saklanır.",
         "İkisinden birini **Ayarlar > Depolama > Görseller** altında kapatın; orada kişi fotoğrafları için onları 512 pikselde tutan üçüncü bir anahtar var. Ayarlar yalnızca yeni görseller için geçerlidir; görsel olmayan dosyalar olduğu gibi saklanır. HEIC ve TIFF görselleri JPEG'e dönüştürülür, çünkü onları yalnızca Safari gösterebilir. [Geri yüklediğiniz bir yedek](/tr/help/restore-backup/) bayt bayt geri yazılır."
       ]
     },
@@ -596,10 +613,18 @@
         "Kalıcı silme gerçekten gitti demektir: hiçbir cihaz ve bizim tarafımızda hiç kimse onu geri getiremez, [yalnızca daha önce aldığınız bir yedek](/tr/help/backup-strategy/) getirebilir. Çöp kutusunu “belki bir gün” yığını olarak kullanıyorsanız otomatik silmeyi kapatın ya da notları 30. günden önce geri yükleyin. O zamana kadar çöpteki notlar [depolamanızdan](/tr/help/storage-usage/) düşmeye devam eder - aynı görünümdeki “Boşalt” o yeri anında serbest bırakır."
       ]
     },
+    "dead-mans-switch": {
+      "q": "Ölü adam düğmesi neyi siler, cihazlarımda ne kalır?",
+      "a": [
+        "Yalnızca sunucudaki kopyayı. Düğme açıkken cihazlarınızdan hiçbiri seçtiğiniz süre boyunca (1 ay ile 5 yıl arası) çevrimiçi olmazsa sunucu şifreli notlarınızı, geçmişlerini, dosyalarınızı ve ayarlarınızı siler. Güvenlik payı olarak, süre bittikten sonra bir şey silmeden önce iki hafta daha bekler: bu iki hafta içinde çevrimiçi olan bir cihaz silmeyi yine durdurur. Hesabınız kalır, yani kurtarma ifadenizle hâlâ giriş yapabilirsiniz; Pro da kalır. Varsa depolama aboneliğiniz de kalır ve yenilenmeye devam eder. E-posta uyarısı gönderilmez ve silme işlemi geri alınamaz.",
+        "Cihazlarınız notlarını tutar. Bir silme işleminden sonra bir cihaz yeniden çevrimiçi olduğunda eşitlemeyi durdurur ve önce size sorar: tuttuğu her şeyin bir yedeğini indirin (bunu daha sonra [geri yükleyebilirsiniz](/tr/help/restore-backup/)), sonra notları o cihazdan kaldırın. Cihaz oturumu kapatır ve bir sonraki giriş boş hesapta başlar. Bu cihazın hiç açmadığı bir dosya sunucudan zaten silinmiş olabilir; yedek o zaman bu dosyayı eksik olarak listeler. Uygulamayı her cihazda güncel tutun, çünkü eski bir sürüm önce soramaz.",
+        "Ayarlar > ID & Sync > \"Ölü adam düğmesi\" bölümünden açın ve süreyi seçin. Herhangi bir cihazınızda uygulamayı çevrimiçiyken açmak süreyi yeniden başlatır; o sekmedeki \"Silinme tarihi\" de iki hafta dahil, silmenin gerçekleşebileceği en erken günü gösterir. Durdurmak için düğmeyi istediğiniz zaman kapatın."
+      ]
+    },
     "leaving": {
       "q": "PrivacyNotes'tan tamamen nasıl ayrılırım?",
       "a": [
-        "[Önce dışa aktarın](/tr/help/export/), sonra silin - ikisi de kendi elinizde. Ayarlar > Import & Export > Dışa aktar her çıkış yolunu kapsar: tam bir kopya için “PrivacyNotes yedeği (.zip)”, bir sonraki not uygulamanız için taşınabilir Markdown ve HTML ve bir sonraki parola yöneticiniz için Bitwarden uyumlu “Kasa dışa aktarımı (.json)”. Dışa aktarımlar cihazınızda üretilir.",
+        "[Önce dışa aktarın](/tr/help/export/), sonra silin - ikisi de kendi elinizde. Ayarlar > Import & Export > Dışa aktar her çıkış yolunu kapsar: tam bir kopya için “Her şey, şifresiz (.zip)”, bir sonraki not uygulamanız için taşınabilir Markdown ve HTML ve bir sonraki parola yöneticiniz için Bitwarden uyumlu “Kasa dışa aktarımı (.json)”. Dışa aktarımlar cihazınızda üretilir.",
         "Sonra Ayarlar > Hesap > “Hesabı ve verileri sil...”: DELETE yazın; eşitlenen notlarınız, dosyalarınız, cihazlarınız, ayarlarınız ve hesabın kendisi kalıcı olarak kaldırılır. Bir depolama aboneliğinin kayıtları ve asgari bir güvenlik tanımlayıcısı kalır, silmeden önce alınan yedeklerin süresi yedi gün sonra dolar ([ayrıntılar](/tr/help/delete-account/)). [Etkin bir depolama eklentisinin önce iptal edilmesi gerekir](/tr/help/manage-storage-addon/), Ayarlar > Depolama altından. Karanlık arayüz oyunları yok, geri kazanma e-postası yok - verileriniz sizindir, çıkarken de."
       ]
     },
@@ -622,7 +647,7 @@
       "q": "Pro için ödeme yaptım ama etkin değil. Şimdi ne olacak?",
       "a": [
         "Bir dakika verin, sonra uygulamayı yenileyin. Ödemeden sonra uygulama yaklaşık 20 saniye boyunca yoklama yapar ve kilidi kendiliğinden açar; yenileme de açılışta Pro durumunu tekrar kontrol eder. Ödeme geçtiyse ama etkinleştirme gecikiyorsa “Ödeme alındı ama Pro'nun etkinleşmesi her zamankinden uzun sürüyor” diyen bir şerit çıkar - bu durum neredeyse her seferinde kendiliğinden düzelir. [Mağaza sürümlerinde](/tr/help/store-purchases/), doğrulanamayan bir satın alım uygulamayı yeniden başlattığınızda tekrar denenir ve hiç etkinleşmeyen bir satın alım 3 gün içinde mağaza tarafından otomatik olarak iade edilir.",
-        "Hâlâ kilitli mi? Neredeyse her zaman bir hesap uyuşmazlığıdır: Pro, satın alma sırasında giriş yapılmış hesaba bağlanır, yani farklı bir ifade - ya da ifade kasanız yerine bir Google, Apple veya GitHub girişi - farklı bir hesaptır. Satın alan cihazda Ayarlar > ID & Sync altındaki Hesap kimliğini karşılaştırın. Gerçekten takıldıysa [bildirin](https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues) ve o Hesap kimliğini ekleyin: satın alımı tanımlar ve notlarınız hakkında hiçbir şey açığa çıkarmaz."
+        "Hâlâ kilitli mi? Neredeyse her zaman bir hesap uyuşmazlığıdır: Pro, satın alma sırasında giriş yapılmış hesaba bağlanır, yani farklı bir ifade - ya da ifade kasanız yerine bir Google, Apple veya GitHub girişi - farklı bir hesaptır. Satın alan cihazda Ayarlar > ID & Sync altındaki Hesap kimliğini karşılaştırın. Gerçekten takıldıysa [bildirin](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues) ve o Hesap kimliğini ekleyin: satın alımı tanımlar ve notlarınız hakkında hiçbir şey açığa çıkarmaz."
       ]
     },
     "manage-storage-addon": {
@@ -637,13 +662,13 @@
       "q": "Satın alımlar web, Google Play ve App Store arasında geçerli olur mu?",
       "a": [
         "Evet. Pro ve depolama bir platforma ya da mağazaya değil, hesabınıza bağlanır. Web'den alın, giriş yaptığınız her uygulama Pro olur, mağaza sürümleri dâhil; bir mağaza sürümünün içinden alın, web ve masaüstü uygulamaları aynı şekilde açılır. Geri yükleme zaten giriş yapmanın kendisi, çünkü hak hesabı takip eder. Mağaza sürümünde ayrıca Ayarlar > Hesap altında bir **Satın alımları geri yükle** düğmesi bulunur; Apple ya da Google'a neye sahip olduğunuzu sorar ve yeniden kurulumdan sonra yine açar.",
-        "Tek fark, faturayı kimin kestiği. Web satın alımları Paddle üzerinden yürür ve Ayarlar > Depolama altında [uygulamada yönetilir](/tr/help/manage-storage-addon/). Bir mağaza sürümünün içinde yapılan satın alımların (App Store şu anda, [Google Play o uygulama çıktığında](/tr/help/play-vs-apk/)) faturasını o mağaza keser: tekrar eden depolama mağazanın abonelik ayarlarından iptal edilir ve iadeler mağazanın sürecini izler. Her hâlükârda aynı hesap ve her yerde aynı Pro - henüz var olmayan platformlar dâhil."
+        "Tek fark, faturayı kimin kestiği. Web satın alımları Paddle üzerinden yürür ve Ayarlar > Depolama altında [uygulamada yönetilir](/tr/help/manage-storage-addon/). Bir mağaza sürümünün içinde yapılan satın alımların (App Store ve [Google Play](/tr/help/play-vs-apk/)) faturasını o mağaza keser: tekrar eden depolama mağazanın abonelik ayarlarından iptal edilir ve iadeler mağazanın sürecini izler. Her hâlükârda aynı hesap ve her yerde aynı Pro - henüz var olmayan platformlar dâhil."
       ]
     },
     "play-vs-apk": {
       "q": "Obtainium, doğrudan APK veya Google Play: hangisini indirmeli?",
       "a": [
-        "Uygulamanın kendini güncel tutmasını istiyorsanız [Obtainium](/tr/help/obtainium/), bunun için ikinci bir uygulama çalıştırmak istemiyorsanız [doğrudan APK'yı](/tr/help/android-updates/) seçin. Google Play henüz yayında değil, yani bugün seçim bu ikisi arasında. İkisi de size aynı anahtarla imzalanmış aynı dosyayı verir, yani istediğiniz zaman iki yöne de geçebilirsiniz: Obtainium daha önce elle kurduğunuz APK'yı devralır, sitedeki APK ise Obtainium'un kurduğunun üzerine kurulur.",
+        "Alışılmış yolu istiyorsanız Google Play'i seçin: uygulamayı diğer uygulamalar gibi kurar ve günceller, uygulama içi satın alımların faturasını da Google keser. Uygulamanın bir Google hesabı olmadan kendini güncel tutmasını istiyorsanız [Obtainium](/tr/help/obtainium/), bunun için ikinci bir uygulama çalıştırmak istemiyorsanız [doğrudan APK'yı](/tr/help/android-updates/) seçin. Obtainium ve APK size aynı anahtarla imzalanmış aynı dosyayı verir, yani bu ikisi arasında istediğiniz zaman geçebilirsiniz: Obtainium daha önce elle kurduğunuz APK'yı devralır, sitedeki APK ise Obtainium'un kurduğunun üzerine kurulur. Play sürümü farklı bir anahtarla imzalanır, bu yüzden Play ile diğer ikisinden biri arasında geçiş yapmak için önce uygulamayı kaldırmanız gerekir.",
         "Sonradan fikrinizi değiştirmek kolaydır. Önce kaldırmayı gerektiren her geçişten önce uygulamanın \"Synced\" gösterdiğini doğrulayın ve 12 kelimenizi ya da [başka bir cihazdan bir giriş QR kodunu](/tr/help/add-second-device/) hazır bulundurun, çünkü kaldırma yerel kopyayı siler."
       ]
     },
@@ -707,7 +732,7 @@
       "q": "Bir notu biriyle paylaşabilir ya da birlikte üzerinde çalışabilir miyim?",
       "a": [
         "Bir [Burn note](/tr/help/burn-notes/) gönderin: herhangi bir notu okunduğu anda yok edilen tek kullanımlık şifreli bir bağlantıya çevirir; bir parola, bir adres ya da bir taslak için bu yeter. Karşı tarafın saklayacağı bir şey içinse notu [Markdown, HTML ya da PDF olarak dışa aktarıp](/tr/help/export/) dosyayı gönderin.",
-        "İki kişinin canlı olarak düzenlediği bir not başka bir ürün olurdu: sunucunun insanlar arasında anahtar taşımasını gerektirirdi ve sunucuyu anahtarlarınızdan uzak tutmak burada tasarımın tamamıdır. Bir hesap, bir ifadesi olan bir kişidir ve [kendi saklama ile](/tr/help/threat-model-levels/) sunucuda notlarınızı açan hiçbir şey bulunmaz."
+        "İki kişinin canlı olarak düzenlediği bir not başka bir ürün olurdu: sunucunun insanlar arasında anahtar taşımasını gerektirirdi, bu tasarım ise bundan kaçınır. Bir hesap, bir ifadesi olan bir kişidir ve [kendi saklama ile](/tr/help/threat-model-levels/) sunucuda notlarınızı açan hiçbir şey bulunmaz."
       ]
     },
     "add-second-device": {
@@ -742,7 +767,7 @@
       "q": "Notlarım Android telefon yedeğime dahil mi?",
       "a": [
         "Hayır. Android uygulaması kendi verisini telefonun bulut yedeğinin dışında tutar, yani hiçbiri Google Drive'a gitmez. Sebep notlar değil, anahtar: **Bu cihaza güven** dediğiniz cihazda oturumunuz açık kalsın diye 12 kelimeniz o cihazda durur ve notlarınızın şifresini çözen anahtarın yeri bir bulut yedeği değildir.",
-        "Yeni bir telefon bu yüzden boş başlar: uygulamayı kurun, [12 kelimenizle oturum açın](/tr/help/add-second-device/), eşitlenmiş olan her şey gelir. Geri yükleme bu ilk eşitlemeyi bekler; böylece getirdiğiniz bir yedek iki kez eklenmek yerine hesaptakilerle eşleştirilir. Hiç eşitlenmemiş olan yalnızca eski telefonda yaşar, o yüzden önce alt bilgi çubuğunun \"Synced\" dediğinden emin olun ya da Ayarlar > Import & Export > Dışa aktar altından bir “PrivacyNotes yedeği (.zip)” götürün ([hangi yedeği almalı](/tr/help/backup-strategy/)).",
+        "Yeni bir telefon bu yüzden boş başlar: uygulamayı kurun, [12 kelimenizle oturum açın](/tr/help/add-second-device/), eşitlenmiş olan her şey gelir. Geri yükleme bu ilk eşitlemeyi bekler; böylece getirdiğiniz bir yedek iki kez eklenmek yerine hesaptakilerle eşleştirilir. Hiç eşitlenmemiş olan yalnızca eski telefonda yaşar, o yüzden önce alt bilgi çubuğunun \"Synced\" dediğinden emin olun ya da Ayarlar > Import & Export > Dışa aktar altından bir “Her şey, şifresiz (.zip)” götürün ([hangi yedeği almalı](/tr/help/backup-strategy/)).",
         "İlk kurulumdaki doğrudan telefondan telefona aktarım ayrı bir durum: bazı telefonlar orada uygulama verisini taşır ve Android bir uygulamaya bunu reddetmesi için güvenilir bir yol vermez. O kopya iki cihazınızdan hiç çıkmaz, o yüzden eski telefonu sonrasında silin."
       ]
     },
@@ -771,7 +796,7 @@
       "q": "İndirdiğim uygulamanın gerçek olduğunu nasıl doğrularım?",
       "a": [
         "Yayımladığımız her yapı imzalıdır ve işletim sisteminiz herhangi bir şeyi çalıştırmadan önce o imzayı denetler. macOS yapıları Apple tarafından imzalanır ve noterlenir. Windows yükleyicileri, Özellikler > Dijital İmzalar altında okuyabileceğiniz bir Authenticode imzası taşır. Android APK'si kendi anahtarımızla imzalanır; bu yüzden Android bizden gelmeyen her güncellemeyi reddeder. iPhone ve iPad uygulaması Apple tarafından imzalanır ve yalnızca App Store üzerinden kurulur. [Masaüstü uygulamaları da anahtarımızla imzalanmamış bir güncellemeyi geri çevirir](/tr/help/desktop-updates/).",
-        "Yalnızca PrivacyNotes.app adresinden ya da her sürümün bulunduğu [GitHub sürümlerimizden](https://github.com/LifetimeLabsDev/PrivacyNotes.app/releases) indirin. Asıl denetim imzadır ve onu sisteminiz sizin için yapar: imza, sitemizde hiçbir yerde bulunmayan bir anahtara karşı doğrulanır, yani değiştirilmiş bir dosya, yanındaki sayfa ne yazarsa yazsın bu denetimden geçemez."
+        "Yalnızca PrivacyNotes.app adresinden ya da her sürümün bulunduğu [GitHub sürümlerimizden](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/releases) indirin. Asıl denetim imzadır ve onu sisteminiz sizin için yapar: imza, sitemizde hiçbir yerde bulunmayan bir anahtara karşı doğrulanır, yani değiştirilmiş bir dosya, yanındaki sayfa ne yazarsa yazsın bu denetimden geçemez."
       ]
     },
     "family-sharing": {
@@ -784,7 +809,7 @@
     "pro-after-leak": {
       "q": "Kurtarma ifadem sızdı. Pro'yu kaybeder miyim?",
       "a": [
-        "Pro, satın aldığınız hesapta kalır ve kurtarma ifadeniz o hesabın tek anahtarıdır. İfade sızar ve yeni bir kasaya geçerseniz Pro sizinle birlikte gelmez ve onu kimse elle taşıyamaz, biz de dâhil. Uygulama bunu kayıt sırasında ve çıkış yapmadan önce bir kez daha söyler: 12 kelime tek giriş yoludur.",
+        "Pro, satın aldığınız hesapta kalır ve o hesap kurtarma ifadenize aittir. İfade sızar ve yeni bir kasaya geçerseniz Pro sizinle birlikte gelmez ve onu kimse elle taşıyamaz, biz de dâhil. Uygulama bunu kayıt sırasında ve çıkış yapmadan önce bir kez daha hatırlatır.",
         "Pro'yu son 30 gün içinde satın aldıysanız [tam iade](/tr/help/refunds/) alabilir ve yeni kasada yeniden satın alabilirsiniz. Her iade bize ödeme ücretlerine mal olur, bu yüzden lütfen bunu gerçek bir sızıntı için saklayın. Notlarınızı taşıma ve eski kasayı kapatma adımları [ifadeniz sızdığında ne yapmalı](/tr/help/phrase-compromised/) sayfasında. Yeni ifadeyi bir parola yöneticisinde tutun ve başka hiçbir yere yazmayın."
       ]
     },
@@ -888,7 +913,7 @@
       "q": "Ninja'ya hangi tarihleri ve saatleri yazabilirim?",
       "a": [
         "Ninja tarihleri bir insana söyleyeceğiniz gibi okur. Tek başına bir tarih yazın, örneğin `yarın` ya da `31 Ekim`, ve ilk satır takvimi o günde açar. `+` işaretinden sonra aynı sözcükler yeni bir öğenin gününü belirler:",
-        "- Günler: `bu gece`, `bu cumartesi`, `öbür gün`, `3 gün sonra`, `31 Ekim`, `2026-12-24`\n- Saatler ve süreler: `öğle`, `15:00`, `09:00-17:00`, `süre 30 dk`, `süre 3 gün`\n- Aralıklar: `cuma ila pazar`, `20-25 Ekim`\n- Tekrarlar: `her gün`, `her pazartesi 10 kez`\n- Uyarılar: `1 saat önce`, `uyarı 1 gün ve 1 saat önce`",
+        "- Günler: `bu gece`, `bu cumartesi`, `öbür gün`, `3 gün sonra`, `31 Ekim`, `2026-12-24`\n- Saatler ve süreler: `öğle`, `15:00`, `09:00-17:00`, `15:00 süre 30 dk`, `süre 3 gün`\n- Aralıklar: `cuma ila pazar`, `20-25 Ekim`\n- Tekrarlar: `her gün`, `her pazartesi 10 kez`\n- Uyarılar: `1 saat önce`, `uyarı 1 gün ve 1 saat önce`",
         "Rakamlarla yazılan bir tarih, Ayarlar > Tarih ve saat altındaki **Tarih biçimi** ayarını izler, yani `5/10` ayı ya da günü sizin ayarınıza göre önce okur. Yıl yıl olarak kalır: `31 Ekim 2027` hiçbir zaman 20:27 değildir. Tarih sözcükleri uygulama dilini izler ve `ekle` sözcüğü Türkçede ve İngilizcede `+` gibi çalışır. [Ninja ücretsizdir](/tr/help/ninja/)."
       ]
     },
@@ -924,7 +949,7 @@
       "q": "Bir görev listesini temizleyebilir, sıralayabilir veya yeniden düzenleyebilir miyim?",
       "a": [
         "Evet. Notun \"...\" menüsünde bir listeyi yeniden kullanmak için **Tüm öğelerin işaretini kaldır**, bitenleri temizlemek için **İşaretli öğeleri sil** ve işaretli öğeleri diğerlerinin altına taşımak için **Öğeleri duruma göre sırala** bulunur. Her biri yalnızca bir şeyi değiştirecekse görünür. Silme önce onay ister; sıralama ve tüm işaretleri kaldırma Cmd+Z ya da Ctrl+Z ile geri alınabilir. Notun alt kısmı ilerlemenizi sayar, örneğin \"6 öğeden 3 tanesi işaretli\".",
-        "Elle yeniden sıralamak için bir öğenin sonundaki tutamacı sürükleyin. İç içe öğeler onunla birlikte taşınır, Esc ise sürüklemeyi iptal eder. Tutamaç bilgisayarda üzerine gelince görünür, dokunmatik ekranda ise hafifçe görünür kalır. İşaretli bir öğe varsayılan olarak listesindeki işaretsiz öğelerin altına iner; bunu Ayarlar > Listeler bölümündeki **İşaretli öğeleri aşağı taşı** ile kapatabilirsiniz. Bunların hepsi ücretsizdir."
+        "Elle yeniden sıralamak için bir öğenin sonundaki tutamacı sürükleyin. İç içe öğeler onunla birlikte taşınır, Esc ise sürüklemeyi iptal eder. Tutamaç bilgisayarda üzerine gelince görünür, dokunmatik ekranda ise hafifçe görünür kalır. İşaretli bir öğe varsayılan olarak listesindeki işaretsiz öğelerin altına iner; bunu Ayarlar > Düzenleyici bölümündeki **İşaretli öğeleri aşağı taşı** ile kapatabilirsiniz. Bunların hepsi ücretsizdir."
       ]
     },
     "find-in-note": {
@@ -951,14 +976,14 @@
     "calendar": {
       "q": "Bir takvim var mı, üzerinde neler görünür?",
       "a": [
-        "Evet. Kenar çubuğundaki Takvim, tarihi olan her öğeyi tek bir yerde gösterir: etkinlikler, [günlük kayıtları](/tr/help/journal/), tarihli notlar ve görev listeleri, bir de [kişilerinizin doğum günleri](/tr/help/contacts/). Yanındaki liste önümüzdeki günlerin ajandasıdır; büyük görünüm ise Gün, Hafta ve Ay arasında geçiş yapar. Boş bir güne tıklayın ya da boş saatlerin üzerinde sürükleyin, Ninja o gün ve saat ayarlı olarak açılır; ya da bir öğeyi başka bir güne sürükleyin.",
+        "Evet. Kenar çubuğundaki Takvim, tarihi olan her öğeyi tek bir yerde gösterir: etkinlikler, [günlük kayıtları](/tr/help/journal/), tarihli notlar ve görev listeleri, bir de [kişilerinizin doğum günleri ve diğer tarihleri](/tr/help/contacts/). Yanındaki liste önümüzdeki günlerin ajandasıdır; büyük görünüm ise Gün, Hafta ve Ay arasında geçiş yapar. Boş bir güne tıklayın ya da boş saatlerin üzerinde sürükleyin, Ninja o gün ve saat ayarlı olarak açılır; ya da bir öğeyi başka bir güne sürükleyin.",
         "Etkinlik kendi başına bir öğe türüdür: günü, bitiş günü, saati ve tekrarı olan bir not. `+` işaretinden sonra [Ninja](/tr/help/ninja-quick-add/)'ya bütün bir satır yazın, örneğin `+Dişçi cuma 15:00 1 saat önce`; günü, saati ve [uyarıyı](/tr/help/reminders/) sizin yerinize okur. Takvimi orada açmak için tek başına bir gün yazın, örneğin `31 Ekim`. Bir not ya da görev listesi de \"...\" menüsündeki Zamanlama satırından bir gün, saat ve bitiş günü taşıyabilir. Takvim ücretsizdir."
       ]
     },
     "reminders": {
       "q": "Takvim hatırlatıcıları uygulama kapalıyken de çalışır mı?",
       "a": [
-        "Telefonda evet: 400 güne kadar ilerisi için en fazla 64 uyarı telefonun kendisine verilir, bu yüzden PrivacyNotes kapalıyken de çalarlar; uygulamayı açıp kilidini açmak daha fazlasını verir. Masaüstü uygulamasında hatırlatıcı uygulama çalışırken, tarayıcıda ise PrivacyNotes bir sekmede açıkken çalar. Her cihaz hatırlatıcılarını kendi üzerindeki öğelerden planlar, bu yüzden sunucu hiçbir başlığı, saati ya da günü öğrenmez.",
+        "Telefonda evet: 400 güne kadar ilerisi için en fazla 64 uyarı telefonun kendisine verilir, bu yüzden PrivacyNotes kapalıyken de çalarlar; uygulamayı açıp kilidini açmak daha fazlasını verir. Masaüstü uygulamasında hatırlatıcı uygulama çalışırken, tarayıcıda ise PrivacyNotes bir sekmede açıkken çalar. Her cihaz hatırlatıcılarını kendi üzerindeki öğelerden planlar, bu yüzden hiçbir hatırlatıcı sunucudan gelmez; bir öğenin başlığı, saati ve günü yalnızca şifreli öğenin içinde eşitlenir.",
         "Bir öğenin Zamanlama görünümündeki Uyarı satırından, öğe başına en fazla beş uyarı ekleyin; varsayılanları ise \"Hatırlatıcılarda başlıkları göster\" seçeneğinin de bulunduğu Ayarlar > Tarih ve saat > Takvim altında belirleyin. [PIN'inizin arkasındaki bir öğe](/tr/help/locked-vs-protected/) her zaman \"Hatırlatıcı\" ve saatle çalar; uygulama kilidi etkinken zamanlanan her uyarı da öyle. Kilit etkinleştirilmeden önce telefona verilmiş bir uyarı, çalana kadar başlığını koruyabilir. Hatırlatıcılar Pro'nun parçasıdır; [takvimin kendisi ücretsizdir](/tr/help/calendar/)."
       ]
     },
@@ -1112,7 +1137,7 @@
     "tracker-privacy": {
       "q": "Takip ve ilaç verilerimi kim okuyabilir?",
       "a": [
-        "Takip değerleriniz günlük kayıtlarınızın, ilaç listeniz ise ayarlarınızın içinde durur; ikisi de cihazınızda şifrelenir ve eşitlenirken şifreli kalır. İstatistikler, [Doktor PDF'i](/tr/help/doctor-pdf/), [yapay zekâ istemi](/tr/help/ai-prompt/) ve iki indirme cihazınızda hesaplanır.",
+        "Takip değerleriniz günlük kayıtlarınızın içinde durur; bunlar cihazınızda şifrelenir ve eşitlenirken şifreli kalır. İlaç listeniz ve özel takipleriniz ise ayarlarınızın içinde durur. Notlarınız gibi şifreli eşitlenirler, ancak bu cihazın bunlardan tuttuğu kopya henüz mühürlenmemiştir; bu yüzden orada onu disk şifrelemeniz ve ekran kilidiniz korur. İstatistikler, [Doktor PDF'i](/tr/help/doctor-pdf/), [yapay zekâ istemi](/tr/help/ai-prompt/) ve iki indirme cihazınızda hesaplanır.",
         "[Kendi saklama modunda](/tr/help/threat-model-levels/) sunucuda bunları açan hiçbir şey yoktur. Google, Apple veya GitHub ile kaydolduysanız ve “Basit ve pratik olsun”u seçtiyseniz ifadeniz sunucumuzda bize ait bir anahtarla saklanır; Ayarlar > Hesap > Anahtar saklama bölümü modunuzu gösterir ve değiştirmenizi sağlar. Daha fazlası için [PrivacyNotes neleri görebilir](/tr/help/what-can-you-see/)."
       ]
     },
@@ -1148,7 +1173,7 @@
       "q": "Masaüstü uygulamasını nasıl güncellerim?",
       "a": [
         "Bunu yapmanız gerekmez. Mac ve Windows uygulamaları ile Linux AppImage, açıldıklarında ve onlara geri döndüğünüzde, en fazla 12 saatte bir güncelleme arar ve arka planda indirir. Ardından bir bildirim **Güncelleme mevcut** der; bitirmek için **Yeniden başlat**, yenilikleri görmek için **Changelog** sunar.",
-        "Linux .deb paketi yeni bir indirmeyle güncellenir: bildirimi, [indirme bölümünü](https://privacynotes.app/tr#downloads) açan **İndir** seçeneğini sunar ve yeni paketi eskisinin üzerine kurarsınız. Güvenli eşitleme için fazla eski bir .deb, siz bunu yapana kadar eşitlemeyi duraklatır. Windows'ta Scoop ile kurduysanız `scoop update privacynotes` komutunu çalıştırın; bildirimde bunun için **Komutu kopyala** vardır. Mac'te Homebrew bir yükseltme komutu gerektirmez, çünkü uygulama kendini günceller."
+        "Linux .deb paketi yeni bir indirmeyle güncellenir: bildirimi, [indirme bölümünü](https://privacynotes.app/tr#downloads) açan **İndir** seçeneğini sunar ve yeni paketi eskisinin üzerine kurarsınız. Güvenli eşitleme için fazla eski bir .deb, siz bunu yapana kadar eşitlemeyi duraklatır. Windows'ta Scoop ile kurduysanız winget'e geçmenizi öneririz, çünkü uygulama o zaman kendini günceller. Bildirimde `winget install LifetimeLabs.PrivacyNotes; scoop uninstall privacynotes` için **Komutu kopyala** vardır: uygulamayı kapatın ve komutu PowerShell'e yapıştırın. Notlarınız ve ayarlarınız cihazda kalır. Mac'te Homebrew bir yükseltme komutu gerektirmez, çünkü uygulama kendini günceller."
       ]
     }
   }

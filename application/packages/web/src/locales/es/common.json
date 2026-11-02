@@ -26,14 +26,11 @@
     "noResults": "Sin resultados"
   },
   "deleteNote": {
-    "title": "Eliminar para siempre",
     "confirm": "Eliminar para siempre",
-    "untitled": "Sin título",
     "body": "¿Eliminar de forma permanente <highlight>“{{title}}”</highlight>? Esto no se puede deshacer."
   },
   "emptyTrash": {
     "title": "Vaciar papelera",
-    "confirm": "Eliminar para siempre",
     "body_one": "¿Eliminar de forma permanente <highlight>{{count}} nota</highlight>? Esto no se puede deshacer.",
     "body_other": "¿Eliminar de forma permanente <highlight>{{count}} notas</highlight>? Esto no se puede deshacer."
   },
@@ -61,7 +58,6 @@
   },
   "palette": {
     "label": "Comandos",
-    "open": "Comandos",
     "empty": "Ningún comando coincide",
     "groups": {
       "features": "Funciones",
@@ -86,7 +82,7 @@
       "insertDate": "Insertar la fecha",
       "insertDateTime": "Insertar la fecha y la hora",
       "clearFilters": "Quitar los filtros",
-      "moveToTrash": "Mover nota a la papelera",
+      "moveToTrash": "Eliminar nota",
       "closeTab": "Cerrar la pestaña o la nota",
       "nextTab": "Pestaña siguiente",
       "previousTab": "Pestaña anterior",
@@ -109,10 +105,8 @@
     "move": "mover",
     "open": "abrir",
     "openInTab": "abrir en una pestaña",
-    "openLink": "Abrir",
     "edit": "editar",
     "close": "cerrar",
-    "tags": "Etiquetas",
     "folders": "Carpetas",
     "tagItems_one": "{{count}} elemento",
     "tagItems_other": "{{count}} elementos",
@@ -175,17 +169,14 @@
     "downloadPublicKey": "Descargar clave pública",
     "downloadPrivateKey": "Descargar clave privada",
     "downloadHint": "Mueve la clave descargada a ~/.ssh y ejecuta chmod 600 sobre ella, o ssh la rechazará.",
+    "downloadHintDesktop": "PrivacyNotes no guarda en ~/.ssh, para proteger las claves que hay ahí. Guarda la clave en otro sitio, muévela a ~/.ssh y ejecuta chmod 600 sobre ella, o ssh la rechazará.",
+    "downloadHintWindows": "PrivacyNotes no guarda en tu carpeta .ssh, para proteger las claves que hay ahí. Guarda la clave en otro sitio y muévela a %USERPROFILE%\\.ssh. Windows no necesita chmod.",
     "downloadFailed": "No se pudo guardar el archivo de la clave. Revisa el archivo y vuelve a intentarlo.",
     "passphrase": "Frase de contraseña",
     "passphrasePlaceholder": "Frase de contraseña de la clave (si tiene)",
     "show": "Mostrar",
     "hide": "Ocultar",
-    "copyPassphrase": "Copiar frase de contraseña",
-    "notes": "Notas",
-    "notesPlaceholder": "Notas adicionales (opcional)",
-    "requirePin": "Pedir PIN para ver",
-    "whatDoesThisDo": "¿Qué hace esto?",
-    "setUpPinFirst": "Configura primero un PIN en los ajustes de Seguridad."
+    "copyPassphrase": "Copiar frase de contraseña"
   },
   "tagInput": {
     "placeholder": "Añade etiquetas… separa con coma, # o enter",
@@ -257,7 +248,6 @@
       "abriendo la bóveda en silencio",
       "descifrado localmente. ignorado globalmente",
       "descifrando como si no fuera asunto de nadie",
-      "texto plano de origen local",
       "convirtiendo pensamientos en sopa ilegible",
       "llega otra obra maestra cifrada",
       "poniendo orden en el caos cifrado",
@@ -281,17 +271,14 @@
     "changesSome_other": "{{count}} de estas notas tienen cambios sin copia de seguridad que se perderían."
   },
   "ninja": {
-    "recent": "Recientes",
     "topHit": "Mejor resultado",
     "trashEmpty": "La papelera está vacía",
     "allThemes": "Todos los temas",
     "features": {
       "stats": {
-        "label": "Estadísticas",
         "detail": "Tu escritura, tus rachas y tus registros a lo largo del tiempo"
       },
       "trackers": {
-        "label": "Registros",
         "detail": "Estado de ánimo, hábitos, factores y medicación"
       },
       "medication": {
@@ -311,7 +298,6 @@
         "detail": "Una contraseña o frase de contraseña segura, lista para copiar"
       },
       "themes": {
-        "label": "Temas",
         "detail": "Temas de color para modo claro y oscuro"
       }
     },
@@ -322,7 +308,6 @@
     "commands": {
       "syncResume": "Reanudar la sincronización",
       "changelog": "Novedades",
-      "help": "Ayuda",
       "themesPage": "Temas de la comunidad",
       "website": "Web de PrivacyNotes"
     },

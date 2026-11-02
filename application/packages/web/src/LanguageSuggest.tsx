@@ -24,7 +24,7 @@ export function LanguageSuggest({ className }: { className?: string }) {
   if (hidden || explicit || dismissed || suggested === current) return null;
 
   return (
-    <div className={`flex items-center gap-1 rounded-full border border-accent/40 bg-accent/[0.08] ps-2.5 pe-1 py-1 text-sm ${className ?? ''}`}>
+    <div className={`flex items-center gap-1 rounded-full border border-accent/40 bg-accent/[0.08] ps-2.5 pe-1 py-1 text-body ${className ?? ''}`}>
       <button
         type="button"
         onClick={() => {
@@ -48,7 +48,7 @@ export function LanguageSuggest({ className }: { className?: string }) {
         aria-label={t('langSuggest.dismiss', { lng: suggested })}
         className="rounded-full p-1 text-[var(--wl-muted)] hover:bg-[var(--wl-ink)]/10 hover:text-[var(--wl-ink)] transition"
       >
-        <X size={14} />
+        <X />
       </button>
     </div>
   );

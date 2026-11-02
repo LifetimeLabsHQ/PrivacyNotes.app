@@ -9,7 +9,7 @@
 # owns the host through its associated-domains entitlement. It compiles for
 # iOS alone: Android keeps the system browser and an App Link, and desktop
 # returns to a page. README.md lists every change from upstream.
-# Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.2)
+# Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.2)
 [package]
 name = "tauri-plugin-auth-session"
 version = "0.2.2"

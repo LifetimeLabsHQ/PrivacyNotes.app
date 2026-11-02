@@ -1,11 +1,9 @@
 {
   "captionFolder": "フォルダ",
   "captionTag": "タグ",
-  "captionNote": "ノート",
   "captionTracker": "トラッカー",
   "useDefault": "標準に戻す",
   "color": "色",
-  "noColor": "色なし",
   "applyToSubfolders": "サブフォルダにも色を適用",
   "icon": "アイコン",
   "searchPlaceholder": "アイコンを検索",

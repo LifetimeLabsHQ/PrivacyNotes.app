@@ -12,6 +12,8 @@
     "addLink": "插入連結",
     "noteLink": "連結到另一篇筆記（或輸入 [[）",
     "numberedList": "編號清單",
+    "indent": "增加縮排",
+    "outdent": "減少縮排",
     "textColor": "文字顏色",
     "textColorApply": "文字顏色：{{color}}",
     "pickColor": "選擇文字顏色",
@@ -72,6 +74,7 @@
     "remove": "移除標註",
     "collapse": "收合標註",
     "expand": "展開標註",
+    "dragGrip": "拖曳",
     "types": {
       "info": "資訊",
       "success": "成功",
@@ -132,6 +135,9 @@
     "addColumnRight": "在右側插入欄",
     "toggleHeaderRow": "切換標題列",
     "equalColumnWidths": "平均分配欄寬",
+    "cellColor": "儲存格顏色",
+    "sortAscending": "從 A 到 Z 排序",
+    "sortDescending": "從 Z 到 A 排序",
     "resizeHint": "按住 {{shift}} 只調整這一欄，按住 {{alt}} 可更精細地調整",
     "deleteRow": "刪除列",
     "deleteColumn": "刪除欄",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "在筆記中尋找",
-    "label": "在筆記中尋找",
     "previous": "上一個符合項目",
     "previousTitle": "上一個",
     "next": "下一個符合項目",
     "nextTitle": "下一個",
     "close": "關閉尋找",
-    "closeTitle": "關閉",
     "replacePlaceholder": "取代為",
     "replaceLabel": "取代為",
     "replace": "取代",
@@ -177,10 +180,7 @@
     "replaceAll": "全部",
     "replaceAllTitle": "取代全部符合項目",
     "caseSensitive": "區分大小寫",
-    "caseSensitiveTitle": "區分大小寫",
     "closeReplace": "關閉尋找與取代",
-    "closeReplaceTitle": "關閉",
-    "showReplace": "尋找與取代",
     "hideReplace": "隱藏取代",
     "replacedCount_other": "已取代 {{count}} 項"
   },
@@ -191,9 +191,7 @@
     "ariaLabel": "筆記大綱",
     "hide": "隱藏大綱",
     "copyHeadingLink": "複製標題連結",
-    "copyNoteLink": "複製筆記連結",
-    "copyHeadingShortcut": "複製標題捷徑",
-    "copied": "已複製"
+    "copyHeadingShortcut": "複製標題捷徑"
   },
   "bodyMenu": {
     "cut": "剪下",
@@ -209,11 +207,8 @@
     "add": "加入一行"
   },
   "link": {
-    "popoverLabel": "插入連結",
     "placeholder": "貼上或輸入 URL",
     "apply": "套用",
-    "addTitle": "插入連結",
-    "editTitle": "編輯連結",
     "urlLabel": "URL",
     "urlPlaceholder": "https://example.com",
     "errorEnterUrl": "請輸入 URL",
@@ -229,7 +224,6 @@
   },
   "audio": {
     "uploadingRecording": "正在上傳錄音…",
-    "uploading": "上傳中…",
     "stopRecording": "停止錄音",
     "recordAudio": "錄音",
     "savingRecording": "正在儲存錄音…",
@@ -243,7 +237,6 @@
     "tasksChecked_other": "{{formatted}} 項中已勾選 {{done}} 項",
     "syncLimit": " · 已用 1 MB 同步上限的 {{share}}",
     "overSyncLimit": " · 超過 1 MB 同步上限，只保留在這台裝置上",
-    "split": "拆分筆記",
     "veryLong": "，篇幅很長，編輯可能變慢或卡頓",
     "gettingLong": "，篇幅漸長，較慢的裝置可能出現延遲",
     "largeTableWarning": "大型表格（{{rows}} 列）會讓這篇筆記編輯變慢，建議拆分"
@@ -258,17 +251,13 @@
     "placeholder": "一鍵複製的文字"
   },
   "inlineCode": {
-    "copyHint": "{{key}}+點擊即可複製",
-    "copied": "已複製"
+    "copyHint": "{{key}}+點擊即可複製"
   },
   "codeBlock": {
-    "copy": "複製",
-    "copied": "已複製",
     "copyFailed": "失敗",
     "wrap": "長行自動換行",
     "showAll_other": "顯示全部 {{count}} 行",
     "showLess": "收合",
-    "plainText": "純文字",
     "language": "程式碼語言：{{name}}",
     "searchLanguages": "搜尋語言",
     "placeholder": "輸入或貼上程式碼。若要上色，請在上方選擇語言。"
@@ -349,7 +338,6 @@
     "inProgress": "進行中",
     "review": "審核中",
     "done": "已完成",
-    "color": "顏色",
     "columns": "欄",
     "columnCount_other": "{{count}} 欄",
     "cardCount_other": "{{count}} 張卡片",

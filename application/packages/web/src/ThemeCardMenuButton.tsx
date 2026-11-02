@@ -14,7 +14,7 @@ export function CardMenuButton({ name, onClick }: { name: string; onClick: (e: M
       aria-label={t('appearance.custom.menu', { name })}
       className="absolute top-1 end-1 flex h-6 w-6 items-center justify-center rounded-md bg-surface-2/90 text-pn-soft hover:text-pn transition"
     >
-      <DotsThree size={18} weight="bold" aria-hidden="true" />
+      <DotsThree weight="bold" aria-hidden="true" />
     </button>
   );
 }
@@ -67,13 +67,13 @@ export function QuickStarButton({ name, marked, onToggle }: { name: string; mark
       onClick={onToggle}
       aria-pressed={marked}
       aria-label={t(marked ? 'appearance.favoriteRemove' : 'appearance.favoriteAdd', { name })}
-      className={`absolute start-1/2 top-[26px] -translate-x-1/2 -translate-y-1/2 rtl:translate-x-1/2 flex flex-col items-center gap-px rounded-md bg-surface-2/90 px-1.5 py-1 text-[10px] font-medium leading-none transition focus-visible:opacity-100 ${
+      className={`absolute start-1/2 top-[26px] -translate-x-1/2 -translate-y-1/2 rtl:translate-x-1/2 flex flex-col items-center gap-px rounded-md bg-surface-2/90 px-1.5 py-1 text-meta font-medium leading-none transition focus-visible:opacity-100 ${
         marked ? 'text-pn' : 'text-pn-soft opacity-0 group-hover/card:opacity-100 [@media(hover:none)]:opacity-100'
       }`}
     >
-      <Star size={14} weight="fill" className={`text-pro ${filled}`} aria-hidden="true" />
-      <Star size={14} weight="bold" className={outline} aria-hidden="true" />
-      <span className="hidden group-hover/card:block" aria-hidden="true">{t(marked ? 'appearance.favoriteRemoveShort' : 'appearance.favoriteAddShort')}</span>
+      <Star weight="fill" className={`text-pro ${filled}`} aria-hidden="true" />
+      <Star weight="bold" className={outline} aria-hidden="true" />
+      <span className="hidden group-hover/card:block" aria-hidden="true">{t(marked ? 'appearance.favoriteRemoveShort' : 'common:actions.add')}</span>
     </button>
   );
 }

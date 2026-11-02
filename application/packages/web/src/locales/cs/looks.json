@@ -1,11 +1,9 @@
 {
   "captionFolder": "Složka",
   "captionTag": "Značka",
-  "captionNote": "Poznámka",
   "captionTracker": "Sledovaná hodnota",
   "useDefault": "Použít výchozí",
   "color": "Barva",
-  "noColor": "Bez barvy",
   "applyToSubfolders": "Použít barvu na podsložky",
   "icon": "Ikona",
   "searchPlaceholder": "Hledat ikony",

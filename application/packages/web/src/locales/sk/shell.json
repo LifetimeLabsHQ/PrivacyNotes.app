@@ -1,18 +1,14 @@
 {
   "pillars": {
-    "trash": "Kôš",
-    "bookmarks": "Záložky",
-    "contacts": "Kontakty"
+    "trash": "Kôš"
   },
   "tasksList": {
-    "title": "Úlohy",
     "newTaskNote": "Nový zoznam úloh",
     "hideCompleted": "Skryť dokončené úlohy",
     "showCompleted": "Zobraziť dokončené úlohy",
     "searchPlaceholder": "Hľadaj úlohy…",
     "sortOptions": "Možnosti zoradenia",
     "quickAddPlaceholder": "Pridaj rýchlu úlohu",
-    "noMatches": "Žiadne zhody.",
     "tasksFromOtherItems": "Úlohy v iných položkách",
     "noTaskListsYet": "Zatiaľ žiadne zoznamy úloh. Úlohy v iných položkách sú skryté.",
     "noTasksYet": "Zatiaľ žiadne úlohy. Použi pole vyššie alebo napíš `- [ ] …` do ľubovoľnej poznámky.",
@@ -29,45 +25,27 @@
     "seeLess": "Zobraziť menej"
   },
   "filesList": {
-    "title": "Súbory",
     "upload": "Nahrať",
     "selectedOf": "Vybrané: {{selected}} z {{total}}",
-    "deselectAll": "Zrušiť výber všetkých",
-    "selectAll": "Vybrať všetko",
-    "storage": "Úložisko",
     "perFile": "Na súbor",
     "free": "voľné",
-    "upgradeToPro": "Prejsť na Pro",
     "filterAll": "Všetko",
-    "filterImages": "Obrázky",
     "filterAudio": "Zvuk",
     "filterFiles": "Súbory",
-    "sortOptions": "Možnosti zoradenia",
     "searchPlaceholder": "Hľadaj súbory…",
     "sortName": "Názov",
     "showNotesWithAttachments": "Zobraziť súbory v iných položkách",
-    "noMatches": "Žiadne zhody.",
     "pinProtected": "Chránené PIN-om",
-    "readOnly": "Iba na čítanie",
     "noFilesYet": "Zatiaľ žiadne súbory.",
     "noDocuments": "Žiadne dokumenty.",
     "noImages": "Žiadne obrázky.",
     "noAudioFiles": "Žiadne zvukové súbory.",
     "emptyTypesHint": "Obrázky, dokumenty, zvuk, video a súbory zip. Do {{max}} MB na súbor.",
     "uploadFiles": "Nahrať súbory",
-    "menuDeselect": "Zrušiť výber",
-    "menuSelect": "Vybrať",
     "menuShow": "Zobraziť",
     "menuAllFiles": "Všetky súbory",
-    "menuImages": "Obrázky",
-    "menuAudio": "Zvuk",
     "menuDocuments": "Dokumenty",
-    "menuHideNoteAttachments": "Skryť súbory v iných položkách",
-    "menuShowNoteAttachments": "Zobraziť súbory v iných položkách",
-    "menuUnpin": "Odopnúť",
-    "menuPin": "Pripnúť",
-    "menuRename": "Premenovať",
-    "menuMoveToTrash": "Presunúť do koša"
+    "menuHideNoteAttachments": "Skryť súbory v iných položkách"
   },
   "vaultItem": {
     "badgeLogin": "Prihlasovacie údaje",
@@ -78,7 +56,6 @@
     "untitledKey": "Kľúč bez názvu",
     "copied": "Skopírované!",
     "copyField": "Kopírovať: {{label}}",
-    "hide": "Skryť",
     "reveal": "Zobraziť",
     "fieldUrl": "URL",
     "fieldUser": "Používateľ",
@@ -91,14 +68,11 @@
     "fieldLabel": "Štítok",
     "fieldPublic": "Verejný",
     "fieldPrivate": "Súkromný",
-    "fieldTotp": "Kód 2FA",
     "totpInvalid": "Neplatný kľúč",
     "copyCode": "Kopírovať kód",
     "totpUnlockCta": "Odomknúť kódy 2FA s Pro",
     "totpProNote": "Kľúč je uložený a synchronizovaný. Iba kód je súčasťou Pro.",
     "copyAll": "Kopírovať URL, používateľa a heslo",
-    "open": "Otvoriť",
-    "notesHeading": "Poznámky",
     "fillOneField": "Pred uložením vyplň aspoň jedno pole.",
     "expiryNeedsBoth": "Zadaj mesiac aj rok platnosti alebo nechaj obe polia prázdne.",
     "customField": "Vlastné pole",
@@ -130,20 +104,18 @@
   },
   "tagsRail": {
     "showAllItems": "Zobraziť všetky položky",
-    "changelog": "Changelog",
     "closeMenu": "Zavrieť ponuku",
-    "close": "Zavrieť",
     "views": "Obsah",
     "resizeSplit": "Zmeniť veľkosť Obsahu a značiek alebo priečinkov",
     "sidebarOptions": "Možnosti bočného panela",
     "showInSidebar": "Zobraziť v bočnom paneli",
     "allOptions": "Možnosti zobrazenia Všetko",
     "showInAll": "Zobraziť v zobrazení Všetko",
-    "viewList": "Zoznam",
-    "viewGrid": "Mriežka",
     "viewAuto": "Automaticky",
     "allItemsTooltip": "Všetky poznámky, denníky a položky trezoru",
     "allItems": "Všetko",
+    "dashboard": "Domov",
+    "dashboardTooltip": "Tvoje widgety na prvý pohľad",
     "pinnedTooltip": "Pripnuté položky",
     "pinned": "Pripnuté",
     "archive": "Archív",
@@ -151,6 +123,7 @@
     "notes": "Poznámky",
     "tasksTooltip": "Úlohy zo všetkých poznámok",
     "tasks": "Úlohy",
+    "drawings": "Kresby",
     "vaultTooltip": "Prihlasovacie údaje, kreditné karty a kľúče",
     "vault": "Trezor",
     "filesTooltip": "Všetky súbory a prílohy",
@@ -158,7 +131,6 @@
     "journalsTooltip": "Denné záznamy v denníku",
     "journals": "Denníky",
     "actionsForTag": "Akcie pre značku {{tag}}",
-    "renameTag": "Premenovať",
     "removeFavorite": "Odobrať z obľúbených",
     "markAsFavorite": "Pridať do obľúbených",
     "deleteTag": "Odstrániť značku",
@@ -166,7 +138,6 @@
     "tags": "Značky",
     "sortTags": "Zoradiť značky",
     "sort": "Zoradiť",
-    "sortBy": "Zoradiť podľa",
     "sortEntries": "Počet položiek",
     "sortName": "Názov",
     "sortCustom": "Vlastné",
@@ -177,11 +148,9 @@
     "createTag": "Nová značka",
     "untagged": "Bez značky",
     "trashTooltip": "Odstránené položky",
-    "trash": "Kôš",
     "feedback": "Spätná väzba",
     "import": "Import",
     "downloads": "Na stiahnutie",
-    "help": "Pomocník",
     "rate": "Ohodnotiť",
     "markdown": "Markdown",
     "markdownTip": "Nešifrované",
@@ -209,7 +178,6 @@
     "deleteSubfolders_few": "Odstrániť aj jeho {{count}} podpriečinky",
     "deleteSubfolders_many": "Odstrániť aj jeho {{count}} podpriečinka",
     "deleteSubfolders_other": "Odstrániť aj jeho {{count}} podpriečinkov",
-    "moveTo": "Presunúť do priečinka",
     "searchPlaceholder": "Hľadaj priečinky",
     "sortFolders": "Zoradiť priečinky",
     "chipUnfiled": "Priečinok",
@@ -230,7 +198,6 @@
     "seedTeam": "Tím"
   },
   "collapsedSidebar": {
-    "newNote": "Nová poznámka",
     "expandSidebar": "Rozbaliť bočný panel"
   },
   "mobileHeader": {
@@ -245,26 +212,14 @@
     "colorFromTag": "Zo značky: #{{name}}",
     "colorOwnHint": "Tu zvolená farba vyplní pozadie tejto poznámky. <setting>Farby priečinkov a značiek</setting> ju nemenia.",
     "details": "Podrobnosti",
-    "readOnly": "Iba na čítanie",
     "readOnlyDescription": "Žiadne úpravy, kým to nevypneš.",
     "protect": "Chrániť",
     "convertTo": "Previesť na",
-    "typeNote": "Poznámka",
     "typeJournal": "Denník",
-    "typeTask": "Úloha",
-    "unpin": "Odopnúť",
-    "pin": "Pripnúť",
-    "archive": "Archivovať",
-    "unarchive": "Zrušiť archiváciu",
     "burn": "Spáliť",
     "share": "Zdieľať",
     "trash": "Kôš",
-    "duplicate": "Duplikovať",
-    "restore": "Obnoviť",
-    "deleteForever": "Odstrániť navždy",
-    "moveToFolder": "Presunúť do priečinka",
     "noteHistory": "História",
-    "findReplace": "Nájsť a nahradiť",
     "uncheckAllTasks": "Zrušiť označenie všetkých položiek",
     "deleteCheckedTasks": "Odstrániť označené položky",
     "sortTasksByStatus": "Zoradiť položky podľa stavu",
@@ -283,27 +238,17 @@
     "schedule": "Termín",
     "ends": "Koniec",
     "sameDay": "V ten istý deň",
-    "allDay": "Celý deň",
     "starts": "Začiatok",
     "endsAt": "Končí o",
     "noEnd": "Žiadny",
     "removeFromCalendar": "Odobrať z kalendára",
     "makeEvent": "Previesť na <b>Udalosť</b>, aby sa dala opakovať",
-    "typeEvent": "Udalosť",
     "repeatRemoved": "Opakovanie je odstránené"
   },
   "selectionToolbar": {
-    "exitSelectionTooltip": "Ukončiť výber",
     "exitSelection": "Ukončiť výber",
-    "unpin": "Odopnúť",
-    "pin": "Pripnúť",
-    "archive": "Archivovať",
-    "unarchive": "Zrušiť archiváciu",
     "tag": "Pridať značku",
     "export": "Exportovať",
-    "delete": "Odstrániť",
-    "restore": "Obnoviť",
-    "deleteForever": "Odstrániť navždy",
     "more": "Ďalšie akcie",
     "addTagPlaceholder": "Pridaj značku…",
     "noTagsFound": "Nenašli sa žiadne značky",
@@ -326,6 +271,7 @@
     "showTags": "Zobraziť priečinok a značky",
     "showCalendar": "Zobraziť kalendár",
     "showCheckIn": "Zobraziť záznam nálady",
+    "showMedication": "Zobraziť lieky",
     "showWorkItems": "Zobraziť položky <b>Práca</b>",
     "showPersonalItems": "Zobraziť položky <b>Osobné</b>",
     "other": "Ostatné",
@@ -348,7 +294,6 @@
     "moodCalendar": "Zobrazovať nálady v kalendári"
   },
   "backfillPopover": {
-    "calendarLabel": "Kalendár denníka",
     "today": "Dnes",
     "chooseEntry": "Položky z {{date}}"
   },
@@ -371,6 +316,7 @@
     "newNote": "Nová poznámka",
     "newTask": "Nová úloha",
     "newKanban": "Nová kanbanová tabuľa",
+    "newDrawing": "Nová kresba",
     "newLogin": "Nové prihlasovacie údaje",
     "newJournal": "Nový záznam v denníku",
     "newFile": "Nový súbor",
@@ -398,32 +344,24 @@
     "duplicate": "Duplikovať",
     "moveToFolder": "Presunúť do priečinka",
     "exportAsMarkdown": "Exportovať ako Markdown",
-    "shareBurnAfterReading": "Zdieľať a Spáliť po prečítaní",
     "exportAsHtml": "Exportovať ako HTML",
-    "printSaveAsPdf": "Tlačiť / Uložiť ako PDF",
-    "moveToTrash": "Presunúť do koša",
-    "newBookmark": "Nová záložka",
     "newContact": "Nový kontakt",
-    "openBookmark": "Otvoriť",
     "copyBookmarkUrl": "Kopírovať URL",
     "editBookmark": "Upraviť záložku",
     "saveAsNote": "Uložiť ako poznámku",
-    "openClippedNote": "Otvoriť poznámku",
     "openInTab": "Otvoriť na karte",
     "openInTabHint": "{{key}} + klik",
+    "openInTabHintMiddle": "Stredný klik",
     "closeTab": "Zavrieť kartu",
     "closeOtherTabs": "Zavrieť ostatné karty",
     "closeAllTabs": "Zavrieť všetky karty",
     "pinTab": "Pripnúť kartu",
     "unpinTab": "Odopnúť kartu",
-    "newEvent": "Nová udalosť",
-    "quickAdd": "Rýchle pridanie"
+    "newEvent": "Nová udalosť"
   },
   "demoBanner": {
     "title": "Vyskúšaj to bez rizika",
-    "description": "Nič sa tu neukladá. Získaj vlastný šifrovaný zápisník, zadarmo.",
-    "cta": "Vytvoriť účet",
-    "dismiss": "Zavrieť"
+    "description": "Nič sa tu neukladá. Získaj vlastný šifrovaný zápisník, zadarmo."
   },
   "markdown": {
     "title": "Markdown",
@@ -464,20 +402,17 @@
     "fileCount_other": "{{count}} súborov",
     "railFolders": "Priečinky Markdown",
     "railTags": "Značky Markdown",
-    "allFiles": "Všetky súbory",
     "modeRich": "Formátovaný",
     "modeSource": "Markdown",
     "reopenPrompt": "Po opätovnom načítaní prehliadač znova potrebuje povolenie. Tvoj priečinok je zapamätaný, takže stačí jedno kliknutie.",
     "reopenFolder": "Znova otvoriť {{name}}",
     "new": "Nový",
-    "delete": "Odstrániť",
     "saveToNotes": "Uložiť do mojich poznámok",
     "createFailed": "Súbor sa nepodarilo vytvoriť.",
     "deleteFailed": "Súbor sa nepodarilo presunúť do koša.",
     "importedToast": "Poznámka „{{title}}“ je uložená v tvojich šifrovaných poznámkach. Pôvodný súbor zostal nedotknutý.",
     "deleteTitle": "Presunúť do koša priečinka?",
     "deleteBody": "Súbor „{{name}}“ sa presunie do priečinka .trash vo vnútri tvojho priečinka Markdown. Ak si to rozmyslíš, obnov ho zo správcu súborov.",
-    "deleteConfirm": "Presunúť do koša",
     "explainTitle": "Tvoj priečinok Markdown",
     "explainDone": "Rozumiem",
     "bannerTitle": "Pokročilý editor Markdown",
@@ -486,7 +421,6 @@
     "explainIntro": "Vyber priečinok so súbormi .md a .txt - podpriečinky sa zobrazia automaticky, úpravy sa ukladajú priamo do súborov a nič sa neprevádza",
     "chipPreview": "Živý náhľad",
     "chipTasks": "Úlohy",
-    "chipTags": "Značky",
     "chipTables": "Tabuľky",
     "useAgent": "Daj agentom AI prístup k svojim poznámkam",
     "useObsidian": "Tie isté súbory v Obsidiane alebo Logsequ",
@@ -514,7 +448,6 @@
     "assocWorking": "Pýtam sa systému…",
     "copyPath": "Kopírovať cestu",
     "selectedCount": "Vybrané: {{selected}} z {{total}}",
-    "selectAll": "Vybrať všetko",
     "exitSelection": "Ukončiť výber",
     "deleteManyTitle_one": "Presunúť {{count}} súbor do koša priečinka?",
     "deleteManyTitle_few": "Presunúť {{count}} súbory do koša priečinka?",
@@ -541,15 +474,11 @@
   "bookmarks": {
     "newBookmark": "Nová záložka",
     "searchPlaceholder": "Hľadaj záložky…",
-    "sortOptions": "Možnosti zoradenia",
     "quickAddPlaceholder": "Vlož alebo napíš odkaz…",
     "urlLabel": "Záložka (URL)",
     "urlInvalid": "Zadaj webovú adresu, napríklad example.com alebo https://example.com/page.",
     "urlDuplicate": "Táto URL už patrí inej záložke, preto sa zmena neuložila.",
-    "openAction": "Otvoriť",
     "copiedUrl": "Odkaz skopírovaný",
-    "moveToTrash": "Presunúť do koša",
-    "rowMenu": "Ďalšie akcie",
     "emptyNone": "Zatiaľ žiadne záložky.",
     "emptyTitle": "Ulož si stránky, ktoré stoja za to",
     "emptyAdd": "Pridať záložku",
@@ -566,11 +495,9 @@
     "new": "Nová"
   },
   "contacts": {
-    "new": "Nový",
     "searchPlaceholder": "Hľadaj kontakty…",
-    "sortOptions": "Možnosti zoradenia",
     "emptyNone": "Zatiaľ žiadne kontakty.",
-    "emptyTitle": "Adresár, ktorý si môžeš prečítať iba ty",
+    "emptyTitle": "Adresár šifrovaný na tvojom zariadení",
     "emptyAdd": "Pridať kontakt",
     "emptyImport": "Importovať kontakty",
     "noMatches": "Žiadne zhody.",
@@ -589,15 +516,12 @@
     "company": "Spoločnosť",
     "department": "Oddelenie",
     "jobTitle": "Pracovná pozícia",
-    "groupName": "Meno",
     "groupPhone": "Telefón",
     "groupEmail": "E-mail",
     "groupAddress": "Adresa",
     "groupWebsite": "Webová stránka",
-    "groupProfile": "Profil",
     "groupDates": "Dátumy",
     "groupRelated": "Príbuzní a blízki",
-    "groupNote": "Poznámka",
     "addPhone": "Pridať telefón",
     "addEmail": "Pridať e-mail",
     "addWebsite": "Pridať webovú stránku",
@@ -612,7 +536,6 @@
     "notePlaceholder": "Poznámky o tejto osobe",
     "labelNone": "Štítok",
     "labelCustom": "Vlastný štítok…",
-    "removeRow": "Odobrať",
     "call": "Zavolať",
     "message": "Poslať správu",
     "sendEmail": "Poslať e-mail",
@@ -635,15 +558,8 @@
     "menuPersonal": "Osobné",
     "menuName": "Meno",
     "menuText": "Text",
-    "itemAddress": "Adresa",
-    "itemWebsite": "Webová stránka",
-    "itemProfile": "Profil",
-    "itemCompany": "Spoločnosť",
-    "itemJobTitle": "Pracovná pozícia",
-    "itemBirthday": "Narodeniny",
     "itemDate": "Dátum",
     "itemRelated": "Meno blízkej osoby",
-    "itemNickname": "Prezývka",
     "itemNameParts": "Stredné meno, tituly",
     "itemPhonetic": "Fonetické meno",
     "itemNote": "Poznámka",
@@ -779,8 +695,10 @@
       "note": "Poznámky",
       "task": "Zoznamy úloh",
       "journal": "Záznamy v denníku",
-      "contact": "Narodeniny"
+      "contact": "Narodeniny a dátumy"
     },
+    "birthdays": "Narodeniny",
+    "contactDate": "{{name}}: {{label}}",
     "dragEnd": "Potiahni a zmeň deň konca",
     "previousDay": "Predchádzajúci deň",
     "nextDay": "Ďalší deň",
@@ -906,7 +824,6 @@
     "daysBeforeAt_many": "{{count}} dňa vopred o {{time}}",
     "daysBeforeAt_other": "{{count}} dní vopred o {{time}}",
     "custom": "Vlastné",
-    "add": "Pridať",
     "max": "Najviac päť upozornení.",
     "units": {
       "minutes": "minút",
@@ -918,11 +835,9 @@
     "remove": "Odobrať {{alert}}",
     "reminder": "Pripomienka",
     "medication": "Pripomienka liekov",
-    "open": "Otvoriť",
     "snooze": "Odložiť o 10 min",
     "offOnPhone": "Pripomienky sú na tomto telefóne vypnuté",
-    "turnOn": "Zapnúť",
-    "openSettings": "Otvoriť nastavenia"
+    "turnOn": "Zapnúť"
   },
   "quickAdd": {
     "group": "Vytvoriť",
@@ -935,6 +850,14 @@
     "appendHintDetail": "Vloží >>, potom napíš začiatok názvu",
     "appendNone": "Zatiaľ nemáš zoznam úloh ani poznámku, do ktorých by sa dalo pridávať",
     "appendNoneDetail": "Napíš názov za >> a vytvorí sa zoznam úloh s týmto názvom",
+    "cannotAdd": "Do {{title}} sa nedá pridávať",
+    "blocked": {
+      "trash": "Položka je v koši.",
+      "pin": "Položka je za tvojím PIN-om. Otvor ju a potom pridávaj.",
+      "readOnly": "Položka je iba na čítanie.",
+      "board": "Je to kanbanová tabuľa. Karty pridávaj na tabuli.",
+      "archived": "Položka je archivovaná. Zruš jej archiváciu a potom pridávaj."
+    },
     "linkGroup": "Uložiť tento odkaz",
     "linkDetail": {
       "bookmark": "Uloží adresu. Pomenuješ ju potom.",
@@ -954,6 +877,7 @@
       "task": "Nový zoznam úloh",
       "journal": "Nový záznam v denníku",
       "kanban": "Nová kanbanová tabuľa",
+      "drawing": "Nová kresba",
       "login": "Nové prihlasovacie údaje",
       "file": "Nahrať súbor",
       "contact": "Nový kontakt",
@@ -986,8 +910,8 @@
       },
       "length": {
         "label": "Dĺžka",
-        "examples": "na 30 min · na 3 dni · pi do ne",
-        "insert": "na 1 h"
+        "examples": "15:00 na 30 min · na 3 dni · pi do ne",
+        "insert": "15:00 na 1 h"
       },
       "repeat": {
         "label": "Opakovanie",
@@ -1033,17 +957,14 @@
     "backToToday": "Späť na dnešok",
     "options": "Možnosti záznamu nálady",
     "skipToday": "Dnes preskočiť",
-    "hide": "Skryť túto kartu",
+    "hide": "Skryť",
     "change": "Zmeniť náladu",
     "saved": "Uložené",
     "chooseTrackers": "Vybrať sledované hodnoty",
-    "settings": "Nastavenia záznamu nálady",
     "skipped": "Na dnes preskočené.",
     "startOver": "Začať odznova",
     "cleared": "Záznam nálady je vymazaný.",
     "hidden": "Karta je skrytá. Znova ju zapneš prepínačom Zobraziť záznam nálady v predvoľbách zoznamu.",
-    "undo": "Vrátiť späť",
-    "done": "Hotovo",
     "write": "Napísať o dnešku",
     "writeOn": "Napísať o dni {{date}}",
     "streak": "Deň {{n}} za sebou",
@@ -1058,19 +979,25 @@
     "hiddenCount_other": "Skryté záznamy nálady: {{count}}.",
     "showThem": "Zobraziť"
   },
+  "medicationCard": {
+    "title": "Sledovanie liekov",
+    "options": "Možnosti liekov",
+    "edit": "Zmeniť dnešné lieky",
+    "hidden": "Karta je skrytá. Znova ju zapneš v predvoľbách zoznamu alebo v Nastavenia > Sledované hodnoty > Lieky."
+  },
   "clipper": {
-    "saveAsNote": "Uložiť ako poznámku",
     "saving": "Ukladá sa ako poznámka…",
     "stepPage": "Sťahuje sa stránka",
     "stepPictures": "Ukladajú sa obrázky, {{done}} z {{total}}",
-    "openNote": "Otvoriť poznámku",
     "alreadySaved": "Táto stránka je už uložená ako poznámka ({{date}}).",
     "savedOn": "Uložené ako poznámka {{date}}",
-    "windowTitle": "Uložiť stránku",
     "addressLabel": "Webová adresa",
     "addressPlaceholder": "Vlož odkaz…",
     "savePictures": "Uložiť obrázky",
     "savePicturesHint": "Až 20 obrázkov, uložených s poznámkou. Započítavajú sa do tvojho úložiska.",
+    "extensionTipTitle": "Ukladaj z prehliadača a výsledok bude lepší",
+    "extensionTip": "Rozšírenie prehliadača uloží stránku tak, ako ju vidíš, aj stránky za prihlásením.",
+    "extensionTipSetUp": "Nastaviť rozšírenie",
     "downloading": "Sťahuje sa stránka…",
     "downloadingPictures": "Sťahujú sa obrázky, {{done}} z {{total}}",
     "picturesLine_one": "{{count}} obrázok · {{size}}, uložený s poznámkou",
@@ -1106,5 +1033,168 @@
     "until": "Do {{day}}",
     "noAlert": "Bez upozornenia",
     "endsLater": "Končí v iný deň"
+  },
+  "apps": {
+    "railLabel": "Rozšírenie",
+    "title": "Rozšírenie prehliadača",
+    "subtitle": "Ukladanie stránok a správca hesiel v prehliadačoch Chrome, Firefox a Edge. Rozšírenie nikdy nedrží kľúč, ktorý otvára tvoje poznámky.",
+    "stepInstall": "Nainštaluj rozšírenie",
+    "stepFeatures": "Vyber, čo môže robiť",
+    "stepConnect": "Pripojenie",
+    "makeCode": "Vytvoriť kód",
+    "connectHint": "Vytvor jednorazový kód a vlož ho do rozšírenia.",
+    "thisBrowser": "Tento prehliadač",
+    "otherApps": "Aplikácie pre počítač a telefón:",
+    "desktopAll": "Všetky na stiahnutie",
+    "extensionComputersOnly": "Rozšírenie je pre Chrome, Firefox a Edge na počítači.",
+    "demoSignUp": "Zaregistruj sa a pripoj prehliadač"
+  },
+  "extensionConnect": {
+    "clips": "Ukladanie stránok",
+    "clipsHint": "Ukladaj webové stránky ako poznámky.",
+    "loginsHint": "Prihlasovacie údaje, karty, kľúče SSH a záložky pre web, na ktorom práve si, iba na kopírovanie. Zamknuté vlastným PIN-om alebo prístupovým kódom.",
+    "pickOne": "Zapni aspoň jedno.",
+    "codeLabel": "Kód pre rozšírenie",
+    "oneUse": "Funguje raz, 10 minút.",
+    "usedBy": "Tento kód použil prehliadač {{name}} a je už pripojený. Ak o tom nevieš, odober ho nižšie.",
+    "newCode": "Nový kód",
+    "tooManyCodes": "Čaká priveľa kódov. Použi jeden z nich, alebo počkaj 10 minút.",
+    "tooManyExtensions": "Tento účet má pripojených 10 prehliadačov, čo je maximum. Najprv jeden odober.",
+    "keyElsewhere": "Kľúč k tvojim prihlasovacím údajom je na inom z tvojich zariadení. Otvor tam PrivacyNotes, nechaj ho synchronizovať a skús to znova.",
+    "failed": "Kód sa nepodarilo vytvoriť. Skontroluj pripojenie a skús to znova."
+  },
+  "dashboard": {
+    "taskReadOnly": "Táto poznámka je iba na čítanie. Ak chceš odškrtávať jej úlohy, vypni režim iba na čítanie v ponuke Možnosti poznámky.",
+    "addWidget": "Pridať widget",
+    "catalogTitle": "Pridanie widgetu",
+    "layouts": "Rozloženia",
+    "layoutChanged": "Rozloženie sa zmenilo",
+    "full": "Domov je plný. Najprv odober nejaký widget.",
+    "added": "Pridané na Domov",
+    "removed": "Odobraté z Domova",
+    "showOnHome": "Zobraziť na Domove",
+    "removeFromHome": "Odobrať z Domova",
+    "resize": "Zmeniť veľkosť widgetu „{{name}}“",
+    "narrower": "Užšie",
+    "taller": "Vyššie",
+    "shorter": "Nižšie",
+    "moveEarlier": "Posunúť dopredu",
+    "moveLater": "Posunúť dozadu",
+    "chooseNote": "Vyber poznámku",
+    "chooseTag": "Vyber značku",
+    "chooseFolder": "Vyber priečinok",
+    "chooseTracker": "Vyber sledovanú hodnotu",
+    "choose": "Vybrať",
+    "gone": "Už tu nie je",
+    "otherSpace": "V druhom priestore",
+    "proLocked": "Súčasť Pro",
+    "noneToChoose": "Zatiaľ nie je z čoho vyberať",
+    "headerEvents_one": "{{formatted}} udalosť dnes",
+    "headerEvents_few": "{{formatted}} udalosti dnes",
+    "headerEvents_other": "{{formatted}} udalostí dnes",
+    "headerTasks_one": "{{formatted}} otvorená úloha",
+    "headerTasks_few": "{{formatted}} otvorené úlohy",
+    "headerTasks_other": "{{formatted}} otvorených úloh",
+    "startToday": "Začať dnešný záznam",
+    "groups": {
+      "keep": "Veci, ktoré uchovávaš"
+    },
+    "layout": {
+      "everyday": "Na každý deň",
+      "planner": "Plánovanie",
+      "writer": "Písanie"
+    },
+    "w": {
+      "checkIn": {
+        "name": "Záznam nálady",
+        "help": "Ako sa dnes máš a tvoje sledované hodnoty"
+      },
+      "calendar": {
+        "help": "Mesiac s bodkami pre záznamy a udalosti"
+      },
+      "upcoming": {
+        "name": "Najbližšie",
+        "help": "Dnes a nasledujúcich 7 dní"
+      },
+      "today": {
+        "name": "Dnešný záznam",
+        "help": "Dnešný záznam v denníku, alebo jeho začiatok"
+      },
+      "tasks": {
+        "name": "Otvorené úlohy",
+        "help": "Nezaškrtnuté úlohy z tvojich poznámok"
+      },
+      "recent": {
+        "name": "Nedávno upravené",
+        "help": "Položky, ktoré sa naposledy upravovali"
+      },
+      "pinned": {
+        "help": "Tvoje pripnuté položky"
+      },
+      "note": {
+        "name": "Poznámka",
+        "help": "Jedna vybraná poznámka na Domove"
+      },
+      "tag": {
+        "name": "Značka",
+        "help": "Najnovšie položky s jednou značkou"
+      },
+      "folder": {
+        "name": "Priečinok",
+        "help": "Najnovšie položky v jednom priečinku"
+      },
+      "onThisDay": {
+        "name": "V tento deň",
+        "help": "Záznamy v denníku z minulých rokov"
+      },
+      "week": {
+        "help": "Slová, aktívne dni, položky a záznamy nálady"
+      },
+      "streak": {
+        "help": "Dni písania za sebou"
+      },
+      "checkInStreak": {
+        "help": "Dni so záznamom nálady za sebou"
+      },
+      "rhythm": {
+        "name": "Tvoj rytmus",
+        "help": "26 týždňov písania a nálady"
+      },
+      "milestone": {
+        "name": "Ďalší míľnik",
+        "help": "Ako blízko je ďalší"
+      },
+      "tracker": {
+        "name": "Sledovaná hodnota",
+        "help": "Jedna sledovaná hodnota: jej číslo a jej dni"
+      },
+      "weekRecap": {
+        "help": "Tvoj týždeň na jednej karte"
+      },
+      "files": {
+        "name": "Nedávne súbory",
+        "help": "Tvoje najnovšie obrázky a súbory"
+      },
+      "bookmarks": {
+        "help": "Tvoje najnovšie záložky"
+      },
+      "birthdays": {
+        "help": "Narodeniny v nasledujúcich 30 dňoch"
+      }
+    },
+    "empty": {
+      "upcoming": "V nasledujúcich 7 dňoch nič",
+      "tasks": "Žiadne otvorené úlohy",
+      "recent": "Zatiaľ tu nič nie je",
+      "pinned": "Zatiaľ nič pripnuté",
+      "tag": "Žiadne položky s touto značkou",
+      "folder": "V tomto priečinku nič nie je",
+      "onThisDay": "V tento deň z minulých rokov žiadne záznamy",
+      "files": "Zatiaľ žiadne súbory",
+      "bookmarks": "Zatiaľ žiadne záložky",
+      "birthdays": "V nasledujúcich 30 dňoch žiadne narodeniny",
+      "tracker": "Zatiaľ nič zaznamenané",
+      "milestone": "Všetky míľniky dosiahnuté"
+    }
   }
 }

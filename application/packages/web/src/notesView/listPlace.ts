@@ -7,7 +7,7 @@
  * anchor holds words of the note's text, which must not reach the disk in
  * the clear. The one thing that outlives the page is the id of the note last
  * open, which a cold start opens again.
- * Spec: ops/docs/archive/keep-my-place.md
+ * Spec: docs/internal/specs/keep-my-place.md
  */
 import { isDemoMode } from '../demo';
 import type { ViewAnchor } from '../viewSwitchAnchor';

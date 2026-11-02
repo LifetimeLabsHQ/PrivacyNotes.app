@@ -53,8 +53,6 @@
   },
   "mood": {
     "prompt": "Como você está se sentindo? (1-10)",
-    "low": "péssimo",
-    "high": "incrível",
     "anchor": {
       "1": "péssimo",
       "3": "difícil",
@@ -142,8 +140,6 @@
     "editMedication": "Editar medicação",
     "removeMedication": "Remover medicação",
     "confirmRemove": "Remover <highlight>{{name}}</highlight>?",
-    "yes": "Sim",
-    "no": "Não",
     "taken": "Tomado",
     "skip": "Pular",
     "editList": "Alterar estas medicações",
@@ -257,16 +253,15 @@
   },
   "config": {
     "configureTrackers": "Configurar rastreadores",
-    "title": "Rastreadores",
-    "tabGeneral": "Geral",
     "tabCustom": "Personalizados",
-    "chooseTrackers": "Escolher rastreadores",
     "factorsTitle": "Seus fatores",
     "factorsHelp": "As partes de um dia que você toca no botão Fatores. Um fator removido mantém o nome nos dias em que aparece.",
     "renameFactor": "Renomear {{name}}",
     "addFactor": "Adicionar fator",
     "medicationsTitle": "Suas medicações",
     "medicationsHelp": "As medicações sobre as quais o botão Remédios pergunta. Uma medicação removida mantém o histórico.",
+    "medicationCard": "Cartão de medicação",
+    "medicationCardHelp": "\"Você tomou sua medicação?\" neste dispositivo, só em um dia em que uma medicação está prevista.",
     "customHelp": "Rastreadores que você mesmo nomeia: uma escala, um número ou um sim ou não. Até {{max}}.",
     "yourCustomTrackers": "Seus rastreadores personalizados",
     "categoryMoodMind": "Humor e mente",
@@ -291,23 +286,17 @@
     "kindBuild": "Para criar",
     "kindWatch": "Para observar",
     "editHabit": "Editar {{name}}",
-    "removeHabit": "Remover {{name}}",
     "ownHabitsFull": "Você tem {{max}} hábitos próprios, o máximo possível.",
     "addCustomTrackerHint": "Acompanhe o que você quiser",
     "maxReached": "Máximo de {{max}} rastreadores personalizados atingido.",
     "customTrackers": "Rastreadores personalizados",
-    "newCustomTracker": "Novo rastreador personalizado",
-    "newMedication": "Nova medicação",
     "newMedicationHelp": "O botão Remédios pergunta sobre ela a partir do dia de início, nos horários que você definir.",
     "trackerNamePlaceholder": "Nome do rastreador",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "Nome",
     "typeLabel": "Tipo",
-    "colorLabel": "Cor",
     "preview": "Prévia",
     "startFromLast": "Lembrar o último registro",
     "chooseIcon": "Escolher ícone",
-    "iconLabel": "Ícone",
     "startFromLastHelp": "Bom para coisas que mudam pouco, como seu peso ou uma dose diária."
   },
   "factors": {
@@ -316,7 +305,6 @@
     "count_other": "{{count}} fatores",
     "remove": "Remover {{name}}",
     "placeholder": "visitas, enxaqueca, hora extra",
-    "add": "Adicionar",
     "empty": "Adicione as coisas que moldam os seus dias e depois toque nelas em qualquer dia.",
     "commaHint": "Adicione vários de uma vez, separados por vírgulas.",
     "editList": "Alterar estes fatores",
@@ -339,8 +327,6 @@
   "habits": {
     "prompt": "O que você fez hoje?",
     "count": "{{yes}}/{{total}}",
-    "yes": "Sim",
-    "no": "Não",
     "empty": "Escolha as perguntas na configuração dos rastreadores.",
     "changeQuestions": "Alterar estas perguntas",
     "q": {
@@ -399,9 +385,7 @@
     "prompt": "Quanta cafeína você consumiu?"
   },
   "flow": {
-    "next": "Próximo",
     "finish": "Finalizar",
-    "done": "Concluído",
     "step": "Rastreador {{n}} de {{total}}"
   }
 }

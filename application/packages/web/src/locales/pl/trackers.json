@@ -56,8 +56,6 @@
   },
   "mood": {
     "prompt": "Jak się czujesz? (1-10)",
-    "low": "okropnie",
-    "high": "wspaniale",
     "anchor": {
       "1": "okropnie",
       "3": "ciężko",
@@ -149,8 +147,6 @@
     "editMedication": "Edytuj lek",
     "removeMedication": "Usuń lek",
     "confirmRemove": "Usunąć <highlight>{{name}}</highlight>?",
-    "yes": "Tak",
-    "no": "Nie",
     "taken": "Przyjęty",
     "skip": "Pominięty",
     "editList": "Zmień te leki",
@@ -285,16 +281,15 @@
   },
   "config": {
     "configureTrackers": "Skonfiguruj trackery",
-    "title": "Trackery",
-    "tabGeneral": "Ogólne",
     "tabCustom": "Własne",
-    "chooseTrackers": "Wybierz trackery",
     "factorsTitle": "Twoje czynniki",
     "factorsHelp": "Elementy dnia, które zaznaczasz w przycisku Czynniki. Usunięty czynnik zachowuje swoją nazwę w dniach, w których występuje.",
     "renameFactor": "Zmień nazwę {{name}}",
     "addFactor": "Dodaj czynnik",
     "medicationsTitle": "Twoje leki",
     "medicationsHelp": "Leki, o które pyta przycisk Leki. Usunięty lek zachowuje swoją historię.",
+    "medicationCard": "Karta leków",
+    "medicationCardHelp": "„Czy udało Ci się przyjąć leki?” na tym urządzeniu, tylko w dniu, w którym przypada dawka leku.",
     "customHelp": "Trackery, które nazywasz samodzielnie: skala, liczba albo tak lub nie. Maksymalnie {{max}}.",
     "yourCustomTrackers": "Twoje własne trackery",
     "categoryMoodMind": "Nastrój i umysł",
@@ -319,23 +314,17 @@
     "kindBuild": "Do budowania",
     "kindWatch": "Do obserwowania",
     "editHabit": "Edytuj {{name}}",
-    "removeHabit": "Usuń {{name}}",
     "ownHabitsFull": "Masz już najwięcej własnych nawyków, ile można: {{max}}.",
     "addCustomTrackerHint": "Śledź, co tylko chcesz",
     "maxReached": "Osiągnięto maksimum {{max}} własnych trackerów.",
     "customTrackers": "Własne trackery",
-    "newCustomTracker": "Nowy własny tracker",
-    "newMedication": "Nowy lek",
     "newMedicationHelp": "Przycisk Leki pyta o niego od dnia rozpoczęcia, o ustawionych godzinach.",
     "trackerNamePlaceholder": "Nazwa trackera",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "Nazwa",
     "typeLabel": "Typ",
-    "colorLabel": "Kolor",
     "preview": "Podgląd",
     "startFromLast": "Pamiętaj ostatni wpis",
     "chooseIcon": "Wybierz ikonę",
-    "iconLabel": "Ikona",
     "startFromLastHelp": "Przydatne przy rzeczach, które rzadko się zmieniają, jak waga czy codzienna dawka."
   },
   "factors": {
@@ -343,7 +332,6 @@
     "count_one": "{{count}} czynnik",
     "remove": "Usuń {{name}}",
     "placeholder": "goście, migrena, nadgodziny",
-    "add": "Dodaj",
     "empty": "Dodaj to, co kształtuje Twoje dni, a potem zaznaczaj to w dowolnym dniu.",
     "commaHint": "Dodaj kilka naraz, oddzielając je przecinkami.",
     "editList": "Zmień te czynniki",
@@ -368,8 +356,6 @@
   "habits": {
     "prompt": "Co dziś było w Twoim dniu?",
     "count": "{{yes}}/{{total}}",
-    "yes": "Tak",
-    "no": "Nie",
     "empty": "Wybierz pytania w konfiguracji trackerów.",
     "changeQuestions": "Zmień te pytania",
     "q": {
@@ -428,9 +414,7 @@
     "prompt": "Ile kofeiny było dziś w Twoim dniu?"
   },
   "flow": {
-    "next": "Dalej",
     "finish": "Zakończ",
-    "done": "Gotowe",
     "step": "Tracker {{n}} z {{total}}"
   }
 }

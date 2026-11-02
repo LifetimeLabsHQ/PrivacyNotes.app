@@ -12,6 +12,8 @@
     "addLink": "Pridať odkaz",
     "noteLink": "Odkaz na inú poznámku (alebo napíš [[)",
     "numberedList": "Číslovaný zoznam",
+    "indent": "Zväčšiť zarážku",
+    "outdent": "Zmenšiť zarážku",
     "textColor": "Farba textu",
     "textColorApply": "Farba textu: {{color}}",
     "pickColor": "Vybrať farbu textu",
@@ -72,6 +74,7 @@
     "remove": "Odstrániť callout",
     "collapse": "Zbaliť callout",
     "expand": "Rozbaliť callout",
+    "dragGrip": "Potiahnuť",
     "types": {
       "info": "Informácia",
       "success": "Úspech",
@@ -132,6 +135,9 @@
     "addColumnRight": "Pridať stĺpec vpravo",
     "toggleHeaderRow": "Zapnúť alebo vypnúť riadok hlavičky",
     "equalColumnWidths": "Vyrovnať šírku stĺpcov",
+    "cellColor": "Farba bunky",
+    "sortAscending": "Zoradiť od A po Z",
+    "sortDescending": "Zoradiť od Z po A",
     "resizeHint": "Podrž {{shift}} a zmeníš len tento stĺpec, {{alt}} pre jemnejšie kroky",
     "deleteRow": "Odstrániť riadok",
     "deleteColumn": "Odstrániť stĺpec",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "Hľadaj v poznámke",
-    "label": "Nájsť v poznámke",
     "previous": "Predchádzajúci výskyt",
     "previousTitle": "Predchádzajúci",
     "next": "Ďalší výskyt",
     "nextTitle": "Ďalší",
     "close": "Zavrieť hľadanie",
-    "closeTitle": "Zavrieť",
     "replacePlaceholder": "Zadaj náhradný text",
     "replaceLabel": "Nahradiť čím",
     "replace": "Nahradiť",
@@ -177,10 +180,7 @@
     "replaceAll": "Všetko",
     "replaceAllTitle": "Nahradiť všetky výskyty",
     "caseSensitive": "Rozlišovať veľké a malé písmená",
-    "caseSensitiveTitle": "Rozlišovať veľké a malé písmená",
     "closeReplace": "Zavrieť Nájsť a nahradiť",
-    "closeReplaceTitle": "Zavrieť",
-    "showReplace": "Nájsť a nahradiť",
     "hideReplace": "Skryť nahradenie",
     "replacedCount_one": "Nahradené: {{count}}",
     "replacedCount_few": "Nahradené: {{count}}",
@@ -194,9 +194,7 @@
     "ariaLabel": "Osnova poznámky",
     "hide": "Skryť osnovu",
     "copyHeadingLink": "Kopírovať odkaz na nadpis",
-    "copyNoteLink": "Kopírovať odkaz na poznámku",
-    "copyHeadingShortcut": "Kopírovať skratku k nadpisu",
-    "copied": "Skopírované"
+    "copyHeadingShortcut": "Kopírovať skratku k nadpisu"
   },
   "bodyMenu": {
     "cut": "Vystrihnúť",
@@ -212,11 +210,8 @@
     "add": "Pridať riadok"
   },
   "link": {
-    "popoverLabel": "Pridať odkaz",
     "placeholder": "Vlož alebo napíš URL",
     "apply": "Použiť",
-    "addTitle": "Pridať odkaz",
-    "editTitle": "Upraviť odkaz",
     "urlLabel": "URL",
     "urlPlaceholder": "https://example.com",
     "errorEnterUrl": "Zadaj adresu URL",
@@ -232,7 +227,6 @@
   },
   "audio": {
     "uploadingRecording": "Nahráva sa záznam…",
-    "uploading": "Nahráva sa…",
     "stopRecording": "Zastaviť nahrávanie",
     "recordAudio": "Nahrať zvuk",
     "savingRecording": "Ukladá sa záznam…",
@@ -255,7 +249,6 @@
     "tasksChecked_other": "Zaškrtnuté: {{done}} z {{formatted}}",
     "syncLimit": " · {{share}} z limitu synchronizácie 1 MB",
     "overSyncLimit": " · nad limitom synchronizácie 1 MB, zostáva na tomto zariadení",
-    "split": "Rozdeliť poznámku",
     "veryLong": ", veľmi dlhá, úpravy môžu byť pomalé a trhané",
     "gettingLong": ", začína byť dlhá, na pomalších zariadeniach sa môže sekať",
     "largeTableWarning": "Veľká tabuľka ({{rows}} riadkov) môže spomaliť úpravy tejto poznámky, zváž jej rozdelenie"
@@ -270,12 +263,9 @@
     "placeholder": "Text na skopírovanie jedným kliknutím"
   },
   "inlineCode": {
-    "copyHint": "{{key}}+kliknutím skopíruješ",
-    "copied": "Skopírované"
+    "copyHint": "{{key}}+kliknutím skopíruješ"
   },
   "codeBlock": {
-    "copy": "Kopírovať",
-    "copied": "Skopírované",
     "copyFailed": "Nepodarilo sa",
     "wrap": "Zalamovať dlhé riadky",
     "showAll_one": "Zobraziť {{count}} riadok",
@@ -283,7 +273,6 @@
     "showAll_many": "Zobraziť všetkých {{count}} riadka",
     "showAll_other": "Zobraziť všetkých {{count}} riadkov",
     "showLess": "Zobraziť menej",
-    "plainText": "Obyčajný text",
     "language": "Jazyk kódu: {{name}}",
     "searchLanguages": "Hľadaj jazyk",
     "placeholder": "Napíš alebo vlož kód. Pre farby vyber hore jazyk."
@@ -364,7 +353,6 @@
     "inProgress": "Prebieha",
     "review": "Kontrola",
     "done": "Hotovo",
-    "color": "Farba",
     "columns": "Stĺpce",
     "columnCount_one": "{{count}} stĺpec",
     "columnCount_few": "{{count}} stĺpce",

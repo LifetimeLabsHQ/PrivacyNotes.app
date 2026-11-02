@@ -6,7 +6,7 @@ import type { useOpenTabs } from './useOpenTabs';
  * What the tab strip, the tab keys and the "Open in tab" actions do with the
  * open tabs: show one, step round them, close one or several. Closing drops
  * the empty drafts a tab was keeping, the same rule every draft follows.
- * Spec: ops/docs/archive/note-tabs.md
+ * Spec: docs/internal/specs/note-tabs.md
  */
 export function useTabActions({
   view,
@@ -35,7 +35,7 @@ export function useTabActions({
   /** Show a tab's item. It goes through the bookmark path because a plain
    *  selection of a bookmark opens its address, and a tab shows the bookmark.
    *  Trash and Markdown cannot show a live item, so they are left for All
-   *  items first. Spec: ops/docs/archive/note-tabs.md (section 4) */
+   *  items first. Spec: docs/internal/specs/note-tabs.md (section 4) */
   function showTab(id: string) {
     if (view === 'trash' || view === 'markdown') setView('home');
     void selectBookmarkForEdit(id);
@@ -61,7 +61,7 @@ export function useTabActions({
 
   /** Closing the open item's tab moves to the tab beside it, the way a
    *  browser does. The last tab takes its item off the screen, as a browser
-   *  window closes with its last tab. Spec: ops/issues/0568.md (Spec) */
+   *  window closes with its last tab. Spec: docs/internal/issues/0568.md (Spec) */
   function closeTab(id: string) {
     if (openTabs.pinnedIds.has(id)) return;
     if (id === selectedId) {

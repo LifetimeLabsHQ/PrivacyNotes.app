@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CaretDown, CaretLeft, CaretRight, Plus } from './icons';
-import { formatInstant, toLocalIso, weekdayDate, weekdayLabel } from './intlFormat';
+import { WEEK_START_DAY, formatInstant, toLocalIso, useDateFormatKey, weekStartSetting, weekdayDate, weekdayLabel, type WeekStart } from './intlFormat';
 import { intlLocale } from './languages';
 import type { Space } from './spaces';
 import type { LocalNote } from './db';
@@ -14,7 +14,7 @@ import { moodAnchor } from './moodMark';
  * own the data and decide what a picked day does. It replaces the browser
  * date field, whose calendar is a separate window the page cannot place,
  * mark or connect to an entry.
- * Spec: ops/docs/archive/journal-calendar.md
+ * Spec: docs/internal/specs/journal-calendar.md
  */
 
 /** A local ISO day as a Date at noon, so a daylight-saving change never moves
@@ -38,8 +38,10 @@ export function addMonths(day: string, n: number): string {
   return toLocalIso(target);
 }
 
-/** The first day of the week for a locale, 0 = Sunday. Monday where the engine cannot say. */
-export function firstWeekday(locale: string): number {
+/** The first day of the week, 0 = Sunday: the synced setting, or on Automatic
+ *  the locale's own. Monday where the engine cannot say. */
+export function firstWeekday(locale: string, setting: WeekStart = weekStartSetting()): number {
+  if (setting !== 'auto') return WEEK_START_DAY[setting];
   try {
     const l = new Intl.Locale(locale) as Intl.Locale & {
       getWeekInfo?: () => { firstDay: number };
@@ -51,6 +53,12 @@ export function firstWeekday(locale: string): number {
     // An unknown tag falls through to the default.
   }
   return 1;
+}
+
+/** `firstWeekday` for the app language, read again when the setting changes. */
+export function useWeekStart(): number {
+  useDateFormatKey();
+  return firstWeekday(intlLocale());
 }
 
 /** Six weeks of days around the month of `day`, so every month has the same height. */
@@ -105,7 +113,7 @@ export function pickDots(found: readonly Dot[]): Dot[] {
 type Props = {
   /** The days that get a dot. With `entriesOf`, a dot per space: Personal
    *  round in the accent, Work square in the warning color, so the shape
-   *  tells them apart without color. Spec: ops/docs/plans/spaces.md (section 9) */
+   *  tells them apart without color. Spec: docs/internal/specs/spaces.md (section 9) */
   marked: { has(day: string): boolean; entriesOf?(day: string): readonly { space: Space | null; kind?: LocalNote['type'] }[] };
   /** The day drawn with a ring. */
   selected?: string;
@@ -150,7 +158,7 @@ type Props = {
   drop?: { accepts: (e: React.DragEvent) => boolean; onDrop: (day: string, e: React.DragEvent) => void };
   /** Small: the mood look of the Journals calendar. A day with a mood is a
    *  disc in its color, a day written without one a ring; the dots give way.
-   *  Spec: ops/issues/0439.md (Spec) */
+   *  Spec: docs/internal/issues/0439.md (Spec) */
   moodOf?: (day: string) => number | 'written' | undefined;
 };
 
@@ -178,7 +186,7 @@ export function MonthGrid({
   const [dropDay, setDropDay] = useState<string | null>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const locale = intlLocale();
-  const weekStart = firstWeekday(locale);
+  const weekStart = useWeekStart();
   const cells = weeks === 1 ? weekCells(focus, weekStart) : monthCells(focus, weekStart);
   const step = (n: number) => (weeks === 1 ? addDays(focus, 7 * n) : addMonths(focus, n));
   const title = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(dayAtNoon(focus)); // date-ok: a month heading carries no day, so no date-order setting applies
@@ -187,9 +195,10 @@ export function MonthGrid({
   // the heading never wraps beside the arrows; a screen reader always hears
   // the long one. The breakpoint fits the longest long month with its year.
   const heading = (
-    <span aria-live="polite" className="whitespace-nowrap">
-      <span aria-hidden="true" className="@min-[208px]/month:hidden">{shortTitle}</span>
-      <span aria-hidden="true" className="hidden @min-[208px]/month:inline">{title}</span>
+    <span aria-live="polite" className="min-w-0 truncate">
+      {/* Touch-size arrows (40px each) leave the long name room only from 280px. */}
+      <span aria-hidden="true" className="@min-[208px]/month:hidden [@media(hover:none)]:@max-[279.98px]/month:inline">{shortTitle}</span>
+      <span aria-hidden="true" className="hidden @min-[208px]/month:inline [@media(hover:none)]:@max-[279.98px]/month:hidden">{title}</span>
       <span className="sr-only">{title}</span>
     </span>
   );
@@ -257,7 +266,9 @@ export function MonthGrid({
   // states stay one design in the list, the popovers and the entry menu.
   // Under 208 px (the short title's width) the title and the header buttons
   // tighten, so the arrows and a host's button still fit beside the title.
-  const titleClass = 'inline-flex items-center gap-1 rounded-md px-2 @max-[207.98px]/month:px-1 py-1 text-[13px] font-medium text-pn';
+  // min-w-0: with touch-size arrows the long month name can be wider than
+  // the room left; it truncates instead of pushing the arrows out.
+  const titleClass = 'inline-flex min-w-0 items-center gap-1 rounded-md px-2 @max-[207.98px]/month:px-1 py-1 text-compact font-medium text-pn';
   return (
     <div className={`@container/month w-full ${wide ? '' : 'max-w-[240px]'} mx-auto select-none`}>
       {onToday && (
@@ -266,8 +277,8 @@ export function MonthGrid({
           onClick={onToday}
           className="mb-2 w-full flex items-baseline justify-between gap-3 px-3 py-2 rounded-lg text-start ring-[1.5px] ring-inset ring-accent hover:bg-accent/10 transition"
         >
-          <span className="text-[14px] font-medium text-pn">{t('backfillPopover.today')}</span>
-          <span className="text-[12px] tabular-nums font-semibold text-accent">{formatInstant(dayAtNoon(today), 'dayMonth')}</span>
+          <span className="text-body font-medium text-pn">{t('backfillPopover.today')}</span>
+          <span className="text-small tabular-nums font-semibold text-accent">{formatInstant(dayAtNoon(today), 'dayMonth')}</span>
         </button>
       )}
       {/* The month arrows sit together at the end, so they never read as the
@@ -282,7 +293,7 @@ export function MonthGrid({
             className={`${titleClass} hover:bg-pn/5 transition`}
           >
             {heading}
-            <CaretDown size={12} aria-hidden="true" className={`text-accent transition-transform ${weeks === 6 ? 'rotate-180' : ''}`} />
+            <CaretDown aria-hidden="true" className={`shrink-0 text-accent transition-transform ${weeks === 6 ? 'rotate-180' : ''}`} />
           </button>
         ) : (
           <span className={titleClass}>
@@ -291,17 +302,17 @@ export function MonthGrid({
         )}
         <span className="flex shrink-0 items-center @max-[207.98px]/month:[&_button]:w-7">
           <button type="button" onClick={() => setFocus(step(-1))} aria-label={t(weeks === 1 ? 'monthGrid.previousWeek' : 'monthGrid.previousMonth')} className={navBtn}>
-            <CaretLeft size={14} aria-hidden="true" />
+            <CaretLeft aria-hidden="true" />
           </button>
           <button type="button" onClick={() => setFocus(step(1))} aria-label={t(weeks === 1 ? 'monthGrid.nextWeek' : 'monthGrid.nextMonth')} className={navBtn}>
-            <CaretRight size={14} aria-hidden="true" />
+            <CaretRight aria-hidden="true" />
           </button>
           {headerEnd}
         </span>
       </div>
       <div ref={gridRef} role="group" aria-label={title} onKeyDown={onKeyDown} className="grid grid-cols-7 gap-0.5 text-center">
         {Array.from({ length: 7 }, (_, i) => (
-          <div key={i} aria-hidden="true" className={`text-[11px] text-pn-muted ${weeks === 1 ? 'py-0.5 md:py-1' : 'py-1'}`}>
+          <div key={i} aria-hidden="true" className={`text-meta text-pn-muted ${weeks === 1 ? 'py-0.5 md:py-1' : 'py-1'}`}>
             {weekdayLabel(weekdayDate((weekStart + i) % 7), 'narrow')}
           </div>
         ))}
@@ -355,7 +366,7 @@ export function MonthGrid({
               className={`group min-w-0 flex items-center justify-center h-10 [@media(hover:none)]:h-11 outline-none rounded-lg ${dropDay === day ? 'ring-2 ring-inset ring-accent bg-accent/10' : ''}`}
             >
               <span
-                className={`relative flex items-center justify-center w-full max-w-8 ${moodOf ? 'aspect-square rounded-full' : 'h-9 pb-2 rounded-lg'} text-[13px] tabular-nums transition group-focus-visible:outline group-focus-visible:outline-2 group-focus-visible:outline-offset-1 group-focus-visible:outline-accent ${circle}`}
+                className={`relative flex items-center justify-center w-full max-w-8 ${moodOf ? 'aspect-square rounded-full' : 'h-9 pb-2 rounded-lg'} text-compact tabular-nums transition group-focus-visible:outline group-focus-visible:outline-2 group-focus-visible:outline-offset-1 group-focus-visible:outline-accent ${circle}`}
                 // A tint of the mood's color, not the color itself: the day's
                 // number stays in the text color and the month stays calm.
                 style={moodDisc ? { background: `color-mix(in srgb, ${moodColor(mood)} 32%, transparent)` } : undefined}
@@ -388,7 +399,7 @@ export function MonthGrid({
  * button (the roving tab stop), the content under it is the host's chips,
  * the empty space and the plus create. Weekends take a tint, other months
  * fade, today's number is a filled square.
- * Spec: ops/docs/archive/calendar-pillar-spec.md (step 1)
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (step 1)
  */
 function LargeMonth({
   focus, today, title, cells, weekStart, weeks, gridRef, onKeyDown, onPrev, onNext, onToday, onPick,
@@ -441,7 +452,7 @@ function LargeMonth({
         <div role="row" className={`sticky top-0 z-[2] bg-surface-2 shrink-0 grid ${cols} border-b border-divider`}>
           {weekNumbers && <div role="columnheader" aria-hidden="true" />}
           {Array.from({ length: 7 }, (_, i) => (
-            <div key={i} role="columnheader" className="text-[11px] text-pn-muted text-center py-1">
+            <div key={i} role="columnheader" className="text-meta text-pn-muted text-center py-1">
               {weekdayLabel(weekdayDate((weekStart + i) % 7), 'short')}
             </div>
           ))}
@@ -449,7 +460,7 @@ function LargeMonth({
         {rows.map((days) => (
           <div key={days[0]} role="row" className={`relative flex-1 ${weeks === 1 ? 'min-h-0' : 'min-h-[5.5rem]'} grid ${cols} border-b border-divider last:border-b-0`}>
             {weekNumbers && (
-              <div role="rowheader" className="text-[10px] text-pn-muted text-center pt-1.5 tabular-nums border-e border-divider">
+              <div role="rowheader" className="text-meta text-pn-muted text-center pt-1.5 tabular-nums border-e border-divider">
                 {isoWeek(days[0]!)}
               </div>
             )}
@@ -483,7 +494,7 @@ function LargeMonth({
                       tabIndex={day === focus ? 0 : -1}
                       aria-label={label}
                       onClick={() => onPick(day)}
-                      className={`pointer-events-auto inline-flex items-center justify-center min-w-6 h-6 px-1 rounded-md text-[12px] tabular-nums transition outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent ${
+                      className={`pointer-events-auto inline-flex items-center justify-center min-w-6 h-6 px-1 rounded-md text-small tabular-nums transition outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent ${
                         isToday ? 'bg-accent-fill text-white font-bold' : `${inMonth ? 'text-pn font-medium' : 'text-pn-muted opacity-60'} hover:bg-pn/5`
                       }`}
                     >
@@ -497,7 +508,7 @@ function LargeMonth({
                         aria-label={t('calendar.addOn', { date: label })}
                         className="pointer-events-auto hidden group-hover/cell:inline-flex [@media(hover:none)]:hidden items-center justify-center w-5 h-5 rounded border border-dashed border-divider text-pn-muted hover:text-accent hover:border-accent transition"
                       >
-                        <Plus size={11} aria-hidden="true" />
+                        <Plus aria-hidden="true" />
                       </button>
                     )}
                   </div>
@@ -539,7 +550,7 @@ export function CalendarHeader({ title, shortTitle, onPrev, onNext, prevLabel, n
     <div className="@container/calhead shrink-0 flex flex-col gap-1 px-3 py-2 border-b border-divider">
       <div className="flex items-center gap-1.5 min-w-0">
         {start}
-        <h2 aria-live="polite" className="min-w-0 truncate text-[16px] font-semibold text-pn me-1">
+        <h2 aria-live="polite" className="min-w-0 truncate text-title font-semibold text-pn me-1">
           {shortTitle ? (
             <>
               <span aria-hidden="true" className="@min-[520px]/calhead:hidden">{shortTitle}</span>
@@ -550,14 +561,14 @@ export function CalendarHeader({ title, shortTitle, onPrev, onNext, prevLabel, n
         </h2>
         <span className="shrink-0 flex items-center">
           <button type="button" onClick={onPrev} aria-label={prevLabel} className={HEADER_NAV}>
-            <CaretLeft size={14} aria-hidden="true" />
+            <CaretLeft aria-hidden="true" />
           </button>
           <button type="button" onClick={onNext} aria-label={nextLabel} className={HEADER_NAV}>
-            <CaretRight size={14} aria-hidden="true" />
+            <CaretRight aria-hidden="true" />
           </button>
         </span>
         {onToday && (
-          <button type="button" onClick={onToday} className="shrink-0 h-7 px-2.5 rounded-md border border-divider text-[13px] font-medium text-pn hover:border-accent hover:text-accent transition">
+          <button type="button" onClick={onToday} className="shrink-0 h-7 px-2.5 rounded-md border border-divider text-compact font-medium text-pn hover:border-accent hover:text-accent transition">
             {t('backfillPopover.today')}
           </button>
         )}

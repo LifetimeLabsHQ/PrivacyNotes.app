@@ -53,8 +53,6 @@
   },
   "mood": {
     "prompt": "Hur mår du? (1-10)",
-    "low": "uselt",
-    "high": "fantastiskt",
     "anchor": {
       "1": "uselt",
       "3": "tungt",
@@ -142,8 +140,6 @@
     "editMedication": "Redigera medicin",
     "removeMedication": "Ta bort medicin",
     "confirmRemove": "Ta bort <highlight>{{name}}</highlight>?",
-    "yes": "Ja",
-    "no": "Nej",
     "taken": "Tagen",
     "skip": "Hoppa över",
     "editList": "Ändra de här medicinerna",
@@ -257,16 +253,15 @@
   },
   "config": {
     "configureTrackers": "Ställ in mätvärden",
-    "title": "Mätvärden",
-    "tabGeneral": "Allmänt",
     "tabCustom": "Egna",
-    "chooseTrackers": "Välj mätvärden",
     "factorsTitle": "Dina faktorer",
     "factorsHelp": "De delar av en dag som du trycker på i Faktorer. En borttagen faktor behåller sitt namn de dagar som har den.",
     "renameFactor": "Byt namn på {{name}}",
     "addFactor": "Lägg till faktor",
     "medicationsTitle": "Dina mediciner",
     "medicationsHelp": "De mediciner som Mediciner frågar om. En borttagen medicin behåller sin historik.",
+    "medicationCard": "Medicinkort",
+    "medicationCardHelp": "\"Tog du din medicin?\" på den här enheten, bara en dag då en medicin ska tas.",
     "customHelp": "Mätvärden du namnger själv: en skala, ett tal eller ja eller nej. Upp till {{max}}.",
     "yourCustomTrackers": "Dina egna mätvärden",
     "categoryMoodMind": "Humör och sinne",
@@ -291,23 +286,17 @@
     "kindBuild": "Att bygga",
     "kindWatch": "Att hålla koll på",
     "editHabit": "Redigera {{name}}",
-    "removeHabit": "Ta bort {{name}}",
     "ownHabitsFull": "Du har {{max}} egna vanor, det högsta antalet som går.",
     "addCustomTrackerHint": "Mät vad du vill",
     "maxReached": "Du har nått gränsen på {{max}} egna mätvärden.",
     "customTrackers": "Egna mätvärden",
-    "newCustomTracker": "Nytt eget mätvärde",
-    "newMedication": "Ny medicin",
     "newMedicationHelp": "Mediciner frågar om den från startdagen, vid de tider du ställer in.",
     "trackerNamePlaceholder": "Namn på mätvärde",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "Namn",
     "typeLabel": "Typ",
-    "colorLabel": "Färg",
     "preview": "Förhandsvisning",
     "startFromLast": "Kom ihåg senaste värdet",
     "chooseIcon": "Välj ikon",
-    "iconLabel": "Ikon",
     "startFromLastHelp": "Bra för sådant som sällan ändras, som din vikt eller en daglig dos."
   },
   "factors": {
@@ -315,7 +304,6 @@
     "count_other": "{{count}} faktorer",
     "remove": "Ta bort {{name}}",
     "placeholder": "besök, migrän, övertid",
-    "add": "Lägg till",
     "empty": "Lägg till det som formar dina dagar och tryck sedan på dem vilken dag som helst.",
     "commaHint": "Lägg till flera på en gång, åtskilda med kommatecken.",
     "editList": "Ändra de här faktorerna",
@@ -339,8 +327,6 @@
   "habits": {
     "prompt": "Vad gjorde du i dag?",
     "count": "{{yes}}/{{total}}",
-    "yes": "Ja",
-    "no": "Nej",
     "empty": "Välj frågorna i inställningarna för mätvärden.",
     "changeQuestions": "Ändra de här frågorna",
     "q": {
@@ -399,9 +385,7 @@
     "prompt": "Hur mycket koffein fick du i dig?"
   },
   "flow": {
-    "next": "Nästa",
     "finish": "Slutför",
-    "done": "Klar",
     "step": "Mätvärde {{n}} av {{total}}"
   }
 }

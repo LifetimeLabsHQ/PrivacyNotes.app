@@ -12,6 +12,8 @@
     "addLink": "リンクを追加",
     "noteLink": "別のノートへリンク([[ の入力でも可)",
     "numberedList": "番号付きリスト",
+    "indent": "インデントを増やす",
+    "outdent": "インデントを減らす",
     "textColor": "文字色",
     "textColorApply": "文字色: {{color}}",
     "pickColor": "文字色を選択",
@@ -72,6 +74,7 @@
     "remove": "コールアウトを削除",
     "collapse": "コールアウトを折りたたむ",
     "expand": "コールアウトを展開",
+    "dragGrip": "ドラッグ",
     "types": {
       "info": "情報",
       "success": "成功",
@@ -132,6 +135,9 @@
     "addColumnRight": "右に列を追加",
     "toggleHeaderRow": "見出し行を切り替え",
     "equalColumnWidths": "列の幅をそろえる",
+    "cellColor": "セルの色",
+    "sortAscending": "昇順に並び替え",
+    "sortDescending": "降順に並び替え",
     "resizeHint": "{{shift}} を押しながらドラッグでこの列だけを変更、{{alt}} で細かく調整",
     "deleteRow": "行を削除",
     "deleteColumn": "列を削除",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "ノート内を検索",
-    "label": "ノート内を検索",
     "previous": "前の一致",
     "previousTitle": "前へ",
     "next": "次の一致",
     "nextTitle": "次へ",
     "close": "検索を閉じる",
-    "closeTitle": "閉じる",
     "replacePlaceholder": "置換後の文字列",
     "replaceLabel": "置換後の文字列",
     "replace": "置換",
@@ -177,10 +180,7 @@
     "replaceAll": "すべて",
     "replaceAllTitle": "すべての一致を置換",
     "caseSensitive": "大文字と小文字を区別",
-    "caseSensitiveTitle": "大文字と小文字を区別",
     "closeReplace": "検索と置換を閉じる",
-    "closeReplaceTitle": "閉じる",
-    "showReplace": "検索と置換",
     "hideReplace": "置換を隠す",
     "replacedCount_other": "{{count}}件を置換しました"
   },
@@ -191,9 +191,7 @@
     "ariaLabel": "ノートのアウトライン",
     "hide": "アウトラインを隠す",
     "copyHeadingLink": "見出しへのリンクをコピー",
-    "copyNoteLink": "ノートリンクをコピー",
-    "copyHeadingShortcut": "見出しへのショートカットをコピー",
-    "copied": "コピーしました"
+    "copyHeadingShortcut": "見出しへのショートカットをコピー"
   },
   "bodyMenu": {
     "cut": "切り取り",
@@ -209,11 +207,8 @@
     "add": "行を追加"
   },
   "link": {
-    "popoverLabel": "リンクを追加",
     "placeholder": "URLを貼り付けまたは入力",
     "apply": "適用",
-    "addTitle": "リンクを追加",
-    "editTitle": "リンクを編集",
     "urlLabel": "URL",
     "urlPlaceholder": "https://example.com",
     "errorEnterUrl": "URLを入力してください",
@@ -229,7 +224,6 @@
   },
   "audio": {
     "uploadingRecording": "録音をアップロード中...",
-    "uploading": "アップロード中...",
     "stopRecording": "録音を停止",
     "recordAudio": "音声を録音",
     "savingRecording": "録音を保存中...",
@@ -243,7 +237,6 @@
     "tasksChecked_other": "{{formatted}}件中{{done}}件チェック済み",
     "syncLimit": " · 同期の上限1 MBの{{share}}",
     "overSyncLimit": " · 同期の上限1 MBを超えているため、このデバイスにのみ保存されます",
-    "split": "ノートを分割",
     "veryLong": "、非常に長いため、編集が重くなったりカクつくことがあります",
     "gettingLong": "、長くなってきました。遅いデバイスでは重くなることがあります",
     "largeTableWarning": "大きな表({{rows}}行)があるため、このノートは編集が重くなることがあります。分割を検討してください"
@@ -258,17 +251,13 @@
     "placeholder": "ワンクリックでコピーするテキスト"
   },
   "inlineCode": {
-    "copyHint": "{{key}}+クリックでコピー",
-    "copied": "コピーしました"
+    "copyHint": "{{key}}+クリックでコピー"
   },
   "codeBlock": {
-    "copy": "コピー",
-    "copied": "コピーしました",
     "copyFailed": "失敗しました",
     "wrap": "長い行を折り返す",
     "showAll_other": "{{count}}行すべて表示",
     "showLess": "折りたたむ",
-    "plainText": "プレーンテキスト",
     "language": "コードの言語: {{name}}",
     "searchLanguages": "言語を検索",
     "placeholder": "コードを入力するか貼り付けます。色を付けるには、上で言語を選びます。"
@@ -349,7 +338,6 @@
     "inProgress": "進行中",
     "review": "レビュー",
     "done": "完了",
-    "color": "色",
     "columns": "列",
     "columnCount_other": "{{count}}列",
     "cardCount_other": "{{count}}枚のカード",

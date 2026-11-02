@@ -20,26 +20,42 @@ const CHECK_FLOOR_MS = 12 * 60 * 60 * 1000; // 12h
 
 // Public changelog, opened in the system browser (a /changelog tab cannot
 // open inside the Tauri webview). Canonical no-www domain. Spec:
-// ops/docs/gotchas.md (canonical domain).
+// docs/contrib/gotchas.md (canonical domain).
 const CHANGELOG_URL = `${APEX_ORIGIN}/changelog`;
 
 // The release floor for the .deb, the one desktop format that cannot self-update.
 // Published per platform, from the tracked packages/desktop/update-policy.json:
 // a global floor would let a Linux release force Android clients toward an APK
-// that does not satisfy it yet. Spec: ops/docs/android-update-check.md (floors are published per platform, never globally).
+// that does not satisfy it yet. Spec: docs/internal/android-update-check.md (floors are published per platform, never globally).
 const LINUX_POLICY_URL = `${RELEASES_ORIGIN}/linux/update-policy.json`;
 
-// The command a Scoop user runs to move to the version this toast names. Scoop's
-// bucket carries each release within hours of it shipping, so there is always
-// something for this to fetch by the time the toast appears.
-const SCOOP_UPDATE_CMD = 'scoop update privacynotes';
+// The command that moves a Scoop install to winget. The bucket still gets each
+// release, but Scoop is off the homepage and winget is the channel we support:
+// winget runs our installer, which lands the app where the self-updater
+// installs, and the Scoop copy is then removed. Notes and settings live outside
+// the Scoop folder, so they stay. `;`, not `&&`: Windows PowerShell 5.1 has no `&&`.
+// Spec: docs/internal/windows-release.md (Scoop is off the homepage; a Scoop install is offered winget)
+const SCOOP_SWITCH_CMD = 'winget install LifetimeLabs.PrivacyNotes; scoop uninstall privacynotes';
 
 // What the launch check found. `restart` is a staged install awaiting a relaunch.
 // The other two cannot self-update and want opposite advice: a Linux .deb is
 // replaced from the downloads page, while a Scoop install must NOT be, because the
-// download there is the installer that leaves a second copy behind.
+// download there is the installer that leaves a second copy behind. It gets the
+// command that moves it to winget instead.
 // `required` is set only in download mode, when this build is below the floor.
 type UpdateReady = { version: string; mode: 'restart' | 'download' | 'scoop'; required?: boolean };
+
+/** A Windows update downloaded and waiting for Restart. On Windows the
+ *  install launches the installer and quits the app at once, so installing in
+ *  the background closed the window mid-sentence and lost the typing still in
+ *  its save delay (external report, 2026-10-24, bug report 11.4). */
+let downloadedForRestart: { install(): Promise<void> } | null = null;
+
+const IS_WINDOWS = typeof navigator !== 'undefined' && /Windows/i.test(navigator.userAgent);
+
+/** How long the editors get to write what they hold before the app quits:
+ *  the note editor's save delay and the Markdown folder's (900 ms), with room. */
+const SAVE_BEFORE_QUIT_MS = 1500;
 
 /**
  * Desktop self-updater (macOS/Windows/Linux only).
@@ -54,7 +70,7 @@ type UpdateReady = { version: string; mode: 'restart' | 'download' | 'scoop'; re
  * non-dismissible only when the build is below the release floor, otherwise
  * dismissible for 48h like any ordinary update (issue #224).
  * iOS/Android update through their app stores, so this is gated on
- * detectPlatform() === 'desktop'. Spec: ops/docs/macos-ios-setup.md (iOS updates through App Store review, not this updater).
+ * detectPlatform() === 'desktop'. Spec: docs/internal/macos-ios-setup.md (iOS updates through App Store review, not this updater).
  */
 async function fetchLinuxMinVersion(): Promise<string | undefined> {
   try {
@@ -84,7 +100,7 @@ async function runUpdateCheck(): Promise<UpdateReady | null> {
 
     // A Linux .deb can't self-update (it lives in root-owned /usr). Don't
     // install; the toast points the user at the downloads page to fetch the
-    // newer .deb by hand. Spec: ops/docs/linux-release.md (.deb lives in root-owned /usr, excluded from the updater manifest).
+    // newer .deb by hand. Spec: docs/internal/linux-release.md (.deb lives in root-owned /usr, excluded from the updater manifest).
     if (!canSelfUpdate) {
       // Both blocked formats arrive here, so ask which one before choosing the
       // nudge. Defaulting to the .deb path on an error keeps the existing
@@ -92,8 +108,7 @@ async function runUpdateCheck(): Promise<UpdateReady | null> {
       const scoop = await invoke<boolean>('is_scoop_install').catch(() => false);
       if (scoop) {
         // No release floor is consulted: the floor is published for Linux only,
-        // and a Scoop user is never more than one bucket poll behind anyway, so
-        // this toast is always dismissible.
+        // so this toast is always dismissible.
         if (isUpdateSnoozed(update.version)) return null;
         return { version: update.version, mode: 'scoop' };
       }
@@ -113,9 +128,15 @@ async function runUpdateCheck(): Promise<UpdateReady | null> {
       return { version: update.version, mode: 'download', required };
     }
 
-    // macOS/Windows/AppImage: download + install in the background; the toast's
-    // Restart button relaunches into the freshly installed build.
-    await update.downloadAndInstall();
+    // macOS/AppImage: download + install in the background; the toast's
+    // Restart button relaunches into the freshly installed build. Windows:
+    // download only, and install from the Restart button, after a save.
+    if (IS_WINDOWS) {
+      await update.download();
+      downloadedForRestart = update;
+    } else {
+      await update.downloadAndInstall();
+    }
     return { version: update.version, mode: 'restart' };
   } catch (e) {
     // Offline, endpoint down, or signature mismatch. Never surface; retry next launch.
@@ -126,6 +147,15 @@ async function runUpdateCheck(): Promise<UpdateReady | null> {
 
 async function relaunchApp(): Promise<void> {
   try {
+    // The editors write what they hold on beforeunload (useDebouncedMarkdownSave
+    // and the flush stash); a quit by the updater fires none.
+    window.dispatchEvent(new Event('beforeunload'));
+    await new Promise((resolve) => setTimeout(resolve, SAVE_BEFORE_QUIT_MS));
+    if (downloadedForRestart) {
+      // Windows: the installer runs and the app quits; it starts again after.
+      await downloadedForRestart.install();
+      return;
+    }
     const { relaunch } = await import('@tauri-apps/plugin-process');
     await relaunch();
   } catch (e) {
@@ -144,11 +174,11 @@ async function openChangelog(): Promise<void> {
 
 async function copyScoopCommand(): Promise<void> {
   try {
-    await navigator.clipboard.writeText(SCOOP_UPDATE_CMD);
+    await navigator.clipboard.writeText(SCOOP_SWITCH_CMD);
   } catch (e) {
     // Denied or unavailable. The toast still named the new version, and the
-    // command is on the homepage, so this is a lost convenience rather than a
-    // dead end.
+    // desktop-updates FAQ entry spells the command out, so this is a lost
+    // convenience rather than a dead end.
     console.warn('[updater] clipboard write failed', e);
   }
 }
@@ -158,7 +188,7 @@ async function openDownloads(): Promise<void> {
     const { openUrl } = await import('@tauri-apps/plugin-opener');
     // Locale-aware, matching the in-app Downloads button: on desktop
     // marketingHomeHref() is the absolute /<lang> homepage, and #downloads
-    // reveals both Linux formats. Spec: ops/docs/linux-release.md (homepage carries both AppImage and .deb buttons).
+    // reveals both Linux formats. Spec: docs/internal/linux-release.md (homepage carries both AppImage and .deb buttons).
     await openUrl(`${marketingHomeHref()}#downloads`);
   } catch (e) {
     console.warn('[updater] open downloads failed', e);
@@ -219,8 +249,8 @@ export function DesktopUpdater() {
   if (!ready) return null;
 
   // Only a staged install offers Restart. A .deb is sent to the downloads page,
-  // and a Scoop install is handed the command instead, since the download it
-  // would otherwise be pointed at is what creates the second copy. Only a
+  // and a Scoop install is handed the command that moves it to winget, since the
+  // download it would otherwise be pointed at is what creates the second copy. Only a
   // below-the-floor .deb loses its dismiss and changelog; every other update
   // behaves like an ordinary one.
   const isStaged = ready.mode === 'restart';

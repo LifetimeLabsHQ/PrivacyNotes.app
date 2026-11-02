@@ -14,8 +14,8 @@
 // itself at build time, so shipping them to the browser too is dead weight -
 // faq is the single biggest catalog we have. Keep them out of both globs.
 //
-// Spec: ops/docs/i18n-spec.md, ops/docs/i18n-extraction-guide.md,
-// ops/docs/bundle-size.md (build-only catalogs)
+// Spec: docs/contrib/i18n-spec.md, docs/contrib/i18n-extraction-guide.md,
+// docs/contrib/bundle-size.md (build-only catalogs)
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
@@ -60,10 +60,11 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number];
 // them into the static /help pages and no component calls
 // useTranslation('faq') or ('guides') any more. They are also the two
 // largest catalogs, so excluding them takes ~64 KB off the eager English
-// load and drops fourteen lazy chunks entirely.
-// Spec: ops/docs/bundle-size.md (build-only catalogs)
+// load and drops fourteen lazy chunks entirely. `extension` is the browser
+// extension's catalog (packages/extension bundles it); the app never reads it.
+// Spec: docs/contrib/bundle-size.md (build-only catalogs)
 const enModules = import.meta.glob<{ default: Record<string, unknown> }>(
-  ['./locales/en/*.json', '!./locales/en/faq.json', '!./locales/en/guides.json', '!./locales/en/looks.json', '!./locales/en/settingsSearch.json'],
+  ['./locales/en/*.json', '!./locales/en/faq.json', '!./locales/en/guides.json', '!./locales/en/looks.json', '!./locales/en/settingsSearch.json', '!./locales/en/extension.json'],
   { eager: true },
 );
 const localeModules = import.meta.glob<{ default: Record<string, unknown> }>([
@@ -73,11 +74,12 @@ const localeModules = import.meta.glob<{ default: Record<string, unknown> }>([
   '!./locales/*/guides.json',
   '!./locales/*/looks.json',
   '!./locales/*/settingsSearch.json',
+  '!./locales/*/extension.json',
 ]);
 // `looks` is the one namespace that loads on its own, English included: the
 // folder and tag look picker is its only reader, and its icon names have no
 // business in any boot. ensureLooksLoaded() fetches it.
-// Spec: ops/docs/archive/folder-tag-icons.md (section 10)
+// Spec: docs/internal/specs/folder-tag-icons.md (section 10)
 const looksModules = import.meta.glob<{ default: Record<string, unknown> }>('./locales/*/looks.json');
 const looksLoaded = new Set<string>();
 // `settingsSearch` loads the same way: its keywords and result lines are

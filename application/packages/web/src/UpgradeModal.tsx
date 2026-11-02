@@ -30,12 +30,12 @@ type Props = {
 /** Which Pro feature opened the modal; picks the intro line. */
 export type UpgradeTrigger =
   | 'lock' | 'protect' | 'history' | 'devices' | 'zen' | 'theme' | 'storage'
-  | 'fileSize' | 'folders' | 'looks' | 'noteIcon' | 'spaces' | 'formatBar' | 'totp' | 'replace' | 'passphrase' | 'alerts' | null;
+  | 'fileSize' | 'folders' | 'looks' | 'noteIcon' | 'spaces' | 'formatBar' | 'totp' | 'replace' | 'passphrase' | 'alerts' | 'vaultFiles' | null;
 
 const FEATURES: Array<{ icon: React.JSX.Element; labelKey: string }> = [
   { icon: <IconDevices />, labelKey: 'upgrade.features.devices' },
   { icon: <IconFolders />, labelKey: 'upgrade.features.folders' },
-  { icon: <Columns size={18} aria-hidden="true" />, labelKey: 'upgrade.features.spaces' },
+  { icon: <Columns aria-hidden="true" />, labelKey: 'upgrade.features.spaces' },
   { icon: <IconLock />, labelKey: 'upgrade.features.lock' },
   { icon: <IconHistory />, labelKey: 'upgrade.features.history' },
   { icon: <IconPalette />, labelKey: 'upgrade.features.themes' },
@@ -77,6 +77,8 @@ function introKey(trigger: Props['trigger']): string {
       return 'upgrade.intro.passphrase';
     case 'alerts':
       return 'upgrade.intro.alerts';
+    case 'vaultFiles':
+      return 'upgrade.intro.vaultFiles';
     case 'fileSize':
       // Reuse the already-translated upload upsell string (importExport ns)
       // so the file-size context doesn't need its own billing copy.
@@ -122,6 +124,8 @@ function triggerIcon(trigger: Props['trigger']): React.JSX.Element {
       return <Password size={size} aria-hidden="true" />;
     case 'alerts':
       return <BellSimple size={size} aria-hidden="true" />;
+    case 'vaultFiles':
+      return <FileArrowUp size={size} aria-hidden="true" />;
     default:
       return <IconUpgrade size={size} />;
   }
@@ -186,7 +190,7 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, trigger = nu
     <div
       /* Stacked overlay, not the standard one: a Pro gate can sit inside
          another modal, and the pitch is always the thing to read on top.
-         Spec: ops/docs/archive/ui-patterns.md (z-index tier system) */
+         Spec: docs/internal/design/ui-patterns.md (z-index tier system) */
       className="fixed inset-0 bg-black/40 dark:bg-black/40 flex items-center justify-center p-4 sm:p-6 z-[55]"
       onClick={onClose}
     >
@@ -199,28 +203,28 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, trigger = nu
         <div className="relative bg-amber-50/80 dark:bg-amber-950/50 rounded-t-lg px-6 pt-5 pb-5">
           <CloseButton onClick={onClose} className="absolute top-4 end-4" />
 
-          <div className="flex items-center gap-2 text-[13px] font-semibold text-amber-700 dark:text-amber-300">
+          <div className="flex items-center gap-2 text-compact font-semibold text-amber-700 dark:text-amber-300">
             <IconUpgrade size={16} />
             {t('upgrade.header')}
           </div>
 
           {beta ? (
             <div className="flex items-baseline gap-2 mt-2.5">
-              <span className="text-4xl font-bold tracking-tight text-amber-900 dark:text-amber-100">{storePro ?? (nativeStore ? '…' : `$${EARLY_PRICE}`)}</span>
+              <span className="text-display-4 font-bold tracking-tight text-amber-900 dark:text-amber-100">{storePro ?? (nativeStore ? '…' : `$${EARLY_PRICE}`)}</span>
               {/* The struck-through full price is a Paddle web figure. The stores
                   have no "was" price and sell on their own fixed tiers, so on a
                   native build it would compare the real charge against a number
                   the user can never be billed. Badge stays: the price genuinely
                   does rise later. */}
               {!nativeStore && (
-                <span className="text-lg font-semibold line-through text-warning">${PRO_PRICE}</span>
+                <span className="text-heading font-semibold line-through text-warning">${PRO_PRICE}</span>
               )}
-              <span className="text-[11px] font-semibold text-amber-900 dark:text-amber-100 bg-amber-200 dark:bg-amber-800 rounded-md px-2 py-0.5">{t('upgrade.earlyAdopterBadge')}</span>
+              <span className="text-meta font-semibold text-amber-900 dark:text-amber-100 bg-amber-200 dark:bg-amber-800 rounded-md px-2 py-0.5">{t('upgrade.earlyAdopterBadge')}</span>
             </div>
           ) : (
             <div className="flex items-baseline gap-2 mt-2.5">
-              <span className="text-4xl font-bold tracking-tight text-amber-900 dark:text-amber-100">{storePro ?? (nativeStore ? '…' : `$${PRO_PRICE}`)}</span>
-              <span className="text-sm font-medium text-amber-700/70 dark:text-amber-300/70">{t('upgrade.oneTime')}</span>
+              <span className="text-display-4 font-bold tracking-tight text-amber-900 dark:text-amber-100">{storePro ?? (nativeStore ? '…' : `$${PRO_PRICE}`)}</span>
+              <span className="text-body font-medium text-amber-700/70 dark:text-amber-300/70">{t('upgrade.oneTime')}</span>
             </div>
           )}
 
@@ -230,7 +234,7 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, trigger = nu
           {!nativeStore && (
             <div className="mt-4 space-y-1.5">
               {compareRows.map((row) => (
-                <div key={row.name} className="grid grid-cols-[6.5rem_1fr_3.5rem] items-center gap-2 text-[12px]">
+                <div key={row.name} className="grid grid-cols-[6.5rem_1fr_3.5rem] items-center gap-2 text-small">
                   <span className="truncate text-amber-700 dark:text-amber-300">{row.name}</span>
                   <div className="h-2.5 rounded-sm bg-amber-900/10 dark:bg-amber-100/10">
                     <div
@@ -241,7 +245,7 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, trigger = nu
                   <span className="text-end font-semibold text-amber-900 dark:text-amber-100">${row.total}</span>
                 </div>
               ))}
-              <p className="text-[12px] text-amber-700 dark:text-amber-300 pt-1">
+              <p className="text-small text-amber-700 dark:text-amber-300 pt-1">
                 {t('upgrade.compareCaption', { years: COMPARE_YEARS })}
               </p>
             </div>
@@ -254,7 +258,7 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, trigger = nu
               <span className="shrink-0 w-11 h-11 rounded-md bg-amber-50 dark:bg-amber-950/50 text-pro flex items-center justify-center">
                 {triggerIcon(trigger)}
               </span>
-              <p className="text-sm font-semibold text-pn leading-relaxed">
+              <p className="text-body font-semibold text-pn leading-relaxed">
                 {/* The Spaces pitch reuses the Settings description, so the
                     sentence is written and translated once. */}
                 {t(introKey(trigger), { desc: t('settings:appearance.spacesDesc') })}
@@ -263,7 +267,7 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, trigger = nu
           )}
 
           {purchaseError && (
-            <div className="rounded-md border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-sm p-3">
+            <div className="rounded-md border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-body p-3">
               {purchaseError}
             </div>
           )}
@@ -273,7 +277,7 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, trigger = nu
               type="button"
               disabled={(!configured && !demo) || loading}
               onClick={handleUpgrade}
-              className="w-full rounded-md bg-amber-700 text-white hover:bg-amber-800 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-semibold transition"
+              className="w-full rounded-md bg-amber-700 text-white hover:bg-amber-800 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 px-3 py-2.5 text-body font-semibold transition"
             >
               <IconUpgrade size={16} onFill />
               {demo
@@ -282,12 +286,12 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, trigger = nu
                   ? t('upgrade.ctaOpening')
                   : t('upgrade.ctaUnlockPrice', { price: storePro ?? (nativeStore ? '…' : `$${ourPrice}`) })}
             </button>
-            <p className="text-[11px] text-pn-muted text-center">{t('upgrade.subscriptionPitch')}</p>
+            <p className="text-meta text-pn-muted text-center">{t('upgrade.subscriptionPitch')}</p>
           </div>
 
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
             {FEATURES.map((f) => (
-              <li key={f.labelKey} className="flex items-start gap-3 text-sm">
+              <li key={f.labelKey} className="flex items-start gap-3 text-body">
                 <span className="shrink-0 mt-0.5 text-warning">{f.icon}</span>
                 <span className="text-pn">{t(f.labelKey)}</span>
               </li>
@@ -307,7 +311,7 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, trigger = nu
               are, and a reviewer looking for the links on the screen with
               the price finds them. Same labels as the About modal rather
               than a second pair of strings. */}
-          <p className="text-[11px] text-pn-muted leading-relaxed">
+          <p className="text-meta text-pn-muted leading-relaxed">
             <a
               href="https://lifetimelabs.dev/terms/"
               target="_blank"
@@ -332,81 +336,35 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, trigger = nu
   );
 }
 
-/* ────────────────────────────────────────────────────────────────
- * Icons
- * The shared upgrade icon is a simple rocket - reads as "ascend",
- * works at 16px in a button or 28px in a header.
- * ──────────────────────────────────────────────────────────────── */
-
-export function IconUpgrade({ size = 18, onFill = false }: { size?: number; onFill?: boolean }) {
-  // The rocket is the Pro mark and must read as "upgrade" whatever text
-  // it sits next to, so its colour comes from the theme's own `--pn-pro`
-  // token and NEVER from the surrounding text: `text-pro` is a fixed
-  // per-theme value, not `currentColor`. Bronze on every LIGHT theme and
-  // gold on every DARK one - the token is keyed to mode, because gold is
-  // a light colour and measured 1.63:1 on plain white.
-  //
-  // The one exception is `onFill`: on a solid button or a hovered menu band
-  // no Pro colour carries against the fill, so the rocket is white like the
-  // button's own text.
-  //
-  // FILLED, not outline. A hairline of a light colour has almost no ink
-  // in it at 11px; the solid body is what makes the mark legible.
-  // Spec: ops/docs/design-decisions.md (Pro mark colour)
-  return <RocketLaunch size={size} weight="fill" className={onFill ? 'text-white' : 'text-pro'} aria-hidden="true" />;
-}
-
-/** An icon-only Pro door's glyph with the rocket on its top-end corner (the
- *  collapsed rail's Folders button, the Work icon of the space switch). The
- *  rocket is anchored to the glyph, not the button, so it sits on the icon's
- *  own corner at every button size, and the glyph never moves. */
-export function ProGlyph({ pro, children }: { pro: boolean; children: ReactNode }) {
-  if (!pro) return <>{children}</>;
-  return (
-    <span className="relative flex">
-      {children}
-      <span className="pointer-events-none absolute -top-1.5 -end-1.5 flex" aria-hidden="true">
-        <IconUpgrade size={9} />
-      </span>
-    </span>
-  );
-}
-
-/** The rocket and the word, at the end of a menu row that opens a Pro
- *  feature: the mark `ContextMenu` draws for an item with `pro`. It keys off
- *  `!isPro`, never `proUnlocked`, so the demo still labels what it unlocks. */
-export function ProMark() {
-  return (
-    <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold normal-case tracking-normal text-accent">
-      <IconUpgrade size={12} /> Pro
-    </span>
-  );
-}
+// The Pro mark lives in proMark.tsx, a leaf the UI parts import without this
+// window and its billing code.
+export { IconUpgrade, ProGlyph, ProMark } from './proMark';
+import { IconUpgrade } from './proMark';
 
 function IconDevices() {
-  return <Monitor size={18} aria-hidden="true" />;
+  return <Monitor aria-hidden="true" />;
 }
 
 function IconStorage() {
-  return <Database size={18} aria-hidden="true" />;
+  return <Database aria-hidden="true" />;
 }
 
 function IconLock() {
-  return <Lock size={18} aria-hidden="true" />;
+  return <Lock aria-hidden="true" />;
 }
 
 function IconPalette() {
-  return <Palette size={18} aria-hidden="true" />;
+  return <Palette aria-hidden="true" />;
 }
 
 function IconHistory() {
-  return <ClockCounterClockwise size={18} aria-hidden="true" />;
+  return <ClockCounterClockwise aria-hidden="true" />;
 }
 
 function IconZen() {
-  return <ArrowsOutSimple size={18} aria-hidden="true" />;
+  return <ArrowsOutSimple aria-hidden="true" />;
 }
 
 function IconFolders() {
-  return <Folder size={18} aria-hidden="true" />;
+  return <Folder aria-hidden="true" />;
 }

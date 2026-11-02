@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { DEMO_APP_URL } from './demo';
 import { withSource } from './campaignSource';
 import { ProviderLabel, type ConnectedAccountProvider } from './ConnectedAccounts';
-import { BetaReportLink } from './BetaReportLink';
 import { SectionEyebrow, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, SettingsCallout } from './settingsUI';
 
 const PROVIDERS: ConnectedAccountProvider[] = ['google', 'apple', 'github'];
@@ -24,9 +23,8 @@ export function DemoAccountTeaser({ kind }: { kind: 'accounts' | 'keyCustody' | 
     {kind === 'twoFactor' && <p className={`${SETTINGS_HELP} leading-relaxed`}>{t('twoFactor.description')}</p>}
     <SettingsCallout>{t(`demoTeaser.${kind}`)}</SettingsCallout>
     <a href={withSource(DEMO_APP_URL)} className={SETTINGS_BTN_PRIMARY}>
-      <UserPlus size={15} aria-hidden="true" className="shrink-0" />
+      <UserPlus aria-hidden="true" className="shrink-0" />
       {t('demoTeaser.createAccount')}
     </a>
-    {kind === 'accounts' && <BetaReportLink />}
   </div>;
 }

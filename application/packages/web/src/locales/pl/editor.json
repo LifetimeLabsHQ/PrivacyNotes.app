@@ -12,6 +12,8 @@
     "addLink": "Dodaj link",
     "noteLink": "Link do innej notatki (lub wpisz [[)",
     "numberedList": "Lista numerowana",
+    "indent": "Zwiększ wcięcie",
+    "outdent": "Zmniejsz wcięcie",
     "textColor": "Kolor tekstu",
     "textColorApply": "Kolor tekstu: {{color}}",
     "pickColor": "Wybierz kolor tekstu",
@@ -72,6 +74,7 @@
     "remove": "Usuń ramkę",
     "collapse": "Zwiń ramkę",
     "expand": "Rozwiń ramkę",
+    "dragGrip": "Przeciągnij",
     "types": {
       "info": "Informacja",
       "success": "Sukces",
@@ -132,6 +135,9 @@
     "addColumnRight": "Dodaj kolumnę z prawej",
     "toggleHeaderRow": "Włącz lub wyłącz wiersz nagłówka",
     "equalColumnWidths": "Wyrównaj szerokość kolumn",
+    "cellColor": "Kolor komórki",
+    "sortAscending": "Sortuj od A do Z",
+    "sortDescending": "Sortuj od Z do A",
     "resizeHint": "Przytrzymaj {{shift}}, aby zmienić tylko tę kolumnę, lub {{alt}}, aby zmieniać dokładniej",
     "deleteRow": "Usuń wiersz",
     "deleteColumn": "Usuń kolumnę",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "Znajdź w notatce",
-    "label": "Znajdź w notatce",
     "previous": "Poprzednie dopasowanie",
     "previousTitle": "Poprzednie",
     "next": "Następne dopasowanie",
     "nextTitle": "Następne",
     "close": "Zamknij wyszukiwanie",
-    "closeTitle": "Zamknij",
     "replacePlaceholder": "Zamień na",
     "replaceLabel": "Zamień na",
     "replace": "Zamień",
@@ -177,10 +180,7 @@
     "replaceAll": "Wszystkie",
     "replaceAllTitle": "Zamień wszystkie wystąpienia",
     "caseSensitive": "Uwzględniaj wielkość liter",
-    "caseSensitiveTitle": "Uwzględniaj wielkość liter",
     "closeReplace": "Zamknij znajdź i zamień",
-    "closeReplaceTitle": "Zamknij",
-    "showReplace": "Znajdź i zamień",
     "hideReplace": "Ukryj zamianę",
     "replacedCount_one": "Zamieniono {{count}}",
     "replacedCount_few": "Zamieniono {{count}}",
@@ -194,9 +194,7 @@
     "ariaLabel": "Konspekt notatki",
     "hide": "Ukryj konspekt",
     "copyHeadingLink": "Kopiuj link do nagłówka",
-    "copyNoteLink": "Kopiuj link do notatki",
-    "copyHeadingShortcut": "Kopiuj skrót do nagłówka",
-    "copied": "Skopiowano"
+    "copyHeadingShortcut": "Kopiuj skrót do nagłówka"
   },
   "bodyMenu": {
     "cut": "Wytnij",
@@ -212,11 +210,8 @@
     "add": "Dodaj wiersz"
   },
   "link": {
-    "popoverLabel": "Dodaj link",
     "placeholder": "Wklej lub wpisz adres URL",
     "apply": "Zastosuj",
-    "addTitle": "Dodaj link",
-    "editTitle": "Edytuj link",
     "urlLabel": "URL",
     "urlPlaceholder": "https://example.com",
     "errorEnterUrl": "Podaj adres URL",
@@ -232,7 +227,6 @@
   },
   "audio": {
     "uploadingRecording": "Przesyłanie nagrania...",
-    "uploading": "Przesyłanie...",
     "stopRecording": "Zatrzymaj nagrywanie",
     "recordAudio": "Nagraj dźwięk",
     "savingRecording": "Zapisywanie nagrania...",
@@ -255,7 +249,6 @@
     "tasksChecked_other": "Zaznaczono {{done}} z {{formatted}}",
     "syncLimit": " · {{share}} limitu synchronizacji 1 MB",
     "overSyncLimit": " · powyżej limitu synchronizacji 1 MB, zostaje na tym urządzeniu",
-    "split": "Podziel notatkę",
     "veryLong": ", bardzo długa, edycja może być wolna i przycinać",
     "gettingLong": ", robi się długa, na wolniejszych urządzeniach może zwalniać",
     "largeTableWarning": "Duża tabela (wiersze: {{rows}}) może spowolnić edycję tej notatki, rozważ podzielenie jej"
@@ -270,12 +263,9 @@
     "placeholder": "Tekst do skopiowania jednym kliknięciem"
   },
   "inlineCode": {
-    "copyHint": "{{key}}+klik, aby skopiować",
-    "copied": "Skopiowano"
+    "copyHint": "{{key}}+klik, aby skopiować"
   },
   "codeBlock": {
-    "copy": "Kopiuj",
-    "copied": "Skopiowano",
     "copyFailed": "Błąd",
     "wrap": "Zawijaj długie wiersze",
     "showAll_one": "Pokaż {{count}} wiersz",
@@ -283,7 +273,6 @@
     "showAll_many": "Pokaż wszystkie {{count}} wierszy",
     "showAll_other": "Pokaż wszystkie {{count}} wiersza",
     "showLess": "Pokaż mniej",
-    "plainText": "Zwykły tekst",
     "language": "Język kodu: {{name}}",
     "searchLanguages": "Szukaj języków",
     "placeholder": "Wpisz lub wklej kod. Aby dodać kolory, wybierz język powyżej."
@@ -364,7 +353,6 @@
     "inProgress": "W toku",
     "review": "Do sprawdzenia",
     "done": "Ukończone",
-    "color": "Kolor",
     "columns": "Kolumny",
     "columnCount_one": "{{count}} kolumna",
     "cardCount_one": "{{count}} karta",

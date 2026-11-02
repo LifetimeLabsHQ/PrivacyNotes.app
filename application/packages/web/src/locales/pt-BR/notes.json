@@ -6,19 +6,18 @@
     "deselect": "Desmarcar nota",
     "pinProtected": "Protegida por PIN",
     "readOnly": "Somente leitura",
-    "file": "Arquivo",
     "empty": "Vazia",
     "noContent": "Sem conteúdo",
     "notBackedUp": "Sem backup",
     "archived": "Arquivado",
-    "entryDate": "Data da entrada",
     "date": "Data",
-    "dayOf": "dia {{n}} de {{total}}"
+    "dayOf": "dia {{n}} de {{total}}",
+    "reminders_one": "{{count}} lembrete",
+    "reminders_other": "{{count}} lembretes"
   },
   "header": {
     "new": "Nova",
     "newNote": "Nova nota",
-    "trash": "Lixeira",
     "newEvent": "Novo evento"
   },
   "folderChip": {
@@ -31,7 +30,6 @@
   },
   "vaultNew": {
     "ariaLabel": "Novo item do cofre",
-    "login": "Login",
     "card": "Cartão de Crédito",
     "sshKey": "Chave SSH",
     "generator": "Senha"
@@ -39,15 +37,14 @@
   "newMenu": {
     "note": "Nota",
     "task": "Tarefa",
-    "kanban": "Quadro kanban",
+    "kanban": "Kanban",
+    "drawing": "Desenho",
     "journal": "Diário",
     "login": "Login",
-    "file": "Arquivo",
     "bookmark": "Marcador",
     "clipPage": "Recortar página",
     "contact": "Contato",
-    "event": "Evento",
-    "quickAdd": "Adição rápida"
+    "event": "Evento"
   },
   "vaultFilter": {
     "all": "Todos",
@@ -64,14 +61,14 @@
   "trash": {
     "empty": "Esvaziar",
     "emptyHover": "Excluir todas as notas da lixeira",
-    "storage": "Armazenamento",
     "autoDelete": "Excluir automaticamente após 30 dias"
   },
   "search": {
     "sortOptions": "Opções de ordenação e visão",
     "placeholderVault": "Buscar no cofre…",
     "placeholderNotes": "Buscar notas…",
-    "placeholderEvents": "Buscar eventos…"
+    "placeholderEvents": "Buscar eventos…",
+    "placeholderDrawings": "Buscar desenhos…"
   },
   "selection": {
     "countOf": "{{selected}} de {{total}} selecionados",
@@ -82,10 +79,11 @@
     "noMatches": "Nenhum resultado.",
     "vault": "O cofre está vazio.",
     "notes": "Nenhuma nota ainda.",
+    "drawings": "Nenhum desenho ainda.",
+    "drawingsLine": "Esboce, planeje ou mapeie uma ideia. Desenhos podem ter links para suas notas, mas não mostram o que há nelas.",
     "archive": "Nada arquivado.",
     "trash": "A Lixeira está vazia.",
     "filtered": "Nenhum item corresponde aos seus filtros.",
-    "clearFilters": "Remover os filtros",
     "filteredAfter": "para exibi-los.",
     "hiddenInAll_one": "{{count}} item está oculto pelo filtro Mostrar em Todos. Abra o filtro ao lado de Todos para exibi-lo.",
     "hiddenInAll_other": "{{count}} itens estão ocultos pelo filtro Mostrar em Todos. Abra o filtro ao lado de Todos para exibi-los.",
@@ -98,16 +96,6 @@
     "other": "Outros",
     "collapseAll": "Recolher todos os grupos",
     "expandAll": "Expandir todos os grupos"
-  },
-  "headerLabel": {
-    "allItems": "Todos",
-    "untagged": "Sem etiqueta",
-    "journals": "Diários",
-    "vault": "Cofre",
-    "pinned": "Fixados",
-    "archive": "Arquivo",
-    "notes": "Notas",
-    "calendar": "Calendário"
   },
   "footerStats": {
     "journals_one": "Diário",
@@ -122,6 +110,8 @@
     "bookmarks_other": "Marcadores",
     "contacts_one": "Contato",
     "contacts_other": "Contatos",
+    "drawings_one": "Desenho",
+    "drawings_other": "Desenhos",
     "files_one": "Arquivo",
     "files_other": "Arquivos",
     "lists_one": "Lista",
@@ -149,7 +139,6 @@
     "reload": "Recarregar"
   },
   "banner": {
-    "dismiss": "Dispensar",
     "proActivationPending": "Pagamento recebido, mas a ativação do Pro está demorando mais que o normal. Atualize em um minuto ou contate o suporte se não ativar.",
     "snapshotPaused": "O histórico de notas está pausado. Seu plano Pro parece inativo. Novas edições não serão registradas até o Pro ser restaurado.",
     "restorePro": "Restaurar Pro",
@@ -157,8 +146,7 @@
     "updateCard": "Atualizar cartão"
   },
   "sidebar": {
-    "collapse": "Recolher barra lateral",
-    "expand": "Expandir barra lateral"
+    "collapse": "Recolher barra lateral"
   },
   "notesList": {
     "collapse": "Recolher lista de notas",
@@ -195,24 +183,11 @@
     "titlePlaceholder": "Sem título (clique para editar ou deixe gerar automaticamente)",
     "titlePlaceholderLogin": "ex.: GitHub",
     "titlePlaceholderCard": "ex.: Visa terminando em 4242",
-    "titlePlaceholderSshKey": "ex.: chave de deploy do GitHub",
-    "pin": "Fixar",
-    "unpin": "Desafixar",
-    "restore": "Restaurar",
-    "deleteForever": "Excluir para sempre",
-    "moveToTrash": "Mover para a lixeira",
-    "noteOptions": "Opções da nota",
     "readOnlyToggle": "Somente leitura. Desative em",
     "menu": "Menu",
-    "showMarkdown": "Ver markdown",
     "showFormatted": "Ver formatado",
     "invisiblesShow": "Ver caracteres invisíveis",
     "invisiblesHide": "Ocultar caracteres invisíveis",
-    "findInNote": "Buscar na nota",
-    "navPrev": "Anterior",
-    "navNext": "Próximo",
-    "navPrevTab": "Aba anterior",
-    "navNextTab": "Próxima aba",
     "undo": "Desfazer",
     "redo": "Refazer",
     "hide": "Ocultar",
@@ -222,9 +197,7 @@
     "widthDefault": "Largura padrão",
     "widthWide": "Mais largo",
     "widthFull": "Largura total",
-    "burn": "Compartilhar e Queimar Após Ler",
     "titlePlaceholderLink": "Nome do marcador",
-    "titlePlaceholderContact": "Nome",
     "notBackedUpTooLarge": "Acima do limite de 1 MB, então sem backup. Mova as imagens para anexos ou divida a nota.",
     "notBackedUpFailed": "Sem backup. Último erro: {{message}}. Tentando de novo.",
     "unknownType": "Este item foi criado com uma versão mais recente do PrivacyNotes. Atualize o aplicativo para abri-lo."
@@ -241,15 +214,17 @@
     "printTextTitle": "Imprimir só o texto",
     "printTextDesc": "Mantém o título. Deixa de fora a data, a pasta e as etiquetas.",
     "burnTitle": "Compartilhar e Queimar Após Ler",
-    "burnDesc": "Publique esta nota como um link de visualização única. O link se autodestrói após a leitura. Sua nota fica segura na sua conta."
+    "burnDesc": "Publique esta nota como um link de visualização única. O link se autodestrói após a leitura. Sua nota fica segura na sua conta.",
+    "drawingFileTitle": "Desenho (.excalidraw)",
+    "drawingFileDesc": "Abre no Excalidraw e no Obsidian, com as imagens.",
+    "drawingPngTitle": "Imagem (.png)",
+    "drawingPngDesc": "O desenho inteiro como uma única imagem."
   },
   "weekReview": {
     "title": "Resumo da semana",
     "daysLogged": "{{count}}/7 registrados",
     "mood": "Humor",
-    "sleep": "Sono",
-    "meds": "Remédios",
-    "activity": "Atividade"
+    "meds": "Remédios"
   },
   "footer": {
     "settings": "Configurações",
@@ -264,12 +239,10 @@
     "words_one": "Palavra",
     "words_other": "Palavras",
     "zen": "Modo Zen",
-    "appearance": "Aparência",
     "lockApp": "Bloquear app",
     "lockAppSetUp": "Defina primeiro um PIN em Segurança",
     "goToTop": "Ir para o topo",
     "goToEnd": "Ir para o final",
-    "signOut": "Sair",
     "signingOut": "Saindo…",
     "switchToLight": "Mudar para o modo claro",
     "switchToDark": "Mudar para o modo escuro"
@@ -307,10 +280,11 @@
     "bodyMulti": "Estes {{count}} arquivos parecem markdown. Importá-los como notas para você poder ler e editar, ou guardá-los como anexos de arquivos criptografados?"
   },
   "bulkTrash": {
-    "title": "Mover para a Lixeira",
-    "body_one": "Mover <highlight>{{count}} item</highlight> para a lixeira? Depois você pode restaurá-lo.",
-    "body_other": "Mover <highlight>{{count}} itens</highlight> para a lixeira? Você pode restaurá-los depois.",
-    "readOnlyTitle": "Somente leitura",
+    "body_one": "Excluir <highlight>{{count}} item</highlight>? Mova-o para a lixeira para restaurá-lo depois, ou exclua-o para sempre.",
+    "body_other": "Excluir <highlight>{{count}} itens</highlight>? Mova-os para a lixeira para restaurá-los depois, ou exclua-os para sempre.",
+    "confirm": "Mover para a Lixeira",
+    "keys": "Fora desta janela, <kbd>{{trash}}</kbd> move um item para a lixeira na hora, e <kbd>{{ask}}</kbd> abre esta janela mesmo depois de Não perguntar novamente.",
+    "dontAskAgain": "Não perguntar novamente",
     "readOnlyAcknowledge": "Entendi",
     "readOnlyBlocked_one": "Este item é <highlight>somente leitura</highlight>, então não vai para a lixeira. Desative somente leitura nas opções da nota primeiro.",
     "readOnlyBlocked_other": "Os <highlight>{{count}} itens</highlight> são somente leitura, então nenhum vai para a lixeira. Desative somente leitura nas opções da nota primeiro.",
@@ -319,21 +293,12 @@
   },
   "deleteCheckedTasks": {
     "title": "Excluir os itens marcados?",
-    "confirm": "Excluir",
     "body_one": "<highlight>{{count}} item</highlight> será excluído desta nota. Isso não pode ser desfeito.",
     "body_other": "<highlight>{{count}} itens</highlight> serão excluídos desta nota, incluindo os itens aninhados. Isso não pode ser desfeito."
   },
-  "bulkDelete": {
-    "body_one": "Excluir permanentemente <highlight>{{count}} nota</highlight>? Isso não pode ser desfeito.",
-    "body_other": "Excluir permanentemente <highlight>{{count}} notas</highlight>? Isso não pode ser desfeito."
-  },
   "tagConfirm": {
     "mergeTitle": "Mesclar Etiquetas",
-    "deleteTitle": "Excluir Etiqueta",
-    "deleteWithNotesTitle": "Excluir Etiqueta e Notas",
     "mergeConfirm": "Mesclar",
-    "deleteConfirm": "Excluir Etiqueta",
-    "moveToTrash": "Mover para a Lixeira",
     "mergeBody_one": "A etiqueta <highlight>“{{targetTag}}”</highlight> já existe. Mesclar <highlight>{{count}} nota</highlight> atualmente com a etiqueta “{{tag}}” nela?",
     "mergeBody_other": "A etiqueta <highlight>“{{targetTag}}”</highlight> já existe. Mesclar <highlight>{{count}} notas</highlight> atualmente com a etiqueta “{{tag}}” nela?",
     "deleteBody_one": "Remover a etiqueta <highlight>“{{tag}}”</highlight> de <highlight>{{count}} nota</highlight>? As notas em si não são excluídas.",
@@ -363,5 +328,35 @@
     "missing": "Ainda não criada",
     "protectedHidden_one": "{{count}} item protegido por PIN não exibido",
     "protectedHidden_other": "{{count}} itens protegidos por PIN não exibidos"
+  },
+  "drawing": {
+    "fullScreen": "Tela cheia",
+    "frame": "Moldura",
+    "laser": "Ponteiro laser",
+    "bar": {
+      "hiddenNote": "Elas continuam funcionando pelas teclas."
+    },
+    "resetTitle": "Redefinir a tela?",
+    "resetBody": "Isso remove tudo da tela. Desfazer traz de volta.",
+    "hotkeysTitle": "Atalhos do desenho",
+    "tools": {
+      "label": "Ferramentas de desenho",
+      "keepTool": "Manter a ferramenta depois de desenhar",
+      "hand": "Mover a tela",
+      "rectangle": "Retângulo",
+      "diamond": "Losango",
+      "ellipse": "Elipse",
+      "arrow": "Seta",
+      "line": "Linha",
+      "pen": "Caneta",
+      "text": "Caixa de texto",
+      "eraser": "Borracha",
+      "resetZoom": "Redefinir zoom",
+      "open": "Abrir um arquivo de desenho",
+      "reset": "Redefinir a tela",
+      "style": "Estilo",
+      "more": "Mais ferramentas",
+      "fewer": "Menos ferramentas"
+    }
   }
 }

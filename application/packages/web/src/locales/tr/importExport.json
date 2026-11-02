@@ -3,14 +3,12 @@
     "importTitle": "Verilerinizi içe aktarın",
     "exportTitle": "Verilerinizi dışa aktarın",
     "restoreTitle": "Verilerinizi geri yükleyin",
-    "vaultTitle": "Parolalarınızı içe aktarın",
-    "tablistLabel": "İçe aktar, Dışa aktar, Geri yükle veya Parolalar",
+    "tablistLabel": "İçe aktar, Dışa aktar, Geri yükle veya Takipler",
     "tabImport": "İçe aktar",
     "tabExport": "Dışa aktar",
     "tabRestore": "Geri yükle",
     "tabVault": "Parolalar",
-    "working": "İşleniyor…",
-    "tabWellness": "Takipler"
+    "working": "İşleniyor…"
   },
   "footer": {
     "exportNote": "Dışa aktarma cihazınızda çalışır. Hiçbir şey yüklenmez.",
@@ -18,12 +16,11 @@
     "importNote": "Her şey cihazınızda da eşitlenirken de her zaman şifrelidir."
   },
   "importPick": {
-    "autoTagLabel": "İçe aktarılan notları kaynağına göre etiketle",
-    "autoTagDesc": "Google Keep notları <keep>#google</keep>, Obsidian notları <obsidian>#obsidian</obsidian> etiketini alır; gerisi de böyle.",
     "guideAria": "{{app}} için içe aktarma rehberi",
     "guideLabel": "Kılavuz",
-    "groupGeneral": "Genel",
-    "groupNotes": "Notlar"
+    "searchPlaceholder": "Uygulamanızı bulun",
+    "groupCalendar": "Takvim, kişiler ve yer imleri",
+    "noMatch": "Eşleşen uygulama yok. Çoğu not uygulaması Markdown dosyaları dışa aktarabilir ve Markdown dosyaları buraya içe aktarılabilir."
   },
   "folderImport": {
     "tagLabel": "Notları klasörüne göre de etiketle",
@@ -76,6 +73,7 @@
     "googleCalendar": "Google Calendar'ın Settings > Import & export bölümünden alınan .zip dosyası veya tek bir .ics dosyası. Etkinlikler saatlerini, tekrarlarını ve hatırlatıcılarını korur.",
     "appleNotes": "Ücretsiz Exporter uygulamasıyla Markdown olarak dışa aktarın, sonra .zip dosyasını buraya bırakın.",
     "appleJournal": "Mac veya iPhone'daki Journal uygulamasından dışa aktarın, AppleJournalEntries klasörünü sıkıştırın ve .zip dosyasını bırakın. Kayıtlar fotoğrafları, videoları, ses notları ve konumlarıyla birlikte günlük kaydı olarak içe aktarılır.",
+    "excalidraw": "excalidraw.com'dan kaydedilmiş çizimler: tek bir .excalidraw dosyası veya birkaçı birlikte sıkıştırılmış hâlde. Obsidian'ın Excalidraw eklentisinden gelen .excalidraw.md dosyaları da çalışır. Çizimin içindeki görseller de birlikte gelir.",
     "evernote": "Tek başına bir .enex veya birkaçı birlikte sıkıştırılmış hâlde. Biçimlendirmeyi, etiketleri, ekleri, not bağlantılarını ve not defterlerini korur. Evernote görevleri .enex dosyasına koymaz.",
     "samsungNotes": "Word (.docx) veya Metin (.txt) olarak dışa aktarın. Toplu aktarım için birden fazla dosyayı sıkıştırın.",
     "simplenote": "Simplenote'tan dışa aktarın (Ayarlar -> Araçlar -> Notları Dışa Aktar). .zip dosyasını bırakın.",
@@ -99,9 +97,6 @@
     "vcard": "Kişiler (vCard)",
     "markdownFolder": "Markdown dosyaları"
   },
-  "vaultPick": {
-    "intro": "Başka bir parola yöneticisinden giriş bilgilerini, kredi kartlarını ve SSH anahtarlarını içe aktarın."
-  },
   "restorePick": {
     "intro": "Daha önce dışa aktardığınız bir PrivacyNotes yedeğini geri yükleyin.",
     "fullBackupTitle": "Tam yedek (.zip)",
@@ -123,8 +118,8 @@
     "restoringBlobs": "Görseller ve dosyalar geri yükleniyor..."
   },
   "errors": {
-    "genericParse": "Bir şeyler ters gitti.",
     "decryptionFailed": "Şifre çözme başarısız oldu. İfade yanlış veya dosya bozuk.",
+    "importNothingChanged": "Hiçbir şey içe aktarılmadı; notlarınız, klasörleriniz ve dosyalarınız olduğu gibi duruyor. {{detail}}",
     "blobImportFailed": "Notlarınız aktarıldı, ama görselleri ve dosyaları aktarılmadı: {{detail}} Seçtiğiniz dosyada hiçbir şey değişmedi, yani aktarılan notları silip içe aktarmayı yeniden çalıştırabilirsiniz.",
     "blobsNotInBackup_one": "Notlarınız geri yüklendi, ancak yedekte listelenen {{items}} yedeğin içinde yok.",
     "blobsNotInBackup_other": "Notlarınız geri yüklendi, ancak yedekte listelenen {{items}} yedeğin içinde yok."
@@ -135,11 +130,7 @@
     "splitOversize_one": "Eşitlenebilmesi için bu notu başlıklarından daha küçük notlara bölün",
     "splitOversize_other": "Eşitlenebilmeleri için bu {{count}} notu başlıklarından daha küçük notlara bölün",
     "partTitle": "{{title}} ({{index}}/{{total}})",
-    "continuedIn": "Devamı: {{link}}",
-    "sourceLabel": "Kaynak",
     "uniqueTags": "Benzersiz etiket",
-    "empty": "Boş",
-    "untagged": "Etiketsiz",
     "items": "Öğe",
     "previewLabel": "Önizleme",
     "andMore": "… ve {{count}} tane daha",
@@ -150,9 +141,14 @@
     "eventSkipNote": "zaten içe aktardığınız etkinlikler atlanır ve olduğu gibi kalır, bu yüzden iki kez çalıştırmak onları çoğaltmaz.",
     "restoreMergeNote": "kendi yedeğinizdeki notlar kimliklerine göre eşleştirilir. Zaten sahip olduğunuz bir not yalnızca yedekteki kopya daha yeniyse güncellenir, çöp kutusundaki bir not da oradan geri alınır.",
     "quotaExceeded": "<strong>Depolama alanı içe aktarmaya yetmiyor.</strong> Tahmini {{needed}} gerekiyor, {{available}} boş. İçe aktarmadan önce yer açın veya yükseltin.",
-    "quotaWarning": "Dikkat: bu içe aktarma, kalan {{available}} depolama alanınızın yaklaşık {{needed}} kadarını kullanacak.",
     "oversizeAttachments_one": "1 dosya, planınızdaki {{limit}} dosya başı sınırından büyük. Bu cihaza aktarılır, ama siz yükseltene kadar diğer cihazlarınıza eşitlenmez.",
-    "oversizeAttachments_other": "{{count}} dosya, planınızdaki {{limit}} dosya başı sınırından büyük. Bu cihaza aktarılır, ama siz yükseltene kadar diğer cihazlarınıza eşitlenmez."
+    "oversizeAttachments_other": "{{count}} dosya, planınızdaki {{limit}} dosya başı sınırından büyük. Bu cihaza aktarılır, ama siz yükseltene kadar diğer cihazlarınıza eşitlenmez.",
+    "title": "İçe aktarmadan önce kontrol edin",
+    "sourceTagLabel": "Her nota <tag>{{tag}}</tag> etiketi ekle",
+    "sourceTagDesc": "Kapalı: kaynak için etiket eklenmez. Notlarda zaten bulunan etiketler her durumda aktarılır.",
+    "storageLine": "Bu içe aktarma yaklaşık {{needed}} gerektiriyor. {{available}} boş alanınız var.",
+    "nothingWritten": "İçe aktar'a basana kadar hiçbir şey yazılmaz.",
+    "whatComesIn": "Neler aktarılacak"
   },
   "counts": {
     "note_one": "not",
@@ -167,6 +163,8 @@
     "sshKey_other": "SSH anahtarı",
     "contact_one": "kişi",
     "contact_other": "kişi",
+    "drawing_other": "çizim",
+    "drawing_one": "çizim",
     "zeroItems": "0 öğe",
     "importButton": "{{counts}} içe aktar"
   },
@@ -178,14 +176,14 @@
     "fullBackupHeading": "Tam yedek",
     "portableHeading": "Taşınabilir dışa aktarım",
     "vaultOnlyHeading": "Yalnızca kasa",
-    "zipBackupTitle": "PrivacyNotes yedeği (.zip)",
-    "zipBackupDesc": "Her şey: notlar, günlükler, kasa öğeleri, görevler, görseller, sesler ve dosyalar. Eksiksiz bir hesap yedeği için veya yeni bir cihaza taşınmak için bunu kullanın. İçindeki dosyalar şifrelenmemiştir, bu yüzden zip dosyasını güvenli bir yerde saklayın.",
-    "encryptedZipBackupTitle": "Şifreli tam yedek (.pnbackupz)",
-    "encryptedZipBackupDesc": "Zip yedeğinin içerdiği her şey - notlar, kasa öğeleri, görseller, sesler ve dosyalar - ifade anahtarınızla mühürlenmiş hâlde. Her cihazda ifadenizle geri yüklenir. İstediğiniz yerde saklayabilirsiniz.",
-    "encryptedBackupTitle": "Şifreli yedek (.pnbackup)",
-    "encryptedBackupDesc": "Tüm metin içeriği ve üst veriler, ifade anahtarınızla şifrelenmiş hâlde. Görsel veya dosya içermez. İstediğiniz yerde saklayabilirsiniz - ifadeniz olmadan okunamaz.",
+    "zipBackupTitle": "Her şey, şifresiz (.zip)",
+    "zipBackupDesc": "Notlarınız, günlükleriniz, kasa öğeleriniz, görevleriniz, görselleriniz, sesleriniz ve dosyalarınız, ilaçlarınız ve takiplerinizle birlikte. Her bilgisayarda ifade olmadan açılır, bu yüzden güvenli bir yerde saklayın. Not geçmişi ve uygulama kilidi PIN'iniz dahil değildir.",
+    "encryptedZipBackupTitle": "Her şey, şifreli (.pnbackupz)",
+    "encryptedZipBackupDesc": "Zip ile aynı içerik, ifade anahtarınızla mühürlenmiş hâlde. Her cihazda ifadenizle geri yüklenir. İstediğiniz yerde saklayabilirsiniz.",
+    "encryptedBackupTitle": "Yalnızca metin, şifreli (.pnbackup)",
+    "encryptedBackupDesc": "Tüm metin içeriği ve üst veriler, görsel veya dosya olmadan. İfade anahtarınızla mühürlenmiş küçük bir dosya. İstediğiniz yerde saklayabilirsiniz.",
     "htmlArchiveTitle": "HTML arşivi (.zip)",
-    "htmlArchiveDesc": "Her not için yazdırılabilir tek bir HTML sayfası. Çevrimdışı okumak veya arşivlemek için iyi, geri yüklemek için değil.",
+    "htmlArchiveDesc": "Her not için yazdırılabilir tek bir HTML sayfası; giriş bilgileri, kartlar ve anahtarlar düz metin olarak dahildir. Çevrimdışı okumak veya arşivlemek için iyi, geri yüklemek için değil. Güvenli bir yerde saklayın.",
     "textBackupTitle": "Metin yedeği (.json)",
     "textBackupDesc": "Tüm metin içeriği ve üst veriler düz JSON olarak. Görsel veya dosya içermez. Güvendiğiniz bir yerde saklayın - bu dosya şifreli değildir.",
     "vaultExportTitle": "Kasa dışa aktarımı (.json)",
@@ -199,6 +197,8 @@
     "calendarOnlyHeading": "Yalnızca takvim",
     "calendarExportTitle": "Takvim dosyası (.ics)",
     "calendarExportDesc": "Google Calendar, Apple Takvim veya Outlook için etkinlikler ile tarihli notlar ve görev listeleri.",
+    "drawingsExportTitle": "Çizimler (.zip)",
+    "drawingsExportDesc": "Her çizim, görselleriyle birlikte kendi .excalidraw dosyası olarak; excalidraw.com ve Obsidian için.",
     "calendarPrivate": "Özel"
   },
   "exportProgress": {
@@ -207,11 +207,8 @@
     "incompleteTitle": "Dışa aktarma eksik",
     "exportingTitle": "Yedek dışa aktarılıyor...",
     "preparing": "Hazırlanıyor...",
-    "exporting": "Dışa aktarılıyor...",
-    "imagesProgress": "Görseller dışa aktarılıyor... {{total}} görselden {{done}} tanesi",
-    "filesProgress": "Dosyalar dışa aktarılıyor... {{total}} dosyadan {{done}} tanesi",
-    "building": "Yedek oluşturuluyor...",
-    "compressing": "Sıkıştırılıyor...",
+    "showInFolder": "Klasörde göster",
+    "zipStep": "Sıkıştırma",
     "missingFailed_one": "Bu cihaz şunu indiremedi: {{items}}. Bu yüzden dışa aktarmanızda yok. Bağlantınızı kontrol edip yeniden dışa aktarın.",
     "missingFailed_other": "Bu cihaz şunları indiremedi: {{items}}. Bu yüzden dışa aktarmanızda yok. Bağlantınızı kontrol edip yeniden dışa aktarın.",
     "missingNotFound_one": "{{items}} ne bu cihazda ne de sunucuda var, bu yüzden dışa aktarmanızda yok.",
@@ -258,7 +255,8 @@
     "generic": "Dışa aktarım kaydedilemedi. Lütfen tekrar deneyin veya başka bir klasör seçin."
   },
   "saveErrors": {
-    "shortWrite": "{{expected}} baytın yalnızca {{written}} baytı kaydedildi, yani dosya eksik. Tekrar deneyin ve bir bulut klasörü yerine cihazınızın kendi depolamasına kaydedin."
+    "shortWrite": "{{expected}} baytın yalnızca {{written}} baytı kaydedildi, yani dosya eksik. Tekrar deneyin ve bir bulut klasörü yerine cihazınızın kendi depolamasına kaydedin.",
+    "protectedFolder": "PrivacyNotes {{folder}} klasörüne kaydetmez, çünkü o klasör anahtarlar, ayarlar veya programlar barındırır. Dosyayı başka bir yere kaydedin ve oraya kendiniz taşıyın."
   },
   "shareSheet": {
     "title_one": "PrivacyNotes ile {{count}} öğe paylaşıldı",
@@ -267,7 +265,6 @@
     "saveAll": "Tümünü kaydet"
   },
   "destination": {
-    "label": "Şuraya ekle",
     "none": "Klasör yok",
     "newFolder": "Yeni klasör \"{{name}}\"",
     "help": "Kaynaktaki klasörler seçtiğiniz klasörün içine gider; klasörü olmayan öğeler de doğrudan ona eklenir."

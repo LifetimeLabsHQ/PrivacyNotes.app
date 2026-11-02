@@ -12,6 +12,8 @@
     "addLink": "Добавить ссылку",
     "noteLink": "Ссылка на другую заметку (или введите [[)",
     "numberedList": "Нумерованный список",
+    "indent": "Увеличить отступ",
+    "outdent": "Уменьшить отступ",
     "textColor": "Цвет текста",
     "textColorApply": "Цвет текста: {{color}}",
     "pickColor": "Выберите цвет текста",
@@ -72,6 +74,7 @@
     "remove": "Убрать выноску",
     "collapse": "Свернуть выноску",
     "expand": "Развернуть выноску",
+    "dragGrip": "Перетащить",
     "types": {
       "info": "Информация",
       "success": "Успех",
@@ -132,6 +135,9 @@
     "addColumnRight": "Добавить столбец справа",
     "toggleHeaderRow": "Включить / выключить строку заголовка",
     "equalColumnWidths": "Выровнять ширину столбцов",
+    "cellColor": "Цвет ячейки",
+    "sortAscending": "Сортировать от А до Я",
+    "sortDescending": "Сортировать от Я до А",
     "resizeHint": "Удерживайте {{shift}}, чтобы менять только этот столбец, или {{alt}} для более мелкого шага",
     "deleteRow": "Удалить строку",
     "deleteColumn": "Удалить столбец",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "Найти в заметке",
-    "label": "Найти в заметке",
     "previous": "Предыдущее совпадение",
     "previousTitle": "Предыдущее",
     "next": "Следующее совпадение",
     "nextTitle": "Следующее",
     "close": "Закрыть поиск",
-    "closeTitle": "Закрыть",
     "replacePlaceholder": "Заменить на",
     "replaceLabel": "Заменить на",
     "replace": "Заменить",
@@ -177,10 +180,7 @@
     "replaceAll": "Все",
     "replaceAllTitle": "Заменить все совпадения",
     "caseSensitive": "Учитывать регистр",
-    "caseSensitiveTitle": "Учитывать регистр",
     "closeReplace": "Закрыть поиск и замену",
-    "closeReplaceTitle": "Закрыть",
-    "showReplace": "Найти и заменить",
     "hideReplace": "Скрыть замену",
     "replacedCount_one": "Заменено: {{count}}",
     "replacedCount_few": "Заменено: {{count}}",
@@ -194,9 +194,7 @@
     "ariaLabel": "Структура заметки",
     "hide": "Скрыть структуру",
     "copyHeadingLink": "Копировать ссылку на заголовок",
-    "copyNoteLink": "Копировать ссылку на заметку",
-    "copyHeadingShortcut": "Копировать ярлык заголовка",
-    "copied": "Скопировано"
+    "copyHeadingShortcut": "Копировать ярлык заголовка"
   },
   "bodyMenu": {
     "cut": "Вырезать",
@@ -212,11 +210,8 @@
     "add": "Добавить строку"
   },
   "link": {
-    "popoverLabel": "Добавить ссылку",
     "placeholder": "Вставьте или введите URL",
     "apply": "Применить",
-    "addTitle": "Добавить ссылку",
-    "editTitle": "Изменить ссылку",
     "urlLabel": "URL",
     "urlPlaceholder": "https://example.com",
     "errorEnterUrl": "Введите URL",
@@ -232,7 +227,6 @@
   },
   "audio": {
     "uploadingRecording": "Отправка записи...",
-    "uploading": "Отправка...",
     "stopRecording": "Остановить запись",
     "recordAudio": "Записать аудио",
     "savingRecording": "Сохранение записи...",
@@ -255,7 +249,6 @@
     "tasksChecked_other": "Отмечено {{done}} из {{formatted}}",
     "syncLimit": " · {{share}} от лимита синхронизации 1 МБ",
     "overSyncLimit": " · превышен лимит синхронизации 1 МБ, заметка остаётся на этом устройстве",
-    "split": "Разделить заметку",
     "veryLong": ", очень длинная, редактирование может тормозить",
     "gettingLong": ", становится длинной, на медленных устройствах может тормозить",
     "largeTableWarning": "Большая таблица (строк: {{rows}}) может замедлить редактирование этой заметки, лучше разделить её"
@@ -270,12 +263,9 @@
     "placeholder": "Текст для копирования одним щелчком"
   },
   "inlineCode": {
-    "copyHint": "Копировать: {{key}}+щелчок",
-    "copied": "Скопировано"
+    "copyHint": "Копировать: {{key}}+щелчок"
   },
   "codeBlock": {
-    "copy": "Копировать",
-    "copied": "Скопировано",
     "copyFailed": "Ошибка",
     "wrap": "Переносить длинные строки",
     "showAll_one": "Показать все {{count}} строку",
@@ -283,7 +273,6 @@
     "showAll_many": "Показать все {{count}} строк",
     "showAll_other": "Показать все {{count}} строки",
     "showLess": "Показать меньше",
-    "plainText": "Обычный текст",
     "language": "Язык кода: {{name}}",
     "searchLanguages": "Найдите язык",
     "placeholder": "Введите или вставьте код. Чтобы добавить цвета, выберите язык вверху."
@@ -364,7 +353,6 @@
     "inProgress": "В работе",
     "review": "На проверке",
     "done": "Готово",
-    "color": "Цвет",
     "columns": "Колонки",
     "columnCount_one": "{{count}} колонка",
     "cardCount_one": "{{count}} карточка",

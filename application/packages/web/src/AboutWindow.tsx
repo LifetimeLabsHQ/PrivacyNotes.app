@@ -30,7 +30,7 @@ async function openExternal(url: string) {
 }
 
 const buttonClass =
-  'w-full rounded-lg border border-divider py-1.5 text-[13px] text-pn-soft transition hover:bg-pn/10';
+  'w-full rounded-lg border border-divider py-1.5 text-compact text-pn-soft transition hover:bg-pn/10';
 
 export default function AboutWindow() {
   const { t } = useTranslation('landing');
@@ -52,13 +52,13 @@ export default function AboutWindow() {
       <div className="mb-2 flex h-[72px] w-[72px] items-center justify-center rounded-[18px] border border-pn/10 bg-surface-2 shadow-sm">
         <LogoIcon size={44} />
       </div>
-      <h1 className="text-lg text-pn">
+      <h1 className="text-heading text-pn">
         <Brand />
       </h1>
-      <p className="select-text text-xs text-pn-muted">
+      <p className="select-text text-small text-pn-muted">
         {t('about.windowVersion', { version: VERSION })}
       </p>
-      <p className="text-xs text-pn-muted">© 2026 Lifetime Labs LLC</p>
+      <p className="text-small text-pn-muted">© 2026 Lifetime Labs LLC</p>
       {/* Roadmap reuses the tab-strip label rather than carrying a second key
           for the same word; /changelog and /roadmap are English-only pages, so
           only the help hub takes a locale slug. */}
@@ -70,10 +70,10 @@ export default function AboutWindow() {
           {t('about.windowHelp')}
         </button>
         <button onClick={() => void openExternal(siteHref('/changelog'))} className={buttonClass}>
-          {t('about.windowWhatsNew')}
+          {t('common:updateToast.changelog')}
         </button>
         <button onClick={() => void openExternal(siteHref('/roadmap'))} className={buttonClass}>
-          {t('about.tabs.roadmap')}
+          {t('header.roadmap')}
         </button>
       </div>
     </div>

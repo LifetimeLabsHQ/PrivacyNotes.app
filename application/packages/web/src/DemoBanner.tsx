@@ -27,14 +27,14 @@ type Props = {
  * demo and cannot be dismissed, so closing the conversion CTA costs no
  * honesty. Dismissal is session state: a reload brings it back.
  *
- * Spec: ops/specs/editor-mode-toggle.md (that row's bottom position varies by note length via mt-auto)
+ * Spec: docs/internal/specs/editor-mode-toggle.md (that row's bottom position varies by note length via mt-auto)
  */
 export function DemoBanner({ onDismiss }: Props) {
   const { t } = useTranslation('shell');
   return (
     <div className="shrink-0 flex items-center gap-2 sm:gap-3 border-b border-emerald-300/80 dark:border-emerald-800/70 bg-emerald-50 dark:bg-emerald-950/90 px-3 sm:px-4 py-2">
-      <Lock size={16} className="shrink-0 text-success" aria-hidden="true" />
-      <p className="min-w-0 flex-1 truncate text-[13px] leading-snug text-emerald-950 dark:text-emerald-100">
+      <Lock className="shrink-0 text-success" aria-hidden="true" />
+      <p className="min-w-0 flex-1 truncate text-compact leading-snug text-emerald-950 dark:text-emerald-100">
         <span className="font-semibold">{t('demoBanner.title')}</span>
         {/* Mini on phones: the description drops, leaving icon + title + CTA. */}
         <span className="hidden sm:inline text-emerald-800 dark:text-emerald-300/90">
@@ -44,14 +44,14 @@ export function DemoBanner({ onDismiss }: Props) {
       </p>
       <a
         href={withSource(DEMO_APP_URL)}
-        className="shrink-0 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[13px] font-semibold px-3 py-1.5 transition"
+        className="shrink-0 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-compact font-semibold px-3 py-1.5 transition"
       >
-        {t('demoBanner.cta')}
+        {t('security:demoTeaser.createAccount')}
       </a>
       <button
         type="button"
         onClick={onDismiss}
-        aria-label={t('demoBanner.dismiss')}
+        aria-label={t('common:updateToast.dismiss')}
         className="shrink-0 rounded-md p-1 text-success hover:bg-emerald-100 dark:hover:bg-emerald-900 transition"
       >
         <X />

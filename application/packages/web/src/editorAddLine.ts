@@ -7,8 +7,11 @@
  * near it would land in the next block too.
  *
  * Hovering such a gap shows the same hint as the "Add a line at the top" zone
- * in Editor.tsx; a click or a tap adds an empty paragraph there with the caret
- * in it. A touch screen has no hover, so the gap is a tap target only. A click
+ * in Editor.tsx. Only a click on the hint's "+ Add a line" label adds an empty
+ * paragraph there with the caret in it; a click anywhere else in the gap is
+ * left to the browser, so a click aimed at the edge of a table or a callout
+ * no longer adds a blank line (GitHub #632). A touch screen has no hover and
+ * shows no label, so there a tap anywhere in the gap adds the line. A click
  * within a few px of a divider's line selects the divider, so Delete removes it.
  *
  * Only top-level blocks are read: the body of a callout or a list item is
@@ -20,6 +23,7 @@ import type { Node as PMNode } from '@tiptap/pm/model';
 import { NodeSelection, Plugin, PluginKey, TextSelection, type EditorState, type Transaction } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import i18n from './i18n';
+import { isTouchPointer } from './useIsMobile';
 
 /** A gap thinner than this is widened around its middle, so a list or an
  *  image gap (9px) is still a target a finger can hit. */
@@ -60,6 +64,17 @@ interface Gap {
 type Target = { divider: number } | { gap: Gap } | null;
 
 const DIVIDER_SLACK_PX = 4;
+
+/** Slack around the hint's label, which is only about 14px high. */
+const LABEL_SLACK_PX = 4;
+
+/** Whether a viewport point falls on the label, with a little slack. A
+ *  hidden hint has an empty box, so nothing hits it. */
+export function onLabel(box: { left: number; right: number; top: number; bottom: number }, x: number, y: number): boolean {
+  if (box.right <= box.left) return false;
+  return x >= box.left - LABEL_SLACK_PX && x <= box.right + LABEL_SLACK_PX
+    && y >= box.top - LABEL_SLACK_PX && y <= box.bottom + LABEL_SLACK_PX;
+}
 
 function targetAt(view: EditorView, x: number, y: number): Target {
   const box = view.dom.getBoundingClientRect();
@@ -122,7 +137,7 @@ function buildHint(): HTMLElement {
   // The ghost look, shared with the top zone in Editor.tsx: muted text and a
   // dashed line, so a pass over the gaps while scrolling stays quiet. The
   // short fade-in delay (.pn-add-line-hint in index.css) does the rest.
-  text.className = 'flex items-center gap-1 text-xs leading-none text-pn-muted';
+  text.className = 'pn-add-line-label flex items-center gap-1 text-small leading-none text-pn-muted';
   text.innerHTML = PLUS_ICON;
   text.append(i18n.t('editor:addLine.add'));
   const line = document.createElement('span');
@@ -137,8 +152,21 @@ export const AddLineBetweenBlocks = Extension.create({
 
   addProseMirrorPlugins() {
     let hint: HTMLElement | null = null;
+    let armedDom: HTMLElement | null = null;
+    // The pointer cursor tells a mouse that a click on the label adds the line.
+    const arm = (dom: HTMLElement | null) => {
+      if (armedDom === dom) return;
+      if (armedDom) armedDom.style.cursor = '';
+      if (dom) dom.style.cursor = 'pointer';
+      armedDom = dom;
+    };
     const hide = () => {
       if (hint) hint.style.display = 'none';
+      arm(null);
+    };
+    const labelHit = (x: number, y: number) => {
+      const label = hint?.style.display === 'none' ? null : hint?.querySelector('.pn-add-line-label');
+      return label ? onLabel(label.getBoundingClientRect(), x, y) : false;
     };
 
     return [
@@ -152,6 +180,7 @@ export const AddLineBetweenBlocks = Extension.create({
             update: hide,
             destroy() {
               window.removeEventListener('scroll', hide, true);
+              arm(null);
               hint?.remove();
               hint = null;
             },
@@ -172,6 +201,7 @@ export const AddLineBetweenBlocks = Extension.create({
               hint.style.left = `${box.left}px`;
               hint.style.width = `${box.width}px`;
               hint.style.top = `${(gap.top + gap.bottom) / 2}px`;
+              arm(labelHit(event.clientX, event.clientY) ? view.dom : null);
               return false;
             },
             mouseleave() {
@@ -182,6 +212,7 @@ export const AddLineBetweenBlocks = Extension.create({
               if (event.button !== 0 || !view.editable) return false;
               const target = targetAt(view, event.clientX, event.clientY);
               if (!target) return false;
+              if ('gap' in target && !isTouchPointer() && !labelHit(event.clientX, event.clientY)) return false;
               const tr = 'gap' in target
                 ? addLineAt(view.state, target.gap.pos)
                 : view.state.tr.setSelection(NodeSelection.create(view.state.doc, target.divider));

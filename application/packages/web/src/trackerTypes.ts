@@ -5,7 +5,7 @@
  * title/body/tags - zero new Supabase tables, zero new sync logic.
  * Medication templates and tracker configuration live in UserSettings.
  *
- * See ops/docs/mood-wellness-tracker.md for the full feature spec.
+ * See docs/internal/mood-wellness-tracker.md for the full feature spec.
  */
 
 import { PALETTE, TEXT_COLORS } from './editorColors';
@@ -148,7 +148,7 @@ interface MedicationRefill {
 /** Persistent medication template - lives in UserSettings.
  *  Every field after `dosageHistory` is optional: absent means the behavior
  *  before it existed (every day, one dose, no time), which is also what an
- *  older client's template reads as. Spec: ops/docs/mood-wellness-tracker.md section 6.7 */
+ *  older client's template reads as. Spec: docs/internal/mood-wellness-tracker.md section 6.7 */
 export interface MedicationTemplate {
   id: string;
   name: string;
@@ -190,6 +190,101 @@ export interface MedicationTemplate {
    * the UI but kept in the array so union-merge sync never resurrects it.
    */
   deletedAt?: string;
+}
+
+/* ── Reading templates out of a backup ──────────────────────────────── */
+// A backup file is whatever the person was handed, and a restored template
+// reaches the synced settings of every device. So only the shapes the app
+// draws come back: a field of the wrong type goes, and a template without an
+// id and a name is skipped (the same care as normalizeJournalTrackers).
+
+const str = (v: unknown): v is string => typeof v === 'string';
+const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+const obj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+const listOf = <T>(v: unknown, read: (x: Record<string, unknown>) => T | null): T[] =>
+  Array.isArray(v) ? v.filter(obj).map(read).filter((x): x is T => x !== null) : [];
+
+function readRepeat(v: unknown): Repeat | undefined {
+  if (!obj(v) || !['day', 'week', 'month', 'year'].includes(v.every as string) || !num(v.interval) || v.interval < 1) return undefined;
+  return {
+    every: v.every as Repeat['every'],
+    interval: Math.floor(v.interval),
+    ...(Array.isArray(v.weekdays) && v.weekdays.every((d) => Number.isInteger(d) && (d as number) >= 0 && (d as number) <= 6) ? { weekdays: v.weekdays as number[] } : {}),
+    ...(v.monthly === 'day' || v.monthly === 'weekday' ? { monthly: v.monthly } : {}),
+    ...([1, 2, 3, 4, -1].includes(v.nth as number) ? { nth: v.nth as Repeat['nth'] } : {}),
+    ...(str(v.until) ? { until: v.until } : {}),
+    ...(num(v.count) ? { count: v.count } : {}),
+  };
+}
+
+function readDose(d: Record<string, unknown>): MedicationDose | null {
+  if (!str(d.id) || !num(d.amount)) return null;
+  return { id: d.id, amount: d.amount, ...(str(d.time) ? { time: d.time } : {}) };
+}
+
+/** The medication templates of a backup that the app can draw. */
+export function readMedicationTemplates(raw: unknown): MedicationTemplate[] {
+  return listOf(raw, (m) => {
+    if (!str(m.id) || !m.id || !str(m.name)) return null;
+    const repeat = readRepeat(m.repeat);
+    return {
+      id: m.id,
+      name: m.name,
+      dosage: str(m.dosage) ? m.dosage : '',
+      timing: (['morning', 'afternoon', 'evening', 'bedtime'] as const).includes(m.timing as MedicationTiming) ? (m.timing as MedicationTiming) : 'morning',
+      startedAt: str(m.startedAt) ? m.startedAt : new Date(0).toISOString(),
+      dosageHistory: listOf(m.dosageHistory, (h) => (str(h.dosage) && str(h.changedAt) ? { dosage: h.dosage, changedAt: h.changedAt } : null)),
+      ...((MEDICATION_FORMS as readonly string[]).includes(m.form as string) ? { form: m.form as MedicationForm } : {}),
+      ...(str(m.color) ? { color: m.color } : {}),
+      ...(typeof m.asNeeded === 'boolean' ? { asNeeded: m.asNeeded } : {}),
+      ...(num(m.maxPerDay) ? { maxPerDay: m.maxPerDay } : {}),
+      ...(repeat ? { repeat } : {}),
+      ...(Array.isArray(m.doses) ? { doses: listOf(m.doses, readDose) } : {}),
+      ...(str(m.endsOn) ? { endsOn: m.endsOn } : {}),
+      ...(Array.isArray(m.scheduleHistory)
+        ? {
+            scheduleHistory: listOf(m.scheduleHistory, (e) => {
+              if (!str(e.id) || !str(e.changedAt) || !str(e.editedAt)) return null;
+              const r = readRepeat(e.repeat);
+              return {
+                id: e.id,
+                changedAt: e.changedAt,
+                editedAt: e.editedAt,
+                doses: listOf(e.doses, readDose),
+                ...(typeof e.asNeeded === 'boolean' ? { asNeeded: e.asNeeded } : {}),
+                ...(num(e.maxPerDay) ? { maxPerDay: e.maxPerDay } : {}),
+                ...(r ? { repeat: r } : {}),
+                ...(str(e.endsOn) ? { endsOn: e.endsOn } : {}),
+              };
+            }),
+          }
+        : {}),
+      ...(Array.isArray(m.refills)
+        ? { refills: listOf(m.refills, (r) => (str(r.id) && str(r.at) && num(r.count) ? { id: r.id, at: r.at, count: r.count } : null)) }
+        : {}),
+      ...(str(m.updatedAt) ? { updatedAt: m.updatedAt } : {}),
+      ...(str(m.deletedAt) ? { deletedAt: m.deletedAt } : {}),
+    };
+  });
+}
+
+/** The custom tracker definitions of a backup that the app can draw. */
+export function readCustomTrackerTemplates(raw: unknown): CustomTrackerTemplate[] {
+  return listOf(raw, (c) => {
+    if (!str(c.id) || !c.id || !str(c.name) || !['scale10', 'scale5', 'slider100', 'number', 'yesno'].includes(c.type as string)) return null;
+    return {
+      id: c.id,
+      name: c.name,
+      type: c.type as CustomTrackerType,
+      color: str(c.color) ? c.color : (TRACKER_COLORS[0] ?? ''),
+      createdAt: str(c.createdAt) ? c.createdAt : new Date(0).toISOString(),
+      ...(str(c.stoppedAt) ? { stoppedAt: c.stoppedAt } : {}),
+      ...(typeof c.startFromLast === 'boolean' ? { startFromLast: c.startFromLast } : {}),
+      ...(str(c.icon) ? { icon: c.icon } : {}),
+      ...(str(c.updatedAt) ? { updatedAt: c.updatedAt } : {}),
+      ...(str(c.deletedAt) ? { deletedAt: c.deletedAt } : {}),
+    };
+  });
 }
 
 /** Filter out tombstoned (soft-deleted) medication templates. */
@@ -238,7 +333,7 @@ export const CUSTOM_TRACKER_TYPE_LABELS: Record<CustomTrackerType, string> = {
  * palette of the app (gray, red, orange, yellow, green, teal, blue, purple,
  * pink), in the same order. They are made to read as text in every theme, so
  * no surface puts white text on them.
- * Spec: ops/docs/archive/ui-patterns.md section 141
+ * Spec: docs/internal/design/ui-patterns.md section 141
  */
 export const TRACKER_COLORS: readonly string[] = TEXT_COLORS.map((c) => c.value);
 
@@ -295,7 +390,7 @@ export interface CustomTrackerTemplate {
  * Lives in the settings blob as a top-level list, never inside
  * `trackerSettings`, whose fields an older app rebuilds from a fixed list.
  * Merged by id with stamps and tombstones, like the custom trackers.
- * Spec: ops/issues/0439.md (Spec)
+ * Spec: docs/internal/issues/0439.md (Spec)
  */
 export interface FactorDef {
   id: string;
@@ -377,7 +472,7 @@ interface CustomTrackerEntry {
  * (exercise is Activity, friends is Social). The habits to build come first,
  * the habits to watch (`WATCH_HABITS`) last. A question the set lacks is a
  * custom yes or no tracker.
- * Spec: ops/docs/plans/mood-tracking-landscape.md (proposal 1)
+ * Spec: docs/internal/plans/mood-tracking-landscape.md (proposal 1)
  */
 export const HABIT_IDS = [
   'meditate',
@@ -662,7 +757,7 @@ export interface JournalTrackerData {
    *  The two differ whenever a past day is backfilled. Stamped on every
    *  entry the app creates; absent only on entries that predate the
    *  field. Read it through `journalDateOf()` in notesViewUtils.
-   *  Spec: ops/docs/design-decisions.md (journal entry titles) */
+   *  Spec: docs/internal/design-decisions.md (journal entry titles) */
   journalDate?: string;
   backfilled?: boolean;
   /** Weekly reflection text (stored on the Monday entry). */
@@ -697,6 +792,86 @@ export function hasLoggedTrackers(trackers: Record<string, unknown> | undefined,
   if (!trackers) return false;
   return Object.entries(trackers).some(([key, v]) =>
     !NOT_LOGGED.has(key) && (withReflection || key !== 'weekReflection') && isLoggedValue(v));
+}
+
+// ------------------------------------------------------------------
+// Reading a journal payload the app did not write
+// ------------------------------------------------------------------
+
+/** The `JournalTrackerData` keys that hold one finite number. */
+const NUMBER_KEYS = [
+  'mood', 'sleepScore', 'heartRate', 'energy', 'focus', 'weight', 'steps',
+  'water', 'screenTime', 'caffeine', 'pain', 'social',
+] as const;
+
+const MEDICATION_STATUSES: ReadonlySet<unknown> = new Set<MedicationStatus>(['taken', 'skipped', 'missed']);
+
+function isPlainRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+
+const optionalString = (v: unknown): boolean => v === undefined || typeof v === 'string';
+
+function isMedicationLog(v: unknown): boolean {
+  return isPlainRecord(v) && typeof v.medicationId === 'string' && MEDICATION_STATUSES.has(v.status)
+    && optionalString(v.at) && optionalString(v.reason) && optionalString(v.ts);
+}
+
+function isCustomEntry(v: unknown): boolean {
+  return isPlainRecord(v) && typeof v.trackerId === 'string'
+    && (typeof v.value === 'boolean' || typeof v.value === 'string' || (typeof v.value === 'number' && Number.isFinite(v.value)));
+}
+
+/**
+ * A journal entry's trackers in the shape every reader assumes. An import
+ * hands over whatever JSON its file held, and a synced row can carry what an
+ * older build imported, so `medications: "x"` reached a `.filter` in the
+ * check-in card and stopped the app from starting on every device. Each
+ * known key of the wrong shape goes, a list keeps only the elements of the
+ * right shape, and every other key passes through untouched. The same object
+ * comes back when nothing is wrong, so a healthy row costs one pass.
+ * Read through on every note read (db.ts) and on every import (apply.ts).
+ */
+export function normalizeJournalTrackers(trackers: Record<string, unknown>): Record<string, unknown> {
+  let out: Record<string, unknown> | null = null;
+  const put = (key: string, value: unknown) => {
+    out ??= { ...trackers };
+    if (value === undefined) delete out[key];
+    else out[key] = value;
+  };
+  const keepWhere = (key: string, ok: (v: unknown) => boolean) => {
+    const v = trackers[key];
+    if (v === undefined) return;
+    if (!Array.isArray(v)) return put(key, undefined);
+    if (!v.every(ok)) put(key, v.filter(ok));
+  };
+  for (const key of NUMBER_KEYS) {
+    const v = trackers[key];
+    if (v !== undefined && !(typeof v === 'number' && Number.isFinite(v))) put(key, undefined);
+  }
+  keepWhere('emotions', (v) => typeof v === 'string');
+  keepWhere('factors', (v) => typeof v === 'string');
+  keepWhere('medications', isMedicationLog);
+  keepWhere('customTrackers', isCustomEntry);
+  const sleep = trackers.sleep;
+  if (sleep !== undefined) {
+    if (!isPlainRecord(sleep) || !(SLEEP_QUALITIES as readonly unknown[]).includes(sleep.quality)) put('sleep', undefined);
+    else if (sleep.hours !== undefined && !(typeof sleep.hours === 'number' && Number.isFinite(sleep.hours))) put('sleep', { quality: sleep.quality });
+  }
+  if (trackers.activity !== undefined && !(ACTIVITY_LEVELS as readonly unknown[]).includes(trackers.activity)) put('activity', undefined);
+  const habits = trackers.habits;
+  if (habits !== undefined) {
+    if (!isPlainRecord(habits)) put('habits', undefined);
+    else if (!Object.values(habits).every((v) => typeof v === 'boolean')) {
+      put('habits', Object.fromEntries(Object.entries(habits).filter(([, v]) => typeof v === 'boolean')));
+    }
+  }
+  if (trackers.journalDate !== undefined && !(typeof trackers.journalDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(trackers.journalDate))) {
+    put('journalDate', undefined);
+  }
+  if (trackers.backfilled !== undefined && typeof trackers.backfilled !== 'boolean') put('backfilled', undefined);
+  if (trackers.weekReflection !== undefined && typeof trackers.weekReflection !== 'string') put('weekReflection', undefined);
+  return out ?? trackers;
 }
 
 // ------------------------------------------------------------------
@@ -763,6 +938,12 @@ function unionById(
  *   common base there is no way to tell which side moved a scalar, and
  *   local is the more recent intent on this device.
  */
+/** Whether `mergeTrackers` merges this key's two values (a union by id, a set,
+ *  or a per-field merge) rather than keeping one side's value whole. */
+export function isMergedTrackerKey(key: string): boolean {
+  return Object.hasOwn(KEYED_TRACKER_ARRAYS, key) || key === 'emotions' || key === 'login' || key === 'habits';
+}
+
 export function mergeTrackers(
   local: Record<string, unknown> | undefined,
   remote: Record<string, unknown> | undefined

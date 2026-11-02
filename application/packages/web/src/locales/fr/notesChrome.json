@@ -1,6 +1,4 @@
 {
-  "dismiss": "Ignorer",
-  "close": "Fermer",
   "moveBanner": {
     "bodySignIn": "Connecte-toi là-bas avec ta phrase de récupération ou via « {{scanQr}} ».",
     "cta": "Déménager maintenant",
@@ -49,7 +47,7 @@
   },
   "signOutConfirm": {
     "title": "As-tu enregistré ta phrase de 12 mots ?",
-    "body": "Ta phrase est le <only>seul</only> moyen de revenir. Pas de réinitialisation par e-mail, pas de ligne d'assistance. On ne sait pas qui tu es, et c'est voulu. Si tu ne l'as pas encore notée, appuie sur <action>Non, afficher la phrase</action> et on te l'affiche tout de suite.",
+    "body": "Ta phrase est le <only>seul</only> moyen de revenir. Pas de réinitialisation par e-mail, pas de ligne d'assistance. Si tu ne l'as pas encore notée, appuie sur <action>Non, afficher la phrase</action> et on te l'affiche tout de suite.",
     "unsyncedWarn_one": "1 note sur cet appareil n'est pas encore synchronisée. Elle sera définitivement perdue si elle ne peut pas être envoyée pendant la déconnexion.",
     "unsyncedWarn_other": "{{count}} notes sur cet appareil ne sont pas encore synchronisées. Elles seront définitivement perdues si elles ne peuvent pas être envoyées pendant la déconnexion.",
     "unsyncedKept_one": "1 note sur cet appareil n'est pas encore synchronisée. Elle reste sur cet appareil et se synchronisera quand tu te reconnecteras.",
@@ -73,6 +71,12 @@
     "moreNotes": "et {{count}} de plus",
     "appLockHint": "Appareil partagé ? Active le verrouillage de l'app dans Paramètres > Sécurité."
   },
+  "signOutUpload": {
+    "uploading": "Envoi de tes dernières modifications…",
+    "title": "Certaines modifications ne sont pas encore envoyées",
+    "body": "Si tu te déconnectes maintenant, les modifications faites sur cet appareil depuis la dernière synchronisation seront perdues. Connecte-toi à Internet pour les garder.",
+    "signOutAnyway": "Se déconnecter quand même"
+  },
   "burnShareModal": {
     "title": "Partager en burn note",
     "body": "<lead>Ta note d'origine ne sera pas supprimée.</lead> Elle reste en sécurité dans ton compte. Le lien burn est une copie chiffrée distincte qui s'autodétruit après lecture.",
@@ -90,17 +94,15 @@
     "afterDays_other": "Après {{count}} jours",
     "create": "Créer et copier le lien",
     "share": "Partager le lien",
-    "imagesStripped": "Seul le texte est affiché, les fichiers sont masqués dans cette note.",
-    "copied": "Copié"
+    "imagesStripped": "Seul le texte est affiché, les fichiers sont masqués dans cette note."
   },
   "burnView": {
     "title": "Burn After Reading",
     "tagline": "Chiffré. Éphémère. Rien que pour tes yeux.",
     "toggleTheme": "Basculer le thème",
-    "checking": "Vérification...",
     "revealing": "Récupération et déchiffrement...",
     "goToApp": "Aller sur <brand/>",
-    "footerTagline": "- Notes chiffrées en zero-knowledge, hébergées en Suisse.",
+    "footerTagline": "- Notes chiffrées, hébergées en Suisse.",
     "sealed": {
       "heading": "Tu as reçu une note chiffrée.",
       "subheading": "Ce message s'autodétruira après lecture. Les liens non lus expirent d'eux-mêmes.",
@@ -138,5 +140,20 @@
     "demo": "Les liens burn sont stockés sur un serveur, et la démo n'en contacte aucun. Inscris-toi pour créer de vrais liens burn.",
     "tooLarge": "La note est trop volumineuse pour être partagée via un lien burn ({{size}} Ko). Le maximum est de {{max}} Ko.",
     "storeFailed": "Échec de l'enregistrement de la burn note sur le serveur."
+  },
+  "dms": {
+    "returnTitle": "Ta copie sur le serveur a été supprimée",
+    "returnBody_one": "Ton dispositif d'homme mort a supprimé tes notes du serveur le {{date}}. Cet appareil contient encore {{count}} note. Télécharge une sauvegarde si tu veux la garder, puis supprime-la de cet appareil.",
+    "returnBody_many": "Ton dispositif d'homme mort a supprimé tes notes du serveur le {{date}}. Cet appareil contient encore {{count}} notes. Télécharge une sauvegarde si tu veux les garder, puis supprime-les de cet appareil.",
+    "returnBody_other": "Ton dispositif d'homme mort a supprimé tes notes du serveur le {{date}}. Cet appareil contient encore {{count}} notes. Télécharge une sauvegarde si tu veux les garder, puis supprime-les de cet appareil.",
+    "returnBackup": "Télécharger une sauvegarde",
+    "returnDelete": "Supprimer de cet appareil"
+  },
+  "massDelete": {
+    "title": "Notes supprimées sur un autre appareil",
+    "body_one": "{{count}} note encore présente sur cet appareil a été supprimée par toi ou par un autre de tes appareils. Si c'était toi, supprime-la ici aussi. Si ce n'était pas toi, quelqu'un a peut-être accès à ton compte : garde-la pour la remettre sur tous tes appareils.",
+    "body_other": "{{count}} notes encore présentes sur cet appareil ont été supprimées par toi ou par un autre de tes appareils. Si c'était toi, supprime-les ici aussi. Si ce n'était pas toi, quelqu'un a peut-être accès à ton compte : garde-les pour les remettre sur tous tes appareils.",
+    "keep": "Garder mes notes",
+    "delete": "Les supprimer ici aussi"
   }
 }

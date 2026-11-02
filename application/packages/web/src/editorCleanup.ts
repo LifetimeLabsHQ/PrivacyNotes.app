@@ -22,8 +22,16 @@ export function collapseMediaGaps(md: string): string {
   //   Image:      ![...](pn:img/...){width=N align=X} (optional attr suffix),
   //               or pn:file/... for a picture placed from Files
   //   Attachment:  [...|...|...](pn:file/...)
+  // Each kind is tried only at its first opening on a line (the lookbehinds):
+  // a later one there can only end where the first could, so it fails the
+  // same way. The attachment's first two parts stop at the first pipes (and,
+  // like `.`, at any line break), which is the split the lazy groups took
+  // first. Without both, a long run of `[` or `|` was rescanned from every
+  // bracket and at every split (external report, 2026-10-24, bug report
+  // 23.3). Output is unchanged.
   const mediaLine =
-    '(?:!\\[.*?\\]\\(pn:(?:img|file)\\/[^)]+\\)(?:\\{[^}\\n]*\\})?|\\[.*?\\|.*?\\|.*?\\]\\(pn:file\\/[^)]+\\))';
+    '(?:!\\[(?<!!\\[.*?!\\[).*?\\]\\(pn:(?:img|file)\\/[^)]+\\)(?:\\{[^}\\n]*\\})?' +
+    '|\\[(?<!\\[.*?\\[)[^|\\n\\r\\u2028\\u2029]*\\|[^|\\n\\r\\u2028\\u2029]*\\|.*?\\]\\(pn:file\\/[^)]+\\))';
   return md.replace(
     new RegExp(`(${mediaLine})\\n{3,}(?=${mediaLine})`, 'g'),
     '$1\n\n',

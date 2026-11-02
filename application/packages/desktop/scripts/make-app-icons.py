@@ -17,7 +17,7 @@ shape its system expects:
   macOS 26   glyph.png and fold.png for AppIcon.icon; the blue is its fill, in dark too
 
 Run from packages/desktop through `pnpm icon`. It does not build Assets.car, which
-still needs Icon Composer and actool (ops/docs/macos-icon.md).
+still needs Icon Composer and actool (docs/internal/macos-icon.md).
 Needs Pillow and the Tauri CLI, which rasterizes the SVG.
 """
 import json
@@ -33,11 +33,11 @@ HERE = Path(__file__).resolve().parent.parent
 ICONS = HERE / "src-tauri" / "icons"
 GLYPH_SVG = HERE.parent / "web" / "icon" / "app-icon-glyph.svg"
 
-# Spec: ops/docs/design-decisions.md (social avatar) - the avatar's colors and fold
+# Spec: docs/internal/design-decisions.md (social avatar) - the avatar's colors and fold
 BLUE = (0x1E, 0x40, 0xAF)
 FOLD = (0x4F, 0x6B, 0xD5)
 FOLD_START = 0.5            # the fold line runs from (FOLD_START, 0) to (1, 1 - FOLD_START) of the frame
-# Spec: ops/docs/macos-icon.md (what ships where)
+# Spec: docs/internal/macos-icon.md (what ships where)
 ANDROID_VIEW = 72 / 108     # share of the adaptive canvas that a launcher shows
 TILE_INSET = 16             # Windows / Linux tile margin at 1024px
 TILE_RADIUS = 0.22          # of the tile side

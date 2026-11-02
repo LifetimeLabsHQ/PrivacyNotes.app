@@ -15,7 +15,7 @@
  * core rule recovering the width suffix.
  */
 
-import { useState, useEffect, useRef, useCallback, memo } from 'react';
+import { useState, useEffect, useRef, useCallback, memo, type PointerEvent as ReactPointerEvent } from 'react';
 import { estimateBlobBytes } from './notesViewUtils';
 import { useTranslation } from 'react-i18next';
 import { Node, mergeAttributes } from '@tiptap/core';
@@ -24,15 +24,22 @@ import { NodeSelection, Plugin, PluginKey, type Selection, type Transaction } fr
 import type { EditorView } from '@tiptap/pm/view';
 import type { Node as ProseMirrorNode, Slice } from '@tiptap/pm/model';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
-import { ArrowsOutSimple, Check, Copy, Download, Trash } from './icons';
+import { ArrowsOutSimple, Check, Copy, Download, Notches } from './icons';
+import { DeleteButton, IconButton } from './ui';
+import { IMAGE_WIDTH_MAX, IMAGE_WIDTH_MIN, clampImageWidth } from './imageWidth';
+import { TextField } from './ui/fields';
+import { HoverLabel } from './HoverLabel';
 import { IMAGE_FIT_PX, currentImageOptions, processImage, type ImageOptions } from './imageProcessing';
-import { attachmentIdForUrl, cachedAttachmentUrl, loadAttachmentData, loadAttachmentUrl } from './EncryptedAttachment';
+import { attachmentIdForUrl, cachedAttachmentUrl, loadAttachmentData, readAttachmentUrl } from './EncryptedAttachment';
+import { isBlobDamaged } from './blobDamaged';
+import { Callout, FeedbackButton } from './ui/feedback';
 import { FILE_REF_PREFIX, openMediaViewerInDoc, type MediaRef } from './mediaRefs';
 import { validateAttachment } from './attachmentValidation';
 import { suppressSoftKeyboard } from './softKeyboard';
 import type { ImageStore } from './imageStore';
 import { saveBlob, type SaveResult } from './saveFile';
 import i18n from './i18n';
+import { intlLocale } from './languages';
 
 /** Prefix for our custom image URIs. */
 const IMAGE_URI_PREFIX = 'pn:img/';
@@ -92,10 +99,11 @@ function cachedSourceUrl(source: BlobSource | null): string | null {
 
 /**
  * Read a picture's bytes into a cached object URL. Null means "not here and
- * not on the server yet", which the node view retries; a throw is an error.
+ * not on the server yet", which the node view retries; a throw is an error,
+ * and a BlobDamagedError is bytes that arrived and do not open.
  */
 async function fetchSourceUrl(source: BlobSource): Promise<string | null> {
-  if (source.store === 'file') return loadAttachmentUrl(source.uuid);
+  if (source.store === 'file') return readAttachmentUrl(source.uuid);
   const store = getImageStore();
   if (!store) throw new Error(i18n.t('media:image.storeUnavailable'));
   const bytes = await store.getImage(source.uuid);
@@ -111,7 +119,8 @@ async function fetchSourceUrl(source: BlobSource): Promise<string | null> {
 // React NodeView - renders encrypted images with loading/error states
 // ------------------------------------------------------------------
 
-/** Valid image width presets (percentage of container). */
+/** The size bar's width presets (percent of the column). Any whole percent
+ *  from IMAGE_WIDTH_MIN to IMAGE_WIDTH_MAX is a valid width (imageWidth.ts). */
 type ImageWidth = 25 | 50 | 75 | 100;
 const IMAGE_WIDTHS: ImageWidth[] = [25, 50, 75, 100];
 const IMAGE_WIDTH_LABEL_KEYS: Record<ImageWidth, string> = {
@@ -123,7 +132,7 @@ const IMAGE_WIDTH_LABEL_KEYS: Record<ImageWidth, string> = {
 
 type ImageNodeViewProps = {
   node: {
-    attrs: { src: string; alt: string; title: string; width: ImageWidth; textAlign?: string | null };
+    attrs: { src: string; alt: string; title: string; width: number; textAlign?: string | null };
   };
   selected: boolean;
   editor: {
@@ -139,8 +148,79 @@ type ImageNodeViewProps = {
 };
 
 /**
+ * The percent field after the presets: it shows the width (live while the
+ * corner handle drags) and takes a typed one on Enter or when focus leaves.
+ * Escape puts the shown width back. Spec: docs/internal/design/patterns/151-160.md
+ * section 160
+ */
+function WidthField({ width, onResize }: { width: number; onResize: (w: number) => void }) {
+  const { t } = useTranslation('media');
+  const [draft, setDraft] = useState(String(width));
+  // Escape blurs the field, and the blur must not apply what Escape undid.
+  const cancelled = useRef(false);
+  // The picture's node is draggable, and Firefox will not select text in a
+  // field inside a draggable element: a double click or a drag in the field
+  // did nothing. The node stops being draggable while the field is in use.
+  const dragHost = useRef<HTMLElement | null>(null);
+  const releaseDrag = () => {
+    if (dragHost.current) dragHost.current.draggable = true;
+    dragHost.current = null;
+  };
+  useEffect(() => releaseDrag, []);
+  useEffect(() => { setDraft(String(width)); }, [width]);
+  const commit = () => {
+    const w = clampImageWidth(parseFloat(draft));
+    setDraft(String(w ?? width));
+    if (w !== null && w !== width) onResize(w);
+  };
+  return (
+    <span className="pn-image-toolbar-width">
+      <TextField
+        size="sm"
+        type="number"
+        inputMode="numeric"
+        min={IMAGE_WIDTH_MIN}
+        max={IMAGE_WIDTH_MAX}
+        step={1}
+        aria-label={t('image.widthAria')}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onPointerDown={(e) => {
+          const host = e.currentTarget.closest<HTMLElement>('[draggable="true"]');
+          if (!host) return;
+          host.draggable = false;
+          dragHost.current = host;
+        }}
+        onBlur={() => {
+          releaseDrag();
+          if (cancelled.current) cancelled.current = false;
+          else commit();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            commit();
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            cancelled.current = true;
+            setDraft(String(width));
+            e.currentTarget.blur();
+          }
+        }}
+      />
+      <span aria-hidden="true">{t('image.percentSign')}</span>
+    </span>
+  );
+}
+
+/** A press on a bar tool must not move the editor's caret or focus. */
+const keepEditorFocus = (e: ReactPointerEvent) => { e.preventDefault(); e.stopPropagation(); };
+
+/**
  * Floating toolbar shown above a selected image.
- * Provides size presets (25/50/75/100%), copy, view, download, and delete.
+ * Provides size presets (25/50/75/100%), a percent field, copy, view,
+ * download, and delete.
  */
 function ImageToolbar({
   width,
@@ -151,8 +231,8 @@ function ImageToolbar({
   onDownload,
   onDelete,
 }: {
-  width: ImageWidth;
-  onResize: (w: ImageWidth) => void;
+  width: number;
+  onResize: (w: number) => void;
   onCopy: () => void;
   copied: boolean;
   onView: () => void;
@@ -180,46 +260,37 @@ function ImageToolbar({
           </button>
         ))}
       </div>
+      <WidthField width={width} onResize={onResize} />
       <div className="pn-image-toolbar-divider" />
-      <button
-        type="button"
-        className="pn-image-toolbar-btn"
-        aria-label={t('image.copyAria')}
-        onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+      {/* The house parts: each tool's tip opens above it, and delete arms a
+          "Delete?" in place before it removes the picture. */}
+      <IconButton
+        label={t('image.copyAria')}
+        onPointerDown={keepEditorFocus}
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCopy(); }}
       >
-        {copied ? <Check size={16} /> : <Copy size={16} />}
-      </button>
+        {copied ? <Check /> : <Copy />}
+      </IconButton>
       <div className="pn-image-toolbar-divider" />
-      <button
-        type="button"
-        className="pn-image-toolbar-btn"
-        aria-label={t('image.viewAria')}
-        onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+      <IconButton
+        label={t('image.viewAria')}
+        onPointerDown={keepEditorFocus}
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(); }}
       >
-        <ArrowsOutSimple size={16} />
-      </button>
+        <ArrowsOutSimple />
+      </IconButton>
       <div className="pn-image-toolbar-divider" />
-      <button
-        type="button"
-        className="pn-image-toolbar-btn"
-        aria-label={t('image.downloadAria')}
-        onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+      <IconButton
+        label={t('image.downloadAria')}
+        onPointerDown={keepEditorFocus}
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDownload(); }}
       >
-        <Download size={16} />
-      </button>
+        <Download />
+      </IconButton>
       <div className="pn-image-toolbar-divider" />
-      <button
-        type="button"
-        className="pn-image-toolbar-btn pn-image-toolbar-danger"
-        aria-label={t('image.deleteAria')}
-        onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(); }}
-      >
-        <Trash size={16} />
-      </button>
+      <span onPointerDown={keepEditorFocus} className="inline-flex">
+        <DeleteButton label={t('image.deleteAria')} onConfirm={onDelete} />
+      </span>
     </div>
   );
 }
@@ -247,6 +318,10 @@ const EncryptedImageView = memo(function EncryptedImageView({
   const cachedUrl = cachedSourceUrl(source);
   const [objectUrl, setObjectUrl] = useState<string | null>(cachedUrl);
   const [error, setError] = useState<string | null>(null);
+  // The blob arrived but does not open (a wrong key, damaged bytes). Nothing
+  // retries it on its own and nothing is deleted; Try again reads it once
+  // more. See blobDamaged.ts.
+  const [damaged, setDamaged] = useState(false);
   // A failed native save can leave an empty or partial file, so the message
   // stays until a save succeeds; a dismissed dialog changes nothing.
   const [saveFailed, setSaveFailed] = useState(false);
@@ -308,6 +383,12 @@ const EncryptedImageView = memo(function EncryptedImageView({
           // null - not on the server yet, retry if attempts remain
         } catch (err) {
           if (cancelled) return;
+          // Bytes that do not open will not open on the next attempt either.
+          if (isBlobDamaged(err)) {
+            setDamaged(true);
+            setLoading(false);
+            return;
+          }
           // On last attempt, surface the error
           if (attempt === RETRY_DELAYS.length - 1) {
             setError(err instanceof Error ? err.message : t('image.loadFailed'));
@@ -350,8 +431,13 @@ const EncryptedImageView = memo(function EncryptedImageView({
         setError(null);
         setLoading(false);
         pendingRetryIds.delete(imageId);
-      } catch {
-        // Still not available - stay in error state, try again next sync
+      } catch (err) {
+        // Bytes that do not open leave the sync retry for Try again;
+        // anything else stays in error state and tries again next sync.
+        if (!isBlobDamaged(err)) return;
+        pendingRetryIds.delete(imageId);
+        setError(null);
+        setDamaged(true);
       }
     };
 
@@ -359,9 +445,72 @@ const EncryptedImageView = memo(function EncryptedImageView({
     return () => window.removeEventListener('privacynotes:sync-complete', onSyncComplete);
   }, [imageId, objectUrl]);
 
-  const handleResize = useCallback((w: ImageWidth) => {
+  // One read per click. A picture that is still not there, or a request that
+  // fails, falls back to the state the first read would have shown.
+  const handleRetry = useCallback(async () => {
+    if (!source || !imageId) return;
+    setDamaged(false);
+    setLoading(true);
+    try {
+      const url = await fetchSourceUrl(source);
+      if (url) {
+        setObjectUrl(url);
+        return;
+      }
+      setError(t('image.notFound'));
+      pendingRetryIds.add(imageId);
+    } catch (err) {
+      if (isBlobDamaged(err)) setDamaged(true);
+      else setError(err instanceof Error ? err.message : t('image.loadFailed'));
+    } finally {
+      setLoading(false);
+    }
+  }, [src, imageId, t]);
+
+  const handleResize = useCallback((w: number) => {
     updateAttributes({ width: w });
   }, [updateAttributes]);
+
+  // The corner handle. The width follows the pointer as a percent of the
+  // column and is written once, on release; until then only this view
+  // redraws. The edge across from the handle stays put, and a centered
+  // picture grows on both sides, so it moves twice as far.
+  const [dragWidth, setDragWidth] = useState<number | null>(null);
+  const drag = useRef<{ x: number; px: number; column: number; factor: number } | null>(null);
+  const handleResizeStart = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const box = wrapperRef.current;
+    const column = box?.parentElement?.getBoundingClientRect().width;
+    if (!box || !column) return;
+    const boxRect = box.getBoundingClientRect();
+    const handleRect = e.currentTarget.getBoundingClientRect();
+    const onRight = handleRect.left + handleRect.width / 2 > boxRect.left + boxRect.width / 2;
+    const start = clampImageWidth(node.attrs.width) ?? IMAGE_WIDTH_MAX;
+    drag.current = {
+      x: e.clientX,
+      px: (start / 100) * column,
+      column,
+      factor: (onRight ? 1 : -1) * (node.attrs.textAlign === 'center' ? 2 : 1),
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDragWidth(start);
+  }, [node.attrs.width, node.attrs.textAlign]);
+  const handleResizeMove = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
+    const d = drag.current;
+    if (!d) return;
+    const px = d.px + (e.clientX - d.x) * d.factor;
+    setDragWidth(clampImageWidth((px / d.column) * 100));
+  }, []);
+  const handleResizeEnd = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!drag.current) return;
+    drag.current = null;
+    if (e.type === 'pointerup' && dragWidth !== null && dragWidth !== node.attrs.width) {
+      updateAttributes({ width: dragWidth });
+    }
+    setDragWidth(null);
+  }, [dragWidth, node.attrs.width, updateAttributes]);
 
   const handleDownload = useCallback(async () => {
     if (!source) return;
@@ -496,8 +645,8 @@ const EncryptedImageView = memo(function EncryptedImageView({
     };
   }, [tapped]);
 
-  // Width style - percentage of container.
-  const widthPercent = (width && IMAGE_WIDTHS.includes(width)) ? width : 100;
+  // Width style - percentage of container; the handle's width while it drags.
+  const widthPercent = dragWidth ?? clampImageWidth(width) ?? IMAGE_WIDTH_MAX;
   // Alignment moves the whole box, the same way an aligned list item does
   // (ui-patterns.md section 65): the container is already capped by the
   // width preset, so auto margins are all it takes. At 100% there is no
@@ -525,16 +674,33 @@ const EncryptedImageView = memo(function EncryptedImageView({
     >
       <div
         ref={wrapperRef}
-        className="pn-image-container"
+        className={`pn-image-container${dragWidth !== null ? ' pn-image-resizing' : ''}`}
         style={{ maxWidth: `${widthPercent}%`, ...alignStyle }}
       >
         {loading && (
-          <div className="flex items-center justify-center bg-track rounded-md p-8 text-pn-muted text-sm">
+          <div className="flex items-center justify-center bg-track rounded-md p-8 text-pn-muted text-body">
             {t('image.loading')}
           </div>
         )}
+        {damaged && (
+          <Callout
+            tone="danger"
+            action={
+              <FeedbackButton
+                action="retry"
+                onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); void handleRetry(); }}
+              >
+                {t('auth:signIn.tryAgain')}
+              </FeedbackButton>
+            }
+          >
+            {t('attachment.damaged')}
+          </Callout>
+        )}
         {error && (
-          <div className="flex items-center justify-center bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-md p-4 text-danger text-sm">
+          <div className="flex items-center justify-center bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-md p-4 text-danger text-body">
             {error}
           </div>
         )}
@@ -555,8 +721,44 @@ const EncryptedImageView = memo(function EncryptedImageView({
           />
         )}
         {(selected || tapped) && objectUrl && !error && editor.isEditable && (
+          <>
+            {/* A button so ProseMirror leaves its events alone (TipTap's
+                NodeView.stopEvent); out of the Tab order, since the percent
+                field does the same job from the keyboard. */}
+            <div className={`pn-image-resize${textAlign === 'right' ? ' pn-image-resize-left' : ''}`}>
+              {/* The tip sits beside the handle on the picture's side, so it
+                  stays inside the picture's box; hidden while it drags. */}
+              <HoverLabel
+                label={t('image.resizeHint')}
+                position={(textAlign === 'right') !== (document.documentElement.dir === 'rtl') ? 'end' : 'start'}
+                disabled={dragWidth !== null}
+              >
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  aria-label={t('image.resizeHint')}
+                  className="pn-image-resize-button"
+                  onPointerDown={handleResizeStart}
+                  onPointerMove={handleResizeMove}
+                  onPointerUp={handleResizeEnd}
+                  onPointerCancel={handleResizeEnd}
+                  onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onDragStart={(e) => e.preventDefault()}
+                >
+                  <Notches />
+                </button>
+              </HoverLabel>
+            </div>
+            {dragWidth !== null && (
+              <span className={`pn-image-resize-value${textAlign === 'right' ? ' pn-image-resize-left' : ''}`}>
+                {(dragWidth / 100).toLocaleString(intlLocale(), { style: 'percent' })}
+              </span>
+            )}
+          </>
+        )}
+        {(selected || tapped) && objectUrl && !error && editor.isEditable && (
           <ImageToolbar
-            width={widthPercent as ImageWidth}
+            width={widthPercent}
             onResize={handleResize}
             onCopy={handleCopy}
             copied={copied}
@@ -566,10 +768,10 @@ const EncryptedImageView = memo(function EncryptedImageView({
           />
         )}
         {(selected || tapped) && saveFailed && (
-          <p className="mt-1 text-xs text-danger">{t('image.saveFailed')}</p>
+          <p className="mt-1 text-small text-danger">{t('media:viewer.saveFailed')}</p>
         )}
         {(selected || tapped) && copyFailed && (
-          <p className="mt-1 text-xs text-danger">{t('image.copyFailed')}</p>
+          <p className="mt-1 text-small text-danger">{t('image.copyFailed')}</p>
         )}
       </div>
     </NodeViewWrapper>
@@ -742,7 +944,7 @@ export async function storePictureQuietly(
   reserved: number,
 ): Promise<{ uuid: string; stored: number } | { failure: 'storage' | 'failed' }> {
   const opts = currentImageOptions();
-  const out = await runPicturePipeline(file, { ...opts, fitBox: opts.fitBox ?? IMAGE_FIT_PX }, undefined, reserved);
+  const out = await runPicturePipeline(file, { ...opts, fitBox: opts.fitBox ?? IMAGE_FIT_PX, redraw: true }, undefined, reserved);
   return 'uuid' in out ? { uuid: out.uuid, stored: estimateBlobBytes(out.bytes) } : { failure: out.failure };
 }
 
@@ -788,7 +990,7 @@ async function runPicturePipeline(file: File, opts: ImageOptions, onAccepted?: (
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.includes('Quota exceeded')) return { failure: 'storage' };
-    return { failure: 'failed', message: i18n.t('media:image.uploadFailed', { message: msg }) };
+    return { failure: 'failed', message: i18n.t('media:attachment.uploadFailed', { message: msg }) };
   }
 }
 
@@ -799,7 +1001,7 @@ async function handleImageUpload(
 ): Promise<void> {
   // A Markdown folder note keeps its pictures as files beside it, never in
   // the encrypted store. The guard sits on the upload itself, so every door
-  // into it is covered. Spec: ops/docs/archive/paste-pictures.md (section 3.3)
+  // into it is covered. Spec: docs/internal/specs/paste-pictures.md (section 3.3)
   if (plaintextViews.has(view)) return;
   // The placeholder tells the user something is happening while the
   // picture is decoded and encrypted, so it is drawn from inside the
@@ -925,7 +1127,7 @@ function looksLikeImage(file: File): boolean {
 //
 // `https:` pictures are never fetched: the page policy (`connect-src`) keeps
 // the page on our own hosts, and that wall is the point.
-// Spec: ops/docs/archive/paste-pictures.md (section 3)
+// Spec: docs/internal/specs/paste-pictures.md (section 3)
 
 const PENDING_PREFIX = 'pn:pending/';
 
@@ -955,7 +1157,7 @@ let lastReport: PasteReport | null = null;
  * The stored picture an object URL of this tab shows, as a `pn:img/` or
  * `pn:file/` ref, or null. The browser's "Copy image" names that URL in the
  * clipboard HTML, and this turns it back into the picture we already hold
- * instead of a second copy. Spec: ops/docs/archive/picture-copy-reuse.md
+ * instead of a second copy. Spec: docs/internal/specs/picture-copy-reuse.md
  */
 export function refForObjectUrl(url: string): string | null {
   if (!url.startsWith('blob:')) return null;
@@ -1100,7 +1302,7 @@ type SanitizeOptions = {
  * Pastes with no image to sort return the original string untouched, which
  * keeps every other paste byte-identical.
  *
- * Spec: GitHub #67, #204, #239; ops/docs/archive/paste-pictures.md (section 3.2)
+ * Spec: GitHub #67, #204, #239; docs/internal/specs/paste-pictures.md (section 3.2)
  */
 export function sanitizePastedHtml(html: string, opts: SanitizeOptions = {}): string {
   if (opts.report) {
@@ -1573,18 +1775,10 @@ export const EncryptedImage = Node.create<{ plaintextOnly: boolean }>({
         parseHTML: (el: HTMLElement) => {
           // Parse from data attribute (set by our markdown-it plugin below)
           // or from inline style width percentage.
-          const dataW = el.getAttribute('data-width');
-          if (dataW) {
-            const n = parseInt(dataW, 10);
-            if (IMAGE_WIDTHS.includes(n as ImageWidth)) return n;
-          }
-          const style = el.getAttribute('style') || '';
-          const match = style.match(/width:\s*(\d+)%/);
-          if (match) {
-            const n = parseInt(match[1]!, 10);
-            if (IMAGE_WIDTHS.includes(n as ImageWidth)) return n;
-          }
-          return 100;
+          const dataW = clampImageWidth(parseInt(el.getAttribute('data-width') ?? '', 10));
+          if (dataW !== null) return dataW;
+          const match = (el.getAttribute('style') || '').match(/width:\s*(\d+)%/);
+          return (match && clampImageWidth(parseInt(match[1]!, 10))) ?? IMAGE_WIDTH_MAX;
         },
         renderHTML: (attrs: Record<string, unknown>) => {
           if (!attrs['width'] || attrs['width'] === 100) return {};

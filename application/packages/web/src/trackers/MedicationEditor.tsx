@@ -4,7 +4,7 @@ import { Bandaids, BellSimple, CalendarDots, Circle, Clock, DotsThree, Eyedroppe
 import { TEXT_COLORS } from '../editorColors';
 import { ColorSwatch } from '../ColorSwatch';
 import { MarkTile } from './CustomTrackerGlyph';
-import { MonthGrid, firstWeekday } from '../MonthGrid';
+import { MonthGrid, useWeekStart } from '../MonthGrid';
 import { formatDay, weekdayDate, weekdayLabel } from '../intlFormat';
 import { intlLocale } from '../languages';
 import { toLocalIso } from '../notesViewUtils';
@@ -26,7 +26,7 @@ import { ProMark } from '../UpgradeModal';
  * and strength, form and color, how it is taken (a schedule or as needed),
  * the repeat, one line per dose with its time and amount, the start and end
  * days, this device's reminder and the supply. Every part is one the app
- * already has. Spec: ops/docs/mood-wellness-tracker.md section 6.7
+ * already has. Spec: docs/internal/mood-wellness-tracker.md section 6.7
  */
 
 const NO_DAYS: ReadonlySet<string> = new Set();
@@ -101,7 +101,7 @@ export function MedicationEditor({ initial, remind: initialRemind, supply, runsO
   const [picking, setPicking] = useState<'start' | 'end' | null>(null);
   const startRef = useRef<HTMLButtonElement>(null);
   const endRef = useRef<HTMLButtonElement>(null);
-  const weekStart = firstWeekday(intlLocale());
+  const weekStart = useWeekStart();
   const unit = unitKey(form || undefined);
   const timed = doses.some((d) => d.time);
   const remindId = useId();
@@ -157,7 +157,7 @@ export function MedicationEditor({ initial, remind: initialRemind, supply, runsO
         />
         {which === 'end' && endsOn && (
           <div className="px-3 pb-3">
-            <Button icon={<X size={15} aria-hidden="true" />} onClick={() => { setEndsOn(undefined); setPicking(null); }}>{t('medication.noEnd')}</Button>
+            <Button icon={<X aria-hidden="true" />} onClick={() => { setEndsOn(undefined); setPicking(null); }}>{t('medication.noEnd')}</Button>
           </div>
         )}
       </Popover>
@@ -165,7 +165,7 @@ export function MedicationEditor({ initial, remind: initialRemind, supply, runsO
   );
 
   const addTime = doses.length < MAX_DOSES && (
-    <Button icon={<Plus size={15} aria-hidden="true" />} className="whitespace-nowrap" onClick={() => setDoses((cur) => [...cur, { id: newDoseId(), amount: cur[cur.length - 1]?.amount ?? '1' }])}>
+    <Button icon={<Plus aria-hidden="true" />} className="whitespace-nowrap" onClick={() => setDoses((cur) => [...cur, { id: newDoseId(), amount: cur[cur.length - 1]?.amount ?? '1' }])}>
       {t('medication.addTime')}
     </Button>
   );
@@ -181,10 +181,10 @@ export function MedicationEditor({ initial, remind: initialRemind, supply, runsO
             className={`${SETTINGS_SELECT} w-28 text-center tabular-nums`}
           />
           <TextField size="sm" type="number" inputMode="decimal" min={0.25} step={0.25} value={d.amount} onChange={(e) => setDoses((cur) => cur.map((x) => (x.id === d.id ? { ...x, amount: e.target.value } : x)))} className="w-16 text-center" aria-label={t('medication.amount')} />
-          <span className="text-xs text-pn-muted truncate">{unit ? t(unit, { count: Number(d.amount) || 1 }) : ''}</span>
+          <span className="text-small text-pn-muted truncate">{unit ? t(unit, { count: Number(d.amount) || 1 }) : ''}</span>
           {doses.length > 1 && (
             <IconButton position="start" label={t('medication.removeTime')} onClick={() => setDoses((cur) => cur.filter((x) => x.id !== d.id))}>
-              <X size={14} aria-hidden="true" />
+              <X aria-hidden="true" />
             </IconButton>
           )}
           {/* The next time joins the last line rather than taking one of its own. */}
@@ -209,14 +209,14 @@ export function MedicationEditor({ initial, remind: initialRemind, supply, runsO
           grow
           first={{
             icon: TextT,
-            label: t('config.nameLabel'),
+            label: t('shell:filesList.sortName'),
             // The row's own tile, live: the form's glyph in the picked color.
             children: (
               <div className="flex items-center gap-2">
                 <MarkTile color={color}>
                   <MedicationGlyph form={form || undefined} size={18} style={color ? { color } : undefined} className={color ? 'shrink-0' : 'shrink-0 text-pn-muted'} />
                 </MarkTile>
-                <TextField size="sm" aria-label={t('config.nameLabel')} value={name} maxLength={MED_NAME_MAX} onChange={(e) => setName(e.target.value)} placeholder={t('medication.namePlaceholder')} className="w-full" autoFocus />
+                <TextField size="sm" aria-label={t('shell:filesList.sortName')} value={name} maxLength={MED_NAME_MAX} onChange={(e) => setName(e.target.value)} placeholder={t('medication.namePlaceholder')} className="w-full" autoFocus />
               </div>
             ),
           }}
@@ -238,7 +238,7 @@ export function MedicationEditor({ initial, remind: initialRemind, supply, runsO
             ))}
           </div>
         </Field>
-        <Field icon={Palette} label={t('config.colorLabel')}>
+        <Field icon={Palette} label={t('shell:noteOptionsMenu.color')}>
           {/* The round swatches of the custom tracker form, with a "no
               color" swatch first: a medication needs no color. */}
           <div className="flex flex-wrap items-center gap-1.5 min-h-9">
@@ -288,7 +288,7 @@ export function MedicationEditor({ initial, remind: initialRemind, supply, runsO
                           aria-pressed={on}
                           aria-label={weekdayLabel(weekdayDate(w), 'long')}
                           onClick={() => setWeekdays((cur) => (on ? (cur.length > 1 ? cur.filter((x) => x !== w) : cur) : [...cur, w]))}
-                          className={`w-8 h-8 rounded-full text-xs font-semibold transition ${on ? 'bg-accent-fill text-white' : 'bg-surface-1 text-pn-muted hover:text-pn'}`}
+                          className={`w-8 h-8 rounded-full text-small font-semibold transition ${on ? 'bg-accent-fill text-white' : 'bg-surface-1 text-pn-muted hover:text-pn'}`}
                         >
                           {weekdayLabel(weekdayDate(w), 'narrow')}
                         </button>
@@ -297,7 +297,7 @@ export function MedicationEditor({ initial, remind: initialRemind, supply, runsO
                   </div>
                 )}
                 {kind === 'interval' && (
-                  <label className="flex items-center gap-2 text-[13px] text-pn">
+                  <label className="flex items-center gap-2 text-compact text-pn">
                     {t('medication.every')}
                     <TextField size="sm" type="number" inputMode="numeric" min={2} max={99} value={interval} onChange={(e) => setInterval(e.target.value)} className="w-16 text-center" aria-label={t('medication.every')} />
                     {t('medication.days')}
@@ -338,7 +338,7 @@ export function MedicationEditor({ initial, remind: initialRemind, supply, runsO
                 <TextField size="sm" type="number" inputMode="decimal" min={0} value={refill} onChange={(e) => setRefill(e.target.value)} placeholder={t('medication.refillPlaceholder')} aria-label={t('medication.refill')} className="w-36" />
               ) : (
                 // Free: the Pro door in place of the count, as every Pro control.
-                <Button icon={<Package size={15} aria-hidden="true" />} pro onClick={onUpgrade}>{t('medication.trackSupply')}</Button>
+                <Button icon={<Package aria-hidden="true" />} pro onClick={onUpgrade}>{t('medication.trackSupply')}</Button>
               )}
               <p className={`${SETTINGS_HELP} min-w-0 flex-1 basis-40`}>
                 {supply === null || !unlocked
@@ -378,7 +378,7 @@ function Field({ icon: Glyph, label, top = false, htmlFor, pro = false, children
         <span className="inline-flex flex-wrap items-center gap-x-1.5">
           {htmlFor ? (
             <label htmlFor={htmlFor} className={ROW_TITLE}>
-              <Glyph size={14} className="text-accent shrink-0" aria-hidden="true" />
+              <Glyph className="text-accent shrink-0" aria-hidden="true" />
               {label}
             </label>
           ) : (

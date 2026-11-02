@@ -35,6 +35,22 @@ function tokenClaims(token: string): { sub?: unknown; session_id?: unknown; aal?
   throw new Error('The sign-in response was invalid. Start sign-in again.');
 }
 
+/** A database request that has not answered in this long is given up, so a
+ *  hung connection (a captive portal, a half-open socket after sleep) fails
+ *  the sync pass instead of holding its lock until the app reloads (GitHub
+ *  #655). Only `/rest/v1/`: a storage upload of a large file may take longer,
+ *  and the auth calls keep the SDK's own handling. */
+const REST_DEADLINE_MS = 60_000;
+
+/** The caller's signal and the database deadline as one, where the browser
+ *  can join them; a browser that cannot keeps the caller's own. */
+function withRestDeadline(requestUrl: URL, init: RequestInit | undefined): RequestInit | undefined {
+  if (!requestUrl.pathname.startsWith('/rest/v1/')) return init;
+  const deadline = AbortSignal.timeout(REST_DEADLINE_MS);
+  if (!init?.signal) return { ...init, signal: deadline };
+  return typeof AbortSignal.any === 'function' ? { ...init, signal: AbortSignal.any([init.signal, deadline]) } : init;
+}
+
 /** The sole SDK client uses its ordinary PKCE exchange. This transport
  * observes only that exchange's successful auth response, before the SDK
  * saves it, so the exact returned token can be bound to its original flow. */
@@ -46,7 +62,7 @@ export function accountOAuthFetch(url: string, storageKey: string): typeof fetch
     const context = active && !active.requestClaimed && requestUrl.origin + requestUrl.pathname === authTokenUrl &&
       requestUrl.searchParams.get('grant_type') === active.grantType ? active : undefined;
     if (context) context.requestClaimed = true;
-    const result = await fetch(input, init);
+    const result = await fetch(input, withRestDeadline(requestUrl, init));
     if (context && result.ok) {
       const data = await result.clone().json();
       if (typeof data?.access_token !== 'string' || typeof data?.user?.id !== 'string') throw new Error('The sign-in response was invalid.');

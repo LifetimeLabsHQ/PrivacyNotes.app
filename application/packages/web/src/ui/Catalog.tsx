@@ -7,7 +7,7 @@ import { TimeInput } from '../TimeInput';
 import { defaultTrackerSettings, type JournalTrackerData, type FactorDef, type MedicationTemplate } from '../trackerTypes';
 import { MonthGrid } from '../MonthGrid';
 import catalogIndex from './catalogIndex.json';
-import { AppWindow, ArrowSquareOut, Article, Bell, BookmarkSimple, ChatText, CheckCircle, Clock, Copy, Folder, Gear, Globe, HardDrives, Info, Moon, PencilSimple, Plus, PushPin, Scissors, SlidersHorizontal, Sparkle, Stethoscope, Sun, Trash, User, Warning } from '../icons';
+import { AppWindow, ArrowSquareOut, Article, Bell, BookmarkSimple, ChatText, CheckCircle, CheckFat, Clock, Copy, Fire, Folder, Gear, Globe, HardDrives, Info, Moon, PencilSimple, Plus, PushPin, Scissors, SlidersHorizontal, Sparkle, Stethoscope, Sun, Trash, User, Warning } from '../icons';
 import {
   Button,
   FeedbackButton,
@@ -24,6 +24,7 @@ import {
   ModalFooter,
   Badge,
   Banner,
+  GridCard,
   Callout,
   Checkbox,
   TaskCheckbox,
@@ -96,7 +97,7 @@ import {
 const patternGroups = {
   'Actions': ['Button', 'IconButton', 'DeleteButton', 'EditRow', 'Vault form actions', 'Vault field actions', 'Generation actions', 'Bookmark actions', 'useProGate', 'Class strings'],
   'Fields and settings': ['TextField and Select', 'FieldLabel, GroupHeading, FIELD_CLASS', 'Segmented', 'Setting row, Switch, heading', 'Tabs', 'ListSearchInput, InlineRenameField', 'ColorSwatch', 'Checkbox', 'TaskCheckbox', 'SettingsCallout, ResetDefaultsButton, HelpChip'],
-  'Content and trackers': ['StatTile', 'MoodScale', 'ScaleTiles', 'Tracker panel parts', 'MonthGrid, StorageBar', 'Detail pane kit', 'Badge, IconTile, Kbd'],
+  'Content and trackers': ['StatTile', 'MoodScale', 'ScaleTiles', 'Tracker panel parts', 'MonthGrid, StorageBar', 'GridCard', 'Detail pane kit', 'Badge, IconTile, Kbd'],
   'Product flows': ['Guided tracker flow', 'Time input', 'Import workflow', 'Export progress', 'Upload progress', 'Flow reference map'],
   'Window contract': ['Window anatomy and behavior', 'Window sizing lab'],
   'App map': ['Replay recipes', 'Settings paths', 'Window implementation inventory'],
@@ -109,7 +110,7 @@ const CatalogFilter = createContext({ search: '', group: 'All patterns' });
  * Reference examples of shared UI parts in the app's own CSS.
  * Opened at `?demo=1#ui-catalog` (demo and dev builds only, see main.tsx).
  * The layout harness and a reviewing session look at the same page.
- * Spec: ops/docs/archive/design-system.md
+ * Spec: docs/internal/design/design-system.md
  */
 export default function Catalog() {
   const [trackerData, setTrackerData] = useState<JournalTrackerData>({});
@@ -163,10 +164,10 @@ export default function Catalog() {
     <div className="min-h-dvh bg-surface-1 text-pn">
       <div className="mx-auto max-w-3xl px-6 py-8 space-y-8">
         <header className="flex flex-wrap items-center gap-3">
-          <h1 className="text-base font-semibold">UI catalog</h1>
+          <h1 className="text-title font-semibold">UI catalog</h1>
           <p className={`${SETTINGS_HELP} flex-1`}>Find an existing pattern before building another.</p>
           <IconButton label={dark ? 'Light' : 'Dark'} onClick={toggleDark}>
-            {dark ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
+            {dark ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
           </IconButton>
         </header>
 
@@ -183,11 +184,11 @@ export default function Catalog() {
         </div>
 
         <details className="rounded-lg border border-divider bg-surface-2 p-4">
-          <summary className="cursor-pointer text-sm font-semibold">How to use this catalog and what remains unverified</summary>
+          <summary className="cursor-pointer text-body font-semibold">How to use this catalog and what remains unverified</summary>
           <div className="mt-3 space-y-3">
             <p className={SETTINGS_HELP}>Import shared parts from packages/web/src/ui. Check the real usage before choosing a pattern: identical appearance does not prove shared implementation, and a shared component can have intentional variants.</p>
             <p className={SETTINGS_HELP}>Examples use local fixture state. Some buttons demonstrate appearance only. A rendered example does not verify the product trigger, persistence, permissions or recovery behavior.</p>
-            <p className={SETTINGS_HELP}>The browser, demo, macOS and Android inventory is recorded in ops/audits/2026-10-20-ui-foundation/. coverage.json lists per-setting observations and open gaps; findings.md separates implementation candidates from visual differences; ui-check-audit.md records check limitations.</p>
+            <p className={SETTINGS_HELP}>The browser, demo, macOS and Android inventory is recorded in docs/internal/audits/2026-10-20-ui-foundation/. coverage.json lists per-setting observations and open gaps; findings.md separates implementation candidates from visual differences; ui-check-audit.md records check limitations.</p>
             <p className={SETTINGS_HELP}>Coverage is partial. Android notification denial, retry and permission granted were observed; delivery remains separate. Untested combinations, persistence, destructive actions, billing and failure recovery stay in the coverage register.</p>
           </div>
         </details>
@@ -213,7 +214,7 @@ export default function Catalog() {
         </Part>
         <Part name="Window implementation inventory" note="Find shared modal calls and custom window shells before creating another."
           searchText={catalogIndex.windows.map((r) => `${r.file} ${r.path}`).join(' ')}
-          source="ui/catalogIndex.json; ops/audits/2026-10-20-ui-foundation/scan-windows.mjs"
+          source="ui/catalogIndex.json; docs/internal/audits/2026-10-20-ui-foundation/scan-windows.mjs"
           gap="Source candidates, not unique windows or confirmed defects. Backdrop and dialog rows may describe the same window. Source-derived paths still need runtime verification where evidence is absent.">
           <CatalogIndex kind="windows" />
         </Part>
@@ -223,13 +224,13 @@ export default function Catalog() {
           usage="ConfirmModal.tsx; ClipPageModal.tsx; NoteHistoryModal.tsx"
           gap="The shared shell currently lacks initial-focus, focus-containment and focus-return guarantees. The catalog exposes this gap; it does not repair it.">
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-2"><h3 className="text-sm font-semibold">Required anatomy</h3><p className={SETTINGS_HELP}>One title, one CloseButton at the top end, a named dialog, a body and optional ModalFooter. Forms end with Cancel and the primary action. Information windows have no redundant Close footer.</p></div>
-            <div className="space-y-2"><h3 className="text-sm font-semibold">Exit behavior</h3><p className={SETTINGS_HELP}>Escape closes the top layer. Android Back uses the same overlay stack. Outside clicks close ordinary windows. Settings clears search first and goes back before closing on phones. Busy and required-answer windows need explicit exceptions.</p></div>
-            <div className="space-y-2"><h3 className="text-sm font-semibold">Size by content</h3><p className={SETTINGS_HELP}>max-w-sm for confirms, max-w-md for short forms, max-w-lg for ordinary long content. Settings, comparison and media have documented wider layouts. Bound long bodies and keep the header and actions reachable.</p></div>
-            <div className="space-y-2"><h3 className="text-sm font-semibold">Review before reuse</h3><p className={SETTINGS_HELP}>Test short height, phone keyboard, long labels, RTL, nested pickers, Tab boundaries and focus after closing. A dialog role alone does not make the background inert or trap focus.</p></div>
+            <div className="space-y-2"><h3 className="text-body font-semibold">Required anatomy</h3><p className={SETTINGS_HELP}>One title, one CloseButton at the top end, a named dialog, a body and optional ModalFooter. Forms end with Cancel and the primary action. Information windows have no redundant Close footer.</p></div>
+            <div className="space-y-2"><h3 className="text-body font-semibold">Exit behavior</h3><p className={SETTINGS_HELP}>Escape closes the top layer. Android Back uses the same overlay stack. Outside clicks close ordinary windows. Settings clears search first and goes back before closing on phones. Busy and required-answer windows need explicit exceptions.</p></div>
+            <div className="space-y-2"><h3 className="text-body font-semibold">Size by content</h3><p className={SETTINGS_HELP}>max-w-sm for confirms, max-w-md for short forms, max-w-lg for ordinary long content. Settings, comparison and media have documented wider layouts. Bound long bodies and keep the header and actions reachable.</p></div>
+            <div className="space-y-2"><h3 className="text-body font-semibold">Review before reuse</h3><p className={SETTINGS_HELP}>Test short height, phone keyboard, long labels, RTL, nested pickers, Tab boundaries and focus after closing. A dialog role alone does not make the background inert or trap focus.</p></div>
           </div>
           <details className="rounded-md border border-divider p-3">
-            <summary className="cursor-pointer text-sm font-semibold">Drafts, validation and submission</summary>
+            <summary className="cursor-pointer text-body font-semibold">Drafts, validation and submission</summary>
             <div className="mt-3 space-y-2">
               <p className={SETTINGS_HELP}>Specify whether X, Escape, backdrop and Cancel discard, retain or save edits. A Cancel label does not prove rollback. Folder/tag appearance saves immediately: Cancel restores the opening values; X and Done keep changes. Its first Escape clears a nonempty search. Child pickers must preserve the parent draft and scroll position.</p>
               <p className={SETTINGS_HELP}>Invalid input stays in the window with an associated field error and a recovery path. Submission prevents duplicate requests. Failure retains useful input; success defines where focus returns.</p>
@@ -238,8 +239,8 @@ export default function Catalog() {
             </div>
           </details>
           <details className="rounded-md border border-divider p-3">
-            <summary className="cursor-pointer text-sm font-semibold">Completion checklist for each window</summary>
-            <ol className="mt-3 list-decimal ps-5 space-y-2 text-sm">
+            <summary className="cursor-pointer text-body font-semibold">Completion checklist for each window</summary>
+            <ol className="mt-3 list-decimal ps-5 space-y-2 text-body">
               <li>Record its owner, real trigger path, prerequisites and verified platforms.</li>
               <li>Record width, height, scroll owner, header, footer and each dismissal route.</li>
               <li>Exercise clean, dirty, invalid, busy, failure and success states where applicable.</li>
@@ -247,7 +248,7 @@ export default function Catalog() {
               <li>Attach evidence and unresolved gaps. Source inventory and fixture coverage do not establish runtime completion.</li>
             </ol>
           </details>
-          <p className={SETTINGS_HELP}>Full contract and offender evidence: ops/audits/2026-10-20-ui-foundation/window-contract.md and window-inventory.json. Proposed focus and scroll requirements await the attended cleanup.</p>
+          <p className={SETTINGS_HELP}>Full contract and offender evidence: docs/internal/audits/2026-10-20-ui-foundation/window-contract.md and window-inventory.json. Proposed focus and scroll requirements await the attended cleanup.</p>
         </Part>
 
         <Part name="Window sizing lab" note="Real Modal and ModalFooter, with long content, nested windows and a reversible busy state."
@@ -259,14 +260,14 @@ export default function Catalog() {
           source="import/ImportModal.tsx; import/registry.ts; notesView/useFilesUpload.ts"
           usage="Sidebar Import; Settings > Import & Export; Files > Upload > Import as notes"
           gap="Demo Markdown success, warning previews and blocking parse errors observed. Import actions use Button; parse errors, warning lists and the oversize split option use Callout. Native file pickers, large-file progress, quota limits, restore and every format's parsing outcomes remain separate scenarios. This map is not an importer simulator.">
-          <ol className="list-decimal space-y-2 ps-5 text-sm text-pn-soft">
+          <ol className="list-decimal space-y-2 ps-5 text-body text-pn-soft">
             <li>Pick: source-tag switch, format cards and guide links, plus Webcal address validation. No footer. Import, Export, Restore and Passwords tabs; Trackers depends on caller data.</li>
             <li>Preview: source and item counts, warnings, sample titles and Add to destination. Folder trees reveal folder tags; Firefox tags/keywords reveal Keep tags from your browser; embedded contact photos reveal Import photos; notes over 1 MB reveal the split option. Back returns to format selection; Import names the item count.</li>
             <li>Working: parsing or writing status. The standalone shell has a bar header, Close and a scrolling body capped at 85vh. Busy dismissal and long-running recovery still need runtime checks.</li>
             <li>Failure: blocking parse errors show Back and Cancel. A malformed Keep JSON instead produces a warning preview with zero items. Do not collapse these into one generic error state.</li>
             <li>Success: the tested single-note import closes the window and adds the note. Files upload has a separate Import or store? choice and Upload complete surface.</li>
           </ol>
-          <p className={SETTINGS_HELP}>Android uses an unrestricted native file filter because its MIME mapping can hide supported extensions. Its embedded import pane was measured at 411px without horizontal overflow. iOS picker behavior remains unverified. Observed review gaps: malformed ZIP exposes raw library error text; Escape leaves BODY focused. Replay evidence and synthetic inputs: ops/audits/2026-10-20-ui-foundation/import-runtime.json and fixtures/.</p>
+          <p className={SETTINGS_HELP}>Android uses an unrestricted native file filter because its MIME mapping can hide supported extensions. Its embedded import pane was measured at 411px without horizontal overflow. iOS picker behavior remains unverified. Observed review gaps: malformed ZIP exposes raw library error text; Escape leaves BODY focused. Replay evidence and synthetic inputs: docs/internal/audits/2026-10-20-ui-foundation/import-runtime.json and fixtures/.</p>
         </Part>
 
         <Part name="Guided tracker flow" note="Real TrackerPills: empty, filled, expanded, guided completion and read-only. Changes stay in this fixture."
@@ -288,9 +289,9 @@ export default function Catalog() {
           source="TimeInput.tsx; touchOnly.ts" usage="ScheduleView.tsx; CalendarSettings.tsx"
           gap="Desktop parsing and the Pixel native picker were observed. iOS picker appearance, wheel commits and Reset remain source-derived until tested on an iPhone or iPad.">
           <dl className="space-y-3">
-            <div><dt className="text-sm font-semibold">Desktop / fine pointer</dt><dd className={SETTINGS_HELP}>Text entry accepts 3pm or 15:30. Enter or blur commits. Invalid text keeps the previous committed value; clearing removes an optional time. Verified in the browser.</dd></div>
-            <div><dt className="text-sm font-semibold">Android</dt><dd className={SETTINGS_HELP}>Native time input. The tested Pixel opens a clock picker with a text-entry mode and Set, Cancel and Clear controls. Cancel returns to Schedule. This is the observed Pixel UI, not a promise that every Android version looks identical.</dd></div>
-            <div><dt className="text-sm font-semibold">iOS / iPadOS</dt><dd className={SETTINGS_HELP}>Native time input with the platform’s own presentation. The source handles wheel updates separately from committed change events and supports Safari Reset for optional times. Runtime verification is still open; Android evidence does not cover iOS.</dd></div>
+            <div><dt className="text-body font-semibold">Desktop / fine pointer</dt><dd className={SETTINGS_HELP}>Text entry accepts 3pm or 15:30. Enter or blur commits. Invalid text keeps the previous committed value; clearing removes an optional time. Verified in the browser.</dd></div>
+            <div><dt className="text-body font-semibold">Android</dt><dd className={SETTINGS_HELP}>Native time input. The tested Pixel opens a clock picker with a text-entry mode and Set, Cancel and Clear controls. Cancel returns to Schedule. This is the observed Pixel UI, not a promise that every Android version looks identical.</dd></div>
+            <div><dt className="text-body font-semibold">iOS / iPadOS</dt><dd className={SETTINGS_HELP}>Native time input with the platform’s own presentation. The source handles wheel updates separately from committed change events and supports Safari Reset for optional times. Runtime verification is still open; Android evidence does not cover iOS.</dd></div>
           </dl>
           <p className={SETTINGS_HELP}>This live example uses this device’s actual input mode. The component chooses native input when touch is available and the pointer is not fine; resizing a desktop browser does not simulate a phone picker.</p>
           <TimeInput label="Fixture time" value={fixtureTime} onCommit={(value) => setFixtureTime(value ?? undefined)} className={FIELD_CLASS} clearable />
@@ -300,10 +301,10 @@ export default function Catalog() {
         <Part name="Flow reference map" note="Start with the real composition when building a related feature. These are navigation recipes, not verified coverage claims."
           source="CheckInCard.tsx; QuickSwitcher.tsx; ScheduleView.tsx; NoteOptionsMenu.tsx; EventCard.tsx"
           gap="Browser state evidence is in flow-observations.json. Native equivalents, full error recovery and untouched branches remain separate checks.">
-          <details><summary className="cursor-pointer text-sm">Daily check-in: list and grid</summary><p className={SETTINGS_HELP}>Enable Settings → Trackers → Daily check-in card. In All, Journals must also be included in All. Choose mood, follow trackers, finish, reopen the summary. Check the options menu, another day, skip/undo, protected entry and empty tracker setup. Grid uses a full-width tile; list uses a band.</p></details>
-          <details><summary className="cursor-pointer text-sm">Quick switcher and quick add</summary><p className={SETTINGS_HELP}>Cmd+K opens search; &gt; changes to commands. Q opens creation mode. Type a synthetic title with a date and time, inspect parsed chips, choose an item type, then verify the created item. Item search, settings results, empty results and command results are different states.</p></details>
-          <details><summary className="cursor-pointer text-sm">Journal, event and alert submenus</summary><p className={SETTINGS_HELP}>Create a journal or event, open its date, then Alert. Inspect presets, custom amount and units, duplicate prevention, multiple selections and None. Also inspect all-day versus timed, end date, repeats and occurrence scope. ScheduleView shares menu parts with NoteOptionsMenu; visual similarity does not mean every row is a ui/ component.</p></details>
-          <details><summary className="cursor-pointer text-sm">Event date tile and date preferences</summary><p className={SETTINGS_HELP}>Settings → Date &amp; Time → Format → Date format. Try Automatic, Day first, Month first and Year first (ISO), then open Yoga in the demo. The desktop tile always has localized month / day / weekday, such as OCT / 21 / Wed. Date order applies to complete dates, never to these standalone labels. Check a narrow pane too: the phone layout uses a full date line. Source: EventCard.tsx and intlFormat.ts. ISO regression reproduced and fixed in Chromium on 2026-10-21; this is not a Firefox or native runtime verification.</p></details>
+          <details><summary className="cursor-pointer text-body">Daily check-in: list and grid</summary><p className={SETTINGS_HELP}>Enable Settings → Trackers → Daily check-in card. In All, Journals must also be included in All. Choose mood, follow trackers, finish, reopen the summary. Check the options menu, another day, skip/undo, protected entry and empty tracker setup. Grid uses a full-width tile; list uses a band.</p></details>
+          <details><summary className="cursor-pointer text-body">Quick switcher and quick add</summary><p className={SETTINGS_HELP}>Cmd+K opens search; &gt; changes to commands. Q opens creation mode. Type a synthetic title with a date and time, inspect parsed chips, choose an item type, then verify the created item. Item search, settings results, empty results and command results are different states.</p></details>
+          <details><summary className="cursor-pointer text-body">Journal, event and alert submenus</summary><p className={SETTINGS_HELP}>Create a journal or event, open its date, then Alert. Inspect presets, custom amount and units, duplicate prevention, multiple selections and None. Also inspect all-day versus timed, end date, repeats and occurrence scope. ScheduleView shares menu parts with NoteOptionsMenu; visual similarity does not mean every row is a ui/ component.</p></details>
+          <details><summary className="cursor-pointer text-body">Event date tile and date preferences</summary><p className={SETTINGS_HELP}>Settings → Date &amp; Time → Format → Date format. Try Automatic, Day first, Month first and Year first (ISO), then open Yoga in the demo. The desktop tile always has localized month / day / weekday, such as OCT / 21 / Wed. Date order applies to complete dates, never to these standalone labels. Check a narrow pane too: the phone layout uses a full date line. Source: EventCard.tsx and intlFormat.ts. ISO regression reproduced and fixed in Chromium on 2026-10-21; this is not a Firefox or native runtime verification.</p></details>
         </Part>
 
         <Part name="Button" note="action brings the one icon, label and look of each action; one size for every button; pro; disabled">
@@ -318,16 +319,16 @@ export default function Catalog() {
           <div className="flex flex-wrap items-center gap-2">
             <Button action="add">Add medication</Button>
             <Button variant="upgrade" icon={<IconUpgrade size={15} onFill />}>Upgrade to Pro</Button>
-            <Button pro icon={<Stethoscope size={15} aria-hidden="true" />} onClick={guard(() => setLog('Ran the Pro action.'))}>Doctor report</Button>
+            <Button pro icon={<Stethoscope aria-hidden="true" />} onClick={guard(() => setLog('Ran the Pro action.'))}>Doctor report</Button>
             <Button action="save" disabled />
           </div>
         </Part>
 
         <Part name="IconButton" note="row tools only; the label is required">
           <div className="flex gap-1">
-            <IconButton label="Edit"><PencilSimple size={16} aria-hidden="true" /></IconButton>
-            <IconButton label="Remove" tone="danger"><Trash size={16} aria-hidden="true" /></IconButton>
-            <IconButton label="Settings"><Gear size={16} aria-hidden="true" /></IconButton>
+            <IconButton label="Edit"><PencilSimple aria-hidden="true" /></IconButton>
+            <IconButton label="Remove" tone="danger"><Trash aria-hidden="true" /></IconButton>
+            <IconButton label="Settings"><Gear aria-hidden="true" /></IconButton>
           </div>
         </Part>
 
@@ -336,8 +337,8 @@ export default function Catalog() {
           usage="ClipPageModal.tsx (TextField); CalendarSettings.tsx (SETTINGS_SELECT on native selects)"
           gap="Fixture validation below only checks length. Actual forms own their validation and recovery.">
           <div className="grid gap-3 sm:grid-cols-2">
-            <TextField label="Web address" icon={<Globe size={13} />} placeholder="https://" hint="A page or an article." />
-            <TextField label="Short name" icon={<User size={13} />} defaultValue="A name that is far too long" error="Too long." />
+            <TextField label="Web address" icon={<Globe />} placeholder="https://" hint="A page or an article." />
+            <TextField label="Short name" icon={<User />} defaultValue="A name that is far too long" error="Too long." />
             <Select aria-label="Range" defaultValue="30">
               <option value="7">7 days</option>
               <option value="30">30 days</option>
@@ -356,10 +357,10 @@ export default function Catalog() {
 
         <Part name="FieldLabel, GroupHeading, FIELD_CLASS" note="the item-form kit, for a field laid out by hand">
           <GroupHeading>Login</GroupHeading>
-          <FieldLabel icon={<User size={13} />}>Username</FieldLabel>
+          <FieldLabel icon={<User />}>Username</FieldLabel>
           <div className="flex gap-1.5">
             <input className={FIELD_CLASS} defaultValue="user@example.com" aria-label="Username" />
-            <button type="button" className={FIELD_BUTTON} aria-label="Copy"><Copy size={16} aria-hidden="true" /></button>
+            <button type="button" className={FIELD_BUTTON} aria-label="Copy"><Copy aria-hidden="true" /></button>
           </div>
         </Part>
 
@@ -390,7 +391,7 @@ export default function Catalog() {
                 <button type="button" aria-pressed={false} className={settingsSegClass(false)}>Off</button>
               </div>
             </div>
-            <Switch label="A boolean setting" icon={<Gear size={14} className="text-accent" />} labelClassName={ROW_TITLE} description="A switch row: the whole row is the label." checked={on} onChange={setOn} className="py-3" />
+            <Switch label="A boolean setting" icon={<Gear className="text-accent" />} labelClassName={ROW_TITLE} description="A switch row: the whole row is the label." checked={on} onChange={setOn} className="py-3" />
             <Switch label="Disabled, off" checked={false} onChange={() => {}} disabled className="py-3" />
             <Switch label="Disabled, on" checked onChange={() => {}} disabled className="py-3" />
           </div>
@@ -422,12 +423,12 @@ export default function Catalog() {
           gap="This fixture reports confirmation without deleting data. Editor caret preservation and each caller's deletion, persistence and failure handling need separate checks. The shared component has no busy or disabled prop.">
           <p className={SETTINGS_HELP}>The first click only arms the button. Confirm within three seconds; Escape or timeout returns to the trash icon. Keyboard activation focuses the confirmation so Enter can confirm. Outside click and blur are not explicit cancellation handlers.</p>
           <div className="flex max-w-md items-center gap-2 rounded-md border border-divider bg-surface-2 py-1.5 pe-1.5 ps-3">
-            <span className="min-w-0 flex-1 truncate text-sm font-medium">Multivitamin</span>
-            <IconButton label="Edit"><PencilSimple size={14} aria-hidden="true" /></IconButton>
+            <span className="min-w-0 flex-1 truncate text-body font-medium">Multivitamin</span>
+            <IconButton label="Edit"><PencilSimple aria-hidden="true" /></IconButton>
             <DeleteButton kind="remove" label="Remove Multivitamin" onConfirm={() => setLog('Removed')} />
           </div>
           <div className="flex max-w-md items-center gap-2 rounded-xl border border-divider bg-surface-2 py-2 pe-3 ps-3">
-            <span className="min-w-0 flex-1 truncate text-sm">qa-repeat.jpg</span>
+            <span className="min-w-0 flex-1 truncate text-body">qa-repeat.jpg</span>
             <DeleteButton label="Delete qa-repeat.jpg" onConfirm={() => setLog('Deleted')} />
           </div>
           <p className={SETTINGS_HELP} role="status">{log || 'No confirmation yet. These are local examples.'}</p>
@@ -456,7 +457,7 @@ export default function Catalog() {
         </Part>
         <Part name="Export progress" note="The actual export window in running, complete, incomplete and failed states."
           source="ExportProgressModal.tsx; notesView/useExports.ts"
-          gap="Local fixture only: no files exported. Running automatically finishes after three seconds so the non-cancellable window cannot trap the catalog. Product path: Settings > Import & Export > Export. Real disk/network failures require separate checks.">
+          gap="Local fixture only: no files exported. Running finishes after three seconds; Cancel, the X and Escape close it before then. The fixture has no saved path, so Show in folder (desktop only) does not appear. Product path: Settings > Import & Export > Export. Real disk/network failures require separate checks.">
           <ExportProgressLab />
         </Part>
 
@@ -498,7 +499,7 @@ export default function Catalog() {
         <Part name="useProGate" note="Pro actions stay enabled; a free account gets the upgrade window">
           <div className="flex flex-wrap items-center gap-3">
             <Switch label="Free account" checked={free} onChange={setFree} />
-            <Button pro={free} icon={<Sparkle size={15} aria-hidden="true" />} onClick={guard(() => setLog('Ran the Pro action.'))}>Show and copy AI prompt</Button>
+            <Button pro={free} icon={<Sparkle aria-hidden="true" />} onClick={guard(() => setLog('Ran the Pro action.'))}>Show and copy AI prompt</Button>
             <span className={SETTINGS_HELP}>{log}</span>
           </div>
         </Part>
@@ -544,19 +545,19 @@ export default function Catalog() {
               {['Work', 'Family', 'Exercise'].map((c) => (
                 <button key={c} type="button" aria-pressed={chips.includes(c)} onClick={() => setChips((x) => (x.includes(c) ? x.filter((y) => y !== c) : [...x, c]))} className={chipClass(chips.includes(c))}>{c}</button>
               ))}
-              <button type="button" className={CHIP_ADD}><Plus size={12} aria-hidden="true" />Add</button>
+              <button type="button" className={CHIP_ADD}><Plus aria-hidden="true" />Add</button>
             </div>
           </div>
         </Part>
 
         <Part name="Modal, ModalFooter" note="title with an icon and the close X; inline header for a short window, bar header over a scrolling body; footer with icon buttons">
           <div className="flex flex-wrap gap-2">
-            <Button icon={<AppWindow size={15} aria-hidden="true" />} onClick={() => setWindowOpen('inline')}>Short window</Button>
-            <Button icon={<AppWindow size={15} aria-hidden="true" />} onClick={() => setWindowOpen('bar')}>Window with a title bar</Button>
+            <Button icon={<AppWindow aria-hidden="true" />} onClick={() => setWindowOpen('inline')}>Short window</Button>
+            <Button icon={<AppWindow aria-hidden="true" />} onClick={() => setWindowOpen('bar')}>Window with a title bar</Button>
           </div>
           {windowOpen === 'inline' && (
-            <Modal onClose={() => setWindowOpen(null)} title="Clip page" icon={<Scissors size={16} />} className="max-w-md p-6 space-y-4">
-              <TextField label="Web address" icon={<Globe size={13} />} dir="ltr" placeholder="https://" />
+            <Modal onClose={() => setWindowOpen(null)} title="Clip page" icon={<Scissors />} className="max-w-md p-6 space-y-4">
+              <TextField label="Web address" icon={<Globe />} dir="ltr" placeholder="https://" />
               <div className={SETTINGS_TRACK}>
                 <button type="button" aria-pressed={false} className={settingsSegClass(false)}>Bookmark</button>
                 <button type="button" aria-pressed className={settingsSegClass(true)}>Main text</button>
@@ -569,10 +570,10 @@ export default function Catalog() {
             </Modal>
           )}
           {windowOpen === 'bar' && (
-            <Modal onClose={() => setWindowOpen(null)} title="Note history" icon={<Clock size={16} />} subtitle="Local example versions." header="bar" className="max-w-lg max-h-[80vh] flex flex-col">
+            <Modal onClose={() => setWindowOpen(null)} title="Note history" icon={<Clock />} subtitle="Local example versions." header="bar" className="max-w-lg max-h-[80vh] flex flex-col">
               <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-2">
                 {['Today, 14:02', 'Yesterday, 09:40', 'Oct 12, 18:15'].map((v) => (
-                  <p key={v} className="flex items-center gap-2 text-sm"><Article size={14} className="text-accent" aria-hidden="true" />{v}</p>
+                  <p key={v} className="flex items-center gap-2 text-body"><Article className="text-accent" aria-hidden="true" />{v}</p>
                 ))}
               </div>
               <ModalFooter bar>
@@ -625,8 +626,19 @@ export default function Catalog() {
           </div>
         </Part>
 
+        <Part name="GridCard" note="a Home widget: placed by the grid, content clipped to the box, its arranging tools in `controls`">
+          <ul className="grid grid-cols-3 gap-3">
+            <GridCard title="Open tasks" icon={CheckFat} style={{ gridColumn: 'span 2' }} link={{ label: 'Tasks', onClick: () => setLog('Tasks') }}>
+              <p className="text-compact text-pn">Book dentist</p>
+            </GridCard>
+            <GridCard title="Streak" icon={Fire}>
+              <p className="text-display font-semibold">12</p>
+            </GridCard>
+          </ul>
+        </Part>
+
         <Part name="UpdateToast" note="a toast at the bottom end: icon tile, title, meta, one action">
-          <Button icon={<Bell size={15} aria-hidden="true" />} onClick={() => setToast(true)}>Show a toast</Button>
+          <Button icon={<Bell aria-hidden="true" />} onClick={() => setToast(true)}>Show a toast</Button>
           {toast && <UpdateToast version="0.700.0" actionLabel="Restart" onAction={() => setToast(false)} onDismiss={() => setToast(false)} />}
         </Part>
 
@@ -634,8 +646,8 @@ export default function Catalog() {
           <div className={DETAIL_COLUMN}>
             <DetailHero tile={<DetailTile><Globe size={22} /></DetailTile>} title="Google" subtitle="accounts.google.com" onEdit={() => setLog('Edit')} editLabel="Edit" />
             <DetailGroup heading="Login">
-              <DetailRow icon={<User size={13} />} label="Username" actions={<DetailCopyAction value="user@example.com" id="u" copied={copied} onCopy={(_, id) => setCopied(id)} label="Copy" />}>user@example.com</DetailRow>
-              <DetailRow icon={<Globe size={13} />} label="Website" actions={<DetailAction label="Open" href="https://accounts.google.com"><ArrowSquareOut size={15} /></DetailAction>}><DetailLink href="https://accounts.google.com">accounts.google.com</DetailLink></DetailRow>
+              <DetailRow icon={<User />} label="Username" actions={<DetailCopyAction value="user@example.com" id="u" copied={copied} onCopy={(_, id) => setCopied(id)} label="Copy" />}>user@example.com</DetailRow>
+              <DetailRow icon={<Globe />} label="Website" actions={<DetailAction label="Open" href="https://accounts.google.com"><ArrowSquareOut /></DetailAction>}><DetailLink href="https://accounts.google.com">accounts.google.com</DetailLink></DetailRow>
             </DetailGroup>
             <DetailNotes heading="Notes">Example login. Edit or delete anytime.</DetailNotes>
           </div>
@@ -653,7 +665,7 @@ export default function Catalog() {
             <Callout tone="success">Your recovery phrase is saved.</Callout>
           </div>
           <div className="overflow-hidden rounded-md border border-divider">
-            <Banner action={<FeedbackButton icon={<HardDrives size={15} aria-hidden="true" />}>Manage storage</FeedbackButton>} onDismiss={() => setLog('Dismissed')} dismissLabel="Later">Storage is full. New files are not uploaded.</Banner>
+            <Banner action={<FeedbackButton icon={<HardDrives aria-hidden="true" />}>Manage storage</FeedbackButton>} onDismiss={() => setLog('Dismissed')} dismissLabel="Later">Storage is full. New files are not uploaded.</Banner>
             <Banner tone="info">A newer version is ready.</Banner>
             <Banner tone="warning">Example: permission is needed before continuing.</Banner>
             <Banner tone="danger">Example: the operation failed. Your draft is still available.</Banner>
@@ -667,7 +679,7 @@ export default function Catalog() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <IconTile tone="danger"><Trash /></IconTile><IconTile tone="warning"><Warning /></IconTile><IconTile><Info /></IconTile><IconTile tone="success"><CheckCircle /></IconTile>
-            <span className="text-sm text-pn-muted">Press <Kbd>Esc</Kbd> to close, <Kbd>⌘</Kbd><Kbd>K</Kbd> to jump.</span>
+            <span className="text-body text-pn-muted">Press <Kbd>Esc</Kbd> to close, <Kbd>⌘</Kbd><Kbd>K</Kbd> to jump.</span>
           </div>
         </Part>
 
@@ -702,9 +714,9 @@ export default function Catalog() {
 
         <Part name="Popover, Divider, CopyButton, Snackbar" note="a panel at its control; a rule between groups; copy with a check; a message after an action">
           <div className="flex flex-wrap items-center gap-2">
-            <span ref={popAnchor} className="inline-flex"><Button icon={<SlidersHorizontal size={15} aria-hidden="true" />} onClick={() => setPop((v) => !v)}>View options</Button></span>
+            <span ref={popAnchor} className="inline-flex"><Button icon={<SlidersHorizontal aria-hidden="true" />} onClick={() => setPop((v) => !v)}>View options</Button></span>
             <CopyButton value="otpauth://example" label="Copy code" />
-            <Button icon={<ChatText size={15} aria-hidden="true" />} onClick={() => setSnack((v) => !v)}>Show a snackbar</Button>
+            <Button icon={<ChatText aria-hidden="true" />} onClick={() => setSnack((v) => !v)}>Show a snackbar</Button>
           </div>
           <Popover open={pop} anchorRef={popAnchor} onClose={() => setPop(false)} title="View options">
             <Checkbox label="Show previews" defaultChecked />
@@ -758,11 +770,11 @@ function WindowLab() {
             <Button action={busy ? 'done' : 'next'} onClick={() => setBusy((v) => !v)}>{busy ? 'End simulated busy state' : 'Simulate busy state'}</Button>
           </div>
           {busy && <StatusLine busy>Local busy simulation. End it with the button above; X, Escape and outside click are disabled.</StatusLine>}
-          {long && Array.from({ length: 16 }, (_, i) => <p key={i} className="text-sm">Example paragraph {i + 1}. Long content belongs in the scrolling body while the title and actions remain reachable.</p>)}
+          {long && Array.from({ length: 16 }, (_, i) => <p key={i} className="text-body">Example paragraph {i + 1}. Long content belongs in the scrolling body while the title and actions remain reachable.</p>)}
         </div>
         {!info && <ModalFooter bar><Button action="cancel" disabled={busy} onClick={() => close('Cancelled the local draft.')} /><Button action="save" disabled={busy || invalid} onClick={() => close('Saved the local fixture only.')} /></ModalFooter>}
         {child && <Modal title="Child window" layer="z-[60]" onClose={() => setChild(false)} className="max-w-sm p-6 space-y-4">
-          <p className="text-sm">Close this layer first. The parent window should remain open.</p>
+          <p className="text-body">Close this layer first. The parent window should remain open.</p>
           <ModalFooter><Button action="cancel" onClick={() => setChild(false)} /><Button action="done" onClick={() => setChild(false)} /></ModalFooter>
         </Modal>}
       </Modal>}
@@ -795,9 +807,9 @@ function CatalogIndex({ kind }: { kind: 'settings' | 'windows' | 'flows' | 'site
     <p className={SETTINGS_HELP}>{found.length} of {rows.length} entries · {catalogIndex.scope}</p>
     <div className="max-h-[32rem] overflow-y-auto space-y-2">
       {found.map((r) => <details key={r.id} className="rounded-md border border-divider p-3">
-        <summary className="cursor-pointer text-sm font-semibold break-words">{r.title}</summary>
+        <summary className="cursor-pointer text-body font-semibold break-words">{r.title}</summary>
         <div className="mt-2 space-y-2">
-          {kind === 'sites' ? <a href={r.path} target="_blank" rel="noopener noreferrer" className="block text-sm text-accent underline break-words">{r.path}</a> : <p className="text-sm break-words">{r.path}</p>}
+          {kind === 'sites' ? <a href={r.path} target="_blank" rel="noopener noreferrer" className="block text-body text-accent underline break-words">{r.path}</a> : <p className="text-body break-words">{r.path}</p>}
           <p className={`${SETTINGS_HELP} break-words`}>Source: {r.source}</p>
           <p className={SETTINGS_HELP}>{r.detail}</p>
           <p className={`${SETTINGS_HELP} whitespace-pre-line break-words`}>{r.extra}</p>
@@ -817,7 +829,7 @@ function Part({ name, note, source, usage, gap, searchText = '', children }: { n
     <section hidden={!matches} className="space-y-3 rounded-lg border border-divider bg-surface-2 p-4" data-catalog={name}>
       <div>
         <p className={SETTINGS_HELP}>{group}</p>
-        <h2 className="text-sm font-semibold">{name}</h2>
+        <h2 className="text-body font-semibold">{name}</h2>
         <p className={SETTINGS_HELP}>{note}</p>
         {source && <p className={SETTINGS_HELP}>Source, relative to packages/web/src: {source}</p>}
         {usage && <p className={SETTINGS_HELP}>Real usages: {usage}</p>}
@@ -858,7 +870,7 @@ function ExportProgressLab() {
       <option value="failed">Failed</option><option value="incomplete">Incomplete</option><option value="complete">Complete</option><option value="running">Running, then completes</option>
     </select>
     <Button action="export" onClick={() => setOpen(true)}>Open export fixture</Button>
-    {open && <ExportProgressModal done={phase !== 'running'} status={phase === 'incomplete' ? 'Some files could not be included. Keep your original data.' : phase === 'running' ? 'Preparing the example backup...' : ''} error={phase === 'failed' ? 'The backup could not be created. Try exporting again.' : undefined} onClose={() => setOpen(false)} />}
+    {open && <ExportProgressModal done={phase !== 'running'} status={phase === 'incomplete' ? 'Some files could not be included. Keep your original data.' : ''} steps={['pictures', 'files', 'notes', 'zip']} step={phase === 'running' ? { step: 'pictures', done: 17, total: 56 } : undefined} error={phase === 'failed' ? 'The backup could not be created. Try exporting again.' : undefined} onClose={() => setOpen(false)} />}
   </>;
 }
 

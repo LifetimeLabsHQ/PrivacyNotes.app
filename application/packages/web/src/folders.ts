@@ -62,7 +62,7 @@ export interface FolderTree {
  * than this still holds the folder as live, and with the tombstone gone the
  * merge would take it back, so the window has to outlast any plausible
  * absence. Six months does; a week would not.
- * Spec: ops/docs/design-decisions.md (folder tombstone retention)
+ * Spec: docs/internal/design-decisions.md (folder tombstone retention)
  */
 export const TOMBSTONE_RETENTION_MS = 180 * 24 * 60 * 60 * 1000;
 
@@ -85,7 +85,7 @@ function stamp(): string {
  * The ids are fixed and permanent. They are what an already-seeded vault
  * matches on, what a seed file's `folder:` frontmatter resolves through,
  * and what the delete rule below tests against.
- * Spec: ops/specs/folders.md (starter tree)
+ * Spec: docs/internal/specs/folders.md (starter tree)
  */
 export const SEED_FOLDER_IDS = {
   PrivacyNotes: 'f01de001-0000-4000-8000-000000000004',
@@ -118,7 +118,7 @@ export function canDeleteFolder(id: string, foldersUnlocked: boolean): boolean {
  * did and it should follow the account rather than the device that made it.
  * Which folders are open stays per-device - that is about the screen you
  * are looking at, not about the content.
- * Spec: ops/docs/design-decisions.md (folders sort by Custom)
+ * Spec: docs/internal/design-decisions.md (folders sort by Custom)
  */
 export type FolderSortField = 'name' | 'entries' | 'custom';
 export type FolderSortDir = 'asc' | 'desc';
@@ -228,7 +228,7 @@ export function subtreeIds(folders: FolderDef[], id: string): Set<string> {
  * list of the open folder. Off, a folder holds its direct members only; on,
  * it holds its whole branch. Unfiled has no branch, so the switch never
  * reaches it. The branch is built once here, not once per note.
- * Spec: ops/docs/archive/folder-subfolders.md (section 4)
+ * Spec: docs/internal/specs/folder-subfolders.md (section 4)
  */
 export function folderScope(
   folders: FolderDef[],
@@ -246,7 +246,7 @@ export function folderScope(
  * folder, so two subfolders that share a name read apart in a combined list.
  * More than two levels down, the leading levels give way to an ellipsis,
  * because the chip truncates and its leaf is the part that matters.
- * Spec: ops/docs/archive/folder-subfolders.md (D4)
+ * Spec: docs/internal/specs/folder-subfolders.md (D4)
  */
 export function branchPathLabels(folders: FolderDef[], rootId: string): Map<string, string> {
   const byId = new Map(folders.map((f) => [f.id, f]));
@@ -353,8 +353,9 @@ export function moveFolder(
  * Both affected sibling lists are renumbered 0..n-1, so `order` can never
  * collide or leave a gap a later insert would have to guess at. A move the
  * tree refuses (into the folder's own subtree, or under an unknown parent)
- * and a sequence that is not exactly the destination's children are both
- * rejected whole rather than half-applied.
+ * and a sequence with a repeated or foreign id, or without the folder, are
+ * rejected whole rather than half-applied. A sequence that leaves siblings
+ * out (the tree did not show them) keeps those in their places.
  */
 export function applyFolderPlacement(
   folders: FolderDef[],
@@ -367,16 +368,27 @@ export function applyFolderPlacement(
   const reparenting = moving.parentId !== newParentId;
   if (reparenting && !canMoveFolder(folders, id, newParentId)) return folders;
 
-  const expected = new Set(
-    folders.filter((f) => f.parentId === newParentId && f.id !== id).map((f) => f.id),
-  );
-  expected.add(id);
-  if (orderedIds.length !== expected.size) return folders;
+  const siblings = folders
+    .filter((f) => f.parentId === newParentId && f.id !== id)
+    .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
+    .map((f) => f.id);
+  const expected = new Set([...siblings, id]);
+  if (!orderedIds.includes(id)) return folders;
   if (new Set(orderedIds).size !== orderedIds.length) return folders;
   if (orderedIds.some((each) => !expected.has(each))) return folders;
+  // The tree can show fewer siblings than there are: a space hides the
+  // folders of the other one (GitHub #621, a drop that did nothing). Each
+  // sibling the drop did not see goes back after the sibling it follows now.
+  const full = [...orderedIds];
+  const seen = new Set(orderedIds);
+  let anchor: string | null = null;
+  for (const each of siblings) {
+    if (!seen.has(each)) full.splice(anchor === null ? 0 : full.indexOf(anchor) + 1, 0, each);
+    anchor = each;
+  }
 
   const at = stamp();
-  const destination = new Map(orderedIds.map((each, i) => [each, i]));
+  const destination = new Map(full.map((each, i) => [each, i]));
   // The folder leaves a hole behind it; close that list up too, so a later
   // drop into the old parent is not numbering against stale gaps.
   const source = reparenting
@@ -526,7 +538,8 @@ export function folderNamePath(folders: FolderDef[], id: string | null): string[
  * folder whose full path (name chain from the root) already exists instead
  * of duplicating it. Returns the combined folders plus a map from each
  * imported folder id to its final id in the merged tree, so callers can
- * remap every note's folderId.
+ * remap every note's folderId, and the ids of the folders it created, which
+ * are the only ones a failed import may take back (`removeImportedFolders`).
  *
  * `originalIds` comes from our own backup: the id each imported folder had
  * in the account that wrote it. A folder `existing` still holds under that
@@ -548,10 +561,11 @@ export function reconcileImportedFolders(
   imported: FolderDef[],
   originalIds?: ReadonlyMap<string, string>,
   rootParent: string | null = null,
-): { folders: FolderDef[]; idMap: Map<string, string> } {
+): { folders: FolderDef[]; idMap: Map<string, string>; created: string[] } {
   let folders = [...existing];
   const live = new Set(existing.map((f) => f.id));
   const idMap = new Map<string, string>();
+  const created: string[] = [];
   for (const inc of imported) {
     const original = originalIds?.get(inc.id);
     if (original && live.has(original)) {
@@ -570,12 +584,43 @@ export function reconcileImportedFolders(
     if (res) {
       folders = res.folders;
       idMap.set(inc.id, res.created.id);
+      created.push(res.created.id);
     } else if (parentId) {
       // Unusable name: keep notes on the nearest real folder.
       idMap.set(inc.id, parentId);
     }
   }
-  return { folders, idMap };
+  return { folders, idMap, created };
+}
+
+/**
+ * Take back the folders a failed import created (backlog 217). `created`
+ * holds only ids the import made itself, each a fresh uuid, so a folder the
+ * vault had is never in it. A made folder is still kept when something not
+ * from the import is in it by now: a folder a pull or the person put inside
+ * it, or a note filed in it (`inUse`). Its made parents are kept with it.
+ * The rest go through `deleteFolder`, deepest first, so each leaves a
+ * tombstone and goes from other devices too if the tree already synced.
+ * Answers the input arrays unchanged when there is nothing to take back.
+ */
+export function removeImportedFolders(
+  tree: FolderTree,
+  created: ReadonlySet<string>,
+  inUse: ReadonlySet<string>,
+): { folders: FolderDef[]; deleted: FolderTombstone[]; removed: Set<string> } {
+  let { folders, deleted } = tree;
+  const removed = new Set<string>();
+  for (let progress = true; progress; ) {
+    progress = false;
+    for (const f of folders) {
+      if (!created.has(f.id) || inUse.has(f.id) || folders.some((c) => c.parentId === f.id)) continue;
+      ({ folders, deleted } = deleteFolder({ folders, deleted }, f.id));
+      removed.add(f.id);
+      progress = true;
+      break;
+    }
+  }
+  return { folders, deleted, removed };
 }
 
 /**

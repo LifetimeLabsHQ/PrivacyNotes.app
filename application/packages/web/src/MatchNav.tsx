@@ -15,13 +15,13 @@ export const BAR_BTN =
 
 /** Text buttons (Replace, All): the icon button's style at a label's width. */
 export const TEXT_BTN =
-  'flex items-center justify-center h-7 px-2 rounded text-xs font-medium text-pn-soft ' +
+  'flex items-center justify-center h-7 px-2 rounded text-small font-medium text-pn-soft ' +
   '[@media(hover:hover)]:hover:bg-pn/10 ' +
   'disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition shrink-0 outline-none';
 
 /** The search and replacement fields of the replace bars. */
 export const BAR_INPUT =
-  'flex-1 min-w-0 bg-transparent text-sm text-pn ' +
+  'flex-1 min-w-0 bg-transparent text-body text-pn ' +
   'placeholder:text-pn-muted outline-none px-1';
 
 type Props = {
@@ -43,7 +43,7 @@ export function MatchNav({ count, noHits, canStep, onStep }: Props) {
   return (
     <>
       <span
-        className={`min-w-[3.5ch] text-center text-xs tabular-nums shrink-0 ${
+        className={`min-w-[3.5ch] text-center text-small tabular-nums shrink-0 ${
           noHits ? 'text-danger' : 'text-pn-muted'
         }`}
       >
@@ -58,7 +58,7 @@ export function MatchNav({ count, noHits, canStep, onStep }: Props) {
           aria-label={t('find.previous')}
           className={BAR_BTN}
         >
-          <CaretUp size={15} />
+          <CaretUp />
         </button>
       </HoverLabel>
       <HoverLabel label={t('find.nextTitle')} keys={bindingKeyText({ key: 'Enter' })} position="below">
@@ -70,7 +70,7 @@ export function MatchNav({ count, noHits, canStep, onStep }: Props) {
           aria-label={t('find.next')}
           className={BAR_BTN}
         >
-          <CaretDown size={15} />
+          <CaretDown />
         </button>
       </HoverLabel>
     </>
@@ -86,7 +86,7 @@ export function MatchNav({ count, noHits, canStep, onStep }: Props) {
  */
 export function ReplaceToggle({ open, pro, onClick }: { open: boolean; pro: boolean; onClick: () => void }) {
   const { t } = useTranslation('editor');
-  const label = open ? t('find.hideReplace') : t('find.showReplace');
+  const label = open ? t('find.hideReplace') : t('common:palette.commands.findReplace');
   return (
     <HoverLabel label={label} keys={open ? '' : keyText('findReplace')} position="below">
       <button
@@ -98,7 +98,7 @@ export function ReplaceToggle({ open, pro, onClick }: { open: boolean; pro: bool
         className={`${BAR_BTN}${open ? ' bg-pn/10 text-accent' : ''}`}
       >
         <ProGlyph pro={pro}>
-          <Swap size={15} />
+          <Swap />
         </ProGlyph>
       </button>
     </HoverLabel>

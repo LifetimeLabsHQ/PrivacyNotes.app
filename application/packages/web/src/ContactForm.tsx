@@ -37,7 +37,7 @@ import { isImeComposing } from './imeComposing';
  * one component for every row kind: a button that opens the shared
  * ContextMenu with the suggested vocabulary plus a custom entry.
  *
- * Spec: ops/docs/archive/contacts-pillar.md (section 6) + contacts-mockups.html (sections 4 and 5)
+ * Spec: docs/internal/specs/contacts-pillar.md (section 6) + contacts-mockups.html (sections 4 and 5)
  */
 
 type RowKind = 'phones' | 'emails' | 'urls' | 'profiles' | 'dates' | 'related';
@@ -72,7 +72,7 @@ const VOCABULARY: Record<RowKind | 'addresses', readonly string[]> = {
  * one thing worth refusing is a runaway paste, because a note over 1 MB is one
  * the server will not take, and it then sits unsynced behind a pill the owner
  * has to notice.
- * Spec: ops/docs/design-decisions.md (contact field caps)
+ * Spec: docs/internal/design-decisions.md (contact field caps)
  */
 const VALUE_MAX = 200;
 const LABEL_MAX = 40;
@@ -182,7 +182,7 @@ export function ContactForm({
       x: rect.left,
       y: rect.bottom + 4,
       items: [
-        { label: t('contacts.changePhoto'), icon: <Camera size={14} />, onSelect: () => photoInputRef.current?.click() },
+        { label: t('contacts.changePhoto'), icon: <Camera />, onSelect: () => photoInputRef.current?.click() },
         { label: t('contacts.removePhoto'), icon: iconTrash(), destructive: true, onSelect: () => update({ photo: '', photoBytes: 0 }) },
       ],
     });
@@ -255,22 +255,22 @@ export function ContactForm({
     const show = (key: string) => setAdded((prev) => new Set(prev).add(key));
     const items: ContextMenuItem[] = [
       { type: 'header', label: t('contacts.menuContact') },
-      { label: t('contacts.itemAddress'), onSelect: () => update({ addresses: withTrailingBlankAddress(draft.addresses) }) },
-      { label: t('contacts.itemWebsite'), onSelect: () => addRow('urls') },
-      { label: t('contacts.itemProfile'), onSelect: () => addRow('profiles') },
+      { label: t('shell:contacts.groupAddress'), onSelect: () => update({ addresses: withTrailingBlankAddress(draft.addresses) }) },
+      { label: t('shell:contacts.groupWebsite'), onSelect: () => addRow('urls') },
+      { label: t('shell:contacts.labels.profile'), onSelect: () => addRow('profiles') },
     ];
     if (!showCompany || !showJobTitle) {
       items.push({ type: 'header', label: t('contacts.menuWork') });
-      if (!showCompany) items.push({ label: t('contacts.itemCompany'), onSelect: () => show('company') });
-      if (!showJobTitle) items.push({ label: t('contacts.itemJobTitle'), onSelect: () => show('jobTitle') });
+      if (!showCompany) items.push({ label: t('shell:contacts.company'), onSelect: () => show('company') });
+      if (!showJobTitle) items.push({ label: t('shell:contacts.jobTitle'), onSelect: () => show('jobTitle') });
     }
     items.push({ type: 'header', label: t('contacts.menuPersonal') });
-    if (!hasBirthday) items.push({ label: t('contacts.itemBirthday'), onSelect: () => addRow('dates', BIRTHDAY_LABEL) });
+    if (!hasBirthday) items.push({ label: t('shell:contacts.labels.birthday'), onSelect: () => addRow('dates', BIRTHDAY_LABEL) });
     items.push({ label: t('contacts.itemDate'), onSelect: () => addRow('dates', 'anniversary') });
     items.push({ label: t('contacts.itemRelated'), onSelect: () => addRow('related') });
     if (!showNickname || !showNameParts || !showPhonetic) {
       items.push({ type: 'header', label: t('contacts.menuName') });
-      if (!showNickname) items.push({ label: t('contacts.itemNickname'), onSelect: () => show('nickname') });
+      if (!showNickname) items.push({ label: t('shell:contacts.nickname'), onSelect: () => show('nickname') });
       if (!showNameParts) items.push({ label: t('contacts.itemNameParts'), onSelect: () => show('nameParts') });
       if (!showPhonetic) items.push({ label: t('contacts.itemPhonetic'), onSelect: () => show('phonetic') });
     }
@@ -296,7 +296,7 @@ export function ContactForm({
           onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === 'Escape') && !isImeComposing(e)) { e.preventDefault(); setCustomLabel(null); } }}
           placeholder={t('contacts.labelNone')}
           maxLength={LABEL_MAX}
-          className="w-28 shrink-0 rounded-md border border-accent bg-surface-1 px-2 py-2 text-xs focus:outline-none"
+          className="w-28 shrink-0 rounded-md border border-accent bg-surface-1 px-2 py-2 text-small focus:outline-none"
         />
       );
     }
@@ -305,10 +305,10 @@ export function ContactForm({
         type="button"
         disabled={locked}
         onClick={(e) => openLabelMenu(e, kind, index)}
-        className="w-28 shrink-0 inline-flex items-center justify-between gap-1 rounded-md border border-divider bg-surface-2 px-2 py-2 text-xs text-pn-soft hover:border-accent transition disabled:opacity-60"
+        className="w-28 shrink-0 inline-flex items-center justify-between gap-1 rounded-md border border-divider bg-surface-2 px-2 py-2 text-small text-pn-soft hover:border-accent transition disabled:opacity-60"
       >
         <span className="truncate">{labelText(label)}</span>
-        <CaretDown size={11} className="shrink-0 text-pn-muted" aria-hidden="true" />
+        <CaretDown className="shrink-0 text-pn-muted" aria-hidden="true" />
       </button>
     );
   }
@@ -319,10 +319,10 @@ export function ContactForm({
         type="button"
         onClick={onClick}
         disabled={locked || blank}
-        aria-label={t('contacts.removeRow')}
+        aria-label={t('common:actions.remove')}
         className={`shrink-0 w-8 h-8 rounded-md inline-flex items-center justify-center text-accent/70 hover:text-red-600 dark:hover:text-red-400 transition ${blank ? 'opacity-35' : ''}`}
       >
-        <Minus size={14} />
+        <Minus />
       </button>
     );
   }
@@ -371,7 +371,7 @@ export function ContactForm({
           >
             <ContactChip name={title} initials={contactInitialsFor(title, draft)} photo={draft.photo} size={56} />
             <span className="absolute -bottom-0.5 -end-0.5 w-5 h-5 rounded-full bg-surface-1 border border-divider inline-flex items-center justify-center text-pn-soft group-hover:border-accent group-hover:text-accent transition">
-              {photoBusy ? <Spinner size={11} className="animate-spin" /> : <Camera size={11} />}
+              {photoBusy ? <Spinner className="animate-spin" /> : <Camera />}
             </span>
           </button>
           <input
@@ -408,7 +408,7 @@ export function ContactForm({
 
         {showNameParts && (
           <div>
-            <GroupHeading>{t('contacts.groupName')}</GroupHeading>
+            <GroupHeading>{t('shell:contacts.menuName')}</GroupHeading>
             <div className="grid grid-cols-3 gap-1.5">
               <input value={draft.prefix} onChange={(e) => update({ prefix: e.target.value })} placeholder={t('contacts.prefix')} disabled={locked} maxLength={VALUE_MAX} dir="auto" className={fieldClass} />
               <input value={draft.middle} onChange={(e) => update({ middle: e.target.value })} placeholder={t('contacts.middleName')} disabled={locked} maxLength={VALUE_MAX} dir="auto" className={fieldClass} />
@@ -419,7 +419,7 @@ export function ContactForm({
 
         {showNickname && (
           <div>
-            <FieldLabel icon={<User size={13} />}>{t('contacts.nickname')}</FieldLabel>
+            <FieldLabel icon={<User />}>{t('contacts.nickname')}</FieldLabel>
             <input value={draft.nickname} onChange={(e) => update({ nickname: e.target.value })} disabled={locked} maxLength={VALUE_MAX} dir="auto" className={fieldClass} />
           </div>
         )}
@@ -480,13 +480,13 @@ export function ContactForm({
         )}
 
         {showUrls && labelledRows('urls', t('contacts.groupWebsite'), t('contacts.addWebsite'), 'url')}
-        {showProfiles && labelledRows('profiles', t('contacts.groupProfile'), t('contacts.addProfile'))}
+        {showProfiles && labelledRows('profiles', t('shell:contacts.labels.profile'), t('contacts.addProfile'))}
         {showDates && labelledRows('dates', t('contacts.groupDates'), t('contacts.addDate'))}
         {showRelated && labelledRows('related', t('contacts.groupRelated'), t('contacts.addRelated'))}
 
         {showNotes && (
           <div>
-            <FieldLabel icon={<NotePencil size={13} />}>{t('contacts.groupNote')}</FieldLabel>
+            <FieldLabel icon={<NotePencil />}>{t('shell:contacts.itemNote')}</FieldLabel>
             <textarea value={draft.notes} onChange={(e) => update({ notes: e.target.value })} placeholder={t('contacts.notePlaceholder')} disabled={locked} maxLength={NOTE_MAX} rows={3} dir="auto" className={`${fieldClass} resize-y`} />
           </div>
         )}
@@ -496,9 +496,9 @@ export function ContactForm({
           type="button"
           onClick={openAddField}
           disabled={locked}
-          className="self-start inline-flex items-center gap-1.5 rounded-md border border-dashed border-divider px-3 py-1.5 text-[13px] text-accent hover:border-accent hover:bg-accent/8 transition disabled:opacity-60"
+          className="self-start inline-flex items-center gap-1.5 rounded-md border border-dashed border-divider px-3 py-1.5 text-compact text-accent hover:border-accent hover:bg-accent/8 transition disabled:opacity-60"
         >
-          <Plus size={14} />
+          <Plus />
           {t('contacts.addField')}
         </button>
 
@@ -508,21 +508,21 @@ export function ContactForm({
               type="button"
               onClick={() => setExtrasOpen((v) => !v)}
               aria-expanded={extrasOpen}
-              className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-pn-soft"
+              className="w-full flex items-center gap-2 px-3 py-2 text-compact text-pn-soft"
             >
-              <CaretDown size={12} className={`shrink-0 transition-transform ${extrasOpen ? '' : '-rotate-90'}`} aria-hidden="true" />
+              <CaretDown className={`shrink-0 transition-transform ${extrasOpen ? '' : '-rotate-90'}`} aria-hidden="true" />
               {t('contacts.alsoInFile')}
-              <span className="ms-auto text-xs text-pn-muted">{t('contacts.extrasCount', { count: draft.extras.length })}</span>
+              <span className="ms-auto text-small text-pn-muted">{t('contacts.extrasCount', { count: draft.extras.length })}</span>
             </button>
             {extrasOpen && (
               <div className="px-3 pb-3 flex flex-col gap-1">
                 {draft.extras.map((x, i) => (
-                  <div key={i} className="flex gap-3 text-xs">
+                  <div key={i} className="flex gap-3 text-small">
                     <span className="shrink-0 w-36 truncate font-mono text-pn-muted" dir="ltr">{x.name}</span>
                     <span className="min-w-0 break-all text-pn-soft" dir="auto">{x.value}</span>
                   </div>
                 ))}
-                <p className="mt-1 text-[11px] text-pn-muted">{t('contacts.extrasNote')}</p>
+                <p className="mt-1 text-meta text-pn-muted">{t('contacts.extrasNote')}</p>
               </div>
             )}
           </div>
@@ -537,19 +537,19 @@ export function ContactForm({
             disabled={!pinConfigured && !pinProtected}
             className="rounded accent-accent"
           />
-          <span className="text-sm text-pn-muted">{t('auth:loginForm.requirePin')}</span>
+          <span className="text-body text-pn-muted">{t('common:cardForm.requirePin')}</span>
           <button
             type="button"
             onClick={(e) => { e.preventDefault(); setShowPinInfo(true); }}
             className="text-accent/60 hover:text-accent transition p-1 -m-1"
-            aria-label={t('auth:loginForm.whatDoesThisDo')}
+            aria-label={t('common:cardForm.whatDoesThisDo')}
           >
             <Info />
           </button>
         </label>
         {showPinInfo && <PinInfoModal onClose={() => setShowPinInfo(false)} />}
         {!pinConfigured && !pinProtected && (
-          <p className="text-[11px] text-pn-muted -mt-3">{t('auth:loginForm.setUpPinFirst')}</p>
+          <p className="text-meta text-pn-muted -mt-3">{t('common:cardForm.setUpPinFirst')}</p>
         )}
 
         {saveError && <Callout tone="danger">{saveError}</Callout>}

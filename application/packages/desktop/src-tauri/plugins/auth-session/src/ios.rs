@@ -15,7 +15,7 @@ use objc2_authentication_services::{
     ASWebAuthenticationSessionErrorDomain,
 };
 use objc2_foundation::{NSError, NSObject, NSObjectProtocol, NSString, NSURL};
-use objc2_ui_kit::{UIApplication, UIScene, UIWindowScene};
+use objc2_ui_kit::{UIApplication, UIScene, UIWindow, UIWindowScene};
 
 // The presentation context provider: the object the sheet asks for the window
 // to anchor to.
@@ -51,6 +51,8 @@ impl AuthPresentationProvider {
 }
 
 /// The first window of a connected scene, as the anchor the sheet presents over.
+/// With no window, a bare one: the sheet then fails with an error that ends the
+/// sign-in, where a panic here would abort the app (`panic = "abort"`).
 fn get_key_window_as_anchor() -> Retained<NSObject> {
     let mtm = unsafe { MainThreadMarker::new_unchecked() };
     let app = UIApplication::sharedApplication(mtm);
@@ -66,7 +68,8 @@ fn get_key_window_as_anchor() -> Retained<NSObject> {
             return Retained::into_super(Retained::into_super(Retained::into_super(window)));
         }
     }
-    panic!("No windows available for ASWebAuthenticationSession presentation anchor");
+    let window = UIWindow::new(mtm);
+    Retained::into_super(Retained::into_super(Retained::into_super(window)))
 }
 
 /// Holds the active session and what it depends on, so nothing is released

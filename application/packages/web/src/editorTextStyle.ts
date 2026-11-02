@@ -21,6 +21,25 @@ import { TextStyle } from '@tiptap/extension-text-style';
  * markdownRender.ts, which independently allowlists the `color` value
  * (sanitizeColor) so an untrusted note can't smuggle other styles.
  */
+/**
+ * Turn off tiptap-markdown's own delimiter trim for a mark whose `open` is a
+ * function. Call it first thing in that `open`.
+ *
+ * `expelEnclosingWhitespace` drives two layers. prosemirror-markdown moves
+ * whitespace out of the mark node by node, which is correct for any `open`.
+ * tiptap-markdown (0.9.0) adds a second pass that stores `info.open` as a
+ * string delimiter and splices it through the output by emphasis rules. Given
+ * a function, it wrote the function's source into the note and cut
+ * `fn.length` characters (#672). That pass only matters for `*` and `_`, so
+ * an empty delimiter, which makes every one of its splices a no-op, is the
+ * right value for an HTML tag or `==`. The entry was pushed just before
+ * `open` runs, and close copies it, so clearing it here covers both ends.
+ */
+export function skipDelimiterTrim(state: unknown): void {
+  const top = (state as { inlines?: { delimiter?: unknown; end?: number }[] }).inlines?.at(-1);
+  if (top && typeof top.delimiter === 'function' && top.end === undefined) top.delimiter = '';
+}
+
 /** Attributes FontSize, FontFamily and Color all hang off the one textStyle mark. */
 type TextStyleAttrs = {
   color?: string | null;
@@ -55,7 +74,8 @@ export const TextStyleMarkdown = TextStyle.extend({
     return {
       markdown: {
         serialize: {
-          open(_state: unknown, mark: { attrs: TextStyleAttrs }) {
+          open(state: unknown, mark: { attrs: TextStyleAttrs }) {
+            skipDelimiterTrim(state);
             const css = textStyleCss(mark.attrs);
             return css ? `<span style="${css}">` : '';
           },

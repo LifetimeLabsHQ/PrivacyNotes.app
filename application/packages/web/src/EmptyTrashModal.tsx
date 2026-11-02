@@ -15,7 +15,7 @@ export function EmptyTrashModal({ noteCount, noteIds, onConfirm, onClose }: Prop
   return (
     <ConfirmModal
       title={t('emptyTrash.title')}
-      confirmLabel={t('emptyTrash.confirm')}
+      confirmLabel={t('common:deleteNote.confirm')}
       variant="danger"
       onConfirm={onConfirm}
       onClose={onClose}

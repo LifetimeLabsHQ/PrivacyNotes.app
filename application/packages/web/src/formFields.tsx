@@ -10,11 +10,11 @@ import { AccentBar, HeadlineRule } from './settingsUI';
  * save into: a contact read as one design in view mode and another in edit
  * mode. A form is the same pane with the values typeable, so it takes its
  * headline and its label anatomy from the same place the pane does.
- * Spec: ops/docs/archive/ui-patterns.md (the item forms wear the detail pane's anatomy)
+ * Spec: docs/internal/design/ui-patterns.md (the item forms wear the detail pane's anatomy)
  */
 
 export const FIELD_CLASS =
-  'w-full rounded-md border border-divider bg-surface-1 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-60';
+  'w-full rounded-md border border-divider bg-surface-1 px-3 py-2 text-body focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-60';
 
 /** A button that sits beside a field, outside it, so nothing covers the value. */
 export const FIELD_BUTTON =
@@ -29,7 +29,7 @@ export function GroupHeading({ children }: { children: ReactNode }) {
   return (
     <div className="flex items-center gap-2.5 mb-2">
       <AccentBar />
-      <h3 className="text-sm font-semibold text-pn truncate" dir="auto">{children}</h3>
+      <h3 className="text-body font-semibold text-pn truncate" dir="auto">{children}</h3>
       <HeadlineRule />
     </div>
   );
@@ -45,7 +45,7 @@ export function FieldLabel({ icon, children, htmlFor }: { icon?: ReactNode; chil
   return (
     <label
       htmlFor={htmlFor}
-      className="flex items-center gap-1.5 text-xs font-medium text-pn-muted mb-1"
+      className="flex items-center gap-1.5 text-small font-medium text-pn-muted mb-1"
       dir="auto"
     >
       {icon && <span className="shrink-0 text-accent" aria-hidden="true">{icon}</span>}

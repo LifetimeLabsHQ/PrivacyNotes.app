@@ -12,7 +12,7 @@ import { HABIT_IDS, WATCH_HABITS, type HabitAnswers } from './trackerTypes';
  * by id with tombstones, like the factors, because an older app keeps an
  * unknown top-level key and drops an unknown key inside `trackerSettings`.
  * Ids carry the `c-` prefix, so they never meet a built-in id.
- * Spec: ops/issues/0439.md (Spec)
+ * Spec: docs/internal/issues/0439.md (Spec)
  */
 
 export type HabitKind = 'build' | 'watch';

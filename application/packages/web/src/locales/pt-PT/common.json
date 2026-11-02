@@ -26,14 +26,11 @@
     "noResults": "Sem resultados"
   },
   "deleteNote": {
-    "title": "Eliminar Para Sempre",
     "confirm": "Eliminar Para Sempre",
-    "untitled": "Sem título",
     "body": "Eliminar permanentemente <highlight>“{{title}}”</highlight>? Isto não pode ser anulado."
   },
   "emptyTrash": {
     "title": "Esvaziar o Lixo",
-    "confirm": "Eliminar Para Sempre",
     "body_one": "Eliminar permanentemente <highlight>{{count}} nota</highlight>? Isto não pode ser anulado.",
     "body_other": "Eliminar permanentemente <highlight>{{count}} notas</highlight>? Isto não pode ser anulado."
   },
@@ -61,7 +58,6 @@
   },
   "palette": {
     "label": "Comandos",
-    "open": "Comandos",
     "empty": "Nenhum comando corresponde",
     "groups": {
       "features": "Funcionalidades",
@@ -86,7 +82,7 @@
       "insertDate": "Inserir a data",
       "insertDateTime": "Inserir a data e a hora",
       "clearFilters": "Remover os filtros",
-      "moveToTrash": "Mover a nota para o lixo",
+      "moveToTrash": "Eliminar a nota",
       "closeTab": "Fechar o separador ou a nota",
       "nextTab": "Separador seguinte",
       "previousTab": "Separador anterior",
@@ -109,10 +105,8 @@
     "move": "mover",
     "open": "abrir",
     "openInTab": "abrir num separador",
-    "openLink": "Abrir",
     "edit": "editar",
     "close": "fechar",
-    "tags": "Etiquetas",
     "folders": "Pastas",
     "tagItems_one": "{{count}} item",
     "tagItems_other": "{{count}} itens",
@@ -175,17 +169,14 @@
     "downloadPublicKey": "Descarregar chave pública",
     "downloadPrivateKey": "Descarregar chave privada",
     "downloadHint": "Move a chave descarregada para ~/.ssh e executa chmod 600 nela, ou o ssh recusa-a.",
+    "downloadHintDesktop": "O PrivacyNotes não guarda em ~/.ssh, para manter seguras as chaves que lá estão. Guarda a chave noutro sítio, move-a para ~/.ssh e executa chmod 600 nela, ou o ssh recusa-a.",
+    "downloadHintWindows": "O PrivacyNotes não guarda na tua pasta .ssh, para manter seguras as chaves que lá estão. Guarda a chave noutro sítio e move-a para %USERPROFILE%\\.ssh. O Windows não precisa de chmod.",
     "downloadFailed": "Não foi possível guardar o ficheiro da chave. Verifica o ficheiro e tenta novamente.",
     "passphrase": "Frase-passe",
     "passphrasePlaceholder": "Frase-passe da chave (se existir)",
     "show": "Mostrar",
     "hide": "Ocultar",
-    "copyPassphrase": "Copiar frase-passe",
-    "notes": "Notas",
-    "notesPlaceholder": "Notas adicionais (opcional)",
-    "requirePin": "Exigir PIN para ver",
-    "whatDoesThisDo": "O que é que isto faz?",
-    "setUpPinFirst": "Configura primeiro um PIN nas definições de Segurança."
+    "copyPassphrase": "Copiar frase-passe"
   },
   "tagInput": {
     "placeholder": "Adicionar etiquetas… separa por vírgula, # ou enter",
@@ -257,7 +248,6 @@
       "a abrir o cofre em silêncio",
       "desencriptado localmente. ignorado globalmente",
       "a desencriptar como se não fosse da conta de ninguém",
-      "texto simples de produção local",
       "a transformar pensamentos numa sopa ilegível",
       "mais uma obra-prima encriptada a caminho",
       "a pôr ordem no caos encriptado",
@@ -281,17 +271,14 @@
     "changesSome_other": "{{count}} destas notas têm alterações sem cópia de segurança que se perderiam."
   },
   "ninja": {
-    "recent": "Recentes",
     "topHit": "Melhor correspondência",
     "trashEmpty": "O Lixo está vazio",
     "allThemes": "Todos os temas",
     "features": {
       "stats": {
-        "label": "Estatísticas",
         "detail": "A tua escrita, as sequências e os registos ao longo do tempo"
       },
       "trackers": {
-        "label": "Registos",
         "detail": "Humor, hábitos, fatores e medicação"
       },
       "medication": {
@@ -311,7 +298,6 @@
         "detail": "Uma palavra-passe forte ou uma frase-passe, pronta a copiar"
       },
       "themes": {
-        "label": "Temas",
         "detail": "Temas de cor para claro e escuro"
       }
     },
@@ -322,7 +308,6 @@
     "commands": {
       "syncResume": "Retomar a sincronização",
       "changelog": "Novidades",
-      "help": "Ajuda",
       "themesPage": "Temas da comunidade",
       "website": "Site do PrivacyNotes"
     },

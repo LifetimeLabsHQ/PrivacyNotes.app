@@ -15,7 +15,7 @@ import { compareSentence, formatNumber, hasData, levelLabel, sideLabels, tracker
 /**
  * One tracker's page: its numbers, its chart against an outcome on one date
  * axis, and the comparison, same day or next day. The Back row above names it.
- * Spec: ops/docs/archive/wellness-statistics.md (sections 9, 22)
+ * Spec: docs/internal/specs/wellness-statistics.md (sections 9, 22)
  */
 /** The smallest difference the goes-with list shows, as a share of the outcome's spread, and how many rows it keeps. */
 const GOES_WITH_MIN = 0.05;
@@ -67,7 +67,7 @@ export function ExploreSubTab({ model, trackerId, unlocked, isPro, onOpenUpgrade
     return rows.map((x) => ({ ...x, share: x.share / top }));
   }, [model, selected, outcomes, unlocked]);
 
-  if (!selected) return <p className="text-xs text-pn-muted">{t('wellness.trackers.empty')}</p>;
+  if (!selected) return <p className="text-small text-pn-muted">{t('wellness.trackers.empty')}</p>;
   const series = model.seriesOf(selected);
   const { headline, sub } = cardNumbers(selected, series, t);
   const name = trackerName(selected, t);
@@ -85,10 +85,10 @@ export function ExploreSubTab({ model, trackerId, unlocked, isPro, onOpenUpgrade
   return (
     <>
       <div>
-        <div className="text-2xl font-semibold">{headline}</div>
-        <div className="text-[11px] text-pn-muted">{sub}</div>
+        <div className="text-display-2 font-semibold">{headline}</div>
+        <div className="text-meta text-pn-muted">{sub}</div>
         {agg.kind === 'yesno' && (
-          <div className="text-[11px] text-pn-muted">
+          <div className="text-meta text-pn-muted">
             {t('wellness.explore.longestRunWithout', { count: agg.longestRunWithout })}, {t('wellness.explore.longestRunWith', { count: agg.longestRunWith })}
           </div>
         )}
@@ -98,7 +98,7 @@ export function ExploreSubTab({ model, trackerId, unlocked, isPro, onOpenUpgrade
       {!outcome && (
         <div>
           <TrackerChart spec={chartSpecFor(selected, series, weekly)} height={64} ariaLabel={name} formatValue={formatPoint} onPickDay={onOpenDay} />
-          <div className="flex justify-between text-[11px] text-pn-muted mt-1">
+          <div className="flex justify-between text-meta text-pn-muted mt-1">
             <span>{formatDay(model.range.from, 'dayMonth')}</span>
             <span>{formatDay(model.range.to, 'dayMonth')}</span>
           </div>
@@ -112,7 +112,7 @@ export function ExploreSubTab({ model, trackerId, unlocked, isPro, onOpenUpgrade
           <div className="mt-1">
             <TrackerChart spec={chartSpecFor(selected, series, weekly)} height={selected.kind === 'yesno' ? 24 : 48} ariaLabel={name} formatValue={formatPoint} onPickDay={onOpenDay} />
           </div>
-          <div className="flex justify-between text-[11px] text-pn-muted mt-1">
+          <div className="flex justify-between text-meta text-pn-muted mt-1">
             <span>{formatDay(model.range.from, 'dayMonth')}</span>
             <span>{formatDay(model.range.to, 'dayMonth')}</span>
           </div>
@@ -123,7 +123,7 @@ export function ExploreSubTab({ model, trackerId, unlocked, isPro, onOpenUpgrade
         <div>
           <div className="flex items-center justify-between gap-2 mb-2">
             <SectionEyebrow icon={Sparkle}>{t('home.goesWith', { name })}</SectionEyebrow>
-            <span className="text-[11px] text-pn-muted">{t('home.goesWithHint', { side: sideLabels(goesWith[0]!.r, selected, t).a })}</span>
+            <span className="text-small text-pn-muted">{t('home.goesWithHint', { side: sideLabels(goesWith[0]!.r, selected, t).a })}</span>
           </div>
           <div className="@container rounded-lg border border-divider bg-surface-2 px-3 divide-y divide-divider">
             {goesWith.map(({ o, r, share }) => (
@@ -168,7 +168,7 @@ export function ExploreSubTab({ model, trackerId, unlocked, isPro, onOpenUpgrade
               {!isPro && <ProMark />}
             </div>
             {unlocked && outcomes.length > 1 && (
-              <label className="flex items-center gap-2 text-xs text-pn-soft">
+              <label className="flex items-center gap-2 text-small text-pn-soft">
                 {t('wellness.effects.compareWith')}
                 <select value={outcome.id} onChange={(e) => setOutcomeId(e.target.value)} className={SETTINGS_SELECT}>
                   {outcomes.map((d) => <option key={d.id} value={d.id}>{trackerName(d, t)}</option>)}
@@ -187,28 +187,28 @@ export function ExploreSubTab({ model, trackerId, unlocked, isPro, onOpenUpgrade
                 return (
                   <div key={tag ?? 'one'} className="rounded-lg border border-divider bg-track p-3">
                     {/* The finding first, in words; the bars below show it. */}
-                    <p className="text-sm text-pn mb-3">
+                    <p className="text-body text-pn mb-3">
                       {result.delta === null
                         ? result.shortfall && t('wellness.effects.shortfall', { count: result.shortfall.days, side: t(result.shortfall.side === 'a' ? 'wellness.effects.sideWith' : 'wellness.effects.sideWithout') })
                         : compareSentence(result, selected, outcome, t)}
                     </p>
                     {([['a', widthA, result.a, selected.color, sides.a], ['b', widthB, result.b, undefined, sides.b]] as const).map(([side, w, g, color, label]) => (
-                      <div key={side} className="grid grid-cols-[minmax(0,9rem)_1fr_2.5rem] items-center gap-3 text-xs mb-2 last:mb-0">
+                      <div key={side} className="grid grid-cols-[minmax(0,9rem)_1fr_2.5rem] items-center gap-3 text-small mb-2 last:mb-0">
                         <span className="min-w-0">
                           <span className="block text-pn-soft truncate">{label}</span>
-                          <span className="block text-[11px] text-pn-muted">{t('wellness.units.days', { count: g.n })}</span>
+                          <span className="block text-meta text-pn-muted">{t('wellness.units.days', { count: g.n })}</span>
                         </span>
                         <span className="h-2.5 rounded bg-surface-0 overflow-hidden"><span className="block h-full rounded" style={{ width: `${Math.min(100, w)}%`, backgroundColor: color ?? 'var(--pn-border-stronger, #9ca3af)' }} /></span>
-                        <span className="tabular-nums text-end text-sm font-semibold">{g.mean === null ? '-' : formatNumber(g.mean, 1)}</span>
+                        <span className="tabular-nums text-end text-body font-semibold">{g.mean === null ? '-' : formatNumber(g.mean, 1)}</span>
                       </div>
                     ))}
                   </div>
                 );
               })}
-              <p className="text-[11px] text-pn-muted">{t('wellness.effects.footnote')}</p>
+              <p className="text-small text-pn-muted">{t('wellness.effects.footnote')}</p>
             </div>
           ) : (
-            <button type="button" onClick={onOpenUpgrade} className="w-full rounded-lg border border-dashed border-divider p-3 text-xs text-pn-muted hover:text-pn hover:border-pn-muted transition-colors text-center">
+            <button type="button" onClick={onOpenUpgrade} className="w-full rounded-lg border border-dashed border-divider p-3 text-small text-pn-muted hover:text-pn hover:border-pn-muted transition-colors text-center">
               {t('wellness.patterns.tableLocked')}
             </button>
           )}

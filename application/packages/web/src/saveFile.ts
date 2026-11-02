@@ -20,10 +20,11 @@
  * it resolves to what became of the file, and the sink check refuses any call
  * whose result is dropped.
  *
- * Spec: ops/docs/gotchas.md (native webview has no download handler; Android
+ * Spec: docs/contrib/gotchas.md (native webview has no download handler; Android
  * SAF writes need a truncate-free retry and a size check)
  */
 import { detectPlatform } from './devices';
+import { cleanFileName } from './fileNames';
 import i18n from './i18n';
 
 /**
@@ -32,11 +33,70 @@ import i18n from './i18n';
  * behind, so the caller tells the reader to check it.
  */
 export type SaveResult =
-  | { ok: true }
+  /** `path` is where the native Save As dialog put the file; the web
+   *  download has no path the page can know. */
+  | { ok: true; path?: string }
   | { ok: false; reason: 'cancelled' }
-  | { ok: false; reason: 'failed'; error: unknown };
+  /** `blockedFolder` is set when the reader picked a folder the desktop app
+   *  never writes into; nothing was written. */
+  | { ok: false; reason: 'failed'; error: unknown; blockedFolder?: string };
+
+/**
+ * The folders under the home folder that the desktop app never writes into:
+ * credential folders, places where a file runs on its own, and the app's own
+ * data. The write deny list in capabilities/default.json refuses them whatever
+ * the Save As dialog allows; this copy only lets the app say why (issue #673).
+ * Spec: packages/desktop/src-tauri/capabilities/default.json (fs:allow-write-file deny)
+ */
+export const PROTECTED_FOLDERS = [
+  '.ssh',
+  '.gnupg',
+  '.aws',
+  '.kube',
+  '.docker',
+  '.config/gh',
+  '.local/share/keyrings',
+  'Library/LaunchAgents',
+  'Applications',
+  'bin',
+  'AppData',
+  'Documents/WindowsPowerShell',
+  'Documents/PowerShell',
+  'Library/Application Support/app.privacynotes',
+  'Library/Caches/app.privacynotes',
+  'Library/Logs/app.privacynotes',
+  'Library/WebKit',
+];
+
+/** The protected folder `path` is inside, as a full path, or null. */
+export function protectedFolder(path: string, home: string): string | null {
+  const sep = home.includes('\\') ? '\\' : '/';
+  const base = home.replace(/[\\/]+$/, '');
+  const rel = path.replace(/\\/g, '/');
+  const root = `${base.replace(/\\/g, '/')}/`;
+  if (!rel.startsWith(root)) return null;
+  const inside = rel.slice(root.length);
+  const hit = PROTECTED_FOLDERS.find((folder) => inside.startsWith(`${folder}/`));
+  return hit ? `${base}${sep}${hit.replaceAll('/', sep)}` : null;
+}
+
+/** The sentence for a failed save: why a protected folder refused it, or the caller's own. */
+export function saveFailureText(saved: { blockedFolder?: string }, fallback: string): string {
+  return saved.blockedFolder
+    ? i18n.t('importExport:saveErrors.protectedFolder', { folder: saved.blockedFolder })
+    : fallback;
+}
+
+class BlockedFolderError extends Error {
+  constructor(readonly folder: string) {
+    super(saveFailureText({ blockedFolder: folder }, ''));
+  }
+}
 
 export async function saveBlob(blob: Blob, filename: string): Promise<SaveResult> {
+  // Every caller's name, an attachment's from a note included, reaches the
+  // browser's download and the native Save dialog in the same clean form.
+  filename = cleanFileName(filename, 'download');
   if (detectPlatform() === 'web') {
     const url = URL.createObjectURL(blob);
     try {
@@ -55,15 +115,19 @@ export async function saveBlob(blob: Blob, filename: string): Promise<SaveResult
   }
 
   try {
-    return (await saveNative(blob, filename)) ? { ok: true } : { ok: false, reason: 'cancelled' };
+    const path = await saveNative(blob, filename);
+    return path ? { ok: true, path } : { ok: false, reason: 'cancelled' };
   } catch (error) {
+    if (error instanceof BlockedFolderError) {
+      return { ok: false, reason: 'failed', error, blockedFolder: error.folder };
+    }
     return { ok: false, reason: 'failed', error };
   }
 }
 
-/** False when the reader dismisses the dialog; throws when the bytes did not
- *  all land. */
-async function saveNative(blob: Blob, filename: string): Promise<boolean> {
+/** The saved path, or null when the reader dismisses the dialog; throws when
+ *  the bytes did not all land. */
+async function saveNative(blob: Blob, filename: string): Promise<string | null> {
   // Native: the webview cannot download, so prompt for a location and write the
   // bytes ourselves. `save` returns null when the user cancels the dialog.
   const [{ save }, fs] = await Promise.all([
@@ -71,7 +135,14 @@ async function saveNative(blob: Blob, filename: string): Promise<boolean> {
     import('@tauri-apps/plugin-fs'),
   ]);
   const path = await save({ defaultPath: filename });
-  if (!path) return false;
+  if (!path) return null;
+  // The fs plugin would refuse the write with a scope error that names no
+  // reason, so the reader hears which folder and why before anything is written.
+  if (detectPlatform() === 'desktop') {
+    const { homeDir } = await import('@tauri-apps/api/path');
+    const folder = protectedFolder(path, await homeDir());
+    if (folder) throw new BlockedFolderError(folder);
+  }
   const bytes = new Uint8Array(await blob.arrayBuffer());
 
   try {
@@ -101,7 +172,7 @@ async function saveNative(blob: Blob, filename: string): Promise<boolean> {
       }),
     );
   }
-  return true;
+  return path;
 }
 
 /** Bytes currently on disk at `path`, or null when the size cannot be read

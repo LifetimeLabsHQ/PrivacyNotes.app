@@ -10,7 +10,7 @@ import { CaretDown, PlusCircle } from './icons';
  * the end of the bottom bar, where a thumb reaches it; `slot` is the bar's
  * empty box for it, and null while the bar holds no New (an item is open, the
  * keyboard is up). Wider screens keep the button in the header.
- * Spec: ops/docs/archive/ui-patterns.md section 137
+ * Spec: docs/internal/design/ui-patterns.md section 137
  */
 export const NewButtonDock = createContext<{ docked: boolean; slot: HTMLElement | null }>({ docked: false, slot: null });
 
@@ -67,7 +67,7 @@ export function NewButton({
           {/* In the header a caret marks the buttons that open a menu or a
               calendar. The bar's button stays a plain square: it is the one
               action at the end of the bar, and its menu opens on the tap. */}
-          {popup && !docked && <CaretDown size={12} weight="bold" />}
+          {popup && !docked && <CaretDown weight="bold" />}
         </button>
       </HoverLabel>
       {children}
@@ -112,7 +112,7 @@ export function NewDropdown({ options, label }: { options: NewMenuOption[]; labe
   }, [open]);
 
   return (
-    // Spec: ops/docs/archive/ui-patterns.md section 45 (z-index tier system - the
+    // Spec: docs/internal/design/ui-patterns.md section 45 (z-index tier system - the
     // NewButton wrapper must not create a z-20 stacking context, or it traps the
     // MobileHeader's z-50 pillar dropdown beneath it in the Vault view).
     <NewButton
@@ -135,7 +135,7 @@ export function NewDropdown({ options, label }: { options: NewMenuOption[]; labe
         since each locale shipped. `w-max` opts out of the containing-block cap;
         `max-w` keeps a pathological string from running off a narrow viewport;
         `whitespace-nowrap` on the rows stops a two-word label breaking anyway.
-        Spec: ops/docs/archive/ui-patterns.md section 45.
+        Spec: docs/internal/design/ui-patterns.md section 45.
       */}
       {open && (
         <div role="menu" className={`absolute end-0 ${docked ? 'bottom-full mb-2' : 'top-full mt-1'} z-50 w-max max-w-[calc(100vw-1.5rem)] bg-surface-2 border border-divider rounded-lg shadow-lg py-1`}>
@@ -145,7 +145,7 @@ export function NewDropdown({ options, label }: { options: NewMenuOption[]; labe
               type="button"
               role="menuitem"
               onClick={() => { onSelect(); setOpen(false); }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-start whitespace-nowrap text-pn-soft hover:bg-pn/5 transition cursor-pointer"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-body text-start whitespace-nowrap text-pn-soft hover:bg-pn/5 transition cursor-pointer"
             >
               {/* Accent, like every other menu that lists things to go to or
                   make: the rail rows, the sidebar option menus and the view

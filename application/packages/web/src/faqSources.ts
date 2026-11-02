@@ -22,11 +22,11 @@
  * Keep this module import-free. `help-page.ts` evaluates it in Node at
  * build time, next to `faq.ts`.
  *
- * // Spec: ops/docs/help-center.md (source blocks)
+ * // Spec: docs/contrib/help-center.md (source blocks)
  */
 
 /** Repository root. Every document below is published from it. */
-const REPO_URL = 'https://github.com/LifetimeLabsDev/PrivacyNotes.app';
+const REPO_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app';
 
 /** The published files a source row may point at, keyed to their paths. */
 export const SOURCE_FILES = {

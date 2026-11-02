@@ -11,11 +11,11 @@
  * `pn-card-status`, `pn-card-actions`, `pn-ribbon`, `pn-card--select`,
  * `pn-lazy-row`, `pn-lazy-card`), so the mini tile and the lazy-paint gate
  * work unchanged.
- * Spec: ops/docs/plans/list-grid-parity.md (section 5)
+ * Spec: docs/internal/plans/list-grid-parity.md (section 5)
  */
 import type { CSSProperties, HTMLAttributes, ReactNode, RefCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Archive, Check, CloudSlash, PencilSimpleSlash, PushPin, Shield, Warning, type Icon } from './icons';
+import { Archive, Bell, Check, CloudSlash, Paperclip, PencilSimpleSlash, PushPin, Shield, Warning, type Icon } from './icons';
 
 export type ItemFlag = 'notBackedUp' | 'pinned' | 'pinProtected' | 'readOnly' | 'archived' | 'localOnly';
 
@@ -30,6 +30,15 @@ const FLAGS: Record<ItemFlag, { Icon: Icon; label?: string; ns?: string; warn?: 
   localOnly: { Icon: CloudSlash, label: 'attachment.localOnly', ns: 'media', warn: true },
 };
 const FLAG_ORDER = Object.keys(FLAGS) as ItemFlag[];
+
+type ItemCountKind = 'files' | 'reminders';
+
+/** What an item holds, shown as an icon on the date line when it holds one,
+ *  with the number from two up. Spec: issue #627. */
+const COUNTS: Record<ItemCountKind, { Icon: Icon; label: string }> = {
+  files: { Icon: Paperclip, label: 'shell:markdown.fileCount' },
+  reminders: { Icon: Bell, label: 'noteRow.reminders' },
+};
 
 export interface ListItem {
   /** The note id the list's middle-click and Alt-click read, or none for an
@@ -50,6 +59,8 @@ export interface ListItem {
   date: { label: string; row: string; tile: string } | null;
   size: string | null;
   flags: ItemFlag[];
+  /** The files and reminders the item holds; a zero is left out. */
+  counts?: Partial<Record<ItemCountKind, number>>;
   /** The folder chip and the tag chips, or null when the row shows none. */
   chips: ReactNode;
   ribbon: boolean;
@@ -83,7 +94,7 @@ export interface ItemState {
   contextTarget: boolean;
 }
 
-function itemStateClass(s: ItemState, layout: 'row' | 'tile'): string {
+export function itemStateClass(s: ItemState, layout: 'row' | 'tile'): string {
   if (layout === 'row') {
     return s.selected
       ? 'pn-on-tint bg-accent/15 hover:bg-accent/20 border-s-2 border-s-accent dark:bg-accent/20 dark:hover:bg-accent/25'
@@ -104,7 +115,7 @@ function itemStateClass(s: ItemState, layout: 'row' | 'tile'): string {
 
 /** The flag icons, in their one order. `onImage` is the white-on-photo tone of
  *  a picture tile. */
-export function ItemFlags({ flags, size = 12, onImage = false }: { flags: readonly ItemFlag[]; size?: number; onImage?: boolean }) {
+export function ItemFlags({ flags, size, onImage = false }: { flags: readonly ItemFlag[]; size?: number; onImage?: boolean }) {
   const { t } = useTranslation('notes');
   return (
     <>
@@ -118,6 +129,27 @@ export function ItemFlags({ flags, size = 12, onImage = false }: { flags: readon
             className={`${onImage ? 'shrink-0 ' : ''}${tone}`.trim() || undefined}
             aria-label={label ? t(label, ns ? { ns } : undefined) : undefined}
           />
+        );
+      })}
+    </>
+  );
+}
+
+/** The counts of an item, in their one order, each an icon and its number. */
+function ItemCounts({ counts }: { counts: ListItem['counts'] }) {
+  const { t } = useTranslation('notes');
+  if (!counts) return null;
+  return (
+    <>
+      {(Object.keys(COUNTS) as ItemCountKind[]).filter((k) => (counts[k] ?? 0) > 0).map((k) => {
+        const { Icon, label } = COUNTS[k];
+        const n = counts[k]!;
+        return (
+          <span key={k} data-slot={k} className="shrink-0 inline-flex items-center gap-0.5 text-meta text-accent tabular-nums" aria-label={t(label, { count: n })} title={t(label, { count: n })}>
+            <Icon aria-hidden="true" />
+            {/* One is the usual case: the icon says it, a "1" only repeats it. */}
+            {n > 1 && n}
+          </span>
         );
       })}
     </>
@@ -144,7 +176,7 @@ interface LayoutProps {
   trailing?: ReactNode;
 }
 
-function SelectBox({ selected, onToggle, layout, compact = false }: { selected: boolean; onToggle?: (e: React.MouseEvent) => void; layout: 'row' | 'tile'; compact?: boolean }) {
+export function SelectBox({ selected, onToggle, layout, compact = false }: { selected: boolean; onToggle?: (e: React.MouseEvent) => void; layout: 'row' | 'tile'; compact?: boolean }) {
   const { t } = useTranslation('notes');
   return (
     <span
@@ -167,7 +199,7 @@ function SelectBox({ selected, onToggle, layout, compact = false }: { selected: 
 function rootAttrs(item: ListItem, state: ItemState) {
   return {
     // Read by the list pane's one middle-click and Alt-click handler, which
-    // opens the item as a tab. Spec: ops/docs/archive/note-tabs.md
+    // opens the item as a tab. Spec: docs/internal/specs/note-tabs.md
     'data-item-id': item.id,
     'aria-current': state.open || undefined,
     style: item.look?.css,
@@ -184,7 +216,7 @@ function rootAttrs(item: ListItem, state: ItemState) {
  */
 export function ItemRow({ item, state, as: Root = 'li', rootProps, onToggleSelect, trailing }: LayoutProps) {
   const onTitle = flagsOnTitle(item);
-  const meta = !onTitle && (item.date || item.flags.length > 0 || item.size);
+  const meta = !onTitle && (item.date || item.flags.length > 0 || item.size || hasCounts(item));
   const compact = !!item.compact;
   return (
     <Root
@@ -202,13 +234,18 @@ export function ItemRow({ item, state, as: Root = 'li', rootProps, onToggleSelec
           line stops short of it. */}
       <div className={`flex items-center gap-2.5${(compact || onTitle) && item.ribbon ? ' pe-5' : ''}`}>
         {item.icon && <span data-slot="icon" className="contents">{item.icon}</span>}
-        <div data-slot="title" className="min-w-0 flex-1 text-sm font-semibold truncate text-pn" dir="auto">
+        <div data-slot="title" className="min-w-0 flex-1 text-body font-semibold truncate text-pn" dir="auto">
           {item.title}
         </div>
         {onTitle && (
-          <span data-slot="flags" className="shrink-0 flex items-center gap-1.5 text-accent">
-            <ItemFlags flags={item.flags} />
-          </span>
+          <>
+            {item.flags.length > 0 && (
+              <span data-slot="flags" className="shrink-0 flex items-center gap-1.5 text-meta text-accent">
+                <ItemFlags flags={item.flags} />
+              </span>
+            )}
+            <ItemCounts counts={item.counts} />
+          </>
         )}
         {/* Compact rows carry the short date, the flags and the size at the
             end of the title line. */}
@@ -216,7 +253,7 @@ export function ItemRow({ item, state, as: Root = 'li', rootProps, onToggleSelec
         {trailing && <span className="pn-row-actions shrink-0 flex items-center gap-1">{trailing}</span>}
       </div>
       {item.preview && (
-        <div data-slot="preview" className={`text-[13px] text-pn-muted ${compact ? 'mt-0.5' : 'mt-1'} ${item.preview.long ? 'pn-preview-long' : 'truncate'}`} dir={item.preview.dir}>
+        <div data-slot="preview" className={`text-compact text-pn-muted ${compact ? 'mt-0.5' : 'mt-1'} ${item.preview.long ? 'pn-preview-long' : 'truncate'}`} dir={item.preview.dir}>
           {item.preview.text}
         </div>
       )}
@@ -230,10 +267,15 @@ export function ItemRow({ item, state, as: Root = 'li', rootProps, onToggleSelec
   );
 }
 
-/** True when a row's flags are its only meta: they then end the title line
- *  instead of standing alone on a line of their own. */
+/** True when a row's flags and counts (attachments) are its only meta: they
+ *  then end the title line instead of standing alone on a line of their own,
+ *  under the icon. */
 function flagsOnTitle(item: ListItem): boolean {
-  return !item.date && !item.size && item.flags.length > 0;
+  return !item.date && !item.size && (item.flags.length > 0 || hasCounts(item));
+}
+
+function hasCounts(item: ListItem): boolean {
+  return !!item.counts && Object.values(item.counts).some((n) => (n ?? 0) > 0);
 }
 
 /** The date, the flags and the size, anchored to one another, never to the
@@ -245,15 +287,16 @@ function MetaLine({ item, form }: { item: ListItem; form: 'row' | 'tile' }) {
   return (
     <>
       {date && (
-        <span data-slot="date" className={`${form === 'tile' && !compact ? 'pn-card-date ' : ''}${compact ? 'shrink-0' : 'min-w-0'} text-[12px] text-pn-muted whitespace-nowrap overflow-hidden text-ellipsis`}>
+        <span data-slot="date" className={`${form === 'tile' && !compact ? 'pn-card-date ' : ''}${compact ? 'shrink-0' : 'min-w-0'} text-small text-pn-muted whitespace-nowrap overflow-hidden text-ellipsis`}>
           {date}
         </span>
       )}
-      <span data-slot="flags" className={`${form === 'tile' ? 'pn-card-status ' : ''}shrink-0 flex items-center gap-1.5 text-accent`}>
+      <span data-slot="flags" className={`${form === 'tile' ? 'pn-card-status ' : ''}shrink-0 flex items-center gap-1.5 text-meta text-accent`}>
         <ItemFlags flags={item.flags} />
       </span>
+      <ItemCounts counts={item.counts} />
       {item.size && (
-        <span data-slot="size" className="shrink-0 text-[11px] text-pn-muted font-medium tabular-nums">
+        <span data-slot="size" className="shrink-0 text-meta text-pn-muted font-medium tabular-nums">
           {item.size}
         </span>
       )}
@@ -270,7 +313,7 @@ function MetaLine({ item, form }: { item: ListItem; form: 'row' | 'tile' }) {
 export function ItemTile({ item, state, as: Root = 'li', rootProps, onToggleSelect, trailing }: LayoutProps) {
   // A tile keeps its flags on the meta line even alone: floated into a mini
   // tile's wrapping title they pushed the first word below the glyph.
-  const meta = item.date || item.flags.length > 0 || item.size;
+  const meta = item.date || item.flags.length > 0 || item.size || hasCounts(item);
   return (
     <Root
       {...rootAttrs(item, state)}
@@ -285,13 +328,13 @@ export function ItemTile({ item, state, as: Root = 'li', rootProps, onToggleSele
       {state.selectionMode && <SelectBox selected={state.selected} onToggle={onToggleSelect} layout="tile" />}
       <div className="pn-card-head flex items-center gap-2.5 min-w-0">
         {item.icon && <span data-slot="icon" className="pn-card-icbox contents">{item.icon}</span>}
-        <div className={`pn-card-title${item.glyph ? '' : ' pn-card-title--bare'} min-w-0 flex-1 text-sm font-semibold truncate flex items-center gap-1.5 text-pn`}>
+        <div className={`pn-card-title${item.glyph ? '' : ' pn-card-title--bare'} min-w-0 flex-1 text-body font-semibold truncate flex items-center gap-1.5 text-pn`}>
           {item.glyph}
           <span data-slot="title" className="pn-card-titletext truncate" dir="auto">{item.title}</span>
         </div>
       </div>
       {item.preview && (
-        <div data-slot="preview" className={`pn-card-preview${item.preview.long ? ' pn-preview-long' : ''} text-[13px] text-pn-muted leading-snug`} dir={item.preview.dir}>
+        <div data-slot="preview" className={`pn-card-preview${item.preview.long ? ' pn-preview-long' : ''} text-compact text-pn-muted leading-snug`} dir={item.preview.dir}>
           {item.preview.text}
         </div>
       )}

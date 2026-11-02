@@ -433,7 +433,28 @@ function noteLink(target: string, label: string): string {
  *   <en-crypt>                      -> a marker line; we cannot decrypt it
  *   color / font / alignment        -> dropped, inner text kept
  */
+
+/** Past this element depth a block keeps its text and loses its structure,
+ *  the same trade as the `<details>` caps in detailsFold.ts. The walk
+ *  recurses once per level and each quote level prefixes the lines below it
+ *  again, so 3000 nested blocks overflowed the stack (bug report 32). It
+ *  counts every element, inline marks included, so it sits above the
+ *  deepest list a real note nests. */
+const MAX_ENML_DEPTH = 64;
+
+/** The text runs of a subtree too deep to walk, in order, without recursion. */
+function flatText(el: Element): string {
+  const runs: string[] = [];
+  const it = el.ownerDocument.createTreeWalker(el, 4 /* NodeFilter.SHOW_TEXT */);
+  for (let n = it.nextNode(); n; n = it.nextNode()) {
+    const t = (n.textContent ?? '').trim();
+    if (t) runs.push(t);
+  }
+  return runs.join(' ');
+}
+
 function enmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
+  let depth = 0;
   function inlineOnly(text: string): string {
     return text.replace(/\s*\n+\s*/g, ' ').trim();
   }
@@ -594,6 +615,19 @@ function enmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
   }
 
   function walk(node: Node, indent: string): string {
+    if (node.nodeType === 1 && depth >= MAX_ENML_DEPTH) {
+      const text = flatText(node as Element);
+      return text ? `\n${text}\n\n` : '';
+    }
+    depth++;
+    try {
+      return walkNode(node, indent);
+    } finally {
+      depth--;
+    }
+  }
+
+  function walkNode(node: Node, indent: string): string {
     if (node.nodeType === 3) return node.textContent ?? '';
     if (node.nodeType !== 1) return '';
 

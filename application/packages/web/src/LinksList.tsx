@@ -41,8 +41,8 @@ export function LinksList({
     >
       <span className="text-pn-muted group-hover:text-accent transition">{l.icon}</span>
       <span className="min-w-0">
-        <span className="block text-sm font-medium text-accent">{l.label}</span>
-        <span className="block text-xs text-pn-muted">{l.desc}</span>
+        <span className="block text-body font-medium text-accent">{l.label}</span>
+        <span className="block text-small text-pn-muted">{l.desc}</span>
       </span>
       <ArrowUpRight className="ms-auto shrink-0 text-pn-muted group-hover:text-accent transition" />
     </a>

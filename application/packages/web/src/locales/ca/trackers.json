@@ -53,8 +53,6 @@
   },
   "mood": {
     "prompt": "Com et sents? (1-10)",
-    "low": "fatal",
-    "high": "de meravella",
     "anchor": {
       "1": "fatal",
       "3": "malament",
@@ -144,8 +142,6 @@
     "editMedication": "Edita el medicament",
     "removeMedication": "Elimina el medicament",
     "confirmRemove": "Vols eliminar <highlight>{{name}}</highlight>?",
-    "yes": "Sí",
-    "no": "No",
     "taken": "Pres",
     "skip": "Omet",
     "editList": "Canvia aquests medicaments",
@@ -259,16 +255,15 @@
   },
   "config": {
     "configureTrackers": "Configura els seguiments",
-    "title": "Seguiments",
-    "tabGeneral": "General",
     "tabCustom": "Personalitzats",
-    "chooseTrackers": "Tria els seguiments",
     "factorsTitle": "Els teus factors",
     "factorsHelp": "Les parts d'un dia que toques a Factors. Un factor eliminat conserva el nom als dies que el contenen.",
     "renameFactor": "Canvia el nom de {{name}}",
     "addFactor": "Afegeix un factor",
     "medicationsTitle": "Els teus medicaments",
     "medicationsHelp": "Els medicaments sobre els quals pregunta Medicació. Un medicament eliminat conserva el seu historial.",
+    "medicationCard": "Targeta de medicació",
+    "medicationCardHelp": "«Has pres la medicació?» en aquest dispositiu, només els dies que toca prendre un medicament.",
     "customHelp": "Seguiments als quals poses nom tu mateix: una escala, un número o un sí o no. Fins a {{max}}.",
     "yourCustomTrackers": "Els teus seguiments personalitzats",
     "categoryMoodMind": "Ànim i ment",
@@ -293,23 +288,17 @@
     "kindBuild": "Per crear",
     "kindWatch": "Per vigilar",
     "editHabit": "Edita {{name}}",
-    "removeHabit": "Elimina {{name}}",
     "ownHabitsFull": "Tens {{max}} hàbits propis, el màxim possible.",
     "addCustomTrackerHint": "Registra qualsevol cosa que vulguis",
     "maxReached": "Has arribat al màxim de {{max}} seguiments personalitzats.",
     "customTrackers": "Seguiments personalitzats",
-    "newCustomTracker": "Seguiment personalitzat nou",
-    "newMedication": "Medicament nou",
     "newMedicationHelp": "Medicació en pregunta a partir del dia d'inici, a les hores que defineixis.",
     "trackerNamePlaceholder": "Nom del seguiment",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "Nom",
     "typeLabel": "Tipus",
-    "colorLabel": "Color",
     "preview": "Previsualització",
     "startFromLast": "Recorda l'última entrada",
     "chooseIcon": "Tria una icona",
-    "iconLabel": "Icona",
     "startFromLastHelp": "Útil per a coses que canvien poc, com el teu pes o una dosi diària."
   },
   "factors": {
@@ -317,7 +306,6 @@
     "count_other": "{{count}} factors",
     "remove": "Elimina {{name}}",
     "placeholder": "visites, migranya, hores extres",
-    "add": "Afegeix",
     "empty": "Afegeix les coses que marquen els teus dies i després toca-les qualsevol dia.",
     "commaHint": "Afegeix-ne diversos alhora, separats per comes.",
     "editList": "Canvia aquests factors",
@@ -341,8 +329,6 @@
   "habits": {
     "prompt": "Què has fet avui?",
     "count": "{{yes}}/{{total}}",
-    "yes": "Sí",
-    "no": "No",
     "empty": "Tria les preguntes a la configuració dels seguiments.",
     "changeQuestions": "Canvia aquestes preguntes",
     "q": {
@@ -401,9 +387,7 @@
     "prompt": "Quanta cafeïna has pres?"
   },
   "flow": {
-    "next": "Següent",
     "finish": "Acaba",
-    "done": "Fet",
     "step": "Seguiment {{n}} de {{total}}"
   }
 }

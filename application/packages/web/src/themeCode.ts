@@ -20,7 +20,7 @@
  *
  * Import-free on purpose. The /themes page build loads this file on its own
  * (themes-page.ts), and the app loads it lazily, so it stays off the boot
- * path. Spec: ops/docs/color-themes.md (section 6)
+ * path. Spec: docs/contrib/color-themes.md (section 6)
  */
 
 const PREFIX = 'pn1';

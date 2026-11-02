@@ -20,7 +20,7 @@ import { useSyncExternalStore } from 'react';
  * (VersionUpdateToast), and pointing someone at the downloads page for that
  * would be a lie.
  *
- * Spec: ops/docs/android-update-check.md (optional vs required updates)
+ * Spec: docs/internal/android-update-check.md (optional vs required updates)
  */
 
 let available: string | null = null;

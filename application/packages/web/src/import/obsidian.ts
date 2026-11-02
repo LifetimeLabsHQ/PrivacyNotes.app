@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { zipEntryText } from './zipEntry';
+import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
 import type { FolderDef } from '../folders';
 import { extractInlineTags, parseYamlTags } from '../notesRepo';
 import { FRONT_MATTER } from '../markdownFolder/adapter';
@@ -271,6 +271,7 @@ async function parseZip(
 ): Promise<{
   notes: ImportedNote[];
   skippedAttachments: number;
+  tooLarge: number;
   folders: FolderDef[];
   blobs: Map<string, { data: Uint8Array; mime: string; name: string }>;
 }> {
@@ -336,6 +337,7 @@ async function parseZip(
   const bodies = notes.map((n) => n.body).join('\n');
   const blobs = new Map<string, { data: Uint8Array; mime: string; name: string }>();
   let skippedAttachments = 0;
+  let tooLarge = 0;
   for (const [rel, entry] of attachments) {
     if (!isBlobReferenced(rel, bodies)) {
       skippedAttachments++;
@@ -344,14 +346,19 @@ async function parseZip(
     if (blobs.size % 10 === 0) {
       onProgress?.(`Reading attachments... ${blobs.size + 1} of ${attachments.length}`);
     }
+    const data = await zipEntryMedia(entry);
+    if (!data) {
+      tooLarge++;
+      continue;
+    }
     blobs.set(rel, {
-      data: await entry.async('uint8array'),
+      data,
       mime: mimeFromExt(rel),
       name: rel.split('/').pop() ?? rel,
     });
   }
 
-  return { notes, skippedAttachments, folders, blobs };
+  return { notes, skippedAttachments, tooLarge, folders, blobs };
 }
 
 /* ------------------------------------------------------------------ */
@@ -362,7 +369,7 @@ export async function parseObsidian(
   file: File,
   onProgress?: (msg: string) => void,
 ): Promise<ParsedImport> {
-  const { notes, skippedAttachments, folders, blobs } = await parseZip(
+  const { notes, skippedAttachments, tooLarge, folders, blobs } = await parseZip(
     file,
     onProgress
   );
@@ -379,6 +386,7 @@ export async function parseObsidian(
       `Skipped ${skippedAttachments} attachment${skippedAttachments === 1 ? '' : 's'} that none of your notes link to.`
     );
   }
+  if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   const transforms: string[] = [];
   if (blobs.size > 0) {
     const images = [...blobs.values()].filter((b) => b.mime.startsWith('image/')).length;

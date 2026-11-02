@@ -2,7 +2,7 @@ import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { BellSimple, CalendarX, CalendarDots, Check, Clock, Repeat as RepeatGlyph, Sun, X, ArrowRight } from './icons';
 import type { LocalNote } from './db';
-import { MonthGrid, firstWeekday } from './MonthGrid';
+import { MonthGrid, useWeekStart } from './MonthGrid';
 import { formatDay, weekdayDate, weekdayLabel } from './intlFormat';
 import { entryDayOf, journalDateOf, type JournalDays } from './notesViewUtils';
 import { pushEscapeHandler } from './useEscapeToClose';
@@ -43,7 +43,7 @@ import { TimeInput } from './TimeInput';
  * day, the times and Alert. Repeat, Ends and Alert open their own views
  * inside the same menu, as Color does. Every change goes through `onEdit`,
  * which asks "Change this item?" on a repeating event.
- * Spec: ops/docs/archive/calendar-pillar-spec.md (steps 4, 6 and 7, section 4.4)
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (steps 4, 6 and 7, section 4.4)
  */
 
 /** The menu's own row parts, handed in so the view draws exactly like the menu. */
@@ -78,8 +78,8 @@ type Props = {
 type Sub = 'main' | 'ends' | 'repeat' | 'repeatCustom' | 'alerts';
 
 const NO_DAYS: ReadonlySet<string> = new Set();
-const FIELD = 'w-[5.5rem] h-8 rounded-md border border-divider bg-surface-1 px-2 text-[13px] text-pn tabular-nums text-center focus:border-accent outline-none';
-const SELECT = 'h-8 rounded-md border border-divider bg-surface-1 px-1.5 text-[13px] text-pn focus:border-accent outline-none';
+const FIELD = 'w-[5.5rem] h-8 rounded-md border border-divider bg-surface-1 px-2 text-compact text-pn tabular-nums text-center focus:border-accent outline-none';
+const SELECT = 'h-8 rounded-md border border-divider bg-surface-1 px-1.5 text-compact text-pn focus:border-accent outline-none';
 
 /** A time field of this view: its box, and a cleared field clears the time. */
 function TimeField({ day, value, onCommit, label }: { day: string; value: string | undefined; onCommit: (time: string | null) => void; label: string }) {
@@ -133,8 +133,8 @@ export default function ScheduleView({
         <Group>
           <ActionItem
             label={t('noteOptionsMenu.sameDay')}
-            icon={<CalendarDots size={16} aria-hidden="true" />}
-            value={!shownEnd ? <Check size={14} aria-hidden="true" /> : undefined}
+            icon={<CalendarDots aria-hidden="true" />}
+            value={!shownEnd ? <Check aria-hidden="true" /> : undefined}
             onClick={() => { onEdit({ end: null }); setSub('main'); }}
           />
         </Group>
@@ -154,7 +154,7 @@ export default function ScheduleView({
               <ActionItem
                 key={key}
                 label={repeat ? describeRepeat(repeat, s!.day, t) : t('repeat.never')}
-                icon={on ? <Check size={16} aria-hidden="true" /> : <span className="inline-block w-4" />}
+                icon={on ? <Check aria-hidden="true" /> : <span className="inline-block w-4" />}
                 onClick={() => {
                   const change = presetEdit(repeat, current);
                   if (change) onEdit(change);
@@ -200,27 +200,27 @@ export default function ScheduleView({
           {!journal && (
             <ActionItem
               label={t('noteOptionsMenu.ends')}
-              icon={<ArrowRight size={16} aria-hidden="true" />}
+              icon={<ArrowRight aria-hidden="true" />}
               value={shownEnd ? formatDay(shownEnd, 'weekdayDate') : t('noteOptionsMenu.sameDay')}
               chevron
               onClick={() => setSub('ends')}
             />
           )}
           <ToggleItem
-            label={t('noteOptionsMenu.allDay')}
-            icon={<Sun size={16} aria-hidden="true" />}
+            label={t('shell:calendar.allDay')}
+            icon={<Sun aria-hidden="true" />}
             checked={!s.time}
             onClick={() => onEdit(s.time ? { time: null } : { time: '09:00', timeEnd: '10:00' })}
           />
           {s.time && (
-            <div className="px-4 py-1.5 flex items-center gap-3 text-[14px] text-pn">
-              <Clock size={16} aria-hidden="true" className="shrink-0 text-accent" />
+            <div className="px-4 py-1.5 flex items-center gap-3 text-body text-pn">
+              <Clock aria-hidden="true" className="shrink-0 text-accent" />
               <span className="flex-1 min-w-0 truncate">{t('noteOptionsMenu.starts')}</span>
               <TimeField day={shownDay} value={s.time} label={t('noteOptionsMenu.starts')} onCommit={(time) => onEdit({ time })} />
             </div>
           )}
           {s.time && (
-            <div className="px-4 py-1.5 flex items-center gap-3 text-[14px] text-pn">
+            <div className="px-4 py-1.5 flex items-center gap-3 text-body text-pn">
               <span className="shrink-0 w-4" />
               <span className="flex-1 min-w-0 truncate">{t('noteOptionsMenu.endsAt')}</span>
               <TimeField day={shownDay} value={s.timeEnd} label={t('noteOptionsMenu.endsAt')} onCommit={(timeEnd) => onEdit({ timeEnd })} />
@@ -229,7 +229,7 @@ export default function ScheduleView({
           {event && (
             <ActionItem
               label={t('repeat.label')}
-              icon={<RepeatGlyph size={16} aria-hidden="true" />}
+              icon={<RepeatGlyph aria-hidden="true" />}
               value={s.repeat ? describeRepeat(s.repeat, s.day, t) : t('repeat.never')}
               chevron
               onClick={() => setSub('repeat')}
@@ -238,14 +238,14 @@ export default function ScheduleView({
           {(note.type === 'note' || note.type === 'task') && (
             <ActionItem
               label={<Trans i18nKey="shell:noteOptionsMenu.makeEvent" components={{ b: <b className="font-semibold" /> }} />}
-              icon={<RepeatGlyph size={16} aria-hidden="true" />}
+              icon={<RepeatGlyph aria-hidden="true" />}
               chevron
               onClick={onMakeEvent}
             />
           )}
           <ActionItem
             label={t('alerts.label')}
-            icon={<BellSimple size={16} aria-hidden="true" />}
+            icon={<BellSimple aria-hidden="true" />}
             pro={showPro}
             value={alertsUnlocked ? alertsSummary(s.alerts, shownDay, t) : undefined}
             chevron={alertsUnlocked}
@@ -260,7 +260,7 @@ export default function ScheduleView({
         <Group>
           <ActionItem
             label={t('noteOptionsMenu.removeFromCalendar')}
-            icon={<CalendarX size={16} aria-hidden="true" />}
+            icon={<CalendarX aria-hidden="true" />}
             onClick={() => { onSetNoteDate?.(null); onBack(); }}
           />
         </Group>
@@ -304,7 +304,7 @@ function AlertsView({ ui, day, timed, alerts, onBack, onChange }: { ui: MenuUi; 
       <Group>
         <ActionItem
           label={t('alerts.none')}
-          icon={alerts.length === 0 ? <Check size={16} aria-hidden="true" /> : <span className="inline-block w-4" />}
+          icon={alerts.length === 0 ? <Check aria-hidden="true" /> : <span className="inline-block w-4" />}
           onClick={() => set([])}
         />
         {presets.map((p) => {
@@ -313,7 +313,7 @@ function AlertsView({ ui, day, timed, alerts, onBack, onChange }: { ui: MenuUi; 
             <ActionItem
               key={key(p)}
               label={alertLabel(p, day, t)}
-              icon={on ? <Check size={16} aria-hidden="true" /> : <span className="inline-block w-4" />}
+              icon={on ? <Check aria-hidden="true" /> : <span className="inline-block w-4" />}
               disabled={!on && full}
               onClick={() => set(on ? alerts.filter((a) => key(a) !== key(p)) : [...alerts, p])}
             />
@@ -323,8 +323,8 @@ function AlertsView({ ui, day, timed, alerts, onBack, onChange }: { ui: MenuUi; 
           <ActionItem
             key={key(a)}
             label={alertLabel(a, day, t)}
-            icon={<Check size={16} aria-hidden="true" />}
-            value={<X size={13} aria-label={t('alerts.remove', { alert: alertLabel(a, day, t) })} />}
+            icon={<Check aria-hidden="true" />}
+            value={<X aria-label={t('alerts.remove', { alert: alertLabel(a, day, t) })} />}
             onClick={() => set(alerts.filter((x) => key(x) !== key(a)))}
           />
         ))}
@@ -332,8 +332,8 @@ function AlertsView({ ui, day, timed, alerts, onBack, onChange }: { ui: MenuUi; 
       {/* The custom alert in three fixed lines: its label, the fields in
           reading order ("1 days at 10 AM"), and Add across the menu, so
           nothing wraps into a different order at a narrow width. */}
-      <div className="px-4 py-2.5 flex flex-col gap-2 text-[13px] text-pn">
-        <span className="text-xs text-pn-muted">{t('alerts.custom')}</span>
+      <div className="px-4 py-2.5 flex flex-col gap-2 text-compact text-pn">
+        <span className="text-small text-pn-muted">{t('alerts.custom')}</span>
         <div className="flex items-center gap-2">
           <input type="number" min={0} max={999} value={amount} onChange={(e) => setAmount(e.target.value)} onKeyDown={(e) => e.stopPropagation()} aria-label={t('alerts.custom')} className={`${FIELD} w-14 shrink-0`} />
           <select value={unit} onChange={(e) => setUnit(e.target.value as typeof unit)} className={`${SELECT} min-w-0`}>
@@ -349,9 +349,9 @@ function AlertsView({ ui, day, timed, alerts, onBack, onChange }: { ui: MenuUi; 
           )}
         </div>
         <Button action="add" disabled={full || taken} onClick={addCustom} className="w-full justify-center">
-          {t('alerts.add')}
+          {t('common:actions.add')}
         </Button>
-        {full && <span className="text-[12px] text-pn-muted">{t('alerts.max')}</span>}
+        {full && <span className="text-small text-pn-muted">{t('alerts.max')}</span>}
       </div>
     </>
   );
@@ -370,7 +370,7 @@ function CustomRepeat({ ui, day, current, onBack, onApply }: { ui: MenuUi; day: 
   const [until, setUntil] = useState(current?.until ?? shiftDay(day, 30));
   const [count, setCount] = useState(String(current?.count ?? 10));
   const n = Math.max(1, Math.min(999, Number(interval) || 1));
-  const weekStart = firstWeekday(intlLocale());
+  const weekStart = useWeekStart();
   const nth = nthOf(day) > 4 ? -1 : (nthOf(day) as 1 | 2 | 3 | 4);
   const draft: Repeat = {
     every,
@@ -385,7 +385,7 @@ function CustomRepeat({ ui, day, current, onBack, onApply }: { ui: MenuUi; day: 
   return (
     <>
       <BackRow title={t('repeat.custom')} onBack={onBack} />
-      <div className="px-4 py-3 space-y-3 text-[13px] text-pn">
+      <div className="px-4 py-3 space-y-3 text-compact text-pn">
         <div className="flex items-center gap-2">
           <span>{t('repeat.every')}</span>
           <input type="number" min={1} max={999} value={interval} onChange={(e) => setInterval(e.target.value)} onKeyDown={(e) => e.stopPropagation()} aria-label={t('repeat.every')} className={`${FIELD} w-14`} />
@@ -404,7 +404,7 @@ function CustomRepeat({ ui, day, current, onBack, onApply }: { ui: MenuUi; day: 
                   aria-pressed={on}
                   aria-label={weekdayLabel(weekdayDate(w), 'long')}
                   onClick={() => setWeekdays((cur) => (on ? (cur.length > 1 ? cur.filter((x) => x !== w) : cur) : [...cur, w]))}
-                  className={`w-8 h-8 rounded-full text-[12px] font-semibold transition ${on ? 'bg-accent-fill text-white' : 'bg-surface-1 text-pn-muted hover:text-pn'}`}
+                  className={`w-8 h-8 rounded-full text-small font-semibold transition ${on ? 'bg-accent-fill text-white' : 'bg-surface-1 text-pn-muted hover:text-pn'}`}
                 >
                   {weekdayLabel(weekdayDate(w), 'narrow')}
                 </button>
@@ -444,8 +444,8 @@ function CustomRepeat({ ui, day, current, onBack, onApply }: { ui: MenuUi; day: 
             </div>
           )}
         </div>
-        <p className="text-[12px] text-pn-muted">{describeRepeat(draft, day, t)}</p>
-        <button type="button" onClick={() => onApply(draft)} className="w-full h-9 rounded-md bg-accent-fill text-white text-[13px] font-medium">
+        <p className="text-small text-pn-muted">{describeRepeat(draft, day, t)}</p>
+        <button type="button" onClick={() => onApply(draft)} className="w-full h-9 rounded-md bg-accent-fill text-white text-compact font-medium">
           {t('repeat.apply')}
         </button>
       </div>

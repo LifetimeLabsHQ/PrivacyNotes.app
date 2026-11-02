@@ -4,6 +4,7 @@ import { compareNotes, deriveDisplayTitle, editedAtOf } from './notesViewUtils';
 import { nextFence, type Fence } from './markdownFence';
 import { createNote, getNote, updateNoteFrom } from './notesRepo';
 import { textMatcher } from './textMatch';
+import { escapeMarkdownText, guardMarkdownLineStart } from './markdownEscape';
 import { activeLocale } from './languages';
 
 /**
@@ -164,6 +165,21 @@ function setTaskCheckedInBody(
   const [, indent, marker, , rest] = m;
   lines[lineIdx] = `${m.quote}${indent}${marker} [${checked ? 'x' : ' '}] ${rest ?? ''}`.replace(/\s+$/, '');
   return lines.join('\n');
+}
+
+/**
+ * The task in `note` that `task` was drawn from: the line with the same text
+ * and state nearest to its old line, or null when none is left. A list drawn
+ * from an older copy of the note (Home's widget reads the notes array, which
+ * takes the editor's typing only on a flush) can point at a line that moved.
+ */
+export function relocateTask(task: TaskItem, note: LocalNote): TaskItem | null {
+  let best: TaskItem | null = null;
+  for (const t of extractAllTasks([note])) {
+    if (t.text !== task.text || t.checked !== task.checked) continue;
+    if (!best || Math.abs(t.lineIdx - task.lineIdx) < Math.abs(best.lineIdx - task.lineIdx)) best = t;
+  }
+  return best;
 }
 
 /**
@@ -466,11 +482,13 @@ const TRAILING_BLANKS = /(?:\n+&nbsp;)+\s*$/;
  * Add lines to the end of a body: as tasks after the last task line, or as
  * one paragraph. The empty task of a new list takes the first line, and
  * the empty paragraphs at the end stay at the end. Pure, for the switcher's
- * ">>" (Spec: ops/docs/archive/quick-add-prefix.md). Tested in
+ * ">>" (Spec: docs/internal/specs/quick-add-prefix.md). Tested in
  * tests/switcherQuery.test.ts.
  */
 export function appendLinesToBody(body: string, lines: string[], asTasks: boolean): string {
-  const clean = lines.map((l) => l.trim()).filter(Boolean);
+  // Typed text, so it shows as typed: "5*3*2" stays a sum, "[[x]]" text, as
+  // the editor escapes what is typed in it.
+  const clean = lines.map((l) => l.trim()).filter(Boolean).map((l) => guardMarkdownLineStart(escapeMarkdownText(l)));
   if (!clean.length) return body;
   const tail = body.match(TRAILING_BLANKS)?.[0] ?? '';
   let out = body.slice(0, body.length - tail.length).replace(/\s+$/, '');

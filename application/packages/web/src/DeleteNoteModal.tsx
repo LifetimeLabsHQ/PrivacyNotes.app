@@ -14,7 +14,7 @@ export function DeleteNoteModal({ noteTitle, noteId, onConfirm, onClose }: Props
   const { t } = useTranslation('common');
   return (
     <ConfirmModal
-      title={t('deleteNote.title')}
+      title={t('common:deleteNote.confirm')}
       confirmLabel={t('deleteNote.confirm')}
       variant="danger"
       onConfirm={onConfirm}
@@ -22,7 +22,7 @@ export function DeleteNoteModal({ noteTitle, noteId, onConfirm, onClose }: Props
     >
       <Trans
         i18nKey="common:deleteNote.body"
-        values={{ title: noteTitle || t('deleteNote.untitled') }}
+        values={{ title: noteTitle || t('common:state.untitled') }}
         components={{ highlight: <span className="font-medium text-pn" /> }}
       />
       <NeverBackedUpNotice ids={noteId ? [noteId] : null} />

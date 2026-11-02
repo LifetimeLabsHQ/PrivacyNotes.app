@@ -23,7 +23,7 @@
  */
 
 import JSZip from 'jszip';
-import { zipEntryText } from './zipEntry';
+import { zipEntryMedia, zipEntryText } from './zipEntry';
 import type { BackupManifest, MissingBlob } from '../export';
 import { stripFrontMatterPadding, unescapeQuotes } from '../noteMarkdown';
 import { FRONT_MATTER } from '../markdownFolder/adapter';
@@ -47,7 +47,8 @@ function parseFrontmatter(md: string): { meta: Record<string, unknown>; body: st
   // Keeping it grew every restored note by one blank line per backup cycle
   // (#148); see stripFrontMatterPadding for why this is not `.trim()`.
   const body = stripFrontMatterPadding(match[2]!);
-  const meta: Record<string, unknown> = {};
+  // No prototype: a `__proto__:` line is then an ordinary key (#656).
+  const meta: Record<string, unknown> = Object.create(null);
 
   for (const line of yamlBlock.split('\n')) {
     const colon = line.indexOf(':');
@@ -113,8 +114,9 @@ function rewriteAttachmentsForImport(
   // names with spaces or parens. target points into an attachment folder.
   // A leading `!` is a picture placed from Files, which shows the file
   // rather than listing it, so it goes back to a picture of the same blob.
+  // The name may hold escaped brackets: the editor writes `scan \[1\].pdf`.
   return body.replace(
-    /(!?)\[([^\]]*)\]\((?:<((?:audio|video|docs|files)\/[^>]+)>|((?:audio|video|docs|files)\/[^)\s]+))\)/g,
+    /(!?)\[((?:\\.|[^\]\\])*)\]\((?:<((?:audio|video|docs|files)\/[^>]+)>|((?:audio|video|docs|files)\/[^)\s]+))\)/g,
     (match, bang: string, name: string, bracketed: string | undefined, bare: string | undefined) => {
       const target = bracketed ?? bare;
       if (!target) return match;
@@ -309,8 +311,9 @@ export async function parsePrivacyNotesBackup(
   }
 
   // Sum blob sizes for the quota preflight, from the zip entries rather than
-  // from the manifest. jszip verifies an entry's uncompressed size against
-  // the bytes it inflates, so that number cannot be lied about; the
+  // from the manifest. jszip checks an entry's declared size only after it
+  // has inflated every byte, so this sum is a warning and not a bound; the
+  // bounded read in readBlobEntry is what stops a forged entry. The
   // manifest's own `size` field is whatever the file says. The declared
   // number is the fallback for an entry that is missing, where the restore
   // will skip the blob anyway.
@@ -343,7 +346,7 @@ export async function parsePrivacyNotesBackup(
   return {
     folders: rebuiltFolders,
     originalFolderIds: originalIds,
-    ...(carried ? { settings: { itemStyles: carried.itemStyles, customThemes: carried.customThemes, factors: carried.factors, customHabits: carried.customHabits } } : {}),
+    ...(carried ? { settings: { itemStyles: carried.itemStyles, customThemes: carried.customThemes, factors: carried.factors, customHabits: carried.customHabits, medications: carried.medications, customTrackers: carried.customTrackers } } : {}),
     notes,
     warnings,
     transforms: [],
@@ -408,7 +411,11 @@ export async function restoreBlobs(
     // whatever the file carries under the same name. Restoring your own
     // backup finds the identical bytes and loses nothing.
     if (await db.imageCache.get(uuid)) continue;
-    const data = new Uint8Array(await imgFile.async('uint8array'));
+    const data = await zipEntryMedia(imgFile);
+    if (!data) {
+      missing.push({ id: uuid, kind: 'image' });
+      continue;
+    }
     const hash = await sha256hex(data);
 
     await db.imageCache.put({ id: uuid, data, cachedAt: now });
@@ -435,7 +442,11 @@ export async function restoreBlobs(
       continue;
     }
     if (await db.attachmentCache.get(uuid)) continue;
-    const data = new Uint8Array(await attFile.async('uint8array'));
+    const data = await zipEntryMedia(attFile);
+    if (!data) {
+      missing.push({ id: uuid, kind: 'file' });
+      continue;
+    }
     const hash = await sha256hex(data);
     // The size is measured, not read from the manifest: the quota preflight
     // and the per-file ceiling both consume it, and the archive declares its

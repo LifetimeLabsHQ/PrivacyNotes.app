@@ -11,7 +11,7 @@ order: 3
 
 ![The notes table in our live database. Every note body is one long block of unreadable text.](/onboarding/database.webp)
 
-That is our live database in Zurich, not a drawing of one. Your note goes in the `ciphertext` column. Encrypted bytes are all we store, whichever option you pick below.
+That is our live database in Zurich, not a drawing of one. Your note goes in the `ciphertext` column, whichever option you pick below. Next to it we keep only what runs the service: your public key, sizes, timestamps, and the email behind a Google, Apple or GitHub login.
 
 ## What happens when you write a note
 
@@ -30,26 +30,26 @@ Every option keeps your notes encrypted on your device. They differ in where you
 | **Login, key on your device** | With you, nowhere else | Sign in with Google, Apple or GitHub, and still hold the key |
 | **Phrase only, no login** | With you, nowhere else | No email, no name, no login at all |
 
-The bottom two mean we could not read a note even if we were compelled to. The first trades that away for convenience: your phrase sits on our server under a key of ours, so a new device needs nothing but your login. If our server were ever breached, that key could be exposed.
+The bottom two are zero knowledge: no key to your notes exists on our server, so a court order cannot open them. The first trades that away for convenience: your phrase sits on our server under a key of ours, so a new device needs nothing but your login. If our server were ever breached, that key could be exposed.
 
 Signed in with Google, Apple or GitHub? You can switch between the first two later, in **Settings > Account > Key custody**. With a phrase-only account, the phrase always stays with you.
 
 > [!warning] Keep your own copy of the phrase
-> Your phrase opens your notes. If you lose it, nobody can recover it for you, us included. <span style="color: #e03131">Write it on paper today.</span>
+> Your phrase opens your notes. With self-custody, nobody can recover a lost phrase. <span style="color: #e03131">Write it on paper today.</span>
 
 ## Check it yourself
 
-[Detailed verification instructions on GitHub](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/VERIFY.md)
+[Detailed verification instructions on GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md)
 
 - [ ] Open your browser's Network tab, then edit a note. Watch what we receive: one block of unreadable text.
 - [ ] Read the encryption code. It is public, and short enough to finish in one sitting.
 
 | What | Where |
 | --- | --- |
-| The encryption itself | [crypto.ts](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/crypto/crypto.ts) |
-| What our server receives | [VERIFY.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/VERIFY.md#tier-1-one-minute-no-tools) |
-| What an attacker can and cannot do | [THREAT_MODEL.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/THREAT_MODEL.md) |
-| How to report a hole | [SECURITY.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/SECURITY.md) |
+| The encryption itself | [crypto.ts](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/crypto/crypto.ts) |
+| What our server receives | [VERIFY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md#tier-1-one-minute-no-tools) |
+| What an attacker can and cannot do | [THREAT_MODEL.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md) |
+| How to report a hole | [SECURITY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/SECURITY.md) |
 
 > [!info] One lock covers all of it
 > Notes, journal entries, bookmarks, Vault items and file attachments are encrypted the same way. [[Moving in]] shows how to bring each of them across.

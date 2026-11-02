@@ -25,7 +25,7 @@ import { isImeComposing } from './imeComposing';
  * complete `$$...$$`, and the caret sits INSIDE the closing delimiter, so no
  * keystroke ever completed the pattern.
  *
- * Spec: ops/docs/design-decisions.md (Math extension: official over third-party)
+ * Spec: docs/internal/design-decisions.md (Math extension: official over third-party)
  */
 export function mathNodeView(config: { block: boolean; katexOptions?: KatexOptions }) {
   const { block, katexOptions } = config;

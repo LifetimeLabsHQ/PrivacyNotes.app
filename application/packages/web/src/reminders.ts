@@ -15,7 +15,7 @@ import { occurrencesOf, shiftDay, type Alert, type Schedule } from './schedule';
  * locked (no Pro, a refund) the plan is empty, so the same call cancels
  * everything; `cancelDeviceReminders` takes every alert off when the account
  * leaves the device. Nothing else schedules or cancels.
- * Spec: ops/docs/archive/calendar-pillar-spec.md (step 7, section 8)
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (step 7, section 8)
  */
 
 /** The iOS limit of pending local notifications; the plan never holds more. */

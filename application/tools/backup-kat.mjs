@@ -38,7 +38,7 @@
  *  - Image/attachment blobs are not part of .pnbackup (raw pn:img/ and
  *    pn:file/ refs ride along in bodies); the zip backup covers blobs.
  *
- * Spec: ops/docs/dependency-migration.md (section 3), packages/shared/src/backup.ts
+ * Spec: docs/internal/dependency-migration.md (section 3), packages/shared/src/backup.ts
  */
 
 import test from 'node:test';

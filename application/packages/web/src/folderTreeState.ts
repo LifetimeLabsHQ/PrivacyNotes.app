@@ -52,7 +52,7 @@ const TOGGLED_KEY = 'privacynotes.folderToggles';
  */
 export const MAX_INDENT_LEVEL = 5;
 
-/** Guide-line indent per level, in px. Spec: ops/specs/folders.md (folder indent) */
+/** Guide-line indent per level, in px. Spec: docs/internal/specs/folders.md (folder indent) */
 export const INDENT_PX = 12;
 
 function readToggled(): Set<string> {

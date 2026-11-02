@@ -7,17 +7,21 @@
  * the 'lowlight' package itself keeps its entire namespace alive - including
  * `all`, every hljs grammar there is - which quadrupled the lowlight chunk to
  * ~294 kB gz the first time it was tried. The STATIC import below tree-shakes
- * back down to `common`, the exact grammar set the editor's own instance
- * (editorCodeBlock.ts) already ships, so this module adds nothing the app
+ * back down to `common` plus codeGrammarsExtra.ts, the exact grammar set the
+ * editor's own instance (editorCodeBlock.ts) loads, so this module adds nothing the app
  * was not already carrying.
  *
  * The output is hljs token <span>s, the same classes CodeBlockLowlight emits
  * in the editor, so the burn viewer colors them through the `.prose pre
  * .hljs-*` palette in index.css and the export stylesheet carries a copy.
  */
-import { createLowlight, common } from 'lowlight';
+import { createCodeLowlight } from './codeGrammars';
+import { EXTRA_GRAMMARS } from './codeGrammarsExtra';
 
-const lowlight = createLowlight(common);
+// This module is already a lazy chunk, so the extra grammars register here
+// at once rather than through loadExtraGrammars.
+const lowlight = createCodeLowlight();
+lowlight.register(EXTRA_GRAMMARS);
 
 interface HastNode {
   type: string;

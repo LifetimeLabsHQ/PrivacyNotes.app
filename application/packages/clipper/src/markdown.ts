@@ -48,10 +48,14 @@ export function toMarkdown(root: Node, base: string, page = base): { markdown: s
   // link or picture that follows it into a picture of its own. `$`, `=` and
   // `|` open the editor's own pair rules (math, highlight, spoiler), and a
   // pair that reaches into a code span would end that span early.
-  // A character Turndown escaped already keeps its one backslash.
+  // A character Turndown escaped already keeps its one backslash. The match
+  // starts only where a run of backslashes starts: from every position inside
+  // a long run the pattern re-scanned the rest of it, and a page holding
+  // 160,000 backslashes froze the app for 10 s (external report, 2026-10-24,
+  // bug report 25).
   service.escape = (s: string) =>
     escapeMarkdown(s)
-      .replace(/(\\*)([<$=|])/g, (whole, slashes: string, c: string) => (slashes.length % 2 ? whole : `${slashes}\\${c}`))
+      .replace(/(?<!\\)(\\*)([<$=|])/g, (whole, slashes: string, c: string) => (slashes.length % 2 ? whole : `${slashes}\\${c}`))
       .replace(/!$/, '\\!');
 
   service.use([tables, taskListItems]);
@@ -65,7 +69,7 @@ export function toMarkdown(root: Node, base: string, page = base): { markdown: s
     replacement: (content, node) => {
       const cells = Array.from(node.parentNode?.childNodes ?? []);
       const prefix = cells.indexOf(node as ChildNode) === 0 ? '| ' : ' ';
-      const cell = content.replace(/\s*\n+\s*/g, ' ').replace(/(\\*)\|/g, (whole, slashes: string) => (slashes.length % 2 ? whole : `${slashes}\\|`));
+      const cell = content.replace(/\s*\n+\s*/g, ' ').replace(/(?<!\\)(\\*)\|/g, (whole, slashes: string) => (slashes.length % 2 ? whole : `${slashes}\\|`));
       return `${prefix}${cell.trim()} |`;
     },
   });

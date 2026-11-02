@@ -1,6 +1,4 @@
 {
-  "dismiss": "Schließen",
-  "close": "Schließen",
   "moveBanner": {
     "bodySignIn": "Melde dich dort mit deiner Wiederherstellungsphrase oder über \"{{scanQr}}\" an.",
     "cta": "Jetzt umziehen",
@@ -49,7 +47,7 @@
   },
   "signOutConfirm": {
     "title": "Hast du deine 12-Wort-Phrase gespeichert?",
-    "body": "Deine Phrase ist der <only>einzige</only> Weg zurück. Kein E-Mail-Reset, keine Support-Hotline. Wir wissen nicht, wer du bist, ganz bewusst. Falls du sie noch nicht aufgeschrieben hast, tippe auf <action>Nein, Phrase anzeigen</action>, und wir öffnen sie sofort für dich.",
+    "body": "Deine Phrase ist der <only>einzige</only> Weg zurück. Kein E-Mail-Reset, keine Support-Hotline. Falls du sie noch nicht aufgeschrieben hast, tippe auf <action>Nein, Phrase anzeigen</action>, und wir öffnen sie sofort für dich.",
     "unsyncedWarn_one": "1 Notiz auf diesem Gerät ist noch nicht synchronisiert. Sie geht dauerhaft verloren, wenn sie beim Abmelden nicht hochgeladen werden kann.",
     "unsyncedWarn_other": "{{count}} Notizen auf diesem Gerät sind noch nicht synchronisiert. Sie gehen dauerhaft verloren, wenn sie beim Abmelden nicht hochgeladen werden können.",
     "unsyncedKept_one": "1 Notiz auf diesem Gerät ist noch nicht synchronisiert. Sie bleibt auf diesem Gerät und wird synchronisiert, sobald du dich wieder anmeldest.",
@@ -73,6 +71,12 @@
     "moreNotes": "und {{count}} weitere",
     "appLockHint": "Geteiltes Gerät? Schalte die App-Sperre unter Einstellungen > Sicherheit ein."
   },
+  "signOutUpload": {
+    "uploading": "Deine letzten Änderungen werden hochgeladen…",
+    "title": "Einige Änderungen sind noch nicht hochgeladen",
+    "body": "Wenn du dich jetzt abmeldest, gehen die Änderungen auf diesem Gerät seit der letzten Synchronisierung verloren. Verbinde dich mit dem Internet, um sie zu behalten.",
+    "signOutAnyway": "Trotzdem abmelden"
+  },
   "burnShareModal": {
     "title": "Teilen und nach dem Lesen vernichten",
     "body": "<lead>Deine ursprüngliche Notiz wird nicht gelöscht.</lead> Sie bleibt sicher in deinem Konto. Der Burn-Link ist eine separate verschlüsselte Kopie, die sich nach dem Lesen selbst zerstört.",
@@ -90,17 +94,15 @@
     "afterDays_other": "Nach {{count}} Tagen",
     "create": "Link erstellen und kopieren",
     "share": "Link teilen",
-    "imagesStripped": "Es wird nur Text angezeigt, Dateien sind in dieser Notiz ausgeblendet.",
-    "copied": "Kopiert"
+    "imagesStripped": "Es wird nur Text angezeigt, Dateien sind in dieser Notiz ausgeblendet."
   },
   "burnView": {
     "title": "Nach dem Lesen vernichten",
     "tagline": "Verschlüsselt. Vergänglich. Nur für deine Augen.",
     "toggleTheme": "Design umschalten",
-    "checking": "Wird geprüft...",
     "revealing": "Wird abgerufen und entschlüsselt...",
     "goToApp": "Zu <brand/> gehen",
-    "footerTagline": "- Zero-Knowledge-verschlüsselte Notizen, gehostet in der Schweiz.",
+    "footerTagline": "- Verschlüsselte Notizen, gehostet in der Schweiz.",
     "sealed": {
       "heading": "Du hast eine verschlüsselte Notiz erhalten.",
       "subheading": "Diese Nachricht zerstört sich nach dem Lesen selbst. Ungelesene Links laufen von selbst ab.",
@@ -138,5 +140,19 @@
     "demo": "Burn-Links werden auf einem Server gespeichert, und die Demo kontaktiert keinen. Registriere dich, um echte Burn-Links zu erstellen.",
     "tooLarge": "Die Notiz ist zu groß, um sie per Burn-Link zu teilen ({{size}} KB). Das Maximum sind {{max}} KB.",
     "storeFailed": "Die Burn-Notiz konnte nicht auf dem Server gespeichert werden."
+  },
+  "dms": {
+    "returnTitle": "Deine Kopie auf dem Server wurde gelöscht",
+    "returnBody_other": "Dein Totmannschalter hat deine Notizen am {{date}} vom Server gelöscht. Auf diesem Gerät sind noch {{count}} Notizen. Lade ein Backup herunter, wenn du sie behalten willst, und lösche sie dann von diesem Gerät.",
+    "returnBackup": "Backup herunterladen",
+    "returnDelete": "Von diesem Gerät löschen",
+    "returnBody_one": "Dein Totmannschalter hat deine Notizen am {{date}} vom Server gelöscht. Auf diesem Gerät ist noch {{count}} Notiz. Lade ein Backup herunter, wenn du sie behalten willst, und lösche sie dann von diesem Gerät."
+  },
+  "massDelete": {
+    "title": "Notizen auf einem anderen Gerät gelöscht",
+    "body_one": "Du oder ein anderes deiner Geräte hat {{count}} Notiz gelöscht, die dieses Gerät noch hat. Wenn du das warst, lösche sie auch hier. Wenn nicht du es warst, hat womöglich jemand Zugriff auf dein Konto: Behalte sie, um sie auf all deinen Geräten wiederherzustellen.",
+    "body_other": "Du oder ein anderes deiner Geräte hat {{count}} Notizen gelöscht, die dieses Gerät noch hat. Wenn du das warst, lösche sie auch hier. Wenn nicht du es warst, hat womöglich jemand Zugriff auf dein Konto: Behalte sie, um sie auf all deinen Geräten wiederherzustellen.",
+    "keep": "Meine Notizen behalten",
+    "delete": "Auch hier löschen"
   }
 }

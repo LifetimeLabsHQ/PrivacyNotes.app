@@ -25,7 +25,7 @@
  * It is a button, not a toggle, and `defaultApp.ts` explains why: no
  * platform has an API to stop being the default handler.
  *
- * Spec: ops/docs/archive/markdown-folder.md (section 11)
+ * Spec: docs/internal/specs/markdown-folder.md (section 11)
  */
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -145,7 +145,7 @@ function ActionButton({
       type="button"
       onClick={onClick}
       disabled={busy}
-      className={`inline-flex items-center gap-1.5 text-[13px] font-medium px-3 py-1.5 rounded-md transition disabled:opacity-50 cursor-pointer ${
+      className={`inline-flex items-center gap-1.5 text-compact font-medium px-3 py-1.5 rounded-md transition disabled:opacity-50 cursor-pointer ${
         emphasis === 'solid'
           ? 'bg-accent-fill text-white hover:bg-accent-fill-hover'
           : 'border border-divider bg-surface-2 text-pn hover:border-accent'
@@ -163,7 +163,7 @@ function ActionButton({
       ) : (
         <>
           {t('markdown.assocWindowsOpen')}
-          <ArrowSquareOut size={14} className="shrink-0" />
+          <ArrowSquareOut className="shrink-0" />
         </>
       )}
     </button>
@@ -197,18 +197,18 @@ function DefaultAppBody({
 
   return (
     <>
-      <p className="text-[13px] font-medium text-pn leading-snug">
+      <p className="text-compact font-medium text-pn leading-snug">
         {isOurs ? t('markdown.assocOwnerOurs') : hint}
       </p>
-      <p className="mt-0.5 text-[12px] text-pn-muted leading-snug">
+      <p className="mt-0.5 text-small text-pn-muted leading-snug">
         {isOurs ? hint : ownerLine}
       </p>
       {isOurs ? (
-        <p className="mt-2 text-[11.5px] text-pn-muted leading-snug">
+        <p className="mt-2 text-small text-pn-muted leading-snug">
           {t('markdown.assocChangeHint')}
         </p>
       ) : assoc.finderOnly ? (
-        <p className="mt-2 text-[11px] text-pn-muted leading-snug">
+        <p className="mt-2 text-meta text-pn-muted leading-snug">
           {t('markdown.assocFinderSteps')}
         </p>
       ) : (
@@ -217,7 +217,7 @@ function DefaultAppBody({
         </div>
       )}
       {failed && (
-        <p className="mt-1.5 text-[12px] text-danger leading-snug">
+        <p className="mt-1.5 text-small text-danger leading-snug">
           {t('markdown.assocFailed')}
         </p>
       )}
@@ -347,8 +347,8 @@ export function MarkdownDefaultAppPopover({
       className={`z-50 w-[19rem] max-w-full rounded-lg border border-divider bg-surface-2 shadow-lg p-3.5 text-start ${className}`}
     >
       <div className="flex items-center gap-2 mb-2.5">
-        <FileMd size={16} className="shrink-0 text-pn-muted" />
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-pn-muted">
+        <FileMd className="shrink-0 text-pn-muted" />
+        <p className="text-meta font-semibold uppercase tracking-wide text-pn-muted">
           {t('markdown.assocTitle')}
         </p>
       </div>
@@ -364,7 +364,7 @@ export function MarkdownDefaultAppPopover({
         // Only reachable for the beat before the first status returns: the
         // trigger is desktop-only, so `null` here means "not read yet" rather
         // than "not supported".
-        <p className="text-[12px] text-pn-muted">{t('markdown.assocReading')}</p>
+        <p className="text-small text-pn-muted">{t('markdown.assocReading')}</p>
       )}
     </div>
   );
@@ -381,7 +381,7 @@ const ROW: Record<AssocKind, {
 }> = {
   markdown: {
     icon: FileMd,
-    title: 'appearance.defaultAppsMarkdown',
+    title: 'importExport:sourceLabel.markdownFolder',
     hint: () => ['settings', 'appearance.defaultAppsMarkdownHint'],
     finderSteps: ['shell', 'markdown.assocFinderSteps'],
   },
@@ -403,7 +403,7 @@ const ROW: Record<AssocKind, {
  * button, for the reason the module header gives. The Text row is not drawn
  * on Linux, where the native side offers no plain-text claim.
  *
- * Spec: ops/docs/plans/default-app-settings.md (sections 4 and 6)
+ * Spec: docs/internal/plans/default-app-settings.md (sections 4 and 6)
  */
 export function DefaultAppSettingsRow({ kind }: { kind: AssocKind }) {
   const { t } = useTranslation('settings');
@@ -449,15 +449,15 @@ export function DefaultAppSettingsRow({ kind }: { kind: AssocKind }) {
       </div>
       {assoc && !(!isOurs && assoc.finderOnly) && (isOurs ? (
         <div>
-          <Badge tone="success" icon={<CheckCircle size={12} weight="fill" aria-hidden="true" />}>
+          <Badge tone="success" icon={<CheckCircle weight="fill" aria-hidden="true" />}>
             {t('appearance.defaultAppsIsDefault')}
           </Badge>
         </div>
       ) : (
         <Button
           icon={assoc.settable
-            ? <CheckCircle size={15} aria-hidden="true" className="shrink-0" />
-            : <ArrowSquareOut size={15} aria-hidden="true" className="shrink-0" />}
+            ? <CheckCircle aria-hidden="true" className="shrink-0" />
+            : <ArrowSquareOut aria-hidden="true" className="shrink-0" />}
           onClick={() => void run()}
           disabled={busy}
         >

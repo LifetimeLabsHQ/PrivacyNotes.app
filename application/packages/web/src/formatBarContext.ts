@@ -9,7 +9,11 @@ import type { BarPosition } from './editorPrefs';
  */
 export type FormatBarContextValue = {
   layout: ResolvedFormatBar;
+  /** The drawing canvas's toolbar (`drawing/drawingBar.tsx`); stock when absent. */
+  drawing?: ResolvedFormatBar;
   onCustomize?: () => void;
+  /** The drawing toolbar's gear: Settings > Toolbar on its Drawing side. */
+  onCustomizeDrawing?: () => void;
   /** Where the bar sits, top or bottom (per device). */
   position?: BarPosition;
 };

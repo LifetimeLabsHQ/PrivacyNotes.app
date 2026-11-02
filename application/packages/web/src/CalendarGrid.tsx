@@ -14,7 +14,7 @@ import { shiftDay, timeFromMinutes } from './schedule';
  * overnight item draws in two parts; the red line is now. A drag on empty
  * hours, or a click, asks the host to create at that time. Layout only: the
  * data, the chips and the cards come from the host.
- * Spec: ops/docs/archive/calendar-pillar-spec.md (step 5)
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (step 5)
  */
 
 /** One hour, in pixels. */
@@ -110,15 +110,15 @@ export function CalendarGrid({ days, index, hidden, firstHour, scrollRef, render
             aria-current={day === today ? 'date' : undefined}
             className="flex flex-col items-center py-1 text-pn-muted hover:bg-pn/5 transition"
           >
-            <span className="text-[11px]">{weekdayLabel(dayAtNoon(day), 'short')}</span>
-            <span className={`text-[15px] font-semibold tabular-nums rounded-md px-1.5 ${day === today ? 'bg-accent-fill text-white' : 'text-pn'}`}>
+            <span className="text-meta">{weekdayLabel(dayAtNoon(day), 'short')}</span>
+            <span className={`text-row font-semibold tabular-nums rounded-md px-1.5 ${day === today ? 'bg-accent-fill text-white' : 'text-pn'}`}>
               {dayAtNoon(day).getDate()}
             </span>
           </button>
         ))}
       </div>
       <div className="shrink-0 relative grid border-b border-divider max-h-[30%] overflow-y-auto [scrollbar-gutter:stable]" style={cols}>
-        <div className="text-[10px] text-pn-muted text-end pe-1.5 pt-1.5">{t('calendar.allDay')}</div>
+        <div className="text-meta text-pn-muted text-end pe-1.5 pt-1.5">{t('calendar.allDay')}</div>
         {days.map((day) => (
           <div key={day} className={`relative min-w-0 min-h-9 p-1 flex flex-col gap-px border-s border-divider ${day === today ? 'bg-accent/5' : ''}`}>
             {renderAllDay(day)}
@@ -130,7 +130,7 @@ export function CalendarGrid({ days, index, hidden, firstHour, scrollRef, render
         <div className="relative grid" style={{ ...cols, height: 24 * HOUR_PX }}>
           <div className="relative">
             {Array.from({ length: 23 }, (_, i) => (
-              <span key={i} className="absolute end-1.5 -translate-y-1/2 whitespace-nowrap text-[10px] text-pn-muted tabular-nums" style={{ top: (i + 1) * HOUR_PX }}>
+              <span key={i} className="absolute end-1.5 -translate-y-1/2 whitespace-nowrap text-meta text-pn-muted tabular-nums" style={{ top: (i + 1) * HOUR_PX }}>
                 {formatInstant(new Date(2026, 0, 1, i + 1, 0), 'time')}
               </span>
             ))}
@@ -167,7 +167,7 @@ export function CalendarGrid({ days, index, hidden, firstHour, scrollRef, render
                 {draft?.day === day && (
                   <div
                     aria-hidden="true"
-                    className="absolute inset-x-1 rounded-md bg-accent/20 ring-1 ring-accent pointer-events-none text-[11px] text-accent-strong px-1.5 py-0.5 tabular-nums"
+                    className="absolute inset-x-1 rounded-md bg-accent/20 ring-1 ring-accent pointer-events-none text-meta text-accent-strong px-1.5 py-0.5 tabular-nums"
                     style={{ top: (draft.from / 60) * HOUR_PX, height: ((draft.to - draft.from) / 60) * HOUR_PX }}
                   >
                     {formatInstant(new Date(2026, 0, 1, Math.floor(draft.from / 60), draft.from % 60), 'time')}

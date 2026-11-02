@@ -6,19 +6,17 @@
     "deselect": "노트 선택 해제",
     "pinProtected": "PIN 보호됨",
     "readOnly": "읽기 전용",
-    "file": "파일",
     "empty": "비어 있음",
     "noContent": "내용 없음",
     "notBackedUp": "백업 안 됨",
     "archived": "아카이브됨",
-    "entryDate": "항목 날짜",
     "date": "날짜",
-    "dayOf": "{{total}}일 중 {{n}}일째"
+    "dayOf": "{{total}}일 중 {{n}}일째",
+    "reminders_other": "미리 알림 {{count}}개"
   },
   "header": {
     "new": "추가",
     "newNote": "새 노트",
-    "trash": "휴지통",
     "newEvent": "새 일정"
   },
   "folderChip": {
@@ -31,7 +29,6 @@
   },
   "vaultNew": {
     "ariaLabel": "새 보관함 항목",
-    "login": "로그인",
     "card": "신용카드",
     "sshKey": "SSH 키",
     "generator": "비밀번호"
@@ -39,15 +36,14 @@
   "newMenu": {
     "note": "노트",
     "task": "할 일",
-    "kanban": "칸반 보드",
+    "kanban": "칸반",
+    "drawing": "드로잉",
     "journal": "저널",
     "login": "로그인",
-    "file": "파일",
     "bookmark": "북마크",
     "clipPage": "페이지 스크랩",
     "contact": "연락처",
-    "event": "일정",
-    "quickAdd": "빠른 추가"
+    "event": "일정"
   },
   "vaultFilter": {
     "all": "전체",
@@ -64,14 +60,14 @@
   "trash": {
     "empty": "비우기",
     "emptyHover": "휴지통의 모든 노트 삭제",
-    "storage": "저장 공간",
     "autoDelete": "30일 후 자동 삭제"
   },
   "search": {
     "sortOptions": "정렬 및 보기 옵션",
     "placeholderVault": "보관함 검색…",
     "placeholderNotes": "노트 검색…",
-    "placeholderEvents": "일정 검색…"
+    "placeholderEvents": "일정 검색…",
+    "placeholderDrawings": "드로잉 검색…"
   },
   "selection": {
     "countOf": "{{total}}개 중 {{selected}}개 선택됨",
@@ -82,10 +78,11 @@
     "noMatches": "일치하는 항목이 없어요.",
     "vault": "보관함이 비어 있어요.",
     "notes": "아직 노트가 없어요.",
+    "drawings": "아직 드로잉이 없어요.",
+    "drawingsLine": "아이디어를 스케치하고, 계획하고, 정리해 보세요. 드로잉은 노트에 링크할 수 있지만 노트의 내용은 보여 주지 않아요.",
     "archive": "아카이브된 항목이 없어요.",
     "trash": "휴지통이 비어 있어요.",
     "filtered": "필터와 일치하는 항목이 없어요.",
-    "clearFilters": "필터 해제",
     "filteredAfter": "그러면 다시 보여요.",
     "hiddenInAll_other": "항목 {{count}}개가 전체에 표시 필터로 숨겨져 있어요. 전체 옆의 필터를 열어 표시하세요.",
     "inOtherSpace_other": "항목 {{count}}개가 {{space}} 공간에 있어요. 사이드바에서 {{space}} 공간으로 전환하면 볼 수 있어요."
@@ -97,16 +94,6 @@
     "collapseAll": "모든 그룹 접기",
     "expandAll": "모든 그룹 펼치기"
   },
-  "headerLabel": {
-    "allItems": "전체",
-    "untagged": "태그 없음",
-    "journals": "저널",
-    "vault": "보관함",
-    "pinned": "고정됨",
-    "archive": "아카이브",
-    "notes": "노트",
-    "calendar": "캘린더"
-  },
   "footerStats": {
     "journals_other": "저널",
     "items_other": "항목",
@@ -114,6 +101,7 @@
     "notes_other": "노트",
     "bookmarks_other": "북마크",
     "contacts_other": "연락처",
+    "drawings_other": "드로잉",
     "files_other": "파일",
     "lists_other": "목록",
     "tasks_other": "할 일",
@@ -136,7 +124,6 @@
     "reload": "새로고침"
   },
   "banner": {
-    "dismiss": "닫기",
     "proActivationPending": "결제는 받았지만 Pro 활성화가 평소보다 오래 걸리고 있어요. 1분 뒤에 새로고침하고, 그래도 안 켜지면 지원팀에 문의하세요.",
     "snapshotPaused": "노트 히스토리가 일시 중지됐어요. Pro 플랜이 비활성 상태로 보여요. Pro가 복구될 때까지 새 수정 내용은 스냅샷되지 않아요.",
     "restorePro": "Pro 복구",
@@ -144,8 +131,7 @@
     "updateCard": "카드 업데이트"
   },
   "sidebar": {
-    "collapse": "사이드바 접기",
-    "expand": "사이드바 펼치기"
+    "collapse": "사이드바 접기"
   },
   "notesList": {
     "collapse": "노트 목록 접기",
@@ -182,24 +168,11 @@
     "titlePlaceholder": "제목 없음 (클릭해서 편집하거나 자동 생성)",
     "titlePlaceholderLogin": "예: GitHub",
     "titlePlaceholderCard": "예: 4242로 끝나는 Visa",
-    "titlePlaceholderSshKey": "예: GitHub 배포 키",
-    "pin": "고정",
-    "unpin": "고정 해제",
-    "restore": "복원",
-    "deleteForever": "영구 삭제",
-    "moveToTrash": "휴지통으로 이동",
-    "noteOptions": "노트 옵션",
     "readOnlyToggle": "읽기 전용. 해제는 여기서:",
     "menu": "메뉴",
-    "showMarkdown": "markdown 보기",
     "showFormatted": "서식 보기",
     "invisiblesShow": "서식 기호 보기",
     "invisiblesHide": "서식 기호 숨기기",
-    "findInNote": "노트에서 찾기",
-    "navPrev": "이전",
-    "navNext": "다음",
-    "navPrevTab": "이전 탭",
-    "navNextTab": "다음 탭",
     "undo": "실행 취소",
     "redo": "다시 실행",
     "hide": "숨기기",
@@ -209,9 +182,7 @@
     "widthDefault": "기본 너비",
     "widthWide": "더 넓게",
     "widthFull": "전체 너비",
-    "burn": "공유 & Burn After Reading",
     "titlePlaceholderLink": "북마크 이름",
-    "titlePlaceholderContact": "이름",
     "notBackedUpTooLarge": "1 MB 제한을 넘어 백업되지 않았어요. 사진을 첨부 파일로 옮기거나 노트를 나눠 주세요.",
     "notBackedUpFailed": "백업되지 않았어요. 마지막 오류: {{message}}. 다시 시도하는 중이에요.",
     "unknownType": "이 항목은 더 새로운 버전의 PrivacyNotes에서 만들어졌어요. 열려면 앱을 업데이트하세요."
@@ -228,15 +199,17 @@
     "printTextTitle": "본문만 인쇄",
     "printTextDesc": "제목은 남기고 날짜, 폴더, 태그는 빼요.",
     "burnTitle": "공유 & Burn After Reading",
-    "burnDesc": "이 노트를 한 번만 볼 수 있는 링크로 게시해요. 링크는 읽히면 스스로 파기돼요. 원본 노트는 계정에 안전하게 남아요."
+    "burnDesc": "이 노트를 한 번만 볼 수 있는 링크로 게시해요. 링크는 읽히면 스스로 파기돼요. 원본 노트는 계정에 안전하게 남아요.",
+    "drawingFileTitle": "드로잉 (.excalidraw)",
+    "drawingFileDesc": "Excalidraw와 Obsidian에서 이미지와 함께 열려요.",
+    "drawingPngTitle": "이미지 (.png)",
+    "drawingPngDesc": "드로잉 전체를 한 장의 이미지로 저장해요."
   },
   "weekReview": {
     "title": "주간 리뷰",
     "daysLogged": "7일 중 {{count}}일 기록",
     "mood": "기분",
-    "sleep": "수면",
-    "meds": "복약",
-    "activity": "활동"
+    "meds": "복약"
   },
   "footer": {
     "settings": "설정",
@@ -250,12 +223,10 @@
     "journalCalendar": "저널 캘린더",
     "words_other": "단어",
     "zen": "Zen 모드",
-    "appearance": "디자인",
     "lockApp": "앱 잠그기",
     "lockAppSetUp": "먼저 보안에서 PIN을 설정하세요",
     "goToTop": "맨 위로 이동",
     "goToEnd": "맨 끝으로 이동",
-    "signOut": "로그아웃",
     "signingOut": "로그아웃 중…",
     "switchToLight": "라이트 모드로 전환",
     "switchToDark": "다크 모드로 전환"
@@ -293,28 +264,21 @@
     "bodyMulti": "이 파일 {{count}}개는 markdown으로 보여요. 읽고 편집할 수 있게 노트로 가져올까요, 아니면 암호화된 첨부 파일로 보관할까요?"
   },
   "bulkTrash": {
-    "title": "휴지통으로 이동",
-    "body_other": "<highlight>항목 {{count}}개</highlight>를 휴지통으로 옮길까요? 나중에 복원할 수 있어요.",
-    "readOnlyTitle": "읽기 전용",
+    "body_other": "<highlight>항목 {{count}}개</highlight>를 삭제할까요? 휴지통으로 옮겨 나중에 복원하거나 영구 삭제할 수 있어요.",
+    "confirm": "휴지통으로 이동",
+    "keys": "이 창 밖에서 <kbd>{{trash}}</kbd> 키를 누르면 항목이 바로 휴지통으로 이동하고, <kbd>{{ask}}</kbd> 키를 누르면 '다시 묻지 않기'를 켠 뒤에도 이 창이 열려요.",
+    "dontAskAgain": "다시 묻지 않기",
     "readOnlyAcknowledge": "알겠어요",
     "readOnlyBlocked_other": "<highlight>항목 {{count}}개</highlight>가 읽기 전용이라 휴지통으로 옮길 수 없어요. 먼저 노트 옵션에서 읽기 전용을 꺼 주세요.",
     "readOnlySkipped_other": "<highlight>항목 {{count}}개</highlight>는 읽기 전용이라 그대로 남아요."
   },
   "deleteCheckedTasks": {
     "title": "체크된 항목을 삭제할까요?",
-    "confirm": "삭제",
     "body_other": "이 노트에서 <highlight>항목 {{count}}개</highlight>가 삭제돼요. 하위 항목도 포함돼요. 이 작업은 되돌릴 수 없어요."
-  },
-  "bulkDelete": {
-    "body_other": "<highlight>노트 {{count}}개</highlight>를 영구 삭제할까요? 이 작업은 되돌릴 수 없어요."
   },
   "tagConfirm": {
     "mergeTitle": "태그 병합",
-    "deleteTitle": "태그 삭제",
-    "deleteWithNotesTitle": "태그 & 노트 삭제",
     "mergeConfirm": "병합",
-    "deleteConfirm": "태그 삭제",
-    "moveToTrash": "휴지통으로 이동",
     "mergeBody_other": "<highlight>“{{targetTag}}”</highlight> 태그가 이미 있어요. 현재 “{{tag}}” 태그가 달린 <highlight>노트 {{count}}개</highlight>를 그쪽으로 병합할까요?",
     "deleteBody_other": "<highlight>노트 {{count}}개</highlight>에서 <highlight>“{{tag}}”</highlight> 태그를 제거할까요? 노트 자체는 삭제되지 않아요.",
     "deleteWithNotesBody_other": "<highlight>“{{tag}}”</highlight> 태그를 삭제하고 <highlight>노트 {{count}}개</highlight>를 휴지통으로 옮길까요? 휴지통에서 복원할 수 있어요."
@@ -340,5 +304,35 @@
     "linksTo": "이 노트의 링크",
     "missing": "아직 만들지 않음",
     "protectedHidden_other": "PIN 보호 항목 {{count}}개는 표시되지 않아요"
+  },
+  "drawing": {
+    "fullScreen": "전체 화면",
+    "frame": "프레임",
+    "laser": "레이저 포인터",
+    "bar": {
+      "hiddenNote": "단축키로는 계속 쓸 수 있어요."
+    },
+    "resetTitle": "캔버스를 초기화할까요?",
+    "resetBody": "캔버스의 모든 내용이 제거돼요. 실행 취소로 되돌릴 수 있어요.",
+    "hotkeysTitle": "드로잉 단축키",
+    "tools": {
+      "label": "드로잉 도구",
+      "keepTool": "그린 뒤에도 도구 유지",
+      "hand": "캔버스 이동",
+      "rectangle": "사각형",
+      "diamond": "마름모",
+      "ellipse": "타원",
+      "arrow": "화살표",
+      "line": "선",
+      "pen": "펜",
+      "text": "텍스트 상자",
+      "eraser": "지우개",
+      "resetZoom": "확대/축소 초기화",
+      "open": "드로잉 파일 열기",
+      "reset": "캔버스 초기화",
+      "style": "스타일",
+      "more": "도구 더 보기",
+      "fewer": "도구 줄이기"
+    }
   }
 }

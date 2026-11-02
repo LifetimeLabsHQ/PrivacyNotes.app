@@ -22,7 +22,7 @@
  * What ProseMirror copied itself (`data-pm-slice`) is never touched: it is the
  * exact document, and a copy inside the app must paste back unchanged.
  *
- * Spec: ops/docs/design-decisions.md (editor paragraph rhythm)
+ * Spec: docs/internal/design-decisions.md (editor paragraph rhythm)
  */
 import { Extension, type Editor } from '@tiptap/core';
 import { DOMSerializer, Fragment, Slice, type Node as ProseMirrorNode, type ResolvedPos, type Schema } from '@tiptap/pm/model';
@@ -552,7 +552,7 @@ const plainPasteRunning = new WeakMap<EditorView, boolean>();
  * also holds the text the picture shows (a spreadsheet's cells), which the
  * picture handler leaves to the formatted paste. No event is passed on, so
  * those handlers never see the clipboard of a paste that became text.
- * Spec: ops/issues/0508.md (Spec)
+ * Spec: docs/internal/issues/0508.md (Spec)
  */
 function pasteAsPlainText(view: EditorView, event: ClipboardEvent): boolean {
   if (readPasteFormat() !== 'plain') return false;
@@ -626,7 +626,7 @@ const PlainPastePlacement = Extension.create({
  * that does not. The text comes from the editor's own text serializer, so it
  * is exactly what Copy writes under that Copied text setting. A press with
  * nothing selected copies the whole note, and the caret goes back where it was.
- * Spec: ops/issues/0546.md (Spec)
+ * Spec: docs/internal/issues/0546.md (Spec)
  */
 export function copySelectionAs(ed: Editor, format: CopyFormat): void {
   const before = ed.state.selection;

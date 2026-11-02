@@ -39,6 +39,16 @@
     "ordinal": "st, nd, rd, th, .",
     "work": "work",
     "personal": "personal, home",
-    "in": "in"
+    "in": "in",
+    "weekend": "weekend",
+    "endOfMonth": "end of month, end of the month",
+    "morning": "morning",
+    "afternoon": "afternoon",
+    "evening": "evening",
+    "biweekly": "biweekly, fortnightly",
+    "quarterly": "quarterly",
+    "halfPast": "half past",
+    "numbers": "one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve",
+    "a": "a, an"
   }
 }

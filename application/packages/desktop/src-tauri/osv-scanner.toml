@@ -3,7 +3,7 @@
 # moves a crate only within the range its dependents allow, so a fix outside
 # that range is not one this manifest can take; it waits on the dependent.
 # One entry per advisory: the scanner matches the GitHub alias of each id too.
-# Spec: ops/docs/dependency-migration.md (crate advisories)
+# Spec: docs/internal/dependency-migration.md (crate advisories)
 
 [[IgnoredVulns]]
 id = "RUSTSEC-2024-0429"

@@ -77,7 +77,7 @@ export async function custodialPhraseMatchesAccount(
  *
  * Every one of these is a return address that no other application can
  * silently receive. No native build asks for the custom scheme.
- * Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8)
+ * Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8)
  */
 export function nativeOAuthRedirect(platform: Platform): string {
   if (platform === 'desktop') return OAUTH_DESKTOP_RETURN;
@@ -209,7 +209,7 @@ export function useOAuthFlows({
               handled = false;
               // Loud, not silent: falling back to onboarding here made
               // an unexpected hydrate failure look like a signed-out
-              // state. Spec: ops/docs/domain-split.md (pre-cutover gate)
+              // state. Spec: docs/internal/domain-split.md (pre-cutover gate)
               setAuth({ status: 'oauth_hydrate_failed', trust: true });
             },
           );
@@ -280,7 +280,7 @@ export function useOAuthFlows({
               handled = false;
               // Loud, not silent: falling back to onboarding here made
               // an unexpected hydrate failure look like a signed-out
-              // state. Spec: ops/docs/domain-split.md (pre-cutover gate)
+              // state. Spec: docs/internal/domain-split.md (pre-cutover gate)
               setAuth({ status: 'oauth_hydrate_failed', trust: true });
             },
           );
@@ -317,7 +317,7 @@ export function useOAuthFlows({
    *       `oauth_custody_choice` state so the onboarding UI can
    *       present the custodial vs self-custody choice.
    *
-   * Spec: ops/docs/custodial-key-spec.md, ops/docs/oauth-zk-fix.md
+   * Spec: docs/contrib/custodial-key-spec.md, docs/internal/specs/oauth-zk-fix.md
    */
   async function hydrateFromOAuthSession(accessToken: string, trust: boolean, verifiedProvider?: AccountOAuthProvider, expectedGeneration?: number) {
     // Abort marker: true once the user has started their own phrase
@@ -373,7 +373,7 @@ export function useOAuthFlows({
         return;
       }
       // --- Branch (a): try custodial phrase retrieval first ---
-      // Spec: ops/docs/custodial-key-spec.md (custodial to self-custody is one-way, never back)
+      // Spec: docs/contrib/custodial-key-spec.md (custodial to self-custody is one-way, never back)
       //
       // Failure discipline, because the silent fall-through orphaned
       // real accounts: only a SUCCESSFUL `custodial: false`
@@ -559,7 +559,7 @@ export function useOAuthFlows({
     // --- Branch (c): new OAuth user ---
     // Park in custody choice state. The onboarding UI renders the
     // "Keep it simple" vs "Maximum privacy" choice screen.
-    // Spec: ops/docs/custodial-key-spec.md (later upgradable to self-custody in settings, never back)
+    // Spec: docs/contrib/custodial-key-spec.md (later upgradable to self-custody in settings, never back)
     if (superseded()) {
       console.info('[oauth] hydrate superseded by manual sign-in, aborting');
       return;
@@ -619,7 +619,7 @@ export function useOAuthFlows({
         // is fresh and unconsumed, so it must exist before the browser or the
         // iOS sheet can send one back. One call covers every platform: the
         // iOS branch below feeds the same handler.
-        // Spec: ops/docs/plans/deep-link-callback-hardening.md (section 2.2)
+        // Spec: docs/internal/plans/deep-link-callback-hardening.md (section 2.2)
         markOAuthPending();
         // iOS presents the flow in-app (ASWebAuthenticationSession) instead
         // of bouncing to Safari: App Review guideline 4 rejects the external
@@ -631,7 +631,7 @@ export function useOAuthFlows({
         // read off the address the provider was given, so the two cannot
         // drift. Android and desktop keep the system browser: Custom Tabs is
         // not required there, and desktop has no in-app equivalent.
-        // Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.2)
+        // Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.2)
         if (platform === 'ios') {
           const { invoke } = await import('@tauri-apps/api/core');
           const returnTo = new URL(nativeOAuthRedirect(platform));
@@ -662,7 +662,7 @@ export function useOAuthFlows({
         // page and the person carries the code across. Say so, or the
         // sign-in screen sits on "Redirecting..." for ever waiting for a
         // deep link that is never coming.
-        // Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.3)
+        // Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.3)
         return { ok: true as const, awaitPastedCode: platform === 'desktop' };
       }
 
@@ -678,7 +678,7 @@ export function useOAuthFlows({
           // otherwise the return mints a session onto the origin we
           // just retired (the auth logs caught exactly that on
           // 2026-08-24, hours after the landing CTAs were redirected).
-          // Spec: ops/docs/domain-split.md (retirement phase)
+          // Spec: docs/internal/domain-split.md (retirement phase)
           redirectTo: isApexHost() ? APP_ORIGIN : window.location.origin,
         },
       });
@@ -711,7 +711,7 @@ export function useOAuthFlows({
   // hang. What both locks protect is the owner-mismatch wipe in
   // authenticateWithPhrase: a URL that installs another account's session
   // would otherwise destroy this device's local data and stored phrase.
-  // Spec: ops/docs/plans/deep-link-callback-hardening.md (sections 2.2 and 3)
+  // Spec: docs/internal/plans/deep-link-callback-hardening.md (sections 2.2 and 3)
   async function handleNativeOAuthCallback(rawUrl: string) {
     // Anything that is not the callback this platform asked for is somebody
     // else's URL, and the marker is worth one acceptance per flow: spending
@@ -730,7 +730,7 @@ export function useOAuthFlows({
     // disk. A session the library ends on its own leaves the phrase behind
     // and lands the person on the sign-in screen, and reading the blob alone
     // refused every provider button there for ever, in silence.
-    // Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.8)
+    // Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.8)
     const signedIn = hasStoredPhrase() && vaultOpenRef.current;
     if (gate !== 'ok' || signedIn) {
       const reason = signedIn ? 'signed-in' : gate;
@@ -744,7 +744,7 @@ export function useOAuthFlows({
       // `signed-in` and the screen never moved again. A missing marker is
       // the opposite case, a URL this install never asked for, and it stays
       // silent, because an answer hands an unsolicited link an oracle.
-      // Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.8)
+      // Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.8)
       if (gate !== 'missing') {
         setAuth({ status: 'oauth_hydrate_failed', trust: true });
       }
@@ -869,7 +869,7 @@ export function useOAuthFlows({
    * Errors are returned rather than thrown so the sign-in screen can show
    * them beside the box the person typed into, which is where they are
    * looking.
-   * Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.3)
+   * Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.3)
    */
   async function completeDesktopOAuth(
     rawCode: string,
@@ -996,7 +996,7 @@ export function useOAuthFlows({
    * session cannot be retried - local sign-out, back to the sign-in
    * options. A dead-but-present session fails hydration again and
    * lands back on oauth_hydrate_failed, honestly.
-   * Spec: ops/docs/domain-split.md (pre-cutover gate)
+   * Spec: docs/internal/domain-split.md (pre-cutover gate)
    */
   async function retryOAuthHydration(trust: boolean) {
     setAuth({ status: 'loading' });

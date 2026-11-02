@@ -9,6 +9,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./extension": {
+      "types": "./dist/extension.d.ts",
+      "import": "./dist/extension.js"
     }
   },
   "scripts": {
@@ -17,10 +21,11 @@
   },
   "dependencies": {
     "@noble/ciphers": "^2.4.0",
+    "@noble/curves": "^2.4.0",
     "@noble/ed25519": "^3.2.0",
     "@noble/hashes": "^2.4.0",
     "@scure/bip39": "^2.4.0",
-    "@supabase/supabase-js": "^2.117.2"
+    "@supabase/supabase-js": "^2.118.0"
   },
   "devDependencies": {
     "typescript": "^7.0.2"

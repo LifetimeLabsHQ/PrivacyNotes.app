@@ -1,11 +1,9 @@
 {
   "captionFolder": "Dossier",
   "captionTag": "Étiquette",
-  "captionNote": "Note",
   "captionTracker": "Suivi",
   "useDefault": "Par défaut",
   "color": "Couleur",
-  "noColor": "Aucune couleur",
   "applyToSubfolders": "Appliquer la couleur aux sous-dossiers",
   "icon": "Icône",
   "searchPlaceholder": "Rechercher des icônes",

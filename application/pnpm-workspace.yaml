@@ -8,5 +8,5 @@ allowBuilds:
 # refuses can be unblocked with a per-version `minimumReleaseAgeExclude` entry;
 # each entry pins one exact version and is deleted once that version leaves the
 # lockfile, so the list is empty in steady state.
-# Spec: ops/docs/dependency-migration.md (pnpm supply-chain gate)
+# Spec: docs/internal/dependency-migration.md (pnpm supply-chain gate)
 minimumReleaseAge: 1440

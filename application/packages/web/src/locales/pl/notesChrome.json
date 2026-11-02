@@ -1,6 +1,4 @@
 {
-  "dismiss": "Odrzuć",
-  "close": "Zamknij",
   "moveBanner": {
     "bodySignIn": "Zaloguj się tam swoją frazą odzyskiwania albo przez „{{scanQr}}”.",
     "cta": "Przenieś teraz",
@@ -55,7 +53,7 @@
   },
   "signOutConfirm": {
     "title": "Czy zapisałeś swoją frazę z 12 słów?",
-    "body": "Twoja fraza to <only>jedyna</only> droga powrotu. Żadnego resetu przez e-mail, żadnej infolinii. Z założenia nie wiemy, kim jesteś. Jeśli jeszcze jej nie zapisałeś, wybierz <action>Nie, pokaż frazę</action>, a otworzymy ją teraz.",
+    "body": "Twoja fraza to <only>jedyna</only> droga powrotu. Żadnego resetu przez e-mail, żadnej infolinii. Jeśli fraza nie jest jeszcze zapisana, wybierz <action>Nie, pokaż frazę</action>, a otworzymy ją teraz.",
     "unsyncedWarn_one": "1 notatka na tym urządzeniu nie została jeszcze zsynchronizowana. Zostanie bezpowrotnie utracona, jeśli nie uda się jej wysłać podczas wylogowania.",
     "unsyncedWarn_few": "{{count}} notatki na tym urządzeniu nie zostały jeszcze zsynchronizowane. Zostaną bezpowrotnie utracone, jeśli nie uda się ich wysłać podczas wylogowania.",
     "unsyncedWarn_many": "{{count}} notatek na tym urządzeniu nie zostało jeszcze zsynchronizowanych. Zostaną bezpowrotnie utracone, jeśli nie uda się ich wysłać podczas wylogowania.",
@@ -95,6 +93,12 @@
     "moreNotes": "i jeszcze {{count}}",
     "appLockHint": "Współdzielone urządzenie? Włącz blokadę aplikacji w Ustawienia > Bezpieczeństwo."
   },
+  "signOutUpload": {
+    "uploading": "Przesyłanie ostatnich zmian…",
+    "title": "Niektóre zmiany nie zostały jeszcze przesłane",
+    "body": "Jeśli wylogujesz się teraz, zmiany wprowadzone na tym urządzeniu od ostatniej synchronizacji zostaną utracone. Połącz się z internetem, aby je zachować.",
+    "signOutAnyway": "Wyloguj się mimo to"
+  },
   "burnShareModal": {
     "title": "Udostępnij i spal po przeczytaniu",
     "body": "<lead>Twoja oryginalna notatka nie zostanie usunięta.</lead> Zostaje bezpiecznie na Twoim koncie. Link do spalenia to osobna zaszyfrowana kopia, która niszczy się po przeczytaniu.",
@@ -120,17 +124,15 @@
     "afterDays_other": "Po {{count}} dnia",
     "create": "Utwórz i skopiuj link",
     "share": "Udostępnij link",
-    "imagesStripped": "Pokazywany jest tylko tekst, pliki w tej notatce są ukryte.",
-    "copied": "Skopiowano"
+    "imagesStripped": "Pokazywany jest tylko tekst, pliki w tej notatce są ukryte."
   },
   "burnView": {
     "title": "Spal po przeczytaniu",
     "tagline": "Zaszyfrowane. Ulotne. Tylko dla Twoich oczu.",
     "toggleTheme": "Przełącz motyw",
-    "checking": "Sprawdzanie...",
     "revealing": "Pobieranie i odszyfrowywanie...",
     "goToApp": "Przejdź do <brand/>",
-    "footerTagline": "- Notatki szyfrowane w modelu zero-knowledge, hostowane w Szwajcarii.",
+    "footerTagline": "- Szyfrowane notatki, hostowane w Szwajcarii.",
     "sealed": {
       "heading": "Otrzymałeś zaszyfrowaną notatkę.",
       "subheading": "Ta wiadomość zniszczy się po przeczytaniu. Nieprzeczytane linki wygasają same.",
@@ -168,5 +170,21 @@
     "demo": "Linki do spalenia są zapisywane na serwerze, a demo z żadnym się nie łączy. Zarejestruj się, aby tworzyć prawdziwe linki do spalenia.",
     "tooLarge": "Notatka jest za duża, aby udostępnić ją linkiem do spalenia ({{size}} KB). Maksimum to {{max}} KB.",
     "storeFailed": "Nie udało się zapisać notatki do spalenia na serwerze."
+  },
+  "dms": {
+    "returnTitle": "Twoja kopia na serwerze została usunięta",
+    "returnBody_one": "Twój przełącznik bezczynności usunął Twoje notatki z serwera dnia {{date}}. To urządzenie nadal ma {{count}} notatkę. Jeśli chcesz ją zachować, pobierz kopię zapasową, a potem usuń ją z tego urządzenia.",
+    "returnBackup": "Pobierz kopię zapasową",
+    "returnDelete": "Usuń z tego urządzenia",
+    "returnBody_few": "Twój przełącznik bezczynności usunął Twoje notatki z serwera dnia {{date}}. To urządzenie nadal ma {{count}} notatki. Jeśli chcesz je zachować, pobierz kopię zapasową, a potem usuń je z tego urządzenia.",
+    "returnBody_many": "Twój przełącznik bezczynności usunął Twoje notatki z serwera dnia {{date}}. To urządzenie nadal ma {{count}} notatek. Jeśli chcesz je zachować, pobierz kopię zapasową, a potem usuń je z tego urządzenia."
+  },
+  "massDelete": {
+    "title": "Notatki usunięte na innym urządzeniu",
+    "body_one": "Na innym Twoim urządzeniu usunięto {{count}} notatkę, którą to urządzenie wciąż ma. Jeśli to Ty, usuń ją też tutaj. Jeśli nie, ktoś może mieć dostęp do Twojego konta: zachowaj ją, żeby wróciła na wszystkie Twoje urządzenia.",
+    "keep": "Zachowaj moje notatki",
+    "delete": "Usuń je też tutaj",
+    "body_few": "Na innym Twoim urządzeniu usunięto {{count}} notatki, które to urządzenie wciąż ma. Jeśli to Ty, usuń je też tutaj. Jeśli nie, ktoś może mieć dostęp do Twojego konta: zachowaj je, żeby wróciły na wszystkie Twoje urządzenia.",
+    "body_many": "Na innym Twoim urządzeniu usunięto {{count}} notatek, które to urządzenie wciąż ma. Jeśli to Ty, usuń je też tutaj. Jeśli nie, ktoś może mieć dostęp do Twojego konta: zachowaj je, żeby wróciły na wszystkie Twoje urządzenia."
   }
 }

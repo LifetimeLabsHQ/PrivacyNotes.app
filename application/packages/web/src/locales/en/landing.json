@@ -2,6 +2,8 @@
   "header": {
     "betaBadge": "beta",
     "downloads": "Downloads",
+    "price": "Price",
+    "priceLine": "What your apps cost, added up",
     "pricing": "Pricing",
     "roadmap": "Roadmap",
     "createVault": "Create your vault",
@@ -39,14 +41,13 @@
       "clipper": "Your <w>web clipper</w>.",
       "markdown": "Your <w>Markdown</w>."
     },
-    "subhead": "Notes, tasks, passwords, files, bookmarks, a calendar, a mood and medication tracker, and a Markdown editor. One private app.",
+    "subhead": "Notes, tasks, passwords, journal, files, calendar, contacts and bookmarks, with mood and medication tracking. One private app.",
     "tryDemo": "Try the demo",
     "microcopy": "Free forever. No credit card. Sign in with Google, Apple, GitHub, or just a 12-word phrase.",
     "alreadyHaveVault": "Already have a vault? Log in",
     "trustSigned": "Signed releases on GitHub"
   },
   "heroCard": {
-    "passwords": "Passwords",
     "today": "Today",
     "tripTitle": "Trip packing list",
     "taskPassport": "Passport + tickets",
@@ -57,45 +58,85 @@
     "encrypted": "Encrypted",
     "moodWeek": "Mood · this week"
   },
+  "heroApp": {
+    "label": "Sections of the app",
+    "notes": {
+      "meta": "Edited 2 min ago",
+      "markdown": "MD",
+      "day": "Saturday",
+      "body": "Tram 28 early, <b>before the crowds</b>. Lunch at the place <ref>Ana</ref> keeps talking about.",
+      "tag1": "#travel",
+      "tag2": "#food"
+    },
+    "vault": {
+      "meta": "3 items, one key",
+      "password": "correct-horse-battery",
+      "card": "Travel card",
+      "ssh": "Work laptop"
+    },
+    "journal": {
+      "med": "Vitamin D, 08:00",
+      "entry": "Long walk by the river. Slept well, finally."
+    },
+    "files": {
+      "meta": "Files, encrypted",
+      "file1": "passport.pdf",
+      "file2": "beach.heic",
+      "file3": "voice-memo.m4a",
+      "file4": "lease.pdf",
+      "storage": "46 MB of 500 MB"
+    },
+    "calendar": {
+      "ev4": "Ana's birthday",
+      "empty": "Nothing planned"
+    },
+    "contacts": {
+      "initials": "AM",
+      "name": "Ana Martins",
+      "place": "Lisbon",
+      "birthday": "Birthday, {{date}}"
+    },
+    "bookmarks": {
+      "reading": "Reading",
+      "bm1": "Tram 28 - Wikipedia",
+      "bm2": "Lisbon on OpenStreetMap",
+      "bm3": "Pastel de nata recipe",
+      "bm4": "Markdown Guide",
+      "bm5": "PrivacyNotes source code",
+      "clipped": "Saved as note"
+    },
+    "mood": {
+      "insight": "Best days follow 7 h of sleep"
+    }
+  },
   "announcement": {
     "ossText": "Now open source: the full client code. Web, desktop and mobile.",
     "ossTextNarrow": "Now open source: the full client code.",
     "ossCta": "Star us on GitHub",
-    "ossCtaNarrow": "GitHub",
     "dismiss": "Dismiss announcement"
   },
   "pillars": {
     "kicker": "Everything under one key - and one editor on your disk",
-    "notesName": "Notes",
     "notesBlurb": "Rich live editor, tags, instant search.",
-    "tasksName": "Tasks",
     "tasksBlurb": "Every checkbox, one view.",
-    "vaultName": "Vault",
     "vaultBlurb": "Passwords, cards, SSH keys.",
     "journalName": "Journal",
     "journalBlurb": "Mood, sleep, medication. Research-backed tags, doctor export.",
-    "filesName": "Files",
     "filesBlurb": "Encrypted images, docs, audio, and video.",
     "bookmarksName": "Bookmark Sync",
     "bookmarksBlurb": "Saved links with website icons. Import your browser bookmarks.",
-    "contactsName": "Contacts",
     "contactsBlurb": "Numbers, emails, addresses. Import your whole address book.",
-    "calendarName": "Calendar",
-    "calendarBlurb": "Events and reminders. Day, week, and month views.",
-    "markdownFree": "Free"
+    "calendarBlurb": "Events and reminders. Day, week, and month views."
   },
   "mdEditor": {
     "title": "A free Markdown editor. Your files never leave your disk.",
     "body": "Point it at a folder of .md and .txt files - subfolders show up automatically, edits save in place, and nothing is converted. The same rich editor as your notes: live preview, tasks, tags, and tables.",
-    "chipObsidian": "Same files in Obsidian or Logseq",
-    "chipGit": "A git repo you sync yourself",
-    "chipAgents": "Give AI agents access to your notes",
     "platforms": "In the desktop app or any Chromium browser.",
     "sampleTitle": "Weekend project ideas",
     "sampleTask1": "Wire the garden sensor",
     "sampleTask2": "Draft the blog post",
     "sampleTag": "#tinkering",
-    "savedToDisk": "Saved to disk"
+    "saving": "Saving"
   },
   "meds": {
     "tileName": "Medication Tracker",
@@ -119,7 +160,7 @@
     "med4": "Melatonin",
     "dose4": "2 mg",
     "kicker": "Medication tracking",
-    "heading": "Take it on time. Keep the record to yourself.",
+    "heading": "Never miss a dose. Your pills are nobody's business.",
     "intro": "Add a medication once, with its dose and its times. Each day asks for one tap: taken, skipped or missed. The reminder rings on your phone. The list, the doses and the skipped days are encrypted on your device, and they stay that way when they sync.",
     "todayLabel": "Today. Tap a dose.",
     "todayCount": "{{taken}} of {{total}} taken",
@@ -146,7 +187,6 @@
     "refillBy": "Reorder in {{days}} days"
   },
   "ninja": {
-    "tileName": "Ninja",
     "tileTagline": "Alfred for your notes.",
     "tileLead": "Fast at executing orders.",
     "tileBlurb": "Press {{key}} and type. A few letters jump anywhere, + makes anything in plain words, > runs a command. Your hands never leave the keyboard.",
@@ -157,11 +197,6 @@
     "chipDay": "Go to a day",
     "chipLink": "Paste a link",
     "placeholder": "Type a title, + to add, or > for commands",
-    "recent": "Recent",
-    "inText": "In the text",
-    "create": "Create",
-    "addTo": "Add to",
-    "commands": "Commands",
     "recent1": "Weekend project ideas",
     "recent1Meta": "Notes · 2 h ago",
     "recent2": "Groceries",
@@ -185,15 +220,10 @@
     "q2Row3": "New task list: Dentist",
     "q3": "milk, eggs >> groc",
     "q3Row1": "Add 2 tasks to Groceries",
-    "q3Row1Meta": "Tasks",
     "q3Row2": "New event: milk, eggs",
     "q4": "zen",
     "q4Row1": "Start zen mode",
     "q4Row2": "Settings: Zen mode",
-    "hintOpen": "open",
-    "hintActions": "actions",
-    "hintTab": "open in a tab",
-    "hintClose": "close",
     "tryDemo": "Try it in the demo",
     "seeShots": "Screenshots",
     "shots": {
@@ -223,8 +253,7 @@
       "theme": "Type “theme”: every theme with its colors. Enter wears it, light or dark."
     },
     "q1Row1Meta": "Notes · 2 days ago",
-    "q1Row2Meta": "Folder · 4 items",
-    "hintMove": "move"
+    "q1Row2Meta": "Folder · 4 items"
   },
   "demoShot": {
     "kicker": "See it live",
@@ -246,15 +275,14 @@
     "rls": "Row-level security"
   },
   "downloads": {
-    "kicker": "Downloads",
     "heading": "Download PrivacyNotes",
     "tileAria": "Download for {{name}}",
+    "playDesc": "Updates through the Play Store. Purchases in the app are billed by Google.",
     "apkDesc": "Every update is a download and an install you do yourself.",
     "obtainiumDesc": "Installs every new release from our repo.",
     "obtainiumBadgeAlt": "Get it on Obtainium",
     "appStore": "App Store",
     "recommended": "Recommended",
-    "comingSoon": "Coming soon",
     "apkFootnote": "Needs Android 7.0 or newer. Zapstore, Obtainium and the APK need no Google account and no Google billing: Pro unlocks via web checkout. The APK alerts you in-app when a new version is ready.",
     "linuxRequirement": "Both formats need webkit2gtk 4.1: Ubuntu 22.04 or newer, Debian 12 or newer, or an equivalent release from 2023 onward. Older distributions only ship webkit2gtk 4.0 and cannot run these builds.",
     "linuxArchX86": "Intel / AMD (x86_64)",
@@ -271,12 +299,12 @@
     "pkgToggle": "Install with a package manager ({{platforms}})",
     "pkgBrewDesc": "brew upgrade skips it: the app updates itself.",
     "pkgWingetDesc": "Built into Windows 10 and 11.",
-    "pkgScoopDesc": "Scoop never auto-updates. Run scoop update privacynotes.",
     "pkgFootnote": "Each one installs the same signed build.",
     "githubLink": "All releases on GitHub",
     "githubNote": "Signed · Public · Verifiable · Every single release",
     "zapstoreDesc": "<rec>Recommended.</rec> Verifies our signature before it installs.",
     "zapstoreBadgeAlt": "Get it on Zapstore",
+    "playBadgeAlt": "Get it on Google Play",
     "autoUpdates": "Auto-updates",
     "manualUpdates": "Manual updates"
   },
@@ -284,37 +312,13 @@
     "getStarted": "Get started"
   },
   "pricing": {
-    "freeLabel": "Free forever",
     "freeSubLabel": "No credit card required, no time limit.",
-    "freeAllPillars": "Notes, tasks, calendar, files, vault, journal, contacts, and bookmarks",
+    "freeAllPillars": "Notes, tasks, passwords, journal, files, calendar, contacts and bookmarks, with mood and medication tracking",
     "freeSync": "Sync across 2 devices",
     "freeVault": "50 MB storage, 5 MB per file",
-    "freeSearch": "Full-text search and tags",
     "freeImport": "Import and export, including Keep and Obsidian",
-    "freeBurn": "Burn After Reading",
-    "freeMood": "Mood and wellness tracking",
-    "freeTheme": "Dark and light mode",
     "freeAnon": "Anonymous sign-in, no email",
-    "freeGoogle": "Google, Apple, or GitHub sign-in",
-    "noSubscription": "No subscription",
-    "proLabel": "Pro · Pay once",
-    "earlyAdopterBadge": "Early Adopter",
-    "oneTime": "one-time",
-    "proOnceDesc": "You pay <b>once</b> and own it forever.",
-    "proCompareBeta": "Pay ${{earlyPrice}} once. Obsidian Sync costs $48/yr, every year. Standard Notes charges $90/yr. Early adopter price, locked in before it rises to ${{proPrice}}.",
-    "proCompare": "Pay ${{proPrice}} once and own it forever. Obsidian Sync costs $48/yr and Standard Notes $90/yr, every single year.",
-    "proEverythingFree": "Everything in Free, plus:",
-    "proSync": "Sync across unlimited devices",
-    "proHistory": "Note history, up to 50 versions",
-    "proLock": "Read-only notes",
-    "proPin": "PIN-protect notes",
-    "proAnalytics": "Wellness analytics and export",
-    "proZen": "Zen mode and extra themes",
-    "proStorage": "500 MB storage, 50 MB per file, <expand>expandable</expand>"
-  },
-  "storageAddon": {
-    "heading": "Need more storage?",
-    "body": "Pro includes 500 MB. If you need more, add extra storage from ${{price}}/year. This is the only recurring cost in <brand/>. The Pro upgrade itself is one-time, forever."
+    "earlyAdopterBadge": "Early Adopter"
   },
   "underHood": {
     "heading": "Under the hood",
@@ -322,17 +326,14 @@
     "cipherDesc": "Keys derived client-side",
     "phraseTerm": "BIP-39 phrases",
     "phraseDesc": "12 words, Ed25519 signing",
-    "rlsTerm": "Row-level security",
     "rlsDesc": "RLS keyed to your pubkey",
     "trackingTerm": "Zero trackers",
     "trackingDesc": "No pixels, no third-party trackers",
     "authTerm": "Anonymous auth",
     "authDesc": "No email, no password",
-    "serversTerm": "Swiss servers",
     "serversDesc": "Zurich, Switzerland",
     "sshTerm": "SSH key vault",
     "sshDesc": "Ed25519 generation built in",
-    "pwgenTerm": "Password generator",
     "pwgenDesc": "crypto.getRandomValues()",
     "opensourceTerm": "Open source",
     "opensourceDesc": "Clients and crypto on GitHub"
@@ -361,9 +362,7 @@
       "social": "An evening out",
       "custom": "Anything you count, with Pro"
     },
-    "cardPatternsTitle": "Patterns",
     "cardPatternsBody": "Every tracker ranked by what it does to your mood, with the finding written out in plain words.",
-    "cardExploreTitle": "Explore",
     "cardExploreBody": "One tracker against your mood, the same day or the next. Sleep tonight, mood tomorrow.",
     "cardMedsTitle": "Medication",
     "cardMedsBody": "Taken or skipped, dose changes on a timeline, and adherence held against your mood.",
@@ -374,27 +373,34 @@
     "vizReport": "Doctor report",
     "vizPrompt": "AI prompt",
     "encryptedHeading": "Why this only works encrypted",
-    "encryptedBody": "Nobody logs their antidepressant dosage in Notion. Nobody tracks hopeless days in a Google Doc. Data this sensitive needs zero-knowledge encryption, so that is how PrivacyNotes is built."
+    "encryptedBody": "Nobody logs their antidepressant dosage in Notion. Nobody tracks hopeless days in a Google Doc. Data this sensitive needs encryption on the device, so that is how PrivacyNotes is built."
   },
   "comparison": {
     "kicker": "The math",
-    "heading": "Why pay for three apps when one does it all, encrypted?",
-    "typicalSetup": "Typical setup",
-    "themStandardNotes": "Standard Notes, $90/yr",
-    "themObsidian": "Obsidian Sync, $48/yr",
-    "themDayOne": "Day One, $36/yr",
-    "themPasswordManager": "Bitwarden / 1Password, $10-36/yr",
-    "themLunatask": "Lunatask, $72/yr",
-    "themDaylio": "Daylio, $48/yr (unencrypted mood data)",
-    "themSeparate": "Separate apps, recurring fees",
-    "usAllInOne": "Notes, tasks, calendar, files, vault, journal, contacts, bookmarks. One app",
-    "usTracking": "Mood, energy, sleep, medication tracking",
-    "usEncrypted": "Encrypted on your device, synced to Switzerland",
-    "usSignIn": "Anonymous, or Google, Apple, or GitHub sign-in, same encryption either way",
-    "usExport": "Pattern detection + doctor PDF export",
-    "usSync": "Desktop + mobile, unlimited sync",
-    "usPriceBeta": "Free forever, or ${{earlyPrice}} once for Pro (early adopter price)",
-    "usPrice": "Free forever, or ${{proPrice}} once for Pro"
+    "headingLive": "Your apps cost <cost>{{amount}}</cost> a year.<br />Ours starts <free>free</free>. Pro is <free>{{pro}}, once</free>.",
+    "pick": "Tap what you pay for today",
+    "group": {
+      "mood": "Mood and wellness",
+      "files": "Files and storage",
+      "bookmarks": "Bookmarks and read-later"
+    },
+    "barThem_one": "Them, {{count}} year",
+    "barThem_other": "Them, {{count}} years",
+    "barUs": "<brand/> Pro",
+    "receipt": "Your bill",
+    "receiptCount_one": "{{count}} subscription",
+    "receiptCount_other": "{{count}} subscriptions",
+    "receiptRenews": "Renews every year",
+    "perYear": "Total per year",
+    "keepLabel": "You save",
+    "keepLine_one": "in {{count}} year, even if you buy Pro.",
+    "keepLine_other": "over {{count}} years, even if you buy Pro.",
+    "pickNone": "Tap the apps you pay for.",
+    "checked": "Yearly prices on annual billing, from each app's pricing page, {{date}}.",
+    "usKicker": "All of it in one app, encrypted on your device.",
+    "usFreeBig": "free forever",
+    "usProOnce": "once, yours for life",
+    "usProLine": "Every device, 50 versions of each note, PIN-locked notes, wellness insights and 10x the storage. More space from ${{price}} a year, the only thing we bill yearly."
   },
   "extras": {
     "kicker": "And also",
@@ -414,20 +420,25 @@
     "weekInReview": "Week-in-review",
     "selfDestruct": "Self-destructing notes",
     "anonAccounts": "Anonymous accounts",
-    "zenMode": "Zen mode",
     "darkMode": "Dark mode"
   },
   "whyPrivacy": {
     "kicker": "Why it matters",
-    "heading": "Most note apps read your notes.<accent>Ours can’t.</accent>",
-    "para1": "Most note apps mine your content. Add “buy a new TV” to your shopping list and your next few pages fill up with TV ads. Your grocery list, your journal, your private thoughts, all fed into ad-targeting pipelines, profiled, and sold. That is the business model of every “free” note app backed by advertising.",
-    "para2": "Even apps that don’t show ads still store your notes in plaintext on their servers, readable by employees, hackable in breaches, and available to anyone with a subpoena. Your data becomes their leverage.",
+    "heading": "Write “buy a new TV”. <accent>See TVs for a month.</accent>",
+    "lead": "That is how most free note apps pay their bills: what you write is read, profiled and sold, and the ads come after you.",
+    "step": {
+      "type": "You type it",
+      "typeSub": "“buy a new TV”",
+      "read": "The app reads it",
+      "readSub": "interest: electronics",
+      "ads": "The ads follow you",
+      "adsSub": "on every site you visit"
+    },
     "differenceLabel": "The difference",
-    "differenceBody": "<brand/> encrypts your notes on your device, and with self-custody the key never leaves it, so neither we nor our servers can read a word. There are no ads, no pixels, no third-party trackers and no analytics of what you write, and there never will be. Our website counts clicks on its download and partner links by country, without any identifier. What you write stays yours.",
+    "differenceBody": "<brand/> encrypts your notes on your device. There are no ads, no pixels, no third-party trackers and no analytics of what you write, and there never will be. The code is open source, so you can check that yourself.",
     "keyboardNote": "<b>A note on device keyboards.</b> Third-party keyboards (such as Gboard, SwiftKey, or Samsung Keyboard) may send what you type to their own servers. This happens at the operating-system level, outside any app’s control. Consider disabling cloud features in your keyboard settings or using an offline-only keyboard."
   },
   "readIt": {
-    "kicker": "Open source",
     "heading": "Do not trust us. Read it.",
     "body": "The app you are running is published, along with the encryption inside it. Start with the one-minute check that needs no tools, or go straight to the code.",
     "cta": "View the source on GitHub",
@@ -437,30 +448,25 @@
     "crypto": "The encryption itself"
   },
   "wontFind": {
-    "kicker": "What you won’t find in the app",
-    "noTracking": "No trackers",
-    "noAds": "No ads",
-    "noHarvesting": "No data harvesting",
-    "noAiTraining": "No AI training",
-    "noLockIn": "No lock-in",
-    "noEmail": "No email required",
-    "noTelemetry": "No analytics of your notes",
-    "noCookieBanner": "No cookie banner",
-    "noPasswords": "No passwords",
-    "noDarkPatterns": "No dark patterns",
-    "noVc": "No VC funding",
-    "noBlockchain": "No blockchain",
-    "noBackdoor": "No secret backdoor"
+    "kicker": "Left out on purpose",
+    "noTracking": "Trackers",
+    "noAds": "Ads",
+    "noHarvesting": "Data harvesting",
+    "noAiTraining": "AI training",
+    "noLockIn": "Lock-in",
+    "noEmail": "Required email",
+    "noDarkPatterns": "Dark patterns",
+    "noBackdoor": "Backdoors"
   },
   "noRecovery": {
     "heading": "Your phrase is your key",
-    "body": "No phrase, no notes. We cannot recover them, and neither can anyone else. That is the trade-off for self-custody: you are the only one holding the key, so writing to our team cannot bring your notes back.",
+    "body": "With self-custody, no phrase means no notes: nobody can recover them. That is the trade-off for holding the only key, so writing to our team cannot bring your notes back.",
     "noRecoveryTerm": "No recovery",
-    "noRecoveryDesc": "Lose your phrase, lose your notes",
+    "noRecoveryDesc": "With self-custody, lose your phrase and you lose your notes",
     "deviceTerm": "Device-generated",
     "deviceDesc": "With self-custody, your phrase never touches our servers",
     "zkTerm": "Zero-knowledge",
-    "zkDesc": "With self-custody, we can't read or restore your data",
+    "zkDesc": "With self-custody, the server holds nothing that opens your notes",
     "writeTerm": "Write it down",
     "writeDesc": "Paper backup, stored somewhere safe",
     "printTerm": "Print from settings",
@@ -471,22 +477,20 @@
   "closing": {
     "kicker": "Ready when you are",
     "heading": "Your vault is ready in under a minute.",
-    "importNote": "Switching apps? Export from any of these and import in minutes:"
+    "importNote": "Switching apps? Export from any of these and import in minutes:",
+    "importDemoTitle": "Try your own import in the demo first",
+    "importDemoBody": "Your file is read in your browser, nothing goes to our servers, and closing the tab clears it."
   },
   "about": {
     "tabs": {
       "about": "About",
-      "changelog": "Changelog",
-      "roadmap": "Roadmap",
       "hotkeys": "Hotkeys",
       "rating": "Rating"
     },
-    "modalTitle": "About",
-    "intro": "<brand/> keeps your notes, tasks, journal, passwords, files, bookmarks and contacts in one place. Everything is encrypted on your device with a key made from your 12 words, and it stays encrypted on our servers in <nowrap>Switzerland</nowrap>. It works offline, and the app is open source.",
+    "intro": "<brand/> keeps your notes, tasks, passwords, journal, files, calendar, contacts and bookmarks in one place, with mood and medication tracking. Everything is encrypted on your device with a key made from your 12 words, and it stays encrypted on our servers in <nowrap>Switzerland</nowrap>. It works offline, and the app is open source.",
     "versionHeading": "Version",
     "windowVersion": "Version {{version}}",
     "windowHelp": "Help Center",
-    "windowWhatsNew": "Changelog",
     "whatsNew": "What's new",
     "seeWhatsNew": "See all changes on PrivacyNotes.app with screenshots",
     "feedbackHeading": "Feedback",
@@ -495,14 +499,13 @@
     "termsOfService": "Terms of Service",
     "refundPolicy": "Refund Policy",
     "tagline": "No subscriptions. Just Software. Not a service.",
-    "hotkeysFootnote": "Most shortcuts are ignored while you're typing in a text field, so regular keys like J and K still type J and K.",
     "singleKeysTitle": "Single-key shortcuts",
     "singleKeysDesc": "Use J, K, Q, / and ?, and T, D, W, M and N in the Calendar, without holding Cmd or Ctrl."
   },
   "trust": {
     "openSourceHeading": "Open Source",
     "openSourceLink": "Read the source at GitHub.com",
-    "openSourceBody": "The app and the encryption inside it are published, so anyone can check our zero-knowledge claims.",
+    "openSourceBody": "The app and the encryption inside it are published, so anyone can check how your notes are encrypted.",
     "dataStorageHeading": "Data Storage",
     "dataStorageBody": "Encrypted blobs stored in Zurich, <flag/> Switzerland.",
     "faviconsHeading": "Website icons",
@@ -524,6 +527,7 @@
     "outro": "We read every review that comes in, and a word from someone who uses this daily is what keeps us going.",
     "descGithub": "Star the repo on GitHub",
     "descAppStore": "Rate PrivacyNotes on the App Store",
+    "descPlay": "Rate PrivacyNotes on Google Play",
     "descAlternativeTo": "Like and review on AlternativeTo",
     "descCapterra": "Rate PrivacyNotes on Capterra",
     "descSaasHub": "Like and review on SaaSHub",

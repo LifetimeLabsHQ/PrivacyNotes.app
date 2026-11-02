@@ -1,0 +1,104 @@
+/*
+  The one file of type and icon sizes, for the app and every public page.
+
+  Code never writes a size. It names a role (`text-body`, `text-small` ...),
+  and the role takes its number from here. To make all text larger, change
+  the numbers below; nothing else needs to move. The roles and when to use
+  each one: docs/contrib/design/type-scale.md.
+
+  --fs-<role>  the text size.
+  --lh-<role>  its line height, as a ratio. A role without one keeps the
+               line height of its parent, as an arbitrary size did before.
+  --ic-<role>  the icon size beside text of that role. An icon with no size
+               of its own takes the icon size of the nearest role around it,
+               so an icon is always larger than its label.
+
+  All values are rem, so the browser's own font size setting scales the whole
+  UI evenly. Desktop app zoom (appZoom.ts) scales the page from below, and the
+  editor Text size (--pn-text-scale) scales note content only; neither reads
+  these numbers, and these numbers never read them.
+
+  Plain CSS custom properties on purpose: index.css turns them into utilities,
+  and the static pages (static-page-chrome.ts) inline this file as it is.
+  Spec: docs/contrib/design/type-scale.md
+*/
+:root {
+  /* The icon size outside any role, and an icon's size relative to its text
+     where no role sets one (the static pages' inline icons). */
+  --icon-size: var(--ic-body);
+  --icon-ratio: 1.2;
+
+  /* Dates, counts, badges, keyboard hints, chart labels. */
+  --fs-meta: 0.6875rem;
+  --ic-meta: 0.8125rem;
+
+  /* Segmented controls, chips, secondary labels, captions. */
+  --fs-small: 0.75rem;
+  --lh-small: calc(1 / 0.75);
+  --ic-small: 0.9375rem;
+
+  /* Helper lines that explain a setting or a screen (SETTINGS_HELP) and help
+     links. Its own role, so it can grow without widening controls. */
+  --fs-help: 0.8125rem;
+  --lh-help: 1.4;
+  --ic-help: 1rem;
+
+  /* Menu items, compact cards, sidebar sub-rows. */
+  --fs-compact: 0.8125rem;
+  --ic-compact: 1rem;
+
+  /* Body text, buttons, fields, settings rows. */
+  --fs-body: 0.875rem;
+  --lh-body: calc(1.25 / 0.875);
+  --ic-body: 1.0625rem;
+
+  /* The main rows of the sidebar and the lists. */
+  --fs-row: 0.9375rem;
+  --ic-row: 1.125rem;
+
+  /* Pane titles, card titles, reading text on public pages. */
+  --fs-title: 1rem;
+  --lh-title: 1.5;
+  --ic-title: 1.25rem;
+
+  /* Window titles, section headings. */
+  --fs-heading: 1.125rem;
+  --lh-heading: calc(1.75 / 1.125);
+  --ic-heading: 1.375rem;
+
+  /* Big numbers and headlines, smallest to largest. */
+  --fs-display: 1.25rem;
+  --lh-display: calc(1.75 / 1.25);
+  --ic-display: 1.5rem;
+  --fs-display-2: 1.5rem;
+  --lh-display-2: calc(2 / 1.5);
+  --ic-display-2: 1.75rem;
+  --fs-display-3: 1.875rem;
+  --lh-display-3: 1.2;
+  --ic-display-3: 2rem;
+  --fs-display-4: 2.25rem;
+  --lh-display-4: calc(2.5 / 2.25);
+  --ic-display-4: 2.25rem;
+  --fs-display-5: 3rem;
+  --lh-display-5: 1;
+  --ic-display-5: 2.5rem;
+  --fs-display-6: 3.75rem;
+  --lh-display-6: 1;
+  --ic-display-6: 2.5rem;
+  --fs-display-7: 4.5rem;
+  --lh-display-7: 1;
+  --ic-display-7: 2.5rem;
+
+  /* Headlines that grow with the window, on the public pages only. */
+  --fs-hero-1: clamp(2.375rem, 5vw, 3.5rem);
+  --fs-hero-2: clamp(1.875rem, 4vw, 2.5rem);
+  --fs-hero-3: clamp(1.75rem, 3.4vw, 2.25rem);
+}
+
+/* An inline icon on a static page (or in markup they share with the app,
+   like the footer) carries data-ic and no width: it grows with its text. */
+[data-ic] {
+  width: calc(1em * var(--icon-ratio));
+  height: calc(1em * var(--icon-ratio));
+  flex-shrink: 0;
+}

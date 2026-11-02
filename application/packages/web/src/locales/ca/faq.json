@@ -109,13 +109,13 @@
       "q": "Què pot veure PrivacyNotes de les meves notes?",
       "a": [
         "Les notes, els títols, les etiquetes i els adjunts estan sempre xifrats, al teu dispositiu i de camí al servidor. [Amb autocustòdia](/ca/help/threat-model-levels/), que és el punt de partida de tots els comptes creats amb una frase, no tenim cap clau de desxifratge. Si et registres amb Google, Apple o GitHub, l'app et pregunta on vols guardar la clau i comença amb «Mantén-ho simple i còmode», que desa la frase al nostre servidor, xifrada amb una clau nostra. En aquest mode, el nostre servidor pot desxifrar la frase i, per tant, les teves notes. Configuració > Compte > Custòdia de la clau mostra el mode actual i et permet canviar-lo.",
-        "Podem veure la informació necessària per fer funcionar el servei: quant d'emmagatzematge xifrat utilitzes, quants dispositius tens vinculats i les marques de temps de sincronització. Si només utilitzes la frase i [no has connectat cap compte de Google, Apple o GitHub](/ca/help/connected-logins/), no sabem la teva adreça de correu electrònic."
+        "Podem veure la informació necessària per fer funcionar el servei: la clau pública que genera la teva frase, quants elements i quant d'emmagatzematge xifrat tens, quants dispositius tens vinculats i les marques de temps de sincronització. Els nostres límits de velocitat també veuen l'adreça IP de cada petició, que no escrivim al teu compte. Si només utilitzes la frase i [no has connectat cap compte de Google, Apple o GitHub](/ca/help/connected-logins/), no sabem la teva adreça de correu electrònic."
       ]
     },
     "us-company": {
       "q": "PrivacyNotes la porta una empresa dels EUA. Això posa en risc les meves notes?",
       "a": [
-        "Les teves notes es xifren al teu dispositiu, i amb l'[autocustòdia](/ca/help/threat-model-levels/) el servidor no té res que les obri. El que escrius li arriba només com a text xifrat, així que una ordre legal de qualsevol país només aconsegueix text xifrat, estigui on estigui registrada l'empresa. Comprova-ho: el codi està [publicat com a codi obert a GitHub](https://github.com/LifetimeLabsDev/PrivacyNotes.app), i la pestanya de xarxa del navegador mostra que les teves paraules només surten com a text xifrat.",
+        "Les teves notes es xifren al teu dispositiu, i amb l'[autocustòdia](/ca/help/threat-model-levels/) el servidor no té res que les obri. El que escrius li arriba només com a text xifrat, així que una ordre legal de qualsevol país només aconsegueix text xifrat, estigui on estigui registrada l'empresa. Comprova-ho: el codi està [publicat com a codi obert a GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), i la pestanya de xarxa del navegador mostra que les teves paraules només surten com a text xifrat.",
         "Lifetime Labs LLC és una empresa dels EUA perquè era la manera més ràpida de posar els nostres projectes sota un sol nom. Ningú de l'equip viu als EUA, i les teves notes sincronitzades s'emmagatzemen a Zuric, Suïssa.",
         "El que la llei pot assolir són les dades que el servei necessita: la teva clau pública, les marques de temps de sincronització, la mida d'emmagatzematge, registres del servidor de vida curta i, si connectes Google, Apple o GitHub, aquest correu. Amb «Mantén-ho simple i còmode», la teva frase de recuperació també es guarda al nostre servidor, i obre les teves notes. Configuració > Compte > Custòdia de la clau et canvia a l'autocustòdia. [Què pot veure PrivacyNotes](/ca/help/what-can-you-see/) en detalla més."
       ]
@@ -123,7 +123,7 @@
     "app-privacy-label": {
       "q": "Per què l’etiqueta de privacitat de l’App Store diu que les meves dades estan vinculades a mi?",
       "a": [
-        "Perquè Apple demana una sola etiqueta que cobreixi tot el que pot arribar al nostre servidor, encara que hi arribi xifrat i encara que només ho enviïn alguns comptes. Vinculades a tu vol dir associades a un compte, i el compte darrere d’un registre amb frase és una clau, no un nom. Res no s’utilitza per fer seguiment, i l’app no inclou analítiques, anuncis ni informes d’errors. Cada línia de l’etiqueta vol dir una sola cosa:",
+        "Perquè Apple demana una sola etiqueta que cobreixi tot el que pot arribar al nostre servidor, encara que hi arribi xifrat i encara que només ho enviïn alguns comptes. Vinculades a tu vol dir associades a un compte, i el compte darrere d’un registre amb frase és una clau, no un nom. Res no s’utilitza per fer seguiment, i l’app no inclou anuncis, ni informes d’errors, ni analítiques del que escrius. Cada línia de l’etiqueta vol dir una sola cosa:",
         "- **Contingut de l’usuari**: les teves notes i fitxers, xifrats al teu dispositiu. [Amb autocustòdia](/ca/help/threat-model-levels/), el servidor no guarda res que els pugui obrir.\n- **Identificadors**: una clau pública derivada de la teva frase de recuperació i un hash del dispositiu calculat al teu dispositiu, que només aplica [el límit de dispositius del pla gratuït](/ca/help/device-limit/).\n- **Informació de contacte**: una adreça de correu, només si inicies la sessió amb Google, Apple o GitHub.\n- **Compres**: si el teu compte té Pro. Apple gestiona el pagament i mai no veiem la teva targeta.",
         "Perquè aquesta llista sigui tan curta com sigui possible al teu compte, [registra’t amb una frase de recuperació](/ca/help/signup-options/) en lloc d’un inici de sessió de Google, Apple o GitHub, i mantén l’autocustòdia. Configuració > Compte > Custòdia de la clau mostra el mode actual. [Què pot veure PrivacyNotes](/ca/help/what-can-you-see/) explica la resta."
       ]
@@ -183,7 +183,7 @@
       "a": [
         "Sí, la llista de paraules estàndard BIP-39 en anglès: 2048 paraules, exactament la mateixa llista que fan servir els moneders de Bitcoin. Generem les frases amb [@scure/bip39](https://github.com/paulmillr/scure-bip39), una biblioteca de codi obert auditada. Cap llista de paraules pròpia i cap criptografia casolana.",
         "La llista està pensada per escriure-la a mà: les quatre primeres lletres de cada paraula són úniques, així que una paraula mig esborrada o abreujada continua sent inequívoca, i les paraules que s'assemblen entre elles es van excloure expressament.",
-        "Com que és la llista estàndard, pots verificar la teva frase amb qualsevol referència pública de BIP-39, i el nostre codi de xifratge és [codi obert](https://github.com/LifetimeLabsDev/PrivacyNotes.app), així que pots comprovar-ne la implementació tu mateix."
+        "Com que és la llista estàndard, pots verificar la teva frase amb qualsevol referència pública de BIP-39, i el nostre codi de xifratge és [codi obert](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), així que pots comprovar-ne la implementació tu mateix."
       ]
     },
     "search-local": {
@@ -203,22 +203,23 @@
     "burn-notes": {
       "q": "Què són les burn notes?",
       "a": [
-        "Una burn note és una manera autodestructiva de [compartir una nota amb algú que no fa servir PrivacyNotes](/ca/help/share-with-someone/). L'aplicació xifra el contingut amb una clau d'un sol ús i et dona un enllaç. La clau viatja al fragment de l'enllaç, que els navegadors no envien mai als servidors, així que el nostre servidor emmagatzema text xifrat que no pot llegir.",
+        "Una burn note és una manera autodestructiva de [compartir una nota amb algú que no fa servir PrivacyNotes](/ca/help/share-with-someone/). L'aplicació xifra el contingut amb una clau d'un sol ús i et dona un enllaç. La clau viatja al fragment de l'enllaç, que els navegadors no envien mai als servidors, així que el nostre servidor només emmagatzema text xifrat, mai la clau que l'obre.",
         "El primer cop que s'obre l'enllaç, el servidor lliura el text xifrat i el suprimeix en el mateix pas: una lectura, i ja no hi és. Els enllaços no oberts caduquen sols quan passa el temps que tria qui els envia, d'1 hora a 7 dies. Sigui com sigui, no en queda res."
       ]
     },
     "open-source": {
       "q": "PrivacyNotes és de codi obert?",
       "a": [
-        "Sí. Les aplicacions web, d'escriptori i mòbil estan publicades a [GitHub](https://github.com/LifetimeLabsDev/PrivacyNotes.app), juntament amb el codi de xifratge que fa il·legibles les teves notes i el model d'amenaces que detalla què protegeix cada peça. És el mateix codi amb què compilem les nostres versions.",
-        "Això és el que converteix una promesa en una cosa que pots comprovar. Llegeix el xifratge d'una tirada, obre la pestanya de xarxa del navegador i [mira com les teves notes surten com a text il·legible](/ca/help/what-can-you-see/), o compila l'aplicació tu mateix i [compara-la amb la que distribuïm](/ca/help/verify-download/). No has de creure'ns ni una paraula."
+        "Sí. Les aplicacions web, d'escriptori i mòbil estan publicades a [GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), juntament amb el codi de xifratge que fa il·legibles les teves notes i el model d'amenaces que detalla què protegeix cada peça. És el mateix codi amb què compilem les nostres versions.",
+        "Això és el que converteix una promesa en una cosa que pots comprovar. Llegeix el xifratge d'una tirada, obre la pestanya de xarxa del navegador i [mira com les teves notes surten com a text il·legible](/ca/help/what-can-you-see/), o compila l'aplicació tu mateix i [compara-la amb la que distribuïm](/ca/help/verify-download/). Amb autocustòdia, no has de creure'ns ni una paraula."
       ]
     },
     "report-vulnerability": {
       "q": "He trobat una vulnerabilitat de seguretat. Com la puc comunicar?",
       "a": [
-        "Escriu a privacynotes@lifetimelabs.dev. La mateixa adreça està publicada al nostre [security.txt](https://privacynotes.app/.well-known/security.txt) signat amb PGP, així que pots confirmar que és autèntica abans d'escriure, i al costat hi ha la nostra [clau pública](https://privacynotes.app/.well-known/pgp-key.txt) per si prefereixes xifrar l'informe.",
-        "Responem, i quan una correcció demana coordinació acordem amb tu els terminis de divulgació abans que res es faci públic. Els informes arriben directament a qui va escriure el codi, i qui vulgui crèdit el rep. [Prova contra la demostració a try.privacynotes.app](/ca/help/try-before-signup/) o un compte d'usar i llençar, mai contra les notes d'una altra persona."
+        "Informa-ne en privat [a GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/security/advisories/new). Si no pots fer servir GitHub, escriu a sec@lifetimelabs.dev. Aquesta adreça també està publicada al nostre [security.txt](https://privacynotes.app/.well-known/security.txt), al nostre propi domini, així que pots confirmar que és autèntica abans d'escriure.",
+        "Responem, i quan una correcció demana coordinació acordem amb tu els terminis de divulgació abans que res es faci públic. Els informes arriben directament a qui va escriure el codi, i qui vulgui crèdit el rep. [Prova contra la demostració a try.privacynotes.app](/ca/help/try-before-signup/) o un compte d'usar i llençar, mai contra les notes d'una altra persona.",
+        "Abans d'enviar-lo, comprova'l amb la versió actual i amb el nostre [model d'amenaces](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md), que enumera els límits que ja coneixem i acceptem. Les eines d'IA són benvingudes, però comprova tu mateix cada afirmació amb l'aplicació, digues si una eina ha ajudat a escriure l'informe i no publiquis mai primer una troballa sense comprovar: una afirmació pública errònia preocupa la gent abans que ningú pugui verificar-la. Les indicacions completes són a [SECURITY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/SECURITY.md#reporting-a-vulnerability). Les preguntes sobre com funciona l'aplicació són benvingudes a qualsevol lloc, formulades com a preguntes."
       ]
     },
     "lost-phrase": {
@@ -262,8 +263,8 @@
     "what-syncs": {
       "q": "Què se sincronitza exactament entre els meus dispositius, i què es queda en local?",
       "a": [
-        "Tot el que esperaries, i tot plegat xifrat al teu dispositiu: notes, tasques, entrades del diari, [la caixa forta](/ca/help/vault/) i els fitxers que hi ha dins. La teva configuració també et segueix - etiquetes preferides, preferències d'ordre i de vista, tema de color, el PIN (com a hash amb sal, mai el PIN en si), bloqueig de l'aplicació, configuració dels seguiments i de la medicació, i [la supressió automàtica de la paperera](/ca/help/trash-auto-delete/). Configura-ho un cop i tots els dispositius ho recullen.",
-        "Unes quantes coses es queden expressament en local a cada dispositiu: el mode clar o fosc (cada dispositiu segueix la preferència del seu propi sistema), el desbloqueig biomètric (lligat al maquinari de cada dispositiu), [l'espai que mostra la barra lateral](/ca/help/spaces/) i l'estat de desbloqueig (en tancar l'aplicació, sempre es torna a bloquejar). El servidor només emmagatzema blobs xifrats i no en pot llegir res."
+        "Tot el que esperaries, i tot plegat xifrat al teu dispositiu: notes, tasques, entrades del diari, [la caixa forta](/ca/help/vault/) i els fitxers que hi ha dins. La teva configuració també et segueix - etiquetes preferides, preferències d'ordre i de vista, tema de color, el PIN (com a hash amb sal, mai el PIN en si), configuració dels seguiments i de la medicació, i [la supressió automàtica de la paperera](/ca/help/trash-auto-delete/). Configura-ho un cop i tots els dispositius ho recullen.",
+        "Unes quantes coses es queden expressament en local a cada dispositiu: el mode clar o fosc (cada dispositiu segueix la preferència del seu propi sistema), el desbloqueig biomètric (lligat al maquinari de cada dispositiu), el bloqueig de l'aplicació i el temps que triguen l'aplicació i el PIN a tornar a preguntar (perquè un mòbil es pugui bloquejar abans que un ordinador de casa), [l'espai que mostra la barra lateral](/ca/help/spaces/) i l'estat de desbloqueig (en tancar l'aplicació, sempre es torna a bloquejar). Tot el que se sincronitza, el servidor només ho emmagatzema xifrat."
       ]
     },
     "offline": {
@@ -290,8 +291,8 @@
       "q": "On s'emmagatzemen les meves dades?",
       "a": [
         "Primer de tot, al teu dispositiu, i aquesta és la còpia amb què treballes: l'aplicació és local primer, així que [les teves notes s'obren i s'editen sense connexió](/ca/help/offline/). La còpia de sincronització viu en servidors a Zuric, Suïssa. Allà hi ha la teva clau pública, blobs xifrats de les teves notes, fitxers i configuració, més les marques de temps i les mides que necessita una sincronització. Cap títol, cap text, cap etiqueta.",
-        "El país compta menys que el xifratge. Tot està sempre xifrat, al teu dispositiu i de camí al servidor, així que aquesta còpia seria il·legible fos on fos: Suïssa és un extra, no pas la promesa. [Què se sincronitza](/ca/help/what-syncs/) ho detalla punt per punt.",
-        "La còpia del teu dispositiu també està xifrada. [Les notes se segellen al disc](/ca/help/data-on-disk/) amb una clau derivada de la teva frase de recuperació en desbloquejar, així que una còpia de l'emmagatzematge de l'aplicació al teu dispositiu, o una còpia de seguretat robada d'aquest emmagatzematge, conté dades xifrades, no pas les teves notes."
+        "El país compta menys que el xifratge. Tot està sempre xifrat, al teu dispositiu i de camí al servidor, així que aquesta còpia és text xifrat fos on fos, i amb autocustòdia res al servidor no la pot obrir. Suïssa és un extra, no pas la promesa. [Què se sincronitza](/ca/help/what-syncs/) ho detalla punt per punt.",
+        "La còpia del teu dispositiu també està xifrada: [les notes se segellen al disc](/ca/help/data-on-disk/) amb una clau derivada de la teva frase de recuperació en desbloquejar."
       ]
     },
     "data-on-disk": {
@@ -299,14 +300,14 @@
       "a": [
         "En una carpeta per instal·lació, dins de l'àrea de dades d'aplicacions del teu compte. On és aquesta carpeta depèn de la plataforma:",
         "- **macOS**: `~/Library/WebKit/app.privacynotes/WebsiteData/`\n- **Windows**: `%LOCALAPPDATA%\\app.privacynotes`\n- **Linux**: `~/.local/share/app.privacynotes`, o `app.privacynotes.appimage` en l'AppImage, que porta el seu propi motor web i per això manté un perfil propi\n- **Android, iOS**: l'emmagatzematge privat de l'app, que cap altra app pot obrir\n- **Navegador**: el perfil del teu navegador, sota `use.privacynotes.app`",
-        "El que hi ha allà són dades xifrades. Cada nota és un bloc segellat amb el títol, el text i les etiquetes a dins, obert per una clau derivada de la teva frase de recuperació en desbloquejar, de manera que una carpeta copiada no conté res de llegible. En clar només queda el que necessita l'índex local: identificadors, dates, el tipus d'element i marques com fixada o esborrada.",
-        "Per portar les notes a un altre dispositiu, o per guardar-ne una còpia teva, fes servir **Configuració > Import & Export > Exporta** i tria la «Còpia de seguretat completa xifrada (.pnbackupz)». Ho conté tot, està xifrada amb la clau de la teva frase i [es restaura amb la teva frase en qualsevol dispositiu](/ca/help/restore-backup/). [Més sobre còpies de seguretat](/ca/help/backup-strategy/)."
+        "Cada nota hi és un bloc segellat amb el títol, el text i les etiquetes, obert per una clau derivada de la teva frase de recuperació en desbloquejar. En clar només queda el que necessita l'índex local: identificadors, dates, el tipus d'element i marques com fixada o esborrada. La teva configuració també hi queda segellada, excepte el que la pantalla de bloqueig necessita abans que desbloquegis, com l'interruptor del bloqueig de l'app i els colors i el nom del tema que fas servir. La carpeta també guarda la teva frase de recuperació, així que l'app s'obre sense demanar-la. Si algú pogués copiar aquesta carpeta, activa el bloqueig de l'app a Configuració > Seguretat, que llavors només guarda la frase darrere del bloqueig.",
+        "Per portar les notes a un altre dispositiu, o per guardar-ne una còpia teva, fes servir **Configuració > Import & Export > Exporta** i tria «Tot, xifrat (.pnbackupz)». Conté les teves notes, fitxers i configuració (l'historial de notes i el PIN del bloqueig de l'app en queden fora), està xifrada amb la clau de la teva frase i [es restaura amb la teva frase en qualsevol dispositiu](/ca/help/restore-backup/). [Més sobre còpies de seguretat](/ca/help/backup-strategy/)."
       ]
     },
     "export": {
       "q": "Puc exportar les meves notes, o hi estic lligat?",
       "a": [
-        "Pots exportar-ho tot en qualsevol moment, generat íntegrament al teu dispositiu: fitxers Markdown en un zip amb els adjunts inclosos, JSON pla, o HTML autònom - per nota o per a tot el compte. El zip és la «Còpia de seguretat de PrivacyNotes (.zip)», [i es pot restaurar](/ca/help/restore-backup/), com les còpies xifrades; el JSON i l'HTML són per llegir i per a la teva propera aplicació. [Els elements de la caixa forta tenen la seva pròpia via](/ca/help/vault/), «Exportació de la caixa forta (.json)», que escriu el format de Bitwarden i porta els teus noms d'usuari, contrasenyes, URL, dades de targeta i claus 2FA a Bitwarden, 1Password o KeePass.",
+        "Pots exportar-ho tot en qualsevol moment, generat íntegrament al teu dispositiu: fitxers Markdown en un zip amb els adjunts inclosos, JSON pla, o HTML autònom - per nota o per a tot el compte. El zip és el «Tot, sense xifrar (.zip)», [i es pot restaurar](/ca/help/restore-backup/), com les còpies xifrades; el JSON i l'HTML són per llegir i per a la teva propera aplicació. [Els elements de la caixa forta tenen la seva pròpia via](/ca/help/vault/), «Exportació de la caixa forta (.json)», que escriu el format de Bitwarden i porta els teus noms d'usuari, contrasenyes, URL, dades de targeta i claus 2FA a Bitwarden, 1Password o KeePass.",
         "Tot és a Configuració > Import & Export > Exporta. La importació funciona igual, des d'Obsidian, Evernote, Apple Notes, Standard Notes, Bitwarden i més: la llista completa és a [venir d'una altra aplicació](/ca/help/import-from-other-apps/). Tancar-te a dins no forma part del model de negoci."
       ]
     },
@@ -336,7 +337,7 @@
       "q": "Què passa amb les meves notes si PrivacyNotes tanca?",
       "a": [
         "Te les quedes. Les teves notes, tasques, entrades de diari i elements de la caixa forta viuen al teu dispositiu perquè l'aplicació és local primer, i [exportar-los a Markdown, JSON o HTML funciona fora de línia](/ca/help/export/). Una imatge o un fitxer es queda en un dispositiu un cop l'hi afegeixes o l'hi obres, i un que aquest dispositiu no ha obert mai es baixa quan l'obres, així que [fes una còpia de seguretat completa](/ca/help/backup-strategy/): baixa totes les imatges i fitxers que falten en aquest dispositiu, i t'ho diu si no se'n pot baixar algun.",
-        "El codi de xifratge també és [codi obert](https://github.com/LifetimeLabsDev/PrivacyNotes.app), així que el format continua sent llegible de manera independent fins i tot en un món on els nostres servidors desapareguessin d'un dia per l'altre."
+        "El codi de xifratge també és [codi obert](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), així que el format continua sent llegible de manera independent fins i tot en un món on els nostres servidors desapareguessin d'un dia per l'altre."
       ]
     },
     "free-vs-pro": {
@@ -402,7 +403,7 @@
       "a": [
         "Sovint pocs dies. Les peticions petites i els informes de bugs solen entrar a la versió següent, i publiquem una versió gairebé cada setmana en lloc de dues o tres vegades l'any. El [changelog](/changelog) n'és la prova: cada entrada té data, està escrita en llenguatge clar i diu què ha canviat. Llegeix-ne un mes i sabràs exactament què pots esperar de nosaltres abans de confiar res a l'aplicació.",
         "Aquest ritme surt de com està repartida la feina. El nucli de xifratge, el protocol de sincronització i l'inici de sessió els van escriure persones, fora de la feina, molt abans que l'app tingués nom, i el nucli criptogràfic encara es manté així; res d'automatitzat s'hi acosta. Quan aquesta base va ser sòlida, la primavera del 2026, vam començar a fer servir eines d'IA per programar sota un protocol fix: primer per a les [traduccions](/ca/help/translation-quality/), després els articles d'ajuda, després funcions d'interfície i correccions de bugs no crítics, on són bones acotant casos rars que altrament durien setmanes, i escrivint els scripts de prova que obliguen diversos desenvolupadors a un mateix estàndard. Per això val la pena desenvolupar el que demana una sola persona en comptes de fer-ho esperar darrere de les peticions que encapçalen la llista.",
-        "Tot el que toca el xifratge, la sincronització o l'inici de sessió es queda en mans de desenvolupadors experimentats que escriuen cada línia, i aquest codi és [públic](https://github.com/LifetimeLabsDev/PrivacyNotes.app) perquè el puguis llegir en comptes de creure'ns. Més sobre l'equip i com treballem a la nostra [pàgina sobre nosaltres](https://lifetimelabs.dev/about).",
+        "Tot el que toca el xifratge, la sincronització o l'inici de sessió es queda en mans de desenvolupadors experimentats que escriuen cada línia, i aquest codi és [públic](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) perquè el puguis llegir en comptes de creure'ns. Més sobre l'equip i com treballem a la nostra [pàgina sobre nosaltres](https://lifetimelabs.dev/about).",
         "L'aplicació en si no té funcions d'IA i no envia mai les teves notes enlloc ([detalls](/ca/help/no-ai/)). Aquesta promesa va a part, i no canvia."
       ]
     },
@@ -417,9 +418,9 @@
       "q": "Com instal·lo l'app d'Android amb Obtainium?",
       "a": [
         "Obtainium és una app d'Android gratuïta i de codi obert que instal·la altres apps directament des de les seves pàgines de versions. Des d'ara és la manera que recomanem per instal·lar PrivacyNotes a Android, perquè és l'única via que es manté al dia sola. Ja la tens? Toca la insígnia i Obtainium afegirà PrivacyNotes per tu.",
-        "[![Aconsegueix-lo a Obtainium](/marketing/badge-obtainium.webp)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22app.privacynotes%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FLifetimeLabsDev%2FPrivacyNotes.app%22%2C%22author%22%3A%22LifetimeLabsDev%22%2C%22name%22%3A%22PrivacyNotes%22%7D)",
+        "[![Aconsegueix-lo a Obtainium](/marketing/badge-obtainium.webp)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22app.privacynotes%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FLifetimeLabsHQ%2FPrivacyNotes.app%22%2C%22author%22%3A%22LifetimeLabsDev%22%2C%22name%22%3A%22PrivacyNotes%22%7D)",
         "Encara no la tens? Instal·la primer [Obtainium](https://obtainium.imranr.dev/), afegeix-hi una app i enganxa això:",
-        "`https://github.com/LifetimeLabsDev/PrivacyNotes.app`",
+        "`https://github.com/LifetimeLabsHQ/PrivacyNotes.app`",
         "Obtainium llegeix les nostres versions, tria l'APK i instal·la cada versió nova tan bon punt surt. No hi intervé cap compte de Google en cap moment.",
         "Obtainium no és una app nostra, i Android et continua demanant que confirmis cada instal·lació, així que una actualització arriba com a notificació i un toc, no en silenci. L'APK és la mateixa compilació que serveix la nostra pàgina de baixada, [signada amb la mateixa clau](/ca/help/verify-download/), així que Obtainium adopta una app que ja vas instal·lar per sideload: res per desinstal·lar, res per tornar a iniciar sessió. Sense ell, l'app només et pot [avisar dins de l'app](/ca/help/android-updates/) que hi ha una versió a punt."
       ]
@@ -428,14 +429,14 @@
       "q": "Quins idiomes parla l'aplicació?",
       "a": [
         "Anglès, alemany, francès, italià, espanyol, neerlandès, polonès, txec, eslovac, català, turc, suec, ucraïnès, rus, japonès, coreà, xinès tradicional, tailandès, àrab i portuguès, en les variants europea i brasilera. L'aplicació segueix per defecte l'idioma del sistema, o pots fixar-ne un explícitament a Configuració > Llengua a cada dispositiu.",
-        "[Les traduccions són gratuïtes per a tothom](/ca/help/translation-quality/), no pas un avantatge de Pro. Hi ha més idiomes previstos; si el teu hi falta, digue'ns-ho a [GitHub](https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues) o a [Reddit](https://www.reddit.com/r/PrivacyNotes/)."
+        "[Les traduccions són gratuïtes per a tothom](/ca/help/translation-quality/), no pas un avantatge de Pro. Hi ha més idiomes previstos; si el teu hi falta, digue'ns-ho a [GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues) o a [Reddit](https://www.reddit.com/r/PrivacyNotes/)."
       ]
     },
     "translation-quality": {
       "q": "Com es fan les traduccions de l'app?",
       "a": [
         "Primer escrivim l'anglès. [Després un agent d'IA tradueix cada idioma](/ca/help/languages/) seguint un glossari compartit, en el registre fixat per a aquell idioma, i un segon agent revisa cada lot abans de publicar-lo per comprovar-ne l'exactitud, la terminologia i el registre. Parlants nadius en revisen una mostra, començant pels idiomes més nous i pels textos de seguretat, d'inici de sessió i de facturació, i dues comprovacions automàtiques aturen la compilació mentre falti alguna traducció o n'hi hagi alguna de desfasada. Les traduccions hi són a tots els plans, mai com a extra de Pro.",
-        "En pots millorar qualsevol. Si una frase sona estranya en el teu idioma, [informa'ns de la traducció](https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues/new?template=translation.yml): el teu idioma, la pantalla on surt i què hi hauria de dir. Les correccions surten a la versió següent."
+        "En pots millorar qualsevol. Si una frase sona estranya en el teu idioma, [informa'ns de la traducció](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues/new?template=translation.yml): el teu idioma, la pantalla on surt i què hi hauria de dir. Les correccions surten a la versió següent."
       ]
     },
     "markdown-syntax": {
@@ -463,14 +464,30 @@
       "q": "Puc desar les adreces d’interès del navegador a PrivacyNotes?",
       "a": [
         "Sí. Els marcadors són un pilar propi a la barra lateral, al costat de les notes, les tasques i els diaris, i són gratuïts en qualsevol pla. Enganxa un enllaç a la barra d’afegit ràpid per desar-ne un, o després de `+` a [Ninja](/ca/help/ninja/), que també ofereix desar la pàgina com a nota o començar-hi un inici de sessió. Per portar els teus, exporta un fitxer de marcadors (.html) del navegador i deixa’l anar a Configuració > Import & Export > Importa > \"Marcadors del navegador\". El Chrome, el Firefox, el Safari, l’Edge, l’Opera, el Brave i el Vivaldi contenen el mateix fitxer, i les carpetes i les dates hi vénen incloses. El Safari l’embolcalla en un .zip, que pots deixar anar sense obrir-lo.",
-        "Les teves adreces no surten mai del teu dispositiu: no carreguem la pàgina que hi ha darrere d’un enllaç tret que triïs Desa com a nota ([desa una pàgina](/ca/help/save-page-as-note/)), i per això un marcador que afegeixes a mà porta el domini com a nom fins que n’escrius un. Les icones dels llocs són l’única excepció, i les pots desactivar. L’exportació escriu el mateix fitxer .html estàndard, així que els teus marcadors marxen amb la mateixa facilitat amb què van arribar ([guia d’importació](/ca/help/import/browser-bookmarks/))."
+        "Les teves adreces no surten mai del teu dispositiu: no carreguem la pàgina que hi ha darrere d’un enllaç tret que triïs Desa com a nota ([desa una pàgina](/ca/help/save-page-as-note/)), i per això un marcador que afegeixes a mà porta el domini com a nom fins que n’escrius un. Les icones dels llocs són l’única excepció, i les pots desactivar. L’exportació escriu el mateix fitxer .html estàndard, així que els teus marcadors marxen amb la mateixa facilitat amb què van arribar ([guia d’importació](/ca/help/import/browser-bookmarks/)).",
+        "L’[extensió del navegador](/ca/help/browser-extension/) també carrega una pàgina, quan hi tries Desa la pàgina enllaçada com a nota."
       ]
     },
     "save-page-as-note": {
       "q": "Puc desar una pàgina web com a nota?",
       "a": [
         "Sí. [Obre un marcador](/ca/help/bookmarks/) i tria Desa com a nota, o tria Retalla una pàgina al menú + i enganxa-hi un enllaç. El text principal de la pàgina es converteix en una nota normal a Notes, enllaçada al seu marcador, i fins a 20 de les seves imatges es desen amb la nota, xifrades com qualsevol imatge que hi afegeixis tu, tret que desactivis Desa les imatges a la finestra Retalla una pàgina. Desar pàgines és gratuït en qualsevol pla, i [les imatges compten per al teu emmagatzematge](/ca/help/storage-usage/).",
-        "Les apps d’escriptori i de mòbil baixen la pàgina i les seves imatges directament des del teu dispositiu. L’app web les baixa a través del nostre servidor, que les fa arribar i no en conserva ni la pàgina, ni les imatges, ni les adreces. Les pàgines que requereixen iniciar la sessió i les pàgines construïdes amb scripts poden quedar buides: conserva-les com a marcador."
+        "Les apps d’escriptori i de mòbil baixen la pàgina i les seves imatges directament des del teu dispositiu. L’app web les baixa a través del nostre servidor, que les fa arribar i no en conserva ni la pàgina, ni les imatges, ni les adreces. Les pàgines que requereixen iniciar la sessió i les pàgines construïdes amb scripts poden quedar buides: conserva-les com a marcador.",
+        "Amb l’[extensió del navegador](/ca/help/browser-extension/) també pots desar la pàgina que estàs llegint, incloses les pàgines que requereixen iniciar la sessió."
+      ]
+    },
+    "browser-extension": {
+      "q": "Hi ha una extensió de PrivacyNotes per al navegador?",
+      "a": [
+        "Sí, per a Chrome, Edge i Firefox en un ordinador, i és gratuïta. Desa la pàgina que estàs llegint com a nota, amb el text principal i les imatges, o com a marcador, i pot mostrar els inicis de sessió, les targetes, les claus SSH i els marcadors del lloc on ets, només per copiar. Mai no omple formularis per si sola.",
+        "Obre Configuració > Extensió, afegeix l'extensió des de la botiga del navegador, tria què pot fer i després tria Crea un codi. Copia el codi d'un sol ús i enganxa'l a l'extensió. Per eliminar-la, tria Elimina al costat seu, a Extensions del navegador, a la mateixa pàgina. Una extensió no ocupa cap plaça de dispositiu. [Com protegeix les teves notes](/ca/help/browser-extension-security/)."
+      ]
+    },
+    "browser-extension-security": {
+      "q": "L'extensió del navegador pot llegir les meves notes?",
+      "a": [
+        "No. L'extensió no té mai la clau que obre les teves notes. Bloqueja cada retall abans que surti del navegador, i una de les teves apps el converteix en nota en la sincronització següent.",
+        "Si actives els inicis de sessió, l'extensió veu els teus inicis de sessió, les teves targetes, la meitat pública de les teves claus SSH i els teus marcadors, mai el text d'una nota ni cap clau privada. Els protegeix un PIN o un codi d'accés que defineixes per a l'extensió, independent del de l'app. Després de 10 intents fallits el navegador es desconnecta, de manera que una còpia del teu navegador no es pot obrir a força de provar. Els inicis de sessió es bloquegen després de 5 minuts sense ús i quan es tanca el navegador. Els detalls són al nostre [model d'amenaces](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
     "contacts": {
@@ -491,7 +508,7 @@
     "keyboard-shortcuts": {
       "q": "Quines dreceres de teclat hi ha?",
       "a": [
-        "Prem ? a qualsevol lloc de l'aplicació per obrir la guia ràpida integrada, també disponible a Configuració > Informació. Prem Cmd+K o Ctrl+K per a [Ninja](/ca/help/ninja/), que obre qualsevol cosa i executa qualsevol ordre, i Q per afegir un element amb paraules normals. Les dreceres cobreixen la navegació, les accions de nota, el format i les vistes - i a Windows i Linux, cada Cmd es llegeix com a Ctrl i Option com a Alt.",
+        "Prem ? a qualsevol lloc de l'aplicació per obrir la guia ràpida integrada, també disponible a Configuració > Dreceres. Prem Cmd+K o Ctrl+K per a [Ninja](/ca/help/ninja/), que obre qualsevol cosa i executa qualsevol ordre, i Q per afegir un element amb paraules normals. Les dreceres cobreixen la navegació, les accions de nota, el format i les vistes - i a Windows i Linux, cada Cmd es llegeix com a Ctrl i Option com a Alt.",
         "La [guia ràpida imprimible](/help/keyboard-shortcuts/cheat-sheet) recull totes les dreceres en una sola pàgina A4, per a Mac o per a Windows i Linux, i per al navegador o les apps d'escriptori. Es genera a partir de la mateixa llista que mostra l'app, així que sempre coincideix amb la versió que fas servir."
       ]
     },
@@ -499,7 +516,7 @@
       "q": "Hi ha una guia ràpida de les dreceres per imprimir?",
       "a": [
         "Sí. La [guia ràpida per imprimir](/help/keyboard-shortcuts/cheat-sheet) recull totes les dreceres en una sola pàgina A4, a dues columnes, a punt per penjar-la al costat de la pantalla. Es genera a partir de la mateixa llista que mostra l'aplicació, així que mai no pot quedar endarrerida respecte d'una versió.",
-        "Obre-la i prem el botó Imprimeix (o Cmd+P / Ctrl+P). Per quedar-te un fitxer en lloc de paper, tria PDF com a destinació al diàleg d'impressió. La guia també està enllaçada a sobre i a sota de [la llista de dreceres de l'aplicació](/ca/help/keyboard-shortcuts/) (Configuració > Informació > Dreceres) i al peu d'aquest lloc."
+        "Obre-la i prem el botó Imprimeix (o Cmd+P / Ctrl+P). Per quedar-te un fitxer en lloc de paper, tria PDF com a destinació al diàleg d'impressió. La guia també està enllaçada a sobre i a sota de [la llista de dreceres de l'aplicació](/ca/help/keyboard-shortcuts/) a Configuració > Dreceres i al peu d'aquest lloc."
       ]
     },
     "ask-an-ai": {
@@ -527,7 +544,7 @@
     "phrase-compromised": {
       "q": "S'ha filtrat la meva frase de recuperació. Què faig?",
       "a": [
-        "Dona la caixa forta per cremada. Una frase no es pot canviar ni rotar, perquè la frase és la clau amb què està xifrat tot - així que la solució és passar a una caixa forta nova. Primer, al compte antic, exporta-ho tot: Configuració > Import & Export > Exporta > «Còpia de seguretat de PrivacyNotes (.zip)».",
+        "Dona la caixa forta per cremada. Una frase no es pot canviar ni rotar, perquè la frase és la clau amb què està xifrat tot - així que la solució és passar a una caixa forta nova. Primer, al compte antic, exporta-ho tot: Configuració > Import & Export > Exporta > «Tot, sense xifrar (.zip)».",
         "Tanca la sessió, crea una caixa forta nova (12 paraules noves) i torna a importar l'exportació a Configuració > Import & Export > Restaura > «Còpia de seguretat completa (.zip)». Després [suprimeix el compte antic](/ca/help/delete-account/) des de qualsevol dispositiu que encara hi tingui la sessió iniciada: Configuració > Compte > «Suprimeix el compte i les dades...». Això n'elimina les dades sincronitzades i deixa fora qualsevol que tingui la frase antiga. Si vas iniciar la sessió amb Google, Apple o GitHub, suprimeix primer el compte antic i després torna a iniciar la sessió amb el mateix compte de Google, Apple o GitHub per començar la caixa forta nova.",
         "Dues coses a resoldre abans: [cancel·la l'emmagatzematge addicional que tinguis actiu](/ca/help/manage-storage-addon/), perquè la supressió ho exigeix, i tingues present que [Pro es queda al compte on es va comprar](/ca/help/pro-after-leak/) en comptes de passar a la caixa forta nova. Després desa la frase nova en un gestor de contrasenyes i enlloc més: tota la prevenció és aquesta."
       ]
@@ -556,8 +573,8 @@
     "backup-strategy": {
       "q": "Quina és la millor manera de fer una còpia de seguretat de les meves notes?",
       "a": [
-        "Exporta la «Còpia de seguretat completa xifrada (.pnbackupz)» a Configuració > Import & Export > Exporta. Xifra tot - notes, diaris, elements de la caixa forta, tasques, imatges, àudio i fitxers - amb la clau de la teva frase, així que la pots deixar al núvol o en una memòria USB, i [es restaura amb la teva frase a qualsevol dispositiu](/ca/help/restore-backup/).",
-        "S'obre amb la frase que la va crear, així que guarda al costat una «Còpia de seguretat de PrivacyNotes (.zip)» per si algun dia [passes a una frase nova](/ca/help/phrase-compromised/): té el mateix contingut, es restaura a qualsevol caixa forta i és llegible al disc, així que desa-la en un lloc de confiança. La «Còpia de seguretat xifrada (.pnbackup)» cobreix el text i les metadades en comptes de les imatges i els fitxers, i la «Còpia de seguretat de text (.json)» i l'arxiu HTML són formats de portabilitat més que no pas de restauració.",
+        "Exporta «Tot, xifrat (.pnbackupz)» a Configuració > Import & Export > Exporta. Xifra tot - notes, diaris, elements de la caixa forta, tasques, imatges, àudio i fitxers - amb la clau de la teva frase, així que la pots deixar al núvol o en una memòria USB, i [es restaura amb la teva frase a qualsevol dispositiu](/ca/help/restore-backup/).",
+        "S'obre amb la frase que la va crear, així que guarda al costat un «Tot, sense xifrar (.zip)» per si algun dia [passes a una frase nova](/ca/help/phrase-compromised/): té el mateix contingut, es restaura a qualsevol caixa forta i és llegible al disc, així que desa-la en un lloc de confiança. El «Només text, xifrat (.pnbackup)» cobreix el text i les metadades en comptes de les imatges i els fitxers, i la «Còpia de seguretat de text (.json)» i l'arxiu HTML són formats de portabilitat més que no pas de restauració.",
         "Per què conservar còpies de seguretat locals, si tot se sincronitza? Perquè la sincronització no és una còpia de seguretat: propaga fidelment les supressions, incloent-hi les d'un servidor compromès que els teus dispositius després reprodueixen. Una còpia al teu propi disc és l'única que cap incident del servidor no pot tocar. Exporta abans de les importacions grosses, [abans de marxar](/ca/help/leaving/), i amb una regularitat que puguis mantenir."
       ]
     },
@@ -571,7 +588,7 @@
     "image-quality": {
       "q": "PrivacyNotes canvia o comprimeix les meves imatges?",
       "a": [
-        "Sí. Les dues opcions estan activades per defecte perquè estimem els nostres usuaris: volem que [estalviïs espai](/ca/help/storage-usage/) i conservis la teva privadesa. Estalvi d'espai redueix una imatge gran a 2048 píxels i la desa com a JPEG al 85 % de qualitat, que conserva tot el detall que una pantalla pot mostrar. Elimina les dades d'ubicació treu les metadades EXIF que una càmera escriu en una foto, inclosa la posició GPS, abans de desar la imatge. Totes dues s'apliquen a cada imatge de l'app: enganxada en una nota, afegida com a fitxer o importada.",
+        "Sí. Les dues opcions estan activades per defecte perquè estimem els nostres usuaris: volem que [estalviïs espai](/ca/help/storage-usage/) i conservis la teva privadesa. Estalvi d'espai redueix una imatge gran a 2048 píxels i la desa com a JPEG al 85 % de qualitat, que conserva tot el detall que una pantalla pot mostrar. Elimina les dades d'ubicació treu les metadades EXIF que una càmera escriu en una foto, inclosa la posició GPS, abans de desar la imatge. Totes dues s'apliquen a cada imatge de l'app: enganxada en una nota, afegida com a fitxer o importada. Dues excepcions: un GIF conserva la mida perquè l'animació continuï funcionant, i un fitxer adjunt a un element de la Caixa forta es desa exactament tal com era.",
         "Desactiva qualsevol de les dues a **Configuració > Emmagatzematge > Imatges**, on les fotos de contacte tenen un tercer interruptor que les manté a 512 píxels. Les opcions només afecten les imatges noves; els fitxers que no són imatges es desen exactament tal com són. Les imatges HEIC i TIFF es converteixen a JPEG, perquè només Safari les pot mostrar. [Una còpia de seguretat que restauris](/ca/help/restore-backup/) s'escriu byte a byte."
       ]
     },
@@ -596,10 +613,18 @@
         "Suprimit permanentment vol dir que ha desaparegut: cap dispositiu ni ningú de la nostra banda no el pot recuperar, [només una còpia de seguretat que hagis fet abans](/ca/help/backup-strategy/). Si fas servir la paperera com un munt de coses per a un potser algun dia, desactiva la supressió automàtica o restaura les notes abans del dia 30. Fins llavors, les notes a la paperera encara compten dins del [teu emmagatzematge](/ca/help/storage-usage/) - «Buida», a la mateixa vista, allibera aquell espai a l'instant."
       ]
     },
+    "dead-mans-switch": {
+      "q": "Què suprimeix l'interruptor d'home mort i què es queda als meus dispositius?",
+      "a": [
+        "Només la còpia del servidor. Quan l'interruptor està activat i cap dels teus dispositius no es connecta durant el període que has triat, d'1 mes a 5 anys, el servidor suprimeix les teves notes xifrades, el seu historial, els teus fitxers i la teva configuració. Com a marge de seguretat, espera dues setmanes més després que acabi el període abans de suprimir res: un dispositiu que es connecti durant aquestes dues setmanes encara atura la supressió. El teu compte es manté, de manera que la frase de recuperació et continua iniciant la sessió, i Pro es manté. Una subscripció d'emmagatzematge també es manté i es continua renovant. No rebràs cap avís per correu electrònic, i la supressió no es pot desfer.",
+        "Els teus dispositius conserven les seves notes. Quan un dispositiu torna a connectar-se després d'una supressió, deixa de sincronitzar i primer t'ho pregunta: baixa una còpia de seguretat de tot el que conté, que més endavant pots [restaurar](/ca/help/restore-backup/), i després treu les notes d'aquell dispositiu. Llavors tanca la sessió, i el pròxim inici de sessió comença en el compte buit. Un fitxer que aquest dispositiu no va obrir mai pot haver desaparegut ja del servidor, i aleshores la còpia de seguretat l'indica com a absent. Mantén l'app actualitzada a tots els dispositius, perquè una versió antiga no t'ho pot preguntar abans.",
+        "Activa'l a Configuració > ID & Sync > \"Interruptor d'home mort\" i tria el període. Obrir l'app amb connexió a qualsevol dels teus dispositius torna a posar el temps a zero, i la \"Data de supressió\" d'aquesta pestanya mostra el primer dia en què es pot fer la supressió, amb les dues setmanes incloses. Desactiva l'interruptor quan vulguis per aturar-lo."
+      ]
+    },
     "leaving": {
       "q": "Com marxo del tot de PrivacyNotes?",
       "a": [
-        "[Primer exporta](/ca/help/export/), després suprimeix - totes dues coses les fas tu mateix. Configuració > Import & Export > Exporta cobreix totes les vies de sortida: «Còpia de seguretat de PrivacyNotes (.zip)» per a una còpia completa, Markdown i HTML portables per a la teva pròxima aplicació de notes, i «Exportació de la caixa forta (.json)» en format compatible amb Bitwarden per al teu pròxim gestor de contrasenyes. Les exportacions es generen al teu dispositiu.",
+        "[Primer exporta](/ca/help/export/), després suprimeix - totes dues coses les fas tu mateix. Configuració > Import & Export > Exporta cobreix totes les vies de sortida: «Tot, sense xifrar (.zip)» per a una còpia completa, Markdown i HTML portables per a la teva pròxima aplicació de notes, i «Exportació de la caixa forta (.json)» en format compatible amb Bitwarden per al teu pròxim gestor de contrasenyes. Les exportacions es generen al teu dispositiu.",
         "Després, Configuració > Compte > «Suprimeix el compte i les dades...»: escriu DELETE, i les teves notes sincronitzades, els fitxers, els dispositius, la configuració i el compte mateix s'eliminen permanentment. Es conserven els registres d'una subscripció d'emmagatzematge i un identificador de seguretat mínim, i les còpies de seguretat fetes abans de la supressió caduquen als set dies ([detalls](/ca/help/delete-account/)). [L'emmagatzematge addicional actiu s'ha de cancel·lar primer](/ca/help/manage-storage-addon/) a Configuració > Emmagatzematge. Sense patrons foscos i sense correus de reconquesta - les teves dades són teves, també a la sortida."
       ]
     },
@@ -622,7 +647,7 @@
       "q": "He pagat Pro però no està actiu. I ara què?",
       "a": [
         "Dona-li un minut i després torna a carregar l'aplicació. Després del pagament, l'aplicació ho comprova durant uns 20 segons i es desbloqueja sola, i una recàrrega torna a comprovar l'estat de Pro en arrencar. Si el pagament ha entrat però l'activació va endarrerida, un avís diu «Hem rebut el pagament, però l'activació de Pro triga més de l'habitual» - aquest estat es resol sol en gairebé tots els casos. [A les versions de botiga](/ca/help/store-purchases/), una compra que no es valida es torna a intentar quan reinicies l'aplicació, i una compra que no s'arriba a activar mai la reemborsa automàticament la botiga en un termini de 3 dies.",
-        "Encara bloquejat? Gairebé sempre és un desajust de compte: Pro s'associa al compte que tenia la sessió iniciada en el moment de la compra, així que una frase diferent - o un inici de sessió amb Google, Apple o GitHub en lloc de la teva caixa forta amb frase - és un compte diferent. Compara l'ID del compte a Configuració > ID & Sync al dispositiu que el va comprar. Si de debò s'ha encallat, [informa'n](https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues) i inclou aquest ID del compte: identifica la compra i no revela res de les teves notes."
+        "Encara bloquejat? Gairebé sempre és un desajust de compte: Pro s'associa al compte que tenia la sessió iniciada en el moment de la compra, així que una frase diferent - o un inici de sessió amb Google, Apple o GitHub en lloc de la teva caixa forta amb frase - és un compte diferent. Compara l'ID del compte a Configuració > ID & Sync al dispositiu que el va comprar. Si de debò s'ha encallat, [informa'n](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues) i inclou aquest ID del compte: identifica la compra i no revela res de les teves notes."
       ]
     },
     "manage-storage-addon": {
@@ -637,13 +662,13 @@
       "q": "Les compres es traspassen entre la web, Google Play i l'App Store?",
       "a": [
         "Sí. Pro i l'emmagatzematge van lligats al teu compte, no pas a cap plataforma ni botiga. Compra al web i totes les aplicacions on iniciïs la sessió tindran Pro, incloses les versions de botiga; compra des d'una versió de botiga i les aplicacions web i d'escriptori es desbloquegen igual. Iniciar la sessió ja és la restauració, perquè el dret segueix el compte. Una versió de botiga porta a més un botó **Restaura les compres** a Configuració > Compte, que pregunta a Apple o Google què tens i ho torna a desbloquejar després d'una reinstal·lació.",
-        "L'única diferència és qui et factura. Les compres al web passen per Paddle i [es gestionen a l'aplicació](/ca/help/manage-storage-addon/) a Configuració > Emmagatzematge. Les compres fetes des d'una versió de botiga (l'App Store avui, [Google Play quan surti aquella aplicació](/ca/help/play-vs-apk/)) les factura aquella botiga: l'emmagatzematge recurrent es cancel·la a la configuració de subscripcions de la botiga, i els reemborsaments segueixen el procés de la botiga. Sigui com sigui, és el mateix compte i el mateix Pro pertot arreu - incloent-hi plataformes que encara no existeixen."
+        "L'única diferència és qui et factura. Les compres al web passen per Paddle i [es gestionen a l'aplicació](/ca/help/manage-storage-addon/) a Configuració > Emmagatzematge. Les compres fetes des d'una versió de botiga (l'App Store i [Google Play](/ca/help/play-vs-apk/)) les factura aquella botiga: l'emmagatzematge recurrent es cancel·la a la configuració de subscripcions de la botiga, i els reemborsaments segueixen el procés de la botiga. Sigui com sigui, és el mateix compte i el mateix Pro pertot arreu - incloent-hi plataformes que encara no existeixen."
       ]
     },
     "play-vs-apk": {
       "q": "Obtainium, APK directe o Google Play: quina baixada d'Android?",
       "a": [
-        "Agafa [Obtainium](/ca/help/obtainium/) si vols que l'app es mantingui al dia sola, i [l'APK directe](/ca/help/android-updates/) si prefereixes no fer córrer una segona app per a això. Google Play encara no és actiu, així que avui la tria és entre aquests dos. Et donen el mateix fitxer signat amb la mateixa clau, així que pots moure't en qualsevol sentit quan vulguis: Obtainium adopta un APK que ja havies instal·lat per sideload, i l'APK del web s'instal·la sobre un d'Obtainium.",
+        "Agafa Google Play si vols el camí habitual: instal·la i actualitza l'app com qualsevol altra, i les compres dins l'app les factura Google. Agafa [Obtainium](/ca/help/obtainium/) si vols que l'app es mantingui al dia sola sense cap compte de Google, i [l'APK directe](/ca/help/android-updates/) si prefereixes no fer córrer una segona app per a això. Obtainium i l'APK et donen el mateix fitxer signat amb la mateixa clau, així que pots moure't entre aquests dos quan vulguis: Obtainium adopta un APK que ja havies instal·lat per sideload, i l'APK del web s'instal·la sobre un d'Obtainium. La versió de Play està signada amb una clau diferent, així que passar de Play a qualsevol dels altres dos, o al revés, obliga a desinstal·lar primer.",
         "Més endavant pots canviar d'idea sense complicacions. Abans de qualsevol canvi que obligui a desinstal·lar primer, confirma que l'app mostra \"Synced\" i tingues a mà les teves 12 paraules o [un QR d'inici de sessió d'un altre dispositiu](/ca/help/add-second-device/), perquè desinstal·lar esborra la còpia local."
       ]
     },
@@ -707,7 +732,7 @@
       "q": "Puc compartir una nota amb algú o treballar-hi conjuntament?",
       "a": [
         "Envia una [burn note](/ca/help/burn-notes/): converteix qualsevol nota en un enllaç xifrat d'un sol ús, destruït en el moment que es llegeix, i això cobreix una contrasenya, una adreça o un esborrany. Per a una cosa que l'altra persona es quedi, [exporta la nota com a Markdown, HTML o PDF](/ca/help/export/) i envia-li el fitxer.",
-        "Una nota que dues persones editen en directe seria un altre producte: caldria que el servidor passés claus entre persones, i mantenir el servidor lluny de les teves claus és aquí tot el disseny. Un compte és una persona amb una frase, i [amb autocustòdia](/ca/help/threat-model-levels/) el servidor no té res que obri les teves notes."
+        "Una nota que dues persones editen en directe seria un altre producte: caldria que el servidor passés claus entre persones, cosa que aquest disseny evita. Un compte és una persona amb una frase, i [amb autocustòdia](/ca/help/threat-model-levels/) el servidor no té res que obri les teves notes."
       ]
     },
     "add-second-device": {
@@ -742,7 +767,7 @@
       "q": "Les meves notes són a la còpia de seguretat del telèfon Android?",
       "a": [
         "No. L'app d'Android manté les seves dades fora de la còpia de seguretat al núvol del telèfon, així que no n'arriba res a Google Drive. El motiu és la clau, no pas les notes: allà on has triat **Confia en aquest dispositiu**, les teves 12 paraules queden en aquell dispositiu per mantenir la sessió iniciada, i una còpia al núvol no és lloc per a la clau que desxifra les teves notes.",
-        "Un telèfon nou comença, doncs, buit: instal·la l'app, [inicia la sessió amb les teves 12 paraules](/ca/help/add-second-device/) i arriba tot el que s'havia sincronitzat. La restauració espera aquesta primera sincronització, de manera que una còpia que portis es fa coincidir amb el que ja té el compte en lloc d'afegir-se dues vegades. El que no s'ha sincronitzat mai només viu al telèfon vell, així que comprova primer que el peu de pàgina diu \"Synced\", o emporta't una «Còpia de seguretat de PrivacyNotes (.zip)» des de Configuració > Import & Export > Exporta ([quina còpia fer](/ca/help/backup-strategy/)).",
+        "Un telèfon nou comença, doncs, buit: instal·la l'app, [inicia la sessió amb les teves 12 paraules](/ca/help/add-second-device/) i arriba tot el que s'havia sincronitzat. La restauració espera aquesta primera sincronització, de manera que una còpia que portis es fa coincidir amb el que ja té el compte en lloc d'afegir-se dues vegades. El que no s'ha sincronitzat mai només viu al telèfon vell, així que comprova primer que el peu de pàgina diu \"Synced\", o emporta't un «Tot, sense xifrar (.zip)» des de Configuració > Import & Export > Exporta ([quina còpia fer](/ca/help/backup-strategy/)).",
         "Una transferència directa de telèfon a telèfon durant la configuració és una altra cosa: alguns telèfons hi mouen les dades de les apps, i Android no dona a cap app una manera fiable de negar-s'hi. Aquesta còpia no surt mai dels teus dos dispositius, així que esborra el telèfon vell després."
       ]
     },
@@ -771,7 +796,7 @@
       "q": "Com comprovo que l'app que he baixat és autèntica?",
       "a": [
         "Cada compilació que publiquem està signada, i el teu sistema operatiu comprova aquesta signatura abans d'executar res. Les compilacions de macOS estan signades i notaritzades per Apple. Els instal·ladors de Windows porten una signatura Authenticode que pots llegir a Propietats > Signatures digitals. L'APK d'Android està signat amb la nostra pròpia clau, i per això Android rebutja qualsevol actualització que no vingui de nosaltres. L'app per a iPhone i iPad està signada per Apple i només s'instal·la des de l'App Store. [Les apps d'escriptori també rebutgen una actualització](/ca/help/desktop-updates/) que no estigui signada amb la nostra clau.",
-        "Baixa només des de PrivacyNotes.app o des de les nostres [versions a GitHub](https://github.com/LifetimeLabsDev/PrivacyNotes.app/releases), on hi ha cada llançament. La signatura és la comprovació que compta, i el teu sistema la fa per tu: es verifica contra una clau que no és enlloc del nostre lloc web, així que un fitxer canviat no passa aquella comprovació, digui el que digui la pàgina del costat."
+        "Baixa només des de PrivacyNotes.app o des de les nostres [versions a GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/releases), on hi ha cada llançament. La signatura és la comprovació que compta, i el teu sistema la fa per tu: es verifica contra una clau que no és enlloc del nostre lloc web, així que un fitxer canviat no passa aquella comprovació, digui el que digui la pàgina del costat."
       ]
     },
     "family-sharing": {
@@ -784,7 +809,7 @@
     "pro-after-leak": {
       "q": "S'ha filtrat la meva frase de recuperació. Perdo Pro?",
       "a": [
-        "Pro es queda al compte on el vas comprar, i la teva frase de recuperació és l'única clau d'aquest compte. Si la frase es filtra i passes a una caixa forta nova, Pro no ve amb tu, i ningú no el pot traspassar a mà, ni tan sols nosaltres. L'aplicació ho diu quan et registres i un altre cop abans de tancar la sessió: les 12 paraules són l'única manera d'entrar.",
+        "Pro es queda al compte on el vas comprar, i aquest compte pertany a la teva frase de recuperació. Si la frase es filtra i passes a una caixa forta nova, Pro no ve amb tu, i ningú no el pot traspassar a mà, ni tan sols nosaltres. L'aplicació t'ho avisa quan et registres i un altre cop abans de tancar la sessió.",
         "Si vas comprar Pro en els últims 30 dies, pots obtenir un [reemborsament complet](/ca/help/refunds/) i tornar-lo a comprar a la caixa forta nova. Cada reemborsament ens costa comissions de pagament, així que reserva'l per a una filtració real. Els passos per traslladar les notes i tancar la caixa forta antiga són a [què fer si se't filtra la frase](/ca/help/phrase-compromised/). Desa la frase nova en un gestor de contrasenyes i no l'escriguis enlloc més."
       ]
     },
@@ -888,7 +913,7 @@
       "q": "Quines dates i hores puc escriure a Ninja?",
       "a": [
         "Ninja llegeix les dates tal com les diries a una persona. Escriu només una data, com ara `demà` o `31 oct`, i la primera fila obre el calendari en aquell dia. Després de `+`, les mateixes paraules fixen el dia d'un element nou:",
-        "- Dies: `aquesta nit`, `aquest dissabte`, `passat demà`, `31 oct`, `2026-12-24`\n- Hores i durades: `migdia`, `15:00`, `durant 30 minuts`, `durant 3 dies`\n- Intervals: `de divendres a diumenge`, `20-25 oct`\n- Repeticions: `cada dia`, `cada dilluns i dimecres`, `cada divendres fins al 20 de desembre`, `cada dilluns, 10 vegades`\n- Avisos: `1 h abans`, `avís 1 dia i 1 hora abans`",
+        "- Dies: `aquesta nit`, `aquest dissabte`, `passat demà`, `31 oct`, `2026-12-24`\n- Hores i durades: `migdia`, `15:00`, `15:00 durant 30 minuts`, `durant 3 dies`\n- Intervals: `de divendres a diumenge`, `20-25 oct`\n- Repeticions: `cada dia`, `cada dilluns i dimecres`, `cada divendres fins al 20 de desembre`, `cada dilluns, 10 vegades`\n- Avisos: `1 h abans`, `avís 1 dia i 1 hora abans`",
         "Una data en xifres segueix el **Format de data** de Configuració > Data i hora, de manera que `24/12` es llegeix amb el mes primer o el dia primer segons el que hagis triat. Un any continua sent un any: `31 oct 2027` no són mai les 20:27. Les paraules de les dates segueixen la llengua de l'app, i la paraula `afegeix` funciona com `+` en català i en anglès (`add`). [Ninja és gratuït](/ca/help/ninja/)."
       ]
     },
@@ -924,7 +949,7 @@
       "q": "Puc buidar, ordenar o reordenar una llista de tasques?",
       "a": [
         "Sí. El menú \"...\" de la nota té **Desmarca tots els elements** per reutilitzar una llista, **Suprimeix els elements marcats** per treure els que ja estan fets i **Ordena els elements per estat** per moure els elements marcats a sota de la resta. Cada opció només apareix quan canviaria alguna cosa. Suprimir demana confirmació abans, i Ordenar i Desmarcar es poden desfer amb Cmd+Z o Ctrl+Z. La part de baix de la nota compta el teu progrés, per exemple «3 de 6 marcats».",
-        "Per reordenar a mà, arrossega la nansa del final d'un element. Els elements niats es mouen amb ell, i Esc cancel·la l'arrossegament. La nansa apareix quan hi passes el punter en un ordinador i es queda lleugerament visible en una pantalla tàctil. Per defecte, un element marcat baixa a sota dels no marcats de la seva llista; desactiva-ho amb **Mou avall els elements marcats** a Configuració > Llistes. Tot és gratuït."
+        "Per reordenar a mà, arrossega la nansa del final d'un element. Els elements niats es mouen amb ell, i Esc cancel·la l'arrossegament. La nansa apareix quan hi passes el punter en un ordinador i es queda lleugerament visible en una pantalla tàctil. Per defecte, un element marcat baixa a sota dels no marcats de la seva llista; desactiva-ho amb **Mou avall els elements marcats** a Configuració > Editor. Tot és gratuït."
       ]
     },
     "find-in-note": {
@@ -951,14 +976,14 @@
     "calendar": {
       "q": "Hi ha un calendari, i què s'hi mostra?",
       "a": [
-        "Sí. Calendari, a la barra lateral, mostra en un sol lloc tots els elements amb data: esdeveniments, [entrades de diari](/ca/help/journal/), notes i llistes de tasques amb data, i [els aniversaris dels teus contactes](/ca/help/contacts/). La llista del costat és l'agenda dels propers dies, i la vista gran canvia entre Dia, Setmana i Mes. Fes clic en un dia buit, o arrossega sobre hores buides, i Ninja s'obre amb aquell dia i aquella hora fixats, o arrossega un element a un altre dia.",
+        "Sí. Calendari, a la barra lateral, mostra en un sol lloc tots els elements amb data: esdeveniments, [entrades de diari](/ca/help/journal/), notes i llistes de tasques amb data, i [els aniversaris i altres dates dels teus contactes](/ca/help/contacts/). La llista del costat és l'agenda dels propers dies, i la vista gran canvia entre Dia, Setmana i Mes. Fes clic en un dia buit, o arrossega sobre hores buides, i Ninja s'obre amb aquell dia i aquella hora fixats, o arrossega un element a un altre dia.",
         "Un esdeveniment és un tipus d'element propi: una nota amb un dia, un dia final, una hora i una repetició. Escriu una línia sencera a [Ninja](/ca/help/ninja-quick-add/) després de `+`, per exemple `+Dentista divendres 15:00 1 h abans`, i Ninja en llegeix el dia, l'hora i [l'avís per tu](/ca/help/reminders/). Escriu només un dia, com ara `31 oct`, per obrir-hi el calendari. Una nota o una llista de tasques també pot tenir un dia, una hora i un dia final, des de la fila Programació del seu menú \"...\". El calendari és gratuït."
       ]
     },
     "reminders": {
       "q": "Els recordatoris del calendari funcionen quan l'app està tancada?",
       "a": [
-        "En un telèfon, sí: fins a 64 avisos, fins a 400 dies vista, es lliuren al mateix telèfon, de manera que sonen encara que PrivacyNotes estigui tancat; obrir i desbloquejar l'app en lliura més. A l'app d'escriptori, un recordatori sona mentre l'app s'executa, i en un navegador, mentre PrivacyNotes està obert en una pestanya. Cada dispositiu planifica els seus recordatoris a partir dels elements que conté, de manera que el servidor no coneix mai cap títol, hora ni dia.",
+        "En un telèfon, sí: fins a 64 avisos, fins a 400 dies vista, es lliuren al mateix telèfon, de manera que sonen encara que PrivacyNotes estigui tancat; obrir i desbloquejar l'app en lliura més. A l'app d'escriptori, un recordatori sona mentre l'app s'executa, i en un navegador, mentre PrivacyNotes està obert en una pestanya. Cada dispositiu planifica els seus recordatoris a partir dels elements que conté, de manera que cap recordatori no ve del servidor, i el títol, l'hora i el dia d'un element només se sincronitzen dins de l'element xifrat.",
         "Afegeix un avís des de la fila Avís de la vista Programació d'un element, fins a cinc per element, i defineix els valors per defecte a Configuració > Data i hora > Calendari, on també hi ha \"Mostra els títols als recordatoris\". [Un element protegit amb el teu PIN](/ca/help/locked-vs-protected/) sempre sona com a \"Recordatori\" i l'hora, i també qualsevol avís programat mentre el bloqueig de l'app està activat. Un avís lliurat abans d'activar el bloqueig pot conservar el títol fins que soni. Els recordatoris formen part de Pro; [el calendari en si és gratuït](/ca/help/calendar/)."
       ]
     },
@@ -1112,7 +1137,7 @@
     "tracker-privacy": {
       "q": "Qui pot llegir les meves dades de seguiments i de medicaments?",
       "a": [
-        "Els valors dels teus seguiments viuen dins de les entrades del diari i la llista de medicaments a la teva configuració, i tots dos estan xifrats al teu dispositiu i continuen xifrats quan se sincronitzen. Les estadístiques, [el PDF per al metge](/ca/help/doctor-pdf/), [la indicació per a la IA](/ca/help/ai-prompt/) i les dues baixades es calculen al teu dispositiu.",
+        "Els valors dels teus seguiments viuen dins de les entrades del diari, que estan xifrades al teu dispositiu i continuen xifrades quan se sincronitzen. La llista de medicaments i els seguiments personalitzats viuen a la teva configuració. Se sincronitzen xifrats com les teves notes, però la còpia que en guarda aquest dispositiu encara no està segellada, així que el xifrat del disc i el bloqueig de pantalla són el que la protegeix allà. Les estadístiques, [el PDF per al metge](/ca/help/doctor-pdf/), [la indicació per a la IA](/ca/help/ai-prompt/) i les dues baixades es calculen al teu dispositiu.",
         "[Amb autocustòdia](/ca/help/threat-model-levels/), el servidor no té res que els pugui obrir. Si t'has registrat amb Google, Apple o GitHub i has triat «Mantén-ho simple i còmode», la teva frase es desa al nostre servidor sota una clau nostra; Configuració > Compte > Custòdia de la clau mostra el teu mode i et deixa canviar-lo. Més a [què pot veure PrivacyNotes](/ca/help/what-can-you-see/)."
       ]
     },
@@ -1148,7 +1173,7 @@
       "q": "Com actualitzo l'app d'escriptori?",
       "a": [
         "No cal que facis res. Les apps per a Mac i Windows i l'AppImage de Linux busquen una actualització quan s'inicien i quan hi tornes, com a molt cada 12 hores, i la baixen en segon pla. Després un avís mostra **Actualització disponible**, amb **Reinicia** per acabar i **Changelog** per veure les novetats.",
-        "El paquet .deb de Linux s'actualitza amb una baixada nova: el seu avís ofereix **Baixa**, que obre la [secció de baixades](https://privacynotes.app/ca#downloads), i instal·les el paquet nou damunt de l'antic. Un .deb massa antic per sincronitzar amb seguretat posa en pausa la sincronització fins que ho facis. Si vas instal·lar l'app amb Scoop a Windows, executa `scoop update privacynotes`, i l'avís té **Copia l'ordre** per a això. En un Mac, Homebrew no necessita cap ordre d'actualització, perquè l'app s'actualitza sola."
+        "El paquet .deb de Linux s'actualitza amb una baixada nova: el seu avís ofereix **Baixa**, que obre la [secció de baixades](https://privacynotes.app/ca#downloads), i instal·les el paquet nou damunt de l'antic. Un .deb massa antic per sincronitzar amb seguretat posa en pausa la sincronització fins que ho facis. Si vas instal·lar l'app amb Scoop a Windows, et recomanem passar a winget, perquè l'app llavors s'actualitza sola. L'avís té **Copia l'ordre** per a `winget install LifetimeLabs.PrivacyNotes; scoop uninstall privacynotes`: tanca l'app i enganxa-la a PowerShell. Les teves notes i els ajustos es queden al dispositiu. En un Mac, Homebrew no necessita cap ordre d'actualització, perquè l'app s'actualitza sola."
       ]
     }
   }

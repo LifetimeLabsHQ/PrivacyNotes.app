@@ -61,7 +61,7 @@
  * (main.tsx). Demo mode bypasses the middleware entirely: the demo
  * phrase is a public constant, and the demo database is throwaway.
  *
- * Spec: ops/docs/archive/local-at-rest.md (sections 3.2 and 3.3)
+ * Spec: docs/internal/specs/local-at-rest.md (sections 3.2 and 3.3)
  */
 import type { DBCore, DBCoreTable, Middleware } from 'dexie';
 import {
@@ -144,7 +144,7 @@ export class LocalSealReadError extends Error {
  * the sync simulator's devices start from it, so the suite runs the mode
  * users run. false is the reader release: sealed rows open, writes land
  * plaintext.
- * Spec: ops/docs/archive/local-at-rest.md (5.1, the two releases)
+ * Spec: docs/internal/specs/local-at-rest.md (5.1, the two releases)
  */
 export const SEALED_WRITES_IN_PRODUCTION = true;
 
@@ -202,8 +202,14 @@ function clearUnsealMemo(): void {
 }
 onLocalDataKeyCleared(clearUnsealMemo);
 
+/** The AAD of one sealed record: the table tag and the record id. Also the
+ *  sealed part of the settings cache (settingsSeal.ts), outside Dexie. */
+export function localAad(tag: string, id: unknown): string {
+  return `${AAD_PREFIX}:${tag}:${String(id)}`;
+}
+
 function aadFor(cfg: TableSealConfig, id: unknown): string {
-  return `${AAD_PREFIX}:${cfg.aad}:${String(id)}`;
+  return localAad(cfg.aad, id);
 }
 
 function requireKey(): Uint8Array {

@@ -88,14 +88,14 @@ export function DeviceLimitModal() {
 
   return (
     <Modal title={t('deviceLimit.title')} className="max-w-lg p-6 space-y-5 max-h-[90vh] overflow-y-auto">
-        <p className="text-sm text-pn-muted leading-relaxed">
+        <p className="text-body text-pn-muted leading-relaxed">
           {t('deviceLimit.body', { limit: auth.limit, count: activeDevices.length })}
         </p>
 
         {/* Active devices */}
         {activeDevices.length > 0 && (
           <div className="space-y-2">
-            <div className="text-[11px] uppercase tracking-wide text-pn-muted">
+            <div className="text-meta uppercase tracking-wide text-pn-muted">
               {t('deviceLimit.activeDevices')}
             </div>
             {activeDevices.map((d) => (
@@ -114,8 +114,8 @@ export function DeviceLimitModal() {
         {/* Recently removed devices - informational, do not occupy a slot. */}
         {cooldownDevices.length > 0 && (
           <div className="space-y-2">
-            <div className="text-[11px] uppercase tracking-wide text-pn-muted">
-              {t('deviceLimit.recentlyRemoved')}
+            <div className="text-meta uppercase tracking-wide text-pn-muted">
+              {t('settings:devices.recentlyRemoved')}
             </div>
             {cooldownDevices.map((d) => (
               <div
@@ -123,11 +123,11 @@ export function DeviceLimitModal() {
                 className="flex items-center justify-between gap-3 rounded-md border border-divider px-3 py-2 opacity-60"
               >
                 <div className="min-w-0">
-                  <div className="text-sm font-medium truncate text-pn-muted">
+                  <div className="text-body font-medium truncate text-pn-muted">
                     {d.device_name}
                   </div>
-                  <div className="text-[11px] text-pn-muted">
-                    {t('deviceLimit.removedAt', { when: formatRelative(d.revoked_at!) })}
+                  <div className="text-meta text-pn-muted">
+                    {t('settings:devices.removedAt', { time: formatRelative(d.revoked_at!) })}
                   </div>
                 </div>
               </div>
@@ -136,7 +136,7 @@ export function DeviceLimitModal() {
         )}
 
         {error && (
-          <div className="rounded-md border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-sm p-3">
+          <div className="rounded-md border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-body p-3">
             {error}
           </div>
         )}
@@ -144,20 +144,20 @@ export function DeviceLimitModal() {
         {/* Same copy as NotesView's pending banner (notes namespace) so no
             new locale strings are needed; the poll above retries for us. */}
         {activationPending && (
-          <div className="rounded-md border border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-sm p-3">
+          <div className="rounded-md border border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-body p-3">
             {t('notes:banner.proActivationPending')}
           </div>
         )}
 
         {configured ? (
           <div className="rounded-md border border-accent/40 bg-accent/5 dark:bg-accent/10 p-4 space-y-2">
-            <div className="text-sm font-medium">{t('deviceLimit.upgradeHeading')}</div>
-            <p className="text-xs text-pn-muted leading-relaxed">
+            <div className="text-body font-medium">{t('deviceLimit.upgradeHeading')}</div>
+            <p className="text-small text-pn-muted leading-relaxed">
               {t('deviceLimit.upgradeBody')}
             </p>
             <button
               type="button"
-              className="w-full rounded-md bg-accent-fill hover:bg-accent-fill-hover text-white text-sm font-medium px-3 py-2 transition disabled:opacity-50"
+              className="w-full rounded-md bg-accent-fill hover:bg-accent-fill-hover text-white text-body font-medium px-3 py-2 transition disabled:opacity-50"
               // Also locked while a paid checkout awaits its webhook: the
               // one-time Pro product has no server-side dedupe, so a live
               // button here invites a second charge.
@@ -185,7 +185,7 @@ export function DeviceLimitModal() {
                 }
               }}
             >
-              {checkoutLoading ? t('deviceLimit.openingCheckout') : t('deviceLimit.upgradeCta', { price: isBetaPricing() ? EARLY_PRICE : PRO_PRICE })}
+              {checkoutLoading ? t('billing:upgrade.ctaOpening') : t('deviceLimit.upgradeCta', { price: isBetaPricing() ? EARLY_PRICE : PRO_PRICE })}
             </button>
           </div>
         ) : (
@@ -193,15 +193,15 @@ export function DeviceLimitModal() {
           // Without this fallback the modal is a dead end: revoke or
           // sign out, no third option. See gap #24.
           <div className="rounded-md border border-divider bg-surface-1 p-4 space-y-2">
-            <div className="text-sm font-medium">{t('deviceLimit.needMoreHeading')}</div>
-            <p className="text-xs text-pn-muted leading-relaxed">
+            <div className="text-body font-medium">{t('deviceLimit.needMoreHeading')}</div>
+            <p className="text-small text-pn-muted leading-relaxed">
               {t('deviceLimit.needMoreBody')}
             </p>
             <a
               href="https://lifetimelabs.dev/contact/"
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full text-center rounded-md border border-divider hover:bg-pn/5 text-sm font-medium px-3 py-2 transition"
+              className="block w-full text-center rounded-md border border-divider hover:bg-pn/5 text-body font-medium px-3 py-2 transition"
             >
               {t('deviceLimit.contactSupport')}
             </a>
@@ -214,10 +214,10 @@ export function DeviceLimitModal() {
           // devices are unreachable, the phrase is their only way to
           // recover. Reveal on demand. See gap #22.
           <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 p-4 space-y-2">
-            <div className="text-sm font-medium text-amber-800 dark:text-amber-300">
+            <div className="text-body font-medium text-amber-800 dark:text-amber-300">
               {t('deviceLimit.saveRecoveryHeading')}
             </div>
-            <p className="text-xs text-amber-700/90 dark:text-amber-400/90 leading-relaxed">
+            <p className="text-small text-amber-700/90 dark:text-amber-400/90 leading-relaxed">
               {t('deviceLimit.saveRecoveryBody')}
             </p>
             {showPhrase ? (
@@ -231,7 +231,7 @@ export function DeviceLimitModal() {
               <button
                 type="button"
                 onClick={() => setShowPhrase(true)}
-                className="w-full rounded-md border border-amber-400/60 dark:border-amber-600/40 bg-surface-2 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-sm font-medium text-amber-800 dark:text-amber-300 px-3 py-2 transition"
+                className="w-full rounded-md border border-amber-400/60 dark:border-amber-600/40 bg-surface-2 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-body font-medium text-amber-800 dark:text-amber-300 px-3 py-2 transition"
               >
                 {t('deviceLimit.viewRecoveryPhrase')}
               </button>
@@ -242,10 +242,10 @@ export function DeviceLimitModal() {
         <button
           type="button"
           onClick={() => void signOut({ keepUnsyncedNotes: true })}
-          className="w-full rounded-md border border-divider hover:bg-pn/5 text-sm px-3 py-2 transition"
+          className="w-full rounded-md border border-divider hover:bg-pn/5 text-body px-3 py-2 transition"
           disabled={busy !== null}
         >
-          {t('deviceLimit.signOut')}
+          {t('settings:account.signOut')}
         </button>
     </Modal>
   );
@@ -268,16 +268,16 @@ function DeviceRowView({
   return (
     <div className="flex items-center justify-between gap-3 rounded-md border border-divider px-3 py-2">
       <div className="min-w-0">
-        <div className="text-sm font-medium truncate">
+        <div className="text-body font-medium truncate">
           {device.device_name}
-          <span className="ms-2 font-mono text-[11px] font-normal text-pn-muted">{shortDeviceId(device.device_id)}</span>
+          <span className="ms-2 font-mono text-meta font-normal text-pn-muted">{shortDeviceId(device.device_id)}</span>
           {isCurrent && (
-            <span className="ms-2 text-[10px] uppercase tracking-wide text-accent">
-              {t('deviceLimit.thisDevice')}
+            <span className="ms-2 text-meta uppercase tracking-wide text-accent">
+              {t('settings:devices.thisDevice')}
             </span>
           )}
         </div>
-        <div className="text-[11px] text-pn-muted">
+        <div className="text-meta text-pn-muted">
           {t('deviceLimit.lastActive', { platform: device.platform, when: formatRelative(device.last_seen_at) })}
         </div>
       </div>
@@ -285,7 +285,7 @@ function DeviceRowView({
         type="button"
         onClick={onRevoke}
         disabled={disabled}
-        className="text-xs rounded-md border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30 px-2.5 py-1.5 transition disabled:opacity-50"
+        className="text-small rounded-md border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30 px-2.5 py-1.5 transition disabled:opacity-50"
       >
         {busy ? t('deviceLimit.removing') : t('common:actions.remove')}
       </button>

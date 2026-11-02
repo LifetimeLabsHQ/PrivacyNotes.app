@@ -4,7 +4,7 @@
 // ArabicNormalizer behaves. Kept out of search.ts so cjkSegment.ts and
 // arabicFold.ts both read as small, single-purpose script-handling modules
 // consumed by the same index-and-query pipeline.
-// Spec: ops/docs/design-decisions.md (search folding)
+// Spec: docs/internal/design-decisions.md (search folding)
 
 // Covers every character this function touches: tashkeel, tatweel, the alef
 // variants, alef maqsura, teh marbuta, and both Arabic-Indic digit blocks.

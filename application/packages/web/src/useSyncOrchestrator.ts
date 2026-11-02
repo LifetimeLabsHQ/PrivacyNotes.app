@@ -7,15 +7,17 @@ import { createNote, listNotes } from './notesRepo';
 import { db, type LocalNote } from './db';
 import { sync, pushConflictAnswer, writeConflictAnswer, CaptchaRequiredError, DeviceRevokedError, QuotaExceededError, SessionExpiredError, type NoteConflict, type PushHalt } from './sync';
 import { logAuthEvent } from './authDiag';
+import { verifyExpiredSession } from './sessionCheck';
 import { ensureLevel2, isMfaRefusal, MfaUnavailableError } from './mfaStep';
 import { fetchQuotaUsage } from './devices';
-import { hasSettingsPulled, syncUserSettings, updateLocalSettings, type UserSettings } from './userSettings';
+import { hasSettingsPulled, hasUnpushedSettings, loadLocalSettings, syncUserSettings, updateLocalSettings, type UserSettings } from './userSettings';
 import { syncPinCache } from './pin';
 import { syncPinWrap } from './pinRecovery';
 import { hasLiveSignIn, signInStamp, signedOutSince } from './liveSignIn';
 import { seedOnboardingNotes, SEED_MEDICATION, withSeedFactors } from './welcomeNote';
 import { isDemoMode } from './demo';
 import { reconcileOrphanBlobs, sweepBlobGC } from './imageGC';
+import { drainVersionQueue } from './noteVersions';
 import { pullOpensTrashPurge } from './trashPurge';
 import { markPulledClean, wipeGenerationNow } from './pullState';
 import { publishShareLimit } from './useShareInbox';
@@ -73,7 +75,9 @@ async function forkCopy(
   flags: { pinProtected: 0 | 1; locked: 0 | 1; editedAt?: string },
 ): Promise<LocalNote> {
   return db.transaction('rw', db.notes, async () => {
-    const copy = await createNote(title, body, source.tags, source.starred === 1, source.type ?? 'note', null, { counted: false });
+    // In the source's folder: with none, a copy of a Work note showed only
+    // under Personal.
+    const copy = await createNote(title, body, source.tags, source.starred === 1, source.type ?? 'note', source.folderId ?? null, { counted: false });
     await db.notes.update(copy.id, flags);
     return { ...copy, ...flags };
   });
@@ -116,6 +120,8 @@ export function useSyncOrchestrator({
   /** ISO timestamp of when the user first exceeded quota (from server). */
   const [quotaExceededSince, setQuotaExceededSince] = useState<string | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const sessionExpiredRef = useRef(false);
+  sessionExpiredRef.current = sessionExpired;
   /** Per-sync-pass push-error tracking for the dismissable banner. Cleared
    * at the start of each `runSync` and populated by the `onPushError`
    * callback. Size rejections stay out of it: the banner's "retries
@@ -503,6 +509,43 @@ export function useSyncOrchestrator({
             );
           }
         }
+        // History versions made while the server could not take them.
+        void drainVersionQueue(supabase, auth.pubkey).catch((err) =>
+          console.warn('[note_versions] drain failed:', err),
+        );
+        // The browser extension: adopt its inbox, keep its logins copy. Only
+        // after a pull that completed, so a partial view deletes nothing.
+        // Spec: docs/internal/plans/browser-extension-build.md (sections 3.3 and 3.4)
+        void import('./extensionSync')
+          .then(async (ext) => {
+            const result = await ext.runExtensionSync({
+              store: ext.supabaseExtensionStore(supabase, auth.pubkey),
+              pubkey: auth.pubkey,
+              inboxSecret: ext.inboxSecretOf(auth.pubkey, auth.phrase),
+              contentKey: auth.encryptionKey,
+              deviceId: auth.deviceId,
+              isCurrent: () => hasLiveSignIn() && !signedOutSince(signedInAt),
+              pushKeys: async () => {
+                await syncUserSettings(supabase, auth.pubkey, auth.encryptionKey, undefined, signedInAt);
+                return !hasUnpushedSettings();
+              },
+              readKeys: () => loadLocalSettings().extensionKeys,
+              saveKeys: (update) => {
+                if (signedOutSince(signedInAt)) return;
+                let changed = false;
+                const next = updateLocalSettings((prev) => {
+                  const keys = update(prev.extensionKeys);
+                  changed = keys !== prev.extensionKeys;
+                  return changed ? { ...prev, extensionKeys: keys } : prev;
+                });
+                if (!changed) return;
+                settingsGenRef.current += 1;
+                setUserSettings(next);
+              },
+            });
+            if (result.adopted > 0) await refresh();
+          })
+          .catch((err) => console.warn('[extension] pass failed:', err));
         // Sweep the deferred blob GC queue (#125). Cheap when the queue is
         // empty (one indexed Dexie query), so no cooldown needed like the
         // pending-upload retry above.
@@ -610,39 +653,12 @@ export function useSyncOrchestrator({
         // background revalidation already failed to repair the link).
         // An unreachable server is no verdict: skip the modal, the next
         // pass re-checks.
+        // A token the server refuses gets one forced refresh first: on a
+        // device whose clock runs behind, getUser cannot see that the
+        // token expired (sessionCheck.ts).
         try {
-          const { data: check, error: checkErr } = await supabase.auth.getUser();
-          if (!checkErr && check.user) {
-            const claimPk = (check.user.app_metadata as { pubkey?: string } | undefined)?.pubkey;
-            if (claimPk === auth.pubkey) {
-              logAuthEvent('sync:session-expired-suppressed', {
-                reason: 'verified-healthy',
-              });
-              return;
-            }
-            logAuthEvent('sync:session-expired-claim-mismatch', {
-              claimPk: claimPk?.slice(0, 8) ?? null,
-            });
-            setSessionExpired(true);
-            return;
-          }
-          const checkStatus = (checkErr as { status?: number } | null)?.status;
-          const definitive =
-            checkErr?.name === 'AuthSessionMissingError' ||
-            (checkErr?.name === 'AuthApiError' &&
-              (checkStatus === 401 || checkStatus === 403));
-          if (definitive) {
-            logAuthEvent('sync:session-expired-confirmed', {
-              name: checkErr?.name,
-              status: checkStatus,
-            });
-            setSessionExpired(true);
-            return;
-          }
-          logAuthEvent('sync:session-expired-unverifiable', {
-            name: checkErr?.name,
-            status: checkStatus,
-          });
+          const verdict = await verifyExpiredSession(supabase, auth.pubkey);
+          if (verdict === 'dead' || verdict === 'claim-mismatch') setSessionExpired(true);
           return;
         } catch {
           // The verification itself blew up (offline mid-call): no
@@ -673,13 +689,11 @@ export function useSyncOrchestrator({
   /** Resolve a queued note conflict. Called from ConflictModal. */
   const resolveConflict = useCallback(async (conflict: NoteConflict, resolution: 'local' | 'server' | 'both') => {
     const { noteId, localNote } = conflict;
-    // One decision per conflict. Every ConflictModal button calls
-    // onResolve AND then onClose, and onClose is wired to a second,
-    // contradictory 'server' resolution - so "Use mine" force-pushed the
-    // local version and then immediately overwrote the local row with the
-    // server's, losing the version the user had just chosen to keep. The
-    // guard clears when the first decision finishes, by which point the
-    // conflict has left the queue and the modal is gone.
+    // One decision per conflict: a double click, or a second button pressed
+    // while the first answer is still in flight, must not run a second,
+    // contradictory resolution over the first. The guard clears when the
+    // first decision finishes, by which point the conflict has left the
+    // queue and the modal is gone.
     if (resolvingConflictsRef.current.has(noteId)) return;
     resolvingConflictsRef.current.add(noteId);
     // Snapshot the key synchronously, before any await: signOut zeroes
@@ -792,7 +806,12 @@ export function useSyncOrchestrator({
     window.addEventListener('privacynotes:wifi-restored', onWifiRestored);
 
     const SYNC_POLL_MS = 30_000;
-    const tick = () => { if (!document.hidden) void runSync(); };
+    // Not while the session is expired: the check already forced a refresh
+    // and the server said no, so a timer would only resend the refused
+    // token twice a minute until the user signs out (production,
+    // 2026-11-02). Coming back online or to the window still runs a pass,
+    // and a pass that works clears the modal.
+    const tick = () => { if (!document.hidden && !sessionExpiredRef.current) void runSync(); };
     const interval = setInterval(tick, SYNC_POLL_MS);
 
     const onVisibility = () => { if (!document.hidden) void runSync(); };

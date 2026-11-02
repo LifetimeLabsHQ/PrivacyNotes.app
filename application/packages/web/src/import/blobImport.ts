@@ -1,9 +1,9 @@
 import { db } from '../db';
-import type { AttachmentMeta } from '../attachmentStore';
 import { formatFileSize } from '../attachmentValidation';
 import { contactPhotoOptions, currentImageOptions, processImage } from '../imageProcessing';
 import { withContactPhotoBytes } from '../contactBody';
-import type { ImportBlob, ImportedNote } from './types';
+import { sniffImageFormat } from '../imageMetadata';
+import type { ImportBlob, ImportedNote, StagedBlob } from './types';
 
 /* ------------------------------------------------------------------ */
 /* SHA-256 helper (was duplicated in appleNotes, googleKeep, privacynotes) */
@@ -45,6 +45,15 @@ export function mimeFromExt(path: string): string {
   // An own-property test: an extension like `constructor` must not read a
   // value inherited from Object.prototype.
   return Object.hasOwn(map, ext) ? map[ext]! : 'application/octet-stream';
+}
+
+/** MIME from the extension, or from the image signature when the name has
+ *  no known extension (Notesnook exports JPEGs with no extension, #642). */
+export function mimeFromExtOrBytes(path: string, data: Uint8Array): string {
+  const mime = mimeFromExt(path);
+  if (mime !== 'application/octet-stream') return mime;
+  const format = sniffImageFormat(data);
+  return format === 'unknown' ? mime : `image/${format}`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -130,9 +139,14 @@ export function isBlobReferenced(key: string, text: string): boolean {
  * 1. Returns the notes with every blob key inside a markdown image
  *    `![...](KEY)` or link `[...](KEY)` swapped for the matching
  *    `pn:img/UUID` or `pn:file/UUID` URI.
- * 2. Stores each blob a rewritten body names in imageCache/imageDedup
+ * 2. Returns each new blob a rewritten body names as a `StagedBlob`, and
+ *    stores none of them: `applyImport` writes them to imageCache/imageDedup
  *    (images) or attachmentCache/attachmentDedup (non-images) with
- *    pendingUpload=1. A blob no body names is never stored or uploaded.
+ *    pendingUpload=1, in the same transaction as the notes. A failed notes
+ *    write then keeps no file either, and no upload can start on a file
+ *    whose note never landed. A blob no body names is never staged. A blob
+ *    the vault already holds (same hash) is reused and never staged, so a
+ *    failed import cannot touch it.
  *
  * RUNS BEFORE THE NOTES ARE WRITTEN, and that ordering is load-bearing. A
  * note row must never exist holding a placeholder key, because sync reads
@@ -150,24 +164,20 @@ export function isBlobReferenced(key: string, text: string): boolean {
  *   - Google Keep: `"keepimg:photo.jpg"`
  *   - Samsung Notes: `"samsungimg:rId2"`
  *
- * Returns the rewritten notes plus counts of images and attachments stored.
+ * Returns the rewritten notes, the staged blobs, and counts of the images
+ * and attachments the notes name.
  */
 export async function importBlobs(
   blobs: Map<string, ImportBlob>,
   notes: ImportedNote[],
   onProgress?: (msg: string) => void,
-): Promise<{ images: number; attachments: number; notes: ImportedNote[] }> {
-  const now = new Date().toISOString();
-
+): Promise<{ images: number; attachments: number; notes: ImportedNote[]; staged: StagedBlob[] }> {
   // Build the key -> pn: URI mapping first and store nothing yet: a blob is
   // stored only once a rewritten body names it (see the end of this
   // function). New blobs wait here, keyed by uuid; `newByHash` lets
   // identical bytes under two keys share one uuid within this import.
   const keyToUri = new Map<string, string>();
-  const fresh = new Map<
-    string,
-    { hash: string; data: Uint8Array; image: boolean; meta: AttachmentMeta }
-  >();
+  const fresh = new Map<string, StagedBlob>();
   const newByHash = new Map<string, string>();
   // The stored bytes per URI: a contact records its photo's size in its body.
   const uriToBytes = new Map<string, number>();
@@ -194,7 +204,7 @@ export async function importBlobs(
     if (!uuid) {
       uuid = crypto.randomUUID();
       newByHash.set(hash, uuid);
-      fresh.set(uuid, { hash, data, image: isImage, meta: { name, mime, size: data.length } });
+      fresh.set(uuid, { uuid, hash, data, image: isImage, meta: { name, mime, size: data.length } });
     }
     keyToUri.set(key, `${isImage ? 'pn:img' : 'pn:file'}/${uuid}`);
     // Same hash, same bytes: the length holds for a deduplicated picture too.
@@ -208,7 +218,7 @@ export async function importBlobs(
   }
 
   if (keyToUri.size === 0) {
-    return { images: 0, attachments: 0, notes };
+    return { images: 0, attachments: 0, notes, staged: [] };
   }
 
   onProgress?.('Updating image references...');
@@ -225,7 +235,7 @@ export async function importBlobs(
     };
   });
 
-  // Store only the blobs a rewritten body names. An importer picks its blobs
+  // Stage only the blobs a rewritten body names. An importer picks its blobs
   // from the source markup, and its conversion can still drop a reference
   // (UpNote flattens media inside a table cell to text). A blob stored with
   // no note naming it uploads anyway, and no delete ever queues it, so it
@@ -234,16 +244,7 @@ export async function importBlobs(
   for (const note of rewritten) {
     for (const m of note.body.matchAll(/pn:(?:img|file)\/([0-9a-f-]{36})/g)) named.add(m[1]!);
   }
-  for (const [uuid, blob] of fresh) {
-    if (!named.has(uuid)) continue;
-    if (blob.image) {
-      await db.imageCache.put({ id: uuid, data: blob.data, cachedAt: now });
-      await db.imageDedup.put({ hash: blob.hash, uuid, encryptedSize: 0, pendingUpload: 1 });
-    } else {
-      await db.attachmentCache.put({ id: uuid, meta: blob.meta, data: blob.data, cachedAt: now });
-      await db.attachmentDedup.put({ hash: blob.hash, uuid, encryptedSize: 0, pendingUpload: 1 });
-    }
-  }
+  const staged = [...fresh.values()].filter((blob) => named.has(blob.uuid));
 
   let images = 0;
   let attachments = 0;
@@ -252,7 +253,7 @@ export async function importBlobs(
     if (uri.startsWith('pn:img/')) images++;
     else attachments++;
   }
-  return { images, attachments, notes: rewritten };
+  return { images, attachments, notes: rewritten, staged };
 }
 
 /**

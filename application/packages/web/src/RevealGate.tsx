@@ -71,19 +71,19 @@ export function RevealGate({
         className={`mx-auto ${style.glyph}`}
       />
       <div>
-        <p className={`font-semibold text-pn ${compact ? 'text-base' : 'text-lg'}`}>
+        <p className={`font-semibold text-pn ${compact ? 'text-title' : 'text-heading'}`}>
           {heading}
         </p>
         {/* text-balance: two or three short centered lines, where the
             default greedy wrap leaves a stub on the last one. */}
-        <p className="text-sm text-pn-muted dark:text-pn-soft mt-2 text-balance">
+        <p className="text-body text-pn-muted dark:text-pn-soft mt-2 text-balance">
           {body}
         </p>
       </div>
       <button
         onClick={onReveal}
         className={`inline-flex items-center gap-2 rounded-lg font-semibold transition shadow-lg ${
-          compact ? 'px-4 py-2 text-sm' : 'px-6 py-3 text-base'
+          compact ? 'px-4 py-2 text-body' : 'px-6 py-3 text-title'
         } ${style.button}`}
       >
         <Eye size={compact ? 16 : 18} aria-hidden="true" />
@@ -93,7 +93,7 @@ export function RevealGate({
           in the darker palettes (3.85:1 on amber in Soft). The footnote
           carries the consequence ("No second chances"), so it has to be
           readable. */}
-      <p className="text-[11px] text-pn-muted dark:text-pn-soft">
+      <p className="text-help text-pn-muted dark:text-pn-soft">
         {footnote}
       </p>
     </div>

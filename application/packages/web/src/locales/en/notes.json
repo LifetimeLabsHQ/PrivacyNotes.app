@@ -6,19 +6,18 @@
     "deselect": "Deselect note",
     "pinProtected": "PIN-protected",
     "readOnly": "Read-only",
-    "file": "File",
     "empty": "Empty",
     "noContent": "No content",
     "notBackedUp": "Not backed up",
     "archived": "Archived",
-    "entryDate": "Entry date",
     "date": "Date",
-    "dayOf": "day {{n}} of {{total}}"
+    "dayOf": "day {{n}} of {{total}}",
+    "reminders_one": "{{count}} reminder",
+    "reminders_other": "{{count}} reminders"
   },
   "header": {
     "new": "New",
     "newNote": "New note",
-    "trash": "Trash",
     "newEvent": "New event"
   },
   "folderChip": {
@@ -31,7 +30,6 @@
   },
   "vaultNew": {
     "ariaLabel": "New vault item",
-    "login": "Login",
     "card": "Credit Card",
     "sshKey": "SSH Key",
     "generator": "Password"
@@ -39,15 +37,14 @@
   "newMenu": {
     "note": "Note",
     "task": "Task",
-    "kanban": "Kanban board",
+    "kanban": "Kanban",
+    "drawing": "Drawing",
     "journal": "Journal",
     "login": "Login",
-    "file": "File",
     "bookmark": "Bookmark",
     "clipPage": "Clip page",
     "contact": "Contact",
-    "event": "Event",
-    "quickAdd": "Quick add"
+    "event": "Event"
   },
   "vaultFilter": {
     "all": "All",
@@ -64,14 +61,14 @@
   "trash": {
     "empty": "Empty",
     "emptyHover": "Delete all notes in trash",
-    "storage": "Storage",
     "autoDelete": "Auto-delete after 30 days"
   },
   "search": {
     "sortOptions": "Sort and view options",
     "placeholderVault": "Search vault…",
     "placeholderNotes": "Search notes…",
-    "placeholderEvents": "Search events…"
+    "placeholderEvents": "Search events…",
+    "placeholderDrawings": "Search drawings…"
   },
   "selection": {
     "countOf": "{{selected}} of {{total}} selected",
@@ -82,10 +79,11 @@
     "noMatches": "No matches.",
     "vault": "Vault is empty.",
     "notes": "No notes yet.",
+    "drawings": "No drawings yet.",
+    "drawingsLine": "Sketch, plan or map out an idea. Drawings can link to your notes, but do not show what is in them.",
     "archive": "Nothing archived.",
     "trash": "Trash is empty.",
     "filtered": "No items match your filters.",
-    "clearFilters": "Clear filters",
     "filteredAfter": "To display them.",
     "hiddenInAll_one": "{{count}} item is hidden by the Show in All filter. Open the filter next to All to show it.",
     "hiddenInAll_other": "{{count}} items are hidden by the Show in All filter. Open the filter next to All to show them.",
@@ -98,16 +96,6 @@
     "other": "Other",
     "collapseAll": "Collapse all groups",
     "expandAll": "Expand all groups"
-  },
-  "headerLabel": {
-    "allItems": "All",
-    "untagged": "Untagged",
-    "journals": "Journals",
-    "vault": "Vault",
-    "pinned": "Pinned",
-    "archive": "Archive",
-    "notes": "Notes",
-    "calendar": "Calendar"
   },
   "footerStats": {
     "journals_one": "Journal",
@@ -122,6 +110,8 @@
     "bookmarks_other": "Bookmarks",
     "contacts_one": "Contact",
     "contacts_other": "Contacts",
+    "drawings_one": "Drawing",
+    "drawings_other": "Drawings",
     "files_one": "File",
     "files_other": "Files",
     "lists_one": "List",
@@ -149,7 +139,6 @@
     "reload": "Reload"
   },
   "banner": {
-    "dismiss": "Dismiss",
     "proActivationPending": "Payment received but Pro activation is taking longer than usual. Refresh in a minute, or contact support if it doesn't flip on.",
     "snapshotPaused": "Note history is paused. Your Pro plan looks inactive. New edits won't be snapshotted until Pro is restored.",
     "restorePro": "Restore Pro",
@@ -157,8 +146,7 @@
     "updateCard": "Update card"
   },
   "sidebar": {
-    "collapse": "Collapse sidebar",
-    "expand": "Expand sidebar"
+    "collapse": "Collapse sidebar"
   },
   "notesList": {
     "collapse": "Collapse notes list",
@@ -195,24 +183,11 @@
     "titlePlaceholder": "Untitled (click to edit or let it autogenerate)",
     "titlePlaceholderLogin": "e.g. GitHub",
     "titlePlaceholderCard": "e.g. Visa ending in 4242",
-    "titlePlaceholderSshKey": "e.g. GitHub deploy key",
-    "pin": "Pin",
-    "unpin": "Unpin",
-    "restore": "Restore",
-    "deleteForever": "Delete forever",
-    "moveToTrash": "Move to trash",
-    "noteOptions": "Note options",
     "readOnlyToggle": "Read-only. Toggle off in",
     "menu": "Menu",
-    "showMarkdown": "Show markdown",
     "showFormatted": "Show formatted",
     "invisiblesShow": "Show invisible characters",
     "invisiblesHide": "Hide invisible characters",
-    "findInNote": "Find in note",
-    "navPrev": "Previous",
-    "navNext": "Next",
-    "navPrevTab": "Previous tab",
-    "navNextTab": "Next tab",
     "undo": "Undo",
     "redo": "Redo",
     "hide": "Hide",
@@ -222,9 +197,7 @@
     "widthDefault": "Default width",
     "widthWide": "Wider",
     "widthFull": "Full width",
-    "burn": "Share & Burn After Reading",
     "titlePlaceholderLink": "Bookmark name",
-    "titlePlaceholderContact": "Name",
     "notBackedUpTooLarge": "Over the 1 MB limit, so not backed up. Move pictures to attachments or split the note.",
     "notBackedUpFailed": "Not backed up. Last error: {{message}}. Retrying.",
     "unknownType": "This item was made by a newer version of PrivacyNotes. Update the app to open it."
@@ -241,15 +214,17 @@
     "printTextTitle": "Print text only",
     "printTextDesc": "Keeps the title. Leaves out the date, folder and tags.",
     "burnTitle": "Share & Burn After Reading",
-    "burnDesc": "Publish this note as a one-time view link. The link self-destructs after reading. Your note stays safe in your account."
+    "burnDesc": "Publish this note as a one-time view link. The link self-destructs after reading. Your note stays safe in your account.",
+    "drawingFileTitle": "Drawing (.excalidraw)",
+    "drawingFileDesc": "Opens in Excalidraw and Obsidian, with its pictures.",
+    "drawingPngTitle": "Picture (.png)",
+    "drawingPngDesc": "The whole drawing as one picture."
   },
   "weekReview": {
     "title": "Week in review",
     "daysLogged": "{{count}}/7 logged",
     "mood": "Mood",
-    "sleep": "Sleep",
-    "meds": "Meds",
-    "activity": "Activity"
+    "meds": "Meds"
   },
   "footer": {
     "settings": "Settings",
@@ -264,12 +239,10 @@
     "words_one": "Word",
     "words_other": "Words",
     "zen": "Zen",
-    "appearance": "Design",
     "lockApp": "Lock app",
     "lockAppSetUp": "Set a PIN in Security first",
     "goToTop": "Go to top",
     "goToEnd": "Go to end",
-    "signOut": "Sign out",
     "signingOut": "Signing out…",
     "switchToLight": "Switch to light mode",
     "switchToDark": "Switch to dark mode"
@@ -307,10 +280,11 @@
     "bodyMulti": "These {{count}} files look like markdown. Import them as notes so you can read and edit them, or store them as encrypted file attachments?"
   },
   "bulkTrash": {
-    "title": "Move to Trash",
-    "body_one": "Move <highlight>{{count}} item</highlight> to trash? You can restore it later.",
-    "body_other": "Move <highlight>{{count}} items</highlight> to trash? You can restore them later.",
-    "readOnlyTitle": "Read-only",
+    "body_one": "Delete <highlight>{{count}} item</highlight>? Move it to the trash to restore it later, or delete it forever.",
+    "body_other": "Delete <highlight>{{count}} items</highlight>? Move them to the trash to restore them later, or delete them forever.",
+    "confirm": "Move to Trash",
+    "keys": "Outside this window, <kbd>{{trash}}</kbd> moves an item to the trash at once, and <kbd>{{ask}}</kbd> opens this window even after Don't ask again.",
+    "dontAskAgain": "Don't ask again",
     "readOnlyAcknowledge": "Got it",
     "readOnlyBlocked_one": "This item is <highlight>read-only</highlight>, so it cannot be moved to trash. Turn read-only off in the note options menu first.",
     "readOnlyBlocked_other": "All <highlight>{{count}} items</highlight> are read-only, so none of them can be moved to trash. Turn read-only off in the note options menu first.",
@@ -319,21 +293,12 @@
   },
   "deleteCheckedTasks": {
     "title": "Delete checked items?",
-    "confirm": "Delete",
     "body_one": "<highlight>{{count}} item</highlight> will be deleted from this note. This cannot be undone.",
     "body_other": "<highlight>{{count}} items</highlight> will be deleted from this note, nested items included. This cannot be undone."
   },
-  "bulkDelete": {
-    "body_one": "Permanently delete <highlight>{{count}} note</highlight>? This cannot be undone.",
-    "body_other": "Permanently delete <highlight>{{count}} notes</highlight>? This cannot be undone."
-  },
   "tagConfirm": {
     "mergeTitle": "Merge Tags",
-    "deleteTitle": "Delete Tag",
-    "deleteWithNotesTitle": "Delete Tag & Notes",
     "mergeConfirm": "Merge",
-    "deleteConfirm": "Delete Tag",
-    "moveToTrash": "Move to Trash",
     "mergeBody_one": "Tag <highlight>“{{targetTag}}”</highlight> already exists. Merge <highlight>{{count}} note</highlight> currently tagged “{{tag}}” into it?",
     "mergeBody_other": "Tag <highlight>“{{targetTag}}”</highlight> already exists. Merge <highlight>{{count}} notes</highlight> currently tagged “{{tag}}” into it?",
     "deleteBody_one": "Remove tag <highlight>“{{tag}}”</highlight> from <highlight>{{count}} note</highlight>? The notes themselves are not deleted.",
@@ -363,5 +328,35 @@
     "missing": "Not created yet",
     "protectedHidden_one": "{{count}} PIN-protected item not shown",
     "protectedHidden_other": "{{count}} PIN-protected items not shown"
+  },
+  "drawing": {
+    "fullScreen": "Full screen",
+    "frame": "Frame",
+    "laser": "Laser pointer",
+    "bar": {
+      "hiddenNote": "They still work by their keys."
+    },
+    "resetTitle": "Reset the canvas?",
+    "resetBody": "This removes everything on the canvas. Undo brings it back.",
+    "hotkeysTitle": "Drawing hotkeys",
+    "tools": {
+      "label": "Drawing tools",
+      "keepTool": "Keep the tool after drawing",
+      "hand": "Move the canvas",
+      "rectangle": "Rectangle",
+      "diamond": "Diamond",
+      "ellipse": "Ellipse",
+      "arrow": "Arrow",
+      "line": "Line",
+      "pen": "Pen",
+      "text": "Text box",
+      "eraser": "Eraser",
+      "resetZoom": "Reset zoom",
+      "open": "Open a drawing file",
+      "reset": "Reset the canvas",
+      "style": "Style",
+      "more": "More tools",
+      "fewer": "Fewer tools"
+    }
   }
 }

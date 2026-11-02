@@ -18,7 +18,7 @@
  * never loads TipTap. Both hand it the same thing, a grid of cell strings, and
  * get back a grid of results.
  *
- * Spec: ops/docs/archive/table-formulas.md
+ * Spec: docs/internal/specs/table-formulas.md
  */
 
 /** A1 reference: column letters then a row number, as Capacities writes them. */
@@ -63,7 +63,7 @@ const NUMBER_RE = /^-?(\d{1,3}(,\d{3})+|\d+)(\.\d+)?$/;
  *   Capacities describes. Excel's own CEILING and FLOOR take a significance
  *   argument and return an error without one, and that is NOT what is wanted.
  *
- * Spec: ops/docs/archive/table-formulas.md (section 4b)
+ * Spec: docs/internal/specs/table-formulas.md (section 4b)
  */
 
 /** Takes every value in its arguments, ranges flattened. Non-numeric cells never arrive. */
@@ -413,6 +413,12 @@ class Evaluator {
 export function evaluateTable(grid: readonly (readonly string[])[]): (FormulaResult | null)[][] {
   const cached = new Map<string, number | null>();
   const visiting = new Set<string>();
+  // Cells whose walk ended in a cycle. Every later walk through one ends in
+  // the same cycle, so it fails at once: before this, nothing on a chain that
+  // ended in a cycle was remembered, and a loop of formulas that also total a
+  // column cost about n cubed walks, half a minute for 400 rows on every
+  // change and caret move (external report, 2026-10-24, bug report 22).
+  const cycled = new Set<string>();
   // The cells whose formulas we are inside, innermost last. `visiting` answers
   // "is this a cycle"; the last entry answers "is this the cell that wrote the
   // range we are expanding", which is a different question with a different
@@ -424,7 +430,7 @@ export function evaluateTable(grid: readonly (readonly string[])[]): (FormulaRes
   /** The numeric value of one cell, or null when it has none. */
   const valueAt = (row: number, col: number): number | null => {
     const key = `${row}:${col}`;
-    if (visiting.has(key)) throw new CycleError();
+    if (visiting.has(key) || cycled.has(key)) throw new CycleError();
     const memo = cached.get(key);
     if (memo !== undefined) return memo;
     const text = textAt(row, col);
@@ -435,6 +441,9 @@ export function evaluateTable(grid: readonly (readonly string[])[]): (FormulaRes
       chain.push(key);
       try {
         result = compute(text, key);
+      } catch (err) {
+        if (err instanceof CycleError) cycled.add(key);
+        throw err;
       } finally {
         visiting.delete(key);
         chain.pop();

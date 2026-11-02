@@ -3,7 +3,7 @@
  * WebKitGTK draws color emoji through Skia's COLRv1 path, and with the
  * gradient flags of a current Noto Color Emoji that path fails an assertion
  * and kills the web process, which freezes the whole Linux window.
- * Spec: ops/docs/gotchas.md (color emoji freeze the Linux app)
+ * Spec: docs/contrib/gotchas.md (color emoji freeze the Linux app)
  */
 export function SwissFlag() {
   return (

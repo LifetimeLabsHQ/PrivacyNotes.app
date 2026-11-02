@@ -4,7 +4,7 @@
 //! biometric for every use of its private half, seals a random secret to the
 //! public half, and opens it through `BiometricPrompt.CryptoObject`. This crate
 //! only carries the three calls to it and maps a rejection onto its code.
-//! Spec: ops/docs/plans/biometric-key-binding.md (section 8.2)
+//! Spec: docs/internal/plans/biometric-key-binding.md (section 8.2)
 
 use serde::{Deserialize, Serialize};
 use tauri::{

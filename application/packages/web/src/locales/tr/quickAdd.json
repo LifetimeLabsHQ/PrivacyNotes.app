@@ -39,6 +39,16 @@
     "ordinal": "., 'i, 'ı, 'u, 'ü, 'si, 'sı, 'inde, 'ında, 'unda, 'ünde, 'sinde, 'sında, 'de, 'da, 'te, 'ta",
     "work": "iş",
     "personal": "kişisel, ev",
-    "in": "içinde, sonra"
+    "in": "içinde, sonra",
+    "weekend": "hafta sonu, haftasonu",
+    "endOfMonth": "ay sonu, aysonu, ay sonunda, ayın sonu, ayın sonunda",
+    "morning": "sabah, sabahı",
+    "afternoon": "öğleden sonra, öğlenden sonra, öğleden sonrası",
+    "evening": "akşam, akşamı",
+    "biweekly": "on beş günde bir, onbeş günde bir, 15 günde bir",
+    "quarterly": "üç aylık, üç ayda bir, 3 ayda bir, çeyreklik",
+    "halfPast": "half past",
+    "numbers": "bir, iki, üç, dört, beş, altı, yedi, sekiz, dokuz, on, onbir, oniki",
+    "a": "bir"
   }
 }

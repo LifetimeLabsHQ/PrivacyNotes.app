@@ -18,6 +18,7 @@ export function ShareMenu({
   exportSingleHtml,
   printNote,
   handleBurnShare,
+  exportDrawing,
   onCopyShortcut,
   onCopyNoteLink,
 }: {
@@ -36,6 +37,8 @@ export function ShareMenu({
   exportSingleHtml: (n: LocalNote) => Promise<void> | void;
   printNote: (n: LocalNote, titleOnly?: boolean) => Promise<void> | void;
   handleBurnShare: (n: LocalNote) => Promise<void> | void;
+  /** A drawing's two ways out, in place of the text formats and burn. */
+  exportDrawing: (n: LocalNote, format: 'excalidraw' | 'png') => Promise<void> | void;
   /** Copy the shortcut that opens this item from other apps. */
   onCopyShortcut: (n: LocalNote) => void;
   /** Copy the note-link to this item, for a link inside the notes; null
@@ -52,7 +55,7 @@ export function ShareMenu({
   // the shell - the demo bar, or an announcement - and the panel then opened
   // ON TOP of the button that had just been pressed. The hook measures the
   // trigger, opens below it, and flips above when there is no room.
-  // Spec: ops/docs/archive/ui-patterns.md (section 15)
+  // Spec: docs/internal/design/ui-patterns.md (section 15)
   const pos = usePopoverPosition(open, triggerHidden ? fallbackAnchorRef : anchorRef, panelRef, { align: 'end' });
 
   // Close on an outside pointerdown, ignoring the trigger so it can toggle
@@ -94,8 +97,8 @@ export function ShareMenu({
             }`}
           >
           {/* 18px in a 32px box, the size every button in the editor header
-              wears. Spec: ops/docs/archive/ui-patterns.md (section 80) */}
-          <Export size={18} />
+              wears. Spec: docs/internal/design/ui-patterns.md (section 80) */}
+          <Export />
           </button>
         </HoverLabel>
       </div>
@@ -105,7 +108,7 @@ export function ShareMenu({
             ref={panelRef}
             role="dialog"
             aria-label={t('share.ariaLabel')}
-            className="fixed z-50 w-72 max-h-[calc(100vh-16px)] overflow-y-auto rounded-lg border border-divider bg-surface-2 shadow-lg text-sm py-1"
+            className="fixed z-50 w-72 max-h-[calc(100vh-16px)] overflow-y-auto rounded-lg border border-divider bg-surface-2 shadow-lg text-body py-1"
             style={{
               top: pos?.top ?? 0,
               left: pos?.left ?? 0,
@@ -119,7 +122,7 @@ export function ShareMenu({
                   destructive and never decoration. */}
               {/* The shortcut first: it is the one row here that shares
                   nothing, so its line says who can open it.
-                  Spec: ops/docs/archive/note-shortcuts.md (4) */}
+                  Spec: docs/internal/specs/note-shortcuts.md (4) */}
               {isShortcutId(selected.id) && (
                 <button
                   onClick={() => {
@@ -128,12 +131,12 @@ export function ShareMenu({
                   }}
                   className="w-full text-start px-3 py-2.5 flex items-start gap-2.5 hover:bg-surface-1 transition"
                 >
-                  <span className="shrink-0 mt-0.5 text-accent"><LinkSimple size={18} aria-hidden="true" /></span>
+                  <span className="shrink-0 mt-0.5 text-accent"><LinkSimple aria-hidden="true" /></span>
                   <span className="min-w-0">
                     <span className="block font-medium text-pn">
                       {t(shortcutNoun(selected.type) === 'item' ? 'shell:shortcut.copyItem' : 'shell:shortcut.copyNote')}
                     </span>
-                    <span className="block text-[12px] text-pn-muted">
+                    <span className="block text-small text-pn-muted">
                       {t(shortcutNoun(selected.type) === 'item' ? 'shell:shortcut.descItem' : 'shell:shortcut.descNote')}
                     </span>
                   </span>
@@ -147,13 +150,55 @@ export function ShareMenu({
                   }}
                   className="w-full text-start px-3 py-2.5 flex items-start gap-2.5 hover:bg-surface-1 transition"
                 >
-                  <span className="shrink-0 mt-0.5 text-accent"><BracketsSquare size={18} aria-hidden="true" /></span>
+                  <span className="shrink-0 mt-0.5 text-accent"><BracketsSquare aria-hidden="true" /></span>
                   <span className="min-w-0">
                     <span className="block font-medium text-pn">{t('shell:shortcut.copyNoteLink')}</span>
-                    <span className="block text-[12px] text-pn-muted">{t('shell:shortcut.descNoteLink')}</span>
+                    <span className="block text-small text-pn-muted">{t('shell:shortcut.descNoteLink')}</span>
                   </span>
                 </button>
               )}
+              {/* A drawing has no text to print or burn: it leaves as a file
+                  Excalidraw opens, or as a picture.
+                  Spec: docs/internal/specs/drawing.md (section 7, Export) */}
+              {selected.type === 'drawing' ? (
+              <>
+              <button
+                onClick={() => {
+                  onClose();
+                  void exportDrawing(selected, 'excalidraw');
+                }}
+                className="w-full text-start px-3 py-2.5 flex items-start gap-2.5 hover:bg-surface-1 transition"
+              >
+                <span className="shrink-0 mt-0.5 text-accent"><EXPORT_GLYPHS.drawing aria-hidden="true" /></span>
+                <span className="min-w-0">
+                  <span className="block font-medium text-pn">
+                    {t('share.drawingFileTitle')}
+                  </span>
+                  <span className="block text-small text-pn-muted">
+                    {t('share.drawingFileDesc')}
+                  </span>
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  onClose();
+                  void exportDrawing(selected, 'png');
+                }}
+                className="w-full text-start px-3 py-2.5 flex items-start gap-2.5 hover:bg-surface-1 transition"
+              >
+                <span className="shrink-0 mt-0.5 text-accent"><EXPORT_GLYPHS.png aria-hidden="true" /></span>
+                <span className="min-w-0">
+                  <span className="block font-medium text-pn">
+                    {t('share.drawingPngTitle')}
+                  </span>
+                  <span className="block text-small text-pn-muted">
+                    {t('share.drawingPngDesc')}
+                  </span>
+                </span>
+              </button>
+              </>
+              ) : (
+              <>
               <button
                 onClick={() => {
                   onClose();
@@ -161,12 +206,12 @@ export function ShareMenu({
                 }}
                 className="w-full text-start px-3 py-2.5 flex items-start gap-2.5 hover:bg-surface-1 transition"
               >
-                <span className="shrink-0 mt-0.5 text-accent"><EXPORT_GLYPHS.markdown size={18} aria-hidden="true" /></span>
+                <span className="shrink-0 mt-0.5 text-accent"><EXPORT_GLYPHS.markdown aria-hidden="true" /></span>
                 <span className="min-w-0">
                   <span className="block font-medium text-pn">
                     {t('share.currentMdTitle')}
                   </span>
-                  <span className="block text-[12px] text-pn-muted">
+                  <span className="block text-small text-pn-muted">
                     {t('share.currentMdDesc')}
                   </span>
                 </span>
@@ -178,12 +223,12 @@ export function ShareMenu({
                 }}
                 className="w-full text-start px-3 py-2.5 flex items-start gap-2.5 hover:bg-surface-1 transition"
               >
-                <span className="shrink-0 mt-0.5 text-accent"><EXPORT_GLYPHS.html size={18} aria-hidden="true" /></span>
+                <span className="shrink-0 mt-0.5 text-accent"><EXPORT_GLYPHS.html aria-hidden="true" /></span>
                 <span className="min-w-0">
                   <span className="block font-medium text-pn">
                     {t('share.currentHtmlTitle')}
                   </span>
-                  <span className="block text-[12px] text-pn-muted">
+                  <span className="block text-small text-pn-muted">
                     {t('share.currentHtmlDesc')}
                   </span>
                 </span>
@@ -195,12 +240,12 @@ export function ShareMenu({
                 }}
                 className="w-full text-start px-3 py-2.5 flex items-start gap-2.5 hover:bg-surface-1 transition"
               >
-                <span className="shrink-0 mt-0.5 text-accent"><EXPORT_GLYPHS.print size={18} aria-hidden="true" /></span>
+                <span className="shrink-0 mt-0.5 text-accent"><EXPORT_GLYPHS.print aria-hidden="true" /></span>
                 <span className="min-w-0">
                   <span className="block font-medium text-pn">
                     {t('share.printTitle')}
                   </span>
-                  <span className="block text-[12px] text-pn-muted">
+                  <span className="block text-small text-pn-muted">
                     {t('share.printDesc')}
                   </span>
                 </span>
@@ -217,7 +262,7 @@ export function ShareMenu({
                   <span className="block font-medium text-pn">
                     {t('share.printTextTitle')}
                   </span>
-                  <span className="block text-[12px] text-pn-muted">
+                  <span className="block text-small text-pn-muted">
                     {t('share.printTextDesc')}
                   </span>
                 </span>
@@ -229,16 +274,18 @@ export function ShareMenu({
                 }}
                 className="w-full text-start px-3 py-2.5 flex items-start gap-2.5 hover:bg-surface-1 transition"
               >
-                <span className="shrink-0 mt-0.5 text-orange-800 dark:text-orange-400"><EXPORT_GLYPHS.burn size={18} aria-hidden="true" /></span>
+                <span className="shrink-0 mt-0.5 text-orange-800 dark:text-orange-400"><EXPORT_GLYPHS.burn aria-hidden="true" /></span>
                 <span className="min-w-0">
                   <span className="block font-medium text-orange-800 dark:text-orange-400">
                     {t('share.burnTitle')}
                   </span>
-                  <span className="block text-[12px] text-pn-muted">
+                  <span className="block text-small text-pn-muted">
                     {t('share.burnDesc')}
                   </span>
                 </span>
               </button>
+              </>
+              )}
           </div>
         ),
         document.body,

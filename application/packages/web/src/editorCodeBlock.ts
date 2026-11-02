@@ -1,10 +1,10 @@
 import i18n from './i18n';
 import type { Editor as TipTapEditor } from '@tiptap/react';
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
-import { createLowlight, common } from 'lowlight';
-import { Extension, textblockTypeInputRule, type NodeViewRendererProps } from '@tiptap/core';
-import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
-import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
+import { createCodeLowlight, loadExtraGrammars } from './codeGrammars';
+import { Extension, InputRule, type NodeViewRendererProps } from '@tiptap/core';
+import type { Node as ProseMirrorNode, NodeType } from '@tiptap/pm/model';
+import { Plugin, PluginKey, TextSelection, type EditorState } from '@tiptap/pm/state';
 import { getCodeWrap, setCodeWrap, subscribeCodeWrap } from './codeWrap';
 import { codeLanguageLabel, lastCodeLanguage, openCodeLanguageMenu, rememberCodeLanguage } from './codeLanguages';
 import { TIP_PILL, positionClasses } from './HoverLabel';
@@ -16,7 +16,7 @@ import { TIP_PILL, positionClasses } from './HoverLabel';
  * and friends leaking into pasted CLI snippets. Normal prose selections fall
  * through to the default markdown serializer.
  *
- * Spec: ops/docs/design-decisions.md (code-block plain-text copy)
+ * Spec: docs/internal/design-decisions.md (code-block plain-text copy)
  */
 export const CodeBlockPlainCopy = Extension.create({
   name: 'codeBlockPlainCopy',
@@ -65,7 +65,7 @@ export const CodeBlockPlainCopy = Extension.create({
  * (codeWrap.ts), so every block follows; the label opens the language menu
  * (codeLanguages.ts).
  *
- * Spec: ops/docs/design-decisions.md (code blocks wrap by default)
+ * Spec: docs/internal/design-decisions.md (code blocks wrap by default)
  *
  * Base is CodeBlockLowlight (same node name `codeBlock`, so markdown
  * round-trip and toggleCodeBlockSmart are unchanged): its ProseMirror
@@ -73,17 +73,18 @@ export const CodeBlockPlainCopy = Extension.create({
  * node view's contentDOM receives like any other decoration. Token
  * colors live in index.css (one bright-on-dark palette - the code panel
  * is dark in both themes). `common` registers the ~37 stock hljs
- * grammars; the fence's language string picks one, anything unknown
- * falls back to plain text.
+ * grammars at once and the popular ones it leaves out after boot
+ * (codeGrammars.ts); the fence's language string picks one, anything
+ * unknown falls back to plain text.
  */
-export const lowlight = createLowlight(common);
+export const lowlight = createCodeLowlight();
 
 /**
  * The fence language of a copy box: a code block drawn as a light box in
  * the note's own font, with the code block's wrap and copy buttons in a
  * light look and no language label. Stored as ```copy, so another Markdown app shows a plain
  * code block. Registered as plain text, or lowlight would guess a language
- * and colour it. Spec: ops/docs/archive/spoiler-and-copy.md
+ * and colour it. Spec: docs/internal/specs/spoiler-and-copy.md
  */
 export const COPY_BOX_LANGUAGE = 'copy';
 lowlight.registerAlias({ plaintext: [COPY_BOX_LANGUAGE] });
@@ -109,7 +110,7 @@ const CARET_ICON =
   '<path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"/></svg>';
 
 const CODE_TOOL_BTN =
-  'inline-flex items-center justify-center h-5 rounded text-xs transition ' +
+  'inline-flex items-center justify-center h-5 rounded text-small transition ' +
   '[@media(hover:none)]:h-7';
 
 /**
@@ -120,7 +121,7 @@ const CODE_TOOL_BTN =
  * a language and nothing else (the same limit codeWrap.ts records), so every
  * open starts folded. A cursor or a find match that lands in the hidden part
  * opens the block, so nothing is typed or found out of sight.
- * Spec: ops/docs/design-decisions.md (long code blocks fold)
+ * Spec: docs/internal/design-decisions.md (long code blocks fold)
  */
 const FOLD_MIN_LINES = 30;
 const FOLD_SHOWN_LINES = 20;
@@ -128,11 +129,63 @@ const FOLD_SHOWN_LINES = 20;
 /** Each folded node view's "open it" hook, keyed by its pre. */
 const unfolders = new WeakMap<Node, () => void>();
 
+/**
+ * prosemirror-view's own test for Chrome on Android, where it ignores the
+ * Enter keydown and reads the DOM change the keyboard makes instead. In a
+ * code block that change is a second `pre` cloned from ours, which it does
+ * not read as a new block, so the Enter was dropped (GitHub #637).
+ */
+const ANDROID = typeof navigator !== 'undefined' && /Android \d/.test(navigator.userAgent);
+
+/**
+ * While the cursor is in code, the phone keyboard stops capitalizing,
+ * correcting and suggesting (GitHub #638). Off switches only, so the
+ * spell check rule holds. Chrome on Android hands new flags to an open
+ * keyboard only when it restarts it, and a changed `enterkeyhint` is what
+ * restarts it; without it the flags waited for the next focus.
+ * Spec: docs/internal/design-decisions.md (Spell check is the engine's, not ours)
+ */
+const CODE_KEYBOARD = { autocorrect: 'off', autocapitalize: 'off', spellcheck: 'false', enterkeyhint: 'enter' };
+
+function cursorInCode(state: EditorState, codeBlock: NodeType): boolean {
+  const { $head } = state.selection;
+  if ($head.parent.type === codeBlock) return true;
+  const code = state.schema.marks.code;
+  return !!code?.isInSet(state.storedMarks ?? $head.marks());
+}
+
 export const CodeBlockWithCopy = CodeBlockLowlight.extend({
+  // The extra grammars arrive after the editor may have painted a block that
+  // needs one. The highlight plugin repaints only on a step that touches a
+  // block, so each such block gets a markup step that changes nothing: no
+  // save (preventUpdate, and the doc stays equal), no undo entry.
+  onCreate() {
+    const editor = this.editor;
+    const type = this.type;
+    const before = new Set(lowlight.listLanguages());
+    void loadExtraGrammars(lowlight).then(() => {
+      if (editor.isDestroyed) return;
+      const tr = editor.state.tr;
+      editor.state.doc.descendants((node, pos) => {
+        const lang = node.type === type ? (node.attrs['language'] as string | null) : null;
+        if (lang && !before.has(lang) && lowlight.registered(lang)) tr.setNodeMarkup(pos, undefined, node.attrs);
+      });
+      if (tr.docChanged) editor.view.dispatch(tr.setMeta('preventUpdate', true).setMeta('addToHistory', false));
+    });
+  },
   // A fence typed without a language takes the last one picked on this device.
+  // The fence takes any info string Markdown does (c++, c#, objective-c),
+  // not only letters, and works in a list item: setNode lifts the item out
+  // of the list as the toolbar button does (GitHub #674). A backtick fence's
+  // info string cannot hold a backtick.
   addInputRules() {
-    return [/^```([a-z]+)?[\s\n]$/, /^~~~([a-z]+)?[\s\n]$/].map((find) => textblockTypeInputRule({
-      find, type: this.type, getAttributes: (match) => ({ language: match[1] || lastCodeLanguage() }),
+    const type = this.type;
+    return [/^```([^\s`]+)?[\s\n]$/, /^~~~(\S+)?[\s\n]$/].map((find) => new InputRule({
+      find,
+      // A failed setNode returns null, and the rule then dispatches nothing,
+      // the deleted fence included.
+      handler: ({ range, match, chain }) =>
+        chain().deleteRange(range).setNode(type, { language: match[1] || lastCodeLanguage() }).run() ? undefined : null,
     }));
   },
   addKeyboardShortcuts() {
@@ -187,6 +240,25 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
             lastHit = hitPos;
           },
         }),
+      }),
+      new Plugin({
+        key: new PluginKey('codeBlockKeyboard'),
+        props: {
+          attributes: (state) => (cursorInCode(state, type) ? CODE_KEYBOARD : {}),
+          handleDOMEvents: {
+            // Run the Enter key handlers before the keyboard edits the DOM,
+            // as a desktop keydown does.
+            beforeinput: (view, event) => {
+              const { inputType } = event as InputEvent;
+              if (!ANDROID || (inputType !== 'insertParagraph' && inputType !== 'insertLineBreak')) return false;
+              if (view.state.selection.$head.parent.type !== type) return false;
+              event.preventDefault();
+              const enter = Object.assign(new Event('keydown', { bubbles: true, cancelable: true }), { key: 'Enter', keyCode: 13 });
+              view.someProp('handleKeyDown', (f) => f(view, enter as KeyboardEvent));
+              return true;
+            },
+          },
+        },
       }),
     ];
   },
@@ -281,7 +353,7 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
       // An icon, not a word: a word grows in other languages and the tools
       // sit on the code's first line. The tip names it; a copy turns the
       // icon into a check and the tip into "Copied" for a moment.
-      const copyLabel = i18n.t('editor:codeBlock.copy');
+      const copyLabel = i18n.t('common:actions.copy');
       const copyBtn = document.createElement('button');
       copyBtn.type = 'button';
       copyBtn.innerHTML = COPY_ICON;
@@ -311,7 +383,7 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
         window.clearTimeout(copyReset);
         copyBtn.innerHTML = done ? CHECK_ICON : COPY_ICON;
         copyBtn.classList.toggle('pn-copied', done);
-        copyTipText.textContent = i18n.t(done ? 'editor:codeBlock.copied' : 'editor:codeBlock.copyFailed');
+        copyTipText.textContent = i18n.t(done ? 'auth:createPhrase.copied' : 'editor:codeBlock.copyFailed');
         copyTip.classList.add('pn-tip-shown');
         copyReset = window.setTimeout(() => {
           copyBtn.innerHTML = COPY_ICON;
@@ -346,7 +418,7 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
         if (language === langShown) return;
         pre.classList.toggle('pn-copybox', language === COPY_BOX_LANGUAGE);
         langShown = language;
-        const name = codeLanguageLabel(language) ?? i18n.t('editor:codeBlock.plainText');
+        const name = codeLanguageLabel(language) ?? i18n.t('settings:appearance.copyFormatPlain');
         langName.textContent = name;
         langBtn.setAttribute('aria-label', i18n.t('editor:codeBlock.language', { name }));
       };
@@ -449,7 +521,7 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
  * one textblock, and when the selection holds a block with no text form
  * (an image, a table, a callout).
  *
- * Spec: ops/docs/design-decisions.md (code-block multi-line merge, #142)
+ * Spec: docs/internal/design-decisions.md (code-block multi-line merge, #142)
  */
 export function toggleCodeBlockSmart(editor: TipTapEditor, language: string | null = null) {
   const { state } = editor;

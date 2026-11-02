@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UpdateToast } from './UpdateToast';
 import { detectPlatform } from './devices';
-import { APP_STORE_URL, RELEASES_ORIGIN } from './hosts';
+import { APP_STORE_URL, PLAY_STORE_URL, RELEASES_ORIGIN } from './hosts';
 import { knownVersionFloor, reportVersionFloor, useBelowVersionFloor } from './versionFloor';
 
 /**
@@ -26,7 +26,7 @@ import { knownVersionFloor, reportVersionFloor, useBelowVersionFloor } from './v
  * floor held yet, the first check runs at once and a failed one retries
  * within a minute, so a first launch is not left unguarded for a full poll.
  *
- * Spec: ops/docs/android-update-check.md (store builds)
+ * Spec: docs/internal/android-update-check.md (store builds)
  */
 const PLATFORM = detectPlatform();
 const IS_PLAY =
@@ -40,10 +40,8 @@ const POLICY_URL = IS_IOS
 
 // Store listing URLs. The https forms route straight into the store apps on
 // device (verified app links), so no market:// / itms-apps:// schemes needed.
-// Package id + Apple ID: ops/docs/mobile-release-status.md (app records).
-const STORE_URL = IS_IOS
-  ? APP_STORE_URL
-  : 'https://play.google.com/store/apps/details?id=app.privacynotes';
+// Package id + Apple ID: docs/internal/mobile-release-status.md (app records).
+const STORE_URL = IS_IOS ? APP_STORE_URL : PLAY_STORE_URL;
 
 // Same cadence as AndroidUpdateToast: mobile OSes freeze webview timers in
 // the background, so the visibilitychange re-check (throttled by the same

@@ -12,7 +12,7 @@
  * and a dead end the moment editing exists - and a read-only path that cannot
  * grow into the real one is a second implementation to keep working.
  *
- * Spec: ops/docs/archive/markdown-folder.md (section 5, platform matrix)
+ * Spec: docs/internal/specs/markdown-folder.md (section 5, platform matrix)
  */
 import { detectPlatform } from '../devices';
 import { SUPPORTED_EXTENSIONS, isSupportedFile } from './adapter';
@@ -385,11 +385,34 @@ async function resolveTauriAsset(
   const full = `${root}/${relPath}`;
   try {
     if (!(await fs.exists(full))) return null;
+    if (await crossesLink(fs, root, relPath)) return null;
   } catch {
     return null;
   }
   const { convertFileSrc } = await import('@tauri-apps/api/core');
   return convertFileSrc(full);
+}
+
+/**
+ * Whether a path under `root` passes through a symbolic link. The string test
+ * above refuses `..`, but a link needs no `..`: a folder holding
+ * `assets -> /somewhere` showed whatever lay there, and the asset scope's deny
+ * list sees the link's own path, not its target. `lstat` never follows the
+ * last link, so each part of the path is asked on its own, as the scan asks
+ * each entry (`isScannableFile`). Pinned by tests/markdownFolderAssetLink.test.ts.
+ */
+async function crossesLink(fs: TauriFs, root: string, relPath: string): Promise<boolean> {
+  let at = root;
+  for (const part of relPath.split(/[/\\]/).filter((p) => p && p !== '.')) {
+    at = `${at}/${part}`;
+    if (await isLink(fs, at)) return true;
+  }
+  return false;
+}
+
+/** Whether `path` itself is a symbolic link; `lstat` does not follow it. */
+async function isLink(fs: TauriFs, path: string): Promise<boolean> {
+  return (await fs.lstat(path)).isSymlink;
 }
 
 /** Where a deleted file goes. Matches what Obsidian does, so a vault shared
@@ -521,6 +544,9 @@ const writesInFlight = new Map<string, Promise<void>>();
  * rename rejects with the target untouched. A rename replaces the file rather
  * than writing into it, so the permission bits are carried across by hand,
  * and a read-only file is refused the way an overwrite would have been.
+ * A symbolic link is refused too: the rename would put a plain file where the
+ * link was and leave its target unsaved. The scan never lists a link
+ * (`isScannableFile`), so only a file opened by its path can be one.
  *
  * A file whose neighbours the scope does not cover is written in place, the
  * one write the ACL allows it. A file opened on its own is granted as that
@@ -536,6 +562,7 @@ function replaceTauriFile(
   const run = (writesInFlight.get(path) ?? Promise.resolve()).then(async () => {
     const info = await fs.stat(path).catch(() => null);
     if (info?.readonly) throw new Error(`read_only: ${path}`);
+    if (await isLink(fs, path).catch(() => false)) throw new Error(`symlink: ${path}`);
     const staging = stagingPath(path);
     const beside = await fs.exists(staging).then(() => true, () => false);
     const dest = beside ? staging : path;
@@ -616,11 +643,33 @@ async function writeTauriAsset(
 
 /* ── Backends ─────────────────────────────────────────────────────── */
 
+/** The largest file the pane opens. One 50 MB `.md`, from a folder or a
+ *  double-click, froze the desktop app and then took the webview down (external
+ *  report, 2026-10-24, bug report 34); a note nobody writes by hand is
+ *  past this, and it still opens in any other editor. */
+const TEXT_READ_MAX_BYTES = 8 * 1024 * 1024;
+
+/**
+ * A file's bytes as text, or a throw when they are not UTF-8. The lossy
+ * decode read a PNG, a zip or a UTF-16 note named `.md` as mojibake, filled
+ * the tag rail with junk from it, and the first save wrote the U+FFFD text
+ * over the original bytes (bug report 35). A file that throws here stays
+ * listed and cannot be opened, so it is never written.
+ */
+function decodeText(bytes: Uint8Array): string {
+  if (bytes.byteLength > TEXT_READ_MAX_BYTES) throw new Error('file too large to open');
+  return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+}
+
 function handleFileRef(handle: FileSystemFileHandle, location: string): OpenedFileRef {
   return {
     name: handle.name,
     location,
-    read: async () => (await handle.getFile()).text(),
+    read: async () => {
+      const file = await handle.getFile();
+      if (file.size > TEXT_READ_MAX_BYTES) throw new Error('file too large to open');
+      return decodeText(new Uint8Array(await file.arrayBuffer()));
+    },
     write: async (text) => {
       // `createWritable` writes to a swap file and swaps it in on close, so a
       // crash mid-write leaves the original intact rather than truncated.
@@ -644,7 +693,10 @@ function tauriFileRef(fs: TauriFs, path: string, location: string): OpenedFileRe
   return {
     name,
     location,
-    read: () => fs.readTextFile(path),
+    read: async () => {
+      if ((await fs.stat(path)).size > TEXT_READ_MAX_BYTES) throw new Error('file too large to open');
+      return decodeText(await fs.readFile(path));
+    },
     write: (text) => replaceTauriFile(fs, path, text),
     stamp: async () => {
       try {

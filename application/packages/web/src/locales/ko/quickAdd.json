@@ -39,6 +39,16 @@
     "ordinal": "일, 번째, .",
     "work": "업무, 회사, 직장, work",
     "personal": "개인, 집, personal",
-    "in": "후"
+    "in": "후",
+    "weekend": "주말",
+    "endOfMonth": "월말, 말일, 이달 말",
+    "morning": "아침, 오전",
+    "afternoon": "오후",
+    "evening": "저녁",
+    "biweekly": "격주로, 이주마다",
+    "quarterly": "분기마다, 분기별, 매분기",
+    "halfPast": "half past",
+    "numbers": "하나, 두, 세, 네, 다섯, 여섯, 일곱, 여덟, 아홉, 열, 열한, 열두",
+    "a": "한"
   }
 }

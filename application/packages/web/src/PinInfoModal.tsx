@@ -7,8 +7,8 @@ type Props = { onClose: () => void };
 export function PinInfoModal({ onClose }: Props) {
   const { t } = useTranslation('security');
   return createPortal(
-    <Modal onClose={onClose} title={t('pinInfo.title')} className="max-w-sm p-6 space-y-3">
-        <p className="text-sm text-pn-muted leading-relaxed">
+    <Modal onClose={onClose} title={t('common:cardForm.requirePin')} className="max-w-sm p-6 space-y-3">
+        <p className="text-body text-pn-muted leading-relaxed">
           {t('pinInfo.body')}
         </p>
     </Modal>,

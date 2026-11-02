@@ -25,7 +25,7 @@ export function QrScannerModal({
   // the live camera path errored out).
   const qrScannerModRef = useRef<any>(null);
   // Native Linux (WebKitGTK) never grants getUserMedia, so skip the camera
-  // entirely and open straight into the upload-only path. See ops/docs/gotchas.md.
+  // entirely and open straight into the upload-only path. See docs/contrib/gotchas.md.
   const linuxNative = isLinuxNative();
   const [status, setStatus] = useState<
     'loading' | 'running' | 'error' | 'uploadOnly'
@@ -199,52 +199,52 @@ export function QrScannerModal({
             muted
           />
           {status === 'loading' && (
-            <div className="absolute inset-0 flex items-center justify-center text-white text-xs">
+            <div className="absolute inset-0 flex items-center justify-center text-white text-small">
               {t('qrScanner.startingCamera')}
             </div>
           )}
           {status === 'error' && (
-            <div /* theme-ok: the camera well is dark in every theme */ className="absolute inset-0 bg-neutral-900 flex flex-col items-center justify-center text-center p-6 text-sm text-neutral-200">
+            <div /* theme-ok: the camera well is dark in every theme */ className="absolute inset-0 bg-neutral-900 flex flex-col items-center justify-center text-center p-6 text-body text-neutral-200">
               <div className="mb-2 text-red-400 font-medium">
                 {t('qrScanner.cameraUnavailable')}
               </div>
-              <div /* theme-ok: on the dark camera well */ className="text-xs text-neutral-400">{error}</div>
+              <div /* theme-ok: on the dark camera well */ className="text-small text-neutral-400">{error}</div>
             </div>
           )}
           {status === 'uploadOnly' && (
-            <div /* theme-ok: the camera well is dark in every theme */ className="absolute inset-0 bg-neutral-900 flex flex-col items-center justify-center text-center p-6 text-sm text-neutral-200">
+            <div /* theme-ok: the camera well is dark in every theme */ className="absolute inset-0 bg-neutral-900 flex flex-col items-center justify-center text-center p-6 text-body text-neutral-200">
               <div className="mb-2 font-medium">
                 {t('qrScanner.uploadOnlyTitle')}
               </div>
-              <div /* theme-ok: on the dark camera well */ className="text-xs text-neutral-400">
+              <div /* theme-ok: on the dark camera well */ className="text-small text-neutral-400">
                 {t('qrScanner.uploadOnlyBody')}
               </div>
             </div>
           )}
           {scanningImage && (
-            <div className="absolute inset-0 bg-black/70 flex items-center justify-center text-white text-xs">
+            <div className="absolute inset-0 bg-black/70 flex items-center justify-center text-white text-small">
               {t('qrScanner.readingImage')}
             </div>
           )}
         </div>
 
         {hint && (
-          <div className="px-5 py-2 text-xs text-warning bg-amber-50 dark:bg-amber-950/30 border-t border-amber-200/50 dark:border-amber-900/40">
+          <div className="px-5 py-2 text-small text-warning bg-amber-50 dark:bg-amber-950/30 border-t border-amber-200/50 dark:border-amber-900/40">
             {hint}
           </div>
         )}
 
         <div className="px-5 py-3 border-t border-divider flex items-center justify-between gap-3">
-          <div className="text-xs text-pn-muted leading-relaxed">
+          <div className="text-small text-pn-muted leading-relaxed">
             {t('qrScanner.uploadHint')}
           </div>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={scanningImage}
-            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded border border-divider hover:bg-surface-1 disabled:opacity-50 transition"
+            className="shrink-0 inline-flex items-center gap-1.5 text-small font-medium px-3 py-1.5 rounded border border-divider hover:bg-surface-1 disabled:opacity-50 transition"
           >
-            <Upload size={14} />
+            <Upload />
             {t('qrScanner.uploadImage')}
           </button>
           <input
@@ -259,7 +259,7 @@ export function QrScannerModal({
           />
         </div>
 
-        <div className="px-5 py-3 border-t border-divider text-xs text-pn-muted leading-relaxed">
+        <div className="px-5 py-3 border-t border-divider text-small text-pn-muted leading-relaxed">
           <Trans
             i18nKey="auth:qrScanner.footer"
             components={{ brand: <Brand /> }}

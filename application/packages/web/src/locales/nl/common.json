@@ -26,14 +26,11 @@
     "noResults": "Geen resultaten"
   },
   "deleteNote": {
-    "title": "Definitief verwijderen",
     "confirm": "Definitief verwijderen",
-    "untitled": "Naamloos",
     "body": "<highlight>“{{title}}”</highlight> definitief verwijderen? Dit kan niet ongedaan worden gemaakt."
   },
   "emptyTrash": {
     "title": "Prullenbak legen",
-    "confirm": "Definitief verwijderen",
     "body_one": "<highlight>{{count}} notitie</highlight> definitief verwijderen? Dit kan niet ongedaan worden gemaakt.",
     "body_other": "<highlight>{{count}} notities</highlight> definitief verwijderen? Dit kan niet ongedaan worden gemaakt."
   },
@@ -61,7 +58,6 @@
   },
   "palette": {
     "label": "Opdrachten",
-    "open": "Opdrachten",
     "empty": "Geen overeenkomende opdracht",
     "groups": {
       "features": "Functies",
@@ -86,7 +82,7 @@
       "insertDate": "Datum invoegen",
       "insertDateTime": "Datum en tijd invoegen",
       "clearFilters": "Filters wissen",
-      "moveToTrash": "Notitie naar prullenbak",
+      "moveToTrash": "Notitie verwijderen",
       "closeTab": "Tabblad of notitie sluiten",
       "nextTab": "Volgend tabblad",
       "previousTab": "Vorig tabblad",
@@ -109,10 +105,8 @@
     "move": "navigeren",
     "open": "openen",
     "openInTab": "openen in een tabblad",
-    "openLink": "Openen",
     "edit": "bewerken",
     "close": "sluiten",
-    "tags": "Tags",
     "folders": "Mappen",
     "tagItems_one": "{{count}} item",
     "tagItems_other": "{{count}} items",
@@ -175,17 +169,14 @@
     "downloadPublicKey": "Openbare sleutel downloaden",
     "downloadPrivateKey": "Privésleutel downloaden",
     "downloadHint": "Verplaats de gedownloade sleutel naar ~/.ssh en voer er chmod 600 op uit, anders weigert ssh hem.",
+    "downloadHintDesktop": "PrivacyNotes slaat niet op in ~/.ssh, om de sleutels daar veilig te houden. Sla de sleutel ergens anders op, verplaats hem naar ~/.ssh en voer er chmod 600 op uit, anders weigert ssh hem.",
+    "downloadHintWindows": "PrivacyNotes slaat niet op in je map .ssh, om de sleutels daar veilig te houden. Sla de sleutel ergens anders op en verplaats hem naar %USERPROFILE%\\.ssh. Windows heeft geen chmod nodig.",
     "downloadFailed": "Het sleutelbestand kon niet worden opgeslagen. Controleer het bestand en probeer het opnieuw.",
     "passphrase": "Wachtwoordzin",
     "passphrasePlaceholder": "Wachtwoordzin van de sleutel (indien aanwezig)",
     "show": "Tonen",
     "hide": "Verbergen",
-    "copyPassphrase": "Wachtwoordzin kopiëren",
-    "notes": "Notities",
-    "notesPlaceholder": "Extra notities (optioneel)",
-    "requirePin": "PIN vereisen om te bekijken",
-    "whatDoesThisDo": "Wat doet dit?",
-    "setUpPinFirst": "Stel eerst een PIN in bij Beveiliging."
+    "copyPassphrase": "Wachtwoordzin kopiëren"
   },
   "tagInput": {
     "placeholder": "Tags toevoegen… scheiden met komma, # of enter",
@@ -257,7 +248,6 @@
       "de kluis gaat stilletjes open",
       "lokaal ontsleuteld. wereldwijd genegeerd",
       "we ontsleutelen alsof het niemand wat aangaat",
-      "lokaal geproduceerde leesbare tekst",
       "gedachten worden onleesbare soep",
       "weer een versleuteld meesterwerk op komst",
       "orde scheppen in versleutelde chaos",
@@ -281,17 +271,14 @@
     "changesSome_other": "{{count}} van deze notities hebben niet-geback-upte wijzigingen die verloren zouden gaan."
   },
   "ninja": {
-    "recent": "Recent geopend",
     "topHit": "Beste overeenkomst",
     "trashEmpty": "De prullenbak is leeg",
     "allThemes": "Alle thema's",
     "features": {
       "stats": {
-        "label": "Statistieken",
         "detail": "Je schrijven, reeksen en trackers door de tijd"
       },
       "trackers": {
-        "label": "Trackers",
         "detail": "Stemming, gewoonten, factoren en medicatie"
       },
       "medication": {
@@ -311,7 +298,6 @@
         "detail": "Een sterk wachtwoord of een wachtwoordzin, klaar om te kopiëren"
       },
       "themes": {
-        "label": "Thema's",
         "detail": "Kleurthema's voor licht en donker"
       }
     },
@@ -322,7 +308,6 @@
     "commands": {
       "syncResume": "Synchronisatie hervatten",
       "changelog": "Wat is er nieuw",
-      "help": "Help",
       "themesPage": "Communitythema's",
       "website": "Website van PrivacyNotes"
     },

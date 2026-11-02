@@ -44,7 +44,7 @@ export const LANGUAGE_META: Record<string, { native: string }> = {
   // Script-based, never region-based: this catalog serves Taiwan, Hong Kong and
   // Macau, so the label says the script and never "Taiwan" (it would contradict
   // the zh-HK/zh-MO fallback). The flag is the ROC flag as an eyes-open
-  // compromise; see ops/docs/i18n-cjk-plan.md section 4.
+  // compromise; see docs/internal/specs/i18n-cjk-plan.md section 4.
   'zh-TW': { native: '繁體中文' },
   ca: { native: 'Català' },
   cs: { native: 'Čeština' },

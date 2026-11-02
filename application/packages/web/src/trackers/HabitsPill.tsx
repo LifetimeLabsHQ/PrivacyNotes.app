@@ -13,7 +13,7 @@ import { Gear } from '../icons';
  * open while the rows are answered; the pass moves on with Next, as it does
  * for medications. The ids are fixed and the names come from the catalog,
  * so the statistics read each question as its own yes or no tracker.
- * Spec: ops/docs/plans/mood-tracking-landscape.md (proposal 1)
+ * Spec: docs/internal/plans/mood-tracking-landscape.md (proposal 1)
  */
 export function HabitsPill({
   value,
@@ -54,8 +54,8 @@ export function HabitsPill({
   };
 
   const options = [
-    { key: 'yes', label: t('habits.yes') },
-    { key: 'no', label: t('habits.no') },
+    { key: 'yes', label: t('trackers:custom.yes') },
+    { key: 'no', label: t('trackers:custom.no') },
   ] as const;
 
   return (
@@ -74,20 +74,20 @@ export function HabitsPill({
           <button
             type="button"
             onClick={onChangeQuestions}
-            className="-mt-1 mb-1 self-start inline-flex items-center gap-1.5 text-[12px] font-medium text-accent hover:underline"
+            className="-mt-1 mb-1 self-start inline-flex items-center gap-1.5 text-small font-medium text-accent hover:underline"
           >
-            <Gear size={14} aria-hidden="true" />
+            <Gear aria-hidden="true" />
             {t('habits.changeQuestions')}
           </button>
         )}
         {asked.length === 0 && (
-          <p className="text-[11px] text-pn-muted">{t('habits.empty')}</p>
+          <p className="text-meta text-pn-muted">{t('habits.empty')}</p>
         )}
         {asked.map((q) => {
           const a = answers[q.id];
           return (
             <div key={q.id} className="flex items-center justify-between gap-3 py-2 border-b border-divider last:border-b-0">
-              <span className="min-w-0 flex-1 break-words text-[13px] text-pn">{q.question}</span>
+              <span className="min-w-0 flex-1 break-words text-compact text-pn">{q.question}</span>
               <Segmented
                 ariaLabel={q.question}
                 options={options}

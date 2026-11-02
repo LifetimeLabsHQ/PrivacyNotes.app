@@ -13,7 +13,7 @@ Todas começam no mesmo lugar: **Configurações > Import & Export**.
 
 | Você tem | Chega como | Vem junto |
 | --- | --- | --- |
-| Notas de outro aplicativo | Notas | Tags, pastas, links entre notas, anexos |
+| Notas de outro aplicativo | Notas | Etiquetas, pastas, links entre notas, anexos |
 | Uma exportação do Apple Journal | Entradas de diário | Fotos, vídeos, memorandos de voz, lugares |
 | Favoritos do navegador | Favoritos | Títulos e ícones dos sites |
 | Uma exportação de senhas | Itens do cofre | Logins, cartões, chaves, códigos 2FA |

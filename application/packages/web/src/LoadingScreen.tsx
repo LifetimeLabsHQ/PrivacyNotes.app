@@ -47,7 +47,7 @@ export function TypewriterLine({ text }: { text: string }) {
   }, [len, text]);
 
   return (
-    <div className="font-mono text-sm text-pn-muted select-none">
+    <div className="font-mono text-body text-pn-muted select-none">
       <span>{text.slice(0, len)}</span>
       <span
         className="inline-block w-[0.5ch] ms-[1px] -mb-[2px] align-baseline bg-pn-muted animate-pulse"
@@ -78,10 +78,12 @@ const APP_LOOK: TypewriterLook = {
  * cadence for a person typing (the lock screen, owner 2026-10-22); the
  * loading screen keeps the machine.
  */
-export function TypewriterRotation({ running = true, paused = false, human = false, loading = false }: {
+export function TypewriterRotation({ running = true, paused = false, human = false, once = false, loading = false }: {
   running?: boolean;
   paused?: boolean;
   human?: boolean;
+  /** Every line one time, then the last one stays (the lock screen). */
+  once?: boolean;
   /** Also the lines about loading, opening or decrypting
    *  (`loading.loadingOnly`), which only the loading screen can say truthfully;
    *  the lock screen leaves them out. */
@@ -105,6 +107,7 @@ export function TypewriterRotation({ running = true, paused = false, human = fal
       human,
       paused,
       running,
+      once,
     });
     return () => {
       engine.current?.destroy();
@@ -115,7 +118,7 @@ export function TypewriterRotation({ running = true, paused = false, human = fal
   useEffect(() => { engine.current?.setPaused(paused); }, [paused]);
   useEffect(() => { engine.current?.setRunning(running); }, [running]);
 
-  return <div ref={host} className="font-mono text-sm text-pn-muted select-none" />;
+  return <div ref={host} className="font-mono text-body text-pn-muted select-none" />;
 }
 
 export function LoadingScreen({ inline = false }: { inline?: boolean } = {}) {

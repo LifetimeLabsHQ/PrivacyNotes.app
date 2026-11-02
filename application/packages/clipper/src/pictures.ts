@@ -5,7 +5,7 @@
  * A clip never keeps a remote picture that loads when the note opens. Each
  * token becomes either a stored picture (`pn:img/<uuid>`) or a plain text
  * link to the original address, which nothing loads.
- * Spec: ops/docs/archive/web-clipper-stage1.md (section 3.3)
+ * Spec: docs/internal/specs/web-clipper-stage1.md (section 3.3)
  */
 import { IMAGE_TOKEN_SCHEME, escapeAlt, type ClipImage } from './markdown';
 

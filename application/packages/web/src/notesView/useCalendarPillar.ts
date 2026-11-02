@@ -26,7 +26,7 @@ function readMode(): CalendarMode {
  * none while another item is selected: the quick switcher and a note-link
  * select an item without `openItem`, and a Delete or a schedule edit there
  * must never act at the day of the item opened before.
- * Spec: ops/docs/archive/calendar-pillar-spec.md (step 3)
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (step 3)
  */
 export function useCalendarPillar({ view, selectedId, setSelectedId, selectView }: {
   view: View;

@@ -52,7 +52,7 @@ export const PasscodeInput = forwardRef<PinInputHandle, Props>(function Passcode
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const textSize = compact ? 'text-base' : 'text-lg';
+  const textSize = compact ? 'text-title' : 'text-heading';
 
   return (
     // rtl-ok: the masked text has no reading direction, and the bullets must sit where the field draws its text
@@ -78,7 +78,7 @@ export const PasscodeInput = forwardRef<PinInputHandle, Props>(function Passcode
         enterKeyHint="go"
         disabled={disabled}
         style={mask ? HIDDEN_TEXT : undefined}
-        aria-label={ariaLabel ?? t('passcodeInput.ariaLabel')}
+        aria-label={ariaLabel ?? t('security:pinTab.kindPasscode')}
         className={`peer w-full rounded-md bg-track text-pn border border-divider focus:border-accent dark:focus:border-accent font-mono focus:outline-none disabled:cursor-not-allowed ps-3 pe-11 ${compact ? 'h-12' : 'h-14'} ${textSize}`}
       />
       {mask && (
@@ -102,7 +102,7 @@ export const PasscodeInput = forwardRef<PinInputHandle, Props>(function Passcode
         title={shown ? t('passcodeInput.hide') : t('passcodeInput.show')}
         className="absolute inset-y-0 end-0 w-11 flex items-center justify-center rounded-e-md text-pn-muted hover:text-pn focus:outline-none focus-visible:text-accent disabled:cursor-not-allowed"
       >
-        {shown ? <EyeSlash size={18} /> : <Eye size={18} />}
+        {shown ? <EyeSlash /> : <Eye />}
       </button>
     </div>
   );

@@ -7,7 +7,7 @@
  * encrypted store, so no later change can leak content across the boundary by
  * forgetting a filter.
  *
- * Spec: ops/docs/archive/markdown-folder.md (note-links never cross the boundary; a title must not leak)
+ * Spec: docs/internal/specs/markdown-folder.md (note-links never cross the boundary; a title must not leak)
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -106,7 +106,7 @@ export function MarkdownListPane({
    *  same pair `NotesList` uses. */
   viewMode: 'list' | 'grid';
   /** Open the reference card behind the `?`. Owned by the shell because the
-   *  modal is the shell's to render. Spec: ops/docs/archive/markdown-folder.md (12) */
+   *  modal is the shell's to render. Spec: docs/internal/specs/markdown-folder.md (12) */
   onExplain: () => void;
   /** A remembered folder awaiting the click that re-grants its permission. */
   reopenName: string | null;
@@ -187,7 +187,7 @@ export function MarkdownListPane({
    * the picker anyway - "Outside our vault / No sync, encryption or backup"
    * sits two inches above the button - and the full card is one click away
    * on the `?`.
-   * Spec: ops/docs/archive/markdown-folder.md (section 12)
+   * Spec: docs/internal/specs/markdown-folder.md (section 12)
    */
   async function handleOpenFolder() {
     setError(null);
@@ -304,7 +304,7 @@ export function MarkdownListPane({
     const pathItems: ContextMenuItem[] = hasRealPath() ? [
       {
         label: t('markdown.copyPath'),
-        icon: <Copy size={14} />,
+        icon: <Copy />,
         onSelect: () => void navigator.clipboard.writeText(path),
       },
       { type: 'separator' },
@@ -313,14 +313,14 @@ export function MarkdownListPane({
     return [
       {
         label: isSelected ? t('contextMenu.deselect') : t('contextMenu.select'),
-        icon: <CheckSquare size={14} />,
+        icon: <CheckSquare />,
         onSelect: () => toggleSelected(entry.relPath),
       },
       { type: 'separator' },
       ...pathItems,
       {
         label: t('markdown.saveToNotes'),
-        icon: <Lock size={14} />,
+        icon: <Lock />,
         onSelect: () => {
           void (async () => {
             const raw = await entry.ref.read();
@@ -330,8 +330,8 @@ export function MarkdownListPane({
       },
       { type: 'separator' },
       {
-        label: t('markdown.delete'),
-        icon: <Trash size={14} />,
+        label: t('common:actions.delete'),
+        icon: <Trash />,
         destructive: true,
         onSelect: () => {
           void (async () => {
@@ -595,19 +595,19 @@ export function MarkdownListPane({
                 {/* Amber, the same `text-label` the
                     rail gives its folder glyphs - the app's "this is on your own
                     disk" colour. Accent blue here made it read as a control. */}
-                <Folder size={16} className="text-amber-600/90 dark:text-amber-500/90 shrink-0" />
+                <Folder className="text-amber-600/90 dark:text-amber-500/90 shrink-0" />
                 {/* Full-strength text at 13px: which folder is open is the
                     load-bearing fact of this whole pillar - it is what every
                     edit writes into - and at 12px it was the smallest thing in
                     the header. A deep path still truncates from the end. */}
-                <span className="font-mono text-[13px] font-medium text-pn truncate">
+                <span className="font-mono text-compact font-medium text-pn truncate">
                   {dir.ref.location}
                 </span>
                 {/* Bare number: "files" is already the word above it, and the
                     count has to survive beside a path in a 320px column. The
                     spelled-out version stays for screen readers, which cannot
                     infer the noun from the layout. */}
-                <span aria-hidden="true" className="shrink-0 text-[11.5px] text-pn-muted tabular-nums">
+                <span aria-hidden="true" className="shrink-0 text-small text-pn-muted tabular-nums">
                   {matches.length}
                 </span>
                 <span className="sr-only">{t('markdown.fileCount', { count: matches.length })}</span>
@@ -631,7 +631,6 @@ export function MarkdownListPane({
                     `transform` and `rotate-180` drives the `rotate` property, so
                     both at once compose into a stutter. */}
                 <ArrowsClockwise
-                  size={16}
                   className={busy ? 'animate-spin' : 'transition-transform duration-300 group-hover:rotate-180'}
                 />
               </button>
@@ -646,7 +645,7 @@ export function MarkdownListPane({
                 aria-label={t('markdown.closeFolder')}
                 className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-divider bg-surface-2 text-pn-muted hover:border-accent hover:text-accent transition cursor-pointer"
               >
-                <X size={16} />
+                <X />
               </button>
             </HoverLabel>
             {/* Grows on a line that fits, so the chip sits at the end; on a
@@ -679,7 +678,7 @@ export function MarkdownListPane({
                 `below-end` and not `below`: a centred tip on the second-to-last
                 control in the row collided with the `?`'s own tip beside it. Same
                 position as that one, for the same reason it has it.
-                Spec: ops/docs/archive/markdown-folder.md (section 11) */}
+                Spec: docs/internal/specs/markdown-folder.md (section 11) */}
             {defaultApp && defaultApp.owner !== 'ours' && (
               <HoverLabel label={t('markdown.assocTitle')} position="below-end" className="shrink-0">
                 <button
@@ -694,7 +693,7 @@ export function MarkdownListPane({
                       : 'bg-surface-2 border-green-600/50 dark:border-green-500/50 text-success hover:border-green-600 dark:hover:border-green-500 hover:bg-green-600/5'
                   }`}
                 >
-                  <FileMd size={16} />
+                  <FileMd />
                 </button>
               </HoverLabel>
             )}
@@ -734,7 +733,7 @@ export function MarkdownListPane({
                 aria-label={t('markdown.localFolder')}
                 className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-divider bg-surface-2 text-accent hover:border-accent transition cursor-pointer"
               >
-                <Question size={16} weight="fill" />
+                <Question weight="fill" />
               </button>
             </HoverLabel>
           </div>
@@ -756,7 +755,7 @@ export function MarkdownListPane({
                     : 'bg-surface-2 border-divider text-pn-muted hover:border-accent hover:text-accent'
                 }`}
               >
-                <FunnelSimple size={18} />
+                <FunnelSimple />
               </button>
             </HoverLabel>
             <ListSearchInput
@@ -780,7 +779,7 @@ export function MarkdownListPane({
               until this existed those two actions failed in silence. Both
               clear it before they try again, so it never outlives the attempt
               it describes. */}
-          {error && <p className="mt-1.5 text-[12px] text-danger">{error}</p>}
+          {error && <p className="mt-1.5 text-small text-danger">{error}</p>}
         </div>
       )}
 
@@ -796,7 +795,7 @@ export function MarkdownListPane({
           job. And the title row is where New and the pillar switcher are, which
           stay worth reaching mid-selection. The X is the toolbar's Clear. */}
       {selectionMode && selected.size > 0 && (
-        <div className="shrink-0 px-4 py-2 border-b border-divider bg-accent/5 dark:bg-accent/10 flex items-center justify-between gap-2 text-[13px]">
+        <div className="shrink-0 px-4 py-2 border-b border-divider bg-accent/5 dark:bg-accent/10 flex items-center justify-between gap-2 text-compact">
           <span className="font-medium text-pn-soft tabular-nums">
             {t('markdown.selectedCount', { selected: selected.size, total: matches.length })}
           </span>
@@ -806,7 +805,7 @@ export function MarkdownListPane({
               onClick={() => setSelected(new Set(matches.map((m) => m.entry.relPath)))}
               className="font-semibold text-accent hover:underline"
             >
-              {t('markdown.selectAll')}
+              {t('notes:selection.selectAll')}
             </button>
             <button
               type="button"
@@ -823,7 +822,7 @@ export function MarkdownListPane({
               onClick={() => onRequestDeleteMany([...selected])}
               className="font-semibold text-danger hover:underline"
             >
-              {t('markdown.delete')}
+              {t('common:actions.delete')}
             </button>
             <button
               type="button"
@@ -831,7 +830,7 @@ export function MarkdownListPane({
               aria-label={t('markdown.exitSelection')}
               className="text-pn-muted hover:text-accent"
             >
-              <X size={14} />
+              <X />
             </button>
           </div>
         </div>
@@ -846,7 +845,7 @@ export function MarkdownListPane({
       >
         {dir ? (
           matches.length === 0 ? (
-            <p className="p-4 text-[13px] text-pn-muted text-center">
+            <p className="p-4 text-compact text-pn-muted text-center">
               {/* A tag filter with the index still running is "not read yet",
                   not "nothing matches" - saying the latter would be wrong for
                   as long as the pass takes on a large vault. */}
@@ -934,27 +933,27 @@ function SingleFileCard({
           {/* Same extension rule as the folder rows above - a lone file is
               still a file, and this card is the only place its type is shown. */}
           {isTextFile(opened.ref.name)
-            ? <FileTxt size={14} className="text-accent shrink-0" />
-            : <FileMd size={14} className="text-accent shrink-0" />}
-          <span className="text-[13px] font-medium truncate">{opened.adapted.title}</span>
+            ? <FileTxt className="text-accent shrink-0" />
+            : <FileMd className="text-accent shrink-0" />}
+          <span className="text-compact font-medium truncate">{opened.adapted.title}</span>
         </div>
-        <p className="font-mono text-[11px] text-pn-muted truncate mb-2">
+        <p className="font-mono text-meta text-pn-muted truncate mb-2">
           {opened.ref.location}
         </p>
         {opened.adapted.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
             {opened.adapted.tags.map((tag) => (
-              <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-full border border-divider text-pn-muted">
+              <span key={tag} className="text-meta px-1.5 py-0.5 rounded-full border border-divider text-pn-muted">
                 #{tag}
               </span>
             ))}
           </div>
         )}
         <div className="flex items-center gap-3">
-          <button type="button" onClick={onOpenFile} className="text-[12px] text-accent hover:underline">
+          <button type="button" onClick={onOpenFile} className="text-small text-accent hover:underline">
             {t('markdown.openFile')}
           </button>
-          <button type="button" onClick={onClose} className="text-[12px] text-accent hover:underline">
+          <button type="button" onClick={onClose} className="text-small text-accent hover:underline">
             {t('markdown.close')}
           </button>
         </div>

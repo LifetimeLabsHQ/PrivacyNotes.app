@@ -1,9 +1,7 @@
 {
-  "title": "Estatísticas",
   "tabs": {
     "overview": "Resumo",
-    "writing": "Escrita",
-    "wellness": "Registos"
+    "writing": "Escrita"
   },
   "writing": {
     "notes": "Notas",
@@ -11,9 +9,6 @@
     "tags": "Etiquetas",
     "currentStreak": "Sequência atual",
     "longestStreak": "Maior sequência",
-    "streakValue_one": "{{count}} dia",
-    "streakValue_many": "{{count}} dias",
-    "streakValue_other": "{{count}} dias",
     "timeRangeAria": "Intervalo de tempo da atividade",
     "modeActivity": "Atividade",
     "modeMood": "Humor",
@@ -82,20 +77,17 @@
       "hint": "Abre uma entrada de diário e regista o teu humor para começar."
     },
     "export": {
-      "heading": "Exportar",
       "downloadJSON": "Transferir JSON",
       "downloadCSV": "Transferir CSV",
       "csvDate": "Data",
       "doctorPDF": "PDF para o médico",
       "copyAIPrompt": "Mostrar e copiar prompt de IA",
-      "copied": "Copiado!",
       "saveFailed": "Não foi possível guardar, por isso o ficheiro pode estar vazio ou incompleto. Tenta de novo ou escolhe outra pasta.",
       "proBadge": "PRO",
       "usesRange": "Usa o período acima",
-      "promptShown": "O prompt que copiaste. Cola-o no chatbot que preferires.",
-      "hidePrompt": "Ocultar",
+      "promptShown": "O teu prompt para o período acima. Copia-o com o botão e depois cola-o no chatbot que preferires.",
       "intro": "Os valores dos teus registos nas entradas de diário, no período que escolheres.",
-      "aiPromptDesc": "Um resumo dos teus registos para colar num chatbot. Aparece aqui e vai para a área de transferência.",
+      "aiPromptDesc": "Um resumo dos teus registos para colar num chatbot. Aparece abaixo e vai para a área de transferência.",
       "doctorDesc": "Um relatório para imprimir com humor, sono, medicação e tendências, para levar a uma consulta.",
       "jsonDesc": "Cada valor de registo com a data e a definição, para outra app ou para a tua própria análise.",
       "csvDesc": "Uma linha por dia e uma coluna por registo, para uma folha de cálculo.",
@@ -113,7 +105,6 @@
       "changedTo": "Mudou para {{dosage}}"
     },
     "patterns": {
-      "heading": "O que mexe com o teu humor",
       "insights": "Análises",
       "proBadge": "PRO",
       "insightsLocked_one": "{{count}} análise detetada. Passa para Pro para veres",
@@ -125,21 +116,18 @@
     "week": {
       "range": "{{start}} a {{end}}",
       "daysLogged": "{{count}}/7 dias registados",
-      "avgMood": "Humor médio",
       "moodDelta": "{{delta}} face à semana passada",
-      "avgSleep": "Sono médio",
-      "medsTaken": "Medicamentos tomados",
       "topActivity": "Principal atividade",
       "topEmotions": "Principais emoções",
       "reflection": "Reflexão",
       "reflectionPlaceholder": "Como correu esta semana no geral? Algum pensamento a registar...",
-      "heading": "Resumo da semana",
       "proBadge": "PRO",
       "locked": "Passa para Pro para veres o resumo semanal dos teus registos"
     },
     "units": {
       "days_one": "{{count}} dia",
-      "days_other": "{{count}} dias"
+      "days_other": "{{count}} dias",
+      "days_many": "{{count}} dias"
     },
     "insights": {
       "dayOfWeek": "O teu melhor dia costuma ser {{best}} (média {{bestAvg}}) e o mais difícil {{worst}} (média {{worstAvg}}).",
@@ -162,7 +150,6 @@
     },
     "aiPrompt": {
       "intro": "Escrevo um diário com registos todos os dias. Abaixo estão os meus dados. O humor é a minha própria avaliação de 1 (péssimo) a 10 (fantástico). Um dia sem valor significa que não o registei, não um zero.",
-      "overview": "Resumo",
       "daysTracked": "Dias registados: {{days}}",
       "avgMood": "Humor médio: {{mood}}/10",
       "avgSleep": "Sono médio: {{hours}} h",
@@ -172,12 +159,7 @@
       "columnDate": "Data",
       "columnMood": "Humor",
       "columnAverage": "Média de 7 dias",
-      "sleepDistribution": "Distribuição da qualidade do sono",
-      "activityDistribution": "Distribuição do nível de atividade",
-      "adherenceHeading": "Adesão à medicação",
       "adherenceLine": "{{name}}: {{taken}} de {{total}} doses programadas tomadas ({{pct}}%)",
-      "dosageTimeline": "Cronologia da dosagem",
-      "patterns": "Padrões detetados",
       "questions": "Como responder",
       "question1": "Começa pelas três conclusões mais importantes, cada uma com os números que a sustentam.",
       "question2": "Separa o que os dados mostram do que supões. Dois registos que variam juntos não provam que um causa o outro.",
@@ -187,11 +169,8 @@
       "question6": "Se os dados te deixarem com dúvidas, faz-me primeiro até três perguntas.",
       "footer": "Gerado com o PrivacyNotes (privacynotes.app)",
       "period": "Período: {{from}} a {{to}}",
-      "daysLogged": "Dias registados: {{logged}} de {{days}}",
-      "trackers": "Registos",
       "trackerLine": "{{name}}: média {{avg}}, mínimo {{low}}, máximo {{high}}, {{count}} dias",
       "trackerYesLine": "{{name}}: sim em {{yes}} de {{count}} dias",
-      "effects": "Humor nos dias com e sem",
       "effectLine": "{{name}} ({{rule}}): {{a}} com, {{b}} sem, diferença {{delta}}, {{na}} / {{nb}} dias",
       "customQuestion": "Verifica também se {{name}} tem relação com o meu humor, no mesmo dia ou no dia seguinte."
     },
@@ -199,12 +178,10 @@
       "documentTitle": "Relatório de bem-estar",
       "heading": "Relatório de humor e bem-estar",
       "meta": "Gerado a {{date}} | Período: {{from}} a {{to}} | Dias registados: {{days}}",
-      "overview": "Resumo",
       "columnMetric": "Indicador",
       "columnValue": "Valor",
       "avgMood": "Humor médio",
       "avgSleep": "Sono médio",
-      "adherence": "Adesão à medicação",
       "daysTracked": "Dias registados",
       "moodTrend": "Tendência do humor (últimos 90 dias)",
       "legend": "Vermelho = 1-2, Laranja = 3-4, Amarelo = 5-6, Verde = 7-8, Azul = 9-10",
@@ -224,13 +201,12 @@
       "unknownDose": "dose desconhecida",
       "topEmotions": "Emoções mais frequentes",
       "patterns": "Padrões detetados",
-      "footer": "Gerado com o PrivacyNotes - privacynotes.app",
+      "footer": "Registado e gerado com o PrivacyNotes.app",
       "period": "Período: {{from}} a {{to}}, {{days}} dias",
       "daysLogged": "Dias registados: {{logged}} de {{days}}",
       "moodHeading": "Humor, uma barra por dia",
       "moodLegend": "Barras: 1-2 vermelho, 3-4 laranja, 5-6 amarelo, 7-8 verde, 9-10 azul. Linha: média de 7 dias. Triângulo: mudança de dose. Um espaço vazio é um dia sem entrada.",
       "previous": "os {{days}} dias anteriores: {{value}}",
-      "trackers": "Registos",
       "columnTracker": "Registo",
       "columnAverage": "Média",
       "columnLowHigh": "Mín / máx",
@@ -238,20 +214,15 @@
       "effects": "Humor nos dias com e sem",
       "columnFactor": "Fator",
       "columnRule": "Regra",
-      "columnWith": "Com",
-      "columnWithout": "Sem",
       "columnDifference": "Diferença",
       "nextDaySuffix": "{{name}}, dia seguinte",
       "effectsNote": "Médias dos dias registados. Uma diferença é uma observação, não uma causa.",
       "medCalendar": "Calendário",
       "doseChanges": "Mudanças de dose",
-      "columnDoseChanges": "Mudanças de dose",
       "yesOn": "sim em {{count}}",
       "total": "{{value}} no total"
     },
     "tiles": {
-      "daysLogged": "Dias registados",
-      "daysLoggedOf": "{{logged}} de {{days}}",
       "avgMood": "Humor médio",
       "moodDelta": "{{delta}} face aos {{days}} dias anteriores",
       "avgSleep": "Sono médio",
@@ -263,7 +234,6 @@
       "dose": "{{name}} {{dosage}}"
     },
     "pixels": {
-      "heading": "O ano em píxeis",
       "aria": "Humor de cada dia de {{year}}, um quadrado por dia",
       "hint": "Um quadrado por dia, nas cores do humor.",
       "hintTap": "Um quadrado por dia, nas cores do humor. Um toque abre o dia.",
@@ -272,7 +242,6 @@
       "nextYear": "Ano seguinte"
     },
     "trackers": {
-      "heading": "Registos",
       "tapHint": "Um toque abre Explorar",
       "stopped": "Parados",
       "deleted": "Eliminado",
@@ -389,20 +358,14 @@
   "overview": {
     "week": "A tua semana",
     "streak": "Sequência de escrita",
-    "streakDays_one": "{{count}} dia",
-    "streakDays_other": "{{count}} dias",
     "streakNudge": "Ainda nada hoje. Uma linha chega para a manter.",
     "streakKept": "Hoje está garantido.",
     "words": "Palavras escritas",
     "wordsDelta": "{{delta}} face à semana anterior",
-    "mood": "Humor",
-    "moodDelta": "{{delta}} face à semana anterior",
     "daysLogged": "Dias registados",
     "daysLoggedOf": "{{logged}} de {{days}}",
     "rhythm": "O teu ritmo, {{weeks}} semanas",
     "layerBoth": "Ambos",
-    "layerWriting": "Escrita",
-    "layerMood": "Humor",
     "rhythmLegend": "Célula: quanto escreveste nesse dia. Ponto: como correu o dia.",
     "hours": "Quando escreves",
     "hoursSub": "edições por hora, {{days}} dias",
@@ -424,19 +387,12 @@
     "vault": "O teu cofre",
     "vaultSub": "esta semana, em resumo",
     "done": "{{count}} concluídas",
-    "milestones": "Marcos",
     "longestStreak": "Maior sequência: {{count}} dias",
     "openWriting": "Abrir Escrita",
     "openWellness": "Abrir Registos",
     "computed": "calculado neste dispositivo",
     "pillars": {
-      "notes": "Notas",
-      "journals": "Diários",
-      "tasks": "Tarefas",
-      "files": "Ficheiros",
-      "bookmarks": "Marcadores",
-      "contacts": "Contactos",
-      "logins": "Logins"
+      "journals": "Diários"
     },
     "ledgerEstimated": "Estimado a partir das tuas notas até a contagem começar.",
     "today": "Hoje, {{date}}",
@@ -465,7 +421,6 @@
     "wordsToday_one": "{{formatted}} palavra hoje"
   },
   "recap": {
-    "thisWeek": "Esta semana",
     "previous": "Semana anterior",
     "next": "Semana seguinte",
     "bestWorst": "{{best}} foi o teu melhor dia ({{bestMood}}), {{worst}} o mais difícil ({{worstMood}}).",
@@ -476,11 +431,9 @@
   },
   "writingTab": {
     "inOneLook": "Este período num relance",
-    "wordsWritten": "Palavras escritas",
     "daysWrote": "Dias em que escreveste",
     "perDay": "{{words}} palavras por dia",
     "notesStarted": "Notas começadas",
-    "vsBefore": "{{delta}} face aos dias anteriores",
     "readTime_other": "Cerca de {{count}} minutos de leitura escritos",
     "novels_other": "O equivalente a {{count}} romances, desde sempre",
     "tagsUsed": "{{count}} etiquetas, {{used}} usadas neste período",
@@ -495,10 +448,8 @@
     "short": "Curtas",
     "median": "Metade das tuas notas tem menos de {{words}} palavras.",
     "longest": "As tuas notas mais longas",
-    "words_other": "{{formatted}} palavras",
     "readHours_other": "Cerca de {{count}} horas de leitura escritas",
     "readHours_one": "Cerca de {{count}} hora de leitura escrita",
-    "words_one": "{{formatted}} palavra",
     "novels_one": "O equivalente a {{count}} romance, desde sempre",
     "readTime_one": "Cerca de {{count}} minuto de leitura escrito"
   }

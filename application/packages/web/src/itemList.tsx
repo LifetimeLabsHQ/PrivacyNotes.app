@@ -5,7 +5,7 @@
  * one routing of a click on an item. A behavior belongs to the list, not to a
  * pane: each of these lived in one or two panes, and the others lacked it.
  * `pnpm check:house` refuses the `pn-notes-grid` class anywhere else.
- * Spec: ops/docs/plans/list-grid-parity.md (section 5, LG2)
+ * Spec: docs/internal/plans/list-grid-parity.md (section 5, LG2)
  */
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useProgressiveReveal, type ProgressiveReveal } from './useProgressiveReveal';
@@ -90,7 +90,7 @@ export interface ItemListState {
 export function useItemList(resetKey: readonly unknown[], total: number, place: string | null = null): ItemListState {
   // `place` names the view and space the pane draws, null under a search. A
   // list that was open earlier this session comes back at its offset, with
-  // its rows drawn down to it first. Spec: ops/docs/archive/keep-my-place.md
+  // its rows drawn down to it first. Spec: docs/internal/specs/keep-my-place.md
   const key = place === null ? null : `${place}|${JSON.stringify(resetKey)}`;
   const reveal = useProgressiveReveal(() => key === null ? undefined : listTop(key)?.revealed);
   const scroll = useScrollRestore(resetKey);
@@ -161,11 +161,13 @@ export function useItemList(resetKey: readonly unknown[], total: number, place: 
  * The list element: a `ul` of `li` items, or a `div` for the Files pane,
  * whose items are buttons. It scrolls, and in grid mode it is the grid.
  */
-export function ItemList({ list, grid, as: Root = 'ul', className = '', onMouseDown, children }: {
+export function ItemList({ list, grid, as: Root = 'ul', className = '', style, onMouseDown, children }: {
   list: ItemListState;
   grid: boolean;
   as?: 'ul' | 'div';
   className?: string;
+  /** A pane that lays out its own grid (Home) sets it here. */
+  style?: React.CSSProperties;
   onMouseDown?: (e: React.MouseEvent) => void;
   children: ReactNode;
 }) {
@@ -174,6 +176,7 @@ export function ItemList({ list, grid, as: Root = 'ul', className = '', onMouseD
       ref={list.ref as React.RefObject<HTMLUListElement & HTMLDivElement>}
       onScroll={(e) => list.onScroll(e.currentTarget)}
       onMouseDown={onMouseDown}
+      style={style}
       className={`flex-1 overflow-y-auto list-none m-0 ${grid ? GRID_CLASS : 'p-0'} ${className}`.trim()}
     >
       {children}

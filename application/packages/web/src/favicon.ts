@@ -22,7 +22,7 @@ import { APEX_ORIGIN, usesOfficialServer } from './hosts';
  * A native build that syncs with another server gets no icons: the lookup
  * would send us the domain of every link and login it holds.
  */
-// Spec: ops/docs/gotchas.md (native builds have no local /favicon Worker; use the hosted proxy)
+// Spec: docs/contrib/gotchas.md (native builds have no local /favicon Worker; use the hosted proxy)
 const PROXY_ORIGIN = APEX_ORIGIN;
 
 /**

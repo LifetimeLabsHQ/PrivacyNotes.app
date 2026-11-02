@@ -12,6 +12,8 @@
     "addLink": "إضافة رابط",
     "noteLink": "ربط بملاحظة أخرى (أو اكتب [[)",
     "numberedList": "قائمة مرقّمة",
+    "indent": "زيادة المسافة البادئة",
+    "outdent": "إنقاص المسافة البادئة",
     "textColor": "لون النص",
     "textColorApply": "لون النص: {{color}}",
     "pickColor": "اختيار لون النص",
@@ -72,6 +74,7 @@
     "remove": "إزالة التنبيه",
     "collapse": "طي التنبيه",
     "expand": "توسيع التنبيه",
+    "dragGrip": "اسحب",
     "types": {
       "info": "معلومة",
       "success": "نجاح",
@@ -132,6 +135,9 @@
     "addColumnRight": "إضافة عمود إلى اليمين",
     "toggleHeaderRow": "تفعيل صف الرأس أو إلغاؤه",
     "equalColumnWidths": "توحيد عرض الأعمدة",
+    "cellColor": "لون الخلية",
+    "sortAscending": "فرز من أ إلى ي",
+    "sortDescending": "فرز من ي إلى أ",
     "resizeHint": "اضغط مع الاستمرار على {{shift}} لتغيير هذا العمود وحده، أو على {{alt}} لخطوات أدق",
     "deleteRow": "حذف الصف",
     "deleteColumn": "حذف العمود",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "البحث في الملاحظة",
-    "label": "البحث في الملاحظة",
     "previous": "المطابقة السابقة",
     "previousTitle": "السابق",
     "next": "المطابقة التالية",
     "nextTitle": "التالي",
     "close": "إغلاق البحث",
-    "closeTitle": "إغلاق",
     "replacePlaceholder": "استبدال بـ",
     "replaceLabel": "استبدال بـ",
     "replace": "استبدال",
@@ -177,10 +180,7 @@
     "replaceAll": "الكل",
     "replaceAllTitle": "استبدال كل النتائج",
     "caseSensitive": "مطابقة حالة الأحرف",
-    "caseSensitiveTitle": "مطابقة حالة الأحرف",
     "closeReplace": "إغلاق البحث والاستبدال",
-    "closeReplaceTitle": "إغلاق",
-    "showReplace": "البحث والاستبدال",
     "hideReplace": "إخفاء الاستبدال",
     "replacedCount_zero": "تم استبدال {{count}}",
     "replacedCount_one": "تم استبدال {{count}}",
@@ -196,9 +196,7 @@
     "ariaLabel": "مخطط الملاحظة",
     "hide": "إخفاء المخطط التفصيلي",
     "copyHeadingLink": "نسخ رابط العنوان",
-    "copyNoteLink": "نسخ رابط بين الملاحظات",
-    "copyHeadingShortcut": "نسخ اختصار العنوان",
-    "copied": "تم النسخ"
+    "copyHeadingShortcut": "نسخ اختصار العنوان"
   },
   "bodyMenu": {
     "cut": "قص",
@@ -214,11 +212,8 @@
     "add": "إضافة سطر"
   },
   "link": {
-    "popoverLabel": "إضافة رابط",
     "placeholder": "الصق أو اكتب رابطًا",
     "apply": "تطبيق",
-    "addTitle": "إضافة رابط",
-    "editTitle": "تعديل الرابط",
     "urlLabel": "الرابط",
     "urlPlaceholder": "https://example.com",
     "errorEnterUrl": "أدخل رابطًا",
@@ -234,7 +229,6 @@
   },
   "audio": {
     "uploadingRecording": "جارٍ تحميل التسجيل...",
-    "uploading": "جارٍ التحميل...",
     "stopRecording": "إيقاف التسجيل",
     "recordAudio": "تسجيل صوتي",
     "savingRecording": "جارٍ حفظ التسجيل...",
@@ -247,7 +241,7 @@
     "words_one": "{{formatted}} كلمة",
     "words_two": "{{formatted}} كلمتان",
     "words_few": "{{formatted}} كلمات",
-    "words_many": "{{formatted}} كلمة",
+    "words_many": "{{formatted}} كلمةً",
     "words_other": "{{formatted}} كلمة",
     "characters_zero": "{{formatted}} أحرف",
     "characters_one": "{{formatted}} حرف",
@@ -263,7 +257,6 @@
     "tasksChecked_other": "{{done}} من {{formatted}} محددة",
     "syncLimit": " · {{share}} من حد المزامنة البالغ 1 ميغابايت",
     "overSyncLimit": " · تتجاوز حد المزامنة البالغ 1 ميغابايت، وتبقى على هذا الجهاز",
-    "split": "تقسيم الملاحظة",
     "veryLong": "، طويلة جدًا، قد تكون بطيئة في التعديل وتتقطع",
     "gettingLong": "، أصبحت طويلة، قد تتأخر على الأجهزة الأبطأ",
     "largeTableWarning": "جدول كبير ({{rows}} صفًا) قد يجعل تعديل هذه الملاحظة بطيئًا، ففكر في تقسيمه"
@@ -278,12 +271,9 @@
     "placeholder": "نص يُنسخ بنقرة واحدة"
   },
   "inlineCode": {
-    "copyHint": "انقر مع {{key}} للنسخ",
-    "copied": "تم النسخ"
+    "copyHint": "انقر مع {{key}} للنسخ"
   },
   "codeBlock": {
-    "copy": "نسخ",
-    "copied": "تم النسخ",
     "copyFailed": "فشل",
     "wrap": "التفاف الأسطر الطويلة",
     "showAll_zero": "عرض كل الأسطر ({{count}})",
@@ -293,7 +283,6 @@
     "showAll_many": "عرض كل الـ{{count}} سطرًا",
     "showAll_other": "عرض كل الـ{{count}} سطر",
     "showLess": "عرض أقل",
-    "plainText": "نص عادي",
     "language": "لغة الشفرة: {{name}}",
     "searchLanguages": "ابحث عن لغة",
     "placeholder": "اكتب الشفرة أو الصقها. للألوان، اختر لغة في الأعلى."
@@ -374,7 +363,6 @@
     "inProgress": "قيد التنفيذ",
     "review": "مراجعة",
     "done": "مكتمل",
-    "color": "اللون",
     "columns": "الأعمدة",
     "columnCount_zero": "{{count}} أعمدة",
     "columnCount_one": "عمود واحد",

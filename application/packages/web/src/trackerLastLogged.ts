@@ -9,7 +9,7 @@ import type { JournalTrackerData } from './trackerTypes';
  * from there. Nothing is written until the person taps or types. One store
  * for every number panel, in the check-in card and in the journal entry
  * alike; the notes view writes the history, newest day first.
- * Spec: ops/docs/archive/ui-patterns.md section 141
+ * Spec: docs/internal/design/ui-patterns.md section 141
  */
 
 let history: readonly JournalTrackerData[] = [];

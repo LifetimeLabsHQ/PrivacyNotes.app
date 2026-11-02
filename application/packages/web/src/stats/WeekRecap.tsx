@@ -40,13 +40,15 @@ function mondayOf(day: string): string {
  * hardest day in one sentence, the biggest changes against the week before
  * as pills, the week's other numbers, and the reflection: editable for this
  * week, read back for an earlier one.
- * Spec: ops/docs/archive/wellness-statistics.md (section 22)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 22)
  */
-export function WeekRecap({ model, notes, reflection, onReflectionChange }: {
+export function WeekRecap({ model, notes, reflection, onReflectionChange, bare = false }: {
   model: WellnessModel;
   notes: LocalNote[];
   reflection?: string;
   onReflectionChange?: (text: string) => void;
+  /** No card of its own, inside a tile that is one already (a Home widget). */
+  bare?: boolean;
 }) {
   const { t } = useTranslation('stats');
   const today = toLocalIso(new Date());
@@ -99,16 +101,16 @@ export function WeekRecap({ model, notes, reflection, onReflectionChange }: {
   const pastReflection = back > 0 ? (byDate.get(monday) as { weekReflection?: unknown } | undefined)?.weekReflection : undefined;
 
   return (
-    <div className="rounded-lg border border-divider bg-surface-2 p-3 space-y-3">
+    <div className={bare ? 'space-y-3' : 'rounded-lg border border-divider bg-surface-2 p-3 space-y-3'}>
       <div className="flex items-center justify-between gap-2">
         <IconButton label={t('recap.previous')} onClick={() => setBack((b) => b + 1)} disabled={!canGoBack}>
-          <CaretLeft size={14} aria-hidden="true" />
+          <CaretLeft aria-hidden="true" />
         </IconButton>
-        <span className="text-sm font-semibold text-pn">
-          {back === 0 ? t('recap.thisWeek') : t('wellness.week.range', { start: formatDay(days[0]!, 'dayMonth'), end: formatDay(days[6]!, 'dayMonth') })}
+        <span className="text-body font-semibold text-pn">
+          {back === 0 ? t('stats:overview.thisWeek') : t('wellness.week.range', { start: formatDay(days[0]!, 'dayMonth'), end: formatDay(days[6]!, 'dayMonth') })}
         </span>
         <IconButton label={t('recap.next')} onClick={() => setBack((b) => Math.max(0, b - 1))} disabled={back === 0}>
-          <CaretRight size={14} aria-hidden="true" />
+          <CaretRight aria-hidden="true" />
         </IconButton>
       </div>
 
@@ -116,15 +118,15 @@ export function WeekRecap({ model, notes, reflection, onReflectionChange }: {
         {moods.map(({ day, v }) => (
           <div key={day} className="flex flex-col items-center gap-1">
             {v !== null ? <MoodMark mood={v} size={30} /> : <span className={`w-[30px] h-[30px] rounded-md ${day > today ? '' : 'border border-dashed border-divider'}`} />}
-            <span className="text-[11px] text-pn-muted">{weekdayLabel(new Date(`${day}T12:00:00`), 'narrow')}</span>
+            <span className="text-meta text-pn-muted">{weekdayLabel(new Date(`${day}T12:00:00`), 'narrow')}</span>
           </div>
         ))}
       </div>
 
       {best && worst && best.day !== worst.day ? (
-        <p className="text-sm text-pn">{upperFirst(t('recap.bestWorst', { best: dayName(best.day), bestMood: best.v, worst: dayName(worst.day), worstMood: worst.v }))}</p>
+        <p className="text-body text-pn">{upperFirst(t('recap.bestWorst', { best: dayName(best.day), bestMood: best.v, worst: dayName(worst.day), worstMood: worst.v }))}</p>
       ) : logged.length === 0 ? (
-        <p className="text-xs text-pn-muted">{t('recap.noMood')}</p>
+        <p className="text-small text-pn-muted">{t('recap.noMood')}</p>
       ) : null}
 
       {changes.length > 0 && (
@@ -140,7 +142,7 @@ export function WeekRecap({ model, notes, reflection, onReflectionChange }: {
         </div>
       )}
 
-      <p className="text-[11px] text-pn-muted">
+      <p className="text-small text-pn-muted">
         {t('recap.also', { logged: logged.length, created })}
         {changes.length > 0 && ` ${t('recap.againstWeekBefore')}`}
       </p>
@@ -154,7 +156,7 @@ export function WeekRecap({ model, notes, reflection, onReflectionChange }: {
           onChange={(e) => onReflectionChange(e.target.value)}
         />
       ) : typeof pastReflection === 'string' && pastReflection.trim() ? (
-        <p className="rounded-md bg-surface-0 p-2 text-xs text-pn-soft whitespace-pre-wrap">{pastReflection}</p>
+        <p className="rounded-md bg-surface-0 p-2 text-small text-pn-soft whitespace-pre-wrap">{pastReflection}</p>
       ) : null}
     </div>
   );

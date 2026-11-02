@@ -19,7 +19,7 @@
  * Refusing a callback costs the user one retry; accepting a foreign one
  * hands the device to another account.
  *
- * Spec: ops/docs/plans/deep-link-callback-hardening.md (section 2.1)
+ * Spec: docs/internal/plans/deep-link-callback-hardening.md (section 2.1)
  */
 
 export type OAuthPendingVerdict = 'ok' | 'missing' | 'stale';
@@ -34,7 +34,7 @@ const PENDING_KEY = 'privacynotes.oauth.pending';
 
 // Long enough for an account picker plus a second factor; a flow that takes
 // longer is refused as stale and lands on the retry screen, never in a hang.
-// Spec: ops/docs/plans/deep-link-callback-hardening.md (section 2.1)
+// Spec: docs/internal/plans/deep-link-callback-hardening.md (section 2.1)
 export const OAUTH_PENDING_TTL_MS = 10 * 60 * 1000;
 
 let inMemory: number | null = null;

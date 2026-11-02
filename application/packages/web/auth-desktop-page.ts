@@ -17,7 +17,7 @@ import { brandMark, CHROME_CSS, ogLocaleTag } from './static-page-chrome.ts';
 // only reaches it if the person copies it out of a page carrying our name and
 // pastes it into that application. That is a visible act on the level of
 // handing over the recovery phrase, rather than a redirect nobody sees.
-// Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.3)
+// Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.3)
 //
 // Three constraints this page is built around.
 //
@@ -46,17 +46,17 @@ const DESC = 'Copy the one-time code and paste it back into the PrivacyNotes des
 const PAGE_CSS = `
 .wrap{max-width:34rem;margin:0 auto;padding:4rem 1.25rem 5rem}
 .card{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:1.75rem}
-h1{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin:0 0 .5rem}
+h1{font-size:var(--fs-display-2);font-weight:800;letter-spacing:-.02em;margin:0 0 .5rem}
 .lede{color:var(--sub);margin:0 0 1.5rem;line-height:1.6}
 .codebox{display:flex;gap:.5rem;align-items:stretch;margin:0 0 .75rem}
-code.code{flex:1;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9rem;
+code.code{flex:1;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-body);
   background:var(--tint);border:1px solid var(--line);border-radius:10px;padding:.85rem 1rem;
   overflow-wrap:anywhere;user-select:all}
 button.copy{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--ink);
   border-radius:10px;padding:.85rem 1.1rem;font-weight:600;cursor:pointer}
 button.copy:hover{background:var(--tint)}
 .steps{margin:1.5rem 0 0;padding-left:1.15rem;color:var(--sub);line-height:1.7}
-.note{margin:1.5rem 0 0;padding-top:1.25rem;border-top:1px solid var(--line);color:var(--sub);font-size:.875rem;line-height:1.6}
+.note{margin:1.5rem 0 0;padding-top:1.25rem;border-top:1px solid var(--line);color:var(--sub);font-size:var(--fs-body);line-height:1.6}
 .nojs{color:var(--sub);line-height:1.6}
 [hidden]{display:none!important}
 `;

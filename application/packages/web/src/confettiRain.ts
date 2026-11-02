@@ -9,7 +9,7 @@ import { MOOD_COLORS } from './moodColors';
  * is not drawn before it starts, so no band waits on the screen. The layer
  * catches no pointer, is hidden from screen readers and removes itself; with
  * reduced motion nothing is thrown.
- * Spec: ops/docs/archive/ui-patterns.md section 141
+ * Spec: docs/internal/design/ui-patterns.md section 141
  */
 const COLORS = [...MOOD_COLORS, PALETTE.purple, PALETTE.pink];
 /** One piece per 14 px of width, from 30 on a phone to 80 on a wide card. */

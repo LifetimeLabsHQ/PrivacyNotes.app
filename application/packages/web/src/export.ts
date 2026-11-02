@@ -23,7 +23,8 @@ import { scheduleOf } from './schedule';
 import { describeSchedule } from './scheduleText';
 import type { ImageStore } from './imageStore';
 import type { AttachmentStore } from './attachmentStore';
-import { unescapeMarkdownText } from './fileNames';
+import { attachmentLinks, unescapeMarkdownText } from './fileNames';
+import { FILE_PICTURE, markdownLinks, replaceMatches } from './linkScan';
 import { extractImageIds } from './imageProcessing';
 import { escapeHtml, renderMarkdown, renderNoteBody, prepareRender, inlineSameOriginImages, inlineRenderedFavicons } from './markdownRender';
 import { parseLoginBody, domainFromUrl } from './LoginForm';
@@ -31,13 +32,15 @@ import { isPublicField, loginExtrasOf } from './loginExtras';
 import { parseCardBody, detectCardNetwork } from './CardForm';
 import { parseSshKeyBody } from './SshKeyForm';
 import { vaultContent, vaultToMarkdown } from './vaultFields';
+import { hasVaultFiles, noteFileLinks } from './vaultBody';
 import type { VaultContent } from './vaultFields';
 import { ancestorIds, folderNamePath, type FolderDef } from './folders';
 import type { ItemStyles } from './itemStyles';
 import type { CustomThemes } from './customThemes';
-import type { FactorDef } from './trackerTypes';
+import type { CustomTrackerTemplate, FactorDef, MedicationTemplate } from './trackerTypes';
 import { linkExportMarkdown } from './linkBody';
 import { slugify, zipEntryStems } from './exportNames';
+import { parseScene, toExcalidrawFile } from './drawing/scene';
 import { lineHeightCss, paragraphGapCss, readLineSpacing } from './theme';
 import { isSameOriginPath } from './sameOriginPath';
 import { contactDisplayName, contactFullName, contactInitialsFor, formatAddressLines, formatContactDate, parseContactBody, telHref, type Contact } from './contactBody';
@@ -188,12 +191,14 @@ function replaceWithDataUris(
 }
 
 /**
- * A picture placed from the Files pillar: `![alt](pn:file/<uuid>)`. It shows
+ * Pictures placed from the Files pillar: `![alt](pn:file/<uuid>)`. One shows
  * an upload's attachment blob instead of a copy in the picture store, so
- * every export that resolves `pn:img/` refs has to resolve these too. Groups
- * exclude newlines, like the attachment link pattern below.
+ * every export that resolves `pn:img/` refs has to resolve these too. The alt
+ * text excludes newlines, like the attachment link. `uuid` is the blob's id.
  */
-const FILE_PICTURE_RE = /!\[([^\]\n]*)\]\(pn:file\/([0-9a-f-]{36})\)/g;
+function filePictures(body: string): { index: number; end: number; alt: string; uuid: string }[] {
+  return markdownLinks(body, FILE_PICTURE).map((p) => ({ ...p, alt: p.text, uuid: p.target.slice('pn:file/'.length) }));
+}
 
 /** Resolve all picture references in a body to inline data URIs: `pn:img/`
  *  through the picture store, pictures placed from Files through the
@@ -220,7 +225,7 @@ async function resolveFilePictures(
   missing: MissingBlob[],
 ): Promise<string> {
   const ids = new Set<string>();
-  for (const m of body.matchAll(FILE_PICTURE_RE)) ids.add(m[2]!);
+  for (const { uuid } of filePictures(body)) ids.add(uuid);
   if (ids.size === 0) return body;
   const uris = new Map<string, string>();
   for (const uuid of ids) {
@@ -233,9 +238,9 @@ async function resolveFilePictures(
     const mime = att.meta.mime.startsWith('image/') ? att.meta.mime : sniffImageMime(att.data);
     uris.set(uuid, `data:${mime};base64,${uint8ToBase64(att.data)}`);
   }
-  return body.replace(FILE_PICTURE_RE, (match, alt: string, uuid: string) => {
+  return replaceMatches(body, filePictures(body), ({ alt, uuid }) => {
     const uri = uris.get(uuid);
-    return uri ? `![${alt}](${uri})` : match;
+    return uri ? `![${alt}](${uri})` : null;
   });
 }
 
@@ -244,18 +249,24 @@ async function resolveFilePictures(
 // File attachments use `[name|size|mime](pn:file/<uuid>)` in note bodies.
 // The full backup zip resolves these into real files in organized folders.
 
-/** Matches attachment links: [name|size|mime](pn:file/<uuid>).
- *  Groups exclude newlines so the name can't span lines and swallow
- *  preceding task-checkbox text into the exported filename. */
-const ATTACHMENT_LINK_RE = /\[([^|\n]*)\|([^|\n]*)\|([^\]\n]*)\]\(pn:file\/([0-9a-f-]{36})\)/g;
 
-/** Extract attachment metadata from all pn:file/ links in a body. */
-function extractAttachmentLinks(body: string): Map<string, { name: string; size: string; mime: string }> {
+/** Files a table cell holds. A table with a file in a cell is stored as
+ *  HTML, where the file is `<a data-attachment href="pn:file/<uuid>">`, not
+ *  the markdown link above, so the full backup left the file out and said
+ *  nothing (external report, 2026-10-24, bug report 5). The link stays as it
+ *  is in the backup: a restore keeps the file's id, so it resolves again. */
+function extractHtmlAttachmentLinks(body: string): Map<string, { name: string; size: string; mime: string }> {
   const map = new Map<string, { name: string; size: string; mime: string }>();
-  let m: RegExpExecArray | null;
-  ATTACHMENT_LINK_RE.lastIndex = 0;
-  while ((m = ATTACHMENT_LINK_RE.exec(body)) !== null) {
-    map.set(m[4]!, { name: m[1]!, size: m[2]!, mime: m[3]! });
+  if (typeof body !== 'string' || !body.includes('data-attachment')) return map;
+  const doc = new DOMParser().parseFromString(body, 'text/html');
+  for (const a of doc.querySelectorAll('a[data-attachment]')) {
+    const uuid = /^pn:file\/([0-9a-f-]{36})$/.exec(a.getAttribute('href') ?? '')?.[1];
+    if (!uuid || map.has(uuid)) continue;
+    map.set(uuid, {
+      name: a.getAttribute('data-filename') ?? '',
+      size: a.getAttribute('data-filesize') ?? '',
+      mime: a.getAttribute('data-mimetype') ?? '',
+    });
   }
   return map;
 }
@@ -364,7 +375,7 @@ export interface BackupManifest {
   /** The looks of folders, tags and notes, the custom themes and the factor
    *  names, the settings the notes alone cannot carry. Written only when there
    *  is something to carry; the restore validates each. */
-  settings?: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown };
+  settings?: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown };
 }
 
 /**
@@ -384,31 +395,50 @@ function rewriteBodyForExport(
   });
   // Pictures placed from Files point at the upload's file in the zip, and
   // the restore maps that path back (import/privacynotes.ts).
-  result = result.replace(FILE_PICTURE_RE, (match, alt: string, uuid: string) => {
+  result = replaceMatches(result, filePictures(result), ({ alt, uuid }) => {
     const info = attachmentMap.get(uuid);
-    if (!info) return match;
-    return `![${alt}](${mdLinkTarget(info.path)})`;
+    return info ? `![${alt}](${mdLinkTarget(info.path)})` : null;
   });
   // Rewrite attachments: [name|size|mime](pn:file/<uuid>) → [name](<folder/original name.ext>)
-  result = result.replace(ATTACHMENT_LINK_RE, (match, name: string, _size: string, _mime: string, uuid: string) => {
-    const info = attachmentMap.get(uuid);
-    if (!info) return match;
+  return replaceMatches(result, attachmentLinks(result), (link) => {
+    const info = attachmentMap.get(link.uuid);
     // Each reference keeps its OWN label. One file can be referenced from
     // two notes under two names, so collapsing them onto the first-seen
     // name would throw one of them away.
-    return `[${name || info.name}](${mdLinkTarget(info.path)})`;
+    return info ? `[${link.name || info.name}](${mdLinkTarget(info.path)})` : null;
   });
-  return result;
 }
 
 /** Cross-platform save: web anchor-download trick, native Save As dialog.
  *  Throws when the save failed, which saveBlob reports rather than throws:
  *  every export caller shows a thrown error, and a failed save that resolved
  *  would read as a finished export (issue #193). A dismissed dialog is the
- *  reader's choice, not a failure. */
-async function downloadBlob(blob: Blob, filename: string): Promise<void> {
+ *  reader's choice, not a failure. Resolves to the path a native save wrote,
+ *  which the export window offers to show in the file manager. */
+async function downloadBlob(blob: Blob, filename: string): Promise<string | undefined> {
   const saved = await saveBlob(blob, filename);
   if (!saved.ok && saved.reason === 'failed') throw saved.error;
+  return saved.ok ? saved.path : undefined;
+}
+
+/** Where a bulk export is: its step, and how far into it for a step that
+ *  counts. The export window owns the wording. */
+export type ExportStepName = 'pictures' | 'files' | 'notes' | 'zip';
+export interface ExportStep {
+  step: ExportStepName;
+  done?: number;
+  total?: number;
+}
+/** The steps each bulk export goes through, in order. */
+export const FULL_BACKUP_STEPS: readonly ExportStepName[] = ['pictures', 'files', 'notes', 'zip'];
+export const HTML_ARCHIVE_STEPS: readonly ExportStepName[] = ['notes', 'zip'];
+export const DRAWINGS_STEPS: readonly ExportStepName[] = ['pictures', 'zip'];
+
+/** What a bulk export saved: the blobs it left out, and where a native save
+ *  put the file. */
+export interface BulkExportResult {
+  missing: MissingBlob[];
+  savedPath?: string;
 }
 
 // noteToMarkdown lives in ./noteMarkdown so the round-trip test can drive it
@@ -466,10 +496,17 @@ async function buildFullBackupZip(
   notes: LocalNote[],
   imageStore?: ImageStore | null,
   attachmentStore?: AttachmentStore | null,
-  onProgress?: (msg: string) => void,
+  onProgress?: (at: ExportStep) => void,
   folders: FolderDef[] = [],
-  settings: { itemStyles?: ItemStyles; customThemes?: CustomThemes; factors?: FactorDef[]; customHabits?: CustomHabitDef[] } = {},
+  settings: { itemStyles?: ItemStyles; customThemes?: CustomThemes; factors?: FactorDef[]; customHabits?: CustomHabitDef[]; medications?: MedicationTemplate[]; customTrackers?: CustomTrackerTemplate[] } = {},
+  signal?: AbortSignal,
 ): Promise<{ blob: Blob; missing: MissingBlob[] }> {
+  // A cancelled export stops at its next step. A read that hangs cannot be
+  // interrupted, but the window has already closed and nothing gets saved.
+  const progress = (at: ExportStep) => {
+    signal?.throwIfAborted();
+    onProgress?.(at);
+  };
   const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
 
@@ -481,7 +518,12 @@ async function buildFullBackupZip(
 
   for (const note of notes) {
     for (const id of extractImageIds(note.body)) allImageIds.add(id);
-    for (const [uuid, meta] of extractAttachmentLinks(note.body)) {
+    for (const { uuid, name, size, mime } of noteFileLinks(note)) {
+      if (!allAttLinks.has(uuid)) allAttLinks.set(uuid, { name, size, mime });
+    }
+  }
+  for (const note of notes) {
+    for (const [uuid, meta] of extractHtmlAttachmentLinks(note.body)) {
       if (!allAttLinks.has(uuid)) allAttLinks.set(uuid, meta);
     }
   }
@@ -489,8 +531,8 @@ async function buildFullBackupZip(
   // after every chip, so a chip's name wins over the picture's empty one and
   // the blob is still exported when no chip in this export names it.
   for (const note of notes) {
-    for (const m of note.body.matchAll(FILE_PICTURE_RE)) {
-      if (!allAttLinks.has(m[2]!)) allAttLinks.set(m[2]!, { name: '', size: '', mime: '' });
+    for (const { uuid } of filePictures(note.body)) {
+      if (!allAttLinks.has(uuid)) allAttLinks.set(uuid, { name: '', size: '', mime: '' });
     }
   }
 
@@ -503,7 +545,7 @@ async function buildFullBackupZip(
   if (allImageIds.size > 0) {
     let done = 0;
     for (const uuid of allImageIds) {
-      onProgress?.(i18n.t('importExport:exportProgress.imagesProgress', { done: ++done, total: allImageIds.size }));
+      progress({ step: 'pictures', done: ++done, total: allImageIds.size });
       const data = await readForExport(
         imageStore && (() => imageStore.getImage(uuid)),
         { id: uuid, kind: 'image' },
@@ -530,7 +572,7 @@ async function buildFullBackupZip(
   if (allAttLinks.size > 0) {
     let done = 0;
     for (const [uuid] of allAttLinks) {
-      onProgress?.(i18n.t('importExport:exportProgress.filesProgress', { done: ++done, total: allAttLinks.size }));
+      progress({ step: 'files', done: ++done, total: allAttLinks.size });
       const att = await readForExport(
         attachmentStore && (() => attachmentStore.getAttachment(uuid)),
         { id: uuid, kind: 'file' },
@@ -563,19 +605,22 @@ async function buildFullBackupZip(
 
   // ── 4. Add notes as .md files with rewritten body refs ──────────────
 
-  onProgress?.(i18n.t('importExport:exportProgress.building'));
+  progress({ step: 'notes' });
 
   const stems = zipEntryStems(notes);
   for (const [i, note] of notes.entries()) {
     const stem = stems[i]!;
 
-    const body = rewriteBodyForExport(note.body, resolvedImageExts, attachmentMap);
+    // A vault item keeps its pn:file links: its body is JSON, which the text
+    // rewrite would break, and the restore puts each file back under the
+    // same uuid (manifest.attachments), so the links still resolve.
+    const body = hasVaultFiles(note.type) ? note.body : rewriteBodyForExport(note.body, resolvedImageExts, attachmentMap);
     zip.file(`${stem}.md`, noteToMarkdown({ ...note, body }, true, folderNamePath(folders, note.folderId)));
   }
 
   // The calendar as one .ics for other apps. A restore reads only the
   // root .md files, so it never brings an event back twice.
-  // Spec: ops/docs/archive/google-calendar-import.md (section 6)
+  // Spec: docs/internal/specs/google-calendar-import.md (section 6)
   const calendar = await calendarFileForBackup(notes);
   if (calendar) zip.file('calendar.ics', calendar);
 
@@ -595,14 +640,21 @@ async function buildFullBackupZip(
     ...(Object.keys(settings.customThemes ?? {}).length > 0 ? { customThemes: settings.customThemes } : {}),
     ...((settings.factors ?? []).length > 0 ? { factors: settings.factors } : {}),
     ...((settings.customHabits ?? []).length > 0 ? { customHabits: settings.customHabits } : {}),
+    // Medications and custom tracker definitions live in the settings only;
+    // without them a restore brought back journal values with no tracker or
+    // medication to draw them (external report, 2026-10-24, bug report 6).
+    ...((settings.medications ?? []).length > 0 ? { medications: settings.medications } : {}),
+    ...((settings.customTrackers ?? []).length > 0 ? { customTrackers: settings.customTrackers } : {}),
   };
   if (Object.keys(carried).length > 0) manifest.settings = carried;
   zip.file('manifest.json', JSON.stringify(manifest, null, 2));
 
   // ── 6. Generate and download ────────────────────────────────────────
 
-  onProgress?.(i18n.t('importExport:exportProgress.compressing'));
-  return { blob: await zip.generateAsync({ type: 'blob' }), missing };
+  progress({ step: 'zip' });
+  const blob = await zip.generateAsync({ type: 'blob' });
+  signal?.throwIfAborted();
+  return { blob, missing };
 }
 
 /** Returns the pictures and files the zip could not include. The zip is
@@ -612,14 +664,14 @@ export async function exportAllMarkdownZip(
   notes: LocalNote[],
   imageStore?: ImageStore | null,
   attachmentStore?: AttachmentStore | null,
-  onProgress?: (msg: string) => void,
+  onProgress?: (at: ExportStep) => void,
   folders: FolderDef[] = [],
-  settings: { itemStyles?: ItemStyles; customThemes?: CustomThemes; factors?: FactorDef[]; customHabits?: CustomHabitDef[] } = {},
-): Promise<MissingBlob[]> {
-  const { blob, missing } = await buildFullBackupZip(notes, imageStore, attachmentStore, onProgress, folders, settings);
+  settings: { itemStyles?: ItemStyles; customThemes?: CustomThemes; factors?: FactorDef[]; customHabits?: CustomHabitDef[]; medications?: MedicationTemplate[]; customTrackers?: CustomTrackerTemplate[] } = {},
+  signal?: AbortSignal,
+): Promise<BulkExportResult> {
+  const { blob, missing } = await buildFullBackupZip(notes, imageStore, attachmentStore, onProgress, folders, settings, signal);
   const stamp = toLocalIso(new Date());
-  await downloadBlob(blob, `privacynotes-backup-${stamp}.zip`);
-  return missing;
+  return { missing, savedPath: await downloadBlob(blob, `privacynotes-backup-${stamp}.zip`) };
 }
 
 /**
@@ -634,18 +686,19 @@ export async function exportEncryptedFullBackup(
   imageStore: ImageStore | null,
   attachmentStore: AttachmentStore | null,
   encryptionKey: Uint8Array,
-  onProgress?: (msg: string) => void,
+  onProgress?: (at: ExportStep) => void,
   folders: FolderDef[] = [],
-  settings: { itemStyles?: ItemStyles; customThemes?: CustomThemes; factors?: FactorDef[]; customHabits?: CustomHabitDef[] } = {},
-): Promise<MissingBlob[]> {
-  const { blob, missing } = await buildFullBackupZip(notes, imageStore, attachmentStore, onProgress, folders, settings);
+  settings: { itemStyles?: ItemStyles; customThemes?: CustomThemes; factors?: FactorDef[]; customHabits?: CustomHabitDef[]; medications?: MedicationTemplate[]; customTrackers?: CustomTrackerTemplate[] } = {},
+  signal?: AbortSignal,
+): Promise<BulkExportResult> {
+  const { blob, missing } = await buildFullBackupZip(notes, imageStore, attachmentStore, onProgress, folders, settings, signal);
   const sealed = encodeZipBackup(new Uint8Array(await blob.arrayBuffer()), encryptionKey);
   const stamp = toLocalIso(new Date());
-  await downloadBlob(
+  const savedPath = await downloadBlob(
     new Blob([sealed as BlobPart], { type: 'application/octet-stream' }),
     `privacynotes-backup-${stamp}.pnbackupz`,
   );
-  return missing;
+  return { missing, savedPath };
 }
 
 /**
@@ -706,7 +759,7 @@ export async function exportBookmarksHtml(
  * reads. Labels go back out in Apple's dialect and every unmodelled line
  * is written back verbatim, which is what makes the file readable by the
  * phone it came from. Loaded on demand like the bookmarks writer.
- * Spec: ops/docs/archive/contacts-pillar.md (section 8)
+ * Spec: docs/internal/specs/contacts-pillar.md (section 8)
  */
 export async function exportContactsVcf(notes: LocalNote[]): Promise<void> {
   const contacts = notes.filter(
@@ -749,7 +802,7 @@ export async function exportContactsVcf(notes: LocalNote[]): Promise<void> {
  * The calendar as an .ics file for Google Calendar, Apple Calendar or
  * Outlook. Past Google's 1 MB import limit the file is cut into parts of
  * whole events and saved as one .zip. Loaded on demand like the vCard writer.
- * Spec: ops/docs/archive/google-calendar-import.md (section 5)
+ * Spec: docs/internal/specs/google-calendar-import.md (section 5)
  */
 export async function exportCalendarIcs(notes: LocalNote[]): Promise<void> {
   const { buildCalendarFiles } = await import('./calendarIcs');
@@ -764,6 +817,61 @@ export async function exportCalendarIcs(notes: LocalNote[]): Promise<void> {
   const zip = new JSZip();
   parts.forEach((text, i) => zip.file(`calendar-${i + 1}.ics`, text));
   await downloadBlob(await zip.generateAsync({ type: 'blob' }), `privacynotes-calendar-${stamp}.zip`);
+}
+
+/**
+ * Every live drawing as its own `.excalidraw` file, which excalidraw.com and
+ * Obsidian open, in one .zip. Each picture gets its bytes back as a data URL
+ * (`toExcalidrawFile`); one that cannot be read is left out of its file and
+ * reported, like every bulk export. The trash stays home, as for contacts.
+ * Spec: docs/internal/specs/drawing.md (section 0, Exports)
+ */
+export async function exportDrawingsZip(
+  notes: LocalNote[],
+  imageStore?: ImageStore | null,
+  onProgress?: (at: ExportStep) => void,
+  signal?: AbortSignal,
+): Promise<BulkExportResult> {
+  const progress = (at: ExportStep) => {
+    signal?.throwIfAborted();
+    onProgress?.(at);
+  };
+  const drawings = notes
+    .filter((n) => n.type === 'drawing' && n.deleted !== 1 && n.trashed !== 1)
+    .flatMap((note) => {
+      const scene = parseScene(note.body);
+      return scene ? [{ note, scene }] : [];
+    });
+  const uuids = new Set<string>();
+  for (const { scene } of drawings) {
+    for (const file of Object.values(scene.files)) {
+      if (file.src.startsWith('pn:img/')) uuids.add(file.src.slice('pn:img/'.length));
+    }
+  }
+  const missing: MissingBlob[] = [];
+  const dataUris = new Map<string, string>();
+  let done = 0;
+  for (const uuid of uuids) {
+    progress({ step: 'pictures', done: ++done, total: uuids.size });
+    const data = await readForExport(imageStore && (() => imageStore.getImage(uuid)), { id: uuid, kind: 'image' }, missing);
+    if (data) dataUris.set(`pn:img/${uuid}`, `data:${sniffImageMime(data)};base64,${uint8ToBase64(data)}`);
+  }
+  progress({ step: 'zip' });
+  const { default: JSZip } = await import('jszip');
+  const zip = new JSZip();
+  const stems = zipEntryStems(drawings.map((d) => d.note));
+  drawings.forEach(({ scene }, i) => {
+    const urls = new Map<string, string>();
+    for (const [id, file] of Object.entries(scene.files)) {
+      const uri = dataUris.get(file.src);
+      if (uri) urls.set(id, uri);
+    }
+    zip.file(`${stems[i]!}.excalidraw`, toExcalidrawFile(scene, urls));
+  });
+  const blob = await zip.generateAsync({ type: 'blob' });
+  signal?.throwIfAborted();
+  const stamp = toLocalIso(new Date());
+  return { missing, savedPath: await downloadBlob(blob, `privacynotes-drawings-${stamp}.zip`) };
 }
 
 /** The one-file calendar a backup zip carries, or null when nothing is dated. */
@@ -802,6 +910,10 @@ function renderVaultHtml(vault: VaultContent): string {
   if (vault.notes) {
     html += `<div class="vault-notes"><strong>${escapeHtml(vault.notesLabel)}</strong><p>${escapeHtml(vault.notes)}</p></div>`;
   }
+  // The files are named, not carried: the page has nowhere to put them.
+  if (vault.files?.length) {
+    html += `<div class="vault-notes"><strong>${escapeHtml(i18n.t('shell:tagsRail.files'))}</strong><ul>${vault.files.map((n) => `<li>${escapeHtml(n)}</li>`).join('')}</ul></div>`;
+  }
   return html;
 }
 
@@ -831,7 +943,7 @@ function renderContactHtml(title: string, c: Contact): string {
   const phonetic = [c.phonetic.first, c.phonetic.middle, c.phonetic.last].map((s) => s.trim()).filter(Boolean).join(' ');
   if (phonetic) nameRows.push(row(t('itemPhonetic'), escapeHtml(phonetic)));
   const full = contactFullName(c);
-  if (full && full !== contactDisplayName(title, c)) nameRows.push(row(t('groupName'), escapeHtml(full)));
+  if (full && full !== contactDisplayName(title, c)) nameRows.push(row(t('menuName'), escapeHtml(full)));
   if (c.department.trim()) nameRows.push(row(t('department'), escapeHtml(c.department)));
 
   let html = [
@@ -839,13 +951,13 @@ function renderContactHtml(title: string, c: Contact): string {
     group(t('groupEmail'), c.emails.map((e) => row(labelText(e.label), link(`mailto:${e.value}`, e.value)))),
     group(t('groupAddress'), c.addresses.map((a) => row(labelText(a.label), escapeHtml(formatAddressLines(a).join('\n'))))),
     group(t('groupWebsite'), c.urls.map((u) => row(labelText(u.label), web(u.value)))),
-    group(t('groupProfile'), c.profiles.map((p) => row(labelText(p.label), web(p.value)))),
+    group(t('labels.profile'), c.profiles.map((p) => row(labelText(p.label), web(p.value)))),
     group(t('groupDates'), c.dates.map((d) => row(labelText(d.label), escapeHtml(formatContactDate(d.value, locale))))),
     group(t('groupRelated'), c.related.map((r) => row(labelText(r.label), escapeHtml(r.value)))),
-    group(t('groupName'), nameRows),
+    group(t('menuName'), nameRows),
   ].join('');
   if (c.notes.trim()) {
-    html += `<section class="contact-group"><h2 class="contact-group-title">${escapeHtml(t('groupNote'))}</h2><p class="contact-notes" dir="auto">${escapeHtml(c.notes)}</p></section>`;
+    html += `<section class="contact-group"><h2 class="contact-group-title">${escapeHtml(t('itemNote'))}</h2><p class="contact-notes" dir="auto">${escapeHtml(c.notes)}</p></section>`;
   }
   return html;
 }
@@ -909,7 +1021,10 @@ export function buildNoteHtmlDocument(note: LocalNote, folderPath: string[] = []
       ? renderContactHtml(note.title, contact)
       : vault
         ? renderVaultHtml(vault)
-        : renderMarkdown(note.body || '');
+        // A drawing's body is its scene: the page carries the title alone.
+        : note.type === 'drawing'
+          ? ''
+          : renderMarkdown(note.body || '');
   // A contact's header is the pane's hero: the tile beside the name, the job
   // and the company under it.
   const contactTile = contact ? contactTileHtml(note.title, contact) : '';
@@ -934,7 +1049,7 @@ export function buildNoteHtmlDocument(note: LocalNote, folderPath: string[] = []
   // The schedule under the title: an event's, or a dated note's or task
   // list's, and a journal entry's time when it has one. The day of a journal
   // entry is its title already.
-  // Spec: ops/docs/archive/calendar-pillar-spec.md (step 4)
+  // Spec: docs/internal/specs/calendar-pillar-spec.md (step 4)
   const schedule = scheduleOf(note.trackers as Record<string, unknown> | undefined, note.type);
   const scheduleHtml = schedule && !titleOnly && (note.type !== 'journal' || schedule.time)
     ? `\n      <div class="meta schedule">${escapeHtml(describeSchedule(schedule, i18n.getFixedT(null, 'shell')))}</div>`
@@ -964,8 +1079,9 @@ export function buildNoteHtmlDocument(note: LocalNote, folderPath: string[] = []
      in whatever browser the reader has. It is self-contained by
      construction - the images it shows are already inlined - so nothing it
      needs is a fetch, and a note that names a remote host must not turn a
-     print into a call to it. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: blob:; style-src 'unsafe-inline'; font-src data:" />
+     print into a call to it. default-src covers neither where a form sends
+     nor what a base element points at, so both are named. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: blob:; style-src 'unsafe-inline'; font-src data:; form-action 'none'; base-uri 'none'" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>${escapeHtml(title)}</title>
 <style>
@@ -978,7 +1094,7 @@ export function buildNoteHtmlDocument(note: LocalNote, folderPath: string[] = []
        printed version of it. Both stacks are what the app computes
        (Tailwind's defaults, no webfont anywhere) - change them together
        with the app or the two drift apart again.
-       Spec: ops/docs/design-decisions.md (export typography) */
+       Spec: docs/internal/design-decisions.md (export typography) */
     --pn-sans: -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --pn-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   }
@@ -1043,7 +1159,7 @@ export function buildNoteHtmlDocument(note: LocalNote, folderPath: string[] = []
      H4, H5 and H6 all read 1rem until v0.422.0, so three of the six levels
      exported as the same size as each other AND as the paragraph under
      them. The note title above sits a step clear of a body H1.
-     Spec: ops/docs/design-decisions.md (editor heading scale) */
+     Spec: docs/internal/design-decisions.md (editor heading scale) */
   .content h1 { font-size: 1.867rem; }
   .content h2 { font-size: 1.667rem; }
   .content h3 { font-size: 1.493rem; }
@@ -1075,7 +1191,7 @@ export function buildNoteHtmlDocument(note: LocalNote, folderPath: string[] = []
   /* The reader's own paragraph gap, so an exported or printed note lays out
      the way it looked on screen. A fixed 1em here reopened every break a
      compact editor closes.
-     Spec: ops/docs/design-decisions.md (editor paragraph rhythm) */
+     Spec: docs/internal/design-decisions.md (editor paragraph rhythm) */
   .content p {
     margin: ${paragraphGapCss()} 0;
   }
@@ -1401,6 +1517,8 @@ export function buildNoteHtmlDocument(note: LocalNote, folderPath: string[] = []
        the callout rule above exists - and why a highlight printed as plain
        text, its whole point gone, both before the palette shipped and after. */
     .content mark { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    /* A colored table cell (#616), for the same reason. */
+    .content td[data-fill], .content th[data-fill] { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     details.pn-callout:not([open]) > .pn-callout-body { display: block !important; }
     .content h1, .content h2, .content h3,
     .content h4, .content h5, .content h6 {
@@ -1528,15 +1646,21 @@ export async function exportAllHtmlZip(
   notes: LocalNote[],
   imageStore?: ImageStore | null,
   folders: FolderDef[] = [],
-  onProgress?: (msg: string) => void,
+  onProgress?: (at: ExportStep) => void,
   attachmentStore?: AttachmentStore | null,
-): Promise<MissingBlob[]> {
+  signal?: AbortSignal,
+): Promise<BulkExportResult> {
   const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
+  // A drawing has no page to print: it leaves as a file or a picture from
+  // its share menu, and the full backup keeps it.
+  // Spec: docs/internal/specs/drawing.md (section 7, Export)
+  notes = notes.filter((n) => n.type !== 'drawing');
   const stems = zipEntryStems(notes);
   const missing = new Map<string, MissingBlob>();
-  onProgress?.(i18n.t('importExport:exportProgress.building'));
   for (const [i, note] of notes.entries()) {
+    signal?.throwIfAborted();
+    onProgress?.({ step: 'notes', done: i + 1, total: notes.length });
     const filename = `${stems[i]!}.html`;
 
     const resolved = await resolveBodyImages(note.body, imageStore, attachmentStore);
@@ -1549,11 +1673,11 @@ export async function exportAllHtmlZip(
   }
   const calendar = await calendarFileForBackup(notes);
   if (calendar) zip.file('calendar.ics', calendar);
-  onProgress?.(i18n.t('importExport:exportProgress.compressing'));
+  onProgress?.({ step: 'zip' });
   const blob = await zip.generateAsync({ type: 'blob' });
+  signal?.throwIfAborted();
   const stamp = toLocalIso(new Date());
-  await downloadBlob(blob, `privacynotes-backup-${stamp}-html.zip`);
-  return [...missing.values()];
+  return { missing: [...missing.values()], savedPath: await downloadBlob(blob, `privacynotes-backup-${stamp}-html.zip`) };
 }
 
 declare global {

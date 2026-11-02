@@ -92,7 +92,7 @@ export interface FolderPickerProps {
   /** Rename a folder in place, from the row menu. */
   onRenameFolder?: (id: string, name: string) => void;
   /** Note mode while spaces are on: the tree in one section per space, each
-   *  under its name; Unfiled sits in the section flagged for it. Spec: ops/docs/plans/spaces.md */
+   *  under its name; Unfiled sits in the section flagged for it. Spec: docs/internal/specs/spaces.md */
   sections?: { key: string; label: string; icon: Icon; folders: FolderDef[]; unfiled?: boolean }[];
   /** The dialog's title; "Move to folder" when absent. */
   title?: string;
@@ -216,7 +216,7 @@ export function FolderPicker({
     if (onCreateFolder && canCreateChild(folders, folder.id)) {
       items.push({
         label: t('folders.newSubfolder'),
-        icon: <FolderPlus size={14} />,
+        icon: <FolderPlus />,
         onSelect: () => {
           setRenamingId(null);
           setCreateDraft('');
@@ -227,7 +227,7 @@ export function FolderPicker({
     if (onRenameFolder) {
       items.push({
         label: t('folders.rename'),
-        icon: <PencilSimple size={14} />,
+        icon: <PencilSimple />,
         onSelect: () => {
           cancelCreate();
           setRenameDraft(folder.name);
@@ -273,11 +273,11 @@ export function FolderPicker({
           <DotsThree />
         </button>
       )}
-      <span className="text-[11px] text-pn-muted tabular-nums ms-1 shrink-0">
+      <span className="text-meta text-pn-muted tabular-nums ms-1 shrink-0">
         {(open ? counts : totals).get(folder.id) ?? 0}
       </span>
       {checkedId === folder.id ? (
-        <Check size={14} className="ms-1.5 me-1 shrink-0 text-accent" />
+        <Check className="ms-1.5 me-1 shrink-0 text-accent" />
       ) : (
         <span className="ms-1.5 me-1 w-3.5 shrink-0" aria-hidden="true" />
       )}
@@ -289,7 +289,7 @@ export function FolderPicker({
       folders={list}
       density="dialog"
       sortSiblings={sortSiblings}
-      ariaLabel={t('folders.moveTo')}
+      ariaLabel={t('shell:contextMenu.moveToFolder')}
       isActive={(f) => checkedId === f.id}
       isDisabled={isDisabled}
       onSelect={(f) => onPick(f.id)}
@@ -327,7 +327,7 @@ export function FolderPicker({
             <div className="flex items-center gap-2 px-1 py-2">
               <span className="w-4 shrink-0" aria-hidden="true" />
               <span className="inline-flex shrink-0 text-label">
-                <Folder size={15} />
+                <Folder />
               </span>
               <FolderNameInput
           value={createDraft}
@@ -346,10 +346,10 @@ export function FolderPicker({
     <button
       type="button"
       onClick={() => onPick(null)}
-      className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-[14px] text-start transition text-pn-muted hover:bg-pn/5 hover:text-pn-soft"
+      className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-body text-start transition text-pn-muted hover:bg-pn/5 hover:text-pn-soft"
     >
       <span className="inline-flex shrink-0">
-        <Prohibit size={15} />
+        <Prohibit />
       </span>
       <span className="flex-1 min-w-0 truncate">
         {mode === 'folder' ? t('folders.rootLevel') : t('folders.unfiled')}
@@ -364,7 +364,7 @@ export function FolderPicker({
     >
       <div
         role="dialog"
-        aria-label={t('folders.moveTo')}
+        aria-label={t('shell:contextMenu.moveToFolder')}
         // The global chrome menu means nothing on top of a picker, and it
         // used to be the only menu a right-click here produced. Spec: #208.
         data-no-app-menu
@@ -375,18 +375,18 @@ export function FolderPicker({
           {/* One title for both modes. "Move folder" said the same thing in
               a second dialog that was quietly missing half this one's
               features, and a folder moves INTO a folder like anything else. */}
-          <h2 className="text-[15px] font-semibold m-0">{title ?? t('folders.moveTo')}</h2>
+          <h2 className="text-row font-semibold m-0">{title ?? t('shell:contextMenu.moveToFolder')}</h2>
           <CloseButton onClick={onClose} />
         </div>
         <div className="px-4 pb-2 shrink-0">
           <div className="flex items-center gap-2 rounded-md bg-surface-1 border border-divider px-2.5">
-            <MagnifyingGlass size={14} className="shrink-0 text-pn-muted" aria-hidden="true" />
+            <MagnifyingGlass className="shrink-0 text-pn-muted" aria-hidden="true" />
             <input
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('folders.searchPlaceholder')}
-              className="flex-1 min-w-0 h-9 bg-transparent text-[14px] focus:outline-none placeholder:text-pn-muted"
+              className="flex-1 min-w-0 h-9 bg-transparent text-body focus:outline-none placeholder:text-pn-muted"
             />
           </div>
         </div>
@@ -405,7 +405,7 @@ export function FolderPicker({
                   type="button"
                   disabled={disabled}
                   onClick={() => onPick(folder.id)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-[14px] text-start transition ${
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-body text-start transition ${
                     disabled
                       ? 'text-pn-muted/75 cursor-not-allowed'
                       : checkedId === folder.id
@@ -428,7 +428,7 @@ export function FolderPicker({
             sections ? (
               sections.map((sec, i) => (
                 <div key={sec.key} className={i > 0 ? 'mt-2 pt-2 border-t border-divider' : undefined}>
-                  <div className="flex items-center gap-1.5 px-3 pt-1 pb-1 text-[12px] font-semibold text-pn-muted">
+                  <div className="flex items-center gap-1.5 px-3 pt-1 pb-1 text-small font-semibold text-pn-muted">
                     <sec.icon size={13} aria-hidden="true" />
                     {sec.label}
                   </div>
@@ -451,7 +451,7 @@ export function FolderPicker({
               places. Muted for the same reason the rail's is. */}
           {!sections && unfiledRow}
           {searching && matches.length === 0 && (
-            <div className="px-3 py-2 text-[13px] text-pn-muted">
+            <div className="px-3 py-2 text-compact text-pn-muted">
               {t('folders.noMatches')}
             </div>
           )}
@@ -461,7 +461,7 @@ export function FolderPicker({
             {creatingUnder === null ? (
               <div className="flex items-center gap-2 px-3 py-1 flex-1">
                 <span className="inline-flex shrink-0 text-label">
-                  <Folder size={15} />
+                  <Folder />
                 </span>
                 <FolderNameInput
                   value={createDraft}
@@ -483,10 +483,10 @@ export function FolderPicker({
                    go, this is a thing you make. Two buttons that do the same
                    job in the two places that draw the same tree should not
                    look like different controls.
-                   Spec: ops/docs/archive/ui-patterns.md (section 76) */
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-dashed border-divider px-3 py-2 text-[13px] text-pn-muted transition hover:border-accent/50 hover:text-accent"
+                   Spec: docs/internal/design/ui-patterns.md (section 76) */
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-dashed border-divider px-3 py-2 text-compact text-pn-muted transition hover:border-accent/50 hover:text-accent"
               >
-                <FolderPlus size={15} className="shrink-0 text-label" />
+                <FolderPlus className="shrink-0 text-label" />
                 {t('folders.new')}
               </button>
             )}

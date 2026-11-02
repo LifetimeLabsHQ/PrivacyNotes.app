@@ -44,8 +44,8 @@ export type JournalTitlesProps = {
  * `trackers.journalDate`, which is what the Week in Review card matches
  * on. Nothing infers a date from the title. See notesViewUtils.ts.
  *
- * GitHub #200. Spec: ops/docs/archive/ui-patterns.md section 36 (settings standard),
- * ops/docs/archive/dates.md (section 3.5)
+ * GitHub #200. Spec: docs/internal/design/ui-patterns.md section 36 (settings standard),
+ * docs/internal/specs/dates.md (section 3.5)
  */
 /** The select's value for the custom pattern, which no preset uses. */
 const CUSTOM = 'custom';
@@ -102,7 +102,7 @@ export function JournalTitles({ format, onFormatChange, suffix, onSuffixChange, 
           value={customOpen ? CUSTOM : format}
           onChange={(e) => (e.target.value === CUSTOM ? setCustomOpen(true) : pickPreset(e.target.value as JournalTitleFormat))}
           aria-label={t('journals.titlesTitle')}
-          className="rounded-md bg-track border border-divider px-2.5 py-1.5 text-sm text-pn focus:border-accent focus:outline-none"
+          className="rounded-md bg-track border border-divider px-2.5 py-1.5 text-body text-pn focus:border-accent focus:outline-none"
         >
           {distinctJournalFormats(today, format, locale).map((f) => (
             <option key={f} value={f}>{journalTitle(today, f, '', locale)}</option>
@@ -118,7 +118,7 @@ export function JournalTitles({ format, onFormatChange, suffix, onSuffixChange, 
             onChange={(e) => onSuffixChange(e.target.value)}
             placeholder={t('journals.suffixPlaceholder')}
             aria-label={t('journals.suffixTitle')}
-            className="w-44 rounded-md bg-track border border-divider px-3 py-1.5 text-sm text-pn placeholder:text-pn-muted focus:border-accent focus:outline-none"
+            className="w-44 rounded-md bg-track border border-divider px-3 py-1.5 text-body text-pn placeholder:text-pn-muted focus:border-accent focus:outline-none"
           />
         )}
         </div>
@@ -135,13 +135,13 @@ export function JournalTitles({ format, onFormatChange, suffix, onSuffixChange, 
               onChange={(e) => onPatternChange(e.target.value)}
               placeholder={t('journals.customPatternPlaceholder')}
               aria-label={t('journals.customPattern')}
-              className="w-full rounded-md bg-track border border-divider px-3 py-1.5 font-mono text-sm text-pn placeholder:text-pn-muted focus:border-accent focus:outline-none"
+              className="w-full rounded-md bg-track border border-divider px-3 py-1.5 font-mono text-body text-pn placeholder:text-pn-muted focus:border-accent focus:outline-none"
             />
             {result &&
               ('text' in result ? (
-                <p className="mt-1.5 text-[13px] text-pn-soft">{t('journals.customPatternPreview', { title: result.text })}</p>
+                <p className="mt-1.5 text-compact text-pn-soft">{t('journals.customPatternPreview', { title: result.text })}</p>
               ) : (
-                <p role="alert" className="mt-1.5 text-[13px] text-red-600 dark:text-red-400">{errorText(result)}</p>
+                <p role="alert" className="mt-1.5 text-compact text-red-600 dark:text-red-400">{errorText(result)}</p>
               ))}
             <p className={`${SETTINGS_HELP} mt-3 mb-1.5`}>{t('journals.customPatternTokens')}</p>
             <div className="flex flex-wrap gap-1.5">
@@ -152,7 +152,7 @@ export function JournalTitles({ format, onFormatChange, suffix, onSuffixChange, 
                     key={token}
                     type="button"
                     onClick={() => insertToken(token)}
-                    className="inline-flex items-baseline gap-1.5 rounded-md border border-divider px-2 py-1 text-xs hover:border-pn-muted"
+                    className="inline-flex items-baseline gap-1.5 rounded-md border border-divider px-2 py-1 text-small hover:border-pn-muted"
                   >
                     <code dir="ltr" className="font-mono text-pn">{token}</code>
                     <span className="text-pn-muted">{'text' in value ? value.text : ''}</span>

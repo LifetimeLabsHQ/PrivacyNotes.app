@@ -2,7 +2,7 @@ import { COMMAND_PREFIX } from './commandPalette';
 import type { QuickAdd } from './quickAdd';
 import { dayNumber, shiftDay } from './schedule';
 import { stripToPlainText } from './notesViewUtils';
-import { isDelimiterRow, tableWidthFromMarker } from './tableDelimiterRow';
+import { isDelimiterRow, isTableMarker } from './tableDelimiterRow';
 import { foldForMatch, textMatcher } from './textMatch';
 
 /**
@@ -12,7 +12,7 @@ import { foldForMatch, textMatcher } from './textMatch';
  * second way into the quick add, in English and in the reader's language
  * (`quickAdd.json` `words.add`). Anything else is a jump. The mode lives in
  * the query, so the input always shows it and Backspace leaves it.
- * Spec: ops/docs/archive/quick-add-prefix.md
+ * Spec: docs/internal/specs/quick-add-prefix.md
  */
 export const CREATE_PREFIX = '+';
 export const TAG_PREFIX = '#';
@@ -57,24 +57,26 @@ export function emptyMessage(mode: SwitcherMode, query: string, quickAdd: boolea
 /** Typed inside a quick add, it adds the text to an item that exists. */
 const APPEND_MARK = '>>';
 
+/** A list comma in any script: Latin, Arabic, the ideographic and the full-width one. */
+const LIST_COMMA = /[,،、，]/;
+/** A quoted run, as the quick add's parser reads one: its comma is text. */
+const QUOTED = /"[^"]*"|“[^”]*”|«[^»]*»/g;
+
 /**
  * "milk, eggs >> groc": the text to add and the start of the item's title.
- * The last mark counts, so a ">>" inside the text stays text. Null when the
- * query has no mark or nothing before it. The target may be empty: the
- * switcher then offers the likely items.
+ * The last mark counts, so a ">>" inside the text stays text, and so does
+ * one in quotes ("Tom >> Jerry"). Null when the query has no mark or nothing
+ * before it. The target may be empty: the switcher then offers the likely
+ * items.
  */
 export function splitAppend(text: string): { text: string; target: string } | null {
-  const at = text.lastIndexOf(APPEND_MARK);
+  const masked = text.replace(QUOTED, (m) => ' '.repeat(m.length));
+  const at = masked.lastIndexOf(APPEND_MARK);
   if (at < 0) return null;
   const before = text.slice(0, at).trim();
   if (!before) return null;
   return { text: before, target: text.slice(at + APPEND_MARK.length).trim() };
 }
-
-/** A list comma in any script: Latin, Arabic, the ideographic and the full-width one. */
-const LIST_COMMA = /[,،、，]/;
-/** A quoted run, as the quick add's parser reads one: its comma is text. */
-const QUOTED = /"[^"]*"|“[^”]*”|«[^»]*»/g;
 
 /**
  * The lines an append writes: a comma list becomes one line a part, with
@@ -96,20 +98,43 @@ const EMPHASIS_MARKS = /[*_~`=\\]/g;
 const SNIPPET_SIDE = 40;
 
 /**
+ * The query with one read part of a quick add in quotes, so the parser keeps
+ * it as text: the part where it stands as whole words ("fri" in "Buy frisbee
+ * fri" is the last word, not inside "frisbee"), however many spaces are typed
+ * between its words. A script with no spaces has no whole word, so there the
+ * first place it stands is taken. The query as it was when the part is gone.
+ */
+export function quotePart(query: string, part: string): string {
+  const words = part.trim().split(/\s+/).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const whole = new RegExp(`(^|[\\s+"“«])(${words.join('\\s+')})(?=$|[\\s,;.!?"”»])`, 'u').exec(query);
+  if (whole) {
+    const at = whole.index + whole[1]!.length;
+    return `${query.slice(0, at)}"${whole[2]}"${query.slice(at + whole[2]!.length)}`;
+  }
+  const at = query.indexOf(part);
+  return at < 0 ? query : `${query.slice(0, at)}"${part}"${query.slice(at + part.length)}`;
+}
+
+/**
  * One line of a body as the list preview shows it: through the one preview
  * stripper (`stripToPlainText`), so a snippet never shows what a list row
  * hides, a spoiler included. A table row reads as its cells; its rule row and
- * width marker read as nothing.
+ * marker lines (width, cell colors) read as nothing.
  */
 function plainLine(line: string): string {
   const t = line.trim();
-  if (!t || isDelimiterRow(t) || tableWidthFromMarker(t) !== null) return '';
-  const plain = stripToPlainText(t);
-  if (!/^\|.*\|$/.test(plain)) return plain.replace(/\s+/g, ' ');
-  return plain
+  if (!t || isDelimiterRow(t) || isTableMarker(t)) return '';
+  if (!/^\|.*\|$/.test(t)) return stripToPlainText(t).replace(/\s+/g, ' ');
+  // A table row splits on its own bars first: a bar typed in a cell is saved
+  // as "\|", so a spoiler in a cell is "\|\|word\|\|" and each cell, its bars
+  // put back, goes through the stripper on its own.
+  return t
+    // A spoiler written with bare bars ("| pin | ||4242|| |", from an import)
+    // would split into cells of its own: masked first, as the stripper masks one.
+    .replace(/(^|[^|\\])\|\|(?![\s|])[^\n]*?\S\|\|(?!\|)/g, '$1•••')
     .slice(1, -1)
-    .split('|')
-    .map((c) => c.replace(/\s+/g, ' ').trim())
+    .split(/(?<!\\)\|/)
+    .map((c) => stripToPlainText(c.replace(/\\\|/g, '|').trim()).replace(/\s+/g, ' ').trim())
     .filter(Boolean)
     .join(' · ');
 }

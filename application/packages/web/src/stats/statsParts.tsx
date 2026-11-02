@@ -17,7 +17,7 @@ import { formatNumber, formatValue, hasData, levelLabel, trackerName, type Welln
  * The small parts of the Statistics page, in the look of the check-in card
  * and the journal pills: the tracker glyph, the logged pill, the bar that
  * grows from the middle, the weekday chart, the mood mix and the calendar.
- * Spec: ops/docs/archive/wellness-statistics.md (section 22)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 22)
  */
 
 /** Trackers where less is the better direction; a fall in them reads as good. */
@@ -63,7 +63,7 @@ export function StatPill({ icon, children, muted = false, tone, tint }: { icon?:
   const look = tint ? 'text-pn' : tone ? PILL_TONE[tone] : muted ? 'bg-surface-0 text-pn-muted' : PILL_TONE.good;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-md px-2 h-7 text-xs font-medium whitespace-nowrap ${look}`}
+      className={`inline-flex items-center gap-1.5 rounded-md px-2 h-7 text-small font-medium whitespace-nowrap ${look}`}
       style={tint ? { backgroundColor: `color-mix(in srgb, ${tint} 18%, transparent)` } : undefined}
     >
       {icon}
@@ -183,17 +183,17 @@ export function EffectBarRow({ d, label, sub, delta, sure, share, text, tone, on
       <TrackerTile d={d} />
       <span className="flex-1 min-w-0">
         <span className="flex items-center gap-1.5 min-w-0">
-          <span className="truncate text-sm text-pn">{label}</span>
+          <span className="truncate text-body text-pn">{label}</span>
           {sure}
         </span>
-        <span className="block truncate text-[11px] text-pn-muted">{sub}</span>
+        <span className="block truncate text-meta text-pn-muted">{sub}</span>
       </span>
       <span aria-hidden="true" className="relative hidden @md:block w-24 h-2 shrink-0 rounded bg-surface-0">
         <span className="absolute inset-y-[-3px] start-1/2 w-px bg-divider" />
         <span className={`absolute inset-y-0 rounded ${up ? 'start-1/2' : 'end-1/2'} ${bar}`} style={{ width: `${width}%` }} />
       </span>
-      <span className={`min-w-10 shrink-0 text-end text-sm font-semibold tabular-nums ${TONE_TEXT[mood]}`}>{signed}</span>
-      {onOpen && <CaretRight size={14} className="shrink-0 text-pn-muted" aria-hidden="true" />}
+      <span className={`min-w-10 shrink-0 text-end text-body font-semibold tabular-nums ${TONE_TEXT[mood]}`}>{signed}</span>
+      {onOpen && <CaretRight className="shrink-0 text-pn-muted" aria-hidden="true" />}
     </>
   );
   return onOpen
@@ -230,7 +230,7 @@ export function WeekdayChart({ values, color, format }: { values: (number | null
   return (
     <div className="grid grid-cols-7 gap-1.5 items-end h-24">
       {values.map((v, i) => (
-        <div key={i} className={`flex h-full flex-col items-center justify-end gap-1 text-[11px] ${v !== null && v === best ? 'font-semibold text-pn' : 'text-pn-muted'}`}>
+        <div key={i} className={`flex h-full flex-col items-center justify-end gap-1 text-meta ${v !== null && v === best ? 'font-semibold text-pn' : 'text-pn-muted'}`}>
           {v !== null && <span className="tabular-nums">{format(v)}</span>}
           <span
             className="block w-full rounded-t-md rounded-b-sm"
@@ -256,7 +256,7 @@ export function MoodMix({ series }: { series: DaySeries }) {
       <div className="flex h-2.5 overflow-hidden rounded-full">
         {counts.map((c, i) => c > 0 && <span key={i} style={{ width: `${(c / total) * 100}%`, backgroundColor: MOOD_COLORS[i] }} />)}
       </div>
-      <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-pn-muted">
+      <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-meta text-pn-muted">
         {counts.map((c, i) => (
           <span key={i} className="inline-flex items-center gap-1">
             <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: MOOD_COLORS[i] }} />
@@ -304,15 +304,15 @@ function DayGrid({ title, days, mood, from, to, picked, onPick }: {
   const lead = (new Date(`${days[0]}T12:00:00`).getDay() + 6) % 7;
   return (
     <div className="min-w-0">
-      <p className="text-sm font-semibold text-pn mb-1.5">{title}</p>
+      <p className="text-body font-semibold text-pn mb-1.5">{title}</p>
       <div className="grid grid-cols-7 gap-1 text-center">
-        {Array.from({ length: 7 }, (_, i) => <span key={`h${i}`} className="text-[11px] text-pn-muted">{weekdayLabel(weekdayDate(i), 'narrow')}</span>)}
+        {Array.from({ length: 7 }, (_, i) => <span key={`h${i}`} className="text-meta text-pn-muted">{weekdayLabel(weekdayDate(i), 'narrow')}</span>)}
         {Array.from({ length: lead }, (_, i) => <span key={`p${i}`} />)}
         {days.map((day) => {
           const inRange = day >= from && day <= to;
           const m = mood.get(day);
           const label = Number(day.slice(8));
-          if (!inRange) return <span key={day} className="py-1 text-[11px] text-pn-muted/60">{label}</span>;
+          if (!inRange) return <span key={day} className="py-1 text-meta text-pn-muted/60">{label}</span>;
           return (
             <button
               key={day}
@@ -322,7 +322,7 @@ function DayGrid({ title, days, mood, from, to, picked, onPick }: {
               aria-label={formatDay(day, 'date')}
               className={`flex flex-col items-center gap-0.5 rounded-md border py-1 ${picked === day ? 'border-accent ring-1 ring-accent' : 'border-divider hover:border-pn-muted'}`}
             >
-              <span className="text-[11px] text-pn-soft">{label}</span>
+              <span className="text-meta text-pn-soft">{label}</span>
               {m !== undefined ? <MoodMark mood={m} size={20} /> : <span className="w-5 h-5 rounded-md border border-dashed border-divider" />}
             </button>
           );
@@ -377,11 +377,11 @@ export function DayCalendar({ model, onOpenDay }: { model: WellnessModel; onOpen
       {picked && (
         <div className="mt-3 border-t border-divider pt-3">
           <div className="flex items-center justify-between gap-2 mb-2">
-            <p className="text-sm font-semibold text-pn">{formatDay(picked, 'date')}</p>
+            <p className="text-body font-semibold text-pn">{formatDay(picked, 'date')}</p>
             {onOpenDay && <Button action="open" onClick={() => onOpenDay(picked)}>{t('home.openEntry')}</Button>}
           </div>
           {pills.length === 0 ? (
-            <p className="text-xs text-pn-muted">{t('home.nothingThatDay')}</p>
+            <p className="text-small text-pn-muted">{t('home.nothingThatDay')}</p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {pills.map(({ d, v }) => (

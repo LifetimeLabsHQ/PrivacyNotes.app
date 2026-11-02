@@ -5,7 +5,7 @@ import type { DaySeries, RangeBounds } from './wellnessTypes';
  * day of one year, read from the mood series of that year. A cell past the
  * end of its month is null and stays blank; a day with no mood carries
  * `mood: undefined` and draws as an empty square.
- * Spec: ops/docs/archive/wellness-statistics.md (section 8)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 8)
  */
 
 export interface PixelDay {

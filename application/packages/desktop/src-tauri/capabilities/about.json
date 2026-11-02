@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "description": "The About window (open_about_window in lib.rs, macOS only) loads the app bundle with ?about-window=1 and shows one panel, which closes itself and opens links in the browser (AboutWindow.tsx). Those are its only grants, so a script in that window reaches nothing on disk: the Markdown folder's file grants stay on the main window.",
+  "identifier": "about",
+  "permissions": ["core:default", "core:window:allow-close", "opener:default"],
+  "platforms": ["macOS"],
+  "windows": ["about"]
+}

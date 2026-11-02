@@ -776,5 +776,67 @@
       "bytes": 56326,
       "sha256": "4321061acd86214265a7352cbf347bb6cc76ed26ab45872eab718efc0d105b76"
     }
+  },
+  "0.715": {
+    "typed-symbols": {
+      "w": 1444,
+      "h": 750,
+      "bytes": 21008,
+      "sha256": "8a4653a133b6e017f2b42c366be3e659787fbb30fa00399232eb33cd9b8716d1"
+    }
+  },
+  "0.717": {
+    "cell-colors": {
+      "w": 1444,
+      "h": 1038,
+      "bytes": 33110,
+      "sha256": "70a3515d024f1b6beb2889664b148f89ee0e4c8627abd7e4e736490a9caa9791"
+    },
+    "table-sort": {
+      "w": 1444,
+      "h": 1038,
+      "bytes": 35338,
+      "sha256": "96ec064ebd658ccad6fc945359cf385953b910c755cbd4aa2fa9e8d62cb03fb3"
+    }
+  },
+  "0.718": {
+    "import-tiles": {
+      "w": 2000,
+      "h": 1407,
+      "bytes": 304868,
+      "sha256": "c770f58862f8d864d1aa77ce7c4ffb8beffbaad4f38a7f164c8f42be2df7edba"
+    }
+  },
+  "0.719": {
+    "vault-files": {
+      "w": 1444,
+      "h": 1494,
+      "bytes": 40728,
+      "sha256": "19fb2fbfe114ebb190e8ed6af7a9c51e33b734d493aaf985a6bffde08cebab72"
+    }
+  },
+  "0.720": {
+    "dead-mans-switch": {
+      "w": 2000,
+      "h": 985,
+      "bytes": 245322,
+      "sha256": "67256e8a245ef7458a7741273d824ce5b34ce7bffafd9e4fec8c0bd2ec5bb2d7"
+    }
+  },
+  "0.721": {
+    "home": {
+      "w": 2000,
+      "h": 927,
+      "bytes": 90324,
+      "sha256": "ec18a54ef9541ba5f4ee46415e419db1f19896ca6768a86da38cea4a44e08027"
+    }
+  },
+  "0.722": {
+    "drawing": {
+      "w": 1764,
+      "h": 1800,
+      "bytes": 39236,
+      "sha256": "c9410dd041c8a466d47092eabea82fb1143d6140464f50fd11e0e55afc648d15"
+    }
   }
 }

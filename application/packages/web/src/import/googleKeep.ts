@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { zipEntryText } from './zipEntry';
+import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
 import { normalizeTag } from '../notesRepo';
 import { linkifyMarkdown } from './linkify';
 import { importBlobs } from './blobImport';
@@ -81,7 +81,7 @@ interface KeepNote {
 /**
  * Keep's note colors, as the colors of a folder or tag look. Keep has a few
  * more: cerulean reads as blue, brown as orange. DEFAULT maps to none.
- * Spec: ops/docs/archive/folder-tag-icons.md (section 4.7)
+ * Spec: docs/internal/specs/folder-tag-icons.md (section 4.7)
  */
 const KEEP_COLORS: Readonly<Record<string, string>> = {
   RED: 'red',
@@ -114,7 +114,7 @@ export const googleKeepImporter: Importer = {
 
   async parse(file, onProgress) {
     onProgress?.('Reading file…');
-    const { noteBlobs, imageBlobs } = await extractKeepNotes(file, onProgress);
+    const { noteBlobs, imageBlobs, tooLarge = 0 } = await extractKeepNotes(file, onProgress);
 
     if (noteBlobs.length === 0) {
       throw new Error(
@@ -125,6 +125,7 @@ export const googleKeepImporter: Importer = {
     onProgress?.('Parsing notes…');
     const notes: ImportedNote[] = [];
     const warnings: string[] = [];
+    if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
 
     let emptyCount = 0;
     let untaggedCount = 0;
@@ -406,6 +407,8 @@ function mimeFromExt(path: string): string {
 interface ExtractResult {
   noteBlobs: KeepBlob[];
   imageBlobs: Map<string, { data: Uint8Array; mime: string; name: string }>;
+  /** Pictures past the largest upload, left out (zipEntryMedia). */
+  tooLarge?: number;
 }
 
 /**
@@ -432,6 +435,7 @@ async function extractKeepNotes(
     onProgress?.('Unzipping…');
     const zip = await JSZip.loadAsync(file);
     const noteBlobs: KeepBlob[] = [];
+    let tooLarge = 0;
 
     // Separate JSON and image entries.
     const jsonEntries: JSZip.JSZipObject[] = [];
@@ -456,7 +460,11 @@ async function extractKeepNotes(
       onProgress?.(`Extracting ${imageEntries.length} image${imageEntries.length === 1 ? '' : 's'}…`);
       for (const entry of imageEntries) {
         const basename = entry.name.split('/').pop() ?? entry.name;
-        const data = new Uint8Array(await entry.async('uint8array'));
+        const data = await zipEntryMedia(entry);
+        if (!data) {
+          tooLarge++;
+          continue;
+        }
         imageBlobs.set(`keepimg:${basename}`, {
           data,
           mime: mimeFromExt(basename),
@@ -465,7 +473,7 @@ async function extractKeepNotes(
       }
     }
 
-    return { noteBlobs, imageBlobs };
+    return { noteBlobs, imageBlobs, tooLarge };
   }
 
   if (lowerName.endsWith('.json')) {

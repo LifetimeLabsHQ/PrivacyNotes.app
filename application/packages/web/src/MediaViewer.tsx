@@ -9,7 +9,7 @@
  * zoom buttons, and no control sits on it: the arrows have gutters of their
  * own, and on a phone they move into the bar.
  *
- * Spec: ops/docs/archive/ui-patterns.md (section 98, the picture viewer)
+ * Spec: docs/internal/design/ui-patterns.md (section 98, the picture viewer)
  */
 import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { lazyPart } from './chunkLoad';
@@ -191,7 +191,7 @@ export function MediaViewer({ items, index: startIndex, onClose }: {
     >
       <div className="shrink-0 pt-[env(safe-area-inset-top)]">
         <div className="h-14 flex items-center gap-1 px-2 sm:px-4">
-          <h2 className="flex-1 min-w-0 px-2 text-sm font-medium truncate" dir="auto">{title}</h2>
+          <h2 className="flex-1 min-w-0 px-2 text-body font-medium truncate" dir="auto">{title}</h2>
           {/* A mail is text that scrolls; zoom is for pictures and pages. */}
           <div className={`shrink-0 flex items-center${mail ? ' invisible' : ''}`}>
             <StageButton
@@ -199,28 +199,28 @@ export function MediaViewer({ items, index: startIndex, onClose }: {
               disabled={zoom <= 1}
               onClick={() => setZoom((z) => [...ZOOM_STEPS].reverse().find((s) => s < z - 0.01) ?? 1)}
             >
-              <MagnifyingGlassMinus size={18} />
+              <MagnifyingGlassMinus />
             </StageButton>
             <StageButton
               label={t('viewer.zoomIn')}
               disabled={zoom >= MAX_ZOOM}
               onClick={() => setZoom((z) => ZOOM_STEPS.find((s) => s > z + 0.01) ?? MAX_ZOOM)}
             >
-              <MagnifyingGlassPlus size={18} />
+              <MagnifyingGlassPlus />
             </StageButton>
           </div>
           {count > 1 && (
             <div className="shrink-0 flex items-center">
               <span className="sm:hidden">{previous('below', false)}</span>
-              <span className="px-1.5 text-xs tabular-nums text-white/60 whitespace-nowrap">
+              <span className="px-1.5 text-small tabular-nums text-white/60 whitespace-nowrap">
                 {t('viewer.position', { index: index + 1, count })}
               </span>
               <span className="sm:hidden">{next('below', false)}</span>
             </div>
           )}
           {canSaveMedia(item) && (
-            <StageButton label={t('attachment.download')} disabled={saving} onClick={() => void save()}>
-              <Download size={18} />
+            <StageButton label={t('common:updateToast.download')} disabled={saving} onClick={() => void save()}>
+              <Download />
             </StageButton>
           )}
           <StageButton label={t('common:actions.close')} tip="below-end" onClick={close}>
@@ -228,7 +228,7 @@ export function MediaViewer({ items, index: startIndex, onClose }: {
           </StageButton>
         </div>
         {failedSave === item.src && (
-          <p className="px-4 pb-2 text-xs text-red-400">{t('viewer.saveFailed')}</p>
+          <p className="px-4 pb-2 text-small text-red-400">{t('viewer.saveFailed')}</p>
         )}
       </div>
       <div data-backdrop="" className="flex-1 min-h-0 flex pb-[max(1rem,env(safe-area-inset-bottom))]">
@@ -300,7 +300,7 @@ function StageButton({ label, tip = 'below', edge = false, disabled = false, onC
 
 function Notice({ text }: { text: string }) {
   return (
-    <div className="h-full flex items-center justify-center p-6 text-sm text-center text-white/70">
+    <div className="h-full flex items-center justify-center p-6 text-body text-center text-white/70">
       {text}
     </div>
   );
@@ -314,7 +314,7 @@ function Notice({ text }: { text: string }) {
  * is down, and the zoom reaches the parent (the buttons, the swipe gate) when
  * the gesture ends. The area around the picture is backdrop, so a tap beside
  * a small picture closes the viewer the way a tap on the stage does.
- * Spec: ops/docs/archive/viewer-pinch-zoom.md
+ * Spec: docs/internal/specs/viewer-pinch-zoom.md
  */
 function Picture({ src, alt, zoom, onZoom, onPointerDown, onPointerUp, onPointerCancel }: {
   src: string;

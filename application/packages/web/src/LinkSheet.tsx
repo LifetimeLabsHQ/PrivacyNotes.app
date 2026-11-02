@@ -175,7 +175,7 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
   // Shared form content - used in both mobile and desktop layouts.
   const form = (
     <>
-      <label className="block text-[11px] font-medium text-pn-muted mb-1">
+      <label className="block text-meta font-medium text-pn-muted mb-1">
         {t('link.urlLabel')}
       </label>
       <input
@@ -195,13 +195,13 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
           urlError
             ? 'border-red-400 dark:border-red-500'
             : 'border-divider'
-        } bg-surface-2 px-3 py-2 text-sm text-pn focus:outline-none focus:ring-1 focus:ring-accent`}
+        } bg-surface-2 px-3 py-2 text-body text-pn focus:outline-none focus:ring-1 focus:ring-accent`}
       />
       {urlError && (
-        <p className="text-[11px] text-danger mt-1">{urlError}</p>
+        <p className="text-meta text-danger mt-1">{urlError}</p>
       )}
 
-      <label className="block text-[11px] font-medium text-pn-muted mb-1 mt-3">
+      <label className="block text-meta font-medium text-pn-muted mb-1 mt-3">
         {t('link.textLabel')}
       </label>
       <input
@@ -216,12 +216,12 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
           if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); onClose(); }
         }}
         disabled={hasSelection && !isEditing}
-        className={`w-full rounded-md border border-divider bg-surface-2 px-3 py-2 text-sm text-pn focus:outline-none focus:ring-1 focus:ring-accent ${
+        className={`w-full rounded-md border border-divider bg-surface-2 px-3 py-2 text-body text-pn focus:outline-none focus:ring-1 focus:ring-accent ${
           hasSelection && !isEditing ? 'opacity-50 cursor-not-allowed' : ''
         }`}
       />
       {hasSelection && !isEditing && (
-        <p className="text-[10px] text-pn-muted mt-1">
+        <p className="text-meta text-pn-muted mt-1">
           {t('link.selectedTextHint')}
         </p>
       )}
@@ -232,7 +232,7 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={remove}
-            className="rounded-md px-3 py-2 text-sm font-medium text-danger hover:bg-red-100 dark:hover:bg-red-900/30 transition"
+            className="rounded-md px-3 py-2 text-body font-medium text-danger hover:bg-red-100 dark:hover:bg-red-900/30 transition"
           >
             {t('common:actions.remove')}
           </button>
@@ -242,7 +242,7 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={onClose}
-          className="rounded-md px-3 py-2 text-sm font-medium text-pn-muted hover:bg-pn/5 transition"
+          className="rounded-md px-3 py-2 text-body font-medium text-pn-muted hover:bg-pn/5 transition"
         >
           {t('common:actions.cancel')}
         </button>
@@ -251,7 +251,7 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
           onMouseDown={(e) => e.preventDefault()}
           onClick={apply}
           disabled={!url.trim()}
-          className="rounded-md bg-accent-fill px-4 py-2 text-sm font-medium text-white hover:bg-accent-fill-hover transition disabled:opacity-40 disabled:cursor-not-allowed"
+          className="rounded-md bg-accent-fill px-4 py-2 text-body font-medium text-white hover:bg-accent-fill-hover transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {isEditing ? t('link.update') : t('link.apply')}
         </button>
@@ -261,7 +261,7 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
 
   const header = (
     <div className="mb-3 flex items-center justify-between gap-2">
-      <h3 className="text-base font-semibold text-pn">{isEditing ? t('link.editTitle') : t('link.addTitle')}</h3>
+      <h3 className="text-title font-semibold text-pn">{isEditing ? t('editor:link.menuEdit') : t('editor:toolbar.addLink')}</h3>
       <CloseButton onClick={onClose} className="-me-2" />
     </div>
   );
@@ -280,7 +280,7 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
           ref={sheetRef}
           className="fixed bottom-0 inset-x-0 z-50 bg-surface-2 border-t border-divider rounded-t-xl px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]"
           role="dialog"
-          aria-label={isEditing ? t('link.editTitle') : t('link.addTitle')}
+          aria-label={isEditing ? t('editor:link.menuEdit') : t('editor:toolbar.addLink')}
         >
           {/* Handle */}
           <div className="w-8 h-1 bg-pn-muted/35 rounded-full mx-auto mb-4" />
@@ -305,7 +305,7 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
         visibility: pos ? 'visible' : 'hidden',
       }}
       role="dialog"
-      aria-label={isEditing ? t('link.editTitle') : t('link.addTitle')}
+      aria-label={isEditing ? t('editor:link.menuEdit') : t('editor:toolbar.addLink')}
     >
       {header}
       {form}

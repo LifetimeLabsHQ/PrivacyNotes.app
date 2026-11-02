@@ -6,7 +6,7 @@ import { SETTINGS_HELP, SETTINGS_SELECT } from '../settingsUI';
 const BOX = { md: FIELD_CLASS, sm: SETTINGS_SELECT } as const;
 
 /** The label over a field: the accent glyph and 12px medium text. */
-const LABEL = 'mb-1 flex items-center gap-1.5 text-xs font-medium text-pn-muted';
+const LABEL = 'mb-1 flex items-center gap-1.5 text-small font-medium text-pn-muted';
 
 /**
  * @catalog TextField
@@ -42,7 +42,7 @@ export const TextField = forwardRef<HTMLInputElement, Omit<InputHTMLAttributes<H
         </label>
       )}
       {field}
-      {error ? <p className="mt-1 text-xs text-danger">{error}</p> : hint && <p className={`mt-1 ${SETTINGS_HELP}`}>{hint}</p>}
+      {error ? <p className="mt-1 text-small text-danger">{error}</p> : hint && <p className={`mt-1 ${SETTINGS_HELP}`}>{hint}</p>}
     </div>
   );
 });

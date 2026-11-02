@@ -12,7 +12,7 @@
  * worker.ts mirrors these hostnames by hand (separate bundle, cannot
  * import app code) - keep them in sync.
  *
- * Spec: ops/docs/domain-split.md (retirement phase, apex sunset model)
+ * Spec: docs/internal/domain-split.md (retirement phase, apex sunset model)
  */
 
 /** The dedicated app host. */
@@ -56,13 +56,44 @@ export function usesOfficialServer(): boolean {
  * tile and the store build's update toast link it from here. worker.ts keeps
  * a copy for /dl/appstore, because this module reads `window` and the Worker
  * is type-checked without it; tests/appStoreId.test.ts holds the two equal.
- * Spec: ops/docs/mobile-release-status.md (app records)
+ * Spec: docs/internal/mobile-release-status.md (app records)
  */
 export const APP_STORE_ID = '6785958812';
 export const APP_STORE_URL = `https://apps.apple.com/app/id${APP_STORE_ID}`;
 
+/**
+ * The Google Play listing of the Android app. Same two readers as
+ * APP_STORE_URL, and worker.ts keeps the same copy for /dl/play.
+ * Spec: docs/internal/mobile-release-status.md (app records)
+ */
+export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=app.privacynotes';
+
 let cachedApp: boolean | null = null;
 let cachedApex: boolean | null = null;
+let cachedBeta: boolean | null = null;
+
+/**
+ * True on the contributor beta site (beta.privacynotes.app, or its Pages
+ * address privacynotes-beta.pages.dev and the per-deploy previews under it).
+ * Swaps the header version stamp for the BETA stamp, so nobody mistakes the
+ * beta site for the app. `?betahost=1` forces it on localhost only, like
+ * `?apphost=1` above.
+ * Spec: docs/internal/plans/repo-split-contributors.md (Decision 2026-11-01)
+ */
+export function isBetaHost(): boolean {
+  if (cachedBeta !== null) return cachedBeta;
+  try {
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    cachedBeta =
+      host === 'beta.privacynotes.app' ||
+      host === 'privacynotes-beta.pages.dev' ||
+      host.endsWith('.privacynotes-beta.pages.dev') ||
+      (host === 'localhost' && new URLSearchParams(window.location.search).get('betahost') === '1');
+  } catch {
+    cachedBeta = false;
+  }
+  return cachedBeta;
+}
 
 /**
  * True when running on the dedicated app host (use.privacynotes.app).

@@ -3,14 +3,12 @@
     "importTitle": "Importuj svoje data",
     "exportTitle": "Exportuj svoje data",
     "restoreTitle": "Obnov svoje data",
-    "vaultTitle": "Importuj svoje hesla",
-    "tablistLabel": "Import, Export, Obnovit nebo Hesla",
+    "tablistLabel": "Import, Export, Obnovit nebo Sledované hodnoty",
     "tabImport": "Import",
     "tabExport": "Export",
     "tabRestore": "Obnovit",
     "tabVault": "Hesla",
-    "working": "Pracuji…",
-    "tabWellness": "Sledované hodnoty"
+    "working": "Pracuji…"
   },
   "footer": {
     "exportNote": "Export běží lokálně. Nic se nikam nenahrává.",
@@ -18,12 +16,11 @@
     "importNote": "Všechno je vždy zašifrované, na tvém zařízení i při synchronizaci."
   },
   "importPick": {
-    "autoTagLabel": "Označit importované poznámky podle zdroje",
-    "autoTagDesc": "Poznámky z Google Keep dostanou <keep>#google</keep>, poznámky z Obsidianu <obsidian>#obsidian</obsidian> a tak dále.",
     "guideAria": "Průvodce importem pro {{app}}",
     "guideLabel": "Návod",
-    "groupGeneral": "Obecné",
-    "groupNotes": "Poznámky"
+    "searchPlaceholder": "Najdi svou aplikaci",
+    "groupCalendar": "Kalendář, kontakty a záložky",
+    "noMatch": "Žádná aplikace neodpovídá. Většina aplikací na poznámky umí exportovat soubory Markdown a soubory Markdown se dají importovat tady."
   },
   "folderImport": {
     "tagLabel": "Označit poznámky i podle složky",
@@ -82,6 +79,7 @@
     "googleCalendar": "Soubor .zip z Google Calendar přes Settings > Import & export, nebo jeden soubor .ics. Události si zachovají časy, opakování i připomínky.",
     "appleNotes": "Exportuj přes bezplatnou aplikaci Exporter do Markdownu a pak sem přetáhni .zip.",
     "appleJournal": "Exportuj z Deníku na Macu nebo iPhonu, zkomprimuj složku AppleJournalEntries a přetáhni sem .zip. Záznamy se importují jako záznamy v deníku i s fotkami, videi, hlasovými poznámkami a polohami.",
+    "excalidraw": "Kresby uložené z excalidraw.com: jeden soubor .excalidraw, nebo víc zabalených do zipu. Fungují i kresby z pluginu Excalidraw v Obsidianu jako soubory .excalidraw.md. Obrázky uvnitř kresby se přenesou taky.",
     "evernote": "Jeden soubor .enex, nebo víc zabalených do zipu. Zachová formátování, štítky, přílohy, odkazy na poznámky a zápisníky. Úkoly Evernote do .enex nedává.",
     "samsungNotes": "Exportuj jako Word (.docx) nebo text (.txt). Víc souborů zabal do .zip pro hromadný import.",
     "simplenote": "Exportuj ze Simplenote (Settings -> Tools -> Export Notes). Přetáhni sem .zip.",
@@ -105,9 +103,6 @@
     "vcard": "Kontakty (vCard)",
     "markdownFolder": "Soubory Markdown"
   },
-  "vaultPick": {
-    "intro": "Importuj přihlašovací údaje, platební karty a SSH klíče z jiného správce hesel."
-  },
   "restorePick": {
     "intro": "Obnov dříve vytvořenou zálohu PrivacyNotes.",
     "fullBackupTitle": "Kompletní záloha (.zip)",
@@ -129,8 +124,8 @@
     "restoringBlobs": "Obnovuji obrázky a soubory..."
   },
   "errors": {
-    "genericParse": "Něco se pokazilo.",
     "decryptionFailed": "Dešifrování selhalo. Špatná fráze nebo poškozený soubor.",
+    "importNothingChanged": "Nic se nenaimportovalo a tvoje poznámky, složky a soubory zůstaly beze změny. {{detail}}",
     "blobImportFailed": "Tvoje poznámky se naimportovaly, ale jejich obrázky a soubory ne: {{detail}} V souboru, který jsi vybral, se nic nezměnilo, takže naimportované poznámky můžeš smazat a spustit import znovu.",
     "blobsNotInBackup_one": "Tvoje poznámky se obnovily, ale {{items}} uvedený v záloze v ní chybí.",
     "blobsNotInBackup_few": "Tvoje poznámky se obnovily, ale {{items}} uvedené v záloze v ní chybí.",
@@ -145,11 +140,7 @@
     "splitOversize_few": "Rozdělit tyto {{count}} poznámky podle nadpisů na menší poznámky, aby se synchronizovaly",
     "splitOversize_other": "Rozdělit těchto {{count}} poznámek podle nadpisů na menší poznámky, aby se synchronizovaly",
     "partTitle": "{{title}} ({{index}}/{{total}})",
-    "continuedIn": "Pokračování v {{link}}",
-    "sourceLabel": "Zdroj",
     "uniqueTags": "Unikátní značky",
-    "empty": "Prázdné",
-    "untagged": "Bez značek",
     "items": "Položky",
     "previewLabel": "Náhled",
     "andMore": "… a další ({{count}})",
@@ -160,9 +151,14 @@
     "eventSkipNote": "události, které už máš naimportované, se přeskočí a zůstanou, jak jsou, takže druhé spuštění je nezdvojí.",
     "restoreMergeNote": "poznámky z tvé vlastní zálohy se párují podle identifikátoru. Poznámka, kterou už máš, se aktualizuje jen tehdy, když je verze v záloze novější, a poznámka v koši se z něj vrátí.",
     "quotaExceeded": "<strong>Na import máš málo místa.</strong> Odhadem je potřeba {{needed}}, k dispozici je {{available}}. Před importem uvolni místo nebo přejdi na vyšší tarif.",
-    "quotaWarning": "Pozor: tento import spotřebuje přibližně {{needed}} z {{available}} zbývajícího místa.",
     "oversizeAttachments_one": "1 soubor je větší než limit {{limit}} na soubor v tvém plánu. Naimportuje se do tohoto zařízení, ale nesynchronizuje se s tvými dalšími zařízeními, dokud nepřejdeš na vyšší tarif.",
     "oversizeAttachments_other": "{{count}} souborů je větších než limit {{limit}} na soubor v tvém plánu. Naimportují se do tohoto zařízení, ale nesynchronizují se s tvými dalšími zařízeními, dokud nepřejdeš na vyšší tarif.",
+    "title": "Zkontroluj před importem",
+    "sourceTagLabel": "Označit každou poznámku značkou <tag>{{tag}}</tag>",
+    "sourceTagDesc": "Vypnuto: žádná značka pro zdroj. Značky, které už poznámky mají, se přenesou tak jako tak.",
+    "storageLine": "Tento import potřebuje asi {{needed}}. Volné máš {{available}}.",
+    "nothingWritten": "Nic se nezapíše, dokud nestiskneš Importovat.",
+    "whatComesIn": "Co se naimportuje",
     "oversizeAttachments_few": "{{count}} soubory jsou větší než limit {{limit}} na soubor v tvém plánu. Naimportují se do tohoto zařízení, ale nesynchronizují se s tvými dalšími zařízeními, dokud nepřejdeš na vyšší tarif.",
     "oversizeAttachments_many": "{{count}} souboru je větší než limit {{limit}} na soubor v tvém plánu. Naimportuje se do tohoto zařízení, ale nesynchronizuje se s tvými dalšími zařízeními, dokud nepřejdeš na vyšší tarif."
   },
@@ -181,6 +177,9 @@
     "contact_few": "kontakty",
     "contact_many": "kontaktů",
     "contact_other": "kontaktů",
+    "drawing_other": "kreseb",
+    "drawing_one": "kresba",
+    "drawing_few": "kresby",
     "zeroItems": "0 položek",
     "importButton": "Importovat {{counts}}",
     "note_few": "poznámky",
@@ -202,14 +201,14 @@
     "fullBackupHeading": "Kompletní záloha",
     "portableHeading": "Přenositelný export",
     "vaultOnlyHeading": "Jen trezor",
-    "zipBackupTitle": "Záloha PrivacyNotes (.zip)",
-    "zipBackupDesc": "Všechno: poznámky, deníky, položky trezoru, úkoly, obrázky, zvuk a soubory. Použij ji pro kompletní zálohu účtu nebo pro přechod na nové zařízení. Soubory uvnitř nejsou šifrované, proto ulož zip na bezpečné místo.",
-    "encryptedZipBackupTitle": "Šifrovaná úplná záloha (.pnbackupz)",
-    "encryptedZipBackupDesc": "Všechno, co obsahuje zip záloha - poznámky, položky trezoru, obrázky, zvuk a soubory - zapečetěné klíčem z tvojí fráze. Obnovíš ji svou frází na jakémkoli zařízení. Můžeš ji bezpečně uložit kamkoli.",
-    "encryptedBackupTitle": "Šifrovaná záloha (.pnbackup)",
-    "encryptedBackupDesc": "Veškerý textový obsah a metadata zašifrované klíčem z tvojí fráze. Bez obrázků a souborů. Můžeš ji bezpečně uložit kamkoli - bez tvojí fráze je nečitelná.",
+    "zipBackupTitle": "Všechno, bez šifrování (.zip)",
+    "zipBackupDesc": "Tvoje poznámky, deníky, položky trezoru, úkoly, obrázky, zvuk a soubory, spolu s léky a sledovanými hodnotami. Otevře se na jakémkoli počítači bez fráze, proto ji ulož na bezpečné místo. Historie poznámky a PIN zámku aplikace v ní nejsou.",
+    "encryptedZipBackupTitle": "Všechno, šifrovaně (.pnbackupz)",
+    "encryptedZipBackupDesc": "Totéž co zip, zapečetěné klíčem z tvojí fráze. Obnovíš ji svou frází na jakémkoli zařízení. Můžeš ji bezpečně uložit kamkoli.",
+    "encryptedBackupTitle": "Jen text, šifrovaně (.pnbackup)",
+    "encryptedBackupDesc": "Veškerý textový obsah a metadata, bez obrázků a souborů. Malý soubor zapečetěný klíčem z tvojí fráze. Můžeš ho bezpečně uložit kamkoli.",
     "htmlArchiveTitle": "HTML archiv (.zip)",
-    "htmlArchiveDesc": "Jedna tisknutelná HTML stránka na každou poznámku. Dobré pro čtení offline nebo archivaci, ne pro obnovu.",
+    "htmlArchiveDesc": "Jedna tisknutelná HTML stránka na každou poznámku, včetně přihlašovacích údajů, karet a klíčů jako nezašifrovaný text. Dobré pro čtení offline nebo archivaci, ne pro obnovu. Ulož ho na bezpečné místo.",
     "textBackupTitle": "Textová záloha (.json)",
     "textBackupDesc": "Veškerý textový obsah a metadata jako čistý JSON. Bez obrázků a souborů. Ulož ji na místo, kterému věříš - není zašifrovaná.",
     "vaultExportTitle": "Export trezoru (.json)",
@@ -223,6 +222,8 @@
     "calendarOnlyHeading": "Jen kalendář",
     "calendarExportTitle": "Soubor kalendáře (.ics)",
     "calendarExportDesc": "Události a poznámky a seznamy úkolů s datem, pro Google Calendar, Apple Calendar nebo Outlook.",
+    "drawingsExportTitle": "Kresby (.zip)",
+    "drawingsExportDesc": "Každá kresba jako samostatný soubor .excalidraw i s obrázky, pro excalidraw.com a Obsidian.",
     "calendarPrivate": "Soukromé"
   },
   "exportProgress": {
@@ -231,11 +232,8 @@
     "incompleteTitle": "Export je neúplný",
     "exportingTitle": "Exportuji zálohu...",
     "preparing": "Připravuji...",
-    "exporting": "Exportuji...",
-    "imagesProgress": "Exportuji obrázky... {{done}} z {{total}}",
-    "filesProgress": "Exportuji soubory... {{done}} z {{total}}",
-    "building": "Vytvářím zálohu...",
-    "compressing": "Komprimuji...",
+    "showInFolder": "Zobrazit ve složce",
+    "zipStep": "Komprese",
     "missingFailed_one": "Toto zařízení nemohlo stáhnout {{items}}, takže v exportu chybí. Zkontroluj připojení a exportuj znovu.",
     "missingFailed_few": "Toto zařízení nemohlo stáhnout {{items}}, takže v exportu chybí. Zkontroluj připojení a exportuj znovu.",
     "missingFailed_many": "Toto zařízení nemohlo stáhnout {{items}}, takže v exportu chybí. Zkontroluj připojení a exportuj znovu.",
@@ -294,7 +292,8 @@
     "generic": "Export se nepodařilo uložit. Zkus to znovu, nebo vyber jinou složku."
   },
   "saveErrors": {
-    "shortWrite": "Uložilo se jen {{written}} z {{expected}} bajtů, takže je soubor neúplný. Zkus to znovu a ulož do úložiště zařízení místo do složky v cloudu."
+    "shortWrite": "Uložilo se jen {{written}} z {{expected}} bajtů, takže je soubor neúplný. Zkus to znovu a ulož do úložiště zařízení místo do složky v cloudu.",
+    "protectedFolder": "PrivacyNotes neukládá do {{folder}}, protože tahle složka obsahuje klíče, nastavení nebo programy. Ulož soubor jinam a přesuň ho tam ručně."
   },
   "shareSheet": {
     "title_one": "Do PrivacyNotes byla sdílena {{count}} položka",
@@ -305,7 +304,6 @@
     "saveAll": "Uložit vše"
   },
   "destination": {
-    "label": "Přidat do",
     "none": "Bez složky",
     "newFolder": "Nová složka „{{name}}“",
     "help": "Složky ze zdroje se vloží do složky, kterou vybereš, a položky bez složky skončí přímo v ní."

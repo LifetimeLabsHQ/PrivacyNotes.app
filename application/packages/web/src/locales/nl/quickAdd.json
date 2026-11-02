@@ -39,6 +39,16 @@
     "ordinal": "e, ste, de, .",
     "work": "werk",
     "personal": "persoonlijk, privé, prive, thuis",
-    "in": "over"
+    "in": "over",
+    "weekend": "weekend, weekeinde",
+    "endOfMonth": "einde van de maand, eind van de maand, einde maand, eind maand, maandeinde",
+    "morning": "ochtend, 's ochtends, 's morgens",
+    "afternoon": "middag, 's middags",
+    "evening": "avond, 's avonds",
+    "biweekly": "tweewekelijks",
+    "quarterly": "driemaandelijks, per kwartaal",
+    "halfPast": "half past",
+    "numbers": "een, twee, drie, vier, vijf, zes, zeven, acht, negen, tien, elf, twaalf",
+    "a": "een"
   }
 }

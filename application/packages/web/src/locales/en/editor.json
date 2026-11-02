@@ -12,6 +12,8 @@
     "addLink": "Add link",
     "noteLink": "Link to another note (or type [[)",
     "numberedList": "Numbered list",
+    "indent": "Indent",
+    "outdent": "Outdent",
     "textColor": "Text color",
     "textColorApply": "Text color: {{color}}",
     "pickColor": "Choose a text color",
@@ -72,6 +74,7 @@
     "remove": "Remove callout",
     "collapse": "Collapse callout",
     "expand": "Expand callout",
+    "dragGrip": "Drag",
     "types": {
       "info": "Info",
       "success": "Success",
@@ -132,6 +135,9 @@
     "addColumnRight": "Add column right",
     "toggleHeaderRow": "Toggle header row",
     "equalColumnWidths": "Make columns equal",
+    "cellColor": "Cell color",
+    "sortAscending": "Sort A to Z",
+    "sortDescending": "Sort Z to A",
     "resizeHint": "Hold {{shift}} to change only this column, {{alt}} for finer steps",
     "deleteRow": "Delete row",
     "deleteColumn": "Delete column",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "Find in note",
-    "label": "Find in note",
     "previous": "Previous match",
     "previousTitle": "Previous",
     "next": "Next match",
     "nextTitle": "Next",
     "close": "Close find",
-    "closeTitle": "Close",
     "replacePlaceholder": "Replace with",
     "replaceLabel": "Replace with",
     "replace": "Replace",
@@ -177,10 +180,7 @@
     "replaceAll": "All",
     "replaceAllTitle": "Replace every match",
     "caseSensitive": "Match case",
-    "caseSensitiveTitle": "Match case",
     "closeReplace": "Close find and replace",
-    "closeReplaceTitle": "Close",
-    "showReplace": "Find and replace",
     "hideReplace": "Hide replace",
     "replacedCount_one": "{{count}} replaced",
     "replacedCount_other": "{{count}} replaced"
@@ -192,9 +192,7 @@
     "ariaLabel": "Note outline",
     "hide": "Hide outline",
     "copyHeadingLink": "Copy link to heading",
-    "copyNoteLink": "Copy note-link",
-    "copyHeadingShortcut": "Copy shortcut to heading",
-    "copied": "Copied"
+    "copyHeadingShortcut": "Copy shortcut to heading"
   },
   "bodyMenu": {
     "cut": "Cut",
@@ -210,11 +208,8 @@
     "add": "Add a line"
   },
   "link": {
-    "popoverLabel": "Add link",
     "placeholder": "Paste or type a URL",
     "apply": "Apply",
-    "addTitle": "Add link",
-    "editTitle": "Edit link",
     "urlLabel": "URL",
     "urlPlaceholder": "https://example.com",
     "errorEnterUrl": "Enter a URL",
@@ -230,7 +225,6 @@
   },
   "audio": {
     "uploadingRecording": "Uploading recording...",
-    "uploading": "Uploading...",
     "stopRecording": "Stop recording",
     "recordAudio": "Record audio",
     "savingRecording": "Saving recording...",
@@ -247,7 +241,6 @@
     "tasksChecked_other": "{{done}} of {{formatted}} checked",
     "syncLimit": " · {{share}} of the 1 MB sync limit",
     "overSyncLimit": " · over the 1 MB sync limit, stays on this device",
-    "split": "Split note",
     "veryLong": ", very long, may be slow to edit and stutter",
     "gettingLong": ", getting long, may lag on slower devices",
     "largeTableWarning": "Large table ({{rows}} rows) can make this note slow to edit, consider splitting it"
@@ -262,18 +255,14 @@
     "placeholder": "Text to copy with one click"
   },
   "inlineCode": {
-    "copyHint": "{{key}}-click to copy",
-    "copied": "Copied"
+    "copyHint": "{{key}}-click to copy"
   },
   "codeBlock": {
-    "copy": "Copy",
-    "copied": "Copied",
     "copyFailed": "Failed",
     "wrap": "Wrap long lines",
     "showAll_one": "Show all {{count}} line",
     "showAll_other": "Show all {{count}} lines",
     "showLess": "Show less",
-    "plainText": "Plain text",
     "language": "Code language: {{name}}",
     "searchLanguages": "Search languages",
     "placeholder": "Type or paste code. For colors, pick a language above."
@@ -354,7 +343,6 @@
     "inProgress": "In progress",
     "review": "Review",
     "done": "Done",
-    "color": "Color",
     "columns": "Columns",
     "columnCount_one": "{{count}} column",
     "columnCount_other": "{{count}} columns",

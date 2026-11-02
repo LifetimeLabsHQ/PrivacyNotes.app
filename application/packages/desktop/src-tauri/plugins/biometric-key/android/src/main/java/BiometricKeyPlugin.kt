@@ -61,7 +61,7 @@ class DeleteArgs {
  * Rejections carry one code, which the web side reads: `unsupported` (said
  * before any prompt: no strong biometric, or the Keystore refused the key),
  * `cancelled`, `gone` (the key is destroyed and never comes back) and `failed`.
- * Spec: ops/docs/plans/biometric-key-binding.md (section 8.2)
+ * Spec: docs/internal/plans/biometric-key-binding.md (section 8.2)
  */
 @TauriPlugin
 class BiometricKeyPlugin(private val activity: Activity) : Plugin(activity) {

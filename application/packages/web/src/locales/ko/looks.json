@@ -1,11 +1,9 @@
 {
   "captionFolder": "폴더",
   "captionTag": "태그",
-  "captionNote": "노트",
   "captionTracker": "트래커",
   "useDefault": "기본값 사용",
   "color": "색상",
-  "noColor": "색상 없음",
   "applyToSubfolders": "하위 폴더에도 색상 적용",
   "icon": "아이콘",
   "searchPlaceholder": "아이콘 검색",

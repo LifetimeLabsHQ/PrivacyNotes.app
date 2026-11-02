@@ -11,7 +11,7 @@ type ChangelogItem = {
   type: ChangelogItemType;
   text: string;
   /** Key of a screenshot on the /changelog page only, or several in order;
-   *  the app never loads them. Spec: ops/docs/plans/changelog-screenshots.md */
+   *  the app never loads them. Spec: docs/internal/plans/changelog-screenshots.md */
   shot?: string | string[];
   /** Numbers of the public GitHub issues this item answers, linked on the
    *  /changelog page to credit the people who asked. */
@@ -26,6 +26,137 @@ export type ChangelogRelease = {
 };
 
 export const PUBLIC_CHANGELOG: ChangelogRelease[] = [
+  {
+    version: '0.722',
+    date: '2026-11-02',
+    title: 'Drawings: sketch on a canvas next to your notes',
+    items: [
+      { type: 'new', text: 'Drawings are a new item type: a full-screen canvas for sketches, diagrams and handwriting, made from the "+" menu, Ninja or the right-click menu.', issues: [285], shot: 'drawing' },
+      { type: 'new', text: 'The canvas wears your theme, and its toolbar sits with the editor bar. Arrange it in Settings > Toolbar > Drawing.' },
+      { type: 'new', text: 'Pictures you add to a drawing are stored with the same encryption as the pictures in your notes.' },
+      { type: 'new', text: 'Import .excalidraw files, Obsidian\'s .excalidraw.md files too, and export a drawing as .excalidraw or PNG. Drawings are in your backups.' },
+      { type: 'new', text: 'The drawing keys have their own list: press ? in a drawing to see it, or print it from the cheat sheet.' },
+      { type: 'improved', text: 'The canvas makes no outside requests: its fonts ship with the app.' },
+    ],
+  },
+  {
+    version: '0.721',
+    date: '2026-11-02',
+    title: 'Home: a page of widgets you arrange',
+    items: [
+      { type: 'new', text: 'Home is a new page above All, with widgets for your check-in, calendar, coming up, open tasks, recent edits, pinned items, streaks, a chosen note and more.', issues: [570], shot: 'home' },
+      { type: 'new', text: 'Start from a layout (Everyday, Journal, Planner or Writer), then add, remove and move widgets. Your layout syncs to every device.' },
+      { type: 'new', text: 'Make each widget wider, narrower, taller or shorter, and Home packs the cards with no gaps.' },
+      { type: 'new', text: '"Show on Home" in the menu of a note, tag or folder adds it as a widget, and Home can be the page the app opens on. The folder widget and Week in review are part of Pro.' },
+      { type: 'new', text: 'Widgets follow your open space and your PIN: an item behind the PIN shows only as a plain row.' },
+    ],
+  },
+  {
+    version: '0.720',
+    date: '2026-11-02',
+    title: 'A dead man\'s switch for the server copy of your notes',
+    items: [
+      { type: 'new', text: 'Turn on the dead man\'s switch in Settings > ID & Sync. If none of your devices goes online for the time you pick, from one month to five years, the server deletes its copy of your notes, settings and files.', issues: [599], shot: 'dead-mans-switch' },
+      { type: 'new', text: 'Your account, Pro and storage subscriptions stay. When a device comes back online, it asks you to download a backup or delete the notes on that device.' },
+      { type: 'fixed', text: 'A device whose clock runs behind no longer signs you out at start: the app renews the sign-in.' },
+    ],
+  },
+  {
+    version: '0.719',
+    date: '2026-11-02',
+    title: 'Attach files to logins, cards and SSH keys',
+    items: [
+      { type: 'new', text: 'A login, card or SSH key has a Files section: attach a file with the button, by drop or by paste. Attaching is part of Pro, and files already attached stay usable on every plan.', issues: [563], shot: 'vault-files' },
+      { type: 'improved', text: 'A picture on a vault item keeps its original file and name, and a GIF stays animated.' },
+      { type: 'improved', text: 'Turning on two-factor sign-in no longer asks you to update your other devices first.' },
+    ],
+  },
+  {
+    version: '0.718',
+    date: '2026-11-02',
+    title: 'Import & Export, rebuilt and easier to find',
+    items: [
+      { type: 'new', text: 'A check step before an import shows what the file holds and lets you pick the folder, a tag and the other choices.', issues: [608] },
+      { type: 'improved', text: 'Import & Export shows each app as a tile, and a search finds your app by name or file type, so ".enex" finds Evernote.', issues: [608], shot: 'import-tiles' },
+      { type: 'improved', text: 'Bitwarden and browser passwords sit with the other sources in the Import tab.', issues: [608] },
+      { type: 'improved', text: 'The three backups have names that say what they hold and whether they are encrypted.' },
+      { type: 'improved', text: 'The backup window shows each step, can be cancelled, and on desktop opens the folder of the saved file.' },
+      { type: 'improved', text: 'For Pro, the AI prompt in the Trackers tab shows open and ready to copy.' },
+      { type: 'fixed', text: 'A backup keeps medications, custom trackers, files in table cells and the words you just typed in the open note.' },
+      { type: 'fixed', text: 'A failed import leaves nothing behind: no notes, no folders and no files.' },
+      { type: 'fixed', text: 'Notesnook imports keep pictures with no file extension, lists and formatting in table cells, and the width and alignment of pictures.', issues: [642, 597, 663] },
+      { type: 'fixed', text: 'Notesnook and UpNote imports keep characters you typed, such as ** or <b>, as text.' },
+      { type: 'fixed', text: 'A very large picture or file in an import is skipped with a warning and no longer freezes the app.', issues: [656] },
+      { type: 'fixed', text: 'Math in a picture\'s caption or in a link no longer breaks it in exports.', issues: [659] },
+    ],
+  },
+  {
+    version: '0.717',
+    date: '2026-11-02',
+    title: 'Tables: color the cells and sort by a column',
+    items: [
+      { type: 'new', text: 'Color table cells, the header row too, with the paint bucket on the table bar.', issues: [616], shot: 'cell-colors' },
+      { type: 'new', text: 'Sort a table by any column with the arrow in its header, A to Z or Z to A. Whole rows move and keep their colors.', issues: [636], shot: 'table-sort' },
+      { type: 'fixed', text: 'Exports add up table formulas the same way the app does.' },
+    ],
+  },
+  {
+    version: '0.716',
+    date: '2026-11-02',
+    title: 'Easier editing on a phone',
+    items: [
+      { type: 'new', text: 'Indent and Outdent buttons in the "+" menu of the format bar, and you can move them onto the bar.', issues: [614] },
+      { type: 'new', text: 'On iPhone and iPad, tap the status bar to go to the top.', issues: [617] },
+      { type: 'improved', text: 'Autocorrect and capitals switch off while you type code.', issues: [638] },
+      { type: 'fixed', text: 'Enter in a code block on Android starts a new line.', issues: [637] },
+      { type: 'fixed', text: 'Text size changes the body text on a phone, not only the headings.', issues: [646] },
+      { type: 'fixed', text: 'On iOS, the cursor on an empty line stays above the keyboard, and menus open above it.', issues: [624, 623] },
+      { type: 'fixed', text: 'On iOS, "Link copied" goes away on its own, and the sign-in sheet no longer closes the app.', issues: [641, 658] },
+    ],
+  },
+  {
+    version: '0.715',
+    date: '2026-11-02',
+    title: 'A note font, typed arrows, your own sidebar order, and fixes',
+    items: [
+      { type: 'new', text: 'Pick the font of your notes, Sans, Serif or Mono, in Settings > Editor.', issues: [615] },
+      { type: 'new', text: 'Turn typed symbols into arrows and math signs: -> becomes →, != becomes ≠. Off by default.', issues: [660], shot: 'typed-symbols' },
+      { type: 'new', text: 'Choose the first day of the week, and put the sidebar rows in your own order.', issues: [621] },
+      { type: 'new', text: 'Anniversaries and the other dates on a contact show on the calendar every year.', issues: [666] },
+      { type: 'new', text: 'Select many events in the calendar list and delete them at once.' },
+      { type: 'new', text: 'Drag a callout or a Kanban board by its grip, as you drag a task.', issues: [628] },
+      { type: 'new', text: 'Set a picture to any width from 10 to 100 percent, with a field or a corner handle.', issues: [663] },
+      { type: 'new', text: 'A medication card in Journals and All, with Taken and Skip for today\'s doses.', issues: [649] },
+      { type: 'new', text: 'An option to open links only with Cmd-click or Ctrl-click.', issues: [633] },
+      { type: 'new', text: 'The app lock settings belong to each device, so a phone can lock sooner than a computer.', issues: [662] },
+      { type: 'new', text: '"Don\'t ask again" on Move to Trash, and Delete forever from the same window.', issues: [603, 630] },
+      { type: 'new', text: 'When another device deletes many notes at once, the app asks you before it removes them here.' },
+      { type: 'new', text: 'Drag a note onto the tab bar to open it in a tab.' },
+      { type: 'new', text: 'Four new community themes: Darth Vader, Death Star, Jedi and Hoth.' },
+      { type: 'new', text: 'A Licenses page lists the open source parts the app is built on.' },
+      { type: 'improved', text: 'Rows show a paperclip for files and a bell for reminders, and long tag lists end in "+N more". Notes and Journals no longer repeat the type icon.', issues: [627, 618] },
+      { type: 'improved', text: 'Favourite tags follow the tag sort, and each sort starts in its natural direction.', issues: [644, 626, 611] },
+      { type: 'improved', text: 'Ninja reads dates the way each language says them, and items that Ninja adds stay.', issues: [601] },
+      { type: 'improved', text: 'Settings > Editor has two tabs, and text and icons follow one size scale in the app and on the website.' },
+      { type: 'improved', text: '"+ Add a line" adds a line only from its label.', issues: [632] },
+      { type: 'improved', text: 'The ``` shortcut takes c++, c# and other language names, and works in a list item.', issues: [674] },
+      { type: 'improved', text: 'A note that you type in and then clear goes away when you leave it.', issues: [602] },
+      { type: 'improved', text: 'Security fixes in sign-in, burn notes, exports and the desktop app.' },
+      { type: 'fixed', text: 'A highlight or colored text next to punctuation no longer writes code text into the note.', issues: [672] },
+      { type: 'fixed', text: 'Sync no longer stalls, skips a note, or loses a date on an item that Ninja added.', issues: [655, 654] },
+      { type: 'fixed', text: 'A device with a wrong clock or a lost connection no longer empties the Trash early, deletes text or puts back old settings.', issues: [651] },
+      { type: 'fixed', text: 'Escape in the sync conflict window no longer picks the other version.' },
+      { type: 'fixed', text: 'Note History keeps versions saved offline, and sign-out waits for the last upload.' },
+      { type: 'fixed', text: 'A burn link that was cut short keeps its note.', issues: [652] },
+      { type: 'fixed', text: 'The desktop app says when it cannot save into a protected folder, such as .ssh.', issues: [673, 648] },
+      { type: 'fixed', text: 'The Linux AppImage plays audio, and the desktop window opens in its theme with no white flash.', issues: [645, 665] },
+      { type: 'fixed', text: 'Windows updates wait for Restart, so no typing is lost.' },
+      { type: 'fixed', text: 'The tab bar scrolls only sideways, "Open in tab" works on Linux, and "All day" fits in every language.', issues: [620, 625, 631] },
+      { type: 'fixed', text: 'Renaming an item that holds one file renames the file too.', issues: [610] },
+      { type: 'fixed', text: 'Long runs of brackets no longer slow the app, and a damaged journal entry no longer stops it from starting.' },
+      { type: 'fixed', text: 'The language menu on the website works again.', issues: [653] },
+    ],
+  },
   {
     version: '0.694',
     date: '2026-10-23',

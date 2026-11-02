@@ -98,11 +98,11 @@ export function BurnShareModal({
   }
 
   const selectClass =
-    'w-full rounded-md border border-divider bg-surface-1 text-sm px-2.5 py-2 disabled:opacity-60';
+    'w-full rounded-md border border-divider bg-surface-1 text-body px-2.5 py-2 disabled:opacity-60';
 
   return (
-    <Modal onClose={onClose} title={t('burnShareModal.title')} icon={<Fire size={16} className="text-orange-500" />} className="max-w-md p-6 space-y-4">
-        <p className="text-sm text-pn-muted leading-relaxed">
+    <Modal onClose={onClose} title={t('burnShareModal.title')} icon={<Fire className="text-orange-500" />} className="max-w-md p-6 space-y-4">
+        <p className="text-body text-pn-muted leading-relaxed">
           <Trans
             i18nKey="notesChrome:burnShareModal.body"
             components={{ lead: <strong className="text-pn" /> }}
@@ -110,13 +110,13 @@ export function BurnShareModal({
         </p>
         <HelpChip surface="burn" />
         {imagesStripped && (
-          <div className="flex items-center gap-2 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-[13px] px-3 py-2">
-            <Warning size={15} className="shrink-0" />
+          <div className="flex items-center gap-2 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-compact px-3 py-2">
+            <Warning className="shrink-0" />
             {t('burnShareModal.imagesStripped')}
           </div>
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label className="block text-[13px]">
+          <label className="block text-compact">
             <span className="block mb-1">{t('burnShareModal.readTime')}</span>
             <select
               className={selectClass}
@@ -132,9 +132,9 @@ export function BurnShareModal({
                 </option>
               ))}
             </select>
-            <span className="block mt-1 text-xs text-pn-muted">{t('burnShareModal.readTimeHint')}</span>
+            <span className="block mt-1 text-small text-pn-muted">{t('burnShareModal.readTimeHint')}</span>
           </label>
-          <label className="block text-[13px]">
+          <label className="block text-compact">
             <span className="block mb-1">{t('burnShareModal.lifetime')}</span>
             <select
               className={selectClass}
@@ -150,7 +150,7 @@ export function BurnShareModal({
                 </option>
               ))}
             </select>
-            <span className="block mt-1 text-xs text-pn-muted">{t('burnShareModal.lifetimeHint')}</span>
+            <span className="block mt-1 text-small text-pn-muted">{t('burnShareModal.lifetimeHint')}</span>
           </label>
         </div>
         {url && (
@@ -158,21 +158,21 @@ export function BurnShareModal({
             type="text"
             readOnly
             value={url}
-            className="w-full rounded-md border border-divider bg-surface-1 text-pn-soft text-sm px-3 py-2.5 font-mono truncate focus:outline-none"
+            className="w-full rounded-md border border-divider bg-surface-1 text-pn-soft text-body px-3 py-2.5 font-mono truncate focus:outline-none"
             onFocus={(e) => e.target.select()}
           />
         )}
-        {error && <p className="text-[13px] text-danger">{error}</p>}
+        {error && <p className="text-compact text-danger">{error}</p>}
         <ModalFooter>
           {!url && <Button action="cancel" onClick={onClose} />}
           <Button
             variant="primary"
-            icon={copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
+            icon={copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
             onClick={handlePrimary}
             disabled={busy}
           >
             {copied
-              ? t('burnShareModal.copied')
+              ? t('auth:createPhrase.copied')
               : share
                 ? t('burnShareModal.share')
                 : url

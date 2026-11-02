@@ -3,12 +3,14 @@ import { Table, type TableOptions } from '@tiptap/extension-table';
 import { getHTMLFromFragment } from '@tiptap/core';
 import { Fragment } from '@tiptap/pm/model';
 import { Selection } from '@tiptap/pm/state';
-import { selectionCell } from '@tiptap/pm/tables';
+import { CellSelection, selectionCell } from '@tiptap/pm/tables';
 import { TABLE_MIN_WIDTH, delimiterRow } from './tableColumnWidths';
-import { tableWidthMarker } from './tableDelimiterRow';
+import { tableFillMarker, tableWidthMarker } from './tableDelimiterRow';
+import { cellFillColor } from './editorColors';
 import { ColumnWidthTableView, columnResizePlugin, registerTableWidthsMarkdown, renderTableHTML, tableWidthOf, tableWidths } from './tableColumnResize';
 import { isStoredAlignment } from './editorAlignment';
 import { tableFormulaPlugin } from './editorTableFormula';
+import { tableSortPlugin } from './editorTableSort';
 import { formulaSuggestion } from './FormulaSuggestion';
 import { isFormulaText } from './tableFormula';
 
@@ -65,6 +67,12 @@ function cellHasSpan(cell: any): boolean {
   return cell.attrs.colspan > 1 || cell.attrs.rowspan > 1;
 }
 
+function cellsByRow(table: any): any[][] {
+  const rows: any[][] = [];
+  table.forEach((row: any) => rows.push(cellsOf(row)));
+  return rows;
+}
+
 function cellsOf(row: any): any[] {
   const cells: any[] = [];
   row.forEach((cell: any) => cells.push(cell));
@@ -119,6 +127,16 @@ function escapeCellPipes(state: any, from: number): void {
     }
     if (typeof inline.start === 'number') inline.start = shift(inline.start);
     if (typeof inline.end === 'number') inline.end = shift(inline.end);
+  }
+  // That trim moves a delimiter until markdown-it's emphasis check says it
+  // may open there, and an escaped spoiler "\|\|" after a letter never may:
+  // "abc||Nantes||" lost its marks and saved as "abcNantes\" (GitHub #601).
+  // A spoiler takes no emphasis rule and prosemirror-markdown has already
+  // moved its edge spaces out, so a finished one in this cell is not trimmed.
+  if (Array.isArray(state.inlines)) {
+    state.inlines = (state.inlines as { start?: number; end?: number; delimiter?: unknown }[]).filter((inline) =>
+      !(typeof inline.start === 'number' && inline.start >= from && typeof inline.end === 'number'
+        && typeof inline.delimiter === 'string' && inline.delimiter.includes('|')));
   }
 }
 
@@ -206,6 +224,13 @@ function serializeTableToMarkdown(this: any, state: any, node: any, _parent: any
     state.write(tableWidthMarker(tableWidth));
     state.ensureNewLine();
   }
+  // Cell colors cannot live in a pipe row either, so they get a marker line
+  // of their own under the width one. An HTML table carries them as data-fill.
+  const fills = tableFillMarker(cellsByRow(node).map((row) => row.map((cell) => cellFillColor(cell.attrs['fill']) ? cell.attrs['fill'] : null)));
+  if (fills) {
+    state.write(fills);
+    state.ensureNewLine();
+  }
   state.closeBlock(node);
   state.inTable = false;
 }
@@ -221,7 +246,7 @@ function serializeTableToMarkdown(this: any, state: any, node: any, _parent: any
  * Column widths: `colwidth` holds a relative weight, so the node view and
  * `renderHTML` are replaced (TipTap's read it as pixels), and a plugin drags
  * a border. `resizable` stays false, which keeps prosemirror-tables' own
- * pixel resizer out. Spec: ops/docs/archive/table-column-widths.md
+ * pixel resizer out. Spec: docs/internal/specs/table-column-widths.md
  */
 export const TableWithMarkdown = Table.extend<TableOptions & TableFormulaOptions>({
   addOptions() {
@@ -246,6 +271,26 @@ export const TableWithMarkdown = Table.extend<TableOptions & TableFormulaOptions
       },
     };
   },
+  addGlobalAttributes() {
+    return [
+      {
+        // A cell's color (#616), a palette name. Drawn inline so a copied
+        // table keeps it in another app; data-fill is what parsing reads
+        // back. Spec: docs/internal/specs/table-cell-colors.md
+        types: ['tableCell', 'tableHeader'],
+        attributes: {
+          fill: {
+            default: null,
+            parseHTML: (element: HTMLElement) => (cellFillColor(element.getAttribute('data-fill')) ? element.getAttribute('data-fill') : null),
+            renderHTML: (attributes: Record<string, unknown>) => {
+              const color = cellFillColor(attributes['fill']);
+              return color ? { 'data-fill': attributes['fill'], style: `background-color: ${color}` } : {};
+            },
+          },
+        },
+      },
+    ];
+  },
   renderHTML({ node, HTMLAttributes }) {
     return renderTableHTML(node, { ...this.options.HTMLAttributes, ...HTMLAttributes });
   },
@@ -254,6 +299,12 @@ export const TableWithMarkdown = Table.extend<TableOptions & TableFormulaOptions
       ...(this.parent?.() ?? []),
       columnResizePlugin(),
       tableFormulaPlugin(),
+      // The cell's own markdown, read when a sort needs it: the serializer
+      // is set up after the plugins are.
+      tableSortPlugin((node) => {
+        const storage = this.editor.storage['markdown'] as { serializer?: { serialize(n: unknown): string } } | undefined;
+        return storage?.serializer ? storage.serializer.serialize(node) : null;
+      }),
       formulaSuggestion(this.editor, this.options.formulasUnlocked),
     ];
   },
@@ -340,4 +391,40 @@ export function stepTableCell(editor: TipTapEditor, dir: number): void {
   if (goToAdjacentCell(editor, dir) || dir !== 1 || !editor.can().addRowAfter()) return;
   editor.chain().addRowAfter().run();
   goToAdjacentCell(editor, 1);
+}
+
+/**
+ * Color the selected cells, or the caret's cell, with a palette name; null
+ * clears (#616). Not TipTap's `setCellAttribute`: prosemirror-tables gives up
+ * when the first cell already has the value, and in a cell selection it
+ * changed one cell only. One transaction, so one undo step.
+ * Spec: docs/internal/specs/table-cell-colors.md
+ */
+export function setCellFill(editor: TipTapEditor, name: string | null): void {
+  const { state } = editor;
+  const tr = state.tr;
+  const paint = (node: any, pos: number) => {
+    if ((node.attrs['fill'] ?? null) !== name) tr.setNodeMarkup(pos, null, { ...node.attrs, fill: name });
+  };
+  if (state.selection instanceof CellSelection) {
+    state.selection.forEachCell(paint);
+  } else {
+    let $cell: any;
+    try {
+      $cell = selectionCell(state);
+    } catch {
+      return;
+    }
+    paint($cell.nodeAfter, $cell.pos);
+  }
+  if (tr.docChanged) editor.view.dispatch(tr);
+}
+
+/** The color name of the caret's cell (the anchor cell of a cell selection), or null. */
+export function caretCellFill(editor: TipTapEditor): string | null {
+  try {
+    return selectionCell(editor.state).nodeAfter?.attrs['fill'] ?? null;
+  } catch {
+    return null;
+  }
 }

@@ -11,7 +11,7 @@
  *   > > [!column|purple]+ To do
  *   > > - [ ] A card
  *
- * Spec: ops/issues/0270.md (Spec)
+ * Spec: docs/internal/issues/0270.md (Spec)
  */
 
 import type { Node as PMNode, Schema } from '@tiptap/pm/model';

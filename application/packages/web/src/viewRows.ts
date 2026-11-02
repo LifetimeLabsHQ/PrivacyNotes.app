@@ -6,6 +6,51 @@ import type { View } from './views';
 /** One row in a list of views: the view it opens, its label, its glyph. */
 export type ViewRow = { key: View; label: string; icon: Icon };
 
+// The order the person gave the sidebar rows (Settings > Lists > Sidebar and
+// All, GitHub #621), synced as `viewOrder`. NotesView sets it on every render,
+// before any list of views is drawn, so every surface below follows it.
+let viewOrder: readonly View[] = [];
+
+export function setViewOrder(order: readonly View[]): void {
+  viewOrder = order;
+}
+
+/** Rows that keep their place at the top, in this order, whatever the stored
+ *  order says: Home, then All. Spec: docs/internal/specs/dashboard.md (section 2) */
+const PINNED_TOP: readonly View[] = ['dashboard', 'home'];
+
+/**
+ * Rows in the person's order. Home and All stay first. A view
+ * the stored order does not name (a pillar added later, or one this platform
+ * lacked when the order was saved) keeps its place after the row it follows
+ * by default, so a new pillar never lands at the end of somebody's list.
+ */
+export function orderViews<T extends { key: View }>(rows: T[], order: readonly View[]): T[] {
+  const byKey = new Map(rows.map((r) => [r.key, r]));
+  const placed = [...new Set(order)].filter((k) => !PINNED_TOP.includes(k) && byKey.has(k));
+  rows.forEach((r, i) => {
+    if (PINNED_TOP.includes(r.key) || placed.includes(r.key)) return;
+    let at = 0;
+    for (let j = i - 1; j >= 0; j--) {
+      const p = placed.indexOf(rows[j]!.key);
+      if (p >= 0) {
+        at = p + 1;
+        break;
+      }
+    }
+    placed.splice(at, 0, r.key);
+  });
+  const top = PINNED_TOP.filter((k) => byKey.has(k)).map((k) => byKey.get(k)!);
+  return [...top, ...placed.map((k) => byKey.get(k)!)];
+}
+
+/** The stored order after moving `key` to `to`, an index in the sidebar rows. */
+export function moveView(rows: readonly View[], key: View, to: number): View[] {
+  const out = rows.filter((k) => k !== key);
+  out.splice(Math.max(0, Math.min(to, out.length)), 0, key);
+  return out;
+}
+
 /**
  * Every view a list of views can offer, in sidebar order.
  *
@@ -18,14 +63,20 @@ export type ViewRow = { key: View; label: string; icon: Icon };
  *
  * The `t` is bound to the SHELL namespace by the caller. Adding a pillar means
  * one entry here and nowhere else.
- * Spec: ops/docs/archive/start-view.md (one row list, one label namespace)
+ * Spec: docs/internal/specs/start-view.md (one row list, one label namespace)
  */
 export function viewRows(t: TFunction): ViewRow[] {
+  return orderViews(defaultViewRows(t), viewOrder);
+}
+
+function defaultViewRows(t: TFunction): ViewRow[] {
   return [
+    { key: 'dashboard', label: t('tagsRail.dashboard'), icon: PILLAR_GLYPHS.dashboard },
     { key: 'home', label: t('tagsRail.allItems'), icon: PILLAR_GLYPHS.all },
     { key: 'starred', label: t('tagsRail.pinned'), icon: PILLAR_GLYPHS.pinned },
     { key: 'all', label: t('tagsRail.notes'), icon: PILLAR_GLYPHS.notes },
     { key: 'tasks', label: t('tagsRail.tasks'), icon: PILLAR_GLYPHS.tasks },
+    { key: 'drawings', label: t('tagsRail.drawings'), icon: PILLAR_GLYPHS.drawings },
     { key: 'vault', label: t('tagsRail.vault'), icon: PILLAR_GLYPHS.vault },
     { key: 'files', label: t('tagsRail.files'), icon: PILLAR_GLYPHS.files },
     { key: 'journal', label: t('tagsRail.journals'), icon: PILLAR_GLYPHS.journals },
@@ -38,7 +89,7 @@ export function viewRows(t: TFunction): ViewRow[] {
       : []),
     { key: 'contacts', label: t('tagsRail.contacts'), icon: PILLAR_GLYPHS.contacts },
     { key: 'bookmarks', label: t('tagsRail.bookmarks'), icon: PILLAR_GLYPHS.bookmarks },
-    // Always the last row: a place things go to leave, not a pillar.
+    // The last row by default: a place things go to leave, not a pillar.
     { key: 'archive', label: t('tagsRail.archive'), icon: PILLAR_GLYPHS.archive },
   ];
 }
@@ -48,7 +99,7 @@ export function viewRows(t: TFunction): ViewRow[] {
  *
  * All is absent because it cannot be hidden from itself: it is the home view
  * and the collapsed rail's logo goes there.
- * Spec: ops/docs/archive/sidebar-views.md
+ * Spec: docs/internal/specs/sidebar-views.md
  */
 export function sidebarViewRows(t: TFunction): ViewRow[] {
   return viewRows(t).filter((r) => r.key !== 'home');
@@ -62,7 +113,7 @@ export function sidebarViewRows(t: TFunction): ViewRow[] {
  * its items are out of All until the user lets them in.
  */
 export function allViewRows(t: TFunction): ViewRow[] {
-  return sidebarViewRows(t).filter((r) => r.key !== 'starred' && r.key !== 'markdown');
+  return sidebarViewRows(t).filter((r) => r.key !== 'starred' && r.key !== 'markdown' && r.key !== 'dashboard');
 }
 
 /** Views that list a state of an item (pinned, archived) rather than a type. */
@@ -99,7 +150,7 @@ export function switcherViewRows(t: TFunction): ViewRow[] {
  * Markdown is never a start view: its folder handle is session-only by design,
  * so the app would open on a pillar that can only explain itself. A view the
  * user has hidden is not offered either.
- * Spec: ops/docs/archive/start-view.md (a hidden start view falls back to All)
+ * Spec: docs/internal/specs/start-view.md (a hidden start view falls back to All)
  */
 export function startViewRows(t: TFunction, hidden: View[] | undefined): ViewRow[] {
   return viewRows(t).filter((r) => r.key !== 'markdown' && r.key !== 'archive' && !hidden?.includes(r.key));

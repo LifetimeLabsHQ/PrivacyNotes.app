@@ -7,6 +7,7 @@ import { hasMedia, stripMediaReferencesTo } from './imageProcessing';
 import { changesContent } from './editStamp';
 import { recordLedgerWrite, type LedgerWrite } from './dayLedger';
 import { withoutSourceIdentity } from './schedule';
+import { storedHoldIds } from './massDelete';
 
 /**
  * Pure Dexie CRUD. No network, and no crypto of its own: wire
@@ -126,10 +127,15 @@ export function extractInlineTags(
     // and `[x](https://e.com/a#b)` is a fragment; both look exactly like a tag
     // and neither is one. Found on a real docs folder, where anchors alone
     // invented a dozen tags nobody had written.
-    .replace(/\]\([^)]*\)/g, ']()')
+    // With no `)` after a `](`, no later destination can close either, so the
+    // rest is kept in one step instead of being read again from every `](`
+    // (external report, 2026-10-24).
+    .replace(/\]\([^)]*(\))?/g, (run, close?: string) => (close ? ']()' : run))
     // Note-link targets. `[[#Setup]]` and `[[Note#Setup]]` point at a
     // heading; the `#` there is an anchor, not a tag.
-    .replace(/\[\[[^\]\n]*\]\]/g, '[[]]')
+    // The second branch keeps a `[[` that opens none, up to where one opening
+    // inside it would fail the same way.
+    .replace(/\[\[[^\]\n]*\]\]|(\[\[[^\]\n]*)/g, (run, open?: string) => (open === undefined ? '[[]]' : run))
     .replace(/^\s{0,3}#{1,6}\s.*$/gm, '');
   // Last, so a code span holding `%%` is already gone and cannot pair up with
   // a later one across ordinary text.
@@ -225,14 +231,22 @@ export async function createNote(
   /** False for content brought in from elsewhere (a conflict copy, a
    *  Markdown-folder copy, a share from another app): it is not writing done
    *  here, so neither the day ledger nor the created-item counter moves. */
-  { counted = true }: { counted?: boolean } = {},
+  {
+    counted = true,
+    id,
+  }: {
+    counted?: boolean;
+    /** A derived id, for an item every device must create under the same
+     *  id (an extension clip). The caller checks that none exists. */
+    id?: string;
+  } = {},
 ): Promise<LocalNote> {
   // First real write is the contextual moment to ask for persistent
   // storage (no-op after the first call / in demo). See db.ts.
   void requestPersistence();
   const now = new Date().toISOString();
   const note: LocalNote = {
-    id: crypto.randomUUID(),
+    id: id ?? crypto.randomUUID(),
     title,
     body,
     tags: tags ?? [],
@@ -378,7 +392,7 @@ async function writePatch(current: LocalNote, patch: NotePatch, updatedAt: strin
   // The day ledger counts writing: a changed title, body or tag set, by the
   // person. A tracker, folder or type change alone is not writing (a pill tap
   // is not), and neither is the app's bookkeeping (an explicit stamp or
-  // `edit: false`). Spec: ops/docs/archive/wellness-statistics.md (section 20)
+  // `edit: false`). Spec: docs/internal/specs/wellness-statistics.md (section 20)
   const writing =
     updatedAt === undefined && opts?.edit !== false &&
     ((patch.title !== undefined && patch.title !== current.title) ||
@@ -521,7 +535,7 @@ export async function duplicateNote(id: string): Promise<LocalNote | null> {
  * after the screen last read it, or between the two writes, is never undone.
  * The copy keeps title, body, tags, folder and PIN protection; never
  * read-only. Null when `build` refuses or the series write does not land.
- * Spec: ops/docs/archive/calendar-pillar-spec.md (step 6)
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (step 6)
  */
 export async function splitOffCopy(
   id: string,
@@ -811,7 +825,7 @@ export async function bulkAddTag(ids: string[], tag: string): Promise<number> {
  * next sync pushes the change to the server like any other edit.
  *
  * `inScope` limits this and the two tag writes below to the open space;
- * without it every note is read. Spec: ops/docs/plans/spaces.md (section 8)
+ * without it every note is read. Spec: docs/internal/specs/spaces.md (section 8)
  *
  * Returns the number of notes modified.
  */
@@ -935,9 +949,11 @@ export async function clearLocalDatabase(opts?: { keepUnsyncedNotes?: boolean })
     // seal middleware would throw on any sealed row. Index reads,
     // primaryKeys() and bulkDelete never touch values. Both dirty
     // values are unsynced data (2 = sealed, invisible to old bundles).
-    // Spec: ops/docs/archive/local-at-rest.md (3.3, the key-free wipe)
+    // Spec: docs/internal/specs/local-at-rest.md (3.3, the key-free wipe)
+    // So are the notes the mass delete guard holds: the server deleted
+    // them and the question waits (massDelete.ts).
     const allNoteIds = await db.notes.toCollection().primaryKeys();
-    const keepNotes = new Set(await db.notes.where('dirty').anyOf(1, 2).primaryKeys());
+    const keepNotes = new Set([...(await db.notes.where('dirty').anyOf(1, 2).primaryKeys()), ...storedHoldIds()]);
     await db.notes.bulkDelete(allNoteIds.filter((id) => !keepNotes.has(id)));
     // Blobs that never reached the server (pendingUpload=1, or 2 when the
     // server refused them for good) are the same class of data: the cache
@@ -985,6 +1001,9 @@ export async function clearLocalDatabase(opts?: { keepUnsyncedNotes?: boolean })
   // The day ledger is this account's writing history on this device. A forced
   // sign-out keeps it with the unsynced notes, for the same returning owner.
   await db.dayLedger.clear();
+  // History versions still waiting are this account's; a forced sign-out
+  // keeps them with the unsynced notes, for the same returning owner.
+  await db.versionQueue.clear();
   // The favicon cache is a separate IndexedDB, so it is not covered by any
   // db.*.clear() above. It holds a per-domain record derived from the user's
   // links, so it must go on sign-out too. See clearFaviconCache.
@@ -1031,7 +1050,10 @@ export async function dropReferencesToBlobsOnlyHere(): Promise<number> {
  * pending tombstones included. Sign-out uses this to decide how hard
  * to try flushing before the wipe. */
 export async function countUnsyncedNotes(): Promise<number> {
-  return db.notes.where('dirty').anyOf(1, 2).count();
+  const dirty = new Set(await db.notes.where('dirty').anyOf(1, 2).primaryKeys());
+  // A note the mass delete guard holds exists nowhere else either.
+  const held = await db.notes.where('id').anyOf(storedHoldIds()).primaryKeys();
+  return dirty.size + held.filter((id) => !dirty.has(id)).length;
 }
 
 /**

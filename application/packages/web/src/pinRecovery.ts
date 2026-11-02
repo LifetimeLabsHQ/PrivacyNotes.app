@@ -17,7 +17,7 @@
  * Callers own persistence. Settings hands the result to its own save; the
  * lock screen writes it to the local cache before the app mounts.
  *
- * Spec: ops/docs/archive/pin-recovery.md
+ * Spec: docs/internal/specs/pin-recovery.md
  */
 
 import {
@@ -39,19 +39,16 @@ import { isPinWrapWithheld, loadLocalSettings, type UserSettings } from './userS
  * carry the removal to the others. Local side effects run here; the
  * returned blob still has to be saved and synced by the caller.
  *
- * `appLockEnabled` is deliberately untouched. It is a synced setting, while
- * an enrolled fingerprint is a fact about ONE device, so deciding the flag
- * from this device's biometric state would let a laptop with no fingerprint
- * reader switch off a phone's working fingerprint lock - a remote disarm,
- * from an action that has nothing to do with that phone. Nothing needs the
- * flag to move: App.tsx refuses to lock a device holding no wrapped blob, so
- * this device simply stops locking while every device that kept a door keeps
- * using it.
+ * `appLockEnabled` is deliberately untouched. It is a setting of each device
+ * (DEVICE_SETTINGS in userSettings.ts), and nothing needs it to move: App.tsx
+ * refuses to lock a device holding no wrapped blob, so this device simply
+ * stops locking while every device that kept a door keeps using it.
  *
  * `phrase` goes back at rest on a device whose wrap is its last door, so the
  * next boot has a session to restore. Arming app lock strips the stored copy,
- * which makes the wrap the only one; the flag is not the test, because it can
- * come off on another device while this one still holds only the wrap.
+ * which makes the wrap the only one; the flag is not the test, because a
+ * version before #662 synced it, and it can have come off on another device
+ * while this one still holds only the wrap.
  *
  * Answers null, having changed nothing, when that phrase does not read back:
  * the wrap stays, and so does the PIN that opens it. Callers keep the PIN and
@@ -142,6 +139,10 @@ export async function restoreUnsavedClear(
  * lost. A write the store refuses keeps the wrap until a later pass lands
  * it. Making the wrap stick for good would bring back a PIN removed on one
  * device still unlocking every other one.
+ *
+ * The flag travels with the wrap, so the same pass is where a lock armed on
+ * another device arrives here, and it strips the phrase as arming did there
+ * (`stripPhraseUnderArmedLock`).
  */
 export async function syncPinWrap(settings: UserSettings, phrase?: string): Promise<void> {
   if (settings.pinWrapSalt && settings.pinWrapIV && settings.pinWrapCiphertext) {
@@ -161,6 +162,10 @@ export async function syncPinWrap(settings: UserSettings, phrase?: string): Prom
     if (!hasPinWrappedPhrase() || !hasSamePinWrap(blob)) {
       hydrateLocalPinWrap(blob);
     }
+    // The door is the account's wrap as it now reads back, not merely some
+    // wrap: an old one the write failed to replace opens only with a retired
+    // PIN. Pinned by tests/pinRecovery.test.ts.
+    if (hasSamePinWrap(blob)) stripPhraseUnderArmedLock(settings, phrase);
     return;
   }
   // Four nulls can also mean the cache does not KNOW the account's wrap:
@@ -179,7 +184,30 @@ export async function syncPinWrap(settings: UserSettings, phrase?: string): Prom
   removePinWrappedPhrase();
 }
 
-// Spec: ops/docs/biometric-unlock.md (PIN wrap PBKDF2 count before it was
+/**
+ * Arming the app lock strips the phrase at rest on the device where the
+ * switch is pressed, so the lock screen guards the only copy. The switch is a
+ * setting of each device (#662), but a device that signs in takes the
+ * account's value with its first pull, and its sign-in wrote the phrase
+ * before that pull and the wrap arrived. The pass that brings the flag and
+ * the wrap strips it here too. The same holds for a device on a version
+ * before #662, where the flag still syncs.
+ *
+ * Only behind the account's own wrap, read back on this device: an untrusted
+ * device or a signed-out pass refuses to write it. Not behind a fingerprint:
+ * its record outlives a native key the OS destroyed, and the lock screen's
+ * way back from that ("gone") needs the phrase still at rest. And only for
+ * the live sign-in's phrase, so a pass that outlived its session cannot take
+ * another account's phrase off.
+ *
+ * Spec: docs/contrib/biometric-unlock.md (section 5, the lock armed on another device)
+ */
+function stripPhraseUnderArmedLock(settings: UserSettings, phrase?: string): void {
+  if (settings.appLockEnabled !== true || !phrase || !isLivePhrase(phrase)) return;
+  if (hasStoredPhrase()) removeStoredPhrase();
+}
+
+// Spec: docs/contrib/biometric-unlock.md (PIN wrap PBKDF2 count before it was
 // recorded alongside the blob)
 const LEGACY_WRAP_ITERATIONS = 100_000;
 

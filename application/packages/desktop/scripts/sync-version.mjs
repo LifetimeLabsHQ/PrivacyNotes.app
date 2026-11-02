@@ -5,7 +5,7 @@
 // web/src/i18n.ts) into both Info.plist files. Runs
 // automatically before every Tauri dev/build (wired into
 // beforeDevCommand/beforeBuildCommand in tauri.conf.json).
-// Spec: ops/docs/commit-workflow.md (version single source)
+// Spec: docs/internal/commit-workflow.md (version single source)
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
@@ -46,7 +46,7 @@ if (cargoNext !== cargo) {
 // Tauri writes it at `android init` and does not reliably refresh it afterwards, so without
 // this an AAB ships new code under the previous stamp, which Play rejects as a duplicate
 // versionCode. Skipped when the Android project has never been generated on this machine.
-// Spec: ops/docs/android-setup.md (Android version stamp)
+// Spec: docs/internal/android-setup.md (Android version stamp)
 const androidPropsPath = resolve(
   root,
   'packages/desktop/src-tauri/gen/android/app/tauri.properties',
@@ -73,7 +73,7 @@ if (existsSync(androidPropsPath)) {
 
 // The iOS share extension: App Store Connect refuses an upload whose extension
 // version differs from the app's, and Tauri stamps only the app's own plist.
-// Spec: ops/docs/archive/share-into-app.md
+// Spec: docs/internal/specs/share-into-app.md
 const sharePlistPath = resolve(root, 'packages/desktop/src-tauri/ios-share/Info.plist');
 const sharePlist = readFileSync(sharePlistPath, 'utf8');
 const sharePlistNext = sharePlist.replace(
@@ -94,7 +94,7 @@ if (sharePlistNext !== sharePlist) {
 // writes back into it; a freshly re-initialized one without the key is left alone,
 // because the next iOS build merges the key in. Apple knows Traditional Chinese by
 // its script tag.
-// Spec: ops/docs/i18n-spec.md section 10d (wiring checklist)
+// Spec: docs/contrib/i18n-spec.md section 10d (wiring checklist)
 const i18nPath = resolve(root, 'packages/web/src/i18n.ts');
 const declared = readFileSync(i18nPath, 'utf8').match(/SUPPORTED_LOCALES = \[([\s\S]*?)\] as const;/);
 if (!declared) {
@@ -129,7 +129,7 @@ for (const [plistRel, required] of [
 // that guard every other string guard these too. A locale whose catalog lacks
 // them gets no folder, and iOS falls back to English. Apple knows Traditional
 // Chinese by its script tag, as above.
-// Spec: ops/docs/archive/share-into-app.md
+// Spec: docs/internal/specs/share-into-app.md
 for (const lang of readdirSync(resolve(root, 'packages/web/src/locales'))) {
   const catalogPath = resolve(root, 'packages/web/src/locales', lang, 'shell.json');
   if (!existsSync(catalogPath)) continue;

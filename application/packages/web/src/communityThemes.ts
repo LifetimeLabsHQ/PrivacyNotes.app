@@ -19,7 +19,7 @@
  * nothing else about them.
  *
  * Import-free: themes-page.ts loads this file on its own.
- * Spec: ops/docs/color-themes.md (section 6)
+ * Spec: docs/contrib/color-themes.md (section 6)
  */
 export interface CommunityTheme {
   id: string;
@@ -34,16 +34,20 @@ export interface CommunityTheme {
   /** What the author wrote about the theme in the form's "Anything we should
    *  know" field, rewritten into the house pattern (inspiration, colon,
    *  colors) with the same content: plain text on one line, at most 240
-   *  characters (ops/docs/community-themes.md, section 3). /themes shows it on
+   *  characters (docs/contrib/community-themes.md, section 3). /themes shows it on
    *  the card and in the viewer; the app does not show it. */
   description?: string;
 }
 
 /** The Themes discussions of the public repository; a theme's thread is
  *  this URL, a slash and its `discussion` number. */
-export const THEME_DISCUSSIONS_URL = 'https://github.com/LifetimeLabsDev/PrivacyNotes.app/discussions';
+export const THEME_DISCUSSIONS_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app/discussions';
 
 export const COMMUNITY_THEMES: CommunityTheme[] = [
+  { id: 'hoth00000000', code: 'pn1:Hoth:EBEBEB,E0E9F0,7D9CBA,444444,606060,4B5B67:by=plaidski', added: '2026-11-02', discussion: 678, description: "Star Wars: the ice planet Hoth, crisp as a fresh sheet of copy paper under office light, with an icy blue border and a slate accent." },
+  { id: 'jedi00000000', code: 'pn1:Jedi:F4EEE2,D5C9B0,C5B599,4D3C3A,5F5345,206225:by=privacytoolsIO', added: '2026-10-30', discussion: 671, description: "Star Wars: the cream and tan of Jedi robes with the green of Luke's lightsaber." },
+  { id: 'deathstar000', code: 'pn1:Death Star:2A2E33,171112,4D494E,E9ECEE,A39CA1,5DE1E4:by=privacytoolsIO', added: '2026-10-30', discussion: 670, description: "Star Wars: the gunmetal grey of the Death Star with a cyan hologram glow." },
+  { id: 'darthvader00', code: 'pn1:Darth Vader:120C0C,000400,331A1A,EEE2DE,A68E88,FF302E:by=privacytoolsIO', added: '2026-10-30', discussion: 669, description: "Star Wars: the black armor of Darth Vader with the red of a Sith lightsaber." },
   { id: 'whiterabbit0', code: 'pn1:White Rabbit:000000,030803,0F2A12,A8F5A8,4F9A58,00FF41:list=080C08,well=080C08,soft=89D58C,hover=B8FFC8,fill=008422,fillhover=00731E,danger=FF5C5C,warning=E8E05A,success=00FF41,by=Real-Fruit-Snacks', added: '2026-10-20', discussion: 589, description: "Falling green code on black." },
   { id: 'krustykrab00', code: 'pn1:Krusty Krab:FFF4E6,FCE0C2,F0C295,3A2410,7A5228,C8102E:list=FFFAF2,well=FFFAF2,soft=503418,hover=0B5886,fill=C8102E,fillhover=AE0E28,danger=B3261E,warning=7A5200,success=2E6B3A,by=Real-Fruit-Snacks', added: '2026-10-20', discussion: 588, description: "A fast-food shack: patty-bun cream with ketchup red and a blue hover." },
   { id: 'bikinibottom', code: 'pn1:Bikini Bottom:F8F6D8,FFF2A8,E8D66A,2B3A1C,6B6A2E,0B70AA:list=FCFAEC,well=FCFAEC,soft=414B22,hover=745900,fill=0B7AB8,fillhover=0A6AA0,danger=C8102E,warning=7A5200,success=2E7D32,by=Real-Fruit-Snacks', added: '2026-10-20', discussion: 587, description: "Under the sea: sandy yellow with lagoon-blue buttons and a sponge-yellow hover." },

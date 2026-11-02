@@ -8,13 +8,14 @@
  * Web: window.open with noopener, same guarantees as rel="noopener".
  * Tauri (desktop + mobile wrappers): the opener plugin, because the
  * WebView swallows window.open the same way it swallows target=_blank.
- * Spec: ops/docs/macos-ios-setup.md (native flows use the same opener plugin)
+ * Spec: docs/internal/macos-ios-setup.md (native flows use the same opener plugin)
  *
  * Four schemes and nothing else: http(s) for the web, and tel:, sms: and
  * mailto: for a contact's rows, which the OS hands to the dialer, the
  * messages app and the mail client. A phone number never opens in the iOS
- * browser sheet; that sheet is for http(s) only.
- * Spec: ops/docs/archive/contacts-pillar.md (section 9, tap to call)
+ * browser sheet; that sheet is for http(s) only. On the web a path of this
+ * site is an http(s) link on this origin.
+ * Spec: docs/internal/specs/contacts-pillar.md (section 9, tap to call)
  */
 
 import { detectPlatform } from './devices';
@@ -23,9 +24,12 @@ import { openShortcutInApp } from './noteShortcut';
 const OPENABLE = /^(https?|tel|sms|mailto):/i;
 
 export function openExternal(url: string): void {
+  // A site path ("/en/changelog", as `siteHref` gives one on a web host that
+  // also serves the site: localhost, staging) opens on this origin.
+  if (/^\/(?!\/)/.test(url) && detectPlatform() === 'web') url = new URL(url, window.location.origin).href;
   if (!OPENABLE.test(url)) return;
   // A shortcut to an item of this vault opens in place.
-  // Spec: ops/docs/archive/note-shortcuts.md (5.4)
+  // Spec: docs/internal/specs/note-shortcuts.md (5.4)
   if (openShortcutInApp(url)) return;
   const platform = detectPlatform();
   if (platform !== 'web') {

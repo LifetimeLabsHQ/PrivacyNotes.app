@@ -5,7 +5,7 @@ import { currentSchedule, latestRevision, withRevision } from './medicationDoses
 /**
  * The edits of the medication list, shared by the Meds pill and the
  * Medications tab of Settings > Trackers so both write the same rows.
- * Spec: ops/docs/mood-wellness-tracker.md
+ * Spec: docs/internal/mood-wellness-tracker.md
  */
 
 // Caps on medication template fields. Long unbroken names/dosages overflow
@@ -70,7 +70,7 @@ function scheduleKey(m: MedicationTemplate): string {
  * color, start) stamps `updatedAt`: the schedule resolves by its revisions
  * and the refills by their ids, so neither must make a stale copy of the
  * other fields win on another device.
- * Spec: ops/docs/mood-wellness-tracker.md section 6.7
+ * Spec: docs/internal/mood-wellness-tracker.md section 6.7
  */
 export function saveMedication(
   list: readonly MedicationTemplate[],

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LocalNote } from './db';
 import {
@@ -16,6 +16,7 @@ import {
   BIRTHDAY_LABEL,
 } from './contactBody';
 import { ContactForm, withTrailingBlank } from './ContactForm';
+import { mergeVaultDraft } from './vaultBody';
 import { ContactChip } from './NoteRow';
 import { useCopyToClipboard } from './clipboard';
 import { openExternal } from './openExternal';
@@ -72,7 +73,7 @@ function toDraft(c: Contact): Contact {
  * the display name and writes live, and Done fills it in from the name
  * fields only while it is empty or still equal to the last derived name.
  *
- * Spec: ops/docs/archive/contacts-pillar.md (section 6)
+ * Spec: docs/internal/specs/contacts-pillar.md (section 6)
  */
 export function ContactItem({
   note,
@@ -98,10 +99,14 @@ export function ContactItem({
   const [draft, setDraft] = useState<Contact>(() => toDraft(saved));
   const [draftPinProtected, setDraftPinProtected] = useState(note.pinProtected === 1);
   const [saveError, setSaveError] = useState('');
+  // The stored contact the form opened on, as the form itself would write it,
+  // so Save changes only the fields that were edited here.
+  const baseBodyRef = useRef(buildContactBody(toDraft(saved)));
 
   // A remote edit lands in the draft only while nobody is typing into it.
   useEffect(() => {
     if (!editing) {
+      baseBodyRef.current = buildContactBody(toDraft(saved));
       setDraft(toDraft(saved));
       setDraftPinProtected(note.pinProtected === 1);
     }
@@ -124,6 +129,7 @@ export function ContactItem({
   useEffect(() => {
     const c = parseContactBody(note.body);
     setEditing(isContactEmpty(c));
+    baseBodyRef.current = buildContactBody(toDraft(c));
     setDraft(toDraft(c));
     setDraftPinProtected(note.pinProtected === 1);
     setSaveError('');
@@ -133,7 +139,7 @@ export function ContactItem({
   const locked = isTrash || note.locked === 1;
 
   const handleSave = useCallback(() => {
-    const body = buildContactBody(draft);
+    const body = mergeVaultDraft(baseBodyRef.current, buildContactBody(draft), buildContactBody(toDraft(saved)));
     const next = parseContactBody(body);
     if (isContactEmpty(next)) {
       setSaveError(t('contacts.fillOne'));
@@ -230,12 +236,12 @@ function ContactView({ note, contact, locked, onEdit }: {
     ));
 
   const nameRows: React.ReactNode[] = [];
-  if (contact.nickname.trim()) nameRows.push(<DetailRow key="nick" icon={<User size={13} />} label={t('contacts.nickname')}>{contact.nickname}</DetailRow>);
+  if (contact.nickname.trim()) nameRows.push(<DetailRow key="nick" icon={<User />} label={t('contacts.nickname')}>{contact.nickname}</DetailRow>);
   const phonetic = [contact.phonetic.first, contact.phonetic.middle, contact.phonetic.last].map((s) => s.trim()).filter(Boolean).join(' ');
-  if (phonetic) nameRows.push(<DetailRow key="phon" icon={<User size={13} />} label={t('contacts.itemPhonetic')}>{phonetic}</DetailRow>);
+  if (phonetic) nameRows.push(<DetailRow key="phon" icon={<User />} label={t('contacts.itemPhonetic')}>{phonetic}</DetailRow>);
   const full = contactFullName(contact);
-  if (full && full !== name) nameRows.push(<DetailRow key="full" icon={<User size={13} />} label={t('contacts.groupName')}>{full}</DetailRow>);
-  if (contact.department.trim()) nameRows.push(<DetailRow key="dept" icon={<User size={13} />} label={t('contacts.department')}>{contact.department}</DetailRow>);
+  if (full && full !== name) nameRows.push(<DetailRow key="full" icon={<User />} label={t('shell:contacts.menuName')}>{full}</DetailRow>);
+  if (contact.department.trim()) nameRows.push(<DetailRow key="dept" icon={<User />} label={t('contacts.department')}>{contact.department}</DetailRow>);
 
   return (
     <div>
@@ -258,7 +264,7 @@ function ContactView({ note, contact, locked, onEdit }: {
           <ContactChip name={name} initials={contactInitialsFor(note.title, contact)} photo={contact.photo} size={DETAIL_TILE_PX} />
         )}
         title={name}
-        subtitle={subtitle ? <div className="text-sm text-pn-muted truncate" dir="auto">{subtitle}</div> : undefined}
+        subtitle={subtitle ? <div className="text-body text-pn-muted truncate" dir="auto">{subtitle}</div> : undefined}
         onEdit={locked ? undefined : onEdit}
         editLabel={t('common:actions.edit')}
       />
@@ -266,12 +272,12 @@ function ContactView({ note, contact, locked, onEdit }: {
       {contact.phones.length > 0 && group(t('contacts.groupPhone'), contact.phones.map((p, i) => (
         <DetailRow
           key={`ph${i}`}
-          icon={<Phone size={13} />}
+          icon={<Phone />}
           label={labelText(p.label)}
           actions={
             <>
-              <DetailAction label={t('contacts.call')} href={telHref(p.value)}><Phone size={15} /></DetailAction>
-              <DetailAction label={t('contacts.message')} href={smsHref(p.value)}><ChatCircle size={15} /></DetailAction>
+              <DetailAction label={t('contacts.call')} href={telHref(p.value)}><Phone /></DetailAction>
+              <DetailAction label={t('contacts.message')} href={smsHref(p.value)}><ChatCircle /></DetailAction>
               {copyAction(p.value, `ph${i}`)}
             </>
           }
@@ -284,11 +290,11 @@ function ContactView({ note, contact, locked, onEdit }: {
       {contact.emails.length > 0 && group(t('contacts.groupEmail'), contact.emails.map((e, i) => (
         <DetailRow
           key={`em${i}`}
-          icon={<EnvelopeSimple size={13} />}
+          icon={<EnvelopeSimple />}
           label={labelText(e.label)}
           actions={
             <>
-              <DetailAction label={t('contacts.sendEmail')} href={`mailto:${e.value}`}><EnvelopeSimple size={15} /></DetailAction>
+              <DetailAction label={t('contacts.sendEmail')} href={`mailto:${e.value}`}><EnvelopeSimple /></DetailAction>
               {copyAction(e.value, `em${i}`)}
             </>
           }
@@ -300,7 +306,7 @@ function ContactView({ note, contact, locked, onEdit }: {
       {contact.addresses.length > 0 && group(t('contacts.groupAddress'), contact.addresses.map((a, i) => {
         const lines = formatAddressLines(a);
         return (
-          <DetailRow key={`ad${i}`} icon={<MapPin size={13} />} label={labelText(a.label)} multiline actions={copyAction(lines.join('\n'), `ad${i}`)}>
+          <DetailRow key={`ad${i}`} icon={<MapPin />} label={labelText(a.label)} multiline actions={copyAction(lines.join('\n'), `ad${i}`)}>
             <span className="whitespace-pre-line">{lines.join('\n')}</span>
           </DetailRow>
         );
@@ -311,11 +317,11 @@ function ContactView({ note, contact, locked, onEdit }: {
         return (
           <DetailRow
             key={`url${i}`}
-            icon={<Globe size={13} />}
+            icon={<Globe />}
             label={labelText(u.label)}
             actions={
               <>
-                <DetailAction label={t('contacts.open')} onClick={() => openExternal(href)}><ArrowSquareOut size={15} /></DetailAction>
+                <DetailAction label={t('contacts.open')} onClick={() => openExternal(href)}><ArrowSquareOut /></DetailAction>
                 {copyAction(u.value, `url${i}`)}
               </>
             }
@@ -325,16 +331,16 @@ function ContactView({ note, contact, locked, onEdit }: {
         );
       }))}
 
-      {contact.profiles.length > 0 && group(t('contacts.groupProfile'), contact.profiles.map((p, i) => {
+      {contact.profiles.length > 0 && group(t('shell:contacts.labels.profile'), contact.profiles.map((p, i) => {
         const href = webHref(p.value);
         return (
           <DetailRow
             key={`pr${i}`}
-            icon={<At size={13} />}
+            icon={<At />}
             label={labelText(p.label)}
             actions={
               <>
-                {href && <DetailAction label={t('contacts.open')} onClick={() => openExternal(href)}><ArrowSquareOut size={15} /></DetailAction>}
+                {href && <DetailAction label={t('contacts.open')} onClick={() => openExternal(href)}><ArrowSquareOut /></DetailAction>}
                 {copyAction(p.value, `pr${i}`)}
               </>
             }
@@ -345,14 +351,14 @@ function ContactView({ note, contact, locked, onEdit }: {
       }))}
 
       {contact.dates.length > 0 && group(t('contacts.groupDates'), contact.dates.map((d, i) => (
-        <DetailRow key={`dt${i}`} icon={d.label === BIRTHDAY_LABEL ? <Cake size={13} /> : <Calendar size={13} />} label={labelText(d.label)}>{formatContactDate(d.value, locale)}</DetailRow>
+        <DetailRow key={`dt${i}`} icon={d.label === BIRTHDAY_LABEL ? <Cake /> : <Calendar />} label={labelText(d.label)}>{formatContactDate(d.value, locale)}</DetailRow>
       )))}
 
-      {contact.related.length > 0 && group(t('contacts.groupRelated'), textRows(contact.related, 'rel', <Users size={13} />))}
+      {contact.related.length > 0 && group(t('contacts.groupRelated'), textRows(contact.related, 'rel', <Users />))}
 
-      {nameRows.length > 0 && group(t('contacts.groupName'), nameRows)}
+      {nameRows.length > 0 && group(t('shell:contacts.menuName'), nameRows)}
 
-      {contact.notes.trim() && <DetailNotes heading={t('contacts.groupNote')}>{contact.notes}</DetailNotes>}
+      {contact.notes.trim() && <DetailNotes heading={t('shell:contacts.itemNote')}>{contact.notes}</DetailNotes>}
 
       {contact.extras.length > 0 && (
         <div className="mt-5 rounded-md border border-divider">
@@ -360,21 +366,21 @@ function ContactView({ note, contact, locked, onEdit }: {
             type="button"
             onClick={() => setExtrasOpen((v) => !v)}
             aria-expanded={extrasOpen}
-            className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-pn-soft"
+            className="w-full flex items-center gap-2 px-3 py-2 text-compact text-pn-soft"
           >
-            <CaretDown size={12} className={`shrink-0 transition-transform ${extrasOpen ? '' : '-rotate-90'}`} aria-hidden="true" />
+            <CaretDown className={`shrink-0 transition-transform ${extrasOpen ? '' : '-rotate-90'}`} aria-hidden="true" />
             {t('contacts.alsoInFile')}
-            <span className="ms-auto text-xs text-pn-muted">{t('contacts.extrasCount', { count: contact.extras.length })}</span>
+            <span className="ms-auto text-small text-pn-muted">{t('contacts.extrasCount', { count: contact.extras.length })}</span>
           </button>
           {extrasOpen && (
             <div className="px-3 pb-3 flex flex-col gap-1">
               {contact.extras.map((x, i) => (
-                <div key={i} className="flex gap-3 text-xs">
+                <div key={i} className="flex gap-3 text-small">
                   <span className="shrink-0 w-36 truncate font-mono text-pn-muted" dir="ltr">{x.name}</span>
                   <span className="min-w-0 break-all text-pn-soft" dir="auto">{x.value}</span>
                 </div>
               ))}
-              <p className="mt-1 text-[11px] text-pn-muted">{t('contacts.extrasNote')}</p>
+              <p className="mt-1 text-meta text-pn-muted">{t('contacts.extrasNote')}</p>
             </div>
           )}
         </div>

@@ -8,7 +8,7 @@ import { HIGHLIGHT_COLORS, TEXT_COLORS } from '../editorColors';
  * toolbar, and passes `sanitizeColor` in the HTML export and the burn viewer.
  * The same rule the paste path follows (`keepPaletteStyles`).
  *
- * Spec: ops/issues/0553.md (Spec)
+ * Spec: docs/internal/issues/0553.md (Spec)
  */
 
 /**

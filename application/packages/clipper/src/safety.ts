@@ -5,7 +5,7 @@
  * no link to a scheme other than http, https or mailto. A page that slips
  * something past the conversion rules gets its text only, every Markdown
  * character escaped, so nothing in it can be read as markup.
- * Spec: ops/docs/archive/web-clipper-stage1.md (section 7, traps)
+ * Spec: docs/internal/specs/web-clipper-stage1.md (section 7, traps)
  */
 import MarkdownIt from 'markdown-it';
 import type Token from 'markdown-it/lib/token.mjs';

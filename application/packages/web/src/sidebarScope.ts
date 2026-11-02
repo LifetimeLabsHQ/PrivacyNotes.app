@@ -10,7 +10,7 @@ import type { View } from './views';
  * because the tree needs its parents and every folder is a drop target. All,
  * Pinned, Archive and Trash keep the global rail; Markdown has its own.
  * Tag pickers never read this: a note tag can still go on a login.
- * Spec: ops/issues/archive/0335.md (decisions)
+ * Spec: docs/internal/issues/archive/0335.md (decisions)
  */
 
 /** The items a pillar is made of, before the tag and folder filters. `null`
@@ -31,6 +31,7 @@ export function sectionNotes(
     case 'vault': return listedNotes.filter((n) => n.type === 'login' || n.type === 'card' || n.type === 'ssh-key');
     case 'bookmarks': return listedNotes.filter((n) => n.type === 'link');
     case 'contacts': return listedNotes.filter((n) => n.type === 'contact');
+    case 'drawings': return listedNotes.filter((n) => n.type === 'drawing');
     case 'tasks': return listedNotes.filter((n) =>
       n.type === 'task' || (showNoteTasks && taskNoteIds.has(n.id)));
     case 'files': return listedNotes.filter((n) => n.type === 'file' || fileNoteIds.has(n.id));

@@ -26,7 +26,7 @@ export function VaultVersionPreview({ version, type }: { version: NoteVersion; t
         rows.map((row, i) => <VaultVersionRow key={i} row={row} id={`row-${i}`} />)
       )}
       {type === 'login' && version.login === undefined && (
-        <p className="mt-3 text-[12px] text-pn-muted">{t('history.loginExtrasNotRecorded')}</p>
+        <p className="mt-3 text-small text-pn-muted">{t('history.loginExtrasNotRecorded')}</p>
       )}
     </div>
   );
@@ -44,8 +44,8 @@ function VaultVersionRow({ row, id }: { row: VaultField; id: string }) {
       actions={
         <>
           {row.secret && (
-            <DetailAction label={shown ? t('vaultItem.hide') : t('vaultItem.reveal')} onClick={() => setShown(!shown)}>
-              {shown ? <EyeSlash size={15} /> : <Eye size={15} />}
+            <DetailAction label={shown ? t('common:sshKeyForm.hide') : t('vaultItem.reveal')} onClick={() => setShown(!shown)}>
+              {shown ? <EyeSlash /> : <Eye />}
             </DetailAction>
           )}
           <DetailCopyAction
@@ -61,7 +61,7 @@ function VaultVersionRow({ row, id }: { row: VaultField; id: string }) {
       {masked ? (
         <span dir="ltr" className="font-mono tracking-wider" /* rtl-ok: a mask, symbols only */>••••••••</span>
       ) : (
-        <span dir={row.mono ? 'ltr' : 'auto'} className={`whitespace-pre-wrap break-all ${row.mono ? 'font-mono text-xs' : ''}`} /* rtl-ok: a key keeps its character order */>
+        <span dir={row.mono ? 'ltr' : 'auto'} className={`whitespace-pre-wrap break-all ${row.mono ? 'font-mono text-small' : ''}`} /* rtl-ok: a key keeps its character order */>
           {row.value}
         </span>
       )}

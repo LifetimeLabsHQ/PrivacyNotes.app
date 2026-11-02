@@ -9,7 +9,7 @@
  * codes carry the mode in their names, because a theme name is unique.
  *
  * Import-free: themes-page.ts loads this file on its own.
- * Spec: ops/docs/color-themes.md (section 6)
+ * Spec: docs/contrib/color-themes.md (section 6)
  */
 export const BUILTIN_THEME_CODES: Record<'light' | 'dark', Record<string, string>> = {
   light: {

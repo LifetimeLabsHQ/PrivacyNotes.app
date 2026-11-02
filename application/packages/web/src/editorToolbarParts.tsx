@@ -173,7 +173,7 @@ export const TB_BTN_ACTIVE = 'bg-accent/15 text-accent-strong [@media(hover:hove
 // the near edge closes that gap and moves the dead space to the far side, where
 // it reads as a hole in the row. 24px is the width where the caret carries no
 // visible slack on either side, and the hairline then does the grouping that
-// spacing alone cannot. Spec: ops/docs/archive/ui-patterns.md (split colour buttons)
+// spacing alone cannot. Spec: docs/internal/design/ui-patterns.md (split colour buttons)
 export const TB_SPLIT_MAIN =
   'relative flex items-center justify-center w-8 h-8 rounded-s-md active:scale-95 transition outline-none shrink-0';
 export const TB_SPLIT_CARET =
@@ -186,10 +186,6 @@ export const TB_ICON = 18;
 // The caret of a split button. Only a split button carries one: a button whose
 // one press opens a list (heading, alignment, font, callout) shows no caret.
 export const TB_CARET = 11;
-// What the ••• toggle costs row 1 once it appears: one 32px button box and
-// the 6px gap before it. Only the frame that turns overflow on needs this -
-// after that the toggle is in the cluster and the row is measured around it.
-export const MORE_TOGGLE_W = 38;
 
 /**
  * Which side of the bar its hover labels open on: below the bar at the top of

@@ -12,7 +12,7 @@
  * next save. Its tail rule and its HTML are replaced, because the tail drops
  * every definition no marker uses, and a dropped definition is a dropped node.
  *
- * Spec: ops/docs/archive/footnotes.md
+ * Spec: docs/internal/specs/footnotes.md
  */
 import i18n from './i18n';
 import footnotePlugin from 'markdown-it-footnote';

@@ -10,14 +10,14 @@
  * Flow: check in-memory map → check IndexedDB → fetch through queue →
  * store in IndexedDB → return blob URL.
  *
- * Spec: ops/docs/backlog.md (#69 - favicon concurrency cap + IDB cache)
+ * Spec: docs/internal/backlog.md (#69 - favicon concurrency cap + IDB cache)
  */
 
 import { isDemoMode } from './demo';
 
 // ── Concurrency queue ────────────────────────────────────────────
 
-// Spec: ops/docs/backlog.md (#69 - client concurrency cap of 5)
+// Spec: docs/internal/backlog.md (#69 - client concurrency cap of 5)
 const MAX_CONCURRENT = 5;
 
 let active = 0;

@@ -59,7 +59,7 @@ export function useViewMode(synced: ViewMode): [ViewMode, (next: ViewMode) => vo
  * reason: a phone may want one line per item where a desktop does not. One
  * setting for every list pane; it changes the layout of an item, never what
  * it shows. The demo has its own key, as above.
- * Spec: ops/docs/plans/list-grid-parity.md (compact rows)
+ * Spec: docs/internal/plans/list-grid-parity.md (compact rows)
  */
 function compactKey(): string {
   return isDemoMode() ? 'privacynotes.demo.compactRows' : 'privacynotes.compactRows';

@@ -1,6 +1,5 @@
 {
   "modal": {
-    "title": "Zabezpečení",
     "tabPin": "PIN",
     "tabBiometricShort": "Zámek",
     "tabBiometric": "Biometrický zámek",
@@ -9,9 +8,10 @@
     "tabTwoFactor": "2FA"
   },
   "pinTab": {
+    "changeLost": "Změna PIN se neuložila: PIN byl nejdřív změněn na jiném zařízení.",
+    "phraseUnwrapped": "Tento prohlížeč nedokázal ochránit obnovovací frázi, kterou toto zařízení uchovává, takže je fráze uložená tady bez šifrování. Kdokoli s kopií úložiště tohoto zařízení si ji může přečíst. Zapni zámek aplikace na kartě „Zámek“, aby fráze zůstala jen za tvým PINem nebo přístupovým kódem.",
     "enterCurrent": "Pro změny zadej svůj současný PIN.",
     "currentPin": "Současný PIN",
-    "checking": "Kontrola...",
     "verify": "Ověřit",
     "replaceExisting": "Zadej nový čtyřmístný PIN. Nahradí tvůj současný PIN.",
     "setIntro": "Čtyřmístný PIN otevírá tvé chráněné poznámky a obnovovací frázi. Synchronizuje se do všech zařízení.",
@@ -42,10 +42,8 @@
     "setPin": "Nastavit PIN",
     "removePin": "Odstranit PIN",
     "reaskAfter": "Znovu vyžádat PIN po",
-    "reaskHint": "Platí pro zobrazení fráze a pro všechny poznámky chráněné PINem.",
+    "reaskHint": "Platí pro zobrazení fráze a pro všechny poznámky chráněné PINem na tomto zařízení.",
     "incorrectPin": "Nesprávný PIN.",
-    "incorrectPinRetry": "Nesprávný PIN. Zkus to znovu.",
-    "tooManyAttempts": "Příliš mnoho pokusů. Zkus to znovu za {{seconds}} s.",
     "pinFourDigits": "PIN musí mít 4 číslice.",
     "pinsDoNotMatch": "PINy se neshodují.",
     "passcodeIntro": "Přístupový kód otevírá tvé chráněné poznámky a obnovovací frázi. Synchronizuje se do všech zařízení.",
@@ -61,8 +59,7 @@
     "ruleNotDigits": "Nejen číslice",
     "ruleMax": "Nejvýše {{max}} znaků",
     "passcodesDoNotMatch": "Přístupové kódy se neshodují.",
-    "incorrectPasscode": "Nesprávný přístupový kód.",
-    "incorrectPasscodeRetry": "Nesprávný přístupový kód. Zkus to znovu."
+    "incorrectPasscode": "Nesprávný přístupový kód."
   },
   "timeout": {
     "min1": "1 minuta",
@@ -76,16 +73,11 @@
     "browserRestart": "Při restartu prohlížeče"
   },
   "pinInfo": {
-    "title": "Vyžadovat PIN pro zobrazení",
     "body": "Když je tohle zapnuté, PIN se vyžaduje pokaždé, když tuhle položku otevřeš, i když je aplikace už odemčená. Použij to u citlivých položek, které mají zůstat chráněné, když odejdeš od zařízení."
   },
   "removePinDialog": {
-    "title": "Odstranit PIN",
     "introWithBio": "Zadej svůj současný PIN a potvrď odstranění. Biometrické odemknutí zůstane aktivní, ale tvoje jediná záložní cesta pak bude obnovovací fráze.",
     "introNoBio": "Zadej svůj současný PIN a potvrď odstranění. Obrazovka tvé obnovovací fráze se pak otevře bez PINu.",
-    "verifying": "Ověřování...",
-    "removePin": "Odstranit PIN",
-    "titlePasscode": "Odstranit přístupový kód",
     "introWithBioPasscode": "Zadej svůj současný přístupový kód a potvrď odstranění. Biometrické odemknutí zůstane aktivní, ale tvoje jediná záložní cesta pak bude obnovovací fráze.",
     "introNoBioPasscode": "Zadej svůj současný přístupový kód a potvrď odstranění. Obrazovka tvé obnovovací fráze se pak otevře bez přístupového kódu.",
     "removePasscode": "Odstranit přístupový kód"
@@ -109,16 +101,10 @@
   },
   "phraseGate": {
     "enterToView": "Pro zobrazení fráze zadej svůj čtyřmístný PIN.",
-    "incorrectPinRetry": "Nesprávný PIN. Zkus to znovu.",
-    "tooManyAttempts": "Příliš mnoho pokusů. Zkus to znovu za {{seconds}} s.",
-    "lockedFor": "Zamčeno na {{seconds}} s",
-    "checking": "Kontrola...",
-    "unlock": "Odemknout",
     "enterToChangeCustody": "Pro změnu správy klíče zadej svůj čtyřmístný PIN.",
     "checkFailed": "PIN se nepodařilo ověřit. Zkus to znovu.",
     "enterToViewPasscode": "Pro zobrazení fráze zadej svůj přístupový kód.",
     "enterToChangeCustodyPasscode": "Pro změnu správy klíče zadej svůj přístupový kód.",
-    "incorrectPasscodeRetry": "Nesprávný přístupový kód. Zkus to znovu.",
     "checkFailedPasscode": "Přístupový kód se nepodařilo ověřit. Zkus to znovu."
   },
   "phraseView": {
@@ -133,11 +119,9 @@
     "hideQr": "Skrýt QR kód",
     "showQr": "Zobrazit QR kód",
     "saveQr": "Uložit QR",
-    "copied": "Zkopírováno",
     "copyPhrase": "Kopírovat frázi"
   },
   "custody": {
-    "eyebrow": "Správa klíče",
     "current": "Aktuální",
     "rowDevice": "Nové zařízení",
     "rowDeviceCustodial": "Přihlášení přes {{provider}}, nic se nepíše",
@@ -152,7 +136,6 @@
     "releaseWarning": "Nejdřív si ulož frázi o 12 slovech mimo PrivacyNotes. Po smazání naší kopie ji budeš potřebovat na nových zařízeních.",
     "challengePrompt": "Opiš tato slova ze seznamu výše a potvrď, že je máš.",
     "wordLabel": "Slovo {{position}}",
-    "busy": "Ukládám...",
     "releaseConfirm": "Smazat ze serveru",
     "adoptConfirm": "Svěřit nám kopii",
     "releaseDone": "Hotovo. Kopii tvojí fráze už neuchováváme. Nová zařízení si vyžádají těchto 12 slov nebo naskenování QR kódu.",
@@ -189,6 +172,7 @@
     "boundStatus": "Biometrické odemknutí je svázané s tvým přístupovým klíčem.",
     "boundStatusNative": "Biometrické odemknutí je svázané se zabezpečeným hardwarem tohoto zařízení.",
     "setUpAgain": "Nastavit znovu pro silnější zámek",
+    "unboundWeaker": "Na tomto zařízení je biometrické odemknutí jen zábranou pro lidi poblíž, ne zámkem: kdokoli s kopií úložiště tohoto zařízení může otevřít tvé poznámky bez tvého otisku prstu nebo obličeje.",
     "cannotBind": "Aplikace pro přístupové klíče v tomto prohlížeči silnější zámek vytvořit neumí. Biometrické odemknutí funguje dál jako dosud. Pokud tvé přístupové klíče ukládá správce hesel, vypni v něm možnost přístupových klíčů a pak biometrické odemknutí vypni a znovu zapni, aby se použilo vlastní úložiště přístupových klíčů tvého zařízení.",
     "bindOffer": "Biometrické odemknutí na tomto zařízení ještě není svázané s tvým přístupovým klíčem a tento prohlížeč ho svázat umí. Nastav ho jednou znovu, aby jeho klíč zůstal u tvého přístupového klíče, a ne v úložišti tohoto zařízení.",
     "bindOfferLater": "Teď ne",
@@ -196,14 +180,14 @@
     "settingUp": "Nastavování...",
     "enable": "Zapnout biometrické odemknutí",
     "lockOnOpen": "Zamykat aplikaci při spuštění",
-    "lockOnOpenHint": "Při otevření aplikace vyžadovat biometriku nebo PIN.",
+    "lockOnOpenHint": "Při otevření aplikace na tomto zařízení vyžadovat biometriku nebo PIN.",
     "lockHidesOnSwitch": "Skryje tvoje poznámky také při přepínání aplikací.",
     "lockNeedsCredential": "Zámek aplikace potřebuje na tomto zařízení PIN nebo biometrické odemknutí.",
     "setUpPin": "Nastavit PIN",
     "confirmPinForLock": "Zadej svůj PIN a zapneš to. Uzamkne kopii tvé obnovovací fráze, takže aplikaci otevře jen tvůj PIN.",
     "confirmPasscodeForLock": "Zadej svůj přístupový kód a zapneš to. Uzamkne kopii tvé obnovovací fráze, takže aplikaci otevře jen tvůj přístupový kód.",
     "relockAfter": "Znovu zamknout po",
-    "relockHint": "Platí jen pro uzamykací obrazovku aplikace.",
+    "relockHint": "Platí jen pro uzamykací obrazovku aplikace na tomto zařízení.",
     "blockCapture": "Skrývat při snímání obrazovky",
     "blockCaptureHint": "Pokud to zařízení umožňuje, tvoje poznámky se neobjeví na snímcích obrazovky, nahrávkách ani při sdílení obrazovky. Platí jen pro toto zařízení.",
     "perDeviceNote": "Biometrické odemknutí otevírá stejné poznámky jako PIN. Zůstává na tomto zařízení a nikdy se nesynchronizuje.",
@@ -216,31 +200,19 @@
     "phraseNotSaved": "Toto zařízení nemohlo uložit tvou obnovovací frázi, takže se nic nezměnilo. Zkus to znovu."
   },
   "pinSetup": {
-    "title": "Nastav si PIN",
     "description": "Čtyřmístný PIN bude potřeba k zobrazení tvé obnovovací fráze. Nepovinný, ale ve společných prostorách doporučený.",
-    "newPin": "Nový PIN",
-    "confirmPin": "Potvrzení PINu",
-    "skipForNow": "Zatím přeskočit",
-    "saving": "Ukládání…",
-    "setPin": "Nastavit PIN",
-    "pinFourDigits": "PIN musí mít 4 číslice.",
-    "pinsDoNotMatch": "PINy se neshodují."
+    "skipForNow": "Zatím přeskočit"
   },
   "pinInput": {
-    "ariaLabel": "PIN",
     "digitAriaLabel": "Číslice {{index}}"
   },
   "passcodeInput": {
-    "ariaLabel": "Přístupový kód",
     "show": "Zobrazit přístupový kód",
     "hide": "Skrýt přístupový kód"
   },
   "protectedGate": {
-    "biometricFailed": "Biometrické ověření se nepodařilo nebo bylo zrušeno.",
     "protectedItem": "Chráněná položka",
     "biometricSubtitle": "Odemkni tuto položku otiskem prstu nebo obličejem.",
-    "verifying": "Ověřování...",
-    "unlock": "Odemknout",
     "usePinInstead": "Použít místo toho PIN",
     "useBiometricInstead": "Použít místo toho biometriku",
     "disableProtection": "Vypnout ochranu",
@@ -248,18 +220,10 @@
     "disableSubtitle": "Poznámka zůstane, kde je. Zmizí jen zámek.",
     "disableBiometricSubtitle": "Potvrď otiskem prstu nebo obličejem.",
     "verifySubtitle": "Pro odemčení této položky zadej svůj čtyřmístný PIN. Odemčení vydrží po dobu, kterou máš nastavenou v Zabezpečení.",
-    "incorrectPinRetry": "Nesprávný PIN. Zkus to znovu.",
-    "tooManyAttempts": "Příliš mnoho pokusů. Zkus to znovu za {{seconds}} s.",
     "lockedFor": "Zamčeno na {{seconds}} s",
-    "checking": "Kontrola...",
     "bootstrapTitle": "Nastav si PIN",
     "bootstrapSubtitle": "Tato položka je chráněná PINem, ale na tomto zařízení žádný PIN nastavený není. Nastav čtyřmístný PIN a odemkni ji. Tvůj PIN se synchronizuje na všechna tvoje zařízení.",
     "bootstrapWarning": "Nastavení PINu na tomto místě nevyžaduje znalost předchozího PINu. Kdokoli, kdo drží tvoji obnovovací frázi, to může udělat na novém zařízení. U skutečně citlivého obsahu se proto spoléhej na ověření samotnou frází, ne na PIN.",
-    "newPin": "Nový PIN",
-    "confirmPin": "Potvrzení PINu",
-    "pinFourDigits": "PIN musí mít 4 číslice.",
-    "pinsDoNotMatch": "PINy se neshodují.",
-    "saving": "Ukládání...",
     "setPinUnlock": "Nastavit PIN a odemknout",
     "pinRequired": "Vyžaduje se PIN",
     "deleteSubtitle": "Pro smazání této chráněné položky zadej svůj PIN.",
@@ -267,7 +231,6 @@
     "usePasscodeInstead": "Použít místo toho přístupový kód",
     "disableTitlePasscode": "Zadej přístupový kód pro vypnutí ochrany",
     "verifySubtitlePasscode": "Pro odemčení této položky zadej svůj přístupový kód. Odemčení vydrží po dobu, kterou máš nastavenou v Zabezpečení.",
-    "incorrectPasscodeRetry": "Nesprávný přístupový kód. Zkus to znovu.",
     "passcodeRequired": "Vyžaduje se přístupový kód",
     "deleteSubtitlePasscode": "Pro smazání této chráněné položky zadej svůj přístupový kód."
   },
@@ -294,19 +257,14 @@
     "checking": "Kontrola...",
     "unlock": "Odemknout",
     "recoveryPhrase": "Obnovovací fráze",
-    "recoveryPhraseSubtitle": "Pro odemčení zadej svou obnovovací frázi z 12 slov.",
-    "invalidPhrase": "Neplatná fráze. Zkontroluj pravopis a pořadí slov.",
-    "phrasePlaceholder": "slovo1 slovo2 slovo3 slovo4 slovo5 slovo6 slovo7 slovo8 slovo9 slovo10 slovo11 slovo12"
+    "recoveryPhraseSubtitle": "Pro odemčení zadej svou obnovovací frázi z 12 slov."
   },
   "deviceLimit": {
     "title": "Dosažen limit zařízení",
     "body": "Bezplatné účty mohou synchronizovat maximálně na {{limit}} zařízeních současně. Ty už máš {{count}}. Odeber jedno, ať můžeš pokračovat na tomto zařízení, nebo přejdi na Pro s neomezeným počtem zařízení.",
     "activeDevices": "Aktivní zařízení",
-    "recentlyRemoved": "Nedávno odebraná",
-    "removedAt": "Odebráno {{when}}",
     "upgradeHeading": "Nebo přejdi na Pro",
     "upgradeBody": "Jednorázová platba, žádné předplatné. Neomezený počet zařízení a k tomu obrázky, historie poznámek a další.",
-    "openingCheckout": "Otevírání platby...",
     "upgradeCta": "Přejít na Pro za {{price}} $",
     "needMoreHeading": "Potřebuješ víc zařízení?",
     "needMoreBody": "V této verzi aplikace se na Pro přejít nedá. Pokud opravdu potřebuješ třetí zařízení, napiš nám a vyřešíme to.",
@@ -315,8 +273,6 @@
     "saveRecoveryBody": "Přihlášení proběhlo přes OAuth. Zapiš si i svou frázi z 12 slov. Je to tvoje záložní cesta, když OAuth selže nebo když se nedostaneš do aplikace na žádném ze svých zařízení.",
     "hide": "Skrýt",
     "viewRecoveryPhrase": "Zobrazit obnovovací frázi",
-    "signOut": "Odhlásit se",
-    "thisDevice": "Toto zařízení",
     "lastActive": "{{platform}} · naposledy aktivní {{when}}",
     "removing": "Odebírání..."
   },
@@ -329,9 +285,9 @@
     "bitcoinBody": "Lidé je chrání stejným druhem fráze z 12 slov.",
     "universeTitle": "700násobek stáří vesmíru",
     "universeBody": "Na vyzkoušení všech frází při miliardě miliard pokusů za sekundu.",
-    "twinTitle": "Nikdo na Zemi nemá tvoji frázi",
+    "twinTitle": "Stejnou frázi nikdo jiný na Zemi nedostane",
     "twinBody": "Ani kdyby PrivacyNotes používalo všech 8 miliard lidí.",
-    "keepPrivate": "Dovnitř se dostaneš jen se svými skutečnými 12 slovy. Nikomu je neukazuj."
+    "keepPrivate": "Hádáním se dovnitř nedostane nikdo. Svých 12 slov nikomu neukazuj."
   },
   "connectedAccounts": {
     "title": "Propojené účty",
@@ -350,13 +306,10 @@
     "connectAnotherProvider": "Propojit další účet u {{provider}}",
     "updateTitle": "Aktualizovat přihlášení k tomuto trezoru",
     "updateDescription": "Tím se uložená fráze a propojené účty připraví na dvoufaktorové přihlášení a zpřístupní se správa propojených účtů. Tvoje poznámky ani správa klíče se nezmění.",
-    "updateDevices": "Než budeš pokračovat, aktualizuj aplikaci na ostatních zařízeních. Může být potřeba se na nich znovu přihlásit.",
-    "updateAcknowledgment": "Na ostatních zařízeních mám PrivacyNotes aktualizované.",
     "updateAction": "Aktualizovat přihlášení",
     "setupTitle": "Propojit Google, Apple nebo GitHub",
     "setupDescription": "První propojení potřebuje jednorázovou aktualizaci tohoto trezoru. Tvoje poznámky ani správa klíče se nezmění.",
     "setupAction": "Nastavit propojené účty",
-    "closed": "Propojování a odebírání účtů bude brzy k dispozici. Do té doby se přihlašuješ jako teď.",
     "repairTitle": "Dokončit aktualizaci přihlášení",
     "repairDescription": "Tento trezor už používá aktualizované přihlášení. Znovu připoj toto zařízení pomocí fráze, která je tu už odemčená. Místní poznámky zůstávají dostupné.",
     "repairAction": "Pokračovat do tohoto trezoru",
@@ -374,7 +327,6 @@
     "rateLimited": "Proběhlo příliš mnoho pokusů o změnu účtů. Chvíli počkej a zkus to znovu.",
     "connectionMissing": "Tento účet už není propojený. Než to zkusíš znovu, ověř aktuální seznam účtů.",
     "noAccounts": "Nejsou propojené žádné účty poskytovatelů. K přihlášení slouží tvoje uložená fráze.",
-    "actionFailed": "Změnu se nepodařilo potvrdit. Zkontroluj připojení a zkus to znovu.",
     "retry": "Znovu ověřit účty",
     "connectDone": "Účet je propojený s tímto trezorem. Správa klíče se nezměnila.",
     "disconnectDone": "Účet je odpojený. Tvoje poznámky ani správa klíče se nezměnily.",
@@ -384,7 +336,6 @@
     "freshMfa": "Pro potvrzení této změny bude potřeba nový kód z autentizátoru. Dvoufaktorové přihlášení zůstane zapnuté.",
     "continueProvider": "Pokračovat přes {{provider}}",
     "working": "Probíhá zpracování...",
-    "cancel": "Zrušit",
     "confirmDisconnect": "Odpojit {{provider}}?",
     "account": "tento účet",
     "lastCustodial": "Toto je tvůj poslední propojený účet. Nejdřív propoj jiný účet nebo si ulož frázi a před odebráním přejdi na vlastní správu.",
@@ -445,10 +396,7 @@
       "key": "Uložit klíč",
       "confirm": "Potvrdit"
     },
-    "next": "Další",
-    "back": "Zpět",
     "stepOf": "Krok {{step}} ze 3",
-    "working": "Probíhá zpracování...",
     "scan": "Naskenuj tento kód aplikací autentizátoru.",
     "qrLabel": "QR kód pro aplikaci autentizátoru",
     "openAuthenticator": "Jsi na tomto telefonu? Otevři aplikaci autentizátoru",
@@ -462,9 +410,7 @@
     "backupWarning": "Ztracený telefon? Tento klíč ti vrátí kódy. Uchovej ho na bezpečném místě mimo PrivacyNotes.",
     "savedAcknowledgment": "Záložní klíč mám uložený.",
     "confirmBackup": "Znovu napiš záložní klíč z předchozího kroku a pak zadej kód z aplikace.",
-    "reenterBackup": "Záložní klíč",
     "codeLabel": "Kód z aplikace",
-    "activate": "Zapnout 2FA",
     "cancelSetup": "Zrušit",
     "enabled": "2FA je zapnuté",
     "authenticatorRow": "Aplikace autentizátoru",
@@ -484,11 +430,6 @@
     "overview": "Přehled",
     "keyCustody": "Správa klíče",
     "accounts": "Účty"
-  },
-  "beta": {
-    "label": "Beta",
-    "notice": "Tato funkce je ve verzi beta.",
-    "reportBug": "Nahlásit chybu"
   },
   "demoTeaser": {
     "accounts": "Vytvoř si účet a propoj svůj trezor s Google, Apple nebo GitHub.",

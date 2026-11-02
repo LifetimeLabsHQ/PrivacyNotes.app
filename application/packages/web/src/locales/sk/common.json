@@ -26,14 +26,11 @@
     "noResults": "Žiadne výsledky"
   },
   "deleteNote": {
-    "title": "Odstrániť navždy",
     "confirm": "Odstrániť navždy",
-    "untitled": "Bez názvu",
     "body": "Navždy odstrániť <highlight>„{{title}}“</highlight>? Túto akciu nemožno vrátiť späť."
   },
   "emptyTrash": {
     "title": "Vyprázdniť kôš",
-    "confirm": "Odstrániť navždy",
     "body_one": "Navždy odstrániť <highlight>{{count}} poznámku</highlight>? Túto akciu nemožno vrátiť späť.",
     "body_few": "Navždy odstrániť <highlight>{{count}} poznámky</highlight>? Túto akciu nemožno vrátiť späť.",
     "body_many": "Navždy odstrániť <highlight>{{count}} poznámky</highlight>? Túto akciu nemožno vrátiť späť.",
@@ -63,7 +60,6 @@
   },
   "palette": {
     "label": "Príkazy",
-    "open": "Príkazy",
     "empty": "Žiadny zodpovedajúci príkaz",
     "groups": {
       "features": "Funkcie",
@@ -88,7 +84,7 @@
       "insertDate": "Vložiť dátum",
       "insertDateTime": "Vložiť dátum a čas",
       "clearFilters": "Zrušiť filtre",
-      "moveToTrash": "Presunúť poznámku do koša",
+      "moveToTrash": "Odstrániť poznámku",
       "closeTab": "Zavrieť kartu alebo poznámku",
       "nextTab": "Ďalšia karta",
       "previousTab": "Predchádzajúca karta",
@@ -111,10 +107,8 @@
     "move": "presunúť sa",
     "open": "otvoriť",
     "openInTab": "otvoriť na karte",
-    "openLink": "Otvoriť",
     "edit": "upraviť",
     "close": "zavrieť",
-    "tags": "Značky",
     "folders": "Priečinky",
     "tagItems_one": "{{count}} položka",
     "tagItems_few": "{{count}} položky",
@@ -181,17 +175,14 @@
     "downloadPublicKey": "Stiahnuť verejný kľúč",
     "downloadPrivateKey": "Stiahnuť súkromný kľúč",
     "downloadHint": "Presuň stiahnutý kľúč do ~/.ssh a spusti na ňom chmod 600, inak ho ssh odmietne.",
+    "downloadHintDesktop": "PrivacyNotes neukladá do ~/.ssh, aby kľúče, ktoré tam sú, zostali v bezpečí. Ulož kľúč inam, presuň ho do ~/.ssh a spusti na ňom chmod 600, inak ho ssh odmietne.",
+    "downloadHintWindows": "PrivacyNotes neukladá do tvojho priečinka .ssh, aby kľúče, ktoré tam sú, zostali v bezpečí. Ulož kľúč inam a presuň ho do %USERPROFILE%\\.ssh. Windows chmod nepotrebuje.",
     "downloadFailed": "Súbor s kľúčom sa nepodarilo uložiť. Skontroluj súbor a skús to znova.",
     "passphrase": "Prístupová fráza",
     "passphrasePlaceholder": "Prístupová fráza ku kľúču (ak existuje)",
     "show": "Zobraziť",
     "hide": "Skryť",
-    "copyPassphrase": "Kopírovať prístupovú frázu",
-    "notes": "Poznámky",
-    "notesPlaceholder": "Ďalšie poznámky (voliteľné)",
-    "requirePin": "Na zobrazenie vyžadovať PIN",
-    "whatDoesThisDo": "Čo to robí?",
-    "setUpPinFirst": "Najprv si nastav PIN v nastaveniach Zabezpečenie."
+    "copyPassphrase": "Kopírovať prístupovú frázu"
   },
   "tagInput": {
     "placeholder": "Pridaj značky… oddeľ čiarkou, # alebo Enterom",
@@ -263,7 +254,6 @@
       "potichu otváram trezor",
       "lokálne dešifrované. globálne ignorované",
       "dešifrujem, akoby nič",
-      "čistý text z miestnych zdrojov",
       "mením myšlienky na nečitateľnú polievku",
       "ďalšie šifrované majstrovské dielo na ceste",
       "obnovujem poriadok zo šifrovaného chaosu",
@@ -291,17 +281,14 @@
     "changesSome_other": "{{count}} z týchto poznámok má zmeny, ktoré nie sú zálohované a stratili by sa."
   },
   "ninja": {
-    "recent": "Nedávne",
     "topHit": "Najlepšia zhoda",
     "trashEmpty": "Kôš je prázdny",
     "allThemes": "Všetky motívy",
     "features": {
       "stats": {
-        "label": "Štatistiky",
         "detail": "Tvoje písanie, série a sledované hodnoty v čase"
       },
       "trackers": {
-        "label": "Sledované hodnoty",
         "detail": "Nálada, návyky, faktory a lieky"
       },
       "medication": {
@@ -321,7 +308,6 @@
         "detail": "Silné heslo alebo prístupová fráza, pripravené na skopírovanie"
       },
       "themes": {
-        "label": "Motívy",
         "detail": "Farebné motívy pre svetlý aj tmavý režim"
       }
     },
@@ -332,7 +318,6 @@
     "commands": {
       "syncResume": "Obnoviť synchronizáciu",
       "changelog": "Čo je nové",
-      "help": "Pomocník",
       "themesPage": "Motívy komunity",
       "website": "Webová stránka PrivacyNotes"
     },

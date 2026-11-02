@@ -4,7 +4,7 @@
  * The clipped note carries the bookmark's address in `trackers.clipSource`;
  * the bookmark body stays as it is, because `parseLinkBody` drops a field it
  * does not know and an older client editing the bookmark would erase it.
- * Spec: ops/docs/archive/web-clipper-stage1.md (section 3.4)
+ * Spec: docs/internal/specs/web-clipper-stage1.md (section 3.4)
  */
 import { linkDedupeKey } from './linkBody';
 import { CLIP_SOURCE_KEY } from './schedule';

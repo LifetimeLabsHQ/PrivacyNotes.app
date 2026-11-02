@@ -29,7 +29,7 @@ type DateProps = {
 /**
  * The "Language" pane: spell check and the app language, both device-local.
  * The date settings have their own pane, `DateSheet` below.
- * Spec: ops/docs/archive/ui-patterns.md section 36 (settings standard)
+ * Spec: docs/internal/design/ui-patterns.md section 36 (settings standard)
  */
 export function LanguageSheet({ embedded = false }: Props) {
   const { t } = useTranslation('settings');
@@ -51,10 +51,10 @@ export function LanguageSheet({ embedded = false }: Props) {
       value: 'system',
       icon: (
         <span className="flex items-center justify-center rounded-[3px] bg-accent/15 text-accent-strong" style={{ width: 26, height: 19, flexShrink: 0 }}>
-          <Translate size={14} />
+          <Translate />
         </span>
       ),
-      title: t('appearance.languageSystem'),
+      title: t('settings:language.automatic'),
     },
     ...sortByNative(SUPPORTED_LOCALES).map((code) => ({
       value: code,
@@ -76,12 +76,12 @@ export function LanguageSheet({ embedded = false }: Props) {
           under the language grid it sat below the fold on every window short
           of full height, so the only people who found it were the ones who
           already knew it was there.
-          Spec: ops/docs/design-decisions.md (Spell check is the engine's,
+          Spec: docs/internal/design-decisions.md (Spell check is the engine's,
           not ours) */}
       <div data-setting="language.spellCheck" className="border-b border-divider pb-1">
         <Switch
           label={t('appearance.spellCheckTitle')}
-          icon={<TextAUnderline size={14} className="text-accent" />}
+          icon={<TextAUnderline className="text-accent" />}
           labelClassName={ROW_TITLE}
           description={t('appearance.spellCheckDesc')}
           checked={spellcheck}
@@ -93,7 +93,7 @@ export function LanguageSheet({ embedded = false }: Props) {
       <div data-setting="language.language" className="mt-4">
         <p className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW} mb-0.5`}>
           <EyebrowGlyph icon={Translate} />
-          {t('appearance.language')}
+          {t('notes:settings.languageLabel')}
         </p>
         <p className={`${SETTINGS_HELP} mb-2`}>
           {tNotes('settings.languageDesc')}
@@ -119,7 +119,7 @@ export function LanguageSheet({ embedded = false }: Props) {
                 }`}
               >
                 {tile.icon}
-                <span className="min-w-0 pe-4 text-sm font-medium text-pn truncate">{tile.title}</span>
+                <span className="min-w-0 pe-4 text-body font-medium text-pn truncate">{tile.title}</span>
                 {active && (
                   <span className="absolute top-1/2 -translate-y-1/2 end-2 inline-flex h-4 w-4 items-center justify-center rounded-full bg-accent/15 text-accent-strong">
                     <Check size={11} />
@@ -136,17 +136,17 @@ export function LanguageSheet({ embedded = false }: Props) {
           as /changelog's own report link, so the two read as one action. */}
       <HelpChip surface="language" className="pt-4" />
       <a
-        href="https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues/new?template=translation.yml"
+        href="https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues/new?template=translation.yml"
         target="_blank"
         rel="noopener noreferrer"
         data-setting="language.reportMistake"
-        className="mt-1.5 inline-flex items-center gap-2 max-w-full text-[13px] text-red-600 hover:underline dark:text-red-400"
+        className="mt-1.5 inline-flex items-center gap-2 max-w-full text-compact text-red-600 hover:underline dark:text-red-400"
       >
         <span className="flex h-5 shrink-0 items-center">
-          <Bug size={15} weight="fill" aria-hidden="true" />
+          <Bug weight="fill" aria-hidden="true" />
         </span>
         <span>{t('language.reportMistake')}</span>
-        <ArrowSquareOut size={12} className="shrink-0 mt-1 opacity-70" aria-hidden="true" />
+        <ArrowSquareOut className="shrink-0 mt-1 opacity-70" aria-hidden="true" />
       </a>
     </>
   );
@@ -161,7 +161,7 @@ export function LanguageSheet({ embedded = false }: Props) {
 /** The "Date" pane: one preview line, then the synced date format and clock,
  *  then the titles new journal entries get, which are written in that format.
  *  The preview is the only place a choice shows its result, so no option
- *  needs an example of its own. Spec: ops/docs/archive/dates.md (section 3.3) */
+ *  needs an example of its own. Spec: docs/internal/specs/dates.md (section 3.3) */
 export function DateSheet({ journal, ...props }: DateProps & { journal: JournalTitlesProps }) {
   const now = new Date();
   const prefs = { order: props.dateOrder, clock: props.clock };
@@ -190,7 +190,7 @@ export function DateSheet({ journal, ...props }: DateProps & { journal: JournalT
 /**
  * "Date format" and "Clock": synced, while Automatic resolves on each device.
  * Each row's help line writes today, or now, in the shape the row picks.
- * Spec: ops/docs/archive/dates.md (section 3.3)
+ * Spec: docs/internal/specs/dates.md (section 3.3)
  */
 function DateTimeSection({ dateOrder, onDateOrderChange, clock, onClockChange, today, now }: DateProps & { today: string; now: string }) {
   const { t } = useTranslation('settings');

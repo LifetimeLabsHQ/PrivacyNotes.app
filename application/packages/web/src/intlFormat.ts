@@ -78,6 +78,13 @@ export function formatRelative(iso: string): string {
 
 /** "Today" (0), "Yesterday" (-1) or "Tomorrow" (1) in the app language, from
  *  Intl, as a list group header names a day. Lower case in most languages. */
+/** A word with its first letter in capitals, by the language's own rule
+ *  ("today" to "Today"), for a word Intl gives in lower case. */
+export function capitalize(s: string, loc: string): string {
+  const [first = '', ...rest] = [...s];
+  return first.toLocaleUpperCase(loc) + rest.join('');
+}
+
 export function relativeDayName(offset: -1 | 0 | 1): string {
   return relativeFormatter('auto').format(offset, 'day');
 }
@@ -116,13 +123,24 @@ export function toLocalIso(d: Date): string {
 
 // ── The date settings ─────────────────────────────────────────────
 //
-// "Date format" and "Clock" in Settings > Date & Time, synced. Automatic is the
-// app language plus the device region (`dateLocale`), resolved on each device.
+// "Date format", "Clock" and "First day of the week" in Settings > Date & Time,
+// synced. Automatic is the app language plus the device region (`dateLocale`),
+// resolved on each device.
 
 export const DATE_ORDERS = ['auto', 'dmy', 'mdy', 'ymd'] as const;
 export type DateOrder = (typeof DATE_ORDERS)[number];
 export const CLOCKS = ['auto', 'h23', 'h12'] as const;
 export type Clock = (typeof CLOCKS)[number];
+
+/** The first day of the week. 'auto' follows the app language; GitHub #621. */
+export const WEEK_STARTS = ['auto', 'mon', 'sun', 'sat'] as const;
+export type WeekStart = (typeof WEEK_STARTS)[number];
+/** The weekday number, 0 = Sunday, of each fixed choice. */
+export const WEEK_START_DAY: Record<Exclude<WeekStart, 'auto'>, number> = { mon: 1, sun: 0, sat: 6 };
+
+export function isWeekStart(v: unknown): v is WeekStart {
+  return typeof v === 'string' && (WEEK_STARTS as readonly string[]).includes(v);
+}
 
 export function isDateOrder(v: unknown): v is DateOrder {
   return typeof v === 'string' && (DATE_ORDERS as readonly string[]).includes(v);
@@ -139,19 +157,26 @@ export interface DatePrefs {
 
 const AUTOMATIC: DatePrefs = { order: 'auto', clock: 'auto' };
 let datePrefs: DatePrefs = AUTOMATIC;
+let weekStartPref: WeekStart = 'auto';
 let prefsVersion = 0;
 const prefsListeners = new Set<() => void>();
 
 /** Apply the synced date settings. Every formatter is rebuilt, and every
  *  memo that lists `useDateFormatKey()` formats again, without a remount. */
-export function setDatePrefs(order: DateOrder, clock: Clock): void {
-  if (datePrefs.order === order && datePrefs.clock === clock) return;
+export function setDatePrefs(order: DateOrder, clock: Clock, weekStart: WeekStart): void {
+  if (datePrefs.order === order && datePrefs.clock === clock && weekStartPref === weekStart) return;
   datePrefs = { order, clock };
+  weekStartPref = weekStart;
   resolvedDateLocale = undefined;
   resolvedPrefs.clear();
   dateFormatters.clear();
   prefsVersion++;
   for (const cb of prefsListeners) cb();
+}
+
+/** The synced "First day of the week"; `firstWeekday` in MonthGrid.tsx resolves it. */
+export function weekStartSetting(): WeekStart {
+  return weekStartPref;
 }
 
 function subscribeDatePrefs(cb: () => void) {
@@ -448,7 +473,7 @@ function tokenValue(token: PatternToken, d: Date, tag: string): string {
  * weekday names come from the date locale. Any other Latin letter outside
  * brackets is an error that names it, and so are an unclosed bracket and a
  * pattern that writes nothing. A letter of another script is text.
- * Spec: ops/docs/archive/dates.md (section 3.5)
+ * Spec: docs/internal/specs/dates.md (section 3.5)
  */
 export function formatPattern(d: Date, pattern: string, language: string = activeLocale()): PatternResult {
   const tag = dateLocale(language);

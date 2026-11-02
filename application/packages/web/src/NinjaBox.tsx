@@ -9,7 +9,7 @@
 // is aria-hidden; the tile text beside it carries the meaning.
 // The loop runs only while the tile is on screen and stops under reduced
 // motion, where the box rests on the event scene, fully typed.
-// Spec: ops/design/patterns/145-150.md section 145
+// Spec: docs/internal/design/patterns/145-150.md section 145
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ComponentType } from 'react';
@@ -58,12 +58,12 @@ function BoxRow({ row, q, on }: { row: Row; q: string; on: boolean }) {
   return (
     <div className={`relative mx-1.5 flex items-center gap-3 rounded-md px-2 py-1.5 ${on ? 'bg-[var(--wl-tint-blue)] before:absolute before:inset-y-1.5 before:start-0 before:w-[3px] before:rounded-full before:bg-accent dark:before:bg-blue-300' : ''}`}>
       <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${TONE[row.tone]}`}>
-        <Glyph size={16} weight="bold" />
+        <Glyph weight="bold" />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-semibold leading-5 text-[var(--wl-ink)]"><Marked text={row.title} q={mark} /></div>
+        <div className="truncate text-body font-semibold leading-5 text-[var(--wl-ink)]"><Marked text={row.title} q={mark} /></div>
         {(row.detail || row.chips) && (
-          <div className="flex min-w-0 items-center gap-1.5 text-xs leading-4 text-[var(--wl-muted)]">
+          <div className="flex min-w-0 items-center gap-1.5 text-small leading-4 text-[var(--wl-muted)]">
             {row.detail && <span className="truncate"><Marked text={row.detail} q={mark} /></span>}
             {row.chips?.map((c) => (
               <span key={c} className="shrink-0 rounded bg-[var(--wl-tint-blue)] px-1 text-accent dark:text-blue-300">{c}</span>
@@ -74,7 +74,7 @@ function BoxRow({ row, q, on }: { row: Row; q: string; on: boolean }) {
       {row.keys && <Kbd>{row.keys}</Kbd>}
       {on && !row.keys && (
         <span className="inline-flex h-6 w-7 items-center justify-center rounded-md border-[1.5px] border-[var(--wl-line)] bg-[var(--wl-card)] text-[var(--wl-sub)]">
-          <KeyReturn size={14} weight="bold" />
+          <KeyReturn weight="bold" />
         </span>
       )}
     </div>
@@ -115,14 +115,14 @@ export function NinjaBox() {
           { icon: NotePencil, tone: 'note', title: t('ninja.q1Row1'), detail: t('ninja.q1Row1Meta'), mark: true },
           { icon: Folder, tone: 'plain', title: t('ninja.q1Row2'), detail: t('ninja.q1Row2Meta'), mark: true },
         ] },
-        { header: t('ninja.inText'), rows: [{ icon: NotePencil, tone: 'note', title: t('ninja.q1Row3'), detail: t('ninja.q1Row3Line'), mark: true }] },
-        { header: t('ninja.create'), rows: [{ icon: CalendarDot, tone: 'event', title: t('ninja.q1Row4') }] },
+        { header: t('common:quickSwitcher.inText'), rows: [{ icon: NotePencil, tone: 'note', title: t('ninja.q1Row3'), detail: t('ninja.q1Row3Line'), mark: true }] },
+        { header: t('shell:quickAdd.group'), rows: [{ icon: CalendarDot, tone: 'event', title: t('ninja.q1Row4') }] },
       ],
     },
     {
       sign: '+',
       query: t('ninja.q2'),
-      groups: [{ header: t('ninja.create'), rows: [
+      groups: [{ header: t('shell:quickAdd.group'), rows: [
         { icon: CalendarDot, tone: 'event', title: t('ninja.q2Row1'), detail: t('ninja.q2Detail'), chips: [t('ninja.q2ChipDay'), t('ninja.q2ChipTime'), t('ninja.q2ChipAlert')] },
         { icon: FileText, tone: 'note', title: t('ninja.q2Row2'), detail: t('ninja.q2Detail') },
         { icon: CheckSquare, tone: 'task', title: t('ninja.q2Row3'), detail: t('ninja.q2Detail') },
@@ -132,14 +132,14 @@ export function NinjaBox() {
       sign: '+',
       query: t('ninja.q3'),
       groups: [
-        { header: t('ninja.addTo'), rows: [{ icon: ArrowElbowDownRight, tone: 'task', title: t('ninja.q3Row1'), detail: t('ninja.q3Row1Meta') }] },
-        { header: t('ninja.create'), rows: [{ icon: CalendarDot, tone: 'event', title: t('ninja.q3Row2') }] },
+        { header: t('shell:quickAdd.addTo'), rows: [{ icon: ArrowElbowDownRight, tone: 'task', title: t('ninja.q3Row1'), detail: t('shell:tagsRail.tasks') }] },
+        { header: t('shell:quickAdd.group'), rows: [{ icon: CalendarDot, tone: 'event', title: t('ninja.q3Row2') }] },
       ],
     },
     {
       sign: '>',
       query: t('ninja.q4'),
-      groups: [{ header: t('ninja.commands'), rows: [
+      groups: [{ header: t('common:palette.groups.commands'), rows: [
         { icon: ArrowsOutSimple, tone: 'note', title: t('ninja.q4Row1'), keys: mac ? '⇧⌘F' : 'Ctrl+Shift+F' },
         { icon: Gear, tone: 'note', title: t('ninja.q4Row2') },
       ] }],
@@ -210,12 +210,12 @@ export function NinjaBox() {
     // The queries ride on the element so the timer reads their lengths
     // without re-running on every language change.
     <div ref={root} data-q={scenes.map((s) => s.query).join('\u0000')} aria-hidden="true" className="pn-fx-ninja-box flex flex-col overflow-hidden rounded-xl border-2 border-[var(--wl-edge)] bg-[var(--wl-card)]">
-      <div className="flex h-12 items-center gap-2 border-b border-[var(--wl-line)] px-3.5 text-base font-medium text-[var(--wl-ink)]">
+      <div className="flex h-12 items-center gap-2 border-b border-[var(--wl-line)] px-3.5 text-title font-medium text-[var(--wl-ink)]">
         {scene?.sign && <span className="font-mono text-accent dark:text-blue-300">{scene.sign}</span>}
         <span className="whitespace-pre">{typed}</span>
         <span className="pn-fx-ninja-caret h-[1.15em] w-0.5 shrink-0 bg-accent dark:bg-blue-300" />
-        {!scene && <span className="truncate text-sm font-normal text-[var(--wl-muted)]">{t('ninja.placeholder')}</span>}
-        <span className="ms-auto inline-flex h-8 w-8 shrink-0 items-center justify-center text-[var(--wl-muted)]"><X size={14} weight="bold" /></span>
+        {!scene && <span className="truncate text-body font-normal text-[var(--wl-muted)]">{t('ninja.placeholder')}</span>}
+        <span className="ms-auto inline-flex h-8 w-8 shrink-0 items-center justify-center text-[var(--wl-muted)]"><X weight="bold" /></span>
       </div>
       {/* The list sits absolutely inside a wrapper that only fills the space the
           box has, so a full scene can never add height and make the tile jump. */}
@@ -223,7 +223,7 @@ export function NinjaBox() {
         <div className="absolute inset-0 overflow-hidden pt-1">
         {!scene && (
           <>
-            <Header>{t('ninja.recent')}</Header>
+            <Header>{t('common:quickSwitcher.recent')}</Header>
             <BoxRow on q="" row={{ icon: NotePencil, tone: 'note', title: t('ninja.recent1'), detail: t('ninja.recent1Meta') }} />
             <BoxRow on={false} q="" row={{ icon: CheckSquare, tone: 'task', title: t('ninja.recent2'), detail: t('ninja.recent2Meta') }} />
             <BoxRow on={false} q="" row={{ icon: Book, tone: 'journal', title: t('ninja.recent3'), detail: t('ninja.recent3Meta') }} />
@@ -237,12 +237,12 @@ export function NinjaBox() {
         ))}
               </div>
       </div>
-      <div className="flex flex-nowrap gap-x-2.5 border-t border-[var(--wl-line)] px-3.5 py-2 text-xs text-[var(--wl-muted)]">
-        <Hint keys={['↑', '↓']}>{t('ninja.hintMove')}</Hint>
-        <Hint keys={['↵']}>{t('ninja.hintOpen')}</Hint>
-        <Hint keys={['Tab']}>{t('ninja.hintActions')}</Hint>
-        <Hint keys={[mac ? '⌥↵' : 'Alt+↵']}>{t('ninja.hintTab')}</Hint>
-        <Hint keys={['Esc']}>{t('ninja.hintClose')}</Hint>
+      <div className="flex flex-nowrap gap-x-2.5 border-t border-[var(--wl-line)] px-3.5 py-2 text-small text-[var(--wl-muted)]">
+        <Hint keys={['↑', '↓']}>{t('common:quickSwitcher.move')}</Hint>
+        <Hint keys={['↵']}>{t('common:quickSwitcher.open')}</Hint>
+        <Hint keys={['Tab']}>{t('common:quickSwitcher.actions')}</Hint>
+        <Hint keys={[mac ? '⌥↵' : 'Alt+↵']}>{t('common:quickSwitcher.openInTab')}</Hint>
+        <Hint keys={['Esc']}>{t('common:quickSwitcher.close')}</Hint>
       </div>
     </div>
   );

@@ -30,7 +30,7 @@ body:
   # never types it and we never get a guess. No placeholder on purpose: a pre-filled example
   # version just teaches people to accept it without looking, and a confidently wrong version
   # is worse than a blank one. Optional for anyone arriving straight from GitHub.
-  # Spec: ops/docs/gotchas.md (not every channel auto-updates).
+  # Spec: docs/contrib/gotchas.md (not every channel auto-updates).
   - type: input
     id: version
     attributes:

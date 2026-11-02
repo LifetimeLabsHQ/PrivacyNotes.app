@@ -5,7 +5,7 @@ import { NOTE_MAX_STORED_BYTES, storedNoteBytes } from './sync';
 
 /**
  * Cutting a note that is too large to sync into parts that each fit.
- * Spec: ops/docs/plans/note-size-limit.md
+ * Spec: docs/internal/specs/note-size-limit.md
  */
 
 /** Room each part keeps under the ceiling for a longer title and the

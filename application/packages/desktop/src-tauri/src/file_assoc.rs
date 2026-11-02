@@ -20,7 +20,7 @@
 //! default at install time or at launch, unlike the `privacynotes://` scheme
 //! registration in lib.rs: a scheme nobody else wants is not a hijack, and a
 //! Markdown association taken from Obsidian or VS Code very much is.
-//! Spec: ops/docs/archive/markdown-folder.md (section 11)
+//! Spec: docs/internal/specs/markdown-folder.md (section 11)
 
 /// What the frontend needs to render the control. Four fields rather than a
 /// boolean because "we are not the default" splits into cases that want
@@ -114,7 +114,7 @@ pub fn claim(app: &tauri::AppHandle) -> Result<(), String> {
 /// offered: `text/plain` is the type of every README, log and config file, and
 /// the plain-text claim on macOS takes extensionless text files too, which the
 /// UI says in so many words.
-// Spec: ops/docs/plans/default-app-settings.md (section 6)
+// Spec: docs/internal/plans/default-app-settings.md (section 6)
 pub fn text_status(app: &tauri::AppHandle) -> Option<AssocStatus> {
     #[cfg(target_os = "macos")]
     return Some(apple::status(app, apple::PLAIN_TEXT_UTI));
@@ -251,7 +251,7 @@ mod apple {
     /// handler of this role, and Get Info > Change All writes it. A claim of
     /// the Editor role alone leaves the double-click with whichever app holds
     /// All, while Finder's "Open With" menu labels us "(default)".
-    // Spec: ops/docs/plans/default-app-settings.md (section 5.1)
+    // Spec: docs/internal/plans/default-app-settings.md (section 5.1)
     const LS_ROLES_ALL: u32 = 0xFFFF_FFFF;
     /// `kLSRolesEditor` (0x4). Read only, to find a Mac where an Editor-role
     /// claim already names us: there a claim of All is skipped without a
@@ -272,7 +272,7 @@ mod apple {
     /// UTIs on most systems, so they stay openable through
     /// `CFBundleTypeExtensions` but cannot have a default set - which is why the
     /// UI says "Markdown files" and never enumerates four extensions.
-    // Spec: ops/docs/archive/markdown-folder.md (section 11)
+    // Spec: docs/internal/specs/markdown-folder.md (section 11)
     pub const MARKDOWN_UTI: &str = "net.daringfireball.markdown";
     /// The type of `.txt`, and of every text file with no extension of its
     /// own (README, LICENSE), which is why the Text row says so.
@@ -395,7 +395,7 @@ mod linux {
     /// still emitted by older desktops. Both are claimed, and `text/plain` very
     /// deliberately is NOT - taking the default for all plain text would make
     /// us the editor for every README, log and config file on the machine.
-    // Spec: ops/docs/archive/markdown-folder.md (section 11)
+    // Spec: docs/internal/specs/markdown-folder.md (section 11)
     const MARKDOWN_MIMES: [&str; 2] = ["text/markdown", "text/x-markdown"];
 
     /// `~/.local/share/applications`, where a per-user handler belongs.
@@ -526,7 +526,7 @@ mod linux {
     /// `NoDisplay` is deliberately absent, unlike the deep-link plugin's
     /// scheme-handler file: this entry is a real Markdown editor the user chose,
     /// and it has to appear in a file manager's "Open with" list.
-    // Spec: ops/docs/archive/markdown-folder.md (section 11)
+    // Spec: docs/internal/specs/markdown-folder.md (section 11)
     fn write_handler_desktop_file(app: &tauri::AppHandle, id: &str) -> Result<(), String> {
         use tauri::Manager;
         let dir = user_applications_dir(app)
@@ -588,7 +588,7 @@ mod windows_assoc {
     /// without that key Windows silently falls back to the top of the list.
     /// `registeredAppUser` and not `registeredAppMachine` because the installer
     /// runs in `currentUser` mode.
-    // Spec: ops/docs/windows-release.md (default Markdown app)
+    // Spec: docs/internal/windows-release.md (default Markdown app)
     const DEFAULT_APPS_URI: PCWSTR = w!("ms-settings:defaultapps?registeredAppUser=PrivacyNotes");
 
     /// One `AssocQueryStringW` call. Called twice: once for the executable path

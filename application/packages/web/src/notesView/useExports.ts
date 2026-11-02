@@ -1,4 +1,4 @@
-import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
+import { useEffect, useRef, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SupabaseClient } from '@notes/shared';
 import type { LocalNote } from '../db';
@@ -6,15 +6,29 @@ import { recordAdminEvent } from '../adminEvents';
 import type { ExportSource } from '../adminEvents';
 import i18n from '../i18n';
 import { decodeZipBackup, BACKUP_TOO_SMALL } from '@notes/shared';
-import type { MissingBlob } from '../export';
+import type { BulkExportResult, ExportStep, ExportStepName, MissingBlob } from '../export';
 import { RESTORE_WAIT_LINE, restoreGateNow } from '../pullState';
 import { remapFolderLooks, settingsAfterRestore } from '../backupRestore';
 import type { ImageStore } from '../imageStore';
 import type { AttachmentStore } from '../attachmentStore';
 import type { UserSettings } from '../userSettings';
 import { isChunkLoadError, prefetchChunk } from '../chunkLoad';
+import { pictureDataUrl } from '../drawing/pictures';
+import { parseScene, toExcalidrawFile } from '../drawing/scene';
 
 const loadExport = () => import('../export');
+
+/** What the export progress window shows. */
+export interface ExportProgress {
+  status: string;
+  done: boolean;
+  error?: string;
+  /** Where a native save put the file, for Show in folder. */
+  savedPath?: string;
+  /** The steps of a running bulk export, and the one it is on. */
+  steps?: readonly ExportStepName[];
+  step?: ExportStep;
+}
 
 export function useExports({
   supabase,
@@ -31,9 +45,13 @@ export function useExports({
   mutateSettings: (updater: (prev: UserSettings) => UserSettings) => void;
   imageStoreRef: MutableRefObject<ImageStore | null>;
   attachmentStoreRef: MutableRefObject<AttachmentStore | null>;
-  setExportProgress: Dispatch<SetStateAction<{ status: string; done: boolean; error?: string } | null>>;
+  setExportProgress: Dispatch<SetStateAction<ExportProgress | null>>;
 }) {
   const { t } = useTranslation('notes');
+  // The bulk export that has the progress window open. Cancel, the X and
+  // Escape abort it and close the window at once; the export stops at its
+  // next step and saves nothing.
+  const bulkAbortRef = useRef<AbortController | null>(null);
   // export.ts, with the renderer it pulls in, loads on the first export and
   // not at boot. It is fetched a few seconds after sign-in so an export made
   // offline later still works: nothing else caches the chunk. Offline at that
@@ -64,6 +82,8 @@ export function useExports({
       await run();
       recordAdminEvent(supabase, 'export', format);
     } catch (err) {
+      // Cancelled: the window closed when the reader asked, so stay quiet.
+      if ((err as Error | null)?.name === 'AbortError') return;
       // Offline before the chunk was ever fetched: the toast already says so,
       // so a progress window the export opened closes rather than waiting.
       if (!navigator.onLine && isChunkLoadError(err)) {
@@ -102,29 +122,52 @@ export function useExports({
         ex.describeMissing,
       );
     });
-  // Both bulk zips open the progress window and both report the same two
-  // phases. An empty opening status is deliberate: the modal owns the
-  // "Preparing..." wording, in every language.
-  const exportAllMarkdownZip = async (ns: LocalNote[]) => {
-    setExportProgress({ status: '', done: false });
-    await runExport('md-zip', async () => {
-      const ex = await loadExport();
-      const missing = await ex.exportAllMarkdownZip(ns, imageStoreRef.current, attachmentStoreRef.current, (msg) => {
-        setExportProgress({ status: msg, done: false });
-      }, userSettings.folders, { itemStyles: userSettings.itemStyles, customThemes: userSettings.customThemes, factors: userSettings.factors, customHabits: userSettings.customHabits });
-      setExportProgress({ status: ex.describeMissing(missing), done: true });
+  // A drawing leaves as a .excalidraw file or a PNG, with its pictures.
+  // Spec: docs/internal/specs/drawing.md (section 7, Export)
+  const exportDrawing = (n: LocalNote, format: 'excalidraw' | 'png') =>
+    runExport('drawing', async () => {
+      const scene = parseScene(n.body);
+      if (!scene) throw new Error(t('importExport:exportErrors.generic'));
+      const urls = new Map<string, string>();
+      for (const [id, file] of Object.entries(scene.files)) {
+        const url = await pictureDataUrl(file.src);
+        if (url) urls.set(id, url);
+      }
+      const { saveDrawing } = await import('../drawing/exportDrawing');
+      await saveDrawing(n.title, toExcalidrawFile(scene, urls), format);
     });
-  };
-  const exportEncryptedFullBackup = async (ns: LocalNote[]) => {
+  // Every bulk zip opens the progress window and reports its steps. The
+  // window owns all the wording, "Preparing..." included, in every language.
+  const runBulkExport = async (
+    format: ExportSource,
+    steps: (ex: typeof import('../export')) => readonly ExportStepName[],
+    run: (signal: AbortSignal, onProgress: (at: ExportStep) => void) => Promise<BulkExportResult>,
+  ) => {
+    bulkAbortRef.current?.abort();
+    const controller = new AbortController();
+    bulkAbortRef.current = controller;
+    const { signal } = controller;
     setExportProgress({ status: '', done: false });
-    await runExport('encrypted-zip', async () => {
+    await runExport(format, async () => {
       const ex = await loadExport();
-      const missing = await ex.exportEncryptedFullBackup(ns, imageStoreRef.current, attachmentStoreRef.current, auth.encryptionKey, (msg) => {
-        setExportProgress({ status: msg, done: false });
-      }, userSettings.folders, { itemStyles: userSettings.itemStyles, customThemes: userSettings.customThemes, factors: userSettings.factors, customHabits: userSettings.customHabits });
-      setExportProgress({ status: ex.describeMissing(missing), done: true });
+      signal.throwIfAborted();
+      const { missing, savedPath } = await run(signal, (step) => setExportProgress({ status: '', done: false, steps: steps(ex), step }));
+      setExportProgress({ status: ex.describeMissing(missing), done: true, savedPath });
     });
+    if (bulkAbortRef.current === controller) bulkAbortRef.current = null;
   };
+  /** Closes the progress window; a running bulk export stops with it. */
+  const closeExportProgress = () => {
+    bulkAbortRef.current?.abort();
+    bulkAbortRef.current = null;
+    setExportProgress(null);
+  };
+  const exportAllMarkdownZip = (ns: LocalNote[]) =>
+    runBulkExport('md-zip', (ex) => ex.FULL_BACKUP_STEPS, async (signal, onProgress) =>
+      (await loadExport()).exportAllMarkdownZip(ns, imageStoreRef.current, attachmentStoreRef.current, onProgress, userSettings.folders, { itemStyles: userSettings.itemStyles, customThemes: userSettings.customThemes, factors: userSettings.factors, customHabits: userSettings.customHabits, medications: userSettings.medications, customTrackers: userSettings.trackerSettings?.customTrackers }, signal));
+  const exportEncryptedFullBackup = (ns: LocalNote[]) =>
+    runBulkExport('encrypted-zip', (ex) => ex.FULL_BACKUP_STEPS, async (signal, onProgress) =>
+      (await loadExport()).exportEncryptedFullBackup(ns, imageStoreRef.current, attachmentStoreRef.current, auth.encryptionKey, onProgress, userSettings.folders, { itemStyles: userSettings.itemStyles, customThemes: userSettings.customThemes, factors: userSettings.factors, customHabits: userSettings.customHabits, medications: userSettings.medications, customTrackers: userSettings.trackerSettings?.customTrackers }, signal));
   /** Decrypt a picked .pnbackupz into the plain full-backup zip. The
    *  modal then runs it through the NORMAL zip restore flow - preview,
    *  quota preflight and blob restore all reuse. Errors arrive already
@@ -141,16 +184,9 @@ export function useExports({
       throw new Error(i18n.t('importExport:decryptErrors.notThisAccount'));
     }
   };
-  const exportAllHtmlZip = async (ns: LocalNote[]) => {
-    setExportProgress({ status: '', done: false });
-    await runExport('html-zip', async () => {
-      const ex = await loadExport();
-      const missing = await ex.exportAllHtmlZip(ns, imageStoreRef.current, userSettings.folders, (msg) => {
-        setExportProgress({ status: msg, done: false });
-      }, attachmentStoreRef.current);
-      setExportProgress({ status: ex.describeMissing(missing), done: true });
-    });
-  };
+  const exportAllHtmlZip = (ns: LocalNote[]) =>
+    runBulkExport('html-zip', (ex) => ex.HTML_ARCHIVE_STEPS, async (signal, onProgress) =>
+      (await loadExport()).exportAllHtmlZip(ns, imageStoreRef.current, userSettings.folders, onProgress, attachmentStoreRef.current, signal));
   const exportAllJson = (ns: LocalNote[]) =>
     runExport('json', async () => (await loadExport()).exportAllJson(ns, userSettings.folders, userSettings.itemStyles, userSettings.customThemes, userSettings.factors, userSettings.customHabits));
   const exportEncryptedBackup = (ns: LocalNote[]) =>
@@ -164,6 +200,11 @@ export function useExports({
     runExport('contacts', async () => (await loadExport()).exportContactsVcf(ns));
   const exportCalendar = (ns: LocalNote[]) =>
     runExport('calendar', async () => (await loadExport()).exportCalendarIcs(ns));
+  // Every drawing as a .excalidraw file in one .zip, through the bulk
+  // window: pictures are read one by one, and a missing one is reported.
+  const exportDrawings = (ns: LocalNote[]) =>
+    runBulkExport('drawing', (ex) => ex.DRAWINGS_STEPS, async (signal, onProgress) =>
+      (await loadExport()).exportDrawingsZip(ns, imageStoreRef.current, onProgress, signal));
   const printNote = (n: LocalNote, titleOnly = false) =>
     runExport('pdf', async () =>
       (await loadExport()).printNote(n, imageStoreRef.current, userSettings.folders, attachmentStoreRef.current, titleOnly));
@@ -219,7 +260,7 @@ export function useExports({
    *  .pnbackup restore merges them, with each folder look moved to the id its
    *  folder came back under. */
   const mergeRestoredSettings = (
-    settings: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown },
+    settings: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown },
     savedToFinal: ReadonlyMap<string, string>,
   ) =>
     mutateSettings((prev) =>
@@ -228,20 +269,25 @@ export function useExports({
         customThemes: settings.customThemes,
         factors: settings.factors,
         customHabits: settings.customHabits,
+        medications: settings.medications,
+        customTrackers: settings.customTrackers,
       }),
     );
   return {
     mergeRestoredSettings,
     exportSingleMarkdown,
     exportSingleHtml,
+    exportDrawing,
     exportAllMarkdownZip,
     exportAllHtmlZip,
+    closeExportProgress,
     exportAllJson,
     exportEncryptedBackup,
     exportVault,
     exportBookmarks,
     exportContacts,
     exportCalendar,
+    exportDrawings,
     printNote,
     importEncryptedBackup,
     exportEncryptedFullBackup,

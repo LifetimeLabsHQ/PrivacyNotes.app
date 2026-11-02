@@ -3,14 +3,12 @@
     "importTitle": "Importa les teves dades",
     "exportTitle": "Exporta les teves dades",
     "restoreTitle": "Restaura les teves dades",
-    "vaultTitle": "Importa les teves contrasenyes",
-    "tablistLabel": "Importació, exportació, restauració o contrasenyes",
+    "tablistLabel": "Importació, exportació, restauració o seguiments",
     "tabImport": "Importa",
     "tabExport": "Exporta",
     "tabRestore": "Restaura",
     "tabVault": "Contrasenyes",
-    "working": "S'està treballant…",
-    "tabWellness": "Seguiments"
+    "working": "S'està treballant…"
   },
   "footer": {
     "exportNote": "Les exportacions s'executen localment. No es puja res.",
@@ -18,12 +16,11 @@
     "importNote": "Tot està sempre xifrat, al teu dispositiu i durant la sincronització."
   },
   "importPick": {
-    "autoTagLabel": "Etiqueta les notes importades segons l'origen",
-    "autoTagDesc": "Les notes de Google Keep reben <keep>#google</keep>, les d'Obsidian <obsidian>#obsidian</obsidian>, i així successivament.",
     "guideAria": "Guia d'importació per a {{app}}",
     "guideLabel": "Guia",
-    "groupGeneral": "General",
-    "groupNotes": "Notes"
+    "searchPlaceholder": "Cerca la teva app",
+    "groupCalendar": "Calendari, contactes i marcadors",
+    "noMatch": "Cap app no coincideix. La majoria d'apps de notes poden exportar fitxers Markdown, i els fitxers Markdown es poden importar aquí."
   },
   "folderImport": {
     "tagLabel": "Etiqueta també les notes per carpeta",
@@ -76,6 +73,7 @@
     "googleCalendar": "El .zip de Settings > Import & export de Google Calendar, o un sol fitxer .ics. Els esdeveniments conserven les hores, les repeticions i els recordatoris.",
     "appleNotes": "Exporta amb l'aplicació gratuïta Exporter en format Markdown i deixa anar el .zip aquí.",
     "appleJournal": "Exporta des de Diari al Mac o a l'iPhone, comprimeix la carpeta AppleJournalEntries i deixa anar el .zip. Les entrades s'importen com a entrades de diari amb les fotos, els vídeos, les notes de veu i les ubicacions.",
+    "excalidraw": "Dibuixos desats des d'excalidraw.com: un fitxer .excalidraw, o uns quants dins d'un zip. També funcionen els dibuixos del connector Excalidraw d'Obsidian, com a fitxers .excalidraw.md. Les imatges de dins d'un dibuix també s'importen.",
     "evernote": "Un sol .enex, o uns quants dins d'un zip. Conserva el format, les etiquetes, els adjunts, els enllaços entre notes i les llibretes. L'Evernote deixa les tasques fora del .enex.",
     "samsungNotes": "Exporta com a Word (.docx) o text (.txt). Comprimeix diversos fitxers en un .zip per importar-los en bloc.",
     "simplenote": "Exporta des de Simplenote (Settings -> Tools -> Export Notes). Deixa anar el .zip.",
@@ -84,7 +82,7 @@
     "notesnook": "Exportació de Notesnook com a .zip. Tria HTML en exportar per conservar el format, les llibretes, les etiquetes i els adjunts.",
     "bear": "A Bear, tria File > Backup Notes... i deixa anar aquí el fitxer .bear2bk. Hi vénen les etiquetes i les etiquetes niades, les notes fixades, l'arxiu, la paperera, els ressaltats amb els seus colors, els enllaços entre notes i els adjunts.",
     "joplin": "El fitxer .jex de File > Export all > \"JEX - Joplin Export File\". Les llibretes es converteixen en carpetes, i les etiquetes, les tasques pendents, els enllaços entre notes i els adjunts també hi vénen.",
-    "upnote": "A UpNote: Settings > Backup > Backup now, i després comprimeix tot el que hi ha a la carpeta de còpia de seguretat. Conserva les llibretes, les etiquetes, les notes fixades, els note-links, el format i els adjunts. Les exportacions per nota des de les apps de mòbil també funcionen - tria «Export to HTML».",
+    "upnote": "A UpNote: Settings > Backup > Backup now, i després comprimeix tot el que hi ha a la carpeta de còpia de seguretat. Conserva les llibretes, les etiquetes, les notes fixades, els enllaços entre notes, el format i els adjunts. Les exportacions per nota des de les apps de mòbil també funcionen - tria «Export to HTML».",
     "markdownFolder": "Fitxers .md o .txt solts o dins d'un .zip. Una carpeta comprimida manté les subcarpetes i s'emporta les imatges i els adjunts.",
     "markdownApp": "Aquestes notes ja són fitxers Markdown dins d'una carpeta. Deixa anar aquesta carpeta en .zip i hi van les subcarpetes, les imatges i les #etiquetes.",
     "browserBookmarks": "El fitxer d’adreces d’interès (.html) que surt de \"Export bookmarks\" al teu navegador, o el .zip que escriu Safari. Chrome, Firefox, Safari, Edge, Opera, Brave i Vivaldi contenen tots el mateix fitxer. Les carpetes i les dates hi vénen.",
@@ -98,9 +96,6 @@
     "browserPasswords": "Contrasenyes del navegador",
     "vcard": "Contactes (vCard)",
     "markdownFolder": "Fitxers Markdown"
-  },
-  "vaultPick": {
-    "intro": "Importa inicis de sessió, targetes de crèdit i claus SSH des d'un altre gestor de contrasenyes."
   },
   "restorePick": {
     "intro": "Restaura una còpia de seguretat de PrivacyNotes que hagis exportat abans.",
@@ -123,8 +118,8 @@
     "restoringBlobs": "S'estan restaurant les imatges i els fitxers..."
   },
   "errors": {
-    "genericParse": "Alguna cosa ha anat malament.",
     "decryptionFailed": "El desxifratge ha fallat. Frase incorrecta o fitxer malmès.",
+    "importNothingChanged": "No s'ha importat res, i les teves notes, carpetes i fitxers continuen com estaven. {{detail}}",
     "blobImportFailed": "Les teves notes s'han importat, però les imatges i els fitxers no: {{detail}} No s'ha modificat res del fitxer que vas triar, així que pots suprimir les notes importades i tornar a executar la importació.",
     "blobsNotInBackup_one": "Les teves notes s'han restaurat, però {{items}} que figura a la còpia de seguretat no hi és.",
     "blobsNotInBackup_other": "Les teves notes s'han restaurat, però {{items}} que figuren a la còpia de seguretat no hi són."
@@ -135,11 +130,7 @@
     "splitOversize_one": "Divideix aquesta nota en notes més petites pels seus encapçalaments, perquè se sincronitzi",
     "splitOversize_other": "Divideix aquestes {{count}} notes en notes més petites pels seus encapçalaments, perquè se sincronitzin",
     "partTitle": "{{title}} ({{index}}/{{total}})",
-    "continuedIn": "Continua a {{link}}",
-    "sourceLabel": "Origen",
     "uniqueTags": "Etiquetes úniques",
-    "empty": "Buit",
-    "untagged": "Sense etiquetes",
     "items": "Elements",
     "previewLabel": "Previsualització",
     "andMore": "… i {{count}} més",
@@ -150,9 +141,14 @@
     "eventSkipNote": "els esdeveniments que ja has importat s'ometen i queden tal com són, així que executar-ho dues vegades no els duplicarà.",
     "restoreMergeNote": "les notes de la teva pròpia còpia de seguretat es fan coincidir per identificador. Una nota que ja tens només s'actualitza si la versió de la còpia és més recent, i una nota de la paperera en surt.",
     "quotaExceeded": "<strong>No tens prou emmagatzematge per importar.</strong> Es calcula que calen {{needed}}, i en queden {{available}} de disponibles. Allibera espai o millora el pla abans d'importar.",
-    "quotaWarning": "Atenció: aquesta importació farà servir aproximadament {{needed}} dels {{available}} d'emmagatzematge que et queden.",
     "oversizeAttachments_one": "1 fitxer supera el límit de {{limit}} per fitxer del teu pla. S'importa en aquest dispositiu, però no se sincronitzarà amb els altres dispositius fins que no milloris a Pro.",
     "oversizeAttachments_other": "{{count}} fitxers superen el límit de {{limit}} per fitxer del teu pla. S'importen en aquest dispositiu, però no se sincronitzaran amb els altres dispositius fins que no milloris a Pro.",
+    "title": "Comprova-ho abans d'importar",
+    "sourceTagLabel": "Etiqueta cada nota amb <tag>{{tag}}</tag>",
+    "sourceTagDesc": "Desactivat: cap etiqueta per a l'origen. Les etiquetes que ja tenen les notes s'importen igualment.",
+    "storageLine": "Aquesta importació necessita uns {{needed}}. Tens {{available}} lliures.",
+    "nothingWritten": "No es desa res fins que no premis Importa.",
+    "whatComesIn": "Què s'importa",
     "oversizeAttachments_many": "{{count}} fitxers superen el límit de {{limit}} per fitxer del teu pla. S'importen en aquest dispositiu, però no se sincronitzaran amb els altres dispositius fins que no milloris a Pro."
   },
   "counts": {
@@ -168,6 +164,8 @@
     "sshKey_other": "claus SSH",
     "contact_one": "contacte",
     "contact_other": "contactes",
+    "drawing_other": "dibuixos",
+    "drawing_one": "dibuix",
     "zeroItems": "0 elements",
     "importButton": "Importa {{counts}}",
     "note_many": "notes",
@@ -184,14 +182,14 @@
     "fullBackupHeading": "Còpia de seguretat completa",
     "portableHeading": "Exportació portable",
     "vaultOnlyHeading": "Només la caixa forta",
-    "zipBackupTitle": "Còpia de seguretat de PrivacyNotes (.zip)",
-    "zipBackupDesc": "Tot: notes, diaris, elements de la caixa forta, tasques, imatges, àudio i fitxers. Fes-la servir com a còpia de seguretat completa del compte o per passar a un dispositiu nou. Els fitxers de dins no estan xifrats, així que guarda el zip en un lloc segur.",
-    "encryptedZipBackupTitle": "Còpia de seguretat completa xifrada (.pnbackupz)",
-    "encryptedZipBackupDesc": "Tot el que conté la còpia zip - notes, elements de la caixa forta, imatges, àudio i fitxers - segellat amb la clau de la teva frase. Es restaura amb la teva frase a qualsevol dispositiu. Es pot desar en qualsevol lloc.",
-    "encryptedBackupTitle": "Còpia de seguretat xifrada (.pnbackup)",
-    "encryptedBackupDesc": "Tot el contingut de text i les metadades, xifrats amb la clau de la teva frase. Sense imatges ni fitxers. Es pot desar en qualsevol lloc sense por: és il·legible sense la teva frase.",
+    "zipBackupTitle": "Tot, sense xifrar (.zip)",
+    "zipBackupDesc": "Les teves notes, diaris, elements de la caixa forta, tasques, imatges, àudio i fitxers, amb els teus medicaments i seguiments. S'obre a qualsevol ordinador sense frase, així que guarda'l en un lloc segur. No inclou l'historial de notes ni el PIN del bloqueig de l'app.",
+    "encryptedZipBackupTitle": "Tot, xifrat (.pnbackupz)",
+    "encryptedZipBackupDesc": "El mateix que el zip, segellat amb la clau de la teva frase. Es restaura amb la teva frase a qualsevol dispositiu. Es pot desar en qualsevol lloc.",
+    "encryptedBackupTitle": "Només text, xifrat (.pnbackup)",
+    "encryptedBackupDesc": "Tot el contingut de text i les metadades, sense imatges ni fitxers. Un fitxer petit, segellat amb la clau de la teva frase. Es pot desar en qualsevol lloc.",
     "htmlArchiveTitle": "Arxiu HTML (.zip)",
-    "htmlArchiveDesc": "Una pàgina HTML imprimible per nota. Ideal per llegir fora de línia o arxivar, no per restaurar.",
+    "htmlArchiveDesc": "Una pàgina HTML imprimible per nota, amb els inicis de sessió, les targetes i les claus en text clar. Ideal per llegir fora de línia o arxivar, no per restaurar. Guarda'l en un lloc segur.",
     "textBackupTitle": "Còpia de seguretat de text (.json)",
     "textBackupDesc": "Tot el contingut de text i les metadades en JSON pla. Sense imatges ni fitxers. Desa-la en un lloc de confiança: no està xifrada.",
     "vaultExportTitle": "Exportació de la caixa forta (.json)",
@@ -205,6 +203,8 @@
     "calendarOnlyHeading": "Només calendari",
     "calendarExportTitle": "Fitxer de calendari (.ics)",
     "calendarExportDesc": "Esdeveniments, i notes i llistes de tasques amb data, per a Google Calendar, Apple Calendar o Outlook.",
+    "drawingsExportTitle": "Dibuixos (.zip)",
+    "drawingsExportDesc": "Cada dibuix com a fitxer .excalidraw propi, amb les imatges incloses, per a excalidraw.com i Obsidian.",
     "calendarPrivate": "Privat"
   },
   "exportProgress": {
@@ -213,11 +213,8 @@
     "incompleteTitle": "Exportació incompleta",
     "exportingTitle": "S'està exportant la còpia de seguretat...",
     "preparing": "S'està preparant...",
-    "exporting": "S'està exportant...",
-    "imagesProgress": "S'estan exportant les imatges... {{done}} de {{total}}",
-    "filesProgress": "S'estan exportant els fitxers... {{done}} de {{total}}",
-    "building": "S'està construint la còpia de seguretat...",
-    "compressing": "S'està comprimint...",
+    "showInFolder": "Mostra a la carpeta",
+    "zipStep": "Compressió",
     "missingFailed_one": "Aquest dispositiu no ha pogut baixar {{items}}, així que la teva exportació no l'inclou. Comprova la connexió i torna a exportar.",
     "missingFailed_other": "Aquest dispositiu no ha pogut baixar {{items}}, així que no s'inclouen en la teva exportació. Comprova la connexió i torna a exportar.",
     "missingNotFound_one": "{{items}} no és ni en aquest dispositiu ni al servidor, així que la teva exportació no l'inclou.",
@@ -266,7 +263,8 @@
     "generic": "No s'ha pogut desar l'exportació. Torna-ho a provar o tria una altra carpeta."
   },
   "saveErrors": {
-    "shortWrite": "Només s'han desat {{written}} de {{expected}} bytes, així que el fitxer és incomplet. Torna-ho a provar desant a l'emmagatzematge del teu dispositiu en comptes d'una carpeta al núvol."
+    "shortWrite": "Només s'han desat {{written}} de {{expected}} bytes, així que el fitxer és incomplet. Torna-ho a provar desant a l'emmagatzematge del teu dispositiu en comptes d'una carpeta al núvol.",
+    "protectedFolder": "PrivacyNotes no desa res a {{folder}}, perquè aquesta carpeta conté claus, configuració o programes. Desa el fitxer en un altre lloc i mou-lo allà tu mateix."
   },
   "shareSheet": {
     "title_one": "S'ha compartit {{count}} element amb PrivacyNotes",
@@ -275,7 +273,6 @@
     "saveAll": "Desa-ho tot"
   },
   "destination": {
-    "label": "Afegeix a",
     "none": "Sense carpeta",
     "newFolder": "Carpeta nova \"{{name}}\"",
     "help": "Les carpetes de l'origen van dins de la carpeta que triïs, i els elements sense carpeta hi van a parar."

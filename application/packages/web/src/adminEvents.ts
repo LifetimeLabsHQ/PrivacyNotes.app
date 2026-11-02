@@ -38,7 +38,8 @@ export type ExportSource =
   | 'contacts'
   | 'calendar'
   | 'pdf'
-  | 'burn';
+  | 'burn'
+  | 'drawing';
 
 export type AdminEventSource = ImportSource | ExportSource;
 

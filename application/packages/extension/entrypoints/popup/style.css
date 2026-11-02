@@ -1,0 +1,39 @@
+/* The app's own tokens, type roles and light and dark defaults, and the
+   utilities of the app's UI parts the popup imports. Nothing is copied. */
+@import '../../../web/src/index.css';
+@source '../../../web/src/ui';
+@source '../../../web/src/Switch.tsx';
+@source '../../../web/src/settingsUI.tsx';
+@source '../../../web/src/formFields.tsx';
+@source '../../../web/src/HoverLabel.tsx';
+@source '../../../web/src/PinInput.tsx';
+@source '../../../web/src/PasscodeInput.tsx';
+@source '../../../web/src/PasswordGeneratorPanel.tsx';
+@source '../../../web/src/PasswordText.tsx';
+@source '../../../web/src/ContextMenu.tsx';
+@source '../../../web/src/ListSearchInput.tsx';
+@source '../../../web/src/proMark.tsx';
+@source '../../src';
+@source '.';
+/* Build output is never a source, whether or not an ignore file says so (the
+   Firefox source archive carries none). */
+@source not '../../.wxt';
+@source not '../../.output';
+
+html,
+body {
+  width: 360px;
+  margin: 0;
+  background: rgb(var(--pn-surface-2));
+  color: rgb(var(--pn-text));
+}
+
+/* The browser sizes the popup to the document, so a tooltip that hangs past
+   the edge for one layout before HoverLabel fits it widened the whole popup
+   and snapped it back on every hover (beta issue 18). Both are needed: on
+   html alone the clip passes to the viewport, which still counts the
+   overhang, and on body alone it passes to the viewport the same way. */
+html,
+body {
+  overflow-x: clip;
+}

@@ -33,7 +33,7 @@ function watch(el: Element, update: (entry: IntersectionObserverEntry) => void) 
 
 /** Keep the row's space and keyboard destination while its contents unmount.
  * Grid placement remains CSS-owned, including mixed-width calendar cards.
- * Spec: ops/docs/archive/keep-my-place.md (windowed items)
+ * Spec: docs/internal/specs/keep-my-place.md (windowed items)
  */
 function WindowedNoteItem({ grid, ...props }: NoteRowProps & { grid: boolean }) {
   const compact = useCompactRows();

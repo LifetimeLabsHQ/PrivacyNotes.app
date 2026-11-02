@@ -12,6 +12,8 @@
     "addLink": "Link hinzufügen",
     "noteLink": "Auf eine andere Notiz verlinken (oder [[ tippen)",
     "numberedList": "Nummerierte Liste",
+    "indent": "Einzug vergrößern",
+    "outdent": "Einzug verkleinern",
     "textColor": "Textfarbe",
     "textColorApply": "Textfarbe: {{color}}",
     "pickColor": "Textfarbe wählen",
@@ -72,6 +74,7 @@
     "remove": "Hinweisbox entfernen",
     "collapse": "Hinweisbox einklappen",
     "expand": "Hinweisbox ausklappen",
+    "dragGrip": "Ziehen",
     "types": {
       "info": "Info",
       "success": "Erfolg",
@@ -132,6 +135,9 @@
     "addColumnRight": "Spalte rechts einfügen",
     "toggleHeaderRow": "Kopfzeile umschalten",
     "equalColumnWidths": "Spalten gleich breit machen",
+    "cellColor": "Zellenfarbe",
+    "sortAscending": "Von A bis Z sortieren",
+    "sortDescending": "Von Z bis A sortieren",
     "resizeHint": "Halte {{shift}} gedrückt, um nur diese Spalte zu ändern, {{alt}} für feinere Schritte",
     "deleteRow": "Zeile löschen",
     "deleteColumn": "Spalte löschen",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "In Notiz suchen",
-    "label": "In Notiz suchen",
     "previous": "Vorheriger Treffer",
     "previousTitle": "Zurück",
     "next": "Nächster Treffer",
     "nextTitle": "Weiter",
     "close": "Suche schließen",
-    "closeTitle": "Schließen",
     "replacePlaceholder": "Ersetzen durch",
     "replaceLabel": "Ersetzen durch",
     "replace": "Ersetzen",
@@ -177,10 +180,7 @@
     "replaceAll": "Alle",
     "replaceAllTitle": "Alle Treffer ersetzen",
     "caseSensitive": "Groß-/Kleinschreibung beachten",
-    "caseSensitiveTitle": "Groß-/Kleinschreibung beachten",
     "closeReplace": "Suchen und Ersetzen schließen",
-    "closeReplaceTitle": "Schließen",
-    "showReplace": "Suchen und ersetzen",
     "hideReplace": "Ersetzen ausblenden",
     "replacedCount_one": "{{count}} ersetzt",
     "replacedCount_other": "{{count}} ersetzt"
@@ -192,9 +192,7 @@
     "ariaLabel": "Notizgliederung",
     "hide": "Gliederung ausblenden",
     "copyHeadingLink": "Link zur Überschrift kopieren",
-    "copyNoteLink": "Notiz-Link kopieren",
-    "copyHeadingShortcut": "Verknüpfung zur Überschrift kopieren",
-    "copied": "Kopiert"
+    "copyHeadingShortcut": "Verknüpfung zur Überschrift kopieren"
   },
   "bodyMenu": {
     "cut": "Ausschneiden",
@@ -210,11 +208,8 @@
     "add": "Zeile einfügen"
   },
   "link": {
-    "popoverLabel": "Link hinzufügen",
     "placeholder": "Eine URL einfügen oder tippen",
     "apply": "Anwenden",
-    "addTitle": "Link hinzufügen",
-    "editTitle": "Link bearbeiten",
     "urlLabel": "URL",
     "urlPlaceholder": "https://beispiel.de",
     "errorEnterUrl": "Gib eine URL ein",
@@ -230,7 +225,6 @@
   },
   "audio": {
     "uploadingRecording": "Aufnahme wird hochgeladen...",
-    "uploading": "Wird hochgeladen...",
     "stopRecording": "Aufnahme stoppen",
     "recordAudio": "Audio aufnehmen",
     "savingRecording": "Aufnahme wird gespeichert...",
@@ -247,7 +241,6 @@
     "tasksChecked_other": "{{done}} von {{formatted}} abgehakt",
     "syncLimit": " · {{share}} des Sync-Limits von 1 MB",
     "overSyncLimit": " · über dem Sync-Limit von 1 MB, bleibt auf diesem Gerät",
-    "split": "Notiz aufteilen",
     "veryLong": ", sehr lang, könnte beim Bearbeiten langsam sein und ruckeln",
     "gettingLong": ", wird lang, könnte auf langsameren Geräten hängen",
     "largeTableWarning": "Eine große Tabelle ({{rows}} Zeilen) kann diese Notiz beim Bearbeiten langsam machen, erwäge sie aufzuteilen"
@@ -262,18 +255,14 @@
     "placeholder": "Text, den du mit einem Klick kopierst"
   },
   "inlineCode": {
-    "copyHint": "{{key}}-Klick zum Kopieren",
-    "copied": "Kopiert"
+    "copyHint": "{{key}}-Klick zum Kopieren"
   },
   "codeBlock": {
-    "copy": "Kopieren",
-    "copied": "Kopiert",
     "copyFailed": "Fehlgeschlagen",
     "wrap": "Lange Zeilen umbrechen",
     "showAll_one": "{{count}} Zeile anzeigen",
     "showAll_other": "Alle {{count}} Zeilen anzeigen",
     "showLess": "Weniger anzeigen",
-    "plainText": "Nur Text",
     "language": "Sprache des Codes: {{name}}",
     "searchLanguages": "Sprachen suchen",
     "placeholder": "Tippe oder füge Code ein. Für Farben wählst du oben eine Sprache."
@@ -354,7 +343,6 @@
     "inProgress": "In Arbeit",
     "review": "Prüfung",
     "done": "Erledigt",
-    "color": "Farbe",
     "columns": "Spalten",
     "columnCount_one": "{{count}} Spalte",
     "columnCount_other": "{{count}} Spalten",

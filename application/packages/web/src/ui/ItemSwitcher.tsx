@@ -46,7 +46,7 @@ export function SubViewHeader({ backLabel, onBack, anchorRef, children }: {
   // The pane's own heading already names the place, so the back row is one compact line.
   return (
     <div ref={anchorRef} className="-mt-2 flex items-center gap-2 scroll-mt-6">
-      <IconButton label={backLabel} onClick={onBack}><CaretLeft size={16} aria-hidden="true" /></IconButton>
+      <IconButton label={backLabel} onClick={onBack}><CaretLeft aria-hidden="true" /></IconButton>
       {children}
     </div>
   );
@@ -83,7 +83,7 @@ export function ItemSwitcher({ items, currentId, label, onPick }: {
         }}
       >
         <span className="truncate">{current.name}</span>
-        <CaretDown size={12} aria-hidden="true" className="shrink-0 text-pn-muted" />
+        <CaretDown aria-hidden="true" className="shrink-0 text-pn-muted" />
       </Button>
       </span>
       <Popover open={open} anchorRef={anchor} onClose={() => setOpen(false)} className="w-80">
@@ -95,12 +95,12 @@ export function ItemSwitcher({ items, currentId, label, onPick }: {
               role="option"
               aria-selected={x.id === currentId}
               onClick={() => { setOpen(false); onPick(x.id); }}
-              className={`w-full flex items-center gap-2.5 rounded-md px-2 py-1.5 text-start text-sm ${x.id === currentId ? 'bg-accent/10 text-accent-strong' : 'text-pn hover:bg-pn/5'}`}
+              className={`w-full flex items-center gap-2.5 rounded-md px-2 py-1.5 text-start text-body ${x.id === currentId ? 'bg-accent/10 text-accent-strong' : 'text-pn hover:bg-pn/5'}`}
             >
               {x.tile(22)}
               {/* The name always shows in full; a long value (a set of emotions) is the part that gives way. */}
               <span className="shrink-0 whitespace-nowrap">{x.name}</span>
-              {x.detail != null && <span className="flex-1 min-w-0 truncate text-end text-xs text-pn-muted tabular-nums">{x.detail}</span>}
+              {x.detail != null && <span className="flex-1 min-w-0 truncate text-end text-small text-pn-muted tabular-nums">{x.detail}</span>}
             </button>
           ))}
         </div>

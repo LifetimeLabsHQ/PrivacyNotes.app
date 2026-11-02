@@ -26,14 +26,11 @@
     "noResults": "Inga träffar"
   },
   "deleteNote": {
-    "title": "Radera för alltid",
     "confirm": "Radera för alltid",
-    "untitled": "Utan titel",
     "body": "Radera <highlight>”{{title}}”</highlight> permanent? Det går inte att ångra."
   },
   "emptyTrash": {
     "title": "Töm papperskorgen",
-    "confirm": "Radera för alltid",
     "body_one": "Radera <highlight>{{count}} anteckning</highlight> permanent? Det går inte att ångra.",
     "body_other": "Radera <highlight>{{count}} anteckningar</highlight> permanent? Det går inte att ångra."
   },
@@ -61,7 +58,6 @@
   },
   "palette": {
     "label": "Kommandon",
-    "open": "Kommandon",
     "empty": "Inget matchande kommando",
     "groups": {
       "features": "Funktioner",
@@ -86,7 +82,7 @@
       "insertDate": "Infoga datumet",
       "insertDateTime": "Infoga datum och tid",
       "clearFilters": "Rensa filter",
-      "moveToTrash": "Flytta anteckning till papperskorgen",
+      "moveToTrash": "Radera anteckning",
       "closeTab": "Stäng fliken eller anteckningen",
       "nextTab": "Nästa flik",
       "previousTab": "Föregående flik",
@@ -109,10 +105,8 @@
     "move": "flytta",
     "open": "öppna",
     "openInTab": "öppna i en flik",
-    "openLink": "Öppna",
     "edit": "redigera",
     "close": "stäng",
-    "tags": "Taggar",
     "folders": "Mappar",
     "tagItems_one": "{{count}} objekt",
     "tagItems_other": "{{count}} objekt",
@@ -175,17 +169,14 @@
     "downloadPublicKey": "Ladda ner publik nyckel",
     "downloadPrivateKey": "Ladda ner privat nyckel",
     "downloadHint": "Flytta den nedladdade nyckeln till ~/.ssh och kör chmod 600 på den, annars vägrar ssh använda den.",
+    "downloadHintDesktop": "PrivacyNotes sparar inte i ~/.ssh, för att skydda nycklarna som ligger där. Spara nyckeln någon annanstans, flytta den till ~/.ssh och kör chmod 600 på den, annars vägrar ssh använda den.",
+    "downloadHintWindows": "PrivacyNotes sparar inte i din .ssh-mapp, för att skydda nycklarna som ligger där. Spara nyckeln någon annanstans och flytta den till %USERPROFILE%\\.ssh. Windows behöver ingen chmod.",
     "downloadFailed": "Nyckelfilen kunde inte sparas. Kontrollera filen och försök igen.",
     "passphrase": "Lösenfras",
     "passphrasePlaceholder": "Nyckelns lösenfras (om någon)",
     "show": "Visa",
     "hide": "Dölj",
-    "copyPassphrase": "Kopiera lösenfras",
-    "notes": "Anteckningar",
-    "notesPlaceholder": "Ytterligare anteckningar (valfritt)",
-    "requirePin": "Kräv PIN för att visa",
-    "whatDoesThisDo": "Vad gör det här?",
-    "setUpPinFirst": "Skapa en PIN i säkerhetsinställningarna först."
+    "copyPassphrase": "Kopiera lösenfras"
   },
   "tagInput": {
     "placeholder": "Lägg till taggar… separera med komma, # eller enter",
@@ -257,7 +248,6 @@
       "öppnar valvet tyst",
       "lokalt dekrypterat. globalt ignorerat",
       "dekrypterar som om det inte angår någon",
-      "närproducerad klartext",
       "gör tankar till oläslig soppa",
       "ännu ett krypterat mästerverk på väg",
       "skapar ordning ur krypterat kaos",
@@ -281,17 +271,14 @@
     "changesSome_other": "{{count}} av de här anteckningarna har ändringar som inte är säkerhetskopierade och skulle gå förlorade."
   },
   "ninja": {
-    "recent": "Senaste",
     "topHit": "Bästa träff",
     "trashEmpty": "Papperskorgen är tom",
     "allThemes": "Alla teman",
     "features": {
       "stats": {
-        "label": "Statistik",
         "detail": "Ditt skrivande, dina sviter och dina mätvärden över tid"
       },
       "trackers": {
-        "label": "Mätvärden",
         "detail": "Humör, vanor, faktorer och medicin"
       },
       "medication": {
@@ -311,7 +298,6 @@
         "detail": "Ett starkt lösenord eller en lösenfras, redo att kopiera"
       },
       "themes": {
-        "label": "Teman",
         "detail": "Färgteman för ljust och mörkt"
       }
     },
@@ -322,7 +308,6 @@
     "commands": {
       "syncResume": "Återuppta synk",
       "changelog": "Nyheter",
-      "help": "Hjälp",
       "themesPage": "Communityteman",
       "website": "PrivacyNotes webbplats"
     },

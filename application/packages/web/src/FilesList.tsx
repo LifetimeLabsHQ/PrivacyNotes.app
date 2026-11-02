@@ -39,6 +39,7 @@ import { LazyPdfCover, LazyPicture } from './LazyPicture';
 import { isMail, isPdf, isPictureMime, openMediaViewer, type MediaRef } from './mediaRefs';
 import { useQuotaBlockedUuids } from './usePendingUploads';
 import { unescapeMarkdownText } from './fileNames';
+import { noteFileLinks } from './vaultBody';
 import { textMatcher } from './textMatch';
 import { setItemDragImage, writeItemDrag } from './itemDrag';
 import { isShortcutId } from './noteShortcut';
@@ -53,6 +54,11 @@ export interface FileItem {
   kind: 'image' | 'attachment';
   /** Original filename (attachments) or 'Image' (images) */
   name: string;
+  /** What the row shows, sorts and searches by: the note's title when the
+   *  note is one file and nothing else (GitHub #610), so renaming either
+   *  name renames the row; otherwise `name`. Type labels and downloads keep
+   *  reading `name`, which carries the extension. */
+  label: string;
   /** MIME type if known */
   mime: string;
   /** Original file size in bytes (0 if unknown) */
@@ -108,10 +114,6 @@ function parseSizeToBytes(s: string): number {
 // ── Extraction ─────────────────────────────────────────────────────────
 
 const IMG_RE = /pn:img\/([0-9a-f-]{36})/g;
-// Capture groups exclude newlines so the filename group can't span lines
-// and swallow preceding content (e.g. `- [ ] task` checkboxes) up to the
-// first `|` later in the body, which corrupted the file-row label.
-const ATT_RE = /\[([^|\n]*)\|([^|\n]*)\|([^\]\n]*)\]\(pn:file\/([0-9a-f-]{36})\)/g;
 /** Extract all file items from a set of notes. */
 export function extractFileItems(notes: LocalNote[]): FileItem[] {
   const items: FileItem[] = [];
@@ -125,10 +127,12 @@ export function extractFileItems(notes: LocalNote[]): FileItem[] {
     IMG_RE.lastIndex = 0;
     while ((m = IMG_RE.exec(note.body)) !== null) {
       imgIdx++;
+      const name = imgIdx === 1 ? `Image, ${noteTitle}` : `Image ${imgIdx}, ${noteTitle}`;
       items.push({
         uuid: m[1]!,
         kind: 'image',
-        name: imgIdx === 1 ? `Image, ${noteTitle}` : `Image ${imgIdx}, ${noteTitle}`,
+        name,
+        label: name,
         mime: 'image/*',
         size: 0,
         sizeLabel: '',
@@ -145,18 +149,24 @@ export function extractFileItems(notes: LocalNote[]): FileItem[] {
       });
     }
     // Attachments
-    ATT_RE.lastIndex = 0;
-    while ((m = ATT_RE.exec(note.body)) !== null) {
-      const sizeStr = m[2]!;
+    const links = noteFileLinks(note);
+    // A file item holding one file: its title and its file name are one name
+    // to the person, so the row follows the title. A note of several files
+    // lists each file by its own name.
+    const soleFile = isStandaloneFile && links.length === 1 && imgIdx === 0 && !!note.title;
+    for (const link of links) {
+      const sizeStr = link.size;
+      // The body text is markdown, so a name holding a bracket or an
+      // asterisk arrives escaped. The editor's chip reads the parsed
+      // document and never sees the backslashes; this row reads the raw
+      // body and would show them.
+      const name = unescapeMarkdownText(link.name) || 'Attachment';
       items.push({
-        uuid: m[4]!,
+        uuid: link.uuid,
         kind: 'attachment',
-        // The body text is markdown, so a name holding a bracket or an
-        // asterisk arrives escaped. The editor's chip reads the parsed
-        // document and never sees the backslashes; this row reads the raw
-        // body and would show them.
-        name: unescapeMarkdownText(m[1]!) || 'Attachment',
-        mime: m[3]! || 'application/octet-stream',
+        name,
+        label: soleFile ? noteTitle : name,
+        mime: link.mime || 'application/octet-stream',
         size: parseSizeToBytes(sizeStr),
         sizeLabel: sizeStr.trim(),
         noteId: note.id,
@@ -192,7 +202,7 @@ function listedWhileGated(items: FileItem[], gated: ReadonlySet<string>): FileIt
     if (!gated.has(item.noteId)) out.push(item);
     else if (!seen.has(item.noteId)) {
       seen.add(item.noteId);
-      out.push({ ...item, kind: 'attachment', name: item.noteTitle, mime: '', size: 0, sizeLabel: '' });
+      out.push({ ...item, kind: 'attachment', name: item.noteTitle, label: item.noteTitle, mime: '', size: 0, sizeLabel: '' });
     }
   }
   return out;
@@ -261,7 +271,7 @@ export function fileItemMediaRef(item: FileItem): MediaRef {
 
 interface FilesListProps {
   /** The view and space this list draws, so a return lands where it was;
-   *  null under a search. Spec: ops/docs/archive/keep-my-place.md */
+   *  null under a search. Spec: docs/internal/specs/keep-my-place.md */
   place?: string | null;
   fileItems: FileItem[];
   filesCount: number;
@@ -369,25 +379,25 @@ function getFileTypeLabel(item: FileItem): string {
 
 // Free-vs-Pro comparison shown to free users in the Files view (storage-bar
 // area and empty state). Values are numbers with short labels so no locale can
-// overflow the narrow column. Spec: ops/docs/pro-features.md (free vs Pro limits).
+// overflow the narrow column. Spec: docs/internal/pro-features.md (free vs Pro limits).
 function ProUpsell({ onUpgrade, className = '' }: { onUpgrade: () => void; className?: string }) {
   const { t } = useTranslation('shell');
   const rows = [
     { label: t('filesList.perFile'), free: 5, pro: 50 },
-    { label: t('filesList.storage'), free: 50, pro: 500 },
+    { label: t('settings:tabs.storage'), free: 50, pro: 500 },
   ];
   return (
     <div className={`w-full ${className}`}>
       {rows.map((r) => (
-        <div key={r.label} className="flex items-center justify-between gap-2 text-[11px] py-0.5">
+        <div key={r.label} className="flex items-center justify-between gap-2 text-meta py-0.5">
           <span className="text-pn-muted">{r.label}</span>
           <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
             <span className="text-pn-muted">
-              {r.free} MB <span className="text-[9px] uppercase tracking-wide">{t('filesList.free')}</span>
+              {r.free} MB <span className="text-meta uppercase tracking-wide">{t('filesList.free')}</span>
             </span>
             <span className="text-pn-muted" aria-hidden="true">{'→'}</span>
             <span className="text-accent font-medium">
-              {r.pro} MB <span className="text-[9px] uppercase tracking-wide">Pro</span>
+              {r.pro} MB <span className="text-meta uppercase tracking-wide">Pro</span>
             </span>
           </span>
         </div>
@@ -395,9 +405,9 @@ function ProUpsell({ onUpgrade, className = '' }: { onUpgrade: () => void; class
       <button
         type="button"
         onClick={onUpgrade}
-        className="mt-2 w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent-strong font-medium text-xs px-3 py-2 transition"
+        className="mt-2 w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent-strong font-medium text-small px-3 py-2 transition"
       >
-        <IconUpgrade size={12} /> {t('filesList.upgradeToPro')}
+        <IconUpgrade size={12} /> {t('settings:plan.upgradeToPro')}
       </button>
     </div>
   );
@@ -499,7 +509,7 @@ export function FilesList({
   // doesn't highlight both. We keep a local composite-key set for
   // visual state. The parent's selectedIds (noteIds), which is what the
   // bulk actions read, is re-derived from it on every change - see
-  // applyFileSelection. Spec: ops/docs/archive/ui-patterns.md section 61.
+  // applyFileSelection. Spec: docs/internal/design/ui-patterns.md section 61.
   const [selectedFileIds, setSelectedFileIds] = useState<Set<string>>(new Set());
   /** Anchor for shift-click range select - the last file toggled on its
    *  own. Mirrors `lastSelectedId` in useMultiSelect, in file-key space. */
@@ -624,7 +634,7 @@ export function FilesList({
     return [
       // ── Select / Deselect ────────────────────────────────────────
       {
-        label: isSelected ? t('filesList.menuDeselect') : t('filesList.menuSelect'),
+        label: isSelected ? t('shell:contextMenu.deselect') : t('shell:contextMenu.select'),
         icon: isSelected ? checkIcon : emptyIcon,
         onSelect: () => toggleFileSelected(item),
       },
@@ -637,12 +647,12 @@ export function FilesList({
         onSelect: () => setFilter('all'),
       },
       {
-        label: t('filesList.menuImages'),
+        label: t('notes:settings.imagesLabel'),
         icon: filter === 'image' ? checkIcon : emptyIcon,
         onSelect: () => setFilter('image'),
       },
       {
-        label: t('filesList.menuAudio'),
+        label: t('shell:filesList.filterAudio'),
         icon: filter === 'audio' ? checkIcon : emptyIcon,
         onSelect: () => setFilter('audio'),
       },
@@ -653,14 +663,14 @@ export function FilesList({
       },
       { type: 'separator' },
       {
-        label: showNote ? t('filesList.menuHideNoteAttachments') : t('filesList.menuShowNoteAttachments'),
+        label: showNote ? t('filesList.menuHideNoteAttachments') : t('shell:filesList.showNotesWithAttachments'),
         icon: emptyIcon,
         onSelect: () => setShowNote((v) => !v),
       },
       { type: 'separator' },
       // ── Per-file actions ─────────────────────────────────────────
       {
-        label: starred ? t('filesList.menuUnpin') : t('filesList.menuPin'),
+        label: starred ? t('shell:contextMenu.unpin') : t('shell:contextMenu.pin'),
         icon: iconPin(starred),
         onSelect: () => onToggleStar(item.noteId, !starred),
       },
@@ -668,7 +678,7 @@ export function FilesList({
       // to rename on one yet.
       ...(item.kind === 'attachment' && !item.locked
         ? [{
-            label: t('filesList.menuRename'),
+            label: t('common:actions.rename'),
             icon: iconEditPencil(),
             onSelect: () => onRenameFile(item.noteId, item.uuid),
           }]
@@ -677,12 +687,12 @@ export function FilesList({
       ...(item.standalone && isShortcutId(item.noteId)
         ? [{
             label: t('shell:shortcut.copyItem'),
-            icon: <LinkSimple size={14} aria-hidden="true" />,
+            icon: <LinkSimple aria-hidden="true" />,
             onSelect: () => onCopyShortcut(item.noteId),
           }]
         : []),
       {
-        label: t('filesList.menuMoveToTrash'),
+        label: t('common:actions.delete'),
         icon: iconTrash(),
         destructive: true,
         onSelect: () => onTrash(item.noteId),
@@ -714,13 +724,13 @@ export function FilesList({
     const q = search.trim();
     if (q) {
       const match = textMatcher(q);
-      items = items.filter((f) => match(f.name) || match(f.noteTitle));
+      items = items.filter((f) => match(f.label) || match(f.name) || match(f.noteTitle));
     }
     // Sort - pinned files always float to top, then user's chosen sort within each group.
     const dir = sortDir === 'asc' ? 1 : -1;
     items = [...items].sort((a, b) => {
       if (a.starred !== b.starred) return a.starred ? -1 : 1;
-      if (sortField === 'title') return dir * a.name.localeCompare(b.name);
+      if (sortField === 'title') return dir * a.label.localeCompare(b.label);
       if (sortField === 'size') return dir * (a.size - b.size);
       if (sortField === 'created') return dir * (a.createdAt > b.createdAt ? 1 : a.createdAt < b.createdAt ? -1 : 0);
       // modified - by the parent note's last edit
@@ -739,7 +749,7 @@ export function FilesList({
    * the drop would move or tag the whole host note. In selection mode a
    * selected standalone file drags every selected standalone file the list
    * shows. Ids only, so a drop into an editor makes nothing.
-   * Spec: ops/docs/archive/drag-to-folder-and-tag.md (section 13)
+   * Spec: docs/internal/specs/drag-to-folder-and-tag.md (section 13)
    */
   const fileDragProps = (item: FileItem) => {
     const ids = () => fileDragIds(item, filtered, (f) => selectedFileIds.has(fileKey(f)), selectedFileIds.size > 0);
@@ -775,7 +785,7 @@ export function FilesList({
    * sorted, filtered and searched, and on close the pane follows it to the
    * note of the file that was on screen. A file in a note the PIN still
    * guards opens the gate instead, and never joins the list.
-   * Spec: ops/docs/archive/ui-patterns.md (section 98, the picture viewer)
+   * Spec: docs/internal/design/ui-patterns.md (section 98, the picture viewer)
    */
   function openViewerAt(item: FileItem) {
     if (!isViewableFileItem(item)) return;
@@ -825,7 +835,7 @@ export function FilesList({
           view="files"
           onSelectView={onSelectView}
           onOpenDrawer={onOpenDrawer}
-          title={t('filesList.title')}
+          title={t('shell:tagsRail.files')}
           icon={<PILLAR_GLYPHS.files size={26} className="text-accent shrink-0" aria-hidden="true" />}
         />
         <NewButton
@@ -846,7 +856,7 @@ export function FilesList({
 
       {/* ── Selection count strip ──────────────────────────────── */}
       {selectedFileIds.size > 0 && (
-        <div className="shrink-0 px-4 py-2 border-b border-divider bg-accent/5 dark:bg-accent/10 flex items-center justify-between gap-2 text-[13px]">
+        <div className="shrink-0 px-4 py-2 border-b border-divider bg-accent/5 dark:bg-accent/10 flex items-center justify-between gap-2 text-compact">
           <span className="font-medium text-pn-soft tabular-nums">
             {t('filesList.selectedOf', { selected: selectedFileIds.size, total: filtered.length })}
           </span>
@@ -855,7 +865,7 @@ export function FilesList({
               onClick={selectedFileIds.size >= filtered.length ? clearFileSelection : selectAllFiles}
               className="font-semibold text-accent hover:underline"
             >
-              {selectedFileIds.size >= filtered.length ? t('filesList.deselectAll') : t('filesList.selectAll')}
+              {selectedFileIds.size >= filtered.length ? t('notes:selection.deselectAll') : t('notes:selection.selectAll')}
             </button>
           )}
         </div>
@@ -866,7 +876,7 @@ export function FilesList({
           add-ons live in Settings only, where somebody goes to look. ── */}
       {quotaMaxBytes > 0 && (
         <StorageBar
-          label={t('filesList.storage')}
+          label={t('settings:tabs.storage')}
           usedBytes={quotaUsedBytes}
           maxBytes={quotaMaxBytes}
           onRefresh={onRefreshStorage}
@@ -883,7 +893,7 @@ export function FilesList({
       <div className="shrink-0 px-3 pt-2 pb-1 flex gap-1.5">
         {([
           { key: 'all' as FileType, label: t('filesList.filterAll') },
-          { key: 'image' as FileType, label: t('filesList.filterImages') },
+          { key: 'image' as FileType, label: t('notes:settings.imagesLabel') },
           { key: 'audio' as FileType, label: t('filesList.filterAudio') },
           { key: 'document' as FileType, label: t('filesList.filterFiles') },
         ] as const).map(({ key, label }) => (
@@ -893,7 +903,7 @@ export function FilesList({
             onClick={() => setFilter(key)}
             aria-pressed={filter === key}
             tabIndex={mobileTabIndex}
-            className={`text-xs px-2.5 py-1 rounded-full transition font-medium ${
+            className={`text-small px-2.5 py-1 rounded-full transition font-medium ${
               filter === key
                 ? 'bg-accent-fill text-white'
                 : 'bg-surface-1 text-pn-muted hover:bg-pn/10'
@@ -907,13 +917,13 @@ export function FilesList({
       {/* ── Search row + sort button - matches NotesList layout ───── */}
       <div className="shrink-0 px-3 py-2 md:p-3 border-b border-divider relative">
         <div className="flex items-stretch gap-2">
-          <HoverLabel label={t('filesList.sortOptions')} position="above-start">
+          <HoverLabel label={t('shell:tasksList.sortOptions')} position="above-start">
           <button
             ref={sortBtnRef}
             type="button"
             onClick={() => setSortOpen((v) => !v)}
             tabIndex={mobileTabIndex}
-            aria-label={t('filesList.sortOptions')}
+            aria-label={t('shell:tasksList.sortOptions')}
             aria-expanded={sortOpen}
             className={`shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-md border transition ${
               sortOpen
@@ -921,7 +931,7 @@ export function FilesList({
                 : 'bg-surface-2 border-divider text-pn-soft hover:border-accent hover:text-accent'
             }`}
           >
-            <FunnelSimple size={18} />
+            <FunnelSimple />
           </button>
           </HoverLabel>
           <ListSearchInput
@@ -953,7 +963,7 @@ export function FilesList({
           checked={showNote}
           onChange={setShowNote}
           className="gap-2 select-none"
-          labelClassName="text-xs text-pn-muted"
+          labelClassName="text-small text-pn-muted"
         />
       </div>
 
@@ -979,16 +989,16 @@ export function FilesList({
             <div className="w-16 h-16 rounded-full bg-track flex items-center justify-center mb-4">
               <Folder size={28} className="text-pn-muted" />
             </div>
-            <p className="text-sm font-medium text-pn-soft mb-1">
+            <p className="text-body font-medium text-pn-soft mb-1">
               {search.trim()
-                ? t('filesList.noMatches')
+                ? t('notes:empty.noMatches')
                 : filter === 'all'
                   ? t('filesList.noFilesYet')
                   : filter === 'document' ? t('filesList.noDocuments') : filter === 'image' ? t('filesList.noImages') : t('filesList.noAudioFiles')}
             </p>
             {!search.trim() && (
               <>
-                <p className="text-xs text-pn-muted max-w-[220px] mb-4">
+                <p className="text-small text-pn-muted max-w-[220px] mb-4">
                   {/* States the real cap, so it follows proUnlocked (the demo
                       uploads at the Pro limit). The free-vs-Pro table above
                       is the upsell and stays keyed off isPro. */}
@@ -997,7 +1007,7 @@ export function FilesList({
                 <button
                   type="button"
                   onClick={() => onUploadFiles()}
-                  className="text-xs font-medium text-white bg-accent-fill hover:bg-accent-fill-hover px-4 py-1.5 rounded-md transition"
+                  className="text-small font-medium text-white bg-accent-fill hover:bg-accent-fill-hover px-4 py-1.5 rounded-md transition"
                 >
                   {t('filesList.uploadFiles')}
                 </button>
@@ -1081,7 +1091,7 @@ export function FilesList({
                 const listItem: Omit<ListItem, 'look'> = {
                   icon: <FileTileIcon mime={item.mime} />,
                   glyph: <CardGlyph type="file" />,
-                  title: item.name,
+                  title: item.label,
                   // The type word only for a standalone file; a file inside a
                   // note names that note. A note the PIN still guards shows
                   // neither, the way the note list hides its preview.
@@ -1135,13 +1145,13 @@ export function FilesList({
                     : <LazyPicture src={fileItemMediaRef(item).src} />}
                   <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
                   <div className="absolute inset-x-0 bottom-0 p-2.5">
-                    <div className="text-[13px] font-semibold text-white truncate flex items-center gap-1.5">
+                    <div className="text-compact font-semibold text-white truncate flex items-center gap-1.5">
                       <ItemFlags flags={flags} size={11} onImage />
-                      <span data-slot="title" className="truncate" dir="auto">{item.name}</span>
+                      <span data-slot="title" className="truncate" dir="auto">{item.label}</span>
                     </div>
                     <div className="flex items-center justify-between gap-2 mt-0.5">
-                      <span className="text-[11px] text-white/85 truncate">{item.standalone ? getFileTypeLabel(item) : item.noteTitle}</span>
-                      {listPrefs.showSize && item.size > 0 && <span className="text-[11px] text-white/85 shrink-0">{formatBytes(item.size)}</span>}
+                      <span className="text-meta text-white/85 truncate">{item.standalone ? getFileTypeLabel(item) : item.noteTitle}</span>
+                      {listPrefs.showSize && item.size > 0 && <span className="text-meta text-white/85 shrink-0">{formatBytes(item.size)}</span>}
                     </div>
                   </div>
                   {selectedFileIds.size > 0 && (
@@ -1191,7 +1201,7 @@ export function FilesList({
 /**
  * A file as a list row or a grid tile: the item the Files pane builds, with
  * the color of the parent note's tags or folder, which a file shares with it.
- * Spec: ops/docs/plans/list-grid-parity.md (section 5)
+ * Spec: docs/internal/plans/list-grid-parity.md (section 5)
  */
 function FileEntry({ item, file, grid, compact, state, rootProps, onToggleSelect }: {
   item: Omit<ListItem, 'look'>;

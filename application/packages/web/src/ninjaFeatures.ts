@@ -14,7 +14,7 @@ import { ArrowsClockwise, ChartBar, GridFour, Heartbeat, LockSimple, Megaphone, 
  * proves each entry named here exists, so a moved setting fails a test, not
  * Ninja.
  *
- * Spec: ops/docs/plans/ninja-features.md
+ * Spec: docs/internal/specs/ninja-features.md
  */
 
 export type NinjaAction = 'passwordGenerator' | 'lock' | 'syncNow' | 'syncPause' | 'emptyTrash';
@@ -40,13 +40,13 @@ export type NinjaDoor = {
 };
 
 export const NINJA_DOORS: readonly NinjaDoor[] = [
-  { id: 'feature:stats', group: 'features', label: 'common:ninja.features.stats.label', detail: 'common:ninja.features.stats.detail', icon: ChartBar, to: { kind: 'settings', entry: 'section.stats' } },
-  { id: 'feature:trackers', group: 'features', label: 'common:ninja.features.trackers.label', detail: 'common:ninja.features.trackers.detail', icon: Heartbeat, to: { kind: 'tracker', tab: 'trackers', entry: 'trackers.setup' } },
+  { id: 'feature:stats', group: 'features', label: 'notes:settings.statsLabel', detail: 'common:ninja.features.stats.detail', icon: ChartBar, to: { kind: 'settings', entry: 'section.stats' } },
+  { id: 'feature:trackers', group: 'features', label: 'notes:settings.trackersLabel', detail: 'common:ninja.features.trackers.detail', icon: Heartbeat, to: { kind: 'tracker', tab: 'trackers', entry: 'trackers.setup' } },
   { id: 'feature:medication', group: 'features', label: 'common:ninja.features.medication.label', detail: 'common:ninja.features.medication.detail', icon: Pill, to: { kind: 'tracker', tab: 'medications', entry: 'trackers.medications' } },
   { id: 'feature:yearInPixels', group: 'features', label: 'common:ninja.features.yearInPixels.label', detail: 'common:ninja.features.yearInPixels.detail', icon: GridFour, to: { kind: 'settings', entry: 'stats.yearInPixels' } },
   { id: 'feature:importExport', group: 'features', label: 'common:ninja.features.importExport.label', detail: 'common:ninja.features.importExport.detail', icon: Repeat, to: { kind: 'settings', entry: 'section.import' } },
   { id: 'feature:generator', group: 'features', label: 'common:ninja.features.generator.label', detail: 'common:ninja.features.generator.detail', icon: Password, to: { kind: 'action', id: 'passwordGenerator' } },
-  { id: 'feature:themes', group: 'features', label: 'common:ninja.features.themes.label', detail: 'common:ninja.features.themes.detail', icon: Palette, to: { kind: 'settings', entry: 'appearance.theme' } },
+  { id: 'feature:themes', group: 'features', label: 'common:palette.groups.themes', detail: 'common:ninja.features.themes.detail', icon: Palette, to: { kind: 'settings', entry: 'appearance.theme' } },
 
   { id: 'new:medication', group: 'new', label: 'common:ninja.new.medication', icon: Pill, inCreate: true, to: { kind: 'tracker', tab: 'medications', entry: 'trackers.medications' } },
   { id: 'new:customTracker', group: 'new', label: 'common:ninja.new.customTracker', icon: Plus, pro: true, inCreate: true, to: { kind: 'tracker', tab: 'custom', entry: 'trackers.custom' } },
@@ -57,7 +57,7 @@ export const NINJA_DOORS: readonly NinjaDoor[] = [
   { id: 'cmd:syncPause', group: 'commands', label: 'settings:syncPanel.pauseSync', icon: ArrowsClockwise, to: { kind: 'action', id: 'syncPause' } },
   { id: 'cmd:emptyTrash', group: 'commands', label: 'common:emptyTrash.title', icon: Trash, to: { kind: 'action', id: 'emptyTrash' } },
   { id: 'page:changelog', group: 'commands', label: 'common:ninja.commands.changelog', icon: Megaphone, to: { kind: 'page', path: '/changelog' } },
-  { id: 'page:help', group: 'commands', label: 'common:ninja.commands.help', icon: Question, to: { kind: 'page', path: '/help' } },
+  { id: 'page:help', group: 'commands', label: 'notes:settings.helpLabel', icon: Question, to: { kind: 'page', path: '/help' } },
   { id: 'page:themes', group: 'commands', label: 'common:ninja.commands.themesPage', icon: PaintBrush, to: { kind: 'page', path: '/themes' } },
   { id: 'page:home', group: 'commands', label: 'common:ninja.commands.website', icon: Globe, to: { kind: 'page', path: '/' } },
 ];

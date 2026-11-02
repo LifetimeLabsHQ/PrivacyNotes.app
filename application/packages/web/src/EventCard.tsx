@@ -35,7 +35,7 @@ type Props = {
   onUpgrade: () => void;
 };
 
-const CHIP = 'inline-flex items-center gap-1.5 h-7 max-w-full px-2.5 rounded-md border text-xs font-medium transition-colors';
+const CHIP = 'inline-flex items-center gap-1.5 h-7 max-w-full px-2.5 rounded-md border text-small font-medium transition-colors';
 const CHIP_SET = `${CHIP} border-divider text-pn-soft hover:border-accent/50 hover:text-pn`;
 const CHIP_OFF = `${CHIP} border-dashed border-pn-muted/50 text-pn-muted hover:border-pn-muted hover:text-pn-soft`;
 
@@ -76,11 +76,11 @@ export function EventCard({ schedule: s, day, fold, alertsUnlocked, showPro, onO
         onClick={() => setOpen(true)}
         aria-expanded={false}
         aria-label={t('eventCard.show', { when: `${when}, ${times}` })}
-        className={`${folded ? 'flex' : 'hidden'} sm:hidden w-full min-w-0 items-center gap-2 border-s-[3px] border-current ps-2.5 py-1 text-[13px] text-start ${tone}`}
+        className={`${folded ? 'flex' : 'hidden'} sm:hidden w-full min-w-0 items-center gap-2 border-s-[3px] border-current ps-2.5 py-1 text-compact text-start ${tone}`}
       >
         <span className="shrink-0">{formatDay(day, 'weekdayDate')}</span>
         <span className="min-w-0 truncate text-pn tabular-nums">{times}</span>
-        <CaretDown size={14} aria-hidden="true" className="ms-auto shrink-0 text-pn-muted" />
+        <CaretDown aria-hidden="true" className="ms-auto shrink-0 text-pn-muted" />
       </button>
 
       <div className={`${folded ? 'hidden sm:flex' : 'flex'} items-start gap-3 sm:gap-4 rounded-e-md border border-s-[3px] border-divider bg-surface-2/60 p-3 ${tone} [border-inline-start-color:currentColor]`}>
@@ -90,9 +90,9 @@ export function EventCard({ schedule: s, day, fold, alertsUnlocked, showPro, onO
           aria-label={`${t('noteOptionsMenu.schedule')}: ${when}, ${times}`}
           className="hidden sm:flex shrink-0 w-14 flex-col items-center rounded-md border border-divider py-1 leading-tight hover:border-accent/50 transition-colors"
         >
-          <span className="text-[11px] font-medium uppercase">{month}</span>
-          <span className="text-xl font-semibold text-pn tabular-nums">{Number(day.slice(8, 10))}</span>
-          <span className="text-[11px] text-pn-muted">{weekday}</span>
+          <span className="text-meta font-medium uppercase">{month}</span>
+          <span className="text-display font-semibold text-pn tabular-nums">{Number(day.slice(8, 10))}</span>
+          <span className="text-meta text-pn-muted">{weekday}</span>
         </button>
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-2">
@@ -101,13 +101,13 @@ export function EventCard({ schedule: s, day, fold, alertsUnlocked, showPro, onO
               onClick={() => onOpen('main')}
               className="min-w-0 flex-1 text-start rounded-sm hover:opacity-80"
             >
-              <span className="block text-[13px] sm:hidden">{when}</span>
-              <span className="block text-base font-semibold text-pn tabular-nums">
+              <span className="block text-compact sm:hidden">{when}</span>
+              <span className="block text-title font-semibold text-pn tabular-nums">
                 {times}
-                {length && <span className="ms-2 text-sm font-normal text-pn-muted">{length}</span>}
+                {length && <span className="ms-2 text-body font-normal text-pn-muted">{length}</span>}
               </span>
               {endDay && (
-                <span className="hidden sm:block text-[13px] text-pn-soft">{t('eventCard.until', { day: formatDay(endDay, 'weekdayDate') })}</span>
+                <span className="hidden sm:block text-compact text-pn-soft">{t('eventCard.until', { day: formatDay(endDay, 'weekdayDate') })}</span>
               )}
             </button>
             {fold && (
@@ -118,29 +118,29 @@ export function EventCard({ schedule: s, day, fold, alertsUnlocked, showPro, onO
                 aria-label={t('eventCard.hide')}
                 className="sm:hidden shrink-0 -m-1 p-1 text-pn-muted hover:text-pn"
               >
-                <CaretUp size={14} aria-hidden="true" />
+                <CaretUp aria-hidden="true" />
               </button>
             )}
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             <button type="button" onClick={() => onOpen('repeat')} className={s.repeat ? CHIP_SET : CHIP_OFF}>
-              <RepeatGlyph size={14} aria-hidden="true" className="shrink-0" />
+              <RepeatGlyph aria-hidden="true" className="shrink-0" />
               <span className="truncate">{s.repeat ? describeRepeat(s.repeat, s.day, t) : t('repeat.never')}</span>
             </button>
             <button type="button" onClick={openAlerts} className={alertsUnlocked && s.alerts?.length ? CHIP_SET : CHIP_OFF}>
-              <BellSimple size={14} aria-hidden="true" className="shrink-0" />
+              <BellSimple aria-hidden="true" className="shrink-0" />
               <span className="truncate">{alertsUnlocked && s.alerts?.length ? alertsSummary(s.alerts, day, t) : t('eventCard.noAlert')}</span>
               {showPro && <ProMark />}
             </button>
             {s.time && (
               <button type="button" onClick={() => onOpen('main')} className={CHIP_OFF}>
-                <Sun size={14} aria-hidden="true" className="shrink-0" />
+                <Sun aria-hidden="true" className="shrink-0" />
                 <span className="truncate">{t('calendar.allDay')}</span>
               </button>
             )}
             {!endDay && (
               <button type="button" onClick={() => onOpen('ends')} className={CHIP_OFF}>
-                <ArrowRight size={14} aria-hidden="true" className="shrink-0" />
+                <ArrowRight aria-hidden="true" className="shrink-0" />
                 <span className="truncate">{t('eventCard.endsLater')}</span>
               </button>
             )}

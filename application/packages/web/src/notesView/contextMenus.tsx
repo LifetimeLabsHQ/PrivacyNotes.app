@@ -20,14 +20,15 @@ import type { ContextMenuItem } from '../ContextMenu';
 import type { LocalNote } from '../db';
 import {
   iconBookmark, iconCheckbox, iconCopy, iconDownload, iconEditPencil,
-  iconExternal, iconFlame, iconFolder, iconOpenInTab,
+  iconExternal, iconFlame, iconFolder, iconHome, iconOpenInTab,
   iconNewJournal, iconNewLogin, iconNewTask,
   iconArchive, iconNote, iconPin, iconReadOnly, iconRestore, iconSettings, iconTag,
   iconShield, iconSidebar,
   iconSignOut, iconTrash, iconUpload, iconZen, LinkSimple, NEW_GLYPHS, EXPORT_GLYPHS,
 } from '../icons';
 import { bulkActionGuards, noteActionGuards } from '../noteActionGuards';
-import { isMac } from '../editorLinks';
+import { isMac } from '../devices';
+import { detectDeviceOs } from '../deviceFingerprint';
 import type { ImageStore } from '../imageStore';
 import type { View } from '../views';
 
@@ -78,8 +79,12 @@ export type ContextMenuDeps = {
   handleSignOutClick: () => void;
 
   /** Open these items as tabs above the editor, or show the tab one already
-   *  has. Absent where the strip is not drawn. Spec: ops/docs/archive/note-tabs.md */
+   *  has. Absent where the strip is not drawn. Spec: docs/internal/specs/note-tabs.md */
   onOpenInTab?: (ids: string[]) => void;
+  /** Home: whether a note widget shows this item, and the row that adds or
+   *  removes it. Absent while the layout cannot be written.
+   *  Spec: docs/internal/specs/dashboard.md (section 6) */
+  onHome?: { has: (id: string) => boolean; toggle: (n: LocalNote) => void; offers: (n: LocalNote) => boolean };
 
   // Multi-select (used by buildNoteMenu for Select / Deselect)
   selectedIds: Set<string>;
@@ -141,7 +146,7 @@ export type ContextMenuDeps = {
  * `ContextMenuItem`; the caller hands them to `ctxMenu.open`. The text
  * editor menu was retired in v0.158.0 - under strategy B (partial
  * suppression) the browser's native menu wins on editable surfaces.
- * Spec: ops/docs/backlog.md #74.
+ * Spec: docs/internal/backlog.md #74.
  */
 export function createContextMenuBuilders(deps: ContextMenuDeps): {
   buildGlobalMenu: () => ContextMenuItem[];
@@ -151,7 +156,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
   // item. handleNew accepts an overrideView so it creates the correct
   // type even though the React re-render from handleSelectView hasn't
   // committed yet (closure's `view` would still be stale).
-  // Fix: ops/docs/backlog.md #94.
+  // Fix: docs/internal/backlog.md #94.
   const createInPillar = (target: View) => () => {
     void deps.handleSelectView(target);
     void deps.handleNew(undefined, target);
@@ -161,11 +166,11 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
   // menu opens from the keyboard (NEW_MENU_PICKS, same order).
   // Order MUST match the sidebar pillar nav (TagsRail.tsx) and the "New" dropdown
   // (NotesList.tsx allNewOptions): Note, Task, Kanban board, Login, File, Journal, Event, Contact, Bookmark.
-  // Spec: ops/docs/archive/ui-patterns.md section 45 (New-menu order invariant)
+  // Spec: docs/internal/design/ui-patterns.md section 45 (New-menu order invariant)
   const buildGlobalMenu = (): ContextMenuItem[] => [
     {
-      label: i18n.t('shell:contextMenu.quickAdd'),
-      icon: <NEW_GLYPHS.event size={14} />,
+      label: i18n.t('shell:quickAdd.label'),
+      icon: <NEW_GLYPHS.event />,
       shortcut: keyText('quickAdd'),
       onSelect: () => deps.onQuickAdd(),
     },
@@ -188,6 +193,14 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
       },
     },
     {
+      label: i18n.t('shell:contextMenu.newDrawing'),
+      icon: <NEW_GLYPHS.drawing size={14} />,
+      onSelect: () => {
+        void deps.handleSelectView('drawings');
+        void deps.handleNew(undefined, 'drawings');
+      },
+    },
+    {
       label: i18n.t('shell:contextMenu.newLogin'),
       icon: iconNewLogin(),
       onSelect: createInPillar('vault'),
@@ -204,17 +217,17 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
     },
     {
       label: i18n.t('shell:contextMenu.newEvent'),
-      icon: <NEW_GLYPHS.event size={14} />,
+      icon: <NEW_GLYPHS.event />,
       // An event is made in the quick add, which shows what it can read.
       onSelect: () => deps.onQuickAdd(),
     },
     {
       label: i18n.t('shell:contextMenu.newContact'),
-      icon: <NEW_GLYPHS.contact size={14} />,
+      icon: <NEW_GLYPHS.contact />,
       onSelect: () => deps.onNewContact(),
     },
     {
-      label: i18n.t('shell:contextMenu.newBookmark'),
+      label: i18n.t('shell:bookmarks.newBookmark'),
       icon: iconBookmark(),
       onSelect: () => deps.onNewBookmark(),
     },
@@ -283,6 +296,9 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
   const oneItemOnly = (reason: string): OneItemOnly => ({ oneItemOnly: reason });
   const isOneItemOnly = (v: RowSpec['many']): v is OneItemOnly =>
     typeof v === 'object' && v !== null && 'oneItemOnly' in v;
+  // A drawing has no text to print or burn: it saves as a file or a
+  // picture from its own canvas menu. Spec: docs/internal/specs/drawing.md (section 7, Export)
+  const notADrawing = (s: Scope): boolean => s.kind === 'many' || s.note.type !== 'drawing';
 
   /**
    * One row of a note menu.
@@ -385,7 +401,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
   const NOTE_GROUPS: RowSpec[][] = [
     [
       {
-        label: () => i18n.t('shell:contextMenu.openBookmark'),
+        label: () => i18n.t('shell:contacts.open'),
         icon: () => iconExternal(),
         when: isLink,
         one: (n) => deps.onOpenBookmark(n),
@@ -407,7 +423,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
       },
       {
         label: (s) => s.kind === 'one' && deps.clippedNoteFor(s.note)
-          ? i18n.t('shell:contextMenu.openClippedNote')
+          ? i18n.t('editor:noteLink.open')
           : i18n.t('shell:contextMenu.saveAsNote'),
         icon: () => iconNote(),
         when: isLink,
@@ -420,10 +436,23 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
         label: () => i18n.t('shell:contextMenu.openInTab'),
         icon: () => iconOpenInTab(),
         // The click that does the same from a row, which no other place names.
-        shortcut: () => i18n.t('shell:contextMenu.openInTabHint', { key: isMac() ? '⌥' : 'Alt' }),
+        // Linux window managers and ChromeOS take Alt-click before the page
+        // sees it, so there the hint names the middle click, which works.
+        shortcut: () => (['Linux', 'ChromeOS'].includes(detectDeviceOs())
+          ? i18n.t('shell:contextMenu.openInTabHintMiddle')
+          : i18n.t('shell:contextMenu.openInTabHint', { key: isMac() ? '⌥' : 'Alt' })),
         when: () => deps.onOpenInTab !== undefined,
         one: (n) => deps.onOpenInTab?.([n.id]),
         many: (ids) => deps.onOpenInTab?.(ids),
+      },
+      {
+        label: (s) => s.kind === 'one' && deps.onHome?.has(s.note.id)
+          ? i18n.t('shell:dashboard.removeFromHome')
+          : i18n.t('shell:dashboard.showOnHome'),
+        icon: () => iconHome(),
+        when: (s) => s.kind === 'one' && !!deps.onHome?.offers(s.note),
+        one: (n) => deps.onHome?.toggle(n),
+        many: oneItemOnly('a note widget shows one note'),
       },
     ],
     [selectRow],
@@ -454,7 +483,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
       // same two switches and one wording for a thing is enough. A trailing
       // check says which way a switch is set, the way a native menu does.
       {
-        label: () => i18n.t('shell:noteOptionsMenu.readOnly'),
+        label: () => i18n.t('notes:noteRow.readOnly'),
         icon: () => iconReadOnly(),
         pro: !deps.isPro,
         checked: (s) => s.kind === 'many' ? deps.selectionAllLocked : s.note.locked === 1,
@@ -499,39 +528,43 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
     [
       {
         label: (s) => i18n.t(s.kind === 'one' && shortcutNoun(s.note.type) === 'item' ? 'shell:shortcut.copyItem' : 'shell:shortcut.copyNote'),
-        icon: () => <LinkSimple size={14} aria-hidden="true" />,
+        icon: () => <LinkSimple aria-hidden="true" />,
         when: (s) => s.kind === 'one' && isShortcutId(s.note.id),
         one: (n) => deps.onCopyShortcut(n),
         many: oneItemOnly('a shortcut opens one item'),
       },
       {
         label: () => i18n.t('shell:contextMenu.exportAsMarkdown'),
-        icon: () => <EXPORT_GLYPHS.markdown size={14} aria-hidden="true" />,
+        when: notADrawing,
+        icon: () => <EXPORT_GLYPHS.markdown aria-hidden="true" />,
         one: (n) => void deps.exportSingleMarkdown(n),
         many: () => deps.onBulkExportMarkdown(),
       },
       {
         label: () => i18n.t('shell:contextMenu.exportAsHtml'),
-        icon: () => <EXPORT_GLYPHS.html size={14} aria-hidden="true" />,
+        when: notADrawing,
+        icon: () => <EXPORT_GLYPHS.html aria-hidden="true" />,
         one: (n) => void deps.exportSingleHtml(n),
         many: () => deps.onBulkExportHtml(),
       },
       {
-        label: () => i18n.t('shell:contextMenu.printSaveAsPdf'),
-        icon: () => <EXPORT_GLYPHS.print size={14} aria-hidden="true" />,
+        label: () => i18n.t('notes:share.printTitle'),
+        when: notADrawing,
+        icon: () => <EXPORT_GLYPHS.print aria-hidden="true" />,
         one: (n) => void deps.printNote(n),
         many: oneItemOnly('one sheet of paper cannot mean five notes'),
       },
       {
-        label: () => i18n.t('shell:contextMenu.shareBurnAfterReading'),
-        icon: () => <span className="text-orange-500"><EXPORT_GLYPHS.burn size={14} aria-hidden="true" /></span>,
+        label: () => i18n.t('notes:share.burnTitle'),
+        when: notADrawing,
+        icon: () => <span className="text-orange-500"><EXPORT_GLYPHS.burn aria-hidden="true" /></span>,
         one: (n) => void deps.handleBurnShare(n),
         many: oneItemOnly('a burn link points at one note'),
       },
     ],
     [
       {
-        label: () => i18n.t('shell:contextMenu.moveToTrash'),
+        label: () => i18n.t('common:actions.delete'),
         icon: () => iconTrash(),
         destructive: true,
         one: (n) => deps.requestTrash([n.id]),

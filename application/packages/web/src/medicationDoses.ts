@@ -11,7 +11,7 @@ import type {
  * The doses of a medication: which ones a day asks about, how a day's log
  * names them, what a day reads as, and the supply left. Pure: the Meds pill,
  * Settings, the statistics and the reminder plan all read these.
- * Spec: ops/docs/mood-wellness-tracker.md section 6.7
+ * Spec: docs/internal/mood-wellness-tracker.md section 6.7
  */
 
 /** The first dose of every medication. It logs under the bare template id,

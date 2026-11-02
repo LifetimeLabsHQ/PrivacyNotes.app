@@ -24,7 +24,8 @@
       "replace": "Trova e sostituisci è una funzione Pro. Passa a Pro per sostituire un'occorrenza o tutte le occorrenze di una nota in un colpo solo.",
       "passphrase": "Le passphrase sono una funzione Pro. Genera una frase di parole casuali, facile da digitare e da dire.",
       "default": "Un upgrade sblocca tutto ciò che c'è qui sotto. Pagamento una tantum.",
-      "alerts": "I promemoria sono una funzione Pro. I tuoi dispositivi suonano all'ora che scegli, e niente dell'elemento esce da lì."
+      "alerts": "I promemoria sono una funzione Pro. Ogni dispositivo suona per conto suo all'ora che scegli, quindi nessun servizio di notifiche push vede l'elemento.",
+      "vaultFiles": "I file negli elementi della cassaforte sono una funzione Pro. Conserva codici di recupero, una chiave di backup o una scansione insieme all'accesso, alla carta o alla chiave a cui appartiene."
     },
     "features": {
       "devices": "Sincronizza dispositivi illimitati, su ogni piattaforma",
@@ -80,7 +81,6 @@
     "loadFailed": "Non è stato possibile caricare la cronologia. Controlla la connessione e riprova.",
     "selectPrompt": "Seleziona una versione per l'anteprima.",
     "emptyBody": "(vuoto)",
-    "restore": "Ripristina",
     "restoring": "Ripristino…",
     "restoreSnapshotFailed": "Non è stato possibile salvare prima la versione attuale, quindi non è stato ripristinato nulla. Controlla la connessione e riprova.",
     "restoreFailed": "Non è stato possibile ripristinare questa versione. Riprova.",

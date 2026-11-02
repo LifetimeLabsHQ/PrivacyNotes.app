@@ -5,7 +5,7 @@
  * comment somewhere: nothing is written unless the user actually typed, and
  * nothing is written over a file that changed underneath us.
  *
- * Spec: ops/docs/archive/markdown-folder.md (section 7)
+ * Spec: docs/internal/specs/markdown-folder.md (section 7)
  */
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +22,7 @@ import { editorCommands } from '../editorCommands';
 import { HoverLabel } from '../HoverLabel';
 import { keyText } from '../shortcutMatch';
 import { adaptFile, isTextFile, tidyRichSave } from './adapter';
-import { stampsMatch } from './fileAccess';
+import { stampsMatch, type FileStamp } from './fileAccess';
 import { applyAssets, restoreAssets, useAssets } from './useAssets';
 import { isLocalHref, noteLinkPathFor, resolveNoteLinkPath, resolveRelativeLinkPath } from './links';
 import type { OpenedMarkdownDir, OpenedMarkdownFile, SaveState } from './types';
@@ -38,11 +38,11 @@ const EMPTY_ASSETS: Map<string, string> = new Map();
 // The pillar is free, all of it, so the editor runs with every feature open:
 // callouts, find and replace. Nothing here prices anything, and no upgrade
 // pitch can open from this pane.
-// Spec: ops/docs/pro-features.md (Markdown folder)
+// Spec: docs/internal/pro-features.md (Markdown folder)
 const SOURCE_SEARCH = { isPro: true };
 // The find pill shows only on a file longer than the pane, with a line of
 // slack so it does not blink while a line wraps. The notes pane's value.
-// Spec: ops/docs/design-decisions.md (the editor corner holds only controls that can hide themselves)
+// Spec: docs/internal/design-decisions.md (the editor corner holds only controls that can hide themselves)
 const OVERFLOW_SLACK_PX = 40;
 
 /** The reading column, the same one the encrypted editor uses. `NoteEditorPane`
@@ -50,7 +50,7 @@ const OVERFLOW_SLACK_PX = 40;
  *  encrypted note editor - and the store behind it - into this module, which the
  *  one-way boundary forbids. Both rows below reference this constant so the
  *  header and the body cannot drift apart.
- *  Spec: ops/docs/design-decisions.md (editor content column max-width) */
+ *  Spec: docs/internal/design-decisions.md (editor content column max-width) */
 
 /**
  * A buffered edit and the file it was typed into, travelling together.
@@ -127,6 +127,13 @@ export function MarkdownFilePane({
   const [liveBody, setLiveBody] = useState(opened.adapted.body);
   const timer = useRef<number | null>(null);
   const pending = useRef<PendingWrite | null>(null);
+  // Saves run one after another, and each file remembers the stamp of this
+  // pane's own last write. An edit buffered while a save was in flight carried
+  // the stamp from before that save, so its write read our own save as a
+  // change on disk, and "Reload from disk" then threw the edit away (external
+  // report, 2026-10-24, bug report 7).
+  const saveChain = useRef<Promise<void>>(Promise.resolve());
+  const ownWrites = useRef(new Map<string, FileStamp | null>());
   // Relative image paths become loadable URLs on the way in, and are put back
   // verbatim on the way out - the file must keep saying what it said.
   const noteDir = opened.ref.location.includes('/')
@@ -182,7 +189,7 @@ export function MarkdownFilePane({
 
   // Links resolve inside this folder and nowhere else: a local file never
   // names an encrypted note, and an encrypted note never names a file.
-  // Spec: ops/docs/archive/markdown-folder.md (section 3, note-links)
+  // Spec: docs/internal/specs/markdown-folder.md (section 3, note-links)
   const relPaths = useMemo(() => (dir?.entries ?? []).map((e) => e.relPath), [dir]);
   const linkTitles = useMemo(
     () => relPaths.map((rel) => ({ id: rel, title: noteLinkPathFor(rel) })),
@@ -288,7 +295,13 @@ export function MarkdownFilePane({
    * runs from the flush below, which fires while the pane is switching to a
    * different file.
    */
-  async function save({ target, text }: PendingWrite) {
+  function save(write: PendingWrite): Promise<void> {
+    const run = saveChain.current.then(() => writeNow(write));
+    saveChain.current = run;
+    return run;
+  }
+
+  async function writeNow({ target, text }: PendingWrite) {
     // Whether the file being written is still the one the pane is showing.
     // The write itself is safe either way - the stamp check guards it - but
     // nothing may be REPORTED for a file the user has already left: the header
@@ -305,7 +318,8 @@ export function MarkdownFilePane({
       // Checked BEFORE announcing 'saving' so a blocked write reads as one
       // steady "not saved" rather than flickering through a claim that a save
       // is in progress when none will happen.
-      if (!stampsMatch(await target.ref.stamp(), target.stamp)) {
+      const onDisk = await target.ref.stamp();
+      if (!stampsMatch(onDisk, target.stamp) && !stampsMatch(onDisk, ownWrites.current.get(target.ref.location) ?? null)) {
         if (stillOpen()) setState({ kind: 'stale' });
         return;
       }
@@ -320,6 +334,7 @@ export function MarkdownFilePane({
         stamp: await target.ref.stamp(),
         adapted: adaptFile(target.ref.name, text),
       };
+      ownWrites.current.set(target.ref.location, written.stamp);
       if (!stillOpen()) return;
       onUpdatedRef.current(written);
       setState({ kind: 'saved' });
@@ -578,7 +593,7 @@ export function MarkdownFilePane({
     <div className="flex-1 min-h-0 flex flex-col">
     <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto">
       {state.kind === 'stale' && (
-        <div className="flex items-center gap-3 px-6 py-2 text-[12.5px] bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-b border-amber-200 dark:border-amber-900">
+        <div className="flex items-center gap-3 px-6 py-2 text-compact bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-b border-amber-200 dark:border-amber-900">
           <span>{t('markdown.changedOnDisk')}</span>
           <button type="button" onClick={() => void reloadFromDisk()} className="underline underline-offset-2">
             {t('markdown.reload')}
@@ -592,7 +607,7 @@ export function MarkdownFilePane({
           renamed on disk, not typed over here - so it truncates instead of
           scroll-fading. The only addition is the open padlock, which is the
           whole point of this pillar.
-          Spec: ops/docs/archive/ui-patterns.md (editor header) */}
+          Spec: docs/internal/design/ui-patterns.md (editor header) */}
       <div className="flex justify-center min-h-11 sm:min-h-14 py-1.5 sm:py-0 sm:h-14 border-b border-divider shrink-0">
         <div className="flex items-center gap-2 px-4 sm:px-6 pn-content-col">
           {/* The way back, in the one slot every editor in this app puts it.
@@ -608,7 +623,7 @@ export function MarkdownFilePane({
                 aria-label={t('notes:editor.backToGrid')}
                 className="rounded p-1.5 -ms-1 text-pn-muted hover:bg-pn/10 hover:text-accent transition shrink-0"
               >
-                <X size={18} />
+                <X />
               </button>
             </HoverLabel>
           ) : (
@@ -618,31 +633,31 @@ export function MarkdownFilePane({
               aria-label={t('notes:editor.backToList')}
               className="md:hidden rounded p-1.5 -ms-1 text-pn-muted hover:bg-pn/10 transition shrink-0"
             >
-              <ArrowLeft size={18} />
+              <ArrowLeft />
             </button>
           )}
           <span
-            className="flex-1 min-w-0 truncate text-base sm:text-xl lg:text-2xl font-semibold tracking-tight text-pn"
+            className="flex-1 min-w-0 truncate text-title sm:text-display lg:text-display-2 font-semibold tracking-tight text-pn"
             title={opened.ref.location}
           >
             {opened.adapted.title}
           </span>
-          <span className="shrink-0 text-[12px] text-pn-muted">{statusLabel(state, t)}</span>
+          <span className="shrink-0 text-small text-pn-muted">{statusLabel(state, t)}</span>
           {/* The file's type, at the head of the action group rather than in
               front of the title: that slot belongs to the way back, which every
               other editor in the app puts there and which a reader looks for
               first. Extension, not editor mode - see `isTextFile`. */}
           {isTextFile(opened.ref.name)
-            ? <FileTxt size={18} className="shrink-0 text-pn-muted" />
-            : <FileMd size={18} className="shrink-0 text-pn-muted" />}
+            ? <FileTxt className="shrink-0 text-pn-muted" />
+            : <FileMd className="shrink-0 text-pn-muted" />}
           {/* Find and replace has no "..." menu to live in here, so it sits in
               the header, for both modes. Cmd/Ctrl+F and Option+Cmd+F reach the
               same bars. */}
-          <HoverLabel label={t('noteOptionsMenu.findReplace')} keys={keyText('findReplace')} position="below">
+          <HoverLabel label={t('common:palette.commands.findReplace')} keys={keyText('findReplace')} position="below">
             <button
               type="button"
               onClick={() => (mode === 'rich' ? editorRef.current?.toggleReplace() : editorCommands.findReplace?.())}
-              aria-label={t('noteOptionsMenu.findReplace')}
+              aria-label={t('common:palette.commands.findReplace')}
               className="rounded-md p-2.5 text-pn-muted hover:text-accent hover:bg-accent/10 transition shrink-0"
             >
               <Swap size={20} />
@@ -659,11 +674,11 @@ export function MarkdownFilePane({
             </button>
           </HoverLabel>
           {onDelete && (
-            <HoverLabel label={t('markdown.delete')} position="below">
+            <HoverLabel label={t('common:actions.delete')} position="below">
               <button
                 type="button"
                 onClick={onDelete}
-                aria-label={t('markdown.delete')}
+                aria-label={t('common:actions.delete')}
                 className="rounded-md p-2.5 text-red-500 hover:text-red-600 hover:bg-red-500/10 dark:text-red-400 dark:hover:text-red-300 transition shrink-0"
               >
                 <Trash size={20} />
@@ -681,7 +696,7 @@ export function MarkdownFilePane({
                 key={m}
                 type="button"
                 onClick={() => setMode(m)}
-                className={`px-2.5 text-[12px] transition ${mode === m ? 'bg-track text-pn' : 'text-pn-muted hover:text-pn'}`}
+                className={`px-2.5 text-small transition ${mode === m ? 'bg-track text-pn' : 'text-pn-muted hover:text-pn'}`}
               >
                 {m === 'rich' ? t('markdown.modeRich') : t('markdown.modeSource')}
               </button>
@@ -725,8 +740,8 @@ export function MarkdownFilePane({
             hideEncryptedMedia
             // The magnifier beside the outline pill, as on a note.
             bodyControls={bodyOverflows ? (
-              <EditorSlotPill label={t('notes:editor.findInNote')} keys={keyText('find')} onClick={() => editorRef.current?.toggleFind()}>
-                <MagnifyingGlass size={17} />
+              <EditorSlotPill label={t('common:palette.commands.find')} keys={keyText('find')} onClick={() => editorRef.current?.toggleFind()}>
+                <MagnifyingGlass />
               </EditorSlotPill>
             ) : null}
             onInsertFiles={(files) => void attachFiles(files)}
@@ -751,17 +766,17 @@ export function MarkdownFilePane({
             mode control and stays exactly where a reader of notes expects it;
             the header's segmented control is the second affordance on the same
             `mode` state, for the reason given up there.
-            Spec: ops/specs/editor-mode-toggle.md */}
+            Spec: docs/internal/specs/editor-mode-toggle.md */}
         <div className="mt-auto pt-4 shrink-0 flex items-start justify-between gap-3">
           <WordCount body={liveBody} />
           <button
             type="button"
             onClick={() => setMode(mode === 'source' ? 'rich' : 'source')}
-            className="shrink-0 select-none text-xs text-pn-muted hover:text-pn-soft hover:underline transition"
+            className="shrink-0 select-none text-small text-pn-muted hover:text-pn-soft hover:underline transition"
           >
             {/* The notes namespace, because this is the encrypted editor's own
                 link and its wording must not fork from it. */}
-            {mode === 'source' ? t('notes:editor.showFormatted') : t('notes:editor.showMarkdown')}
+            {mode === 'source' ? t('notes:editor.showFormatted') : t('editor:formatBar.items.markdownView')}
           </button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { Check, Minus, ShieldSlash, Timer, Warning } from '../icons';
-import { Button } from '../ui';
+import { Button, Callout } from '../ui';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEscapeToClose } from '../useEscapeToClose';
@@ -30,6 +30,7 @@ import {
   type PinCredential,
 } from '../pin';
 import { clearPin, restoreUnsavedClear } from '../pinRecovery';
+import { storedPhraseUnwrapped } from '../phraseAtRest';
 import { isTrustedDevice } from '../trustStorage';
 import { signInStamp, signedOutSince } from '../liveSignIn';
 import { ForgotPinLink, PinRecoveryForm } from '../PinRecoveryForm';
@@ -46,7 +47,7 @@ import {
   type SecretKind,
 } from '../secretKind';
 import { SectionEyebrow, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, SETTINGS_SELECT, SettingsCallout } from '../settingsUI';
-import { loadLocalSettings, saveCredential, type UserSettings } from '../userSettings';
+import { loadLocalSettings, saveCredential, takePinChangeLost, type UserSettings } from '../userSettings';
 import { TIMEOUT_OPTIONS } from './timeoutOptions';
 
 /**
@@ -55,7 +56,7 @@ import { TIMEOUT_OPTIONS } from './timeoutOptions';
  * lasts. That window covers the phrase view and PIN-protected notes; the app
  * lock screen has its own, in the Biometric tab. A switch is a change: the
  * current secret first, then the new hash and wrap in one write.
- * Spec: ops/docs/plans/app-lock-passcode.md
+ * Spec: docs/internal/plans/app-lock-passcode.md
  */
 export function PinTab({
   phrase,
@@ -85,6 +86,8 @@ export function PinTab({
   // Read `hasPin()` once on mount and flip locally on set/remove so the
   // UI transitions without remounting.
   const [pinExists, setPinExists] = useState(() => hasPin());
+  // Read once per opening of the tab, which clears it.
+  const [changeLost] = useState(() => takePinChangeLost());
   // The kind the account holds, read from its hash salt, and the kind the
   // new-secret step sets. Setting a passcode is behind PASSCODE_SETUP_ENABLED;
   // checking one never is, so an older device can change an account's
@@ -94,7 +97,7 @@ export function PinTab({
     PASSCODE_SETUP_ENABLED && pinIsPasscode() ? 'passcode' : 'pin');
   const [oldPinVerified, setOldPinVerified] = useState(false);
   // The phrase route out of a forgotten PIN, and the line that says it
-  // worked. Spec: ops/docs/archive/pin-recovery.md
+  // worked. Spec: docs/internal/specs/pin-recovery.md
   const [recovering, setRecovering] = useState(false);
   // The kind that was cleared, for the line that says it worked.
   const [recovered, setRecovered] = useState<SecretKind | null>(null);
@@ -163,8 +166,12 @@ export function PinTab({
   // While biometric unlock on this device is a presence gate, its wrap key
   // sits beside the wrap it opens, so it is the weaker door and a longer
   // secret here does not raise the cost of a stolen copy of the storage.
-  // Spec: ops/docs/plans/biometric-key-binding.md (part C)
+  // Spec: docs/internal/plans/biometric-key-binding.md (part C)
   const biometricWeaker = hasBiometricCredential() && !isBiometricKeyBound();
+  // The wrap failed on this browser and the phrase sits as plain text; the
+  // app lock is what takes it out of storage.
+  // Spec: docs/public/THREAT_MODEL.md (The phrase itself is wrapped)
+  const phraseUnwrapped = storedPhraseUnwrapped();
 
   async function verifyOldPin(candidate: string) {
     if (!secretReady(existingKind, candidate) || oldPinBusy) return;
@@ -173,7 +180,7 @@ export function PinTab({
     const current = getPinLockoutState();
     if (current.locked) {
       setLockout(current);
-      setOldPinError(t('pinTab.tooManyAttempts', { seconds: current.secondsLeft }));
+      setOldPinError(t('security:lockScreen.tooManyAttempts', { seconds: current.secondsLeft }));
       return;
     }
     setOldPinBusy(true);
@@ -218,7 +225,7 @@ export function PinTab({
       const state = recordPinFailure();
       setLockout(state);
       setOldPinError(state.locked
-        ? t('pinTab.tooManyAttempts', { seconds: state.secondsLeft })
+        ? t('security:lockScreen.tooManyAttempts', { seconds: state.secondsLeft })
         : existingKind === 'passcode' ? t('pinTab.incorrectPasscode') : t('pinTab.incorrectPin'));
       setOldPin('');
       oldPinRef.current?.clear();
@@ -389,6 +396,8 @@ export function PinTab({
 
   return (
     <div className="@container space-y-3">
+      {changeLost && <Callout tone="danger">{t('pinTab.changeLost')}</Callout>}
+      {phraseUnwrapped && <Callout tone="danger">{t('pinTab.phraseUnwrapped')}</Callout>}
       {needsOldPin && biometricWeaker && (
         <SettingsCallout>{t('pinTab.biometricWeaker')}</SettingsCallout>
       )}
@@ -416,7 +425,7 @@ export function PinTab({
             />
           </div>
           {oldPinError && (
-            <p className="text-sm text-danger text-center">
+            <p className="text-body text-danger text-center">
               {oldPinError}
             </p>
           )}
@@ -425,7 +434,7 @@ export function PinTab({
             disabled={!secretReady(existingKind, oldPin) || oldPinBusy}
             className={`w-full ${SETTINGS_BTN_PRIMARY}`}
           >
-            {oldPinBusy ? t('pinTab.checking') : t('pinTab.verify')}
+            {oldPinBusy ? t('security:lockScreen.checking') : t('pinTab.verify')}
           </button>
           <ForgotPinLink kind={existingKind} onClick={() => setRecovering(true)} />
         </>
@@ -436,7 +445,7 @@ export function PinTab({
               <SettingsCallout>{t('pinTab.protectReason')}</SettingsCallout>
             )}
             {recovered && (
-              <p className="text-sm text-accent">
+              <p className="text-body text-accent">
                 {recovered === 'passcode' ? t('pinRecovery.clearedPasscode') : t('pinRecovery.cleared')}
               </p>
             )}
@@ -522,12 +531,12 @@ export function PinTab({
           )}
 
           {error && (
-            <p className="text-sm text-danger text-center">
+            <p className="text-body text-danger text-center">
               {error}
             </p>
           )}
           {savedFlash && (
-            <p className="text-sm text-accent text-center">
+            <p className="text-body text-accent text-center">
               {existingKind === 'passcode' ? t('pinTab.passcodeSaved') : t('pinTab.pinSaved')}
             </p>
           )}
@@ -549,7 +558,7 @@ export function PinTab({
             {pinExists && (
               <Button
                 data-setting="security.removePin"
-                icon={<ShieldSlash size={15} aria-hidden="true" className="shrink-0" />}
+                icon={<ShieldSlash aria-hidden="true" className="shrink-0" />}
                 onClick={() => setShowRemoveConfirm(true)}
                 disabled={busy}
               >
@@ -649,7 +658,7 @@ function RemovePinDialog({
     const current = getPinLockoutState();
     if (current.locked) {
       setLockout(current);
-      setError(t('pinTab.tooManyAttempts', { seconds: current.secondsLeft }));
+      setError(t('security:lockScreen.tooManyAttempts', { seconds: current.secondsLeft }));
       return;
     }
     setBusy(true);
@@ -670,8 +679,8 @@ function RemovePinDialog({
       const state = recordPinFailure();
       setLockout(state);
       setError(state.locked
-        ? t('pinTab.tooManyAttempts', { seconds: state.secondsLeft })
-        : kind === 'passcode' ? t('pinTab.incorrectPasscodeRetry') : t('pinTab.incorrectPinRetry'));
+        ? t('security:lockScreen.tooManyAttempts', { seconds: state.secondsLeft })
+        : kind === 'passcode' ? t('security:lockScreen.incorrectPasscodeRetry') : t('security:lockScreen.incorrectPinRetry'));
       setPin('');
       setBusy(false);
       inputRef.current?.clear();
@@ -684,10 +693,10 @@ function RemovePinDialog({
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="bg-surface-2 border border-divider rounded-lg max-w-sm w-full mx-4 p-5 space-y-4 text-pn">
-        <h2 className="text-lg font-semibold">
-          {kind === 'passcode' ? t('removePinDialog.titlePasscode') : t('removePinDialog.title')}
+        <h2 className="text-heading font-semibold">
+          {kind === 'passcode' ? t('security:removePinDialog.removePasscode') : t('security:pinTab.removePin')}
         </h2>
-        <p className="text-sm text-pn-soft leading-relaxed">
+        <p className="text-body text-pn-soft leading-relaxed">
           {kind === 'passcode'
             ? (hasBio ? t('removePinDialog.introWithBioPasscode') : t('removePinDialog.introNoBioPasscode'))
             : (hasBio ? t('removePinDialog.introWithBio') : t('removePinDialog.introNoBio'))}
@@ -705,7 +714,7 @@ function RemovePinDialog({
           disabled={busy || lockout.locked}
         />
         {error && (
-          <p className="text-sm text-danger text-center">
+          <p className="text-body text-danger text-center">
             {error}
           </p>
         )}
@@ -713,7 +722,7 @@ function RemovePinDialog({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-sm transition"
+            className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-body transition"
           >
             {t('common:actions.cancel')}
           </button>
@@ -721,11 +730,11 @@ function RemovePinDialog({
             type="button"
             onClick={() => void submit(pin)}
             disabled={!secretReady(kind, pin) || busy || lockout.locked}
-            className="flex-1 rounded-md bg-red-600 text-white hover:bg-red-700 px-3 py-2 text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 rounded-md bg-red-600 text-white hover:bg-red-700 px-3 py-2 text-body font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {busy
-              ? t('removePinDialog.verifying')
-              : kind === 'passcode' ? t('removePinDialog.removePasscode') : t('removePinDialog.removePin')}
+              ? t('security:lockScreen.verifying')
+              : kind === 'passcode' ? t('removePinDialog.removePasscode') : t('security:pinTab.removePin')}
           </button>
         </div>
       </div>
@@ -782,13 +791,13 @@ function NewPasscodeFields({
         />
         <ul className="space-y-0.5 pt-1">
           {checks.map((c) => (
-            <li key={c.label} className={`flex items-center gap-1.5 text-xs ${c.ok ? 'text-success' : 'text-pn-soft'}`}>
-              <Check size={13} weight="bold" className={c.ok ? '' : 'opacity-30'} aria-hidden="true" />
+            <li key={c.label} className={`flex items-center gap-1.5 text-small ${c.ok ? 'text-success' : 'text-pn-soft'}`}>
+              <Check weight="bold" className={c.ok ? '' : 'opacity-30'} aria-hidden="true" />
               {c.label}
             </li>
           ))}
           {!rules.notTooLong && (
-            <li className="text-xs text-danger">{t('pinTab.ruleMax', { max: PASSCODE_MAX_CHARS })}</li>
+            <li className="text-small text-danger">{t('pinTab.ruleMax', { max: PASSCODE_MAX_CHARS })}</li>
           )}
         </ul>
       </div>
@@ -803,7 +812,7 @@ function NewPasscodeFields({
           compact
           disabled={busy}
         />
-        {mismatch && <p className="text-xs text-pn-soft">{t('pinTab.passcodesDoNotMatch')}</p>}
+        {mismatch && <p className="text-small text-pn-soft">{t('pinTab.passcodesDoNotMatch')}</p>}
       </div>
     </div>
   );
@@ -819,7 +828,7 @@ function NewPasscodeFields({
  * arrow-key moves and the group's name for screen readers. Each tile is a
  * subgrid of the group, so a row that wraps in one tile keeps the next row
  * level in both.
- * Spec: ops/docs/THREAT_MODEL.md (PIN protection)
+ * Spec: docs/public/THREAT_MODEL.md (PIN protection)
  */
 function SecretKindTiles({
   value,
@@ -880,7 +889,7 @@ function SecretKindTiles({
               className="sr-only"
             />
             <span className="flex items-center justify-between gap-2 mb-0.5">
-              <span className="flex items-center gap-2 text-sm font-medium text-pn">
+              <span className="flex items-center gap-2 text-body font-medium text-pn">
                 <span
                   aria-hidden="true"
                   className={`grid place-items-center size-4 rounded-full border ${on ? 'border-accent' : 'border-pn-soft'}`}
@@ -890,7 +899,7 @@ function SecretKindTiles({
                 {tile.title}
               </span>
               <span
-                className={`rounded px-2 py-0.5 text-[11px] font-medium ${
+                className={`rounded px-2 py-0.5 text-meta font-medium ${
                   tile.kind === 'pin' ? 'bg-accent/10 text-accent' : 'bg-success/10 text-success'
                 }`}
               >
@@ -899,11 +908,11 @@ function SecretKindTiles({
             </span>
             {tile.rows.map(([label, mark, text]) => (
               <span key={label} className="block">
-                <span className="block text-[11px] text-pn-soft">{label}</span>
-                <span className="flex items-start gap-1.5 text-xs leading-relaxed text-pn">
-                  {mark === 'yes' && <Check size={14} aria-hidden="true" className="shrink-0 mt-0.5 text-success" />}
-                  {mark === 'no' && <Warning size={14} aria-hidden="true" className="shrink-0 mt-0.5 text-warning" />}
-                  {mark === 'meh' && <Minus size={14} aria-hidden="true" className="shrink-0 mt-0.5 text-pn-soft" />}
+                <span className="block text-meta text-pn-soft">{label}</span>
+                <span className="flex items-start gap-1.5 text-small leading-relaxed text-pn">
+                  {mark === 'yes' && <Check aria-hidden="true" className="shrink-0 mt-0.5 text-success" />}
+                  {mark === 'no' && <Warning aria-hidden="true" className="shrink-0 mt-0.5 text-warning" />}
+                  {mark === 'meh' && <Minus aria-hidden="true" className="shrink-0 mt-0.5 text-pn-soft" />}
                   <span>{text}</span>
                 </span>
               </span>
@@ -924,14 +933,14 @@ function SecretKindTiles({
 // are English in every locale by the owner's decision of 2026-10-15 and stay
 // out of the catalogs on purpose, so no translation batch picks them up. Remove
 // both, with the devicesUpdated state, once every channel ships v0.632.5 or
-// newer. Spec: ops/docs/plans/app-lock-passcode.md (section 11, step 6)
+// newer. Spec: docs/internal/plans/app-lock-passcode.md (section 11, step 6)
 const OLDER_APPS_NOTICE =
   'Before you switch, update PrivacyNotes on every device you use. An older version asks for a 4-digit PIN and will not take your passcode. If that happens, use your recovery phrase there.';
 const OLDER_APPS_CONFIRM = 'I updated PrivacyNotes on all my devices';
 
 function OlderAppsNotice() {
   return (
-    <div className="rounded-md border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 p-3 text-xs leading-relaxed text-amber-800 dark:text-amber-200">
+    <div className="rounded-md border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 p-3 text-small leading-relaxed text-amber-800 dark:text-amber-200">
       {OLDER_APPS_NOTICE}
     </div>
   );
@@ -947,7 +956,7 @@ function OlderAppsConfirm({
   disabled: boolean;
 }) {
   return (
-    <label className="flex items-start gap-2 text-xs leading-relaxed text-pn cursor-pointer">
+    <label className="flex items-start gap-2 text-small leading-relaxed text-pn cursor-pointer">
       <input
         type="checkbox"
         checked={checked}

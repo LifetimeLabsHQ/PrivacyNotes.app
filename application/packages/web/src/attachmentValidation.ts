@@ -15,7 +15,7 @@ import i18n from './i18n';
 /** Per-file size limits in bytes. */
 const FILE_SIZE_LIMIT_FREE = 5 * 1000 * 1000;   // 5 MB
 const FILE_SIZE_LIMIT_PRO = 50 * 1000 * 1000;    // 50 MB
-// Spec: ops/docs/file-size-storage-upsell.md (storage-sub holders get 100 MB/file)
+// Spec: docs/internal/file-size-storage-upsell.md (storage-sub holders get 100 MB/file)
 const FILE_SIZE_LIMIT_STORAGE = 100 * 1000 * 1000; // 100 MB
 
 /** Resolve the per-file size limit for a user's tier. Exported so the

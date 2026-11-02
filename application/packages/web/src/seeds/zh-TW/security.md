@@ -8,7 +8,7 @@ title: 你的筆記如何受到保護
 
 ![我們正式資料庫裡的筆記資料表。每則筆記的內容都是一長串讀不懂的文字。](/onboarding/database.webp)
 
-那是我們在蘇黎世的真正資料庫，不是示意圖。你的筆記會進到 `ciphertext` 這一欄。不管你在下面選哪一種做法，我們存下來的都只有加密後的位元組。
+那是我們在蘇黎世的真正資料庫，不是示意圖。不管你在下面選哪一種做法，你的筆記都會進到 `ciphertext` 這一欄。旁邊我們只保留維持服務運作所需的資料：你的公開金鑰、大小、時間戳記，以及 Google、Apple 或 GitHub 登入背後的電子郵件。
 
 ## 你寫一則筆記時，發生了什麼
 
@@ -27,26 +27,26 @@ title: 你的筆記如何受到保護
 | **登入，金鑰留在你的裝置** | 只在你手上，別的地方沒有 | 用 Google、Apple 或 GitHub 登入，鑰匙仍然歸你 |
 | **只用助憶詞，不必登入** | 只在你手上，別的地方沒有 | 不用電子郵件、不用姓名、完全不用登入 |
 
-下面兩種做法，就算有人逼我們，我們也讀不到筆記。第一種把這件事換成方便：你的助憶詞放在我們的伺服器上，由我們的一把鑰匙保護，所以新裝置只需要你的登入。萬一我們的伺服器被入侵，那把鑰匙就有可能外洩。
+下面兩種做法屬於零知識：我們的伺服器上沒有任何能打開你筆記的金鑰，所以法院命令也打不開它們。第一種把這件事換成方便：你的助憶詞放在我們的伺服器上，由我們的一把鑰匙保護，所以新裝置只需要你的登入。萬一我們的伺服器被入侵，那把鑰匙就有可能外洩。
 
 用 Google、Apple 或 GitHub 登入的話，之後可以到 **設定 > 帳號 > 金鑰保管** 在前兩種做法之間切換。只用助憶詞的帳號，助憶詞永遠留在你手上。
 
 > [!warning] 自己也留一份助憶詞
-> 助憶詞能打開你的筆記。弄丟了就沒有人救得回來，我們也不行。<span style="color: #e03131">今天就抄在紙上。</span>
+> 助憶詞能打開你的筆記。在自我保管下，弄丟的助憶詞沒有人救得回來。<span style="color: #e03131">今天就抄在紙上。</span>
 
 ## 自己查證
 
-[GitHub 上的完整查證步驟](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/VERIFY.md)
+[GitHub 上的完整查證步驟](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md)
 
 - [ ] 打開瀏覽器的網路分頁，然後編輯一則筆記。看看我們收到什麼：一團讀不懂的文字。
 - [ ] 讀一讀加密的程式碼。它是公開的，而且短到可以一次讀完。
 
 | 內容 | 位置 |
 | --- | --- |
-| 加密本身 | [crypto.ts](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/crypto/crypto.ts) |
-| 我們的伺服器收到什麼 | [VERIFY.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/VERIFY.md#tier-1-one-minute-no-tools) |
-| 攻擊者做得到與做不到的事 | [THREAT_MODEL.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/THREAT_MODEL.md) |
-| 怎麼回報漏洞 | [SECURITY.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/SECURITY.md) |
+| 加密本身 | [crypto.ts](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/crypto/crypto.ts) |
+| 我們的伺服器收到什麼 | [VERIFY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md#tier-1-one-minute-no-tools) |
+| 攻擊者做得到與做不到的事 | [THREAT_MODEL.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md) |
+| 怎麼回報漏洞 | [SECURITY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/SECURITY.md) |
 
 > [!info] 同一把鎖罩住全部
 > 筆記、日誌紀錄、書籤、保險庫項目和附件，都用同樣的方式加密。[[搬家]] 會示範怎麼把每一種搬過來。

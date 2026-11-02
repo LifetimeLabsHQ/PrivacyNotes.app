@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { zipEntryText } from './zipEntry';
+import { ImportTooLargeError, mediaTooLargeWarning, zipEntryBytes, zipEntryMedia, zipEntryText } from './zipEntry';
 import { linkifyMarkdown } from './linkify';
 import type { ImportedNote, ParsedImport } from './types';
 
@@ -375,6 +375,8 @@ interface SamsungEntry {
     hadFormatting: boolean;
     hadLists: boolean;
     hadCheckboxes: boolean;
+    /** Pictures past the largest upload, left out (zipEntryMedia). */
+    tooLarge: number;
   };
   /** Image blobs extracted from a .docx, keyed by placeholder (e.g. "samsungimg:rId2"). */
   blobs?: Map<string, { data: Uint8Array; mime: string; name: string }>;
@@ -437,6 +439,7 @@ async function parseDocxFile(
 
   // Extract image blobs referenced by the document
   const blobs = new Map<string, { data: Uint8Array; mime: string; name: string }>();
+  let tooLarge = 0;
   if (result.imageRIds.length > 0) {
     // Parse rels to resolve rId -> media path
     const relsFile = zip.file('word/_rels/document.xml.rels');
@@ -453,7 +456,11 @@ async function parseDocxFile(
         const mediaFile = zip.file(zipPath);
         if (!mediaFile) continue;
 
-        const data = await mediaFile.async('uint8array');
+        const data = await zipEntryMedia(mediaFile);
+        if (!data) {
+          tooLarge++;
+          continue;
+        }
         const name = target.split('/').pop() ?? target;
         const mime = mimeFromMediaPath(name);
 
@@ -470,6 +477,7 @@ async function parseDocxFile(
       hadFormatting: result.hadFormatting,
       hadLists: result.hadLists,
       hadCheckboxes: result.hadCheckboxes,
+      tooLarge,
     },
     blobs,
   };
@@ -518,8 +526,7 @@ async function extractEntries(
       onProgress?.(`Parsing ${docxFiles.length} Word document${docxFiles.length === 1 ? '' : 's'}…`);
       for (const entry of docxFiles) {
         try {
-          const data = await entry.async('uint8array');
-          const innerZip = await JSZip.loadAsync(data);
+          const innerZip = await JSZip.loadAsync(await zipEntryBytes(entry));
           const { body, meta, blobs } = await parseDocxFile(innerZip);
           entries.push({
             name: entry.name,
@@ -529,8 +536,10 @@ async function extractEntries(
             docxMeta: meta,
             blobs: blobs.size > 0 ? blobs : undefined,
           });
-        } catch {
-          // If a docx fails to parse, skip it - will be counted as a warning
+        } catch (err) {
+          // A docx that expands past the limit refuses the import; any other
+          // failure skips it - will be counted as a warning
+          if (err instanceof ImportTooLargeError) throw err;
         }
       }
     }
@@ -595,6 +604,7 @@ export async function parseSamsungNotes(
   let blankCollapseCount = 0;
   let formattingPreservedCount = 0;
   let imageCount = 0;
+  let tooLarge = 0;
   let docxCount = 0;
   let txtCount = 0;
 
@@ -611,6 +621,7 @@ export async function parseSamsungNotes(
       body = entry.body;
 
       if (entry.docxMeta?.hadImages) imageCount++;
+      tooLarge += entry.docxMeta?.tooLarge ?? 0;
       if (entry.docxMeta?.hadFormatting) formattingPreservedCount++;
       if (entry.docxMeta?.hadLists) bulletConvertCount++;
       if (entry.docxMeta?.hadCheckboxes) checkboxConvertCount++;
@@ -704,6 +715,7 @@ export async function parseSamsungNotes(
     );
   }
 
+  if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   if (emptyCount > 0) {
     warnings.push(
       `Skipped ${emptyCount} empty note${emptyCount === 1 ? '' : 's'} with no title and no body.`,

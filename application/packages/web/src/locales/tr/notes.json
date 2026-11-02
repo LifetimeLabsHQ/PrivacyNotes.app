@@ -6,19 +6,18 @@
     "deselect": "Not seçimini kaldır",
     "pinProtected": "PIN korumalı",
     "readOnly": "Salt okunur",
-    "file": "Dosya",
     "empty": "Boş",
     "noContent": "İçerik yok",
     "notBackedUp": "Yedeklenmedi",
     "archived": "Arşivlendi",
-    "entryDate": "Kayıt tarihi",
     "date": "Tarih",
-    "dayOf": "{{total}} günün {{n}}. günü"
+    "dayOf": "{{total}} günün {{n}}. günü",
+    "reminders_one": "{{count}} hatırlatıcı",
+    "reminders_other": "{{count}} hatırlatıcı"
   },
   "header": {
     "new": "Yeni",
     "newNote": "Yeni not",
-    "trash": "Çöp kutusu",
     "newEvent": "Yeni etkinlik"
   },
   "folderChip": {
@@ -31,7 +30,6 @@
   },
   "vaultNew": {
     "ariaLabel": "Yeni kasa öğesi",
-    "login": "Giriş bilgisi",
     "card": "Kredi kartı",
     "sshKey": "SSH anahtarı",
     "generator": "Parola"
@@ -39,15 +37,14 @@
   "newMenu": {
     "note": "Not",
     "task": "Görev",
-    "kanban": "Kanban panosu",
+    "kanban": "Kanban",
+    "drawing": "Çizim",
     "journal": "Günlük",
     "login": "Giriş bilgisi",
-    "file": "Dosya",
     "bookmark": "Yer imi",
     "clipPage": "Sayfayı kırp",
     "contact": "Kişi",
-    "event": "Etkinlik",
-    "quickAdd": "Hızlı ekle"
+    "event": "Etkinlik"
   },
   "vaultFilter": {
     "all": "Tümü",
@@ -64,14 +61,14 @@
   "trash": {
     "empty": "Boşalt",
     "emptyHover": "Çöp kutusundaki tüm notları sil",
-    "storage": "Depolama",
     "autoDelete": "30 gün sonra otomatik olarak sil"
   },
   "search": {
     "sortOptions": "Sıralama ve görünüm seçenekleri",
     "placeholderVault": "Kasada arayın…",
     "placeholderNotes": "Notlarda arayın…",
-    "placeholderEvents": "Etkinliklerde arayın…"
+    "placeholderEvents": "Etkinliklerde arayın…",
+    "placeholderDrawings": "Çizimlerde arayın…"
   },
   "selection": {
     "countOf": "{{total}} öğeden {{selected}} tanesi seçildi",
@@ -82,10 +79,11 @@
     "noMatches": "Eşleşme yok.",
     "vault": "Kasa boş.",
     "notes": "Henüz not yok.",
+    "drawings": "Henüz çizim yok.",
+    "drawingsLine": "Bir fikri çizin, planlayın veya haritasını çıkarın. Çizimler notlarınıza bağlantı verebilir ama içlerinde ne olduğunu göstermez.",
     "archive": "Arşivlenmiş öğe yok.",
     "trash": "Çöp kutusu boş.",
     "filtered": "Filtrelerinizle eşleşen öğe yok.",
-    "clearFilters": "Filtreleri temizle",
     "filteredAfter": "ve hepsini görün.",
     "hiddenInAll_other": "{{count}} öğe Tümü'nde göster filtresiyle gizleniyor. Göstermek için Tümü'nün yanındaki filtreyi açın.",
     "inOtherSpace_other": "{{count}} öğe {{space}} alanınızda. Görmek için kenar çubuğundan {{space}} alanına geçin.",
@@ -99,16 +97,6 @@
     "collapseAll": "Tüm grupları daralt",
     "expandAll": "Tüm grupları genişlet"
   },
-  "headerLabel": {
-    "allItems": "Tümü",
-    "untagged": "Etiketsiz",
-    "journals": "Günlükler",
-    "vault": "Kasa",
-    "pinned": "Sabitlenmiş",
-    "archive": "Arşiv",
-    "notes": "Notlar",
-    "calendar": "Takvim"
-  },
   "footerStats": {
     "journals_other": "Günlük",
     "journals_one": "Günlük",
@@ -121,6 +109,8 @@
     "bookmarks_other": "Yer imi",
     "bookmarks_one": "Yer imi",
     "contacts_other": "Kişi",
+    "drawings_one": "Çizim",
+    "drawings_other": "Çizim",
     "files_other": "Dosya",
     "lists_other": "Liste",
     "tasks_other": "Görev",
@@ -149,7 +139,6 @@
     "reload": "Yeniden yükle"
   },
   "banner": {
-    "dismiss": "Kapat",
     "proActivationPending": "Ödeme alındı ama Pro'nun etkinleşmesi her zamankinden uzun sürüyor. Bir dakika sonra sayfayı yenileyin, açılmazsa destekle iletişime geçin.",
     "snapshotPaused": "Not geçmişi duraklatıldı. Pro planınız etkin görünmüyor. Pro geri gelene kadar yeni düzenlemelerinizin anlık görüntüsü alınmayacak.",
     "restorePro": "Pro'yu geri getir",
@@ -157,8 +146,7 @@
     "updateCard": "Kartı güncelle"
   },
   "sidebar": {
-    "collapse": "Kenar çubuğunu daralt",
-    "expand": "Kenar çubuğunu genişlet"
+    "collapse": "Kenar çubuğunu daralt"
   },
   "notesList": {
     "collapse": "Not listesini daralt",
@@ -195,24 +183,11 @@
     "titlePlaceholder": "Başlıksız (düzenlemek için tıklayın veya kendiliğinden oluşmasına bırakın)",
     "titlePlaceholderLogin": "örn. GitHub",
     "titlePlaceholderCard": "örn. 4242 ile biten Visa",
-    "titlePlaceholderSshKey": "örn. GitHub dağıtım anahtarı",
-    "pin": "Sabitle",
-    "unpin": "Sabitlemeyi kaldır",
-    "restore": "Geri yükle",
-    "deleteForever": "Kalıcı olarak sil",
-    "moveToTrash": "Çöp kutusuna taşı",
-    "noteOptions": "Not seçenekleri",
     "readOnlyToggle": "Salt okunur. Kapatmak için:",
     "menu": "Menü",
-    "showMarkdown": "Markdown'ı göster",
     "showFormatted": "Biçimlendirilmiş halini göster",
     "invisiblesShow": "Görünmez karakterleri göster",
     "invisiblesHide": "Görünmez karakterleri gizle",
-    "findInNote": "Notta bul",
-    "navPrev": "Önceki",
-    "navNext": "Sonraki",
-    "navPrevTab": "Önceki sekme",
-    "navNextTab": "Sonraki sekme",
     "undo": "Geri al",
     "redo": "Yinele",
     "hide": "Gizle",
@@ -222,9 +197,7 @@
     "widthDefault": "Varsayılan genişlik",
     "widthWide": "Daha geniş",
     "widthFull": "Tam genişlik",
-    "burn": "Paylaş ve okunduktan sonra yak",
     "titlePlaceholderLink": "Yer imi adı",
-    "titlePlaceholderContact": "Ad",
     "notBackedUpTooLarge": "1 MB sınırının üzerinde olduğu için yedeklenmedi. Görselleri eklere taşıyın veya notu bölün.",
     "notBackedUpFailed": "Yedeklenmedi. Son hata: {{message}}. Yeniden deneniyor.",
     "unknownType": "Bu öğe, PrivacyNotes'un daha yeni bir sürümüyle oluşturuldu. Açmak için uygulamayı güncelleyin."
@@ -241,15 +214,17 @@
     "printTextTitle": "Yalnızca metni yazdır",
     "printTextDesc": "Başlığı korur. Tarihi, klasörü ve etiketleri çıkarır.",
     "burnTitle": "Paylaş ve okunduktan sonra yak",
-    "burnDesc": "Bu notu tek seferlik görüntüleme bağlantısı olarak yayınlayın. Bağlantı okunduktan sonra kendini imha eder. Notunuz hesabınızda güvende kalır."
+    "burnDesc": "Bu notu tek seferlik görüntüleme bağlantısı olarak yayınlayın. Bağlantı okunduktan sonra kendini imha eder. Notunuz hesabınızda güvende kalır.",
+    "drawingFileTitle": "Çizim (.excalidraw)",
+    "drawingFileDesc": "Excalidraw ve Obsidian'da, görselleriyle birlikte açılır.",
+    "drawingPngTitle": "Görsel (.png)",
+    "drawingPngDesc": "Çizimin tamamı tek bir görsel olarak."
   },
   "weekReview": {
     "title": "Haftanın özeti",
     "daysLogged": "{{count}}/7 gün kayıtlı",
     "mood": "Ruh hali",
-    "sleep": "Uyku",
-    "meds": "İlaçlar",
-    "activity": "Aktivite"
+    "meds": "İlaçlar"
   },
   "footer": {
     "settings": "Ayarlar",
@@ -264,12 +239,10 @@
     "words_other": "Kelime",
     "words_one": "Kelime",
     "zen": "Zen modu",
-    "appearance": "Görünüm",
     "lockApp": "Uygulamayı kilitle",
     "lockAppSetUp": "Önce Güvenlik bölümünden bir PIN oluşturun",
     "goToTop": "Başa git",
     "goToEnd": "Sona git",
-    "signOut": "Çıkış yap",
     "signingOut": "Çıkış yapılıyor…",
     "switchToLight": "Açık moda geç",
     "switchToDark": "Koyu moda geç"
@@ -307,10 +280,11 @@
     "bodyMulti": "Bu {{count}} dosya markdown gibi görünüyor. Okuyup düzenleyebilmek için not olarak mı içe aktarılsınlar, yoksa şifrelenmiş dosya ekleri olarak mı saklansınlar?"
   },
   "bulkTrash": {
-    "title": "Çöp kutusuna taşı",
-    "body_one": "<highlight>{{count}} öğe</highlight> çöp kutusuna taşınsın mı? Öğeyi sonradan geri yükleyebilirsiniz.",
-    "body_other": "<highlight>{{count}} öğe</highlight> çöp kutusuna taşınsın mı? Sonradan geri yükleyebilirsiniz.",
-    "readOnlyTitle": "Salt okunur",
+    "body_one": "<highlight>{{count}} öğe</highlight> silinsin mi? Sonradan geri yüklemek için çöp kutusuna taşıyın veya kalıcı olarak silin.",
+    "body_other": "<highlight>{{count}} öğe</highlight> silinsin mi? Sonradan geri yüklemek için çöp kutusuna taşıyın veya kalıcı olarak silin.",
+    "confirm": "Çöp kutusuna taşı",
+    "keys": "Bu pencerenin dışında <kbd>{{trash}}</kbd> bir öğeyi hemen çöp kutusuna taşır, <kbd>{{ask}}</kbd> ise Bir daha sorma seçiliyken bile bu pencereyi açar.",
+    "dontAskAgain": "Bir daha sorma",
     "readOnlyAcknowledge": "Anladım",
     "readOnlyBlocked_one": "<highlight>{{count}} öğe</highlight> salt okunur olduğu için çöp kutusuna taşınamaz. Önce not seçeneklerinden salt okunur ayarını kapatın.",
     "readOnlyBlocked_other": "<highlight>{{count}} öğe</highlight> salt okunur olduğu için çöp kutusuna taşınamaz. Önce not seçeneklerinden salt okunur ayarını kapatın.",
@@ -319,21 +293,12 @@
   },
   "deleteCheckedTasks": {
     "title": "İşaretli öğeler silinsin mi?",
-    "confirm": "Sil",
     "body_one": "<highlight>{{count}} öğe</highlight> bu nottan silinecek. Bu işlem geri alınamaz.",
     "body_other": "<highlight>{{count}} öğe</highlight> bu nottan silinecek, iç içe öğeler dahil. Bu işlem geri alınamaz."
   },
-  "bulkDelete": {
-    "body_one": "<highlight>{{count}} not</highlight> kalıcı olarak silinsin mi? Bu işlem geri alınamaz.",
-    "body_other": "<highlight>{{count}} not</highlight> kalıcı olarak silinsin mi? Bu işlem geri alınamaz."
-  },
   "tagConfirm": {
     "mergeTitle": "Etiketleri birleştir",
-    "deleteTitle": "Etiketi sil",
-    "deleteWithNotesTitle": "Etiketi ve notları sil",
     "mergeConfirm": "Birleştir",
-    "deleteConfirm": "Etiketi sil",
-    "moveToTrash": "Çöp kutusuna taşı",
     "mergeBody_one": "<highlight>“{{targetTag}}”</highlight> etiketi zaten var. Şu anda “{{tag}}” etiketli <highlight>{{count}} not</highlight> bununla birleştirilsin mi?",
     "mergeBody_other": "<highlight>“{{targetTag}}”</highlight> etiketi zaten var. Şu anda “{{tag}}” etiketli <highlight>{{count}} not</highlight> bununla birleştirilsin mi?",
     "deleteBody_one": "<highlight>“{{tag}}”</highlight> etiketi <highlight>{{count}} nottan</highlight> kaldırılsın mı? Notların kendisi silinmez.",
@@ -363,5 +328,35 @@
     "missing": "Henüz oluşturulmadı",
     "protectedHidden_one": "PIN korumalı {{count}} öğe gösterilmiyor",
     "protectedHidden_other": "PIN korumalı {{count}} öğe gösterilmiyor"
+  },
+  "drawing": {
+    "fullScreen": "Tam ekran",
+    "frame": "Çerçeve",
+    "laser": "Lazer işaretçi",
+    "bar": {
+      "hiddenNote": "Kısayol tuşlarıyla yine çalışırlar."
+    },
+    "resetTitle": "Tuval sıfırlansın mı?",
+    "resetBody": "Bu, tuvaldeki her şeyi kaldırır. Geri al ile geri gelir.",
+    "hotkeysTitle": "Çizim kısayol tuşları",
+    "tools": {
+      "label": "Çizim araçları",
+      "keepTool": "Çizdikten sonra aracı koru",
+      "hand": "Tuvali taşı",
+      "rectangle": "Dikdörtgen",
+      "diamond": "Eşkenar dörtgen",
+      "ellipse": "Elips",
+      "arrow": "Ok",
+      "line": "Çizgi",
+      "pen": "Kalem",
+      "text": "Metin kutusu",
+      "eraser": "Silgi",
+      "resetZoom": "Yakınlaştırmayı sıfırla",
+      "open": "Bir çizim dosyası aç",
+      "reset": "Tuvali sıfırla",
+      "style": "Stil",
+      "more": "Daha fazla araç",
+      "fewer": "Daha az araç"
+    }
   }
 }

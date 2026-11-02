@@ -7,7 +7,7 @@
  * shows stays on view even when it is not picked here (the caller adds it).
  * Its own module, so the Settings pane that names the number does not pull
  * the community list into boot.
- * Spec: ops/docs/color-themes.md (section 6)
+ * Spec: docs/contrib/color-themes.md (section 6)
  */
 export const COMMUNITY_SHOWN_PER_MODE = 20;
 /** Under All: a short row, after the team's themes. */

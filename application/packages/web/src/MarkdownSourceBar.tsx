@@ -9,7 +9,7 @@ import type { SourceAction } from './markdownSourceFormat';
  * The fixed set the Markdown view offers: the items that have a plain
  * Markdown form. Settings > Toolbar does not arrange it; colour, alignment,
  * font, underline and the callout have no Markdown and are not here.
- * Spec: ops/issues/0493.md (Spec)
+ * Spec: docs/internal/issues/0493.md (Spec)
  */
 const SOURCE_BAR: readonly SourceAction[] = [
   'bold', 'italic', 'strike', 'heading', 'tasks', 'link', 'notelink',

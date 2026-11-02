@@ -84,7 +84,7 @@ function getStoredTheme(): Theme {
  * Browser and OS chrome color: the Android Chrome address bar, the iOS
  * Safari / installed-PWA status bar, the Android task switcher card.
  * Values mirror the two metas in index.html.
- * Spec: ops/docs/color-themes.md (section 1, theme-color)
+ * Spec: docs/contrib/color-themes.md (section 1, theme-color)
  */
 const THEME_COLOR: Record<Theme, string> = { light: '#F5F5F5', dark: '#171514' };
 
@@ -199,7 +199,7 @@ function suppressThemeTransitions(): void {
 }
 
 /** Paint a resolved theme without animating every mounted item.
- * Spec: ops/docs/color-themes.md (Theme switching performance)
+ * Spec: docs/contrib/color-themes.md (Theme switching performance)
  */
 function paintTheme(theme: Theme): void {
   const root = document.documentElement;
@@ -274,6 +274,7 @@ export function initTheme(): Theme {
   watchSystemTheme();
   initColorTheme();
   applyTextSize(getStoredTextSize());
+  applyNoteFont(getStoredNoteFont());
   applyContentWidth(getStoredContentWidth());
   paintCodeWrap();
   return theme;
@@ -321,6 +322,40 @@ function applyTextSize(size: TextSize): void {
 }
 
 // ------------------------------------------------------------------
+// Note font axis
+// ------------------------------------------------------------------
+
+const NOTE_FONT_KEY = 'privacynotes.noteFont';
+
+/**
+ * The typeface every note renders in, for a reader who writes most notes
+ * in one (GitHub #615). Drives `data-note-font` on <html>, which index.css
+ * reads; nothing is written into a note, and a font picked in the toolbar
+ * still wins over it. Device-local, like the text size beside it.
+ * Spec: index.css (Note font), values from FONT_FAMILIES in editorColors.ts
+ */
+export const NOTE_FONTS = ['sans', 'serif', 'mono'] as const;
+export type NoteFont = (typeof NOTE_FONTS)[number];
+
+function getStoredNoteFont(): NoteFont {
+  try {
+    const stored = localStorage.getItem(NOTE_FONT_KEY);
+    return (NOTE_FONTS as readonly string[]).includes(stored ?? '') ? (stored as NoteFont) : 'sans';
+  } catch {
+    return 'sans';
+  }
+}
+
+let activeNoteFont: NoteFont = 'sans';
+
+/** Paint a note font on <html> and persist it. */
+function applyNoteFont(font: NoteFont): void {
+  activeNoteFont = font;
+  document.documentElement.dataset.noteFont = font;
+  localStorage.setItem(NOTE_FONT_KEY, font);
+}
+
+// ------------------------------------------------------------------
 // Line spacing axis
 // ------------------------------------------------------------------
 
@@ -342,7 +377,7 @@ function applyTextSize(size: TextSize): void {
  * the phone they typed the note on to the laptop they read it on. So the
  * value lives on UserSettings and syncs, this module only paints it, and
  * there is deliberately no localStorage key below.
- * Spec: ops/docs/design-decisions.md (editor paragraph rhythm)
+ * Spec: docs/internal/design-decisions.md (editor paragraph rhythm)
  */
 // The values are stored and synced, so they never change; the labels the
 // reader sees are Tight, Default and Relaxed (settings.json lineSpacing*).
@@ -376,7 +411,7 @@ export function readLineSpacing(): LineSpacing {
  * cannot read `--pn-para-gap`: the export stylesheet, the HTML flavour of a
  * copy, and the burn viewer, which lays a note out in its sender's spacing.
  * Keep it equal to the values in index.css.
- * Spec: ops/docs/design-decisions.md (editor paragraph rhythm)
+ * Spec: docs/internal/design-decisions.md (editor paragraph rhythm)
  */
 export function paragraphGapCss(spacing: LineSpacing = readLineSpacing()): string {
   return spacing === 'normal' ? '0.75em' : '0';
@@ -411,7 +446,7 @@ const CONTENT_WIDTH_KEY = 'privacynotes.contentWidth';
  * Device-local, for the text-size reason: a phone never reaches the cap
  * at all, so syncing this would fix one screen and do nothing for the
  * other.
- * Spec: ops/docs/design-decisions.md (editor content column max-width)
+ * Spec: docs/internal/design-decisions.md (editor content column max-width)
  */
 export const CONTENT_WIDTHS = ['default', 'wide', 'full'] as const;
 export type ContentWidth = (typeof CONTENT_WIDTHS)[number];
@@ -452,7 +487,7 @@ const SPELLCHECK_KEY = 'privacynotes.spellcheck';
  * ignores the document's own language entirely, so someone writing French
  * on an English install gets every word underlined with nothing in the app
  * to change it. This flag is that missing off switch.
- * Spec: ops/docs/design-decisions.md (Spell check is the engine's, not ours)
+ * Spec: docs/internal/design-decisions.md (Spell check is the engine's, not ours)
  *
  * Device-local and NOT synced, for the text-size reason above and one
  * stronger: the dictionary belongs to the machine, not the account. The
@@ -487,7 +522,7 @@ export type CopyFormat = 'markdown' | 'plain';
  * character, for a reader who pastes tasks into forms and work tools that
  * print `- [ ]` as it is. Device-local, like spell check: what a paste
  * target understands belongs to the device's apps, not the account.
- * Spec: ops/docs/archive/paste-pictures.md (section 3.6)
+ * Spec: docs/internal/specs/paste-pictures.md (section 3.6)
  */
 function getStoredCopyFormat(): CopyFormat {
   try {
@@ -514,7 +549,7 @@ export function readCopyFormat(): CopyFormat {
 
 /**
  * Runs `run` with the copy serializer reading the given format, and leaves
- * the setting as it was. Spec: ops/issues/0546.md (Spec)
+ * the setting as it was. Spec: docs/internal/issues/0546.md (Spec)
  */
 export function withCopyFormat(format: CopyFormat, run: () => void): void {
   copyFormatOnce = format;
@@ -538,7 +573,7 @@ export type PasteFormat = 'formatted' | 'plain';
  * Default Formatted. Plain text makes every paste from another app take the
  * same path as a paste with Shift held, which phones have no key for.
  * Device-local, like the copied text.
- * Spec: ops/issues/0508.md (Spec)
+ * Spec: docs/internal/issues/0508.md (Spec)
  */
 function getStoredPasteFormat(): PasteFormat {
   try {
@@ -561,6 +596,39 @@ export function readPasteFormat(): PasteFormat {
 }
 
 // ------------------------------------------------------------------
+// Link click axis
+// ------------------------------------------------------------------
+
+const LINK_MODIFIER_KEY = 'privacynotes.linkModifier';
+
+/**
+ * Whether a mouse click on a link in a note needs Cmd (Ctrl off a Mac) to
+ * open it. Default off: a click opens, as GitHub #293 asked. On, a plain
+ * click places the caret, for a reader who opened links by mistake
+ * (GitHub #633). A tap still opens, since a touch screen has no key to hold.
+ * Device-local, like the copied text: it follows the pointer in use.
+ */
+function getStoredLinkModifier(): boolean {
+  try {
+    return localStorage.getItem(LINK_MODIFIER_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+let activeLinkModifier: boolean = getStoredLinkModifier();
+
+function applyLinkModifier(on: boolean): void {
+  activeLinkModifier = on;
+  localStorage.setItem(LINK_MODIFIER_KEY, on ? '1' : '0');
+}
+
+/** For the link click handlers, which run outside React. */
+export function readLinkModifier(): boolean {
+  return activeLinkModifier;
+}
+
+// ------------------------------------------------------------------
 // Website icons axis
 // ------------------------------------------------------------------
 
@@ -577,7 +645,7 @@ const FAVICONS_KEY = 'privacynotes.favicons';
  * Every surface reads it through `getFavicons()` rather than the hook, so
  * the non-React callers (markdownRender for export, print and burn pages,
  * the editor's decoration plugin) see the same value.
- * Spec: ops/docs/design-decisions.md (Website icons toggle)
+ * Spec: docs/internal/design-decisions.md (Website icons toggle)
  */
 function getStoredFavicons(): boolean {
   return localStorage.getItem(FAVICONS_KEY) !== '0';
@@ -615,7 +683,7 @@ const INVISIBLES_KEY = 'privacynotes.invisibles';
  *
  * Purely decorative - the extension paints ProseMirror decorations and never
  * touches the document, so nothing here can reach stored markdown.
- * Spec: ops/docs/design-decisions.md (Invisible characters toggle)
+ * Spec: docs/internal/design-decisions.md (Invisible characters toggle)
  */
 function getStoredInvisibles(): boolean {
   return localStorage.getItem(INVISIBLES_KEY) === '1';
@@ -684,7 +752,7 @@ export const THEME_DISPLAY_NAME: Record<ColorTheme, string> = {
     the editor tone: it is the widest spread the palettes have, so it is
     what makes one chip read as a different theme from the next.
     The Design pane's cards and Ninja's theme rows draw it.
-    Spec: ops/docs/color-themes.md (section 4, adding a theme) */
+    Spec: docs/contrib/color-themes.md (section 4, adding a theme) */
 const SWATCH: Record<ColorTheme, [string, string, string]> = {
   'default': ['#F5F5F5', '#1E40AF', '#0A0A0A'],
   'warm-cream': ['#E1D8C4', '#1840B1', '#2D2416'],
@@ -733,7 +801,7 @@ function modeOf(ct: ColorTheme): Theme | null {
  * neither the blob nor the theme parser. Both slots paint through two fixed
  * classes, `theme-custom-light` and `theme-custom-dark`, and one generated
  * <style>, so no theme id ever reaches CSS and the stylesheet does not grow
- * with the list. Spec: ops/docs/color-themes.md (section 6)
+ * with the list. Spec: docs/contrib/color-themes.md (section 6)
  */
 export type CustomChoice = `custom:${string}`;
 export type ThemeChoice = ColorTheme | CustomChoice;
@@ -953,7 +1021,7 @@ export function previewCustomTheme(mode: Theme, snap: CustomSnapshot | null): vo
  * Put Default in every slot that holds a Pro theme, for an account the
  * server reports as free: Pro ends only by a refund or a chargeback. The
  * saved custom themes stay in the list, so a repurchase brings them back.
- * Spec: ops/docs/pro-features.md (Color themes)
+ * Spec: docs/internal/pro-features.md (Color themes)
  */
 export function dropProThemes(): void {
   let changed = false;
@@ -1041,6 +1109,7 @@ export function resetAppearance(): void {
     applySpellcheck(true);
     applyCopyFormat('markdown');
     applyPasteFormat('formatted');
+    applyLinkModifier(false);
     setCodeWrap(true);
   } catch { /* ignore */ }
   emitThemeChange();
@@ -1063,6 +1132,7 @@ export function resetThemeAxes(): void {
  *  size emits on its own store, which this function's callers do not reach. */
 function applyStyleDefaults(): void {
   applyTextSize('md');
+  applyNoteFont('sans');
   applyContentWidth('default');
   applyFavicons(true);
   applyInvisibles(false);
@@ -1075,6 +1145,7 @@ function applyStyleDefaults(): void {
 export function resetStyleAxes(): void {
   try {
     applyTextSize('md');
+    applyNoteFont('sans');
     applyContentWidth('default');
     applyInvisibles(false);
   } catch { /* ignore */ }
@@ -1112,6 +1183,8 @@ function getInvisiblesSnapshot(): boolean { return activeInvisibles; }
 function getFaviconsSnapshot(): boolean { return activeFavicons; }
 function getCopyFormatSnapshot(): CopyFormat { return activeCopyFormat; }
 function getPasteFormatSnapshot(): PasteFormat { return activePasteFormat; }
+function getLinkModifierSnapshot(): boolean { return activeLinkModifier; }
+function getNoteFontSnapshot(): NoteFont { return activeNoteFont; }
 
 /** Website icons only depend on their visibility preference, not the palette. */
 export function useFavicons(): boolean {
@@ -1129,7 +1202,7 @@ function setColorTheme(mode: Theme, next: ThemeChoice): void {
  * a system in the other mode pins the theme's mode, so a pick never goes
  * away when Settings closes. A pick of the mode on screen keeps Auto.
  * Settings, the theme builder and Ninja all pick through this.
- * Spec: ops/docs/color-themes.md (section 1, a click on a theme)
+ * Spec: docs/contrib/color-themes.md (section 1, a click on a theme)
  */
 function pickTheme(mode: Theme, pick: ThemeChoice | CustomSnapshot): void {
   if (typeof pick === 'string') applyColorTheme(mode, pick);
@@ -1153,7 +1226,7 @@ function toggle(): void {
 }
 
 /** The shell reads writing preferences; CSS paints mode and palette changes.
- * Spec: ops/docs/color-themes.md (Theme switching performance)
+ * Spec: docs/contrib/color-themes.md (Theme switching performance)
  */
 export function useShellAppearance() {
   const spellcheck = useSyncExternalStore(subscribeTheme, getSpellcheckSnapshot);
@@ -1182,6 +1255,8 @@ export function useTheme() {
   const favicons = useSyncExternalStore(subscribeTheme, getFaviconsSnapshot);
   const copyFormat = useSyncExternalStore(subscribeTheme, getCopyFormatSnapshot);
   const pasteFormat = useSyncExternalStore(subscribeTheme, getPasteFormatSnapshot);
+  const linkModifier = useSyncExternalStore(subscribeTheme, getLinkModifierSnapshot);
+  const noteFont = useSyncExternalStore(subscribeTheme, getNoteFontSnapshot);
 
   /** Pin an explicit light/dark choice, replacing 'auto' if it was set. */
   const setTheme = useCallback((next: Theme) => {
@@ -1239,11 +1314,21 @@ export function useTheme() {
     emitThemeChange();
   }, []);
 
+  const setLinkModifier = useCallback((next: boolean) => {
+    applyLinkModifier(next);
+    emitThemeChange();
+  }, []);
+
+  const setNoteFont = useCallback((next: NoteFont) => {
+    applyNoteFont(next);
+    emitThemeChange();
+  }, []);
+
   /** Show a palette in one slot without persisting. Reverts on reload. */
   const previewColor = useCallback((mode: Theme, next: ThemeChoice) => {
     previewColorTheme(mode, next);
     emitThemeChange();
   }, []);
 
-  return { theme, themeMode, toggle, setTheme, setThemeMode, colorTheme, lightTheme, darkTheme, setColorTheme, setCustomTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, cycleContentWidth, spellcheck, setSpellcheck, invisibles, setInvisibles, favicons, setFavicons, copyFormat, setCopyFormat, pasteFormat, setPasteFormat };
+  return { theme, themeMode, toggle, setTheme, setThemeMode, colorTheme, lightTheme, darkTheme, setColorTheme, setCustomTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, cycleContentWidth, spellcheck, setSpellcheck, invisibles, setInvisibles, favicons, setFavicons, copyFormat, setCopyFormat, pasteFormat, setPasteFormat, linkModifier, setLinkModifier, noteFont, setNoteFont };
 }

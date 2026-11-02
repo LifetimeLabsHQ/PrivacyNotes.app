@@ -30,7 +30,7 @@ type Variant = 'secondary' | 'accent' | 'primary' | 'danger' | 'upgrade';
  * One icon, one label and one look per action, so every Save in the app shows
  * the same glyph and word. `label` is a key in `common:actions`, or null when
  * the caller words it (Restore, Apply, Open take the object's own word).
- * Spec: ops/docs/archive/design-system.md
+ * Spec: docs/internal/design/design-system.md
  */
 export const ACTIONS = {
   save: { icon: FloppyDisk, label: 'save', variant: 'primary' },

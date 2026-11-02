@@ -3,7 +3,7 @@ import type { NoteType } from '@notes/shared';
 /**
  * What each note type's body holds: markdown the editor writes, or a JSON
  * document a form owns (a bookmark's `{url}`, a contact, a login, a card, an
- * SSH key). Keyed by the whole `NoteType` union, so a type added to it does
+ * SSH key, a drawing's scene). Keyed by the whole `NoteType` union, so a type added to it does
  * not build until it is placed here.
  */
 const BODY_KIND: Record<NoteType, 'markdown' | 'form'> = {
@@ -17,6 +17,7 @@ const BODY_KIND: Record<NoteType, 'markdown' | 'form'> = {
   login: 'form',
   card: 'form',
   'ssh-key': 'form',
+  drawing: 'form',
 };
 
 /** The markdown pillars: the note types whose body the editor writes. */
@@ -37,7 +38,7 @@ export function isKnownNoteType(type: string | undefined): boolean {
  * The types an item can be converted to from the "..." menu. A file is a
  * source and never a target: its body holds one attachment that the editor
  * draws as a file card, and a note with none or several has no such card.
- * Spec: ops/docs/archive/convert-type.md
+ * Spec: docs/internal/specs/convert-type.md
  */
 export const CONVERT_TARGETS = ['note', 'task', 'journal', 'event'] as const;
 export type ConvertTarget = (typeof CONVERT_TARGETS)[number];
@@ -56,7 +57,7 @@ export function isConvertSource(type: string | undefined): boolean {
  * tracker values under the day the item was made, and an event lives on the
  * calendar. An event that becomes anything else loses its repeat, because a
  * series is an event; the Convert to view says so.
- * Spec: ops/docs/archive/convert-type.md, ops/docs/archive/calendar-pillar-spec.md (decision 10)
+ * Spec: docs/internal/specs/convert-type.md, docs/internal/specs/calendar-pillar-spec.md (decision 10)
  */
 export function convertPatch(
   trackers: Record<string, unknown> | undefined,

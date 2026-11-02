@@ -1,6 +1,5 @@
 {
   "modal": {
-    "title": "Säkerhet",
     "tabPin": "PIN",
     "tabBiometricShort": "Lås",
     "tabBiometric": "Biometriskt lås",
@@ -9,9 +8,10 @@
     "tabTwoFactor": "2FA"
   },
   "pinTab": {
+    "changeLost": "Din PIN-ändring sparades inte: PIN-koden hade redan ändrats på en annan enhet.",
+    "phraseUnwrapped": "Den här webbläsaren kunde inte skydda återställningsfrasen som den här enheten sparar, så frasen lagras här utan kryptering. Den som har en kopia av enhetens lagring kan läsa den. Aktivera applåset under fliken Lås för att bara ha den bakom din PIN-kod eller lösenkod.",
     "enterCurrent": "Ange din nuvarande PIN för att göra ändringar.",
     "currentPin": "Nuvarande PIN",
-    "checking": "Kontrollerar...",
     "verify": "Verifiera",
     "replaceExisting": "Ange en ny fyrsiffrig PIN. Den ersätter din nuvarande PIN.",
     "setIntro": "En fyrsiffrig PIN öppnar dina skyddade anteckningar och din återställningsfras. Den synkas till alla dina enheter.",
@@ -42,10 +42,8 @@
     "setPin": "Skapa PIN",
     "removePin": "Ta bort PIN",
     "reaskAfter": "Fråga efter PIN igen efter",
-    "reaskHint": "Gäller frasvyn och alla PIN-skyddade anteckningar.",
+    "reaskHint": "Gäller frasvyn och alla PIN-skyddade anteckningar på den här enheten.",
     "incorrectPin": "Fel PIN.",
-    "incorrectPinRetry": "Fel PIN. Försök igen.",
-    "tooManyAttempts": "För många försök. Försök igen om {{seconds}} s.",
     "pinFourDigits": "PIN måste bestå av fyra siffror.",
     "pinsDoNotMatch": "PIN-koderna stämmer inte överens.",
     "passcodeIntro": "En lösenkod öppnar dina skyddade anteckningar och din återställningsfras. Den synkas till alla dina enheter.",
@@ -61,8 +59,7 @@
     "ruleNotDigits": "Inte bara siffror",
     "ruleMax": "Högst {{max}} tecken",
     "passcodesDoNotMatch": "Lösenkoderna stämmer inte överens.",
-    "incorrectPasscode": "Fel lösenkod.",
-    "incorrectPasscodeRetry": "Fel lösenkod. Försök igen."
+    "incorrectPasscode": "Fel lösenkod."
   },
   "timeout": {
     "min1": "1 minut",
@@ -76,16 +73,11 @@
     "browserRestart": "Vid omstart av webbläsaren"
   },
   "pinInfo": {
-    "title": "Kräv PIN för att visa",
     "body": "När det är på krävs din PIN varje gång du öppnar det här objektet, även om appen redan är upplåst. Använd det för känsliga objekt som ska förbli skyddade när du går ifrån."
   },
   "removePinDialog": {
-    "title": "Ta bort PIN",
     "introWithBio": "Ange din nuvarande PIN för att bekräfta borttagningen. Biometrisk upplåsning förblir aktiv, men din enda reserv blir din återställningsfras.",
     "introNoBio": "Ange din nuvarande PIN för att bekräfta borttagningen. Din återställningsfras öppnas sedan utan PIN.",
-    "verifying": "Verifierar...",
-    "removePin": "Ta bort PIN",
-    "titlePasscode": "Ta bort lösenkod",
     "introWithBioPasscode": "Ange din nuvarande lösenkod för att bekräfta borttagningen. Biometrisk upplåsning förblir aktiv, men din enda reserv blir din återställningsfras.",
     "introNoBioPasscode": "Ange din nuvarande lösenkod för att bekräfta borttagningen. Din återställningsfras öppnas sedan utan lösenkod.",
     "removePasscode": "Ta bort lösenkod"
@@ -109,16 +101,10 @@
   },
   "phraseGate": {
     "enterToView": "Ange din fyrsiffriga PIN för att visa din fras.",
-    "incorrectPinRetry": "Fel PIN. Försök igen.",
-    "tooManyAttempts": "För många försök. Försök igen om {{seconds}} s.",
-    "lockedFor": "Låst i {{seconds}} s",
-    "checking": "Kontrollerar...",
-    "unlock": "Lås upp",
     "enterToChangeCustody": "Ange din fyrsiffriga PIN för att ändra nyckelförvaringen.",
     "checkFailed": "Det gick inte att kontrollera din PIN. Försök igen.",
     "enterToViewPasscode": "Ange din lösenkod för att visa din fras.",
     "enterToChangeCustodyPasscode": "Ange din lösenkod för att ändra nyckelförvaringen.",
-    "incorrectPasscodeRetry": "Fel lösenkod. Försök igen.",
     "checkFailedPasscode": "Det gick inte att kontrollera din lösenkod. Försök igen."
   },
   "phraseView": {
@@ -133,11 +119,9 @@
     "hideQr": "Dölj QR-kod",
     "showQr": "Visa QR-kod",
     "saveQr": "Spara QR",
-    "copied": "Kopierad",
     "copyPhrase": "Kopiera frasen"
   },
   "custody": {
-    "eyebrow": "Nyckelförvaring",
     "current": "Nuvarande",
     "rowDevice": "Ny enhet",
     "rowDeviceCustodial": "Logga in med {{provider}}, inget att skriva",
@@ -152,7 +136,6 @@
     "releaseWarning": "Spara först din fras på 12 ord utanför PrivacyNotes. När vi har raderat vår kopia behöver du frasen på nya enheter.",
     "challengePrompt": "Skriv de här orden från listan ovan för att bekräfta att du har dem.",
     "wordLabel": "Ord {{position}}",
-    "busy": "Sparar...",
     "releaseConfirm": "Radera från servern",
     "adoptConfirm": "Låt oss lagra en kopia",
     "releaseDone": "Klart. Vi har inte längre någon kopia av din fras. Nya enheter ber om de här 12 orden eller en QR-skanning.",
@@ -189,6 +172,7 @@
     "boundStatus": "Biometrisk upplåsning är knuten till din passkey.",
     "boundStatusNative": "Biometrisk upplåsning är knuten till den här enhetens säkra hårdvara.",
     "setUpAgain": "Ställ in igen för ett starkare lås",
+    "unboundWeaker": "På den här enheten är biometrisk upplåsning en spärr mot personer i närheten, inte ett lås: den som har en kopia av den här enhetens lagring kan öppna dina anteckningar utan ditt fingeravtryck eller ansikte.",
     "cannotBind": "Passkey-appen i den här webbläsaren kan inte skapa det starkare låset. Biometrisk upplåsning fungerar som tidigare. Om en lösenordshanterare sparar dina passkeys, stäng av dess passkey-alternativ och stäng sedan av och slå på biometrisk upplåsning igen för att använda enhetens egen passkey-lagring.",
     "bindOffer": "Biometrisk upplåsning på den här enheten är inte knuten till din passkey än, och den här webbläsaren kan knyta den. Ställ in den igen en gång, så att dess nyckel stannar hos din passkey i stället för i den här enhetens lagring.",
     "bindOfferLater": "Inte nu",
@@ -196,14 +180,14 @@
     "settingUp": "Ställer in...",
     "enable": "Aktivera biometrisk upplåsning",
     "lockOnOpen": "Lås appen vid start",
-    "lockOnOpenHint": "Kräv biometri eller PIN när appen öppnas.",
+    "lockOnOpenHint": "Kräv biometri eller PIN när appen öppnas på den här enheten.",
     "lockHidesOnSwitch": "Döljer också dina anteckningar när du byter app.",
     "lockNeedsCredential": "Applåset kräver en PIN eller biometrisk upplåsning på den här enheten.",
     "setUpPin": "Ange en PIN",
     "confirmPinForLock": "Ange din PIN för att slå på det här. Den låser en kopia av din återställningsfras, så att bara din PIN kan öppna appen.",
     "confirmPasscodeForLock": "Ange din lösenkod för att slå på det här. Den låser en kopia av din återställningsfras, så att bara din lösenkod kan öppna appen.",
     "relockAfter": "Lås igen efter",
-    "relockHint": "Gäller bara appens låsskärm.",
+    "relockHint": "Gäller bara appens låsskärm på den här enheten.",
     "blockCapture": "Dölj vid skärmfångst",
     "blockCaptureHint": "Håller dina anteckningar borta från skärmdumpar, inspelningar och skärmdelning, så långt din enhet tillåter det. Gäller bara den här enheten.",
     "perDeviceNote": "Biometrisk upplåsning öppnar samma anteckningar som din PIN. Den stannar på den här enheten och synkas aldrig.",
@@ -216,31 +200,19 @@
     "phraseNotSaved": "Den här enheten kunde inte spara din återställningsfras, så inget ändrades. Försök igen."
   },
   "pinSetup": {
-    "title": "Skapa en PIN",
     "description": "En fyrsiffrig PIN krävs för att visa din återställningsfras. Valfritt, men rekommenderas i delade utrymmen.",
-    "newPin": "Ny PIN",
-    "confirmPin": "Bekräfta PIN",
-    "skipForNow": "Hoppa över tills vidare",
-    "saving": "Sparar…",
-    "setPin": "Skapa PIN",
-    "pinFourDigits": "PIN måste bestå av fyra siffror.",
-    "pinsDoNotMatch": "PIN-koderna stämmer inte överens."
+    "skipForNow": "Hoppa över tills vidare"
   },
   "pinInput": {
-    "ariaLabel": "PIN",
     "digitAriaLabel": "Siffra {{index}}"
   },
   "passcodeInput": {
-    "ariaLabel": "Lösenkod",
     "show": "Visa lösenkod",
     "hide": "Dölj lösenkod"
   },
   "protectedGate": {
-    "biometricFailed": "Den biometriska verifieringen misslyckades eller avbröts.",
     "protectedItem": "Skyddat objekt",
     "biometricSubtitle": "Använd fingeravtryck eller ansikte för att låsa upp det här objektet.",
-    "verifying": "Verifierar...",
-    "unlock": "Lås upp",
     "usePinInstead": "Använd PIN i stället",
     "useBiometricInstead": "Använd biometri i stället",
     "disableProtection": "Stäng av skyddet",
@@ -248,18 +220,10 @@
     "disableSubtitle": "Anteckningen ligger kvar. Bara låset försvinner.",
     "disableBiometricSubtitle": "Bekräfta med fingeravtryck eller ansikte.",
     "verifySubtitle": "Ange din fyrsiffriga PIN för att låsa upp det här objektet. Upplåsningen varar lika länge som tidsgränsen du valt under Säkerhet.",
-    "incorrectPinRetry": "Fel PIN. Försök igen.",
-    "tooManyAttempts": "För många försök. Försök igen om {{seconds}} s.",
     "lockedFor": "Låst i {{seconds}} s",
-    "checking": "Kontrollerar...",
     "bootstrapTitle": "Skapa en PIN",
     "bootstrapSubtitle": "Det här objektet är PIN-skyddat, men ingen PIN är inställd på den här enheten. Skapa en fyrsiffrig PIN för att låsa upp det. Din PIN synkas till alla dina enheter.",
     "bootstrapWarning": "Att skapa en PIN här kräver ingen kännedom om den tidigare PIN-koden. Vem som helst med din återställningsfras kan göra det på en ny enhet. För riktigt känsligt innehåll bör du förlita dig på inloggning med enbart fras i stället.",
-    "newPin": "Ny PIN",
-    "confirmPin": "Bekräfta PIN",
-    "pinFourDigits": "PIN måste bestå av fyra siffror.",
-    "pinsDoNotMatch": "PIN-koderna stämmer inte överens.",
-    "saving": "Sparar...",
     "setPinUnlock": "Skapa PIN och lås upp",
     "pinRequired": "PIN krävs",
     "deleteSubtitle": "Ange din PIN för att radera det här skyddade objektet.",
@@ -267,7 +231,6 @@
     "usePasscodeInstead": "Använd lösenkod i stället",
     "disableTitlePasscode": "Ange lösenkod för att stänga av skyddet",
     "verifySubtitlePasscode": "Ange din lösenkod för att låsa upp det här objektet. Upplåsningen varar lika länge som tidsgränsen du valt under Säkerhet.",
-    "incorrectPasscodeRetry": "Fel lösenkod. Försök igen.",
     "passcodeRequired": "Lösenkod krävs",
     "deleteSubtitlePasscode": "Ange din lösenkod för att radera det här skyddade objektet."
   },
@@ -294,19 +257,14 @@
     "checking": "Kontrollerar...",
     "unlock": "Lås upp",
     "recoveryPhrase": "Återställningsfras",
-    "recoveryPhraseSubtitle": "Ange din återställningsfras på 12 ord för att låsa upp.",
-    "invalidPhrase": "Ogiltig fras. Kontrollera stavning och ordföljd.",
-    "phrasePlaceholder": "ord1 ord2 ord3 ord4 ord5 ord6 ord7 ord8 ord9 ord10 ord11 ord12"
+    "recoveryPhraseSubtitle": "Ange din återställningsfras på 12 ord för att låsa upp."
   },
   "deviceLimit": {
     "title": "Enhetsgränsen är nådd",
     "body": "Gratiskonton kan synka på upp till {{limit}} enheter samtidigt. Du har redan {{count}}. Ta bort en för att fortsätta på den här enheten, eller uppgradera för obegränsat antal enheter.",
     "activeDevices": "Aktiva enheter",
-    "recentlyRemoved": "Nyligen borttagna",
-    "removedAt": "Borttagen {{when}}",
     "upgradeHeading": "Eller uppgradera till Pro",
     "upgradeBody": "Engångsbetalning, ingen prenumeration. Obegränsat antal enheter plus bilder, anteckningshistorik och mer.",
-    "openingCheckout": "Öppnar kassan...",
     "upgradeCta": "Uppgradera till Pro för {{price}} $",
     "needMoreHeading": "Behöver du fler enheter?",
     "needMoreBody": "Pro-uppgraderingar är inte tillgängliga i den här versionen. Om du verkligen behöver en tredje enhet, hör av dig så löser vi det.",
@@ -315,8 +273,6 @@
     "saveRecoveryBody": "Du loggade in med OAuth. Skriv ner dina 12 ord också. De är din reserv om OAuth någon gång slutar fungera eller om du blir utelåst på alla enheter.",
     "hide": "Dölj",
     "viewRecoveryPhrase": "Visa återställningsfras",
-    "signOut": "Logga ut",
-    "thisDevice": "Den här enheten",
     "lastActive": "{{platform}} · senast aktiv {{when}}",
     "removing": "Tar bort..."
   },
@@ -329,9 +285,9 @@
     "bitcoinBody": "Människor skyddar dem med samma sorts fras på 12 ord.",
     "universeTitle": "700 gånger universums ålder",
     "universeBody": "För att prova varje fras, med en miljard miljarder gissningar i sekunden.",
-    "twinTitle": "Ingen på jorden har din fras",
+    "twinTitle": "Ingen annan på jorden kommer att få samma fras",
     "twinBody": "Inte ens om alla 8 miljarder av oss använde PrivacyNotes.",
-    "keepPrivate": "Enda vägen in är dina faktiska 12 ord. Håll dem hemliga."
+    "keepPrivate": "Att gissa är ingen väg in. Håll dina 12 ord hemliga."
   },
   "connectedAccounts": {
     "title": "Anslutna konton",
@@ -355,13 +311,10 @@
     "connectAnotherProvider": "Anslut ett annat {{provider}}-konto",
     "updateTitle": "Uppdatera inloggningen för det här valvet",
     "updateDescription": "Det här förbereder din sparade fras och dina anslutna konton för tvåfaktorsinloggning och låter dig hantera anslutna konton. Dina anteckningar och nyckelförvaringen ändras inte.",
-    "updateDevices": "Uppdatera appen på dina andra enheter innan du fortsätter. De kan behöva logga in igen.",
-    "updateAcknowledgment": "Jag har uppdaterat PrivacyNotes på mina andra enheter.",
     "updateAction": "Uppdatera inloggning",
     "setupTitle": "Anslut Google, Apple eller GitHub",
     "setupDescription": "Den första anslutningen kräver en engångsuppdatering av det här valvet. Dina anteckningar och nyckelförvaringen förblir desamma.",
     "setupAction": "Ställ in anslutna konton",
-    "closed": "Det blir snart möjligt att ansluta och ta bort konton. Tills dess loggar du in som du gör nu.",
     "repairTitle": "Slutför uppdateringen av inloggningen",
     "repairDescription": "Det här valvet använder redan den uppdaterade inloggningen. Anslut den här enheten igen med frasen som redan är upplåst här. Dina lokala anteckningar är fortfarande tillgängliga.",
     "repairAction": "Fortsätt till det här valvet",
@@ -379,7 +332,6 @@
     "rateLimited": "Det har gjorts för många försök att ändra konton. Vänta en stund och försök igen.",
     "connectionMissing": "Det här kontot är inte längre anslutet. Kontrollera den aktuella kontolistan innan du försöker igen.",
     "noAccounts": "Inga leverantörskonton är anslutna. Din sparade fras är ditt inloggningssätt.",
-    "actionFailed": "Ändringen kunde inte bekräftas. Kontrollera anslutningen och försök igen.",
     "retry": "Kontrollera kontona igen",
     "connectDone": "Kontot har anslutits till det här valvet. Nyckelförvaringen är oförändrad.",
     "disconnectDone": "Kontot har kopplats bort. Dina anteckningar och nyckelförvaringen är oförändrade.",
@@ -389,7 +341,6 @@
     "freshMfa": "Du behöver en ny kod från din autentiseringsapp för att bekräfta ändringen. Tvåfaktorsinloggning förblir på efteråt.",
     "continueProvider": "Fortsätt med {{provider}}",
     "working": "Arbetar...",
-    "cancel": "Avbryt",
     "confirmDisconnect": "Koppla bort {{provider}}?",
     "account": "det här kontot",
     "lastCustodial": "Det här är ditt sista anslutna konto. Anslut ett annat konto först, eller spara din fras och byt till egen nyckelförvaring innan du tar bort det.",
@@ -445,10 +396,7 @@
       "key": "Spara nyckel",
       "confirm": "Bekräfta"
     },
-    "next": "Nästa",
-    "back": "Tillbaka",
     "stepOf": "Steg {{step}} av 3",
-    "working": "Arbetar...",
     "scan": "Skanna den här koden med din autentiseringsapp.",
     "qrLabel": "QR-kod för din autentiseringsapp",
     "openAuthenticator": "På den här telefonen? Öppna din autentiseringsapp",
@@ -462,9 +410,7 @@
     "backupWarning": "Har du tappat bort telefonen? Med den här nyckeln får du tillbaka dina koder. Förvara den säkert utanför PrivacyNotes.",
     "savedAcknowledgment": "Jag har sparat reservnyckeln.",
     "confirmBackup": "Skriv in reservnyckeln från förra steget igen och ange sedan koden från din app.",
-    "reenterBackup": "Reservnyckel",
     "codeLabel": "Kod från din app",
-    "activate": "Slå på 2FA",
     "cancelSetup": "Avbryt",
     "enabled": "2FA är på",
     "authenticatorRow": "Autentiseringsapp",
@@ -484,11 +430,6 @@
     "overview": "Översikt",
     "keyCustody": "Nyckelförvaring",
     "accounts": "Konton"
-  },
-  "beta": {
-    "label": "Beta",
-    "notice": "Den här funktionen är i beta.",
-    "reportBug": "Rapportera en bugg"
   },
   "demoTeaser": {
     "accounts": "Skapa ett konto för att ansluta Google, Apple eller GitHub till ditt valv.",

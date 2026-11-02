@@ -45,6 +45,8 @@ interface UseMultiSelectArgs {
   requestPinGate: (action: () => Promise<void>, purpose: PinGatePurpose) => void;
   /** Keep a new copy gated until the next unlock (a copy of a gated note). */
   gateCopy: (id: string) => void;
+  /** False when the person ticked "Don't ask again": trash without the confirm. */
+  confirmTrash: boolean;
 }
 
 /** What the trash modal is asking about: the ids that can move to trash,
@@ -66,15 +68,16 @@ interface UseMultiSelectReturn {
   clearSelection: () => void;
   deselectAll: () => void;
   toggleSelected: (id: string) => void;
-  rangeSelect: (id: string) => void;
+  rangeSelect: (id: string, order?: readonly string[]) => void;
   selectAllVisible: () => void;
   handleRowClick: (e: React.MouseEvent, id: string) => void;
   beginLongPress: (id: string) => void;
   cancelLongPress: () => void;
   bulkTrashPending: TrashRequest | null;
   requestBulkTrash: () => void;
-  requestTrash: (ids: string[]) => void;
+  requestTrash: (ids: string[], ask?: boolean) => void;
   executeBulkTrash: () => Promise<void>;
+  executeBulkDeleteForever: () => Promise<void>;
   dismissBulkTrash: () => void;
   handleBulkRestore: () => Promise<void>;
   bulkDeletePending: string[] | null;
@@ -99,7 +102,7 @@ interface UseMultiSelectReturn {
  *  event, long before the click handler's `preventDefault()` runs. Attach to
  *  a list's scroll container so every row is covered by one handler - it
  *  fires only while shift is held, so ordinary text selection is untouched.
- *  Spec: ops/docs/archive/ui-patterns.md section 53. */
+ *  Spec: docs/internal/design/ui-patterns.md section 53. */
 export function suppressShiftTextSelection(e: React.MouseEvent) {
   if (e.shiftKey) e.preventDefault();
 }
@@ -122,6 +125,7 @@ export function useMultiSelect({
   isNoteLocked,
   requestPinGate,
   gateCopy,
+  confirmTrash,
 }: UseMultiSelectArgs): UseMultiSelectReturn {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
@@ -168,14 +172,16 @@ export function useMultiSelect({
 
   /** Shift-click: select every row from the last-toggled id up to `id`,
    *  inclusive, additive. No-op (falls back to toggle) if there's no
-   *  anchor yet. */
+   *  anchor yet. `order` is the row order of a pane that draws the items in
+   *  an order of its own (the Calendar's agenda, by day); the list's
+   *  order otherwise. */
   const rangeSelect = useCallback(
-    (id: string) => {
+    (id: string, order?: readonly string[]) => {
       if (!lastSelectedId || lastSelectedId === id) {
         toggleSelected(id);
         return;
       }
-      const ids = displayNotesRef.current.map((n) => n.id);
+      const ids = order ?? displayNotesRef.current.map((n) => n.id);
       const a = ids.indexOf(lastSelectedId);
       const b = ids.indexOf(id);
       if (a < 0 || b < 0) {
@@ -252,10 +258,20 @@ export function useMultiSelect({
     return { ids: movable, skipped: ids.length - movable.length };
   }
 
+  /** Ask first, or trash at once when the person turned the question off.
+   *  A request where every item is read-only still shows its notice. `ask`
+   *  opens the window whatever the setting says, the one way to reach
+   *  Delete forever with the question turned off (#630). */
+  function askOrTrash(ids: string[], ask = false) {
+    const request = splitTrashable(ids);
+    if (!ask && !confirmTrash && request.ids.length > 0) void trashNow(request.ids);
+    else setBulkTrashPending(request);
+  }
+
   function requestBulkTrash() {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
-    setBulkTrashPending(splitTrashable(ids));
+    askOrTrash(ids);
   }
 
   /**
@@ -264,15 +280,19 @@ export function useMultiSelect({
    * the same PIN gate as a whole selection. One item reads "1 item"
    * through the plural form the modal already carries.
    */
-  function requestTrash(ids: string[]) {
+  function requestTrash(ids: string[], ask = false) {
     if (ids.length === 0) return;
-    setBulkTrashPending(splitTrashable(ids));
+    askOrTrash(ids, ask);
   }
 
   async function executeBulkTrash() {
     const ids = bulkTrashPending?.ids;
     setBulkTrashPending(null);
     if (!ids || ids.length === 0) return;
+    await trashNow(ids);
+  }
+
+  async function trashNow(ids: string[]) {
     // If any selected notes are protected and currently locked, require PIN first.
     const hasLockedProtected = notes.some((n) => ids.includes(n.id) && n.pinProtected === 1 && isNoteLocked(n));
     if (hasLockedProtected) {
@@ -290,6 +310,22 @@ export function useMultiSelect({
     clearSelection();
     await refresh();
     void runSync();
+  }
+
+  /** The Delete window's "Delete forever": the items skip the Trash. They
+   *  pass through it inside the same call, because a permanent delete takes
+   *  only trashed rows (bulkPermanentlyDelete). */
+  async function executeBulkDeleteForever() {
+    const ids = bulkTrashPending?.ids;
+    setBulkTrashPending(null);
+    if (!ids || ids.length === 0) return;
+    const run = async () => {
+      await bulkTrash(ids);
+      await deleteNow(ids);
+    };
+    const hasLockedProtected = notes.some((n) => ids.includes(n.id) && n.pinProtected === 1 && isNoteLocked(n));
+    if (hasLockedProtected) requestPinGate(run, 'delete');
+    else await run();
   }
 
   function dismissBulkTrash() {
@@ -320,6 +356,10 @@ export function useMultiSelect({
     const ids = bulkDeletePending;
     setBulkDeletePending(null);
     if (!ids || ids.length === 0) return;
+    await deleteNow(ids);
+  }
+
+  async function deleteNow(ids: string[]) {
     const deleted = await bulkPermanentlyDelete(ids);
     if (selectedId && ids.includes(selectedId)) setSelectedId(null);
     clearSelection();
@@ -518,6 +558,7 @@ export function useMultiSelect({
     requestBulkTrash,
     requestTrash,
     executeBulkTrash,
+    executeBulkDeleteForever,
     dismissBulkTrash,
     handleBulkRestore,
     bulkDeletePending,

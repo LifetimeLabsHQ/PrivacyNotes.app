@@ -5,6 +5,7 @@ import { isNativeStoreBuild } from '../devices';
 import { appZoomSupported } from '../appZoom';
 import { captureBlockSupported } from '../privacyScreen';
 import { isDemoMode } from '../demo';
+import { extensionOffered } from '../extensionRelease';
 import { exemptOpts } from '../i18nExempt';
 import { ArrowSquareOut } from '../icons';
 import { helpPath } from '../localeRoutes';
@@ -32,6 +33,8 @@ function isShown(entry: SettingEntry): boolean {
   if (entry.shownOn === 'realAccount') return !isDemoMode();
   if (entry.shownOn === 'desktopApp') return appZoomSupported();
   if (entry.shownOn === 'captureBlock') return captureBlockSupported();
+  if (entry.shownOn === 'extension') return extensionOffered();
+  if (entry.shownOn === 'extensionAccount') return extensionOffered() && !isDemoMode();
   return true;
 }
 
@@ -87,7 +90,7 @@ function Highlighted({ text, mark }: { text: string; mark: SettingHit['mark'] })
  * The results pane: grouped by section, the group header carrying the
  * section's rail icon. The active result is the one the arrows point at;
  * the field keeps the focus, so the list is a listbox driven from there.
- * Spec: ops/docs/archive/ui-patterns.md (section 114, settings search)
+ * Spec: docs/internal/design/ui-patterns.md (section 114, settings search)
  */
 export function SettingsSearchResults({
   query,
@@ -119,25 +122,25 @@ export function SettingsSearchResults({
     return (
       <div className="flex-1 min-h-0 overflow-y-auto px-6 py-10 text-center text-pn-soft">
         <p role="status" className="sr-only">{t('resultCount', { count: 0 })}</p>
-        <p className="mt-2 text-sm text-pn">
+        <p className="mt-2 text-body text-pn">
           {t('common:state.noResults')}: <bdi>“{query}”</bdi>
         </p>
         <a
           href={siteHref(`${helpPath(activeLocale())}?q=${encodeURIComponent(query)}`)}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-1.5 text-sm text-accent hover:underline"
+          className="mt-3 inline-flex items-center gap-1.5 text-body text-accent hover:underline"
         >
           <span>
             <Trans t={t} i18nKey="searchHelp" values={{ query }} components={{ q: <bdi /> }} />
           </span>
-          <ArrowSquareOut size={13} className="shrink-0" aria-hidden="true" />
+          <ArrowSquareOut className="shrink-0" aria-hidden="true" />
         </a>
         <div className="mt-4">
           <button
             type="button"
             onClick={onClear}
-            className="rounded-full border border-divider px-3 py-1 text-xs text-pn-soft hover:text-pn hover:bg-surface-1 transition"
+            className="rounded-full border border-divider px-3 py-1 text-small text-pn-soft hover:text-pn hover:bg-surface-1 transition"
           >
             {t('common:actions.clearSearch')}
           </button>
@@ -160,7 +163,7 @@ export function SettingsSearchResults({
             <Fragment key={hit.entry.id}>
               {newGroup && (
                 <div className={`flex items-center gap-1.5 px-2 pt-3 pb-1 first:pt-1 ${SETTINGS_EYEBROW}`}>
-                  <span className="shrink-0 [&>svg]:w-3.5 [&>svg]:h-3.5">{sectionIcon(hit.entry.section)}</span>
+                  <span className="shrink-0">{sectionIcon(hit.entry.section)}</span>
                   {sectionLabel(hit.entry.section)}
                 </div>
               )}
@@ -172,15 +175,15 @@ export function SettingsSearchResults({
                 onMouseMove={() => { if (at !== activeIndex) onHover(at); }}
                 className={`cursor-pointer rounded-md px-2 py-1.5 text-start ${at === activeIndex ? 'bg-surface-1' : ''}`}
               >
-                <div className="text-sm text-pn">
+                <div className="text-body text-pn">
                   <Highlighted text={hit.label} mark={hit.english ? null : hit.mark} />
-                  {crumb && <span className="text-xs text-pn-soft"> · {crumb}</span>}
+                  {crumb && <span className="text-small text-pn-soft"> · {crumb}</span>}
                   {hit.entry.section === 'help' && (
-                    <ArrowSquareOut size={12} className="inline ms-1.5 text-accent" aria-hidden="true" />
+                    <ArrowSquareOut className="inline ms-1.5 text-accent" aria-hidden="true" />
                   )}
                 </div>
                 {hit.why && (
-                  <div className="text-xs text-pn-muted">
+                  <div className="text-small text-pn-muted">
                     {hit.english ? t('matchedInEnglish') : t('matched')} <bdi>{hit.why}</bdi>
                   </div>
                 )}

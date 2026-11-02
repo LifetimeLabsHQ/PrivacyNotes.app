@@ -2,7 +2,7 @@
  * Callout type registry for the editor: every type's color (from
  * calloutKeywords.ts), its icon, and the picker order. Every type is free.
  *
- * Spec: ops/docs/callouts.md (the type table and the picker order)
+ * Spec: docs/contrib/callouts.md (the type table and the picker order)
  */
 
 import type { Icon } from '@phosphor-icons/react';

@@ -35,12 +35,15 @@ import { useNearScreen } from './useNearScreen';
 import { useBlobQuotaBlocked } from './usePendingUploads';
 import { MusicNotes, VideoCamera, Image, Archive, File as FileGlyph, Pause, Play, Check, Copy, Download, DotsThree, Eye, PencilSimple, X, iconCopy, iconEditPencil } from './icons';
 import { DeleteButton } from './ui/DeleteButton';
+import { Callout, FeedbackButton } from './ui/feedback';
+import { isBlobDamaged } from './blobDamaged';
 import { formatDuration } from './formatDuration';
 import {
   FILE_NAME_MAX_LENGTH,
   cleanFileName,
   escapeMarkdownText,
   joinFileName,
+  subscribeToAttachmentNames,
   splitFileName,
 } from './fileNames';
 import i18n from './i18n';
@@ -78,7 +81,7 @@ const renameListeners = new Set<RenameListener>();
 let pendingRename: { uuid: string; at: number } | null = null;
 
 /** How long a request waits for its chip to appear. */
-// Spec: ops/docs/archive/file-rename-and-audio-seek.md (where the control lives)
+// Spec: docs/internal/specs/file-rename-and-audio-seek.md (where the control lives)
 const RENAME_REQUEST_TTL_MS = 4000;
 
 /**
@@ -178,7 +181,7 @@ export function holdsOneFile(doc: ProseMirrorNode): boolean {
  * Whether a note's picture or PDF draws as the file card: only in a note the
  * Files pillar made, and only while that note holds one file. A note of
  * several files reads as a list, and a card per file would make it a gallery.
- * Spec: ops/docs/archive/ui-patterns.md (section 107, the file card)
+ * Spec: docs/internal/design/ui-patterns.md (section 107, the file card)
  */
 export function showsFileCard(fileNote: boolean, doc: ProseMirrorNode): boolean {
   return fileNote && holdsOneFile(doc);
@@ -197,12 +200,14 @@ const MailCover = lazy(() => import('./MailView').then((m) => ({ default: m.Mail
  *
  * Spans rather than divs throughout, because this is the content of a button.
  */
-function FilePreview({ uuid, pdf, mail, name, onOpen }: {
+function FilePreview({ uuid, pdf, mail, name, onOpen, onDamaged }: {
   uuid: string;
   pdf: boolean;
   mail: boolean;
   name: string;
   onOpen: () => void;
+  /** The picture's bytes do not open; the chip shows that state in place of this card. */
+  onDamaged: () => void;
 }) {
   const { t } = useTranslation('media');
   // A PDF and a mail are read from their bytes; only a picture has a URL.
@@ -213,13 +218,17 @@ function FilePreview({ uuid, pdf, mail, name, onOpen }: {
   useEffect(() => {
     if (fromBytes || url) return;
     let alive = true;
-    void loadAttachmentUrl(uuid).then((loaded) => {
+    void readAttachmentUrl(uuid).then((loaded) => {
       if (!alive) return;
       if (loaded) setUrl(loaded);
       else setMissing(true);
+    }, (err: unknown) => {
+      if (!alive) return;
+      if (isBlobDamaged(err)) onDamaged();
+      else setMissing(true);
     });
     return () => { alive = false; };
-  }, [uuid, fromBytes, url]);
+  }, [uuid, fromBytes, url, onDamaged]);
 
   return (
     <button
@@ -247,7 +256,7 @@ function FilePreview({ uuid, pdf, mail, name, onOpen }: {
           />
         </span>
       ) : (
-        <span className="block px-4 py-16 text-sm text-center text-pn-muted">
+        <span className="block px-4 py-16 text-body text-center text-pn-muted">
           {missing ? t('image.notFound') : t('image.loading')}
         </span>
       )}
@@ -302,7 +311,7 @@ function LabelledAction({ onClick, disabled, children }: {
       onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       disabled={disabled}
-      className={`shrink-0 inline-flex items-center gap-1.5 h-[30px] px-2.5 me-1 rounded-lg bg-accent/10 dark:bg-accent/20 text-accent-strong text-xs font-medium transition cursor-pointer select-none hover:bg-accent/15 dark:hover:bg-accent/30 ${BUTTON_CONTENT} ${
+      className={`shrink-0 inline-flex items-center gap-1.5 h-[30px] px-2.5 me-1 rounded-lg bg-accent/10 dark:bg-accent/20 text-accent-strong text-small font-medium transition cursor-pointer select-none hover:bg-accent/15 dark:hover:bg-accent/30 ${BUTTON_CONTENT} ${
         disabled ? 'opacity-50 pointer-events-none' : ''
       }`}
     >
@@ -388,6 +397,10 @@ function EncryptedAttachmentView({
   // never uploaded from its origin device (usually a full vault there).
   // Rendered as an amber explanation, not a red error (backlog #151).
   const [missingRemote, setMissingRemote] = useState(false);
+  // The blob arrived but does not open (a wrong key, damaged bytes). Shown
+  // with a Try again; nothing is deleted for it. See blobDamaged.ts.
+  const [damaged, setDamaged] = useState(false);
+  const markDamaged = useCallback(() => setDamaged(true), []);
   const [copied, setCopied] = useState(false);
   const [playing, setPlaying] = useState(false);
   /**
@@ -477,8 +490,10 @@ function EncryptedAttachmentView({
   useEffect(() => {
     if (!isImage || !uuid) return;
     let cancelled = false;
-    void loadAttachmentUrl(uuid).then((url) => {
+    void readAttachmentUrl(uuid).then((url) => {
       if (!cancelled && url) setThumbnailUrl(url);
+    }, (err: unknown) => {
+      if (!cancelled && isBlobDamaged(err)) setDamaged(true);
     });
     return () => { cancelled = true; };
   }, [isImage, uuid]);
@@ -533,6 +548,7 @@ function EncryptedAttachmentView({
       // its origin device. Explain instead of "File not found" (#151).
       if (!attachment) { setMissingRemote(true); return; }
       setMissingRemote(false);
+      setDamaged(false);
       const mime = attachment.meta.mime || 'application/octet-stream';
       const blob = new Blob([attachment.data as BlobPart], { type: mime });
       const saved = await saveBlob(blob, filename || 'download');
@@ -540,7 +556,8 @@ function EncryptedAttachmentView({
       // is not a failure.
       if (!saved.ok && saved.reason === 'failed') throw saved.error;
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('attachment.downloadFailed'));
+      if (isBlobDamaged(err)) setDamaged(true);
+      else setError(err instanceof Error ? err.message : t('attachment.downloadFailed'));
     } finally {
       setDownloading(false);
     }
@@ -559,6 +576,25 @@ function EncryptedAttachmentView({
       setTimeout(() => setCopied(false), 1500);
     });
   }, [src, filename, filesize, mimetype]);
+
+  // Try again on a damaged file: one read per click. A file that opens clears
+  // the state (a picture draws its thumbnail); one that is gone or cannot be
+  // reached takes the path a Download would have taken.
+  const handleRetry = useCallback(async () => {
+    const store = getAttachmentStore();
+    if (!uuid || !store) return;
+    try {
+      const attachment = await store.getAttachment(uuid);
+      setDamaged(false);
+      if (!attachment) { setMissingRemote(true); return; }
+      setMissingRemote(false);
+      if (isImage) setThumbnailUrl(await loadAttachmentUrl(uuid));
+    } catch (err) {
+      if (isBlobDamaged(err)) return;
+      setDamaged(false);
+      setError(err instanceof Error ? err.message : t('attachment.downloadFailed'));
+    }
+  }, [uuid, isImage, t]);
 
   // ---- Rename ----
 
@@ -610,6 +646,12 @@ function EncryptedAttachmentView({
     });
   }, [uuid, startRename]);
 
+  // A single-file item's title commit names its file (fileNameForTitle).
+  // The title is set already, so onRename is not called back.
+  useEffect(() => subscribeToAttachmentNames((requested, name) => {
+    if (requested === uuid && editable) updateAttributes({ filename: name });
+  }), [uuid, editable, updateAttributes]);
+
   const handlePlayPause = useCallback(async () => {
     if (playing && audioRef.current) {
       audioRef.current.pause();
@@ -654,7 +696,8 @@ function EncryptedAttachmentView({
       setPlaying(true);
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
-      if (msg === 'format') { setFormatUnsupported(true); setError(null); }
+      if (isBlobDamaged(err)) setDamaged(true);
+      else if (msg === 'format') { setFormatUnsupported(true); setError(null); }
       else { setError(msg || t('attachment.playbackFailed')); }
       setPlaying(false);
     }
@@ -676,7 +719,7 @@ function EncryptedAttachmentView({
   // its armed confirm lasts seconds and must appear where the click was.
   const openMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
     const items: ContextMenuItem[] = [];
-    if (editable) items.push({ label: t('attachment.rename'), icon: iconEditPencil(), onSelect: startRename });
+    if (editable) items.push({ label: t('common:actions.rename'), icon: iconEditPencil(), onSelect: startRename });
     items.push({ label: t('common:actions.copy'), icon: iconCopy(), onSelect: handleCopy });
     const r = e.currentTarget.getBoundingClientRect();
     const rtl = document.documentElement.dir === 'rtl';
@@ -807,20 +850,20 @@ function EncryptedAttachmentView({
                 maxLength={FILE_NAME_MAX_LENGTH}
                 placeholder={t('attachment.renamePlaceholder')}
                 aria-label={t('attachment.renamePlaceholder')}
-                className="min-w-0 flex-1 bg-transparent border-b border-accent/50 focus:border-accent outline-none text-sm font-medium text-pn"
+                className="min-w-0 flex-1 bg-transparent border-b border-accent/50 focus:border-accent outline-none text-body font-medium text-pn"
               />
               {nameExt && (
-                <span className="shrink-0 text-sm text-pn-muted">
+                <span className="shrink-0 text-body text-pn-muted">
                   .{nameExt}
                 </span>
               )}
             </div>
           ) : (
-            <div className="text-sm font-medium text-pn truncate" dir="auto">
+            <div className="text-body font-medium text-pn truncate" dir="auto">
               {filename || t('attachment.fallbackName')}
             </div>
           )}
-          <div className="text-xs text-pn-muted truncate">
+          <div className="text-small text-pn-muted truncate">
             {formatUnsupported && (
               <span className="text-warning">{t('attachment.cantPlay')}</span>
             )}
@@ -841,14 +884,14 @@ function EncryptedAttachmentView({
           {/* The WHY, always visible - a tooltip is unreachable on touch,
               and this sits outside the truncating meta line so it can wrap. */}
           {localOnly && (
-            <div className="text-[11px] text-warning mt-0.5 leading-tight">
+            <div className="text-meta text-warning mt-0.5 leading-tight">
               {t('attachment.localOnlyTip')}
             </div>
           )}
           {/* Other-device counterpart of localOnlyTip: same always-visible
               amber line, same reasons (no hover on touch, truncation). */}
           {missingRemote && (
-            <div className="text-[11px] text-warning mt-0.5 leading-tight">
+            <div className="text-meta text-warning mt-0.5 leading-tight">
               {t('attachment.notUploadedTip')}
             </div>
           )}
@@ -860,7 +903,7 @@ function EncryptedAttachmentView({
               every recording in the note on open. */}
           {playable && (
             <div className="flex items-center gap-2 mt-1.5">
-              <span className="shrink-0 text-[11px] text-pn-muted tabular-nums">
+              <span className="shrink-0 text-meta text-pn-muted tabular-nums">
                 {formatDuration(position)}
               </span>
               <input
@@ -887,7 +930,7 @@ function EncryptedAttachmentView({
                 className="flex-1 h-1.5 cursor-pointer disabled:cursor-default disabled:opacity-50"
                 style={{ accentColor: 'rgb(var(--pn-accent))' }}
               />
-              <span className="shrink-0 text-[11px] text-pn-muted tabular-nums">
+              <span className="shrink-0 text-meta text-pn-muted tabular-nums">
                 {duration > 0 ? formatDuration(duration) : '--:--'}
               </span>
             </div>
@@ -903,55 +946,73 @@ function EncryptedAttachmentView({
           {renaming ? (
             <>
               <ActionButton onClick={commitRename} label={t('attachment.saveName')}>
-                <Check size={15} className="text-accent" />
+                <Check className="text-accent" />
               </ActionButton>
               <ActionButton onClick={cancelRename} label={t('common:actions.cancel')} tip="above-end">
-                <X size={15} />
+                <X />
               </ActionButton>
             </>
           ) : (
             <>
               {viewable ? (
                 <LabelledAction onClick={openViewer}>
-                  <Eye size={15} />
+                  <Eye />
                   {t('attachment.view')}
                 </LabelledAction>
               ) : playable ? null : (
                 <LabelledAction onClick={() => void handleDownload()} disabled={downloading}>
-                  <Download size={15} />
-                  {t('attachment.download')}
+                  <Download />
+                  {t('common:updateToast.download')}
                 </LabelledAction>
               )}
               {(viewable || playable) && (
-                <ActionButton onClick={() => void handleDownload()} disabled={downloading} label={t('attachment.download')}>
-                  <Download size={15} />
+                <ActionButton onClick={() => void handleDownload()} disabled={downloading} label={t('common:updateToast.download')}>
+                  <Download />
                 </ActionButton>
               )}
               {/* Rename and Copy show in the row when the chip has room, and fold into the menu when it has not. */}
               <span className="hidden @[30rem]/chip:contents">
                 {editable && (
-                  <ActionButton onClick={startRename} label={t('attachment.rename')}>
-                    <PencilSimple size={15} />
+                  <ActionButton onClick={startRename} label={t('common:actions.rename')}>
+                    <PencilSimple />
                   </ActionButton>
                 )}
-                <ActionButton onClick={handleCopy} label={copied ? t('attachment.copied') : t('common:actions.copy')} tip="above-end">
-                  {copied ? <Check size={15} className="text-success" /> : <Copy size={15} />}
+                <ActionButton onClick={handleCopy} label={copied ? t('auth:createPhrase.copied') : t('common:actions.copy')} tip="above-end">
+                  {copied ? <Check className="text-success" /> : <Copy />}
                 </ActionButton>
               </span>
               <span className="contents @[30rem]/chip:hidden">
-                <ActionButton onClick={openMenu} label={copied ? t('attachment.copied') : t('attachment.more')} tip="above-end">
+                <ActionButton onClick={openMenu} label={copied ? t('auth:createPhrase.copied') : t('shell:selectionToolbar.more')} tip="above-end">
                   {copied ? (
-                    <Check size={15} className="text-success" />
+                    <Check className="text-success" />
                   ) : (
-                    <DotsThree size={18} weight="bold" />
+                    <DotsThree weight="bold" />
                   )}
                 </ActionButton>
               </span>
-              {editable && <DeleteButton label={t('common:actions.delete')} confirmLabel={t('attachment.deleteConfirm')} onConfirm={deleteNode} />}
+              {editable && <DeleteButton label={t('common:actions.delete')} confirmLabel={t('common:actions.deleteConfirm')} onConfirm={deleteNode} />}
             </>
           )}
         </div>
       </div>
+  );
+
+  const damagedNotice = (
+    <Callout
+      tone="danger"
+      action={
+        <FeedbackButton
+          action="retry"
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          onClick={(e) => { e.stopPropagation(); void handleRetry(); }}
+          className={BUTTON_CONTENT}
+        >
+          {t('auth:signIn.tryAgain')}
+        </FeedbackButton>
+      }
+    >
+      {t('attachment.damaged')}
+    </Callout>
   );
 
   return (
@@ -969,10 +1030,17 @@ function EncryptedAttachmentView({
     >
       {showPreview && uuid ? (
         <div className={`rounded-xl border overflow-hidden bg-surface-2 transition ${frameTone}`}>
-          <FilePreview uuid={uuid} pdf={isPdfFile} mail={isMailFile} name={filename || ''} onOpen={openViewer} />
+          {damaged
+            ? <div className="p-3">{damagedNotice}</div>
+            : <FilePreview uuid={uuid} pdf={isPdfFile} mail={isMailFile} name={filename || ''} onOpen={openViewer} onDamaged={markDamaged} />}
           {row}
         </div>
-      ) : row}
+      ) : (
+        <>
+          {row}
+          {damaged && <div className="mt-2">{damagedNotice}</div>}
+        </>
+      )}
       <ContextMenu state={menu.state} onClose={menu.close} />
     </NodeViewWrapper>
   );
@@ -992,15 +1060,24 @@ function getAttachmentStore(): AttachmentStore | null {
   return _attachmentStore;
 }
 
-/** A decrypted attachment, or null when it is neither here nor on the server. */
-export async function loadAttachmentData(uuid: string): Promise<DecryptedAttachment | null> {
+/**
+ * As loadAttachmentData, except that bytes which do not open throw
+ * BlobDamagedError: the one failure a chip or a picture shows as damaged.
+ */
+async function readAttachmentData(uuid: string): Promise<DecryptedAttachment | null> {
   const store = getAttachmentStore();
   if (!store) return null;
   try {
     return await store.getAttachment(uuid);
-  } catch {
+  } catch (err) {
+    if (isBlobDamaged(err)) throw err;
     return null;
   }
+}
+
+/** A decrypted attachment, or null when it is neither here nor on the server. */
+export async function loadAttachmentData(uuid: string): Promise<DecryptedAttachment | null> {
+  return readAttachmentData(uuid).catch(() => null);
 }
 
 /**
@@ -1011,19 +1088,25 @@ export async function loadAttachmentData(uuid: string): Promise<DecryptedAttachm
 const attachmentUrlCache = new Map<string, string>();
 
 /**
- * An object URL for an attachment's bytes, or null when it cannot be read.
+ * An object URL for an attachment's bytes, or null when it is not here and
+ * not on the server; bytes that do not open throw BlobDamagedError.
  * Typed by the stored MIME, because an SVG in an untyped blob does not draw.
  */
-export async function loadAttachmentUrl(uuid: string): Promise<string | null> {
+export async function readAttachmentUrl(uuid: string): Promise<string | null> {
   const cached = attachmentUrlCache.get(uuid);
   if (cached) return cached;
-  const att = await loadAttachmentData(uuid);
+  const att = await readAttachmentData(uuid);
   if (!att) return null;
   const existing = attachmentUrlCache.get(uuid);
   if (existing) return existing;
   const url = URL.createObjectURL(new Blob([att.data as BlobPart], { type: att.meta.mime || '' }));
   attachmentUrlCache.set(uuid, url);
   return url;
+}
+
+/** An object URL for an attachment's bytes, or null when it cannot be read. */
+export async function loadAttachmentUrl(uuid: string): Promise<string | null> {
+  return readAttachmentUrl(uuid).catch(() => null);
 }
 
 /** The cached URL, without reading anything. Lets a node view paint on its first frame. */
@@ -1033,7 +1116,7 @@ export function cachedAttachmentUrl(uuid: string): string | null {
 
 /** The attachment an object URL of this tab shows, or null. A paste of the
  *  browser's "Copy image" names that URL, and this turns it back into the
- *  stored file instead of a second copy. Spec: ops/docs/archive/picture-copy-reuse.md */
+ *  stored file instead of a second copy. Spec: docs/internal/specs/picture-copy-reuse.md */
 export function attachmentIdForUrl(url: string): string | null {
   for (const [uuid, cached] of attachmentUrlCache) if (cached === url) return uuid;
   return null;
@@ -1096,6 +1179,7 @@ export function setAttachmentUploadContext(ctx: AttachmentUploadContext | null) 
 async function handleAttachmentUpload(
   file: File,
   view: EditorView,
+  opts: AttachmentUploadOptions = {},
 ): Promise<void> {
   if (!_uploadContext) return;
 
@@ -1110,9 +1194,11 @@ async function handleAttachmentUpload(
   // An image through the paperclip is still a file chip, but its bytes
   // obey the image switches like every other door, and the chip then names
   // the stored format so a download opens. A picture the module cannot
-  // read is stored as it arrived, the way every non-image is.
+  // read is stored as it arrived, the way every non-image is. A vault
+  // item's file (`keepOriginal`) is always stored as it arrived: a backup
+  // QR or a scan of recovery codes wants its own bytes and name.
   let upload = file;
-  if (isSupportedImage(file)) {
+  if (!opts.keepOriginal && isSupportedImage(file)) {
     const processed = await processImage(file, currentImageOptions());
     if (processed.ok) {
       upload = new File([processed.image.data as BlobPart], processed.image.name, { type: processed.image.mime });
@@ -1206,12 +1292,17 @@ async function handleAttachmentUpload(
   });
 }
 
+/** How one upload treats its file. `keepOriginal` skips the image
+ *  switches, so a picture keeps its bytes, name and MIME. */
+type AttachmentUploadOptions = { keepOriginal?: boolean };
+
 /** Public entry point for toolbar file picker. */
 export async function triggerAttachmentUpload(
   file: File,
   view: EditorView,
+  opts: AttachmentUploadOptions = {},
 ): Promise<void> {
-  return handleAttachmentUpload(file, view);
+  return handleAttachmentUpload(file, view, opts);
 }
 
 // ------------------------------------------------------------------
@@ -1329,7 +1420,10 @@ export const EncryptedAttachment = Node.create<AttachmentOptions>({
           const parts = text.split('|');
           return {
             src: href,
-            filename: parts[0] || 'Attachment',
+            // The link text is whatever the note holds, an import's included,
+            // so the name shown and saved goes through the same cleaning as
+            // a rename.
+            filename: cleanFileName(parts[0] || '', 'Attachment'),
             filesize: parts[1] || '',
             mimetype: parts[2] || '',
           };

@@ -16,6 +16,7 @@
  *      Passwords). Give it an icon and a description key there too.
  */
 
+import type { AttachmentMeta } from '../attachmentStore';
 import type { FolderDef } from '../folders';
 
 /** One note, normalized to the shape PrivacyNotes cares about. */
@@ -71,7 +72,7 @@ export interface ImportedNote {
   /** Transient: a folder and tag color key the source gave the note (Google
    *  Keep's note colors). The import turns it into a tag named after the
    *  color, in the reader's language, and gives that tag the color. Not
-   *  persisted on the note. Spec: ops/docs/archive/folder-tag-icons.md (section 4.7) */
+   *  persisted on the note. Spec: docs/internal/specs/folder-tag-icons.md (section 4.7) */
   colorKey?: string;
 }
 
@@ -136,7 +137,7 @@ export interface ParsedImport {
    * Our own full backup only: the looks of folders, tags and notes and the
    * custom themes, as the manifest holds them. Validated at apply time.
    */
-  settings?: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown };
+  settings?: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown };
 }
 
 /** Importer identifiers - add new ones here as adapters land. */
@@ -168,7 +169,8 @@ export type ImporterId =
   | 'browser-bookmarks'
   | 'browser-passwords'
   | 'vcard'
-  | 'google-calendar';
+  | 'google-calendar'
+  | 'excalidraw';
 
 export interface Importer {
   id: ImporterId;
@@ -196,6 +198,16 @@ export interface Importer {
 export interface RestoreCounts {
   updated: number;
   unchanged: number;
+}
+
+/** A picture or file `importBlobs` prepared and did not store: `applyImport`
+ *  writes it in the notes' own transaction, so a failed write keeps neither. */
+export interface StagedBlob {
+  uuid: string;
+  hash: string;
+  data: Uint8Array;
+  image: boolean;
+  meta: AttachmentMeta;
 }
 
 export interface ApplyResult {

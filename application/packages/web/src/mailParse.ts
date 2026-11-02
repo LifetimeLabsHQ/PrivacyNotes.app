@@ -6,7 +6,7 @@
  * rendered. When a mail has no text part, its HTML is reduced to text in an
  * inert document, which loads nothing and runs nothing, so no remote image or
  * tracking pixel can tell the sender the mail was opened.
- * Spec: ops/issues/0522.md
+ * Spec: docs/internal/issues/0522.md
  */
 
 interface MailAttachment {
@@ -222,7 +222,9 @@ function walk(headers: Headers, body: string, out: Collected, depth: number): vo
 function tidy(text: string): string {
   return text
     .replace(/\r\n?/g, '\n')
-    .replace(/[ \t]+\n/g, '\n')
+    // Matched only from the start of a run: from every position inside a long
+    // run of spaces the pattern re-scanned the rest of it (bug report 23).
+    .replace(/(?<![ \t])[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }

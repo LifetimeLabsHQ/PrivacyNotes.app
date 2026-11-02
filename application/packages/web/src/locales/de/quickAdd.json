@@ -39,6 +39,16 @@
     "ordinal": ".",
     "work": "arbeit, beruf, job",
     "personal": "privat, persönlich, zuhause",
-    "in": "in"
+    "in": "in",
+    "weekend": "wochenende",
+    "endOfMonth": "monatsende, ende des monats",
+    "morning": "früh, morgens, vormittag, vormittags",
+    "afternoon": "nachmittag, nachmittags",
+    "evening": "abend",
+    "biweekly": "zweiwöchentlich, vierzehntägig, vierzehntäglich",
+    "quarterly": "vierteljährlich, quartalsweise",
+    "halfPast": "halb nach",
+    "numbers": "eins, zwei, drei, vier, fünf, sechs, sieben, acht, neun, zehn, elf, zwölf",
+    "a": "ein, eine, einen, einer, einem"
   }
 }

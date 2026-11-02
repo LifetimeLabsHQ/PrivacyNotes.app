@@ -5,7 +5,7 @@
  * stranger's HTML, so it parses with `DOMParser` only (inert, no script, no
  * loads) and never renders the page. Load it with a dynamic `import()`: it
  * is not part of the app's boot path.
- * Spec: ops/docs/archive/web-clipper-stage1.md (section 3.2)
+ * Spec: docs/internal/specs/web-clipper-stage1.md (section 3.2)
  */
 import { Readability } from '@mozilla/readability';
 import { baseOf, cleanPage, httpAddress, parsePage } from './clean';
@@ -92,7 +92,7 @@ export function refreshTarget(html: string, finalUrl: string): string | null {
 
 /** The largest note body a clip may save, in UTF-8 bytes. The encrypted row
  *  must stay under the server's 1 MiB row ceiling.
- *  Spec: ops/docs/archive/web-clipper-stage1.md (section 3.2, Size) */
+ *  Spec: docs/internal/specs/web-clipper-stage1.md (section 3.2, Size) */
 export const CLIP_MAX_BODY_BYTES = 700 * 1024;
 
 /** How many bytes a stored picture address adds over its token. */
@@ -118,7 +118,7 @@ export function clipFits(markdown: string, images: readonly ClipImage[]): boolea
 /** Below this much text, a clip is often a sign-in, cookie or check page
  *  rather than the page itself, and the app suggests a bookmark. It is a
  *  suggestion only: a short post is a real page too.
- *  Spec: ops/docs/archive/web-clipper-stage1.md (D14) */
+ *  Spec: docs/internal/specs/web-clipper-stage1.md (D14) */
 export const CLIP_SHORT_TEXT = 300;
 
 /** Whether a clip holds less text than a reader would expect of a page.

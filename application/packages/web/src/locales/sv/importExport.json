@@ -3,14 +3,12 @@
     "importTitle": "Importera dina data",
     "exportTitle": "Exportera dina data",
     "restoreTitle": "Återställ dina data",
-    "vaultTitle": "Importera dina lösenord",
-    "tablistLabel": "Importera, exportera, återställ eller lösenord",
+    "tablistLabel": "Importera, exportera, återställ eller mätvärden",
     "tabImport": "Importera",
     "tabExport": "Exportera",
     "tabRestore": "Återställ",
     "tabVault": "Lösenord",
-    "working": "Arbetar…",
-    "tabWellness": "Mätvärden"
+    "working": "Arbetar…"
   },
   "footer": {
     "exportNote": "Exporter körs lokalt. Ingenting laddas upp.",
@@ -18,12 +16,11 @@
     "importNote": "Allt är alltid krypterat, på din enhet och när det synkas."
   },
   "importPick": {
-    "autoTagLabel": "Tagga importerade anteckningar efter källa",
-    "autoTagDesc": "Anteckningar från Google Keep får <keep>#google</keep>, Obsidian får <obsidian>#obsidian</obsidian>, och så vidare.",
     "guideAria": "Importguide för {{app}}",
     "guideLabel": "Guide",
-    "groupGeneral": "Allmänt",
-    "groupNotes": "Anteckningar"
+    "searchPlaceholder": "Hitta din app",
+    "groupCalendar": "Kalender, kontakter och bokmärken",
+    "noMatch": "Ingen app matchar. De flesta anteckningsappar kan exportera Markdown-filer, och Markdown-filer kan importeras här."
   },
   "folderImport": {
     "tagLabel": "Tagga även anteckningar efter mapp",
@@ -76,6 +73,7 @@
     "googleCalendar": ".zip-filen från Settings > Import & export i Google Kalender, eller en enskild .ics-fil. Händelserna behåller sina tider, upprepningar och påminnelser.",
     "appleNotes": "Exportera med gratisappen Exporter som Markdown och släpp .zip-filen här.",
     "appleJournal": "Exportera från Journal på Mac eller iPhone, komprimera mappen AppleJournalEntries och släpp .zip-filen här. Posterna importeras som dagboksinlägg med sina foton, videor, röstmemon och platser.",
+    "excalidraw": "Teckningar sparade från excalidraw.com: en .excalidraw-fil, eller flera zippade tillsammans. Teckningar från Obsidians Excalidraw-plugin fungerar också, som .excalidraw.md-filer. Bilder i en teckning följer med.",
     "evernote": "En ensam .enex, eller flera zippade tillsammans. Behåller formatering, taggar, bilagor, anteckningslänkar och anteckningsböcker. Evernote tar inte med uppgifter i .enex.",
     "samsungNotes": "Exportera som Word (.docx) eller text (.txt). Zippa flera filer för att importera många på en gång.",
     "simplenote": "Exportera från Simplenote (Inställningar -> Verktyg -> Exportera anteckningar). Släpp .zip-filen här.",
@@ -99,9 +97,6 @@
     "vcard": "Kontakter (vCard)",
     "markdownFolder": "Markdown-filer"
   },
-  "vaultPick": {
-    "intro": "Importera inloggningar, kort och SSH-nycklar från en annan lösenordshanterare."
-  },
   "restorePick": {
     "intro": "Återställ en PrivacyNotes-säkerhetskopia som du exporterat tidigare.",
     "fullBackupTitle": "Fullständig säkerhetskopia (.zip)",
@@ -123,8 +118,8 @@
     "restoringBlobs": "Återställer bilder och filer..."
   },
   "errors": {
-    "genericParse": "Något gick fel.",
     "decryptionFailed": "Dekrypteringen misslyckades. Fel fras eller skadad fil.",
+    "importNothingChanged": "Ingenting importerades, och dina anteckningar, mappar och filer är som de var. {{detail}}",
     "blobImportFailed": "Dina anteckningar importerades, men inte deras bilder och filer: {{detail}} Ingenting i filen du valde ändrades, så du kan radera de importerade anteckningarna och köra importen igen.",
     "blobsNotInBackup_one": "Dina anteckningar återställdes, men {{items}} som listas i säkerhetskopian saknas i den.",
     "blobsNotInBackup_other": "Dina anteckningar återställdes, men {{items}} som listas i säkerhetskopian saknas i den."
@@ -135,11 +130,7 @@
     "splitOversize_one": "Dela upp anteckningen i mindre anteckningar vid dess rubriker, så att den synkas",
     "splitOversize_other": "Dela upp de här {{count}} anteckningarna i mindre anteckningar vid deras rubriker, så att de synkas",
     "partTitle": "{{title}} ({{index}}/{{total}})",
-    "continuedIn": "Fortsätter i {{link}}",
-    "sourceLabel": "Källa",
     "uniqueTags": "Unika taggar",
-    "empty": "Tom",
-    "untagged": "Otaggad",
     "items": "Objekt",
     "previewLabel": "Förhandsvisning",
     "andMore": "… och {{count}} till",
@@ -150,9 +141,14 @@
     "eventSkipNote": "händelser du redan har importerat hoppas över och lämnas som de är, så att köra det två gånger dubblerar dem inte.",
     "restoreMergeNote": "anteckningar från din egen säkerhetskopia matchas på id. En anteckning du redan har uppdateras bara när säkerhetskopians version är nyare, och en anteckning i papperskorgen tas ut ur den.",
     "quotaExceeded": "<strong>För lite lagring för att importera.</strong> Uppskattningsvis {{needed}} behövs, {{available}} tillgängligt. Frigör utrymme eller uppgradera innan du importerar.",
-    "quotaWarning": "Obs: den här importen använder ungefär {{needed}} av ditt återstående lagringsutrymme på {{available}}.",
     "oversizeAttachments_one": "1 fil är större än gränsen på {{limit}} per fil i din plan. Den importeras till den här enheten, men synkas inte till dina andra enheter förrän du uppgraderar.",
-    "oversizeAttachments_other": "{{count}} filer är större än gränsen på {{limit}} per fil i din plan. De importeras till den här enheten, men synkas inte till dina andra enheter förrän du uppgraderar."
+    "oversizeAttachments_other": "{{count}} filer är större än gränsen på {{limit}} per fil i din plan. De importeras till den här enheten, men synkas inte till dina andra enheter förrän du uppgraderar.",
+    "title": "Kontrollera innan du importerar",
+    "sourceTagLabel": "Tagga varje anteckning <tag>{{tag}}</tag>",
+    "sourceTagDesc": "Av: ingen tagg för källan. Taggar som redan finns i anteckningarna följer med oavsett.",
+    "storageLine": "Den här importen behöver ungefär {{needed}}. Du har {{available}} ledigt.",
+    "nothingWritten": "Inget skrivs förrän du trycker på Importera.",
+    "whatComesIn": "Det här kommer in"
   },
   "counts": {
     "note_one": "anteckning",
@@ -167,6 +163,8 @@
     "sshKey_other": "SSH-nycklar",
     "contact_one": "kontakt",
     "contact_other": "kontakter",
+    "drawing_one": "teckning",
+    "drawing_other": "teckningar",
     "zeroItems": "0 objekt",
     "importButton": "Importera {{counts}}"
   },
@@ -178,14 +176,14 @@
     "fullBackupHeading": "Fullständig säkerhetskopia",
     "portableHeading": "Portabel export",
     "vaultOnlyHeading": "Endast valvet",
-    "zipBackupTitle": "PrivacyNotes-säkerhetskopia (.zip)",
-    "zipBackupDesc": "Allt: anteckningar, dagböcker, valvobjekt, uppgifter, bilder, ljud och filer. Använd den här för en komplett kontosäkerhetskopia eller för att flytta till en ny enhet. Filerna i den är inte krypterade, så förvara zip-filen på ett säkert ställe.",
-    "encryptedZipBackupTitle": "Krypterad fullständig säkerhetskopia (.pnbackupz)",
-    "encryptedZipBackupDesc": "Allt som zip-kopian innehåller - anteckningar, valvobjekt, bilder, ljud och filer - förseglat med din frasnyckel. Återställs med din fras på vilken enhet som helst. Tryggt att förvara var som helst.",
-    "encryptedBackupTitle": "Krypterad säkerhetskopia (.pnbackup)",
-    "encryptedBackupDesc": "Allt textinnehåll och all metadata, krypterat med din frasnyckel. Inga bilder eller filer. Tryggt att förvara var som helst - oläsligt utan din fras.",
+    "zipBackupTitle": "Allt, inte krypterat (.zip)",
+    "zipBackupDesc": "Dina anteckningar, dagböcker, valvobjekt, uppgifter, bilder, ljud och filer, med dina mediciner och mätvärden. Öppnas på vilken dator som helst utan fras, så förvara den på ett säkert ställe. Anteckningshistorik och PIN-koden för applåset ingår inte.",
+    "encryptedZipBackupTitle": "Allt, krypterat (.pnbackupz)",
+    "encryptedZipBackupDesc": "Samma som zip-filen, förseglad med din frasnyckel. Återställs med din fras på vilken enhet som helst. Tryggt att förvara var som helst.",
+    "encryptedBackupTitle": "Endast text, krypterad (.pnbackup)",
+    "encryptedBackupDesc": "Allt textinnehåll och all metadata, utan bilder eller filer. En liten fil, förseglad med din frasnyckel. Tryggt att förvara var som helst.",
     "htmlArchiveTitle": "HTML-arkiv (.zip)",
-    "htmlArchiveDesc": "En utskrivbar HTML-sida per anteckning. Bra för att läsa offline eller arkivera, inte för att återställa.",
+    "htmlArchiveDesc": "En utskrivbar HTML-sida per anteckning, med inloggningar, kort och nycklar i klartext. Bra för att läsa offline eller arkivera, inte för att återställa. Förvara den på ett säkert ställe.",
     "textBackupTitle": "Textsäkerhetskopia (.json)",
     "textBackupDesc": "Allt textinnehåll och all metadata som vanlig JSON. Inga bilder eller filer. Förvara den någonstans du litar på - den här är inte krypterad.",
     "vaultExportTitle": "Valvexport (.json)",
@@ -199,6 +197,8 @@
     "calendarOnlyHeading": "Bara kalender",
     "calendarExportTitle": "Kalenderfil (.ics)",
     "calendarExportDesc": "Händelser samt daterade anteckningar och uppgiftslistor, för Google Kalender, Apple Kalender eller Outlook.",
+    "drawingsExportTitle": "Teckningar (.zip)",
+    "drawingsExportDesc": "Varje teckning som en egen .excalidraw-fil, med bilderna inuti, för excalidraw.com och Obsidian.",
     "calendarPrivate": "Privat"
   },
   "exportProgress": {
@@ -207,11 +207,8 @@
     "incompleteTitle": "Exporten är ofullständig",
     "exportingTitle": "Exporterar säkerhetskopia...",
     "preparing": "Förbereder...",
-    "exporting": "Exporterar...",
-    "imagesProgress": "Exporterar bilder... {{done}} av {{total}}",
-    "filesProgress": "Exporterar filer... {{done}} av {{total}}",
-    "building": "Bygger säkerhetskopian...",
-    "compressing": "Komprimerar...",
+    "showInFolder": "Visa i mappen",
+    "zipStep": "Komprimering",
     "missingFailed_one": "Den här enheten kunde inte ladda ner {{items}}, så din export lämnar den utanför. Kontrollera anslutningen och exportera igen.",
     "missingFailed_other": "Den här enheten kunde inte ladda ner {{items}}, så din export lämnar dem utanför. Kontrollera anslutningen och exportera igen.",
     "missingNotFound_one": "{{items}} finns varken på den här enheten eller på servern, så din export lämnar den utanför.",
@@ -258,7 +255,8 @@
     "generic": "Exporten kunde inte sparas. Försök igen, eller välj en annan mapp."
   },
   "saveErrors": {
-    "shortWrite": "Bara {{written}} av {{expected}} byte sparades, så filen är ofullständig. Försök igen och spara till enhetens egen lagring i stället för till en molnmapp."
+    "shortWrite": "Bara {{written}} av {{expected}} byte sparades, så filen är ofullständig. Försök igen och spara till enhetens egen lagring i stället för till en molnmapp.",
+    "protectedFolder": "PrivacyNotes sparar inte i {{folder}}, eftersom den mappen innehåller nycklar, inställningar eller program. Spara filen någon annanstans och flytta den dit själv."
   },
   "shareSheet": {
     "title_one": "{{count}} objekt delades till PrivacyNotes",
@@ -267,7 +265,6 @@
     "saveAll": "Spara alla"
   },
   "destination": {
-    "label": "Lägg till i",
     "none": "Ingen mapp",
     "newFolder": "Ny mapp \"{{name}}\"",
     "help": "Mappar från källan hamnar i mappen du väljer, och objekt utan mapp läggs direkt i den."

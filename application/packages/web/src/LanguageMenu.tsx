@@ -70,7 +70,7 @@ export function LanguageMenu({ dropUp = false, dark = false, navigate = false, i
   }
 
   const options: Array<{ value: string; label: string }> = [
-    { value: 'system', label: t('appearance.languageSystem') },
+    { value: 'system', label: t('settings:language.automatic') },
     ...sortByNative(SUPPORTED_LOCALES).map((c) => ({ value: c, label: LANGUAGE_META[c]?.native ?? c })),
   ];
 
@@ -87,19 +87,19 @@ export function LanguageMenu({ dropUp = false, dark = false, navigate = false, i
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-label={`${t('appearance.language')}: ${LANGUAGE_META[current]?.native ?? current}`}
+        aria-label={`${t('notes:settings.languageLabel')}: ${LANGUAGE_META[current]?.native ?? current}`}
         aria-haspopup="menu"
         aria-expanded={open}
         className={rail
           ? `inline-flex h-[29px] items-center gap-1 rounded-lg ${rail === 'tight' ? 'px-1' : 'px-2'} text-[var(--wl-ink)] transition hover:text-accent`
           : iconOnly
           ? `inline-flex items-center justify-center rounded-full border-[1.5px] border-[var(--wl-ink)] text-[var(--wl-ink)] hover:bg-[var(--wl-ink)]/10 transition ${compact ? 'h-9 w-9' : 'h-10 w-10'}`
-          : `inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-sm font-medium transition ${buttonClass}`}
+          : `inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-body font-medium transition ${buttonClass}`}
       >
         {rail ? (
           <>
             <Flag code={current} />
-            {rail !== 'tight' && <Caret size={11} aria-hidden="true" />}
+            {rail !== 'tight' && <Caret aria-hidden="true" />}
           </>
         ) : iconOnly ? (
           <Translate size={compact ? 18 : 20} />
@@ -107,7 +107,7 @@ export function LanguageMenu({ dropUp = false, dark = false, navigate = false, i
           <>
             <Flag code={current} />
             <span className={shortOnPhone ? 'hidden sm:inline' : undefined}>{LANGUAGE_META[current]?.native ?? current}</span>
-            <Caret size={12} aria-hidden="true" />
+            <Caret aria-hidden="true" />
           </>
         )}
       </button>
@@ -125,17 +125,17 @@ export function LanguageMenu({ dropUp = false, dark = false, navigate = false, i
                 role="menuitemradio"
                 aria-checked={active}
                 onClick={() => pick(opt.value)}
-                className="flex w-full items-center gap-2.5 px-3 py-1.5 text-sm text-[var(--wl-ink)] hover:bg-[var(--wl-tint)] transition"
+                className="flex w-full items-center gap-2.5 px-3 py-1.5 text-body text-[var(--wl-ink)] hover:bg-[var(--wl-tint)] transition"
               >
                 {opt.value === 'system' ? (
                   <span className="flex items-center justify-center rounded-[3px] bg-accent/10 text-accent" style={{ width: 26, height: 19, flexShrink: 0 }}>
-                    <Translate size={13} />
+                    <Translate />
                   </span>
                 ) : (
                   <Flag code={opt.value} />
                 )}
                 <span className="flex-1 text-start">{opt.label}</span>
-                {active && <Check size={13} className="text-accent" />}
+                {active && <Check className="text-accent" />}
               </button>
             );
           })}

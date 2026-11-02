@@ -495,7 +495,7 @@
           "h": "En iPhone o Android: exporta las notas de una en una",
           "steps": [
             "Las apps de móvil de UpNote no pueden escribir un backup. En su lugar, abre una nota y toca los tres puntos de la esquina superior.",
-            "Elige Export > \"Export to HTML\". Markdown no: UpNote aplana los avisos (callouts), los colores de texto, la alineación y los subíndices y superíndices antes de escribir su Markdown, mientras que el HTML lo conserva todo.",
+            "Elige Export > \"Export to HTML\". Markdown no: UpNote aplana los avisos, los colores de texto, la alineación y los subíndices y superíndices antes de escribir su Markdown, mientras que el HTML lo conserva todo.",
             "Comparte el resultado con tu app Archivos o envíatelo a ti mismo, y luego suéltalo aquí sin modificar.",
             "¿Te llevas varias notas? Guarda las exportaciones en tu app Archivos, selecciónalas todas y elige Comprimir: ese único zip se importa de una sola vez."
           ],

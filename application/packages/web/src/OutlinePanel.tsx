@@ -202,7 +202,7 @@ export function OutlinePanel({ editor, open, onOpenChange }: Props) {
     // invisible-characters toggle that sit beside it.
     return (
       <EditorSlotPill label={t('outline.title')} keys={keyText('outline')} onClick={() => onOpenChange(true)}>
-        <ListBullets size={16} />
+        <ListBullets />
       </EditorSlotPill>
     );
   }
@@ -211,7 +211,7 @@ export function OutlinePanel({ editor, open, onOpenChange }: Props) {
     <EditorSlotPanel
       panelRef={rootRef}
       label={t('outline.ariaLabel')}
-      icon={<ListBullets size={16} />}
+      icon={<ListBullets />}
       title={t('outline.title')}
       count={headings.length}
       closeLabel={t('outline.hide')}
@@ -246,7 +246,7 @@ export function OutlinePanel({ editor, open, onOpenChange }: Props) {
                 }`}
               >
                 <span className="flex w-4 shrink-0 items-center justify-center">
-                  {CalloutIcon && <CalloutIcon size={16} weight="bold" color={CALLOUT_BY_TYPE[h.callout!].color} />}
+                  {CalloutIcon && <CalloutIcon weight="bold" color={CALLOUT_BY_TYPE[h.callout!].color} />}
                 </span>
                 <span className="truncate" dir="auto">{label}</span>
               </button>
@@ -262,21 +262,21 @@ export function OutlinePanel({ editor, open, onOpenChange }: Props) {
                     }
                     // Two links to the same heading: the note-link for inside
                     // the notes, the shortcut for other apps.
-                    // Spec: ops/docs/archive/note-shortcuts.md (4)
+                    // Spec: docs/internal/specs/note-shortcuts.md (4)
                     const r = e.currentTarget.getBoundingClientRect();
                     const rtl = document.documentElement.dir === 'rtl';
                     linkMenu.open(
                       { clientX: rtl ? r.left : r.right, clientY: r.bottom + 4, preventDefault: () => e.preventDefault(), stopPropagation: () => e.stopPropagation() },
                       [
-                        { label: t('outline.copyNoteLink'), icon: <BracketsSquare size={14} aria-hidden="true" />, onSelect: () => copy(noteLink, String(h.pos)) },
-                        { label: t('outline.copyHeadingShortcut'), icon: <LinkSimple size={14} aria-hidden="true" />, onSelect: () => copy(shortcutUrl(linkNote.id, code), String(h.pos)) },
+                        { label: t('shell:shortcut.copyNoteLink'), icon: <BracketsSquare aria-hidden="true" />, onSelect: () => copy(noteLink, String(h.pos)) },
+                        { label: t('outline.copyHeadingShortcut'), icon: <LinkSimple aria-hidden="true" />, onSelect: () => copy(shortcutUrl(linkNote.id, code), String(h.pos)) },
                       ],
                       e.detail === 0,
                       undefined,
                       true,
                     );
                   }}
-                  aria-label={isCopied ? t('outline.copied') : t('outline.copyHeadingLink')}
+                  aria-label={isCopied ? t('auth:createPhrase.copied') : t('outline.copyHeadingLink')}
                   className={`absolute inset-y-0 end-1 flex w-6 items-center justify-center rounded transition outline-none focus-visible:opacity-100 [@media(hover:none)]:opacity-100 ${
                     isCopied
                       ? 'opacity-100 text-accent'
@@ -286,8 +286,8 @@ export function OutlinePanel({ editor, open, onOpenChange }: Props) {
                   {/* No tip: the list clips any tip that leaves its visible
                       part, and the menu this icon opens names both links. */}
                   {isCopied
-                    ? <Check size={16} weight="bold" aria-hidden="true" />
-                    : <LinkSimple size={16} aria-hidden="true" />}
+                    ? <Check weight="bold" aria-hidden="true" />
+                    : <LinkSimple aria-hidden="true" />}
                 </button>
               )}
               {/* The fold arrow sits over the row's icon slot, which a heading
@@ -304,7 +304,6 @@ export function OutlinePanel({ editor, open, onOpenChange }: Props) {
                   className="absolute inset-y-0 flex w-4 items-center justify-center text-pn-muted [@media(hover:hover)]:hover:text-accent transition outline-none"
                 >
                   <CaretDown
-                    size={12}
                     weight="bold"
                     aria-hidden="true"
                     className={`transition-transform ${isFolded ? '-rotate-90 rtl:rotate-90' : ''}`}

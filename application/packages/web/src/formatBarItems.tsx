@@ -40,6 +40,8 @@ import {
   ArticleMedium,
   ClipboardText,
   FileMd,
+  TextIndent,
+  TextOutdent,
 } from './icons';
 
 /**
@@ -47,7 +49,7 @@ import {
  * label key (editor namespace). The toolbar's own buttons draw richer
  * controls for some of these (the split colour buttons, the heading level);
  * the Settings board and a button promoted from the menu use these.
- * Spec: ops/docs/archive/format-bar.md
+ * Spec: docs/internal/specs/format-bar.md
  */
 export const FORMAT_BAR_LOOK: Record<string, { Icon: Icon; label: string }> = {
   bold: { Icon: TextB, label: 'toolbar.bold' },
@@ -67,6 +69,8 @@ export const FORMAT_BAR_LOOK: Record<string, { Icon: Icon; label: string }> = {
   hr: { Icon: Minus, label: 'toolbar.divider' },
   bullets: { Icon: ListBullets, label: 'toolbar.bulletList' },
   numbered: { Icon: ListNumbers, label: 'toolbar.numberedList' },
+  indent: { Icon: TextIndent, label: 'toolbar.indent' },
+  outdent: { Icon: TextOutdent, label: 'toolbar.outdent' },
   fromFiles: { Icon: Images, label: 'toolbar.pictureFromFiles' },
   date: { Icon: Calendar, label: 'toolbar.date' },
   dateTime: { Icon: Clock, label: 'toolbar.dateTime' },

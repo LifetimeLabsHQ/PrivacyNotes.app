@@ -20,7 +20,7 @@ export function writeToolbarPref(visible: boolean) {
 
 // Where the format bar sits on a touch screen: at the top of the note, or at
 // the bottom, above the keyboard. Per device, since a phone and a tablet can
-// want different things. Spec: ops/docs/archive/format-bar.md (section 7)
+// want different things. Spec: docs/internal/specs/format-bar.md (section 7)
 const BAR_POSITION_KEY = 'privacynotes.editor.barPosition';
 export type BarPosition = 'top' | 'bottom';
 
@@ -40,7 +40,7 @@ export function writeBarPositionPref(position: BarPosition) {
   }
 }
 
-// Spec: ops/docs/archive/ui-patterns.md (outline panel) - remember the outline open/closed
+// Spec: docs/internal/design/ui-patterns.md (outline panel) - remember the outline open/closed
 // choice across notes and sessions, like the toolbar visibility pref.
 const OUTLINE_PREF_KEY = 'privacynotes.editor.outlineOpen';
 
@@ -73,7 +73,7 @@ export function writeOutlinePref(open: boolean) {
  * remote copy for every scalar field, so a value that changes on each pick
  * would let two devices in one sitting overwrite each other's colour for
  * no gain: a fresh device trains itself on the first swatch its owner
- * picks. Spec: ops/docs/design-decisions.md (remembered editor colours)
+ * picks. Spec: docs/internal/design-decisions.md (remembered editor colours)
  */
 export type ColorPrefKind = 'text' | 'highlight';
 
@@ -104,7 +104,7 @@ export function writeColorPref(kind: ColorPrefKind, name: string) {
  * this device. The column names are not remembered: a new board always
  * starts from the default names in the reader's language. Device-local, for
  * the reason the colour picks above are.
- * Spec: ops/issues/0270.md (Spec, remember)
+ * Spec: docs/internal/issues/0270.md (Spec, remember)
  */
 export interface KanbanPref {
   count: 3 | 4;
@@ -135,7 +135,7 @@ export function writeKanbanPref(pref: KanbanPref) {
 }
 
 // The Connections panel shares the outline's corner and remembers its
-// open/closed choice the same way. Spec: ops/issues/0351.md (Spec)
+// open/closed choice the same way. Spec: docs/internal/issues/0351.md (Spec)
 const CONNECTIONS_PREF_KEY = 'privacynotes.editor.connectionsOpen';
 
 export function readConnectionsPref(): boolean {

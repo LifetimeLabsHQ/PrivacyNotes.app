@@ -4,7 +4,7 @@
  *
  * Hash (PBKDF2-SHA256, 600k iterations) stored in UserSettings and synced
  * across devices. The salt is 16 bytes for a PIN and 24 for a passcode, which
- * is how every reader tells the two apart (secretKind.ts). localStorage cache
+ * is how every reader tells the two apart (secretKind.ts). A local cache
  * keeps `hasPin()` synchronous. A legacy hash (100k iterations) still
  * verifies, and stays until the secret is changed.
  */
@@ -13,18 +13,28 @@ import { bytesToBase64, base64ToBytes } from '@notes/shared';
 import type { UserSettings } from './userSettings';
 import { credentialKey } from './demo';
 import { normalizeSecret, saltBytesFor, saltIsPasscode } from './secretKind';
+import { trustAwareStorage } from './trustStorage';
 
 // Spec: THREAT_MODEL.md (PBKDF2-SHA256 600k iterations per OWASP 2024)
 const ITERATIONS = 600_000;
 const LEGACY_ITERATIONS = 100_000;
 const KEY_BITS = 256;
 
-// localStorage cache mirrors settings so `hasPin()` can be synchronous.
+// The cache mirrors settings so `hasPin()` can be synchronous.
 // Demo-bucketed (credentialKey in demo.ts) so a demo session's PIN
-// never touches a real account's cache.
+// never touches a real account's cache. Trust-aware like the phrase: on a
+// device the user did not mark trusted it lives in sessionStorage and goes
+// when the browser closes, because the salt and hash of a four-digit PIN
+// fall to an offline search in minutes.
+// Spec: docs/public/THREAT_MODEL.md (Devices not marked as trusted)
+const pinCache = trustAwareStorage;
 const CACHE_SALT = credentialKey('privacynotes.pinSalt');
 const CACHE_HASH = credentialKey('privacynotes.pinHash');
 const CACHE_ITERATIONS = credentialKey('privacynotes.pinIterations');
+/** Set when a PIN change made on this device lost to another device's
+ *  (userSettings.ts); one account's notice, so bucketed and cleared with the
+ *  PIN cache at every account boundary. */
+export const PIN_CHANGE_LOST_KEY = credentialKey('privacynotes.pinChangeLost');
 
 async function derive(pin: string, salt: Uint8Array, iterations: number): Promise<Uint8Array> {
   if (typeof crypto === 'undefined' || !crypto.subtle) {
@@ -56,18 +66,18 @@ async function derive(pin: string, salt: Uint8Array, iterations: number): Promis
 function cacheWrite(salt: string | null, hash: string | null, iterations: number | null): void {
   try {
     if (salt && hash) {
-      localStorage.setItem(CACHE_SALT, salt);
-      localStorage.setItem(CACHE_HASH, hash);
-      localStorage.setItem(CACHE_ITERATIONS, String(iterations ?? LEGACY_ITERATIONS));
+      pinCache.setItem(CACHE_SALT, salt);
+      pinCache.setItem(CACHE_HASH, hash);
+      pinCache.setItem(CACHE_ITERATIONS, String(iterations ?? LEGACY_ITERATIONS));
     } else {
-      localStorage.removeItem(CACHE_SALT);
-      localStorage.removeItem(CACHE_HASH);
-      localStorage.removeItem(CACHE_ITERATIONS);
+      pinCache.removeItem(CACHE_SALT);
+      pinCache.removeItem(CACHE_HASH);
+      pinCache.removeItem(CACHE_ITERATIONS);
     }
   } catch { /* storage disabled */ }
 }
 
-/** Sync the localStorage cache from UserSettings. Call after every settings sync. */
+/** Sync the local cache from UserSettings. Call after every settings sync. */
 export function syncPinCache(settings: UserSettings): void {
   cacheWrite(settings.pinSalt, settings.pinHash, settings.pinIterations);
 }
@@ -90,16 +100,21 @@ export function clearPinCache(): void {
   cacheWrite(null, null, null);
   clearPinFailures();
   clearPinUnlock();
+  try {
+    localStorage.removeItem(PIN_CHANGE_LOST_KEY);
+  } catch {
+    /* nothing to clear */
+  }
 }
 
 // ── Public API ───────────────────────────────────────────────────
 
-/** Synchronous check via localStorage cache (kept in sync by syncPinCache/stagePinHash). */
+/** Synchronous check via the local cache (kept in sync by syncPinCache/stagePinHash). */
 export function hasPin(): boolean {
   try {
     return (
-      localStorage.getItem(CACHE_HASH) !== null &&
-      localStorage.getItem(CACHE_SALT) !== null
+      pinCache.getItem(CACHE_HASH) !== null &&
+      pinCache.getItem(CACHE_SALT) !== null
     );
   } catch {
     return false;
@@ -114,7 +129,7 @@ export function hasPin(): boolean {
  */
 export function pinIsPasscode(): boolean {
   try {
-    return saltIsPasscode(localStorage.getItem(CACHE_SALT));
+    return saltIsPasscode(pinCache.getItem(CACHE_SALT));
   } catch {
     return false;
   }
@@ -126,7 +141,7 @@ export type PinCredential = Pick<UserSettings, 'pinSalt' | 'pinHash'>;
 /** The cached salt and hash, null when this device caches none. */
 export function cachedPinCredential(): PinCredential {
   try {
-    return { pinSalt: localStorage.getItem(CACHE_SALT), pinHash: localStorage.getItem(CACHE_HASH) };
+    return { pinSalt: pinCache.getItem(CACHE_SALT), pinHash: pinCache.getItem(CACHE_HASH) };
   } catch {
     return { pinSalt: null, pinHash: null };
   }
@@ -173,7 +188,7 @@ export function stagePinHash(h: PinHash): (() => void) | null {
   const keys = [CACHE_SALT, CACHE_HASH, CACHE_ITERATIONS];
   let previous: (string | null)[];
   try {
-    previous = keys.map((k) => localStorage.getItem(k));
+    previous = keys.map((k) => pinCache.getItem(k));
   } catch {
     return null;
   }
@@ -181,15 +196,15 @@ export function stagePinHash(h: PinHash): (() => void) | null {
   const putBack = () => keys.forEach((k, i) => {
     try {
       const v = previous[i];
-      if (v === null || v === undefined) localStorage.removeItem(k);
-      else localStorage.setItem(k, v);
+      if (v === null || v === undefined) pinCache.removeItem(k);
+      else pinCache.setItem(k, v);
     } catch { /* */ }
   });
   try {
-    localStorage.setItem(CACHE_SALT, h.pinSalt);
-    localStorage.setItem(CACHE_HASH, h.pinHash);
-    localStorage.setItem(CACHE_ITERATIONS, String(h.pinIterations));
-    if (localStorage.getItem(CACHE_SALT) !== h.pinSalt || localStorage.getItem(CACHE_HASH) !== h.pinHash) {
+    pinCache.setItem(CACHE_SALT, h.pinSalt);
+    pinCache.setItem(CACHE_HASH, h.pinHash);
+    pinCache.setItem(CACHE_ITERATIONS, String(h.pinIterations));
+    if (pinCache.getItem(CACHE_SALT) !== h.pinSalt || pinCache.getItem(CACHE_HASH) !== h.pinHash) {
       throw new Error('read-back');
     }
   } catch {
@@ -198,7 +213,7 @@ export function stagePinHash(h: PinHash): (() => void) | null {
   }
   return () => {
     try {
-      if (localStorage.getItem(CACHE_HASH) === h.pinHash) putBack();
+      if (pinCache.getItem(CACHE_HASH) === h.pinHash) putBack();
     } catch { /* */ }
   };
 }
@@ -241,16 +256,16 @@ export function pinChangeNeedsWrap(
  * true for a valid PIN under a hash at the older count, and nothing acts on it
  * yet: a rehash saved here would be pushed over a newer secret another device
  * set before this one pulled it, so it waits on a guard in the settings push.
- * Spec: ops/docs/plans/app-lock-passcode.md (section 10)
+ * Spec: docs/internal/plans/app-lock-passcode.md (section 10)
  */
 export async function verifyPin(pin: string): Promise<{ valid: boolean; needsRehash: boolean }> {
   let saltB64: string | null;
   let hashB64: string | null;
   let iterStr: string | null;
   try {
-    saltB64 = localStorage.getItem(CACHE_SALT);
-    hashB64 = localStorage.getItem(CACHE_HASH);
-    iterStr = localStorage.getItem(CACHE_ITERATIONS);
+    saltB64 = pinCache.getItem(CACHE_SALT);
+    hashB64 = pinCache.getItem(CACHE_HASH);
+    iterStr = pinCache.getItem(CACHE_ITERATIONS);
   } catch {
     return { valid: false, needsRehash: false };
   }
@@ -272,7 +287,7 @@ export async function verifyPin(pin: string): Promise<{ valid: boolean; needsReh
   const altIterations = storedIterations === ITERATIONS ? LEGACY_ITERATIONS : ITERATIONS;
   if (constantTimeEqual(await derive(pin, salt, altIterations), expected)) {
     // Fix the stale cache so this only costs one extra derive once.
-    try { localStorage.setItem(CACHE_ITERATIONS, String(altIterations)); } catch { /* */ }
+    try { pinCache.setItem(CACHE_ITERATIONS, String(altIterations)); } catch { /* */ }
     return { valid: true, needsRehash: altIterations < ITERATIONS };
   }
 

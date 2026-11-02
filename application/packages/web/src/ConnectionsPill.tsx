@@ -17,7 +17,7 @@ const ConnectionsPanel = lazy(() => import('./ConnectionsPanel').then((m) => ({ 
  * takes itself away when it has nothing to say, so a note with no links
  * shows nothing. Open, it becomes the panel in the same place, as the outline
  * does; the editor keeps one panel open at a time.
- * Spec: ops/issues/0351.md (Spec)
+ * Spec: docs/internal/issues/0351.md (Spec)
  */
 export function ConnectionsPill({
   note,
@@ -72,7 +72,7 @@ export function ConnectionsPill({
   if (!open) {
     return (
       <EditorSlotPill label={t('connections.title')} keys={keyText('connections')} onClick={() => onOpenChange(true)} tabIndex={tabIndex}>
-        <Graph size={17} />
+        <Graph />
       </EditorSlotPill>
     );
   }

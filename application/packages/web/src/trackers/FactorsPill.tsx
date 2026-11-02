@@ -18,7 +18,7 @@ const STARTER_FACTORS = ['work', 'family', 'travel', 'holiday', 'deadline', 'cel
  * "travel". A chip is on or off. The list itself is kept in one place, the
  * Factors tab of the tracker setup: the gear link opens it, as the Habits
  * pill's link opens its questions, so the panel stays a row of chips.
- * Spec: ops/issues/0439.md (Spec), ops/docs/plans/mood-tracking-landscape.md (proposal 4)
+ * Spec: docs/internal/issues/0439.md (Spec), docs/internal/plans/mood-tracking-landscape.md (proposal 4)
  */
 export function FactorsPill({
   value,
@@ -66,9 +66,9 @@ export function FactorsPill({
           <button
             type="button"
             onClick={onEditFactors}
-            className="-mt-3 self-start inline-flex items-center gap-1.5 text-[12px] font-medium text-accent hover:underline"
+            className="-mt-3 self-start inline-flex items-center gap-1.5 text-small font-medium text-accent hover:underline"
           >
-            <Gear size={14} aria-hidden="true" />
+            <Gear aria-hidden="true" />
             {t('factors.editList')}
           </button>
         )}
@@ -91,7 +91,7 @@ export function FactorsPill({
           </div>
         )}
         {live.length === 0 && (
-          <span className="text-[11px] text-pn-muted">{t('factors.pillEmpty')}</span>
+          <span className="text-meta text-pn-muted">{t('factors.pillEmpty')}</span>
         )}
       </div>
     </PillShell>

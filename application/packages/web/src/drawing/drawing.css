@@ -1,0 +1,277 @@
+/* The drawing canvas in the app's theme. Excalidraw draws its menus,
+   toolbars and dialogs from these variables; each one here points at a
+   token of the app's theme, so the canvas follows every theme in light and
+   dark. Colours and the font only: no size, spacing or shape changes. The
+   drawing itself (the scene's own colours) is not touched.
+   `.excalidraw.excalidraw` matches Excalidraw's `.excalidraw.theme--dark`
+   in weight and comes after it, so one block serves both modes.
+   Spec: docs/internal/specs/drawing.md (section 3) */
+.excalidraw.excalidraw {
+  --ui-font: var(--font-sans);
+  --color-primary: var(--color-accent);
+  --color-primary-darker: var(--color-accent-strong);
+  --color-primary-darkest: var(--color-accent-strong);
+  --color-primary-hover: var(--color-accent-strong);
+  --color-primary-light: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  --color-brand-hover: var(--color-accent-strong);
+  --color-brand-active: var(--color-accent-strong);
+  --color-on-primary-container: var(--color-accent-strong);
+  --color-surface-primary-container: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  --color-surface-high: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  --color-surface-mid: var(--color-track);
+  --color-surface-low: var(--color-track);
+  --color-surface-lowest: var(--color-surface-2);
+  --color-on-surface: var(--color-pn);
+  --text-primary-color: var(--color-pn);
+  --color-muted: var(--color-pn-muted);
+  --island-bg-color: var(--color-surface-2);
+  --popup-bg-color: var(--color-surface-2);
+  --sidebar-bg-color: var(--color-surface-2);
+  --input-bg-color: var(--color-surface-1);
+  --default-border-color: var(--color-divider);
+  --dialog-border-color: var(--color-divider);
+  --sidebar-border-color: var(--color-divider);
+  --input-border-color: var(--color-divider);
+  --color-border-outline-variant: var(--color-divider);
+  --select-highlight-color: var(--color-accent);
+  --focus-highlight-color: color-mix(in srgb, var(--color-accent) 30%, transparent);
+  --link-color: var(--color-accent);
+  /* Written out from the app's tokens: Excalidraw names its own colours
+     the same, so `var(--color-danger)` here would point at itself. */
+  --color-danger: rgb(var(--pn-danger));
+  --color-warning: rgb(var(--pn-warning));
+  --color-success: rgb(var(--pn-success));
+  /* Panels and menus take the app's Popover shape (rounded-lg, the
+     Tailwind shadow-lg the app's menus wear). */
+  --border-radius-lg: var(--radius-lg);
+  --shadow-island: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* The app's popover border on the Excalidraw panels that stay (the shape
+   properties, its dialogs). */
+.excalidraw .Island {
+  border: 1px solid var(--color-divider);
+}
+
+/* Excalidraw's tool island holds the hint ("To move canvas, hold ..."), so
+   the island stays without its tools or its panel look, and the hint wears
+   the app's help text, readable, where Excalidraw drew it ghosted. The
+   tools are the app's toolbar (DrawingToolbar.tsx). */
+.excalidraw .App-toolbar-container .App-toolbar {
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+.excalidraw .App-toolbar-container .App-toolbar > :not(.HintViewer) {
+  display: none;
+}
+/* The hint hangs under the island, which is empty now and sits at the
+   canvas's centre: centre the hint on that point, as wide as its text, and
+   let it wrap only where the canvas is narrower (the canvas is the size
+   container, for `cqi` here and `cqh` in the phone panel; it takes its size
+   from the pane, never from what it holds). The phone layout and a touch-only screen show no
+   hint: Excalidraw puts it where the app's toolbar replaced its tools, and
+   its text names keys (Enter, Ctrl and an arrow). */
+.excalidraw {
+  container-type: size;
+}
+.excalidraw .HintViewer {
+  left: 50%;
+  width: max-content;
+  max-width: calc(100cqi - 2rem);
+  padding-right: 0;
+  color: var(--color-pn-muted);
+  font-size: var(--fs-help);
+  transform: translateX(-50%);
+}
+.excalidraw.excalidraw--mobile .HintViewer {
+  display: none;
+}
+@media (hover: none) and (pointer: coarse) {
+  .excalidraw .HintViewer {
+    display: none;
+  }
+}
+
+/* The shape panel (stroke, background, widths, layers) in the app's parts.
+   Excalidraw sets the panel's button colours on the panel itself, in a rule
+   as heavy as `.excalidraw.theme--dark.excalidraw .App-menu__left`, so this
+   selector is one class heavier.
+   - Option buttons are the toolbar's (`ToolbarBtn`): 32px, rounded-md,
+     clear at rest, the hover wash, the accent tint when on.
+   - Labels are the form label (`FieldLabel`): small, medium, muted.
+   - Swatches are the app's (`ColorSwatch`): round, the divider rim, the
+     accent ring when picked, no key letter inside (the keys still work). Excalidraw's dark-mode filter on a swatch
+     stays: it shows the colour as the dark canvas draws it.
+   - The opacity slider fills in the accent on the app's track. */
+.excalidraw.excalidraw.excalidraw.excalidraw :is(.App-menu__left, .App-mobile-menu) {
+  --button-bg: transparent;
+  --button-border: transparent;
+  --button-color: var(--color-pn-soft);
+  --button-hover-bg: color-mix(in srgb, var(--color-pn) 10%, transparent);
+  --button-hover-border: transparent;
+  --button-hover-color: var(--color-pn-soft);
+  --button-active-bg: color-mix(in srgb, var(--color-pn) 10%, transparent);
+  --button-active-border: transparent;
+  --button-selected-bg: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  --button-selected-border: transparent;
+  --button-selected-hover-bg: color-mix(in srgb, var(--color-accent) 25%, transparent);
+  --color-slider-track: var(--color-accent);
+  --color-slider-thumb: var(--color-accent);
+}
+.excalidraw .panelColumn .buttonList :is(label, button, .zIndexButton) {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+}
+.excalidraw .panelColumn .buttonList :is(label, button, .zIndexButton).active svg {
+  color: var(--color-accent-strong);
+}
+.excalidraw .panelColumn :is(h3, legend, .control-label) {
+  color: var(--color-pn-muted);
+  font-size: var(--fs-small);
+  font-weight: 500;
+}
+/* Doubled class: one size for every swatch, over Excalidraw's larger
+   current-colour and large swatches. */
+.excalidraw .color-picker__button.color-picker__button {
+  --radius: 9999px;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-color: var(--color-divider);
+  transition: transform 150ms;
+}
+@media (hover: hover) {
+  .excalidraw .color-picker__button:hover {
+    transform: scale(1.1);
+  }
+}
+.excalidraw .color-picker__button:hover::after,
+.excalidraw .color-picker__button__hotkey-label {
+  display: none;
+}
+.excalidraw .color-picker__button.active .color-picker__button-outline {
+  inset: 0;
+  box-shadow: 0 0 0 1px var(--island-bg-color), 0 0 0 3px var(--color-accent);
+  filter: none;
+}
+.excalidraw .range-input {
+  --button-bg: var(--color-track);
+}
+/* The swatch row keeps the app's swatch gap (gap-1.5), so a picked ring
+   never touches its neighbour; the row's columns fit the app's swatch, and
+   the wide layout's panel is 1rem wider to hold it. */
+.excalidraw .color-picker__top-picks {
+  gap: 0.375rem;
+}
+.excalidraw .color-picker-container {
+  grid-template-columns: auto 1rem 1.5rem;
+  max-width: none;
+}
+.excalidraw .App-menu__left {
+  width: 13.5rem;
+}
+/* Excalidraw's phone layout lets the shape panel grow over the whole
+   canvas; it keeps to the lower part, so the shape being styled shows:
+   45% of the canvas, at least 10rem where the canvas is short (a phone on
+   its side), and never taller than the canvas with the bar's own padding
+   (3rem). */
+.excalidraw .App-bottom-bar .App-mobile-menu {
+  max-height: min(calc(100cqh - 3rem), max(45cqh, 10rem));
+}
+.excalidraw .App-bottom-bar {
+  top: auto;
+}
+
+/* Excalidraw's right-click (long-press) menu as the app's ContextMenu:
+   the panel (py-1, rounded-md, the divider rim, surface-2 at 95% behind a
+   blur, shadow-xl, compact text and body text on a touch screen), its
+   rules, its rows (px-3, py-1.5 and py-2.5 under a finger) and the hovered
+   row's accent band. The Delete row keeps Excalidraw's own red. */
+.excalidraw .context-menu {
+  margin: 0;
+  padding: 0.25rem 0;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  background-color: color-mix(in srgb, var(--color-surface-2) 95%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  font-size: var(--fs-compact);
+}
+@media (hover: none) {
+  .excalidraw .context-menu {
+    font-size: var(--fs-body);
+  }
+  .excalidraw .context-menu .context-menu-item {
+    padding-block: 0.625rem;
+  }
+}
+.excalidraw .context-menu-item-separator {
+  margin: 0.25rem 0;
+  border-top-color: var(--color-divider);
+}
+.excalidraw .context-menu .context-menu-item {
+  padding: 0.375rem 0.75rem;
+  color: var(--color-pn);
+}
+.excalidraw .context-menu-item .context-menu-item__shortcut {
+  color: var(--color-pn-muted);
+  font-size: var(--fs-meta);
+  opacity: 1;
+}
+.excalidraw .context-menu .context-menu-item:hover {
+  background-color: var(--color-accent-fill);
+  color: #fff; /* theme-ok: on the accent band, as the app's menu */
+}
+.excalidraw .context-menu-item:hover .context-menu-item__shortcut {
+  color: inherit;
+}
+
+/* Removes, never restyles: Excalidraw has no setting for these. The
+   actions behind the menu rows are also off by name in DrawingCanvas.tsx
+   (`canvasActions`), which takes their keys; Excalidraw's right-click menu
+   does not read that list, so its rows go here.
+   - The library (the shelf of reusable shapes) has no storage of ours, so it
+     emptied on every close: its button, its "Browse libraries" link (which
+     opens libraries.excalidraw.com with this origin and a token in the
+     address) and its "Add to library" row.
+   - Excalidraw's Help (its corner button, its links to Excalidraw's
+     documentation, blog, GitHub and YouTube): the menu's Hotkeys row opens
+     the app's own list, which holds the drawing keys.
+   - Excalidraw's tool island, main menu, zoom box and undo box, and in its
+     phone layout its side tools and the tool row of its bottom bar (the
+     bar stays for the shape panel, which the toolbar's Style button
+     opens): the app's
+     toolbar (DrawingToolbar.tsx) holds every one of their actions, the frame
+     and the laser pointer included. The extra tools menu goes with them (its
+     web embed is blocked and its Mermaid is stubbed out of the build).
+   - Excalidraw's own zen mode, view mode and stats: the app has a zen mode
+     and a read-only lock of its own, and the stats are for developers.
+   - Copy element link (an address on Excalidraw's model, meaningless here)
+     and Copy as SVG (its font subsetter needs WebAssembly, which the
+     content security policy blocks).
+   Spec: docs/internal/specs/drawing.md (section 3) */
+.excalidraw .default-sidebar-trigger,
+.excalidraw .library-menu-browse-button,
+.excalidraw .HelpDialog__header,
+.excalidraw .help-icon,
+.excalidraw .App-toolbar__extra-tools-trigger,
+.excalidraw .main-menu-trigger,
+.excalidraw .layer-ui__wrapper__footer-left,
+.excalidraw .mobile-misc-tools-container,
+.excalidraw .App-bottom-bar footer.App-toolbar,
+.excalidraw .App-bottom-bar:not(:has(.App-mobile-menu)),
+.excalidraw .context-menu li[data-testid='addToLibrary'],
+.excalidraw .context-menu li[data-testid='zenMode'],
+.excalidraw .context-menu li[data-testid='viewMode'],
+.excalidraw .context-menu li[data-testid='stats'],
+.excalidraw .context-menu li[data-testid='copyElementLink'],
+.excalidraw .context-menu li[data-testid='copyAsSvg'] {
+  display: none;
+}
+
+/* Excalidraw's own tooltip box (it hangs off the page's body): the app's
+   tooltip takes its place (DrawingTips.tsx). */
+.excalidraw-tooltip {
+  display: none;
+}

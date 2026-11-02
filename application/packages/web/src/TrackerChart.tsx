@@ -7,7 +7,7 @@ import type { ChartSpec, TrackerValue } from './wellnessTypes';
  * One chart for every tracker: bars, a line, dots or a calendar, all drawn
  * from `chartGeometry`. A time axis runs left to right in every locale, so
  * the container is a forced-LTR island.
- * Spec: ops/docs/archive/wellness-statistics.md (section 6)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 6)
  */
 
 const defaultFormat = (v: TrackerValue | number | undefined): string =>
@@ -137,7 +137,7 @@ export function TrackerChart({ spec, height, ariaLabel, onPickDay, average, form
       </svg>
       {hit && (
         <div
-          className="pointer-events-none absolute top-0 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap bg-surface-2 border border-divider text-xs text-pn rounded px-2 py-1"
+          className="pointer-events-none absolute top-0 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap bg-surface-2 border border-divider text-small text-pn rounded px-2 py-1"
           style={{ left: Math.min(Math.max(tipX, 48), Math.max(48, width - 48)) }}
         >
           <span className="text-pn-muted">{formatDay(hit.date, 'date')}</span>{' '}

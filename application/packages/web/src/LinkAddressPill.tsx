@@ -83,7 +83,7 @@ export function LinkAddressPill({ rootRef }: { rootRef: RefObject<HTMLDivElement
     <div
       aria-hidden="true"
       dir="ltr"
-      className={`pointer-events-none fixed z-50 truncate border-t border-divider bg-surface-2 px-2 py-0.5 text-[11px] leading-4 text-pn-muted [@media(hover:none)]:hidden ${shown.rtl ? 'border-l rounded-tl-md' : 'border-r rounded-tr-md'}`} // rtl-ok: physical sides of an always-LTR pill, chosen by the pane's direction
+      className={`pointer-events-none fixed z-50 truncate border-t border-divider bg-surface-2 px-2 py-0.5 text-meta leading-4 text-pn-muted [@media(hover:none)]:hidden ${shown.rtl ? 'border-l rounded-tl-md' : 'border-r rounded-tr-md'}`} // rtl-ok: physical sides of an always-LTR pill, chosen by the pane's direction
       style={{
         bottom: shown.bottom,
         maxWidth: Math.max(0, width * 0.75),

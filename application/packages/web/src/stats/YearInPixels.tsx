@@ -25,7 +25,7 @@ function paintedColor(el: Element | null, fallback: string): string {
  * mood series of the chosen year, never the entries; a tap opens the day. The
  * picture it saves carries no title and no name, so it can be shared as it
  * is: a reader sees colors and nothing else.
- * Spec: ops/docs/archive/wellness-statistics.md (section 8)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 8)
  */
 export function YearInPixels({ model, onOpenDay }: { model: WellnessModel; onOpenDay?: (date: string) => void }) {
   const { t } = useTranslation('stats');
@@ -99,8 +99,8 @@ export function YearInPixels({ model, onOpenDay }: { model: WellnessModel; onOpe
   return (
     <div data-setting="stats.yearInPixels" className="@container">
       <div className="flex items-center justify-between mb-2 gap-2">
-        <SectionEyebrow icon={GridFour}>{t('wellness.pixels.heading')}</SectionEyebrow>
-        <div className="flex items-center gap-1 text-xs">
+        <SectionEyebrow icon={GridFour}>{t('common:ninja.features.yearInPixels.label')}</SectionEyebrow>
+        <div className="flex items-center gap-1 text-small">
           <button
             type="button"
             aria-label={t('wellness.pixels.prevYear')}
@@ -108,7 +108,7 @@ export function YearInPixels({ model, onOpenDay }: { model: WellnessModel; onOpe
             onClick={() => setPicked(years[index - 1]!)}
             className="p-1 rounded text-pn-muted hover:text-pn disabled:opacity-30 disabled:hover:text-pn-muted"
           >
-            <CaretLeft size={14} />
+            <CaretLeft />
           </button>
           <span className="tabular-nums font-medium min-w-[3ch] text-center">{year}</span>
           <button
@@ -118,7 +118,7 @@ export function YearInPixels({ model, onOpenDay }: { model: WellnessModel; onOpe
             onClick={() => setPicked(years[index + 1]!)}
             className="p-1 rounded text-pn-muted hover:text-pn disabled:opacity-30 disabled:hover:text-pn-muted"
           >
-            <CaretRight size={14} />
+            <CaretRight />
           </button>
         </div>
       </div>
@@ -130,7 +130,7 @@ export function YearInPixels({ model, onOpenDay }: { model: WellnessModel; onOpe
         aria-label={t('wellness.pixels.aria', { year })}
       >
         {grid.flatMap((column, m) => [
-          <span key={`l${m}`} className="text-[11px] text-pn-muted leading-none">{months[m]}</span>,
+          <span key={`l${m}`} className="text-meta text-pn-muted leading-none">{months[m]}</span>,
           ...column.map((cell, d) => (cell ? cellOf(cell) : <div key={`${m}-${d}`} aria-hidden="true" />)),
         ])}
       </div>
@@ -138,7 +138,7 @@ export function YearInPixels({ model, onOpenDay }: { model: WellnessModel; onOpe
       <div className="@xl:hidden mx-auto w-full max-w-[220px]">
         <div className="grid grid-cols-12 gap-[3px] mb-1">
           {months.map((m, i) => (
-            <span key={i} className="text-center text-[9px] text-pn-muted leading-none">{m}</span>
+            <span key={i} className="text-center text-meta text-pn-muted leading-none">{m}</span>
           ))}
         </div>
         <div
@@ -151,12 +151,12 @@ export function YearInPixels({ model, onOpenDay }: { model: WellnessModel; onOpe
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 mt-2">
-        <span className="text-[11px] text-pn-muted">{onOpenDay ? t('wellness.pixels.hintTap') : t('wellness.pixels.hint')}</span>
-        <button type="button" onClick={saveImage} className="px-3 py-1.5 rounded-md text-xs font-medium border border-divider hover:bg-surface-1 transition-colors">
+        <span className="text-small text-pn-muted">{onOpenDay ? t('wellness.pixels.hintTap') : t('wellness.pixels.hint')}</span>
+        <button type="button" onClick={saveImage} className="px-3 py-1.5 rounded-md text-small font-medium border border-divider hover:bg-surface-1 transition-colors">
           {t('wellness.pixels.saveImage')}
         </button>
       </div>
-      {saveFailed && <p className="mt-2 text-xs text-danger">{t('wellness.export.saveFailed')}</p>}
+      {saveFailed && <p className="mt-2 text-small text-danger">{t('wellness.export.saveFailed')}</p>}
       <span ref={surfaceProbe} className="hidden bg-surface-2" aria-hidden="true" />
       <span ref={emptyProbe} className="hidden bg-track" aria-hidden="true" />
     </div>

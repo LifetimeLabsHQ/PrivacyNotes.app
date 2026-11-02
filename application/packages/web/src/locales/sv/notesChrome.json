@@ -1,6 +1,4 @@
 {
-  "dismiss": "Avfärda",
-  "close": "Stäng",
   "moveBanner": {
     "bodySignIn": "Logga in där med din återställningsfras eller via ”{{scanQr}}”.",
     "cta": "Flytta nu",
@@ -49,7 +47,7 @@
   },
   "signOutConfirm": {
     "title": "Har du sparat din fras på 12 ord?",
-    "body": "Din fras är den <only>enda</only> vägen tillbaka. Ingen återställning via e-post, ingen supportlinje. Vi vet inte vem du är, helt avsiktligt. Om du inte har skrivit ner den än, tryck på <action>Nej, visa frasen</action> så öppnar vi den åt dig direkt.",
+    "body": "Din fras är den <only>enda</only> vägen tillbaka. Ingen återställning via e-post, ingen supportlinje. Om du inte har skrivit ner den än, tryck på <action>Nej, visa frasen</action> så öppnar vi den åt dig direkt.",
     "unsyncedWarn_one": "1 anteckning på den här enheten har inte synkats än. Den går förlorad för alltid om den inte kan laddas upp när du loggar ut.",
     "unsyncedWarn_other": "{{count}} anteckningar på den här enheten har inte synkats än. De går förlorade för alltid om de inte kan laddas upp när du loggar ut.",
     "unsyncedKept_one": "1 anteckning på den här enheten har inte synkats än. Den stannar på enheten och synkas när du loggar in igen.",
@@ -73,6 +71,12 @@
     "moreNotes": "och {{count}} till",
     "appLockHint": "Delad enhet? Slå på applåset under Inställningar > Säkerhet."
   },
+  "signOutUpload": {
+    "uploading": "Laddar upp dina senaste ändringar…",
+    "title": "Vissa ändringar är inte uppladdade än",
+    "body": "Om du loggar ut nu går ändringar som gjorts på den här enheten sedan senaste synk förlorade. Anslut till internet för att behålla dem.",
+    "signOutAnyway": "Logga ut ändå"
+  },
   "burnShareModal": {
     "title": "Dela och bränn efter läsning",
     "body": "<lead>Din ursprungliga anteckning raderas inte.</lead> Den ligger kvar tryggt på ditt konto. Burn-länken är en separat krypterad kopia som självförstörs efter att den lästs.",
@@ -90,17 +94,15 @@
     "afterDays_other": "Efter {{count}} dagar",
     "create": "Skapa och kopiera länk",
     "share": "Dela länk",
-    "imagesStripped": "Bara text visas, filer döljs i den här anteckningen.",
-    "copied": "Kopierad"
+    "imagesStripped": "Bara text visas, filer döljs i den här anteckningen."
   },
   "burnView": {
     "title": "Bränn efter läsning",
     "tagline": "Krypterad. Flyktig. Endast för dina ögon.",
     "toggleTheme": "Växla tema",
-    "checking": "Kontrollerar...",
     "revealing": "Hämtar och dekrypterar...",
     "goToApp": "Gå till <brand/>",
-    "footerTagline": "- Zero-knowledge-krypterade anteckningar, med servrar i Schweiz.",
+    "footerTagline": "- Krypterade anteckningar, med servrar i Schweiz.",
     "sealed": {
       "heading": "Du har fått en krypterad anteckning.",
       "subheading": "Det här meddelandet självförstörs efter läsning. Olästa länkar går ut av sig själva.",
@@ -138,5 +140,19 @@
     "demo": "Burn-länkar lagras på en server, och demoläget kontaktar aldrig någon server. Skapa ett konto för att göra riktiga burn-länkar.",
     "tooLarge": "Anteckningen är för stor för att delas via burn-länk ({{size}} KB). Max är {{max}} KB.",
     "storeFailed": "Kunde inte lagra burn note på servern."
+  },
+  "dms": {
+    "returnTitle": "Din kopia på servern har raderats",
+    "returnBody_one": "Ditt död mans grepp raderade dina anteckningar från servern den {{date}}. Den här enheten har fortfarande {{count}} anteckning. Ladda ner en säkerhetskopia om du vill behålla den och radera den sedan från den här enheten.",
+    "returnBody_other": "Ditt död mans grepp raderade dina anteckningar från servern den {{date}}. Den här enheten har fortfarande {{count}} anteckningar. Ladda ner en säkerhetskopia om du vill behålla dem och radera dem sedan från den här enheten.",
+    "returnBackup": "Ladda ner en säkerhetskopia",
+    "returnDelete": "Radera från den här enheten"
+  },
+  "massDelete": {
+    "title": "Anteckningar raderade på en annan enhet",
+    "body_other": "Du, eller en annan av dina enheter, raderade {{count}} anteckningar som den här enheten har kvar. Om det var du kan du radera dem här också. Om det inte var du kan någon ha åtkomst till ditt konto: behåll dem för att lägga tillbaka dem på alla dina enheter.",
+    "keep": "Behåll mina anteckningar",
+    "delete": "Radera dem här också",
+    "body_one": "Du, eller en annan av dina enheter, raderade {{count}} anteckning som den här enheten har kvar. Om det var du kan du radera den här också. Om det inte var du kan någon ha åtkomst till ditt konto: behåll den för att lägga tillbaka den på alla dina enheter."
   }
 }

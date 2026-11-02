@@ -35,7 +35,7 @@ import { installedByStore } from './androidInstaller';
  * (Zapstore, Obtainium), and those installs get the floor report but no
  * prompt - androidInstaller.ts is what tells them apart.
  *
- * Spec: ops/docs/android-update-check.md
+ * Spec: docs/internal/android-update-check.md
  */
 const IS_DIRECT_APK =
   detectPlatform() === 'android' && import.meta.env.VITE_ANDROID_DIST === 'direct';

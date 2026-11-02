@@ -8,7 +8,7 @@ export const SLOT_PILL_WIDTH = 34;
 export const SLOT_PILL_HEIGHT = 36;
 
 /** A count in a slot panel: in its header, or beside a group. */
-export const SLOT_BADGE = 'rounded-full bg-pn/10 px-1.5 text-[11px] leading-4 tabular-nums text-pn-muted';
+export const SLOT_BADGE = 'rounded-full bg-pn/10 px-1.5 text-meta leading-4 tabular-nums text-pn-muted';
 
 /**
  * A control in the editor's top-right slot, the strip that floats over the
@@ -28,7 +28,7 @@ export const SLOT_BADGE = 'rounded-full bg-pn/10 px-1.5 text-[11px] leading-4 ta
  * not reached for, and the slot's own zero-height sticky wrapper is a poor
  * host for one. The label is inside the pill, so it pushes rather than
  * covers.
- * Spec: ops/docs/archive/ui-patterns.md (section 80)
+ * Spec: docs/internal/design/ui-patterns.md (section 80)
  */
 export function EditorSlotPill({
   label,
@@ -61,7 +61,7 @@ export function EditorSlotPill({
       onClick={onClick}
       aria-label={label}
       aria-pressed={active}
-      className={`group pointer-events-auto mt-1 flex items-center h-8 overflow-hidden rounded-lg border shadow-lg text-sm active:scale-95 transition outline-none ${
+      className={`group pointer-events-auto mt-1 flex items-center h-8 overflow-hidden rounded-lg border shadow-lg text-body active:scale-95 transition outline-none ${
         // Every state keeps an OPAQUE surface: the pill sits on the note's
         // own text, which reads straight through a translucent tint such as
         // `bg-accent/10` or `bg-pn/10`. ON says so with the border and the
@@ -100,7 +100,7 @@ export function EditorSlotPill({
 
 /** Row classes for a list inside `EditorSlotPanel`: an inset, rounded row. */
 export const SLOT_PANEL_ROW =
-  'flex w-full items-center gap-2 rounded-md py-1.5 text-start text-sm transition outline-none [@media(hover:hover)]:hover:bg-pn/5 focus-visible:bg-pn/10';
+  'flex w-full items-center gap-2 rounded-md py-1.5 text-start text-body transition outline-none [@media(hover:hover)]:hover:bg-pn/5 focus-visible:bg-pn/10';
 
 /**
  * An open panel in the editor's corner slot: the outline and the
@@ -108,7 +108,7 @@ export const SLOT_PANEL_ROW =
  * an opaque surface over the note text - and the two share one frame so the
  * corner never shows two looks. An open panel always goes last in the row,
  * into the corner, so the closed pills stay together to its left.
- * Spec: ops/docs/archive/ui-patterns.md (section 80)
+ * Spec: docs/internal/design/ui-patterns.md (section 80)
  */
 export function EditorSlotPanel({
   panelRef,
@@ -144,7 +144,7 @@ export function EditorSlotPanel({
     >
       <div className="flex items-center gap-2 ps-3 pe-1.5 py-1.5 border-b border-divider">
         <span className="flex shrink-0 text-accent">{icon}</span>
-        <span className="text-sm font-semibold text-pn">{title}</span>
+        <span className="text-body font-semibold text-pn">{title}</span>
         {count !== undefined && <span className={SLOT_BADGE}>{count}</span>}
         <div className="flex-1" />
         <HoverLabel label={closeLabel} keys={closeKeys} position="start">
@@ -154,7 +154,7 @@ export function EditorSlotPanel({
             aria-label={closeLabel}
             className="flex items-center justify-center w-6 h-6 rounded-md text-pn-muted [@media(hover:hover)]:hover:bg-pn/10 [@media(hover:hover)]:hover:text-pn active:scale-95 transition shrink-0 outline-none"
           >
-            <X size={14} />
+            <X />
           </button>
         </HoverLabel>
       </div>

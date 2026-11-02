@@ -11,7 +11,7 @@ import { asNeededOn, doseLogId, dosesOf, firstRepeatDay, isLiveOn } from './medi
  * and a desktop ring only where the person switched it on. Each dose with a
  * time becomes one item of the reminder plan in useReminders. The text never
  * names the medication.
- * Spec: ops/docs/mood-wellness-tracker.md section 6.7
+ * Spec: docs/internal/mood-wellness-tracker.md section 6.7
  */
 
 /** The prefix of a medication reminder's item id: `medication:<templateId>:<doseId>`. */

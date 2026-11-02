@@ -171,20 +171,20 @@ export function ReplaceBar({ editor, focusTick, startQuery, onSwap, swapPro = fa
   return (
     <div className="pointer-events-auto mt-1 ms-2 me-2 flex flex-1 min-w-0 sm:flex-none sm:w-[22rem] flex-col gap-1 rounded-lg border border-divider bg-surface-1 shadow-lg px-1.5 py-1">
       <div className="flex items-center gap-0.5">
-        <MagnifyingGlass size={15} className={iconCls} />
+        <MagnifyingGlass className={iconCls} />
         <input
           ref={searchRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={onSearchKeyDown}
-          placeholder={t('find.placeholder')}
-          aria-label={t('find.label')}
+          placeholder={t('common:palette.commands.find')}
+          aria-label={t('common:palette.commands.find')}
           spellCheck={false}
           autoComplete="off"
           className={BAR_INPUT}
         />
-        <HoverLabel label={t('find.caseSensitiveTitle')} position="below">
+        <HoverLabel label={t('editor:find.caseSensitive')} position="below">
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
@@ -193,13 +193,13 @@ export function ReplaceBar({ editor, focusTick, startQuery, onSwap, swapPro = fa
             aria-label={t('find.caseSensitive')}
             className={`${BAR_BTN}${caseSensitive ? ' bg-pn/10 text-accent' : ''}`}
           >
-            <TextAa size={15} />
+            <TextAa />
           </button>
         </HoverLabel>
         <MatchNav count={count} noHits={noHits} canStep={info.total > 0} onStep={go} />
         <ReplaceToggle open pro={swapPro} onClick={() => onSwap(query)} />
         <div className="w-px h-5 bg-divider mx-0.5 shrink-0" aria-hidden="true" />
-        <HoverLabel label={t('find.closeReplaceTitle')} keys={keyText('findReplace')} position="below-end">
+        <HoverLabel label={t('common:actions.close')} keys={keyText('findReplace')} position="below-end">
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
@@ -207,12 +207,12 @@ export function ReplaceBar({ editor, focusTick, startQuery, onSwap, swapPro = fa
             aria-label={t('find.closeReplace')}
             className={BAR_BTN}
           >
-            <X size={15} />
+            <X />
           </button>
         </HoverLabel>
       </div>
       <div className="flex items-center gap-0.5">
-        <ArrowsLeftRight size={15} className={iconCls} />
+        <ArrowsLeftRight className={iconCls} />
         <input
           type="text"
           value={replacement}

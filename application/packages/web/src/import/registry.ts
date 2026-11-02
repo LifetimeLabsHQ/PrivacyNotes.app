@@ -18,6 +18,7 @@ import { simplenoteImporter } from './simplenote';
 import { parseBrowserBookmarks } from './browserBookmarks';
 import { parseVcard } from './vcard';
 import { parseGoogleCalendar } from './googleCalendar';
+import { parseExcalidraw } from './excalidraw';
 
 /**
  * Registry of available importers, keyed by id at every call site. Each
@@ -56,7 +57,7 @@ export const IMPORTERS: Importer[] = [
     label: 'Browser bookmarks',
     // Deliberately no sourceTag: the recreated folder tree already answers
     // "where did this come from", so an auto tag would only add noise.
-    // Spec: ops/docs/archive/bookmarks-pillar.md (import mapping)
+    // Spec: docs/internal/specs/bookmarks-pillar.md (import mapping)
     description:
       'Chrome, Firefox, Safari, or Edge - the bookmarks .html file from "Export bookmarks", or the .zip Safari writes. Folders come along, dates survive, and re-importing the same file skips what you already have.',
     accept: '.html,.htm,.zip',
@@ -68,7 +69,7 @@ export const IMPORTERS: Importer[] = [
     id: 'vcard',
     label: 'Contacts (vCard)',
     // No sourceTag: the groups on the phone arrive as tags already.
-    // Spec: ops/docs/archive/contacts-pillar.md (section 7.3, CATEGORIES become tags)
+    // Spec: docs/internal/specs/contacts-pillar.md (section 7.3, CATEGORIES become tags)
     description:
       'The .vcf file your phone or address book exports: iPhone and Mac through iCloud or Contacts, Android, Google Contacts. Every card comes across, photos included, and importing the same file twice skips the people you already have.',
     accept: '.vcf,.vcard',
@@ -80,13 +81,23 @@ export const IMPORTERS: Importer[] = [
     id: 'google-calendar',
     label: 'Google Calendar',
     // No sourceTag: each calendar arrives as a folder already.
-    // Spec: ops/docs/archive/google-calendar-import.md (section 4)
+    // Spec: docs/internal/specs/google-calendar-import.md (section 4)
     description:
       'The .zip from Settings > Import & export, or one .ics file. Events keep their times, repeats and reminders.',
     accept: '.ics,.zip',
     enabled: true,
     sourceTag: '',
     parse: parseGoogleCalendar,
+  },
+  {
+    id: 'excalidraw',
+    label: 'Excalidraw',
+    description:
+      'Drawings saved from excalidraw.com: one .excalidraw file, or several zipped together. Drawings from Obsidian\'s Excalidraw plugin work too, as .excalidraw.md files. Pictures inside a drawing come along.',
+    accept: '.excalidraw,.md,.zip',
+    enabled: true,
+    sourceTag: 'excalidraw',
+    parse: parseExcalidraw,
   },
   {
     id: 'evernote',

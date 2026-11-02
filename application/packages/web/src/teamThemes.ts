@@ -11,10 +11,10 @@
  * a check, or whose id another entry has, here or in the community list, or
  * whose name another theme of the same mode has. Each entry carries a
  * description for /themes, in the pattern the community descriptions follow
- * (ops/docs/community-themes.md, section 3); the build refuses one without.
+ * (docs/contrib/community-themes.md, section 3); the build refuses one without.
  *
  * Import-free: themes-page.ts loads this file on its own.
- * Spec: ops/docs/color-themes.md (section 6)
+ * Spec: docs/contrib/color-themes.md (section 6)
  */
 export interface TeamTheme {
   id: string;

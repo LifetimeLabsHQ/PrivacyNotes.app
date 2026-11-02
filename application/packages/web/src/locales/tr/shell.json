@@ -1,18 +1,14 @@
 {
   "pillars": {
-    "trash": "Çöp kutusu",
-    "bookmarks": "Yer imleri",
-    "contacts": "Kişiler"
+    "trash": "Çöp kutusu"
   },
   "tasksList": {
-    "title": "Görevler",
     "newTaskNote": "Yeni görev notu",
     "hideCompleted": "Tamamlanan görevleri gizle",
     "showCompleted": "Tamamlanan görevleri göster",
     "searchPlaceholder": "Görevlerde arayın…",
     "sortOptions": "Sıralama seçenekleri",
     "quickAddPlaceholder": "Hızlıca bir görev ekleyin",
-    "noMatches": "Eşleşme yok.",
     "itemsWithTasks": "Görevi olan öğeler",
     "allTasks": "Tüm görevler",
     "tasksFromOtherItems": "Diğer öğelerdeki görevler",
@@ -29,45 +25,27 @@
     "seeLess": "Daha azını gör"
   },
   "filesList": {
-    "title": "Dosyalar",
     "upload": "Yükle",
     "selectedOf": "{{total}} öğeden {{selected}} tanesi seçildi",
-    "deselectAll": "Tüm seçimi kaldır",
-    "selectAll": "Tümünü seç",
-    "storage": "Depolama",
     "perFile": "Dosya başına",
     "free": "Ücretsiz",
-    "upgradeToPro": "Pro'ya yükselt",
     "filterAll": "Tümü",
-    "filterImages": "Görseller",
     "filterAudio": "Ses",
     "filterFiles": "Dosyalar",
-    "sortOptions": "Sıralama seçenekleri",
     "searchPlaceholder": "Dosyalarda arayın…",
     "sortName": "Ad",
     "showNotesWithAttachments": "Diğer öğelerdeki dosyaları göster",
-    "noMatches": "Eşleşme yok.",
     "pinProtected": "PIN korumalı",
-    "readOnly": "Salt okunur",
     "noFilesYet": "Henüz dosya yok.",
     "noDocuments": "Belge yok.",
     "noImages": "Görsel yok.",
     "noAudioFiles": "Ses dosyası yok.",
     "emptyTypesHint": "Görseller, belgeler, ses, video ve zip dosyaları. Dosya başına {{max}} MB'a kadar.",
     "uploadFiles": "Dosya yükle",
-    "menuDeselect": "Seçimi kaldır",
-    "menuSelect": "Seç",
     "menuShow": "Göster",
     "menuAllFiles": "Tüm dosyalar",
-    "menuImages": "Görseller",
-    "menuAudio": "Ses",
     "menuDocuments": "Belgeler",
-    "menuHideNoteAttachments": "Diğer öğelerdeki dosyaları gizle",
-    "menuShowNoteAttachments": "Diğer öğelerdeki dosyaları göster",
-    "menuUnpin": "Sabitlemeyi kaldır",
-    "menuPin": "Sabitle",
-    "menuRename": "Yeniden adlandır",
-    "menuMoveToTrash": "Çöp kutusuna taşı"
+    "menuHideNoteAttachments": "Diğer öğelerdeki dosyaları gizle"
   },
   "vaultItem": {
     "badgeLogin": "Giriş",
@@ -78,7 +56,6 @@
     "untitledKey": "Başlıksız anahtar",
     "copied": "Kopyalandı!",
     "copyField": "{{label}} alanını kopyala",
-    "hide": "Gizle",
     "reveal": "Göster",
     "fieldUrl": "URL",
     "fieldUser": "Kullanıcı",
@@ -91,14 +68,11 @@
     "fieldLabel": "Etiket",
     "fieldPublic": "Genel",
     "fieldPrivate": "Özel",
-    "fieldTotp": "2FA kodu",
     "totpInvalid": "Geçersiz anahtar",
     "copyCode": "Kodu kopyala",
     "totpUnlockCta": "2FA kodlarını Pro ile aç",
     "totpProNote": "Anahtar kaydedilir ve eşitlenir. Yalnızca kod Pro gerektirir.",
     "copyAll": "URL, kullanıcı ve parolayı kopyala",
-    "open": "Aç",
-    "notesHeading": "Notlar",
     "fillOneField": "Kaydetmeden önce en az bir alanı doldurun.",
     "expiryNeedsBoth": "Son kullanma için hem ay hem yıl gerekir; ya da ikisini de boş bırakın.",
     "customField": "Özel alan",
@@ -128,20 +102,18 @@
   },
   "tagsRail": {
     "showAllItems": "Tüm öğeleri göster",
-    "changelog": "Changelog",
     "closeMenu": "Menüyü kapat",
-    "close": "Kapat",
     "views": "İçerik",
     "resizeSplit": "İçerik ile etiketler veya klasörler arasını yeniden boyutlandır",
     "sidebarOptions": "Kenar çubuğu seçenekleri",
     "showInSidebar": "Kenar çubuğunda göster",
     "allOptions": "Tümü görünümü seçenekleri",
     "showInAll": "Tümü'nde göster",
-    "viewList": "Liste",
-    "viewGrid": "Izgara",
     "viewAuto": "Otomatik",
     "allItemsTooltip": "Tüm notlar, günlükler ve kasa öğeleri",
     "allItems": "Tümü",
+    "dashboard": "Ana sayfa",
+    "dashboardTooltip": "Widget'larınıza bir bakış",
     "pinnedTooltip": "Sabitlenmiş öğeler",
     "pinned": "Sabitlenmiş",
     "archive": "Arşiv",
@@ -149,6 +121,7 @@
     "notes": "Notlar",
     "tasksTooltip": "Tüm notlardaki görevler",
     "tasks": "Görevler",
+    "drawings": "Çizimler",
     "vaultTooltip": "Girişler, kredi kartları ve anahtarlar",
     "vault": "Kasa",
     "filesTooltip": "Tüm dosyalar ve ekler",
@@ -156,7 +129,6 @@
     "journalsTooltip": "Günlük kayıtları",
     "journals": "Günlükler",
     "actionsForTag": "{{tag}} etiketi için işlemler",
-    "renameTag": "Yeniden adlandır",
     "removeFavorite": "Favorilerden çıkar",
     "markAsFavorite": "Favorilere ekle",
     "deleteTag": "Etiketi sil",
@@ -164,7 +136,6 @@
     "tags": "Etiketler",
     "sortTags": "Etiketleri sırala",
     "sort": "Sırala",
-    "sortBy": "Sıralama ölçütü",
     "sortEntries": "Kayıtlar",
     "sortName": "Ad",
     "sortCustom": "Özel",
@@ -175,11 +146,9 @@
     "createTag": "Yeni etiket",
     "untagged": "Etiketsiz",
     "trashTooltip": "Silinen öğeler",
-    "trash": "Çöp kutusu",
     "feedback": "Geri bildirim",
     "import": "İçe aktar",
     "downloads": "İndirmeler",
-    "help": "Yardım",
     "rate": "Puan ver",
     "markdown": "Markdown",
     "markdownTip": "Şifresiz",
@@ -205,7 +174,6 @@
     "deleteConfirmBranchNested": "\"{{folder}}\" ve alt klasörleri silinecek. İçindeki notlar \"{{parent}}\" klasörüne taşınır. Hiçbir not silinmez.",
     "deleteSubfolders_one": "Alt klasörünü de sil",
     "deleteSubfolders_other": "{{count}} alt klasörünü de sil",
-    "moveTo": "Klasöre taşı",
     "searchPlaceholder": "Klasörlerde arayın",
     "sortFolders": "Klasörleri sırala",
     "chipUnfiled": "Klasör",
@@ -226,7 +194,6 @@
     "seedTeam": "Ekip"
   },
   "collapsedSidebar": {
-    "newNote": "Yeni not",
     "expandSidebar": "Kenar çubuğunu genişlet"
   },
   "mobileHeader": {
@@ -241,26 +208,14 @@
     "colorFromTag": "Etiketten: #{{name}}",
     "colorOwnHint": "Burada seçilen renk bu notun arka planını doldurur. <setting>Klasör ve etiket renkleri</setting> bunu değiştirmez.",
     "details": "Ayrıntılar",
-    "readOnly": "Salt okunur",
     "readOnlyDescription": "Kapatana kadar düzenleme yapılamaz.",
     "protect": "Koru",
     "convertTo": "Dönüştür",
-    "typeNote": "Not",
     "typeJournal": "Günlük",
-    "typeTask": "Görev",
-    "unpin": "Sabitlemeyi kaldır",
-    "pin": "Sabitle",
-    "archive": "Arşivle",
-    "unarchive": "Arşivden çıkar",
     "burn": "Yak",
     "share": "Paylaş",
     "trash": "Çöp kutusu",
-    "duplicate": "Çoğalt",
-    "restore": "Geri yükle",
-    "deleteForever": "Kalıcı olarak sil",
-    "moveToFolder": "Klasöre taşı",
     "noteHistory": "Geçmiş",
-    "findReplace": "Bul ve değiştir",
     "uncheckAllTasks": "Tüm öğelerin işaretini kaldır",
     "deleteCheckedTasks": "İşaretli öğeleri sil",
     "sortTasksByStatus": "Öğeleri duruma göre sırala",
@@ -277,27 +232,17 @@
     "schedule": "Zamanlama",
     "ends": "Bitiş",
     "sameDay": "Aynı gün",
-    "allDay": "Tüm gün",
     "starts": "Başlangıç",
     "endsAt": "Bitiş saati",
     "noEnd": "Yok",
     "removeFromCalendar": "Takvimden kaldır",
     "makeEvent": "Tekrarlamak için <b>Etkinlik</b> türüne dönüştürün",
-    "typeEvent": "Etkinlik",
     "repeatRemoved": "Tekrar kaldırılır"
   },
   "selectionToolbar": {
-    "exitSelectionTooltip": "Seçimden çık",
     "exitSelection": "Seçimden çık",
-    "unpin": "Sabitlemeyi kaldır",
-    "pin": "Sabitle",
-    "archive": "Arşivle",
-    "unarchive": "Arşivden çıkar",
     "tag": "Etiketle",
     "export": "Dışa aktar",
-    "delete": "Sil",
-    "restore": "Geri yükle",
-    "deleteForever": "Kalıcı olarak sil",
     "more": "Diğer işlemler",
     "addTagPlaceholder": "Etiket ekleyin...",
     "noTagsFound": "Etiket bulunamadı",
@@ -320,6 +265,7 @@
     "showTags": "Klasörü ve etiketleri göster",
     "showCalendar": "Takvimi göster",
     "showCheckIn": "Günlük durumu göster",
+    "showMedication": "İlacı göster",
     "showWorkItems": "<b>İş</b> öğelerini göster",
     "showPersonalItems": "<b>Kişisel</b> öğeleri göster",
     "other": "Diğer",
@@ -342,7 +288,6 @@
     "moodCalendar": "Ruh hallerini takvimde göster"
   },
   "backfillPopover": {
-    "calendarLabel": "Günlük takvimi",
     "today": "Bugün",
     "chooseEntry": "{{date}} öğeleri"
   },
@@ -363,6 +308,7 @@
     "newNote": "Yeni not",
     "newTask": "Yeni görev",
     "newKanban": "Yeni Kanban panosu",
+    "newDrawing": "Yeni çizim",
     "newLogin": "Yeni giriş",
     "newJournal": "Yeni günlük",
     "newFile": "Yeni dosya",
@@ -388,32 +334,24 @@
     "duplicate": "Çoğalt",
     "moveToFolder": "Klasöre taşı",
     "exportAsMarkdown": "Markdown olarak dışa aktar",
-    "shareBurnAfterReading": "Paylaş ve okunduktan sonra yak",
     "exportAsHtml": "HTML olarak dışa aktar",
-    "printSaveAsPdf": "Yazdır / PDF olarak kaydet",
-    "moveToTrash": "Çöp kutusuna taşı",
-    "newBookmark": "Yeni yer imi",
     "newContact": "Yeni Kişi",
-    "openBookmark": "Aç",
     "copyBookmarkUrl": "URL'yi kopyala",
     "editBookmark": "Yer imini düzenle",
     "saveAsNote": "Not olarak kaydet",
-    "openClippedNote": "Notu aç",
     "openInTab": "Sekmede aç",
     "openInTabHint": "{{key}}-tıklama",
+    "openInTabHintMiddle": "Orta tıklama",
     "closeTab": "Sekmeyi kapat",
     "closeOtherTabs": "Diğer sekmeleri kapat",
     "closeAllTabs": "Tüm sekmeleri kapat",
     "pinTab": "Sekmeyi sabitle",
     "unpinTab": "Sekmenin sabitlemesini kaldır",
-    "newEvent": "Yeni etkinlik",
-    "quickAdd": "Hızlı ekle"
+    "newEvent": "Yeni etkinlik"
   },
   "demoBanner": {
     "title": "Risksiz deneyin",
-    "description": "Burada hiçbir şey kaydedilmez. Kendi şifreli defterinizi ücretsiz edinin.",
-    "cta": "Hesap oluştur",
-    "dismiss": "Kapat"
+    "description": "Burada hiçbir şey kaydedilmez. Kendi şifreli defterinizi ücretsiz edinin."
   },
   "markdown": {
     "title": "Markdown",
@@ -452,20 +390,17 @@
     "fileCount_other": "{{count}} dosya",
     "railFolders": "Markdown klasörleri",
     "railTags": "Markdown etiketleri",
-    "allFiles": "Tüm dosyalar",
     "modeRich": "Biçimlendirilmiş",
     "modeSource": "Markdown",
     "reopenPrompt": "Sayfa yeniden yüklendikten sonra tarayıcınız yeniden izin ister. Klasörünüz hatırlandığı için bu tek tıkla biter.",
     "reopenFolder": "{{name}} klasörünü yeniden aç",
     "new": "Yeni",
-    "delete": "Sil",
     "saveToNotes": "Notlarıma kaydet",
     "createFailed": "Dosya oluşturulamadı.",
     "deleteFailed": "Dosya çöp kutusuna taşınamadı.",
     "importedToast": "\"{{title}}\" şifreli notlarınıza kaydedildi. Özgün dosyaya dokunulmadı.",
     "deleteTitle": "Klasörün çöp kutusuna taşınsın mı?",
     "deleteBody": "\"{{name}}\" Markdown klasörünüzün içindeki bir .trash klasörüne taşınır. Fikrinizi değiştirirseniz dosya yöneticinizden geri alabilirsiniz.",
-    "deleteConfirm": "Çöp kutusuna taşı",
     "explainTitle": "Markdown klasörünüz",
     "explainDone": "Anladım",
     "bannerTitle": "Gelişmiş Markdown düzenleyici",
@@ -474,7 +409,6 @@
     "explainIntro": ".md ve .txt dosyalarından oluşan bir klasör seçin - alt klasörler kendiliğinden görünür, değişiklikler yerinde kaydedilir ve hiçbir şey dönüştürülmez",
     "chipPreview": "Canlı önizleme",
     "chipTasks": "Görevler",
-    "chipTags": "Etiketler",
     "chipTables": "Tablolar",
     "useAgent": "Yapay zekâ ajanlarına notlarınıza erişim verin",
     "useObsidian": "Aynı dosyalar Obsidian veya Logseq'te",
@@ -502,7 +436,6 @@
     "assocWorking": "Sisteminize soruluyor…",
     "copyPath": "Yolu kopyala",
     "selectedCount": "{{total}} dosyadan {{selected}} tanesi seçildi",
-    "selectAll": "Tümünü seç",
     "exitSelection": "Seçimden çık",
     "deleteManyTitle_one": "{{count}} dosya klasörün çöp kutusuna taşınsın mı?",
     "deleteManyTitle_other": "{{count}} dosya klasörün çöp kutusuna taşınsın mı?",
@@ -525,15 +458,11 @@
   "bookmarks": {
     "newBookmark": "Yeni yer imi",
     "searchPlaceholder": "Yer imlerinde arayın…",
-    "sortOptions": "Sıralama seçenekleri",
     "quickAddPlaceholder": "Bağlantı yapıştırın veya yazın…",
     "urlLabel": "Yer imi (URL)",
     "urlInvalid": "example.com veya https://example.com/page gibi bir web adresi girin.",
     "urlDuplicate": "Bu URL zaten başka bir yer iminde, bu yüzden değişiklik kaydedilmedi.",
-    "openAction": "Aç",
     "copiedUrl": "Bağlantı kopyalandı",
-    "moveToTrash": "Çöp kutusuna taşı",
-    "rowMenu": "Diğer işlemler",
     "emptyNone": "Henüz yer imi yok.",
     "emptyTitle": "Saklamaya değer siteleri kaydedin",
     "emptyAdd": "Yer imi ekle",
@@ -548,11 +477,9 @@
     "new": "Yeni"
   },
   "contacts": {
-    "new": "Yeni",
     "searchPlaceholder": "Kişilerde arayın…",
-    "sortOptions": "Sıralama seçenekleri",
     "emptyNone": "Henüz kişi yok.",
-    "emptyTitle": "Yalnızca sizin okuyabildiğiniz bir adres defteri",
+    "emptyTitle": "Cihazınızda şifrelenen bir adres defteri",
     "emptyAdd": "Kişi ekle",
     "emptyImport": "Kişileri içe aktar",
     "noMatches": "Eşleşme yok.",
@@ -571,15 +498,12 @@
     "company": "Şirket",
     "department": "Departman",
     "jobTitle": "Unvan",
-    "groupName": "Ad",
     "groupPhone": "Telefon",
     "groupEmail": "E-posta",
     "groupAddress": "Adres",
     "groupWebsite": "Web sitesi",
-    "groupProfile": "Profil",
     "groupDates": "Tarihler",
     "groupRelated": "Yakınlar",
-    "groupNote": "Not",
     "addPhone": "Telefon ekle",
     "addEmail": "E-posta ekle",
     "addWebsite": "Web sitesi ekle",
@@ -594,7 +518,6 @@
     "notePlaceholder": "Bu kişi hakkında notlar",
     "labelNone": "Etiket",
     "labelCustom": "Özel etiket…",
-    "removeRow": "Kaldır",
     "call": "Ara",
     "message": "Mesaj",
     "sendEmail": "E-posta gönder",
@@ -615,15 +538,8 @@
     "menuPersonal": "Kişisel",
     "menuName": "Ad",
     "menuText": "Metin",
-    "itemAddress": "Adres",
-    "itemWebsite": "Web sitesi",
-    "itemProfile": "Profil",
-    "itemCompany": "Şirket",
-    "itemJobTitle": "Unvan",
-    "itemBirthday": "Doğum günü",
     "itemDate": "Tarih",
     "itemRelated": "Yakın kişi",
-    "itemNickname": "Takma ad",
     "itemNameParts": "İkinci ad, ön ek, son ek",
     "itemPhonetic": "Fonetik ad",
     "itemNote": "Not",
@@ -751,8 +667,10 @@
       "note": "Notlar",
       "task": "Görev listeleri",
       "journal": "Günlük kayıtları",
-      "contact": "Doğum günleri"
+      "contact": "Doğum günleri ve tarihler"
     },
+    "birthdays": "Doğum günleri",
+    "contactDate": "{{name}}: {{label}}",
     "dragEnd": "Bitiş gününü değiştirmek için sürükleyin",
     "previousDay": "Önceki gün",
     "nextDay": "Sonraki gün",
@@ -843,7 +761,6 @@
     "onDayAt": "O gün saat {{time}}",
     "daysBeforeAt_other": "{{count}} gün önce saat {{time}}",
     "custom": "Özel",
-    "add": "Ekle",
     "max": "En fazla beş uyarı.",
     "units": {
       "minutes": "dakika",
@@ -855,11 +772,9 @@
     "remove": "{{alert}} uyarısını kaldır",
     "reminder": "Hatırlatıcı",
     "medication": "İlaç hatırlatıcısı",
-    "open": "Aç",
     "snooze": "10 dk ertele",
     "offOnPhone": "Bu telefonda hatırlatıcılar kapalı",
     "turnOn": "Etkinleştir",
-    "openSettings": "Ayarları aç",
     "daysBeforeAt_one": "{{count}} gün önce saat {{time}}",
     "weeksBefore_one": "{{count}} hafta önce",
     "daysBefore_one": "{{count}} gün önce",
@@ -875,6 +790,14 @@
     "appendHintDetail": ">> yazın, ardından adının başını",
     "appendNone": "Henüz eklenecek bir görev listesi veya not yok",
     "appendNoneDetail": "Bu adda bir görev listesi oluşturmak için >> ardından bir ad yazın",
+    "cannotAdd": "Şuraya eklenemiyor: {{title}}",
+    "blocked": {
+      "trash": "Çöp kutusunda.",
+      "pin": "PIN'inizle korunuyor. Eklemek için açın.",
+      "readOnly": "Salt okunur.",
+      "board": "Bu bir Kanban panosu. Kartları panoya ekleyin.",
+      "archived": "Arşivlenmiş. Eklemek için arşivden çıkarın."
+    },
     "linkGroup": "Bu bağlantıyı kaydet",
     "linkDetail": {
       "bookmark": "Adresi saklar. Adını sonra siz verirsiniz.",
@@ -894,6 +817,7 @@
       "task": "Yeni görev listesi",
       "journal": "Yeni günlük kaydı",
       "kanban": "Yeni Kanban panosu",
+      "drawing": "Yeni çizim",
       "login": "Yeni giriş bilgisi",
       "file": "Dosya yükle",
       "contact": "Yeni kişi",
@@ -926,8 +850,8 @@
       },
       "length": {
         "label": "Süre",
-        "examples": "süre 30 dk · süre 3 gün · cuma - pazar",
-        "insert": "süre 1 sa"
+        "examples": "15:00 süre 30 dk · süre 3 gün · cuma - pazar",
+        "insert": "15:00 süre 1 sa"
       },
       "repeat": {
         "label": "Tekrar",
@@ -973,17 +897,14 @@
     "backToToday": "Bugüne dön",
     "options": "Durum seçenekleri",
     "skipToday": "Bugünü atla",
-    "hide": "Bu kartı gizle",
+    "hide": "Gizle",
     "change": "Ruh halini değiştir",
     "saved": "Kaydedildi",
     "chooseTrackers": "Takipleri seç",
-    "settings": "Durum ayarları",
     "skipped": "Bugün için atlandı.",
     "startOver": "Baştan başla",
     "cleared": "Durum kaydı temizlendi.",
     "hidden": "Kart gizlendi. Liste tercihlerindeki Günlük durumu göster seçeneğiyle yeniden açabilirsiniz.",
-    "undo": "Geri al",
-    "done": "Tamam",
     "write": "Bugün hakkında yaz",
     "writeOn": "{{date}} hakkında yaz",
     "streak": "Üst üste {{n}}. gün",
@@ -997,19 +918,25 @@
     "showThem": "Göster",
     "hiddenCount_one": "{{count}} durum kaydı gizli."
   },
+  "medicationCard": {
+    "title": "İlaç takibi",
+    "options": "İlaç seçenekleri",
+    "edit": "Bugünün ilacını değiştirin",
+    "hidden": "Kart gizlendi. Liste tercihlerinden veya Ayarlar > Takipler > İlaç bölümünden yeniden açabilirsiniz."
+  },
   "clipper": {
-    "saveAsNote": "Not olarak kaydet",
     "saving": "Not olarak kaydediliyor…",
     "stepPage": "Sayfa indiriliyor",
     "stepPictures": "Görseller kaydediliyor, {{done}} / {{total}}",
-    "openNote": "Notu aç",
     "alreadySaved": "Bu sayfa zaten not olarak kaydedildi ({{date}}).",
     "savedOn": "Not olarak kaydedildi: {{date}}",
-    "windowTitle": "Sayfayı kırp",
     "addressLabel": "Web adresi",
     "addressPlaceholder": "Bir bağlantı yapıştırın…",
     "savePictures": "Görselleri kaydet",
     "savePicturesHint": "En fazla 20 görsel, notla birlikte saklanır. Depolama alanınızdan düşülür.",
+    "extensionTipTitle": "Daha iyi sonuç için tarayıcınızdan kırpın",
+    "extensionTip": "Tarayıcı uzantısı sayfayı gördüğünüz gibi kaydeder, oturum açmayı gerektiren sayfaları da.",
+    "extensionTipSetUp": "Uzantıyı kur",
     "downloading": "Sayfa indiriliyor…",
     "downloadingPictures": "Görseller indiriliyor, {{done}} / {{total}}",
     "picturesLine_other": "{{count}} görsel · {{size}}, notla birlikte kaydedilir",
@@ -1042,5 +969,166 @@
     "until": "{{day}} tarihine kadar",
     "noAlert": "Uyarı yok",
     "endsLater": "Başka bir gün biter"
+  },
+  "apps": {
+    "railLabel": "Uzantı",
+    "title": "Tarayıcı uzantısı",
+    "subtitle": "Chrome, Firefox ve Edge'de web kırpıcı ve parola yöneticisi. Uzantı, notlarınızı açan anahtarı hiçbir zaman tutmaz.",
+    "stepInstall": "Uzantıyı yükleyin",
+    "stepFeatures": "Neler yapabileceğini seçin",
+    "stepConnect": "Bağlayın",
+    "makeCode": "Kod oluştur",
+    "connectHint": "Tek kullanımlık bir kod oluşturun ve uzantıya yapıştırın.",
+    "thisBrowser": "Bu tarayıcı",
+    "otherApps": "Masaüstü ve telefon uygulamaları:",
+    "desktopAll": "Tüm indirmeler",
+    "extensionComputersOnly": "Uzantı, bilgisayardaki Chrome, Firefox ve Edge içindir.",
+    "demoSignUp": "Bir tarayıcı bağlamak için kaydolun"
+  },
+  "extensionConnect": {
+    "clips": "Web kırpıcı",
+    "clipsHint": "Web sitelerini not olarak kaydedin.",
+    "loginsHint": "Bulunduğunuz site için giriş bilgileri, kartlar, SSH anahtarları ve yer imleri, yalnızca kopyalama. Kendi PIN'i veya geçiş koduyla kilitlenir.",
+    "pickOne": "En az birini açın.",
+    "codeLabel": "Uzantı için kod",
+    "oneUse": "10 dakika boyunca bir kez çalışır.",
+    "usedBy": "{{name}} bu kodu kullandı ve bağlandı. Bu siz değilseniz aşağıdan kaldırın.",
+    "newCode": "Yeni kod",
+    "tooManyCodes": "Bekleyen çok fazla kod var. Birini kullanın veya 10 dakika bekleyin.",
+    "tooManyExtensions": "Bu hesaba en fazla sayı olan 10 tarayıcı bağlı. Önce birini kaldırın.",
+    "keyElsewhere": "Giriş bilgileri anahtarınız başka bir cihazınızda. PrivacyNotes'u orada açıp eşitlemesine izin verin, sonra tekrar deneyin.",
+    "failed": "Kod oluşturulamadı. Bağlantınızı kontrol edip tekrar deneyin."
+  },
+  "dashboard": {
+    "taskReadOnly": "Bu not salt okunur. Görevlerini işaretlemek için Not seçenekleri menüsünden salt okunur ayarını kapatın.",
+    "addWidget": "Widget ekle",
+    "catalogTitle": "Bir widget ekleyin",
+    "layouts": "Düzenler",
+    "layoutChanged": "Düzen değişti",
+    "full": "Ana sayfa dolu. Önce bir widget kaldırın.",
+    "added": "Ana sayfaya eklendi",
+    "removed": "Ana sayfadan kaldırıldı",
+    "showOnHome": "Ana sayfada göster",
+    "removeFromHome": "Ana sayfadan kaldır",
+    "resize": "{{name}} widget'ını yeniden boyutlandır",
+    "narrower": "Daha dar",
+    "taller": "Daha uzun",
+    "shorter": "Daha kısa",
+    "moveEarlier": "Öne taşı",
+    "moveLater": "Geriye taşı",
+    "chooseNote": "Bir not seçin",
+    "chooseTag": "Bir etiket seçin",
+    "chooseFolder": "Bir klasör seçin",
+    "chooseTracker": "Bir takip seçin",
+    "choose": "Seç",
+    "gone": "Artık burada değil",
+    "otherSpace": "Diğer alanda",
+    "proLocked": "Pro'ya dahil",
+    "noneToChoose": "Henüz seçilecek bir şey yok",
+    "headerEvents_other": "Bugün {{formatted}} etkinlik",
+    "headerTasks_other": "{{formatted}} açık görev",
+    "startToday": "Bugünün kaydını başlat",
+    "groups": {
+      "keep": "Sakladıklarınız"
+    },
+    "layout": {
+      "everyday": "Her gün",
+      "planner": "Planlayıcı",
+      "writer": "Yazar"
+    },
+    "w": {
+      "checkIn": {
+        "name": "Durum kaydı",
+        "help": "Bugün nasılsınız ve takipleriniz"
+      },
+      "calendar": {
+        "help": "Kayıt ve etkinlik noktalarıyla ay"
+      },
+      "upcoming": {
+        "name": "Yaklaşanlar",
+        "help": "Bugün ve sonraki 7 gün"
+      },
+      "today": {
+        "name": "Bugünün kaydı",
+        "help": "Bugünün günlük kaydı veya bir başlangıç"
+      },
+      "tasks": {
+        "name": "Açık görevler",
+        "help": "Notlarınızdaki işaretlenmemiş görevler"
+      },
+      "recent": {
+        "name": "Son düzenlenenler",
+        "help": "En son üzerinde çalıştığınız öğeler"
+      },
+      "pinned": {
+        "help": "Sabitlenmiş öğeleriniz"
+      },
+      "note": {
+        "name": "Bir not",
+        "help": "Seçtiğiniz bir not, Ana sayfada"
+      },
+      "tag": {
+        "name": "Bir etiket",
+        "help": "Bir etiketteki en yeni öğeler"
+      },
+      "folder": {
+        "name": "Bir klasör",
+        "help": "Bir klasördeki en yeni öğeler"
+      },
+      "onThisDay": {
+        "name": "Bugün geçmişte",
+        "help": "Önceki yıllardan günlük kayıtları"
+      },
+      "week": {
+        "help": "Kelimeler, etkin günler, öğeler ve durum kayıtları"
+      },
+      "streak": {
+        "help": "Üst üste yazdığınız gün sayısı"
+      },
+      "checkInStreak": {
+        "help": "Üst üste durum kaydı yaptığınız gün sayısı"
+      },
+      "rhythm": {
+        "name": "Ritminiz",
+        "help": "26 haftalık yazma ve ruh hali"
+      },
+      "milestone": {
+        "name": "Sonraki kilometre taşı",
+        "help": "Bir sonrakine ne kadar yakınsınız"
+      },
+      "tracker": {
+        "name": "Bir takip",
+        "help": "Tek bir takip: sayısı ve günleri"
+      },
+      "weekRecap": {
+        "help": "Haftanız, tek bir kartta"
+      },
+      "files": {
+        "name": "Son dosyalar",
+        "help": "En yeni görselleriniz ve dosyalarınız"
+      },
+      "bookmarks": {
+        "help": "En yeni yer imleriniz"
+      },
+      "birthdays": {
+        "help": "Sonraki 30 gündeki doğum günleri"
+      }
+    },
+    "empty": {
+      "upcoming": "Sonraki 7 günde bir şey yok",
+      "tasks": "Açık görev yok",
+      "recent": "Burada henüz bir şey yok",
+      "pinned": "Henüz sabitlenmiş bir şey yok",
+      "tag": "Bu etikete sahip öğe yok",
+      "folder": "Bu klasörde bir şey yok",
+      "onThisDay": "Önceki yıllarda bu güne ait kayıt yok",
+      "files": "Henüz dosya yok",
+      "bookmarks": "Henüz yer imi yok",
+      "birthdays": "Sonraki 30 günde doğum günü yok",
+      "tracker": "Henüz kayıt yok",
+      "milestone": "Tüm kilometre taşlarına ulaşıldı"
+    },
+    "headerTasks_one": "{{formatted}} açık görev",
+    "headerEvents_one": "Bugün {{formatted}} etkinlik"
   }
 }

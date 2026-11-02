@@ -66,12 +66,13 @@ export function FullFooter({
   gridMode,
   selected,
   openSyncVerify,
+  localReadDone,
   footerStats,
   calendar,
   auth,
   setShowSettings,
   setShowStats,
-  setShowAbout,
+  openHotkeys,
   setShowAppearance,
   setShowUpgrade,
   lockReady,
@@ -84,12 +85,14 @@ export function FullFooter({
   gridMode: boolean;
   selected: LocalNote | null;
   openSyncVerify: () => void;
+  /** The first read of this device's vault has finished (see SyncStatus's ready). */
+  localReadDone: boolean;
   footerStats: FooterStats;
   calendar: FooterCalendar;
   auth: { isPro: boolean };
   setShowSettings: Dispatch<SetStateAction<boolean>>;
   setShowStats: Dispatch<SetStateAction<boolean>>;
-  setShowAbout: (next: { tab: 'hotkeys' }) => void;
+  openHotkeys: () => void;
   setShowAppearance: Dispatch<SetStateAction<boolean>>;
   setShowUpgrade: (next: { trigger: 'zen' }) => void;
   /** The device has a PIN, a passcode or biometric unlock, so Lock app
@@ -99,7 +102,7 @@ export function FullFooter({
 }) {
   const { t } = useTranslation('notes');
   return (
-      <footer className="hidden [@media(min-width:768px)_and_(min-height:501px)]:flex shrink-0 items-center border-t border-divider text-[13px] text-pn-muted">
+      <footer className="hidden [@media(min-width:768px)_and_(min-height:501px)]:flex shrink-0 items-center border-t border-divider text-compact text-pn-muted">
         {/* Settings + Sync zone - matches sidebar width. It is a sidebar
             size container too (pn-sidebar in index.css), so a sidebar
             narrower than 230px drops the Settings word for a tip, the way
@@ -116,11 +119,11 @@ export function FullFooter({
                   aria-label={t('footer.settings', exemptOpts('notes:footer.settings'))}
                   className="inline-flex items-center gap-2 text-pn hover:text-accent transition"
                 >
-                  <Gear size={16} className="text-accent" />
-                  {!sidebarCollapsed && <span className="pn-sb-wide text-[14px] font-medium">{t('footer.settings', exemptOpts('notes:footer.settings'))}</span>}
+                  <Gear className="text-accent" />
+                  {!sidebarCollapsed && <span className="pn-sb-wide text-body font-medium">{t('footer.settings', exemptOpts('notes:footer.settings'))}</span>}
                 </button>
               </HoverLabel>
-              {!sidebarCollapsed && <SyncStatus onOpen={openSyncVerify} />}
+              {!sidebarCollapsed && <SyncStatus ready={localReadDone} onOpen={openSyncVerify} />}
             </div>
           </div>
         )}
@@ -138,36 +141,36 @@ export function FullFooter({
                   aria-label={t('footer.settings', exemptOpts('notes:footer.settings'))}
                   className="inline-flex items-center gap-2 text-pn hover:text-accent transition"
                 >
-                  <Gear size={16} className="text-accent" />
-                  <span className="text-[14px] font-medium">{t('footer.settings', exemptOpts('notes:footer.settings'))}</span>
+                  <Gear className="text-accent" />
+                  <span className="text-body font-medium">{t('footer.settings', exemptOpts('notes:footer.settings'))}</span>
                 </button>
-                <SyncStatus onOpen={openSyncVerify} />
+                <SyncStatus ready={localReadDone} onOpen={openSyncVerify} />
               </span>
             )}
             {(zenMode || sidebarCollapsed) && (
-              <span className={zenMode ? 'flex' : 'hidden lg:flex'}><SyncStatus onOpen={openSyncVerify} /></span>
+              <span className={zenMode ? 'flex' : 'hidden lg:flex'}><SyncStatus ready={localReadDone} onOpen={openSyncVerify} /></span>
             )}
             <HoverLabel label={t('footer.viewShortcuts')} keys={keyText('help')} position="above">
               <button
-                onClick={() => setShowAbout({ tab: 'hotkeys' })}
+                onClick={openHotkeys}
                 aria-label={t('footer.viewShortcuts')}
-                className="inline-flex items-center gap-2 whitespace-nowrap text-[14px] font-medium text-pn hover:text-accent transition cursor-pointer"
+                className="inline-flex items-center gap-2 whitespace-nowrap text-body font-medium text-pn hover:text-accent transition cursor-pointer"
               >
               <span>{t('footer.newNote')}</span>
               <span dir="ltr" className="hidden xl:inline-flex items-center gap-1"> {/* rtl-ok: modifier-key sequence never reorders */}
                 {hotkeyKeys.map((k) => (
                   <kbd
                     key={k}
-                    className="font-mono text-xs leading-none px-1.5 py-0.5 rounded border border-divider bg-surface-2 text-pn shadow-[0_1px_0_rgba(0,0,0,0.08)] dark:shadow-[0_1px_0_rgba(0,0,0,0.6)] min-w-[1.25rem] text-center"
+                    className="font-mono text-small leading-none px-1.5 py-0.5 rounded border border-divider bg-surface-2 text-pn shadow-[0_1px_0_rgba(0,0,0,0.08)] dark:shadow-[0_1px_0_rgba(0,0,0,0.6)] min-w-[1.25rem] text-center"
                   >
                     {k}
                   </kbd>
                 ))}
               </span>
-              <kbd dir="ltr" className="xl:hidden font-mono text-xs leading-none px-1.5 py-0.5 rounded border border-divider bg-surface-2 text-pn shadow-[0_1px_0_rgba(0,0,0,0.08)] dark:shadow-[0_1px_0_rgba(0,0,0,0.6)] text-center"> {/* rtl-ok: modifier-key sequence never reorders */}
+              <kbd dir="ltr" className="xl:hidden font-mono text-small leading-none px-1.5 py-0.5 rounded border border-divider bg-surface-2 text-pn shadow-[0_1px_0_rgba(0,0,0,0.08)] dark:shadow-[0_1px_0_rgba(0,0,0,0.6)] text-center"> {/* rtl-ok: modifier-key sequence never reorders */}
                 {hotkeyLabel}
               </kbd>
-              <span className="text-[13px] font-normal text-pn-muted hidden min-[1400px]:inline">
+              <span className="text-compact font-normal text-pn-muted hidden min-[1400px]:inline">
                 ({DESKTOP_APP
                   ? t(isMacPlatform ? 'footer.newNoteHintMacDesktop' : 'footer.newNoteHintOtherDesktop')
                   : t(isMacPlatform ? 'footer.newNoteHintMac' : 'footer.newNoteHintOther')})
@@ -180,9 +183,9 @@ export function FullFooter({
             <button
               onClick={() => setShowStats(true)}
               aria-label={t('footer.openStats')}
-              className="inline-flex items-center gap-2 text-[13px] text-pn-muted hover:text-accent transition whitespace-nowrap"
+              className="inline-flex items-center gap-2 text-compact text-pn-muted hover:text-accent transition whitespace-nowrap"
             >
-              <ChartBar size={13} />
+              <ChartBar />
               <StatsReadout stats={footerStats} labels="wide" />
             </button>
           </HoverLabel>
@@ -210,7 +213,7 @@ export function FullFooter({
                     : 'text-pn hover:bg-pn/5'
                 }`}
               >
-                <ArrowsOutSimple size={14} className={zenMode ? '' : 'text-accent'} />
+                <ArrowsOutSimple className={zenMode ? '' : 'text-accent'} />
                 <span className="hidden xl:inline">{t('footer.zen')}</span>
                 {!auth.isPro && <IconUpgrade size={10} />}
               </button>
@@ -220,15 +223,15 @@ export function FullFooter({
                 anyone who just wanted to look at the pane. ⌘⇧L is still
                 the one-key flip. Same Sun glyph the Settings rail uses for
                 this category, so the button reads as "open", not "toggle". */}
-            <HoverLabel hiddenAtXl label={t('footer.appearance')} position="above-end">
+            <HoverLabel hiddenAtXl label={t('notes:settings.appearanceLabel')} position="above-end">
               <button
                 onClick={() => setShowAppearance((open) => !open)}
                 data-appearance-trigger
-                aria-label={t('footer.appearance')}
+                aria-label={t('notes:settings.appearanceLabel')}
                 className="rounded-md inline-flex items-center gap-1.5 px-2 py-1 font-medium text-pn hover:bg-pn/5 transition"
               >
-                <Sun size={14} className="text-accent" />
-                <span className="hidden xl:inline">{t('footer.appearance')}</span>
+                <Sun className="text-accent" />
+                <span className="hidden xl:inline">{t('notes:settings.appearanceLabel')}</span>
               </button>
             </HoverLabel>
             {/* Locks at once instead of after the re-lock window (GitHub
@@ -241,7 +244,7 @@ export function FullFooter({
                 aria-label={lockReady ? t('footer.lockApp') : t('footer.lockAppSetUp')}
                 className="rounded-md inline-flex items-center gap-1.5 px-2 py-1 font-medium text-pn hover:bg-pn/5 transition"
               >
-                <LockKey size={14} className="text-accent" />
+                <LockKey className="text-accent" />
                 <span className="hidden xl:inline">{t('footer.lockApp')}</span>
               </button>
             </HoverLabel>
@@ -291,6 +294,7 @@ export function MiniFooter({
   zenUnlocked,
   selected,
   openSyncVerify,
+  localReadDone,
   footerStats,
   calendar,
   auth,
@@ -307,6 +311,8 @@ export function MiniFooter({
   zenUnlocked: boolean;
   selected: LocalNote | null;
   openSyncVerify: () => void;
+  /** The first read of this device's vault has finished (see SyncStatus's ready). */
+  localReadDone: boolean;
   footerStats: FooterStats;
   calendar: FooterCalendar;
   auth: { isPro: boolean };
@@ -325,7 +331,7 @@ export function MiniFooter({
   const { t } = useTranslation('notes');
   const settingsLabel = t('footer.settings', exemptOpts('notes:footer.settings'));
   return (
-      <footer className={`[@media(min-width:768px)_and_(min-height:501px)]:hidden shrink-0 flex items-center justify-between gap-2 px-2 py-0.5 ${IS_DESKTOP_APP ? 'pb-0.5' : 'pb-[max(0.125rem,env(safe-area-inset-bottom))]'} md:pb-0.5 border-t border-divider text-[13px] text-pn-muted [@media(max-height:320px)]:hidden`}>
+      <footer className={`[@media(min-width:768px)_and_(min-height:501px)]:hidden shrink-0 flex items-center justify-between gap-2 px-2 py-0.5 ${IS_DESKTOP_APP ? 'pb-0.5' : 'pb-[max(0.125rem,env(safe-area-inset-bottom))]'} md:pb-0.5 border-t border-divider text-compact text-pn-muted [@media(max-height:320px)]:hidden`}>
         {/* Settings, Design and Lock app hold the start of the bar on every screen, so
             they never move under the thumb. The end holds the one action of
             the screen on show: New on a list, Zen in an open item, where New
@@ -339,7 +345,7 @@ export function MiniFooter({
           </BarButton>
           {/* Opens the sheet rather than flipping light and dark: a straight
               flip silently cancels Auto. */}
-          <BarButton label={t('footer.appearance')} position="above" onClick={() => setShowAppearance((open) => !open)} appearanceTrigger>
+          <BarButton label={t('notes:settings.appearanceLabel')} position="above" onClick={() => setShowAppearance((open) => !open)} appearanceTrigger>
             <Sun size={22} />
           </BarButton>
           {/* Lock app (GitHub #594). Below 360px a long open note shows two
@@ -352,7 +358,7 @@ export function MiniFooter({
           </span>
         </div>
         <span className="shrink-0">
-          <SyncStatus onOpen={openSyncVerify} tipPosition="above" tipHostClassName="flex h-11 items-center" />
+          <SyncStatus ready={localReadDone} onOpen={openSyncVerify} tipPosition="above" tipHostClassName="flex h-11 items-center" />
         </span>
         {/* Stats readout - md+ only. Below md the phone row is too tight;
             at md-lg the same three phone controls span a tablet-width row,
@@ -361,9 +367,9 @@ export function MiniFooter({
         <button
           onClick={() => setShowStats(true)}
           aria-label={t('footer.openStats')}
-          className="inline-flex items-center gap-2 text-[13px] text-pn-muted hover:text-accent transition whitespace-nowrap"
+          className="inline-flex items-center gap-2 text-compact text-pn-muted hover:text-accent transition whitespace-nowrap"
         >
-          <ChartBar size={13} />
+          <ChartBar />
           <StatsReadout stats={footerStats} labels="always" />
         </button>
         <JournalCalendarButton {...calendar} />

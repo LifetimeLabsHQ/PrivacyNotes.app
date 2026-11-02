@@ -10,7 +10,7 @@
  * large binary payloads.
  */
 
-// Explicit `.js` suffix required by @noble v2+. Spec: ops/docs/dependency-migration.md (subpath imports need it; entry points like @noble/ed25519 must not)
+// Explicit `.js` suffix required by @noble v2+. Spec: docs/internal/dependency-migration.md (subpath imports need it; entry points like @noble/ed25519 must not)
 import { randomBytes } from '@noble/hashes/utils.js';
 import { xchacha20poly1305 } from '@noble/ciphers/chacha.js';
 

@@ -11,6 +11,7 @@ import type { DayEntry, DayIndex } from './notesViewUtils';
 import { dayNumber } from './schedule';
 import { ReminderPermissionHint } from './notesView/useReminders';
 import { useProgressiveReveal } from './useProgressiveReveal';
+import { routeItemClick } from './itemList';
 
 /**
  * The Calendar pillar's list pane: the agenda. The coming days with their
@@ -20,7 +21,7 @@ import { useProgressiveReveal } from './useProgressiveReveal';
  * today is out of view. On a phone a week strip with dots heads it, pulled
  * down to a month by its grab bar or its title, and a tap on a day scrolls
  * the agenda there.
- * Spec: ops/docs/archive/calendar-pillar-spec.md (step 3)
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (step 3)
  */
 
 const BACK_DAYS = 7;
@@ -40,6 +41,18 @@ type Props = {
   dragPayload?: (id: string) => ItemDragPayload;
   /** A row's right-click menu: the item menu, at the occurrence. */
   onItemMenu?: (e: React.MouseEvent, entry: DayEntry) => void;
+  /** The list's multi-select (`useMultiSelect`). Only an event takes part: a
+   *  dated note or task list belongs to its own list, and the calendar never
+   *  trashes a document. A repeating event is one item, so a pick of one
+   *  occurrence picks the series and marks every occurrence of it. */
+  selection?: {
+    mode: boolean;
+    ids: ReadonlySet<string>;
+    toggle: (id: string) => void;
+    range: (id: string, order: readonly string[]) => void;
+    longPress: (id: string) => void;
+    longPressEnd: () => void;
+  };
 };
 
 /** A day's items in time order. The index puts the open space first, which a
@@ -64,7 +77,7 @@ function dayHeader(day: string, today: string): { word: string | null; date: str
   return { word: null, date };
 }
 
-export default function CalendarAgenda({ index, onOpen, search, strip, dragPayload, onItemMenu }: Props) {
+export default function CalendarAgenda({ index, onOpen, search, strip, dragPayload, onItemMenu, selection }: Props) {
   const { t } = useTranslation('shell');
   const today = toLocalIso(new Date());
   const [ahead, setAhead] = useState(AHEAD_DAYS);
@@ -94,6 +107,25 @@ export default function CalendarAgenda({ index, onOpen, search, strip, dragPaylo
     }
     return out;
   }, [index, today, ahead, query]);
+
+  /** The events in agenda order, once each, for a shift-click range. */
+  const eventOrder = useMemo(
+    () => [...new Set(days.flatMap((d) => d.entries.filter((e) => e.kind === 'event').map((e) => e.id)))],
+    [days],
+  );
+
+  function openRow(entry: DayEntry, e: React.MouseEvent) {
+    const open = () => onOpen(entry.id, entry.occurrence ?? entry.span?.start);
+    if (!selection || entry.kind !== 'event') {
+      if (!selection?.mode) open();
+      return;
+    }
+    routeItemClick(e, selection.mode, {
+      range: () => selection.range(entry.id, eventOrder),
+      toggle: () => selection.toggle(entry.id),
+      open,
+    });
+  }
 
   const lastDay = days[days.length - 1];
   const totalRows = lastDay ? lastDay.offset + lastDay.entries.length + 1 : 0;
@@ -197,7 +229,7 @@ export default function CalendarAgenda({ index, onOpen, search, strip, dragPaylo
       )}
       <ReminderPermissionHint />
       <div ref={scroller} onScroll={onScroll} className="@container/agenda relative flex-1 min-h-0 overflow-y-auto overscroll-contain pb-16">
-        {days.length === 0 && <p className="p-4 text-[13px] text-pn-muted text-center">{t('notes:empty.noMatches')}</p>}
+        {days.length === 0 && <p className="p-4 text-compact text-pn-muted text-center">{t('notes:empty.noMatches')}</p>}
         <ul>
           {days.filter((d) => d.offset < reveal.visible).map(({ day, entries, offset }, i) => {
             const prev = days[i - 1];
@@ -206,7 +238,7 @@ export default function CalendarAgenda({ index, onOpen, search, strip, dragPaylo
             return (
               <Fragment key={day}>
                 {gap > 1 && !query && (
-                  <li aria-hidden="true" className="px-4 py-1.5 flex items-center gap-2 text-[11px] text-pn-muted/80">
+                  <li aria-hidden="true" className="px-4 py-1.5 flex items-center gap-2 text-meta text-pn-muted/80">
                     <span className="h-px flex-1 bg-divider/60" />
                     {t('calendar.nothingFor', { count: gap })}
                     <span className="h-px flex-1 bg-divider/60" />
@@ -220,13 +252,13 @@ export default function CalendarAgenda({ index, onOpen, search, strip, dragPaylo
                     const tone = day === today ? 'text-accent' : day < today ? 'text-pn-muted/70' : 'text-pn';
                     return (
                       <div className="sticky top-0 z-10 bg-surface-1/95 backdrop-blur-sm border-b border-divider/50 px-4 pt-2.5 pb-1.5 flex items-baseline gap-2 min-w-0">
-                        {word && <span className={`text-[13px] font-semibold shrink-0 ${tone}`}>{word}</span>}
-                        <span className={`text-[12.5px] truncate ${word ? 'text-pn-muted' : `font-semibold ${tone}`}`}>{date}</span>
+                        {word && <span className={`text-compact font-semibold shrink-0 ${tone}`}>{word}</span>}
+                        <span className={`text-compact truncate ${word ? 'text-pn-muted' : `font-semibold ${tone}`}`}>{date}</span>
                       </div>
                     );
                   })()}
                   {entries.length === 0 ? (
-                    <p className="px-4 py-2.5 text-[12.5px] text-pn-muted">{t('calendar.nothingToday')}</p>
+                    <p className="px-4 py-2.5 text-compact text-pn-muted">{t('calendar.nothingToday')}</p>
                   ) : (
                     <div className={`px-2 py-1.5 flex flex-col gap-0.5 ${day < today ? 'opacity-70' : ''}`}>
                       {entries.slice(0, Math.max(0, reveal.visible - offset - 1)).map((entry) => (
@@ -236,16 +268,29 @@ export default function CalendarAgenda({ index, onOpen, search, strip, dragPaylo
                           day={day}
                           mixed={mixed}
                           size="agenda"
-                          onOpen={(e) => onOpen(e.id, e.occurrence ?? e.span?.start)}
+                          onOpen={openRow}
                           onMenu={onItemMenu}
-                          dragProps={entry.kind === 'contact' || !dragPayload ? undefined : {
-                            draggable: true,
-                            onDragStart: (e) => {
-                              const p = dragPayload(entry.id);
-                              writeItemDrag(e.dataTransfer, p.ids, p.linkText);
-                              setItemDragImage(e.dataTransfer, e.currentTarget, 1);
-                            },
+                          dragProps={{
+                            ...(entry.kind === 'contact' || !dragPayload ? {} : {
+                              draggable: true,
+                              onDragStart: (e: React.DragEvent<HTMLButtonElement>) => {
+                                const p = dragPayload(entry.id);
+                                writeItemDrag(e.dataTransfer, p.ids, p.linkText);
+                                setItemDragImage(e.dataTransfer, e.currentTarget, 1);
+                              },
+                            }),
+                            // A long press selects, as in every list.
+                            ...(selection && entry.kind === 'event' ? {
+                              onTouchStart: () => selection.longPress(entry.id),
+                              onTouchEnd: selection.longPressEnd,
+                              onTouchMove: selection.longPressEnd,
+                              onTouchCancel: selection.longPressEnd,
+                            } : {}),
                           }}
+                          select={selection?.mode && entry.kind === 'event' ? {
+                            selected: selection.ids.has(entry.id),
+                            onToggle: (e) => (e.shiftKey ? selection.range(entry.id, eventOrder) : selection.toggle(entry.id)),
+                          } : undefined}
                         />
                       ))}
                     </div>
@@ -260,9 +305,9 @@ export default function CalendarAgenda({ index, onOpen, search, strip, dragPaylo
         <button
           type="button"
           onClick={() => goTo(today)}
-          className="absolute bottom-4 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-20 inline-flex items-center gap-1.5 rounded-full bg-accent-fill text-white shadow-lg px-3 py-1.5 text-[13px] font-semibold"
+          className="absolute bottom-4 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-20 inline-flex items-center gap-1.5 rounded-full bg-accent-fill text-white shadow-lg px-3 py-1.5 text-compact font-semibold"
         >
-          <ArrowLineDown size={13} aria-hidden="true" className={todayOut === 'above' ? 'rotate-180' : ''} />
+          <ArrowLineDown aria-hidden="true" className={todayOut === 'above' ? 'rotate-180' : ''} />
           {(() => { const w = relativeDayName(0); return `${w.charAt(0).toLocaleUpperCase(intlLocale())}${w.slice(1)}`; })()}
         </button>
       )}

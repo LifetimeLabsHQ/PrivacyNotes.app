@@ -1,6 +1,5 @@
 {
   "modal": {
-    "title": "Security",
     "tabPin": "PIN",
     "tabBiometricShort": "Lock",
     "tabBiometric": "Biometric Lock",
@@ -9,9 +8,10 @@
     "tabTwoFactor": "2FA"
   },
   "pinTab": {
+    "changeLost": "Your PIN change was not saved: the PIN was changed on another device first.",
+    "phraseUnwrapped": "This browser could not protect the recovery phrase this device keeps, so the phrase is stored here without encryption. Anyone with a copy of this device's storage can read it. Turn on the app lock in the Lock tab to keep it only behind your PIN or passcode.",
     "enterCurrent": "Enter your current PIN to make changes.",
     "currentPin": "Current PIN",
-    "checking": "Checking...",
     "verify": "Verify",
     "replaceExisting": "Enter a new 4-digit PIN. This replaces your existing PIN.",
     "setIntro": "A 4-digit PIN opens your protected notes and your recovery phrase. It syncs to every device.",
@@ -42,10 +42,8 @@
     "setPin": "Set PIN",
     "removePin": "Remove PIN",
     "reaskAfter": "Re-ask for PIN after",
-    "reaskHint": "Applies to the phrase view and any PIN-protected notes.",
+    "reaskHint": "Applies to the phrase view and any PIN-protected notes on this device.",
     "incorrectPin": "Incorrect PIN.",
-    "incorrectPinRetry": "Incorrect PIN. Try again.",
-    "tooManyAttempts": "Too many attempts. Try again in {{seconds}}s.",
     "pinFourDigits": "PIN must be 4 digits.",
     "pinsDoNotMatch": "PINs do not match.",
     "passcodeIntro": "A passcode opens your protected notes and your recovery phrase. It syncs to every device.",
@@ -61,8 +59,7 @@
     "ruleNotDigits": "Not only numbers",
     "ruleMax": "At most {{max}} characters",
     "passcodesDoNotMatch": "Passcodes do not match.",
-    "incorrectPasscode": "Incorrect passcode.",
-    "incorrectPasscodeRetry": "Incorrect passcode. Try again."
+    "incorrectPasscode": "Incorrect passcode."
   },
   "timeout": {
     "min1": "1 minute",
@@ -76,16 +73,11 @@
     "browserRestart": "On browser restart"
   },
   "pinInfo": {
-    "title": "Require PIN to view",
     "body": "When enabled, your PIN is required every time you open this item, even if the app is already unlocked. Use it for sensitive items that should stay protected when you step away."
   },
   "removePinDialog": {
-    "title": "Remove PIN",
     "introWithBio": "Enter your current PIN to confirm removal. Biometric unlock stays active, but your only fallback will be your recovery phrase.",
     "introNoBio": "Enter your current PIN to confirm removal. Your recovery phrase screen will then open without a PIN.",
-    "verifying": "Verifying...",
-    "removePin": "Remove PIN",
-    "titlePasscode": "Remove passcode",
     "introWithBioPasscode": "Enter your current passcode to confirm removal. Biometric unlock stays active, but your only fallback will be your recovery phrase.",
     "introNoBioPasscode": "Enter your current passcode to confirm removal. Your recovery phrase screen will then open without a passcode.",
     "removePasscode": "Remove passcode"
@@ -109,16 +101,10 @@
   },
   "phraseGate": {
     "enterToView": "Enter your 4-digit PIN to view your phrase.",
-    "incorrectPinRetry": "Incorrect PIN. Try again.",
-    "tooManyAttempts": "Too many attempts. Try again in {{seconds}}s.",
-    "lockedFor": "Locked for {{seconds}}s",
-    "checking": "Checking...",
-    "unlock": "Unlock",
     "enterToChangeCustody": "Enter your 4-digit PIN to change key custody.",
     "checkFailed": "Your PIN could not be checked. Try again.",
     "enterToViewPasscode": "Enter your passcode to view your phrase.",
     "enterToChangeCustodyPasscode": "Enter your passcode to change key custody.",
-    "incorrectPasscodeRetry": "Incorrect passcode. Try again.",
     "checkFailedPasscode": "Your passcode could not be checked. Try again."
   },
   "phraseView": {
@@ -133,11 +119,9 @@
     "hideQr": "Hide QR code",
     "showQr": "Show QR code",
     "saveQr": "Save QR",
-    "copied": "Copied",
     "copyPhrase": "Copy phrase"
   },
   "custody": {
-    "eyebrow": "Key custody",
     "current": "Current",
     "rowDevice": "New device",
     "rowDeviceCustodial": "Sign in with {{provider}}, nothing to type",
@@ -152,7 +136,6 @@
     "releaseWarning": "Save your 12-word phrase outside PrivacyNotes first. After we delete our copy, you will need it on new devices.",
     "challengePrompt": "Type these words from the list above to confirm you have them.",
     "wordLabel": "Word {{position}}",
-    "busy": "Saving...",
     "releaseConfirm": "Delete from server",
     "adoptConfirm": "Store a copy with us",
     "releaseDone": "Done. We no longer hold a copy of your phrase. New devices will ask for these 12 words or a QR scan.",
@@ -189,6 +172,7 @@
     "boundStatus": "Biometric unlock is tied to your passkey.",
     "boundStatusNative": "Biometric unlock is tied to this device's secure hardware.",
     "setUpAgain": "Set up again for a stronger lock",
+    "unboundWeaker": "On this device, biometric unlock is a gate for people nearby, not a lock: someone with a copy of this device's storage can open your notes without your fingerprint or face.",
     "cannotBind": "The passkey app in this browser cannot make the stronger lock. Biometric unlock keeps working as before. If a password manager saves your passkeys, turn off its passkey option, then turn biometric unlock off and on again to use your device's own passkey store.",
     "bindOffer": "Biometric unlock on this device is not tied to your passkey yet, and this browser can tie it. Set it up again once, so its key stays with your passkey instead of in this device's storage.",
     "bindOfferLater": "Not now",
@@ -196,14 +180,14 @@
     "settingUp": "Setting up...",
     "enable": "Enable biometric unlock",
     "lockOnOpen": "Lock app on open",
-    "lockOnOpenHint": "Require biometric or PIN when opening the app.",
+    "lockOnOpenHint": "Require biometric or PIN when opening the app on this device.",
     "lockHidesOnSwitch": "Also hides your notes when you switch apps.",
     "lockNeedsCredential": "The app lock needs a PIN or biometric unlock on this device.",
     "setUpPin": "Set a PIN",
     "confirmPinForLock": "Enter your PIN to turn this on. It locks a copy of your recovery phrase so only your PIN can open the app.",
     "confirmPasscodeForLock": "Enter your passcode to turn this on. It locks a copy of your recovery phrase so only your passcode can open the app.",
     "relockAfter": "Re-lock after",
-    "relockHint": "Applies to the app lock screen only.",
+    "relockHint": "Applies to the app lock screen on this device only.",
     "blockCapture": "Hide from screen capture",
     "blockCaptureHint": "Keeps your notes out of screenshots, recordings and screen sharing where your device allows it. Applies to this device only.",
     "perDeviceNote": "Biometric unlock opens the same notes as your PIN. It stays on this device and never syncs.",
@@ -216,31 +200,19 @@
     "phraseNotSaved": "This device could not save your recovery phrase, so nothing was changed. Try again."
   },
   "pinSetup": {
-    "title": "Set a PIN",
     "description": "A 4-digit PIN will be required to view your recovery phrase. Optional, but recommended for shared spaces.",
-    "newPin": "New PIN",
-    "confirmPin": "Confirm PIN",
-    "skipForNow": "Skip for now",
-    "saving": "Saving…",
-    "setPin": "Set PIN",
-    "pinFourDigits": "PIN must be 4 digits.",
-    "pinsDoNotMatch": "PINs do not match."
+    "skipForNow": "Skip for now"
   },
   "pinInput": {
-    "ariaLabel": "PIN",
     "digitAriaLabel": "Digit {{index}}"
   },
   "passcodeInput": {
-    "ariaLabel": "Passcode",
     "show": "Show passcode",
     "hide": "Hide passcode"
   },
   "protectedGate": {
-    "biometricFailed": "Biometric verification failed or was cancelled.",
     "protectedItem": "Protected item",
     "biometricSubtitle": "Use your fingerprint or face to unlock this item.",
-    "verifying": "Verifying...",
-    "unlock": "Unlock",
     "usePinInstead": "Use PIN instead",
     "useBiometricInstead": "Use biometric instead",
     "disableProtection": "Disable protection",
@@ -248,18 +220,10 @@
     "disableBiometricSubtitle": "Use your fingerprint or face to confirm.",
     "disableSubtitle": "The note stays where it is. Only the lock comes off.",
     "verifySubtitle": "Enter your 4-digit PIN to unlock this item. The unlock lasts for the timeout you set in Security.",
-    "incorrectPinRetry": "Incorrect PIN. Try again.",
-    "tooManyAttempts": "Too many attempts. Try again in {{seconds}}s.",
     "lockedFor": "Locked for {{seconds}}s",
-    "checking": "Checking...",
     "bootstrapTitle": "Set a PIN",
     "bootstrapSubtitle": "This item is PIN-protected, but no PIN is set on this device. Set a 4-digit PIN to unlock it. Your PIN syncs across all your devices.",
     "bootstrapWarning": "Setting a PIN here does not require knowledge of the prior PIN. Anyone holding your recovery phrase can do this on a fresh device. For truly sensitive content, rely on phrase-only auth instead.",
-    "newPin": "New PIN",
-    "confirmPin": "Confirm PIN",
-    "pinFourDigits": "PIN must be 4 digits.",
-    "pinsDoNotMatch": "PINs do not match.",
-    "saving": "Saving...",
     "setPinUnlock": "Set PIN and unlock",
     "pinRequired": "PIN required",
     "deleteSubtitle": "Enter your PIN to delete this protected item.",
@@ -267,7 +231,6 @@
     "usePasscodeInstead": "Use passcode instead",
     "disableTitlePasscode": "Enter passcode to disable protection",
     "verifySubtitlePasscode": "Enter your passcode to unlock this item. The unlock lasts for the timeout you set in Security.",
-    "incorrectPasscodeRetry": "Incorrect passcode. Try again.",
     "passcodeRequired": "Passcode required",
     "deleteSubtitlePasscode": "Enter your passcode to delete this protected item."
   },
@@ -294,19 +257,14 @@
     "checking": "Checking...",
     "unlock": "Unlock",
     "recoveryPhrase": "Recovery Phrase",
-    "recoveryPhraseSubtitle": "Enter your 12-word recovery phrase to unlock.",
-    "invalidPhrase": "Invalid phrase. Check spelling and word order.",
-    "phrasePlaceholder": "word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12"
+    "recoveryPhraseSubtitle": "Enter your 12-word recovery phrase to unlock."
   },
   "deviceLimit": {
     "title": "Device limit reached",
     "body": "Free accounts can sync on up to {{limit}} devices at a time. You already have {{count}}. Remove one to continue on this device, or upgrade for unlimited devices.",
     "activeDevices": "Active devices",
-    "recentlyRemoved": "Recently removed",
-    "removedAt": "Removed {{when}}",
     "upgradeHeading": "Or upgrade to Pro",
     "upgradeBody": "One-time payment, no subscription. Unlimited devices plus images, note history, and more.",
-    "openingCheckout": "Opening checkout...",
     "upgradeCta": "Upgrade to Pro for ${{price}}",
     "needMoreHeading": "Need more devices?",
     "needMoreBody": "Pro upgrades aren't available on this build. If you genuinely need a third device, reach out and we'll sort it.",
@@ -315,8 +273,6 @@
     "saveRecoveryBody": "You signed in with OAuth. Write down your 12-word phrase too. It's your fallback if OAuth ever fails or you're locked out across devices.",
     "hide": "Hide",
     "viewRecoveryPhrase": "View recovery phrase",
-    "signOut": "Sign out",
-    "thisDevice": "This device",
     "lastActive": "{{platform}} · last active {{when}}",
     "removing": "Removing..."
   },
@@ -329,9 +285,9 @@
     "bitcoinBody": "People protect it with the same kind of 12-word phrase.",
     "universeTitle": "700 times the age of the universe",
     "universeBody": "To try every phrase, at a billion billion guesses a second.",
-    "twinTitle": "Nobody on Earth has your phrase",
+    "twinTitle": "Nobody else on Earth will get the same phrase",
     "twinBody": "Not even if all 8 billion of us used PrivacyNotes.",
-    "keepPrivate": "The only way in is your actual 12 words. Keep them private."
+    "keepPrivate": "Guessing is not a way in. Keep your 12 words private."
   },
   "connectedAccounts": {
     "title": "Connected accounts",
@@ -355,13 +311,10 @@
     "connectAnotherProvider": "Connect another {{provider}} account",
     "updateTitle": "Update sign-in for this vault",
     "updateDescription": "This prepares your saved phrase and connected accounts to use two-factor sign-in and lets you manage connected accounts. Your notes and key custody stay unchanged.",
-    "updateDevices": "Update the app on your other devices before continuing. They may need to sign in again.",
-    "updateAcknowledgment": "I updated PrivacyNotes on my other devices.",
     "updateAction": "Update sign-in",
     "setupTitle": "Connect Google, Apple or GitHub",
     "setupDescription": "The first connection needs a one-time update of this vault. Your notes and key custody stay the same.",
     "setupAction": "Set up connected accounts",
-    "closed": "Connecting and removing accounts opens soon. Until then, you sign in the way you do now.",
     "repairTitle": "Finish updating sign-in",
     "repairDescription": "This vault already uses the updated sign-in. Reconnect this device using the phrase already unlocked here. Your local notes stay available.",
     "repairAction": "Continue to this vault",
@@ -382,7 +335,6 @@
     "rateLimited": "Too many account changes were attempted. Wait a little, then try again.",
     "connectionMissing": "This account is no longer connected. Check the current account list before trying again.",
     "noAccounts": "No provider accounts are connected. Your saved phrase is your sign-in method.",
-    "actionFailed": "The change could not be confirmed. Check your connection and try again.",
     "retry": "Check accounts again",
     "connectDone": "Account connected to this vault. Key custody is unchanged.",
     "disconnectDone": "Account disconnected. Your notes and key custody are unchanged.",
@@ -392,7 +344,6 @@
     "freshMfa": "You will need a fresh authenticator code to confirm this change. Two-factor sign-in stays on afterward.",
     "continueProvider": "Continue with {{provider}}",
     "working": "Working...",
-    "cancel": "Cancel",
     "confirmDisconnect": "Disconnect {{provider}}?",
     "account": "this account",
     "lastCustodial": "This is your last connected account. Connect another account first, or save your phrase and switch to self-custody before removing it.",
@@ -445,10 +396,7 @@
       "key": "Save key",
       "confirm": "Confirm"
     },
-    "next": "Next",
-    "back": "Back",
     "stepOf": "Step {{step}} of 3",
-    "working": "Working...",
     "scan": "Scan this code with your authenticator app.",
     "qrLabel": "QR code for your authenticator app",
     "openAuthenticator": "On this phone? Open your authenticator app",
@@ -462,9 +410,7 @@
     "backupWarning": "Lost your phone? This key brings your codes back. Keep it somewhere safe, outside PrivacyNotes.",
     "savedAcknowledgment": "I saved the backup key.",
     "confirmBackup": "Type your backup key again from the previous step, then enter the code from your app.",
-    "reenterBackup": "Backup key",
     "codeLabel": "Code from your app",
-    "activate": "Turn on 2FA",
     "cancelSetup": "Cancel",
     "enabled": "2FA is on",
     "authenticatorRow": "Authenticator app",
@@ -484,11 +430,6 @@
     "overview": "Overview",
     "keyCustody": "Key custody",
     "accounts": "Accounts"
-  },
-  "beta": {
-    "label": "Beta",
-    "notice": "This feature is in beta.",
-    "reportBug": "Report a bug"
   },
   "demoTeaser": {
     "accounts": "Create an account to connect Google, Apple or GitHub to your vault.",

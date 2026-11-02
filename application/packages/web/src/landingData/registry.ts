@@ -15,13 +15,13 @@
  * Prices are never written into copy. Strings carry {price}, {earlyPrice}
  * and {proPrice} tokens which landing-pages.ts resolves from src/pricing.ts;
  * the build fails if a dataset hardcodes the current dollar values.
- * Spec: ops/docs/plans/marketing-pages.md (maintenance mechanisms)
+ * Spec: docs/internal/plans/marketing-pages.md (maintenance mechanisms)
  */
 
 /** Trust ribbon chips. Wording mirrors the homepage ribbon (landing.json). */
 export const CHIPS = {
   'free-forever': { label: 'Free forever' },
-  'zero-knowledge': { label: 'Zero knowledge' },
+  'always-encrypted': { label: 'Always encrypted' },
   'swiss-servers': { label: 'Swiss servers' },
   'no-subscription': { label: 'No subscription' },
   'open-source': { label: 'Open source' },
@@ -38,7 +38,7 @@ export const BENEFITS = {
   'private-architecture': {
     icon: 'lock',
     title: 'Private by architecture',
-    body: 'Notes encrypt on your device with a key derived from your 12-word phrase. We could not read your drafts if we tried.',
+    body: 'Notes encrypt on your device with a key derived from your 12-word phrase. With self-custody, that key never leaves your devices.',
   },
   'note-links': {
     icon: 'graph',
@@ -80,14 +80,14 @@ export type VsRow = {
 
 export const VS_ROWS: Record<string, VsRow> = {
   e2ee: {
-    label: 'End-to-end encrypted by default',
-    small: 'Sealed on your device before anything is sent',
+    label: 'Encrypted on your device by default',
+    small: 'Always encrypted, on your device and on the way to the server',
     group: 'privacy',
     us: { v: 'yes' },
   },
   'zero-knowledge': {
-    label: 'Zero knowledge',
-    small: 'The provider cannot read your notes',
+    label: 'Zero knowledge available',
+    small: 'With self-custody, the provider holds nothing that opens your notes',
     group: 'privacy',
     us: { v: 'yes' },
   },
@@ -200,11 +200,11 @@ export const VS_GROUP_LABELS: Record<VsRow['group'], string> = {
 export const SHARED_FAQS = {
   'verify-encryption': {
     q: 'Do I have to trust you on the encryption?',
-    a: 'No. Notes are encrypted on your device with XChaCha20-Poly1305, keys derived from your phrase, and the encryption code and threat model are published. You can watch the ciphertext leave your own browser in the network tab.',
+    a: 'You can check it instead. Notes are encrypted on your device with XChaCha20-Poly1305, keys derived from your phrase, and the encryption code and threat model are published. You can watch the ciphertext leave your own browser in the network tab. With self-custody, the key never reaches us either.',
   },
   'lose-phrase': {
     q: 'What if I lose my 12-word phrase?',
-    a: 'The notes are unrecoverable, by us or anyone. There is no reset flow, because a reset flow would also be a backdoor. Keep the phrase like a physical key: in a password manager or somewhere safe.',
+    a: 'With self-custody, nobody can recover the notes: a reset flow would also be a backdoor. If your account keeps a custodial copy of the phrase, a connected login restores it. Keep the phrase like a physical key: in a password manager or somewhere safe.',
   },
   'export-leave': {
     q: 'What if I want to leave later?',

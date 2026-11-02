@@ -23,6 +23,7 @@ import { LandingPage, FX_CSS } from './LandingPage';
 import { LogoIcon } from './LogoIcon';
 import { Brand } from './Brand';
 import { PrivacyLadder } from './PrivacyLadder';
+import { Badge } from './ui';
 import { isImeComposing } from './imeComposing';
 import { AppleIcon, GithubIcon, GoogleIcon } from './providerIcons';
 
@@ -50,7 +51,7 @@ function OAuthSetupScreen({ children }: { children: ReactNode }) {
       {/* Logo */}
       <div className="flex items-center gap-3 mb-8">
         <LogoIcon size={56} className="text-accent w-14 h-14" />
-        <span className="text-3xl tracking-tight">
+        <span className="text-display-3 tracking-tight">
           <Brand />
         </span>
       </div>
@@ -267,14 +268,14 @@ function OAuthHandoffStep({ onEnterPhrase, onBack }: { onEnterPhrase: () => void
       {/* Success confirmation */}
       <div className="text-center space-y-1">
         <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500 mx-auto">
-          <Check size={18} className="text-white" aria-hidden="true" />
+          <Check className="text-white" aria-hidden="true" />
         </div>
-        <h3 className="text-lg font-bold text-[var(--wl-ink)] mt-3">
+        <h3 className="text-heading font-bold text-[var(--wl-ink)] mt-3">
           {provider
             ? t('oauthHandoff.verifiedTitle', { provider: OAUTH_META[provider].name })
             : t('oauthHandoff.verifiedTitleGeneric')}
         </h3>
-        <p className="text-sm text-[var(--wl-sub)] leading-relaxed">
+        <p className="text-body text-[var(--wl-sub)] leading-relaxed">
           {t('oauthHandoff.verifiedBody')}
         </p>
       </div>
@@ -287,14 +288,14 @@ function OAuthHandoffStep({ onEnterPhrase, onBack }: { onEnterPhrase: () => void
         {t('oauthHandoff.enterPhrase')}
       </button>
 
-      <p className="text-sm text-[var(--wl-sub)] text-center leading-relaxed">
+      <p className="text-body text-[var(--wl-sub)] text-center leading-relaxed">
         <Trans i18nKey="auth:oauthHandoff.noPhraseHint" components={{ strong: <strong /> }} />
       </p>
 
       <button
         type="button"
         onClick={onBack}
-        className="w-full text-sm text-[var(--wl-sub)] hover:text-[var(--wl-ink)] transition py-1"
+        className="w-full text-body text-[var(--wl-sub)] hover:text-[var(--wl-ink)] transition py-1"
       >
         {t('oauthHandoff.backToOptions')}
       </button>
@@ -315,7 +316,7 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
   // showing. Desktop gets no callback of its own: no desktop operating system
   // can say which application owns a custom scheme, so the browser stops on
   // our own return page and the person carries the code across.
-  // Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.3)
+  // Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.3)
   const [pastedCode, setPastedCode] = useState<string | null>(null);
   const [pasteBusy, setPasteBusy] = useState(false);
   // Set when this install is still holding a usable phrase while showing this
@@ -324,7 +325,7 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
   // verdict; a deliberate sign-out clears it first and never reaches this.
   // Without this the app asks for something it already has, and the only way
   // through is retyping twelve words it is holding.
-  // Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.8)
+  // Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.8)
   const [resumable, setResumable] = useState<string | null>(null);
   const [resumeBusy, setResumeBusy] = useState(false);
   useEffect(() => {
@@ -344,7 +345,7 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
   // hits Back, the browser restores this page from bfcache (pageshow with
   // persisted=true) or re-renders it (popstate). Without this reset the
   // button stays stuck on "Redirecting..." until a manual refresh.
-  // See: github.com/LifetimeLabsDev/PrivacyNotes.app/issues/123
+  // See: github.com/LifetimeLabsHQ/PrivacyNotes.app/issues/123
   useEffect(() => {
     function reset() { setOauthPending(null); }
     function handlePageShow(e: PageTransitionEvent) {
@@ -408,17 +409,17 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
   // ---------- Default: normal login options ----------
   return (
     <div className="space-y-6">
-      <h3 className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--wl-ink)]">
+      <h3 className="text-display-3 sm:text-display-4 font-black tracking-tight text-[var(--wl-ink)]">
         {t('chooseMode.welcomeBack')}
       </h3>
 
       {resumable && (
         <div className="rounded-2xl border border-[var(--wl-line)] bg-[var(--wl-bg)] shadow-sm p-5 flex flex-col gap-3">
           <div>
-            <div className="text-sm font-semibold text-[var(--wl-ink)]">
+            <div className="text-body font-semibold text-[var(--wl-ink)]">
               {t('chooseMode.resumeTitle')}
             </div>
-            <div className="text-xs text-[var(--wl-sub)] mt-0.5">
+            <div className="text-small text-[var(--wl-sub)] mt-0.5">
               {t('chooseMode.resumeSubtitle')}
             </div>
           </div>
@@ -433,14 +434,65 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
         </div>
       )}
 
+      {/* Desktop OAuth stops on our return page, so the next step is here,
+          above both cards and in the accent colour: it is the one thing left
+          to do, and at the foot of a card it read as an afterthought. */}
+      {pastedCode !== null && (
+        <div className="rounded-2xl border-2 border-[var(--wl-pro)] bg-[var(--wl-tint-blue)] shadow-sm p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <div className="sm:w-56 sm:shrink-0">
+            <div className="text-body font-semibold text-[var(--wl-ink)]">
+              {t('chooseMode.desktopCodeTitle')}
+            </div>
+            <div className="text-small text-[var(--wl-sub)] mt-0.5">
+              {t('chooseMode.desktopCodeHint')}
+            </div>
+          </div>
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+              <input
+                type="text"
+                autoFocus
+                spellCheck={false}
+                autoCapitalize="none"
+                autoCorrect="off"
+                value={pastedCode}
+                onChange={(e) => setPastedCode(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !isImeComposing(e)) void handlePastedCode(); }}
+                placeholder={t('chooseMode.desktopCodePlaceholder')}
+                className="basis-full sm:basis-0 flex-1 min-w-0 rounded-lg border border-[var(--wl-line)] bg-[var(--wl-card)] px-3 py-2.5 text-body text-[var(--wl-ink)] font-mono"
+              />
+              <button
+                type="button"
+                disabled={pasteBusy || !pastedCode.trim()}
+                onClick={() => void handlePastedCode()}
+                className="flex-1 sm:flex-none rounded-lg bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-2.5 text-body font-medium transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {pasteBusy ? t('auth:chooseMode.resumeWorking') : t('auth:chooseMode.resumeAction')}
+              </button>
+              <button
+                type="button"
+                disabled={pasteBusy}
+                onClick={() => { setPastedCode(null); setOauthError(null); }}
+                className="rounded-lg border border-[var(--wl-line)] bg-[var(--wl-card)] hover:bg-[var(--wl-tint)] px-3 py-2.5 text-body text-[var(--wl-ink)] transition disabled:opacity-60"
+              >
+                {t('common:actions.cancel')}
+              </button>
+            </div>
+            {oauthError && (
+              <p className="text-body text-danger">{oauthError}</p>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="grid sm:grid-cols-2 gap-4">
         {/* Easy & Convenient - OAuth providers */}
         <div className="rounded-2xl border border-[var(--wl-line)] bg-[var(--wl-bg)] shadow-sm p-5 flex flex-col gap-3">
           <div className="flex-1">
-            <div className="text-sm font-semibold text-[var(--wl-ink)]">
+            <div className="text-body font-semibold text-[var(--wl-ink)]">
               {t('chooseMode.easyTitle')}
             </div>
-            <div className="text-xs text-[var(--wl-sub)] mt-0.5">
+            <div className="text-small text-[var(--wl-sub)] mt-0.5">
               {t('chooseMode.easySubtitle')}
             </div>
           </div>
@@ -461,58 +513,18 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
               );
             })}
           </div>
-          {pastedCode !== null && (
-            <div className="rounded-lg border border-[var(--wl-line)] bg-[var(--wl-tint)] p-3 space-y-2">
-              <div className="text-sm font-semibold text-[var(--wl-ink)]">
-                {t('chooseMode.desktopCodeTitle')}
-              </div>
-              <div className="text-xs text-[var(--wl-sub)]">
-                {t('chooseMode.desktopCodeHint')}
-              </div>
-              <input
-                type="text"
-                autoFocus
-                spellCheck={false}
-                autoCapitalize="none"
-                autoCorrect="off"
-                value={pastedCode}
-                onChange={(e) => setPastedCode(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !isImeComposing(e)) void handlePastedCode(); }}
-                placeholder={t('chooseMode.desktopCodePlaceholder')}
-                className="w-full rounded-lg border border-[var(--wl-line)] bg-[var(--wl-card)] px-3 py-2 text-sm text-[var(--wl-ink)] font-mono"
-              />
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={pasteBusy || !pastedCode.trim()}
-                  onClick={() => void handlePastedCode()}
-                  className="flex-1 rounded-lg bg-[var(--wl-pro)] text-white px-3 py-2 text-sm font-medium transition disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {pasteBusy ? t('chooseMode.desktopCodeWorking') : t('chooseMode.desktopCodeContinue')}
-                </button>
-                <button
-                  type="button"
-                  disabled={pasteBusy}
-                  onClick={() => { setPastedCode(null); setOauthError(null); }}
-                  className="rounded-lg border border-[var(--wl-line)] bg-[var(--wl-card)] px-3 py-2 text-sm text-[var(--wl-ink)] transition disabled:opacity-60"
-                >
-                  {t('chooseMode.desktopCodeCancel')}
-                </button>
-              </div>
-            </div>
-          )}
-          {oauthError && (
-            <p className="text-sm text-danger">{oauthError}</p>
+          {oauthError && pastedCode === null && (
+            <p className="text-body text-danger">{oauthError}</p>
           )}
         </div>
 
         {/* Anonymous & Uncompromising - phrase auth */}
         <div className="rounded-2xl border border-[var(--wl-line)] bg-[var(--wl-bg)] shadow-sm p-5 flex flex-col gap-3">
           <div className="flex-1">
-            <div className="text-sm font-semibold text-[var(--wl-ink)]">
+            <div className="text-body font-semibold text-[var(--wl-ink)]">
               {t('chooseMode.anonymousTitle')}
             </div>
-            <div className="text-xs text-[var(--wl-sub)] mt-0.5">
+            <div className="text-small text-[var(--wl-sub)] mt-0.5">
               {t('chooseMode.anonymousSubtitle')}
             </div>
           </div>
@@ -521,14 +533,14 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
               onClick={() => onPick('create')}
               className="w-full rounded-lg bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-3 font-medium transition shadow-sm flex items-center justify-center gap-2.5"
             >
-              <Password size={16} aria-hidden="true" />
+              <Password aria-hidden="true" />
               {t('chooseMode.generatePhrase')}
             </button>
             <button
               onClick={() => onPick('import')}
               className="w-full rounded-lg border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-4 py-3 font-medium transition flex items-center justify-center gap-2.5"
             >
-              <KeyReturn size={16} aria-hidden="true" />
+              <KeyReturn aria-hidden="true" />
               {t('chooseMode.signInExisting')}
             </button>
             {/* Third row on this side, so the two cards stay the same height
@@ -542,10 +554,9 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
               aria-controls="pn-signin-ladder"
               className="w-full rounded-lg border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-4 py-3 text-[var(--wl-sub)] flex items-center justify-center gap-2 transition"
             >
-              <Scales size={16} aria-hidden="true" />
+              <Scales aria-hidden="true" />
               {t('chooseMode.compareOptions')}
               <CaretDown
-                size={13}
                 aria-hidden="true"
                 className={`transition-transform ${ladderOpen ? 'rotate-180' : ''}`}
               />
@@ -557,9 +568,9 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
       {ladderOpen && <PrivacyLadder id="pn-signin-ladder" tone="washi" />}
 
       {/* Trust signals */}
-      <div className="pt-4 border-t border-[var(--wl-line)] flex flex-col sm:flex-row sm:flex-wrap items-center justify-center gap-x-6 gap-y-1.5 text-[11px] text-[var(--wl-sub)]">
+      <div className="pt-4 border-t border-[var(--wl-line)] flex flex-col sm:flex-row sm:flex-wrap items-center justify-center gap-x-6 gap-y-1.5 text-meta text-[var(--wl-sub)]">
         <span className="inline-flex items-center gap-1.5">
-          <svg width="11" height="11" viewBox="0 0 32 32" aria-hidden="true" className="shrink-0 rounded-[2px]">
+          <svg data-ic="" viewBox="0 0 32 32" aria-hidden="true" className="shrink-0 rounded-[2px]">
             <rect width="32" height="32" fill="#da291c" />
             <rect x="13" y="6" width="6" height="20" fill="#fff" />
             <rect x="6" y="13" width="20" height="6" fill="#fff" />
@@ -567,11 +578,11 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
           {t('chooseMode.trustSwitzerland')}
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <Lock size={12} />
+          <Lock />
           {t('chooseMode.trustEncrypted')}
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <Check size={12} className="text-emerald-500" />
+          <Check className="text-emerald-500" />
           {t('chooseMode.trustAuditable')}
         </span>
       </div>
@@ -630,7 +641,7 @@ function useSessionProvider(): OAuthProvider | null | undefined {
 /**
  * Key custody choice screen for new OAuth users.
  * "Keep it simple & convenient" (custodial) vs "Maximum security & privacy" (self-custody).
- * Spec: ops/docs/custodial-key-spec.md (one-way: custodial can upgrade later, self-custody cannot downgrade)
+ * Spec: docs/contrib/custodial-key-spec.md (one-way: custodial can upgrade later, self-custody cannot downgrade)
  */
 function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
   const { t } = useTranslation('auth');
@@ -682,14 +693,14 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
       {/* Welcome header */}
       <div className="text-center space-y-1">
         <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500 mx-auto">
-          <Check size={18} className="text-white" aria-hidden="true" />
+          <Check className="text-white" aria-hidden="true" />
         </div>
-        <h3 className="text-lg font-bold text-[var(--wl-ink)] mt-3">
+        <h3 className="text-heading font-bold text-[var(--wl-ink)] mt-3">
           {provider
             ? t('custody.signedIn', { provider: OAUTH_META[provider].name })
             : t('custody.signedInGeneric')}
         </h3>
-        <p className="text-sm text-[var(--wl-sub)]">
+        <p className="text-body text-[var(--wl-sub)]">
           {t('custody.intro')}
         </p>
       </div>
@@ -714,16 +725,15 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
-              <div className="font-medium text-sm text-[var(--wl-ink)]">
+              <div className="font-medium text-body text-[var(--wl-ink)]">
                 {t('custody.simpleTitle')}
               </div>
-              {choice === 'custodial' && (
-                <span className="text-[11px] font-medium bg-accent/10 text-accent-strong px-2.5 py-0.5 rounded-md shrink-0">
-                  {t('custody.recommended')}
-                </span>
-              )}
+              {/* The chips the comparison ladder gives these two options
+                  (PrivacyLadder.tsx), not "Recommended": that word on the
+                  least private option read as advice to pick it. */}
+              <Badge tone="info">{t('ladder.easyRecovery')}</Badge>
             </div>
-            <div className="text-xs text-[var(--wl-sub)] mt-1 leading-relaxed">
+            <div className="text-small text-[var(--wl-sub)] mt-1 leading-relaxed">
               {t('custody.simpleBody')}
             </div>
           </div>
@@ -748,11 +758,14 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
               <div className="w-2.5 h-2.5 rounded-full bg-accent-fill" />
             )}
           </div>
-          <div>
-            <div className="font-medium text-sm text-[var(--wl-ink)]">
-              {t('custody.maxSecurityTitle')}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <div className="font-medium text-body text-[var(--wl-ink)]">
+                {t('custody.maxSecurityTitle')}
+              </div>
+              <Badge tone="success">{t('ladder.zeroKnowledge')}</Badge>
             </div>
-            <div className="text-xs text-[var(--wl-sub)] mt-1 leading-relaxed">
+            <div className="text-small text-[var(--wl-sub)] mt-1 leading-relaxed">
               {t('custody.maxSecurityBody')}
             </div>
           </div>
@@ -760,7 +773,7 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
       </button>
 
       {error && (
-        <p className="text-sm text-danger">{error}</p>
+        <p className="text-body text-danger">{error}</p>
       )}
 
       <button
@@ -771,14 +784,14 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
         {t('continue')}
       </button>
 
-      <p className="text-xs text-[var(--wl-muted)] text-center leading-relaxed">
+      <p className="text-small text-[var(--wl-muted)] text-center leading-relaxed">
         {tradeoffText}
       </p>
 
       <button
         type="button"
         onClick={onBack}
-        className="w-full text-sm text-[var(--wl-sub)] hover:text-[var(--wl-ink)] transition py-1"
+        className="w-full text-body text-[var(--wl-sub)] hover:text-[var(--wl-ink)] transition py-1"
       >
         {t('oauthHandoff.backToOptions')}
       </button>
@@ -796,7 +809,7 @@ function TrustDeviceCheckbox({
 }) {
   const { t } = useTranslation('auth');
   return (
-    <label className="flex items-start gap-2 text-sm text-[var(--wl-ink)] cursor-pointer rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] p-3">
+    <label className="flex items-start gap-2 text-body text-[var(--wl-ink)] cursor-pointer rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] p-3">
       <input
         type="checkbox"
         checked={trustDevice}
@@ -805,7 +818,7 @@ function TrustDeviceCheckbox({
       />
       <span>
         <span className="font-medium">{t('trustDevice.label')}</span>
-        <span className="block text-xs text-[var(--wl-sub)] mt-0.5 leading-relaxed">
+        <span className="block text-small text-[var(--wl-sub)] mt-0.5 leading-relaxed">
           {t('trustDevice.description')}
         </span>
       </span>
@@ -886,8 +899,8 @@ function CreatePhrase({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] p-3 text-sm leading-relaxed text-[var(--wl-ink)] flex items-start gap-2.5">
-        <Warning size={18} aria-hidden="true" className="shrink-0 mt-0.5 text-warning" />
+      <div className="rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] p-3 text-body leading-relaxed text-[var(--wl-ink)] flex items-start gap-2.5">
+        <Warning aria-hidden="true" className="shrink-0 mt-0.5 text-warning" />
         <span>
           <Trans i18nKey="auth:createPhrase.warning" components={{ strong: <strong /> }} />
         </span>
@@ -902,9 +915,9 @@ function CreatePhrase({
         {words.map((w, i) => (
           <div
             key={i}
-            className="rounded-md bg-[var(--wl-bg)] border border-[var(--wl-line)] text-[var(--wl-ink)] px-3 py-2 text-sm font-mono"
+            className="rounded-md bg-[var(--wl-bg)] border border-[var(--wl-line)] text-[var(--wl-ink)] px-3 py-2 text-body font-mono"
           >
-            <span className="text-[var(--wl-muted)] text-xs me-1">{i + 1}.</span>
+            <span className="text-[var(--wl-muted)] text-small me-1">{i + 1}.</span>
             {w}
           </div>
         ))}
@@ -913,7 +926,7 @@ function CreatePhrase({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <button
           onClick={copyPhrase}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm transition ${
+          className={`inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-body transition ${
             copied
               ? 'border-accent bg-accent/10 text-accent-strong'
               : 'border-[var(--wl-line)] hover:bg-[var(--wl-tint)]'
@@ -933,14 +946,14 @@ function CreatePhrase({
         </button>
         <button
           onClick={() => { void handleDownloadTxt(); }}
-          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-3 py-2 text-sm transition"
+          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-3 py-2 text-body transition"
         >
           <FileText aria-hidden="true" />
           {t('createPhrase.downloadTxt')}
         </button>
         <button
           onClick={() => { void handleDownloadQR(); }}
-          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-3 py-2 text-sm transition"
+          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-3 py-2 text-body transition"
         >
           <QrCode aria-hidden="true" />
           {t('createPhrase.downloadQr')}
@@ -948,7 +961,7 @@ function CreatePhrase({
       </div>
 
       {failedFiles.size > 0 && (
-        <p className="text-sm text-danger">{t('createPhrase.saveFailed')}</p>
+        <p className="text-body text-danger">{t('createPhrase.saveFailed')}</p>
       )}
 
       {/* Hidden QR canvas: stays mounted so Download QR can always read
@@ -958,7 +971,7 @@ function CreatePhrase({
         <QRCodeCanvas value={buildSignInUrl(phrase)} size={320} level="M" marginSize={4} />
       </div>
 
-      <label className="flex items-start gap-2 text-sm text-[var(--wl-ink)] cursor-pointer rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] p-3">
+      <label className="flex items-start gap-2 text-body text-[var(--wl-ink)] cursor-pointer rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] p-3">
         <input
           type="checkbox"
           checked={confirmed}
@@ -978,7 +991,7 @@ function CreatePhrase({
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={onBack}
-          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-4 py-2 text-sm transition"
+          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-4 py-2 text-body transition"
         >
           <ArrowLeft aria-hidden="true" />
           {t('createPhrase.oneClickInstead')}
@@ -986,7 +999,7 @@ function CreatePhrase({
         <button
           onClick={() => onReady(phrase)}
           disabled={!confirmed}
-          className="inline-flex items-center justify-center gap-1.5 rounded-md bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-2 text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed transition"
+          className="inline-flex items-center justify-center gap-1.5 rounded-md bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-2 text-body font-medium disabled:opacity-40 disabled:cursor-not-allowed transition"
         >
           {t('continue')}
           <ArrowRight aria-hidden="true" />
@@ -1061,7 +1074,7 @@ function ImportPhrase({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-[var(--wl-sub)]">
+      <p className="text-body text-[var(--wl-sub)]">
         {t('importPhrase.instructions')}
       </p>
       <textarea
@@ -1078,7 +1091,7 @@ function ImportPhrase({
         autoCapitalize="none"
         autoCorrect="off"
         autoComplete="off"
-        className="w-full rounded-md bg-[var(--wl-bg)] border border-[var(--wl-line)] text-[var(--wl-ink)] focus:border-accent p-3 text-sm font-mono focus:outline-none placeholder:text-[var(--wl-muted)]"
+        className="w-full rounded-md bg-[var(--wl-bg)] border border-[var(--wl-line)] text-[var(--wl-ink)] focus:border-accent p-3 text-body font-mono focus:outline-none placeholder:text-[var(--wl-muted)]"
         autoFocus
       />
       <div
@@ -1090,18 +1103,18 @@ function ImportPhrase({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={scanning}
-          className="w-full rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-3 py-2 text-sm transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-3 py-2 text-body transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Upload size={16} />
+          <Upload />
           {scanning ? t('qrScanner.readingImage') : t('importPhrase.uploadQr')}
         </button>
         {!isLinuxNative() && (
           <button
             type="button"
             onClick={() => setShowScanner(true)}
-            className="w-full rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-3 py-2 text-sm transition flex items-center justify-center gap-2"
+            className="w-full rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-3 py-2 text-body transition flex items-center justify-center gap-2"
           >
-            <Scan size={16} />
+            <Scan />
             {t('importPhrase.scanQr')}
           </button>
         )}
@@ -1116,7 +1129,7 @@ function ImportPhrase({
           if (file) void handleUploadFile(file);
         }}
       />
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <p className="text-body text-danger">{error}</p>}
       <TrustDeviceCheckbox
         trustDevice={trustDevice}
         onTrustDeviceChange={onTrustDeviceChange}
@@ -1124,14 +1137,14 @@ function ImportPhrase({
       <div className="flex gap-2">
         <button
           onClick={onBack}
-          className="rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-4 py-2 text-sm transition"
+          className="rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-4 py-2 text-body transition"
         >
           {t('common:actions.back')}
         </button>
         <button
           onClick={handleSubmit}
           disabled={!input.trim()}
-          className="flex-1 rounded-md bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-2 text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed transition"
+          className="flex-1 rounded-md bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-2 text-body font-medium disabled:opacity-40 disabled:cursor-not-allowed transition"
         >
           {t('continue')}
         </button>
@@ -1192,7 +1205,7 @@ function SignInStep({
   // Until then no challenge is rendered and nothing is fetched from
   // Cloudflare - and under the web-only link-pubkey gate, native
   // clients are never refused, so the widget below is web-only in
-  // practice. Spec: ops/docs/design-decisions.md (Turnstile is
+  // practice. Spec: docs/internal/design-decisions.md (Turnstile is
   // web-only, enforced at link-pubkey)
   const [needsChallenge, setNeedsChallenge] = useState(false);
 
@@ -1349,14 +1362,14 @@ function SignInStep({
     const retryable = error !== t('signIn.publicPhrase');
     return (
       <div className="space-y-4">
-        <div className="rounded-md border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20 p-3 text-sm text-red-700 dark:text-red-300 leading-relaxed">
+        <div className="rounded-md border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20 p-3 text-body text-red-700 dark:text-red-300 leading-relaxed">
           {error}
         </div>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={onBack}
-            className={`${retryable ? '' : 'flex-1 '}rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-4 py-2 text-sm transition`}
+            className={`${retryable ? '' : 'flex-1 '}rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-4 py-2 text-body transition`}
           >
             {t('common:actions.back')}
           </button>
@@ -1379,7 +1392,7 @@ function SignInStep({
                 void finish();
               }
             }}
-            className="flex-1 rounded-md bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-2 text-sm font-medium transition"
+            className="flex-1 rounded-md bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-2 text-body font-medium transition"
           >
             {t('signIn.tryAgain')}
           </button>}
@@ -1401,7 +1414,7 @@ function SignInStep({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-[var(--wl-sub)] text-center py-4">
+      <p className="text-body text-[var(--wl-sub)] text-center py-4">
         {t('signIn.signingIn')}
       </p>
       {/* Until the server actually refuses a tokenless sign-in there is

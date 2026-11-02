@@ -6,7 +6,7 @@
  * construction below rather than an estimate: the bits shown in the
  * generator are the log of how many distinct outputs the same settings can
  * produce, each equally likely.
- * Spec: ops/docs/archive/ui-patterns.md (the password generator)
+ * Spec: docs/internal/design/ui-patterns.md (the password generator)
  */
 
 /**
@@ -167,4 +167,61 @@ export function strengthOf(bits: number): Strength {
   if (bits < 60) return 'fair';
   if (bits < 90) return 'strong';
   return 'veryStrong';
+}
+
+/** The generator's remembered options, in the synced settings and in the
+ *  browser extension's own storage. */
+export interface PwGen {
+  length: number;
+  lowercase: boolean;
+  uppercase: boolean;
+  numbers: boolean;
+  symbols: boolean;
+  exactNumbers: number;
+  exactSymbols: number;
+  mode: 'password' | 'passphrase';
+  words: number;
+  separator: (typeof SEPARATORS)[number];
+  capitalize: boolean;
+  addNumber: boolean;
+  addSymbol: boolean;
+}
+
+export function defaultPwGen(): PwGen {
+  return {
+    length: 20,
+    lowercase: true,
+    uppercase: true,
+    numbers: true,
+    symbols: true,
+    exactNumbers: 1,
+    exactSymbols: 1,
+    mode: 'password',
+    words: 5,
+    separator: '-',
+    capitalize: true,
+    addNumber: true,
+    addSymbol: false,
+  };
+}
+
+/** Stored options from an untrusted blob: each field that holds, the default for the rest. */
+export function readPwGen(value: unknown): PwGen {
+  const out = defaultPwGen();
+  if (!value || typeof value !== 'object') return out;
+  const pg = value as Partial<PwGen>;
+  if (typeof pg.length === 'number' && pg.length >= PASSWORD_LENGTH.min && pg.length <= PASSWORD_LENGTH.max) out.length = pg.length;
+  if (typeof pg.lowercase === 'boolean') out.lowercase = pg.lowercase;
+  if (typeof pg.uppercase === 'boolean') out.uppercase = pg.uppercase;
+  if (typeof pg.numbers === 'boolean') out.numbers = pg.numbers;
+  if (typeof pg.symbols === 'boolean') out.symbols = pg.symbols;
+  if (typeof pg.exactNumbers === 'number' && pg.exactNumbers >= 0 && pg.exactNumbers <= EXACT_COUNT_MAX) out.exactNumbers = pg.exactNumbers;
+  if (typeof pg.exactSymbols === 'number' && pg.exactSymbols >= 0 && pg.exactSymbols <= EXACT_COUNT_MAX) out.exactSymbols = pg.exactSymbols;
+  if (pg.mode === 'password' || pg.mode === 'passphrase') out.mode = pg.mode;
+  if (typeof pg.words === 'number' && Number.isInteger(pg.words) && pg.words >= PASSPHRASE_WORDS.min && pg.words <= PASSPHRASE_WORDS.max) out.words = pg.words;
+  if (SEPARATORS.includes(pg.separator as PwGen['separator'])) out.separator = pg.separator as PwGen['separator'];
+  if (typeof pg.capitalize === 'boolean') out.capitalize = pg.capitalize;
+  if (typeof pg.addNumber === 'boolean') out.addNumber = pg.addNumber;
+  if (typeof pg.addSymbol === 'boolean') out.addSymbol = pg.addSymbol;
+  return out;
 }

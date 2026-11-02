@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { zipEntryText } from './zipEntry';
+import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
 import { linkifyMarkdown } from './linkify';
 import { currentImageOptions, processImage } from '../imageProcessing';
 import { EMOTION_TAGS } from '../trackerTypes';
@@ -467,6 +467,8 @@ interface Counters {
   cards: number;
   failedPhotos: number;
   missingAssets: number;
+  /** Photos and videos past the largest upload, left out (zipEntryMedia). */
+  tooLarge: number;
 }
 
 /** A photo waiting for its turn in the conversion pool. */
@@ -712,7 +714,14 @@ async function runPhotoQueue(
       const job = ctx.photoJobs[next++];
       if (!job) return;
       try {
-        const raw = new Uint8Array(await job.entry.async('uint8array'));
+        const raw = await zipEntryMedia(job.entry);
+        if (!raw) {
+          ctx.counters.photos--;
+          ctx.counters.tooLarge++;
+          dropped.add(job.token);
+          done++;
+          continue;
+        }
         const mime = sniffImageMime(raw) ?? mimeFromExt(job.name);
         const result = await processImage(new File([raw], job.name, { type: mime }), currentImageOptions());
         if (result.ok) {
@@ -729,6 +738,7 @@ async function runPhotoQueue(
         }
       } catch {
         ctx.counters.photos--;
+        ctx.counters.missingAssets++;
         dropped.add(job.token);
       }
       done++;
@@ -748,7 +758,11 @@ async function storeFile(ctx: AssetCtx, src: string | null): Promise<string | nu
     return null;
   }
   const name = src.split('/').pop() ?? 'attachment';
-  const data = new Uint8Array(await entry.async('uint8array'));
+  const data = await zipEntryMedia(entry);
+  if (!data) {
+    ctx.counters.tooLarge++;
+    return null;
+  }
   const token = blobToken(ctx.nextToken++);
   ctx.blobs.set(token, { data, mime: mimeFromExt(name), name });
   return token;
@@ -845,7 +859,7 @@ export async function parseAppleJournal(
 
   const counters: Counters = {
     photos: 0, converted: 0, videos: 0, audio: 0, places: 0,
-    moods: 0, cards: 0, failedPhotos: 0, missingAssets: 0,
+    moods: 0, cards: 0, failedPhotos: 0, missingAssets: 0, tooLarge: 0,
   };
   const flags: ConvFlags = {
     bold: 0, italic: 0, underline: 0, strike: 0, color: 0, lists: 0, quotes: 0,
@@ -915,7 +929,6 @@ export async function parseAppleJournal(
   // knows the real total and the progress line can count against it.
   const dropped = await runPhotoQueue(ctx, onProgress);
   if (dropped.size > 0) {
-    counters.missingAssets += dropped.size;
     for (const note of notes) {
       for (const token of dropped) {
         if (!note.body.includes(token)) continue;
@@ -934,6 +947,7 @@ export async function parseAppleJournal(
       `${counters.failedPhotos} photo${plural(counters.failedPhotos)} could not be converted out of Apple's HEIC format and were kept as-is, so they may not display.`,
     );
   }
+  if (counters.tooLarge > 0) warnings.push(mediaTooLargeWarning(counters.tooLarge));
   if (counters.missingAssets > 0) {
     warnings.push(
       `${counters.missingAssets} photo${plural(counters.missingAssets)} or video${plural(counters.missingAssets)} referenced by an entry was not in the export and had to be skipped.`,

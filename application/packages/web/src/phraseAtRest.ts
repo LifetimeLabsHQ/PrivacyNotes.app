@@ -7,10 +7,14 @@
  * envelope under a non-extractable WebCrypto AES-256 key that lives in
  * IndexedDB (db.kv). IndexedDB persists the CryptoKey OBJECT via
  * structured clone; the raw key bytes never exist in script-readable
- * form, so a copied localStorage file or a serialized backup of the
- * databases cannot recover the phrase. An attacker who can RUN CODE
- * in this origin on this machine can still use the key - that boundary
- * is documented in THREAT_MODEL.md.
+ * form, so a copied localStorage file alone, or a script-level dump,
+ * carries no readable phrase. "Non-extractable" is a script-API property,
+ * not hardware: the browser writes the key's bytes into its own IndexedDB
+ * files, so a copy of the whole profile or app data folder opens the
+ * envelope with a parser of those files. An attacker who can RUN CODE in
+ * this origin on this machine can use the key directly. Both boundaries
+ * are documented in THREAT_MODEL.md ("Local storage at rest"); the app
+ * lock removes this envelope.
  *
  * The envelope reuses the phrase's own storage key. Every presence
  * check (hasStoredSession, the app-lock gate, sign-out removal, the
@@ -58,6 +62,22 @@ const WRAP_KEY_KV = 'phraseWrapKey';
  *  legacy plaintext. */
 export function isWrappedEnvelope(value: string): boolean {
   return value.startsWith(ENVELOPE_PREFIX);
+}
+
+/**
+ * True when this device keeps its recovery phrase as plain text: the wrap
+ * failed (a browser without working IndexedDB or WebCrypto) and
+ * `persistStoredPhrase` fell back to the plain write. The PIN tab warns
+ * while it holds; the next wrap that works clears it. With the app lock on
+ * nothing is stored in this slot, so it is false.
+ */
+export function storedPhraseUnwrapped(): boolean {
+  try {
+    const stored = trustAwareStorage.getItem(PHRASE_STORAGE_KEY);
+    return !!stored && !isWrappedEnvelope(stored) && isValidPhrase(stored);
+  } catch {
+    return false;
+  }
 }
 
 function isCryptoKey(v: unknown): v is CryptoKey {
@@ -276,7 +296,7 @@ export async function unwrapStoredEnvelope(value: string): Promise<string | null
  * for anything it cannot use: nothing stored, an envelope that will not open,
  * or a value that is not a phrase. The app lock needs no special case here,
  * because arming it removes this copy and the lock screen owns the unlock.
- * Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.8)
+ * Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.8)
  */
 export async function readResumablePhrase(): Promise<string | null> {
   let stored: string | null = null;

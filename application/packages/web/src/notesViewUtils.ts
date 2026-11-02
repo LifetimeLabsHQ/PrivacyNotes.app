@@ -17,20 +17,16 @@ import { formatBytes } from './formatBytes';
 import i18n from './i18n';
 import { formatDay, formatInstant, formatPattern, toLocalIso, writtenDateLocale } from './intlFormat';
 import { parseLinkBody, linkDomain } from './linkBody';
-import { contactBirthday, contactDisplayName, contactPhotoBytes, contactSecondLine, parseContactBody } from './contactBody';
+import { contactBirthday, contactDisplayName, contactOtherDates, contactPhotoBytes, contactSecondLine, parseContactBody } from './contactBody';
+import { isEmptyScene, parseScene, sceneText } from './drawing/scene';
 import type { PinGatePurpose } from './ProtectedNoteGate';
 import type { NoteConflict } from './sync';
-import { isDelimiterRow, tableWidthFromMarker } from './tableDelimiterRow';
+import { isDelimiterRow, isTableMarker } from './tableDelimiterRow';
 import { bindingCaps, bindingText, visibleBindings } from './commandKeys';
 import { DESKTOP_APP, KEY_OS } from './shortcutMatch';
 import { hasLoggedTrackers } from './trackerTypes';
-
-/** Regex to match pn:file/ links in note bodies. Not a picture placed from
- *  Files (`![...](pn:file/...)`), which shows a file rather than holding one. */
-const FILE_LINK_STRIP = /(?<!!)\[[^\]]*\]\(pn:file\/[0-9a-f-]{36}\)/g;
-
-/** Regex to extract size strings from pn:file/ links: [name|size|mime](pn:file/uuid) */
-const ATT_SIZE_RE = /\[[^|]*\|([^|]*)\|[^\]]*\]\(pn:file\/[0-9a-f-]{36}\)/g;
+import { attachmentLinks } from './fileNames';
+import { ANY_PICTURE, FILE_LINK, markdownLinks } from './linkScan';
 
 /** Parse a pre-formatted size string like "42.2 MB" back to bytes. */
 function parseSizeToBytes(s: string): number {
@@ -50,7 +46,7 @@ function parseSizeToBytes(s: string): number {
 //   image_bytes  = encrypted blob byte count per image/attachment
 //
 // To make per-note sizes sum to the bar, we estimate the same values
-// client-side. Spec: ops/docs/supabase.md (quota tracking)
+// client-side. Spec: docs/contrib/supabase.md (quota tracking)
 
 /** Estimate base64(encrypt(json)) byte count - what the server stores
  *  in the `ciphertext` text column and measures with octet_length(). */
@@ -74,10 +70,8 @@ export function estimateBlobBytes(originalSize: number): number {
  *  separately by adjust_blob_bytes RPCs on upload. */
 function sumAttachmentBlobBytes(body: string): number {
   let total = 0;
-  ATT_SIZE_RE.lastIndex = 0;
-  let m: RegExpExecArray | null;
-  while ((m = ATT_SIZE_RE.exec(body)) !== null) {
-    total += estimateBlobBytes(parseSizeToBytes(m[1]!.trim()));
+  for (const { size } of attachmentLinks(body, { acrossLines: true })) {
+    total += estimateBlobBytes(parseSizeToBytes(size.trim()));
   }
   return total;
 }
@@ -253,19 +247,19 @@ function shieldLiterals(line: string): string {
   return out;
 }
 
-/** Count file links in a note body. */
+/** Count file links in a note body. Not a picture placed from Files
+ *  (`![...](pn:file/...)`), which shows a file rather than holding one. */
 export function fileCount(body: string): number {
-  const matches = body.match(FILE_LINK_STRIP);
-  return matches ? matches.length : 0;
+  return markdownLinks(body, FILE_LINK).length;
 }
 
 // Extract a human-friendly label from the first image in markdown body.
 // Returns e.g. "IMG7461.jpeg|3.4 MB|image/jpeg" or just the alt text.
 // Used as a last-resort excerpt when the body is image-only.
 function imageExcerpt(body: string): string {
-  const m = body.match(/!\[([^\]]*)\]\([^)]*\)(\{[^}\n]*\})?/);
-  if (!m || !m[1]) return '';
-  const alt = m[1].trim();
+  const text = markdownLinks(body, ANY_PICTURE)[0]?.text;
+  if (!text) return '';
+  const alt = text.trim();
   if (!alt) return i18n.t('shell:fileTypes.image');
   // Alt text often contains "filename|size|mime" - show just the filename
   const first = alt.split('|')[0];
@@ -283,9 +277,18 @@ function stripInlineMarkdown(line: string): string {
     // (before links, otherwise the link regex eats the inner [alt](url)
     // and leaves `!`). The optional suffix carries size and alignment; it
     // must be matched generically or a preview shows a stray `{align=center}`.
-    .replace(/!\[([^\]]*)\]\([^)]*\)(\{[^}\n]*\})?/g, '')
-    // [name|size|mime](pn:file/...) -> friendly label based on mimetype
-    .replace(/\[[^\]]*\|[^\]]*\|([^\]]*)\]\(pn:file\/[^)]*\)/g, (_m, mime: string) => {
+    // The last branch of this, the file, the link and the note-link pattern
+    // keeps a bracket that opens no link, with everything up to the next `]`:
+    // a link opening at a later bracket before that `]` would fail the same
+    // way, and without the skip a long run of `[` was rescanned from every
+    // bracket (external report, 2026-10-24, bug report 23.1). Output is
+    // unchanged.
+    .replace(/!\[[^\]]*\]\([^)]*\)(?:\{[^}\n]*\})?|(!\[[^\]]*)/g, '$1')
+    // [name|size|mime](pn:file/...) -> friendly label based on mimetype. The
+    // mime is what follows the last pipe; the two inner groups take no pipe,
+    // so a run of pipes is not tried at every split.
+    .replace(/\[[^\]]*\|[^\]|]*\|([^\]|]*)\]\(pn:file\/[^)]*\)|\[[^\]]*/g, (run, mime?: string) => {
+      if (mime === undefined) return run;
       const mt = mime.trim().toLowerCase();
       if (mt.startsWith('audio/')) return i18n.t('shell:fileTypes.audioRecording');
       if (mt.startsWith('video/')) return i18n.t('shell:fileTypes.video');
@@ -306,13 +309,14 @@ function stripInlineMarkdown(line: string): string {
     .replace(/==(?![\s=])([^\n]*?)==/g, (run, inner: string) => (inner && !/\s$/.test(inner) ? inner : run))
     // [text](url) -> text; an empty one ("[](url)", left when its text was a
     // picture, as a clipped page writes a linked image) -> "".
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\[([^\]]*)\]\([^)]*\)|(\[[^\]]*)/g, '$1$2')
     // "](url)" with no "[" on this line: a link whose text began on the line
     // before, as a clipped heading writes one. A typed "]" is escaped on save.
     .replace(/\]\((?:https?:|mailto:|#|\/)[^)\s]*\)/g, '')
     // [[note link]] -> note link; [[note link|label]] -> label, as the
-    // editor shows it (same groups as NOTE_LINK_RE in noteLinks.ts).
-    .replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_m, target: string, label?: string) => label ?? target)
+    // editor shows it (same groups and skip as NOTE_LINK_RE in noteLinks.ts).
+    .replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]|\[\[[^\]|][^\]]*/g, (run, target?: string, label?: string) =>
+      target === undefined ? run : label ?? target)
     // <http://...> autolink -> http://...
     .replace(/<((?:https?|mailto):[^>\s]+)>/g, '$1')
     // Emphasis and strike delimiters. Every literal `*`, `~` and backtick is
@@ -451,7 +455,7 @@ export function deriveTitleFromContent(n: LocalNote): string {
   const t = (n.title ?? '').trim();
   if (t) return t;
   // Bookmarks: the domain IS the default name (render-time fallback, per
-  // ops/docs/archive/bookmarks-pillar.md section 2 - never stored).
+  // docs/internal/specs/bookmarks-pillar.md section 2 - never stored).
   if (n.type === 'link') return linkDomain(parseLinkBody(n.body).url);
   // Contacts: the name the fields spell, else the company, else an address.
   if (n.type === 'contact') return contactDisplayName('', parseContactBody(n.body));
@@ -487,9 +491,10 @@ export function deriveDisplayTitle(n: LocalNote, gated = false): string {
  * above it, so a label there is the row calling a named person empty.
  */
 export function emptyExcerptLabel(n: LocalNote): string {
-  if (n.type === 'file') return i18n.t('notes:noteRow.file');
+  if (n.type === 'file') return i18n.t('shell:fileTypes.file');
   if (n.type === 'login' || n.type === 'card' || n.type === 'ssh-key' || n.type === 'link') return i18n.t('notes:noteRow.empty');
-  if (n.type === 'contact') return '';
+  // A drawing without words is not empty: its shapes are its content.
+  if (n.type === 'contact' || n.type === 'drawing') return '';
   return i18n.t('notes:noteRow.noContent');
 }
 
@@ -548,7 +553,7 @@ export function isPlaceholderTitle(n: LocalNote): boolean {
  * A BOOKMARK is why this function exists rather than a `.title` read. A
  * bookmark stores an EMPTY title when the user gave no name, and shows its
  * domain instead - decided at render time so an edited URL can never leave a
- * stale name behind (`ops/docs/archive/bookmarks-pillar.md` section 2). So the
+ * stale name behind (`docs/internal/specs/bookmarks-pillar.md` section 2). So the
  * app calls it "github.com" everywhere while its stored title is '', and a
  * `.title` read made it unlinkable and unresolvable: it never appeared in the
  * autocomplete, and `[[github.com]]` typed by hand offered to create a note.
@@ -724,7 +729,7 @@ function deriveNoteSize(n: LocalNote): string {
  * while the list is sorted by size: the rest of the time it is a byte count on
  * every row that nobody asked for, and while it is the sort key it is the only
  * way to see why the rows are in the order they are in.
- * Spec: ops/docs/archive/ui-patterns.md (section 66)
+ * Spec: docs/internal/design/ui-patterns.md (section 66)
  */
 export function rowSizeLabel(n: LocalNote, sortField: string): string {
   return sortField === 'size' ? deriveNoteSize(n) : '';
@@ -775,8 +780,8 @@ export function deriveExcerpt(n: LocalNote, long = false): string {
       // measure - this one is the raw upload size, that one is storage cost.
       // The meta line is now the single place a size appears.
       // Extract mime from the single link: [name|size|mime](pn:file/...)
-      const m = n.body.match(/\[[^|]*\|[^|]*\|([^\]]*)\]\(pn:file\//);
-      return mimeToLabel((m?.[1]?.trim() || '').toLowerCase());
+      const mime = attachmentLinks(n.body, { acrossLines: true, anyId: true })[0]?.mime;
+      return mimeToLabel((mime?.trim() || '').toLowerCase());
     }
     return i18n.t('shell:noteRow.files', { count });
   }
@@ -810,6 +815,12 @@ export function deriveExcerpt(n: LocalNote, long = false): string {
       return typeof data.label === 'string' && data.label ? data.label : i18n.t('shell:noteRow.noLabel');
     } catch { return ''; }
   }
+  // Drawings: the words of its text boxes, never the scene JSON.
+  if (n.type === 'drawing') {
+    const scene = parseScene(n.body);
+    const lines = scene ? sceneText(scene).split('\n') : [];
+    return long ? lines.slice(0, LONG_EXCERPT_LINES).join('\n').slice(0, LONG_EXCERPT_CHARS) : (lines[0] ?? '').slice(0, 80);
+  }
   const explicitTitle = (n.title ?? '').trim();
   // The literal stays English on purpose: it matches a title an IMPORTER wrote
   // (the Evernote one names an untitled note that), not a stand-in this file
@@ -821,9 +832,9 @@ export function deriveExcerpt(n: LocalNote, long = false): string {
   const lines: string[] = [];
   for (const line of n.body.split(/\r?\n/)) {
     const t = line.trim();
-    // A table's dash row and its width marker say nothing, and with column
+    // A table's dash row and its marker lines say nothing, and with column
     // widths the dash row can run to dozens of dashes.
-    if (!t || FENCE_LINE.test(t) || isDelimiterRow(t) || tableWidthFromMarker(t) !== null) continue;
+    if (!t || FENCE_LINE.test(t) || isDelimiterRow(t) || isTableMarker(t)) continue;
     if (!skipped) {
       skipped = true;
       continue;
@@ -858,7 +869,7 @@ export const hotkeyLabel = bindingText(newNoteKey, KEY_OS);
 // entry's calendar date from it. The date lives in
 // `trackers.journalDate` as a local ISO string and the title is matched
 // only as a fallback for entries created before that field existed.
-// Spec: ops/docs/design-decisions.md (journal entry titles)
+// Spec: docs/internal/design-decisions.md (journal entry titles)
 
 // The one local-day helper lives with the date formatter; every caller that
 // names a day imports it from here.
@@ -910,7 +921,7 @@ export function journalDateOf(n: LocalNote): string | null {
  * a body nor a weekly reflection. The title plays no part, because whether it
  * is the one the app gave can only be judged against today's title settings.
  * Text can be added at any time, and the entry is then an ordinary one.
- * Spec: ops/issues/0439.md (Spec)
+ * Spec: docs/internal/issues/0439.md (Spec)
  */
 export function isCheckIn(n: LocalNote): boolean {
   if (n.type !== 'journal') return false;
@@ -933,7 +944,7 @@ export function entryDayOf(n: LocalNote): string {
 
 /** Each day that holds a live journal entry, to the id of its newest one.
  *  Trashed and archived entries stay off the calendar.
- *  Spec: ops/docs/archive/journal-calendar.md (the data) */
+ *  Spec: docs/internal/specs/journal-calendar.md (the data) */
 export function journalEntriesByDay(notes: readonly LocalNote[]): Map<string, string> {
   const newest = new Map<string, LocalNote>();
   for (const n of notes) {
@@ -985,7 +996,7 @@ export type JournalDays = ReadonlyMap<string, string> & {
 };
 
 /** The day map with the space of each entry. A day with entries in both
- *  spaces lists the open space first. Spec: ops/docs/plans/spaces.md (section 9) */
+ *  spaces lists the open space first. Spec: docs/internal/specs/spaces.md (section 9) */
 export function journalDaysIndex(
   notes: readonly LocalNote[],
   spaces?: { spaceOf: (n: LocalNote) => Space; open: Space; titleOf: (n: LocalNote) => string },
@@ -1106,7 +1117,7 @@ export function distinctJournalFormats(d: Date, selected: JournalTitleFormat, lo
  * Whether a title is still exactly one the app made for that day: the custom
  * pattern, or any preset with the current suffix or with none. Only such a
  * title follows the entry when its day changes; a title the person typed stays.
- * Spec: ops/docs/archive/dates.md (section 3.4)
+ * Spec: docs/internal/specs/dates.md (section 3.4)
  */
 export function isGeneratedJournalTitle(title: string, day: string, suffix: string, locale: string, pattern = ''): boolean {
   const d = new Date(`${day}T12:00:00`);
@@ -1126,7 +1137,7 @@ export function isGeneratedJournalTitle(title: string, day: string, suffix: stri
  * read-only entry keeps its title: the write refuses a title change there. So
  * does an entry the PIN guards right now, which the caller says with
  * `keepTitle`, because the gate is the view's state, not the row's.
- * Spec: ops/docs/archive/dates.md (section 3.4)
+ * Spec: docs/internal/specs/dates.md (section 3.4)
  */
 export function journalDatePatch(
   n: Pick<LocalNote, 'type' | 'title' | 'trackers' | 'createdAt' | 'locked'>,
@@ -1149,18 +1160,20 @@ export function journalDatePatch(
 
 /** The day of an item a calendar shows, by its type: a journal entry's
  *  day (its creation day before the field), a note's, a task list's or an
- *  event's `journalDate`, or null. A contact is placed by its birthday instead. */
+ *  event's `journalDate`, or null. A contact is placed by its dates instead. */
 function itemDayOf(n: LocalNote): string | null {
   if (n.type === 'journal') return entryDayOf(n);
   if (n.type === 'note' || n.type === 'task' || n.type === 'event') return journalDateOf(n);
   return null;
 }
 
-/** Whether an item shows on a calendar: a day of its own, or a birthday
- *  on a contact its PIN does not guard. */
+/** Whether an item shows on a calendar: a day of its own, or a birthday or
+ *  another labelled date on a contact its PIN does not guard. */
 export function isOnCalendar(n: LocalNote, isGated: (n: LocalNote) => boolean): boolean {
   if (itemDayOf(n) !== null) return true;
-  return n.type === 'contact' && !isGated(n) && contactBirthday(parseContactBody(n.body)) !== null;
+  if (n.type !== 'contact' || isGated(n)) return false;
+  const c = parseContactBody(n.body);
+  return contactBirthday(c) !== null || contactOtherDates(c).length > 0;
 }
 
 const KIND_ORDER: Record<DayKind, number> = { event: 0, journal: 1, note: 2, task: 3, contact: 4 };
@@ -1176,33 +1189,49 @@ function scheduleOfItem(n: LocalNote): Schedule | null {
 /**
  * Every dated item for the calendars: events, journal entries, notes and task
  * lists on their day (every day of a multi-day item, every occurrence of a
- * repeating event), and contacts on their birthday in every year (29 February
- * on the 28th in a year without it). Trashed and archived items stay off, and
- * so does the birthday of a contact behind its PIN, whose body is the secret;
+ * repeating event), and contacts on their birthday and their other labelled
+ * dates in every year (29 February on the 28th in a year without it), a
+ * date other than the birthday titled with its label ("Anna: Anniversary"
+ * through `dateTitle`), one entry per contact on a day, the birthday first.
+ * Trashed and archived items stay off, and so do the dates of a contact
+ * behind its PIN, whose body is the secret;
  * `openOnly` keeps the other space off too. A day lists the open space first,
  * then the all-day items before the timed ones, the timed ones by time, then
- * events, entries, notes, task lists and birthdays, newest first. A repeating
+ * events, entries, notes, task lists and contact dates, newest first. A repeating
  * event is expanded for the day asked, so no window is needed and a day is
  * read once.
- * Spec: ops/docs/archive/note-date.md (section 4), ops/docs/archive/calendar-pillar-spec.md (section 4.3)
+ * Spec: docs/internal/specs/note-date.md (section 4), docs/internal/specs/calendar-pillar-spec.md (section 4.3)
  */
 export function calendarIndex(
   notes: readonly LocalNote[],
-  opts: { titleOf: (n: LocalNote) => string; isGated: (n: LocalNote) => boolean; spaceOf?: (n: LocalNote) => Space; open?: Space; openOnly?: boolean },
+  opts: {
+    titleOf: (n: LocalNote) => string;
+    isGated: (n: LocalNote) => boolean;
+    /** The title of a contact date other than the birthday, from the contact's title and the row's label. */
+    dateTitle?: (name: string, label: string) => string;
+    spaceOf?: (n: LocalNote) => Space;
+    open?: Space;
+    openOnly?: boolean;
+  },
 ): DayIndex {
   type Placed = { n: LocalNote; s: Schedule; start: string };
+  // A contact date: the label is null for the birthday.
+  type Dated = { n: LocalNote; label: string | null };
   const byDay = new Map<string, Placed[]>();
-  const byBirthday = new Map<string, LocalNote[]>();
+  const byDate = new Map<string, Dated[]>();
   const series: { n: LocalNote; s: Schedule; len: number }[] = [];
   for (const n of notes) {
     if (n.deleted !== 0 || n.trashed !== 0 || n.archived === 1) continue;
     if (opts.openOnly && opts.spaceOf && opts.spaceOf(n) !== (opts.open ?? 'personal')) continue;
     if (n.type === 'contact') {
       if (opts.isGated(n)) continue;
-      const b = contactBirthday(parseContactBody(n.body));
-      if (b) {
-        const key = `${String(b.month).padStart(2, '0')}-${String(b.day).padStart(2, '0')}`;
-        byBirthday.set(key, [...(byBirthday.get(key) ?? []), n]);
+      const c = parseContactBody(n.body);
+      const b = contactBirthday(c);
+      const dates = [...(b ? [{ label: null, ...b }] : []), ...contactOtherDates(c)];
+      for (const d of dates) {
+        const key = `${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`;
+        const list = byDate.get(key) ?? [];
+        if (!list.some((x) => x.n === n)) byDate.set(key, [...list, { n, label: d.label }]);
       }
       continue;
     }
@@ -1221,11 +1250,15 @@ export function calendarIndex(
     }
   }
   const leap = (year: number) => new Date(year, 1, 29).getDate() === 29;
-  const birthdaysOn = (day: string): LocalNote[] => {
+  const contactDatesOn = (day: string): Dated[] => {
     const md = day.slice(5);
-    const own = byBirthday.get(md) ?? [];
-    return md === '02-28' && !leap(Number(day.slice(0, 4))) ? [...own, ...(byBirthday.get('02-29') ?? [])] : own;
+    const own = byDate.get(md) ?? [];
+    if (md !== '02-28' || leap(Number(day.slice(0, 4)))) return own;
+    // One entry per contact, the birthday before another date.
+    const all = [...own, ...(byDate.get('02-29') ?? [])];
+    return all.filter((d, i) => !all.some((x, j) => x.n === d.n && (x.label === null ? d.label !== null || j < i : d.label !== null && j < i)));
   };
+  const dateTitle = opts.dateTitle ?? ((name, label) => `${name}: ${label}`);
   // Each series is expanded once per window of SERIES_WINDOW days: the start
   // days that can cover a day of the window, kept per series. A day asked
   // takes the starts that cover it, so a long span costs no placement on
@@ -1276,11 +1309,11 @@ export function calendarIndex(
         if (s.alerts?.length) entry.alerted = true;
         return entry;
       }),
-      ...birthdaysOn(day).map((n): DayEntry & { at: string } => ({
+      ...contactDatesOn(day).map(({ n, label }): DayEntry & { at: string } => ({
         id: n.id,
         kind: 'contact',
         space: opts.spaceOf ? opts.spaceOf(n) : null,
-        title: opts.titleOf(n),
+        title: label === null ? opts.titleOf(n) : dateTitle(opts.titleOf(n), label),
         at: n.createdAt,
         tags: n.tags,
         folderId: n.folderId ?? null,
@@ -1298,7 +1331,7 @@ export function calendarIndex(
     return entries;
   };
   return {
-    has: (day) => byDay.has(day) || birthdaysOn(day).length > 0 || seriesOn(day).length > 0,
+    has: (day) => byDay.has(day) || contactDatesOn(day).length > 0 || seriesOn(day).length > 0,
     entriesOf,
   };
 }
@@ -1312,7 +1345,7 @@ export function calendarIndex(
  * time, so a new date setting needs no index rebuild. A query with no digit,
  * or shorter than four characters, names no day: a word never lists every
  * dated item.
- * Spec: ops/docs/archive/note-date.md
+ * Spec: docs/internal/specs/note-date.md
  */
 export function itemsDatedAs(query: string, notes: readonly LocalNote[], isGated: (n: LocalNote) => boolean): Set<string> {
   const found = new Set<string>();
@@ -1350,7 +1383,7 @@ export function itemsDatedAs(query: string, notes: readonly LocalNote[], isGated
  * it. A move takes the whole schedule along: a multi-day item keeps its
  * length. Taking the day away removes the whole schedule, and `backfilled`,
  * which belongs to a journal entry, goes with it. An event always has a day.
- * Spec: ops/docs/archive/note-date.md, ops/docs/archive/calendar-pillar-spec.md (step 4)
+ * Spec: docs/internal/specs/note-date.md, docs/internal/specs/calendar-pillar-spec.md (step 4)
  */
 export function schedulePatch(
   n: Pick<LocalNote, 'type' | 'trackers'>,
@@ -1421,7 +1454,9 @@ export function isNoteEmpty(note: LocalNote | undefined): boolean {
   const hasTitle = (note.title ?? '').trim() !== '';
   // Vault items: template JSON body = empty.
   const vaultTemplate = VAULT_EMPTY_BODIES[note.type];
-  const hasBody = vaultTemplate ? body !== '' && body !== vaultTemplate : body !== '';
+  // The editor saves an empty line as `&nbsp;`, so a draft typed in and then
+  // cleared holds only those: no content (#602).
+  const hasBody = vaultTemplate ? body !== '' && body !== vaultTemplate : body.replace(/&nbsp;/g, '').trim() !== '';
   // A schedule is content once it was written after the item was born, or
   // when the item was born with more than its day and alerts (a time, an end
   // or a repeat, as the quick add and a dragged range give it): the calendar
@@ -1433,6 +1468,11 @@ export function isNoteEmpty(note: LocalNote | undefined): boolean {
   const untouched = note.createdAt === note.updatedAt;
   if (schedule.length > 0 && (!untouched || schedule.some((key) => key !== 'journalDate' && key !== 'alerts'))) return false;
   if (note.type === 'event') return !hasTitle && !hasBody && !hasTags && untouched;
+  // A drawing with nothing drawn: its body is a scene, empty or not.
+  if (note.type === 'drawing') {
+    const scene = parseScene(note.body ?? '');
+    return !!scene && isEmptyScene(scene) && !hasTitle && !hasTags;
+  }
   // Task & journal titles are auto-generated - body is the real
   // signal, but only while the draft is still untouched (#122).
   // A new task list starts with one empty checkbox, which is no content.

@@ -84,21 +84,21 @@ export function QrSignInPrompt({
 
   return (
     <Modal onClose={onCancel} escape={!busy} closeOnBackdrop={!busy} title={t('qrSignInPrompt.title')} className="max-w-md p-6 space-y-4">
-        <p className="text-xs text-pn-muted leading-relaxed">
+        <p className="text-small text-pn-muted leading-relaxed">
           {t('qrSignInPrompt.body')}
         </p>
 
         <div className="rounded-lg border border-divider p-3">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-[10px] uppercase tracking-wide text-pn-muted">
+            <div className="text-meta uppercase tracking-wide text-pn-muted">
               {t('qrSignInPrompt.scannedPhrase')}
             </div>
             <button
               type="button"
               onClick={() => setRevealed((v) => !v)}
-              className="text-xs text-accent hover:underline"
+              className="text-small text-accent hover:underline"
             >
-              {revealed ? t('qrSignInPrompt.hide') : t('qrSignInPrompt.reveal')}
+              {revealed ? t('common:sshKeyForm.hide') : t('shell:vaultItem.reveal')}
             </button>
           </div>
           {revealed ? (
@@ -107,7 +107,7 @@ export function QrSignInPrompt({
               {words.map((w, i) => (
                 <div
                   key={i}
-                  className="rounded bg-track border border-divider px-2 py-1 text-[11px] font-mono truncate"
+                  className="rounded bg-track border border-divider px-2 py-1 text-meta font-mono truncate"
                 >
                   <span className="text-pn-muted me-1">
                     {i + 1}.
@@ -117,13 +117,13 @@ export function QrSignInPrompt({
               ))}
             </div>
           ) : (
-            <div className="font-mono text-xs text-pn-muted tracking-wider select-none">
+            <div className="font-mono text-small text-pn-muted tracking-wider select-none">
               •••• •••• •••• •••• •••• •••• •••• •••• •••• •••• •••• ••••
             </div>
           )}
         </div>
 
-        <label className="flex items-start gap-2 text-xs text-pn-soft cursor-pointer rounded-md border border-divider bg-surface-1 p-2.5">
+        <label className="flex items-start gap-2 text-small text-pn-soft cursor-pointer rounded-md border border-divider bg-surface-1 p-2.5">
           <input
             type="checkbox"
             checked={trustDevice}
@@ -133,14 +133,14 @@ export function QrSignInPrompt({
           />
           <span>
             <span className="font-medium">{t('trustDevice.label')}</span>
-            <span className="block text-[11px] text-pn-muted mt-0.5 leading-relaxed">
+            <span className="block text-meta text-pn-muted mt-0.5 leading-relaxed">
               {t('trustDevice.descriptionRestarts')}
             </span>
           </span>
         </label>
 
         {(error ?? stalled) && (
-          <div className="rounded border border-red-400/40 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-300 px-3 py-2 text-xs">
+          <div className="rounded border border-red-400/40 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-300 px-3 py-2 text-small">
             {error ?? stalled}
           </div>
         )}
@@ -159,7 +159,7 @@ export function QrSignInPrompt({
             type="button"
             disabled={busy}
             onClick={onCancel}
-            className="text-sm rounded border border-divider px-3 py-1.5 hover:bg-surface-1 transition disabled:opacity-50"
+            className="text-body rounded border border-divider px-3 py-1.5 hover:bg-surface-1 transition disabled:opacity-50"
           >
             {t('common:actions.cancel')}
           </button>
@@ -175,7 +175,7 @@ export function QrSignInPrompt({
               setTurnstileKey((k) => k + 1);
               onConfirm(token);
             }}
-            className="text-sm rounded bg-accent-fill text-white px-4 py-1.5 hover:bg-accent-fill-hover transition font-medium disabled:opacity-50"
+            className="text-body rounded bg-accent-fill text-white px-4 py-1.5 hover:bg-accent-fill-hover transition font-medium disabled:opacity-50"
           >
             {busy ? t('signIn.signingIn') : t('qrSignInPrompt.signIn')}
           </button>

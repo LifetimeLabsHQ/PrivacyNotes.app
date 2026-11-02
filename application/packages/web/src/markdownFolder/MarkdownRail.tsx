@@ -16,7 +16,7 @@
  *     different feature with a different confirm.
  *   - No Pro gate anywhere near it.
  *
- * Spec: ops/docs/archive/markdown-folder.md (section 9)
+ * Spec: docs/internal/specs/markdown-folder.md (section 9)
  */
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -122,26 +122,26 @@ export function MarkdownRail({
       ? SIDEBAR_ACTIVE
       : 'text-pn hover:bg-pn/5';
   const folderRowClass = (active: boolean) =>
-    `w-full rounded text-[15px] lg:text-[13px] font-medium transition flex items-center group ${selectedClass(active)}`;
+    `w-full rounded text-row lg:text-compact font-medium transition flex items-center group ${selectedClass(active)}`;
   const tagRowClass = (active: boolean) =>
-    `w-full rounded text-[15px] font-medium transition flex items-center group ${selectedClass(active)}`;
+    `w-full rounded text-row font-medium transition flex items-center group ${selectedClass(active)}`;
   const folderInnerClass = 'flex-1 min-w-0 flex items-center gap-2 lg:gap-1.5 px-2 py-2 lg:py-1 text-start';
   const tagInnerClass = 'flex-1 min-w-0 flex items-center gap-2 px-2 py-2 text-start';
   const folderCountClass =
-    'shrink-0 text-xs lg:text-[11px] text-pn-muted tabular-nums ms-1 me-2 lg:me-1.5';
-  const tagCountClass = 'shrink-0 text-xs text-pn-muted tabular-nums ms-2 me-2';
+    'shrink-0 text-small lg:text-meta text-pn-muted tabular-nums ms-1 me-2 lg:me-1.5';
+  const tagCountClass = 'shrink-0 text-small text-pn-muted tabular-nums ms-2 me-2';
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-3">
-      <p className="text-[11px] uppercase tracking-wide text-pn-muted px-2 pt-3 pb-1">
+      <p className="text-meta uppercase tracking-wide text-pn-muted px-2 pt-3 pb-1">
         {t('markdown.railFolders')}
       </p>
       <button type="button" onClick={() => onSelectDir(null)} className={folderRowClass(selectedDir === null)}>
         <span className={folderInnerClass}>
           <span className={`inline-flex shrink-0 ${selectedDir === null ? 'text-accent' : 'text-label'}`}>
-            <Folder size={16} className="lg:w-3.5 lg:h-3.5" />
+            <Folder className="lg:w-3.5 lg:h-3.5" />
           </span>
-          <span className="truncate">{t('markdown.allFiles')}</span>
+          <span className="truncate">{t('shell:filesList.menuAllFiles')}</span>
         </span>
         <span className={folderCountClass}>{entries.length}</span>
       </button>
@@ -164,7 +164,7 @@ export function MarkdownRail({
               style={{ paddingInlineStart: `${8 + Math.min(node.depth - 1, MAX_INDENT_LEVEL) * 14}px` }}
             >
               <span className={`inline-flex shrink-0 ${selectedDir === node.path ? 'text-accent' : 'text-label'}`}>
-                <Folder size={16} className="lg:w-3.5 lg:h-3.5" />
+                <Folder className="lg:w-3.5 lg:h-3.5" />
               </span>
               <span className="truncate">{node.name}</span>
             </span>
@@ -175,7 +175,7 @@ export function MarkdownRail({
 
       {sortedTags.length > 0 && (
         <>
-          <p className="text-[11px] uppercase tracking-wide text-pn-muted px-2 pt-4 pb-1">
+          <p className="text-meta uppercase tracking-wide text-pn-muted px-2 pt-4 pb-1">
             {t('markdown.railTags')}
           </p>
           {/* Filter only. A rename here would rewrite front matter across every
@@ -191,7 +191,7 @@ export function MarkdownRail({
             >
               <span className={tagInnerClass}>
                 <span className="inline-flex shrink-0 text-accent">
-                  <Hash size={16} />
+                  <Hash />
                 </span>
                 <span className="truncate">{tag}</span>
               </span>

@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import { setCheckInCardShown } from './checkInCardSwitch';
+import { useSteppedWidth } from './useElementSize';
 import { useTranslation } from 'react-i18next';
 import type { LocalNote } from './db';
 import { closedMenuJustNow, type ContextMenuItem } from './ContextMenu';
@@ -45,10 +46,19 @@ import type { CheckInSettings } from './userSettings';
  * entry, its history and its sync behave as if the entry's own pills were
  * used. An entry behind its PIN or set read-only is never read or written
  * here: the card shows a lock, and a tap opens the entry and its gate.
- * Spec: ops/issues/0439.md (Spec), ops/docs/archive/ui-patterns.md section 141
+ * Spec: docs/internal/issues/0439.md (Spec), docs/internal/design/ui-patterns.md section 141
  */
 type Props = {
   grid: boolean;
+  /** On Home: every state keeps the tile, so the layout arranged in Customize
+   *  is the one Home shows before and after a check-in. */
+  home?: boolean;
+  /** Home's placement of the tile in its grid. */
+  style?: CSSProperties;
+  /** Home's arranging tools (the grip tab, the resize corner), drawn in the tile. */
+  controls?: ReactNode;
+  /** Home's id for the tile, which its reorder finds by. */
+  reorderId?: string;
   /** The live items of the open space; the card finds the day's entry here. */
   notes: readonly LocalNote[];
   /** Whether the PIN guards an entry right now. */
@@ -58,6 +68,9 @@ type Props = {
   trackerSettings: TrackerSettings;
   onTrackerSettingsChange: (next: TrackerSettings) => void;
   medications: MedicationTemplate[];
+  /** The medication card shows under this one (MedicationCard.tsx), so the
+   *  pass leaves the medication out. */
+  medicationCard?: boolean;
   factors: FactorDef[];
   isPro: boolean;
   onOpenUpgrade?: () => void;
@@ -116,7 +129,8 @@ export function CheckInCard(p: Props) {
   // The prompt sits above the scale at every width. A grid tile keeps the
   // open tracker under the pills; the split layout is for the band across
   // the list.
-  const width = useWidth(root);
+  // Renewed only when it crosses SPLIT, so a pane resize does not redraw the card at every pixel.
+  const [width] = useSteppedWidth(root, (w) => String(w >= SPLIT));
   const split = !p.grid && width >= SPLIT;
 
   useEffect(() => {
@@ -181,11 +195,11 @@ export function CheckInCard(p: Props) {
   }, [p.notes]);
 
   const shell = (children: ReactNode, line = false) => (
-    <Shell grid={p.grid} line={line} rootRef={rootRef} onRoot={setRoot}>{children}</Shell>
+    <Shell grid={p.grid} line={line && !p.home} rootRef={rootRef} onRoot={setRoot} style={p.style} center={p.home} reorderId={p.reorderId}>{children}{p.controls}</Shell>
   );
 
   const noticeLine = notice && (
-      <div className="flex items-center gap-2 min-h-8 text-[13px] text-pn-muted">
+      <div className="flex items-center gap-2 min-h-8 text-compact text-pn-muted">
         <span className="min-w-0 flex-1 truncate">{notice === 'skipped' ? t('checkIn.skipped') : notice === 'cleared' ? t('checkIn.cleared') : t('checkIn.hidden')}</span>
         <button
           type="button"
@@ -195,9 +209,9 @@ export function CheckInCard(p: Props) {
             pendingHide.current = false;
             setNotice(null);
           }}
-          className="shrink-0 rounded-md px-2 py-1 text-[13px] font-medium text-accent hover:bg-accent/10"
+          className="shrink-0 rounded-md px-2 py-1 text-compact font-medium text-accent hover:bg-accent/10"
         >
-          {t('checkIn.undo')}
+          {t('notes:editor.undo')}
         </button>
       </div>
   );
@@ -210,13 +224,20 @@ export function CheckInCard(p: Props) {
   const entry = checkInEntry(p.notes, day);
   const guarded = !!entry && (p.isGated(entry) || entry.locked === 1);
   const data = (entry && !guarded ? (entry.trackers as JournalTrackerData | undefined) : undefined) ?? {};
+  // While the medication card shows, the doses are that card's: a dose
+  // logged there neither folds this card nor shows in its line, and Start
+  // over leaves it.
+  const { medications: _doses, ...rest } = data;
+  const own: JournalTrackerData = p.medicationCard ? rest : data;
   const mood = typeof data.mood === 'number' ? data.mood : null;
-  const logged = hasLoggedTrackers(data as Record<string, unknown>, false);
+  const logged = hasLoggedTrackers(own as Record<string, unknown>, false);
   const isToday = day === today;
   const dayLabel = formatDay(day, 'tile');
   const prompt = isToday ? t('checkIn.prompt') : t('checkIn.promptOn', { date: dayLabel });
-  // The pass needs at least one tracker besides the mood.
-  const hasPass = p.trackerSettings.activeBuiltins.some((id) => id !== 'mood');
+  // The pass needs at least one tracker besides the mood (and the
+  // medication, while its own card shows).
+  const outOfPass: string[] = p.medicationCard ? ['mood', 'medication'] : ['mood'];
+  const hasPass = p.trackerSettings.activeBuiltins.some((id) => !outOfPass.includes(id));
 
   async function pick(value: number) {
     if (mood === value) {
@@ -255,15 +276,15 @@ export function CheckInCard(p: Props) {
     // (Show check-in in the list options), off; the toast's Undo takes
     // it back.
     const items: ContextMenuItem[] = [
-      { label: t('checkIn.skipToday'), icon: <SkipForward size={14} />, onSelect: () => { fold(); setCheckInSkipped(true); setNotice('skipped'); } },
-      { label: t('checkIn.anotherDay'), icon: <CalendarPlus size={14} />, onSelect: () => setCalOpen(true) },
-      { label: t('checkIn.chooseTrackers'), icon: <SlidersHorizontal size={14} />, onSelect: () => p.onOpenTrackers('trackers') },
+      { label: t('checkIn.skipToday'), icon: <SkipForward />, onSelect: () => { fold(); setCheckInSkipped(true); setNotice('skipped'); } },
+      { label: t('checkIn.anotherDay'), icon: <CalendarPlus />, onSelect: () => setCalOpen(true) },
+      { label: t('checkIn.chooseTrackers'), icon: <SlidersHorizontal />, onSelect: () => p.onOpenTrackers('trackers') },
       // Clears the mood and every tracker value of the day; the entry's text
       // and its bookkeeping (the date) stay. The notice offers Undo, which writes them back.
-      ...(logged ? [{ label: t('checkIn.startOver'), icon: <ArrowCounterClockwise size={14} />, onSelect: () => {
-        const keep = { ...data };
+      ...(logged ? [{ label: t('checkIn.startOver'), icon: <ArrowCounterClockwise />, onSelect: () => {
+        const keep = { ...own };
         const patch: JournalTrackerData = {};
-        for (const key of Object.keys(data)) {
+        for (const key of Object.keys(own)) {
           if (BOOKKEEPING_KEYS.has(key)) delete (keep as Record<string, unknown>)[key];
           else (patch as Record<string, unknown>)[key] = undefined;
         }
@@ -273,8 +294,8 @@ export function CheckInCard(p: Props) {
         setNotice('cleared');
       } }] : []),
       { type: 'separator' },
-      { label: t('checkIn.hide'), icon: <EyeSlash size={14} />, onSelect: () => { fold(); pendingHide.current = true; setNotice('hidden'); } },
-      { label: t('checkIn.settings'), icon: <Gear size={14} />, onSelect: p.onOpenSettings },
+      { label: t('checkIn.hide'), icon: <EyeSlash />, onSelect: () => { fold(); pendingHide.current = true; setNotice('hidden'); } },
+      { label: t('contextMenu.settings'), icon: <Gear />, onSelect: p.onOpenSettings },
     ];
     p.openMenu?.(
       { clientX: rtl ? r.left : r.right, clientY: r.bottom + 4, preventDefault: () => {}, stopPropagation: () => {} },
@@ -285,29 +306,11 @@ export function CheckInCard(p: Props) {
     );
   }
 
-  // In a narrow prompt row a mouse reveals the gear on hover, over the end of
-  // the prompt, so the question keeps the whole row; a finger always sees it.
-  // The negative end margin puts the glyph, not the button's padding, on the
-  // edge the tiles end at (8px of a 32px button, 12px of a 40px one).
-  const gear = (
-    <span className="shrink-0 -me-2 [@media(hover:none)]:-me-3 rounded-md bg-surface-2 transition-opacity @max-[239.98px]/checkin:[@media(hover:hover)]:absolute @max-[239.98px]/checkin:[@media(hover:hover)]:end-0 @max-[239.98px]/checkin:[@media(hover:hover)]:opacity-0 @max-[239.98px]/checkin:[@media(hover:hover)]:group-hover/checkin:opacity-100 @max-[239.98px]/checkin:[@media(hover:hover)]:focus-within:opacity-100">
-      <HoverLabel label={t('checkIn.options')} position="below-end">
-        <button
-          type="button"
-          onClick={openGear}
-          aria-label={t('checkIn.options')}
-          aria-haspopup="menu"
-          className="inline-flex items-center justify-center w-8 h-8 [@media(hover:none)]:w-10 [@media(hover:none)]:h-10 rounded-md text-pn-muted hover:text-pn-soft hover:bg-pn/5 transition"
-        >
-          <Gear size={16} aria-hidden="true" />
-        </button>
-      </HoverLabel>
-    </span>
-  );
+  const gear = <CardGear label={t('checkIn.options')} onClick={openGear} />;
 
   // Another day: the day, and the way back to today.
   const dayChip = !isToday && (
-    <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full border border-accent/50 ps-2.5 pe-1 h-7 text-[12px] font-medium text-accent whitespace-nowrap">
+    <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full border border-accent/50 ps-2.5 pe-1 h-7 text-small font-medium text-accent whitespace-nowrap">
       {dayLabel}
       <button
         type="button"
@@ -349,10 +352,10 @@ export function CheckInCard(p: Props) {
         <button
           type="button"
           onClick={() => p.onOpenDay(day)}
-          className="min-w-0 flex-1 flex items-center gap-2 text-start text-[13px] text-pn-muted"
+          className="min-w-0 flex-1 flex items-center gap-2 text-start text-compact text-pn-muted"
         >
           <span className="min-w-0 truncate">{isToday ? t('checkIn.locked') : t('checkIn.lockedOn', { date: dayLabel })}</span>
-          <LockSimple size={16} aria-hidden="true" className="shrink-0" />
+          <LockSimple aria-hidden="true" className="shrink-0" />
         </button>
         {dayChip}
         {gear}
@@ -379,7 +382,7 @@ export function CheckInCard(p: Props) {
 
   // Folded: what was logged, on one line. A tap opens the pass again.
   if (!flowOpen && logged) {
-    const parts = checkInParts(data, p.trackerSettings, p.factors);
+    const parts = checkInParts(own, p.trackerSettings, p.factors);
     return shell(
       <>
         <div className="flex items-center gap-2 min-h-8">
@@ -387,7 +390,7 @@ export function CheckInCard(p: Props) {
             type="button"
             onClick={() => setFlowOpen(true)}
             aria-label={t('checkIn.edit')}
-            className="min-w-0 flex-1 flex items-center gap-2 text-start text-[13px]"
+            className="min-w-0 flex-1 flex items-center gap-2 text-start text-compact"
           >
             {mood !== null && <MoodMark mood={mood} size={26} />}
             {streak ? (
@@ -418,7 +421,7 @@ export function CheckInCard(p: Props) {
     <button
       type="button"
       onClick={() => p.onOpenDay(day)}
-      className="min-w-0 truncate text-[12.5px] text-accent hover:underline"
+      className="min-w-0 truncate text-compact text-accent hover:underline"
     >
       {isToday ? t('checkIn.write') : t('checkIn.writeOn', { date: dayLabel })}
     </button>
@@ -430,9 +433,9 @@ export function CheckInCard(p: Props) {
     <div role="status" className={`flex items-center gap-3.5 pb-1 ${split ? '' : 'mt-4 border-t border-divider pt-3'}`}>
       <CheckCircle size={56} weight="fill" aria-hidden="true" className="shrink-0 text-success pn-pop" />
       <span className="min-w-0 leading-tight">
-        <span className="block text-base font-semibold text-pn">{t('checkIn.allDone')}</span>
-        <span className="mt-0.5 block text-[13px] text-pn-muted">{t('checkIn.niceWork')}</span>
-        <span className="mt-1.5 flex items-center gap-2 text-xs text-pn-muted">
+        <span className="block text-title font-semibold text-pn">{t('checkIn.allDone')}</span>
+        <span className="mt-0.5 block text-compact text-pn-muted">{t('checkIn.niceWork')}</span>
+        <span className="mt-1.5 flex items-center gap-2 text-small text-pn-muted">
           <span key={counted ? 'now' : 'before'} className={`inline-block ${counted ? 'pn-pop' : ''}`}>{streakLabel}</span>
           {streakDots}
         </span>
@@ -444,10 +447,10 @@ export function CheckInCard(p: Props) {
   const pills = inPass && hasPass && !!entry;
   const done = inPass && !pills && (
     <Button action="done" onClick={finish} className="shrink-0">
-      {t('checkIn.done')}
+      {t('common:actions.done')}
     </Button>
   );
-  const promptLine = <span className="min-w-0 truncate text-[13px] font-medium text-pn">{prompt}</span>;
+  const promptLine = <span className="min-w-0 truncate text-compact font-medium text-pn">{prompt}</span>;
   // One line at every list width: the chip, the word and Saved on the start,
   // the gear on the end; the chip itself reopens the tiles. Only the word
   // yields, and only on a card narrower than the list pane allows.
@@ -465,9 +468,9 @@ export function CheckInCard(p: Props) {
         <MoodMark mood={mood} size={28} className={scaleOpen ? 'ring-2 ring-accent ring-offset-1 ring-offset-surface-2' : ''} />
       </button>
       <span className="min-w-0 flex-1 leading-tight">
-        <span className="block truncate text-[13px] font-semibold text-pn">{moodWord(mood)}</span>
-        <span className="flex items-center gap-1 text-[11px] text-success">
-          <CheckCircle size={12} weight="fill" aria-hidden="true" key={popKey} className={popKey ? 'pn-pop' : ''} />
+        <span className="block truncate text-compact font-semibold text-pn">{moodWord(mood)}</span>
+        <span className="flex items-center gap-1 text-meta text-success">
+          <CheckCircle weight="fill" aria-hidden="true" key={popKey} className={popKey ? 'pn-pop' : ''} />
           {t('checkIn.saved')}
         </span>
       </span>
@@ -511,7 +514,7 @@ export function CheckInCard(p: Props) {
           <TrackerPills
             key={day}
             variant="card"
-            exclude={['mood']}
+            exclude={outOfPass}
             data={data}
             onChange={(next) => void p.onSave(day, next)}
             trackerSettings={p.trackerSettings}
@@ -530,27 +533,41 @@ export function CheckInCard(p: Props) {
   );
 }
 
-/** The width of an element, kept current. */
-function useWidth(el: HTMLElement | null): number {
-  const [width, setWidth] = useState(0);
-  useLayoutEffect(() => {
-    if (!el) return;
-    setWidth(el.getBoundingClientRect().width);
-    if (typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver((entries) => setWidth(entries[0]?.contentRect.width ?? 0));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [el]);
-  return width;
+/** The options button at the end of a card's top row. In a narrow prompt
+ *  row (a `@container/checkin` under 240px) a mouse reveals it on hover, over
+ *  the end of the prompt, so the question keeps the whole row; a finger
+ *  always sees it. The negative end margin puts the glyph, not the button's
+ *  padding, on the edge the tiles end at (8px of a 32px button, 12px of a
+ *  40px one). */
+export function CardGear({ label, onClick }: { label: string; onClick: (e: React.MouseEvent<HTMLButtonElement>) => void }) {
+  return (
+    <span className="shrink-0 -me-2 [@media(hover:none)]:-me-3 rounded-md bg-surface-2 transition-opacity @max-[239.98px]/checkin:[@media(hover:hover)]:absolute @max-[239.98px]/checkin:[@media(hover:hover)]:end-0 @max-[239.98px]/checkin:[@media(hover:hover)]:opacity-0 @max-[239.98px]/checkin:[@media(hover:hover)]:group-hover/checkin:opacity-100 @max-[239.98px]/checkin:[@media(hover:hover)]:focus-within:opacity-100">
+      <HoverLabel label={label} position="below-end">
+        <button
+          type="button"
+          onClick={onClick}
+          aria-label={label}
+          aria-haspopup="menu"
+          className="inline-flex items-center justify-center w-8 h-8 [@media(hover:none)]:w-10 [@media(hover:none)]:h-10 rounded-md text-pn-muted hover:text-pn-soft hover:bg-pn/5 transition"
+        >
+          <Gear aria-hidden="true" />
+        </button>
+      </HoverLabel>
+    </span>
+  );
 }
 
-/** The card's frame: a band across the list. In the grid it is a tile two
+
+/** The card's frame, for this card and the medication card under it
+ *  (MedicationCard.tsx): a band across the list. In the grid it is a tile two
  *  columns wide that the other tiles fill in around (the span is in
  *  index.css), and a one-line state is a strip across the grid, so a short
- *  line never sits in a tall empty tile. */
-function Shell({ grid, line, rootRef, onRoot, children }: { grid: boolean; line: boolean; rootRef: RefObject<HTMLLIElement | null>; onRoot: (el: HTMLLIElement | null) => void; children: ReactNode }) {
+ *  line never sits in a tall empty tile. Home keeps the tile (`home`). */
+export function Shell({ grid, line, rootRef, onRoot, style, center = false, reorderId, children }: { grid: boolean; line: boolean; rootRef: RefObject<HTMLLIElement | null>; onRoot: (el: HTMLLIElement | null) => void; style?: CSSProperties; center?: boolean; reorderId?: string; children: ReactNode }) {
   return (
     <li
+      style={style}
+      data-reorder-id={reorderId}
       ref={(el) => {
         rootRef.current = el;
         onRoot(el);
@@ -558,7 +575,7 @@ function Shell({ grid, line, rootRef, onRoot, children }: { grid: boolean; line:
       data-checkin-card=""
       className={
         grid
-          ? `${line ? 'col-span-full' : 'pn-grid-checkin flex flex-col'} min-w-0 rounded-xl border border-divider bg-surface-2 px-3 py-2.5`
+          ? `${line ? 'col-span-full' : 'pn-grid-checkin flex flex-col'}${center ? ' relative justify-center' : ''} min-w-0 rounded-xl border border-divider bg-surface-2 px-3 py-2.5`
           : 'min-w-0 px-4 py-2.5 bg-surface-2 border-b border-divider'
       }
     >

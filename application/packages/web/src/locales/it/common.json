@@ -26,14 +26,11 @@
     "noResults": "Nessun risultato"
   },
   "deleteNote": {
-    "title": "Elimina per sempre",
     "confirm": "Elimina per sempre",
-    "untitled": "Senza titolo",
     "body": "Eliminare definitivamente <highlight>“{{title}}”</highlight>? L'operazione è irreversibile."
   },
   "emptyTrash": {
     "title": "Svuota cestino",
-    "confirm": "Elimina per sempre",
     "body_one": "Eliminare definitivamente <highlight>{{count}} nota</highlight>? L'operazione è irreversibile.",
     "body_other": "Eliminare definitivamente <highlight>{{count}} note</highlight>? L'operazione è irreversibile."
   },
@@ -61,7 +58,6 @@
   },
   "palette": {
     "label": "Comandi",
-    "open": "Comandi",
     "empty": "Nessun comando corrispondente",
     "groups": {
       "features": "Funzioni",
@@ -86,7 +82,7 @@
       "insertDate": "Inserisci la data",
       "insertDateTime": "Inserisci data e ora",
       "clearFilters": "Rimuovi i filtri",
-      "moveToTrash": "Sposta nota nel cestino",
+      "moveToTrash": "Elimina nota",
       "closeTab": "Chiudi la scheda o la nota",
       "nextTab": "Scheda successiva",
       "previousTab": "Scheda precedente",
@@ -109,10 +105,8 @@
     "move": "sposta",
     "open": "apri",
     "openInTab": "apri in una scheda",
-    "openLink": "Apri",
     "edit": "modifica",
     "close": "chiudi",
-    "tags": "Tag",
     "folders": "Cartelle",
     "tagItems_one": "{{count}} elemento",
     "tagItems_other": "{{count}} elementi",
@@ -175,17 +169,14 @@
     "downloadPublicKey": "Scarica chiave pubblica",
     "downloadPrivateKey": "Scarica chiave privata",
     "downloadHint": "Sposta la chiave scaricata in ~/.ssh ed esegui chmod 600 su di essa, altrimenti ssh la rifiuta.",
+    "downloadHintDesktop": "PrivacyNotes non salva in ~/.ssh, per proteggere le chiavi che ci sono. Salva la chiave da un'altra parte, spostala in ~/.ssh ed esegui chmod 600 su di essa, altrimenti ssh la rifiuta.",
+    "downloadHintWindows": "PrivacyNotes non salva nella tua cartella .ssh, per proteggere le chiavi che ci sono. Salva la chiave da un'altra parte e spostala in %USERPROFILE%\\.ssh. Windows non ha bisogno di chmod.",
     "downloadFailed": "Non è stato possibile salvare il file della chiave. Controlla il file e riprova.",
     "passphrase": "Passphrase",
     "passphrasePlaceholder": "Passphrase della chiave (se presente)",
     "show": "Mostra",
     "hide": "Nascondi",
-    "copyPassphrase": "Copia passphrase",
-    "notes": "Note",
-    "notesPlaceholder": "Note aggiuntive (facoltativo)",
-    "requirePin": "Richiedi il PIN per visualizzare",
-    "whatDoesThisDo": "A cosa serve?",
-    "setUpPinFirst": "Imposta prima un PIN nelle impostazioni di Sicurezza."
+    "copyPassphrase": "Copia passphrase"
   },
   "tagInput": {
     "placeholder": "Aggiungi tag… separa con virgola, # o invio",
@@ -257,7 +248,6 @@
       "apro la cassaforte in silenzio",
       "decifrata in locale. ignorata nel mondo",
       "decifro come se non fossero affari di nessuno",
-      "testo in chiaro a chilometro zero",
       "trasformo i pensieri in zuppa illeggibile",
       "un altro capolavoro cifrato in arrivo",
       "rimetto ordine nel caos cifrato",
@@ -281,17 +271,14 @@
     "changesSome_other": "{{count}} di queste note hanno modifiche senza backup che andrebbero perse."
   },
   "ninja": {
-    "recent": "Recenti",
     "topHit": "Risultato migliore",
     "trashEmpty": "Il cestino è vuoto",
     "allThemes": "Tutti i temi",
     "features": {
       "stats": {
-        "label": "Statistiche",
         "detail": "La tua scrittura, le serie e i tracker nel tempo"
       },
       "trackers": {
-        "label": "Tracker",
         "detail": "Umore, abitudini, fattori e farmaci"
       },
       "medication": {
@@ -311,7 +298,6 @@
         "detail": "Una password o una passphrase robusta, pronta da copiare"
       },
       "themes": {
-        "label": "Temi",
         "detail": "Temi di colore per la modalità chiara e scura"
       }
     },
@@ -322,7 +308,6 @@
     "commands": {
       "syncResume": "Riprendi la sincronizzazione",
       "changelog": "Novità",
-      "help": "Aiuto",
       "themesPage": "Temi della community",
       "website": "Sito di PrivacyNotes"
     },

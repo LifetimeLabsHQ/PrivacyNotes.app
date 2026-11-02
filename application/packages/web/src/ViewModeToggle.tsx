@@ -27,7 +27,7 @@ export function ViewModeToggle({ mode, onChange }: { mode: ViewMode; onChange: (
               : 'border-divider text-pn-muted hover:text-accent hover:border-accent/50 dark:hover:text-accent'
           }`}
         >
-          <Sparkle size={15} />
+          <Sparkle />
         </button>
       </HoverLabel>
       <div className="flex-1 min-w-0 flex rounded-md border border-divider overflow-hidden">
@@ -37,14 +37,14 @@ export function ViewModeToggle({ mode, onChange }: { mode: ViewMode; onChange: (
             type="button"
             onClick={() => onChange(m)}
             aria-pressed={mode === m}
-            className={`flex-auto min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1 text-[12px] font-medium transition ${
+            className={`flex-auto min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1 text-small font-medium transition ${
               mode === m
                 ? SIDEBAR_ACTIVE
                 : 'text-pn-muted hover:text-accent dark:hover:text-accent'
             }`}
           >
-            {m === 'list' ? <List size={13} className="shrink-0" /> : <SquaresFour size={13} className="shrink-0" />}
-            <span className="truncate">{m === 'list' ? t('tagsRail.viewList') : t('tagsRail.viewGrid')}</span>
+            {m === 'list' ? <List className="shrink-0" /> : <SquaresFour className="shrink-0" />}
+            <span className="truncate">{m === 'list' ? t('settings:appearance.viewList') : t('settings:appearance.viewGrid')}</span>
           </button>
         ))}
       </div>

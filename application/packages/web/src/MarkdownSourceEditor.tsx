@@ -47,7 +47,7 @@ export type MarkdownSourceHandle = { focus: () => boolean };
  * Uncontrolled (defaultValue + key), mirroring Editor, so typing never
  * round-trips through parent state.
  *
- * Spec: ops/specs/editor-mode-toggle.md (no custom Tab-key handling in v1, deliberately)
+ * Spec: docs/internal/specs/editor-mode-toggle.md (no custom Tab-key handling in v1, deliberately)
  */
 export function MarkdownSourceEditor({ value, onChange, readOnly = false, search, toolbar, ref: handleRef }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -161,7 +161,7 @@ export function MarkdownSourceEditor({ value, onChange, readOnly = false, search
 
   // Replace is the Pro half of search, gated here for the key and the "..."
   // row alike, as useEditorPanels gates the rich editor's.
-  // Spec: ops/docs/pro-features.md (Find and replace)
+  // Spec: docs/internal/pro-features.md (Find and replace)
   const toggleReplace = () => {
     if (!search || readOnly) return;
     if (barRef.current === 'replace') return closeBar();
@@ -267,7 +267,7 @@ export function MarkdownSourceEditor({ value, onChange, readOnly = false, search
       // same --pn-text-scale knob. Its own 14px base is kept (monospace
       // runs visually larger than the prose face at the same size).
       style={{ fontSize: 'calc(14px * var(--pn-text-scale))' }}
-      className="relative w-full resize-none overflow-hidden border-0 bg-transparent p-0 font-mono leading-relaxed text-pn outline-none [grid-area:1/1]"
+      className="pn-source-field relative w-full resize-none overflow-hidden border-0 bg-transparent p-0 font-mono leading-relaxed text-pn outline-none [grid-area:1/1]"
     />
   );
 

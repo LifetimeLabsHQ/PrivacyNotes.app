@@ -7,7 +7,7 @@
  * string id and validated at build time. Price mentions use {price},
  * {earlyPrice}, {proPrice} tokens - never literal dollar amounts.
  * Editable by hand or via the local builder: pnpm landing:builder.
- * Spec: ops/docs/plans/marketing-pages.md (these landing pages are English only, permanently)
+ * Spec: docs/internal/plans/marketing-pages.md (these landing pages are English only, permanently)
  */
 export default {
   kind: 'feature',
@@ -15,13 +15,13 @@ export default {
   seo: {
     title: 'Free Markdown Editor - Private, No Signup | PrivacyNotes',
     description:
-      'Write markdown in your browser with live preview. No account, no signup. Your notes are encrypted end-to-end and never readable by anyone but you.',
+      'Write markdown in your browser with live preview. No account, no signup. Your notes are encrypted on your device.',
     breadcrumb: 'Markdown editor',
   },
   hero: {
     badge: 'Free, in your browser, right now',
     h1: 'Free markdown editor. Private by default.',
-    sub: 'Live preview, keyboard-first, works offline. No account to start writing, and when you do sync, your text is always encrypted, on your device and on the way to the server. We could not read your drafts if we tried.',
+    sub: 'Live preview, keyboard-first, works offline. No account to start writing, and when you do sync, your text is always encrypted, on your device and on the way to the server.',
     cta: 'Start writing, no signup',
     ctaSecondary: 'Download the apps',
     micro:
@@ -41,11 +41,11 @@ export default {
       { text: 'Your words, your disk, your key.', cls: '' },
     ],
   },
-  chips: ['free-forever', 'zero-knowledge', 'swiss-servers', 'no-subscription', 'open-source'],
+  chips: ['free-forever', 'always-encrypted', 'swiss-servers', 'no-subscription', 'open-source'],
   benefitsIntro: {
     kicker: 'Why this one',
     h2: 'Markdown editors are easy. Private ones are not.',
-    lead: 'Most "free online editors" are a signup funnel with a text area attached. This is the opposite: a real editor first, and an architecture around it engineered so nobody upstream can read what you write.',
+    lead: 'Most "free online editors" are a signup funnel with a text area attached. This is the opposite: a real editor first, with every note encrypted on your device.',
   },
   benefits: [
     'real-editor',
@@ -61,7 +61,7 @@ export default {
     body1:
       'On desktop, point PrivacyNotes at a folder of markdown files and work on them in place: edits save straight back to disk as plain .md, nothing is imported into a silo.',
     body2:
-      'And when you sync that folder across devices, the sync is end-to-end encrypted, and it is {price} once, not a yearly plan.',
+      'The folder stays on your disk and does not sync. Notes you keep in the app sync encrypted across devices, and Pro is {price} once, not a yearly plan.',
     micro: 'Files stay yours either way: any other editor can open them tomorrow.',
     tree: [
       { text: 'notes/', cls: 'dir' },
@@ -85,9 +85,9 @@ export default {
         themNote: 'Signup wall first, editor second',
       },
       {
-        label: 'Provider can read your text',
+        label: 'Your text sits in plaintext on the server',
         us: 'No',
-        usNote: 'Encrypted on your device before sync',
+        usNote: 'Encrypted on your device',
         them: 'Yes',
         themNote: 'Plaintext in their database',
       },
@@ -158,7 +158,7 @@ export default {
     'account-needed',
     {
       q: 'Where is my text stored?',
-      a: 'On your device first. If you sync, an end-to-end encrypted copy goes to Swiss servers that cannot decrypt it: the key never leaves your machine. The encryption code is public, and you can watch the ciphertext leave your browser in the network tab.',
+      a: 'On your device first, encrypted there. If you sync, the encrypted copy goes to Swiss servers, and with self-custody the key never leaves your machine. The encryption code is public, and you can watch the ciphertext leave your browser in the network tab.',
     },
     {
       q: 'Can I use my existing markdown files?',

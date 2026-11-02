@@ -24,7 +24,8 @@
       "replace": "Nájsť a nahradiť je funkcia Pro. Prejdi na Pro a nahraď jednu zhodu alebo všetky zhody v poznámke naraz.",
       "passphrase": "Prístupové frázy sú funkcia Pro. Vygeneruj frázu z náhodných slov, ktorá sa ľahko píše aj vyslovuje.",
       "default": "Jeden prechod na Pro odomkne všetko nižšie. Jednorazová platba.",
-      "alerts": "Pripomienky sú funkcia Pro. Tvoje zariadenia zazvonia v čase, ktorý si vyberieš, a nič z položky ich neopustí."
+      "alerts": "Pripomienky sú funkcia Pro. Každé zariadenie zazvoní samo v čase, ktorý si vyberieš, takže položku nevidí žiadna služba push notifikácií.",
+      "vaultFiles": "Súbory pri položkách trezora sú funkcia Pro. Uchovaj kódy na obnovenie, záložný kľúč alebo sken spolu s prihlasovacími údajmi, kartou alebo kľúčom, ku ktorým patria."
     },
     "features": {
       "devices": "Synchronizácia neobmedzeného počtu zariadení na každej platforme",
@@ -80,7 +81,6 @@
     "loadFailed": "Históriu sa nepodarilo načítať. Skontroluj pripojenie a skús to znova.",
     "selectPrompt": "Vyber verziu na náhľad.",
     "emptyBody": "(prázdne)",
-    "restore": "Obnoviť",
     "restoring": "Obnovuje sa…",
     "restoreSnapshotFailed": "Aktuálnu verziu sa najprv nepodarilo uložiť, preto sa nič neobnovilo. Skontroluj pripojenie a skús to znova.",
     "restoreFailed": "Túto verziu sa nepodarilo obnoviť. Skús to znova.",

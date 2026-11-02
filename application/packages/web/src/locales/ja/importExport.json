@@ -3,14 +3,12 @@
     "importTitle": "データを読み込む",
     "exportTitle": "データを書き出す",
     "restoreTitle": "データを復元する",
-    "vaultTitle": "パスワードを読み込む",
-    "tablistLabel": "読み込み、書き出し、復元、パスワード",
+    "tablistLabel": "読み込み、書き出し、復元、トラッカー",
     "tabImport": "読み込み",
     "tabExport": "書き出し",
     "tabRestore": "復元",
     "tabVault": "パスワード",
-    "working": "処理中…",
-    "tabWellness": "トラッカー"
+    "working": "処理中…"
   },
   "footer": {
     "exportNote": "書き出しはローカルで実行されます。何もアップロードされません。",
@@ -18,12 +16,11 @@
     "importNote": "すべては、デバイス上でも同期中も、常に暗号化されています。"
   },
   "importPick": {
-    "autoTagLabel": "読み込んだノートに提供元のタグを付ける",
-    "autoTagDesc": "Google Keepのノートには<keep>#google</keep>、Obsidianには<obsidian>#obsidian</obsidian>、という具合です。",
     "guideAria": "{{app}}の読み込みガイド",
     "guideLabel": "ガイド",
-    "groupGeneral": "一般",
-    "groupNotes": "ノート"
+    "searchPlaceholder": "アプリを探す",
+    "groupCalendar": "カレンダー、連絡先、ブックマーク",
+    "noMatch": "一致するアプリがありません。ほとんどのノートアプリはMarkdownファイルを書き出せます。Markdownファイルはここで読み込めます。"
   },
   "folderImport": {
     "tagLabel": "フォルダ名のタグも付ける",
@@ -73,6 +70,7 @@
     "googleCalendar": "GoogleカレンダーのSettings > Import & exportから書き出した.zip、または単一の.icsファイル。予定は時刻、繰り返し、リマインダーを保持します。",
     "appleNotes": "無料のExporterアプリでMarkdownとして書き出し、その.zipをここにドロップしてください。",
     "appleJournal": "Journal(ジャーナル)をMacまたはiPhoneから書き出し、AppleJournalEntriesフォルダを圧縮して、その.zipをドロップしてください。エントリーは写真、動画、ボイスメモ、位置情報とともにジャーナルのエントリーとして読み込まれます。",
+    "excalidraw": "excalidraw.com から保存したドローイング。.excalidrawファイル1つでも、複数をzipにまとめてでも読み込めます。ObsidianのExcalidrawプラグインのドローイング(.excalidraw.mdファイル)にも対応しています。ドローイング内の画像も一緒に読み込まれます。",
     "evernote": ".enexが1つでも、複数をzipにまとめてでも読み込めます。書式、タグ、添付ファイル、ノートリンク、ノートブックを保持します。タスクはEvernoteが.enexに含めません。",
     "samsungNotes": "Word(.docx)またはテキスト(.txt)として書き出してください。複数ファイルはzipにまとめると一括で読み込めます。",
     "simplenote": "Simplenoteから書き出して(Settings -> Tools -> Export Notes)、その.zipをドロップしてください。",
@@ -96,9 +94,6 @@
     "vcard": "連絡先 (vCard)",
     "markdownFolder": "Markdownファイル"
   },
-  "vaultPick": {
-    "intro": "ログイン情報、クレジットカード、SSH鍵を、他のパスワードマネージャーから読み込みます。"
-  },
   "restorePick": {
     "intro": "以前に書き出したPrivacyNotesのバックアップを復元します。",
     "fullBackupTitle": "完全バックアップ(.zip)",
@@ -120,8 +115,8 @@
     "restoringBlobs": "画像とファイルを復元中..."
   },
   "errors": {
-    "genericParse": "問題が発生しました。",
     "decryptionFailed": "復号に失敗しました。フレーズが違うか、ファイルが破損しています。",
+    "importNothingChanged": "何も読み込まれていません。ノート、フォルダ、ファイルは元のままです。{{detail}}",
     "blobImportFailed": "ノートは読み込まれましたが、画像とファイルは読み込まれませんでした: {{detail}} 選んだファイルの中身は変更されていないので、読み込んだノートを削除してから、もう一度読み込みをやり直せます。",
     "blobsNotInBackup_other": "ノートは復元されましたが、バックアップに記載されている{{items}}がバックアップ内にありません。"
   },
@@ -129,11 +124,7 @@
     "oversize_other": "{{count}}件のノートが1 MBを超えています。これらはこのデバイスに残り、同期されません。",
     "splitOversize_other": "これら{{count}}件のノートを見出しごとに小さなノートに分割して、同期できるようにする",
     "partTitle": "{{title}} ({{index}}/{{total}})",
-    "continuedIn": "{{link}}に続く",
-    "sourceLabel": "読み込み元",
     "uniqueTags": "タグの種類",
-    "empty": "空",
-    "untagged": "タグなし",
     "items": "アイテム",
     "previewLabel": "プレビュー",
     "andMore": "… 他{{count}}件",
@@ -144,8 +135,13 @@
     "eventSkipNote": "すでに読み込み済みの予定はスキップされそのまま残るので、2 回実行しても重複しません。",
     "restoreMergeNote": "あなた自身のバックアップにあるノートはIDで照合されます。すでにあるノートは、バックアップの版のほうが新しい場合にだけ更新され、ゴミ箱にあるノートはゴミ箱から戻ります。",
     "quotaExceeded": "<strong>ストレージ不足のため読み込めません。</strong>推定{{needed}}が必要ですが、利用できるのは{{available}}です。空き容量を確保するか、アップグレードしてから読み込んでください。",
-    "quotaWarning": "注意: この読み込みで、残りストレージ{{available}}のうち約{{needed}}を使用します。",
-    "oversizeAttachments_other": "{{count}}件のファイルが、ご利用のプランのファイルごとの上限{{limit}}を超えています。これらはこのデバイスには読み込まれますが、アップグレードするまで他のデバイスには同期されません。"
+    "oversizeAttachments_other": "{{count}}件のファイルが、ご利用のプランのファイルごとの上限{{limit}}を超えています。これらはこのデバイスには読み込まれますが、アップグレードするまで他のデバイスには同期されません。",
+    "title": "読み込む前に確認",
+    "sourceTagLabel": "各ノートにタグ<tag>{{tag}}</tag>を付ける",
+    "sourceTagDesc": "オフ: 読み込み元のタグは付けません。ノートにすでにあるタグはどちらの場合もそのまま読み込まれます。",
+    "storageLine": "この読み込みには約{{needed}}が必要です。空きは{{available}}です。",
+    "nothingWritten": "読み込みボタンを押すまで、何も書き込まれません。",
+    "whatComesIn": "読み込まれる内容"
   },
   "counts": {
     "note_other": "件のノート",
@@ -154,6 +150,7 @@
     "card_other": "件のカード",
     "sshKey_other": "件のSSH鍵",
     "contact_other": "連絡先",
+    "drawing_other": "件のドローイング",
     "zeroItems": "0件",
     "importButton": "{{counts}}を読み込む"
   },
@@ -165,14 +162,14 @@
     "fullBackupHeading": "完全バックアップ",
     "portableHeading": "汎用形式で書き出し",
     "vaultOnlyHeading": "保管庫のみ",
-    "zipBackupTitle": "PrivacyNotesバックアップ(.zip)",
-    "zipBackupDesc": "ノート、ジャーナル、保管庫のアイテム、タスク、画像、音声、ファイルのすべて。アカウント全体のバックアップや、新しいデバイスへの移行に使えます。中のファイルは暗号化されていないため、zipは安全な場所に保管してください。",
-    "encryptedZipBackupTitle": "暗号化フルバックアップ(.pnbackupz)",
-    "encryptedZipBackupDesc": "zipバックアップに含まれるすべて（ノート、保管庫のアイテム、画像、音声、ファイル）をフレーズ鍵で封印します。どのデバイスでもフレーズで復元できます。どこに保管しても安全です。",
-    "encryptedBackupTitle": "暗号化バックアップ(.pnbackup)",
-    "encryptedBackupDesc": "すべてのテキスト内容とメタデータを、フレーズ鍵で暗号化した形式で。画像とファイルは含まれません。フレーズがなければ読めないため、どこに保管しても安全です。",
+    "zipBackupTitle": "すべて、暗号化なし(.zip)",
+    "zipBackupDesc": "ノート、ジャーナル、保管庫のアイテム、タスク、画像、音声、ファイルに加えて、服薬とトラッカーのデータも入ります。フレーズなしでどのコンピューターでも開けるため、安全な場所に保管してください。ノート履歴とアプリロックのPINは含まれません。",
+    "encryptedZipBackupTitle": "すべて、暗号化あり(.pnbackupz)",
+    "encryptedZipBackupDesc": "zipと同じ内容を、フレーズ鍵で封印します。どのデバイスでもフレーズで復元できます。どこに保管しても安全です。",
+    "encryptedBackupTitle": "テキストのみ、暗号化あり(.pnbackup)",
+    "encryptedBackupDesc": "すべてのテキスト内容とメタデータです。画像とファイルは含まれません。フレーズ鍵で封印された小さなファイルで、どこに保管しても安全です。",
     "htmlArchiveTitle": "HTMLアーカイブ(.zip)",
-    "htmlArchiveDesc": "ノートごとに印刷可能なHTMLページを1枚。オフラインでの閲覧やアーカイブ向きで、復元には使えません。",
+    "htmlArchiveDesc": "ノートごとに印刷可能なHTMLページを1枚。ログイン情報、カード、鍵も平文で含まれます。オフラインでの閲覧やアーカイブ向きで、復元には使えません。安全な場所に保管してください。",
     "textBackupTitle": "テキストバックアップ(.json)",
     "textBackupDesc": "すべてのテキスト内容とメタデータをプレーンなJSONで。画像とファイルは含まれません。暗号化されていないため、信頼できる場所に保管してください。",
     "vaultExportTitle": "保管庫の書き出し(.json)",
@@ -186,6 +183,8 @@
     "calendarOnlyHeading": "カレンダーのみ",
     "calendarExportTitle": "カレンダーファイル (.ics)",
     "calendarExportDesc": "予定と、日付のあるノートやタスクリストです。Googleカレンダー、Appleカレンダー、Outlook で使えます。",
+    "drawingsExportTitle": "ドローイング (.zip)",
+    "drawingsExportDesc": "すべてのドローイングを画像を含む個別の .excalidraw ファイルとして書き出します。excalidraw.com や Obsidian で使えます。",
     "calendarPrivate": "非公開"
   },
   "exportProgress": {
@@ -194,11 +193,8 @@
     "incompleteTitle": "書き出しが不完全です",
     "exportingTitle": "バックアップを書き出し中...",
     "preparing": "準備中...",
-    "exporting": "書き出し中...",
-    "imagesProgress": "画像を書き出し中... {{done}} / {{total}}",
-    "filesProgress": "ファイルを書き出し中... {{done}} / {{total}}",
-    "building": "バックアップを作成中...",
-    "compressing": "圧縮中...",
+    "showInFolder": "フォルダで表示",
+    "zipStep": "圧縮",
     "missingFailed_other": "このデバイスでは{{items}}をダウンロードできなかったため、書き出しには含まれていません。接続を確認して、もう一度書き出してください。",
     "missingNotFound_other": "{{items}}はこのデバイスにもサーバーにもないため、書き出しには含まれていません。"
   },
@@ -239,7 +235,8 @@
     "generic": "書き出したファイルを保存できませんでした。もう一度試すか、別のフォルダを選んでください。"
   },
   "saveErrors": {
-    "shortWrite": "{{expected}} バイト中 {{written}} バイトしか保存されず、ファイルが不完全です。クラウドのフォルダーではなくデバイスのストレージに保存して、もう一度お試しください。"
+    "shortWrite": "{{expected}} バイト中 {{written}} バイトしか保存されず、ファイルが不完全です。クラウドのフォルダーではなくデバイスのストレージに保存して、もう一度お試しください。",
+    "protectedFolder": "{{folder}} には鍵、設定、プログラムが入っているため、PrivacyNotes はそこには保存しません。別の場所に保存してから、ご自身で移動してください。"
   },
   "shareSheet": {
     "title_other": "{{count}}件の項目がPrivacyNotesに共有されました",
@@ -247,7 +244,6 @@
     "saveAll": "すべて保存"
   },
   "destination": {
-    "label": "追加先",
     "none": "フォルダなし",
     "newFolder": "新規フォルダ「{{name}}」",
     "help": "読み込み元のフォルダは選んだフォルダの中に入り、フォルダのない項目はそのフォルダに直接入ります。"

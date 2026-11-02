@@ -17,14 +17,14 @@ function PatternCard({ text, icon: Glyph }: { text: string; icon: Icon }) {
   return (
     <div className="flex items-center gap-3 py-2.5">
       <span aria-hidden="true" className="inline-flex w-[26px] h-[26px] shrink-0 items-center justify-center rounded-md bg-accent/10 text-accent">
-        <Glyph size={14} />
+        <Glyph />
       </span>
-      <span className="text-sm text-pn">{text}</span>
+      <span className="text-body text-pn">{text}</span>
     </div>
   );
 }
 
-/** Spec: ops/docs/archive/wellness-statistics.md (section 11) */
+/** Spec: docs/internal/specs/wellness-statistics.md (section 11) */
 export function PatternsSubTab({ model, stats, unlocked, isPro, onOpenUpgrade }: {
   model: WellnessModel;
   stats: TrackerStats;
@@ -80,11 +80,11 @@ export function PatternsSubTab({ model, stats, unlocked, isPro, onOpenUpgrade }:
                   ) : null;
                 })}
               </div>
-              {waiting > 0 && <p className="text-[11px] text-pn-muted mt-2">{t('wellness.patterns.waiting', { count: waiting })}</p>}
-              <p className="text-[11px] text-pn-muted mt-1">{t('home.footnoteShort')}</p>
+              {waiting > 0 && <p className="text-small text-pn-muted mt-2">{t('wellness.patterns.waiting', { count: waiting })}</p>}
+              <p className="text-small text-pn-muted mt-1">{t('home.footnoteShort')}</p>
             </>
           ) : (
-            <button type="button" onClick={onOpenUpgrade} className="w-full rounded-lg border border-dashed border-divider p-3 text-xs text-pn-muted hover:text-pn hover:border-pn-muted transition-colors text-center">
+            <button type="button" onClick={onOpenUpgrade} className="w-full rounded-lg border border-dashed border-divider p-3 text-small text-pn-muted hover:text-pn hover:border-pn-muted transition-colors text-center">
               {t('wellness.patterns.tableLocked')}
             </button>
           )}
@@ -102,7 +102,7 @@ export function PatternsSubTab({ model, stats, unlocked, isPro, onOpenUpgrade }:
               {others.map((p, i) => <PatternCard key={`p${i}`} text={insightText(p, t)} icon={PATTERN_ICONS[p.type] ?? Sparkle} />)}
             </div>
           ) : (
-            <button type="button" onClick={onOpenUpgrade} className="w-full rounded-lg border border-dashed border-divider p-3 text-xs text-pn-muted hover:text-pn hover:border-pn-muted transition-colors text-center">
+            <button type="button" onClick={onOpenUpgrade} className="w-full rounded-lg border border-dashed border-divider p-3 text-small text-pn-muted hover:text-pn hover:border-pn-muted transition-colors text-center">
               {t('wellness.patterns.insightsLocked', { count: insightCount })}
             </button>
           )}

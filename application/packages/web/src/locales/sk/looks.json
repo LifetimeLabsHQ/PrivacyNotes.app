@@ -1,11 +1,9 @@
 {
   "captionFolder": "Priečinok",
   "captionTag": "Značka",
-  "captionNote": "Poznámka",
   "captionTracker": "Sledovaná hodnota",
   "useDefault": "Použiť predvolené",
   "color": "Farba",
-  "noColor": "Bez farby",
   "applyToSubfolders": "Použiť farbu aj na podpriečinky",
   "icon": "Ikona",
   "searchPlaceholder": "Hľadaj ikony",

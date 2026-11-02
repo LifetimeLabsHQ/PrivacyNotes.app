@@ -2,7 +2,7 @@
  * The layout a new Kanban board starts with, and the empty body of a new
  * Kanban task. No editor code here: the New menus and the empty-draft check
  * read it without loading the editor.
- * Spec: ops/issues/0270.md (Spec)
+ * Spec: docs/internal/issues/0270.md (Spec)
  */
 
 import { readKanbanPref } from './editorPrefs';

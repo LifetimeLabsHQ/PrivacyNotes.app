@@ -128,29 +128,29 @@ export function SourceSearchBar({ mode, text, focusTick, initialQuery, onHits, o
           : '';
   const iconCls = 'text-pn-muted shrink-0 ms-0.5 me-0.5';
   const closeLabel = mode === 'replace'
-    ? t('find.closeReplaceTitle')
-    : t('find.closeTitle');
+    ? t('common:actions.close')
+    : t('common:actions.close');
 
   return (
     <div className={`pointer-events-auto mt-1 me-2 flex flex-col gap-1 rounded-lg border border-divider bg-surface-1 shadow-lg px-1.5 py-1 ${
       mode === 'replace' ? 'ms-2 flex-1 min-w-0 sm:flex-none sm:w-[22rem]' : ''
     }`}>
       <div className="flex items-center gap-0.5">
-        <MagnifyingGlass size={15} className={iconCls} />
+        <MagnifyingGlass className={iconCls} />
         <input
           ref={searchRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={onSearchKeyDown}
-          placeholder={t('find.placeholder')}
-          aria-label={t('find.label')}
+          placeholder={t('common:palette.commands.find')}
+          aria-label={t('common:palette.commands.find')}
           spellCheck={false}
           autoComplete="off"
-          className={mode === 'replace' ? BAR_INPUT : 'w-36 sm:w-44 bg-transparent text-sm text-pn placeholder:text-pn-muted outline-none px-1'}
+          className={mode === 'replace' ? BAR_INPUT : 'w-36 sm:w-44 bg-transparent text-body text-pn placeholder:text-pn-muted outline-none px-1'}
         />
         {mode === 'replace' && (
-          <HoverLabel label={t('find.caseSensitiveTitle')} position="below">
+          <HoverLabel label={t('editor:find.caseSensitive')} position="below">
             <button
               type="button"
               onMouseDown={(e) => e.preventDefault()}
@@ -159,7 +159,7 @@ export function SourceSearchBar({ mode, text, focusTick, initialQuery, onHits, o
               aria-label={t('find.caseSensitive')}
               className={`${BAR_BTN}${caseSensitive ? ' bg-pn/10 text-accent' : ''}`}
             >
-              <TextAa size={15} />
+              <TextAa />
             </button>
           </HoverLabel>
         )}
@@ -174,13 +174,13 @@ export function SourceSearchBar({ mode, text, focusTick, initialQuery, onHits, o
             aria-label={mode === 'replace' ? t('find.closeReplace') : t('find.close')}
             className={BAR_BTN}
           >
-            <X size={15} />
+            <X />
           </button>
         </HoverLabel>
       </div>
       {mode === 'replace' && (
         <div className="flex items-center gap-0.5">
-          <ArrowsLeftRight size={15} className={iconCls} />
+          <ArrowsLeftRight className={iconCls} />
           <input
             type="text"
             value={replacement}

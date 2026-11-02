@@ -11,6 +11,7 @@ import type { LocalNote } from '../db';
 import { parseMarkdown } from '../import/markdown';
 import { applyImport } from '../import/apply';
 import { fileUnfiled } from '../import/destination';
+import type { StagedBlob } from '../import/types';
 import type { FolderDef } from '../folders';
 import { SUPPORTED_EXT } from '../markdownFolder/adapter';
 import { createNote } from '../notesRepo';
@@ -45,6 +46,7 @@ export function useFilesUpload({
   setView,
   setImportToast,
   onImportFolders,
+  onUndoImportFolders,
   importDestination,
   onBlobsRestored,
   inheritFilters,
@@ -60,8 +62,10 @@ export function useFilesUpload({
   setView: (next: View) => void;
   setImportToast: Dispatch<SetStateAction<string | null>>;
   /** Merge a rebuilt folder tree into settings under `rootParent` (null: at
-   *  the top); returns old id -> kept id. */
-  onImportFolders?: (folders: FolderDef[], rootParent: string | null) => Map<string, string> | undefined;
+   *  the top); returns old id -> kept id, and the ids of the folders it made. */
+  onImportFolders?: (folders: FolderDef[], rootParent: string | null) => { idMap: Map<string, string>; created: string[] } | undefined;
+  /** Take back the folders a file's failed import made (backlog 217). */
+  onUndoImportFolders?: (ids: readonly string[]) => void;
   /** The Import window's default "Add to", decided once per import before the
    *  first await, so a space switch while the files are read cannot move the
    *  import: null for none, else a function that makes (or reuses) the folder,
@@ -138,12 +142,15 @@ export function useFilesUpload({
     const makeTarget = importDestination?.() ?? null;
     let target: string | null | undefined;
     for (const file of files) {
+      let created: string[] = [];
       try {
         const parsed = await parseMarkdown(file);
         if (target === undefined) target = makeTarget?.() ?? null;
         let toApply = parsed;
         if (parsed.folders && parsed.folders.length > 0) {
-          const idMap = onImportFolders?.(parsed.folders, target);
+          const merged = onImportFolders?.(parsed.folders, target);
+          created = merged?.created ?? [];
+          const idMap = merged?.idMap;
           if (idMap && idMap.size > 0) {
             toApply = {
               ...parsed,
@@ -161,21 +168,29 @@ export function useFilesUpload({
         // can be sent by a sync pass that the later rewrite cannot reach
         // (see blobImport.ts). Its own try, so a media failure still
         // leaves the notes, which is what the outer catch would cost.
-        let storedBlobs = false;
+        let staged: StagedBlob[] = [];
         if (parsed.blobs && parsed.blobs.size > 0) {
           try {
             const { importBlobs } = await import('../import/blobImport');
             const media = await importBlobs(parsed.blobs, toApply.notes);
             toApply = { ...toApply, notes: media.notes };
-            storedBlobs = true;
+            staged = media.staged;
           } catch (err) {
             console.warn('[Files->Import] media failed for', file.name, err);
           }
         }
-        const result = await applyImport(toApply, 'markdown');
+        // The pictures land in the notes' own write, so a failed write keeps
+        // neither, and the folders this file made go again with it.
+        const result = await applyImport(toApply, 'markdown', staged);
+        if (result.errors.length > 0) {
+          onUndoImportFolders?.(created);
+          console.warn('[Files->Import] write failed for', file.name, result.errors);
+          continue;
+        }
         totalImported += result.imported;
-        if (storedBlobs) onBlobsRestored?.();
+        if (staged.length > 0) onBlobsRestored?.();
       } catch (err) {
+        onUndoImportFolders?.(created);
         console.warn('[Files→Import] failed for', file.name, err);
       }
     }

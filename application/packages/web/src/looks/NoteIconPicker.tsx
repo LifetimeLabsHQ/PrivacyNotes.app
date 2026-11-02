@@ -2,7 +2,7 @@
  * The look picker opened on one note, from the note menu's Icon row. It holds
  * what the folder and tag pickers hold in the sidebar: the state before the
  * visit, for Cancel, and a sync once a pick was saved.
- * Spec: ops/docs/archive/folder-tag-icons.md (section 6)
+ * Spec: docs/internal/specs/folder-tag-icons.md (section 6)
  */
 import { useRef, useState } from 'react';
 import { noteLookKey, restoreLooks, setItemLook, snapshotLooks } from '../itemStyles';

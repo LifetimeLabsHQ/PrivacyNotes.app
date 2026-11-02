@@ -3,7 +3,7 @@
 // server call to every boot, and announcements are rare enough that a
 // deploy per announcement is the correct cost. Adding the next one is a
 // new entry here plus its locale keys, not a feature.
-// Spec: ops/docs/backlog.md (#175, the general announcement banner)
+// Spec: docs/internal/backlog.md (#175, the general announcement banner)
 
 type AnnouncementSurface = 'app' | 'site' | 'both';
 
@@ -30,8 +30,8 @@ export const ANNOUNCEMENTS: Announcement[] = [
     textKey: 'announcement.ossText',
     textNarrowKey: 'announcement.ossTextNarrow',
     ctaKey: 'announcement.ossCta',
-    ctaNarrowKey: 'announcement.ossCtaNarrow',
-    href: 'https://github.com/LifetimeLabsDev/PrivacyNotes.app',
+    ctaNarrowKey: 'security:connectedAccounts.providers.github',
+    href: 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app',
   },
 ];
 

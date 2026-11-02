@@ -7,7 +7,8 @@ plugins {
 
 android {
     namespace = "app.privacynotes.biometrickey"
-    compileSdk = 36
+    compileSdk = 37
+    compileSdkMinor = 1
 
     defaultConfig {
         minSdk = 24

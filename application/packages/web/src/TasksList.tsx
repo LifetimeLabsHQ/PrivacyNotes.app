@@ -32,10 +32,10 @@ import { useListGroups } from './ListGroupHeader';
 
 export interface TasksListProps {
   /** The view and space this list draws, so a return lands where it was;
-   *  null under a search. Spec: ops/docs/archive/keep-my-place.md */
+   *  null under a search. Spec: docs/internal/specs/keep-my-place.md */
   place?: string | null;
   /** The calendar card, while a task list in the open space has a day.
-   *  Spec: ops/docs/archive/note-date.md (section 4) */
+   *  Spec: docs/internal/specs/note-date.md (section 4) */
   calendar?: ({ entries: DayIndex; onOpen: (id: string, occurrence?: string) => void; onCreate: (isoDate: string) => void; onEvent: (isoDate: string) => void } & CalendarCardExtras) | null;
   /** With Spaces on, the space that is not open, for the calendar switch. */
   otherSpace?: Space | null;
@@ -360,7 +360,7 @@ export default function TasksList({
 
   /* Group headers (#448) over the notes that hold tasks, in the grid and in
      the list's first band. The "All tasks" section stays grouped by note.
-     Spec: ops/docs/archive/list-groups.md */
+     Spec: docs/internal/specs/list-groups.md */
   const grouping = useListGroups({
     notes: taskContainingNotes,
     listPrefs,
@@ -427,7 +427,7 @@ export default function TasksList({
                 editedAt: g.editedAt,
               })
             }
-            className={`w-full flex items-center gap-1.5 text-start px-4 pt-3 pb-1 text-[11px] uppercase tracking-wide font-semibold transition ${
+            className={`w-full flex items-center gap-1.5 text-start px-4 pt-3 pb-1 text-meta uppercase tracking-wide font-semibold transition ${
               groupActive
                 ? 'text-accent dark:text-accent'
                 : 'text-pn-muted hover:text-accent dark:hover:text-accent'
@@ -435,7 +435,7 @@ export default function TasksList({
             aria-label={tr('tasksList.openNote', { title: g.noteTitle })}
           >
             {notesById.get(g.noteId)?.starred === 1 && (
-              <PushPin size={11} className="shrink-0" aria-hidden="true" />
+              <PushPin className="shrink-0" aria-hidden="true" />
             )}
             <span className="truncate">{g.noteTitle}</span>
           </button>
@@ -452,7 +452,7 @@ export default function TasksList({
   /* The label between the two bands. Drawn by the list and the aggregate, so
      the hybrid shape inherits it through the aggregate it already renders. */
   const bandHeader = (
-    <div className="px-4 pt-3 pb-1 text-[11px] uppercase tracking-wide font-semibold text-pn-muted border-t border-divider">
+    <div className="px-4 pt-3 pb-1 text-meta uppercase tracking-wide font-semibold text-pn-muted border-t border-divider">
       {tr('tasksList.tasksFromOtherItems')}
     </div>
   );
@@ -460,9 +460,9 @@ export default function TasksList({
   const aggregatedTasksSection = (
     <>
       {taskGroups.length === 0 && (filteredEmpty ?? (
-        <div className="p-6 text-[13px] text-pn-muted text-center">
+        <div className="p-6 text-compact text-pn-muted text-center">
           {search.trim()
-            ? tr('tasksList.noMatches')
+            ? tr('notes:empty.noMatches')
             : !listPrefs.showNoteTasks
               ? tr('tasksList.noTaskListsYet')
               : showDoneTasks
@@ -509,7 +509,7 @@ export default function TasksList({
           view="tasks"
           onSelectView={onSelectView}
           onOpenDrawer={onOpenDrawer}
-          title={tr('tasksList.title')}
+          title={tr('shell:tagsRail.tasks')}
           icon={<PILLAR_GLYPHS.tasks size={26} className="text-accent shrink-0" aria-hidden="true" />}
         />
         <NewDropdown
@@ -545,7 +545,7 @@ export default function TasksList({
                 : 'bg-surface-2 border-divider text-pn-soft hover:border-accent hover:text-accent'
             }`}
           >
-            {showDoneTasks ? <EyeSlash size={18} /> : <Eye size={18} />}
+            {showDoneTasks ? <EyeSlash /> : <Eye />}
           </button>
           </HoverLabel>
           <HoverLabel label={tr('tasksList.sortOptions')} position="above-start">
@@ -561,7 +561,7 @@ export default function TasksList({
                 : 'bg-surface-2 border-divider text-pn-soft hover:border-accent hover:text-accent'
             }`}
           >
-            <FunnelSimple size={18} />
+            <FunnelSimple />
           </button>
           </HoverLabel>
           <ListSearchInput
@@ -593,14 +593,14 @@ export default function TasksList({
           checked={listPrefs.showNoteTasks}
           onChange={(on) => onListPrefsChange(setPillarPrefs(listPrefsStore, 'tasks', { ...listPrefs, showNoteTasks: on }))}
           className="gap-2 select-none"
-          labelClassName="text-xs text-pn-muted"
+          labelClassName="text-small text-pn-muted"
         />
       </div>
 
       {/* Row 4 -- Quick-add */}
       <div className="shrink-0 p-3 border-b border-divider">
         <div className="flex items-center gap-2 rounded-md bg-surface-2 border border-divider px-3 py-2 focus-within:border-accent">
-          <Plus size={16} className="text-pn-muted shrink-0" />
+          <Plus className="text-pn-muted shrink-0" />
           <input
             ref={taskInputRef}
             tabIndex={mobileTabIndex}
@@ -616,7 +616,7 @@ export default function TasksList({
             }}
             placeholder={tr('tasksList.quickAddPlaceholder')}
             enterKeyHint="done"
-            className="flex-1 min-w-0 bg-transparent text-[15px] focus:outline-none placeholder:text-pn-muted"
+            className="flex-1 min-w-0 bg-transparent text-row focus:outline-none placeholder:text-pn-muted"
           />
         </div>
       </div>
@@ -632,9 +632,9 @@ export default function TasksList({
         {viewMode === 'grid' ? (
           <>
             {taskContainingNotes.length === 0 && (filteredEmpty ?? (
-              <div className="p-6 text-[13px] text-pn-muted text-center">
+              <div className="p-6 text-compact text-pn-muted text-center">
                 {search.trim()
-                  ? tr('tasksList.noMatches')
+                  ? tr('notes:empty.noMatches')
                   : !listPrefs.showNoteTasks
                     ? tr('tasksList.noTaskListsYet')
                     : tr('tasksList.noItemsWithTasks')}
@@ -654,7 +654,7 @@ export default function TasksList({
           <>
             {taskContainingNotes.length > 0 && (
               <div className="border-b border-divider">
-                <div className="px-4 pt-3 pb-1 text-[11px] uppercase tracking-wide font-semibold text-pn-muted">
+                <div className="px-4 pt-3 pb-1 text-meta uppercase tracking-wide font-semibold text-pn-muted">
                   {tr('tasksList.itemsWithTasks')}
                 </div>
                 <ul>{taskNoteItems(false)}</ul>
@@ -663,7 +663,7 @@ export default function TasksList({
             {/* The heading names the groups under it, so it stays away when
                 there are none and the pane's own empty line stands alone. */}
             {taskGroups.length > 0 && (
-              <div className="px-4 pt-3 pb-1 text-[11px] uppercase tracking-wide font-semibold text-pn-muted">
+              <div className="px-4 pt-3 pb-1 text-meta uppercase tracking-wide font-semibold text-pn-muted">
                 {tr('tasksList.allTasks')}
               </div>
             )}
@@ -775,7 +775,7 @@ function ClampedTaskText({ text, checked, onClick }: {
     <span className="flex-1 min-w-0">
       <button
         onClick={onClick}
-        className={`w-full text-start text-[15px] leading-snug ${
+        className={`w-full text-start text-row leading-snug ${
           checked
             ? 'text-pn-muted line-through'
             : 'text-pn'
@@ -794,7 +794,7 @@ function ClampedTaskText({ text, checked, onClick }: {
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
-          className="text-[12px] text-accent hover:underline mt-0.5"
+          className="text-small text-accent hover:underline mt-0.5"
         >
           {tr('tasksList.seeMore')}
         </button>
@@ -803,7 +803,7 @@ function ClampedTaskText({ text, checked, onClick }: {
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); setExpanded(false); }}
-          className="text-[12px] text-accent hover:underline mt-0.5"
+          className="text-small text-accent hover:underline mt-0.5"
         >
           {tr('tasksList.seeLess')}
         </button>

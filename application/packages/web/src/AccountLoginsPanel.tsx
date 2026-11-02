@@ -9,7 +9,6 @@ import { ConnectedAccounts, ProviderLabel, type ConnectedAccountProvider } from 
 import { mfaSessionIdentity } from './sessionWriteGuard';
 import { isDemoMode } from './demo';
 import { SETTINGS_HELP, SectionEyebrow } from './settingsUI';
-import { BetaReportLink } from './BetaReportLink';
 
 const PROVIDERS: ConnectedAccountProvider[] = ['google', 'apple', 'github'];
 
@@ -113,7 +112,7 @@ function RealAccountLoginsPanel({ onOpenCustody, onOpenPhrase, autoFocus }: { on
         <div className="divide-y divide-divider rounded-md border border-divider">
           {PROVIDERS.map((provider) => <div key={provider} className="flex items-center justify-between gap-2 p-3">
             <ProviderLabel provider={provider} detail={signedIn.provider === provider ? signedIn.email || t('connectedAccounts.emailHidden') : undefined} />
-            {signedIn.provider === provider && <span className="shrink-0 text-xs text-accent">{t('connectedAccounts.signedInNow')}</span>}
+            {signedIn.provider === provider && <span className="shrink-0 text-small text-accent">{t('connectedAccounts.signedInNow')}</span>}
           </div>)}
         </div>
         {!signedIn.provider && <p className={SETTINGS_HELP}>{t('connectedAccounts.signedInPhrase')}</p>}
@@ -141,18 +140,17 @@ function RealAccountLoginsPanel({ onOpenCustody, onOpenPhrase, autoFocus }: { on
       <p role="status" className={SETTINGS_HELP}>{t('connectedAccounts.connectWaiting')}</p>
       {(connection.platform === 'desktop' || connection.platform === 'web') && <form className="space-y-2"
         onSubmit={(event) => { event.preventDefault(); setInvalidReturn(!connection.acceptReturn(returnUrl.trim())); }}>
-        <label className="block text-xs text-pn-soft">
+        <label className="block text-small text-pn-soft">
           {t('connectedAccounts.returnLink')}
           <input type="text" value={returnUrl} dir="ltr" maxLength={16384} autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false}
             onChange={(event) => { setReturnUrl(event.target.value); setInvalidReturn(false); }}
-            className="mt-1 w-full rounded-md border border-divider bg-surface-1 px-3 py-2 text-sm text-pn" />
+            className="mt-1 w-full rounded-md border border-divider bg-surface-1 px-3 py-2 text-body text-pn" />
         </label>
         <p className={SETTINGS_HELP}>{t('connectedAccounts.returnHelp')}</p>
-        {invalidReturn && <p role="alert" className="text-xs text-danger">{t('connectedAccounts.invalidReturn')}</p>}
-        <button type="submit" disabled={!returnUrl.trim()} className="text-sm text-accent disabled:opacity-40">{t('connectedAccounts.finishConnection')}</button>
+        {invalidReturn && <p role="alert" className="text-small text-danger">{t('connectedAccounts.invalidReturn')}</p>}
+        <button type="submit" disabled={!returnUrl.trim()} className="text-body text-accent disabled:opacity-40">{t('connectedAccounts.finishConnection')}</button>
       </form>}
-      <button type="button" className="text-sm text-accent" onClick={() => controller.current?.abort()}>{t('connectedAccounts.cancelConnection')}</button>
+      <button type="button" className="text-body text-accent" onClick={() => controller.current?.abort()}>{t('connectedAccounts.cancelConnection')}</button>
     </div>}
-    <BetaReportLink />
   </div>;
 }

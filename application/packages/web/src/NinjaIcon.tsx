@@ -12,7 +12,7 @@
 //   theme so the face does not vanish on a dark surface.
 // Used for Ninja, the ⌘K box: the sidebar button, the collapsed rail, the
 // list header below lg and the homepage tile.
-// Spec: ops/design/patterns/145-150.md section 145
+// Spec: docs/internal/design/patterns/145-150.md section 145
 
 /** The key's memory trick: ⌘K, K for Katana. English in every language on
  *  purpose (owner, 2026-10-23): the K is the key's letter, so a translation

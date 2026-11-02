@@ -17,13 +17,14 @@
  *
  * What it refuses, on every redirect hop: a scheme other than http or https,
  * a user name or password in the address, a host that names or resolves to a
- * private, local or reserved address. A Worker cannot pin its connection to
+ * private, local or reserved address, and a hop from https down to http.
+ * A Worker cannot pin its connection to
  * the address it looked up, so the lookup is a second fence; the first is
  * that Cloudflare's network does not route to private ranges.
  *
  * It keeps nothing: no cookie either way, no cache, and no log line that
  * holds an address or a size (tests/workerLogPrivacy.test.ts).
- * Spec: ops/docs/archive/web-clipper-stage1.md (section 3.1)
+ * Spec: docs/internal/specs/web-clipper-stage1.md (section 3.1)
  */
 
 /** One Durable Object per counted subject: an account, an address, or the
@@ -53,13 +54,13 @@ interface DurableObjectState {
 
 const MAX_REDIRECTS = 5;
 const DEADLINE_MS = 20_000;
-/** Spec: ops/docs/archive/web-clipper-stage1.md (section 3.1, page: 5 MB) */
+/** Spec: docs/internal/specs/web-clipper-stage1.md (section 3.1, page: 5 MB) */
 const PAGE_MAX_BYTES = 5 * 1024 * 1024;
 /** One picture may be as large as the per-clip picture budget.
- *  Spec: ops/docs/archive/web-clipper-stage1.md (section 3.3, 10 MB per clip) */
+ *  Spec: docs/internal/specs/web-clipper-stage1.md (section 3.3, 10 MB per clip) */
 const IMAGE_MAX_BYTES = 10_000_000;
 /** A public calendar feed of several years is a few MB.
- *  Spec: ops/issues/0548.md (Spec, design A) */
+ *  Spec: docs/internal/issues/0548.md (Spec, design A) */
 const CALENDAR_MAX_BYTES = 10_000_000;
 const USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15';
@@ -70,10 +71,11 @@ const DEMO_ORIGINS = new Set(['https://try.privacynotes.app', 'https://use.priva
 /** The local dev server, accepted only when the Worker itself runs locally. */
 const DEV_ORIGIN = 'http://localhost:5173';
 
-/** A window in seconds and the most requests it holds. */
+/** A window in seconds and the most it holds: requests, or bytes for a
+ *  budget rule, whose hits carry an amount. */
 type Rule = { name: string; window: number; limit: number };
 
-/** Spec: ops/docs/archive/web-clipper-stage1.md (section 3.1, rate limits) */
+/** Spec: docs/internal/specs/web-clipper-stage1.md (section 3.1, rate limits) */
 const LIMITS = {
   page: [
     { name: 'page-minute', window: 60, limit: 30 },
@@ -84,6 +86,10 @@ const LIMITS = {
   demoPage: [{ name: 'demo-page-hour', window: 3_600, limit: 10 }],
   demoImage: [{ name: 'demo-image-hour', window: 3_600, limit: 100 }],
   demoGlobal: [{ name: 'demo-page-day', window: 86_400, limit: 5_000 }],
+  demoImageGlobal: [{ name: 'demo-image-day', window: 86_400, limit: 20_000 }],
+  // Checked before a download and charged with its size after it, so the
+  // download that crosses the budget goes and the next one is refused.
+  accountBytes: [{ name: 'bytes-day', window: 86_400, limit: 2_000_000_000 }],
 } satisfies Record<string, Rule[]>;
 
 /** A calendar download counts against the page limits: one request each,
@@ -139,13 +145,19 @@ export async function handleClipFetch(request: Request, url: URL, env: ClipEnv):
   const isDemo = subject.startsWith('demo:');
   const pageLike = kind !== 'image';
   const rules = isDemo ? (pageLike ? LIMITS.demoPage : LIMITS.demoImage) : pageLike ? LIMITS.page : LIMITS.image;
+  // The demo-wide cap is read before the visitor's counter moves, so a
+  // request the cap refuses does not use up the visitor's own allowance
+  // (GitHub #657). Two requests racing past the read can still both count.
+  const globalRules = pageLike ? LIMITS.demoGlobal : LIMITS.demoImageGlobal;
+  if (isDemo && !(await allowed(env.CLIP_LIMITS, 'demo-global', globalRules, false))) return refuse(429, 'demo-cap');
   if (!(await allowed(env.CLIP_LIMITS, subject, rules, true))) return refuse(429, 'limit');
-  if (isDemo && pageLike && !(await allowed(env.CLIP_LIMITS, 'demo-global', LIMITS.demoGlobal, true))) {
-    return refuse(429, 'demo-cap');
-  }
+  if (isDemo && !(await allowed(env.CLIP_LIMITS, 'demo-global', globalRules, true))) return refuse(429, 'demo-cap');
+  if (!isDemo && !(await allowed(env.CLIP_LIMITS, subject, LIMITS.accountBytes, false))) return refuse(429, 'limit');
 
   try {
-    return await download(body.url, kind);
+    const res = await download(body.url, kind);
+    if (!isDemo) await allowed(env.CLIP_LIMITS, subject, LIMITS.accountBytes, true, Number(res.headers.get('Content-Length')) || 0);
+    return res;
   } catch (err) {
     if (err instanceof ClipRefusal) return refuse(err.status, err.code, err.headers);
     if (err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError')) return refuse(504, 'timeout');
@@ -220,17 +232,20 @@ async function download(raw: string, kind: Kind): Promise<Response> {
         Accept: kind === 'calendar' ? 'text/calendar,*/*;q=0.5' : 'text/html,application/xhtml+xml,image/*;q=0.9,*/*;q=0.5',
       },
     });
-    if (res.status >= 300 && res.status < 400) {
+    // A 3xx with no Location (300, 304) points nowhere: it falls through to
+    // the status refusal below, which names the status (GitHub #657).
+    const location = res.headers.get('Location');
+    if (res.status >= 300 && res.status < 400 && location) {
       await res.body?.cancel();
       if (hop === MAX_REDIRECTS) throw new ClipRefusal(422, 'too-many-redirects');
-      const location = res.headers.get('Location');
-      if (!location) throw new ClipRefusal(502, 'bad-redirect');
       let next: URL;
       try {
         next = new URL(location, target);
       } catch {
         throw new ClipRefusal(502, 'bad-redirect');
       }
+      // A chain that reached https stays on it.
+      if (target.protocol === 'https:' && next.protocol === 'http:') throw new ClipRefusal(502, 'bad-redirect');
       target = checkUrl(next.href);
       continue;
     }
@@ -248,6 +263,7 @@ async function download(raw: string, kind: Kind): Promise<Response> {
       status: 200,
       headers: {
         'Content-Type': 'application/octet-stream',
+        'Content-Length': String(bytes.byteLength),
         'X-Clip-Url': target.href,
         'X-Clip-Type': contentType.replace(/[^\x20-\x7e]/g, ''),
         'Cache-Control': 'no-store',
@@ -430,15 +446,27 @@ export function isBlockedIp(ip: Ip): boolean {
 type Jwk = JsonWebKey & { kid?: string };
 let keyCache: { at: number; base: string; keys: Map<string, CryptoKey> } | null = null;
 const KEY_TTL_MS = 10 * 60 * 1000;
+/** A key download that failed or ran past KEY_FETCH_MS is not tried again for
+ *  KEY_RETRY_MS: the keys already held stay in use, so a slow auth server
+ *  does not hold up every signed-in request (GitHub #657). */
+const KEY_FETCH_MS = 3000;
+const KEY_RETRY_MS = 30_000;
+let keyFailedAt = 0;
 
 async function signingKey(base: string, kid: string): Promise<CryptoKey | null> {
   const age = keyCache && keyCache.base === base ? Date.now() - keyCache.at : Infinity;
   // An unknown key id fetches the keys again, at most once a minute, so a
   // made-up id cannot cost a download per request.
-  if (age >= KEY_TTL_MS || (!keyCache!.keys.has(kid) && age >= 60_000)) {
-    const res = await fetch(`${base}/auth/v1/.well-known/jwks.json`);
-    if (!res.ok) return null;
-    const { keys } = (await res.json()) as { keys?: Jwk[] };
+  if ((age >= KEY_TTL_MS || (!keyCache!.keys.has(kid) && age >= 60_000)) && Date.now() - keyFailedAt >= KEY_RETRY_MS) {
+    let keys: Jwk[] | undefined;
+    try {
+      const res = await fetch(`${base}/auth/v1/.well-known/jwks.json`, { signal: AbortSignal.timeout(KEY_FETCH_MS) });
+      if (!res.ok) throw new Error(String(res.status));
+      keys = ((await res.json()) as { keys?: Jwk[] }).keys;
+    } catch {
+      keyFailedAt = Date.now();
+      return keyCache && keyCache.base === base ? keyCache.keys.get(kid) ?? null : null;
+    }
     const map = new Map<string, CryptoKey>();
     for (const jwk of keys ?? []) {
       if (jwk.kty !== 'EC' || jwk.crv !== 'P-256' || !jwk.kid) continue;
@@ -492,9 +520,9 @@ export async function verifySession(token: string, base: string): Promise<string
 
 /** Ask the subject's counter whether `rules` allow one more request, and
  *  count it when `count` is true and every rule allows it. */
-async function allowed(ns: ClipLimitsNamespace, subject: string, rules: Rule[], count: boolean): Promise<boolean> {
+async function allowed(ns: ClipLimitsNamespace, subject: string, rules: Rule[], count: boolean, amount = 1): Promise<boolean> {
   const stub = ns.get(ns.idFromName(subject));
-  const res = await stub.fetch('https://clip-limits/hit', { method: 'POST', body: JSON.stringify({ rules, count }) });
+  const res = await stub.fetch('https://clip-limits/hit', { method: 'POST', body: JSON.stringify({ rules, count, amount }) });
   return res.status === 200;
 }
 
@@ -503,7 +531,8 @@ export class ClipLimits {
   constructor(private readonly state: DurableObjectState) {}
 
   async fetch(request: Request): Promise<Response> {
-    const { rules, count } = (await request.json()) as { rules: Rule[]; count: boolean };
+    const { rules, count, amount = 1 } = (await request.json()) as { rules: Rule[]; count: boolean; amount?: number };
+    const add = Number.isSafeInteger(amount) && amount >= 0 ? amount : 1;
     const now = Math.floor(Date.now() / 1000);
     type Window = { start: number; n: number; window: number };
     const stored = (await this.state.storage.get<Record<string, Window>>('w')) ?? {};
@@ -514,7 +543,7 @@ export class ClipLimits {
       const current = windows[rule.name];
       const n = current && current.start === start ? current.n : 0;
       if (n >= rule.limit) return new Response(null, { status: 429 });
-      windows[rule.name] = { start, n: n + 1, window: rule.window };
+      windows[rule.name] = { start, n: n + add, window: rule.window };
     }
     if (count) {
       await this.state.storage.put('w', windows);

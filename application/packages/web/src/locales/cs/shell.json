@@ -1,18 +1,14 @@
 {
   "pillars": {
-    "trash": "Koš",
-    "bookmarks": "Záložky",
-    "contacts": "Kontakty"
+    "trash": "Koš"
   },
   "tasksList": {
-    "title": "Úkoly",
     "newTaskNote": "Nová poznámka s úkoly",
     "hideCompleted": "Skrýt hotové úkoly",
     "showCompleted": "Zobrazit hotové úkoly",
     "searchPlaceholder": "Hledat úkoly…",
     "sortOptions": "Možnosti řazení",
     "quickAddPlaceholder": "Přidat rychlý úkol",
-    "noMatches": "Žádné výsledky.",
     "itemsWithTasks": "Položky s úkoly",
     "allTasks": "Všechny úkoly",
     "tasksFromOtherItems": "Úkoly v jiných položkách",
@@ -29,45 +25,27 @@
     "seeLess": "Ukázat méně"
   },
   "filesList": {
-    "title": "Soubory",
     "upload": "Nahrát",
     "selectedOf": "Vybráno {{selected}} z {{total}}",
-    "deselectAll": "Zrušit výběr",
-    "selectAll": "Vybrat vše",
-    "storage": "Úložiště",
     "perFile": "Na soubor",
     "free": "Zdarma",
-    "upgradeToPro": "Přejít na Pro",
     "filterAll": "Vše",
-    "filterImages": "Obrázky",
     "filterAudio": "Zvuk",
     "filterFiles": "Soubory",
-    "sortOptions": "Možnosti řazení",
     "searchPlaceholder": "Hledat soubory…",
     "sortName": "Název",
     "showNotesWithAttachments": "Zobrazit soubory v jiných položkách",
-    "noMatches": "Žádné výsledky.",
     "pinProtected": "Chráněno PINem",
-    "readOnly": "Jen pro čtení",
     "noFilesYet": "Zatím žádné soubory.",
     "noDocuments": "Žádné dokumenty.",
     "noImages": "Žádné obrázky.",
     "noAudioFiles": "Žádné zvukové soubory.",
     "emptyTypesHint": "Obrázky, dokumenty, zvuk, video a soubory zip. Až {{max}} MB na soubor.",
     "uploadFiles": "Nahrát soubory",
-    "menuDeselect": "Zrušit výběr",
-    "menuSelect": "Vybrat",
     "menuShow": "Zobrazit",
     "menuAllFiles": "Všechny soubory",
-    "menuImages": "Obrázky",
-    "menuAudio": "Zvuk",
     "menuDocuments": "Dokumenty",
-    "menuHideNoteAttachments": "Skrýt soubory v jiných položkách",
-    "menuShowNoteAttachments": "Zobrazit soubory v jiných položkách",
-    "menuUnpin": "Odepnout",
-    "menuPin": "Připnout",
-    "menuRename": "Přejmenovat",
-    "menuMoveToTrash": "Přesunout do koše"
+    "menuHideNoteAttachments": "Skrýt soubory v jiných položkách"
   },
   "vaultItem": {
     "badgeLogin": "Přihlašovací údaje",
@@ -78,7 +56,6 @@
     "untitledKey": "Klíč bez názvu",
     "copied": "Zkopírováno!",
     "copyField": "Kopírovat: {{label}}",
-    "hide": "Skrýt",
     "reveal": "Zobrazit",
     "fieldUrl": "URL",
     "fieldUser": "Uživatel",
@@ -91,14 +68,11 @@
     "fieldLabel": "Popisek",
     "fieldPublic": "Veřejný",
     "fieldPrivate": "Privátní",
-    "fieldTotp": "Kód 2FA",
     "totpInvalid": "Neplatný klíč",
     "copyCode": "Kopírovat kód",
     "totpUnlockCta": "Odemkni kódy 2FA s Pro",
     "totpProNote": "Klíč se ukládá i synchronizuje. Pro je potřeba jen pro kód.",
     "copyAll": "Kopírovat URL, uživatele a heslo",
-    "open": "Otevřít",
-    "notesHeading": "Poznámky",
     "fillOneField": "Před uložením vyplň alespoň jedno pole.",
     "expiryNeedsBoth": "Platnost vyžaduje měsíc i rok, nebo nech obě pole prázdná.",
     "customField": "Vlastní pole",
@@ -130,20 +104,18 @@
   },
   "tagsRail": {
     "showAllItems": "Zobrazit všechny položky",
-    "changelog": "Changelog",
     "closeMenu": "Zavřít menu",
-    "close": "Zavřít",
     "views": "Obsah",
     "resizeSplit": "Změnit poměr mezi Obsahem a značkami nebo složkami",
     "sidebarOptions": "Možnosti postranního panelu",
     "showInSidebar": "Zobrazit na postranním panelu",
     "allOptions": "Možnosti sekce Vše",
     "showInAll": "Zobrazit v sekci Vše",
-    "viewList": "Seznam",
-    "viewGrid": "Mřížka",
     "viewAuto": "Auto",
     "allItemsTooltip": "Všechny poznámky, deníky a položky trezoru",
     "allItems": "Vše",
+    "dashboard": "Domov",
+    "dashboardTooltip": "Tvoje widgety na první pohled",
     "pinnedTooltip": "Připnuté položky",
     "pinned": "Připnuté",
     "archive": "Archiv",
@@ -151,6 +123,7 @@
     "notes": "Poznámky",
     "tasksTooltip": "Úkoly ze všech poznámek",
     "tasks": "Úkoly",
+    "drawings": "Kresby",
     "vaultTooltip": "Přihlašovací údaje, platební karty a klíče",
     "vault": "Trezor",
     "filesTooltip": "Všechny soubory a přílohy",
@@ -158,7 +131,6 @@
     "journalsTooltip": "Denní záznamy v deníku",
     "journals": "Deníky",
     "actionsForTag": "Akce pro značku {{tag}}",
-    "renameTag": "Přejmenovat",
     "removeFavorite": "Odebrat z oblíbených",
     "markAsFavorite": "Přidat do oblíbených",
     "deleteTag": "Smazat značku",
@@ -166,7 +138,6 @@
     "tags": "Značky",
     "sortTags": "Řadit značky",
     "sort": "Řadit",
-    "sortBy": "Řadit podle",
     "sortEntries": "Záznamy",
     "sortName": "Název",
     "sortCustom": "Vlastní",
@@ -177,11 +148,9 @@
     "createTag": "Nová značka",
     "untagged": "Bez značek",
     "trashTooltip": "Smazané položky",
-    "trash": "Koš",
     "feedback": "Zpětná vazba",
     "import": "Import",
     "downloads": "Ke stažení",
-    "help": "Nápověda",
     "rate": "Ohodnotit",
     "markdown": "Markdown",
     "markdownTip": "Nešifrované",
@@ -209,7 +178,6 @@
     "deleteSubfolders_few": "Smazat i její {{count}} podsložky",
     "deleteSubfolders_many": "Smazat i jejích {{count}} podsložky",
     "deleteSubfolders_other": "Smazat i jejích {{count}} podsložek",
-    "moveTo": "Přesunout do složky",
     "searchPlaceholder": "Hledat složky",
     "sortFolders": "Řadit složky",
     "chipUnfiled": "Složka",
@@ -230,7 +198,6 @@
     "seedTeam": "Tým"
   },
   "collapsedSidebar": {
-    "newNote": "Nová poznámka",
     "expandSidebar": "Rozbalit boční panel"
   },
   "mobileHeader": {
@@ -245,26 +212,14 @@
     "colorFromTag": "Ze značky: #{{name}}",
     "colorOwnHint": "Barva zvolená tady vyplní pozadí této poznámky. <setting>Barvy složek a značek</setting> ji nemění.",
     "details": "Podrobnosti",
-    "readOnly": "Jen pro čtení",
     "readOnlyDescription": "Žádné úpravy, dokud to nevypneš.",
     "protect": "Chránit",
     "convertTo": "Převést na",
-    "typeNote": "Poznámka",
     "typeJournal": "Deník",
-    "typeTask": "Úkol",
-    "unpin": "Odepnout",
-    "pin": "Připnout",
-    "archive": "Archivovat",
-    "unarchive": "Zrušit archivaci",
     "burn": "Spálit",
     "share": "Sdílet",
     "trash": "Koš",
-    "duplicate": "Duplikovat",
-    "restore": "Obnovit",
-    "deleteForever": "Smazat navždy",
-    "moveToFolder": "Přesunout do složky",
     "noteHistory": "Historie",
-    "findReplace": "Najít a nahradit",
     "uncheckAllTasks": "Odškrtnout všechny položky",
     "deleteCheckedTasks": "Smazat zaškrtnuté položky",
     "sortTasksByStatus": "Seřadit položky podle stavu",
@@ -281,29 +236,19 @@
     "schedule": "Termín",
     "ends": "Končí",
     "sameDay": "Tentýž den",
-    "allDay": "Celý den",
     "starts": "Začíná",
     "endsAt": "Končí v",
     "noEnd": "Žádný",
     "removeFromCalendar": "Odebrat z kalendáře",
     "makeEvent": "Převést na <b>Událost</b> pro opakování",
-    "typeEvent": "Událost",
     "repeatRemoved": "Opakování je odebrané",
     "tagCount_few": "{{count}} značky",
     "tagCount_many": "{{count}} značky"
   },
   "selectionToolbar": {
-    "exitSelectionTooltip": "Ukončit výběr",
     "exitSelection": "Ukončit výběr",
-    "unpin": "Odepnout",
-    "pin": "Připnout",
-    "archive": "Archivovat",
-    "unarchive": "Zrušit archivaci",
     "tag": "Značka",
     "export": "Exportovat",
-    "delete": "Smazat",
-    "restore": "Obnovit",
-    "deleteForever": "Smazat navždy",
     "more": "Další akce",
     "addTagPlaceholder": "Přidat značku...",
     "noTagsFound": "Žádné značky nenalezeny",
@@ -326,6 +271,7 @@
     "showTags": "Zobrazit složku a značky",
     "showCalendar": "Zobrazit kalendář",
     "showCheckIn": "Zobrazit záznam nálady",
+    "showMedication": "Zobrazit léky",
     "showWorkItems": "Zobrazit položky z prostoru <b>Práce</b>",
     "showPersonalItems": "Zobrazit položky z prostoru <b>Osobní</b>",
     "other": "Ostatní",
@@ -348,7 +294,6 @@
     "moodCalendar": "Zobrazovat nálady v kalendáři"
   },
   "backfillPopover": {
-    "calendarLabel": "Kalendář deníku",
     "today": "Dnes",
     "chooseEntry": "Položky: {{date}}"
   },
@@ -370,6 +315,7 @@
     "newNote": "Nová poznámka",
     "newTask": "Nový úkol",
     "newKanban": "Nová kanbanová tabule",
+    "newDrawing": "Nová kresba",
     "newLogin": "Nové přihlašovací údaje",
     "newJournal": "Nový deník",
     "newFile": "Nový soubor",
@@ -397,32 +343,24 @@
     "duplicate": "Duplikovat",
     "moveToFolder": "Přesunout do složky",
     "exportAsMarkdown": "Exportovat jako Markdown",
-    "shareBurnAfterReading": "Sdílet a spálit po přečtení",
     "exportAsHtml": "Exportovat jako HTML",
-    "printSaveAsPdf": "Tisk / Uložit jako PDF",
-    "moveToTrash": "Přesunout do koše",
-    "newBookmark": "Nová záložka",
     "newContact": "Nový kontakt",
-    "openBookmark": "Otevřít",
     "copyBookmarkUrl": "Kopírovat URL",
     "editBookmark": "Upravit záložku",
     "saveAsNote": "Uložit jako poznámku",
-    "openClippedNote": "Otevřít poznámku",
     "openInTab": "Otevřít na kartě",
     "openInTabHint": "{{key}}-klik",
+    "openInTabHintMiddle": "Prostřední klik",
     "closeTab": "Zavřít kartu",
     "closeOtherTabs": "Zavřít ostatní karty",
     "closeAllTabs": "Zavřít všechny karty",
     "pinTab": "Připnout kartu",
     "unpinTab": "Odepnout kartu",
-    "newEvent": "Nová událost",
-    "quickAdd": "Rychlé přidání"
+    "newEvent": "Nová událost"
   },
   "demoBanner": {
     "title": "Vyzkoušej to bez rizika",
-    "description": "Tady se nic neukládá. Pořiď si vlastní šifrovaný zápisník, zdarma.",
-    "cta": "Vytvořit účet",
-    "dismiss": "Zavřít"
+    "description": "Tady se nic neukládá. Pořiď si vlastní šifrovaný zápisník, zdarma."
   },
   "markdown": {
     "title": "Markdown",
@@ -461,20 +399,17 @@
     "fileCount_other": "{{count}} souborů",
     "railFolders": "Složky Markdown",
     "railTags": "Značky Markdown",
-    "allFiles": "Všechny soubory",
     "modeRich": "Formátovaně",
     "modeSource": "Markdown",
     "reopenPrompt": "Po znovunačtení potřebuje tvůj prohlížeč oprávnění znovu. Složku si pamatuje, takže je to na jedno kliknutí.",
     "reopenFolder": "Znovu otevřít {{name}}",
     "new": "Nový",
-    "delete": "Smazat",
     "saveToNotes": "Uložit do mých poznámek",
     "createFailed": "Soubor se nepodařilo vytvořit.",
     "deleteFailed": "Soubor se nepodařilo přesunout do koše.",
     "importedToast": "„{{title}}“ uloženo do tvých šifrovaných poznámek. Původní soubor zůstává nedotčený.",
     "deleteTitle": "Přesunout do koše ve složce?",
     "deleteBody": "„{{name}}“ se přesune do složky .trash uvnitř tvé složky Markdown. Když si to rozmyslíš, obnovíš ho ze správce souborů.",
-    "deleteConfirm": "Přesunout do koše",
     "explainTitle": "Tvoje složka Markdown",
     "explainDone": "Rozumím",
     "bannerTitle": "Pokročilý editor Markdownu",
@@ -483,7 +418,6 @@
     "explainIntro": "Vyber složku se soubory .md a .txt - podsložky se objeví samy, změny se ukládají rovnou a nic se nepřevádí",
     "chipPreview": "Živý náhled",
     "chipTasks": "Úkoly",
-    "chipTags": "Značky",
     "chipTables": "Tabulky",
     "useAgent": "Dej AI agentům přístup ke svým poznámkám",
     "useObsidian": "Stejné soubory v Obsidianu nebo Logseq",
@@ -511,7 +445,6 @@
     "assocWorking": "Ptáme se tvého systému…",
     "copyPath": "Kopírovat cestu",
     "selectedCount": "Vybráno {{selected}} z {{total}}",
-    "selectAll": "Vybrat vše",
     "exitSelection": "Ukončit výběr",
     "deleteManyTitle_one": "Přesunout {{count}} soubor do koše ve složce?",
     "deleteManyTitle_other": "Přesunout {{count}} souborů do koše ve složce?",
@@ -540,15 +473,11 @@
   "bookmarks": {
     "newBookmark": "Nová záložka",
     "searchPlaceholder": "Hledat záložky…",
-    "sortOptions": "Možnosti řazení",
     "quickAddPlaceholder": "Vlož nebo napiš odkaz…",
     "urlLabel": "Záložka (URL)",
     "urlInvalid": "Zadej webovou adresu, např. example.com nebo https://example.com/page.",
     "urlDuplicate": "Tuto URL už má jiná záložka, takže se změna neuložila.",
-    "openAction": "Otevřít",
     "copiedUrl": "Odkaz zkopírován",
-    "moveToTrash": "Přesunout do koše",
-    "rowMenu": "Další akce",
     "emptyNone": "Zatím žádné záložky.",
     "emptyTitle": "Ukládej si weby, které stojí za to",
     "emptyAdd": "Přidat záložku",
@@ -564,11 +493,9 @@
     "importSkipped_few": "{{count}} přeskočeny, už jsou uložené."
   },
   "contacts": {
-    "new": "Nový",
     "searchPlaceholder": "Hledat kontakty…",
-    "sortOptions": "Možnosti řazení",
     "emptyNone": "Zatím žádné kontakty.",
-    "emptyTitle": "Adresář, který přečteš jen ty",
+    "emptyTitle": "Adresář šifrovaný na tvém zařízení",
     "emptyAdd": "Přidat kontakt",
     "emptyImport": "Importovat kontakty",
     "noMatches": "Nic nenalezeno.",
@@ -587,15 +514,12 @@
     "company": "Firma",
     "department": "Oddělení",
     "jobTitle": "Pozice",
-    "groupName": "Jméno",
     "groupPhone": "Telefon",
     "groupEmail": "E-mail",
     "groupAddress": "Adresa",
     "groupWebsite": "Web",
-    "groupProfile": "Profil",
     "groupDates": "Data",
     "groupRelated": "Blízcí",
-    "groupNote": "Poznámka",
     "addPhone": "Přidat telefon",
     "addEmail": "Přidat e-mail",
     "addWebsite": "Přidat web",
@@ -610,7 +534,6 @@
     "notePlaceholder": "Poznámky k této osobě",
     "labelNone": "Štítek",
     "labelCustom": "Vlastní štítek…",
-    "removeRow": "Odebrat",
     "call": "Zavolat",
     "message": "Zpráva",
     "sendEmail": "Poslat e-mail",
@@ -633,15 +556,8 @@
     "menuPersonal": "Osobní",
     "menuName": "Jméno",
     "menuText": "Text",
-    "itemAddress": "Adresa",
-    "itemWebsite": "Web",
-    "itemProfile": "Profil",
-    "itemCompany": "Firma",
-    "itemJobTitle": "Pozice",
-    "itemBirthday": "Narozeniny",
     "itemDate": "Datum",
     "itemRelated": "Blízká osoba",
-    "itemNickname": "Přezdívka",
     "itemNameParts": "Prostřední jméno, titul, přípona",
     "itemPhonetic": "Fonetické jméno",
     "itemNote": "Poznámka",
@@ -774,8 +690,10 @@
       "note": "Poznámky",
       "task": "Seznamy úkolů",
       "journal": "Záznamy v deníku",
-      "contact": "Narozeniny"
+      "contact": "Narozeniny a další data"
     },
+    "birthdays": "Narozeniny",
+    "contactDate": "{{name}}: {{label}}",
     "dragEnd": "Přetažením změníš poslední den",
     "previousDay": "Předchozí den",
     "nextDay": "Další den",
@@ -885,7 +803,6 @@
     "daysBeforeAt_few": "{{count}} dny předem v {{time}}",
     "daysBeforeAt_other": "{{count}} dní předem v {{time}}",
     "custom": "Vlastní",
-    "add": "Přidat",
     "max": "Nejvýš pět upozornění.",
     "units": {
       "minutes": "minut",
@@ -897,11 +814,9 @@
     "remove": "Odebrat {{alert}}",
     "reminder": "Připomínka",
     "medication": "Připomínka léků",
-    "open": "Otevřít",
     "snooze": "Odložit o 10 min",
     "offOnPhone": "Připomínky jsou v tomto telefonu vypnuté",
-    "turnOn": "Zapnout",
-    "openSettings": "Otevřít nastavení"
+    "turnOn": "Zapnout"
   },
   "quickAdd": {
     "group": "Vytvořit",
@@ -914,6 +829,14 @@
     "appendHintDetail": "Vloží >>, pak napiš začátek názvu",
     "appendNone": "Zatím tu není seznam úkolů ani poznámka, kam přidávat",
     "appendNoneDetail": "Napiš název za >> a vytvoříš seznam úkolů s tímto názvem",
+    "cannotAdd": "Nelze přidat do {{title}}",
+    "blocked": {
+      "trash": "Položka je v koši.",
+      "pin": "Položka je za tvým PINem. Otevři ji a přidej.",
+      "readOnly": "Položka je jen pro čtení.",
+      "board": "Je to kanbanová tabule. Karty přidávej přímo na tabuli.",
+      "archived": "Položka je archivovaná. Zruš archivaci a přidej."
+    },
     "linkGroup": "Uložit tento odkaz",
     "linkDetail": {
       "bookmark": "Uloží adresu. Pojmenuješ ji potom.",
@@ -933,6 +856,7 @@
       "task": "Nový seznam úkolů",
       "journal": "Nový záznam v deníku",
       "kanban": "Nová kanbanová tabule",
+      "drawing": "Nová kresba",
       "login": "Nové přihlašovací údaje",
       "file": "Nahrát soubor",
       "contact": "Nový kontakt",
@@ -965,8 +889,8 @@
       },
       "length": {
         "label": "Délka",
-        "examples": "na 30 min · na 3 dny · pá do ne",
-        "insert": "na 1 h"
+        "examples": "15:00 na 30 min · na 3 dny · pá do ne",
+        "insert": "15:00 na 1 h"
       },
       "repeat": {
         "label": "Opakování",
@@ -1012,17 +936,14 @@
     "backToToday": "Zpět na dnešek",
     "options": "Možnosti záznamu nálady",
     "skipToday": "Dnes přeskočit",
-    "hide": "Skrýt tuto kartu",
+    "hide": "Skrýt",
     "change": "Změnit náladu",
     "saved": "Uloženo",
     "chooseTrackers": "Vybrat sledované hodnoty",
-    "settings": "Nastavení záznamu nálady",
     "skipped": "Pro dnešek přeskočeno.",
     "startOver": "Začít znovu",
     "cleared": "Záznam nálady vymazán.",
     "hidden": "Karta je skrytá. Znovu ji zapneš volbou „Zobrazit záznam nálady“ v nastavení seznamu.",
-    "undo": "Vrátit zpět",
-    "done": "Hotovo",
     "write": "Napsat o dnešku",
     "writeOn": "Napsat o dni {{date}}",
     "streak": "Den {{n}} v řadě",
@@ -1037,19 +958,25 @@
     "hiddenCount_other": "Skrytých záznamů nálady: {{count}}.",
     "showThem": "Zobrazit"
   },
+  "medicationCard": {
+    "title": "Sledování léků",
+    "options": "Možnosti léků",
+    "edit": "Změnit dnešní léky",
+    "hidden": "Karta je skrytá. Znovu ji zapneš v nastavení seznamu nebo v Nastavení > Sledované hodnoty > Léky."
+  },
   "clipper": {
-    "saveAsNote": "Uložit jako poznámku",
     "saving": "Ukládá se jako poznámka…",
     "stepPage": "Stahuje se stránka",
     "stepPictures": "Ukládají se obrázky, {{done}} z {{total}}",
-    "openNote": "Otevřít poznámku",
     "alreadySaved": "Tato stránka už je uložená jako poznámka ({{date}}).",
     "savedOn": "Uloženo jako poznámka {{date}}",
-    "windowTitle": "Uložit stránku",
     "addressLabel": "Webová adresa",
     "addressPlaceholder": "Vlož odkaz…",
     "savePictures": "Uložit obrázky",
     "savePicturesHint": "Až 20 obrázků, uložených s poznámkou. Započítávají se do tvého úložiště.",
+    "extensionTipTitle": "Ukládej stránky z prohlížeče, výsledek bude lepší",
+    "extensionTip": "Rozšíření prohlížeče uloží stránku tak, jak ji vidíš, i stránky za přihlášením.",
+    "extensionTipSetUp": "Nastavit rozšíření",
     "downloading": "Stahuje se stránka…",
     "downloadingPictures": "Stahují se obrázky, {{done}} z {{total}}",
     "picturesLine_one": "{{count}} obrázek · {{size}}, uložený s poznámkou",
@@ -1085,5 +1012,168 @@
     "until": "Končí: {{day}}",
     "noAlert": "Bez upozornění",
     "endsLater": "Končí jiný den"
+  },
+  "apps": {
+    "railLabel": "Rozšíření",
+    "title": "Rozšíření prohlížeče",
+    "subtitle": "Ukládání stránek a správce hesel v Chrome, Firefoxu a Edge. Rozšíření nikdy nedrží klíč, který otevírá tvoje poznámky.",
+    "stepInstall": "Nainstaluj rozšíření",
+    "stepFeatures": "Vyber, co smí dělat",
+    "stepConnect": "Připoj ho",
+    "makeCode": "Vytvořit kód",
+    "connectHint": "Vytvoř jednorázový kód a vlož ho do rozšíření.",
+    "thisBrowser": "Tento prohlížeč",
+    "otherApps": "Aplikace pro počítač a telefon:",
+    "desktopAll": "Všechny ke stažení",
+    "extensionComputersOnly": "Rozšíření je pro Chrome, Firefox a Edge na počítači.",
+    "demoSignUp": "Zaregistruj se a připoj prohlížeč"
+  },
+  "extensionConnect": {
+    "clips": "Ukládání stránek",
+    "clipsHint": "Ukládej weby jako poznámky.",
+    "loginsHint": "Přihlašovací údaje, karty, SSH klíče a záložky pro web, na kterém jsi, jen ke kopírování. Zamčené vlastním PINem nebo přístupovým kódem.",
+    "pickOne": "Zapni aspoň jednu možnost.",
+    "codeLabel": "Kód pro rozšíření",
+    "oneUse": "Funguje jednou, po dobu 10 minut.",
+    "usedBy": "Tento kód použil prohlížeč {{name}} a je teď připojený. Pokud o tom nevíš, odeber ho níže.",
+    "newCode": "Nový kód",
+    "tooManyCodes": "Čeká příliš mnoho kódů. Použij jeden z nich, nebo počkej 10 minut.",
+    "tooManyExtensions": "Tento účet má připojených 10 prohlížečů, víc mít nemůže. Nejdřív jeden odeber.",
+    "keyElsewhere": "Klíč k tvým přihlašovacím údajům je na jiném tvém zařízení. Otevři tam PrivacyNotes, nech ho synchronizovat a pak to zkus znovu.",
+    "failed": "Kód se nepodařilo vytvořit. Zkontroluj připojení a zkus to znovu."
+  },
+  "dashboard": {
+    "taskReadOnly": "Tato poznámka je jen pro čtení. Aby šlo odškrtávat její úkoly, vypni režim jen pro čtení v možnostech poznámky.",
+    "addWidget": "Přidat widget",
+    "catalogTitle": "Přidat widget",
+    "layouts": "Rozvržení",
+    "layoutChanged": "Rozvržení změněno",
+    "full": "Domov je plný. Nejdřív odeber některý widget.",
+    "added": "Přidáno na Domov",
+    "removed": "Odebráno z Domova",
+    "showOnHome": "Zobrazit na Domově",
+    "removeFromHome": "Odebrat z Domova",
+    "resize": "Změnit velikost: {{name}}",
+    "narrower": "Užší",
+    "taller": "Vyšší",
+    "shorter": "Nižší",
+    "moveEarlier": "Posunout dopředu",
+    "moveLater": "Posunout dozadu",
+    "chooseNote": "Vyber poznámku",
+    "chooseTag": "Vyber značku",
+    "chooseFolder": "Vyber složku",
+    "chooseTracker": "Vyber sledovanou hodnotu",
+    "choose": "Vybrat",
+    "gone": "Už tu není",
+    "otherSpace": "V druhém prostoru",
+    "proLocked": "Součást Pro",
+    "noneToChoose": "Zatím není z čeho vybírat",
+    "headerEvents_other": "Dnes {{formatted}} událostí",
+    "headerTasks_other": "{{formatted}} nesplněných úkolů",
+    "startToday": "Začít dnešní záznam",
+    "groups": {
+      "keep": "Co uchováváš"
+    },
+    "layout": {
+      "everyday": "Na každý den",
+      "planner": "Plánování",
+      "writer": "Psaní"
+    },
+    "w": {
+      "checkIn": {
+        "name": "Záznam nálady",
+        "help": "Jak se dnes máš a tvoje sledované hodnoty"
+      },
+      "calendar": {
+        "help": "Měsíc s tečkami pro záznamy a události"
+      },
+      "upcoming": {
+        "name": "Co tě čeká",
+        "help": "Dnes a dalších 7 dní"
+      },
+      "today": {
+        "name": "Dnešní záznam",
+        "help": "Dnešní záznam v deníku, nebo jeho začátek"
+      },
+      "tasks": {
+        "name": "Nesplněné úkoly",
+        "help": "Nezaškrtnuté úkoly z tvých poznámek"
+      },
+      "recent": {
+        "name": "Nedávno upravené",
+        "help": "Naposledy upravované položky"
+      },
+      "pinned": {
+        "help": "Tvoje připnuté položky"
+      },
+      "note": {
+        "name": "Poznámka",
+        "help": "Jedna vybraná poznámka na Domově"
+      },
+      "tag": {
+        "name": "Značka",
+        "help": "Nejnovější položky s jednou značkou"
+      },
+      "folder": {
+        "name": "Složka",
+        "help": "Nejnovější položky v jedné složce"
+      },
+      "onThisDay": {
+        "name": "V tento den",
+        "help": "Záznamy v deníku z dřívějších let"
+      },
+      "week": {
+        "help": "Slova, aktivní dny, položky a záznamy nálady"
+      },
+      "streak": {
+        "help": "Dny psaní v řadě"
+      },
+      "checkInStreak": {
+        "help": "Dny v řadě se záznamem nálady"
+      },
+      "rhythm": {
+        "name": "Tvůj rytmus",
+        "help": "26 týdnů psaní a nálady"
+      },
+      "milestone": {
+        "name": "Další milník",
+        "help": "Jak blízko je ten další"
+      },
+      "tracker": {
+        "name": "Sledovaná hodnota",
+        "help": "Jedna sledovaná hodnota: její číslo a její dny"
+      },
+      "weekRecap": {
+        "help": "Tvůj týden na jedné kartě"
+      },
+      "files": {
+        "name": "Nedávné soubory",
+        "help": "Tvoje nejnovější obrázky a soubory"
+      },
+      "bookmarks": {
+        "help": "Tvoje nejnovější záložky"
+      },
+      "birthdays": {
+        "help": "Narozeniny v příštích 30 dnech"
+      }
+    },
+    "empty": {
+      "upcoming": "V příštích 7 dnech nic",
+      "tasks": "Žádné nesplněné úkoly",
+      "recent": "Zatím tu nic není",
+      "pinned": "Zatím nic připnutého",
+      "tag": "Žádné položky s touto značkou",
+      "folder": "V této složce nic není",
+      "onThisDay": "Žádné záznamy z tohoto dne v dřívějších letech",
+      "files": "Zatím žádné soubory",
+      "bookmarks": "Zatím žádné záložky",
+      "birthdays": "Žádné narozeniny v příštích 30 dnech",
+      "tracker": "Zatím nic zaznamenaného",
+      "milestone": "Všechny milníky dosaženy"
+    },
+    "headerTasks_one": "{{formatted}} nesplněný úkol",
+    "headerTasks_few": "{{formatted}} nesplněné úkoly",
+    "headerEvents_one": "Dnes {{formatted}} událost",
+    "headerEvents_few": "Dnes {{formatted}} události"
   }
 }

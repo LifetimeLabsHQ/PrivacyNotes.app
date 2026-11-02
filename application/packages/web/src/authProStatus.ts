@@ -12,13 +12,13 @@ import { writeCachedAccountFlags } from './authStorage';
 import type { AuthState } from './auth';
 import { dropProThemes } from './theme';
 
-// Spec: ops/docs/billing-integration.md (Pro propagation: one RPC per minute)
+// Spec: docs/internal/billing-integration.md (Pro propagation: one RPC per minute)
 const PRO_RECHECK_THROTTLE_MS = 60 * 1000;
 
 /**
  * Check if the current user bought Pro at the early-supporter price
  * by reading their pro_pubkeys row (RLS allows owner SELECT).
- * Spec: ops/docs/design-decisions.md (early supporter threshold: amount_cents < PRO_PRICE_CENTS)
+ * Spec: docs/internal/design-decisions.md (early supporter threshold: amount_cents < PRO_PRICE_CENTS)
  */
 export async function checkEarlySupporter(sb: SupabaseClient): Promise<boolean> {
   try {
@@ -114,7 +114,7 @@ export function useProStatus({
           const current = authRef.current;
           // Restore unvalidated store ownership for free accounts. Paid accounts
           // only need the server verdict, including refunds on another device.
-          // Spec: ops/docs/plans/iap-restore-handoff.md (background restore)
+          // Spec: docs/internal/specs/iap-restore-handoff.md (background restore)
           if ((current.status === 'device_limit_reached' ||
             (current.status === 'authenticated' && !current.isPro)) && isNativeStoreBuild()) {
             await restoreNativePurchases(account);

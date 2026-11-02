@@ -1,10 +1,11 @@
 import JSZip from 'jszip';
-import { gunzipText, ImportTooLargeError, zipEntryBytes, zipEntryText } from './zipEntry';
+import { gunzipText, ImportTooLargeError, mediaTooLargeWarning, zipEntryBytes, zipEntryMedia, zipEntryText } from './zipEntry';
 import type { FolderDef } from '../folders';
 import { normalizeTag } from '../notesRepo';
 import { TEXT_COLORS, HIGHLIGHT_COLORS } from '../editorColors';
 import { buildFolderTree } from './folderImport';
-import { BARE_LINKABLE_RE, linkifyMarkdown } from './linkify';
+import { BARE_LINKABLE_RE, linkifyLiteralText, linkifyMarkdown } from './linkify';
+import { escapeMarkdownText, guardMarkdownLineStart, markdownCodeSpan } from './standardNotesSuper';
 import { noteLinkTarget } from '../noteLinks';
 import { mimeFromExt } from './blobImport';
 import type { ImportedNote, ParsedImport } from './types';
@@ -225,6 +226,8 @@ interface ConvCtx {
    * raw pipes would split the markdown table.
    */
   plainMedia: boolean;
+  /** True while rendering a link's label: a link cannot hold another. */
+  inLink?: boolean;
   flags: ConvFlags;
 }
 
@@ -450,7 +453,9 @@ function walkInline(node: Node, ctx: ConvCtx): string {
     // carries per-line indentation inside text nodes. Left in place, four
     // spaces after a newline become an indented code block once the run
     // is quoted or emitted, so the markdown shows literal `**` markers.
-    return normalizeText(node.textContent ?? '').replace(/\n[ \t]+/g, '\n');
+    const text = normalizeText(node.textContent ?? '').replace(/\n[ \t]+/g, '\n');
+    // Typed text as markdown; outside a link, a bare URL or email becomes an autolink.
+    return ctx.inLink ? escapeMarkdownText(text) : linkifyLiteralText(text, escapeMarkdownText).markdown;
   }
   if (node.nodeType !== Node.ELEMENT_NODE) return '';
   const el = node as Element;
@@ -508,8 +513,9 @@ function walkInline(node: Node, ctx: ConvCtx): string {
       return inner.trim() ? wrapMark(inner, '<sup>', '</sup>') : inner;
     }
     case 'code': {
-      const inner = inlineOnly(children());
-      return inner ? `\`${inner}\`` : '';
+      // Code shows its text as typed, so the text is not escaped.
+      const inner = inlineOnly(normalizeText(el.textContent ?? ''));
+      return inner ? markdownCodeSpan(inner) : '';
     }
     case 'mark': {
       const inner = children();
@@ -550,19 +556,24 @@ function walkInline(node: Node, ctx: ConvCtx): string {
 }
 
 function renderAnchor(el: Element, ctx: ConvCtx): string {
+  const outer = ctx.inLink;
+  ctx.inLink = true;
   const label = inlineOnly(
     Array.from(el.childNodes).map((c) => walkInline(c, ctx)).join('')
   );
-  // For [label](target) emissions the label must not carry brackets: a
-  // "]" ends the link early AND breaks blobImport's rewrite regex, which
+  ctx.inLink = outer;
+  // A tag, a note-link label and an attachment name are read as plain text.
+  const text = inlineOnly(normalizeText(el.textContent ?? ''));
+  // For an attachment's [label](target) the label must not carry brackets:
+  // a "]" ends the link early AND breaks blobImport's rewrite regex, which
   // would leave the raw upnatt: token as dead text in the note.
-  const linkLabel = label.replace(/[[\]]/g, '');
+  const fileLabel = escapeMarkdownText(text.replace(/[[\]]/g, ''));
 
   // Inline hashtag. The tag itself already arrived via tagLinks; the body
   // keeps the literal #text so the note reads the way it did in UpNote
   // (matching how the Obsidian importer leaves inline tags in place).
   const tagAttr = el.getAttribute('data-upnote-tag');
-  if (tagAttr) return label || tagAttr;
+  if (tagAttr) return text || tagAttr;
 
   // Note link: resolve the target id to that note's real title.
   const noteId =
@@ -572,7 +583,7 @@ function renderAnchor(el: Element, ctx: ConvCtx): string {
   if (noteId) {
     ctx.flags.noteLinks++;
     const title = noteLinkTarget(ctx.noteTitles.get(noteId) ?? '');
-    const l = noteLinkTarget(label);
+    const l = noteLinkTarget(text);
     if (!title) return l ? `[[${l}]]` : '';
     if (!l || l === title) return `[[${title}]]`;
     return `[[${title}|${l}]]`;
@@ -585,7 +596,7 @@ function renderAnchor(el: Element, ctx: ConvCtx): string {
     // (see ConvCtx.plainMedia); the blob rewrite's pipes would split the
     // table otherwise.
     if (ctx.plainMedia) return label;
-    return `[${linkLabel}](${token})`;
+    return `[${fileLabel}](${token})`;
   }
   if (isLocalRef(el)) {
     // Referenced but not in the backup (UpNote had not downloaded it to
@@ -600,7 +611,7 @@ function renderAnchor(el: Element, ctx: ConvCtx): string {
   // Parens or spaces in the target break [label](target); angle brackets
   // are markdown's own escape hatch for that.
   const target = /[\s()]/.test(href) ? `<${href}>` : href;
-  return `[${linkLabel || href}](${target})`;
+  return `[${label || escapeMarkdownText(href)}](${target})`;
 }
 
 function renderImage(el: Element, ctx: ConvCtx): string {
@@ -691,6 +702,7 @@ function renderList(el: Element, ctx: ConvCtx, indent: string): string {
     // body's "> " prefix defeats - so carry the same zero-width space the
     // repair would insert.
     if (isChecklist && !text) text = '​';
+    else text = guardMarkdownLineStart(text);
     lines.push(indent + marker + text);
     for (const list of nested) pushNested(list);
   }
@@ -731,7 +743,8 @@ function renderTable(el: Element, ctx: ConvCtx): string {
     for (const c of Array.from(tr.children)) {
       if (!/^(td|th)$/i.test(c.tagName)) continue;
       ctx.plainMedia = true;
-      const text = inlineOnly(walkInline(c, ctx)).replace(/\|/g, '\\|').replace(/^$/, ' ');
+      // A typed pipe is already escaped; one inside a link or note-link is not.
+      const text = inlineOnly(walkInline(c, ctx)).replace(/(?<!\\)((?:\\\\)*)\|/g, '$1\\|').replace(/^$/, ' ');
       ctx.plainMedia = false;
       cells.push(text);
       // Markdown has no cell spans; empty placeholder cells keep the later
@@ -779,7 +792,7 @@ function renderCollapsible(el: Element, ctx: ConvCtx): string {
   const title = titleEl ? inlineOnly(normalizeText(titleEl.textContent ?? '')) : '';
   const body = contentEl ? renderBlocks(contentEl, ctx).trim() : '';
 
-  const head = `> [!fold]${collapsed ? '-' : '+'}${title ? ` ${title}` : ''}`;
+  const head = `> [!fold]${collapsed ? '-' : '+'}${title ? ` ${escapeMarkdownText(title)}` : ''}`;
   if (!body) return `\n${head}\n\n`;
   const quoted = body
     .split('\n')
@@ -822,7 +835,9 @@ function renderBlock(el: Element, ctx: ConvCtx): string {
       return renderList(el, ctx, '');
 
     case 'blockquote': {
-      const inner = (hasBlockChildren(el) ? renderBlocks(el, ctx) : walkInline(el, ctx)).trim();
+      const inner = hasBlockChildren(el)
+        ? renderBlocks(el, ctx).trim()
+        : guardMarkdownLineStart(walkInline(el, ctx).trim());
       if (!inner) return '';
       const quoted = inner
         .split('\n')
@@ -882,9 +897,10 @@ function renderBlock(el: Element, ctx: ConvCtx): string {
         return `\n<p style="text-align: ${align};">${inner}</p>\n\n`;
       }
       if (align) ctx.flags.droppedStyling++;
+      // Inline content only, so block syntax at its start was typed.
       const inner = walkInline(el, ctx).trim();
       if (!inner) return '\n';
-      return `${inner}\n\n`;
+      return `${guardMarkdownLineStart(inner)}\n\n`;
     }
 
     default:
@@ -903,7 +919,7 @@ function renderBlocks(container: Element, ctx: ConvCtx): string {
   const flush = () => {
     const text = inlineRun.trim();
     inlineRun = '';
-    if (text) parts.push(`${text}\n\n`);
+    if (text) parts.push(`${guardMarkdownLineStart(text)}\n\n`);
   };
 
   for (const node of Array.from(container.childNodes)) {
@@ -1051,7 +1067,7 @@ function extractUpNoteInlineTags(body: string): string[] {
 
 /** Strip markdown escapes UpNote writes into headings and labels. */
 function unescapeMd(s: string): string {
-  return s.replace(/\\([\\`*_{}[\]()#+.!|~<>-])/g, '$1');
+  return s.replace(/\\([\\`*_{}[\]()#+.!|~<>$=-])/g, '$1');
 }
 
 /** The cells of a markdown table row, outer pipes dropped. */
@@ -1262,10 +1278,15 @@ async function parseSingleExports(
   let blobBytes = 0;
   let imageCount = 0;
   let attachmentCount = 0;
+  let tooLarge = 0;
   let i = 0;
   for (const [base, entry] of mediaFiles) {
     if (!referenced.has(base)) continue;
-    const data = new Uint8Array(await entry.async('uint8array'));
+    const data = await zipEntryMedia(entry);
+    if (!data) {
+      tooLarge++;
+      continue;
+    }
     const token = blobToken(i++);
     const mime = mimeFromExt(base);
     const name = entry.name.split('/').pop() ?? base;
@@ -1321,6 +1342,7 @@ async function parseSingleExports(
       ? 'This is UpNote\'s per-note Markdown export. It keeps text, lists, tables, code, math, links, images, and attachments - but UpNote flattens callouts, text colors, alignment, and sub/superscript before writing it, and it carries no notebooks, pins, or original dates. On the phone, "Export to HTML" keeps that formatting; on a computer, Settings > Backup keeps everything.'
       : 'These are UpNote\'s per-note HTML exports: formatting, images, and attachments come across in full. Per-note exports carry no notebooks, pins, or original dates - on a computer, Settings > Backup produces a backup folder that keeps those too.',
   ];
+  if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   if (flags.missingFiles > 0) {
     warnings.push(
       `${flags.missingFiles === 1 ? '1 file was' : `${flags.missingFiles} files were`} referenced by the notes but not in the zip. Export the note again and share the whole zip UpNote produces, without unpacking it.`
@@ -1589,9 +1611,14 @@ export async function parseUpNote(
       `Extracting ${wanted.length} attachment${wanted.length === 1 ? '' : 's'}...`
     );
   }
+  let tooLarge = 0;
   for (let i = 0; i < wanted.length; i++) {
     const { base, entry } = wanted[i]!;
-    const data = new Uint8Array(await entry.async('uint8array'));
+    const data = await zipEntryMedia(entry);
+    if (!data) {
+      tooLarge++;
+      continue;
+    }
     const token = blobToken(i);
     const mime = mimeFromExt(base);
     // The snapshot's files records carry the original filename; the bytes
@@ -1765,6 +1792,7 @@ export async function parseUpNote(
   const untaggedNotes = out.filter((n) => n.tags.length === 0).length;
 
   const warnings: string[] = [];
+  if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   if (flags.missingFiles > 0) {
     warnings.push(
       `${flags.missingFiles === 1 ? '1 attached file was' : `${flags.missingFiles} attached files were`} referenced by notes but missing from the backup folder, so ${flags.missingFiles === 1 ? 'it' : 'they'} could not be imported. In UpNote, enable "Backup attachments" under Settings > Backup, run "Backup now" again, and re-import the fresh zip.`

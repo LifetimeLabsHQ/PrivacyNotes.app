@@ -8,7 +8,7 @@ import type { DeviceRow } from './devices';
  * a browser on the same machine after a cache clear, a reinstalled app, or
  * two machines the fingerprint could not tell apart. Removal therefore
  * works per row, and a whole-slot removal is an explicit second action.
- * Spec: ops/docs/design-decisions.md (device removal is per row)
+ * Spec: docs/internal/design-decisions.md (device removal is per row)
  */
 export type DeviceSlot = {
   key: string;

@@ -8,23 +8,23 @@ import { useCommitOnCollapse } from './PillShell';
  * choice) commits on the tap and the pass moves on; a many-value or a typed
  * input (chips, a number) commits as it changes and the pass moves on with
  * Next. The scale tiles live in `MoodScale.tsx` (`ScaleTiles`).
- * Spec: ops/docs/archive/ui-patterns.md section 141
+ * Spec: docs/internal/design/ui-patterns.md section 141
  */
 
 /** A chip in a many-value panel (emotions, factors): the tag chip's shape at
  *  the pill row's height. `on` takes the logged look of the pills. */
 export function chipClass(on: boolean): string {
-  return `inline-flex items-center h-7 px-2.5 rounded-md border text-[12px] font-medium transition-colors ${
+  return `inline-flex items-center h-7 px-2.5 rounded-md border text-small font-medium transition-colors ${
     on ? 'border-success/25 bg-success/15 text-success' : 'border-transparent bg-surface-0 text-pn-soft hover:bg-pn/10 hover:text-pn'
   }`;
 }
 
 /** A chip that adds something: dashed, with a plus. */
-export const CHIP_ADD = 'inline-flex items-center gap-1 h-7 px-2.5 rounded-md border border-dashed border-pn-muted/50 text-[12px] font-medium text-pn-muted hover:border-pn-muted hover:text-pn-soft transition-colors';
+export const CHIP_ADD = 'inline-flex items-center gap-1 h-7 px-2.5 rounded-md border border-dashed border-pn-muted/50 text-small font-medium text-pn-muted hover:border-pn-muted hover:text-pn-soft transition-colors';
 
 /** The question over an input. */
 export function PanelQuestion({ children, className = 'mb-2' }: { children: ReactNode; className?: string }) {
-  return <p className={`text-[13px] font-semibold text-pn ${className}`}>{children}</p>;
+  return <p className={`text-compact font-semibold text-pn ${className}`}>{children}</p>;
 }
 
 /**
@@ -51,7 +51,7 @@ export function ChoiceGrid<T extends string | boolean>({ options, value, onPick,
             role="radio"
             aria-checked={on}
             onClick={() => onPick(o.key)}
-            className={`min-w-0 flex items-center justify-center rounded-lg px-1 text-center text-[12px] font-medium leading-tight transition outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+            className={`min-w-0 flex items-center justify-center rounded-lg px-1 text-center text-small font-medium leading-tight transition outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               size === 'lg' ? 'h-12' : 'h-10 [@media(hover:none)]:h-11'
             } ${on ? 'bg-accent-fill text-white' : 'bg-surface-0 text-pn-soft hover:bg-accent/15 hover:text-accent'}`}
           >
@@ -65,7 +65,8 @@ export function ChoiceGrid<T extends string | boolean>({ options, value, onPick,
 
 /** A pair or a trio of joined segments: Taken | Skipped, kg | lb. */
 export function Segmented<T extends string>({ options, value, onPick, tone = 'accent', ariaLabel, size = 'md', className = '' }: {
-  options: readonly { key: T; label: string }[];
+  /** `icon`: a glyph before the label, sized by the caller. */
+  options: readonly { key: T; label: string; icon?: ReactNode }[];
   value: T | null | undefined;
   onPick: (key: T) => void;
   tone?: 'accent' | 'status';
@@ -86,10 +87,11 @@ export function Segmented<T extends string>({ options, value, onPick, tone = 'ac
             type="button"
             aria-pressed={on}
             onClick={() => onPick(o.key)}
-            className={`flex-1 ${size === 'sm' ? 'px-2.5 h-7 text-[11.5px]' : 'px-3 h-8 [@media(hover:none)]:h-9 text-[12px]'} font-medium transition-colors ${i > 0 ? 'border-s border-divider' : ''} ${
+            className={`flex-1 inline-flex items-center justify-center gap-1.5 ${size === 'sm' ? 'px-2.5 h-7 text-small' : 'px-3 h-8 [@media(hover:none)]:h-9 text-small'} font-medium transition-colors ${i > 0 ? 'border-s border-divider' : ''} ${
               on ? fill : 'bg-surface-2 text-pn-muted hover:bg-pn/5 hover:text-pn'
             }`}
           >
+            {o.icon}
             {o.label}
           </button>
         );
@@ -206,9 +208,9 @@ export function NumberStepper({ value, onChange, min, max, step = 1, unit, unitK
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitDraft(); } }}
             aria-label={placeholder}
             style={{ width: `${Math.max(1, shown.length) + 0.4}ch` }}
-            className="max-w-full bg-transparent text-center text-[18px] @[16rem]/stepper:text-[24px] font-semibold tabular-nums text-pn placeholder:text-pn-muted/60 outline-none"
+            className="max-w-full bg-transparent text-center text-heading @[16rem]/stepper:text-display-2 font-semibold tabular-nums text-pn placeholder:text-pn-muted/60 outline-none"
           />
-          {unit && <span className="text-[11px] @[16rem]/stepper:text-[13px] font-medium text-pn-muted">{unit}</span>}
+          {unit && <span className="text-meta @[16rem]/stepper:text-compact font-medium text-pn-muted">{unit}</span>}
         </label>
         <button type="button" onClick={() => nudge(1)} aria-label="+" className={`${btn} border-s border-divider`}><Plus size={16} aria-hidden="true" /></button>
       </div>
@@ -222,7 +224,7 @@ export function NumberStepper({ value, onChange, min, max, step = 1, unit, unitK
                 type="button"
                 aria-pressed={on}
                 onClick={() => { typed.current = false; onChange(q); }}
-                className={`h-8 min-w-0 rounded-md text-[11px] @[16rem]/stepper:text-[12.5px] font-medium tabular-nums transition ${on ? 'bg-accent-fill text-white' : 'bg-surface-0 text-pn-soft hover:bg-accent/15 hover:text-accent'}`}
+                className={`h-8 min-w-0 rounded-md text-meta @[16rem]/stepper:text-compact font-medium tabular-nums transition ${on ? 'bg-accent-fill text-white' : 'bg-surface-0 text-pn-soft hover:bg-accent/15 hover:text-accent'}`}
               >
                 {q}
               </button>

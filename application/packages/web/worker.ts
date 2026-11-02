@@ -15,7 +15,7 @@
  * tried as fallback. Both are proxied - the user's browser only ever
  * talks to our domain.
  *
- * Spec: ops/docs/backlog.md (#69 - dual-source round-robin + fallback)
+ * Spec: docs/internal/backlog.md (#69 - dual-source round-robin + fallback)
  */
 
 import { liveVotes, parseShipped, rankThemes } from './themeVotes';
@@ -33,7 +33,7 @@ interface Env extends ClipEnv {
    * client-side code runs for analytics purposes", so every count this
    * Worker takes must fall out of the request itself. Never add an
    * in-page beacon to satisfy a counting need.
-   * Spec: ops/docs/plans/partner-attribution.md (section 3a)
+   * Spec: docs/internal/plans/partner-attribution.md (section 3a)
    */
   CAMPAIGNS?: AnalyticsEngineDataset;
   /** A GitHub token that can only read public data, for the live counts on
@@ -99,11 +99,14 @@ declare global {
   }
 }
 
-// Spec: ops/docs/backlog.md (#69 - 90-day edge cache TTL)
+// Spec: docs/internal/backlog.md (#69 - 90-day edge cache TTL)
 const CACHE_TTL = 90 * 24 * 60 * 60;
 
 /** 24 hours - cache misses to avoid hammering upstream for unknown domains. */
 const MISS_TTL = 24 * 60 * 60;
+/** A lookup that failed upstream (network, 429, 5xx): the browser may keep it
+ *  for five minutes, and the edge does not keep it at all. */
+const ERROR_TTL = 5 * 60;
 
 /**
  * Bump to invalidate every edge-cached favicon at once. Needed when the
@@ -128,7 +131,7 @@ const BADGE_TTL = 24 * 60 * 60;
 // use.privacynotes.app is the dedicated app host; try.privacynotes.app is
 // the demo. The Worker cannot import app code (separate bundle), so these
 // mirror src/hosts.ts by hand - keep them in sync.
-// Spec: ops/docs/domain-split.md
+// Spec: docs/internal/domain-split.md
 const APEX_HOST = 'privacynotes.app';
 const APP_HOST = 'use.privacynotes.app';
 const DEMO_HOST = 'try.privacynotes.app';
@@ -167,8 +170,8 @@ const APEX_ORIGIN = 'https://privacynotes.app';
  * purchase. The host half is what keeps a payment CDN out of the origin that
  * stores the phrase envelope.
  *
- * Spec: ops/docs/design-decisions.md (native checkout: desktop opens the system
- * browser), ops/docs/domain-split.md
+ * Spec: docs/internal/design-decisions.md (native checkout: desktop opens the system
+ * browser), docs/internal/domain-split.md
  */
 const cspFor = (paddle: boolean): string =>
   [
@@ -176,7 +179,7 @@ const cspFor = (paddle: boolean): string =>
     `script-src 'self' https://challenges.cloudflare.com${paddle ? ' https://cdn.paddle.com https://sandbox-cdn.paddle.com https://public.profitwell.com' : ''}`,
     `style-src 'self' 'unsafe-inline'${paddle ? ' https://cdn.paddle.com https://sandbox-cdn.paddle.com' : ''}`,
     // data: and blob: read bytes already on the device (a picture inside a
-    // paste) and can send nothing out. Spec: ops/docs/archive/paste-pictures.md (section 2)
+    // paste) and can send nothing out. Spec: docs/internal/specs/paste-pictures.md (section 2)
     `connect-src 'self' data: blob: https://sync.privacynotes.app https://releases.privacynotes.app https://challenges.cloudflare.com${paddle ? ' https://*.paddle.com https://*.profitwell.com' : ''}`,
     `img-src 'self' data: blob: https://sync.privacynotes.app${paddle ? ' https://*.paddle.com' : ''}`,
     `frame-src https://challenges.cloudflare.com${paddle ? ' https://*.paddle.com' : ''}`,
@@ -423,7 +426,7 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
   // legitimately opens it here: billing.ts targets the apex from every
   // client, desktop binaries have the apex baked in, and Paddle's own
   // default payment link points there.
-  // Spec: ops/docs/domain-split.md
+  // Spec: docs/internal/domain-split.md
   if (url.hostname === APP_HOST) {
     const p = url.pathname;
     if (
@@ -438,6 +441,7 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
       p === '/roadmap' ||
       p === '/themes' ||
       p === '/brand' ||
+      p === '/licenses' ||
       LANDING_SLUGS.has(p) ||
       p.startsWith('/vs/') ||
       p.startsWith('/for/') ||
@@ -458,7 +462,7 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
   // redirect invites Google to fold the path into the target and treat
   // it as a real URL, and robots.txt plus X-Robots-Tag keep it out of
   // the index either way.
-  // Spec: ops/docs/plans/partner-attribution.md
+  // Spec: docs/internal/plans/partner-attribution.md
   // The demo host participates: a partner who routes a reader to the
   // sandbox is invisible otherwise, and the count happens here, before any
   // demo code runs, so the demo still makes zero server calls of its own.
@@ -523,7 +527,7 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
   // their employer's intranet hostname leave their own browser. The Worker
   // already has the Referer header, so it resolves here and injects the
   // result for the page to read on mount.
-  // Spec: ops/docs/plans/partner-attribution.md (section 3b)
+  // Spec: docs/internal/plans/partner-attribution.md (section 3b)
   if (
     (url.hostname === APEX_HOST || url.hostname === DEMO_HOST) &&
     !url.searchParams.has('ref') &&
@@ -549,7 +553,7 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
  * /themes with the current upvotes: the page lists its threads and their
  * baked counts in a meta tag, and each count and card carries its thread.
  * Rewrites only integers, and leaves the page as built when GitHub does not
- * answer. Spec: ops/docs/community-themes.md
+ * answer. Spec: docs/contrib/community-themes.md
  */
 async function withThemeVotes(response: Response, url: URL, env: Env, ctx: ExecutionContext): Promise<Response> {
   if (url.pathname !== '/themes' || !response.ok || !(response.headers.get('content-type') ?? '').includes('text/html')) {
@@ -608,36 +612,43 @@ function withSecurityHeaders(response: Response, url: URL, status?: number): Res
   }
   // Prevent edge cache from serving stale HTML without headers.
   headers.set('Cache-Control', 'no-cache');
-  if (url.pathname === '/auth/connect') {
+  // Both sign-in returns carry a one-time code in the address.
+  if (url.pathname === '/auth/connect' || url.pathname === '/auth/desktop') {
     headers.set('Cache-Control', 'no-store');
     headers.set('Referrer-Policy', 'no-referrer');
   }
+  // A burn note is a stranger's content on the app origin, and the page opens
+  // no window of its own, so it cuts every opener link. Only here: the app
+  // keeps its opener for the account connection popup (accountConnection.ts).
+  if (url.pathname === '/burn') headers.set('Cross-Origin-Opener-Policy', 'same-origin');
   return new Response(response.body, { status: status ?? response.status, headers });
 }
 
-/** Try one upstream source. Returns null on failure. */
+/** Try one upstream source: the icon, 'miss' when the source answered that it
+ *  has none, or 'error' when it could not answer (network, 429, 5xx). */
 async function trySource(
   source: SourceKey,
   domain: string,
-): Promise<{ body: ArrayBuffer; contentType: string } | null> {
+): Promise<{ body: ArrayBuffer; contentType: string } | 'miss' | 'error'> {
   try {
     const res = await fetch(SOURCES[source](domain), {
       headers: { 'User-Agent': 'PrivacyNotes-Favicon-Proxy/1.0' },
     });
+    if (res.status === 429 || res.status >= 500) return 'error';
     const body = await res.arrayBuffer();
     const contentType = rasterType(res.headers.get('content-type') || '');
     // DDG returns 200 with a tiny 1x1 placeholder for unknown domains.
     // Google returns small PNGs. Reject anything < 100 bytes or not a raster
     // image we are willing to put our own name on.
     if (!res.ok || body.byteLength < 100 || !contentType) {
-      return null;
+      return 'miss';
     }
     return { body, contentType };
   } catch (err) {
     // The source and the error only: the domain is the one thing this proxy
     // keeps out of every record.
     console.error(`favicon: ${source} unreachable: ${err instanceof Error ? err.name : 'error'}`);
-    return null;
+    return 'error';
   }
 }
 
@@ -658,17 +669,19 @@ async function handleFavicon(request: Request, url: URL, ctx: ExecutionContext):
   const primary: SourceKey = hashDomain(domain) % 2 === 0 ? 'ddg' : 'google';
   const secondary: SourceKey = primary === 'ddg' ? 'google' : 'ddg';
 
-  let result = await trySource(primary, domain);
-  if (!result) {
-    result = await trySource(secondary, domain);
-  }
+  const first = await trySource(primary, domain);
+  const result = typeof first === 'object' ? first : await trySource(secondary, domain);
 
-  if (!result) {
-    // Neither source had a valid favicon - cache the miss.
+  if (typeof result !== 'object') {
+    // Neither source had an icon. Only a "no icon" from both is cached for the
+    // day; a source that could not answer (a brief throttle, an outage) is
+    // asked again soon, or every domain looked up then would stay blank for a
+    // day (GitHub #657).
+    const answered = first === 'miss' && result === 'miss';
     const miss = new Response(null, { status: 404 });
-    miss.headers.set('Cache-Control', `public, max-age=${MISS_TTL}`);
+    miss.headers.set('Cache-Control', `public, max-age=${answered ? MISS_TTL : ERROR_TTL}`);
     miss.headers.set('Access-Control-Allow-Origin', '*');
-    ctx.waitUntil(cache.put(cacheKey, miss.clone()));
+    if (answered) ctx.waitUntil(cache.put(cacheKey, miss.clone()));
     return miss;
   }
 
@@ -755,7 +768,7 @@ async function handleBadge(request: Request, url: URL, ctx: ExecutionContext): P
  * an admin edit goes live within minutes instead of a deploy. Every failure
  * mode resolves to nothing, which loses attribution and never records the
  * wrong one.
- * Spec: ops/docs/plans/partner-attribution.md (section 3b)
+ * Spec: docs/internal/plans/partner-attribution.md (section 3b)
  */
 const SOURCES_URL = 'https://sync.privacynotes.app/functions/v1/campaign-sources';
 
@@ -775,7 +788,11 @@ async function loadSources(): Promise<SourceRow[]> {
     const res = await fetch(SOURCES_URL, { cf: { cacheTtl: 300, cacheEverything: true } });
     if (!res.ok) throw new Error(String(res.status));
     const body = (await res.json()) as { sources?: SourceRow[] };
-    const rows = Array.isArray(body.sources) ? body.sources : [];
+    // The slug goes into page HTML (injectSource). The database CHECK keeps it
+    // to this shape, and a row in any other shape is a tampered answer.
+    const rows = (Array.isArray(body.sources) ? body.sources : []).filter(
+      (r) => typeof r?.slug === 'string' && /^[a-z0-9-]{1,32}$/.test(r.slug) && Array.isArray(r.hosts),
+    );
     sourcesCache = { at: now, rows };
     return rows;
   } catch (err) {
@@ -852,7 +869,7 @@ function normalizeSlug(raw: string | undefined, rows: SourceRow[]): string | nul
  * page the homepage would have shown them. Never the bare apex: that is
  * the smart entry and drops a signed-in reader into the app instead of
  * the pitch.
- * Spec: ops/docs/domain-split.md
+ * Spec: docs/internal/domain-split.md
  */
 function localeSlugFor(request: Request): string {
   const header = request.headers.get('Accept-Language') ?? '';

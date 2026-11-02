@@ -1,10 +1,11 @@
 import JSZip from 'jszip';
-import { zipEntryText } from './zipEntry';
+import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
 import type { FolderDef } from '../folders';
 import { normalizeTag } from '../notesRepo';
 import { FRONT_MATTER } from '../markdownFolder/adapter';
 import { buildFolderTree } from './folderImport';
-import { BARE_LINKABLE_RE, linkifyMarkdown } from './linkify';
+import { BARE_LINKABLE_RE, linkifyLiteralText, linkifyMarkdown } from './linkify';
+import { escapeMarkdownText, guardMarkdownLineStart, markdownCodeSpan } from './standardNotesSuper';
 // Aliased: this file already has a `noteLinkTarget(ctx, href)` that resolves
 // an href to a note TITLE. The shared one sanitizes a title into a writable
 // link target. Two different jobs, one obvious name.
@@ -12,7 +13,8 @@ import { noteLinkTarget as sanitizeLinkTarget } from '../noteLinks';
 import { isUntitledStem } from '../exportNames';
 import { DEFAULT_HIGHLIGHT, FONT_SIZES } from '../editorColors';
 import { nearestHighlight, nearestTextColor } from './paletteColor';
-import { importBlobs, mimeFromExt } from './blobImport';
+import { importBlobs, mimeFromExtOrBytes } from './blobImport';
+import { IMAGE_WIDTH_MAX, clampImageWidth } from '../imageWidth';
 import type { ImportedNote, ParsedImport } from './types';
 
 /**
@@ -268,6 +270,28 @@ function noteLink(target: string, label: string): string {
 
 const ALIGN_RE = /text-align:\s*(center|right|justify)/i;
 
+/**
+ * The width of Notesnook's text column in pixels: the editor is capped at
+ * 850px with 30px of padding on each side, and a picture is never drawn
+ * wider. A stored `width` is pixels against this column (#663).
+ */
+const NOTESNOOK_COLUMN_PX = 790;
+
+/**
+ * The editor's `{width=N align=X}` suffix for a Notesnook picture, or ''.
+ * The pixel width becomes a percent of the column; `data-align` keeps
+ * center and right (left is the default and writes nothing).
+ */
+function imageSuffix(el: Element): string {
+  const attrs: string[] = [];
+  const px = parseFloat(el.getAttribute('width') ?? '');
+  const width = px > 0 ? clampImageWidth((px / NOTESNOOK_COLUMN_PX) * 100) : null;
+  if (width !== null && width < IMAGE_WIDTH_MAX) attrs.push(`width=${width}`);
+  const align = el.getAttribute('data-align')?.toLowerCase();
+  if (align === 'center' || align === 'right') attrs.push(`align=${align}`);
+  return attrs.length > 0 ? `{${attrs.join(' ')}}` : '';
+}
+
 /** Block-level tags an aligned HTML block cannot contain. */
 const ALIGN_BLOCKERS = new Set([
   'p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -518,6 +542,22 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
     return text.replace(/\s*\n+\s*/g, ' ').trim();
   }
 
+  // Inside a link's label a bare URL is only text: a link cannot hold another.
+  let linkDepth = 0;
+
+  /** Typed text as markdown; outside a link, a bare URL or email becomes an autolink. */
+  function literal(s: string): string {
+    return linkDepth > 0 ? escapeMarkdownText(s) : linkifyLiteralText(s, escapeMarkdownText).markdown;
+  }
+
+  /** Does the block open with typed text, which could look like block syntax? */
+  function opensWithText(el: Element): boolean {
+    const first = Array.from(el.childNodes).find(
+      (c) => c.nodeType === Node.ELEMENT_NODE || (c.textContent ?? '').trim(),
+    );
+    return first?.nodeType === Node.TEXT_NODE;
+  }
+
   /** LaTeX source out of a KaTeX render, which embeds it in MathML. */
   function latexOf(el: Element): string {
     const ann = el.querySelector('annotation[encoding="application/x-tex"]');
@@ -580,14 +620,16 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
         }
       }
 
-      lines.push(indent + marker + inlineOnly(inline));
+      const text = inlineOnly(inline);
+      lines.push(indent + marker + (opensWithText(li) ? guardMarkdownLineStart(text) : text));
       for (const block of nested) {
         const trimmed = block.replace(/\n+$/, '');
         if (trimmed) lines.push(trimmed);
       }
     }
     if (lines.length === 0) return '';
-    return `${listTitle ? `${listTitle}\n\n` : ''}${lines.join('\n')}\n\n`;
+    const titleLine = listTitle ? `${guardMarkdownLineStart(escapeMarkdownText(listTitle))}\n\n` : '';
+    return `${titleLine}${lines.join('\n')}\n\n`;
   }
 
   /** Prefix every line with `> `, an empty line with a bare `>`. */
@@ -603,7 +645,7 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
    * a `collapsed` class when folded, and an `<h4>` title as its first child
    * (Notesnook fills it with the type name in capitals). The keyword is
    * written as found: the editor maps it onto its own type and keeps it.
-   * Spec: ops/docs/callouts.md (importers)
+   * Spec: docs/contrib/callouts.md (importers)
    */
   function renderCallout(el: Element): string {
     const raw = (el.getAttribute('data-callout-type') ?? '').trim().toLowerCase();
@@ -635,7 +677,8 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
       Array.from(tr.children)
         .filter((c) => /^(td|th)$/i.test(c.tagName))
         .map((c) =>
-          inlineOnly(walk(c, '')).replace(/\|/g, '\\|').replace(/^$/, ' ')
+          // A typed pipe is already escaped; one inside a link or note-link is not.
+          inlineOnly(walk(c, '')).replace(/(?<!\\)((?:\\\\)*)\|/g, '$1\\|').replace(/^$/, ' ')
         );
 
     const cells = rows.flatMap((tr) =>
@@ -699,20 +742,24 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
 
   function renderAnchor(el: Element, indent: string): string {
     const href = el.getAttribute('href') ?? '';
+    linkDepth++;
     const inner = inlineOnly(
       Array.from(el.childNodes).map((c) => walk(c, indent)).join('')
     );
-    const label = inner || href;
+    linkDepth--;
+    const label = inner || escapeMarkdownText(href);
+    // A note-link label and an attachment name are read as plain text.
+    const text = inlineOnly(el.textContent ?? '') || href;
 
     // Attachment link, e.g. [obsidian.zip](./attachments/<hash>-obsidian.zip)
     const token = attachmentToken(ctx, href);
-    if (token) return `[${label}](${token})`;
+    if (token) return `[${escapeMarkdownText(text.replace(/[[\]]/g, ''))}](${token})`;
 
     // Internal note link.
     const target = noteLinkTarget(ctx, href);
     if (target) {
       ctx.flags.noteLinks++;
-      return noteLink(target, label);
+      return noteLink(target, text);
     }
 
     // A relative .html/.md href we could not resolve still reads as an
@@ -721,7 +768,7 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
     const resolved = resolveRelative(ctx.baseDir, href);
     if (resolved && (HTML_EXT.test(resolved) || MD_EXT.test(resolved))) {
       ctx.flags.noteLinks++;
-      return noteLink(label, label);
+      return noteLink(text, text);
     }
 
     if (!href) return label;
@@ -730,7 +777,7 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
 
   function walk(node: Node, indent: string): string {
     if (node.nodeType === Node.TEXT_NODE) {
-      return node.textContent ?? '';
+      return literal(node.textContent ?? '');
     }
     if (node.nodeType !== Node.ELEMENT_NODE) return '';
 
@@ -824,14 +871,12 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
         const inner = children();
         return inner.trim() ? `<${tag}>${inner}</${tag}>` : inner;
       }
-      case 'code': {
-        // A <code> inside <pre> is handled by the <pre> branch.
-        const inner = inlineOnly(children());
-        return inner ? `\`${inner}\`` : '';
-      }
+      case 'code':
       case 'kbd': {
-        const inner = inlineOnly(children());
-        return inner ? `\`${inner}\`` : '';
+        // A <code> inside <pre> is handled by the <pre> branch. Code shows
+        // its text as typed, so the text is not escaped.
+        const inner = inlineOnly(el.textContent ?? '');
+        return inner ? markdownCodeSpan(inner) : '';
       }
 
       case 'pre': {
@@ -860,9 +905,10 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
           }
         }
         if (align) ctx.flags.droppedAlign++;
-        const inner = children();
-        if (!inner.trim()) return '\n';
-        return `${inner.trim()}\n\n`;
+        const inner = children().trim();
+        if (!inner) return '\n';
+        // A <p> holds no blocks, so only typed text can open it.
+        return `${tag === 'p' && opensWithText(el) ? guardMarkdownLineStart(inner) : inner}\n\n`;
       }
 
       case 'ul':
@@ -886,9 +932,8 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
         const src = el.getAttribute('src') ?? '';
         const alt = (el.getAttribute('alt') ?? '').replace(/[[\]]/g, '');
         const token = attachmentToken(ctx, src);
-        if (token) return `\n\n![${alt}](${token})\n\n`;
-        if (!src) return '';
-        return `\n\n![${alt}](${src})\n\n`;
+        if (!token && !src) return '';
+        return `\n\n![${alt}](${token ?? src})${imageSuffix(el)}\n\n`;
       }
 
       case 'a':
@@ -1015,7 +1060,8 @@ function titleFromFilename(rel: string): string {
  */
 function readMarkdownNote(text: string, rel: string, fileDate: Date | null): RawNote {
   const fm = text.match(FRONT_MATTER);
-  const meta: Record<string, string> = {};
+  // No prototype: a `__proto__:` line is then an ordinary key (#656).
+  const meta: Record<string, string> = Object.create(null);
   let body = text;
 
   if (fm && fm[1] !== undefined) {
@@ -1133,6 +1179,7 @@ interface ParseZipResult {
   flags: ConvFlags;
   imageCount: number;
   attachmentCount: number;
+  tooLarge: number;
 }
 
 async function parseZip(
@@ -1199,6 +1246,7 @@ async function parseZip(
   // Attachments first: the note conversion needs the placeholder map.
   const blobs = new Map<string, { data: Uint8Array; mime: string; name: string }>();
   const attachmentTokens = new Map<string, string>();
+  let tooLarge = 0;
 
   if (blobFiles.length > 0) {
     onProgress?.(
@@ -1207,9 +1255,13 @@ async function parseZip(
   }
   for (let i = 0; i < blobFiles.length; i++) {
     const [rel, entry] = blobFiles[i]!;
-    const data = new Uint8Array(await entry.async('uint8array'));
+    const data = await zipEntryMedia(entry);
+    if (!data) {
+      tooLarge++;
+      continue;
+    }
     const token = blobToken(i);
-    blobs.set(token, { data, mime: mimeFromExt(rel), name: attachmentName(rel) });
+    blobs.set(token, { data, mime: mimeFromExtOrBytes(rel, data), name: attachmentName(rel) });
     attachmentTokens.set(rel.toLowerCase(), token);
     if ((i + 1) % 20 === 0) {
       onProgress?.(`Extracted ${i + 1} of ${blobFiles.length} attachments...`);
@@ -1334,6 +1386,7 @@ async function parseZip(
     flags,
     imageCount,
     attachmentCount,
+    tooLarge,
   };
 }
 
@@ -1355,6 +1408,7 @@ export async function parseNotesnook(
     flags,
     imageCount,
     attachmentCount,
+    tooLarge,
   } = await parseZip(file, onProgress);
 
   const uniqueTags = new Set(notes.flatMap((n) => n.tags));
@@ -1363,6 +1417,7 @@ export async function parseNotesnook(
   const plural = (n: number) => (n === 1 ? '' : 's');
 
   const warnings: string[] = [];
+  if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   if (format === 'markdown') {
     warnings.push(
       hadFrontMatter

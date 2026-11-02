@@ -3,14 +3,12 @@
     "importTitle": "Import your data",
     "exportTitle": "Export your data",
     "restoreTitle": "Restore your data",
-    "vaultTitle": "Import your passwords",
-    "tablistLabel": "Import, Export, Restore, or Passwords",
+    "tablistLabel": "Import, Export, Restore, or Trackers",
     "tabImport": "Import",
     "tabExport": "Export",
     "tabRestore": "Restore",
     "tabVault": "Passwords",
-    "working": "Working…",
-    "tabWellness": "Trackers"
+    "working": "Working…"
   },
   "footer": {
     "exportNote": "Exports run locally. Nothing is uploaded.",
@@ -18,12 +16,11 @@
     "importNote": "Everything is always encrypted, on your device and when it syncs."
   },
   "importPick": {
-    "autoTagLabel": "Tag imported notes by source",
-    "autoTagDesc": "Google Keep notes get <keep>#google</keep>, Obsidian gets <obsidian>#obsidian</obsidian>, and so on.",
     "guideAria": "Import guide for {{app}}",
     "guideLabel": "Guide",
-    "groupGeneral": "General",
-    "groupNotes": "Notes"
+    "searchPlaceholder": "Find your app",
+    "groupCalendar": "Calendar, contacts and bookmarks",
+    "noMatch": "No app matches. Most note apps can export Markdown files, and Markdown files import here."
   },
   "folderImport": {
     "tagLabel": "Also tag notes by folder",
@@ -76,6 +73,7 @@
     "googleCalendar": "The .zip from Google Calendar's Settings > Import & export, or one .ics file. Events keep their times, repeats and reminders.",
     "appleNotes": "Export via the free Exporter app as Markdown, then drop the .zip here.",
     "appleJournal": "Export from Journal on Mac or iPhone, compress the AppleJournalEntries folder, and drop the .zip. Entries import as journal entries with their photos, videos, voice memos, and locations.",
+    "excalidraw": "Drawings saved from excalidraw.com: one .excalidraw file, or several zipped together. Drawings from Obsidian's Excalidraw plugin work too, as .excalidraw.md files. Pictures inside a drawing come along.",
     "evernote": "One .enex on its own, or several zipped together. Keeps formatting, tags, attachments, note links, and notebooks. Evernote leaves tasks out of .enex.",
     "samsungNotes": "Export as Word (.docx) or Text (.txt). Zip multiple files for bulk import.",
     "simplenote": "Export from Simplenote (Settings -> Tools -> Export Notes). Drop the .zip.",
@@ -99,9 +97,6 @@
     "vcard": "Contacts (vCard)",
     "markdownFolder": "Markdown files"
   },
-  "vaultPick": {
-    "intro": "Import logins, credit cards, and SSH keys from another password manager."
-  },
   "restorePick": {
     "intro": "Restore a PrivacyNotes backup you exported earlier.",
     "fullBackupTitle": "Full backup (.zip)",
@@ -123,8 +118,8 @@
     "restoringBlobs": "Restoring images and files..."
   },
   "errors": {
-    "genericParse": "Something went wrong.",
     "decryptionFailed": "Decryption failed. Wrong phrase or corrupted file.",
+    "importNothingChanged": "Nothing was imported, and your notes, folders and files are as they were. {{detail}}",
     "blobImportFailed": "Your notes imported, but their images and files did not: {{detail}} Nothing in the file you picked was changed, so you can delete the imported notes and run the import again.",
     "blobsNotInBackup_one": "Your notes were restored, but {{items}} listed in the backup is missing from it.",
     "blobsNotInBackup_other": "Your notes were restored, but {{items}} listed in the backup are missing from it."
@@ -135,11 +130,7 @@
     "splitOversize_one": "Split this note into smaller notes at its headings, so it syncs",
     "splitOversize_other": "Split these {{count}} notes into smaller notes at their headings, so they sync",
     "partTitle": "{{title}} ({{index}}/{{total}})",
-    "continuedIn": "Continued in {{link}}",
-    "sourceLabel": "Source",
     "uniqueTags": "Unique tags",
-    "empty": "Empty",
-    "untagged": "Untagged",
     "items": "Items",
     "previewLabel": "Preview",
     "andMore": "… and {{count}} more",
@@ -150,9 +141,14 @@
     "eventSkipNote": "events you have already imported are skipped and left as they are, so running this twice will not duplicate them.",
     "restoreMergeNote": "notes from your own backup are matched by id. A note you already have is updated only when the backup's copy is newer, a note in your trash comes back out of it.",
     "quotaExceeded": "<strong>Storage too low to import.</strong> Estimated {{needed}} needed, {{available}} available. Free up space or upgrade before importing.",
-    "quotaWarning": "Heads up: this import will use roughly {{needed}} of your {{available}} remaining storage.",
     "oversizeAttachments_one": "1 file is larger than the {{limit}} per-file limit on your plan. It imports to this device, but it will not sync to your other devices until you upgrade.",
-    "oversizeAttachments_other": "{{count}} files are larger than the {{limit}} per-file limit on your plan. They import to this device, but they will not sync to your other devices until you upgrade."
+    "oversizeAttachments_other": "{{count}} files are larger than the {{limit}} per-file limit on your plan. They import to this device, but they will not sync to your other devices until you upgrade.",
+    "title": "Check before importing",
+    "sourceTagLabel": "Tag each note <tag>{{tag}}</tag>",
+    "sourceTagDesc": "Off: no tag for the source. Tags already in the notes come along either way.",
+    "storageLine": "This import needs about {{needed}}. You have {{available}} free.",
+    "nothingWritten": "Nothing is written until you press Import.",
+    "whatComesIn": "What comes in"
   },
   "counts": {
     "note_one": "note",
@@ -167,6 +163,8 @@
     "sshKey_other": "SSH keys",
     "contact_one": "contact",
     "contact_other": "contacts",
+    "drawing_one": "drawing",
+    "drawing_other": "drawings",
     "zeroItems": "0 items",
     "importButton": "Import {{counts}}"
   },
@@ -178,14 +176,14 @@
     "fullBackupHeading": "Full backup",
     "portableHeading": "Portable export",
     "vaultOnlyHeading": "Vault only",
-    "zipBackupTitle": "PrivacyNotes backup (.zip)",
-    "zipBackupDesc": "Everything: notes, journals, vault items, tasks, images, audio, and files. Use this for a complete account backup or to move to a new device. The files inside are not encrypted, so store the zip somewhere safe.",
-    "encryptedZipBackupTitle": "Encrypted full backup (.pnbackupz)",
-    "encryptedZipBackupDesc": "Everything the zip backup holds - notes, vault items, images, audio, and files - sealed with your phrase key. Restores with your phrase on any device. Safe to store anywhere.",
-    "encryptedBackupTitle": "Encrypted backup (.pnbackup)",
-    "encryptedBackupDesc": "All text content and metadata, encrypted with your phrase key. No images or files. Safe to store anywhere - unreadable without your phrase.",
+    "zipBackupTitle": "Everything, not encrypted (.zip)",
+    "zipBackupDesc": "Your notes, journals, vault items, tasks, images, audio and files, with your medications and trackers. Opens on any computer with no phrase, so store it somewhere safe. Note History and your app lock PIN are not included.",
+    "encryptedZipBackupTitle": "Everything, encrypted (.pnbackupz)",
+    "encryptedZipBackupDesc": "The same as the zip, sealed with your phrase key. Restores with your phrase on any device. Safe to store anywhere.",
+    "encryptedBackupTitle": "Text only, encrypted (.pnbackup)",
+    "encryptedBackupDesc": "All text content and metadata, with no images or files. A small file, sealed with your phrase key. Safe to store anywhere.",
     "htmlArchiveTitle": "HTML archive (.zip)",
-    "htmlArchiveDesc": "One printable HTML page per note. Good for reading offline or archiving, not for restoring.",
+    "htmlArchiveDesc": "One printable HTML page per note, logins, cards and keys included in plain text. Good for reading offline or archiving, not for restoring. Store it somewhere safe.",
     "textBackupTitle": "Text backup (.json)",
     "textBackupDesc": "All text content and metadata as plain JSON. No images or files. Store somewhere you trust - this is not encrypted.",
     "vaultExportTitle": "Vault export (.json)",
@@ -199,6 +197,8 @@
     "calendarOnlyHeading": "Calendar only",
     "calendarExportTitle": "Calendar file (.ics)",
     "calendarExportDesc": "Events and dated notes and task lists, for Google Calendar, Apple Calendar or Outlook.",
+    "drawingsExportTitle": "Drawings (.zip)",
+    "drawingsExportDesc": "Every drawing as its own .excalidraw file, pictures inside, for excalidraw.com and Obsidian.",
     "calendarPrivate": "Private"
   },
   "exportProgress": {
@@ -207,11 +207,8 @@
     "incompleteTitle": "Export incomplete",
     "exportingTitle": "Exporting backup...",
     "preparing": "Preparing...",
-    "exporting": "Exporting...",
-    "imagesProgress": "Exporting images... {{done}} of {{total}}",
-    "filesProgress": "Exporting files... {{done}} of {{total}}",
-    "building": "Building backup...",
-    "compressing": "Compressing...",
+    "showInFolder": "Show in folder",
+    "zipStep": "Zip",
     "missingFailed_one": "This device could not download {{items}}, so your export leaves it out. Check your connection and export again.",
     "missingFailed_other": "This device could not download {{items}}, so your export leaves them out. Check your connection and export again.",
     "missingNotFound_one": "{{items}} is not on this device or on the server, so your export leaves it out.",
@@ -258,7 +255,8 @@
     "generic": "The export could not be saved. Please try again, or pick a different folder."
   },
   "saveErrors": {
-    "shortWrite": "Only {{written}} of {{expected}} bytes were saved, so the file is incomplete. Try again and save to your device's own storage rather than a cloud folder."
+    "shortWrite": "Only {{written}} of {{expected}} bytes were saved, so the file is incomplete. Try again and save to your device's own storage rather than a cloud folder.",
+    "protectedFolder": "PrivacyNotes does not save into {{folder}}, because that folder holds keys, settings or programs. Save the file somewhere else and move it there yourself."
   },
   "shareSheet": {
     "title_one": "{{count}} item was shared into PrivacyNotes",
@@ -267,7 +265,6 @@
     "saveAll": "Save all"
   },
   "destination": {
-    "label": "Add to",
     "none": "No folder",
     "newFolder": "New folder \"{{name}}\"",
     "help": "Folders from the source go inside the folder you pick, and items without a folder go into it."

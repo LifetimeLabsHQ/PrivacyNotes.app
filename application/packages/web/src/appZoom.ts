@@ -3,10 +3,11 @@
  *
  * The desktop app runs in a webview, so the engine under the page can scale
  * the page the way a browser does. That is what makes this reach the app
- * chrome, which the editor text size next to it cannot: the chrome carries
- * hardcoded pixel sizes, so a root font size would move part of the UI and
- * freeze the rest. Zoom happens below our stylesheet instead of inside it,
- * so no component is aware of it.
+ * chrome, which the editor text size next to it cannot. The chrome's text
+ * is in rem (typeScale.css), but its spacing, borders and pictures are not
+ * all, so a root font size would still move part of the UI and freeze the
+ * rest. Zoom happens below our stylesheet instead of inside it, so no
+ * component is aware of it, and it multiplies the type roles as they are.
  *
  * One ladder owns the level and both the Appearance row and the keyboard step
  * along it. Tauri's own `zoomHotkeysEnabled` is deliberately off, even though
@@ -19,7 +20,7 @@
  * laptop and a 27 inch monitor want different answers, so one synced value
  * would fix one screen and break the other.
  *
- * Spec: ops/docs/design-decisions.md (app zoom)
+ * Spec: docs/internal/design-decisions.md (app zoom)
  */
 
 import { useCallback, useSyncExternalStore } from 'react';

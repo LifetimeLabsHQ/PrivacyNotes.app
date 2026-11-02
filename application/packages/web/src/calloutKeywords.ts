@@ -8,7 +8,7 @@
  * types (Fold, Box, Panel) have no color: they draw in the text color, and
  * the caret is their only control.
  *
- * Spec: ops/docs/callouts.md (the type table)
+ * Spec: docs/contrib/callouts.md (the type table)
  */
 
 export type CalloutType =
@@ -129,7 +129,7 @@ export function calloutColorOf(type: CalloutType, meta: string | null | undefine
  * write. Anything unknown falls back to `info` (a neutral box) rather than
  * being dropped; the node keeps the keyword itself, so it saves back as
  * written.
- * Spec: ops/docs/callouts.md (import alias map)
+ * Spec: docs/contrib/callouts.md (import alias map)
  */
 const CALLOUT_ALIASES: Record<string, CalloutType> = {
   fold: 'fold',

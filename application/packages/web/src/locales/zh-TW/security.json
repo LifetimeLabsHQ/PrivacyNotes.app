@@ -1,6 +1,5 @@
 {
   "modal": {
-    "title": "安全性",
     "tabPin": "PIN 碼",
     "tabBiometricShort": "鎖定",
     "tabBiometric": "生物辨識鎖定",
@@ -9,9 +8,10 @@
     "tabTwoFactor": "2FA"
   },
   "pinTab": {
+    "changeLost": "你的 PIN 碼變更沒有儲存：另一台裝置已先變更了 PIN 碼。",
+    "phraseUnwrapped": "這個瀏覽器無法保護這台裝置存放的復原助憶詞，所以助憶詞以未加密的方式存放在這裡。任何人只要有這台裝置儲存空間的副本，就能讀取它。到「鎖定」分頁開啟應用程式鎖定，讓助憶詞只留在你的 PIN 碼或通行碼之後。",
     "enterCurrent": "輸入目前的 PIN 碼以進行變更。",
     "currentPin": "目前 PIN 碼",
-    "checking": "檢查中…",
     "verify": "驗證",
     "replaceExisting": "輸入新的 4 位數 PIN 碼，將取代現有的 PIN 碼。",
     "setIntro": "4 位數 PIN 碼可開啟你的受保護筆記和復原助憶詞，並同步到你所有裝置。",
@@ -42,10 +42,8 @@
     "setPin": "設定 PIN 碼",
     "removePin": "移除 PIN 碼",
     "reaskAfter": "重新要求 PIN 碼的間隔",
-    "reaskHint": "適用於助憶詞檢視與所有受 PIN 碼保護的筆記。",
+    "reaskHint": "適用於這台裝置上的助憶詞檢視與所有受 PIN 碼保護的筆記。",
     "incorrectPin": "PIN 碼錯誤。",
-    "incorrectPinRetry": "PIN 碼錯誤，請再試一次。",
-    "tooManyAttempts": "嘗試次數過多。請於 {{seconds}} 秒後再試。",
     "pinFourDigits": "PIN 碼必須是 4 位數。",
     "pinsDoNotMatch": "兩次輸入的 PIN 碼不一致。",
     "passcodeIntro": "通行碼可開啟你受保護的筆記和復原助憶詞，並會同步到每台裝置。",
@@ -61,8 +59,7 @@
     "ruleNotDigits": "不可只有數字",
     "ruleMax": "最多 {{max}} 個字元",
     "passcodesDoNotMatch": "兩次輸入的通行碼不一致。",
-    "incorrectPasscode": "通行碼錯誤。",
-    "incorrectPasscodeRetry": "通行碼錯誤，請再試一次。"
+    "incorrectPasscode": "通行碼錯誤。"
   },
   "timeout": {
     "min1": "1 分鐘",
@@ -76,16 +73,11 @@
     "browserRestart": "瀏覽器重新啟動時"
   },
   "pinInfo": {
-    "title": "檢視時需要 PIN 碼",
     "body": "啟用後，即使應用程式已解鎖，每次開啟這個項目都需要輸入 PIN 碼。適合用在離開座位時仍需保護的敏感項目。"
   },
   "removePinDialog": {
-    "title": "移除 PIN 碼",
     "introWithBio": "輸入目前的 PIN 碼以確認移除。生物辨識解鎖仍會保持啟用，但之後唯一的備援就是你的復原助憶詞。",
     "introNoBio": "輸入目前的 PIN 碼以確認移除。之後你的復原助憶詞畫面會直接開啟，不需要 PIN 碼。",
-    "verifying": "驗證中…",
-    "removePin": "移除 PIN 碼",
-    "titlePasscode": "移除通行碼",
     "introWithBioPasscode": "輸入目前的通行碼以確認移除。生物辨識解鎖仍會保持啟用，但之後唯一的備援就是你的復原助憶詞。",
     "introNoBioPasscode": "輸入目前的通行碼以確認移除。之後你的復原助憶詞畫面會直接開啟，不需要通行碼。",
     "removePasscode": "移除通行碼"
@@ -109,16 +101,10 @@
   },
   "phraseGate": {
     "enterToView": "輸入 4 位數 PIN 碼以檢視你的助憶詞。",
-    "incorrectPinRetry": "PIN 碼錯誤，請再試一次。",
-    "tooManyAttempts": "嘗試次數過多。請於 {{seconds}} 秒後再試。",
-    "lockedFor": "鎖定中，{{seconds}} 秒後可再試",
-    "checking": "檢查中…",
-    "unlock": "解鎖",
     "enterToChangeCustody": "輸入你的 4 位數 PIN，即可變更金鑰保管方式。",
     "checkFailed": "無法檢查你的 PIN。請再試一次。",
     "enterToViewPasscode": "輸入通行碼以檢視你的助憶詞。",
     "enterToChangeCustodyPasscode": "輸入你的通行碼，即可變更金鑰保管方式。",
-    "incorrectPasscodeRetry": "通行碼錯誤，請再試一次。",
     "checkFailedPasscode": "無法檢查你的通行碼。請再試一次。"
   },
   "phraseView": {
@@ -133,11 +119,9 @@
     "hideQr": "隱藏 QR Code",
     "showQr": "顯示 QR Code",
     "saveQr": "儲存 QR Code",
-    "copied": "已複製",
     "copyPhrase": "複製助憶詞"
   },
   "custody": {
-    "eyebrow": "金鑰保管",
     "current": "目前",
     "rowDevice": "新裝置",
     "rowDeviceCustodial": "用 {{provider}} 登入，不必輸入",
@@ -152,7 +136,6 @@
     "releaseWarning": "請先將 12 個單字的助憶詞保存在 PrivacyNotes 以外的地方。我們刪除副本後，你在新裝置上會需要它。",
     "challengePrompt": "從上方清單輸入這幾個單字，確認你已經保存下來。",
     "wordLabel": "第 {{position}} 個單字",
-    "busy": "儲存中...",
     "releaseConfirm": "從伺服器刪除",
     "adoptConfirm": "交由我們保存副本",
     "releaseDone": "完成。我們已不再保存你的助憶詞副本。新裝置將需要這 12 個單字或掃描 QR 碼。",
@@ -189,6 +172,7 @@
     "boundStatus": "生物辨識解鎖已與你的密碼金鑰綁定。",
     "boundStatusNative": "生物辨識解鎖已與這台裝置的安全硬體綁定。",
     "setUpAgain": "重新設定以取得更強的鎖定",
+    "unboundWeaker": "在這台裝置上，生物辨識解鎖只能擋住身邊的人，並不是真正的鎖：只要取得這台裝置儲存空間的副本，任何人都不需要你的指紋或臉孔就能開啟你的筆記。",
     "cannotBind": "這個瀏覽器中的密碼金鑰應用程式無法建立更強的鎖定。生物辨識解鎖會照常運作。如果你的密碼金鑰是由密碼管理器儲存，請關閉它的密碼金鑰選項，再將生物辨識解鎖關閉後重新開啟，改用裝置本身的密碼金鑰儲存區。",
     "bindOffer": "此裝置上的生物辨識解鎖尚未與你的密碼金鑰綁定，而這個瀏覽器可以完成綁定。請重新設定一次，讓解鎖金鑰改由你的密碼金鑰保管，而不是存放在這台裝置的儲存空間裡。",
     "bindOfferLater": "稍後再說",
@@ -196,14 +180,14 @@
     "settingUp": "設定中…",
     "enable": "啟用生物辨識解鎖",
     "lockOnOpen": "開啟時鎖定應用程式",
-    "lockOnOpenHint": "開啟應用程式時要求生物辨識或 PIN 碼。",
+    "lockOnOpenHint": "在這台裝置上開啟應用程式時要求生物辨識或 PIN 碼。",
     "lockHidesOnSwitch": "切換應用程式時也會隱藏你的筆記。",
     "lockNeedsCredential": "應用程式鎖定需要在這台裝置上設定 PIN 碼或啟用生物辨識解鎖。",
     "setUpPin": "設定 PIN 碼",
     "confirmPinForLock": "輸入 PIN 碼即可開啟這項功能。它會鎖住一份你的復原助憶詞副本，只有你的 PIN 碼能打開應用程式。",
     "confirmPasscodeForLock": "輸入通行碼即可開啟這項功能。它會鎖住一份你的復原助憶詞副本，只有你的通行碼能打開應用程式。",
     "relockAfter": "重新鎖定間隔",
-    "relockHint": "僅適用於應用程式鎖定畫面。",
+    "relockHint": "僅適用於這台裝置上的應用程式鎖定畫面。",
     "blockCapture": "在螢幕擷取時隱藏",
     "blockCaptureHint": "在裝置允許的範圍內，讓你的筆記不出現在截圖、螢幕錄影和螢幕分享中。僅適用於這台裝置。",
     "perDeviceNote": "生物辨識解鎖開啟的筆記和 PIN 碼相同。它只留在這部裝置上，永不同步。",
@@ -216,31 +200,19 @@
     "phraseNotSaved": "這台裝置無法儲存你的復原助憶詞，因此沒有任何變更。請再試一次。"
   },
   "pinSetup": {
-    "title": "設定 PIN 碼",
     "description": "檢視復原助憶詞時將需要 4 位數 PIN 碼。可留待日後設定，但共用環境建議啟用。",
-    "newPin": "新 PIN 碼",
-    "confirmPin": "確認 PIN 碼",
-    "skipForNow": "暫時略過",
-    "saving": "儲存中…",
-    "setPin": "設定 PIN 碼",
-    "pinFourDigits": "PIN 碼必須是 4 位數。",
-    "pinsDoNotMatch": "兩次輸入的 PIN 碼不一致。"
+    "skipForNow": "暫時略過"
   },
   "pinInput": {
-    "ariaLabel": "PIN 碼",
     "digitAriaLabel": "第 {{index}} 位數"
   },
   "passcodeInput": {
-    "ariaLabel": "通行碼",
     "show": "顯示通行碼",
     "hide": "隱藏通行碼"
   },
   "protectedGate": {
-    "biometricFailed": "生物辨識驗證失敗或已取消。",
     "protectedItem": "受保護項目",
     "biometricSubtitle": "用指紋或臉部解鎖此項目。",
-    "verifying": "驗證中…",
-    "unlock": "解鎖",
     "usePinInstead": "改用 PIN 碼",
     "useBiometricInstead": "改用生物辨識",
     "disableProtection": "停用保護",
@@ -248,18 +220,10 @@
     "disableSubtitle": "筆記留在原處，只有鎖會解除。",
     "disableBiometricSubtitle": "用指紋或臉部確認。",
     "verifySubtitle": "輸入 4 位數 PIN 碼以解鎖此項目。解鎖狀態會維持你在「安全性」中設定的時間。",
-    "incorrectPinRetry": "PIN 碼錯誤，請再試一次。",
-    "tooManyAttempts": "嘗試次數過多。請於 {{seconds}} 秒後再試。",
     "lockedFor": "鎖定中，{{seconds}} 秒後可再試",
-    "checking": "檢查中…",
     "bootstrapTitle": "設定 PIN 碼",
     "bootstrapSubtitle": "此項目受 PIN 碼保護，但這部裝置尚未設定 PIN 碼。設定 4 位數 PIN 碼即可解鎖；PIN 碼會同步到你所有的裝置。",
     "bootstrapWarning": "在這裡設定 PIN 碼不需要知道先前的 PIN 碼。任何持有你復原助憶詞的人都能在新裝置上這麼做。真正敏感的內容，請改仰賴僅限助憶詞的驗證。",
-    "newPin": "新 PIN 碼",
-    "confirmPin": "確認 PIN 碼",
-    "pinFourDigits": "PIN 碼必須是 4 位數。",
-    "pinsDoNotMatch": "兩次輸入的 PIN 碼不一致。",
-    "saving": "儲存中…",
     "setPinUnlock": "設定 PIN 碼並解鎖",
     "pinRequired": "需要 PIN 碼",
     "deleteSubtitle": "輸入 PIN 碼以刪除此受保護項目。",
@@ -267,7 +231,6 @@
     "usePasscodeInstead": "改用通行碼",
     "disableTitlePasscode": "輸入通行碼以停用保護",
     "verifySubtitlePasscode": "輸入通行碼以解鎖此項目。解鎖狀態會維持你在「安全性」中設定的時間。",
-    "incorrectPasscodeRetry": "通行碼錯誤，請再試一次。",
     "passcodeRequired": "需要通行碼",
     "deleteSubtitlePasscode": "輸入通行碼以刪除此受保護項目。"
   },
@@ -294,19 +257,14 @@
     "checking": "檢查中…",
     "unlock": "解鎖",
     "recoveryPhrase": "復原助憶詞",
-    "recoveryPhraseSubtitle": "輸入你的 12 個復原助憶詞以解鎖。",
-    "invalidPhrase": "助憶詞無效。請檢查拼字與單字順序。",
-    "phrasePlaceholder": "word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12"
+    "recoveryPhraseSubtitle": "輸入你的 12 個復原助憶詞以解鎖。"
   },
   "deviceLimit": {
     "title": "已達裝置上限",
     "body": "免費帳號最多可同時在 {{limit}} 部裝置同步，你目前已有 {{count}} 部。移除一部即可在此裝置繼續，或升級享有無上限裝置。",
     "activeDevices": "使用中的裝置",
-    "recentlyRemoved": "最近移除",
-    "removedAt": "已於 {{when}} 移除",
     "upgradeHeading": "或升級至 Pro",
     "upgradeBody": "單次付款，免訂閱。無上限裝置，還有圖片、筆記歷史等更多功能。",
-    "openingCheckout": "正在開啟結帳…",
     "upgradeCta": "以 ${{price}} 升級 Pro",
     "needMoreHeading": "需要更多裝置？",
     "needMoreBody": "這個版本無法購買 Pro。如果你真的需要第三部裝置，聯絡我們，我們幫你處理。",
@@ -315,8 +273,6 @@
     "saveRecoveryBody": "你是以 OAuth 登入的。也請把 12 個助憶詞抄下來：萬一 OAuth 失效，或你在所有裝置上都被鎖在門外，這就是你的備援。",
     "hide": "隱藏",
     "viewRecoveryPhrase": "檢視復原助憶詞",
-    "signOut": "登出",
-    "thisDevice": "此裝置",
     "lastActive": "{{platform}} · 最近活動 {{when}}",
     "removing": "移除中…"
   },
@@ -329,9 +285,9 @@
     "bitcoinBody": "大家都用同一種 12 個單字的助憶詞來保護它。",
     "universeTitle": "宇宙年齡的 700 倍",
     "universeBody": "這是每秒試 100 京次、把每一組都試完所需的時間。",
-    "twinTitle": "地球上沒有人和你的助憶詞相同",
+    "twinTitle": "地球上不會有其他人拿到相同的助憶詞",
     "twinBody": "就算全球 80 億人都用 PrivacyNotes 也一樣。",
-    "keepPrivate": "唯一能進入的方式，就是你真正的 12 個單字。請不要讓別人知道。"
+    "keepPrivate": "用猜的進不來。請不要讓別人知道你的 12 個單字。"
   },
   "connectedAccounts": {
     "title": "已連結的帳號",
@@ -355,13 +311,10 @@
     "connectAnotherProvider": "連結另一個 {{provider}} 帳號",
     "updateTitle": "更新這個保險庫的登入方式",
     "updateDescription": "這會讓已保存的助憶詞和已連結的帳號準備好使用雙因素登入，並讓你管理已連結的帳號。筆記和金鑰保管方式不會改變。",
-    "updateDevices": "繼續之前，請先更新其他裝置上的應用程式。那些裝置可能需要重新登入。",
-    "updateAcknowledgment": "我已更新其他裝置上的 PrivacyNotes。",
     "updateAction": "更新登入方式",
     "setupTitle": "連結 Google、Apple 或 GitHub",
     "setupDescription": "第一次連結時，需要為這個保險庫做一次性更新。你的筆記和金鑰保管方式都不會改變。",
     "setupAction": "設定已連結的帳號",
-    "closed": "連結和移除帳號的功能即將開放。在那之前，請照目前的方式登入。",
     "repairTitle": "完成登入方式更新",
     "repairDescription": "這個保險庫已使用更新後的登入方式。請使用此處已解鎖的助憶詞，重新連結這台裝置。本機筆記仍可使用。",
     "repairAction": "繼續前往這個保險庫",
@@ -379,7 +332,6 @@
     "rateLimited": "帳號變更嘗試次數過多。請稍候再試。",
     "connectionMissing": "這個帳號已不再連結。重試前，請先檢查目前的帳號清單。",
     "noAccounts": "尚未連結任何第三方帳號。你已保存的助憶詞就是登入方式。",
-    "actionFailed": "無法確認變更。請檢查連線後再試一次。",
     "retry": "重新檢查帳號",
     "connectDone": "帳號已連結至這個保險庫。金鑰保管方式沒有變更。",
     "disconnectDone": "已取消連結帳號。筆記和金鑰保管方式沒有變更。",
@@ -389,7 +341,6 @@
     "freshMfa": "你需要新的驗證器代碼來確認這項變更。變更後仍會開啟雙因素登入。",
     "continueProvider": "使用 {{provider}} 繼續",
     "working": "處理中...",
-    "cancel": "取消",
     "confirmDisconnect": "要取消連結 {{provider}} 嗎？",
     "account": "這個帳號",
     "lastCustodial": "這是你最後一個已連結的帳號。請先連結另一個帳號，或保存助憶詞並切換至自我保管後，再移除它。",
@@ -445,10 +396,7 @@
       "key": "保存金鑰",
       "confirm": "確認"
     },
-    "next": "下一步",
-    "back": "返回",
     "stepOf": "第 {{step}} 步，共 3 步",
-    "working": "處理中...",
     "scan": "用驗證器應用程式掃描這個代碼。",
     "qrLabel": "驗證器應用程式的 QR 碼",
     "openAuthenticator": "在這支手機上？開啟驗證器應用程式",
@@ -462,9 +410,7 @@
     "backupWarning": "手機遺失了？這個金鑰能找回你的代碼。請保存在 PrivacyNotes 以外的安全位置。",
     "savedAcknowledgment": "我已保存備份金鑰。",
     "confirmBackup": "再次輸入上一步的備份金鑰，然後輸入應用程式中的代碼。",
-    "reenterBackup": "備份金鑰",
     "codeLabel": "應用程式中的代碼",
-    "activate": "開啟 2FA",
     "cancelSetup": "取消",
     "enabled": "2FA 已開啟",
     "authenticatorRow": "驗證器應用程式",
@@ -484,11 +430,6 @@
     "overview": "總覽",
     "keyCustody": "金鑰保管",
     "accounts": "帳號"
-  },
-  "beta": {
-    "label": "測試版",
-    "notice": "此功能仍在測試階段。",
-    "reportBug": "回報 bug"
   },
   "demoTeaser": {
     "accounts": "建立帳號，即可將 Google、Apple 或 GitHub 連結至你的保險庫。",

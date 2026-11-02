@@ -1,7 +1,7 @@
 // The UI library: the one import for every control in the app.
-// `ops/design/COMPONENTS.md` is generated from the @catalog blocks below and in
+// `docs/contrib/design/COMPONENTS.md` is generated from the @catalog blocks below and in
 // each part's file (`pnpm check:components` fails when it is stale).
-// Spec: ops/docs/archive/design-system.md
+// Spec: docs/internal/design/design-system.md
 
 export { Button, IconButton, CloseButton } from './Button';
 export { VaultFieldAction } from './VaultFieldAction';
@@ -14,6 +14,7 @@ export { FeedbackButton, Callout, Banner, Snackbar, Badge, Spinner, ProgressBar,
 export { Checkbox } from './Checkbox';
 export { TaskCheckbox } from './TaskCheckbox';
 export { Popover, Kbd, Divider, CopyButton, IconTile } from './misc';
+export { GridCard } from './GridCard';
 
 /**
  * @catalog Switch
@@ -52,7 +53,7 @@ export { SETTINGS_BTN, SETTINGS_BTN_PRIMARY, SETTINGS_BTN_DANGER, SETTINGS_BTN_U
 
 /**
  * @catalog StatTile
- * use: one number with its label (label above, value below, an optional line under it), in Statistics and Week in review.
+ * use: one number with its label (label above, value below, an optional line under it), in Statistics, Week in review and the Home widgets; `bare` drops its card inside a tile that is one already (GridCard).
  * never: a bare big number with an uppercase label under it.
  */
 export { StatTile } from '../settingsUI';
@@ -83,7 +84,7 @@ export { SettingsTabStrip, settingsTabClass } from '../settingsUI';
  * use: `ProMark` (rocket and "Pro") after a heading or a row title; `IconUpgrade` (the rocket alone) on a button or a tab.
  * never: an amber "PRO" pill; a gold color of your own.
  */
-export { ProMark, IconUpgrade } from '../UpgradeModal';
+export { ProMark, IconUpgrade } from '../proMark';
 
 /**
  * @catalog HelpChip
@@ -188,3 +189,10 @@ export { UpdateToast } from '../UpdateToast';
 export { DetailHero, DetailGroup, DetailRow, DetailAction, DetailCopyAction, DetailLink, DetailNotes, DetailTile, DETAIL_COLUMN } from '../detailPane';
 
 export { VaultFormActions } from './VaultFormActions';
+
+/**
+ * @catalog Reorder (usePointerReorder, DropLine, DRAG_SOURCE, DROP_INSIDE)
+ * use: every list a person arranges by drag: folders, sidebar rows, toolbar items, tabs. The site gives `resolve` and `onDrop`; the hook owns threshold, capture, Escape, auto-scroll. Pair it with a menu (Move up, Move down) for keyboard and touch.
+ * never: HTML5 draggable for a reorder; a landing line in the flow; a dragged row look of its own.
+ */
+export { usePointerReorder, DropLine, DRAG_SOURCE, DROP_INSIDE, halfOf, nearestRow } from './reorder';

@@ -8,7 +8,7 @@
  * carries them. Blocks (divider, code block, table) sit on their own lines
  * with a blank line before them, because a `---` right under a line of text
  * makes that line a heading.
- * Spec: ops/issues/0493.md (Spec)
+ * Spec: docs/internal/issues/0493.md (Spec)
  */
 
 /** Replace [from, to) with `insert`, then select [selFrom, selTo). */

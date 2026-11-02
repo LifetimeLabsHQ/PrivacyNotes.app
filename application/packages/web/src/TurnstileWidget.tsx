@@ -9,7 +9,7 @@ import { useEffect, useRef } from 'react';
  * render this after the server refuses for want of a token. Nothing
  * here runs - and challenges.cloudflare.com is never contacted - until
  * the link-pubkey gate (web origins only) actually refuses one.
- * Spec: ops/docs/design-decisions.md (Turnstile is web-only, enforced at link-pubkey)
+ * Spec: docs/internal/design-decisions.md (Turnstile is web-only, enforced at link-pubkey)
  *
  * Site key comes from `VITE_TURNSTILE_SITE_KEY`. If unset (local
  * preview without CF configured), the widget short-circuits to a
@@ -111,7 +111,7 @@ function loadTurnstileScript(): Promise<void> {
  * How long a challenge may run before the caller is told it is not
  * coming. Cloudflare can hand a client an interactive challenge it
  * cannot complete (embedded webviews are the known case - see
- * ops/docs/supabase.md), and without a deadline the caller waits on a
+ * docs/contrib/supabase.md), and without a deadline the caller waits on a
  * token forever with no error and no way out. Generous: a real
  * interactive solve on a slow link takes a few seconds. Backlog #120.
  */

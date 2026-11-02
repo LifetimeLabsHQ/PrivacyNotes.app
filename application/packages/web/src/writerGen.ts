@@ -14,7 +14,7 @@
  * sealed writer never reloads (it only announces; announcing lands in
  * the writer release).
  *
- * Spec: ops/docs/archive/local-at-rest.md (5.2, mechanism 2)
+ * Spec: docs/internal/specs/local-at-rest.md (5.2, mechanism 2)
  */
 import { isDemoMode } from './demo';
 import { sealedWritesOn } from './localSeal';

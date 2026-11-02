@@ -214,7 +214,7 @@ const OG_LOCALE: Record<string, string> = {
   // its hreflang and URL slug are language-only too. `ar_AR` is the pan-Arab
   // value Open Graph carries for exactly this case, so it is the only one that
   // keeps that decision intact; `ar_SA` would be the first place in the tree
-  // to pick a country for Arabic. Spec: ops/docs/i18n-spec.md (per-locale
+  // to pick a country for Arabic. Spec: docs/contrib/i18n-spec.md (per-locale
   // route maps).
   ar: 'ar_AR',
   uk: 'uk_UA',

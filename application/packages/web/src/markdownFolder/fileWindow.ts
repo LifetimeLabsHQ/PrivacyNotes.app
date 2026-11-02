@@ -11,7 +11,7 @@
  *
  * Desktop only. Window positions are physical pixels throughout, the unit the
  * monitor work area and the window getters report.
- * Spec: ops/docs/archive/markdown-folder.md (section 11)
+ * Spec: docs/internal/specs/markdown-folder.md (section 11)
  */
 import { detectPlatform } from '../devices';
 

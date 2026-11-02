@@ -1,6 +1,4 @@
 {
-  "dismiss": "忽略",
-  "close": "關閉",
   "moveBanner": {
     "bodySignIn": "請在那裡用你的復原助憶詞或「{{scanQr}}」登入。",
     "cta": "立即搬家",
@@ -46,7 +44,7 @@
   },
   "signOutConfirm": {
     "title": "你保存好 12 個助憶詞了嗎？",
-    "body": "助憶詞是回到帳號的<only>唯一</only>途徑。沒有電子郵件重設，也沒有客服專線；我們刻意設計成不知道你是誰。如果你還沒抄下來，點<action>還沒，顯示助憶詞</action>，我們現在就打開給你看。",
+    "body": "助憶詞是回到帳號的<only>唯一</only>途徑。沒有電子郵件重設，也沒有客服專線。如果你還沒抄下來，點<action>還沒，顯示助憶詞</action>，我們現在就打開給你看。",
     "unsyncedWarn_other": "這部裝置上有 {{count}} 則筆記尚未同步。若登出時無法上傳，這些筆記將永久遺失。",
     "unsyncedKept_other": "這部裝置上有 {{count}} 則筆記尚未同步。筆記會保留在這部裝置上，重新登入後就會同步。",
     "unsyncedFilesWarn_other": "這台裝置上有 {{count}} 個檔案尚未同步。登出會將其永久刪除。",
@@ -62,6 +60,12 @@
     "moreNotes": "還有 {{count}} 則",
     "appLockHint": "共用裝置？請到「設定 > 安全性」開啟應用程式鎖定。"
   },
+  "signOutUpload": {
+    "uploading": "正在上傳你最近的變更…",
+    "title": "有些變更尚未上傳",
+    "body": "如果現在登出，自上次同步後在這台裝置上所做的變更都會遺失。請連上網路以保留這些變更。",
+    "signOutAnyway": "仍要登出"
+  },
   "burnShareModal": {
     "title": "分享與 Burn After Reading",
     "body": "<lead>你的原始筆記不會被刪除。</lead>它仍安全地保留在你的帳號中。burn 連結是另外一份加密副本，被閱讀後就會自動銷毀。",
@@ -75,17 +79,15 @@
     "afterDays_other": "{{count}} 天後",
     "create": "建立並複製連結",
     "share": "分享連結",
-    "imagesStripped": "這篇筆記僅顯示文字，檔案已隱藏。",
-    "copied": "已複製"
+    "imagesStripped": "這篇筆記僅顯示文字，檔案已隱藏。"
   },
   "burnView": {
     "title": "Burn After Reading（閱後即焚筆記）",
     "tagline": "加密。轉瞬即逝。僅供親閱。",
     "toggleTheme": "切換佈景主題",
-    "checking": "檢查中…",
     "revealing": "正在取得並解密…",
     "goToApp": "前往 <brand/>",
-    "footerTagline": "- 零知識加密筆記，主機在瑞士。",
+    "footerTagline": "- 加密筆記，主機在瑞士。",
     "sealed": {
       "heading": "你收到一篇加密筆記。",
       "subheading": "這則訊息將在閱讀後自動銷毀。未讀的連結會自行失效。",
@@ -123,5 +125,17 @@
     "demo": "burn 連結會儲存在伺服器上，而示範版不會連線到伺服器。註冊後即可建立真正的 burn 連結。",
     "tooLarge": "筆記太大，無法透過 burn 連結分享（{{size}}KB）。上限為 {{max}}KB。",
     "storeFailed": "無法將 burn 筆記儲存到伺服器。"
+  },
+  "dms": {
+    "returnTitle": "你在伺服器上的副本已被刪除",
+    "returnBody_other": "你的失聯開關已在 {{date}} 從伺服器刪除你的筆記。這台裝置上仍有 {{count}} 則筆記。如果想保留，請先下載備份，然後再從這台裝置刪除。",
+    "returnBackup": "下載備份",
+    "returnDelete": "從這台裝置刪除"
+  },
+  "massDelete": {
+    "title": "筆記已在另一台裝置上刪除",
+    "body_other": "你或你的另一台裝置刪除了 {{count}} 則筆記，但這台裝置上還有這些筆記。如果是你刪除的，也在這裡刪除它們。如果不是你，可能有人能存取你的帳號：保留它們，就能把它們放回你所有的裝置。",
+    "keep": "保留我的筆記",
+    "delete": "這裡也一併刪除"
   }
 }

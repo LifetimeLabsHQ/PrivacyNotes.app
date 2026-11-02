@@ -61,7 +61,7 @@ export const LINE_EXITS: Exit[] = [
   'select', 'words', 'words', 'select', 'select', 'strike', 'words', 'words', 'strike',
 ];
 export const LOADING_EXITS: Exit[] = [
-  'encrypt', 'strike', 'select', 'hash', 'encrypt', 'encrypt', 'hash', 'shred', 'encrypt', 'words',
+  'encrypt', 'strike', 'select', 'hash', 'encrypt', 'encrypt', 'shred', 'encrypt', 'words',
   'words', 'hash', 'words', 'select', 'strike', 'select', 'words', 'hash', 'words',
 ];
 
@@ -183,7 +183,10 @@ export type Typewriter = {
  * false holds it before its next step (the loading screen's grace window, a
  * footer out of view). `paused` finishes the line on screen and stops there,
  * with a still caret. `human` swaps the even machine cadence for a person
- * typing (lock screen, owner 2026-10-22; site footer).
+ * typing (lock screen, owner 2026-10-22; site footer). `once` types every
+ * line of the pool one time and stops on the last, with a still caret: a
+ * surface that can stay up all night (the lock screen) must not animate all
+ * night (issue #643, memory growth on Linux).
  */
 export function mountTypewriter(host: HTMLElement, opts: {
   pool: Line[];
@@ -191,13 +194,16 @@ export function mountTypewriter(host: HTMLElement, opts: {
   human?: boolean;
   paused?: boolean;
   running?: boolean;
+  once?: boolean;
 }): Typewriter {
-  const { pool, look, human = false } = opts;
+  const { pool, look, human = false, once = false } = opts;
   let paused = opts.paused ?? false;
   let running = opts.running ?? true;
   let lineIdx = 0;
   let text = '';
   let phase: 'typing' | 'holding' | 'exiting' = 'typing';
+  // `once` reached the last line: it stays, and nothing moves any more.
+  let done = false;
   // How the full line leaves, picked per line, and the frame it is on.
   let exit: Exit = 'select';
   let frame = 0;
@@ -224,7 +230,7 @@ export function mountTypewriter(host: HTMLElement, opts: {
     // A real caret stays solid while keys go down and blinks only when idle.
     const leaving = !paused && phase === 'exiting' && text.length > 0;
     const busy = !paused && (phase === 'typing' || leaving);
-    const motion = paused ? '' : human ? (busy ? '' : look.caretBlink) : look.caretPulse;
+    const motion = paused || done ? '' : human ? (busy ? '' : look.caretBlink) : look.caretPulse;
     caret.className = motion ? `${look.caret} ${motion}` : look.caret;
 
     const mode = leaving && exit === 'encrypt' ? 'encrypt' : leaving && exit === 'shred' ? 'shred' : 'plain';
@@ -311,6 +317,11 @@ export function mountTypewriter(host: HTMLElement, opts: {
     }
 
     if (phase === 'holding') {
+      if (once && lineIdx >= pool.length - 1) {
+        done = true;
+        render();
+        return;
+      }
       const read = human ? Math.min(1800 + current.length * 40, 4000) : HOLD_MS;
       return later(read, () => {
         const how = exitFor(line);

@@ -20,7 +20,7 @@
  * Runs at build time in Node, so nothing reaches the browser. Keep this
  * module import-free: `help-page.ts` evaluates it next to `faq.ts`.
  *
- * // Spec: ops/docs/help-center.md (related questions)
+ * // Spec: docs/contrib/help-center.md (related questions)
  */
 
 type Entry = { q: string; a: string[] };

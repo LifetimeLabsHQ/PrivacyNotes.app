@@ -1,6 +1,4 @@
 {
-  "dismiss": "Skryť",
-  "close": "Zavrieť",
   "moveBanner": {
     "bodySignIn": "Prihlás sa tam obnovovacou frázou alebo cez „{{scanQr}}“.",
     "cta": "Presunúť teraz",
@@ -55,7 +53,7 @@
   },
   "signOutConfirm": {
     "title": "Máš uloženú svoju 12-slovnú frázu?",
-    "body": "Tvoja fráza je <only>jediná</only> cesta späť. Žiadne obnovenie cez e-mail, žiadna linka podpory. Nevieme, kto si, a to zámerne. Ak ju ešte nemáš zapísanú, ťukni na <action>Nie, zobraziť frázu</action> a hneď ti ju otvoríme.",
+    "body": "Tvoja fráza je <only>jediná</only> cesta späť. Žiadne obnovenie cez e-mail, žiadna linka podpory. Ak ju ešte nemáš zapísanú, ťukni na <action>Nie, zobraziť frázu</action> a hneď ti ju otvoríme.",
     "unsyncedWarn_one": "{{count}} poznámka v tomto zariadení sa ešte nesynchronizovala. Ak sa ju pri odhlasovaní nepodarí nahrať, natrvalo sa stratí.",
     "unsyncedWarn_few": "{{count}} poznámky v tomto zariadení sa ešte nesynchronizovali. Ak sa ich pri odhlasovaní nepodarí nahrať, natrvalo sa stratia.",
     "unsyncedWarn_many": "{{count}} poznámky v tomto zariadení sa ešte nesynchronizovalo. Ak sa ich pri odhlasovaní nepodarí nahrať, natrvalo sa stratia.",
@@ -95,6 +93,12 @@
     "moreNotes": "a ešte {{count}}",
     "appLockHint": "Zdieľané zariadenie? Zapni zámok aplikácie v časti Nastavenia > Zabezpečenie."
   },
+  "signOutUpload": {
+    "uploading": "Nahrávajú sa tvoje posledné zmeny…",
+    "title": "Niektoré zmeny ešte nie sú nahrané",
+    "body": "Ak sa teraz odhlásiš, zmeny urobené v tomto zariadení od poslednej synchronizácie sa stratia. Pripoj sa k internetu a zachovaj si ich.",
+    "signOutAnyway": "Napriek tomu sa odhlásiť"
+  },
   "burnShareModal": {
     "title": "Zdieľať a Spáliť po prečítaní",
     "body": "<lead>Pôvodná poznámka sa neodstráni.</lead> Zostáva v bezpečí v tvojom účte. Odkaz na spálenie je samostatná šifrovaná kópia, ktorá sa po prečítaní sama zničí.",
@@ -120,17 +124,15 @@
     "afterDays_other": "Po {{count}} dňoch",
     "create": "Vytvoriť a skopírovať odkaz",
     "share": "Zdieľať odkaz",
-    "imagesStripped": "Zobrazuje sa iba text, súbory sú v tejto poznámke skryté.",
-    "copied": "Skopírované"
+    "imagesStripped": "Zobrazuje sa iba text, súbory sú v tejto poznámke skryté."
   },
   "burnView": {
     "title": "Spáliť po prečítaní",
     "tagline": "Šifrované. Pominuteľné. Iba pre tvoje oči.",
     "toggleTheme": "Prepnúť motív",
-    "checking": "Kontroluje sa…",
     "revealing": "Načítava sa a dešifruje…",
     "goToApp": "Prejsť do <brand/>",
-    "footerTagline": "- Poznámky šifrované s nulovou znalosťou, hostované vo Švajčiarsku.",
+    "footerTagline": "- Šifrované poznámky, hostované vo Švajčiarsku.",
     "sealed": {
       "heading": "Prišla ti šifrovaná poznámka.",
       "subheading": "Táto správa sa po prečítaní sama zničí. Neprečítané odkazy vypršia samy.",
@@ -168,5 +170,21 @@
     "demo": "Odkazy na spálenie sa ukladajú na server a demo sa so žiadnym serverom nespája. Zaregistruj sa a vytváraj skutočné odkazy na spálenie.",
     "tooLarge": "Poznámka je príliš veľká na zdieľanie cez odkaz na spálenie ({{size}} KB). Maximum je {{max}} KB.",
     "storeFailed": "Samozničujúcu poznámku sa nepodarilo uložiť na server."
+  },
+  "dms": {
+    "returnTitle": "Tvoja kópia na serveri bola odstránená",
+    "returnBody_one": "Tvoj spínač mŕtveho muža {{date}} odstránil tvoje poznámky zo servera. Toto zariadenie má stále {{count}} poznámku. Ak si ju chceš ponechať, stiahni si zálohu a potom ju z tohto zariadenia odstráň.",
+    "returnBody_few": "Tvoj spínač mŕtveho muža {{date}} odstránil tvoje poznámky zo servera. Toto zariadenie má stále {{count}} poznámky. Ak si ich chceš ponechať, stiahni si zálohu a potom ich z tohto zariadenia odstráň.",
+    "returnBody_other": "Tvoj spínač mŕtveho muža {{date}} odstránil tvoje poznámky zo servera. Toto zariadenie má stále {{count}} poznámok. Ak si ich chceš ponechať, stiahni si zálohu a potom ich z tohto zariadenia odstráň.",
+    "returnBackup": "Stiahnuť zálohu",
+    "returnDelete": "Odstrániť z tohto zariadenia"
+  },
+  "massDelete": {
+    "title": "Poznámky odstránené na inom zariadení",
+    "body_other": "Na inom tvojom zariadení sa odstránilo {{count}} poznámok, ktoré toto zariadenie stále má. Ak to bol tvoj zámer, odstráň ich aj tu. Ak nie, niekto môže mať prístup k tvojmu účtu: ponechaj si ich a vrátia sa na všetky tvoje zariadenia.",
+    "keep": "Ponechať moje poznámky",
+    "delete": "Odstrániť ich aj tu",
+    "body_one": "Na inom tvojom zariadení sa odstránila {{count}} poznámka, ktorú toto zariadenie stále má. Ak to bol tvoj zámer, odstráň ju aj tu. Ak nie, niekto môže mať prístup k tvojmu účtu: ponechaj si ju a vráti sa na všetky tvoje zariadenia.",
+    "body_few": "Na inom tvojom zariadení sa odstránili {{count}} poznámky, ktoré toto zariadenie stále má. Ak to bol tvoj zámer, odstráň ich aj tu. Ak nie, niekto môže mať prístup k tvojmu účtu: ponechaj si ich a vrátia sa na všetky tvoje zariadenia."
   }
 }

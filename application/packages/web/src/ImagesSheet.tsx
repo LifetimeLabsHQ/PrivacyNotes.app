@@ -27,7 +27,7 @@ type Props = {
  * to new images only, which the footer states, because a user who turns
  * the space saver on to free space frees nothing.
  *
- * Spec: ops/docs/archive/image-quality-handoff.md (section 9)
+ * Spec: docs/internal/specs/image-quality-handoff.md (section 9)
  */
 export function ImagesSheet({ spaceSaver, stripMetadata, contactCeiling, onChange }: Props) {
   const { t } = useTranslation('settings');
@@ -64,7 +64,7 @@ export function ImagesSheet({ spaceSaver, stripMetadata, contactCeiling, onChang
       <div className="px-6 pt-2 pb-4">
         {/* Boolean rows: the whole row is the label, the switch sits beside
             it at every width.
-            Spec: ops/docs/archive/ui-patterns.md section 36 (compact setting rows) */}
+            Spec: docs/internal/design/ui-patterns.md section 36 (compact setting rows) */}
         <div className="divide-y divide-divider">
           {rows.map((row) => (
             <Switch

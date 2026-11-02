@@ -57,8 +57,13 @@ export interface KeyboardShortcutHandlers {
   selectedId: string | null;
   view: View;
   handleTrash: (id: string) => void;
+  /** Open the Delete window for this item, whatever the setting says. */
+  askDelete: (id: string) => void;
   /** Close the open note editor (Escape). */
   closeEditor: () => void;
+  /** The last step of Escape: go to Home when Home is the start view and
+   *  another view is open. True when it moved. Spec: docs/internal/specs/dashboard.md (section 2) */
+  goHome?: () => boolean;
 
   // Search and filters
   search: string;
@@ -70,9 +75,9 @@ export interface KeyboardShortcutHandlers {
   // Settings
   setShowSettings: (v: boolean) => void;
 
-  // About modal (hotkeys tab)
-  showAbout: false | { tab?: 'about' | 'hotkeys' | 'rating' };
-  setShowAbout: (v: false | { tab?: 'about' | 'hotkeys' | 'rating' }) => void;
+  // Settings > Hotkeys, and whether ? opened it on its own (open now)
+  openHotkeys: () => void;
+  hotkeysOpen: boolean;
 
   // J/K navigation
   displayNotesRef: React.RefObject<LocalNote[]>;
@@ -100,7 +105,7 @@ export interface KeyboardShortcutHandlers {
  * of them used arrives with `defaultPrevented`, which `matchesKey` refuses.
  * Each key press runs at most one command.
  *
- * Spec: ops/docs/archive/keyboard-shortcuts.md (sections 4.3 and 4.4)
+ * Spec: docs/internal/specs/keyboard-shortcuts.md (sections 4.3 and 4.4)
  */
 export function useKeyboardShortcuts(h: KeyboardShortcutHandlers): PaletteRunner {
   // The listener is added once and reads the latest handlers through a ref,
@@ -163,8 +168,8 @@ export type PaletteCommand = (typeof PALETTE_COMMANDS)[number];
 /**
  * Each command's row icon in the quick switcher: the glyph its own button
  * already draws (the editor header's back and forward, the footer's Sun and
- * Gear, the outline and find pills, the toolbar's date items, the About
- * window's Hotkeys tab), so a person meets one picture per feature. A
+ * Gear, the outline and find pills, the toolbar's date items, Settings >
+ * Hotkeys), so a person meets one picture per feature. A
  * command added to PALETTE_COMMANDS without an icon here fails the type
  * check.
  */
@@ -255,7 +260,7 @@ function runCommand(id: PaletteCommand, h: KeyboardShortcutHandlers): void {
     case 'zoomIn': return stepAppZoom(1);
     case 'zoomOut': return stepAppZoom(-1);
     case 'zoomReset': return applyAppZoom(DEFAULT_APP_ZOOM);
-    case 'help': return h.setShowAbout({ tab: 'hotkeys' });
+    case 'help': return h.openHotkeys();
   }
 }
 
@@ -276,7 +281,12 @@ function revealRow(id: string | null) {
 
 /** Runs the command of one key press. Truthy when one ran, so the key is cancelled. */
 function runShortcut(e: KeyboardEvent, h: KeyboardShortcutHandlers): boolean | typeof STEP {
-  const typing = isEditableTarget(e.target);
+  // The drawing canvas counts as a text field: its own keys are single
+  // letters and digits (R for a rectangle, 1 to 9 for the tools), and a key
+  // it does not use must not step the list or start a command while the
+  // focus is in it. Keys it does use never arrive: it cancels them.
+  // Spec: docs/internal/specs/drawing.md (section 3)
+  const typing = isEditableTarget(e.target) || (e.target instanceof Element && !!e.target.closest('.excalidraw'));
   const is = (id: keyof typeof APP_KEYS) => matchesKey(e, APP_KEYS[id], typing);
 
   // ── Commands that run anywhere, including in a text field ──
@@ -305,8 +315,11 @@ function runShortcut(e: KeyboardEvent, h: KeyboardShortcutHandlers): boolean | t
   // Mod+K, everywhere, the editor included (insert link is Mod+Shift+K).
   // Cancelled behind a dialog too: a browser would print the app page on the
   // Mod+P alias. The switcher closes itself on its own key.
+  // The window of the hotkey list is where the key is learnt, and closing it
+  // loses nothing: there it gives way to the switcher.
   if (is('quickSwitcher')) {
-    if (!behind) h.openQuickSwitcher();
+    if (behind && h.hotkeysOpen) h.setShowSettings(false);
+    if (!behind || h.hotkeysOpen) h.openQuickSwitcher();
     return true;
   }
   if (is('commandMode') && (e.metaKey || e.ctrlKey) && !behind) {
@@ -322,7 +335,7 @@ function runShortcut(e: KeyboardEvent, h: KeyboardShortcutHandlers): boolean | t
   // else the open item. It never closes the window: on a Mac that moves to
   // Shift+Cmd+W. Alt+Shift+W only closes a tab, and is let through when
   // there is none, because on a Mac it types „.
-  // Spec: ops/docs/archive/note-tabs.md (section 3)
+  // Spec: docs/internal/specs/note-tabs.md (section 3)
   if (is('closeTab')) {
     const altKey = !(e.metaKey || e.ctrlKey);
     if (altKey) return h.closeActiveTab();
@@ -401,6 +414,11 @@ function runShortcut(e: KeyboardEvent, h: KeyboardShortcutHandlers): boolean | t
     void h.handleTrash(h.selectedId);
     return true;
   }
+  if (is('deleteAsk')) {
+    if (typing || behind || !h.selectedId || h.view === 'trash' || h.view === 'tasks') return false;
+    h.askDelete(h.selectedId);
+    return true;
+  }
 
   if (h.selectionMode && is('selectAll') && !typing) {
     h.selectAllVisible();
@@ -415,12 +433,13 @@ function runShortcut(e: KeyboardEvent, h: KeyboardShortcutHandlers): boolean | t
 
   // ── Single keys: never while typing, never while an overlay is open (a
   // menu or a dialog reads letters of its own), and not when the switch in
-  // Settings > About > Hotkeys turned them off. ──
+  // Settings > Hotkeys turned them off. ──
   if (typing || !singleKeysOn()) return false;
 
   // ? also closes the list it opened, which is an overlay itself.
-  if (is('help') && (h.showAbout || !behind)) {
-    h.setShowAbout(h.showAbout ? false : { tab: 'hotkeys' });
+  if (is('help') && (h.hotkeysOpen || !behind)) {
+    if (h.hotkeysOpen) h.setShowSettings(false);
+    else h.openHotkeys();
     return true;
   }
   if (behind) return false;
@@ -495,5 +514,5 @@ function runEscape(h: KeyboardShortcutHandlers): boolean {
     h.closeEditor();
     return true;
   }
-  return false;
+  return h.goHome?.() ?? false;
 }

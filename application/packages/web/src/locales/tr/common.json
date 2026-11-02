@@ -26,14 +26,11 @@
     "noResults": "Sonuç yok"
   },
   "deleteNote": {
-    "title": "Kalıcı olarak sil",
     "confirm": "Kalıcı olarak sil",
-    "untitled": "Başlıksız",
     "body": "<highlight>“{{title}}”</highlight> kalıcı olarak silinsin mi? Bu işlem geri alınamaz."
   },
   "emptyTrash": {
     "title": "Çöp kutusunu boşalt",
-    "confirm": "Kalıcı olarak sil",
     "body_one": "<highlight>{{count}} not</highlight> kalıcı olarak silinsin mi? Bu işlem geri alınamaz.",
     "body_other": "<highlight>{{count}} not</highlight> kalıcı olarak silinsin mi? Bu işlem geri alınamaz."
   },
@@ -61,7 +58,6 @@
   },
   "palette": {
     "label": "Komutlar",
-    "open": "Komutlar",
     "empty": "Eşleşen komut yok",
     "groups": {
       "features": "Özellikler",
@@ -86,7 +82,7 @@
       "insertDate": "Tarihi ekle",
       "insertDateTime": "Tarih ve saati ekle",
       "clearFilters": "Filtreleri temizle",
-      "moveToTrash": "Notu çöp kutusuna taşı",
+      "moveToTrash": "Notu sil",
       "closeTab": "Sekmeyi veya notu kapat",
       "nextTab": "Sonraki sekme",
       "previousTab": "Önceki sekme",
@@ -109,10 +105,8 @@
     "move": "gezin",
     "open": "aç",
     "openInTab": "sekmede aç",
-    "openLink": "Aç",
     "edit": "düzenle",
     "close": "kapat",
-    "tags": "Etiketler",
     "folders": "Klasörler",
     "tagItems_one": "{{count}} öğe",
     "tagItems_other": "{{count}} öğe",
@@ -175,17 +169,14 @@
     "downloadPublicKey": "Genel anahtarı indir",
     "downloadPrivateKey": "Özel anahtarı indir",
     "downloadHint": "İndirilen anahtarı ~/.ssh klasörüne taşıyın ve üzerinde chmod 600 çalıştırın, aksi halde ssh onu reddeder.",
+    "downloadHintDesktop": "PrivacyNotes, oradaki anahtarları korumak için ~/.ssh klasörüne kaydetmez. Anahtarı başka bir yere kaydedin, ~/.ssh klasörüne taşıyın ve üzerinde chmod 600 çalıştırın, aksi halde ssh onu reddeder.",
+    "downloadHintWindows": "PrivacyNotes, oradaki anahtarları korumak için .ssh klasörünüze kaydetmez. Anahtarı başka bir yere kaydedin ve %USERPROFILE%\\.ssh klasörüne taşıyın. Windows'ta chmod gerekmez.",
     "downloadFailed": "Anahtar dosyası kaydedilemedi. Dosyayı kontrol edip tekrar deneyin.",
     "passphrase": "Parola",
     "passphrasePlaceholder": "Anahtar parolası (varsa)",
     "show": "Göster",
     "hide": "Gizle",
-    "copyPassphrase": "Parolayı kopyala",
-    "notes": "Notlar",
-    "notesPlaceholder": "Ek notlar (isteğe bağlı)",
-    "requirePin": "Görüntülemek için PIN iste",
-    "whatDoesThisDo": "Bu ne işe yarar?",
-    "setUpPinFirst": "Önce Güvenlik ayarlarından bir PIN oluşturun."
+    "copyPassphrase": "Parolayı kopyala"
   },
   "tagInput": {
     "placeholder": "Etiket ekleyin… virgül, # veya Enter ile ayırın",
@@ -257,7 +248,6 @@
       "kasayı sessizce açıyoruz",
       "yerelde çözüldü. küresel olarak umursanmadı",
       "kimseyi ilgilendirmeyecek şekilde çözülüyor",
-      "yerel üretim düz metin",
       "düşünceleri okunmaz çorbaya çeviriyoruz",
       "şifreli bir başyapıt daha geliyor",
       "şifreli kaostan düzen kuruyoruz",
@@ -281,17 +271,14 @@
     "changesSome_other": "Bu notlardan {{count}} tanesinin yedeklenmemiş değişiklikleri var ve kaybolur."
   },
   "ninja": {
-    "recent": "Son kullanılanlar",
     "topHit": "En iyi eşleşme",
     "trashEmpty": "Çöp kutusu boş",
     "allThemes": "Tüm temalar",
     "features": {
       "stats": {
-        "label": "İstatistikler",
         "detail": "Zaman içinde yazdıklarınız, serileriniz ve takipleriniz"
       },
       "trackers": {
-        "label": "Takipler",
         "detail": "Ruh hali, alışkanlıklar, etkenler ve ilaçlar"
       },
       "medication": {
@@ -311,7 +298,6 @@
         "detail": "Kopyalamaya hazır güçlü bir parola veya parola ifadesi"
       },
       "themes": {
-        "label": "Temalar",
         "detail": "Açık ve koyu renk temaları"
       }
     },
@@ -322,7 +308,6 @@
     "commands": {
       "syncResume": "Eşitlemeyi sürdür",
       "changelog": "Yenilikler",
-      "help": "Yardım",
       "themesPage": "Topluluk temaları",
       "website": "PrivacyNotes web sitesi"
     },

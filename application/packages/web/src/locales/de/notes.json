@@ -6,19 +6,18 @@
     "deselect": "Notiz abwählen",
     "pinProtected": "PIN-geschützt",
     "readOnly": "Schreibgeschützt",
-    "file": "Datei",
     "empty": "Leer",
     "noContent": "Kein Inhalt",
     "notBackedUp": "Nicht gesichert",
     "archived": "Archiviert",
-    "entryDate": "Eintragsdatum",
     "date": "Datum",
-    "dayOf": "Tag {{n}} von {{total}}"
+    "dayOf": "Tag {{n}} von {{total}}",
+    "reminders_one": "{{count}} Erinnerung",
+    "reminders_other": "{{count}} Erinnerungen"
   },
   "header": {
     "new": "Neu",
     "newNote": "Neue Notiz",
-    "trash": "Papierkorb",
     "newEvent": "Neuer Termin"
   },
   "folderChip": {
@@ -31,7 +30,6 @@
   },
   "vaultNew": {
     "ariaLabel": "Neuer Tresor-Eintrag",
-    "login": "Login",
     "card": "Kreditkarte",
     "sshKey": "SSH-Schlüssel",
     "generator": "Passwort"
@@ -39,15 +37,14 @@
   "newMenu": {
     "note": "Notiz",
     "task": "Aufgabe",
-    "kanban": "Kanban-Board",
+    "kanban": "Kanban",
+    "drawing": "Zeichnung",
     "journal": "Tagebuch",
     "login": "Login",
-    "file": "Datei",
     "bookmark": "Lesezeichen",
     "clipPage": "Seite clippen",
     "contact": "Kontakt",
-    "event": "Termin",
-    "quickAdd": "Schnell hinzufügen"
+    "event": "Termin"
   },
   "vaultFilter": {
     "all": "Alle",
@@ -64,14 +61,14 @@
   "trash": {
     "empty": "Leeren",
     "emptyHover": "Alle Notizen im Papierkorb löschen",
-    "storage": "Speicher",
     "autoDelete": "Nach 30 Tagen automatisch löschen"
   },
   "search": {
     "sortOptions": "Sortier- und Ansichtsoptionen",
     "placeholderVault": "Tresor durchsuchen…",
     "placeholderNotes": "Notizen durchsuchen…",
-    "placeholderEvents": "Termine durchsuchen…"
+    "placeholderEvents": "Termine durchsuchen…",
+    "placeholderDrawings": "Zeichnungen durchsuchen…"
   },
   "selection": {
     "countOf": "{{selected}} von {{total}} ausgewählt",
@@ -82,10 +79,11 @@
     "noMatches": "Keine Treffer.",
     "vault": "Der Tresor ist leer.",
     "notes": "Noch keine Notizen.",
+    "drawings": "Noch keine Zeichnungen.",
+    "drawingsLine": "Skizziere, plane oder entwirf eine Idee. Zeichnungen können auf deine Notizen verlinken, zeigen aber nicht, was darin steht.",
     "archive": "Nichts archiviert.",
     "trash": "Der Papierkorb ist leer.",
     "filtered": "Keine Einträge passen zu deinen Filtern.",
-    "clearFilters": "Filter aufheben",
     "filteredAfter": "damit sie wieder erscheinen.",
     "hiddenInAll_other": "{{count}} Einträge sind durch den Filter In „Alle“ anzeigen ausgeblendet. Öffne den Filter neben Alle, um sie anzuzeigen.",
     "inOtherSpace_other": "{{count}} Einträge sind in deinem Bereich {{space}}. Wechsle in der Seitenleiste zu {{space}}, um sie zu sehen.",
@@ -99,16 +97,6 @@
     "collapseAll": "Alle Gruppen einklappen",
     "expandAll": "Alle Gruppen ausklappen"
   },
-  "headerLabel": {
-    "allItems": "Alle",
-    "untagged": "Ohne Tag",
-    "journals": "Tagebücher",
-    "vault": "Tresor",
-    "pinned": "Angepinnt",
-    "archive": "Archiv",
-    "notes": "Notizen",
-    "calendar": "Kalender"
-  },
   "footerStats": {
     "journals_other": "Einträge",
     "journals_one": "Eintrag",
@@ -121,6 +109,8 @@
     "bookmarks_other": "Lesezeichen",
     "bookmarks_one": "Lesezeichen",
     "contacts_other": "Kontakte",
+    "drawings_one": "Zeichnung",
+    "drawings_other": "Zeichnungen",
     "files_other": "Dateien",
     "lists_other": "Listen",
     "tasks_other": "Aufgaben",
@@ -149,7 +139,6 @@
     "reload": "Neu laden"
   },
   "banner": {
-    "dismiss": "Schließen",
     "proActivationPending": "Zahlung erhalten, aber die Pro-Aktivierung dauert länger als üblich. Lade in einer Minute neu oder kontaktiere den Support, falls Pro nicht aktiviert wird.",
     "snapshotPaused": "Der Notizverlauf ist pausiert. Dein Pro-Tarif scheint inaktiv. Neue Änderungen werden nicht versioniert, bis Pro wiederhergestellt ist.",
     "restorePro": "Pro wiederherstellen",
@@ -157,8 +146,7 @@
     "updateCard": "Karte aktualisieren"
   },
   "sidebar": {
-    "collapse": "Seitenleiste einklappen",
-    "expand": "Seitenleiste ausklappen"
+    "collapse": "Seitenleiste einklappen"
   },
   "notesList": {
     "collapse": "Notizliste einklappen",
@@ -195,24 +183,11 @@
     "titlePlaceholder": "Ohne Titel (zum Bearbeiten klicken oder automatisch erstellen lassen)",
     "titlePlaceholderLogin": "z. B. GitHub",
     "titlePlaceholderCard": "z. B. Visa endend auf 4242",
-    "titlePlaceholderSshKey": "z. B. GitHub Deploy-Schlüssel",
-    "pin": "Anpinnen",
-    "unpin": "Lösen",
-    "restore": "Wiederherstellen",
-    "deleteForever": "Endgültig löschen",
-    "moveToTrash": "In den Papierkorb",
-    "noteOptions": "Notizoptionen",
     "readOnlyToggle": "Schreibgeschützt. Ausschalten unter",
     "menu": "Menü",
-    "showMarkdown": "Markdown anzeigen",
     "showFormatted": "Formatiert anzeigen",
     "invisiblesShow": "Unsichtbare Zeichen anzeigen",
     "invisiblesHide": "Unsichtbare Zeichen ausblenden",
-    "findInNote": "In Notiz suchen",
-    "navPrev": "Vorherige",
-    "navNext": "Nächste",
-    "navPrevTab": "Vorheriger Tab",
-    "navNextTab": "Nächster Tab",
     "undo": "Rückgängig",
     "redo": "Wiederholen",
     "hide": "Verbergen",
@@ -222,9 +197,7 @@
     "widthDefault": "Standardbreite",
     "widthWide": "Breiter",
     "widthFull": "Volle Breite",
-    "burn": "Teilen & nach dem Lesen vernichten",
     "titlePlaceholderLink": "Name des Lesezeichens",
-    "titlePlaceholderContact": "Name",
     "notBackedUpTooLarge": "Über dem 1-MB-Limit, daher nicht gesichert. Verschiebe Bilder in Anhänge oder teile die Notiz auf.",
     "notBackedUpFailed": "Nicht gesichert. Letzter Fehler: {{message}}. Neuer Versuch läuft.",
     "unknownType": "Dieses Element wurde mit einer neueren Version von PrivacyNotes erstellt. Aktualisiere die App, um es zu öffnen."
@@ -241,15 +214,17 @@
     "printTextTitle": "Nur Text drucken",
     "printTextDesc": "Behält den Titel. Lässt Datum, Ordner und Tags weg.",
     "burnTitle": "Teilen & nach dem Lesen vernichten",
-    "burnDesc": "Veröffentliche diese Notiz als Link zum einmaligen Ansehen. Der Link zerstört sich nach dem Lesen selbst. Deine Notiz bleibt sicher in deinem Konto."
+    "burnDesc": "Veröffentliche diese Notiz als Link zum einmaligen Ansehen. Der Link zerstört sich nach dem Lesen selbst. Deine Notiz bleibt sicher in deinem Konto.",
+    "drawingFileTitle": "Zeichnung (.excalidraw)",
+    "drawingFileDesc": "Lässt sich mit ihren Bildern in Excalidraw und Obsidian öffnen.",
+    "drawingPngTitle": "Bild (.png)",
+    "drawingPngDesc": "Die ganze Zeichnung als ein Bild."
   },
   "weekReview": {
     "title": "Wochenrückblick",
     "daysLogged": "{{count}}/7 erfasst",
     "mood": "Stimmung",
-    "sleep": "Schlaf",
-    "meds": "Medikamente",
-    "activity": "Aktivität"
+    "meds": "Medikamente"
   },
   "footer": {
     "settings": "Einstellungen",
@@ -264,12 +239,10 @@
     "words_other": "Wörter",
     "words_one": "Wort",
     "zen": "Zen-Modus",
-    "appearance": "Design",
     "lockApp": "App sperren",
     "lockAppSetUp": "Lege zuerst unter Sicherheit eine PIN fest",
     "goToTop": "Zum Anfang",
     "goToEnd": "Zum Ende",
-    "signOut": "Abmelden",
     "signingOut": "Wird abgemeldet…",
     "switchToLight": "Zum hellen Modus wechseln",
     "switchToDark": "Zum dunklen Modus wechseln"
@@ -307,10 +280,11 @@
     "bodyMulti": "Diese {{count}} Dateien sehen nach Markdown aus. Als Notizen importieren, damit du sie lesen und bearbeiten kannst, oder als verschlüsselte Dateianhänge speichern?"
   },
   "bulkTrash": {
-    "title": "In den Papierkorb",
-    "body_one": "<highlight>{{count}} Eintrag</highlight> in den Papierkorb verschieben? Später kannst du ihn wiederherstellen.",
-    "body_other": "<highlight>{{count}} Einträge</highlight> in den Papierkorb verschieben? Du kannst sie später wiederherstellen.",
-    "readOnlyTitle": "Schreibgeschützt",
+    "body_one": "<highlight>{{count}} Eintrag</highlight> löschen? Verschiebe ihn in den Papierkorb, um ihn später wiederherzustellen, oder lösche ihn endgültig.",
+    "body_other": "<highlight>{{count}} Einträge</highlight> löschen? Verschiebe sie in den Papierkorb, um sie später wiederherzustellen, oder lösche sie endgültig.",
+    "confirm": "In den Papierkorb verschieben",
+    "keys": "Außerhalb dieses Fensters verschiebt <kbd>{{trash}}</kbd> einen Eintrag sofort in den Papierkorb, und <kbd>{{ask}}</kbd> öffnet dieses Fenster auch nach „Nicht mehr fragen“.",
+    "dontAskAgain": "Nicht mehr fragen",
     "readOnlyAcknowledge": "Verstanden",
     "readOnlyBlocked_one": "Dieser Eintrag ist <highlight>schreibgeschützt</highlight> und kann nicht in den Papierkorb. Schalte den Schreibschutz zuerst in den Notizoptionen aus.",
     "readOnlyBlocked_other": "Alle <highlight>{{count}} Einträge</highlight> sind schreibgeschützt, also kann keiner in den Papierkorb. Schalte den Schreibschutz zuerst in den Notizoptionen aus.",
@@ -319,21 +293,12 @@
   },
   "deleteCheckedTasks": {
     "title": "Abgehakte Einträge löschen?",
-    "confirm": "Löschen",
     "body_one": "<highlight>{{count}} Eintrag</highlight> wird aus dieser Notiz gelöscht. Das kann nicht rückgängig gemacht werden.",
     "body_other": "<highlight>{{count}} Einträge</highlight> werden aus dieser Notiz gelöscht, verschachtelte Einträge eingeschlossen. Das kann nicht rückgängig gemacht werden."
   },
-  "bulkDelete": {
-    "body_one": "<highlight>{{count}} Notiz</highlight> endgültig löschen? Das kann nicht rückgängig gemacht werden.",
-    "body_other": "<highlight>{{count}} Notizen</highlight> endgültig löschen? Das kann nicht rückgängig gemacht werden."
-  },
   "tagConfirm": {
     "mergeTitle": "Tags zusammenführen",
-    "deleteTitle": "Tag löschen",
-    "deleteWithNotesTitle": "Tag & Notizen löschen",
     "mergeConfirm": "Zusammenführen",
-    "deleteConfirm": "Tag löschen",
-    "moveToTrash": "In den Papierkorb",
     "mergeBody_one": "Tag <highlight>„{{targetTag}}“</highlight> existiert bereits. <highlight>{{count}} Notiz</highlight>, die aktuell mit „{{tag}}“ getaggt ist, dorthin überführen?",
     "mergeBody_other": "Tag <highlight>„{{targetTag}}“</highlight> existiert bereits. <highlight>{{count}} Notizen</highlight>, die aktuell mit „{{tag}}“ getaggt sind, dorthin überführen?",
     "deleteBody_one": "Tag <highlight>„{{tag}}“</highlight> von <highlight>{{count}} Notiz</highlight> entfernen? Die Notiz selbst wird nicht gelöscht.",
@@ -363,5 +328,35 @@
     "missing": "Noch nicht erstellt",
     "protectedHidden_one": "{{count}} PIN-geschütztes Element wird nicht angezeigt",
     "protectedHidden_other": "{{count}} PIN-geschützte Elemente werden nicht angezeigt"
+  },
+  "drawing": {
+    "fullScreen": "Vollbild",
+    "frame": "Rahmen",
+    "laser": "Laserpointer",
+    "bar": {
+      "hiddenNote": "Sie funktionieren weiterhin über ihre Tasten."
+    },
+    "resetTitle": "Zeichenfläche zurücksetzen?",
+    "resetBody": "Damit wird alles auf der Zeichenfläche entfernt. Rückgängig holt es zurück.",
+    "hotkeysTitle": "Tastenkürzel zum Zeichnen",
+    "tools": {
+      "label": "Zeichenwerkzeuge",
+      "keepTool": "Werkzeug nach dem Zeichnen beibehalten",
+      "hand": "Zeichenfläche verschieben",
+      "rectangle": "Rechteck",
+      "diamond": "Raute",
+      "ellipse": "Ellipse",
+      "arrow": "Pfeil",
+      "line": "Linie",
+      "pen": "Stift",
+      "text": "Textfeld",
+      "eraser": "Radierer",
+      "resetZoom": "Zoom zurücksetzen",
+      "open": "Zeichnungsdatei öffnen",
+      "reset": "Zeichenfläche zurücksetzen",
+      "style": "Stil",
+      "more": "Mehr Werkzeuge",
+      "fewer": "Weniger Werkzeuge"
+    }
   }
 }

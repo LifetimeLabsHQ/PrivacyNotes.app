@@ -180,7 +180,7 @@ export function AudioRecorder({ editorView, tabIndex, onStateChange, stopRef, st
         aria-label={t('audio.uploadingRecording')}
       >
         <CircleNotch className="animate-spin h-3.5 w-3.5" />
-        <span className="text-xs font-medium">{t('audio.uploading')}</span>
+        <span className="text-small font-medium">{t('importExport:upload.statusUploading')}</span>
       </span>
       </HoverLabel>
     );
@@ -202,7 +202,7 @@ export function AudioRecorder({ editorView, tabIndex, onStateChange, stopRef, st
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
           <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600" />
         </span>
-        <span className="text-xs font-medium tabular-nums">
+        <span className="text-small font-medium tabular-nums">
           {formatDuration(duration)}
         </span>
       </button>
@@ -247,10 +247,10 @@ export function AudioRecordingBanner({
 
   if (state === 'uploading') {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 bg-accent/10 dark:bg-accent/15 border-b border-accent/20 text-sm text-accent-strong">
+      <div className="flex items-center gap-2 px-3 py-2 bg-accent/10 dark:bg-accent/15 border-b border-accent/20 text-body text-accent-strong">
         <CircleNotch className="animate-spin h-4 w-4 shrink-0" />
         <span className="font-medium">{t('audio.savingRecording')}</span>
-        <span className="text-xs opacity-70">{formatDuration(duration)}</span>
+        <span className="text-small opacity-70">{formatDuration(duration)}</span>
       </div>
     );
   }
@@ -261,7 +261,7 @@ export function AudioRecordingBanner({
   const pct = Math.min((duration / MAX_RECORDING_SECONDS) * 100, 100);
 
   return (
-    <div className={`relative border-b text-sm ${
+    <div className={`relative border-b text-body ${
       warn
         ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/50'
         : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/50'
@@ -283,14 +283,14 @@ export function AudioRecordingBanner({
           {formatDuration(duration)} / {formatDuration(MAX_RECORDING_SECONDS)}
         </span>
         {warn && (
-          <span className="text-xs text-warning">
+          <span className="text-small text-warning">
             {t('audio.secondsLeft', { count: remaining })}
           </span>
         )}
         <button
           type="button"
           onClick={onStop}
-          className={`ml-auto rounded px-2.5 py-0.5 text-xs font-medium text-white transition ${
+          className={`ml-auto rounded px-2.5 py-0.5 text-small font-medium text-white transition ${
             warn ? 'bg-amber-600 hover:bg-amber-700' : 'bg-red-600 hover:bg-red-700'
           }`}
         >

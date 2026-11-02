@@ -53,8 +53,6 @@
   },
   "mood": {
     "prompt": "How are you feeling? (1-10)",
-    "low": "awful",
-    "high": "amazing",
     "anchor": {
       "1": "awful",
       "3": "rough",
@@ -142,8 +140,6 @@
     "editMedication": "Edit medication",
     "removeMedication": "Remove medication",
     "confirmRemove": "Remove <highlight>{{name}}</highlight>?",
-    "yes": "Yes",
-    "no": "No",
     "taken": "Taken",
     "skip": "Skip",
     "editList": "Change these medications",
@@ -257,16 +253,15 @@
   },
   "config": {
     "configureTrackers": "Configure trackers",
-    "title": "Trackers",
-    "tabGeneral": "General",
     "tabCustom": "Custom",
-    "chooseTrackers": "Choose trackers",
     "factorsTitle": "Your factors",
     "factorsHelp": "The parts of a day you tap in the Factors pill. A removed factor keeps its name on the days that hold it.",
     "renameFactor": "Rename {{name}}",
     "addFactor": "Add factor",
     "medicationsTitle": "Your medications",
     "medicationsHelp": "The medications the Meds pill asks about. A removed one keeps its history.",
+    "medicationCard": "Medication card",
+    "medicationCardHelp": "\"Did you take your medication?\" on this device, only on a day a medication is due.",
     "customHelp": "Trackers you name yourself: a scale, a number or a yes or no. Up to {{max}}.",
     "yourCustomTrackers": "Your custom trackers",
     "categoryMoodMind": "Mood & mind",
@@ -291,23 +286,17 @@
     "kindBuild": "To build",
     "kindWatch": "To watch",
     "editHabit": "Edit {{name}}",
-    "removeHabit": "Remove {{name}}",
     "ownHabitsFull": "You have {{max}} habits of your own, the most there can be.",
     "addCustomTrackerHint": "Track anything you want",
     "maxReached": "Maximum {{max}} custom trackers reached.",
     "customTrackers": "Custom trackers",
-    "newCustomTracker": "New custom tracker",
-    "newMedication": "New medication",
     "newMedicationHelp": "The Meds pill asks about it from its start day, at the times you set.",
     "trackerNamePlaceholder": "Tracker name",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "Name",
     "typeLabel": "Type",
-    "colorLabel": "Color",
     "preview": "Preview",
     "startFromLast": "Remember last entry",
     "chooseIcon": "Choose icon",
-    "iconLabel": "Icon",
     "startFromLastHelp": "Good for things that rarely change, like your weight or a daily dose."
   },
   "factors": {
@@ -316,7 +305,6 @@
     "count_other": "{{count}} factors",
     "remove": "Remove {{name}}",
     "placeholder": "visitors, migraine, overtime",
-    "add": "Add",
     "empty": "Add the things that shape your days, then tap them on any day.",
     "commaHint": "Add several at once, separated by commas.",
     "editList": "Change these factors",
@@ -339,8 +327,6 @@
   "habits": {
     "prompt": "What did you do today?",
     "count": "{{yes}}/{{total}}",
-    "yes": "Yes",
-    "no": "No",
     "empty": "Pick the questions in the tracker setup.",
     "changeQuestions": "Change these questions",
     "q": {
@@ -399,9 +385,7 @@
     "prompt": "How much caffeine did you have?"
   },
   "flow": {
-    "next": "Next",
     "finish": "Finish",
-    "done": "Done",
     "step": "Tracker {{n}} of {{total}}"
   }
 }

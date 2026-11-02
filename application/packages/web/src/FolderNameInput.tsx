@@ -63,7 +63,7 @@ export function FolderNameInput({
         placeholder={t('folders.namePlaceholder')}
         enterKeyHint="done"
         className={`min-w-0 flex-1 bg-transparent border-b border-accent/50 focus:border-accent outline-none text-pn placeholder:text-pn-muted ${
-          rail ? 'text-[15px] lg:text-[13px] font-medium' : 'text-[14px]'
+          rail ? 'text-row lg:text-compact font-medium' : 'text-body'
         }`}
       />
       <button
@@ -77,7 +77,7 @@ export function FolderNameInput({
         aria-label={t('folders.saveName')}
         className={`${button} text-accent hover:border-accent`}
       >
-        <Check size={14} />
+        <Check />
       </button>
       <button
         type="button"
@@ -90,7 +90,7 @@ export function FolderNameInput({
         aria-label={t('common:actions.cancel')}
         className={`${button} text-pn-muted hover:text-accent hover:border-accent`}
       >
-        <X size={14} />
+        <X />
       </button>
     </>
   );

@@ -6,19 +6,18 @@
     "deselect": "Deseleziona nota",
     "pinProtected": "Protetta da PIN",
     "readOnly": "Sola lettura",
-    "file": "File",
     "empty": "Vuota",
     "noContent": "Nessun contenuto",
     "notBackedUp": "Senza backup",
     "archived": "Archiviato",
-    "entryDate": "Data della pagina",
     "date": "Data",
-    "dayOf": "giorno {{n}} di {{total}}"
+    "dayOf": "giorno {{n}} di {{total}}",
+    "reminders_one": "{{count}} promemoria",
+    "reminders_other": "{{count}} promemoria"
   },
   "header": {
     "new": "Nuova",
     "newNote": "Nuova nota",
-    "trash": "Cestino",
     "newEvent": "Nuovo evento"
   },
   "folderChip": {
@@ -31,7 +30,6 @@
   },
   "vaultNew": {
     "ariaLabel": "Nuovo elemento della cassaforte",
-    "login": "Accesso",
     "card": "Carta di credito",
     "sshKey": "Chiave SSH",
     "generator": "Password"
@@ -39,15 +37,14 @@
   "newMenu": {
     "note": "Nota",
     "task": "Attività",
-    "kanban": "Bacheca Kanban",
+    "kanban": "Kanban",
+    "drawing": "Disegno",
     "journal": "Diario",
     "login": "Accesso",
-    "file": "File",
     "bookmark": "Segnalibro",
     "clipPage": "Salva pagina web",
     "contact": "Contatto",
-    "event": "Evento",
-    "quickAdd": "Aggiunta rapida"
+    "event": "Evento"
   },
   "vaultFilter": {
     "all": "Tutti",
@@ -64,14 +61,14 @@
   "trash": {
     "empty": "Svuota",
     "emptyHover": "Elimina tutte le note nel cestino",
-    "storage": "Spazio",
     "autoDelete": "Elimina dopo 30 giorni"
   },
   "search": {
     "sortOptions": "Opzioni di ordinamento e visualizzazione",
     "placeholderVault": "Cerca nella cassaforte…",
     "placeholderNotes": "Cerca tra le note…",
-    "placeholderEvents": "Cerca tra gli eventi…"
+    "placeholderEvents": "Cerca tra gli eventi…",
+    "placeholderDrawings": "Cerca tra i disegni…"
   },
   "selection": {
     "countOf": "{{selected}} di {{total}} selezionati",
@@ -82,10 +79,11 @@
     "noMatches": "Nessun risultato.",
     "vault": "La cassaforte è vuota.",
     "notes": "Ancora nessuna nota.",
+    "drawings": "Ancora nessun disegno.",
+    "drawingsLine": "Fai uno schizzo, pianifica o crea la mappa di un'idea. I disegni possono collegarsi alle tue note, ma non ne mostrano il contenuto.",
     "archive": "Niente in archivio.",
     "trash": "Il cestino è vuoto.",
     "filtered": "Nessun elemento corrisponde ai tuoi filtri.",
-    "clearFilters": "Rimuovi i filtri",
     "filteredAfter": "per visualizzarli.",
     "hiddenInAll_other": "{{count}} elementi sono nascosti dal filtro Mostra in «Tutti». Apri il filtro accanto a Tutti per mostrarli.",
     "inOtherSpace_other": "{{count}} elementi sono nel tuo spazio {{space}}. Passa a {{space}} nella barra laterale per vederli.",
@@ -98,16 +96,6 @@
     "other": "Altro",
     "collapseAll": "Comprimi tutti i gruppi",
     "expandAll": "Espandi tutti i gruppi"
-  },
-  "headerLabel": {
-    "allItems": "Tutti",
-    "untagged": "Senza tag",
-    "journals": "Diario",
-    "vault": "Cassaforte",
-    "pinned": "Fissati",
-    "archive": "Archivio",
-    "notes": "Note",
-    "calendar": "Calendario"
   },
   "footerStats": {
     "journals_one": "Pagina di diario",
@@ -122,6 +110,8 @@
     "bookmarks_other": "Segnalibri",
     "contacts_one": "Contatto",
     "contacts_other": "Contatti",
+    "drawings_one": "Disegno",
+    "drawings_other": "Disegni",
     "files_one": "File",
     "files_other": "File",
     "lists_one": "Elenco",
@@ -149,7 +139,6 @@
     "reload": "Ricarica"
   },
   "banner": {
-    "dismiss": "Ignora",
     "proActivationPending": "Pagamento ricevuto, ma l'attivazione di Pro sta richiedendo più tempo del solito. Aggiorna tra un minuto, oppure contatta l'assistenza se non si attiva.",
     "snapshotPaused": "La cronologia delle note è in pausa. Il tuo piano Pro risulta inattivo. Le nuove modifiche non verranno salvate finché Pro non viene ripristinato.",
     "restorePro": "Ripristina Pro",
@@ -157,8 +146,7 @@
     "updateCard": "Aggiorna carta"
   },
   "sidebar": {
-    "collapse": "Comprimi barra laterale",
-    "expand": "Espandi barra laterale"
+    "collapse": "Comprimi barra laterale"
   },
   "notesList": {
     "collapse": "Comprimi elenco note",
@@ -195,24 +183,11 @@
     "titlePlaceholder": "Senza titolo (clicca per modificare o lascia che si generi da solo)",
     "titlePlaceholderLogin": "es. GitHub",
     "titlePlaceholderCard": "es. Visa che termina con 4242",
-    "titlePlaceholderSshKey": "es. chiave di deploy GitHub",
-    "pin": "Fissa",
-    "unpin": "Non fissare",
-    "restore": "Ripristina",
-    "deleteForever": "Elimina per sempre",
-    "moveToTrash": "Sposta nel cestino",
-    "noteOptions": "Opzioni nota",
     "readOnlyToggle": "Sola lettura. Disattivala in",
     "menu": "Menu",
-    "showMarkdown": "Mostra markdown",
     "showFormatted": "Mostra formattato",
     "invisiblesShow": "Mostra caratteri invisibili",
     "invisiblesHide": "Nascondi caratteri invisibili",
-    "findInNote": "Trova nella nota",
-    "navPrev": "Precedente",
-    "navNext": "Successivo",
-    "navPrevTab": "Scheda precedente",
-    "navNextTab": "Scheda successiva",
     "undo": "Annulla",
     "redo": "Ripeti",
     "hide": "Nascondi",
@@ -222,9 +197,7 @@
     "widthDefault": "Larghezza predefinita",
     "widthWide": "Più largo",
     "widthFull": "Larghezza piena",
-    "burn": "Condividi & Burn After Reading",
     "titlePlaceholderLink": "Nome del segnalibro",
-    "titlePlaceholderContact": "Nome",
     "notBackedUpTooLarge": "Oltre il limite di 1 MB, quindi senza backup. Sposta le immagini negli allegati o dividi la nota.",
     "notBackedUpFailed": "Senza backup. Ultimo errore: {{message}}. Nuovo tentativo in corso.",
     "unknownType": "Questo elemento è stato creato con una versione più recente di PrivacyNotes. Aggiorna l'app per aprirlo."
@@ -241,15 +214,17 @@
     "printTextTitle": "Stampa solo il testo",
     "printTextDesc": "Mantiene il titolo. Omette data, cartella e tag.",
     "burnTitle": "Condividi & Burn After Reading",
-    "burnDesc": "Pubblica questa nota come link a visualizzazione singola. Il link si autodistrugge dopo la lettura. La tua nota resta al sicuro nel tuo account."
+    "burnDesc": "Pubblica questa nota come link a visualizzazione singola. Il link si autodistrugge dopo la lettura. La tua nota resta al sicuro nel tuo account.",
+    "drawingFileTitle": "Disegno (.excalidraw)",
+    "drawingFileDesc": "Si apre in Excalidraw e Obsidian, con le sue immagini.",
+    "drawingPngTitle": "Immagine (.png)",
+    "drawingPngDesc": "L'intero disegno come un'unica immagine."
   },
   "weekReview": {
     "title": "Riepilogo della settimana",
     "daysLogged": "{{count}}/7 registrati",
     "mood": "Umore",
-    "sleep": "Sonno",
-    "meds": "Farmaci",
-    "activity": "Attività"
+    "meds": "Farmaci"
   },
   "footer": {
     "settings": "Impostazioni",
@@ -264,12 +239,10 @@
     "words_one": "Parola",
     "words_other": "Parole",
     "zen": "Modalità Zen",
-    "appearance": "Aspetto",
     "lockApp": "Blocca l'app",
     "lockAppSetUp": "Imposta prima un PIN in Sicurezza",
     "goToTop": "Vai all'inizio",
     "goToEnd": "Vai alla fine",
-    "signOut": "Esci",
     "signingOut": "Disconnessione…",
     "switchToLight": "Passa alla modalità chiara",
     "switchToDark": "Passa alla modalità scura"
@@ -307,10 +280,11 @@
     "bodyMulti": "Questi {{count}} file sembrano markdown. Vuoi importarli come note così da poterli leggere e modificare, oppure archiviarli come allegati cifrati?"
   },
   "bulkTrash": {
-    "title": "Sposta nel cestino",
-    "body_one": "Spostare <highlight>{{count}} elemento</highlight> nel cestino? Potrai ripristinarlo più tardi.",
-    "body_other": "Spostare <highlight>{{count}} elementi</highlight> nel cestino? Potrai ripristinarli in seguito.",
-    "readOnlyTitle": "Sola lettura",
+    "body_one": "Eliminare <highlight>{{count}} elemento</highlight>? Spostalo nel cestino per ripristinarlo in seguito, oppure eliminalo per sempre.",
+    "body_other": "Eliminare <highlight>{{count}} elementi</highlight>? Spostali nel cestino per ripristinarli in seguito, oppure eliminali per sempre.",
+    "confirm": "Sposta nel cestino",
+    "keys": "Fuori da questa finestra, <kbd>{{trash}}</kbd> sposta subito un elemento nel cestino e <kbd>{{ask}}</kbd> apre questa finestra anche dopo Non chiedere più.",
+    "dontAskAgain": "Non chiedere più",
     "readOnlyAcknowledge": "Ho capito",
     "readOnlyBlocked_one": "Questo elemento è in <highlight>sola lettura</highlight>, quindi non può finire nel cestino. Disattiva prima la sola lettura nelle opzioni nota.",
     "readOnlyBlocked_other": "Tutti i <highlight>{{count}} elementi</highlight> sono in sola lettura, quindi nessuno può finire nel cestino. Disattiva prima la sola lettura nelle opzioni nota.",
@@ -319,21 +293,12 @@
   },
   "deleteCheckedTasks": {
     "title": "Eliminare gli elementi spuntati?",
-    "confirm": "Elimina",
     "body_one": "<highlight>{{count}} elemento</highlight> verrà eliminato da questa nota. L'operazione è irreversibile.",
     "body_other": "<highlight>{{count}} elementi</highlight> verranno eliminati da questa nota, elementi annidati inclusi. L'operazione è irreversibile."
   },
-  "bulkDelete": {
-    "body_one": "Eliminare definitivamente <highlight>{{count}} nota</highlight>? L'operazione è irreversibile.",
-    "body_other": "Eliminare definitivamente <highlight>{{count}} note</highlight>? L'operazione è irreversibile."
-  },
   "tagConfirm": {
     "mergeTitle": "Unisci tag",
-    "deleteTitle": "Elimina tag",
-    "deleteWithNotesTitle": "Elimina tag e note",
     "mergeConfirm": "Unisci",
-    "deleteConfirm": "Elimina tag",
-    "moveToTrash": "Sposta nel cestino",
     "mergeBody_one": "Il tag <highlight>“{{targetTag}}”</highlight> esiste già. Unire <highlight>{{count}} nota</highlight> attualmente taggata “{{tag}}”?",
     "mergeBody_other": "Il tag <highlight>“{{targetTag}}”</highlight> esiste già. Unire <highlight>{{count}} note</highlight> attualmente taggate “{{tag}}”?",
     "deleteBody_one": "Rimuovere il tag <highlight>“{{tag}}”</highlight> da <highlight>{{count}} nota</highlight>? Le note non vengono eliminate.",
@@ -363,5 +328,35 @@
     "missing": "Non ancora creata",
     "protectedHidden_one": "{{count}} elemento protetto da PIN non mostrato",
     "protectedHidden_other": "{{count}} elementi protetti da PIN non mostrati"
+  },
+  "drawing": {
+    "fullScreen": "Schermo intero",
+    "frame": "Cornice",
+    "laser": "Puntatore laser",
+    "bar": {
+      "hiddenNote": "Funzionano comunque con i loro tasti."
+    },
+    "resetTitle": "Reimpostare la tela?",
+    "resetBody": "Questo rimuove tutto ciò che c'è sulla tela. Annulla lo riporta indietro.",
+    "hotkeysTitle": "Scorciatoie da tastiera per il disegno",
+    "tools": {
+      "label": "Strumenti di disegno",
+      "keepTool": "Mantieni lo strumento dopo aver disegnato",
+      "hand": "Sposta la tela",
+      "rectangle": "Rettangolo",
+      "diamond": "Rombo",
+      "ellipse": "Ellisse",
+      "arrow": "Freccia",
+      "line": "Linea",
+      "pen": "Penna",
+      "text": "Casella di testo",
+      "eraser": "Gomma",
+      "resetZoom": "Reimposta lo zoom",
+      "open": "Apri un file di disegno",
+      "reset": "Reimposta la tela",
+      "style": "Stile",
+      "more": "Più strumenti",
+      "fewer": "Meno strumenti"
+    }
   }
 }

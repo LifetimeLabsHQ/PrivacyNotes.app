@@ -2,9 +2,9 @@
 //
 // The help chip in a modal shows a real FAQ question, because the question is
 // the payload: it is written the way a reader types it into a search box
-// (ops/docs/help-center.md section 2). The app cannot read those questions at
+// (docs/contrib/help-center.md section 2). The app cannot read those questions at
 // runtime - faq.json is 1.4 MB across the locales and i18n.ts deliberately
-// keeps it out of both catalog globs (ops/docs/bundle-size.md, build-only
+// keeps it out of both catalog globs (docs/contrib/bundle-size.md, build-only
 // catalogs). Hand-copying each question into a normal catalog key would work
 // exactly once: /help questions get rewritten for search, and the copy would
 // go on confidently saying the old thing with nothing to flag it - the same
@@ -33,7 +33,7 @@
 //   node tools/sync-help-chips.mjs           write the files
 //   node tools/sync-help-chips.mjs --check   fail if they are out of date
 //
-// Spec: ops/docs/help-center.md (section 9 - the in-app help chip)
+// Spec: docs/contrib/help-center.md (section 9 - the in-app help chip)
 
 import { readFileSync, readdirSync, writeFileSync, existsSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';

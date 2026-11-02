@@ -5,7 +5,7 @@
  * (`--pn-logo-tint` in index.css): a layer cut
  * to the logo's own shape, blended in `color` mode, so the mark keeps its
  * light and dark parts and takes the accent's hue. Hovering the nearest
- * `.pn-logo-host` shows the real colors. Spec: ops/docs/color-themes.md (section 6)
+ * `.pn-logo-host` shows the real colors. Spec: docs/contrib/color-themes.md (section 6)
  */
 export function LogoIcon({ size = 24, className = '', tint = false }: { size?: number; className?: string; tint?: boolean }) {
   const img = (

@@ -16,7 +16,7 @@ import SURFACES from './helpChips.json';
  *
  * `helpQuestions` is a GENERATED namespace: tools/sync-help-chips.mjs copies
  * the linked questions out of faq.json, which is 1.4 MB across the locales
- * and stays out of the bundle (i18n.ts, ops/docs/bundle-size.md). Riding the
+ * and stays out of the bundle (i18n.ts, docs/contrib/bundle-size.md). Riding the
  * normal catalog pipeline rather than a private loader is what keeps it
  * cheap: a separate module tree with its own glob measured 2.32 kB gzipped
  * on the boot path, against roughly 0.2 kB here. `pnpm check:help-chips`
@@ -29,7 +29,7 @@ import SURFACES from './helpChips.json';
  * carries the same mark. Rail means "a guide for THIS ROW", chip means "a
  * page for THIS SCREEN".
  *
- * Spec: ops/docs/help-center.md (section 9 - the in-app help chip)
+ * Spec: docs/contrib/help-center.md (section 9 - the in-app help chip)
  */
 export function HelpChip({
   surface,
@@ -64,13 +64,13 @@ export function HelpChip({
           href={siteHref(`${helpPath(locale)}/${id}`)}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-start gap-2 max-w-full text-[13px] text-accent hover:underline"
+          className="inline-flex items-start gap-2 max-w-full text-help text-accent hover:underline"
         >
           {/* Centred inside a 20px box, which is the text's own line height.
               `mt-px` guessed at it and left the mark riding high above the
               first line whenever the question wrapped. */}
           <span className="flex h-5 shrink-0 items-center">
-            <BookOpenText size={15} aria-hidden="true" />
+            <BookOpenText aria-hidden="true" />
           </span>
           {/* No new-tab arrow. It orphaned onto a line of its own whenever the
               question's last line ended near the wrap point, and neither

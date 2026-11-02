@@ -1,0 +1,35 @@
+// The app catalog keys the extension shows, picked at build time so the
+// extension uses the app's own words (a Save is the app's Save) without a
+// second copy of any string. A path names a value or a whole group.
+// Spec: docs/internal/plans/browser-extension-build.md (section 5, strings; decision E5)
+export const BORROWED_KEYS: readonly string[] = [
+  'common:actions',
+  'common:cardForm.notes',
+  'notes:newMenu.note',
+  'notes:newMenu.bookmark',
+  'shell:bookmarks.saveAsBookmark',
+  'shell:clipper.saveAnyway',
+  'shell:clipper.sourceLabel',
+  'shell:clipper.imageLabel',
+  'shell:checkIn.saved',
+  'auth:loginForm',
+  'shell:vaultItem.fieldName',
+  'shell:vaultItem.copied',
+  'notes:vaultFilter',
+  'shell:tagsRail.pinned',
+  'shell:tagsRail.vault',
+  'shell:tagsRail.bookmarks',
+  'security:timeout',
+  'settingsSearch:resultCount',
+  'common:sshKeyForm.copyPublicKey',
+  'editor:noteLink.open',
+  'common:cardForm.copyCardNumber',
+  'notes:settings.groupBrand',
+  'security:modal.tabPin',
+  'security:pinInput',
+  'security:pinTab.kindPin',
+  'security:pinTab.kindPasscode',
+  'security:passcodeInput',
+  'security:mfaPrompt.codeLabel',
+  'security:connectedAccounts.disconnect',
+];

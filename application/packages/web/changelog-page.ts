@@ -34,7 +34,7 @@ import { LIGHTBOX_CSS, brandMark, BUG_ICON, CHROME_CSS, GITHUB_ICON, LINK_ICON, 
 // no-JS reader never sees a dead control; the month index does NOT, because
 // its rows are real anchors that work either way.
 //
-// The changelog stays English-only by policy (ops/docs/i18n-spec.md,
+// The changelog stays English-only by policy (docs/contrib/i18n-spec.md,
 // translation tiers): it churns with every release and the audience
 // reads English, so there are no locale variants of this page.
 
@@ -50,7 +50,7 @@ const FEED_PATH = '/changelog/feed.xml';
 const MD_PATH = '/changelog.md';
 
 /** How many releases are visible before the reader asks for more. */
-// Spec: ops/docs/archive/ui-patterns.md section 58 (changelog rail + reveal)
+// Spec: docs/internal/design/ui-patterns.md section 58 (changelog rail + reveal)
 const PAGE_SIZE = 25;
 
 type ChangelogItem = { type: 'new' | 'improved' | 'fixed'; text: string; shot?: string | string[] };
@@ -146,16 +146,16 @@ const SEARCH_ICON =
   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
 
 const CLEAR_ICON =
-  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>';
+  '<svg data-ic viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>';
 
 const CHEVRON_ICON =
-  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
+  '<svg data-ic viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
 
 const STACK_ICON =
-  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 12 12 17 21 12"/><polyline points="3 17 12 22 21 17"/><polygon points="12 2 3 7 12 12 21 7 12 2"/></svg>';
+  '<svg data-ic viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 12 12 17 21 12"/><polyline points="3 17 12 22 21 17"/><polygon points="12 2 3 7 12 12 21 7 12 2"/></svg>';
 
 const PHOTO_ICON =
-  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-5-5-8 8"/></svg>';
+  '<svg data-ic viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-5-5-8 8"/></svg>';
 
 /** Shots per release version; see changelog-shots.ts. */
 type ShotMap = Map<string, Shot[]>;
@@ -197,24 +197,24 @@ function renderGallery(shots: Shot[]): string {
   const data = shots.map((s) => ({ src: s.src, dark: s.dark?.src ?? null, alt: s.alt }));
   // The hero keeps the height of its tallest picture at the width it is
   // drawn, so the arrows and the thumbnails stay put while a reader steps
-  // through shots of different sizes. 42px is the hero's padding and border.
+  // through shots of different sizes. --hero-pad is the hero's padding and border (42px, 14px on a phone).
   const fits = shots
     .flatMap((s) => (s.dark ? [s, s.dark] : [s]))
-    .map((s) => `min(${css(s.h)}px,560px,(100cqw - 42px)*${(s.h / s.w).toFixed(4)})`);
+    .map((s) => `min(${css(s.h)}px,560px,(100cqw - var(--hero-pad,42px))*${(s.h / s.w).toFixed(4)})`);
   return `<div class="cl-gal" data-shots="${esc(JSON.stringify(data))}">
 <div class="cl-stage" style="--hero-h:max(${fits.join(',')})"><a class="cl-hero" href="${first.src}" data-i="0">${shotImgs(first, first.alt)}</a></div>${thumbs}
 </div>`;
 }
 
 const TYPE_ICON: Record<ChangelogItem['type'], string> = {
-  new: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg>',
+  new: '<svg data-ic viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg>',
   improved:
-    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="18" x2="18" y2="6"/><polyline points="10 6 18 6 18 14"/></svg>',
+    '<svg data-ic viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="18" x2="18" y2="6"/><polyline points="10 6 18 6 18 14"/></svg>',
   fixed: BUG_ICON.replace('width="15" height="15"', 'width="16" height="16"'),
 };
 
 /** The public tracker, where every issue an item answers is linked. */
-const ISSUES_URL = 'https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues';
+const ISSUES_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues';
 
 function renderReleases(releases: ChangelogRelease[], shotMap: ShotMap): string {
   let prevMonth: string | null = null;
@@ -324,7 +324,7 @@ ${months}
 <a class="ritem" href="${ISSUES_URL}?q=is%3Aissue+state%3Aclosed" target="_blank" rel="noopener noreferrer">${GITHUB_ICON}<span class="rlbl">Closed issues</span></a>
 </div>
 <div class="rail rail-extra">
-<a class="ritem r-bug" href="https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues" target="_blank" rel="noopener noreferrer">${BUG_ICON}<span class="rlbl">Report a bug</span></a>
+<a class="ritem r-bug" href="https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues" target="_blank" rel="noopener noreferrer">${BUG_ICON}<span class="rlbl">Report a bug</span></a>
 <a class="ritem r-rss" href="${FEED_PATH}">${RSS_ICON}<span class="rlbl">RSS feed</span></a>
 <a class="ritem r-md" href="${MD_PATH}">${TEXT_ICON}<span class="rlbl">Plain text for AI</span></a>
 </div>
@@ -343,7 +343,7 @@ const PAGE_CSS = `.cl-month{margin:30px 0 4px;scroll-margin-top:16px}
 .perma:hover{color:var(--accent)}
 .perma.done{opacity:1;color:var(--new-fg)}
 .rail-next,.rail-extra{margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}
-.rail-note{margin:0 4px 8px;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.rail-note{margin:0 4px 8px;font-size:var(--fs-compact);line-height:1.5;color:var(--muted)}
 /* The only red control on the site's static pages: it is the only one that
    files something against us, and it should not read as a section link. */
 .r-bug{color:var(--bad)}
@@ -352,14 +352,14 @@ const PAGE_CSS = `.cl-month{margin:30px 0 4px;scroll-margin-top:16px}
 .r-bug:hover svg{color:var(--bad)}
 .cl-more{margin:4px 0 0;padding-top:26px;border-top:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:10px}
 .cl-more[hidden]{display:none}
-.cl-more button{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;font-family:inherit;color:var(--fg);background:none;border:1px solid var(--line);border-radius:10px;padding:11px 20px;cursor:pointer}
+.cl-more button{display:inline-flex;align-items:center;gap:8px;font-size:var(--fs-body);font-weight:600;font-family:inherit;color:var(--fg);background:none;border:1px solid var(--line);border-radius:10px;padding:11px 20px;cursor:pointer}
 .cl-more button:hover{border-color:var(--faint);color:var(--accent)}
 .cl-more button:hover svg{color:var(--accent)}
 .cl-more svg{color:var(--faint)}
-.cl-rest{font-size:12.5px;color:var(--faint)}
+.cl-rest{font-size:var(--fs-compact);color:var(--faint)}
 .cl-origin{margin:34px 0 0;padding:22px 24px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
 .cl-origin .eyebrow{margin:0 0 10px}
-.cl-origin p{margin:0;font-size:15px;line-height:1.62;color:var(--muted)}
+.cl-origin p{margin:0;font-size:var(--fs-row);line-height:1.62;color:var(--muted)}
 /* Screenshots. The gallery sits between the title and the items; .sd is the
    dark copy, swapped in by the same two selectors themeVarsCss uses. */
 .cl-gal{margin:0 0 18px}
@@ -371,22 +371,22 @@ const PAGE_CSS = `.cl-month{margin:30px 0 4px;scroll-margin-top:16px}
 .cl-hero{display:flex;justify-content:center;align-items:center;padding:20px;border:1px solid var(--line);border-radius:12px;background:var(--rail);cursor:zoom-in}
 .cl-hero img{box-shadow:0 1px 2px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.08)}
 .cl-thumbs{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-top:12px}
-.cl-stage{position:relative;container-type:inline-size}
+.cl-stage{position:relative;container-type:inline-size;--hero-pad:42px}
 .cl-stage .cl-hero{min-height:calc(var(--hero-h,0px) + 42px)}
 .cl-step{position:absolute;top:50%;margin-top:-20px;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--fg);cursor:pointer;opacity:.9;box-shadow:0 1px 4px rgba(0,0,0,.12)}
 .cl-step:hover{opacity:1;color:var(--accent);border-color:var(--accent)}
 .cl-step[hidden]{display:none}
 .cl-step.prev{left:10px}
 .cl-step.next{right:10px}
-@media(max-width:600px){.cl-thumbs{gap:4px}.cl-step{width:34px;height:34px;margin-top:-17px}}
+@media(max-width:600px){.cl-thumbs{gap:4px}.cl-step{width:34px;height:34px;margin-top:-17px}.cl-stage{--hero-pad:14px}.cl-hero{padding:6px}.cl-stage .cl-hero{min-height:calc(var(--hero-h,0px) + 14px)}}
 .cl-th{display:block;border:1px solid var(--line);border-radius:8px;overflow:hidden;opacity:.72;transition:opacity .12s ease}
 .cl-th img{width:100%;max-height:none;border-radius:0;aspect-ratio:16/10;object-fit:cover;object-position:top left}
 .cl-th:hover,.cl-th.on{opacity:1}
 .cl-th.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
-.shotchip{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:1px 8px 1px 6px;border:1px solid var(--line);border-radius:999px;font-size:12px;line-height:18px;font-weight:500;color:var(--muted);text-decoration:none;white-space:nowrap;vertical-align:1px;cursor:zoom-in}
-.shotchip svg{width:13px;height:13px}
+.shotchip{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:0 8px 0 6px;height:22px;box-sizing:border-box;border:1px solid var(--line);border-radius:999px;font-size:var(--fs-small);line-height:1;font-weight:500;color:var(--muted);text-decoration:none;white-space:nowrap;vertical-align:middle;cursor:zoom-in}
 .shotchip:hover{color:var(--accent);border-color:var(--accent)}
-.issuechip{margin-left:6px;font-size:12px;font-weight:500;color:var(--muted);text-decoration:none;white-space:nowrap}
+/* The issue number and the Screenshot pill share one box height and sit on the text's middle, so they line up with each other and with the words. */
+.issuechip{display:inline-flex;align-items:center;height:22px;margin-left:6px;font-size:var(--fs-small);line-height:1;font-weight:500;color:var(--muted);text-decoration:none;white-space:nowrap;vertical-align:middle}
 .issuechip:hover{color:var(--accent);text-decoration:underline}
 ${LIGHTBOX_CSS}
 @media(max-width:860px){

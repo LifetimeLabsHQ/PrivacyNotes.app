@@ -20,7 +20,7 @@
  *   - Labels are free strings. The picker suggests a vocabulary; whatever
  *     the source said is kept, including a custom label.
  *
- * Spec: ops/docs/archive/contacts-pillar.md (section 5)
+ * Spec: docs/internal/specs/contacts-pillar.md (section 5)
  */
 
 /** A labelled value: a phone, an email, a website, a profile, a date, a related name. */
@@ -491,6 +491,20 @@ export function contactBirthday(c: Contact): { month: number; day: number } | nu
   return d && d.month >= 1 && d.month <= 12 && d.day >= 1 && d.day <= 31 ? { month: d.month, day: d.day } : null;
 }
 
+/** The month and day of every other labelled date row (an anniversary, a
+ *  custom label), in card order. A row with no label, or a value in no known
+ *  shape, is left out. The birthday row is `contactBirthday`'s. */
+export function contactOtherDates(c: Contact): { label: string; month: number; day: number }[] {
+  const out: { label: string; month: number; day: number }[] = [];
+  for (const row of c.dates) {
+    const label = row.label.trim();
+    if (!label || label === BIRTHDAY_LABEL) continue;
+    const d = parseContactDate(row.value);
+    if (d && d.month >= 1 && d.month <= 12 && d.day >= 1 && d.day <= 31) out.push({ label, month: d.month, day: d.day });
+  }
+  return out;
+}
+
 /**
  * A stored date as the reader's language writes it: "14 March" for a date
  * with no year, "4 March 2015" with one. Unparseable text is shown as it is.
@@ -529,7 +543,7 @@ export function formatAddressLines(a: ContactAddress): string[] {
  * (or neither has a number), or when they share an email address. The
  * fallback carries the weight: Apple exports carry a UID, Android and
  * Google exports carry none, and a macOS export can carry only an email.
- * Spec: ops/docs/archive/contacts-pillar.md (section 7.5)
+ * Spec: docs/internal/specs/contacts-pillar.md (section 7.5)
  */
 
 export type ContactMatchIndex = {

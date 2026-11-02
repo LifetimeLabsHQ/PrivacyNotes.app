@@ -26,14 +26,11 @@
     "noResults": "Aucun résultat"
   },
   "deleteNote": {
-    "title": "Supprimer définitivement",
     "confirm": "Supprimer définitivement",
-    "untitled": "Sans titre",
     "body": "Supprimer définitivement <highlight>« {{title}} »</highlight> ? Cette action est irréversible."
   },
   "emptyTrash": {
     "title": "Vider la corbeille",
-    "confirm": "Supprimer définitivement",
     "body_one": "Supprimer définitivement <highlight>{{count}} note</highlight> ? Cette action est irréversible.",
     "body_other": "Supprimer définitivement <highlight>{{count}} notes</highlight> ? Cette action est irréversible."
   },
@@ -61,7 +58,6 @@
   },
   "palette": {
     "label": "Commandes",
-    "open": "Commandes",
     "empty": "Aucune commande correspondante",
     "groups": {
       "features": "Fonctionnalités",
@@ -86,7 +82,7 @@
       "insertDate": "Insérer la date",
       "insertDateTime": "Insérer la date et l'heure",
       "clearFilters": "Effacer les filtres",
-      "moveToTrash": "Mettre la note à la corbeille",
+      "moveToTrash": "Supprimer la note",
       "closeTab": "Fermer l'onglet ou la note",
       "nextTab": "Onglet suivant",
       "previousTab": "Onglet précédent",
@@ -109,10 +105,8 @@
     "move": "déplacer",
     "open": "ouvrir",
     "openInTab": "ouvrir dans un onglet",
-    "openLink": "Ouvrir",
     "edit": "modifier",
     "close": "fermer",
-    "tags": "Étiquettes",
     "folders": "Dossiers",
     "tagItems_one": "{{count}} élément",
     "tagItems_other": "{{count}} éléments",
@@ -175,17 +169,14 @@
     "downloadPublicKey": "Télécharger la clé publique",
     "downloadPrivateKey": "Télécharger la clé privée",
     "downloadHint": "Déplace la clé téléchargée dans ~/.ssh et lance chmod 600 dessus, sinon ssh la refuse.",
+    "downloadHintDesktop": "PrivacyNotes n'enregistre pas dans ~/.ssh, pour protéger les clés qui s'y trouvent. Enregistre la clé ailleurs, déplace-la dans ~/.ssh et lance chmod 600 dessus, sinon ssh la refuse.",
+    "downloadHintWindows": "PrivacyNotes n'enregistre pas dans ton dossier .ssh, pour protéger les clés qui s'y trouvent. Enregistre la clé ailleurs et déplace-la dans %USERPROFILE%\\.ssh. Windows n'a pas besoin de chmod.",
     "downloadFailed": "Le fichier de clé n'a pas pu être enregistré. Vérifie le fichier et réessaie.",
     "passphrase": "Phrase secrète",
     "passphrasePlaceholder": "Phrase secrète de la clé (le cas échéant)",
     "show": "Afficher",
     "hide": "Masquer",
-    "copyPassphrase": "Copier la phrase secrète",
-    "notes": "Notes",
-    "notesPlaceholder": "Notes supplémentaires (facultatif)",
-    "requirePin": "Exiger le PIN pour afficher",
-    "whatDoesThisDo": "À quoi ça sert ?",
-    "setUpPinFirst": "Configure d'abord un PIN dans les paramètres de sécurité."
+    "copyPassphrase": "Copier la phrase secrète"
   },
   "tagInput": {
     "placeholder": "Ajoute des étiquettes… séparées par une virgule, # ou Entrée",
@@ -257,7 +248,6 @@
       "on ouvre le coffre en silence",
       "déchiffré localement. ignoré mondialement",
       "on déchiffre comme si de rien n'était",
-      "du texte en clair, produit localement",
       "on transforme tes idées en soupe illisible",
       "encore un chef-d'œuvre chiffré en approche",
       "on remet de l'ordre dans le chaos chiffré",
@@ -281,17 +271,14 @@
     "changesSome_other": "{{count}} de ces notes ont des modifications non sauvegardées qui seraient perdues."
   },
   "ninja": {
-    "recent": "Récents",
     "topHit": "Meilleur résultat",
     "trashEmpty": "La corbeille est vide",
     "allThemes": "Tous les thèmes",
     "features": {
       "stats": {
-        "label": "Statistiques",
         "detail": "Ton écriture, tes séries et tes suivis dans le temps"
       },
       "trackers": {
-        "label": "Suivis",
         "detail": "Humeur, habitudes, facteurs et médication"
       },
       "medication": {
@@ -311,7 +298,6 @@
         "detail": "Un mot de passe ou une phrase de passe robuste, prêt à copier"
       },
       "themes": {
-        "label": "Thèmes",
         "detail": "Thèmes de couleur pour le mode clair et le mode sombre"
       }
     },
@@ -322,7 +308,6 @@
     "commands": {
       "syncResume": "Reprendre la synchro",
       "changelog": "Nouveautés",
-      "help": "Aide",
       "themesPage": "Thèmes de la communauté",
       "website": "Site web de PrivacyNotes"
     },

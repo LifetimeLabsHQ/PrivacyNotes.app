@@ -11,7 +11,7 @@ import { TextSelection, type EditorState, type Transaction } from '@tiptap/pm/st
  * platform collator in the reader's language, with the same settings as
  * folders and tags (case and accents ignored, numbers by value).
  *
- * Spec: ops/issues/archive/0391.md
+ * Spec: docs/internal/issues/archive/0391.md
  */
 
 type LineSortDirection = 'asc' | 'desc';

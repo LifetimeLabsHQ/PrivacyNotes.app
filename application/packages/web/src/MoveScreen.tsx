@@ -44,7 +44,7 @@ const PhraseTab = lazy(() =>
  * normal auth restore run before App.tsx picks this screen, so the
  * session the sync needs always exists by now.
  *
- * Spec: ops/docs/domain-split.md (retirement phase)
+ * Spec: docs/internal/domain-split.md (retirement phase)
  */
 
 type MoveState = 'idle' | 'syncing' | 'error' | 'conflict';
@@ -111,12 +111,12 @@ export function MoveScreen({ onOpenNotes }: { onOpenNotes: () => void }) {
   return (
     <div className="min-h-dvh bg-surface-0 text-pn flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-5 rounded-xl border border-divider bg-surface-2 p-6 sm:p-8">
-        <h1 className="text-xl font-semibold">{t('moveScreen.title')}</h1>
-        <p className="text-sm leading-relaxed text-pn-muted">
+        <h1 className="text-display font-semibold">{t('moveScreen.title')}</h1>
+        <p className="text-body leading-relaxed text-pn-muted">
           {t('moveScreen.bodySignIn', { scanQr: t('importPhrase.scanQr', { ns: 'auth' }) })}
         </p>
         {stuck && (
-          <p className="text-sm leading-relaxed text-warning">
+          <p className="text-body leading-relaxed text-warning">
             {state === 'conflict' ? t('moveBanner.conflict') : t('moveBanner.error')}
           </p>
         )}
@@ -124,7 +124,7 @@ export function MoveScreen({ onOpenNotes }: { onOpenNotes: () => void }) {
           type="button"
           disabled={state === 'syncing'}
           onClick={() => void handleMove()}
-          className="w-full rounded-lg bg-accent-fill hover:bg-accent-fill-hover text-white text-sm font-semibold px-4 py-2.5 transition disabled:opacity-60"
+          className="w-full rounded-lg bg-accent-fill hover:bg-accent-fill-hover text-white text-body font-semibold px-4 py-2.5 transition disabled:opacity-60"
         >
           {state === 'syncing' ? t('moveBanner.syncing') : t('moveBanner.cta')}
         </button>
@@ -132,7 +132,7 @@ export function MoveScreen({ onOpenNotes }: { onOpenNotes: () => void }) {
           <button
             type="button"
             onClick={onOpenNotes}
-            className="w-full rounded-lg border border-divider hover:bg-surface-1 text-sm font-medium px-4 py-2.5 transition"
+            className="w-full rounded-lg border border-divider hover:bg-surface-1 text-body font-medium px-4 py-2.5 transition"
           >
             {t('moveScreen.openNotes')}
           </button>
@@ -151,12 +151,12 @@ export function MoveScreen({ onOpenNotes }: { onOpenNotes: () => void }) {
           <button
             type="button"
             onClick={openPhrase}
-            className="w-full rounded-lg border border-divider hover:bg-surface-1 text-sm font-medium px-4 py-2.5 transition"
+            className="w-full rounded-lg border border-divider hover:bg-surface-1 text-body font-medium px-4 py-2.5 transition"
           >
             {t('moveScreen.showPhrase')}
           </button>
         )}
-        <p className="text-center text-sm">
+        <p className="text-center text-body">
           <a
             href={marketingHomeHref()}
             className="text-pn-muted underline underline-offset-2 hover:text-pn transition"

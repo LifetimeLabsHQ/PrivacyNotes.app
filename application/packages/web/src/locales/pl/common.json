@@ -26,14 +26,11 @@
     "noResults": "Brak wyników"
   },
   "deleteNote": {
-    "title": "Usuń na zawsze",
     "confirm": "Usuń na zawsze",
-    "untitled": "Bez tytułu",
     "body": "Trwale usunąć <highlight>„{{title}}”</highlight>? Tej operacji nie można cofnąć."
   },
   "emptyTrash": {
     "title": "Opróżnij kosz",
-    "confirm": "Usuń na zawsze",
     "body_one": "Trwale usunąć <highlight>{{count}} notatkę</highlight>? Tej operacji nie można cofnąć.",
     "body_few": "Trwale usunąć <highlight>{{count}} notatki</highlight>? Tej operacji nie można cofnąć.",
     "body_many": "Trwale usunąć <highlight>{{count}} notatek</highlight>? Tej operacji nie można cofnąć.",
@@ -63,7 +60,6 @@
   },
   "palette": {
     "label": "Polecenia",
-    "open": "Polecenia",
     "empty": "Brak pasujących poleceń",
     "groups": {
       "features": "Funkcje",
@@ -88,7 +84,7 @@
       "insertDate": "Wstaw datę",
       "insertDateTime": "Wstaw datę i godzinę",
       "clearFilters": "Usuń filtry",
-      "moveToTrash": "Przenieś notatkę do kosza",
+      "moveToTrash": "Usuń notatkę",
       "closeTab": "Zamknij kartę lub notatkę",
       "nextTab": "Następna karta",
       "previousTab": "Poprzednia karta",
@@ -111,10 +107,8 @@
     "move": "przejdź",
     "open": "otwórz",
     "openInTab": "otwórz w karcie",
-    "openLink": "Otwórz",
     "edit": "edytuj",
     "close": "zamknij",
-    "tags": "Tagi",
     "folders": "Foldery",
     "tagItems_one": "{{count}} element",
     "emptyTags": "Brak tagu o tej nazwie",
@@ -180,17 +174,14 @@
     "downloadPublicKey": "Pobierz klucz publiczny",
     "downloadPrivateKey": "Pobierz klucz prywatny",
     "downloadHint": "Przenieś pobrany klucz do ~/.ssh i uruchom na nim chmod 600, inaczej ssh go odrzuci.",
+    "downloadHintDesktop": "PrivacyNotes nie zapisuje w ~/.ssh, aby klucze, które tam są, pozostały bezpieczne. Zapisz klucz gdzie indziej, przenieś go do ~/.ssh i uruchom na nim chmod 600, inaczej ssh go odrzuci.",
+    "downloadHintWindows": "PrivacyNotes nie zapisuje w twoim folderze .ssh, aby klucze, które tam są, pozostały bezpieczne. Zapisz klucz gdzie indziej i przenieś go do %USERPROFILE%\\.ssh. Windows nie potrzebuje chmod.",
     "downloadFailed": "Nie udało się zapisać pliku klucza. Sprawdź plik i spróbuj ponownie.",
     "passphrase": "Hasło klucza",
     "passphrasePlaceholder": "Hasło klucza (jeśli jest)",
     "show": "Pokaż",
     "hide": "Ukryj",
-    "copyPassphrase": "Kopiuj hasło klucza",
-    "notes": "Notatki",
-    "notesPlaceholder": "Dodatkowe notatki (opcjonalnie)",
-    "requirePin": "Wymagaj PIN-u do podglądu",
-    "whatDoesThisDo": "Co to robi?",
-    "setUpPinFirst": "Najpierw ustaw PIN w ustawieniach Bezpieczeństwa."
+    "copyPassphrase": "Kopiuj hasło klucza"
   },
   "tagInput": {
     "placeholder": "Dodaj tagi… oddzielaj przecinkiem, # lub Enterem",
@@ -262,7 +253,6 @@
       "po cichu otwieramy sejf",
       "lokalnie odszyfrowane. globalnie ignorowane",
       "odszyfrowujemy, bo to niczyja sprawa",
-      "tekst jawny z lokalnych upraw",
       "zamieniamy myśli w nieczytelną zupę",
       "nadchodzi kolejne zaszyfrowane arcydzieło",
       "przywracamy porządek w zaszyfrowanym chaosie",
@@ -290,17 +280,14 @@
     "changesSome_other": "{{count}} z tych notatek ma zmiany bez kopii zapasowej, które zostałyby utracone."
   },
   "ninja": {
-    "recent": "Ostatnie",
     "topHit": "Najlepsze dopasowanie",
     "trashEmpty": "Kosz jest pusty",
     "allThemes": "Wszystkie motywy",
     "features": {
       "stats": {
-        "label": "Statystyki",
         "detail": "Twoje pisanie, serie i trackery w czasie"
       },
       "trackers": {
-        "label": "Trackery",
         "detail": "Nastrój, nawyki, czynniki i leki"
       },
       "medication": {
@@ -320,7 +307,6 @@
         "detail": "Silne hasło lub fraza hasłowa, gotowe do skopiowania"
       },
       "themes": {
-        "label": "Motywy",
         "detail": "Motywy kolorystyczne, jasne i ciemne"
       }
     },
@@ -331,7 +317,6 @@
     "commands": {
       "syncResume": "Wznów synchronizację",
       "changelog": "Nowości",
-      "help": "Pomoc",
       "themesPage": "Motywy społeczności",
       "website": "Strona PrivacyNotes"
     },

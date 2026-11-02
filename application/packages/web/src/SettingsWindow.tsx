@@ -54,7 +54,7 @@ function openLink(href: string) {
  * section with no hit and counts the hits of the others. A result opens its
  * section on the result's tab and flashes the row; "Back to results" keeps
  * the query. Escape clears the query before it closes anything.
- * Spec: ops/docs/archive/ui-patterns.md (section 114, settings search)
+ * Spec: docs/internal/design/ui-patterns.md (section 114, settings search)
  *
  * The frame is intentionally dumb - it knows nothing about individual
  * panes. Callers pass a `categories` array whose `render()` returns the
@@ -264,7 +264,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
         autoComplete="off"
         spellCheck={false}
         enterKeyHint="search"
-        className="pn-search-well w-full h-8 rounded-md bg-surface-1 border border-divider ps-8 pe-8 text-sm text-pn placeholder:text-pn-muted focus:outline-none focus:border-accent [&::-webkit-search-cancel-button]:appearance-none"
+        className="pn-search-well w-full h-8 rounded-md bg-surface-1 border border-divider ps-8 pe-8 text-body text-pn placeholder:text-pn-muted focus:outline-none focus:border-accent [&::-webkit-search-cancel-button]:appearance-none"
       />
       {query ? (
         <button
@@ -274,14 +274,14 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
           aria-label={t('common:actions.clearSearch')}
           className="absolute end-1 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-6 h-6 rounded text-pn-muted hover:text-pn transition"
         >
-          <X size={13} />
+          <X />
         </button>
       ) : (
         !isMobile && (
           <kbd
             dir="ltr"
             aria-hidden="true"
-            className="absolute end-2 top-1/2 -translate-y-1/2 rounded border border-divider px-1 font-sans text-[11px] leading-4 text-pn-muted pointer-events-none"
+            className="absolute end-2 top-1/2 -translate-y-1/2 rounded border border-divider px-1 font-sans text-meta leading-4 text-pn-muted pointer-events-none"
           >
             {keyText('quickSwitcher')}
           </kbd>
@@ -323,7 +323,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
         data-no-app-menu
         role="dialog"
         aria-modal="true"
-        aria-label={t('shell.title')}
+        aria-label={t('shell:contextMenu.settings')}
         className={`fixed inset-0 z-50 flex justify-center bg-black/20 dark:bg-black/20 ${isMobile ? 'items-stretch sm:items-center sm:p-4' : 'items-center p-4 sm:p-6'}`}
         onPointerDown={(e) => {
           if (mountReady && e.target === e.currentTarget) onClose();
@@ -365,7 +365,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
             >
               <ArrowLeft size={20} />
             </button>
-            <h2 className="min-w-0 text-base font-semibold leading-tight">{active.label}</h2>
+            <h2 className="min-w-0 text-title font-semibold leading-tight">{active.title ?? active.label}</h2>
             <div className="ms-auto flex">{closeButton}</div>
           </div>
           {paneBody}
@@ -375,7 +375,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
     return backdrop(
       <div className={`${phoneFill} sm:h-auto`}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-divider">
-          <h2 className="text-lg font-semibold">{t('shell.title')}</h2>
+          <h2 className="text-heading font-semibold">{t('shell:contextMenu.settings')}</h2>
           {closeButton}
         </div>
         <div className="px-4 pt-3 pb-1 flex">{field}</div>
@@ -395,23 +395,23 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
                     href={c.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-start text-pn hover:bg-surface-1 transition"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-body text-start text-pn hover:bg-surface-1 transition"
                   >
                     <span className="shrink-0 text-accent">{c.icon}</span>
                     <span className="flex-1 inline-flex items-center gap-1.5">
                       {c.label}
-                      <ArrowSquareOut size={13} className="text-accent shrink-0" />
+                      <ArrowSquareOut className="text-accent shrink-0" />
                     </span>
                   </a>
                 ) : (
                   <button
                     type="button"
                     onClick={() => openCategory(c.id)}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-start text-pn hover:bg-surface-1 transition"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-body text-start text-pn hover:bg-surface-1 transition"
                   >
                     <span className="shrink-0 text-accent">{c.icon}</span>
                     <span className="flex-1">{c.label}</span>
-                    <CaretRight size={16} className="text-pn-muted shrink-0" />
+                    <CaretRight className="text-pn-muted shrink-0" />
                   </button>
                 )}
               </Fragment>
@@ -422,7 +422,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
           // A phone has no corner to reach for: Sign out and Close share the foot.
           <div className="border-t border-divider p-3 grid grid-cols-2 gap-2">
             {footer}
-            <Button icon={<X size={15} aria-hidden="true" />} className="w-full justify-center" onClick={onClose}>
+            <Button icon={<X aria-hidden="true" />} className="w-full justify-center" onClick={onClose}>
               {t('common:actions.close')}
             </Button>
           </div>
@@ -446,34 +446,35 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
       wide && !NATIVE_PHONE
         ? 'h-full max-h-full'
       // Alone, the window fits its one pane: as tall as the pane and narrower,
-      // except the format bar board, which needs the width. A pane taller
-      // than the screen scrolls inside the cap, so the header stays on screen.
+      // except the format bar board, which needs the width and keeps the full
+      // window's height: its Typing and Drawing sides differ in height, and a
+      // window that followed them would jump on a tab switch and when a hover
+      // label shows. A pane taller than the screen scrolls inside the cap, so
+      // the header stays on screen.
       : alone && activeId !== 'formatBar'
         ? 'max-w-2xl max-h-[85vh]'
-        : alone
-          ? 'max-w-4xl xl:max-w-5xl max-h-[85vh]'
-          : 'max-w-4xl xl:max-w-5xl max-h-[85vh] h-[656px] [@media(min-height:800px)]:h-[720px] [@media(min-height:920px)]:h-[780px]'
+        : 'max-w-4xl xl:max-w-5xl max-h-[85vh] h-[656px] [@media(min-height:800px)]:h-[720px] [@media(min-height:920px)]:h-[780px]'
     }`}>
       <div className="flex items-center gap-4 px-5 py-3 border-b border-divider">
         {alone ? (
           <button
             type="button"
             onClick={() => setAlone(false)}
-            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 -mx-2 text-sm font-medium text-pn-soft hover:text-pn hover:bg-surface-1 transition"
+            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 -mx-2 text-body font-medium text-pn-soft hover:text-pn hover:bg-surface-1 transition"
           >
-            <ArrowLeft size={14} aria-hidden="true" />
+            <ArrowLeft aria-hidden="true" />
             {t('shell.allSettings')}
           </button>
         ) : (
           <>
-            <h2 className="text-lg font-semibold whitespace-nowrap">{t('shell.title')}</h2>
+            <h2 className="text-heading font-semibold whitespace-nowrap">{t('shell:contextMenu.settings')}</h2>
             <div className="flex flex-1 max-w-xs">{field}</div>
           </>
         )}
         <div className="ms-auto flex items-center gap-1">
           {!NATIVE_PHONE && (
             <IconButton label={wide ? t('shell.restoreWindow') : t('shell.fillWindow')} position="start" onClick={toggleWide} aria-pressed={wide}>
-              {wide ? <ArrowsIn size={18} aria-hidden="true" /> : <ArrowsOut size={18} aria-hidden="true" />}
+              {wide ? <ArrowsIn aria-hidden="true" /> : <ArrowsOut aria-hidden="true" />}
             </IconButton>
           )}
           {closeButton}
@@ -486,11 +487,11 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
               const on = !searching && c.id === activeId;
               const count = counts.get(c.id) ?? 0;
               // A rail is not a result set: a section with no hit dims and
-              // stays. Spec: ops/docs/archive/ui-patterns.md section 52
+              // stays. Spec: docs/internal/design/ui-patterns.md section 52
               const dim = searching && hits !== null && count === 0;
               const showHeader = c.group && c.group !== categories[i - 1]?.group;
               const badge = searching && count > 0 && (
-                <span className="shrink-0 rounded-full bg-accent/10 px-1.5 text-[11px] leading-4 text-accent-strong">{count}</span>
+                <span className="shrink-0 rounded-full bg-accent/10 px-1.5 text-meta leading-4 text-accent-strong">{count}</span>
               );
               return (
                 <Fragment key={c.id}>
@@ -504,12 +505,12 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
                       href={c.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm text-start transition text-pn-soft hover:bg-surface-1 ${dim ? 'opacity-45' : ''}`}
+                      className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-body text-start transition text-pn-soft hover:bg-surface-1 ${dim ? 'opacity-45' : ''}`}
                     >
                       <span className="shrink-0 text-accent">{c.icon}</span>
                       <span className="flex-1 inline-flex items-center gap-1.5">
                         {c.label}
-                        <ArrowSquareOut size={12} className="text-accent shrink-0" />
+                        <ArrowSquareOut className="text-accent shrink-0" />
                       </span>
                       {badge}
                     </a>
@@ -518,7 +519,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
                       type="button"
                       onClick={() => openCategory(c.id)}
                       aria-current={on}
-                      className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm text-start transition ${
+                      className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-body text-start transition ${
                         on
                           ? 'bg-accent/10 text-accent-strong font-medium'
                           : 'text-pn-soft hover:bg-surface-1'
@@ -526,7 +527,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
                     >
                       {/* Category icons are always accent, active or not, so the
                           rail reads as one family and matches the sidebar.
-                          Spec: ops/docs/archive/ui-patterns.md section 36 */}
+                          Spec: docs/internal/design/ui-patterns.md section 36 */}
                       <span className="shrink-0 text-accent">{c.icon}</span>
                       <span className="flex-1">{c.label}</span>
                       {badge}
@@ -551,15 +552,15 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
                     <button
                       type="button"
                       onClick={() => setLanding(null)}
-                      className="mb-2 inline-flex items-center gap-1 rounded-full border border-divider px-2.5 py-0.5 text-xs text-pn-soft hover:text-pn hover:bg-surface-1 transition"
+                      className="mb-2 inline-flex items-center gap-1 rounded-full border border-divider px-2.5 py-0.5 text-small text-pn-soft hover:text-pn hover:bg-surface-1 transition"
                     >
-                      <ArrowLeft size={12} aria-hidden="true" />
+                      <ArrowLeft aria-hidden="true" />
                       {t('settingsSearch:backToResults')}
                     </button>
                   )}
                   <div className="flex items-center gap-2.5">
                     <AccentBar />
-                    <h3 className="text-base font-semibold">{active.label}</h3>
+                    <h3 className="text-title font-semibold">{active.title ?? active.label}</h3>
                     <HeadlineRule />
                   </div>
                 </div>

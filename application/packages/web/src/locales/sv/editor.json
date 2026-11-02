@@ -12,6 +12,8 @@
     "addLink": "Lägg till länk",
     "noteLink": "Länka till en annan anteckning (eller skriv [[)",
     "numberedList": "Numrerad lista",
+    "indent": "Öka indrag",
+    "outdent": "Minska indrag",
     "textColor": "Textfärg",
     "textColorApply": "Textfärg: {{color}}",
     "pickColor": "Välj textfärg",
@@ -72,6 +74,7 @@
     "remove": "Ta bort informationsruta",
     "collapse": "Fäll ihop informationsrutan",
     "expand": "Fäll ut informationsrutan",
+    "dragGrip": "Dra",
     "types": {
       "info": "Info",
       "success": "Klart",
@@ -132,6 +135,9 @@
     "addColumnRight": "Lägg till kolumn till höger",
     "toggleHeaderRow": "Slå på eller av rubrikrad",
     "equalColumnWidths": "Gör kolumnerna lika breda",
+    "cellColor": "Cellfärg",
+    "sortAscending": "Sortera från A till Ö",
+    "sortDescending": "Sortera från Ö till A",
     "resizeHint": "Håll ned {{shift}} för att bara ändra den här kolumnen, {{alt}} för finare steg",
     "deleteRow": "Radera rad",
     "deleteColumn": "Radera kolumn",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "Sök i anteckning",
-    "label": "Sök i anteckning",
     "previous": "Föregående träff",
     "previousTitle": "Föregående",
     "next": "Nästa träff",
     "nextTitle": "Nästa",
     "close": "Stäng sökning",
-    "closeTitle": "Stäng",
     "replacePlaceholder": "Ersätt med",
     "replaceLabel": "Ersätt med",
     "replace": "Ersätt",
@@ -177,10 +180,7 @@
     "replaceAll": "Alla",
     "replaceAllTitle": "Ersätt alla träffar",
     "caseSensitive": "Matcha skiftläge",
-    "caseSensitiveTitle": "Matcha skiftläge",
     "closeReplace": "Stäng sök och ersätt",
-    "closeReplaceTitle": "Stäng",
-    "showReplace": "Sök och ersätt",
     "hideReplace": "Dölj ersättning",
     "replacedCount_one": "{{count}} ersatt",
     "replacedCount_other": "{{count}} ersatta"
@@ -192,9 +192,7 @@
     "ariaLabel": "Anteckningens översikt",
     "hide": "Dölj översikt",
     "copyHeadingLink": "Kopiera länk till rubriken",
-    "copyNoteLink": "Kopiera anteckningslänk",
-    "copyHeadingShortcut": "Kopiera genväg till rubriken",
-    "copied": "Kopierad"
+    "copyHeadingShortcut": "Kopiera genväg till rubriken"
   },
   "bodyMenu": {
     "cut": "Klipp ut",
@@ -210,11 +208,8 @@
     "add": "Lägg till en rad"
   },
   "link": {
-    "popoverLabel": "Lägg till länk",
     "placeholder": "Klistra in eller skriv en URL",
     "apply": "Tillämpa",
-    "addTitle": "Lägg till länk",
-    "editTitle": "Redigera länk",
     "urlLabel": "URL",
     "urlPlaceholder": "https://example.com",
     "errorEnterUrl": "Ange en URL",
@@ -230,7 +225,6 @@
   },
   "audio": {
     "uploadingRecording": "Laddar upp inspelning...",
-    "uploading": "Laddar upp...",
     "stopRecording": "Stoppa inspelning",
     "recordAudio": "Spela in ljud",
     "savingRecording": "Sparar inspelning...",
@@ -247,7 +241,6 @@
     "tasksChecked_other": "{{done}} av {{formatted}} markerade",
     "syncLimit": " · {{share}} av synkgränsen på 1 MB",
     "overSyncLimit": " · över synkgränsen på 1 MB, stannar på den här enheten",
-    "split": "Dela upp anteckning",
     "veryLong": ", mycket lång, kan bli trög att redigera och hacka",
     "gettingLong": ", börjar bli lång, kan lagga på långsammare enheter",
     "largeTableWarning": "En stor tabell ({{rows}} rader) kan göra anteckningen trög att redigera, överväg att dela upp den"
@@ -262,18 +255,14 @@
     "placeholder": "Text att kopiera med ett klick"
   },
   "inlineCode": {
-    "copyHint": "{{key}}-klicka för att kopiera",
-    "copied": "Kopierad"
+    "copyHint": "{{key}}-klicka för att kopiera"
   },
   "codeBlock": {
-    "copy": "Kopiera",
-    "copied": "Kopierad",
     "copyFailed": "Misslyckades",
     "wrap": "Radbryt långa rader",
     "showAll_one": "Visa {{count}} rad",
     "showAll_other": "Visa alla {{count}} rader",
     "showLess": "Visa mindre",
-    "plainText": "Oformaterad text",
     "language": "Kodspråk: {{name}}",
     "searchLanguages": "Sök språk",
     "placeholder": "Skriv eller klistra in kod. Välj ett språk ovanför för färger."
@@ -354,7 +343,6 @@
     "inProgress": "Pågår",
     "review": "Granskning",
     "done": "Klart",
-    "color": "Färg",
     "columns": "Kolumner",
     "columnCount_one": "{{count}} kolumn",
     "columnCount_other": "{{count}} kolumner",

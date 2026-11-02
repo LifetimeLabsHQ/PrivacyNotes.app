@@ -1,6 +1,4 @@
 {
-  "dismiss": "Dismiss",
-  "close": "Close",
   "moveBanner": {
     "bodySignIn": "Sign in there with your recovery phrase or “{{scanQr}}”.",
     "cta": "Move now",
@@ -49,7 +47,7 @@
   },
   "signOutConfirm": {
     "title": "Did you save your 12-word phrase?",
-    "body": "Your phrase is the <only>only</only> way back in. No email reset, no support line. We don't know who you are, by design. If you haven't written it down yet, tap <action>No, show phrase</action> and we'll open it for you right now.",
+    "body": "Your phrase is the <only>only</only> way back in. No email reset, no support line. If you haven't written it down yet, tap <action>No, show phrase</action> and we'll open it for you right now.",
     "unsyncedWarn_one": "1 note on this device hasn't synced yet. It will be permanently lost if it can't be uploaded while signing out.",
     "unsyncedWarn_other": "{{count}} notes on this device haven't synced yet. They will be permanently lost if they can't be uploaded while signing out.",
     "unsyncedKept_one": "1 note on this device hasn't synced yet. It stays on this device and syncs after you sign in again.",
@@ -73,6 +71,12 @@
     "moreNotes": "and {{count}} more",
     "appLockHint": "Shared device? Turn on app lock under Settings > Security."
   },
+  "signOutUpload": {
+    "uploading": "Uploading your last changes…",
+    "title": "Some changes are not uploaded yet",
+    "body": "If you sign out now, changes made on this device since the last sync are lost. Connect to the internet to keep them.",
+    "signOutAnyway": "Sign out anyway"
+  },
   "burnShareModal": {
     "title": "Share & Burn After Reading",
     "body": "<lead>Your original note will not be deleted.</lead> It stays safe in your account. The burn link is a separate encrypted copy that self-destructs after being read.",
@@ -90,17 +94,15 @@
     "afterDays_other": "After {{count}} days",
     "create": "Create and copy link",
     "share": "Share link",
-    "imagesStripped": "Only text is shown, files are hidden in this note.",
-    "copied": "Copied"
+    "imagesStripped": "Only text is shown, files are hidden in this note."
   },
   "burnView": {
     "title": "Burn After Reading",
     "tagline": "Encrypted. Ephemeral. Eyes only.",
     "toggleTheme": "Toggle theme",
-    "checking": "Checking...",
     "revealing": "Fetching and decrypting...",
     "goToApp": "Go to <brand/>",
-    "footerTagline": "- Zero-knowledge encrypted notes, hosted in Switzerland.",
+    "footerTagline": "- Encrypted notes, hosted in Switzerland.",
     "sealed": {
       "heading": "You received an encrypted note.",
       "subheading": "This message will self-destruct after reading. Unread links expire on their own.",
@@ -138,5 +140,19 @@
     "demo": "Burn links are stored on a server, and the demo never contacts one. Sign up to create real burn links.",
     "tooLarge": "Note is too large to share via burn link ({{size}}KB). Maximum is {{max}}KB.",
     "storeFailed": "Failed to store burn note on server."
+  },
+  "dms": {
+    "returnTitle": "Your server copy was deleted",
+    "returnBody_one": "Your dead man's switch deleted your notes from the server on {{date}}. This device still has {{count}} note. Download a backup if you want to keep it, then delete it from this device.",
+    "returnBody_other": "Your dead man's switch deleted your notes from the server on {{date}}. This device still has {{count}} notes. Download a backup if you want to keep them, then delete them from this device.",
+    "returnBackup": "Download a backup",
+    "returnDelete": "Delete from this device"
+  },
+  "massDelete": {
+    "title": "Notes deleted on another device",
+    "body_one": "You, or another of your devices, deleted {{count}} note that this device still has. If that was you, delete it here too. If it was not you, someone may have access to your account: keep it to put it back on all your devices.",
+    "body_other": "You, or another of your devices, deleted {{count}} notes that this device still has. If that was you, delete them here too. If it was not you, someone may have access to your account: keep them to put them back on all your devices.",
+    "keep": "Keep my notes",
+    "delete": "Delete them here too"
   }
 }

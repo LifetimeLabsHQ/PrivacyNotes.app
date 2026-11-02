@@ -12,6 +12,8 @@
     "addLink": "링크 추가",
     "noteLink": "다른 노트로 연결 ([[ 입력도 가능)",
     "numberedList": "번호 목록",
+    "indent": "들여쓰기",
+    "outdent": "내어쓰기",
     "textColor": "글자 색",
     "textColorApply": "글자 색: {{color}}",
     "pickColor": "글자 색 선택",
@@ -72,6 +74,7 @@
     "remove": "콜아웃 제거",
     "collapse": "콜아웃 접기",
     "expand": "콜아웃 펼치기",
+    "dragGrip": "드래그",
     "types": {
       "info": "정보",
       "success": "성공",
@@ -132,6 +135,9 @@
     "addColumnRight": "오른쪽에 열 추가",
     "toggleHeaderRow": "머리글 행 전환",
     "equalColumnWidths": "열 너비 같게",
+    "cellColor": "셀 색상",
+    "sortAscending": "오름차순으로 정렬",
+    "sortDescending": "내림차순으로 정렬",
     "resizeHint": "{{shift}} 키를 누른 채 끌면 이 열만 바뀌고, {{alt}} 키를 누르면 더 세밀하게 조절돼요",
     "deleteRow": "행 삭제",
     "deleteColumn": "열 삭제",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "노트에서 찾기",
-    "label": "노트에서 찾기",
     "previous": "이전 결과",
     "previousTitle": "이전",
     "next": "다음 결과",
     "nextTitle": "다음",
     "close": "찾기 닫기",
-    "closeTitle": "닫기",
     "replacePlaceholder": "바꿀 내용",
     "replaceLabel": "바꿀 내용",
     "replace": "바꾸기",
@@ -177,10 +180,7 @@
     "replaceAll": "모두",
     "replaceAllTitle": "모든 항목 바꾸기",
     "caseSensitive": "대소문자 구분",
-    "caseSensitiveTitle": "대소문자 구분",
     "closeReplace": "찾기 및 바꾸기 닫기",
-    "closeReplaceTitle": "닫기",
-    "showReplace": "찾기 및 바꾸기",
     "hideReplace": "바꾸기 숨기기",
     "replacedCount_other": "{{count}}개 바꿈"
   },
@@ -191,9 +191,7 @@
     "ariaLabel": "노트 개요",
     "hide": "개요 숨기기",
     "copyHeadingLink": "제목 링크 복사",
-    "copyNoteLink": "노트 링크 복사",
-    "copyHeadingShortcut": "제목 바로가기 복사",
-    "copied": "복사됨"
+    "copyHeadingShortcut": "제목 바로가기 복사"
   },
   "bodyMenu": {
     "cut": "잘라내기",
@@ -209,11 +207,8 @@
     "add": "줄 추가"
   },
   "link": {
-    "popoverLabel": "링크 추가",
     "placeholder": "URL을 붙여넣거나 입력하세요",
     "apply": "적용",
-    "addTitle": "링크 추가",
-    "editTitle": "링크 편집",
     "urlLabel": "URL",
     "urlPlaceholder": "https://example.com",
     "errorEnterUrl": "URL을 입력하세요",
@@ -229,7 +224,6 @@
   },
   "audio": {
     "uploadingRecording": "녹음 업로드 중...",
-    "uploading": "업로드 중...",
     "stopRecording": "녹음 중지",
     "recordAudio": "오디오 녹음",
     "savingRecording": "녹음 저장 중...",
@@ -243,7 +237,6 @@
     "tasksChecked_other": "{{formatted}}개 중 {{done}}개 체크됨",
     "syncLimit": " · 1MB 동기화 한도의 {{share}}",
     "overSyncLimit": " · 1MB 동기화 한도를 넘어 이 기기에만 남아요",
-    "split": "노트 나누기",
     "veryLong": ", 매우 길어요. 편집이 느려지거나 끊길 수 있어요",
     "gettingLong": ", 길어지고 있어요. 느린 기기에서는 버벅일 수 있어요",
     "largeTableWarning": "큰 표({{rows}}행)는 이 노트의 편집을 느리게 만들 수 있어요. 나누는 것을 고려하세요"
@@ -258,17 +251,13 @@
     "placeholder": "클릭 한 번으로 복사할 텍스트"
   },
   "inlineCode": {
-    "copyHint": "{{key}}+클릭으로 복사",
-    "copied": "복사됨"
+    "copyHint": "{{key}}+클릭으로 복사"
   },
   "codeBlock": {
-    "copy": "복사",
-    "copied": "복사됨",
     "copyFailed": "실패",
     "wrap": "긴 줄 줄바꿈",
     "showAll_other": "{{count}}줄 모두 보기",
     "showLess": "접기",
-    "plainText": "일반 텍스트",
     "language": "코드 언어: {{name}}",
     "searchLanguages": "언어 검색",
     "placeholder": "코드를 입력하거나 붙여 넣어요. 색을 넣으려면 위에서 언어를 골라요."
@@ -349,7 +338,6 @@
     "inProgress": "진행 중",
     "review": "검토",
     "done": "완료",
-    "color": "색상",
     "columns": "열",
     "columnCount_other": "{{count}}개 열",
     "cardCount_other": "카드 {{count}}개",

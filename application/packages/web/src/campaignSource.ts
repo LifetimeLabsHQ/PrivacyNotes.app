@@ -24,7 +24,7 @@
  * injects the result, so the raw referrer never reaches the browser's own
  * code and never leaves it - a referrer origin can name a person's employer.
  *
- * Spec: ops/docs/plans/partner-attribution.md (sections 3b and 3c)
+ * Spec: docs/internal/plans/partner-attribution.md (sections 3b and 3c)
  */
 
 import { detectPlatform } from './devices';
@@ -129,7 +129,7 @@ export function clearStoredSource(): void {
  * who routes a reader through the demo is still credited when that reader
  * signs up. The word lives in demo sessionStorage, which dies with the tab
  * like everything else there, and the demo makes no server call for it.
- * Spec: ops/docs/plans/partner-attribution.md (section 3c)
+ * Spec: docs/internal/plans/partner-attribution.md (section 3c)
  */
 export function captureSource(): void {
   const s = session();

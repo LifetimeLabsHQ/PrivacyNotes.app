@@ -10,8 +10,8 @@
  * via `hashFingerprint`; the server never sees the underlying OS, GPU,
  * cores, or language strings.
  *
- * See ops/docs/device-fingerprint.md for collection rationale and
- * ops/docs/device-fingerprint-hash.md for the hashing design.
+ * See docs/internal/device-fingerprint.md for collection rationale and
+ * docs/internal/specs/device-fingerprint-hash.md for the hashing design.
  */
 
 import { computeFpHashes, type FpHashes } from '@notes/shared';
@@ -66,7 +66,7 @@ export function detectDeviceOs(): string {
  * DeviceFingerprint stays inside this module - callers only see the
  * four opaque per-field hashes.
  */
-// Spec: ops/docs/device-fingerprint-hash.md (per-field client-side hashing)
+// Spec: docs/internal/specs/device-fingerprint-hash.md (per-field client-side hashing)
 export function hashFingerprint(
   fp: DeviceFingerprint,
   pepper: Uint8Array,
@@ -87,7 +87,7 @@ export function hashFingerprint(
  *   Firefox:     "Apple M4" or "ANGLE (...)" (varies by version)
  *   Safari:      "Apple GPU"
  *
- * Spec: ops/docs/device-fingerprint.md (section 3.6)
+ * Spec: docs/internal/device-fingerprint.md (section 3.6)
  */
 function getGpuRenderer(): string {
   try {

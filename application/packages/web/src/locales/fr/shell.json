@@ -1,18 +1,14 @@
 {
   "pillars": {
-    "trash": "Corbeille",
-    "bookmarks": "Signets",
-    "contacts": "Contacts"
+    "trash": "Corbeille"
   },
   "tasksList": {
-    "title": "Tâches",
     "newTaskNote": "Nouvelle note de tâches",
     "hideCompleted": "Masquer les tâches terminées",
     "showCompleted": "Afficher les tâches terminées",
     "searchPlaceholder": "Rechercher des tâches…",
     "sortOptions": "Options de tri",
     "quickAddPlaceholder": "Ajouter une tâche rapide",
-    "noMatches": "Aucun résultat.",
     "itemsWithTasks": "Éléments avec des tâches",
     "allTasks": "Toutes les tâches",
     "tasksFromOtherItems": "Tâches des autres éléments",
@@ -29,45 +25,27 @@
     "seeLess": "Voir moins"
   },
   "filesList": {
-    "title": "Fichiers",
     "upload": "Importer",
     "selectedOf": "{{selected}} sur {{total}} sélectionnés",
-    "deselectAll": "Tout désélectionner",
-    "selectAll": "Tout sélectionner",
-    "storage": "Stockage",
     "perFile": "Par fichier",
     "free": "Gratuit",
-    "upgradeToPro": "Passer à Pro",
     "filterAll": "Tous",
-    "filterImages": "Images",
     "filterAudio": "Audio",
     "filterFiles": "Fichiers",
-    "sortOptions": "Options de tri",
     "searchPlaceholder": "Rechercher des fichiers…",
     "sortName": "Nom",
     "showNotesWithAttachments": "Afficher les fichiers des autres éléments",
-    "noMatches": "Aucun résultat.",
     "pinProtected": "Protégé par PIN",
-    "readOnly": "Lecture seule",
     "noFilesYet": "Aucun fichier pour l'instant.",
     "noDocuments": "Aucun document.",
     "noImages": "Aucune image.",
     "noAudioFiles": "Aucun fichier audio.",
     "emptyTypesHint": "Images, documents, audio, vidéo et fichiers zip. Jusqu'à {{max}} Mo par fichier.",
     "uploadFiles": "Importer des fichiers",
-    "menuDeselect": "Désélectionner",
-    "menuSelect": "Sélectionner",
     "menuShow": "Afficher",
     "menuAllFiles": "Tous les fichiers",
-    "menuImages": "Images",
-    "menuAudio": "Audio",
     "menuDocuments": "Documents",
-    "menuHideNoteAttachments": "Masquer les fichiers des autres éléments",
-    "menuShowNoteAttachments": "Afficher les fichiers des autres éléments",
-    "menuUnpin": "Désépingler",
-    "menuPin": "Épingler",
-    "menuRename": "Renommer",
-    "menuMoveToTrash": "Mettre à la corbeille"
+    "menuHideNoteAttachments": "Masquer les fichiers des autres éléments"
   },
   "vaultItem": {
     "badgeLogin": "Identifiant",
@@ -78,7 +56,6 @@
     "untitledKey": "Clé sans titre",
     "copied": "Copié !",
     "copyField": "Copier {{label}}",
-    "hide": "Masquer",
     "reveal": "Révéler",
     "fieldUrl": "URL",
     "fieldUser": "Utilisateur",
@@ -91,14 +68,11 @@
     "fieldLabel": "Libellé",
     "fieldPublic": "Publique",
     "fieldPrivate": "Privée",
-    "fieldTotp": "Code 2FA",
     "totpInvalid": "Clé invalide",
     "copyCode": "Copier le code",
     "totpUnlockCta": "Débloque les codes 2FA avec Pro",
     "totpProNote": "La clé est enregistrée et synchronisée. Seul le code nécessite Pro.",
     "copyAll": "Copier l'URL, l'utilisateur et le mot de passe",
-    "open": "Ouvrir",
-    "notesHeading": "Notes",
     "fillOneField": "Remplis au moins un champ avant d'enregistrer.",
     "expiryNeedsBoth": "L'expiration nécessite le mois et l'année, ou laisse les deux vides.",
     "customField": "Champ personnalisé",
@@ -128,20 +102,18 @@
   },
   "tagsRail": {
     "showAllItems": "Afficher tous les éléments",
-    "changelog": "Changelog",
     "closeMenu": "Fermer le menu",
-    "close": "Fermer",
     "views": "Contenu",
     "resizeSplit": "Redimensionner Contenu et les étiquettes ou dossiers",
     "sidebarOptions": "Options de la barre latérale",
     "showInSidebar": "Afficher dans la barre latérale",
     "allOptions": "Options de « Tout »",
     "showInAll": "Afficher dans « Tout »",
-    "viewList": "Liste",
-    "viewGrid": "Grille",
     "viewAuto": "Auto",
     "allItemsTooltip": "Toutes les notes, tous les journaux et tous les éléments du coffre",
     "allItems": "Tout",
+    "dashboard": "Accueil",
+    "dashboardTooltip": "Tes widgets en un coup d'œil",
     "pinnedTooltip": "Éléments épinglés",
     "pinned": "Épinglés",
     "archive": "Archives",
@@ -149,6 +121,7 @@
     "notes": "Notes",
     "tasksTooltip": "Tâches de toutes les notes",
     "tasks": "Tâches",
+    "drawings": "Dessins",
     "vaultTooltip": "Identifiants, cartes bancaires et clés",
     "vault": "Coffre",
     "filesTooltip": "Tous les fichiers et pièces jointes",
@@ -156,7 +129,6 @@
     "journalsTooltip": "Entrées de journal quotidiennes",
     "journals": "Journaux",
     "actionsForTag": "Actions pour l'étiquette {{tag}}",
-    "renameTag": "Renommer",
     "removeFavorite": "Retirer le favori",
     "markAsFavorite": "Favori",
     "deleteTag": "Supprimer l'étiquette",
@@ -164,7 +136,6 @@
     "tags": "Étiquettes",
     "sortTags": "Trier les étiquettes",
     "sort": "Trier",
-    "sortBy": "Trier par",
     "sortEntries": "Entrées",
     "sortName": "Nom",
     "sortCustom": "Personnalisé",
@@ -175,11 +146,9 @@
     "createTag": "Nouvelle étiquette",
     "untagged": "Sans étiquette",
     "trashTooltip": "Éléments supprimés",
-    "trash": "Corbeille",
     "feedback": "Retours",
     "import": "Importer",
     "downloads": "Téléchargements",
-    "help": "Aide",
     "rate": "Noter",
     "markdown": "Markdown",
     "markdownTip": "Non chiffré",
@@ -205,7 +174,6 @@
     "deleteConfirmBranchNested": "« {{folder}} » et ses sous-dossiers seront supprimés. Leurs notes seront déplacées vers « {{parent}} ». Aucune note ne sera supprimée.",
     "deleteSubfolders_one": "Supprimer aussi son sous-dossier",
     "deleteSubfolders_other": "Supprimer aussi ses {{count}} sous-dossiers",
-    "moveTo": "Déplacer vers un dossier",
     "searchPlaceholder": "Rechercher des dossiers",
     "sortFolders": "Trier les dossiers",
     "chipUnfiled": "Dossier",
@@ -226,7 +194,6 @@
     "seedTeam": "Équipe"
   },
   "collapsedSidebar": {
-    "newNote": "Nouvelle note",
     "expandSidebar": "Déplier la barre latérale"
   },
   "mobileHeader": {
@@ -241,26 +208,14 @@
     "colorFromTag": "De l'étiquette : #{{name}}",
     "colorOwnHint": "Une couleur choisie ici remplit le fond de cette note. Les <setting>Couleurs des dossiers et étiquettes</setting> ne la modifient pas.",
     "details": "Détails",
-    "readOnly": "Lecture seule",
     "readOnlyDescription": "Aucune modification tant que tu ne le désactives pas.",
     "protect": "Protéger",
     "convertTo": "Convertir en",
-    "typeNote": "Note",
     "typeJournal": "Journal",
-    "typeTask": "Tâche",
-    "unpin": "Désépingler",
-    "pin": "Épingler",
-    "archive": "Archiver",
-    "unarchive": "Désarchiver",
     "burn": "Burn",
     "share": "Partager",
     "trash": "Corbeille",
-    "duplicate": "Dupliquer",
-    "restore": "Restaurer",
-    "deleteForever": "Supprimer définitivement",
-    "moveToFolder": "Déplacer vers un dossier",
     "noteHistory": "Historique",
-    "findReplace": "Rechercher et remplacer",
     "uncheckAllTasks": "Décocher tous les éléments",
     "deleteCheckedTasks": "Supprimer les éléments cochés",
     "sortTasksByStatus": "Trier les éléments par statut",
@@ -277,27 +232,17 @@
     "schedule": "Planification",
     "ends": "Fin",
     "sameDay": "Le même jour",
-    "allDay": "Toute la journée",
     "starts": "Début",
     "endsAt": "Se termine à",
     "noEnd": "Aucune",
     "removeFromCalendar": "Retirer du calendrier",
     "makeEvent": "Convertis-le en <b>Événement</b> pour le répéter",
-    "typeEvent": "Événement",
     "repeatRemoved": "La répétition est supprimée"
   },
   "selectionToolbar": {
-    "exitSelectionTooltip": "Quitter la sélection",
     "exitSelection": "Quitter la sélection",
-    "unpin": "Désépingler",
-    "pin": "Épingler",
-    "archive": "Archiver",
-    "unarchive": "Désarchiver",
     "tag": "Étiqueter",
     "export": "Exporter",
-    "delete": "Supprimer",
-    "restore": "Restaurer",
-    "deleteForever": "Supprimer définitivement",
     "more": "Plus d'actions",
     "addTagPlaceholder": "Ajoute une étiquette…",
     "noTagsFound": "Aucune étiquette trouvée",
@@ -320,6 +265,7 @@
     "showTags": "Afficher le dossier et les étiquettes",
     "showCalendar": "Afficher le calendrier",
     "showCheckIn": "Afficher le bilan du jour",
+    "showMedication": "Afficher les médicaments",
     "showWorkItems": "Afficher les éléments <b>Travail</b>",
     "showPersonalItems": "Afficher les éléments <b>Personnel</b>",
     "other": "Autre",
@@ -342,7 +288,6 @@
     "moodCalendar": "Afficher les humeurs dans le calendrier"
   },
   "backfillPopover": {
-    "calendarLabel": "Calendrier du journal",
     "today": "Aujourd'hui",
     "chooseEntry": "Éléments du {{date}}"
   },
@@ -363,6 +308,7 @@
     "newNote": "Nouvelle note",
     "newTask": "Nouvelle tâche",
     "newKanban": "Nouveau tableau Kanban",
+    "newDrawing": "Nouveau dessin",
     "newLogin": "Nouvel identifiant",
     "newJournal": "Nouveau journal",
     "newFile": "Nouveau fichier",
@@ -388,32 +334,24 @@
     "duplicate": "Dupliquer",
     "moveToFolder": "Déplacer vers un dossier",
     "exportAsMarkdown": "Exporter en Markdown",
-    "shareBurnAfterReading": "Partager en burn note",
     "exportAsHtml": "Exporter en HTML",
-    "printSaveAsPdf": "Imprimer / Enregistrer en PDF",
-    "moveToTrash": "Mettre à la corbeille",
-    "newBookmark": "Nouveau signet",
     "newContact": "Nouveau contact",
-    "openBookmark": "Ouvrir",
     "copyBookmarkUrl": "Copier l'URL",
     "editBookmark": "Modifier le signet",
     "saveAsNote": "Enregistrer en note",
-    "openClippedNote": "Ouvrir la note",
     "openInTab": "Ouvrir dans un onglet",
     "openInTabHint": "{{key}}+clic",
+    "openInTabHintMiddle": "Clic milieu",
     "closeTab": "Fermer l'onglet",
     "closeOtherTabs": "Fermer les autres onglets",
     "closeAllTabs": "Fermer tous les onglets",
     "pinTab": "Épingler l'onglet",
     "unpinTab": "Désépingler l'onglet",
-    "newEvent": "Nouvel événement",
-    "quickAdd": "Ajout rapide"
+    "newEvent": "Nouvel événement"
   },
   "demoBanner": {
     "title": "Essaie sans aucun risque",
-    "description": "Rien n'est enregistré ici. Crée ton propre carnet chiffré, gratuitement.",
-    "cta": "Créer un compte",
-    "dismiss": "Ignorer"
+    "description": "Rien n'est enregistré ici. Crée ton propre carnet chiffré, gratuitement."
   },
   "markdown": {
     "title": "Markdown",
@@ -452,20 +390,17 @@
     "fileCount_other": "{{count}} fichiers",
     "railFolders": "Dossiers Markdown",
     "railTags": "Étiquettes Markdown",
-    "allFiles": "Tous les fichiers",
     "modeRich": "Enrichi",
     "modeSource": "Markdown",
     "reopenPrompt": "Ton navigateur redemande l'autorisation après un rechargement. Ton dossier est mémorisé, donc c'est un seul clic.",
     "reopenFolder": "Rouvrir {{name}}",
     "new": "Nouveau",
-    "delete": "Supprimer",
     "saveToNotes": "Enregistrer dans mes notes",
     "createFailed": "Impossible de créer le fichier.",
     "deleteFailed": "Impossible de mettre le fichier à la corbeille.",
     "importedToast": "« {{title}} » a été enregistré dans tes notes chiffrées. Le fichier d'origine reste intact.",
     "deleteTitle": "Mettre à la corbeille du dossier ?",
     "deleteBody": "« {{name}} » ira dans un dossier .trash à l'intérieur de ton dossier Markdown. Récupère-le depuis ton gestionnaire de fichiers si tu changes d'avis.",
-    "deleteConfirm": "Mettre à la corbeille",
     "explainTitle": "Ton dossier Markdown",
     "explainDone": "Compris",
     "bannerTitle": "Éditeur Markdown avancé",
@@ -474,7 +409,6 @@
     "explainIntro": "Choisis un dossier de fichiers .md et .txt - les sous-dossiers apparaissent automatiquement, les modifications s'enregistrent sur place, et rien n'est converti",
     "chipPreview": "Aperçu en direct",
     "chipTasks": "Tâches",
-    "chipTags": "Étiquettes",
     "chipTables": "Tableaux",
     "useAgent": "Laisser des agents IA accéder à tes notes",
     "useObsidian": "Les mêmes fichiers dans Obsidian ou Logseq",
@@ -502,7 +436,6 @@
     "assocWorking": "Interrogation de ton système…",
     "copyPath": "Copier le chemin",
     "selectedCount": "{{selected}} sur {{total}} sélectionnés",
-    "selectAll": "Tout sélectionner",
     "exitSelection": "Quitter la sélection",
     "deleteManyTitle_one": "Mettre {{count}} fichier à la corbeille du dossier ?",
     "deleteManyTitle_other": "Mettre {{count}} fichiers à la corbeille du dossier ?",
@@ -525,15 +458,11 @@
   "bookmarks": {
     "newBookmark": "Nouveau signet",
     "searchPlaceholder": "Rechercher des signets…",
-    "sortOptions": "Options de tri",
     "quickAddPlaceholder": "Colle ou saisis un lien…",
     "urlLabel": "Signet (URL)",
     "urlInvalid": "Saisis une adresse web, comme example.com ou https://example.com/page.",
     "urlDuplicate": "Un autre signet a déjà cette URL, la modification n'a pas été enregistrée.",
-    "openAction": "Ouvrir",
     "copiedUrl": "Lien copié",
-    "moveToTrash": "Mettre à la corbeille",
-    "rowMenu": "Plus d'actions",
     "emptyNone": "Aucun signet pour l'instant.",
     "emptyTitle": "Garde les sites qui comptent",
     "emptyAdd": "Ajouter un signet",
@@ -548,11 +477,9 @@
     "new": "Nouveau"
   },
   "contacts": {
-    "new": "Nouveau",
     "searchPlaceholder": "Rechercher des contacts…",
-    "sortOptions": "Options de tri",
     "emptyNone": "Pas encore de contacts.",
-    "emptyTitle": "Un carnet d'adresses que toi seul peux lire",
+    "emptyTitle": "Un carnet d'adresses, chiffré sur ton appareil",
     "emptyAdd": "Ajouter un contact",
     "emptyImport": "Importer des contacts",
     "noMatches": "Aucun résultat.",
@@ -571,15 +498,12 @@
     "company": "Société",
     "department": "Service",
     "jobTitle": "Fonction",
-    "groupName": "Nom",
     "groupPhone": "Téléphone",
     "groupEmail": "E-mail",
     "groupAddress": "Adresse",
     "groupWebsite": "Site web",
-    "groupProfile": "Profil",
     "groupDates": "Dates",
     "groupRelated": "Proches",
-    "groupNote": "Note",
     "addPhone": "Ajouter un téléphone",
     "addEmail": "Ajouter un e-mail",
     "addWebsite": "Ajouter un site web",
@@ -594,7 +518,6 @@
     "notePlaceholder": "Notes sur cette personne",
     "labelNone": "Étiquette",
     "labelCustom": "Étiquette personnalisée…",
-    "removeRow": "Retirer",
     "call": "Appeler",
     "message": "Message",
     "sendEmail": "Envoyer un e-mail",
@@ -615,15 +538,8 @@
     "menuPersonal": "Personnel",
     "menuName": "Nom",
     "menuText": "Texte",
-    "itemAddress": "Adresse",
-    "itemWebsite": "Site web",
-    "itemProfile": "Profil",
-    "itemCompany": "Société",
-    "itemJobTitle": "Fonction",
-    "itemBirthday": "Anniversaire",
     "itemDate": "Date",
     "itemRelated": "Personne liée",
-    "itemNickname": "Surnom",
     "itemNameParts": "Deuxième prénom, préfixe, suffixe",
     "itemPhonetic": "Nom phonétique",
     "itemNote": "Note",
@@ -753,8 +669,10 @@
       "note": "Notes",
       "task": "Listes de tâches",
       "journal": "Entrées de journal",
-      "contact": "Anniversaires"
+      "contact": "Anniversaires et dates"
     },
+    "birthdays": "Anniversaires",
+    "contactDate": "{{name}} : {{label}}",
     "dragEnd": "Fais glisser pour changer le jour de fin",
     "previousDay": "Jour précédent",
     "nextDay": "Jour suivant",
@@ -848,7 +766,6 @@
     "daysBeforeAt_one": "{{count}} jour avant à {{time}}",
     "daysBeforeAt_other": "{{count}} jours avant à {{time}}",
     "custom": "Personnalisée",
-    "add": "Ajouter",
     "max": "Jusqu'à cinq alertes.",
     "units": {
       "minutes": "minutes",
@@ -860,11 +777,9 @@
     "remove": "Retirer {{alert}}",
     "reminder": "Rappel",
     "medication": "Rappel de médicament",
-    "open": "Ouvrir",
     "snooze": "Rappeler dans 10 min",
     "offOnPhone": "Les rappels sont désactivés sur ce téléphone",
-    "turnOn": "Activer",
-    "openSettings": "Ouvrir les paramètres"
+    "turnOn": "Activer"
   },
   "quickAdd": {
     "group": "Créer",
@@ -876,6 +791,14 @@
     "appendHintDetail": "Tape >>, puis le début de son nom",
     "appendNone": "Aucune liste de tâches ni note à compléter pour l'instant",
     "appendNoneDetail": "Tape un nom après >> pour créer une liste de tâches de ce nom",
+    "cannotAdd": "Impossible d'ajouter à {{title}}",
+    "blocked": {
+      "trash": "Elle est dans la corbeille.",
+      "pin": "Elle est derrière ton PIN. Ouvre-la pour ajouter.",
+      "readOnly": "Elle est en lecture seule.",
+      "board": "C'est un tableau Kanban. Ajoute les cartes sur le tableau.",
+      "archived": "Elle est archivée. Désarchive-la pour ajouter."
+    },
     "linkGroup": "Enregistrer ce lien",
     "linkDetail": {
       "bookmark": "Garde l'adresse. Tu la nommes ensuite.",
@@ -894,6 +817,7 @@
       "task": "Nouvelle liste de tâches",
       "journal": "Nouvelle entrée de journal",
       "kanban": "Nouveau tableau Kanban",
+      "drawing": "Nouveau dessin",
       "login": "Nouvel identifiant",
       "file": "Importer un fichier",
       "contact": "Nouveau contact",
@@ -926,8 +850,8 @@
       },
       "length": {
         "label": "Durée",
-        "examples": "pendant 30 min · pendant 3 jours · ven. au dim.",
-        "insert": "pendant 1h"
+        "examples": "15h pendant 30 min · pendant 3 jours · ven. au dim.",
+        "insert": "15h pendant 1h"
       },
       "repeat": {
         "label": "Répétition",
@@ -973,17 +897,14 @@
     "backToToday": "Revenir à aujourd'hui",
     "options": "Options du bilan du jour",
     "skipToday": "Passer aujourd'hui",
-    "hide": "Masquer cette carte",
+    "hide": "Masquer",
     "change": "Changer d'humeur",
     "saved": "Enregistré",
     "chooseTrackers": "Choisir les suivis",
-    "settings": "Paramètres du bilan du jour",
     "skipped": "Passé pour aujourd'hui.",
     "startOver": "Recommencer",
     "cleared": "Bilan du jour effacé.",
     "hidden": "Carte masquée. « Afficher le bilan du jour » dans les préférences de la liste la réactive.",
-    "undo": "Annuler",
-    "done": "Terminé",
     "write": "Écrire sur aujourd'hui",
     "writeOn": "Écrire sur le {{date}}",
     "streak": "Jour {{n}} d'affilée",
@@ -997,19 +918,25 @@
     "hiddenCount_other": "{{count}} bilans du jour sont masqués.",
     "showThem": "Afficher"
   },
+  "medicationCard": {
+    "title": "Suivi de la médication",
+    "options": "Options des médicaments",
+    "edit": "Modifier les médicaments du jour",
+    "hidden": "Carte masquée. Réactive-la dans les préférences de la liste ou dans Paramètres > Suivis > Médication."
+  },
   "clipper": {
-    "saveAsNote": "Enregistrer en note",
     "saving": "Enregistrement en note…",
     "stepPage": "Téléchargement de la page",
     "stepPictures": "Enregistrement des images, {{done}} sur {{total}}",
-    "openNote": "Ouvrir la note",
     "alreadySaved": "Cette page est déjà enregistrée en note ({{date}}).",
     "savedOn": "Enregistrée en note le {{date}}",
-    "windowTitle": "Capturer une page",
     "addressLabel": "Adresse web",
     "addressPlaceholder": "Colle un lien…",
     "savePictures": "Enregistrer les images",
     "savePicturesHint": "Jusqu'à 20 images, stockées avec la note. Elles comptent dans ton stockage.",
+    "extensionTipTitle": "Capture depuis ton navigateur pour un meilleur résultat",
+    "extensionTip": "L'extension de navigateur enregistre la page telle que tu la vois, y compris les pages qui demandent une connexion.",
+    "extensionTipSetUp": "Configurer l'extension",
     "downloading": "Téléchargement de la page…",
     "downloadingPictures": "Téléchargement des images, {{done}} sur {{total}}",
     "picturesLine_one": "{{count}} image · {{size}}, enregistrée avec la note",
@@ -1045,5 +972,168 @@
     "until": "Jusqu'au {{day}}",
     "noAlert": "Aucune alerte",
     "endsLater": "Se termine un autre jour"
+  },
+  "apps": {
+    "railLabel": "Extension",
+    "title": "Extension de navigateur",
+    "subtitle": "Capture web et gestionnaire de mots de passe dans Chrome, Firefox et Edge. L'extension ne détient jamais la clé qui ouvre tes notes.",
+    "stepInstall": "Installer l'extension",
+    "stepFeatures": "Choisir ce qu'elle peut faire",
+    "stepConnect": "Connecter",
+    "makeCode": "Créer un code",
+    "connectHint": "Crée un code à usage unique et colle-le dans l'extension.",
+    "thisBrowser": "Ce navigateur",
+    "otherApps": "Apps de bureau et mobiles :",
+    "desktopAll": "Tous les téléchargements",
+    "extensionComputersOnly": "L'extension est pour Chrome, Firefox et Edge sur ordinateur.",
+    "demoSignUp": "Inscris-toi pour connecter un navigateur"
+  },
+  "extensionConnect": {
+    "clips": "Capture web",
+    "clipsHint": "Enregistre des sites web en notes.",
+    "loginsHint": "Identifiants, cartes, clés SSH et signets du site où tu te trouves, en copie seulement. Verrouillé par son propre PIN ou code d'accès.",
+    "pickOne": "Active au moins une option.",
+    "codeLabel": "Code pour l'extension",
+    "oneUse": "Fonctionne une seule fois, pendant 10 minutes.",
+    "usedBy": "{{name}} a utilisé ce code et est connecté. Si ce n'était pas toi, retire-le ci-dessous.",
+    "newCode": "Nouveau code",
+    "tooManyCodes": "Trop de codes sont en attente. Utilise l'un d'eux, ou attends 10 minutes.",
+    "tooManyExtensions": "Ce compte a 10 navigateurs connectés, le maximum possible. Retires-en un d'abord.",
+    "keyElsewhere": "La clé de tes identifiants se trouve sur un autre de tes appareils. Ouvre PrivacyNotes là-bas et laisse-le se synchroniser, puis réessaie.",
+    "failed": "Impossible de créer un code. Vérifie ta connexion et réessaie."
+  },
+  "dashboard": {
+    "taskReadOnly": "Cette note est en lecture seule. Désactive la lecture seule dans les options de la note pour cocher ses tâches.",
+    "addWidget": "Ajouter un widget",
+    "catalogTitle": "Ajouter un widget",
+    "layouts": "Dispositions",
+    "layoutChanged": "Disposition modifiée",
+    "full": "L'Accueil est plein. Retire d'abord un widget.",
+    "added": "Ajouté à l'Accueil",
+    "removed": "Retiré de l'Accueil",
+    "showOnHome": "Afficher sur l'Accueil",
+    "removeFromHome": "Retirer de l'Accueil",
+    "resize": "Redimensionner {{name}}",
+    "narrower": "Plus étroit",
+    "taller": "Plus haut",
+    "shorter": "Moins haut",
+    "moveEarlier": "Déplacer plus tôt",
+    "moveLater": "Déplacer plus loin",
+    "chooseNote": "Choisir une note",
+    "chooseTag": "Choisir une étiquette",
+    "chooseFolder": "Choisir un dossier",
+    "chooseTracker": "Choisir un suivi",
+    "choose": "Choisir",
+    "gone": "N'existe plus",
+    "otherSpace": "Dans l'autre espace",
+    "proLocked": "Inclus dans Pro",
+    "noneToChoose": "Rien à choisir pour l'instant",
+    "headerEvents_one": "{{formatted}} événement aujourd'hui",
+    "headerEvents_many": "{{formatted}} événements aujourd'hui",
+    "headerEvents_other": "{{formatted}} événements aujourd'hui",
+    "headerTasks_one": "{{formatted}} tâche ouverte",
+    "headerTasks_many": "{{formatted}} tâches ouvertes",
+    "headerTasks_other": "{{formatted}} tâches ouvertes",
+    "startToday": "Commencer l'entrée du jour",
+    "groups": {
+      "keep": "Ce que tu conserves"
+    },
+    "layout": {
+      "everyday": "Quotidien",
+      "planner": "Planificateur",
+      "writer": "Écriture"
+    },
+    "w": {
+      "checkIn": {
+        "name": "Bilan du jour",
+        "help": "Comment tu vas aujourd'hui, et tes suivis"
+      },
+      "calendar": {
+        "help": "Le mois, avec des points pour les entrées et les événements"
+      },
+      "upcoming": {
+        "name": "À venir",
+        "help": "Aujourd'hui et les 7 prochains jours"
+      },
+      "today": {
+        "name": "Entrée du jour",
+        "help": "L'entrée de journal du jour, ou de quoi la commencer"
+      },
+      "tasks": {
+        "name": "Tâches ouvertes",
+        "help": "Les tâches non cochées de tes notes"
+      },
+      "recent": {
+        "name": "Modifiés récemment",
+        "help": "Les éléments sur lesquels tu as travaillé en dernier"
+      },
+      "pinned": {
+        "help": "Tes éléments épinglés"
+      },
+      "note": {
+        "name": "Une note",
+        "help": "Une note de ton choix, sur l'Accueil"
+      },
+      "tag": {
+        "name": "Une étiquette",
+        "help": "Les éléments les plus récents d'une étiquette"
+      },
+      "folder": {
+        "name": "Un dossier",
+        "help": "Les éléments les plus récents d'un dossier"
+      },
+      "onThisDay": {
+        "name": "Ce jour-là",
+        "help": "Les entrées de journal des années précédentes"
+      },
+      "week": {
+        "help": "Mots, jours actifs, éléments et bilans du jour"
+      },
+      "streak": {
+        "help": "Jours d'affilée où tu as écrit"
+      },
+      "checkInStreak": {
+        "help": "Jours d'affilée avec un bilan du jour"
+      },
+      "rhythm": {
+        "name": "Ton rythme",
+        "help": "26 semaines d'écriture et d'humeur"
+      },
+      "milestone": {
+        "name": "Prochain jalon",
+        "help": "À quelle distance se trouve le prochain"
+      },
+      "tracker": {
+        "name": "Un suivi",
+        "help": "Un suivi : son chiffre et ses jours"
+      },
+      "weekRecap": {
+        "help": "Ta semaine, en une carte"
+      },
+      "files": {
+        "name": "Fichiers récents",
+        "help": "Tes images et fichiers les plus récents"
+      },
+      "bookmarks": {
+        "help": "Tes signets les plus récents"
+      },
+      "birthdays": {
+        "help": "Les anniversaires des 30 prochains jours"
+      }
+    },
+    "empty": {
+      "upcoming": "Rien dans les 7 prochains jours",
+      "tasks": "Aucune tâche ouverte",
+      "recent": "Rien ici pour l'instant",
+      "pinned": "Rien d'épinglé pour l'instant",
+      "tag": "Aucun élément avec cette étiquette",
+      "folder": "Rien dans ce dossier",
+      "onThisDay": "Aucune entrée ce jour-là les années précédentes",
+      "files": "Aucun fichier pour l'instant",
+      "bookmarks": "Aucun signet pour l'instant",
+      "birthdays": "Aucun anniversaire dans les 30 prochains jours",
+      "tracker": "Rien de noté pour l'instant",
+      "milestone": "Tous les jalons sont atteints"
+    }
   }
 }

@@ -27,7 +27,7 @@
  * Module-scoped on purpose: a re-lock unmounts the UI but keys stay in
  * memory by the existing app-lock design, and the sweep keeps going.
  *
- * Spec: ops/docs/archive/local-at-rest.md (section 5.3)
+ * Spec: docs/internal/specs/local-at-rest.md (section 5.3)
  */
 import { db, openRawDb } from './db';
 import type { LocalNote } from './db';

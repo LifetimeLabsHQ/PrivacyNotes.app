@@ -24,7 +24,8 @@
       "replace": "Sök och ersätt är en Pro-funktion. Uppgradera för att ersätta en träff eller alla träffar i en anteckning på en gång.",
       "passphrase": "Lösenfraser är en Pro-funktion. Skapa en fras av slumpmässiga ord som är lätt att skriva och att säga.",
       "default": "En uppgradering låser upp allt nedan. Engångsbetalning.",
-      "alerts": "Påminnelser är en Pro-funktion. Dina enheter ringer vid den tid du väljer, och inget om objektet lämnar dem."
+      "alerts": "Påminnelser är en Pro-funktion. Varje enhet ringer för sig vid den tid du väljer, så ingen pushtjänst ser objektet.",
+      "vaultFiles": "Filer på valvobjekt är en Pro-funktion. Förvara återställningskoder, en reservnyckel eller en inskannad bild tillsammans med inloggningen, kortet eller nyckeln de hör till."
     },
     "features": {
       "devices": "Synka obegränsat antal enheter, på alla plattformar",
@@ -80,7 +81,6 @@
     "loadFailed": "Historiken kunde inte hämtas. Kontrollera anslutningen och försök igen.",
     "selectPrompt": "Välj en version för att förhandsgranska.",
     "emptyBody": "(tom)",
-    "restore": "Återställ",
     "restoring": "Återställer…",
     "restoreSnapshotFailed": "Den aktuella versionen kunde inte sparas först, så inget återställdes. Kontrollera anslutningen och försök igen.",
     "restoreFailed": "Den här versionen kunde inte återställas. Försök igen.",

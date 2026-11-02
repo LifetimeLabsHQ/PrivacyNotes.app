@@ -53,8 +53,6 @@
   },
   "mood": {
     "prompt": "Wie fühlst du dich? (1-10)",
-    "low": "schrecklich",
-    "high": "fantastisch",
     "anchor": {
       "1": "schrecklich",
       "3": "mies",
@@ -142,8 +140,6 @@
     "editMedication": "Medikament bearbeiten",
     "removeMedication": "Medikament entfernen",
     "confirmRemove": "<highlight>{{name}}</highlight> entfernen?",
-    "yes": "Ja",
-    "no": "Nein",
     "taken": "Eingenommen",
     "skip": "Überspringen",
     "editList": "Diese Medikamente ändern",
@@ -257,16 +253,15 @@
   },
   "config": {
     "configureTrackers": "Tracker konfigurieren",
-    "title": "Tracker",
-    "tabGeneral": "Allgemein",
     "tabCustom": "Eigene",
-    "chooseTrackers": "Tracker auswählen",
     "factorsTitle": "Deine Faktoren",
     "factorsHelp": "Die Teile eines Tages, die du bei Faktoren antippst. Ein entfernter Faktor behält seinen Namen an den Tagen, an denen er erfasst ist.",
     "renameFactor": "{{name}} umbenennen",
     "addFactor": "Faktor hinzufügen",
     "medicationsTitle": "Deine Medikamente",
     "medicationsHelp": "Die Medikamente, nach denen Medis fragt. Ein entferntes behält seinen Verlauf.",
+    "medicationCard": "Medikationskarte",
+    "medicationCardHelp": "„Hast du deine Medikamente genommen?“ auf diesem Gerät, nur an einem Tag, an dem ein Medikament fällig ist.",
     "customHelp": "Tracker, die du selbst benennst: eine Skala, eine Zahl oder ja oder nein. Bis zu {{max}}.",
     "yourCustomTrackers": "Deine eigenen Tracker",
     "categoryMoodMind": "Stimmung und Geist",
@@ -291,23 +286,17 @@
     "kindBuild": "Aufbauen",
     "kindWatch": "Im Blick behalten",
     "editHabit": "{{name}} bearbeiten",
-    "removeHabit": "{{name}} entfernen",
     "ownHabitsFull": "Du hast {{max}} eigene Gewohnheiten, mehr sind nicht möglich.",
     "addCustomTrackerHint": "Tracke alles, was du möchtest",
     "maxReached": "Maximal {{max}} benutzerdefinierte Tracker erreicht.",
     "customTrackers": "Benutzerdefinierte Tracker",
-    "newCustomTracker": "Neuer benutzerdefinierter Tracker",
-    "newMedication": "Neues Medikament",
     "newMedicationHelp": "Medis fragt ab dem Starttag danach, zu den Uhrzeiten, die du festlegst.",
     "trackerNamePlaceholder": "Name des Trackers",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "Name",
     "typeLabel": "Typ",
-    "colorLabel": "Farbe",
     "preview": "Vorschau",
     "startFromLast": "Letzten Eintrag merken",
     "chooseIcon": "Symbol wählen",
-    "iconLabel": "Symbol",
     "startFromLastHelp": "Gut für Dinge, die sich selten ändern, wie dein Gewicht oder eine tägliche Dosis."
   },
   "factors": {
@@ -315,7 +304,6 @@
     "count_other": "{{count}} Faktoren",
     "remove": "{{name}} entfernen",
     "placeholder": "Besuch, Migräne, Überstunden",
-    "add": "Hinzufügen",
     "empty": "Füge die Dinge hinzu, die deine Tage prägen, und tippe sie dann an jedem Tag an.",
     "commaHint": "Füge mehrere auf einmal hinzu, durch Kommas getrennt.",
     "editList": "Diese Faktoren ändern",
@@ -339,8 +327,6 @@
   "habits": {
     "prompt": "Was hast du heute gemacht?",
     "count": "{{yes}}/{{total}}",
-    "yes": "Ja",
-    "no": "Nein",
     "empty": "Wähle die Fragen in der Tracker-Einrichtung aus.",
     "changeQuestions": "Diese Fragen ändern",
     "q": {
@@ -399,9 +385,7 @@
     "prompt": "Wie viel Koffein hattest du?"
   },
   "flow": {
-    "next": "Weiter",
     "finish": "Abschließen",
-    "done": "Fertig",
     "step": "Tracker {{n}} von {{total}}"
   }
 }

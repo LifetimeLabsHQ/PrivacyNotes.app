@@ -12,7 +12,7 @@
  *
  * Every target takes the drop as a copy, so the cursor shows the same plus
  * over an editor, a tag and a folder.
- * Spec: ops/docs/archive/drag-to-folder-and-tag.md (section 6)
+ * Spec: docs/internal/specs/drag-to-folder-and-tag.md (section 6)
  */
 
 export const ITEM_TYPE = 'application/x-privacynotes-items';
@@ -41,7 +41,7 @@ export function writeItemDrag(dt: DataTransfer, ids: readonly string[], linkText
 export function setItemDragImage(dt: DataTransfer, row: Element, count: number): void {
   const chip = document.createElement('div');
   chip.className =
-    'pointer-events-none fixed top-[-1000px] start-0 inline-flex max-w-[260px] items-center gap-2 rounded-lg border border-divider bg-surface-2 py-1 ps-1 pe-3 text-[13px] font-medium text-pn';
+    'pointer-events-none fixed top-[-1000px] start-0 inline-flex max-w-[260px] items-center gap-2 rounded-lg border border-divider bg-surface-2 py-1 ps-1 pe-3 text-compact font-medium text-pn';
   const icon = row.querySelector('[data-slot="icon"]');
   if (icon) {
     const box = document.createElement('span');
@@ -57,7 +57,7 @@ export function setItemDragImage(dt: DataTransfer, row: Element, count: number):
   chip.append(title);
   if (count > 1) {
     const more = document.createElement('span');
-    more.className = 'shrink-0 rounded-full bg-accent-fill px-1.5 text-[11px] font-semibold tabular-nums text-white';
+    more.className = 'shrink-0 rounded-full bg-accent-fill px-1.5 text-meta font-semibold tabular-nums text-white';
     more.textContent = `+${count - 1}`;
     chip.append(more);
   }

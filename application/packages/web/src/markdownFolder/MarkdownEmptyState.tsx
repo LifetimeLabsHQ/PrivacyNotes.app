@@ -5,7 +5,7 @@
  * situations - a desktop browser without the API has a fix worth selling, a
  * phone does not - plus the remembered-folder prompt that only Chromium needs.
  *
- * Spec: ops/docs/archive/markdown-folder.md (sections 5 and 12)
+ * Spec: docs/internal/specs/markdown-folder.md (sections 5 and 12)
  */
 import { useTranslation } from 'react-i18next';
 import { Download, SlidersHorizontal, Copy, Check, FileText, FolderOpen } from '../icons';
@@ -57,7 +57,7 @@ export function MarkdownEmptyState({
               through a Chromium flags page, and Chromium ships those pages in
               English everywhere - a card translated around an untranslated
               screen helps nobody. `flag` is a constant for the same reason. */}
-          <p className="text-[15px] font-semibold">
+          <p className="text-row font-semibold">
             {t('markdown.braveTitle', { flag: BRAVE_FLAG_NAME })}
           </p>
           {/* Text with a copy button, not a link: Chromium blocks page-initiated
@@ -66,15 +66,15 @@ export function MarkdownEmptyState({
           <div className="w-full flex items-center gap-2 rounded-md border border-divider bg-surface-1 ps-2.5 pe-1.5 py-1.5">
             {/* `text-start` resolves to left inside the card's LTR island, so
                 the URL never needs a physical utility or its own dir. */}
-            <code className="flex-1 min-w-0 truncate text-start font-mono text-[12px] text-pn-soft">
+            <code className="flex-1 min-w-0 truncate text-start font-mono text-small text-pn-soft">
               {BRAVE_FLAG_URL}
             </code>
             <button
               type="button"
               onClick={() => copy(BRAVE_FLAG_URL, 'brave-flag')}
-              className="shrink-0 inline-flex items-center gap-1 text-[12px] font-medium px-2 py-1 rounded border border-divider hover:bg-surface-2 transition"
+              className="shrink-0 inline-flex items-center gap-1 text-small font-medium px-2 py-1 rounded border border-divider hover:bg-surface-2 transition"
             >
-              {copied === 'brave-flag' ? <Check size={13} /> : <Copy size={13} />}
+              {copied === 'brave-flag' ? <Check /> : <Copy />}
               {copied === 'brave-flag'
                 ? t('markdown.braveCopied')
                 : t('markdown.braveCopy')}
@@ -84,14 +84,14 @@ export function MarkdownEmptyState({
               whole instruction now, and it is the last thing that should be
               squinted at. The app link stays secondary on colour and underline
               rather than on being smaller. */}
-          <p className="text-[13px] text-pn-muted leading-relaxed">
+          <p className="text-compact text-pn-muted leading-relaxed">
             {t('markdown.braveSteps', { flag: BRAVE_FLAG_NAME })}
           </p>
           <a
             href={`${marketingHomeHref()}#downloads`}
             target="_blank"
             rel="noreferrer"
-            className="text-[13px] text-pn-muted underline underline-offset-2 hover:text-pn transition mt-1"
+            className="text-compact text-pn-muted underline underline-offset-2 hover:text-pn transition mt-1"
           >
             {t('markdown.braveAppAlternative')}
           </a>
@@ -104,11 +104,11 @@ export function MarkdownEmptyState({
     return (
       <div className="h-full flex flex-col items-center justify-center text-center px-6 py-10 gap-3">
         <Download size={26} weight="duotone" className="text-pn-muted" />
-        <p className="text-[15px] font-semibold">{t('markdown.needsAppTitle')}</p>
+        <p className="text-row font-semibold">{t('markdown.needsAppTitle')}</p>
         {/* Two sentences, one per line: as a single string it stretched the
             full width of the pane on a desktop window and read as a wall. The
             break sits on the sentence boundary, so it survives translation. */}
-        <p className="text-[13px] text-pn-muted leading-relaxed">
+        <p className="text-compact text-pn-muted leading-relaxed">
           {t('markdown.needsAppBody')}
           <br />
           {t('markdown.needsAppWhere')}
@@ -122,7 +122,7 @@ export function MarkdownEmptyState({
           href={`${marketingHomeHref()}#downloads`}
           target="_blank"
           rel="noreferrer"
-          className="text-[13px] font-medium px-3 py-1.5 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover transition mt-1"
+          className="text-compact font-medium px-3 py-1.5 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover transition mt-1"
         >
           {t('markdown.getDesktopApp')}
         </a>
@@ -144,13 +144,13 @@ export function MarkdownEmptyState({
         <MarkdownPitch />
         {reopenName && (
           <div className="rounded-lg border border-divider bg-surface-1 p-3 mt-4">
-            <p className="text-[12.5px] text-pn-soft mb-2">
+            <p className="text-compact text-pn-soft mb-2">
               {t('markdown.reopenPrompt', { name: reopenName })}
             </p>
             <button
               type="button"
               onClick={onReopen}
-              className="text-[13px] font-medium px-3 py-1.5 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover transition"
+              className="text-compact font-medium px-3 py-1.5 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover transition"
             >
               {t('markdown.reopenFolder', { name: reopenName })}
             </button>
@@ -162,21 +162,21 @@ export function MarkdownEmptyState({
         <div className="grid grid-cols-2 gap-2 mt-4">
           <Button
             variant="primary"
-            icon={<FolderOpen size={15} aria-hidden="true" className="shrink-0" />}
+            icon={<FolderOpen aria-hidden="true" className="shrink-0" />}
             onClick={onOpenFolder}
             className="w-full justify-center"
           >
             {busy ? t('markdown.scanning') : t('markdown.openFolder')}
           </Button>
           <Button
-            icon={<FileText size={15} aria-hidden="true" className="shrink-0" />}
+            icon={<FileText aria-hidden="true" className="shrink-0" />}
             onClick={onOpenFile}
             className="w-full justify-center"
           >
             {t('markdown.openFile')}
           </Button>
         </div>
-        {error && <p className="text-[12px] text-danger mt-2 text-center">{error}</p>}
+        {error && <p className="text-small text-danger mt-2 text-center">{error}</p>}
       </div>
     </div>
   );

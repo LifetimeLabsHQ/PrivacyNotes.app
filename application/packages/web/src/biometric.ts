@@ -6,7 +6,7 @@
  * app, whose webview never exposes a WebAuthn platform authenticator. Which one
  * wrapped a blob is recorded in the stored credential id, so an unlock always
  * prompts the same way the enrollment did.
- * Spec: ops/docs/biometric-unlock.md, backlog #101
+ * Spec: docs/contrib/biometric-unlock.md, backlog #101
  *
  * In a browser whose passkey provider has the WebAuthn PRF extension, the key
  * is bound: HKDF over the PRF output of the passkey gives the AES-GCM key at
@@ -19,8 +19,8 @@
  * user-presence check only: the phrase is wrapped with a random AES-GCM-256
  * key that sits in localStorage beside the blob it wraps, so storage access
  * bypasses the gate entirely. `isBiometricKeyBound` answers which.
- * Spec: ops/docs/plans/app-lock-passcode.md (section 4.6),
- * ops/docs/plans/biometric-key-binding.md (sections 4 and 8)
+ * Spec: docs/internal/plans/app-lock-passcode.md (section 4.6),
+ * docs/internal/plans/biometric-key-binding.md (sections 4 and 8)
  *
  * Also provides PIN-based phrase wrapping (PBKDF2, convenience only).
  * Note encryption is untouched - this module only wraps the stored phrase.
@@ -130,7 +130,7 @@ async function invokeTauri<T>(cmd: string, args?: Record<string, unknown>): Prom
  * there is no command at all.
  * Deliberately not cached: enrolling a finger, or a biometry lockout, flips the
  * answer while the app is open.
- * Spec: ops/docs/biometric-unlock.md (section 3.2 native path), backlog #101
+ * Spec: docs/contrib/biometric-unlock.md (section 3.2 native path), backlog #101
  */
 async function canUseNativeBiometric(): Promise<boolean> {
   if (detectPlatform() === 'web') return false;
@@ -188,7 +188,7 @@ function nativeSecret(hex: unknown): Uint8Array {
  * behind the biometric prompt, which is both the person's consent and the
  * proof that the key opens. Throws a NativeKeyFailure. A shell without the
  * command reads as `unsupported`, so the presence gate still enrolls.
- * Spec: ops/docs/plans/biometric-key-binding.md (section 8.2)
+ * Spec: docs/internal/plans/biometric-key-binding.md (section 8.2)
  */
 async function nativeKeyCreate(reason: string, cancelLabel: string): Promise<NativeKey> {
   let made: { handle?: unknown; secret?: unknown };
@@ -615,7 +615,7 @@ export async function enrollBiometric(
  * uses). The hardware key is made under a fresh name, so a working enrollment
  * is never touched before the new record reads back; a key whose record did
  * not commit is deleted.
- * Spec: ops/docs/plans/biometric-key-binding.md (section 8.2)
+ * Spec: docs/internal/plans/biometric-key-binding.md (section 8.2)
  */
 async function enrollNative(
   phrase: string,
@@ -691,7 +691,7 @@ export type BiometricSetUpAgainResult =
  * the store refuses all leave it exactly as it was. Afterwards the browser is
  * told, where it can be, that the old passkey is gone; that is a hint to the
  * passkey provider, and nothing relies on it.
- * Spec: ops/docs/plans/app-lock-passcode.md (section 4.6, "Old enrollments")
+ * Spec: docs/internal/plans/app-lock-passcode.md (section 4.6, "Old enrollments")
  */
 export async function setUpBiometricAgain(phrase: string): Promise<BiometricSetUpAgainResult> {
   const since = signInStamp();
@@ -847,7 +847,7 @@ export async function unlockWithBiometricDetailed(
  * needs a passed biometric, so it gates the old wrap as the presence prompt
  * did, and one prompt does both. Where it cannot, or the key could not be
  * made, the presence prompt runs as before. A cancel cancels.
- * Spec: ops/docs/plans/biometric-key-binding.md (section 8.2, migration)
+ * Spec: docs/internal/plans/biometric-key-binding.md (section 8.2, migration)
  */
 async function unlockNativePresence(
   stored: { wrapKeyB64: string; ivB64: string; wrappedB64: string },
@@ -889,7 +889,7 @@ async function unlockNativePresence(
  * while another door holds the phrase (a PIN wrap, or the phrase at rest) and
  * the record is still the one this unlock read. With no biometric enrolled
  * the lock screen says the same, and the record stays.
- * Spec: ops/docs/plans/biometric-key-binding.md (D6, section 8.2)
+ * Spec: docs/internal/plans/biometric-key-binding.md (D6, section 8.2)
  */
 async function unlockNativeBound(
   record: NativeBoundEnrollment,
@@ -1005,7 +1005,7 @@ export function hasBiometricCredential(): boolean {
  * ciphertext. True for a browser enrollment bound through PRF and for a native
  * enrollment whose key the secure hardware holds. The PIN tab warns while
  * biometric unlock is on and this is false.
- * Spec: ops/docs/plans/biometric-key-binding.md (D3)
+ * Spec: docs/internal/plans/biometric-key-binding.md (D3)
  */
 export function isBiometricKeyBound(): boolean {
   // A raw wrap key beside the record still opens the phrase on its own, so

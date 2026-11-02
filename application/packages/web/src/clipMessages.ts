@@ -3,7 +3,7 @@
  * and the clip hook share: the labels a clip writes into its note, the
  * result line and the message for each failure. A module of its own, so the
  * lazily loaded window does not pull the hook's chunk apart.
- * Spec: ops/docs/archive/web-clipper-stage1.md (section 5.4)
+ * Spec: docs/internal/specs/web-clipper-stage1.md (section 5.4)
  */
 import i18n from './i18n';
 import { formatInstant } from './intlFormat';

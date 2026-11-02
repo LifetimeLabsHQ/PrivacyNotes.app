@@ -9,8 +9,8 @@ import { formatInstant } from './intlFormat';
  * entry is absent is not offered; the date inserts are absent while the note
  * cannot be edited.
  *
- * Spec: ops/docs/archive/keyboard-shortcuts.md (decision D5, command mode),
- * ops/docs/archive/dates.md (section 3.6)
+ * Spec: docs/internal/specs/keyboard-shortcuts.md (decision D5, command mode),
+ * docs/internal/specs/dates.md (section 3.6)
  */
 export type EditorCommand = 'find' | 'findReplace' | 'outline' | 'connections' | 'markdownView' | 'insertDate' | 'insertDateTime';
 

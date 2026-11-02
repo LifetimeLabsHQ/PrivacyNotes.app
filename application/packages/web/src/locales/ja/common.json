@@ -26,14 +26,11 @@
     "noResults": "結果なし"
   },
   "deleteNote": {
-    "title": "完全に削除",
     "confirm": "完全に削除",
-    "untitled": "無題",
     "body": "<highlight>「{{title}}」</highlight>を完全に削除しますか?この操作は取り消せません。"
   },
   "emptyTrash": {
     "title": "ゴミ箱を空にする",
-    "confirm": "完全に削除",
     "body_other": "<highlight>{{count}}件のノート</highlight>を完全に削除しますか?この操作は取り消せません。"
   },
   "storageBar": {
@@ -60,7 +57,6 @@
   },
   "palette": {
     "label": "コマンド",
-    "open": "コマンド",
     "empty": "一致するコマンドはありません",
     "groups": {
       "features": "機能",
@@ -85,7 +81,7 @@
       "insertDate": "日付を挿入",
       "insertDateTime": "日付と時刻を挿入",
       "clearFilters": "フィルターを解除",
-      "moveToTrash": "ノートをゴミ箱に移動",
+      "moveToTrash": "ノートを削除",
       "closeTab": "タブまたはノートを閉じる",
       "nextTab": "次のタブ",
       "previousTab": "前のタブ",
@@ -108,10 +104,8 @@
     "move": "移動",
     "open": "開く",
     "openInTab": "タブで開く",
-    "openLink": "開く",
     "edit": "編集",
     "close": "閉じる",
-    "tags": "タグ",
     "folders": "フォルダ",
     "tagItems_other": "{{count}}件",
     "emptyTags": "その名前のタグはありません",
@@ -172,17 +166,14 @@
     "downloadPublicKey": "公開鍵をダウンロード",
     "downloadPrivateKey": "秘密鍵をダウンロード",
     "downloadHint": "ダウンロードした鍵を ~/.ssh に移動し、chmod 600 を実行してください。実行しないと ssh に拒否されます。",
+    "downloadHintDesktop": "~/.ssh 内の鍵を守るため、PrivacyNotes はそこには保存しません。鍵を別の場所に保存してから ~/.ssh に移動し、chmod 600 を実行してください。実行しないと ssh に拒否されます。",
+    "downloadHintWindows": ".ssh フォルダ内の鍵を守るため、PrivacyNotes はそこには保存しません。鍵を別の場所に保存してから %USERPROFILE%\\.ssh に移動してください。Windows では chmod は不要です。",
     "downloadFailed": "鍵ファイルを保存できませんでした。ファイルを確認して、もう一度お試しください。",
     "passphrase": "パスフレーズ",
     "passphrasePlaceholder": "鍵のパスフレーズ(あれば)",
     "show": "表示",
     "hide": "隠す",
-    "copyPassphrase": "パスフレーズをコピー",
-    "notes": "メモ",
-    "notesPlaceholder": "追加のメモ(任意)",
-    "requirePin": "表示にPINを要求",
-    "whatDoesThisDo": "この機能について",
-    "setUpPinFirst": "まずセキュリティ設定でPINを設定してください。"
+    "copyPassphrase": "パスフレーズをコピー"
   },
   "tagInput": {
     "placeholder": "タグを追加… カンマ、#、Enterで区切り",
@@ -254,7 +245,6 @@
       "保管庫をそっと開けています",
       "ローカルでは復号。世界からは無視",
       "誰の目にも触れずに復号中",
-      "地産地消の平文",
       "思考を読めないスープに変えています",
       "暗号化された傑作がまたひとつ到着します",
       "暗号化された混沌から秩序を取り戻しています",
@@ -276,17 +266,14 @@
     "changesSome_other": "このうち{{count}}件にはバックアップされていない変更があり、失われます。"
   },
   "ninja": {
-    "recent": "最近",
     "topHit": "最も一致",
     "trashEmpty": "ゴミ箱は空です",
     "allThemes": "すべてのテーマ",
     "features": {
       "stats": {
-        "label": "統計",
         "detail": "執筆、連続記録、トラッカーの推移"
       },
       "trackers": {
-        "label": "トラッカー",
         "detail": "気分、習慣、要因、服薬"
       },
       "medication": {
@@ -306,7 +293,6 @@
         "detail": "強力なパスワードやパスフレーズを、すぐにコピーできます"
       },
       "themes": {
-        "label": "テーマ",
         "detail": "ライトとダークのカラーテーマ"
       }
     },
@@ -317,7 +303,6 @@
     "commands": {
       "syncResume": "同期を再開",
       "changelog": "新機能",
-      "help": "ヘルプ",
       "themesPage": "コミュニティテーマ",
       "website": "PrivacyNotesのウェブサイト"
     },

@@ -16,7 +16,7 @@
  *   the screen. No text or link layer: a PDF is read here, not clicked
  *   through, so nothing inside one can navigate the app.
  *
- * Spec: ops/docs/archive/ui-patterns.md (section 98, the picture viewer)
+ * Spec: docs/internal/design/ui-patterns.md (section 98, the picture viewer)
  */
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -207,7 +207,7 @@ export function PdfPages({ load, zoom, fitMax = Infinity, label }: {
           ))}
         </div>
       ) : (
-        <div className="h-full flex items-center justify-center p-6 text-sm text-white/70 text-center">
+        <div className="h-full flex items-center justify-center p-6 text-body text-white/70 text-center">
           {opened.status === 'loading'
             ? t('viewer.pdfLoading')
             : opened.status === 'password'
@@ -317,14 +317,14 @@ export function PdfCover({ uuid, name }: { uuid: string; name: string }) {
   // Spans, because the file card renders this inside a button.
   if (failed) {
     return (
-      <span className="block px-4 py-8 text-sm text-center text-pn-muted">
+      <span className="block px-4 py-8 text-body text-center text-pn-muted">
         {failed === 'password' ? t('viewer.pdfPassword') : t('viewer.pdfFailed')}
       </span>
     );
   }
   if (!cover) {
     return (
-      <span ref={placeholderRef} className="block px-4 py-16 text-sm text-center text-pn-muted">
+      <span ref={placeholderRef} className="block px-4 py-16 text-body text-center text-pn-muted">
         {t('viewer.pdfLoading')}
       </span>
     );
@@ -338,7 +338,7 @@ export function PdfCover({ uuid, name }: { uuid: string; name: string }) {
           draggable={false}
           className="block max-w-full max-h-[60vh] !my-0 bg-white shadow-sm"
         />
-        <span className="absolute bottom-2 end-2 rounded-md bg-black/60 text-white text-[11px] font-medium px-1.5 py-0.5">
+        <span className="absolute bottom-2 end-2 rounded-md bg-black/60 text-white text-meta font-medium px-1.5 py-0.5">
           {t('viewer.pageCount', { count: cover.pages })}
         </span>
       </span>

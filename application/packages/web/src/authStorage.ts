@@ -37,7 +37,7 @@ export const SHOW_PHRASE_ONCE_KEY = credentialKey('privacynotes.oauth.showPhrase
 // apple-app-site-association file served here. Host and path must match the
 // app-link entry under `plugins.deep-link.mobile` in tauri.conf.json and the
 // entitlement; tests/desktopCapabilities.test.ts holds them together.
-// Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (sections 8.1, 8.2)
+// Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (sections 8.1, 8.2)
 export const OAUTH_APP_LINK_REDIRECT = 'https://use.privacynotes.app/auth/callback';
 
 // Where a DESKTOP sign-in comes back to. No desktop operating system can say
@@ -48,7 +48,7 @@ export const OAUTH_APP_LINK_REDIRECT = 'https://use.privacynotes.app/auth/callba
 // it with the verifier it generated before the browser opened. The page is
 // static and deliberately does not load the application bundle, whose client
 // would otherwise spend the code in the browser.
-// Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.3)
+// Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.3)
 export const OAUTH_DESKTOP_RETURN = 'https://use.privacynotes.app/auth/desktop';
 
 

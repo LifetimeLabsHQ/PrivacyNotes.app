@@ -24,7 +24,8 @@
       "replace": "Buscar y reemplazar es una función Pro. Mejora tu plan para reemplazar una coincidencia o todas las de una nota de una vez.",
       "passphrase": "Las frases de contraseña son una función Pro. Genera una frase de palabras al azar, fácil de escribir y de decir.",
       "default": "Una sola mejora desbloquea todo lo de abajo. Pago único.",
-      "alerts": "Los recordatorios son una función Pro. Tus dispositivos suenan a la hora que elijas, y nada del elemento sale de ellos."
+      "alerts": "Los recordatorios son una función Pro. Cada dispositivo suena por su cuenta a la hora que elijas, así que ningún servicio de notificaciones push ve el elemento.",
+      "vaultFiles": "Los archivos en los elementos de la bóveda son una función Pro. Guarda códigos de recuperación, una clave de respaldo o un escaneo junto al inicio de sesión, la tarjeta o la clave a la que pertenece."
     },
     "features": {
       "devices": "Sincroniza dispositivos ilimitados, en todas las plataformas",
@@ -80,7 +81,6 @@
     "loadFailed": "No se pudo cargar el historial. Comprueba tu conexión e inténtalo de nuevo.",
     "selectPrompt": "Selecciona una versión para previsualizarla.",
     "emptyBody": "(vacío)",
-    "restore": "Restaurar",
     "restoring": "Restaurando…",
     "restoreSnapshotFailed": "No se pudo guardar primero la versión actual, así que no se restauró nada. Comprueba tu conexión e inténtalo de nuevo.",
     "restoreFailed": "No se pudo restaurar esta versión. Inténtalo de nuevo.",

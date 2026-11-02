@@ -56,13 +56,13 @@ export function QuotaRing({
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-[15px] font-medium leading-none text-pn">
+            <span className="text-row font-medium leading-none text-pn">
               {pctLabel}
             </span>
           </div>
         </div>
         <div className="min-w-0">
-          <div className="text-lg font-medium text-pn">
+          <div className="text-heading font-medium text-pn">
             {formatBytes(usedBytes)}{' '}
             <span className="font-normal text-pn-muted">
               <Trans
@@ -72,7 +72,7 @@ export function QuotaRing({
               />
             </span>
           </div>
-          <div className="mt-0.5 text-[13px] text-pn-muted">{label}</div>
+          <div className="mt-0.5 text-help text-pn-muted">{label}</div>
         </div>
       </div>
     );
@@ -104,7 +104,7 @@ export function QuotaRing({
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-medium leading-none text-pn">
+          <span className="text-display-3 font-medium leading-none text-pn">
             {pctLabel}
           </span>
           <span className={`mt-1 ${SETTINGS_EYEBROW}`}>
@@ -112,7 +112,7 @@ export function QuotaRing({
           </span>
         </div>
       </div>
-      <div className="mt-3 text-[15px] font-medium text-pn">
+      <div className="mt-3 text-row font-medium text-pn">
         {formatBytes(usedBytes)}{' '}
         <span className="font-normal text-pn-muted">
           <Trans
@@ -122,7 +122,7 @@ export function QuotaRing({
           />
         </span>
       </div>
-      <div className="mt-0.5 text-[13px] text-pn-muted">{label}</div>
+      <div className="mt-0.5 text-help text-pn-muted">{label}</div>
     </div>
   );
 }

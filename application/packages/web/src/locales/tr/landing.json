@@ -2,6 +2,8 @@
   "header": {
     "betaBadge": "beta",
     "downloads": "İndirmeler",
+    "price": "Fiyat",
+    "priceLine": "Uygulamalarınızın toplam maliyeti",
     "pricing": "Fiyatlandırma",
     "roadmap": "Roadmap",
     "createVault": "Kasanızı oluşturun",
@@ -39,14 +41,13 @@
       "clipper": "<w>Web kırpıcınız</w>.",
       "markdown": "<w>Markdown'ınız</w>."
     },
-    "subhead": "Notlar, görevler, parolalar, dosyalar, yer imleri, bir takvim, bir ruh hali ve ilaç takibi ve bir Markdown düzenleyici. Tek bir özel uygulama.",
+    "subhead": "Notlar, görevler, parolalar, günlük, dosyalar, takvim, kişiler ve yer imleri; ruh hali ve ilaç takibiyle birlikte. Tek bir özel uygulama.",
     "tryDemo": "Demoyu deneyin",
     "microcopy": "Sonsuza kadar ücretsiz. Kredi kartı yok. Google, Apple, GitHub veya sadece 12 kelimelik bir ifadeyle giriş yapın.",
     "alreadyHaveVault": "Kasanız var mı? Giriş yapın",
     "trustSigned": "GitHub'da imzalı sürümler"
   },
   "heroCard": {
-    "passwords": "Parolalar",
     "today": "Bugün",
     "tripTitle": "Seyahat bavul listesi",
     "taskPassport": "Pasaport + biletler",
@@ -57,45 +58,85 @@
     "encrypted": "Şifreli",
     "moodWeek": "Ruh hali · bu hafta"
   },
+  "heroApp": {
+    "label": "Uygulamanın bölümleri",
+    "notes": {
+      "meta": "2 dk önce düzenlendi",
+      "markdown": "MD",
+      "day": "Cumartesi",
+      "body": "Erkenden 28 numaralı tramvay, <b>kalabalıktan önce</b>. Öğle yemeği <ref>Ana</ref>'nın sürekli bahsettiği yerde.",
+      "tag1": "#seyahat",
+      "tag2": "#yemek"
+    },
+    "vault": {
+      "meta": "3 öğe, tek anahtar",
+      "password": "correct-horse-battery",
+      "card": "Seyahat kartı",
+      "ssh": "İş bilgisayarı"
+    },
+    "journal": {
+      "med": "D vitamini, 08:00",
+      "entry": "Nehir kenarında uzun bir yürüyüş. Sonunda iyi uyudum."
+    },
+    "files": {
+      "meta": "Dosyalar, şifreli",
+      "file1": "pasaport.pdf",
+      "file2": "plaj.heic",
+      "file3": "sesli-not.m4a",
+      "file4": "kira-sozlesmesi.pdf",
+      "storage": "46 MB / 500 MB"
+    },
+    "calendar": {
+      "ev4": "Ana'nın doğum günü",
+      "empty": "Plan yok"
+    },
+    "contacts": {
+      "initials": "AM",
+      "name": "Ana Martins",
+      "place": "Lizbon",
+      "birthday": "Doğum günü, {{date}}"
+    },
+    "bookmarks": {
+      "reading": "Okunacaklar",
+      "bm1": "28 numaralı tramvay - Vikipedi",
+      "bm2": "OpenStreetMap'te Lizbon",
+      "bm3": "Pastel de nata tarifi",
+      "bm4": "Markdown Rehberi",
+      "bm5": "PrivacyNotes kaynak kodu",
+      "clipped": "Not olarak kaydedildi"
+    },
+    "mood": {
+      "insight": "En iyi günler 7 saatlik uykunun ardından gelir"
+    }
+  },
   "announcement": {
     "ossText": "Artık açık kaynak: istemci kodunun tamamı. Web, masaüstü ve mobil.",
     "ossTextNarrow": "Artık açık kaynak: istemci kodunun tamamı.",
     "ossCta": "GitHub'da yıldız ver",
-    "ossCtaNarrow": "GitHub",
     "dismiss": "Duyuruyu kapat"
   },
   "pillars": {
     "kicker": "Her şey tek anahtar altında - ve diskinizde bir düzenleyici",
-    "notesName": "Notlar",
     "notesBlurb": "Biçimlendirilmiş canlı düzenleyici, etiketler, anında arama.",
-    "tasksName": "Görevler",
     "tasksBlurb": "Her onay kutusu, tek görünümde.",
-    "vaultName": "Kasa",
     "vaultBlurb": "Parolalar, kartlar, SSH anahtarları.",
     "journalName": "Günlükler",
     "journalBlurb": "Ruh hali, uyku, ilaç. Araştırmaya dayalı etiketler, doktor dışa aktarımı.",
-    "filesName": "Dosyalar",
     "filesBlurb": "Şifreli görseller, belgeler, ses ve video.",
     "bookmarksName": "Yer imi eşitleme",
     "bookmarksBlurb": "Site simgeleriyle kaydedilen bağlantılar. Tarayıcı yer imlerinizi içe aktarın.",
-    "contactsName": "Kişiler",
     "contactsBlurb": "Numaralar, e-postalar, adresler. Tüm adres defterinizi içe aktarın.",
-    "calendarName": "Takvim",
-    "calendarBlurb": "Etkinlikler ve hatırlatıcılar. Gün, hafta ve ay görünümleri.",
-    "markdownFree": "Ücretsiz"
+    "calendarBlurb": "Etkinlikler ve hatırlatıcılar. Gün, hafta ve ay görünümleri."
   },
   "mdEditor": {
     "title": "Ücretsiz bir Markdown düzenleyici. Dosyalarınız diskinizden hiç çıkmaz.",
     "body": "Ona .md ve .txt dosyalarından oluşan bir klasör gösterin - alt klasörler kendiliğinden görünür, değişiklikler yerinde kaydedilir ve hiçbir şey dönüştürülmez. Notlarınızdaki biçimlendirilmiş düzenleyicinin aynısı: canlı önizleme, görevler, etiketler ve tablolar.",
-    "chipObsidian": "Aynı dosyalar Obsidian veya Logseq'te",
-    "chipGit": "Kendi eşitlediğiniz bir git deposu",
-    "chipAgents": "Yapay zekâ ajanlarına notlarınıza erişim verin",
     "platforms": "Masaüstü uygulamasında veya herhangi bir Chromium tarayıcıda.",
     "sampleTitle": "Hafta sonu proje fikirleri",
     "sampleTask1": "Bahçe sensörünü bağla",
     "sampleTask2": "Blog yazısının taslağını çıkar",
     "sampleTag": "#kendinyap",
-    "savedToDisk": "Diske kaydedildi"
+    "saving": "Kaydediliyor"
   },
   "meds": {
     "tileName": "İlaç takibi",
@@ -119,7 +160,7 @@
     "med4": "Melatonin",
     "dose4": "2 mg",
     "kicker": "İlaç takibi",
-    "heading": "Zamanında alın. Kaydı kendinize saklayın.",
+    "heading": "Hiçbir dozu kaçırmayın. Haplarınız kimseyi ilgilendirmez.",
     "intro": "Bir ilacı dozu ve saatleriyle bir kez ekleyin. Her gün tek bir dokunuş ister: alındı, atlandı ya da kaçırıldı. Hatırlatıcı telefonunuzda çalar. Liste, dozlar ve atlanan günler cihazınızda şifrelenir ve eşitlenirken de öyle kalır.",
     "todayLabel": "Bugün. Bir doza dokunun.",
     "todayCount": "{{total}} dozun {{taken}} tanesi alındı",
@@ -146,7 +187,6 @@
     "refillBy": "{{days}} gün içinde yeniden sipariş verin"
   },
   "ninja": {
-    "tileName": "Ninja",
     "tileTagline": "Notlarınız için Alfred.",
     "tileLead": "Emredin, anında yapsın.",
     "tileBlurb": "{{key}} tuşuna basın ve yazın. Birkaç harf sizi her yere götürür, + her şeyi günlük dille oluşturur, > bir komut çalıştırır. Elleriniz klavyeden hiç ayrılmaz.",
@@ -157,11 +197,6 @@
     "chipDay": "Bir güne git",
     "chipLink": "Bir bağlantı yapıştır",
     "placeholder": "Bir başlık yazın, eklemek için + ya da komutlar için >",
-    "recent": "Son kullanılanlar",
-    "inText": "Metnin içinde",
-    "create": "Oluştur",
-    "addTo": "Şuraya ekle",
-    "commands": "Komutlar",
     "recent1": "Hafta sonu proje fikirleri",
     "recent1Meta": "Notlar · 2 sa önce",
     "recent2": "Market",
@@ -185,15 +220,10 @@
     "q2Row3": "Yeni görev listesi: Dişçi",
     "q3": "süt, yumurta >> mar",
     "q3Row1": "2 görev ekle: Market",
-    "q3Row1Meta": "Görevler",
     "q3Row2": "Yeni etkinlik: süt, yumurta",
     "q4": "zen",
     "q4Row1": "Zen modunu başlat",
     "q4Row2": "Ayarlar: Zen modu",
-    "hintOpen": "aç",
-    "hintActions": "eylemler",
-    "hintTab": "sekmede aç",
-    "hintClose": "kapat",
     "tryDemo": "Demoda deneyin",
     "seeShots": "Ekran görüntüleri",
     "shots": {
@@ -223,8 +253,7 @@
       "theme": "“theme” yazın: her tema renkleriyle listelenir. Enter onu uygular, açık ya da koyu."
     },
     "q1Row1Meta": "Notlar · 2 gün önce",
-    "q1Row2Meta": "Klasör · 4 öğe",
-    "hintMove": "gezin"
+    "q1Row2Meta": "Klasör · 4 öğe"
   },
   "demoShot": {
     "kicker": "Canlı görün",
@@ -246,15 +275,14 @@
     "rls": "Satır düzeyinde güvenlik"
   },
   "downloads": {
-    "kicker": "İndirmeler",
     "heading": "PrivacyNotes'u indirin",
     "tileAria": "{{name}} için indir",
+    "playDesc": "Play Store üzerinden güncellenir. Uygulama içi satın alımların faturasını Google keser.",
     "apkDesc": "Her güncellemeyi kendiniz indirip kurarsınız.",
     "obtainiumDesc": "Depomuzdaki her yeni sürümü kurar.",
     "obtainiumBadgeAlt": "Obtainium'da Edin",
     "appStore": "App Store",
     "recommended": "Önerilen",
-    "comingSoon": "Yakında",
     "apkFootnote": "Android 7.0 veya üzeri gerekir. Zapstore, Obtainium ve APK için Google hesabı ve Google ödeme sistemi gerekmez: Pro, web üzerinden satın alınarak açılır. Yeni bir sürüm hazır olduğunda APK sizi uygulama içinde uyarır.",
     "linuxRequirement": "Her iki biçim de webkit2gtk 4.1 gerektirir: Ubuntu 22.04 veya üzeri, Debian 12 veya üzeri ya da 2023 sonrası eşdeğer bir sürüm. Daha eski dağıtımlar yalnızca webkit2gtk 4.0 ile gelir ve bu yapıları çalıştıramaz.",
     "linuxArchX86": "Intel / AMD (x86_64)",
@@ -271,12 +299,12 @@
     "pkgToggle": "Paket yöneticisiyle kurun ({{platforms}})",
     "pkgBrewDesc": "Uygulama kendini günceller, brew upgrade değil.",
     "pkgWingetDesc": "Windows 10 ve 11'de yerleşik olarak gelir.",
-    "pkgScoopDesc": "Scoop hiçbir zaman kendiliğinden güncellemez. scoop update privacynotes komutunu çalıştırın.",
     "pkgFootnote": "Her biri aynı imzalı yapıyı kurar.",
     "githubLink": "Tüm sürümler GitHub'da",
     "githubNote": "İmzalı · Herkese açık · Doğrulanabilir · İstisnasız her sürüm",
     "zapstoreDesc": "<rec>Önerilen.</rec> Kurulumdan önce imzamızı doğrular.",
     "zapstoreBadgeAlt": "Zapstore'da Edin",
+    "playBadgeAlt": "Google Play'den Alın",
     "autoUpdates": "Kendini günceller",
     "manualUpdates": "Elle güncellenir"
   },
@@ -284,37 +312,13 @@
     "getStarted": "Başlayın"
   },
   "pricing": {
-    "freeLabel": "Sonsuza kadar ücretsiz",
     "freeSubLabel": "Kredi kartı gerekmez, süre sınırı yok.",
-    "freeAllPillars": "Notlar, görevler, takvim, dosyalar, kasa, günlük, kişiler ve yer imleri",
+    "freeAllPillars": "Notlar, görevler, parolalar, günlük, dosyalar, takvim, kişiler ve yer imleri; ruh hali ve ilaç takibiyle birlikte",
     "freeSync": "2 cihaz arasında eşitleme",
     "freeVault": "50 MB depolama, dosya başına 5 MB",
-    "freeSearch": "Tam metin arama + etiketler",
     "freeImport": "İçe ve dışa aktarma, Keep ve Obsidian dâhil",
-    "freeBurn": "Okuduktan sonra yak",
-    "freeMood": "Ruh hali ve sağlık takibi",
-    "freeTheme": "Koyu ve açık mod",
     "freeAnon": "Anonim giriş, e-posta olmadan",
-    "freeGoogle": "Google, Apple veya GitHub ile giriş",
-    "noSubscription": "Abonelik yok",
-    "proLabel": "Pro · Tek seferlik ödeme",
-    "earlyAdopterBadge": "Erken Kullanıcı",
-    "oneTime": "tek seferlik",
-    "proOnceDesc": "<b>Bir kez</b> ödersiniz ve sonsuza dek sizindir.",
-    "proCompareBeta": "Bir kez {{earlyPrice}} $ ödeyin. Obsidian Sync yılda 48 $, her yıl. Standard Notes yılda 90 $ alıyor. Erken kullanıcı fiyatı, {{proPrice}} $'a yükselmeden önce sabitlendi.",
-    "proCompare": "Bir kez {{proPrice}} $ ödeyin, sonsuza dek sizin olsun. Obsidian Sync yılda 48 $, Standard Notes 90 $ tutuyor, hem de her yıl.",
-    "proEverythingFree": "Ücretsizdeki her şey, ayrıca:",
-    "proSync": "Sınırsız cihaz arasında eşitleme",
-    "proHistory": "Not geçmişi, en fazla 50 sürüm",
-    "proLock": "Salt okunur notlar",
-    "proPin": "Notları PIN ile koruyun",
-    "proAnalytics": "Sağlık analizi + dışa aktarma",
-    "proZen": "Zen modu ve ek temalar",
-    "proStorage": "500 MB depolama, dosya başına 50 MB, <expand>genişletilebilir</expand>"
-  },
-  "storageAddon": {
-    "heading": "Daha fazla depolama mı lazım?",
-    "body": "Pro 500 MB içerir. Daha fazlası gerekirse yılda {{price}} $'dan başlayan ek depolama alabilirsiniz. <brand/> içindeki tek yinelenen ücret budur. Pro yükseltmesinin kendisi tek seferliktir, sonsuza dek."
+    "earlyAdopterBadge": "Erken Kullanıcı"
   },
   "underHood": {
     "heading": "Kaputun altında",
@@ -322,17 +326,14 @@
     "cipherDesc": "Anahtarlar istemci tarafında türetilir",
     "phraseTerm": "BIP-39 ifadeleri",
     "phraseDesc": "12 kelime, Ed25519 imzalama",
-    "rlsTerm": "Satır düzeyinde güvenlik",
     "rlsDesc": "Genel anahtarınıza bağlı RLS",
     "trackingTerm": "Sıfır izleyici",
     "trackingDesc": "Piksel yok, üçüncü taraf izleyici yok",
     "authTerm": "Anonim kimlik doğrulama",
     "authDesc": "E-posta yok, parola yok",
-    "serversTerm": "İsviçre sunucuları",
     "serversDesc": "Zürih, İsviçre",
     "sshTerm": "SSH anahtar kasası",
     "sshDesc": "Ed25519 üretimi yerleşik",
-    "pwgenTerm": "Parola üretici",
     "pwgenDesc": "crypto.getRandomValues()",
     "opensourceTerm": "Açık kaynak",
     "opensourceDesc": "Uygulamalar ve şifreleme GitHub'da"
@@ -361,9 +362,7 @@
       "social": "Dışarıda bir akşam",
       "custom": "Saydığınız her şey, Pro ile"
     },
-    "cardPatternsTitle": "Örüntüler",
     "cardPatternsBody": "Her takip, ruh halinize etkisine göre sıralanır ve bulgu sade bir dille yazılır.",
-    "cardExploreTitle": "Keşfet",
     "cardExploreBody": "Tek bir takip ruh halinizin karşısında, aynı gün ya da ertesi gün. Bu gece uyku, yarın ruh hali.",
     "cardMedsTitle": "İlaç",
     "cardMedsBody": "Alınan ya da atlanan dozlar, zaman çizelgesinde doz değişiklikleri ve ruh halinizle karşılaştırılan uyum.",
@@ -374,27 +373,34 @@
     "vizReport": "Doktor raporu",
     "vizPrompt": "Yapay zekâ istemi",
     "encryptedHeading": "Bu neden yalnızca şifreliyken işe yarar",
-    "encryptedBody": "Kimse antidepresan dozunu Notion'a yazmıyor. Kimse umutsuz geçen günlerini bir Google Doc'ta tutmuyor. Bu kadar hassas veri sıfır bilgi şifrelemesi ister; PrivacyNotes de böyle kurulmuştur."
+    "encryptedBody": "Kimse antidepresan dozunu Notion'a yazmıyor. Kimse umutsuz geçen günlerini bir Google Doc'ta tutmuyor. Bu kadar hassas veri cihazda şifreleme ister; PrivacyNotes de böyle kurulmuştur."
   },
   "comparison": {
     "kicker": "Hesap ortada",
-    "heading": "Tek bir uygulama hepsini şifreli yaparken neden üç uygulamaya para ödeyesiniz?",
-    "typicalSetup": "Alışıldık kurulum",
-    "themStandardNotes": "Standard Notes, 90 $/yıl",
-    "themObsidian": "Obsidian Sync, 48 $/yıl",
-    "themDayOne": "Day One, 36 $/yıl",
-    "themPasswordManager": "Bitwarden / 1Password, 10-36 $/yıl",
-    "themLunatask": "Lunatask, 72 $/yıl",
-    "themDaylio": "Daylio, 48 $/yıl (şifrelenmemiş ruh hali verisi)",
-    "themSeparate": "Ayrı uygulamalar, yinelenen ücretler",
-    "usAllInOne": "Notlar, görevler, takvim, dosyalar, kasa, günlük, kişiler, yer imleri. Tek uygulama",
-    "usTracking": "Ruh hali, enerji, uyku ve ilaç takibi",
-    "usEncrypted": "Cihazınızda şifreli, İsviçre'ye eşitlenir",
-    "usSignIn": "Anonim ya da Google, Apple veya GitHub ile giriş, her durumda aynı şifreleme",
-    "usExport": "Örüntü tespiti + doktor PDF dışa aktarımı",
-    "usSync": "Masaüstü + mobil, sınırsız eşitleme",
-    "usPriceBeta": "Sonsuza kadar ücretsiz ya da Pro için tek seferlik {{earlyPrice}} $ (erken kullanıcı fiyatı)",
-    "usPrice": "Sonsuza kadar ücretsiz ya da Pro için tek seferlik {{proPrice}} $"
+    "headingLive": "Uygulamalarınız yılda <cost>{{amount}}</cost> tutuyor.<br />Bizimki <free>ücretsiz</free> başlıyor. Pro <free>tek seferlik {{pro}}</free>.",
+    "pick": "Bugün ödediklerinize dokunun",
+    "group": {
+      "mood": "Ruh hali ve sağlık",
+      "files": "Dosyalar ve depolama",
+      "bookmarks": "Yer imleri ve sonra oku"
+    },
+    "barThem_one": "Onlar, {{count}} yıl",
+    "barThem_other": "Onlar, {{count}} yıl",
+    "barUs": "<brand/> Pro",
+    "receipt": "Faturanız",
+    "receiptCount_one": "{{count}} abonelik",
+    "receiptCount_other": "{{count}} abonelik",
+    "receiptRenews": "Her yıl yenilenir",
+    "perYear": "Yıllık toplam",
+    "keepLabel": "Tasarrufunuz",
+    "keepLine_one": "{{count}} yılda, Pro alsanız bile.",
+    "keepLine_other": "{{count}} yılda, Pro alsanız bile.",
+    "pickNone": "Ödediğiniz uygulamalara dokunun.",
+    "checked": "Yıllık faturalandırmayla yıllık fiyatlar, her uygulamanın fiyat sayfasından, {{date}}.",
+    "usKicker": "Hepsi tek bir uygulamada, cihazınızda şifreli.",
+    "usFreeBig": "sonsuza kadar ücretsiz",
+    "usProOnce": "tek seferlik, ömür boyu sizin",
+    "usProLine": "Her cihaz, her notun 50 sürümü, PIN ile kilitli notlar, sağlık içgörüleri ve 10 kat depolama. Yılda ${{price}}'dan başlayan ek alan; yıllık faturalandırdığımız tek şey bu."
   },
   "extras": {
     "kicker": "Bir de şunlar",
@@ -414,20 +420,25 @@
     "weekInReview": "Haftanın özeti",
     "selfDestruct": "Kendini imha eden notlar",
     "anonAccounts": "Anonim hesaplar",
-    "zenMode": "Zen modu",
     "darkMode": "Koyu mod"
   },
   "whyPrivacy": {
     "kicker": "Neden önemli",
-    "heading": "Çoğu not uygulaması notlarınızı okur.<accent>Bizimki okuyamaz.</accent>",
-    "para1": "Çoğu not uygulaması içeriğinizden veri devşirir. Alışveriş listenize “yeni televizyon al” yazın, sonraki birkaç sayfanız televizyon reklamıyla dolar. Market listeniz, günlüğünüz, en özel düşünceleriniz; hepsi reklam hedefleme sistemlerine akıyor, profilleniyor ve satılıyor. Bu, reklamla ayakta duran her “ücretsiz” not uygulamasının iş modeli.",
-    "para2": "Reklam göstermeyen uygulamalar bile notlarınızı sunucularında düz metin olarak tutuyor: çalışanlar okuyabiliyor, ihlallerde sızabiliyor, mahkeme kararı olan herkes erişebiliyor. Verileriniz onların kozu oluyor.",
+    "heading": "“Yeni bir televizyon al” yazın. <accent>Bir ay boyunca televizyon görün.</accent>",
+    "lead": "Ücretsiz not uygulamalarının çoğu faturalarını böyle öder: yazdıklarınız okunur, profilinize işlenir ve satılır, ardından reklamlar peşinize düşer.",
+    "step": {
+      "type": "Siz yazarsınız",
+      "typeSub": "“yeni bir televizyon al”",
+      "read": "Uygulama okur",
+      "readSub": "ilgi alanı: elektronik",
+      "ads": "Reklamlar peşinizden gelir",
+      "adsSub": "ziyaret ettiğiniz her sitede"
+    },
     "differenceLabel": "Aradaki fark",
-    "differenceBody": "<brand/> notlarınızı cihazınızda şifreler ve kendi saklamanızda anahtar oradan hiç çıkmaz; bu yüzden yazdıklarınızın tek bir kelimesini bile ne biz ne de sunucularımız okuyabilir. Reklam yok, piksel yok, üçüncü taraf izleyici yok, yazdıklarınız üzerinde analitik de yok; bundan sonra da olmayacak. Web sitemiz, indirme ve iş ortağı bağlantılarına yapılan tıklamaları hiçbir tanımlayıcı olmadan ülkeye göre sayar. Yazdığınız sizde kalır.",
+    "differenceBody": "<brand/> notlarınızı cihazınızda şifreler. Reklam yok, piksel yok, üçüncü taraf izleyici yok, yazdıklarınız üzerinde analitik de yok; bundan sonra da olmayacak. Kod açık kaynaktır, bunu kendiniz kontrol edebilirsiniz.",
     "keyboardNote": "<b>Cihaz klavyeleri hakkında bir not.</b> Üçüncü taraf klavyeler (Gboard, SwiftKey veya Samsung Klavye gibi) yazdıklarınızı kendi sunucularına gönderebilir. Bu, işletim sistemi düzeyinde, herhangi bir uygulamanın denetimi dışında olur. Klavye ayarlarınızdaki bulut özelliklerini kapatmayı ya da yalnızca çevrimdışı çalışan bir klavye kullanmayı düşünün."
   },
   "readIt": {
-    "kicker": "Açık kaynak",
     "heading": "Bize güvenmeyin. Okuyun.",
     "body": "Şu anda kullandığınız uygulama, içindeki şifrelemeyle birlikte yayımlandı. Hiçbir araç gerektirmeyen bir dakikalık denetimle başlayın ya da doğrudan koda gidin.",
     "cta": "Kaynağı GitHub'da görüntüle",
@@ -437,30 +448,25 @@
     "crypto": "Şifrelemenin kendisi"
   },
   "wontFind": {
-    "kicker": "Uygulamada bulamayacaklarınız",
-    "noTracking": "İzleyici yok",
-    "noAds": "Reklam yok",
-    "noHarvesting": "Veri toplama yok",
-    "noAiTraining": "Yapay zekâ eğitimi yok",
-    "noLockIn": "Platforma bağımlılık yok",
-    "noEmail": "E-posta gerekmez",
-    "noTelemetry": "Notlarınız üzerinde analitik yok",
-    "noCookieBanner": "Çerez bildirimi yok",
-    "noPasswords": "Parola yok",
-    "noDarkPatterns": "Aldatıcı tasarım yok",
-    "noVc": "Girişim sermayesi yok",
-    "noBlockchain": "Blok zinciri yok",
-    "noBackdoor": "Gizli arka kapı yok"
+    "kicker": "Bilerek dışarıda bırakıldı",
+    "noTracking": "İzleyiciler",
+    "noAds": "Reklamlar",
+    "noHarvesting": "Veri toplama",
+    "noAiTraining": "Yapay zekâ eğitimi",
+    "noLockIn": "Platforma bağımlılık",
+    "noEmail": "Zorunlu e-posta",
+    "noDarkPatterns": "Aldatıcı tasarımlar",
+    "noBackdoor": "Arka kapılar"
   },
   "noRecovery": {
     "heading": "İfadeniz anahtarınızdır",
-    "body": "İfade yoksa not da yok. Biz geri getiremeyiz, başka kimse de getiremez. Kendi saklamanın bedeli bu: anahtar yalnızca sizde olduğu için, ekibimize yazmanız da notlarınızı geri getirmez.",
+    "body": "Kendi saklamada ifade yoksa not da yok: kimse onları geri getiremez. Tek anahtarı tutmanın bedeli bu; bu yüzden ekibimize yazmanız da notlarınızı geri getirmez.",
     "noRecoveryTerm": "Kurtarma yok",
-    "noRecoveryDesc": "İfadenizi kaybederseniz notlarınızı da kaybedersiniz",
+    "noRecoveryDesc": "Kendi saklamanızda ifadenizi kaybederseniz notlarınızı da kaybedersiniz",
     "deviceTerm": "Cihazda üretilir",
     "deviceDesc": "Kendi saklamanızda ifadeniz sunucularımıza hiç uğramaz",
     "zkTerm": "Sıfır bilgi",
-    "zkDesc": "Kendi saklamanızda verinizi ne okuyabiliriz ne de geri getirebiliriz",
+    "zkDesc": "Kendi saklamanızda sunucuda notlarınızı açan hiçbir şey yoktur",
     "writeTerm": "Bir yere yazın",
     "writeDesc": "Kâğıda yedek, güvenli bir yerde saklanır",
     "printTerm": "Ayarlardan yazdırın",
@@ -471,22 +477,20 @@
   "closing": {
     "kicker": "Siz hazır olunca",
     "heading": "Kasanız bir dakikadan kısa sürede hazır.",
-    "importNote": "Uygulama mı değiştiriyorsunuz? Bunların herhangi birinden dışa aktarın, dakikalar içinde içe aktarın:"
+    "importNote": "Uygulama mı değiştiriyorsunuz? Bunların herhangi birinden dışa aktarın, dakikalar içinde içe aktarın:",
+    "importDemoTitle": "Kendi içe aktarmanızı önce demoda deneyin",
+    "importDemoBody": "Dosyanız tarayıcınızda okunur, sunucularımıza hiçbir şey gitmez ve sekmeyi kapatınca silinir."
   },
   "about": {
     "tabs": {
       "about": "Hakkında",
-      "changelog": "Changelog",
-      "roadmap": "Roadmap",
       "hotkeys": "Kısayollar",
       "rating": "Değerlendirme"
     },
-    "modalTitle": "Hakkında",
-    "intro": "<brand/>, notlarınızı, görevlerinizi, günlüğünüzü, parolalarınızı, dosyalarınızı, yer imlerinizi ve kişilerinizi tek bir yerde tutar. Her şey cihazınızda 12 kelimenizden oluşturulan bir anahtarla şifrelenir ve <nowrap>İsviçre'deki</nowrap> sunucularımızda da şifreli kalır. Çevrimdışı çalışır ve uygulama açık kaynaktır.",
+    "intro": "<brand/>, notlarınızı, görevlerinizi, parolalarınızı, günlüğünüzü, dosyalarınızı, takviminizi, kişilerinizi ve yer imlerinizi tek bir yerde tutar; ruh hali ve ilaç takibiyle birlikte. Her şey cihazınızda 12 kelimenizden oluşturulan bir anahtarla şifrelenir ve <nowrap>İsviçre'deki</nowrap> sunucularımızda da şifreli kalır. Çevrimdışı çalışır ve uygulama açık kaynaktır.",
     "versionHeading": "Sürüm",
     "windowVersion": "Sürüm {{version}}",
     "windowHelp": "Yardım Merkezi",
-    "windowWhatsNew": "Changelog",
     "whatsNew": "Yenilikler",
     "seeWhatsNew": "Tüm değişiklikleri ekran görüntüleriyle PrivacyNotes.app'te görün",
     "feedbackHeading": "Geri bildirim",
@@ -495,14 +499,13 @@
     "termsOfService": "Kullanım Koşulları",
     "refundPolicy": "İade Politikası",
     "tagline": "Abonelik yok. Sadece yazılım. Hizmet değil.",
-    "hotkeysFootnote": "Bir metin alanına yazarken çoğu kısayol yok sayılır, böylece J ve K gibi normal tuşlar yine J ve K yazar.",
     "singleKeysTitle": "Tek tuşlu kısayollar",
     "singleKeysDesc": "J, K, Q, / ve ? tuşlarını, Takvim'de de T, D, W, M ve N tuşlarını Cmd veya Ctrl'ye basılı tutmadan kullanın."
   },
   "trust": {
     "openSourceHeading": "Açık Kaynak",
     "openSourceLink": "Kaynağı GitHub.com'da okuyun",
-    "openSourceBody": "Uygulama ve içindeki şifreleme yayımlandı, böylece sıfır bilgi iddialarımızı herkes doğrulayabilir.",
+    "openSourceBody": "Uygulama ve içindeki şifreleme yayımlandı, böylece notlarınızın nasıl şifrelendiğini herkes kontrol edebilir.",
     "dataStorageHeading": "Veri Saklama",
     "dataStorageBody": "Şifreli veri blokları Zürih, <flag/> İsviçre'de saklanır.",
     "faviconsHeading": "Site simgeleri",
@@ -524,6 +527,7 @@
     "outro": "Gelen her değerlendirmeyi okuyoruz ve uygulamayı her gün kullanan birinden gelen birkaç kelime bize güç veriyor.",
     "descGithub": "GitHub'da bize yıldız verin",
     "descAppStore": "PrivacyNotes'u App Store'da puanlayın",
+    "descPlay": "PrivacyNotes'u Google Play'de puanlayın",
     "descAlternativeTo": "AlternativeTo'da beğenin ve yorum yazın",
     "descCapterra": "PrivacyNotes'u Capterra'da puanlayın",
     "descSaasHub": "SaaSHub'da beğenin ve yorum yazın",

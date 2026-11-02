@@ -29,7 +29,7 @@ export interface SidebarOption {
  * when the popover's own height changes, which happens here on every tick:
  * the rail behind it shortens as rows switch off.
  *
- * Spec: ops/docs/archive/sidebar-views.md
+ * Spec: docs/internal/specs/sidebar-views.md
  */
 export function SidebarOptionsPopover({
   title,
@@ -75,7 +75,7 @@ export function SidebarOptionsPopover({
         visibility: pos ? 'visible' : 'hidden',
       }}
     >
-      <div className="px-3 pb-1.5 text-[10px] font-semibold tracking-wider uppercase text-pn-muted">
+      <div className="px-3 pb-1.5 text-meta font-semibold tracking-wider uppercase text-pn-muted">
         {title}
       </div>
       {options.map((o) => (
@@ -85,7 +85,7 @@ export function SidebarOptionsPopover({
           role="checkbox"
           aria-checked={o.checked}
           onClick={() => onToggle(o.key)}
-          className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[14px] text-pn hover:bg-pn/5 transition"
+          className="w-full flex items-center gap-2.5 px-3 py-1.5 text-body text-pn hover:bg-pn/5 transition"
         >
           <o.icon size={16} className="shrink-0 text-accent" aria-hidden="true" />
           <span className="flex-1 min-w-0 text-start truncate">{o.label}</span>

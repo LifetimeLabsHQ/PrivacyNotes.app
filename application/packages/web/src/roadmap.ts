@@ -90,7 +90,7 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     id: 'web-app',
     title: 'Encrypted web app',
     status: 'shipped',
-    description: 'Where it started: zero-knowledge notes, tasks, and journal in the browser.',
+    description: 'Where it started: notes, tasks, and journal in the browser, encrypted on your device.',
     icon: 'globe',
   },
   {
@@ -129,15 +129,15 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     id: 'burn-notes',
     title: 'Burn notes',
     status: 'shipped',
-    description: "Share a note as a self-destructing, client-encrypted link the server can't read.",
+    description: 'Share a note as a self-destructing link, encrypted on your device, whose key never reaches the server.',
     icon: 'flame',
   },
   {
     id: 'zero-knowledge-signin',
-    title: 'Sign in without giving up zero knowledge',
+    title: 'Sign in with Google, Apple or GitHub',
     status: 'shipped',
     description:
-      'Google, Apple and GitHub sign-in, with your key generated on your own device either way. Keep it simple and we hold an encrypted copy of your phrase, or take full custody and we hold nothing at all.',
+      'Google, Apple and GitHub sign-in, with your key generated on your own device either way. Keep it simple and we hold an encrypted copy of your phrase, or take full custody and the server holds nothing that opens your notes.',
     icon: 'fingerprint',
   },
   {

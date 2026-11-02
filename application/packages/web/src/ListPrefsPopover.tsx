@@ -9,7 +9,7 @@ import { ViewModeToggle } from './ViewModeToggle';
 import type { Space } from './spaces';
 import { SPACE_ICONS } from './SpaceSwitch';
 import { setCalendarShowsOther, setJournalCalendarMood, setJournalCalendarShown, useCalendarShowsOther, useJournalCalendarMood, useJournalCalendarShown } from './JournalCalendar';
-import { Question, ArrowsInLineVertical, Pulse, Article, Calendar, Rows, Clock, Smiley, HardDrive, PencilSimpleSlash, Shield, SortAscending, SortDescending, Tag, TextAlignJustify } from './icons';
+import { Question, ArrowsInLineVertical, Pulse, Pill, Article, Calendar, Rows, Clock, Smiley, HardDrive, PencilSimpleSlash, Shield, SortAscending, SortDescending, Tag, TextAlignJustify } from './icons';
 import { CloseButton } from './ui';
 import {
   resolvePrefs,
@@ -25,7 +25,8 @@ import {
  *   - LAYOUT: Auto / List / Grid, this device only (viewMode.ts), and in
  *     Journals Show calendar (device-local, like the layout), and Show
  *     daily check-in above it in the lists that draw the card (device-local
- *     too, checkInCardSwitch.ts)
+ *     too, checkInCardSwitch.ts), and Show medication under it while a
+ *     medication is set up
  *   - SORT BY: Modified / Created / Title + asc/desc arrow
  *   - VIEW: Show preview (+ Longer preview text) / Show date / Show tags, plus
  *     Show file size in the lists whose rows print one (`showSizeToggle`)
@@ -73,8 +74,11 @@ type Props = {
   otherSpace?: Space | null;
   /** This list draws the daily check-in card: its switch, above Show calendar.
    *  The one place the card is switched on and off, besides the gear's
-   *  "Hide this card". Spec: ops/issues/0439.md (Spec) */
+   *  "Hide this card". Spec: docs/internal/issues/0439.md (Spec) */
   checkInCard?: { checked: boolean; onChange: (on: boolean) => void };
+  /** The medication card's switch, under the check-in's, while a medication
+   *  is set up (GitHub #649, checkInCardSwitch.ts). */
+  medicationCard?: { checked: boolean; onChange: (on: boolean) => void };
   /** CSS classes merged onto the popover container. Positioning only. */
   className?: string;
   /** Hide the VIEW toggles section (preview, date, tags). */
@@ -87,7 +91,7 @@ type Props = {
   showSizeToggle?: boolean;
   /**
    * Add "Show groups" to the VIEW section. Only the panes that draw group
-   * headers pass it. Spec: ops/docs/archive/list-groups.md
+   * headers pass it. Spec: docs/internal/specs/list-groups.md
    */
   showGroupsToggle?: boolean;
   /** Hide the OTHER toggles section (read-only, protected). */
@@ -135,6 +139,7 @@ export function ListPrefsPopover({
   moodRow = false,
   otherSpace = null,
   checkInCard,
+  medicationCard,
 }: Props) {
   const { t } = useTranslation('shell');
   // Read and write the SAME copy the pane's list renders from.
@@ -243,11 +248,11 @@ export function ListPrefsPopover({
       {/* ── LAYOUT ───────────────────────────────────────────────── */}
       {layout && (
       <div className="px-4 pt-3 pb-3 border-b border-divider">
-        <div className="text-[10px] font-semibold tracking-wider text-pn-muted uppercase mt-1">
+        <div className="text-meta font-semibold tracking-wider text-pn-muted uppercase mt-1">
           {t('listPrefs.layout')}
         </div>
         {/* The note scopes the whole section, so it sits under the heading. */}
-        <div className="mb-2 text-[11.5px] text-pn-muted">{t('listPrefs.layoutDeviceOnly')}</div>
+        <div className="mb-2 text-small text-pn-muted">{t('listPrefs.layoutDeviceOnly')}</div>
         <ViewModeToggle mode={layout.mode} onChange={layout.set} />
         <div className="mt-2">
           <ToggleRow
@@ -258,8 +263,9 @@ export function ListPrefsPopover({
             onChange={setDeviceCompactRows}
           />
         </div>
-        {/* The two cards at the top of the list, in the order they stand:
-            the check-in above the calendar, both device-local like the layout. */}
+        {/* The cards at the top of the list, in the order they stand: the
+            check-in, the medication card and the calendar, all device-local
+            like the layout. */}
         {checkInCard && (
           <div className="mt-2">
             <ToggleRow
@@ -270,8 +276,18 @@ export function ListPrefsPopover({
             />
           </div>
         )}
+        {medicationCard && (
+          <div className={checkInCard ? 'mt-0.5' : 'mt-2'}>
+            <ToggleRow
+              label={t('listPrefs.showMedication')}
+              icon={<Pill aria-hidden="true" className="shrink-0" />}
+              checked={medicationCard.checked}
+              onChange={medicationCard.onChange}
+            />
+          </div>
+        )}
         {calendarRows && (
-          <div className={`${checkInCard ? 'mt-0.5' : 'mt-2'} space-y-0.5`}>
+          <div className={`${checkInCard || medicationCard ? 'mt-0.5' : 'mt-2'} space-y-0.5`}>
             <ToggleRow
               label={t('listPrefs.showCalendar')}
               icon={<Calendar aria-hidden="true" className="shrink-0" />}
@@ -308,7 +324,7 @@ export function ListPrefsPopover({
 
       {/* ── SORT BY ──────────────────────────────────────────────── */}
       <div className="px-4 pt-3 pb-2">
-        <div className="text-[10px] font-semibold tracking-wider text-pn-muted uppercase mb-1.5 mt-1">
+        <div className="text-meta font-semibold tracking-wider text-pn-muted uppercase mb-1.5 mt-1">
           {t('listPrefs.sortBy')}
         </div>
         <div className="space-y-0.5">
@@ -346,7 +362,7 @@ export function ListPrefsPopover({
       {/* ── VIEW ─────────────────────────────────────────────────── */}
       {!hideViewSection && (
       <div className="px-4 pt-2 pb-3 border-t border-divider">
-        <div className="text-[10px] font-semibold tracking-wider text-pn-muted uppercase mb-1.5 mt-1">
+        <div className="text-meta font-semibold tracking-wider text-pn-muted uppercase mb-1.5 mt-1">
           {t('listPrefs.view')}
         </div>
         <div className="space-y-0.5">
@@ -409,7 +425,7 @@ export function ListPrefsPopover({
       {/* ── OTHER ────────────────────────────────────────────────── */}
       {!hideOtherSection && (
       <div className="px-4 pt-2 pb-3 border-t border-divider">
-        <div className="text-[10px] font-semibold tracking-wider text-pn-muted uppercase mb-1.5 mt-1">
+        <div className="text-meta font-semibold tracking-wider text-pn-muted uppercase mb-1.5 mt-1">
           {t('listPrefs.other')}
         </div>
         <div className="space-y-0.5">
@@ -479,7 +495,7 @@ export function SortRow({
             <span className="w-1.5 h-1.5 rounded-full bg-accent-fill" aria-hidden />
           )}
         </span>
-        <span className="text-[14px] text-pn">
+        <span className="text-body text-pn">
           {label}
         </span>
       </button>
@@ -492,7 +508,7 @@ export function SortRow({
           // -my-1: the button keeps its 28 px target without making its row taller than a switch row.
           className="shrink-0 flex items-center gap-1 px-1.5 h-7 -my-1 rounded hover:bg-pn/5 transition"
         >
-          <span className="text-[11px] font-medium text-accent uppercase">{dir === 'asc' ? t('listPrefs.asc') : t('listPrefs.desc')}</span>
+          <span className="text-meta font-medium text-accent uppercase">{dir === 'asc' ? t('listPrefs.asc') : t('listPrefs.desc')}</span>
           {dir === 'asc' ? (
             <SortAscending className="text-accent" />
           ) : (
@@ -503,7 +519,7 @@ export function SortRow({
       )}
     </div>
     {active && hint && (
-      <div className="ps-5 pb-1 -mt-0.5 text-[11.5px] text-pn-muted">{hint}</div>
+      <div className="ps-5 pb-1 -mt-0.5 text-small text-pn-muted">{hint}</div>
     )}
     </>
   );
@@ -544,7 +560,7 @@ function HelpTip({ text }: { text: string }) {
         // and a glyph centered on the box reads high beside it.
         className="relative translate-y-px inline-flex items-center justify-center w-4 h-4 rounded-full text-pn-muted hover:text-accent transition before:absolute before:-inset-3 before:content-['']"
       >
-        <Question size={13} aria-hidden="true" />
+        <Question aria-hidden="true" />
       </button>
       <span
         aria-hidden="true"
@@ -587,7 +603,7 @@ function ToggleRow({
       description={description && <span className="block ps-5">{description}</span>}
       onChange={onChange}
       className="gap-2 py-1 select-none"
-      labelClassName="flex items-center gap-1.5 text-[14px] text-pn"
+      labelClassName="flex items-center gap-1.5 text-body text-pn"
     />
   );
 }

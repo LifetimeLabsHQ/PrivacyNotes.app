@@ -27,7 +27,7 @@ import { VERSION } from './version';
  * report and unreadable storage mean "not below"; an unreadable policy after
  * a floor is known keeps that floor.
  *
- * Spec: ops/docs/android-update-check.md (sync pause below the floor)
+ * Spec: docs/internal/android-update-check.md (sync pause below the floor)
  */
 
 const STORAGE_KEY = 'privacynotes.versionFloor';

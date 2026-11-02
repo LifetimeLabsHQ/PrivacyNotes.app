@@ -21,6 +21,6 @@
   <launchable type="desktop-id">PrivacyNotes.desktop</launchable>
   <url type="homepage">https://privacynotes.app</url>
   <url type="help">https://privacynotes.app/faq</url>
-  <url type="bugtracker">https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues</url>
+  <url type="bugtracker">https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues</url>
   <content_rating type="oars-1.1" />
 </component>

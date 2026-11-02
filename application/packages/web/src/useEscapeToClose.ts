@@ -53,10 +53,19 @@ export function hasOpenOverlay(): boolean {
  * Puts an overlay on the Escape stack and returns the call that takes it
  * off. The hook below is built on it; an overlay made of plain DOM, outside
  * React, calls it directly so it stops Escape the same way (codeLanguages.ts).
+ * `key: false` puts it on the stack for the Android back button only: the
+ * overlay keeps the Escape key itself (the drawing canvas, whose Escape also
+ * finishes a text box or a line).
  */
-export function pushEscapeHandler(onEscape: () => void, inline = false): () => void {
+export function pushEscapeHandler(onEscape: () => void, inline = false, key = true): () => void {
   const id = Symbol('esc');
   escStack.push({ id, close: onEscape, inline });
+  if (!key) {
+    return () => {
+      const i = escStack.findIndex((entry) => entry.id === id);
+      if (i !== -1) escStack.splice(i, 1);
+    };
+  }
   function handler(e: KeyboardEvent) {
     if (e.key !== 'Escape') return;
     // An Escape that cancels a conversion belongs to the input method.

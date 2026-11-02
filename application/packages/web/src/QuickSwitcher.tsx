@@ -6,7 +6,7 @@ import type { DirectoryEntry } from './markdownFolder/fileAccess';
 import { editedAtOf, journalOn } from './notesViewUtils';
 import type { ContextMenuItem } from './ContextMenu';
 import { searchIndexReady, searchNotes } from './search';
-import { CREATE_PREFIX, FOLDER_PREFIX, TAG_PREFIX, appendLines, asWebAddress, dayOfQuery, emptyMessage, readSwitcherQuery, splitAppend, textHit } from './switcherQuery';
+import { CREATE_PREFIX, FOLDER_PREFIX, TAG_PREFIX, appendLines, asWebAddress, dayOfQuery, emptyMessage, quotePart, readSwitcherQuery, splitAppend, textHit } from './switcherQuery';
 import { typeGlyph } from './NoteRow';
 import i18n from './i18n';
 import { intlLocale } from './languages';
@@ -56,8 +56,9 @@ const LINES_JOIN = ' · ';
 const APPEND_LIMIT = 5;
 /** The types whose body is Markdown: a snippet of any other would read as data. */
 const SNIPPET_TYPES: ReadonlySet<LocalNote['type']> = new Set(['note', 'task', 'journal', 'event']);
-/** The first line of a Kanban board's body (`kanbanLayout.ts`). */
-const KANBAN_BODY = /^> \[!kanban\]/m;
+/** The first line of a Kanban board in a body, read as the callout rule in
+ *  `Callout.tsx` reads one: any case, with or without the space after ">". */
+const KANBAN_BODY = /^>\s?\[!kanban(?:\|[\w-]+)?\]/im;
 /** The command list's entries that type a prefix instead of running. The
  *  quick add's own command types "+" there, as its other doors do. */
 const PREFIX_ENTRY = { tags: 'jump:tags', folders: 'jump:folders', newTag: 'new:tag', newFolder: 'new:folder', quickAdd: 'cmd:quickAdd' } as const;
@@ -69,7 +70,7 @@ const PREFIX_OF: Record<string, { prefix: string; creating: boolean }> = {
   [PREFIX_ENTRY.quickAdd]: { prefix: CREATE_PREFIX, creating: false },
 };
 
-const KEYCAP = 'inline-flex min-w-6 h-6 shrink-0 items-center justify-center rounded-md border border-b-2 border-divider bg-surface-1 px-1.5 font-sans text-[13px] font-medium leading-none text-pn';
+const KEYCAP = 'inline-flex min-w-6 h-6 shrink-0 items-center justify-center rounded-md border border-b-2 border-divider bg-surface-1 px-1.5 font-sans text-compact font-medium leading-none text-pn';
 
 /**
  * The icon tile's color for each kind of item, so a vault entry or a
@@ -95,7 +96,7 @@ function ItemIcon({ noteId, fallback: Fallback, size }: { noteId: string; fallba
  * them on hover, as the editor's slot pills (EditorSlotPill.tsx) and the
  * sidebar's Ninja button reveal theirs, so the row of hints always fits on
  * one line. A touch screen hides the whole row.
- * Spec: ops/design/patterns/145-150.md section 146
+ * Spec: docs/internal/design/patterns/145-150.md section 146
  */
 function FooterHint({ keys, children }: { keys: string[]; children: string }) {
   return (
@@ -114,7 +115,7 @@ const optionId = (i: number) => `pn-quick-switcher-${i}`;
 const GROUP_RULE = 'mt-1.5 pt-1 border-t border-divider';
 /** Sticks to the list's lower edge (or above the pinned row) and takes no room: a negative margin as tall as itself. */
 const LIST_FADE = 'pointer-events-none sticky z-10 -mt-8 h-8 bg-gradient-to-t from-surface-2 to-transparent';
-const GROUP_HEADER = 'px-3.5 pt-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-accent';
+const GROUP_HEADER = 'px-3.5 pt-2.5 pb-1 text-meta font-semibold uppercase tracking-wider text-accent';
 const GROUP_ICONS: Record<PaletteGroup, Icon> = { features: Sparkle, commands: Terminal, new: Plus, goTo: Compass, themes: Palette };
 /** A theme row shows once the query is this long: an empty ">" stays short;
  *  without ">" it takes one more letter, so a short title query stays on items. */
@@ -168,10 +169,11 @@ type Snippet = { text: string; start: number; end: number } | null;
  * The New menu's kinds the quick add's parser does not read, in that menu's
  * order. Each makes one item from the text as typed: a name, a web address,
  * or nothing. The view hands over the call for each; one it leaves out is
- * not offered. Spec: ops/docs/archive/keyboard-shortcuts.md (section 8.3, item 5)
+ * not offered. Spec: docs/internal/specs/keyboard-shortcuts.md (section 8.3, item 5)
  */
 const MAKERS = [
   { id: 'kanban', glyph: NEW_GLYPHS.kanban, tone: 'task', takes: 'name' },
+  { id: 'drawing', glyph: NEW_GLYPHS.drawing, tone: 'drawing', takes: 'name' },
   { id: 'login', glyph: NEW_GLYPHS.login, tone: 'login', takes: 'name' },
   { id: 'file', glyph: NEW_GLYPHS.file, tone: 'file', takes: 'none' },
   { id: 'contact', glyph: NEW_GLYPHS.contact, tone: 'contact', takes: 'name' },
@@ -182,6 +184,9 @@ export type MakerId = (typeof MAKERS)[number]['id'];
 type Maker = (typeof MAKERS)[number];
 type MenuRow = Extract<ContextMenuItem, { onSelect: () => void }>;
 
+/** Why ">>" adds nothing to an item: `quickAdd.blocked.<reason>`. */
+type BlockReason = 'trash' | 'pin' | 'readOnly' | 'board' | 'archived';
+
 type Row =
   | { kind: 'item'; n: LocalNote; m: Mark }
   | { kind: 'text'; n: LocalNote; snippet: Snippet }
@@ -190,6 +195,7 @@ type Row =
   | { kind: 'appendNew'; title: string; lines: string[] }
   | { kind: 'appendHint'; text: string }
   | { kind: 'appendNone' }
+  | { kind: 'appendBlocked'; n: LocalNote; why: BlockReason }
   | { kind: 'action'; item: MenuRow; label: string }
   | { kind: 'make'; maker: Maker; text: string }
   | { kind: 'file'; f: FileItem; m: Mark }
@@ -200,16 +206,21 @@ type Row =
   | { kind: 'newFilter'; scope: 'tags' | 'folders'; name: string }
   | { kind: 'setting'; hit: ReturnType<typeof runSettingsSearch>[number] }
   | { kind: 'search'; everything: boolean }
-  | { kind: 'create'; type: QuickAddType; parsed: QuickAdd }
+  | { kind: 'create'; type: QuickAddType; parsed: QuickAdd; lead: boolean }
   | { kind: 'syntax'; id: SyntaxId }
   | { kind: 'example'; n: number; text: string; parsed: QuickAdd };
+
+/** The clock as the quick add reads it: "HH:MM", local. */
+function clockOf(d: Date): string {
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
 
 /** The example sentences of `quickAdd.examples`, numbered from 1. */
 const EXAMPLES = 6;
 
 /** What the quick add reads, one row a kind, under an empty input: the
  *  commands list of the quick add. Enter or a click types the first example.
- *  Spec: ops/docs/archive/calendar-pillar-spec.md (step 8) */
+ *  Spec: docs/internal/specs/calendar-pillar-spec.md (step 8) */
 const SYNTAX = [
   { id: 'day', Icon: CalendarBlank },
   { id: 'time', Icon: Clock },
@@ -256,7 +267,7 @@ type Group = { header?: string; rows: Row[]; only?: { prefix: string; label: str
  *
  * A lazy chunk: NotesView mounts it only while it is open.
  *
- * Spec: ops/docs/archive/keyboard-shortcuts.md (section 8.1, the quick switcher; D14 and D15; the "+" mode, D16 and section 8.3)
+ * Spec: docs/internal/specs/keyboard-shortcuts.md (section 8.1, the quick switcher; D14 and D15; the "+" mode, D16 and section 8.3)
  */
 export default function QuickSwitcher({
   initialQuery = '',
@@ -356,7 +367,7 @@ export default function QuickSwitcher({
    * first (Q, a calendar cell, the New menu, the phone's +) they come first,
    * a cell's day and time fill what the words leave out, and "text >> name"
    * adds the text to an item that exists.
-   * Spec: ops/docs/archive/calendar-pillar-spec.md (step 8), ops/docs/archive/quick-add-prefix.md
+   * Spec: docs/internal/specs/calendar-pillar-spec.md (step 8), docs/internal/specs/quick-add-prefix.md
    */
   quickAdd?: {
     defaultDay?: string;
@@ -404,6 +415,19 @@ export default function QuickSwitcher({
     setActive(actionsFor.row);
   };
   useEscapeToClose(() => (actionsFor ? leaveActions() : onClose()));
+  // The focus goes back where it was when the box closes and nothing else
+  // took it (Esc, a ">>", a command that opens nothing): the caret returns to
+  // the note being written, so the next key types there and is no shortcut.
+  // Read on the first render, before the field takes the focus.
+  const [focusBefore] = useState(() => document.activeElement);
+  useEffect(() => () => {
+    requestAnimationFrame(() => {
+      const now = document.activeElement;
+      if (focusBefore instanceof HTMLElement && focusBefore.isConnected && (!now || now === document.body)) {
+        focusBefore.focus({ preventScroll: true });
+      }
+    });
+  }, [focusBefore]);
   // Came in through New tag or New folder: the Create row leads, so Enter
   // after the name makes it. Ends with the prefix.
   const [creatingFilter, setCreatingFilter] = useState(false);
@@ -449,7 +473,14 @@ export default function QuickSwitcher({
   const q = read.text;
   // "milk, eggs >> groc": the Create rows read the text, the Add rows the name.
   // ">>" reads the same with or without the "+": a title seldom holds it.
-  const append = useMemo(() => ((creating || (mode === 'jump' && !actionsFor && quickAdd)) ? splitAppend(q) : null), [creating, mode, actionsFor, quickAdd, q]);
+  // A jump typed as a whole title ("Tom >> Jerry") opens that item.
+  const append = useMemo(() => {
+    if (!(creating || (mode === 'jump' && !actionsFor && quickAdd))) return null;
+    const split = splitAppend(q);
+    if (!split || creating) return split;
+    const whole = foldForMatch(q);
+    return notes.some((n) => n.trashed !== 1 && foldForMatch(titleOf(n).trim()) === whole) ? null : split;
+  }, [creating, mode, actionsFor, quickAdd, q, notes, titleOf]);
   const createText = append ? append.text : q;
   // Read once per open: the list is what the app could run when it opened.
   // The switcher's own entry is left out, since it is already open.
@@ -488,7 +519,8 @@ export default function QuickSwitcher({
           group: 'themes',
           label: name,
           detail: t(`ninja.themes.${mode}`),
-          match: words.map((w) => `${w} ${name}`).join(' '),
+          // The mode after the name too: "default dark", "theme frost light".
+          match: [...words.map((w) => `${w} ${name}`), `${name} ${t(`ninja.themes.${mode}`)}`].join(' '),
           glyph: <ThemeSwatch colors={colors} />,
           ...(kept ? {} : { pro: true }),
           ...(current === choice ? { checked: true } : {}),
@@ -536,11 +568,13 @@ export default function QuickSwitcher({
     const byId = new Map(live.map((n) => [n.id, n]));
     // A Markdown file has no note behind it, so it sorts after the items of
     // the same rank.
-    type Hit = { row: Row; m: TextMatch; n?: LocalNote };
+    type Hit = { row: Row; m: TextMatch; n?: LocalNote; exact?: boolean };
     const hits: Hit[] = [];
     for (const n of live) {
-      const m = match(titleOf(n));
-      if (m) hits.push({ row: { kind: 'item', n, m }, m, n });
+      const title = titleOf(n);
+      const m = match(title);
+      // A title typed whole leads the ones it starts: "Plan" before "Planet".
+      if (m) hits.push({ row: { kind: 'item', n, m }, m, n, exact: m.start === 0 && m.end >= title.trimEnd().length });
     }
     const titled = new Set(hits.map((h) => h.n!.id));
     // Attachments only: a picture's name is made from its note's title. A
@@ -557,7 +591,7 @@ export default function QuickSwitcher({
       if (m) hits.push({ row: { kind: 'markdown', e, title, m }, m });
     }
     return hits
-      .sort((a, b) => b.m.rank - a.m.rank || (a.n && b.n ? byRecency(a.n, b.n) : a.n ? -1 : b.n ? 1 : 0))
+      .sort((a, b) => b.m.rank - a.m.rank || Number(!!b.exact) - Number(!!a.exact) || (a.n && b.n ? byRecency(a.n, b.n) : a.n ? -1 : b.n ? 1 : 0))
       .slice(0, LIMIT)
       .map((h) => h.row);
   }, [commandMode, scope, actionsFor, q, itemText, notes, recentIds, titleOf, files, markdown]);
@@ -665,7 +699,10 @@ export default function QuickSwitcher({
     // The word "theme" counts only when the query starts with it: "the" is
     // the start of a title far more often than of a theme's name.
     const asked = themeWords(t).some((w) => foldForMatch(w).startsWith(foldForMatch(q)) || foldForMatch(q).startsWith(foldForMatch(w)));
-    const pool = asked && q.length >= THEME_WORD_MIN ? themeEntries : themeEntries.map((e) => ({ ...e, match: undefined }));
+    // A name and its mode ("default dark") read once the query has two
+    // words; "dark" alone still finds the Mode setting before every dark theme.
+    const twoWords = /\s/.test(q.trim());
+    const pool = asked && q.length >= THEME_WORD_MIN ? themeEntries : themeEntries.map((e) => ({ ...e, match: twoWords ? `${e.label} ${e.detail ?? ''}` : undefined }));
     // The word alone ("theme", "themes") asks for the list: all of it.
     const wordOnly = asked && q.length >= THEME_WORD_MIN && !/\s/.test(q.trim());
     const found = matchEntries(pool, q);
@@ -725,16 +762,27 @@ export default function QuickSwitcher({
     // A cell's day and hour belong to the "+" it opened: Backspace over the
     // "+" leaves them behind, and a "+" typed again brings them back.
     const defaultDay = creating ? quickAdd.defaultDay : undefined;
-    const parsed = parseQuickAdd(createText, { ...readCtx, today: toLocalIso(new Date()), defaultDay, folders: quickAdd.folders });
-    // A cell gave a day (and an hour): it fills what the words leave out.
-    if (!parsed.day && defaultDay) parsed.day = defaultDay;
-    if (!parsed.time && defaultDay && quickAdd.time && parsed.day === defaultDay) {
-      parsed.time = quickAdd.time;
-      if (quickAdd.timeEnd) parsed.timeEnd = quickAdd.timeEnd;
-    }
-    const first: QuickAddType = parsed.type ?? 'event';
+    const now = new Date();
+    const ctx = { ...readCtx, today: toLocalIso(now), now: clockOf(now), defaultDay, folders: quickAdd.folders };
+    // Each row reads the words for its own type, so it shows only what that
+    // type keeps: a task list takes no repeat, a journal entry no span.
+    const read = (as: QuickAddType): QuickAdd => {
+      const parsed = parseQuickAdd(createText, { ...ctx, as });
+      // A cell gave a day (and an hour): it fills what the words leave out.
+      if (!parsed.day && defaultDay) parsed.day = defaultDay;
+      if (!parsed.time && defaultDay && quickAdd.time && parsed.day === defaultDay) {
+        parsed.time = quickAdd.time;
+        if (quickAdd.timeEnd) parsed.timeEnd = quickAdd.timeEnd;
+      }
+      return parsed;
+    };
+    const plain = read('event');
+    // Typed with no "+" and no word of a day or a time, a name that matched
+    // nothing is a note before it is an event ("address").
+    const dated = plain.parts.some((p) => p.kind !== 'tag' && p.kind !== 'folder' && p.kind !== 'space');
+    const first: QuickAddType = plain.type ?? (creating || dated || defaultDay ? 'event' : 'note');
     return ([first, ...(['event', 'note', 'task', 'journal'] as const).filter((x) => x !== first)])
-      .map((type): Row => ({ kind: 'create', type, parsed }));
+      .map((type, k): Row => ({ kind: 'create', type, parsed: type === 'event' ? plain : read(type), lead: k === 0 }));
   }, [quickAdd, readCtx, commandMode, scope, actionsFor, creating, q, createText]);
 
   // The rest of the New menu, under the four the parser reads. A web address
@@ -770,33 +818,47 @@ export default function QuickSwitcher({
     const byRecency = (a: LocalNote, b: LocalNote) =>
       (recentRank.get(a.id) ?? Infinity) - (recentRank.get(b.id) ?? Infinity) ||
       editedAtOf(b).localeCompare(editedAtOf(a));
-    // A Kanban board is a task too, but its cards live in columns: a line
-    // added at its end would land outside the board.
-    const open = notes.filter((n) => {
-      if (n.trashed === 1 || n.locked === 1 || (n.type !== 'note' && n.type !== 'task' && n.type !== 'journal')) return false;
+    // ">>" writes only into a note, a task list or a journal entry it may
+    // change. A Kanban board is a task too, but its cards live in columns: a
+    // line added at its end would land outside the board.
+    const blockedWhy = (n: LocalNote): BlockReason | null => {
+      if (n.trashed === 1) return 'trash';
       const body = bodyOfRef.current(n);
-      return body !== null && !KANBAN_BODY.test(body);
-    });
-    let targets: LocalNote[];
+      if (body === null) return 'pin';
+      if (n.locked === 1) return 'readOnly';
+      if (KANBAN_BODY.test(body)) return 'board';
+      if (n.archived === 1) return 'archived';
+      return null;
+    };
+    const kinds = notes.flatMap((n) => (n.type === 'note' || n.type === 'task' || n.type === 'journal' ? [{ n, why: blockedWhy(n) }] : []));
+    const open = kinds.flatMap((k) => (k.why ? [] : [k.n]));
+    let targets: { n: LocalNote; why: BlockReason | null; exact?: boolean }[];
     if (append.target) {
+      // A named item that takes no text is listed too, with the reason, in
+      // its rank: Enter on it adds nothing, and never makes a second list of
+      // the same name that would hold the text without its protection.
       const match = textMatcher(append.target);
-      targets = open
-        .flatMap((n) => {
-          const m = match(titleOf(n));
-          return m ? [{ n, rank: m.rank }] : [];
+      const want = foldForMatch(append.target);
+      const exact = (n: LocalNote) => foldForMatch(titleOf(n).trim()) === want;
+      targets = kinds
+        .flatMap((k) => {
+          const m = match(titleOf(k.n));
+          return m ? [{ ...k, rank: m.rank, exact: exact(k.n) }] : [];
         })
-        .sort((a, b) => b.rank - a.rank || byRecency(a.n, b.n))
-        .map((h) => h.n);
+        .sort((a, b) => Number(b.exact) - Number(a.exact) || b.rank - a.rank || Number(!!a.why) - Number(!!b.why) || byRecency(a.n, b.n));
+      // A name no item has: the list it names, made with the lines in it, so
+      // the ">>" never ends in nothing.
+      if (!targets.some((h) => !h.why || h.exact)) {
+        return [{ kind: 'appendNew', title: append.target, lines }, ...targets.slice(0, APPEND_LIMIT - 1).map((h): Row => ({ kind: 'appendBlocked', n: h.n, why: h.why! }))];
+      }
     } else {
       const today = journalOn(open, toLocalIso(new Date()));
-      targets = [...(today ? [today] : []), ...open.filter((n) => n.type === 'task').sort(byRecency)];
+      targets = [...(today ? [today] : []), ...open.filter((n) => n.type === 'task').sort(byRecency)].map((n) => ({ n, why: null }));
     }
-    // A name no item has: the list it names, made with the lines in it, so
-    // the ">>" never ends in nothing.
-    if (!targets.length && append.target) return [{ kind: 'appendNew', title: append.target, lines }];
     // No name, and nothing that takes text: say so, and how a list is made.
     if (!targets.length) return [{ kind: 'appendNone' }];
-    return targets.slice(0, APPEND_LIMIT).map((n): Row => {
+    return targets.slice(0, APPEND_LIMIT).map(({ n, why }): Row => {
+      if (why) return { kind: 'appendBlocked', n, why };
       const asTasks = n.type === 'task';
       return { kind: 'append', n, lines: asTasks ? lines : [append.text], asTasks };
     });
@@ -821,15 +883,15 @@ export default function QuickSwitcher({
     if (commandMode) {
       const recent = new Set(recentRows.map((r) => (r.kind === 'command' ? r.entry.id : '')));
       return [
-        { header: t('ninja.recent'), rows: recentRows },
+        { header: t('quickSwitcher.recent'), rows: recentRows },
         ...GROUP_ORDER.map((g) => ({
           header: t(`palette.groups.${g}`),
           rows: commandRows.filter((r) => r.kind === 'command' && r.entry.group === g && !recent.has(r.entry.id)),
         })),
-        { header: t('settings:shell.title'), rows: settings.filter((r) => !(r.kind === 'setting' && commandRows.some((c) => c.kind === 'command' && foldForMatch(c.entry.label) === foldForMatch(r.hit.label)))) },
+        { header: t('shell:contextMenu.settings'), rows: settings.filter((r) => !(r.kind === 'setting' && commandRows.some((c) => c.kind === 'command' && foldForMatch(c.entry.label) === foldForMatch(r.hit.label)))) },
       ].filter((g) => g.rows.length);
     }
-    const tagGroup: Group = { header: t('quickSwitcher.tags'), rows: tagRows, only: { prefix: TAG_PREFIX, label: t('quickSwitcher.showOnlyTags') } };
+    const tagGroup: Group = { header: t('shell:tagsRail.tags'), rows: tagRows, only: { prefix: TAG_PREFIX, label: t('quickSwitcher.showOnlyTags') } };
     const folderGroup: Group = { header: t('quickSwitcher.folders'), rows: folderRows, only: { prefix: FOLDER_PREFIX, label: t('quickSwitcher.showOnlyFolders') } };
     if (scope) {
       const found = { ...(scope === 'tags' ? tagGroup : folderGroup), only: undefined };
@@ -881,7 +943,7 @@ export default function QuickSwitcher({
       tagGroup,
       folderGroup,
       { header: t('palette.label'), rows: commandRows.filter((r) => !top.has(r)), only: { prefix: COMMAND_PREFIX, label: t('quickSwitcher.showOnlyCommands') } },
-      { header: t('settings:shell.title'), rows: settingRows },
+      { header: t('shell:contextMenu.settings'), rows: settingRows },
       // Found by a name, the themes follow the settings ("dark" finds Mode first).
       ...(themesAsked ? [] : [themeGroup]),
       // Explicit under the hits: Enter on a hit still opens the hit.
@@ -956,7 +1018,7 @@ export default function QuickSwitcher({
       return;
     }
     // A line that says why nothing can be added: it keeps the switcher open.
-    if (row.kind === 'appendNone') return;
+    if (row.kind === 'appendNone' || row.kind === 'appendBlocked') return;
     if (row.kind === 'appendHint') {
       setQuery(`${query.trimEnd()} >> `);
       setActive(0);
@@ -1051,8 +1113,8 @@ export default function QuickSwitcher({
         <div className="min-w-0 flex-1">
           {/* An item's own words take their own direction, as the list's title
               does: an Arabic title right-aligned under an English interface. */}
-          <div dir={opts.ownText ? 'auto' : undefined} className={`truncate text-[14px] leading-5 ${accent ? 'font-medium text-accent' : 'text-pn'} ${strong ? 'font-semibold' : ''}`}>{title}</div>
-          {detail && <div dir={opts.ownText === 'both' ? 'auto' : undefined} className="truncate text-[12px] leading-4 text-pn-muted">{detail}</div>}
+          <div dir={opts.ownText ? 'auto' : undefined} className={`truncate text-body leading-5 ${accent ? 'font-medium text-accent' : 'text-pn'} ${strong ? 'font-semibold' : ''}`}>{title}</div>
+          {detail && <div dir={opts.ownText === 'both' ? 'auto' : undefined} className="truncate text-small leading-4 text-pn-muted">{detail}</div>}
         </div>
         {/* The item's own menu, as Tab lists it: a touch screen has no Tab,
             so every item row shows the button there; a pointer sees it on
@@ -1069,7 +1131,7 @@ export default function QuickSwitcher({
             aria-label={tShell('selectionToolbar.more')}
             className={`${selected ? 'inline-flex' : 'hidden [@media(hover:none)]:inline-flex'} w-8 h-8 shrink-0 items-center justify-center rounded-md text-pn-muted hover:text-pn hover:bg-pn/5`}
           >
-            <DotsThreeOutlineVertical size={16} aria-hidden="true" />
+            <DotsThreeOutlineVertical aria-hidden="true" />
           </button>
         )}
         {opts.link ? (
@@ -1088,12 +1150,12 @@ export default function QuickSwitcher({
                   e.stopPropagation();
                   open(i, false, which === 1);
                 }}
-                className={`inline-flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-[12px] transition ${
+                className={`inline-flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-small transition ${
                   selected && action === which ? 'border-accent text-accent-strong bg-accent/10' : 'border-pn-muted/50 text-pn-soft hover:text-pn hover:border-pn-muted'
                 }`}
               >
-                {which === 1 ? <PencilSimple size={12} aria-hidden="true" /> : <ArrowSquareOut size={12} aria-hidden="true" />}
-                {which === 1 ? t('actions.edit') : t('quickSwitcher.openLink')}
+                {which === 1 ? <PencilSimple aria-hidden="true" /> : <ArrowSquareOut aria-hidden="true" />}
+                {which === 1 ? t('actions.edit') : t('shell:contacts.open')}
                 <kbd aria-hidden="true" className={`${KEYCAP} [@media(hover:none)]:hidden`}>{which === 1 ? '⇧↵' : '↵'}</kbd>
               </button>
             ))}
@@ -1128,6 +1190,8 @@ export default function QuickSwitcher({
         <>
           {view?.label}
           {view?.label ? ' · ' : ''}
+          {/* An archived item is out of the lists, so its row says so. */}
+          {row.n.archived === 1 ? `${t('notes:noteRow.archived')} · ` : ''}
           {formatRelative(editedAtOf(row.n))}
         </>,
         { tone: toneOf(row.n.type), ...lookOf(row.n), strong: true, link: !!linkOf?.(row.n), more: moreFor(i), ownText: 'title' },
@@ -1171,6 +1235,9 @@ export default function QuickSwitcher({
     if (row.kind === 'appendNone') {
       return option(i, 'append-none', ArrowElbowDownRight, tShell('quickAdd.appendNone'), tShell('quickAdd.appendNoneDetail'));
     }
+    if (row.kind === 'appendBlocked') {
+      return option(i, `append-blocked:${row.n.id}`, ArrowElbowDownRight, tShell('quickAdd.cannotAdd', { title: titleOf(row.n) }), tShell(`quickAdd.blocked.${row.why}`));
+    }
     if (row.kind === 'appendNew') {
       return option(
         i,
@@ -1206,8 +1273,8 @@ export default function QuickSwitcher({
         item.icon,
         <span className="inline-flex items-center gap-2">
           <span className={item.destructive ? 'text-danger' : undefined}>{item.label}</span>
-          {item.pro && <span className="text-[11px] font-semibold text-accent">Pro</span>}
-          {item.checked && <Check size={14} className="text-accent" aria-hidden="true" />}
+          {item.pro && <span className="text-meta font-semibold text-accent">Pro</span>}
+          {item.checked && <Check className="text-accent" aria-hidden="true" />}
         </span>,
         null,
         { keys: item.shortcut },
@@ -1284,7 +1351,7 @@ export default function QuickSwitcher({
             {/* One flex child: the mark splits the label into pieces, and the gap would open between them. */}
             <span><Highlighted text={entry.label} mark={row.m} /></span>
             {entry.pro && <ProMark />}
-            {entry.checked && <Check size={14} className="text-accent" aria-hidden="true" />}
+            {entry.checked && <Check className="text-accent" aria-hidden="true" />}
           </span>
         ) : <Highlighted text={entry.label} mark={row.m} />,
         entry.detail ?? null,
@@ -1295,7 +1362,7 @@ export default function QuickSwitcher({
       const { hit } = row;
       // A section's own entry names no place but Settings.
       const place = hit.entry.isSection
-        ? t('settings:shell.title')
+        ? t('shell:contextMenu.settings')
         : [sectionLabels.get(hit.entry.section), tabOf(hit)].filter(Boolean).join(' · ');
       return option(
         i,
@@ -1303,7 +1370,7 @@ export default function QuickSwitcher({
         sectionIcons[hit.entry.section],
         <>
           <Highlighted text={hit.label} mark={hit.english ? null : hit.mark} />
-          {hit.entry.section === 'help' && <ArrowSquareOut size={12} className="inline ms-1.5 text-accent" aria-hidden="true" />}
+          {hit.entry.section === 'help' && <ArrowSquareOut className="inline ms-1.5 text-accent" aria-hidden="true" />}
         </>,
         <>
           {place}
@@ -1337,13 +1404,13 @@ export default function QuickSwitcher({
       return option(
         i,
         `create-${type}`,
-        <Icon size={16} />,
+        <Icon />,
         label,
         <>
           {sentence}
           {/* What the words were read as. A click keeps that text in the
               title instead, by putting it in quotes. */}
-          {parsed.parts.length > 0 && type === (parsed.type ?? 'event') && (
+          {parsed.parts.length > 0 && row.lead && (
             <span className="ms-1.5 inline-flex flex-wrap gap-1 align-middle">
               {parsed.parts.map((part, k) => (
                 <button
@@ -1353,9 +1420,9 @@ export default function QuickSwitcher({
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setQuery((cur) => cur.replace(part.text, `"${part.text}"`));
+                    setQuery((cur) => quotePart(cur, part.text));
                   }}
-                  className="rounded bg-accent/15 px-1 text-[11px] text-accent-strong hover:bg-accent/25"
+                  className="rounded bg-accent/15 px-1 text-meta text-accent-strong hover:bg-accent/25"
                 >
                   {part.text}
                 </button>
@@ -1412,7 +1479,7 @@ export default function QuickSwitcher({
       >
         <div className="flex items-center gap-2.5 px-3.5 border-b border-divider">
           {/* The mark in its real colors, where the rows below show theirs:
-              the box says its own name. Spec: ops/design/patterns/145-150.md
+              the box says its own name. Spec: docs/internal/design/patterns/145-150.md
               section 146 */}
           {/* The mark plays the sidebar button's katana cut once each time
               the box opens: the animation runs on mount. */}
@@ -1432,6 +1499,22 @@ export default function QuickSwitcher({
               if (!/^[#/]/.test(e.target.value)) setCreatingFilter(false);
               setActive(0);
               setActionAt({ row: -1, which: 0 });
+            }}
+            // A pasted list of lines keeps one line a part: the field holds
+            // one line, so each break becomes the comma ">>" splits at, and
+            // "milk / eggs / bread" are three tasks, not "milk eggs bread".
+            onPaste={(e) => {
+              const text = e.clipboardData.getData('text/plain');
+              const lines = text.split(/\r?\n/).map((l) => l.replace(/^\s*(?:[-*+]\s+(?:\[[ xX]\]\s+)?|\d+[.)]\s+)?/, '').trim()).filter(Boolean);
+              if (lines.length < 2) return;
+              e.preventDefault();
+              const el = e.currentTarget;
+              const from = el.selectionStart ?? query.length;
+              const to = el.selectionEnd ?? from;
+              const insert = lines.join(', ');
+              setQuery(query.slice(0, from) + insert + query.slice(to));
+              setActive(0);
+              requestAnimationFrame(() => el.setSelectionRange(from + insert.length, from + insert.length));
             }}
             onKeyDown={(e) => {
               if (isImeComposing(e)) return;
@@ -1479,7 +1562,7 @@ export default function QuickSwitcher({
             aria-expanded
             aria-controls="pn-quick-switcher-list"
             aria-activedescendant={count ? optionId(at) : undefined}
-            className="flex-1 min-w-0 h-12 bg-transparent text-[17px] font-medium text-pn placeholder:text-[15px] placeholder:font-normal placeholder:text-pn-muted outline-none"
+            className="flex-1 min-w-0 h-12 bg-transparent text-heading font-medium text-pn placeholder:text-row placeholder:font-normal placeholder:text-pn-muted outline-none"
           />
           {/* Always shown: it clears the query, and with no query it closes
               the switcher, so a pointer never needs Escape. */}
@@ -1496,13 +1579,13 @@ export default function QuickSwitcher({
               aria-label={t(query ? 'actions.clearSearch' : 'actions.close')}
               className="inline-flex items-center justify-center w-8 h-8 rounded-md text-pn-muted hover:text-pn hover:bg-pn/5 transition"
             >
-              <X size={14} />
+              <X />
             </button>
           </HoverLabel>
         </div>
         <div id="pn-quick-switcher-list" ref={listRef} onScroll={measureFade} role="listbox" className="max-h-[max(33vh,15rem)] overflow-y-auto pt-1 [&:not(:has(.sticky))]:pb-1">
           {count === 0 && (
-            <div className="px-3.5 py-3 text-[13px] text-pn-muted">
+            <div className="px-3.5 py-3 text-compact text-pn-muted">
               {t(emptyMessage(mode, query, !!quickAdd))}
             </div>
           )}
@@ -1523,7 +1606,7 @@ export default function QuickSwitcher({
                         aria-label={t('actions.back')}
                         className="ms-1.5 mt-1.5 inline-flex min-w-0 items-center gap-1 rounded-md pe-1.5 text-pn-muted hover:text-pn hover:bg-pn/5"
                       >
-                        <ArrowLeft size={14} className="ms-1.5 shrink-0" aria-hidden="true" />
+                        <ArrowLeft className="ms-1.5 shrink-0" aria-hidden="true" />
                         <span id={headerId} className={`${GROUP_HEADER} truncate !ps-0.5 !pt-1`}>{g.header}</span>
                       </button>
                     ) : (
@@ -1538,9 +1621,9 @@ export default function QuickSwitcher({
                           setQuery(`${g.only!.prefix}${q}`);
                           setActive(0);
                         }}
-                        className="mt-1.5 inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-[12px] text-pn-muted hover:text-pn hover:bg-pn/5 transition"
+                        className="mt-1.5 inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-small text-pn-muted hover:text-pn hover:bg-pn/5 transition"
                       >
-                        <kbd aria-hidden="true" className="inline-flex min-w-5 h-5 items-center justify-center rounded border border-b-2 border-divider bg-surface-1 px-1 font-sans text-[12px] font-medium leading-none text-pn">{g.only.prefix}</kbd>
+                        <kbd aria-hidden="true" className="inline-flex min-w-5 h-5 items-center justify-center rounded border border-b-2 border-divider bg-surface-1 px-1 font-sans text-small font-medium leading-none text-pn">{g.only.prefix}</kbd>
                         {g.only.label}
                       </button>
                     )}
@@ -1564,7 +1647,7 @@ export default function QuickSwitcher({
           )}
         </div>
         {/* Key hints only: a touch screen has no keys to name. */}
-        <div className="flex flex-nowrap gap-x-2.5 px-3.5 py-2 border-t border-divider text-[12px] text-pn-muted [@media(hover:none)]:hidden">
+        <div className="flex flex-nowrap gap-x-2.5 px-3.5 py-2 border-t border-divider text-small text-pn-muted [@media(hover:none)]:hidden">
           <FooterHint keys={['↑', '↓']}>{t('quickSwitcher.move')}</FooterHint>
           <FooterHint keys={['↵']}>{t('quickSwitcher.open')}</FooterHint>
           {selectedLink && <FooterHint keys={['⇧↵']}>{t('quickSwitcher.edit')}</FooterHint>}
@@ -1583,7 +1666,7 @@ export default function QuickSwitcher({
           )}
           <FooterHint keys={['Esc']}>{t('quickSwitcher.close')}</FooterHint>
           {/* The key's memory trick, at the free end of the row. */}
-          <span className="ms-auto inline-flex min-w-0 items-center gap-1.5 self-center ps-2 text-[13px] font-semibold text-pn-soft" dir="ltr">
+          <span className="ms-auto inline-flex min-w-0 items-center gap-1.5 self-center ps-2 text-compact font-semibold text-pn-soft" dir="ltr">
             <kbd className={KEYCAP}>{KEY_OS === 'mac' ? '⌘K' : 'Ctrl+K'}</kbd>
             <span className="truncate">{KATANA_LINE}</span>
           </span>

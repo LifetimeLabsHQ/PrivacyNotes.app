@@ -86,6 +86,7 @@ import { useDebouncedMarkdownSave } from './useDebouncedMarkdownSave';
 import {
   TextStyleMarkdown,
   TaskListInputRule,
+  TypedSymbols,
   TaskListWithMarkdown,
   TaskItemMobileSafe,
   fixEmptyTaskItems,
@@ -187,6 +188,9 @@ type Props = {
   /** Whether a ticked task moves below the open ones (the synced
    *  `sinkCheckedTasks` setting). Defaults to on. */
   sinkCheckedTasks?: boolean;
+  /** Whether a typed pair such as `->` turns into its symbol (the synced
+   *  `typedSymbols` setting, #660). Defaults to off. */
+  typedSymbols?: boolean;
   /** The empty body's hint, when the item type has its own ("Add an agenda..." on an event). */
   placeholder?: string;
   /** Called once with the editor after it is created. The history
@@ -255,7 +259,7 @@ export type EditorHandle = {
 const TOUCH_HANDLE_HEIGHT = 32;
 
 const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }>(function EditorInner(
-  { value, onChange, readOnly = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, cachedDoc, hideEncryptedMedia, onInsertFiles, bodyControls, connections, toolbarSlot, onShowMarkdown, onRenameFile, fileNote = false, preview = false, sinkCheckedTasks = true, placeholder, onReady },
+  { value, onChange, readOnly = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, cachedDoc, hideEncryptedMedia, onInsertFiles, bodyControls, connections, toolbarSlot, onShowMarkdown, onRenameFile, fileNote = false, preview = false, sinkCheckedTasks = true, typedSymbols = false, placeholder, onReady },
   ref
 ) {
   const { t } = useTranslation('editor');
@@ -277,6 +281,8 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
   onRenameFileRef.current = onRenameFile;
   const sinkCheckedRef = useRef(sinkCheckedTasks);
   sinkCheckedRef.current = sinkCheckedTasks;
+  const typedSymbolsRef = useRef(typedSymbols);
+  typedSymbolsRef.current = typedSymbols;
   const placeholderRef = useRef(placeholder);
   placeholderRef.current = placeholder;
   // Read by a Kanban board's Add column, which is Pro.
@@ -349,24 +355,24 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       else (highlight.value ? chain.setHighlight({ color: highlight.value }) : chain.setHighlight()).run();
     };
     const items: ContextMenuItem[] = [
-      { label: t('bodyMenu.cut'), icon: <Scissors size={14} />, onSelect: () => { ed.commands.focus(); document.execCommand('cut'); } },
+      { label: t('bodyMenu.cut'), icon: <Scissors />, onSelect: () => { ed.commands.focus(); document.execCommand('cut'); } },
       { label: t('common:actions.copy'), icon: iconCopy(), onSelect: () => { ed.commands.focus(); document.execCommand('copy'); } },
-      { label: t('bodyMenu.copyAsPlain'), icon: <ClipboardText size={14} />, onSelect: () => copySelectionAs(ed, 'plain') },
-      { label: t('bodyMenu.copyAsMarkdown'), icon: <FileMd size={14} />, onSelect: () => copySelectionAs(ed, 'markdown') },
+      { label: t('bodyMenu.copyAsPlain'), icon: <ClipboardText />, onSelect: () => copySelectionAs(ed, 'plain') },
+      { label: t('bodyMenu.copyAsMarkdown'), icon: <FileMd />, onSelect: () => copySelectionAs(ed, 'markdown') },
       { type: 'separator' },
-      { label: t('toolbar.bold'), icon: <TextB size={14} />, checked: ed.isActive('bold'), onSelect: () => ed.chain().focus().toggleBold().run() },
-      { label: t('toolbar.italic'), icon: <TextItalic size={14} />, checked: ed.isActive('italic'), onSelect: () => ed.chain().focus().toggleItalic().run() },
-      { label: t('toolbar.strikethrough'), icon: <TextStrikethrough size={14} />, checked: ed.isActive('strike'), onSelect: () => ed.chain().focus().toggleStrike().run() },
-      { label: t('toolbar.highlight'), icon: <Highlighter size={14} />, checked: ed.isActive('highlight'), onSelect: toggleHighlight },
-      { label: t('toolbar.inlineCode'), icon: <Code size={14} />, checked: ed.isActive('code'), onSelect: () => ed.chain().focus().toggleCode().run() },
-      { label: t('link.popoverLabel'), icon: <LinkGlyph size={14} />, onSelect: askForLink },
+      { label: t('toolbar.bold'), icon: <TextB />, checked: ed.isActive('bold'), onSelect: () => ed.chain().focus().toggleBold().run() },
+      { label: t('toolbar.italic'), icon: <TextItalic />, checked: ed.isActive('italic'), onSelect: () => ed.chain().focus().toggleItalic().run() },
+      { label: t('toolbar.strikethrough'), icon: <TextStrikethrough />, checked: ed.isActive('strike'), onSelect: () => ed.chain().focus().toggleStrike().run() },
+      { label: t('toolbar.highlight'), icon: <Highlighter />, checked: ed.isActive('highlight'), onSelect: toggleHighlight },
+      { label: t('toolbar.inlineCode'), icon: <Code />, checked: ed.isActive('code'), onSelect: () => ed.chain().focus().toggleCode().run() },
+      { label: t('editor:toolbar.addLink'), icon: <LinkGlyph />, onSelect: askForLink },
     ];
     const sort = planLineSort(ed.state, activeLocale(), sinkCheckedRef.current);
     if (sort) {
       const doc = ed.state.doc;
       items.push({ type: 'separator' }, {
         label: t(sort.direction === 'asc' ? 'bodyMenu.sortAsc' : 'bodyMenu.sortDesc'),
-        icon: sort.direction === 'asc' ? <SortAscending size={14} /> : <SortDescending size={14} />,
+        icon: sort.direction === 'asc' ? <SortAscending /> : <SortDescending />,
         onSelect: () => {
           // The plan holds positions in the document it was made for.
           if (ed.state.doc !== doc) return;
@@ -415,7 +421,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       // Only a click inside a selection that existed before it gets the app
       // menu. A caret, an empty line, a word and a selected picture keep the
       // browser menu, with its spelling, Look Up, Paste and Copy image.
-      // Spec: ops/issues/archive/0414.md, ops/issues/0488.md
+      // Spec: docs/internal/issues/archive/0414.md, docs/internal/issues/0488.md
       const before = preClickRef.current;
       const sel = before?.selection;
       if (!before || !sel || sel.empty || before.doc !== ed.state.doc || at.pos < sel.from || at.pos > sel.to) return;
@@ -532,7 +538,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         // the gap cursor had in dark and sepia - invisible against the surface
         // it is drawn on. Match the gap cursor's treatment: accent-colored and
         // thick enough to read as a real insertion point.
-        // Spec: ops/docs/design-decisions.md (Drop cursor visibility)
+        // Spec: docs/internal/design-decisions.md (Drop cursor visibility)
         dropcursor: { color: 'rgb(var(--pn-accent))', width: 2 },
       }),
       ParagraphWithMarkdown,
@@ -601,6 +607,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         sinkChecked: () => sinkCheckedRef.current,
       }),
       TaskListInputRule,
+      TypedSymbols.configure({ enabled: () => typedSymbolsRef.current }),
       TableWithMarkdown.configure({
         resizable: false,
         HTMLAttributes: {
@@ -621,9 +628,9 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       // what its name says - a toolbar affordance - and the plaintext boundary
       // is held where it can be held without breaking the document model: the
       // Markdown pane's own paste and drop capture handlers.
-      // Spec: ops/docs/archive/markdown-folder.md (section 5, isolation)
+      // Spec: docs/internal/specs/markdown-folder.md (section 5, isolation)
       // The paste guard on the upload itself rides on the same flag:
-      // ops/docs/archive/paste-pictures.md (section 3.3)
+      // docs/internal/specs/paste-pictures.md (section 3.3)
       EncryptedImage.configure({ plaintextOnly: !!hideEncryptedMedia }),
       EncryptedAttachment.configure({
         onRename: (name: string) => {
@@ -737,7 +744,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         // alike. Emitted ONLY in the off case: with spell check on we leave
         // the engine's own default alone, so an Android WebView that ships
         // it off is never switched on by someone who just installed an
-        // update. Spec: ops/docs/design-decisions.md (Spell check is the
+        // update. Spec: docs/internal/design-decisions.md (Spell check is the
         // engine's, not ours)
         ...(spellcheck ? {} : { spellcheck: 'false' }),
       },
@@ -774,7 +781,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       // Sort the pictures of pasted HTML: ours stay, the ones whose bytes the
       // device holds become pending pictures, the rest go, so no broken image
       // node is ever made. A Markdown folder note stores none of them.
-      // Spec: GitHub #67, ops/docs/archive/paste-pictures.md (section 3.2)
+      // Spec: GitHub #67, docs/internal/specs/paste-pictures.md (section 3.2)
       transformPastedHTML: (html) => sanitizePastedHtml(html, { store: !hideEncryptedMedia, report: true }),
       // Long-press-to-paste shouldn't drag the keyboard up with it: the user
       // is reaching for the Cut/Copy/Paste bubble, not for the keys, and an
@@ -890,8 +897,13 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
   });
   endEditorCreate();
 
+  // An effect can run against an editor TipTap has already destroyed: a
+  // Suspense boundary that hides this tree and shows it again (Home's note
+  // widget, under a lazy pane) reconnects the effects before useEditor makes
+  // the next instance. Every effect below that reaches into the instance
+  // checks `isDestroyed` first, and the new instance runs them again.
   useEffect(() => {
-    if (editor && onReady) onReady(editor);
+    if (editor && !editor.isDestroyed && onReady) onReady(editor);
     // Once per editor instance; a new callback identity is not a new editor.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
@@ -900,7 +912,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
   // note id so it doesn't remount when `locked` toggles - this effect
   // makes prevent-editing take effect immediately.
   useEffect(() => {
-    if (editor) editor.setEditable(!readOnly);
+    if (editor && !editor.isDestroyed) editor.setEditable(!readOnly);
   }, [editor, readOnly]);
 
   // Feed the back-reference declared above (see editorRef).
@@ -913,7 +925,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
   // toggle has to drive the command; the editor is keyed by note id, and this
   // effect is what carries the choice across a note switch.
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed) return;
     if (invisibles) editor.commands.showInvisibleCharacters();
     else editor.commands.hideInvisibleCharacters();
   }, [editor, invisibles]);
@@ -921,7 +933,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
   // Same story for website icons: the plugin reads the preference when it
   // builds its decorations, so flipping the toggle has to ask for a rebuild.
   useEffect(() => {
-    refreshFavicons(editor ?? null);
+    refreshFavicons(editor && !editor.isDestroyed ? editor : null);
   }, [editor, favicons]);
 
   useFlushOnExit(editor);
@@ -931,7 +943,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
   // it directly on the DOM element after mount. This removes the editor
   // from iOS Safari's form-assistant prev/next chain.
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed) return;
     const el = editor.view.dom;
     if (isMobile) {
       el.setAttribute('tabindex', '-1');
@@ -972,7 +984,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
    */
   const [needsTopLine, setNeedsTopLine] = useState(false);
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed) return;
     const check = () => {
       const first = editor.state.doc.firstChild?.type.name;
       setNeedsTopLine(first !== undefined && first !== 'paragraph' && first !== 'heading');
@@ -1279,8 +1291,8 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
             className="pn-top-line group absolute inset-x-0 top-0 z-[1] h-8 cursor-text outline-none"
           >
             <span className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center gap-1.5 opacity-0 transition-opacity [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-hover:delay-150 group-focus-visible:opacity-100">
-              <span className="flex items-center gap-1 text-xs leading-none text-pn-muted">
-                <Plus size={14} aria-hidden="true" />
+              <span className="flex items-center gap-1 text-small leading-none text-pn-muted">
+                <Plus aria-hidden="true" />
                 {t('topRow.add')}
               </span>
               {/* Ends where the corner pills begin. */}

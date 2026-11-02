@@ -12,6 +12,8 @@
     "addLink": "Afegeix un enllaç",
     "noteLink": "Enllaça a una altra nota (o escriu [[)",
     "numberedList": "Llista numerada",
+    "indent": "Augmenta el sagnat",
+    "outdent": "Redueix el sagnat",
     "textColor": "Color del text",
     "textColorApply": "Color del text: {{color}}",
     "pickColor": "Tria un color del text",
@@ -72,6 +74,7 @@
     "remove": "Elimina el requadre destacat",
     "collapse": "Replega el requadre destacat",
     "expand": "Desplega el requadre destacat",
+    "dragGrip": "Arrossega",
     "types": {
       "info": "Informació",
       "success": "Èxit",
@@ -132,6 +135,9 @@
     "addColumnRight": "Afegeix una columna a la dreta",
     "toggleHeaderRow": "Activa o desactiva la fila de capçalera",
     "equalColumnWidths": "Iguala les columnes",
+    "cellColor": "Color de la cel·la",
+    "sortAscending": "Ordena de la A a la Z",
+    "sortDescending": "Ordena de la Z a la A",
     "resizeHint": "Mantén premuda {{shift}} per canviar només aquesta columna, {{alt}} per a passos més fins",
     "deleteRow": "Suprimeix la fila",
     "deleteColumn": "Suprimeix la columna",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "Cerca dins la nota",
-    "label": "Cerca dins la nota",
     "previous": "Coincidència anterior",
     "previousTitle": "Anterior",
     "next": "Coincidència següent",
     "nextTitle": "Següent",
     "close": "Tanca la cerca",
-    "closeTitle": "Tanca",
     "replacePlaceholder": "Substitueix per",
     "replaceLabel": "Substitueix per",
     "replace": "Substitueix",
@@ -177,10 +180,7 @@
     "replaceAll": "Totes",
     "replaceAllTitle": "Substitueix totes les coincidències",
     "caseSensitive": "Distingeix majúscules i minúscules",
-    "caseSensitiveTitle": "Distingeix majúscules i minúscules",
     "closeReplace": "Tanca cerca i substitueix",
-    "closeReplaceTitle": "Tanca",
-    "showReplace": "Cerca i substitueix",
     "hideReplace": "Amaga la substitució",
     "replacedCount_one": "{{count}} substituïda",
     "replacedCount_many": "{{count}} substituïdes",
@@ -193,9 +193,7 @@
     "ariaLabel": "Esquema de la nota",
     "hide": "Amaga l'esquema",
     "copyHeadingLink": "Copia l'enllaç a l'encapçalament",
-    "copyNoteLink": "Copia l'enllaç entre notes",
-    "copyHeadingShortcut": "Copia la drecera a l'encapçalament",
-    "copied": "Copiat"
+    "copyHeadingShortcut": "Copia la drecera a l'encapçalament"
   },
   "bodyMenu": {
     "cut": "Retalla",
@@ -211,11 +209,8 @@
     "add": "Afegeix una línia"
   },
   "link": {
-    "popoverLabel": "Afegeix un enllaç",
     "placeholder": "Enganxa o escriu un URL",
     "apply": "Aplica",
-    "addTitle": "Afegeix un enllaç",
-    "editTitle": "Edita l'enllaç",
     "urlLabel": "URL",
     "urlPlaceholder": "https://example.com",
     "errorEnterUrl": "Escriu un URL",
@@ -231,7 +226,6 @@
   },
   "audio": {
     "uploadingRecording": "S'està pujant l'enregistrament...",
-    "uploading": "S'està pujant...",
     "stopRecording": "Atura l'enregistrament",
     "recordAudio": "Enregistra àudio",
     "savingRecording": "S'està desant l'enregistrament...",
@@ -251,7 +245,6 @@
     "tasksChecked_other": "{{done}} de {{formatted}} marcats",
     "syncLimit": " · {{share}} del límit de sincronització d’1 MB",
     "overSyncLimit": " · supera el límit de sincronització d’1 MB, es queda en aquest dispositiu",
-    "split": "Divideix la nota",
     "veryLong": ", molt llarga, pot anar lenta en editar-la i encallar-se",
     "gettingLong": ", es va fent llarga, pot anar lenta en dispositius més lents",
     "largeTableWarning": "Una taula gran ({{rows}} files) pot fer que aquesta nota vagi lenta en editar-la; considera dividir-la"
@@ -266,19 +259,15 @@
     "placeholder": "Text per copiar amb un clic"
   },
   "inlineCode": {
-    "copyHint": "{{key}}+clic per copiar",
-    "copied": "Copiat"
+    "copyHint": "{{key}}+clic per copiar"
   },
   "codeBlock": {
-    "copy": "Copia",
-    "copied": "Copiat",
     "copyFailed": "Ha fallat",
     "wrap": "Ajusta les línies llargues",
     "showAll_one": "Mostra {{count}} línia",
     "showAll_many": "Mostra les {{count}} línies",
     "showAll_other": "Mostra les {{count}} línies",
     "showLess": "Mostra’n menys",
-    "plainText": "Text pla",
     "language": "Llenguatge del codi: {{name}}",
     "searchLanguages": "Cerca llenguatges",
     "placeholder": "Escriu o enganxa codi. Per tenir colors, tria un llenguatge a dalt."
@@ -359,7 +348,6 @@
     "inProgress": "En curs",
     "review": "Revisió",
     "done": "Fet",
-    "color": "Color",
     "columns": "Columnes",
     "columnCount_other": "{{count}} columnes",
     "cardCount_other": "{{count}} targetes",

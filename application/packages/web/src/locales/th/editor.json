@@ -12,6 +12,8 @@
     "addLink": "เพิ่มลิงก์",
     "noteLink": "ลิงก์ไปยังโน้ตอื่น (หรือพิมพ์ [[)",
     "numberedList": "รายการแบบตัวเลข",
+    "indent": "เพิ่มการเยื้อง",
+    "outdent": "ลดการเยื้อง",
     "textColor": "สีข้อความ",
     "textColorApply": "สีข้อความ: {{color}}",
     "pickColor": "เลือกสีข้อความ",
@@ -72,6 +74,7 @@
     "remove": "นำกล่องเน้นข้อความออก",
     "collapse": "ย่อกล่องเน้นข้อความ",
     "expand": "ขยายกล่องเน้นข้อความ",
+    "dragGrip": "ลาก",
     "types": {
       "info": "ข้อมูล",
       "success": "สำเร็จ",
@@ -132,6 +135,9 @@
     "addColumnRight": "เพิ่มคอลัมน์ด้านขวา",
     "toggleHeaderRow": "เปิด / ปิดแถวหัวตาราง",
     "equalColumnWidths": "ปรับคอลัมน์ให้กว้างเท่ากัน",
+    "cellColor": "สีเซลล์",
+    "sortAscending": "เรียงจาก ก ถึง ฮ",
+    "sortDescending": "เรียงจาก ฮ ถึง ก",
     "resizeHint": "กด {{shift}} ค้างไว้เพื่อปรับเฉพาะคอลัมน์นี้ หรือกด {{alt}} ค้างไว้เพื่อปรับทีละน้อย",
     "deleteRow": "ลบแถว",
     "deleteColumn": "ลบคอลัมน์",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "ค้นหาในโน้ต",
-    "label": "ค้นหาในโน้ต",
     "previous": "รายการที่ตรงก่อนหน้า",
     "previousTitle": "ก่อนหน้า",
     "next": "รายการที่ตรงถัดไป",
     "nextTitle": "ถัดไป",
     "close": "ปิดการค้นหา",
-    "closeTitle": "ปิด",
     "replacePlaceholder": "แทนที่ด้วย",
     "replaceLabel": "แทนที่ด้วย",
     "replace": "แทนที่",
@@ -177,10 +180,7 @@
     "replaceAll": "ทั้งหมด",
     "replaceAllTitle": "แทนที่ทุกรายการที่ตรง",
     "caseSensitive": "ตรงตามตัวพิมพ์",
-    "caseSensitiveTitle": "ตรงตามตัวพิมพ์",
     "closeReplace": "ปิดการค้นหาและแทนที่",
-    "closeReplaceTitle": "ปิด",
-    "showReplace": "ค้นหาและแทนที่",
     "hideReplace": "ซ่อนการแทนที่",
     "replacedCount_other": "แทนที่แล้ว {{count}} รายการ"
   },
@@ -191,9 +191,7 @@
     "ariaLabel": "เค้าโครงของโน้ต",
     "hide": "ซ่อนเค้าโครง",
     "copyHeadingLink": "คัดลอกลิงก์ไปยังหัวเรื่อง",
-    "copyNoteLink": "คัดลอกลิงก์ระหว่างโน้ต",
-    "copyHeadingShortcut": "คัดลอกทางลัดไปยังหัวเรื่อง",
-    "copied": "คัดลอกแล้ว"
+    "copyHeadingShortcut": "คัดลอกทางลัดไปยังหัวเรื่อง"
   },
   "bodyMenu": {
     "cut": "ตัด",
@@ -209,11 +207,8 @@
     "add": "เพิ่มบรรทัด"
   },
   "link": {
-    "popoverLabel": "เพิ่มลิงก์",
     "placeholder": "วางหรือพิมพ์ URL",
     "apply": "ใช้",
-    "addTitle": "เพิ่มลิงก์",
-    "editTitle": "แก้ไขลิงก์",
     "urlLabel": "URL",
     "urlPlaceholder": "https://example.com",
     "errorEnterUrl": "ใส่ URL",
@@ -229,7 +224,6 @@
   },
   "audio": {
     "uploadingRecording": "กำลังอัปโหลดเสียงที่บันทึก...",
-    "uploading": "กำลังอัปโหลด...",
     "stopRecording": "หยุดบันทึกเสียง",
     "recordAudio": "บันทึกเสียง",
     "savingRecording": "กำลังจัดเก็บไฟล์เสียง...",
@@ -243,7 +237,6 @@
     "tasksChecked_other": "ทำเครื่องหมายแล้ว {{done}} จาก {{formatted}}",
     "syncLimit": " · ใช้ {{share}} ของขีดจำกัดการซิงค์ 1 MB",
     "overSyncLimit": " · เกินขีดจำกัดการซิงค์ 1 MB จึงอยู่บนอุปกรณ์นี้เท่านั้น",
-    "split": "แยกโน้ต",
     "veryLong": " ยาวมาก การแก้ไขอาจช้าและกระตุก",
     "gettingLong": " เริ่มยาวแล้ว อาจหน่วงบนอุปกรณ์ที่ช้า",
     "largeTableWarning": "ตารางขนาดใหญ่ ({{rows}} แถว) อาจทำให้แก้ไขโน้ตนี้ได้ช้า ลองแยกตาราง"
@@ -258,17 +251,13 @@
     "placeholder": "ข้อความที่คัดลอกได้ในคลิกเดียว"
   },
   "inlineCode": {
-    "copyHint": "{{key}}+คลิกเพื่อคัดลอก",
-    "copied": "คัดลอกแล้ว"
+    "copyHint": "{{key}}+คลิกเพื่อคัดลอก"
   },
   "codeBlock": {
-    "copy": "คัดลอก",
-    "copied": "คัดลอกแล้ว",
     "copyFailed": "ล้มเหลว",
     "wrap": "ตัดบรรทัดยาว",
     "showAll_other": "แสดงทั้งหมด {{count}} บรรทัด",
     "showLess": "แสดงน้อยลง",
-    "plainText": "ข้อความธรรมดา",
     "language": "ภาษาของโค้ด: {{name}}",
     "searchLanguages": "ค้นหาภาษา",
     "placeholder": "พิมพ์หรือวางโค้ด เลือกภาษาด้านบนเพื่อให้มีสี"
@@ -349,7 +338,6 @@
     "inProgress": "กำลังทำ",
     "review": "ตรวจทาน",
     "done": "เสร็จแล้ว",
-    "color": "สี",
     "columns": "คอลัมน์",
     "columnCount_other": "{{count}} คอลัมน์",
     "cardCount_other": "{{count}} การ์ด",

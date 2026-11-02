@@ -3,12 +3,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { THEME_SCRIPT_TAG, THEME_TOGGLE_CSS, themeVarsCss, WASHI_DARK, WASHI_LIGHT } from './static-page-theme.ts';
-import { BRAND_CSS, brandMark, CHROME_CSS, languageMenu, OG_IMAGE_TAGS, ogLocaleTag, siteFooterFor, siteNav } from './static-page-chrome.ts';
+import { BRAND_CSS, brandMark, CHROME_CSS, TYPE_SCALE_CSS, languageMenu, OG_IMAGE_TAGS, ogLocaleTag, siteFooterFor, siteNav } from './static-page-chrome.ts';
 import { LOCALE_TO_SLUG, RTL_LOCALES, helpPath } from './src/localeRoutes.ts';
 import { FAQ_SOURCES, SOURCE_FILES, sourceUrl } from './src/faqSources.ts';
 import { relatedFaq } from './src/faqRelated.ts';
 import { PUBLISHED_DOCS, REPO_URL, docFiles, docMd, docSize, docSourceUrl, docUrl, docsIndexMd } from './publishedDocs.ts';
 import { VERSION } from './src/version.ts';
+import { hiddenFaqIds } from './src/extensionRelease.ts';
 import { foldText } from './src/textFold.ts';
 import { SEARCH_CORE_SCRIPT_TAG } from './search-core-script.ts';
 import { LANDING_PAGES_PUBLIC } from './landing-pages.ts';
@@ -130,6 +131,9 @@ type KeyOs = 'mac' | 'pc';
 type CapRun = string[] | '/' | '–';
 /** The row formatter of src/hotkeysData.ts, the one the app uses. */
 let rowCaps: (row: HotkeyRowData, os: KeyOs, desktop: boolean, firstOnly?: boolean) => CapRun[] = () => [];
+/** The drawing canvas's keys (DRAWING_HOTKEY_GROUPS), the sheet's third set:
+ *  their own page, so each printout stays one A4 sheet. */
+let drawingHotkeyGroups: HotkeyGroupData[] = [];
 
 // Transpile a self-contained TS module (no imports) with Oxc and
 // import it as a data-URL ES module to pull out its exports.
@@ -155,9 +159,10 @@ async function loadStructure(): Promise<{
   const guides = await evalModule(GUIDES_SRC);
   const hotkeys = await evalModule(HOTKEYS_SRC, COMMAND_KEYS_SRC);
   rowCaps = hotkeys.rowCaps as typeof rowCaps;
+  drawingHotkeyGroups = hotkeys.DRAWING_HOTKEY_GROUPS as HotkeyGroupData[];
   return {
     order: faq.FAQ_GROUP_ORDER as FaqGroupKey[],
-    rows: faq.FAQ_STRUCTURE as FaqStructureRow[],
+    rows: (faq.FAQ_STRUCTURE as FaqStructureRow[]).filter((r) => !hiddenFaqIds().includes(r.id)),
     guideOrder: guides.GUIDE_ORDER as string[],
     hotkeyGroups: hotkeys.HOTKEY_GROUPS as HotkeyGroupData[],
   };
@@ -166,7 +171,24 @@ async function loadStructure(): Promise<{
 function readCatalog(locale: HelpLocale): FaqCatalog | null {
   const file = path.join(LOCALES_DIR, locale, 'faq.json');
   if (!fs.existsSync(file)) return null;
-  return JSON.parse(fs.readFileSync(file, 'utf8')) as FaqCatalog;
+  return withoutHidden(JSON.parse(fs.readFileSync(file, 'utf8')) as FaqCatalog);
+}
+
+/**
+ * An entry that is not released yet (src/extensionRelease.ts) leaves the
+ * catalog, and so does every paragraph that links to it, so no page points
+ * at a missing leaf. A paragraph that names one stands alone in faq.json.
+ */
+function withoutHidden(cat: FaqCatalog): FaqCatalog {
+  const hidden = hiddenFaqIds();
+  if (hidden.length === 0) return cat;
+  const links = hidden.map((id) => `/help/${id}/`);
+  const entries: FaqCatalog['entries'] = {};
+  for (const [id, e] of Object.entries(cat.entries ?? {})) {
+    if (hidden.includes(id)) continue;
+    entries[id] = { ...e, a: Array.isArray(e.a) ? e.a.filter((p) => !links.some((l) => p.includes(l))) : e.a };
+  }
+  return { ...cat, entries };
 }
 
 function readGuides(locale: HelpLocale): GuidesCatalog | null {
@@ -295,7 +317,7 @@ const CODE_PARA = /^`([^`]+)`$/;
  * The .md twins and the llms text layer carry the dashes through untouched,
  * where they already mean a list, and stripMd drops the markers for the text
  * surfaces (JSON-LD, meta descriptions, the search haystack).
- * // Spec: ops/docs/help-center.md (the template)
+ * // Spec: docs/contrib/help-center.md (the template)
  */
 
 /**
@@ -318,7 +340,7 @@ const BADGE_PARA = /^\[!\[([^\]]*)\]\(([^)]+)\)\]\(([^)]+)\)$/;
  * and a reader on a slow connection still gets the box reserved before the
  * image lands. A second badge of another shape is the moment to widen the
  * markup, not the moment to guess.
- * // Spec: ops/packaging/obtainium/README.md (the badge)
+ * // Spec: docs/internal/packaging/obtainium/README.md (the badge)
  */
 const BADGE_W = 161;
 const BADGE_H = 48;
@@ -337,7 +359,7 @@ const BADGE_H = 48;
  * paragraph (a `/help/<id>/` pointer) out of it. Standard markdown on
  * purpose, like the other rows, so the .md twins and llms-full.txt carry it
  * through as a link and `stripMd` reduces it to its label.
- * // Spec: ops/docs/help-center.md (the template)
+ * // Spec: docs/contrib/help-center.md (the template)
  */
 const DOWNLOAD_PARA = /^\[([^\]]+)\]\((\/[^)\s]+\.[a-z0-9]{2,4})\)$/;
 
@@ -597,7 +619,7 @@ const DOWNLOAD_PATH =
   'M228,144v64a12,12,0,0,1-12,12H40a12,12,0,0,1-12-12V144a12,12,0,0,1,24,0v52H204V144a12,12,0,0,1,24,0ZM119.51,152.49a12,12,0,0,0,17,0l40-40a12,12,0,0,0-17-17L140,115V32a12,12,0,0,0-24,0v83L96.49,95.51a12,12,0,0,0-17,17Z';
 
 /** Arrow into the answer's own page, drawn like LINK_ICON (24px grid, 2px stroke). */
-const OPEN_ICON = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>`;
+const OPEN_ICON = `<svg data-ic viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>`;
 
 /** One inline glyph, same shape as topicIcon. */
 function icon(d: string, size: number): string {
@@ -786,11 +808,11 @@ function askMiniBar(p: Record<string, string>): string {
 
 /** The same shape at rail size, beside a monospace file name. */
 const GITHUB_MARK_SM =
-  '<svg width="15" height="15" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,104v8a56.06,56.06,0,0,1-48.44,55.47A39.8,39.8,0,0,1,176,192v40a8,8,0,0,1-8,8H104a8,8,0,0,1-8-8V216H72a40,40,0,0,1-40-40A24,24,0,0,0,8,152a8,8,0,0,1,0-16,40,40,0,0,1,40,40,24,24,0,0,0,24,24H96v-8a39.8,39.8,0,0,1,8.44-24.53A56.06,56.06,0,0,1,56,112v-8a58.14,58.14,0,0,1,7.69-28.32A59.78,59.78,0,0,1,69.07,28,8,8,0,0,1,76,24a59.75,59.75,0,0,1,48,24h24a59.75,59.75,0,0,1,48-24,8,8,0,0,1,6.93,4,59.74,59.74,0,0,1,5.37,47.68A58,58,0,0,1,216,104Z"/></svg>';
+  '<svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,104v8a56.06,56.06,0,0,1-48.44,55.47A39.8,39.8,0,0,1,176,192v40a8,8,0,0,1-8,8H104a8,8,0,0,1-8-8V216H72a40,40,0,0,1-40-40A24,24,0,0,0,8,152a8,8,0,0,1,0-16,40,40,0,0,1,40,40,24,24,0,0,0,24,24H96v-8a39.8,39.8,0,0,1,8.44-24.53A56.06,56.06,0,0,1,56,112v-8a58.14,58.14,0,0,1,7.69-28.32A59.78,59.78,0,0,1,69.07,28,8,8,0,0,1,76,24a59.75,59.75,0,0,1,48,24h24a59.75,59.75,0,0,1,48-24,8,8,0,0,1,6.93,4,59.74,59.74,0,0,1,5.37,47.68A58,58,0,0,1,216,104Z"/></svg>';
 
 /** @phosphor-icons "github-logo" (fill), the shape the feedback row uses. */
 const GITHUB_MARK =
-  '<svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,104v8a56.06,56.06,0,0,1-48.44,55.47A39.8,39.8,0,0,1,176,192v40a8,8,0,0,1-8,8H104a8,8,0,0,1-8-8V216H72a40,40,0,0,1-40-40A24,24,0,0,0,8,152a8,8,0,0,1,0-16,40,40,0,0,1,40,40,24,24,0,0,0,24,24H96v-8a39.8,39.8,0,0,1,8.44-24.53A56.06,56.06,0,0,1,56,112v-8a58.14,58.14,0,0,1,7.69-28.32A59.78,59.78,0,0,1,69.07,28,8,8,0,0,1,76,24a59.75,59.75,0,0,1,48,24h24a59.75,59.75,0,0,1,48-24,8,8,0,0,1,6.93,4,59.74,59.74,0,0,1,5.37,47.68A58,58,0,0,1,216,104Z"/></svg>';
+  '<svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,104v8a56.06,56.06,0,0,1-48.44,55.47A39.8,39.8,0,0,1,176,192v40a8,8,0,0,1-8,8H104a8,8,0,0,1-8-8V216H72a40,40,0,0,1-40-40A24,24,0,0,0,8,152a8,8,0,0,1,0-16,40,40,0,0,1,40,40,24,24,0,0,0,24,24H96v-8a39.8,39.8,0,0,1,8.44-24.53A56.06,56.06,0,0,1,56,112v-8a58.14,58.14,0,0,1,7.69-28.32A59.78,59.78,0,0,1,69.07,28,8,8,0,0,1,76,24a59.75,59.75,0,0,1,48,24h24a59.75,59.75,0,0,1,48-24,8,8,0,0,1,6.93,4,59.74,59.74,0,0,1,5.37,47.68A58,58,0,0,1,216,104Z"/></svg>';
 
 /**
  * The published source that backs one answer, as a row per document.
@@ -849,12 +871,12 @@ function feedbackBlock(prompt: string): string {
   return `<div class="feedback">
 <p>${esc(prompt)}</p>
 <div class="fb-links">
-<a class="btn btn-ghost" href="https://github.com/LifetimeLabsDev/PrivacyNotes.app/issues" target="_blank" rel="noopener noreferrer"><svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,104v8a56.06,56.06,0,0,1-48.44,55.47A39.8,39.8,0,0,1,176,192v40a8,8,0,0,1-8,8H104a8,8,0,0,1-8-8V216H72a40,40,0,0,1-40-40A24,24,0,0,0,8,152a8,8,0,0,1,0-16,40,40,0,0,1,40,40,24,24,0,0,0,24,24H96v-8a39.8,39.8,0,0,1,8.44-24.53A56.06,56.06,0,0,1,56,112v-8a58.14,58.14,0,0,1,7.69-28.32A59.78,59.78,0,0,1,69.07,28,8,8,0,0,1,76,24a59.75,59.75,0,0,1,48,24h24a59.75,59.75,0,0,1,48-24,8,8,0,0,1,6.93,4,59.74,59.74,0,0,1,5.37,47.68A58,58,0,0,1,216,104Z"/></svg>GitHub</a>
-<a class="btn btn-ghost" href="https://www.reddit.com/r/PrivacyNotes/" target="_blank" rel="noopener noreferrer"><svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M248,104a32,32,0,0,0-52.94-24.19c-16.75-8.9-36.76-14.28-57.66-15.53l5.19-31.17,17.72,2.72a24,24,0,1,0,2.87-15.74l-26-4a8,8,0,0,0-9.11,6.59L121.2,64.16c-21.84.94-42.82,6.38-60.26,15.65a32,32,0,0,0-42.59,47.74A59,59,0,0,0,16,144c0,21.93,12,42.35,33.91,57.49C70.88,216,98.61,224,128,224s57.12-8,78.09-22.51C228,186.35,240,165.93,240,144a59,59,0,0,0-2.35-16.45A32.16,32.16,0,0,0,248,104ZM72,128a16,16,0,1,1,16,16A16,16,0,0,1,72,128Zm91.75,55.07a76.18,76.18,0,0,1-71.5,0,8,8,0,1,1,7.5-14.14,60.18,60.18,0,0,0,56.5,0,8,8,0,1,1,7.5,14.14ZM168,144a16,16,0,1,1,16-16A16,16,0,0,1,168,144Z"/></svg>Reddit</a>
-<a class="btn btn-ghost" href="https://x.com/PrivacyNotesApp" target="_blank" rel="noopener noreferrer"><svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M215,219.85a8,8,0,0,1-7,4.15H160a8,8,0,0,1-6.75-3.71l-40.49-63.63L53.92,221.38a8,8,0,0,1-11.84-10.76l61.77-68L41.25,44.3A8,8,0,0,1,48,32H96a8,8,0,0,1,6.75,3.71l40.49,63.63,58.84-64.72a8,8,0,0,1,11.84,10.76l-61.77,67.95,62.6,98.38A8,8,0,0,1,215,219.85Z"/></svg>X.com</a>
-<a class="btn btn-ghost" href="https://mastodon.social/@privacynotes" target="_blank" rel="noopener noreferrer"><svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M184,32H72A40,40,0,0,0,32,72V192a40,40,0,0,0,40,40h88a8,8,0,0,0,0-16H72a24,24,0,0,1-24-24v-8H184a40,40,0,0,0,40-40V72A40,40,0,0,0,184,32Zm0,104a8,8,0,0,1-16,0V104a16,16,0,0,0-32,0v32a8,8,0,0,1-16,0V104a16,16,0,0,0-32,0v32a8,8,0,0,1-16,0V104a32,32,0,0,1,56-21.13A32,32,0,0,1,184,104Z"/></svg>Mastodon</a>
-<a class="btn btn-ghost" href="https://www.youtube.com/@PrivacyNotesApp" target="_blank" rel="noopener noreferrer"><svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M234.33,69.52a24,24,0,0,0-14.49-16.4C185.56,39.88,131,40,128,40s-57.56-.12-91.84,13.12a24,24,0,0,0-14.49,16.4C19.08,79.5,16,97.74,16,128s3.08,48.5,5.67,58.48a24,24,0,0,0,14.49,16.41C69,215.56,120.4,216,127.34,216h1.32c6.94,0,58.37-.44,91.18-13.11a24,24,0,0,0,14.49-16.41c2.59-10,5.67-28.22,5.67-58.48S236.92,79.5,234.33,69.52Zm-73.74,65-40,28A8,8,0,0,1,108,156V100a8,8,0,0,1,12.59-6.55l40,28a8,8,0,0,1,0,13.1Z"/></svg>YouTube</a>
-<a class="btn btn-ghost" href="https://www.facebook.com/PrivacyNotesApp/" target="_blank" rel="noopener noreferrer"><svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M232,128a104.16,104.16,0,0,1-91.55,103.26,4,4,0,0,1-4.45-4V152h24a8,8,0,0,0,8-8.53,8.17,8.17,0,0,0-8.25-7.47H136V112a16,16,0,0,1,16-16h16a8,8,0,0,0,8-8.53A8.17,8.17,0,0,0,167.73,80H152a32,32,0,0,0-32,32v24H96a8,8,0,0,0-8,8.53A8.17,8.17,0,0,0,96.27,152H120v75.28a4,4,0,0,1-4.44,4A104.15,104.15,0,0,1,24.07,124.09c2-54,45.74-97.9,99.78-100A104.12,104.12,0,0,1,232,128Z"/></svg>Facebook</a>
+<a class="btn btn-ghost" href="https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues" target="_blank" rel="noopener noreferrer"><svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,104v8a56.06,56.06,0,0,1-48.44,55.47A39.8,39.8,0,0,1,176,192v40a8,8,0,0,1-8,8H104a8,8,0,0,1-8-8V216H72a40,40,0,0,1-40-40A24,24,0,0,0,8,152a8,8,0,0,1,0-16,40,40,0,0,1,40,40,24,24,0,0,0,24,24H96v-8a39.8,39.8,0,0,1,8.44-24.53A56.06,56.06,0,0,1,56,112v-8a58.14,58.14,0,0,1,7.69-28.32A59.78,59.78,0,0,1,69.07,28,8,8,0,0,1,76,24a59.75,59.75,0,0,1,48,24h24a59.75,59.75,0,0,1,48-24,8,8,0,0,1,6.93,4,59.74,59.74,0,0,1,5.37,47.68A58,58,0,0,1,216,104Z"/></svg>GitHub</a>
+<a class="btn btn-ghost" href="https://www.reddit.com/r/PrivacyNotes/" target="_blank" rel="noopener noreferrer"><svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M248,104a32,32,0,0,0-52.94-24.19c-16.75-8.9-36.76-14.28-57.66-15.53l5.19-31.17,17.72,2.72a24,24,0,1,0,2.87-15.74l-26-4a8,8,0,0,0-9.11,6.59L121.2,64.16c-21.84.94-42.82,6.38-60.26,15.65a32,32,0,0,0-42.59,47.74A59,59,0,0,0,16,144c0,21.93,12,42.35,33.91,57.49C70.88,216,98.61,224,128,224s57.12-8,78.09-22.51C228,186.35,240,165.93,240,144a59,59,0,0,0-2.35-16.45A32.16,32.16,0,0,0,248,104ZM72,128a16,16,0,1,1,16,16A16,16,0,0,1,72,128Zm91.75,55.07a76.18,76.18,0,0,1-71.5,0,8,8,0,1,1,7.5-14.14,60.18,60.18,0,0,0,56.5,0,8,8,0,1,1,7.5,14.14ZM168,144a16,16,0,1,1,16-16A16,16,0,0,1,168,144Z"/></svg>Reddit</a>
+<a class="btn btn-ghost" href="https://x.com/PrivacyNotesApp" target="_blank" rel="noopener noreferrer"><svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M215,219.85a8,8,0,0,1-7,4.15H160a8,8,0,0,1-6.75-3.71l-40.49-63.63L53.92,221.38a8,8,0,0,1-11.84-10.76l61.77-68L41.25,44.3A8,8,0,0,1,48,32H96a8,8,0,0,1,6.75,3.71l40.49,63.63,58.84-64.72a8,8,0,0,1,11.84,10.76l-61.77,67.95,62.6,98.38A8,8,0,0,1,215,219.85Z"/></svg>X.com</a>
+<a class="btn btn-ghost" href="https://mastodon.social/@privacynotes" target="_blank" rel="noopener noreferrer"><svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M184,32H72A40,40,0,0,0,32,72V192a40,40,0,0,0,40,40h88a8,8,0,0,0,0-16H72a24,24,0,0,1-24-24v-8H184a40,40,0,0,0,40-40V72A40,40,0,0,0,184,32Zm0,104a8,8,0,0,1-16,0V104a16,16,0,0,0-32,0v32a8,8,0,0,1-16,0V104a16,16,0,0,0-32,0v32a8,8,0,0,1-16,0V104a32,32,0,0,1,56-21.13A32,32,0,0,1,184,104Z"/></svg>Mastodon</a>
+<a class="btn btn-ghost" href="https://www.youtube.com/@PrivacyNotesApp" target="_blank" rel="noopener noreferrer"><svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M234.33,69.52a24,24,0,0,0-14.49-16.4C185.56,39.88,131,40,128,40s-57.56-.12-91.84,13.12a24,24,0,0,0-14.49,16.4C19.08,79.5,16,97.74,16,128s3.08,48.5,5.67,58.48a24,24,0,0,0,14.49,16.41C69,215.56,120.4,216,127.34,216h1.32c6.94,0,58.37-.44,91.18-13.11a24,24,0,0,0,14.49-16.41c2.59-10,5.67-28.22,5.67-58.48S236.92,79.5,234.33,69.52Zm-73.74,65-40,28A8,8,0,0,1,108,156V100a8,8,0,0,1,12.59-6.55l40,28a8,8,0,0,1,0,13.1Z"/></svg>YouTube</a>
+<a class="btn btn-ghost" href="https://www.facebook.com/PrivacyNotesApp/" target="_blank" rel="noopener noreferrer"><svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M232,128a104.16,104.16,0,0,1-91.55,103.26,4,4,0,0,1-4.45-4V152h24a8,8,0,0,0,8-8.53,8.17,8.17,0,0,0-8.25-7.47H136V112a16,16,0,0,1,16-16h16a8,8,0,0,0,8-8.53A8.17,8.17,0,0,0,167.73,80H152a32,32,0,0,0-32,32v24H96a8,8,0,0,0-8,8.53A8.17,8.17,0,0,0,96.27,152H120v75.28a4,4,0,0,1-4.44,4A104.15,104.15,0,0,1,24.07,124.09c2-54,45.74-97.9,99.78-100A104.12,104.12,0,0,1,232,128Z"/></svg>Facebook</a>
 </div>
 </div>`;
 }
@@ -874,7 +896,7 @@ function feedbackBlock(prompt: string): string {
  * Keys are FAQ entry ids and guide ids. They share one map because no id
  * appears in both catalogs. Never write a future date and never bump one for
  * a typo: the whole value of the signal is that it is true.
- * // Spec: ops/docs/help-center.md (freshness dates)
+ * // Spec: docs/contrib/help-center.md (freshness dates)
  */
 const CONTENT_BASELINE = '2026-08-26';
 const CONTENT_UPDATED: Record<string, string> = {
@@ -887,7 +909,10 @@ const CONTENT_UPDATED: Record<string, string> = {
   'offline': '2026-10-23',
   'calendar': '2026-10-23',
   'tasks': '2026-10-23',
-  'bookmarks': '2026-10-23',
+  'bookmarks': '2026-10-31',
+  'save-page-as-note': '2026-10-31',
+  'browser-extension': '2026-10-31',
+  'browser-extension-security': '2026-10-31',
   'custom-themes': '2026-10-23',
   'keyboard-shortcuts': '2026-10-23',
   'us-company': '2026-10-23',
@@ -1180,13 +1205,13 @@ function helpFooter(
 }
 
 const SEARCH_ICON =
-  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>';
+  '<svg data-ic viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>';
 
 const CLEAR_ICON =
-  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  '<svg data-ic viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
 
 const RAIL_HOME_ICON =
-  '<svg width="15" height="15" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg>';
+  '<svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg>';
 
 /** Shared <head> boilerplate for every Help page. */
 function headCommon(
@@ -1227,27 +1252,27 @@ const HELP_SHARED_CSS = `
 .entry[hidden]{display:none}
 summary{display:flex;align-items:center;gap:12px;padding:18px 0;cursor:pointer;list-style:none}
 summary::-webkit-details-marker{display:none}
-summary .q{flex:1;font-size:16px;font-weight:600;letter-spacing:-.01em}
+summary .q{flex:1;font-size:var(--fs-title);font-weight:600;letter-spacing:-.01em}
 summary:hover .q{color:var(--accent)}
 .chev{flex:0 0 auto;width:10px;height:10px;border-right:2px solid var(--faint);border-bottom:2px solid var(--faint);transform:rotate(45deg);transition:transform .15s ease;margin-top:-4px}
 details[open] .chev{transform:rotate(-135deg);margin-top:4px}
 .a{padding:0 0 22px}
-.a p{margin:0 0 12px;font-size:15px;color:var(--muted)}\n.cbx{display:flex;flex-wrap:wrap;align-items:center;gap:9px 10px;margin:0 0 12px;padding:9px 10px 9px 13px;border:1px solid var(--line);border-radius:9px;background:var(--rail)}\n.cbx code{flex:1 1 210px;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.5;color:var(--fg);word-break:break-all}\n.cbx .btn-ok{flex:none;margin-inline-start:auto}\n.lst{margin:0 0 14px;padding-inline-start:19px;list-style:disc}\n.lst li{margin:0 0 7px;font-size:15px;color:var(--muted);line-height:1.65}\n.lst strong{color:var(--fg)}\n.lst code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--fg);word-break:break-all;direction:ltr;unicode-bidi:isolate}\n.bdg{display:block;width:max-content;max-width:100%;margin:0 0 14px;transition:opacity .15s ease}\n.bdg:hover{opacity:.82}\n.bdg img{display:block;height:48px;width:auto}\n.dlb{display:inline-flex;align-items:center;gap:8px;width:max-content;max-width:100%;margin:0 0 14px;padding:9px 14px;border:1px solid var(--line);border-radius:9px;background:var(--rail);color:var(--fg);font-size:14px;font-weight:500;text-decoration:none;transition:border-color .15s ease}\n.dlb:hover{border-color:var(--accent);text-decoration:none}\n.dlb .ic{display:flex;flex:none;color:var(--accent)}
+.a p{margin:0 0 12px;font-size:var(--fs-row);color:var(--muted)}\n.cbx{display:flex;flex-wrap:wrap;align-items:center;gap:9px 10px;margin:0 0 12px;padding:9px 10px 9px 13px;border:1px solid var(--line);border-radius:9px;background:var(--rail)}\n.cbx code{flex:1 1 210px;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-compact);line-height:1.5;color:var(--fg);word-break:break-all}\n.cbx .btn-ok{flex:none;margin-inline-start:auto}\n.lst{margin:0 0 14px;padding-inline-start:19px;list-style:disc}\n.lst li{margin:0 0 7px;font-size:var(--fs-row);color:var(--muted);line-height:1.65}\n.lst strong{color:var(--fg)}\n.lst code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-compact);color:var(--fg);word-break:break-all;direction:ltr;unicode-bidi:isolate}\n.bdg{display:block;width:max-content;max-width:100%;margin:0 0 14px;transition:opacity .15s ease}\n.bdg:hover{opacity:.82}\n.bdg img{display:block;height:48px;width:auto}\n.dlb{display:inline-flex;align-items:center;gap:8px;width:max-content;max-width:100%;margin:0 0 14px;padding:9px 14px;border:1px solid var(--line);border-radius:9px;background:var(--rail);color:var(--fg);font-size:var(--fs-body);font-weight:500;text-decoration:none;transition:border-color .15s ease}\n.dlb:hover{border-color:var(--accent);text-decoration:none}\n.dlb .ic{display:flex;flex:none;color:var(--accent)}
 .a p:last-child{margin-bottom:0}
 /* The answer's own page and its link, always visible under an open answer.
    Until 2026-10-23 the page link was a chain icon in the question row that
    only appeared on hover, so most readers never found the leaf pages. */
 .a-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-.a-act{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:none;color:var(--muted);font:inherit;font-size:13px;font-weight:500;line-height:1.3;text-decoration:none;cursor:pointer;transition:border-color .15s ease,color .15s ease}
+.a-act{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:none;color:var(--muted);font:inherit;font-size:var(--fs-compact);font-weight:500;line-height:1.3;text-decoration:none;cursor:pointer;transition:border-color .15s ease,color .15s ease}
 .a-act:hover{border-color:var(--accent);color:var(--accent);text-decoration:none}
 .a-act svg{flex:0 0 auto;color:var(--accent)}
 /* .langmenu / .langlist moved to CHROME_CSS (static-page-chrome.ts): the
    footer renders one too, and the footer is that module's. Only the
    suggest banner below is Help-specific. */
 .lang-banner{display:flex;align-items:center;gap:6px;width:max-content;max-width:100%;margin:0 0 14px;padding:5px 6px 5px 12px;border:1px solid var(--line);border-radius:99px;background:var(--imp-bg)}
-.lang-banner a{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--accent);text-decoration:none}
+.lang-banner a{display:inline-flex;align-items:center;gap:8px;font-size:var(--fs-body);font-weight:600;color:var(--accent);text-decoration:none}
 .lang-banner a svg{width:20px;height:14px;border-radius:2px}
-.lang-banner button{border:0;background:none;cursor:pointer;color:var(--faint);font-size:14px;line-height:1;padding:5px 7px;border-radius:99px}
+.lang-banner button{border:0;background:none;cursor:pointer;color:var(--faint);font-size:var(--fs-body);line-height:1;padding:5px 7px;border-radius:99px}
 .lang-banner button:hover{color:var(--fg)}
 /* flow-root + a FLOATED tile, not a flex row: as a flex item the tile reserved
    its column for the whole head, so on a phone every line of the lead wrapped
@@ -1261,34 +1286,34 @@ details[open] .chev{transform:rotate(-135deg);margin-top:4px}
 /* float:right plus a dir=rtl mirror, rather than the logical float:inline-end:
    that value is recent enough that a browser which ignores it drops the float
    altogether, and the pair below costs one line.
-   Spec: ops/docs/archive/ui-patterns.md (section 67, icon mirroring) */
+   Spec: docs/internal/design/ui-patterns.md (section 67, icon mirroring) */
 .app-tile{float:right;margin-inline-start:24px;margin-block-end:12px;width:96px;height:96px;background:var(--chip);border-radius:22px;display:flex;align-items:center;justify-content:center}
 [dir=rtl] .app-tile{float:left}
 .app-tile img{width:72px;height:72px;object-fit:contain}
 .feedback{margin:22px 0 0}
-.feedback p{margin:0 0 10px;color:var(--muted);font-size:14px}
+.feedback p{margin:0 0 10px;color:var(--muted);font-size:var(--fs-body)}
 .ask{margin:30px 0 0;padding:18px 20px;border:1px solid var(--ok-line);background:var(--ok-bg);border-radius:12px}
 .ask-head{display:flex;gap:13px;align-items:flex-start}
 .ask-ico{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;background:var(--ok);color:var(--ok-bg)}
-.ask h2{margin:0 0 4px;font-size:15.5px;font-weight:700;color:var(--ok);letter-spacing:-.01em}
-.ask-head p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
+.ask h2{margin:0 0 4px;font-size:var(--fs-title);font-weight:700;color:var(--ok);letter-spacing:-.01em}
+.ask-head p{margin:0;color:var(--muted);font-size:var(--fs-body);line-height:1.6}
 .ask-steps{margin:15px 0 0;padding:0;list-style:none;counter-reset:askstep}
-.ask-steps li{counter-increment:askstep;position:relative;padding-inline-start:31px;margin:0 0 8px;font-size:14px;line-height:1.5;color:var(--fg)}
+.ask-steps li{counter-increment:askstep;position:relative;padding-inline-start:31px;margin:0 0 8px;font-size:var(--fs-body);line-height:1.5;color:var(--fg)}
 .ask-steps li:last-child{margin-bottom:0}
-.ask-steps li::before{content:counter(askstep);position:absolute;inset-inline-start:0;top:0;width:20px;height:20px;border-radius:99px;background:var(--ok);color:var(--ok-bg);font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ask-steps li::before{content:counter(askstep);position:absolute;inset-inline-start:0;top:0;width:20px;height:20px;border-radius:99px;background:var(--ok);color:var(--ok-bg);font-size:var(--fs-small);font-weight:700;display:flex;align-items:center;justify-content:center}
 .ask-more{margin:16px 0 0}
 .ask-more summary{display:inline-flex;align-items:center;gap:10px;cursor:pointer;list-style:none}
 .ask-more summary::-webkit-details-marker{display:none}
-.sum-lbl{display:inline-flex;align-items:center;gap:8px;padding:0 14px;height:32px;border:1px solid var(--ok);border-radius:8px;font-size:13px;font-weight:600;color:var(--ok)}
+.sum-lbl{display:inline-flex;align-items:center;gap:8px;padding:0 14px;height:32px;border:1px solid var(--ok);border-radius:8px;font-size:var(--fs-compact);font-weight:600;color:var(--ok)}
 .sum-lbl:hover{background:var(--bg)}
 .sum-lbl::after{content:'';width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin-block-start:-4px}
-/* The chevrons here use PHYSICAL borders while every other rule in this block is logical, on purpose: a down-pointing arrow means the same thing in both directions, and border-inline-end turns it sideways under dir=rtl. Spec: ops/docs/archive/ui-patterns.md (section 67, icon mirroring) */
+/* The chevrons here use PHYSICAL borders while every other rule in this block is logical, on purpose: a down-pointing arrow means the same thing in both directions, and border-inline-end turns it sideways under dir=rtl. Spec: docs/internal/design/ui-patterns.md (section 67, icon mirroring) */
 .ask-more[open] .sum-lbl::after{transform:rotate(-135deg);margin-block-start:2px}
 .ask-act{margin:13px 0 0}
 /* One rule for both copy buttons, the compact one on the summary row and the
    long one under the prompt. Matching the 32px height to .sum-lbl is what
    makes the pair read as one control rather than two stacked things. */
-.btn-ok{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 14px;border:0;border-radius:8px;background:var(--ok);color:var(--ok-bg);font-family:inherit;font-size:13px;font-weight:600;line-height:1;white-space:nowrap;cursor:pointer;transition:filter .13s ease,transform .13s ease}
+.btn-ok{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 14px;border:0;border-radius:8px;background:var(--ok);color:var(--ok-bg);font-family:inherit;font-size:var(--fs-compact);font-weight:600;line-height:1;white-space:nowrap;cursor:pointer;transition:filter .13s ease,transform .13s ease}
 .btn-ok:hover{filter:brightness(1.09)}
 .btn-ok:active{transform:scale(.95)}
 .btn-ok .ic{display:inline-flex}
@@ -1298,32 +1323,32 @@ details[open] .chev{transform:rotate(-135deg);margin-top:4px}
 .btn-ok.on .ic-done{display:inline-flex}
 @keyframes ask-pop{0%{transform:scale(1)}35%{transform:scale(1.09)}70%{transform:scale(.98)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.btn-ok{transition:none}.btn-ok.on{animation:none}.btn-ok:active{transform:none}}
-.ask pre{margin:13px 0 0;padding:13px 15px;max-height:480px;overflow-y:auto;border:1px solid var(--ok-line);border-radius:9px;background:var(--bg);color:var(--fg);font-size:12.5px;line-height:1.55;white-space:pre-wrap;overflow-x:auto}
+.ask pre{margin:13px 0 0;padding:13px 15px;max-height:480px;overflow-y:auto;border:1px solid var(--ok-line);border-radius:9px;background:var(--bg);color:var(--fg);font-size:var(--fs-compact);line-height:1.55;white-space:pre-wrap;overflow-x:auto}
 /* display:flex + width:fit-content, NOT inline-flex: an inline-level box has its vertical margins ignored for line-box height, so margin-block-end here did nothing and the gap below the pill was whatever the grid happened to give - which differs between the wide layout and the reordered narrow one. Block-level shrink-wrap keeps the pill hugging its text and makes both margins real. */
-.askmini{display:flex;width:fit-content;align-items:center;gap:8px;margin:18px 0 22px;padding:7px 14px;border:1px solid var(--ok-line);background:var(--ok-bg);border-radius:99px;font-size:13px;font-weight:600;color:var(--ok);text-decoration:none}
+.askmini{display:flex;width:fit-content;align-items:center;gap:8px;margin:18px 0 22px;padding:7px 14px;border:1px solid var(--ok-line);background:var(--ok-bg);border-radius:99px;font-size:var(--fs-compact);font-weight:600;color:var(--ok);text-decoration:none}
 .askmini:hover{text-decoration:none;border-color:var(--ok)}
 .askmini-arr{width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin-block-start:-4px}
-.ask .askwarn{display:flex;gap:9px;align-items:flex-start;margin:17px 0 0;padding-block-start:14px;border-block-start:1px solid var(--ok-line);font-size:13px;font-weight:600;line-height:1.5;color:var(--fg)}
+.ask .askwarn{display:flex;gap:9px;align-items:flex-start;margin:17px 0 0;padding-block-start:14px;border-block-start:1px solid var(--ok-line);font-size:var(--fs-compact);font-weight:600;line-height:1.5;color:var(--fg)}
 .ask .askwarn svg{flex:0 0 auto;color:var(--ok);margin-block-start:1px}
 .fb-links{display:flex;gap:8px;flex-wrap:wrap}
-/* The published-document rows. A monospace file name is the whole point of the block, so it takes the weight the topic labels take and drops a step in size to stay on one line inside the 208px rail: THREAT_MODEL.md is the longest name we ship and it fits at 12.5px. It carries dir="auto" like every other file name the app renders, and therefore must NOT stretch the way a topic label does: a stretched box under dir=rtl aligns its LTR name to the far edge and leaves a hole beside the icon. Shrink-wrapping puts the name against its mark in both directions. Spec: ops/docs/archive/ui-patterns.md (section 67, dir=auto convention) */
-.rlbl-mono{flex:0 1 auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;font-weight:600}
-.rail-note{margin:8px 10px 0;font-size:12px;line-height:1.5;color:var(--faint)}
+/* The published-document rows. A monospace file name is the whole point of the block, so it takes the weight the topic labels take and drops a step in size to stay on one line inside the 208px rail: THREAT_MODEL.md is the longest name we ship and it fits at 12.5px. It carries dir="auto" like every other file name the app renders, and therefore must NOT stretch the way a topic label does: a stretched box under dir=rtl aligns its LTR name to the far edge and leaves a hole beside the icon. Shrink-wrapping puts the name against its mark in both directions. Spec: docs/internal/design/ui-patterns.md (section 67, dir=auto convention) */
+.rlbl-mono{flex:0 1 auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-compact);font-weight:600}
+.rail-note{margin:8px 10px 0;font-size:var(--fs-small);line-height:1.5;color:var(--faint)}
 /* The page shell (.wrap width, .pcols grid, .rail-col, .ritem, .search,
    .count, mark) lives in CHROME_CSS - every static page uses it now, not
    just Help. Only the Help-specific pieces are below. */
-.crumb{grid-area:crumb;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:4px 0 14px}
+.crumb{grid-area:crumb;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-meta);font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:4px 0 14px}
 .crumb a{color:var(--accent);text-decoration:none}
 .crumb a:hover{text-decoration:underline}
 .crumb .sep{margin:0 7px;color:var(--faint)}
 .sresults{display:flex;flex-direction:column;gap:2px;margin:10px 0 0}
 .sresults[hidden]{display:none}
-.sr-item{padding:9px 12px;border-radius:9px;font-size:14.5px;line-height:1.4;color:var(--muted);text-decoration:none}
+.sr-item{padding:9px 12px;border-radius:9px;font-size:var(--fs-row);line-height:1.4;color:var(--muted);text-decoration:none}
 .sr-item:hover,.sr-item.on{background:var(--imp-bg);color:var(--accent);text-decoration:none}
 .sr-all{color:var(--accent);font-weight:600}
 .leaf-hub{margin-top:38px;padding-top:26px;border-top:1px solid var(--line)}
-.lh-title{margin:0 0 6px;font-size:20px;font-weight:800;letter-spacing:-.02em;color:var(--fg)}
-.leaf-hub .sub{margin:0;font-size:14px;color:var(--muted)}
+.lh-title{margin:0 0 6px;font-size:var(--fs-display);font-weight:800;letter-spacing:-.02em;color:var(--fg)}
+.leaf-hub .sub{margin:0;font-size:var(--fs-body);color:var(--muted)}
 .leaf-hub .search{margin-top:14px}
 /* The generic single-column collapse (and the rail-row-to-pill switch) is
    in CHROME_CSS; these are the per-view area maps only. */
@@ -1365,52 +1390,68 @@ body[data-static-page="help-guide"] .rail-sources{margin-top:28px;padding-top:20
 const MD_SHOWCASE_CSS = `
 .md-sec{margin-top:30px}
 .md-sec>.eyebrow{margin:0 0 10px}
-.md-cap{margin:16px 0 6px;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.md-cap{margin:16px 0 6px;font-size:var(--fs-small);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
 .md-sec>.eyebrow+.md-cap{margin-top:0}
 .md-demo{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:0 0 12px}
 .md-src{background:var(--chip);padding:14px 16px;display:flex;align-items:center}
-.md-src pre{margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.8;color:var(--muted);white-space:pre-wrap;word-break:break-word}
+.md-src pre{margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-compact);line-height:1.8;color:var(--muted);white-space:pre-wrap;word-break:break-word}
 .md-out{padding:14px 18px;min-width:0;border-left:1px solid var(--line)}
 .md-out>:first-child{margin-top:0}.md-out>:last-child{margin-bottom:0}
-.d-h1{font-size:21px;font-weight:800;letter-spacing:-.02em;color:var(--fg);margin:0 0 4px}
-.d-h2{font-size:17px;font-weight:700;letter-spacing:-.01em;color:var(--fg);margin:0 0 4px}
-.d-h3{font-size:14.5px;font-weight:700;color:var(--fg);margin:0}
-.d-p{margin:0 0 6px;font-size:14.5px;color:var(--fg);line-height:1.7}
-.d-list{margin:0;padding-left:20px;font-size:14.5px;color:var(--fg);line-height:1.8}
+.d-h1{font-size:var(--fs-display);font-weight:800;letter-spacing:-.02em;color:var(--fg);margin:0 0 4px}
+.d-h2{font-size:var(--fs-heading);font-weight:700;letter-spacing:-.01em;color:var(--fg);margin:0 0 4px}
+.d-h3{font-size:var(--fs-row);font-weight:700;color:var(--fg);margin:0}
+.d-p{margin:0 0 6px;font-size:var(--fs-row);color:var(--fg);line-height:1.7}
+.d-list{margin:0;padding-left:20px;font-size:var(--fs-row);color:var(--fg);line-height:1.8}
 .d-list ul{margin:0;padding-left:18px;list-style:disc}
 .d-hr{border:0;border-top:1px solid var(--line);margin:10px 0}
-.d-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;background:var(--chip);border-radius:5px;padding:1px 5px}
+.d-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-compact);background:var(--chip);border-radius:5px;padding:1px 5px}
 .d-mark{background:var(--imp-bg);color:var(--mark-fg);border-radius:3px;padding:0 2px}
-.d-task{display:flex;align-items:center;gap:9px;margin:4px 0;font-size:14.5px;color:var(--fg)}
+.d-task{display:flex;align-items:center;gap:9px;margin:4px 0;font-size:var(--fs-row);color:var(--fg)}
 .d-box{flex:0 0 auto;width:16px;height:16px;border:1.5px solid var(--faint);border-radius:4px;display:inline-flex;align-items:center;justify-content:center}
 .d-box.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.d-quote{border-left:3px solid var(--accent);padding:2px 0 2px 12px;margin:0;font-size:14.5px;font-style:italic;color:var(--muted)}
-.d-call{display:flex;gap:10px;padding:11px 13px;border-radius:10px;border:1px solid;font-size:13.5px;margin:0 0 8px}
+.d-quote{border-left:3px solid var(--accent);padding:2px 0 2px 12px;margin:0;font-size:var(--fs-row);font-style:italic;color:var(--muted)}
+.d-call{display:flex;gap:10px;padding:11px 13px;border-radius:10px;border:1px solid;font-size:var(--fs-body);margin:0 0 8px}
 .d-call:last-child{margin-bottom:0}
 .d-call svg{flex:0 0 auto;margin-top:1px}
-.d-call strong{display:block;font-size:13.5px;margin:0 0 2px;color:var(--fg)}
+.d-call strong{display:block;font-size:var(--fs-body);margin:0 0 2px;color:var(--fg)}
 .d-call p{margin:0;color:var(--muted)}
 .d-info{background:rgba(59,130,246,.09);border-color:rgba(59,130,246,.35)}
 .d-info svg,.d-info strong{color:#3b82f6}
 .d-warn{background:rgba(217,119,6,.09);border-color:rgba(217,119,6,.35)}
 .d-warn svg,.d-warn strong{color:#d97706}
-.d-table{border-collapse:collapse;width:100%;font-size:13.5px;color:var(--fg)}
+.d-table{border-collapse:collapse;width:100%;font-size:var(--fs-body);color:var(--fg)}
 .d-table th,.d-table td{border:1px solid var(--line);padding:7px 10px;text-align:left}
 .d-table th{background:var(--chip);font-weight:600}
 .d-cb{background:#0e1014;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:0}
-.d-cb code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.7;color:#e7e9ec;white-space:pre-wrap}
+.d-cb code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-compact);line-height:1.7;color:#e7e9ec;white-space:pre-wrap}
 .t-k{color:#c678dd}.t-f{color:#61afef}.t-c{color:#7f848e}
-.d-math{margin:0;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:16.5px;color:var(--fg)}
+.d-math{margin:0;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:var(--fs-title);color:var(--fg)}
 .d-nl{color:var(--accent);font-weight:600;border-bottom:1px dashed var(--accent);cursor:pointer}
 @media(max-width:700px){.md-demo{grid-template-columns:minmax(0,1fr)}.md-out{border-left:0;border-top:1px solid var(--line)}}`;
 
 const PRINTER_ICON =
-  '<svg width="15" height="15" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M214.67,68H204V40a12,12,0,0,0-12-12H64A12,12,0,0,0,52,40V68H41.33C25.16,68,12,80.56,12,96v80a12,12,0,0,0,12,12H52v28a12,12,0,0,0,12,12H192a12,12,0,0,0,12-12V188h28a12,12,0,0,0,12-12V96C244,80.56,230.84,68,214.67,68ZM76,52H180V68H76ZM180,204H76V172H180Zm40-40H204v-4a12,12,0,0,0-12-12H64a12,12,0,0,0-12,12v4H36V96c0-2.17,2.44-4,5.33-4H214.67c2.89,0,5.33,1.83,5.33,4Zm-16-44a16,16,0,1,1-16-16A16,16,0,0,1,204,120Z"/></svg>';
+  '<svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M214.67,68H204V40a12,12,0,0,0-12-12H64A12,12,0,0,0,52,40V68H41.33C25.16,68,12,80.56,12,96v80a12,12,0,0,0,12,12H52v28a12,12,0,0,0,12,12H192a12,12,0,0,0,12-12V188h28a12,12,0,0,0,12-12V96C244,80.56,230.84,68,214.67,68ZM76,52H180V68H76ZM180,204H76V172H180Zm40-40H204v-4a12,12,0,0,0-12-12H64a12,12,0,0,0-12,12v4H36V96c0-2.17,2.44-4,5.33-4H214.67c2.89,0,5.33,1.83,5.33,4Zm-16-44a16,16,0,1,1-16-16A16,16,0,0,1,204,120Z"/></svg>';
+
+/** The cheat sheet's switch icons (Phosphor, bold): the key each OS's
+ *  shortcuts start with, where the app runs, and which keys the sheet shows. */
+const PICK_ICONS: Record<string, string> = {
+  mac: '<svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M180,140H164V116h16a40,40,0,1,0-40-40V92H116V76a40,40,0,1,0-40,40H92v24H76a40,40,0,1,0,40,40V164h24v16a40,40,0,1,0,40-40ZM164,76a16,16,0,1,1,16,16H164ZM60,76a16,16,0,0,1,32,0V92H76A16,16,0,0,1,60,76ZM92,180a16,16,0,1,1-16-16H92Zm24-64h24v24H116Zm64,80a16,16,0,0,1-16-16V164h16a16,16,0,0,1,0,32Z"/></svg>',
+  pc: '<svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M208.49,128.49a12,12,0,0,1-17,0L128,65,64.49,128.49a12,12,0,0,1-17-17l72-72a12,12,0,0,1,17,0l72,72A12,12,0,0,1,208.49,128.49Z"/></svg>',
+  web: '<svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,36H40A20,20,0,0,0,20,56V200a20,20,0,0,0,20,20H216a20,20,0,0,0,20-20V56A20,20,0,0,0,216,36Zm-4,24V84H44V60ZM44,196V108H212v88Z"/></svg>',
+  desktop: '<svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M208,36H48A28,28,0,0,0,20,64V172a28,28,0,0,0,28,28h68v12H96a12,12,0,0,0,0,24h64a12,12,0,0,0,0-24H140V200h68a28,28,0,0,0,28-28V64A28,28,0,0,0,208,36ZM48,60H208a4,4,0,0,1,4,4v72H44V64A4,4,0,0,1,48,60ZM208,176H48a4,4,0,0,1-4-4V160H212v12A4,4,0,0,1,208,176Z"/></svg>',
+  notes: '<svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M232.49,55.51l-32-32a12,12,0,0,0-17,0l-96,96A12,12,0,0,0,84,128v32a12,12,0,0,0,12,12h32a12,12,0,0,0,8.49-3.51l96-96A12,12,0,0,0,232.49,55.51ZM192,49l15,15L196,75,181,60Zm-69,99H108V133l56-56,15,15Zm105-7.43V208a20,20,0,0,1-20,20H48a20,20,0,0,1-20-20V48A20,20,0,0,1,48,28h67.43a12,12,0,0,1,0,24H52V204H204V140.57a12,12,0,0,1,24,0Z"/></svg>',
+  drawing: '<svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M208.5,192.49a10.6,10.6,0,0,0,0,15,12,12,0,0,1-17,17,34.62,34.62,0,0,1,0-49l9.37-9.37a10.63,10.63,0,0,0-15-15l-66.76,66.75a34.63,34.63,0,0,1-49-49l98.76-98.75a10.63,10.63,0,0,0-15-15L87.11,121.86a34.63,34.63,0,0,1-49-49L79.51,31.51a12,12,0,1,1,17,17L55.1,89.86a10.63,10.63,0,0,0,15,15l66.76-66.75a34.63,34.63,0,1,1,49,49L87.11,185.86a10.63,10.63,0,0,0,15,15l66.75-66.75a34.63,34.63,0,0,1,49,49Z"/></svg>',
+};
+
+/** One of the cheat sheet's switch buttons, with its icon. */
+function hkPick(set: string, value: string, label: string, pressed = false): string {
+  return `<button type="button" class="hk-pick" data-hk-set="${set}" data-value="${value}" aria-pressed="${pressed}">${PICK_ICONS[value]}${label}</button>`;
+}
 
 const CALL_INFO_ICON =
-  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>';
+  '<svg data-ic viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>';
 const CALL_WARN_ICON =
-  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.7 18-8-14a2 2 0 0 0-3.5 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
+  '<svg data-ic viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.7 18-8-14a2 2 0 0 0-3.5 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
 const TASK_CHECK_ICON =
   '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
 
@@ -1444,18 +1485,18 @@ function renderMarkdownShowcase(label: string, p: Record<string, string>): strin
     ),
     mdDemo(
       p.mdDemoCallouts ?? 'Callouts',
-      '&gt; [!info] Zero-knowledge\n&gt; The server stores only ciphertext.\n\n&gt; [!warning] No resets\n&gt; A lost phrase cannot be recovered.',
-      `<div class="d-call d-info">${CALL_INFO_ICON}<div><strong>Zero-knowledge</strong><p>The server stores only ciphertext.</p></div></div><div class="d-call d-warn">${CALL_WARN_ICON}<div><strong>No resets</strong><p>A lost phrase cannot be recovered.</p></div></div>`
+      '&gt; [!info] Pinned\n&gt; Pinned notes stay at the top of the list.\n\n&gt; [!warning] Back it up\n&gt; Write your phrase on paper.',
+      `<div class="d-call d-info">${CALL_INFO_ICON}<div><strong>Pinned</strong><p>Pinned notes stay at the top of the list.</p></div></div><div class="d-call d-warn">${CALL_WARN_ICON}<div><strong>Back it up</strong><p>Write your phrase on paper.</p></div></div>`
     ),
     mdDemo(
       p.mdDemoTable ?? 'Table',
-      '| App | Can read your notes |\n| --- | --- |\n| PrivacyNotes | No |\n| Typical cloud notes | Yes |',
-      '<table class="d-table"><thead><tr><th>App</th><th>Can read your notes</th></tr></thead><tbody><tr><td>PrivacyNotes</td><td>No</td></tr><tr><td>Typical cloud notes</td><td>Yes</td></tr></tbody></table>'
+      '| Item | Count |\n| --- | --- |\n| Notes | 12 |\n| Tasks | 5 |',
+      '<table class="d-table"><thead><tr><th>Item</th><th>Count</th></tr></thead><tbody><tr><td>Notes</td><td>12</td></tr><tr><td>Tasks</td><td>5</td></tr></tbody></table>'
     ),
     mdDemo(
       p.mdDemoCode ?? 'Code block',
-      '\`\`\`js\n// keys never leave your device\nconst keys = deriveKeys(phrase);\n\`\`\`',
-      '<pre class="d-cb"><code><span class="t-c">// keys never leave your device</span>\n<span class="t-k">const</span> keys = <span class="t-f">deriveKeys</span>(phrase);</code></pre>'
+      '\`\`\`js\n// the same phrase makes the same keys\nconst keys = deriveKeys(phrase);\n\`\`\`',
+      '<pre class="d-cb"><code><span class="t-c">// the same phrase makes the same keys</span>\n<span class="t-k">const</span> keys = <span class="t-f">deriveKeys</span>(phrase);</code></pre>'
     ),
     mdDemo(
       p.mdDemoScripts ?? 'Superscript, subscript, underline',
@@ -1486,7 +1527,7 @@ ${demos.join('\n')}
 
 /** The CSS that shows one key set: the root carries data-hk-os and data-hk-app. */
 function keySetCss(root: string, rowClass: string): string {
-  return `${root}[data-hk-os="mac"] [data-os="pc"],${root}[data-hk-os="pc"] [data-os="mac"],${root}[data-hk-app="web"] [data-app="desktop"],${root}[data-hk-app="desktop"] [data-app="web"],${root}[data-hk-app="web"] .${rowClass}[data-desktop-only]{display:none}`;
+  return `${root}[data-hk-os="mac"] [data-os="pc"],${root}[data-hk-os="pc"] [data-os="mac"],${root}[data-hk-app="web"] [data-app="desktop"],${root}[data-hk-app="desktop"] [data-app="web"],${root}[data-hk-app="drawing"] [data-app="web"],${root}[data-hk-app="drawing"] [data-app="desktop"],${root}[data-hk-app="web"] [data-app="drawing"],${root}[data-hk-app="desktop"] [data-app="drawing"],${root}[data-hk-app="web"] .${rowClass}[data-desktop-only]{display:none}`;
 }
 
 /** The English typing note from common.json, the one hotkeys string the sheet shares with the app. */
@@ -1531,9 +1572,9 @@ function renderCheatSheetHtml(hotkeyGroups: HotkeyGroupData[]): string {
   // One sheet per key set (Mac or Windows and Linux, browser or desktop
   // app), each with its own two columns: the sets differ in rows and in key
   // widths, so one balance cannot fit all four. The page shows one at a time.
-  const renderSet = (os: KeyOs, app: 'web' | 'desktop') => {
+  const renderSet = (os: KeyOs, app: 'web' | 'desktop' | 'drawing') => {
     const desktop = app === 'desktop';
-    const groups = hotkeyGroups
+    const groups = (app === 'drawing' ? drawingHotkeyGroups : hotkeyGroups)
       .map((g) => ({ g, rows: g.rows.filter((r) => rowCaps(r, os, desktop).length > 0) }))
       .filter((x) => x.rows.length > 0);
     const renderGroup = ({ g, rows }: (typeof groups)[number]) => {
@@ -1593,7 +1634,7 @@ ${col(false)}
 </div>
 </div>`;
   };
-  const sets = (['mac', 'pc'] as const).flatMap((os) => (['web', 'desktop'] as const).map((app) => renderSet(os, app))).join('\n');
+  const sets = (['mac', 'pc'] as const).flatMap((os) => (['web', 'desktop', 'drawing'] as const).map((app) => renderSet(os, app))).join('\n');
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -1617,25 +1658,26 @@ ${themeVarsCss(
   '--bg:#f2f3f5;--fg:#15171a;--muted:#5b6168;--line:#e7e9ec;--accent:#1E40AF;--on-accent:#fff',
   '--bg:#0e1014;--fg:#e7e9ec;--muted:#9aa1aa;--line:#23262c;--accent:#4A90D9;--on-accent:#03203E'
 )}
+${TYPE_SCALE_CSS}
 ${BRAND_CSS}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5}
 .bar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px;background:var(--bg);border-bottom:1px solid var(--line)}
-.bar-brand{display:inline-flex;align-items:center;gap:9px;font-size:15px;color:var(--fg);text-decoration:none}
+.bar-brand{display:inline-flex;align-items:center;gap:9px;font-size:var(--fs-row);color:var(--fg);text-decoration:none}
 .bar-brand img{width:26px;height:26px}
-.btn-print{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;border:0;border-radius:9px;background:var(--accent);color:var(--on-accent);font-family:inherit;font-size:13.5px;font-weight:600;line-height:1;white-space:nowrap;cursor:pointer}
+.btn-print{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;border:0;border-radius:9px;background:var(--accent);color:var(--on-accent);font-family:inherit;font-size:var(--fs-body);font-weight:600;line-height:1;white-space:nowrap;cursor:pointer}
 .btn-print:hover{filter:brightness(1.08)}
 .btn-print svg{flex:0 0 auto}
-.hint{max-width:210mm;margin:18px auto 0;padding:0 20px;font-size:13px;color:var(--muted);text-align:center}
+.hint{max-width:210mm;margin:18px auto 0;padding:0 20px;font-size:var(--fs-compact);color:var(--muted);text-align:center}
 /* The sheet is paper: fixed light colors in both themes, so the preview on
    screen is exactly what comes out of the printer. */
 .sheet{width:210mm;max-width:100%;margin:18px auto 48px;background:#fff;color:#15171a;border:1px solid var(--line);border-radius:4px;box-shadow:0 12px 40px rgba(0,0,0,.14);padding:13mm 12mm}
 .s-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:2px solid #15171a;padding-bottom:13px}
-.s-brand{display:inline-flex;align-items:center;gap:8px;font-size:16px;letter-spacing:-.01em}
+.s-brand{display:inline-flex;align-items:center;gap:8px;font-size:var(--fs-title);letter-spacing:-.01em}
 .s-brand img{width:22px;height:22px}
-.s-head h1{margin:0;font-size:15px;font-weight:700;color:#3d434a;letter-spacing:-.01em}
-.s-meta{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:#8a9099}
+.s-head h1{margin:0;font-size:var(--fs-row);font-weight:700;color:#3d434a;letter-spacing:-.01em}
+.s-meta{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-meta);color:#8a9099}
 /* minmax(0,1fr), never bare 1fr: the dot leaders are one long nowrap glyph
    run, and a bare 1fr track's auto minimum honors that intrinsic width,
    pushing the second column off the sheet. */
@@ -1645,30 +1687,32 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,Bli
    page; the longer column sets the height. Measure with a real print
    (headless Chrome, --print-to-pdf) after a row is added. */
 .s-g{margin:0 0 20px}
-.s-g h2{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1E40AF;margin:0 0 6px}
-.s-row{display:flex;align-items:center;gap:9px;padding:2px 0;border-top:1px solid #e7e9ec;font-size:12px;color:#3d434a}
+.s-g h2{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-meta);font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1E40AF;margin:0 0 6px}
+.s-row{display:flex;align-items:center;gap:9px;padding:2px 0;border-top:1px solid #e7e9ec;font-size:var(--fs-small);color:#3d434a}
 .s-g h2+.s-row{border-top:0}
 .s-lbl{flex:0 1 auto}
 /* Dot leader between label and keys: REAL TEXT (a clipped run of middots),
    not a gradient background. A gradient rasterizes in the macOS save-as-PDF
    path and came out as broken dashes; glyphs are vectors in every print
    engine. The row's align-items centers it. */
-.s-dots{flex:1 1 0;min-width:14px;overflow:hidden;white-space:nowrap;color:#c9ced4;font-size:11px;line-height:1;letter-spacing:5px;text-align:center}
+.s-dots{flex:1 1 0;min-width:14px;overflow:hidden;white-space:nowrap;color:#c9ced4;font-size:var(--fs-meta);line-height:1;letter-spacing:5px;text-align:center}
 .s-dots::before{content:"································································································"}
 /* direction:ltr - a key sequence is a forced-LTR island under RTL, so a
-   combined cap like "1 – ⌥⌘6" cannot reorder. Spec: ops/docs/archive/ui-patterns.md
+   combined cap like "1 – ⌥⌘6" cannot reorder. Spec: docs/internal/design/ui-patterns.md
    (section 67, forced-LTR islands) */
 .s-keys{display:inline-flex;align-items:center;gap:3px;flex:0 0 auto;direction:ltr}
-.s-or{color:#8a9099;font-size:10px;padding:0 1px}
+.s-or{color:#8a9099;font-size:var(--fs-meta);padding:0 1px}
 ${keySetCss('.sheet', 's-row')}
-.sheet[data-hk-os="mac"] [data-legend="pc"],.sheet[data-hk-os="pc"] [data-legend="mac"],.sheet[data-hk-app="web"] [data-set-name="desktop"],.sheet[data-hk-app="desktop"] [data-set-name="web"],.sheet[data-hk-os="mac"] [data-set-name="pc"],.sheet[data-hk-os="pc"] [data-set-name="mac"]{display:none}
+.sheet[data-hk-os="mac"] [data-legend="pc"],.sheet[data-hk-os="pc"] [data-legend="mac"],.sheet[data-hk-app="web"] [data-set-name="desktop"],.sheet[data-hk-app="desktop"] [data-set-name="web"],.sheet[data-hk-app="drawing"] [data-set-name="web"],.sheet[data-hk-app="drawing"] [data-set-name="desktop"],.sheet[data-hk-app="web"] [data-set-name="drawing"],.sheet[data-hk-app="desktop"] [data-set-name="drawing"],.sheet[data-hk-os="mac"] [data-set-name="pc"],.sheet[data-hk-os="pc"] [data-set-name="mac"]{display:none}
 .bar-picks{display:flex;gap:8px;flex-wrap:wrap}
 .bar-pickset{display:inline-flex;border:1px solid var(--line);border-radius:99px;padding:2px}
-.hk-pick{border:0;background:none;font:inherit;font-size:12.5px;font-weight:600;color:var(--muted);padding:5px 11px;border-radius:99px;cursor:pointer}
+.hk-pick{display:inline-flex;align-items:center;gap:6px;border:0;background:none;font:inherit;font-size:var(--fs-compact);font-weight:600;color:var(--muted);padding:5px 11px;border-radius:99px;cursor:pointer}
+.hk-pick svg{flex:0 0 auto}
+.hk-pick:disabled{opacity:.45;cursor:default}
 .hk-pick[aria-pressed="true"]{background:var(--line);color:var(--fg)}
-kbd.s-cap{display:inline-flex;min-width:20px;height:20px;padding:0 5px;align-items:center;justify-content:center;border:1px solid #d5d9de;border-bottom-width:2px;border-radius:5px;background:#f5f6f8;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;font-weight:600;color:#15171a}
+kbd.s-cap{display:inline-flex;min-width:20px;height:20px;padding:0 5px;align-items:center;justify-content:center;border:1px solid #d5d9de;border-bottom-width:2px;border-radius:5px;background:#f5f6f8;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-meta);font-weight:600;color:#15171a}
 .s-foot{margin-top:6px;padding-top:14px;border-top:1px solid #e7e9ec}
-.s-foot p{margin:0 0 6px;font-size:10.5px;color:#5b6168}
+.s-foot p{margin:0 0 6px;font-size:var(--fs-meta);color:#5b6168}
 .s-foot p:last-child{margin-bottom:0}
 /* Zero page margin on purpose: the browser prints its own header/footer
    (title, URL, date, page count) INSIDE the page margin, so a 0mm margin
@@ -1697,8 +1741,9 @@ kbd.s-cap,.s-g h2,.sheet .pn-mark-a{-webkit-print-color-adjust:exact;print-color
 <div class="bar">
 <a class="bar-brand" href="${helpPath('en')}"><img src="/privacy-notes.webp" width="26" height="26" alt="" aria-hidden="true" draggable="false">${brandMark()}</a>
 <div class="bar-picks" hidden>
-<div class="bar-pickset"><button type="button" class="hk-pick" data-hk-set="os" data-value="mac" aria-pressed="true">Mac</button><button type="button" class="hk-pick" data-hk-set="os" data-value="pc" aria-pressed="false">Windows and Linux</button></div>
-<div class="bar-pickset"><button type="button" class="hk-pick" data-hk-set="app" data-value="web" aria-pressed="true">Browser</button><button type="button" class="hk-pick" data-hk-set="app" data-value="desktop" aria-pressed="false">Desktop app</button></div>
+<div class="bar-pickset">${hkPick('os', 'mac', 'Mac', true)}${hkPick('os', 'pc', 'Windows and Linux')}</div>
+<div class="bar-pickset" data-hk-apps>${hkPick('app', 'web', 'Browser', true)}${hkPick('app', 'desktop', 'Desktop app')}</div>
+<div class="bar-pickset">${hkPick('sheet', 'notes', 'Notes', true)}${hkPick('sheet', 'drawing', 'Drawing')}</div>
 </div>
 <button class="btn-print" id="cs-print" type="button">${PRINTER_ICON}${esc(printLabel)}</button>
 </div>
@@ -1707,7 +1752,7 @@ kbd.s-cap,.s-g h2,.sheet .pn-mark-a{-webkit-print-color-adjust:exact;print-color
 <header class="s-head">
 <div class="s-brand"><img src="/privacy-notes.webp" width="22" height="22" alt="" aria-hidden="true" draggable="false">${brandMark()}</div>
 <h1>${esc(title)}</h1>
-<span class="s-meta"><span data-set-name="mac">Mac</span><span data-set-name="pc">Windows and Linux</span>, <span data-set-name="web">browser</span><span data-set-name="desktop">desktop app</span> · v${VERSION}</span>
+<span class="s-meta"><span data-set-name="mac">Mac</span><span data-set-name="pc">Windows and Linux</span>, <span data-set-name="web">browser</span><span data-set-name="desktop">desktop app</span><span data-set-name="drawing">drawing</span> · v${VERSION}</span>
 </header>
 ${sets}
 <footer class="s-foot">
@@ -1815,7 +1860,7 @@ ${HELP_SHARED_CSS}
 ${MD_SHOWCASE_CSS}
 .gstrip{margin:8px 0 26px;padding:16px 18px;border:1px solid var(--line);border-radius:14px}
 .gstrip .eyebrow{margin:0 0 4px}
-.glead{margin:0 0 12px;font-size:14px;color:var(--muted)}
+.glead{margin:0 0 12px;font-size:var(--fs-body);color:var(--muted)}
 .fgroup .eyebrow{margin:34px 0 6px}
 .fgroup:first-of-type .eyebrow{margin-top:8px}
 .fgroup[hidden]{display:none}
@@ -1896,12 +1941,12 @@ ${PAGE_VARS}
 ${THEME_TOGGLE_CSS}
 ${CHROME_CSS}
 ${HELP_SHARED_CSS}
-h1{font-size:26px}
-.leaf-body p{margin:0 0 14px;font-size:15.5px;color:var(--muted);line-height:1.65}
+h1{font-size:var(--fs-display-2)}
+.leaf-body p{margin:0 0 14px;font-size:var(--fs-title);color:var(--muted);line-height:1.65}
 .leaf-body p:first-child{margin-top:2px}
 .related{margin-top:34px}
 .related .eyebrow{margin:0 0 4px}
-.rel-q{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 2px;border-top:1px solid var(--line);font-size:14.5px;font-weight:600;color:var(--fg);text-decoration:none;letter-spacing:-.01em}
+.rel-q{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 2px;border-top:1px solid var(--line);font-size:var(--fs-row);font-weight:600;color:var(--fg);text-decoration:none;letter-spacing:-.01em}
 .related .eyebrow + .rel-q{border-top:0}
 .rel-q:hover{color:var(--accent);text-decoration:none}
 .rel-q .chev{transform:rotate(-45deg);margin-top:0}
@@ -1912,9 +1957,9 @@ h1{font-size:26px}
 .src-row:hover{text-decoration:none}
 .src-row:hover .src-file{color:var(--accent)}
 .src-lbl{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:1px 9px}
-.src-file{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;font-weight:600;color:var(--fg)}
-.src-head{font-size:13.5px;color:var(--muted)}
-.src-note{margin:10px 0 0;font-size:12.5px;color:var(--faint)}
+.src-file{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-compact);font-weight:600;color:var(--fg)}
+.src-head{font-size:var(--fs-body);color:var(--muted)}
+.src-note{margin:10px 0 0;font-size:var(--fs-compact);color:var(--faint)}
 ${showcaseCss}
 </style>
 </head>
@@ -2009,17 +2054,17 @@ ${PAGE_VARS}
 ${THEME_TOGGLE_CSS}
 ${CHROME_CSS}
 ${HELP_SHARED_CSS}
-h1{font-size:26px}
-.lead{font-size:15.5px;color:var(--muted);line-height:1.6;margin:0 0 4px}
-.guide-body h2{font-size:18px;font-weight:700;letter-spacing:-.01em;margin:26px 0 8px}
+h1{font-size:var(--fs-display-2)}
+.lead{font-size:var(--fs-title);color:var(--muted);line-height:1.6;margin:0 0 4px}
+.guide-body h2{font-size:var(--fs-heading);font-weight:700;letter-spacing:-.01em;margin:26px 0 8px}
 .guide-body>h2:first-child{margin-top:14px}
 .guide-body>p:first-child{margin-top:14px}
 .guide-body>figure.guide-shot:first-child{margin-top:14px}
 .guide-shot{margin:0 0 18px}
 .guide-shot img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:10px}
-.guide-body p{margin:0 0 13px;font-size:15.5px;color:var(--muted);line-height:1.65}
+.guide-body p{margin:0 0 13px;font-size:var(--fs-title);color:var(--muted);line-height:1.65}
 .guide-body ol{margin:0 0 16px;padding-left:22px}
-.guide-body ol li{margin:0 0 9px;font-size:15.5px;color:var(--muted);line-height:1.6}
+.guide-body ol li{margin:0 0 9px;font-size:var(--fs-title);color:var(--muted);line-height:1.6}
 .guide-body ol li::marker{color:var(--accent);font-weight:600}
 </style>
 </head>
@@ -2100,7 +2145,7 @@ function renderMarketingSitemap(): string {
     if (locale === 'en') continue;
     urls.push(`${ORIGIN}${slug}`);
   }
-  urls.push(`${ORIGIN}/changelog`, `${ORIGIN}/roadmap`, `${ORIGIN}/themes`, `${ORIGIN}/brand`);
+  urls.push(`${ORIGIN}/changelog`, `${ORIGIN}/roadmap`, `${ORIGIN}/themes`, `${ORIGIN}/brand`, `${ORIGIN}/licenses`);
   return urlset(urls);
 }
 
@@ -2371,7 +2416,7 @@ ${faq}
 ${ORIGIN}${helpPath('en')}
 
 How to export from another app, and what arrives here. Imports run entirely on the reader's own
-device, so nothing readable is uploaded.
+device, and imported notes are encrypted there like any other note.
 ${importSteps}
 ${guideBlocks}
 `;

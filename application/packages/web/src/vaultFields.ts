@@ -19,6 +19,7 @@ import { parseSshKeyBody } from './SshKeyForm';
 import { formatAddressLines, formatContactDate, parseContactBody } from './contactBody';
 import { dateLocale } from './intlFormat';
 import { isPublicField, loginExtrasOf } from './loginExtras';
+import { noteFileLinks } from './vaultBody';
 
 export interface VaultField {
   label: string;
@@ -35,6 +36,9 @@ export interface VaultContent {
   /** The item's freeform notes - body text under the table, not a row. */
   notes: string;
   notesLabel: string;
+  /** Names of the files attached to a login, card or SSH key (#563). An
+   *  export lists them; the files themselves travel only in the backup. */
+  files?: string[];
 }
 
 /**
@@ -58,7 +62,7 @@ export function vaultContent(note: Pick<LocalNote, 'type' | 'body' | 'trackers'>
     for (const f of extras.fields) {
       if (f.value) fields.push({ label: f.label || i18n.t('shell:vaultItem.customField'), value: f.value, secret: !isPublicField(f) });
     }
-    return { fields, notes: l.notes, notesLabel: i18n.t('auth:loginForm.notesLabel') };
+    return { fields, notes: l.notes, notesLabel: i18n.t('common:cardForm.notes'), files: fileNamesOf(note) };
   }
 
   if (note.type === 'card') {
@@ -73,7 +77,7 @@ export function vaultContent(note: Pick<LocalNote, 'type' | 'body' | 'trackers'>
     if (c.expMonth || c.expYear) fields.push({ label: i18n.t('common:cardForm.expiry'), value: `${c.expMonth}/${c.expYear}` });
     if (c.cvv) fields.push({ label: i18n.t('common:cardForm.cvv'), value: c.cvv, secret: true });
     if (c.billingZip) fields.push({ label: i18n.t('common:cardForm.billingZip'), value: c.billingZip });
-    return { fields, notes: c.notes, notesLabel: i18n.t('common:cardForm.notes') };
+    return { fields, notes: c.notes, notesLabel: i18n.t('common:cardForm.notes'), files: fileNamesOf(note) };
   }
 
   if (note.type === 'ssh-key') {
@@ -83,7 +87,7 @@ export function vaultContent(note: Pick<LocalNote, 'type' | 'body' | 'trackers'>
     if (s.publicKey) fields.push({ label: i18n.t('common:sshKeyForm.publicKey'), value: s.publicKey, mono: true });
     if (s.privateKey) fields.push({ label: i18n.t('common:sshKeyForm.privateKey'), value: s.privateKey, mono: true, secret: true });
     if (s.passphrase) fields.push({ label: i18n.t('common:sshKeyForm.passphrase'), value: s.passphrase, mono: true, secret: true });
-    return { fields, notes: s.notes, notesLabel: i18n.t('common:sshKeyForm.notes') };
+    return { fields, notes: s.notes, notesLabel: i18n.t('common:cardForm.notes'), files: fileNamesOf(note) };
   }
 
   if (note.type === 'contact') {
@@ -98,14 +102,25 @@ export function vaultContent(note: Pick<LocalNote, 'type' | 'body' | 'trackers'>
     if (c.jobTitle) fields.push({ label: i18n.t('shell:contacts.jobTitle'), value: c.jobTitle });
     for (const a of c.addresses) fields.push({ label: label(i18n.t('shell:contacts.groupAddress'), a.label), value: formatAddressLines(a).join('\n') });
     for (const u of c.urls) fields.push({ label: label(i18n.t('shell:contacts.groupWebsite'), u.label), value: u.value });
-    for (const p of c.profiles) fields.push({ label: label(i18n.t('shell:contacts.groupProfile'), p.label), value: p.value });
+    for (const p of c.profiles) fields.push({ label: label(i18n.t('shell:contacts.labels.profile'), p.label), value: p.value });
     for (const d of c.dates) fields.push({ label: label(i18n.t('shell:contacts.groupDates'), d.label), value: formatContactDate(d.value, dateLocale()) });
     for (const r of c.related) fields.push({ label: label(i18n.t('shell:contacts.groupRelated'), r.label), value: r.value });
     if (c.nickname) fields.push({ label: i18n.t('shell:contacts.nickname'), value: c.nickname });
-    return { fields, notes: c.notes, notesLabel: i18n.t('shell:contacts.groupNote') };
+    return { fields, notes: c.notes, notesLabel: i18n.t('shell:contacts.itemNote') };
   }
 
   return null;
+}
+
+/** The names of a vault item's files, in the order the Files section shows them. */
+function fileNamesOf(note: Pick<LocalNote, 'type' | 'body'>): string[] {
+  return noteFileLinks(note).map((f) => f.name);
+}
+
+/** Text that must read literally inside a markdown line: a custom field's
+ *  name, a file name. */
+function literalMarkdown(text: string): string {
+  return text.replace(/\s+/g, ' ').replace(/[\\`*_[\]<>#|~]/g, '\\$&');
 }
 
 /**
@@ -117,7 +132,7 @@ export function vaultContent(note: Pick<LocalNote, 'type' | 'body' | 'trackers'>
  */
 function fieldBlock(rawLabel: string, value: string): string {
   // A custom field's name is user input: keep it one line and literal.
-  const label = rawLabel.replace(/\s+/g, ' ').replace(/[\\`*_[\]<>#|~]/g, '\\$&');
+  const label = literalMarkdown(rawLabel);
   const ticks = (value.match(/`+/g) ?? []).reduce((n, run) => Math.max(n, run.length), 0);
   if (value.includes('\n')) {
     const fence = '`'.repeat(Math.max(3, ticks + 1));
@@ -142,5 +157,9 @@ function fieldBlock(rawLabel: string, value: string): string {
 export function vaultToMarkdown(vault: VaultContent): string {
   const blocks = vault.fields.map((f) => fieldBlock(f.label, f.value));
   if (vault.notes) blocks.push(`**${vault.notesLabel}:**\n\n${vault.notes}`);
+  // The files are named, not carried: a single .md has nowhere to put them.
+  if (vault.files?.length) {
+    blocks.push(`**${i18n.t('shell:tagsRail.files')}:**\n\n${vault.files.map((n) => `- ${literalMarkdown(n)}`).join('\n')}`);
+  }
   return blocks.join('\n\n');
 }

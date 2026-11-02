@@ -17,7 +17,7 @@ export function nativeTimeCommit(raw: string, clearable: boolean): string | null
  * clock. A pointer device gets a text field that shows the time as the clock
  * setting writes it and takes it as typed ("15:00", "3pm"). Both commit on
  * Enter, on the picker's change, or when the field loses focus.
- * Spec: ops/issues/0550.md (Spec)
+ * Spec: docs/internal/issues/0550.md (Spec)
  */
 export function TimeInput({ value, onCommit, label, className, day, clearable = false }: {
   value: string | undefined;

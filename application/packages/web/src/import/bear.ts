@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { zipEntryBytes, zipEntryText } from './zipEntry';
+import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
 import { normalizeTag, parseYamlTags, TAG_MAX_LENGTH } from '../notesRepo';
 import { buildFolderTree } from './folderImport';
 import { FRONT_MATTER } from '../markdownFolder/adapter';
@@ -357,17 +357,25 @@ export async function parseBear(file: File, onProgress?: (msg: string) => void):
   });
 
   onProgress?.('Reading attachments…');
+  let tooLarge = 0;
   for (const [path, key] of blobKeyOf) {
     if (!out.some((n) => isBlobReferenced(key, n.body))) {
       blobs.delete(key);
       continue;
     }
-    blobs.get(key)!.data = await zipEntryBytes(files.get(path)!, Infinity);
+    const data = await zipEntryMedia(files.get(path)!);
+    if (data) {
+      blobs.get(key)!.data = data;
+    } else {
+      blobs.delete(key);
+      tooLarge++;
+    }
   }
 
   const s = (n: number, one = '', many = 's') => (n === 1 ? one : many);
   const transforms: string[] = [];
   const warnings: string[] = [];
+  if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   const tagged = out.length - untagged;
   if (tagged > 0) transforms.push(`Read Bear's #tags in ${tagged} note${s(tagged)}, nested tags included.`);
   if (folders.length > 0) {

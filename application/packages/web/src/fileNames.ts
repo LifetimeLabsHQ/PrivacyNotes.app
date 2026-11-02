@@ -15,9 +15,11 @@
  * one place that writes a link by hand rather than through the serializer.
  */
 
+import { nextStop } from './linkScan';
+
 /** Longest name a file may carry. Matches the note title cap, because a
  *  single-file note carries its name in both places. */
-// Spec: ops/docs/archive/file-rename-and-audio-seek.md (character rules)
+// Spec: docs/internal/specs/file-rename-and-audio-seek.md (character rules)
 export const FILE_NAME_MAX_LENGTH = 200;
 
 /**
@@ -28,6 +30,10 @@ export const FILE_NAME_MAX_LENGTH = 200;
  */
 export function cleanFileName(raw: string, fallback: string): string {
   const cleaned = raw
+    // The direction overrides and isolates draw the rest of a name in another
+    // order, so "photo<U+202E>gpj.exe" reads as a picture. The marks U+200E
+    // and U+200F change no order and right-to-left names need them.
+    .replace(/[\u202A-\u202E\u2066-\u2069]/g, '')
     // eslint-disable-next-line no-control-regex
     .replace(/[\x00-\x1f\x7f|]+/g, ' ')
     .replace(/\s+/g, ' ')
@@ -74,7 +80,103 @@ export function splitFileName(name: string): { base: string; ext: string } {
   return { base: name.slice(0, dot), ext: tail };
 }
 
+/** One `[name|size|mime](pn:file/<uuid>)` in a body, its fields as written.
+ *  It spans `index` up to, not including, `end`. */
+export type AttachmentLink = { index: number; end: number; name: string; size: string; mime: string; uuid: string };
+
+const UUID_TAIL_RE = /^[0-9a-f-]{36}\)/;
+
+/**
+ * Every attachment link in a body, as
+ * `/\[([^|\n]*)\|([^|\n]*)\|([^\]\n]*)\]\(pn:file\/([0-9a-f-]{36})\)/g` finds
+ * them. No field spans a line, so the name cannot swallow the text before it
+ * (a `- [ ] task` checkbox) up to the first `|` further down.
+ *
+ * `acrossLines` lets the fields span lines, as
+ * `/\[([^|]*)\|([^|]*)\|([^\]]*)\]\(pn:file\/[0-9a-f-]{36}\)/g` does; the
+ * readers that sum sizes, name a file note's type and print a body use that
+ * one. `anyId` drops the uuid check, as `/\[[^|]*\|[^|]*\|([^\]]*)\]\(pn:file\//`
+ * does, and gives an empty uuid.
+ *
+ * Each field ends at its first stop character, so a link opening at a bracket
+ * has one possible shape (see `linkScan.ts`). The regex read from every
+ * bracket to the next `]`, and a long line of `[a|` cost quadratic time
+ * (external report, 2026-10-24, bug report 23.1). `tests/bracketRunCost.test.ts`
+ * and `tests/linkScan.test.ts` compare this with the regexes.
+ */
+export function attachmentLinks(
+  body: string,
+  { acrossLines = false, anyId = false }: { acrossLines?: boolean; anyId?: boolean } = {},
+): AttachmentLink[] {
+  const links: AttachmentLink[] = [];
+  const pipe = nextStop(body, acrossLines ? /\|/ : /[|\n]/);
+  const close = nextStop(body, acrossLines ? /\]/ : /[\]\n]/);
+  let open = body.indexOf('[');
+  while (open >= 0) {
+    const sizeAt = pipe(open);
+    // A bracket before the name's pipe would fail the same way.
+    let from = sizeAt;
+    if (body[sizeAt] === '|') {
+      const mimeAt = pipe(sizeAt);
+      if (body[mimeAt] === '|') {
+        const end = close(mimeAt);
+        const uuidAt = end + '](pn:file/'.length;
+        const idEnd = anyId ? uuidAt : uuidAt + 37;
+        if (body.startsWith('](pn:file/', end) && (anyId || UUID_TAIL_RE.test(body.slice(uuidAt, idEnd)))) {
+          links.push({
+            index: open,
+            end: idEnd,
+            name: body.slice(open + 1, sizeAt),
+            size: body.slice(sizeAt + 1, mimeAt),
+            mime: body.slice(mimeAt + 1, end),
+            uuid: body.slice(uuidAt, anyId ? uuidAt : uuidAt + 36),
+          });
+          from = idEnd;
+        }
+      }
+    }
+    open = body.indexOf('[', from);
+  }
+  return links;
+}
+
 /** Rejoin what `splitFileName` took apart. */
 export function joinFileName(base: string, ext: string): string {
   return ext ? `${base}.${ext}` : base;
+}
+
+/**
+ * The name a single-file item's file takes when its title changes (GitHub
+ * #610): the title as the base, with the file's own extension kept, as a
+ * chip rename keeps it. A title that already ends in that extension does not
+ * get it twice. Null when the name would not change or nothing usable is left.
+ */
+// Spec: docs/internal/specs/file-rename-and-audio-seek.md (section 3.4)
+export function fileNameForTitle(title: string, current: string): string | null {
+  const { ext } = splitFileName(current);
+  let base = title.trim();
+  if (ext && base.toLowerCase().endsWith(`.${ext.toLowerCase()}`)) base = base.slice(0, -ext.length - 1);
+  base = cleanFileName(base, '');
+  // Nothing but dots and spaces is no name, the same rule the chip applies.
+  if (!/[^.]/.test(base)) return null;
+  const next = joinFileName(base, ext);
+  return next === current ? null : next;
+}
+
+type NameListener = (uuid: string, name: string) => void;
+const nameListeners = new Set<NameListener>();
+
+/**
+ * Ask the chip holding `uuid` to take `name`. Only the chip inside the live
+ * editor writes a file name, so an edit still pending there cannot overwrite
+ * it. It lives here, not in the chip's module, so the title commit does not
+ * pull the editor into the boot path.
+ */
+export function requestAttachmentName(uuid: string, name: string) {
+  for (const listener of nameListeners) listener(uuid, name);
+}
+
+export function subscribeToAttachmentNames(listener: NameListener): () => void {
+  nameListeners.add(listener);
+  return () => { nameListeners.delete(listener); };
 }

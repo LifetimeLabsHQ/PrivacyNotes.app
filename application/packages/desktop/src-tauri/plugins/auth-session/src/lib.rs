@@ -8,7 +8,7 @@
 //! scheme is never offered as the return address: any app can claim one.
 //!
 //! Forked from tauri-plugin-auth-session 0.2.2; README.md lists the changes.
-//! Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.2)
+//! Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.2)
 
 use tauri::{
     plugin::{Builder, TauriPlugin},

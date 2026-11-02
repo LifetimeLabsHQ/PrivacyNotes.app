@@ -39,6 +39,16 @@
     "ordinal": ".",
     "work": "práca, prácu, práci",
     "personal": "osobné, osobný, domov, doma",
-    "in": "za"
+    "in": "za",
+    "weekend": "víkend",
+    "endOfMonth": "koniec mesiaca, koncom mesiaca, na konci mesiaca",
+    "morning": "ráno, dopoludnia, doobeda",
+    "afternoon": "popoludní, poobede, popoludnie",
+    "evening": "večer",
+    "biweekly": "dvojtýždenne",
+    "quarterly": "štvrťročne, kvartálne",
+    "halfPast": "pol hodiny po",
+    "numbers": "jeden, dva, tri, štyri, päť, šesť, sedem, osem, deväť, desať, jedenásť, dvanásť",
+    "a": "jednu, jedno, jedna"
   }
 }

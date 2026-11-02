@@ -39,6 +39,16 @@
     "ordinal": ":a, :e, .",
     "work": "arbete, jobb, jobbet",
     "personal": "privat, personligt, hem, hemma",
-    "in": "om"
+    "in": "om",
+    "weekend": "helg, helgen, veckoslut, veckoslutet",
+    "endOfMonth": "månadsslut, månadsskiftet, slutet av månaden",
+    "morning": "förmiddag, förmiddagen, morgonen, bitti",
+    "afternoon": "eftermiddag, eftermiddagen",
+    "evening": "kväll, kvällen",
+    "biweekly": "tvåveckorsvis, varannan vecka",
+    "quarterly": "kvartalsvis",
+    "halfPast": "",
+    "numbers": "ett, två, tre, fyra, fem, sex, sju, åtta, nio, tio, elva, tolv",
+    "a": "en, ett"
   }
 }

@@ -43,7 +43,7 @@ import { CONVERT_TARGETS, isConvertSource, type ConvertTarget } from './noteType
  * The Pro rows stay tappable for a free user: the tap opens the
  * UpgradeModal instead of applying the change, so the features are
  * discoverable without the free UI feeling crippled.
- * Spec: ops/docs/archive/ui-patterns.md (section 80)
+ * Spec: docs/internal/design/ui-patterns.md (section 80)
  */
 export interface NoteColorInfo {
   /** The color set on the note itself; null when it takes its tag's or folder's. */
@@ -56,7 +56,7 @@ export interface NoteColorInfo {
 export type SpaceMove = { label: React.ReactNode; icon: React.ReactNode; run: (ids: string[]) => void };
 
 type Props = NoteActionGuardDeps & {
-  /** The space move, while spaces are on. Spec: ops/docs/plans/spaces.md */
+  /** The space move, while spaces are on. Spec: docs/internal/specs/spaces.md */
   spaceMove?: SpaceMove;
   /** Anchor so clicks on the "..." button don't count as outside. */
   anchorRef: React.RefObject<HTMLElement | null>;
@@ -82,11 +82,11 @@ type Props = NoteActionGuardDeps & {
   /** The days that hold a journal entry, dotted in the Entry date calendar. */
   journalDays?: JournalDays;
   /** Attach a note or a task list to a day, or take it away (null).
-   *  Spec: ops/docs/archive/note-date.md */
+   *  Spec: docs/internal/specs/note-date.md */
   onSetNoteDate?: (day: string | null) => void;
   /** The Schedule view's edits (end day, time, repeat, alerts) and the
    *  occurrence a repeating event was opened on.
-   *  Spec: ops/docs/archive/calendar-pillar-spec.md (step 4) */
+   *  Spec: docs/internal/specs/calendar-pillar-spec.md (step 4) */
   schedule?: {
     occurrence: string | null;
     onEdit: (edit: ScheduleEdit) => void;
@@ -140,10 +140,10 @@ type Props = NoteActionGuardDeps & {
 
 /** The name each convertible type goes by in the Convert to view. */
 const TYPE_LABEL = {
-  note: 'noteOptionsMenu.typeNote',
+  note: 'notes:newMenu.note',
   journal: 'noteOptionsMenu.typeJournal',
-  task: 'noteOptionsMenu.typeTask',
-  event: 'noteOptionsMenu.typeEvent',
+  task: 'notes:newMenu.task',
+  event: 'notes:newMenu.event',
 } as const;
 
 /**
@@ -252,16 +252,16 @@ export function NoteOptionsMenu({
         <Group>
           {onRestore && (
             <ActionItem
-              label={t('noteOptionsMenu.restore')}
-              icon={<ArrowCounterClockwise size={16} aria-hidden="true" />}
+              label={t('shell:contextMenu.restore')}
+              icon={<ArrowCounterClockwise aria-hidden="true" />}
               tone="success"
               onClick={() => { onRestore(); onClose(); }}
             />
           )}
           {onDeleteForever && (
             <ActionItem
-              label={t('noteOptionsMenu.deleteForever')}
-              icon={<Trash size={16} aria-hidden="true" />}
+              label={t('shell:contextMenu.deleteForever')}
+              icon={<Trash aria-hidden="true" />}
               tone="danger"
               onClick={() => { onDeleteForever(); onClose(); }}
             />
@@ -306,29 +306,29 @@ export function NoteOptionsMenu({
                 <ActionItem
                   key={target}
                   label={t(TYPE_LABEL[target])}
-                  icon={<Glyph size={16} className={color} aria-hidden="true" />}
+                  icon={<Glyph className={color} aria-hidden="true" />}
                   disabled={current}
-                  value={current ? <Check size={14} aria-hidden="true" /> : undefined}
+                  value={current ? <Check aria-hidden="true" /> : undefined}
                   onClick={() => { onConvertType?.(target); onClose(); }}
                 />
               );
             })}
           </Group>
           {noteSchedule?.repeat && (
-            <p className="px-4 py-2 text-[12px] text-pn-muted">{t('noteOptionsMenu.repeatRemoved')}</p>
+            <p className="px-4 py-2 text-small text-pn-muted">{t('noteOptionsMenu.repeatRemoved')}</p>
           )}
         </>
       ) : view === 'details' ? (
         <>
           <BackRow title={t('noteOptionsMenu.details')} onBack={() => setView('main')} />
-          <div className="px-4 py-3 text-[13px] text-pn-muted space-y-1 leading-relaxed">
+          <div className="px-4 py-3 text-compact text-pn-muted space-y-1 leading-relaxed">
             <div>{t('noteOptionsMenu.lastModified', { date: formatInstant(editedAtOf(note), 'dateTime') })}</div>
             <div>{t('noteOptionsMenu.created', { date: formatInstant(note.createdAt, 'dateTime') })}</div>
             <div>
               {t('noteOptionsMenu.size', { size: formatBytes(bytes) })}
               {note.tags.length > 0 && <> · {t('noteOptionsMenu.tagCount', { count: note.tags.length })}</>}
             </div>
-            <div className="text-[12px] text-pn-muted">{t('noteOptionsMenu.sizeHint')}</div>
+            <div className="text-small text-pn-muted">{t('noteOptionsMenu.sizeHint')}</div>
           </div>
         </>
       ) : (
@@ -340,7 +340,7 @@ export function NoteOptionsMenu({
           <div className="flex items-stretch p-1.5">
             {onToggleStar && (
               <StripButton
-                label={note.starred === 1 ? t('noteOptionsMenu.unpin') : t('noteOptionsMenu.pin')}
+                label={note.starred === 1 ? t('shell:contextMenu.unpin') : t('shell:contextMenu.pin')}
                 icon={<PushPin size={20} weight={note.starred === 1 ? 'fill' : 'bold'} aria-hidden="true" />}
                 pressed={note.starred === 1}
                 onClick={() => { onToggleStar(); onClose(); }}
@@ -357,7 +357,7 @@ export function NoteOptionsMenu({
               />
             )}
             <StripButton
-              label={t('noteOptionsMenu.duplicate')}
+              label={t('shell:contextMenu.duplicate')}
               icon={<Copy size={20} aria-hidden="true" />}
               onClick={() => { onDuplicate(); onClose(); }}
             />
@@ -374,7 +374,7 @@ export function NoteOptionsMenu({
             <Group>
               <ActionItem
                 label={t('noteOptionsMenu.color')}
-                icon={<Palette size={16} aria-hidden="true" />}
+                icon={<Palette aria-hidden="true" />}
                 value={
                   <span className="inline-flex items-center gap-2 min-w-0">
                     <span
@@ -391,7 +391,7 @@ export function NoteOptionsMenu({
               {onPickIcon && (
                 <ActionItem
                   label={t('noteOptionsMenu.icon')}
-                  icon={<Shapes size={16} aria-hidden="true" />}
+                  icon={<Shapes aria-hidden="true" />}
                   pro={!isPro}
                   value={iconPaths ? <PathGlyph paths={iconPaths} size={16} className="text-pn-soft" /> : undefined}
                   onClick={() => { onClose(); onPickIcon(); }}
@@ -404,16 +404,16 @@ export function NoteOptionsMenu({
             <Group>
               {showModeRow && (
                 <ActionItem
-                  label={editorMode === 'markdown' ? t('notes:editor.showFormatted') : t('notes:editor.showMarkdown')}
+                  label={editorMode === 'markdown' ? t('notes:editor.showFormatted') : t('editor:formatBar.items.markdownView')}
                   // The glyph names the DESTINATION, so it changes with the label.
-                  icon={editorMode === 'markdown' ? <TextAa size={17} aria-hidden="true" /> : <ArticleMedium size={17} aria-hidden="true" />}
+                  icon={editorMode === 'markdown' ? <TextAa aria-hidden="true" /> : <ArticleMedium aria-hidden="true" />}
                   onClick={() => { onToggleEditorMode?.(); onClose(); }}
                 />
               )}
               {showReplaceRow && (
                 <ActionItem
-                  label={t('noteOptionsMenu.findReplace')}
-                  icon={<Swap size={16} aria-hidden="true" />}
+                  label={t('common:palette.commands.findReplace')}
+                  icon={<Swap aria-hidden="true" />}
                   pro={!isPro}
                   onClick={() => { onFindReplace?.(); onClose(); }}
                 />
@@ -421,21 +421,21 @@ export function NoteOptionsMenu({
               {showUncheckRow && (
                 <ActionItem
                   label={t('noteOptionsMenu.uncheckAllTasks')}
-                  icon={<ListChecks size={16} aria-hidden="true" />}
+                  icon={<ListChecks aria-hidden="true" />}
                   onClick={() => { onUncheckAllTasks?.(); onClose(); }}
                 />
               )}
               {showDeleteCheckedRow && (
                 <ActionItem
                   label={t('noteOptionsMenu.deleteCheckedTasks')}
-                  icon={<Broom size={16} aria-hidden="true" />}
+                  icon={<Broom aria-hidden="true" />}
                   onClick={() => { onDeleteCheckedTasks?.(); onClose(); }}
                 />
               )}
               {showSortTasksRow && (
                 <ActionItem
                   label={t('noteOptionsMenu.sortTasksByStatus')}
-                  icon={<SortAscending size={16} aria-hidden="true" />}
+                  icon={<SortAscending aria-hidden="true" />}
                   onClick={() => { onSortTasksByStatus?.(); onClose(); }}
                 />
               )}
@@ -446,7 +446,7 @@ export function NoteOptionsMenu({
             {onSetJournalDate && !isTrash && note.type === 'journal' && (
               <ActionItem
                 label={t('noteOptionsMenu.entryDate')}
-                icon={<Calendar size={16} aria-hidden="true" />}
+                icon={<Calendar aria-hidden="true" />}
                 value={scheduleValue(noteSchedule, formatInstant(dayAtNoon(entryDayOf(note)), 'tile'))}
                 chevron
                 onClick={() => setView('schedule')}
@@ -455,7 +455,7 @@ export function NoteOptionsMenu({
             {onSetNoteDate && !isTrash && (note.type === 'note' || note.type === 'task' || note.type === 'event') && (
               <ActionItem
                 label={t('noteOptionsMenu.schedule')}
-                icon={<Calendar size={16} aria-hidden="true" />}
+                icon={<Calendar aria-hidden="true" />}
                 value={noteDay ? scheduleValue(noteSchedule, formatInstant(dayAtNoon(noteDay), 'tile')) : t('noteOptionsMenu.noDate')}
                 chevron
                 onClick={() => setView('schedule')}
@@ -463,8 +463,8 @@ export function NoteOptionsMenu({
             )}
             {onMoveToFolder && (
               <ActionItem
-                label={t('noteOptionsMenu.moveToFolder')}
-                icon={<Folder size={16} aria-hidden="true" />}
+                label={t('shell:contextMenu.moveToFolder')}
+                icon={<Folder aria-hidden="true" />}
                 pro={!isPro}
                 onClick={act.moveToFolder}
               />
@@ -479,7 +479,7 @@ export function NoteOptionsMenu({
             )}
             <ActionItem
               label={t('noteOptionsMenu.noteHistory')}
-              icon={<ClockCounterClockwise size={16} aria-hidden="true" />}
+              icon={<ClockCounterClockwise aria-hidden="true" />}
               pro={!isPro}
               disabled={unlocked && !onOpenHistory}
               value={unlocked && !onOpenHistory ? t('noteOptionsMenu.comingSoon') : undefined}
@@ -488,7 +488,7 @@ export function NoteOptionsMenu({
             {showConvertRow && (
               <ActionItem
                 label={t('noteOptionsMenu.convertTo')}
-                icon={<Repeat size={16} aria-hidden="true" />}
+                icon={<Repeat aria-hidden="true" />}
                 chevron
                 onClick={() => setView('convert')}
               />
@@ -497,22 +497,22 @@ export function NoteOptionsMenu({
 
           <Group>
             <ToggleItem
-              label={t('noteOptionsMenu.readOnly')}
-              icon={<PencilSimpleSlash size={16} aria-hidden="true" />}
+              label={t('notes:noteRow.readOnly')}
+              icon={<PencilSimpleSlash aria-hidden="true" />}
               checked={note.locked === 1}
               pro={!isPro}
               onClick={act.toggleLock}
             />
             <ToggleItem
               label={t('noteOptionsMenu.protect')}
-              icon={<Shield size={16} aria-hidden="true" />}
+              icon={<Shield aria-hidden="true" />}
               checked={note.pinProtected === 1}
               pro={!isPro}
               onClick={act.toggleProtect}
             />
             {onToggleArchive && (
               <ActionItem
-                label={note.archived === 1 ? t('noteOptionsMenu.unarchive') : t('noteOptionsMenu.archive')}
+                label={note.archived === 1 ? t('shell:contextMenu.unarchive') : t('shell:contextMenu.archive')}
                 icon={iconArchive(note.archived === 1, 16)}
                 onClick={() => { onToggleArchive(); onClose(); }}
               />
@@ -522,7 +522,7 @@ export function NoteOptionsMenu({
           <Group>
             <ActionItem
               label={t('noteOptionsMenu.details')}
-              icon={<Info size={16} aria-hidden="true" />}
+              icon={<Info aria-hidden="true" />}
               tone="muted"
               value={formatBytes(bytes)}
               chevron
@@ -533,8 +533,8 @@ export function NoteOptionsMenu({
           {onTrash && (
             <Group>
               <ActionItem
-                label={t('notes:editor.moveToTrash')}
-                icon={<Trash size={16} aria-hidden="true" />}
+                label={t('common:actions.delete')}
+                icon={<Trash aria-hidden="true" />}
                 tone="danger"
                 onClick={() => { onTrash(); onClose(); }}
               />
@@ -556,7 +556,7 @@ export function NoteOptionsMenu({
  * own wears the solid ring, and "Use default" hands the note back to its
  * tag or folder. The menu stays open, so a pick can be seen on the note
  * before it closes. Free, unlike the folder and tag looks.
- * Spec: ops/docs/archive/folder-tag-icons.md (section 4.9)
+ * Spec: docs/internal/specs/folder-tag-icons.md (section 4.9)
  */
 function NoteColorPanel({
   color,
@@ -580,7 +580,7 @@ function NoteColorPanel({
         onPick={(c) => onSetColor(c ?? NOTE_NO_COLOR)}
       />
       {own === null && inherited && (
-        <p className="mt-2 text-[12px] text-pn-muted truncate" dir="auto">
+        <p className="mt-2 text-small text-pn-muted truncate" dir="auto">
           {inherited.kind === 'folder'
             ? t('noteOptionsMenu.colorFromFolder', { name: inherited.name })
             : t('noteOptionsMenu.colorFromTag', { name: inherited.name })}
@@ -590,7 +590,7 @@ function NoteColorPanel({
         <button
           type="button"
           onClick={() => onSetColor(null)}
-          className="mt-2 -ms-2 text-[13px] font-medium px-2 py-1 [@media(hover:none)]:min-h-11 rounded-md text-accent hover:bg-accent/10 focus-visible:bg-accent/10 outline-none transition"
+          className="mt-2 -ms-2 text-compact font-medium px-2 py-1 [@media(hover:none)]:min-h-11 rounded-md text-accent hover:bg-accent/10 focus-visible:bg-accent/10 outline-none transition"
         >
           {t('noteOptionsMenu.colorUseDefault')}
         </button>
@@ -598,7 +598,7 @@ function NoteColorPanel({
       {/* An own color is a background at every "Folder and tag colors"
           choice, so the setting that quiets folder and tag colors never
           reaches it; the hint says so and links to the setting. */}
-      <p className="mt-2 text-xs text-pn-muted">
+      <p className="mt-2 text-small text-pn-muted">
         <Trans
           i18nKey="shell:noteOptionsMenu.colorOwnHint"
           components={{
@@ -650,7 +650,7 @@ function StripButton({
           "Duplizieren" measures 59px at this size). Keep any new strip
           label to one short word. break-words is the safety net, not the
           plan: a mid-word break here looks like a bug. */}
-      <span className="w-full text-[12px] leading-tight text-center break-words text-pn">
+      <span className="w-full text-small leading-tight text-center break-words text-pn">
         {label}
       </span>
     </button>

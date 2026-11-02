@@ -26,14 +26,11 @@
     "noResults": "No results"
   },
   "deleteNote": {
-    "title": "Delete Forever",
     "confirm": "Delete Forever",
-    "untitled": "Untitled",
     "body": "Permanently delete <highlight>“{{title}}”</highlight>? This cannot be undone."
   },
   "emptyTrash": {
     "title": "Empty Trash",
-    "confirm": "Delete Forever",
     "body_one": "Permanently delete <highlight>{{count}} note</highlight>? This cannot be undone.",
     "body_other": "Permanently delete <highlight>{{count}} notes</highlight>? This cannot be undone."
   },
@@ -61,7 +58,6 @@
   },
   "palette": {
     "label": "Commands",
-    "open": "Commands",
     "empty": "No matching command",
     "groups": {
       "features": "Features",
@@ -86,7 +82,7 @@
       "insertDate": "Insert the date",
       "insertDateTime": "Insert the date and time",
       "clearFilters": "Clear filters",
-      "moveToTrash": "Move note to trash",
+      "moveToTrash": "Delete note",
       "closeTab": "Close the tab or the note",
       "nextTab": "Next tab",
       "previousTab": "Previous tab",
@@ -109,10 +105,8 @@
     "move": "move",
     "open": "open",
     "openInTab": "open in a tab",
-    "openLink": "Open",
     "edit": "edit",
     "close": "close",
-    "tags": "Tags",
     "folders": "Folders",
     "tagItems_one": "{{count}} item",
     "tagItems_other": "{{count}} items",
@@ -175,17 +169,14 @@
     "downloadPublicKey": "Download public key",
     "downloadPrivateKey": "Download private key",
     "downloadHint": "Move the downloaded key to ~/.ssh and run chmod 600 on it, or ssh refuses it.",
+    "downloadHintDesktop": "PrivacyNotes does not save into ~/.ssh, to keep the keys there safe. Save the key somewhere else, move it to ~/.ssh and run chmod 600 on it, or ssh refuses it.",
+    "downloadHintWindows": "PrivacyNotes does not save into your .ssh folder, to keep the keys there safe. Save the key somewhere else and move it to %USERPROFILE%\\.ssh. Windows needs no chmod.",
     "downloadFailed": "The key file could not be saved. Check the file and try again.",
     "passphrase": "Passphrase",
     "passphrasePlaceholder": "Key passphrase (if any)",
     "show": "Show",
     "hide": "Hide",
-    "copyPassphrase": "Copy passphrase",
-    "notes": "Notes",
-    "notesPlaceholder": "Additional notes (optional)",
-    "requirePin": "Require PIN to view",
-    "whatDoesThisDo": "What does this do?",
-    "setUpPinFirst": "Set up a PIN in Security settings first."
+    "copyPassphrase": "Copy passphrase"
   },
   "tagInput": {
     "placeholder": "Add tags… separate by comma, # or enter",
@@ -243,7 +234,6 @@
       "opening the vault quietly",
       "locally decrypted. globally ignored",
       "decrypting like it’s nobody’s business",
-      "locally sourced plaintext",
       "turning thoughts into unreadable soup",
       "another encrypted masterpiece incoming",
       "restoring order from encrypted chaos",
@@ -267,17 +257,14 @@
     "changesSome_other": "{{count}} of these notes have changes that are not backed up and would be lost."
   },
   "ninja": {
-    "recent": "Recent",
     "topHit": "Best match",
     "trashEmpty": "The trash is empty",
     "allThemes": "All themes",
     "features": {
       "stats": {
-        "label": "Statistics",
         "detail": "Your writing, streaks and trackers over time"
       },
       "trackers": {
-        "label": "Trackers",
         "detail": "Mood, habits, factors and medication"
       },
       "medication": {
@@ -297,7 +284,6 @@
         "detail": "A strong password or passphrase, ready to copy"
       },
       "themes": {
-        "label": "Themes",
         "detail": "Color themes for light and dark"
       }
     },
@@ -308,7 +294,6 @@
     "commands": {
       "syncResume": "Resume sync",
       "changelog": "What is new",
-      "help": "Help",
       "themesPage": "Community themes",
       "website": "PrivacyNotes website"
     },

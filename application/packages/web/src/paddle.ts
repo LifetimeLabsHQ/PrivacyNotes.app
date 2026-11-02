@@ -175,7 +175,7 @@ export async function openProCheckout(
   // read its own account_origin row. Neither is worth it: revenue per
   // placement already falls out of account_origin joined to pro_pubkeys,
   // which is what admin_account_origin_summary() returns.
-  // Spec: ops/docs/plans/partner-attribution.md (section 3, layer 3)
+  // Spec: docs/internal/plans/partner-attribution.md (section 3, layer 3)
   window.Paddle!.Checkout.open({
     items: [{ priceId: PADDLE_PRO_PRICE_ID, quantity: 1 }],
     ...(PADDLE_BETA_DISCOUNT_ID ? { discountId: PADDLE_BETA_DISCOUNT_ID } : {}),
@@ -192,7 +192,7 @@ export async function openProCheckout(
  * URL for `_ptxn` and auto-opens the checkout for that transaction as
  * soon as it is initialized - our only job is to be initialized.
  * onComplete fires on checkout.completed, same as a normal checkout.
- * Spec: ops/docs/domain-split.md (Paddle default payment link -> /checkout)
+ * Spec: docs/internal/domain-split.md (Paddle default payment link -> /checkout)
  */
 export async function initPaddleForTransaction(
   onComplete: () => void,

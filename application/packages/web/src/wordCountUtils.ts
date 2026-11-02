@@ -12,23 +12,27 @@
  */
 
 import { hasCJK, segmentWords } from './cjkSegment';
-import { isDelimiterRow, tableWidthFromMarker } from './tableDelimiterRow';
+import { isDelimiterRow, isTableMarker } from './tableDelimiterRow';
+import { LINE_LINK, markdownLinks, replaceMatches } from './linkScan';
 
 export function stripMarkdown(md: string): string {
-  return md
+  const text = md
     // A table's delimiter row carries no words, and its dash counts are the
     // column widths: left in, each column read as a word and every dash as a
-    // character, so resizing a column changed the note's count. The width
-    // marker under a narrower table carries none either.
+    // character, so resizing a column changed the note's count. The marker
+    // lines under a table (width, cell colors) carry none either.
     .split('\n')
-    .filter((line) => !isDelimiterRow(line) && tableWidthFromMarker(line) === null)
+    .filter((line) => !isDelimiterRow(line) && !isTableMarker(line))
     .join('\n')
     // Strip raw HTML the editor emits into the markdown body before counting:
     // the table fallback serializer writes full <table>...</table> HTML, and
     // colored text serializes as <span style="color:...">. Without this every
     // tag token ("<td", 'colspan="1"', ...) counts as a word - an empty 3x100
     // table read as ~1000 words and bloated the all-notes stats scan.
-    .replace(/<\/?[a-zA-Z][^>]*>/g, ' ')    // HTML tags (table fallback, color spans, <br>)
+    // HTML tags (table fallback, color spans, <br>). With no `>` after a `<`,
+    // no later tag can close either, so the rest is kept in one step instead
+    // of being read again from every `<` (external report, 2026-10-24).
+    .replace(/<\/?[a-zA-Z][^>]*(>)?/g, (run, close?: string) => (close ? ' ' : run))
     .replace(/&(?:[a-zA-Z]+|#\d+|#x[0-9a-fA-F]+);/g, ' ') // HTML entities incl. &nbsp; (empty-paragraph marker)
     .replace(/^#{1,6}\s+/gm, '')           // heading markers
     .replace(/^>\s?/gm, '')                 // blockquotes
@@ -39,10 +43,19 @@ export function stripMarkdown(md: string): string {
     .replace(/```[\s\S]*?```/g, (m) =>      // code blocks → keep inner text
       m.replace(/^```.*\n?/m, '').replace(/\n?```$/m, ''))
     .replace(/^ {0,3}\[\^[^\s\]]+\]:[ \t]?/gm, '') // footnote definitions → keep their text
-    .replace(/\[\^[^\s\]]+\]/g, '')           // footnote markers
-    .replace(/\^\[([^\]]*)\]/g, '$1')          // inline footnotes → keep their text
-    .replace(/!\[.*?\]\(.*?\)/g, '')        // images
-    .replace(/\[([^\]]*)\]\(.*?\)/g, '$1')  // links → keep text
+    // Footnote markers. The second branch keeps a `[^` that opens none, up to
+    // where a marker opening inside it would fail the same way.
+    .replace(/\[\^[^\s\]]+\]|(\[\^[^\s\]]*)/g, '$1')
+    // Inline footnotes keep their text. With no `]` after a `^[`, no later one
+    // can close either, so the rest is kept in one step.
+    .replace(/\^\[([^\]]*)(\])?/g, (run, inner: string, close?: string) => (close ? inner : run))
+    // Images: `![` up to the first `](` on its line, then to the first `)`, which
+    // is what the lazy `/!\[.*?\]\(.*?\)/g` found. When that fails, every later
+    // picture on the line fails too, so the second branch keeps the rest of the
+    // line. The lazy pattern retried every `](` from every `![`: cubic.
+    .replace(/!\[(?:(?!\]\().)*\]\([^)\n\r\u2028\u2029]*\)|(!\[.*)/g, '$1');
+  // Links keep their text (`/\[([^\]]*)\]\(.*?\)/g`).
+  return replaceMatches(text, markdownLinks(text, LINE_LINK), (link) => link.text)
     .replace(/\|/g, ' ')                    // table pipes → spaces
     .replace(/[*_~`]+/g, '');               // bold / italic / strikethrough / inline code
 }
@@ -51,7 +64,7 @@ export function stripMarkdown(md: string): string {
  *  put spaces between words, so a whitespace split counts a whole page as one
  *  word (which also starved the writing milestones); segment CJK text into word
  *  units instead. Latin text keeps the exact whitespace split. Mixed text counts
- *  both. Spec: ops/docs/i18n-cjk-plan.md (CJK tokenization). */
+ *  both. Spec: docs/internal/specs/i18n-cjk-plan.md (CJK tokenization). */
 export function countWords(md: string): number {
   const text = stripMarkdown(md).trim();
   if (!text) return 0;

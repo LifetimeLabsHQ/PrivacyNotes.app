@@ -13,6 +13,7 @@ import {
   folderCounts as computeFolderCounts,
   moveFolder,
   reconcileImportedFolders,
+  removeImportedFolders,
   renameFolder,
   validateFolders,
   type FolderDef,
@@ -74,7 +75,7 @@ export function useFolderActions({
 }) {
   // Every folder edit goes through here, so a folder that becomes a root
   // keeps its space and a new root lands in the active one.
-  // Spec: ops/docs/plans/spaces.md (section 3)
+  // Spec: docs/internal/specs/spaces.md (section 3)
   const spaceRef = useRef(activeSpace);
   spaceRef.current = activeSpace;
   // `space` overrides the active space for a caller that decided it earlier.
@@ -111,32 +112,39 @@ export function useFolderActions({
   // Free accounts can browse the imported folders (folder actions stay
   // Pro-gated); an upgrade unlocks editing them with no re-import.
   // `rootParent` is the folder the import window's "Add to" row names.
+  // `created` lists the folders the merge made, for `undoImportedFolders`.
   const mergeImportedFolders = useCallback(
-    (incoming: FolderDef[], originalIds?: ReadonlyMap<string, string>, rootParent: string | null = null): Map<string, string> => {
-      if (incoming.length === 0) return new Map();
+    (
+      incoming: FolderDef[],
+      originalIds?: ReadonlyMap<string, string>,
+      rootParent: string | null = null,
+    ): { idMap: Map<string, string>; created: string[] } => {
+      if (incoming.length === 0) return { idMap: new Map(), created: [] };
       // Reconciled against the tree the updater is handed, never against a
       // copy from render: that copy can predate the first pull, and a tree
       // rebuilt from it would replace every folder it did not know about.
       // mutateSettings runs the updater before it returns, so the map is
       // filled by the time the caller reads it.
       let idMap = new Map<string, string>();
+      let created: string[] = [];
       mutateFolders((prev) => {
         const merged = reconcileImportedFolders(prev.folders, incoming, originalIds, rootParent);
         idMap = merged.idMap;
+        created = merged.created;
         return { ...prev, folders: validateFolders(merged.folders) };
       });
-      return idMap;
+      return { idMap, created };
     },
     [mutateFolders]
   );
 
   // The "Add to" row's new folder, named after the source, at the top of the
   // open space (or of `space`, when the caller decided it before an await).
-  // A second import from the same source reuses it.
+  // A second import from the same source reuses it; `created` says which.
   const createImportFolder = useCallback(
-    (name: string, space?: Space): string | null => {
+    (name: string, space?: Space): { id: string; created: boolean } | null => {
       const into = space ?? spaceRef.current;
-      let id: string | null = null;
+      let made: { id: string; created: boolean } | null = null;
       mutateFolders((prev) => {
         const res = createFolder(prev.folders, name, null);
         if (!res) return prev;
@@ -144,13 +152,34 @@ export function useFolderActions({
         const same = prev.folders.find(
           (f) => !f.parentId && f.name === res.created.name && (spaces.get(f.id) ?? 'personal') === into,
         );
-        id = same?.id ?? res.created.id;
+        made = same ? { id: same.id, created: false } : { id: res.created.id, created: true };
         return same ? prev : { ...prev, folders: res.folders };
       }, into);
-      return id;
+      return made;
     },
     [mutateFolders]
   );
+
+  // A failed import takes back the folders it made, never one the vault had
+  // (removeImportedFolders in folders.ts). Against the tree the updater is
+  // handed, so a pull that landed during the import is kept. The failed
+  // write filed no note, so a note in one of them is one the person put
+  // there meanwhile, and that folder stays. Spec: docs/internal/backlog.md (217)
+  function undoImportedFolders(ids: readonly string[]) {
+    if (ids.length === 0) return;
+    const created = new Set(ids);
+    const inUse = new Set(notes.flatMap((n) => (n.folderId && created.has(n.folderId) ? [n.folderId] : [])));
+    mutateFolders((prev) => {
+      const next = removeImportedFolders({ folders: prev.folders, deleted: prev.foldersDeleted }, created, inUse);
+      if (next.removed.size === 0) return prev;
+      return {
+        ...prev,
+        folders: next.folders,
+        foldersDeleted: next.deleted,
+        itemStyles: dropFolderLooks(prev.itemStyles, next.removed),
+      };
+    });
+  }
 
   // ── Folders (Pro) ───────────────────────────────────────────────
   // A folder is a filter: selecting one mirrors handleSelectTag. The
@@ -167,7 +196,9 @@ export function useFolderActions({
     // folder's own count - and picking a folder there returns to All
     // items, the same landing handleSelectTag uses. handleSelectView
     // clears both filters in the other direction.
-    if (view === 'trash') setView('home');
+    // Home takes no filter: a folder clicked there opens it in All.
+    // Spec: docs/internal/specs/dashboard.md (section 2)
+    if (view === 'trash' || view === 'dashboard') setView('home');
     setSelectedId(null);
     setDrawerOpen(false);
     const discarded = await discardIfEmpty(previousId);
@@ -328,7 +359,7 @@ export function useFolderActions({
    * Only live notes move, and only into a folder that still exists: a sync
    * can delete one during the drag. The move then takes the Move dialog's
    * path, so a free account gets the same upgrade window.
-   * Spec: ops/docs/archive/drag-to-folder-and-tag.md (section 6)
+   * Spec: docs/internal/specs/drag-to-folder-and-tag.md (section 6)
    */
   function handleDropOnFolder(ids: string[], folderId: string | null) {
     const live = liveItemIds(ids, activeNotes);
@@ -355,7 +386,7 @@ export function useFolderActions({
         onClick={() =>
           setFolderPicker({ mode: 'note', noteIds: [note.id], currentFolderId: note.folderId ?? null })
         }
-        aria-label={t('shell:folders.moveTo')}
+        aria-label={t('shell:contextMenu.moveToFolder')}
         /* Square corners and a border, against the round accent pills the
            tags use: the folder is the ONE place a note lives, the tags are
            however many labels it carries, and the shape carries that split.
@@ -365,8 +396,8 @@ export function useFolderActions({
            note no longer changes the chip's height. Unfiled keeps a DASHED
            border for "no folder yet" but in accent rather than grey - a grey
            dashed ghost read as a disabled control.
-           Spec: ops/docs/archive/ui-patterns.md (editor tag row) */
-        className={`shrink-0 inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md border transition ${
+           Spec: docs/internal/design/ui-patterns.md (editor tag row) */
+        className={`shrink-0 inline-flex items-center gap-1 text-small font-medium px-2 py-0.5 rounded-md border transition ${
           noteFolder
             ? 'border-accent/40 bg-accent/15 text-accent-strong hover:bg-accent/25'
             : 'border-dashed border-accent/40 bg-accent/8 text-accent-strong hover:bg-accent/15 hover:border-accent/60'
@@ -382,7 +413,7 @@ export function useFolderActions({
             className="shrink-0 text-label"
           />
         ) : (
-          <Folder size={12} className="shrink-0 text-label" />
+          <Folder className="shrink-0 text-label" />
         )}
         <span className="truncate max-w-[120px]">
           {noteFolder ? noteFolder.name : t('shell:folders.chipUnfiled')}
@@ -420,6 +451,7 @@ export function useFolderActions({
   return {
     mergeImportedFolders,
     createImportFolder,
+    undoImportedFolders,
     folderPicker,
     setFolderPicker,
     folderDeleteConfirm,

@@ -1,11 +1,9 @@
 {
   "captionFolder": "Mapp",
   "captionTag": "Tagg",
-  "captionNote": "Anteckning",
   "captionTracker": "Mätvärde",
   "useDefault": "Använd standard",
   "color": "Färg",
-  "noColor": "Ingen färg",
   "applyToSubfolders": "Använd färgen på undermappar",
   "icon": "Ikon",
   "searchPlaceholder": "Sök ikoner",

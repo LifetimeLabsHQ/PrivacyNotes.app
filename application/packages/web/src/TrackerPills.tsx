@@ -15,7 +15,7 @@
  * (`flow`), in the entry it starts when a picker commits. A picker that
  * commits and closes opens the next tracker without a value, and a bar over
  * the panel names the step and offers Next (Finish on the last) and, in the
- * entry, Done. Spec: ops/docs/archive/ui-patterns.md section 141
+ * entry, Done. Spec: docs/internal/design/ui-patterns.md section 141
  */
 
 import { answeredHabitIds, customHabitsNow } from './habitList';
@@ -117,7 +117,7 @@ function MiniPill({ color, icon, label, onClick }: { color: string; icon: ReactN
         e.stopPropagation();
         onClick();
       }}
-      className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium whitespace-nowrap shrink-0 transition-colors"
+      className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-meta font-medium whitespace-nowrap shrink-0 transition-colors"
       style={{ background: `${color}30`, color }}
     >
       {icon}
@@ -130,7 +130,7 @@ function MiniPill({ color, icon, label, onClick }: { color: string; icon: ReactN
  * The one place the row decides between a swipeable strip and a wrapping row.
  * `touch` hides the scrollbar because a finger needs no bar; `pointer` wraps
  * because a hidden bar is unreachable with a mouse.
- * Spec: ops/docs/archive/ui-patterns.md section 85 (hidden sideways scroll).
+ * Spec: docs/internal/design/ui-patterns.md section 85 (hidden sideways scroll).
  */
 const SCROLL_OR_WRAP = {
   touch: 'overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
@@ -675,12 +675,12 @@ export function TrackerPills({
         <button
           type="button"
           onClick={() => customUnlocked ? onOpenSetup('custom') : onOpenUpgrade?.()}
-          className="inline-flex items-center gap-1 rounded-md border border-dashed border-pn-muted/50 px-2 h-7 [@media(hover:none)]:h-8 text-[12px] font-medium text-pn-muted hover:border-pn-muted hover:text-pn-soft transition-colors shrink-0"
+          className="inline-flex items-center gap-1 rounded-md border border-dashed border-pn-muted/50 px-2 h-7 [@media(hover:none)]:h-8 text-small font-medium text-pn-muted hover:border-pn-muted hover:text-pn-soft transition-colors shrink-0"
         >
-          <Plus size={11} />
+          <Plus />
           {t('labels.custom')}
           {!isPro && (
-            <span className="inline-flex items-center px-1 py-0 rounded text-[8px] font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 ms-0.5">
+            <span className="inline-flex items-center px-1 py-0 rounded text-meta font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 ms-0.5">
               PRO
             </span>
           )}
@@ -712,8 +712,8 @@ export function TrackerPills({
         <div className={`flex flex-wrap items-center gap-2 pb-3 ${split ? '' : card ? 'pt-4' : 'pt-2'} ${card ? 'max-w-[560px]' : 'px-4 sm:px-6'}`} onPointerDown={(e) => e.stopPropagation()}>
           {current && (
             <span className="min-w-[7rem] flex-1 leading-tight">
-              <span className="block truncate text-[13px] font-semibold text-pn">{current.label}</span>
-              <span className="block whitespace-nowrap text-[11px] text-pn-muted">{t('flow.step', { n: at + 1, total: order.length })}</span>
+              <span className="block truncate text-compact font-semibold text-pn">{current.label}</span>
+              <span className="block whitespace-nowrap text-meta text-pn-muted">{t('flow.step', { n: at + 1, total: order.length })}</span>
             </span>
           )}
           {!current && <span className="flex-1" />}
@@ -723,12 +723,12 @@ export function TrackerPills({
           <div className="ms-auto flex shrink-0 gap-2">
             {(!flow || (card && hasNext)) && (
               <Button action="done" variant="secondary" onClick={finish}>
-                {t('flow.done')}
+                {t('common:actions.done')}
               </Button>
             )}
             {hasNext ? (
               <Button action="next" onClick={() => openNext(cursor)}>
-                {t('flow.next')}
+                {t('common:actions.next')}
               </Button>
             ) : (
               <Button action="finish" onClick={finish}>

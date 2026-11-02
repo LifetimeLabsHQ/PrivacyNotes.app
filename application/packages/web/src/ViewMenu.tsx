@@ -25,7 +25,7 @@ import type { View } from './views';
  * skeleton and answers a different question - which of these do I want, many
  * at a time. They stay apart on purpose: merging them means a mode prop that
  * branches at every row and at the ARIA.
- * Spec: ops/docs/archive/start-view.md (one menu, two triggers)
+ * Spec: docs/internal/specs/start-view.md (one menu, two triggers)
  */
 export function ViewMenu({
   rows,
@@ -80,7 +80,7 @@ export function ViewMenu({
           role="menuitemradio"
           aria-checked={current === r.key}
           onClick={() => { onPick(r.key); onClose(); }}
-          className={`flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors ${
+          className={`flex items-center gap-2 w-full px-3 py-2 text-body transition-colors ${
             current === r.key
               ? 'text-accent-strong bg-accent/10'
               : 'text-pn-muted hover:bg-pn/5'

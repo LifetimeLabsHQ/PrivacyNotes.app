@@ -24,7 +24,7 @@
  *     puts it back on every save - byte for byte, fences and line endings
  *     included.
  *
- * Spec: ops/docs/archive/markdown-folder.md (section 6, data model)
+ * Spec: docs/internal/specs/markdown-folder.md (section 6, data model)
  */
 import { extractInlineTags, normalizeTag, parseYamlTags } from '../notesRepo';
 import type { LocalNote } from '../db';
@@ -153,8 +153,11 @@ function headingTitle(body: string): string | null {
   // Only the FIRST non-empty line, and only an h1. A heading further down is a
   // section, not the document's name.
   const firstLine = body.split('\n').find((l) => l.trim() !== '');
-  const match = firstLine?.match(/^\s{0,3}#\s+(.+?)\s*#*\s*$/);
-  return match?.[1]?.trim() || null;
+  // The closing hashes come off with trims, not a lazy group: `(.+?)\s*#*\s*$`
+  // was cubic on a heading line ending in spaces, and this runs on every file
+  // the folder reads (external report, 2026-10-24, bug report 23).
+  const match = firstLine?.match(/^\s{0,3}#\s+(.*)$/);
+  return match?.[1]?.trimEnd().replace(/#+$/, '').trim() || null;
 }
 
 /**
@@ -190,8 +193,29 @@ export function adaptFile(filename: string, raw: string): AdaptedFile {
     frontMatter,
     frontMatterRaw,
     tags: [...new Set(tags)],
-    editorMode: TEXT_EXT.test(filename) ? 'source' : 'rich',
+    editorMode: TEXT_EXT.test(filename) || needsSourceMode(body) ? 'source' : 'rich',
   };
+}
+
+/** Constructs the rich editor has no node for, so its first save drops or
+ *  rewrites them: an HTML comment, an Obsidian embed or comment, raw HTML it
+ *  does not draw, a reference-style link definition (external report,
+ *  2026-10-24, bug report 7.2). Code is left out of the test, because there
+ *  they are text. */
+const LOST_IN_RICH = /<!--|!\[\[|%%|<(?:kbd|iframe|video|audio|details|summary|abbr|object|embed|script|style|template|dialog)\b|^ {0,3}\[(?!\^)[^\]\n]+\]:[ \t]/im;
+
+/**
+ * Whether a file opens in the source editor because the rich one would lose
+ * part of it on the first keystroke. The rule the spec set for a construct the
+ * round trip cannot keep: default its files to source mode, and say nothing.
+ * The person can still switch to rich mode.
+ * Spec: docs/internal/specs/markdown-folder.md (rule 3)
+ */
+function needsSourceMode(body: string): boolean {
+  const prose = body
+    .replace(/^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?^ {0,3}\1[ \t]*$/gm, '')
+    .replace(/`[^`\n]*`/g, '');
+  return LOST_IN_RICH.test(prose);
 }
 
 /**

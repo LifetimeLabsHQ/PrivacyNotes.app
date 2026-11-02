@@ -2,6 +2,8 @@
   "header": {
     "betaBadge": "beta",
     "downloads": "Baixades",
+    "price": "Preu",
+    "priceLine": "El que costen les teves apps, sumat",
     "pricing": "Preus",
     "roadmap": "Roadmap",
     "createVault": "Crea la teva caixa forta",
@@ -39,14 +41,13 @@
       "clipper": "El teu <w>retallador web</w>.",
       "markdown": "El teu <w>Markdown</w>."
     },
-    "subhead": "Notes, tasques, contrasenyes, fitxers, marcadors, un calendari, un seguiment de l'estat d'ànim i la medicació, i un editor Markdown. Una sola app privada.",
+    "subhead": "Notes, tasques, contrasenyes, diari, fitxers, calendari, contactes i marcadors, amb seguiment de l'estat d'ànim i de la medicació. Una sola app privada.",
     "tryDemo": "Prova la demo",
     "microcopy": "Gratuït per sempre. Sense targeta de crèdit. Inicia la sessió amb Google, amb Apple, amb GitHub o només amb una frase de 12 paraules.",
     "alreadyHaveVault": "Ja tens una caixa forta? Inicia la sessió",
     "trustSigned": "Versions signades a GitHub"
   },
   "heroCard": {
-    "passwords": "Contrasenyes",
     "today": "Avui",
     "tripTitle": "Llista per fer la maleta",
     "taskPassport": "Passaport + bitllets",
@@ -57,45 +58,85 @@
     "encrypted": "Xifrat",
     "moodWeek": "Estat d'ànim · aquesta setmana"
   },
+  "heroApp": {
+    "label": "Seccions de l'app",
+    "notes": {
+      "meta": "Editada fa 2 min",
+      "markdown": "MD",
+      "day": "Dissabte",
+      "body": "El tramvia 28 ben d'hora, <b>abans de les multituds</b>. Dinar al lloc del qual <ref>Ana</ref> no para de parlar.",
+      "tag1": "#viatges",
+      "tag2": "#menjar"
+    },
+    "vault": {
+      "meta": "3 elements, una clau",
+      "password": "correct-horse-battery",
+      "card": "Targeta de viatge",
+      "ssh": "Portàtil de la feina"
+    },
+    "journal": {
+      "med": "Vitamina D, 08:00",
+      "entry": "Una llarga passejada vora el riu. Per fi he dormit bé."
+    },
+    "files": {
+      "meta": "Fitxers, xifrats",
+      "file1": "passaport.pdf",
+      "file2": "platja.heic",
+      "file3": "nota-de-veu.m4a",
+      "file4": "lloguer.pdf",
+      "storage": "46 MB de 500 MB"
+    },
+    "calendar": {
+      "ev4": "Aniversari de l'Ana",
+      "empty": "Res programat"
+    },
+    "contacts": {
+      "initials": "AM",
+      "name": "Ana Martins",
+      "place": "Lisboa",
+      "birthday": "Aniversari, {{date}}"
+    },
+    "bookmarks": {
+      "reading": "Lectura",
+      "bm1": "Tramvia 28 - Viquipèdia",
+      "bm2": "Lisboa a OpenStreetMap",
+      "bm3": "Recepta de pastel de nata",
+      "bm4": "Guia de Markdown",
+      "bm5": "Codi font de PrivacyNotes",
+      "clipped": "Desat com a nota"
+    },
+    "mood": {
+      "insight": "Els millors dies venen després de 7 h de son"
+    }
+  },
   "announcement": {
     "ossText": "Ara és codi obert: tot el codi del client. Web, escriptori i mòbil.",
     "ossTextNarrow": "Ara és codi obert: tot el codi del client.",
     "ossCta": "Dona'ns una estrella a GitHub",
-    "ossCtaNarrow": "GitHub",
     "dismiss": "Descarta l'anunci"
   },
   "pillars": {
     "kicker": "Tot sota una sola clau - i un editor al teu disc",
-    "notesName": "Notes",
     "notesBlurb": "Editor en viu amb format, etiquetes, cerca instantània.",
-    "tasksName": "Tasques",
     "tasksBlurb": "Cada casella, en una sola vista.",
-    "vaultName": "Caixa forta",
     "vaultBlurb": "Contrasenyes, targetes, claus SSH.",
     "journalName": "Diari",
     "journalBlurb": "Ànim, son, medicació. Etiquetes amb base científica, exportació per al metge.",
-    "filesName": "Fitxers",
     "filesBlurb": "Imatges, documents, àudio i vídeo xifrats.",
     "bookmarksName": "Sincronització de marcadors",
     "bookmarksBlurb": "Enllaços desats amb la icona del lloc. Importa els marcadors del teu navegador.",
-    "contactsName": "Contactes",
     "contactsBlurb": "Números, correus, adreces. Importa tota la teva llibreta d'adreces.",
-    "calendarName": "Calendari",
-    "calendarBlurb": "Esdeveniments i recordatoris. Vistes de dia, setmana i mes.",
-    "markdownFree": "Gratuït"
+    "calendarBlurb": "Esdeveniments i recordatoris. Vistes de dia, setmana i mes."
   },
   "mdEditor": {
     "title": "Un editor de Markdown gratuït. Els teus fitxers no surten mai del teu disc.",
     "body": "Indica-li una carpeta amb fitxers .md i .txt - les subcarpetes hi apareixen automàticament, els canvis es desen al mateix fitxer i no es converteix res. El mateix editor que per a les teves notes: previsualització en viu, tasques, etiquetes i taules.",
-    "chipObsidian": "Els mateixos fitxers a Obsidian o Logseq",
-    "chipGit": "Un repositori git que sincronitzes tu mateix",
-    "chipAgents": "Dona accés a les teves notes als agents d'IA",
     "platforms": "A l'aplicació d'escriptori o a qualsevol navegador Chromium.",
     "sampleTitle": "Idees per al cap de setmana",
     "sampleTask1": "Connectar el sensor del jardí",
     "sampleTask2": "Esbossar l'article del blog",
     "sampleTag": "#bricolatge",
-    "savedToDisk": "Desat al disc"
+    "saving": "Desant"
   },
   "meds": {
     "tileName": "Seguiment de la medicació",
@@ -119,7 +160,7 @@
     "med4": "Melatonina",
     "dose4": "2 mg",
     "kicker": "Seguiment de la medicació",
-    "heading": "Pren-te-la a l'hora. Guarda el registre per a tu.",
+    "heading": "No et saltis cap dosi. Les teves pastilles no són cosa de ningú més.",
     "intro": "Afegeix un medicament un sol cop, amb la seva dosi i els seus horaris. Cada dia et demana un sol toc: presa, omesa o oblidada. El recordatori sona al mòbil. La llista, les dosis i els dies omesos estan xifrats al teu dispositiu, i continuen així quan se sincronitzen.",
     "todayLabel": "Avui. Toca una dosi.",
     "todayCount": "{{taken}} de {{total}} preses",
@@ -146,7 +187,6 @@
     "refillBy": "Torna'n a demanar d'aquí a {{days}} dies"
   },
   "ninja": {
-    "tileName": "Ninja",
     "tileTagline": "L'Alfred de les teves notes.",
     "tileLead": "Tu manes, ell executa.",
     "tileBlurb": "Prem {{key}} i escriu. Amb quatre lletres saltes a qualsevol lloc, + crea el que vulguis amb paraules planeres, > executa una ordre. Les mans no deixen mai el teclat.",
@@ -157,11 +197,6 @@
     "chipDay": "Vés a un dia",
     "chipLink": "Enganxa un enllaç",
     "placeholder": "Escriu un títol, + per afegir, o > per a les ordres",
-    "recent": "Recents",
-    "inText": "Al text",
-    "create": "Crea",
-    "addTo": "Afegeix a",
-    "commands": "Ordres",
     "recent1": "Idees per a projectes de cap de setmana",
     "recent1Meta": "Notes · fa 2 h",
     "recent2": "Compra",
@@ -185,15 +220,10 @@
     "q2Row3": "Llista de tasques nova: Dentista",
     "q3": "llet, ous >> comp",
     "q3Row1": "Afegeix 2 tasques a Compra",
-    "q3Row1Meta": "Tasques",
     "q3Row2": "Esdeveniment nou: llet, ous",
     "q4": "zen",
     "q4Row1": "Activa el mode Zen",
     "q4Row2": "Configuració: Mode Zen",
-    "hintOpen": "obre",
-    "hintActions": "accions",
-    "hintTab": "obre en una pestanya",
-    "hintClose": "tanca",
     "tryDemo": "Prova-ho a la demo",
     "seeShots": "Captures de pantalla",
     "shots": {
@@ -223,8 +253,7 @@
       "theme": "Escriu «tema»: tots els temes amb els seus colors. Retorn el posa, clar o fosc."
     },
     "q1Row1Meta": "Notes · fa 2 dies",
-    "q1Row2Meta": "Carpeta · 4 elements",
-    "hintMove": "mou"
+    "q1Row2Meta": "Carpeta · 4 elements"
   },
   "demoShot": {
     "kicker": "Mira-la en directe",
@@ -246,15 +275,14 @@
     "rls": "Seguretat a nivell de fila"
   },
   "downloads": {
-    "kicker": "Baixades",
     "heading": "Baixa PrivacyNotes",
     "tileAria": "Baixa per a {{name}}",
+    "playDesc": "S'actualitza a través de la Play Store. Les compres dins l'app les factura Google.",
     "apkDesc": "Cada actualització és una baixada i una instal·lació que fas tu.",
     "obtainiumDesc": "Instal·la cada versió nova del nostre repositori.",
     "obtainiumBadgeAlt": "Aconsegueix-lo a Obtainium",
     "appStore": "App Store",
     "recommended": "Recomanat",
-    "comingSoon": "Properament",
     "apkFootnote": "Requereix Android 7.0 o posterior. Zapstore, Obtainium i l'APK no necessiten cap compte de Google ni la facturació de Google: Pro es desbloqueja amb el pagament web. L'APK t'avisa dins l'aplicació quan hi ha una versió nova a punt.",
     "linuxRequirement": "Tots dos formats necessiten webkit2gtk 4.1: Ubuntu 22.04 o posterior, Debian 12 o posterior, o una distribució equivalent del 2023 endavant. Les distribucions més antigues només porten webkit2gtk 4.0 i no poden executar aquestes versions.",
     "linuxArchX86": "Intel / AMD (x86_64)",
@@ -271,12 +299,12 @@
     "pkgToggle": "Instal·la amb un gestor de paquets ({{platforms}})",
     "pkgBrewDesc": "L'aplicació s'actualitza sola, no pas brew upgrade.",
     "pkgWingetDesc": "Inclòs al Windows 10 i 11.",
-    "pkgScoopDesc": "Scoop no s'actualitza mai sol. Executa scoop update privacynotes.",
     "pkgFootnote": "Cadascun instal·la la mateixa compilació signada.",
     "githubLink": "Totes les versions a GitHub",
     "githubNote": "Signada · Pública · Verificable · Cada versió, sense excepció",
     "zapstoreDesc": "<rec>Recomanat.</rec> Comprova la nostra signatura abans d'instal·lar.",
     "zapstoreBadgeAlt": "Aconsegueix-lo a Zapstore",
+    "playBadgeAlt": "Aconsegueix-lo a Google Play",
     "autoUpdates": "S'actualitza sol",
     "manualUpdates": "Actualització manual"
   },
@@ -284,37 +312,13 @@
     "getStarted": "Comença"
   },
   "pricing": {
-    "freeLabel": "Gratuït per sempre",
     "freeSubLabel": "Sense targeta de crèdit ni límit de temps.",
-    "freeAllPillars": "Notes, tasques, calendari, fitxers, caixa forta, diari, contactes i marcadors",
+    "freeAllPillars": "Notes, tasques, contrasenyes, diari, fitxers, calendari, contactes i marcadors, amb seguiment de l'estat d'ànim i de la medicació",
     "freeSync": "Sincronització entre 2 dispositius",
     "freeVault": "50 MB d'emmagatzematge, fins a 5 MB per fitxer",
-    "freeSearch": "Cerca de text complet + etiquetes",
     "freeImport": "Importació i exportació, incloent-hi Keep i Obsidian",
-    "freeBurn": "Burn After Reading",
-    "freeMood": "Registre d'ànim i benestar",
-    "freeTheme": "Mode fosc i clar",
     "freeAnon": "Inici de sessió anònim, sense correu",
-    "freeGoogle": "Inici de sessió amb Google, Apple o GitHub",
-    "noSubscription": "Sense subscripció",
-    "proLabel": "Pro · Un sol pagament",
-    "earlyAdopterBadge": "Pioner",
-    "oneTime": "pagament únic",
-    "proOnceDesc": "Pagues <b>una vegada</b> i és teu per sempre.",
-    "proCompareBeta": "Paga {{earlyPrice}} $ una sola vegada. Obsidian Sync costa 48 $/any, cada any. Standard Notes cobra 90 $/any. Preu per a pioners, fixat abans que pugi a {{proPrice}} $.",
-    "proCompare": "Paga {{proPrice}} $ una sola vegada i és teu per sempre. Obsidian Sync costa 48 $/any i Standard Notes 90 $/any, any rere any.",
-    "proEverythingFree": "Tot el del pla gratuït, i a més:",
-    "proSync": "Sincronització entre dispositius il·limitats",
-    "proHistory": "Historial de notes, fins a 50 versions",
-    "proLock": "Notes només de lectura",
-    "proPin": "Notes protegides amb PIN",
-    "proAnalytics": "Analítica de benestar + exportació",
-    "proZen": "Mode Zen i temes extres",
-    "proStorage": "500 MB d'emmagatzematge, fins a 50 MB per fitxer, <expand>ampliable</expand>"
-  },
-  "storageAddon": {
-    "heading": "Necessites més emmagatzematge?",
-    "body": "Pro inclou 500 MB. Si en necessites més, afegeix emmagatzematge addicional des de {{price}} $/any. És l'únic cost recurrent de <brand/>. La millora a Pro és un pagament únic, per sempre."
+    "earlyAdopterBadge": "Pioner"
   },
   "underHood": {
     "heading": "Sota el capó",
@@ -322,17 +326,14 @@
     "cipherDesc": "Claus derivades al client",
     "phraseTerm": "Frases BIP-39",
     "phraseDesc": "12 paraules, signatura Ed25519",
-    "rlsTerm": "Seguretat a nivell de fila",
     "rlsDesc": "RLS lligada a la teva clau pública",
     "trackingTerm": "Zero rastrejadors",
     "trackingDesc": "Sense píxels, sense rastrejadors de tercers",
     "authTerm": "Autenticació anònima",
     "authDesc": "Sense correu, sense contrasenya",
-    "serversTerm": "Servidors suïssos",
     "serversDesc": "Zuric, Suïssa",
     "sshTerm": "Caixa forta de claus SSH",
     "sshDesc": "Generació Ed25519 integrada",
-    "pwgenTerm": "Generador de contrasenyes",
     "pwgenDesc": "crypto.getRandomValues()",
     "opensourceTerm": "Codi obert",
     "opensourceDesc": "Aplicacions i xifratge a GitHub"
@@ -361,9 +362,7 @@
       "social": "Una nit fora",
       "custom": "Qualsevol cosa que comptis, amb Pro"
     },
-    "cardPatternsTitle": "Patrons",
     "cardPatternsBody": "Cada seguiment ordenat segons l'efecte que té en el teu ànim, amb la conclusió escrita en paraules planeres.",
-    "cardExploreTitle": "Explora",
     "cardExploreBody": "Un seguiment contra el teu ànim, el mateix dia o l'endemà. El son d'aquesta nit, l'ànim de demà.",
     "cardMedsTitle": "Medicació",
     "cardMedsBody": "Preses o omeses, canvis de dosi en una línia de temps i l'adherència comparada amb el teu ànim.",
@@ -374,27 +373,34 @@
     "vizReport": "Informe per al metge",
     "vizPrompt": "Indicació per a la IA",
     "encryptedHeading": "Per què això només funciona xifrat",
-    "encryptedBody": "Ningú no apunta la dosi d'antidepressius a Notion. Ningú no registra els dies de desesperança en un document de Google. Unes dades tan sensibles necessiten xifratge de coneixement zero, i així és com està construït PrivacyNotes."
+    "encryptedBody": "Ningú no apunta la dosi d'antidepressius a Notion. Ningú no registra els dies de desesperança en un document de Google. Unes dades tan sensibles necessiten xifratge al dispositiu, i així és com està construït PrivacyNotes."
   },
   "comparison": {
     "kicker": "Fem números",
-    "heading": "Per què pagar tres aplicacions si una ho fa tot, i xifrat?",
-    "typicalSetup": "La combinació habitual",
-    "themStandardNotes": "Standard Notes, 90 $/any",
-    "themObsidian": "Obsidian Sync, 48 $/any",
-    "themDayOne": "Day One, 36 $/any",
-    "themPasswordManager": "Bitwarden / 1Password, 10-36 $/any",
-    "themLunatask": "Lunatask, 72 $/any",
-    "themDaylio": "Daylio, 48 $/any (dades d'ànim sense xifrar)",
-    "themSeparate": "Aplicacions separades, quotes recurrents",
-    "usAllInOne": "Notes, tasques, calendari, fitxers, caixa forta, diari, contactes, marcadors. Una sola aplicació",
-    "usTracking": "Registre d'ànim, energia, son i medicació",
-    "usEncrypted": "Xifrat al teu dispositiu, sincronitzat a Suïssa",
-    "usSignIn": "Inici de sessió anònim, o amb Google, Apple o GitHub, el mateix xifratge en tots els casos",
-    "usExport": "Detecció de patrons + exportació de PDF per al metge",
-    "usSync": "Escriptori + mòbil, sincronització il·limitada",
-    "usPriceBeta": "Gratuït per sempre, o {{earlyPrice}} $ una sola vegada per Pro (preu per a pioners)",
-    "usPrice": "Gratuït per sempre, o {{proPrice}} $ una sola vegada per Pro"
+    "headingLive": "Les teves apps costen <cost>{{amount}}</cost> l'any.<br />La nostra comença <free>gratis</free>. Pro costa <free>{{pro}}, un sol cop</free>.",
+    "pick": "Toca el que pagues avui",
+    "group": {
+      "mood": "Estat d'ànim i benestar",
+      "files": "Fitxers i emmagatzematge",
+      "bookmarks": "Marcadors i lectura posterior"
+    },
+    "barThem_one": "Ells, {{count}} any",
+    "barThem_other": "Ells, {{count}} anys",
+    "barUs": "<brand/> Pro",
+    "receipt": "La teva factura",
+    "receiptCount_one": "{{count}} subscripció",
+    "receiptCount_other": "{{count}} subscripcions",
+    "receiptRenews": "Es renova cada any",
+    "perYear": "Total anual",
+    "keepLabel": "T'estalvies",
+    "keepLine_one": "en {{count}} any, encara que compris Pro.",
+    "keepLine_other": "en {{count}} anys, encara que compris Pro.",
+    "pickNone": "Toca les apps que pagues.",
+    "checked": "Preus anuals amb facturació anual, de la pàgina de preus de cada app, {{date}}.",
+    "usKicker": "Tot en una sola app, xifrat al teu dispositiu.",
+    "usFreeBig": "gratuït per sempre",
+    "usProOnce": "un sol cop, teu per sempre",
+    "usProLine": "Tots els dispositius, 50 versions de cada nota, notes bloquejades amb PIN, observacions de benestar i 10 vegades més emmagatzematge. Més espai des de ${{price}} l'any, l'única cosa que cobrem cada any."
   },
   "extras": {
     "kicker": "I a més",
@@ -414,20 +420,25 @@
     "weekInReview": "Resum de la setmana",
     "selfDestruct": "Notes que s'autodestrueixen",
     "anonAccounts": "Comptes anònims",
-    "zenMode": "Mode Zen",
     "darkMode": "Mode fosc"
   },
   "whyPrivacy": {
     "kicker": "Per què importa",
-    "heading": "La majoria d'aplicacions de notes llegeixen les teves notes.<accent>La nostra no pot.</accent>",
-    "para1": "La majoria d'aplicacions de notes exploten el teu contingut. Afegeix “comprar un televisor nou” a la llista de la compra i les properes pàgines que visitis s'ompliran d'anuncis de televisors. La llista de la compra, el teu diari, els teus pensaments privats, tot alimentant circuits de publicitat dirigida, perfilat i venut. És el model de negoci de totes les aplicacions de notes “gratuïtes” que viuen de la publicitat.",
-    "para2": "Fins i tot les aplicacions que no mostren anuncis guarden les teves notes en text clar als seus servidors: llegibles pels empleats, exposades a filtracions i a l'abast de qualsevol requeriment judicial. Les teves dades es converteixen en el seu avantatge.",
+    "heading": "Escriu «compra una tele nova». <accent>Veu teles durant un mes.</accent>",
+    "lead": "Així és com la majoria d'apps de notes gratuïtes paguen les factures: el que escrius es llegeix, es perfila i es ven, i els anuncis et persegueixen.",
+    "step": {
+      "type": "Tu ho escrius",
+      "typeSub": "«compra una tele nova»",
+      "read": "L'app ho llegeix",
+      "readSub": "interès: electrònica",
+      "ads": "Els anuncis et segueixen",
+      "adsSub": "a cada lloc web que visites"
+    },
     "differenceLabel": "La diferència",
-    "differenceBody": "<brand/> xifra les teves notes al teu dispositiu, i amb l'autocustòdia la clau no en surt mai, de manera que ni nosaltres ni els nostres servidors en podem llegir ni una paraula. No hi ha anuncis, ni píxels, ni rastrejadors de tercers, ni analítiques del que escrius, i mai no n'hi haurà. El nostre lloc web compta els clics als seus enllaços de baixada i de socis per país, sense cap identificador. El que escrius és teu.",
+    "differenceBody": "<brand/> xifra les teves notes al teu dispositiu. No hi ha anuncis, ni píxels, ni rastrejadors de tercers, ni analítiques del que escrius, i mai no n'hi haurà. L'app és de codi obert, així que ho pots comprovar tu mateix.",
     "keyboardNote": "<b>Un apunt sobre els teclats del dispositiu.</b> Els teclats de tercers (com Gboard, SwiftKey o Samsung Keyboard) poden enviar el que escrius als seus propis servidors. Això passa a nivell del sistema operatiu, fora del control de qualsevol aplicació. Considera desactivar les funcions al núvol a la configuració del teclat o fer servir un teclat només fora de línia."
   },
   "readIt": {
-    "kicker": "Codi obert",
     "heading": "No ens creguis. Llegeix-ho.",
     "body": "L'aplicació que estàs fent servir està publicada, juntament amb el xifratge que porta dins. Comença per la comprovació d'un minut que no necessita cap eina, o ves directament al codi.",
     "cta": "Mira el codi a GitHub",
@@ -437,30 +448,25 @@
     "crypto": "El xifratge mateix"
   },
   "wontFind": {
-    "kicker": "El que no trobaràs a l’aplicació",
-    "noTracking": "Sense rastrejadors",
-    "noAds": "Sense anuncis",
-    "noHarvesting": "Sense recollida de dades",
-    "noAiTraining": "Sense entrenament d'IA",
-    "noLockIn": "Sense lligams",
-    "noEmail": "Sense correu",
-    "noTelemetry": "Sense analítiques de les teves notes",
-    "noCookieBanner": "Sense avís de galetes",
-    "noPasswords": "Sense contrasenyes",
-    "noDarkPatterns": "Sense patrons foscos",
-    "noVc": "Sense capital de risc",
-    "noBlockchain": "Sense blockchain",
-    "noBackdoor": "Sense porta del darrere secreta"
+    "kicker": "El que hem deixat fora expressament",
+    "noTracking": "Rastrejadors",
+    "noAds": "Anuncis",
+    "noHarvesting": "Recollida de dades",
+    "noAiTraining": "Entrenament d'IA",
+    "noLockIn": "Lligams",
+    "noEmail": "Correu obligatori",
+    "noDarkPatterns": "Patrons foscos",
+    "noBackdoor": "Portes del darrere"
   },
   "noRecovery": {
     "heading": "La teva frase és la teva clau",
-    "body": "Sense frase, no hi ha notes. No les podem recuperar, i ningú més no ho pot fer. Aquest és el preu de l'autocustòdia: només tu tens la clau, així que escriure al nostre equip no et tornarà les notes.",
+    "body": "Amb autocustòdia, sense frase no hi ha notes: ningú no les pot recuperar. Aquest és el preu de tenir l'única clau, així que escriure al nostre equip no et tornarà les notes.",
     "noRecoveryTerm": "Sense recuperació",
-    "noRecoveryDesc": "Perds la frase, perds les notes",
+    "noRecoveryDesc": "Amb autocustòdia, si perds la frase, perds les notes",
     "deviceTerm": "Generada al dispositiu",
     "deviceDesc": "Amb autocustòdia, la teva frase no toca mai els nostres servidors",
     "zkTerm": "Coneixement zero",
-    "zkDesc": "Amb autocustòdia, no podem llegir ni restaurar les teves dades",
+    "zkDesc": "Amb autocustòdia, el servidor no guarda res que obri les teves notes",
     "writeTerm": "Escriu-la en paper",
     "writeDesc": "Còpia en paper, desada en un lloc segur",
     "printTerm": "Imprimeix-la des de la configuració",
@@ -471,22 +477,20 @@
   "closing": {
     "kicker": "Quan vulguis",
     "heading": "La teva caixa forta està a punt en menys d'un minut.",
-    "importNote": "Véns d'una altra aplicació? Exporta des de qualsevol d'aquestes i importa en pocs minuts:"
+    "importNote": "Véns d'una altra aplicació? Exporta des de qualsevol d'aquestes i importa en pocs minuts:",
+    "importDemoTitle": "Prova primer la teva importació a la demo",
+    "importDemoBody": "El teu fitxer es llegeix al navegador, no arriba res als nostres servidors, i en tancar la pestanya s'esborra."
   },
   "about": {
     "tabs": {
       "about": "Quant a",
-      "changelog": "Changelog",
-      "roadmap": "Roadmap",
       "hotkeys": "Dreceres",
       "rating": "Valoració"
     },
-    "modalTitle": "Informació",
-    "intro": "<brand/> reuneix les teves notes, tasques, diari, contrasenyes, fitxers, marcadors i contactes en un sol lloc. Tot es xifra al teu dispositiu amb una clau creada a partir de les teves 12 paraules, i continua xifrat als nostres servidors a <nowrap>Suïssa</nowrap>. Funciona fora de línia, i l'app és de codi obert.",
+    "intro": "<brand/> reuneix les teves notes, tasques, contrasenyes, diari, fitxers, calendari, contactes i marcadors en un sol lloc, amb seguiment de l'estat d'ànim i de la medicació. Tot es xifra al teu dispositiu amb una clau creada a partir de les teves 12 paraules, i continua xifrat als nostres servidors a <nowrap>Suïssa</nowrap>. Funciona fora de línia, i l'app és de codi obert.",
     "versionHeading": "Versió",
     "windowVersion": "Versió {{version}}",
     "windowHelp": "Centre d'ajuda",
-    "windowWhatsNew": "Changelog",
     "whatsNew": "Novetats",
     "seeWhatsNew": "Tots els canvis amb captures a PrivacyNotes.app",
     "feedbackHeading": "Comentaris",
@@ -495,14 +499,13 @@
     "termsOfService": "Condicions del servei",
     "refundPolicy": "Política de reemborsament",
     "tagline": "Sense subscripcions. Només programari. No un servei.",
-    "hotkeysFootnote": "La majoria de dreceres s'ignoren mentre escrius en un camp de text, de manera que les tecles normals com la J i la K continuen escrivint J i K.",
     "singleKeysTitle": "Dreceres d'una tecla",
     "singleKeysDesc": "Fes servir J, K, Q, / i ?, i T, D, W, M i N al Calendari, sense mantenir premuda Cmd o Ctrl."
   },
   "trust": {
     "openSourceHeading": "Codi obert",
     "openSourceLink": "Llegeix el codi a GitHub.com",
-    "openSourceBody": "L'aplicació i el xifratge que porta dins estan publicats, així que qualsevol pot comprovar les nostres afirmacions de coneixement zero.",
+    "openSourceBody": "L'aplicació i el xifratge que porta dins estan publicats, així que qualsevol pot comprovar com es xifren les teves notes.",
     "dataStorageHeading": "Emmagatzematge de dades",
     "dataStorageBody": "Blobs xifrats emmagatzemats a Zuric, <flag/> Suïssa.",
     "faviconsHeading": "Icones dels llocs web",
@@ -524,6 +527,7 @@
     "outro": "Llegim totes les valoracions, i unes paraules d’algú que fa servir l’app cada dia són el que ens manté en marxa.",
     "descGithub": "Dona'ns una estrella a GitHub",
     "descAppStore": "Valora PrivacyNotes a l'App Store",
+    "descPlay": "Valora PrivacyNotes a Google Play",
     "descAlternativeTo": "Fes m'agrada i ressenya a AlternativeTo",
     "descCapterra": "Valora PrivacyNotes a Capterra",
     "descSaasHub": "Fes m'agrada i ressenya a SaaSHub",

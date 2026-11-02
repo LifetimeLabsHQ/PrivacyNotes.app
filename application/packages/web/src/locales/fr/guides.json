@@ -644,9 +644,9 @@
         {
           "h": "Exporter depuis Firefox",
           "steps": [
-            "Tape about:logins dans la barre d'adresse et appuie sur Entrée.",
-            "Clique sur le bouton \"...\" en haut à droite et choisis \"Export Logins...\".",
-            "Confirme avec le mot de passe de ton appareil. Le fichier s'appelle logins.csv."
+            "Tape `about:logins` dans la barre d'adresse et appuie sur Entrée.",
+            "Clique sur le bouton \"...\" en haut à droite et choisis `Export Logins...`.",
+            "Confirme avec le mot de passe de ton appareil. Le fichier s'appelle `logins.csv`."
           ]
         },
         {

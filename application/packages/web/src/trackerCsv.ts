@@ -9,7 +9,7 @@ import type { TrackerDescriptor } from './wellnessTypes';
  * as taken, skipped or missed, the emotions of a day joined with "; ". A
  * tracker with no value in the rows gets no column, so a journal with mood
  * alone is a two-column sheet.
- * Spec: ops/docs/archive/wellness-statistics.md (section 12)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 12)
  */
 
 export interface CsvLabels {
@@ -87,7 +87,9 @@ function columnsOf(d: TrackerDescriptor, labels: CsvLabels): Column[] {
         header: text(header),
         cell: (e) => {
           const v = d.read(e.data);
-          return typeof v === 'string' ? v : '';
+          // A stored status, which an imported file chose before the read-side
+          // check kept it to the real ones: a text cell like any other.
+          return typeof v === 'string' ? text(v) : '';
         },
         keep: anyFilled,
       }];
@@ -124,7 +126,7 @@ export function trackerCsv(
     .filter(({ col, cells }) => col.keep(cells));
   const lines = [[text(labels.date), ...columns.map(({ col }) => col.header)].join(',')];
   entries.forEach((e, i) => {
-    lines.push([e.date, ...columns.map(({ cells }) => cells[i]!)].join(','));
+    lines.push([text(e.date), ...columns.map(({ cells }) => cells[i]!)].join(','));
   });
   return `﻿${lines.join('\r\n')}\r\n`;
 }

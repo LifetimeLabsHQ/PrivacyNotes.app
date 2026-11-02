@@ -26,14 +26,11 @@
     "noResults": "沒有結果"
   },
   "deleteNote": {
-    "title": "永久刪除",
     "confirm": "永久刪除",
-    "untitled": "未命名",
     "body": "要永久刪除 <highlight>「{{title}}」</highlight>嗎？此動作無法復原。"
   },
   "emptyTrash": {
     "title": "清空垃圾桶",
-    "confirm": "永久刪除",
     "body_other": "要永久刪除 <highlight>{{count}} 篇筆記</highlight>嗎？此動作無法復原。"
   },
   "storageBar": {
@@ -60,7 +57,6 @@
   },
   "palette": {
     "label": "指令",
-    "open": "指令",
     "empty": "沒有符合的指令",
     "groups": {
       "features": "功能",
@@ -85,7 +81,7 @@
       "insertDate": "插入日期",
       "insertDateTime": "插入日期與時間",
       "clearFilters": "清除篩選",
-      "moveToTrash": "將筆記移至垃圾桶",
+      "moveToTrash": "刪除筆記",
       "closeTab": "關閉分頁或筆記",
       "nextTab": "下一個分頁",
       "previousTab": "上一個分頁",
@@ -108,10 +104,8 @@
     "move": "移動",
     "open": "開啟",
     "openInTab": "在分頁中開啟",
-    "openLink": "開啟",
     "edit": "編輯",
     "close": "關閉",
-    "tags": "標籤",
     "folders": "資料夾",
     "tagItems_other": "{{count}} 個項目",
     "emptyTags": "沒有符合此名稱的標籤",
@@ -172,17 +166,14 @@
     "downloadPublicKey": "下載公鑰",
     "downloadPrivateKey": "下載私鑰",
     "downloadHint": "請將下載的金鑰移到 ~/.ssh 並對它執行 chmod 600，否則 ssh 會拒絕使用。",
+    "downloadHintDesktop": "為了保護 ~/.ssh 裡的金鑰，PrivacyNotes 不會直接存進那裡。請把金鑰存到別的地方，再移到 ~/.ssh 並對它執行 chmod 600，否則 ssh 會拒絕使用。",
+    "downloadHintWindows": "為了保護 .ssh 資料夾裡的金鑰，PrivacyNotes 不會直接存進那裡。請把金鑰存到別的地方，再移到 %USERPROFILE%\\.ssh。Windows 不需要 chmod。",
     "downloadFailed": "無法儲存金鑰檔案。請檢查檔案後再試一次。",
     "passphrase": "密碼短語",
     "passphrasePlaceholder": "金鑰密碼短語（如有）",
     "show": "顯示",
     "hide": "隱藏",
-    "copyPassphrase": "複製密碼短語",
-    "notes": "備註",
-    "notesPlaceholder": "其他備註（選填）",
-    "requirePin": "檢視時需要 PIN 碼",
-    "whatDoesThisDo": "這是做什麼的？",
-    "setUpPinFirst": "請先到安全性設定裡設定 PIN 碼。"
+    "copyPassphrase": "複製密碼短語"
   },
   "tagInput": {
     "placeholder": "新增標籤…可用逗號、# 或 Enter 分隔",
@@ -254,7 +245,6 @@
       "悄悄打開保險庫",
       "本機解密，全球沒人理",
       "解密中，真的不關別人的事",
-      "在地生產的明文",
       "正在把想法煮成沒人看得懂的濃湯",
       "又一部加密傑作即將登場",
       "從加密的混沌中找回秩序",
@@ -276,17 +266,14 @@
     "changesSome_other": "其中 {{count}} 則有尚未備份的變更，將會遺失。"
   },
   "ninja": {
-    "recent": "最近",
     "topHit": "最佳符合",
     "trashEmpty": "垃圾桶是空的",
     "allThemes": "所有佈景主題",
     "features": {
       "stats": {
-        "label": "統計",
         "detail": "你的寫作、連續紀錄和追蹤項目的長期變化"
       },
       "trackers": {
-        "label": "追蹤項目",
         "detail": "心情、習慣、因素和用藥"
       },
       "medication": {
@@ -306,7 +293,6 @@
         "detail": "強度高的密碼或密碼短語，隨時可以複製"
       },
       "themes": {
-        "label": "佈景主題",
         "detail": "淺色與深色的配色佈景主題"
       }
     },
@@ -317,7 +303,6 @@
     "commands": {
       "syncResume": "恢復同步",
       "changelog": "新功能",
-      "help": "說明",
       "themesPage": "社群佈景主題",
       "website": "PrivacyNotes 網站"
     },

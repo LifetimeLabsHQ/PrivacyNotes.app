@@ -24,7 +24,8 @@
       "replace": "Procurar e substituir é uma funcionalidade Pro. Passa para Pro e substitui uma ocorrência ou todas as ocorrências de uma nota de uma vez.",
       "passphrase": "As frases-passe são uma funcionalidade Pro. Gera uma frase de palavras aleatórias, fácil de escrever e de dizer.",
       "default": "Um upgrade desbloqueia tudo o que está abaixo. Pagamento único.",
-      "alerts": "Os lembretes são uma funcionalidade Pro. Os teus dispositivos tocam à hora que escolheres, e nada sobre o item sai deles."
+      "alerts": "Os lembretes são uma funcionalidade Pro. Cada dispositivo toca por si à hora que escolheres, por isso nenhum serviço de notificações push vê o item.",
+      "vaultFiles": "Os ficheiros nos itens do cofre são uma funcionalidade Pro. Guarda códigos de recuperação, uma chave de backup ou uma digitalização junto do login, cartão ou chave a que pertencem."
     },
     "features": {
       "devices": "Sincroniza dispositivos ilimitados, em todas as plataformas",
@@ -80,7 +81,6 @@
     "loadFailed": "Não foi possível carregar o histórico. Verifica a ligação e tenta de novo.",
     "selectPrompt": "Seleciona uma versão para pré-visualizar.",
     "emptyBody": "(vazia)",
-    "restore": "Restaurar",
     "restoring": "A restaurar…",
     "restoreSnapshotFailed": "Não foi possível guardar primeiro a versão atual, por isso nada foi restaurado. Verifica a ligação e tenta de novo.",
     "restoreFailed": "Não foi possível restaurar esta versão. Tenta de novo.",

@@ -9,7 +9,7 @@
  * The marker after the type sets the fold state on serialize: `+` expanded,
  * `-` folded, none = expanded. Every callout is foldable in the editor: its
  * type icon is the fold control. We always write `+`/`-`. This is
- * Obsidian-native, so notes import and export 1:1 (see ops/docs/callouts.md).
+ * Obsidian-native, so notes import and export 1:1 (see docs/contrib/callouts.md).
  *
  * Obsidian's metadata after a bar (`[!note|wide]`) is kept as written in
  * `meta`. A Kanban column reads its color from it (`[!column|green]`); see
@@ -41,6 +41,7 @@ import { useTranslation } from 'react-i18next';
 import { CaretDown, CaretRight } from './icons';
 import { CALLOUT_BY_TYPE, canonicalCalloutType, type CalloutType } from './calloutTypes';
 import { KanbanBoardView, KanbanColumnView, type KanbanOptions } from './KanbanBoard';
+import { BlockGrip } from './BlockGrip';
 import { isBoard, isColumn, kanbanNormalizePlugin } from './kanban';
 
 declare module '@tiptap/core' {
@@ -120,7 +121,7 @@ function isBlankParagraph(node: ProseMirrorNode): boolean {
  * a blank line under text gets another line below it, and a second blank line in
  * a row removes both and puts the caret in a new paragraph after the box. The
  * box always keeps one body block. Everything else falls through to the default
- * Enter. Spec: ops/docs/callouts.md (Enter leaves a callout or a quote on the third press)
+ * Enter. Spec: docs/contrib/callouts.md (Enter leaves a callout or a quote on the third press)
  */
 function enterAtEndOfBox(state: EditorState, view: EditorView): boolean {
   const { $from, empty } = state.selection;
@@ -158,7 +159,7 @@ function enterAtEndOfBox(state: EditorState, view: EditorView): boolean {
 /* ------------------------------------------------------------------ */
 
 function CalloutView(props: NodeViewProps) {
-  const { node, updateAttributes } = props;
+  const { node, updateAttributes, editor, getPos } = props;
   const { t } = useTranslation('editor');
   const type = node.attrs.type as CalloutType;
   if (type === 'kanban') return <KanbanBoardView {...props} />;
@@ -172,7 +173,7 @@ function CalloutView(props: NodeViewProps) {
   const accent = isPlain
     ? { ['--cs' as string]: 'rgb(var(--pn-text))', ['--cc' as string]: 'var(--pn-text)' }
     : { ['--cc' as string]: def.rgb, ['--cs' as string]: def.color };
-  const caret = folded ? <CaretRight size={15} weight="bold" /> : <CaretDown size={15} weight="bold" />;
+  const caret = folded ? <CaretRight weight="bold" /> : <CaretDown weight="bold" />;
 
   // Show the type name as a placeholder while the title is empty (Obsidian
   // shows the type as the default title). The title is the first child.
@@ -201,8 +202,8 @@ function CalloutView(props: NodeViewProps) {
           caret
         ) : (
           <>
-            <span className="pn-callout-type-icon"><Icon size={18} weight="bold" /></span>
-            <span className="pn-callout-caret">{folded ? <CaretRight size={18} weight="bold" /> : <CaretDown size={18} weight="bold" />}</span>
+            <span className="pn-callout-type-icon"><Icon weight="bold" /></span>
+            <span className="pn-callout-caret">{folded ? <CaretRight weight="bold" /> : <CaretDown weight="bold" />}</span>
           </>
         )}
       </button>
@@ -211,6 +212,7 @@ function CalloutView(props: NodeViewProps) {
           {label}
         </span>
       )}
+      {editor.isEditable && <BlockGrip editor={editor} getPos={getPos} className="pn-callout-grip" />}
       <NodeViewContent className="pn-callout-content" />
     </NodeViewWrapper>
   );
@@ -443,7 +445,7 @@ export const Callout = Node.create<KanbanOptions>({
       // is this node view - the wrapper and the content container, both of
       // which are React's to write. Text inside the title and body belongs to
       // their own descs, so reading real edits (and IME input) is untouched.
-      // Spec: ops/docs/callouts.md (any future React node view with editable content needs this too)
+      // Spec: docs/contrib/callouts.md (any future React node view with editable content needs this too)
       ignoreMutation: ({ mutation }) => mutation.type !== 'selection',
     });
   },
@@ -613,7 +615,7 @@ export const Callout = Node.create<KanbanOptions>({
       },
       // Backspace at the very start of the title removes the callout, unwrapping
       // its content back to plain blocks - the natural "get rid of it" gesture
-      // (there is also a Remove button in the toolbar picker). Spec: ops/docs/callouts.md (two removal paths by design, the toolbar one requested in GitHub #170)
+      // (there is also a Remove button in the toolbar picker). Spec: docs/contrib/callouts.md (two removal paths by design, the toolbar one requested in GitHub #170)
       Backspace: ({ editor }) => {
         const { $from, empty } = editor.state.selection;
         if (!empty) return false;
@@ -627,7 +629,7 @@ export const Callout = Node.create<KanbanOptions>({
       },
       // Escape above a leading callout: ArrowUp from the title's top line, or
       // ArrowLeft from its very start, drops a gap cursor before the callout so
-      // content can be added in front of it. Spec: ops/docs/callouts.md (uses tiptap's gap cursor, only falls back to a paragraph if invalid)
+      // content can be added in front of it. Spec: docs/contrib/callouts.md (uses tiptap's gap cursor, only falls back to a paragraph if invalid)
       ArrowUp: ({ editor }) => escapeAboveCallout(editor.state, editor.view, false),
       ArrowLeft: ({ editor }) => escapeAboveCallout(editor.state, editor.view, true),
     };

@@ -53,8 +53,6 @@
   },
   "mood": {
     "prompt": "Comment te sens-tu ? (1-10)",
-    "low": "horrible",
-    "high": "génial",
     "anchor": {
       "1": "horrible",
       "3": "difficile",
@@ -142,8 +140,6 @@
     "editMedication": "Modifier le médicament",
     "removeMedication": "Supprimer le médicament",
     "confirmRemove": "Supprimer <highlight>{{name}}</highlight> ?",
-    "yes": "Oui",
-    "no": "Non",
     "taken": "Pris",
     "skip": "Ignorer",
     "editList": "Modifier ces médicaments",
@@ -257,16 +253,15 @@
   },
   "config": {
     "configureTrackers": "Configurer les suivis",
-    "title": "Suivis",
-    "tabGeneral": "Général",
     "tabCustom": "Personnalisés",
-    "chooseTrackers": "Choisir les suivis",
     "factorsTitle": "Tes facteurs",
     "factorsHelp": "Les éléments d'une journée que tu touches dans la pastille Facteurs. Un facteur retiré garde son nom les jours qui le contiennent.",
     "renameFactor": "Renommer {{name}}",
     "addFactor": "Ajouter un facteur",
     "medicationsTitle": "Tes médicaments",
     "medicationsHelp": "Les médicaments sur lesquels la pastille Médocs t'interroge. Un médicament retiré garde son historique.",
+    "medicationCard": "Carte des médicaments",
+    "medicationCardHelp": "« As-tu pris tes médicaments ? » sur cet appareil, seulement un jour où un médicament est prévu.",
     "customHelp": "Des suivis que tu nommes toi-même : une échelle, un nombre ou un oui ou non. Jusqu'à {{max}}.",
     "yourCustomTrackers": "Tes suivis personnalisés",
     "categoryMoodMind": "Humeur et esprit",
@@ -291,23 +286,17 @@
     "kindBuild": "À prendre",
     "kindWatch": "À surveiller",
     "editHabit": "Modifier {{name}}",
-    "removeHabit": "Retirer {{name}}",
     "ownHabitsFull": "Tu as {{max}} habitudes à toi, le maximum possible.",
     "addCustomTrackerHint": "Suis tout ce que tu veux",
     "maxReached": "Maximum de {{max}} suivis personnalisés atteint.",
     "customTrackers": "Suivis personnalisés",
-    "newCustomTracker": "Nouveau suivi personnalisé",
-    "newMedication": "Nouveau médicament",
     "newMedicationHelp": "La pastille Médocs t'interroge dessus à partir de sa date de début, aux heures que tu choisis.",
     "trackerNamePlaceholder": "Nom du suivi",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "Nom",
     "typeLabel": "Type",
-    "colorLabel": "Couleur",
     "preview": "Aperçu",
     "startFromLast": "Reprendre la dernière saisie",
     "chooseIcon": "Choisir une icône",
-    "iconLabel": "Icône",
     "startFromLastHelp": "Pratique pour ce qui change rarement, comme ton poids ou une dose quotidienne."
   },
   "factors": {
@@ -316,7 +305,6 @@
     "count_other": "{{count}} facteurs",
     "remove": "Retirer {{name}}",
     "placeholder": "invités, migraine, heures sup",
-    "add": "Ajouter",
     "empty": "Ajoute ce qui façonne tes journées, puis touche-les n'importe quel jour.",
     "commaHint": "Ajoutes-en plusieurs à la fois, séparés par des virgules.",
     "editList": "Modifier ces facteurs",
@@ -339,8 +327,6 @@
   "habits": {
     "prompt": "Qu'as-tu fait aujourd'hui ?",
     "count": "{{yes}}/{{total}}",
-    "yes": "Oui",
-    "no": "Non",
     "empty": "Choisis les questions dans la configuration des suivis.",
     "changeQuestions": "Modifier ces questions",
     "q": {
@@ -399,9 +385,7 @@
     "prompt": "Combien de caféine as-tu pris ?"
   },
   "flow": {
-    "next": "Suivant",
     "finish": "Terminer",
-    "done": "Terminé",
     "step": "Suivi {{n}} sur {{total}}"
   }
 }

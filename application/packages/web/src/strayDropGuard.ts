@@ -17,7 +17,7 @@
  * every drag to a native handler that never lets the page see it (GitHub
  * #284), so `dragDropEnabled` is off in tauri.conf.json and the page owns
  * the default action described above.
- * Spec: ops/docs/design-decisions.md (Drag and drop in the desktop app)
+ * Spec: docs/internal/design-decisions.md (Drag and drop in the desktop app)
  */
 function cancelUnclaimedFileDrop(e: DragEvent): void {
   if (e.defaultPrevented) return;

@@ -1,0 +1,12 @@
+{
+  "extends": "./.wxt/tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "paths": { "@web/*": ["../web/src/*"] }
+  },
+  "include": [".wxt/wxt.d.ts", "entrypoints/**/*", "src/**/*", "wxt.config.ts", "catalog-keys.ts"]
+}

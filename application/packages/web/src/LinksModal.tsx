@@ -32,11 +32,11 @@ export function LinksModal({ title, titleIcon, intro, links, children, outro, on
 
         {/* Body */}
         <div className="px-5 py-4">
-          <p className="text-sm text-pn-muted mb-3">{intro}</p>
+          <p className="text-body text-pn-muted mb-3">{intro}</p>
           <LinksList links={links} onLinkClick={onLinkClick} grid={grid} />
           {children}
           {outro && (
-            <p className="mt-3 pt-3 border-t border-divider text-xs leading-relaxed text-pn-muted">
+            <p className="mt-3 pt-3 border-t border-divider text-small leading-relaxed text-pn-muted">
               {outro}
             </p>
           )}

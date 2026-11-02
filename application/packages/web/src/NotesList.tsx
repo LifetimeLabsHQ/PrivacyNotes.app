@@ -13,6 +13,7 @@ import { WindowedNoteRow, WindowedNoteCard } from './WindowedNoteItem';
 import { StorageBar } from './StorageBar';
 import { HoverLabel } from './HoverLabel';
 import { JournalCalendarCard, JournalCalendarPopover, useJournalCalendarMood, useJournalCalendarShown, type CalendarCardExtras } from './JournalCalendar';
+import { EmptyState } from './ui';
 import { Key, CreditCard, Lock, NotePencil, Trash, SquaresFour, Book, Shield, ShieldPlus, PushPin, FileText, FunnelSimple, Note, CheckSquare, Upload, BookmarkSimple, Plus, Notebook, CalendarPlus, PILLAR_GLYPHS, NEW_GLYPHS } from './icons';
 import { ActiveFilterEntry, ActiveSearchEntry, FilteredEmpty, ListFilterChips } from './ListFilterChips';
 import { ListEntryCard } from './ListEntryCard';
@@ -37,7 +38,7 @@ type VaultFilter = 'all' | 'login' | 'card' | 'ssh-key';
 
 export interface NotesListProps {
   /** The view and space this list draws, so a return lands where it was;
-   *  null under a search. Spec: ops/docs/archive/keep-my-place.md */
+   *  null under a search. Spec: docs/internal/specs/keep-my-place.md */
   place?: string | null;
   view: string;
   displayNotes: LocalNote[];
@@ -129,7 +130,7 @@ export interface NotesListProps {
   onQuickAdd: () => void;
   /** Open the import modal on the tab this pillar imports from - the
    *  standing import entry at the end of the list. */
-  onOpenImport: (tab: 'import' | 'vault') => void;
+  onOpenImport: () => void;
   onBackfillDate: (isoDate: string) => void;
   /** Every dated item by day: the one index every calendar reads. */
   calendarDays: DayIndex;
@@ -143,6 +144,9 @@ export interface NotesListProps {
   calendarExtras: CalendarCardExtras;
   /** The Calendar pillar's agenda, drawn in place of the item list. */
   calendarBody?: ReactNode;
+  /** Home: its widgets, drawn in place of the item list, and the edit mode
+   *  the Customize button turns on. Spec: docs/internal/specs/dashboard.md */
+  dashboard?: { body: ReactNode };
   /** Creates a note or a task list on a day picked in a calendar. */
   onCreateDated: (type: 'note' | 'task', isoDate: string) => void;
   /** Opens Quick add for an event on an ISO day (the calendar's day panel). */
@@ -151,6 +155,8 @@ export interface NotesListProps {
   checkInCard?: ReactNode;
   /** The card's switch for the list options menu, where this list can draw it. */
   checkInCardToggle?: { checked: boolean; onChange: (on: boolean) => void };
+  /** The medication card's switch, while a medication is set up (GitHub #649). */
+  medicationCardToggle?: { checked: boolean; onChange: (on: boolean) => void };
   /** "Show check-ins without text", while the list holds any. */
   checkInToggle?: { on: boolean; onChange: (on: boolean) => void };
   /** How many check-ins the list hides now, for the empty state. */
@@ -252,10 +258,12 @@ export function NotesList({
   onOpenCalendarItem,
   calendarExtras,
   calendarBody,
+  dashboard,
   onCreateDated,
   onNewEvent,
   checkInCard,
   checkInCardToggle,
+  medicationCardToggle,
   checkInToggle,
   hiddenCheckIns = 0,
   hiddenInAll = 0,
@@ -314,7 +322,7 @@ export function NotesList({
 
 
   /* Group headers (#448): one switch, and the sort decides the groups.
-   * Spec: ops/docs/archive/list-groups.md */
+   * Spec: docs/internal/specs/list-groups.md */
   const grouping = useListGroups({
     notes: displayNotes,
     listPrefs,
@@ -422,7 +430,7 @@ export function NotesList({
   // Vault view "New" menu - structured secret types.
   const GeneratorIcon = ACTIONS.generate.icon;
   const vaultNewOptions: NewMenuOption[] = [
-    { key: 'login', label: t('vaultNew.login'), icon: <Lock />, onSelect: () => onNew('login') },
+    { key: 'login', label: t('notes:newMenu.login'), icon: <Lock />, onSelect: () => onNew('login') },
     { key: 'card', label: t('vaultNew.card'), icon: <CreditCard />, onSelect: () => onNew('card') },
     { key: 'ssh-key', label: t('vaultNew.sshKey', exemptOpts('notes:vaultNew.sshKey')), icon: <Key />, onSelect: () => onNew('ssh-key') },
     // The login form's Generate icon: the same generator, here to copy.
@@ -437,19 +445,20 @@ export function NotesList({
   // created item is starred, from the active view. Bare-noun labels live in
   // notes:newMenu.* so the button's "New" isn't repeated in every row.
   // Order MUST match the sidebar pillar nav (TagsRail.tsx) and the right-click
-  // menu (contextMenus.tsx buildGlobalMenu): Note, Task, Kanban board, Login, File, Journal, Event, Contact, Bookmark.
+  // menu (contextMenus.tsx buildGlobalMenu): Note, Task, Kanban board, Drawing, Login, File, Journal, Event, Contact, Bookmark.
   // A tag or folder filter narrows the list, never the menu: every type
   // inherits both filters on creation, so all seven stay reachable and land
   // where the user is looking (GitHub #324).
-  // Spec: ops/docs/archive/ui-patterns.md section 45 (New-menu order invariant)
+  // Spec: docs/internal/design/ui-patterns.md section 45 (New-menu order invariant)
   const allNewOptions: NewMenuOption[] = [
     // Quick add heads the menu: one line that reads a day and a time.
-    { key: 'quickAdd', label: t('newMenu.quickAdd'), icon: <CalendarPlus />, onSelect: () => onQuickAdd(), keys: keyText('quickAdd') },
+    { key: 'quickAdd', label: t('shell:quickAdd.label'), icon: <CalendarPlus />, onSelect: () => onQuickAdd(), keys: keyText('quickAdd') },
     { key: 'note', label: t('newMenu.note'), icon: <NEW_GLYPHS.note />, onSelect: () => onNew() },
     { key: 'task', label: t('newMenu.task'), icon: <NEW_GLYPHS.task />, onSelect: () => onNew(undefined, 'tasks') },
     { key: 'kanban', label: t('newMenu.kanban'), icon: <NEW_GLYPHS.kanban />, onSelect: () => onNew(undefined, 'tasks', 'kanban') },
+    { key: 'drawing', label: t('newMenu.drawing'), icon: <NEW_GLYPHS.drawing />, onSelect: () => onNew(undefined, 'drawings') },
     { key: 'login', label: t('newMenu.login'), icon: <NEW_GLYPHS.login />, onSelect: () => onNew('login', 'vault') },
-    { key: 'file', label: t('newMenu.file'), icon: <NEW_GLYPHS.file />, onSelect: () => onNewFile() },
+    { key: 'file', label: t('shell:fileTypes.file'), icon: <NEW_GLYPHS.file />, onSelect: () => onNewFile() },
     { key: 'journal', label: t('newMenu.journal'), icon: <NEW_GLYPHS.journal />, onSelect: () => onNew(undefined, 'journal') },
     // An event is made in the quick add, which shows what it can read.
     { key: 'event', label: t('newMenu.event'), icon: <NEW_GLYPHS.event />, onSelect: () => onQuickAdd() },
@@ -492,10 +501,12 @@ export function NotesList({
           view={view as Parameters<typeof ListNav>[0]['view']}
           onSelectView={onSelectView}
           onOpenDrawer={onOpenDrawer}
-          title={view === 'trash' ? t('header.trash') : listHeaderLabel}
+          title={view === 'trash' ? t('shell:pillars.trash') : listHeaderLabel}
           icon={
             view === 'trash' ? (
-              <PILLAR_GLYPHS.trash size={26} className="text-danger shrink-0" aria-label={t('header.trash')} />
+              <PILLAR_GLYPHS.trash size={26} className="text-danger shrink-0" aria-label={t('shell:pillars.trash')} />
+            ) : view === 'dashboard' ? (
+              <PILLAR_GLYPHS.dashboard size={26} className="text-accent shrink-0" aria-hidden="true" />
             ) : view === 'home' ? (
               <PILLAR_GLYPHS.all size={26} className="text-accent shrink-0" aria-hidden="true" />
             ) : view === 'journal' ? (
@@ -508,6 +519,8 @@ export function NotesList({
               <PILLAR_GLYPHS.archive size={26} className="text-accent shrink-0" aria-hidden="true" />
             ) : view === 'calendar' ? (
               <PILLAR_GLYPHS.calendar size={26} className="text-accent shrink-0" aria-hidden="true" />
+            ) : view === 'drawings' ? (
+              <PILLAR_GLYPHS.drawings size={26} className="text-accent shrink-0" aria-hidden="true" />
             ) : (
               <PILLAR_GLYPHS.notes size={26} className="text-accent shrink-0" aria-hidden="true" />
             )
@@ -518,7 +531,7 @@ export function NotesList({
           <button
             onClick={onEmptyTrash}
             aria-label={t('trash.emptyHover')}
-            className="shrink-0 inline-flex items-center rounded-md bg-red-500/10 hover:bg-red-500/20 text-danger font-semibold px-3 py-1.5 text-lg tracking-tight transition"
+            className="shrink-0 inline-flex items-center rounded-md bg-red-500/10 hover:bg-red-500/20 text-danger font-semibold px-3 py-1.5 text-heading tracking-tight transition"
           >
             {t('trash.empty')}
           </button>
@@ -530,7 +543,7 @@ export function NotesList({
           <div className="shrink-0 flex items-center gap-1.5 empty:hidden">
             {view === 'vault' ? (
               <NewDropdown label={t('vaultNew.ariaLabel')} options={vaultNewOptions} />
-            ) : view === 'home' || view === 'starred' ? (
+            ) : view === 'home' || view === 'starred' || view === 'dashboard' ? (
               <NewDropdown label={t('header.new')} options={allNewOptions} />
             ) : view === 'journal' ? (
               /* The date picker hangs off the New button rather than a calendar
@@ -566,6 +579,12 @@ export function NotesList({
                 label={t('header.newEvent')}
                 keys={keyText('quickAdd')}
               />
+            ) : view === 'drawings' ? (
+              <NewButton
+                onClick={() => onNew()}
+                label={t('shell:contextMenu.newDrawing')}
+                keys={keyText('newNote')}
+              />
             ) : (
               <NewButton
                 onClick={() => onNew()}
@@ -591,7 +610,7 @@ export function NotesList({
       {/* Storage bar - shown in trash view to encourage emptying. */}
       {view === 'trash' && quotaMaxBytes != null && quotaMaxBytes > 0 && quotaUsedBytes != null && (
         <StorageBar
-          label={t('trash.storage')}
+          label={t('settings:tabs.storage')}
           usedBytes={quotaUsedBytes}
           maxBytes={quotaMaxBytes}
           onRefresh={onRefreshStorage}
@@ -604,7 +623,7 @@ export function NotesList({
           checked={autoDeleteTrashDays > 0}
           onChange={(on) => onAutoDeleteTrashDaysChange(on ? 30 : 0)}
           className="shrink-0 px-4 py-2 gap-2 select-none"
-          labelClassName="text-xs text-pn-muted"
+          labelClassName="text-small text-pn-muted"
         />
       )}
       {/* Vault sub-filter pills - narrow by item type.
@@ -615,7 +634,7 @@ export function NotesList({
           labels wrapped to two lines, which every locale but English and Dutch
           has been doing since it shipped. Scrolling a chip row is the normal
           affordance; wrapping inside a pill is not.
-          Spec: ops/docs/archive/ui-patterns.md section 45. */}
+          Spec: docs/internal/design/ui-patterns.md section 45. */}
       {view === 'vault' && (
         <div className="shrink-0 px-3 pt-2 pb-1 flex gap-1.5 overflow-x-auto pn-scrollbar-none">
           {([
@@ -629,7 +648,7 @@ export function NotesList({
               type="button"
               onClick={() => onVaultFilterChange(key as VaultFilter)}
               aria-pressed={vaultFilter === key}
-              className={`shrink-0 whitespace-nowrap text-xs px-2.5 py-1 rounded-full transition font-medium ${
+              className={`shrink-0 whitespace-nowrap text-small px-2.5 py-1 rounded-full transition font-medium ${
                 vaultFilter === key
                   ? 'bg-accent-fill text-white'
                   : 'bg-surface-1 text-pn-muted hover:bg-pn/10'
@@ -646,7 +665,7 @@ export function NotesList({
           as part of the same row. */}
       <div className="shrink-0 px-3 py-2 md:p-3 border-b border-divider relative">
         <div className="flex items-stretch gap-2">
-          {view !== 'calendar' && (
+          {view !== 'calendar' && view !== 'dashboard' && (
           <HoverLabel label={t('search.sortOptions')} position="above-start">
           <button
             ref={listPrefsButtonRef}
@@ -662,7 +681,7 @@ export function NotesList({
           >
             {/* Sort / filter icon - three lines of descending length,
                 matches SN + most filemanagers. */}
-            <FunnelSimple size={18} />
+            <FunnelSimple />
           </button>
           </HoverLabel>
           )}
@@ -671,7 +690,7 @@ export function NotesList({
             tabIndex={mobileTabIndex}
             value={search}
             onChange={setSearch}
-            placeholder={view === 'vault' ? t('search.placeholderVault') : view === 'calendar' ? t('search.placeholderEvents') : t('search.placeholderNotes')}
+            placeholder={view === 'vault' ? t('search.placeholderVault') : view === 'calendar' ? t('search.placeholderEvents') : view === 'drawings' ? t('search.placeholderDrawings') : t('search.placeholderNotes')}
           />
         </div>
         {showListPrefs && (
@@ -691,13 +710,14 @@ export function NotesList({
             pillar={view === 'journal' ? 'journal' : view === 'vault' ? 'vault' : 'global'}
             showGroupsToggle
             checkInCard={checkInCardToggle}
-            {...(view === 'journal' ? { createdLabel: t('noteRow.entryDate') } : {})}
+            medicationCard={medicationCardToggle}
+            {...(view === 'journal' ? { createdLabel: t('shell:noteOptionsMenu.entryDate') } : {})}
           />
         )}
       </div>
       {/* The Files and Tasks pattern: one switch under the search for the
           entries a list leaves out. Journals only: All follows it.
-          Spec: ops/issues/0439.md (Spec) */}
+          Spec: docs/internal/issues/0439.md (Spec) */}
       {checkInToggle && view === 'journal' && (
         <div className="shrink-0 px-4 py-2 border-b border-divider">
           <Switch
@@ -705,7 +725,7 @@ export function NotesList({
             checked={checkInToggle.on}
             onChange={checkInToggle.onChange}
             className="gap-2 select-none"
-            labelClassName="text-xs text-pn-muted"
+            labelClassName="text-small text-pn-muted"
           />
         </div>
       )}
@@ -720,7 +740,7 @@ export function NotesList({
           onDeselectAll={onDeselectAll}
         />
       )}
-      {view === 'calendar' ? calendarBody : (
+      {view === 'calendar' ? calendarBody : view === 'dashboard' ? dashboard?.body : (
       <ItemList list={list} grid={viewMode === 'grid'} onMouseDown={suppressShiftTextSelection}>
         {checkInCard}
         {view === 'journal' && calendarShown && !search.trim() && !selectionMode && (
@@ -728,7 +748,7 @@ export function NotesList({
         )}
         {/* Notes and All draw the same card once they hold a dated item. A day
             makes a note in Notes and a journal entry in All, where a date
-            reads as a journal day. Spec: ops/docs/archive/note-date.md (section 4) */}
+            reads as a journal day. Spec: docs/internal/specs/note-date.md (section 4) */}
         {((view === 'all' && datedLists.notes) || (view === 'home' && datedLists.all)) && calendarShown && !search.trim() && !selectionMode && (
           <JournalCalendarCard
             grid={viewMode === 'grid'}
@@ -748,7 +768,7 @@ export function NotesList({
                 loss. A search that found nothing already names its own cause,
                 so it keeps the plain line. */}
             {hiddenCheckIns > 0 && checkInToggle ? (
-              <p className="p-4 text-[13px] text-pn-muted text-center">
+              <p className="p-4 text-compact text-pn-muted text-center">
                 {t('shell:checkIn.hiddenCount', { count: hiddenCheckIns })}{' '}
                 <button type="button" onClick={() => checkInToggle.onChange(true)} className="text-accent hover:underline">
                   {t('shell:checkIn.showThem')}
@@ -762,15 +782,21 @@ export function NotesList({
                 onClearTag={onClearTag}
               />
             ) : !search.trim() && hiddenInAll > 0 ? (
-              <p className="p-4 text-[13px] text-pn-muted text-center">
+              <p className="p-4 text-compact text-pn-muted text-center">
                 {t('empty.hiddenInAll', { count: hiddenInAll })}
               </p>
             ) : !search.trim() && otherSpaceLine ? (
-              <p className="p-4 text-[13px] text-pn-muted text-center">
+              <p className="p-4 text-compact text-pn-muted text-center">
                 {otherSpaceLine}
               </p>
+            ) : view === 'drawings' && !search.trim() ? (
+              /* The one sentence that says what a drawing cannot do: it links
+                 to notes but never shows them. Spec: docs/internal/specs/drawing.md (section 5) */
+              <EmptyState icon={<PILLAR_GLYPHS.drawings aria-hidden="true" />} title={t('empty.drawings')}>
+                {t('empty.drawingsLine')}
+              </EmptyState>
             ) : (
-              <p className="p-4 text-[13px] text-pn-muted text-center">
+              <p className="p-4 text-compact text-pn-muted text-center">
                 {search.trim() ? t('empty.noMatches') : view === 'vault' ? t('empty.vault') : view === 'archive' ? t('empty.archive') : view === 'trash' ? t('empty.trash') : t('empty.notes')}
               </p>
             )}
@@ -797,6 +823,10 @@ export function NotesList({
             dragSelection={dragSelection}
             isMultiSelected={selectedIds.has(n.id)}
             showTypeIcons
+            /* The Notes pillar ('all') and Journals list one type only: the
+               same icon on every row names nothing. A check-in keeps its
+               mood face. Spec: issue #618. */
+            hideTypeIcon={view === 'all' || view === 'journal'}
             sortAwareDate
             entryDays={view === 'journal'}
             trashTint={view === 'trash'}
@@ -846,7 +876,7 @@ export function NotesList({
           <ImportPromptEntry
             kind={importKind}
             variant={viewMode === 'grid' ? 'tile' : 'row'}
-            onOpen={() => onOpenImport(importKind === 'vault' ? 'vault' : 'import')}
+            onOpen={onOpenImport}
             onDismiss={importPrompt.dismiss}
           />
         )}

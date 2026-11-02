@@ -53,8 +53,6 @@
   },
   "mood": {
     "prompt": "Como te estás a sentir? (1-10)",
-    "low": "péssimo",
-    "high": "incrível",
     "anchor": {
       "1": "péssimo",
       "3": "difícil",
@@ -142,8 +140,6 @@
     "editMedication": "Editar medicamento",
     "removeMedication": "Remover medicamento",
     "confirmRemove": "Remover <highlight>{{name}}</highlight>?",
-    "yes": "Sim",
-    "no": "Não",
     "taken": "Tomado",
     "skip": "Saltar",
     "editList": "Alterar estes medicamentos",
@@ -257,16 +253,15 @@
   },
   "config": {
     "configureTrackers": "Configurar registos",
-    "title": "Registos",
-    "tabGeneral": "Geral",
     "tabCustom": "Personalizados",
-    "chooseTrackers": "Escolher registos",
     "factorsTitle": "Os teus fatores",
     "factorsHelp": "As partes de um dia que tocas em Fatores. Um fator removido mantém o nome nos dias que o têm.",
     "renameFactor": "Mudar o nome de {{name}}",
     "addFactor": "Adicionar fator",
     "medicationsTitle": "Os teus medicamentos",
     "medicationsHelp": "Os medicamentos sobre os quais o registo Medicamentos pergunta. Um medicamento removido mantém o histórico.",
+    "medicationCard": "Cartão da medicação",
+    "medicationCardHelp": "\"Tomaste a medicação?\" neste dispositivo, só num dia em que há um medicamento a tomar.",
     "customHelp": "Registos a que tu dás o nome: uma escala, um número ou um sim ou não. Até {{max}}.",
     "yourCustomTrackers": "Os teus registos personalizados",
     "categoryMoodMind": "Humor e mente",
@@ -291,23 +286,17 @@
     "kindBuild": "A criar",
     "kindWatch": "A vigiar",
     "editHabit": "Editar {{name}}",
-    "removeHabit": "Remover {{name}}",
     "ownHabitsFull": "Tens {{max}} hábitos teus, o máximo possível.",
     "addCustomTrackerHint": "Regista o que quiseres",
     "maxReached": "Atingiste o máximo de {{max}} registos personalizados.",
     "customTrackers": "Registos personalizados",
-    "newCustomTracker": "Novo registo personalizado",
-    "newMedication": "Novo medicamento",
     "newMedicationHelp": "O botão Medicamentos pergunta por ele a partir do dia de início, nos horários que definires.",
     "trackerNamePlaceholder": "Nome do registo",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "Nome",
     "typeLabel": "Tipo",
-    "colorLabel": "Cor",
     "preview": "Pré-visualização",
     "startFromLast": "Lembrar a última entrada",
     "chooseIcon": "Escolher ícone",
-    "iconLabel": "Ícone",
     "startFromLastHelp": "Útil para coisas que raramente mudam, como o teu peso ou uma dose diária."
   },
   "factors": {
@@ -316,7 +305,6 @@
     "count_other": "{{count}} fatores",
     "remove": "Remover {{name}}",
     "placeholder": "visitas, enxaqueca, horas extra",
-    "add": "Adicionar",
     "empty": "Adiciona as coisas que marcam os teus dias e depois toca nelas em qualquer dia.",
     "commaHint": "Adiciona vários de uma vez, separados por vírgulas.",
     "editList": "Alterar estes fatores",
@@ -339,8 +327,6 @@
   "habits": {
     "prompt": "O que fizeste hoje?",
     "count": "{{yes}}/{{total}}",
-    "yes": "Sim",
-    "no": "Não",
     "empty": "Escolhe as perguntas na configuração dos registos.",
     "changeQuestions": "Alterar estas perguntas",
     "q": {
@@ -399,9 +385,7 @@
     "prompt": "Quanta cafeína tomaste?"
   },
   "flow": {
-    "next": "Seguinte",
     "finish": "Terminar",
-    "done": "Concluído",
     "step": "Registo {{n}} de {{total}}"
   }
 }

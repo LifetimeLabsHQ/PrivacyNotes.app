@@ -60,7 +60,7 @@ import { extractImageIds } from './imageProcessing';
 import { extractAttachmentIds } from './EncryptedAttachment';
 import type { ImageStore } from './imageStore';
 import type { AttachmentStore } from './attachmentStore';
-import { listNoteVersions } from './noteVersions';
+import { hasQueuedVersions, listNoteVersions } from './noteVersions';
 import { decryptNote, base64ToBytes, type SupabaseClient } from '@notes/shared';
 import { db } from './db';
 import { isDemoMode } from './demo';
@@ -79,8 +79,17 @@ let sweepInFlight = false;
  * the pending exclusion keeps the displayed figure honest from the moment
  * of the delete, so the grace only has to cover the cross-device restore
  * race, and one day of clean pulls is enough for any device that is
- * actually alive. Spec: ops/docs/design-decisions.md (deferred blob GC). */
+ * actually alive. Spec: docs/internal/design-decisions.md (deferred blob GC). */
 const BLOB_GC_GRACE_MS = 24 * 60 * 60 * 1000;
+
+/** How old an unreferenced object must be before the orphan reconcile takes
+ *  it, by the server's clock. Longer than the queue's grace: the reconcile
+ *  cannot see another device's unsent note, and a note pushed a day after its
+ *  picture (a browser closed right after the insert, a conflict left open, a
+ *  phone app killed) lost the picture at 24h (external report, 2026-10-24).
+ *  An orphan only costs quota until then. Spec: docs/internal/design-decisions.md
+ *  (deferred blob GC). */
+const RECONCILE_GRACE_MS = BLOB_GC_GRACE_MS;
 
 /**
  * Check which blob UUIDs are still referenced by any note other than
@@ -368,6 +377,45 @@ async function uploadAgainWhatThePurgeTook(uuids: string[]): Promise<void> {
 }
 
 /**
+ * The other half of the reconcile: a blob this device holds in its cache, that
+ * a live local note names and the complete bucket listing lacks, goes up
+ * again. Another device's reconcile deletes a picture whose note had not
+ * reached the server yet, and a re-added file whose hash this device
+ * remembered skipped its upload after another device's cleanup took the
+ * object; either way the device that holds the bytes is the one that can put
+ * them back (external report, 2026-10-24, bug reports 4 and 14). A row the
+ * server refused for good, or one already waiting to upload, is left alone.
+ */
+async function uploadAgainWhatIsMissing(inBucket: ReadonlySet<string>): Promise<void> {
+  const cached = [
+    ...(await db.imageCache.toCollection().primaryKeys()),
+    ...(await db.attachmentCache.toCollection().primaryKeys()),
+  ].filter((uuid) => !inBucket.has(uuid));
+  if (cached.length === 0) return;
+  const remaining = new Set(cached);
+  const named: string[] = [];
+  await db.notes.where('deleted').equals(0).each((note) => {
+    for (const uuid of remaining) {
+      if (note.body.includes(uuid)) {
+        named.push(uuid);
+        remaining.delete(uuid);
+      }
+    }
+  });
+  const missing: string[] = [];
+  for (const uuid of named) {
+    const rows = [
+      ...(await db.imageDedup.where('uuid').equals(uuid).toArray()),
+      ...(await db.attachmentDedup.where('uuid').equals(uuid).toArray()),
+    ];
+    if (rows.every((r) => !r.pendingUpload)) missing.push(uuid);
+  }
+  if (missing.length === 0) return;
+  console.warn('[imageGC] uploading again', missing.length, 'blob(s) the bucket lacks');
+  await uploadAgainWhatThePurgeTook(missing);
+}
+
+/**
  * Phase 2 of deferred blob GC: actually remove Storage objects for
  * queue entries that have cleared the grace period, after re-checking
  * references against the full local mirror. Must only be called right
@@ -466,7 +514,7 @@ let reconcileInFlight = false;
 
 /** How often the orphan reconcile is allowed to run. Orphans are a slow leak,
  * not an urgent condition, and the pass costs a recalc, a quota read and a
- * full bucket listing. Spec: ops/docs/design-decisions.md (orphan blob
+ * full bucket listing. Spec: docs/internal/design-decisions.md (orphan blob
  * reconcile). */
 const RECONCILE_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const RECONCILE_AT_KEY = 'privacynotes.blobReconcileAt';
@@ -551,8 +599,11 @@ type StorageObject = { name: string; created_at?: string | null };
  *    gcOnBodyChange), and that reference exists only in encrypted server
  *    rows. If the versions cannot be read, the pass aborts. A snapshot this
  *    device has not saved yet holds its blobs too (holdBlobsForVersion).
- * 5. The object is older than BLOB_GC_GRACE_MS, which covers the window
- *    between an upload returning a uuid and that uuid reaching a saved body.
+ * 5. The object is older than RECONCILE_GRACE_MS by the server's clock (the
+ *    stamp the recount in gate 2 writes), which covers the window between an
+ *    upload returning a uuid and that uuid reaching a saved body on any
+ *    device. This device's clock is not read: one a day fast made every
+ *    fresh upload look old enough.
  *
  * Anything currently in db.blobGC is skipped outright: those blobs already
  * have an owner with its own grace period, and this pass must not shorten it.
@@ -617,8 +668,10 @@ export async function reconcileOrphanBlobs(
       }
     }
 
-    // Gate 1: nothing of ours is still unpushed.
+    // Gate 1: nothing of ours is still unpushed, History versions included:
+    // a queued one may name a picture no saved version names yet.
     if ((await db.notes.where('dirty').anyOf(1, 2).count()) > 0) return;
+    if (await hasQueuedVersions()) return;
 
     // Gate 2: the server agrees with us about how many notes exist. recalc
     // first so note_count is a recount, not a drifted delta counter.
@@ -634,6 +687,13 @@ export async function reconcileOrphanBlobs(
       return;
     }
     const usage = await fetchQuotaUsage(supabase);
+    // The recount just stamped the quota row with the server's now().
+    const stamped = await supabase.from('pubkey_quotas').select('updated_at').maybeSingle();
+    const serverNow = Date.parse((stamped.data as { updated_at?: string } | null)?.updated_at ?? '');
+    if (stamped.error || !Number.isFinite(serverNow)) {
+      console.warn('[imageGC] reconcile skipped - no server time');
+      return;
+    }
     const localLive = await db.notes.where('deleted').equals(0).count();
     if (localLive !== usage.noteCount) {
       console.warn(
@@ -657,13 +717,14 @@ export async function reconcileOrphanBlobs(
       objects.push(...page);
       if (page.length < LIST_PAGE) break;
     }
+    await uploadAgainWhatIsMissing(new Set(objects.map((o) => o.name)));
     if (objects.length === 0) {
       markReconcileDone();
       return;
     }
 
     // Gates 3 and 5, plus the blobGC hand-off.
-    const cutoff = Date.now() - BLOB_GC_GRACE_MS;
+    const cutoff = serverNow - RECONCILE_GRACE_MS;
     const aged = objects.filter((o) => {
       const created = o.created_at ? Date.parse(o.created_at) : NaN;
       return Number.isFinite(created) && created < cutoff;
@@ -727,7 +788,7 @@ export async function reconcileOrphanBlobs(
  * against an incomplete picture. RLS ('note_versions_owner_select') scopes the
  * read to the caller; the explicit owner gives the planner an index condition
  * on `note_versions(user_pubkey)` instead of a table scan.
- * Spec: ops/docs/archive/supabase-performance-2026-09.md (Capacity check, 2026-10-19)
+ * Spec: docs/internal/specs/supabase-performance-2026-09.md (Capacity check, 2026-10-19)
  *
  * The row count is established first and every page is then read explicitly,
  * because a single big `.limit()` cannot tell "that is all of them" apart from

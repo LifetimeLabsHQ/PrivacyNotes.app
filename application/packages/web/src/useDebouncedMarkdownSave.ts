@@ -124,7 +124,7 @@ export function useDebouncedMarkdownSave({
     // roughly proportional to character count. Keeps small notes snappy
     // while giving large notes breathing room. Perf fix for #58, #66, #91.
     const docSize = editor.state.doc.content.size;
-    // Spec: ops/docs/design-decisions.md (editor adaptive debounce thresholds)
+    // Spec: docs/internal/design-decisions.md (editor adaptive debounce thresholds)
     const delay = docSize > 500_000 ? 5000
       : docSize > 150_000 ? 2000
       : docSize > 50_000 ? 600

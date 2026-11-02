@@ -1,6 +1,5 @@
 {
   "modal": {
-    "title": "Segurança",
     "tabPin": "PIN",
     "tabBiometricShort": "Bloqueio",
     "tabBiometric": "Bloqueio biométrico",
@@ -9,9 +8,10 @@
     "tabTwoFactor": "2FA"
   },
   "pinTab": {
+    "changeLost": "Sua alteração do PIN não foi salva: o PIN já tinha sido alterado em outro dispositivo.",
+    "phraseUnwrapped": "Este navegador não conseguiu proteger a frase de recuperação que este dispositivo guarda, então a frase fica armazenada aqui sem criptografia. Qualquer pessoa com uma cópia do armazenamento deste dispositivo consegue lê-la. Ative o bloqueio do app na aba Bloqueio para mantê-la só atrás do seu PIN ou código de acesso.",
     "enterCurrent": "Digite seu PIN atual para fazer alterações.",
     "currentPin": "PIN atual",
-    "checking": "Verificando...",
     "verify": "Verificar",
     "replaceExisting": "Digite um novo PIN de 4 dígitos. Ele substitui seu PIN atual.",
     "setIntro": "Um PIN de 4 dígitos abre suas notas protegidas e sua frase de recuperação. Ele sincroniza com todos os seus dispositivos.",
@@ -42,10 +42,8 @@
     "setPin": "Definir PIN",
     "removePin": "Remover PIN",
     "reaskAfter": "Pedir o PIN de novo após",
-    "reaskHint": "Aplica-se à visualização da frase e a qualquer nota protegida por PIN.",
+    "reaskHint": "Aplica-se à visualização da frase e a qualquer nota protegida por PIN neste dispositivo.",
     "incorrectPin": "PIN incorreto.",
-    "incorrectPinRetry": "PIN incorreto. Tente de novo.",
-    "tooManyAttempts": "Tentativas demais. Tente de novo em {{seconds}}s.",
     "pinFourDigits": "O PIN deve ter 4 dígitos.",
     "pinsDoNotMatch": "Os PINs não coincidem.",
     "passcodeIntro": "Um código de acesso abre suas notas protegidas e sua frase de recuperação. Ele é sincronizado com todos os seus dispositivos.",
@@ -61,8 +59,7 @@
     "ruleNotDigits": "Não só números",
     "ruleMax": "No máximo {{max}} caracteres",
     "passcodesDoNotMatch": "Os códigos de acesso não coincidem.",
-    "incorrectPasscode": "Código de acesso incorreto.",
-    "incorrectPasscodeRetry": "Código de acesso incorreto. Tente de novo."
+    "incorrectPasscode": "Código de acesso incorreto."
   },
   "timeout": {
     "min1": "1 minuto",
@@ -76,16 +73,11 @@
     "browserRestart": "Ao reiniciar o navegador"
   },
   "pinInfo": {
-    "title": "Exigir PIN para ver",
     "body": "Quando está ativo, o seu PIN é pedido toda vez que você abre este item, mesmo que o aplicativo já esteja desbloqueado. Use para itens sensíveis que devem continuar protegidos quando você se afasta."
   },
   "removePinDialog": {
-    "title": "Remover PIN",
     "introWithBio": "Digite seu PIN atual para confirmar a remoção. O desbloqueio biométrico continua ativo, mas sua única alternativa será sua frase de recuperação.",
     "introNoBio": "Digite seu PIN atual para confirmar a remoção. A tela da sua frase de recuperação vai abrir sem PIN depois disso.",
-    "verifying": "Verificando...",
-    "removePin": "Remover PIN",
-    "titlePasscode": "Remover código de acesso",
     "introWithBioPasscode": "Digite seu código de acesso atual para confirmar a remoção. O desbloqueio biométrico continua ativo, mas sua única alternativa será sua frase de recuperação.",
     "introNoBioPasscode": "Digite seu código de acesso atual para confirmar a remoção. A tela da sua frase de recuperação vai abrir sem código de acesso depois disso.",
     "removePasscode": "Remover código de acesso"
@@ -109,16 +101,10 @@
   },
   "phraseGate": {
     "enterToView": "Digite seu PIN de 4 dígitos para ver sua frase.",
-    "incorrectPinRetry": "PIN incorreto. Tente de novo.",
-    "tooManyAttempts": "Tentativas demais. Tente de novo em {{seconds}}s.",
-    "lockedFor": "Bloqueado por {{seconds}}s",
-    "checking": "Verificando...",
-    "unlock": "Desbloquear",
     "enterToChangeCustody": "Digite seu PIN de 4 dígitos para mudar a custódia da chave.",
     "checkFailed": "Não foi possível verificar seu PIN. Tente novamente.",
     "enterToViewPasscode": "Digite seu código de acesso para ver sua frase.",
     "enterToChangeCustodyPasscode": "Digite seu código de acesso para mudar a custódia da chave.",
-    "incorrectPasscodeRetry": "Código de acesso incorreto. Tente de novo.",
     "checkFailedPasscode": "Não foi possível verificar seu código de acesso. Tente novamente."
   },
   "phraseView": {
@@ -133,11 +119,9 @@
     "hideQr": "Ocultar QR code",
     "showQr": "Mostrar QR code",
     "saveQr": "Salvar QR",
-    "copied": "Copiado",
     "copyPhrase": "Copiar frase"
   },
   "custody": {
-    "eyebrow": "Custódia da chave",
     "current": "Atual",
     "rowDevice": "Dispositivo novo",
     "rowDeviceCustodial": "Entrar com {{provider}}, sem digitar nada",
@@ -152,7 +136,6 @@
     "releaseWarning": "Salve sua frase de 12 palavras fora do PrivacyNotes primeiro. Depois que excluirmos nossa cópia, você precisará dela em dispositivos novos.",
     "challengePrompt": "Digite estas palavras a partir da lista acima para confirmar que você as tem.",
     "wordLabel": "Palavra {{position}}",
-    "busy": "Salvando...",
     "releaseConfirm": "Apagar do servidor",
     "adoptConfirm": "Guardar uma cópia com a gente",
     "releaseDone": "Pronto. Não guardamos mais nenhuma cópia da sua frase. Dispositivos novos vão pedir estas 12 palavras ou uma leitura do QR.",
@@ -189,6 +172,7 @@
     "boundStatus": "O desbloqueio biométrico está vinculado à sua passkey.",
     "boundStatusNative": "O desbloqueio biométrico está vinculado ao hardware seguro deste dispositivo.",
     "setUpAgain": "Configurar de novo para um bloqueio mais forte",
+    "unboundWeaker": "Neste dispositivo, o desbloqueio biométrico é uma barreira para quem está por perto, não um bloqueio: alguém com uma cópia do armazenamento deste dispositivo pode abrir as suas notas sem a sua impressão digital ou o seu rosto.",
     "cannotBind": "O app de passkeys deste navegador não consegue criar o bloqueio mais forte. O desbloqueio biométrico continua funcionando como antes. Se um gerenciador de senhas salva as suas passkeys, desative a opção de passkeys dele e depois desative e ative de novo o desbloqueio biométrico para usar o armazenamento de passkeys do próprio dispositivo.",
     "bindOffer": "O desbloqueio biométrico neste dispositivo ainda não está vinculado à sua passkey, e este navegador consegue vinculá-lo. Configure de novo uma vez, para que a chave dele fique com a sua passkey em vez de no armazenamento deste dispositivo.",
     "bindOfferLater": "Agora não",
@@ -196,14 +180,14 @@
     "settingUp": "Configurando...",
     "enable": "Ativar desbloqueio biométrico",
     "lockOnOpen": "Bloquear o app ao abrir",
-    "lockOnOpenHint": "Exigir biometria ou PIN ao abrir o app.",
+    "lockOnOpenHint": "Exigir biometria ou PIN ao abrir o app neste dispositivo.",
     "lockHidesOnSwitch": "Também esconde suas notas quando você troca de app.",
     "lockNeedsCredential": "O bloqueio do app precisa de um PIN ou do desbloqueio biométrico neste dispositivo.",
     "setUpPin": "Criar um PIN",
     "confirmPinForLock": "Digite seu PIN para ativar. Ele tranca uma cópia da sua frase de recuperação, então só o seu PIN pode abrir o app.",
     "confirmPasscodeForLock": "Digite seu código de acesso para ativar. Ele tranca uma cópia da sua frase de recuperação, então só o seu código de acesso pode abrir o app.",
     "relockAfter": "Bloquear de novo após",
-    "relockHint": "Aplica-se apenas à tela de bloqueio do app.",
+    "relockHint": "Aplica-se apenas à tela de bloqueio do app neste dispositivo.",
     "blockCapture": "Ocultar em capturas de tela",
     "blockCaptureHint": "Mantém suas notas fora de capturas de tela, gravações e compartilhamento de tela, quando o seu dispositivo permite. Aplica-se apenas a este dispositivo.",
     "perDeviceNote": "O desbloqueio biométrico abre as mesmas notas que o seu PIN. Ele fica neste dispositivo e nunca sincroniza.",
@@ -216,31 +200,19 @@
     "phraseNotSaved": "Este dispositivo não conseguiu salvar sua frase de recuperação, então nada foi alterado. Tente de novo."
   },
   "pinSetup": {
-    "title": "Definir um PIN",
     "description": "Um PIN de 4 dígitos será exigido para ver sua frase de recuperação. Opcional, mas recomendado para espaços compartilhados.",
-    "newPin": "Novo PIN",
-    "confirmPin": "Confirmar PIN",
-    "skipForNow": "Pular por agora",
-    "saving": "Salvando…",
-    "setPin": "Definir PIN",
-    "pinFourDigits": "O PIN deve ter 4 dígitos.",
-    "pinsDoNotMatch": "Os PINs não coincidem."
+    "skipForNow": "Pular por agora"
   },
   "pinInput": {
-    "ariaLabel": "PIN",
     "digitAriaLabel": "Dígito {{index}}"
   },
   "passcodeInput": {
-    "ariaLabel": "Código de acesso",
     "show": "Mostrar código de acesso",
     "hide": "Ocultar código de acesso"
   },
   "protectedGate": {
-    "biometricFailed": "A verificação biométrica falhou ou foi cancelada.",
     "protectedItem": "Item protegido",
     "biometricSubtitle": "Use sua impressão digital ou rosto para desbloquear este item.",
-    "verifying": "Verificando...",
-    "unlock": "Desbloquear",
     "usePinInstead": "Usar o PIN em vez disso",
     "useBiometricInstead": "Usar a biometria em vez disso",
     "disableProtection": "Desativar a proteção",
@@ -248,18 +220,10 @@
     "disableSubtitle": "A nota continua onde está. Só o bloqueio sai.",
     "disableBiometricSubtitle": "Confirme com sua impressão digital ou rosto.",
     "verifySubtitle": "Digite seu PIN de 4 dígitos para desbloquear este item. O desbloqueio dura o tempo limite definido em Segurança.",
-    "incorrectPinRetry": "PIN incorreto. Tente de novo.",
-    "tooManyAttempts": "Tentativas demais. Tente de novo em {{seconds}}s.",
     "lockedFor": "Bloqueado por {{seconds}}s",
-    "checking": "Verificando...",
     "bootstrapTitle": "Definir um PIN",
     "bootstrapSubtitle": "Este item é protegido por PIN, mas nenhum PIN está definido neste dispositivo. Defina um PIN de 4 dígitos para desbloqueá-lo. Seu PIN sincroniza em todos os seus dispositivos.",
     "bootstrapWarning": "Definir um PIN aqui não exige conhecer o PIN anterior. Qualquer pessoa com sua frase de recuperação pode fazer isso num dispositivo novo. Para conteúdo realmente sensível, conte com a autenticação apenas por frase.",
-    "newPin": "Novo PIN",
-    "confirmPin": "Confirmar PIN",
-    "pinFourDigits": "O PIN deve ter 4 dígitos.",
-    "pinsDoNotMatch": "Os PINs não coincidem.",
-    "saving": "Salvando...",
     "setPinUnlock": "Definir PIN e desbloquear",
     "pinRequired": "PIN obrigatório",
     "deleteSubtitle": "Digite seu PIN para excluir este item protegido.",
@@ -267,7 +231,6 @@
     "usePasscodeInstead": "Usar o código de acesso em vez disso",
     "disableTitlePasscode": "Digite o código de acesso para desativar a proteção",
     "verifySubtitlePasscode": "Digite seu código de acesso para desbloquear este item. O desbloqueio dura o tempo limite definido em Segurança.",
-    "incorrectPasscodeRetry": "Código de acesso incorreto. Tente de novo.",
     "passcodeRequired": "Código de acesso obrigatório",
     "deleteSubtitlePasscode": "Digite seu código de acesso para excluir este item protegido."
   },
@@ -294,19 +257,14 @@
     "checking": "Verificando...",
     "unlock": "Desbloquear",
     "recoveryPhrase": "Frase de recuperação",
-    "recoveryPhraseSubtitle": "Digite sua frase de recuperação de 12 palavras para desbloquear.",
-    "invalidPhrase": "Frase inválida. Confira a grafia e a ordem das palavras.",
-    "phrasePlaceholder": "palavra1 palavra2 palavra3 palavra4 palavra5 palavra6 palavra7 palavra8 palavra9 palavra10 palavra11 palavra12"
+    "recoveryPhraseSubtitle": "Digite sua frase de recuperação de 12 palavras para desbloquear."
   },
   "deviceLimit": {
     "title": "Limite de dispositivos atingido",
     "body": "Contas gratuitas podem sincronizar em até {{limit}} dispositivos por vez. Você já tem {{count}}. Remova um para continuar neste dispositivo ou faça upgrade para ter dispositivos ilimitados.",
     "activeDevices": "Dispositivos ativos",
-    "recentlyRemoved": "Removidos recentemente",
-    "removedAt": "Removido {{when}}",
     "upgradeHeading": "Ou faça upgrade para o Pro",
     "upgradeBody": "Pagamento único, sem assinatura. Dispositivos ilimitados, além de imagens, histórico de notas e mais.",
-    "openingCheckout": "Abrindo o checkout...",
     "upgradeCta": "Faça upgrade para o Pro por US$ {{price}}",
     "needMoreHeading": "Precisa de mais dispositivos?",
     "needMoreBody": "Os upgrades do Pro não estão disponíveis nesta versão. Se você realmente precisar de um terceiro dispositivo, fale com a gente que damos um jeito.",
@@ -315,8 +273,6 @@
     "saveRecoveryBody": "Você entrou com OAuth. Anote sua frase de 12 palavras também. Ela é sua alternativa caso o OAuth falhe ou você perca o acesso em todos os dispositivos.",
     "hide": "Ocultar",
     "viewRecoveryPhrase": "Ver frase de recuperação",
-    "signOut": "Sair",
-    "thisDevice": "Este dispositivo",
     "lastActive": "{{platform}} · ativo pela última vez {{when}}",
     "removing": "Removendo..."
   },
@@ -329,9 +285,9 @@
     "bitcoinBody": "As pessoas o protegem com o mesmo tipo de frase de 12 palavras.",
     "universeTitle": "700 vezes a idade do universo",
     "universeBody": "Para testar todas, a um bilhão de bilhões de tentativas por segundo.",
-    "twinTitle": "Ninguém na Terra tem a sua frase",
+    "twinTitle": "Ninguém mais na Terra vai receber a mesma frase",
     "twinBody": "Nem se todos os 8 bilhões de nós usassem o PrivacyNotes.",
-    "keepPrivate": "O único jeito de entrar são as suas 12 palavras de verdade. Mantenha-as em sigilo."
+    "keepPrivate": "Adivinhar não é um jeito de entrar. Mantenha suas 12 palavras em sigilo."
   },
   "connectedAccounts": {
     "title": "Contas conectadas",
@@ -350,13 +306,10 @@
     "connectAnotherProvider": "Conectar outra conta do {{provider}}",
     "updateTitle": "Atualizar o login deste cofre",
     "updateDescription": "Isso prepara sua frase salva e suas contas conectadas para o login em duas etapas e permite gerenciar as contas conectadas. Suas notas e a custódia da chave não mudam.",
-    "updateDevices": "Atualize o app nos outros dispositivos antes de continuar. Eles podem precisar fazer login novamente.",
-    "updateAcknowledgment": "Atualizei o PrivacyNotes nos meus outros dispositivos.",
     "updateAction": "Atualizar login",
     "setupTitle": "Conecte Google, Apple ou GitHub",
     "setupDescription": "A primeira conexão precisa de uma atualização única deste cofre. Suas notas e a custódia da chave continuam iguais.",
     "setupAction": "Configurar contas conectadas",
-    "closed": "Conectar e remover contas estará disponível em breve. Até lá, você entra do mesmo jeito que hoje.",
     "repairTitle": "Concluir a atualização do login",
     "repairDescription": "Este cofre já usa o login atualizado. Reconecte este dispositivo usando a frase que já está desbloqueada aqui. Suas notas locais continuam disponíveis.",
     "repairAction": "Continuar neste cofre",
@@ -374,7 +327,6 @@
     "rateLimited": "Houve tentativas demais de alterar contas. Aguarde um pouco e tente novamente.",
     "connectionMissing": "Esta conta não está mais conectada. Verifique a lista atual de contas antes de tentar novamente.",
     "noAccounts": "Nenhuma conta de provedor está conectada. Sua frase salva é seu método de login.",
-    "actionFailed": "Não foi possível confirmar a alteração. Verifique sua conexão e tente novamente.",
     "retry": "Verificar contas novamente",
     "connectDone": "Conta conectada a este cofre. A custódia da chave não mudou.",
     "disconnectDone": "Conta desconectada. Suas notas e a custódia da chave não mudaram.",
@@ -384,7 +336,6 @@
     "freshMfa": "Você precisará de um novo código do autenticador para confirmar esta alteração. O login em duas etapas continuará ativado.",
     "continueProvider": "Continuar com {{provider}}",
     "working": "Processando...",
-    "cancel": "Cancelar",
     "confirmDisconnect": "Desconectar {{provider}}?",
     "account": "esta conta",
     "lastCustodial": "Esta é sua última conta conectada. Conecte outra conta primeiro ou salve sua frase e mude para a autocustódia antes de removê-la.",
@@ -445,10 +396,7 @@
       "key": "Salvar chave",
       "confirm": "Confirmar"
     },
-    "next": "Próximo",
-    "back": "Voltar",
     "stepOf": "Etapa {{step}} de 3",
-    "working": "Processando...",
     "scan": "Leia este código com seu app autenticador.",
     "qrLabel": "Código QR para seu app autenticador",
     "openAuthenticator": "Está neste celular? Abra seu app autenticador",
@@ -462,9 +410,7 @@
     "backupWarning": "Perdeu o celular? Esta chave traz seus códigos de volta. Guarde em um lugar seguro, fora do PrivacyNotes.",
     "savedAcknowledgment": "Salvei a chave de backup.",
     "confirmBackup": "Digite de novo sua chave de backup da etapa anterior e depois o código do seu app.",
-    "reenterBackup": "Chave de backup",
     "codeLabel": "Código do seu app",
-    "activate": "Ativar 2FA",
     "cancelSetup": "Cancelar",
     "enabled": "O 2FA está ativado",
     "authenticatorRow": "App autenticador",
@@ -484,11 +430,6 @@
     "overview": "Visão geral",
     "keyCustody": "Custódia da chave",
     "accounts": "Contas"
-  },
-  "beta": {
-    "label": "Beta",
-    "notice": "Este recurso está em beta.",
-    "reportBug": "Relatar um bug"
   },
   "demoTeaser": {
     "accounts": "Crie uma conta para conectar Google, Apple ou GitHub ao seu cofre.",

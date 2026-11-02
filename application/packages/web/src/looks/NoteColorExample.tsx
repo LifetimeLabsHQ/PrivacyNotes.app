@@ -31,11 +31,11 @@ export function NoteColorExample({
         style={choice === 'off' ? undefined : { background: tint, color: `var(--pn-label-${color}-ink)` }}
         aria-hidden="true"
       >
-        <NotePencil size={15} />
+        <NotePencil />
       </span>
       <div className="min-w-0">
-        <p className="truncate text-[13px] font-semibold text-pn">{title}</p>
-        <p className="flex items-center gap-1 text-[11px] text-pn-muted truncate" dir="auto">{source}</p>
+        <p className="truncate text-compact font-semibold text-pn">{title}</p>
+        <p className="flex items-center gap-1 text-meta text-pn-muted truncate" dir="auto">{source}</p>
       </div>
     </div>
   );

@@ -1,18 +1,14 @@
 {
   "pillars": {
-    "trash": "Papperskorgen",
-    "bookmarks": "Bokmärken",
-    "contacts": "Kontakter"
+    "trash": "Papperskorgen"
   },
   "tasksList": {
-    "title": "Uppgifter",
     "newTaskNote": "Ny uppgiftsanteckning",
     "hideCompleted": "Dölj klara uppgifter",
     "showCompleted": "Visa klara uppgifter",
     "searchPlaceholder": "Sök uppgifter…",
     "sortOptions": "Sorteringsalternativ",
     "quickAddPlaceholder": "Lägg till en snabb uppgift",
-    "noMatches": "Inga träffar.",
     "itemsWithTasks": "Objekt med uppgifter",
     "allTasks": "Alla uppgifter",
     "tasksFromOtherItems": "Uppgifter i andra objekt",
@@ -29,45 +25,27 @@
     "seeLess": "Visa mindre"
   },
   "filesList": {
-    "title": "Filer",
     "upload": "Ladda upp",
     "selectedOf": "{{selected}} av {{total}} valda",
-    "deselectAll": "Avmarkera alla",
-    "selectAll": "Markera alla",
-    "storage": "Lagring",
     "perFile": "Per fil",
     "free": "Gratis",
-    "upgradeToPro": "Uppgradera till Pro",
     "filterAll": "Alla",
-    "filterImages": "Bilder",
     "filterAudio": "Ljud",
     "filterFiles": "Filer",
-    "sortOptions": "Sorteringsalternativ",
     "searchPlaceholder": "Sök filer…",
     "sortName": "Namn",
     "showNotesWithAttachments": "Visa filer i andra objekt",
-    "noMatches": "Inga träffar.",
     "pinProtected": "PIN-skyddad",
-    "readOnly": "Skrivskyddad",
     "noFilesYet": "Inga filer än.",
     "noDocuments": "Inga dokument.",
     "noImages": "Inga bilder.",
     "noAudioFiles": "Inga ljudfiler.",
     "emptyTypesHint": "Bilder, dokument, ljud, video och zip-filer. Upp till {{max}} MB per fil.",
     "uploadFiles": "Ladda upp filer",
-    "menuDeselect": "Avmarkera",
-    "menuSelect": "Markera",
     "menuShow": "Visa",
     "menuAllFiles": "Alla filer",
-    "menuImages": "Bilder",
-    "menuAudio": "Ljud",
     "menuDocuments": "Dokument",
-    "menuHideNoteAttachments": "Dölj filer i andra objekt",
-    "menuShowNoteAttachments": "Visa filer i andra objekt",
-    "menuUnpin": "Lossa",
-    "menuPin": "Fäst",
-    "menuRename": "Byt namn",
-    "menuMoveToTrash": "Flytta till papperskorgen"
+    "menuHideNoteAttachments": "Dölj filer i andra objekt"
   },
   "vaultItem": {
     "badgeLogin": "Inloggning",
@@ -78,7 +56,6 @@
     "untitledKey": "Nyckel utan titel",
     "copied": "Kopierat!",
     "copyField": "Kopiera {{label}}",
-    "hide": "Dölj",
     "reveal": "Visa",
     "fieldUrl": "URL",
     "fieldUser": "Användare",
@@ -91,14 +68,11 @@
     "fieldLabel": "Etikett",
     "fieldPublic": "Publik",
     "fieldPrivate": "Privat",
-    "fieldTotp": "2FA-kod",
     "totpInvalid": "Ogiltig nyckel",
     "copyCode": "Kopiera kod",
     "totpUnlockCta": "Lås upp 2FA-koder med Pro",
     "totpProNote": "Nyckeln sparas och synkas. Bara koden kräver Pro.",
     "copyAll": "Kopiera URL, användare och lösenord",
-    "open": "Öppna",
-    "notesHeading": "Anteckningar",
     "fillOneField": "Fyll i minst ett fält innan du sparar.",
     "expiryNeedsBoth": "Ange både månad och år, eller lämna båda tomma.",
     "customField": "Eget fält",
@@ -128,20 +102,18 @@
   },
   "tagsRail": {
     "showAllItems": "Visa allt",
-    "changelog": "Changelog",
     "closeMenu": "Stäng menyn",
-    "close": "Stäng",
     "views": "Innehåll",
     "resizeSplit": "Ändra storlek på Innehåll och taggarna eller mapparna",
     "sidebarOptions": "Sidofältsalternativ",
     "showInSidebar": "Visa i sidofältet",
     "allOptions": "Alternativ för Alla",
     "showInAll": "Visa i Alla",
-    "viewList": "Lista",
-    "viewGrid": "Rutnät",
     "viewAuto": "Auto",
     "allItemsTooltip": "Alla anteckningar, dagböcker och valvobjekt",
     "allItems": "Alla",
+    "dashboard": "Hem",
+    "dashboardTooltip": "Dina widgetar i en överblick",
     "pinnedTooltip": "Fästa objekt",
     "pinned": "Fästa",
     "archive": "Arkiv",
@@ -149,6 +121,7 @@
     "notes": "Anteckningar",
     "tasksTooltip": "Uppgifter i alla anteckningar",
     "tasks": "Uppgifter",
+    "drawings": "Teckningar",
     "vaultTooltip": "Inloggningar, kreditkort och nycklar",
     "vault": "Valv",
     "filesTooltip": "Alla filer och bilagor",
@@ -156,7 +129,6 @@
     "journalsTooltip": "Dagliga dagboksinlägg",
     "journals": "Dagböcker",
     "actionsForTag": "Åtgärder för taggen {{tag}}",
-    "renameTag": "Byt namn",
     "removeFavorite": "Ta bort favorit",
     "markAsFavorite": "Markera som favorit",
     "deleteTag": "Radera tagg",
@@ -164,7 +136,6 @@
     "tags": "Taggar",
     "sortTags": "Sortera taggar",
     "sort": "Sortera",
-    "sortBy": "Sortera efter",
     "sortEntries": "Poster",
     "sortName": "Namn",
     "sortCustom": "Egen",
@@ -175,11 +146,9 @@
     "createTag": "Ny tagg",
     "untagged": "Otaggade",
     "trashTooltip": "Raderade objekt",
-    "trash": "Papperskorgen",
     "feedback": "Feedback",
     "import": "Importera",
     "downloads": "Nedladdningar",
-    "help": "Hjälp",
     "rate": "Betygsätt",
     "markdown": "Markdown",
     "markdownTip": "Okrypterad",
@@ -205,7 +174,6 @@
     "deleteConfirmBranchNested": "”{{folder}}” och dess undermappar raderas. Deras anteckningar flyttas till ”{{parent}}”. Inga anteckningar raderas.",
     "deleteSubfolders_other": "Radera även dess {{count}} undermappar",
     "deleteSubfolders_one": "Radera även dess undermapp",
-    "moveTo": "Flytta till mapp",
     "searchPlaceholder": "Sök mappar",
     "sortFolders": "Sortera mappar",
     "chipUnfiled": "Mapp",
@@ -226,7 +194,6 @@
     "seedTeam": "Team"
   },
   "collapsedSidebar": {
-    "newNote": "Ny anteckning",
     "expandSidebar": "Fäll ut sidofältet"
   },
   "mobileHeader": {
@@ -241,26 +208,14 @@
     "colorFromTag": "Från taggen: #{{name}}",
     "colorOwnHint": "En färg som väljs här fyller anteckningens bakgrund. <setting>Mapp- och taggfärger</setting> ändrar den inte.",
     "details": "Detaljer",
-    "readOnly": "Skrivskyddad",
     "readOnlyDescription": "Inga ändringar förrän du stänger av det.",
     "protect": "Skydda",
     "convertTo": "Gör om till",
-    "typeNote": "Anteckning",
     "typeJournal": "Dagbok",
-    "typeTask": "Uppgift",
-    "unpin": "Lossa",
-    "pin": "Fäst",
-    "archive": "Arkivera",
-    "unarchive": "Ta ur arkivet",
     "burn": "Bränn",
     "share": "Dela",
     "trash": "Papperskorg",
-    "duplicate": "Duplicera",
-    "restore": "Återställ",
-    "deleteForever": "Radera för alltid",
-    "moveToFolder": "Flytta till mapp",
     "noteHistory": "Historik",
-    "findReplace": "Sök och ersätt",
     "uncheckAllTasks": "Avmarkera alla punkter",
     "deleteCheckedTasks": "Radera markerade punkter",
     "sortTasksByStatus": "Sortera punkter efter status",
@@ -277,27 +232,17 @@
     "schedule": "Schema",
     "ends": "Slutar",
     "sameDay": "Samma dag",
-    "allDay": "Heldag",
     "starts": "Börjar",
     "endsAt": "Slutar kl.",
     "noEnd": "Inget",
     "removeFromCalendar": "Ta bort från kalendern",
     "makeEvent": "Gör om till <b>Händelse</b> för att upprepa den",
-    "typeEvent": "Händelse",
     "repeatRemoved": "Upprepningen tas bort"
   },
   "selectionToolbar": {
-    "exitSelectionTooltip": "Avsluta markering",
     "exitSelection": "Avsluta markering",
-    "unpin": "Lossa",
-    "pin": "Fäst",
-    "archive": "Arkivera",
-    "unarchive": "Ta ur arkivet",
     "tag": "Tagga",
     "export": "Exportera",
-    "delete": "Radera",
-    "restore": "Återställ",
-    "deleteForever": "Radera för alltid",
     "more": "Fler åtgärder",
     "addTagPlaceholder": "Lägg till en tagg...",
     "noTagsFound": "Inga taggar hittades",
@@ -320,6 +265,7 @@
     "showTags": "Visa mapp och taggar",
     "showCalendar": "Visa kalender",
     "showCheckIn": "Visa incheckning",
+    "showMedication": "Visa medicin",
     "showWorkItems": "Visa objekt i <b>Arbete</b>",
     "showPersonalItems": "Visa objekt i <b>Privat</b>",
     "other": "Övrigt",
@@ -342,7 +288,6 @@
     "moodCalendar": "Visa humör i kalendern"
   },
   "backfillPopover": {
-    "calendarLabel": "Dagbokskalender",
     "today": "Idag",
     "chooseEntry": "Objekt den {{date}}"
   },
@@ -363,6 +308,7 @@
     "newNote": "Ny anteckning",
     "newTask": "Ny uppgift",
     "newKanban": "Ny kanbantavla",
+    "newDrawing": "Ny teckning",
     "newLogin": "Ny inloggning",
     "newJournal": "Nytt dagboksinlägg",
     "newFile": "Ny fil",
@@ -388,32 +334,24 @@
     "duplicate": "Duplicera",
     "moveToFolder": "Flytta till mapp",
     "exportAsMarkdown": "Exportera som Markdown",
-    "shareBurnAfterReading": "Dela och bränn efter läsning",
     "exportAsHtml": "Exportera som HTML",
-    "printSaveAsPdf": "Skriv ut / spara som PDF",
-    "moveToTrash": "Flytta till papperskorgen",
-    "newBookmark": "Nytt bokmärke",
     "newContact": "Ny kontakt",
-    "openBookmark": "Öppna",
     "copyBookmarkUrl": "Kopiera URL",
     "editBookmark": "Redigera bokmärke",
     "saveAsNote": "Spara som anteckning",
-    "openClippedNote": "Öppna anteckning",
     "openInTab": "Öppna i flik",
     "openInTabHint": "{{key}}-klick",
+    "openInTabHintMiddle": "Mittenklick",
     "closeTab": "Stäng flik",
     "closeOtherTabs": "Stäng andra flikar",
     "closeAllTabs": "Stäng alla flikar",
     "pinTab": "Fäst flik",
     "unpinTab": "Lossa flik",
-    "newEvent": "Ny händelse",
-    "quickAdd": "Snabbtillägg"
+    "newEvent": "Ny händelse"
   },
   "demoBanner": {
     "title": "Testa helt utan risk",
-    "description": "Ingenting sparas här. Skaffa din egen krypterade anteckningsbok, gratis.",
-    "cta": "Skapa konto",
-    "dismiss": "Avfärda"
+    "description": "Ingenting sparas här. Skaffa din egen krypterade anteckningsbok, gratis."
   },
   "markdown": {
     "title": "Markdown",
@@ -452,20 +390,17 @@
     "fileCount_other": "{{count}} filer",
     "railFolders": "Markdown-mappar",
     "railTags": "Markdown-taggar",
-    "allFiles": "Alla filer",
     "modeRich": "Formaterad",
     "modeSource": "Markdown",
     "reopenPrompt": "Din webbläsare behöver behörighet igen efter en omladdning. Mappen finns sparad, så det räcker med ett klick.",
     "reopenFolder": "Öppna {{name}} igen",
     "new": "Ny",
-    "delete": "Radera",
     "saveToNotes": "Spara i mina anteckningar",
     "createFailed": "Filen kunde inte skapas.",
     "deleteFailed": "Filen kunde inte flyttas till papperskorgen.",
     "importedToast": "”{{title}}” sparades i dina krypterade anteckningar. Originalfilen är orörd.",
     "deleteTitle": "Flytta till mappens papperskorg?",
     "deleteBody": "”{{name}}” flyttas till en .trash-mapp i din Markdown-mapp. Återställ den från filhanteraren om du ändrar dig.",
-    "deleteConfirm": "Flytta till papperskorgen",
     "explainTitle": "Din Markdown-mapp",
     "explainDone": "Uppfattat",
     "bannerTitle": "Avancerad Markdown-redigerare",
@@ -474,7 +409,6 @@
     "explainIntro": "Välj en mapp med .md- och .txt-filer - undermappar dyker upp automatiskt, ändringar sparas direkt, och inget konverteras",
     "chipPreview": "Live-förhandsgranskning",
     "chipTasks": "Uppgifter",
-    "chipTags": "Taggar",
     "chipTables": "Tabeller",
     "useAgent": "Ge AI-agenter tillgång till dina anteckningar",
     "useObsidian": "Samma filer i Obsidian eller Logseq",
@@ -502,7 +436,6 @@
     "assocWorking": "Frågar ditt system…",
     "copyPath": "Kopiera sökväg",
     "selectedCount": "{{selected}} av {{total}} markerade",
-    "selectAll": "Markera alla",
     "exitSelection": "Avsluta markering",
     "deleteManyTitle_one": "Flytta {{count}} fil till mappens papperskorg?",
     "deleteManyTitle_other": "Flytta {{count}} filer till mappens papperskorg?",
@@ -525,15 +458,11 @@
   "bookmarks": {
     "newBookmark": "Nytt bokmärke",
     "searchPlaceholder": "Sök bokmärken…",
-    "sortOptions": "Sorteringsalternativ",
     "quickAddPlaceholder": "Klistra in eller skriv en länk…",
     "urlLabel": "Bokmärke (URL)",
     "urlInvalid": "Ange en webbadress, som example.com eller https://example.com/page.",
     "urlDuplicate": "Ett annat bokmärke har redan den här URL:en, så ändringen sparades inte.",
-    "openAction": "Öppna",
     "copiedUrl": "Länk kopierad",
-    "moveToTrash": "Flytta till papperskorgen",
-    "rowMenu": "Fler åtgärder",
     "emptyNone": "Inga bokmärken än.",
     "emptyTitle": "Spara sidorna som är värda att behålla",
     "emptyAdd": "Lägg till bokmärke",
@@ -548,11 +477,9 @@
     "new": "Nytt"
   },
   "contacts": {
-    "new": "Ny",
     "searchPlaceholder": "Sök kontakter…",
-    "sortOptions": "Sorteringsalternativ",
     "emptyNone": "Inga kontakter än.",
-    "emptyTitle": "En adressbok som bara du kan läsa",
+    "emptyTitle": "En adressbok, krypterad på din enhet",
     "emptyAdd": "Lägg till en kontakt",
     "emptyImport": "Importera kontakter",
     "noMatches": "Inga träffar.",
@@ -571,15 +498,12 @@
     "company": "Företag",
     "department": "Avdelning",
     "jobTitle": "Titel",
-    "groupName": "Namn",
     "groupPhone": "Telefon",
     "groupEmail": "E-post",
     "groupAddress": "Adress",
     "groupWebsite": "Webbplats",
-    "groupProfile": "Profil",
     "groupDates": "Datum",
     "groupRelated": "Relaterade personer",
-    "groupNote": "Anteckning",
     "addPhone": "Lägg till telefon",
     "addEmail": "Lägg till e-post",
     "addWebsite": "Lägg till webbplats",
@@ -594,7 +518,6 @@
     "notePlaceholder": "Anteckningar om den här personen",
     "labelNone": "Etikett",
     "labelCustom": "Egen etikett…",
-    "removeRow": "Ta bort",
     "call": "Ring",
     "message": "Meddelande",
     "sendEmail": "Skicka e-post",
@@ -615,15 +538,8 @@
     "menuPersonal": "Personligt",
     "menuName": "Namn",
     "menuText": "Text",
-    "itemAddress": "Adress",
-    "itemWebsite": "Webbplats",
-    "itemProfile": "Profil",
-    "itemCompany": "Företag",
-    "itemJobTitle": "Titel",
-    "itemBirthday": "Födelsedag",
     "itemDate": "Datum",
     "itemRelated": "Relaterat namn",
-    "itemNickname": "Smeknamn",
     "itemNameParts": "Mellannamn, prefix, suffix",
     "itemPhonetic": "Fonetiskt namn",
     "itemNote": "Anteckning",
@@ -751,8 +667,10 @@
       "note": "Anteckningar",
       "task": "Uppgiftslistor",
       "journal": "Dagboksinlägg",
-      "contact": "Födelsedagar"
+      "contact": "Födelsedagar och datum"
     },
+    "birthdays": "Födelsedagar",
+    "contactDate": "{{name}}: {{label}}",
     "dragEnd": "Dra för att ändra slutdagen",
     "previousDay": "Föregående dag",
     "nextDay": "Nästa dag",
@@ -843,7 +761,6 @@
     "onDayAt": "Samma dag kl. {{time}}",
     "daysBeforeAt_other": "{{count}} dagar före kl. {{time}}",
     "custom": "Anpassad",
-    "add": "Lägg till",
     "max": "Upp till fem aviseringar.",
     "units": {
       "minutes": "minuter",
@@ -855,11 +772,9 @@
     "remove": "Ta bort {{alert}}",
     "reminder": "Påminnelse",
     "medication": "Medicinpåminnelse",
-    "open": "Öppna",
     "snooze": "Snooza 10 min",
     "offOnPhone": "Påminnelser är avstängda på den här telefonen",
     "turnOn": "Slå på",
-    "openSettings": "Öppna inställningar",
     "daysBeforeAt_one": "{{count}} dag före kl. {{time}}",
     "weeksBefore_one": "{{count}} vecka före",
     "daysBefore_one": "{{count}} dag före",
@@ -875,6 +790,14 @@
     "appendHintDetail": "Skriv >> och sedan början av namnet",
     "appendNone": "Ingen uppgiftslista eller anteckning att lägga till i än",
     "appendNoneDetail": "Skriv ett namn efter >> för att skapa en uppgiftslista med det namnet",
+    "cannotAdd": "Kan inte lägga till i {{title}}",
+    "blocked": {
+      "trash": "Den ligger i papperskorgen.",
+      "pin": "Den är skyddad av din PIN-kod. Öppna den för att lägga till.",
+      "readOnly": "Den är skrivskyddad.",
+      "board": "Det är en kanbantavla. Lägg till kort på tavlan.",
+      "archived": "Den är arkiverad. Ta ur arkivet för att lägga till."
+    },
     "linkGroup": "Spara den här länken",
     "linkDetail": {
       "bookmark": "Sparar adressen. Du namnger den sedan.",
@@ -894,6 +817,7 @@
       "task": "Ny uppgiftslista",
       "journal": "Nytt dagboksinlägg",
       "kanban": "Ny kanbantavla",
+      "drawing": "Ny teckning",
       "login": "Ny inloggning",
       "file": "Ladda upp en fil",
       "contact": "Ny kontakt",
@@ -926,8 +850,8 @@
       },
       "length": {
         "label": "Längd",
-        "examples": "i 30 min · i 3 dagar · fre till sön",
-        "insert": "i 1 tim"
+        "examples": "15:00 i 30 min · i 3 dagar · fre till sön",
+        "insert": "15:00 i 1 tim"
       },
       "repeat": {
         "label": "Upprepa",
@@ -973,17 +897,14 @@
     "backToToday": "Tillbaka till i dag",
     "options": "Alternativ för incheckning",
     "skipToday": "Hoppa över i dag",
-    "hide": "Dölj det här kortet",
+    "hide": "Dölj",
     "change": "Ändra humör",
     "saved": "Sparat",
     "chooseTrackers": "Välj mätvärden",
-    "settings": "Inställningar för incheckning",
     "skipped": "Överhoppad för i dag.",
     "startOver": "Börja om",
     "cleared": "Incheckningen rensad.",
     "hidden": "Kortet är dolt. Visa incheckning i listinställningarna slår på det igen.",
-    "undo": "Ångra",
-    "done": "Klar",
     "write": "Skriv om i dag",
     "writeOn": "Skriv om {{date}}",
     "streak": "Dag {{n}} i rad",
@@ -997,19 +918,25 @@
     "showThem": "Visa",
     "hiddenCount_one": "{{count}} incheckning är dold."
   },
+  "medicationCard": {
+    "title": "Medicinuppföljning",
+    "options": "Alternativ för medicin",
+    "edit": "Ändra dagens medicin",
+    "hidden": "Kortet är dolt. Slå på det igen i listinställningarna eller under Inställningar > Mätvärden > Medicin."
+  },
   "clipper": {
-    "saveAsNote": "Spara som anteckning",
     "saving": "Sparar som anteckning…",
     "stepPage": "Laddar ner sidan",
     "stepPictures": "Sparar bilder, {{done}} av {{total}}",
-    "openNote": "Öppna anteckning",
     "alreadySaved": "Den här sidan är redan sparad som anteckning ({{date}}).",
     "savedOn": "Sparad som anteckning {{date}}",
-    "windowTitle": "Klipp webbsida",
     "addressLabel": "Webbadress",
     "addressPlaceholder": "Klistra in en länk…",
     "savePictures": "Spara bilder",
     "savePicturesHint": "Upp till 20 bilder, lagrade med anteckningen. De räknas mot din lagring.",
+    "extensionTipTitle": "Klipp från webbläsaren för ett bättre resultat",
+    "extensionTip": "Webbläsartillägget sparar sidan som du ser den, även sidor som kräver inloggning.",
+    "extensionTipSetUp": "Konfigurera tillägget",
     "downloading": "Laddar ner sidan…",
     "downloadingPictures": "Laddar ner bilder, {{done}} av {{total}}",
     "picturesLine_other": "{{count}} bilder · {{size}}, sparade med anteckningen",
@@ -1042,5 +969,166 @@
     "until": "Till och med {{day}}",
     "noAlert": "Ingen avisering",
     "endsLater": "Slutar en annan dag"
+  },
+  "apps": {
+    "railLabel": "Tillägg",
+    "title": "Webbläsartillägg",
+    "subtitle": "Webbklippare och lösenordshanterare i Chrome, Firefox och Edge. Tillägget har aldrig nyckeln som öppnar dina anteckningar.",
+    "stepInstall": "Installera tillägget",
+    "stepFeatures": "Välj vad det får göra",
+    "stepConnect": "Anslut",
+    "makeCode": "Skapa en kod",
+    "connectHint": "Skapa en engångskod och klistra in den i tillägget.",
+    "thisBrowser": "Den här webbläsaren",
+    "otherApps": "Appar för dator och telefon:",
+    "desktopAll": "Alla nedladdningar",
+    "extensionComputersOnly": "Tillägget är för Chrome, Firefox och Edge på en dator.",
+    "demoSignUp": "Skapa ett konto för att ansluta en webbläsare"
+  },
+  "extensionConnect": {
+    "clips": "Webbklippare",
+    "clipsHint": "Spara webbplatser som anteckningar.",
+    "loginsHint": "Inloggningar, kort, SSH-nycklar och bokmärken för webbplatsen du är på, bara kopiering. Låst med en egen PIN eller lösenkod.",
+    "pickOne": "Slå på minst en.",
+    "codeLabel": "Kod till tillägget",
+    "oneUse": "Fungerar en gång, i 10 minuter.",
+    "usedBy": "{{name}} använde den här koden och är ansluten. Om det inte var du kan du ta bort den nedan.",
+    "newCode": "Ny kod",
+    "tooManyCodes": "För många koder väntar. Använd en av dem, eller vänta 10 minuter.",
+    "tooManyExtensions": "Det här kontot har 10 anslutna webbläsare, det högsta antalet. Ta bort en först.",
+    "keyElsewhere": "Nyckeln till dina inloggningar finns på en annan av dina enheter. Öppna PrivacyNotes där och låt det synka, försök sedan igen.",
+    "failed": "Det gick inte att skapa en kod. Kontrollera anslutningen och försök igen."
+  },
+  "dashboard": {
+    "taskReadOnly": "Den här anteckningen är skrivskyddad. Stäng av Skrivskyddad i menyn Anteckningsalternativ för att bocka av dess uppgifter.",
+    "addWidget": "Lägg till widget",
+    "catalogTitle": "Lägg till en widget",
+    "layouts": "Layouter",
+    "layoutChanged": "Layouten ändrad",
+    "full": "Hem är fullt. Ta bort en widget först.",
+    "added": "Tillagd på Hem",
+    "removed": "Borttagen från Hem",
+    "showOnHome": "Visa på Hem",
+    "removeFromHome": "Ta bort från Hem",
+    "resize": "Ändra storlek på {{name}}",
+    "narrower": "Smalare",
+    "taller": "Högre",
+    "shorter": "Lägre",
+    "moveEarlier": "Flytta tidigare",
+    "moveLater": "Flytta senare",
+    "chooseNote": "Välj en anteckning",
+    "chooseTag": "Välj en tagg",
+    "chooseFolder": "Välj en mapp",
+    "chooseTracker": "Välj ett mätvärde",
+    "choose": "Välj",
+    "gone": "Finns inte längre",
+    "otherSpace": "I det andra utrymmet",
+    "proLocked": "Ingår i Pro",
+    "noneToChoose": "Inget att välja än",
+    "headerEvents_one": "{{formatted}} händelse i dag",
+    "headerEvents_other": "{{formatted}} händelser i dag",
+    "headerTasks_one": "{{formatted}} öppen uppgift",
+    "headerTasks_other": "{{formatted}} öppna uppgifter",
+    "startToday": "Börja dagens inlägg",
+    "groups": {
+      "keep": "Saker du sparar"
+    },
+    "layout": {
+      "everyday": "Vardag",
+      "planner": "Planerare",
+      "writer": "Skribent"
+    },
+    "w": {
+      "checkIn": {
+        "name": "Incheckning",
+        "help": "Hur du mår i dag, och dina mätvärden"
+      },
+      "calendar": {
+        "help": "Månaden, med prickar för inlägg och händelser"
+      },
+      "upcoming": {
+        "name": "Kommande",
+        "help": "I dag och de kommande 7 dagarna"
+      },
+      "today": {
+        "name": "Dagens inlägg",
+        "help": "Dagens dagboksinlägg, eller en början"
+      },
+      "tasks": {
+        "name": "Öppna uppgifter",
+        "help": "Uppgifter som inte är avbockade i dina anteckningar"
+      },
+      "recent": {
+        "name": "Nyligen redigerade",
+        "help": "Objekten du arbetade med senast"
+      },
+      "pinned": {
+        "help": "Dina fästa objekt"
+      },
+      "note": {
+        "name": "En anteckning",
+        "help": "En anteckning du väljer, på Hem"
+      },
+      "tag": {
+        "name": "En tagg",
+        "help": "De nyaste objekten med en viss tagg"
+      },
+      "folder": {
+        "name": "En mapp",
+        "help": "De nyaste objekten i en viss mapp"
+      },
+      "onThisDay": {
+        "name": "Den här dagen",
+        "help": "Dagboksinlägg från tidigare år"
+      },
+      "week": {
+        "help": "Ord, aktiva dagar, objekt och incheckningar"
+      },
+      "streak": {
+        "help": "Dagar i rad som du har skrivit"
+      },
+      "checkInStreak": {
+        "help": "Dagar i rad som du har checkat in"
+      },
+      "rhythm": {
+        "name": "Din rytm",
+        "help": "26 veckor av skrivande och humör"
+      },
+      "milestone": {
+        "name": "Nästa milstolpe",
+        "help": "Hur nära nästa är"
+      },
+      "tracker": {
+        "name": "Ett mätvärde",
+        "help": "Ett mätvärde: dess siffra och dess dagar"
+      },
+      "weekRecap": {
+        "help": "Din vecka, på ett kort"
+      },
+      "files": {
+        "name": "Senaste filer",
+        "help": "Dina nyaste bilder och filer"
+      },
+      "bookmarks": {
+        "help": "Dina nyaste bokmärken"
+      },
+      "birthdays": {
+        "help": "Födelsedagar de kommande 30 dagarna"
+      }
+    },
+    "empty": {
+      "upcoming": "Inget de kommande 7 dagarna",
+      "tasks": "Inga öppna uppgifter",
+      "recent": "Inget här än",
+      "pinned": "Inget fäst än",
+      "tag": "Inga objekt med den här taggen",
+      "folder": "Inget i den här mappen",
+      "onThisDay": "Inga inlägg den här dagen tidigare år",
+      "files": "Inga filer än",
+      "bookmarks": "Inga bokmärken än",
+      "birthdays": "Inga födelsedagar de kommande 30 dagarna",
+      "tracker": "Inget loggat än",
+      "milestone": "Alla milstolpar är nådda"
+    }
   }
 }

@@ -40,7 +40,7 @@
  * per field, so a half-finished language never seeds an empty note.
  *
  * Seed prose is translated once per locale on a manual trigger
- * (`ops/docs/i18n-spec.md` section 3), and every supported locale ships
+ * (`docs/contrib/i18n-spec.md` section 3), and every supported locale ships
  * a full seed directory today.
  */
 

@@ -138,23 +138,23 @@ export function FindBar({ editor, focusTick, initialQuery, startQuery, onSwap, s
 
   return (
     <div className="pointer-events-auto mt-1 me-2 flex items-center gap-0.5 rounded-lg border border-divider bg-surface-1 shadow-lg px-1.5 py-1">
-      <MagnifyingGlass size={15} className="text-pn-muted shrink-0 ms-0.5 me-0.5" />
+      <MagnifyingGlass className="text-pn-muted shrink-0 ms-0.5 me-0.5" />
       <input
         ref={inputRef}
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={onKeyDown}
-        placeholder={t('find.placeholder')}
-        aria-label={t('find.label')}
+        placeholder={t('common:palette.commands.find')}
+        aria-label={t('common:palette.commands.find')}
         spellCheck={false}
         autoComplete="off"
-        className="w-36 sm:w-44 bg-transparent text-sm text-pn placeholder:text-pn-muted outline-none px-1"
+        className="w-36 sm:w-44 bg-transparent text-body text-pn placeholder:text-pn-muted outline-none px-1"
       />
       <MatchNav count={count} noHits={noHits} canStep={info.total > 0} onStep={go} />
       {onSwap && <ReplaceToggle open={false} pro={swapPro} onClick={() => onSwap(query)} />}
       <div className="w-px h-5 bg-divider mx-0.5 shrink-0" aria-hidden="true" />
-      <HoverLabel label={t('find.closeTitle')} keys={keyText('find')} position="below-end">
+      <HoverLabel label={t('common:actions.close')} keys={keyText('find')} position="below-end">
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
@@ -165,7 +165,7 @@ export function FindBar({ editor, focusTick, initialQuery, startQuery, onSwap, s
           aria-label={t('find.close')}
           className={BAR_BTN}
         >
-          <X size={15} />
+          <X />
         </button>
       </HoverLabel>
     </div>

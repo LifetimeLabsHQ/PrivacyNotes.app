@@ -7,7 +7,7 @@ import { CustomTrackerGlyph } from './CustomTrackerGlyph';
 import { ScaleTiles } from '../MoodScale';
 import { ChoiceGrid, NumberStepper, PanelQuestion } from './panelUI';
 
-// Spec: ops/docs/design-decisions.md (number tracker bounds - prevents scientific-notation display)
+// Spec: docs/internal/design-decisions.md (number tracker bounds - prevents scientific-notation display)
 const MAX_NUMBER = 1e12;
 
 /** Clamp to a sane magnitude and round to 4 decimals so the value never stringifies to exponential form. */

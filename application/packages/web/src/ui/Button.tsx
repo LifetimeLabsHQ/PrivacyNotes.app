@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { HoverLabel } from '../HoverLabel';
 import { X } from '../icons';
 import { ACTIONS, type ActionName } from './actions';
-import { IconUpgrade } from '../UpgradeModal';
+import { IconUpgrade } from '../proMark';
 import { SETTINGS_BTN, SETTINGS_BTN_DANGER, SETTINGS_BTN_PRIMARY, SETTINGS_BTN_UPGRADE } from '../settingsUI';
 
-type Variant = 'secondary' | 'accent' | 'primary' | 'danger' | 'upgrade';
+type Variant = 'secondary' | 'accent' | 'primary' | 'danger' | 'dangerSoft' | 'upgrade';
 
 // Settings callouts also use Button; read their tokens after modules initialize.
 function buttonLook(variant: Variant): string {
@@ -15,13 +15,14 @@ function buttonLook(variant: Variant): string {
     case 'accent': return `${SETTINGS_BTN} !border-accent/35 bg-accent/10 !text-accent-strong hover:!bg-accent/15`;
     case 'primary': return SETTINGS_BTN_PRIMARY;
     case 'danger': return SETTINGS_BTN_DANGER;
+    case 'dangerSoft': return `${SETTINGS_BTN} !border-danger/40 bg-danger/10 !text-danger hover:!bg-danger/15`;
     case 'upgrade': return SETTINGS_BTN_UPGRADE;
   }
 }
 
 /**
  * @catalog Button
- * use: every labeled action. Name it with `action` (save, add, create, done, confirm, apply, next, restore, delete, remove, cancel, back, edit, rename, copy, search, open): that brings the one icon, the label and the look of that action (`ui/actions.ts`), so a Save is the same everywhere. Words that say more ("Add medication") go in `children`; the icon stays. `icon` and `variant` only for an action the map does not have. One size for every button, everywhere; `pro` adds the rocket. The accent variant is a soft tint for a prominent secondary action beside a primary Save.
+ * use: every labeled action. Name it with `action` (save, add, create, done, confirm, apply, next, restore, delete, remove, cancel, back, edit, rename, copy, search, open): that brings the one icon, the label and the look of that action (`ui/actions.ts`), so a Save is the same everywhere. Words that say more ("Add medication") go in `children`; the icon stays. `icon` and `variant` only for an action the map does not have. One size for every button, everywhere; `pro` adds the rocket. The accent variant is a soft tint for a prominent secondary action beside a primary Save; dangerSoft is the same tint in red, for a destructive answer beside a safer primary one (Delete forever beside Move to Trash).
  * never: a <button> with its own border, fill or padding classes; a Save, Add or Remove without its icon; a second icon for an action the map has; a smaller or larger button.
  */
 export function Button({
@@ -50,7 +51,7 @@ export function Button({
   const Glyph = spec?.icon;
   return (
     <button type={type} {...rest} className={`${buttonLook(look)}${className ? ` ${className}` : ''}`}>
-      {Glyph ? <Glyph size={15} aria-hidden="true" className="shrink-0" /> : icon}
+      {Glyph ? <Glyph aria-hidden="true" className="shrink-0" /> : icon}
       {children ?? (spec?.label ? t(`actions.${spec.label}`) : null)}
       {pro && <IconUpgrade size={12} onFill={look !== 'secondary'} />}
     </button>
@@ -101,7 +102,7 @@ export function CloseButton({ onClick, disabled, className = '' }: { onClick: ()
   const { t } = useTranslation('common');
   return (
     <IconButton label={t('actions.close')} position="below-end" onClick={onClick} disabled={disabled} className={className} data-close-button="">
-      <X size={18} aria-hidden="true" />
+      <X aria-hidden="true" />
     </IconButton>
   );
 }

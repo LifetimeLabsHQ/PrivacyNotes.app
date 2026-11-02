@@ -345,15 +345,15 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
               key={tag}
               type="button"
               onClick={() => selectTag(tag)}
-              className={`w-full flex items-center gap-2 px-3 text-sm cursor-pointer transition-colors ${
+              className={`w-full flex items-center gap-2 px-3 text-body cursor-pointer transition-colors ${
                 i === highlightIndex
                   ? 'bg-track'
                   : 'hover:bg-pn/5'
               } ${isMobile ? 'min-h-[44px] py-2.5' : 'py-2'}`}
             >
-              <span className="text-pn-muted text-xs">#</span>
+              <span className="text-pn-muted text-small">#</span>
               <span className="text-pn truncate">{boldPrefix(tag)}</span>
-              <span className="ml-auto text-xs text-pn-muted tabular-nums shrink-0">
+              <span className="ml-auto text-small text-pn-muted tabular-nums shrink-0">
                 {count}
               </span>
             </button>
@@ -366,13 +366,13 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
               <button
                 type="button"
                 onClick={() => commit()}
-                className={`w-full flex items-center gap-2 px-3 text-sm cursor-pointer transition-colors text-pn-muted ${
+                className={`w-full flex items-center gap-2 px-3 text-body cursor-pointer transition-colors text-pn-muted ${
                   highlightIndex === suggestions.length
                     ? 'bg-track'
                     : 'hover:bg-pn/5'
                 } ${isMobile ? 'min-h-[44px] py-2.5' : 'py-2'}`}
               >
-                <span className="text-xs">+</span>
+                <span className="text-small">+</span>
                 <span>{t('tagInput.create', { tag: normalizedDraft })}</span>
               </button>
             </>
@@ -412,9 +412,9 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
                follows every theme. Round pills here and a square-cornered
                folder chip in the leading slot are the same split as list vs
                container: many labels vs one location.
-               Spec: ops/docs/archive/ui-patterns.md (editor tag row) */
+               Spec: docs/internal/design/ui-patterns.md (editor tag row) */
             data-tag-chip={tag}
-            className="group inline-flex shrink-0 items-center gap-1 text-xs px-2.5 py-0.5 rounded-full bg-accent/10 text-accent-strong hover:bg-accent/20 transition whitespace-nowrap"
+            className="group inline-flex shrink-0 items-center gap-1 text-small px-2.5 py-0.5 rounded-full bg-accent/10 text-accent-strong hover:bg-accent/20 transition whitespace-nowrap"
             dir="auto"
           >
             <span
@@ -426,7 +426,7 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
             </span>
             <button
               onClick={() => remove(tag)}
-              className="text-accent/60 hover:text-danger transition text-[11px] leading-none"
+              className="text-accent/60 hover:text-danger transition text-meta leading-none"
               aria-label={t('tagInput.removeTag', { tag })}
               tabIndex={-1}
             >
@@ -450,7 +450,7 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
           enterKeyHint="done"
           autoComplete="off"
           spellCheck={spellcheck ? undefined : false}
-          className="flex-1 min-w-[80px] shrink-0 bg-transparent text-xs focus:outline-none placeholder:text-pn-muted py-0.5"
+          className="flex-1 min-w-[80px] shrink-0 bg-transparent text-small focus:outline-none placeholder:text-pn-muted py-0.5"
         />
       </div>
       {trailing}

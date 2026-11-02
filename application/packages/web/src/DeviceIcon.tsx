@@ -19,7 +19,7 @@ import { deviceLook, type DeviceKind, type DeviceOs } from './deviceLook';
  * The OS logo in its brand color, with a badge for the kind of device. The
  * brand greens and yellows are darker on a light theme, where the official
  * marks fall under 3:1 against a light surface.
- * Spec: ops/docs/archive/ui-patterns.md (section 142, Registered devices row)
+ * Spec: docs/internal/design/ui-patterns.md (section 142, Registered devices row)
  */
 const OS_LOGO: Record<DeviceOs, { Icon: ComponentType<IconProps>; color: string }> = {
   apple: { Icon: AppleLogo, color: 'text-pn' },
@@ -43,7 +43,7 @@ export function DeviceIcon({ row }: { row: Pick<DeviceRow, 'platform' | 'device_
   const Badge = KIND_BADGE[kind];
   return (
     <span aria-hidden="true" className="relative shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-surface-2 border border-divider">
-      <Icon size={18} weight={os === 'other' ? 'bold' : 'fill'} className={color} />
+      <Icon weight={os === 'other' ? 'bold' : 'fill'} className={color} />
       <span className="absolute -bottom-1 -end-1 flex items-center justify-center w-4 h-4 rounded-full bg-surface-1 border border-divider text-pn-muted">
         <Badge size={9} weight="fill" />
       </span>

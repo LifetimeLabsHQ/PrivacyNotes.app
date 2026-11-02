@@ -9,7 +9,7 @@
  * Typing always wins: a key that types a character on this keyboard runs
  * nothing.
  *
- * Spec: ops/docs/archive/keyboard-shortcuts.md (section 4.3, the matcher rules)
+ * Spec: docs/internal/specs/keyboard-shortcuts.md (section 4.3, the matcher rules)
  */
 
 import { COMMAND_KEYS, bindingText, commandKeyText, type CommandId, type KeyBinding, type KeyOs } from './commandKeys';

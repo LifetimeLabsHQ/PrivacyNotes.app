@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * returns cannot know whether the clipboard still holds our secret
  * or something they copied elsewhere in the meantime (reading it
  * back needs a permission prompt), so it risks eating user data.
- * Removed 2026-07-24; if reviving, see ops/docs/roadmap.md (native
+ * Removed 2026-07-24; if reviving, see docs/internal/roadmap.md (native
  * read-compare-clear via the Tauri clipboard-manager plugin is the
  * only honest path, desktop-only).
  * ──────────────────────────────────────────────────────────────── */

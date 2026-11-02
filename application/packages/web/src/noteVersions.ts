@@ -31,7 +31,7 @@ const TABLE = 'note_versions';
 /**
  * Rows the server's BEFORE INSERT trigger keeps per note. The demo path
  * below enforces the same number itself, so the two behave alike.
- * Spec: ops/docs/pro-features.md (Note history row)
+ * Spec: docs/internal/pro-features.md (Note history row)
  */
 const MAX_VERSIONS = 50;
 
@@ -89,6 +89,103 @@ export type CreateNoteVersionResult =
   | { ok: false; code: string; message: string };
 
 /**
+ * Private copy of the key for one seal, or null once sign-out has zeroed the
+ * shared buffer in place. A version sealed under the zeroed buffer is
+ * readable by anyone who reads the table. Same pattern as imageStore.ts and
+ * sync.ts.
+ */
+function liveKey(encryptionKey: Uint8Array): Uint8Array | null {
+  const copy = new Uint8Array(encryptionKey);
+  return copy.every((b) => b === 0) ? null : copy;
+}
+
+/** A version's payload, encrypted with the account key as the server row holds it. */
+function sealVersion(note: LocalNote, encryptionKey: Uint8Array): { ciphertext: string; nonce: string } {
+  const { ciphertext, nonce } = encryptNote(
+    {
+      title: note.title,
+      body: note.body,
+      tags: note.tags,
+      trashed: note.trashed === 1,
+      starred: note.starred === 1,
+      locked: note.locked === 1,
+      pinProtected: note.pinProtected === 1,
+      type: note.type,
+      ...(note.type === 'login' ? { trackers: loginOf(note) } : journalOf(note)),
+    },
+    encryptionKey,
+  );
+  return { ciphertext: bytesToBase64(ciphertext), nonce: bytesToBase64(nonce) };
+}
+
+/** The most versions the queue keeps; past it the oldest go. */
+const QUEUE_MAX = 200;
+
+/**
+ * Keep a version the server could not take yet: the device was offline, or
+ * the note has not reached the server (a version row needs its note). The
+ * in-session retry held one such state in memory, and a reload lost even that,
+ * so most of what was written offline had no History (external report,
+ * 2026-10-24, bug report 2). `drainVersionQueue` sends them after a sync pass.
+ */
+export async function queueNoteVersion(note: LocalNote, encryptionKey: Uint8Array, hash: string): Promise<void> {
+  if (isDemoMode()) return;
+  const key = liveKey(encryptionKey);
+  if (!key) return;
+  try {
+    if (await db.versionQueue.where('hash').equals(hash).count()) return;
+    await db.versionQueue.add({ noteId: note.id, hash, ...sealVersion(note, key), queuedAt: new Date().toISOString() });
+    const ids = await db.versionQueue.toCollection().primaryKeys();
+    if (ids.length > QUEUE_MAX) await db.versionQueue.bulkDelete(ids.slice(0, ids.length - QUEUE_MAX));
+  } catch (err) {
+    console.warn('[note_versions] queue failed:', err);
+  }
+}
+
+/** A state that reached the server leaves the queue. */
+export async function unqueueNoteVersion(hash: string): Promise<void> {
+  await db.versionQueue.where('hash').equals(hash).delete().catch(() => 0);
+}
+
+/** Whether a version is waiting: the orphan reconcile deletes nothing then,
+ *  because a waiting version may name a picture no saved one names. */
+export async function hasQueuedVersions(): Promise<boolean> {
+  return (await db.versionQueue.count()) > 0;
+}
+
+/**
+ * Send the queued versions, oldest first, whose note the server holds. Stops
+ * at the first request that fails for the network, to try again after the next
+ * pass. A refusal for good (Pro lapsed, the note gone) drops that version.
+ */
+export async function drainVersionQueue(supabase: SupabaseClient, pubkey: string): Promise<void> {
+  if (isDemoMode() || isServerWriteBlocked()) return;
+  const queued = await db.versionQueue.orderBy('id').toArray();
+  for (const v of queued) {
+    const note = await db.notes.get(v.noteId);
+    if (!note) {
+      await db.versionQueue.delete(v.id!);
+      continue;
+    }
+    if (note.syncedNonce == null) continue;
+    const { error } = await supabase.from(TABLE).insert({
+      note_id: v.noteId,
+      user_pubkey: pubkey,
+      ciphertext: v.ciphertext,
+      nonce: v.nonce,
+    });
+    // 42501: Pro lapsed. 23503: the note left the server. 23514: over the
+    // size cap. None of them passes on a retry.
+    if (!error || ['42501', '23503', '23514'].includes(error.code ?? '')) {
+      await db.versionQueue.delete(v.id!);
+      continue;
+    }
+    console.warn('[note_versions] queued send failed, kept for the next pass:', error.message);
+    return;
+  }
+}
+
+/**
  * Write a new version snapshot for `note`. Returns a structured
  * result so the caller can detect the Pro-lapsed RLS rejection
  * (code 42501) and surface a one-time toast. Other errors are
@@ -132,26 +229,15 @@ export async function createNoteVersion(
       return { ok: false, code: '', message: (err as Error).message };
     }
   }
+  const key = liveKey(encryptionKey);
+  if (!key) return { ok: false, code: 'signed_out', message: 'encryption key cleared' };
   try {
-    const { ciphertext, nonce } = encryptNote(
-      {
-        title: note.title,
-        body: note.body,
-        tags: note.tags,
-        trashed: note.trashed === 1,
-        starred: note.starred === 1,
-        locked: note.locked === 1,
-        pinProtected: note.pinProtected === 1,
-        type: note.type,
-        ...(note.type === 'login' ? { trackers: loginOf(note) } : journalOf(note)),
-      },
-      encryptionKey
-    );
+    const { ciphertext, nonce } = sealVersion(note, key);
     const { error } = await supabase.from(TABLE).insert({
       note_id: note.id,
       user_pubkey: pubkey,
-      ciphertext: bytesToBase64(ciphertext),
-      nonce: bytesToBase64(nonce),
+      ciphertext,
+      nonce,
     });
     if (error) {
       console.error('[note_versions] insert failed:', error);

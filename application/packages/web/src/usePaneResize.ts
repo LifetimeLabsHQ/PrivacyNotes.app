@@ -42,7 +42,7 @@
  * keeps its session-only xl reseed; the stored width simply applies
  * whenever the pane is expanded.
  *
- * Spec: ops/docs/design-decisions.md (pane resize), ops/docs/archive/ui-patterns.md section 56
+ * Spec: docs/internal/design-decisions.md (pane resize), docs/internal/design/ui-patterns.md section 56
  */
 import { useEffect, useRef, type RefObject } from 'react';
 import { closeTopAnchoredOverlay } from './useEscapeToClose';
@@ -53,7 +53,7 @@ import { closeTopAnchoredOverlay } from './useEscapeToClose';
 // guarantee the editor keeps a usable column at every window size; they are
 // duplicated in the pane className strings in NotesView
 // (min(var(...), 420px, 30vw) / min(var(...), 620px, 40vw)).
-// Spec: ops/docs/design-decisions.md (pane resize clamps)
+// Spec: docs/internal/design-decisions.md (pane resize clamps)
 export const SIDEBAR_WIDTH_DEFAULT = 240;
 export const SIDEBAR_WIDTH_MIN = 200;
 export const SIDEBAR_WIDTH_MAX = 420;
@@ -83,7 +83,7 @@ export const LIST_VIEWPORT_CAP = 0.4;
 // rendered width - so the grid remainder can never fall below the floor
 // no matter which caps bind. The formulas live in the --pn-* render vars
 // on NotesView's root div (reserves derived in NotesView.tsx).
-// Spec: ops/docs/design-decisions.md (pane resize clamps)
+// Spec: docs/internal/design-decisions.md (pane resize clamps)
 export const EDITOR_DOCK_DEFAULT = 830;
 export const EDITOR_DOCK_MIN = 480;
 export const EDITOR_DOCK_STORE_MAX = 1600;
@@ -92,19 +92,19 @@ export const GRID_DOCK_MIN = 320;
 // match the `w-3` on all six strip buttons in NotesView (Tailwind only sees
 // literal class strings, so the number cannot be interpolated there). The
 // docked-grid clamp system reserves TWO of them, hence STRIPS_W.
-// Spec: ops/docs/design-decisions.md (pane resize clamps)
+// Spec: docs/internal/design-decisions.md (pane resize clamps)
 const STRIP_W = 12;
 export const STRIPS_W = STRIP_W * 2;
 // Derived reserves for the docked-grid clamp system. DOCK_SIDEBAR_RESERVE caps
 // the sidebar (strips + full grid floor + editor min); DOCK_GRID_RESERVE is what
 // the grid-floor formula subtracts (sidebar min + strips + editor min).
-// Spec: ops/docs/design-decisions.md (pane resize clamps)
+// Spec: docs/internal/design-decisions.md (pane resize clamps)
 export const DOCK_SIDEBAR_RESERVE = STRIPS_W + GRID_DOCK_MIN + EDITOR_DOCK_MIN;
 export const DOCK_GRID_RESERVE = SIDEBAR_WIDTH_MIN + STRIPS_W + EDITOR_DOCK_MIN;
 const DRAG_THRESHOLD_PX = 4;
 const KEY_STEP_PX = 16;
 // How far past the limit the pointer travels before a release collapses.
-// Spec: ops/docs/archive/ui-patterns.md section 56
+// Spec: docs/internal/design/ui-patterns.md section 56
 const SNAP_PX = 56;
 
 type DragState = {
@@ -322,7 +322,7 @@ export function usePaneResize(cfg: {
  * past the snap distance, released. The pane is not mounted, so there is no
  * width to show during the drag; the strip's accent line says "let go and it
  * opens", and the pane opens at its stored width.
- * Spec: ops/docs/archive/ui-patterns.md section 56
+ * Spec: docs/internal/design/ui-patterns.md section 56
  */
 export function useExpandDrag(onExpand: () => void, direction: 1 | -1) {
   const drag = useRef<{ pointerId: number; startX: number; el: HTMLElement; ready: boolean } | null>(null);

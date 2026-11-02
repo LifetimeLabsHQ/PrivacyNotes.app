@@ -7,24 +7,27 @@
  * help-page.ts evaluates this file together with commandKeys.ts (the import
  * below is its only one), so it MUST stay free of other imports.
  *
- * `label` and `title` hold the English text. The in-app Hotkeys tab and the
+ * `label` and `title` hold the English text. Settings > Hotkeys and the
  * cheat sheet show them as they are, in English on purpose, so both keep one
  * layout. `i18nKey` is a stable name for a row or a group.
  *
- * Spec: ops/docs/archive/keyboard-shortcuts.md (sections 4.5 and 4.6)
+ * Spec: docs/internal/specs/keyboard-shortcuts.md (sections 4.5 and 4.6)
  */
 
-import { bindingCaps, visibleBindings, type CommandId, type KeyOs } from './commandKeys';
+import { bindingApplies, bindingCaps, visibleBindings, type CommandId, type KeyBinding, type KeyOs } from './commandKeys';
 
 export type HotkeyRow = {
   /** The commands the row shows, joined by " / " (J / K). */
   commands: CommandId[];
+  /** Keys another component owns (the drawing canvas), shown as they are
+   *  in place of `commands`: they never run through the app's handler. */
+  bindings?: readonly KeyBinding[];
   /** Show the first and the last key of the one command as a range (⌥⌘1 – ⌥⌘6). */
   range?: boolean;
   label: string;
   i18nKey: string;
 };
-type HotkeyGroup = { title: string; i18nKey: string; rows: HotkeyRow[] };
+export type HotkeyGroup = { title: string; i18nKey: string; rows: HotkeyRow[] };
 
 /** The help rows. Order by how often they are reached for, not strictly by category. */
 export const HOTKEY_GROUPS: HotkeyGroup[] = [
@@ -58,13 +61,14 @@ export const HOTKEY_GROUPS: HotkeyGroup[] = [
       { commands: ['quickAdd'], label: 'Quick add: a title with a day and a time', i18nKey: 'quickAdd' },
       // One row, so the printed sheet stays on one page.
       { commands: ['calendarToday', 'calendarDay', 'calendarWeek', 'calendarMonth', 'calendarNew'], label: 'Calendar: today / day / week / month / new', i18nKey: 'calendarKeys' },
-      { commands: ['moveToTrash'], label: 'Move note to trash', i18nKey: 'moveToTrash' },
+      // One row, so the printed sheet stays on one page.
+      { commands: ['moveToTrash', 'deleteAsk'], label: 'Delete / ask', i18nKey: 'moveToTrash' },
     ],
   },
   {
     // Mouse gestures on a list row or grid tile. Cmd-click is the platform's
     // multi-select, so opening a tab takes Option-click, the one modifier a
-    // row leaves free. Spec: ops/docs/archive/note-tabs.md (section 2)
+    // row leaves free. Spec: docs/internal/specs/note-tabs.md (section 2)
     title: 'Lists',
     i18nKey: 'lists',
     rows: [
@@ -148,6 +152,50 @@ export const HOTKEY_GROUPS: HotkeyGroup[] = [
   },
 ];
 
+/**
+ * The drawing canvas's own keys (Excalidraw 0.18.1), in a window of their
+ * own (drawing/DrawingHotkeys.tsx): they work while the canvas has the
+ * focus, where a single letter is the canvas's. Never on the printed sheet.
+ * Checked against Excalidraw's code; tests/excalidrawContract.test.ts pins
+ * the version. Spec: docs/internal/specs/drawing.md (section 0, Keys)
+ */
+export const DRAWING_HOTKEY_GROUPS: HotkeyGroup[] = [
+  {
+    title: 'Tools',
+    i18nKey: 'drawTools',
+    rows: [
+      { commands: [], bindings: [{ key: 'v' }, { key: '1' }], label: 'Select', i18nKey: 'drawSelect' },
+      { commands: [], bindings: [{ key: 'h' }], label: 'Move the canvas (hand)', i18nKey: 'drawHand' },
+      { commands: [], bindings: [{ key: 'r' }, { key: '2' }], label: 'Rectangle', i18nKey: 'drawRectangle' },
+      { commands: [], bindings: [{ key: 'd' }, { key: '3' }], label: 'Diamond', i18nKey: 'drawDiamond' },
+      { commands: [], bindings: [{ key: 'o' }, { key: '4' }], label: 'Ellipse', i18nKey: 'drawEllipse' },
+      { commands: [], bindings: [{ key: 'a' }, { key: '5' }], label: 'Arrow', i18nKey: 'drawArrow' },
+      { commands: [], bindings: [{ key: 'l' }, { key: '6' }], label: 'Line', i18nKey: 'drawLine' },
+      { commands: [], bindings: [{ key: 'p' }, { key: '7' }], label: 'Pen', i18nKey: 'drawPen' },
+      { commands: [], bindings: [{ key: 't' }, { key: '8' }], label: 'Text', i18nKey: 'drawText' },
+      { commands: [], bindings: [{ key: '9' }], label: 'Picture', i18nKey: 'drawPicture' },
+      { commands: [], bindings: [{ key: 'e' }, { key: '0' }], label: 'Eraser', i18nKey: 'drawEraser' },
+      { commands: [], bindings: [{ key: 'f' }], label: 'Frame', i18nKey: 'drawFrame' },
+      { commands: [], bindings: [{ key: 'k' }], label: 'Laser pointer', i18nKey: 'drawLaser' },
+      { commands: [], bindings: [{ key: 'q' }], label: 'Keep the tool after drawing', i18nKey: 'drawKeepTool' },
+    ],
+  },
+  {
+    title: 'Editing',
+    i18nKey: 'drawEditing',
+    rows: [
+      { commands: [], bindings: [{ key: 'Enter' }, { key: 'Escape' }], label: 'Edit text / finish editing', i18nKey: 'drawEditText' },
+      { commands: [], bindings: [{ mod: true, key: 'd' }], label: 'Duplicate', i18nKey: 'drawDuplicate' },
+      { commands: [], bindings: [{ mod: true, key: 'g' }, { mod: true, shift: true, key: 'g' }], label: 'Group / ungroup', i18nKey: 'drawGroup' },
+      { commands: [], bindings: [{ mod: true, key: '=' }, { mod: true, key: '-' }], label: 'Zoom in / out', i18nKey: 'drawZoom' },
+      { commands: [], bindings: [{ mod: true, key: '0' }, { shift: true, key: '1' }], label: 'Reset zoom / zoom to fit', i18nKey: 'drawZoomReset' },
+      { commands: [], bindings: [{ mod: true, key: 'f' }], label: 'Search the drawing', i18nKey: 'drawSearch' },
+      { commands: ['undo', 'redo'], label: 'Undo / redo', i18nKey: 'drawUndo' },
+      { commands: [], bindings: [{ key: '?' }], label: 'Show this list', i18nKey: 'drawHelp' },
+    ],
+  },
+];
+
 /** The last line of the in-app list in a browser, which shows no desktop-only key. */
 export const DESKTOP_MORE_NOTE = 'The desktop app has more shortcuts: tabs, sections and new items.';
 
@@ -169,8 +217,8 @@ export function rowCaps(
     return [bindingCaps(keys[0]!, os), '–', bindingCaps(keys[keys.length - 1]!, os)];
   }
   const out: (string[] | '/' | '–')[] = [];
-  for (const id of row.commands) {
-    const keys = visibleBindings(id, os, desktop);
+  const lists = row.bindings ? [row.bindings.filter((b) => bindingApplies(b, os, desktop))] : row.commands.map((id) => visibleBindings(id, os, desktop));
+  for (const keys of lists) {
     for (const b of firstOnly ? keys.slice(0, 1) : keys) {
       if (out.length) out.push('/');
       out.push(bindingCaps(b, os));

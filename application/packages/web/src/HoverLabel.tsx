@@ -1,6 +1,6 @@
 import type { PointerEvent, ReactNode } from 'react';
 
-// Spec: ops/docs/archive/ui-patterns.md (section 18 - instant CSS hover labels)
+// Spec: docs/internal/design/ui-patterns.md (section 18 - instant CSS hover labels)
 
 /*
  * `position` names say WHERE THE TIP LANDS. `above` puts it above the element,
@@ -21,7 +21,7 @@ import type { PointerEvent, ReactNode } from 'react';
  *
  * Adding a new entry here is for a genuinely new geometry only.
  *
- * Full decision order: ops/docs/archive/ui-patterns.md section 18.
+ * Full decision order: docs/internal/design/ui-patterns.md section 18.
  */
 export const positionClasses = {
   end: 'start-full top-1/2 -translate-y-1/2 ms-2',
@@ -55,7 +55,7 @@ type Position = keyof typeof positionClasses;
  *  list options help) so that one line changes them all. */
 export const TIP_SKIN =
   // theme-ok: a tooltip is a dark pill in every theme
-  'px-2 py-[3px] rounded-[5px] bg-neutral-900 dark:bg-neutral-800 border border-neutral-800 dark:border-neutral-700 text-[12px] leading-4 text-neutral-100';
+  'px-2 py-[3px] rounded-[5px] bg-neutral-900 dark:bg-neutral-800 border border-neutral-800 dark:border-neutral-700 text-small leading-4 text-neutral-100';
 
 const TIP_PILL_LOOK = `pn-tip pointer-events-none ${TIP_SKIN} z-50 [@media(hover:none)]:hidden`;
 

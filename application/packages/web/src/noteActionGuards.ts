@@ -40,7 +40,7 @@ export type NoteActionGuardDeps = {
  * Every gate here is `proUnlocked`, so the public demo can exercise all
  * four - note history included, via its local demo snapshot path
  * (noteVersions.ts).
- * Spec: ops/docs/pro-features.md (of these four, only history is server-enforced via RLS)
+ * Spec: docs/internal/pro-features.md (of these four, only history is server-enforced via RLS)
  */
 export function noteActionGuards(d: NoteActionGuardDeps) {
   const unlocked = proUnlocked(d.isPro);
@@ -115,7 +115,7 @@ export type BulkActionGuardDeps = {
  * must be able to see at a glance that they ask for the same things in
  * the same order. A selection that could protect or unlock items the
  * single path refuses would be a hole, not a shortcut.
- * Spec: ops/docs/pro-features.md
+ * Spec: docs/internal/pro-features.md
  */
 export function bulkActionGuards(d: BulkActionGuardDeps) {
   const unlocked = proUnlocked(d.isPro);

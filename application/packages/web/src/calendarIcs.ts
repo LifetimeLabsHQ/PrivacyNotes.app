@@ -3,6 +3,7 @@ import i18n from './i18n';
 import { escapeText, foldLine } from './icsLines';
 import { repeatToRrule } from './icsRepeat';
 import { deriveDisplayTitle } from './notesViewUtils';
+import { ANY_FILE_LINK, IMG_PICTURE, markdownLinks, replaceMatches } from './linkScan';
 import {
   SOURCE_IDENTITY_KEY,
   goesToCalendarFile,
@@ -24,7 +25,7 @@ import {
  *
  * Google refuses a file over 1 MB, so the export made for other apps can be
  * cut into parts of whole events; the copy inside a backup is one file.
- * Spec: ops/docs/archive/google-calendar-import.md (section 5)
+ * Spec: docs/internal/specs/google-calendar-import.md (section 5)
  */
 
 /** Google's import limit, in bytes. */
@@ -50,9 +51,8 @@ function utcStamp(iso: string | undefined, fallback: Date): string {
 
 /** The body as plain text: pictures and files by name, note-links by their title. */
 function descriptionOf(body: string): string {
-  return body
-    .replace(/!\[([^\]]*)\]\(pn:img\/[^)]*\)/g, (_, alt: string) => alt)
-    .replace(/\[([^\]]*)\]\(pn:file\/[^)]*\)/g, (_, name: string) => name)
+  const pictures = replaceMatches(body, markdownLinks(body, IMG_PICTURE), (link) => link.text);
+  return replaceMatches(pictures, markdownLinks(pictures, ANY_FILE_LINK), (link) => link.text)
     .replace(/\[\[([^\]|]+)(?:\|([^\]]*))?\]\]/g, (_, target: string, alias?: string) => alias || target)
     .replace(/\n{3,}/g, '\n\n')
     .trim();

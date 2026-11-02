@@ -20,7 +20,7 @@ import { moodAnchor, moodInk } from './moodMark';
  * Under a mouse the row is a meter: the tile under the pointer and every tile
  * before it light up (`pn-scale-row` in index.css). It changes color only,
  * so a row squeezed into a narrow list never pushes a tile into its neighbor.
- * Spec: ops/docs/archive/ui-patterns.md section 141
+ * Spec: docs/internal/design/ui-patterns.md section 141
  */
 export function ScaleTiles({ min, max, value, onPick, label, tone = 'accent', ends, nameOf, className = '' }: {
   min: number;
@@ -85,7 +85,7 @@ export function ScaleTiles({ min, max, value, onPick, label, tone = 'accent', en
         })}
       </div>
       {ends && (
-        <div className="flex justify-between gap-2 pt-1 text-[11px] text-pn-muted px-0.5">
+        <div className="flex justify-between gap-2 pt-1 text-meta text-pn-muted px-0.5">
           <span className="min-w-0 truncate">{ends[0]}</span>
           <span className="min-w-0 truncate text-end">{ends[1]}</span>
         </div>

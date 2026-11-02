@@ -26,7 +26,7 @@ import { NewButton } from './NewButton';
  * Rows are the shared NoteRow, which draws the round initials chip for a
  * contact itself, so the prefs toggles and the sort rule are the same code
  * the rest of the app runs.
- * Spec: ops/docs/archive/contacts-pillar.md (section 4) + contacts-mockups.html
+ * Spec: docs/internal/specs/contacts-pillar.md (section 4) + contacts-mockups.html
  */
 export function ContactsList({
   place = null,
@@ -75,7 +75,7 @@ export function ContactsList({
   viewMode,
 }: {
   /** The view and space this list draws, so a return lands where it was;
-   *  null under a search. Spec: ops/docs/archive/keep-my-place.md */
+   *  null under a search. Spec: docs/internal/specs/keep-my-place.md */
   place?: string | null;
   /** Active (non-trashed) contact notes, already folder/tag scoped and
    *  searched by the owner (NotesView's displayNotes). */
@@ -188,13 +188,13 @@ export function ContactsList({
           view="contacts"
           onSelectView={onSelectView}
           onOpenDrawer={onOpenDrawer}
-          title={t('pillars.contacts')}
+          title={t('shell:tagsRail.contacts')}
           icon={<PILLAR_GLYPHS.contacts size={26} className="text-accent shrink-0" aria-hidden="true" />}
         />
         <NewButton
           onClick={onRequestNew}
           tabIndex={mobileTabIndex}
-          label={t('contacts.new')}
+          label={t('shell:markdown.new')}
         />
       </div>
       )}
@@ -209,13 +209,13 @@ export function ContactsList({
       {/* ── Search row + sort button - matches the other lists ───── */}
       <div className="shrink-0 px-3 py-2 md:p-3 border-b border-divider relative">
         <div className="flex items-stretch gap-2">
-          <HoverLabel label={t('contacts.sortOptions')} position="above-start">
+          <HoverLabel label={t('shell:tasksList.sortOptions')} position="above-start">
             <button
               ref={sortBtnRef}
               type="button"
               onClick={() => setSortOpen((v) => !v)}
               tabIndex={mobileTabIndex}
-              aria-label={t('contacts.sortOptions')}
+              aria-label={t('shell:tasksList.sortOptions')}
               aria-expanded={sortOpen}
               className={`shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-md border transition ${
                 sortOpen
@@ -223,7 +223,7 @@ export function ContactsList({
                   : 'bg-surface-2 border-divider text-pn-soft hover:border-accent hover:text-accent'
               }`}
             >
-              <FunnelSimple size={18} />
+              <FunnelSimple />
             </button>
           </HoverLabel>
           <ListSearchInput
@@ -259,15 +259,15 @@ export function ContactsList({
         {empty && !filteredAway ? (
           <li className={`flex flex-col items-center justify-center text-center px-8 py-14 ${viewMode === 'grid' ? 'col-span-full' : ''}`}>
             <PILLAR_GLYPHS.contacts size={34} className="text-pn-muted" weight="duotone" aria-hidden="true" />
-            <p className="text-[13px] text-pn-muted mt-3">{otherSpaceLine ?? t('contacts.emptyNone')}</p>
-            <h3 className="text-[15px] font-semibold mt-1 mb-4">{t('contacts.emptyTitle')}</h3>
+            <p className="text-compact text-pn-muted mt-3">{otherSpaceLine ?? t('contacts.emptyNone')}</p>
+            <h3 className="text-row font-semibold mt-1 mb-4">{t('contacts.emptyTitle')}</h3>
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <button type="button" onClick={onRequestNew} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-accent-fill px-3.5 py-2 text-[13px] font-medium text-white transition hover:bg-accent-fill/90">
-                <NEW_GLYPHS.contact size={15} />
+              <button type="button" onClick={onRequestNew} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-accent-fill px-3.5 py-2 text-compact font-medium text-white transition hover:bg-accent-fill/90">
+                <NEW_GLYPHS.contact />
                 {t('contacts.emptyAdd')}
               </button>
-              <button type="button" onClick={onOpenImport} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-divider bg-surface-1 px-3.5 py-2 text-[13px] transition hover:bg-pn/10">
-                <Download size={15} />
+              <button type="button" onClick={onOpenImport} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-divider bg-surface-1 px-3.5 py-2 text-compact transition hover:bg-pn/10">
+                <Download />
                 {t('contacts.emptyImport')}
               </button>
             </div>
@@ -285,7 +285,7 @@ export function ContactsList({
               </li>
             )}
             {!filteredAway && contacts.length === 0 && (
-              <li className={`p-6 text-[13px] text-pn-muted text-center ${viewMode === 'grid' ? 'col-span-full' : ''}`}>{t('contacts.noMatches')}</li>
+              <li className={`p-6 text-compact text-pn-muted text-center ${viewMode === 'grid' ? 'col-span-full' : ''}`}>{t('contacts.noMatches')}</li>
             )}
             {contacts.slice(0, list.reveal.visible).map((n) => (
               viewMode === 'grid' ? (

@@ -3,7 +3,7 @@ import { applyRestoredFolders, validateFolders } from './folders';
 import { deletedFolderIds, itemStylesEqual, mergeItemStyles, validateItemStyles } from './itemStyles';
 import { customThemesEqual, mergeCustomThemes, validateCustomThemes } from './customThemes';
 import type { UserSettings } from './userSettings';
-import { readFactors } from './trackerTypes';
+import { readCustomTrackerTemplates, readFactors, readMedicationTemplates } from './trackerTypes';
 
 /**
  * The settings a restore of an encrypted text backup leaves: its folders, the
@@ -16,7 +16,7 @@ import { readFactors } from './trackerTypes';
  */
 export function settingsAfterRestore(
   prev: UserSettings,
-  backup: { folders?: unknown; itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown },
+  backup: { folders?: unknown; itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown },
 ): UserSettings {
   const folders = validateFolders(backup.folders);
   const looks = validateItemStyles(backup.itemStyles);
@@ -28,13 +28,20 @@ export function settingsAfterRestore(
   // The person's own habit questions come back the same way.
   const knownHabits = new Set(prev.customHabits.map((h) => h.id));
   const newHabits = readCustomHabits(backup.customHabits).filter((h) => !knownHabits.has(h.id));
-  if (folders.length === 0 && Object.keys(looks).length === 0 && Object.keys(themes).length === 0 && newFactors.length === 0 && newHabits.length === 0) return prev;
+  // Medications and custom tracker definitions come back the same way, only
+  // in a shape the app draws: the file may not be the person's own.
+  const knownMeds = new Set(prev.medications.map((m) => m.id));
+  const newMeds = readMedicationTemplates(backup.medications).filter((m) => !knownMeds.has(m.id));
+  const knownTrackers = new Set(prev.trackerSettings.customTrackers.map((c) => c.id));
+  const newTrackers = readCustomTrackerTemplates(backup.customTrackers).filter((c) => !knownTrackers.has(c.id));
+  const nothingNew = newFactors.length === 0 && newHabits.length === 0 && newMeds.length === 0 && newTrackers.length === 0;
+  if (folders.length === 0 && Object.keys(looks).length === 0 && Object.keys(themes).length === 0 && nothingNew) return prev;
   const result = applyRestoredFolders({ folders: prev.folders, deleted: prev.foldersDeleted }, folders);
   const itemStyles = mergeItemStyles(prev.itemStyles, looks, deletedFolderIds(result.tree.deleted));
   const customThemes = mergeCustomThemes(prev.customThemes, themes);
   const looksChanged = !itemStylesEqual(itemStyles, prev.itemStyles);
   const themesChanged = !customThemesEqual(customThemes, prev.customThemes);
-  if (result.added === 0 && !looksChanged && !themesChanged && newFactors.length === 0 && newHabits.length === 0) return prev;
+  if (result.added === 0 && !looksChanged && !themesChanged && nothingNew) return prev;
   return {
     ...prev,
     folders: result.tree.folders,
@@ -43,6 +50,10 @@ export function settingsAfterRestore(
     ...(themesChanged ? { customThemes } : {}),
     ...(newFactors.length > 0 ? { factors: [...prev.factors, ...newFactors] } : {}),
     ...(newHabits.length > 0 ? { customHabits: [...prev.customHabits, ...newHabits] } : {}),
+    ...(newMeds.length > 0 ? { medications: [...prev.medications, ...newMeds] } : {}),
+    ...(newTrackers.length > 0
+      ? { trackerSettings: { ...prev.trackerSettings, customTrackers: [...prev.trackerSettings.customTrackers, ...newTrackers] } }
+      : {}),
   };
 }
 

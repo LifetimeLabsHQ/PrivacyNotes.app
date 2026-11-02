@@ -4,6 +4,7 @@ import type { AttachmentMeta } from './attachmentStore';
 import type { SyncBase } from './noteMerge';
 import { isDemoMode, DEMO_DB_NAME } from './demo';
 import { localSealMiddleware } from './localSeal';
+import { normalizeJournalTrackers } from './trackerTypes';
 import type { LedgerRow } from './dayLedger';
 
 /**
@@ -189,7 +190,7 @@ interface EditorDocCacheEntry {
  * calls. So demo keeps its snapshots here, in the throwaway demo database,
  * in the same plaintext form the notes themselves are stored in locally.
  * They die with the tab session like everything else in that database.
- * Spec: ops/docs/pro-features.md (note history: Pro-only, 50 versions per note)
+ * Spec: docs/internal/pro-features.md (note history: Pro-only, 50 versions per note)
  */
 interface DemoNoteVersion {
   id: string;
@@ -217,6 +218,19 @@ interface DemoNoteVersion {
  * Dexie only declares the primary key, and IndexedDB clones CryptoKey
  * natively.
  */
+/** A History version that could not reach the server yet, already encrypted
+ *  with the account key in the form the server row takes (noteVersions.ts). */
+interface QueuedVersion {
+  id?: number;
+  noteId: string;
+  /** The content hash of the state (useNoteEditing), so a later send of the
+   *  same state removes it. */
+  hash: string;
+  ciphertext: string;
+  nonce: string;
+  queuedAt: string;
+}
+
 interface KvEntry {
   key: string;
   value: string | CryptoKey;
@@ -233,6 +247,7 @@ class NotesDb extends Dexie {
   editorDocCache!: EntityTable<EditorDocCacheEntry, 'noteId'>;
   kv!: EntityTable<KvEntry, 'key'>;
   dayLedger!: EntityTable<LedgerRow, 'date'>;
+  versionQueue!: EntityTable<QueuedVersion, 'id'>;
 
   constructor(raw = false) {
     // Demo mode uses a separate, throwaway database so demo data never
@@ -252,7 +267,7 @@ class NotesDb extends Dexie {
     // below 13. A change to sealed
     // content runs after unlock instead, the way the sweep does.
     // Test: tests/dbUpgradeSealed.test.ts
-    // Spec: ops/docs/archive/local-at-rest.md (section 5.1)
+    // Spec: docs/internal/specs/local-at-rest.md (section 5.1)
     // v1 - original schema.
     this.version(1).stores({
       notes: 'id, updatedAt, dirty, deleted',
@@ -455,7 +470,7 @@ class NotesDb extends Dexie {
 
     // v14 - the day ledger (dayLedger.ts): counts per local day, never note
     // text, so it is not sealed. New table, nothing to back-fill.
-    // Spec: ops/docs/archive/wellness-statistics.md (section 20)
+    // Spec: docs/internal/specs/wellness-statistics.md (section 20)
     this.version(14).stores({
       notes: 'id, updatedAt, dirty, deleted, trashed, starred, type, folderId',
       imageCache: 'id, cachedAt',
@@ -469,13 +484,44 @@ class NotesDb extends Dexie {
       dayLedger: 'date',
     });
 
+    // v15 - History versions waiting for the server (noteVersions.ts). The
+    // rows are already encrypted with the account key, as the server's are,
+    // so the at-rest seal does not cover the table. New table, nothing to
+    // back-fill. Spec: docs/internal/design-decisions.md (offline History versions)
+    this.version(15).stores({
+      notes: 'id, updatedAt, dirty, deleted, trashed, starred, type, folderId',
+      imageCache: 'id, cachedAt',
+      imageDedup: 'hash, uuid',
+      attachmentCache: 'id, cachedAt',
+      attachmentDedup: 'hash, uuid',
+      blobGC: 'uuid, enqueuedAt',
+      editorDocCache: 'noteId, cachedAt',
+      demoVersions: 'id, noteId, createdAt',
+      kv: 'key',
+      dayLedger: 'date',
+      versionQueue: '++id, noteId, hash',
+    });
+
     // The at-rest seal layer. Read surfaces open sealed rows wherever
     // they exist; writes stay plaintext until the writer release turns
     // sealed writes on. Inert in demo mode. The raw escape hatch below
     // skips it for exactly two callers with a legitimate need to see
     // stored bytes: the sweep's scan and its conversions.
-    // Spec: ops/docs/archive/local-at-rest.md (section 3.3)
+    // Spec: docs/internal/specs/local-at-rest.md (section 3.3)
     if (!raw) this.use(localSealMiddleware());
+
+    // A journal entry's trackers come out in the shape every reader assumes,
+    // whatever an import or an older build stored: one wrong-typed field in
+    // one entry otherwise stops the app from starting on every device. Here,
+    // after the seal opens the row, so it covers every read and the demo.
+    // Pinned by tests/journalTrackerShape.test.ts.
+    if (!raw) {
+      // A read of an id with no row hands the hook undefined.
+      this.notes.hook('reading', (note: LocalNote | undefined) => {
+        if (note?.type === 'journal' && note.trackers) note.trackers = normalizeJournalTrackers(note.trackers);
+        return note as LocalNote;
+      });
+    }
   }
 }
 

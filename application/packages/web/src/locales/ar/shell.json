@@ -1,18 +1,14 @@
 {
   "pillars": {
-    "trash": "المهملات",
-    "bookmarks": "الإشارات المرجعية",
-    "contacts": "جهات الاتصال"
+    "trash": "المهملات"
   },
   "tasksList": {
-    "title": "المهام",
     "newTaskNote": "ملاحظة مهام جديدة",
     "hideCompleted": "إخفاء المهام المكتملة",
     "showCompleted": "إظهار المهام المكتملة",
     "searchPlaceholder": "ابحث في المهام…",
     "sortOptions": "خيارات الفرز",
     "quickAddPlaceholder": "أضف مهمة سريعة",
-    "noMatches": "لا توجد نتائج مطابقة.",
     "itemsWithTasks": "العناصر التي تحتوي على مهام",
     "allTasks": "كل المهام",
     "tasksFromOtherItems": "مهام في عناصر أخرى",
@@ -29,45 +25,27 @@
     "seeLess": "عرض أقل"
   },
   "filesList": {
-    "title": "الملفات",
     "upload": "رفع",
     "selectedOf": "{{selected}} من {{total}} محدد",
-    "deselectAll": "إلغاء تحديد الكل",
-    "selectAll": "تحديد الكل",
-    "storage": "مساحة التخزين",
     "perFile": "لكل ملف",
     "free": "مجاني",
-    "upgradeToPro": "الترقية إلى Pro",
     "filterAll": "الكل",
-    "filterImages": "الصور",
     "filterAudio": "الصوت",
     "filterFiles": "الملفات",
-    "sortOptions": "خيارات الفرز",
     "searchPlaceholder": "ابحث في الملفات…",
     "sortName": "الاسم",
     "showNotesWithAttachments": "إظهار الملفات في عناصر أخرى",
-    "noMatches": "لا توجد نتائج مطابقة.",
     "pinProtected": "محمي برمز PIN",
-    "readOnly": "للقراءة فقط",
     "noFilesYet": "لا توجد ملفات بعد.",
     "noDocuments": "لا توجد مستندات.",
     "noImages": "لا توجد صور.",
     "noAudioFiles": "لا توجد ملفات صوتية.",
     "emptyTypesHint": "الصور والمستندات والملفات الصوتية والفيديو وملفات zip. حتى {{max}} ميغابايت لكل ملف.",
     "uploadFiles": "رفع الملفات",
-    "menuDeselect": "إلغاء التحديد",
-    "menuSelect": "تحديد",
     "menuShow": "إظهار",
     "menuAllFiles": "جميع الملفات",
-    "menuImages": "الصور",
-    "menuAudio": "الصوت",
     "menuDocuments": "المستندات",
-    "menuHideNoteAttachments": "إخفاء الملفات في عناصر أخرى",
-    "menuShowNoteAttachments": "إظهار الملفات في عناصر أخرى",
-    "menuUnpin": "إلغاء التثبيت",
-    "menuPin": "تثبيت",
-    "menuRename": "إعادة تسمية",
-    "menuMoveToTrash": "نقل إلى المهملات"
+    "menuHideNoteAttachments": "إخفاء الملفات في عناصر أخرى"
   },
   "vaultItem": {
     "badgeLogin": "تسجيل الدخول",
@@ -78,7 +56,6 @@
     "untitledKey": "مفتاح بلا عنوان",
     "copied": "تم النسخ!",
     "copyField": "نسخ {{label}}",
-    "hide": "إخفاء",
     "reveal": "إظهار",
     "fieldUrl": "الرابط",
     "fieldUser": "المستخدم",
@@ -91,14 +68,11 @@
     "fieldLabel": "التسمية",
     "fieldPublic": "عام",
     "fieldPrivate": "خاص",
-    "fieldTotp": "رمز 2FA",
     "totpInvalid": "مفتاح غير صالح",
     "copyCode": "نسخ الرمز",
     "totpUnlockCta": "فتح رموز 2FA مع Pro",
     "totpProNote": "يُحفظ المفتاح ويُزامَن. الرمز وحده يتطلب Pro.",
     "copyAll": "نسخ الرابط واسم المستخدم وكلمة المرور",
-    "open": "فتح",
-    "notesHeading": "ملاحظات",
     "fillOneField": "يرجى تعبئة حقل واحد على الأقل قبل الحفظ.",
     "expiryNeedsBoth": "يتطلب تاريخ الانتهاء كلًا من الشهر والسنة، أو اتركهما فارغين.",
     "customField": "حقل مخصص",
@@ -132,20 +106,18 @@
   },
   "tagsRail": {
     "showAllItems": "إظهار جميع العناصر",
-    "changelog": "Changelog",
     "closeMenu": "إغلاق القائمة",
-    "close": "إغلاق",
     "views": "المحتوى",
     "resizeSplit": "تغيير حجم «المحتوى» والوسوم أو المجلدات",
     "sidebarOptions": "خيارات الشريط الجانبي",
     "showInSidebar": "العرض في الشريط الجانبي",
     "allOptions": "خيارات «الكل»",
     "showInAll": "العرض في «الكل»",
-    "viewList": "قائمة",
-    "viewGrid": "شبكة",
     "viewAuto": "تلقائي",
     "allItemsTooltip": "جميع الملاحظات واليوميات وعناصر الخزنة",
     "allItems": "الكل",
+    "dashboard": "الرئيسية",
+    "dashboardTooltip": "أدواتك في لمحة",
     "pinnedTooltip": "العناصر المثبتة",
     "pinned": "المثبتة",
     "archive": "الأرشيف",
@@ -153,6 +125,7 @@
     "notes": "الملاحظات",
     "tasksTooltip": "المهام في جميع الملاحظات",
     "tasks": "المهام",
+    "drawings": "الرسومات",
     "vaultTooltip": "بيانات تسجيل الدخول والبطاقات الائتمانية والمفاتيح",
     "vault": "الخزنة",
     "filesTooltip": "جميع الملفات والمرفقات",
@@ -160,7 +133,6 @@
     "journalsTooltip": "التدوينات اليومية",
     "journals": "اليوميات",
     "actionsForTag": "إجراءات الوسم {{tag}}",
-    "renameTag": "إعادة تسمية",
     "removeFavorite": "إلغاء التفضيل",
     "markAsFavorite": "إضافة إلى المفضلة",
     "deleteTag": "حذف الوسم",
@@ -168,7 +140,6 @@
     "tags": "الوسوم",
     "sortTags": "فرز الوسوم",
     "sort": "فرز",
-    "sortBy": "الفرز حسب",
     "sortEntries": "عدد العناصر",
     "sortName": "الاسم",
     "sortCustom": "مخصص",
@@ -179,11 +150,9 @@
     "createTag": "وسم جديد",
     "untagged": "بلا وسم",
     "trashTooltip": "العناصر المحذوفة",
-    "trash": "المهملات",
     "feedback": "التعليقات",
     "import": "استيراد",
     "downloads": "التنزيلات",
-    "help": "المساعدة",
     "rate": "تقييم",
     "markdown": "Markdown",
     "markdownTip": "غير مشفّر",
@@ -213,7 +182,6 @@
     "deleteSubfolders_few": "حذف مجلداته الفرعية الـ{{count}} أيضًا",
     "deleteSubfolders_many": "حذف مجلداته الفرعية الـ{{count}} أيضًا",
     "deleteSubfolders_other": "حذف مجلداته الفرعية الـ{{count}} أيضًا",
-    "moveTo": "نقل إلى مجلد",
     "searchPlaceholder": "ابحث في المجلدات",
     "sortFolders": "فرز المجلدات",
     "chipUnfiled": "مجلد",
@@ -234,7 +202,6 @@
     "seedTeam": "الفريق"
   },
   "collapsedSidebar": {
-    "newNote": "ملاحظة جديدة",
     "expandSidebar": "توسيع الشريط الجانبي"
   },
   "mobileHeader": {
@@ -249,26 +216,14 @@
     "colorFromTag": "من الوسم: #{{name}}",
     "colorOwnHint": "اللون الذي تختاره هنا يملأ خلفية هذه الملاحظة. ولا تغيّره <setting>ألوان المجلدات والوسوم</setting>.",
     "details": "التفاصيل",
-    "readOnly": "للقراءة فقط",
     "readOnlyDescription": "لا تعديلات حتى توقف هذا الخيار.",
     "protect": "حماية",
     "convertTo": "تحويل إلى",
-    "typeNote": "ملاحظة",
     "typeJournal": "يومية",
-    "typeTask": "مهمة",
-    "unpin": "إلغاء التثبيت",
-    "pin": "تثبيت",
-    "archive": "أرشفة",
-    "unarchive": "إلغاء الأرشفة",
     "burn": "حرق",
     "share": "مشاركة",
     "trash": "المهملات",
-    "duplicate": "تكرار",
-    "restore": "استعادة",
-    "deleteForever": "حذف نهائي",
-    "moveToFolder": "نقل إلى مجلد",
     "noteHistory": "السجل",
-    "findReplace": "البحث والاستبدال",
     "uncheckAllTasks": "إلغاء تحديد كل العناصر",
     "deleteCheckedTasks": "حذف العناصر المحددة",
     "sortTasksByStatus": "فرز العناصر حسب الحالة",
@@ -285,13 +240,11 @@
     "schedule": "الموعد",
     "ends": "ينتهي",
     "sameDay": "اليوم نفسه",
-    "allDay": "طوال اليوم",
     "starts": "يبدأ",
     "endsAt": "ينتهي عند",
     "noEnd": "بلا",
     "removeFromCalendar": "إزالة من التقويم",
     "makeEvent": "تحويل إلى <b>حدث</b> لتكراره",
-    "typeEvent": "حدث",
     "repeatRemoved": "يُزال التكرار",
     "tagCount_zero": "{{count}} وسوم",
     "tagCount_two": "وسمان",
@@ -299,17 +252,9 @@
     "tagCount_many": "{{count}} وسمًا"
   },
   "selectionToolbar": {
-    "exitSelectionTooltip": "الخروج من التحديد",
     "exitSelection": "الخروج من التحديد",
-    "unpin": "إلغاء التثبيت",
-    "pin": "تثبيت",
-    "archive": "أرشفة",
-    "unarchive": "إلغاء الأرشفة",
     "tag": "وسم",
     "export": "تصدير",
-    "delete": "حذف",
-    "restore": "استعادة",
-    "deleteForever": "حذف نهائي",
     "more": "مزيد من الإجراءات",
     "addTagPlaceholder": "أضف وسمًا...",
     "noTagsFound": "لا توجد وسوم",
@@ -332,6 +277,7 @@
     "showTags": "إظهار المجلد والوسوم",
     "showCalendar": "إظهار التقويم",
     "showCheckIn": "إظهار تسجيل الحالة",
+    "showMedication": "إظهار الدواء",
     "showWorkItems": "إظهار عناصر مساحة <b>العمل</b>",
     "showPersonalItems": "إظهار عناصر المساحة <b>الشخصية</b>",
     "other": "أخرى",
@@ -354,7 +300,6 @@
     "moodCalendar": "إظهار المزاج في التقويم"
   },
   "backfillPopover": {
-    "calendarLabel": "تقويم اليوميات",
     "today": "اليوم",
     "chooseEntry": "العناصر في {{date}}"
   },
@@ -379,6 +324,7 @@
     "newNote": "ملاحظة جديدة",
     "newTask": "مهمة جديدة",
     "newKanban": "لوحة كانبان جديدة",
+    "newDrawing": "رسم جديد",
     "newLogin": "بيانات تسجيل دخول جديدة",
     "newJournal": "يومية جديدة",
     "newFile": "ملف جديد",
@@ -408,32 +354,24 @@
     "duplicate": "تكرار",
     "moveToFolder": "نقل إلى مجلد",
     "exportAsMarkdown": "التصدير كـ Markdown",
-    "shareBurnAfterReading": "مشاركة وحرق بعد القراءة",
     "exportAsHtml": "التصدير كـ HTML",
-    "printSaveAsPdf": "طباعة / حفظ كـ PDF",
-    "moveToTrash": "نقل إلى المهملات",
-    "newBookmark": "إشارة مرجعية جديدة",
     "newContact": "جهة اتصال جديدة",
-    "openBookmark": "فتح",
     "copyBookmarkUrl": "نسخ عنوان URL",
     "editBookmark": "تعديل الإشارة المرجعية",
     "saveAsNote": "حفظ كملاحظة",
-    "openClippedNote": "فتح الملاحظة",
     "openInTab": "فتح في علامة تبويب",
     "openInTabHint": "انقر مع {{key}}",
+    "openInTabHintMiddle": "انقر بالزر الأوسط",
     "closeTab": "إغلاق علامة التبويب",
     "closeOtherTabs": "إغلاق علامات التبويب الأخرى",
     "closeAllTabs": "إغلاق كل علامات التبويب",
     "pinTab": "تثبيت علامة التبويب",
     "unpinTab": "إلغاء تثبيت علامة التبويب",
-    "newEvent": "حدث جديد",
-    "quickAdd": "إضافة سريعة"
+    "newEvent": "حدث جديد"
   },
   "demoBanner": {
     "title": "جرّبه بلا أي مخاطرة",
-    "description": "لا شيء يُحفظ هنا. احصل على مفكرتك المشفّرة الخاصة، مجانًا.",
-    "cta": "إنشاء حساب",
-    "dismiss": "إغلاق"
+    "description": "لا شيء يُحفظ هنا. احصل على مفكرتك المشفّرة الخاصة، مجانًا."
   },
   "markdown": {
     "title": "Markdown",
@@ -472,20 +410,17 @@
     "fileCount_other": "{{count}} ملف",
     "railFolders": "مجلدات Markdown",
     "railTags": "وسوم Markdown",
-    "allFiles": "جميع الملفات",
     "modeRich": "منسّق",
     "modeSource": "Markdown",
     "reopenPrompt": "يحتاج متصفحك إلى إذن جديد بعد إعادة التحميل. مجلدك محفوظ، لذا يكفي نقرة واحدة.",
     "reopenFolder": "إعادة فتح {{name}}",
     "new": "جديد",
-    "delete": "حذف",
     "saveToNotes": "الحفظ في ملاحظاتي",
     "createFailed": "تعذّر إنشاء الملف.",
     "deleteFailed": "تعذّر نقل الملف إلى المهملات.",
     "importedToast": "تم حفظ «{{title}}» في ملاحظاتك المشفّرة. الملف الأصلي لم يُمسّ.",
     "deleteTitle": "النقل إلى مهملات المجلد؟",
     "deleteBody": "ينتقل «{{name}}» إلى مجلد .trash داخل مجلد Markdown الخاص بك. استعده من مدير الملفات إن غيّرت رأيك.",
-    "deleteConfirm": "النقل إلى المهملات",
     "explainTitle": "مجلد Markdown الخاص بك",
     "explainDone": "فهمت",
     "bannerTitle": "محرر Markdown متقدم",
@@ -494,7 +429,6 @@
     "explainIntro": "اختر مجلدًا فيه ملفات .md و.txt - تظهر المجلدات الفرعية تلقائيًا، وتُحفظ التعديلات في مكانها، ولا يُحوَّل أي شيء",
     "chipPreview": "معاينة حية",
     "chipTasks": "مهام",
-    "chipTags": "وسوم",
     "chipTables": "جداول",
     "useAgent": "امنح وكلاء الذكاء الاصطناعي وصولًا إلى ملاحظاتك",
     "useObsidian": "الملفات نفسها في Obsidian أو Logseq",
@@ -522,7 +456,6 @@
     "assocWorking": "جارٍ سؤال نظامك…",
     "copyPath": "نسخ المسار",
     "selectedCount": "{{selected}} من {{total}} محدد",
-    "selectAll": "تحديد الكل",
     "exitSelection": "الخروج من التحديد",
     "deleteManyTitle_one": "نقل ملف واحد إلى مهملات المجلد؟",
     "deleteManyTitle_other": "نقل {{count}} ملف إلى مهملات المجلد؟",
@@ -557,15 +490,11 @@
   "bookmarks": {
     "newBookmark": "إشارة مرجعية جديدة",
     "searchPlaceholder": "ابحث في الإشارات المرجعية…",
-    "sortOptions": "خيارات الفرز",
     "quickAddPlaceholder": "الصق رابطًا أو اكتبه…",
     "urlLabel": "الإشارة المرجعية (URL)",
     "urlInvalid": "أدخل عنوان ويب، مثل example.com أو https://example.com/page.",
     "urlDuplicate": "هذا الرابط موجود بالفعل في إشارة مرجعية أخرى، لذلك لم يُحفظ التغيير.",
-    "openAction": "فتح",
     "copiedUrl": "تم نسخ الرابط",
-    "moveToTrash": "نقل إلى المهملات",
-    "rowMenu": "مزيد من الإجراءات",
     "emptyNone": "لا إشارات مرجعية بعد.",
     "emptyTitle": "احفظ المواقع التي تستحق البقاء",
     "emptyAdd": "إضافة إشارة مرجعية",
@@ -584,11 +513,9 @@
     "importSkipped_many": "تم تخطي {{count}} عنصرًا لأنها محفوظة من قبل."
   },
   "contacts": {
-    "new": "جديد",
     "searchPlaceholder": "ابحث في جهات الاتصال…",
-    "sortOptions": "خيارات الفرز",
     "emptyNone": "لا جهات اتصال بعد.",
-    "emptyTitle": "دفتر عناوين لا يقرؤه سواك",
+    "emptyTitle": "دفتر عناوين، مشفّر على جهازك",
     "emptyAdd": "إضافة جهة اتصال",
     "emptyImport": "استيراد جهات الاتصال",
     "noMatches": "لا نتائج.",
@@ -607,15 +534,12 @@
     "company": "الشركة",
     "department": "القسم",
     "jobTitle": "المسمى الوظيفي",
-    "groupName": "الاسم",
     "groupPhone": "الهاتف",
     "groupEmail": "البريد الإلكتروني",
     "groupAddress": "العنوان",
     "groupWebsite": "الموقع الإلكتروني",
-    "groupProfile": "الملف الشخصي",
     "groupDates": "التواريخ",
     "groupRelated": "الأشخاص ذوو الصلة",
-    "groupNote": "ملاحظة",
     "addPhone": "إضافة هاتف",
     "addEmail": "إضافة بريد إلكتروني",
     "addWebsite": "إضافة موقع إلكتروني",
@@ -630,7 +554,6 @@
     "notePlaceholder": "ملاحظات عن هذا الشخص",
     "labelNone": "التسمية",
     "labelCustom": "تسمية مخصصة…",
-    "removeRow": "إزالة",
     "call": "اتصال",
     "message": "رسالة",
     "sendEmail": "إرسال بريد إلكتروني",
@@ -655,15 +578,8 @@
     "menuPersonal": "شخصي",
     "menuName": "الاسم",
     "menuText": "نص",
-    "itemAddress": "العنوان",
-    "itemWebsite": "الموقع الإلكتروني",
-    "itemProfile": "الملف الشخصي",
-    "itemCompany": "الشركة",
-    "itemJobTitle": "المسمى الوظيفي",
-    "itemBirthday": "تاريخ الميلاد",
     "itemDate": "التاريخ",
     "itemRelated": "اسم شخص ذي صلة",
-    "itemNickname": "الاسم المستعار",
     "itemNameParts": "الاسم الأوسط، اللقب، اللاحقة",
     "itemPhonetic": "الاسم الصوتي",
     "itemNote": "ملاحظة",
@@ -805,8 +721,10 @@
       "note": "الملاحظات",
       "task": "قوائم المهام",
       "journal": "تدوينات اليوميات",
-      "contact": "أعياد الميلاد"
+      "contact": "أعياد الميلاد والتواريخ"
     },
+    "birthdays": "أعياد الميلاد",
+    "contactDate": "{{name}}: {{label}}",
     "dragEnd": "اسحب لتغيير يوم الانتهاء",
     "previousDay": "اليوم السابق",
     "nextDay": "اليوم التالي",
@@ -964,7 +882,6 @@
     "daysBeforeAt_many": "قبل {{count}} يومًا الساعة {{time}}",
     "daysBeforeAt_other": "قبل {{count}} يوم الساعة {{time}}",
     "custom": "مخصص",
-    "add": "إضافة",
     "max": "حتى خمسة تنبيهات.",
     "units": {
       "minutes": "دقائق",
@@ -976,11 +893,9 @@
     "remove": "إزالة {{alert}}",
     "reminder": "تذكير",
     "medication": "تذكير بالدواء",
-    "open": "فتح",
     "snooze": "غفوة 10 دقائق",
     "offOnPhone": "التذكيرات متوقفة على هذا الهاتف",
-    "turnOn": "تشغيل",
-    "openSettings": "فتح الإعدادات"
+    "turnOn": "تشغيل"
   },
   "quickAdd": {
     "group": "إنشاء",
@@ -996,6 +911,14 @@
     "appendHintDetail": "يكتب >>، ثم بداية اسمها",
     "appendNone": "لا توجد قائمة مهام أو ملاحظة للإضافة إليها بعد",
     "appendNoneDetail": "اكتب اسمًا بعد >> لإنشاء قائمة مهام بهذا الاسم",
+    "cannotAdd": "لا يمكن الإضافة إلى {{title}}",
+    "blocked": {
+      "trash": "إنها في المهملات.",
+      "pin": "إنها محمية برمز PIN. افتحها للإضافة إليها.",
+      "readOnly": "إنها للقراءة فقط.",
+      "board": "إنها لوحة كانبان. أضف البطاقات على اللوحة.",
+      "archived": "إنها مؤرشفة. ألغِ أرشفتها للإضافة إليها."
+    },
     "linkGroup": "حفظ هذا الرابط",
     "linkDetail": {
       "bookmark": "يحفظ العنوان. تسمّيه بعد ذلك.",
@@ -1018,6 +941,7 @@
       "task": "قائمة مهام جديدة",
       "journal": "تدوينة يوميات جديدة",
       "kanban": "لوحة كانبان جديدة",
+      "drawing": "رسم جديد",
       "login": "بيانات تسجيل دخول جديدة",
       "file": "رفع ملف",
       "contact": "جهة اتصال جديدة",
@@ -1050,8 +974,8 @@
       },
       "length": {
         "label": "المدة",
-        "examples": "لمدة 30 د · لمدة 3 أيام · الجمعة إلى الأحد",
-        "insert": "لمدة 1 ساعة"
+        "examples": "15:00 لمدة 30 د · لمدة 3 أيام · الجمعة إلى الأحد",
+        "insert": "15:00 لمدة 1 ساعة"
       },
       "repeat": {
         "label": "التكرار",
@@ -1097,17 +1021,14 @@
     "backToToday": "العودة إلى اليوم",
     "options": "خيارات تسجيل الحالة",
     "skipToday": "تخطي اليوم",
-    "hide": "إخفاء هذه البطاقة",
+    "hide": "إخفاء",
     "change": "تغيير المزاج",
     "saved": "تم الحفظ",
     "chooseTrackers": "اختيار المتتبعات",
-    "settings": "إعدادات تسجيل الحالة",
     "skipped": "تم التخطي لهذا اليوم.",
     "startOver": "البدء من جديد",
     "cleared": "تم مسح تسجيل الحالة.",
     "hidden": "أُخفيت البطاقة. يمكنك إعادتها بتفعيل «إظهار تسجيل الحالة» في تفضيلات القائمة.",
-    "undo": "تراجع",
-    "done": "تم",
     "write": "اكتب عن اليوم",
     "writeOn": "اكتب عن {{date}}",
     "streak": "اليوم {{n}} على التوالي",
@@ -1125,19 +1046,25 @@
     "hiddenCount_other": "{{count}} تسجيل حالة مخفي.",
     "showThem": "إظهار"
   },
+  "medicationCard": {
+    "title": "تتبّع الدواء",
+    "options": "خيارات الدواء",
+    "edit": "تغيير دواء اليوم",
+    "hidden": "أُخفيت البطاقة. يمكنك إعادتها من تفضيلات القائمة أو من الإعدادات > المتتبعات > الدواء."
+  },
   "clipper": {
-    "saveAsNote": "حفظ كملاحظة",
     "saving": "جارٍ الحفظ كملاحظة…",
     "stepPage": "تنزيل الصفحة",
     "stepPictures": "حفظ الصور، {{done}} من {{total}}",
-    "openNote": "فتح الملاحظة",
     "alreadySaved": "هذه الصفحة محفوظة بالفعل كملاحظة ({{date}}).",
     "savedOn": "حُفظت كملاحظة {{date}}",
-    "windowTitle": "قصّ صفحة",
     "addressLabel": "عنوان الويب",
     "addressPlaceholder": "الصق رابطًا…",
     "savePictures": "حفظ الصور",
     "savePicturesHint": "حتى 20 صورة تُخزَّن مع الملاحظة، وتُحتسب من مساحة التخزين الخاصة بك.",
+    "extensionTipTitle": "قصّ من متصفحك للحصول على نتيجة أفضل",
+    "extensionTip": "تحفظ إضافة المتصفح الصفحة كما تراها، حتى الصفحات التي تتطلب تسجيل الدخول.",
+    "extensionTipSetUp": "إعداد الإضافة",
     "downloading": "جارٍ تنزيل الصفحة…",
     "downloadingPictures": "جارٍ تنزيل الصور، {{done}} من {{total}}",
     "picturesLine_zero": "{{count}} صور · {{size}}، محفوظة مع الملاحظة",
@@ -1182,5 +1109,174 @@
     "until": "حتى {{day}}",
     "noAlert": "بلا تنبيه",
     "endsLater": "ينتهي في يوم آخر"
+  },
+  "apps": {
+    "railLabel": "الإضافة",
+    "title": "إضافة المتصفح",
+    "subtitle": "أداة قصّ الويب ومدير كلمات المرور في Chrome وFirefox وEdge. لا تحمل الإضافة أبدًا المفتاح الذي يفتح ملاحظاتك.",
+    "stepInstall": "تثبيت الإضافة",
+    "stepFeatures": "اختيار ما يمكنها فعله",
+    "stepConnect": "الربط",
+    "makeCode": "إنشاء رمز",
+    "connectHint": "أنشئ رمزًا للاستخدام مرة واحدة والصقه في الإضافة.",
+    "thisBrowser": "هذا المتصفح",
+    "otherApps": "تطبيقات الكمبيوتر والهاتف:",
+    "desktopAll": "كل التنزيلات",
+    "extensionComputersOnly": "الإضافة مخصصة لـ Chrome وFirefox وEdge على الكمبيوتر.",
+    "demoSignUp": "سجّل لربط متصفح"
+  },
+  "extensionConnect": {
+    "clips": "أداة قصّ الويب",
+    "clipsHint": "حفظ المواقع كملاحظات.",
+    "loginsHint": "بيانات تسجيل الدخول والبطاقات ومفاتيح SSH والإشارات المرجعية للموقع الذي تتصفحه، للنسخ فقط. مقفلة برمز PIN أو رمز دخول خاص بها.",
+    "pickOne": "فعّل خيارًا واحدًا على الأقل.",
+    "codeLabel": "رمز الإضافة",
+    "oneUse": "يعمل مرة واحدة، لمدة 10 دقائق.",
+    "usedBy": "استخدم {{name}} هذا الرمز وأصبح متصلًا. إن لم تكن أنت من فعل ذلك، فأزِله أدناه.",
+    "newCode": "رمز جديد",
+    "tooManyCodes": "رموز كثيرة جدًا بانتظار الاستخدام. استخدم أحدها، أو انتظر 10 دقائق.",
+    "tooManyExtensions": "لهذا الحساب 10 متصفحات مرتبطة، وهو الحد الأقصى. أزل واحدًا أولًا.",
+    "keyElsewhere": "مفتاح بيانات تسجيل الدخول موجود على جهاز آخر من أجهزتك. افتح PrivacyNotes هناك ودعه يُجري المزامنة، ثم حاول مرة أخرى.",
+    "failed": "تعذّر إنشاء رمز. تحقّق من اتصالك وحاول مرة أخرى."
+  },
+  "dashboard": {
+    "taskReadOnly": "هذه الملاحظة للقراءة فقط. أوقف خيار «للقراءة فقط» من خيارات الملاحظة لتتمكن من وضع علامة على مهامها.",
+    "addWidget": "إضافة أداة",
+    "catalogTitle": "إضافة أداة",
+    "layouts": "التخطيطات",
+    "layoutChanged": "تم تغيير التخطيط",
+    "full": "الرئيسية ممتلئة. أزل أداة أولًا.",
+    "added": "أُضيفت إلى الرئيسية",
+    "removed": "أُزيلت من الرئيسية",
+    "showOnHome": "العرض في الرئيسية",
+    "removeFromHome": "إزالة من الرئيسية",
+    "resize": "تغيير حجم {{name}}",
+    "narrower": "أضيق",
+    "taller": "أطول",
+    "shorter": "أقصر",
+    "moveEarlier": "نقل إلى الأمام",
+    "moveLater": "نقل إلى الخلف",
+    "chooseNote": "اختيار ملاحظة",
+    "chooseTag": "اختيار وسم",
+    "chooseFolder": "اختيار مجلد",
+    "chooseTracker": "اختيار متتبع",
+    "choose": "اختيار",
+    "gone": "لم يعد موجودًا",
+    "otherSpace": "في المساحة الأخرى",
+    "proLocked": "جزء من Pro",
+    "noneToChoose": "لا شيء للاختيار بعد",
+    "headerEvents_zero": "{{formatted}} أحداث اليوم",
+    "headerEvents_one": "{{formatted}} حدث اليوم",
+    "headerEvents_two": "{{formatted}} حدثان اليوم",
+    "headerEvents_few": "{{formatted}} أحداث اليوم",
+    "headerEvents_many": "{{formatted}} حدثًا اليوم",
+    "headerEvents_other": "{{formatted}} حدث اليوم",
+    "headerTasks_zero": "{{formatted}} مهام مفتوحة",
+    "headerTasks_one": "{{formatted}} مهمة مفتوحة",
+    "headerTasks_two": "{{formatted}} مهمتان مفتوحتان",
+    "headerTasks_few": "{{formatted}} مهام مفتوحة",
+    "headerTasks_many": "{{formatted}} مهمةً مفتوحة",
+    "headerTasks_other": "{{formatted}} مهمة مفتوحة",
+    "startToday": "بدء يومية اليوم",
+    "groups": {
+      "keep": "ما تحتفظ به"
+    },
+    "layout": {
+      "everyday": "يومي",
+      "planner": "المخطِّط",
+      "writer": "الكاتب"
+    },
+    "w": {
+      "checkIn": {
+        "name": "تسجيل الحالة",
+        "help": "حالك اليوم، ومتتبعاتك"
+      },
+      "calendar": {
+        "help": "الشهر، مع نقاط اليوميات والأحداث"
+      },
+      "upcoming": {
+        "name": "القادم",
+        "help": "اليوم والأيام السبعة القادمة"
+      },
+      "today": {
+        "name": "يومية اليوم",
+        "help": "يومية اليوم، أو بداية لها"
+      },
+      "tasks": {
+        "name": "المهام المفتوحة",
+        "help": "المهام غير المحددة من ملاحظاتك"
+      },
+      "recent": {
+        "name": "المعدّلة مؤخرًا",
+        "help": "آخر العناصر التي عملت عليها"
+      },
+      "pinned": {
+        "help": "عناصرك المثبتة"
+      },
+      "note": {
+        "name": "ملاحظة",
+        "help": "ملاحظة واحدة تختارها، في الرئيسية"
+      },
+      "tag": {
+        "name": "وسم",
+        "help": "أحدث العناصر ذات وسم واحد"
+      },
+      "folder": {
+        "name": "مجلد",
+        "help": "أحدث العناصر في مجلد واحد"
+      },
+      "onThisDay": {
+        "name": "في مثل هذا اليوم",
+        "help": "يوميات من سنوات سابقة"
+      },
+      "week": {
+        "help": "الكلمات والأيام النشطة والعناصر وتسجيلات الحالة"
+      },
+      "streak": {
+        "help": "الأيام المتتالية التي كتبت فيها"
+      },
+      "checkInStreak": {
+        "help": "الأيام المتتالية التي سجّلت فيها حالتك"
+      },
+      "rhythm": {
+        "name": "إيقاعك",
+        "help": "26 أسبوعًا من الكتابة والمزاج"
+      },
+      "milestone": {
+        "name": "المعلم التالي",
+        "help": "كم يقترب المعلم التالي"
+      },
+      "tracker": {
+        "name": "متتبع",
+        "help": "متتبع واحد: رقمه وأيامه"
+      },
+      "weekRecap": {
+        "help": "أسبوعك، في بطاقة واحدة"
+      },
+      "files": {
+        "name": "الملفات الأخيرة",
+        "help": "أحدث صورك وملفاتك"
+      },
+      "bookmarks": {
+        "help": "أحدث إشاراتك المرجعية"
+      },
+      "birthdays": {
+        "help": "أعياد الميلاد في الأيام الثلاثين القادمة"
+      }
+    },
+    "empty": {
+      "upcoming": "لا شيء في الأيام السبعة القادمة",
+      "tasks": "لا مهام مفتوحة",
+      "recent": "لا شيء هنا بعد",
+      "pinned": "لا شيء مثبت بعد",
+      "tag": "لا عناصر بهذا الوسم",
+      "folder": "لا شيء في هذا المجلد",
+      "onThisDay": "لا يوميات في مثل هذا اليوم من سنوات سابقة",
+      "files": "لا ملفات بعد",
+      "bookmarks": "لا إشارات مرجعية بعد",
+      "birthdays": "لا أعياد ميلاد في الأيام الثلاثين القادمة",
+      "tracker": "لم يُسجَّل شيء بعد",
+      "milestone": "تم بلوغ كل المعالم"
+    }
   }
 }

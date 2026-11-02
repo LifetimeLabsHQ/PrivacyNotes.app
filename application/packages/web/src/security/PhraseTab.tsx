@@ -29,21 +29,21 @@ export function PhraseTab({
   return <PhrasePinGate pubkey={pubkey} pinTimeoutMinutes={pinTimeoutMinutes} hasPin={hasPin}
     pinCredential={pinCredential} onCancel={onCancel} recovery={recovery}>
     <div className="space-y-4">
-      {isDemoMode() && <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 px-3 py-2.5 text-[13px] leading-relaxed text-warning flex items-start gap-2.5">
-        <Warning size={16} aria-hidden="true" className="shrink-0 mt-0.5" />
+      {isDemoMode() && <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 px-3 py-2.5 text-compact leading-relaxed text-warning flex items-start gap-2.5">
+        <Warning aria-hidden="true" className="shrink-0 mt-0.5" />
         <span>{t('phraseView.demoPhrase')}</span>
       </div>}
       <PhraseView phrase={phrase} onCancel={onCancel} hideDismiss gated hasPin={hasPin} />
-      {onOpenCustody && <button type="button" className="inline-flex items-center gap-2 text-sm text-accent hover:underline" onClick={onOpenCustody}>
-        <Vault size={16} className="shrink-0" aria-hidden="true" />
+      {onOpenCustody && <button type="button" className="inline-flex items-center gap-2 text-body text-accent hover:underline" onClick={onOpenCustody}>
+        <Vault className="shrink-0" aria-hidden="true" />
         {t('connectedAccounts.openCustody')}
       </button>}
       <PhraseOdds />
       <div className="flex flex-col items-start gap-1.5">
         <a href={PHRASE_MEGATHREAD.href} target="_blank" rel="noopener noreferrer"
-          className="inline-flex items-start gap-2 max-w-full text-[13px] text-accent hover:underline">
+          className="inline-flex items-start gap-2 max-w-full text-help text-accent hover:underline">
           <span className="flex h-5 shrink-0 items-center">
-            <RedditLogo size={15} weight="fill" aria-hidden="true" />
+            <RedditLogo weight="fill" aria-hidden="true" />
           </span>
           <span>{PHRASE_MEGATHREAD.title}</span>
         </a>

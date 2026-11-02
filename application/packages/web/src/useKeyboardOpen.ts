@@ -14,7 +14,7 @@
  * move while someone types reads that instead of a viewport unit, because
  * `interactive-widget=resizes-content` in index.html resizes the layout
  * viewport itself: on Android every unit, `svh` included, follows the keyboard
- * down. Spec: ops/docs/archive/ui-patterns.md (stable viewport height)
+ * down. Spec: docs/internal/design/ui-patterns.md (stable viewport height)
  *
  * While the keyboard is open it also publishes `--pn-app-h`, the height
  * left above the keyboard, which the app shell takes as its height. Android
@@ -24,7 +24,7 @@
  * format bar off the screen (GitHub #449). With the shell cut to the visible
  * area the page has nothing to move: it is put back at the top, and the
  * caret is kept in view by scrolling the note instead.
- * Spec: ops/docs/archive/format-bar.md (section 7)
+ * Spec: docs/internal/specs/format-bar.md (section 7)
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -79,9 +79,19 @@ function keepCaretVisible() {
   } else if (el.isContentEditable) {
     const sel = window.getSelection();
     if (!sel?.rangeCount) return;
-    const range = sel.getRangeAt(0).getBoundingClientRect();
-    if (!range.height) return;
-    rect = range;
+    let caret = sel.getRangeAt(0).getBoundingClientRect();
+    // A caret on an empty line has no box, so the line's own element is
+    // measured instead: its `<br>`, or the node the caret sits in (GitHub #624).
+    if (!caret.height) {
+      const node = sel.focusNode;
+      const child = node?.childNodes[sel.focusOffset];
+      const line = child instanceof Element ? child : node instanceof Element ? node : node?.parentElement;
+      // The editable root is the whole note, not a line.
+      if (!line || line === el) return;
+      caret = line.getBoundingClientRect();
+      if (!caret.height) return;
+    }
+    rect = caret;
   } else {
     return;
   }

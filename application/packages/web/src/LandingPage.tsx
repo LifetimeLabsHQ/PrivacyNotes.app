@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import type { CSSProperties, MouseEvent, ReactNode } from 'react';
-import { AddressBook, AndroidLogo, AppleLogo, Archive, ArrowLeft, ArrowLineRight, ArrowRight, ArrowUpRight, Bell, Book, Bookmarks, CalendarBlank, CalendarCheck, CalendarDots, CalendarPlus, CaretDown, ChartBar, Check, CheckCircle, CheckFat, CheckSquare, Clock, ClockCounterClockwise, Copy, Cube, Export, FileText, Folder, GithubLogo, GooglePlayLogo, Hash, Image as ImageIcon, Key, LinkSimple, ListChecks, Lock, LockSimple, Moon, MusicNotes, Package, Pill, Play, PlusCircle, SealCheck, Shield, Smiley, Sparkle, Square, Sun, TerminalWindow, UserCheck, VideoCamera, WindowsLogo, X } from './icons';
+import { AddressBook, AndroidLogo, AppleLogo, Archive, ArrowLeft, ArrowLineRight, ArrowRight, ArrowUpRight, Bell, Book, Bookmarks, CalendarBlank, CalendarCheck, CalendarDots, CalendarPlus, CaretDown, ChartBar, Check, CheckCircle, Clock, ClockCounterClockwise, Copy, Cube, Export, Eye, FileText, Folder, GithubLogo, Hash, Image as ImageIcon, Key, LinkSimple, ListChecks, Lock, LockSimple, Megaphone, Moon, MusicNotes, Package, PencilSimple, Pill, Play, PlusCircle, Repeat, SealCheck, Shield, Smiley, Sparkle, Sun, TerminalWindow, UserCheck, VideoCamera, WindowsLogo, X } from './icons';
 import { NinjaBox } from './NinjaBox';
+import { HeroApp } from './HeroApp';
+import { MarkdownDemo } from './MarkdownDemo';
+import { usePriceMath } from './PriceMath';
 import { NinjaShotsButton } from './NinjaGallery';
 import { KATANA_LINE, NinjaIcon } from './NinjaIcon';
 import { DEMO_HREF } from './footerData';
@@ -28,7 +31,7 @@ import { PRO_PRICE, EARLY_PRICE, STORAGE_ADDON_PRICE } from './pricing';
 import { detectPlatform } from './devices';
 import { useAuth } from './auth';
 import { isDemoMode } from './demo';
-import { APP_ORIGIN, APP_STORE_URL, isAppHost, isApexHost } from './hosts';
+import { APP_ORIGIN, APP_STORE_URL, PLAY_STORE_URL, isAppHost, isApexHost } from './hosts';
 import { captureSource, withSource } from './campaignSource';
 import { marketingHomeHref } from './siteLinks';
 import { GUIDE_META, GUIDE_ORDER } from './guides';
@@ -40,12 +43,12 @@ const IS_DESKTOP = detectPlatform() !== 'web';
  * Stable "latest macOS build" link. The release runbook overwrites this single
  * object on every release, so the homepage never needs touching and the link
  * never goes stale. Universal .dmg (Intel + Apple Silicon).
- * // Spec: ops/docs/macos-ios-setup.md (publish to R2 - stable latest/ alias)
+ * // Spec: docs/internal/macos-ios-setup.md (publish to R2 - stable latest/ alias)
  */
 const MAC_DMG_URL = 'https://releases.privacynotes.app/latest/PrivacyNotes_universal.dmg';
 
 /** All-platform release archive on the public GitHub repo, one page per version, signed builds. */
-const GITHUB_RELEASES_URL = 'https://github.com/LifetimeLabsDev/PrivacyNotes.app/releases';
+const GITHUB_RELEASES_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app/releases';
 
 /**
  * The public repository, and the documents that answer "prove it".
@@ -57,11 +60,11 @@ const GITHUB_RELEASES_URL = 'https://github.com/LifetimeLabsDev/PrivacyNotes.app
  * URL would be invisible to it, and a renamed heading is invisible to
  * everyone else: GitHub serves a stale anchor as the top of the page.
  */
-const GITHUB_REPO_URL = 'https://github.com/LifetimeLabsDev/PrivacyNotes.app';
-const VERIFY_DOC_URL = 'https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/VERIFY.md';
-const THREAT_MODEL_DOC_URL = 'https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/THREAT_MODEL.md';
-const SECURITY_DOC_URL = 'https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/SECURITY.md';
-const CRYPTO_SRC_URL = 'https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/crypto/crypto.ts';
+const GITHUB_REPO_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app';
+const VERIFY_DOC_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md';
+const THREAT_MODEL_DOC_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md';
+const SECURITY_DOC_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/SECURITY.md';
+const CRYPTO_SRC_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/crypto/crypto.ts';
 
 /**
  * The Zapstore listing, and the store itself for a reader who has never heard of it.
@@ -71,7 +74,7 @@ const CRYPTO_SRC_URL = 'https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob
  * is verification a person cannot do by hand on a phone: it checks the file hash and the
  * signing certificate against the ones recorded when we published, and refuses the install
  * on a mismatch. The listing id is the Android package id.
- * Spec: ops/docs/android-setup.md (Zapstore listing)
+ * Spec: docs/internal/android-setup.md (Zapstore listing)
  */
 const ZAPSTORE_LISTING_URL = 'https://zapstore.dev/apps/app.privacynotes';
 const ZAPSTORE_SITE_URL = 'https://zapstore.dev';
@@ -83,7 +86,7 @@ const ZAPSTORE_SITE_URL = 'https://zapstore.dev';
  * manifest to publish, no account, no review queue, and nothing for us to keep in sync,
  * because it reads the same releases the workflows already push.
  */
-const OBTAINIUM_SOURCE_URL = 'https://github.com/LifetimeLabsDev/PrivacyNotes.app';
+const OBTAINIUM_SOURCE_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app';
 
 /** Obtainium's own homepage, linked from the row so people who have never heard of it can find out what it is. */
 const OBTAINIUM_SITE_URL = 'https://obtainium.imranr.dev/';
@@ -92,12 +95,12 @@ const OBTAINIUM_SITE_URL = 'https://obtainium.imranr.dev/';
  * The one-tap route: Obtainium registers the `obtainium://` scheme, so this hands the phone a
  * ready-made app entry instead of a URL to paste. The payload is built here rather than pasted
  * as one long encoded string, so the repo URL stays single-sourced and the shape stays readable;
- * it is the same four fields as our merged listing in ops/packaging/obtainium/app.privacynotes.json,
+ * it is the same four fields as our merged listing in docs/internal/packaging/obtainium/app.privacynotes.json,
  * and Obtainium fills every other field with its GitHub-source defaults on import.
  * The redirect page in the middle is Obtainium's own and is what makes the link degrade instead
  * of dead-ending: it validates the payload, then falls back to "get Obtainium" when no handler
  * answers, which is every desktop visitor and everyone who does not have it yet.
- * // Spec: ops/packaging/obtainium/README.md (the one-tap add link)
+ * // Spec: docs/internal/packaging/obtainium/README.md (the one-tap add link)
  */
 const OBTAINIUM_ADD_URL = `https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/${encodeURIComponent(
   JSON.stringify({ id: 'app.privacynotes', url: OBTAINIUM_SOURCE_URL, author: 'LifetimeLabsDev', name: 'PrivacyNotes' }),
@@ -106,7 +109,7 @@ const OBTAINIUM_ADD_URL = `https://apps.obtainium.imranr.dev/redirect?r=obtainiu
 /**
  * Stable "latest Linux build" link (AppImage, x86_64). Same pattern as MAC_DMG_URL: the
  * release workflow overwrites this object every release, so the link never goes stale.
- * // Spec: ops/docs/linux-release.md (publish to R2 - stable latest/ alias)
+ * // Spec: docs/internal/linux-release.md (publish to R2 - stable latest/ alias)
  */
 const LINUX_APPIMAGE_URL = 'https://releases.privacynotes.app/latest/PrivacyNotes_x86_64.AppImage';
 
@@ -115,7 +118,7 @@ const LINUX_APPIMAGE_URL = 'https://releases.privacynotes.app/latest/PrivacyNote
  * desktop entry, an app-menu icon. Same overwrite-every-release pattern as the AppImage, but
  * unlike the AppImage it cannot self-update (a deb lives in root-owned /usr), so it is offered
  * alongside the AppImage, not instead of it.
- * // Spec: ops/docs/linux-release.md (publish to R2 - stable latest/ alias)
+ * // Spec: docs/internal/linux-release.md (publish to R2 - stable latest/ alias)
  */
 const LINUX_DEB_URL = 'https://releases.privacynotes.app/latest/PrivacyNotes_amd64.deb';
 
@@ -203,7 +206,7 @@ function useLinuxArch(): LinuxArch | null {
  * The digest link at the end of a download row: a padlock, the word, and a new tab. Every
  * release pipeline publishes a `.sha256` beside every artifact it serves, on every
  * platform, so the URL is always the download URL plus a suffix.
- * // Spec: ops/docs/linux-release.md (every artifact ships a .sha256 sibling)
+ * // Spec: docs/internal/linux-release.md (every artifact ships a .sha256 sibling)
  *
  * A new tab, because the digest is a plain-text file the browser renders in place:
  * same-tab would replace the download page with a bare line of hex and leave the reader to
@@ -221,9 +224,9 @@ function ChecksumLink({ href, label, className }: { href: string; label: string;
       target="_blank"
       rel="noopener"
       aria-label={t('downloads.checksumAria', { label })}
-      className={`relative flex shrink-0 items-center gap-1 font-mono text-[11px] text-accent transition hover:opacity-80${className ? ` ${className}` : ''}`}
+      className={`relative flex shrink-0 items-center gap-1 font-mono text-meta text-accent transition hover:opacity-80${className ? ` ${className}` : ''}`}
     >
-      <LockSimple size={13} weight="fill" aria-hidden="true" />
+      <LockSimple weight="fill" aria-hidden="true" />
       sha256
     </a>
   );
@@ -234,7 +237,7 @@ function ChecksumLink({ href, label, className }: { href: string; label: string;
  * and the digest CI publishes beside every artifact, so a download from this page can be
  * checked without trusting this page. The `.sha256` sibling names the R2 object rather
  * than the local build file, so `sha256sum -c` works on the file as it was downloaded.
- * // Spec: ops/docs/linux-release.md (every artifact ships a .sha256 sibling)
+ * // Spec: docs/internal/linux-release.md (every artifact ships a .sha256 sibling)
  *
  * The row is a div rather than an anchor because it now holds two links, and an anchor
  * may not nest one. The format link stretches back over the whole row, so the click
@@ -253,12 +256,12 @@ function LinuxDl({ href, label, desc, icon, recommended, divider }: {
         {label}
       </a>
       {recommended && (
-        <span className="shrink-0 rounded-full border border-[var(--wl-emerald)]/30 bg-[var(--wl-tint-green)] px-2.5 py-1 text-xs font-semibold text-[var(--wl-emerald)]">
+        <span className="shrink-0 rounded-full border border-[var(--wl-emerald)]/30 bg-[var(--wl-tint-green)] px-2.5 py-1 text-small font-semibold text-[var(--wl-emerald)]">
           {t('downloads.recommended')}
         </span>
       )}
       <span className="flex items-center gap-3 sm:ms-auto">
-        <span className="text-sm text-[var(--wl-sub)]">{desc}</span>
+        <span className="text-body text-[var(--wl-sub)]">{desc}</span>
         <ChecksumLink href={href} label={label} />
       </span>
     </div>
@@ -275,9 +278,9 @@ function LinuxDl({ href, label, desc, icon, recommended, divider }: {
 function UpdatePill({ auto }: { auto: boolean }) {
   const { t } = useTranslation('landing');
   return auto ? (
-    <span className="whitespace-nowrap rounded-full bg-[var(--wl-tint-green)] px-2 py-0.5 text-xs font-semibold text-[var(--wl-emerald)]">{t('downloads.autoUpdates')}</span>
+    <span className="whitespace-nowrap rounded-full bg-[var(--wl-tint-green)] px-2 py-0.5 text-small font-semibold text-[var(--wl-emerald)]">{t('downloads.autoUpdates')}</span>
   ) : (
-    <span className="whitespace-nowrap rounded-full bg-[var(--wl-tint-amber)] px-2 py-0.5 text-xs font-semibold text-[var(--wl-amber-text)]">{t('downloads.manualUpdates')}</span>
+    <span className="whitespace-nowrap rounded-full bg-[var(--wl-tint-amber)] px-2 py-0.5 text-small font-semibold text-[var(--wl-amber-text)]">{t('downloads.manualUpdates')}</span>
   );
 }
 
@@ -292,7 +295,7 @@ function CmdBlock({ cmd, className }: { cmd: string; className?: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className={`flex items-center justify-between gap-2 rounded-lg bg-[var(--wl-ink)]/8 py-1 ps-2.5 pe-1 ${className ?? ''}`}>
-      <code className="min-w-0 whitespace-pre-wrap break-words py-0.5 font-mono text-xs text-[var(--wl-ink)]">{cmd}</code>
+      <code className="min-w-0 whitespace-pre-wrap break-words py-0.5 font-mono text-small text-[var(--wl-ink)]">{cmd}</code>
       <button
         type="button"
         aria-label={t('common:actions.copy')}
@@ -307,7 +310,7 @@ function CmdBlock({ cmd, className }: { cmd: string; className?: string }) {
         }}
         className="shrink-0 cursor-pointer rounded-md p-1.5 text-[var(--wl-sub)] transition hover:bg-[var(--wl-ink)]/8 hover:text-[var(--wl-ink)]"
       >
-        {copied ? <Check size={15} weight="bold" /> : <Copy size={15} weight="bold" />}
+        {copied ? <Check weight="bold" /> : <Copy weight="bold" />}
       </button>
     </div>
   );
@@ -355,7 +358,7 @@ function PkgCmd({ icon, name, tool, selfUpdates, desc, cmd, divider }: {
         <span>{name} <span className="font-normal text-[var(--wl-sub)]">({tool})</span></span>
         <UpdatePill auto={selfUpdates} />
       </span>
-      <span className="mt-0.5 block text-sm text-[var(--wl-sub)]">{desc}</span>
+      <span className="mt-0.5 block text-body text-[var(--wl-sub)]">{desc}</span>
       <CmdBlock className="mt-2" cmd={cmd} />
     </div>
   );
@@ -365,13 +368,13 @@ function PkgCmd({ icon, name, tool, selfUpdates, desc, cmd, divider }: {
  * Stable "latest Windows build" link (NSIS -setup.exe, x86_64). Same overwrite-on-release
  * pattern as MAC_DMG_URL and LINUX_APPIMAGE_URL: the release workflow rewrites this alias every
  * release, so the link never goes stale.
- * // Spec: ops/docs/windows-release.md (publish to R2 - stable latest/ alias)
+ * // Spec: docs/internal/windows-release.md (publish to R2 - stable latest/ alias)
  */
 const WINDOWS_SETUP_URL = 'https://releases.privacynotes.app/latest/PrivacyNotes_x64-setup.exe';
 
 /**
- * Stable "latest Android direct APK" link (the sideload channel; Google Play comes
- * later). Same pattern as MAC_DMG_URL: publishing a release overwrites this object
+ * Stable "latest Android direct APK" link (the sideload channel; Google Play is a
+ * separate store build). Same pattern as MAC_DMG_URL: publishing a release overwrites this object
  * every release, so the link never goes stale. Installed APKs nudge themselves onto
  * newer versions via AndroidUpdateToast.tsx.
  *
@@ -382,7 +385,7 @@ const WINDOWS_SETUP_URL = 'https://releases.privacynotes.app/latest/PrivacyNotes
  * with no way to tell them apart. Do NOT "fix" this by pointing the href at the
  * versioned key: that needs the manifest fetch below to have resolved, so it would
  * break the tile with JS off, on a failed fetch, and on first paint.
- * // Spec: ops/docs/android-setup.md (publish to R2 - stable latest/ alias)
+ * // Spec: docs/internal/android-setup.md (publish to R2 - stable latest/ alias)
  */
 const ANDROID_APK_URL = 'https://releases.privacynotes.app/latest/PrivacyNotes.apk';
 
@@ -393,7 +396,7 @@ const ANDROID_APK_URL = 'https://releases.privacynotes.app/latest/PrivacyNotes.a
  * manifest AndroidUpdateToast polls. Platform versions drift on purpose (a
  * macOS-only fix bumps only darwin), so every tile fetches its own manifest.
  * A failed fetch just renders no tag.
- * // Spec: ops/docs/macos-ios-setup.md, ops/docs/linux-release.md, ops/docs/windows-release.md (per-target updater manifests)
+ * // Spec: docs/internal/macos-ios-setup.md, docs/internal/linux-release.md, docs/internal/windows-release.md (per-target updater manifests)
  */
 const VERSION_MANIFEST_URLS = {
   macOS: 'https://releases.privacynotes.app/u/darwin-aarch64/latest.json',
@@ -459,7 +462,7 @@ const DOSE_DAYS = [true, true, true, false, true, true, true, true, true, false,
    for the names and doses, literal times. Nothing here names a condition:
    a prescription on a homepage says what the reader has. The 28th day of
    the section's month is today, drawn from the capsule's own state.
-   Spec: ops/design/patterns/141-144.md section 143 */
+   Spec: docs/internal/design/patterns/141-144.md section 143 */
 const MEDS = [['08:00', 'med1', 'dose1'], ['13:00', 'med2', 'dose2'], ['20:00', 'med3', 'dose3'], ['22:30', 'med4', 'dose4']] as const;
 const MONTH_DOSES = [true, true, true, true, true, false, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, true, true, true] as const;
 const MONTH_TAKEN = MONTH_DOSES.filter(Boolean).length;
@@ -468,7 +471,7 @@ type DoseState = 0 | 1 | 2;
 
 function FeaturePill({ children }: { children: ReactNode }) {
   return (
-    <span className="rounded-full border-[1.5px] border-[var(--wl-chip-border)] bg-[var(--wl-card)] text-[var(--wl-chip-text)] px-3.5 py-1.5 text-xs font-semibold">
+    <span className="rounded-full border-[1.5px] border-[var(--wl-chip-border)] bg-[var(--wl-card)] text-[var(--wl-chip-text)] px-3.5 py-1.5 text-small font-semibold">
       {children}
     </span>
   );
@@ -534,7 +537,7 @@ function DownloadTile({
         >
           {icon}
         </span>
-        <span className="text-sm font-semibold text-[var(--wl-sub)]">{name}</span>
+        <span className="text-body font-semibold text-[var(--wl-sub)]">{name}</span>
       </div>
     );
   }
@@ -552,8 +555,8 @@ function DownloadTile({
       >
         {icon}
       </span>
-      <span className="text-sm font-semibold text-[var(--wl-ink)]">{name}</span>
-      <span className="h-3.5 font-mono text-[10px] text-[var(--wl-muted)]">{version ? `v${version}` : note}</span>
+      <span className="text-body font-semibold text-[var(--wl-ink)]">{name}</span>
+      <span className="h-3.5 font-mono text-meta text-[var(--wl-muted)]">{version ? `v${version}` : note}</span>
     </>
   );
   if (onClick) {
@@ -606,8 +609,38 @@ function ThemeToggle({ compact, rail }: { compact?: boolean; rail?: boolean }) {
 
 function Kicker({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`font-mono text-[11px] font-semibold uppercase tracking-[0.2em] mb-5 ${className ?? 'text-accent'}`}>
+    <div className={`font-mono text-meta font-semibold uppercase tracking-[0.2em] mb-5 ${className ?? 'text-accent'}`}>
       {'// '}{children}
+    </div>
+  );
+}
+
+/**
+ * The page's call to action: create a vault, or try the demo. Each button
+ * takes the width of its label on one line, and the second one moves under
+ * the first when the two do not fit side by side (a narrow phone, a long
+ * translation); on its own line a button fills the row. A fixed two-column
+ * grid broke both labels over two lines at 320 px. `onSlab` turns the ink
+ * button light for the dark box of the price section.
+ */
+function CtaPair({ label, onCreate, className, onSlab }: { label: string; onCreate: () => void; className?: string; onSlab?: boolean }) {
+  const { t } = useTranslation('landing');
+  return (
+    <div className={`flex flex-wrap items-center gap-2 sm:gap-3 ${className ?? ''}`}>
+      <button
+        type="button"
+        onClick={onCreate}
+        className={`flex-auto sm:flex-none cursor-pointer rounded-full px-4 sm:px-7 py-3.5 text-body sm:text-title font-bold ${onSlab ? 'bg-[var(--wl-on-slab)] text-[var(--wl-slab)] transition hover:opacity-90' : 'pn-fx-conic-btn bg-[var(--wl-ink)] text-[var(--wl-bg)]'}`}
+      >
+        {label}
+      </button>
+      <a
+        href="https://try.privacynotes.app/"
+        className="pn-fx-amber flex-auto sm:flex-none inline-flex items-center justify-center gap-2 rounded-full border-2 border-[var(--wl-amber-border)] text-[var(--wl-amber-text)] px-4 sm:px-6 py-3 text-body sm:text-title font-bold transition"
+      >
+        {t('hero.tryDemo')}
+        <ArrowUpRight className="shrink-0" aria-hidden="true" />
+      </a>
     </div>
   );
 }
@@ -619,12 +652,7 @@ const WONT_FIND_KEYS = [
   'wontFind.noAiTraining',
   'wontFind.noLockIn',
   'wontFind.noEmail',
-  'wontFind.noTelemetry',
-  'wontFind.noCookieBanner',
-  'wontFind.noPasswords',
   'wontFind.noDarkPatterns',
-  'wontFind.noVc',
-  'wontFind.noBlockchain',
   'wontFind.noBackdoor',
 ];
 const CRYPTO_ITEM_KEYS = ['crypto.xchacha', 'crypto.bip39', 'crypto.ed25519', 'crypto.swissServers', 'crypto.noTracking', 'crypto.rls'];
@@ -643,18 +671,6 @@ const READ_IT_DOCS = [
   { file: 'THREAT_MODEL.md', href: THREAT_MODEL_DOC_URL, labelKey: 'readIt.threatModel', icon: Shield },
   { file: 'SECURITY.md', href: SECURITY_DOC_URL, labelKey: 'readIt.security', icon: Lock },
   { file: 'crypto/crypto.ts', href: CRYPTO_SRC_URL, labelKey: 'readIt.crypto', icon: Key },
-] as const;
-
-/** The hero window's sidebar, in the order of the pillar grid. */
-const HERO_PILLARS = [
-  { key: 'notes', Icon: FileText },
-  { key: 'tasks', Icon: CheckCircle },
-  { key: 'vault', Icon: Shield },
-  { key: 'journal', Icon: Book },
-  { key: 'files', Icon: Folder },
-  { key: 'calendar', Icon: CalendarDots },
-  { key: 'contacts', Icon: UserCheck },
-  { key: 'bookmarks', Icon: Bookmarks },
 ] as const;
 
 /**
@@ -684,9 +700,9 @@ const DECRYPT_FRAMES_PER_LETTER = 2;
  * gets the factor that shrinks the whole heading, all three lines alike.
  * Still on "notes" under reduced motion, paused off screen; the h2 carries a
  * plain sr-only twin.
- * Spec: ops/design/patterns/145-150.md section 149
+ * Spec: docs/internal/design/patterns/145-150.md section 149
  */
-function HeroRotator({ onFit }: { onFit?: (fit: number) => void }) {
+function HeroRotator({ onFit, onWord }: { onFit?: (fit: number) => void; onWord?: (key: string) => void }) {
   const { t } = useTranslation('landing');
   const [at, setAt] = useState(0);
   const [shown, setShown] = useState<string>();
@@ -701,6 +717,8 @@ function HeroRotator({ onFit }: { onFit?: (fit: number) => void }) {
   const now = parts[at];
   const words = useRef(parts);
   words.current = parts;
+  const onWordRef = useRef(onWord);
+  onWordRef.current = onWord;
   useEffect(() => {
     const measure = () => setWidth(ruler.current?.getBoundingClientRect().width);
     measure();
@@ -750,6 +768,7 @@ function HeroRotator({ onFit }: { onFit?: (fit: number) => void }) {
         }
       };
       setAt(i);
+      onWordRef.current?.(HERO_WORDS[i]!);
       step();
     };
     const io = new IntersectionObserver(([e]) => {
@@ -797,7 +816,7 @@ function HeroRotator({ onFit }: { onFit?: (fit: number) => void }) {
    .pn-washi wrapper so the app theme tokens stay untouched; the .dark block
    flips it to the sumi ink set. Every value passes WCAG AA against the
    grounds it is used on - re-check contrast if any value changes.
-   // Spec: ops/docs/design-decisions.md (washi landing palette) */
+   // Spec: docs/internal/design-decisions.md (washi landing palette) */
 export const FX_CSS = `
 .pn-washi{
 --wl-bg:#F7F1E1;--wl-card:#FCF8EC;--wl-tint:#ECE3C9;
@@ -810,6 +829,8 @@ export const FX_CSS = `
 --wl-tint-blue:#E8EAF2;--wl-tint-blue-deep:#E8EAF2;--wl-tint-green:#E4EBD5;--wl-tint-amber:#F7EAB8;
 --wl-amber-text:#92400E;--wl-amber-border:#B45309;
 --wl-emerald:#065F46;
+--wl-cost:#B91C1C;
+--wl-paper:#FFFFFF;
 --wl-teal:#0B604A;--wl-tint-teal:#DDEFE6;
 --wl-chip-border:#1C1917;--wl-chip-text:#1C1917;
 --wl-footer:#161210;
@@ -826,6 +847,8 @@ export const FX_CSS = `
 --wl-tint-blue:#212940;--wl-tint-blue-deep:#1D2234;--wl-tint-green:#1E2A1F;--wl-tint-amber:#2C230F;
 --wl-amber-text:#FBBF24;--wl-amber-border:rgba(251,191,36,.55);
 --wl-emerald:#34D399;
+--wl-cost:#F87171;
+--wl-paper:#2A241C;
 --wl-teal:#5DCAA5;--wl-tint-teal:#182A25;
 --wl-chip-border:#3A3226;--wl-chip-text:#CFC8B8;
 --wl-footer:#1F1A14;
@@ -857,7 +880,7 @@ export const FX_CSS = `
 .pn-fx-slab{transition:transform .15s ease,box-shadow .15s ease}
 .pn-fx-slab:hover{transform:translate(-4px,-4px);box-shadow:6px 6px 0 var(--wl-edge)}
 .pn-fx-peek{position:relative;transition:background-color .15s ease,color .15s ease}
-.pn-fx-peek::after{content:attr(data-peek);position:absolute;bottom:calc(100% + 5px);inset-inline-start:0;transform-origin:bottom left;transform:translateY(6px) scale(.92);opacity:0;background:var(--wl-ink);color:var(--wl-bg);font-size:11px;font-weight:600;line-height:1;padding:5px 9px;border-radius:7px;white-space:nowrap;pointer-events:none;z-index:2;transition:opacity .15s ease,transform .2s cubic-bezier(.34,1.56,.64,1)}
+.pn-fx-peek::after{content:attr(data-peek);position:absolute;bottom:calc(100% + 5px);inset-inline-start:0;transform-origin:bottom left;transform:translateY(6px) scale(.92);opacity:0;background:var(--wl-ink);color:var(--wl-bg);font-size:var(--fs-meta);font-weight:600;line-height:1;padding:5px 9px;border-radius:7px;white-space:nowrap;pointer-events:none;z-index:2;transition:opacity .15s ease,transform .2s cubic-bezier(.34,1.56,.64,1)}
 .pn-fx-peek-end::after{inset-inline-start:auto;inset-inline-end:0;transform-origin:bottom right}
 @media (hover:hover){
 .pn-fx-peek:hover::after{opacity:1;transform:translateY(0) scale(1)}
@@ -891,7 +914,7 @@ export const FX_CSS = `
 .pn-fx-hand:hover .pn-fx-hand-chip{transform:translateY(-4px) rotate(-2deg);border-color:var(--wl-emerald);box-shadow:0 8px 16px rgba(0,0,0,.12)}
 .pn-fx-hand:hover .pn-fx-hand-chip:nth-child(2){transform:translateY(-4px) rotate(2deg);transition-delay:.08s}
 .pn-fx-stamp{position:relative}
-.pn-fx-stamp::after{content:attr(data-stamp);position:absolute;top:14px;right:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;font-weight:800;letter-spacing:.1em;white-space:nowrap;color:#dc2626;border:2px solid currentColor;padding:2px 8px;border-radius:4px;transform:rotate(8deg) scale(3);opacity:0;pointer-events:none;transition:transform .18s cubic-bezier(.34,1.56,.64,1),opacity .12s}
+.pn-fx-stamp::after{content:attr(data-stamp);position:absolute;top:14px;right:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-meta);font-weight:800;letter-spacing:.1em;white-space:nowrap;color:#dc2626;border:2px solid currentColor;padding:2px 8px;border-radius:4px;transform:rotate(8deg) scale(3);opacity:0;pointer-events:none;transition:transform .18s cubic-bezier(.34,1.56,.64,1),opacity .12s}
 .pn-fx-stamp:hover::after{transform:rotate(-6deg) scale(1);opacity:1}
 .pn-fx-stamp-bright::after{color:#ef4444}
 .pn-fx-invert{transition:background-color .2s ease,box-shadow .2s ease}
@@ -920,7 +943,7 @@ export const FX_CSS = `
 .pn-fx-fill:hover{background-position:0 0}
 .pn-fx-cal{position:relative}
 .pn-fx-cal-week{display:flex;gap:3px;position:relative}
-.pn-fx-cal-week>span{flex:1;height:20px;border-radius:5px;background:color-mix(in srgb,var(--wl-teal) 14%,transparent);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;line-height:20px;text-align:center;color:var(--wl-teal)}
+.pn-fx-cal-week>span{flex:1;height:20px;border-radius:5px;background:color-mix(in srgb,var(--wl-teal) 14%,transparent);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-meta);line-height:20px;text-align:center;color:var(--wl-teal)}
 .pn-fx-cal-week>.pn-fx-cal-today{background:var(--wl-teal);color:var(--wl-tint-teal);font-weight:700}
 .pn-fx-cal-week>.pn-fx-cal-pill{position:absolute;top:-8px;left:calc((100% - 18px) / 7 + 3px);width:calc((100% - 18px) / 7);height:5px;border-radius:3px;background:var(--wl-teal);flex:none;transition:width .45s cubic-bezier(.22,1,.36,1)}
 .pn-fx-cal:hover .pn-fx-cal-pill{width:calc((100% - 18px) / 7 * 3 + 6px)}
@@ -947,6 +970,25 @@ export const FX_CSS = `
 .pn-fx-meds:hover .pn-fx-meds-row:nth-child(3),.pn-fx-meds:hover .pn-fx-meds-row:nth-child(3) .pn-fx-meds-ring,.pn-fx-meds:hover .pn-fx-meds-row:nth-child(3) .pn-fx-meds-ring svg{transition-delay:.4s}
 .pn-fx-meds-seg{transition:background-color .15s ease,color .15s ease}
 .pn-fx-ninja-caret{animation:pn-ninja-blink 1s steps(1) infinite}
+.pn-seen{display:block;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.pn-seen:hover,.pn-seen:focus-visible{transform:translateY(-4px) scale(1.06)}
+.pn-receipt-wrap{filter:drop-shadow(0 1px 1px rgba(0,0,0,.08)) drop-shadow(0 6px 14px rgba(0,0,0,.08));transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.pn-receipt-wrap:hover{transform:rotate(0deg)}
+.pn-receipt{position:relative;margin-bottom:9px}
+.pn-receipt::after{content:"";position:absolute;inset-inline:0;top:100%;height:9px;background:linear-gradient(135deg,var(--wl-paper) 50%,transparent 50%) 0 0/14px 9px repeat-x,linear-gradient(225deg,var(--wl-paper) 50%,transparent 50%) 0 0/14px 9px repeat-x}
+.pn-receipt-code{background:repeating-linear-gradient(90deg,var(--wl-ink) 0 2px,transparent 2px 4px,var(--wl-ink) 4px 5px,transparent 5px 8px,var(--wl-ink) 8px 11px,transparent 11px 13px);opacity:.75}
+.pn-hero-in{animation:pn-hero-in .35s cubic-bezier(.22,1,.36,1) both}
+@keyframes pn-hero-in{from{opacity:0;transform:translateY(6px)}}
+.pn-hero-totp{animation:pn-hero-totp 30s linear infinite}
+@keyframes pn-hero-totp{from{stroke-dashoffset:0}to{stroke-dashoffset:1}}
+.pn-hero-mood-line{stroke-dasharray:1;animation:pn-hero-draw 1.2s cubic-bezier(.65,0,.35,1) .1s both}
+@keyframes pn-hero-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.pn-hero-mood-area{animation:pn-hero-fade .8s ease .7s both}
+@keyframes pn-hero-fade{from{opacity:0}}
+.pn-hero-mood-dot{transform-box:fill-box;transform-origin:center;animation:pn-hero-pop .35s cubic-bezier(.34,1.56,.64,1) both;transition:r .15s ease}
+@keyframes pn-hero-pop{from{transform:scale(0)}}
+.pn-hero-mood-pulse{transform-box:fill-box;transform-origin:center;animation:pn-hero-pulse 2s ease-out 1.4s infinite;opacity:0}
+@keyframes pn-hero-pulse{from{transform:scale(.6);opacity:.5}to{transform:scale(2.2);opacity:0}}
 @keyframes pn-ninja-blink{50%{opacity:0}}
 .pn-seam .fl-pill{background:var(--wl-card);border-color:var(--wl-line);color:var(--wl-sub)}
 .pn-seam .fl-caret{background:var(--wl-sub)}
@@ -977,7 +1019,7 @@ export const FX_CSS = `
    halves of those rules (the gradient, the scanlines) stay; they cost one
    paint, not a frame budget. */
 @media (hover:none){.pn-fx-conic-btn:hover,.group:hover .pn-fx-conic-btn,.pn-fx-conic-tile:hover,.pn-fx-ants:hover,.pn-fx-cal:hover .pn-fx-cal-bell{animation:none!important}}
-@media (prefers-reduced-motion:reduce){.pn-sticky,.pn-fx-conic-btn,.pn-fx-conic-tile,.pn-fx-popmix>span,.pn-fx-shake:hover,.pn-fx-slab,.pn-fx-stamp::after,.pn-fx-peek,.pn-fx-peek::after,.pn-fx-rank-bar,.pn-fx-next-arrow,.pn-fx-dose-dot,.pn-fx-hand-chip,.pn-fx-type:hover .pn-fx-icons svg,.pn-fx-ants:hover,.pn-fx-seal-chip,.pn-fx-fill,.pn-fx-cal-pill,.pn-fx-cal-bell,.pn-fx-meds-cap,.pn-fx-meds-fill,.pn-fx-meds-due,.pn-fx-meds-done,.pn-fx-meds-next,.pn-fx-meds-row,.pn-fx-meds-ring,.pn-fx-meds-ring svg,.pn-fx-meds-seg,.pn-fx-ninja-caret{animation:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){.pn-sticky,.pn-fx-conic-btn,.pn-fx-conic-tile,.pn-fx-popmix>span,.pn-fx-shake:hover,.pn-fx-slab,.pn-fx-stamp::after,.pn-fx-peek,.pn-fx-peek::after,.pn-fx-rank-bar,.pn-fx-next-arrow,.pn-fx-dose-dot,.pn-fx-hand-chip,.pn-fx-type:hover .pn-fx-icons svg,.pn-fx-ants:hover,.pn-fx-seal-chip,.pn-fx-fill,.pn-fx-cal-pill,.pn-fx-cal-bell,.pn-fx-meds-cap,.pn-fx-meds-fill,.pn-fx-meds-due,.pn-fx-meds-done,.pn-fx-meds-next,.pn-fx-meds-row,.pn-fx-meds-ring,.pn-fx-meds-ring svg,.pn-fx-meds-seg,.pn-fx-ninja-caret,.pn-seen,.pn-hero-in,.pn-hero-totp,.pn-hero-mood-line,.pn-hero-mood-area,.pn-hero-mood-dot,.pn-hero-mood-pulse{animation:none!important;transition:none!important}}
 `;
 
 export function LandingPage({
@@ -990,6 +1032,9 @@ export function LandingPage({
   const { t } = useTranslation('landing');
   // The hero heading's shrink factor, from HeroRotator (1 when it fits).
   const [heroFit, setHeroFit] = useState(1);
+  // The noun the hero heading shows, which the small app window follows.
+  const [heroWord, setHeroWord] = useState<string>(HERO_WORDS[0]);
+  const priceMath = usePriceMath(isBetaPricing() ? EARLY_PRICE : PRO_PRICE);
   const { auth } = useAuth();
   // Drives the live-demo shot below, which ships as a light and a dark
   // capture. Read here rather than through a CSS class pair so only the
@@ -1002,7 +1047,7 @@ export function LandingPage({
   // pitch. That is also what makes an apex CTA land without a marketing
   // flash - the card is the first paint, no fragment needed. Web on the apex
   // still starts on the marketing homepage until the visitor picks an intent.
-  // Spec: ops/docs/domain-split.md (apex is marketing-only, a signed-in visitor there sees MoveScreen)
+  // Spec: docs/internal/domain-split.md (apex is marketing-only, a signed-in visitor there sees MoveScreen)
   const [authIntent, setAuthIntent] = useState<'create' | 'login' | null>(
     IS_DESKTOP || isAppHost() ? 'login' : null,
   );
@@ -1079,7 +1124,7 @@ export function LandingPage({
   // and strip it from the address bar. Runs on the apex, where the
   // arrival happens, and on the app host, where the handoff lands it.
   // First touch wins, so a re-mount cannot overwrite the arrival.
-  // Spec: ops/docs/plans/partner-attribution.md (referrer resolved server-side in the Worker, never sent raw from the browser)
+  // Spec: docs/internal/plans/partner-attribution.md (referrer resolved server-side in the Worker, never sent raw from the browser)
   useEffect(() => {
     captureSource();
   }, []);
@@ -1165,7 +1210,7 @@ export function LandingPage({
     // alike. Signed-in visitors keep the in-place paths (the MoveScreen
     // owns their migration, with its sync gate); demo, native,
     // localhost, and the app host itself are untouched.
-    // Spec: ops/docs/domain-split.md (no feature flag: rollback means reverting the retirement commit)
+    // Spec: docs/internal/domain-split.md (no feature flag: rollback means reverting the retirement commit)
     if (
       isApexHost() &&
       !isDemoMode() &&
@@ -1232,7 +1277,7 @@ export function LandingPage({
     const logoInner = (
       <>
         <LogoIcon size={44} className="shrink-0 text-accent" />
-        <span className="truncate text-2xl tracking-tight"><Brand /></span>
+        <span className="truncate text-display-2 tracking-tight"><Brand /></span>
       </>
     );
     return (
@@ -1261,12 +1306,12 @@ export function LandingPage({
               <button
                 type="button"
                 onClick={headerBack}
-                className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-sm text-[var(--wl-sub)] hover:text-[var(--wl-ink)] transition"
+                className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-body text-[var(--wl-sub)] hover:text-[var(--wl-ink)] transition"
               >
                 {/* The icon, not a bare &larr;: it is the one arrow in this
                     file that has to mirror for Arabic, and icons.tsx does
                     that for every ArrowLeft call site. */}
-                <ArrowLeft size={14} aria-hidden="true" /> {t('common:actions.back')}
+                <ArrowLeft aria-hidden="true" /> {t('common:actions.back')}
               </button>
             ) : (
               /* Native opens straight on this card, so it is the only
@@ -1323,7 +1368,7 @@ export function LandingPage({
               the brand at its full width, so the name is never cut. */}
           <div ref={brandRef} className="flex min-w-0 items-center gap-2 lg:gap-3">
             <LogoIcon size={64} className="shrink-0 text-accent w-8 h-8 lg:w-16 lg:h-16" />
-            <h1 className="truncate text-lg lg:text-4xl tracking-tight">
+            <h1 className="truncate text-heading lg:text-display-4 tracking-tight">
               <Brand />
             </h1>
           </div>
@@ -1332,7 +1377,7 @@ export function LandingPage({
               all but Downloads, then the hamburger. Measured per locale and window, not by
               breakpoint. There is no Log in button: the App pill opens the
               same auth card, and the hero microcopy keeps an explicit
-              log-in link. Spec: ops/docs/archive/ui-patterns.md section 49 */}
+              log-in link. Spec: docs/internal/design/ui-patterns.md section 49 */}
           <div className="shrink-0">
             <HeaderRail mode={navMode} items={navItems} themeToggle={<ThemeToggle rail />} onApp={() => openAuth('create')} onMenu={() => setNavOpen(true)} menuOpen={navOpen} />
           </div>
@@ -1352,7 +1397,7 @@ export function LandingPage({
               <div className="mb-10 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <LogoIcon size={40} className="text-accent" />
-                  <span className="text-xl tracking-tight text-[var(--wl-ink)]">
+                  <span className="text-display tracking-tight text-[var(--wl-ink)]">
                     <Brand />
                   </span>
                 </div>
@@ -1365,7 +1410,7 @@ export function LandingPage({
                   <X size={20} />
                 </button>
               </div>
-              <nav className="flex flex-col text-3xl font-black tracking-tight text-[var(--wl-ink)]">
+              <nav className="flex flex-col text-display-3 font-black tracking-tight text-[var(--wl-ink)]">
                 <OverlayRows items={navItems} onSection={goToSection} />
               </nav>
               <div className="mt-auto space-y-3 pt-10">
@@ -1376,16 +1421,16 @@ export function LandingPage({
                 <button
                   type="button"
                   onClick={() => { setNavOpen(false); openAuth('create'); }}
-                  className="pn-fx-conic-btn cursor-pointer w-full rounded-full bg-[var(--wl-ink)] py-3.5 text-base font-bold text-[var(--wl-bg)]"
+                  className="pn-fx-conic-btn cursor-pointer w-full rounded-full bg-[var(--wl-ink)] py-3.5 text-title font-bold text-[var(--wl-bg)]"
                 >
                   {t('header.openApp')}
                 </button>
                 <a
                   href="https://try.privacynotes.app/"
-                  className="pn-fx-amber flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-[var(--wl-amber-border)] py-3 text-base font-bold text-[var(--wl-amber-text)] transition"
+                  className="pn-fx-amber flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-[var(--wl-amber-border)] py-3 text-title font-bold text-[var(--wl-amber-text)] transition"
                 >
                   {t('hero.tryDemo')}
-                  <ArrowUpRight size={16} className="shrink-0" aria-hidden="true" />
+                  <ArrowUpRight className="shrink-0" aria-hidden="true" />
                 </a>
                 <div className="flex items-center justify-center gap-3 pt-3">
                   <ThemeToggle />
@@ -1404,7 +1449,7 @@ export function LandingPage({
           <div className="mx-auto flex h-14 max-w-5xl xl:max-w-7xl items-center justify-between gap-3 px-5 sm:px-8">
             <button type="button" onClick={() => window.scrollTo({ top: 0 })} className="flex min-w-0 cursor-pointer items-center gap-2">
               <LogoIcon size={28} className="shrink-0 text-accent" />
-              <span className="truncate text-base tracking-tight text-[var(--wl-ink)]">
+              <span className="truncate text-title tracking-tight text-[var(--wl-ink)]">
                 <Brand />
               </span>
             </button>
@@ -1422,7 +1467,7 @@ export function LandingPage({
       <main>
         <div className="relative mx-auto max-w-5xl px-5 sm:px-8 pb-10 sm:pb-14">
         {/* ── Hero (poster, two-column) ───────────────────────── */}
-        <div className="relative grid lg:grid-cols-[minmax(0,1fr)_400px] gap-12 lg:gap-20 items-center mb-12 sm:mb-16">
+        <div className="relative grid lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_440px] gap-12 lg:gap-12 xl:gap-16 xl:-me-28 items-center mb-12 sm:mb-16">
         {/* Below lg the card column (and its asanoha patch) is hidden, so
             this twin keeps the motif on phones and tablets: same pattern,
             bleeding off the top end corner behind the hero text. Own ids
@@ -1453,24 +1498,26 @@ export function LandingPage({
         </svg>
         <div className="max-w-3xl">
           <a
-            href="https://github.com/LifetimeLabsDev/PrivacyNotes.app"
+            href="https://github.com/LifetimeLabsHQ/PrivacyNotes.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="pn-fx-track inline-flex items-center gap-2 rounded-full border border-[var(--wl-emerald)]/40 bg-[var(--wl-tint-green)] px-3 py-1 text-[11px] font-bold text-[var(--wl-emerald)] uppercase tracking-[0.08em] hover:bg-[var(--wl-emerald)]/15 transition mb-6"
+            className="pn-fx-track inline-flex items-center gap-2 rounded-full border border-[var(--wl-emerald)]/40 bg-[var(--wl-tint-green)] px-3 py-1 text-meta font-bold text-[var(--wl-emerald)] uppercase tracking-[0.08em] hover:bg-[var(--wl-emerald)]/15 transition mb-6"
           >
-            <Lock size={12} className="shrink-0" />
+            <Lock className="shrink-0" />
             {t('hero.badge')}
           </a>
-          <h2 className="text-5xl sm:text-7xl lg:text-6xl font-black tracking-tight leading-[1.05] text-[var(--wl-ink)]">
+          <h2 className="text-display-5 sm:text-display-7 lg:text-display-6 font-black tracking-tight leading-[1.05] text-[var(--wl-ink)]">
             <span className="sr-only">{t('hero.headlineSr')}</span>
             <Trans
               i18nKey="landing:hero.headline"
               parent="span"
               aria-hidden="true"
               className="block"
+              // Shrunk to fit the widest rotating word on a narrow screen: a fitted size, outside the type roles.
+              data-type-exempt=""
               style={heroFit < 1 ? { fontSize: `${heroFit}em` } : undefined}
               components={{
-                rotate: <HeroRotator onFit={setHeroFit} />,
+                rotate: <HeroRotator onFit={setHeroFit} onWord={setHeroWord} />,
                 br: <br />,
                 stroke: (
                   <span
@@ -1486,26 +1533,11 @@ export function LandingPage({
               }}
             />
           </h2>
-          <p className="mt-6 text-lg sm:text-xl text-[var(--wl-sub)] leading-relaxed max-w-xl">
+          <p className="mt-6 text-heading sm:text-display text-[var(--wl-sub)] leading-relaxed max-w-xl">
             {t('hero.subhead')}
           </p>
-          <div className="mt-8 grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              onClick={() => openAuth('create')}
-              className="pn-fx-conic-btn cursor-pointer rounded-full bg-[var(--wl-ink)] text-[var(--wl-bg)] px-3 sm:px-7 py-3.5 text-sm sm:text-base font-bold"
-            >
-              {t('header.createVault')}
-            </button>
-            <a
-              href="https://try.privacynotes.app/"
-              className="pn-fx-amber inline-flex items-center justify-center gap-2 rounded-full border-2 border-[var(--wl-amber-border)] text-[var(--wl-amber-text)] px-3 sm:px-6 py-3 text-sm sm:text-base font-bold transition"
-            >
-              {t('hero.tryDemo')}
-              <ArrowUpRight size={16} className="shrink-0" aria-hidden="true" />
-            </a>
-          </div>
-          <p className="mt-3 text-xs text-[var(--wl-muted)]">
+          <CtaPair className="mt-8" label={t('header.createVault')} onCreate={() => openAuth('create')} />
+          <p className="mt-3 text-small text-[var(--wl-muted)]">
             {t('hero.microcopy')}
             {' '}
             <button
@@ -1524,16 +1556,16 @@ export function LandingPage({
               href={GITHUB_RELEASES_URL}
               target="_blank"
               rel="noopener"
-              className="pn-fx-arrow inline-flex items-center gap-1.5 rounded-full border border-[var(--wl-line)] bg-[var(--wl-card)]/70 px-3 py-1.5 text-xs font-semibold text-[var(--wl-sub)] hover:text-[var(--wl-ink)] transition"
+              className="pn-fx-arrow inline-flex items-center gap-1.5 rounded-full border border-[var(--wl-line)] bg-[var(--wl-card)]/70 px-3 py-1.5 text-small font-semibold text-[var(--wl-sub)] hover:text-[var(--wl-ink)] transition"
             >
-              <GithubLogo size={14} weight="fill" className="shrink-0" aria-hidden="true" />
+              <GithubLogo weight="fill" className="shrink-0" aria-hidden="true" />
               {t('hero.trustSigned')}
             </a>
           </div>
         </div>
 
         {/* Hero visual: a small copy of the app, pure CSS */}
-        <div className="relative hidden lg:block h-[480px]" aria-hidden="true">
+        <div className="relative hidden lg:block h-[480px]">
           {/* Asanoha (hemp leaf) patch in faint brand blue: the washi
               pattern behind the tilted cards, replacing the old sparkle
               glyph. Inline SVG, about 1 KB; the radial mask dissolves the
@@ -1542,6 +1574,7 @@ export function LandingPage({
             viewBox="0 0 240 240"
             className="pointer-events-none absolute -top-10 -start-16 h-[560px] w-[560px] text-accent opacity-[0.13] dark:opacity-[0.17]"
             fill="none"
+            aria-hidden="true"
           >
             <defs>
               <pattern id="pn-asanoha" width="40" height="46" patternUnits="userSpaceOnUse">
@@ -1560,50 +1593,10 @@ export function LandingPage({
             </defs>
             <rect width="240" height="240" fill="url(#pn-asanoha)" mask="url(#pn-asanoha-mask)" />
           </svg>
-          {/* The app, small: the sidebar names every pillar, the open list
-              is the Tasks pillar, and the mood card over the corner is the
-              Journal. Spec: ops/design/patterns/145-150.md section 149 */}
-          <div className="absolute inset-x-0 top-10 grid h-[380px] grid-cols-[158px_minmax(0,1fr)] overflow-hidden rounded-2xl border-2 border-[var(--wl-edge)] bg-[var(--wl-card)]">
-            <div className="space-y-0.5 border-e border-[var(--wl-line)] p-2">
-              {HERO_PILLARS.map(({ key, Icon }) => (
-                <div
-                  key={key}
-                  className={`flex items-center gap-2 rounded-lg px-2.5 py-[7px] text-xs font-semibold ${key === 'tasks' ? 'bg-[var(--wl-tint-blue)] text-accent' : 'text-[var(--wl-sub)]'}`}
-                >
-                  <Icon size={15} weight="duotone" className="shrink-0" />
-                  <span className="truncate">{key === 'vault' ? t('heroCard.passwords') : t(`pillars.${key}Name`)}</span>
-                </div>
-              ))}
-            </div>
-            <div className="p-6">
-              <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--wl-sub)]">{t('heroCard.today')}</div>
-              <div className="mt-2 mb-4 text-lg font-extrabold leading-snug text-[var(--wl-ink)]">{t('heroCard.tripTitle')}</div>
-              <div className="space-y-2.5 text-sm text-[var(--wl-ink)]">
-                {(['taskPassport', 'taskInsurance', 'taskChargers', 'taskHotel'] as const).map((k, i) => (
-                  <div key={k} className="flex items-center gap-2.5">
-                    {i < 2 ? (
-                      <Check size={15} className="shrink-0 text-accent" />
-                    ) : (
-                      <span className="inline-block h-3.5 w-3.5 shrink-0 rounded-[4px] border border-[var(--wl-muted)]/60" />
-                    )}
-                    <span className={i < 2 ? 'line-through text-[var(--wl-sub)]' : ''}>{t(`heroCard.${k}`)}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-5 flex flex-wrap gap-2">
-                <span className="rounded-full bg-[var(--wl-tint-teal)] px-2.5 py-1 text-[11px] font-semibold text-[var(--wl-teal)]">{t('heroCard.flight')}</span>
-                <span className="rounded-full bg-[var(--wl-tint-green)] px-2.5 py-1 text-[11px] font-semibold text-[var(--wl-emerald)]">{t('heroCard.encrypted')}</span>
-              </div>
-            </div>
-          </div>
-          <div className="pn-fx-straighten absolute bottom-0 -end-3 w-60 rotate-3 rounded-2xl border-2 border-[var(--wl-edge)] bg-[var(--wl-card)] p-4">
-            <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--wl-emerald)]">{t('heroCard.moodWeek')}</div>
-            <div className="mt-3 flex gap-1.5">
-              {[0.35, 0.6, 0.5, 1, 0.8, 0.9, 0.7].map((o, i) => (
-                <span key={i} className={`h-7 flex-1 rounded-md ${i === 2 ? 'bg-[var(--wl-amber-border)]' : 'bg-[var(--wl-emerald)]'}`} style={{ opacity: o }} />
-              ))}
-            </div>
-          </div>
+          {/* The app, small and live: each pillar in the sidebar opens its
+              own panel, and until a visitor picks one the window follows the
+              heading's noun. Spec: docs/internal/design/patterns/145-150.md section 150 */}
+          <HeroApp word={heroWord} />
         </div>
         </div>
 
@@ -1651,19 +1644,19 @@ export function LandingPage({
                 sits on a photograph and an outline disappears into it. Note it
                 does NOT take pn-fx-conic-btn: that hover paints a black
                 background, which would flip an amber button back to black. */}
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-amber-500 px-5 sm:px-7 py-3 sm:py-3.5 text-sm sm:text-base font-bold text-neutral-950 shadow-[0_4px_14px_rgba(10,10,10,0.28)] transition group-hover:bg-amber-400">
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-amber-500 px-5 sm:px-7 py-3 sm:py-3.5 text-body sm:text-title font-bold text-neutral-950 shadow-[0_4px_14px_rgba(10,10,10,0.28)] transition group-hover:bg-amber-400">
               {t('hero.tryDemo')}
-              <ArrowUpRight size={16} className="shrink-0" aria-hidden="true" />
+              <ArrowUpRight className="shrink-0" aria-hidden="true" />
             </span>
           </a>
-          <p className="mt-3 text-center text-xs text-[var(--wl-muted)]">{t('demoShot.caption')}</p>
+          <p className="mt-3 text-center text-small text-[var(--wl-muted)]">{t('demoShot.caption')}</p>
         </div>
 
         {/* ── The typewriter on a seam ──────────────────────────
             The footer's closing line (footerLines.ts), set on a hairline
             under the demo shot's caption: half above the line, half
             below, like the footer's own seam. Spec:
-            ops/design/patterns/145-150.md section 149 */}
+            docs/internal/design/patterns/145-150.md section 149 */}
         <div className="pn-seam -mx-5 sm:-mx-8 mt-14 mb-14 sm:mb-16 border-t border-[var(--wl-line)]">
           <FooterLines />
         </div>
@@ -1692,30 +1685,30 @@ export function LandingPage({
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
             <div className="pn-fx-invert col-span-2 sm:col-span-1 rounded-2xl border-2 border-[var(--wl-slab-line)] bg-[var(--wl-slab)] p-4 sm:p-6">
               <FileText size={30} weight="duotone" className="text-blue-400" />
-              <div className="mt-2.5 sm:mt-3 text-xl sm:text-2xl lg:text-xl font-extrabold tracking-tight text-[var(--wl-on-slab)]">{t('pillars.notesName')}</div>
-              <p className="mt-1 text-sm leading-relaxed text-[var(--wl-slab-sub)]">
+              <div className="mt-2.5 sm:mt-3 text-display sm:text-display-2 lg:text-display font-extrabold tracking-tight text-[var(--wl-on-slab)]">{t('shell:tagsRail.notes')}</div>
+              <p className="mt-1 text-body leading-relaxed text-[var(--wl-slab-sub)]">
                 {t('pillars.notesBlurb')}
               </p>
             </div>
             <div className="pn-fx-draw rounded-2xl bg-[var(--wl-tint-blue)] border-2 border-accent/30 p-4 sm:p-6">
               <svg className="pn-fx-draw-rect" aria-hidden="true"><rect /></svg>
               <CheckCircle size={30} weight="duotone" className="text-accent" />
-              <div className="mt-2.5 sm:mt-3 text-xl sm:text-2xl lg:text-xl font-extrabold tracking-tight text-[var(--wl-ink)]">{t('pillars.tasksName')}</div>
-              <p className="mt-1 text-sm leading-relaxed text-[var(--wl-sub)]">
+              <div className="mt-2.5 sm:mt-3 text-display sm:text-display-2 lg:text-display font-extrabold tracking-tight text-[var(--wl-ink)]">{t('shell:tagsRail.tasks')}</div>
+              <p className="mt-1 text-body leading-relaxed text-[var(--wl-sub)]">
                 {t('pillars.tasksBlurb')}
               </p>
             </div>
             <div className="pn-fx-stamp rounded-2xl bg-[var(--wl-tint-green)] border-2 border-[var(--wl-emerald)]/30 p-4 sm:p-6" data-stamp="SECURE">
               <Shield size={30} weight="duotone" className="text-[var(--wl-emerald)]" />
-              <div className="mt-2.5 sm:mt-3 text-xl sm:text-2xl lg:text-xl font-extrabold tracking-tight text-[var(--wl-ink)]">{t('pillars.vaultName')}</div>
-              <p className="mt-1 text-sm leading-relaxed text-[var(--wl-sub)]">
+              <div className="mt-2.5 sm:mt-3 text-display sm:text-display-2 lg:text-display font-extrabold tracking-tight text-[var(--wl-ink)]">{t('shell:tagsRail.vault')}</div>
+              <p className="mt-1 text-body leading-relaxed text-[var(--wl-sub)]">
                 {t('pillars.vaultBlurb')}
               </p>
             </div>
             <div className="pn-fx-grid col-span-2 sm:col-span-1 rounded-2xl bg-[var(--wl-card)] border-2 border-accent/30 p-4 sm:p-6">
               <Book size={30} weight="duotone" className="text-[var(--wl-ink)]" />
-              <div className="mt-2.5 sm:mt-3 text-xl sm:text-2xl lg:text-xl font-extrabold tracking-tight text-[var(--wl-ink)]">{t('pillars.journalName')}</div>
-              <p className="mt-1 text-sm leading-relaxed text-[var(--wl-sub)]">
+              <div className="mt-2.5 sm:mt-3 text-display sm:text-display-2 lg:text-display font-extrabold tracking-tight text-[var(--wl-ink)]">{t('pillars.journalName')}</div>
+              <p className="mt-1 text-body leading-relaxed text-[var(--wl-sub)]">
                 {t('pillars.journalBlurb')}
               </p>
             </div>
@@ -1729,14 +1722,14 @@ export function LandingPage({
                 chips can be pure ink. */}
             <div className="pn-fx-seal pn-fx-stamp col-span-2 sm:col-span-1 rounded-2xl bg-[var(--wl-tile-files)] border-2 border-[var(--wl-ink)]/25 p-4 sm:p-6" data-stamp="ENCRYPTED">
               <Folder size={30} weight="duotone" className="text-[var(--wl-ink)]" />
-              <div className="mt-2.5 sm:mt-3 text-xl sm:text-2xl lg:text-xl font-extrabold tracking-tight text-[var(--wl-ink)]">{t('pillars.filesName')}</div>
-              <p className="mt-1 text-sm leading-relaxed text-[var(--wl-sub)]">
+              <div className="mt-2.5 sm:mt-3 text-display sm:text-display-2 lg:text-display font-extrabold tracking-tight text-[var(--wl-ink)]">{t('shell:tagsRail.files')}</div>
+              <p className="mt-1 text-body leading-relaxed text-[var(--wl-sub)]">
                 {t('pillars.filesBlurb')}
               </p>
               <div aria-hidden="true" className="mt-3 sm:mt-4 flex gap-1.5">
                 {[ImageIcon, FileText, MusicNotes, VideoCamera].map((Glyph, i) => (
                   <span key={i} className="pn-fx-seal-chip flex h-7 w-7 items-center justify-center rounded-md border border-[var(--wl-ink)]/25 text-[var(--wl-ink)]">
-                    <Glyph size={15} weight="duotone" />
+                    <Glyph weight="duotone" />
                   </span>
                 ))}
               </div>
@@ -1749,9 +1742,9 @@ export function LandingPage({
                 meter's are: a numeral reads the same in every catalog. */}
             <div className="pn-fx-cal col-span-2 sm:col-span-1 rounded-2xl bg-[var(--wl-tint-teal)] border-2 border-[var(--wl-teal)]/30 p-4 sm:p-6">
               <CalendarDots size={30} weight="duotone" className="text-[var(--wl-teal)]" />
-              <Bell size={18} weight="duotone" aria-hidden="true" className="pn-fx-cal-bell absolute top-4 end-4 sm:top-6 sm:end-6 text-[var(--wl-teal)]" />
-              <div className="mt-2.5 sm:mt-3 text-xl sm:text-2xl lg:text-xl font-extrabold tracking-tight text-[var(--wl-ink)]">{t('pillars.calendarName')}</div>
-              <p className="mt-1 text-sm leading-relaxed text-[var(--wl-sub)]">
+              <Bell weight="duotone" aria-hidden="true" className="pn-fx-cal-bell absolute top-4 end-4 sm:top-6 sm:end-6 text-[var(--wl-teal)]" />
+              <div className="mt-2.5 sm:mt-3 text-display sm:text-display-2 lg:text-display font-extrabold tracking-tight text-[var(--wl-ink)]">{t('shell:tagsRail.calendar')}</div>
+              <p className="mt-1 text-body leading-relaxed text-[var(--wl-sub)]">
                 {t('pillars.calendarBlurb')}
               </p>
               <div dir="ltr" aria-hidden="true" className="pn-fx-cal-week mt-3 sm:mt-4"> {/* rtl-ok: a week of digits stays LTR */}
@@ -1766,8 +1759,8 @@ export function LandingPage({
                 up to the homepage. */}
             <div className="pn-fx-fill col-span-2 sm:col-span-1 rounded-2xl bg-[var(--wl-card)] border-2 border-[var(--wl-line)] p-4 sm:p-6">
               <UserCheck size={30} weight="duotone" className="text-accent" />
-              <div className="mt-2.5 sm:mt-3 text-xl sm:text-2xl lg:text-xl font-extrabold tracking-tight text-[var(--wl-ink)]">{t('pillars.contactsName')}</div>
-              <p className="mt-1 text-sm leading-relaxed text-[var(--wl-sub)]">
+              <div className="mt-2.5 sm:mt-3 text-display sm:text-display-2 lg:text-display font-extrabold tracking-tight text-[var(--wl-ink)]">{t('shell:tagsRail.contacts')}</div>
+              <p className="mt-1 text-body leading-relaxed text-[var(--wl-sub)]">
                 {t('pillars.contactsBlurb')}
               </p>
             </div>
@@ -1783,8 +1776,8 @@ export function LandingPage({
                 no tile sits beside or under one of its own hue. */}
             <div className="pn-fx-ribbon pn-fx-ribbon-ink col-span-2 sm:col-span-1 rounded-2xl border-2 border-[var(--wl-slab-line)] bg-[var(--wl-slab)] p-4 sm:p-6">
               <Bookmarks size={30} weight="duotone" className="text-blue-400" />
-              <div className="mt-2.5 sm:mt-3 text-xl sm:text-2xl lg:text-xl font-extrabold tracking-tight text-[var(--wl-on-slab)]">{t('pillars.bookmarksName')}</div>
-              <p className="mt-1 text-sm leading-relaxed text-[var(--wl-slab-sub)]">
+              <div className="mt-2.5 sm:mt-3 text-display sm:text-display-2 lg:text-display font-extrabold tracking-tight text-[var(--wl-on-slab)]">{t('pillars.bookmarksName')}</div>
+              <p className="mt-1 text-body leading-relaxed text-[var(--wl-slab-sub)]">
                 {t('pillars.bookmarksBlurb')}
               </p>
             </div>
@@ -1795,7 +1788,7 @@ export function LandingPage({
               Markdown slab. Left: the key caps, the tagline, the name, the
               blurb and nine chips, one per thing the box does. Right: a copy
               of the box that types four scenes in a loop (NinjaBox.tsx).
-              Spec: ops/design/patterns/145-150.md section 145 */}
+              Spec: docs/internal/design/patterns/145-150.md section 145 */}
           <div className="pn-fx-ninja mt-2.5 sm:mt-3 grid lg:grid-cols-2 gap-6 sm:gap-8 items-center lg:items-stretch rounded-2xl bg-[var(--wl-tint-blue)] border-2 border-accent/40 p-5 sm:p-7">
             <div className="flex flex-col">
               {/* The mark, the key and its memory trick on one line: K for
@@ -1804,22 +1797,22 @@ export function LandingPage({
                 <NinjaIcon size={40} tone="real" className="shrink-0" />
                 <span className="inline-flex gap-1" aria-hidden="true">
                   {(KEY_OS === 'mac' ? ['⌘', 'K'] : ['Ctrl', 'K']).map((k) => (
-                    <span key={k} className="inline-flex h-8 min-w-8 items-center justify-center rounded-md border-2 border-b-4 border-[var(--wl-ink)] bg-[var(--wl-card)] px-2 font-mono text-[13px] font-bold text-[var(--wl-ink)]">{k}</span>
+                    <span key={k} className="inline-flex h-8 min-w-8 items-center justify-center rounded-md border-2 border-b-4 border-[var(--wl-ink)] bg-[var(--wl-card)] px-2 font-mono text-compact font-bold text-[var(--wl-ink)]">{k}</span>
                   ))}
                 </span>
-                <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-accent dark:text-blue-300">{'// '}{KATANA_LINE}</span>
+                <span className="font-mono text-meta font-semibold uppercase tracking-[0.2em] text-accent dark:text-blue-300">{'// '}{KATANA_LINE}</span>
               </div>
               <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--wl-ink)]">{t('ninja.tileName')}</span>
-                <span className="text-base sm:text-lg font-semibold text-[var(--wl-sub)]">{t('ninja.tileTagline')}</span>
+                <span className="text-display-3 sm:text-display-4 font-black tracking-tight text-[var(--wl-ink)]">{t('common:quickSwitcher.jumpTo')}</span>
+                <span className="text-title sm:text-heading font-semibold text-[var(--wl-sub)]">{t('ninja.tileTagline')}</span>
               </div>
-              <p className="mt-2 text-lg sm:text-xl font-bold leading-snug tracking-tight text-[var(--wl-ink)]">{t('ninja.tileLead')}</p>
-              <p className="mt-2 text-base leading-relaxed text-[var(--wl-sub)] max-w-lg">
+              <p className="mt-2 text-heading sm:text-display font-bold leading-snug tracking-tight text-[var(--wl-ink)]">{t('ninja.tileLead')}</p>
+              <p className="mt-2 text-title leading-relaxed text-[var(--wl-sub)] max-w-lg">
                 {t('ninja.tileBlurb', { key: KEY_OS === 'mac' ? '⌘K' : 'Ctrl+K' })}
               </p>
               <div className="mt-4 flex flex-wrap gap-1.5">
                 {([['chipDates', CalendarPlus], ['chipAppend', ListChecks], ['chipTab', ArrowLineRight], ['chipTags', Hash], ['chipDay', CalendarBlank], ['chipLink', LinkSimple]] as const).map(([k, Glyph]) => (
-                  <span key={k} className="inline-flex items-center gap-1 rounded-full border-[1.5px] border-[var(--wl-chip-border)] bg-[var(--wl-card)] px-2.5 py-1 text-[11px] font-semibold text-[var(--wl-chip-text)] [&_svg]:size-3 [&_svg]:text-accent dark:[&_svg]:text-blue-300">
+                  <span key={k} className="inline-flex items-center gap-1 rounded-full border-[1.5px] border-[var(--wl-chip-border)] bg-[var(--wl-card)] px-2.5 py-1 text-meta font-semibold text-[var(--wl-chip-text)] [&_svg]:text-accent dark:[&_svg]:text-blue-300">
                     <Glyph weight="duotone" />
                     {t(`ninja.${k}`)}
                   </span>
@@ -1829,8 +1822,8 @@ export function LandingPage({
                   the key works for real, and the screenshots of the real box
                   in the shared viewer (NinjaGallery.tsx). */}
               <div className="mt-5 lg:mt-auto lg:pt-5 flex flex-wrap items-center gap-2.5">
-                <a href={DEMO_HREF} className="pn-fx-conic-btn inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-[var(--wl-bg)]">
-                  <Play size={15} weight="fill" aria-hidden="true" />
+                <a href={DEMO_HREF} className="pn-fx-conic-btn inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-body font-bold text-[var(--wl-bg)]">
+                  <Play weight="fill" aria-hidden="true" />
                   {t('ninja.tryDemo')}
                 </a>
                 <NinjaShotsButton />
@@ -1850,12 +1843,12 @@ export function LandingPage({
               half-width column holds the chips on three rows and clips the
               capsule label. Without a pointer the tile rests at the due
               state, which reads on its own.
-              Spec: ops/design/patterns/141-144.md section 143 */}
+              Spec: docs/internal/design/patterns/141-144.md section 143 */}
           <div className="pn-fx-meds mt-2.5 sm:mt-3 grid lg:grid-cols-[1.4fr_1fr] gap-6 sm:gap-8 items-center rounded-2xl bg-[var(--wl-tint-green)] border-2 border-[var(--wl-emerald)]/40 p-5 sm:p-7">
             <div>
               <Pill size={30} weight="duotone" className="text-[var(--wl-emerald)]" />
-              <div className="mt-2.5 sm:mt-3 text-2xl sm:text-3xl font-black tracking-tight text-[var(--wl-ink)]">{t('meds.tileName')}</div>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--wl-sub)] max-w-md">
+              <div className="mt-2.5 sm:mt-3 text-display-2 sm:text-display-3 font-black tracking-tight text-[var(--wl-ink)]">{t('meds.tileName')}</div>
+              <p className="mt-2 text-body leading-relaxed text-[var(--wl-sub)] max-w-md">
                 {t('meds.tileBlurb')}
               </p>
               {/* Nine chips on two rows at every desktop width, with room
@@ -1863,7 +1856,7 @@ export function LandingPage({
                   gaps. A third row pushes the day below the text. */}
               <div className="mt-4 flex flex-wrap gap-1.5">
                 {([['chipReminders', Bell], ['chipSchedules', Clock], ['chipHistory', ClockCounterClockwise], ['chipRefills', Package], ['chipStats', ChartBar], ['chipDoctor', FileText], ['chipPrompt', Sparkle], ['chipMood', Smiley], ['chipAdherence', CalendarCheck]] as const).map(([k, Glyph]) => (
-                  <span key={k} className="inline-flex items-center gap-1 rounded-full border-[1.5px] border-[var(--wl-chip-border)] bg-[var(--wl-card)] px-2.5 py-1 text-[11px] font-semibold text-[var(--wl-chip-text)] [&_svg]:size-3 [&_svg]:text-[var(--wl-emerald)]">
+                  <span key={k} className="inline-flex items-center gap-1 rounded-full border-[1.5px] border-[var(--wl-chip-border)] bg-[var(--wl-card)] px-2.5 py-1 text-meta font-semibold text-[var(--wl-chip-text)] [&_svg]:text-[var(--wl-emerald)]">
                     <Glyph weight="duotone" />
                     {t(`meds.${k}`)}
                   </span>
@@ -1872,20 +1865,20 @@ export function LandingPage({
             </div>
             <div aria-hidden="true">
               <div className="pn-fx-meds-cap relative mx-2 h-16 overflow-hidden rounded-full border-[2.5px] border-[var(--wl-edge)] bg-[var(--wl-card)]">
-                <div className="pn-fx-meds-fill absolute inset-y-0 start-0 flex items-center justify-center bg-[var(--wl-emerald)] text-sm font-extrabold text-[var(--wl-bg)]">
+                <div className="pn-fx-meds-fill absolute inset-y-0 start-0 flex items-center justify-center bg-[var(--wl-emerald)] text-body font-extrabold text-[var(--wl-bg)]">
                   <span dir="ltr" className="pn-fx-meds-due inline-flex items-center gap-2 font-mono"><Clock size={20} weight="bold" />{MEDS[0][0]}</span> {/* rtl-ok: a clock time stays LTR */}
                   <span className="pn-fx-meds-done absolute inline-flex items-center gap-2"><Check size={20} weight="bold" />{t('meds.tileTaken')}</span>
                 </div>
-                <div className="pn-fx-meds-next absolute inset-y-0 end-0 flex w-1/2 items-center justify-center whitespace-nowrap font-mono text-[13px] text-[var(--wl-ink)]">
+                <div className="pn-fx-meds-next absolute inset-y-0 end-0 flex w-1/2 items-center justify-center whitespace-nowrap font-mono text-compact text-[var(--wl-ink)]">
                   {t('meds.med1')}<span className="hidden sm:inline"> · {t('meds.dose1')}</span>
                 </div>
               </div>
               <div className="mt-4 space-y-1.5">
                 {MEDS.slice(0, 3).map(([time, name, dose]) => (
-                  <div key={name} className="pn-fx-meds-row flex items-center gap-3 rounded-lg border-[1.5px] border-[var(--wl-line)] bg-[var(--wl-card)] px-3 py-2 text-sm">
-                    <span dir="ltr" className="font-mono text-[11px] text-[var(--wl-sub)]">{time}</span> {/* rtl-ok: a clock time stays LTR */}
+                  <div key={name} className="pn-fx-meds-row flex items-center gap-3 rounded-lg border-[1.5px] border-[var(--wl-line)] bg-[var(--wl-card)] px-3 py-2 text-body">
+                    <span dir="ltr" className="font-mono text-meta text-[var(--wl-sub)]">{time}</span> {/* rtl-ok: a clock time stays LTR */}
                     <span className="font-semibold text-[var(--wl-ink)]">{t(`meds.${name}`)}</span>
-                    <span className="text-xs text-[var(--wl-sub)]">{t(`meds.${dose}`)}</span>
+                    <span className="whitespace-nowrap text-small text-[var(--wl-sub)]">{t(`meds.${dose}`)}</span>
                     <span className="pn-fx-meds-ring ms-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-[var(--wl-line)] text-[var(--wl-bg)]">
                       <Check size={12} weight="bold" />
                     </span>
@@ -1902,49 +1895,22 @@ export function LandingPage({
               on your disk" half of the kicker, not a pillar. */}
           <div className="pn-fx-ants mt-2.5 sm:mt-3 grid sm:grid-cols-2 gap-6 sm:gap-8 items-center rounded-2xl p-6 sm:p-8">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-[var(--wl-ink)]">
+              <h2 className="text-display-2 sm:text-display-3 font-black tracking-tight text-[var(--wl-ink)]">
                 {t('mdEditor.title')}
               </h2>
-              <p className="mt-3 text-sm leading-relaxed text-[var(--wl-sub)]">
+              <p className="mt-3 text-body leading-relaxed text-[var(--wl-sub)]">
                 {t('mdEditor.body')}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {['mdEditor.chipObsidian', 'mdEditor.chipGit', 'mdEditor.chipAgents'].map((k) => (
-                  <span key={k} className="rounded-full border border-[var(--wl-amber-border)] px-3 py-1 text-xs font-semibold text-[var(--wl-amber-text)]">
+                {['shell:markdown.useObsidian', 'shell:markdown.useGit', 'shell:markdown.useAgent'].map((k) => (
+                  <span key={k} className="rounded-full border border-[var(--wl-amber-border)] px-3 py-1 text-small font-semibold text-[var(--wl-amber-text)]">
                     {t(k)}
                   </span>
                 ))}
               </div>
-              <p className="mt-4 text-xs text-[var(--wl-sub)]">{t('mdEditor.platforms')}</p>
+              <p className="mt-4 text-small text-[var(--wl-sub)]">{t('mdEditor.platforms')}</p>
             </div>
-            <div className="overflow-hidden rounded-xl border-2 border-[var(--wl-edge)] bg-[var(--wl-card)]">
-              <div className="flex items-center gap-1.5 border-b border-[var(--wl-line)] px-3.5 py-2.5">
-                <span aria-hidden="true" className="h-2 w-2 rounded-full bg-red-400" />
-                <span aria-hidden="true" className="h-2 w-2 rounded-full bg-amber-400" />
-                <span aria-hidden="true" className="h-2 w-2 rounded-full bg-emerald-400" />
-                <span dir="ltr" className="ms-2 font-mono text-[11px] text-[var(--wl-muted)]">~/notes/ideas.md</span> {/* rtl-ok: file path stays LTR */}
-              </div>
-              <div className="px-4 py-3.5">
-                <div className="text-base font-extrabold tracking-tight text-[var(--wl-ink)]">{t('mdEditor.sampleTitle')}</div>
-                <div className="mt-2 space-y-1 text-sm text-[var(--wl-sub)]">
-                  <div className="flex items-center gap-1.5">
-                    <CheckSquare size={15} weight="fill" className="shrink-0 text-[var(--wl-emerald)]" aria-hidden="true" />
-                    <span className="line-through decoration-[var(--wl-muted)]">{t('mdEditor.sampleTask1')}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Square size={15} className="shrink-0 text-[var(--wl-muted)]" aria-hidden="true" />
-                    <span>{t('mdEditor.sampleTask2')}</span>
-                  </div>
-                </div>
-                <span className="mt-2.5 inline-block rounded bg-[var(--wl-tint-blue)] px-1.5 py-0.5 text-[11px] font-semibold text-accent dark:text-blue-300">
-                  {t('mdEditor.sampleTag')}
-                </span>
-              </div>
-              <div className="flex items-center justify-between border-t border-[var(--wl-line)] px-3.5 py-2">
-                <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--wl-muted)]">{t('mdEditor.savedToDisk')}</span>
-                <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.08em] text-neutral-950">{t('pillars.markdownFree')}</span>
-              </div>
-            </div>
+            <MarkdownDemo />
           </div>
         </div>
 
@@ -1952,10 +1918,10 @@ export function LandingPage({
             One framed panel, the way to get the app: the platforms, the
             routes and the call to action in its footer. Unframed, the
             centered stack floated between the Markdown slab and the
-            Under-the-hood card. Spec: ops/design/patterns/145-150.md section 149 */}
+            Under-the-hood card. Spec: docs/internal/design/patterns/145-150.md section 149 */}
         <div id="downloads" className="mx-auto mt-8 sm:mt-10 mb-14 scroll-mt-24 text-center rounded-3xl border-2 border-accent/40 bg-[var(--wl-tint-blue-deep)] px-5 pt-12 pb-10 sm:px-10 sm:pt-14">
-          <Kicker>{t('downloads.kicker')}</Kicker>
-          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--wl-ink)]">
+          <Kicker>{t('landing:header.downloads')}</Kicker>
+          <h2 className="text-display-3 sm:text-display-4 font-black tracking-tight text-[var(--wl-ink)]">
             {t('downloads.heading')}
           </h2>
           {/* Below sm the row is width-capped to three tiles, so the five
@@ -1974,40 +1940,40 @@ export function LandingPage({
                   it applies to the AppImage as much as the .deb (both are built against
                   libwebkit2gtk-4.1-0), and a floor read after the download has already
                   started is the false-hope failure issue #227 reported on macOS.
-                  Spec: ops/docs/linux-release.md (dependency floor) */}
-              <p className="border-b border-[var(--wl-ink)]/10 px-4 py-3 text-xs leading-relaxed text-[var(--wl-sub)]">
+                  Spec: docs/internal/linux-release.md (dependency floor) */}
+              <p className="border-b border-[var(--wl-ink)]/10 px-4 py-3 text-small leading-relaxed text-[var(--wl-sub)]">
                 {t('downloads.linuxRequirement')}
               </p>
               {/* One group per architecture, detected one first. The AppImage carries the
                   Recommended pill because of the formats offered here it is the one that
                   updates itself, the .deb being root-owned. One pill per panel, the same
                   rule the Android panel follows: a second one turns a recommendation into
-                  a category. Spec: ops/docs/linux-release.md (the sole updater payload) */}
+                  a category. Spec: docs/internal/linux-release.md (the sole updater payload) */}
               {linuxArchShown.map((a, i) => (
                 <div key={a} className={i > 0 ? 'border-t border-[var(--wl-ink)]/10' : undefined}>
                   <div className="flex items-start justify-between gap-3 px-4 pt-3 pb-1.5">
                     <span>
                       <span className="block font-semibold text-accent">{t(LINUX_BUILDS[a].label)}</span>
-                      <span className="mt-0.5 block text-xs leading-relaxed text-[var(--wl-sub)]">{t(LINUX_BUILDS[a].desc)}</span>
+                      <span className="mt-0.5 block text-small leading-relaxed text-[var(--wl-sub)]">{t(LINUX_BUILDS[a].desc)}</span>
                     </span>
                     {linuxArch === a && (
-                      <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[var(--wl-emerald)]">
-                        <CheckCircle size={14} weight="fill" aria-hidden="true" />
+                      <span className="flex shrink-0 items-center gap-1 text-small font-semibold text-[var(--wl-emerald)]">
+                        <CheckCircle weight="fill" aria-hidden="true" />
                         {t('downloads.linuxDetected')}
                       </span>
                     )}
                   </div>
-                  <LinuxDl recommended icon={<Cube size={17} weight="fill" />} href={LINUX_BUILDS[a].appimage} label="AppImage" desc={t('downloads.linuxAppImageDesc')} />
-                  <LinuxDl divider icon={<Archive size={17} weight="fill" />} href={LINUX_BUILDS[a].deb} label=".deb" desc={t('downloads.linuxDebDesc')} />
+                  <LinuxDl recommended icon={<Cube weight="fill" />} href={LINUX_BUILDS[a].appimage} label="AppImage" desc={t('downloads.linuxAppImageDesc')} />
+                  <LinuxDl divider icon={<Archive weight="fill" />} href={LINUX_BUILDS[a].deb} label=".deb" desc={t('downloads.linuxDebDesc')} />
                 </div>
               ))}
               {linuxArch !== null && !linuxOtherArch && (
                 <button
                   type="button"
                   onClick={() => setLinuxOtherArch(true)}
-                  className="flex w-full cursor-pointer items-center gap-2 border-t border-[var(--wl-ink)]/10 px-4 py-3 text-sm font-semibold text-accent transition hover:bg-[var(--wl-ink)]/5"
+                  className="flex w-full cursor-pointer items-center gap-2 border-t border-[var(--wl-ink)]/10 px-4 py-3 text-body font-semibold text-accent transition hover:bg-[var(--wl-ink)]/5"
                 >
-                  <CaretDown size={14} weight="bold" aria-hidden="true" />
+                  <CaretDown weight="bold" aria-hidden="true" />
                   {t('downloads.linuxShowOther', { arch: t(LINUX_BUILDS[linuxSecondArch].label) })}
                 </button>
               )}
@@ -2015,9 +1981,9 @@ export function LandingPage({
                   manual re-install - and the obvious move, double-clicking the file,
                   dead-ends in Ubuntu's App Center, which reports "Installed" and offers
                   no update or remove action. Uninstalling first is never necessary:
-                  installing over the old version IS the upgrade. Spec: ops/docs/linux-release.md (App Center's untrusted-source note persists until a signed apt repo ships) */}
+                  installing over the old version IS the upgrade. Spec: docs/internal/linux-release.md (App Center's untrusted-source note persists until a signed apt repo ships) */}
               <div className="border-t border-[var(--wl-ink)]/10 px-4 py-3">
-                <p className="text-xs leading-relaxed text-[var(--wl-sub)]">
+                <p className="text-small leading-relaxed text-[var(--wl-sub)]">
                   <Trans
                     i18nKey="landing:downloads.debFootnote"
                     components={{
@@ -2035,7 +2001,7 @@ export function LandingPage({
           )}
           {androidOpen && (
             <div dir="ltr" className="mx-auto mt-6 max-w-lg overflow-hidden rounded-2xl border border-[var(--wl-ink)]/15 bg-[var(--wl-card)]/70 text-left"> {/* rtl-ok: code sample stays LTR */}
-              {/* The two self-updating routes lead, and each badge sits at the end of its own
+              {/* The self-updating routes lead, and each badge sits at the end of its own
                   row rather than under it: the badge art already carries the store's name, so
                   a title line above it would print the same word twice. What the row adds is
                   the one thing the art cannot say - who installs the next version. That is the
@@ -2046,13 +2012,39 @@ export function LandingPage({
                   certificate we published and refuses a mismatch, which is the check this
                   whole page asks people to care about. The row wraps below about 384px, so a
                   phone stacks the badge under the text instead of squeezing both. */}
+              {/* Google Play leads because it is the store most Android readers already have.
+                  It is not the Recommended one: Zapstore keeps that word, and the footnote
+                  says why the other routes exist. The Play build is signed with Google's key,
+                  so moving between it and the routes below means an uninstall first.
+                  The badge is Google's own, unchanged apart from the transparent margin cropped
+                  off; the row reads like the Zapstore one below.
+                  Spec: docs/internal/android-setup.md (Step 4: release signing, dual keystore) */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-[var(--wl-ink)]/10 px-4 py-3">
+                <div className="min-w-[175px] flex-1">
+                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold text-[var(--wl-ink)]">
+                    <a href={PLAY_STORE_URL} target="_blank" rel="noopener" className="underline hover:no-underline">Google Play</a>
+                    <UpdatePill auto />
+                  </span>
+                  <span className="mt-0.5 block text-body text-[var(--wl-sub)]">{t('downloads.playDesc')}</span>
+                </div>
+                <a href={PLAY_STORE_URL} target="_blank" rel="noopener" className="shrink-0 transition hover:opacity-80">
+                  <img
+                    src="/marketing/badge-google-play.webp"
+                    alt={t('downloads.playBadgeAlt')}
+                    width={161}
+                    height={48}
+                    loading="lazy"
+                    className="block h-12 w-auto"
+                  />
+                </a>
+              </div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3">
                 <div className="min-w-[175px] flex-1">
                   <span className="flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold text-[var(--wl-ink)]">
                     <a href={ZAPSTORE_SITE_URL} target="_blank" rel="noopener" className="underline hover:no-underline">Zapstore</a>
                     <UpdatePill auto />
                   </span>
-                  <span className="mt-0.5 block text-sm text-[var(--wl-sub)]">
+                  <span className="mt-0.5 block text-body text-[var(--wl-sub)]">
                     <Trans
                       i18nKey="landing:downloads.zapstoreDesc"
                       components={{ rec: <strong className="font-semibold text-[var(--wl-emerald)]" /> }}
@@ -2085,7 +2077,7 @@ export function LandingPage({
                       <a href={OBTAINIUM_SITE_URL} target="_blank" rel="noopener" className="underline hover:no-underline">Obtainium</a>
                       <UpdatePill auto />
                     </span>
-                    <span className="mt-0.5 block text-sm text-[var(--wl-sub)]">{t('downloads.obtainiumDesc')}</span>
+                    <span className="mt-0.5 block text-body text-[var(--wl-sub)]">{t('downloads.obtainiumDesc')}</span>
                   </div>
                   {/* Obtainium's own badge, served from our origin like every other image here.
                       It is the whole point of the row on a phone, so it sits in the row itself:
@@ -2113,36 +2105,25 @@ export function LandingPage({
                     is why this row needs no string of its own. */}
                 <HelpChip surface="downloads" className="mt-2.5" />
               </div>
-              {/* One row for the two routes nobody has to keep current by choice: the APK you
-                  update by hand, and the store that is not open yet. The APK half is its own
-                  positioned block because the digest link cannot nest inside the download
-                  link, so the anchor is stretched across that block alone - which is also what
-                  keeps the hover highlight off the Play line underneath. This is the one
-                  Android route where a checksum earns its place, because a sideloaded APK is
-                  installed by hand outside any store's verification. */}
+              {/* The APK you update by hand. The row is its own positioned block because the
+                  digest link cannot nest inside the download link, so the anchor is stretched
+                  across the row. This is the one Android route where a checksum earns its
+                  place, because a sideloaded APK is installed by hand outside any store's
+                  verification. */}
               <div className="border-t border-[var(--wl-ink)]/10 py-1">
                 <div className="relative px-4 py-2 hover:bg-[var(--wl-ink)]/5">
                   <span className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold text-[var(--wl-ink)]">
                     <a href={ANDROID_APK_URL} className="flex items-center gap-2 after:absolute after:inset-0">
-                      <span aria-hidden="true" className="shrink-0 text-accent"><AndroidLogo size={17} weight="fill" /></span>
+                      <span aria-hidden="true" className="shrink-0 text-accent"><AndroidLogo weight="fill" /></span>
                       APK
                     </a>
                     <UpdatePill auto={false} />
                     <ChecksumLink href={ANDROID_APK_URL} label="APK" className="ms-auto" />
                   </span>
-                  <span className="mt-0.5 block text-sm text-[var(--wl-sub)]">{t('downloads.apkDesc')}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3 px-4 py-2">
-                  <span className="flex items-center gap-2 font-semibold text-[var(--wl-muted)]">
-                    <span aria-hidden="true" className="shrink-0"><GooglePlayLogo size={17} weight="fill" /></span>
-                    Google Play
-                  </span>
-                  <span className="shrink-0 rounded-full border border-[var(--wl-ink)]/15 px-2.5 py-1 text-xs font-semibold text-[var(--wl-sub)]">
-                    {t('downloads.comingSoon')}
-                  </span>
+                  <span className="mt-0.5 block text-body text-[var(--wl-sub)]">{t('downloads.apkDesc')}</span>
                 </div>
               </div>
-              <p className="border-t border-[var(--wl-ink)]/10 px-4 py-3 text-xs leading-relaxed text-[var(--wl-sub)]">
+              <p className="border-t border-[var(--wl-ink)]/10 px-4 py-3 text-small leading-relaxed text-[var(--wl-sub)]">
                 {t('downloads.apkFootnote')}
               </p>
             </div>
@@ -2157,14 +2138,15 @@ export function LandingPage({
               a row without the chip reads as the one route that has no answer. A
               channel that RUNS our installer lands the app where the self-updater
               installs, so the app keeps itself current; a channel that UNPACKS it does
-              not, which is why Scoop is amber. Apply that test to any channel added here.
+              not, and gets the amber chip. Scoop is such a channel and is off this panel.
+              Apply that test to any channel added here.
               Spec: mockups/downloads-pkgmgr.html */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
               onClick={() => { setLinuxOpen(false); setAndroidOpen(false); setPkgOpen((v) => !v); }}
               aria-expanded={pkgOpen}
-              className="flex cursor-pointer items-start gap-2 text-start rounded-full border border-[var(--wl-ink)]/15 bg-[var(--wl-card)] px-4 py-2 text-sm font-semibold text-[var(--wl-ink)] transition hover:border-accent/60"
+              className="flex cursor-pointer items-start gap-2 text-start rounded-full border border-[var(--wl-ink)]/15 bg-[var(--wl-card)] px-4 py-2 text-body font-semibold text-[var(--wl-ink)] transition hover:border-accent/60"
             >
               {/* Centred inside a 20px box, which is the text's own line height, so the
                   mark sits on the first line instead of floating between two. These
@@ -2172,7 +2154,7 @@ export function LandingPage({
                   German, and a centred icon beside a wrapped label reads as orphaned.
                   Same box the help chip uses, for the same reason. */}
               <span className="flex h-5 shrink-0 items-center text-accent">
-                <Package size={17} weight="fill" aria-hidden="true" />
+                <Package weight="fill" aria-hidden="true" />
               </span>
               {/* This label names the rows in the panel below. Adding or removing a row
                   means editing both, or it promises a platform nobody finds. */}
@@ -2182,24 +2164,24 @@ export function LandingPage({
               href={GITHUB_RELEASES_URL}
               target="_blank"
               rel="noopener"
-              className="flex items-start gap-2 rounded-full border border-[var(--wl-ink)]/15 bg-[var(--wl-card)] px-4 py-2 text-sm font-semibold text-[var(--wl-ink)] transition hover:border-accent/60"
+              className="flex items-start gap-2 rounded-full border border-[var(--wl-ink)]/15 bg-[var(--wl-card)] px-4 py-2 text-body font-semibold text-[var(--wl-ink)] transition hover:border-accent/60"
             >
               <span className="flex h-5 shrink-0 items-center text-accent">
-                <GithubLogo size={17} weight="fill" aria-hidden="true" />
+                <GithubLogo weight="fill" aria-hidden="true" />
               </span>
               <span>
                 {t('downloads.githubLink')}
-                <ArrowUpRight size={13} className="ms-1.5 inline align-[-1px] text-[var(--wl-sub)]" aria-hidden="true" />
+                <ArrowUpRight className="ms-1.5 inline align-[-1px] text-[var(--wl-sub)]" aria-hidden="true" />
               </span>
             </a>
           </div>
-          <p className="mt-4 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] leading-relaxed text-[var(--wl-emerald)]">
+          <p className="mt-4 font-mono text-meta font-semibold uppercase tracking-[0.18em] leading-relaxed text-[var(--wl-emerald)]">
             {t('downloads.githubNote')}
           </p>
           {pkgOpen && (
             <div dir="ltr" className="mx-auto mt-5 max-w-lg overflow-hidden rounded-2xl border border-[var(--wl-ink)]/15 bg-[var(--wl-card)]/70 text-left"> {/* rtl-ok: code sample stays LTR */}
               <PkgCmd
-                icon={<AppleLogo size={17} weight="fill" />}
+                icon={<AppleLogo weight="fill" />}
                 name="macOS"
                 tool="Homebrew"
                 selfUpdates
@@ -2208,51 +2190,25 @@ export function LandingPage({
               />
               <PkgCmd
                 divider
-                icon={<WindowsLogo size={17} weight="fill" />}
+                icon={<WindowsLogo weight="fill" />}
                 name="Windows"
                 tool="winget"
                 selfUpdates
                 desc={t('downloads.pkgWingetDesc')}
                 cmd="winget install LifetimeLabs.PrivacyNotes"
               />
-              {/* Two lines, and CmdBlock renders `cmd` with whitespace-pre-wrap, so the
-                  break survives and the copy button hands over both. Scoop resolves a
-                  short name only against buckets it already knows, so the bucket has to
-                  be added before the install can name it. */}
-              <PkgCmd
-                divider
-                icon={<WindowsLogo size={17} weight="fill" />}
-                name="Windows"
-                tool="Scoop"
-                selfUpdates={false}
-                desc={t('downloads.pkgScoopDesc')}
-                cmd={'scoop bucket add lifetimelabs https://github.com/LifetimeLabsDev/scoop-bucket\nscoop install lifetimelabs/privacynotes'}
-              />
-              <p className="border-t border-[var(--wl-ink)]/10 px-4 py-3 text-xs leading-relaxed text-[var(--wl-sub)]">
+              <p className="border-t border-[var(--wl-ink)]/10 px-4 py-3 text-small leading-relaxed text-[var(--wl-sub)]">
                 {t('downloads.pkgFootnote')}
               </p>
             </div>
           )}
-          <p className="mt-8 text-sm text-[var(--wl-sub)]">
+          <p className="mt-8 text-body text-[var(--wl-sub)]">
             {t('downloads.availability')}
           </p>
           {/* ── CTA repeat, as the panel's footer ── */}
-          <div className="-mx-5 sm:-mx-10 mt-10 border-t border-accent/20 px-5 pt-9 sm:px-10 grid grid-cols-2 sm:flex sm:flex-wrap justify-center items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              onClick={() => openAuth('create')}
-              className="pn-fx-conic-btn cursor-pointer rounded-full bg-[var(--wl-ink)] text-[var(--wl-bg)] px-3 sm:px-7 py-3.5 text-sm sm:text-base font-bold"
-            >
-              {t('ctaRepeat.getStarted')}
-            </button>
-            <a
-              href="https://try.privacynotes.app/"
-              className="pn-fx-amber inline-flex items-center justify-center gap-2 rounded-full border-2 border-[var(--wl-amber-border)] text-[var(--wl-amber-text)] px-3 sm:px-6 py-3 text-sm sm:text-base font-bold transition"
-            >
-              {t('hero.tryDemo')}
-              <ArrowUpRight size={16} className="shrink-0" aria-hidden="true" />
-            </a>
-            <p className="col-span-2 basis-full text-center mt-1 text-xs text-[var(--wl-sub)]">
+          <div className="-mx-5 sm:-mx-10 mt-10 border-t border-accent/20 px-5 pt-9 sm:px-10">
+            <CtaPair className="justify-center" label={t('ctaRepeat.getStarted')} onCreate={() => openAuth('create')} />
+            <p className="text-center mt-3 text-small text-[var(--wl-sub)]">
               {t('hero.microcopy')}
             </p>
           </div>
@@ -2270,45 +2226,45 @@ export function LandingPage({
             <div className="relative">
               {/* The crypto-claims strip lives inside this card so the
                   page has one security moment instead of two. */}
-              <div className="mb-5 border-b border-[var(--wl-ink-line)] pb-4 overflow-hidden whitespace-nowrap font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--wl-ink-text)]">
+              <div className="mb-5 border-b border-[var(--wl-ink-line)] pb-4 overflow-hidden whitespace-nowrap font-mono text-meta font-semibold uppercase tracking-[0.18em] text-[var(--wl-ink-text)]">
                 {CRYPTO_ITEM_KEYS.map((k) => t(k)).join('  ·  ')}
               </div>
               <div className="flex items-center gap-2 mb-5">
-                <TerminalWindow size={16} className="text-emerald-400" />
-                <span className="text-xs font-mono font-medium text-emerald-400 uppercase tracking-widest">{t('underHood.heading')}</span>
+                <TerminalWindow className="text-emerald-400" />
+                <span className="text-small font-mono font-medium text-emerald-400 uppercase tracking-widest">{t('underHood.heading')}</span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 [&>*]:min-w-0 [overflow-wrap:anywhere]">
                 <div className="space-y-1">
-                  <div className="font-mono text-sm font-semibold text-white">{t('underHood.cipherTerm')}</div>
-                  <div className="text-xs text-[var(--wl-ink-sub)]">{t('underHood.cipherDesc')}</div>
+                  <div className="font-mono text-body font-semibold text-white">{t('underHood.cipherTerm')}</div>
+                  <div className="text-small text-[var(--wl-ink-sub)]">{t('underHood.cipherDesc')}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="font-mono text-sm font-semibold text-white">{t('underHood.phraseTerm')}</div>
-                  <div className="text-xs text-[var(--wl-ink-sub)]">{t('underHood.phraseDesc')}</div>
+                  <div className="font-mono text-body font-semibold text-white">{t('underHood.phraseTerm')}</div>
+                  <div className="text-small text-[var(--wl-ink-sub)]">{t('underHood.phraseDesc')}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="font-mono text-sm font-semibold text-white">{t('underHood.rlsTerm')}</div>
-                  <div className="text-xs text-[var(--wl-ink-sub)]">{t('underHood.rlsDesc')}</div>
+                  <div className="font-mono text-body font-semibold text-white">{t('landing:crypto.rls')}</div>
+                  <div className="text-small text-[var(--wl-ink-sub)]">{t('underHood.rlsDesc')}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="font-mono text-sm font-semibold text-white">{t('underHood.trackingTerm')}</div>
-                  <div className="text-xs text-[var(--wl-ink-sub)]">{t('underHood.trackingDesc')}</div>
+                  <div className="font-mono text-body font-semibold text-white">{t('underHood.trackingTerm')}</div>
+                  <div className="text-small text-[var(--wl-ink-sub)]">{t('underHood.trackingDesc')}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="font-mono text-sm font-semibold text-white">{t('underHood.authTerm')}</div>
-                  <div className="text-xs text-[var(--wl-ink-sub)]">{t('underHood.authDesc')}</div>
+                  <div className="font-mono text-body font-semibold text-white">{t('underHood.authTerm')}</div>
+                  <div className="text-small text-[var(--wl-ink-sub)]">{t('underHood.authDesc')}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="font-mono text-sm font-semibold text-white">{t('underHood.serversTerm')}</div>
-                  <div className="text-xs text-[var(--wl-ink-sub)]">{t('underHood.serversDesc')}</div>
+                  <div className="font-mono text-body font-semibold text-white">{t('landing:crypto.swissServers')}</div>
+                  <div className="text-small text-[var(--wl-ink-sub)]">{t('underHood.serversDesc')}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="font-mono text-sm font-semibold text-white">{t('underHood.sshTerm')}</div>
-                  <div className="text-xs text-[var(--wl-ink-sub)]">{t('underHood.sshDesc')}</div>
+                  <div className="font-mono text-body font-semibold text-white">{t('underHood.sshTerm')}</div>
+                  <div className="text-small text-[var(--wl-ink-sub)]">{t('underHood.sshDesc')}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="font-mono text-sm font-semibold text-white">{t('underHood.pwgenTerm')}</div>
-                  <div className="text-xs text-[var(--wl-ink-sub)]">{t('underHood.pwgenDesc')}</div>
+                  <div className="font-mono text-body font-semibold text-white">{t('common:ninja.features.generator.label')}</div>
+                  <div className="text-small text-[var(--wl-ink-sub)]">{t('underHood.pwgenDesc')}</div>
                 </div>
                 {/* The one cell in the grid that goes somewhere. Every other
                     term names a property of the build; this one names a place
@@ -2319,12 +2275,12 @@ export function LandingPage({
                     href={GITHUB_REPO_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-white transition hover:text-[var(--wl-emerald)]"
+                    className="inline-flex items-center gap-1.5 font-mono text-body font-semibold text-white transition hover:text-[var(--wl-emerald)]"
                   >
                     {t('underHood.opensourceTerm')}
-                    <ArrowUpRight size={13} className="shrink-0" aria-hidden="true" />
+                    <ArrowUpRight className="shrink-0" aria-hidden="true" />
                   </a>
-                  <div className="text-xs text-[var(--wl-ink-sub)]">{t('underHood.opensourceDesc')}</div>
+                  <div className="text-small text-[var(--wl-ink-sub)]">{t('underHood.opensourceDesc')}</div>
                 </div>
               </div>
             </div>
@@ -2334,10 +2290,10 @@ export function LandingPage({
         {/* ── Mood & Wellness Tracker deep dive ─────────────── */}
         <div className="mx-auto mb-14">
           <Kicker className="text-[var(--wl-emerald)]">{t('mood.kicker')}</Kicker>
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[var(--wl-ink)]">
+          <h2 className="text-display-3 sm:text-display-5 font-black tracking-tight text-[var(--wl-ink)]">
             {t('mood.heading')}
           </h2>
-          <p className="mt-4 text-base text-[var(--wl-sub)] leading-relaxed max-w-xl">
+          <p className="mt-4 text-title text-[var(--wl-sub)] leading-relaxed">
             {t('mood.intro')}
           </p>
 
@@ -2353,15 +2309,15 @@ export function LandingPage({
               and widened it, which pushed the row's last pill onto a new line
               while you looked. The samples are marketing copy, not app data.
               The last pill is the custom tracker and the one Pro thing here.
-              Spec: ops/docs/pro-features.md (custom trackers) */}
+              Spec: docs/internal/pro-features.md (custom trackers) */}
           <div className="pn-fx-popmix mt-7 flex flex-wrap gap-x-2.5 gap-y-2.5 [@media(hover:hover)]:gap-y-8" onMouseOver={peekSide}>
             {LANDING_TRACKERS.map((id) => (
-              <span key={id} data-peek={t(`mood.peek.${id}`)} className="pn-fx-peek inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-[var(--wl-chip-border)] bg-[var(--wl-card)] px-3 py-1.5 text-xs font-semibold text-[var(--wl-chip-text)] [&_svg]:size-3.5 [&_svg]:text-[var(--wl-emerald)]">
+              <span key={id} data-peek={t(`mood.peek.${id}`)} className="pn-fx-peek inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-[var(--wl-chip-border)] bg-[var(--wl-card)] px-3 py-1.5 text-small font-semibold text-[var(--wl-chip-text)] [&_svg]:text-[var(--wl-emerald)]">
                 {TRACKER_ICONS[id]}
                 {t(`trackers:labels.${id}`)}
               </span>
             ))}
-            <span data-peek={t('mood.peek.custom')} className="pn-fx-peek pn-fx-peek-pro inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-dashed border-[var(--wl-amber-border)] bg-[var(--wl-card)] px-3 py-1.5 text-xs font-semibold text-[var(--wl-amber-text)] [&_svg]:size-3.5">
+            <span data-peek={t('mood.peek.custom')} className="pn-fx-peek pn-fx-peek-pro inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-dashed border-[var(--wl-amber-border)] bg-[var(--wl-card)] px-3 py-1.5 text-small font-semibold text-[var(--wl-amber-text)]">
               <PlusCircle />
               {t('mood.pillCustom')}
             </span>
@@ -2376,11 +2332,11 @@ export function LandingPage({
               <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--wl-tint-green)] text-[var(--wl-emerald)]">
                 <ChartBar size={20} weight="duotone" />
               </div>
-              <div className="font-extrabold text-[var(--wl-ink)]">{t('mood.cardPatternsTitle')}</div>
-              <p className="text-sm text-[var(--wl-sub)] leading-relaxed">
+              <div className="font-extrabold text-[var(--wl-ink)]">{t('stats:wellness.subTabs.patterns')}</div>
+              <p className="text-body text-[var(--wl-sub)] leading-relaxed">
                 {t('mood.cardPatternsBody')}
               </p>
-              <div aria-hidden="true" className="pt-2 space-y-1.5 font-mono text-[11px] text-[var(--wl-sub)]">
+              <div aria-hidden="true" className="pt-2 space-y-1.5 font-mono text-meta text-[var(--wl-sub)]">
                 {([['sleep', '70%', '+2.1'], ['steps', '48%', '+1.4'], ['caffeine', '22%', '-0.7']] as const).map(([id, w, delta]) => (
                   <div key={id} className="pn-fx-rank-row flex items-center gap-2">
                     <span className="shrink-0 min-w-16">{t(`trackers:labels.${id}`)}</span>
@@ -2397,11 +2353,11 @@ export function LandingPage({
               <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--wl-tint-green)] text-[var(--wl-emerald)]">
                 <Moon size={20} weight="duotone" />
               </div>
-              <div className="font-extrabold text-[var(--wl-ink)]">{t('mood.cardExploreTitle')}</div>
-              <p className="text-sm text-[var(--wl-sub)] leading-relaxed">
+              <div className="font-extrabold text-[var(--wl-ink)]">{t('stats:wellness.subTabs.explore')}</div>
+              <p className="text-body text-[var(--wl-sub)] leading-relaxed">
                 {t('mood.cardExploreBody')}
               </p>
-              <div aria-hidden="true" className="pt-2 space-y-1.5 font-mono text-[11px] text-[var(--wl-sub)]">
+              <div aria-hidden="true" className="pt-2 space-y-1.5 font-mono text-meta text-[var(--wl-sub)]">
                 <div className="pn-fx-rank-row flex items-center gap-2">
                   <span className="shrink-0 min-w-16">{t('mood.vizTonight')}</span>
                   <span className="flex-1 h-2 rounded-full bg-[var(--wl-ink)]/10 overflow-hidden">
@@ -2410,7 +2366,7 @@ export function LandingPage({
                   <span dir="ltr" className="w-14 text-end tabular-nums">7.5 h</span> {/* rtl-ok: a measurement stays LTR */}
                 </div>
                 <div className="flex items-center gap-2 ps-1 text-[var(--wl-emerald)]">
-                  <ArrowRight size={12} weight="bold" className="pn-fx-next-arrow" />
+                  <ArrowRight weight="bold" className="pn-fx-next-arrow" />
                 </div>
                 <div className="pn-fx-rank-row flex items-center gap-2">
                   <span className="shrink-0 min-w-16">{t('mood.vizTomorrow')}</span>
@@ -2427,7 +2383,7 @@ export function LandingPage({
                 <Pill size={20} weight="duotone" />
               </div>
               <div className="font-extrabold text-[var(--wl-ink)]">{t('mood.cardMedsTitle')}</div>
-              <p className="text-sm text-[var(--wl-sub)] leading-relaxed">
+              <p className="text-body text-[var(--wl-sub)] leading-relaxed">
                 {t('mood.cardMedsBody')}
               </p>
               <div aria-hidden="true" className="pt-2 grid grid-cols-14 gap-1.5">
@@ -2442,16 +2398,16 @@ export function LandingPage({
                 <Export size={20} weight="duotone" />
               </div>
               <div className="font-extrabold text-[var(--wl-ink)]">{t('mood.cardShareTitle')}</div>
-              <p className="text-sm text-[var(--wl-sub)] leading-relaxed">
+              <p className="text-body text-[var(--wl-sub)] leading-relaxed">
                 {t('mood.cardShareBody')}
               </p>
               <div aria-hidden="true" className="pt-2 flex gap-2">
-                <span className="pn-fx-hand-chip inline-flex items-center gap-1.5 rounded-lg border-[1.5px] border-[var(--wl-line)] bg-[var(--wl-bg)] px-2.5 py-1.5 text-xs font-semibold text-[var(--wl-ink)]">
-                  <FileText size={14} weight="duotone" className="text-[var(--wl-emerald)]" />
+                <span className="pn-fx-hand-chip inline-flex items-center gap-1.5 rounded-lg border-[1.5px] border-[var(--wl-line)] bg-[var(--wl-bg)] px-2.5 py-1.5 text-small font-semibold text-[var(--wl-ink)]">
+                  <FileText weight="duotone" className="text-[var(--wl-emerald)]" />
                   {t('mood.vizReport')}
                 </span>
-                <span className="pn-fx-hand-chip inline-flex items-center gap-1.5 rounded-lg border-[1.5px] border-[var(--wl-line)] bg-[var(--wl-bg)] px-2.5 py-1.5 text-xs font-semibold text-[var(--wl-ink)]">
-                  <Copy size={14} weight="duotone" className="text-[var(--wl-emerald)]" />
+                <span className="pn-fx-hand-chip inline-flex items-center gap-1.5 rounded-lg border-[1.5px] border-[var(--wl-line)] bg-[var(--wl-bg)] px-2.5 py-1.5 text-small font-semibold text-[var(--wl-ink)]">
+                  <Copy weight="duotone" className="text-[var(--wl-emerald)]" />
                   {t('mood.vizPrompt')}
                 </span>
               </div>
@@ -2467,10 +2423,10 @@ export function LandingPage({
             />
             <div className="relative">
               <div className="flex items-center gap-2 mb-3">
-                <TerminalWindow size={16} className="text-emerald-400" />
-                <span className="text-xs font-mono font-medium text-emerald-400 uppercase tracking-widest">{t('mood.encryptedHeading')}</span>
+                <TerminalWindow className="text-emerald-400" />
+                <span className="text-small font-mono font-medium text-emerald-400 uppercase tracking-widest">{t('mood.encryptedHeading')}</span>
               </div>
-              <p className="text-sm text-[var(--wl-ink-text)] leading-relaxed">
+              <p className="text-body text-[var(--wl-ink-text)] leading-relaxed">
                 {t('mood.encryptedBody')}
               </p>
             </div>
@@ -2480,10 +2436,10 @@ export function LandingPage({
         {/* ── Medication deep dive ───────────────────────────── */}
         <div className="mx-auto mb-14">
           <Kicker className="text-[var(--wl-emerald)]">{t('meds.kicker')}</Kicker>
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[var(--wl-ink)]">
+          <h2 className="text-display-3 sm:text-display-5 font-black tracking-tight text-[var(--wl-ink)]">
             {t('meds.heading')}
           </h2>
-          <p className="mt-4 text-base text-[var(--wl-sub)] leading-relaxed max-w-xl">
+          <p className="mt-4 text-title text-[var(--wl-sub)] leading-relaxed">
             {t('meds.intro')}
           </p>
 
@@ -2496,7 +2452,7 @@ export function LandingPage({
               marketing data, like the tracker pills' sample values; only the
               last dot is live. Below sm a segment shows the time and hides
               the dose, or four segments cannot share a phone's width. */}
-          <div className="mt-7 flex items-baseline justify-between font-mono text-[11px] uppercase tracking-widest text-[var(--wl-sub)]">
+          <div className="mt-7 flex items-baseline justify-between font-mono text-meta uppercase tracking-widest text-[var(--wl-sub)]">
             <span>{t('meds.todayLabel')}</span>
             <span>{t('meds.todayCount', { taken: dosesTaken, total: MEDS.length })}</span>
           </div>
@@ -2512,16 +2468,16 @@ export function LandingPage({
                   onClick={() => cycleDose(i)}
                   className={`pn-fx-meds-seg flex flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 border-e-[3px] border-[var(--wl-edge)] last:border-e-0 ${state === 1 ? 'bg-[var(--wl-emerald)] text-[var(--wl-bg)]' : state === 2 ? 'bg-[var(--wl-tint-amber)] text-[var(--wl-amber-text)]' : 'text-[var(--wl-ink)] hover:bg-[var(--wl-tint-green)]'}`}
                 >
-                  <span className="text-xs font-extrabold sm:text-[13px]">{t(`meds.${name}`)}</span>
-                  <span dir="ltr" className="font-mono text-[11px] opacity-80">{time}<span className="hidden sm:inline"> · {t(`meds.${dose}`)}</span></span> {/* rtl-ok: a clock time and a dose stay LTR */}
+                  <span className="text-small font-extrabold sm:text-compact">{t(`meds.${name}`)}</span>
+                  <span dir="ltr" className="font-mono text-meta opacity-80">{time}<span className="hidden sm:inline"> · {t(`meds.${dose}`)}</span></span> {/* rtl-ok: a clock time and a dose stay LTR */}
                 </button>
               );
             })}
           </div>
           <div className="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <span dir="ltr" className="text-4xl font-black tracking-tight tabular-nums text-[var(--wl-ink)]">{t('meds.adherencePct', { pct: adherencePct })}</span> {/* rtl-ok: a percentage stays LTR */}
-            <span className="font-mono text-[11px] text-[var(--wl-sub)]">{t('meds.adherenceLabel', { days: MONTH_DOSES.length + 1 })}</span>
-            <span className="ms-auto flex gap-3 font-mono text-[11px] text-[var(--wl-sub)]">
+            <span dir="ltr" className="text-display-4 font-black tracking-tight tabular-nums text-[var(--wl-ink)]">{t('meds.adherencePct', { pct: adherencePct })}</span> {/* rtl-ok: a percentage stays LTR */}
+            <span className="font-mono text-meta text-[var(--wl-sub)]">{t('meds.adherenceLabel', { days: MONTH_DOSES.length + 1 })}</span>
+            <span className="ms-auto flex gap-3 font-mono text-meta text-[var(--wl-sub)]">
               <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[var(--wl-emerald)]" />{t('meds.legendTaken')}</span>
               <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[var(--wl-amber-border)]" />{t('meds.legendSkipped')}</span>
             </span>
@@ -2540,12 +2496,12 @@ export function LandingPage({
                 <Clock size={20} weight="duotone" />
               </div>
               <div className="font-extrabold text-[var(--wl-ink)]">{t('meds.cardScheduleTitle')}</div>
-              <p className="text-sm text-[var(--wl-sub)] leading-relaxed">
+              <p className="text-body text-[var(--wl-sub)] leading-relaxed">
                 {t('meds.cardScheduleBody')}
               </p>
               <div aria-hidden="true" className="flex flex-wrap gap-1.5 pt-1">
                 {(['schedDaily', 'schedTwice', 'schedAlternate', 'schedWeekly', 'schedAsNeeded'] as const).map((k) => (
-                  <span key={k} className="rounded-md border-[1.5px] border-[var(--wl-line)] bg-[var(--wl-bg)] px-2 py-0.5 text-[11px] font-semibold text-[var(--wl-ink)]">{t(`meds.${k}`)}</span>
+                  <span key={k} className="rounded-md border-[1.5px] border-[var(--wl-line)] bg-[var(--wl-bg)] px-2 py-0.5 text-meta font-semibold text-[var(--wl-ink)]">{t(`meds.${k}`)}</span>
                 ))}
               </div>
             </div>
@@ -2555,10 +2511,10 @@ export function LandingPage({
                 <ClockCounterClockwise size={20} weight="duotone" />
               </div>
               <div className="font-extrabold text-[var(--wl-ink)]">{t('meds.cardHistoryTitle')}</div>
-              <p className="text-sm text-[var(--wl-sub)] leading-relaxed">
+              <p className="text-body text-[var(--wl-sub)] leading-relaxed">
                 {t('meds.cardHistoryBody')}
               </p>
-              <div aria-hidden="true" dir="ltr" className="relative mt-1 h-9 font-mono text-[11px] text-[var(--wl-sub)]"> {/* rtl-ok: a timeline runs left to right */}
+              <div aria-hidden="true" dir="ltr" className="relative mt-1 h-9 font-mono text-meta text-[var(--wl-sub)]"> {/* rtl-ok: a timeline runs left to right */}
                 <span className="absolute inset-x-0 top-5 h-0.5 bg-[var(--wl-line)]" />
                 <span className="absolute start-0 top-[14px] h-3 w-3 rounded-full bg-[var(--wl-emerald)]" />
                 <span className="absolute start-[46%] top-[14px] h-3 w-3 rounded-full bg-[var(--wl-emerald)]" />
@@ -2573,239 +2529,68 @@ export function LandingPage({
                 <Package size={20} weight="duotone" />
               </div>
               <div className="font-extrabold text-[var(--wl-ink)]">{t('meds.cardRefillTitle')}</div>
-              <p className="text-sm text-[var(--wl-sub)] leading-relaxed">
+              <p className="text-body text-[var(--wl-sub)] leading-relaxed">
                 {t('meds.cardRefillBody')}
               </p>
               <div aria-hidden="true" className="flex items-baseline gap-2 pt-1">
-                <span className="text-2xl font-black tracking-tight text-[var(--wl-ink)]">11</span>
-                <span className="font-mono text-[11px] text-[var(--wl-sub)]">{t('meds.refillLeft')} · {t('meds.refillBy', { days: 12 })}</span>
+                <span className="text-display-2 font-black tracking-tight text-[var(--wl-ink)]">11</span>
+                <span className="font-mono text-meta text-[var(--wl-sub)]">{t('meds.refillLeft')} · {t('meds.refillBy', { days: 12 })}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ── Comparison: why not three apps? ─────────────────── */}
-        <div className="mx-auto mb-14">
+        {/* ── The price, one section: what you pay today, what it costs,
+             and the one answer. The picker spans the slab; under it the
+             receipt and the bars sit beside the black box, which carries
+             the whole offer (Free, then Pro and its storage add-ons) and
+             the ask. The header's "Price" lands on #price, older links on
+             #pricing. Spec: docs/internal/design/patterns/151-160.md section 154 */}
+        <div id="price" className="mx-auto mb-14 scroll-mt-24">
           <Kicker>{t('comparison.kicker')}</Kicker>
-          <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-[var(--wl-ink)] max-w-2xl mb-6">
-            {t('comparison.heading')}
+          <h2 className="text-display-2 sm:text-display-4 font-black tracking-tight text-[var(--wl-ink)] mb-6">
+            {priceMath.heading}
           </h2>
-          <div className="pn-fx-slab grid sm:grid-cols-2 rounded-2xl border-2 border-[var(--wl-edge)] overflow-hidden text-sm">
-            {/* "Them" column */}
-            <div className="p-6 bg-[var(--wl-card)] space-y-2.5">
-              <div className="font-mono font-semibold text-[var(--wl-sub)] uppercase tracking-[0.18em] text-[10px] mb-3">{t('comparison.typicalSetup')}</div>
-              <div className="flex items-center gap-2 text-[var(--wl-sub)]">
-                <X className="shrink-0 text-[var(--wl-muted)]" />
-                {t('comparison.themStandardNotes')}
+          <div className="pn-fx-slab rounded-2xl border-2 border-[var(--wl-edge)] overflow-hidden text-body">
+            {priceMath.picker}
+            <div className="grid border-t border-[var(--wl-line)] lg:grid-cols-2">
+            {priceMath.result}
+            <div id="pricing" className="flex scroll-mt-24 flex-col justify-center bg-[var(--wl-slab)] p-6 sm:p-7 text-[var(--wl-on-slab)]">
+              <div className="flex items-center gap-2.5">
+                <LogoIcon size={30} className="shrink-0 text-accent" />
+                <span className="text-display font-black tracking-tight"><Brand tone="invert" /></span>
               </div>
-              <div className="flex items-center gap-2 text-[var(--wl-sub)]">
-                <X className="shrink-0 text-[var(--wl-muted)]" />
-                {t('comparison.themObsidian')}
+              <div className="mt-1 text-body text-[var(--wl-slab-sub)]">{t('comparison.usKicker')}</div>
+              {/* Free first: the app costs nothing; Pro is a few extras paid
+                  once. The bars beside it price the Pro case, the most a
+                  person can ever pay us. */}
+              <div className="mt-5 flex flex-wrap items-baseline gap-x-3">
+                <span className="text-display-5 font-black tracking-tight">$0</span>
+                <span className="text-title font-bold">{t('comparison.usFreeBig')}</span>
               </div>
-              <div className="flex items-center gap-2 text-[var(--wl-sub)]">
-                <X className="shrink-0 text-[var(--wl-muted)]" />
-                {t('comparison.themDayOne')}
-              </div>
-              <div className="flex items-center gap-2 text-[var(--wl-sub)]">
-                <X className="shrink-0 text-[var(--wl-muted)]" />
-                {t('comparison.themPasswordManager')}
-              </div>
-              <div className="flex items-center gap-2 text-[var(--wl-sub)]">
-                <X className="shrink-0 text-[var(--wl-muted)]" />
-                {t('comparison.themLunatask')}
-              </div>
-              <div className="flex items-center gap-2 text-[var(--wl-sub)]">
-                <X className="shrink-0 text-[var(--wl-muted)]" />
-                {t('comparison.themDaylio')}
-              </div>
-              <div className="flex items-center gap-2 text-[var(--wl-sub)]">
-                <X className="shrink-0 text-[var(--wl-muted)]" />
-                {t('comparison.themSeparate')}
-              </div>
-            </div>
-            {/* "Us" column - inverted */}
-            <div className="p-6 bg-[var(--wl-slab)] space-y-2.5">
-              <div className="font-mono uppercase tracking-[0.18em] text-[10px] mb-3 text-[var(--wl-on-slab)]"><Brand tone="invert" /></div>
-              {[
-                t('comparison.usAllInOne'),
-                t('comparison.usTracking'),
-                t('comparison.usEncrypted'),
-                t('comparison.usSignIn'),
-                t('comparison.usExport'),
-                t('comparison.usSync'),
-                isBetaPricing()
-                  ? t('comparison.usPriceBeta', { earlyPrice: EARLY_PRICE })
-                  : t('comparison.usPrice', { proPrice: PRO_PRICE }),
-              ].map((text) => (
-                <div key={text} className="flex items-center gap-2 text-[var(--wl-on-slab)]">
-                  <Check className="shrink-0 text-emerald-400" />
-                  {text}
+              <div className="mt-1 text-small text-[var(--wl-slab-sub)]">{t('pricing.freeSubLabel')}</div>
+              <ul className="mt-4 space-y-1.5 text-compact">
+                <li className="flex items-start gap-2"><Check className="mt-[3px] shrink-0 text-emerald-400" />{t('pricing.freeAllPillars')}</li>
+                <li className="flex items-start gap-2"><Check className="mt-[3px] shrink-0 text-emerald-400" />{t('pricing.freeSync')}</li>
+                <li className="flex items-start gap-2"><Check className="mt-[3px] shrink-0 text-emerald-400" />{t('pricing.freeVault')}</li>
+                <li className="flex items-start gap-2"><Check className="mt-[3px] shrink-0 text-emerald-400" />{t('pricing.freeImport')}</li>
+                <li className="flex items-start gap-2"><Check className="mt-[3px] shrink-0 text-emerald-400" />{t('pricing.freeAnon')}</li>
+              </ul>
+              {/* Pro in one line: a few extras, paid once, and the one
+                  thing ever billed yearly (more storage). */}
+              <div className="mt-5 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="text-meta font-bold uppercase tracking-[0.14em] text-[var(--wl-slab-sub)]">{t('billing:checkout.stepPro')}</span>
+                  {isBetaPricing() && <span className="text-body font-bold text-[var(--wl-slab-sub)] line-through">${PRO_PRICE}</span>}
+                  <span className="text-display-2 font-black">${isBetaPricing() ? EARLY_PRICE : PRO_PRICE}</span>
+                  <span className="text-small font-semibold">{t('comparison.usProOnce')}</span>
+                  {isBetaPricing() && <span className="rounded-full bg-white/10 px-2 py-0.5 text-meta font-bold uppercase tracking-wider">{t('pricing.earlyAdopterBadge')}</span>}
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ── CTA pair between the comparison and pricing slabs ── */}
-        <div className="mx-auto mb-14 grid grid-cols-2 sm:flex sm:flex-wrap justify-center items-center gap-2 sm:gap-3">
-          <button
-            type="button"
-            onClick={() => openAuth('create')}
-            className="pn-fx-conic-btn cursor-pointer rounded-full bg-[var(--wl-ink)] text-[var(--wl-bg)] px-3 sm:px-7 py-3.5 text-sm sm:text-base font-bold"
-          >
-            {t('ctaRepeat.getStarted')}
-          </button>
-          <a
-            href="https://try.privacynotes.app/"
-            className="pn-fx-amber inline-flex items-center justify-center gap-2 rounded-full border-2 border-[var(--wl-amber-border)] text-[var(--wl-amber-text)] px-3 sm:px-6 py-3 text-sm sm:text-base font-bold transition"
-          >
-            {t('hero.tryDemo')}
-            <ArrowUpRight size={16} className="shrink-0" aria-hidden="true" />
-          </a>
-        </div>
-
-        {/* ── Free vs Pro (split slab) ────────────────────────── */}
-        <div id="pricing" className="mx-auto mb-14 scroll-mt-24">
-          <div className="pn-fx-slab grid sm:grid-cols-2 rounded-2xl border-2 border-[var(--wl-edge)] overflow-hidden">
-          {/* Free tier */}
-          <div className="bg-[var(--wl-card)] p-6 sm:p-7 space-y-4">
-            <div>
-              <div className="text-[11px] font-extrabold uppercase tracking-[0.15em] text-[var(--wl-sub)]">{t('pricing.freeLabel')}</div>
-              <div className="mt-1 text-5xl font-black text-[var(--wl-ink)]">$0</div>
-              <div className="text-xs text-[var(--wl-sub)] mt-1.5">{t('pricing.freeSubLabel')}</div>
-            </div>
-            <ul className="space-y-2.5 text-sm text-[var(--wl-ink)]">
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-500" />
-                <span>{t('pricing.freeAllPillars')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-500" />
-                <span>{t('pricing.freeSync')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-500" />
-                <span>{t('pricing.freeVault')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-500" />
-                <span>{t('pricing.freeSearch')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-500" />
-                <span>{t('pricing.freeImport')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-500" />
-                <span>{t('pricing.freeBurn')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-500" />
-                <span>{t('pricing.freeMood')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-500" />
-                <span>{t('pricing.freeTheme')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-500" />
-                <span>{t('pricing.freeAnon')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-500" />
-                <span>{t('pricing.freeGoogle')}</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Pro tier */}
-          <div className="bg-[var(--wl-pro)] p-6 sm:p-7 space-y-4 relative">
-            <div className="absolute top-5 end-5 flex items-center gap-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider bg-red-600 text-white px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <X size={10} />
-                {t('pricing.noSubscription')}
-              </span>
-            </div>
-            <div>
-              <div className="text-[11px] font-extrabold uppercase tracking-[0.15em] text-white/70">{t('pricing.proLabel')}</div>
-              {isBetaPricing() ? (
-                <>
-                  <div className="mt-1 flex items-baseline gap-2.5 flex-wrap">
-                    <span className="text-2xl font-bold text-white/50 line-through">${PRO_PRICE}</span>
-                    <span className="text-5xl font-black text-white">${EARLY_PRICE}</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-white/15 text-white px-2 py-0.5 rounded-full">{t('pricing.earlyAdopterBadge')}</span>
-                  </div>
-                  <div className="text-xs text-blue-100 mt-1.5 leading-relaxed">
-                    <Trans i18nKey="landing:pricing.proOnceDesc" components={{ b: <span className="font-semibold text-white" /> }} />
-                  </div>
-                  <div className="text-[11px] text-white font-medium mt-1.5">{t('pricing.proCompareBeta', { earlyPrice: EARLY_PRICE, proPrice: PRO_PRICE })}</div>
-                </>
-              ) : (
-                <>
-                  <div className="mt-1 flex items-baseline gap-2">
-                    <span className="text-5xl font-black text-white">${PRO_PRICE}</span>
-                    <span className="text-sm text-blue-100">{t('pricing.oneTime')}</span>
-                  </div>
-                  <div className="text-xs text-blue-100 mt-1.5 leading-relaxed">
-                    <Trans i18nKey="landing:pricing.proOnceDesc" components={{ b: <span className="font-semibold text-white" /> }} />
-                  </div>
-                  <div className="text-[11px] text-white font-medium mt-1.5">{t('pricing.proCompare', { proPrice: PRO_PRICE })}</div>
-                </>
-              )}
-            </div>
-            <ul className="space-y-2.5 text-sm text-white">
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-400" />
-                <span>{t('pricing.proEverythingFree')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-400" />
-                <span>{t('pricing.proSync')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-400" />
-                <span>{t('pricing.proHistory')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-400" />
-                <span>{t('pricing.proLock')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-400" />
-                <span>{t('pricing.proPin')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-400" />
-                <span>{t('pricing.proAnalytics')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-400" />
-                <span>{t('pricing.proZen')}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckFat size={14} weight="fill" className="shrink-0 mt-1 text-emerald-400" />
-                <span><Trans i18nKey="landing:pricing.proStorage" components={{ expand: <a href="#storage-addons" className="text-white underline hover:no-underline" /> }} /></span>
-              </li>
-            </ul>
-          </div>
-          </div>
-        </div>
-
-        {/* ── Storage add-on detail ───────────────────────────── */}
-        <div id="storage-addons" className="mx-auto mb-14 scroll-mt-24">
-          <div className="pn-fx-lift rounded-2xl border-2 border-[var(--wl-edge)] bg-[var(--wl-card)] px-6 py-5 text-sm text-[var(--wl-sub)]">
-            <div className="flex items-center gap-4">
-              <Package size={64} weight="duotone" className="shrink-0 text-accent" />
-              <div>
-                <p className="font-extrabold text-[var(--wl-ink)] mb-1">{t('storageAddon.heading')}</p>
-                <p className="leading-relaxed">
-                  <Trans
-                    i18nKey="landing:storageAddon.body"
-                    values={{ price: STORAGE_ADDON_PRICE.toFixed(2) }}
-                    components={{ brand: <Brand /> }}
-                  />
-                </p>
+                <div className="mt-1.5 text-small leading-relaxed text-[var(--wl-slab-sub)]">{t('comparison.usProLine', { price: STORAGE_ADDON_PRICE.toFixed(2) })}</div>
               </div>
+              {/* The ask sits right under the answer. */}
+              <CtaPair onSlab className="pt-7" label={t('ctaRepeat.getStarted')} onCreate={() => openAuth('create')} />
+            </div>
             </div>
           </div>
         </div>
@@ -2814,7 +2599,7 @@ export function LandingPage({
         <div className="mx-auto mb-2">
           <Kicker>{t('extras.kicker')}</Kicker>
         </div>
-        <div className="pn-fx-popmix flex flex-wrap gap-2 text-xs text-[var(--wl-sub)] mb-14 mx-auto">
+        <div className="pn-fx-popmix flex flex-wrap gap-2 text-small text-[var(--wl-sub)] mb-14 mx-auto">
           <FeaturePill>{t('extras.fileVault')}</FeaturePill>
           <FeaturePill>{t('extras.passwordVault')}</FeaturePill>
           <FeaturePill>{t('extras.cardStorage')}</FeaturePill>
@@ -2831,11 +2616,11 @@ export function LandingPage({
           <FeaturePill>{t('extras.weekInReview')}</FeaturePill>
           <FeaturePill>{t('extras.selfDestruct')}</FeaturePill>
           <FeaturePill>{t('extras.anonAccounts')}</FeaturePill>
-          <FeaturePill>{t('extras.zenMode')}</FeaturePill>
+          <FeaturePill>{t('common:palette.commands.zen')}</FeaturePill>
           <FeaturePill>{t('extras.darkMode')}</FeaturePill>
         </div>
 
-        {/* ── Why privacy first? ──────────────────────────────────
+        {/* ── Why it matters: the ad loop (variant A, 2026-10-24) ────
              Concrete, pedestrian example. Kept neutral on purpose:
              the homepage has to read as a normal consumer product
              for payment processors. No law-enforcement angle, no
@@ -2843,31 +2628,44 @@ export function LandingPage({
              shouldn't shop for you" story. */}
         <div className="mx-auto mb-14">
           <Kicker>{t('whyPrivacy.kicker')}</Kicker>
-          <h3 className="text-2xl sm:text-4xl font-black tracking-tight text-[var(--wl-ink)] max-w-2xl">
-            <Trans i18nKey="landing:whyPrivacy.heading" components={{ accent: <span className="block text-accent" /> }} />
+          <h3 className="text-display-2 sm:text-display-4 font-black tracking-tight text-[var(--wl-ink)]">
+            <Trans i18nKey="landing:whyPrivacy.heading" components={{ accent: <span className="text-accent" /> }} />
           </h3>
-          <div className="mt-7 grid sm:grid-cols-2 gap-6 items-start">
-            <div className="text-sm text-[var(--wl-sub)] leading-relaxed">
-              <p>
-                {t('whyPrivacy.para1')}
-              </p>
-              <p className="mt-3">
-                {t('whyPrivacy.para2')}
-              </p>
+          <p className="mt-4 text-body leading-relaxed text-[var(--wl-sub)]">{t('whyPrivacy.lead')}</p>
+          {/* The ad loop as three steps: what you type, who reads it, what
+              follows you. Spec: docs/internal/design/patterns/151-160.md section 155 */}
+          <ol className="mt-6 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-stretch">
+            {([['type', PencilSimple], null, ['read', Eye], null, ['ads', Megaphone]] as const).map((step, i) =>
+              step === null ? (
+                <li key={i} aria-hidden="true" className="flex items-center justify-center text-[var(--wl-muted)]">
+                  <ArrowRight className="rotate-90 sm:rotate-0" />
+                </li>
+              ) : (
+                <li
+                  key={step[0]}
+                  className={`pn-fx-lift rounded-xl border-[1.5px] px-4 py-3 ${step[0] === 'ads' ? 'border-[var(--wl-cost)]/40 bg-[var(--wl-cost)]/10' : 'border-[var(--wl-line)] bg-[var(--wl-card)]'}`}
+                >
+                  <div className={`flex items-center gap-2 text-body font-bold ${step[0] === 'ads' ? 'text-[var(--wl-cost)]' : 'text-[var(--wl-ink)]'}`}>
+                    {(() => { const Glyph = step[1]; return <Glyph weight="duotone" className="shrink-0" aria-hidden="true" />; })()}
+                    {t(`whyPrivacy.step.${step[0]}`)}
+                  </div>
+                  <div className={`mt-1 text-small ${step[0] === 'ads' ? 'text-[var(--wl-cost)]' : 'text-[var(--wl-sub)]'} ${step[0] === 'read' ? 'font-mono' : ''}`}>{t(`whyPrivacy.step.${step[0]}Sub`)}</div>
+                </li>
+              ),
+            )}
+          </ol>
+          <div className="pn-fx-stamp mt-4 rounded-2xl border-2 border-accent bg-[var(--wl-tint-blue)] p-5 sm:p-6" data-stamp="PRIVATE">
+            <div className="font-mono text-meta font-semibold uppercase tracking-[0.18em] text-accent dark:text-blue-300 mb-2">
+              {t('whyPrivacy.differenceLabel')}
             </div>
-            <div className="pn-fx-stamp rounded-2xl border-2 border-accent bg-[var(--wl-tint-blue)] p-5 sm:p-6" data-stamp="PRIVATE">
-              <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-accent dark:text-blue-300 mb-2">
-                {t('whyPrivacy.differenceLabel')}
-              </div>
-              <p className="text-sm leading-relaxed text-[var(--wl-ink)]">
-                <Trans
-                  i18nKey="landing:whyPrivacy.differenceBody"
-                  components={{ brand: <Brand /> }}
-                />
-              </p>
-            </div>
+            <p className="text-body sm:text-title leading-relaxed text-[var(--wl-ink)]">
+              <Trans
+                i18nKey="landing:whyPrivacy.differenceBody"
+                components={{ brand: <Brand /> }}
+              />
+            </p>
           </div>
-          <div className="mt-6 border-t border-[var(--wl-line)] pt-3 text-xs text-[var(--wl-muted)] leading-relaxed">
+          <div className="mt-6 border-t border-[var(--wl-line)] pt-3 text-small text-[var(--wl-muted)] leading-relaxed">
             <Trans i18nKey="landing:whyPrivacy.keyboardNote" components={{ b: <span className="font-semibold text-[var(--wl-sub)]" /> }} />
           </div>
         </div>
@@ -2889,18 +2687,18 @@ export function LandingPage({
             <div className="grid gap-7 sm:grid-cols-[3fr_2fr] sm:items-start">
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <GithubLogo size={16} weight="fill" className="text-emerald-400" />
-                  <span className="text-xs font-mono font-medium text-emerald-400 uppercase tracking-widest">{t('readIt.kicker')}</span>
+                  <GithubLogo weight="fill" className="text-emerald-400" />
+                  <span className="text-small font-mono font-medium text-emerald-400 uppercase tracking-widest">{t('landing:underHood.opensourceTerm')}</span>
                 </div>
-                <h3 className="text-2xl font-black tracking-tight text-white">{t('readIt.heading')}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-[var(--wl-ink-sub)]">{t('readIt.body')}</p>
+                <h3 className="text-display-2 font-black tracking-tight text-white">{t('readIt.heading')}</h3>
+                <p className="mt-3 text-body leading-relaxed text-[var(--wl-ink-sub)]">{t('readIt.body')}</p>
                 <a
                   href={GITHUB_REPO_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-5 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-bold text-[var(--wl-ink-card)] transition hover:opacity-90"
+                  className="mt-5 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-body font-bold text-[var(--wl-ink-card)] transition hover:opacity-90"
                 >
-                  <GithubLogo size={17} weight="fill" className="shrink-0" aria-hidden="true" />
+                  <GithubLogo weight="fill" className="shrink-0" aria-hidden="true" />
                   {t('readIt.cta')}
                 </a>
               </div>
@@ -2915,10 +2713,10 @@ export function LandingPage({
                   >
                     <d.icon size={18} className="shrink-0 text-emerald-400" aria-hidden="true" />
                     <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-bold text-white transition group-hover:text-emerald-400">{t(d.labelKey)}</span>
-                      <span dir="ltr" className="block font-mono text-xs text-[var(--wl-ink-sub)]">{d.file}</span> {/* rtl-ok: file name stays LTR */}
+                      <span className="block text-body font-bold text-white transition group-hover:text-emerald-400">{t(d.labelKey)}</span>
+                      <span dir="ltr" className="block font-mono text-small text-[var(--wl-ink-sub)]">{d.file}</span> {/* rtl-ok: file name stays LTR */}
                     </span>
-                    <ArrowUpRight size={15} className="shrink-0 text-[var(--wl-ink-sub)]" aria-hidden="true" />
+                    <ArrowUpRight className="shrink-0 text-[var(--wl-ink-sub)]" aria-hidden="true" />
                   </a>
                 ))}
               </div>
@@ -2931,7 +2729,7 @@ export function LandingPage({
           <Kicker className="text-[var(--wl-amber-text)]">{t('wontFind.kicker')}</Kicker>
           <div className="flex flex-wrap gap-2">
             {WONT_FIND_KEYS.map((k) => (
-              <span key={k} className="pn-fx-shake rounded-full border-[1.5px] border-[var(--wl-amber-border)] bg-[var(--wl-tint-amber)] text-[var(--wl-amber-text)] px-3.5 py-1.5 text-xs font-bold">{t(k)}</span>
+              <span key={k} className="pn-fx-shake rounded-full border-[1.5px] border-[var(--wl-amber-border)] bg-[var(--wl-tint-amber)] text-[var(--wl-amber-text)] px-3.5 py-1.5 text-small font-bold">{t(k)}</span>
             ))}
           </div>
         </div>
@@ -2940,7 +2738,7 @@ export function LandingPage({
 
       {/* No recovery warning - dark terminal style matching "Under the Hood" */}
       <div className="mx-auto max-w-5xl px-5 sm:px-8">
-        <div className="pn-fx-stamp pn-fx-stamp-bright max-w-4xl mx-auto rounded-xl border border-[var(--wl-ink-line)] bg-[var(--wl-ink-card)] p-6 sm:p-7 relative overflow-hidden" data-stamp="YOUR KEY">
+        <div className="pn-fx-stamp pn-fx-stamp-bright rounded-xl border border-[var(--wl-ink-line)] bg-[var(--wl-ink-card)] p-6 sm:p-7 relative overflow-hidden" data-stamp="YOUR KEY">
           {/* Subtle grid background */}
           <div
             aria-hidden
@@ -2949,36 +2747,36 @@ export function LandingPage({
           />
           <div className="relative">
             <div className="flex items-center gap-2 mb-5">
-              <TerminalWindow size={16} className="text-emerald-400" />
-              <span className="text-xs font-mono font-medium text-emerald-400 uppercase tracking-widest">{t('noRecovery.heading')}</span>
+              <TerminalWindow className="text-emerald-400" />
+              <span className="text-small font-mono font-medium text-emerald-400 uppercase tracking-widest">{t('noRecovery.heading')}</span>
             </div>
-            <p className="text-sm text-[var(--wl-ink-text)] leading-relaxed mb-5">
+            <p className="text-body text-[var(--wl-ink-text)] leading-relaxed mb-5">
               {t('noRecovery.body')}
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 [&>*]:min-w-0 [overflow-wrap:anywhere]">
               <div className="space-y-1">
-                <div className="font-mono text-sm font-semibold text-white">{t('noRecovery.noRecoveryTerm')}</div>
-                <div className="text-xs text-[var(--wl-ink-sub)]">{t('noRecovery.noRecoveryDesc')}</div>
+                <div className="font-mono text-body font-semibold text-white">{t('noRecovery.noRecoveryTerm')}</div>
+                <div className="text-small text-[var(--wl-ink-sub)]">{t('noRecovery.noRecoveryDesc')}</div>
               </div>
               <div className="space-y-1">
-                <div className="font-mono text-sm font-semibold text-white">{t('noRecovery.deviceTerm')}</div>
-                <div className="text-xs text-[var(--wl-ink-sub)]">{t('noRecovery.deviceDesc')}</div>
+                <div className="font-mono text-body font-semibold text-white">{t('noRecovery.deviceTerm')}</div>
+                <div className="text-small text-[var(--wl-ink-sub)]">{t('noRecovery.deviceDesc')}</div>
               </div>
               <div className="space-y-1">
-                <div className="font-mono text-sm font-semibold text-white">{t('noRecovery.zkTerm')}</div>
-                <div className="text-xs text-[var(--wl-ink-sub)]">{t('noRecovery.zkDesc')}</div>
+                <div className="font-mono text-body font-semibold text-white">{t('noRecovery.zkTerm')}</div>
+                <div className="text-small text-[var(--wl-ink-sub)]">{t('noRecovery.zkDesc')}</div>
               </div>
               <div className="space-y-1">
-                <div className="font-mono text-sm font-semibold text-white">{t('noRecovery.writeTerm')}</div>
-                <div className="text-xs text-[var(--wl-ink-sub)]">{t('noRecovery.writeDesc')}</div>
+                <div className="font-mono text-body font-semibold text-white">{t('noRecovery.writeTerm')}</div>
+                <div className="text-small text-[var(--wl-ink-sub)]">{t('noRecovery.writeDesc')}</div>
               </div>
               <div className="space-y-1">
-                <div className="font-mono text-sm font-semibold text-white">{t('noRecovery.printTerm')}</div>
-                <div className="text-xs text-[var(--wl-ink-sub)]">{t('noRecovery.printDesc')}</div>
+                <div className="font-mono text-body font-semibold text-white">{t('noRecovery.printTerm')}</div>
+                <div className="text-small text-[var(--wl-ink-sub)]">{t('noRecovery.printDesc')}</div>
               </div>
               <div className="space-y-1">
-                <div className="font-mono text-sm font-semibold text-white">{t('noRecovery.googleTerm')}</div>
-                <div className="text-xs text-[var(--wl-ink-sub)]">{t('noRecovery.googleDesc')}</div>
+                <div className="font-mono text-body font-semibold text-white">{t('noRecovery.googleTerm')}</div>
+                <div className="text-small text-[var(--wl-ink-sub)]">{t('noRecovery.googleDesc')}</div>
               </div>
             </div>
           </div>
@@ -2987,24 +2785,33 @@ export function LandingPage({
 
       {/* ── As seen on: the three sites that list us ──────────
            A credential strip, not an endorsement: each mark links
-           back to the listing it names. The PrivacyTools badge keeps
-           its own place up by the demo shot, because it carries a
-           live star rating and these three do not. */}
-      <div className="mx-auto max-w-5xl px-5 sm:px-8 mt-12">
-        <div className="max-w-4xl mx-auto">
-          <Kicker className="text-center text-[var(--wl-muted)]">{t('badges.asSeenOn')}</Kicker>
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
-            <a href="https://alternativeto.net" target="_blank" rel="noopener noreferrer">
+           back to the listing it names. One slim bar between hairlines,
+           the marks set to one height, in their own colours. Hovering one
+           lifts it (.pn-seen in FX_CSS). PrivacyTools is
+           here as a listing too; its rated badge up by the demo shot stays,
+           because it carries the live star rating. AlternativeTo publishes
+           its logo in one colour only, so it stays in the page ink. */}
+      <div className="mx-auto max-w-5xl px-5 sm:px-8 mt-12 sm:mt-16">
+        <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-10 border-y border-[var(--wl-line)] py-6">
+          <Kicker className="!mb-0 shrink-0 text-[var(--wl-muted)]">{t('badges.asSeenOn')}</Kicker>
+          <div className="flex flex-1 flex-wrap items-center justify-center sm:justify-around gap-x-9 gap-y-4">
+            <a href="https://privacytools.io/app/privacynotes" target="_blank" rel="noopener noreferrer" className="pn-seen">
+              {/* PrivacyTools' own colour logos (privacytools.io/brand): the
+                  light-background file on cream, the dark one on sumi ink. */}
+              <img src="/marketing/privacytools-light.svg" alt={t('badges.privacyToolsAlt')} width="141" height="28" loading="lazy" className="block h-7 w-auto dark:hidden" />
+              <img src="/marketing/privacytools-dark.svg" alt={t('badges.privacyToolsAlt')} width="141" height="28" loading="lazy" className="hidden h-7 w-auto dark:block" />
+            </a>
+            <a href="https://alternativeto.net/software/privacynotes/about/" target="_blank" rel="noopener noreferrer" className="pn-seen">
               {/* Painted through a mask rather than drawn as an image: the
                   lockup is one flat colour, and the page ink is two
                   different colours by mode. A mask takes the ink token
                   itself, so there is one file instead of a light and a
                   dark copy that have to be kept identical by hand.
-                  Spec: ops/docs/archive/ui-patterns.md (section 93, one-colour partner logo) */}
+                  Spec: docs/internal/design/ui-patterns.md (section 93, one-colour partner logo) */}
               <span
                 role="img"
                 aria-label={t('badges.alternativeToAlt')}
-                className="block h-[47px] w-[198px] bg-[var(--wl-ink)]"
+                className="block h-8 w-[135px] bg-[var(--wl-ink)]"
                 style={{
                   maskImage: 'url(/marketing/alternativeto.svg)',
                   WebkitMaskImage: 'url(/marketing/alternativeto.svg)',
@@ -3018,22 +2825,20 @@ export function LandingPage({
               />
             </a>
             {/* nosubscription.org has no logo, so the domain is set as one:
-                the name in page ink, the TLD in accent blue. The hover rule
-                paints its underline from --pn-fx-underline, so the two blues
-                are one declaration and cannot drift apart. The accent is too
+                the name in page ink, the TLD in accent blue. The accent is too
                 dark to read on sumi ink, hence the lighter blue in dark. */}
             <a
-              href="https://nosubscription.org"
+              href="https://nosubscription.org/software/privacynotes"
               target="_blank"
               rel="noopener noreferrer"
-              className="pn-fx-navlink text-[22px] font-bold tracking-tight text-[var(--wl-ink)] [--pn-fx-underline:var(--color-accent)] dark:[--pn-fx-underline:var(--color-blue-500)]"
+              className="pn-seen text-heading font-bold tracking-tight text-[var(--wl-ink)]"
             >
               <Trans
                 i18nKey="landing:badges.nosubscription"
                 components={{ tld: <span className="text-accent dark:text-blue-500" /> }}
               />
             </a>
-            <a href="https://itsfoss.com/privacy-notes/" target="_blank" rel="noopener noreferrer">
+            <a href="https://itsfoss.com/privacy-notes/" target="_blank" rel="noopener noreferrer" className="pn-seen">
               {/* Two brand greens that hold up on cream and on sumi ink
                   alike, so this one mark stays as it was drawn. */}
               <img
@@ -3042,62 +2847,74 @@ export function LandingPage({
                 width="114"
                 height="41"
                 loading="lazy"
-                className="block"
+                className="block h-7 w-auto"
               />
             </a>
           </div>
         </div>
       </div>
 
-      {/* ── Closing CTA: the page ends on an ask, not a warning ── */}
-      <div className="mx-auto max-w-5xl px-5 sm:px-8 mt-16 sm:mt-24">
-        <div className="max-w-4xl mx-auto text-center">
-          <Kicker>{t('closing.kicker')}</Kicker>
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[var(--wl-ink)]">
-            {t('closing.heading')}
-          </h2>
-          <div className="mt-7 grid grid-cols-2 sm:flex sm:flex-wrap justify-center items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              onClick={() => openAuth('create')}
-              className="pn-fx-conic-btn cursor-pointer rounded-full bg-[var(--wl-ink)] text-[var(--wl-bg)] px-3 sm:px-7 py-3.5 text-sm sm:text-base font-bold"
-            >
-              {t('header.createVault')}
-            </button>
-            <a
-              href="https://try.privacynotes.app/"
-              className="pn-fx-amber inline-flex items-center justify-center gap-2 rounded-full border-2 border-[var(--wl-amber-border)] text-[var(--wl-amber-text)] px-3 sm:px-6 py-3 text-sm sm:text-base font-bold transition"
-            >
-              {t('hero.tryDemo')}
-              <ArrowUpRight size={16} className="shrink-0" aria-hidden="true" />
-            </a>
+      {/* ── Closing: the page ends on an ask, not a warning ─────
+           One framed panel: the call to action on top, and under a
+           hairline the apps people move from, as an even grid of tiles.
+           Loose centered pills read as a pile, and the ragged last row
+           pulled the eye off the buttons. */}
+      <div className="mx-auto max-w-5xl px-5 sm:px-8 mt-12 sm:mt-16">
+        <div className="overflow-hidden rounded-3xl border-2 border-[var(--wl-edge)] bg-[var(--wl-card)]">
+          <div className="px-5 pt-12 pb-10 sm:px-10 text-center">
+            <Kicker>{t('closing.kicker')}</Kicker>
+            <h2 className="text-display-3 sm:text-display-5 font-black tracking-tight text-[var(--wl-ink)] text-balance">
+              {t('closing.heading')}
+            </h2>
+            <CtaPair className="mt-7 justify-center" label={t('header.createVault')} onCreate={() => openAuth('create')} />
+            <p className="mt-3 text-small text-[var(--wl-muted)]">{t('hero.microcopy')}</p>
           </div>
-          <p className="mt-3 text-xs text-[var(--wl-muted)]">{t('hero.microcopy')}</p>
-          <p className="mx-auto mt-6 max-w-md text-sm leading-relaxed text-[var(--wl-sub)]">
-            {t('closing.importNote')}
-          </p>
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
-            {GUIDE_ORDER.map((id) => {
-              const meta = GUIDE_META[id];
-              if (!meta) return null;
-              return (
-                <a
-                  key={id}
-                  href={`${helpPath(activeLocale())}/import/${id}`}
-                  className="pn-fx-arrow inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-[var(--wl-chip-border)] bg-[var(--wl-tint)] px-3 py-1.5 text-xs font-semibold text-[var(--wl-chip-text)] hover:bg-[var(--wl-card)] transition"
-                >
-                  {meta.icon ? (
-                    <img src={`/help/icons/${meta.icon}`} alt="" width={16} height={16} loading="lazy" className="h-4 w-4 shrink-0" />
-                  ) : id === 'contacts' ? (
-                    // A guide with no app logo wears the pillar glyph instead.
-                    <AddressBook size={16} aria-hidden="true" className="h-4 w-4 shrink-0" />
-                  ) : (
-                    <Key size={16} aria-hidden="true" className="h-4 w-4 shrink-0" />
-                  )}
-                  {meta.name}
-                </a>
-              );
-            })}
+          <div className="border-t border-[var(--wl-line)] bg-[var(--wl-bg)]/60 px-5 py-7 sm:px-10">
+            <p className="text-body font-semibold text-[var(--wl-ink)]">
+              {t('closing.importNote')}
+            </p>
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              {GUIDE_ORDER.map((id) => {
+                const meta = GUIDE_META[id];
+                if (!meta) return null;
+                return (
+                  <a
+                    key={id}
+                    href={`${helpPath(activeLocale())}/import/${id}`}
+                    className="group flex min-w-0 items-center gap-2 rounded-lg border-[1.5px] border-[var(--wl-line)] bg-[var(--wl-card)] px-2.5 py-2 text-small leading-tight font-semibold text-[var(--wl-chip-text)] transition hover:border-[var(--wl-edge)] hover:bg-[var(--wl-bg)]"
+                  >
+                    {meta.icon ? (
+                      <img src={`/help/icons/${meta.icon}`} alt="" width={16} height={16} loading="lazy" className="h-4 w-4 shrink-0" />
+                    ) : id === 'contacts' ? (
+                      // A guide with no app logo wears the pillar glyph instead.
+                      <AddressBook aria-hidden="true" className="h-4 w-4 shrink-0" />
+                    ) : (
+                      <Key aria-hidden="true" className="h-4 w-4 shrink-0" />
+                    )}
+                    <span className="min-w-0 sm:truncate">{meta.name}</span>
+                    <ArrowRight aria-hidden="true" className="ms-auto hidden shrink-0 opacity-0 transition-opacity group-hover:opacity-60 sm:block" />
+                  </a>
+                );
+              })}
+            </div>
+            {/* The demo runs every importer with zero server calls, and a
+                closed tab clears it (docs/internal/agent-rules.md section 4), so a visitor can
+                test their own export before they commit to anything. */}
+            <div className="mt-5 flex flex-col gap-4 rounded-xl border-2 border-[var(--wl-amber-border)] bg-[var(--wl-tint-amber)] px-5 py-4 sm:flex-row sm:items-center">
+              {/* The app's own Import & Export glyph (SETTINGS_SECTION_ICONS). */}
+              <Repeat size={28} weight="bold" className="shrink-0 text-[var(--wl-amber-text)]" aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <div className="text-body font-extrabold text-[var(--wl-ink)]">{t('closing.importDemoTitle')}</div>
+                <p className="mt-0.5 text-body leading-relaxed text-[var(--wl-sub)]">{t('closing.importDemoBody')}</p>
+              </div>
+              <a
+                href="https://try.privacynotes.app/"
+                className="pn-fx-amber inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-full border-2 border-[var(--wl-amber-border)] px-5 py-2.5 text-body font-bold text-[var(--wl-amber-text)] transition sm:self-auto"
+              >
+                {t('hero.tryDemo')}
+                <ArrowUpRight className="shrink-0" aria-hidden="true" />
+              </a>
+            </div>
           </div>
         </div>
       </div>

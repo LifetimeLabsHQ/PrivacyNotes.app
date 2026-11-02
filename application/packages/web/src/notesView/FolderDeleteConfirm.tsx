@@ -7,7 +7,7 @@ import { subtreeIds, type FolderDef } from '../folders';
  * "Delete folder?" for one folder. A folder with subfolders offers to delete
  * them too, off by default, so a whole imported branch goes in one step; the
  * notes of every deleted folder still move up and are never deleted.
- * Spec: ops/issues/0514.md
+ * Spec: docs/internal/issues/0514.md
  */
 export function FolderDeleteConfirm({ folders, id, name, onDelete, onClose }: {
   folders: FolderDef[];

@@ -4,7 +4,7 @@
  * the native `clip_fetch` command on the desktop and the phones, the Worker's
  * `/clip-fetch` route on the web and in the demo. Both refuse the same things;
  * this module turns their refusals into the few reasons the screens explain.
- * Spec: ops/docs/archive/web-clipper-stage1.md (section 3.1)
+ * Spec: docs/internal/specs/web-clipper-stage1.md (section 3.1)
  */
 import { isDemoMode } from './demo';
 import { detectPlatform } from './devices';
@@ -37,7 +37,23 @@ export type TokenSource = () => Promise<string | null>;
 
 export async function clipDownload(url: string, kind: ClipKind, token: TokenSource): Promise<Downloaded> {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new ClipError('offline');
-  return detectPlatform() === 'web' || isDemoMode() ? viaWorker(url, kind, token) : viaDevice(url, kind);
+  // The fragment stays on the device, as a browser keeps it: a burn link or a
+  // `#phrase=` link holds its secret there. The clip still names the address
+  // the person gave when the download landed on it.
+  const { sent, hash } = splitFragment(url);
+  const got = detectPlatform() === 'web' || isDemoMode() ? await viaWorker(sent, kind, token) : await viaDevice(sent, kind);
+  return hash && got.url === sent ? { ...got, url: sent + hash } : got;
+}
+
+function splitFragment(url: string): { sent: string; hash: string } {
+  try {
+    const u = new URL(url);
+    const hash = u.hash;
+    u.hash = '';
+    return { sent: u.href, hash };
+  } catch {
+    return { sent: url, hash: '' };
+  }
 }
 
 async function viaDevice(url: string, kind: ClipKind): Promise<Downloaded> {

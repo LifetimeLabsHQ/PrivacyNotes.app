@@ -24,7 +24,7 @@ import { getPushFailures } from './pushFailures';
  *
  * Demo never syncs, so every demo row would qualify; the queries return
  * nothing there rather than warn about a promise demo never made.
- * Spec: ops/docs/archive/ui-patterns.md (the not-backed-up state)
+ * Spec: docs/internal/design/ui-patterns.md (the not-backed-up state)
  */
 export function isNeverBackedUp(n: Pick<LocalNote, 'dirty' | 'syncedNonce'>): boolean {
   return n.dirty !== 0 && n.syncedNonce == null;
@@ -68,6 +68,20 @@ interface OnlyOnThisDevice {
 
 const NOTHING: OnlyOnThisDevice = { notes: 0, files: 0 };
 
+/** The line a local wipe shows before it runs: what exists only on this
+ *  device and dies with it, or null when nothing does. Shared by the Danger
+ *  zone and the dead man's switch dialog, so both name the loss the same way. */
+export function describeOnlyHere(t: (key: string, opts?: Record<string, unknown>) => string, atStake: OnlyOnThisDevice): string | null {
+  const notes = t('settings:danger.unsyncedNotes', { count: atStake.notes });
+  const files = t('settings:danger.unsyncedFiles', { count: atStake.files });
+  const items =
+    atStake.notes > 0 && atStake.files > 0
+      ? t('settings:danger.unsyncedBoth', { notes, files })
+      : atStake.notes > 0 ? notes : files;
+  const total = atStake.notes + atStake.files;
+  return total > 0 ? t('settings:danger.localUnsynced', { count: total, items }) : null;
+}
+
 /** A blob row waiting to upload (1) or refused for good (2): its cached
  *  bytes are the only copy. The dedup tables are never sealed, so a value
  *  filter reads them without the key. */
@@ -80,7 +94,9 @@ const blobOnlyHere = (r: { pendingUpload?: number }) => r.pendingUpload === 1 ||
  * flush pushes notes and never a blob, the Danger zone pushes nothing, and
  * both wipes take the blob caches with them. A forced sign-out keeps all of
  * it (clearLocalDatabase with keepUnsyncedNotes). An unpushed settings
- * change is not counted: the sign-out flushes it, the Danger zone does not.
+ * change is not counted here: a chosen sign-out waits for its upload and
+ * asks when it cannot finish (signOutUpload.ts), and the Danger zone does
+ * not push it.
  */
 export async function countOnlyOnThisDevice(): Promise<OnlyOnThisDevice> {
   if (isDemoMode()) return NOTHING;
@@ -155,8 +171,8 @@ export function NeverBackedUpNotice({ ids }: { ids: readonly string[] | null }) 
   if (only === 0 && changes === 0) return null;
   const single = (ids?.length ?? 0) === 1;
   return (
-    <div className="mt-3 flex items-start gap-2 rounded-md border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-[13px] leading-snug p-3">
-      <WarningCircle size={16} className="shrink-0 mt-0.5" />
+    <div className="mt-3 flex items-start gap-2 rounded-md border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-compact leading-snug p-3">
+      <WarningCircle className="shrink-0 mt-0.5" />
       <span className="space-y-1">
         {only > 0 && <span className="block">{single ? t('neverBackedUp.one') : t('neverBackedUp.some', { count: only })}</span>}
         {changes > 0 && <span className="block">{single ? t('neverBackedUp.changesOne') : t('neverBackedUp.changesSome', { count: changes })}</span>}

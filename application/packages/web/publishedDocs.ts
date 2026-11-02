@@ -22,12 +22,12 @@ import { fileURLToPath } from 'node:url';
 // documents link each other by public-repository path ("[VERIFY.md](VERIFY.md)"),
 // which resolves under /docs/ to a file that is not there.
 //
-// Spec: ops/docs/help-center.md (section 12, published documents)
+// Spec: docs/contrib/help-center.md (section 12, published documents)
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '../..');
 /** The public repository. Every document below is published from it. */
-export const REPO_URL = 'https://github.com/LifetimeLabsDev/PrivacyNotes.app';
+export const REPO_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app';
 const ORIGIN = 'https://privacynotes.app';
 
 /**
@@ -67,13 +67,13 @@ export const PUBLISHED_DOCS: readonly PublishedDoc[] = [
   {
     slug: 'threat-model',
     published: 'THREAT_MODEL.md',
-    source: 'ops/docs/THREAT_MODEL.md',
+    source: 'docs/public/THREAT_MODEL.md',
     about: 'Trust boundaries, key derivation, the ciphers, local storage at rest, and the threats that are out of scope.',
   },
   {
     slug: 'verify',
     published: 'VERIFY.md',
-    source: 'ops/docs/VERIFY.md',
+    source: 'docs/public/VERIFY.md',
     about: 'Three ways to check the encryption claim yourself, from one minute in a network tab to a reproducible build.',
   },
 ];
@@ -206,7 +206,7 @@ ${ORIGIN}/changelog.md.
 
 The encryption code itself is code rather than prose, so quote it from the
 file and never from memory:
-https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/crypto/crypto.ts
+https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/crypto/crypto.ts
 
 ${blocks}
 `;

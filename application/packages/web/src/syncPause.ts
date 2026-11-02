@@ -33,6 +33,20 @@ function readStored(): boolean {
 let paused = readStored();
 const listeners = new Set<() => void>();
 
+// A pause set in another tab reaches this one: the storage event fires in
+// every other tab of this origin, so the device stops talking to the server
+// in all of them, as the switch promises (GitHub #655). A null key is a
+// cleared storage.
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('storage', (e) => {
+    if (e.key !== STORAGE_KEY && e.key !== null) return;
+    const next = readStored();
+    if (next === paused) return;
+    paused = next;
+    for (const cb of listeners) cb();
+  });
+}
+
 function isSyncPaused(): boolean {
   return paused;
 }
@@ -50,12 +64,28 @@ export function setSyncPaused(next: boolean): void {
 }
 
 /**
+ * The dead man's switch hold: set when the server says this account was
+ * wiped after this device last looked, and cleared only by the person's
+ * answer in the dialog (dms.ts). In memory on purpose: an app closed
+ * mid-dialog asks again at the next start, and no sign-in or account switch
+ * may lift it the way they lift suspendSync().
+ * Spec: docs/internal/specs/dead-mans-switch.md (section 6)
+ */
+let dmsHeld = false;
+
+export function setDmsHold(next: boolean): void {
+  if (dmsHeld === next) return;
+  dmsHeld = next;
+  for (const cb of listeners) cb();
+}
+
+/**
  * The one question every server-write path asks. Composes the release
- * floor and the user pause so a new blocked-state never needs another
- * sweep over the twelve call sites.
+ * floor, the user pause and the dead man's switch hold so a new
+ * blocked-state never needs another sweep over the twelve call sites.
  */
 export function isServerWriteBlocked(): boolean {
-  return isBelowVersionFloor() || isSyncPaused();
+  return isBelowVersionFloor() || isSyncPaused() || dmsHeld;
 }
 
 function subscribe(cb: () => void) {
@@ -69,3 +99,4 @@ function subscribe(cb: () => void) {
 export function useSyncPaused(): boolean {
   return useSyncExternalStore(subscribe, isSyncPaused, () => false);
 }
+

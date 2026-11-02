@@ -9,7 +9,7 @@
  * an item in its folder's. An unfiled item is Personal, whatever its type:
  * Work has no unfiled list, so an item made there files into a Work folder.
  *
- * Spec: ops/docs/plans/spaces.md
+ * Spec: docs/internal/specs/spaces.md
  */
 import type { LocalNote } from './db';
 import { isDemoMode } from './demo';
@@ -115,7 +115,7 @@ export function carrySpaces(
  * The tag look and the star after a rename (`newTag`) or a delete (null) of
  * a tag in one space. Both are keyed by name for the whole account, so the
  * old name keeps them while an item outside the space still carries it.
- * Spec: ops/docs/plans/spaces.md (section 8)
+ * Spec: docs/internal/specs/spaces.md (section 8)
  */
 export function tagAfterScopedChange<T extends { itemStyles: ItemStyles; favoriteTags: string[] }>(
   prev: T,

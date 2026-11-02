@@ -7,7 +7,7 @@ import type { CompareResult, CompareRuleKind, DaySeries, RangeBounds, TrackerDes
  * a rule fixed per kind, the outcome averaged on each side. A rule never
  * depends on the tracker's name, and a threshold is never picked for the size
  * of the difference it produces.
- * Spec: ops/docs/archive/wellness-statistics.md (section 7)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 7)
  */
 
 /** Days needed on each side before a difference is shown. */

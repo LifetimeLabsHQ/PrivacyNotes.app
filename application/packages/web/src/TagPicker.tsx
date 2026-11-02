@@ -18,7 +18,7 @@ import { CloseButton } from './ui';
  * It was an anchored popover once, which meant the window's position had
  * to be solved against whatever opened it, and a trigger far from the
  * right edge threw it backwards across the pane.
- * Spec: ops/docs/archive/ui-patterns.md
+ * Spec: docs/internal/design/ui-patterns.md
  */
 export function TagPicker({
   allTags,
@@ -69,13 +69,13 @@ export function TagPicker({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-2">
-          <h2 className="text-[15px] font-semibold m-0">{t('selectionToolbar.tag')}</h2>
+          <h2 className="text-row font-semibold m-0">{t('selectionToolbar.tag')}</h2>
           <CloseButton onClick={onClose} />
         </div>
 
         <div className="px-4 pb-2 shrink-0">
           <div className="flex items-center gap-2 rounded-md bg-surface-1 border border-divider px-2.5">
-            <MagnifyingGlass size={14} className="shrink-0 text-pn-muted" aria-hidden="true" />
+            <MagnifyingGlass className="shrink-0 text-pn-muted" aria-hidden="true" />
             <input
               autoFocus
               value={filter}
@@ -83,7 +83,7 @@ export function TagPicker({
               onKeyDown={handleKeyDown}
               placeholder={t('selectionToolbar.addTagPlaceholder')}
               autoComplete="off"
-              className="flex-1 min-w-0 h-9 bg-transparent text-[14px] focus:outline-none placeholder:text-pn-muted"
+              className="flex-1 min-w-0 h-9 bg-transparent text-body focus:outline-none placeholder:text-pn-muted"
             />
           </div>
         </div>
@@ -94,18 +94,18 @@ export function TagPicker({
               key={tag}
               type="button"
               onClick={() => onSelect(tag)}
-              className="w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-[14px] cursor-pointer hover:bg-surface-1 transition min-h-[36px]"
+              className="w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-body cursor-pointer hover:bg-surface-1 transition min-h-[36px]"
             >
-              <span className="text-pn-muted text-xs shrink-0 inline-flex">
+              <span className="text-pn-muted text-small shrink-0 inline-flex">
                 <TagMark tag={tag} size={13} />
               </span>
               <span className="truncate text-start">{tag}</span>
-              <span className="ms-auto shrink-0 text-xs text-pn-muted tabular-nums">{count}</span>
+              <span className="ms-auto shrink-0 text-small text-pn-muted tabular-nums">{count}</span>
             </button>
           ))}
 
           {filtered.length === 0 && !showCreate && (
-            <div className="px-2.5 py-2 text-[14px] text-pn-muted">
+            <div className="px-2.5 py-2 text-body text-pn-muted">
               {t('selectionToolbar.noTagsFound')}
             </div>
           )}
@@ -114,9 +114,9 @@ export function TagPicker({
             <button
               type="button"
               onClick={() => onSelect(normalizedFilter)}
-              className="w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-[14px] cursor-pointer hover:bg-surface-1 transition text-pn-muted min-h-[36px]"
+              className="w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-body cursor-pointer hover:bg-surface-1 transition text-pn-muted min-h-[36px]"
             >
-              <span className="text-xs shrink-0">+</span>
+              <span className="text-small shrink-0">+</span>
               <span className="truncate text-start">{t('selectionToolbar.createTag', { tag: normalizedFilter })}</span>
             </button>
           )}

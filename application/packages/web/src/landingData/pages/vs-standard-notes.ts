@@ -11,7 +11,7 @@
  * standardnotes.com app and pricing page. Update `lastChecked` whenever the
  * cells are re-verified. Their site blocks bots, so re-verification is a
  * human-in-a-browser task.
- * Spec: ops/docs/plans/marketing-pages.md (these landing pages are English only, permanently)
+ * Spec: docs/internal/plans/marketing-pages.md (these landing pages are English only, permanently)
  */
 export default {
   kind: 'vs',
@@ -35,13 +35,13 @@ export default {
   stats: [
     { big: '{price} once', small: 'vs ~$90 per year, forever. Their year one costs more than our lifetime.' },
     { big: '0 emails', small: 'Sign in with a 12-word phrase. Nothing identity-shaped required.' },
-    { big: '7 pillars', small: 'Notes, tasks, journal, files, vault, bookmarks and markdown, all on the free tier.' },
+    { big: '8 pillars', small: 'Notes, tasks, passwords, journal, files, calendar, contacts and bookmarks, with mood and medication tracking, all on the free tier.' },
     { big: '.md on disk', small: 'Desktop can work on a folder of plain markdown files, edits save in place.' },
   ],
   pickUs: [
     'markdown without a plan. Their free tier is plain text; the markdown editor with live preview needs the subscription. Ours is markdown-native from the first note.',
-    'one app instead of a stack: journal with mood tracking, tasks, encrypted files and a password vault next to your notes.',
-    'no account at all. A 12-word phrase is the entire identity. No email to verify, nothing to subpoena out of us.',
+    'one app instead of a stack: notes, tasks, passwords, journal, files, calendar, contacts and bookmarks, with mood and medication tracking.',
+    'no account at all. A 12-word phrase is the entire identity. No email to verify, and with self-custody no key on our server.',
     'to pay once: {earlyPrice} during early access, {proPrice} after. Own it, done.',
   ],
   pickThem: [
@@ -101,7 +101,7 @@ export default {
     h2: 'Both encrypt. Almost everything else differs.',
     lead: 'Once two apps both encrypt end-to-end, the comparison moves to what you hand over, what the free tier really is, and what the price buys.',
     us: [
-      { dt: 'Identity', dd: 'A 12-word phrase. Optional Google, Apple, or GitHub sign-in, same encryption either way.' },
+      { dt: 'Identity', dd: 'A 12-word phrase. Optional Google, Apple, or GitHub sign-in, and you choose who holds the key.' },
       { dt: 'Free tier', dd: 'The whole app, smaller. All seven pillars including markdown, 2 devices, files to 5 MB.' },
       { dt: 'Paying', dd: '{price} once: unlimited devices, note history, PIN-protect, 500 MB of encrypted files.' },
       { dt: 'Keys', dd: 'Derived from your phrase on your device. XChaCha20-Poly1305 per note.' },

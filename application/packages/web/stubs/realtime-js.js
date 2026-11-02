@@ -13,7 +13,7 @@
 // a future feature that needs it fails immediately rather than going
 // quietly dead.
 //
-// Spec: ops/docs/bundle-size.md (section 5). Storage-js was stubbed the
+// Spec: docs/contrib/bundle-size.md (section 5). Storage-js was stubbed the
 // same way in 0.264.0 and broke every attachment upload (#202) - before
 // stubbing another client, grep its call surface, not its import name.
 

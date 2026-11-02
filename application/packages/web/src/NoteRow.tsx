@@ -16,7 +16,7 @@ import { parseLoginBody, domainFromUrl } from './LoginForm';
 import { parseLinkBody, linkDomain } from './linkBody';
 import { contactHue, contactInitials, contactInitialsFor, parseContactBody } from './contactBody';
 import { loadEncryptedImageUrl } from './EncryptedImage';
-import { Archive, Book, CalendarDots, CheckSquare, File, Image, MusicNotes, Key, CreditCard, Lock, Globe, BookmarkSimple, User, type Icon } from './icons';
+import { Archive, Book, CalendarDots, CheckSquare, File, Image, MusicNotes, Key, CreditCard, Lock, Globe, BookmarkSimple, User, Scribble, type Icon } from './icons';
 import { useFolderName } from './folderNames';
 import { ChipFilterContext } from './chipFilter';
 import { sortTags } from './notesRepo';
@@ -24,7 +24,9 @@ import { usePushFailure } from './pushFailures';
 import { FolderGlyph, PathGlyph, TagMark, itemLookDraw, useNoteIconPaths, useNoteLook } from './looks/LookGlyph';
 import { ItemRow, applyCompactRows, type ItemFlag, type ItemRootProps, type ItemState, type ListItem } from './listItem';
 import { isSameOriginPath } from './sameOriginPath';
+import { attachmentLinks } from './fileNames';
 import { useCompactRows } from './viewMode';
+import { scheduleOf } from './schedule';
 
 
 export interface NoteRowProps {
@@ -52,6 +54,9 @@ export interface NoteRowProps {
   isContextTarget?: boolean;
   /** Show starred / note-type icons. Default false. */
   showTypeIcons?: boolean;
+  /** The list holds one type only, so the type icon only repeats it and
+   *  goes. An icon set on the note stays. Spec: issue #618. */
+  hideTypeIcon?: boolean;
   /** Use sortField-aware date label. Default false (always "Modified"). */
   sortAwareDate?: boolean;
   /** The Journals pillar: the created sort shows the day an entry is for. */
@@ -111,6 +116,7 @@ export function useNoteItem(p: NoteRowProps): ListItem {
     entryDays = false,
     trashTint = false,
     showArchived = false,
+    hideTypeIcon = false,
   } = p;
   const { t } = useTranslation('notes');
   const compactRows = useCompactRows();
@@ -129,7 +135,7 @@ export function useNoteItem(p: NoteRowProps): ListItem {
   const displayTitle = useMemo(() => deriveDisplayTitle(n, locked), [n, locked, locale]);
   const excerpt = useMemo(() => deriveExcerpt(n, listPrefs.longPreview), [n, listPrefs.longPreview, locale]);
   // A check-in (values, no text) shows its mood face and what was logged,
-  // never behind the PIN. Spec: ops/issues/0439.md (Spec)
+  // never behind the PIN. Spec: docs/internal/issues/0439.md (Spec)
   const units = useContext(CheckInUnitsContext);
   const checkIn = useMemo(() => {
     if (locked || trashTint || !isCheckIn(n)) return null;
@@ -141,6 +147,13 @@ export function useNoteItem(p: NoteRowProps): ListItem {
   /** One rule for when a size appears. `noteSizeBytes` memoizes per note, so
    *  this is a map lookup after the first call. */
   const sizeText = rowSizeLabel(n, listPrefs.sortField) || null;
+  // What the note holds, on the date line. The files come from the body, so
+  // none while it is behind the PIN; the reminders are the alerts of its
+  // schedule. Spec: issue #627.
+  const counts = useMemo(() => ({
+    files: locked || n.type === 'file' ? 0 : fileCount(n.body),
+    reminders: scheduleOf(n.trackers, n.type)?.alerts?.length ?? 0,
+  }), [n, locked]);
   /** Favicon for the mini glyph - bookmarks and logins only, never in trash
    *  (the boxed chip drops the favicon there too, for the amber icon), and
    *  never behind the PIN, where the address is the content the gate keeps. */
@@ -150,9 +163,9 @@ export function useNoteItem(p: NoteRowProps): ListItem {
   const created = sortAwareDate && listPrefs.sortField === 'created';
   const entryDay = entryDays && created && n.type === 'journal';
   // A note or a task list attached to a day names that day in place of the stamp.
-  // Spec: ops/docs/archive/note-date.md
+  // Spec: docs/internal/specs/note-date.md
   const noteDay = n.type === 'note' || n.type === 'task' ? journalDateOf(n) : null;
-  const dateLabel = noteDay ? t('noteRow.date') : entryDay ? t('noteRow.entryDate') : created ? t('noteRow.created') : t('noteRow.modified');
+  const dateLabel = noteDay ? t('noteRow.date') : entryDay ? t('shell:noteOptionsMenu.entryDate') : created ? t('noteRow.created') : t('noteRow.modified');
   // A new date setting or language formats the date again without a remount.
   const dateFormatKey = useDateFormatKey();
   const dates = useMemo(() => {
@@ -177,11 +190,15 @@ export function useNoteItem(p: NoteRowProps): ListItem {
       ? <NoteIconBox type={n.type} paths={ownIcon} />
       : checkIn?.mood != null
       ? <CheckInRowIcon mood={checkIn.mood} />
+      : hideTypeIcon
+      ? null
       : <RowIcon note={n} isVault={isVault} isFile={n.type === 'file'} isJournal={n.type === 'journal'} hasTasks={n.type === 'task'} trashTint={trashTint} locked={locked} />,
     glyph: ownIcon
       ? <CardGlyph type={n.type} paths={ownIcon} />
       : checkIn?.mood != null
       ? <CheckInGlyph mood={checkIn.mood} />
+      : hideTypeIcon
+      ? null
       : <CardGlyph type={n.type} domain={faviconDomain} />,
     compactIcon: ownIcon
       ? <span className={`shrink-0 inline-flex rounded-[4px] ${typeGlyph(n.type).color}`} aria-hidden="true"><PathGlyph paths={ownIcon} size={COMPACT_PICTURE_PX} /></span>
@@ -193,6 +210,7 @@ export function useNoteItem(p: NoteRowProps): ListItem {
     date: listPrefs.showDate ? { label: dateLabel, ...dates } : null,
     size: sizeText,
     flags,
+    counts,
     chips: listPrefs.showTags ? <TagChips tags={n.tags} folderId={n.folderId} /> : null,
     ribbon: n.type === 'link',
     look: look ? { color: look.color, style: look.style, css: itemLookDraw(look).row } : null,
@@ -369,7 +387,7 @@ function RowIcon({ note, isVault, isFile, isJournal, hasTasks, trashTint, locked
 
   return (
     <span className={`shrink-0 w-7 h-7 rounded-md ${bg} flex items-center justify-center ${text} mt-px`}>
-      {isJournal ? <Book size={ROW_ICON_PX} /> : note.type === 'event' ? <CalendarDots size={ROW_ICON_PX} /> : hasTasks ? <CheckSquare size={ROW_ICON_PX} /> : <File size={ROW_ICON_PX} />}
+      {isJournal ? <Book size={ROW_ICON_PX} /> : note.type === 'event' ? <CalendarDots size={ROW_ICON_PX} /> : note.type === 'drawing' ? <Scribble size={ROW_ICON_PX} /> : hasTasks ? <CheckSquare size={ROW_ICON_PX} /> : <File size={ROW_ICON_PX} />}
     </span>
   );
 }
@@ -408,8 +426,7 @@ function NoteIconBox({ type, paths }: { type: LocalNote['type']; paths: readonly
 
 /** Extract the MIME type from a file note's single pn:file link. */
 function fileMimeFromBody(body: string): string {
-  const m = body.match(/\[[^|]*\|[^|]*\|([^\]]*)\]\(pn:file\//);
-  return (m?.[1] || '').toLowerCase();
+  return (attachmentLinks(body, { acrossLines: true, anyId: true })[0]?.mime ?? '').toLowerCase();
 }
 
 /**
@@ -440,7 +457,7 @@ const FAVICON_TILE = 'bg-[#f0efec] border border-black/[0.06] dark:border-white/
  * rendering read as a dot in a frame. Fallback, also while a site's icon is
  * missing: Globe for bookmarks, Lock for logins, on the accent tint; amber in
  * trash.
- * Spec: ops/docs/archive/bookmarks-pillar.md (row chip)
+ * Spec: docs/internal/specs/bookmarks-pillar.md (row chip)
  */
 export function SiteChip({ domain, tall, trashTint, fallback }: {
   domain: string;
@@ -495,7 +512,7 @@ const CONTACT_HUE_CLASSES = [
  * the square icon chips every other row wears is the convention every address
  * book shares, and it is what lets the eye pick people out of the All list.
  * The circle is CSS over the stored image, which is never cropped in storage.
- * Spec: ops/docs/archive/contacts-pillar.md (section 4, the one new primitive)
+ * Spec: docs/internal/specs/contacts-pillar.md (section 4, the one new primitive)
  */
 export function ContactChip({ name, initials: given, photo, size, trashTint = false, tile = false }: {
   /** The display name; it picks the hue. */
@@ -584,7 +601,7 @@ function VaultRowIcon({ note, trashTint, locked, tall = false }: { note: LocalNo
  * here, and accent means tag. Neither is a raw Tailwind neutral any more -
  * the tags used neutral-200, a COOL grey, so on the warm-cream and slate
  * themes they sat on a warm or blue surface at almost the same lightness and
- * read as disabled chrome. Spec: ops/docs/archive/ui-patterns.md (section 82, the
+ * read as disabled chrome. Spec: docs/internal/design/ui-patterns.md (section 82, the
  * same pair in the editor tag row)
  *
  * The folder chip is omitted entirely for an unfiled item rather than drawn
@@ -603,10 +620,16 @@ function VaultRowIcon({ note, trashTint, locked, tall = false }: { note: LocalNo
  * the click that follows it. A modifier click is a selection gesture, so it
  * passes through to the row.
  */
+/** The tag chips a row shows before the "+N more" chip. */
+const TAG_CHIP_CAP = 4;
+
 export function TagChips({ tags, folderId }: { tags: string[]; folderId?: string | null }) {
+  const { t } = useTranslation('notes');
   const visible = useMemo(() => sortTags(tags), [tags]);
   const folderName = useFolderName(folderId);
   const filter = useContext(ChipFilterContext);
+  const [expanded, setExpanded] = useState(false);
+  const hidden = visible.length - TAG_CHIP_CAP;
   if (visible.length === 0 && !folderName) return null;
   const onPick = (run: (f: NonNullable<typeof filter>) => void) =>
     filter
@@ -623,23 +646,40 @@ export function TagChips({ tags, folderId }: { tags: string[]; folderId?: string
         <span
           data-slot="folder"
           onClick={onPick((f) => f.folder(folderId))}
-          className={`inline-flex items-center gap-1 max-w-[12rem] text-[11px] px-1.5 py-0.5 rounded pn-chip text-accent-strong${pickable}`}
+          className={`inline-flex items-center gap-1 max-w-[12rem] text-meta px-1.5 py-0.5 rounded pn-chip text-accent-strong${pickable}`}
         >
           <FolderGlyph folderId={folderId} size={11} className="shrink-0 text-label" />
           <span className="truncate" dir="auto">{folderName}</span>
         </span>
       )}
-      {visible.slice(0, 4).map((t) => (
+      {(expanded ? visible : visible.slice(0, TAG_CHIP_CAP)).map((tag) => (
         <span
-          key={t}
+          key={tag}
           dir="auto"
-          onClick={onPick((f) => f.tag(t))}
-          className={`inline-flex items-center text-[11px] px-1.5 py-0.5 rounded pn-chip text-accent-strong${pickable}`}
+          onClick={onPick((f) => f.tag(tag))}
+          className={`inline-flex items-center text-meta px-1.5 py-0.5 rounded pn-chip text-accent-strong${pickable}`}
         >
-          <TagMark tag={t} size={11} />
-          {t}
+          <TagMark tag={tag} size={11} />
+          {tag}
         </span>
       ))}
+      {/* The tags past the cap, as one chip that shows them all. A modifier
+          click is a selection gesture and passes to the row. Spec: issue #627. */}
+      {!expanded && hidden > 0 && (
+        <span
+          data-slot="more-tags"
+          role="button"
+          aria-expanded={false}
+          onClick={(e) => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+            e.stopPropagation();
+            setExpanded(true);
+          }}
+          className="pn-chip-pick inline-flex items-center text-meta px-1.5 py-0.5 rounded pn-chip text-pn-muted cursor-pointer transition"
+        >
+          {t('shell:calendar.more', { count: hidden })}
+        </span>
+      )}
     </div>
   );
 }
@@ -674,7 +714,7 @@ export function CardGlyph({ type, override, domain, paths }: { type: LocalNote['
   if (paths) return <PathGlyph paths={paths} size={13} className={`pn-card-glyph shrink-0 ${typeGlyph(type).color}`} />;
   if (domain) return <CardFavGlyph type={type} domain={domain} />;
   const { Icon, color } = typeGlyph(type);
-  return <Icon size={13} className={`pn-card-glyph shrink-0 ${color}`} aria-hidden="true" />;
+  return <Icon className={`pn-card-glyph shrink-0 ${color}`} aria-hidden="true" />;
 }
 
 /** The mini tile's site icon, or the type glyph while there is none (the
@@ -688,7 +728,7 @@ function CardFavGlyph({ type, domain }: { type: LocalNote['type']; domain: strin
       <span className="pn-card-glyph pn-card-glyph-fav shrink-0" style={missing ? { display: 'none' } : undefined} aria-hidden="true">
         <Favicon domain={domain} size={MINI_FAVICON_PX} onMissing={onMissing} />
       </span>
-      {missing && <Icon size={13} className={`pn-card-glyph shrink-0 ${color}`} aria-hidden="true" />}
+      {missing && <Icon className={`pn-card-glyph shrink-0 ${color}`} aria-hidden="true" />}
     </>
   );
 }
@@ -754,6 +794,8 @@ export function typeGlyph(type: LocalNote['type']): { Icon: Icon; color: string 
     // wear the theme's accent (a contact's chip its own hue), and a fixed
     // blue, sky or teal glyph read as a different app in every theme.
     Icon = User;
+  } else if (type === 'drawing') {
+    Icon = Scribble;
   }
   return { Icon, color };
 }

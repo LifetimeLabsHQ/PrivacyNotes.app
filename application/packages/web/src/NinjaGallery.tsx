@@ -5,7 +5,7 @@
 // loads /static-pages.js and the viewer's CSS, both on demand, so neither is
 // on the boot path. A shot's caption is its catalog line, at the headline
 // size of /themes.
-// Spec: ops/design/patterns/145-150.md section 145
+// Spec: docs/internal/design/patterns/145-150.md section 145
 import { useTranslation } from 'react-i18next';
 import { Image as ImageIcon } from './icons';
 import { NINJA_SHOTS } from './ninjaShots';
@@ -60,11 +60,11 @@ export function NinjaShotsButton() {
         const back = e.currentTarget;
         viewer().then((open) => open(shots, 0, back), () => window.open(first.src, '_blank', 'noopener'));
       }}
-      className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--wl-ink)] bg-[var(--wl-card)] px-4 py-2 text-sm font-bold text-[var(--wl-ink)] transition-colors hover:bg-[var(--wl-bg)] cursor-zoom-in"
+      className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--wl-ink)] bg-[var(--wl-card)] px-4 py-2 text-body font-bold text-[var(--wl-ink)] transition-colors hover:bg-[var(--wl-bg)] cursor-zoom-in"
     >
-      <ImageIcon size={15} weight="bold" aria-hidden="true" />
+      <ImageIcon weight="bold" aria-hidden="true" />
       {t('ninja.seeShots')}
-      <span className="rounded-full bg-[var(--wl-tint-blue)] px-1.5 text-[11px] font-semibold tabular-nums text-accent dark:text-blue-300">{NINJA_SHOTS.length}</span>
+      <span className="rounded-full bg-[var(--wl-tint-blue)] px-1.5 text-meta font-semibold tabular-nums text-accent dark:text-blue-300">{NINJA_SHOTS.length}</span>
     </a>
   );
 }

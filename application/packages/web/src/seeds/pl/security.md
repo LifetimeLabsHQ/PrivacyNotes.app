@@ -8,7 +8,7 @@ title: Jak chronione są twoje notatki
 
 ![Tabela notatek w naszej prawdziwej bazie danych. Każda notatka to długi blok nieczytelnego tekstu.](/onboarding/database.webp)
 
-To nasza prawdziwa baza danych w Zurychu, nie rysunek. Twoja notatka trafia do kolumny `ciphertext`. Zaszyfrowane bajty to wszystko, co przechowujemy, którąkolwiek opcję niżej wybierzesz.
+To nasza prawdziwa baza danych w Zurychu, nie rysunek. Twoja notatka trafia do kolumny `ciphertext`, którąkolwiek opcję niżej wybierzesz. Obok niej trzymamy tylko to, czego wymaga działanie usługi: twój klucz publiczny, rozmiary, znaczniki czasu i e-mail stojący za logowaniem przez Google, Apple albo GitHub.
 
 ## Co się dzieje, gdy piszesz notatkę
 
@@ -27,26 +27,26 @@ W każdej opcji twoje notatki są szyfrowane na twoim urządzeniu. Różnią si�
 | **Logowanie, klucz na Twoim urządzeniu** | U ciebie, nigdzie indziej | Zaloguj się przez Google, Apple albo GitHub i nadal trzymaj klucz |
 | **Sama fraza, bez logowania** | U ciebie, nigdzie indziej | Bez e-maila, bez nazwiska, bez logowania |
 
-Przy dwóch ostatnich nie odczytalibyśmy notatki, nawet gdyby nas zmuszono. Pierwsza wymienia to na wygodę: twoja fraza leży na naszym serwerze pod naszym kluczem, więc nowemu urządzeniu wystarczy twoje konto. Gdyby nasz serwer kiedyś padł ofiarą włamania, ten klucz mógłby wyciec.
+Dwie ostatnie to zero-knowledge: na naszym serwerze nie istnieje żaden klucz do twoich notatek, więc nakaz sądowy ich nie otworzy. Pierwsza wymienia to na wygodę: twoja fraza leży na naszym serwerze pod naszym kluczem, więc nowemu urządzeniu wystarczy twoje konto. Gdyby nasz serwer kiedyś padł ofiarą włamania, ten klucz mógłby wyciec.
 
 Logujesz się przez Google, Apple albo GitHub? Między dwiema pierwszymi opcjami możesz później przełączać się w **Ustawienia > Konto > Zarządzanie kluczem**. Przy koncie opartym na samej frazie fraza zawsze zostaje u ciebie.
 
 > [!warning] Miej własną kopię frazy
-> Twoja fraza otwiera twoje notatki. Jeśli ją zgubisz, nikt jej nie odzyska, my też nie. <span style="color: #e03131">Zapisz ją dziś na papierze.</span>
+> Twoja fraza otwiera twoje notatki. Przy samodzielnym przechowywaniu nikt nie odzyska zgubionej frazy. <span style="color: #e03131">Zapisz ją dziś na papierze.</span>
 
 ## Sprawdź to sam
 
-[Szczegółowa instrukcja weryfikacji na GitHubie](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/VERIFY.md)
+[Szczegółowa instrukcja weryfikacji na GitHubie](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md)
 
 - [ ] Otwórz w przeglądarce kartę Sieć, a potem zmień notatkę. Zobacz, co do nas dociera: blok nieczytelnego tekstu.
 - [ ] Przeczytaj kod szyfrowania. Jest publiczny i dość krótki, żeby przeczytać go za jednym razem.
 
 | Co | Gdzie |
 | --- | --- |
-| Samo szyfrowanie | [crypto.ts](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/crypto/crypto.ts) |
-| Co dostaje nasz serwer | [VERIFY.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/VERIFY.md#tier-1-one-minute-no-tools) |
-| Co napastnik może, a czego nie | [THREAT_MODEL.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/THREAT_MODEL.md) |
-| Jak zgłosić lukę | [SECURITY.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/SECURITY.md) |
+| Samo szyfrowanie | [crypto.ts](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/crypto/crypto.ts) |
+| Co dostaje nasz serwer | [VERIFY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md#tier-1-one-minute-no-tools) |
+| Co napastnik może, a czego nie | [THREAT_MODEL.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md) |
+| Jak zgłosić lukę | [SECURITY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/SECURITY.md) |
 
 > [!info] Jeden zamek obejmuje wszystko
 > Notatki, wpisy w dzienniku, zakładki, wpisy sejfu i załączniki są szyfrowane tak samo. [[Przeprowadzka]] pokazuje, jak przenieść każde z nich.

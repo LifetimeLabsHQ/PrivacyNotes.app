@@ -1595,21 +1595,6 @@
       "status": "Registry route; observation means pane/anchor only, not every state."
     },
     {
-      "id": "import.autoTag",
-      "name": "Tag imported notes by source",
-      "path": "Settings > Import & Export > Import > Tag imported notes by source",
-      "source": [
-        "import/ImportModal.tsx:1157"
-      ],
-      "gate": "All supported targets; account/data conditions may still apply",
-      "observed": [
-        "browser",
-        "demo",
-        "android"
-      ],
-      "status": "Registry route; observation means pane/anchor only, not every state."
-    },
-    {
       "id": "import.source.browser-bookmarks",
       "name": "Browser bookmarks",
       "path": "Settings > Import & Export > Import > Browser bookmarks",
@@ -1941,8 +1926,8 @@
     },
     {
       "id": "export.zipBackup",
-      "name": "PrivacyNotes backup (.zip)",
-      "path": "Settings > Import & Export > Export > PrivacyNotes backup (.zip)",
+      "name": "Everything, not encrypted (.zip)",
+      "path": "Settings > Import & Export > Export > Everything, not encrypted (.zip)",
       "source": [
         "import/ImportModal.tsx:1757"
       ],
@@ -1956,8 +1941,8 @@
     },
     {
       "id": "export.encryptedZip",
-      "name": "Encrypted full backup (.pnbackupz)",
-      "path": "Settings > Import & Export > Export > Encrypted full backup (.pnbackupz)",
+      "name": "Everything, encrypted (.pnbackupz)",
+      "path": "Settings > Import & Export > Export > Everything, encrypted (.pnbackupz)",
       "source": [
         "import/ImportModal.tsx:1764"
       ],
@@ -1971,8 +1956,8 @@
     },
     {
       "id": "export.encryptedBackup",
-      "name": "Encrypted backup (.pnbackup)",
-      "path": "Settings > Import & Export > Export > Encrypted backup (.pnbackup)",
+      "name": "Text only, encrypted (.pnbackup)",
+      "path": "Settings > Import & Export > Export > Text only, encrypted (.pnbackup)",
       "source": [
         "import/ImportModal.tsx:1772"
       ],
@@ -3354,11 +3339,11 @@
       "status": "Registry route; observation means pane/anchor only, not every state."
     },
     {
-      "id": "about.singleKeys",
+      "id": "hotkeys.singleKeys",
       "name": "Single-key shortcuts",
-      "path": "Settings > About > Hotkeys > Single-key shortcuts",
+      "path": "Settings > Hotkeys > Typing > Single-key shortcuts",
       "source": [
-        "AboutModal.tsx:279"
+        "HotkeysPane.tsx:50"
       ],
       "gate": "keyboard",
       "observed": [
@@ -3413,11 +3398,11 @@
       "status": "Registry route; observation means pane/anchor only, not every state."
     },
     {
-      "id": "about.hotkeys",
+      "id": "hotkeys.typing",
       "name": "Hotkeys",
-      "path": "Settings > About > Hotkeys",
+      "path": "Settings > Hotkeys",
       "source": [
-        "AboutModal.tsx:34"
+        "HotkeysPane.tsx:97"
       ],
       "gate": "keyboard",
       "observed": [

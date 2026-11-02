@@ -7,7 +7,7 @@
  * built from its own platform sniff ("macOS", "iPad app", "Desktop app on
  * Windows"), so the OS comes from the name first and from `platform` second.
  *
- * Spec: ops/docs/archive/ui-patterns.md (section 142, Registered devices row)
+ * Spec: docs/internal/design/ui-patterns.md (section 142, Registered devices row)
  */
 import policy from '../../desktop/update-policy.json';
 import type { DeviceRow } from './devices';

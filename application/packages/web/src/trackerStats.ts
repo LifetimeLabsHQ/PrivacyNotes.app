@@ -145,7 +145,7 @@ function hasTrackerData(data: JournalTrackerData): boolean {
  * predate that field. Reading `createdAt` unconditionally, as this used
  * to, filed every backfilled entry under the day it was typed rather
  * than the day it was for.
- * Spec: ops/docs/design-decisions.md (journal entry titles)
+ * Spec: docs/internal/design-decisions.md (journal entry titles)
  *
  * Nothing stops a user from keeping two journal entries for the same
  * day, so entries are collapsed per day: later-created data wins key by
@@ -160,7 +160,7 @@ function hasTrackerData(data: JournalTrackerData): boolean {
  * An entry for a day after today waits until that day comes: a plan written
  * ahead is not a tracked day, and counting it would move every average and
  * streak. The JSON export alone keeps every day (`withFuture`).
- * Spec: ops/docs/archive/dates.md (section 3.4)
+ * Spec: docs/internal/specs/dates.md (section 3.4)
  */
 export function extractEntries(
   notes: LocalNote[],
@@ -489,7 +489,7 @@ export function computeTrackerStats(
  * the weekday, the mood streak, the trend. The comparisons, the sleep and
  * activity ones included, come from trackerCompare and are built where they
  * are shown.
- * Spec: ops/docs/archive/wellness-statistics.md (section 7)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 7)
  */
 function computePatterns(
   entries: JournalEntry[],
@@ -590,7 +590,7 @@ export type WellnessDefinitions = {
  * definitions every id points at, and the raw entries with their ids, so a
  * later import can read them back and a person can read them now. Every
  * day is kept, a day planned ahead included.
- * Spec: ops/docs/archive/wellness-statistics.md (section 12)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 12)
  */
 export function exportTrackerJSON(
   notes: LocalNote[],

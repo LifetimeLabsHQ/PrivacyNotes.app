@@ -3,14 +3,12 @@
     "importTitle": "Zaimportuj swoje dane",
     "exportTitle": "Wyeksportuj swoje dane",
     "restoreTitle": "Przywróć swoje dane",
-    "vaultTitle": "Zaimportuj swoje hasła",
-    "tablistLabel": "Import, eksport, przywracanie lub hasła",
+    "tablistLabel": "Import, eksport, przywracanie lub trackery",
     "tabImport": "Import",
     "tabExport": "Eksport",
     "tabRestore": "Przywracanie",
     "tabVault": "Hasła",
-    "working": "Pracuję…",
-    "tabWellness": "Trackery"
+    "working": "Pracuję…"
   },
   "footer": {
     "exportNote": "Eksport działa lokalnie. Nic nie jest wysyłane.",
@@ -18,12 +16,11 @@
     "importNote": "Wszystko jest zawsze zaszyfrowane, na Twoim urządzeniu i podczas synchronizacji."
   },
   "importPick": {
-    "autoTagLabel": "Oznacz zaimportowane notatki tagiem źródła",
-    "autoTagDesc": "Notatki z Google Keep dostają <keep>#google</keep>, Obsidian dostaje <obsidian>#obsidian</obsidian> i tak dalej.",
     "guideAria": "Przewodnik importu dla {{app}}",
     "guideLabel": "Poradnik",
-    "groupGeneral": "Ogólne",
-    "groupNotes": "Notatki"
+    "searchPlaceholder": "Znajdź swoją aplikację",
+    "groupCalendar": "Kalendarz, kontakty i zakładki",
+    "noMatch": "Żadna aplikacja nie pasuje. Większość aplikacji do notatek potrafi eksportować pliki Markdown, a pliki Markdown możesz tu zaimportować."
   },
   "folderImport": {
     "tagLabel": "Oznacz notatki też tagiem folderu",
@@ -82,6 +79,7 @@
     "googleCalendar": "Plik .zip z Settings > Import & export w Google Calendar albo pojedynczy plik .ics. Wydarzenia zachowują godziny, powtarzanie i przypomnienia.",
     "appleNotes": "Wyeksportuj darmową aplikacją Exporter jako Markdown, a potem upuść tutaj plik .zip.",
     "appleJournal": "Eksportuj z Dziennika na Macu lub iPhonie, skompresuj folder AppleJournalEntries i upuść tutaj plik .zip. Wpisy importują się jako wpisy w dzienniku razem ze zdjęciami, filmami, notatkami głosowymi i lokalizacjami.",
+    "excalidraw": "Rysunki zapisane z excalidraw.com: jeden plik .excalidraw albo kilka spakowanych w zip. Działają też rysunki z wtyczki Excalidraw do Obsidiana, jako pliki .excalidraw.md. Obrazy wewnątrz rysunku przechodzą razem z nim.",
     "evernote": "Pojedynczy plik .enex albo kilka spakowanych w zip. Zachowuje formatowanie, tagi, załączniki, linki do notatek i notatniki. Zadań Evernote nie zapisuje w .enex.",
     "samsungNotes": "Wyeksportuj jako Word (.docx) lub tekst (.txt). Spakuj wiele plików w .zip do importu zbiorczego.",
     "simplenote": "Wyeksportuj z Simplenote (Settings -> Tools -> Export Notes). Upuść plik .zip.",
@@ -105,9 +103,6 @@
     "vcard": "Kontakty (vCard)",
     "markdownFolder": "Pliki Markdown"
   },
-  "vaultPick": {
-    "intro": "Zaimportuj loginy, karty kredytowe i klucze SSH z innego menedżera haseł."
-  },
   "restorePick": {
     "intro": "Przywróć kopię zapasową PrivacyNotes wyeksportowaną wcześniej.",
     "fullBackupTitle": "Pełna kopia zapasowa (.zip)",
@@ -129,8 +124,8 @@
     "restoringBlobs": "Przywracanie obrazów i plików..."
   },
   "errors": {
-    "genericParse": "Coś poszło nie tak.",
     "decryptionFailed": "Odszyfrowywanie nie powiodło się. Zła fraza lub uszkodzony plik.",
+    "importNothingChanged": "Nic nie zostało zaimportowane, a twoje notatki, foldery i pliki pozostały bez zmian. {{detail}}",
     "blobImportFailed": "Twoje notatki zaimportowały się, ale ich obrazy i pliki nie: {{detail}} Nic w pliku, który wybrałeś, nie zostało zmienione, więc możesz usunąć zaimportowane notatki i uruchomić import ponownie.",
     "blobsNotInBackup_one": "Twoje notatki zostały przywrócone, ale w kopii zapasowej brakuje wymienionego w niej elementu: {{items}}.",
     "blobsNotInBackup_few": "Twoje notatki zostały przywrócone, ale w kopii zapasowej brakuje wymienionych w niej elementów: {{items}}.",
@@ -141,15 +136,11 @@
     "oversize_one": "{{count}} notatka ma ponad 1 MB. Zostaje na tym urządzeniu i się nie synchronizuje.",
     "splitOversize_one": "Podziel tę notatkę na mniejsze notatki według nagłówków, aby się synchronizowała",
     "partTitle": "{{title}} ({{index}}/{{total}})",
-    "continuedIn": "Ciąg dalszy w {{link}}",
     "splitOversize_few": "Podziel te {{count}} notatki na mniejsze notatki według nagłówków, aby się synchronizowały",
     "splitOversize_many": "Podziel tych {{count}} notatek na mniejsze notatki według nagłówków, aby się synchronizowały",
     "oversize_few": "{{count}} notatki mają ponad 1 MB. Zostają na tym urządzeniu i się nie synchronizują.",
     "oversize_many": "{{count}} notatek ma ponad 1 MB. Zostają na tym urządzeniu i się nie synchronizują.",
-    "sourceLabel": "Źródło",
     "uniqueTags": "Unikalne tagi",
-    "empty": "Puste",
-    "untagged": "Bez tagów",
     "items": "Elementy",
     "previewLabel": "Podgląd",
     "andMore": "… i jeszcze {{count}}",
@@ -160,9 +151,14 @@
     "eventSkipNote": "wydarzenia, które już zaimportowano, są pomijane i zostają bez zmian, więc drugie uruchomienie ich nie zduplikuje.",
     "restoreMergeNote": "notatki z Twojej własnej kopii zapasowej są dopasowywane po identyfikatorze. Notatka, którą już masz, zostaje zaktualizowana tylko wtedy, gdy wersja z kopii jest nowsza, a notatka z kosza wraca z niego.",
     "quotaExceeded": "<strong>Za mało pamięci, aby zaimportować.</strong> Szacowane zapotrzebowanie: {{needed}}, dostępne: {{available}}. Zwolnij miejsce lub przejdź na wyższy plan przed importem.",
-    "quotaWarning": "Uwaga: ten import zajmie mniej więcej {{needed}} z Twoich {{available}} pozostałej pamięci.",
     "oversizeAttachments_one": "1 plik jest większy niż limit {{limit}} na plik w Twoim planie. Zaimportuje się na to urządzenie, ale nie zsynchronizuje się z innymi urządzeniami, dopóki nie przejdziesz na wyższy plan.",
     "oversizeAttachments_other": "{{count}} pliku jest większe niż limit {{limit}} na plik w Twoim planie. Zaimportuje się na to urządzenie, ale nie zsynchronizuje się z innymi urządzeniami, dopóki nie przejdziesz na wyższy plan.",
+    "title": "Sprawdź przed importem",
+    "sourceTagLabel": "Oznacz każdą notatkę tagiem <tag>{{tag}}</tag>",
+    "sourceTagDesc": "Wyłączone: bez tagu źródła. Tagi, które notatki już mają, i tak zostaną zaimportowane.",
+    "storageLine": "Ten import potrzebuje około {{needed}}. Masz wolne {{available}}.",
+    "nothingWritten": "Nic nie zostanie zapisane, dopóki nie naciśniesz Importuj.",
+    "whatComesIn": "Co zostanie zaimportowane",
     "oversizeAttachments_few": "{{count}} pliki są większe niż limit {{limit}} na plik w Twoim planie. Zaimportują się na to urządzenie, ale nie zsynchronizują się z innymi urządzeniami, dopóki nie przejdziesz na wyższy plan.",
     "oversizeAttachments_many": "{{count}} plików jest większych niż limit {{limit}} na plik w Twoim planie. Zaimportują się na to urządzenie, ale nie zsynchronizują się z innymi urządzeniami, dopóki nie przejdziesz na wyższy plan."
   },
@@ -181,6 +177,9 @@
     "contact_few": "kontakty",
     "contact_many": "kontaktów",
     "contact_other": "kontaktów",
+    "drawing_one": "rysunek",
+    "drawing_few": "rysunki",
+    "drawing_many": "rysunków",
     "zeroItems": "0 elementów",
     "importButton": "Importuj ({{counts}})",
     "note_few": "notatki",
@@ -202,14 +201,14 @@
     "fullBackupHeading": "Pełna kopia zapasowa",
     "portableHeading": "Eksport przenośny",
     "vaultOnlyHeading": "Tylko sejf",
-    "zipBackupTitle": "Kopia zapasowa PrivacyNotes (.zip)",
-    "zipBackupDesc": "Wszystko: notatki, dzienniki, elementy sejfu, zadania, obrazy, dźwięk i pliki. Użyj tego do pełnej kopii konta lub przeniesienia się na nowe urządzenie. Pliki w środku nie są zaszyfrowane, więc przechowuj zip w bezpiecznym miejscu.",
-    "encryptedZipBackupTitle": "Zaszyfrowana pełna kopia zapasowa (.pnbackupz)",
-    "encryptedZipBackupDesc": "Wszystko, co zawiera kopia zip - notatki, elementy sejfu, obrazy, dźwięk i pliki - zapieczętowane kluczem z Twojej frazy. Przywrócisz ją swoją frazą na dowolnym urządzeniu. Możesz ją trzymać gdziekolwiek.",
-    "encryptedBackupTitle": "Zaszyfrowana kopia zapasowa (.pnbackup)",
-    "encryptedBackupDesc": "Cała treść tekstowa i metadane, zaszyfrowane kluczem z Twojej frazy. Bez obrazów i plików. Możesz ją trzymać gdziekolwiek - bez Twojej frazy jest nieczytelna.",
+    "zipBackupTitle": "Wszystko, bez szyfrowania (.zip)",
+    "zipBackupDesc": "Twoje notatki, dzienniki, elementy sejfu, zadania, obrazy, dźwięk i pliki, razem z lekami i trackerami. Otwiera się na dowolnym komputerze bez frazy, więc przechowuj go w bezpiecznym miejscu. Historia notatki i PIN blokady aplikacji nie są dołączane.",
+    "encryptedZipBackupTitle": "Wszystko, zaszyfrowane (.pnbackupz)",
+    "encryptedZipBackupDesc": "To samo co zip, zapieczętowane kluczem z Twojej frazy. Przywrócisz je swoją frazą na dowolnym urządzeniu. Możesz je trzymać gdziekolwiek.",
+    "encryptedBackupTitle": "Tylko tekst, zaszyfrowane (.pnbackup)",
+    "encryptedBackupDesc": "Cała treść tekstowa i metadane, bez obrazów i plików. Mały plik, zapieczętowany kluczem z Twojej frazy. Możesz go trzymać gdziekolwiek.",
     "htmlArchiveTitle": "Archiwum HTML (.zip)",
-    "htmlArchiveDesc": "Jedna strona HTML gotowa do druku na notatkę. Dobre do czytania offline lub archiwizacji, nie do przywracania.",
+    "htmlArchiveDesc": "Jedna strona HTML gotowa do druku na notatkę, z loginami, kartami i kluczami zapisanymi jawnym tekstem. Dobre do czytania offline lub archiwizacji, nie do przywracania. Przechowuj je w bezpiecznym miejscu.",
     "textBackupTitle": "Kopia tekstowa (.json)",
     "textBackupDesc": "Cała treść tekstowa i metadane jako zwykły JSON. Bez obrazów i plików. Trzymaj w miejscu, któremu ufasz - to nie jest zaszyfrowane.",
     "vaultExportTitle": "Eksport sejfu (.json)",
@@ -223,6 +222,8 @@
     "calendarOnlyHeading": "Tylko kalendarz",
     "calendarExportTitle": "Plik kalendarza (.ics)",
     "calendarExportDesc": "Wydarzenia oraz notatki i listy zadań z datą, dla Google Calendar, Kalendarza Apple albo Outlooka.",
+    "drawingsExportTitle": "Rysunki (.zip)",
+    "drawingsExportDesc": "Każdy rysunek jako osobny plik .excalidraw, z obrazami w środku, dla excalidraw.com i Obsidiana.",
     "calendarPrivate": "Prywatne"
   },
   "exportProgress": {
@@ -231,11 +232,8 @@
     "incompleteTitle": "Eksport niekompletny",
     "exportingTitle": "Eksportowanie kopii zapasowej...",
     "preparing": "Przygotowywanie...",
-    "exporting": "Eksportowanie...",
-    "imagesProgress": "Eksportowanie obrazów... {{done}} z {{total}}",
-    "filesProgress": "Eksportowanie plików... {{done}} z {{total}}",
-    "building": "Tworzenie kopii zapasowej...",
-    "compressing": "Kompresowanie...",
+    "showInFolder": "Pokaż w folderze",
+    "zipStep": "ZIP",
     "missingFailed_one": "To urządzenie nie mogło pobrać: {{items}}. Twój eksport tego nie zawiera. Sprawdź połączenie i wyeksportuj ponownie.",
     "missingFailed_few": "To urządzenie nie mogło pobrać: {{items}}. Twój eksport ich nie zawiera. Sprawdź połączenie i wyeksportuj ponownie.",
     "missingFailed_many": "To urządzenie nie mogło pobrać: {{items}}. Twój eksport ich nie zawiera. Sprawdź połączenie i wyeksportuj ponownie.",
@@ -294,7 +292,8 @@
     "generic": "Nie udało się zapisać eksportu. Spróbuj ponownie albo wybierz inny folder."
   },
   "saveErrors": {
-    "shortWrite": "Zapisano tylko {{written}} z {{expected}} bajtów, więc plik jest niekompletny. Spróbuj ponownie i zapisz w pamięci urządzenia zamiast w folderze w chmurze."
+    "shortWrite": "Zapisano tylko {{written}} z {{expected}} bajtów, więc plik jest niekompletny. Spróbuj ponownie i zapisz w pamięci urządzenia zamiast w folderze w chmurze.",
+    "protectedFolder": "PrivacyNotes nie zapisuje w {{folder}}, ponieważ ten folder zawiera klucze, ustawienia lub programy. Zapisz plik gdzie indziej i przenieś go tam samodzielnie."
   },
   "shareSheet": {
     "title_one": "Do PrivacyNotes udostępniono {{count}} element",
@@ -305,7 +304,6 @@
     "saveAll": "Zapisz wszystko"
   },
   "destination": {
-    "label": "Dodaj do",
     "none": "Bez folderu",
     "newFolder": "Nowy folder „{{name}}”",
     "help": "Foldery ze źródła trafią do wybranego przez ciebie folderu, a elementy bez folderu trafią bezpośrednio do niego."

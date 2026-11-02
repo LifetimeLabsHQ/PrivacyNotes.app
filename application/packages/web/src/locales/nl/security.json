@@ -1,6 +1,5 @@
 {
   "modal": {
-    "title": "Beveiliging",
     "tabPin": "PIN",
     "tabBiometricShort": "Slot",
     "tabBiometric": "Biometrisch slot",
@@ -9,9 +8,10 @@
     "tabTwoFactor": "2FA"
   },
   "pinTab": {
+    "changeLost": "Je PIN-wijziging is niet opgeslagen: de PIN was eerst op een ander apparaat gewijzigd.",
+    "phraseUnwrapped": "Deze browser kon de herstelzin die dit apparaat bewaart niet beschermen, dus staat de herstelzin hier onversleuteld opgeslagen. Iedereen met een kopie van de opslag van dit apparaat kan hem lezen. Zet de app-vergrendeling aan op het tabblad Slot om de herstelzin alleen achter je PIN of toegangscode te bewaren.",
     "enterCurrent": "Voer je huidige PIN in om wijzigingen aan te brengen.",
     "currentPin": "Huidige PIN",
-    "checking": "Controleren...",
     "verify": "Controleren",
     "replaceExisting": "Voer een nieuwe PIN van 4 cijfers in. Deze vervangt je huidige PIN.",
     "setIntro": "Een PIN van 4 cijfers opent je beveiligde notities en je herstelzin. Hij synchroniseert naar al je apparaten.",
@@ -42,10 +42,8 @@
     "setPin": "PIN instellen",
     "removePin": "PIN verwijderen",
     "reaskAfter": "Opnieuw om PIN vragen na",
-    "reaskHint": "Geldt voor het bekijken van je herstelzin en alle notities met PIN-beveiliging.",
+    "reaskHint": "Geldt voor het bekijken van je herstelzin en alle notities met PIN-beveiliging op dit apparaat.",
     "incorrectPin": "Onjuiste PIN.",
-    "incorrectPinRetry": "Onjuiste PIN. Probeer het opnieuw.",
-    "tooManyAttempts": "Te veel pogingen. Probeer het over {{seconds}} s opnieuw.",
     "pinFourDigits": "De PIN moet uit 4 cijfers bestaan.",
     "pinsDoNotMatch": "De PIN-codes komen niet overeen.",
     "passcodeIntro": "Een toegangscode opent je beveiligde notities en je herstelzin. Hij wordt naar al je apparaten gesynchroniseerd.",
@@ -61,8 +59,7 @@
     "ruleNotDigits": "Niet alleen cijfers",
     "ruleMax": "Hoogstens {{max}} tekens",
     "passcodesDoNotMatch": "De toegangscodes komen niet overeen.",
-    "incorrectPasscode": "Onjuiste toegangscode.",
-    "incorrectPasscodeRetry": "Onjuiste toegangscode. Probeer het opnieuw."
+    "incorrectPasscode": "Onjuiste toegangscode."
   },
   "timeout": {
     "min1": "1 minuut",
@@ -76,16 +73,11 @@
     "browserRestart": "Bij herstart van de browser"
   },
   "pinInfo": {
-    "title": "PIN vereisen om te bekijken",
     "body": "Als dit aanstaat, wordt je PIN elke keer gevraagd als je dit item opent, ook als de app al ontgrendeld is. Gebruik het voor gevoelige items die beschermd moeten blijven als je even wegloopt."
   },
   "removePinDialog": {
-    "title": "PIN verwijderen",
     "introWithBio": "Voer je huidige PIN in om het verwijderen te bevestigen. Biometrisch ontgrendelen blijft actief, maar je enige terugvaloptie wordt dan je herstelzin.",
     "introNoBio": "Voer je huidige PIN in om het verwijderen te bevestigen. Je herstelzin gaat daarna open zonder PIN.",
-    "verifying": "Controleren...",
-    "removePin": "PIN verwijderen",
-    "titlePasscode": "Toegangscode verwijderen",
     "introWithBioPasscode": "Voer je huidige toegangscode in om het verwijderen te bevestigen. Biometrisch ontgrendelen blijft actief, maar je enige terugvaloptie wordt dan je herstelzin.",
     "introNoBioPasscode": "Voer je huidige toegangscode in om het verwijderen te bevestigen. Je herstelzin gaat daarna open zonder toegangscode.",
     "removePasscode": "Toegangscode verwijderen"
@@ -109,16 +101,10 @@
   },
   "phraseGate": {
     "enterToView": "Voer je PIN van 4 cijfers in om je herstelzin te bekijken.",
-    "incorrectPinRetry": "Onjuiste PIN. Probeer het opnieuw.",
-    "tooManyAttempts": "Te veel pogingen. Probeer het over {{seconds}} s opnieuw.",
-    "lockedFor": "Vergrendeld voor {{seconds}} s",
-    "checking": "Controleren...",
-    "unlock": "Ontgrendelen",
     "enterToChangeCustody": "Voer je PIN van 4 cijfers in om het sleutelbeheer te wijzigen.",
     "checkFailed": "Je PIN kon niet worden gecontroleerd. Probeer het opnieuw.",
     "enterToViewPasscode": "Voer je toegangscode in om je herstelzin te bekijken.",
     "enterToChangeCustodyPasscode": "Voer je toegangscode in om het sleutelbeheer te wijzigen.",
-    "incorrectPasscodeRetry": "Onjuiste toegangscode. Probeer het opnieuw.",
     "checkFailedPasscode": "Je toegangscode kon niet worden gecontroleerd. Probeer het opnieuw."
   },
   "phraseView": {
@@ -133,11 +119,9 @@
     "hideQr": "QR-code verbergen",
     "showQr": "QR-code tonen",
     "saveQr": "QR opslaan",
-    "copied": "Gekopieerd",
     "copyPhrase": "Herstelzin kopiëren"
   },
   "custody": {
-    "eyebrow": "Sleutelbeheer",
     "current": "Huidig",
     "rowDevice": "Nieuw apparaat",
     "rowDeviceCustodial": "Aanmelden met {{provider}}, niets te typen",
@@ -152,7 +136,6 @@
     "releaseWarning": "Bewaar je herstelzin van 12 woorden eerst buiten PrivacyNotes. Nadat we onze kopie hebben verwijderd, heb je de herstelzin nodig op nieuwe apparaten.",
     "challengePrompt": "Typ deze woorden over uit de lijst hierboven om te bevestigen dat je ze hebt.",
     "wordLabel": "Woord {{position}}",
-    "busy": "Opslaan...",
     "releaseConfirm": "Van server wissen",
     "adoptConfirm": "Bewaar een kopie bij ons",
     "releaseDone": "Klaar. We bewaren geen kopie meer van je herstelzin. Nieuwe apparaten vragen om deze 12 woorden of een QR-scan.",
@@ -189,6 +172,7 @@
     "boundStatus": "Biometrisch ontgrendelen is gekoppeld aan je passkey.",
     "boundStatusNative": "Biometrisch ontgrendelen is gekoppeld aan de beveiligde hardware van dit apparaat.",
     "setUpAgain": "Opnieuw instellen voor een sterker slot",
+    "unboundWeaker": "Op dit apparaat is biometrisch ontgrendelen een drempel voor mensen in de buurt, geen slot: iemand met een kopie van de opslag van dit apparaat kan je notities openen zonder je vingerafdruk of gezicht.",
     "cannotBind": "De passkey-app in deze browser kan het sterkere slot niet maken. Biometrisch ontgrendelen blijft werken zoals voorheen. Als een wachtwoordmanager je passkeys opslaat, zet dan de passkey-optie daarvan uit en zet daarna biometrisch ontgrendelen uit en weer aan om de eigen passkey-opslag van je apparaat te gebruiken.",
     "bindOffer": "Biometrisch ontgrendelen op dit apparaat is nog niet gekoppeld aan je passkey, en deze browser kan het koppelen. Stel het één keer opnieuw in, zodat de sleutel bij je passkey blijft in plaats van in de opslag van dit apparaat.",
     "bindOfferLater": "Niet nu",
@@ -196,14 +180,14 @@
     "settingUp": "Instellen...",
     "enable": "Biometrisch ontgrendelen inschakelen",
     "lockOnOpen": "App vergrendelen bij openen",
-    "lockOnOpenHint": "Vraag om biometrie of een PIN bij het openen van de app.",
+    "lockOnOpenHint": "Vraag om biometrie of een PIN bij het openen van de app op dit apparaat.",
     "lockHidesOnSwitch": "Verbergt je notities ook wanneer je van app wisselt.",
     "lockNeedsCredential": "De app-vergrendeling heeft op dit apparaat een PIN of biometrisch ontgrendelen nodig.",
     "setUpPin": "PIN instellen",
     "confirmPinForLock": "Voer je PIN in om dit aan te zetten. Die vergrendelt een kopie van je herstelzin, zodat alleen je PIN de app kan openen.",
     "confirmPasscodeForLock": "Voer je toegangscode in om dit aan te zetten. Die vergrendelt een kopie van je herstelzin, zodat alleen je toegangscode de app kan openen.",
     "relockAfter": "Opnieuw vergrendelen na",
-    "relockHint": "Geldt alleen voor het vergrendelscherm van de app.",
+    "relockHint": "Geldt alleen voor het vergrendelscherm van de app op dit apparaat.",
     "blockCapture": "Verbergen bij schermopnames",
     "blockCaptureHint": "Houdt je notities buiten screenshots, opnames en schermdeling, voor zover je apparaat dat toestaat. Geldt alleen voor dit apparaat.",
     "perDeviceNote": "Biometrisch ontgrendelen opent dezelfde notities als je PIN. Het blijft op dit apparaat en synchroniseert nooit.",
@@ -216,31 +200,19 @@
     "phraseNotSaved": "Dit apparaat kon je herstelzin niet opslaan, dus er is niets veranderd. Probeer het opnieuw."
   },
   "pinSetup": {
-    "title": "Stel een PIN in",
     "description": "Een PIN van 4 cijfers is nodig om je herstelzin te bekijken. Optioneel, maar aan te raden op gedeelde plekken.",
-    "newPin": "Nieuwe PIN",
-    "confirmPin": "PIN bevestigen",
-    "skipForNow": "Nu overslaan",
-    "saving": "Opslaan…",
-    "setPin": "PIN instellen",
-    "pinFourDigits": "De PIN moet uit 4 cijfers bestaan.",
-    "pinsDoNotMatch": "De PIN-codes komen niet overeen."
+    "skipForNow": "Nu overslaan"
   },
   "pinInput": {
-    "ariaLabel": "PIN",
     "digitAriaLabel": "Cijfer {{index}}"
   },
   "passcodeInput": {
-    "ariaLabel": "Toegangscode",
     "show": "Toegangscode tonen",
     "hide": "Toegangscode verbergen"
   },
   "protectedGate": {
-    "biometricFailed": "Biometrische verificatie is mislukt of geannuleerd.",
     "protectedItem": "Beveiligd item",
     "biometricSubtitle": "Gebruik je vingerafdruk of gezicht om dit item te ontgrendelen.",
-    "verifying": "Controleren...",
-    "unlock": "Ontgrendelen",
     "usePinInstead": "Gebruik toch een PIN",
     "useBiometricInstead": "Gebruik toch biometrie",
     "disableProtection": "Beveiliging uitschakelen",
@@ -248,18 +220,10 @@
     "disableSubtitle": "De notitie blijft staan. Alleen het slot gaat eraf.",
     "disableBiometricSubtitle": "Bevestig met je vingerafdruk of gezicht.",
     "verifySubtitle": "Voer je PIN van 4 cijfers in om dit item te ontgrendelen. Het blijft ontgrendeld zo lang als je bij Beveiliging hebt ingesteld.",
-    "incorrectPinRetry": "Onjuiste PIN. Probeer het opnieuw.",
-    "tooManyAttempts": "Te veel pogingen. Probeer het over {{seconds}} s opnieuw.",
     "lockedFor": "Vergrendeld voor {{seconds}} s",
-    "checking": "Controleren...",
     "bootstrapTitle": "Stel een PIN in",
     "bootstrapSubtitle": "Dit item is met een PIN beveiligd, maar op dit apparaat is geen PIN ingesteld. Stel een PIN van 4 cijfers in om het te ontgrendelen. Je PIN synchroniseert naar al je apparaten.",
     "bootstrapWarning": "Voor het instellen van een PIN hier is de vorige PIN niet nodig. Iedereen met jouw herstelzin kan dit op een nieuw apparaat doen. Vertrouw voor echt gevoelige inhoud liever op authenticatie met alleen je herstelzin.",
-    "newPin": "Nieuwe PIN",
-    "confirmPin": "PIN bevestigen",
-    "pinFourDigits": "De PIN moet uit 4 cijfers bestaan.",
-    "pinsDoNotMatch": "De PIN-codes komen niet overeen.",
-    "saving": "Opslaan...",
     "setPinUnlock": "PIN instellen en ontgrendelen",
     "pinRequired": "PIN vereist",
     "deleteSubtitle": "Voer je PIN in om dit beveiligde item te verwijderen.",
@@ -267,7 +231,6 @@
     "usePasscodeInstead": "Gebruik toch een toegangscode",
     "disableTitlePasscode": "Voer je toegangscode in om de beveiliging uit te schakelen",
     "verifySubtitlePasscode": "Voer je toegangscode in om dit item te ontgrendelen. Het blijft ontgrendeld zo lang als je bij Beveiliging hebt ingesteld.",
-    "incorrectPasscodeRetry": "Onjuiste toegangscode. Probeer het opnieuw.",
     "passcodeRequired": "Toegangscode vereist",
     "deleteSubtitlePasscode": "Voer je toegangscode in om dit beveiligde item te verwijderen."
   },
@@ -294,19 +257,14 @@
     "checking": "Controleren...",
     "unlock": "Ontgrendelen",
     "recoveryPhrase": "Herstelzin",
-    "recoveryPhraseSubtitle": "Voer je herstelzin van 12 woorden in om te ontgrendelen.",
-    "invalidPhrase": "Ongeldige herstelzin. Controleer de spelling en de volgorde van de woorden.",
-    "phrasePlaceholder": "woord1 woord2 woord3 woord4 woord5 woord6 woord7 woord8 woord9 woord10 woord11 woord12"
+    "recoveryPhraseSubtitle": "Voer je herstelzin van 12 woorden in om te ontgrendelen."
   },
   "deviceLimit": {
     "title": "Apparaatlimiet bereikt",
     "body": "Gratis accounts kunnen op maximaal {{limit}} apparaten tegelijk synchroniseren. Je hebt er al {{count}}. Verwijder er een om op dit apparaat verder te gaan, of upgrade voor een onbeperkt aantal apparaten.",
     "activeDevices": "Actieve apparaten",
-    "recentlyRemoved": "Onlangs verwijderd",
-    "removedAt": "Verwijderd {{when}}",
     "upgradeHeading": "Of upgrade naar Pro",
     "upgradeBody": "Eenmalige betaling, geen abonnement. Onbeperkt veel apparaten plus afbeeldingen, notitiegeschiedenis en meer.",
-    "openingCheckout": "Afrekenen openen...",
     "upgradeCta": "Upgrade naar Pro voor ${{price}}",
     "needMoreHeading": "Meer apparaten nodig?",
     "needMoreBody": "Upgraden naar Pro kan niet in deze versie. Heb je echt een derde apparaat nodig, neem dan contact op en we lossen het op.",
@@ -315,8 +273,6 @@
     "saveRecoveryBody": "Je hebt je met OAuth aangemeld. Schrijf ook je 12-woordenzin op. Dat is je terugvaloptie als OAuth ooit hapert of je op al je apparaten buitengesloten raakt.",
     "hide": "Verbergen",
     "viewRecoveryPhrase": "Herstelzin bekijken",
-    "signOut": "Afmelden",
-    "thisDevice": "Dit apparaat",
     "lastActive": "{{platform}} · laatst actief {{when}}",
     "removing": "Verwijderen..."
   },
@@ -329,9 +285,9 @@
     "bitcoinBody": "Mensen beschermen dat met dezelfde soort zin van 12 woorden.",
     "universeTitle": "700 keer de leeftijd van het heelal",
     "universeBody": "Om elke zin te proberen, met een miljard miljard pogingen per seconde.",
-    "twinTitle": "Niemand op aarde heeft jouw herstelzin",
+    "twinTitle": "Niemand anders op aarde krijgt dezelfde herstelzin",
     "twinBody": "Zelfs niet als alle 8 miljard mensen PrivacyNotes zouden gebruiken.",
-    "keepPrivate": "Alleen je echte 12 woorden geven toegang. Houd ze geheim."
+    "keepPrivate": "Raden brengt je niet binnen. Houd je 12 woorden geheim."
   },
   "connectedAccounts": {
     "title": "Gekoppelde accounts",
@@ -355,13 +311,10 @@
     "connectAnotherProvider": "Nog een {{provider}}-account koppelen",
     "updateTitle": "Aanmelding voor deze kluis bijwerken",
     "updateDescription": "Dit bereidt je opgeslagen herstelzin en gekoppelde accounts voor op aanmelden in twee stappen en laat je gekoppelde accounts beheren. Je notities en sleutelbeheer blijven ongewijzigd.",
-    "updateDevices": "Werk de app op je andere apparaten bij voordat je doorgaat. Mogelijk moeten ze zich opnieuw aanmelden.",
-    "updateAcknowledgment": "Ik heb PrivacyNotes op mijn andere apparaten bijgewerkt.",
     "updateAction": "Aanmelding bijwerken",
     "setupTitle": "Google, Apple of GitHub koppelen",
     "setupDescription": "Voor de eerste koppeling heeft deze kluis eenmalig een update nodig. Je notities en sleutelbeheer blijven hetzelfde.",
     "setupAction": "Gekoppelde accounts instellen",
-    "closed": "Accounts koppelen en verwijderen kan binnenkort. Tot die tijd meld je je aan zoals je nu doet.",
     "repairTitle": "Aanmelding bijwerken afronden",
     "repairDescription": "Deze kluis gebruikt de bijgewerkte aanmelding al. Verbind dit apparaat opnieuw met de herstelzin die hier al ontgrendeld is. Je lokale notities blijven beschikbaar.",
     "repairAction": "Doorgaan naar deze kluis",
@@ -379,7 +332,6 @@
     "rateLimited": "Er zijn te veel accountwijzigingen geprobeerd. Wacht even en probeer het opnieuw.",
     "connectionMissing": "Dit account is niet meer gekoppeld. Controleer de huidige accountlijst voordat je het opnieuw probeert.",
     "noAccounts": "Er zijn geen provideraccounts gekoppeld. Je opgeslagen herstelzin is je aanmeldmethode.",
-    "actionFailed": "De wijziging kon niet worden bevestigd. Controleer je verbinding en probeer het opnieuw.",
     "retry": "Accounts opnieuw controleren",
     "connectDone": "Account gekoppeld aan deze kluis. Het sleutelbeheer is ongewijzigd.",
     "disconnectDone": "Account ontkoppeld. Je notities en sleutelbeheer zijn ongewijzigd.",
@@ -389,7 +341,6 @@
     "freshMfa": "Je hebt een nieuwe verificatiecode nodig om deze wijziging te bevestigen. Aanmelden in twee stappen blijft daarna aanstaan.",
     "continueProvider": "Doorgaan met {{provider}}",
     "working": "Bezig...",
-    "cancel": "Annuleren",
     "confirmDisconnect": "{{provider}} ontkoppelen?",
     "account": "dit account",
     "lastCustodial": "Dit is je laatste gekoppelde account. Koppel eerst een ander account, of sla je herstelzin op en kies eigen sleutelbeheer voordat je dit account verwijdert.",
@@ -445,10 +396,7 @@
       "key": "Sleutel",
       "confirm": "Bevestigen"
     },
-    "next": "Volgende",
-    "back": "Terug",
     "stepOf": "Stap {{step}} van 3",
-    "working": "Bezig...",
     "scan": "Scan deze code met je authenticator-app.",
     "qrLabel": "QR-code voor je authenticator-app",
     "openAuthenticator": "Op deze telefoon? Open je authenticator-app",
@@ -462,9 +410,7 @@
     "backupWarning": "Telefoon kwijt? Met deze sleutel krijg je je codes terug. Bewaar hem op een veilige plek, buiten PrivacyNotes.",
     "savedAcknowledgment": "Ik heb de reservesleutel opgeslagen.",
     "confirmBackup": "Typ je reservesleutel uit de vorige stap opnieuw en voer daarna de code uit je app in.",
-    "reenterBackup": "Reservesleutel",
     "codeLabel": "Code uit je app",
-    "activate": "2FA aanzetten",
     "cancelSetup": "Annuleren",
     "enabled": "2FA staat aan",
     "authenticatorRow": "Authenticator-app",
@@ -484,11 +430,6 @@
     "overview": "Overzicht",
     "keyCustody": "Sleutelbeheer",
     "accounts": "Accounts"
-  },
-  "beta": {
-    "label": "Bèta",
-    "notice": "Deze functie is in bèta.",
-    "reportBug": "Bug melden"
   },
   "demoTeaser": {
     "accounts": "Maak een account aan om Google, Apple of GitHub aan je kluis te koppelen.",

@@ -39,6 +39,16 @@
     "ordinal": "°, º, o, .",
     "work": "lavoro",
     "personal": "personale, casa",
-    "in": "tra, fra"
+    "in": "tra, fra",
+    "weekend": "weekend, fine settimana, finesettimana",
+    "endOfMonth": "fine mese, fine del mese",
+    "morning": "mattina, mattino, mattinata",
+    "afternoon": "pomeriggio",
+    "evening": "sera, serata",
+    "biweekly": "quindicinale, quindicinalmente",
+    "quarterly": "trimestrale, trimestralmente",
+    "halfPast": "e mezza, e mezzo",
+    "numbers": "uno, due, tre, quattro, cinque, sei, sette, otto, nove, dieci, undici, dodici",
+    "a": "un, una, uno"
   }
 }

@@ -37,6 +37,9 @@ export const PALETTE = Object.fromEntries(TEXT_COLORS.map((c) => [c.name.toLower
  * NO DOUBLE QUOTES in any value. These land inside a double-quoted HTML
  * attribute; textStyleCss escapes them defensively, but an escaped quote in a
  * font stack is a portability trap not worth introducing.
+ *
+ * index.css (Note font) repeats the Serif and Mono stacks for the Note font
+ * setting; change both together.
  */
 export const FONT_FAMILIES: { name: string; value: string }[] = [
   { name: 'Sans', value: 'ui-sans-serif, system-ui, sans-serif' },
@@ -86,7 +89,7 @@ export const FONT_SIZES: { name: string; value: string }[] = [
  * yellow lives in the text grid, and consistency there beats putting the
  * most-used swatch under the cursor.
  *
- * Spec: ops/docs/design-decisions.md (highlight colors)
+ * Spec: docs/internal/design-decisions.md (highlight colors)
  */
 /**
  * The palette's default entry, named so the toolbar can fall back to it
@@ -107,3 +110,19 @@ export const HIGHLIGHT_COLORS: { name: string; value: string | null }[] = [
   { name: 'Purple', value: 'rgba(151, 117, 250, 0.35)' },
   { name: 'Pink', value: 'rgba(240, 101, 149, 0.35)' },
 ];
+
+/**
+ * Table cell colors (#616): the highlight palette by name, so a cell and a
+ * highlighted word in it can match. The default highlight stores no color,
+ * so its wash is written out here; index.css `.pn-hl-default` draws the same
+ * light value and the dark one, change both together.
+ * Spec: docs/internal/specs/table-cell-colors.md
+ */
+const CELL_FILLS: Readonly<Record<string, string>> = Object.fromEntries(
+  HIGHLIGHT_COLORS.map((c) => [c.name.toLowerCase(), c.value ?? 'rgba(250, 224, 108, 0.55)']),
+);
+
+/** The color a stored cell fill name paints, or null when it is not a palette name. */
+export function cellFillColor(name: unknown): string | null {
+  return typeof name === 'string' && Object.hasOwn(CELL_FILLS, name) ? CELL_FILLS[name]! : null;
+}

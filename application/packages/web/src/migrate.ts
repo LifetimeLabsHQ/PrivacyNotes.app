@@ -5,7 +5,7 @@
  * the rest of the install's local state (authStorage.ts). This build never
  * sets it: an install that already carries it keeps the notice until Got it.
  *
- * Spec: ops/docs/domain-split.md
+ * Spec: docs/internal/domain-split.md
  */
 
 const MOVED_FLAG_KEY = 'privacynotes.movedFromApex';

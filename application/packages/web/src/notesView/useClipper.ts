@@ -3,7 +3,7 @@
  * page window of the + menu. It holds the running clips (one per bookmark),
  * finds the note each bookmark was clipped into, and writes the bookmark and
  * the note through the ordinary note path.
- * Spec: ops/docs/archive/web-clipper-stage1.md (section 5)
+ * Spec: docs/internal/specs/web-clipper-stage1.md (section 5)
  */
 import { useCallback, useMemo, useState } from 'react';
 import type { SupabaseClient } from '@notes/shared';

@@ -7,7 +7,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useEscapeToClose } from './useEscapeToClose';
-import { IconUpgrade } from './UpgradeModal';
+import { IconUpgrade } from './proMark';
 import { Check } from './icons';
 import { matchesKey } from './shortcutMatch';
 
@@ -99,7 +99,7 @@ export function isEditableTarget(target: EventTarget | null): boolean {
  * text (paste, spellcheck), a note body even when it is read-only
  * (Copy), images (Save image as…), and links (Open in new tab, Copy
  * link). Everywhere else, the app menu wins. Spec:
- * ops/docs/backlog.md #74.
+ * docs/internal/backlog.md #74.
  */
 export function shouldUseBrowserDefault(target: EventTarget | null): boolean {
   if (!target || !(target instanceof HTMLElement)) return false;
@@ -124,7 +124,7 @@ export function shouldUseBrowserDefault(target: EventTarget | null): boolean {
  * button 2, so on a device that cannot hover the second event is the same
  * long press. Taking it opened the link menu over the new selection and
  * cancelled it, so a note of links alone could not be selected (issue #454).
- * Spec: ops/docs/backlog.md #74 (issue #208).
+ * Spec: docs/internal/backlog.md #74 (issue #208).
  */
 export function isTouchContextMenu(e: React.MouseEvent): boolean {
   if (isLongPressEcho(e.nativeEvent)) return true;
@@ -375,7 +375,7 @@ export function ContextMenu({
       // Touch opens it from a tap (a bookmark row's "..." button), so the rows
       // grow to a finger's size there, and a menu taller than the screen
       // scrolls instead of running off it.
-      className="z-[1000] min-w-[160px] max-h-[calc(100dvh-16px)] overflow-y-auto py-1 rounded-md border border-divider bg-surface-2/95 backdrop-blur shadow-xl text-[13px] [@media(hover:none)]:text-[14px] text-pn select-none"
+      className="z-[1000] min-w-[160px] max-h-[calc(100dvh-16px)] overflow-y-auto py-1 rounded-md border border-divider bg-surface-2/95 backdrop-blur shadow-xl text-compact [@media(hover:none)]:text-body text-pn select-none"
     >
       {state.items.map((it, i) => {
         if ('type' in it && it.type === 'separator') {
@@ -390,7 +390,7 @@ export function ContextMenu({
           return (
             <div
               key={`hdr-${i}`}
-              className={`px-3 pt-1.5 pb-0.5 text-[10px] font-semibold tracking-wider text-pn-muted ${it.keepCase ? '' : 'uppercase'}`}
+              className={`px-3 pt-1.5 pb-0.5 text-meta font-semibold tracking-wider text-pn-muted ${it.keepCase ? '' : 'uppercase'}`}
             >
               {it.label}
             </div>
@@ -450,18 +450,18 @@ export function ContextMenu({
                 same reason the check mark does: the band underneath it IS the
                 accent, so an accent word or a Pro colour on it is invisible. */}
             {item.pro && (
-              <span className={`shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold ${active ? 'text-white' : 'text-accent'}`}>
+              <span className={`shrink-0 inline-flex items-center gap-1 text-meta font-semibold ${active ? 'text-white' : 'text-accent'}`}>
                 <IconUpgrade size={12} onFill={active} /> Pro
               </span>
             )}
             {item.checked && (
               <span className={`shrink-0 ${active ? 'text-white' : 'text-accent'}`}>
-                <Check size={14} />
+                <Check />
               </span>
             )}
             {item.shortcut && (
               <span
-                className={`text-[11px] ms-4 tabular-nums ${
+                className={`text-meta ms-4 tabular-nums ${
                   active
                     ? 'text-white/70'
                     : 'text-pn-muted'

@@ -10,7 +10,7 @@
      satisfies the hardened runtime; wry grants the WebKit-level permission via its
      WKUIDelegate (requestMediaCapturePermissionForOrigin). iOS has no such entitlements
      (usage strings alone cover it), so this file is macOS-only.
-     Spec: ops/docs/macos-ios-setup.md (camera + mic access + entitlements) -->
+     Spec: docs/internal/macos-ios-setup.md (camera + mic access + entitlements) -->
 <plist version="1.0">
 <dict>
 	<key>com.apple.security.device.camera</key>

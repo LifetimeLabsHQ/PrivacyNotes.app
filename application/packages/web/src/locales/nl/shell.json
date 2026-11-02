@@ -1,18 +1,14 @@
 {
   "pillars": {
-    "trash": "Prullenbak",
-    "bookmarks": "Bladwijzers",
-    "contacts": "Contacten"
+    "trash": "Prullenbak"
   },
   "tasksList": {
-    "title": "Taken",
     "newTaskNote": "Nieuwe takennotitie",
     "hideCompleted": "Afgeronde taken verbergen",
     "showCompleted": "Afgeronde taken tonen",
     "searchPlaceholder": "Taken zoeken…",
     "sortOptions": "Sorteeropties",
     "quickAddPlaceholder": "Snel een taak toevoegen",
-    "noMatches": "Geen resultaten.",
     "itemsWithTasks": "Items met taken",
     "allTasks": "Alle taken",
     "tasksFromOtherItems": "Taken in andere items",
@@ -29,45 +25,27 @@
     "seeLess": "Minder tonen"
   },
   "filesList": {
-    "title": "Bestanden",
     "upload": "Uploaden",
     "selectedOf": "{{selected}} van {{total}} geselecteerd",
-    "deselectAll": "Selectie opheffen",
-    "selectAll": "Alles selecteren",
-    "storage": "Opslag",
     "perFile": "Per bestand",
     "free": "Gratis",
-    "upgradeToPro": "Upgrade naar Pro",
     "filterAll": "Alles",
-    "filterImages": "Afbeeldingen",
     "filterAudio": "Audio",
     "filterFiles": "Bestanden",
-    "sortOptions": "Sorteeropties",
     "searchPlaceholder": "Bestanden zoeken…",
     "sortName": "Naam",
     "showNotesWithAttachments": "Bestanden in andere items tonen",
-    "noMatches": "Geen resultaten.",
     "pinProtected": "Met PIN beveiligd",
-    "readOnly": "Alleen-lezen",
     "noFilesYet": "Nog geen bestanden.",
     "noDocuments": "Geen documenten.",
     "noImages": "Geen afbeeldingen.",
     "noAudioFiles": "Geen audiobestanden.",
     "emptyTypesHint": "Afbeeldingen, documenten, audio, video en zip-bestanden. Tot {{max}} MB per bestand.",
     "uploadFiles": "Bestanden uploaden",
-    "menuDeselect": "Selectie opheffen",
-    "menuSelect": "Selecteren",
     "menuShow": "Tonen",
     "menuAllFiles": "Alle bestanden",
-    "menuImages": "Afbeeldingen",
-    "menuAudio": "Audio",
     "menuDocuments": "Documenten",
-    "menuHideNoteAttachments": "Bestanden in andere items verbergen",
-    "menuShowNoteAttachments": "Bestanden in andere items tonen",
-    "menuUnpin": "Losmaken",
-    "menuPin": "Vastzetten",
-    "menuRename": "Naam wijzigen",
-    "menuMoveToTrash": "Naar prullenbak"
+    "menuHideNoteAttachments": "Bestanden in andere items verbergen"
   },
   "vaultItem": {
     "badgeLogin": "Login",
@@ -78,7 +56,6 @@
     "untitledKey": "Naamloze sleutel",
     "copied": "Gekopieerd!",
     "copyField": "{{label}} kopiëren",
-    "hide": "Verbergen",
     "reveal": "Tonen",
     "fieldUrl": "URL",
     "fieldUser": "Gebruiker",
@@ -91,14 +68,11 @@
     "fieldLabel": "Label",
     "fieldPublic": "Publiek",
     "fieldPrivate": "Privé",
-    "fieldTotp": "2FA-code",
     "totpInvalid": "Ongeldige sleutel",
     "copyCode": "Code kopiëren",
     "totpUnlockCta": "Ontgrendel 2FA-codes met Pro",
     "totpProNote": "De sleutel wordt opgeslagen en gesynchroniseerd. Alleen de code vereist Pro.",
     "copyAll": "URL, gebruiker en wachtwoord kopiëren",
-    "open": "Openen",
-    "notesHeading": "Notities",
     "fillOneField": "Vul minstens één veld in voordat je opslaat.",
     "expiryNeedsBoth": "Vul bij de vervaldatum zowel maand als jaar in, of laat beide leeg.",
     "customField": "Eigen veld",
@@ -128,20 +102,18 @@
   },
   "tagsRail": {
     "showAllItems": "Alle items tonen",
-    "changelog": "Changelog",
     "closeMenu": "Menu sluiten",
-    "close": "Sluiten",
     "views": "Inhoud",
     "resizeSplit": "Formaat van Inhoud en de tags of mappen wijzigen",
     "sidebarOptions": "Zijbalkopties",
     "showInSidebar": "Tonen in zijbalk",
     "allOptions": "Opties voor Alles",
     "showInAll": "Tonen in Alles",
-    "viewList": "Lijst",
-    "viewGrid": "Raster",
     "viewAuto": "Auto",
     "allItemsTooltip": "Alle notities, dagboeken en kluisitems",
     "allItems": "Alles",
+    "dashboard": "Home",
+    "dashboardTooltip": "Je widgets in één oogopslag",
     "pinnedTooltip": "Vastgezette items",
     "pinned": "Vastgezet",
     "archive": "Archief",
@@ -149,6 +121,7 @@
     "notes": "Notities",
     "tasksTooltip": "Taken uit al je notities",
     "tasks": "Taken",
+    "drawings": "Tekeningen",
     "vaultTooltip": "Logins, creditcards en sleutels",
     "vault": "Kluis",
     "filesTooltip": "Alle bestanden en bijlagen",
@@ -156,7 +129,6 @@
     "journalsTooltip": "Dagelijkse dagboeknotities",
     "journals": "Dagboeken",
     "actionsForTag": "Acties voor tag {{tag}}",
-    "renameTag": "Naam wijzigen",
     "removeFavorite": "Uit favorieten",
     "markAsFavorite": "Favoriet",
     "deleteTag": "Tag verwijderen",
@@ -164,7 +136,6 @@
     "tags": "Tags",
     "sortTags": "Tags sorteren",
     "sort": "Sorteren",
-    "sortBy": "Sorteren op",
     "sortEntries": "Aantal",
     "sortName": "Naam",
     "sortCustom": "Eigen",
@@ -175,11 +146,9 @@
     "createTag": "Nieuwe tag",
     "untagged": "Zonder tag",
     "trashTooltip": "Verwijderde items",
-    "trash": "Prullenbak",
     "feedback": "Feedback",
     "import": "Importeren",
     "downloads": "Downloads",
-    "help": "Help",
     "rate": "Beoordelen",
     "markdown": "Markdown",
     "markdownTip": "Onversleuteld",
@@ -205,7 +174,6 @@
     "deleteConfirmBranchNested": "\"{{folder}}\" en de submappen worden verwijderd. De notities gaan naar \"{{parent}}\". Er worden geen notities verwijderd.",
     "deleteSubfolders_one": "Ook de submap verwijderen",
     "deleteSubfolders_other": "Ook de {{count}} submappen verwijderen",
-    "moveTo": "Naar map verplaatsen",
     "searchPlaceholder": "Mappen zoeken",
     "sortFolders": "Mappen sorteren",
     "chipUnfiled": "Map",
@@ -226,7 +194,6 @@
     "seedTeam": "Team"
   },
   "collapsedSidebar": {
-    "newNote": "Nieuwe notitie",
     "expandSidebar": "Zijbalk uitklappen"
   },
   "mobileHeader": {
@@ -241,26 +208,14 @@
     "colorFromTag": "Uit tag: #{{name}}",
     "colorOwnHint": "Een kleur die je hier kiest, vult de achtergrond van deze notitie. <setting>Map- en tagkleuren</setting> veranderen die niet.",
     "details": "Details",
-    "readOnly": "Alleen-lezen",
     "readOnlyDescription": "Geen bewerkingen tot je het uitzet.",
     "protect": "Beveiligen",
     "convertTo": "Omzetten naar",
-    "typeNote": "Notitie",
     "typeJournal": "Dagboek",
-    "typeTask": "Taak",
-    "unpin": "Losmaken",
-    "pin": "Vastzetten",
-    "archive": "Archiveren",
-    "unarchive": "Uit archief halen",
     "burn": "Vernietigen",
     "share": "Delen",
     "trash": "Prullenbak",
-    "duplicate": "Dupliceren",
-    "restore": "Herstellen",
-    "deleteForever": "Definitief verwijderen",
-    "moveToFolder": "Naar map verplaatsen",
     "noteHistory": "Geschiedenis",
-    "findReplace": "Zoeken en vervangen",
     "uncheckAllTasks": "Alle items uitvinken",
     "deleteCheckedTasks": "Afgevinkte items verwijderen",
     "sortTasksByStatus": "Items sorteren op status",
@@ -277,27 +232,17 @@
     "schedule": "Planning",
     "ends": "Eindigt",
     "sameDay": "Zelfde dag",
-    "allDay": "Hele dag",
     "starts": "Begint",
     "endsAt": "Eindigt om",
     "noEnd": "Geen",
     "removeFromCalendar": "Uit agenda verwijderen",
     "makeEvent": "Zet het om naar <b>Afspraak</b> om het te herhalen",
-    "typeEvent": "Afspraak",
     "repeatRemoved": "De herhaling wordt verwijderd"
   },
   "selectionToolbar": {
-    "exitSelectionTooltip": "Selectie verlaten",
     "exitSelection": "Selectie verlaten",
-    "unpin": "Losmaken",
-    "pin": "Vastzetten",
-    "archive": "Archiveren",
-    "unarchive": "Uit archief halen",
     "tag": "Tag",
     "export": "Exporteren",
-    "delete": "Verwijderen",
-    "restore": "Herstellen",
-    "deleteForever": "Definitief verwijderen",
     "more": "Meer acties",
     "addTagPlaceholder": "Een tag toevoegen...",
     "noTagsFound": "Geen tags gevonden",
@@ -320,6 +265,7 @@
     "showTags": "Map en tags tonen",
     "showCalendar": "Kalender tonen",
     "showCheckIn": "Check-in tonen",
+    "showMedication": "Medicatie tonen",
     "showWorkItems": "Items uit <b>Werk</b> tonen",
     "showPersonalItems": "Items uit <b>Persoonlijk</b> tonen",
     "other": "Overig",
@@ -342,7 +288,6 @@
     "moodCalendar": "Stemmingen tonen in de agenda"
   },
   "backfillPopover": {
-    "calendarLabel": "Dagboekkalender",
     "today": "Vandaag",
     "chooseEntry": "Items van {{date}}"
   },
@@ -363,6 +308,7 @@
     "newNote": "Nieuwe notitie",
     "newTask": "Nieuwe taak",
     "newKanban": "Nieuw kanbanbord",
+    "newDrawing": "Nieuwe tekening",
     "newLogin": "Nieuwe login",
     "newJournal": "Nieuwe dagboeknotitie",
     "newFile": "Nieuw bestand",
@@ -388,32 +334,24 @@
     "duplicate": "Dupliceren",
     "moveToFolder": "Naar map verplaatsen",
     "exportAsMarkdown": "Exporteren als Markdown",
-    "shareBurnAfterReading": "Delen & vernietigen na lezen",
     "exportAsHtml": "Exporteren als HTML",
-    "printSaveAsPdf": "Afdrukken / opslaan als PDF",
-    "moveToTrash": "Naar prullenbak",
-    "newBookmark": "Nieuwe bladwijzer",
     "newContact": "Nieuw contact",
-    "openBookmark": "Openen",
     "copyBookmarkUrl": "URL kopiëren",
     "editBookmark": "Bladwijzer bewerken",
     "saveAsNote": "Opslaan als notitie",
-    "openClippedNote": "Notitie openen",
     "openInTab": "Openen in tabblad",
     "openInTabHint": "{{key}}-klik",
+    "openInTabHintMiddle": "Middelklik",
     "closeTab": "Tabblad sluiten",
     "closeOtherTabs": "Andere tabbladen sluiten",
     "closeAllTabs": "Alle tabbladen sluiten",
     "pinTab": "Tabblad vastzetten",
     "unpinTab": "Tabblad losmaken",
-    "newEvent": "Nieuwe afspraak",
-    "quickAdd": "Snel toevoegen"
+    "newEvent": "Nieuwe afspraak"
   },
   "demoBanner": {
     "title": "Probeer het zonder risico",
-    "description": "Hier wordt niets opgeslagen. Neem je eigen versleutelde notitieboek, gratis.",
-    "cta": "Account aanmaken",
-    "dismiss": "Sluiten"
+    "description": "Hier wordt niets opgeslagen. Neem je eigen versleutelde notitieboek, gratis."
   },
   "markdown": {
     "title": "Markdown",
@@ -452,20 +390,17 @@
     "fileCount_other": "{{count}} bestanden",
     "railFolders": "Markdown-mappen",
     "railTags": "Markdown-tags",
-    "allFiles": "Alle bestanden",
     "modeRich": "Opgemaakt",
     "modeSource": "Markdown",
     "reopenPrompt": "Je browser vraagt na het herladen opnieuw om toestemming. Je map is onthouden, dus dit is één klik.",
     "reopenFolder": "{{name}} opnieuw openen",
     "new": "Nieuw",
-    "delete": "Verwijderen",
     "saveToNotes": "Opslaan in mijn notities",
     "createFailed": "Het bestand kon niet worden aangemaakt.",
     "deleteFailed": "Het bestand kon niet naar de prullenbak worden verplaatst.",
     "importedToast": "\"{{title}}\" opgeslagen in je versleutelde notities. Het originele bestand blijft ongemoeid.",
     "deleteTitle": "Naar de prullenbak van de map verplaatsen?",
     "deleteBody": "\"{{name}}\" gaat naar een .trash-map in je Markdown-map. Haal het bestand terug via je bestandsbeheer als je van gedachten verandert.",
-    "deleteConfirm": "Naar prullenbak",
     "explainTitle": "Je Markdown-map",
     "explainDone": "Duidelijk",
     "bannerTitle": "Geavanceerde Markdown-editor",
@@ -474,7 +409,6 @@
     "explainIntro": "Kies een map met .md- en .txt-bestanden - submappen verschijnen automatisch, wijzigingen worden direct opgeslagen, en er wordt niets omgezet",
     "chipPreview": "Live-voorbeeld",
     "chipTasks": "Taken",
-    "chipTags": "Tags",
     "chipTables": "Tabellen",
     "useAgent": "AI-agents toegang tot je notities geven",
     "useObsidian": "Dezelfde bestanden in Obsidian of Logseq",
@@ -502,7 +436,6 @@
     "assocWorking": "Bezig met navragen bij je systeem…",
     "copyPath": "Pad kopiëren",
     "selectedCount": "{{selected}} van {{total}} geselecteerd",
-    "selectAll": "Alles selecteren",
     "exitSelection": "Selectie beëindigen",
     "deleteManyTitle_one": "{{count}} bestand naar de prullenbak van de map verplaatsen?",
     "deleteManyTitle_other": "{{count}} bestanden naar de prullenbak van de map verplaatsen?",
@@ -525,15 +458,11 @@
   "bookmarks": {
     "newBookmark": "Nieuwe bladwijzer",
     "searchPlaceholder": "Bladwijzers zoeken…",
-    "sortOptions": "Sorteeropties",
     "quickAddPlaceholder": "Plak of typ een link…",
     "urlLabel": "Bladwijzer (URL)",
     "urlInvalid": "Voer een webadres in, zoals example.com of https://example.com/page.",
     "urlDuplicate": "Een andere bladwijzer heeft deze URL al, de wijziging is niet opgeslagen.",
-    "openAction": "Openen",
     "copiedUrl": "Link gekopieerd",
-    "moveToTrash": "Naar prullenbak",
-    "rowMenu": "Meer acties",
     "emptyNone": "Nog geen bladwijzers.",
     "emptyTitle": "Bewaar de sites die het waard zijn",
     "emptyAdd": "Bladwijzer toevoegen",
@@ -548,11 +477,9 @@
     "new": "Nieuw"
   },
   "contacts": {
-    "new": "Nieuw",
     "searchPlaceholder": "Contacten zoeken…",
-    "sortOptions": "Sorteeropties",
     "emptyNone": "Nog geen contacten.",
-    "emptyTitle": "Een adresboek dat alleen jij kunt lezen",
+    "emptyTitle": "Een adresboek, versleuteld op je apparaat",
     "emptyAdd": "Contact toevoegen",
     "emptyImport": "Contacten importeren",
     "noMatches": "Geen resultaten.",
@@ -571,15 +498,12 @@
     "company": "Bedrijf",
     "department": "Afdeling",
     "jobTitle": "Functie",
-    "groupName": "Naam",
     "groupPhone": "Telefoon",
     "groupEmail": "E-mail",
     "groupAddress": "Adres",
     "groupWebsite": "Website",
-    "groupProfile": "Profiel",
     "groupDates": "Datums",
     "groupRelated": "Relaties",
-    "groupNote": "Notitie",
     "addPhone": "Telefoon toevoegen",
     "addEmail": "E-mail toevoegen",
     "addWebsite": "Website toevoegen",
@@ -594,7 +518,6 @@
     "notePlaceholder": "Notities over deze persoon",
     "labelNone": "Label",
     "labelCustom": "Eigen label…",
-    "removeRow": "Verwijderen",
     "call": "Bellen",
     "message": "Bericht",
     "sendEmail": "E-mail sturen",
@@ -615,15 +538,8 @@
     "menuPersonal": "Persoonlijk",
     "menuName": "Naam",
     "menuText": "Tekst",
-    "itemAddress": "Adres",
-    "itemWebsite": "Website",
-    "itemProfile": "Profiel",
-    "itemCompany": "Bedrijf",
-    "itemJobTitle": "Functie",
-    "itemBirthday": "Verjaardag",
     "itemDate": "Datum",
     "itemRelated": "Verwante naam",
-    "itemNickname": "Bijnaam",
     "itemNameParts": "Tweede naam, voorvoegsel, achtervoegsel",
     "itemPhonetic": "Fonetische naam",
     "itemNote": "Notitie",
@@ -751,8 +667,10 @@
       "note": "Notities",
       "task": "Takenlijsten",
       "journal": "Dagboeknotities",
-      "contact": "Verjaardagen"
+      "contact": "Verjaardagen en datums"
     },
+    "birthdays": "Verjaardagen",
+    "contactDate": "{{name}}: {{label}}",
     "dragEnd": "Sleep om de einddag te wijzigen",
     "previousDay": "Vorige dag",
     "nextDay": "Volgende dag",
@@ -843,7 +761,6 @@
     "onDayAt": "Op de dag zelf om {{time}}",
     "daysBeforeAt_other": "{{count}} dagen van tevoren om {{time}}",
     "custom": "Aangepast",
-    "add": "Toevoegen",
     "max": "Maximaal vijf meldingen.",
     "units": {
       "minutes": "minuten",
@@ -855,11 +772,9 @@
     "remove": "{{alert}} verwijderen",
     "reminder": "Herinnering",
     "medication": "Medicatieherinnering",
-    "open": "Openen",
     "snooze": "10 min sluimeren",
     "offOnPhone": "Herinneringen staan uit op deze telefoon",
     "turnOn": "Inschakelen",
-    "openSettings": "Instellingen openen",
     "daysBeforeAt_one": "{{count}} dag van tevoren om {{time}}",
     "weeksBefore_one": "{{count}} week van tevoren",
     "daysBefore_one": "{{count}} dag van tevoren",
@@ -875,6 +790,14 @@
     "appendHintDetail": "Typt >>, dan het begin van de naam",
     "appendNone": "Nog geen takenlijst of notitie om aan toe te voegen",
     "appendNoneDetail": "Typ een naam na >> om een takenlijst met die naam te maken",
+    "cannotAdd": "Kan niet toevoegen aan {{title}}",
+    "blocked": {
+      "trash": "Het staat in de prullenbak.",
+      "pin": "Het zit achter je PIN. Open het om toe te voegen.",
+      "readOnly": "Het is alleen-lezen.",
+      "board": "Het is een Kanbanbord. Voeg kaarten toe op het bord.",
+      "archived": "Het is gearchiveerd. Haal het uit het archief om toe te voegen."
+    },
     "linkGroup": "Deze link bewaren",
     "linkDetail": {
       "bookmark": "Bewaart het adres. Daarna geef je het een naam.",
@@ -894,6 +817,7 @@
       "task": "Nieuwe takenlijst",
       "journal": "Nieuwe dagboeknotitie",
       "kanban": "Nieuw kanbanbord",
+      "drawing": "Nieuwe tekening",
       "login": "Nieuwe login",
       "file": "Een bestand uploaden",
       "contact": "Nieuw contact",
@@ -926,8 +850,8 @@
       },
       "length": {
         "label": "Duur",
-        "examples": "gedurende 30 min · gedurende 3 dagen · vr tot zo",
-        "insert": "gedurende 1 uur"
+        "examples": "15:00 gedurende 30 min · gedurende 3 dagen · vr tot zo",
+        "insert": "15:00 gedurende 1 uur"
       },
       "repeat": {
         "label": "Herhalen",
@@ -973,17 +897,14 @@
     "backToToday": "Terug naar vandaag",
     "options": "Opties voor check-in",
     "skipToday": "Vandaag overslaan",
-    "hide": "Deze kaart verbergen",
+    "hide": "Verbergen",
     "change": "Stemming wijzigen",
     "saved": "Opgeslagen",
     "chooseTrackers": "Trackers kiezen",
-    "settings": "Instellingen voor check-in",
     "skipped": "Overgeslagen voor vandaag.",
     "startOver": "Opnieuw beginnen",
     "cleared": "Check-in gewist.",
     "hidden": "Kaart verborgen. Met ‘Check-in tonen’ in de lijstvoorkeuren zet je hem weer aan.",
-    "undo": "Ongedaan maken",
-    "done": "Klaar",
     "write": "Schrijf over vandaag",
     "writeOn": "Schrijf over {{date}}",
     "streak": "Dag {{n}} op rij",
@@ -997,19 +918,25 @@
     "showThem": "Tonen",
     "hiddenCount_one": "{{count}} check-in is verborgen."
   },
+  "medicationCard": {
+    "title": "Medicatie bijhouden",
+    "options": "Opties voor medicatie",
+    "edit": "Medicatie van vandaag wijzigen",
+    "hidden": "Kaart verborgen. Zet hem weer aan in de lijstvoorkeuren of bij Instellingen > Trackers > Medicatie."
+  },
   "clipper": {
-    "saveAsNote": "Opslaan als notitie",
     "saving": "Opslaan als notitie…",
     "stepPage": "Pagina downloaden",
     "stepPictures": "Afbeeldingen opslaan, {{done}} van {{total}}",
-    "openNote": "Notitie openen",
     "alreadySaved": "Deze pagina is al als notitie opgeslagen ({{date}}).",
     "savedOn": "Als notitie opgeslagen op {{date}}",
-    "windowTitle": "Pagina clippen",
     "addressLabel": "Webadres",
     "addressPlaceholder": "Plak een link…",
     "savePictures": "Afbeeldingen opslaan",
     "savePicturesHint": "Tot 20 afbeeldingen, bewaard bij de notitie. Ze tellen mee voor je opslag.",
+    "extensionTipTitle": "Clip vanuit je browser voor een beter resultaat",
+    "extensionTip": "De browserextensie slaat de pagina op zoals jij hem ziet, ook pagina's achter een aanmelding.",
+    "extensionTipSetUp": "De extensie instellen",
     "downloading": "Pagina downloaden…",
     "downloadingPictures": "Afbeeldingen downloaden, {{done}} van {{total}}",
     "picturesLine_other": "{{count}} afbeeldingen · {{size}}, opgeslagen bij de notitie",
@@ -1042,5 +969,166 @@
     "until": "Tot {{day}}",
     "noAlert": "Geen melding",
     "endsLater": "Eindigt op een andere dag"
+  },
+  "apps": {
+    "railLabel": "Extensie",
+    "title": "Browserextensie",
+    "subtitle": "Webclipper en wachtwoordmanager in Chrome, Firefox en Edge. De extensie heeft nooit de sleutel die je notities opent.",
+    "stepInstall": "De extensie installeren",
+    "stepFeatures": "Kies wat hij mag doen",
+    "stepConnect": "Verbinden",
+    "makeCode": "Code maken",
+    "connectHint": "Maak een eenmalige code en plak die in de extensie.",
+    "thisBrowser": "Deze browser",
+    "otherApps": "Desktop- en telefoonapps:",
+    "desktopAll": "Alle downloads",
+    "extensionComputersOnly": "De extensie is voor Chrome, Firefox en Edge op een computer.",
+    "demoSignUp": "Registreer je om een browser te verbinden"
+  },
+  "extensionConnect": {
+    "clips": "Webclipper",
+    "clipsHint": "Websites als notities opslaan.",
+    "loginsHint": "Logins, kaarten, SSH-sleutels en bladwijzers voor de site waarop je bent, alleen kopiëren. Vergrendeld met een eigen PIN of toegangscode.",
+    "pickOne": "Zet er minstens één aan.",
+    "codeLabel": "Code voor de extensie",
+    "oneUse": "Werkt één keer, 10 minuten lang.",
+    "usedBy": "{{name}} heeft deze code gebruikt en is verbonden. Als jij dat niet was, verwijder hem dan hieronder.",
+    "newCode": "Nieuwe code",
+    "tooManyCodes": "Er wachten te veel codes. Gebruik er een van, of wacht 10 minuten.",
+    "tooManyExtensions": "Dit account heeft 10 browsers verbonden, het maximum. Verwijder er eerst een.",
+    "keyElsewhere": "De sleutel voor je logins staat op een ander apparaat van je. Open PrivacyNotes daar en laat het synchroniseren, en probeer het dan opnieuw.",
+    "failed": "Kon geen code maken. Controleer je verbinding en probeer het opnieuw."
+  },
+  "dashboard": {
+    "taskReadOnly": "Deze notitie is alleen-lezen. Zet alleen-lezen uit in de notitieopties om de taken af te vinken.",
+    "addWidget": "Widget toevoegen",
+    "catalogTitle": "Een widget toevoegen",
+    "layouts": "Indelingen",
+    "layoutChanged": "Indeling gewijzigd",
+    "full": "Home is vol. Verwijder eerst een widget.",
+    "added": "Toegevoegd aan Home",
+    "removed": "Verwijderd van Home",
+    "showOnHome": "Tonen op Home",
+    "removeFromHome": "Verwijderen van Home",
+    "resize": "Formaat van {{name}} wijzigen",
+    "narrower": "Smaller",
+    "taller": "Hoger",
+    "shorter": "Lager",
+    "moveEarlier": "Naar voren",
+    "moveLater": "Naar achteren",
+    "chooseNote": "Kies een notitie",
+    "chooseTag": "Kies een tag",
+    "chooseFolder": "Kies een map",
+    "chooseTracker": "Kies een tracker",
+    "choose": "Kiezen",
+    "gone": "Niet meer hier",
+    "otherSpace": "In de andere ruimte",
+    "proLocked": "Onderdeel van Pro",
+    "noneToChoose": "Nog niets om te kiezen",
+    "headerEvents_one": "{{formatted}} afspraak vandaag",
+    "headerEvents_other": "{{formatted}} afspraken vandaag",
+    "headerTasks_one": "{{formatted}} open taak",
+    "headerTasks_other": "{{formatted}} open taken",
+    "startToday": "Begin aan de dagboeknotitie van vandaag",
+    "groups": {
+      "keep": "Wat je bewaart"
+    },
+    "layout": {
+      "everyday": "Dagelijks",
+      "planner": "Planner",
+      "writer": "Schrijver"
+    },
+    "w": {
+      "checkIn": {
+        "name": "Check-in",
+        "help": "Hoe het vandaag met je gaat, en je trackers"
+      },
+      "calendar": {
+        "help": "De maand, met stippen voor dagboeknotities en afspraken"
+      },
+      "upcoming": {
+        "name": "Binnenkort",
+        "help": "Vandaag en de komende 7 dagen"
+      },
+      "today": {
+        "name": "Dagboeknotitie van vandaag",
+        "help": "De dagboeknotitie van vandaag, of een begin ervan"
+      },
+      "tasks": {
+        "name": "Open taken",
+        "help": "Niet afgevinkte taken uit je notities"
+      },
+      "recent": {
+        "name": "Onlangs bewerkt",
+        "help": "De items waar je het laatst aan werkte"
+      },
+      "pinned": {
+        "help": "Je vastgezette items"
+      },
+      "note": {
+        "name": "Een notitie",
+        "help": "Eén notitie die je kiest, op Home"
+      },
+      "tag": {
+        "name": "Een tag",
+        "help": "De nieuwste items met één tag"
+      },
+      "folder": {
+        "name": "Een map",
+        "help": "De nieuwste items in één map"
+      },
+      "onThisDay": {
+        "name": "Op deze dag",
+        "help": "Dagboeknotities uit eerdere jaren"
+      },
+      "week": {
+        "help": "Woorden, actieve dagen, items en check-ins"
+      },
+      "streak": {
+        "help": "Dagen op rij dat je schreef"
+      },
+      "checkInStreak": {
+        "help": "Dagen op rij dat je een check-in deed"
+      },
+      "rhythm": {
+        "name": "Jouw ritme",
+        "help": "26 weken schrijven en stemming"
+      },
+      "milestone": {
+        "name": "Volgende mijlpaal",
+        "help": "Hoe dichtbij de volgende is"
+      },
+      "tracker": {
+        "name": "Een tracker",
+        "help": "Eén tracker: zijn getal en zijn dagen"
+      },
+      "weekRecap": {
+        "help": "Je week, op één kaart"
+      },
+      "files": {
+        "name": "Recente bestanden",
+        "help": "Je nieuwste afbeeldingen en bestanden"
+      },
+      "bookmarks": {
+        "help": "Je nieuwste bladwijzers"
+      },
+      "birthdays": {
+        "help": "Verjaardagen in de komende 30 dagen"
+      }
+    },
+    "empty": {
+      "upcoming": "Niets in de komende 7 dagen",
+      "tasks": "Geen open taken",
+      "recent": "Hier staat nog niets",
+      "pinned": "Nog niets vastgezet",
+      "tag": "Geen items met deze tag",
+      "folder": "Niets in deze map",
+      "onThisDay": "Geen dagboeknotities op deze dag in eerdere jaren",
+      "files": "Nog geen bestanden",
+      "bookmarks": "Nog geen bladwijzers",
+      "birthdays": "Geen verjaardagen in de komende 30 dagen",
+      "tracker": "Nog niets vastgelegd",
+      "milestone": "Elke mijlpaal behaald"
+    }
   }
 }

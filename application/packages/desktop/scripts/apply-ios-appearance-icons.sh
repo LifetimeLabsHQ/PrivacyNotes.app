@@ -6,7 +6,7 @@
 #
 # The iOS bundle registers no URL scheme, and this script must never splice
 # CFBundleURLTypes into the generated Info.plist: any app can claim a scheme.
-# Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 13)
+# Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 13)
 #
 # Run from packages/desktop:
 #   bash scripts/apply-ios-appearance-icons.sh
@@ -92,7 +92,7 @@ fi
 # The share extension target, and the app's dependency on it, which is what
 # embeds the extension in the app. Tauri's template knows neither, so a fresh
 # init drops both; the sources stay in src-tauri/ios-share, outside gen/.
-# Spec: ops/docs/archive/share-into-app.md
+# Spec: docs/internal/specs/share-into-app.md
 if ! grep -q "privacynotes_Share:" "$GEN/project.yml"; then
   python3 - "$GEN/project.yml" "$HERE/src-tauri/ios-share/target.yml" <<'PYEOF'
 import sys

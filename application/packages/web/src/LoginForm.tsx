@@ -15,49 +15,11 @@ import { FIELD_BUTTON, FIELD_CLASS, FieldLabel } from './formFields';
 import { PasswordGeneratorModal } from './PasswordGenerator';
 import type { UpgradeTrigger } from './UpgradeModal';
 import { newLoginField, type LoginExtras, type LoginField } from './loginExtras';
-import { storedVaultKeys } from './vaultBody';
 
-/* ────────────────────────────────────────────────────────────────
- * LoginData - the JSON blob stored in the note body for login-type
- * notes. Fields: url (the website), username, password, freeform notes,
- * totp (the raw authenticator key/URI as pasted - never canonicalized).
- * The note's `title` field serves as the display name (e.g. "GitHub")
- * and is auto-derived from the URL domain when empty.
- * ──────────────────────────────────────────────────────────────── */
-export interface LoginData {
-  url: string;
-  username: string;
-  password: string;
-  totp: string;
-  notes: string;
-}
-
-export function parseLoginBody(body: string): LoginData {
-  try {
-    const parsed = JSON.parse(body);
-    return {
-      url: typeof parsed.url === 'string' ? parsed.url : '',
-      username: typeof parsed.username === 'string' ? parsed.username : '',
-      password: typeof parsed.password === 'string' ? parsed.password : '',
-      totp: typeof parsed.totp === 'string' ? parsed.totp : '',
-      notes: typeof parsed.notes === 'string' ? parsed.notes : '',
-    };
-  } catch {
-    return { url: '', username: '', password: '', totp: '', notes: '' };
-  }
-}
-
-/** `previous` is the stored body; keys a newer version wrote in it are kept. */
-export function serializeLoginBody(data: LoginData, previous = ''): string {
-  return JSON.stringify({
-    ...storedVaultKeys(previous),
-    url: data.url,
-    username: data.username,
-    password: data.password,
-    totp: data.totp,
-    notes: data.notes,
-  });
-}
+// The body format lives in loginBody.ts, a leaf module for the readers that
+// need no form (exports, importers, the extension's logins copy).
+export { parseLoginBody, serializeLoginBody, type LoginData } from './loginBody';
+import { parseLoginBody, serializeLoginBody, type LoginData } from './loginBody';
 
 /** Extract a display-friendly domain from a URL string. */
 export function domainFromUrl(raw: string): string {
@@ -192,7 +154,7 @@ export function LoginForm({
       <div className="space-y-4">
         {/* Username */}
         <div>
-          <FieldLabel icon={<User size={13} />}>{t('loginForm.usernameLabel')}</FieldLabel>
+          <FieldLabel icon={<User />}>{t('loginForm.usernameLabel')}</FieldLabel>
           <div className="flex gap-1.5">
             <input
               type="text"
@@ -213,7 +175,7 @@ export function LoginForm({
 
         {/* Password */}
         <div>
-          <FieldLabel icon={<Lock size={13} />}>{t('loginForm.passwordLabel')}</FieldLabel>
+          <FieldLabel icon={<Lock />}>{t('loginForm.passwordLabel')}</FieldLabel>
           <div className="flex gap-1.5">
             <PasswordField
               value={data.password}
@@ -252,7 +214,7 @@ export function LoginForm({
         {/* Authenticator key (TOTP) - the key itself is never masked or
             gated; only the generated code (below) is a Pro feature. */}
         <div>
-          <FieldLabel icon={<Shield size={13} />}>{t('loginForm.totpLabel')}</FieldLabel>
+          <FieldLabel icon={<Shield />}>{t('loginForm.totpLabel')}</FieldLabel>
           <div className="flex gap-1.5">
             <input
               type="text"
@@ -271,10 +233,10 @@ export function LoginForm({
             />
           </div>
           {data.totp.trim() && !totpParams && (
-            <p className="mt-1 text-[11px] text-warning">{t('loginForm.totpInvalid')}</p>
+            <p className="mt-1 text-meta text-warning">{t('loginForm.totpInvalid')}</p>
           )}
           {totpParams && totpUnlocked && totpCode && totpSecondsLeft !== null && (
-            <p className="mt-1 text-[11px] text-pn-muted flex items-center gap-1.5">
+            <p className="mt-1 text-meta text-pn-muted flex items-center gap-1.5">
               <span dir="ltr" className="font-mono text-pn-soft tabular-nums" /* rtl-ok: generated digits, must not reorder */>
                 {totpCode}
               </span>
@@ -282,14 +244,14 @@ export function LoginForm({
             </p>
           )}
           {totpParams && !totpUnlocked && (
-            <p className="mt-1 text-[11px] text-pn-muted">{t('loginForm.totpProNote')}</p>
+            <p className="mt-1 text-meta text-pn-muted">{t('loginForm.totpProNote')}</p>
           )}
         </div>
 
         {/* Website / URL - after the credentials, the same order the view
             shows: the title names the site, so the address is a detail. */}
         <div>
-          <FieldLabel icon={<Globe size={13} />}>{t('loginForm.websiteLabel')}</FieldLabel>
+          <FieldLabel icon={<Globe />}>{t('loginForm.websiteLabel')}</FieldLabel>
           <div className="flex gap-1.5">
             <input
               ref={urlRef}
@@ -305,11 +267,11 @@ export function LoginForm({
             <VaultFieldAction kind="copy"
               onClick={() => copy(data.url, 'url')}
               active={copied === 'url'}
-              title={t('loginForm.copyUrl')}
+              title={t('shell:contextMenu.copyBookmarkUrl')}
             />
           </div>
           {urlHint && (
-            <p className="mt-1 text-[11px] text-warning">{urlHint}</p>
+            <p className="mt-1 text-meta text-warning">{urlHint}</p>
           )}
           {extras.extraUrls.map((url, i) => (
             <div key={i} className="flex gap-1.5 mt-1.5">
@@ -323,11 +285,11 @@ export function LoginForm({
                 aria-label={t('loginForm.websiteLabel')}
                 className={fieldClass}
               />
-              <VaultFieldAction kind="copy" onClick={() => copy(url, `url-${i}`)} active={copied === `url-${i}`} title={t('loginForm.copyUrl')} />
+              <VaultFieldAction kind="copy" onClick={() => copy(url, `url-${i}`)} active={copied === `url-${i}`} title={t('shell:contextMenu.copyBookmarkUrl')} />
               {!locked && (
                 <HoverLabel label={t('loginForm.removeWebsite')} position="start">
                   <button type="button" onClick={() => setUrls(extras.extraUrls.filter((_, j) => j !== i))} aria-label={t('loginForm.removeWebsite')} className={FIELD_BUTTON}>
-                    <Trash size={16} />
+                    <Trash />
                   </button>
                 </HoverLabel>
               )}
@@ -337,10 +299,10 @@ export function LoginForm({
             <button
               type="button"
               onClick={() => setUrls([...extras.extraUrls, ''])}
-              className="inline-flex items-center gap-1 mt-1 text-[11px] text-accent-strong bg-accent/8 hover:bg-accent/15 px-2 py-0.5 rounded-full transition"
+              className="inline-flex items-center gap-1 mt-1 text-meta text-accent-strong bg-accent/8 hover:bg-accent/15 px-2 py-0.5 rounded-full transition"
             >
-              <Plus size={11} />
-              {t('loginForm.addWebsite')}
+              <Plus />
+              {t('shell:contacts.addWebsite')}
             </button>
           )}
         </div>
@@ -349,7 +311,7 @@ export function LoginForm({
             and never searchable; a text field is both visible and searchable. */}
         {(extras.fields.length > 0 || !locked) && (
           <div>
-            <FieldLabel icon={<Tag size={13} />}>{t('loginForm.customFieldsLabel')}</FieldLabel>
+            <FieldLabel icon={<Tag />}>{t('loginForm.customFieldsLabel')}</FieldLabel>
             <div className="space-y-2">
               {extras.fields.map((f) => {
                 const hidden = f.type !== 'text';
@@ -381,7 +343,7 @@ export function LoginForm({
                       {!locked && (
                         <HoverLabel label={t('loginForm.removeField')} position="start">
                           <button type="button" onClick={() => setFields(extras.fields.filter((x) => x.id !== f.id))} aria-label={t('loginForm.removeField')} className={FIELD_BUTTON}>
-                            <Trash size={16} />
+                            <Trash />
                           </button>
                         </HoverLabel>
                       )}
@@ -425,25 +387,25 @@ export function LoginForm({
               <button
                 type="button"
                 onClick={() => setFields([...extras.fields, newLoginField('text')])}
-                className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-accent-strong bg-accent/8 hover:bg-accent/15 px-2 py-0.5 rounded-full transition"
+                className="inline-flex items-center gap-1 mt-1.5 text-meta text-accent-strong bg-accent/8 hover:bg-accent/15 px-2 py-0.5 rounded-full transition"
               >
-                <Plus size={11} />
-                {t('loginForm.addField')}
+                <Plus />
+                {t('shell:contacts.addField')}
               </button>
             )}
             {extras.fields.some((f) => f.type === 'text') && (
-              <p className="mt-1 text-[11px] text-pn-muted">{t('loginForm.textFieldSearchable')}</p>
+              <p className="mt-1 text-meta text-pn-muted">{t('loginForm.textFieldSearchable')}</p>
             )}
           </div>
         )}
 
         {/* Notes */}
         <div>
-          <FieldLabel icon={<NotePencil size={13} />}>{t('loginForm.notesLabel')}</FieldLabel>
+          <FieldLabel icon={<NotePencil />}>{t('common:cardForm.notes')}</FieldLabel>
           <textarea
             value={data.notes}
             onChange={(e) => updateBody({ notes: e.target.value })}
-            placeholder={t('loginForm.notesPlaceholder')}
+            placeholder={t('common:cardForm.notesPlaceholder')}
             disabled={locked}
             rows={3}
             className={`${fieldClass} resize-y`}
@@ -461,14 +423,14 @@ export function LoginForm({
             disabled={!pinConfigured && !pinProtected}
             className="rounded accent-accent"
           />
-          <span className="text-sm text-pn-muted">
-            {t('loginForm.requirePin')}
+          <span className="text-body text-pn-muted">
+            {t('common:cardForm.requirePin')}
           </span>
           <button
             type="button"
             onClick={(e) => { e.preventDefault(); setShowPinInfo(true); }}
             className="text-accent/60 hover:text-accent transition p-1 -m-1"
-            aria-label={t('loginForm.whatDoesThisDo')}
+            aria-label={t('common:cardForm.whatDoesThisDo')}
           >
             <Info />
           </button>
@@ -476,8 +438,8 @@ export function LoginForm({
 
         {showPinInfo && <PinInfoModal onClose={() => setShowPinInfo(false)} />}
         {!pinConfigured && !pinProtected && (
-          <p className="text-[11px] text-pn-muted -mt-2">
-            {t('loginForm.setUpPinFirst')}
+          <p className="text-meta text-pn-muted -mt-2">
+            {t('common:cardForm.setUpPinFirst')}
           </p>
         )}
 

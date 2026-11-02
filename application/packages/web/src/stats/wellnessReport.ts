@@ -29,7 +29,7 @@ import { MIN_PER_SIDE } from '../trackerCompare';
  * The doctor report and the AI prompt, both built from the same model the
  * pane shows, over the same range. The report is HTML written into a
  * same-origin window, so every user-authored string goes through `esc`.
- * Spec: ops/docs/archive/wellness-statistics.md (section 12)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 12)
  */
 
 /** The dose a medication STARTED on; `dosage` is the current one. Templates
@@ -168,21 +168,21 @@ ul{margin:4px 0;padding-inline-start:20px}li{font-size:12px;margin:2px 0}
 <h1>${esc(r('heading'))}</h1>
 <p class="meta">${esc(r('meta', { date: today, from: formatDay(model.range.from, 'date'), to: formatDay(model.range.to, 'date'), days: model.inRange.length }))}<br>${esc(r('daysLogged', { logged: model.inRange.length, days: model.rangeDays }))}</p>
 
-<h2>${esc(r('overview'))}</h2>
+<h2>${esc(t('tabs.overview') as string)}</h2>
 <table><tr><th>${esc(r('columnMetric'))}</th><th>${esc(r('columnValue'))}</th></tr>
 <tr><td>${esc(r('avgMood'))}</td><td>${esc(moodAvg)}/10</td></tr>
 <tr><td>${esc(r('avgSleep'))}</td><td>${esc(sleepAvg)}</td></tr>
-<tr><td>${esc(r('adherence'))}</td><td>${stats.medAdherence ?? '-'}%</td></tr>
+<tr><td>${esc(r('adherenceHeading'))}</td><td>${stats.medAdherence ?? '-'}%</td></tr>
 <tr><td>${esc(r('daysTracked'))}</td><td>${model.inRange.length}</td></tr>
 </table>
 
 ${moodSvg ? `<h2>${esc(r('moodHeading'))}</h2>${moodSvg}<div class="marks">${marks}</div><p class="meta">${esc(r('moodLegend'))}</p>` : ''}
 
-${trackerRows ? `<h2>${esc(r('trackers'))}</h2><table><tr><th>${esc(r('columnTracker'))}</th><th>${esc(r('columnDays'))}</th><th>${esc(r('columnAverage'))}</th><th>${esc(r('columnLowHigh'))}</th><th>${esc(r('columnHistory'))}</th></tr>${trackerRows}</table>` : ''}
+${trackerRows ? `<h2>${esc(t('notes:settings.trackersLabel') as string)}</h2><table><tr><th>${esc(r('columnTracker'))}</th><th>${esc(r('columnDays'))}</th><th>${esc(r('columnAverage'))}</th><th>${esc(r('columnLowHigh'))}</th><th>${esc(r('columnHistory'))}</th></tr>${trackerRows}</table>` : ''}
 
-${effectRows.length ? `<h2>${esc(r('effects'))}</h2><table><tr><th>${esc(r('columnFactor'))}</th><th>${esc(r('columnRule'))}</th><th>${esc(r('columnWith'))}</th><th>${esc(r('columnWithout'))}</th><th>${esc(r('columnDifference'))}</th><th>${esc(r('columnDays'))}</th></tr>${effectRows.join('')}</table><p class="meta">${esc(r('effectsNote'))}</p>` : ''}
+${effectRows.length ? `<h2>${esc(r('effects'))}</h2><table><tr><th>${esc(r('columnFactor'))}</th><th>${esc(r('columnRule'))}</th><th>${esc(t('wellness.effects.withLabel') as string)}</th><th>${esc(t('wellness.effects.withoutLabel') as string)}</th><th>${esc(r('columnDifference'))}</th><th>${esc(r('columnDays'))}</th></tr>${effectRows.join('')}</table><p class="meta">${esc(r('effectsNote'))}</p>` : ''}
 
-${medRows ? `<h2>${esc(r('adherenceHeading'))}</h2><p class="meta">${esc(r('adherenceNote'))}</p><table><tr><th>${esc(r('columnMedication'))}</th><th>${esc(r('columnTaken'))}</th><th>${esc(r('columnRate'))}</th><th>${esc(r('columnDoseChanges'))}</th></tr>${medRows}</table>${medCalendars}${lensLines ? `<ul>${lensLines}</ul>` : ''}` : ''}
+${medRows ? `<h2>${esc(r('adherenceHeading'))}</h2><p class="meta">${esc(r('adherenceNote'))}</p><table><tr><th>${esc(r('columnMedication'))}</th><th>${esc(r('columnTaken'))}</th><th>${esc(r('columnRate'))}</th><th>${esc(r('doseChanges'))}</th></tr>${medRows}</table>${medCalendars}${lensLines ? `<ul>${lensLines}</ul>` : ''}` : ''}
 
 ${patternItems ? `<h2>${esc(r('patterns'))}</h2><ul>${patternItems}</ul>` : ''}
 
@@ -201,9 +201,9 @@ export function generateAIPrompt(stats: TrackerStats, medications: MedicationTem
   const lines: string[] = [
     p('intro'),
     '',
-    `## ${p('overview')}`,
+    `## ${t('tabs.overview')}`,
     `- ${p('period', { from: model.range.from, to: model.range.to })}`,
-    `- ${p('daysLogged', { logged: model.inRange.length, days: model.rangeDays })}`,
+    `- ${t('wellness.report.daysLogged', { logged: model.inRange.length, days: model.rangeDays })}`,
   ];
   if (moodAgg?.kind === 'numeric' && moodAgg.avg !== null) lines.push(`- ${p('avgMood', { mood: formatNumber(moodAgg.avg) })}`);
   if (stats.avgSleepHours != null) lines.push(`- ${p('avgSleep', { hours: stats.avgSleepHours })}`);
@@ -225,18 +225,18 @@ export function generateAIPrompt(stats: TrackerStats, medications: MedicationTem
 
   const tl = trackerLines(model, t, false);
   if (tl.length) {
-    lines.push('', `## ${p('trackers')}`);
+    lines.push('', `## ${t('notes:settings.trackersLabel')}`);
     for (const l of tl) {
       lines.push(l.yes !== undefined ? `- ${p('trackerYesLine', { name: l.name, yes: l.yes, count: l.days })}` : `- ${p('trackerLine', { name: l.name, avg: l.average, low: l.lowHigh.split(' / ')[0], high: l.lowHigh.split(' / ')[1], count: l.days })}`);
     }
   }
 
   if (stats.medBreakdown.length > 0) {
-    lines.push('', `## ${p('adherenceHeading')}`);
+    lines.push('', `## ${t('wellness.report.adherenceHeading')}`);
     for (const m of stats.medBreakdown) lines.push(`- ${p('adherenceLine', { name: m.name, taken: m.taken, total: m.total, pct: m.pct })}`);
     const withHistory = medications.filter((m) => m.dosageHistory.length > 0 || m.startedAt);
     if (withHistory.length > 0) {
-      lines.push('', `### ${p('dosageTimeline')}`);
+      lines.push('', `### ${t('wellness.medication.dosageTimeline')}`);
       for (const m of withHistory) {
         lines.push(`- ${m.name}: ${startedLine(m, t)}`);
         for (const h of m.dosageHistory.slice(1)) lines.push(`  - ${changedLine(h.dosage, h.changedAt, t)}`);
@@ -257,7 +257,7 @@ export function generateAIPrompt(stats: TrackerStats, medications: MedicationTem
     }
   }
   if (effects.length || stats.patterns.length) {
-    lines.push('', `## ${p('patterns')}`, ...effects, ...stats.patterns.map((pt) => `- ${insightText(pt, t)}`));
+    lines.push('', `## ${t('wellness.report.patterns')}`, ...effects, ...stats.patterns.map((pt) => `- ${insightText(pt, t)}`));
   }
 
   lines.push('', `## ${p('questions')}`);

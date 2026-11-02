@@ -167,7 +167,7 @@ export function SecurityModal({
       embeddedClassName="flex-1 min-h-0 flex flex-col text-pn"
       onClose={onClose}
       closeOnBackdrop={mountReady}
-      title={t('modal.title')}
+      title={t('notes:settings.securityLabel')}
       className="max-w-md p-6 space-y-5 max-h-[90vh] overflow-y-auto"
     >
         {strip}

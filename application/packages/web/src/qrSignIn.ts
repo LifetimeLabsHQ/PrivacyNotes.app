@@ -50,7 +50,7 @@ export function buildSignInUrl(phrase: string): string {
   // same. An older QR that names the apex still signs in through "Scan QR
   // with camera": `extractPhraseFromScan` accepts any http(s) URL carrying
   // `#phrase=`.
-  // Spec: ops/docs/domain-split.md (retirement + sunset)
+  // Spec: docs/internal/domain-split.md (retirement + sunset)
   const webOrigin =
     typeof window === 'undefined'
       ? ''

@@ -6,13 +6,13 @@ import { TableMap } from '@tiptap/pm/tables';
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view';
 import i18n from './i18n';
 import { commitWidths, dragColumn, dragTableWidth, dragWidths, effectiveWidths, mirrorEdge, widthsFromTableLines } from './tableColumnWidths';
-import { tableWidthFromMarker } from './tableDelimiterRow';
+import { fillAt, tableFillsFromMarker, tableWidthFromMarker, type TableFills } from './tableDelimiterRow';
 
 /**
  * Column widths in the editor: reading them out of the markdown, drawing
  * them, and dragging a border to change them. The storage rules live in
  * tableColumnWidths.ts; this file is the part that touches ProseMirror.
- * Spec: ops/docs/archive/table-column-widths.md
+ * Spec: docs/internal/specs/table-column-widths.md
  */
 
 /**
@@ -99,7 +99,8 @@ export class ColumnWidthTableView extends TableView {
 }
 
 /* ------------------------------------------------------------------ */
-/* Markdown: the delimiter row becomes `colwidth` on every cell        */
+/* Markdown: the delimiter row becomes `colwidth` on every cell, and   */
+/* the marker lines the table width and the cell colors                */
 /* ------------------------------------------------------------------ */
 
 interface MdToken {
@@ -150,21 +151,33 @@ export function registerTableWidthsMarkdown(md: MdInstance): void {
     const ok = original(state, startLine, endLine, silent);
     if (!ok || silent) return ok;
     const widths = widthsFromTableLines(sourceLine(state, startLine), sourceLine(state, startLine + 1));
-    let col = 0;
-    for (const token of widths ? state.tokens.slice(first) : []) {
-      if (token.type === 'tr_open') col = 0;
-      if (token.type === 'th_open' || token.type === 'td_open') {
-        const width = widths![col++];
-        if (width) token.attrSet('colwidth', String(width));
-      }
-    }
-    // The width marker sits on the line right under the table, where an HTML
-    // comment ends the table. It is consumed here so no comment block is left.
-    const tableWidth = state.line < endLine ? tableWidthFromMarker(sourceLine(state, state.line)) : null;
-    if (tableWidth) {
-      state.tokens[first]?.attrSet('data-table-width', String(tableWidth));
+    // The marker lines sit right under the table, where an HTML comment ends
+    // the table: the width one, then the cell colors one. They are consumed
+    // here so no comment block is left.
+    let tableWidth: number | null = null;
+    let fills: TableFills | null = null;
+    for (let n = 0; n < 2 && state.line < endLine; n++) {
+      const line = sourceLine(state, state.line);
+      const width: number | null = tableWidth === null && !fills ? tableWidthFromMarker(line) : null;
+      const fill: TableFills | null = width === null && !fills ? tableFillsFromMarker(line) : null;
+      if (width === null && !fill) break;
+      if (width !== null) tableWidth = width;
+      if (fill) fills = fill;
       state.line += 1;
     }
+    let row = -1;
+    let col = 0;
+    for (const token of widths || fills ? state.tokens.slice(first) : []) {
+      if (token.type === 'tr_open') { row++; col = 0; }
+      if (token.type === 'th_open' || token.type === 'td_open') {
+        const width = widths?.[col];
+        const fill = fillAt(fills, row, col);
+        col++;
+        if (width) token.attrSet('colwidth', String(width));
+        if (fill) token.attrSet('data-fill', fill);
+      }
+    }
+    if (tableWidth) state.tokens[first]?.attrSet('data-table-width', String(tableWidth));
     return ok;
   };
   wrapped.pnWidths = true;

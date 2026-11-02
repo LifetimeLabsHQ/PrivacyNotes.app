@@ -12,7 +12,7 @@ import { LOOK_COLORS, type LookColor } from './itemStyles';
  * on pointer-down, with the default prevented, so its text selection survives
  * the click. The look picker picks on a click, so a finger that starts a
  * scroll in the phone sheet never picks a color.
- * Spec: ops/docs/archive/folder-tag-icons.md (section 4.3)
+ * Spec: docs/internal/specs/folder-tag-icons.md (section 4.3)
  */
 export function ColorSwatch({
   label,
@@ -64,7 +64,7 @@ export function ColorSwatch({
         } ${className}`}
         style={background ? { background } : undefined}
       >
-        {none && <Prohibit size={13} />}
+        {none && <Prohibit />}
       </button>
     </HoverLabel>
   );
@@ -75,7 +75,7 @@ export function ColorSwatch({
  * theme's `--pn-label-<key>-ink` token, finger-sized on a touch screen. The
  * note color, the folder and tag looks and the Kanban columns all draw it,
  * so a color choice looks and behaves the same everywhere.
- * Spec: ops/docs/archive/folder-tag-icons.md (section 4.3)
+ * Spec: docs/internal/specs/folder-tag-icons.md (section 4.3)
  */
 export function ColorSwatchRow({
   selected,

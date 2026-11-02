@@ -59,8 +59,6 @@
   },
   "mood": {
     "prompt": "Ako sa cítiš? (1-10)",
-    "low": "hrozne",
-    "high": "skvele",
     "anchor": {
       "1": "hrozne",
       "3": "zle",
@@ -152,8 +150,6 @@
     "editMedication": "Upraviť liek",
     "removeMedication": "Odobrať liek",
     "confirmRemove": "Odobrať <highlight>{{name}}</highlight>?",
-    "yes": "Áno",
-    "no": "Nie",
     "taken": "Užité",
     "skip": "Preskočiť",
     "editList": "Upraviť tieto lieky",
@@ -281,16 +277,15 @@
   },
   "config": {
     "configureTrackers": "Nastaviť sledovanie",
-    "title": "Sledované hodnoty",
-    "tabGeneral": "Všeobecné",
     "tabCustom": "Vlastné",
-    "chooseTrackers": "Vybrať sledované hodnoty",
     "factorsTitle": "Tvoje faktory",
     "factorsHelp": "Časti dňa, ktoré ťuknutím vyberáš v sledovanej hodnote Faktory. Odobratý faktor si v dňoch, kde je zapísaný, ponechá svoj názov.",
     "renameFactor": "Premenovať {{name}}",
     "addFactor": "Pridať faktor",
     "medicationsTitle": "Tvoje lieky",
     "medicationsHelp": "Lieky, na ktoré sa pýta sledovaná hodnota Lieky. Odobratý liek si ponechá svoju históriu.",
+    "medicationCard": "Karta liekov",
+    "medicationCardHelp": "„Sú dnešné lieky užité?“ na tomto zariadení, iba v deň, keď je nejaký liek na rade.",
     "customHelp": "Sledované hodnoty, ktoré si pomenuješ: stupnica, číslo alebo áno či nie. Najviac {{max}}.",
     "yourCustomTrackers": "Tvoje vlastné sledované hodnoty",
     "categoryMoodMind": "Nálada a myseľ",
@@ -315,23 +310,17 @@
     "kindBuild": "Budovať",
     "kindWatch": "Strážiť",
     "editHabit": "Upraviť {{name}}",
-    "removeHabit": "Odobrať {{name}}",
     "ownHabitsFull": "Máš {{max}} vlastných návykov, čo je maximum.",
     "addCustomTrackerHint": "Sleduj, čo chceš",
     "maxReached": "Dosiahnuté maximum vlastných sledovaných hodnôt: {{max}}.",
     "customTrackers": "Vlastné sledované hodnoty",
-    "newCustomTracker": "Nová vlastná sledovaná hodnota",
-    "newMedication": "Nový liek",
     "newMedicationHelp": "Sledovaná hodnota Lieky sa naň pýta od dňa začiatku, v časoch, ktoré nastavíš.",
     "trackerNamePlaceholder": "Názov sledovanej hodnoty",
     "nameCount": "{{count}}/{{max}}",
-    "nameLabel": "Názov",
     "typeLabel": "Typ",
-    "colorLabel": "Farba",
     "preview": "Náhľad",
     "startFromLast": "Pamätať si posledný záznam",
     "chooseIcon": "Vybrať ikonu",
-    "iconLabel": "Ikona",
     "startFromLastHelp": "Hodí sa pre veci, ktoré sa menia len zriedka, napríklad tvoja váha alebo denná dávka."
   },
   "factors": {
@@ -341,7 +330,6 @@
     "count_other": "{{count}} faktorov",
     "remove": "Odobrať {{name}}",
     "placeholder": "návšteva, migréna, nadčasy",
-    "add": "Pridať",
     "empty": "Pridaj veci, ktoré formujú tvoje dni, a potom ich v ktorýkoľvek deň vyber ťuknutím.",
     "commaHint": "Pridaj viac naraz, oddelené čiarkami.",
     "editList": "Upraviť tieto faktory",
@@ -364,8 +352,6 @@
   "habits": {
     "prompt": "Čo sa dnes dialo?",
     "count": "{{yes}}/{{total}}",
-    "yes": "Áno",
-    "no": "Nie",
     "empty": "Otázky vyber v nastavení sledovania.",
     "changeQuestions": "Zmeniť tieto otázky",
     "q": {
@@ -424,9 +410,7 @@
     "prompt": "Koľko kofeínu dnes?"
   },
   "flow": {
-    "next": "Ďalej",
     "finish": "Dokončiť",
-    "done": "Hotovo",
     "step": "Sledovaná hodnota {{n}} z {{total}}"
   }
 }

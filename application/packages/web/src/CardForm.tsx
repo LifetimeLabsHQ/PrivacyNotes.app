@@ -7,61 +7,9 @@ import { PinInfoModal } from './PinInfoModal';
 import { Calendar, CreditCard, Info, Lock, MapPin, NotePencil, User } from './icons';
 import { useCopyToClipboard } from './clipboard';
 import { FIELD_CLASS, FieldLabel } from './formFields';
-import { storedVaultKeys } from './vaultBody';
 
-/* ────────────────────────────────────────────────────────────────
- * CardData - the JSON blob stored in the note body for card-type
- * notes. The note's `title` field serves as the display name
- * (e.g. "Visa ending in 4242") and is auto-derived from the card
- * number when empty.
- * ──────────────────────────────────────────────────────────────── */
-export interface CardData {
-  cardholderName: string;
-  cardNumber: string;
-  expMonth: string;
-  expYear: string;
-  cvv: string;
-  billingZip: string;
-  notes: string;
-}
-
-export function parseCardBody(body: string): CardData {
-  try {
-    const p = JSON.parse(body);
-    return {
-      cardholderName: typeof p.cardholderName === 'string' ? p.cardholderName : '',
-      cardNumber: typeof p.cardNumber === 'string' ? p.cardNumber : '',
-      expMonth: typeof p.expMonth === 'string' ? p.expMonth : '',
-      expYear: typeof p.expYear === 'string' ? p.expYear : '',
-      cvv: typeof p.cvv === 'string' ? p.cvv : '',
-      billingZip: typeof p.billingZip === 'string' ? p.billingZip : '',
-      notes: typeof p.notes === 'string' ? p.notes : '',
-    };
-  } catch {
-    return { cardholderName: '', cardNumber: '', expMonth: '', expYear: '', cvv: '', billingZip: '', notes: '' };
-  }
-}
-
-/** `previous` is the stored body; keys a newer version wrote in it are kept. */
-export function serializeCardBody(data: CardData, previous = ''): string {
-  return JSON.stringify({ ...storedVaultKeys(previous), ...data });
-}
-
-/** Detect card network from the first digits (BIN). */
-export function detectCardNetwork(num: string): string {
-  const d = num.replace(/\D/g, '');
-  if (!d) return '';
-  const n2 = Number(d.slice(0, 2));
-  const n4 = Number(d.slice(0, 4));
-  const n6 = Number(d.slice(0, 6));
-  if (d.startsWith('4')) return 'Visa';
-  if ((n2 >= 51 && n2 <= 55) || (n6 >= 222100 && n6 <= 272099)) return 'Mastercard';
-  if (n2 === 34 || n2 === 37) return 'Amex';
-  if (n2 === 36 || (n2 >= 38 && n2 <= 39) || (n4 >= 3000 && n4 <= 3059) || (n4 >= 3095 && n4 <= 3095) || (n4 >= 3600 && n4 <= 3699)) return 'Diners';
-  if (n4 >= 6011 || n2 === 65 || (n6 >= 644000 && n6 <= 649999)) return 'Discover';
-  if (n4 >= 3528 && n4 <= 3589) return 'JCB';
-  return '';
-}
+export { parseCardBody, serializeCardBody, detectCardNetwork, type CardData } from './cardBody';
+import { parseCardBody, serializeCardBody, detectCardNetwork, type CardData } from './cardBody';
 
 /** Max digit length by network: 15 for Amex, 16 for all others. */
 function maxDigitsForNetwork(digits: string): number {
@@ -172,7 +120,7 @@ export function CardForm({
       <div className="space-y-4">
         {/* Cardholder Name */}
         <div>
-          <FieldLabel icon={<User size={13} />}>{t('cardForm.cardholderName')}</FieldLabel>
+          <FieldLabel icon={<User />}>{t('cardForm.cardholderName')}</FieldLabel>
           <input
             type="text"
             value={data.cardholderName}
@@ -186,7 +134,7 @@ export function CardForm({
 
         {/* Card Number */}
         <div>
-          <FieldLabel icon={<CreditCard size={13} />}>{t('cardForm.cardNumber')}</FieldLabel>
+          <FieldLabel icon={<CreditCard />}>{t('cardForm.cardNumber')}</FieldLabel>
           <div className="flex gap-1.5">
               <input
                 type="text"
@@ -217,11 +165,11 @@ export function CardForm({
             const tooShort = digits.length > 0 && digits.length < 13;
             return (
               <>
-                <div className="mt-1 text-xs text-pn-muted">
+                <div className="mt-1 text-small text-pn-muted">
                   {network || t('cardForm.unknownNetwork')}
                 </div>
                 {tooShort && (
-                  <div className="mt-0.5 text-[11px] text-warning">
+                  <div className="mt-0.5 text-meta text-warning">
                     {t('cardForm.numberTooShort', { count: digits.length, expected: maxDigitsForNetwork(digits) })}
                   </div>
                 )}
@@ -233,7 +181,7 @@ export function CardForm({
         {/* Expiry + CVV row */}
         <div className="flex gap-3">
           <div className="flex-1">
-            <FieldLabel icon={<Calendar size={13} />}>{t('cardForm.expiry')}</FieldLabel>
+            <FieldLabel icon={<Calendar />}>{t('cardForm.expiry')}</FieldLabel>
             <div className="flex gap-1.5">
               <select
                 value={data.expMonth}
@@ -262,7 +210,7 @@ export function CardForm({
             </div>
           </div>
           <div className="w-28">
-            <FieldLabel icon={<Lock size={13} />}>{t('cardForm.cvv')}</FieldLabel>
+            <FieldLabel icon={<Lock />}>{t('cardForm.cvv')}</FieldLabel>
             <div className="flex gap-1.5">
               <input
                 type={showCvv ? 'text' : 'password'}
@@ -281,12 +229,12 @@ export function CardForm({
         </div>
 
         {isExpired && (
-          <p className="text-[11px] text-warning -mt-2">{t('cardForm.expiredHint')}</p>
+          <p className="text-meta text-warning -mt-2">{t('cardForm.expiredHint')}</p>
         )}
 
         {/* Billing Zip */}
         <div>
-          <FieldLabel icon={<MapPin size={13} />}>{t('cardForm.billingZip')}</FieldLabel>
+          <FieldLabel icon={<MapPin />}>{t('cardForm.billingZip')}</FieldLabel>
           <input
             type="text"
             value={data.billingZip}
@@ -300,7 +248,7 @@ export function CardForm({
 
         {/* Notes */}
         <div>
-          <FieldLabel icon={<NotePencil size={13} />}>{t('cardForm.notes')}</FieldLabel>
+          <FieldLabel icon={<NotePencil />}>{t('cardForm.notes')}</FieldLabel>
           <textarea
             value={data.notes}
             onChange={(e) => updateBody({ notes: e.target.value })}
@@ -322,7 +270,7 @@ export function CardForm({
             disabled={!pinConfigured && !pinProtected}
             className="rounded accent-accent"
           />
-          <span className="text-sm text-pn-muted">
+          <span className="text-body text-pn-muted">
             {t('cardForm.requirePin')}
           </span>
           <button
@@ -337,7 +285,7 @@ export function CardForm({
 
         {showPinInfo && <PinInfoModal onClose={() => setShowPinInfo(false)} />}
         {!pinConfigured && !pinProtected && (
-          <p className="text-[11px] text-pn-muted -mt-2">
+          <p className="text-meta text-pn-muted -mt-2">
             {t('cardForm.setUpPinFirst')}
           </p>
         )}

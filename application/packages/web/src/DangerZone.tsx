@@ -3,7 +3,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { useAuth } from './auth';
 import { deleteAccountServer } from './devices';
 import { deleteEntireLocalDatabase } from './notesRepo';
-import { useOnlyOnThisDevice } from './neverBackedUp';
+import { describeOnlyHere, useOnlyOnThisDevice } from './neverBackedUp';
 import { setDeletingAccount } from './sync';
 import { SectionEyebrow } from './settingsUI';
 import { isDemoMode, isDemoOwnedKey } from './demo';
@@ -59,6 +59,51 @@ function clearAllStorageKeys(): void {
       try { store.removeItem(k); } catch { /* ignore */ }
     }
   }
+}
+
+/**
+ * The local half of a deletion: everything this account left on this
+ * device, keys first, then the database and every app key in storage. The
+ * caller reloads afterwards. Used by the Danger zone and by the dead man's
+ * switch dialog (DmsReturnModal), so both wipes stay one wipe.
+ */
+export async function wipeThisDevice(
+  authed: { encryptionKey: Uint8Array; signingPrivateKey: Uint8Array },
+  supabase: ReturnType<typeof useAuth>['supabase'],
+): Promise<void> {
+  // A sync pass already in flight must not write the phrase back
+  // between this wipe and the reload, here or in another tab of this
+  // browser (liveSignIn.ts).
+  endLiveSignIn();
+  announceSignOut();
+  // A phone's scheduled reminders, while the map that names them
+  // exists: the sweep below removes it, and the OS would ring them with
+  // this account's titles after it is gone.
+  await cancelDeviceReminders();
+  // Zero key material.
+  authed.encryptionKey.fill(0);
+  authed.signingPrivateKey.fill(0);
+  // Kill the Supabase session before wiping storage, locally only:
+  // after an account deletion the server user is gone, and a device
+  // wipe keeps the account. Without this the sb-* session key survives
+  // and hydrateFromOAuthSession treats a re-signup as a returning user.
+  //
+  // Not in demo: the demo holds no session of its own, so the only
+  // row this could clear belongs to the real account signed in on
+  // the same origin.
+  if (!isDemoMode()) {
+    await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+  }
+  // Nuke IndexedDB (notes, images, attachments, dedup tables).
+  await deleteEntireLocalDatabase();
+  // Wipe all localStorage/sessionStorage privacynotes.* + sb-* keys.
+  clearAllStorageKeys();
+  // The sweep took the sign-out notice too, and a stamp taken before
+  // any notice existed would read as current again without one.
+  announceSignOut();
+  // The reload below drops the page, and with it the reminders'
+  // second cancel if the OS was slow to answer; it goes first.
+  await remindersTeardownSettled(RELOAD_WAIT_MS);
 }
 
 export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void }) {
@@ -119,15 +164,7 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
   // notes and files that exist only on this device before the DELETE field.
   // An account deletion takes the server copy as well, and says so above.
   const localOnly = deleteLocal && !deleteServer;
-  const notesAtStake = t('danger.unsyncedNotes', { count: atStake.notes });
-  const filesAtStake = t('danger.unsyncedFiles', { count: atStake.files });
-  const itemsAtStake =
-    atStake.notes > 0 && atStake.files > 0
-      ? t('danger.unsyncedBoth', { notes: notesAtStake, files: filesAtStake })
-      : atStake.notes > 0 ? notesAtStake : filesAtStake;
-  const totalAtStake = atStake.notes + atStake.files;
-  const atStakeLine =
-    totalAtStake > 0 ? t('danger.localUnsynced', { count: totalAtStake, items: itemsAtStake }) : null;
+  const atStakeLine = describeOnlyHere(t, atStake);
   const canDelete =
     confirmText.toUpperCase() === 'DELETE' &&
     (deleteLocal || deleteServer) &&
@@ -160,7 +197,7 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
         const { data: sessData } = await supabase.auth.getSession();
         const session = sessData.session;
         if (!session?.access_token || !session.user?.id) {
-          throw new Error(t('danger.noSession'));
+          throw new Error(t('settings:errors.noSession'));
         }
         if (authRef.current?.pubkey !== authed.pubkey || mfaSessionIdentity(session) !== identity || jwtPayloadPubkey(session.access_token) !== authed.pubkey) throw new MfaCancelledError();
 
@@ -207,39 +244,7 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
       // is gone), and optionally runs on its own ("wipe this device").
       if (effectiveDeleteLocal) {
         if (authRef.current?.pubkey !== authed.pubkey) throw new MfaCancelledError();
-        // A sync pass already in flight must not write the phrase back
-        // between this wipe and the reload, here or in another tab of this
-        // browser (liveSignIn.ts).
-        endLiveSignIn();
-        announceSignOut();
-        // A phone's scheduled reminders, while the map that names them
-        // exists: the sweep below removes it, and the OS would ring them with
-        // this account's titles after it is gone.
-        await cancelDeviceReminders();
-        // Zero key material.
-        authed.encryptionKey.fill(0);
-        authed.signingPrivateKey.fill(0);
-        // Kill the Supabase session before wiping storage. The server-
-        // side user is already gone so we only clear locally; without
-        // this the sb-* session key survives and hydrateFromOAuthSession
-        // treats a re-signup as a returning user.
-        //
-        // Not in demo: the demo holds no session of its own, so the only
-        // row this could clear belongs to the real account signed in on
-        // the same origin.
-        if (!isDemoMode()) {
-          await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
-        }
-        // Nuke IndexedDB (notes, images, attachments, dedup tables).
-        await deleteEntireLocalDatabase();
-        // Wipe all localStorage/sessionStorage privacynotes.* + sb-* keys.
-        clearAllStorageKeys();
-        // The sweep took the sign-out notice too, and a stamp taken before
-        // any notice existed would read as current again without one.
-        announceSignOut();
-        // The reload below drops the page, and with it the reminders'
-        // second cancel if the OS was slow to answer; it goes first.
-        await remindersTeardownSettled(RELOAD_WAIT_MS);
+        await wipeThisDevice(authed, supabase);
       }
 
       onDeleteStarted();
@@ -270,7 +275,7 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="w-full rounded-md border border-transparent bg-red-500/10 hover:bg-red-500/20 text-danger text-sm font-medium px-3 py-1.5 transition"
+          className="w-full rounded-md border border-transparent bg-red-500/10 hover:bg-red-500/20 text-danger text-body font-medium px-3 py-1.5 transition"
         >
           {t('danger.deleteCta')}
         </button>
@@ -284,19 +289,19 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
         {t('danger.heading')}
       </SectionEyebrow>
 
-      <p className="text-xs text-pn-soft leading-relaxed">
+      <p className="text-small text-pn-soft leading-relaxed">
         {t('danger.warning')}
       </p>
 
       <HelpChip surface="deleteAccount" />
 
       {blockedByStorageSub && (
-        <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 text-warning text-xs leading-relaxed px-3 py-2">
+        <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 text-warning text-small leading-relaxed px-3 py-2">
           {t('danger.blockedByStorage')}
         </div>
       )}
 
-      <label className="flex items-start gap-2 text-sm cursor-pointer">
+      <label className="flex items-start gap-2 text-body cursor-pointer">
         <input
           type="checkbox"
           checked={effectiveDeleteLocal}
@@ -306,7 +311,7 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
         />
         <span className={`${deleteServer && !deleteLocal ? 'text-pn-muted' : 'text-pn-soft'}`}>
           {t('danger.localLabel')}
-          <span className="block text-xs text-pn-soft">
+          <span className="block text-small text-pn-soft">
             {t('danger.localDesc')}
             {deleteServer && !deleteLocal && ` ${t('danger.localRequired')}`}
           </span>
@@ -314,7 +319,7 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
       </label>
 
       {!isDemoMode() && (
-      <label className="flex items-start gap-2 text-sm cursor-pointer">
+      <label className="flex items-start gap-2 text-body cursor-pointer">
         <input
           type="checkbox"
           checked={deleteServer}
@@ -324,7 +329,7 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
         />
         <span className="text-pn-soft">
           {t('danger.cloudLabel')}
-          <span className="block text-xs text-pn-soft">
+          <span className="block text-small text-pn-soft">
             {t('danger.cloudDesc')}
           </span>
         </span>
@@ -332,13 +337,13 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
       )}
 
       {localOnly && atStakeLine && (
-        <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 text-warning text-xs leading-relaxed px-3 py-2">
+        <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 text-warning text-small leading-relaxed px-3 py-2">
           {atStakeLine}
         </div>
       )}
 
       <div>
-        <label className="block text-xs text-pn-soft mb-1">
+        <label className="block text-small text-pn-soft mb-1">
           <Trans
             i18nKey="settings:danger.confirmPrompt"
             components={{ kbd: <span className="font-mono font-semibold text-danger" /> }}
@@ -352,12 +357,12 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
           placeholder="DELETE"
           autoComplete="off"
           spellCheck={false}
-          className="w-full rounded-md border border-divider bg-surface-2 text-sm px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-red-500 dark:focus:ring-red-600 placeholder:text-pn-muted"
+          className="w-full rounded-md border border-divider bg-surface-2 text-body px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-red-500 dark:focus:ring-red-600 placeholder:text-pn-muted"
         />
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-xs p-2">
+        <div className="rounded-md border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-small p-2">
           {error}
         </div>
       )}
@@ -371,7 +376,7 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
             setError(null);
           }}
           disabled={busy}
-          className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-sm transition"
+          className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-body transition"
         >
           {t('common:actions.cancel')}
         </button>
@@ -379,7 +384,7 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
           type="button"
           onClick={() => void handleDelete()}
           disabled={!canDelete || busy}
-          className="flex-1 rounded-md bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 text-white px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed"
+          className="flex-1 rounded-md bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 text-white px-3 py-2 text-body font-semibold transition disabled:cursor-not-allowed"
         >
           {busy ? t('danger.deleting') : t('danger.deletePermanently')}
         </button>

@@ -25,7 +25,7 @@ import { evaluateTable, formatFormulaValue, isFormulaText } from './tableFormula
  * problem (backlog #136: its source re-renders only on a remount) precisely
  * because it swaps a node for text and needs an input rule to swap it back.
  *
- * Spec: ops/docs/archive/table-formulas.md
+ * Spec: docs/internal/specs/table-formulas.md
  */
 
 const formulaKey = new PluginKey<DecorationSet>('tableFormula');

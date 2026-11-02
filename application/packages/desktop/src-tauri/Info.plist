@@ -12,8 +12,8 @@
      LocalAuthentication crashes the app outright when Face ID is invoked without
      it. Touch ID (macOS and iPhone SE class) needs no string, and macOS ignores
      this key entirely, but the file is shared by both bundles.
-     Spec: ops/docs/macos-ios-setup.md (camera + mic access),
-     ops/docs/biometric-unlock.md (native path) -->
+     Spec: docs/internal/macos-ios-setup.md (camera + mic access),
+     docs/contrib/biometric-unlock.md (native path) -->
 <plist version="1.0">
 <dict>
 	<key>NSCameraUsageDescription</key>
@@ -32,7 +32,7 @@
 	     iOS build, so a language is added there, never here. Traditional Chinese
 	     is declared as the script tag zh-Hant, matching the fallbackLng map that
 	     serves TW, HK and Macau from the one zh-TW catalog.
-	     Spec: ops/docs/i18n-spec.md section 10d (wiring checklist) -->
+	     Spec: docs/contrib/i18n-spec.md section 10d (wiring checklist) -->
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>en</string>

@@ -8,7 +8,7 @@ title: 노트가 어떻게 보호되나요
 
 ![실제 데이터베이스의 노트 테이블. 노트 본문마다 읽을 수 없는 긴 문자열이 들어 있다.](/onboarding/database.webp)
 
-저건 그림이 아니라 취리히에 있는 저희의 실제 데이터베이스예요. 당신의 노트는 `ciphertext` 열에 들어가요. 아래에서 어떤 방식을 고르든, 저희가 보관하는 건 암호화된 바이트뿐이에요.
+저건 그림이 아니라 취리히에 있는 저희의 실제 데이터베이스예요. 아래에서 어떤 방식을 고르든, 당신의 노트는 `ciphertext` 열에 들어가요. 그 옆에는 서비스를 운영하는 데 필요한 것만 보관해요. 공개 키, 크기, 타임스탬프, 그리고 Google, Apple, GitHub 로그인의 이메일이에요.
 
 ## 노트를 쓰면 무슨 일이 일어나나요
 
@@ -27,26 +27,26 @@ title: 노트가 어떻게 보호되나요
 | **로그인, 키는 기기에** | 당신에게만, 다른 곳엔 없어요 | Google, Apple, GitHub로 로그인해도 열쇠는 계속 당신이 가져요 |
 | **문구만, 로그인 없음** | 당신에게만, 다른 곳엔 없어요 | 이메일도 이름도 로그인도 없어요 |
 
-아래 두 방식에서는 강제로 요구받아도 저희가 노트를 읽을 수 없어요. 첫 번째는 그것을 편리함과 맞바꿔요. 문구가 저희 열쇠 아래 서버에 있으니, 새 기기는 로그인 말고는 아무것도 필요 없어요. 저희 서버가 뚫린다면 그 열쇠가 드러날 수 있어요.
+아래 두 방식은 영지식이에요. 노트를 여는 키가 저희 서버에 존재하지 않으니, 법원 명령으로도 노트를 열 수 없어요. 첫 번째는 그것을 편리함과 맞바꿔요. 문구가 저희 열쇠 아래 서버에 있으니, 새 기기는 로그인 말고는 아무것도 필요 없어요. 저희 서버가 뚫린다면 그 열쇠가 드러날 수 있어요.
 
 Google, Apple, GitHub로 로그인했나요? 처음 두 가지는 나중에 **설정 > 계정 > 키 관리**에서 서로 바꿀 수 있어요. 문구만 쓰는 계정이라면 문구는 언제나 당신에게 있어요.
 
 > [!warning] 문구는 따로 적어 두세요
-> 문구가 노트를 열어요. 잃어버리면 아무도 되찾아 줄 수 없어요. 저희도요. <span style="color: #e03131">오늘 종이에 적어 두세요.</span>
+> 문구가 노트를 열어요. 자가 보관에서는 잃어버린 문구를 아무도 되찾아 줄 수 없어요. <span style="color: #e03131">오늘 종이에 적어 두세요.</span>
 
 ## 직접 확인해 보세요
 
-[GitHub의 자세한 검증 안내](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/VERIFY.md)
+[GitHub의 자세한 검증 안내](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md)
 
 - [ ] 브라우저의 네트워크 탭을 열고 노트를 고쳐 보세요. 저희에게 무엇이 도착하는지 보세요. 읽을 수 없는 문자열 덩어리예요.
 - [ ] 암호화 코드를 읽어 보세요. 공개돼 있고, 한자리에서 다 읽을 만큼 짧아요.
 
 | 무엇을 | 어디서 |
 | --- | --- |
-| 암호화 그 자체 | [crypto.ts](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/crypto/crypto.ts) |
-| 저희 서버가 받는 것 | [VERIFY.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/VERIFY.md#tier-1-one-minute-no-tools) |
-| 공격자가 할 수 있는 것과 없는 것 | [THREAT_MODEL.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/THREAT_MODEL.md) |
-| 취약점을 알리는 방법 | [SECURITY.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/SECURITY.md) |
+| 암호화 그 자체 | [crypto.ts](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/crypto/crypto.ts) |
+| 저희 서버가 받는 것 | [VERIFY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md#tier-1-one-minute-no-tools) |
+| 공격자가 할 수 있는 것과 없는 것 | [THREAT_MODEL.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md) |
+| 취약점을 알리는 방법 | [SECURITY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/SECURITY.md) |
 
 > [!info] 하나의 자물쇠가 전부를 덮어요
 > 노트, 저널 기록, 북마크, 보관함 항목, 첨부 파일은 모두 같은 방식으로 암호화돼요. [[이사]]에 각각을 옮겨 오는 방법이 있어요.

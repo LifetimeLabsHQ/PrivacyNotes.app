@@ -8,7 +8,7 @@ title: ノートはどう守られているか
 
 ![本番データベースのノートテーブル。どのノートの本文も、読めない長い文字列になっている。](/onboarding/database.webp)
 
-これはチューリッヒにある実際の私たちのデータベースで、絵ではありません。あなたのノートは`ciphertext`列に入ります。下のどの方式を選んでも、私たちが保管するのは暗号化されたバイト列だけです。
+これはチューリッヒにある実際の私たちのデータベースで、絵ではありません。下のどの方式を選んでも、あなたのノートは`ciphertext`列に入ります。その隣に置くのはサービスの運用に必要なものだけです。公開鍵、サイズ、タイムスタンプ、そしてGoogle、Apple、GitHubのログインに使うメールアドレスです。
 
 ## ノートを書くと何が起きるか
 
@@ -27,26 +27,26 @@ title: ノートはどう守られているか
 | **ログイン、鍵はデバイスに** | あなたの手元だけ | Google、Apple、GitHubでサインインしても鍵は自分で持てます |
 | **フレーズのみ、ログインなし** | あなたの手元だけ | メールも名前もログインも不要 |
 
-下の2つでは、たとえ強制されても私たちはノートを読めません。1つ目はそれを利便性と引き換えにします。フレーズは当社の鍵で守られてサーバーに置かれるので、新しいデバイスはログインだけで済みます。もし当社のサーバーが破られれば、その鍵が露出する可能性があります。
+下の2つはゼロ知識です。ノートを開く鍵は当社のサーバーに存在しないため、裁判所の命令でも開けません。1つ目はそれを利便性と引き換えにします。フレーズは当社の鍵で守られてサーバーに置かれるので、新しいデバイスはログインだけで済みます。もし当社のサーバーが破られれば、その鍵が露出する可能性があります。
 
 Google、Apple、GitHubでサインインした場合は、上の2つを後から**設定 > アカウント > 鍵の管理**で切り替えられます。フレーズだけのアカウントでは、フレーズは常にあなたの手元にあります。
 
 > [!warning] フレーズは自分でも控えておいてください
-> フレーズはノートを開く鍵です。失うと誰にも取り戻せません。私たちにもできません。<span style="color: #e03131">今日のうちに紙に書いてください。</span>
+> フレーズはノートを開く鍵です。自己管理では、失ったフレーズは誰にも取り戻せません。<span style="color: #e03131">今日のうちに紙に書いてください。</span>
 
 ## 自分で確かめる
 
-[GitHubの詳しい検証手順](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/VERIFY.md)
+[GitHubの詳しい検証手順](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md)
 
 - [ ] ブラウザのネットワークタブを開いてから、ノートを編集します。私たちに届くものを見てください。読めない文字列の塊です。
 - [ ] 暗号化のコードを読んでください。公開されていますし、一度で読み切れる長さです。
 
 | 何を | どこで |
 | --- | --- |
-| 暗号化そのもの | [crypto.ts](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/crypto/crypto.ts) |
-| 私たちのサーバーが受け取るもの | [VERIFY.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/VERIFY.md#tier-1-one-minute-no-tools) |
-| 攻撃者にできること、できないこと | [THREAT_MODEL.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/THREAT_MODEL.md) |
-| 穴を報告する方法 | [SECURITY.md](https://github.com/LifetimeLabsDev/PrivacyNotes.app/blob/main/SECURITY.md) |
+| 暗号化そのもの | [crypto.ts](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/crypto/crypto.ts) |
+| 私たちのサーバーが受け取るもの | [VERIFY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md#tier-1-one-minute-no-tools) |
+| 攻撃者にできること、できないこと | [THREAT_MODEL.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md) |
+| 穴を報告する方法 | [SECURITY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/SECURITY.md) |
 
 > [!info] 1つの錠がすべてを覆います
 > ノート、ジャーナルの記録、ブックマーク、保管庫の項目、添付ファイルは同じように暗号化されます。[[引っ越し]]に、それぞれの持ち込み方があります。

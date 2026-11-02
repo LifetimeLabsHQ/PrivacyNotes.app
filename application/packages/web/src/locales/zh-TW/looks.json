@@ -1,11 +1,9 @@
 {
   "captionFolder": "資料夾",
   "captionTag": "標籤",
-  "captionNote": "筆記",
   "captionTracker": "追蹤項目",
   "useDefault": "恢復預設",
   "color": "顏色",
-  "noColor": "無顏色",
   "applyToSubfolders": "將顏色套用到子資料夾",
   "icon": "圖示",
   "searchPlaceholder": "搜尋圖示",

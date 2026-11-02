@@ -24,6 +24,7 @@ import {
   THEME_DISPLAY_NAME,
   FREE_THEMES,
   TEXT_SIZES,
+  NOTE_FONTS,
   CONTENT_WIDTHS,
   LINE_SPACINGS,
   resetStyleAxes,
@@ -36,9 +37,10 @@ import {
 } from './theme';
 import { APP_ZOOM_LEVELS, DEFAULT_APP_ZOOM, appZoomSupported, useAppZoom } from './appZoom';
 import { intlLocale } from './languages';
+import { FONT_FAMILIES } from './editorColors';
 import { IconUpgrade, ProMark, type UpgradeTrigger } from './UpgradeModal';
 import { proUnlocked } from './demo';
-import { ArrowCounterClockwise, Folder, X, List, ListBullets, Palette, Star, Toolbox, SquaresFour, Sparkle, DotsThreeOutlineVertical, CaretDown, CaretRight, Globe, Plus, ClipboardText, ArrowSquareOut, PencilSimple, Copy, UserSwitch, TextT, TextAlignJustify, FrameCorners, PencilLine, HouseLine, Layout, MagnifyingGlassPlus, Tabs, Paragraph, ListChecks, CheckSquare, Confetti, CircleHalf, PaintBucket, Sun, Moon, Files, PILLAR_GLYPHS, type Icon } from './icons';
+import { ArrowCounterClockwise, Folder, X, List, ListBullets, Palette, Star, Toolbox, SquaresFour, Sparkle, DotsThreeOutlineVertical, CaretDown, CaretRight, Globe, Plus, ClipboardText, ArrowSquareOut, PencilSimple, Copy, UserSwitch, TextT, Scribble, TextAlignJustify, FrameCorners, PencilLine, HouseLine, Layout, MagnifyingGlassPlus, Tabs, Paragraph, LinkSimple, Eye, Brain, TextAa, ListChecks, CheckSquare, Confetti, CircleHalf, PaintBucket, Sun, Moon, Files, DotsSixVertical, ArrowUp, ArrowDown, ArrowRight, PILLAR_GLYPHS, type Icon } from './icons';
 import { DefaultAppSettingsRow } from './markdownFolder/MarkdownDefaultApp';
 import { markdownDefaultAppSupported } from './markdownFolder/defaultApp';
 import type { BUILTIN_THEME_CODES } from './builtinThemeCodes';
@@ -48,6 +50,7 @@ import type { ThemeBuilderTarget } from './notesView/useThemeBuilder';
 import { CardMenuButton, ProCorner, QuickCorner, QuickStarButton } from './ThemeCardMenuButton';
 import { QUICK_THEMES_MAX, quickThemesFor, restoreQuickThemes, toggleQuickTheme, useQuickThemeMarks } from './quickThemes';
 import { ContextMenu, useContextMenu, type ContextMenuItem } from './ContextMenu';
+import { DRAG_SOURCE, DropLine, halfOf, nearestRow, usePointerReorder } from './ui';
 import { siteHref } from './siteLinks';
 
 // The team and custom theme cards and the paste field: a lazy chunk with
@@ -63,7 +66,7 @@ import { Switch } from './Switch';
 import { useOpenItemsInTabs, useTabsFit } from './notesView/useOpenTabs';
 import { faviconUrl } from './favicon';
 import { ViewCheckBox } from './SidebarOptionsPopover';
-import { allViewRows, resolveStartView, sidebarViewRows, startViewRows } from './viewRows';
+import { allViewRows, moveView, resolveStartView, sidebarViewRows, startViewRows } from './viewRows';
 import { ViewMenu } from './ViewMenu';
 import type { View } from './views';
 import { defaultSettings, isShownInAll } from './userSettings';
@@ -71,6 +74,7 @@ import { NOTE_COLOR_CHOICES, NOTE_COLOR_LABEL, noteColorChoice, type NoteColorCh
 import { CloseButton } from './ui';
 import { NoteColorExample } from './looks/NoteColorExample';
 import { usePaneTab } from './settingsPaneTab';
+import { clearToolbarTab, readToolbarTab } from './toolbarSettingsTab';
 
 type Props = {
   isPro: boolean;
@@ -92,18 +96,20 @@ type Props = {
   onLineSpacingChange: (next: LineSpacing) => void;
   /** Views switched off in the sidebar, and item types switched out of the
    *  All list. Both also live behind the rail's own two icons - this is the
-   *  same field shown twice, like View. Spec: ops/docs/archive/sidebar-views.md */
+   *  same field shown twice, like View. Spec: docs/internal/specs/sidebar-views.md */
   hiddenViews: View[];
   hiddenInAll: View[];
   archivedInAll: boolean;
   onToggleHidden: (field: 'hiddenViews' | 'hiddenInAll', key: View) => void;
+  /** The order of the sidebar rows (GitHub #621); [] is the stock order. */
+  onViewOrderChange: (order: View[]) => void;
   /** The view the app opens on at a cold start, and its setter.
-   *  Spec: ops/docs/archive/start-view.md */
+   *  Spec: docs/internal/specs/start-view.md */
   startView: View;
   onStartViewChange: (next: View) => void;
   /** How a note shows its folder, tag or own color: a background, an accent
    *  on its icon, or off. The same control the look picker shows.
-   *  Spec: ops/docs/archive/note-color-style.md (section 3) */
+   *  Spec: docs/internal/specs/note-color-style.md (section 3) */
   noteColors: NoteColorChoice;
   onNoteColorsChange: (next: NoteColorChoice) => void;
   /** Whether a ticked task moves below the open tasks of its list, in the
@@ -112,9 +118,13 @@ type Props = {
   onSinkCheckedTasksChange: (on: boolean) => void;
   taskConfetti: boolean;
   onTaskConfettiChange: (on: boolean) => void;
+  typedSymbols: boolean;
+  onTypedSymbolsChange: (on: boolean) => void;
+  confirmTrash: boolean;
+  onConfirmTrashChange: (on: boolean) => void;
   /** Lists only: which of its two tabs opens. */
   initialTab?: string;
-  /** Personal and Work. Spec: ops/docs/plans/spaces.md */
+  /** Personal and Work. Spec: docs/internal/specs/spaces.md */
   spaces: boolean;
   onSpacesChange: (on: boolean) => void;
   /** Embedded only: which Settings entry this is. Design is the look,
@@ -125,7 +135,7 @@ type Props = {
    *  themes). */
   onOpenAll?: (pane: AppearancePane, row?: string) => void;
   /** The color themes a person made, from the settings blob.
-   *  Spec: ops/docs/color-themes.md (section 6) */
+   *  Spec: docs/contrib/color-themes.md (section 6) */
   customThemes: CustomThemes;
   /** Embedded pane only: save or delete a custom theme. */
   onCustomThemesChange?: (update: (prev: CustomThemes) => CustomThemes) => void;
@@ -161,19 +171,144 @@ const CONTENT_WIDTH_LABEL: Record<ContentWidth, string> = {
     the "A" is a size preview, not copy; the translated size word stays as
     the option's aria-label and title. */
 const TEXT_SIZE_GLYPH: Record<TextSize, string> = {
-  xs: 'text-[9px]',
-  sm: 'text-[11px]',
-  md: 'text-[13px]',
-  lg: 'text-[15px]',
-  xl: 'text-[17px]',
+  xs: 'text-[9px]', // type-scale: exempt (a size sample)
+  sm: 'text-[11px]', // type-scale: exempt (a size sample)
+  md: 'text-[13px]', // type-scale: exempt (a size sample)
+  lg: 'text-[15px]', // type-scale: exempt (a size sample)
+  xl: 'text-[17px]', // type-scale: exempt (a size sample)
 };
 
 /** A glyph welded to the word it labels, for a heading that names a column.
     Trans clones this and replaces only the children, so `icon` survives. */
+/**
+ * The rows of the Sidebar and All table: a handle that drags the row to a new
+ * place (GitHub #621) and opens Move up and Move down on a click, for the
+ * keyboard and a finger, then the two checkboxes.
+ * Spec: docs/internal/specs/sidebar-views.md (section 9)
+ */
+function SidebarViewsBody({ hiddenViews, hiddenInAll, archivedInAll, onToggleHidden, onViewOrderChange }: {
+  hiddenViews: View[];
+  hiddenInAll: View[];
+  archivedInAll: boolean;
+  onToggleHidden: (field: 'hiddenViews' | 'hiddenInAll', key: View) => void;
+  onViewOrderChange: (order: View[]) => void;
+}) {
+  const { t } = useTranslation(['settings', 'editor']);
+  const { t: tShell } = useTranslation('shell');
+  const rows = sidebarViewRows(tShell);
+  // Home keeps its place at the top (orderViews pins it): it draws its
+  // switch but no grip, and nothing drops above it.
+  // Spec: docs/internal/specs/dashboard.md (section 2)
+  const keys: View[] = rows.map((r) => r.key).filter((k) => k !== 'dashboard');
+  const body = useRef<HTMLTableSectionElement>(null);
+  const menu = useContextMenu();
+  type Slot = { overId: View; place: 'before' | 'after' };
+  const orderFor = (id: string, slot: Slot): View[] => {
+    const rest = keys.filter((k) => k !== id);
+    const at = rest.indexOf(slot.overId) + (slot.place === 'after' ? 1 : 0);
+    return moveView(keys, id as View, at);
+  };
+  const same = (a: View[]) => a.every((k, i) => k === keys[i]);
+  const { drag, pressProps, endedDrag } = usePointerReorder<Slot>({
+    resolve: (id, x, y) => {
+      const el = nearestRow(body.current, x, y);
+      const overId = el?.dataset.reorderId as View | undefined;
+      if (!el || !overId || overId === id || overId === 'dashboard') return null;
+      const slot = { overId, place: halfOf(el, x, y) };
+      // A spot that leaves the order as it is draws no line.
+      return same(orderFor(id, slot)) ? null : slot;
+    },
+    targetKey: (s) => `${s.overId}:${s.place}`,
+    onDrop: (id, slot) => onViewOrderChange(orderFor(id, slot)),
+  });
+
+  function openMoveMenu(e: MouseEvent<HTMLButtonElement>, key: View) {
+    if (endedDrag()) return;
+    const at = keys.indexOf(key);
+    const box = e.currentTarget.getBoundingClientRect();
+    menu.open(
+      { clientX: box.left, clientY: box.bottom + 4, preventDefault: () => e.preventDefault(), stopPropagation: () => e.stopPropagation() },
+      [
+        { label: t('editor:formatBar.moveUp'), icon: <ArrowUp />, disabled: at === 0, onSelect: () => onViewOrderChange(moveView(keys, key, at - 1)) },
+        { label: t('editor:formatBar.moveDown'), icon: <ArrowDown />, disabled: at === keys.length - 1, onSelect: () => onViewOrderChange(moveView(keys, key, at + 1)) },
+      ],
+      e.detail === 0,
+    );
+  }
+
+  return (
+    <tbody ref={body}>
+      {rows.map((r) => {
+        const inAll = allViewRows(tShell).some((a) => a.key === r.key);
+        const target = drag?.target?.overId === r.key ? drag.target : null;
+        const pinned = r.key === 'dashboard';
+        return (
+          <tr key={r.key} data-reorder-id={r.key} {...(pinned ? {} : pressProps(r.key))} className={`relative border-t border-divider select-none ${drag?.id === r.key ? DRAG_SOURCE : ''}`}>
+            <td className="py-1.5">
+              {target && <DropLine edge={target.place === 'before' ? 'top' : 'bottom'} />}
+              <span className="flex items-center gap-2">
+                {pinned ? <span className="-ms-1 w-5 h-7 shrink-0" aria-hidden="true" /> : <button
+                  type="button"
+                  data-no-drag
+                  {...pressProps(r.key, { grip: true })}
+                  onClick={(e) => openMoveMenu(e, r.key)}
+                  aria-label={t('editor:formatBar.optionsFor', { item: r.label })}
+                  className="-ms-1 inline-flex items-center justify-center w-5 h-7 shrink-0 cursor-grab active:cursor-grabbing text-pn-muted hover:text-accent transition"
+                >
+                  <DotsSixVertical aria-hidden="true" />
+                </button>}
+                <r.icon size={16} className="text-accent shrink-0" aria-hidden="true" />
+                {r.label}
+              </span>
+            </td>
+            <td className="text-center py-1.5">
+              <button
+                type="button"
+                role="checkbox"
+                data-no-drag
+                aria-checked={!hiddenViews.includes(r.key)}
+                aria-label={`${t('settings:appearance.custom.seed.sidebar')}: ${r.label}`}
+                onClick={() => onToggleHidden('hiddenViews', r.key)}
+                className="inline-flex items-center justify-center p-1"
+              >
+                <ViewCheckBox checked={!hiddenViews.includes(r.key)} />
+              </button>
+            </td>
+            <td className="text-center py-1.5">
+              {inAll ? (
+                <button
+                  type="button"
+                  role="checkbox"
+                  data-no-drag
+                  aria-checked={isShownInAll({ hiddenInAll, archivedInAll }, r.key)}
+                  aria-label={`${t('shell:tagsRail.allItems')}: ${r.label}`}
+                  onClick={() => onToggleHidden('hiddenInAll', r.key)}
+                  className="inline-flex items-center justify-center p-1"
+                >
+                  <ViewCheckBox checked={isShownInAll({ hiddenInAll, archivedInAll }, r.key)} />
+                </button>
+              ) : (
+                <span className={SETTINGS_HELP} aria-hidden="true">-</span>
+              )}
+            </td>
+          </tr>
+        );
+      })}
+      {menu.state && (
+        <tr hidden>
+          <td>
+            <ContextMenu state={menu.state} onClose={menu.close} />
+          </td>
+        </tr>
+      )}
+    </tbody>
+  );
+}
+
 function IconWord({ icon: Glyph, children }: { icon: Icon; children?: ReactNode }) {
   return (
     <span className="inline-flex items-center gap-1.5">
-      <Glyph size={14} className="text-accent shrink-0" aria-hidden="true" />
+      <Glyph className="text-accent shrink-0" aria-hidden="true" />
       {children}
     </span>
   );
@@ -191,7 +326,7 @@ const SEG_FILL = 'flex-1 px-3 lg:flex-none';
 
 export type AppearancePane = 'design' | 'editor' | 'formatBar' | 'lists';
 
-export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = false, viewMode, onViewModeChange, editorMode, onEditorModeChange, formatBar, lineSpacing, onLineSpacingChange, hiddenViews, hiddenInAll, archivedInAll, onToggleHidden, startView, onStartViewChange, noteColors, onNoteColorsChange, sinkCheckedTasks, onSinkCheckedTasksChange, taskConfetti, onTaskConfettiChange, initialTab, spaces, onSpacesChange, pane = 'design', onOpenAll, customThemes, onCustomThemesChange, onOpenThemeBuilder }: Props) {
+export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = false, viewMode, onViewModeChange, editorMode, onEditorModeChange, formatBar, lineSpacing, onLineSpacingChange, hiddenViews, hiddenInAll, archivedInAll, onToggleHidden, onViewOrderChange, startView, onStartViewChange, noteColors, onNoteColorsChange, sinkCheckedTasks, onSinkCheckedTasksChange, taskConfetti, onTaskConfettiChange, typedSymbols, onTypedSymbolsChange, confirmTrash, onConfirmTrashChange, initialTab, spaces, onSpacesChange, pane = 'design', onOpenAll, customThemes, onCustomThemesChange, onOpenThemeBuilder }: Props) {
   const { t } = useTranslation('settings');
   // The table's row labels are the sidebar's own strings, so the pane and the
   // rail can never disagree in any language.
@@ -199,11 +334,24 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   // Which part of the embedded pane shows: Themes is the palette pair and the
   // mode, Text and layout (id `style`) is how text and panes are set, Lists
   // is what the lists hold. The footer popover has no tab strip - it renders
-  // a subset of the first two. Spec: ops/docs/archive/ui-patterns.md section 36
+  // a subset of the first two. Spec: docs/internal/design/ui-patterns.md section 36
 
   const [startMenuOpen, setStartMenuOpen] = useState(false);
   // Lists has two tabs: General, and the Sidebar and All table.
   const [listsTab, setListsTab] = usePaneTab<'general' | 'sidebar'>('lists', initialTab === 'sidebar' ? 'sidebar' : 'general');
+  // Editor has two tabs: Display (how a note looks) and Behavior (what the
+  // editor does).
+  const [editorTab, setEditorTab] = usePaneTab<'display' | 'behavior'>('editor', initialTab === 'behavior' ? 'behavior' : 'display');
+  // The Toolbar pane's two bars: the note editor's and the drawing canvas's.
+  // A gear names its side (toolbarSettingsTab.ts); it wins over the side
+  // the window remembers, so each gear lands on its own bar.
+  const [gearTab] = useState(readToolbarTab);
+  const [barTab, setBarTab] = usePaneTab<'typing' | 'drawing'>('formatBar', gearTab ?? (initialTab === 'drawing' ? 'drawing' : 'typing'));
+  useEffect(() => {
+    if (!gearTab) return;
+    setBarTab(gearTab);
+    clearToolbarTab();
+  }, [gearTab, setBarTab]);
   // The example starts closed: the pane already runs a long column of rows,
   // and a sample that is always open makes one group several times the height
   // of every other for a reader who never asked to see it. The first click on
@@ -232,11 +380,11 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   const triggerRect = trigger?.getBoundingClientRect();
   const centred = !!triggerRect && triggerRect.left + triggerRect.width / 2 < window.innerWidth / 2;
   const popPos = usePopoverPosition(!!trigger, triggerRef, panelRef, { gap: 8, align: 'end', shrink: true });
-  const { theme, themeMode, setThemeMode, colorTheme, lightTheme, darkTheme, setColorTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, favicons, setFavicons, invisibles, setInvisibles, copyFormat, setCopyFormat, pasteFormat, setPasteFormat } = useTheme();
+  const { theme, themeMode, setThemeMode, colorTheme, lightTheme, darkTheme, setColorTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, favicons, setFavicons, invisibles, setInvisibles, copyFormat, setCopyFormat, pasteFormat, setPasteFormat, linkModifier, setLinkModifier, noteFont, setNoteFont } = useTheme();
   // Its own store rather than an axis of useTheme(): a level is handed to the
   // webview under the page, not to a CSS variable on <html>, and keeping it
   // out of theme.ts keeps that module free of a native import on the boot
-  // path. Spec: ops/docs/design-decisions.md (app zoom)
+  // path. Spec: docs/internal/design-decisions.md (app zoom)
   const { appZoom, setAppZoom } = useAppZoom();
   const [openItemsInTabs, setOpenItemsInTabs] = useOpenItemsInTabs();
   // No strip below the pane layout, so no switch for it either.
@@ -393,13 +541,13 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     const name = THEME_DISPLAY_NAME[ct];
     openCardMenu(e, [
       {
-        label: t('appearance.custom.makeCopy'),
-        icon: <PencilSimple size={14} />,
+        label: t('shell:contextMenu.duplicate'),
+        icon: <PencilSimple />,
         onSelect: () => onOpenThemeBuilder?.({ code, name: copyName(name) }),
       },
       {
         label: t('appearance.custom.copyCode'),
-        icon: <Copy size={14} />,
+        icon: <Copy />,
         onSelect: () => void navigator.clipboard?.writeText(code).then(() => showCopied(name)),
       },
     ]);
@@ -458,7 +606,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           {locked && <ProCorner />}
           {!compact && !onOpenThemeBuilder && quickMarks[mode].includes(ct) && <QuickCorner />}
         </span>
-        <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} font-medium text-pn-muted flex items-center gap-1 max-w-full`}>
+        <span className={`${compact ? 'text-meta' : 'text-meta'} font-medium text-pn-muted flex items-center gap-1 max-w-full`}>
           <span className="line-clamp-2 text-center break-words">{THEME_DISPLAY_NAME[ct]}</span>
         </span>
       </button>
@@ -481,23 +629,32 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     <button
       type="button"
       onClick={() => { upgradeHandoffRef.current = true; onOpenUpgrade(); }}
-      className="mt-3 w-full flex items-center justify-center gap-1 text-[11px] font-medium text-accent hover:underline transition"
+      className="mt-3 w-full flex items-center justify-center gap-1 text-meta font-medium text-accent hover:underline transition"
     >
       <IconUpgrade size={12} /> {t('appearance.unlockThemes')}
     </button>
   );
 
-  // Each pane resets exactly the rows it shows. The device axes go back
-  // through their own setters; the synced ones go through the same callbacks
-  // their rows use, so the defaults are read from the settings blob's own
-  // and never copied.
-  function resetStyle() {
+  // Each pane, and each Editor tab, resets exactly the rows it shows. The
+  // device axes go back through their own setters; the synced ones go
+  // through the same callbacks their rows use, so the defaults are read from
+  // the settings blob's own and never copied.
+  function resetDisplay() {
     const d = defaultSettings();
     resetStyleAxes();
     onLineSpacingChange(d.lineSpacing);
     onEditorModeChange(d.editorMode);
+  }
+
+  function resetBehavior() {
+    const d = defaultSettings();
+    setCopyFormat('markdown');
+    setPasteFormat('formatted');
+    setLinkModifier(false);
     onSinkCheckedTasksChange(d.sinkCheckedTasks);
     onTaskConfettiChange(d.taskConfetti);
+    onTypedSymbolsChange(d.typedSymbols);
+    onConfirmTrashChange(d.confirmTrash);
   }
 
   function resetThemes() {
@@ -517,6 +674,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     for (const v of hiddenViews) onToggleHidden('hiddenViews', v);
     for (const v of hiddenInAll) onToggleHidden('hiddenInAll', v);
     if (archivedInAll) onToggleHidden('hiddenInAll', 'archive');
+    onViewOrderChange([]);
   }
 
   const modeButtons = THEME_MODES.map((mode) => (
@@ -524,11 +682,11 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
       key={mode}
       onClick={() => handleModeClick(mode)}
       aria-pressed={themeMode === mode}
-      className={`${embedded ? SEG_FILL : 'flex-1'} inline-flex items-center justify-center gap-1.5 text-xs py-1.5 rounded transition ${
+      className={`${embedded ? SEG_FILL : 'flex-1'} inline-flex items-center justify-center gap-1.5 text-small py-1.5 rounded transition ${
         themeMode === mode ? SEG_ACTIVE : SEG_IDLE
       }`}
     >
-      {mode === 'auto' && <Sparkle size={14} />}
+      {mode === 'auto' && <Sparkle />}
       {mode === 'auto'
         ? t('appearance.modeAuto', exemptOpts('settings:appearance.modeAuto'))
         : mode === 'light'
@@ -549,6 +707,8 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
       aria-pressed={textSize === size}
       aria-label={t(TEXT_SIZE_LABEL[size])}
       title={t(TEXT_SIZE_LABEL[size])}
+      // A sample of the size, not text: outside the type roles.
+      data-type-exempt=""
       className={`${embedded ? 'flex-1 lg:flex-none lg:w-9' : 'flex-auto'} inline-flex items-center justify-center py-1.5 rounded transition ${TEXT_SIZE_GLYPH[size]} ${
         textSize === size ? SEG_ACTIVE : SEG_IDLE
       }`}
@@ -564,7 +724,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
       key={w}
       onClick={() => setContentWidth(w)}
       aria-pressed={contentWidth === w}
-      className={`${embedded ? 'flex-1 lg:flex-none lg:px-3' : 'flex-auto'} inline-flex items-center justify-center py-1.5 rounded text-xs transition ${
+      className={`${embedded ? 'flex-1 lg:flex-none lg:px-3' : 'flex-auto'} inline-flex items-center justify-center py-1.5 rounded text-small transition ${
         contentWidth === w ? SEG_ACTIVE : SEG_IDLE
       }`}
     >
@@ -586,7 +746,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
       key={level}
       onClick={() => setAppZoom(level)}
       aria-pressed={appZoom === level}
-      className={`${embedded ? 'flex-1 lg:flex-none lg:w-12' : 'flex-auto'} inline-flex items-center justify-center py-1.5 rounded text-xs transition ${
+      className={`${embedded ? 'flex-1 lg:flex-none lg:w-12' : 'flex-auto'} inline-flex items-center justify-center py-1.5 rounded text-small transition ${
         appZoom === level ? SEG_ACTIVE : SEG_IDLE
       }`}
     >
@@ -605,7 +765,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
         revealExample();
       }}
       aria-pressed={lineSpacing === sp}
-      className={`${embedded ? 'flex-1 lg:flex-none lg:px-3' : 'flex-auto'} inline-flex items-center justify-center py-1.5 rounded text-xs transition ${
+      className={`${embedded ? 'flex-1 lg:flex-none lg:px-3' : 'flex-auto'} inline-flex items-center justify-center py-1.5 rounded text-small transition ${
         lineSpacing === sp ? SEG_ACTIVE : SEG_IDLE
       }`}
     >
@@ -621,7 +781,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
         if (embedded) setNoteExampleOpen(true);
       }}
       aria-pressed={noteColors === c}
-      className={`${embedded ? 'flex-1 lg:flex-none lg:px-3' : 'flex-auto'} inline-flex items-center justify-center py-1.5 rounded text-xs transition ${
+      className={`${embedded ? 'flex-1 lg:flex-none lg:px-3' : 'flex-auto'} inline-flex items-center justify-center py-1.5 rounded text-small transition ${
         noteColors === c ? SEG_ACTIVE : SEG_IDLE
       }`}
     >
@@ -634,7 +794,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   // control right-aligned; below lg every row stacks instead. Row labels
   // replace section eyebrows here; the footer popover below keeps its own
   // stacked layout because w-80 has no room for a label column.
-  // Spec: ops/docs/archive/ui-patterns.md section 36 (compact setting rows)
+  // Spec: docs/internal/design/ui-patterns.md section 36 (compact setting rows)
   if (embedded) {
     // Below lg (where the shell is the push stack) every row stacks: label
     // and helper, then the control full-width beneath. Above lg it is one
@@ -680,7 +840,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             size deliberately is not. Desktop only: a browser already has
             this on the same keys, and the mobile webviews have no equivalent,
             so the row is absent rather than present and dead.
-            Spec: ops/docs/design-decisions.md (app zoom) */}
+            Spec: docs/internal/design-decisions.md (app zoom) */}
         {appZoomSupported() && (
           <div data-setting="appearance.appZoom" className={row}>
             <div className="min-w-0">
@@ -698,15 +858,15 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
               theme made or pasted here can land in either mode. */}
           <div data-setting="appearance.customThemes">
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-              <RowTitle icon={Palette}>{t('appearance.tabThemes')}</RowTitle>
+              <RowTitle icon={Palette}>{t('common:palette.groups.themes')}</RowTitle>
               {onOpenThemeBuilder && (
-                <div className="flex flex-wrap items-center gap-2 text-[13px]">
+                <div className="flex flex-wrap items-center gap-2 text-body">
                   <button
                     type="button"
                     onClick={() => onOpenThemeBuilder({})}
                     className="inline-flex items-center gap-1.5 rounded-md border border-divider px-3 py-1.5 font-medium text-pn-soft hover:text-pn hover:border-pn-muted transition"
                   >
-                    <Plus size={14} aria-hidden="true" /> {t('appearance.custom.newTheme')}
+                    <Plus aria-hidden="true" /> {t('settings:appearance.custom.builderNew')}
                     {!isPro && <IconUpgrade size={12} />}
                   </button>
                   <button
@@ -717,7 +877,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                       pasteOpen ? 'border-accent text-pn' : 'border-divider text-pn-soft hover:text-pn hover:border-pn-muted'
                     }`}
                   >
-                    <ClipboardText size={14} aria-hidden="true" /> {t('appearance.custom.pasteCode')}
+                    <ClipboardText aria-hidden="true" /> {t('appearance.custom.pasteCode')}
                     {!isPro && <IconUpgrade size={12} />}
                   </button>
                 </div>
@@ -749,7 +909,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                   type="button"
                   onClick={() => setMadeBy(m)}
                   aria-pressed={madeBy === m}
-                  className={`inline-flex items-center justify-center px-3 py-1 rounded text-xs transition ${madeBy === m ? SEG_ACTIVE : SEG_IDLE}`}
+                  className={`inline-flex items-center justify-center px-3 py-1 rounded text-small transition ${madeBy === m ? SEG_ACTIVE : SEG_IDLE}`}
                 >
                   {t(`appearance.madeBy.${m}`)}
                 </button>
@@ -770,7 +930,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                       type="button"
                       onClick={() => setCommunitySort(s)}
                       aria-pressed={communitySort === s}
-                      className={`inline-flex items-center justify-center px-3 py-1 rounded text-xs transition ${communitySort === s ? SEG_ACTIVE : SEG_IDLE}`}
+                      className={`inline-flex items-center justify-center px-3 py-1 rounded text-small transition ${communitySort === s ? SEG_ACTIVE : SEG_IDLE}`}
                     >
                       {t(s === 'votes' ? 'appearance.madeBy.sortVotes' : 'appearance.madeBy.sortNewest')}
                     </button>
@@ -781,10 +941,10 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                 href={siteHref('/themes')}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`sm:ms-auto ${SETTINGS_BTN.replace('py-1.5 text-sm', 'h-8 text-[13px]')}`}
+                className={`sm:ms-auto ${SETTINGS_BTN.replace('py-1.5', 'h-8')}`}
               >
                 {t('appearance.madeBy.more')}
-                <ArrowSquareOut size={12} aria-hidden="true" />
+                <ArrowSquareOut aria-hidden="true" />
               </a>
             </div>
           </div>
@@ -819,7 +979,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             {/* What a star does, and the star a fourth one pushed out. */}
             <div>
               <p className={`${SETTINGS_HELP} flex items-center gap-1.5`}>
-                <Star size={13} weight="fill" className="shrink-0 text-pro" aria-hidden="true" />
+                <Star weight="fill" className="shrink-0 text-pro" aria-hidden="true" />
                 {t('appearance.favoritesHint')}
               </p>
               {droppedFav && (
@@ -844,9 +1004,9 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 font-medium text-accent hover:underline"
               >
-                <Globe size={14} aria-hidden="true" />
+                <Globe aria-hidden="true" />
                 {t('appearance.custom.websiteTitle')}
-                <ArrowSquareOut size={12} aria-hidden="true" />
+                <ArrowSquareOut aria-hidden="true" />
               </a>
               <span>{t('appearance.custom.websiteDesc')}</span>
             </p>
@@ -871,9 +1031,9 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             type="button"
             onClick={() => setNoteExampleOpen((v) => !v)}
             aria-expanded={noteExampleOpen}
-            className="inline-flex items-center gap-1 text-xs text-accent"
+            className="inline-flex items-center gap-1 text-small text-accent"
           >
-            <CaretDown size={12} className={`shrink-0 transition-transform ${noteExampleOpen ? '' : '-rotate-90'}`} aria-hidden="true" />
+            <CaretDown className={`shrink-0 transition-transform ${noteExampleOpen ? '' : '-rotate-90'}`} aria-hidden="true" />
             {t('appearance.lineSpacingExample')}
           </button>
           {noteExampleOpen && (
@@ -884,7 +1044,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                 title={t('appearance.noteColorsExampleTitle')}
                 source={
                   <>
-                    <Folder size={11} weight="fill" style={{ color: 'var(--pn-label-green-ink)' }} aria-hidden="true" />
+                    <Folder weight="fill" style={{ color: 'var(--pn-label-green-ink)' }} aria-hidden="true" />
                     {t('appearance.noteColorsExampleFolder')}
                   </>
                 }
@@ -895,7 +1055,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
       </>
     );
 
-    const styleRows = (
+    const displayRows = (
       <>
         {/* Text size and Line spacing, one group under one example. They are
             the two knobs that change how a paragraph READS, and the sample
@@ -913,7 +1073,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             The example starts closed. The pane already runs a long column of
             rows, and a sample that is always open makes this group twice the
             height of anything else for a reader who never asked to see it.
-            Spec: ops/docs/design-decisions.md (editor paragraph rhythm) */}
+            Spec: docs/internal/design-decisions.md (editor paragraph rhythm) */}
         <div>
           <div data-setting="appearance.textSize" className={row}>
             <div className="min-w-0">
@@ -934,9 +1094,9 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
               type="button"
               onClick={() => setSpacingExampleOpen((v) => !v)}
               aria-expanded={spacingExampleOpen}
-              className="inline-flex items-center gap-1 text-xs text-accent"
+              className="inline-flex items-center gap-1 text-small text-accent"
             >
-              <CaretDown size={12} className={`shrink-0 transition-transform ${spacingExampleOpen ? '' : '-rotate-90'}`} aria-hidden="true" />
+              <CaretDown className={`shrink-0 transition-transform ${spacingExampleOpen ? '' : '-rotate-90'}`} aria-hidden="true" />
               {t('appearance.lineSpacingExample')}
             </button>
             {spacingExampleOpen && (
@@ -946,6 +1106,32 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                 ))}
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Note font - the typeface every note renders in (#615). Each
+            button is set in its own font, so the row is its own example.
+            Device-local, like the text size. Nothing is written into a note,
+            and a font picked in the toolbar still wins. */}
+        <div data-setting="appearance.noteFont" className={row}>
+          <div className="min-w-0">
+            <RowTitle icon={TextAa}>{t('appearance.noteFontTitle')}</RowTitle>
+            <p className={`${SETTINGS_HELP} mt-0.5`}>{t('appearance.noteFontDesc')}</p>
+          </div>
+          <div className={track}>
+            {NOTE_FONTS.map((font) => (
+              <button
+                key={font}
+                onClick={() => setNoteFont(font)}
+                aria-pressed={noteFont === font}
+                style={{ fontFamily: FONT_FAMILIES.find((f) => f.name.toLowerCase() === font)?.value }}
+                className={`${SEG_FILL} text-small py-1.5 rounded transition ${
+                  noteFont === font ? SEG_ACTIVE : SEG_IDLE
+                }`}
+              >
+                {t(`editor:font.families.${font}`)}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -964,10 +1150,10 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
         {/* Editor - formatted / markdown. This is the default every note
             opens in; the per-note "Show markdown" link in the editor footer
             overrides it for one note only.
-            Spec: ops/specs/editor-mode-toggle.md */}
+            Spec: docs/internal/specs/editor-mode-toggle.md */}
         <div data-setting="appearance.editor" className={row}>
           <div className="min-w-0">
-            <RowTitle icon={PencilLine}>{t('appearance.editorTitle')}</RowTitle>
+            <RowTitle icon={PencilLine}>{t('notes:settings.editorLabel')}</RowTitle>
             <p className={helpExplain}>{t('appearance.editorDesc')}</p>
           </div>
           <div className={track}>
@@ -976,7 +1162,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                 key={mode}
                 onClick={() => onEditorModeChange(mode)}
                 aria-pressed={editorMode === mode}
-                className={`${SEG_FILL} text-xs py-1.5 rounded transition ${
+                className={`${SEG_FILL} text-small py-1.5 rounded transition ${
                   editorMode === mode ? SEG_ACTIVE : SEG_IDLE
                 }`}
               >
@@ -986,11 +1172,32 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           </div>
         </div>
 
+        {/* Invisible characters - the pilcrow, the space dots and the line
+            breaks the editor can draw. This is a taste somebody sets once
+            and leaves, which is what makes a settings row the right home for
+            it and a permanent button over the note text the wrong one. The
+            editor keeps the quick toggle beside the word count for the
+            person who wants it on for one note.
+            Spec: docs/internal/design-decisions.md (the editor corner holds only controls that can hide themselves) */}
+        <Switch
+          setting="appearance.invisibles"
+          icon={<Paragraph className="text-accent" />}
+          labelClassName={ROW_TITLE}
+          label={t('appearance.invisiblesTitle')}
+          description={t('appearance.invisiblesDesc')}
+          checked={invisibles}
+          onChange={setInvisibles}
+          className="gap-x-5 py-3"
+        />
+      </>
+    );
 
+    const behaviorRows = (
+      <>
         {/* Copied text - what the plain-text part of a copy holds. Markdown
             keeps today's copy; Plain text drops the `- [ ]` and every other
             formatting character for targets that print them as they are.
-            Device-local. Spec: ops/docs/archive/paste-pictures.md (section 3.6) */}
+            Device-local. Spec: docs/internal/specs/paste-pictures.md (section 3.6) */}
         <div data-setting="appearance.copyFormat" className={row}>
           <div className="min-w-0">
             <RowTitle icon={Copy}>{t('appearance.copyFormatTitle')}</RowTitle>
@@ -1002,7 +1209,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                 key={format}
                 onClick={() => setCopyFormat(format)}
                 aria-pressed={copyFormat === format}
-                className={`${SEG_FILL} text-xs py-1.5 rounded transition ${
+                className={`${SEG_FILL} text-small py-1.5 rounded transition ${
                   copyFormat === format ? SEG_ACTIVE : SEG_IDLE
                 }`}
               >
@@ -1015,7 +1222,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
         {/* Pasted text - the other half of the clipboard. Plain text pastes
             from other apps as lines of text, the way Shift+paste does, for
             phones that have no such key. Device-local.
-            Spec: ops/issues/0508.md (Spec) */}
+            Spec: docs/internal/issues/0508.md (Spec) */}
         <div data-setting="appearance.pasteFormat" className={row}>
           <div className="min-w-0">
             <RowTitle icon={ClipboardText}>{t('appearance.pasteFormatTitle')}</RowTitle>
@@ -1027,31 +1234,53 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                 key={format}
                 onClick={() => setPasteFormat(format)}
                 aria-pressed={pasteFormat === format}
-                className={`${SEG_FILL} text-xs py-1.5 rounded transition ${
+                className={`${SEG_FILL} text-small py-1.5 rounded transition ${
                   pasteFormat === format ? SEG_ACTIVE : SEG_IDLE
                 }`}
               >
-                {format === 'formatted' ? t('appearance.pasteFormatFormatted') : t('appearance.pasteFormatPlain')}
+                {format === 'formatted' ? t('appearance.pasteFormatFormatted') : t('settings:appearance.copyFormatPlain')}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Invisible characters - the pilcrow, the space dots and the line
-            breaks the editor can draw. This is a taste somebody sets once
-            and leaves, which is what makes a settings row the right home for
-            it and a permanent button over the note text the wrong one. The
-            editor keeps the quick toggle beside the word count for the
-            person who wants it on for one note.
-            Spec: ops/docs/design-decisions.md (the editor corner holds only controls that can hide themselves) */}
+        {/* Open links with Cmd or Ctrl-click - a plain mouse click places
+            the cursor instead of opening the link. Off by default. A tap
+            always opens. Device-local. (#633) */}
         <Switch
-          setting="appearance.invisibles"
-          icon={<Paragraph size={14} className="text-accent" />}
+          setting="appearance.linkModifier"
+          icon={<LinkSimple className="text-accent" />}
           labelClassName={ROW_TITLE}
-          label={t('appearance.invisiblesTitle')}
-          description={t('appearance.invisiblesDesc')}
-          checked={invisibles}
-          onChange={setInvisibles}
+          label={t('appearance.linkModifierTitle')}
+          description={t('appearance.linkModifierDesc')}
+          checked={linkModifier}
+          onChange={setLinkModifier}
+          className="gap-x-5 py-3"
+        />
+
+        {/* Typed symbols - "->" becomes an arrow, "!=" a not-equal sign, in
+            the note body and the title. Off by default. Synced. (#660) */}
+        <Switch
+          setting="appearance.typedSymbols"
+          icon={<ArrowRight className="text-accent" />}
+          labelClassName={ROW_TITLE}
+          label={t('appearance.typedSymbolsTitle')}
+          description={t('appearance.typedSymbolsDesc')}
+          checked={typedSymbols}
+          onChange={onTypedSymbolsChange}
+          className="gap-x-5 py-3"
+        />
+
+        {/* Ask before moving to trash. The trash confirm's "Don't ask
+            again" box turns it off; this row turns it back on. Synced. (#603) */}
+        <Switch
+          setting="appearance.confirmTrash"
+          icon={<PILLAR_GLYPHS.trash className="text-accent" />}
+          labelClassName={ROW_TITLE}
+          label={t('appearance.confirmTrashTitle')}
+          description={t('appearance.confirmTrashDesc')}
+          checked={confirmTrash}
+          onChange={onConfirmTrashChange}
           className="gap-x-5 py-3"
         />
 
@@ -1062,7 +1291,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           <div className="divide-y divide-divider">
             <Switch
               setting="appearance.taskConfetti"
-              icon={<Confetti size={14} className="text-accent" />}
+              icon={<Confetti className="text-accent" />}
               labelClassName={ROW_TITLE}
               label={t('appearance.taskConfettiTitle')}
               description={t('appearance.taskConfettiDesc')}
@@ -1072,7 +1301,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             />
             <Switch
               setting="appearance.sinkChecked"
-              icon={<ListChecks size={14} className="text-accent" />}
+              icon={<ListChecks className="text-accent" />}
               labelClassName={ROW_TITLE}
               label={t('appearance.sinkCheckedTitle')}
               description={t('appearance.sinkCheckedDesc')}
@@ -1086,7 +1315,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
         {/* Open with PrivacyNotes - which app the OS opens a double-clicked
             file with. Desktop app only. It stores nothing, so Reset to
             defaults leaves it alone.
-            Spec: ops/docs/plans/default-app-settings.md */}
+            Spec: docs/internal/plans/default-app-settings.md */}
         {markdownDefaultAppSupported() && (
           <div data-setting="appearance.defaultApps" className="pt-4">
             <SectionEyebrow icon={Files}>{t('appearance.defaultAppsTitle')}</SectionEyebrow>
@@ -1104,7 +1333,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             here has the whole pane below it to open into. The menu is the one
             the phone pillar switcher uses, so a pillar added later appears in
             both without a second list.
-            Spec: ops/docs/archive/start-view.md */}
+            Spec: docs/internal/specs/start-view.md */}
         <div data-setting="appearance.startView" className={row}>
           <div className="min-w-0">
             <RowTitle icon={HouseLine}>{t('appearance.startViewTitle')}</RowTitle>
@@ -1116,11 +1345,11 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             aria-haspopup="menu"
             aria-expanded={startMenuOpen}
             aria-label={`${t('appearance.startViewTitle')}: ${startRow?.label ?? ''}`}
-            className="shrink-0 self-start lg:self-auto inline-flex items-center gap-2 rounded-md bg-track px-3 py-1.5 text-sm font-medium text-pn hover:bg-pn-muted/20 transition"
+            className="shrink-0 self-start lg:self-auto inline-flex items-center gap-2 rounded-md bg-track px-3 py-1.5 text-body font-medium text-pn hover:bg-pn-muted/20 transition"
           >
             {startRow && <startRow.icon size={15} className="text-accent shrink-0" aria-hidden="true" />}
             {startRow?.label}
-            <CaretDown size={12} className={`text-pn-soft transition-transform ${startMenuOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+            <CaretDown className={`text-pn-soft transition-transform ${startMenuOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
           </button>
           {startMenuOpen && (
             <ViewMenu
@@ -1146,11 +1375,11 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                 key={mode}
                 onClick={() => onViewModeChange(mode)}
                 aria-pressed={viewMode === mode}
-                className={`${SEG_FILL} inline-flex items-center justify-center gap-1.5 text-xs py-1.5 rounded transition ${
+                className={`${SEG_FILL} inline-flex items-center justify-center gap-1.5 text-small py-1.5 rounded transition ${
                   viewMode === mode ? SEG_ACTIVE : SEG_IDLE
                 }`}
               >
-                {mode === 'list' ? <List size={14} /> : mode === 'grid' ? <SquaresFour size={14} /> : <Sparkle size={14} />}
+                {mode === 'list' ? <List /> : mode === 'grid' ? <SquaresFour /> : <Sparkle />}
                 {mode === 'list' ? t('appearance.viewList') : mode === 'grid' ? t('appearance.viewGrid') : t('appearance.viewAuto', exemptOpts('settings:appearance.viewAuto'))}
               </button>
             ))}
@@ -1159,13 +1388,13 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
 
         {/* Spaces - Pro. A free account sees the row switched off, and the
             switch opens the upgrade window, as every Pro row here does.
-            Spec: ops/docs/plans/spaces.md */}
+            Spec: docs/internal/specs/spaces.md */}
         {/* One element for the switch and its help chip: the list draws a
             divider between children, and the chip belongs to this row. */}
         <div>
         <Switch
           setting="appearance.spaces"
-          icon={<UserSwitch size={14} className="text-accent" />}
+          icon={<UserSwitch className="text-accent" />}
           labelClassName={ROW_TITLE}
           label={t('appearance.spacesTitle')}
           description={<>{t('appearance.spacesDesc')}{!isPro && <> <ProMark /></>}</>}
@@ -1178,17 +1407,17 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
         />
         {/* The row is the whole topic of its help entry, so the chip sits
             under it rather than at the top of the pane.
-            Spec: ops/docs/help-center.md (section 9) */}
+            Spec: docs/contrib/help-center.md (section 9) */}
         <HelpChip surface="spaces" className="-mt-1 mb-2" />
         </div>
 
         {/* Open items in tabs - a row click opens a tab, so it changes what a
             click in a list does. Device-local, like the tabs themselves.
-            Spec: ops/docs/archive/note-tabs.md */}
+            Spec: docs/internal/specs/note-tabs.md */}
         {tabsFit && (
           <Switch
             setting="appearance.openInTabs"
-            icon={<Tabs size={14} className="text-accent" />}
+            icon={<Tabs className="text-accent" />}
             labelClassName={ROW_TITLE}
             label={t('appearance.openInTabsTitle')}
             description={t('appearance.openInTabsDesc')}
@@ -1203,10 +1432,10 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             off switch is device-local like text size, not synced. The full
             privacy story lives in About > Trust; the row keeps the one-line
             version.
-            Spec: ops/docs/design-decisions.md (Website icons toggle) */}
+            Spec: docs/internal/design-decisions.md (Website icons toggle) */}
         <Switch
           setting="appearance.favicons"
-          icon={<Globe size={14} className="text-accent" />}
+          icon={<Globe className="text-accent" />}
           labelClassName={ROW_TITLE}
           label={t('appearance.faviconsTitle')}
           description={
@@ -1229,7 +1458,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                       onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }}
                     />
                   ) : (
-                    <Globe size={14} aria-hidden="true" />
+                    <Globe aria-hidden="true" />
                   ))}
                   <span className="text-accent">google.com</span>
                 </span>
@@ -1255,14 +1484,14 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             in the rail itself (the eye on the Content caption, the funnel in
             the All row) - the same field shown twice, exactly as the
             List/Grid choice already is.
-            Spec: ops/docs/archive/sidebar-views.md */}
+            Spec: docs/internal/specs/sidebar-views.md */}
         <div data-setting="appearance.sidebar" className="py-3">
           {/* The heading names the two columns using the two glyphs the column
               headers carry, so the words below are already recognisable. Each
               glyph is bound to its word by a Trans tag rather than dropped in
               at a fixed offset: word order moves between languages, and the
               pair has to move with it. */}
-          <p className="text-sm font-medium flex items-center gap-1.5">
+          <p className="text-body font-medium flex items-center gap-1.5">
             <Trans
               i18nKey="settings:appearance.sidebarTitle"
               components={{
@@ -1272,7 +1501,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             />
           </p>
           <p className={`${SETTINGS_HELP} mt-0.5`}>{t('appearance.sidebarDesc')}</p>
-          <table className="mt-2.5 w-full text-sm">
+          <table className="mt-2.5 w-full text-body">
             <thead>
               {/* No fixed column widths. `w-full` on the label column means
                   "absorb whatever is left", so the two option columns take
@@ -1284,7 +1513,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                   push stack down there and three nowrap columns would run off
                   its edge. `align-bottom` keeps a wrapped header on the same
                   baseline as a single-line one. */}
-              <tr className="align-bottom text-xs font-semibold text-accent">
+              <tr className="align-bottom text-small font-semibold text-accent">
                 <th className="text-start pb-1.5 w-full" />
                 {/* Both headers carry a glyph. The All column takes the All
                     pillar's own icon, the same one on its row in the rail, so
@@ -1298,75 +1527,61 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                     is accent already. */}
                 <th className="pb-1.5 px-2 lg:whitespace-nowrap">
                   <span className="inline-flex items-center justify-center gap-1.5">
-                    <DotsThreeOutlineVertical size={13} className="shrink-0" aria-hidden="true" />
-                    {t('appearance.colInSidebar')}
+                    <DotsThreeOutlineVertical className="shrink-0" aria-hidden="true" />
+                    {t('settings:appearance.custom.seed.sidebar')}
                   </span>
                 </th>
                 <th className="pb-1.5 px-2 lg:whitespace-nowrap">
                   <span className="inline-flex items-center justify-center gap-1.5">
-                    <PILLAR_GLYPHS.all size={13} className="shrink-0" aria-hidden="true" />
-                    {t('appearance.colInAll')}
+                    <PILLAR_GLYPHS.all className="shrink-0" aria-hidden="true" />
+                    {t('shell:tagsRail.allItems')}
                   </span>
                 </th>
               </tr>
             </thead>
-            <tbody>
-              {sidebarViewRows(tShell).map((r) => {
-                const inAll = allViewRows(tShell).some((a) => a.key === r.key);
-                return (
-                  <tr key={r.key} className="border-t border-divider">
-                    <td className="py-1.5">
-                      <span className="flex items-center gap-2">
-                        <r.icon size={16} className="text-accent shrink-0" aria-hidden="true" />
-                        {r.label}
-                      </span>
-                    </td>
-                    <td className="text-center py-1.5">
-                      <button
-                        type="button"
-                        role="checkbox"
-                        aria-checked={!hiddenViews.includes(r.key)}
-                        aria-label={`${t('appearance.colInSidebar')}: ${r.label}`}
-                        onClick={() => onToggleHidden('hiddenViews', r.key)}
-                        className="inline-flex items-center justify-center p-1"
-                      >
-                        <ViewCheckBox checked={!hiddenViews.includes(r.key)} />
-                      </button>
-                    </td>
-                    <td className="text-center py-1.5">
-                      {inAll ? (
-                        <button
-                          type="button"
-                          role="checkbox"
-                          aria-checked={isShownInAll({ hiddenInAll, archivedInAll }, r.key)}
-                          aria-label={`${t('appearance.colInAll')}: ${r.label}`}
-                          onClick={() => onToggleHidden('hiddenInAll', r.key)}
-                          className="inline-flex items-center justify-center p-1"
-                        >
-                          <ViewCheckBox checked={isShownInAll({ hiddenInAll, archivedInAll }, r.key)} />
-                        </button>
-                      ) : (
-                        <span className={SETTINGS_HELP} aria-hidden="true">-</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
+            <SidebarViewsBody
+              hiddenViews={hiddenViews}
+              hiddenInAll={hiddenInAll}
+              archivedInAll={archivedInAll}
+              onToggleHidden={onToggleHidden}
+              onViewOrderChange={onViewOrderChange}
+            />
           </table>
         </div>
       </>
     );
 
     if (pane === 'formatBar') {
+      // One board for the bar the tab names; the bar position above it is
+      // the same for both, because the drawing toolbar sits where the
+      // format bar does.
+      const board = formatBar && (barTab === 'drawing' && formatBar.drawing
+        ? { ...formatBar.drawing, position: formatBar.position, onPositionChange: formatBar.onPositionChange }
+        : formatBar);
       return (
-        <div className="flex-1 min-h-0 overflow-y-auto text-pn">
-          {formatBar && (
+        <div className="flex-1 min-h-0 flex flex-col text-pn">
+          {formatBar?.drawing && (
+            <SettingsTabStrip role="tablist" aria-label={t('notes:settings.formatBarLabel')} className="shrink-0 px-4 sm:px-6">
+              {([
+                ['typing', t('appearance.toolbarTabTyping'), <TextT key="i" aria-hidden="true" />],
+                ['drawing', t('notes:newMenu.drawing'), <Scribble key="i" aria-hidden="true" />],
+              ] as const).map(([id, label, icon]) => (
+                <button key={id} type="button" data-setting={`formatBar.${id}`} role="tab" aria-selected={barTab === id}
+                  onClick={() => setBarTab(id)} className={settingsTabClass(barTab === id)}>
+                  {icon}
+                  <span>{label}</span>
+                </button>
+              ))}
+            </SettingsTabStrip>
+          )}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          {board && (
             <>
               <div data-setting="appearance.formatBar" className="px-6 pt-4">
                 <Suspense fallback={null}>
                   <FormatBarBoard
-                    {...formatBar}
+                    key={barTab}
+                    {...board}
                     // Under the free bar position, so the Pro mark covers
                     // only the arranging. Keyed on the plan, not on the
                     // unlock, so the demo still labels it.
@@ -1383,10 +1598,10 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                           </div>
                           {/* The Markdown view draws a fixed bar this board
                               does not arrange (GitHub #493). */}
-                          <p className={`${SETTINGS_HELP} mt-1`}>{t('editor:formatBar.markdownViewNote')}</p>
+                          {board === formatBar && <p className={`${SETTINGS_HELP} mt-1`}>{t('editor:formatBar.markdownViewNote')}</p>}
                         </div>
-                        {!formatBar.previewing && (
-                          <ResetDefaultsButton key="formatBar" className="shrink-0" onReset={() => formatBar.onUpdate(() => null)} />
+                        {!board.previewing && (
+                          <ResetDefaultsButton key={`formatBar.${barTab}`} className="shrink-0" onReset={() => board.onUpdate(() => null)} />
                         )}
                       </div>
                     }
@@ -1396,50 +1611,65 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
               {/* A free account's draft: Discard takes the place of Reset, and
                   the upgrade door sits in the same row, so the tab does not
                   grow. At rest the row carries one quiet invitation.
-                  Spec: ops/docs/archive/format-bar.md (section 5) */}
+                  Spec: docs/internal/specs/format-bar.md (section 5) */}
               <div className="px-6 pb-4">
-                {formatBar.previewing ? (
+                {board.previewing ? (
                   <div className="pt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
                     <button
                       type="button"
-                      onClick={formatBar.onDiscard}
-                      className="inline-flex items-center gap-1.5 rounded-md border border-divider px-3 py-1.5 text-sm font-medium text-pn-soft hover:text-pn transition"
+                      onClick={board.onDiscard}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-divider px-3 py-1.5 text-body font-medium text-pn-soft hover:text-pn transition"
                     >
-                      <ArrowCounterClockwise size={15} aria-hidden="true" />
+                      <ArrowCounterClockwise aria-hidden="true" />
                       {t('editor:formatBar.discard')}
                     </button>
                     <button
                       type="button"
-                      onClick={formatBar.onKeep}
+                      onClick={board.onKeep}
                       // The upgrade window's own button colors, so the door and the
                       // window read as one action.
-                      className="ms-auto inline-flex items-center gap-1.5 rounded-md bg-amber-700 hover:bg-amber-800 px-3 py-1.5 text-sm font-semibold text-white transition"
+                      className="ms-auto inline-flex items-center gap-1.5 rounded-md bg-amber-700 hover:bg-amber-800 px-3 py-1.5 text-body font-semibold text-white transition"
                     >
                       <IconUpgrade size={15} onFill />
                       {t('editor:formatBar.keepLayout')}
                     </button>
                   </div>
                 ) : (
-                  formatBar.locked && <p className="pt-3 text-xs text-pn-muted">{t('editor:formatBar.tryIt')}</p>
+                  board.locked && <p className="pt-3 text-small text-pn-muted">{t('editor:formatBar.tryIt')}</p>
                 )}
               </div>
             </>
           )}
         </div>
+        </div>
       );
     }
-    const rows = pane === 'design' ? themeRows : pane === 'editor' ? styleRows : listsTab === 'sidebar' ? sidebarRows : generalRows;
-    const listsTabs = [
-      { id: 'general' as const, label: t('appearance.listsTabGeneral'), icon: <ListBullets aria-hidden="true" /> },
-      { id: 'sidebar' as const, label: t('appearance.listsTabSidebar'), icon: <DotsThreeOutlineVertical aria-hidden="true" /> },
-    ];
+    const rows = pane === 'design' ? themeRows
+      : pane === 'editor' ? (editorTab === 'behavior' ? behaviorRows : displayRows)
+      : listsTab === 'sidebar' ? sidebarRows : generalRows;
+    const tab = <T extends string>(id: T, current: T, pick: (id: T) => void, label: string, icon: ReactNode) =>
+      ({ id, label, icon, on: current === id, pick: () => pick(id) });
+    const tabs = pane === 'lists'
+      ? { label: t('notes:settings.listsLabel'), items: [
+          tab('general', listsTab, setListsTab, t('appearance.listsTabGeneral'), <ListBullets aria-hidden="true" />),
+          tab('sidebar', listsTab, setListsTab, t('appearance.listsTabSidebar'), <DotsThreeOutlineVertical aria-hidden="true" />),
+        ] }
+      : pane === 'editor'
+        ? { label: t('notes:settings.editorLabel'), items: [
+            tab('display', editorTab, setEditorTab, t('appearance.editorTabDisplay'), <Eye aria-hidden="true" />),
+            tab('behavior', editorTab, setEditorTab, t('appearance.editorTabBehavior'), <Brain aria-hidden="true" />),
+          ] }
+        : null;
+    const reset = pane === 'design' ? resetThemes
+      : pane === 'editor' ? (editorTab === 'behavior' ? resetBehavior : resetDisplay)
+      : resetLists;
     return (
       <div className="flex-1 min-h-0 flex flex-col text-pn">
-        {pane === 'lists' && (
-          <SettingsTabStrip role="tablist" aria-label={t('notes:settings.listsLabel')} className="shrink-0 px-4 sm:px-6">
-            {listsTabs.map((tb) => (
-              <button key={tb.id} type="button" data-setting={`lists.${tb.id}`} role="tab" aria-selected={listsTab === tb.id}
-                onClick={() => setListsTab(tb.id)} className={settingsTabClass(listsTab === tb.id)}>
+        {tabs && (
+          <SettingsTabStrip role="tablist" aria-label={tabs.label} className="shrink-0 px-4 sm:px-6">
+            {tabs.items.map((tb) => (
+              <button key={tb.id} type="button" data-setting={`${pane}.${tb.id}`} role="tab" aria-selected={tb.on}
+                onClick={tb.pick} className={settingsTabClass(tb.on)}>
                 {tb.icon}
                 <span>{tb.label}</span>
               </button>
@@ -1449,7 +1679,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
         <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="px-6 divide-y divide-divider">{rows}</div>
           <div className="px-6 pb-4">
-            <ResetDefaultsButton key={pane} onReset={pane === 'design' ? resetThemes : pane === 'editor' ? resetStyle : resetLists} />
+            <ResetDefaultsButton key={`${pane}.${pane === 'editor' ? editorTab : ''}`} onReset={reset} />
           </div>
         </div>
       </div>
@@ -1487,7 +1717,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     >
       <div className="shrink-0 flex items-center gap-2.5 px-4 pt-3 pb-1">
         <AccentBar />
-        <h2 className="text-sm font-semibold">{t('notes:settings.appearanceLabel')}</h2>
+        <h2 className="text-body font-semibold">{t('notes:settings.appearanceLabel')}</h2>
         <HeadlineRule />
         <CloseButton onClick={handleClose} />
       </div>
@@ -1509,10 +1739,10 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
               <button
                 type="button"
                 onClick={() => onOpenAll('design', 'appearance.theme')}
-                className="ms-auto inline-flex items-center gap-0.5 text-xs font-medium text-accent hover:underline"
+                className="ms-auto inline-flex items-center gap-0.5 text-small font-medium text-accent hover:underline"
               >
-                {t('appearance.allThemes')}
-                <CaretRight size={11} className="rtl:-scale-x-100" aria-hidden="true" />
+                {t('common:ninja.allThemes')}
+                <CaretRight className="rtl:-scale-x-100" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -1533,15 +1763,15 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                 type="button"
                 onClick={() => onOpenAll?.('design', 'appearance.theme')}
                 disabled={!onOpenAll}
-                className="flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-divider text-[10px] font-medium text-pn-muted hover:border-pn-muted hover:text-pn-soft transition"
+                className="flex min-h-[3.25rem] flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-divider text-meta font-medium text-pn-muted hover:border-pn-muted hover:text-pn-soft transition"
               >
-                <Star size={13} aria-hidden="true" />
+                <Star aria-hidden="true" />
                 {t('appearance.favoriteEmpty')}
               </button>
             ))}
           </div>
           {!quickThemes.includes(paintedChoice) && (
-            <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-accent px-2 py-1.5 text-[11px] font-medium">
+            <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-accent px-2 py-1.5 text-meta font-medium">
               <span className="h-3.5 w-3.5 shrink-0 rounded" style={{ backgroundColor: 'rgb(var(--pn-accent))' }} aria-hidden="true" />
               <span className="min-w-0 flex-1 truncate" dir="auto">{activeName}</span>
               <button
@@ -1550,7 +1780,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                 aria-label={t('appearance.favoriteAdd', { name: activeName })}
                 className="inline-flex shrink-0 items-center gap-1 text-accent hover:underline"
               >
-                <Star size={12} aria-hidden="true" />
+                <Star aria-hidden="true" />
                 {t('appearance.favoriteAddShort')}
               </button>
             </div>
@@ -1571,9 +1801,9 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
               key={target}
               type="button"
               onClick={() => onOpenAll(target)}
-              className="flex flex-col items-center gap-1 rounded-md py-2 text-xs font-medium text-pn-soft hover:text-accent hover:bg-pn/5 transition"
+              className="flex flex-col items-center gap-1 rounded-md py-2 text-small font-medium text-pn-soft hover:text-accent hover:bg-pn/5 transition"
             >
-              <Glyph size={16} className="text-accent" aria-hidden="true" />
+              <Glyph className="text-accent" aria-hidden="true" />
               {label}
             </button>
           ))}

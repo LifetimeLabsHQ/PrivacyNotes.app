@@ -16,7 +16,7 @@
  * one. A changed golden expectation is never a test to update; it is a
  * broken promise to every existing backup on someone's disk.
  *
- * Spec: ops/docs/dependency-migration.md (section 3, what verifies what)
+ * Spec: docs/internal/dependency-migration.md (section 3, what verifies what)
  */
 
 import { encryptBlob, decryptBlob } from './blob.js';

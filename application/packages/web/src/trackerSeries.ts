@@ -13,7 +13,7 @@ import type {
  * Tracker values on a calendar axis: one slot per local day, a missing day
  * kept as a gap, never closed up. Every day is stepped with a local Date,
  * so a day is the person's calendar day, never a UTC slice.
- * Spec: ops/docs/archive/wellness-statistics.md (section 5)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 5)
  */
 
 function parseDay(iso: string): Date {

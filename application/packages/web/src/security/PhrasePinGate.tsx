@@ -98,7 +98,7 @@ function InlinePinGate({
     const current = getPinLockoutState();
     if (current.locked) {
       setLockout(current);
-      setErr(t('phraseGate.tooManyAttempts', { seconds: current.secondsLeft }));
+      setErr(t('security:lockScreen.tooManyAttempts', { seconds: current.secondsLeft }));
       return;
     }
     working.current = true;
@@ -123,8 +123,8 @@ function InlinePinGate({
         const state = recordPinFailure();
         setLockout(state);
         setErr(state.locked
-          ? t('phraseGate.tooManyAttempts', { seconds: state.secondsLeft })
-          : kind === 'passcode' ? t('phraseGate.incorrectPasscodeRetry') : t('phraseGate.incorrectPinRetry'));
+          ? t('security:lockScreen.tooManyAttempts', { seconds: state.secondsLeft })
+          : kind === 'passcode' ? t('security:lockScreen.incorrectPasscodeRetry') : t('security:lockScreen.incorrectPinRetry'));
         setValue('');
         inputRef.current?.clear();
       }
@@ -145,7 +145,7 @@ function InlinePinGate({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-pn-soft leading-relaxed">
+      <p className="text-body text-pn-soft leading-relaxed">
         {t(kind === 'passcode' ? PASSCODE_PROMPTS[prompt] ?? prompt : prompt)}
       </p>
       <SecretInput
@@ -162,28 +162,28 @@ function InlinePinGate({
         disabled={disabled}
       />
       {err && (
-        <p className="text-sm text-danger text-center">
+        <p className="text-body text-danger text-center">
           {err}
         </p>
       )}
       {lockout.locked && (
-        <p className="text-xs text-pn-soft text-center">
-          {t('phraseGate.lockedFor', { seconds: lockout.secondsLeft })}
+        <p className="text-small text-pn-soft text-center">
+          {t('security:protectedGate.lockedFor', { seconds: lockout.secondsLeft })}
         </p>
       )}
       <div className="flex gap-2">
         <button
           onClick={onCancel}
-          className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-sm transition"
+          className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-body transition"
         >
           {t('common:actions.cancel')}
         </button>
         <button
           onClick={() => void submit(value)}
           disabled={!secretReady(kind, value) || disabled}
-          className="flex-1 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover px-3 py-2 text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover px-3 py-2 text-body font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {busy ? t('phraseGate.checking') : t('phraseGate.unlock')}
+          {busy ? t('security:lockScreen.checking') : t('security:lockScreen.unlock')}
         </button>
       </div>
       {recovery && <ForgotPinLink kind={kind} onClick={() => setRecovering(true)} />}

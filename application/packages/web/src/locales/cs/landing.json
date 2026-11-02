@@ -2,6 +2,8 @@
   "header": {
     "betaBadge": "beta",
     "downloads": "Ke stažení",
+    "price": "Cena",
+    "priceLine": "Kolik tvoje aplikace stojí dohromady",
     "pricing": "Ceník",
     "roadmap": "Roadmap",
     "createVault": "Vytvoř si trezor",
@@ -39,14 +41,13 @@
       "clipper": "Tvoje <w>uložené stránky</w>.",
       "markdown": "Tvůj <w>Markdown</w>."
     },
-    "subhead": "Poznámky, úkoly, hesla, soubory, záložky, kalendář, sledování nálady a léků a editor Markdownu. Jedna soukromá aplikace.",
+    "subhead": "Poznámky, úkoly, hesla, deník, soubory, kalendář, kontakty a záložky, se sledováním nálady a léků. Jedna soukromá aplikace.",
     "tryDemo": "Vyzkoušet demo",
     "microcopy": "Navždy zdarma. Bez platební karty. Přihlas se přes Google, Apple, GitHub nebo jen frází z 12 slov.",
     "alreadyHaveVault": "Už máš trezor? Přihlas se",
     "trustSigned": "Podepsaná vydání na GitHubu"
   },
   "heroCard": {
-    "passwords": "Hesla",
     "today": "Dnes",
     "tripTitle": "Seznam věcí na cestu",
     "taskPassport": "Pas + letenky",
@@ -57,45 +58,85 @@
     "encrypted": "Šifrováno",
     "moodWeek": "Nálada · tento týden"
   },
+  "heroApp": {
+    "label": "Sekce aplikace",
+    "notes": {
+      "meta": "Upraveno před 2 min",
+      "markdown": "MD",
+      "day": "Sobota",
+      "body": "Brzy ráno tramvají 28, <b>než přijdou davy</b>. Oběd v podniku, o kterém <ref>Ana</ref> pořád mluví.",
+      "tag1": "#cestování",
+      "tag2": "#jídlo"
+    },
+    "vault": {
+      "meta": "3 položky, jeden klíč",
+      "password": "correct-horse-battery",
+      "card": "Cestovní karta",
+      "ssh": "Pracovní notebook"
+    },
+    "journal": {
+      "med": "Vitamín D, 08:00",
+      "entry": "Dlouhá procházka u řeky. Konečně pořádný spánek."
+    },
+    "files": {
+      "meta": "Soubory, šifrované",
+      "file1": "pas.pdf",
+      "file2": "plaz.heic",
+      "file3": "hlasova-poznamka.m4a",
+      "file4": "najemni-smlouva.pdf",
+      "storage": "46 MB z 500 MB"
+    },
+    "calendar": {
+      "ev4": "Narozeniny Any",
+      "empty": "Nic naplánováno"
+    },
+    "contacts": {
+      "initials": "AM",
+      "name": "Ana Martins",
+      "place": "Lisabon",
+      "birthday": "Narozeniny, {{date}}"
+    },
+    "bookmarks": {
+      "reading": "Ke čtení",
+      "bm1": "Tramvaj 28 - Wikipedie",
+      "bm2": "Lisabon na OpenStreetMap",
+      "bm3": "Recept na pastel de nata",
+      "bm4": "Průvodce Markdownem",
+      "bm5": "Zdrojový kód PrivacyNotes",
+      "clipped": "Uloženo jako poznámka"
+    },
+    "mood": {
+      "insight": "Nejlepší dny přicházejí po 7 h spánku"
+    }
+  },
   "announcement": {
     "ossText": "Nyní open source: kompletní kód klienta. Web, desktop i mobil.",
     "ossTextNarrow": "Nyní open source: kompletní kód klienta.",
     "ossCta": "Dej nám hvězdičku na GitHubu",
-    "ossCtaNarrow": "GitHub",
     "dismiss": "Zavřít oznámení"
   },
   "pillars": {
     "kicker": "Všechno pod jedním klíčem - a jeden editor na tvém disku",
-    "notesName": "Poznámky",
     "notesBlurb": "Živý formátovaný editor, značky, okamžité hledání.",
-    "tasksName": "Úkoly",
     "tasksBlurb": "Každý úkol, jeden přehled.",
-    "vaultName": "Trezor",
     "vaultBlurb": "Hesla, karty, SSH klíče.",
     "journalName": "Deník",
     "journalBlurb": "Nálada, spánek, léky. Značky podložené výzkumem, export pro lékaře.",
-    "filesName": "Soubory",
     "filesBlurb": "Šifrované obrázky, dokumenty, zvuk a video.",
     "bookmarksName": "Synchronizace záložek",
     "bookmarksBlurb": "Uložené odkazy s ikonami webů. Naimportuj si záložky z prohlížeče.",
-    "contactsName": "Kontakty",
     "contactsBlurb": "Čísla, e-maily, adresy. Naimportuj si celý adresář.",
-    "calendarName": "Kalendář",
-    "calendarBlurb": "Události a připomínky. Denní, týdenní a měsíční zobrazení.",
-    "markdownFree": "Zdarma"
+    "calendarBlurb": "Události a připomínky. Denní, týdenní a měsíční zobrazení."
   },
   "mdEditor": {
     "title": "Markdownový editor zdarma. Tvoje soubory nikdy neopustí tvůj disk.",
     "body": "Ukaž mu složku se soubory .md a .txt - podsložky se objeví samy, změny se ukládají rovnou a nic se nepřevádí. Stejný formátovaný editor jako u tvých poznámek: živý náhled, úkoly, značky a tabulky.",
-    "chipObsidian": "Stejné soubory v Obsidianu nebo Logseq",
-    "chipGit": "Git repozitář, který si synchronizuješ vlastními silami",
-    "chipAgents": "Dej AI agentům přístup ke svým poznámkám",
     "platforms": "V aplikaci pro počítač nebo v jakémkoli prohlížeči Chromium.",
     "sampleTitle": "Nápady na víkendový projekt",
     "sampleTask1": "Zapojit zahradní senzor",
     "sampleTask2": "Načrtnout článek na blog",
     "sampleTag": "#kutění",
-    "savedToDisk": "Uloženo na disk"
+    "saving": "Ukládání"
   },
   "meds": {
     "tileName": "Sledování léků",
@@ -119,7 +160,7 @@
     "med4": "Melatonin",
     "dose4": "2 mg",
     "kicker": "Sledování léků",
-    "heading": "Ber léky včas. Záznam si nech pro sebe.",
+    "heading": "Nevynech ani jednu dávku. Tvoje prášky nejsou nikoho věc.",
     "intro": "Přidej lék jednou, s jeho dávkou a časy. Každý den stačí jedno ťuknutí: užito, vynecháno nebo zmeškáno. Připomínka zazvoní v telefonu. Seznam, dávky i vynechané dny jsou šifrované na tvém zařízení a zůstávají tak i při synchronizaci.",
     "todayLabel": "Dnes. Ťukni na dávku.",
     "todayCount": "užito {{taken}} z {{total}}",
@@ -146,7 +187,6 @@
     "refillBy": "Objednej znovu za {{days}} dní"
   },
   "ninja": {
-    "tileName": "Ninja",
     "tileTagline": "Alfred pro tvoje poznámky.",
     "tileLead": "Rozkazy plní bleskově.",
     "tileBlurb": "Stiskni {{key}} a piš. Pár písmen tě přenese kamkoli, + vytvoří cokoli z běžných slov, > spustí příkaz. Ruce z klávesnice vůbec nesundáš.",
@@ -157,11 +197,6 @@
     "chipDay": "Přejít na den",
     "chipLink": "Vlož odkaz",
     "placeholder": "Napiš název, + pro přidání, nebo > pro příkazy",
-    "recent": "Nedávné",
-    "inText": "V textu",
-    "create": "Vytvořit",
-    "addTo": "Přidat do",
-    "commands": "Příkazy",
     "recent1": "Nápady na víkendový projekt",
     "recent1Meta": "Poznámky · před 2 h",
     "recent2": "Nákup",
@@ -185,15 +220,10 @@
     "q2Row3": "Nový seznam úkolů: Zubař",
     "q3": "mléko, vejce >> nák",
     "q3Row1": "Přidat 2 úkoly do Nákup",
-    "q3Row1Meta": "Úkoly",
     "q3Row2": "Nová událost: mléko, vejce",
     "q4": "zen",
     "q4Row1": "Zapnout režim Zen",
     "q4Row2": "Nastavení: Režim Zen",
-    "hintOpen": "otevřít",
-    "hintActions": "akce",
-    "hintTab": "otevřít na kartě",
-    "hintClose": "zavřít",
     "tryDemo": "Vyzkoušet v demu",
     "seeShots": "Snímky obrazovky",
     "shots": {
@@ -223,8 +253,7 @@
       "theme": "Napiš „téma“: všechna témata i s jejich barvami. Enter ho nasadí, světlé i tmavé."
     },
     "q1Row1Meta": "Poznámky · před 2 dny",
-    "q1Row2Meta": "Složka · 4 položky",
-    "hintMove": "přejít"
+    "q1Row2Meta": "Složka · 4 položky"
   },
   "demoShot": {
     "kicker": "Podívej se naživo",
@@ -246,15 +275,14 @@
     "rls": "Zabezpečení na úrovni řádků"
   },
   "downloads": {
-    "kicker": "Ke stažení",
     "heading": "Stáhni si PrivacyNotes",
     "tileAria": "Stáhnout pro {{name}}",
+    "playDesc": "Aktualizace přes Obchod Play. Nákupy v aplikaci účtuje Google.",
     "apkDesc": "Každou aktualizaci si stáhneš a nainstaluješ ručně.",
     "obtainiumDesc": "Instaluje každou novou verzi z našeho repozitáře.",
     "obtainiumBadgeAlt": "Získat na Obtainium",
     "appStore": "App Store",
     "recommended": "Doporučeno",
-    "comingSoon": "Už brzy",
     "apkFootnote": "Vyžaduje Android 7.0 nebo novější. Zapstore, Obtainium ani APK nepotřebují účet Google ani platby přes Google: Pro si odemkneš platbou na webu. Až bude připravená nová verze, APK ti to oznámí v aplikaci.",
     "linuxRequirement": "Oba formáty potřebují webkit2gtk 4.1: Ubuntu 22.04 nebo novější, Debian 12 nebo novější, případně srovnatelnou distribuci od roku 2023. Starší distribuce mají jen webkit2gtk 4.0 a tato sestavení nespustí.",
     "linuxArchX86": "Intel / AMD (x86_64)",
@@ -271,12 +299,12 @@
     "pkgToggle": "Instalace přes správce balíčků ({{platforms}})",
     "pkgBrewDesc": "Aplikace se aktualizuje sama, ne brew upgrade.",
     "pkgWingetDesc": "Součást Windows 10 a 11.",
-    "pkgScoopDesc": "Scoop se nikdy neaktualizuje sám. Spusť scoop update privacynotes.",
     "pkgFootnote": "Každý z nich nainstaluje stejné podepsané sestavení.",
     "githubLink": "Všechna vydání na GitHubu",
     "githubNote": "Podepsané · Veřejné · Ověřitelné · Každé vydání bez výjimky",
     "zapstoreDesc": "<rec>Doporučeno.</rec> Před instalací ověří náš podpis.",
     "zapstoreBadgeAlt": "Získat na Zapstore",
+    "playBadgeAlt": "Získat na Google Play",
     "autoUpdates": "Aktualizuje se samo",
     "manualUpdates": "Ruční aktualizace"
   },
@@ -284,37 +312,13 @@
     "getStarted": "Začni"
   },
   "pricing": {
-    "freeLabel": "Navždy zdarma",
     "freeSubLabel": "Bez platební karty, bez časového omezení.",
-    "freeAllPillars": "Poznámky, úkoly, kalendář, soubory, trezor, deník, kontakty a záložky",
+    "freeAllPillars": "Poznámky, úkoly, hesla, deník, soubory, kalendář, kontakty a záložky, se sledováním nálady a léků",
     "freeSync": "Synchronizace mezi 2 zařízeními",
     "freeVault": "50 MB místa, až 5 MB na soubor",
-    "freeSearch": "Fulltextové hledání + značky",
     "freeImport": "Import a export, včetně Keep a Obsidianu",
-    "freeBurn": "Spálit po přečtení",
-    "freeMood": "Sledování nálady a pohody",
-    "freeTheme": "Tmavý i světlý režim",
     "freeAnon": "Anonymní přihlášení, bez e-mailu",
-    "freeGoogle": "Přihlášení přes Google, Apple nebo GitHub",
-    "noSubscription": "Bez předplatného",
-    "proLabel": "Pro · Zaplatíš jednou",
-    "earlyAdopterBadge": "Zaváděcí cena",
-    "oneTime": "jednorázově",
-    "proOnceDesc": "Zaplatíš <b>jednou</b> a máš to navždy.",
-    "proCompareBeta": "Zaplať jednou {{earlyPrice}} $. Obsidian Sync stojí 48 $/rok, každý rok. Standard Notes si účtuje 90 $/rok. Zaváděcí cena, zamčená ještě předtím, než vzroste na {{proPrice}} $.",
-    "proCompare": "Zaplať jednou {{proPrice}} $ a máš to navždy. Obsidian Sync stojí 48 $/rok a Standard Notes 90 $/rok, rok co rok.",
-    "proEverythingFree": "Všechno z verze zdarma, plus:",
-    "proSync": "Synchronizace na neomezeném počtu zařízení",
-    "proHistory": "Historie poznámky, až 50 verzí",
-    "proLock": "Poznámky jen pro čtení",
-    "proPin": "Ochrana poznámek PINem",
-    "proAnalytics": "Analýza pohody + export",
-    "proZen": "Režim Zen a další témata",
-    "proStorage": "500 MB místa, až 50 MB na soubor, <expand>lze rozšířit</expand>"
-  },
-  "storageAddon": {
-    "heading": "Potřebuješ víc místa?",
-    "body": "Pro obsahuje 500 MB. Když potřebuješ víc, přidej si další místo od {{price}} $ ročně. Je to jediný opakovaný náklad v <brand/>. Samo Pro je jednorázové, navždy."
+    "earlyAdopterBadge": "Zaváděcí cena"
   },
   "underHood": {
     "heading": "Pod kapotou",
@@ -322,17 +326,14 @@
     "cipherDesc": "Klíče se odvozují na straně klienta",
     "phraseTerm": "Fráze BIP-39",
     "phraseDesc": "12 slov, podpisy Ed25519",
-    "rlsTerm": "Zabezpečení na úrovni řádků",
     "rlsDesc": "RLS vázané na tvůj veřejný klíč",
     "trackingTerm": "Nula sledovacích prvků",
     "trackingDesc": "Žádné pixely, žádné sledovací prvky třetích stran",
     "authTerm": "Anonymní přihlášení",
     "authDesc": "Bez e-mailu, bez hesla",
-    "serversTerm": "Švýcarské servery",
     "serversDesc": "Curych, Švýcarsko",
     "sshTerm": "Trezor pro SSH klíče",
     "sshDesc": "Generování Ed25519 přímo v aplikaci",
-    "pwgenTerm": "Generátor hesel",
     "pwgenDesc": "crypto.getRandomValues()",
     "opensourceTerm": "Open source",
     "opensourceDesc": "Aplikace a šifrování na GitHubu"
@@ -361,9 +362,7 @@
       "social": "Večer venku",
       "custom": "Cokoli, co počítáš, s Pro"
     },
-    "cardPatternsTitle": "Vzorce",
     "cardPatternsBody": "Každá sledovaná hodnota seřazená podle toho, jak působí na tvou náladu, se zjištěním napsaným srozumitelně.",
-    "cardExploreTitle": "Prozkoumat",
     "cardExploreBody": "Jedna sledovaná hodnota proti tvé náladě, týž den nebo den poté. Spánek dnes v noci, nálada zítra.",
     "cardMedsTitle": "Léky",
     "cardMedsBody": "Vzato nebo vynecháno, změny dávkování na časové ose a dodržování léčby porovnané s náladou.",
@@ -374,27 +373,37 @@
     "vizReport": "Zpráva pro lékaře",
     "vizPrompt": "AI prompt",
     "encryptedHeading": "Proč to funguje jen se šifrováním",
-    "encryptedBody": "Nikdo si nezapisuje dávku antidepresiv do Notionu. Nikdo si nevede záznam o beznadějných dnech v Dokumentech Google. Takhle citlivá data potřebují šifrování s nulovou znalostí, a přesně tak je PrivacyNotes postavený."
+    "encryptedBody": "Nikdo si nezapisuje dávku antidepresiv do Notionu. Nikdo si nevede záznam o beznadějných dnech v Dokumentech Google. Takhle citlivá data potřebují šifrování přímo v zařízení, a přesně tak je PrivacyNotes postavený."
   },
   "comparison": {
     "kicker": "Spočítej si to",
-    "heading": "Proč platit tři aplikace, když to všechno zvládne jedna, a ještě šifrovaně?",
-    "typicalSetup": "Typická sestava",
-    "themStandardNotes": "Standard Notes, 90 $/rok",
-    "themObsidian": "Obsidian Sync, 48 $/rok",
-    "themDayOne": "Day One, 36 $/rok",
-    "themPasswordManager": "Bitwarden / 1Password, 10-36 $/rok",
-    "themLunatask": "Lunatask, 72 $/rok",
-    "themDaylio": "Daylio, 48 $/rok (nezašifrovaná data o náladě)",
-    "themSeparate": "Samostatné aplikace, opakované platby",
-    "usAllInOne": "Poznámky, úkoly, kalendář, soubory, trezor, deník, kontakty, záložky. Jedna aplikace",
-    "usTracking": "Sledování nálady, energie, spánku a léků",
-    "usEncrypted": "Šifrované na tvém zařízení, synchronizované do Švýcarska",
-    "usSignIn": "Přihlášení anonymně, nebo přes Google, Apple či GitHub, šifrování stejné v každém případě",
-    "usExport": "Hledání vzorců + export PDF pro lékaře",
-    "usSync": "Počítač + mobil, neomezená synchronizace",
-    "usPriceBeta": "Navždy zdarma, nebo {{earlyPrice}} $ jednou za Pro (zaváděcí cena)",
-    "usPrice": "Navždy zdarma, nebo {{proPrice}} $ jednou za Pro"
+    "headingLive": "Tvoje aplikace stojí <cost>{{amount}}</cost> ročně.<br />Naše začíná <free>zdarma</free>. Pro stojí <free>{{pro}} jednorázově</free>.",
+    "pick": "Ťukni na to, za co dnes platíš",
+    "group": {
+      "mood": "Nálada a pohoda",
+      "files": "Soubory a úložiště",
+      "bookmarks": "Záložky a čtení na později"
+    },
+    "barThem_one": "Ostatní, {{count}} rok",
+    "barThem_few": "Ostatní, {{count}} roky",
+    "barThem_other": "Ostatní, {{count}} let",
+    "barUs": "<brand/> Pro",
+    "receipt": "Tvoje vyúčtování",
+    "receiptCount_one": "{{count}} předplatné",
+    "receiptCount_few": "{{count}} předplatná",
+    "receiptCount_other": "{{count}} předplatných",
+    "receiptRenews": "Obnovuje se každý rok",
+    "perYear": "Celkem za rok",
+    "keepLabel": "Ušetříš",
+    "keepLine_one": "za {{count}} rok, i když si koupíš Pro.",
+    "keepLine_few": "za {{count}} roky, i když si koupíš Pro.",
+    "keepLine_other": "za {{count}} let, i když si koupíš Pro.",
+    "pickNone": "Ťukni na aplikace, za které platíš.",
+    "checked": "Roční ceny při ročním placení, z ceníku každé aplikace, {{date}}.",
+    "usKicker": "To všechno v jedné aplikaci, šifrované na tvém zařízení.",
+    "usFreeBig": "navždy zdarma",
+    "usProOnce": "jednou, tvoje navždy",
+    "usProLine": "Všechna zařízení, 50 verzí každé poznámky, poznámky zamčené PINem, přehledy pohody a 10× víc úložiště. Další místo od ${{price}} ročně, jediná věc, kterou účtujeme ročně."
   },
   "extras": {
     "kicker": "A ještě",
@@ -414,20 +423,25 @@
     "weekInReview": "Přehled týdne",
     "selfDestruct": "Sebezničující poznámky",
     "anonAccounts": "Anonymní účty",
-    "zenMode": "Režim Zen",
     "darkMode": "Tmavý režim"
   },
   "whyPrivacy": {
     "kicker": "Proč na tom záleží",
-    "heading": "Většina aplikací na poznámky si tvoje poznámky čte.<accent>Ta naše nemůže.</accent>",
-    "para1": "Většina aplikací na poznámky těží z tvého obsahu. Přidej si na nákupní seznam „koupit novou televizi“ a na dalších pár stránkách naskáčou reklamy na televize. Tvůj nákupní seznam, tvůj deník, tvoje soukromé myšlenky, všechno putuje do strojů na cílení reklamy, kde tě profilují a prodají. Je to obchodní model každé „bezplatné“ aplikace na poznámky, kterou platí reklama.",
-    "para2": "I aplikace, které reklamy nezobrazují, mají tvoje poznámky na svých serverech v nezašifrované podobě, čitelné pro zaměstnance, zranitelné při únicích dat a dostupné komukoli se soudním příkazem. Tvoje data se stanou jejich pákou.",
+    "heading": "Napiš „koupit novou televizi“. <accent>Měsíc pak uvidíš televize.</accent>",
+    "lead": "Tak platí své účty většina bezplatných aplikací na poznámky: co napíšeš, se čte, profiluje a prodává a reklamy jdou po tobě.",
+    "step": {
+      "type": "Napíšeš to",
+      "typeSub": "„koupit novou televizi“",
+      "read": "Aplikace to přečte",
+      "readSub": "zájem: elektronika",
+      "ads": "Reklamy tě pronásledují",
+      "adsSub": "na každém webu, který navštívíš"
+    },
     "differenceLabel": "V čem je rozdíl",
-    "differenceBody": "<brand/> šifruje tvoje poznámky na tvém zařízení a při vlastní správě klíč to zařízení nikdy neopustí, takže ani slovo si nepřečteme my ani naše servery. Nejsou tu žádné reklamy, žádné pixely, žádné sledovací prvky třetích stran ani žádná analytika toho, co píšeš, a nikdy nebudou. Náš web počítá kliknutí na své odkazy ke stažení a partnerské odkazy podle země, bez jakéhokoli identifikátoru. Co napíšeš, zůstává tvoje.",
+    "differenceBody": "<brand/> šifruje tvoje poznámky na tvém zařízení. Nejsou tu žádné reklamy, žádné pixely, žádné sledovací prvky třetích stran ani žádná analytika toho, co píšeš, a nikdy nebudou. Kód je open source, takže si to můžeš ověřit.",
     "keyboardNote": "<b>Poznámka ke klávesnicím v zařízení.</b> Klávesnice třetích stran (třeba Gboard, SwiftKey nebo Samsung Keyboard) mohou posílat to, co píšeš, na vlastní servery. Děje se to na úrovni operačního systému, mimo kontrolu jakékoli aplikace. Zvaž vypnutí cloudových funkcí v nastavení klávesnice nebo použití klávesnice, která funguje jen offline."
   },
   "readIt": {
-    "kicker": "Open source",
     "heading": "Nevěř nám. Přečti si to.",
     "body": "Aplikace, kterou právě používáš, je zveřejněná i se šifrováním uvnitř. Začni minutovou kontrolou, na kterou nepotřebuješ žádné nástroje, nebo jdi rovnou do kódu.",
     "cta": "Zobrazit kód na GitHubu",
@@ -437,30 +451,25 @@
     "crypto": "Samotné šifrování"
   },
   "wontFind": {
-    "kicker": "Co v aplikaci nenajdeš",
-    "noTracking": "Bez sledovacích prvků",
-    "noAds": "Bez reklam",
-    "noHarvesting": "Bez sbírání dat",
-    "noAiTraining": "Bez trénování AI",
-    "noLockIn": "Bez závislosti na nás",
-    "noEmail": "Bez e-mailu",
-    "noTelemetry": "Bez analytiky tvých poznámek",
-    "noCookieBanner": "Bez cookie lišty",
-    "noPasswords": "Bez hesel",
-    "noDarkPatterns": "Bez temných vzorců",
-    "noVc": "Bez rizikového kapitálu",
-    "noBlockchain": "Bez blockchainu",
-    "noBackdoor": "Bez skrytých zadních vrátek"
+    "kicker": "Záměrně vynecháno",
+    "noTracking": "Sledovací prvky",
+    "noAds": "Reklamy",
+    "noHarvesting": "Sbírání dat",
+    "noAiTraining": "Trénování AI",
+    "noLockIn": "Závislost na dodavateli",
+    "noEmail": "Povinný e-mail",
+    "noDarkPatterns": "Temné vzorce",
+    "noBackdoor": "Zadní vrátka"
   },
   "noRecovery": {
     "heading": "Tvoje fráze je tvůj klíč",
-    "body": "Bez fráze nejsou poznámky. My je neobnovíme a nikdo jiný taky ne. To je cena za vlastní správu: klíč máš jenom ty, takže poznámky ti nevrátí ani zpráva našemu týmu.",
+    "body": "Při vlastní správě platí: bez fráze nejsou poznámky a nikdo je neobnoví. To je cena za to, že jediný klíč máš ty, takže poznámky ti nevrátí ani zpráva našemu týmu.",
     "noRecoveryTerm": "Žádná obnova",
-    "noRecoveryDesc": "Ztratíš frázi, ztratíš poznámky",
+    "noRecoveryDesc": "Při vlastní správě ztratíš s frází i poznámky",
     "deviceTerm": "Vytvořená v zařízení",
     "deviceDesc": "Při vlastní správě se tvoje fráze nikdy nedostane na naše servery",
     "zkTerm": "Nulová znalost",
-    "zkDesc": "Při vlastní správě tvoje data nepřečteme ani neobnovíme",
+    "zkDesc": "Při vlastní správě nemá server nic, co by tvoje poznámky otevřelo",
     "writeTerm": "Zapiš si ji",
     "writeDesc": "Záloha na papíře, uložená na bezpečném místě",
     "printTerm": "Vytiskni z nastavení",
@@ -471,22 +480,20 @@
   "closing": {
     "kicker": "Až budeš chtít",
     "heading": "Trezor máš hotový za necelou minutu.",
-    "importNote": "Přecházíš z jiné aplikace? Vyexportuj z kterékoli z nich a naimportuj to za pár minut:"
+    "importNote": "Přecházíš z jiné aplikace? Vyexportuj z kterékoli z nich a naimportuj to za pár minut:",
+    "importDemoTitle": "Vyzkoušej si nejdřív vlastní import v demu",
+    "importDemoBody": "Tvůj soubor se čte v prohlížeči, nic nejde na naše servery a zavřením karty se smaže."
   },
   "about": {
     "tabs": {
       "about": "O aplikaci",
-      "changelog": "Changelog",
-      "roadmap": "Roadmap",
       "hotkeys": "Zkratky",
       "rating": "Hodnocení"
     },
-    "modalTitle": "O aplikaci",
-    "intro": "<brand/> drží tvoje poznámky, úkoly, deník, hesla, soubory, záložky a kontakty na jednom místě. Všechno se šifruje na tvém zařízení klíčem vytvořeným z tvých 12 slov a zůstává zašifrované i na našich serverech ve <nowrap>Švýcarsku</nowrap>. Funguje offline a aplikace je open source.",
+    "intro": "<brand/> drží tvoje poznámky, úkoly, hesla, deník, soubory, kalendář, kontakty a záložky na jednom místě, se sledováním nálady a léků. Všechno se šifruje na tvém zařízení klíčem vytvořeným z tvých 12 slov a zůstává zašifrované i na našich serverech ve <nowrap>Švýcarsku</nowrap>. Funguje offline a aplikace je open source.",
     "versionHeading": "Verze",
     "windowVersion": "Verze {{version}}",
     "windowHelp": "Centrum nápovědy",
-    "windowWhatsNew": "Changelog",
     "whatsNew": "Novinky",
     "seeWhatsNew": "Všechny změny se snímky obrazovky na PrivacyNotes.app",
     "feedbackHeading": "Zpětná vazba",
@@ -495,14 +502,13 @@
     "termsOfService": "Podmínky používání",
     "refundPolicy": "Zásady vracení peněz",
     "tagline": "Žádné předplatné. Jen software. Ne služba.",
-    "hotkeysFootnote": "Většina zkratek se ignoruje, když píšeš do textového pole, takže obyčejné klávesy jako J a K pořád píšou J a K.",
     "singleKeysTitle": "Zkratky jednou klávesou",
     "singleKeysDesc": "Používej J, K, Q, / a ? a v Kalendáři T, D, W, M a N, bez držení Cmd nebo Ctrl."
   },
   "trust": {
     "openSourceHeading": "Open source",
     "openSourceLink": "Přečti si kód na GitHub.com",
-    "openSourceBody": "Aplikace i šifrování uvnitř jsou zveřejněné, takže si naše tvrzení o nulové znalosti může ověřit kdokoli.",
+    "openSourceBody": "Aplikace i šifrování uvnitř jsou zveřejněné, takže si kdokoli může ověřit, jak se tvoje poznámky šifrují.",
     "dataStorageHeading": "Ukládání dat",
     "dataStorageBody": "Zašifrované bloby uložené v Curychu, <flag/> Švýcarsko.",
     "faviconsHeading": "Ikony webů",
@@ -524,6 +530,7 @@
     "outro": "Čteme každé hodnocení a pár slov od někoho, kdo aplikaci používá denně, nás drží nad vodou.",
     "descGithub": "Dej nám hvězdičku na GitHubu",
     "descAppStore": "Ohodnoť PrivacyNotes v App Storu",
+    "descPlay": "Ohodnoť PrivacyNotes na Google Play",
     "descAlternativeTo": "Ohodnoť nás a napiš recenzi na webu AlternativeTo",
     "descCapterra": "Ohodnoť PrivacyNotes na webu Capterra",
     "descSaasHub": "Ohodnoť nás a napiš recenzi na webu SaaSHub",

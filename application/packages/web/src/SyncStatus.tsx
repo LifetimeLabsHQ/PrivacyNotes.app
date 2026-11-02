@@ -36,6 +36,12 @@ interface SyncStatusProps {
    * top edge.
    */
   tipHostClassName?: string;
+  /**
+   * The first read of this device's vault has finished. Until then the
+   * list is empty while the store opens, and a "Synced" check over it
+   * reads as lost notes (beta issue 3), so nothing shows.
+   */
+  ready?: boolean;
 }
 
 /**
@@ -58,7 +64,7 @@ interface SyncStatusProps {
  * what an added "N files waiting to upload" line did. That count now
  * lives in ID & Sync, one click away.
  */
-export function SyncStatus({ size = 13, onOpen, tipPosition = 'above-start', tipHostClassName }: SyncStatusProps) {
+export function SyncStatus({ size = 13, onOpen, tipPosition = 'above-start', tipHostClassName, ready = true }: SyncStatusProps) {
   const { t } = useTranslation('settings');
   const online = useOnlineStatus();
   const pendingUploads = usePendingUploads();
@@ -71,6 +77,8 @@ export function SyncStatus({ size = 13, onOpen, tipPosition = 'above-start', tip
   const failures = usePushFailures();
   const halt = usePushHalt();
   const standing = pullStanding(useSyncLog());
+
+  if (!ready) return null;
 
   // Demo mode never saves anything - don't show a green "Synced" check
   // that implies durability. Say so plainly instead.
@@ -103,7 +111,7 @@ export function SyncStatus({ size = 13, onOpen, tipPosition = 'above-start', tip
         body: (
           <>
             <Warning size={size} className="text-warning" />
-            <span className="text-warning">{t('syncStatus.updateRequired')}</span>
+            <span className="text-warning">{t('common:updateToast.required')}</span>
           </>
         ),
         tip: t('syncStatus.updateRequiredTooltip'),

@@ -12,7 +12,7 @@ import { FORMULA_NAMES, cellNumber, evaluateTable } from './tableFormula';
  * guess is the feature; a menu that wrote `=SUM()` and left the user counting
  * rows would be slower than typing.
  *
- * Spec: ops/docs/archive/table-formulas.md
+ * Spec: docs/internal/specs/table-formulas.md
  */
 
 /** A function that takes a range reads the cells around the caret; the rest do not. */

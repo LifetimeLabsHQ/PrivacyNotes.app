@@ -24,14 +24,14 @@ export function SessionExpiredModal({ onSignOut }: { onSignOut: () => void }) {
     logAuthEvent('ui:session-expired-modal');
   }, []);
   return (
-    <Modal title={t('sessionExpired.title')} icon={<WarningCircle size={16} />} layer="z-[70]" className="max-w-sm p-6 space-y-4">
-        <p className="text-sm text-pn-muted leading-relaxed">
+    <Modal title={t('sessionExpired.title')} icon={<WarningCircle />} layer="z-[70]" className="max-w-sm p-6 space-y-4">
+        <p className="text-body text-pn-muted leading-relaxed">
           {t('sessionExpired.body')}
         </p>
         <button
           type="button"
           onClick={onSignOut}
-          className="w-full rounded-md bg-accent-fill hover:bg-accent-fill-hover text-white text-sm font-medium px-3 py-2.5 transition"
+          className="w-full rounded-md bg-accent-fill hover:bg-accent-fill-hover text-white text-body font-medium px-3 py-2.5 transition"
         >
           {t('sessionExpired.signInAgain')}
         </button>

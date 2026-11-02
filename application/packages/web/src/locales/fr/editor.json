@@ -12,6 +12,8 @@
     "addLink": "Ajouter un lien",
     "noteLink": "Lier à une autre note (ou tape [[)",
     "numberedList": "Liste numérotée",
+    "indent": "Augmenter le retrait",
+    "outdent": "Diminuer le retrait",
     "textColor": "Couleur du texte",
     "textColorApply": "Couleur du texte : {{color}}",
     "pickColor": "Choisir une couleur de texte",
@@ -72,6 +74,7 @@
     "remove": "Retirer l'encadré",
     "collapse": "Replier l'encadré",
     "expand": "Déplier l'encadré",
+    "dragGrip": "Faire glisser",
     "types": {
       "info": "Info",
       "success": "Succès",
@@ -132,6 +135,9 @@
     "addColumnRight": "Ajouter une colonne à droite",
     "toggleHeaderRow": "Activer ou désactiver la ligne d'en-tête",
     "equalColumnWidths": "Égaliser les colonnes",
+    "cellColor": "Couleur de la cellule",
+    "sortAscending": "Trier de A à Z",
+    "sortDescending": "Trier de Z à A",
     "resizeHint": "Maintiens {{shift}} pour ne modifier que cette colonne, {{alt}} pour un réglage plus fin",
     "deleteRow": "Supprimer la ligne",
     "deleteColumn": "Supprimer la colonne",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "Rechercher dans la note",
-    "label": "Rechercher dans la note",
     "previous": "Correspondance précédente",
     "previousTitle": "Précédent",
     "next": "Correspondance suivante",
     "nextTitle": "Suivant",
     "close": "Fermer la recherche",
-    "closeTitle": "Fermer",
     "replacePlaceholder": "Remplacer par",
     "replaceLabel": "Remplacer par",
     "replace": "Remplacer",
@@ -177,10 +180,7 @@
     "replaceAll": "Tout",
     "replaceAllTitle": "Remplacer toutes les occurrences",
     "caseSensitive": "Respecter la casse",
-    "caseSensitiveTitle": "Respecter la casse",
     "closeReplace": "Fermer rechercher et remplacer",
-    "closeReplaceTitle": "Fermer",
-    "showReplace": "Rechercher et remplacer",
     "hideReplace": "Masquer le remplacement",
     "replacedCount_one": "{{count}} remplacée",
     "replacedCount_other": "{{count}} remplacées"
@@ -192,9 +192,7 @@
     "ariaLabel": "Plan de la note",
     "hide": "Masquer le plan",
     "copyHeadingLink": "Copier le lien vers le titre",
-    "copyNoteLink": "Copier le lien de note",
-    "copyHeadingShortcut": "Copier le raccourci vers le titre",
-    "copied": "Copié"
+    "copyHeadingShortcut": "Copier le raccourci vers le titre"
   },
   "bodyMenu": {
     "cut": "Couper",
@@ -210,11 +208,8 @@
     "add": "Ajouter une ligne"
   },
   "link": {
-    "popoverLabel": "Ajouter un lien",
     "placeholder": "Colle ou saisis une URL",
     "apply": "Appliquer",
-    "addTitle": "Ajouter un lien",
-    "editTitle": "Modifier le lien",
     "urlLabel": "URL",
     "urlPlaceholder": "https://exemple.com",
     "errorEnterUrl": "Saisis une URL",
@@ -230,7 +225,6 @@
   },
   "audio": {
     "uploadingRecording": "Envoi de l'enregistrement...",
-    "uploading": "Envoi...",
     "stopRecording": "Arrêter l'enregistrement",
     "recordAudio": "Enregistrer un audio",
     "savingRecording": "Enregistrement de la prise...",
@@ -247,7 +241,6 @@
     "tasksChecked_other": "{{done}} sur {{formatted}} cochés",
     "syncLimit": " · {{share}} de la limite de synchronisation de 1 Mo",
     "overSyncLimit": " · au-delà de la limite de synchronisation de 1 Mo, reste sur cet appareil",
-    "split": "Scinder la note",
     "veryLong": ", très long, l'édition peut être lente et saccadée",
     "gettingLong": ", devient long, peut ralentir sur les appareils plus lents",
     "largeTableWarning": "Un grand tableau ({{rows}} lignes) peut rendre cette note lente à éditer, envisage de la scinder"
@@ -262,19 +255,15 @@
     "placeholder": "Texte à copier en un clic"
   },
   "inlineCode": {
-    "copyHint": "{{key}}+clic pour copier",
-    "copied": "Copié"
+    "copyHint": "{{key}}+clic pour copier"
   },
   "codeBlock": {
-    "copy": "Copier",
-    "copied": "Copié",
     "copyFailed": "Échec",
     "wrap": "Retour automatique à la ligne",
     "showAll_one": "Afficher {{count}} ligne",
     "showAll_many": "Afficher les {{count}} lignes",
     "showAll_other": "Afficher les {{count}} lignes",
     "showLess": "Afficher moins",
-    "plainText": "Texte brut",
     "language": "Langage du code : {{name}}",
     "searchLanguages": "Rechercher un langage",
     "placeholder": "Tape ou colle du code. Pour les couleurs, choisis un langage au-dessus."
@@ -355,7 +344,6 @@
     "inProgress": "En cours",
     "review": "Relecture",
     "done": "Terminé",
-    "color": "Couleur",
     "columns": "Colonnes",
     "columnCount_one": "{{count}} colonne",
     "columnCount_many": "{{count}} colonnes",

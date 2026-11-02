@@ -21,12 +21,12 @@ export function VaultFormActions({ locked, isNew, saveError, onSave, onCancel }:
     {saveError && <Callout tone="danger">{saveError}</Callout>}
     {!locked && <div className="flex gap-2 -mt-2">
       {!isNew && <button type="button" onClick={onCancel}
-        className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium border border-divider text-pn-muted hover:bg-pn/5 transition">
+        className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-md text-body font-medium border border-divider text-pn-muted hover:bg-pn/5 transition">
         <CancelIcon aria-hidden="true" />
         {t('actions.cancel')}
       </button>}
       <button type="button" onClick={onSave}
-        className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium bg-accent-fill text-white hover:bg-accent-fill-hover transition">
+        className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-md text-body font-medium bg-accent-fill text-white hover:bg-accent-fill-hover transition">
         <SaveIcon aria-hidden="true" />
         {t('actions.save')}
       </button>

@@ -22,7 +22,7 @@
  * inside a link, or an invisible-characters widget at a space, which is the
  * shape of GitHub #205. One character is always one span.
  *
- * Spec: ops/docs/design-decisions.md (Website icons toggle)
+ * Spec: docs/internal/design-decisions.md (Website icons toggle)
  */
 
 import { Extension } from '@tiptap/core';

@@ -7,14 +7,14 @@
  * The whole run is copied, not the word under the pointer: a path or a
  * command is the unit a reader wants out of the note.
  *
- * Spec: ops/docs/archive/spoiler-and-copy.md
+ * Spec: docs/internal/specs/spoiler-and-copy.md
  */
 
 import { Extension, getMarkRange } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorState } from '@tiptap/pm/state';
 import i18n from './i18n';
-import { isMac, isOpenLinkModifier } from './editorLinks';
+import { isMac, isOpenLinkModifier } from './devices';
 
 /** The text of the inline code run around `pos`, or null outside one. */
 export function inlineCodeTextAt(state: EditorState, pos: number): string | null {
@@ -34,7 +34,7 @@ export function inlineCodeHint(): string {
 function flashCopied(x: number, y: number): void {
   const bubble = document.createElement('div');
   bubble.className = 'pn-copy-bubble';
-  bubble.textContent = i18n.t('editor:inlineCode.copied');
+  bubble.textContent = i18n.t('auth:createPhrase.copied');
   bubble.style.left = `${x}px`;
   bubble.style.top = `${y}px`;
   document.body.appendChild(bubble);

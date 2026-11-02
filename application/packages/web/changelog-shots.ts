@@ -7,11 +7,11 @@ import { fileURLToPath } from 'node:url';
 // public/marketing/changelog/<version>/, which the app build deletes, so they
 // never reach a binary; the app bundle carries only the `shot` key on an item.
 //
-// Every picture enters through ops/changelog-shots/ingest.mjs, which encodes
+// Every picture enters through tools/internal/changelog-shots/ingest.mjs, which encodes
 // it and records its size and SHA-256 in shots.json. This module refuses a
 // file the manifest does not describe byte for byte, so a hand-copied PNG or a
 // re-saved WebP cannot bypass the house encoding.
-// Spec: ops/docs/plans/changelog-screenshots.md
+// Spec: docs/internal/plans/changelog-screenshots.md
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SHOTS_DIR = path.resolve(__dirname, 'public/marketing/changelog');
@@ -39,10 +39,10 @@ type Release = { version: string; items: Array<{ text: string; shot?: string | s
 class ShotsError extends Error {}
 
 /** The most shots one release may carry: the thumbnail row holds this many on one line.
- *  Spec: ops/docs/plans/changelog-screenshots.md */
+ *  Spec: docs/internal/plans/changelog-screenshots.md */
 const MAX_SHOTS = 7;
 
-const FIX = 'Add pictures with node ops/changelog-shots/ingest.mjs, never by hand.';
+const FIX = 'Add pictures with node tools/internal/changelog-shots/ingest.mjs, never by hand.';
 
 function fileName(key: string, dark: boolean): string {
   return `${key}${dark ? '.dark' : ''}.webp`;

@@ -39,6 +39,16 @@
     "ordinal": "r, n, t, a, er, º, .",
     "work": "feina, treball",
     "personal": "personal, casa",
-    "in": "d'aquí a, en"
+    "in": "d'aquí a, en",
+    "weekend": "cap de setmana",
+    "endOfMonth": "final de mes, final del mes, fi de mes",
+    "morning": "matí, al matí",
+    "afternoon": "tarda, a la tarda",
+    "evening": "vespre, al vespre",
+    "biweekly": "quinzenalment",
+    "quarterly": "trimestralment",
+    "halfPast": "i mitja",
+    "numbers": "u, dos, tres, quatre, cinc, sis, set, vuit, nou, deu, onze, dotze",
+    "a": "un, una"
   }
 }

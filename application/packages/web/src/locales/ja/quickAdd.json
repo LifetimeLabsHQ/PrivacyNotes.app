@@ -39,6 +39,16 @@
     "ordinal": "日",
     "work": "仕事, 職場",
     "personal": "個人, プライベート, 家",
-    "in": "後"
+    "in": "後",
+    "weekend": "週末",
+    "endOfMonth": "月末, 今月末",
+    "morning": "午前中, 朝方",
+    "afternoon": "午後, 昼過ぎ",
+    "evening": "夕方, 夜, 晩",
+    "biweekly": "2週間ごと, 二週間ごと, 2週ごと",
+    "quarterly": "四半期ごと, 毎四半期, 3か月ごと",
+    "halfPast": "half past",
+    "numbers": "one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve",
+    "a": "a, an"
   }
 }

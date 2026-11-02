@@ -8,7 +8,7 @@
  * help-page.ts evaluates this file on its own, so it MUST stay free of
  * imports, and nothing at the top level may read a build constant.
  *
- * Spec: ops/docs/archive/keyboard-shortcuts.md (sections 4.1 and 5)
+ * Spec: docs/internal/specs/keyboard-shortcuts.md (sections 4.1 and 5)
  */
 
 export type KeyOs = 'mac' | 'pc';
@@ -65,7 +65,7 @@ export const COMMAND_KEYS = {
   ],
   // Back and forward through the opened items, as in a browser. Option+Left
   // moves the caret by a word on a Mac, so the Alt keys are for Windows and
-  // Linux only. Spec: ops/issues/archive/0331.md
+  // Linux only. Spec: docs/internal/issues/archive/0331.md
   historyBack: [
     { mod: true, key: '[', repeat: true },
     { alt: true, key: 'ArrowLeft', os: 'pc', repeat: true },
@@ -112,6 +112,12 @@ export const COMMAND_KEYS = {
   moveToTrash: [
     { mod: true, key: 'Backspace' },
     { mod: true, key: 'Delete', alias: true },
+  ],
+  // The Delete window even with the question turned off: the way to Delete
+  // forever from the keyboard (#630).
+  deleteAsk: [
+    { mod: true, shift: true, key: 'Backspace' },
+    { mod: true, shift: true, key: 'Delete', alias: true },
   ],
   selectAll: [{ mod: true, key: 'a' }],
 

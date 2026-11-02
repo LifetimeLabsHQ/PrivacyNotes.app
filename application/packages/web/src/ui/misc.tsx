@@ -46,7 +46,7 @@ export function Popover({ open, anchorRef, onClose, title, align = 'start', clas
     >
       {title && (
         <div className="mb-1 flex items-center justify-between gap-2 ps-1.5">
-          <p className="text-sm font-semibold">{title}</p>
+          <p className="text-body font-semibold">{title}</p>
           <CloseButton onClick={onClose} />
         </div>
       )}
@@ -63,7 +63,7 @@ export function Popover({ open, anchorRef, onClose, title, align = 'start', clas
  */
 export function Kbd({ children }: { children: ReactNode }) {
   return (
-    <kbd className="inline-flex min-w-[1.25rem] items-center justify-center rounded border border-divider bg-surface-1 px-1 font-sans text-[11px] leading-5 text-pn-muted">
+    <kbd className="inline-flex min-w-[1.25rem] items-center justify-center rounded border border-divider bg-surface-1 px-1 font-sans text-meta leading-5 text-pn-muted">
       {children}
     </kbd>
   );
@@ -87,7 +87,7 @@ export function CopyButton({ value, label }: { value: string; label: string }) {
   const { copy, copied } = useCopyToClipboard();
   return (
     <IconButton label={label} onClick={() => copy(value, 'value')}>
-      {copied ? <Check size={16} className="text-success" aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
+      {copied ? <Check className="text-success" aria-hidden="true" /> : <Copy aria-hidden="true" />}
     </IconButton>
   );
 }

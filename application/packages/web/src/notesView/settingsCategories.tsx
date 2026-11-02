@@ -11,8 +11,10 @@ import type { ImportTarget } from '../import/destination';
 import type { ImageStore } from '../imageStore';
 import type { AppearancePane } from '../AppearanceSheet';
 import { exemptOpts } from '../i18nExempt';
-import { Calendar, ChartBar, CreditCard, Database, Info, Question, Repeat, ListBullets, Palette, Heartbeat, PencilLine, Shield, Toolbox, Translate, User, type Icon } from '../icons';
+import { Calendar, ChartBar, CreditCard, Database, Info, Keyboard, Question, Repeat, ListBullets, Palette, Heartbeat, PencilLine, PuzzlePiece, Shield, Toolbox, Translate, User, type Icon } from '../icons';
 import { proUnlocked } from '../demo';
+import { isTouchOnly } from '../touchOnly';
+import { extensionOffered } from '../extensionRelease';
 import { activeLocale } from '../languages';
 import { helpPath } from '../localeRoutes';
 import { updateNote } from '../notesRepo';
@@ -22,7 +24,7 @@ import type { SettingsCategory } from '../SettingsShell';
 import { StoragePane } from './StoragePane';
 import type { SectionId } from '../settingsSearch/registry';
 import { siteHref } from '../siteLinks';
-import { withCredentialChanges, type UserSettings } from '../userSettings';
+import { loadLocalSettings, withCredentialChanges, type UserSettings } from '../userSettings';
 import { applyNoteColorChoice, noteColorChoice } from '../itemStyles';
 import type { ViewMode } from '../viewMode';
 import { setDeviceLabel } from '../deviceLabels';
@@ -31,7 +33,9 @@ import type { UpgradeTrigger } from '../UpgradeModal';
 
 export const StatsModal = lazyModal(() => import('../StatsModal').then((m) => m.StatsModal));
 export const AboutModal = lazyModal(() => import('../AboutModal').then((m) => m.AboutModal));
+const HotkeysPane = lazyModal(() => import('../HotkeysPane').then((m) => m.HotkeysPane));
 export const FeedbackModal = lazyModal(() => import('../FeedbackModal').then((m) => m.FeedbackModal));
+const BrowserPane = lazyModal(() => import('../BrowserPane').then((m) => m.BrowserPane));
 export const SecurityModal = lazyModal(() => import('../SecurityModal').then((m) => m.SecurityModal));
 export const PasswordGeneratorModal = lazyModal(() => import('../PasswordGenerator').then((m) => m.PasswordGeneratorModal));
 export const SyncOptionsModal = lazyModal(() => import('../SyncOptionsModal').then((m) => m.SyncOptionsModal));
@@ -67,6 +71,8 @@ export const SETTINGS_SECTION_ICONS: Record<SectionId, Icon> = {
   trackers: Heartbeat,
   language: Translate,
   date: Calendar,
+  hotkeys: Keyboard,
+  browser: PuzzlePiece,
   about: Info,
   help: Question,
 };
@@ -102,6 +108,7 @@ export function buildSettingsCategories({
   mergeImportedFolders,
   importTarget,
   createImportFolder,
+  undoImportedFolders,
   mergeRestoredSettings,
   applyImportedTagColors,
   exportAllMarkdownZip,
@@ -114,6 +121,7 @@ export function buildSettingsCategories({
   exportBookmarks,
   exportContacts,
   exportCalendar,
+  exportDrawings,
   importEncryptedBackup,
   imageStoreRef,
   attachmentStoreRef,
@@ -139,7 +147,7 @@ export function buildSettingsCategories({
   /** Switches one view off, or back on, in the sidebar or in the All list.
    *  Built in NotesView because hiding the OPEN view also leaves it, which
    *  this module cannot do; never write hiddenViews/hiddenInAll through
-   *  mutateSettings. Spec: ops/docs/archive/sidebar-views.md */
+   *  mutateSettings. Spec: docs/internal/specs/sidebar-views.md */
   onToggleHiddenView: (field: 'hiddenViews' | 'hiddenInAll', key: View) => void;
   auth: Authed;
   settingsAutoVerify: boolean;
@@ -153,9 +161,10 @@ export function buildSettingsCategories({
     incoming: FolderDef[],
     originalIds?: ReadonlyMap<string, string>,
     rootParent?: string | null,
-  ) => Map<string, string>;
+  ) => { idMap: Map<string, string>; created: string[] };
   importTarget: ImportTarget | undefined;
-  createImportFolder: (name: string) => string | null;
+  createImportFolder: (name: string) => { id: string; created: boolean } | null;
+  undoImportedFolders: (ids: readonly string[]) => void;
   applyImportedTagColors: (colors: Map<string, string>) => void;
   mergeRestoredSettings: (
     settings: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown },
@@ -171,6 +180,8 @@ export function buildSettingsCategories({
   exportBookmarks: (ns: LocalNote[]) => Promise<void>;
   exportContacts: (ns: LocalNote[]) => Promise<void>;
   exportCalendar: (ns: LocalNote[]) => Promise<void>;
+  /** The gated drawings export; without it the Drawings card is not drawn. */
+  exportDrawings?: (ns: LocalNote[]) => Promise<void>;
   importEncryptedBackup: (file: File) => Promise<{ imported: number; updated: number; unchanged: number }>;
   imageStoreRef: MutableRefObject<ImageStore | null>;
   attachmentStoreRef: MutableRefObject<AttachmentStore | null>;
@@ -183,7 +194,7 @@ export function buildSettingsCategories({
   formatBarBoard: FormatBarBoardProps;
 }): SettingsCategory[] {
   // Design, Editor and Lists are three panes of one sheet, one Settings
-  // entry each. Spec: ops/docs/archive/ui-patterns.md (section 135)
+  // entry each. Spec: docs/internal/design/ui-patterns.md (section 135)
   const appearancePane = (pane: AppearancePane, initialTab?: string) => (
     <AppearanceSheet
       embedded
@@ -201,6 +212,7 @@ export function buildSettingsCategories({
       hiddenInAll={userSettings.hiddenInAll}
       archivedInAll={userSettings.archivedInAll}
       onToggleHidden={onToggleHiddenView}
+      onViewOrderChange={(order) => mutateSettings((prev) => ({ ...prev, viewOrder: order }))}
       startView={userSettings.startView}
       onStartViewChange={(next) => mutateSettings((prev) => ({ ...prev, startView: next }))}
       noteColors={noteColorChoice(userSettings.tintNotes, userSettings.noteColorStyle)}
@@ -209,6 +221,10 @@ export function buildSettingsCategories({
       onSinkCheckedTasksChange={(on) => mutateSettings((prev) => ({ ...prev, sinkCheckedTasks: on }))}
       taskConfetti={userSettings.taskConfetti}
       onTaskConfettiChange={(on) => mutateSettings((prev) => ({ ...prev, taskConfetti: on }))}
+      typedSymbols={userSettings.typedSymbols}
+      onTypedSymbolsChange={(on) => mutateSettings((prev) => ({ ...prev, typedSymbols: on }))}
+      confirmTrash={userSettings.confirmTrash}
+      onConfirmTrashChange={(on) => mutateSettings((prev) => ({ ...prev, confirmTrash: on }))}
       spaces={userSettings.spaces}
       onSpacesChange={(on) => mutateSettings((prev) => ({ ...prev, spaces: on }))}
       onOpenUpgrade={(trigger) => { setShowSettings(false); setShowUpgrade({ trigger: trigger ?? 'theme' }); }}
@@ -218,6 +234,13 @@ export function buildSettingsCategories({
       onOpenThemeBuilder={openThemeBuilder}
     />
   );
+
+  // The browser extension's key entries, for the device list and Apps.
+  const extensionKeys = {
+    readKeys: () => loadLocalSettings().extensionKeys,
+    saveKeys: (update: (keys: UserSettings['extensionKeys']) => UserSettings['extensionKeys']) =>
+      mutateSettings((prev) => ({ ...prev, extensionKeys: update(prev.extensionKeys) })),
+  };
 
   return [
             {
@@ -262,11 +285,12 @@ export function buildSettingsCategories({
                 <ImportModal
                   embedded
                   onClose={() => setShowSettings(false)}
-                  initialTab={initialTab === 'export' || initialTab === 'restore' || initialTab === 'vault' || initialTab === 'wellness' ? initialTab : 'import'}
+                  initialTab={initialTab === 'export' || initialTab === 'restore' || initialTab === 'wellness' ? initialTab : 'import'}
                   notes={notes}
                   onImportFolders={mergeImportedFolders}
                   importTarget={importTarget}
                   onCreateImportFolder={createImportFolder}
+                  onUndoImportFolders={undoImportedFolders}
                   onImportSettings={mergeRestoredSettings}
                   onImportTagColors={applyImportedTagColors}
                   onExportAllMdZip={(ns) => void exportAllMarkdownZip(ns)}
@@ -279,6 +303,7 @@ export function buildSettingsCategories({
                   onExportBookmarks={exportBookmarks}
                   onExportContacts={exportContacts}
                   onExportCalendar={exportCalendar}
+                  onExportDrawings={exportDrawings && ((ns) => void exportDrawings(ns))}
                   wellness={{
                     isNoteLocked,
                     trackerSettings: userSettings.trackerSettings,
@@ -329,7 +354,7 @@ export function buildSettingsCategories({
               label: t('settings.editorLabel'),
               group: t('settings.groupPreferences'),
               icon: railIcon('editor'),
-              render: () => appearancePane('editor'),
+              render: ({ initialTab }) => appearancePane('editor', initialTab),
             },
             {
               id: 'formatBar',
@@ -394,6 +419,8 @@ export function buildSettingsCategories({
                     <CalendarSettings
                       value={userSettings.calendar}
                       onChange={(next) => mutateSettings((prev) => ({ ...prev, calendar: next }))}
+                      weekStart={userSettings.weekStart}
+                      onWeekStartChange={(weekStart) => mutateSettings((prev) => ({ ...prev, weekStart }))}
                       alertsUnlocked={proUnlocked(auth.isPro)}
                       showPro={!auth.isPro}
                       onUpgrade={() => setShowUpgrade({ trigger: 'alerts' })}
@@ -464,10 +491,11 @@ export function buildSettingsCategories({
               label: t('settings.accountLabel', exemptOpts('notes:settings.accountLabel')),
               group: t('settings.groupAccount'),
               icon: railIcon('me'),
-              render: () => (
+              render: ({ initialTab }) => (
                 <SyncOptionsModal
                   embedded
                   tab="me"
+                  initialMeSection={initialTab === 'dms' ? 'dms' : undefined}
                   onSyncNow={runSync}
                   onOpenNote={onOpenNote}
                   autoVerify={settingsAutoVerify}
@@ -508,6 +536,24 @@ export function buildSettingsCategories({
                 />
               ),
             },
+            // A touch-only device has no keyboard, so no Hotkeys pane.
+            ...(isTouchOnly() ? [] : [{
+              id: 'hotkeys',
+              label: t('landing:about.tabs.hotkeys'),
+              group: t('settings.groupBrand'),
+              icon: railIcon('hotkeys'),
+              render: ({ initialTab }: { initialTab?: string }) => <HotkeysPane initialTab={initialTab} />,
+            }]),
+            // Spec: docs/internal/plans/browser-extension-build.md (section 6)
+            // No Extension pane until the stores list it (extensionRelease.ts).
+            ...(extensionOffered() ? [{
+              id: 'browser',
+              label: t('shell:apps.railLabel'),
+              title: t('shell:apps.title'),
+              group: t('settings.groupBrand'),
+              icon: railIcon('browser'),
+              render: () => <BrowserPane extensionKeys={extensionKeys} />,
+            }] : []),
             {
               id: 'about',
               label: t('settings.aboutLabel'),
@@ -517,14 +563,14 @@ export function buildSettingsCategories({
                 <AboutModal
                   embedded
                   onClose={() => setShowSettings(false)}
-                  initialTab={initialTab === 'hotkeys' || initialTab === 'rating' ? initialTab : 'about'}
+                  initialTab={initialTab === 'rating' ? initialTab : 'about'}
                 />
               ),
             },
             {
               // Link row, not a pane: the static /help site is the only FAQ
               // renderer, so this opens the browser rather than duplicating
-              // it in-app. Spec: ops/docs/bundle-size.md (in-app FAQ tab)
+              // it in-app. Spec: docs/contrib/bundle-size.md (in-app FAQ tab)
               id: 'help',
               label: t('settings.helpLabel'),
               group: t('settings.groupBrand'),

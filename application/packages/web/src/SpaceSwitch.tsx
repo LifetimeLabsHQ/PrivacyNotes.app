@@ -43,7 +43,7 @@ const VIEWS: readonly { key: SpaceView; icon: Icon; label: 'spaces.all' | 'space
  * crowd a three-segment track. `noAll` leaves All out on a free account,
  * where it is the only view and a click on it does nothing: Personal and
  * Work then stand unpressed, two ways into the upgrade window.
- * Spec: ops/docs/plans/spaces.md (section 6)
+ * Spec: docs/internal/specs/spaces.md (section 6)
  */
 export function SpaceSwitch({
   active,
@@ -79,7 +79,7 @@ export function SpaceSwitch({
             : 'text-accent-strong/60 hover:text-accent-strong hover:bg-surface-2/60'
         }`;
         // Outline while closed, solid while open: the state reads without color.
-        const glyph = <SpaceIcon size={16} weight={on ? 'fill' : 'regular'} aria-hidden="true" />;
+        const glyph = <SpaceIcon weight={on ? 'fill' : 'regular'} aria-hidden="true" />;
         const pro = locked && key !== 'all';
         return (
           // Stretched (beside Jump, and full width in the drawer) the switch
@@ -92,7 +92,7 @@ export function SpaceSwitch({
               <ProGlyph pro={pro && key === 'work'}>{glyph}</ProGlyph>
               {stretch && (
                 <span aria-hidden="true" className="pn-sb-roomy pn-browse-name">
-                  <span className="text-[13px] font-semibold">{t(label)}</span>
+                  <span className="text-compact font-semibold">{t(label)}</span>
                 </span>
               )}
             </button>

@@ -13,7 +13,7 @@
  * cuts straight through an active snooze. Required updates never reach here -
  * they render without a dismiss button at all.
  *
- * Spec: ops/docs/android-update-check.md (optional vs required updates)
+ * Spec: docs/internal/android-update-check.md (optional vs required updates)
  */
 
 const KEY = 'privacynotes.updateSnooze';

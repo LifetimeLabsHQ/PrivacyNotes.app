@@ -17,7 +17,7 @@
  * Escape meaning "stay away for the rest of this run"). Copying the shape is
  * cheaper than rediscovering them.
  *
- * Spec: ops/docs/archive/table-formulas.md
+ * Spec: docs/internal/specs/table-formulas.md
  */
 
 import { ReactRenderer } from '@tiptap/react';
@@ -78,7 +78,7 @@ const FormulaList = forwardRef<ListRef, ListProps>(({ items, command }, ref) => 
   if (items.length === 0) {
     return (
       <div className="z-50 w-64 rounded-lg border border-divider bg-surface-2 shadow-lg overflow-hidden">
-        <div className="px-3 py-2 text-sm text-pn-muted">{t('table.formulaNoMatch')}</div>
+        <div className="px-3 py-2 text-body text-pn-muted">{t('table.formulaNoMatch')}</div>
       </div>
     );
   }
@@ -92,12 +92,12 @@ const FormulaList = forwardRef<ListRef, ListProps>(({ items, command }, ref) => 
           data-selected={index === selectedIndex}
           onClick={() => command(item)}
           onMouseEnter={() => setSelectedIndex(index)}
-          className={`w-full text-start px-3 py-1.5 text-sm flex items-baseline gap-2 transition ${
+          className={`w-full text-start px-3 py-1.5 text-body flex items-baseline gap-2 transition ${
             index === selectedIndex ? 'bg-accent/10 text-accent-strong dark:bg-accent/20' : 'text-pn hover:bg-pn/5'
           }`}
         >
           <span className="font-mono shrink-0">{item.name}</span>
-          <span className="text-xs text-pn-muted truncate">{t(`table.formula.${item.name}`)}</span>
+          <span className="text-small text-pn-muted truncate">{t(`table.formula.${item.name}`)}</span>
         </button>
       ))}
     </div>

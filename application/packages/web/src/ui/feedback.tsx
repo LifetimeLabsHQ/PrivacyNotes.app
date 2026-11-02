@@ -36,9 +36,9 @@ export function Callout({ tone = 'info', title, action, className = '', children
 }) {
   const Glyph = GLYPH[tone];
   return (
-    <div role={tone === 'danger' ? 'alert' : undefined} className={`flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-xs leading-relaxed text-pn ${BOX[tone]}${className ? ` ${className}` : ''}`}>
+    <div role={tone === 'danger' ? 'alert' : undefined} className={`flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-small leading-relaxed text-pn ${BOX[tone]}${className ? ` ${className}` : ''}`}>
       <div className="flex min-w-0 flex-[1_1_12rem] items-start gap-2">
-        <Glyph size={15} className={`mt-0.5 shrink-0 ${INK[tone]}`} aria-hidden="true" />
+        <Glyph className={`mt-0.5 shrink-0 ${INK[tone]}`} aria-hidden="true" />
         <div className="min-w-0 flex-1">
           {title && <p className="font-semibold">{title}</p>}
           {children}
@@ -63,9 +63,9 @@ export function Banner({ tone = 'warning', action, onDismiss, dismissLabel, chil
 }) {
   const Glyph = GLYPH[tone];
   return (
-    <div role="status" className={`flex flex-wrap items-center gap-3 border-b px-4 py-2 text-[13px] text-pn ${BOX[tone]}`}>
+    <div role="status" className={`flex flex-wrap items-center gap-3 border-b px-4 py-2 text-compact text-pn ${BOX[tone]}`}>
       <div className="flex min-w-0 flex-[1_1_12rem] items-start gap-3">
-        <Glyph size={16} className={`mt-0.5 shrink-0 ${INK[tone]}`} aria-hidden="true" />
+        <Glyph className={`mt-0.5 shrink-0 ${INK[tone]}`} aria-hidden="true" />
         <div className="min-w-0 flex-1">{children}</div>
       </div>
       {(action || onDismiss) && <div className="ms-auto flex max-w-full flex-wrap items-center gap-2">
@@ -87,7 +87,7 @@ export function Snackbar({ actionLabel, onAction, children }: { actionLabel?: st
   return (
     <div
       role="status"
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-full bg-accent-fill py-1.5 ps-4 text-sm font-medium text-white shadow-lg ${actionLabel ? 'pe-1.5' : 'pe-4'}`}
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-full bg-accent-fill py-1.5 ps-4 text-body font-medium text-white shadow-lg ${actionLabel ? 'pe-1.5' : 'pe-4'}`}
     >
       <span className="min-w-0 truncate">{children}</span>
       {actionLabel && (
@@ -114,7 +114,7 @@ const BADGE: Record<Tone | 'neutral', string> = {
  */
 export function Badge({ tone = 'neutral', icon, children }: { tone?: Tone | 'neutral'; icon?: ReactNode; children: ReactNode }) {
   return (
-    <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium leading-tight ${BADGE[tone]}`}>
+    <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-meta font-medium leading-tight ${BADGE[tone]}`}>
       {icon}
       {children}
     </span>
@@ -152,7 +152,7 @@ export function ProgressBar({ value, label, tone = 'info' }: { value?: number; l
  */
 export function StatusLine({ busy = false, tone, children }: { busy?: boolean; tone?: 'danger' | 'success'; children: ReactNode }) {
   return (
-    <p role="status" className={`flex items-center gap-2 text-xs ${tone === 'danger' ? 'text-danger' : tone === 'success' ? 'text-success' : 'text-pn-muted'}`}>
+    <p role="status" className={`flex items-center gap-2 text-small ${tone === 'danger' ? 'text-danger' : tone === 'success' ? 'text-success' : 'text-pn-muted'}`}>
       {busy && <Spinner size={14} />}
       <span className="min-w-0">{children}</span>
     </p>
@@ -171,12 +171,12 @@ export function EmptyState({ icon, title, children, actions, compact = false }: 
   actions?: ReactNode;
   compact?: boolean;
 }) {
-  if (compact) return <p className="px-4 py-6 text-center text-[13px] text-pn-muted">{children ?? title}</p>;
+  if (compact) return <p className="px-4 py-6 text-center text-compact text-pn-muted">{children ?? title}</p>;
   return (
     <div className="flex flex-col items-center px-6 py-10 text-center">
       {icon && <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-track text-accent [&>svg]:h-8 [&>svg]:w-8">{icon}</div>}
-      {title && <p className="text-base font-semibold text-pn">{title}</p>}
-      {children && <p className="mt-1 max-w-xs text-sm text-pn-muted">{children}</p>}
+      {title && <p className="text-title font-semibold text-pn">{title}</p>}
+      {children && <p className="mt-1 max-w-xs text-body text-pn-muted">{children}</p>}
       {actions && <div className="mt-4 flex flex-wrap justify-center gap-2">{actions}</div>}
     </div>
   );

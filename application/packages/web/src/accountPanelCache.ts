@@ -23,7 +23,7 @@
  * localStorage half survives a reload; the in-memory half makes repeat
  * opens in one session instant even if storage is unavailable.
  *
- * Spec: ops/docs/archive/ui-patterns.md (settings panels paint from cache first)
+ * Spec: docs/internal/design/ui-patterns.md (settings panels paint from cache first)
  */
 
 import { isDemoMode } from './demo';

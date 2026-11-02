@@ -24,7 +24,8 @@
       "replace": "Najít a nahradit je funkce Pro. Přejdi na Pro a nahraď jeden výskyt nebo všechny výskyty v poznámce najednou.",
       "passphrase": "Přístupové fráze jsou funkce Pro. Vygeneruj frázi z náhodných slov, která se snadno píše i říká.",
       "default": "Jeden přechod na Pro odemkne všechno níže. Jednorázová platba.",
-      "alerts": "Připomínky jsou funkce Pro. Tvoje zařízení zazvoní v čase, který si vybereš, a nic o položce je neopustí."
+      "alerts": "Připomínky jsou funkce Pro. Každé zařízení zazvoní samo v čase, který si vybereš, takže položku nevidí žádná služba push oznámení.",
+      "vaultFiles": "Soubory u položek trezoru jsou funkce Pro. Uchovej obnovovací kódy, záložní klíč nebo sken přímo u přihlašovacích údajů, karty nebo klíče, ke kterým patří."
     },
     "features": {
       "devices": "Synchronizace neomezeného počtu zařízení, na každé platformě",
@@ -80,7 +81,6 @@
     "loadFailed": "Historii se nepodařilo načíst. Zkontroluj připojení a zkus to znovu.",
     "selectPrompt": "Vyber verzi pro náhled.",
     "emptyBody": "(prázdné)",
-    "restore": "Obnovit",
     "restoring": "Obnovování…",
     "restoreSnapshotFailed": "Aktuální verzi se nepodařilo nejdřív uložit, takže se nic neobnovilo. Zkontroluj připojení a zkus to znovu.",
     "restoreFailed": "Tuto verzi se nepodařilo obnovit. Zkus to znovu.",

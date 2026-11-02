@@ -4,11 +4,12 @@ import TaskItem, { type TaskItemOptions } from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
 import { Extension, InputRule, getHTMLFromFragment, type NodeViewRendererProps } from '@tiptap/core';
 import { Fragment, type Node as ProseMirrorNode } from '@tiptap/pm/model';
-import { Plugin, PluginKey, NodeSelection, type Transaction } from '@tiptap/pm/state';
+import { Plugin, PluginKey, NodeSelection, TextSelection, type Transaction } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { isSoftKeyboardDevice, suppressSoftKeyboard } from './softKeyboard';
 import { isStoredAlignment } from './editorAlignment';
 import { dragCard, kanbanCardOf, markCardGrip, openCardMenu } from './kanbanDrag';
+import { scrollParentOf } from './scrollParent';
 
 /**
  * Markdown autoformatting for task lists. StarterKit ships input rules for
@@ -82,7 +83,7 @@ function slideIn(dom: Node | null, topBefore: number) {
  * that place, so the CSS draw runs there, on a task that was already ticked,
  * and the moved task arrives drawn. Finish the stray draw and run the same
  * one, the `.pn-task-checkbox:checked` transition, on the moved task.
- * Spec: ops/docs/design-decisions.md (Checkbox feedback)
+ * Spec: docs/internal/design-decisions.md (Checkbox feedback)
  */
 function drawMovedTick(clicked: HTMLInputElement, moved: Node | null) {
   if (!(moved instanceof HTMLElement)) return;
@@ -99,48 +100,58 @@ function drawMovedTick(clicked: HTMLInputElement, moved: Node | null) {
 }
 
 /**
- * Moves the task item at `pos` so it sits before its sibling at `toIndex`,
- * counted among the siblings without the item itself; `toIndex` equal to that
- * count puts it last.
+ * Moves the node at `pos` so it sits before its sibling at `toIndex`, counted
+ * among the siblings without the node itself; `toIndex` equal to that count
+ * puts it last. A selection inside the node moves with it (#14): mapped, it
+ * would land at the deletion point, in the sibling that took the node's place.
  */
-function moveTaskWithinList(tr: Transaction, pos: number, toIndex: number): Transaction {
+export function moveWithinParent(tr: Transaction, pos: number, toIndex: number): Transaction {
   const $pos = tr.doc.resolve(pos);
-  const list = $pos.parent;
+  const parent = $pos.parent;
   const self = $pos.index();
-  const item = list.child(self);
+  const node = parent.child(self);
   const before = toIndex < self ? toIndex : toIndex + 1;
   let target = $pos.start();
-  for (let k = 0; k < before && k < list.childCount; k++) target += list.child(k).nodeSize;
-  tr.delete(pos, pos + item.nodeSize);
-  tr.insert(tr.mapping.map(target), item);
+  for (let k = 0; k < before && k < parent.childCount; k++) target += parent.child(k).nodeSize;
+  const { from, to } = tr.selection;
+  const inside = from > pos && to < pos + node.nodeSize;
+  tr.delete(pos, pos + node.nodeSize);
+  const at = tr.mapping.map(target);
+  tr.insert(at, node);
+  if (inside) tr.setSelection(TextSelection.between(tr.doc.resolve(at + from - pos), tr.doc.resolve(at + to - pos)));
   return tr;
-}
-
-/** The nearest ancestor that scrolls vertically, for the drag's edge scroll. */
-function scrollParentOf(el: HTMLElement): HTMLElement {
-  for (let p = el.parentElement; p; p = p.parentElement) {
-    const { overflowY } = getComputedStyle(p);
-    if ((overflowY === 'auto' || overflowY === 'scroll') && p.scrollHeight > p.clientHeight) return p;
-  }
-  return (document.scrollingElement as HTMLElement | null) ?? document.documentElement;
 }
 
 /** Distance from a scroll edge, in px, inside which a drag scrolls the note. */
 const DRAG_EDGE = 48;
 
 /**
- * Drags a task by its grip to another place in its own list. Pointer events,
- * so a mouse, a pen and a finger take the same path. The item moves in one
- * transaction on release, so undo takes it back, and its sub-tasks travel with
- * it because they live inside it. A task never leaves its list: the grip of a
- * sub-task reorders the sub-tasks.
+ * Drags a block by its grip to another place among its siblings: a task in its
+ * own list, a callout or a Kanban board among the blocks around it (#628).
+ * Pointer events, so a mouse, a pen and a finger take the same path. The block
+ * moves in one transaction on release, so undo takes it back, and what it holds
+ * travels with it. A block never leaves its parent: the grip of a sub-task
+ * reorders the sub-tasks.
  */
-function dragTask(event: PointerEvent, item: HTMLElement, getPos: () => number | undefined, editor: TipTapEditor) {
-  const list = item.parentElement;
-  if (!editor.isEditable || event.button !== 0 || !list) return;
-  const siblings = [...list.children].filter((el): el is HTMLElement => el instanceof HTMLElement && el !== item);
-  const home = [...list.children].indexOf(item);
-  if (siblings.length === 0) return;
+export function dragBlock(event: PointerEvent, getPos: () => number | undefined, editor: TipTapEditor) {
+  const pos = getPos();
+  if (!editor.isEditable || event.button !== 0 || typeof pos !== 'number') return;
+  const { view } = editor;
+  const $pos = view.state.doc.resolve(pos);
+  const home = $pos.index();
+  const item = view.nodeDOM(pos);
+  const area = item instanceof HTMLElement ? item.parentElement : null;
+  if (!(item instanceof HTMLElement) || !area) return;
+  // The siblings come from the document, not the DOM: a widget the editor
+  // draws between blocks (the gap cursor) is no place to drop on.
+  const siblings: HTMLElement[] = [];
+  let offset = $pos.start();
+  $pos.parent.forEach((child, _, index) => {
+    const dom = index === home ? null : view.nodeDOM(offset);
+    if (dom instanceof HTMLElement) siblings.push(dom);
+    offset += child.nodeSize;
+  });
+  if (siblings.length !== $pos.parent.childCount - 1 || siblings.length === 0) return;
   event.preventDefault();
   // Capture keeps a touch drag from turning into a scroll. The listeners sit on
   // the window, so the drag also survives a capture the browser refuses.
@@ -174,14 +185,14 @@ function dragTask(event: PointerEvent, item: HTMLElement, getPos: () => number |
       marker.style.display = 'none';
       return;
     }
-    const listBox = list.getBoundingClientRect();
+    const areaBox = area.getBoundingClientRect();
     const edge = target < siblings.length
       ? siblings[target]!.getBoundingClientRect().top
       : siblings[siblings.length - 1]!.getBoundingClientRect().bottom;
     marker.style.display = 'block';
     marker.style.top = `${edge - 1}px`;
-    marker.style.left = `${listBox.left}px`;
-    marker.style.width = `${listBox.width}px`;
+    marker.style.left = `${areaBox.left}px`;
+    marker.style.width = `${areaBox.width}px`;
   };
 
   const tick = () => {
@@ -212,9 +223,9 @@ function dragTask(event: PointerEvent, item: HTMLElement, getPos: () => number |
     item.classList.remove('pn-task-dragging');
     item.style.transform = '';
     document.documentElement.classList.remove('pn-task-drag-active');
-    const pos = getPos();
-    if (drop && target !== home && typeof pos === 'number') {
-      editor.view.dispatch(moveTaskWithinList(editor.state.tr, pos, target));
+    const now = getPos();
+    if (drop && target !== home && typeof now === 'number') {
+      editor.view.dispatch(moveWithinParent(editor.state.tr, now, target));
     }
   };
   const onUp = (e: PointerEvent) => { if (e.pointerId === pointerId) finish(true); };
@@ -231,14 +242,14 @@ function dragTask(event: PointerEvent, item: HTMLElement, getPos: () => number |
   window.addEventListener('keydown', onKey, true);
 }
 
-const GRIP_SVG =
+export const GRIP_SVG =
   '<svg viewBox="0 0 10 16"><circle cx="2.5" cy="3" r="1.4"/><circle cx="7.5" cy="3" r="1.4"/><circle cx="2.5" cy="8" r="1.4"/><circle cx="7.5" cy="8" r="1.4"/><circle cx="2.5" cy="13" r="1.4"/><circle cx="7.5" cy="13" r="1.4"/></svg>';
 const CHECK_SVG = `<svg viewBox="0 0 12 12"><path d="${TASK_CHECK_PATH}"/></svg>`;
 
 /** Each icon is parsed once and cloned for every task: a note with thousands
  *  of tasks otherwise parses the same markup thousands of times on open. */
 const parsedSvgs = new Map<string, Node>();
-function svgCopy(markup: string): Node {
+export function svgCopy(markup: string): Node {
   let svg = parsedSvgs.get(markup);
   if (!svg) {
     const host = document.createElement('span');
@@ -393,7 +404,7 @@ export const TaskItemMobileSafe = TaskItem.extend<TaskItemOptions & {
         // A Kanban card can also move to another column, and a tap on its
         // grip opens Move to.
         if (kanbanCardOf(listItem)) dragCard(event, listItem, getPos, editor as TipTapEditor);
-        else dragTask(event, listItem, getPos, editor as TipTapEditor);
+        else dragBlock(event, getPos, editor as TipTapEditor);
       });
       // Once the item is in the document, a card's grip becomes a button.
       requestAnimationFrame(() => markCardGrip(grip, listItem));
@@ -525,14 +536,20 @@ export const TaskItemMobileSafe = TaskItem.extend<TaskItemOptions & {
  */
 const ZWS = '​';
 
+// The indent takes no line break: `^\s*` reached the marker across blank lines
+// from every line start before it, which was quadratic on a long run of them
+// (bug report 23.3). The marker's own line start reaches it the same way, and
+// the lines skipped are kept as they were.
+const TASK_INDENT = '[^\\S\\n\\r\\u2028\\u2029]*';
+
 export function fixEmptyTaskItems(md: string): string {
-  return md.replace(/^(\s*[-*+]\s+\[[ xX]\])[^\S\n]*$/gm, `$1 ${ZWS}`);
+  return md.replace(new RegExp(`^(${TASK_INDENT}[-*+]\\s+\\[[ xX]\\])[^\\S\\n]*$`, 'gm'), `$1 ${ZWS}`);
 }
 
 /** Strip zero-width spaces added by fixEmptyTaskItems before persisting. */
 export function cleanEmptyTaskItems(md: string): string {
   return md.replace(
-    new RegExp(`^(\\s*[-*+]\\s+\\[[ xX]\\] )${ZWS}`, 'gm'),
+    new RegExp(`^(${TASK_INDENT}[-*+]\\s+\\[[ xX]\\] )${ZWS}`, 'gm'),
     '$1',
   );
 }

@@ -26,14 +26,11 @@
     "noResults": "Žádné výsledky"
   },
   "deleteNote": {
-    "title": "Smazat navždy",
     "confirm": "Smazat navždy",
-    "untitled": "Bez názvu",
     "body": "Trvale smazat <highlight>„{{title}}“</highlight>? Tuto akci nelze vzít zpět."
   },
   "emptyTrash": {
     "title": "Vysypat koš",
-    "confirm": "Smazat navždy",
     "body_one": "Trvale smazat <highlight>{{count}} poznámku</highlight>? Tuto akci nelze vzít zpět.",
     "body_few": "Trvale smazat <highlight>{{count}} poznámky</highlight>? Tuto akci nelze vzít zpět.",
     "body_many": "Trvale smazat <highlight>{{count}} poznámky</highlight>? Tuto akci nelze vzít zpět.",
@@ -63,7 +60,6 @@
   },
   "palette": {
     "label": "Příkazy",
-    "open": "Příkazy",
     "empty": "Žádný odpovídající příkaz",
     "groups": {
       "features": "Funkce",
@@ -88,7 +84,7 @@
       "insertDate": "Vložit datum",
       "insertDateTime": "Vložit datum a čas",
       "clearFilters": "Zrušit filtry",
-      "moveToTrash": "Přesunout poznámku do koše",
+      "moveToTrash": "Smazat poznámku",
       "closeTab": "Zavřít kartu nebo poznámku",
       "nextTab": "Další karta",
       "previousTab": "Předchozí karta",
@@ -111,10 +107,8 @@
     "move": "přejít",
     "open": "otevřít",
     "openInTab": "otevřít na kartě",
-    "openLink": "Otevřít",
     "edit": "upravit",
     "close": "zavřít",
-    "tags": "Značky",
     "folders": "Složky",
     "tagItems_one": "{{count}} položka",
     "tagItems_few": "{{count}} položky",
@@ -180,17 +174,14 @@
     "downloadPublicKey": "Stáhnout veřejný klíč",
     "downloadPrivateKey": "Stáhnout privátní klíč",
     "downloadHint": "Přesuň stažený klíč do ~/.ssh a spusť na něj chmod 600, jinak ho ssh odmítne.",
+    "downloadHintDesktop": "PrivacyNotes neukládá do ~/.ssh, aby klíče, které tam máš, zůstaly v bezpečí. Ulož klíč jinam, přesuň ho do ~/.ssh a spusť na něj chmod 600, jinak ho ssh odmítne.",
+    "downloadHintWindows": "PrivacyNotes neukládá do tvé složky .ssh, aby klíče, které tam máš, zůstaly v bezpečí. Ulož klíč jinam a přesuň ho do %USERPROFILE%\\.ssh. Windows chmod nepotřebují.",
     "downloadFailed": "Soubor s klíčem se nepodařilo uložit. Zkontroluj soubor a zkus to znovu.",
     "passphrase": "Přístupová fráze",
     "passphrasePlaceholder": "Přístupová fráze ke klíči (pokud existuje)",
     "show": "Zobrazit",
     "hide": "Skrýt",
-    "copyPassphrase": "Kopírovat přístupovou frázi",
-    "notes": "Poznámky",
-    "notesPlaceholder": "Další poznámky (volitelné)",
-    "requirePin": "Pro zobrazení vyžadovat PIN",
-    "whatDoesThisDo": "Co to dělá?",
-    "setUpPinFirst": "Nejdřív si nastav PIN v nastavení Zabezpečení."
+    "copyPassphrase": "Kopírovat přístupovou frázi"
   },
   "tagInput": {
     "placeholder": "Přidej značky… odděluj čárkou, # nebo Enterem",
@@ -262,7 +253,6 @@
       "potichu otevíráme trezor",
       "lokálně dešifrováno. globálně ignorováno",
       "dešifrujeme, protože je to jen tvoje věc",
-      "otevřený text z lokálních zdrojů",
       "měníme myšlenky na nečitelnou polévku",
       "další zašifrované mistrovské dílo na cestě",
       "děláme pořádek v zašifrovaném chaosu",
@@ -274,7 +264,7 @@
       "vracíme tvoje poznámky tam, kde zůstaly",
       "rozmotáváme včerejší myšlenky",
       "skládáme bity do hezkého pořádku",
-      "pamatujeme si, co si zapomínáš pamatovat"
+      "vybavujeme si, co ti vypadlo z hlavy"
     ]
   },
   "neverBackedUp": {
@@ -290,17 +280,14 @@
     "changesSome_other": "{{count}} z těchto poznámek má nezálohované změny, které by se ztratily."
   },
   "ninja": {
-    "recent": "Nedávné",
     "topHit": "Nejlepší shoda",
     "trashEmpty": "Koš je prázdný",
     "allThemes": "Všechna témata",
     "features": {
       "stats": {
-        "label": "Statistiky",
         "detail": "Tvoje psaní, série a sledované hodnoty v čase"
       },
       "trackers": {
-        "label": "Sledované hodnoty",
         "detail": "Nálada, návyky, faktory a léky"
       },
       "medication": {
@@ -320,7 +307,6 @@
         "detail": "Silné heslo nebo přístupová fráze, připravené ke zkopírování"
       },
       "themes": {
-        "label": "Témata",
         "detail": "Barevná témata pro světlý i tmavý režim"
       }
     },
@@ -331,7 +317,6 @@
     "commands": {
       "syncResume": "Obnovit synchronizaci",
       "changelog": "Co je nového",
-      "help": "Nápověda",
       "themesPage": "Témata komunity",
       "website": "Web PrivacyNotes"
     },

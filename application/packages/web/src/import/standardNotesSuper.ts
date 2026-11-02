@@ -1,6 +1,10 @@
 import { noteLinkTarget } from '../noteLinks';
 import { linkifyLiteralText } from './linkify';
 import type { ImportBlob } from './types';
+import { escapeMarkdownText, guardMarkdownLineStart } from '../markdownEscape';
+
+// The importers reach the two escapes through this module, as before.
+export { escapeMarkdownText, guardMarkdownLineStart };
 
 /**
  * Standard Notes "Super" note -> the markdown our editor stores.
@@ -9,7 +13,7 @@ import type { ImportBlob } from './types';
  * `{"root":{"type":"root","children":[...]}}`. The node types below are the
  * set Standard Notes registers (`SuperEditor/Lexical/Nodes/AllNodes.ts` in
  * their app repository), and every field read here is one its `exportJSON`
- * writes. Spec: ops/docs/archive/standard-notes-super.md
+ * writes. Spec: docs/internal/specs/standard-notes-super.md
  *
  * Mapping:
  *   paragraph / heading / quote          -> markdown; an aligned block is
@@ -99,21 +103,12 @@ function parseState(text: string): LexNode | null {
   }
 }
 
-/** Text the user typed, escaped so markdown shows it as the same characters. */
-export function escapeMarkdownText(s: string): string {
-  return s
-    .replace(/[\\`*[\]<~$|]/g, '\\$&')
-    .replace(/==/g, '=\\=')
-    .replace(/&(?=#?\w+;)/g, '&amp;')
-    // An underscore inside a word never starts emphasis; one at a word edge can.
-    .replace(/(^|[^\p{L}\p{N}])_|_(?=$|[^\p{L}\p{N}])/gu, (hit) => hit.replace('_', '\\_'));
-}
-
-/** Keep a line that merely LOOKS like markdown block syntax from becoming it. */
-export function guardMarkdownLineStart(s: string): string {
-  if (/^\d+[.)](\s|$)/.test(s)) return s.replace(/[.)]/, '\\$&');
-  if (/^(#{1,6}(\s|$)|>|[-+](\s|$)|-{2,}\s*$)/.test(s)) return `\\${s}`;
-  return s;
+/** Code the user typed as one inline code span, its fence longer than any backtick run inside. */
+export function markdownCodeSpan(raw: string): string {
+  const run = Math.max(0, ...(raw.match(/`+/g) ?? []).map((r) => r.length));
+  const fence = '`'.repeat(run + 1);
+  const pad = raw.startsWith('`') || raw.endsWith('`') ? ' ' : '';
+  return `${fence}${pad}${raw}${pad}${fence}`;
 }
 
 /** Returns null when the text is not a Super state; the caller keeps it verbatim. */
@@ -209,12 +204,7 @@ export function superToMarkdown(text: string, ctx: SuperContext): SuperResult | 
     const raw = node.text ?? '';
     if (!raw) return '';
     const format = typeof node.format === 'number' ? node.format : 0;
-    if (format & CODE) {
-      const run = Math.max(0, ...(raw.match(/`+/g) ?? []).map((r) => r.length));
-      const fence = '`'.repeat(run + 1);
-      const pad = raw.startsWith('`') || raw.endsWith('`') ? ' ' : '';
-      return `${fence}${pad}${raw}${pad}${fence}`;
-    }
+    if (format & CODE) return markdownCodeSpan(raw);
     // Emphasis cannot open or close on whitespace, so it stays outside the markers.
     const [, lead, core, trail] = /^(\s*)([\s\S]*?)(\s*)$/.exec(raw)!;
     if (!core) return raw;

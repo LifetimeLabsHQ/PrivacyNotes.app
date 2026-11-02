@@ -1,18 +1,14 @@
 {
   "pillars": {
-    "trash": "ゴミ箱",
-    "bookmarks": "ブックマーク",
-    "contacts": "連絡先"
+    "trash": "ゴミ箱"
   },
   "tasksList": {
-    "title": "タスク",
     "newTaskNote": "新規タスクノート",
     "hideCompleted": "完了したタスクを隠す",
     "showCompleted": "完了したタスクを表示",
     "searchPlaceholder": "タスクを検索…",
     "sortOptions": "並び替えオプション",
     "quickAddPlaceholder": "クイックタスクを追加",
-    "noMatches": "一致なし。",
     "itemsWithTasks": "タスクがある項目",
     "allTasks": "すべてのタスク",
     "tasksFromOtherItems": "他の項目内のタスク",
@@ -29,45 +25,27 @@
     "seeLess": "表示を減らす"
   },
   "filesList": {
-    "title": "ファイル",
     "upload": "追加",
     "selectedOf": "{{total}}件中{{selected}}件を選択",
-    "deselectAll": "選択をすべて解除",
-    "selectAll": "すべて選択",
-    "storage": "ストレージ",
     "perFile": "1ファイルあたり",
     "free": "無料",
-    "upgradeToPro": "Proにアップグレード",
     "filterAll": "すべて",
-    "filterImages": "画像",
     "filterAudio": "音声",
     "filterFiles": "ファイル",
-    "sortOptions": "並び替えオプション",
     "searchPlaceholder": "ファイルを検索…",
     "sortName": "名前",
     "showNotesWithAttachments": "他の項目内のファイルを表示",
-    "noMatches": "一致なし。",
     "pinProtected": "PIN保護",
-    "readOnly": "読み取り専用",
     "noFilesYet": "まだファイルがありません。",
     "noDocuments": "文書はありません。",
     "noImages": "画像はありません。",
     "noAudioFiles": "音声ファイルはありません。",
     "emptyTypesHint": "画像、文書、音声、動画、zipファイル。1ファイルあたり最大{{max}} MB。",
     "uploadFiles": "ファイルをアップロード",
-    "menuDeselect": "選択解除",
-    "menuSelect": "選択",
     "menuShow": "表示",
     "menuAllFiles": "すべてのファイル",
-    "menuImages": "画像",
-    "menuAudio": "音声",
     "menuDocuments": "文書",
-    "menuHideNoteAttachments": "他の項目内のファイルを隠す",
-    "menuShowNoteAttachments": "他の項目内のファイルを表示",
-    "menuUnpin": "ピン留めを解除",
-    "menuPin": "ピン留め",
-    "menuRename": "名前を変更",
-    "menuMoveToTrash": "ゴミ箱に移動"
+    "menuHideNoteAttachments": "他の項目内のファイルを隠す"
   },
   "vaultItem": {
     "badgeLogin": "ログイン",
@@ -78,7 +56,6 @@
     "untitledKey": "無題の鍵",
     "copied": "コピーしました!",
     "copyField": "{{label}}をコピー",
-    "hide": "隠す",
     "reveal": "表示",
     "fieldUrl": "URL",
     "fieldUser": "ユーザー",
@@ -91,14 +68,11 @@
     "fieldLabel": "ラベル",
     "fieldPublic": "公開鍵",
     "fieldPrivate": "秘密鍵",
-    "fieldTotp": "2FA コード",
     "totpInvalid": "無効なキー",
     "copyCode": "コードをコピー",
     "totpUnlockCta": "Pro で 2FA コードをアンロック",
     "totpProNote": "キーは保存され同期されます。Pro が必要なのはコードだけです。",
     "copyAll": "URL、ユーザー名、パスワードをコピー",
-    "open": "開く",
-    "notesHeading": "メモ",
     "fillOneField": "保存する前に、少なくとも1つの項目を入力してください。",
     "expiryNeedsBoth": "有効期限は月と年の両方を入力するか、両方とも空にしてください。",
     "customField": "カスタム項目",
@@ -127,20 +101,18 @@
   },
   "tagsRail": {
     "showAllItems": "すべてのアイテムを表示",
-    "changelog": "Changelog",
     "closeMenu": "メニューを閉じる",
-    "close": "閉じる",
     "views": "コンテンツ",
     "resizeSplit": "コンテンツとタグまたはフォルダの幅を変更",
     "sidebarOptions": "サイドバーのオプション",
     "showInSidebar": "サイドバーに表示",
     "allOptions": "「すべて」のオプション",
     "showInAll": "「すべて」に表示",
-    "viewList": "リスト",
-    "viewGrid": "グリッド",
     "viewAuto": "自動",
     "allItemsTooltip": "すべてのノート、ジャーナル、保管庫アイテム",
     "allItems": "すべて",
+    "dashboard": "ホーム",
+    "dashboardTooltip": "ウィジェットをひと目で",
     "pinnedTooltip": "ピン留めされたアイテム",
     "pinned": "ピン留め",
     "archive": "アーカイブ",
@@ -148,6 +120,7 @@
     "notes": "ノート",
     "tasksTooltip": "全ノートのタスク",
     "tasks": "タスク",
+    "drawings": "ドローイング",
     "vaultTooltip": "ログイン、クレジットカード、鍵",
     "vault": "保管庫",
     "filesTooltip": "すべてのファイルと添付",
@@ -155,7 +128,6 @@
     "journalsTooltip": "毎日のジャーナル",
     "journals": "ジャーナル",
     "actionsForTag": "タグ{{tag}}の操作",
-    "renameTag": "名前を変更",
     "removeFavorite": "お気に入り解除",
     "markAsFavorite": "お気に入り",
     "deleteTag": "タグを削除",
@@ -163,7 +135,6 @@
     "tags": "タグ",
     "sortTags": "タグを並び替え",
     "sort": "並び替え",
-    "sortBy": "並び順",
     "sortEntries": "件数",
     "sortName": "名前",
     "sortCustom": "カスタム",
@@ -174,11 +145,9 @@
     "createTag": "新しいタグ",
     "untagged": "タグなし",
     "trashTooltip": "削除されたアイテム",
-    "trash": "ゴミ箱",
     "feedback": "ご意見",
     "import": "読み込み",
     "downloads": "ダウンロード",
-    "help": "ヘルプ",
     "rate": "評価",
     "markdown": "Markdown",
     "markdownTip": "暗号化なし",
@@ -203,7 +172,6 @@
     "deleteConfirmBranchRoot": "「{{folder}}」とそのサブフォルダを削除します。中のノートは最上位に移動します。ノートは削除されません。",
     "deleteConfirmBranchNested": "「{{folder}}」とそのサブフォルダを削除します。中のノートは「{{parent}}」に移動します。ノートは削除されません。",
     "deleteSubfolders_other": "{{count}} 個のサブフォルダも削除する",
-    "moveTo": "フォルダに移動",
     "searchPlaceholder": "フォルダを検索",
     "sortFolders": "フォルダを並び替え",
     "chipUnfiled": "フォルダ",
@@ -224,7 +192,6 @@
     "seedTeam": "チーム"
   },
   "collapsedSidebar": {
-    "newNote": "新規ノート",
     "expandSidebar": "サイドバーを展開"
   },
   "mobileHeader": {
@@ -239,26 +206,14 @@
     "colorFromTag": "タグから: #{{name}}",
     "colorOwnHint": "ここで選んだ色は、このノートの背景を塗りつぶします。<setting>フォルダとタグの色</setting>では変わりません。",
     "details": "詳細",
-    "readOnly": "読み取り専用",
     "readOnlyDescription": "オフに戻すまで編集できません。",
     "protect": "保護",
     "convertTo": "形式を変換",
-    "typeNote": "ノート",
     "typeJournal": "ジャーナル",
-    "typeTask": "タスク",
-    "unpin": "ピン留めを解除",
-    "pin": "ピン留め",
-    "archive": "アーカイブ",
-    "unarchive": "アーカイブを解除",
     "burn": "Burn",
     "share": "共有",
     "trash": "ゴミ箱",
-    "duplicate": "複製",
-    "restore": "復元",
-    "deleteForever": "完全に削除",
-    "moveToFolder": "フォルダに移動",
     "noteHistory": "履歴",
-    "findReplace": "検索と置換",
     "uncheckAllTasks": "すべての項目のチェックを外す",
     "deleteCheckedTasks": "チェック済みの項目を削除",
     "sortTasksByStatus": "項目を状態で並び替え",
@@ -274,27 +229,17 @@
     "schedule": "スケジュール",
     "ends": "終了日",
     "sameDay": "同じ日",
-    "allDay": "終日",
     "starts": "開始",
     "endsAt": "終了時刻",
     "noEnd": "なし",
     "removeFromCalendar": "カレンダーから削除",
     "makeEvent": "繰り返すには<b>予定</b>に変換してください",
-    "typeEvent": "予定",
     "repeatRemoved": "繰り返しは削除されます"
   },
   "selectionToolbar": {
-    "exitSelectionTooltip": "選択を終了",
     "exitSelection": "選択を終了",
-    "unpin": "ピン留めを解除",
-    "pin": "ピン留め",
-    "archive": "アーカイブ",
-    "unarchive": "アーカイブを解除",
     "tag": "タグ",
     "export": "書き出し",
-    "delete": "削除",
-    "restore": "復元",
-    "deleteForever": "完全に削除",
     "more": "その他の操作",
     "addTagPlaceholder": "タグを追加...",
     "noTagsFound": "タグが見つかりません",
@@ -317,6 +262,7 @@
     "showTags": "フォルダとタグを表示",
     "showCalendar": "カレンダーを表示",
     "showCheckIn": "チェックインカードを表示",
+    "showMedication": "服薬カードを表示",
     "showWorkItems": "<b>仕事</b>のアイテムを表示",
     "showPersonalItems": "<b>個人</b>のアイテムを表示",
     "other": "その他",
@@ -339,7 +285,6 @@
     "moodCalendar": "カレンダーに気分を表示"
   },
   "backfillPopover": {
-    "calendarLabel": "ジャーナルカレンダー",
     "today": "今日",
     "chooseEntry": "{{date}}のアイテム"
   },
@@ -359,6 +304,7 @@
     "newNote": "新規ノート",
     "newTask": "新規タスク",
     "newKanban": "新規カンバンボード",
+    "newDrawing": "新規ドローイング",
     "newLogin": "新規ログイン",
     "newJournal": "新規ジャーナル",
     "newFile": "新規ファイル",
@@ -383,32 +329,24 @@
     "duplicate": "複製",
     "moveToFolder": "フォルダに移動",
     "exportAsMarkdown": "Markdownとして書き出し",
-    "shareBurnAfterReading": "Burn After Readingで共有",
     "exportAsHtml": "HTMLとして書き出し",
-    "printSaveAsPdf": "印刷 / PDFとして保存",
-    "moveToTrash": "ゴミ箱に移動",
-    "newBookmark": "新規ブックマーク",
     "newContact": "新規連絡先",
-    "openBookmark": "開く",
     "copyBookmarkUrl": "URLをコピー",
     "editBookmark": "ブックマークを編集",
     "saveAsNote": "ノートとして保存",
-    "openClippedNote": "ノートを開く",
     "openInTab": "タブで開く",
     "openInTabHint": "{{key}}+クリック",
+    "openInTabHintMiddle": "中クリック",
     "closeTab": "タブを閉じる",
     "closeOtherTabs": "ほかのタブを閉じる",
     "closeAllTabs": "すべてのタブを閉じる",
     "pinTab": "タブをピン留め",
     "unpinTab": "タブのピン留めを解除",
-    "newEvent": "新規予定",
-    "quickAdd": "クイック追加"
+    "newEvent": "新規予定"
   },
   "demoBanner": {
     "title": "リスクなしでお試しください",
-    "description": "ここでは何も保存されません。自分専用の暗号化ノートを無料で作れます。",
-    "cta": "アカウントを作成",
-    "dismiss": "閉じる"
+    "description": "ここでは何も保存されません。自分専用の暗号化ノートを無料で作れます。"
   },
   "markdown": {
     "title": "Markdown",
@@ -446,20 +384,17 @@
     "fileCount_other": "{{count}}個のファイル",
     "railFolders": "Markdownフォルダ",
     "railTags": "Markdownタグ",
-    "allFiles": "すべてのファイル",
     "modeRich": "書式付き",
     "modeSource": "Markdown",
     "reopenPrompt": "再読み込みのあと、ブラウザは改めて許可を必要とします。フォルダは記憶されているので、ワンクリックで済みます。",
     "reopenFolder": "{{name}}を再度開く",
     "new": "新規",
-    "delete": "削除",
     "saveToNotes": "自分のノートに保存",
     "createFailed": "ファイルを作成できませんでした。",
     "deleteFailed": "ファイルをゴミ箱に移動できませんでした。",
     "importedToast": "「{{title}}」を暗号化されたノートに保存しました。元のファイルはそのままです。",
     "deleteTitle": "フォルダのゴミ箱に移動しますか?",
     "deleteBody": "「{{name}}」は、Markdownフォルダ内の.trashフォルダに移動します。気が変わったら、ファイルマネージャーから元に戻せます。",
-    "deleteConfirm": "ゴミ箱に移動",
     "explainTitle": "あなたのMarkdownフォルダ",
     "explainDone": "了解しました",
     "bannerTitle": "高度なMarkdownエディタ",
@@ -468,7 +403,6 @@
     "explainIntro": ".mdや.txtファイルの入ったフォルダを選ぶだけ。サブフォルダは自動で表示され、編集はその場で保存され、何も変換されません",
     "chipPreview": "ライブプレビュー",
     "chipTasks": "タスク",
-    "chipTags": "タグ",
     "chipTables": "表",
     "useAgent": "AIエージェントにノートへのアクセスを",
     "useObsidian": "ObsidianやLogseqでも同じファイルを",
@@ -496,7 +430,6 @@
     "assocWorking": "システムに問い合わせ中…",
     "copyPath": "パスをコピー",
     "selectedCount": "{{total}}件中{{selected}}件を選択",
-    "selectAll": "すべて選択",
     "exitSelection": "選択を終了",
     "deleteManyTitle_other": "{{count}}個のファイルをフォルダのゴミ箱に移動しますか?",
     "deleteManyBody": "ファイルは、Markdownフォルダ内の.trashフォルダに移動します。気が変わったら、ファイルマネージャーから元に戻せます。",
@@ -517,15 +450,11 @@
   "bookmarks": {
     "newBookmark": "新規ブックマーク",
     "searchPlaceholder": "ブックマークを検索…",
-    "sortOptions": "並び替えオプション",
     "quickAddPlaceholder": "リンクを貼り付けまたは入力…",
     "urlLabel": "ブックマーク（URL）",
     "urlInvalid": "example.com や https://example.com/page のようなウェブアドレスを入力してください。",
     "urlDuplicate": "このURLは別のブックマークにすでにあるため、変更は保存されませんでした。",
-    "openAction": "開く",
     "copiedUrl": "リンクをコピーしました",
-    "moveToTrash": "ゴミ箱に移動",
-    "rowMenu": "その他の操作",
     "emptyNone": "ブックマークはまだありません。",
     "emptyTitle": "残しておきたいサイトを保存",
     "emptyAdd": "ブックマークを追加",
@@ -539,11 +468,9 @@
     "new": "新規"
   },
   "contacts": {
-    "new": "新規",
     "searchPlaceholder": "連絡先を検索…",
-    "sortOptions": "並び替えオプション",
     "emptyNone": "まだ連絡先はありません。",
-    "emptyTitle": "あなただけが読める連絡帳",
+    "emptyTitle": "デバイス上で暗号化される連絡帳",
     "emptyAdd": "連絡先を追加",
     "emptyImport": "連絡先を読み込む",
     "noMatches": "一致する連絡先はありません。",
@@ -562,15 +489,12 @@
     "company": "会社",
     "department": "部署",
     "jobTitle": "役職",
-    "groupName": "名前",
     "groupPhone": "電話",
     "groupEmail": "メール",
     "groupAddress": "住所",
     "groupWebsite": "ウェブサイト",
-    "groupProfile": "プロフィール",
     "groupDates": "日付",
     "groupRelated": "関係者",
-    "groupNote": "メモ",
     "addPhone": "電話を追加",
     "addEmail": "メールを追加",
     "addWebsite": "ウェブサイトを追加",
@@ -585,7 +509,6 @@
     "notePlaceholder": "この人についてのメモ",
     "labelNone": "ラベル",
     "labelCustom": "カスタムラベル…",
-    "removeRow": "削除",
     "call": "電話",
     "message": "メッセージ",
     "sendEmail": "メールを送る",
@@ -605,15 +528,8 @@
     "menuPersonal": "個人",
     "menuName": "名前",
     "menuText": "テキスト",
-    "itemAddress": "住所",
-    "itemWebsite": "ウェブサイト",
-    "itemProfile": "プロフィール",
-    "itemCompany": "会社",
-    "itemJobTitle": "役職",
-    "itemBirthday": "誕生日",
     "itemDate": "日付",
     "itemRelated": "関係者の名前",
-    "itemNickname": "ニックネーム",
     "itemNameParts": "ミドルネーム、敬称、接尾辞",
     "itemPhonetic": "ふりがな",
     "itemNote": "メモ",
@@ -740,8 +656,10 @@
       "note": "ノート",
       "task": "タスクリスト",
       "journal": "ジャーナルの記録",
-      "contact": "誕生日"
+      "contact": "誕生日と日付"
     },
+    "birthdays": "誕生日",
+    "contactDate": "{{name}}: {{label}}",
     "dragEnd": "ドラッグして終了日を変更",
     "previousDay": "前の日",
     "nextDay": "次の日",
@@ -819,7 +737,6 @@
     "onDayAt": "当日 {{time}}",
     "daysBeforeAt_other": "{{count}}日前 {{time}}",
     "custom": "カスタム",
-    "add": "追加",
     "max": "通知は5件まで設定できます。",
     "units": {
       "minutes": "分前",
@@ -831,11 +748,9 @@
     "remove": "{{alert}}を削除",
     "reminder": "リマインダー",
     "medication": "服薬リマインダー",
-    "open": "開く",
     "snooze": "10分後に再通知",
     "offOnPhone": "このスマートフォンではリマインダーがオフです",
-    "turnOn": "オンにする",
-    "openSettings": "設定を開く"
+    "turnOn": "オンにする"
   },
   "quickAdd": {
     "group": "作成",
@@ -846,6 +761,14 @@
     "appendHintDetail": ">> に続けて名前の先頭を入力します",
     "appendNone": "追加先のタスクリストやノートはまだありません",
     "appendNoneDetail": ">> に続けて名前を入力すると、その名前のタスクリストを作成します",
+    "cannotAdd": "{{title}}には追加できません",
+    "blocked": {
+      "trash": "ゴミ箱に入っています。",
+      "pin": "PINで保護されています。開いてから追加してください。",
+      "readOnly": "読み取り専用です。",
+      "board": "カンバンボードです。カードはボード上で追加してください。",
+      "archived": "アーカイブ済みです。アーカイブを解除してから追加してください。"
+    },
     "linkGroup": "このリンクを保存",
     "linkDetail": {
       "bookmark": "アドレスを保存します。名前は次に付けます。",
@@ -863,6 +786,7 @@
       "task": "新規タスクリスト",
       "journal": "新規ジャーナル",
       "kanban": "新規カンバンボード",
+      "drawing": "新規ドローイング",
       "login": "新規ログイン",
       "file": "ファイルをアップロード",
       "contact": "新規連絡先",
@@ -895,8 +819,8 @@
       },
       "length": {
         "label": "長さ",
-        "examples": "所要 30分 · 期間 3日 · 金曜日 から 日曜日",
-        "insert": "所要 1時間"
+        "examples": "15:00 所要 30分 · 期間 3日 · 金曜日 から 日曜日",
+        "insert": "15:00 所要 1時間"
       },
       "repeat": {
         "label": "繰り返し",
@@ -942,17 +866,14 @@
     "backToToday": "今日に戻る",
     "options": "チェックインのオプション",
     "skipToday": "今日はスキップ",
-    "hide": "このカードを非表示",
+    "hide": "非表示",
     "change": "気分を変更",
     "saved": "保存しました",
     "chooseTrackers": "トラッカーを選択",
-    "settings": "チェックインの設定",
     "skipped": "今日はスキップしました。",
     "startOver": "最初からやり直す",
     "cleared": "チェックインをクリアしました。",
     "hidden": "カードを非表示にしました。リスト設定の「チェックインカードを表示」で再び表示できます。",
-    "undo": "元に戻す",
-    "done": "完了",
     "write": "今日のことを書く",
     "writeOn": "{{date}}のことを書く",
     "streak": "{{n}}日連続",
@@ -965,19 +886,25 @@
     "hiddenCount_other": "{{count}}件のチェックインが非表示になっています。",
     "showThem": "表示"
   },
+  "medicationCard": {
+    "title": "服薬の記録",
+    "options": "服薬のオプション",
+    "edit": "今日の服薬を変更",
+    "hidden": "カードを非表示にしました。リスト設定、または設定 > トラッカー > 服薬で再び表示できます。"
+  },
   "clipper": {
-    "saveAsNote": "ノートとして保存",
     "saving": "ノートとして保存中…",
     "stepPage": "ページをダウンロード中",
     "stepPictures": "画像を保存中 ({{done}}/{{total}})",
-    "openNote": "ノートを開く",
     "alreadySaved": "このページはすでにノートとして保存されています ({{date}})。",
     "savedOn": "{{date}}にノートとして保存済み",
-    "windowTitle": "ページをクリップ",
     "addressLabel": "Webアドレス",
     "addressPlaceholder": "リンクを貼り付け…",
     "savePictures": "画像を保存",
     "savePicturesHint": "最大20枚の画像をノートと一緒に保存します。ストレージの使用量に含まれます。",
+    "extensionTipTitle": "ブラウザからクリップすると、よりきれいに保存できます",
+    "extensionTip": "ブラウザ拡張機能は、サインインが必要なページも含め、表示されているとおりにページを保存します。",
+    "extensionTipSetUp": "拡張機能を設定",
     "downloading": "ページをダウンロード中…",
     "downloadingPictures": "画像をダウンロード中 ({{done}}/{{total}})",
     "picturesLine_other": "画像{{count}}枚 · {{size}}、ノートと一緒に保存",
@@ -1007,5 +934,164 @@
     "until": "{{day}}まで",
     "noAlert": "通知なし",
     "endsLater": "別の日に終了"
+  },
+  "apps": {
+    "railLabel": "拡張機能",
+    "title": "ブラウザ拡張機能",
+    "subtitle": "Chrome、Firefox、Edge で使えるウェブクリッパーとパスワードマネージャーです。ノートを開く鍵を拡張機能が持つことはありません。",
+    "stepInstall": "拡張機能をインストール",
+    "stepFeatures": "使う機能を選ぶ",
+    "stepConnect": "接続",
+    "makeCode": "コードを作成",
+    "connectHint": "1回限りのコードを作成し、拡張機能に貼り付けてください。",
+    "thisBrowser": "このブラウザ",
+    "otherApps": "デスクトップ・スマートフォン用アプリ:",
+    "desktopAll": "すべてのダウンロード",
+    "extensionComputersOnly": "拡張機能は、コンピューターの Chrome、Firefox、Edge 用です。",
+    "demoSignUp": "ブラウザを接続するにはアカウントを作成してください"
+  },
+  "extensionConnect": {
+    "clips": "ウェブクリッパー",
+    "clipsHint": "Webサイトをノートとして保存します。",
+    "loginsHint": "今いるサイトのログイン情報、カード、SSH鍵、ブックマークを表示します(コピーのみ)。専用の PIN またはパスコードでロックされます。",
+    "pickOne": "少なくとも1つをオンにしてください。",
+    "codeLabel": "拡張機能用のコード",
+    "oneUse": "1回だけ、10分間有効です。",
+    "usedBy": "{{name}} がこのコードを使って接続しました。心当たりがない場合は、下で削除してください。",
+    "newCode": "新しいコード",
+    "tooManyCodes": "未使用のコードが多すぎます。そのいずれかを使うか、10分待ってください。",
+    "tooManyExtensions": "このアカウントには上限の10個のブラウザが接続されています。先に1つ削除してください。",
+    "keyElsewhere": "ログイン情報の鍵はお使いの別のデバイスにあります。そのデバイスで PrivacyNotes を開いて同期してから、もう一度お試しください。",
+    "failed": "コードを作成できませんでした。接続を確認して、もう一度お試しください。"
+  },
+  "dashboard": {
+    "taskReadOnly": "このノートは読み取り専用です。タスクにチェックを入れるには、ノートオプションで読み取り専用を解除してください。",
+    "addWidget": "ウィジェットを追加",
+    "catalogTitle": "ウィジェットを追加",
+    "layouts": "レイアウト",
+    "layoutChanged": "レイアウトを変更しました",
+    "full": "ホームがいっぱいです。先にウィジェットを1つ削除してください。",
+    "added": "ホームに追加しました",
+    "removed": "ホームから削除しました",
+    "showOnHome": "ホームに表示",
+    "removeFromHome": "ホームから削除",
+    "resize": "{{name}}のサイズを変更",
+    "narrower": "もっと狭く",
+    "taller": "もっと高く",
+    "shorter": "もっと低く",
+    "moveEarlier": "前に移動",
+    "moveLater": "後ろに移動",
+    "chooseNote": "ノートを選択",
+    "chooseTag": "タグを選択",
+    "chooseFolder": "フォルダを選択",
+    "chooseTracker": "トラッカーを選択",
+    "choose": "選択",
+    "gone": "見つかりません",
+    "otherSpace": "別のスペースにあります",
+    "proLocked": "Pro 機能",
+    "noneToChoose": "選択できるものはまだありません",
+    "headerEvents_other": "今日の予定 {{formatted}}件",
+    "headerTasks_other": "未完了のタスク {{formatted}}件",
+    "startToday": "今日の記録を始める",
+    "groups": {
+      "keep": "保管しているもの"
+    },
+    "layout": {
+      "everyday": "毎日",
+      "planner": "プランナー",
+      "writer": "ライター"
+    },
+    "w": {
+      "checkIn": {
+        "name": "チェックイン",
+        "help": "今日の調子とトラッカー"
+      },
+      "calendar": {
+        "help": "記録と予定の点が付いた月表示"
+      },
+      "upcoming": {
+        "name": "今後の予定",
+        "help": "今日から7日先まで"
+      },
+      "today": {
+        "name": "今日の記録",
+        "help": "今日のジャーナルの記録、または書き始め"
+      },
+      "tasks": {
+        "name": "未完了のタスク",
+        "help": "ノート内のチェックされていないタスク"
+      },
+      "recent": {
+        "name": "最近編集した項目",
+        "help": "最後に作業したアイテム"
+      },
+      "pinned": {
+        "help": "ピン留めしたアイテム"
+      },
+      "note": {
+        "name": "ノート",
+        "help": "選んだノート1件をホームに表示"
+      },
+      "tag": {
+        "name": "タグ",
+        "help": "1つのタグが付いた最新のアイテム"
+      },
+      "folder": {
+        "name": "フォルダ",
+        "help": "1つのフォルダ内の最新のアイテム"
+      },
+      "onThisDay": {
+        "name": "過去の今日",
+        "help": "前の年の同じ日のジャーナルの記録"
+      },
+      "week": {
+        "help": "単語数、活動日数、アイテム、チェックイン"
+      },
+      "streak": {
+        "help": "連続で執筆した日数"
+      },
+      "checkInStreak": {
+        "help": "連続でチェックインした日数"
+      },
+      "rhythm": {
+        "name": "あなたのリズム",
+        "help": "26週間の執筆と気分"
+      },
+      "milestone": {
+        "name": "次のマイルストーン",
+        "help": "次のマイルストーンまでの進み具合"
+      },
+      "tracker": {
+        "name": "トラッカー",
+        "help": "1つのトラッカーの数値と記録した日"
+      },
+      "weekRecap": {
+        "help": "1週間を1枚のカードで"
+      },
+      "files": {
+        "name": "最近のファイル",
+        "help": "最新の画像とファイル"
+      },
+      "bookmarks": {
+        "help": "最新のブックマーク"
+      },
+      "birthdays": {
+        "help": "30日以内の誕生日"
+      }
+    },
+    "empty": {
+      "upcoming": "7日以内の予定はありません",
+      "tasks": "未完了のタスクはありません",
+      "recent": "まだ何もありません",
+      "pinned": "ピン留めしたものはまだありません",
+      "tag": "このタグが付いたアイテムはありません",
+      "folder": "このフォルダには何もありません",
+      "onThisDay": "前の年のこの日の記録はありません",
+      "files": "ファイルはまだありません",
+      "bookmarks": "ブックマークはまだありません",
+      "birthdays": "30日以内の誕生日はありません",
+      "tracker": "まだ何も記録されていません",
+      "milestone": "すべてのマイルストーンを達成しました"
+    }
   }
 }

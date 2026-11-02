@@ -29,7 +29,7 @@ import { Backspace, Folder, Folders, FunnelSimple, Hash, Prohibit, X } from './i
  * Renders nothing when no filter is active, so callers can mount it
  * unconditionally.
  *
- * Spec: ops/docs/archive/ui-patterns.md (section 41)
+ * Spec: docs/internal/design/ui-patterns.md (section 41)
  */
 
 /**
@@ -37,7 +37,7 @@ import { Backspace, Folder, Folders, FunnelSimple, Hash, Prohibit, X } from './i
  * has no subfolder (and while no folder is open). A context rather than a
  * prop, because every scoped pillar draws this band and none of them reads
  * the switch itself. `NotesView` provides it around the list panes.
- * Spec: ops/docs/archive/folder-subfolders.md (D3)
+ * Spec: docs/internal/specs/folder-subfolders.md (D3)
  */
 export const SubfoldersSwitchContext = createContext<{ on: boolean; onToggle: () => void } | null>(null);
 
@@ -45,7 +45,7 @@ export const SubfoldersSwitchContext = createContext<{ on: boolean; onToggle: ()
 const UNTAGGED = '__untagged__';
 
 const CHIP_CLASS =
-  'max-w-full inline-flex items-center gap-1.5 rounded-full bg-warning/10 hover:bg-warning/20 text-warning ps-2.5 pe-2 py-1 text-[12px] font-medium transition';
+  'max-w-full inline-flex items-center gap-1.5 rounded-full bg-warning/10 hover:bg-warning/20 text-warning ps-2.5 pe-2 py-1 text-small font-medium transition';
 
 export function ListFilterChips({
   folderName,
@@ -62,7 +62,7 @@ export function ListFilterChips({
   const subfolders = useContext(SubfoldersSwitchContext);
   if (folderName === null && tag === null) return null;
   const untagged = tag === UNTAGGED;
-  const tagLabel = untagged ? t('headerLabel.untagged') : tag;
+  const tagLabel = untagged ? t('shell:tagsRail.untagged') : tag;
   return (
     <div className="shrink-0 p-3 border-b border-divider flex flex-wrap items-center gap-1.5 min-w-0">
       {folderName !== null && (
@@ -73,7 +73,7 @@ export function ListFilterChips({
             aria-label={t('folderChip.clear', { folder: folderName })}
             className={CHIP_CLASS}
           >
-            <Folder size={13} className="shrink-0" aria-hidden="true" />
+            <Folder className="shrink-0" aria-hidden="true" />
             <span className="truncate" dir="auto">{folderName}</span>
             <X size={11} className="shrink-0" aria-hidden="true" />
           </button>
@@ -87,13 +87,13 @@ export function ListFilterChips({
           onClick={subfolders.onToggle}
           aria-pressed={subfolders.on}
           aria-label={t('folderChip.subfoldersLabel')}
-          className={`inline-flex items-center gap-1.5 rounded-full border ps-2.5 pe-2.5 py-1 text-[12px] font-medium transition ${
+          className={`inline-flex items-center gap-1.5 rounded-full border ps-2.5 pe-2.5 py-1 text-small font-medium transition ${
             subfolders.on
               ? 'border-transparent bg-accent-fill hover:bg-accent-fill-hover text-white'
               : 'border-accent/40 text-accent-strong hover:bg-accent/10'
           }`}
         >
-          <Folders size={13} className="shrink-0" aria-hidden="true" />
+          <Folders className="shrink-0" aria-hidden="true" />
           {t('folderChip.subfolders')}
         </button>
       )}
@@ -107,9 +107,9 @@ export function ListFilterChips({
             className={CHIP_CLASS}
           >
             {untagged ? (
-              <Prohibit size={13} className="shrink-0" aria-hidden="true" />
+              <Prohibit className="shrink-0" aria-hidden="true" />
             ) : (
-              <Hash size={13} className="shrink-0" aria-hidden="true" />
+              <Hash className="shrink-0" aria-hidden="true" />
             )}
             <span className="truncate" dir="auto">{tagLabel}</span>
             <X size={11} className="shrink-0" aria-hidden="true" />
@@ -136,7 +136,7 @@ export function ListFilterChips({
  * empty search - "No matches." already names its own cause, and the chips
  * above stay visible either way.
  *
- * Spec: ops/docs/archive/ui-patterns.md (section 41)
+ * Spec: docs/internal/design/ui-patterns.md (section 41)
  */
 export function FilteredEmpty({
   folderName,
@@ -161,19 +161,19 @@ export function FilteredEmpty({
           so the copy never has to spell out what to press. Three keys rather
           than one because the fragments sit either side of an element; each
           locale phrases its own half. */}
-      <p className="text-sm font-medium text-pn-soft mb-3">
+      <p className="text-body font-medium text-pn-soft mb-3">
         {t('empty.filtered')}
       </p>
       <button
         type="button"
         onClick={() => { onClearFolder(); onClearTag(); }}
-        className="text-xs font-medium text-white bg-accent-fill hover:bg-accent-fill-hover px-4 py-1.5 rounded-md transition"
+        className="text-small font-medium text-white bg-accent-fill hover:bg-accent-fill-hover px-4 py-1.5 rounded-md transition"
       >
-        {t('empty.clearFilters')}
+        {t('common:palette.commands.clearFilters')}
       </button>
       {/* Same weight as the line above the button, never muted: the two are
           one sentence, and a muted half reads as a footnote instead. */}
-      <p className="text-sm font-medium text-pn-soft max-w-[260px] mt-3">
+      <p className="text-body font-medium text-pn-soft max-w-[260px] mt-3">
         {t('empty.filteredAfter')}
       </p>
     </div>
@@ -203,7 +203,7 @@ export function FilteredEmpty({
  * Renders nothing when no filter is active, so a caller can hand it the same
  * props it hands the chips and let it decide.
  *
- * Spec: ops/docs/archive/ui-patterns.md (section 41)
+ * Spec: docs/internal/design/ui-patterns.md (section 41)
  */
 export function ActiveFilterEntry({
   folderName,
@@ -230,7 +230,7 @@ export function ActiveFilterEntry({
       as={as}
       tone="amber"
       icon={FunnelSimple}
-      label={t('empty.clearFilters')}
+      label={t('common:palette.commands.clearFilters')}
       onClick={() => {
         onClearFolder();
         onClearTag();
@@ -258,7 +258,7 @@ export function ActiveFilterEntry({
  *
  * Renders nothing when the search box is empty.
  *
- * Spec: ops/docs/archive/ui-patterns.md (section 41)
+ * Spec: docs/internal/design/ui-patterns.md (section 41)
  */
 export function ActiveSearchEntry({
   search,

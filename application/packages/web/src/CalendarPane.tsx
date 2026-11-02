@@ -6,7 +6,7 @@ import { typeGlyph } from './NoteRow';
 import { Switch } from './Switch';
 import { HoverLabel } from './HoverLabel';
 import { keyText } from './shortcutMatch';
-import { CalendarHeader, MonthGrid, addDays, dayAtNoon, dayKindColor, firstWeekday, monthCells, weekCells } from './MonthGrid';
+import { CalendarHeader, MonthGrid, addDays, dayAtNoon, dayKindColor, monthCells, useWeekStart, weekCells } from './MonthGrid';
 import { CalendarGrid } from './CalendarGrid';
 import { DayChooser, timeLabel, useEntryLook } from './JournalCalendar';
 import { PathGlyph } from './looks/LookGlyph';
@@ -28,7 +28,7 @@ import { dayNumber } from './schedule';
  * opens its item, an empty cell or hour creates, a chip or a bar dragged to
  * another day moves the whole schedule, the grip at a bar's end moves its end
  * day. Loaded on demand, so the boot chunk does not carry it.
- * Spec: ops/docs/archive/calendar-pillar-spec.md (steps 1, 3, 4 and 5)
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (steps 1, 3, 4 and 5)
  */
 
 /** The drag of a chip or a bar inside the calendar: which occurrence, the
@@ -135,11 +135,11 @@ function Chip({ entry, day, mixed, onOpen, onMenu }: { entry: DayEntry; day: str
       onClick={() => onOpen(entry)}
       onContextMenu={onMenu ? (e) => onMenu(e, entry) : undefined}
       aria-label={[when, title].filter(Boolean).join(' ')}
-      className="shrink-0 flex items-center gap-1 min-w-0 h-[17px] px-1 rounded text-[11px] leading-[15px] text-pn hover:bg-accent/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent text-start"
+      className="shrink-0 flex items-center gap-1 min-w-0 h-[17px] px-1 rounded text-meta leading-[15px] text-pn hover:bg-accent/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent text-start"
     >
       <span data-slot="icon" className="inline-flex shrink-0"><EntryGlyph entry={entry} /></span>
       {/* A narrow cell gives the title the room; the time stays in the label. */}
-      {when && <span className="hidden @min-[128px]/cell:inline shrink-0 text-pn-muted tabular-nums text-[10.5px]">{when}</span>}
+      {when && <span className="hidden @min-[128px]/cell:inline shrink-0 text-pn-muted tabular-nums text-meta">{when}</span>}
       <span data-slot="title" dir="auto" className="min-w-0 truncate">{title}</span>
       {entry.alerted && <BellSimple size={10} aria-hidden="true" className="shrink-0 text-accent" />}
       {entry.repeating && <Repeat size={10} aria-hidden="true" className="shrink-0 text-accent" />}
@@ -197,7 +197,7 @@ function Bars({ days, index, hidden, onOpen, onMenu, top, weekCol }: {
                 onClick={() => onOpen(b.entry)}
                 onContextMenu={onMenu ? (e) => onMenu(e, b.entry) : undefined}
                 aria-label={title}
-                className="flex-1 min-w-0 h-full flex items-center gap-1 px-1.5 text-[10.5px] font-semibold text-pn text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent rounded"
+                className="flex-1 min-w-0 h-full flex items-center gap-1 px-1.5 text-meta font-semibold text-pn text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent rounded"
               >
                 <span data-slot="icon" className="inline-flex shrink-0"><EntryGlyph entry={b.entry} size={11} /></span>
                 <span data-slot="title" dir="auto" className="min-w-0 truncate">{title}</span>
@@ -246,7 +246,7 @@ function MorePopover({ day, index, anchor, onOpen, onClose }: { day: string; ind
       style={{ top: pos?.top ?? 0, left: pos?.left ?? 0, visibility: pos ? 'visible' : 'hidden' }}
       className="fixed z-50 w-[260px] max-w-[calc(100vw-16px)] rounded-md border border-divider bg-surface-2 shadow-lg p-2"
     >
-      <div className="px-2 pb-1 text-[12px] font-semibold text-pn-muted">{formatInstant(dayAtNoon(day), 'date')}</div>
+      <div className="px-2 pb-1 text-small font-semibold text-pn-muted">{formatInstant(dayAtNoon(day), 'date')}</div>
       <DayChooser day={day} entries={index} bare onOpen={(e) => { onClose(); onOpen(e); }} onFold={onClose} />
     </div>
   );
@@ -291,7 +291,7 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
     entriesOf: (day) => index.entriesOf(day).filter((e) => !hiddenKinds.has(e.kind)),
   }), [index, hiddenKinds]);
   const locale = intlLocale();
-  const weekStart = firstWeekday(locale);
+  const weekStart = useWeekStart();
   const today = toLocalIso(new Date());
   const [more, setMore] = useState<{ day: string; anchor: HTMLElement } | null>(null);
   const body = useRef<HTMLDivElement | null>(null);
@@ -333,11 +333,11 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
             aria-pressed={mode === m}
             aria-label={t(`calendar.views.${m}`)}
             onClick={() => setMode(m)}
-            className={`inline-flex items-center gap-1.5 h-6 px-1.5 @min-[420px]/calhead:px-2.5 rounded text-xs transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+            className={`inline-flex items-center gap-1.5 h-6 px-1.5 @min-[420px]/calhead:px-2.5 rounded text-small transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
               mode === m ? 'bg-surface-2 shadow-sm text-pn font-semibold' : 'text-pn-soft hover:text-pn font-medium'
             }`}
           >
-            <Icon size={14} aria-hidden="true" />
+            <Icon aria-hidden="true" />
             <span aria-hidden="true" className="hidden @min-[420px]/calhead:inline">{t(`calendar.views.${m}`)}</span>
           </button>
         </HoverLabel>
@@ -361,9 +361,9 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
               aria-pressed={!off}
               aria-label={t(`calendar.kinds.${kind}`)}
               onClick={() => setHidden(off ? [...hiddenKinds].filter((k) => k !== kind) : [...hiddenKinds, kind])}
-              className={`inline-flex items-center gap-1 min-h-6 text-[12px] text-pn-muted hover:text-pn transition ${off ? 'opacity-45 line-through' : ''}`}
+              className={`inline-flex items-center gap-1 min-h-6 text-small text-pn-muted hover:text-pn transition ${off ? 'opacity-45 line-through' : ''}`}
             >
-              <Glyph size={12} aria-hidden="true" className={dayKindColor(kind)} />
+              <Glyph aria-hidden="true" className={dayKindColor(kind)} />
               {/* A narrow header keeps the glyphs and names them on hover. */}
               <span aria-hidden="true" className="hidden @min-[560px]/calhead:inline">{t(`calendar.kinds.${kind}`)}</span>
             </button>
@@ -377,7 +377,7 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
           checked={otherSpace.shown}
           onChange={otherSpace.set}
           className="gap-2 ms-auto"
-          labelClassName="text-[12px] text-pn-muted"
+          labelClassName="text-small text-pn-muted"
         />
       )}
     </div>
@@ -386,7 +386,7 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
   // Import mirrors the agenda button: the toolbar starts and ends with one
   // square tool. It opens the Import tab, where the calendar rows are. In a
   // header under 316px the top row has no room for it; Settings is the way in.
-  // Spec: ops/issues/0548.md (Spec, the calendar's door)
+  // Spec: docs/internal/issues/0548.md (Spec, the calendar's door)
   const headerEnd = onImport ? (
     <span className="flex items-center gap-2">
       <HoverLabel label={t('calendar.importLabel')} position="below-end" className="hidden @min-[316px]/calhead:block">
@@ -396,7 +396,7 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
           aria-label={t('calendar.importLabel')}
           className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-md border border-divider text-pn-muted hover:border-accent hover:text-accent transition"
         >
-          <Download size={15} aria-hidden="true" />
+          <Download aria-hidden="true" />
         </button>
       </HoverLabel>
       {viewSwitch}
@@ -423,7 +423,7 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
               agenda.open ? 'bg-accent/10 border-accent/40 text-accent' : 'border-divider text-pn-muted hover:border-accent hover:text-accent'
             }`}
           >
-            <ListDashes size={15} aria-hidden="true" />
+            <ListDashes aria-hidden="true" />
           </button>
         </HoverLabel>
       )}
@@ -442,7 +442,7 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
           <button
             type="button"
             onClick={(ev) => setMore({ day, anchor: ev.currentTarget })}
-            className="shrink-0 self-start px-1 text-[10.5px] font-semibold text-accent hover:underline"
+            className="shrink-0 self-start px-1 text-meta font-semibold text-accent hover:underline"
           >
             {t('calendar.more', { count: extra })}
           </button>
@@ -560,14 +560,14 @@ function TimedCard({ block, day, onOpen, onMenu }: { block: TimedBlock; day: str
       aria-label={[title, start && end ? `${start} - ${end}` : start].filter(Boolean).join(', ')}
       className={`pn-timed-card w-full h-full overflow-hidden rounded-md border-s-[3px] border-current bg-current/15 px-1.5 py-0.5 text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${dayKindColor(e.kind)}`}
     >
-      <span className="flex items-center gap-1 text-[11px] font-semibold text-pn">
+      <span className="flex items-center gap-1 text-meta font-semibold text-pn">
         <span data-slot="icon" className="inline-flex shrink-0"><EntryGlyph entry={e} size={11} /></span>
         <span dir="auto" className="min-w-0 truncate">{title}</span>
         {e.alerted && <BellSimple size={10} aria-hidden="true" className="shrink-0 text-pn-muted" />}
         {e.repeating && <Repeat size={10} aria-hidden="true" className="shrink-0 text-pn-muted" />}
         {e.space === 'work' && <SPACE_ICONS.work size={10} aria-hidden="true" className="shrink-0 text-pn-muted" />}
       </span>
-      {start && <span className="pn-timed-time block truncate text-[10.5px] text-pn-muted tabular-nums">{end ? `${start} - ${end}` : start}</span>}
+      {start && <span className="pn-timed-time block truncate text-meta text-pn-muted tabular-nums">{end ? `${start} - ${end}` : start}</span>}
     </button>
   );
 }

@@ -6,19 +6,22 @@
     "deselect": "إلغاء تحديد الملاحظة",
     "pinProtected": "محمية برمز PIN",
     "readOnly": "للقراءة فقط",
-    "file": "ملف",
     "empty": "فارغة",
     "noContent": "بلا محتوى",
     "notBackedUp": "غير منسوخة احتياطيًا",
     "archived": "مؤرشف",
-    "entryDate": "تاريخ التدوينة",
     "date": "التاريخ",
-    "dayOf": "اليوم {{n}} من {{total}}"
+    "dayOf": "اليوم {{n}} من {{total}}",
+    "reminders_zero": "{{count}} تذكيرات",
+    "reminders_one": "تذكير واحد",
+    "reminders_two": "تذكيران",
+    "reminders_few": "{{count}} تذكيرات",
+    "reminders_many": "{{count}} تذكيرًا",
+    "reminders_other": "{{count}} تذكير"
   },
   "header": {
     "new": "جديد",
     "newNote": "ملاحظة جديدة",
-    "trash": "المهملات",
     "newEvent": "حدث جديد"
   },
   "folderChip": {
@@ -31,7 +34,6 @@
   },
   "vaultNew": {
     "ariaLabel": "عنصر خزنة جديد",
-    "login": "بيانات تسجيل الدخول",
     "card": "بطاقة ائتمان",
     "sshKey": "مفتاح SSH",
     "generator": "كلمة مرور"
@@ -39,15 +41,14 @@
   "newMenu": {
     "note": "ملاحظة",
     "task": "مهمة",
-    "kanban": "لوحة كانبان",
+    "kanban": "كانبان",
+    "drawing": "رسم",
     "journal": "اليوميات",
     "login": "بيانات تسجيل الدخول",
-    "file": "ملف",
     "bookmark": "إشارة مرجعية",
     "clipPage": "قصّ صفحة",
     "contact": "جهة اتصال",
-    "event": "حدث",
-    "quickAdd": "إضافة سريعة"
+    "event": "حدث"
   },
   "vaultFilter": {
     "all": "الكل",
@@ -64,14 +65,14 @@
   "trash": {
     "empty": "إفراغ",
     "emptyHover": "حذف جميع الملاحظات في المهملات",
-    "storage": "مساحة التخزين",
     "autoDelete": "حذف تلقائي بعد 30 يومًا"
   },
   "search": {
     "sortOptions": "خيارات الفرز والعرض",
     "placeholderVault": "ابحث في الخزنة…",
     "placeholderNotes": "ابحث في الملاحظات…",
-    "placeholderEvents": "ابحث في الأحداث…"
+    "placeholderEvents": "ابحث في الأحداث…",
+    "placeholderDrawings": "ابحث في الرسومات…"
   },
   "selection": {
     "countOf": "{{selected}} من {{total}} محددة",
@@ -82,10 +83,11 @@
     "noMatches": "لا توجد نتائج مطابقة.",
     "vault": "الخزنة فارغة.",
     "notes": "لا توجد ملاحظات بعد.",
+    "drawings": "لا توجد رسومات بعد.",
+    "drawingsLine": "ارسم فكرة أو خطّط لها أو ضع لها خريطة. يمكن أن ترتبط الرسومات بملاحظاتك، لكنها لا تعرض ما فيها.",
     "archive": "لا يوجد شيء مؤرشف.",
     "trash": "المهملات فارغة.",
     "filtered": "لا توجد عناصر تطابق عوامل التصفية.",
-    "clearFilters": "مسح عوامل التصفية",
     "filteredAfter": "لعرضها.",
     "hiddenInAll_zero": "{{count}} عنصر مخفي بخيار العرض في «الكل». افتح عامل التصفية بجوار «الكل» لإظهارها.",
     "hiddenInAll_one": "عنصر واحد مخفي بخيار العرض في «الكل». افتح عامل التصفية بجوار «الكل» لإظهاره.",
@@ -106,16 +108,6 @@
     "other": "أخرى",
     "collapseAll": "طي كل المجموعات",
     "expandAll": "توسيع كل المجموعات"
-  },
-  "headerLabel": {
-    "allItems": "الكل",
-    "untagged": "بلا وسم",
-    "journals": "اليوميات",
-    "vault": "الخزنة",
-    "pinned": "المثبتة",
-    "archive": "الأرشيف",
-    "notes": "الملاحظات",
-    "calendar": "التقويم"
   },
   "footerStats": {
     "today": "اليوم",
@@ -155,6 +147,12 @@
     "contacts_few": "جهات اتصال",
     "contacts_many": "جهة اتصال",
     "contacts_other": "جهة اتصال",
+    "drawings_zero": "رسومات",
+    "drawings_one": "رسم",
+    "drawings_two": "رسمان",
+    "drawings_few": "رسومات",
+    "drawings_many": "رسمًا",
+    "drawings_other": "رسم",
     "files_zero": "ملفات",
     "files_one": "ملف",
     "files_two": "ملفان",
@@ -201,7 +199,6 @@
     "reload": "إعادة التحميل"
   },
   "banner": {
-    "dismiss": "إغلاق",
     "proActivationPending": "تم استلام الدفعة، لكن تفعيل Pro يستغرق وقتًا أطول من المعتاد. حدّث الصفحة بعد دقيقة، أو تواصل مع الدعم إذا لم يُفعَّل.",
     "snapshotPaused": "تم إيقاف سجل الملاحظات مؤقتًا. يبدو أن خطة Pro لديك غير نشطة. لن تُحفظ لقطات للتعديلات الجديدة حتى تتم استعادة Pro.",
     "restorePro": "استعادة Pro",
@@ -209,8 +206,7 @@
     "updateCard": "تحديث البطاقة"
   },
   "sidebar": {
-    "collapse": "طي الشريط الجانبي",
-    "expand": "توسيع الشريط الجانبي"
+    "collapse": "طي الشريط الجانبي"
   },
   "notesList": {
     "collapse": "طي قائمة الملاحظات",
@@ -247,24 +243,11 @@
     "titlePlaceholder": "بلا عنوان (انقر للتحرير أو اترك التوليد التلقائي)",
     "titlePlaceholderLogin": "مثال: GitHub",
     "titlePlaceholderCard": "مثال: Visa تنتهي بـ 4242",
-    "titlePlaceholderSshKey": "مثال: مفتاح نشر GitHub",
-    "pin": "تثبيت",
-    "unpin": "إلغاء التثبيت",
-    "restore": "استعادة",
-    "deleteForever": "حذف نهائي",
-    "moveToTrash": "نقل إلى المهملات",
-    "noteOptions": "خيارات الملاحظة",
     "readOnlyToggle": "للقراءة فقط. لإلغائه انتقل إلى",
     "menu": "القائمة",
-    "showMarkdown": "عرض Markdown",
     "showFormatted": "عرض التنسيق",
     "invisiblesShow": "إظهار الأحرف غير المرئية",
     "invisiblesHide": "إخفاء الأحرف غير المرئية",
-    "findInNote": "بحث في الملاحظة",
-    "navPrev": "السابق",
-    "navNext": "التالي",
-    "navPrevTab": "علامة التبويب السابقة",
-    "navNextTab": "علامة التبويب التالية",
     "undo": "تراجع",
     "redo": "إعادة",
     "hide": "إخفاء",
@@ -274,9 +257,7 @@
     "widthDefault": "العرض الافتراضي",
     "widthWide": "أوسع",
     "widthFull": "عرض كامل",
-    "burn": "مشاركة وحرق بعد القراءة",
     "titlePlaceholderLink": "اسم الإشارة المرجعية",
-    "titlePlaceholderContact": "الاسم",
     "notBackedUpTooLarge": "تتجاوز حد 1 ميغابايت، لذا لم تُنسخ احتياطيًا. انقل الصور إلى المرفقات أو قسّم الملاحظة.",
     "notBackedUpFailed": "غير منسوخة احتياطيًا. آخر خطأ: {{message}}. تجري إعادة المحاولة.",
     "unknownType": "أُنشئ هذا العنصر في إصدار أحدث من PrivacyNotes. حدّث التطبيق لفتحه."
@@ -293,15 +274,17 @@
     "printTextTitle": "طباعة النص فقط",
     "printTextDesc": "يحتفظ بالعنوان، ويحذف التاريخ والمجلد والوسوم.",
     "burnTitle": "مشاركة وحرق بعد القراءة",
-    "burnDesc": "انشر هذه الملاحظة كرابط عرض لمرة واحدة. يُتلف الرابط نفسه بعد قراءته. تبقى ملاحظتك آمنة في حسابك."
+    "burnDesc": "انشر هذه الملاحظة كرابط عرض لمرة واحدة. يُتلف الرابط نفسه بعد قراءته. تبقى ملاحظتك آمنة في حسابك.",
+    "drawingFileTitle": "الرسم (.excalidraw)",
+    "drawingFileDesc": "يُفتح في Excalidraw وObsidian، مع صوره.",
+    "drawingPngTitle": "صورة (.png)",
+    "drawingPngDesc": "الرسم كاملًا في صورة واحدة."
   },
   "weekReview": {
     "title": "مراجعة الأسبوع",
     "daysLogged": "{{count}}/7 مسجّلة",
     "mood": "المزاج",
-    "sleep": "النوم",
-    "meds": "الأدوية",
-    "activity": "النشاط"
+    "meds": "الأدوية"
   },
   "footer": {
     "settings": "الإعدادات",
@@ -320,12 +303,10 @@
     "words_many": "كلمة",
     "words_other": "كلمة",
     "zen": "وضع Zen",
-    "appearance": "المظهر",
     "lockApp": "قفل التطبيق",
     "lockAppSetUp": "عيّن رمز PIN في «الأمان» أولًا",
     "goToTop": "الانتقال إلى الأعلى",
     "goToEnd": "الانتقال إلى النهاية",
-    "signOut": "تسجيل الخروج",
     "signingOut": "جارٍ تسجيل الخروج…",
     "switchToLight": "التبديل إلى الوضع الفاتح",
     "switchToDark": "التبديل إلى الوضع الداكن"
@@ -363,14 +344,15 @@
     "bodyMulti": "يبدو أن هذه الملفات الـ {{count}} من نوع Markdown. هل تريد استيرادها كملاحظات لتتمكن من قراءتها وتحريرها، أم تخزينها كمرفقات ملفات مشفّرة؟"
   },
   "bulkTrash": {
-    "title": "نقل إلى المهملات",
-    "body_one": "هل تريد نقل <highlight>عنصر واحد</highlight> إلى المهملات؟ يمكنك استعادته في وقت لاحق.",
-    "body_other": "هل تريد نقل <highlight>{{count}} عنصر</highlight> إلى المهملات؟ يمكنك استعادتها لاحقًا.",
-    "body_zero": "هل تريد نقل <highlight>{{count}} عناصر</highlight> إلى المهملات؟ يمكنك استعادتها لاحقًا.",
-    "body_two": "هل تريد نقل <highlight>عنصرين</highlight> إلى المهملات؟ يمكنك استعادتهما لاحقًا.",
-    "body_few": "هل تريد نقل <highlight>{{count}} عناصر</highlight> إلى المهملات؟ يمكنك استعادتها لاحقًا.",
-    "body_many": "هل تريد نقل <highlight>{{count}} عنصرًا</highlight> إلى المهملات؟ يمكنك استعادتها لاحقًا.",
-    "readOnlyTitle": "للقراءة فقط",
+    "body_one": "هل تريد حذف <highlight>عنصر واحد</highlight>؟ انقله إلى المهملات لتستعيده لاحقًا، أو احذفه نهائيًا.",
+    "body_other": "هل تريد حذف <highlight>{{count}} عنصر</highlight>؟ انقلها إلى المهملات لتستعيدها لاحقًا، أو احذفها نهائيًا.",
+    "confirm": "نقل إلى المهملات",
+    "keys": "خارج هذه النافذة، يؤدي <kbd>{{trash}}</kbd> إلى نقل العنصر إلى المهملات فورًا، ويفتح <kbd>{{ask}}</kbd> هذه النافذة حتى بعد اختيار «عدم السؤال مرة أخرى».",
+    "dontAskAgain": "عدم السؤال مرة أخرى",
+    "body_zero": "هل تريد حذف <highlight>{{count}} عناصر</highlight>؟ انقلها إلى المهملات لتستعيدها لاحقًا، أو احذفها نهائيًا.",
+    "body_two": "هل تريد حذف <highlight>عنصرين</highlight>؟ انقلهما إلى المهملات لتستعيدهما لاحقًا، أو احذفهما نهائيًا.",
+    "body_few": "هل تريد حذف <highlight>{{count}} عناصر</highlight>؟ انقلها إلى المهملات لتستعيدها لاحقًا، أو احذفها نهائيًا.",
+    "body_many": "هل تريد حذف <highlight>{{count}} عنصرًا</highlight>؟ انقلها إلى المهملات لتستعيدها لاحقًا، أو احذفها نهائيًا.",
     "readOnlyAcknowledge": "فهمت",
     "readOnlyBlocked_zero": "<highlight>{{count}} عناصر</highlight> للقراءة فقط، لذلك لا يمكن نقل أي منها إلى المهملات. أوقف خيار «للقراءة فقط» من خيارات الملاحظة أولاً.",
     "readOnlyBlocked_one": "هذا العنصر <highlight>للقراءة فقط</highlight>، لذلك لا يمكن نقله إلى المهملات. أوقف خيار «للقراءة فقط» من خيارات الملاحظة أولاً.",
@@ -387,7 +369,6 @@
   },
   "deleteCheckedTasks": {
     "title": "هل تريد حذف العناصر المحددة؟",
-    "confirm": "حذف",
     "body_zero": "سيتم حذف <highlight>{{count}} عناصر</highlight> من هذه الملاحظة. لا يمكن التراجع عن هذا الإجراء.",
     "body_one": "سيتم حذف <highlight>عنصر واحد</highlight> من هذه الملاحظة. لا يمكن التراجع عن هذا الإجراء.",
     "body_two": "سيتم حذف <highlight>عنصرين</highlight> من هذه الملاحظة، بما فيها العناصر المتداخلة. لا يمكن التراجع عن هذا الإجراء.",
@@ -395,21 +376,9 @@
     "body_many": "سيتم حذف <highlight>{{count}} عنصر</highlight> من هذه الملاحظة، بما فيها العناصر المتداخلة. لا يمكن التراجع عن هذا الإجراء.",
     "body_other": "سيتم حذف <highlight>{{count}} عنصر</highlight> من هذه الملاحظة، بما فيها العناصر المتداخلة. لا يمكن التراجع عن هذا الإجراء."
   },
-  "bulkDelete": {
-    "body_one": "هل تريد حذف <highlight>ملاحظة واحدة</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.",
-    "body_other": "هل تريد حذف <highlight>{{count}} ملاحظة</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.",
-    "body_zero": "هل تريد حذف <highlight>{{count}} ملاحظات</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.",
-    "body_two": "هل تريد حذف <highlight>ملاحظتين</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.",
-    "body_few": "هل تريد حذف <highlight>{{count}} ملاحظات</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.",
-    "body_many": "هل تريد حذف <highlight>{{count}} ملاحظة</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء."
-  },
   "tagConfirm": {
     "mergeTitle": "دمج الوسوم",
-    "deleteTitle": "حذف الوسم",
-    "deleteWithNotesTitle": "حذف الوسم والملاحظات",
     "mergeConfirm": "دمج",
-    "deleteConfirm": "حذف الوسم",
-    "moveToTrash": "نقل إلى المهملات",
     "mergeBody_one": "الوسم <highlight>«{{targetTag}}»</highlight> موجود بالفعل. هل تريد دمج <highlight>ملاحظة واحدة</highlight> موسومة حاليًا بـ «{{tag}}» فيه؟",
     "mergeBody_other": "الوسم <highlight>«{{targetTag}}»</highlight> موجود بالفعل. هل تريد دمج <highlight>{{count}} ملاحظة</highlight> موسومة حاليًا بـ «{{tag}}» فيه؟",
     "deleteBody_one": "هل تريد إزالة الوسم <highlight>«{{tag}}»</highlight> من <highlight>ملاحظة واحدة</highlight>؟ لن يتم حذف الملاحظة نفسها.",
@@ -455,5 +424,35 @@
     "protectedHidden_few": "{{count}} عناصر محمية برمز PIN غير معروضة",
     "protectedHidden_many": "{{count}} عنصرًا محميًا برمز PIN غير معروض",
     "protectedHidden_other": "{{count}} عنصر محمي برمز PIN غير معروض"
+  },
+  "drawing": {
+    "fullScreen": "ملء الشاشة",
+    "frame": "إطار",
+    "laser": "مؤشر الليزر",
+    "bar": {
+      "hiddenNote": "لا تزال تعمل باختصارات مفاتيحها."
+    },
+    "resetTitle": "هل تريد إعادة تعيين اللوحة؟",
+    "resetBody": "يزيل هذا كل ما على اللوحة. ويعيده «تراجع».",
+    "hotkeysTitle": "اختصارات الرسم",
+    "tools": {
+      "label": "أدوات الرسم",
+      "keepTool": "إبقاء الأداة بعد الرسم",
+      "hand": "تحريك اللوحة",
+      "rectangle": "مستطيل",
+      "diamond": "معيّن",
+      "ellipse": "شكل بيضاوي",
+      "arrow": "سهم",
+      "line": "خط",
+      "pen": "قلم",
+      "text": "مربع نص",
+      "eraser": "ممحاة",
+      "resetZoom": "إعادة تعيين التكبير",
+      "open": "فتح ملف رسم",
+      "reset": "إعادة تعيين اللوحة",
+      "style": "النمط",
+      "more": "مزيد من الأدوات",
+      "fewer": "أدوات أقل"
+    }
   }
 }

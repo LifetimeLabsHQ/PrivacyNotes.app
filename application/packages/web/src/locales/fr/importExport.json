@@ -3,14 +3,12 @@
     "importTitle": "Importer tes données",
     "exportTitle": "Exporter tes données",
     "restoreTitle": "Restaurer tes données",
-    "vaultTitle": "Importer tes mots de passe",
-    "tablistLabel": "Importer, Exporter, Restaurer ou Mots de passe",
+    "tablistLabel": "Importer, Exporter, Restaurer ou Suivis",
     "tabImport": "Importer",
     "tabExport": "Exporter",
     "tabRestore": "Restaurer",
     "tabVault": "Mots de passe",
-    "working": "En cours…",
-    "tabWellness": "Suivis"
+    "working": "En cours…"
   },
   "footer": {
     "exportNote": "Les exports se font en local. Rien n'est envoyé.",
@@ -18,12 +16,11 @@
     "importNote": "Tout est toujours chiffré, sur ton appareil et pendant la synchronisation."
   },
   "importPick": {
-    "autoTagLabel": "Étiqueter les notes importées par source",
-    "autoTagDesc": "Les notes Google Keep reçoivent <keep>#google</keep>, Obsidian reçoit <obsidian>#obsidian</obsidian>, et ainsi de suite.",
     "guideAria": "Guide d'import pour {{app}}",
     "guideLabel": "Guide",
-    "groupGeneral": "Général",
-    "groupNotes": "Notes"
+    "searchPlaceholder": "Trouve ton app",
+    "groupCalendar": "Calendrier, contacts et signets",
+    "noMatch": "Aucune app ne correspond. La plupart des apps de notes savent exporter des fichiers Markdown, et les fichiers Markdown s'importent ici."
   },
   "folderImport": {
     "tagLabel": "Étiqueter aussi les notes par dossier",
@@ -76,6 +73,7 @@
     "googleCalendar": "Le .zip de Settings > Import & export dans Google Calendar, ou un seul fichier .ics. Les événements gardent leurs horaires, leurs répétitions et leurs rappels.",
     "appleNotes": "Exporte via l'app gratuite Exporter au format Markdown, puis dépose le .zip ici.",
     "appleJournal": "Exporte depuis Journal sur Mac ou iPhone, compresse le dossier AppleJournalEntries, puis dépose le .zip. Les entrées s'importent comme des entrées de journal avec leurs photos, vidéos, mémos vocaux et lieux.",
+    "excalidraw": "Les dessins enregistrés depuis excalidraw.com : un seul fichier .excalidraw, ou plusieurs regroupés dans un zip. Les dessins du plugin Excalidraw d'Obsidian fonctionnent aussi, en fichiers .excalidraw.md. Les images contenues dans un dessin suivent.",
     "evernote": "Un seul .enex, ou plusieurs regroupés dans un zip. Conserve la mise en forme, les étiquettes, les pièces jointes, les liens entre notes et les carnets. Evernote laisse les tâches hors du .enex.",
     "samsungNotes": "Exporte en Word (.docx) ou Texte (.txt). Compresse plusieurs fichiers pour un import groupé.",
     "simplenote": "Exporte depuis Simplenote (Réglages -> Outils -> Exporter les notes). Dépose le .zip.",
@@ -99,9 +97,6 @@
     "vcard": "Contacts (vCard)",
     "markdownFolder": "Fichiers Markdown"
   },
-  "vaultPick": {
-    "intro": "Importe des identifiants, cartes bancaires et clés SSH depuis un autre gestionnaire de mots de passe."
-  },
   "restorePick": {
     "intro": "Restaure une sauvegarde PrivacyNotes que tu as exportée plus tôt.",
     "fullBackupTitle": "Sauvegarde complète (.zip)",
@@ -123,8 +118,8 @@
     "restoringBlobs": "Restauration des images et fichiers..."
   },
   "errors": {
-    "genericParse": "Une erreur s'est produite.",
     "decryptionFailed": "Le déchiffrement a échoué. Mauvaise phrase ou fichier corrompu.",
+    "importNothingChanged": "Rien n'a été importé, et tes notes, tes dossiers et tes fichiers sont restés tels quels. {{detail}}",
     "blobImportFailed": "Tes notes ont été importées, mais pas leurs images ni leurs fichiers : {{detail}} Rien n'a été modifié dans le fichier que tu as choisi, tu peux donc supprimer les notes importées et relancer l'import.",
     "blobsNotInBackup_one": "Tes notes ont été restaurées, mais {{items}} manque dans la sauvegarde, qui en indique pourtant la présence.",
     "blobsNotInBackup_other": "Tes notes ont été restaurées, mais {{items}} manquent dans la sauvegarde, qui en indique pourtant la présence."
@@ -135,11 +130,7 @@
     "splitOversize_one": "Scinder cette note en notes plus petites à ses titres, pour qu'elle se synchronise",
     "splitOversize_other": "Scinder ces {{count}} notes en notes plus petites à leurs titres, pour qu'elles se synchronisent",
     "partTitle": "{{title}} ({{index}}/{{total}})",
-    "continuedIn": "Suite dans {{link}}",
-    "sourceLabel": "Source",
     "uniqueTags": "Étiquettes uniques",
-    "empty": "Vide",
-    "untagged": "Sans étiquette",
     "items": "Éléments",
     "previewLabel": "Aperçu",
     "andMore": "… et {{count}} de plus",
@@ -150,9 +141,14 @@
     "eventSkipNote": "les événements que tu as déjà importés sont ignorés et restent tels quels, donc relancer cet import ne crée aucun doublon.",
     "restoreMergeNote": "les notes de ta propre sauvegarde sont associées par identifiant. Une note que tu as déjà n'est mise à jour que si la copie de la sauvegarde est plus récente, et une note de ta corbeille en ressort.",
     "quotaExceeded": "<strong>Stockage trop faible pour importer.</strong> Environ {{needed}} nécessaires, {{available}} disponibles. Libère de l'espace ou passe à la version supérieure avant d'importer.",
-    "quotaWarning": "Attention : cet import utilisera environ {{needed}} de tes {{available}} de stockage restant.",
     "oversizeAttachments_one": "1 fichier dépasse la limite de {{limit}} par fichier de ton offre. Il s'importe sur cet appareil, mais ne se synchronisera pas vers tes autres appareils tant que tu ne passes pas à Pro.",
-    "oversizeAttachments_other": "{{count}} fichiers dépassent la limite de {{limit}} par fichier de ton offre. Ils s'importent sur cet appareil, mais ne se synchroniseront pas vers tes autres appareils tant que tu ne passes pas à Pro."
+    "oversizeAttachments_other": "{{count}} fichiers dépassent la limite de {{limit}} par fichier de ton offre. Ils s'importent sur cet appareil, mais ne se synchroniseront pas vers tes autres appareils tant que tu ne passes pas à Pro.",
+    "title": "Vérifie avant d'importer",
+    "sourceTagLabel": "Étiqueter chaque note <tag>{{tag}}</tag>",
+    "sourceTagDesc": "Désactivé : aucune étiquette pour la source. Les étiquettes déjà présentes dans les notes suivent dans tous les cas.",
+    "storageLine": "Cet import a besoin d'environ {{needed}}. Il te reste {{available}} de libre.",
+    "nothingWritten": "Rien n'est écrit tant que tu n'appuies pas sur Importer.",
+    "whatComesIn": "Ce qui sera importé"
   },
   "counts": {
     "note_one": "note",
@@ -167,6 +163,9 @@
     "sshKey_other": "clés SSH",
     "contact_one": "contact",
     "contact_other": "contacts",
+    "drawing_one": "dessin",
+    "drawing_many": "dessins",
+    "drawing_other": "dessins",
     "zeroItems": "0 élément",
     "importButton": "Importer {{counts}}"
   },
@@ -178,14 +177,14 @@
     "fullBackupHeading": "Sauvegarde complète",
     "portableHeading": "Export portable",
     "vaultOnlyHeading": "Coffre uniquement",
-    "zipBackupTitle": "Sauvegarde PrivacyNotes (.zip)",
-    "zipBackupDesc": "Tout : notes, journaux, éléments du coffre, tâches, images, audio et fichiers. Utilise-la pour une sauvegarde complète du compte ou pour passer à un nouvel appareil. Les fichiers à l'intérieur ne sont pas chiffrés, alors garde le zip en lieu sûr.",
-    "encryptedZipBackupTitle": "Sauvegarde complète chiffrée (.pnbackupz)",
-    "encryptedZipBackupDesc": "Tout ce que contient la sauvegarde zip - notes, éléments du coffre, images, audio et fichiers - scellé avec la clé de ta phrase. Se restaure avec ta phrase sur n'importe quel appareil. Stockable n'importe où.",
-    "encryptedBackupTitle": "Sauvegarde chiffrée (.pnbackup)",
-    "encryptedBackupDesc": "Tout le contenu textuel et les métadonnées, chiffrés avec la clé de ta phrase. Pas d'images ni de fichiers. Stockable n'importe où - illisible sans ta phrase.",
+    "zipBackupTitle": "Tout, non chiffré (.zip)",
+    "zipBackupDesc": "Tes notes, journaux, éléments du coffre, tâches, images, audio et fichiers, avec tes médicaments et tes suivis. S'ouvre sur n'importe quel ordinateur sans phrase, alors garde-le en lieu sûr. L'historique de la note et le PIN de verrouillage de l'app ne sont pas inclus.",
+    "encryptedZipBackupTitle": "Tout, chiffré (.pnbackupz)",
+    "encryptedZipBackupDesc": "Le même contenu que le zip, scellé avec la clé de ta phrase. Se restaure avec ta phrase sur n'importe quel appareil. Stockable n'importe où.",
+    "encryptedBackupTitle": "Texte seulement, chiffré (.pnbackup)",
+    "encryptedBackupDesc": "Tout le contenu textuel et les métadonnées, sans images ni fichiers. Un petit fichier, scellé avec la clé de ta phrase. Stockable n'importe où.",
     "htmlArchiveTitle": "Archive HTML (.zip)",
-    "htmlArchiveDesc": "Une page HTML imprimable par note. Idéale pour lire hors ligne ou archiver, pas pour restaurer.",
+    "htmlArchiveDesc": "Une page HTML imprimable par note, identifiants, cartes et clés compris, en clair. Idéale pour lire hors ligne ou archiver, pas pour restaurer. Garde-la en lieu sûr.",
     "textBackupTitle": "Sauvegarde texte (.json)",
     "textBackupDesc": "Tout le contenu textuel et les métadonnées en JSON brut. Pas d'images ni de fichiers. Stocke-la en lieu sûr - ce n'est pas chiffré.",
     "vaultExportTitle": "Export du coffre (.json)",
@@ -199,6 +198,8 @@
     "calendarOnlyHeading": "Calendrier seulement",
     "calendarExportTitle": "Fichier de calendrier (.ics)",
     "calendarExportDesc": "Les événements, ainsi que les notes et listes de tâches datées, pour Google Calendar, Apple Calendar ou Outlook.",
+    "drawingsExportTitle": "Dessins (.zip)",
+    "drawingsExportDesc": "Chaque dessin dans son propre fichier .excalidraw, images comprises, pour excalidraw.com et Obsidian.",
     "calendarPrivate": "Privé"
   },
   "exportProgress": {
@@ -207,11 +208,8 @@
     "incompleteTitle": "Export incomplet",
     "exportingTitle": "Export de la sauvegarde...",
     "preparing": "Préparation...",
-    "exporting": "Export...",
-    "imagesProgress": "Export des images... {{done}} sur {{total}}",
-    "filesProgress": "Export des fichiers... {{done}} sur {{total}}",
-    "building": "Construction de la sauvegarde...",
-    "compressing": "Compression...",
+    "showInFolder": "Afficher dans le dossier",
+    "zipStep": "Zip",
     "missingFailed_one": "Cet appareil n'a pas pu télécharger {{items}}, donc ton export ne l'inclut pas. Vérifie ta connexion et exporte à nouveau.",
     "missingFailed_other": "Cet appareil n'a pas pu télécharger {{items}}, donc ton export ne les inclut pas. Vérifie ta connexion et exporte à nouveau.",
     "missingNotFound_one": "{{items}} n'est ni sur cet appareil ni sur le serveur, donc ton export ne l'inclut pas.",
@@ -259,7 +257,8 @@
     "generic": "L'export n'a pas pu être enregistré. Réessaie, ou choisis un autre dossier."
   },
   "saveErrors": {
-    "shortWrite": "Seuls {{written}} octets sur {{expected}} ont été enregistrés, le fichier est donc incomplet. Réessaie en enregistrant dans le stockage de ton appareil plutôt que dans un dossier cloud."
+    "shortWrite": "Seuls {{written}} octets sur {{expected}} ont été enregistrés, le fichier est donc incomplet. Réessaie en enregistrant dans le stockage de ton appareil plutôt que dans un dossier cloud.",
+    "protectedFolder": "PrivacyNotes n'enregistre pas dans {{folder}}, car ce dossier contient des clés, des paramètres ou des programmes. Enregistre le fichier ailleurs et déplace-le là-bas toi-même."
   },
   "shareSheet": {
     "title_one": "{{count}} élément a été partagé avec PrivacyNotes",
@@ -268,7 +267,6 @@
     "saveAll": "Tout enregistrer"
   },
   "destination": {
-    "label": "Ajouter à",
     "none": "Sans dossier",
     "newFolder": "Nouveau dossier « {{name}} »",
     "help": "Les dossiers de la source sont placés dans le dossier choisi, et les éléments sans dossier y sont ajoutés."

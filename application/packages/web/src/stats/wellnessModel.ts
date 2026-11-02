@@ -13,7 +13,7 @@ import { intlLocale } from '../languages';
  * predicate, the registry of every tracker, the range, and a series per
  * tracker on the calendar axis. Built once per range change and shared, so
  * the sub-tabs never disagree about a number.
- * Spec: ops/docs/archive/wellness-statistics.md (sections 4, 5)
+ * Spec: docs/internal/specs/wellness-statistics.md (sections 4, 5)
  */
 export interface WellnessModel {
   entries: JournalEntry[];
@@ -196,7 +196,7 @@ export interface DoseLens {
  * The dose lens: for the start and every dose change of a medication inside
  * the range, the mood average of the two weeks before and after, each side
  * cut at the range, at the day before the next change, and at the deletion.
- * Spec: ops/docs/archive/wellness-statistics.md (section 10)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 10)
  */
 export function doseLenses(entries: JournalEntry[], medications: MedicationTemplate[], range: RangeBounds): DoseLens[] {
   const out: DoseLens[] = [];

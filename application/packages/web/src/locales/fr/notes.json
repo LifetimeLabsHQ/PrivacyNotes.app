@@ -6,19 +6,18 @@
     "deselect": "Désélectionner la note",
     "pinProtected": "Protégé par PIN",
     "readOnly": "Lecture seule",
-    "file": "Fichier",
     "empty": "Vide",
     "noContent": "Aucun contenu",
     "notBackedUp": "Non sauvegardé",
     "archived": "Archivé",
-    "entryDate": "Date de l'entrée",
     "date": "Date",
-    "dayOf": "jour {{n}} sur {{total}}"
+    "dayOf": "jour {{n}} sur {{total}}",
+    "reminders_one": "{{count}} rappel",
+    "reminders_other": "{{count}} rappels"
   },
   "header": {
     "new": "Nouveau",
     "newNote": "Nouvelle note",
-    "trash": "Corbeille",
     "newEvent": "Nouvel événement"
   },
   "folderChip": {
@@ -31,7 +30,6 @@
   },
   "vaultNew": {
     "ariaLabel": "Nouvel élément du coffre",
-    "login": "Identifiant",
     "card": "Carte bancaire",
     "sshKey": "Clé SSH",
     "generator": "Mot de passe"
@@ -39,15 +37,14 @@
   "newMenu": {
     "note": "Note",
     "task": "Tâche",
-    "kanban": "Tableau Kanban",
+    "kanban": "Kanban",
+    "drawing": "Dessin",
     "journal": "Journal",
     "login": "Identifiant",
-    "file": "Fichier",
     "bookmark": "Signet",
     "clipPage": "Capturer une page",
     "contact": "Contact",
-    "event": "Événement",
-    "quickAdd": "Ajout rapide"
+    "event": "Événement"
   },
   "vaultFilter": {
     "all": "Tous",
@@ -64,14 +61,14 @@
   "trash": {
     "empty": "Vider",
     "emptyHover": "Supprimer toutes les notes de la corbeille",
-    "storage": "Stockage",
     "autoDelete": "Supprimer après 30 jours"
   },
   "search": {
     "sortOptions": "Options de tri et d'affichage",
     "placeholderVault": "Rechercher dans le coffre…",
     "placeholderNotes": "Rechercher des notes…",
-    "placeholderEvents": "Rechercher des événements…"
+    "placeholderEvents": "Rechercher des événements…",
+    "placeholderDrawings": "Rechercher des dessins…"
   },
   "selection": {
     "countOf": "{{selected}} sur {{total}} sélectionnés",
@@ -82,10 +79,11 @@
     "noMatches": "Aucun résultat.",
     "vault": "Le coffre est vide.",
     "notes": "Aucune note pour l'instant.",
+    "drawings": "Aucun dessin pour l'instant.",
+    "drawingsLine": "Esquisse, planifie ou schématise une idée. Les dessins peuvent contenir des liens vers tes notes, mais n'en affichent pas le contenu.",
     "archive": "Rien d’archivé.",
     "trash": "La corbeille est vide.",
     "filtered": "Aucun élément ne correspond à tes filtres.",
-    "clearFilters": "Effacer les filtres",
     "filteredAfter": "pour les afficher.",
     "hiddenInAll_one": "{{count}} élément est masqué par le filtre Afficher dans « Tout ». Ouvre le filtre à côté de Tout pour l'afficher.",
     "hiddenInAll_other": "{{count}} éléments sont masqués par le filtre Afficher dans « Tout ». Ouvre le filtre à côté de Tout pour les afficher.",
@@ -98,16 +96,6 @@
     "other": "Autres",
     "collapseAll": "Réduire tous les groupes",
     "expandAll": "Développer tous les groupes"
-  },
-  "headerLabel": {
-    "allItems": "Tout",
-    "untagged": "Sans étiquette",
-    "journals": "Journaux",
-    "vault": "Coffre",
-    "pinned": "Épinglés",
-    "archive": "Archives",
-    "notes": "Notes",
-    "calendar": "Calendrier"
   },
   "footerStats": {
     "journals_one": "journal",
@@ -122,6 +110,8 @@
     "bookmarks_other": "signets",
     "contacts_one": "contact",
     "contacts_other": "contacts",
+    "drawings_one": "dessin",
+    "drawings_other": "dessins",
     "files_one": "fichier",
     "files_other": "fichiers",
     "lists_one": "liste",
@@ -149,7 +139,6 @@
     "reload": "Recharger"
   },
   "banner": {
-    "dismiss": "Ignorer",
     "proActivationPending": "Paiement reçu, mais l'activation de Pro prend plus de temps que d'habitude. Actualise dans une minute, ou contacte le support si ça ne s'active pas.",
     "snapshotPaused": "L'historique des notes est en pause. Ton abonnement Pro semble inactif. Les nouvelles modifications ne seront pas enregistrées tant que Pro n'est pas rétabli.",
     "restorePro": "Rétablir Pro",
@@ -157,8 +146,7 @@
     "updateCard": "Mettre à jour la carte"
   },
   "sidebar": {
-    "collapse": "Replier la barre latérale",
-    "expand": "Déplier la barre latérale"
+    "collapse": "Replier la barre latérale"
   },
   "notesList": {
     "collapse": "Replier la liste des notes",
@@ -195,24 +183,11 @@
     "titlePlaceholder": "Sans titre (clique pour modifier ou laisse-le se générer)",
     "titlePlaceholderLogin": "ex. GitHub",
     "titlePlaceholderCard": "ex. Visa finissant par 4242",
-    "titlePlaceholderSshKey": "ex. clé de déploiement GitHub",
-    "pin": "Épingler",
-    "unpin": "Désépingler",
-    "restore": "Restaurer",
-    "deleteForever": "Supprimer définitivement",
-    "moveToTrash": "Mettre à la corbeille",
-    "noteOptions": "Options de la note",
     "readOnlyToggle": "Lecture seule. Désactive dans",
     "menu": "Menu",
-    "showMarkdown": "Afficher le markdown",
     "showFormatted": "Afficher la mise en forme",
     "invisiblesShow": "Afficher les caractères invisibles",
     "invisiblesHide": "Masquer les caractères invisibles",
-    "findInNote": "Rechercher dans la note",
-    "navPrev": "Précédent",
-    "navNext": "Suivant",
-    "navPrevTab": "Onglet précédent",
-    "navNextTab": "Onglet suivant",
     "undo": "Annuler",
     "redo": "Rétablir",
     "hide": "Masquer",
@@ -222,9 +197,7 @@
     "widthDefault": "Largeur par défaut",
     "widthWide": "Plus large",
     "widthFull": "Pleine largeur",
-    "burn": "Partager en burn note",
     "titlePlaceholderLink": "Nom du signet",
-    "titlePlaceholderContact": "Nom",
     "notBackedUpTooLarge": "Au-delà de la limite de 1 Mo, donc non sauvegardée. Déplace les images en pièces jointes ou scinde la note.",
     "notBackedUpFailed": "Non sauvegardée. Dernière erreur : {{message}}. Nouvel essai en cours.",
     "unknownType": "Cet élément a été créé avec une version plus récente de PrivacyNotes. Mets à jour l'application pour l'ouvrir."
@@ -241,15 +214,17 @@
     "printTextTitle": "Imprimer le texte seul",
     "printTextDesc": "Garde le titre. Retire la date, le dossier et les étiquettes.",
     "burnTitle": "Partager en burn note",
-    "burnDesc": "Publie cette note sous forme de lien à usage unique. Le lien s'autodétruit après lecture. Ta note reste en sécurité dans ton compte."
+    "burnDesc": "Publie cette note sous forme de lien à usage unique. Le lien s'autodétruit après lecture. Ta note reste en sécurité dans ton compte.",
+    "drawingFileTitle": "Dessin (.excalidraw)",
+    "drawingFileDesc": "S'ouvre dans Excalidraw et Obsidian, avec ses images.",
+    "drawingPngTitle": "Image (.png)",
+    "drawingPngDesc": "Le dessin entier en une seule image."
   },
   "weekReview": {
     "title": "Bilan de la semaine",
     "daysLogged": "{{count}}/7 enregistrés",
     "mood": "Humeur",
-    "sleep": "Sommeil",
-    "meds": "Médicaments",
-    "activity": "Activité"
+    "meds": "Médicaments"
   },
   "footer": {
     "settings": "Paramètres",
@@ -264,12 +239,10 @@
     "words_one": "mot",
     "words_other": "mots",
     "zen": "Mode Zen",
-    "appearance": "Apparence",
     "lockApp": "Verrouiller l'app",
     "lockAppSetUp": "Définis d'abord un PIN dans Sécurité",
     "goToTop": "Aller en haut",
     "goToEnd": "Aller à la fin",
-    "signOut": "Se déconnecter",
     "signingOut": "Déconnexion…",
     "switchToLight": "Passer en mode clair",
     "switchToDark": "Passer en mode sombre"
@@ -307,10 +280,11 @@
     "bodyMulti": "Ces {{count}} fichiers ressemblent à du markdown. Les importer comme notes pour pouvoir les lire et les modifier, ou les stocker comme pièces jointes chiffrées ?"
   },
   "bulkTrash": {
-    "title": "Mettre à la corbeille",
-    "body_one": "Mettre <highlight>{{count}} élément</highlight> à la corbeille ? Tu pourras le restaurer par la suite.",
-    "body_other": "Mettre <highlight>{{count}} éléments</highlight> à la corbeille ? Tu pourras les restaurer plus tard.",
-    "readOnlyTitle": "Lecture seule",
+    "body_one": "Supprimer <highlight>{{count}} élément</highlight> ? Mets-le à la corbeille pour le restaurer plus tard, ou supprime-le définitivement.",
+    "body_other": "Supprimer <highlight>{{count}} éléments</highlight> ? Mets-les à la corbeille pour les restaurer plus tard, ou supprime-les définitivement.",
+    "confirm": "Mettre à la corbeille",
+    "keys": "En dehors de cette fenêtre, <kbd>{{trash}}</kbd> met aussitôt un élément à la corbeille, et <kbd>{{ask}}</kbd> ouvre cette fenêtre même après Ne plus demander.",
+    "dontAskAgain": "Ne plus demander",
     "readOnlyAcknowledge": "J'ai compris",
     "readOnlyBlocked_one": "Cet élément est en <highlight>lecture seule</highlight>, il ne peut donc pas aller à la corbeille. Désactive d'abord la lecture seule dans les options de la note.",
     "readOnlyBlocked_other": "Les <highlight>{{count}} éléments</highlight> sont tous en lecture seule, aucun ne peut donc aller à la corbeille. Désactive d'abord la lecture seule dans les options de la note.",
@@ -319,21 +293,12 @@
   },
   "deleteCheckedTasks": {
     "title": "Supprimer les éléments cochés ?",
-    "confirm": "Supprimer",
     "body_one": "<highlight>{{count}} élément</highlight> sera supprimé de cette note. Cette action est irréversible.",
     "body_other": "<highlight>{{count}} éléments</highlight> seront supprimés de cette note, éléments imbriqués compris. Cette action est irréversible."
   },
-  "bulkDelete": {
-    "body_one": "Supprimer définitivement <highlight>{{count}} note</highlight> ? Cette action est irréversible.",
-    "body_other": "Supprimer définitivement <highlight>{{count}} notes</highlight> ? Cette action est irréversible."
-  },
   "tagConfirm": {
     "mergeTitle": "Fusionner les étiquettes",
-    "deleteTitle": "Supprimer l'étiquette",
-    "deleteWithNotesTitle": "Supprimer l'étiquette et les notes",
     "mergeConfirm": "Fusionner",
-    "deleteConfirm": "Supprimer l'étiquette",
-    "moveToTrash": "Mettre à la corbeille",
     "mergeBody_one": "L'étiquette <highlight>« {{targetTag}} »</highlight> existe déjà. Fusionner <highlight>{{count}} note</highlight> actuellement étiquetée « {{tag}} » dedans ?",
     "mergeBody_other": "L'étiquette <highlight>« {{targetTag}} »</highlight> existe déjà. Fusionner <highlight>{{count}} notes</highlight> actuellement étiquetées « {{tag}} » dedans ?",
     "deleteBody_one": "Retirer l'étiquette <highlight>« {{tag}} »</highlight> de <highlight>{{count}} note</highlight> ? Les notes elles-mêmes ne sont pas supprimées.",
@@ -363,5 +328,35 @@
     "missing": "Pas encore créée",
     "protectedHidden_one": "{{count}} élément protégé par PIN non affiché",
     "protectedHidden_other": "{{count}} éléments protégés par PIN non affichés"
+  },
+  "drawing": {
+    "fullScreen": "Plein écran",
+    "frame": "Cadre",
+    "laser": "Pointeur laser",
+    "bar": {
+      "hiddenNote": "Ils fonctionnent toujours avec leurs touches."
+    },
+    "resetTitle": "Réinitialiser le canevas ?",
+    "resetBody": "Cela retire tout ce qui se trouve sur le canevas. Annuler le fait revenir.",
+    "hotkeysTitle": "Raccourcis du dessin",
+    "tools": {
+      "label": "Outils de dessin",
+      "keepTool": "Garder l'outil après avoir dessiné",
+      "hand": "Déplacer le canevas",
+      "rectangle": "Rectangle",
+      "diamond": "Losange",
+      "ellipse": "Ellipse",
+      "arrow": "Flèche",
+      "line": "Ligne",
+      "pen": "Stylo",
+      "text": "Zone de texte",
+      "eraser": "Gomme",
+      "resetZoom": "Réinitialiser le zoom",
+      "open": "Ouvrir un fichier de dessin",
+      "reset": "Réinitialiser le canevas",
+      "style": "Style",
+      "more": "Plus d'outils",
+      "fewer": "Moins d'outils"
+    }
   }
 }

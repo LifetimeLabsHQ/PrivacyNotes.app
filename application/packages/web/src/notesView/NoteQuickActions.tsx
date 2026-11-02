@@ -17,7 +17,7 @@ import { isConvertSource } from '../noteTypes';
  * strip stands IN FOR a hidden row, so showing both would repeat it, while
  * this row is a shortcut to a menu the user may keep using exactly as
  * before. Nobody's habit breaks when the window gets wider.
- * Spec: ops/docs/archive/ui-patterns.md (section 80)
+ * Spec: docs/internal/design/ui-patterns.md (section 80)
  *
  * The markdown/formatted switch is deliberately NOT here. Its glyph is the
  * markdown logo, and the tag row one line below wears the same logo for the
@@ -63,12 +63,12 @@ export function NoteQuickActions({
       <HeaderDivider />
       <div className="shrink-0 flex items-center gap-0.5">
         <QuickButton
-          label={t('shell:noteOptionsMenu.readOnly')}
+          label={t('notes:noteRow.readOnly')}
           onClick={act.toggleLock}
           active={note.locked === 1}
           pro={!isPro}
         >
-          <PencilSimpleSlash size={18} aria-hidden="true" />
+          <PencilSimpleSlash aria-hidden="true" />
         </QuickButton>
         <QuickButton
           label={t('shell:noteOptionsMenu.protect')}
@@ -76,15 +76,15 @@ export function NoteQuickActions({
           active={note.pinProtected === 1}
           pro={!isPro}
         >
-          <Shield size={18} weight={note.pinProtected === 1 ? 'fill' : undefined} aria-hidden="true" />
+          <Shield weight={note.pinProtected === 1 ? 'fill' : undefined} aria-hidden="true" />
         </QuickButton>
         {guards.onMoveToFolder && (
           <QuickButton
-            label={t('shell:noteOptionsMenu.moveToFolder')}
+            label={t('shell:contextMenu.moveToFolder')}
             onClick={act.moveToFolder}
             pro={!isPro}
           >
-            <Folder size={18} aria-hidden="true" />
+            <Folder aria-hidden="true" />
           </QuickButton>
         )}
         <QuickButton
@@ -93,7 +93,7 @@ export function NoteQuickActions({
           pro={!isPro}
           disabled={proUnlocked(isPro) && !guards.onOpenHistory}
         >
-          <ClockCounterClockwise size={18} aria-hidden="true" />
+          <ClockCounterClockwise aria-hidden="true" />
         </QuickButton>
       </div>
 
@@ -101,15 +101,15 @@ export function NoteQuickActions({
         <>
           <HeaderDivider />
           <div className="shrink-0 flex items-center gap-0.5">
-            <QuickButton label={t('shell:noteOptionsMenu.duplicate')} onClick={onDuplicate}>
-              <Copy size={18} aria-hidden="true" />
+            <QuickButton label={t('shell:contextMenu.duplicate')} onClick={onDuplicate}>
+              <Copy aria-hidden="true" />
             </QuickButton>
             {canConvert && (
               <QuickButton
                 label={t('shell:noteOptionsMenu.convertTo')}
                 onClick={onConvertType}
               >
-                <Repeat size={18} aria-hidden="true" />
+                <Repeat aria-hidden="true" />
               </QuickButton>
             )}
           </div>

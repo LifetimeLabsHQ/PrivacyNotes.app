@@ -6,19 +6,17 @@
     "deselect": "取消選取筆記",
     "pinProtected": "PIN 碼保護",
     "readOnly": "唯讀",
-    "file": "檔案",
     "empty": "空白",
     "noContent": "沒有內容",
     "notBackedUp": "未備份",
     "archived": "已封存",
-    "entryDate": "日誌日期",
     "date": "日期",
-    "dayOf": "第 {{n}} 天，共 {{total}} 天"
+    "dayOf": "第 {{n}} 天，共 {{total}} 天",
+    "reminders_other": "{{count}} 個提醒"
   },
   "header": {
     "new": "新增",
     "newNote": "新增筆記",
-    "trash": "垃圾桶",
     "newEvent": "新增活動"
   },
   "folderChip": {
@@ -31,7 +29,6 @@
   },
   "vaultNew": {
     "ariaLabel": "新增保險庫項目",
-    "login": "登入資訊",
     "card": "信用卡",
     "sshKey": "SSH 金鑰",
     "generator": "密碼"
@@ -40,14 +37,13 @@
     "note": "筆記",
     "task": "任務",
     "kanban": "看板",
+    "drawing": "繪圖",
     "journal": "日誌",
     "login": "登入資訊",
-    "file": "檔案",
     "bookmark": "書籤",
     "clipPage": "擷取網頁",
     "contact": "聯絡人",
-    "event": "活動",
-    "quickAdd": "快速新增"
+    "event": "活動"
   },
   "vaultFilter": {
     "all": "全部",
@@ -64,14 +60,14 @@
   "trash": {
     "empty": "清空",
     "emptyHover": "刪除垃圾桶中的所有筆記",
-    "storage": "儲存空間",
     "autoDelete": "30 天後自動刪除"
   },
   "search": {
     "sortOptions": "排序與檢視選項",
     "placeholderVault": "搜尋保險庫…",
     "placeholderNotes": "搜尋筆記…",
-    "placeholderEvents": "搜尋活動…"
+    "placeholderEvents": "搜尋活動…",
+    "placeholderDrawings": "搜尋繪圖…"
   },
   "selection": {
     "countOf": "已選取 {{selected}}/{{total}} 項",
@@ -82,10 +78,11 @@
     "noMatches": "沒有符合的結果。",
     "vault": "保險庫是空的。",
     "notes": "還沒有筆記。",
+    "drawings": "還沒有繪圖。",
+    "drawingsLine": "隨手畫下草圖、規劃或整理一個想法。繪圖可以連結到你的筆記，但不會顯示筆記的內容。",
     "archive": "沒有封存的項目。",
     "trash": "垃圾桶是空的。",
     "filtered": "沒有項目符合篩選條件。",
-    "clearFilters": "清除篩選",
     "filteredAfter": "即可顯示。",
     "hiddenInAll_other": "有 {{count}} 個項目被「顯示於『全部』」篩選條件隱藏。開啟「全部」旁的篩選條件即可顯示。",
     "inOtherSpace_other": "有 {{count}} 個項目在你的「{{space}}」空間中。在側邊欄切換到「{{space}}」即可查看。"
@@ -97,16 +94,6 @@
     "collapseAll": "收合所有群組",
     "expandAll": "展開所有群組"
   },
-  "headerLabel": {
-    "allItems": "全部",
-    "untagged": "無標籤",
-    "journals": "日誌",
-    "vault": "保險庫",
-    "pinned": "已釘選",
-    "archive": "封存",
-    "notes": "筆記",
-    "calendar": "日曆"
-  },
   "footerStats": {
     "journals_other": "日誌",
     "items_other": "項目",
@@ -114,6 +101,7 @@
     "notes_other": "筆記",
     "bookmarks_other": "書籤",
     "contacts_other": "聯絡人",
+    "drawings_other": "繪圖",
     "files_other": "檔案",
     "lists_other": "清單",
     "tasks_other": "任務",
@@ -136,7 +124,6 @@
     "reload": "重新載入"
   },
   "banner": {
-    "dismiss": "忽略",
     "proActivationPending": "已收到款項，但 Pro 開通比平常慢。請一分鐘後重新整理；如果一直沒有解鎖，請聯絡支援。",
     "snapshotPaused": "筆記歷史已暫停。你的 Pro 方案看起來未生效，在 Pro 恢復前，新的編輯不會建立快照。",
     "restorePro": "恢復 Pro",
@@ -144,8 +131,7 @@
     "updateCard": "更新卡片"
   },
   "sidebar": {
-    "collapse": "收合側邊欄",
-    "expand": "展開側邊欄"
+    "collapse": "收合側邊欄"
   },
   "notesList": {
     "collapse": "收合筆記清單",
@@ -182,24 +168,11 @@
     "titlePlaceholder": "未命名（點一下編輯，或留白自動產生）",
     "titlePlaceholderLogin": "例如 GitHub",
     "titlePlaceholderCard": "例如 4242 結尾的 Visa 卡",
-    "titlePlaceholderSshKey": "例如 GitHub 部署金鑰",
-    "pin": "釘選",
-    "unpin": "取消釘選",
-    "restore": "還原",
-    "deleteForever": "永久刪除",
-    "moveToTrash": "移至垃圾桶",
-    "noteOptions": "筆記選項",
     "readOnlyToggle": "唯讀。關閉請至",
     "menu": "選單",
-    "showMarkdown": "顯示 Markdown",
     "showFormatted": "顯示排版結果",
     "invisiblesShow": "顯示編輯標記",
     "invisiblesHide": "隱藏編輯標記",
-    "findInNote": "在筆記中尋找",
-    "navPrev": "上一個",
-    "navNext": "下一個",
-    "navPrevTab": "上一個分頁",
-    "navNextTab": "下一個分頁",
     "undo": "復原",
     "redo": "重做",
     "hide": "隱藏",
@@ -209,9 +182,7 @@
     "widthDefault": "預設寬度",
     "widthWide": "更寬",
     "widthFull": "全寬",
-    "burn": "分享與 Burn After Reading",
     "titlePlaceholderLink": "書籤名稱",
-    "titlePlaceholderContact": "姓名",
     "notBackedUpTooLarge": "超過 1 MB 上限，因此尚未備份。請把圖片改為附件，或將筆記拆成兩則。",
     "notBackedUpFailed": "尚未備份。最近的錯誤：{{message}}。正在重試。",
     "unknownType": "這個項目是由較新版本的 PrivacyNotes 建立的。請更新應用程式後再開啟。"
@@ -228,15 +199,17 @@
     "printTextTitle": "僅列印內文",
     "printTextDesc": "保留標題，省略日期、資料夾與標籤。",
     "burnTitle": "分享與 Burn After Reading",
-    "burnDesc": "將這篇筆記發佈為一次性檢視連結，連結在被閱讀後自動銷毀。你的筆記仍安全保留在帳號中。"
+    "burnDesc": "將這篇筆記發佈為一次性檢視連結，連結在被閱讀後自動銷毀。你的筆記仍安全保留在帳號中。",
+    "drawingFileTitle": "繪圖 (.excalidraw)",
+    "drawingFileDesc": "可在 Excalidraw 與 Obsidian 中開啟，並包含其中的圖片。",
+    "drawingPngTitle": "圖片 (.png)",
+    "drawingPngDesc": "將整份繪圖匯出為一張圖片。"
   },
   "weekReview": {
     "title": "每週回顧",
     "daysLogged": "已記錄 {{count}}/7 天",
     "mood": "心情",
-    "sleep": "睡眠",
-    "meds": "用藥",
-    "activity": "活動"
+    "meds": "用藥"
   },
   "footer": {
     "settings": "設定",
@@ -250,12 +223,10 @@
     "journalCalendar": "日誌行事曆",
     "words_other": "字",
     "zen": "Zen 模式",
-    "appearance": "外觀",
     "lockApp": "鎖定應用程式",
     "lockAppSetUp": "請先到「安全性」設定 PIN 碼",
     "goToTop": "移至頂端",
     "goToEnd": "移至結尾",
-    "signOut": "登出",
     "signingOut": "登出中…",
     "switchToLight": "切換至淺色模式",
     "switchToDark": "切換至深色模式"
@@ -293,28 +264,21 @@
     "bodyMulti": "這 {{count}} 個檔案看起來是 Markdown。要匯入為筆記以便閱讀和編輯，還是儲存為加密檔案附件？"
   },
   "bulkTrash": {
-    "title": "移至垃圾桶",
-    "body_other": "要將 <highlight>{{count}} 個項目</highlight>移至垃圾桶嗎？之後仍可還原。",
-    "readOnlyTitle": "唯讀",
+    "body_other": "要刪除 <highlight>{{count}} 個項目</highlight>嗎？移至垃圾桶之後仍可還原，或者永久刪除。",
+    "confirm": "移至垃圾桶",
+    "keys": "在這個視窗以外，<kbd>{{trash}}</kbd> 會立即將項目移至垃圾桶，而 <kbd>{{ask}}</kbd> 即使在選擇「不再詢問」之後也會開啟這個視窗。",
+    "dontAskAgain": "不再詢問",
     "readOnlyAcknowledge": "知道了",
     "readOnlyBlocked_other": "<highlight>{{count}} 個項目</highlight>是唯讀的，無法移至垃圾桶。請先到筆記選項關閉唯讀。",
     "readOnlySkipped_other": "<highlight>{{count}} 個項目</highlight>是唯讀的，會留在原處。"
   },
   "deleteCheckedTasks": {
     "title": "要刪除已勾選的項目嗎？",
-    "confirm": "刪除",
     "body_other": "將從這篇筆記刪除 <highlight>{{count}} 個項目</highlight>，包含巢狀項目。此動作無法復原。"
-  },
-  "bulkDelete": {
-    "body_other": "要永久刪除 <highlight>{{count}} 篇筆記</highlight>嗎？此動作無法復原。"
   },
   "tagConfirm": {
     "mergeTitle": "合併標籤",
-    "deleteTitle": "刪除標籤",
-    "deleteWithNotesTitle": "刪除標籤與筆記",
     "mergeConfirm": "合併",
-    "deleteConfirm": "刪除標籤",
-    "moveToTrash": "移至垃圾桶",
     "mergeBody_other": "標籤 <highlight>「{{targetTag}}」</highlight>已存在。要將目前標記為「{{tag}}」的 <highlight>{{count}} 篇筆記</highlight>併入嗎？",
     "deleteBody_other": "要從 <highlight>{{count}} 篇筆記</highlight>移除標籤 <highlight>「{{tag}}」</highlight>嗎？筆記本身不會被刪除。",
     "deleteWithNotesBody_other": "要刪除標籤 <highlight>「{{tag}}」</highlight>並將 <highlight>{{count}} 篇筆記</highlight>移至垃圾桶嗎？之後仍可從垃圾桶還原。"
@@ -340,5 +304,35 @@
     "linksTo": "連結至",
     "missing": "尚未建立",
     "protectedHidden_other": "有 {{count}} 個受 PIN 碼保護的項目未顯示"
+  },
+  "drawing": {
+    "fullScreen": "全螢幕",
+    "frame": "框架",
+    "laser": "雷射筆",
+    "bar": {
+      "hiddenNote": "它們仍可用各自的按鍵使用。"
+    },
+    "resetTitle": "要重設畫布嗎？",
+    "resetBody": "這會移除畫布上的所有內容。復原可以把它找回來。",
+    "hotkeysTitle": "繪圖快速鍵",
+    "tools": {
+      "label": "繪圖工具",
+      "keepTool": "繪製後保留目前工具",
+      "hand": "移動畫布",
+      "rectangle": "矩形",
+      "diamond": "菱形",
+      "ellipse": "橢圓",
+      "arrow": "箭頭",
+      "line": "線條",
+      "pen": "畫筆",
+      "text": "文字方塊",
+      "eraser": "橡皮擦",
+      "resetZoom": "重設縮放",
+      "open": "開啟繪圖檔案",
+      "reset": "重設畫布",
+      "style": "樣式",
+      "more": "更多工具",
+      "fewer": "較少工具"
+    }
   }
 }

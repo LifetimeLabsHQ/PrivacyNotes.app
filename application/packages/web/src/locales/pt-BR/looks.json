@@ -1,11 +1,9 @@
 {
   "captionFolder": "Pasta",
   "captionTag": "Etiqueta",
-  "captionNote": "Nota",
   "captionTracker": "Rastreador",
   "useDefault": "Usar padrão",
   "color": "Cor",
-  "noColor": "Sem cor",
   "applyToSubfolders": "Aplicar cor às subpastas",
   "icon": "Ícone",
   "searchPlaceholder": "Buscar ícones",

@@ -6,19 +6,18 @@
     "deselect": "Selectie opheffen",
     "pinProtected": "Met PIN beveiligd",
     "readOnly": "Alleen-lezen",
-    "file": "Bestand",
     "empty": "Leeg",
     "noContent": "Geen inhoud",
     "notBackedUp": "Geen back-up",
     "archived": "Gearchiveerd",
-    "entryDate": "Dagboekdatum",
     "date": "Datum",
-    "dayOf": "dag {{n}} van {{total}}"
+    "dayOf": "dag {{n}} van {{total}}",
+    "reminders_one": "{{count}} herinnering",
+    "reminders_other": "{{count}} herinneringen"
   },
   "header": {
     "new": "Nieuw",
     "newNote": "Nieuwe notitie",
-    "trash": "Prullenbak",
     "newEvent": "Nieuwe afspraak"
   },
   "folderChip": {
@@ -31,7 +30,6 @@
   },
   "vaultNew": {
     "ariaLabel": "Nieuw kluisitem",
-    "login": "Login",
     "card": "Creditcard",
     "sshKey": "SSH-sleutel",
     "generator": "Wachtwoord"
@@ -39,15 +37,14 @@
   "newMenu": {
     "note": "Notitie",
     "task": "Taak",
-    "kanban": "Kanbanbord",
+    "kanban": "Kanban",
+    "drawing": "Tekening",
     "journal": "Dagboek",
     "login": "Login",
-    "file": "Bestand",
     "bookmark": "Bladwijzer",
     "clipPage": "Pagina clippen",
     "contact": "Contact",
-    "event": "Afspraak",
-    "quickAdd": "Snel toevoegen"
+    "event": "Afspraak"
   },
   "vaultFilter": {
     "all": "Alles",
@@ -64,14 +61,14 @@
   "trash": {
     "empty": "Legen",
     "emptyHover": "Alle notities in de prullenbak verwijderen",
-    "storage": "Opslag",
     "autoDelete": "Na 30 dagen automatisch verwijderen"
   },
   "search": {
     "sortOptions": "Sorteer- en weergaveopties",
     "placeholderVault": "Kluis doorzoeken…",
     "placeholderNotes": "Notities zoeken…",
-    "placeholderEvents": "Afspraken zoeken…"
+    "placeholderEvents": "Afspraken zoeken…",
+    "placeholderDrawings": "Tekeningen zoeken…"
   },
   "selection": {
     "countOf": "{{selected}} van {{total}} geselecteerd",
@@ -82,10 +79,11 @@
     "noMatches": "Geen resultaten.",
     "vault": "De kluis is leeg.",
     "notes": "Nog geen notities.",
+    "drawings": "Nog geen tekeningen.",
+    "drawingsLine": "Schets, plan of breng een idee in kaart. Tekeningen kunnen naar je notities linken, maar tonen niet wat erin staat.",
     "archive": "Niets gearchiveerd.",
     "trash": "De prullenbak is leeg.",
     "filtered": "Geen items voldoen aan je filters.",
-    "clearFilters": "Filters wissen",
     "filteredAfter": "om ze te tonen.",
     "hiddenInAll_other": "{{count}} items zijn verborgen door het filter Tonen in Alles. Open het filter naast Alles om ze te tonen.",
     "inOtherSpace_other": "{{count}} items staan in je ruimte {{space}}. Schakel in de zijbalk over naar {{space}} om ze te zien.",
@@ -99,16 +97,6 @@
     "collapseAll": "Alle groepen inklappen",
     "expandAll": "Alle groepen uitklappen"
   },
-  "headerLabel": {
-    "allItems": "Alles",
-    "untagged": "Zonder tag",
-    "journals": "Dagboeken",
-    "vault": "Kluis",
-    "pinned": "Vastgezet",
-    "archive": "Archief",
-    "notes": "Notities",
-    "calendar": "Agenda"
-  },
   "footerStats": {
     "journals_other": "Dagboeknotities",
     "journals_one": "Dagboeknotitie",
@@ -121,6 +109,8 @@
     "bookmarks_other": "Bladwijzers",
     "bookmarks_one": "Bladwijzer",
     "contacts_other": "Contacten",
+    "drawings_one": "Tekening",
+    "drawings_other": "Tekeningen",
     "files_other": "Bestanden",
     "lists_other": "Lijsten",
     "tasks_other": "Taken",
@@ -149,7 +139,6 @@
     "reload": "Herladen"
   },
   "banner": {
-    "dismiss": "Sluiten",
     "proActivationPending": "Je betaling is binnen, maar het activeren van Pro duurt langer dan normaal. Ververs over een minuut, of neem contact op met support als Pro niet actief wordt.",
     "snapshotPaused": "Notitiegeschiedenis is gepauzeerd. Je Pro-plan lijkt niet actief. Van nieuwe bewerkingen worden geen versies bewaard totdat Pro is hersteld.",
     "restorePro": "Pro herstellen",
@@ -157,8 +146,7 @@
     "updateCard": "Kaart bijwerken"
   },
   "sidebar": {
-    "collapse": "Zijbalk inklappen",
-    "expand": "Zijbalk uitklappen"
+    "collapse": "Zijbalk inklappen"
   },
   "notesList": {
     "collapse": "Notitielijst inklappen",
@@ -195,24 +183,11 @@
     "titlePlaceholder": "Naamloos (klik om te bewerken of laat hem automatisch ontstaan)",
     "titlePlaceholderLogin": "bijv. GitHub",
     "titlePlaceholderCard": "bijv. Visa eindigend op 4242",
-    "titlePlaceholderSshKey": "bijv. GitHub deploy-sleutel",
-    "pin": "Vastzetten",
-    "unpin": "Losmaken",
-    "restore": "Herstellen",
-    "deleteForever": "Definitief verwijderen",
-    "moveToTrash": "Naar prullenbak",
-    "noteOptions": "Notitieopties",
     "readOnlyToggle": "Alleen-lezen. Zet het uit in",
     "menu": "Menu",
-    "showMarkdown": "Markdown tonen",
     "showFormatted": "Opgemaakt tonen",
     "invisiblesShow": "Onzichtbare tekens tonen",
     "invisiblesHide": "Onzichtbare tekens verbergen",
-    "findInNote": "Zoeken in notitie",
-    "navPrev": "Vorige",
-    "navNext": "Volgende",
-    "navPrevTab": "Vorig tabblad",
-    "navNextTab": "Volgend tabblad",
     "undo": "Ongedaan maken",
     "redo": "Opnieuw",
     "hide": "Verbergen",
@@ -222,9 +197,7 @@
     "widthDefault": "Standaardbreedte",
     "widthWide": "Breder",
     "widthFull": "Volledige breedte",
-    "burn": "Delen & vernietigen na lezen",
     "titlePlaceholderLink": "Naam van bladwijzer",
-    "titlePlaceholderContact": "Naam",
     "notBackedUpTooLarge": "Boven de limiet van 1 MB, dus geen back-up. Verplaats afbeeldingen naar bijlagen of splits de notitie.",
     "notBackedUpFailed": "Geen back-up. Laatste fout: {{message}}. Nieuwe poging bezig.",
     "unknownType": "Dit item is gemaakt met een nieuwere versie van PrivacyNotes. Werk de app bij om het te openen."
@@ -241,15 +214,17 @@
     "printTextTitle": "Alleen tekst afdrukken",
     "printTextDesc": "Houdt de titel. Laat de datum, map en tags weg.",
     "burnTitle": "Delen & vernietigen na lezen",
-    "burnDesc": "Publiceer deze notitie als link die één keer te bekijken is. De link vernietigt zichzelf na het lezen. Je notitie blijft veilig in je account."
+    "burnDesc": "Publiceer deze notitie als link die één keer te bekijken is. De link vernietigt zichzelf na het lezen. Je notitie blijft veilig in je account.",
+    "drawingFileTitle": "Tekening (.excalidraw)",
+    "drawingFileDesc": "Opent in Excalidraw en Obsidian, met de afbeeldingen erbij.",
+    "drawingPngTitle": "Afbeelding (.png)",
+    "drawingPngDesc": "De hele tekening als één afbeelding."
   },
   "weekReview": {
     "title": "Week in beeld",
     "daysLogged": "{{count}}/7 vastgelegd",
     "mood": "Stemming",
-    "sleep": "Slaap",
-    "meds": "Medicijnen",
-    "activity": "Activiteit"
+    "meds": "Medicijnen"
   },
   "footer": {
     "settings": "Instellingen",
@@ -264,12 +239,10 @@
     "words_other": "Woorden",
     "words_one": "Woord",
     "zen": "Zen-modus",
-    "appearance": "Weergave",
     "lockApp": "App vergrendelen",
     "lockAppSetUp": "Stel eerst een PIN in bij Beveiliging",
     "goToTop": "Naar boven",
     "goToEnd": "Naar het einde",
-    "signOut": "Afmelden",
     "signingOut": "Afmelden…",
     "switchToLight": "Overschakelen naar lichte modus",
     "switchToDark": "Overschakelen naar donkere modus"
@@ -307,10 +280,11 @@
     "bodyMulti": "Deze {{count}} bestanden lijken markdown. Wil je ze als notities importeren zodat je ze kunt lezen en bewerken, of als versleutelde bijlagen opslaan?"
   },
   "bulkTrash": {
-    "title": "Naar prullenbak",
-    "body_one": "<highlight>{{count}} item</highlight> naar de prullenbak verplaatsen? Je kunt het later nog herstellen.",
-    "body_other": "<highlight>{{count}} items</highlight> naar de prullenbak verplaatsen? Je kunt ze later herstellen.",
-    "readOnlyTitle": "Alleen-lezen",
+    "body_one": "<highlight>{{count}} item</highlight> verwijderen? Verplaats het naar de prullenbak om het later te herstellen, of verwijder het definitief.",
+    "body_other": "<highlight>{{count}} items</highlight> verwijderen? Verplaats ze naar de prullenbak om ze later te herstellen, of verwijder ze definitief.",
+    "confirm": "Naar prullenbak",
+    "keys": "Buiten dit venster verplaatst <kbd>{{trash}}</kbd> een item meteen naar de prullenbak, en opent <kbd>{{ask}}</kbd> dit venster ook na Niet meer vragen.",
+    "dontAskAgain": "Niet meer vragen",
     "readOnlyAcknowledge": "Begrepen",
     "readOnlyBlocked_one": "Dit item is <highlight>alleen-lezen</highlight> en kan dus niet naar de prullenbak. Zet alleen-lezen eerst uit in de notitieopties.",
     "readOnlyBlocked_other": "Alle <highlight>{{count}} items</highlight> zijn alleen-lezen, dus geen enkel item kan naar de prullenbak. Zet alleen-lezen eerst uit in de notitieopties.",
@@ -319,21 +293,12 @@
   },
   "deleteCheckedTasks": {
     "title": "Afgevinkte items verwijderen?",
-    "confirm": "Verwijderen",
     "body_one": "<highlight>{{count}} item</highlight> wordt uit deze notitie verwijderd. Dit kan niet ongedaan worden gemaakt.",
     "body_other": "<highlight>{{count}} items</highlight> worden uit deze notitie verwijderd, geneste items inbegrepen. Dit kan niet ongedaan worden gemaakt."
   },
-  "bulkDelete": {
-    "body_one": "<highlight>{{count}} notitie</highlight> definitief verwijderen? Dit kan niet ongedaan worden gemaakt.",
-    "body_other": "<highlight>{{count}} notities</highlight> definitief verwijderen? Dit kan niet ongedaan worden gemaakt."
-  },
   "tagConfirm": {
     "mergeTitle": "Tags samenvoegen",
-    "deleteTitle": "Tag verwijderen",
-    "deleteWithNotesTitle": "Tag & notities verwijderen",
     "mergeConfirm": "Samenvoegen",
-    "deleteConfirm": "Tag verwijderen",
-    "moveToTrash": "Naar prullenbak",
     "mergeBody_one": "De tag <highlight>“{{targetTag}}”</highlight> bestaat al. <highlight>{{count}} notitie</highlight> met de tag “{{tag}}” daarin samenvoegen?",
     "mergeBody_other": "De tag <highlight>“{{targetTag}}”</highlight> bestaat al. <highlight>{{count}} notities</highlight> met de tag “{{tag}}” daarin samenvoegen?",
     "deleteBody_one": "De tag <highlight>“{{tag}}”</highlight> van <highlight>{{count}} notitie</highlight> verwijderen? De notitie zelf blijft bestaan.",
@@ -363,5 +328,35 @@
     "missing": "Nog niet aangemaakt",
     "protectedHidden_one": "{{count}} met PIN beveiligd item niet getoond",
     "protectedHidden_other": "{{count}} met PIN beveiligde items niet getoond"
+  },
+  "drawing": {
+    "fullScreen": "Volledig scherm",
+    "frame": "Frame",
+    "laser": "Laseraanwijzer",
+    "bar": {
+      "hiddenNote": "Ze werken nog steeds met hun toetsen."
+    },
+    "resetTitle": "Het canvas leegmaken?",
+    "resetBody": "Dit verwijdert alles op het canvas. Ongedaan maken haalt het terug.",
+    "hotkeysTitle": "Sneltoetsen voor tekenen",
+    "tools": {
+      "label": "Tekengereedschap",
+      "keepTool": "Gereedschap houden na het tekenen",
+      "hand": "Het canvas verplaatsen",
+      "rectangle": "Rechthoek",
+      "diamond": "Ruit",
+      "ellipse": "Ellips",
+      "arrow": "Pijl",
+      "line": "Lijn",
+      "pen": "Pen",
+      "text": "Tekstvak",
+      "eraser": "Gum",
+      "resetZoom": "Zoom herstellen",
+      "open": "Een tekenbestand openen",
+      "reset": "Het canvas leegmaken",
+      "style": "Stijl",
+      "more": "Meer gereedschap",
+      "fewer": "Minder gereedschap"
+    }
   }
 }

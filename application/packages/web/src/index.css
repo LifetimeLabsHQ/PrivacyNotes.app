@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './typeScale.css';
 
 @plugin '@tailwindcss/typography';
 
@@ -49,6 +50,113 @@
 }
 
 /*
+  The type roles. Each sets a text size from typeScale.css and the icon size
+  for icons inside it (--icon-size, read by the svg rule below). A role with a
+  line height yields to a leading-* utility, as Tailwind's own sizes do.
+  Spec: docs/contrib/design/type-scale.md
+*/
+
+@utility text-meta {
+  font-size: var(--fs-meta);
+  --icon-size: var(--ic-meta);
+}
+
+@utility text-small {
+  font-size: var(--fs-small);
+  line-height: var(--tw-leading, var(--lh-small));
+  --icon-size: var(--ic-small);
+}
+
+@utility text-help {
+  font-size: var(--fs-help);
+  line-height: var(--tw-leading, var(--lh-help));
+  --icon-size: var(--ic-help);
+}
+
+@utility text-compact {
+  font-size: var(--fs-compact);
+  --icon-size: var(--ic-compact);
+}
+
+@utility text-body {
+  font-size: var(--fs-body);
+  line-height: var(--tw-leading, var(--lh-body));
+  --icon-size: var(--ic-body);
+}
+
+@utility text-row {
+  font-size: var(--fs-row);
+  --icon-size: var(--ic-row);
+}
+
+@utility text-title {
+  font-size: var(--fs-title);
+  line-height: var(--tw-leading, var(--lh-title));
+  --icon-size: var(--ic-title);
+}
+
+@utility text-heading {
+  font-size: var(--fs-heading);
+  line-height: var(--tw-leading, var(--lh-heading));
+  --icon-size: var(--ic-heading);
+}
+
+@utility text-display {
+  font-size: var(--fs-display);
+  line-height: var(--tw-leading, var(--lh-display));
+  --icon-size: var(--ic-display);
+}
+
+@utility text-display-2 {
+  font-size: var(--fs-display-2);
+  line-height: var(--tw-leading, var(--lh-display-2));
+  --icon-size: var(--ic-display-2);
+}
+
+@utility text-display-3 {
+  font-size: var(--fs-display-3);
+  line-height: var(--tw-leading, var(--lh-display-3));
+  --icon-size: var(--ic-display-3);
+}
+
+@utility text-display-4 {
+  font-size: var(--fs-display-4);
+  line-height: var(--tw-leading, var(--lh-display-4));
+  --icon-size: var(--ic-display-4);
+}
+
+@utility text-display-5 {
+  font-size: var(--fs-display-5);
+  line-height: var(--tw-leading, var(--lh-display-5));
+  --icon-size: var(--ic-display-5);
+}
+
+@utility text-display-6 {
+  font-size: var(--fs-display-6);
+  line-height: var(--tw-leading, var(--lh-display-6));
+  --icon-size: var(--ic-display-6);
+}
+
+@utility text-display-7 {
+  font-size: var(--fs-display-7);
+  line-height: var(--tw-leading, var(--lh-display-7));
+  --icon-size: var(--ic-display-7);
+}
+
+/*
+  An icon given no size of its own (no width attribute: IconDefaults in
+  icons.tsx sets none) takes the icon size of the nearest role around it.
+  Zero specificity, so a [&>svg]:size-* on a parent or a class on the icon
+  still wins.
+*/
+@layer base {
+  :where(svg[data-pn-icon]:not([width])) {
+    width: var(--icon-size);
+    height: var(--icon-size);
+  }
+}
+
+/*
   A border with no color utility takes the theme's divider. Tailwind v4 would
   otherwise draw it in currentcolor, the text color.
 */
@@ -85,7 +193,7 @@
 
    Adding a size means adding a data-text-size block here and an entry
    to TEXT_SIZES in theme.ts, nothing else.
-   Spec: ops/docs/design-decisions.md (editor text size)
+   Spec: docs/internal/design-decisions.md (editor text size)
    ------------------------------------------------------------------ */
 @layer base {
   :root {
@@ -98,6 +206,16 @@
   :root[data-text-size='lg'] { --pn-text-scale: 1.125; }
   :root[data-text-size='xl'] { --pn-text-scale: 1.25; }
 }
+
+/* ------------------------------------------------------------------
+   Note font. The Note font row in Settings > Editor writes data-note-font
+   on <html> (theme.ts); Sans is the default and paints nothing. The stacks
+   match FONT_FAMILIES in editorColors.ts, so a toolbar pick looks the same.
+   A font mark set in the toolbar is an inline style and still wins.
+   Spec: theme.ts (Note font axis)
+   ------------------------------------------------------------------ */
+:root[data-note-font='serif'] .ProseMirror { font-family: ui-serif, Georgia, Cambria, serif; }
+:root[data-note-font='mono'] .ProseMirror { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 
 /* ------------------------------------------------------------------
    Editor content width - the ONLY place the reading column's cap lives.
@@ -115,7 +233,7 @@
 
    Adding a step means adding a data-content-width block here and an
    entry to CONTENT_WIDTHS in theme.ts, nothing else.
-   Spec: ops/docs/design-decisions.md (editor content column max-width)
+   Spec: docs/internal/design-decisions.md (editor content column max-width)
    ------------------------------------------------------------------ */
 @layer base {
   :root {
@@ -144,7 +262,7 @@
    Adding a step means adding a data-line-spacing block here, an
    entry to LINE_SPACINGS in theme.ts and its lengths in paragraphGapCss
    and lineHeightCss beside it, nothing else.
-   Spec: ops/docs/design-decisions.md (editor paragraph rhythm)
+   Spec: docs/internal/design-decisions.md (editor paragraph rhythm)
    ------------------------------------------------------------------ */
 @layer base {
   :root { --pn-para-gap: 0; --pn-line-height: 1.7; }
@@ -166,11 +284,11 @@
      the pane and again on every opaque surface inside it: each such surface
      covers the layer below before it adds its own, and the color comes out
      the same everywhere. The sticky tag row and toolbar are nearly opaque, so
-     they take the layer too. Spec: ops/docs/archive/folder-tag-icons.md (section 4.5) */
+     they take the layer too. Spec: docs/internal/specs/folder-tag-icons.md (section 4.5) */
   /* The editor pane paints the paper. The color utilities read `--color-*`,
      which <html> computes once from the `--pn-*` channels, so the pane
      computes the surface ones again from its own.
-     Spec: ops/docs/color-themes.md (section 8) */
+     Spec: docs/contrib/color-themes.md (section 8) */
   .pn-editor-pane {
     --pn-surface-2: var(--pn-paper);
     --color-surface-2: rgb(var(--pn-surface-2));
@@ -188,7 +306,7 @@
      there and nowhere else, a background also tints the row): the boxed icon
      takes the tint and the ink, and an icon drawn from a picture (a favicon,
      a contact photo) keeps its own tile and takes a ring in the ink.
-     noteLookStyle sets the two variables. Spec: ops/docs/archive/note-color-style.md (section 3.1) */
+     noteLookStyle sets the two variables. Spec: docs/internal/specs/note-color-style.md (section 3.1) */
   [data-color-style] [data-slot='icon'] > :not(:has(img)) {
     background-color: var(--pn-accent-tint);
     color: var(--pn-accent-ink);
@@ -246,6 +364,12 @@
     }
     .pn-top-line-pad &::before {
       height: max(0px, calc(var(--pn-outline-fh, 0px) - var(--pn-pills-clear, 0px)));
+    }
+    /* A vault item's Files section (VaultFiles.tsx) is a list of file chips,
+       not a page of writing: no tall minimum and no start-of-note gap. */
+    .pn-vault-files & {
+      min-height: 0;
+      padding-top: 0;
     }
     /* CAUTION: this is NOT the visible body size. The utilities in
        Editor.tsx (text-[15px] + prose-p/li/blockquote:text-[15px]) pin
@@ -367,7 +491,7 @@
          lets one long sentence swallow the table. A dragged width is a
          percentage on the table's <col>, written by the node view in
          tableColumnResize.ts, so the table always fills the note.
-         Spec: ops/docs/archive/table-column-widths.md */
+         Spec: docs/internal/specs/table-column-widths.md */
       table-layout: fixed;
       overflow: hidden;
       /* Prose gives <table> its own 2em top/bottom margin, and the table sits
@@ -457,6 +581,54 @@
       cursor: default;
     }
 
+    /* A colored cell (#616) draws its fill inline, which would hide the
+       selection wash, so a selected one gets an accent ring instead. Dark
+       yellow follows .pn-hl-default; the inline value is the light one. */
+    & table.pn-table :is(td, th)[data-fill].selectedCell {
+      box-shadow: inset 0 0 0 2px rgb(var(--pn-accent) / 0.6);
+    }
+    :root.dark & table.pn-table :is(td, th)[data-fill='yellow'] {
+      background-color: rgb(250 204 21 / 0.24) !important;
+    }
+    /* Sort arrows in a header cell (editorTableSort.ts, #636): faint, so a
+       full cell stays readable, and clear on hover. The cell keeps room for
+       the arrow at its end. */
+    & table.pn-table th.pn-sortable {
+      padding-inline-end: 1.7em;
+    }
+    & .pn-table-sort-host {
+      position: absolute;
+      inset-inline-end: 0.25em;
+      top: 0.45em;
+      display: inline-flex;
+      font-weight: 400;
+    }
+    & .pn-table-sort {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.3em;
+      height: 1.3em;
+      border-radius: 4px;
+      color: rgb(var(--pn-text));
+      opacity: 0.2;
+      cursor: pointer;
+      transition: opacity 0.12s;
+    }
+    & .pn-table-sort.is-sorted {
+      opacity: 0.45;
+    }
+    & th:hover .pn-table-sort {
+      opacity: 0.55;
+    }
+    & .pn-table-sort:hover {
+      opacity: 1;
+      background: rgb(var(--pn-text) / 0.08);
+    }
+    &[contenteditable='false'] .pn-table-sort-host {
+      display: none;
+    }
+
     /* Selected cell highlight */
     & table.pn-table td.selectedCell {
       background: rgb(var(--pn-accent) / 0.1);
@@ -537,7 +709,7 @@
      * Callouts (Callout.tsx). Colored, collapsible boxes. The node view
      * sets --cc (space-separated rgb) and --cs (accent hex) per type, so
      * the tinting here is generic; the hues live in calloutTypes.ts.
-     * Spec: ops/docs/callouts.md
+     * Spec: docs/contrib/callouts.md
      * --------------------------------------------------------------- */
     /* The node-view wrapper establishes a BFC (flow-root) so the callout BOX
        wraps beside the outline float like text does - a plain block's border
@@ -547,7 +719,7 @@
        exactly as before (a BFC contains its children's margins). It also
        carries a larger scroll-margin than headings (further below) so an
        outline jump parks the fold control clear of the collapsed outline pill,
-       not under it. Spec: ops/docs/callouts.md */
+       not under it. Spec: docs/contrib/callouts.md */
     & .react-renderer.node-callout {
       display: flow-root;
       margin: 1em 0;
@@ -603,7 +775,7 @@
        margin, so a heading, a list, an image, a table and a code block still
        stand clear of the text around them; only paragraph against paragraph
        closes up. The variable is declared near the top of this file.
-       Spec: ops/docs/design-decisions.md (editor paragraph rhythm) */
+       Spec: docs/internal/design-decisions.md (editor paragraph rhythm) */
     & :where(p):not(:where([class~='not-prose'] *)) {
       margin-top: var(--pn-para-gap);
       margin-bottom: var(--pn-para-gap);
@@ -645,7 +817,7 @@
        value for all six, because the typography plugin sets a different
        one per level and the ladder then disagrees with itself. Line
        height opens up as the size comes down.
-       Spec: ops/docs/design-decisions.md (editor heading scale) */
+       Spec: docs/internal/design-decisions.md (editor heading scale) */
     & :where(h1, h2, h3, h4, h5, h6):not(:where([class~='not-prose'] *)) {
       font-weight: 700;
     }
@@ -1085,7 +1257,7 @@
          screen only at its next frame, so a task the caret is in carries
          `pn-task-caret` (editorTasks.ts) and is drawn at once; without it, a
          key typed right after Enter went into the next block.
-         Spec: ops/docs/design-decisions.md (Opening a long checklist) */
+         Spec: docs/internal/design-decisions.md (Opening a long checklist) */
       content-visibility: auto;
       contain-intrinsic-block-size: auto 1.75em;
     }
@@ -1098,7 +1270,7 @@
     & ul[data-type='taskList'] li.pn-task-caret {
       content-visibility: visible;
     }
-    /* The drag grip (dragTask in editorExtensions.ts), last in the row. The
+    /* The drag grip (dragBlock in editorTasks.ts), last in the row. The
        gutter before the checkbox is not an option: the editor scrolls wide
        content sideways, so it clips anything outside its own box. It shows on
        the hovered task only, never on every ancestor of it, and faintly at all
@@ -1267,7 +1439,7 @@
     z-index: 60;
     padding: 2px 8px;
     border-radius: 6px;
-    font-size: 12px;
+    font-size: var(--fs-small);
     white-space: nowrap;
     pointer-events: none;
     background: rgb(var(--pn-text));
@@ -1311,7 +1483,7 @@
 /* Spoiler text (editorSpoiler.ts): blurred until the caret touches it, a
    click in a read-only note shows it, or the find bar's current match sits
    inside it. Rendered notes (burn shares) show it on focus. Print shows it.
-   Spec: ops/docs/archive/spoiler-and-copy.md */
+   Spec: docs/internal/specs/spoiler-and-copy.md */
 @layer editor {
   /* Hidden: a sharp box with a fine hatch, and the text blurred inside it.
      Shown: the box fades to a faint tint, so the reader still sees which
@@ -1437,7 +1609,7 @@
     transform: translate(-50%, calc(-100% - 8px));
     padding: 2px 8px;
     border-radius: 6px;
-    font-size: 12px;
+    font-size: var(--fs-small);
     pointer-events: none;
     background: rgb(var(--pn-text));
     color: rgb(var(--pn-surface-2));
@@ -1501,7 +1673,7 @@
      * Callouts (Callout.tsx). Colored, collapsible boxes. The node view
      * sets --cc (space-separated rgb) and --cs (accent hex) per type, so
      * the tinting here is generic; the hues live in calloutTypes.ts.
-     * Spec: ops/docs/callouts.md
+     * Spec: docs/contrib/callouts.md
      * --------------------------------------------------------------- */
     /* The node-view wrapper establishes a BFC (flow-root) so the callout BOX
        wraps beside the outline float like text does - a plain block's border
@@ -1511,7 +1683,7 @@
        exactly as before (a BFC contains its children's margins). It also
        carries a larger scroll-margin than headings (further below) so an
        outline jump parks the fold control clear of the collapsed outline pill,
-       not under it. Spec: ops/docs/callouts.md */
+       not under it. Spec: docs/contrib/callouts.md */
     .ProseMirror &.node-callout {
       display: flow-root;
       margin: 1em 0;
@@ -1526,7 +1698,7 @@
   /* ---------------------------------------------------------------
    * Footnotes (footnotes.ts). The shown numbers come from decoration
    * attributes, never from the stored label.
-   * Spec: ops/docs/archive/footnotes.md (section 6)
+   * Spec: docs/internal/specs/footnotes.md (section 6)
    * --------------------------------------------------------------- */
   .ProseMirror sup.pn-fn-ref {
     cursor: pointer;
@@ -1634,7 +1806,7 @@
     background: rgb(var(--pn-surface-1));
     color: rgb(var(--pn-text));
     box-shadow: 0 6px 20px rgb(0 0 0 / 0.15);
-    font-size: 13px;
+    font-size: var(--fs-compact);
     line-height: 1.45;
     white-space: pre-line;
     display: -webkit-box;
@@ -1668,7 +1840,7 @@
      * Callouts (Callout.tsx). Colored, collapsible boxes. The node view
      * sets --cc (space-separated rgb) and --cs (accent hex) per type, so
      * the tinting here is generic; the hues live in calloutTypes.ts.
-     * Spec: ops/docs/callouts.md
+     * Spec: docs/contrib/callouts.md
      * --------------------------------------------------------------- */
     /* The node-view wrapper establishes a BFC (flow-root) so the callout BOX
        wraps beside the outline float like text does - a plain block's border
@@ -1678,7 +1850,7 @@
        exactly as before (a BFC contains its children's margins). It also
        carries a larger scroll-margin than headings (further below) so an
        outline jump parks the fold control clear of the collapsed outline pill,
-       not under it. Spec: ops/docs/callouts.md */
+       not under it. Spec: docs/contrib/callouts.md */
     .ProseMirror &.react-renderer {
       display: flow-root;
       margin: 1em 0;
@@ -1724,7 +1896,7 @@
 @layer editor {
   /* The fold control IS the type icon: the type shows at rest, open or
      folded, and the caret replaces it on hover or keyboard focus (down when
-     open, toward the inline end when folded). Spec: ops/docs/callouts.md (fold control) */
+     open, toward the inline end when folded). Spec: docs/contrib/callouts.md (fold control) */
   .pn-callout-toggle {
     .ProseMirror & {
       position: absolute;
@@ -1773,7 +1945,7 @@
     .ProseMirror &.pn-callout,
     :root.dark .ProseMirror &.pn-callout {
       padding-block: 0.15em;
-      padding-inline: 1.6em 0;
+      padding-inline: 1.6em 0.9em;
       border: 0;
       border-radius: 0;
       background: none;
@@ -1853,6 +2025,77 @@
 }
 
 @layer editor {
+  /* The drag grip of a callout or a Kanban board (BlockGrip.tsx, #628): the
+     task grip's look. A callout's grip sits in the end padding of its title
+     line; a board's sits before its menu. It shows on the hovered block only,
+     never on a callout around it, and faintly at all times on a device with
+     no hover. */
+  .pn-block-grip {
+    .ProseMirror & {
+      width: 0.75em;
+      height: 1.6em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      color: rgb(var(--pn-text-muted));
+      opacity: 0;
+      transition: opacity 0.12s ease;
+    }
+    .ProseMirror & svg {
+      width: 0.6em;
+      height: 0.95em;
+      fill: currentColor;
+    }
+    .ProseMirror .pn-callout:hover:not(:has(.pn-callout:not(.pn-callout-column):hover)) > &,
+    .ProseMirror .pn-callout:hover:not(:has(.pn-callout:not(.pn-callout-column):hover)) > .pn-kanban-tools > &,
+    .ProseMirror .pn-task-dragging > .pn-callout > &,
+    .ProseMirror .pn-task-dragging > .pn-callout > .pn-kanban-tools > & {
+      opacity: 1;
+    }
+    @media (hover: none) {
+      .ProseMirror & {
+        opacity: 0.45;
+      }
+    }
+    .ProseMirror[contenteditable='false'] & {
+      display: none;
+    }
+    .ProseMirror .pn-task-dragging & .pn-tip {
+      display: none;
+    }
+  }
+  .pn-callout-grip {
+    .ProseMirror & {
+      position: absolute;
+      inset-inline-end: 0.15em;
+      top: 0.5em;
+    }
+    .ProseMirror .pn-callout-box > & {
+      top: 0.4em;
+    }
+    .ProseMirror .pn-callout-fold > & {
+      inset-inline-end: 0;
+      top: 0.15em;
+    }
+  }
+  .pn-kanban-grip {
+    .ProseMirror & {
+      width: 1.1em;
+    }
+  }
+  /* A callout or a board on its way to a new place. */
+  .ProseMirror .pn-task-dragging:not(li) {
+    position: relative;
+    z-index: 10;
+    border-radius: 6px;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 0.12);
+  }
+}
+
+@layer editor {
   .pn-callout-content {
     .ProseMirror & {
       margin: 0;
@@ -1903,6 +2146,18 @@
   :root.pn-task-drag-active * {
     cursor: grabbing;
   }
+  /* A reorder drag (ui/reorder.tsx): one cursor, no text selection, and a
+     no-drop cursor over a spot that takes nothing. */
+  :root.pn-reorder-active,
+  :root.pn-reorder-active * {
+    cursor: grabbing !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+  }
+  :root.pn-reorder-refused,
+  :root.pn-reorder-refused * {
+    cursor: no-drop !important;
+  }
 }
 
 @layer editor {
@@ -1910,7 +2165,7 @@
      sit side by side and wrap on a narrow pane; one column per row on a
      phone. A column is never narrower than 8.5rem and a row never holds more
      columns than the board has. Cards are the top-level tasks of a column,
-     each on its own card. Spec: ops/issues/0270.md (Spec) */
+     each on its own card. Spec: docs/internal/issues/0270.md (Spec) */
   .pn-callout-kanban {
     .ProseMirror &.pn-callout,
     :root.dark .ProseMirror &.pn-callout {
@@ -1938,7 +2193,7 @@
     .ProseMirror & > .pn-callout-content > div > [data-callout-title] {
       grid-column: 1 / -1;
       margin: 0;
-      padding-inline: 1.75rem 2.4rem;
+      padding-inline: 1.75rem 3.4rem;
       color: rgb(var(--pn-text));
     }
     .ProseMirror & > .pn-callout-content > div > [data-callout-title] ~ * {
@@ -2059,7 +2314,7 @@
       border-radius: 999px;
       background: color-mix(in srgb, var(--cs) 16%, transparent);
       color: rgb(var(--pn-text-muted));
-      font-size: 11px;
+      font-size: var(--fs-meta);
       line-height: 1.7;
       text-align: center;
     }
@@ -2255,7 +2510,8 @@
    * buttons are being clicked.
    * --------------------------------------------------------------- */
   .ProseMirror:not(:focus-within) {
-    & .pn-image-node:not(.pn-image-tapped) .pn-image-toolbar {
+    & .pn-image-node:not(.pn-image-tapped) .pn-image-toolbar,
+    & .pn-image-node:not(.pn-image-tapped) .pn-image-resize {
       display: none;
     }
     & .pn-image-node:not(.pn-image-tapped).ProseMirror-selectednode .pn-image-container {
@@ -2296,12 +2552,27 @@
     bottom: 0;
     inset-inline-start: 0;
     border-start-end-radius: 8px;
+    /* As wide as its tools, never wider than the screen. The width is set
+       from the screen and not the picture: the bar's frame is the picture,
+       and at XS a bar capped at that frame folds into a narrow column. On a
+       phone the "Size:" label and the dividers go (the presets and the
+       percent sign say it), and a bar that still does not fit, such as one
+       with an armed "Delete?", wraps its tools to a second row. */
+    width: max-content;
+    max-width: calc(100vw - 2rem);
+    flex-wrap: wrap;
+    @media (max-width: 480px) {
+      & .pn-image-toolbar-label,
+      & .pn-image-toolbar-divider {
+        display: none;
+      }
+    }
   }
 }
 
 @layer editor {
   .pn-image-toolbar-label {
-    font-size: 12px;
+    font-size: var(--fs-small);
     color: rgb(var(--pn-text-muted));
     margin-inline-end: 2px;
     line-height: 1;
@@ -2316,10 +2587,123 @@
 }
 
 @layer editor {
+  /* The percent field after the presets (EncryptedImage.tsx, WidthField).
+     Spec: docs/internal/design/patterns/151-160.md section 160 */
+  .pn-image-toolbar-width {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-inline-start: 2px;
+    font-size: var(--fs-small);
+    color: rgb(var(--pn-text-muted));
+    /* No spin arrows: they covered the digits, and the presets and the
+       keyboard arrows already step the value. */
+    & input {
+      width: 3.75rem;
+      text-align: center;
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+    & input::-webkit-inner-spin-button,
+    & input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+}
+
+@layer editor {
+  /* The corner handle that resizes a selected picture, at the top corner so
+     it never sits under the size bar on the bottom edge. It takes the whole
+     press: touch-action keeps a finger drag from scrolling the note.
+     Spec: docs/internal/design/patterns/151-160.md section 160 */
+  .pn-image-resize {
+    position: absolute;
+    top: 4px;
+    inset-inline-end: 4px;
+    z-index: 11;
+    /* A picture aligned right keeps its right edge; the handle moves to the
+       left one. rtl-ok: alignment is the stored physical value, as the
+       auto margins in EncryptedImage.tsx are. */
+    &.pn-image-resize-left {
+      inset-inline-end: auto;
+      left: 4px; /* rtl-ok: see above */
+    }
+  }
+  .pn-image-resize-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid rgb(var(--pn-divider));
+    background: rgb(var(--pn-track));
+    color: rgb(var(--pn-text-muted));
+    cursor: nesw-resize;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    &:hover {
+      color: rgb(var(--pn-text));
+    }
+    /* The glyph's notches point at the corner the handle sits in. */
+    & svg {
+      transform: scaleY(-1);
+    }
+    &:dir(rtl),
+    .pn-image-resize-left & {
+      cursor: nwse-resize;
+      & svg {
+        transform: scale(-1, -1);
+      }
+    }
+    /* A larger target for a finger, with the same glyph. */
+    @media (pointer: coarse) {
+      width: 36px;
+      height: 36px;
+    }
+  }
+
+  /* The percent while the handle drags, beside the handle. */
+  .pn-image-resize-value {
+    position: absolute;
+    top: 8px;
+    inset-inline-end: 40px;
+    z-index: 11;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgb(var(--pn-track));
+    border: 1px solid rgb(var(--pn-divider));
+    font-size: var(--fs-small);
+    font-variant-numeric: tabular-nums;
+    color: rgb(var(--pn-text));
+    pointer-events: none;
+    &.pn-image-resize-left {
+      inset-inline-end: auto;
+      left: 40px; /* rtl-ok: see .pn-image-resize-left */
+    }
+    @media (pointer: coarse) {
+      top: 12px;
+      inset-inline-end: 48px;
+      &.pn-image-resize-left {
+        left: 48px; /* rtl-ok: see .pn-image-resize-left */
+      }
+    }
+  }
+
+  /* The width follows the pointer with no easing while the handle drags. */
+  .pn-image-container.pn-image-resizing {
+    transition: none;
+  }
+}
+
+@layer editor {
   .pn-image-toolbar-size {
     padding: 4px 8px;
     border-radius: 6px;
-    font-size: 12px;
+    font-size: var(--fs-small);
     font-weight: 500;
     color: rgb(var(--pn-text-muted));
     border: none;
@@ -2362,41 +2746,6 @@
   }
 }
 
-@layer editor {
-  .pn-image-toolbar-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    border: none;
-    background: transparent;
-    color: rgb(var(--pn-text-muted));
-    cursor: pointer;
-    &:hover {
-      background: rgb(var(--pn-text) / 0.08);
-      color: rgb(var(--pn-text));
-    }
-  }
-}
-
-@layer editor {
-  .pn-image-toolbar-danger {
-    color: var(--color-red-400);
-    &:hover {
-      color: var(--color-red-400);
-    }
-    :root:not(.dark) & {
-      color: var(--color-red-500);
-    }
-  
-    :root:not(.dark) &:hover {
-      color: var(--color-red-500);
-    }
-  }
-}
-
 @layer utilities {
   /* ------------------------------------------------------------------
  * Color theme custom properties.
@@ -2421,7 +2770,7 @@
 
   /* The writing area: the editor pane's ground. A theme code's `paper` sets
      it; without one it is the background.
-     Spec: ops/docs/color-themes.md (section 8) */
+     Spec: docs/contrib/color-themes.md (section 8) */
   :root {
     --pn-paper: var(--pn-surface-2);
   }
@@ -2433,10 +2782,10 @@
        --pn-text-soft paragraph the blue half stayed full strength while the
        ink half went grey, and the mark came apart. Every theme moves it with
        --pn-text; `.pn-washi` (LandingPage.tsx) points it at the washi ink.
-       Spec: ops/docs/design-decisions.md (PrivacyNotes brand spelling) */
+       Spec: docs/internal/design-decisions.md (PrivacyNotes brand spelling) */
     --brand-ink: rgb(var(--pn-text));
-    --pn-accent: 30 64 175; /* #1E40AF - Spec: ops/docs/design-decisions.md (brand accent) */
-    --pn-accent-hover: 30 58 138; /* #1E3A8A - Spec: ops/docs/design-decisions.md (brand accent hover) */
+    --pn-accent: 30 64 175; /* #1E40AF - Spec: docs/internal/design-decisions.md (brand accent) */
+    --pn-accent-hover: 30 58 138; /* #1E3A8A - Spec: docs/internal/design-decisions.md (brand accent hover) */
     /* A filled control with white content. Light palettes fill with the
        accent itself; dark palettes set a deeper blue, because a light accent
        that reads well as text is too light under white. */
@@ -2451,7 +2800,7 @@
     --pn-surface-1: 250 250 249; /* #FAFAF9 - list */
     --pn-surface-2: 255 255 255; /* #FFFFFF - editor */
     --pn-divider: 229 229 229; /* #E5E5E5 */
-    --pn-track: 245 245 245; /* #F5F5F5 - recessed well - Spec: ops/docs/color-themes.md (track token) */
+    --pn-track: 245 245 245; /* #F5F5F5 - recessed well - Spec: docs/contrib/color-themes.md (track token) */
     --pn-text-soft: 64 64 64; /* #404040 - secondary text */
     --pn-text: 10 10 10; /* #0A0A0A */
     --pn-text-muted: 106 106 106; /* #6A6A6A */
@@ -2464,19 +2813,19 @@
        first two but not warm-cream (2.93:1) and, being far less
        saturated, read as brown rather than as a metal at 11px. Dark
        themes take gold from the :root.dark block below.
-       Spec: ops/docs/design-decisions.md (Pro mark colour) */
+       Spec: docs/internal/design-decisions.md (Pro mark colour) */
     --pn-pro: 180 83 9; /* #B45309 - burnt amber */
     /* The ink of a folder or tag with no color of its own (`text-label`) and
        of the Jump to hover: the accent, in every palette, as resolveTheme
        gives a code without `label=`. A custom theme sets its own value.
-       Spec: ops/docs/color-themes.md (section 6) */
+       Spec: docs/contrib/color-themes.md (section 6) */
     --pn-label: var(--pn-accent);
     /* Folder and tag colors, keyed to MODE like the Pro mark: every light theme
        shares these. `ink` draws a glyph on any surface (3:1 or better, gray
        on the cream sidebar the worst at 4.43); `tint` is an open note's background, light
        enough that body and secondary text keep 4.5:1 and dates 3:1 on every
        theme. tests/labelContrast.test.ts holds both floors.
-       Spec: ops/docs/archive/folder-tag-icons.md (section 4.2) */
+       Spec: docs/internal/specs/folder-tag-icons.md (section 4.2) */
     --pn-label-gray-ink: #5a6168;
     --pn-label-red-ink: #ba1c1c;
     --pn-label-orange-ink: #a43f08;
@@ -2503,7 +2852,7 @@
        9.85:1 on the editor, against burnt amber's 3.62 and 3.20. The pair is
        keyed to MODE, not to a theme id, so a new palette is right by
        default and only needs a --pn-pro line if it is unusually light or
-       dark for its mode. Spec: ops/docs/design-decisions.md (Pro mark colour) */
+       dark for its mode. Spec: docs/internal/design-decisions.md (Pro mark colour) */
     --pn-pro: 245 197 24; /* #F5C518 - gold */
     /* Folder and tag colors for every dark theme. A tint lightens a dark
        surface, so it is weaker here, and yellow the weakest: at 0.10 it would
@@ -2526,7 +2875,7 @@
     --pn-label-blue-tint: rgb(51 154 240 / 0.10);
     --pn-label-purple-tint: rgb(151 117 250 / 0.10);
     --pn-label-pink-tint: rgb(240 101 149 / 0.10);
-    --pn-accent: 74 144 217; /* #4A90D9 - the dark half of the brand accent pair, Spec: ops/docs/design-decisions.md (brand spelling) */
+    --pn-accent: 74 144 217; /* #4A90D9 - the dark half of the brand accent pair, Spec: docs/internal/design-decisions.md (brand spelling) */
     --pn-accent-hover: 116 170 226; /* #74AAE2 - lighter, so link hover and text-accent-strong keep 4.5:1, on a tint too */
     --pn-accent-fill: 61 120 180; /* #3D78B4 */
     --pn-accent-fill-hover: 52 103 155; /* #34679B */
@@ -2643,7 +2992,7 @@
   /* Muted text on a tinted background (a selected row, the active sidebar
      item) reads at the soft level: the tint lifts the background toward the
      muted color and takes it under 4.5:1. The element that paints the tint
-     carries pn-on-tint. Spec: ops/docs/color-themes.md (section 3) */
+     carries pn-on-tint. Spec: docs/contrib/color-themes.md (section 3) */
   .pn-on-tint .text-pn-muted {
     color: rgb(var(--pn-text-soft));
   }
@@ -2656,7 +3005,7 @@
   /* The gold rating star (RatingStar.tsx). The gold measures
      1.7:1 on white, so a light palette keeps the fill and draws an amber-700
      edge, 5:1 on white. A dark palette shows the plain fill.
-     Spec: ops/docs/color-themes.md (section 3) */
+     Spec: docs/contrib/color-themes.md (section 3) */
   :root:not(.dark) .pn-rating-star {
     overflow: visible;
   }
@@ -2672,7 +3021,7 @@
      at the palette tokens. Body text is the soft level in light mode and the
      full text level in dark mode, where the soft level reads dim on a long
      page. The code panel is dark in every theme, so its two values stay
-     fixed (theme-ok). Spec: ops/docs/color-themes.md (section 3) */
+     fixed (theme-ok). Spec: docs/contrib/color-themes.md (section 3) */
   .prose.prose-pn {
     --tw-prose-body: rgb(var(--pn-text-soft));
     --tw-prose-headings: rgb(var(--pn-text));
@@ -2697,7 +3046,7 @@
     --tw-prose-body: rgb(var(--pn-text));
     /* The body already takes the full text level here, so bold mixes
        toward white to keep an ink cue on top of its weight.
-       Spec: ops/docs/design-decisions.md (editor heading scale) */
+       Spec: docs/internal/design-decisions.md (editor heading scale) */
     --tw-prose-bold: color-mix(in srgb, rgb(var(--pn-text)) 25%, #fff); /* theme-ok: lifts every dark palette's text */
     --tw-prose-pre-code: #d4d4d4; /* theme-ok: the code panel */
     --tw-prose-pre-bg: rgb(0 0 0 / 50%); /* theme-ok: the code panel */
@@ -2774,7 +3123,7 @@
      shows its real colors. The line is the child span .pn-jump-charge, over
      the content, clipped by the button. Pointer devices only; under reduced
      motion the colors change and nothing moves.
-     Spec: ops/design/patterns/145-150.md section 147 */
+     Spec: docs/internal/design/patterns/145-150.md section 147 */
   .pn-jump {
     position: relative;
     overflow: hidden;
@@ -2805,7 +3154,7 @@
      palette but Default, and show the real colors while the brand button is
      hovered. A palette opts in by setting --pn-logo-tint and --pn-logo-ink on
      the root, scoped to its mode like the palette blocks.
-     Spec: ops/docs/color-themes.md (section 6) */
+     Spec: docs/contrib/color-themes.md (section 6) */
   :root:not(.dark):is(.theme-warm-cream, .theme-slate, .theme-sage, .theme-custom-light),
   :root.dark:is(.theme-soft-dark, .theme-navy-depths, .theme-oled, .theme-custom-dark) {
     --pn-logo-tint: 1;
@@ -2851,7 +3200,7 @@
      one accent ink with the eye slit cut out in the surface color, and the
      real colors (ink face, cream slit, amber bandana) while a pointer is on
      its button, on the homepage (.pn-ninja-real), and in a custom theme whose
-     code keeps the original logo. Spec: ops/design/patterns/145-150.md
+     code keeps the original logo. Spec: docs/internal/design/patterns/145-150.md
      section 145 */
   .pn-ninja .nj-face,
   .pn-ninja .nj-eye {
@@ -2964,7 +3313,7 @@
 /* Line-wrapping: balance headings and prevent orphans in body copy so text
    reflows cleanly across languages without per-locale hand-tuning. The editor
    stays on default wrapping (the writing surface must stay predictable).
-   Spec: ops/docs/i18n-spec.md (line-wrapping pass) */
+   Spec: docs/contrib/i18n-spec.md (line-wrapping pass) */
 @layer base {
   h1, h2, h3, h4 { text-wrap: balance; }
   p { text-wrap: pretty; }
@@ -2999,13 +3348,24 @@
  * "form navigation" mode and leave the viewport half-zoomed when the
  * keyboard dismissed.
  *
- * Forcing 16px at ≤640px breaks the zoom heuristic. The viewport meta
- * in index.html (maximum-scale=1) is the belt; this is the braces.
+ * Holding editable text at 16px or more at ≤640px breaks the zoom
+ * heuristic. The viewport meta in index.html (maximum-scale=1) is the
+ * belt; this is the braces.
+ *
+ * Text size still applies above the floor (GitHub #646): on a phone the
+ * body scales off 16px instead of 15px, so Large and Largest grow the
+ * body, and the smaller sizes stop at 16px. Headings, code and copy
+ * boxes derive from --pn-editor-body and follow it.
  * ------------------------------------------------------------------ */
 @media (max-width: 640px) {
+  :root {
+    --pn-editor-body: max(16px, calc(16px * var(--pn-text-scale)));
+  }
   input,
   textarea:not(.pn-note-title),
-  select,
+  select {
+    font-size: 16px !important; /* type-scale: exempt - iOS zooms into a field under 16px */
+  }
   [contenteditable='true'],
   [contenteditable='true'] p,
   [contenteditable='true'] li,
@@ -3014,20 +3374,14 @@
   .ProseMirror p,
   .ProseMirror li,
   .ProseMirror blockquote {
-    font-size: 16px !important;
+    font-size: var(--pn-editor-body) !important;
   }
-  /* The body above is pinned and ignores Text size here, so code is pinned
-     beside it at 90% of 16px, and a copy box matches the body. */
-  .ProseMirror pre.pn-codeblock {
-    font-size: 14.4px;
-  }
-  .ProseMirror pre.pn-copybox {
-    font-size: 16px;
-  }
-  /* The Markdown view's marks copy sizes the text field and must wrap
-     exactly like it, so it takes the field's pinned size too. */
+  /* The Markdown view's field and its marks copy, which sizes the field
+     and must wrap exactly like it: the same 14px base as on desktop,
+     held at the floor. */
+  textarea.pn-source-field,
   .pn-source-marks {
-    font-size: 16px !important;
+    font-size: max(16px, calc(14px * var(--pn-text-scale))) !important;
   }
 }
 
@@ -3042,7 +3396,7 @@
 .pn-list-panel {
   container-type: inline-size;
   container-name: pn-list;
-  /* Spec: ops/docs/design-decisions.md (grid tile width band) */
+  /* Spec: docs/internal/design-decisions.md (grid tile width band) */
 }
 
 /* Off-screen list rows and grid tiles skip style, layout and paint
@@ -3087,6 +3441,10 @@
    every label fits on one line beside its icon. The gap and padding here are
    the ROW_GAP and ROW_PAD it measures with. A phone always stacks, so every
    strip on a phone looks the same. */
+/* data-tight: the longest words of the labels do not fit side by side, so
+   the columns go back to equal shares and a word may break anywhere. */
+.pn-tab-strip[data-tight] { grid-auto-columns: minmax(0, 1fr); }
+.pn-tab-strip[data-tight] > .pn-tab { overflow-wrap: anywhere; hyphens: auto; }
 @media (min-width: 640px) {
   .pn-tab-strip[data-row] > .pn-tab { flex-direction: row; justify-content: center; gap: 6px; padding-inline: 8px; white-space: nowrap; }
 }
@@ -3111,7 +3469,7 @@
    the whole row. The sideways clip is the guard for a width no rule foresaw;
    it is `overflow-x: clip`, never `hidden`, because a hidden overflow makes
    the card a scroll container and a grid row then shrinks it to its padding.
-   Spec: ops/docs/archive/ui-patterns.md section 141 */
+   Spec: docs/internal/design/ui-patterns.md section 141 */
 .pn-notes-grid .pn-grid-cal {
   min-width: 0;
   overflow-x: clip;
@@ -3124,9 +3482,46 @@
 .pn-notes-grid .pn-grid-checkin { grid-column: 1 / -1; }
 @container pn-list (min-width: 700px) { .pn-notes-grid .pn-grid-checkin { grid-column: span 2; } }
 
+/* Home (dashboard/Dashboard.tsx) is its own grid, not the tile grid above:
+   its columns, its row height and every card's place are inline styles from
+   the packer (packBoxes in dashboard/dashboardLayout.ts). The calendar card
+   keeps the sideways clip it has in the tile grid.
+   Spec: docs/internal/specs/dashboard.md (section 3) */
+.pn-home-grid .pn-grid-cal {
+  min-width: 0;
+  overflow-x: clip;
+}
+/* A widget's arranging tools (Dashboard.tsx): the grip tab on the card's
+   top edge and the resize corner. With a mouse they show while the card is
+   hovered or holds focus, and the card being dragged or resized keeps them;
+   on touch the tab always shows, a little larger, and the corner is not
+   drawn (the widget menu resizes). Spec: docs/internal/specs/dashboard.md
+   (section 6) */
+@media (hover: hover) {
+  .pn-home-grid .pn-card-ctl {
+    opacity: 0;
+    transition: opacity 120ms;
+  }
+  .pn-home-grid > li:hover .pn-card-ctl,
+  .pn-home-grid > li:focus-within .pn-card-ctl,
+  .pn-home-grid > li.ring-accent .pn-card-ctl {
+    opacity: 1;
+  }
+}
+@media (hover: none) {
+  .pn-home-grid .pn-card-resize { display: none; }
+  .pn-home-grid .pn-card-grip { height: 1.5rem; width: 3rem; top: -0.75rem; }
+}
+/* A widget's rows are few, and the fit that hides the rows past a card's
+   bottom (useFitRows in dashboard/widgets.tsx) needs their real height, not
+   the placeholder a lazy row has before it paints. */
+.pn-home-grid .pn-lazy-row {
+  content-visibility: visible;
+}
+
 /* A pick on the mood scale, and the check-in's "logged" mark: one short pop,
    none for people who asked for less motion.
-   Spec: ops/docs/archive/ui-patterns.md section 141 */
+   Spec: docs/internal/design/ui-patterns.md section 141 */
 @keyframes pn-pop {
   0% { transform: scale(0.6); }
   60% { transform: scale(1.25); }
@@ -3134,6 +3529,15 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .pn-pop { animation: pn-pop 280ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+}
+
+/* The password generator's Regenerate arrows: one full turn on a click (a
+   new React key restarts it), none for people who asked for less motion. */
+@keyframes pn-turn {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pn-turn { animation: pn-turn 420ms cubic-bezier(.3,.7,.2,1); }
 }
 
 /* Pane resize strips (sidebar + notes-list dividers, GitHub #211).
@@ -3149,7 +3553,7 @@
    the drag's duration: cursor + text-selection guard, and it suppresses
    the .pn-tip hover pills which would otherwise flicker under the
    captured pointer.
-   Spec: ops/docs/design-decisions.md (pane resize), ui-patterns.md section 56 */
+   Spec: docs/internal/design-decisions.md (pane resize), ui-patterns.md section 56 */
 .pn-strip {
   position: relative;
   touch-action: none;
@@ -3264,7 +3668,7 @@
   background: var(--color-accent-fill);
   color: #fff;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: var(--fs-meta);
   font-weight: 600;
   line-height: 1;
   padding: 5px 8px;
@@ -3282,7 +3686,7 @@
    (~590px content), the max-w-md standalone/mobile modal (~400px), and on
    phones; a viewport query can't tell those apart. Engines without container
    queries keep the rows at every width (graceful fallback, same as the grid).
-   See ops/docs/archive/ui-patterns.md section 48. */
+   See docs/internal/design/ui-patterns.md section 48. */
 .pn-storage-picker {
   container-type: inline-size;
   container-name: pn-storage;
@@ -3460,7 +3864,7 @@
    same thing twice, and a login already falls back to a padlock chip when it
    has no favicon. The clip-path is the landing page's `.pn-fx-ribbon` polygon
    at row scale, so the two surfaces cut the same notch.
-   Spec: ops/docs/archive/ui-patterns.md section 78 (bookmark ribbon) */
+   Spec: docs/internal/design/ui-patterns.md section 78 (bookmark ribbon) */
 .pn-ribbon {
   position: absolute;
   top: 0;
@@ -3490,7 +3894,7 @@
    as a rendering slip rather than as a corner mark. It stays in the row's own
    16px gutter, the position it holds under a mouse and the one the row's text
    is measured from, and only the rows that carry a ribbon pay for the lane.
-   Spec: ops/docs/archive/ui-patterns.md section 78 (bookmark ribbon) */
+   Spec: docs/internal/design/ui-patterns.md section 78 (bookmark ribbon) */
 @media (hover: none) {
   /* A tile keeps its ribbon at the resting 12px, clear of the 12px corner
      radius: at the tile's very edge the notch sat on the rounded border and
@@ -3578,7 +3982,7 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
     white-space: normal;
-    font-size: 13.5px;
+    font-size: var(--fs-body);
     line-height: 1.3;
   }
   .pn-notes-grid .pn-card-titletext {
@@ -3603,10 +4007,7 @@
     -webkit-line-clamp: 5;
   }
   .pn-notes-grid .pn-card-date {
-    font-size: 11px;
-  }
-  .pn-notes-grid .pn-file-size {
-    display: none;
+    font-size: var(--fs-meta);
   }
   /* Mini tiles take a smaller ribbon, tucked closer to the corner - the tile's
      own padding drops to 10px here. */
@@ -3733,7 +4134,7 @@
    pre-wrap }` unlayered and after our stylesheet, so an @layer rule can never
    beat it - same physics as the gapcursor override below. The extra .tiptap
    class wins the specificity tie regardless of injection order.
-   Spec: ops/docs/design-decisions.md (code blocks wrap by default) */
+   Spec: docs/internal/design-decisions.md (code blocks wrap by default) */
 .tiptap.ProseMirror pre {
   white-space: pre;
   overflow: hidden;
@@ -3746,7 +4147,7 @@
    cursor go" confusion when a callout is the first block and you ArrowUp /
    ArrowLeft to type or delete above it. Recolor to the theme accent, thicken,
    and widen so it reads as a real "type here" caret in every theme.
-   Spec: ops/docs/callouts.md */
+   Spec: docs/contrib/callouts.md */
 .ProseMirror .ProseMirror-gapcursor::after {
   border-top: 2px solid rgb(var(--pn-accent));
   width: 1.5em;
@@ -3839,7 +4240,7 @@
    full prose contrast, so the marks read as a proofreading overlay rather
    than as content. Stays unlayered beside the base block above - file order
    decides the conflicts, and these come second on purpose.
-   Spec: ops/docs/design-decisions.md (Invisible characters toggle) */
+   Spec: docs/internal/design-decisions.md (Invisible characters toggle) */
 .tiptap .tiptap-invisible-character::before {
   color: rgb(var(--pn-accent));
   opacity: 0.45;
@@ -3923,7 +4324,7 @@
    mangled sliver of each. The icons keep their aria-labels. The
    scrollbar is hidden: it would eat a third of the column and uncenter
    the icons; wheel, trackpad and drag still scroll.
-   Spec: ops/docs/archive/ui-patterns.md section 40 (rail fit tiers) */
+   Spec: docs/internal/design/ui-patterns.md section 40 (rail fit tiers) */
 .pn-rail:is([data-fit='shed'], [data-fit='compact'], [data-fit='scroll']) .pn-rail-optional {
   display: none;
 }
@@ -3952,7 +4353,7 @@
    sideways, cutting off everything at its start edge. HoverLabel moves a
    showing tip inside the visible box (`fitTip`), so a shown tip cannot do
    this either. Unlayered, so it wins over the tip's own display utility.
-   Spec: ops/docs/archive/ui-patterns.md section 18 */
+   Spec: docs/internal/design/ui-patterns.md section 18 */
 .pn-tip-host:not(:hover) > .pn-tip {
   display: none;
 }
@@ -3976,7 +4377,7 @@
 /* "Add a line" between two blocks (editorAddLine.ts) fades in after a short
    wait, so the hint does not flash on every gap the pointer crosses while a
    note scrolls under it. The top zone in Editor.tsx waits the same 150ms
-   through a transition delay. Spec: ops/docs/archive/ui-patterns.md
+   through a transition delay. Spec: docs/internal/design/ui-patterns.md
    ("Add a line" between two blocks) */
 .pn-add-line-hint {
   animation: pn-add-line-in 120ms ease-out 150ms both;
@@ -3994,7 +4395,7 @@
    Jump to, the icons and the Pro mark on the Tags and Folders tabs - so the
    brand, the Jump to label and the tab names keep their words, and the
    footer actions name themselves in a tip instead of the expanding pill.
-   Spec: ops/docs/design-decisions.md (pane resize clamps) */
+   Spec: docs/internal/design-decisions.md (pane resize clamps) */
 .pn-sidebar {
   container: pn-sidebar / inline-size;
 }
@@ -4124,7 +4525,7 @@
    never clipped on touch. One dash period is 8px along the 45deg axis,
    11.31px across, so the loop is seamless. Only the resting bar marches: a
    drag swaps in its own edge.
-   Spec: ops/docs/archive/ui-patterns.md section 132 */
+   Spec: docs/internal/design/ui-patterns.md section 132 */
 .pn-bar-ants {
   position: relative;
 }
@@ -4173,7 +4574,7 @@
    scrollbar, and a fade on each edge that has more to show (`data-fade`, set
    by the toolbar from the scroll position). The ramps are logical, so the
    fade follows the reading direction.
-   Spec: ops/docs/archive/format-bar.md (section 7) */
+   Spec: docs/internal/specs/format-bar.md (section 7) */
 .pn-format-strip {
   overflow-x: auto;
   overflow-y: hidden;
@@ -4235,7 +4636,7 @@
 }
 
 /* Every scale tile - the mood, a 0 to 10 scale, a custom scale - from one
-   rule, so their heights never drift apart. Spec: ops/docs/archive/ui-patterns.md section 141 */
+   rule, so their heights never drift apart. Spec: docs/internal/design/ui-patterns.md section 141 */
 .pn-scale-tile {
   display: flex;
   min-width: 0;
@@ -4249,7 +4650,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 0.375rem;
-  font-size: 13px;
+  font-size: var(--fs-compact);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -4265,7 +4666,7 @@
 @media (hover: none) { .pn-scale-tile { max-height: 2.5rem; } }
 /* A row under 240 px (a check-in card in the narrowest list pane): a 13 px
    "10" is wider than its tile there. */
-@container scale (max-width: 239.98px) { .pn-scale-tile { font-size: 11px; } }
+@container scale (max-width: 239.98px) { .pn-scale-tile { font-size: var(--fs-meta); } }
 /* An unpicked mood tile: its band at 26%, or one neutral color while a parent
    sets --pn-tile-shown (the check-in card at rest). An accent scale lights in
    the accent. */
@@ -4335,7 +4736,7 @@
     /* Draw after the fill begins; hide immediately when unchecked. */
     .pn-task-checkbox:checked + .pn-check path {
       stroke-dashoffset: 0;
-      /* Spec: ops/docs/design-decisions.md (Checkbox feedback) */
+      /* Spec: docs/internal/design-decisions.md (Checkbox feedback) */
       transition: stroke-dashoffset 0.75s ease-out 0.06s;
     }
 }

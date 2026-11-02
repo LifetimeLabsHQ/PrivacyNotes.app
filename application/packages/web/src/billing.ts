@@ -11,7 +11,7 @@
  * Every call site goes through the two dispatchers below, so wiring native IAP
  * later means filling in the stub functions and touching nothing else.
  *
- * Spec: ops/docs/design-decisions.md (native checkout: desktop opens the system
+ * Spec: docs/internal/design-decisions.md (native checkout: desktop opens the system
  * browser, iOS/Android use IAP)
  */
 
@@ -23,12 +23,12 @@ import { APEX_ORIGIN } from './hosts';
 
 // The CheckoutLauncher page runs the Paddle overlay on an approved Paddle
 // domain. Desktop sends users here in their system browser.
-// Spec: ops/docs/design-decisions.md (native checkout)
+// Spec: docs/internal/design-decisions.md (native checkout)
 const WEB_CHECKOUT_ORIGIN = APEX_ORIGIN;
 
 // Native store product IDs (App Store + Google Play, mirrored). Pro is a
 // non-consumable one-time unlock; storage tiers are auto-renewable subs.
-// Spec: ops/docs/mobile-release-plan.md (locked product IDs)
+// Spec: docs/internal/specs/mobile-release-plan.md (locked product IDs)
 export const PRO_PRODUCT_ID = 'app.privacynotes.pro';
 export const storageProductId = (gb: number): string => `app.privacynotes.storage.${gb}gb`;
 
@@ -61,7 +61,7 @@ async function openWebCheckout(query: string): Promise<void> {
  * Must stay synchronous inside the click handler or a popup blocker eats the
  * tab. Both callers are click-driven, and `noopener` keeps the new tab from
  * reaching back through window.opener.
- * Spec: ops/docs/plans/paddle-origin-split.md (checkout on a separate origin, can't read app's localStorage)
+ * Spec: docs/internal/plans/paddle-origin-split.md (checkout on a separate origin, can't read app's localStorage)
  */
 function openBrowserCheckout(query: string): void {
   window.open(`${WEB_CHECKOUT_ORIGIN}/checkout?${query}`, '_blank', 'noopener,noreferrer');
@@ -217,7 +217,7 @@ export async function startStorageCheckout(
  * refresh. The macOS App Store build reuses the `Apple*` functions (MAS routes
  * `desktop + isMasBuild()` to them).
  *
- * Spec: ops/docs/billing-integration.md (validator flips the same entitlement the Paddle webhook sets)
+ * Spec: docs/internal/billing-integration.md (validator flips the same entitlement the Paddle webhook sets)
  * ────────────────────────────────────────────────────────────────── */
 
 type NativeValidateFn = 'playstore-validate' | 'appstore-validate';
@@ -257,7 +257,7 @@ async function validateNativePurchase(
   // idle connection pool: the raw fetch threw, validation failed, and a
   // completed purchase surfaced as "payment went through but activating
   // it failed" - the single worst place in the app to give up on one dead
-  // socket. Spec: ops/docs/billing-integration.md (retries are safe: validators are idempotent by design)
+  // socket. Spec: docs/internal/billing-integration.md (retries are safe: validators are idempotent by design)
   for (let attempt = 0; ; attempt++) {
     try {
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${fn}`, {
@@ -305,7 +305,7 @@ function isUserCancel(err: unknown): boolean {
 // Play refuses to sell an item the store account already owns
 // (ITEM_ALREADY_OWNED / "You already own this item"). That buyer is exactly
 // the stuck user restore exists for: the store says owned, our server never
-// validated it. Spec: ops/docs/plans/iap-restore-handoff.md (restore recovers purchases the store shows owned but we never validated)
+// validated it. Spec: docs/internal/specs/iap-restore-handoff.md (restore recovers purchases the store shows owned but we never validated)
 function isAlreadyOwned(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err ?? '');
   return /already[ _]?own/i.test(msg);
@@ -359,7 +359,7 @@ async function runNativePurchase(
     // Server validation token: Google's opaque purchaseToken on Android; on
     // iOS/macOS the signed JWS (appstore-validate decodes bundleId,
     // transactionId, and environment from it - the numeric purchaseToken is
-    // rejected as invalid_purchase). Spec: ops/docs/billing-integration.md (iOS validation needs the JWS, not the numeric purchaseToken)
+    // rejected as invalid_purchase). Spec: docs/internal/billing-integration.md (iOS validation needs the JWS, not the numeric purchaseToken)
     const validationToken = isAndroid ? result?.purchaseToken : result?.jwsRepresentation;
     if (!result?.purchaseToken || !validationToken) {
       // A resolved purchase without a token is a store/plugin failure, not a

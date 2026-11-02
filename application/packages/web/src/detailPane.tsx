@@ -11,7 +11,7 @@ import { Check, Copy, PencilSimple } from './icons';
  * actions as ONE outlined group at the end), one headline over a group, one
  * notes block. A pane composes these and owns nothing of the look, which is
  * what keeps the two panes from drifting apart again.
- * Spec: ops/docs/archive/ui-patterns.md (section 99)
+ * Spec: docs/internal/design/ui-patterns.md (section 99)
  */
 
 /**
@@ -38,7 +38,7 @@ export function DetailHero({ tile, title, subtitle, onEdit, editLabel }: {
       <div className="flex items-center gap-4 min-w-0">
         {tile}
         <div className="min-w-0">
-          <div className="text-lg font-semibold truncate text-pn" dir="auto">{title}</div>
+          <div className="text-heading font-semibold truncate text-pn" dir="auto">{title}</div>
           {subtitle}
         </div>
       </div>
@@ -46,9 +46,9 @@ export function DetailHero({ tile, title, subtitle, onEdit, editLabel }: {
         <button
           type="button"
           onClick={onEdit}
-          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-surface-1 border border-divider text-pn-soft hover:bg-pn/10 transition"
+          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-small font-medium bg-surface-1 border border-divider text-pn-soft hover:bg-pn/10 transition"
         >
-          <PencilSimple size={13} /> {editLabel}
+          <PencilSimple /> {editLabel}
         </button>
       )}
     </div>
@@ -78,7 +78,7 @@ export function DetailGroup({ heading, children }: { heading: string; children: 
     <div className="mt-5">
       <div className="flex items-center gap-2.5 mb-1">
         <AccentBar />
-        <h3 className="text-sm font-semibold text-pn truncate" dir="auto">{heading}</h3>
+        <h3 className="text-body font-semibold text-pn truncate" dir="auto">{heading}</h3>
         <HeadlineRule />
       </div>
       {children}
@@ -98,11 +98,11 @@ export function DetailRow({ icon, label, children, actions, multiline = false }:
     // Under 384 px (a phone, a narrow editor pane) the label takes its own
     // line above the value, so an address keeps the width it needs.
     <div className={`@container/row flex flex-wrap ${multiline ? 'items-start' : 'items-center'} gap-x-3 gap-y-1 py-2 border-b border-divider last:border-b-0`}>
-      <span className="shrink-0 w-24 @max-[23.98rem]/row:w-full flex items-center gap-1.5 text-xs text-pn-muted pt-0.5" dir="auto">
+      <span className="shrink-0 w-24 @max-[23.98rem]/row:w-full flex items-center gap-1.5 text-small text-pn-muted pt-0.5" dir="auto">
         {icon && <span className="shrink-0 text-accent" aria-hidden="true">{icon}</span>}
         <span className="truncate">{label}</span>
       </span>
-      <div className="min-w-0 flex-1 text-sm text-pn break-words" dir="auto">{children}</div>
+      <div className="min-w-0 flex-1 text-body text-pn break-words" dir="auto">{children}</div>
       {actions && <span className="shrink-0 inline-flex items-center rounded-md border border-divider bg-surface-1">{actions}</span>}
     </div>
   );
@@ -142,7 +142,7 @@ export function DetailCopyAction({ value, id, copied, onCopy, label }: {
 }) {
   return (
     <DetailAction label={label} onClick={() => onCopy(value, id)}>
-      {copied === id ? <Check size={15} className="text-green-500" /> : <Copy size={15} />}
+      {copied === id ? <Check className="text-green-500" /> : <Copy />}
     </DetailAction>
   );
 }
@@ -167,7 +167,7 @@ export function DetailLink({ href, children }: { href: string; children: string 
 export function DetailNotes({ heading, children }: { heading: string; children: string }) {
   return (
     <DetailGroup heading={heading}>
-      <div className="py-2 text-sm text-pn whitespace-pre-wrap break-words" dir="auto">{children}</div>
+      <div className="py-2 text-body text-pn whitespace-pre-wrap break-words" dir="auto">{children}</div>
     </DetailGroup>
   );
 }

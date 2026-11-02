@@ -1,6 +1,6 @@
 /**
  * Perf instrumentation for the app-slowness profiling recipe
- * (ops/docs/backlog.md #130). Inert unless the build ran with
+ * (docs/internal/backlog.md #130). Inert unless the build ran with
  * VITE_PERF=1 - without it every span is the same no-op closure and
  * Vite's dead-branch elimination strips the mark/measure calls.
  *

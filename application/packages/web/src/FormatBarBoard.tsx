@@ -1,25 +1,23 @@
-import { useEffect, useRef, useState, type DragEvent, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check, DotsSixVertical, DotsThree, Paperclip, Plus, PushPin, Rows } from './icons';
 import { RowTitle, SETTINGS_EYEBROW, SETTINGS_HELP, SETTINGS_TRACK, settingsSegClass } from './settingsUI';
 import { useEscapeToClose } from './useEscapeToClose';
+import { DRAG_SOURCE, DropLine, usePointerReorder } from './ui';
 import { HoverLabel } from './HoverLabel';
 import { useIsTouchDevice } from './useIsMobile';
 import { usePopoverPosition } from './usePopoverPosition';
 import {
-  FORMAT_BAR_GROUPS,
-  canStep,
-  formatBarItem,
+  FORMAT_BAR,
   homeOf,
-  placeItem,
-  refusalFor,
-  stepItem,
+  type BarModel,
   type FormatBarHome,
   type FormatBarRefusal,
   type ResolvedFormatBar,
 } from './formatBar';
 import { FORMAT_BAR_LOOK } from './formatBarItems';
+import type { Icon as IconType } from './icons';
 import type { BarPosition } from './editorPrefs';
 
 export type FormatBarBoardProps = {
@@ -42,12 +40,21 @@ export type FormatBarBoardProps = {
    *  handed on. */
   onEnter?: () => void;
   onLeave?: () => void;
+  /** Another bar's rules and looks (the drawing toolbar's), which has no
+   *  menus: its items live on the bar, at its end, or hidden. */
+  bar?: {
+    model: BarModel;
+    look: Readonly<Record<string, { Icon: IconType; label: string }>>;
+    /** What a hidden item still does, in place of the format bar's line:
+     *  a label key with its namespace. */
+    hiddenNote: string;
+  };
+  /** The drawing toolbar's board, which the Settings tab shows beside this one. */
+  drawing?: Omit<FormatBarBoardProps, 'drawing' | 'position' | 'onPositionChange'>;
 };
 
 /** A part of the board: the bar's row, the bar's end, the menu, the attach menu, hidden. */
 type Part = FormatBarHome;
-
-const DRAG_TYPE = 'application/x-pn-format-bar';
 
 /**
  * Settings > Toolbar: the bar itself, every item
@@ -63,14 +70,18 @@ const DRAG_TYPE = 'application/x-pn-format-bar';
  * Moves that would break the bar are refused with a line that says why. Every
  * write goes through `onUpdate`, which applies the move to the freshest
  * arrangement in the settings cache, never to the one this render drew.
- * Spec: ops/docs/archive/format-bar.md (section 5)
+ * Spec: docs/internal/specs/format-bar.md (section 5)
  */
-export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionChange, previewing = false, onEnter, onLeave, heading }: FormatBarBoardProps) {
+export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionChange, previewing = false, onEnter, onLeave, heading, bar }: FormatBarBoardProps) {
   const { t } = useTranslation('editor');
+  const model = bar?.model ?? FORMAT_BAR;
+  const look = bar?.look ?? FORMAT_BAR_LOOK;
+  // Only the format bar has the + menu and the attach menu.
+  const menus = !bar;
+  const { item: formatBarItem, refusalFor, placeItem, stepItem, canStep } = model;
   const touch = useIsTouchDevice();
   const canDrag = !touch;
   const [refusal, setRefusal] = useState<{ reason: Exclude<FormatBarRefusal, null>; key: string } | null>(null);
-  const [dragKey, setDragKey] = useState<string | null>(null);
   // The bar marches its edge for a moment when the tab opens (pn-bar-ants).
   const [barIntro, setBarIntro] = useState(true);
   useEffect(() => {
@@ -93,7 +104,7 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
   const menuRef = useRef<HTMLDivElement>(null);
   const menuPos = usePopoverPosition(menuKey !== null, anchorRef, menuRef);
 
-  const label = (key: string) => t(FORMAT_BAR_LOOK[key]!.label);
+  const label = (key: string) => t(look[key]!.label);
   const itemButton = (key: string) =>
     rootRef.current?.querySelector<HTMLButtonElement>(`[data-key="${key}"][data-item]`) ?? null;
 
@@ -192,22 +203,15 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
     items[to]!.focus();
   }
 
-  // Drag, on a pointer device only (a drag does not start from a finger).
-  // While a drag is over the board, `target` says where the item would land,
-  // and a line is drawn there: the half of the item under the pointer
-  // decides before or after it, and the empty part of a list means its end.
-  // A spot where the item already is draws nothing, and a refused home takes
-  // no drop (the cursor says so) and shows its reason. The drop applies the
-  // target, never a guess from the element under the pointer.
-  // A drop target accepts in dragenter as well as dragover, because Chromium
-  // may never send a dragover to a target that did not accept the enter.
-  // Spec: ops/docs/archive/drag-to-folder-and-tag.md (section 3)
-  type DropTarget = { part: Part; before: string | null };
-  const [target, setTarget] = useState<DropTarget | null>(null);
-  const dragFrame = useRef(0);
-  // The dragged key for the drop logic, set at once; `dragKey` (state) only
-  // drives the fade, a frame later.
-  const dragRef = useRef<string | null>(null);
+  // Drag, under a pointer: the shared reorder engine (ui/reorder.tsx), the
+  // same feel as the folders, the sidebar rows and the tabs. A finger uses
+  // the item menu, which holds every move. While a drag is on, `target` says
+  // where the item would land and a line is drawn there: the half of the
+  // item nearest the pointer decides before or after it, and the empty part
+  // of a list means its end. A spot where the item already is draws nothing,
+  // and a refused home takes no drop (the cursor says so) and shows its
+  // reason. The drop applies the target, never a guess.
+  type DropTarget = { part: Part; before: string | null; refused?: Exclude<FormatBarRefusal, null> };
   const groupOf = (k: string) => formatBarItem(k)!.group;
   const listOf = (part: Part) =>
     layout[part];
@@ -218,93 +222,85 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
     return part === 'menu' && next && groupOf(next) !== groupOf(key) ? null : next;
   }
 
-  function endDrag() {
-    cancelAnimationFrame(dragFrame.current);
-    dragRef.current = null;
-    setDragKey(null);
-    setTarget(null);
-  }
-  const dragProps = (key: string) => (canDrag ? {
-    draggable: true,
-    onDragStart: (e: DragEvent) => {
-      e.dataTransfer.setData(DRAG_TYPE, key);
-      e.dataTransfer.effectAllowed = 'move';
-      dragRef.current = key;
-      setMenuKey(null);
-      setRefusal(null);
-      // A frame later, so the drag picture is taken before the item fades.
-      // A drag that ends sooner cancels it, so no stale key outlives it.
-      dragFrame.current = requestAnimationFrame(() => setDragKey(key));
-    },
-    onDragEnd: endDrag,
-  } : {});
-
-  /** Where the dragged item would land for `before` in `part`, null for no move, 'refused' for a refused home. */
-  function aim(part: Part, before: string | null): DropTarget | null | 'refused' {
-    const key = dragRef.current;
-    if (!key) return null;
+  /** Where the dragged item would land for `before` in `part`, null for no move. */
+  function aim(key: string, part: Part, before: string | null): DropTarget | null {
     const item = formatBarItem(key)!;
-    const to = part;
-    if (refusalFor(layout, key, to)) return 'refused';
+    const refused = refusalFor(layout, key, part);
+    if (refused) return { part, before: null, refused };
     let at = before;
     // In the menu an item lands in its own group, at the end when the spot is in another.
     if (part === 'menu' && at && groupOf(at) !== item.group) at = null;
-    if (homeOf(layout, key) === to && (at === key || at === nextIn(part, key))) return null;
-    if (homeOf(layout, key) === to && at === null && nextIn(part, key) === null) return null;
+    if (homeOf(layout, key) === part && (at === key || at === nextIn(part, key))) return null;
+    if (homeOf(layout, key) === part && at === null && nextIn(part, key) === null) return null;
     return { part, before: at };
   }
 
-  /** dragover and dragenter on an item or on the empty part of a list. */
-  const over = (part: Part, key: string | null, sideways = false) => (e: DragEvent) => {
-    const dragged = dragRef.current;
-    if (!dragged) return;
-    e.stopPropagation();
-    let before: string | null = null;
-    if (key) {
-      const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-      const rtl = document.documentElement.dir === 'rtl';
-      const after = sideways
-        ? (rtl ? e.clientX < r.left + r.width / 2 : e.clientX > r.left + r.width / 2)
-        : e.clientY > r.top + r.height / 2;
-      before = after ? nextIn(part, key) : key;
+  /** The zone under a point, then the item in it nearest the point. */
+  function resolve(key: string, x: number, y: number): DropTarget | null {
+    const zone = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-reorder-zone]');
+    if (!zone || !rootRef.current?.contains(zone)) return null;
+    const part = zone.dataset.reorderZone as Part;
+    const sideways = part !== 'menu' && part !== 'attachMenu';
+    let best: { el: HTMLElement; gap: number } | null = null;
+    for (const el of zone.querySelectorAll<HTMLElement>('[data-reorder-id]')) {
+      if (el.closest('[data-reorder-zone]') !== zone) continue;
+      const box = el.getBoundingClientRect();
+      // A bar row wraps and the menu has columns, so the nearest item is
+      // measured both ways.
+      const gap = Math.max(box.left - x, 0, x - box.right) + Math.max(box.top - y, 0, y - box.bottom);
+      if (!best || gap < best.gap) best = { el, gap };
     }
-    const next = aim(part, before);
-    if (next === 'refused') {
-      // No preventDefault: the drop is refused and the cursor shows it.
-      const reason = refusalFor(layout, dragged, part);
-      if (reason && (refusal?.key !== dragged || refusal.reason !== reason)) setRefusal({ reason, key: dragged });
-      if (target) setTarget(null);
-      return;
-    }
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    if (refusal) setRefusal(null);
-    if (next?.part !== target?.part || next?.before !== target?.before) setTarget(next);
-  };
-  const drop = (e: DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const key = dragRef.current ?? e.dataTransfer.getData(DRAG_TYPE);
-    const at = target;
-    endDrag();
-    if (!key || !formatBarItem(key) || !at) return;
-    moveTo(key, at.part, at.before);
-  };
-  const dropZone = (part: Part) => ({
-    onDragEnter: over(part, null),
-    onDragOver: over(part, null),
-    onDrop: drop,
-  });
+    if (!best) return aim(key, part, null);
+    const over = best.el.dataset.reorderId!;
+    const box = best.el.getBoundingClientRect();
+    const rtl = document.documentElement.dir === 'rtl';
+    const after = sideways
+      ? (rtl ? x < box.left + box.width / 2 : x > box.left + box.width / 2)
+      : y > box.top + box.height / 2;
+    return aim(key, part, after ? nextIn(part, over) : over);
+  }
 
-  /** The line that marks where a dragged item lands. */
-  const marker = (part: Part, before: string | null, sideways: boolean) =>
-    target && target.part === part && target.before === before
-      ? <li key={`drop-${before ?? 'end'}`} aria-hidden="true" className={sideways ? 'self-stretch w-0.5 my-1 rounded-full bg-accent' : 'h-0.5 mx-1 rounded-full bg-accent'} />
-      : null;
+  const { drag, pressProps, endedDrag } = usePointerReorder<DropTarget>({
+    enabled: canDrag,
+    resolve,
+    targetKey: (tg) => `${tg.part}:${tg.before}:${tg.refused ?? ''}`,
+    onDrop: (key, at) => {
+      if (at.refused) {
+        setRefusal({ reason: at.refused, key });
+        return;
+      }
+      moveTo(key, at.part, at.before);
+    },
+  });
+  const dragKey = drag?.id ?? null;
+  const target = drag?.target && !drag.target.refused ? drag.target : null;
+  // A drag closes the item menu and clears an old refusal; a refused home
+  // under the drag says why while it is there.
+  useEffect(() => {
+    if (dragKey) setMenuKey(null);
+  }, [dragKey]);
+  const dragRefusal = drag?.target?.refused ? { reason: drag.target.refused, key: drag.id } : null;
+
+  /** The last key of the list a line at the end of `part` follows. */
+  function lastIn(part: Part): string | null {
+    if (part === 'menu' && dragKey) {
+      const own = layout.menu.filter((k) => groupOf(k) === groupOf(dragKey));
+      return own[own.length - 1] ?? null;
+    }
+    return layout[part][layout[part].length - 1] ?? null;
+  }
+  /** The landing line on an item: before it, or after the last one. */
+  function lineOn(key: string, part: Part): ReactNode {
+    if (!target || target.part !== part) return null;
+    const sideways = part !== 'menu' && part !== 'attachMenu';
+    if (target.before === key) return <DropLine edge={sideways ? 'start' : 'top'} />;
+    if (target.before === null && lastIn(part) === key) return <DropLine edge={sideways ? 'end' : 'bottom'} />;
+    return null;
+  }
 
   function item(key: string, part: Part): ReactNode {
     const def = formatBarItem(key)!;
-    const { Icon } = FORMAT_BAR_LOOK[key]!;
+    const { Icon } = look[key]!;
     const home = homeOf(layout, key);
     const open = menuKey === key;
     const name = label(key);
@@ -314,9 +310,10 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
       'data-item': '',
       'aria-haspopup': 'menu' as const,
       'aria-expanded': open,
-      onClick: (e: React.MouseEvent<HTMLButtonElement>) => openMenu(key, e.currentTarget),
-      ...dragProps(key),
-      onDrop: drop,
+      onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+        if (!endedDrag()) openMenu(key, e.currentTarget);
+      },
+      ...pressProps(key),
     };
     // On the bar and in the hidden row an item looks like its toolbar
     // button: the icon alone, the name in a hover label (and at the top of
@@ -327,7 +324,8 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
       // and not a loose line.
       const framedLine = key.startsWith('separator') && part === 'hidden';
       return (
-        <li key={key} className="shrink-0" onDragEnter={over(part, key, true)} onDragOver={over(part, key, true)}>
+        <li key={key} data-reorder-id={key} className="relative shrink-0">
+          {lineOn(key, part)}
           <HoverLabel label={name} position="below">
             <button
               {...common}
@@ -336,81 +334,81 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
               // slot; in the hidden row it is a full button, so it can be seen and grabbed.
               className={`flex items-center justify-center ${thinLine ? 'w-2 [@media(hover:none)]:w-5' : 'w-8 [@media(hover:none)]:w-10'} h-8 [@media(hover:none)]:h-10 rounded-md transition ${
                 open ? 'bg-accent/15 text-accent-strong' : 'text-pn-soft [@media(hover:hover)]:hover:bg-pn/10'
-              } ${framedLine ? 'border border-divider' : ''} ${canDrag ? 'cursor-grab' : ''} ${dragKey === key ? 'opacity-40' : ''}`}
+              } ${framedLine ? 'border border-divider' : ''} ${canDrag ? 'cursor-grab' : ''} ${dragKey === key ? DRAG_SOURCE : ''}`}
             >
               {thinLine
                 ? <span aria-hidden="true" className="h-4 w-px bg-pn-muted/35" />
-                : <Icon size={18} aria-hidden="true" />}
+                : <Icon aria-hidden="true" />}
             </button>
           </HoverLabel>
         </li>
       );
     }
     return (
-      <li key={key} onDragEnter={over(part, key)} onDragOver={over(part, key)}>
+      <li key={key} data-reorder-id={key} className="relative">
+        {lineOn(key, part)}
         <button
           {...common}
-          className={`w-full flex items-center gap-2 min-h-[44px] [@media(hover:hover)]:min-h-[34px] rounded-md ps-2 pe-1.5 text-start text-sm bg-surface-2 border transition ${
+          className={`w-full flex items-center gap-2 min-h-[44px] [@media(hover:hover)]:min-h-[34px] rounded-md ps-2 pe-1.5 text-start text-body bg-surface-2 border transition ${
             open ? 'border-accent' : 'border-transparent [@media(hover:hover)]:hover:border-divider'
-          } ${canDrag ? 'cursor-grab' : ''} ${dragKey === key ? 'opacity-40' : ''} ${home === 'hidden' ? 'text-pn-muted' : 'text-pn-soft'}`}
+          } ${canDrag ? 'cursor-grab' : ''} ${dragKey === key ? DRAG_SOURCE : ''} ${home === 'hidden' ? 'text-pn-muted' : 'text-pn-soft'}`}
         >
-          {canDrag && <DotsSixVertical size={14} className="shrink-0 text-pn-muted" aria-hidden="true" />}
-          <Icon size={18} className="shrink-0" aria-hidden="true" />
+          {canDrag && <DotsSixVertical className="shrink-0 text-pn-muted" aria-hidden="true" />}
+          <Icon className="shrink-0" aria-hidden="true" />
           <span className="flex-1 min-w-0 leading-tight break-words hyphens-auto">{name}</span>
           {/* The pin says why the item cannot go into the menu. */}
-          {part === 'menu' && !def.menuAllowed && <PushPin size={12} className="shrink-0 text-pn-muted" aria-label={t('formatBar.pinned')} />}
-          {touch && <DotsThree size={18} className="shrink-0 text-pn-muted" aria-hidden="true" />}
+          {part === 'menu' && !def.menuAllowed && <PushPin className="shrink-0 text-pn-muted" aria-label={t('formatBar.pinned')} />}
+          {touch && <DotsThree className="shrink-0 text-pn-muted" aria-hidden="true" />}
         </button>
       </li>
     );
   }
 
-  const empty = (text: string) => <p className="px-1 py-2 text-xs text-pn-muted">{text}</p>;
-  /** A column list, with the drop line before an item or at its end. */
-  const list = (keys: string[], part: Part, endMarker = true) => (
+  const empty = (text: string) => <p className="px-1 py-2 text-small text-pn-muted">{text}</p>;
+  /** A column list; the drop line is drawn on its items. */
+  const list = (keys: string[], part: Part) => (
     <ul className="space-y-1">
-      {keys.flatMap((k) => [marker(part, k, false), item(k, part)])}
-      {endMarker && marker(part, null, false)}
+      {keys.map((k) => item(k, part))}
     </ul>
   );
   const subhead = (text: string) => (
-    <div className="px-1 pt-3 pb-1 text-xs text-pn-soft">{text}</div>
+    <div className="px-1 pt-3 pb-1 text-small text-pn-soft">{text}</div>
   );
 
   // In the menu the end of a list is the end of a group: the line goes at the
   // end of the dragged item's own group.
-  const dragGroup = target?.part === 'menu' && dragRef.current ? groupOf(dragRef.current) : null;
+  const dragGroup = target?.part === 'menu' && dragKey ? groupOf(dragKey) : null;
   const menuColumn = layout.menu.length
-    ? FORMAT_BAR_GROUPS.map((g) => {
+    ? model.groups.map((g) => {
         const inGroup = layout.menu.filter((k) => groupOf(k) === g);
         // The menu keeps its groups. A group with nothing in it shows no
         // header, except while an item of that group is dragged over the
         // menu: then it shows where the item will land.
         if (!inGroup.length) {
           return g === dragGroup
-            ? <div key={g}>{subhead(t(`insertGroup.${g}`))}<ul>{marker('menu', null, false)}</ul></div>
+            ? <div key={g}>{subhead(t(`insertGroup.${g}`))}<DropSlot /></div>
             : null;
         }
-        return <div key={g} className="min-w-0">{subhead(t(`insertGroup.${g}`))}{list(inGroup, 'menu', g === dragGroup)}</div>;
+        return <div key={g} className="min-w-0">{subhead(t(`insertGroup.${g}`))}{list(inGroup, 'menu')}</div>;
       })
-    : <>{empty(t('formatBar.menuEmpty'))}{target?.part === 'menu' && <ul>{marker('menu', null, false)}</ul>}</>;
+    : <>{empty(t('formatBar.menuEmpty'))}{target?.part === 'menu' && <DropSlot />}</>;
   // The attach menu, drawn under the Blocks group: the paperclip's own list,
   // a drop target of its own inside the + menu box.
   const attachSection = (
     <div
       key="attachMenu"
-      {...dropZone('attachMenu')}
+      data-reorder-zone="attachMenu"
       className={`min-w-0 mt-2 rounded-md transition-colors ${target?.part === 'attachMenu' ? 'bg-accent/10' : ''}`}
     >
-      <div className="flex items-center gap-1.5 px-1 pt-3 pb-1 text-xs text-pn-soft">
-        <Paperclip size={12} aria-hidden="true" />{t('formatBar.inAttachMenu')}
+      <div className="flex items-center gap-1.5 px-1 pt-3 pb-1 text-small text-pn-soft">
+        <Paperclip aria-hidden="true" />{t('formatBar.inAttachMenu')}
       </div>
       {layout.attachMenu.length
         ? list(layout.attachMenu, 'attachMenu')
-        : <>{empty(t('formatBar.attachMenuEmpty'))}<ul>{marker('attachMenu', null, false)}</ul></>}
+        : <>{empty(t('formatBar.attachMenuEmpty'))}{target?.part === 'attachMenu' && <DropSlot />}</>}
     </div>
   );
-  const blocksAt = Array.isArray(menuColumn) ? FORMAT_BAR_GROUPS.indexOf('blocks') : -1;
+  const blocksAt = Array.isArray(menuColumn) ? model.groups.indexOf('blocks') : -1;
   const menuWithAttach = Array.isArray(menuColumn)
     ? menuColumn.map((col, n) => (n === blocksAt
         ? <div key="blocks" className="min-w-0">{col}{attachSection}</div>
@@ -418,10 +416,11 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
     : <>{menuColumn}{attachSection}</>;
   // The hidden row says what a hidden button still does, or how to hide one.
   // A separator is not a button, so it does not count as a hidden one.
-  const hiddenNote = layout.hidden.some((k) => !k.startsWith('separator')) ? t('formatBar.hiddenNote')
+  const hiddenNote = layout.hidden.some((k) => !k.startsWith('separator')) ? t(bar?.hiddenNote ?? 'formatBar.hiddenNote')
     : canDrag ? t('formatBar.hiddenDrop')
     : t('formatBar.hiddenEmpty');
   const overBar = target?.part === 'bar' || target?.part === 'end';
+  const shownRefusal = dragRefusal ?? refusal;
 
   const menuItem = menuKey ? formatBarItem(menuKey) : undefined;
   const menuHome = menuKey ? homeOf(layout, menuKey) : null;
@@ -439,16 +438,10 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
     act();
     closeMenu();
   };
-  const menuBtn = 'w-full flex items-center gap-2.5 text-start px-3 min-h-[44px] [@media(hover:hover)]:min-h-0 [@media(hover:hover)]:py-1.5 text-sm rounded-md text-pn-soft [@media(hover:hover)]:hover:bg-pn/5 disabled:opacity-40 disabled:cursor-default';
+  const menuBtn = 'w-full flex items-center gap-2.5 text-start px-3 min-h-[44px] [@media(hover:hover)]:min-h-0 [@media(hover:hover)]:py-1.5 text-body rounded-md text-pn-soft [@media(hover:hover)]:hover:bg-pn/5 disabled:opacity-40 disabled:cursor-default';
 
   return (
-    <div
-      ref={rootRef}
-      className="space-y-3"
-      onDragLeave={(e) => {
-        if (!(e.currentTarget as Node).contains(e.relatedTarget as Node | null)) setTarget(null);
-      }}
-    >
+    <div ref={rootRef} className="space-y-3">
       {/* Top or bottom, on every device (per device). */}
       {onPositionChange && (
         <div className="flex items-center justify-between gap-3 pb-3 border-b border-divider">
@@ -497,15 +490,14 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
             pane is narrow. */}
         <section
           aria-label={t('formatBar.onBar')}
-          {...dropZone('bar')}
           className="rounded-lg p-2 bg-surface-1"
         >
           {/* Each hint sits where it applies: how to move a button next to
               the heading, and the fixed end of the bar named above it. */}
           <div className="flex items-baseline gap-2 px-1 pb-1.5">
             <h3 className={`shrink-0 ${SETTINGS_EYEBROW}`}>{t('formatBar.onBar')}</h3>
-            <p className="min-w-0 truncate text-xs text-pn-muted">{touch ? t('formatBar.hintTap') : t('formatBar.hintDrag')}</p>
-            {layout.end.length > 0 && <p className="ms-auto shrink-0 text-xs text-pn-muted">{t('formatBar.alwaysVisible')}</p>}
+            <p className="min-w-0 truncate text-small text-pn-muted">{touch ? t('formatBar.hintTap') : t('formatBar.hintDrag')}</p>
+            {layout.end.length > 0 && <p className="ms-auto shrink-0 text-small text-pn-muted">{t('formatBar.alwaysVisible')}</p>}
           </div>
           {/* Drawn like the toolbar: one row of icon buttons in bar order, the
               + mark where the menu sits, a hairline, then the end of the bar,
@@ -519,29 +511,27 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
               while any button is dragged, and fills when the drag is over it,
               as the Hidden box below does. */}
           <div className={`rounded-lg ${overBar || dragKey ? '' : 'pn-bar-ants'}`} data-intro={barIntro ? '' : undefined}>
-          <ul className={`pn-format-row flex items-center rounded-lg border px-1.5 py-1 transition-colors [@media(hover:none)]:overflow-x-auto [@media(hover:none)]:[scrollbar-width:none] [@media(hover:hover)]:flex-wrap ${
+          <ul data-reorder-zone="bar" className={`pn-format-row flex items-center rounded-lg border px-1.5 py-1 transition-colors [@media(hover:none)]:overflow-x-auto [@media(hover:none)]:[scrollbar-width:none] [@media(hover:hover)]:flex-wrap ${
             overBar ? 'border-accent bg-accent/10 ring-2 ring-accent/25'
               : dragKey ? 'border-dashed border-accent/60 bg-accent/5'
               : 'border-accent/40 bg-accent/5'
           }`}>
-            {layout.bar.flatMap((k) => [marker('bar', k, true), item(k, 'bar')])}
-            {marker('bar', null, true)}
+            {layout.bar.map((k) => item(k, 'bar'))}
             <li aria-hidden="true" className="flex-1" />
             {layout.menu.length > 0 && (
               <li aria-hidden="true" className="flex items-center justify-center w-8 h-8 text-pn-muted">
-                <Plus size={18} />
+                <Plus />
               </li>
             )}
             <li aria-hidden="true" className="mx-0.5 h-4 w-px bg-pn-muted/35" />
             {/* The end zone: its own drop target, so an empty end can still be
                 filled; while a drag is on, it shows as a slot. */}
             <li
-              {...dropZone('end')}
+              data-reorder-zone="end"
               className={`flex items-center min-w-8 min-h-8 rounded-md ${dragKey && !layout.end.length ? 'border border-dashed border-divider' : ''}`}
             >
               <ul className="flex items-center">
-                {layout.end.flatMap((k) => [marker('end', k, true), item(k, 'end')])}
-                {marker('end', null, true)}
+                {layout.end.map((k) => item(k, 'end'))}
               </ul>
             </li>
           </ul>
@@ -551,18 +541,17 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
               whole part is the drop target. */}
           <section
             aria-label={t('formatBar.hidden')}
-            {...dropZone('hidden')}
+            data-reorder-zone="hidden"
             className="mt-3"
           >
             <div className="flex items-baseline gap-2 px-1 pb-1.5">
               <h3 className={`shrink-0 ${SETTINGS_EYEBROW}`}>{t('formatBar.hidden')}</h3>
-              <p className="min-w-0 truncate text-xs text-pn-muted">{hiddenNote}</p>
+              <p className="min-w-0 truncate text-small text-pn-muted">{hiddenNote}</p>
             </div>
             <ul className={`flex flex-wrap items-center min-h-[2.625rem] [@media(hover:none)]:min-h-[3.125rem] rounded-lg border border-dashed px-1.5 py-1 transition-colors ${
               target?.part === 'hidden' ? 'border-accent bg-accent/10' : 'border-divider'
             }`}>
-              {layout.hidden.flatMap((k) => [marker('hidden', k, true), item(k, 'hidden')])}
-              {marker('hidden', null, true)}
+              {layout.hidden.map((k) => item(k, 'hidden'))}
             </ul>
           </section>
         </section>
@@ -572,22 +561,22 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
             preview says it is not saved in the same line, so the pitch takes
             no room of its own; a refusal replaces it while it shows. */}
         <div className="min-w-0">
-          <p aria-live="polite" className={`mb-1.5 px-1 text-xs empty:mb-0 ${refusal ? 'text-danger' : 'text-pro'}`}>
-            {refusal ? (refusal.reason === 'menuNotAllowed'
-              ? t('formatBar.refuse.menuNotAllowed', { item: label(refusal.key) })
-              : t(`formatBar.refuse.${refusal.reason}`))
+          <p aria-live="polite" className={`mb-1.5 px-1 text-small empty:mb-0 ${shownRefusal ? 'text-danger' : 'text-pro'}`}>
+            {shownRefusal ? (shownRefusal.reason === 'menuNotAllowed'
+              ? t('formatBar.refuse.menuNotAllowed', { item: label(shownRefusal.key) })
+              : t(`formatBar.refuse.${shownRefusal.reason}`))
               : previewing && t('formatBar.previewOnly')}
           </p>
-          <section
+          {menus && <section
             aria-label={t('formatBar.inMenu')}
-            {...dropZone('menu')}
+            data-reorder-zone="menu"
             className={`min-w-0 rounded-lg p-2 transition-colors ${target?.part === 'menu' ? 'bg-accent/10' : 'bg-surface-1'}`}
           >
             <h3 className={`px-1 ${SETTINGS_EYEBROW}`}>{t('formatBar.inMenu')}</h3>
             <div className="grid gap-x-3 [grid-template-columns:repeat(auto-fit,minmax(11rem,1fr))] items-start">
               {menuWithAttach}
             </div>
-          </section>
+          </section>}
         </div>
       </div>
 
@@ -609,24 +598,24 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
           className="fixed z-[60] w-60 rounded-lg border border-divider bg-surface-1 p-1 shadow-lg"
           style={{ top: menuPos?.top ?? 0, left: menuPos?.left ?? 0, visibility: menuPos ? 'visible' : 'hidden' }}
         >
-          <div className="flex items-center gap-2 px-3 pt-1.5 pb-1 text-xs font-semibold text-pn-muted" aria-hidden="true">
-            {(() => { const { Icon } = FORMAT_BAR_LOOK[menuKey]!; return <Icon size={14} />; })()}
+          <div className="flex items-center gap-2 px-3 pt-1.5 pb-1 text-small font-semibold text-pn-muted" aria-hidden="true">
+            {(() => { const { Icon } = look[menuKey]!; return <Icon />; })()}
             <span className="truncate">{label(menuKey)}</span>
           </div>
           {ordered && (
             <>
               <button type="button" role="menuitem" className={menuBtn} disabled={!canStep(layout, menuKey, -1)}
                 onClick={menuAction(() => onUpdate((c) => stepItem(c, menuKey, -1)))}>
-                <EarlierIcon size={16} aria-hidden="true" />{earlierLabel}
+                <EarlierIcon aria-hidden="true" />{earlierLabel}
               </button>
               <button type="button" role="menuitem" className={menuBtn} disabled={!canStep(layout, menuKey, 1)}
                 onClick={menuAction(() => onUpdate((c) => stepItem(c, menuKey, 1)))}>
-                <LaterIcon size={16} aria-hidden="true" />{laterLabel}
+                <LaterIcon aria-hidden="true" />{laterLabel}
               </button>
               <div className="my-1 h-px bg-divider" aria-hidden="true" />
             </>
           )}
-          {(['bar', 'menu', 'attachMenu', 'hidden'] as const).filter((home) => home !== 'attachMenu' || menuItem.attachAllowed).map((home) => {
+          {(['bar', 'menu', 'attachMenu', 'hidden'] as const).filter((home) => (home !== 'attachMenu' || menuItem.attachAllowed) && (menus || home === 'bar' || home === 'hidden')).map((home) => {
             const blocked = home === 'menu' && !menuItem.menuAllowed;
             const current = menuHome === home || (home === 'bar' && menuHome === 'end');
             return (
@@ -639,9 +628,9 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
                 disabled={blocked}
                 onClick={menuAction(() => { if (!current) moveTo(menuKey, home); })}
               >
-                <span className="w-4 shrink-0">{current && <Check size={16} aria-hidden="true" />}</span>
+                <span className="w-4 shrink-0">{current && <Check aria-hidden="true" />}</span>
                 <span className="flex-1">{t(`formatBar.home.${home}`)}</span>
-                {blocked && <span className="text-xs text-pn-muted">{t(menuKey === 'audio' ? 'formatBar.showsRecording' : 'formatBar.opensPanel')}</span>}
+                {blocked && <span className="text-small text-pn-muted">{t(menuKey === 'audio' ? 'formatBar.showsRecording' : 'formatBar.opensPanel')}</span>}
               </button>
             );
           })}
@@ -650,4 +639,9 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
       )}
     </div>
   );
+}
+
+/** Where an item lands in a list that has none yet: a line on its own. */
+function DropSlot() {
+  return <div aria-hidden="true" className="relative h-2 mx-1"><DropLine edge="top" /></div>;
 }

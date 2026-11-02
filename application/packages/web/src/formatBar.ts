@@ -18,7 +18,7 @@
  * The saved arrangement names every list, so a key in none of them is an
  * item a later version added. It takes its stock home and stock position, so
  * a person who arranged the bar still meets the new button.
- * Spec: ops/docs/archive/format-bar.md
+ * Spec: docs/internal/specs/format-bar.md
  */
 import {
   mergeRegisterMaps,
@@ -61,6 +61,7 @@ export const FORMAT_BAR_ITEMS: readonly FormatBarItem[] = [
   row('color', false), row('align', false), row('font', false),
   row('highlight', false), row('callout', false), row('strike'),
   menu('table', 'insert'), menu('hr', 'insert'), menu('bullets', 'insert'), menu('numbered', 'insert'),
+  menu('indent', 'insert'), menu('outdent', 'insert'),
   menu('fromFiles', 'insert', true), menu('date', 'insert'), menu('dateTime', 'insert'),
   menu('quote', 'blocks'), menu('codeblock', 'blocks'), menu('copybox', 'blocks'), menu('kanban', 'blocks'),
   menu('inlinecode', 'notation'), menu('math', 'notation'), menu('blockmath', 'notation'),
@@ -74,14 +75,7 @@ export const FORMAT_BAR_ITEMS: readonly FormatBarItem[] = [
   separator('separator1'), separator('separator2'), separator('separator3'), separator('separator4'),
 ];
 
-export const FORMAT_BAR_GROUPS: readonly FormatBarGroup[] = ['format', 'insert', 'blocks', 'notation'];
-
-const BY_KEY = new Map(FORMAT_BAR_ITEMS.map((i) => [i.key, i]));
-const STOCK_INDEX = new Map(FORMAT_BAR_ITEMS.map((i, n) => [i.key, n]));
-
-export function formatBarItem(key: string): FormatBarItem | undefined {
-  return BY_KEY.get(key);
-}
+const FORMAT_BAR_GROUPS: readonly FormatBarGroup[] = ['format', 'insert', 'blocks', 'notation'];
 
 /** What a person saved. */
 export type FormatBarLayout = { bar: string[]; end: string[]; menu: string[]; attachMenu: string[]; hidden: string[] };
@@ -99,38 +93,202 @@ export type ResolvedFormatBar = {
   hidden: string[];
 };
 
-const byStock = (a: string, b: string) => STOCK_INDEX.get(a)! - STOCK_INDEX.get(b)!;
-
-/** Menu order: by group, then the given order inside each group. */
-function groupMenu(keys: string[]): string[] {
-  return FORMAT_BAR_GROUPS.flatMap((g) => keys.filter((k) => BY_KEY.get(k)!.group === g));
-}
-
-/**
- * Put `key` into `list` at its stock place: before the first key that follows
- * it in stock order and is already in the list, else at the end. `sameRun`
- * limits the comparison to keys of the same menu group.
- */
-function insertAtStockPlace(list: string[], key: string, sameRun: (k: string) => boolean = () => true): void {
-  const at = list.findIndex((k) => sameRun(k) && byStock(k, key) > 0);
-  if (at === -1) {
-    // After the last key of the same run, so a menu item lands in its group.
-    let last = -1;
-    list.forEach((k, n) => { if (sameRun(k)) last = n; });
-    list.splice(last === -1 ? list.length : last + 1, 0, key);
-  } else {
-    list.splice(at, 0, key);
-  }
-}
-
-export function stockFormatBar(): ResolvedFormatBar {
-  const stock = (home: FormatBarItem['home']) => FORMAT_BAR_ITEMS.filter((i) => i.home === home).map((i) => i.key);
-  return { bar: stock('bar'), end: stock('end'), menu: groupMenu(stock('menu')), attachMenu: stock('attachMenu'), hidden: stock('hidden') };
-}
+/** Why a move is refused, or null when it is allowed. */
+export type FormatBarRefusal = 'menuNotAllowed' | 'attachNotAllowed' | 'lastOnBar' | null;
 
 function strings(raw: unknown): string[] {
   return Array.isArray(raw) ? raw.filter((k): k is string => typeof k === 'string') : [];
 }
+
+/**
+ * The rules of one arrangeable bar, over its own item list: the format bar
+ * (below) and the drawing canvas's toolbar (`drawing/drawingBar.ts`), which
+ * has no menus, so its items live on the bar, at its end, or hidden.
+ * `sometimesAbsent` names the items that do not count as the button that
+ * keeps a bar usable (see SOMETIMES_ABSENT).
+ */
+export function createBarModel(items: readonly FormatBarItem[], groups: readonly FormatBarGroup[], sometimesAbsent: ReadonlySet<string>) {
+  const BY_KEY = new Map(items.map((i) => [i.key, i]));
+  const STOCK_INDEX = new Map(items.map((i, n) => [i.key, n]));
+  const byStock = (a: string, b: string) => STOCK_INDEX.get(a)! - STOCK_INDEX.get(b)!;
+  const keepsBar = (k: string) => !sometimesAbsent.has(k);
+
+  function item(key: string): FormatBarItem | undefined {
+    return BY_KEY.get(key);
+  }
+
+  /** Menu order: by group, then the given order inside each group. */
+  function groupMenu(keys: string[]): string[] {
+    return groups.flatMap((g) => keys.filter((k) => BY_KEY.get(k)!.group === g));
+  }
+
+  /**
+   * Put `key` into `list` at its stock place: before the first key that follows
+   * it in stock order and is already in the list, else at the end. `sameRun`
+   * limits the comparison to keys of the same menu group.
+   */
+  function insertAtStockPlace(list: string[], key: string, sameRun: (k: string) => boolean = () => true): void {
+    const at = list.findIndex((k) => sameRun(k) && byStock(k, key) > 0);
+    if (at === -1) {
+      // After the last key of the same run, so a menu item lands in its group.
+      let last = -1;
+      list.forEach((k, n) => { if (sameRun(k)) last = n; });
+      list.splice(last === -1 ? list.length : last + 1, 0, key);
+    } else {
+      list.splice(at, 0, key);
+    }
+  }
+
+  function stock(): ResolvedFormatBar {
+    const at = (home: FormatBarItem['home']) => items.filter((i) => i.home === home).map((i) => i.key);
+    return { bar: at('bar'), end: at('end'), menu: groupMenu(at('menu')), attachMenu: at('attachMenu'), hidden: at('hidden') };
+  }
+
+  /**
+   * Turn a saved arrangement into what the toolbar draws. Total: any input,
+   * however malformed, gives a usable bar.
+   */
+  function resolve(saved: Partial<FormatBarLayout> | null | undefined): ResolvedFormatBar {
+    if (!saved || typeof saved !== 'object') return stock();
+    const seen = new Set<string>();
+    const take = (raw: unknown) => strings(raw).filter((k) => {
+      if (!BY_KEY.has(k) || seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+    const bar = take(saved.bar);
+    const endList = take(saved.end);
+    const menuList: string[] = [];
+    for (const k of take(saved.menu)) {
+      // An item that cannot be in the menu goes back to the end of the bar.
+      if (BY_KEY.get(k)!.menuAllowed) menuList.push(k);
+      else endList.push(k);
+    }
+    const attachList: string[] = [];
+    for (const k of take(saved.attachMenu)) {
+      // An item the attach menu cannot hold goes back to the end of the bar.
+      if (BY_KEY.get(k)!.attachAllowed) attachList.push(k);
+      else endList.push(k);
+    }
+    const hidden = take(saved.hidden);
+
+    // Items no list names: a later version added them. Stock home, stock place.
+    for (const i of items) {
+      if (seen.has(i.key)) continue;
+      if (i.home === 'bar') insertAtStockPlace(bar, i.key);
+      else if (i.home === 'end') insertAtStockPlace(endList, i.key);
+      else if (i.home === 'attachMenu') insertAtStockPlace(attachList, i.key);
+      else if (i.home === 'hidden') insertAtStockPlace(hidden, i.key);
+      else insertAtStockPlace(menuList, i.key, (k) => BY_KEY.get(k)!.group === i.group);
+    }
+
+    // A bar with no button every editor offers is never what a person saved
+    // (the Settings board keeps one); it is damage, and the stock arrangement
+    // is the safe answer.
+    if (![...bar, ...endList].some(keepsBar)) return stock();
+
+    return { bar, end: endList, menu: groupMenu(menuList), attachMenu: attachList, hidden };
+  }
+
+  function isStock(r: ResolvedFormatBar): boolean {
+    const s = stock();
+    return r.bar.join() === s.bar.join() && r.end.join() === s.end.join()
+      && r.menu.join() === s.menu.join() && r.attachMenu.join() === s.attachMenu.join()
+      && r.hidden.join() === s.hidden.join();
+  }
+
+  function refusal(r: ResolvedFormatBar, key: string, to: FormatBarHome): FormatBarRefusal {
+    const i = BY_KEY.get(key);
+    if (!i) return null;
+    if (to === 'menu' && !i.menuAllowed) return 'menuNotAllowed';
+    if (to === 'attachMenu' && !i.attachAllowed) return 'attachNotAllowed';
+    const onBar = [...r.bar, ...r.end];
+    if (to !== 'bar' && to !== 'end' && onBar.includes(key) && !onBar.some((k) => k !== key && keepsBar(k))) {
+      return 'lastOnBar';
+    }
+    return null;
+  }
+
+  /**
+   * Move `key` to `to`, before `beforeKey` when that key is in the same list
+   * (and, for the menu, the same group), else to the end of the list or group.
+   * Returns the input unchanged when the move is refused.
+   */
+  function place(r: ResolvedFormatBar, key: string, to: FormatBarHome, beforeKey: string | null = null): ResolvedFormatBar {
+    const i = BY_KEY.get(key);
+    if (!i || refusal(r, key, to)) return r;
+    const out: ResolvedFormatBar = {
+      bar: r.bar.filter((k) => k !== key),
+      end: r.end.filter((k) => k !== key),
+      menu: r.menu.filter((k) => k !== key),
+      attachMenu: r.attachMenu.filter((k) => k !== key),
+      hidden: r.hidden.filter((k) => k !== key),
+    };
+    if (to === 'menu') {
+      const sameGroup = (k: string) => BY_KEY.get(k)!.group === i.group;
+      const at = beforeKey && sameGroup(beforeKey) ? out.menu.indexOf(beforeKey) : -1;
+      if (at >= 0) {
+        out.menu.splice(at, 0, key);
+      } else {
+        let last = -1;
+        out.menu.forEach((k, n) => { if (sameGroup(k)) last = n; });
+        if (last === -1) {
+          out.menu.push(key);
+          out.menu = groupMenu(out.menu);
+        } else {
+          out.menu.splice(last + 1, 0, key);
+        }
+      }
+      return out;
+    }
+    const list = out[to];
+    const at = beforeKey ? list.indexOf(beforeKey) : -1;
+    if (at >= 0) list.splice(at, 0, key);
+    else list.push(key);
+    return out;
+  }
+
+  /**
+   * Move `key` one step inside its own list (and, in the menu, its own group).
+   * The bar's two zones are one line: a step past the row's last place goes to
+   * the start of the end, and a step back from the end's first place goes to
+   * the row's last.
+   */
+  function step(r: ResolvedFormatBar, key: string, dir: -1 | 1): ResolvedFormatBar {
+    const home = homeOf(r, key);
+    if (!home || home === 'hidden') return r;
+    const list = [...r[home]];
+    const at = list.indexOf(key);
+    const to = at + dir;
+    if (home === 'bar' && to >= list.length) {
+      return { ...r, bar: list.filter((k) => k !== key), end: [key, ...r.end] };
+    }
+    if (home === 'end' && to < 0) {
+      return { ...r, bar: [...r.bar, key], end: list.filter((k) => k !== key) };
+    }
+    if (to < 0 || to >= list.length) return r;
+    if (home === 'menu' && BY_KEY.get(list[to]!)!.group !== BY_KEY.get(key)!.group) return r;
+    [list[at], list[to]] = [list[to]!, list[at]!];
+    return { ...r, [home]: list };
+  }
+
+  return {
+    groups,
+    item,
+    stock,
+    resolve,
+    isStock,
+    homeOf,
+    refusalFor: refusal,
+    placeItem: place,
+    stepItem: step,
+    /** Whether `stepItem` would move the item. */
+    canStep: (r: ResolvedFormatBar, key: string, dir: -1 | 1) => step(r, key, dir) !== r,
+  };
+}
+
+/** The rules of one bar (`createBarModel`). */
+export type BarModel = ReturnType<typeof createBarModel>;
 
 /**
  * An item that some editors do not offer: a Markdown folder note has no
@@ -145,152 +303,27 @@ const SOMETIMES_ABSENT = new Set([
   'fromFiles', 'image', 'attach', 'audio', 'customize', 'markdownView', 'attachMenu',
   'separator1', 'separator2', 'separator3', 'separator4',
 ]);
-const keepsBar = (k: string) => !SOMETIMES_ABSENT.has(k);
 
-/**
- * Turn a saved arrangement into what the toolbar draws. Total: any input,
- * however malformed, gives a usable bar.
- */
-export function resolveFormatBar(saved: Partial<FormatBarLayout> | null | undefined): ResolvedFormatBar {
-  if (!saved || typeof saved !== 'object') return stockFormatBar();
-  const seen = new Set<string>();
-  const take = (raw: unknown) => strings(raw).filter((k) => {
-    if (!BY_KEY.has(k) || seen.has(k)) return false;
-    seen.add(k);
-    return true;
-  });
-  const bar = take(saved.bar);
-  const endList = take(saved.end);
-  const menuList: string[] = [];
-  for (const k of take(saved.menu)) {
-    // An item that cannot be in the menu goes back to the end of the bar.
-    if (BY_KEY.get(k)!.menuAllowed) menuList.push(k);
-    else endList.push(k);
-  }
-  const attachList: string[] = [];
-  for (const k of take(saved.attachMenu)) {
-    // An item the attach menu cannot hold goes back to the end of the bar.
-    if (BY_KEY.get(k)!.attachAllowed) attachList.push(k);
-    else endList.push(k);
-  }
-  const hidden = take(saved.hidden);
+/** The format bar's rules. */
+export const FORMAT_BAR = createBarModel(FORMAT_BAR_ITEMS, FORMAT_BAR_GROUPS, SOMETIMES_ABSENT);
 
-  // Items no list names: a later version added them. Stock home, stock place.
-  for (const item of FORMAT_BAR_ITEMS) {
-    if (seen.has(item.key)) continue;
-    if (item.home === 'bar') insertAtStockPlace(bar, item.key);
-    else if (item.home === 'end') insertAtStockPlace(endList, item.key);
-    else if (item.home === 'attachMenu') insertAtStockPlace(attachList, item.key);
-    else if (item.home === 'hidden') insertAtStockPlace(hidden, item.key);
-    else insertAtStockPlace(menuList, item.key, (k) => BY_KEY.get(k)!.group === item.group);
-  }
-
-  // A bar with no button every editor offers is never what a person saved
-  // (the Settings board keeps one); it is damage, and the stock arrangement
-  // is the safe answer.
-  if (![...bar, ...endList].some(keepsBar)) return stockFormatBar();
-
-  return { bar, end: endList, menu: groupMenu(menuList), attachMenu: attachList, hidden };
-}
+export const formatBarItem = FORMAT_BAR.item;
+export const stockFormatBar = FORMAT_BAR.stock;
+export const resolveFormatBar = FORMAT_BAR.resolve;
+export const isStockFormatBar = FORMAT_BAR.isStock;
+export const refusalFor = FORMAT_BAR.refusalFor;
+export const placeItem = FORMAT_BAR.placeItem;
+export const stepItem = FORMAT_BAR.stepItem;
+export const canStep = FORMAT_BAR.canStep;
 
 /** The arrangement to save for what the board shows. */
 export function layoutOf(r: ResolvedFormatBar): FormatBarLayout {
   return { bar: [...r.bar], end: [...r.end], menu: [...r.menu], attachMenu: [...r.attachMenu], hidden: [...r.hidden] };
 }
 
-export function isStockFormatBar(r: ResolvedFormatBar): boolean {
-  const s = stockFormatBar();
-  return r.bar.join() === s.bar.join() && r.end.join() === s.end.join()
-    && r.menu.join() === s.menu.join() && r.attachMenu.join() === s.attachMenu.join()
-    && r.hidden.join() === s.hidden.join();
-}
-
 export function homeOf(r: ResolvedFormatBar, key: string): FormatBarHome | null {
   for (const home of ['bar', 'end', 'menu', 'attachMenu', 'hidden'] as const) if (r[home].includes(key)) return home;
   return null;
-}
-
-/** Why a move is refused, or null when it is allowed. */
-export type FormatBarRefusal = 'menuNotAllowed' | 'attachNotAllowed' | 'lastOnBar' | null;
-
-export function refusalFor(r: ResolvedFormatBar, key: string, to: FormatBarHome): FormatBarRefusal {
-  const item = BY_KEY.get(key);
-  if (!item) return null;
-  if (to === 'menu' && !item.menuAllowed) return 'menuNotAllowed';
-  if (to === 'attachMenu' && !item.attachAllowed) return 'attachNotAllowed';
-  const onBar = [...r.bar, ...r.end];
-  if (to !== 'bar' && to !== 'end' && onBar.includes(key) && !onBar.some((k) => k !== key && keepsBar(k))) {
-    return 'lastOnBar';
-  }
-  return null;
-}
-
-/**
- * Move `key` to `to`, before `beforeKey` when that key is in the same list
- * (and, for the menu, the same group), else to the end of the list or group.
- * Returns the input unchanged when the move is refused.
- */
-export function placeItem(r: ResolvedFormatBar, key: string, to: FormatBarHome, beforeKey: string | null = null): ResolvedFormatBar {
-  const item = BY_KEY.get(key);
-  if (!item || refusalFor(r, key, to)) return r;
-  const out: ResolvedFormatBar = {
-    bar: r.bar.filter((k) => k !== key),
-    end: r.end.filter((k) => k !== key),
-    menu: r.menu.filter((k) => k !== key),
-    attachMenu: r.attachMenu.filter((k) => k !== key),
-    hidden: r.hidden.filter((k) => k !== key),
-  };
-  if (to === 'menu') {
-    const sameGroup = (k: string) => BY_KEY.get(k)!.group === item.group;
-    const at = beforeKey && sameGroup(beforeKey) ? out.menu.indexOf(beforeKey) : -1;
-    if (at >= 0) {
-      out.menu.splice(at, 0, key);
-    } else {
-      let last = -1;
-      out.menu.forEach((k, n) => { if (sameGroup(k)) last = n; });
-      if (last === -1) {
-        out.menu.push(key);
-        out.menu = groupMenu(out.menu);
-      } else {
-        out.menu.splice(last + 1, 0, key);
-      }
-    }
-    return out;
-  }
-  const list = out[to];
-  const at = beforeKey ? list.indexOf(beforeKey) : -1;
-  if (at >= 0) list.splice(at, 0, key);
-  else list.push(key);
-  return out;
-}
-
-/**
- * Move `key` one step inside its own list (and, in the menu, its own group).
- * The bar's two zones are one line: a step past the row's last place goes to
- * the start of the end, and a step back from the end's first place goes to
- * the row's last.
- */
-export function stepItem(r: ResolvedFormatBar, key: string, dir: -1 | 1): ResolvedFormatBar {
-  const home = homeOf(r, key);
-  if (!home || home === 'hidden') return r;
-  const list = [...r[home]];
-  const at = list.indexOf(key);
-  const to = at + dir;
-  if (home === 'bar' && to >= list.length) {
-    return { ...r, bar: list.filter((k) => k !== key), end: [key, ...r.end] };
-  }
-  if (home === 'end' && to < 0) {
-    return { ...r, bar: [...r.bar, key], end: list.filter((k) => k !== key) };
-  }
-  if (to < 0 || to >= list.length) return r;
-  if (home === 'menu' && BY_KEY.get(list[to]!)!.group !== BY_KEY.get(key)!.group) return r;
-  [list[at], list[to]] = [list[to]!, list[at]!];
-  return { ...r, [home]: list };
-}
-
-/** Whether `stepItem` would move the item. */
-export function canStep(r: ResolvedFormatBar, key: string, dir: -1 | 1): boolean {
-  return stepItem(r, key, dir) !== r;
 }
 
 // ------------------------------------------------------------------
@@ -305,11 +338,14 @@ export function canStep(r: ResolvedFormatBar, key: string, dir: -1 | 1): boolean
  */
 export type FormatBarSetting = RegisterMap;
 
-const REGISTER_KEY = 'layout';
+/** The register of each bar: the format bar's `layout`, the drawing
+ *  toolbar's `drawing`. One register map, so both sync the same way. */
+export type BarRegister = 'layout' | 'drawing';
+const REGISTER_KEYS: ReadonlySet<string> = new Set<BarRegister>(['layout', 'drawing']);
 const JSON_MAX = 4096;
 
 export function validateFormatBarSetting(raw: unknown, now = Date.now()): FormatBarSetting {
-  return validateRegisterMap(raw, (k) => k === REGISTER_KEY, JSON_MAX, now);
+  return validateRegisterMap(raw, (k) => REGISTER_KEYS.has(k), JSON_MAX, now);
 }
 
 export function mergeFormatBarSettings(local: FormatBarSetting, remote: FormatBarSetting, now = Date.now()): FormatBarSetting {
@@ -319,8 +355,8 @@ export function mergeFormatBarSettings(local: FormatBarSetting, remote: FormatBa
 export const formatBarSettingsEqual = registerMapsEqual;
 
 /** The saved arrangement, or null for stock (no register, a reset, or bad JSON). */
-export function readFormatBarSetting(setting: FormatBarSetting | undefined): FormatBarLayout | null {
-  const v = setting?.[REGISTER_KEY]?.v;
+export function readFormatBarSetting(setting: FormatBarSetting | undefined, register: BarRegister = 'layout'): FormatBarLayout | null {
+  const v = setting?.[register]?.v;
   if (typeof v !== 'string') return null;
   try {
     const parsed = JSON.parse(v) as unknown;
@@ -333,9 +369,14 @@ export function readFormatBarSetting(setting: FormatBarSetting | undefined): For
 }
 
 /** Write an arrangement; the stock one is written as a reset. */
-export function writeFormatBarSetting(setting: FormatBarSetting, next: ResolvedFormatBar | null): FormatBarSetting {
-  const prev = setting[REGISTER_KEY];
-  const v = !next || isStockFormatBar(next) ? null : JSON.stringify(layoutOf(next));
+export function writeFormatBarSetting(
+  setting: FormatBarSetting,
+  next: ResolvedFormatBar | null,
+  register: BarRegister = 'layout',
+  model: BarModel = FORMAT_BAR,
+): FormatBarSetting {
+  const prev = setting[register];
+  const v = !next || model.isStock(next) ? null : JSON.stringify(layoutOf(next));
   if (prev ? prev.v === v : v === null) return setting;
-  return { ...setting, [REGISTER_KEY]: { v, at: stampAfter(prev?.at) } };
+  return { ...setting, [register]: { v, at: stampAfter(prev?.at) } };
 }

@@ -22,6 +22,7 @@ import {
   type SupabaseClient,
 } from '@notes/shared';
 import { registerLocalDataKey, clearLocalDataKey } from './localKey';
+import { clearMassDeleteState } from './massDelete';
 import { clearLocalDatabase, countUnsyncedNotes, dropReferencesToBlobsOnlyHere } from './notesRepo';
 import { db } from './db';
 import i18n from './i18n';
@@ -188,7 +189,7 @@ const supabase =
       // exchange, so a callback URL is worthless to anyone who did not
       // start the flow, and no token ever travels in a URL. Native pairs
       // it with the pending-sign-in gate in authOAuth.ts.
-      // Spec: ops/docs/plans/deep-link-callback-hardening.md (section 3)
+      // Spec: docs/internal/plans/deep-link-callback-hardening.md (section 3)
       flowType: 'pkce',
     },
   );
@@ -223,7 +224,7 @@ if (!hmrGlobal.__pnAuthDiagWired) {
  * Note: the sign-out reminder fires for both methods. Previously
  * suppressed for OAuth on the assumption "user can always OAuth back
  * in," which was only true while the server derived their phrase from
- * a server-side secret. See ops/docs/oauth-zk-fix.md.
+ * a server-side secret. See docs/internal/specs/oauth-zk-fix.md.
  */
 export type AuthMethod = 'phrase' | 'oauth';
 
@@ -259,7 +260,7 @@ export type AuthState =
       pubkey: string;
       encryptionKey: Uint8Array;
       signingPrivateKey: Uint8Array;
-      /** Per-user device-fingerprint pepper. Spec: ops/docs/device-fingerprint-hash.md (derived client-side from the seed, never sent to the server) */
+      /** Per-user device-fingerprint pepper. Spec: docs/internal/specs/device-fingerprint-hash.md (derived client-side from the seed, never sent to the server) */
       fpPepper: Uint8Array;
       deviceId: string;
       limit: number;
@@ -272,7 +273,7 @@ export type AuthState =
       pubkey: string; // hex
       encryptionKey: Uint8Array;
       signingPrivateKey: Uint8Array;
-      /** Per-user device-fingerprint pepper. Spec: ops/docs/device-fingerprint-hash.md (derived client-side from the seed, never sent to the server) */
+      /** Per-user device-fingerprint pepper. Spec: docs/internal/specs/device-fingerprint-hash.md (derived client-side from the seed, never sent to the server) */
       fpPepper: Uint8Array;
       /** Stable per-install device identifier for this session. */
       deviceId: string;
@@ -307,7 +308,7 @@ type AuthContextValue = {
      * callers without a widget (lock-screen unlock, stored-phrase boot)
      * omit it - a refused sign-in lands the user in onboarding, which
      * has the widget.
-     * Spec: ops/docs/design-decisions.md (Turnstile is web-only, enforced at link-pubkey)
+     * Spec: docs/internal/design-decisions.md (Turnstile is web-only, enforced at link-pubkey)
      */
     captchaToken?: string
   ) => Promise<
@@ -341,7 +342,7 @@ type AuthContextValue = {
    * Finish a desktop sign-in from the code the person pasted back from the
    * return page. Desktop receives no callback of its own, because no desktop
    * operating system can say which application owns a custom scheme.
-   * Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.3)
+   * Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.3)
    */
   completeDesktopOAuth: (
     code: string
@@ -382,7 +383,7 @@ type AuthContextValue = {
    * From an `oauth_custody_choice` state: user picked custodial or
    * self-custody. Generates phrase, authenticates, and optionally
    * stores phrase server-side.
-   * Spec: ops/docs/custodial-key-spec.md (server encrypts the phrase with AES-256-GCM, key held outside the database)
+   * Spec: docs/contrib/custodial-key-spec.md (server encrypts the phrase with AES-256-GCM, key held outside the database)
    */
   completeCustodyChoice: (
     choice: 'custodial' | 'self-custody',
@@ -403,7 +404,7 @@ type AuthContextValue = {
    * Only call this after the user has seen their phrase and confirmed
    * they saved it. Once it returns, nothing on the server can recover
    * their notes.
-   * Spec: ops/docs/custodial-key-spec.md (requires an ed25519 signature over the release challenge, not just the session JWT), backlog #112
+   * Spec: docs/contrib/custodial-key-spec.md (requires an ed25519 signature over the release challenge, not just the session JWT), backlog #112
    */
   releaseCustody: () => Promise<{ ok: true } | { ok: false; error: string }>;
   /**
@@ -413,7 +414,7 @@ type AuthContextValue = {
    * This GIVES the server the ability to decrypt the user's notes.
    * Only reachable from an explicit, informed user action that says so
    * plainly. Never a fallback or a repair step.
-   * Spec: ops/docs/custodial-key-spec.md (server encrypts the phrase with AES-256-GCM, key held outside the database), backlog #112
+   * Spec: docs/contrib/custodial-key-spec.md (server encrypts the phrase with AES-256-GCM, key held outside the database), backlog #112
    */
   adoptCustody: () => Promise<{ ok: true } | { ok: false; error: string }>;
 };
@@ -501,7 +502,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // and drops the app to the sign-in screen, and every provider button on that
   // screen was then refused in silence, for ever. Read the status instead, so
   // the refusal covers an app that IS signed in and nothing else.
-  // Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.8)
+  // Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.8)
   const vaultOpenRef = useRef(false);
   vaultOpenRef.current =
     auth.status === 'authenticated' || auth.status === 'device_limit_reached';
@@ -548,7 +549,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * back off to ten. `setRemintBlocked` keeps sync's claim gate quiet
    * across the wait (plus a margin for the attempt itself), so a pass
    * firing mid-backoff cannot escalate to the re-auth prompt.
-   * Spec: ops/docs/design-decisions.md (rate-limited re-mint)
+   * Spec: docs/internal/design-decisions.md (rate-limited re-mint)
    */
   function scheduleRemintRetry(phrase: string, method: AuthMethod, startedAt: SignInStamp): void {
     const REMINT_RETRY_BASE_MS = 60_000;
@@ -693,9 +694,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const encryptionKey = deriveEncryptionKey(seed);
     // Registered at derivation time, not at setAuth: the fresh-vault
     // seed writes notes before the auth state exists, and those writes
-    // must already be sealable. Spec: ops/docs/archive/local-at-rest.md (section 3.1)
+    // must already be sealable. Spec: docs/internal/specs/local-at-rest.md (section 3.1)
     registerLocalDataKey(deriveLocalDataKey(seed));
-    // Spec: ops/docs/device-fingerprint-hash.md (derived client-side from the seed, never sent to the server)
+    // Spec: docs/internal/specs/device-fingerprint-hash.md (derived client-side from the seed, never sent to the server)
     const fpPepper = deriveFpPepper(seed);
     const pubkey = bytesToHex(publicKey);
     authenticatingRef.current = { stamp: since, pubkey };
@@ -783,6 +784,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       removeBiometricCredential();
       removePinWrappedPhrase();
       clearAccountScopedUiState();
+      clearMassDeleteState();
       // The appearance axes (light/dark, palette, text size, editor
       // width, spell check, website icons, invisibles) are device-local
       // and survive a sign-out by design - the same person coming back
@@ -920,6 +922,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return new Error(`Sign-in failed: ${readError.message}`);
     };
 
+    // A token the server refuses can still belong to a live session: auth-js
+    // judges expiry by the device clock, so on a device whose clock runs
+    // behind it never refreshes and getUser() sends a token the server
+    // already refuses (403 bad_jwt). One forced refresh, which ignores the
+    // clock, keeps the session, its two-factor level and its server row.
+    // 'kept': the session is this vault's and is now the one to link.
+    // 'refused': the server said no to the refresh too, a verdict.
+    // 'unsettled': no verdict (network, 429, a refresh auth-js discarded, or
+    // storage now holding another session, perhaps another tab's sign-in):
+    // nothing is adopted and nothing is signed out.
+    // tests/authHandlers.test.ts (refreshes a token the server refuses)
+    const refreshRefusedToken = async (
+      status: number,
+      cachedUserId: string,
+      cachedToken: string,
+    ): Promise<'kept' | 'refused' | 'unsettled'> => {
+      // A refusal concerns the token it was about. When storage holds
+      // another one by then (another tab signed in meanwhile), the sign-out
+      // that follows a refusal would revoke that healthy session instead.
+      const refusedFor = (token: string): 'refused' | 'unsettled' => {
+        const stored = trustAwareStorage.getItem(AUTH_STORAGE_KEY);
+        const storedToken = stored ? storedAccessToken(stored) : null;
+        return storedToken && storedToken !== token ? 'unsettled' : 'refused';
+      };
+      try {
+        const refreshed = await supabase.auth.refreshSession();
+        if (refreshed.error) {
+          const refreshStatus = (refreshed.error as { status?: number }).status;
+          const refused =
+            refreshed.error.name === 'AuthSessionMissingError' ||
+            (refreshed.error.name === 'AuthApiError' &&
+              (refreshStatus === 400 || refreshStatus === 401 || refreshStatus === 403));
+          return refused ? refusedFor(cachedToken) : 'unsettled';
+        }
+        const session = refreshed.data?.session;
+        if (!session?.access_token || session.user?.id !== cachedUserId || sessionBelongsElsewhere(session, pubkey)) {
+          return 'unsettled';
+        }
+        const { data: again, error: againError } = await supabase.auth.getUser();
+        const againStatus = (againError as { status?: number } | null)?.status;
+        if (againError?.name === 'AuthApiError' && (againStatus === 401 || againStatus === 403)) {
+          return refusedFor(session.access_token);
+        }
+        logAuthEvent('auth:getUser-refused-refreshed', { status, recheck: againError?.name ?? 'ok' });
+        // A recheck that never reached the server is no verdict on the
+        // session the refresh just returned, as the unreachable branch below.
+        authUid = session.user.id;
+        accessToken = session.access_token;
+        linkedUser = !againError && again.user?.id === session.user.id ? again.user : session.user;
+        return 'kept';
+      } catch {
+        return 'unsettled';
+      }
+    };
+
     if (oauthSession) {
       // Trust the caller - session was already validated by getUser()
       // in hydrateFromOAuthSession or completeCustodyChoice.
@@ -957,20 +1014,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           userCheckError?.name === 'AuthApiError' &&
           (checkStatus === 401 || checkStatus === 403)
         ) {
-          // The ONLY branch that may destroy a session: an explicit
-          // server "no" (user purged via dashboard, session revoked,
-          // banned). Allowlisted on purpose - the wipe used to be the
-          // catch-all else, and a review confirmed
-          // that a 429 (AuthApiError, not retryable in auth-js 2.112)
-          // and an unparseable proxy page (AuthUnknownError) landed
-          // here and destroyed healthy sessions.
-          logAuthEvent('auth:getUser-failed', {
-            name: userCheckError.name,
-            status: checkStatus,
-            code: (userCheckError as { code?: string } | null)?.code,
-            message: userCheckError.message,
-          });
-          await supabase.auth.signOut({ scope: 'local' });
+          const outcome = await refreshRefusedToken(
+            checkStatus,
+            cached.data.session.user.id,
+            cached.data.session.access_token,
+          );
+          if (outcome === 'unsettled') {
+            // No verdict either way: fail this attempt as an offline pass
+            // does, keep whatever storage holds, and let the next one ask.
+            logAuthEvent('auth:getUser-refused-unsettled', { status: checkStatus });
+            throw new Error('Sign-in failed: the session could not be checked.');
+          }
+          if (outcome === 'refused') {
+            // The ONLY branch that may destroy a session: an explicit
+            // server "no" (user purged via dashboard, session revoked,
+            // banned). Allowlisted on purpose - the wipe used to be the
+            // catch-all else, and a review confirmed
+            // that a 429 (AuthApiError, not retryable in auth-js 2.112)
+            // and an unparseable proxy page (AuthUnknownError) landed
+            // here and destroyed healthy sessions.
+            logAuthEvent('auth:getUser-failed', {
+              name: userCheckError.name,
+              status: checkStatus,
+              code: (userCheckError as { code?: string } | null)?.code,
+              message: userCheckError.message,
+            });
+            await supabase.auth.signOut({ scope: 'local' });
+          }
         } else {
           // Everything else - network failure, 5xx, 429 rate limit,
           // unparseable response - is not a verdict on the session,
@@ -1008,7 +1078,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // on a definitive refusal (captcha, rate limit, or an unexpected GoTrue
     // error) rather than returning a session; callers set mintedThisPass on
     // the result. Reused by the stale-token retry in the link step below.
-    // Spec: ops/docs/design-decisions.md (phrase-derived auth credential)
+    // Spec: docs/internal/design-decisions.md (phrase-derived auth credential)
     const remintSession = async (): Promise<{ authUid: string; accessToken: string; user: typeof linkedUser }> => {
       if (!freshVault) {
         // Skipped when the caller KNOWS the vault is brand new: the
@@ -1214,7 +1284,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // server only acts on it for anonymous, email-less users, so an
         // already-credentialed user re-linking is a no-op and OAuth
         // sessions (which never send it) are untouchable either way.
-        // Spec: ops/docs/design-decisions.md (phrase-derived auth credential)
+        // Spec: docs/internal/design-decisions.md (phrase-derived auth credential)
         const linkResult = await invokeFnWithRetry(supabase, 'link-pubkey', {
           body: {
             pubkey,
@@ -1227,7 +1297,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // months-old accounts as fresh arrivals and corrupt every
             // cohort number. freshVault is true only when the phrase was
             // generated seconds ago in this onboarding flow.
-            // Spec: ops/docs/plans/partner-attribution.md (section 6e)
+            // Spec: docs/internal/plans/partner-attribution.md (section 6e)
             ...(freshVault
               ? { channel: detectChannel(), ...(getStoredSource() ? { source: getStoredSource() } : {}) }
               : {}),
@@ -1291,7 +1361,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // cached, so the retry that carries a fresh token resumes at the
         // cached-session path above and re-invokes only this link instead
         // of minting a second anonymous user against the per-IP cap.
-        // Spec: ops/docs/design-decisions.md (Turnstile is web-only, enforced at link-pubkey)
+        // Spec: docs/internal/design-decisions.md (Turnstile is web-only, enforced at link-pubkey)
         const fnCode = (linkBody as { error?: string } | null)?.error;
         if (fnCode === 'captcha_required' || fnCode === 'captcha_failed') {
           throw new CaptchaRequiredError();
@@ -1326,7 +1396,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // has to go: leaving a fresh one lets the next attempt take the fast
         // path and skip the very link that is failing, which reads as a
         // signed-in app that never syncs.
-        // Spec: ops/docs/design-decisions.md (a filter that removes the Authorization header)
+        // Spec: docs/internal/design-decisions.md (a filter that removes the Authorization header)
         if (isMissingBearerLinkError(linkError, linkBody)) {
           logAuthEvent('auth:link-bearer-stripped');
           clearRegistrationMarker();
@@ -1364,7 +1434,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       //   on every daily link. It is kept as it is when its token already
       //   carries this vault's claim, and refreshed when it does not.
       // - OAuth: no credential, no password change, plain refresh.
-      // Spec: ops/docs/design-decisions.md (phrase-derived auth credential)
+      // Spec: docs/internal/design-decisions.md (phrase-derived auth credential)
       // tests/authHandlers.test.ts (a verified two-factor session survives the handshake)
       const holdsCredential = Boolean(linkedUser?.email) || linkedUser?.is_anonymous === false;
       let sessionEstablished = false;
@@ -2173,7 +2243,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Named because a write landing here AFTER a sign-out is how an
         // install ends up holding a phrase it is not using, and the log is
         // the only place that race is visible.
-        // Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.8)
+        // Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.8)
         logAuthEvent('auth:phrase-persisted', { by: 'authenticate' });
         await persistStoredPhrase(trimmed);
       }
@@ -2301,7 +2371,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /**
    * Complete the custody choice for a new OAuth user.
    * Called from the KeyCustodyChoice onboarding component.
-   * Spec: ops/docs/custodial-key-spec.md (server encrypts the phrase with AES-256-GCM, key held outside the database)
+   * Spec: docs/contrib/custodial-key-spec.md (server encrypts the phrase with AES-256-GCM, key held outside the database)
    */
   async function completeCustodyChoice(
     choice: 'custodial' | 'self-custody',
@@ -2486,7 +2556,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // it is one of the two ways an install ends up holding a phrase it is
       // not using. Name it, or the next report is another evening of
       // inference: the reason says which half of the test sent us here.
-      // Spec: ops/docs/plans/oauth-redirect-binding-handoff.md (section 8.8)
+      // Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.8)
       logAuthEvent('auth:signout-early-return', {
         reason: tabPubkey === null ? 'no-pubkey' : 'not-owner',
         status: auth.status,
@@ -2647,6 +2717,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // disk for no reason. See accountPanelCache.ts.
       clearPanelCache();
       clearAccountScopedUiState();
+      // The mass delete guard's hold names notes a forced sign-out keeps
+      // (clearLocalDatabase below), so it stays with them; any other
+      // sign-out wipes the notes and the hold together.
+      if (!opts?.keepUnsyncedNotes) clearMassDeleteState();
       // The PIN hash/salt cache, lockout counters, and unlock marker are
       // account-scoped: the next account signing in on this browser must
       // not inherit them (the removed legacy-PIN migration once

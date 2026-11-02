@@ -1,6 +1,4 @@
 {
-  "dismiss": "Descarta",
-  "close": "Tanca",
   "moveBanner": {
     "bodySignIn": "Inicia la sessió allà amb la teva frase de recuperació o amb «{{scanQr}}».",
     "cta": "Trasllada ara",
@@ -52,7 +50,7 @@
   },
   "signOutConfirm": {
     "title": "Has desat la teva frase de 12 paraules?",
-    "body": "La teva frase és l'<only>única</only> manera de tornar a entrar. No hi ha restabliment per correu ni línia de suport. No sabem qui ets, per disseny. Si encara no l'has apuntada, toca <action>No, mostra la frase</action> i te l'obrirem ara mateix.",
+    "body": "La teva frase és l'<only>única</only> manera de tornar a entrar. No hi ha restabliment per correu ni línia de suport. Si encara no l'has apuntada, toca <action>No, mostra la frase</action> i te l'obrirem ara mateix.",
     "unsyncedWarn_one": "1 nota d'aquest dispositiu encara no s'ha sincronitzat. Es perdrà per sempre si no es pot pujar en tancar la sessió.",
     "unsyncedWarn_many": "{{count}} notes d'aquest dispositiu encara no s'han sincronitzat. Es perdran per sempre si no es poden pujar en tancar la sessió.",
     "unsyncedWarn_other": "{{count}} notes d'aquest dispositiu encara no s'han sincronitzat. Es perdran per sempre si no es poden pujar en tancar la sessió.",
@@ -78,6 +76,12 @@
     "moreNotes": "i {{count}} més",
     "appLockHint": "Dispositiu compartit? Activa el bloqueig de l'app a Configuració > Seguretat."
   },
+  "signOutUpload": {
+    "uploading": "S'estan pujant els teus últims canvis…",
+    "title": "Alguns canvis encara no s'han pujat",
+    "body": "Si tanques la sessió ara, es perdran els canvis fets en aquest dispositiu des de l'última sincronització. Connecta't a internet per conservar-los.",
+    "signOutAnyway": "Tanca la sessió igualment"
+  },
   "burnShareModal": {
     "title": "Comparteix amb Burn After Reading",
     "body": "<lead>La teva nota original no se suprimirà.</lead> Es queda segura al teu compte. L'enllaç burn és una còpia xifrada a part que s'autodestrueix després de llegir-se.",
@@ -95,17 +99,15 @@
     "afterDays_other": "Al cap de {{count}} dies",
     "create": "Crea i copia l'enllaç",
     "share": "Comparteix l'enllaç",
-    "imagesStripped": "Només es mostra el text; els fitxers queden ocults en aquesta nota.",
-    "copied": "Copiat"
+    "imagesStripped": "Només es mostra el text; els fitxers queden ocults en aquesta nota."
   },
   "burnView": {
     "title": "Burn After Reading",
     "tagline": "Xifrat. Efímer. Només per als teus ulls.",
     "toggleTheme": "Canvia el tema",
-    "checking": "S'està comprovant...",
     "revealing": "S'està recuperant i desxifrant...",
     "goToApp": "Vés a <brand/>",
-    "footerTagline": "- Notes xifrades de coneixement zero, allotjades a Suïssa.",
+    "footerTagline": "- Notes xifrades, allotjades a Suïssa.",
     "sealed": {
       "heading": "Has rebut una nota xifrada.",
       "subheading": "Aquest missatge s'autodestruirà després de llegir-lo. Els enllaços no llegits caduquen sols.",
@@ -143,5 +145,19 @@
     "demo": "Els enllaços burn es desen en un servidor, i la demo no en contacta cap. Registra't per crear enllaços burn reals.",
     "tooLarge": "La nota és massa gran per compartir-la amb un enllaç burn ({{size}}KB). El màxim és {{max}}KB.",
     "storeFailed": "No s'ha pogut desar la nota burn al servidor."
+  },
+  "dms": {
+    "returnTitle": "La còpia del servidor s'ha suprimit",
+    "returnBody_other": "El teu interruptor d'home mort va suprimir les teves notes del servidor el {{date}}. Aquest dispositiu encara té {{count}} notes. Baixa una còpia de seguretat si les vols conservar i després suprimeix-les d'aquest dispositiu.",
+    "returnBackup": "Baixa una còpia de seguretat",
+    "returnDelete": "Suprimeix d'aquest dispositiu",
+    "returnBody_one": "El teu interruptor d'home mort va suprimir les teves notes del servidor el {{date}}. Aquest dispositiu encara té {{count}} nota. Baixa una còpia de seguretat si la vols conservar i després suprimeix-la d'aquest dispositiu."
+  },
+  "massDelete": {
+    "title": "Notes suprimides en un altre dispositiu",
+    "body_other": "{{count}} notes que aquest dispositiu encara té han estat suprimides per tu o per un altre dels teus dispositius. Si has estat tu, suprimeix-les també aquí. Si no has estat tu, potser algú té accés al teu compte: conserva-les per tornar-les a posar a tots els teus dispositius.",
+    "keep": "Conserva les meves notes",
+    "delete": "Suprimeix-les també aquí",
+    "body_one": "{{count}} nota que aquest dispositiu encara té ha estat suprimida per tu o per un altre dels teus dispositius. Si has estat tu, suprimeix-la també aquí. Si no has estat tu, potser algú té accés al teu compte: conserva-la per tornar-la a posar a tots els teus dispositius."
   }
 }

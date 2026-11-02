@@ -2,6 +2,8 @@
   "header": {
     "betaBadge": "ベータ",
     "downloads": "ダウンロード",
+    "price": "価格",
+    "priceLine": "使っているアプリの料金を合計すると",
     "pricing": "料金",
     "roadmap": "Roadmap",
     "createVault": "保管庫を作成",
@@ -39,14 +41,13 @@
       "clipper": "あなたの<w>ウェブクリッパー</w>。",
       "markdown": "あなたの<w>Markdown</w>。"
     },
-    "subhead": "ノート、タスク、パスワード、ファイル、ブックマーク、カレンダー、気分と服薬のトラッカー、そしてMarkdownエディタ。ひとつのプライベートなアプリです。",
+    "subhead": "ノート、タスク、パスワード、ジャーナル、ファイル、カレンダー、連絡先、ブックマーク、そして気分と服薬の記録。ひとつのプライベートなアプリです。",
     "tryDemo": "デモを試す",
     "microcopy": "ずっと無料。クレジットカード不要。Google、Apple、GitHub、または12単語のフレーズだけでサインイン。",
     "alreadyHaveVault": "すでに保管庫をお持ちですか?ログイン",
     "trustSigned": "GitHubの署名済みリリース"
   },
   "heroCard": {
-    "passwords": "パスワード",
     "today": "今日",
     "tripTitle": "旅行の持ち物リスト",
     "taskPassport": "パスポート + チケット",
@@ -57,45 +58,85 @@
     "encrypted": "暗号化済み",
     "moodWeek": "気分 · 今週"
   },
+  "heroApp": {
+    "label": "アプリのセクション",
+    "notes": {
+      "meta": "2分前に編集",
+      "markdown": "MD",
+      "day": "土曜日",
+      "body": "28番トラムに早めに乗る。<b>混み合う前に</b>。ランチは<ref>アナ</ref>がいつも話しているお店で。",
+      "tag1": "#旅行",
+      "tag2": "#グルメ"
+    },
+    "vault": {
+      "meta": "3件のアイテム、鍵はひとつ",
+      "password": "correct-horse-battery",
+      "card": "旅行用カード",
+      "ssh": "仕事用ノートPC"
+    },
+    "journal": {
+      "med": "ビタミンD、08:00",
+      "entry": "川沿いを長く散歩。やっとぐっすり眠れた。"
+    },
+    "files": {
+      "meta": "ファイル、暗号化済み",
+      "file1": "passport.pdf",
+      "file2": "beach.heic",
+      "file3": "voice-memo.m4a",
+      "file4": "lease.pdf",
+      "storage": "500 MB中46 MB"
+    },
+    "calendar": {
+      "ev4": "アナの誕生日",
+      "empty": "予定なし"
+    },
+    "contacts": {
+      "initials": "AM",
+      "name": "アナ・マルティンス",
+      "place": "リスボン",
+      "birthday": "誕生日: {{date}}"
+    },
+    "bookmarks": {
+      "reading": "読みもの",
+      "bm1": "28番トラム - Wikipedia",
+      "bm2": "OpenStreetMapのリスボン",
+      "bm3": "パステル・デ・ナタのレシピ",
+      "bm4": "Markdownガイド",
+      "bm5": "PrivacyNotesのソースコード",
+      "clipped": "ノートとして保存済み"
+    },
+    "mood": {
+      "insight": "7時間眠った翌日が一番調子のよい日"
+    }
+  },
   "announcement": {
     "ossText": "オープンソースになりました。クライアントの全コードを公開。Web、デスクトップ、モバイル。",
     "ossTextNarrow": "オープンソースになりました。クライアントの全コードを公開。",
     "ossCta": "GitHubでスターをつける",
-    "ossCtaNarrow": "GitHub",
     "dismiss": "お知らせを閉じる"
   },
   "pillars": {
     "kicker": "すべてを1つの鍵で。そして1つのエディタは、あなたのディスクの上に",
-    "notesName": "ノート",
     "notesBlurb": "リッチなライブエディタ、タグ、瞬時の検索。",
-    "tasksName": "タスク",
     "tasksBlurb": "すべてのチェックボックスを、ひとつのビューに。",
-    "vaultName": "保管庫",
     "vaultBlurb": "パスワード、カード、SSH鍵。",
     "journalName": "ジャーナル",
     "journalBlurb": "気分、睡眠、服薬。研究に基づくタグと、医師向けの書き出し。",
-    "filesName": "ファイル",
     "filesBlurb": "画像、文書、音声、動画を暗号化して保存。",
     "bookmarksName": "ブックマーク同期",
     "bookmarksBlurb": "サイトのアイコン付きで保存したリンク。ブラウザのブックマークを読み込めます。",
-    "contactsName": "連絡先",
     "contactsBlurb": "電話番号、メール、住所。アドレス帳をまるごとインポートできます。",
-    "calendarName": "カレンダー",
-    "calendarBlurb": "予定とリマインダー。日、週、月の表示。",
-    "markdownFree": "無料"
+    "calendarBlurb": "予定とリマインダー。日、週、月の表示。"
   },
   "mdEditor": {
     "title": "無料のMarkdownエディタ。ファイルがディスクの外に出ることはありません。",
     "body": ".mdや.txtファイルの入ったフォルダを指定するだけ。サブフォルダは自動で表示され、編集はその場で保存され、何も変換されません。ノートと同じリッチエディタで、ライブプレビュー、タスク、タグ、表が使えます。",
-    "chipObsidian": "ObsidianやLogseqでも同じファイルを",
-    "chipGit": "自分で同期するgitリポジトリ",
-    "chipAgents": "AIエージェントにノートへのアクセスを",
     "platforms": "デスクトップアプリ、またはChromium系ブラウザで。",
     "sampleTitle": "週末にやりたいこと",
     "sampleTask1": "庭のセンサーを配線する",
     "sampleTask2": "ブログ記事の下書き",
     "sampleTag": "#ものづくり",
-    "savedToDisk": "ディスクに保存しました"
+    "saving": "保存中"
   },
   "meds": {
     "tileName": "服薬トラッカー",
@@ -119,7 +160,7 @@
     "med4": "メラトニン",
     "dose4": "2 mg",
     "kicker": "服薬の記録",
-    "heading": "時間どおりに飲む。記録は自分だけのものに。",
+    "heading": "飲み忘れはもうしない。何を飲んでいるかは、誰にも関係のないことです。",
     "intro": "薬は一度だけ、用量と時刻を付けて追加します。毎日の記録はワンタップ: 服用、スキップ、飲み忘れ。リマインダーはスマートフォンに届きます。薬の一覧、用量、飲まなかった日はデバイス上で暗号化され、同期しても暗号化されたままです。",
     "todayLabel": "今日。服用をタップしてください。",
     "todayCount": "{{total}}件中{{taken}}件服用",
@@ -146,7 +187,6 @@
     "refillBy": "{{days}}日後に再注文"
   },
   "ninja": {
-    "tileName": "Ninja",
     "tileTagline": "ノートのためのAlfred。",
     "tileLead": "ご命令とあらば、即実行。",
     "tileBlurb": "{{key}}を押して入力するだけ。数文字でどこへでも移動、+ で普段の言葉のまま何でも作成、> でコマンドを実行。手はキーボードから離れません。",
@@ -157,11 +197,6 @@
     "chipDay": "日付へ移動",
     "chipLink": "リンクを貼り付け",
     "placeholder": "タイトルを入力、+ で追加、> でコマンド",
-    "recent": "最近",
-    "inText": "本文内",
-    "create": "作成",
-    "addTo": "追加先",
-    "commands": "コマンド",
     "recent1": "週末にやりたいことのアイデア",
     "recent1Meta": "ノート · 2時間前",
     "recent2": "買い物リスト",
@@ -185,15 +220,10 @@
     "q2Row3": "新規タスクリスト: 歯医者",
     "q3": "牛乳、卵 >> 買い物",
     "q3Row1": "買い物リストに2件のタスクを追加",
-    "q3Row1Meta": "タスク",
     "q3Row2": "新規予定: 牛乳、卵",
     "q4": "zen",
     "q4Row1": "Zenモードを開始",
     "q4Row2": "設定: Zenモード",
-    "hintOpen": "開く",
-    "hintActions": "操作",
-    "hintTab": "タブで開く",
-    "hintClose": "閉じる",
     "tryDemo": "デモで試す",
     "seeShots": "スクリーンショット",
     "shots": {
@@ -223,8 +253,7 @@
       "theme": "「theme」と入力すると、すべてのテーマが配色とともに表示されます。Enterを押すと、ライトでもダークでもそのテーマに切り替わります。"
     },
     "q1Row1Meta": "ノート · 2日前",
-    "q1Row2Meta": "フォルダ · 4件",
-    "hintMove": "移動"
+    "q1Row2Meta": "フォルダ · 4件"
   },
   "demoShot": {
     "kicker": "ライブで試す",
@@ -246,15 +275,14 @@
     "rls": "行レベルセキュリティ"
   },
   "downloads": {
-    "kicker": "ダウンロード",
     "heading": "PrivacyNotesをダウンロード",
     "tileAria": "{{name}}版をダウンロード",
+    "playDesc": "Play Store経由で更新されます。アプリ内での購入はGoogleが請求します。",
     "apkDesc": "更新のたびに、自分でダウンロードしてインストールします。",
     "obtainiumDesc": "リポジトリから新しいバージョンをすべてインストールします。",
     "obtainiumBadgeAlt": "Obtainiumで入手",
     "appStore": "App Store",
     "recommended": "おすすめ",
-    "comingSoon": "近日公開",
     "apkFootnote": "Android 7.0以降が必要です。Zapstore、Obtainium、APKはGoogleアカウントもGoogle課金も不要です。Proはウェブのチェックアウトでアンロックできます。新しいバージョンが出るとAPKがアプリ内で通知します。",
     "linuxRequirement": "どちらの形式もwebkit2gtk 4.1が必要です。対象はUbuntu 22.04以降、Debian 12以降、または2023年以降の同等のディストリビューションです。それより古いディストリビューションはwebkit2gtk 4.0までしか含まないため、これらのビルドは動きません。",
     "linuxArchX86": "Intel / AMD (x86_64)",
@@ -271,12 +299,12 @@
     "pkgToggle": "パッケージマネージャーでインストール ({{platforms}})",
     "pkgBrewDesc": "アプリが自分で更新します。brew upgrade では更新されません。",
     "pkgWingetDesc": "Windows 10 と 11 に標準搭載です。",
-    "pkgScoopDesc": "Scoop は自動更新しません。scoop update privacynotes を実行してください。",
     "pkgFootnote": "どれも同じ署名済みビルドをインストールします。",
     "githubLink": "GitHubのリリース一覧",
     "githubNote": "署名済み · 公開 · 検証可能 · 全リリース対象",
     "zapstoreDesc": "<rec>おすすめ。</rec>インストール前に署名を確認します。",
     "zapstoreBadgeAlt": "Zapstoreで入手",
+    "playBadgeAlt": "Google Playで手に入れよう",
     "autoUpdates": "自動更新",
     "manualUpdates": "手動更新"
   },
@@ -284,37 +312,13 @@
     "getStarted": "始める"
   },
   "pricing": {
-    "freeLabel": "ずっと無料",
     "freeSubLabel": "クレジットカード不要、期間制限なし。",
-    "freeAllPillars": "ノート、タスク、カレンダー、ファイル、保管庫、ジャーナル、連絡先、ブックマーク",
+    "freeAllPillars": "ノート、タスク、パスワード、ジャーナル、ファイル、カレンダー、連絡先、ブックマーク、そして気分と服薬の記録",
     "freeSync": "2台のデバイスで同期",
     "freeVault": "50 MBストレージ、1ファイル5 MBまで",
-    "freeSearch": "全文検索 + タグ",
     "freeImport": "読み込みと書き出し（KeepやObsidianなど）",
-    "freeBurn": "Burn After Reading",
-    "freeMood": "気分とウェルネスの記録",
-    "freeTheme": "ダークとライトモード",
     "freeAnon": "匿名サインイン、メールアドレス不要",
-    "freeGoogle": "Google、Apple、GitHubでサインイン",
-    "noSubscription": "サブスクなし",
-    "proLabel": "Pro · 買い切り",
-    "earlyAdopterBadge": "アーリーアダプター",
-    "oneTime": "買い切り",
-    "proOnceDesc": "<b>一度</b>支払えば、ずっとあなたのものです。",
-    "proCompareBeta": "${{earlyPrice}}を一度支払うだけ。Obsidian Syncは$48/年、Standard Notesは$90/年が毎年かかります。${{proPrice}}に値上がりする前に固定できる、アーリーアダプター価格です。",
-    "proCompare": "${{proPrice}}を一度支払えば、ずっとあなたのものです。Obsidian Syncは$48/年、Standard Notesは$90/年が毎年かかります。",
-    "proEverythingFree": "Freeの全機能に加えて:",
-    "proSync": "無制限のデバイスで同期",
-    "proHistory": "ノート履歴、最大50バージョン",
-    "proLock": "読み取り専用ノート",
-    "proPin": "ノートのPIN保護",
-    "proAnalytics": "ウェルネス分析 + 書き出し",
-    "proZen": "Zenモードと追加テーマ",
-    "proStorage": "500 MBストレージ、1ファイル50 MBまで、<expand>拡張可能</expand>"
-  },
-  "storageAddon": {
-    "heading": "もっと容量が必要ですか?",
-    "body": "Proには500 MBが含まれます。足りない場合は、年${{price}}からストレージを追加できます。これが<brand/>で唯一のサブスクリプションです。Proのアップグレード自体は買い切りで、ずっと有効です。"
+    "earlyAdopterBadge": "アーリーアダプター"
   },
   "underHood": {
     "heading": "内部の仕組み",
@@ -322,17 +326,14 @@
     "cipherDesc": "鍵はクライアント側で導出",
     "phraseTerm": "BIP-39フレーズ",
     "phraseDesc": "12単語、Ed25519署名",
-    "rlsTerm": "行レベルセキュリティ",
     "rlsDesc": "RLSはあなたの公開鍵に紐付け",
     "trackingTerm": "トラッカーゼロ",
     "trackingDesc": "ピクセルもサードパーティのトラッカーもなし",
     "authTerm": "匿名認証",
     "authDesc": "メールもパスワードも不要",
-    "serversTerm": "スイスのサーバー",
     "serversDesc": "スイス、チューリッヒ",
     "sshTerm": "SSH鍵の保管庫",
     "sshDesc": "Ed25519生成を内蔵",
-    "pwgenTerm": "パスワード生成",
     "pwgenDesc": "crypto.getRandomValues()",
     "opensourceTerm": "オープンソース",
     "opensourceDesc": "アプリと暗号化はGitHubで公開"
@@ -361,9 +362,7 @@
       "social": "夜の外出",
       "custom": "数えたいものは何でも、Proで"
     },
-    "cardPatternsTitle": "パターン",
     "cardPatternsBody": "すべてのトラッカーを気分への影響の大きさで並べ、わかったことをわかりやすい言葉で示します。",
-    "cardExploreTitle": "探索",
     "cardExploreBody": "1つのトラッカーを気分と比べます。同じ日でも、翌日でも。今夜の睡眠と、明日の気分。",
     "cardMedsTitle": "服薬",
     "cardMedsBody": "服用かスキップか、用量の変化をタイムラインで。そして服薬状況を気分と照らし合わせます。",
@@ -374,27 +373,31 @@
     "vizReport": "医師向けレポート",
     "vizPrompt": "AIプロンプト",
     "encryptedHeading": "暗号化されているからこそ、できること",
-    "encryptedBody": "抗うつ薬の用量をNotionに記録する人はいません。絶望的な日々をGoogleドキュメントに付ける人もいません。これほど繊細なデータにはゼロ知識暗号化が必要であり、PrivacyNotesはそのように作られています。"
+    "encryptedBody": "抗うつ薬の用量をNotionに記録する人はいません。絶望的な日々をGoogleドキュメントに付ける人もいません。これほど繊細なデータにはデバイス上での暗号化が必要であり、PrivacyNotesはそのように作られています。"
   },
   "comparison": {
     "kicker": "計算してみると",
-    "heading": "暗号化された1つのアプリですべて済むのに、なぜ3つのアプリにお金を払うのでしょう?",
-    "typicalSetup": "よくある構成",
-    "themStandardNotes": "Standard Notes、$90/年",
-    "themObsidian": "Obsidian Sync、$48/年",
-    "themDayOne": "Day One、$36/年",
-    "themPasswordManager": "Bitwarden / 1Password、$10〜36/年",
-    "themLunatask": "Lunatask、$72/年",
-    "themDaylio": "Daylio、$48/年(気分データは暗号化されず)",
-    "themSeparate": "バラバラのアプリ、繰り返す支払い",
-    "usAllInOne": "ノート、タスク、カレンダー、ファイル、保管庫、ジャーナル、連絡先、ブックマーク。1つのアプリで",
-    "usTracking": "気分、エネルギー、睡眠、服薬の記録",
-    "usEncrypted": "デバイス上で暗号化、スイスに同期",
-    "usSignIn": "匿名でも、Google、Apple、GitHubでのサインインでも、暗号化は同じ",
-    "usExport": "パターン検出 + 医師向けPDF書き出し",
-    "usSync": "デスクトップ + モバイル、無制限の同期",
-    "usPriceBeta": "ずっと無料。Proは${{earlyPrice}}の買い切り(アーリーアダプター価格)",
-    "usPrice": "ずっと無料。Proは${{proPrice}}の買い切り"
+    "headingLive": "あなたのアプリ代は年間<cost>{{amount}}</cost>。<br />私たちのアプリは<free>無料</free>から。Proは<free>{{pro}}の買い切り</free>です。",
+    "pick": "今お金を払っているものをタップしてください",
+    "group": {
+      "mood": "気分とウェルネス",
+      "files": "ファイルとストレージ",
+      "bookmarks": "ブックマークとあとで読む"
+    },
+    "barThem_other": "他のアプリ、{{count}}年間",
+    "barUs": "<brand/> Pro",
+    "receipt": "あなたの請求額",
+    "receiptCount_other": "{{count}}件のサブスクリプション",
+    "receiptRenews": "毎年更新",
+    "perYear": "年間合計",
+    "keepLabel": "節約できる額",
+    "keepLine_other": "{{count}}年間で。Proを購入した場合でもです。",
+    "pickNone": "お金を払っているアプリをタップしてください。",
+    "checked": "年払いの年額。各アプリの料金ページより、{{date}}時点。",
+    "usKicker": "すべてをひとつのアプリで、デバイス上で暗号化。",
+    "usFreeBig": "ずっと無料",
+    "usProOnce": "一度の支払いで、ずっとあなたのもの",
+    "usProLine": "すべてのデバイス、ノートごとに50のバージョン、PINでロックできるノート、ウェルネスのインサイト、10倍のストレージ。容量の追加は年${{price}}から。年額で請求するのはこれだけです。"
   },
   "extras": {
     "kicker": "さらに",
@@ -414,20 +417,25 @@
     "weekInReview": "週間レビュー",
     "selfDestruct": "読んだら消えるノート",
     "anonAccounts": "匿名アカウント",
-    "zenMode": "Zenモード",
     "darkMode": "ダークモード"
   },
   "whyPrivacy": {
     "kicker": "なぜ重要か",
-    "heading": "ほとんどのノートアプリは、あなたのノートを読んでいます。<accent>私たちには読めません。</accent>",
-    "para1": "ほとんどのノートアプリは、あなたの書いた内容を収集しています。買い物リストに「新しいテレビを買う」と書けば、その後の数ページはテレビの広告で埋まります。買い物リストも、日記も、個人的な考えも、すべて広告ターゲティングのパイプラインに送られ、プロファイリングされ、売られていきます。これが、広告で成り立つ「無料」ノートアプリのビジネスモデルです。",
-    "para2": "広告を表示しないアプリでも、ノートはサーバー上に平文で保存されていることがほとんどです。従業員には読めて、情報漏えいでは流出し、召喚状があれば誰にでも渡ります。あなたのデータが、相手の切り札になるのです。",
+    "heading": "「新しいテレビを買う」と書く。<accent>1か月間、テレビの広告が続く。</accent>",
+    "lead": "これが、多くの無料ノートアプリの稼ぎ方です。書いた内容は読まれ、分析され、売られ、広告があなたを追いかけてきます。",
+    "step": {
+      "type": "あなたが入力する",
+      "typeSub": "「新しいテレビを買う」",
+      "read": "アプリがそれを読む",
+      "readSub": "関心: 家電",
+      "ads": "広告が追いかけてくる",
+      "adsSub": "訪れるすべてのサイトで"
+    },
     "differenceLabel": "違い",
-    "differenceBody": "<brand/>はノートをあなたのデバイス上で暗号化します。自己管理なら鍵がデバイスの外へ出ることはないので、私たちにも私たちのサーバーにも、一文字も読めません。広告も、ピクセルも、サードパーティのトラッカーも、書いた内容の分析もなく、この先も導入しません。私たちのウェブサイトは、ダウンロードリンクとパートナーリンクのクリック数を国別に数えますが、識別子は一切使いません。あなたが書いたものは、あなたのものです。",
+    "differenceBody": "<brand/>はノートをあなたのデバイス上で暗号化します。広告も、ピクセルも、サードパーティのトラッカーも、書いた内容の分析もなく、この先も導入しません。コードはオープンソースなので、ご自身で確かめられます。",
     "keyboardNote": "<b>デバイスのキーボードについて。</b>サードパーティ製キーボード(Gboard、SwiftKey、Samsungキーボードなど)は、入力内容を各社のサーバーに送信することがあります。これはOSレベルの動作で、どのアプリにも制御できません。キーボード設定でクラウド機能を無効にするか、オフライン専用キーボードの利用を検討してください。"
   },
   "readIt": {
-    "kicker": "オープンソース",
     "heading": "信じなくていい。読んでください。",
     "body": "あなたがいま使っているアプリは、その中の暗号化ごと公開されています。道具のいらない1分の確認から始めても、そのままコードを読んでもかまいません。",
     "cta": "GitHubでソースを見る",
@@ -437,30 +445,25 @@
     "crypto": "暗号化そのもの"
   },
   "wontFind": {
-    "kicker": "アプリにないもの",
-    "noTracking": "トラッカーなし",
-    "noAds": "広告なし",
-    "noHarvesting": "データ収集なし",
-    "noAiTraining": "AI学習への利用なし",
-    "noLockIn": "ロックインなし",
-    "noEmail": "メールアドレス不要",
-    "noTelemetry": "ノートの分析なし",
-    "noCookieBanner": "Cookieバナーなし",
-    "noPasswords": "パスワードなし",
-    "noDarkPatterns": "ダークパターンなし",
-    "noVc": "VC資金なし",
-    "noBlockchain": "ブロックチェーンなし",
-    "noBackdoor": "秘密のバックドアなし"
+    "kicker": "あえて入れていないもの",
+    "noTracking": "トラッカー",
+    "noAds": "広告",
+    "noHarvesting": "データ収集",
+    "noAiTraining": "AI学習への利用",
+    "noLockIn": "ロックイン",
+    "noEmail": "必須のメール登録",
+    "noDarkPatterns": "ダークパターン",
+    "noBackdoor": "バックドア"
   },
   "noRecovery": {
     "heading": "フレーズがあなたの鍵です",
-    "body": "フレーズがなければ、ノートもありません。私たちには復元できませんし、ほかの誰にもできません。それが自己管理との引き換え条件です。鍵を持っているのはあなただけなので、開発チームに連絡してもノートは戻りません。",
+    "body": "自己管理では、フレーズがなければノートもありません。誰にも復元できません。それが唯一の鍵を持つことの引き換え条件なので、開発チームに連絡してもノートは戻りません。",
     "noRecoveryTerm": "復元不可",
-    "noRecoveryDesc": "フレーズを失えば、ノートも失われます",
+    "noRecoveryDesc": "自己管理では、フレーズを失えばノートも失われます",
     "deviceTerm": "デバイスで生成",
     "deviceDesc": "自己管理では、フレーズが当社のサーバーに触れることはありません",
     "zkTerm": "ゼロ知識",
-    "zkDesc": "自己管理では、私たちはデータを読むことも復元することもできません",
+    "zkDesc": "自己管理では、ノートを開けるものはサーバーに何もありません",
     "writeTerm": "書き留めてください",
     "writeDesc": "紙のバックアップを、安全な場所に",
     "printTerm": "設定から印刷",
@@ -471,22 +474,20 @@
   "closing": {
     "kicker": "準備ができたら",
     "heading": "保管庫は1分もかからずに作れます。",
-    "importNote": "他のアプリからの乗り換えも、どれからでも書き出して数分で取り込めます："
+    "importNote": "他のアプリからの乗り換えも、どれからでも書き出して数分で取り込めます：",
+    "importDemoTitle": "まずはデモで、ご自身のファイルの読み込みを試せます",
+    "importDemoBody": "ファイルはブラウザ内で読み込まれ、私たちのサーバーには何も送られません。タブを閉じれば消去されます。"
   },
   "about": {
     "tabs": {
       "about": "概要",
-      "changelog": "Changelog",
-      "roadmap": "Roadmap",
       "hotkeys": "ショートカット",
       "rating": "評価"
     },
-    "modalTitle": "概要",
-    "intro": "<brand/>はノート、タスク、ジャーナル、パスワード、ファイル、ブックマーク、連絡先をひとつにまとめます。すべては12単語から作られる鍵によってデバイス上で暗号化され、<nowrap>スイス</nowrap>にある私たちのサーバー上でも暗号化されたままです。オフラインでも動作し、アプリはオープンソースです。",
+    "intro": "<brand/>はノート、タスク、パスワード、ジャーナル、ファイル、カレンダー、連絡先、ブックマークをひとつにまとめ、気分と服薬も記録できます。すべては12単語から作られる鍵によってデバイス上で暗号化され、<nowrap>スイス</nowrap>にある私たちのサーバー上でも暗号化されたままです。オフラインでも動作し、アプリはオープンソースです。",
     "versionHeading": "バージョン",
     "windowVersion": "バージョン{{version}}",
     "windowHelp": "ヘルプセンター",
-    "windowWhatsNew": "Changelog",
     "whatsNew": "新機能",
     "seeWhatsNew": "スクリーンショット付きのすべての変更をPrivacyNotes.appで見る",
     "feedbackHeading": "フィードバック",
@@ -495,14 +496,13 @@
     "termsOfService": "利用規約",
     "refundPolicy": "返金ポリシー",
     "tagline": "サブスクなし。ただのソフトウェア。サービスではありません。",
-    "hotkeysFootnote": "テキスト入力中はほとんどのショートカットが無効になるため、JやKなどの通常のキーはそのまま文字として入力されます。",
     "singleKeysTitle": "単一キーのショートカット",
     "singleKeysDesc": "J、K、Q、/、?、そしてカレンダーではT、D、W、M、Nを、CmdやCtrlを押さずに使えます。"
   },
   "trust": {
     "openSourceHeading": "オープンソース",
     "openSourceLink": "GitHub.comでソースを読む",
-    "openSourceBody": "アプリとその中の暗号化は公開されているため、当社のゼロ知識に関する主張は誰でも検証できます。",
+    "openSourceBody": "アプリとその中の暗号化は公開されているため、ノートがどのように暗号化されているかは誰でも確認できます。",
     "dataStorageHeading": "データの保管",
     "dataStorageBody": "暗号化されたデータは、<flag/> スイスのチューリッヒに保管されています。",
     "faviconsHeading": "サイトのアイコン",
@@ -524,6 +524,7 @@
     "outro": "届いた評価はすべて読んでいます。毎日使ってくださる方からの一言が、私たちの支えです。",
     "descGithub": "GitHubでスターを付ける",
     "descAppStore": "App StoreでPrivacyNotesを評価",
+    "descPlay": "Google PlayでPrivacyNotesを評価",
     "descAlternativeTo": "AlternativeToでいいねとレビュー",
     "descCapterra": "CapterraでPrivacyNotesを評価",
     "descSaasHub": "SaaSHubでいいねとレビュー",

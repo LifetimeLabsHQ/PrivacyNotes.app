@@ -6,7 +6,7 @@ import type { ContextMenuItem } from './ContextMenu';
 import type { ListPrefs } from './listPrefs';
 import { isDemoMode } from './demo';
 import { intlLocale } from './languages';
-import { monthName, relativeDayName, toLocalIso } from './intlFormat';
+import { capitalize, monthName, relativeDayName, toLocalIso } from './intlFormat';
 import { deriveDisplayTitle, editedAtOf, entryDayOf } from './notesViewUtils';
 import { CaretDown } from './icons';
 import { OTHER_KEY, PINNED_KEY, SYMBOL_KEY, buildGroups, groupBasis, type ListGroup } from './listGroups';
@@ -15,7 +15,7 @@ import { OTHER_KEY, PINNED_KEY, SYMBOL_KEY, buildGroups, groupBasis, type ListGr
  * The group headers of a notes list: the hook every pane calls, the header
  * row, and the fold state behind it. A pane hands its sorted notes in and
  * renders the entries it gets back, so no pane holds a copy of the rules.
- * Spec: ops/docs/archive/list-groups.md
+ * Spec: docs/internal/specs/list-groups.md
  */
 
 // Device-local, like the layout. The demo gets its own key, because `?demo=1`
@@ -57,16 +57,11 @@ function useGroupFold(scope: string) {
   return { folded, update };
 }
 
-function capitalize(s: string, loc: string): string {
-  const [first = '', ...rest] = [...s];
-  return first.toLocaleUpperCase(loc) + rest.join('');
-}
-
 /** The words on a header. Month, year, today and yesterday come from Intl in
  *  the app language, so no catalog carries them. */
 function groupLabel(key: string, t: (k: string) => string): string {
   const loc = intlLocale();
-  if (key === PINNED_KEY) return t('notes:headerLabel.pinned');
+  if (key === PINNED_KEY) return t('shell:tagsRail.pinned');
   if (key === 'today' || key === 'yesterday') return capitalize(relativeDayName(key === 'today' ? 0 : -1), loc);
   if (key === 'prev7') return t('notes:listGroups.previous7Days');
   if (key === 'prev30') return t('notes:listGroups.previous30Days');
@@ -113,12 +108,11 @@ const ListGroupHeader = memo(function ListGroupHeader({
         onClick={foldable ? onToggle : undefined}
         aria-expanded={foldable ? !collapsed : undefined}
         aria-disabled={foldable ? undefined : true}
-        className={`w-full flex items-center gap-1.5 text-start text-xs font-semibold text-pn-muted select-none ${
+        className={`w-full flex items-center gap-1.5 text-start text-small font-semibold text-pn-muted select-none ${
           grid ? 'py-1.5' : 'px-4 py-1.5'
         } ${foldable ? 'cursor-pointer hover:text-pn' : 'cursor-default'}`}
       >
         <CaretDown
-          size={12}
           aria-hidden="true"
           className={`shrink-0 transition-transform ${foldable ? '' : 'opacity-40'} ${collapsed ? '-rotate-90 rtl:rotate-90' : ''}`}
         />

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Trash } from '../icons';
+import { Trash, type Icon } from '../icons';
 import { useEscapeToClose } from '../useEscapeToClose';
 import { IconButton } from './Button';
 
@@ -9,10 +9,10 @@ const ARMED_MS = 3000;
 
 /**
  * @catalog DeleteButton
- * use: removing one item from a row (a file, a medication, a habit, a field): a trash button that turns into a red "Delete?" (or "Remove?" with `kind="remove"`) in the same place for three seconds; a second click there deletes, Escape or the time disarms it. It always sits in the row itself.
+ * use: removing one item from a row (a file, a medication, a habit, a field): a trash button that turns into a red "Delete?" (or "Remove?" with `kind="remove"`) in the same place for three seconds; a second click there deletes, Escape or the time disarms it. It always sits in the row itself. `icon` swaps the trash for another end, the same two steps (SignOut for the extension's Disconnect).
  * never: a delete or remove row in a "..." or context menu when the row has this button; a confirm that opens somewhere else (a menu, a second row, a window) for a time-limited arm; a red confirm row of your own.
  */
-export function DeleteButton({ label, onConfirm, kind = 'delete', confirmLabel, position }: {
+export function DeleteButton({ label, onConfirm, kind = 'delete', confirmLabel, position, icon: Glyph = Trash }: {
   /** Names the button: "Delete qa-repeat.jpg", "Remove Multivitamin". */
   label: string;
   onConfirm: () => void;
@@ -21,6 +21,8 @@ export function DeleteButton({ label, onConfirm, kind = 'delete', confirmLabel, 
   confirmLabel?: string;
   /** Where the tooltip sits, as on IconButton. */
   position?: ComponentProps<typeof IconButton>['position'];
+  /** The glyph in both states, for an end that is not a delete (SignOut for Disconnect). */
+  icon?: Icon;
 }) {
   const { t } = useTranslation('common');
   const [armed, setArmed] = useState(false);
@@ -46,9 +48,9 @@ export function DeleteButton({ label, onConfirm, kind = 'delete', confirmLabel, 
         type="button"
         onMouseDown={keepFocus}
         onClick={(e) => { e.stopPropagation(); disarm(); onConfirm(); }}
-        className="inline-flex h-8 shrink-0 select-none items-center gap-1 rounded-lg bg-danger/10 px-2.5 text-xs font-medium text-danger transition hover:bg-danger/15"
+        className="inline-flex h-8 shrink-0 select-none items-center gap-1 rounded-lg bg-danger/10 px-2.5 text-small font-medium text-danger transition hover:bg-danger/15"
       >
-        <Trash size={13} aria-hidden="true" />
+        <Glyph aria-hidden="true" />
         {confirmLabel ?? t(kind === 'remove' ? 'actions.removeConfirm' : 'actions.deleteConfirm')}
       </button>
     );
@@ -66,7 +68,7 @@ export function DeleteButton({ label, onConfirm, kind = 'delete', confirmLabel, 
           timer.current = setTimeout(() => setArmed(false), ARMED_MS);
         }}
       >
-        <Trash size={15} aria-hidden="true" />
+        <Glyph aria-hidden="true" />
       </IconButton>
     </span>
   );

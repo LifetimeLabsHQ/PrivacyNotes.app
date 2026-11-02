@@ -12,6 +12,8 @@
     "addLink": "Adicionar link",
     "noteLink": "Criar ligação para outra nota (ou escreve [[)",
     "numberedList": "Lista numerada",
+    "indent": "Aumentar avanço",
+    "outdent": "Diminuir avanço",
     "textColor": "Cor do texto",
     "textColorApply": "Cor do texto: {{color}}",
     "pickColor": "Escolher uma cor do texto",
@@ -72,6 +74,7 @@
     "remove": "Remover aviso",
     "collapse": "Recolher aviso",
     "expand": "Expandir aviso",
+    "dragGrip": "Arrastar",
     "types": {
       "info": "Info",
       "success": "Sucesso",
@@ -132,6 +135,9 @@
     "addColumnRight": "Adicionar coluna à direita",
     "toggleHeaderRow": "Ativar ou desativar a linha de cabeçalho",
     "equalColumnWidths": "Igualar colunas",
+    "cellColor": "Cor da célula",
+    "sortAscending": "Ordenar de A a Z",
+    "sortDescending": "Ordenar de Z a A",
     "resizeHint": "Mantém {{shift}} premido para alterar só esta coluna, {{alt}} para passos mais finos",
     "deleteRow": "Eliminar linha",
     "deleteColumn": "Eliminar coluna",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "Procurar na nota",
-    "label": "Procurar na nota",
     "previous": "Resultado anterior",
     "previousTitle": "Anterior",
     "next": "Resultado seguinte",
     "nextTitle": "Seguinte",
     "close": "Fechar a procura",
-    "closeTitle": "Fechar",
     "replacePlaceholder": "Substituir por",
     "replaceLabel": "Substituir por",
     "replace": "Substituir",
@@ -177,10 +180,7 @@
     "replaceAll": "Todas",
     "replaceAllTitle": "Substituir todas as ocorrências",
     "caseSensitive": "Distinguir maiúsculas de minúsculas",
-    "caseSensitiveTitle": "Distinguir maiúsculas de minúsculas",
     "closeReplace": "Fechar procurar e substituir",
-    "closeReplaceTitle": "Fechar",
-    "showReplace": "Procurar e substituir",
     "hideReplace": "Ocultar a substituição",
     "replacedCount_one": "{{count}} substituída",
     "replacedCount_other": "{{count}} substituídas"
@@ -192,9 +192,7 @@
     "ariaLabel": "Estrutura da nota",
     "hide": "Ocultar estrutura",
     "copyHeadingLink": "Copiar ligação para o título",
-    "copyNoteLink": "Copiar ligação entre notas",
-    "copyHeadingShortcut": "Copiar atalho para o título",
-    "copied": "Copiado"
+    "copyHeadingShortcut": "Copiar atalho para o título"
   },
   "bodyMenu": {
     "cut": "Cortar",
@@ -210,11 +208,8 @@
     "add": "Adicionar uma linha"
   },
   "link": {
-    "popoverLabel": "Adicionar link",
     "placeholder": "Cola ou escreve um URL",
     "apply": "Aplicar",
-    "addTitle": "Adicionar link",
-    "editTitle": "Editar link",
     "urlLabel": "URL",
     "urlPlaceholder": "https://exemplo.com",
     "errorEnterUrl": "Introduz um URL",
@@ -230,7 +225,6 @@
   },
   "audio": {
     "uploadingRecording": "A enviar gravação...",
-    "uploading": "A enviar...",
     "stopRecording": "Parar gravação",
     "recordAudio": "Gravar áudio",
     "savingRecording": "A guardar gravação...",
@@ -247,7 +241,6 @@
     "tasksChecked_other": "{{done}} de {{formatted}} marcados",
     "syncLimit": " · {{share}} do limite de sincronização de 1 MB",
     "overSyncLimit": " · acima do limite de sincronização de 1 MB, fica neste dispositivo",
-    "split": "Dividir nota",
     "veryLong": ", muito longa, pode ficar lenta a editar e bloquear",
     "gettingLong": ", está a ficar longa, pode ficar lenta em dispositivos mais lentos",
     "largeTableWarning": "Uma tabela grande ({{rows}} linhas) pode tornar esta nota lenta a editar, considera dividi-la"
@@ -262,19 +255,15 @@
     "placeholder": "Texto para copiar com um clique"
   },
   "inlineCode": {
-    "copyHint": "{{key}}+clique para copiar",
-    "copied": "Copiado"
+    "copyHint": "{{key}}+clique para copiar"
   },
   "codeBlock": {
-    "copy": "Copiar",
-    "copied": "Copiado",
     "copyFailed": "Falhou",
     "wrap": "Quebrar linhas longas",
     "showAll_one": "Mostrar {{count}} linha",
     "showAll_many": "Mostrar todas as {{count}} linhas",
     "showAll_other": "Mostrar todas as {{count}} linhas",
     "showLess": "Mostrar menos",
-    "plainText": "Texto simples",
     "language": "Linguagem do código: {{name}}",
     "searchLanguages": "Procurar linguagens",
     "placeholder": "Escreve ou cola código. Para ter cores, escolhe uma linguagem acima."
@@ -355,7 +344,6 @@
     "inProgress": "Em curso",
     "review": "Revisão",
     "done": "Concluído",
-    "color": "Cor",
     "columns": "Colunas",
     "columnCount_other": "{{count}} colunas",
     "cardCount_other": "{{count}} cartões",

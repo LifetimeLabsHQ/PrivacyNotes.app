@@ -24,7 +24,8 @@
       "replace": "Rechercher et remplacer est une fonctionnalité Pro. Passe à Pro pour remplacer une occurrence ou toutes les occurrences d'une note d'un coup.",
       "passphrase": "Les phrases secrètes sont une fonctionnalité Pro. Génère une phrase de mots aléatoires, facile à taper et à dire.",
       "default": "Une seule mise à niveau débloque tout ce qui suit. Paiement unique.",
-      "alerts": "Les rappels sont une fonctionnalité Pro. Tes appareils sonnent à l'heure que tu choisis, et rien de l'élément ne les quitte."
+      "alerts": "Les rappels sont une fonctionnalité Pro. Chaque appareil sonne de lui-même à l'heure que tu choisis, donc aucun service de notifications push ne voit l'élément.",
+      "vaultFiles": "Les fichiers sur les éléments du coffre sont une fonctionnalité Pro. Garde des codes de récupération, une clé de secours ou un scan avec l'identifiant, la carte ou la clé auquel il appartient."
     },
     "features": {
       "devices": "Synchronise un nombre illimité d'appareils, sur toutes les plateformes",
@@ -80,7 +81,6 @@
     "loadFailed": "Impossible de charger l'historique. Vérifie ta connexion et réessaie.",
     "selectPrompt": "Sélectionne une version pour l'aperçu.",
     "emptyBody": "(vide)",
-    "restore": "Restaurer",
     "restoring": "Restauration…",
     "restoreSnapshotFailed": "Impossible d'enregistrer d'abord la version actuelle, donc rien n'a été restauré. Vérifie ta connexion et réessaie.",
     "restoreFailed": "Impossible de restaurer cette version. Réessaie.",

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LocalNote } from './db';
 import { LoginForm, parseLoginBody, domainFromUrl } from './LoginForm';
@@ -19,6 +19,11 @@ import { proUnlocked } from './demo';
 import { PasswordText } from './PasswordText';
 import { hasLoginExtras, isPublicField, loginExtrasOf, webHref, withLoginExtras, type LoginExtras, type LoginField } from './loginExtras';
 import type { UpgradeTrigger } from './UpgradeModal';
+import { mergeVaultDraft } from './vaultBody';
+import { saveFailureText } from './saveFile';
+
+// Own chunk: it brings the editor's file chip, which only an item's Files section needs.
+const VaultFiles = lazy(() => import('./VaultFiles'));
 
 
 const IconX = () => <X />;
@@ -32,7 +37,7 @@ const IconSave = () => <Check />;
  * capable), falls back to a queued network fetch (max 5 concurrent),
  * and stores the result in IndexedDB for future sessions.
  *
- * Spec: ops/docs/backlog.md (#69 - client concurrency cap + IDB cache)
+ * Spec: docs/internal/backlog.md (#69 - client concurrency cap + IDB cache)
  * ──────────────────────────────────────────────────────────────── */
 function Favicon({ domain, size = 20, onMissing }: { domain: string; size?: number; onMissing?: (missing: boolean) => void }) {
   const [src, setSrc] = useState('');
@@ -142,7 +147,7 @@ function TypeBadge({ type }: { type: 'login' | 'card' | 'ssh-key' }) {
   }[type];
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${cfg.bg} ${cfg.text}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-meta font-medium ${cfg.bg} ${cfg.text}`}>
       {cfg.icon}
       {cfg.label}
     </span>
@@ -195,7 +200,7 @@ function groupTotpCode(code: string): string {
  * has an authenticator key set. The key is stored and synced for
  * every tier (LoginData.totp); only the generated code is gated.
  * ──────────────────────────────────────────────────────────────── */
-// Spec: ops/docs/pro-features.md (TOTP code display Pro gate)
+// Spec: docs/internal/pro-features.md (TOTP code display Pro gate)
 function TotpField({ raw, isPro, onOpenUpgrade, copy, copied }: {
   raw: string;
   isPro: boolean | null;
@@ -216,7 +221,7 @@ function TotpField({ raw, isPro, onOpenUpgrade, copy, copied }: {
 
   if (!params) {
     return (
-      <DetailRow label={t('vaultItem.fieldTotp')} icon={<Shield size={13} />}>
+      <DetailRow label={t('security:mfaPrompt.codeLabel')} icon={<Shield />}>
         <span className="text-pn-muted italic">{t('vaultItem.totpInvalid')}</span>
       </DetailRow>
     );
@@ -224,7 +229,7 @@ function TotpField({ raw, isPro, onOpenUpgrade, copy, copied }: {
 
   const label = (
     <span className="flex items-center gap-1.5">
-      {t('vaultItem.fieldTotp')}
+      {t('security:mfaPrompt.codeLabel')}
       {!isPro && <RocketLaunch size={11} weight="fill" className="text-pro" />}
     </span>
   );
@@ -232,7 +237,7 @@ function TotpField({ raw, isPro, onOpenUpgrade, copy, copied }: {
   if (!unlocked) {
     return (
       <div className="border-b border-divider last:border-b-0">
-        <DetailRow label={label} icon={<Shield size={13} />}>
+        <DetailRow label={label} icon={<Shield />}>
           <span className="inline-flex items-center gap-2">
             <span dir="ltr" className="font-mono tracking-wider text-pn-muted" /* rtl-ok: masked code placeholder, symbols only, must not reorder */>
               {'••• •••'}
@@ -243,11 +248,11 @@ function TotpField({ raw, isPro, onOpenUpgrade, copy, copied }: {
         <button
           type="button"
           onClick={() => onOpenUpgrade('totp')}
-          className="mb-2 w-full py-1.5 rounded-md text-xs font-medium bg-accent/8 text-accent-strong hover:bg-accent/15 transition"
+          className="mb-2 w-full py-1.5 rounded-md text-small font-medium bg-accent/8 text-accent-strong hover:bg-accent/15 transition"
         >
           {t('vaultItem.totpUnlockCta')}
         </button>
-        <p className="mb-2 text-[11px] text-pn-muted">{t('vaultItem.totpProNote')}</p>
+        <p className="mb-2 text-meta text-pn-muted">{t('vaultItem.totpProNote')}</p>
       </div>
     );
   }
@@ -258,7 +263,7 @@ function TotpField({ raw, isPro, onOpenUpgrade, copy, copied }: {
   return (
     <DetailRow
       label={label}
-      icon={<Shield size={13} />}
+      icon={<Shield />}
       actions={<DetailCopyAction value={code} id="totpCode" copied={copied} onCopy={copy} label={copied === 'totpCode' ? t('vaultItem.copied') : t('vaultItem.copyCode')} />}
     >
       <span className="inline-flex items-center gap-2">
@@ -275,8 +280,8 @@ function TotpField({ raw, isPro, onOpenUpgrade, copy, copied }: {
 function RevealAction({ shown, onToggle }: { shown: boolean; onToggle: () => void }) {
   const { t } = useTranslation('shell');
   return (
-    <DetailAction label={shown ? t('vaultItem.hide') : t('vaultItem.reveal')} onClick={onToggle}>
-      {shown ? <EyeSlash size={15} /> : <Eye size={15} />}
+    <DetailAction label={shown ? t('common:sshKeyForm.hide') : t('vaultItem.reveal')} onClick={onToggle}>
+      {shown ? <EyeSlash /> : <Eye />}
     </DetailAction>
   );
 }
@@ -302,10 +307,10 @@ function ExtraUrlRow({ url, id, copy, copied }: {
   return (
     <DetailRow
       label={t('vaultItem.fieldUrl')}
-      icon={<Globe size={13} />}
+      icon={<Globe />}
       actions={
         <>
-          {href && <DetailAction label={t('vaultItem.open')} onClick={() => openExternal(href)}><ArrowSquareOut size={15} /></DetailAction>}
+          {href && <DetailAction label={t('shell:contacts.open')} onClick={() => openExternal(href)}><ArrowSquareOut /></DetailAction>}
           <DetailCopyAction value={url} id={id} copied={copied} onCopy={copy} label={tip} />
         </>
       }
@@ -313,7 +318,7 @@ function ExtraUrlRow({ url, id, copy, copied }: {
       {href ? (
         <DetailLink href={href}>{domainFromUrlString(url) || url}</DetailLink>
       ) : (
-        <span dir="ltr" className="font-mono text-xs break-all" /* rtl-ok: an address, never reordered */>{url}</span>
+        <span dir="ltr" className="font-mono text-small break-all" /* rtl-ok: an address, never reordered */>{url}</span>
       )}
     </DetailRow>
   );
@@ -335,7 +340,7 @@ function CustomFieldRow({ field, copy, copied }: {
   return (
     <DetailRow
       label={<span dir="auto">{name}</span>}
-      icon={secret ? <Lock size={13} /> : <Tag size={13} />}
+      icon={secret ? <Lock /> : <Tag />}
       actions={
         field.value ? (
           <>
@@ -357,9 +362,11 @@ function CustomFieldRow({ field, copy, copied }: {
 /* ────────────────────────────────────────────────────────────────
  * Login view mode
  * ──────────────────────────────────────────────────────────────── */
-function LoginViewMode({ note, onEdit, copy, copied, isPro, onOpenUpgrade }: {
+function LoginViewMode({ note, onEdit, copy, copied, isPro, onOpenUpgrade, files }: {
   note: LocalNote;
   onEdit: () => void;
+  /** The item's Files section, drawn last. */
+  files: React.ReactNode;
   copy: (text: string, label: string) => void;
   copied: string | null;
   isPro: boolean | null;
@@ -387,7 +394,7 @@ function LoginViewMode({ note, onEdit, copy, copied, isPro, onOpenUpgrade }: {
 
       <div className="mt-3">
         {data.username && (
-          <DetailRow label={t('vaultItem.fieldUser')} icon={<User size={13} />} actions={<DetailCopyAction value={data.username} id="username" copied={copied} onCopy={copy} label={copyTip('username')} />}>
+          <DetailRow label={t('vaultItem.fieldUser')} icon={<User />} actions={<DetailCopyAction value={data.username} id="username" copied={copied} onCopy={copy} label={copyTip('username')} />}>
             <span className="break-all">{data.username}</span>
           </DetailRow>
         )}
@@ -395,7 +402,7 @@ function LoginViewMode({ note, onEdit, copy, copied, isPro, onOpenUpgrade }: {
         {data.password && (
           <DetailRow
             label={t('vaultItem.fieldPass')}
-            icon={<Lock size={13} />}
+            icon={<Lock />}
             actions={
               <>
                 <RevealAction shown={showPassword} onToggle={() => setShowPassword(!showPassword)} />
@@ -418,10 +425,10 @@ function LoginViewMode({ note, onEdit, copy, copied, isPro, onOpenUpgrade }: {
         {data.url && (
           <DetailRow
             label={t('vaultItem.fieldUrl')}
-            icon={<Globe size={13} />}
+            icon={<Globe />}
             actions={
               <>
-                <DetailAction label={t('vaultItem.open')} onClick={() => openExternal(fullUrl)}><ArrowSquareOut size={15} /></DetailAction>
+                <DetailAction label={t('shell:contacts.open')} onClick={() => openExternal(fullUrl)}><ArrowSquareOut /></DetailAction>
                 <DetailCopyAction value={data.url} id="url" copied={copied} onCopy={copy} label={copyTip('url')} />
               </>
             }
@@ -451,14 +458,15 @@ function LoginViewMode({ note, onEdit, copy, copied, isPro, onOpenUpgrade }: {
             if (data.url) lines.push(data.url.trim());
             copy(lines.join('\n'), 'all');
           }}
-          className="mt-3 w-full py-2 rounded-lg text-xs font-medium text-pn-muted border border-divider hover:bg-pn/5 transition flex items-center justify-center gap-1.5"
+          className="mt-3 w-full py-2 rounded-lg text-small font-medium text-pn-muted border border-divider hover:bg-pn/5 transition flex items-center justify-center gap-1.5"
         >
           {copied === 'all' ? <Check className="text-green-500" /> : <Copy />}
           {copied === 'all' ? t('vaultItem.copied') : t('vaultItem.copyAll')}
         </button>
       )}
 
-      {data.notes && <DetailNotes heading={t('vaultItem.notesHeading')}>{data.notes}</DetailNotes>}
+      {data.notes && <DetailNotes heading={t('common:cardForm.notes')}>{data.notes}</DetailNotes>}
+      {files}
     </div>
   );
 }
@@ -466,9 +474,11 @@ function LoginViewMode({ note, onEdit, copy, copied, isPro, onOpenUpgrade }: {
 /* ────────────────────────────────────────────────────────────────
  * Card view mode
  * ──────────────────────────────────────────────────────────────── */
-function CardViewMode({ note, onEdit, copy, copied }: {
+function CardViewMode({ note, onEdit, copy, copied, files }: {
   note: LocalNote;
   onEdit: () => void;
+  /** The item's Files section, drawn last. */
+  files: React.ReactNode;
   copy: (text: string, label: string) => void;
   copied: string | null;
 }) {
@@ -497,7 +507,7 @@ function CardViewMode({ note, onEdit, copy, copied }: {
 
       <div className="mt-3">
         {data.cardholderName && (
-          <DetailRow label={t('vaultItem.fieldName')} icon={<User size={13} />} actions={<DetailCopyAction value={data.cardholderName} id="name" copied={copied} onCopy={copy} label={copyTip('name')} />}>
+          <DetailRow label={t('vaultItem.fieldName')} icon={<User />} actions={<DetailCopyAction value={data.cardholderName} id="name" copied={copied} onCopy={copy} label={copyTip('name')} />}>
             {data.cardholderName}
           </DetailRow>
         )}
@@ -505,7 +515,7 @@ function CardViewMode({ note, onEdit, copy, copied }: {
         {digits && (
           <DetailRow
             label={t('vaultItem.fieldNumber')}
-            icon={<CreditCard size={13} />}
+            icon={<CreditCard />}
             actions={
               <>
                 <RevealAction shown={showNumber} onToggle={() => setShowNumber(!showNumber)} />
@@ -517,13 +527,13 @@ function CardViewMode({ note, onEdit, copy, copied }: {
               <span dir="ltr" className="font-mono tracking-wider break-all" /* rtl-ok: digits, never reordered */>
                 {showNumber ? formatted : masked}
               </span>
-              {network && <span className="text-[10px] text-pn-muted shrink-0">{network}</span>}
+              {network && <span className="text-meta text-pn-muted shrink-0">{network}</span>}
             </span>
           </DetailRow>
         )}
 
         {(data.expMonth || data.expYear) && (
-          <DetailRow label={t('vaultItem.fieldExpires')} icon={<Calendar size={13} />} actions={<DetailCopyAction value={`${data.expMonth}/${data.expYear}`} id="exp" copied={copied} onCopy={copy} label={copyTip('exp')} />}>
+          <DetailRow label={t('vaultItem.fieldExpires')} icon={<Calendar />} actions={<DetailCopyAction value={`${data.expMonth}/${data.expYear}`} id="exp" copied={copied} onCopy={copy} label={copyTip('exp')} />}>
             <span dir="ltr" /* rtl-ok: a month/year pair, never reordered */>{data.expMonth}/{data.expYear}</span>
           </DetailRow>
         )}
@@ -531,7 +541,7 @@ function CardViewMode({ note, onEdit, copy, copied }: {
         {data.cvv && (
           <DetailRow
             label={t('vaultItem.fieldCvv')}
-            icon={<Lock size={13} />}
+            icon={<Lock />}
             actions={
               <>
                 <RevealAction shown={showCvv} onToggle={() => setShowCvv(!showCvv)} />
@@ -546,13 +556,14 @@ function CardViewMode({ note, onEdit, copy, copied }: {
         )}
 
         {data.billingZip && (
-          <DetailRow label={t('vaultItem.fieldZip')} icon={<MapPin size={13} />} actions={<DetailCopyAction value={data.billingZip} id="zip" copied={copied} onCopy={copy} label={copyTip('zip')} />}>
+          <DetailRow label={t('vaultItem.fieldZip')} icon={<MapPin />} actions={<DetailCopyAction value={data.billingZip} id="zip" copied={copied} onCopy={copy} label={copyTip('zip')} />}>
             <span className="break-all">{data.billingZip}</span>
           </DetailRow>
         )}
       </div>
 
-      {data.notes && <DetailNotes heading={t('vaultItem.notesHeading')}>{data.notes}</DetailNotes>}
+      {data.notes && <DetailNotes heading={t('common:cardForm.notes')}>{data.notes}</DetailNotes>}
+      {files}
     </div>
   );
 }
@@ -560,9 +571,11 @@ function CardViewMode({ note, onEdit, copy, copied }: {
 /* ────────────────────────────────────────────────────────────────
  * SSH Key view mode
  * ──────────────────────────────────────────────────────────────── */
-function SshKeyViewMode({ note, onEdit, copy, copied }: {
+function SshKeyViewMode({ note, onEdit, copy, copied, files }: {
   note: LocalNote;
   onEdit: () => void;
+  /** The item's Files section, drawn last. */
+  files: React.ReactNode;
   copy: (text: string, label: string) => void;
   copied: string | null;
 }) {
@@ -570,14 +583,14 @@ function SshKeyViewMode({ note, onEdit, copy, copied }: {
   const data = parseSshKeyBody(note.body);
   const [showPrivate, setShowPrivate] = useState(false);
   const [showPassphrase, setShowPassphrase] = useState(false);
-  const [downloadError, setDownloadError] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const copyTip = useCopyTip(copied);
 
   const download = async (which: 'private' | 'public') => {
-    setDownloadError(false);
+    setDownloadError(null);
     const { downloadSshKey } = await import('./sshKeyFile');
     const saved = await downloadSshKey(which, data);
-    if (!saved.ok && saved.reason === 'failed') setDownloadError(true);
+    if (!saved.ok && saved.reason === 'failed') setDownloadError(saveFailureText(saved, t('common:sshKeyForm.downloadFailed')));
   };
 
   // Truncate public key for display.
@@ -597,34 +610,34 @@ function SshKeyViewMode({ note, onEdit, copy, copied }: {
 
       <div className="mt-3">
         {data.label && (
-          <DetailRow label={t('vaultItem.fieldLabel')} icon={<Tag size={13} />}>
+          <DetailRow label={t('vaultItem.fieldLabel')} icon={<Tag />}>
             <span className="break-all">{data.label}</span>
           </DetailRow>
         )}
 
         {data.publicKey && (
-          <DetailRow label={t('vaultItem.fieldPublic')} icon={<Key size={13} />} actions={
+          <DetailRow label={t('vaultItem.fieldPublic')} icon={<Key />} actions={
             <>
               <DetailCopyAction value={data.publicKey} id="publicKey" copied={copied} onCopy={copy} label={copyTip('publicKey')} />
               <DetailAction label={t('common:sshKeyForm.downloadPublicKey')} onClick={() => void download('public')}>
-                <Download size={15} />
+                <Download />
               </DetailAction>
             </>
           }>
-            <span dir="ltr" className="font-mono text-xs text-pn-muted break-all" /* rtl-ok: a key, never reordered */>{pubShort}</span>
+            <span dir="ltr" className="font-mono text-small text-pn-muted break-all" /* rtl-ok: a key, never reordered */>{pubShort}</span>
           </DetailRow>
         )}
 
         {data.privateKey && (
           <DetailRow
             label={t('vaultItem.fieldPrivate')}
-            icon={<Lock size={13} />}
+            icon={<Lock />}
             actions={
               <>
                 <RevealAction shown={showPrivate} onToggle={() => setShowPrivate(!showPrivate)} />
                 <DetailCopyAction value={data.privateKey} id="privateKey" copied={copied} onCopy={copy} label={copyTip('privateKey')} />
                 <DetailAction label={t('common:sshKeyForm.downloadPrivateKey')} onClick={() => void download('private')}>
-                  <Download size={15} />
+                  <Download />
                 </DetailAction>
               </>
             }
@@ -635,16 +648,16 @@ function SshKeyViewMode({ note, onEdit, copy, copied }: {
           </DetailRow>
         )}
         {data.privateKey && (
-          <p className="text-[11px] text-pn-muted mt-2">{t('common:sshKeyForm.downloadHint')}</p>
+          <p className="text-meta text-pn-muted mt-2">{t('common:sshKeyForm.downloadHint')}</p>
         )}
         {downloadError && (
-          <p className="text-[11px] text-danger mt-1">{t('common:sshKeyForm.downloadFailed')}</p>
+          <p className="text-meta text-danger mt-1">{downloadError}</p>
         )}
 
         {data.passphrase && (
           <DetailRow
             label={t('vaultItem.fieldPass')}
-            icon={<Shield size={13} />}
+            icon={<Shield />}
             actions={
               <>
                 <RevealAction shown={showPassphrase} onToggle={() => setShowPassphrase(!showPassphrase)} />
@@ -659,7 +672,8 @@ function SshKeyViewMode({ note, onEdit, copy, copied }: {
         )}
       </div>
 
-      {data.notes && <DetailNotes heading={t('vaultItem.notesHeading')}>{data.notes}</DetailNotes>}
+      {data.notes && <DetailNotes heading={t('common:cardForm.notes')}>{data.notes}</DetailNotes>}
+      {files}
     </div>
   );
 }
@@ -724,10 +738,16 @@ export function VaultItem({
   const [draftPinProtected, setDraftPinProtected] = useState(note.pinProtected === 1);
   const { copy, copied } = useCopyToClipboard();
   const [saveError, setSaveError] = useState('');
+  // The stored item the form opened on. Save merges the draft against it, so
+  // a field another device changed meanwhile is not written back over.
+  const baseBodyRef = useRef(note.body);
+  const baseExtrasRef = useRef(JSON.stringify(loginExtrasOf(note.trackers)));
 
   // Sync draft when the note changes externally (e.g. sync from another device).
   useEffect(() => {
     if (!editing) {
+      baseBodyRef.current = note.body;
+      baseExtrasRef.current = JSON.stringify(loginExtrasOf(note.trackers));
       setDraftBody(note.body);
       setDraftExtras(loginExtrasOf(note.trackers));
       setDraftPinProtected(note.pinProtected === 1);
@@ -738,6 +758,8 @@ export function VaultItem({
   useEffect(() => {
     const empty = isEmptyVaultBody(note.body, note.type) && !hasLoginExtras(loginExtrasOf(note.trackers));
     setEditing(empty);
+    baseBodyRef.current = note.body;
+    baseExtrasRef.current = JSON.stringify(loginExtrasOf(note.trackers));
     setDraftBody(note.body);
     setDraftExtras(loginExtrasOf(note.trackers));
     setDraftPinProtected(note.pinProtected === 1);
@@ -773,9 +795,11 @@ export function VaultItem({
     // A login's extras go into the latest tracker map, so a key another
     // surface wrote while the form was open is kept.
     const extras = { extraUrls: draftExtras.extraUrls.map((u) => u.trim()).filter(Boolean), fields: draftExtras.fields };
-    const trackers = note.type === 'login' ? withLoginExtras(note.trackers, extras) : undefined;
+    const extrasChanged = JSON.stringify(draftExtras) !== baseExtrasRef.current;
+    const trackers = note.type === 'login' && extrasChanged ? withLoginExtras(note.trackers, extras) : undefined;
+    const body = mergeVaultDraft(baseBodyRef.current, draftBody, note.body);
     setSaving(true);
-    const ok = await onSave(note.id, draftBody, trackers).catch(() => false);
+    const ok = await onSave(note.id, body, trackers).catch(() => false);
     setSaving(false);
     if (!ok) {
       setSaveError(t('vaultItem.saveFailed'));
@@ -795,6 +819,8 @@ export function VaultItem({
   }, [note.body, note.trackers, note.pinProtected]);
 
   const handleEdit = useCallback(() => {
+    baseBodyRef.current = note.body;
+    baseExtrasRef.current = JSON.stringify(loginExtrasOf(note.trackers));
     setDraftBody(note.body);
     setDraftExtras(loginExtrasOf(note.trackers));
     setDraftPinProtected(note.pinProtected === 1);
@@ -805,13 +831,18 @@ export function VaultItem({
 
   // ── View mode ────────────────────────────────────────────────
   if (!editing && !isNew) {
+    const files = (
+      <Suspense fallback={null}>
+        <VaultFiles key={note.id} note={note} readOnly={locked} isPro={isPro} onOpenUpgrade={onOpenUpgrade} onSave={(body) => onSave(note.id, body)} />
+      </Suspense>
+    );
     if (note.type === 'login') {
-      return <LoginViewMode note={note} onEdit={handleEdit} copy={copy} copied={copied} isPro={isPro} onOpenUpgrade={onOpenUpgrade} />;
+      return <LoginViewMode note={note} onEdit={handleEdit} copy={copy} copied={copied} isPro={isPro} onOpenUpgrade={onOpenUpgrade} files={files} />;
     }
     if (note.type === 'card') {
-      return <CardViewMode note={note} onEdit={handleEdit} copy={copy} copied={copied} />;
+      return <CardViewMode note={note} onEdit={handleEdit} copy={copy} copied={copied} files={files} />;
     }
-    return <SshKeyViewMode note={note} onEdit={handleEdit} copy={copy} copied={copied} />;
+    return <SshKeyViewMode note={note} onEdit={handleEdit} copy={copy} copied={copied} files={files} />;
   }
 
   // ── Edit mode ────────────────────────────────────────────────

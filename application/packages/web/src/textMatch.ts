@@ -18,7 +18,7 @@ const ASCII_ONLY = /^[\x00-\x7f]*$/;
 // A filter runs on every keystroke, and the Tasks pillar matches whole note
 // bodies, so a long text is folded once and remembered. The memo forgets
 // everything at once when it is full, so it never grows past its limit.
-// Spec: ops/docs/design-decisions.md (search core)
+// Spec: docs/internal/design-decisions.md (search core)
 const LONG_TEXT = 1000;
 const REMEMBERED_TEXTS = 500;
 const remembered = new Map<string, string>();
@@ -163,7 +163,7 @@ function located(text: string, folded: string, from: number, to: number, rank: 1
  * Japanese and Thai are not split into words, so a match inside a run of
  * their letters ranks 1. A query that folds to nothing matches nothing; an
  * empty query is the caller's to handle, and a list shows every item for it.
- * Spec: ops/docs/design-decisions.md (search core)
+ * Spec: docs/internal/design-decisions.md (search core)
  */
 export function textMatcher(query: string): (text: string) => TextMatch | null {
   const needle = foldForMatch(query).trim();

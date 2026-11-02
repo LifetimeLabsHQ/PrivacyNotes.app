@@ -10,7 +10,7 @@
  * and no count is affected - the list's own `length` still drives empty states,
  * selection counters and sidebar totals.
  *
- * Spec: ops/docs/design-decisions.md (list progressive reveal)
+ * Spec: docs/internal/design-decisions.md (list progressive reveal)
  */
 import { useCallback, useState } from 'react';
 

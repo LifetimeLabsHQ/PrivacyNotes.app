@@ -13,7 +13,7 @@ import { noteLinkKey, noteLinkTargets, parseNoteLinkTarget } from './noteLinks';
  * a vault entry) is JSON and holds no note-link. Any item can be a target. A
  * PIN-protected source is never listed, only counted, so the panel says how
  * many it left out without naming them.
- * Spec: ops/issues/0351.md (Spec)
+ * Spec: docs/internal/issues/0351.md (Spec)
  */
 
 type Item = { id: string; title: string; body: string; pinProtected?: number };

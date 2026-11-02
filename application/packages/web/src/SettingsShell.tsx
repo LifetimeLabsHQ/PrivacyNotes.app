@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 export type SettingsCategory = {
   id: string;
   label: string;
+  /** The pane's headline, when it says more than the short rail label. */
+  title?: string;
   icon: ReactNode;
   /**
    * Optional section label. Consecutive categories sharing a group render
@@ -16,7 +18,7 @@ export type SettingsCategory = {
    * never becomes the active selection, and never lands as the desktop
    * default. Use `siteHref()` so the URL is absolute off the web.
    * `render` is ignored when this is set.
-   * Spec: ops/docs/archive/ui-patterns.md section 36 (settings standard)
+   * Spec: docs/internal/design/ui-patterns.md section 36 (settings standard)
    */
   href?: string;
   /**

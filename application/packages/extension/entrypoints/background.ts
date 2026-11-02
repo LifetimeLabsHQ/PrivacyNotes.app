@@ -1,0 +1,348 @@
+/**
+ * The background: the PrivacyNotes right-click submenu (with the logins of
+ * the page under Copy login), the address-bar keyword, the queue's retry
+ * alarm, the clipboard clear, the two keyboard shortcuts, the idle lock, and
+ * the saves the popup hands over. It reads a page only when the person clips
+ * it, by injecting the capture script into that one tab.
+ * Spec: docs/internal/plans/browser-extension-build.md (sections 3.3, 3.4 and 5)
+ */
+import { browser, type Browser } from 'wxt/browser';
+import { clipNoteBody } from '@notes/clipper';
+import { generateTotpCode, parseTotpInput } from '@notes/shared';
+import type { CopyEntry, LoginCopyEntry } from '@notes/shared/extension';
+import { capturePage, type CapturedPage } from '../src/capture';
+import { buildClip, clippable, type Built, type ClipMode } from '../src/clipping';
+import { CLEAR_ALARM, clearIfStill, clearLater, copySecret, offscreen, writeClipboard } from '../src/clipboard';
+import { FLUSH_ALARM, flashBadge, flush } from '../src/queue';
+import { saveClip, saveLogin, type SaveResult } from '../src/save';
+import { readPrefs } from '../src/prefs';
+import { startI18n, t } from '../src/i18n';
+import { readConnection } from '../src/connection';
+import { allEntries, applyLockTime, copyLoginShortcut, isUnlocked, LOCK_ALARM, lockLogins, locksOn, ROWS_KEY, SESSION_KEY, shortcutUrl } from '../src/logins';
+import { loginsOf, matchLogins, searchEntries } from '../src/match';
+import type { BackgroundMessage } from '../src/messages';
+import { ROUTE_KEY, type PopupRoute } from '../src/route';
+
+const MENU_ROOT = 'pn';
+const COPY_MENU = 'login-copy';
+/** At most this many logins get a submenu of their own under Copy login. */
+const COPY_MENU_MAX = 6;
+
+type Context = 'page' | 'selection' | 'link' | 'editable';
+const ALL_CONTEXTS: Context[] = ['page', 'selection', 'link', 'editable'];
+
+/** The logins the Copy login submenu was built from, by their menu id. */
+let copyMenuLogins = new Map<string, LoginCopyEntry>();
+
+function menuItem(id: string, title: string, contexts: Context[], parentId: string = MENU_ROOT): void {
+  browser.contextMenus.create({ id, parentId, title, contexts: contexts as never });
+}
+
+/**
+ * The whole submenu, built again for the page in front: the static rows,
+ * then under Copy login the logins of that page (one match: its values; two
+ * to six: a row per login). Locked, one row says so and opens the popup.
+ * The copy is local, so this costs no request.
+ */
+async function buildMenus(): Promise<void> {
+  await startI18n();
+  await browser.contextMenus.removeAll();
+  browser.contextMenus.create({ id: MENU_ROOT, title: t('notes:settings.groupBrand'), contexts: ALL_CONTEXTS as never });
+  menuItem('page-note', t('menu.savePageNote'), ['page']);
+  menuItem('page-bookmark', t('menu.savePageBookmark'), ['page']);
+  menuItem('page-markdown', t('menu.copyPageMarkdown'), ['page']);
+  // With text selected the page comes first, then the selection.
+  menuItem('selection-page-note', t('menu.savePageNote'), ['selection']);
+  menuItem('selection-note', t('menu.saveSelection'), ['selection']);
+  menuItem('link-bookmark', t('menu.saveLinkBookmark'), ['link']);
+  menuItem('link-note', t('menu.saveLinkedPage'), ['link']);
+  // The vault half: each opens the popup on its view, or copies at once.
+  browser.contextMenus.create({ id: 'logins-sep', parentId: MENU_ROOT, type: 'separator', contexts: ALL_CONTEXTS as never });
+  menuItem(COPY_MENU, t('menu.copyLogin'), ALL_CONTEXTS);
+  menuItem('login-add', t('menu.addLogin'), ALL_CONTEXTS);
+  menuItem('login-generate', t('menu.generatePassword'), ALL_CONTEXTS);
+
+  copyMenuLogins = new Map();
+  const connection = await readConnection();
+  if (!connection?.logins) return;
+  if (!(await isUnlocked())) return menuItem(`${COPY_MENU}:unlock`, t('vault.unlockToCopy'), ALL_CONTEXTS, COPY_MENU);
+  const [tab] = await browser.tabs.query({ active: true, lastFocusedWindow: true });
+  const found = tab?.url ? await allEntries() : null;
+  const matches = found && tab?.url ? matchLogins(loginsOf(found.entries), tab.url).slice(0, COPY_MENU_MAX) : [];
+  const valueRows = (parent: string, login: LoginCopyEntry) => {
+    copyMenuLogins.set(parent, login);
+    if (login.username) menuItem(`${parent}:username`, t('auth:loginForm.copyUsername'), ALL_CONTEXTS, parent);
+    if (login.password) menuItem(`${parent}:password`, t('auth:loginForm.copyPassword'), ALL_CONTEXTS, parent);
+    if (login.totp && found?.pro && parseTotpInput(login.totp)) menuItem(`${parent}:code`, t('logins.copyCode'), ALL_CONTEXTS, parent);
+  };
+  if (matches.length === 1) return valueRows(COPY_MENU, matches[0]!);
+  for (const login of matches) {
+    const id = `${COPY_MENU}:${login.item}`;
+    menuItem(id, login.username ? `${login.name} · ${login.username}` : login.name, ALL_CONTEXTS, COPY_MENU);
+    valueRows(id, login);
+  }
+}
+
+/** One build at a time: a tab switch during a build waits for it. */
+let menuTask: Promise<void> = Promise.resolve();
+function refreshMenus(): void {
+  menuTask = menuTask.then(buildMenus).catch((err: unknown) => {
+    console.warn('[privacynotes] menu build failed:', err instanceof Error ? err.message : 'unknown');
+  });
+}
+
+/** A click on a Copy login row: the value, cleared after 30 seconds. */
+async function copyFromMenu(menuId: string): Promise<boolean> {
+  if (!menuId.startsWith(`${COPY_MENU}:`)) return false;
+  if (menuId === `${COPY_MENU}:unlock`) {
+    openPopupOn('search', '');
+    return true;
+  }
+  const at = menuId.lastIndexOf(':');
+  const field = menuId.slice(at + 1);
+  const login = copyMenuLogins.get(menuId.slice(0, at));
+  if (!login || !(await isUnlocked())) {
+    await flashBadge('problem');
+    return true;
+  }
+  const value = field === 'username' ? login.username
+    : field === 'password' ? login.password
+    : field === 'code' ? (() => { const totp = parseTotpInput(login.totp); return totp ? generateTotpCode(totp, Date.now()) : ''; })()
+    : '';
+  if (!value || !(await copySecret(value))) await flashBadge('problem');
+  return true;
+}
+
+/** Open the popup on one of its views. A context-menu click is a user
+ *  action, so the popup may open; where the browser refuses, the same page
+ *  opens in a small window at the top end of the browser window, which
+ *  Escape closes. Called before any await, while the click counts. */
+function openPopupOn(view: PopupRoute['view'], url: string, query?: string): void {
+  void browser.storage.session.set({ [ROUTE_KEY]: { view, url, query, at: Date.now() } satisfies PopupRoute });
+  const fallback = async () => {
+    const width = 400;
+    const height = 640;
+    const win = await browser.windows.getLastFocused().catch(() => null);
+    const left = win?.left != null && win.width != null ? Math.max(0, win.left + win.width - width - 16) : undefined;
+    const top = win?.top != null ? win.top + 72 : undefined;
+    await browser.windows.create({ url: browser.runtime.getURL('/popup.html?window=1' as '/'), type: 'popup', width, height, left, top, focused: true });
+  };
+  try {
+    const opened = browser.action.openPopup?.();
+    if (opened) void opened.catch(() => void fallback());
+    else void fallback();
+  } catch {
+    void fallback();
+  }
+}
+
+/** The clip engine needs a DOM: Firefox's background has one, Chrome's
+ *  worker borrows the offscreen document. */
+function build(page: CapturedPage, mode: ClipMode, anyway: boolean): Promise<Built> {
+  if (typeof DOMParser === 'function') return Promise.resolve(buildClip(page, mode, anyway));
+  return offscreen<Built>({ target: 'offscreen', type: 'clip', page, mode, anyway });
+}
+
+async function capture(tabId: number): Promise<CapturedPage | null> {
+  try {
+    const [res] = await browser.scripting.executeScript({ target: { tabId }, func: capturePage });
+    return (res?.result as CapturedPage | undefined) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** A page the person never opened (a link): fetched without cookies. */
+async function fetchPage(url: string): Promise<CapturedPage | null> {
+  try {
+    const res = await fetch(url, { credentials: 'omit', referrerPolicy: 'no-referrer' });
+    const type = res.headers.get('content-type') ?? '';
+    if (!res.ok || !/text\/html|application\/xhtml/.test(type)) return null;
+    const html = (await res.text()).slice(0, 5_000_000);
+    return { url: res.url || url, title: '', html, selectionHtml: '' };
+  } catch {
+    return null;
+  }
+}
+
+function report(result: SaveResult): void {
+  if (result.state !== 'sent' && result.state !== 'queued') void flashBadge('problem');
+}
+
+/** A right-click save: no popup, so a short page is saved anyway and a long
+ *  one as a bookmark, and the icon says how it went. */
+async function savePage(page: CapturedPage | null, mode: ClipMode): Promise<void> {
+  if (!page || !clippable(page.url)) return void flashBadge('problem');
+  const built = await build(page, mode, true);
+  const { pictures } = await readPrefs();
+  if (built.kind === 'clip') report(await saveClip({ mode, url: page.url, title: page.title || built.clip.title, clip: built.clip, pictures }));
+  else report(await saveClip({ mode: 'bookmark', url: page.url, title: page.title }));
+}
+
+/** Alt+Shift+B, and the menu row: the page in front as a bookmark; the icon
+ *  says it is done. */
+async function bookmarkTab(tab: Browser.tabs.Tab | undefined): Promise<void> {
+  if (!clippable(tab?.url)) return void flashBadge('problem');
+  const result = await saveClip({ mode: 'bookmark', url: tab!.url!, title: tab?.title ?? '' });
+  if (result.state === 'sent' || result.state === 'queued') await flashBadge('saved');
+  else report(result);
+}
+
+async function copyMarkdown(page: CapturedPage | null): Promise<void> {
+  if (!page || !clippable(page.url)) return void flashBadge('problem');
+  const built = await build(page, 'note', true);
+  if (built.kind !== 'clip') return void flashBadge('problem');
+  const { clip } = built;
+  const markdown = clip.markdown.replace(/\(pn-clip:(\d+)\)/g, (_m, i: string) => `(${clip.images[Number(i)]?.src ?? ''})`);
+  const body = clipNoteBody({ ...clip, markdown }, page.url, {
+    sourceLabel: t('shell:clipper.sourceLabel'),
+    formatDate: (d) => d.toLocaleDateString(),
+  });
+  if (await writeClipboard(body)) await flashBadge('saved');
+  else await flashBadge('problem');
+}
+
+async function onMenu(info: Browser.contextMenus.OnClickData, tab?: Browser.tabs.Tab): Promise<void> {
+  const id = String(info.menuItemId);
+  if (id === 'login-add') return openPopupOn('addLogin', tab?.url ?? '');
+  if (id === 'login-generate') return openPopupOn('generator', tab?.url ?? '');
+  if (id === COPY_MENU) return copyLoginShortcut();
+  if (await copyFromMenu(id)) return;
+  await startI18n();
+  const tabId = tab?.id;
+  switch (id) {
+    case 'page-note':
+    case 'selection-page-note':
+      return tabId === undefined ? undefined : savePage(await capture(tabId), 'note');
+    case 'selection-note':
+      return tabId === undefined ? undefined : savePage(await capture(tabId), 'selection');
+    case 'page-bookmark':
+      return bookmarkTab(tab);
+    case 'page-markdown':
+      return tabId === undefined ? undefined : copyMarkdown(await capture(tabId));
+    case 'link-bookmark':
+      if (!clippable(info.linkUrl)) return void flashBadge('problem');
+      return report(await saveClip({ mode: 'bookmark', url: info.linkUrl!, title: info.selectionText ?? '' }));
+    case 'link-note':
+      if (!clippable(info.linkUrl)) return void flashBadge('problem');
+      return savePage(await fetchPage(info.linkUrl!), 'note');
+  }
+}
+
+// ── The address bar: "pn <words>" ────────────────────────────────────
+
+const xml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]!);
+const UNLOCK_SUGGESTION = 'pn:unlock';
+
+function secondLine(e: CopyEntry): string {
+  switch (e.kind) {
+    case 'login':
+      return e.username || e.urls[0] || '';
+    case 'card':
+      return [e.network, e.number ? `•••• ${e.number.replace(/\D/g, '').slice(-4)}` : ''].filter(Boolean).join(' ');
+    case 'ssh':
+      return e.keyType;
+    case 'bookmark':
+      return e.url.replace(/^https?:\/\/(www\.)?/, '');
+  }
+}
+
+/** What Enter opens: a bookmark's site, or the item in the app. */
+function destination(e: CopyEntry): string {
+  return e.kind === 'bookmark' ? e.url : shortcutUrl(e.item);
+}
+
+async function omniboxSuggestions(text: string): Promise<Browser.omnibox.SuggestResult[]> {
+  await startI18n();
+  if (!(await isUnlocked())) return [{ content: UNLOCK_SUGGESTION, description: xml(t('vault.omniboxUnlock')) }];
+  const found = await allEntries();
+  if (!found) return [{ content: UNLOCK_SUGGESTION, description: xml(t('vault.omniboxUnlock')) }];
+  const seen = new Set<string>();
+  const out: Browser.omnibox.SuggestResult[] = [];
+  for (const e of searchEntries(found.entries, text, 12)) {
+    const content = destination(e);
+    if (seen.has(content)) continue;
+    seen.add(content);
+    out.push({ content, description: xml([e.name, secondLine(e)].filter(Boolean).join(' · ')) });
+    if (out.length === 6) break;
+  }
+  return out;
+}
+
+async function omniboxEntered(text: string, disposition: string): Promise<void> {
+  if (/^https?:\/\//i.test(text) && text !== UNLOCK_SUGGESTION) {
+    if (disposition === 'currentTab') await browser.tabs.update({ url: text });
+    else await browser.tabs.create({ url: text, active: disposition === 'newForegroundTab' });
+    return;
+  }
+  // Words with no pick, or the vault locked: the popup, on the search.
+  openPopupOn('search', '', text === UNLOCK_SUGGESTION ? '' : text);
+}
+
+async function onMessage(msg: BackgroundMessage): Promise<unknown> {
+  switch (msg.type) {
+    case 'save':
+      return saveClip(msg.request);
+    case 'saveLogin':
+      return saveLogin(msg.request);
+    case 'flush':
+      return flush();
+    case 'copy':
+      if (msg.clearAfter) await clearLater(msg.text);
+      return true;
+  }
+}
+
+export default defineBackground(() => {
+  // The chosen lock time drives the idle detection (the browser's default
+  // is one minute); a change of the choice applies at once.
+  void applyLockTime();
+  browser.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && 'prefs' in changes) void applyLockTime();
+    // The vault opened, closed, pulled or disconnected: the Copy login rows follow.
+    if ((area === 'session' && SESSION_KEY in changes) || (area === 'local' && (ROWS_KEY in changes || 'connection' in changes))) refreshMenus();
+  });
+  browser.runtime.onInstalled.addListener(() => refreshMenus());
+  browser.runtime.onStartup.addListener(() => {
+    refreshMenus();
+    void flush();
+  });
+  // The page in front changed: its logins go under Copy login.
+  browser.tabs.onActivated.addListener(() => refreshMenus());
+  browser.tabs.onUpdated.addListener((_id, change, tab) => {
+    if (change.url && tab.active) refreshMenus();
+  });
+  browser.windows.onFocusChanged.addListener((id) => {
+    if (id !== browser.windows.WINDOW_ID_NONE) refreshMenus();
+  });
+  browser.contextMenus.onClicked.addListener((info, tab) => void onMenu(info, tab));
+  browser.runtime.onMessage.addListener((msg: BackgroundMessage & { target?: string }, sender, sendResponse) => {
+    // Only the extension's own pages (a script injected into a site carries
+    // the site's address), and never the offscreen document's mail.
+    const own = sender.id === browser.runtime.id && !!sender.url?.startsWith(browser.runtime.getURL('/'));
+    if (msg?.target === 'offscreen' || !own) return;
+    void onMessage(msg).then(sendResponse, (err: unknown) => {
+      console.warn('[privacynotes] message failed:', err instanceof Error ? err.message : 'unknown');
+      sendResponse(null);
+    });
+    return true;
+  });
+  browser.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === FLUSH_ALARM) void flush();
+    else if (alarm.name === CLEAR_ALARM) void clearIfStill();
+    else if (alarm.name === LOCK_ALARM) void lockLogins();
+  });
+  browser.commands.onCommand.addListener((command) => {
+    if (command === 'copy-login') void copyLoginShortcut();
+    else if (command === 'save-bookmark') void browser.tabs.query({ active: true, lastFocusedWindow: true }).then(([tab]) => bookmarkTab(tab));
+  });
+  browser.idle.onStateChanged.addListener((state) => {
+    void locksOn(state).then((lock) => (lock ? lockLogins() : undefined));
+  });
+  // The address bar: "pn" then words. Only the local copy is searched.
+  void startI18n().then(() => browser.omnibox.setDefaultSuggestion({ description: xml(t('vault.omniboxDefault')) }));
+  browser.omnibox.onInputChanged.addListener((text, suggest) => {
+    void omniboxSuggestions(text).then(suggest, () => suggest([]));
+  });
+  browser.omnibox.onInputEntered.addListener((text, disposition) => void omniboxEntered(text, disposition));
+});

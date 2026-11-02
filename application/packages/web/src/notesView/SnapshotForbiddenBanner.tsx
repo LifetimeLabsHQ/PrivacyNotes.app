@@ -9,7 +9,7 @@ export function SnapshotForbiddenBanner({
 }) {
   const { t } = useTranslation('notes');
   return (
-    <div className="flex items-center justify-between gap-2 border-b text-sm px-4 py-2 bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300">
+    <div className="flex items-center justify-between gap-2 border-b text-body px-4 py-2 bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300">
       <span>
         {t('banner.snapshotPaused')}
       </span>
@@ -17,7 +17,7 @@ export function SnapshotForbiddenBanner({
         <button
           type="button"
           onClick={onRestorePro}
-          className="text-xs font-medium underline hover:no-underline"
+          className="text-small font-medium underline hover:no-underline"
         >
           {t('banner.restorePro')}
         </button>
@@ -25,7 +25,7 @@ export function SnapshotForbiddenBanner({
           type="button"
           onClick={onDismiss}
           className="text-warning hover:text-amber-900 dark:hover:text-amber-200"
-          aria-label={t('banner.dismiss')}
+          aria-label={t('common:updateToast.dismiss')}
         >
           ×
         </button>

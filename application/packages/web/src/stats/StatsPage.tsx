@@ -37,7 +37,7 @@ export type StatsView = { kind: 'home' } | { kind: 'tracker'; id: string } | { k
  * Settings > Statistics: one page. Days logged, the plain sentences of what
  * stands out, one row per tracker and the writing rows; a tap opens that
  * thing's own page with a Back row. No tabs, so nothing hides behind one.
- * Spec: ops/docs/archive/wellness-statistics.md (section 22)
+ * Spec: docs/internal/specs/wellness-statistics.md (section 22)
  */
 export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_FACTORS, medications, isPro, onOpenUpgrade, weekReflection, onWeekReflectionChange, onOpenDay, onOpenExport, initialView }: {
   notes: LocalNote[];
@@ -94,7 +94,7 @@ export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_F
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the view key names every view
   }, [viewKey]);
   const home = () => setView({ kind: 'home' });
-  const back = (children: ReactNode) => <SubViewHeader backLabel={t('title')} onBack={home} anchorRef={top}>{children}</SubViewHeader>;
+  const back = (children: ReactNode) => <SubViewHeader backLabel={t('notes:settings.statsLabel')} onBack={home} anchorRef={top}>{children}</SubViewHeader>;
   const range = (
     <SettingsSegmented
       label={t('writing.timeRangeAria')}
@@ -107,7 +107,7 @@ export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_F
   if (view.kind === 'medication') {
     return (
       <div data-setting="stats.medication" className="space-y-6">
-        {back(<span className="text-sm font-semibold text-pn">{t('wellness.subTabs.medication')}</span>)}
+        {back(<span className="text-body font-semibold text-pn">{t('wellness.subTabs.medication')}</span>)}
         {range}
         <MedicationSubTab model={model} stats={stats} medications={medications} unlocked={unlocked} isPro={isPro} onOpenDay={onOpenDay} />
         <HelpChip surface="wellness" className="pt-1" />
@@ -119,7 +119,7 @@ export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_F
     const d = model.byId(view.id);
     return (
       <div className="space-y-6">
-        {back(d ? <TrackerSwitcher model={model} current={d} onPick={(id) => setView({ kind: 'tracker', id })} /> : <span className="text-sm font-semibold text-pn">{t('title')}</span>)}
+        {back(d ? <TrackerSwitcher model={model} current={d} onPick={(id) => setView({ kind: 'tracker', id })} /> : <span className="text-body font-semibold text-pn">{t('notes:settings.statsLabel')}</span>)}
         {range}
         {d ? (
           <ExploreSubTab model={model} trackerId={d.id} unlocked={unlocked} isPro={isPro} onOpenUpgrade={onOpenUpgrade} onOpenDay={onOpenDay} />
@@ -154,8 +154,8 @@ export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_F
 
       {hasEntries ? <Overview model={model} today={today} medAdherence={stats.medAdherence} /> : (
         <div className="rounded-lg border border-divider bg-track px-4 py-6 text-center">
-          <p className="text-sm text-pn">{t('wellness.empty.title')}</p>
-          <p className="text-xs text-pn-muted mt-1">{t('wellness.empty.hint')}</p>
+          <p className="text-body text-pn">{t('wellness.empty.title')}</p>
+          <p className="text-small text-pn-muted mt-1">{t('wellness.empty.hint')}</p>
         </div>
       )}
 
@@ -179,7 +179,7 @@ export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_F
       {hasEntries && (
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <SectionEyebrow icon={CalendarCheck}>{t('wellness.week.heading')}</SectionEyebrow>
+            <SectionEyebrow icon={CalendarCheck}>{t('notes:weekReview.title')}</SectionEyebrow>
             {!isPro && <ProMark />}
           </div>
           {unlocked ? (
@@ -199,7 +199,7 @@ export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_F
           every other export; this door leads there, after the data it exports. */}
       {hasEntries && onOpenExport && (
         <button type="button" onClick={onOpenExport} className={`${SETTINGS_BTN} self-start`}>
-          <DownloadSimple size={15} className="text-accent" aria-hidden="true" />
+          <DownloadSimple className="text-accent" aria-hidden="true" />
           {t('wellness.export.openExport')}
         </button>
       )}
@@ -209,7 +209,7 @@ export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_F
 }
 
 /** The change of a tracker's average against the window just before the range; none for "All". */
-function changeOf(model: WellnessModel, d: TrackerDescriptor, series: DaySeries): number | null {
+export function changeOf(model: WellnessModel, d: TrackerDescriptor, series: DaySeries): number | null {
   if (model.rangeId === 'all' || d.aggregate === 'sum') return null;
   const now = aggregate(series, d);
   if (now.kind !== 'numeric' || now.avg === null) return null;
@@ -219,13 +219,13 @@ function changeOf(model: WellnessModel, d: TrackerDescriptor, series: DaySeries)
 }
 
 /** The arrow and the change, green when the change is good for that tracker. */
-function Change({ d, delta, long = false }: { d: TrackerDescriptor; delta: number; long?: boolean }) {
+export function Change({ d, delta, long = false }: { d: TrackerDescriptor; delta: number; long?: boolean }) {
   const { t } = useTranslation('stats');
   const Arrow = delta >= 0 ? ArrowUp : ArrowDown;
   // Counted units (steps, beats) change in whole numbers.
   const text = formatDelta(delta, d.unit === 'steps' || d.unit === 'bpm' ? 0 : 1);
   return (
-    <span className={`inline-flex items-center gap-0.5 text-[11px] font-medium tabular-nums ${TONE_TEXT[changeTone(d, delta)]}`}>
+    <span className={`inline-flex items-center gap-0.5 text-meta font-medium tabular-nums ${TONE_TEXT[changeTone(d, delta)]}`}>
       <Arrow size={11} aria-hidden="true" />
       {long ? t('home.delta', { delta: text }) : text}
     </span>
@@ -264,18 +264,18 @@ function Overview({ model, today, medAdherence }: { model: WellnessModel; today:
         <div className="flex items-center gap-3">
           <MoodMark mood={Math.round(avg * 10) / 10} size={40} />
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-pn">{t('home.onAverage', { word: moodWord(Math.round(avg)) })}</p>
+            <p className="text-body font-semibold text-pn">{t('home.onAverage', { word: moodWord(Math.round(avg)) })}</p>
             {mood && moodDelta !== null && <Change d={mood} delta={moodDelta} long />}
           </div>
         </div>
       )}
       <div className="flex flex-wrap gap-1.5">
-        <StatPill icon={<CheckCircle size={12} aria-hidden="true" />}>{t('home.daysOf', { logged: model.inRange.length, days: model.rangeDays })}</StatPill>
-        {streak >= 2 && <StatPill icon={<Fire size={12} aria-hidden="true" />}>{t('home.inARow', { count: streak })}</StatPill>}
-        {medAdherence != null && <StatPill icon={<Pill size={12} aria-hidden="true" />}>{t('home.medsTaken', { pct: medAdherence })}</StatPill>}
+        <StatPill icon={<CheckCircle aria-hidden="true" />}>{t('home.daysOf', { logged: model.inRange.length, days: model.rangeDays })}</StatPill>
+        {streak >= 2 && <StatPill icon={<Fire aria-hidden="true" />}>{t('home.inARow', { count: streak })}</StatPill>}
+        {medAdherence != null && <StatPill icon={<Pill aria-hidden="true" />}>{t('home.medsTaken', { pct: medAdherence })}</StatPill>}
         {pills.map(({ d, series }) => <TrackerPill key={d.id} d={d}>{pillValue(d, series)}</TrackerPill>)}
       </div>
-      {early && <p className="text-[11px] text-pn-muted">{t('home.firstInsight', { count: MIN_PER_SIDE })}</p>}
+      {early && <p className="text-meta text-pn-muted">{t('home.firstInsight', { count: MIN_PER_SIDE })}</p>}
     </div>
   );
 }
@@ -291,11 +291,11 @@ function MoodByDay({ model }: { model: WellnessModel }) {
     <div data-setting="stats.moodTrend">
       <div className="flex items-center justify-between gap-2 mb-2">
         <SectionEyebrow icon={ChartLineUp}>{t('home.moodByDay')}</SectionEyebrow>
-        <span className="hidden sm:inline text-[11px] text-pn-muted">{t('home.moodLegend')}</span>
+        <span className="hidden sm:inline text-meta text-pn-muted">{t('home.moodLegend')}</span>
       </div>
       <div className="rounded-lg border border-divider bg-surface-2 p-3 space-y-3">
         <TrackerChart spec={chartSpecFor(mood, series, model.rangeDays > 182)} height={96} average ariaLabel={trackerName(mood, t)} />
-        <div className="flex justify-between text-[11px] text-pn-muted -mt-2">
+        <div className="flex justify-between text-meta text-pn-muted -mt-2">
           <span>{formatDay(model.range.from, 'dayMonth')}</span>
           <span>{formatDay(model.range.to, 'dayMonth')}</span>
         </div>
@@ -320,11 +320,11 @@ function YourWeek({ model }: { model: WellnessModel }) {
     <div>
       <div className="flex items-center justify-between gap-2 mb-2">
         <SectionEyebrow icon={CalendarCheck}>{t('home.yourWeek')}</SectionEyebrow>
-        <span className="hidden sm:inline text-[11px] text-pn-muted">{t('home.yourWeekHint')}</span>
+        <span className="hidden sm:inline text-meta text-pn-muted">{t('home.yourWeekHint')}</span>
       </div>
       <div className="rounded-lg border border-divider bg-surface-2 p-3 space-y-2">
         <WeekdayChart values={values} format={(v) => formatNumber(v, 1)} />
-        <p className="text-sm text-pn">{t('home.weekLine', { best: day(best.i), bestAvg: formatNumber(best.v, 1), worst: day(worst.i), worstAvg: formatNumber(worst.v, 1) })}</p>
+        <p className="text-body text-pn">{t('home.weekLine', { best: day(best.i), bestAvg: formatNumber(best.v, 1), worst: day(worst.i), worstAvg: formatNumber(worst.v, 1) })}</p>
       </div>
     </div>
   );
@@ -388,7 +388,7 @@ function StandsOut({ model, unlocked, isPro, onOpen, onOpenUpgrade }: {
     const label = (
       <>
         {standoutLabel(r, d, t)}
-        {r.lag === 1 && <span className="ms-1.5 text-[11px] text-pn-muted">{t('home.nextDay')}</span>}
+        {r.lag === 1 && <span className="ms-1.5 text-meta text-pn-muted">{t('home.nextDay')}</span>}
       </>
     );
     return (
@@ -416,19 +416,19 @@ function StandsOut({ model, unlocked, isPro, onOpen, onOpenUpgrade }: {
       {group(t('home.lifts'), Sparkle, shownLifts)}
       {group(t('home.drags'), SmileySad, shownDrags)}
       {hidden > 0 && (
-        <button type="button" onClick={onOpenUpgrade} className="w-full flex items-center gap-2 text-start text-xs text-pn-muted hover:text-pn">
+        <button type="button" onClick={onOpenUpgrade} className="w-full flex items-center gap-2 text-start text-small text-pn-muted hover:text-pn">
           {!isPro && <ProMark />}
           {t('wellness.patterns.insightsLocked', { count: hidden })}
         </button>
       )}
-      <p className="text-[11px] text-pn-muted">{t('home.footnoteShort')}</p>
+      <p className="text-meta text-pn-muted">{t('home.footnoteShort')}</p>
     </div>
   );
 }
 
 /** The series from its first day with a value, so a short log does not draw as a mostly empty line. */
 /** The span from the first to the last logged day, so a card's small chart fills its box; null under two logged days. */
-function loggedSpan(series: DaySeries): DaySeries | null {
+export function loggedSpan(series: DaySeries): DaySeries | null {
   const logged = (p: DaySeries['points'][number]) => p.value !== undefined && !(Array.isArray(p.value) && p.value.length === 0);
   const first = series.points.findIndex(logged);
   let last = series.points.length - 1;
@@ -467,8 +467,8 @@ function TrackerRows({ model, onOpen }: { model: WellnessModel; onOpen: (d: Trac
       <button type="button" onClick={() => onOpen(d)} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-start min-w-0">
         <TrackerTile d={d} />
         <span className="flex-1 min-w-0">
-          <span className="block text-sm text-pn truncate">{trackerName(d, t)}</span>
-          <span className="block text-[11px] text-pn-muted truncate">{sub}</span>
+          <span className="block text-body text-pn truncate">{trackerName(d, t)}</span>
+          <span className="block text-meta text-pn-muted truncate">{sub}</span>
         </span>
         {span && (
           <span aria-hidden="true" className="hidden @[17rem]:block w-14 shrink-0">
@@ -476,7 +476,7 @@ function TrackerRows({ model, onOpen }: { model: WellnessModel; onOpen: (d: Trac
           </span>
         )}
         <span className="shrink-0 text-end max-w-[35%]">
-          <span className="block text-sm font-semibold tabular-nums truncate">{headline}</span>
+          <span className="block text-body font-semibold tabular-nums truncate">{headline}</span>
           {delta !== null && <Change d={d} delta={delta} />}
         </span>
       </button>
@@ -488,12 +488,12 @@ function TrackerRows({ model, onOpen }: { model: WellnessModel; onOpen: (d: Trac
     <div data-setting="stats.wellness" className="@container">
       <div className="flex items-center justify-between mb-2">
         <SectionEyebrow icon={Pulse}>{t('home.trackers')}</SectionEyebrow>
-        <span className="text-[11px] text-pn-muted">{t('home.tapHint')}</span>
+        <span className="text-meta text-pn-muted">{t('home.tapHint')}</span>
       </div>
       {rows.live.length > 0 && <div className="grid @xl:grid-cols-2 gap-2">{rows.live.map(card)}</div>}
       {rows.stopped.length > 0 && (
         <details className="mt-2">
-          <summary className="text-[11px] text-pn-muted cursor-pointer">{t('wellness.trackers.stoppedChip', { count: rows.stopped.length })}</summary>
+          <summary className="text-meta text-pn-muted cursor-pointer">{t('wellness.trackers.stoppedChip', { count: rows.stopped.length })}</summary>
           <div className="grid @xl:grid-cols-2 gap-2 mt-2">{rows.stopped.map(card)}</div>
         </details>
       )}

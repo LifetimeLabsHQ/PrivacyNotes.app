@@ -4,7 +4,7 @@
 # one it stores. The official biometric plugin asks for a yes or no and has no
 # CryptoObject, so this one ships its own Kotlin. Its commands are reached
 # from Rust only (src/biometric.rs) and are never granted to the web view.
-# Spec: ops/docs/plans/biometric-key-binding.md (section 8.2)
+# Spec: docs/internal/plans/biometric-key-binding.md (section 8.2)
 [package]
 name = "tauri-plugin-biometric-key"
 version = "0.1.0"

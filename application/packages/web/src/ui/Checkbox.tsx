@@ -12,12 +12,12 @@ export function Checkbox({ label, description, card = false, className = '', ...
 }) {
   return (
     <label
-      className={`flex items-start gap-2.5 text-sm text-pn ${rest.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}${card ? ' rounded-lg border border-divider p-3 hover:bg-surface-1 transition' : ''}${className ? ` ${className}` : ''}`}
+      className={`flex items-start gap-2.5 text-body text-pn ${rest.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}${card ? ' rounded-lg border border-divider p-3 hover:bg-surface-1 transition' : ''}${className ? ` ${className}` : ''}`}
     >
       <input type="checkbox" {...rest} className="mt-0.5 h-4 w-4 shrink-0 accent-accent" />
       <span className="min-w-0">
         <span className="block">{label}</span>
-        {description && <span className="mt-0.5 block text-xs text-pn-muted">{description}</span>}
+        {description && <span className="mt-0.5 block text-small text-pn-muted">{description}</span>}
       </span>
     </label>
   );

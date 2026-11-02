@@ -12,6 +12,8 @@
     "addLink": "Додати посилання",
     "noteLink": "Посилання на іншу нотатку (або введіть [[)",
     "numberedList": "Нумерований список",
+    "indent": "Збільшити відступ",
+    "outdent": "Зменшити відступ",
     "textColor": "Колір тексту",
     "textColorApply": "Колір тексту: {{color}}",
     "pickColor": "Виберіть колір тексту",
@@ -72,6 +74,7 @@
     "remove": "Прибрати виноску",
     "collapse": "Згорнути виноску",
     "expand": "Розгорнути виноску",
+    "dragGrip": "Перетягнути",
     "types": {
       "info": "Інформація",
       "success": "Успіх",
@@ -132,6 +135,9 @@
     "addColumnRight": "Додати стовпець праворуч",
     "toggleHeaderRow": "Увімкнути / вимкнути рядок заголовка",
     "equalColumnWidths": "Вирівняти ширину стовпців",
+    "cellColor": "Колір клітинки",
+    "sortAscending": "Сортувати від А до Я",
+    "sortDescending": "Сортувати від Я до А",
     "resizeHint": "Утримуйте {{shift}}, щоб змінити лише цей стовпець, або {{alt}} для дрібніших кроків",
     "deleteRow": "Видалити рядок",
     "deleteColumn": "Видалити стовпець",
@@ -162,14 +168,11 @@
     }
   },
   "find": {
-    "placeholder": "Знайти в нотатці",
-    "label": "Знайти в нотатці",
     "previous": "Попередній збіг",
     "previousTitle": "Попередній",
     "next": "Наступний збіг",
     "nextTitle": "Наступний",
     "close": "Закрити пошук",
-    "closeTitle": "Закрити",
     "replacePlaceholder": "Замінити на",
     "replaceLabel": "Замінити на",
     "replace": "Замінити",
@@ -177,10 +180,7 @@
     "replaceAll": "Усі",
     "replaceAllTitle": "Замінити всі збіги",
     "caseSensitive": "Враховувати регістр",
-    "caseSensitiveTitle": "Враховувати регістр",
     "closeReplace": "Закрити пошук і заміну",
-    "closeReplaceTitle": "Закрити",
-    "showReplace": "Знайти й замінити",
     "hideReplace": "Сховати заміну",
     "replacedCount_one": "Замінено: {{count}}",
     "replacedCount_few": "Замінено: {{count}}",
@@ -194,9 +194,7 @@
     "ariaLabel": "Структура нотатки",
     "hide": "Сховати структуру",
     "copyHeadingLink": "Копіювати посилання на заголовок",
-    "copyNoteLink": "Копіювати посилання на нотатку",
-    "copyHeadingShortcut": "Копіювати ярлик заголовка",
-    "copied": "Скопійовано"
+    "copyHeadingShortcut": "Копіювати ярлик заголовка"
   },
   "bodyMenu": {
     "cut": "Вирізати",
@@ -212,11 +210,8 @@
     "add": "Додати рядок"
   },
   "link": {
-    "popoverLabel": "Додати посилання",
     "placeholder": "Вставте або введіть URL",
     "apply": "Застосувати",
-    "addTitle": "Додати посилання",
-    "editTitle": "Редагувати посилання",
     "urlLabel": "URL",
     "urlPlaceholder": "https://example.com",
     "errorEnterUrl": "Введіть URL",
@@ -232,7 +227,6 @@
   },
   "audio": {
     "uploadingRecording": "Вивантаження запису...",
-    "uploading": "Вивантаження...",
     "stopRecording": "Зупинити запис",
     "recordAudio": "Записати аудіо",
     "savingRecording": "Збереження запису...",
@@ -255,7 +249,6 @@
     "tasksChecked_other": "Позначено {{done}} з {{formatted}}",
     "syncLimit": " · {{share}} ліміту синхронізації 1 МБ",
     "overSyncLimit": " · перевищено ліміт синхронізації 1 МБ, залишається на цьому пристрої",
-    "split": "Розділити нотатку",
     "veryLong": ", дуже довга, редагування може гальмувати",
     "gettingLong": ", стає довгою, на повільних пристроях може гальмувати",
     "largeTableWarning": "Велика таблиця (рядків: {{rows}}) може сповільнити редагування цієї нотатки, варто її розділити"
@@ -270,12 +263,9 @@
     "placeholder": "Текст для копіювання одним клацанням"
   },
   "inlineCode": {
-    "copyHint": "Копіювати: {{key}}+клацання",
-    "copied": "Скопійовано"
+    "copyHint": "Копіювати: {{key}}+клацання"
   },
   "codeBlock": {
-    "copy": "Копіювати",
-    "copied": "Скопійовано",
     "copyFailed": "Помилка",
     "wrap": "Переносити довгі рядки",
     "showAll_one": "Показати всі {{count}} рядок",
@@ -283,7 +273,6 @@
     "showAll_many": "Показати всі {{count}} рядків",
     "showAll_other": "Показати всі {{count}} рядка",
     "showLess": "Показати менше",
-    "plainText": "Звичайний текст",
     "language": "Мова коду: {{name}}",
     "searchLanguages": "Знайдіть мову",
     "placeholder": "Введіть або вставте код. Щоб додати кольори, виберіть мову вгорі."
@@ -364,7 +353,6 @@
     "inProgress": "У роботі",
     "review": "На перевірці",
     "done": "Виконано",
-    "color": "Колір",
     "columns": "Колонки",
     "columnCount_one": "{{count}} колонка",
     "cardCount_one": "{{count}} картка",
