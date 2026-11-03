@@ -33,6 +33,7 @@ import { adaptFile, entryToNote, isSupportedFile, isTextFile, readOpenedFile } f
 import {
   FileExistsError,
   hasRealPath,
+  openFailedText,
   pickDirectory,
   pickFile,
   type DirectoryEntry,
@@ -174,8 +175,8 @@ export function MarkdownListPane({
         return;
       }
       await openRef(ref);
-    } catch {
-      setError(t('markdown.openFailed'));
+    } catch (err) {
+      setError(openFailedText(t, err));
     }
   }
 
@@ -551,7 +552,7 @@ export function MarkdownListPane({
     if (!first) return;
     if (typeof window !== 'undefined' && !window.matchMedia('(min-width: 768px)').matches) return;
     autoOpenedFolderRef.current = dir.ref.location;
-    void openRef(first.entry.ref).catch(() => setError(t('markdown.openFailed')));
+    void openRef(first.entry.ref).catch((err) => setError(openFailedText(t, err)));
     // `openRef` and `t` are recreated every render; the guard above is what makes
     // this run once, not the dependency list.
     // eslint-disable-next-line react-hooks/exhaustive-deps

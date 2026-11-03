@@ -27,6 +27,17 @@ export type ChangelogRelease = {
 
 export const PUBLIC_CHANGELOG: ChangelogRelease[] = [
   {
+    version: '0.723',
+    date: '2026-11-03',
+    title: 'The app loads again on a repeat visit, and other fixes',
+    items: [
+      { type: 'fixed', text: 'The app loads again on a repeat visit, where it showed a blank page until a hard reload.', issues: [685] },
+      { type: 'fixed', text: 'Markdown files open again in the desktop app, and a file that cannot open now says why.' },
+      { type: 'fixed', text: 'A click in the empty space after a link at the end of a line puts the cursor there and does not open the link.', issues: [684] },
+      { type: 'fixed', text: 'A right-click in a drawing opens one menu, the app\'s own, with icons and shortcut keys.', issues: [681] },
+    ],
+  },
+  {
     version: '0.722',
     date: '2026-11-02',
     title: 'Drawings: sketch on a canvas next to your notes',

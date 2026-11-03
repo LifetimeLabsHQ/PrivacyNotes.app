@@ -25,8 +25,9 @@ export function usePendingFileOpens(
    *  already waiting the first time the shell drained it. */
   onOpen: (file: OpenedMarkdownFile, launched: boolean) => void,
   /** A queued file we could not open. The user double-clicked and the window
-   *  came forward, so saying nothing looks like the app simply ignored them. */
-  onError: () => void,
+   *  came forward, so saying nothing looks like the app simply ignored them.
+   *  `err` is what the read threw, for `openFailedText` to name the reason. */
+  onError: (err: unknown) => void,
 ) {
   // Both callbacks arrive as inline arrows from the shell, so their identity
   // changes on every render. The effect below is mount-only and would otherwise
@@ -61,7 +62,7 @@ export function usePendingFileOpens(
       if (cancelled) return;
       // `openPath` only declines off desktop, which the guard above has already
       // ruled out, so a null here is a path that did not become a file.
-      if (!ref) { onErrorRef.current(); return; }
+      if (!ref) { onErrorRef.current(undefined); return; }
       const opened = await readOpenedFile(ref);
       if (cancelled) return;
       onOpenRef.current(opened, launched);
@@ -72,12 +73,12 @@ export function usePendingFileOpens(
         if (cancelled) return;
         try {
           await openNext(launched);
-        } catch {
+        } catch (err) {
           // An unreadable file, a path that moved between the double click and
           // this drain, a permission the OS withheld. All of them end with the
           // user staring at an app that came forward and did nothing, which is
           // the one outcome worth interrupting them about.
-          if (!cancelled) onErrorRef.current();
+          if (!cancelled) onErrorRef.current(err);
         }
       });
       return queue;

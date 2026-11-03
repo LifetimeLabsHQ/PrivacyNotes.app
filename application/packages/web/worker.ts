@@ -515,7 +515,8 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
   // Fetched as "/" rather than "/index.html" so html_handling has
   // nothing to rewrite; the assets layer resolves the root to
   // dist/index.html. Status is forced to 200 - these are real pages,
-  // they just have no pre-rendered file of their own.
+  // they just have no pre-rendered file of their own. A 304 for the
+  // browser's own conditional request stays a 304 (withSecurityHeaders).
   if (APP_ROUTES.has(url.pathname)) {
     const shell = await env.ASSETS.fetch(new Request(new URL('/', url).toString(), request));
     return withSecurityHeaders(shell, url, 200);
@@ -621,7 +622,10 @@ function withSecurityHeaders(response: Response, url: URL, status?: number): Res
   // no window of its own, so it cuts every opener link. Only here: the app
   // keeps its opener for the account connection popup (accountConnection.ts).
   if (url.pathname === '/burn') headers.set('Cross-Origin-Opener-Policy', 'same-origin');
-  return new Response(response.body, { status: status ?? response.status, headers });
+  // A 304 has no body, so forcing it to 200 hands the browser an empty page
+  // as the new copy of the app (issue #685).
+  const finalStatus = response.status === 304 ? 304 : (status ?? response.status);
+  return new Response(response.body, { status: finalStatus, headers });
 }
 
 /** Try one upstream source: the icon, 'miss' when the source answered that it

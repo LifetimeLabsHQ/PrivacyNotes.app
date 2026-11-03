@@ -3,12 +3,13 @@
  * still review the extension, every place that offers it (Settings >
  * Extension, its settings search rows, the Web clipper window's tip) shows
  * in a dev build only, and the help site leaves out its entries and every
- * paragraph that links to them, so a release ships without it. Set to true once
- * Chrome, Edge and Firefox list it. The sync side stays on: it only acts
- * for a browser that is already connected.
+ * paragraph that links to them, so a release ships without it. On since
+ * 2026-11-03, while the stores review it, so their reviewers can pair it in
+ * the live app. The sync side stays on: it only acts for a browser that is
+ * already connected.
  * Spec: docs/internal/plans/browser-extension-build.md (section 6, release switch)
  */
-const EXTENSION_RELEASED = false;
+const EXTENSION_RELEASED = true;
 
 /** True where the app may offer the browser extension. */
 export function extensionOffered(): boolean {

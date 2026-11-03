@@ -97,7 +97,7 @@ export type DrawingCanvasProps = {
  *  (a selection, or a tool that draws), and whether the panel is open. */
 export type CanvasToolState = { tool: string; locked: boolean; zoom: number; phone: boolean; styled: boolean; styleOpen: boolean };
 
-export type DrawingCommands = { toggleStyle: () => void; clear: () => void; escape: () => void };
+export type DrawingCommands = { toggleStyle: () => void; clear: () => void; escape: () => void; closeMenu: () => void };
 
 /** The tools whose next shape takes the panel's style. */
 const STYLED_TOOLS = new Set(['rectangle', 'diamond', 'ellipse', 'arrow', 'line', 'freedraw', 'text']);
@@ -173,6 +173,9 @@ export default function DrawingCanvas({
       toggleStyle: () => api.current?.updateScene({ appState: { openMenu: openMenu.current === 'shape' ? null : 'shape' } as never }),
       // One step of the canvas's history: Undo brings the drawing back.
       clear: () => api.current?.updateScene({ elements: [], captureUpdate: CaptureUpdateAction.IMMEDIATELY }),
+      // Excalidraw's hidden right-click menu, when the app's menu in its
+      // place closes without a pick (DrawingMenu.tsx).
+      closeMenu: () => api.current?.updateScene({ appState: { contextMenu: null } as never }),
       // What Escape does, for the Android back button: a panel or menu
       // closes, a text box is finished by its own Escape, and a shape being
       // drawn by the canvas's.

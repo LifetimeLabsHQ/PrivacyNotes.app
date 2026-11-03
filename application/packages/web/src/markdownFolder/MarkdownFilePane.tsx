@@ -22,7 +22,7 @@ import { editorCommands } from '../editorCommands';
 import { HoverLabel } from '../HoverLabel';
 import { keyText } from '../shortcutMatch';
 import { adaptFile, isTextFile, tidyRichSave } from './adapter';
-import { stampsMatch, type FileStamp } from './fileAccess';
+import { openFailedText, stampsMatch, type FileStamp } from './fileAccess';
 import { applyAssets, restoreAssets, useAssets } from './useAssets';
 import { isLocalHref, noteLinkPathFor, resolveNoteLinkPath, resolveRelativeLinkPath } from './links';
 import type { OpenedMarkdownDir, OpenedMarkdownFile, SaveState } from './types';
@@ -204,8 +204,8 @@ export function MarkdownFilePane({
     try {
       const raw = await entry.ref.read();
       onUpdatedRef.current({ ref: entry.ref, raw, stamp: await entry.ref.stamp(), adapted: adaptFile(entry.ref.name, raw), reloadToken: 0 });
-    } catch {
-      onNotice(t('markdown.openFailed'));
+    } catch (err) {
+      onNotice(openFailedText(t, err));
     }
   }
 
@@ -584,8 +584,8 @@ export function MarkdownFilePane({
         reloadToken: current.reloadToken + 1,
       });
       setState({ kind: 'idle' });
-    } catch {
-      setState({ kind: 'error', message: t('markdown.openFailed') });
+    } catch (err) {
+      setState({ kind: 'error', message: openFailedText(t, err) });
     }
   }
 

@@ -32,6 +32,7 @@ import { useDrawingTips } from './DrawingTips';
 import { DrawingToolbar, type DrawingToolState } from './DrawingToolbar';
 
 const DrawingCanvas = lazyPart(() => import('./DrawingCanvas').then((m) => m.default));
+const DrawingMenu = lazyPart(() => import('./DrawingMenu').then((m) => m.default));
 const DrawingHotkeys = lazyModal(() => import('./DrawingHotkeys').then((m) => m.default));
 /**
  * The drawing keys' window and its doors in the canvas: the toolbar's
@@ -83,7 +84,7 @@ export function DrawingItem({ note, readOnly, onBodyChange, openFullScreenRef, f
   const tips = useDrawingTips();
   // What the toolbar shows: the canvas reports it on every change.
   const [toolState, setToolState] = useState<DrawingToolState>({ tool: 'selection', locked: false, zoom: 1, phone: false, styled: false, styleOpen: false });
-  const commands = useRef<{ toggleStyle: () => void; clear: () => void; escape: () => void } | null>(null);
+  const commands = useRef<{ toggleStyle: () => void; clear: () => void; escape: () => void; closeMenu: () => void } | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const paneRef = useRef<HTMLDivElement | null>(null);
   const windowRef = useRef<HTMLDivElement | null>(null);
@@ -167,10 +168,12 @@ export function DrawingItem({ note, readOnly, onBodyChange, openFullScreenRef, f
     </Suspense>
   );
 
+  // The canvas has a right-click menu of its own (DrawingMenu.tsx), so the
+  // app's menu stays out of it (`data-no-app-menu`). Issue #681.
   return (
     <>
       {!fullScreen && <DrawingToolbar canvasRef={paneRef} state={toolState} readOnly={readOnly} onShowKeys={keys.open} onStyle={() => commands.current?.toggleStyle()} onReset={() => setConfirmReset(true)} slot={toolbarSlot} />}
-      <div ref={paneRef} className="relative flex min-h-0 flex-1 flex-col" onKeyDownCapture={keys.onKeyDownCapture} onPointerOver={tips.onPointerOver} onPointerLeave={onPointerLeave} onPointerDown={tips.onPointerDown}>
+      <div ref={paneRef} data-no-app-menu className="relative flex min-h-0 flex-1 flex-col" onKeyDownCapture={keys.onKeyDownCapture} onPointerOver={tips.onPointerOver} onPointerLeave={onPointerLeave} onPointerDown={tips.onPointerDown}>
         {!fullScreen && canvas('pane')}
       </div>
       {keys.window}
@@ -188,6 +191,9 @@ export function DrawingItem({ note, readOnly, onBodyChange, openFullScreenRef, f
         </ConfirmModal>
       )}
       {tips.view}
+      <Suspense fallback={null}>
+        <DrawingMenu host={fullScreen ? windowRef : paneRef} onDismiss={() => commands.current?.closeMenu()} />
+      </Suspense>
       {fullScreen && (
         <Modal
           title={deriveDisplayTitle(note)}
@@ -198,7 +204,7 @@ export function DrawingItem({ note, readOnly, onBodyChange, openFullScreenRef, f
           className="flex h-full max-w-none flex-col overflow-hidden"
         >
           <DrawingToolbar canvasRef={windowRef} state={toolState} readOnly={readOnly} onShowKeys={keys.open} onStyle={() => commands.current?.toggleStyle()} onReset={() => setConfirmReset(true)} />
-          <div ref={windowRef} className="relative flex min-h-0 flex-1 flex-col" onKeyDownCapture={keys.onKeyDownCapture} onPointerOver={tips.onPointerOver} onPointerLeave={onPointerLeave} onPointerDown={tips.onPointerDown}>
+          <div ref={windowRef} data-no-app-menu className="relative flex min-h-0 flex-1 flex-col" onKeyDownCapture={keys.onKeyDownCapture} onPointerOver={tips.onPointerOver} onPointerLeave={onPointerLeave} onPointerDown={tips.onPointerDown}>
             {canvas('window')}
           </div>
         </Modal>
@@ -215,8 +221,9 @@ export function DrawingItem({ note, readOnly, onBodyChange, openFullScreenRef, f
  */
 export function DrawingVersion({ body }: { body: string }) {
   const { theme } = useTheme();
+  const host = useRef<HTMLDivElement | null>(null);
   return (
-    <div className="relative flex h-full min-h-80 flex-col">
+    <div ref={host} data-no-app-menu className="relative flex h-full min-h-80 flex-col">
       <Suspense fallback={null}>
         <DrawingCanvas
           body={body}
@@ -229,6 +236,7 @@ export function DrawingVersion({ body }: { body: string }) {
           toFile={noFile}
           onOpenLink={openExternal}
         />
+        <DrawingMenu host={host} />
       </Suspense>
     </div>
   );

@@ -97,6 +97,11 @@ export const LinkModifierOpen = Extension.create<object, LinkOpenStorage>({
         props: {
           handleClick: (view, pos, event) => {
             if (event.button !== 0) return false;
+            // A click past the end of a line resolves to the line's last
+            // position, which is the link's edge when the line ends in one.
+            // Only a click that lands on the link itself opens it (GitHub #684).
+            const anchor = event.target instanceof Element ? event.target.closest('a[href]') : null;
+            if (!anchor || !view.dom.contains(anchor)) return false;
             const href = linkHrefAt(view.state, pos);
             if (!href) return false;
             // "Open links with Cmd-click" (GitHub #633): a plain mouse click

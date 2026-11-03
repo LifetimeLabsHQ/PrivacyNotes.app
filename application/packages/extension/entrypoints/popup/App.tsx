@@ -29,10 +29,6 @@ import { Unlock, VaultSections, useVault, type OpenMenu } from './VaultView';
 
 type View = { kind: 'main' } | { kind: 'generator' } | { kind: 'addLogin' };
 
-/** The popup opened as its own window (the browser refused the toolbar
- *  popup): Escape closes it, as it would close the popup. */
-const WINDOW_MODE = new URLSearchParams(window.location.search).has('window');
-
 const TYPE_ICONS = { all: ListBullets, login: GlobeSimple, card: CreditCard, ssh: Key, bookmark: BookmarkSimple } as const;
 
 export function App() {
@@ -69,11 +65,12 @@ export function App() {
     return () => browser.storage.onChanged.removeListener(onChange);
   }, []);
 
-  // Escape: the search first, then a sheet, then the window itself.
+  // Escape: the search first, then a sheet, then the popup or window itself.
+  // The hook takes the key from the browser, so the last step closes it here.
   useEscapeToClose(() => {
     if (query) return setQuery('');
     if (view.kind !== 'main') return setView({ kind: 'main' });
-    if (WINDOW_MODE) window.close();
+    window.close();
   }, connection != null);
 
   const openMenu: OpenMenu = (e, items) => menu.open({ clientX: e.clientX, clientY: e.clientY, preventDefault() {}, stopPropagation() {} }, items);
@@ -129,45 +126,48 @@ export function App() {
 
   const main = (
     <>
-      <header className="flex items-center gap-2 px-3 py-2 border-b border-divider">
-        <img src="/icon/32.png" alt="" className="w-5 h-5 rounded" />
-        <span className="text-body font-semibold text-pn">{t('notes:settings.groupBrand')}</span>
-        <span className="flex-1" />
-        <IconButton label={t('menu.generatePassword')} position="below" onClick={() => setView({ kind: 'generator' })}>
-          <Password aria-hidden="true" />
-        </IconButton>
-        {/* Disconnect asks once in place, the app's two-step confirm. */}
-        <DeleteButton
-          label={t('security:connectedAccounts.disconnect')}
-          confirmLabel={t('account.confirmDisconnect')}
-          icon={SignOut}
-          position="below-end"
-          onConfirm={() => void disconnect(connection).then(() => setConnection(null))}
-        />
-      </header>
-      {connection.logins && (
-        <div
-          className="flex items-center gap-2 px-3 py-2 border-b border-divider"
-          // Locked, the search is a door to the PIN.
-          onFocusCapture={(e) => {
-            if (!unlocked && e.target instanceof HTMLInputElement) {
-              e.target.blur();
-              setFocusNonce((n) => n + 1);
-            }
-          }}
-        >
-          <ListSearchInput
-            value={query}
-            onChange={setQuery}
-            inputRef={searchRef}
-            placeholder={!unlocked ? t('vault.unlockToSearch') : typeFilter === 'all' ? t('vault.search') : t('vault.searchKind', { kind: typeLabel(typeFilter).toLowerCase() })}
-            ariaLabel={t('vault.search')}
+      {/* The header and the search stay put while the vault scrolls (Bitwarden). */}
+      <div className="sticky top-0 z-10 bg-surface-2">
+        <header className="flex items-center gap-2 px-3 py-2 border-b border-divider">
+          <img src="/icon/32.png" alt="" className="w-5 h-5 rounded" />
+          <span className="text-body font-semibold text-pn">{t('notes:settings.groupBrand')}</span>
+          <span className="flex-1" />
+          <IconButton label={t('menu.generatePassword')} position="below" onClick={() => setView({ kind: 'generator' })}>
+            <Password aria-hidden="true" />
+          </IconButton>
+          {/* Disconnect asks once in place, the app's two-step confirm. */}
+          <DeleteButton
+            label={t('security:connectedAccounts.disconnect')}
+            confirmLabel={t('account.confirmDisconnect')}
+            icon={SignOut}
+            position="below-end"
+            onConfirm={() => void disconnect(connection).then(() => setConnection(null))}
           />
-          <Button icon={<CaretDown aria-hidden="true" />} onClick={(e) => openUnder(e.currentTarget, typeItems())} aria-haspopup="menu" className="shrink-0">
-            {typeLabel(typeFilter)}
-          </Button>
-        </div>
-      )}
+        </header>
+        {connection.logins && (
+          <div
+            className="flex items-center gap-2 px-3 py-2 border-b border-divider"
+            // Locked, the search is a door to the PIN.
+            onFocusCapture={(e) => {
+              if (!unlocked && e.target instanceof HTMLInputElement) {
+                e.target.blur();
+                setFocusNonce((n) => n + 1);
+              }
+            }}
+          >
+            <ListSearchInput
+              value={query}
+              onChange={setQuery}
+              inputRef={searchRef}
+              placeholder={!unlocked ? t('vault.unlockToSearch') : typeFilter === 'all' ? t('vault.search') : t('vault.searchKind', { kind: typeLabel(typeFilter).toLowerCase() })}
+              ariaLabel={t('vault.search')}
+            />
+            <Button icon={<CaretDown aria-hidden="true" />} onClick={(e) => openUnder(e.currentTarget, typeItems())} aria-haspopup="menu" className="shrink-0">
+              {typeLabel(typeFilter)}
+            </Button>
+          </div>
+        )}
+      </div>
       <main className="flex-1">
         {connection.clips && !query.trim() && (
           <div className="p-3 border-b border-divider">
@@ -186,7 +186,7 @@ export function App() {
         )}
       </main>
       {connection.logins && (
-        <footer className="flex items-center justify-end px-3 py-2 border-t border-divider bg-surface-1">
+        <footer className="sticky bottom-0 z-10 flex items-center justify-end px-3 py-2 border-t border-divider bg-surface-1">
           <Button icon={<LockSimple aria-hidden="true" />} onClick={(e) => openUnder(e.currentTarget, lockItems())} aria-haspopup="menu">
             {`${t('vault.autoLock')} · ${lockLabel(lockAfter)}`}
           </Button>

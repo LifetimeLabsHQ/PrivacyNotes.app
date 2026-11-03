@@ -7,6 +7,7 @@ import type { View } from '../views';
 import type { OpenedMarkdownFile, OpenedMarkdownDir } from '../markdownFolder/types';
 import { useTagIndex } from '../markdownFolder/useTagIndex';
 import { usePendingFileOpens } from '../markdownFolder/usePendingFileOpens';
+import { openFailedText } from '../markdownFolder/fileAccess';
 import { useFolderRestore } from '../markdownFolder/useFolderRestore';
 import { useFolderRefresh } from '../markdownFolder/useFolderRefresh';
 
@@ -256,7 +257,7 @@ export function useMarkdownPillar({
     },
     // The window came forward because the user double-clicked something. Saying
     // nothing at that point is indistinguishable from the app ignoring them.
-    () => flashToast(t('shell:markdown.openFailed')),
+    (err) => flashToast(openFailedText(t, err)),
   );
 
   return {

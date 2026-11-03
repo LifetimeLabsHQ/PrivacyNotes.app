@@ -36,6 +36,12 @@ function bindingOf(text: string): KeyBinding | null {
   return b;
 }
 
+/** One of Excalidraw's key texts in the app's notation ('' for one it cannot read). */
+export function keysOf(text: string): string {
+  const b = bindingOf(text.trim());
+  return b ? bindingText(b, KEY_OS) : '';
+}
+
 /** A title of Excalidraw's as the tooltip's label and keys ('' for none). */
 export function tipOf(title: string): { label: string; keys: string } {
   const at = title.lastIndexOf(` ${EM_DASH} `);

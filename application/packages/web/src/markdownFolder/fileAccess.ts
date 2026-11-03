@@ -14,7 +14,9 @@
  *
  * Spec: docs/internal/specs/markdown-folder.md (section 5, platform matrix)
  */
+import type { TFunction } from 'i18next';
 import { detectPlatform } from '../devices';
+import { formatBytes } from '../formatBytes';
 import { SUPPORTED_EXTENSIONS, isSupportedFile } from './adapter';
 import type { StoredFolder } from './folderMemory';
 
@@ -657,8 +659,45 @@ const TEXT_READ_MAX_BYTES = 8 * 1024 * 1024;
  * listed and cannot be opened, so it is never written.
  */
 function decodeText(bytes: Uint8Array): string {
-  if (bytes.byteLength > TEXT_READ_MAX_BYTES) throw new Error('file too large to open');
-  return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  if (bytes.byteLength > TEXT_READ_MAX_BYTES) throw new FileOpenError('tooLarge');
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {
+    throw new FileOpenError('notText');
+  }
+}
+
+/** A refusal of our own, so the message can say which one. */
+class FileOpenError extends Error {
+  constructor(readonly reason: 'tooLarge' | 'notText') {
+    super(reason);
+  }
+}
+
+/**
+ * Why a file did not open, in words the reader can act on. The bare "Couldn't
+ * open that file." left them guessing between a moved file, a file that is too
+ * big and a place the app may not read. The native side rejects with a string
+ * and the browser with a DOMException, so both shapes are read here.
+ */
+export function openFailedText(t: TFunction, err: unknown): string {
+  if (err instanceof FileOpenError) {
+    return err.reason === 'tooLarge'
+      ? t('shell:markdown.openFailedTooLarge', { limit: formatBytes(TEXT_READ_MAX_BYTES) })
+      : t('shell:markdown.openFailedNotText');
+  }
+  const name = err instanceof DOMException ? err.name : '';
+  const message = err instanceof Error ? err.message : String(err ?? '');
+  if (name === 'NotFoundError' || /os error 2\b|no such file/i.test(message)) {
+    return t('shell:markdown.openFailedMissing');
+  }
+  if (
+    name === 'NotAllowedError' || name === 'SecurityError' ||
+    /forbidden path|not allowed|os error (1|13)\b|permission denied|operation not permitted/i.test(message)
+  ) {
+    return t('shell:markdown.openFailedDenied');
+  }
+  return t('shell:markdown.openFailed');
 }
 
 function handleFileRef(handle: FileSystemFileHandle, location: string): OpenedFileRef {
@@ -667,7 +706,7 @@ function handleFileRef(handle: FileSystemFileHandle, location: string): OpenedFi
     location,
     read: async () => {
       const file = await handle.getFile();
-      if (file.size > TEXT_READ_MAX_BYTES) throw new Error('file too large to open');
+      if (file.size > TEXT_READ_MAX_BYTES) throw new FileOpenError('tooLarge');
       return decodeText(new Uint8Array(await file.arrayBuffer()));
     },
     write: async (text) => {
@@ -694,7 +733,7 @@ function tauriFileRef(fs: TauriFs, path: string, location: string): OpenedFileRe
     name,
     location,
     read: async () => {
-      if ((await fs.stat(path)).size > TEXT_READ_MAX_BYTES) throw new Error('file too large to open');
+      if ((await fs.stat(path)).size > TEXT_READ_MAX_BYTES) throw new FileOpenError('tooLarge');
       return decodeText(await fs.readFile(path));
     },
     write: (text) => replaceTauriFile(fs, path, text),

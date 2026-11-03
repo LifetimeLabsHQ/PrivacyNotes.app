@@ -157,7 +157,7 @@
       ]
     },
     {
-      "identifier": "fs:allow-read-text-file",
+      "identifier": "fs:allow-read-file",
       "allow": [
         {
           "path": "$HOME/**"

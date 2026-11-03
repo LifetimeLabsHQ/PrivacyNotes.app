@@ -356,6 +356,7 @@ import { NotesList } from './NotesList';
 import { MarkdownListPane } from './markdownFolder/MarkdownListPane';
 import { MarkdownFilePane } from './markdownFolder/MarkdownFilePane';
 import { readOpenedFile } from './markdownFolder/adapter';
+import { openFailedText } from './markdownFolder/fileAccess';
 import { MarkdownRail } from './markdownFolder/MarkdownRail';
 import { MarkdownExplainer, MarkdownPitch } from './markdownFolder/MarkdownExplainer';
 import { MarkdownDefaultAppCard } from './markdownFolder/MarkdownDefaultApp';
@@ -8399,7 +8400,7 @@ function AuthenticatedView({
                   setMarkdownFile(file);
                   void handleSelectView('markdown');
                 })
-                .catch(() => flashToast(t('shell:markdown.openFailed')));
+                .catch((err) => flashToast(openFailedText(t, err)));
             }}
             onOpenFile={(f) => {
               const parent = notes.find((n) => n.id === f.noteId);

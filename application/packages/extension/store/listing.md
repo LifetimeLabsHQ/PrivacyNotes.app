@@ -11,21 +11,100 @@ Privacy policy: https://lifetimelabs.dev/privacy
 
 The Chrome Web Store publisher account is a trader account (EU declaration): the business details on the listing are the company's.
 
-## Permission notes (draft, not yet approved)
+## Description (draft, not yet approved)
 
-The stores ask why each permission is needed. These are the facts of the build, to be worded at review:
+Built from the approved FAQ entries (section 9.2) and the threat model paragraph (section 9.1). Edge asks for at least 250 characters. Paste as is; the lines are not wrapped.
 
-- `scripting`: reads the page you are on, only when you choose to save it.
-- Host access to all websites: the save works on any page you open, and pictures of a clip are fetched from their site. No script is declared for any page.
-- `storage`: the connection to your account, the clips waiting to send (sealed), your Save pictures choice.
-- `contextMenus`: the PrivacyNotes entries in the right-click menu.
-- `alarms`: retries a waiting clip, and clears a copied password after 30 seconds.
-- `idle`: locks the logins after 5 minutes without use.
-- `clipboardWrite`, `clipboardRead`: copies a username, password or code you click, and clears it later only if the clipboard still holds it.
-- `offscreen` (Chrome, Edge): a hidden page that turns a page into a note when the popup is closed, and holds the clipboard.
-- `favicon` (Chrome, Edge): the site's icon in the popup, from the browser's own store, so no request leaves for it.
-- `unlimitedStorage` (Chrome, Edge): a clip with all its pictures is larger than the 10 MB these browsers otherwise allow, and it is stored, sealed, before it is sent.
+```
+PrivacyNotes in your browser. Save the page you are reading to your PrivacyNotes account, and copy your PrivacyNotes logins for the site you are on.
 
-Firefox data collection (`data_collection_permissions.required`): `websiteContent` (a clip, sealed before it leaves the browser) and `authenticationInfo` (a login you add, sealed the same way).
+SAVE PAGES
+- Save the page as a note, with its main text and pictures, or as a bookmark.
+- Save only the text you selected.
+- It reads the tab you have open, so it also saves pages behind a login.
+- Use the right-click menu, or the keyboard: Alt+Shift+S opens PrivacyNotes, Alt+Shift+B saves the page as a bookmark.
 
-Remote code: none. Every script ships in the package.
+YOUR VAULT IN THE BROWSER
+- See the logins, cards, SSH keys and bookmarks from your PrivacyNotes vault, with the ones for this site first.
+- Copy a username, password or 2FA code with one click. The clipboard is cleared after 30 seconds if it still holds what you copied.
+- Make a strong password with the same generator as the app.
+- It never fills forms by itself.
+- Unlock with a PIN, or with your fingerprint or face where your browser supports it. It locks again after the time you choose.
+
+HOW IT KEEPS YOUR NOTES SAFE
+The extension never holds the key that opens your notes. It locks each clip before it leaves your browser, with a key only your apps can open, and one of your apps turns it into a note at its next sync. Your logins reach the extension as a second encrypted copy under a separate key that opens nothing else.
+
+GET STARTED
+Open Settings > Extension in PrivacyNotes, pick what the extension may do, then choose Make a code. Paste the one-time code into the extension. The extension is free and needs a PrivacyNotes account.
+```
+
+## Permission justifications (draft, not yet approved)
+
+One field per permission in the Chrome Web Store (Privacy tab) and in Edge Partner Center (Privacy page).
+
+`scripting`
+```
+Reads the page you are on, only when you choose to save it as a note, a bookmark or a selection. No script runs on a page until you ask for a save.
+```
+
+Host permission (`<all_urls>`)
+```
+A save works on any page you choose to save, and the pictures of a saved page are fetched from their own site. The extension declares no content script for any site and reads a page only when you ask for a save.
+```
+
+`storage`
+```
+Keeps the connection to your PrivacyNotes account, the saved pages that wait to send (sealed before they are stored), and your settings such as the lock time.
+```
+
+`contextMenus`
+```
+Adds the PrivacyNotes entries to the right-click menu: save the page, the selection or a link, and copy the login for this site.
+```
+
+`alarms`
+```
+Retries a saved page that could not send because the device was offline, and clears a copied password from the clipboard after 30 seconds.
+```
+
+`idle`
+```
+Locks your logins after the time without use that you choose, or when the computer locks.
+```
+
+`clipboardWrite`
+```
+Copies a username, password or 2FA code when you click it.
+```
+
+`clipboardRead`
+```
+Clears a copied password after 30 seconds, but only if the clipboard still holds that password, so nothing else you copied is lost.
+```
+
+`offscreen`
+```
+A hidden page that turns the page you saved into a note after the popup closes, and that holds the clipboard for the copy and the clear.
+```
+
+`favicon`
+```
+Shows each site's icon next to its login, from the browser's own icon store, so no request leaves the browser for it.
+```
+
+`unlimitedStorage`
+```
+A saved page with all its pictures can be larger than the 10 MB the browser otherwise allows. It is stored sealed until it is sent to your account.
+```
+
+Remote code: No. Every script ships in the package.
+
+## Data usage (draft)
+
+Chrome and Edge ask which kinds of data the extension handles. Keep these the same as the Firefox declaration (`data_collection_permissions.required`): website content (a saved page, sealed before it leaves the browser) and authentication information (a login you add, sealed the same way). Tick the three certifications (no sale, no use outside the single purpose, no use for credit).
+
+## Images
+
+- Store icon (Chrome) and logo (Edge): `store/icon-128.png` (128 x 128; Edge recommends 300 x 300 and takes 128 x 128).
+- Screenshots: Chrome needs at least one, 1280 x 800 or 640 x 400. Edge takes them as an option, 1280 x 800 or 640 x 480.
+- Small promo tile 440 x 280: an option in both stores; Chrome lists items without one lower.

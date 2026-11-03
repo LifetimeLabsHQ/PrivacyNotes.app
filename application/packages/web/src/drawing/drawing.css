@@ -183,54 +183,17 @@
   top: auto;
 }
 
-/* Excalidraw's right-click (long-press) menu as the app's ContextMenu:
-   the panel (py-1, rounded-md, the divider rim, surface-2 at 95% behind a
-   blur, shadow-xl, compact text and body text on a touch screen), its
-   rules, its rows (px-3, py-1.5 and py-2.5 under a finger) and the hovered
-   row's accent band. The Delete row keeps Excalidraw's own red. */
-.excalidraw .context-menu {
-  margin: 0;
-  padding: 0.25rem 0;
-  border: 1px solid var(--color-divider);
-  border-radius: var(--radius-md);
-  background-color: color-mix(in srgb, var(--color-surface-2) 95%, transparent);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  font-size: var(--fs-compact);
-}
-@media (hover: none) {
-  .excalidraw .context-menu {
-    font-size: var(--fs-body);
-  }
-  .excalidraw .context-menu .context-menu-item {
-    padding-block: 0.625rem;
-  }
-}
-.excalidraw .context-menu-item-separator {
-  margin: 0.25rem 0;
-  border-top-color: var(--color-divider);
-}
-.excalidraw .context-menu .context-menu-item {
-  padding: 0.375rem 0.75rem;
-  color: var(--color-pn);
-}
-.excalidraw .context-menu-item .context-menu-item__shortcut {
-  color: var(--color-pn-muted);
-  font-size: var(--fs-meta);
-  opacity: 1;
-}
-.excalidraw .context-menu .context-menu-item:hover {
-  background-color: var(--color-accent-fill);
-  color: #fff; /* theme-ok: on the accent band, as the app's menu */
-}
-.excalidraw .context-menu-item:hover .context-menu-item__shortcut {
-  color: inherit;
+/* Excalidraw's right-click (long-press) menu stays in the page, unseen:
+   the app's ContextMenu shows its rows and a pick clicks the row here
+   (DrawingMenu.tsx). */
+.excalidraw .popover:has(> .context-menu) {
+  visibility: hidden;
 }
 
 /* Removes, never restyles: Excalidraw has no setting for these. The
    actions behind the menu rows are also off by name in DrawingCanvas.tsx
    (`canvasActions`), which takes their keys; Excalidraw's right-click menu
-   does not read that list, so its rows go here.
+   does not read that list, so DrawingMenu.tsx leaves its rows out.
    - The library (the shelf of reusable shapes) has no storage of ours, so it
      emptied on every close: its button, its "Browse libraries" link (which
      opens libraries.excalidraw.com with this origin and a token in the
@@ -249,7 +212,8 @@
      and a read-only lock of its own, and the stats are for developers.
    - Copy element link (an address on Excalidraw's model, meaningless here)
      and Copy as SVG (its font subsetter needs WebAssembly, which the
-     content security policy blocks).
+     content security policy blocks). These and the rows above leave the
+     right-click menu in DrawingMenu.tsx (`LEFT_OUT`).
    Spec: docs/internal/specs/drawing.md (section 3) */
 .excalidraw .default-sidebar-trigger,
 .excalidraw .library-menu-browse-button,
@@ -260,13 +224,7 @@
 .excalidraw .layer-ui__wrapper__footer-left,
 .excalidraw .mobile-misc-tools-container,
 .excalidraw .App-bottom-bar footer.App-toolbar,
-.excalidraw .App-bottom-bar:not(:has(.App-mobile-menu)),
-.excalidraw .context-menu li[data-testid='addToLibrary'],
-.excalidraw .context-menu li[data-testid='zenMode'],
-.excalidraw .context-menu li[data-testid='viewMode'],
-.excalidraw .context-menu li[data-testid='stats'],
-.excalidraw .context-menu li[data-testid='copyElementLink'],
-.excalidraw .context-menu li[data-testid='copyAsSvg'] {
+.excalidraw .App-bottom-bar:not(:has(.App-mobile-menu)) {
   display: none;
 }
 
