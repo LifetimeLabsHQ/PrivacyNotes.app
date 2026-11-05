@@ -389,6 +389,7 @@
     "receipt": "บิลของคุณ",
     "receiptCount_other": "การสมัครสมาชิก {{count}} รายการ",
     "receiptRenews": "ต่ออายุทุกปี",
+    "receiptStamp": "ยกเลิก",
     "perYear": "รวมต่อปี",
     "keepLabel": "คุณประหยัดได้",
     "keepLine_other": "ใน {{count}} ปี แม้จะซื้อ Pro แล้วก็ตาม",

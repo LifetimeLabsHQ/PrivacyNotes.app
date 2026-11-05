@@ -1,6 +1,6 @@
 [package]
 name = "privacynotes"
-version = "0.722.0"
+version = "0.726.7"
 description = "PrivacyNotes - private notes, encrypted on your device"
 authors = ["Lifetime Labs LLC <hi@lifetimelabs.dev>"]
 homepage = "https://privacynotes.app"
@@ -35,7 +35,7 @@ serde_json = "1"
 # how the Markdown pillar will render an image a note references by relative
 # path. Enabling the config without this feature is a build error, by design.
 # Spec: docs/internal/specs/markdown-folder.md (section 8, media)
-tauri = { version = "~2.12", features = ["protocol-asset"] }
+tauri = { version = "~2.12", features = ["protocol-asset", "tray-icon"] }
 tauri-plugin-deep-link = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
@@ -81,6 +81,14 @@ tauri-plugin-window-state = "2"
 # Spec: docs/contrib/biometric-unlock.md, backlog #101
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "macros", "io-util"] }
+
+# AVIF pictures on Linux (src/avif.rs): WebKitGTK there has no AVIF decoder.
+# avif-native is dav1d, built from source and linked statically through
+# SYSTEM_DEPS_DAV1D_BUILD_INTERNAL in .cargo/config.toml, because Ubuntu
+# 22.04 (the release runner) ships a dav1d older than the binding accepts.
+# Spec: docs/contrib/gotchas.md (AppImage AVIF)
+[target.'cfg(target_os = "linux")'.dependencies]
+image = { version = "0.25", default-features = false, features = ["avif-native", "png"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 # geteuid, for the single-instance rendezvous owner check in lib.rs.

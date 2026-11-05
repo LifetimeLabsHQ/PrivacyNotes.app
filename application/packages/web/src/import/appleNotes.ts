@@ -1,10 +1,13 @@
 import JSZip from 'jszip';
+import i18n from '../i18n';
 import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
 import { normalizeTag } from '../notesRepo';
 import { linkifyMarkdown } from './linkify';
 import { importBlobs } from './blobImport';
 import { isUntitledStem } from '../exportNames';
 import type { ImportedNote, ParsedImport } from './types';
+
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.appleNotes.${key}`, options);
 
 /**
  * Apple Notes importer.
@@ -214,7 +217,7 @@ async function parseZip(
   file: File,
   onProgress?: (msg: string) => void,
 ): Promise<ParseZipResult> {
-  onProgress?.('Reading zip...');
+  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
   const buf = await file.arrayBuffer();
   const zip = await JSZip.loadAsync(buf);
 
@@ -249,7 +252,7 @@ async function parseZip(
     }
   });
 
-  onProgress?.(`Found ${mdFiles.length} note${mdFiles.length === 1 ? '' : 's'}...`);
+  onProgress?.(i18n.t('importExport:importLog.shared.foundNotes', { count: mdFiles.length }));
 
   // Decide the account level ONCE, from every note path at once. Doing it per
   // path is what let the answer depend on how deep the zip was taken.
@@ -265,7 +268,7 @@ async function parseZip(
     if (parsed.hadUnderline) strippedUnderline++;
     notes.push(parsed);
     if ((i + 1) % 50 === 0) {
-      onProgress?.(`Parsed ${i + 1} of ${mdFiles.length}...`);
+      onProgress?.(i18n.t('importExport:importLog.shared.parsed', { done: i + 1, total: mdFiles.length }));
     }
   }
 
@@ -274,7 +277,7 @@ async function parseZip(
   let blobBytes = 0;
   let tooLarge = 0;
   if (blobFiles.length > 0) {
-    onProgress?.(`Extracting ${blobFiles.length} attachment${blobFiles.length === 1 ? '' : 's'}...`);
+    onProgress?.(i18n.t('importExport:importLog.shared.extracting', { count: blobFiles.length }));
   }
   for (let i = 0; i < blobFiles.length; i++) {
     const [rel, entry] = blobFiles[i]!;
@@ -287,7 +290,7 @@ async function parseZip(
     blobs.set(rel, { data, mime: mimeFromExt(rel), name });
     blobBytes += data.length;
     if ((i + 1) % 20 === 0) {
-      onProgress?.(`Extracted ${i + 1} of ${blobFiles.length} attachments...`);
+      onProgress?.(i18n.t('importExport:importLog.shared.extracted', { done: i + 1, total: blobFiles.length }));
     }
   }
 
@@ -325,37 +328,37 @@ export async function parseAppleNotes(
   const withTags = notes.filter((n) => n.tags.length > 0).length;
   if (withTags > 0) {
     transforms.push(
-      `Converted Apple Notes folders to tags on ${withTags} note${withTags === 1 ? '' : 's'}.`
+      msg('foldersToTags', { count: withTags })
     );
   }
   const withTables = notes.filter((n) => /\|.*\|/.test(n.body)).length;
   if (withTables > 0) {
     transforms.push(
-      `Preserved tables in ${withTables} note${withTables === 1 ? '' : 's'}.`
+      msg('preservedTables', { count: withTables })
     );
   }
   const withTasks = notes.filter((n) => /- \[[ x]\]/.test(n.body)).length;
   if (withTasks > 0) {
     transforms.push(
-      `Preserved checklists in ${withTasks} note${withTasks === 1 ? '' : 's'}.`
+      msg('preservedChecklists', { count: withTasks })
     );
   }
   if (strippedUnderline > 0) {
     transforms.push(
-      `Converted underline formatting in ${strippedUnderline} note${strippedUnderline === 1 ? '' : 's'}.`
+      msg('convertedUnderline', { count: strippedUnderline })
     );
   }
   if (imageCount > 0) {
     transforms.push(
-      `Found ${imageCount} image${imageCount === 1 ? '' : 's'} to import.`
+      i18n.t('importExport:importLog.shared.foundImages', { count: imageCount })
     );
   }
   if (attachmentCount > 0) {
     transforms.push(
-      `Found ${attachmentCount} attachment${attachmentCount === 1 ? '' : 's'} to import.`
+      i18n.t('importExport:importLog.shared.foundAttachments', { count: attachmentCount })
     );
   }
-  transforms.push('Made bare URLs clickable.');
+  transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
 
   return {
     notes,

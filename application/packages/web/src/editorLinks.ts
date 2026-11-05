@@ -134,9 +134,11 @@ export function looksLikeUrl(input: string): boolean {
 
 /** The href to store for what the reader typed. A bare host gets https,
  *  which is what a person means by "heise.de" and what the site answers
- *  on. A path or a query is left as the relative reference it is. */
+ *  on. A path or a query is left as the relative reference it is. A space
+ *  inside is percent-encoded, as a browser sends it: markdown cannot hold
+ *  `(my file.pdf)`, so the link would save as plain text. */
 export function normalizeUrl(input: string): string {
-  const trimmed = input.trim();
+  const trimmed = input.trim().replace(/\s/g, encodeURIComponent);
   if (!trimmed) return '';
   if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return trimmed;
   if (/^[/?#]/.test(trimmed)) return trimmed;

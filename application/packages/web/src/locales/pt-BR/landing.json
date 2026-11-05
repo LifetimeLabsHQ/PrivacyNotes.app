@@ -391,6 +391,7 @@
     "receiptCount_one": "{{count}} assinatura",
     "receiptCount_other": "{{count}} assinaturas",
     "receiptRenews": "Renova todo ano",
+    "receiptStamp": "Cancelada",
     "perYear": "Total por ano",
     "keepLabel": "Você economiza",
     "keepLine_one": "em {{count}} ano, mesmo comprando o Pro.",

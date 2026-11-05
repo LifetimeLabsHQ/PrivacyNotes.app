@@ -67,6 +67,7 @@
     "appearance_contentWidth": "본문 너비, 넓게, 전체 너비, 여백",
     "appearance_editor": "Markdown, 마크다운, 서식 있는 텍스트, WYSIWYG, 편집기 모드",
     "appearance_defaultApps": "기본 앱, 다음으로 열기, 더블클릭, finder, 파일 탐색기, markdown, md, txt, 텍스트 파일",
+    "appearance_tray": "트레이, 시스템 트레이, 알림 영역, 최소화, 닫기, 백그라운드, 백그라운드에서 실행, 작업 표시줄",
     "appearance_copyFormat": "복사, 클립보드, 일반 텍스트, 붙여넣기, 체크박스",
     "appearance_pasteFormat": "붙여넣기, 클립보드, 일반 텍스트, 서식, 서식 없음, 스타일 맞추기",
     "appearance_favicons": "파비콘, 사이트 아이콘, 로고",

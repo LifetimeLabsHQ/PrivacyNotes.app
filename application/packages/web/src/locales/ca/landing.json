@@ -391,6 +391,7 @@
     "receiptCount_one": "{{count}} subscripció",
     "receiptCount_other": "{{count}} subscripcions",
     "receiptRenews": "Es renova cada any",
+    "receiptStamp": "Cancel·lada",
     "perYear": "Total anual",
     "keepLabel": "T'estalvies",
     "keepLine_one": "en {{count}} any, encara que compris Pro.",

@@ -8,6 +8,10 @@ import type { Importer, ImportBlob, ImportedNote, ParsedImport } from './types';
 import { escapeMarkdownText, guardMarkdownLineStart, superToMarkdown, type SnLinkedItem } from './standardNotesSuper';
 import { htmlNoteToMarkdown } from './notesnook';
 import { serializeLoginBody } from '../LoginForm';
+import i18n from '../i18n';
+
+const msg = (key: string, options?: Record<string, unknown>): string =>
+  i18n.t(`importExport:importLog.standardNotes.${key}`, options);
 
 /**
  * Standard Notes import adapter.
@@ -154,23 +158,19 @@ export const standardNotesImporter: Importer = {
   sourceTag: 'standardnotes',
 
   async parse(file, onProgress) {
-    onProgress?.('Reading file…');
+    onProgress?.(i18n.t('importExport:status.readingFile'));
     const jsonText = await extractBackupJson(file, onProgress);
 
-    onProgress?.('Parsing JSON…');
+    onProgress?.(i18n.t('importExport:importLog.shared.parsingJson'));
     let backup: SnBackup;
     try {
       backup = JSON.parse(jsonText) as SnBackup;
     } catch (err) {
-      throw new Error(
-        'That file is not valid JSON. Make sure you exported as "Decrypted", not "Encrypted".'
-      );
+      throw new Error(msg('invalidJson'));
     }
 
     if (!backup || !Array.isArray(backup.items)) {
-      throw new Error(
-        'That file is missing the expected "items" array. Not a Standard Notes backup.'
-      );
+      throw new Error(msg('missingItems'));
     }
 
     // An encrypted export is still valid JSON with a version and an
@@ -180,26 +180,22 @@ export const standardNotesImporter: Importer = {
     // both, so an encrypted export imports as a pile of blank untitled
     // notes with no error at all. Reject it and say what to do instead.
     if (isEncryptedBackup(backup)) {
-      throw new Error(
-        'That backup is encrypted. In Standard Notes, export again and pick "Decrypted" - we never receive your Standard Notes password, so we cannot unlock this file.'
-      );
+      throw new Error(msg('encryptedBackup'));
     }
 
     const warnings: string[] = [];
     if (backup.version && backup.version !== '004') {
-      warnings.push(
-        `Unexpected backup format version "${backup.version}" (expected "004"). Parsing anyway.`
-      );
+      warnings.push(msg('unexpectedVersion', { version: backup.version }));
     }
 
-    onProgress?.('Mapping tags…');
+    onProgress?.(msg('mappingTags'));
     const tagIndex = buildTagIndex(backup.items);
     const noteIdToTags = tagIndex.noteTags;
     const linkedItems = buildItemIndex(backup.items);
     const legacyEditor = buildLegacyEditors(backup.items);
     const blobs = new Map<string, ImportBlob>();
 
-    onProgress?.('Building notes…');
+    onProgress?.(i18n.t('importExport:importLog.shared.buildingNotes'));
     const notes: ImportedNote[] = [];
     let emptyCount = 0;
     let untaggedCount = 0;
@@ -403,99 +399,99 @@ export const standardNotesImporter: Importer = {
     const transforms: string[] = [];
     if (linkifiedCount > 0) {
       transforms.push(
-        `Made URLs clickable in ${linkifiedCount} note${linkifiedCount === 1 ? '' : 's'}.`
+        i18n.t('importExport:importLog.shared.linkifiedNotes', { count: linkifiedCount })
       );
     }
     if (starredCount > 0) {
       transforms.push(
-        `Kept ${starredCount} pinned note${starredCount === 1 ? '' : 's'} as starred.`
+        i18n.t('importExport:importLog.shared.keptStarred', { count: starredCount })
       );
     }
     if (trashedImportCount > 0) {
       transforms.push(
-        `Restored ${trashedImportCount} trashed note${trashedImportCount === 1 ? '' : 's'} into the trash.`
+        i18n.t('importExport:importLog.shared.restoredTrashed', { count: trashedImportCount })
       );
     }
     if (archivedCount > 0) {
       transforms.push(
-        `Kept ${archivedCount} archived note${archivedCount === 1 ? '' : 's'} in the archive.`
+        i18n.t('importExport:importLog.shared.keptArchived', { count: archivedCount })
       );
     }
     if (checklistCount > 0) {
       transforms.push(
-        `Converted ${checklistCount} checklist${checklistCount === 1 ? '' : 's'} into tasks you can tick off.`
+        msg('checklists', { count: checklistCount })
       );
     }
     if (superCount > 0) {
       transforms.push(
-        `Converted ${superCount} Super note${superCount === 1 ? '' : 's'}, with headings, lists, tables and formatting kept.`
+        msg('superNotes', { count: superCount })
       );
     }
     if (codeCount > 0) {
-      transforms.push(`Kept ${codeCount} code note${codeCount === 1 ? '' : 's'} as code blocks.`);
+      transforms.push(msg('codeNotes', { count: codeCount }));
     }
     if (sheetCount > 0) {
-      transforms.push(`Converted ${sheetCount} spreadsheet${sheetCount === 1 ? '' : 's'} into tables.`);
+      transforms.push(msg('sheets', { count: sheetCount }));
     }
     if (richTextCount > 0) {
       transforms.push(
-        `Converted ${richTextCount} rich-text note${richTextCount === 1 ? '' : 's'} with their formatting.`
+        msg('richText', { count: richTextCount })
       );
     }
     if (authEntryCount > 0) {
       transforms.push(
-        `Moved ${authEntryCount} authenticator entr${authEntryCount === 1 ? 'y' : 'ies'} into the Vault as logins.`
+        msg('authEntries', { count: authEntryCount })
       );
     }
     if (lockedCount > 0) {
       transforms.push(
-        `Kept ${lockedCount} locked note${lockedCount === 1 ? '' : 's'} read-only.`
+        msg('locked', { count: lockedCount })
       );
     }
     if (tagIndex.folders.length > 0) {
       transforms.push(
-        `Rebuilt your nested tags as ${tagIndex.folders.length} folder${tagIndex.folders.length === 1 ? '' : 's'}, and kept them as tags too.`
+        i18n.t('importExport:importLog.shared.foldersFromNestedTags', { count: tagIndex.folders.length })
       );
     }
     if (tagIndex.shortened > 0) {
       transforms.push(
-        `${tagIndex.shortened} nested tag${tagIndex.shortened === 1 ? '' : 's'} had a path too long for a tag and kept ${tagIndex.shortened === 1 ? 'its' : 'their'} own name. The folder shows the full path.`
+        i18n.t('importExport:importLog.shared.shortened', { count: tagIndex.shortened })
       );
     }
     if (blobs.size > 0) {
-      transforms.push(`Imported ${blobs.size} embedded file${blobs.size === 1 ? '' : 's'}.`);
+      transforms.push(msg('embeddedFiles', { count: blobs.size }));
     }
 
     if (checklistFailedCount > 0) {
       warnings.push(
-        `${checklistFailedCount} checklist${checklistFailedCount === 1 ? '' : 's'} used a format we don't recognize. ${checklistFailedCount === 1 ? 'It was' : 'They were'} imported as plain text so nothing is lost.`
+        msg('checklistFailed', { count: checklistFailedCount })
       );
     }
 
     if (superFailedCount > 0) {
       warnings.push(
-        `${superFailedCount} Super note${superFailedCount === 1 ? '' : 's'} could not be read. ${superFailedCount === 1 ? 'It was' : 'They were'} imported as plain text so nothing is lost.`
+        msg('superFailed', { count: superFailedCount })
       );
     }
     if (sheetFailedCount > 0) {
       warnings.push(
-        `${sheetFailedCount} spreadsheet${sheetFailedCount === 1 ? '' : 's'} could not be read. ${sheetFailedCount === 1 ? 'It was' : 'They were'} imported as plain text so nothing is lost.`
+        msg('sheetFailed', { count: sheetFailedCount })
       );
     }
     if (authFailedCount > 0) {
       warnings.push(
-        `${authFailedCount} authenticator note${authFailedCount === 1 ? '' : 's'} could not be read. ${authFailedCount === 1 ? 'It was' : 'They were'} imported as plain text so nothing is lost.`
+        msg('authFailed', { count: authFailedCount })
       );
     }
     if (missingFileCount > 0) {
       warnings.push(
-        `${missingFileCount} uploaded file${missingFileCount === 1 ? ' is' : 's are'} not in the backup, because Standard Notes backups never include file contents. Each note marks where a file was. Download the files from Standard Notes and add them again.`
+        msg('missingFiles', { count: missingFileCount })
       );
     }
 
     if (missingTitleCount > 0) {
       warnings.push(
-        `${missingTitleCount} note${missingTitleCount === 1 ? '' : 's'} had no title. A title will be derived from the first line.`
+        i18n.t('importExport:importLog.shared.missingTitle', { count: missingTitleCount })
       );
     }
 
@@ -536,7 +532,7 @@ async function extractBackupJson(
   const lowerName = file.name.toLowerCase();
 
   if (lowerName.endsWith('.zip')) {
-    onProgress?.('Unzipping…');
+    onProgress?.(i18n.t('importExport:importLog.shared.unzipping'));
     const zip = await JSZip.loadAsync(file);
     // Prefer the exact filename, but fall back to any .txt at the root
     // in case SN renames it in a future version.
@@ -551,9 +547,7 @@ async function extractBackupJson(
       if (candidates.length === 1) entry = candidates[0]!;
     }
     if (!entry) {
-      throw new Error(
-        `This zip doesn't contain a "${BACKUP_FILENAME}" file. Make sure you picked the Standard Notes export zip.`
-      );
+      throw new Error(msg('zipMissingFile', { name: BACKUP_FILENAME }));
     }
     return zipEntryText(entry);
   }

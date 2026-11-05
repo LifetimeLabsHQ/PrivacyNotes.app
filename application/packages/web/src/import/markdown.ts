@@ -2,6 +2,7 @@
 // dynamically in parseZip so jszip stays out of the boot-path bundle
 // (NotesView statically imports parseMarkdown for drag-and-drop).
 import type JSZip from 'jszip';
+import i18n from '../i18n';
 import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
 import type { FolderDef } from '../folders';
 import { extractInlineTags, normalizeTag } from '../notesRepo';
@@ -14,6 +15,8 @@ import { buildFolderTree, commonRootPrefix, parseFolderPath } from './folderImpo
 import { linkifyMarkdown } from './linkify';
 import { detailsToFold } from './detailsFold';
 import type { ImportedNote, ParsedImport } from './types';
+
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.markdown.${key}`, options);
 
 /**
  * Markdown importer - handles:
@@ -82,6 +85,22 @@ function unquote(s: string | undefined): string {
   if (s.startsWith('"') && s.endsWith('"')) return unescapeQuotes(s.slice(1, -1));
   if (s.startsWith("'") && s.endsWith("'")) return s.slice(1, -1);
   return s;
+}
+
+/**
+ * A front-matter date as the instant the app stores. A date-only value
+ * (`created: 2024-05-12`) is that local day at noon, the app's reading of a
+ * day (MonthGrid.tsx), so the note lands on the same day in every zone;
+ * read as midnight UTC it was the evening before west of Greenwich. A
+ * date-time without a zone is local time, as the editor that wrote it
+ * meant it. Null when the value does not parse. Shared with obsidian.ts.
+ */
+export function parseFrontMatterDate(raw: string | undefined): string | null {
+  const value = unquote(raw).trim();
+  if (!value) return null;
+  const local = value.match(/^(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?))?$/);
+  const at = Date.parse(local ? `${local[1]}T${local[2] ?? '12:00:00'}` : value);
+  return Number.isNaN(at) ? null : new Date(at).toISOString();
 }
 
 /** Derive a title from a filename (strip extension, un-slugify). A default
@@ -154,10 +173,8 @@ function parseOneMd(
   }
 
   // Dates - fall back to file/import time if not present or invalid.
-  let createdAt = meta['created'] ?? fallback;
-  let updatedAt = meta['updated'] ?? fallback;
-  if (isNaN(Date.parse(createdAt))) createdAt = fallback;
-  if (isNaN(Date.parse(updatedAt))) updatedAt = fallback;
+  const createdAt = parseFrontMatterDate(meta['created']) ?? fallback;
+  const updatedAt = parseFrontMatterDate(meta['updated']) ?? fallback;
 
   // Trackers ride in the front-matter as one JSON line (see noteMarkdown.ts).
   // Only `journal`, `task` and `event` are honoured as a type here, the types
@@ -220,7 +237,7 @@ async function parseZip(
   fmCount: number;
   inlineTagCount: number;
 }> {
-  onProgress?.('Reading zip...');
+  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
   const { default: JSZipLib } = await import('jszip');
   const buf = await file.arrayBuffer();
   const zip = await JSZipLib.loadAsync(buf);
@@ -240,7 +257,7 @@ async function parseZip(
     else if (ATTACHMENT_EXT.test(rel)) attachments.push([rel, entry]);
   });
 
-  onProgress?.(`Found ${mdFiles.length} markdown file${mdFiles.length === 1 ? '' : 's'}...`);
+  onProgress?.(msg('foundFiles', { count: mdFiles.length }));
 
   // Subfolders become real folders at any depth. The title still comes from
   // the BASENAME: a file's folder is where it lives, never part of its name.
@@ -264,7 +281,7 @@ async function parseZip(
     }
     notes.push(note);
     if ((i + 1) % 50 === 0) {
-      onProgress?.(`Parsed ${i + 1} of ${mdFiles.length}...`);
+      onProgress?.(i18n.t('importExport:importLog.shared.parsed', { done: i + 1, total: mdFiles.length }));
     }
   }
 
@@ -280,7 +297,7 @@ async function parseZip(
       continue;
     }
     if (blobs.size % 10 === 0) {
-      onProgress?.(`Reading attachments... ${blobs.size + 1} of ${attachments.length}`);
+      onProgress?.(i18n.t('importExport:importLog.shared.readingAttachments', { done: blobs.size + 1, total: attachments.length }));
     }
     const data = await zipEntryMedia(entry);
     if (!data) {
@@ -355,33 +372,33 @@ export async function parseMarkdown(
   const transforms: string[] = [];
   if (fmCount > 0) {
     transforms.push(
-      'Restored titles, tags, and timestamps from front-matter.'
+      msg('restoredFrontMatter')
     );
   }
   if (inlineTagCount > 0) {
     transforms.push(
-      `Read tags written as #hashtags in ${inlineTagCount} note${inlineTagCount === 1 ? '' : 's'}.`
+      msg('readHashtags', { count: inlineTagCount })
     );
   }
   if (folders.length > 0) {
     const filed = notes.filter((n) => n.folderId).length;
     transforms.push(
-      `Rebuilt ${folders.length} folder${folders.length === 1 ? '' : 's'} from your files (${filed} note${filed === 1 ? '' : 's'} filed).`
+      msg('rebuiltFolders', { count: folders.length, filed: i18n.t('importExport:importLog.shared.filedNotes', { count: filed }) })
     );
   }
   if (blobs.size > 0) {
     const images = [...blobs.values()].filter((b) => b.mime.startsWith('image/')).length;
     const files = blobs.size - images;
     const parts: string[] = [];
-    if (images > 0) parts.push(`${images} image${images === 1 ? '' : 's'}`);
-    if (files > 0) parts.push(`${files} file${files === 1 ? '' : 's'}`);
-    transforms.push(`Brought ${parts.join(' and ')} across from your folder.`);
+    if (images > 0) parts.push(i18n.t('importExport:importLog.shared.imageCount', { count: images }));
+    if (files > 0) parts.push(i18n.t('importExport:missing.files', { count: files }));
+    transforms.push(msg('broughtAcross', { parts: parts.length === 2 ? i18n.t('importExport:missing.both', { pictures: parts[0], files: parts[1] }) : parts[0] }));
   }
 
   const warnings: string[] = [];
   if (skippedAttachments > 0) {
     warnings.push(
-      `Skipped ${skippedAttachments} attachment${skippedAttachments === 1 ? '' : 's'} that none of your notes link to.`
+      i18n.t('importExport:importLog.shared.skippedUnlinked', { count: skippedAttachments })
     );
   }
   if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));

@@ -55,11 +55,17 @@ export function MobileDrawer({
         }`}
         onClick={onClose}
       />
-      {/* `relative` is required so the sidebar paints above the backdrop. */}
+      {/* `relative` is required so the sidebar paints above the backdrop.
+          Open, the panel carries no translate: even a zero one makes it the
+          containing block of every `position: fixed` descendant, and the
+          menus inside it (All options, a folder's "...", the tag menu) place
+          themselves in viewport coordinates. In LTR the panel sits at x=0 so
+          that lined up by chance; in RTL it sits at the far side and the
+          menus opened off screen. */}
       <div
         className={`relative flex h-full w-72 bg-surface-0 shadow-2xl flex-col pointer-events-auto ${
           open
-            ? 'translate-x-0 visible [transition:transform_200ms_ease-out]' // rtl-ok: identity transform, direction-neutral
+            ? 'visible [transition:transform_200ms_ease-out]'
             : '-translate-x-full rtl:translate-x-full invisible [transition:transform_200ms_ease-out,visibility_0s_200ms]'
         }`}
         onTouchStart={(e) => {

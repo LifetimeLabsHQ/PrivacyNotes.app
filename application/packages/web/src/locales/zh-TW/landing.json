@@ -389,6 +389,7 @@
     "receipt": "你的帳單",
     "receiptCount_other": "{{count}} 項訂閱",
     "receiptRenews": "每年自動續訂",
+    "receiptStamp": "已取消",
     "perYear": "每年合計",
     "keepLabel": "你省下",
     "keepLine_other": "{{count}} 年下來，就算買了 Pro 也一樣。",

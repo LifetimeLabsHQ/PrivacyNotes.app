@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Check } from './icons';
 import { Brand } from './Brand';
@@ -22,6 +23,37 @@ function usd(n: number, cents = false, always = false): string {
   return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency: 'USD', minimumFractionDigits: always ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 }).format(n);
 }
 
+/** Strike delay per receipt line, and the pause before the total settles. */
+const STRIKE_STEP_MS = 70;
+
+/** The number on screen glides to `target` (ease-out, after `delay` ms)
+ *  instead of jumping; with reduced motion it jumps. */
+function useGlide(target: number, delay = 0, ms = 650): number {
+  const [shown, setShown] = useState(target);
+  const at = useRef(target);
+  useEffect(() => {
+    const from = at.current;
+    if (from === target) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      at.current = target;
+      setShown(target);
+      return;
+    }
+    let raf = 0;
+    let t0 = 0;
+    const step = (now: number) => {
+      t0 ||= now + delay;
+      const k = Math.min(1, Math.max(0, (now - t0) / ms));
+      at.current = from + (target - from) * (1 - (1 - k) ** 3);
+      setShown(at.current);
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, delay, ms]);
+  return shown;
+}
+
 /**
  * The comparison's live half: the visitor ticks the app they pay for in each
  * row, one row per pillar of ours and one app per row, and the heading, the two bars and the saving
@@ -38,6 +70,12 @@ export function usePriceMath(proPrice: number) {
   );
   const ticked = STACK_GROUPS.flatMap((g) => g.apps.filter((a) => pick[g.key] === a.name));
   const yearly = ticked.reduce((sum, a) => sum + a.perYear, 0);
+  // Hover (a tap on touch) cancels the bill: each line is struck through in
+  // turn, then the stamp lands and the total runs down to zero.
+  const [cancelled, setCancelled] = useState(false);
+  const struck = cancelled && ticked.length > 0;
+  const settle = ticked.length * STRIKE_STEP_MS + 120;
+  const total = useGlide(struck ? 0 : yearly, struck ? settle : 0);
   const them = yearly * COMPARE_YEARS;
   // With nothing ticked both bars stay empty: a full $48 bar against an
   // empty one would read as the dearer choice.
@@ -100,7 +138,14 @@ export function usePriceMath(proPrice: number) {
         {/* The bill as a paper receipt: a slip with a torn edge
             (.pn-receipt in FX_CSS), every ticked app with its yearly price,
             the total, and the line every subscription prints in small type. */}
-        <div className="pn-receipt-wrap mx-auto w-full max-w-sm -rotate-1">
+        <div
+          className="pn-receipt-wrap mx-auto w-full max-w-sm -rotate-1"
+          data-cancelled={struck || undefined}
+          style={{ '--settle': `${settle}ms` } as CSSProperties}
+          onPointerEnter={(e) => e.pointerType !== 'touch' && setCancelled(true)}
+          onPointerLeave={(e) => e.pointerType !== 'touch' && setCancelled(false)}
+          onPointerUp={(e) => e.pointerType === 'touch' && setCancelled((c) => !c)}
+        >
           <div className="pn-receipt bg-[var(--wl-paper)] px-5 pt-4 pb-3 font-mono text-small text-[var(--wl-ink)]">
             <div className="text-center text-body font-bold uppercase tracking-[0.3em]">{t('comparison.receipt')}</div>
             <div className="mt-1 text-center text-meta text-[var(--wl-muted)]">
@@ -109,8 +154,8 @@ export function usePriceMath(proPrice: number) {
             <div className="my-2.5 border-t border-dashed border-[var(--wl-muted)]/50" />
             {ticked.length ? (
               <ul className="space-y-0.5">
-                {ticked.map((a) => (
-                  <li key={a.name} className="flex items-baseline justify-between gap-3">
+                {ticked.map((a, i) => (
+                  <li key={a.name} className="pn-receipt-line flex items-baseline justify-between gap-3" style={{ '--i': i } as CSSProperties}>
                     <span className="min-w-0 truncate">{a.name}</span>
                     <span className="tabular-nums">{usd(a.perYear, true, true)}</span>
                   </li>
@@ -121,14 +166,17 @@ export function usePriceMath(proPrice: number) {
             )}
             <div className="my-2.5 border-t border-dashed border-[var(--wl-muted)]/50" />
             {/* The total, marked as with a highlighter pen. */}
-            <div className="-mx-2 flex items-baseline justify-between gap-3 rounded-sm bg-[var(--wl-tint-amber)] px-2 py-1.5 text-body font-bold uppercase">
+            <div className="pn-receipt-total -mx-2 flex items-baseline justify-between gap-3 rounded-sm bg-[var(--wl-tint-amber)] px-2 py-1.5 text-body font-bold uppercase">
               <span>{t('comparison.perYear')}</span>
-              <span className="text-heading tabular-nums text-[var(--wl-cost)]">{usd(yearly, true, true)}</span>
+              <span className="pn-receipt-total-sum text-heading tabular-nums text-[var(--wl-cost)]">{usd(total, true, true)}</span>
             </div>
             <div className="mt-2.5 border-t-[3px] border-double border-[var(--wl-muted)]/50 pt-2 text-center text-meta uppercase tracking-[0.12em] text-[var(--wl-sub)]">
               {t('comparison.receiptRenews')}
             </div>
             <div aria-hidden="true" className="pn-receipt-code mx-auto mt-2 h-5 w-40" />
+            <div aria-hidden="true" className="pn-receipt-stamp text-heading">
+              <span>{t('comparison.receiptStamp')}</span>
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2.5 text-small">

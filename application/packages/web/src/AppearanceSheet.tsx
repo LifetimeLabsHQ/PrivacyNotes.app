@@ -40,9 +40,10 @@ import { intlLocale } from './languages';
 import { FONT_FAMILIES } from './editorColors';
 import { IconUpgrade, ProMark, type UpgradeTrigger } from './UpgradeModal';
 import { proUnlocked } from './demo';
-import { ArrowCounterClockwise, Folder, X, List, ListBullets, Palette, Star, Toolbox, SquaresFour, Sparkle, DotsThreeOutlineVertical, CaretDown, CaretRight, Globe, Plus, ClipboardText, ArrowSquareOut, PencilSimple, Copy, UserSwitch, TextT, Scribble, TextAlignJustify, FrameCorners, PencilLine, HouseLine, Layout, MagnifyingGlassPlus, Tabs, Paragraph, LinkSimple, Eye, Brain, TextAa, ListChecks, CheckSquare, Confetti, CircleHalf, PaintBucket, Sun, Moon, Files, DotsSixVertical, ArrowUp, ArrowDown, ArrowRight, PILLAR_GLYPHS, type Icon } from './icons';
+import { ArrowCounterClockwise, Folder, X, List, ListBullets, Palette, Star, Toolbox, SquaresFour, Sparkle, DotsThreeOutlineVertical, CaretDown, CaretRight, Globe, Plus, ClipboardText, ArrowSquareOut, PencilSimple, Copy, UserSwitch, TextT, Scribble, TextAlignJustify, FrameCorners, PencilLine, HouseLine, Layout, MagnifyingGlassPlus, Tabs, Paragraph, LinkSimple, Eye, Brain, TextAa, ListChecks, CheckSquare, Confetti, Tray, CircleHalf, PaintBucket, Sun, Moon, Files, DotsSixVertical, ArrowUp, ArrowDown, ArrowRight, PILLAR_GLYPHS, type Icon } from './icons';
 import { DefaultAppSettingsRow } from './markdownFolder/MarkdownDefaultApp';
 import { markdownDefaultAppSupported } from './markdownFolder/defaultApp';
+import { setTrayMode, traySupported, useTrayMode } from './trayMode';
 import type { BUILTIN_THEME_CODES } from './builtinThemeCodes';
 import type { CustomThemes } from './customThemes';
 import type { ThemeGalleryCtx } from './customThemeUI';
@@ -386,6 +387,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   // out of theme.ts keeps that module free of a native import on the boot
   // path. Spec: docs/internal/design-decisions.md (app zoom)
   const { appZoom, setAppZoom } = useAppZoom();
+  const trayMode = useTrayMode();
   const [openItemsInTabs, setOpenItemsInTabs] = useOpenItemsInTabs();
   // No strip below the pane layout, so no switch for it either.
   const tabsFit = useTabsFit();
@@ -1189,6 +1191,17 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           onChange={setInvisibles}
           className="gap-x-5 py-3"
         />
+        {/* Open with PrivacyNotes - which app the OS opens a double-clicked
+            file with. Desktop app only. It stores nothing, so Reset to
+            defaults leaves it alone.
+            Spec: docs/internal/plans/default-app-settings.md */}
+        {markdownDefaultAppSupported() && (
+          <div data-setting="appearance.defaultApps" className="pt-4">
+            <SectionEyebrow icon={Files}>{t('appearance.defaultAppsTitle')}</SectionEyebrow>
+            <DefaultAppSettingsRow kind="text" />
+            <DefaultAppSettingsRow kind="markdown" />
+          </div>
+        )}
       </>
     );
 
@@ -1284,6 +1297,21 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           className="gap-x-5 py-3"
         />
 
+        {/* Close and minimize to the tray. A device setting: it never syncs.
+            Spec: docs/internal/specs/calendar-pillar-spec.md (section 8) */}
+        {traySupported() && (
+          <Switch
+            setting="appearance.tray"
+            icon={<Tray className="text-accent" />}
+            labelClassName={ROW_TITLE}
+            label={t('appearance.trayTitle')}
+            description={t('appearance.trayDesc')}
+            checked={trayMode}
+            onChange={setTrayMode}
+            className="gap-x-5 py-3"
+          />
+        )}
+
         {/* Checkboxes - what a tick does, in a note and in the Tasks view
             alike. Both sync. */}
         <div className="pt-4">
@@ -1312,17 +1340,6 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           </div>
         </div>
 
-        {/* Open with PrivacyNotes - which app the OS opens a double-clicked
-            file with. Desktop app only. It stores nothing, so Reset to
-            defaults leaves it alone.
-            Spec: docs/internal/plans/default-app-settings.md */}
-        {markdownDefaultAppSupported() && (
-          <div data-setting="appearance.defaultApps" className="pt-4">
-            <SectionEyebrow icon={Files}>{t('appearance.defaultAppsTitle')}</SectionEyebrow>
-            <DefaultAppSettingsRow kind="text" />
-            <DefaultAppSettingsRow kind="markdown" />
-          </div>
-        )}
       </>
     );
 

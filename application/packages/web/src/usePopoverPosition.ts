@@ -35,9 +35,32 @@ interface PopoverPositionOptions {
  * without shrinking `innerHeight`, so a menu under a bar that sits on the
  * keyboard opened behind it (GitHub #623).
  */
-function visibleBottom(): number {
+export function visibleBottom(): number {
   const vv = window.visualViewport;
   return vv ? Math.min(window.innerHeight, vv.offsetTop + vv.height) : window.innerHeight;
+}
+
+/**
+ * Place an editor suggestion list (`[[`, `=`) at the caret: below it, nudged
+ * left off the right edge, and above it when it would not fit below (the
+ * keyboard counts, through `visibleBottom`). With no room on either side it
+ * sits on the bottom edge. Measured after the list is drawn.
+ */
+export function placeAtCaret(popup: HTMLElement, rect: DOMRect): void {
+  popup.style.top = `${rect.bottom + window.scrollY + 4}px`;
+  popup.style.left = `${rect.left + window.scrollX}px`;
+  requestAnimationFrame(() => {
+    const popupRect = popup.getBoundingClientRect();
+    if (popupRect.right > window.innerWidth - 8) {
+      popup.style.left = `${window.innerWidth - popupRect.width - 8}px`;
+    }
+    const bottom = visibleBottom();
+    if (popupRect.bottom <= bottom - 8) return;
+    const top = rect.top - popupRect.height - 4 >= 8
+      ? rect.top - popupRect.height - 4
+      : Math.max(8, bottom - 8 - popupRect.height);
+    popup.style.top = `${top + window.scrollY}px`;
+  });
 }
 
 /**

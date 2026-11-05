@@ -22,7 +22,11 @@ const dateFormatters = new Map<string, Intl.DateTimeFormat>();
  *
  * A bare YYYY-MM-DD string parses as UTC midnight, so the formatter has to
  * stay on UTC to read back the same day. In local time every user west of
- * Greenwich would see the previous weekday.
+ * Greenwich would see the previous weekday. For the same reason the date
+ * must be a UTC one: `weekdayDate(n)`, or `weekdayDate(weekdayOf(day))`
+ * for a day string. A local-noon Date is 23:00 UTC the day before at
+ * UTC+13 and UTC+14, so New Zealand in summer, Tonga, Samoa and Kiribati
+ * read every weekday one day early.
  */
 export function weekdayLabel(date: Date, width: 'narrow' | 'short' | 'long'): string {
   const loc = intlLocale();
@@ -408,6 +412,46 @@ export function formatInstantWith(prefs: DatePrefs, value: string | Date, style:
   if (short) delete opts.minute;
   const fmt = dateFormatter(r, opts, `${style}:${withYear}:${short}`);
   return style === 'numeric' && r.reorder ? reordered(fmt, d, r.reorder) : fmt.format(d);
+}
+
+/**
+ * A time a person typed into a time field, rewritten in the Latin form that
+ * `parseTimeText` reads. The field shows `formatInstant(d, 'time')`, so what
+ * comes back is often that text: "오후 3:00", "오전 7시", "下午3:30", "3:30 م".
+ * This reads the active language's own morning and afternoon words, its
+ * digits and the marks it writes around the numbers off the same formatter.
+ * The parse itself is in timeLabel.ts, so schedule.ts stays off the boot path.
+ */
+export function latinTimeTextWith(prefs: DatePrefs, text: string): string {
+  const r = resolve(prefs);
+  // Both formatters the field displays with: hour and minute, and the hour
+  // alone for a full hour ("오전 7시" writes its mark after the hour only).
+  const fmts = [dateFormatter(r, DATE_STYLES.time, 'time'), dateFormatter(r, { hour: 'numeric' }, 'hour')];
+  const parts = (h: number) => fmts.flatMap((fmt) => fmt.formatToParts(new Date(2024, 0, 1, h, 5)));
+  const period = (h: number) => parts(h).find((p) => p.type === 'dayPeriod')?.value.trim() ?? '';
+  const am = period(1);
+  const pm = period(13);
+  let s = text.trim();
+  let half = '';
+  if (pm && s.includes(pm)) { half = 'pm'; s = s.replace(pm, ' '); }
+  else if (am && s.includes(am)) { half = 'am'; s = s.replace(am, ' '); }
+  // The marks the language writes around the numbers ("시" after a Korean
+  // hour), but never the ":" between them.
+  for (const lit of parts(13).filter((p) => p.type === 'literal').map((p) => p.value.trim())) {
+    if (lit && lit !== ':') s = s.split(lit).join(' ');
+  }
+  // The language's own digits, where they are not the Latin ones.
+  const digits = new Intl.NumberFormat(r.tag, { useGrouping: false });
+  for (let n = 0; n <= 9; n++) {
+    const local = digits.format(n);
+    if (local !== String(n)) s = s.split(local).join(String(n));
+  }
+  return `${s.trim()} ${half}`;
+}
+
+/** `latinTimeTextWith` under the synced date settings. */
+export function latinTimeText(text: string): string {
+  return latinTimeTextWith(datePrefs, text);
 }
 
 /** The tag a date in words is written in under the synced date settings, so

@@ -42,6 +42,7 @@ type RoadmapItem = {
   status: RoadmapStatus;
   description: string;
   icon: RoadmapIcon;
+  link?: { text: string; href: string };
 };
 
 // Transpile roadmap.ts (a self-contained module with no imports) with
@@ -60,6 +61,16 @@ export async function loadRoadmap(): Promise<{
     items: module.PUBLIC_ROADMAP as RoadmapItem[],
     labels: module.ROADMAP_STATUS_LABEL as Record<RoadmapStatus, string>,
   };
+}
+
+// The card's description, escaped, with `link.text` (first match) as a link.
+// Throws when the text is missing, so a reworded card cannot lose its link quietly.
+function descriptionHtml(it: RoadmapItem): string {
+  const html = esc(it.description);
+  if (!it.link) return html;
+  const text = esc(it.link.text);
+  if (!html.includes(text)) throw new Error(`roadmap: "${it.link.text}" is not in the description of ${it.id}`);
+  return html.replace(text, `<a href="${esc(it.link.href)}">${text}</a>`);
 }
 
 function esc(s: string): string {
@@ -153,7 +164,7 @@ function renderItems(items: RoadmapItem[], labels: Record<RoadmapStatus, string>
 <div class="txt">
 <span class="badge b-${esc(it.status)}">${esc(labels[it.status])}</span>
 <h2 class="t">${esc(it.title)}</h2>
-<p class="d">${esc(it.description)}</p>
+<p class="d">${descriptionHtml(it)}</p>
 </div>
 </div>
 </li>`;

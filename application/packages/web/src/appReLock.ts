@@ -156,6 +156,20 @@ export function shouldReLock(state: ReLockState): boolean {
   return state.now - state.lastActivityAt >= state.timeoutMinutes * 60_000;
 }
 
+/**
+ * The desktop window is in the tray (trayMode.ts). An app in the tray stays
+ * unlocked, so reminders keep ringing from the notes view: the idle window
+ * stops while it is there and starts again from the moment it comes back
+ * (the owner's choice for GitHub #667, 2026-11-03).
+ */
+let inTray = false;
+let backFromTrayAt = 0;
+
+export function setInTray(away: boolean): void {
+  if (inTray && !away) backFromTrayAt = Date.now();
+  inTray = away;
+}
+
 /** Read the live setting rather than a mounted copy: the user can change the
  *  window in Security while the app runs, and the next check must honour it. */
 function readState(lastActivityAt: number): ReLockState {
@@ -197,7 +211,8 @@ export function startReLockWatch(onLock: () => void): () => void {
   }
 
   function check(): void {
-    if (shouldReLock(readState(lastActivityAt))) lock();
+    if (inTray) return;
+    if (shouldReLock(readState(Math.max(lastActivityAt, backFromTrayAt)))) lock();
   }
 
   function onVisibility(): void {

@@ -97,7 +97,7 @@ export const ParagraphWithMarkdown = Paragraph.extend({
     return {
       markdown: {
         serialize(state: any, node: any, parent: any, index: number) {
-          if (serializeAlignedBlock(state, node)) return;
+          if (serializeAlignedBlock(state, node, parent, index)) return;
           // The empty line kept in front of the footnote section is the
           // editor's, not the note's: it writes nothing.
           // `parent` is a Fragment when a copy serializes a selection.
@@ -188,6 +188,11 @@ export const HardBreakWithMarkdown = HardBreak.extend({
  *   start too. So does a line that is only `+`, `1.` or `1)`: an empty item.
  * - A literal entity such as `&amp;` keeps its ampersand, which markdown would
  *   otherwise decode.
+ * - A `==` that could open a highlight is escaped (`x\==1`), so `x==1 or y==2`
+ *   does not read back highlighted. `a == b` stays raw: a run may not open on
+ *   a space. A line of only `=` is escaped at a line start, where it would
+ *   turn the line above into a heading.
+ * - The text after a hard break starts a line too (see TextWithMarkdown).
  */
 const ENTITY = /&(?=#\d+;|#x[0-9a-f]+;|[a-z][a-z0-9]*;)/gi;
 const ALNUM = /[A-Za-z0-9]/;
@@ -195,6 +200,7 @@ const ALNUM = /[A-Za-z0-9]/;
 function escapeMarkdownText(str: string, startOfLine: boolean): string {
   str = str.replace(ENTITY, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   str = str.replace(/[`*\\~[\]]/g, '\\$&');
+  str = str.replace(/=(?==(?![\s=]))/g, '\\=');
   str = str.replace(/_+/g, (run, i: number) =>
     ALNUM.test(str[i - 1] ?? '') && ALNUM.test(str[i + run.length] ?? '') ? run : run.replace(/_/g, '\\_'),
   );
@@ -203,7 +209,8 @@ function escapeMarkdownText(str: string, startOfLine: boolean): string {
       .replace(/^(\+(?=[ ]|$)|[-*>])/, '\\$&')
       .replace(/^(\s*)(#{1,6})(\s|$)/, '$1\\$2$3')
       .replace(/^(\s*\d+)([.)])\s/, '$1\\$2 ')
-      .replace(/^(\s*\d+)([.)])$/, '$1\\$2');
+      .replace(/^(\s*\d+)([.)])$/, '$1\\$2')
+      .replace(/^(\s*)(=+\s*)$/, '$1\\$2');
   }
   return str;
 }
@@ -213,11 +220,15 @@ export const TextWithMarkdown = Text.extend({
     return {
       markdown: {
         // MarkdownSerializerState.text with the escape above in place of `esc`.
-        serialize(state: any, node: ProseMirrorNode) {
+        // Text right after a hard break starts a markdown line, though not a
+        // block: without the line-start escapes, `1. `, `- ` or `---` typed
+        // after Shift+Enter reads back as a list or a heading.
+        serialize(state: any, node: ProseMirrorNode, parent: ProseMirrorNode, index: number) {
+          const afterBreak = index > 0 && parent.child(index - 1).type.name === 'hardBreak';
           const lines = node.text!.split('\n');
           for (let i = 0; i < lines.length; i++) {
             state.write();
-            state.out += escapeMarkdownText(lines[i]!, state.atBlockStart);
+            state.out += escapeMarkdownText(lines[i]!, state.atBlockStart || (afterBreak && i === 0));
             if (i !== lines.length - 1) state.out += '\n';
           }
         },
@@ -254,8 +265,8 @@ export const HeadingWithMarkdown = Heading.extend({
   addStorage() {
     return {
       markdown: {
-        serialize(state: any, node: any) {
-          if (serializeAlignedBlock(state, node)) return;
+        serialize(state: any, node: any, parent: any, index: number) {
+          if (serializeAlignedBlock(state, node, parent, index)) return;
           state.write(state.repeat('#', node.attrs.level) + ' ');
           state.renderInline(node);
           state.closeBlock(node);

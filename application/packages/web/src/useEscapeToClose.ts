@@ -44,9 +44,12 @@ export function closeTopAnchoredOverlay(): void {
   if (top && !top.inline) top.close();
 }
 
-/** True while any Escape-dismissible overlay is open. */
+/** True while an Escape-dismissible overlay is open in front of the page: a
+ *  modal, a popover, a menu, a sheet. An inline entry (the calendar card's
+ *  open day) is part of the page: Escape folds it and the Android back button
+ *  walks it, but it blocks no shortcut and takes no focus from a new item. */
 export function hasOpenOverlay(): boolean {
-  return escStack.length > 0;
+  return escStack.some((entry) => !entry.inline);
 }
 
 /**

@@ -581,7 +581,7 @@ async function withThemeVotes(response: Response, url: URL, env: Env, ctx: Execu
       element(el) {
         thread = Number(el.getAttribute('data-thread'));
         const r = ranks.get(thread);
-        if (r) el.setAttribute('aria-label', `${r.votes} ${r.votes === 1 ? 'vote' : 'votes'}, vote on GitHub`);
+        if (r) el.setAttribute('aria-label', `${r.votes} ${r.votes === 1 ? 'vote' : 'votes'}, upvote on GitHub`);
       },
     })
     .on('a.vote .vc', {

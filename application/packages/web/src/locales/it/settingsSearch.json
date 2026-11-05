@@ -68,6 +68,7 @@
     "appearance_contentWidth": "larghezza colonna, largo, larghezza piena, margini",
     "appearance_editor": "Markdown, testo formattato, rich text, WYSIWYG, modalità editor",
     "appearance_defaultApps": "app predefinita, apri con, doppio clic, Finder, Esplora file, markdown, md, txt, file di testo",
+    "appearance_tray": "area di notifica, barra delle applicazioni, tray, system tray, riduci a icona, chiudi, in background, esegui in background, barra di sistema",
     "appearance_copyFormat": "copia, appunti, testo semplice, incolla, casella di controllo",
     "appearance_pasteFormat": "incolla, appunti, testo semplice, formattazione, senza formattazione, stesso stile",
     "appearance_favicons": "favicon, icone dei siti, loghi",

@@ -68,6 +68,7 @@
     "appearance_contentWidth": "largura da coluna, largo, largura total, margens",
     "appearance_editor": "markdown, texto formatado, wysiwyg, modo do editor",
     "appearance_defaultApps": "app padrão, abrir com, clique duplo, finder, explorador de arquivos, markdown, md, txt, arquivo de texto",
+    "appearance_tray": "bandeja, bandeja do sistema, tray, área de notificação, minimizar, fechar, segundo plano, rodar em segundo plano, barra de tarefas",
     "appearance_copyFormat": "copiar, área de transferência, texto simples, colar, caixa de seleção",
     "appearance_pasteFormat": "colar, área de transferência, texto simples, formatação, sem formatação, manter estilo",
     "appearance_favicons": "favicon, ícones de sites, logos",

@@ -1,5 +1,5 @@
 /**
- * Wiki-link autocomplete dropdown.
+ * Note-link autocomplete dropdown.
  *
  * Renders a floating list of note titles filtered by the user's query.
  * Triggered when the user types `[[` in the editor. Arrow keys navigate,
@@ -30,6 +30,7 @@ import { PluginKey, type EditorState } from '@tiptap/pm/state';
 import { textMatcher } from './textMatch';
 import { noteLinkKey, noteLinkTarget, resolveNoteLinkMatches } from './noteLinks';
 import { headingsFromDoc, uniqueHeadings, type NoteHeadingsAnswer } from './noteHeadings';
+import { placeAtCaret } from './usePopoverPosition';
 
 /* ------------------------------------------------------------------ */
 /* Note titles provider - set from NotesView                          */
@@ -166,7 +167,9 @@ const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>(
 
     const headingMode = items.length > 0 && items[0]!.kind !== 'note';
     const pick = (item: SuggestionItem | undefined) => {
-      if (item?.kind === 'note') command({ target: item.title });
+      // A title can hold `|` or `]` ("Recipes | 2024"), which the link syntax
+      // reads as its label or its end; the importers write the same target.
+      if (item?.kind === 'note') command({ target: noteLinkTarget(item.title) });
       else if (item?.kind === 'heading') command({ target: item.target });
       else if (query.trim()) command({ target: query.trim() });
     };
@@ -510,26 +513,12 @@ function headingItems(editor: Editor, query: string): SuggestionItem[] | null {
   return null;
 }
 
-/** Position the popup below the cursor using the clientRect from suggestion. */
+/** Place the list at the caret (`placeAtCaret`), using the clientRect from suggestion. */
 function updatePosition(
   popup: HTMLDivElement,
   clientRect?: (() => DOMRect | null) | null,
 ) {
   if (!clientRect) return;
   const rect = clientRect();
-  if (!rect) return;
-
-  const top = rect.bottom + window.scrollY + 4;
-  const left = rect.left + window.scrollX;
-
-  popup.style.top = `${top}px`;
-  popup.style.left = `${left}px`;
-
-  // Keep the popup from going off the right edge
-  requestAnimationFrame(() => {
-    const popupRect = popup.getBoundingClientRect();
-    if (popupRect.right > window.innerWidth - 8) {
-      popup.style.left = `${window.innerWidth - popupRect.width - 8}px`;
-    }
-  });
+  if (rect) placeAtCaret(popup, rect);
 }

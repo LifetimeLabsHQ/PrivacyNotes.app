@@ -391,6 +391,7 @@
     "receiptCount_one": "{{count}} Abo",
     "receiptCount_other": "{{count}} Abos",
     "receiptRenews": "Verlängert sich jedes Jahr",
+    "receiptStamp": "Gekündigt",
     "perYear": "Summe pro Jahr",
     "keepLabel": "Du sparst",
     "keepLine_one": "in {{count}} Jahr, selbst wenn du Pro kaufst.",

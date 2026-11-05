@@ -7,6 +7,9 @@ import { BW_EXPORTED_BY, BW_OWN_FIELDS } from '../export';
 import { buildFolderTree } from './folderImport';
 import { linkifyMarkdown } from './linkify';
 import type { Importer, ImportedNote, ParsedImport } from './types';
+import i18n from '../i18n';
+
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.bitwarden.${key}`, options);
 
 /**
  * Bitwarden import adapter.
@@ -124,29 +127,23 @@ export const bitwardenImporter: Importer = {
   sourceTag: 'bitwarden',
 
   async parse(file, onProgress) {
-    onProgress?.('Reading file…');
+    onProgress?.(i18n.t('importExport:status.readingFile'));
     const text = await file.text();
 
-    onProgress?.('Parsing JSON…');
+    onProgress?.(i18n.t('importExport:importLog.shared.parsingJson'));
     let data: BwExport;
     try {
       data = JSON.parse(text) as BwExport;
     } catch {
-      throw new Error(
-        'That file is not valid JSON. Make sure you exported as ".json" (not encrypted).'
-      );
+      throw new Error(msg('invalidJson'));
     }
 
     if (data.encrypted === true) {
-      throw new Error(
-        'This is an encrypted Bitwarden export. Please re-export using the plain ".json" format (not ".json (Encrypted)").'
-      );
+      throw new Error(msg('encryptedExport'));
     }
 
     if (!data.items || !Array.isArray(data.items)) {
-      throw new Error(
-        'This file is missing the expected "items" array. Not a Bitwarden vault export.'
-      );
+      throw new Error(msg('missingItems'));
     }
 
     const ownExport = data.exportedBy === BW_EXPORTED_BY;
@@ -160,7 +157,7 @@ export const bitwardenImporter: Importer = {
       }
     }
 
-    onProgress?.('Converting items…');
+    onProgress?.(msg('convertingItems'));
     const notes: ImportedNote[] = [];
     const warnings: string[] = [];
     const transforms: string[] = [];
@@ -356,7 +353,7 @@ export const bitwardenImporter: Importer = {
 
         default:
           warnings.push(
-            `Skipped item "${item.name ?? '(unnamed)'}" with unknown type ${item.type}.`
+            msg('unknownType', { name: item.name ?? '(unnamed)', type: item.type })
           );
       }
       if (ownExport && folderPath.length > 0 && notes.length > pushedAt) {
@@ -379,57 +376,45 @@ export const bitwardenImporter: Importer = {
 
     // Build transform messages.
     if (loginCount > 0) {
-      transforms.push(`Imported ${loginCount} login${loginCount === 1 ? '' : 's'} as vault items.`);
+      transforms.push(i18n.t('importExport:importLog.shared.importedLogins', { count: loginCount }));
     }
     if (cardCount > 0) {
-      transforms.push(`Imported ${cardCount} card${cardCount === 1 ? '' : 's'} as vault items.`);
+      transforms.push(msg('importedCards', { count: cardCount }));
     }
     if (secureNoteCount > 0) {
-      transforms.push(`Imported ${secureNoteCount} secure note${secureNoteCount === 1 ? '' : 's'}.`);
+      transforms.push(msg('importedSecureNotes', { count: secureNoteCount }));
     }
     if (sshKeyCount > 0) {
-      transforms.push(`Imported ${sshKeyCount} SSH key${sshKeyCount === 1 ? '' : 's'} as vault items.`);
+      transforms.push(msg('importedSshKeys', { count: sshKeyCount }));
     }
     if (identityCount > 0) {
-      transforms.push(
-        `Converted ${identityCount} identit${identityCount === 1 ? 'y' : 'ies'} to notes (no identity type in PrivacyNotes).`
-      );
+      transforms.push(msg('convertedIdentities', { count: identityCount }));
     }
     if (loginFieldCount > 0) {
-      transforms.push(
-        `Kept ${loginFieldCount} login custom field${loginFieldCount === 1 ? '' : 's'} as custom fields.`
-      );
+      transforms.push(msg('keptLoginFields', { count: loginFieldCount }));
     }
     if (extraUrlCount > 0) {
-      transforms.push(
-        `Kept ${extraUrlCount} additional website${extraUrlCount === 1 ? '' : 's'} on logins.`
-      );
+      transforms.push(msg('keptExtraUrls', { count: extraUrlCount }));
     }
     if (customFieldCount > 0) {
-      transforms.push(
-        `Preserved ${customFieldCount} custom field${customFieldCount === 1 ? '' : 's'} in the notes section.`
-      );
+      transforms.push(msg('preservedCustomFields', { count: customFieldCount }));
     }
     if (starredCount > 0) {
-      transforms.push(`Kept ${starredCount} favorite${starredCount === 1 ? '' : 's'} as starred.`);
+      transforms.push(msg('keptStarred', { count: starredCount }));
     }
     if (pinProtectedCount > 0) {
-      transforms.push(
-        `Marked ${pinProtectedCount} re-prompt item${pinProtectedCount === 1 ? '' : 's'} as PIN-protected.`
-      );
+      transforms.push(msg('markedPinProtected', { count: pinProtectedCount }));
     }
     if (linkifiedCount > 0) {
-      transforms.push(`Made URLs clickable in ${linkifiedCount} note${linkifiedCount === 1 ? '' : 's'}.`);
+      transforms.push(i18n.t('importExport:importLog.shared.linkifiedNotes', { count: linkifiedCount }));
     }
     if (totpCount > 0) {
-      transforms.push(`Kept the 2FA authenticator key for ${totpCount} login${totpCount === 1 ? '' : 's'}.`);
+      transforms.push(i18n.t('importExport:importLog.shared.keptTotp', { count: totpCount }));
     }
 
     // Warnings.
     if (skippedOrg > 0) {
-      warnings.push(
-        `Skipped ${skippedOrg} organization vault item${skippedOrg === 1 ? '' : 's'} (only personal vault items are imported).`
-      );
+      warnings.push(msg('skippedOrg', { count: skippedOrg }));
     }
 
     const uniqueTags = new Set<string>();

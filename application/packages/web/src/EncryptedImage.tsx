@@ -39,6 +39,7 @@ import { suppressSoftKeyboard } from './softKeyboard';
 import type { ImageStore } from './imageStore';
 import { saveBlob, type SaveResult } from './saveFile';
 import i18n from './i18n';
+import { drawablePicture } from './avifDisplay';
 import { intlLocale } from './languages';
 
 /** Prefix for our custom image URIs. */
@@ -108,9 +109,10 @@ async function fetchSourceUrl(source: BlobSource): Promise<string | null> {
   if (!store) throw new Error(i18n.t('media:image.storeUnavailable'));
   const bytes = await store.getImage(source.uuid);
   if (!bytes) return null;
+  const drawable = await drawablePicture(bytes);
   const existing = blobUrlCache.get(source.uuid);
   if (existing) return existing;
-  const url = URL.createObjectURL(new Blob([bytes as BlobPart]));
+  const url = URL.createObjectURL(new Blob([drawable.bytes as BlobPart], drawable.mime ? { type: drawable.mime } : {}));
   blobUrlCache.set(source.uuid, url);
   return url;
 }
@@ -842,9 +844,10 @@ export async function loadEncryptedImageUrl(uuid: string): Promise<string | null
   try {
     const blob = await store.getImage(uuid);
     if (!blob) return null;
+    const drawable = await drawablePicture(blob);
     const existing = blobUrlCache.get(uuid);
     if (existing) return existing;
-    const url = URL.createObjectURL(new Blob([blob as BlobPart]));
+    const url = URL.createObjectURL(new Blob([drawable.bytes as BlobPart], drawable.mime ? { type: drawable.mime } : {}));
     blobUrlCache.set(uuid, url);
     return url;
   } catch {

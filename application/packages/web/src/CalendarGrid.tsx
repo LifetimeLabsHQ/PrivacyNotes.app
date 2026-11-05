@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatInstant, toLocalIso, weekdayLabel } from './intlFormat';
+import { formatInstant, toLocalIso, weekdayDate, weekdayLabel } from './intlFormat';
 import { dayAtNoon } from './MonthGrid';
 import { timedBlocks, type TimedBlock } from './calendarLayout';
 import type { DayEntry, DayIndex } from './notesViewUtils';
-import { shiftDay, timeFromMinutes } from './schedule';
+import { shiftDay, timeFromMinutes, weekdayOf } from './schedule';
 
 /**
  * The hour layout of the Day and Week views: a day header row, the all-day
@@ -110,7 +110,7 @@ export function CalendarGrid({ days, index, hidden, firstHour, scrollRef, render
             aria-current={day === today ? 'date' : undefined}
             className="flex flex-col items-center py-1 text-pn-muted hover:bg-pn/5 transition"
           >
-            <span className="text-meta">{weekdayLabel(dayAtNoon(day), 'short')}</span>
+            <span className="text-meta">{weekdayLabel(weekdayDate(weekdayOf(day)), 'short')}</span>
             <span className={`text-row font-semibold tabular-nums rounded-md px-1.5 ${day === today ? 'bg-accent-fill text-white' : 'text-pn'}`}>
               {dayAtNoon(day).getDate()}
             </span>

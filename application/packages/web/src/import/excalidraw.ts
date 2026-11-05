@@ -24,6 +24,7 @@ import { parseScene, serializeScene } from '../drawing/scene';
 import { sniffImageFormat } from '../imageMetadata';
 import { isUntitledStem } from '../exportNames';
 import { oneLineTitle } from '../oneLineTitle';
+import i18n from '../i18n';
 import { zipEntryText } from './zipEntry';
 import { shouldSkip } from './markdown';
 import { buildFolderTree, commonRootPrefix } from './folderImport';
@@ -31,6 +32,8 @@ import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 
 /** A drawing file as read: its path inside the zip (or its name), text, date. */
 type SourceFile = { path: string; text: string; date: Date | null };
+
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.excalidraw.${key}`, options);
 
 const DRAWING_FILE = /\.excalidraw(?:\.md)?$/i;
 
@@ -43,7 +46,7 @@ const PICTURE_MIME = new Map<ReturnType<typeof sniffImageFormat>, string>([
   ['bmp', 'image/bmp'],
 ]);
 
-const NO_DRAWING = 'This file holds no Excalidraw drawing. Pick a .excalidraw file, an Obsidian .excalidraw.md file, or a .zip of them.';
+const noDrawing = (): string => msg('noDrawing');
 
 /** A date from the file, or now when it is missing or impossible. */
 function stampOf(date: Date | null): string {
@@ -84,7 +87,7 @@ async function readFiles(file: File, onProgress?: (msg: string) => void): Promis
   if (!(head[0] === 0x50 && head[1] === 0x4b)) {
     return [{ path: file.name, text: await file.text(), date: file.lastModified ? new Date(file.lastModified) : null }];
   }
-  onProgress?.('Reading zip...');
+  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
   const { default: JSZip } = await import('jszip');
   const zip = await JSZip.loadAsync(file);
   const entries = Object.values(zip.files).filter((e) => !e.dir && !shouldSkip(e.name) && DRAWING_FILE.test(e.name));
@@ -98,7 +101,7 @@ async function readFiles(file: File, onProgress?: (msg: string) => void): Promis
 
 export async function parseExcalidraw(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
   const files = await readFiles(file, onProgress);
-  if (files.length === 0) throw new Error(NO_DRAWING);
+  if (files.length === 0) throw new Error(noDrawing());
 
   const dirOf = (path: string) => path.split('/').slice(0, -1).filter(Boolean).join('/');
 
@@ -111,7 +114,7 @@ export async function parseExcalidraw(file: File, onProgress?: (msg: string) => 
   let unreadablePictures = 0;
 
   for (const [i, f] of files.entries()) {
-    onProgress?.(`Reading drawings... ${i + 1} of ${files.length}`);
+    onProgress?.(msg('readingDrawings', { current: i + 1, total: files.length }));
     const name = f.path.split('/').pop() ?? f.path;
     const isMarkdown = /\.md$/i.test(name);
     let json: string | null = f.text;
@@ -175,7 +178,7 @@ export async function parseExcalidraw(file: File, onProgress?: (msg: string) => 
   }
 
   if (notes.length === 0) {
-    throw new Error(compressed.length > 0 ? compressedLine(compressed) : NO_DRAWING);
+    throw new Error(compressed.length > 0 ? compressedLine(compressed) : noDrawing());
   }
   // Folders only for the drawings that came in, so a folder of refused
   // files is never made empty.
@@ -185,10 +188,10 @@ export async function parseExcalidraw(file: File, onProgress?: (msg: string) => 
   }
 
   const warnings: string[] = [];
-  if (refused.length > 0) warnings.push(`${refused.length} ${refused.length === 1 ? 'file is' : 'files are'} not an Excalidraw drawing and ${refused.length === 1 ? 'was' : 'were'} skipped: ${namesOf(refused)}.`);
+  if (refused.length > 0) warnings.push(msg('refused', { count: refused.length, names: namesOf(refused) }));
   if (compressed.length > 0) warnings.push(compressedLine(compressed));
-  if (outsidePictures > 0) warnings.push(`${outsidePictures} ${outsidePictures === 1 ? 'picture is' : 'pictures are'} not inside ${outsidePictures === 1 ? 'its' : 'their'} drawing file (Obsidian keeps them as separate files), so the drawing shows an empty box in ${outsidePictures === 1 ? 'its' : 'their'} place.`);
-  if (unreadablePictures > 0) warnings.push(`${unreadablePictures} ${unreadablePictures === 1 ? 'picture is' : 'pictures are'} in a format this app does not store, such as SVG, and ${unreadablePictures === 1 ? 'shows' : 'show'} as an empty box.`);
+  if (outsidePictures > 0) warnings.push(msg('outsidePictures', { count: outsidePictures }));
+  if (unreadablePictures > 0) warnings.push(msg('unreadablePictures', { count: unreadablePictures }));
 
   const out: ParsedImport = {
     notes,
@@ -203,9 +206,9 @@ export async function parseExcalidraw(file: File, onProgress?: (msg: string) => 
 }
 
 function namesOf(names: string[]): string {
-  return names.length > 5 ? `${names.slice(0, 5).join(', ')} and ${names.length - 5} more` : names.join(', ');
+  return names.length > 5 ? msg('namesMore', { list: names.slice(0, 5).join(', '), count: names.length - 5 }) : names.join(', ');
 }
 
 function compressedLine(names: string[]): string {
-  return `${names.length} Obsidian ${names.length === 1 ? 'drawing is' : 'drawings are'} saved compressed, which this import cannot read: ${namesOf(names)}. In Obsidian, turn off "Compress Excalidraw JSON in Markdown" in the Excalidraw plugin's settings, open each drawing once so it is saved again, and import it again.`;
+  return msg('compressed', { count: names.length, names: namesOf(names) });
 }

@@ -47,7 +47,7 @@ import i18n, { activeLocale, ensureLooksLoaded } from '../i18n';
 import { isImeComposing } from '../imeComposing';
 import { isSoftKeyboardDevice } from '../softKeyboard';
 import { HeadlineRule, SETTINGS_HELP, SETTINGS_TRACK, SettingsTabStrip, settingsSegClass, settingsTabClass } from '../settingsUI';
-import { useKeyboardOpen } from '../useKeyboardOpen';
+import { useKeyboardRect } from '../useKeyboardOpen';
 import { Switch } from '../Switch';
 import { ListSearchInput } from '../ListSearchInput';
 import { Button, CloseButton, ModalFooter } from '../ui';
@@ -542,31 +542,4 @@ export function LookPicker({
     </div>,
     document.body,
   );
-}
-
-/**
- * The part of the screen a soft keyboard leaves visible, or null while no
- * keyboard is up. Read from the visual viewport, which shrinks for the
- * keyboard both where the page is resized with it and where the keyboard
- * only covers the page.
- */
-function useKeyboardRect(enabled: boolean): { top: number; height: number } | null {
-  const open = useKeyboardOpen();
-  const [rect, setRect] = useState<{ top: number; height: number } | null>(null);
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!enabled || !open || !vv) {
-      setRect(null);
-      return;
-    }
-    const read = () => setRect({ top: vv.offsetTop, height: vv.height });
-    read();
-    vv.addEventListener('resize', read);
-    vv.addEventListener('scroll', read);
-    return () => {
-      vv.removeEventListener('resize', read);
-      vv.removeEventListener('scroll', read);
-    };
-  }, [enabled, open]);
-  return rect;
 }

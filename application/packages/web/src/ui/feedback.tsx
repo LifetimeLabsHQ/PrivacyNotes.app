@@ -87,7 +87,7 @@ export function Snackbar({ actionLabel, onAction, children }: { actionLabel?: st
   return (
     <div
       role="status"
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-full bg-accent-fill py-1.5 ps-4 text-body font-medium text-white shadow-lg ${actionLabel ? 'pe-1.5' : 'pe-4'}`}
+      className={`fixed bottom-6 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-full bg-accent-fill py-1.5 ps-4 text-body font-medium text-white shadow-lg ${actionLabel ? 'pe-1.5' : 'pe-4'}`}
     >
       <span className="min-w-0 truncate">{children}</span>
       {actionLabel && (

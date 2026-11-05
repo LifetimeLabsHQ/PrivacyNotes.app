@@ -47,7 +47,7 @@ import {
   type CopyEntry,
   type InboxKind,
 } from '@notes/shared/extension';
-import { db, type LocalNote } from './db';
+import { db, notesWriteCount, type LocalNote } from './db';
 import { createNote, updateNote } from './notesRepo';
 import { buildLinkBody, buildLinkKeyMap, linkDedupeKey, parseLinkBody } from './linkBody';
 import { buildClipNoteMap, clipTrackers } from './clipLink';
@@ -235,6 +235,7 @@ async function extensionPass(deps: ExtensionSyncDeps): Promise<ExtensionSyncResu
 export function resetExtensionSync(): void {
   known = null;
   inboxKey = null;
+  lastCopy = null;
 }
 
 // ── Adoption ───────────────────────────────────────────────────────
@@ -578,6 +579,16 @@ async function vaultCopy(): Promise<CopyEntry[]> {
   return out;
 }
 
+/**
+ * The vault the last full copy read: while no note was written in this tab
+ * and the server rows still match the memo, a new copy would write nothing,
+ * so the vault is not read again. Reading every note each pass (every 30 s)
+ * grew the desktop app's memory all day (issue #643). A full copy still runs
+ * every ten minutes, for writes made in another tab.
+ */
+let lastCopy: { pubkey: string; tag: string; writes: number; at: number } | null = null;
+const FULL_COPY_MS = 10 * 60_000;
+
 async function keepLoginsCopy(deps: ExtensionSyncDeps, state: ExtensionState): Promise<number> {
   let tag = state.keyTag;
   if (!tag) return 0;
@@ -629,6 +640,14 @@ async function keepLoginsCopy(deps: ExtensionSyncDeps, state: ExtensionState): P
   const memo = readMemo(deps.pubkey, tag);
   const server = await deps.store.listCopy();
   const serverCurrent = new Map(server.filter((r) => r.key_tag === tag).map((r) => [r.id, r]));
+  const writesNow = notesWriteCount();
+  const liveOnServer = [...serverCurrent.values()].filter((r) => !r.deleted);
+  if (
+    lastCopy && lastCopy.pubkey === deps.pubkey && lastCopy.tag === tag &&
+    lastCopy.writes === writesNow && now - lastCopy.at < FULL_COPY_MS &&
+    server.every((r) => r.key_tag === tag) &&
+    liveOnServer.length === Object.keys(memo.fps).length && liveOnServer.every((r) => r.id in memo.fps)
+  ) return 0;
   const writes: CopyWrite[] = [];
   const nextFps: Record<string, string> = {};
   for (const entry of await vaultCopy()) {
@@ -653,6 +672,7 @@ async function keepLoginsCopy(deps: ExtensionSyncDeps, state: ExtensionState): P
   const stale = server.filter((r) => r.key_tag !== tag && !rewritten.has(r.id)).map((r) => r.id);
   if (stale.length && (await deps.store.state()).keyTag === tag) await deps.store.dropCopy(stale);
   writeMemo({ pubkey: deps.pubkey, tag, fps: nextFps });
+  lastCopy = { pubkey: deps.pubkey, tag, writes: writesNow, at: now };
   return writes.length;
 }
 

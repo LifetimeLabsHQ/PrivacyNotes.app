@@ -9,6 +9,10 @@ import { escapeMarkdownText, guardMarkdownLineStart, markdownCodeSpan } from './
 import { noteLinkTarget } from '../noteLinks';
 import { mimeFromExt } from './blobImport';
 import type { ImportedNote, ParsedImport } from './types';
+import i18n from '../i18n';
+
+const msg = (key: string, options?: Record<string, unknown>): string =>
+  i18n.t(`importExport:importLog.upnote.${key}`, options);
 
 /**
  * UpNote importer.
@@ -1241,9 +1245,7 @@ async function parseSingleExports(
   mediaFiles: Map<string, JSZip.JSZipObject>,
   onProgress?: (msg: string) => void
 ): Promise<ParsedImport> {
-  onProgress?.(
-    `Found ${texts.length} exported note${texts.length === 1 ? '' : 's'}...`
-  );
+  onProgress?.(msg('foundExported', { count: texts.length }));
 
   // Collect which media the notes reference, so an unrelated file in the
   // zip is never imported.
@@ -1334,52 +1336,47 @@ async function parseSingleExports(
     });
   }
 
-  const plural = (n: number) => (n === 1 ? '' : 's');
   const uniqueTags = new Set(out.flatMap((n) => n.tags));
 
   const warnings: string[] = [
     mdCount > 0
-      ? 'This is UpNote\'s per-note Markdown export. It keeps text, lists, tables, code, math, links, images, and attachments - but UpNote flattens callouts, text colors, alignment, and sub/superscript before writing it, and it carries no notebooks, pins, or original dates. On the phone, "Export to HTML" keeps that formatting; on a computer, Settings > Backup keeps everything.'
-      : 'These are UpNote\'s per-note HTML exports: formatting, images, and attachments come across in full. Per-note exports carry no notebooks, pins, or original dates - on a computer, Settings > Backup produces a backup folder that keeps those too.',
+      ? msg('perNoteMarkdownWarning')
+      : msg('perNoteHtmlWarning'),
   ];
   if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   if (flags.missingFiles > 0) {
-    warnings.push(
-      `${flags.missingFiles === 1 ? '1 file was' : `${flags.missingFiles} files were`} referenced by the notes but not in the zip. Export the note again and share the whole zip UpNote produces, without unpacking it.`
-    );
+    warnings.push(msg('missingFilesInZip', { count: flags.missingFiles }));
   }
 
   const transforms: string[] = [];
   const tagged = out.filter((n) => n.tags.length > 0).length;
-  if (tagged > 0) transforms.push(`Kept the inline #tags on ${tagged} note${plural(tagged)}.`);
+  if (tagged > 0) transforms.push(msg('keptInlineTags', { count: tagged }));
   if (flags.noteLinks > 0) {
-    transforms.push(`Converted ${flags.noteLinks} internal link${plural(flags.noteLinks)} into note-links.`);
+    transforms.push(i18n.t('importExport:importLog.shared.noteLinks', { count: flags.noteLinks }));
   }
   if (flags.checklists > 0) {
-    transforms.push(`Converted ${flags.checklists} checklist${plural(flags.checklists)} into native task lists.`);
+    transforms.push(i18n.t('importExport:importLog.shared.checklists', { count: flags.checklists }));
   }
   if (flags.callouts > 0) {
-    transforms.push(
-      `Converted ${flags.callouts} collapsible section${plural(flags.callouts)} into callouts, keeping their fold state.`
-    );
+    transforms.push(msg('callouts', { count: flags.callouts }));
   }
-  if (flags.tables > 0) transforms.push(`Preserved ${flags.tables} table${plural(flags.tables)}.`);
+  if (flags.tables > 0) transforms.push(i18n.t('importExport:importLog.shared.tables', { count: flags.tables }));
   if (flags.codeBlocks > 0) {
-    transforms.push(`Preserved ${flags.codeBlocks} code block${plural(flags.codeBlocks)}.`);
+    transforms.push(i18n.t('importExport:importLog.shared.codeBlocks', { count: flags.codeBlocks }));
   }
-  if (flags.math > 0) transforms.push(`Preserved ${flags.math} math formula${plural(flags.math)}.`);
-  if (flags.highlights > 0) transforms.push('Preserved highlights.');
-  if (flags.colors > 0) transforms.push('Matched text colors to the editor palette.');
-  if (flags.underline > 0) transforms.push('Preserved underline formatting.');
-  if (flags.aligned > 0) transforms.push('Preserved text alignment.');
-  if (imageCount > 0) transforms.push(`Found ${imageCount} image${plural(imageCount)} to import.`);
+  if (flags.math > 0) transforms.push(i18n.t('importExport:importLog.shared.math', { count: flags.math }));
+  if (flags.highlights > 0) transforms.push(i18n.t('importExport:importLog.shared.highlights'));
+  if (flags.colors > 0) transforms.push(msg('colors'));
+  if (flags.underline > 0) transforms.push(i18n.t('importExport:importLog.shared.underline'));
+  if (flags.aligned > 0) transforms.push(i18n.t('importExport:importLog.shared.aligned'));
+  if (imageCount > 0) transforms.push(i18n.t('importExport:importLog.shared.foundImages', { count: imageCount }));
   if (attachmentCount > 0) {
-    transforms.push(`Found ${attachmentCount} attachment${plural(attachmentCount)} to import.`);
+    transforms.push(i18n.t('importExport:importLog.shared.foundAttachments', { count: attachmentCount }));
   }
   if (mdCount > 0) {
-    transforms.push('Repaired UpNote\'s markdown quirks (spacer tags, escaped math).');
+    transforms.push(msg('repairedMarkdown'));
   }
-  transforms.push('Made bare URLs clickable.');
+  transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
 
   return {
     notes: out,
@@ -1406,8 +1403,6 @@ function blobToken(index: number): string {
   return `upnatt:${String(index).padStart(6, '0')}`;
 }
 
-const NOT_A_BACKUP =
-  'No UpNote snapshot found in that zip. In UpNote open Settings > Backup, click "Backup now", then "View backup folder", and zip EVERYTHING in that folder (the data and files folders together). The data folder is the one that carries your notes\' formatting, notebooks, and tags.';
 
 export async function parseUpNote(
   file: File,
@@ -1425,15 +1420,13 @@ export async function parseUpNote(
     );
   }
 
-  onProgress?.('Reading zip...');
+  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
   const buf = await file.arrayBuffer();
   let zip: JSZip;
   try {
     zip = await JSZip.loadAsync(buf);
   } catch {
-    throw new Error(
-      'Could not read that file as a zip. In UpNote open Settings > Backup, click "Backup now" and then "View backup folder", zip everything in that folder, and drop the .zip here. On the phone, use the note\'s three-dot menu > Export > "Export to HTML" and drop what UpNote shares.'
-    );
+    throw new Error(msg('zipUnreadable'));
   }
 
   // Locate the data/ snapshots anywhere in the zip: the user may have
@@ -1458,7 +1451,7 @@ export async function parseUpNote(
     list.push({ ts: Number(m[2]), entry });
     snapshotsByRoot.set(m[1]!, list);
   });
-  if (!anyEntry) throw new Error('That zip is empty.');
+  if (!anyEntry) throw new Error(i18n.t('importExport:importLog.shared.zipEmpty'));
 
   if (snapshotsByRoot.size === 0) {
     // Not a backup. The other shape UpNote produces is the per-note
@@ -1530,7 +1523,7 @@ export async function parseUpNote(
       }
       return await parseSingleExports(texts, mediaFiles, onProgress);
     }
-    throw new Error(NOT_A_BACKUP);
+    throw new Error(msg('notABackup'));
   }
 
   // Several roots would mean several backups zipped together (rare); the
@@ -1552,7 +1545,7 @@ export async function parseUpNote(
   // 29-byte gzip holding only the version header, and a truncated torso
   // is equally possible - so fall back through older snapshots until one
   // yields records.
-  onProgress?.('Reading backup snapshot...');
+  onProgress?.(msg('readingSnapshot'));
   let snap: Snapshot | null = null;
   for (const { entry } of snapshotEntries) {
     try {
@@ -1566,13 +1559,11 @@ export async function parseUpNote(
     }
   }
   if (!snap) {
-    throw new Error(
-      'The backup\'s data snapshots could not be read. Run "Back up now" in UpNote again and zip the fresh backup folder.'
-    );
+    throw new Error(msg('snapshotsUnreadable'));
   }
 
   const notes = [...snap.notes.values()];
-  onProgress?.(`Found ${notes.length} note${notes.length === 1 ? '' : 's'}...`);
+  onProgress?.(i18n.t('importExport:importLog.shared.foundNotes', { count: notes.length }));
 
   /* ---------------- attachments ---------------- */
 
@@ -1607,9 +1598,7 @@ export async function parseUpNote(
 
   const wanted = fileEntries.filter((f) => referenced.has(f.base.toLowerCase()));
   if (wanted.length > 0) {
-    onProgress?.(
-      `Extracting ${wanted.length} attachment${wanted.length === 1 ? '' : 's'}...`
-    );
+    onProgress?.(i18n.t('importExport:importLog.shared.extracting', { count: wanted.length }));
   }
   let tooLarge = 0;
   for (let i = 0; i < wanted.length; i++) {
@@ -1632,7 +1621,7 @@ export async function parseUpNote(
     blobTokens.set(base.toLowerCase(), token);
     fileIdTokens.set(fileId.toLowerCase(), token);
     if ((i + 1) % 20 === 0) {
-      onProgress?.(`Extracted ${i + 1} of ${wanted.length} attachments...`);
+      onProgress?.(i18n.t('importExport:importLog.shared.extracted', { done: i + 1, total: wanted.length }));
     }
   }
 
@@ -1760,7 +1749,7 @@ export async function parseUpNote(
     out.push(note);
 
     if ((i + 1) % 50 === 0) {
-      onProgress?.(`Parsed ${i + 1} of ${notes.length}...`);
+      onProgress?.(i18n.t('importExport:importLog.shared.parsed', { done: i + 1, total: notes.length }));
     }
   }
 
@@ -1786,7 +1775,6 @@ export async function parseUpNote(
 
   /* ---------------- summary ---------------- */
 
-  const plural = (n: number) => (n === 1 ? '' : 's');
   const uniqueTags = new Set(out.flatMap((n) => n.tags));
   const emptyNotes = out.filter((n) => !n.title.trim() && !n.body.trim()).length;
   const untaggedNotes = out.filter((n) => n.tags.length === 0).length;
@@ -1794,62 +1782,56 @@ export async function parseUpNote(
   const warnings: string[] = [];
   if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   if (flags.missingFiles > 0) {
-    warnings.push(
-      `${flags.missingFiles === 1 ? '1 attached file was' : `${flags.missingFiles} attached files were`} referenced by notes but missing from the backup folder, so ${flags.missingFiles === 1 ? 'it' : 'they'} could not be imported. In UpNote, enable "Backup attachments" under Settings > Backup, run "Backup now" again, and re-import the fresh zip.`
-    );
+    warnings.push(msg('missingBackupFiles', { count: flags.missingFiles }));
   }
   const transforms: string[] = [];
   if (folders.length > 0) {
     const filed = out.filter((n) => n.folderId).length;
     transforms.push(
-      `Rebuilt ${folders.length} notebook${plural(folders.length)} as folders (${filed} note${plural(filed)} filed).`
+      msg('rebuiltFolders', { count: folders.length, filed: i18n.t('importExport:importLog.shared.filedNotes', { count: filed }) })
     );
   }
   if (multiHomed > 0) {
-    transforms.push(
-      `${multiHomed} note${plural(multiHomed)} lived in more than one notebook; kept the first as the folder and the others as tags.`
-    );
+    transforms.push(msg('multiHomed', { count: multiHomed }));
   }
   const tagged = out.filter((n) => n.tags.length > 0).length;
-  if (tagged > 0) transforms.push(`Kept the tags on ${tagged} note${plural(tagged)}.`);
+  if (tagged > 0) transforms.push(i18n.t('importExport:importLog.shared.tags', { count: tagged }));
   const starred = out.filter((n) => n.starred).length;
   if (starred > 0) {
-    transforms.push(`Marked ${starred} pinned or bookmarked note${plural(starred)} as Pinned.`);
+    transforms.push(msg('pinned', { count: starred }));
   }
   if (trashedCount > 0) {
-    transforms.push(`Moved ${trashedCount} trashed note${plural(trashedCount)} to the trash.`);
+    transforms.push(msg('trashed', { count: trashedCount }));
   }
   if (templates > 0) {
-    transforms.push(`Imported ${templates} template${plural(templates)} as notes tagged #template.`);
+    transforms.push(msg('templates', { count: templates }));
   }
   if (flags.noteLinks > 0) {
-    transforms.push(`Converted ${flags.noteLinks} internal link${plural(flags.noteLinks)} into note-links.`);
+    transforms.push(i18n.t('importExport:importLog.shared.noteLinks', { count: flags.noteLinks }));
   }
   if (flags.checklists > 0) {
-    transforms.push(`Converted ${flags.checklists} checklist${plural(flags.checklists)} into native task lists.`);
+    transforms.push(i18n.t('importExport:importLog.shared.checklists', { count: flags.checklists }));
   }
   if (flags.callouts > 0) {
-    transforms.push(
-      `Converted ${flags.callouts} collapsible section${plural(flags.callouts)} into callouts, keeping their fold state.`
-    );
+    transforms.push(msg('callouts', { count: flags.callouts }));
   }
-  if (flags.tables > 0) transforms.push(`Preserved ${flags.tables} table${plural(flags.tables)}.`);
+  if (flags.tables > 0) transforms.push(i18n.t('importExport:importLog.shared.tables', { count: flags.tables }));
   if (flags.codeBlocks > 0) {
-    transforms.push(`Preserved ${flags.codeBlocks} code block${plural(flags.codeBlocks)}.`);
+    transforms.push(i18n.t('importExport:importLog.shared.codeBlocks', { count: flags.codeBlocks }));
   }
-  if (flags.math > 0) transforms.push(`Preserved ${flags.math} math formula${plural(flags.math)}.`);
-  if (flags.highlights > 0) transforms.push('Preserved highlights.');
-  if (flags.colors > 0) transforms.push('Matched text colors to the editor palette.');
-  if (flags.underline > 0) transforms.push('Preserved underline formatting.');
-  if (flags.aligned > 0) transforms.push('Preserved text alignment.');
+  if (flags.math > 0) transforms.push(i18n.t('importExport:importLog.shared.math', { count: flags.math }));
+  if (flags.highlights > 0) transforms.push(i18n.t('importExport:importLog.shared.highlights'));
+  if (flags.colors > 0) transforms.push(msg('colors'));
+  if (flags.underline > 0) transforms.push(i18n.t('importExport:importLog.shared.underline'));
+  if (flags.aligned > 0) transforms.push(i18n.t('importExport:importLog.shared.aligned'));
   if (flags.droppedStyling > 0) {
-    transforms.push('Dropped alignment on blocks the editor cannot align, keeping the text.');
+    transforms.push(i18n.t('importExport:importLog.shared.droppedAlign'));
   }
-  if (imageCount > 0) transforms.push(`Found ${imageCount} image${plural(imageCount)} to import.`);
+  if (imageCount > 0) transforms.push(i18n.t('importExport:importLog.shared.foundImages', { count: imageCount }));
   if (attachmentCount > 0) {
-    transforms.push(`Found ${attachmentCount} attachment${plural(attachmentCount)} to import.`);
+    transforms.push(i18n.t('importExport:importLog.shared.foundAttachments', { count: attachmentCount }));
   }
-  transforms.push('Made bare URLs clickable.');
+  transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
 
   return {
     notes: out,

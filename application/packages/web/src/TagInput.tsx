@@ -14,7 +14,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { normalizeTag, sortTags, TAG_MAX_LENGTH } from './notesRepo';
+import { normalizeTag, sortTags, TAG_COMMA, TAG_MAX_LENGTH, TAG_SEPARATOR_RUN } from './notesRepo';
 import { textMatcher } from './textMatch';
 import { isImeComposing } from './imeComposing';
 import { useIsMobile } from './useIsMobile';
@@ -209,7 +209,7 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
       }
     }
 
-    if (e.key === 'Enter' || e.key === ',') {
+    if (e.key === 'Enter' || (e.key.length === 1 && TAG_COMMA.test(e.key))) {
       e.preventDefault();
       // If a suggestion is highlighted, select it.
       if (hasDropdown && highlightIndex >= 0) {
@@ -251,8 +251,8 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
     // Mobile keyboards often insert comma/space directly without firing
     // keyDown, so detect delimiters in the incoming value and commit.
     // Also handles paste of "tag1, tag2, tag3".
-    if (value.includes(',') || value.includes('#')) {
-      const parts = value.split(/[,#]+/).map((s) => normalizeTag(s)).filter(Boolean);
+    if (TAG_COMMA.test(value) || value.includes('#')) {
+      const parts = value.split(TAG_SEPARATOR_RUN).map((s) => normalizeTag(s)).filter(Boolean);
       const existing = new Set(tags.map((t) => t.toLowerCase()));
       const toAdd: string[] = [];
       for (const p of parts) {

@@ -7,6 +7,10 @@ import { noteLinkTarget } from '../noteLinks';
 import { importBlobs } from './blobImport';
 import type { ImportedNote, ParsedImport } from './types';
 import { toLocalIso } from '../notesViewUtils';
+import i18n from '../i18n';
+
+const msg = (key: string, options?: Record<string, unknown>): string =>
+  i18n.t(`importExport:importLog.evernote.${key}`, options);
 
 /**
  * Evernote importer (.enex).
@@ -997,17 +1001,15 @@ async function readInput(
   const name = file.name.toLowerCase();
 
   if (ENEX_EXT.test(name)) {
-    onProgress?.('Reading export...');
+    onProgress?.(msg('readingExport'));
     return [{ notebook: notebookName(file.name), xml: await file.text() }];
   }
 
   if (!name.endsWith('.zip')) {
-    throw new Error(
-      'Unrecognized file. Export from Evernote as ENEX (.enex), or zip several .enex files together.'
-    );
+    throw new Error(msg('unrecognizedFile'));
   }
 
-  onProgress?.('Reading zip...');
+  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
   const zip = await JSZip.loadAsync(file);
   const entries = Object.entries(zip.files).filter(
     ([path, entry]) => !entry.dir && !shouldSkip(path) && ENEX_EXT.test(path)
@@ -1016,9 +1018,7 @@ async function readInput(
   if (entries.length === 0) {
     const hasHtml = Object.keys(zip.files).some((p) => /\.html?$/i.test(p));
     throw new Error(
-      hasHtml
-        ? 'This zip holds Evernote\'s web page export, which cannot carry attachments properly. Re-export from Evernote and pick "ENEX format (.enex)".'
-        : 'No .enex files found in this zip. Export from Evernote and pick "ENEX format (.enex)".'
+      hasHtml ? msg('zipHoldsHtml') : msg('zipNoEnex')
     );
   }
 
@@ -1042,7 +1042,6 @@ export async function parseEvernote(
   const flags = emptyFlags();
   const blobs = new Map<string, { data: Uint8Array; mime: string; name: string }>();
   const notes: ImportedNote[] = [];
-  const plural = (n: number) => (n === 1 ? '' : 's');
 
   // Several .enex files means several notebooks, and Evernote names each
   // export after its notebook. One file is one notebook too, so it gets a
@@ -1121,14 +1120,12 @@ export async function parseEvernote(
       }
       notes.push(note);
 
-      if (seen % 25 === 0) onProgress?.(`Parsed ${seen} notes...`);
+      if (seen % 25 === 0) onProgress?.(msg('parsed', { count: seen }));
     }
   }
 
   if (notes.length === 0) {
-    throw new Error(
-      'No notes found in this export. Make sure you exported from Evernote as "ENEX format (.enex)".'
-    );
+    throw new Error(msg('noNotes'));
   }
 
   // Only ship blobs the notes actually reference. An en-media whose
@@ -1148,93 +1145,93 @@ export async function parseEvernote(
   const warnings: string[] = [];
   if (flags.taskBlocks > 0) {
     warnings.push(
-      `${flags.taskBlocks} task block${plural(flags.taskBlocks)} could not be imported. Evernote's .enex export replaces tasks with a "Content not supported" placeholder - the titles, due dates, and completion states are not in the file. Checklists are unaffected and came across as task lists.`
+      msg('taskBlocks', { count: flags.taskBlocks })
     );
   }
   if (flags.encrypted > 0) {
     warnings.push(
-      `${flags.encrypted} encrypted text block${plural(flags.encrypted)} stayed encrypted. Decrypt them in Evernote and export again to bring the text across.`
+      msg('encrypted', { count: flags.encrypted })
     );
   }
   if (malformed > 0) {
     warnings.push(
-      `${malformed} note${plural(malformed)} could not be read and ${malformed === 1 ? 'was' : 'were'} skipped. The file may be truncated.`
+      msg('malformed', { count: malformed })
     );
   }
   const transforms: string[] = [];
   if (folders.length > 0) {
     const filed = notes.filter((n) => n.folderId).length;
     transforms.push(
-      `Rebuilt ${folders.length} folder${plural(folders.length)} from your notebooks (${filed} note${plural(filed)} filed).`
+      i18n.t('importExport:importLog.shared.foldersFromNotebooks', { count: folders.length, filed: i18n.t('importExport:importLog.shared.filedNotes', { count: filed }) })
     );
   }
   const tagged = notes.filter((n) => n.tags.length > 0).length;
   if (tagged > 0) {
-    transforms.push(`Kept the tags on ${tagged} note${plural(tagged)}.`);
+    transforms.push(i18n.t('importExport:importLog.shared.tags', { count: tagged }));
   }
   if (flags.noteLinks > 0) {
     transforms.push(
-      `Converted ${flags.noteLinks} internal link${plural(flags.noteLinks)} into note-links.`
+      i18n.t('importExport:importLog.shared.noteLinks', { count: flags.noteLinks })
     );
   }
   if (flags.checklists > 0) {
     transforms.push(
-      `Converted ${flags.checklists} checklist${plural(flags.checklists)} into native task lists.`
+      i18n.t('importExport:importLog.shared.checklists', { count: flags.checklists })
     );
   }
   if (flags.reminders > 0) {
     transforms.push(
-      `Turned ${flags.reminders} note reminder${plural(flags.reminders)} into a task at the top of the note.`
+      msg('reminders', { count: flags.reminders })
     );
   }
   if (flags.tables > 0) {
     transforms.push(
-      `Preserved ${flags.tables} table${plural(flags.tables)}, using the first row as the header.`
+      msg('tables', { count: flags.tables })
     );
   }
   if (flags.codeBlocks > 0) {
-    transforms.push(`Preserved ${flags.codeBlocks} code block${plural(flags.codeBlocks)}.`);
+    transforms.push(i18n.t('importExport:importLog.shared.codeBlocks', { count: flags.codeBlocks }));
   }
   if (flags.formulas > 0) {
     transforms.push(
-      `Converted ${flags.formulas} formula block${plural(flags.formulas)} into math.`
+      msg('formulas', { count: flags.formulas })
     );
   }
   if (flags.highlights > 0) {
-    transforms.push('Preserved highlighted text.');
+    transforms.push(msg('highlight'));
   }
   if (flags.colors > 0) {
     transforms.push(
-      `Kept the text color on ${flags.colors} run${plural(flags.colors)} of text.`
+      msg('colors', { count: flags.colors })
     );
   }
   if (flags.underline > 0) {
-    transforms.push('Preserved underline formatting.');
+    transforms.push(i18n.t('importExport:importLog.shared.underline'));
   }
   if (flags.transcripts > 0) {
     transforms.push(
-      `Kept the transcript on ${flags.transcripts} voice note${plural(flags.transcripts)}.`
+      msg('transcripts', { count: flags.transcripts })
     );
   }
   if (flags.sourceUrls > 0) {
     transforms.push(
-      `Kept the source URL on ${flags.sourceUrls} web clip${plural(flags.sourceUrls)}.`
+      msg('sourceUrls', { count: flags.sourceUrls })
     );
   }
   if (imageCount > 0) {
-    transforms.push(`Found ${imageCount} image${plural(imageCount)} to import.`);
+    transforms.push(i18n.t('importExport:importLog.shared.foundImages', { count: imageCount }));
   }
   if (attachmentCount > 0) {
     transforms.push(
-      `Found ${attachmentCount} attachment${plural(attachmentCount)} to import.`
+      i18n.t('importExport:importLog.shared.foundAttachments', { count: attachmentCount })
     );
   }
   if (flags.droppedStyling > 0) {
     transforms.push(
-      'Dropped custom fonts, text colors, and alignment, keeping the text.'
+      msg('droppedStyling')
     );
   }
-  transforms.push('Made bare URLs clickable.');
+  transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
 
   const uniqueTags = new Set(notes.flatMap((n) => n.tags));
 

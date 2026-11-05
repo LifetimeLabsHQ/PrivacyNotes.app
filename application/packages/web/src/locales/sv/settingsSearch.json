@@ -68,6 +68,7 @@
     "appearance_contentWidth": "kolumnbredd, bred, full bredd, marginaler",
     "appearance_editor": "markdown, formaterad text, wysiwyg, redigeringsläge",
     "appearance_defaultApps": "standardapp, öppna med, dubbelklicka, finder, utforskaren, markdown, md, txt, textfil",
+    "appearance_tray": "systemfält, aktivitetsfält, meddelandefält, minimera, stäng, bakgrund, kör i bakgrunden, tray, system tray",
     "appearance_copyFormat": "kopiera, urklipp, ren text, klistra in, kryssruta",
     "appearance_pasteFormat": "klistra in, urklipp, ren text, formatering, oformaterad, matcha stil",
     "appearance_favicons": "favicon, webbplatsikoner, logotyper",

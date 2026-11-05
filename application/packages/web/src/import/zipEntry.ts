@@ -28,6 +28,9 @@
 import type JSZip from 'jszip';
 import { perFileLimit } from '../attachmentValidation';
 import { formatBytes } from '../formatBytes';
+import i18n from '../i18n';
+
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.zipEntry.${key}`, options);
 
 /** The most text one zip entry may expand to before the import refuses it. */
 const ZIP_TEXT_ENTRY_LIMIT = 256 * 1024 * 1024;
@@ -46,9 +49,10 @@ function declaredSize(entry: JSZip.JSZipObject): number | null {
 export class ImportTooLargeError extends Error {}
 
 function tooLarge(name: string, limit: number, size?: number): ImportTooLargeError {
-  const grows = size === undefined ? 'expands past' : `expands to ${formatBytes(size)}, more than`;
   return new ImportTooLargeError(
-    `${name} ${grows} the ${formatBytes(limit)} an import can read at once. Remove it from the export and try again.`,
+    size === undefined
+      ? msg('entryTooLarge', { name, limit: formatBytes(limit) })
+      : msg('entryTooLargeKnown', { name, size: formatBytes(size), limit: formatBytes(limit) }),
   );
 }
 
@@ -134,8 +138,7 @@ export async function zipEntryMedia(entry: JSZip.JSZipObject): Promise<Uint8Arra
 
 /** The import warning for the files `zipEntryMedia` skipped. */
 export function mediaTooLargeWarning(count: number): string {
-  const files = count === 1 ? '1 file' : `${count} files`;
-  return `Skipped ${files} larger than ${formatBytes(mediaEntryLimit())}, the largest file any plan can sync.`;
+  return msg('mediaTooLarge', { count, size: formatBytes(mediaEntryLimit()) });
 }
 
 /**

@@ -161,6 +161,10 @@ export const COMMAND_KEYS = {
   // A browser opens its developer tools on Mod+Shift+I.
   invisibles: [{ mod: true, shift: true, key: 'i', desktop: true }],
   taskList: [{ mod: true, shift: true, key: '9' }],
+  // Types `[!`, which opens the callout grid at the caret (#680). A browser
+  // opens its developer tools on Mod+Shift+C, so the web app has the typed
+  // `[!` alone.
+  insertCallout: [{ mod: true, shift: true, key: 'c', desktop: true }],
   // The keys of Google Sheets. A Mac browser shows its spelling check on
   // them, which stays in its Edit menu.
   insertDate: [{ mod: true, key: ';' }],

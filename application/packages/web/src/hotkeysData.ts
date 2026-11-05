@@ -19,8 +19,9 @@ import { bindingApplies, bindingCaps, visibleBindings, type CommandId, type KeyB
 export type HotkeyRow = {
   /** The commands the row shows, joined by " / " (J / K). */
   commands: CommandId[];
-  /** Keys another component owns (the drawing canvas), shown as they are
-   *  in place of `commands`: they never run through the app's handler. */
+  /** Keys another component owns (the drawing canvas, the editor's `[!`
+   *  menu), shown as they are after the keys of `commands`: they never run
+   *  through the app's handler. */
   bindings?: readonly KeyBinding[];
   /** Show the first and the last key of the one command as a range (⌥⌘1 – ⌥⌘6). */
   range?: boolean;
@@ -119,6 +120,10 @@ export const HOTKEY_GROUPS: HotkeyGroup[] = [
       { commands: ['indentList', 'outdentList'], label: 'Indent / outdent a list', i18nKey: 'indentOutdent' },
       { commands: ['blockquote'], label: 'Blockquote', i18nKey: 'blockquote' },
       { commands: ['codeBlock'], label: 'Code block', i18nKey: 'codeBlock' },
+      // Mod+Shift+C is the desktop apps' only: a browser keeps it for its
+      // developer tools. `[!` is typed text the editor's callout menu reads
+      // (CalloutSuggestion.tsx), shown on every key set as the way in.
+      { commands: ['insertCallout'], bindings: [{ key: '[!' }], label: 'Callout ([! on an empty line)', i18nKey: 'insertCallout' },
     ],
   },
   {
@@ -217,7 +222,8 @@ export function rowCaps(
     return [bindingCaps(keys[0]!, os), '–', bindingCaps(keys[keys.length - 1]!, os)];
   }
   const out: (string[] | '/' | '–')[] = [];
-  const lists = row.bindings ? [row.bindings.filter((b) => bindingApplies(b, os, desktop))] : row.commands.map((id) => visibleBindings(id, os, desktop));
+  const lists = row.commands.map((id) => visibleBindings(id, os, desktop));
+  if (row.bindings) lists.push(row.bindings.filter((b) => bindingApplies(b, os, desktop)));
   for (const keys of lists) {
     for (const b of firstOnly ? keys.slice(0, 1) : keys) {
       if (out.length) out.push('/');

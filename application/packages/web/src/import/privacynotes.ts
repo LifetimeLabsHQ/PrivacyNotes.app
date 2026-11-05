@@ -23,6 +23,7 @@
  */
 
 import JSZip from 'jszip';
+import i18n from '../i18n';
 import { zipEntryMedia, zipEntryText } from './zipEntry';
 import type { BackupManifest, MissingBlob } from '../export';
 import { stripFrontMatterPadding, unescapeQuotes } from '../noteMarkdown';
@@ -34,6 +35,8 @@ import type { AttachmentMeta } from '../attachmentStore';
 import { sha256hex } from './blobImport';
 import { createFolder, type FolderDef } from '../folders';
 import { IMPORT_FOLDER_LIMIT, parseFolderPath } from './folderImport';
+
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.privacynotes.${key}`, options);
 
 // ─── YAML frontmatter parser (minimal, no dependency) ────────────────
 
@@ -211,26 +214,21 @@ export async function parsePrivacyNotesBackup(
   file: File,
   onProgress?: (msg: string) => void,
 ): Promise<ParsedImport> {
-  onProgress?.('Reading backup...');
+  onProgress?.(msg('readingBackup'));
   const zip = await JSZip.loadAsync(await file.arrayBuffer());
 
   // Validate manifest
   const manifestFile = zip.file('manifest.json');
   if (!manifestFile) {
-    throw new Error(
-      "This doesn't look like a PrivacyNotes backup. No manifest.json found. " +
-      'If this is a generic markdown zip, try the "Markdown files" importer instead.',
-    );
+    throw new Error(msg('noManifest'));
   }
 
   const manifest: BackupManifest = JSON.parse(await zipEntryText(manifestFile));
   if (manifest.format !== 'privacynotes-backup') {
-    throw new Error(
-      `Unrecognized backup format: "${manifest.format}". Expected "privacynotes-backup".`,
-    );
+    throw new Error(msg('unrecognizedFormat', { format: manifest.format }));
   }
 
-  onProgress?.('Parsing notes...');
+  onProgress?.(msg('parsingNotes'));
 
   // Parse all .md files in the zip root (not in subdirectories)
   const notes: ImportedNote[] = [];
@@ -301,12 +299,12 @@ export async function parsePrivacyNotesBackup(
   const { folders: rebuiltFolders, originalIds } = rebuildFolders(notes);
 
   if (notes.length === 0) {
-    throw new Error('No markdown files found in the backup zip.');
+    throw new Error(msg('noMarkdownFiles'));
   }
 
   if (notes.length !== manifest.noteCount) {
     warnings.push(
-      `Manifest says ${manifest.noteCount} notes but found ${notes.length} .md files.`,
+      msg('manifestMismatch', { manifestCount: manifest.noteCount, foundCount: notes.length }),
     );
   }
 
@@ -425,7 +423,7 @@ export async function restoreBlobs(
       await db.imageDedup.put({ hash, uuid, encryptedSize: 0, pendingUpload: 1 });
     }
     imgCount++;
-    onProgress?.(`Restoring images... ${imgCount} of ${imageUuids.length}`);
+    onProgress?.(msg('restoringImages', { done: imgCount, total: imageUuids.length }));
   }
 
   // Restore attachments
@@ -459,7 +457,7 @@ export async function restoreBlobs(
       await db.attachmentDedup.put({ hash, uuid, encryptedSize: 0, pendingUpload: 1 });
     }
     attCount++;
-    onProgress?.(`Restoring files... ${attCount} of ${attEntries.length}`);
+    onProgress?.(msg('restoringFiles', { done: attCount, total: attEntries.length }));
   }
 
   // The manifest comes from the file, so only well-formed entries count.

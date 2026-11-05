@@ -6,9 +6,13 @@ import { FRONT_MATTER } from '../markdownFolder/adapter';
 import { HIGHLIGHT_COLORS } from '../editorColors';
 import { noteLinkTarget } from '../noteLinks';
 import { linkifyMarkdown } from './linkify';
+import i18n from '../i18n';
 import { mapOutsideCode, proseOnly, stripHtmlComments } from './codeSegments';
 import { isBlobReferenced, mimeFromExt } from './blobImport';
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
+
+const msg = (key: string, options?: Record<string, unknown>): string =>
+  i18n.t(`importExport:importLog.bear.${key}`, options);
 
 /**
  * Bear importer.
@@ -212,13 +216,13 @@ async function readNotes(file: File): Promise<{ notes: RawNote[]; files: Map<str
 }
 
 export async function parseBear(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
-  onProgress?.('Reading file…');
+  onProgress?.(i18n.t('importExport:status.readingFile'));
   const { notes: raws, files } = await readNotes(file);
   if (raws.length === 0) {
-    throw new Error('No Bear notes found. In Bear, pick File > Backup Notes..., then drop the .bear2bk file here.');
+    throw new Error(msg('noNotes'));
   }
 
-  onProgress?.('Reading notes…');
+  onProgress?.(msg('readingNotes'));
   const highlight = new Map(HIGHLIGHT_COLORS.map((c) => [c.name, c.value]));
   const blobs = new Map<string, ImportBlob>();
   const blobKeyOf = new Map<string, string>();
@@ -356,7 +360,7 @@ export async function parseBear(file: File, onProgress?: (msg: string) => void):
     note.folderPath = dir.split('/').filter(Boolean);
   });
 
-  onProgress?.('Reading attachments…');
+  onProgress?.(msg('readingAttachments'));
   let tooLarge = 0;
   for (const [path, key] of blobKeyOf) {
     if (!out.some((n) => isBlobReferenced(key, n.body))) {
@@ -372,28 +376,27 @@ export async function parseBear(file: File, onProgress?: (msg: string) => void):
     }
   }
 
-  const s = (n: number, one = '', many = 's') => (n === 1 ? one : many);
   const transforms: string[] = [];
   const warnings: string[] = [];
   if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   const tagged = out.length - untagged;
-  if (tagged > 0) transforms.push(`Read Bear's #tags in ${tagged} note${s(tagged)}, nested tags included.`);
+  if (tagged > 0) transforms.push(msg('tagged', { count: tagged }));
   if (folders.length > 0) {
-    transforms.push(`Rebuilt your nested tags as ${folders.length} folder${s(folders.length)}, and kept them as tags too.`);
+    transforms.push(i18n.t('importExport:importLog.shared.foldersFromNestedTags', { count: folders.length }));
   }
-  if (blobs.size > 0) transforms.push(`Imported ${blobs.size} attachment${s(blobs.size)}.`);
-  if (colored > 0) transforms.push(`Kept ${colored} highlight${s(colored)} with ${s(colored, 'its', 'their')} Bear color.`);
-  if (underlined > 0) transforms.push(`Turned ${underlined} Bear underline${s(underlined)} into underlined text.`);
-  if (headingLinks > 0) transforms.push(`Pointed ${headingLinks} note-link${s(headingLinks)} at ${s(headingLinks, 'its', 'their')} heading.`);
-  if (linkified > 0) transforms.push(`Made URLs clickable in ${linkified} note${s(linkified)}.`);
+  if (blobs.size > 0) transforms.push(i18n.t('importExport:importLog.shared.attachments', { count: blobs.size }));
+  if (colored > 0) transforms.push(msg('colored', { count: colored }));
+  if (underlined > 0) transforms.push(msg('underlined', { count: underlined }));
+  if (headingLinks > 0) transforms.push(msg('headingLinks', { count: headingLinks }));
+  if (linkified > 0) transforms.push(i18n.t('importExport:importLog.shared.linkifiedNotes', { count: linkified }));
   if (droppedState > 0) {
-    warnings.push(`Bear's folded headings and custom image sizes do not carry over: ${droppedState} of them open in full.`);
+    warnings.push(msg('droppedState', { count: droppedState }));
   }
   if (shortened > 0) {
-    warnings.push(`${shortened} nested tag${s(shortened)} had a path too long for a tag and kept ${s(shortened, 'its', 'their')} own name. The folder shows the full path.`);
+    warnings.push(i18n.t('importExport:importLog.shared.shortened', { count: shortened }));
   }
   if (missingFiles > 0) {
-    warnings.push(`${missingFiles} link${s(missingFiles)} point${s(missingFiles, 's', '')} at a file that is not in the export. ${s(missingFiles, 'It stays', 'They stay')} as a link.`);
+    warnings.push(msg('missingFiles', { count: missingFiles }));
   }
 
   const parsed: ParsedImport = {

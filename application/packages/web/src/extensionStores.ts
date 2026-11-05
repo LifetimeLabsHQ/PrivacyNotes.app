@@ -7,9 +7,9 @@
 export type ExtensionBrowser = 'Chrome' | 'Firefox' | 'Edge';
 
 export const EXTENSION_STORES: Record<ExtensionBrowser, string | null> = {
-  Chrome: null,
+  Chrome: 'https://chromewebstore.google.com/detail/privacynotes/bloonbldcmkoebhiihhmocolilhaemmd',
   Firefox: null,
-  Edge: null,
+  Edge: 'https://microsoftedge.microsoft.com/addons/detail/privacynotes/fkffeinaneapmidinjnoibadpcoknjdg',
 };
 
 /** Each store's own name, shown under the browser once its link is set. */

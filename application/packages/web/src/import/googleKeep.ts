@@ -4,6 +4,9 @@ import { normalizeTag } from '../notesRepo';
 import { linkifyMarkdown } from './linkify';
 import { importBlobs } from './blobImport';
 import type { Importer, ImportedNote, ParsedImport } from './types';
+import i18n from '../i18n';
+
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.googleKeep.${key}`, options);
 
 /**
  * Google Keep import adapter.
@@ -113,16 +116,14 @@ export const googleKeepImporter: Importer = {
   sourceTag: 'google',
 
   async parse(file, onProgress) {
-    onProgress?.('Reading file…');
+    onProgress?.(i18n.t('importExport:status.readingFile'));
     const { noteBlobs, imageBlobs, tooLarge = 0 } = await extractKeepNotes(file, onProgress);
 
     if (noteBlobs.length === 0) {
-      throw new Error(
-        'No Keep notes found in that file. Expected a Google Takeout .zip containing a Takeout/Keep/ folder, or a single Keep .json file.'
-      );
+      throw new Error(msg('noNotes'));
     }
 
-    onProgress?.('Parsing notes…');
+    onProgress?.(i18n.t('importExport:importLog.shared.parsingNotes'));
     const notes: ImportedNote[] = [];
     const warnings: string[] = [];
     if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
@@ -299,67 +300,43 @@ export const googleKeepImporter: Importer = {
 
     const transforms: string[] = [];
     if (linkifiedCount > 0) {
-      transforms.push(
-        `Made URLs clickable in ${linkifiedCount} note${linkifiedCount === 1 ? '' : 's'}.`
-      );
+      transforms.push(i18n.t('importExport:importLog.shared.linkifiedNotes', { count: linkifiedCount }));
     }
     if (starredCount > 0) {
-      transforms.push(
-        `Kept ${starredCount} pinned note${starredCount === 1 ? '' : 's'} as starred.`
-      );
+      transforms.push(i18n.t('importExport:importLog.shared.keptStarred', { count: starredCount }));
     }
     if (trashedImportCount > 0) {
-      transforms.push(
-        `Restored ${trashedImportCount} trashed note${trashedImportCount === 1 ? '' : 's'} into the trash.`
-      );
+      transforms.push(i18n.t('importExport:importLog.shared.restoredTrashed', { count: trashedImportCount }));
     }
     if (archivedCount > 0) {
-      transforms.push(
-        `Kept ${archivedCount} archived note${archivedCount === 1 ? '' : 's'} in the archive.`
-      );
+      transforms.push(i18n.t('importExport:importLog.shared.keptArchived', { count: archivedCount }));
     }
 
     if (formattedCount > 0) {
-      transforms.push(
-        `Preserved bold, italic, underline, and strikethrough in ${formattedCount} note${formattedCount === 1 ? '' : 's'}.`
-      );
+      transforms.push(i18n.t('importExport:importLog.shared.preservedFormatting', { count: formattedCount }));
     }
     if (checklistNoteCount > 0) {
       const n = checklistNoteCount;
       const i = taskItemCount;
-      transforms.push(
-        `Converted ${i} task${i === 1 ? '' : 's'} across ${n} checklist${n === 1 ? '' : 's'} into native task lists (checked state preserved).`
-      );
+      transforms.push(msg('convertedChecklists', { tasks: msg('taskCount', { count: i }), lists: msg('checklistCount', { count: n }) }));
     }
     if (proseFromListCount > 0) {
-      transforms.push(
-        `Imported ${proseFromListCount} completed list${proseFromListCount === 1 ? '' : 's'} as plain text (all items were already checked, treated as a memory log, not a todo).`
-      );
+      transforms.push(msg('completedListsAsText', { count: proseFromListCount }));
     }
     if (blankGhostCount > 0) {
-      warnings.push(
-        `Skipped ${blankGhostCount} blank note${blankGhostCount === 1 ? '' : 's'} with no title and no body.`
-      );
+      warnings.push(msg('skippedBlank', { count: blankGhostCount }));
     }
     if (missingTitleCount > 0) {
-      warnings.push(
-        `${missingTitleCount} note${missingTitleCount === 1 ? '' : 's'} had no title. A title will be derived from the first line.`
-      );
+      warnings.push(i18n.t('importExport:importLog.shared.missingTitle', { count: missingTitleCount }));
     }
     if (parseFailCount > 0) {
-      warnings.push(
-        `${parseFailCount} file${parseFailCount === 1 ? '' : 's'} couldn't be parsed as JSON and were skipped.`
-      );
+      warnings.push(msg('parseFailed', { count: parseFailCount }));
     }
     if (imageCount > 0) {
-      transforms.push(
-        `Found ${imageCount} image${imageCount === 1 ? '' : 's'} to import.`
-      );
+      transforms.push(i18n.t('importExport:importLog.shared.foundImages', { count: imageCount }));
     }
     if (missingImageCount > 0) {
-      warnings.push(
-        `${missingImageCount} image${missingImageCount === 1 ? '' : 's'} referenced in notes but not found in the zip.`
-      );
+      warnings.push(msg('missingImages', { count: missingImageCount }));
     }
 
     const uniqueTags = new Set<string>();
@@ -432,7 +409,7 @@ async function extractKeepNotes(
   const imageBlobs = new Map<string, { data: Uint8Array; mime: string; name: string }>();
 
   if (lowerName.endsWith('.zip')) {
-    onProgress?.('Unzipping…');
+    onProgress?.(i18n.t('importExport:importLog.shared.unzipping'));
     const zip = await JSZip.loadAsync(file);
     const noteBlobs: KeepBlob[] = [];
     let tooLarge = 0;
@@ -447,7 +424,7 @@ async function extractKeepNotes(
       else if (IMAGE_EXT.test(lower)) imageEntries.push(entry);
     }
 
-    onProgress?.(`Reading ${jsonEntries.length} JSON file${jsonEntries.length === 1 ? '' : 's'}…`);
+    onProgress?.(msg('readingJsonFiles', { count: jsonEntries.length }));
     for (const entry of jsonEntries) {
       const text = await zipEntryText(entry);
       if (!looksLikeKeepNote(text)) continue;
@@ -457,7 +434,7 @@ async function extractKeepNotes(
     // Extract image blobs. Key by the basename (what Keep's
     // attachments[].filePath references, e.g. "12345.67890.png").
     if (imageEntries.length > 0) {
-      onProgress?.(`Extracting ${imageEntries.length} image${imageEntries.length === 1 ? '' : 's'}…`);
+      onProgress?.(msg('extractingImages', { count: imageEntries.length }));
       for (const entry of imageEntries) {
         const basename = entry.name.split('/').pop() ?? entry.name;
         const data = await zipEntryMedia(entry);

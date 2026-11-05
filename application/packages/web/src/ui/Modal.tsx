@@ -1,10 +1,10 @@
-import { useId, type HTMLAttributes, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type HTMLAttributes, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import { useEscapeToClose } from '../useEscapeToClose';
 import { CloseButton } from './Button';
 
 /**
  * @catalog Modal
- * use: every window over the app: the dark overlay, the panel, `role="dialog"` with `aria-modal`, Escape and a click outside. `title` is required (with optional `icon` and `subtitle`): the part draws the header, an 18px semibold title with the close X at the end, inside the panel (`header="inline"`, a short window) or as a bar over a scrolling body (`header="bar"`). The X shows while `onClose` is set and `escape` is true. End the window with `ModalFooter`. Omit `onClose` for a window that must be answered (a device limit, an expired session). `embedded` draws the body alone inside Settings, which is the dialog there.
+ * use: every window over the app: the dark overlay, the panel, `role="dialog"` with `aria-modal`, Escape and a click outside, and the keyboard focus: in on open, Tab kept inside, back to the opener on close. `title` is required (with optional `icon` and `subtitle`): the part draws the header, an 18px semibold title with the close X at the end, inside the panel (`header="inline"`, a short window) or as a bar over a scrolling body (`header="bar"`). The X shows while `onClose` is set and `escape` is true. End the window with `ModalFooter`. Omit `onClose` for a window that must be answered (a device limit, an expired session). `embedded` draws the body alone inside Settings, which is the dialog there.
  * never: a `fixed inset-0 bg-black/50` overlay of your own; a hand-drawn window title or close X; a window without a close X that can be closed.
  */
 export function Modal({
@@ -47,7 +47,9 @@ export function Modal({
 }) {
   const autoId = useId();
   const titleId = autoId;
+  const panelRef = useRef<HTMLDivElement>(null);
   useEscapeToClose(onClose ?? noop, Boolean(onClose) && escape && !embedded);
+  useWindowFocus(panelRef, !embedded);
   if (embedded) return <div {...rest} className={embeddedClassName}>{children}</div>;
   const head = (
     <div className={`flex items-start justify-between gap-3${header === 'bar' ? ' shrink-0 border-b border-divider px-6 py-4' : ''}`}>
@@ -68,12 +70,15 @@ export function Modal({
       onClick={onClose && closeOnBackdrop ? (e) => { if (e.target === e.currentTarget) onClose(); } : undefined}
     >
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        tabIndex={-1}
+        onKeyDown={(e) => keepTabInside(e, panelRef.current)}
         // A wide window (max-w-lg and up) ends its footer at the end; a narrow one splits it in halves.
         data-wide={/\bmax-w-(lg|[2-7]?xl)\b/.test(className) || undefined}
-        className={`group/window bg-surface-2 border border-divider text-pn rounded-lg w-full${className ? ` ${className}` : ''}`}
+        className={`group/window bg-surface-2 border border-divider text-pn rounded-lg w-full outline-none${className ? ` ${className}` : ''}`}
       >
         {head}
         {children}
@@ -98,3 +103,49 @@ export function ModalFooter({ bar = false, children }: { bar?: boolean; children
 }
 
 function noop() {}
+
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [contenteditable="true"], [tabindex]:not([tabindex="-1"])';
+
+/**
+ * The keyboard belongs to the open window (WAI-ARIA dialog pattern). On open
+ * the focus moves into the panel, unless a field in it already took it
+ * (`autoFocus`); on close it goes back to what had it before, the row a
+ * shortcut acted on, so the arrow keys carry on from there.
+ */
+function useWindowFocus(panel: RefObject<HTMLDivElement | null>, on: boolean) {
+  useEffect(() => {
+    const el = panel.current;
+    if (!on || !el) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    if (!el.contains(document.activeElement)) el.focus({ preventScroll: true });
+    return () => {
+      // Only when the focus went down with the window: a window that hands
+      // the keyboard on (opens a note, a second window) keeps that choice.
+      const now = document.activeElement;
+      if (now && now !== document.body && !el.contains(now)) return;
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
+    };
+  }, [panel, on]);
+}
+
+/** Tab and Shift+Tab go round the controls of the panel, never to the page under it. */
+function keepTabInside(e: KeyboardEvent<HTMLDivElement>, panel: HTMLDivElement | null) {
+  if (e.key !== 'Tab' || !panel) return;
+  // A window opened from inside this one handles its own Tab.
+  if ((e.target as HTMLElement).closest('[role="dialog"]') !== panel) return;
+  const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((n) => n.getClientRects().length > 0);
+  if (items.length === 0) {
+    e.preventDefault();
+    return;
+  }
+  const first = items[0]!;
+  const last = items[items.length - 1]!;
+  const active = document.activeElement;
+  if (e.shiftKey && (active === first || active === panel)) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && active === last) {
+    e.preventDefault();
+    first.focus();
+  }
+}

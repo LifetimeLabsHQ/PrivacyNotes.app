@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import i18n from '../i18n';
 import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
 import type { FolderDef } from '../folders';
 import { normalizeTag } from '../notesRepo';
@@ -16,6 +17,8 @@ import { nearestHighlight, nearestTextColor } from './paletteColor';
 import { importBlobs, mimeFromExtOrBytes } from './blobImport';
 import { IMAGE_WIDTH_MAX, clampImageWidth } from '../imageWidth';
 import type { ImportedNote, ParsedImport } from './types';
+
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.notesnook.${key}`, options);
 
 /**
  * Notesnook importer.
@@ -1162,8 +1165,7 @@ function isBackupArchive(zip: JSZip, filename: string): boolean {
   return found;
 }
 
-const BACKUP_ERROR =
-  'This is a Notesnook backup (.nnbackupz), not an export. Backups store every attachment in Notesnook\'s own encrypted format, so they cannot be read here. In Notesnook go to Settings > Backup & export, use "Export all notes", pick HTML from the "Export as" dropdown, and drop that .zip in instead.';
+const backupError = (): string => msg('backupError');
 
 /* ------------------------------------------------------------------ */
 /* Zip parser                                                         */
@@ -1186,18 +1188,16 @@ async function parseZip(
   file: File,
   onProgress?: (msg: string) => void
 ): Promise<ParseZipResult> {
-  onProgress?.('Reading zip...');
+  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
   const buf = await file.arrayBuffer();
   let zip: JSZip;
   try {
     zip = await JSZip.loadAsync(buf);
   } catch {
-    throw new Error(
-      'Could not read that file as a zip. Export from Notesnook with Settings > Backup & export > Export all notes, pick HTML, and drop the .zip it produces.'
-    );
+    throw new Error(msg('zipUnreadable'));
   }
 
-  if (isBackupArchive(zip, file.name)) throw new Error(BACKUP_ERROR);
+  if (isBackupArchive(zip, file.name)) throw new Error(backupError());
 
   // Collect candidate paths so we can strip a wrapping folder if the user
   // zipped the export directory rather than its contents.
@@ -1205,7 +1205,7 @@ async function parseZip(
   zip.forEach((path, entry) => {
     if (!entry.dir && !shouldSkip(path)) allPaths.push(path);
   });
-  if (allPaths.length === 0) throw new Error('That zip is empty.');
+  if (allPaths.length === 0) throw new Error(i18n.t('importExport:importLog.shared.zipEmpty'));
 
   let prefix = '';
   const firstSlash = allPaths[0]!.indexOf('/');
@@ -1236,12 +1236,10 @@ async function parseZip(
   const noteFiles = format === 'html' ? htmlFiles : mdFiles;
 
   if (noteFiles.length === 0) {
-    throw new Error(
-      'No notes found in that zip. Export from Notesnook with Settings > Backup & export > Export all notes and pick HTML (or Markdown), then drop the .zip here. The "Text" export is not supported.'
-    );
+    throw new Error(msg('noNotes'));
   }
 
-  onProgress?.(`Found ${noteFiles.length} note${noteFiles.length === 1 ? '' : 's'}...`);
+  onProgress?.(i18n.t('importExport:importLog.shared.foundNotes', { count: noteFiles.length }));
 
   // Attachments first: the note conversion needs the placeholder map.
   const blobs = new Map<string, { data: Uint8Array; mime: string; name: string }>();
@@ -1249,9 +1247,7 @@ async function parseZip(
   let tooLarge = 0;
 
   if (blobFiles.length > 0) {
-    onProgress?.(
-      `Extracting ${blobFiles.length} attachment${blobFiles.length === 1 ? '' : 's'}...`
-    );
+    onProgress?.(i18n.t('importExport:importLog.shared.extracting', { count: blobFiles.length }));
   }
   for (let i = 0; i < blobFiles.length; i++) {
     const [rel, entry] = blobFiles[i]!;
@@ -1264,7 +1260,7 @@ async function parseZip(
     blobs.set(token, { data, mime: mimeFromExtOrBytes(rel, data), name: attachmentName(rel) });
     attachmentTokens.set(rel.toLowerCase(), token);
     if ((i + 1) % 20 === 0) {
-      onProgress?.(`Extracted ${i + 1} of ${blobFiles.length} attachments...`);
+      onProgress?.(i18n.t('importExport:importLog.shared.extracted', { done: i + 1, total: blobFiles.length }));
     }
   }
 
@@ -1284,7 +1280,7 @@ async function parseZip(
       raws.push(raw);
     }
     if ((i + 1) % 50 === 0) {
-      onProgress?.(`Reading ${i + 1} of ${noteFiles.length}...`);
+      onProgress?.(msg('reading', { current: i + 1, total: noteFiles.length }));
     }
   }
 
@@ -1356,7 +1352,7 @@ async function parseZip(
     notes.push(note);
 
     if ((i + 1) % 50 === 0) {
-      onProgress?.(`Parsed ${i + 1} of ${raws.length}...`);
+      onProgress?.(i18n.t('importExport:importLog.shared.parsed', { done: i + 1, total: raws.length }));
     }
   }
 
@@ -1414,91 +1410,90 @@ export async function parseNotesnook(
   const uniqueTags = new Set(notes.flatMap((n) => n.tags));
   const emptyNotes = notes.filter((n) => !n.title.trim() && !n.body.trim()).length;
   const untaggedNotes = notes.filter((n) => n.tags.length === 0).length;
-  const plural = (n: number) => (n === 1 ? '' : 's');
 
   const warnings: string[] = [];
   if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   if (format === 'markdown') {
     warnings.push(
       hadFrontMatter
-        ? 'This is Notesnook\'s "Markdown + Frontmatter" export, which drops underline, font sizes, and text alignment before the file is written. Re-export as HTML to keep them.'
-        : 'This is Notesnook\'s plain "Markdown" export: it carries no tags and no original dates, and it drops underline, font sizes, and text alignment. Re-export as "HTML" to keep all of it, or "Markdown + Frontmatter" for at least the tags and dates.'
+        ? msg('frontmatterExport')
+        : msg('plainMarkdownExport')
     );
   }
   const transforms: string[] = [];
   if (folders.length > 0) {
     const filed = notes.filter((n) => n.folderId).length;
     transforms.push(
-      `Rebuilt ${folders.length} folder${plural(folders.length)} from your notebooks (${filed} note${plural(filed)} filed).`
+      i18n.t('importExport:importLog.shared.foldersFromNotebooks', { count: folders.length, filed: i18n.t('importExport:importLog.shared.filedNotes', { count: filed }) })
     );
   }
   const tagged = notes.filter((n) => n.tags.length > 0).length;
   if (tagged > 0) {
-    transforms.push(`Kept the tags on ${tagged} note${plural(tagged)}.`);
+    transforms.push(i18n.t('importExport:importLog.shared.tags', { count: tagged }));
   }
   const starred = notes.filter((n) => n.starred).length;
   if (starred > 0) {
     transforms.push(
-      `Marked ${starred} pinned or favorited note${plural(starred)} as Pinned.`
+      msg('markedPinned', { count: starred })
     );
   }
   if (flags.noteLinks > 0) {
     transforms.push(
-      `Converted ${flags.noteLinks} internal link${plural(flags.noteLinks)} into note-links.`
+      i18n.t('importExport:importLog.shared.noteLinks', { count: flags.noteLinks })
     );
   }
   if (flags.callouts > 0) {
     transforms.push(
-      `Converted ${flags.callouts} callout${plural(flags.callouts)}, keeping their type, title and fold state.`
+      msg('callouts', { count: flags.callouts })
     );
   }
   if (flags.checklists > 0) {
     transforms.push(
-      `Converted ${flags.checklists} checklist${plural(flags.checklists)} into native task lists.`
+      i18n.t('importExport:importLog.shared.checklists', { count: flags.checklists })
     );
   }
   if (flags.tables > 0) {
-    transforms.push(`Preserved ${flags.tables} table${plural(flags.tables)}.`);
+    transforms.push(i18n.t('importExport:importLog.shared.tables', { count: flags.tables }));
   }
   if (flags.codeBlocks > 0) {
-    transforms.push(`Preserved ${flags.codeBlocks} code block${plural(flags.codeBlocks)}.`);
+    transforms.push(i18n.t('importExport:importLog.shared.codeBlocks', { count: flags.codeBlocks }));
   }
   if (flags.underline > 0) {
-    transforms.push('Preserved underline formatting.');
+    transforms.push(i18n.t('importExport:importLog.shared.underline'));
   }
   if (flags.highlights > 0) {
-    transforms.push('Preserved highlights.');
+    transforms.push(i18n.t('importExport:importLog.shared.highlights'));
   }
   if (flags.math > 0) {
-    transforms.push(`Preserved ${flags.math} math formula${plural(flags.math)}.`);
+    transforms.push(i18n.t('importExport:importLog.shared.math', { count: flags.math }));
   }
   if (flags.aligned > 0) {
-    transforms.push('Preserved text alignment.');
+    transforms.push(i18n.t('importExport:importLog.shared.aligned'));
   }
   if (flags.droppedAlign > 0) {
-    transforms.push('Dropped alignment on blocks the editor cannot align, keeping the text.');
+    transforms.push(i18n.t('importExport:importLog.shared.droppedAlign'));
   }
   if (flags.colors > 0) {
-    transforms.push(`Kept ${flags.colors} text color${plural(flags.colors)}, matched to the editor's colors.`);
+    transforms.push(msg('colors', { count: flags.colors }));
   }
   if (flags.droppedColors > 0) {
-    transforms.push('Dropped colors the editor cannot show, such as black or white text, keeping the text.');
+    transforms.push(msg('droppedColors'));
   }
   if (flags.fontSizes > 0) {
-    transforms.push(`Kept ${flags.fontSizes} font size${plural(flags.fontSizes)}, matched to the editor's Small, Large and Huge.`);
+    transforms.push(msg('fontSizes', { count: flags.fontSizes }));
   }
   if (flags.droppedStyling > 0) {
-    transforms.push('Dropped custom fonts, keeping the text.');
+    transforms.push(msg('droppedStyling'));
   }
   if (imageCount > 0) {
-    transforms.push(`Found ${imageCount} image${plural(imageCount)} to import.`);
+    transforms.push(i18n.t('importExport:importLog.shared.foundImages', { count: imageCount }));
   }
   if (attachmentCount > 0) {
     transforms.push(
-      `Found ${attachmentCount} attachment${plural(attachmentCount)} to import.`
+      i18n.t('importExport:importLog.shared.foundAttachments', { count: attachmentCount })
     );
   }
-  transforms.push('Made bare URLs clickable.');
+  transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
 
   return {
     notes,

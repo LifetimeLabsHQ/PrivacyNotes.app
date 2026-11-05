@@ -389,6 +389,7 @@
     "receipt": "Twój rachunek",
     "receiptCount_one": "{{count}} subskrypcja",
     "receiptRenews": "Odnawia się co roku",
+    "receiptStamp": "Anulowano",
     "perYear": "Razem rocznie",
     "keepLabel": "Oszczędzasz",
     "keepLine_one": "w ciągu {{count}} roku, nawet jeśli kupisz Pro.",

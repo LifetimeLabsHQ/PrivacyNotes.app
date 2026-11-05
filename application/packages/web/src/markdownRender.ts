@@ -368,25 +368,26 @@ function renderInline(raw: string): string {
     return `\x01M${idx}\x01`;
   });
 
-  // Handle backslash escapes before HTML-escaping so \\ → \, \[ → [, etc.
-  // Stash escaped characters behind sentinels so they survive all passes.
+  // Inline code and backslash escapes in one pass over the source, left to
+  // right: a code span is taken whole, so a backslash inside it stays
+  // literal (`\d+\.txt` lost its `\.` while the escapes ran first), and an
+  // escaped backtick is an escape, not the start of a span. Both go behind
+  // sentinels that survive every pass below; the code is HTML-escaped as it
+  // is taken, the escapes when they come back.
+  const codeSpans: string[] = [];
   const bsEscapes: string[] = [];
-  const preprocessed = raw.replace(/\\([\\`*_{}[\]()#+\-.!|~>])/g, (_m: string, c: string) => {
+  const preprocessed = raw.replace(/`([^`]+)`|\\([\\`*_{}[\]()#+\-.!|~>])/g, (_m: string, code: string | undefined, c: string | undefined) => {
+    if (code !== undefined) {
+      const idx = codeSpans.length;
+      codeSpans.push(escapeHtml(code));
+      return `\x01C${idx}\x01`;
+    }
     const idx = bsEscapes.length;
-    bsEscapes.push(c);
+    bsEscapes.push(c ?? '');
     return `\x01E${idx}\x01`;
   });
 
   let t = escapeHtml(preprocessed);
-
-  // Protect inline code spans first - content inside backticks should
-  // not receive any further formatting passes.
-  const codeSpans: string[] = [];
-  t = t.replace(/`([^`]+)`/g, (_m: string, code: string) => {
-    const idx = codeSpans.length;
-    codeSpans.push(code);
-    return `\x01C${idx}\x01`;
-  });
 
   // An attribute value holds text, never markup. Math or a code span inside
   // an image's alt or a link's target goes back as its own source there,
@@ -578,6 +579,9 @@ function renderInline(raw: string): string {
   t = t.replace(/&lt;(\/?)(u|sup|sub)&gt;/gi, (_m: string, slash: string, tag: string) =>
     stash(`<${slash}${tag.toLowerCase()}>`),
   );
+  // A line break inside a table cell, a heading or a callout title: the
+  // editor writes it as a bare <br>, which came out as the text `<br>`.
+  t = t.replace(/&lt;br\s*\/?&gt;/gi, () => stash('<br>'));
 
   // Colored highlights. `==text==` cannot carry a color, so the editor
   // writes those runs as inline <mark style="background-color: ...">
@@ -634,7 +638,7 @@ function renderInline(raw: string): string {
   // Restore inline code last so its contents stay literal.
   t = t.replace(/\x01C(\d+)\x01/g, (_m: string, i: string) => {
     const span = codeSpans[Number(i)] ?? '';
-    // Content is already escaped from the initial escapeHtml(raw) pass.
+    // Content was escaped when the span was taken from the source.
     return `<code>${span}</code>`;
   });
 
@@ -957,6 +961,19 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
 
     i++;
 
+    // A hard break inside an item: the editor writes a trailing `\` and the
+    // next line indented under the marker. Those lines belong to the item.
+    // Read one line each, the continuation ended the list, came out as a
+    // paragraph of its own, and the next item started a new list at 1.
+    const continuation: string[] = [];
+    while (i < lines.length) {
+      const line = lines[i]!;
+      if (line.trim() === '' || detectListItem(line)) break;
+      if (line.length - line.trimStart().length <= baseIndent) break;
+      continuation.push(line.trim());
+      i++;
+    }
+
     // Check for a sub-list: the next ITEM at a deeper indent belongs to the
     // item just emitted. The search skips blank lines, because the editor
     // serializes lists LOOSE - a blank line between every item, the nested
@@ -992,7 +1009,7 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
     const align = wrapped ? sanitizeAlign(wrapped[1] ?? '') : null;
     const body = wrapped && align
       ? sanitizeEditorHtml(wrapped[2] ?? '')
-      : renderInline(item.content.replace(/\\$/, ''));
+      : [item.content, ...continuation].map((l) => renderInline(l.replace(/\\$/, ''))).join('<br />');
     // Same three-part treatment as the editor (ui-patterns.md section 65):
     // the marker moves inside the content box so it can share the text's
     // line, the alignment goes on the item, and the gutter it no longer

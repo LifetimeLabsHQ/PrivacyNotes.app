@@ -1,6 +1,9 @@
 import { domainFromUrl, serializeLoginBody } from '../LoginForm';
+import i18n from '../i18n';
 import { readArchiveEntry } from './safariArchive';
 import type { Importer, ImportedNote, ParsedImport } from './types';
+
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.passwordCsv.${key}`, options);
 
 /**
  * Browser password import adapter.
@@ -58,28 +61,26 @@ export const passwordCsvImporter: Importer = {
   sourceTag: 'browser',
 
   async parse(file, onProgress) {
-    onProgress?.('Reading file…');
+    onProgress?.(i18n.t('importExport:status.readingFile'));
     const text = stripBom(
       /\.zip$/i.test(file.name)
         ? await readArchiveEntry(file, 'Passwords.csv', /\.csv$/i)
         : await file.text()
     );
     if (!text.trim()) {
-      throw new Error('That file is empty. Export your passwords again and pick the .csv format.');
+      throw new Error(msg('emptyFile'));
     }
 
-    onProgress?.('Reading the columns…');
+    onProgress?.(msg('readingColumns'));
     const rows = parseCsv(text, sniffDelimiter(firstLine(text)));
     const header = (rows.shift() ?? []).map((c) => c.trim().toLowerCase());
     const columns = resolveColumns(header);
 
     if (columns.password < 0 || (columns.url < 0 && columns.username < 0)) {
-      throw new Error(
-        'This .csv has no password column, so it is not a browser password export. In your browser, open the password manager and export again as .csv.'
-      );
+      throw new Error(msg('noPasswordColumn'));
     }
 
-    onProgress?.('Converting logins…');
+    onProgress?.(msg('convertingLogins'));
     const notes: ImportedNote[] = [];
     const warnings: string[] = [];
     const transforms: string[] = [];
@@ -130,33 +131,31 @@ export const passwordCsvImporter: Importer = {
     }
 
     if (notes.length === 0) {
-      throw new Error('That .csv has a header but no logins under it.');
+      throw new Error(msg('noLogins'));
     }
 
     const source = detectSource(header);
-    if (source) transforms.push(`Read the file as a ${source} passwords export.`);
-    transforms.push(`Imported ${notes.length} login${notes.length === 1 ? '' : 's'} as vault items.`);
+    if (source) transforms.push(msg('readAs', { source }));
+    transforms.push(i18n.t('importExport:importLog.shared.importedLogins', { count: notes.length }));
     if (derivedTitles > 0) {
       transforms.push(
-        derivedTitles === 1
-          ? 'Named 1 login after its site (this export has no title column).'
-          : `Named ${derivedTitles} logins after their sites (this export has no title column).`
+        msg('namedAfterSite', { count: derivedTitles })
       );
     }
     if (datedCount > 0) {
       transforms.push(
-        `Kept the original dates for ${datedCount} login${datedCount === 1 ? '' : 's'}.`
+        msg('keptDates', { count: datedCount })
       );
     }
     if (totpCount > 0) {
       transforms.push(
-        `Kept the 2FA authenticator key for ${totpCount} login${totpCount === 1 ? '' : 's'}.`
+        i18n.t('importExport:importLog.shared.keptTotp', { count: totpCount })
       );
     }
 
     if (noPassword > 0) {
       warnings.push(
-        `${noPassword} row${noPassword === 1 ? ' has' : 's have'} no password (browsers write sign-in-with-Google entries that way). They import with the rest, so nothing is dropped.`
+        msg('noPassword', { count: noPassword })
       );
     }
 

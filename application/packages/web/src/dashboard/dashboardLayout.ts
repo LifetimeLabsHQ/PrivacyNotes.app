@@ -58,9 +58,11 @@ const CALENDAR_MIN_PX = 230;
 // Spec: docs/internal/specs/dashboard.md (section 5, the version 1 list)
 const WIDGET_DEFS = {
   checkIn: { group: 'today', w: [2, 2, 4], h: [2, 2, 4] },
-  // Measured: the month is 313px at 325px wide; from about 335px the days
-  // reach their cap and the month is 345px, plus the card's 16px of padding.
-  calendar: { group: 'today', w: [1, 1, 2], h: [5, 5, 6], heightAt: (px) => (px >= 335 ? 361 : 331), minWidthPx: CALENDAR_MIN_PX },
+  // Measured: the month is 345px tall at every width the card takes on a
+  // phone (288px to 382px of card; the days have one size), plus the card's
+  // 16px of padding. An older 331px below 335px gave a five-row tile that
+  // the month did not fit, and Home showed one week strip in it.
+  calendar: { group: 'today', w: [1, 1, 2], h: [5, 5, 6], heightAt: () => 361, minWidthPx: CALENDAR_MIN_PX },
   upcoming: { group: 'today', w: [1, 1, 4], h: [2, 5, 12] },
   today: { group: 'today', w: [1, 2, 4], h: [2, 3, 8] },
   tasks: { group: 'today', w: [1, 1, 4], h: [2, 5, 12] },

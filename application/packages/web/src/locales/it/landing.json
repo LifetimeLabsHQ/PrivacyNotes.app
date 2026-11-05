@@ -391,6 +391,7 @@
     "receiptCount_one": "{{count}} abbonamento",
     "receiptCount_other": "{{count}} abbonamenti",
     "receiptRenews": "Si rinnova ogni anno",
+    "receiptStamp": "Annullato",
     "perYear": "Totale all'anno",
     "keepLabel": "Risparmi",
     "keepLine_one": "in {{count}} anno, anche se acquisti Pro.",

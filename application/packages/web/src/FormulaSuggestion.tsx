@@ -28,6 +28,7 @@ import type { Editor } from '@tiptap/core';
 import { PluginKey, TextSelection } from '@tiptap/pm/state';
 import { textMatcher } from './textMatch';
 import { FORMULA_MENU, caretCell, formulaInsertion } from './tableFormulaInsert';
+import { placeAtCaret } from './usePopoverPosition';
 
 type FormulaItem = { name: string };
 
@@ -246,17 +247,9 @@ function ranked(names: readonly string[], query: string): string[] {
     .map((r) => r.name);
 }
 
-/** Below the caret, nudged left when it would run off the right edge. */
+/** At the caret, as the `[[` list (`placeAtCaret`). */
 function updatePosition(popup: HTMLDivElement, clientRect?: (() => DOMRect | null) | null) {
   if (!clientRect) return;
   const rect = clientRect();
-  if (!rect) return;
-  popup.style.top = `${rect.bottom + window.scrollY + 4}px`;
-  popup.style.left = `${rect.left + window.scrollX}px`;
-  requestAnimationFrame(() => {
-    const popupRect = popup.getBoundingClientRect();
-    if (popupRect.right > window.innerWidth - 8) {
-      popup.style.left = `${window.innerWidth - popupRect.width - 8}px`;
-    }
-  });
+  if (rect) placeAtCaret(popup, rect);
 }

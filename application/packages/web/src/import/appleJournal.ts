@@ -5,6 +5,9 @@ import { currentImageOptions, processImage } from '../imageProcessing';
 import { EMOTION_TAGS } from '../trackerTypes';
 import { toLocalIso } from '../notesViewUtils';
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
+import i18n from '../i18n';
+
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.appleJournal.${key}`, options);
 
 /**
  * Apple Journal importer.
@@ -742,7 +745,7 @@ async function runPhotoQueue(
         dropped.add(job.token);
       }
       done++;
-      onProgress?.(`Converting photo ${done} of ${total}...`);
+      onProgress?.(msg('convertingPhoto', { done, total }));
     }
   }
 
@@ -790,19 +793,18 @@ function assemble(grid: GridResult, body: string): string {
 /** Journal's export is a FOLDER, and a file input cannot select one, so
  *  every error that sends the user back to Journal has to name the
  *  compress step - otherwise they re-export and hit the same wall. */
-const EXPORT_HINT =
-  'In Journal on your Mac choose File > Export, right-click the AppleJournal folder it writes and choose Compress, then pick that .zip here.';
+const exportHint = (): string => msg('exportHint');
 
 export async function parseAppleJournal(
   file: File,
   onProgress?: (msg: string) => void,
 ): Promise<ParsedImport> {
-  onProgress?.('Reading zip...');
+  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
   let zip: JSZip;
   try {
     zip = await JSZip.loadAsync(await file.arrayBuffer());
   } catch {
-    throw new Error(`Could not read that file as a zip. ${EXPORT_HINT}`);
+    throw new Error(msg('notAZip', { hint: exportHint() }));
   }
 
   // Locate the export root by finding the Entries folder, wherever the
@@ -811,13 +813,11 @@ export async function parseAppleJournal(
   zip.forEach((path, entry) => {
     if (!entry.dir && !shouldSkip(path)) paths.push(path);
   });
-  if (paths.length === 0) throw new Error('That zip is empty.');
+  if (paths.length === 0) throw new Error(i18n.t('importExport:importLog.shared.zipEmpty'));
 
   const anyEntry = paths.find((p) => /(^|\/)Entries\/[^/]+\.html?$/i.test(p));
   if (!anyEntry) {
-    throw new Error(
-      `That zip has no Entries folder, so it is not an Apple Journal export. ${EXPORT_HINT}`,
-    );
+    throw new Error(msg('noEntriesFolder', { hint: exportHint() }));
   }
   const prefix = anyEntry.slice(0, anyEntry.toLowerCase().lastIndexOf('entries/'));
 
@@ -839,12 +839,12 @@ export async function parseAppleJournal(
   });
 
   if (entryFiles.length === 0) {
-    throw new Error(`That export has no entries in it. ${EXPORT_HINT}`);
+    throw new Error(msg('noEntries', { hint: exportHint() }));
   }
   entryFiles.sort((a, b) => a[0].localeCompare(b[0]));
 
   // Sidecars first: every asset consults them, and they are tiny.
-  onProgress?.('Reading locations...');
+  onProgress?.(msg('readingLocations'));
   const sidecars = new Map<string, Record<string, unknown>>();
   for (const [base, entry] of sidecarFiles) {
     try {
@@ -874,7 +874,7 @@ export async function parseAppleJournal(
 
   for (let i = 0; i < entryFiles.length; i++) {
     const [rel, entry] = entryFiles[i]!;
-    onProgress?.(`Reading entry ${i + 1} of ${entryFiles.length}...`);
+    onProgress?.(msg('readingEntry', { current: i + 1, total: entryFiles.length }));
 
     const doc = new DOMParser().parseFromString(await zipEntryText(entry), 'text/html');
     const styles = parseSpanStyles(doc.querySelector('style')?.textContent ?? '');
@@ -940,64 +940,49 @@ export async function parseAppleJournal(
   let blobBytes = 0;
   for (const blob of blobs.values()) blobBytes += blob.data.length;
 
-  const plural = (n: number) => (n === 1 ? '' : 's');
   const warnings: string[] = [];
   if (counters.failedPhotos > 0) {
-    warnings.push(
-      `${counters.failedPhotos} photo${plural(counters.failedPhotos)} could not be converted out of Apple's HEIC format and were kept as-is, so they may not display.`,
-    );
+    warnings.push(msg('failedPhotos', { count: counters.failedPhotos }));
   }
   if (counters.tooLarge > 0) warnings.push(mediaTooLargeWarning(counters.tooLarge));
   if (counters.missingAssets > 0) {
-    warnings.push(
-      `${counters.missingAssets} photo${plural(counters.missingAssets)} or video${plural(counters.missingAssets)} referenced by an entry was not in the export and had to be skipped.`,
-    );
+    warnings.push(msg('missingAssets', { count: counters.missingAssets }));
   }
   if (untitled > 0) {
-    warnings.push(
-      `${untitled} entr${untitled === 1 ? 'y' : 'ies'} had no title in Journal and were titled with their date.`,
-    );
+    warnings.push(msg('untitled', { count: untitled }));
   }
 
   const transforms: string[] = [
-    `Imported ${notes.length} entr${notes.length === 1 ? 'y' : 'ies'} as journal entries, dated the day each was written.`,
+    msg('importedEntries', { count: notes.length }),
   ];
   if (counters.photos > 0) {
-    transforms.push(
-      `Converted ${counters.photos} photo${plural(counters.photos)} from HEIC so they display everywhere.`,
-    );
+    transforms.push(msg('convertedPhotos', { count: counters.photos }));
   }
   if (counters.videos > 0) {
-    transforms.push(`Found ${counters.videos} video${plural(counters.videos)} to import.`);
+    transforms.push(msg('foundVideos', { count: counters.videos }));
   }
   if (counters.audio > 0) {
-    transforms.push(
-      `Found ${counters.audio} voice recording${plural(counters.audio)} to import.`,
-    );
+    transforms.push(msg('foundAudio', { count: counters.audio }));
   }
   if (counters.places > 0) {
-    transforms.push(
-      `Turned ${counters.places} location${plural(counters.places)} into map links.`,
-    );
+    transforms.push(msg('turnedPlaces', { count: counters.places }));
   }
   if (counters.moods > 0) {
-    transforms.push(
-      `Filled in the mood tracker on ${counters.moods} entr${counters.moods === 1 ? 'y' : 'ies'} from your State of Mind.`,
-    );
+    transforms.push(msg('filledMoods', { count: counters.moods }));
   }
   if (flags.bold + flags.italic + flags.underline + flags.strike > 0) {
-    transforms.push('Preserved bold, italic, underline, and strikethrough.');
+    transforms.push(msg('preservedFormatting'));
   }
   if (flags.color > 0) {
-    transforms.push(`Preserved text color on ${flags.color} run${plural(flags.color)} of text.`);
+    transforms.push(msg('preservedColor', { count: flags.color }));
   }
   if (flags.lists > 0) {
-    transforms.push(`Preserved ${flags.lists} list${plural(flags.lists)}.`);
+    transforms.push(msg('preservedLists', { count: flags.lists }));
   }
   if (flags.quotes > 0) {
-    transforms.push(`Preserved ${flags.quotes} block quote${plural(flags.quotes)}.`);
+    transforms.push(msg('preservedQuotes', { count: flags.quotes }));
   }
-  transforms.push('Made bare URLs clickable.');
+  transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
 
   return {
     notes,

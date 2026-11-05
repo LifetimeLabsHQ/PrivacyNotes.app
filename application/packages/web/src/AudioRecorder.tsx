@@ -61,6 +61,26 @@ export function AudioRecorder({ editorView, tabIndex, onStateChange, stopRef, st
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const durationRef = useRef(0);
+  // Set when the recorder is stopped because it is going away, so `onstop`
+  // releases the microphone and keeps nothing.
+  const discardRef = useRef(false);
+
+  // The editor is mounted per note, and this recorder with it. Leaving the
+  // note (another note, lock, sign-out, Markdown mode) unmounted a running
+  // recorder without stopping it: the microphone stayed on, the recorder
+  // kept recording, and no Stop control was left anywhere. Stop it here.
+  // The take is dropped: the editor it was meant for is gone.
+  useEffect(() => () => {
+    const recorder = recorderRef.current;
+    if (recorder && recorder.state !== 'inactive') {
+      discardRef.current = true;
+      recorder.stop();
+    }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
 
   const updateState = useCallback(
     (next: AudioRecordingState, dur: number) => {
@@ -106,7 +126,7 @@ export function AudioRecorder({ editorView, tabIndex, onStateChange, stopRef, st
         const actualMime = recorder.mimeType || 'audio/webm';
         const blob = new Blob(chunksRef.current, { type: actualMime });
 
-        if (blob.size > 0 && editorView) {
+        if (blob.size > 0 && editorView && !discardRef.current) {
           // Show uploading state while the attachment pipeline runs.
           updateState('uploading', finalDuration);
 

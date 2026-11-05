@@ -20,6 +20,7 @@ import { Mark, getMarkRange, markInputRule, markPasteRule, mergeAttributes } fro
 import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
 import type { EditorState } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
+import { crossesPlainLine } from './editorInlineSyntax';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -70,7 +71,7 @@ function textStopsAtPipe(state: InlineState, silent: boolean): boolean {
 }
 
 /**
- * `||text||` on one line, hugging its delimiters, with no pipe or backslash
+ * `||text||` on one line (a hard break excepted), hugging its delimiters, with no pipe or backslash
  * just outside them. `a || b` stays text because the run may not open on a
  * space. The run between the delimiters is parsed again, so a
  * bold word or a link inside a spoiler survives a reload.
@@ -83,7 +84,7 @@ function spoilerRule(state: InlineState, silent: boolean): boolean {
   if (start >= state.posMax || /[\s|]/.test(src[start] ?? '')) return false;
   const end = src.indexOf('||', start);
   if (end < 0 || end + 2 > state.posMax) return false;
-  if (src.slice(start, end).includes('\n')) return false;
+  if (crossesPlainLine(src.slice(start, end))) return false;
   // A space just inside, or a backslash that escapes the first closing pipe.
   if (/[\s\\]/.test(src[end - 1] ?? '')) return false;
   // After the closing pipes only another pipe counts: a backslash there

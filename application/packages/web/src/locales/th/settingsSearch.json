@@ -67,6 +67,7 @@
     "appearance_contentWidth": "ความกว้างคอลัมน์, กว้าง, เต็มความกว้าง, ขอบ",
     "appearance_editor": "Markdown, มาร์กดาวน์, ข้อความจัดรูปแบบ, WYSIWYG, โหมดตัวแก้ไข",
     "appearance_defaultApps": "แอปเริ่มต้น, เปิดด้วย, ดับเบิลคลิก, finder, file explorer, markdown, md, txt, ไฟล์ข้อความ",
+    "appearance_tray": "ถาดระบบ, system tray, tray, พื้นที่แจ้งเตือน, ย่อหน้าต่าง, ปิด, เบื้องหลัง, ทำงานเบื้องหลัง, แถบงาน, taskbar",
     "appearance_copyFormat": "คัดลอก, คลิปบอร์ด, ข้อความธรรมดา, วาง, ช่องทำเครื่องหมาย",
     "appearance_pasteFormat": "วาง, คลิปบอร์ด, ข้อความธรรมดา, การจัดรูปแบบ, ไม่จัดรูปแบบ, ตรงกับรูปแบบ",
     "appearance_favicons": "ไอคอนเว็บ, favicon, ไอคอนเว็บไซต์, โลโก้",

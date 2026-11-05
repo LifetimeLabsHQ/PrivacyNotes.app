@@ -527,6 +527,20 @@ class NotesDb extends Dexie {
 
 export const db = new NotesDb();
 
+let notesWrites = 0;
+// Dexie fires this when a write transaction commits, in this tab and, through
+// a BroadcastChannel, for a commit in another tab of the same origin.
+Dexie.on('storagemutated', (parts) => {
+  if (Object.keys(parts).some((k) => k.startsWith(`idb://${db.name}/notes/`))) notesWrites++;
+});
+
+/** Counts the committed writes to the notes table, in this tab and in other
+ *  tabs, so a periodic job can tell that nothing changed without reading the
+ *  whole vault (issue #643). */
+export function notesWriteCount(): number {
+  return notesWrites;
+}
+
 /**
  * A second connection WITHOUT the seal middleware. For the sweep only:
  * it must SEE the sealed-or-not state of stored rows, and it converts

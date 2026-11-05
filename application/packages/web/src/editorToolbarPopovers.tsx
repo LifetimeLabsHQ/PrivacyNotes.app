@@ -7,6 +7,7 @@ import { HoverLabel } from './HoverLabel';
 import { ColorSwatch } from './ColorSwatch';
 import { TEXT_COLORS, HIGHLIGHT_COLORS, FONT_FAMILIES, FONT_SIZES } from './editorColors';
 import { CALLOUT_PICKER_TYPES } from './calloutTypes';
+import { CalloutGrid } from './CalloutGrid';
 import { writeColorPref } from './editorPrefs';
 import type { ALIGNMENT_VALUES } from './editorExtensions';
 import type { PopoverPos } from './usePopoverPosition';
@@ -141,30 +142,17 @@ export function CalloutPanel({ popoverRef, pos, onClose, editor, isActive }: {
   const { t } = useTranslation('editor');
   return (
     <ToolbarPanel popoverRef={popoverRef} pos={pos} className="bg-surface-1 border border-divider rounded-lg shadow-lg p-2 w-[240px] max-h-[calc(100dvh-16px)] overflow-y-auto" role="menu" aria-label={t('callout.pickerLabel')}>
-      <div className="grid grid-cols-3 gap-1">
-        {CALLOUT_PICKER_TYPES.map((c) => {
-          const CalloutIcon = c.icon;
-          return (
-            <button
-              key={c.type}
-              type="button"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                onClose();
-                if (editor.isActive('callout')) {
-                  editor.chain().focus().setCalloutType(c.type).run();
-                } else {
-                  editor.chain().focus().insertCallout(c.type).run();
-                }
-              }}
-              className="relative flex flex-col items-center gap-1 rounded-md px-1 py-2 text-pn-soft [@media(hover:hover)]:hover:bg-pn/5 transition"
-            >
-              <CalloutIcon weight="bold" color={c.color || undefined} />
-              <span className="max-w-full text-center text-meta leading-tight hyphens-auto break-words">{t(`callout.types.${c.type}`)}</span>
-            </button>
-          );
-        })}
-      </div>
+      <CalloutGrid
+        types={CALLOUT_PICKER_TYPES}
+        onPick={(type) => {
+          onClose();
+          if (editor.isActive('callout')) {
+            editor.chain().focus().setCalloutType(type).run();
+          } else {
+            editor.chain().focus().insertCallout(type).run();
+          }
+        }}
+      />
       {/* When the cursor is inside a callout, offer an explicit way to remove
           it - the picker is where users look to change or undo a callout, and
           this covers touch platforms with no Backspace-at-start gesture. */}

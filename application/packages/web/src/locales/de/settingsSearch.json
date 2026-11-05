@@ -68,6 +68,7 @@
     "appearance_contentWidth": "Spaltenbreite, breit, volle Breite, Ränder",
     "appearance_editor": "Markdown, Rich Text, WYSIWYG, Editormodus",
     "appearance_defaultApps": "Standard-App, Öffnen mit, Doppelklick, Finder, Explorer, Datei-Explorer, Markdown, md, txt, Textdatei",
+    "appearance_tray": "Infobereich, Systemleiste, Tray, Benachrichtigungsbereich, minimieren, schließen, Hintergrund, im Hintergrund ausführen, Taskleiste",
     "appearance_copyFormat": "kopieren, Zwischenablage, nur Text, einfügen, Kontrollkästchen",
     "appearance_pasteFormat": "einfügen, Zwischenablage, nur Text, Formatierung, unformatiert, Format anpassen",
     "appearance_favicons": "Favicon, Website-Symbole, Logos",

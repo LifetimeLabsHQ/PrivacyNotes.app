@@ -10,6 +10,9 @@ import { htmlNoteToMarkdown } from './notesnook';
 import { mapOutsideCode } from './codeSegments';
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 import { toLocalIso } from '../notesViewUtils';
+import i18n from '../i18n';
+
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.joplin.${key}`, options);
 
 /**
  * Joplin importer.
@@ -116,10 +119,10 @@ function readTar(buf: Uint8Array): Map<string, Uint8Array> {
     const size = nextSize ?? parseInt(ascii(pos + 124, 12).trim() || '0', 8);
     const type = String.fromCharCode(buf[pos + 156] ?? 0);
     const prefix = ascii(pos + 257, 6).startsWith('ustar') ? ascii(pos + 345, 155) : '';
-    if (!Number.isFinite(size) || size < 0) throw new Error('This .jex file is damaged.');
+    if (!Number.isFinite(size) || size < 0) throw new Error(msg('damaged'));
     const start = pos + 512;
     const end = start + size;
-    if (end > buf.length) throw new Error('This .jex file is cut short. Export it from Joplin again.');
+    if (end > buf.length) throw new Error(msg('cutShort'));
     pos = start + Math.ceil(size / 512) * 512;
 
     if (type === 'x') {
@@ -173,13 +176,13 @@ function isoOr(value: string | undefined, fallback: string): string {
 }
 
 export async function parseJoplin(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
-  onProgress?.('Reading file…');
+  onProgress?.(i18n.t('importExport:status.readingFile'));
   const lower = file.name.toLowerCase();
   const { files, tooLarge } = lower.endsWith('.zip')
     ? await readZip(file)
     : { files: readTar(new Uint8Array(await file.arrayBuffer())), tooLarge: 0 };
 
-  onProgress?.('Reading items…');
+  onProgress?.(msg('readingItems'));
   const decoder = new TextDecoder();
   const notesRaw: JoplinItem[] = [];
   const folders = new Map<string, JoplinItem>();
@@ -218,8 +221,8 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
   if (notesRaw.length === 0 && folders.size === 0) {
     throw new Error(
       encryptedCount > 0
-        ? 'Every note in this export is still encrypted. Let Joplin finish decrypting, then export again.'
-        : 'No Joplin notes found. In Joplin, pick File > Export all > "JEX - Joplin Export File", then drop the .jex file here.',
+        ? msg('allEncrypted')
+        : msg('noNotes'),
     );
   }
 
@@ -230,7 +233,7 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
     if (m) resourceFiles.set(m[1]!.toLowerCase(), data);
   }
 
-  onProgress?.('Rebuilding notebooks…');
+  onProgress?.(msg('rebuildingNotebooks'));
   let folderDefs: FolderDef[] = [];
   const folderIdMap = new Map<string, string>();
   const folderPathOf = new Map<string, string[]>();
@@ -367,7 +370,7 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
         .replace(/(^|[^+\w])\+\+(?![\s+])([^+\n]{0,2000}?[^\s+])\+\+(?![+\w])/g, '$1<u>$2</u>'),
     );
 
-  onProgress?.('Building notes…');
+  onProgress?.(i18n.t('importExport:importLog.shared.buildingNotes'));
   const now = new Date().toISOString();
   const notes: ImportedNote[] = [];
   let todoCount = 0;
@@ -438,27 +441,26 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
   const transforms: string[] = [];
   const warnings: string[] = [];
   if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
-  const s = (n: number, one = '', many = 's') => (n === 1 ? one : many);
-  if (folderDefs.length > 0) transforms.push(`Rebuilt ${folderDefs.length} notebook${s(folderDefs.length)} as folders.`);
-  if (blobs.size > 0) transforms.push(`Imported ${blobs.size} attachment${s(blobs.size)}.`);
-  if (todoCount > 0) transforms.push(`Turned ${todoCount} to-do${s(todoCount)} into tasks you can tick off.`);
-  if (htmlCount > 0) transforms.push(`Converted ${htmlCount} HTML note${s(htmlCount)} with their formatting.`);
-  if (trashedCount > 0) transforms.push(`Restored ${trashedCount} trashed note${s(trashedCount)} into the trash.`);
-  if (linkifiedCount > 0) transforms.push(`Made URLs clickable in ${linkifiedCount} note${s(linkifiedCount)}.`);
+  if (folderDefs.length > 0) transforms.push(msg('rebuiltNotebooks', { count: folderDefs.length }));
+  if (blobs.size > 0) transforms.push(i18n.t('importExport:importLog.shared.attachments', { count: blobs.size }));
+  if (todoCount > 0) transforms.push(msg('turnedTodos', { count: todoCount }));
+  if (htmlCount > 0) transforms.push(msg('convertedHtml', { count: htmlCount }));
+  if (trashedCount > 0) transforms.push(i18n.t('importExport:importLog.shared.restoredTrashed', { count: trashedCount }));
+  if (linkifiedCount > 0) transforms.push(i18n.t('importExport:importLog.shared.linkifiedNotes', { count: linkifiedCount }));
   if (conflictCount > 0) {
-    warnings.push(`${conflictCount} note${s(conflictCount)} came from Joplin's Conflicts notebook and carr${s(conflictCount, 'ies', 'y')} the tag "conflict".`);
+    warnings.push(msg('conflict', { count: conflictCount }));
   }
   if (encryptedCount > 0) {
-    warnings.push(`${encryptedCount} item${s(encryptedCount)} ${s(encryptedCount, 'was', 'were')} still encrypted and skipped. Let Joplin finish decrypting, then export again.`);
+    warnings.push(msg('encrypted', { count: encryptedCount }));
   }
   if (missingResources > 0) {
-    warnings.push(`${missingResources} attachment link${s(missingResources)} point${s(missingResources, 's', '')} at a file that is not in the export. ${s(missingResources, 'It stays', 'They stay')} as a link.`);
+    warnings.push(msg('missingResources', { count: missingResources }));
   }
   if (unknownRefs > 0) {
-    warnings.push(`${unknownRefs} link${s(unknownRefs)} point${s(unknownRefs, 's', '')} at a note or file that is not in the export. ${s(unknownRefs, 'It stays', 'They stay')} as a link.`);
+    warnings.push(msg('unknownRefs', { count: unknownRefs }));
   }
   if (droppedFolders > 0) {
-    warnings.push(`${droppedFolders} notebook${s(droppedFolders)} nested too deep ${s(droppedFolders, 'was', 'were')} merged into ${s(droppedFolders, 'its', 'their')} parent.`);
+    warnings.push(msg('droppedFolders', { count: droppedFolders }));
   }
 
   const uniqueTags = new Set(notes.flatMap((n) => n.tags));

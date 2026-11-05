@@ -82,8 +82,12 @@ export function useProStatus({
             isCustodial: current.isCustodial,
           });
           if (!data && current.isPro) dropProThemes();
+          // The same answer keeps the same state: this check runs every
+          // minute, and a new auth object each time rendered the whole app
+          // again and re-read the vault (issue #643).
           setAuth((prev) =>
-            prev.status === 'authenticated' && prev.pubkey === auth.pubkey
+            prev.status === 'authenticated' && prev.pubkey === auth.pubkey &&
+            (prev.isPro !== data || prev.isEarlySupporter !== early)
               ? { ...prev, isPro: data, isEarlySupporter: early }
               : prev,
           );

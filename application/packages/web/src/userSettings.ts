@@ -754,9 +754,19 @@ function untrustedView(cache: LocalCache): LocalCache {
   const syncedKeys = cache.syncedKeys && marker ? { ...cache.syncedKeys, [PIN_GROUP_KEY]: marker } : cache.syncedKeys;
   const view: LocalCache = side
     ? { ...cache, settings: { ...cache.settings, ...side, ...(side.pinHash ? {} : legacyHash) }, wrapWithheld: false, ...(syncedKeys ? { syncedKeys } : {}) }
-    : { ...cache, settings: { ...cache.settings, ...NULL_WRAP }, wrapWithheld: true };
+    : { ...cache, settings: { ...cache.settings, ...NULL_WRAP }, wrapWithheld: withholdsWrap(false) };
   if (legacyHash) writeLocal(view);
   return view;
+}
+
+/**
+ * Whether a tab with no side key withholds the PIN fields as unknown. The
+ * demo never pulls a row that could fill them in, so there its nulls are
+ * known absent: otherwise every save writes a new PIN hash as null and the
+ * demo can never set a PIN. Pinned by tests/demoPin.test.ts.
+ */
+function withholdsWrap(trusted: boolean): boolean {
+  return !trusted && !isDemoMode();
 }
 
 const EPOCH = '1970-01-01T00:00:00.000Z';
@@ -779,7 +789,7 @@ function readLocal(): LocalCache {
   try {
     const raw = localStorage.getItem(localKey());
     if (!raw) {
-      return { settings: defaultSettings(), updatedAt: EPOCH, dirty: false, everPulled: false, wrapWithheld: !trusted, syncedRev: 0 };
+      return { settings: defaultSettings(), updatedAt: EPOCH, dirty: false, everPulled: false, wrapWithheld: withholdsWrap(trusted), syncedRev: 0 };
     }
     const parsed = JSON.parse(raw) as Partial<LocalCache>;
     const opened = openSealedPart(parsed);
@@ -821,7 +831,7 @@ function readLocal(): LocalCache {
     if (opened.rewrite && localDataKeyCopy() !== null && mayWriteUnstamped()) writeLocal(view);
     return view;
   } catch {
-    return { settings: defaultSettings(), updatedAt: EPOCH, dirty: false, everPulled: false, wrapWithheld: !trusted, syncedRev: 0 };
+    return { settings: defaultSettings(), updatedAt: EPOCH, dirty: false, everPulled: false, wrapWithheld: withholdsWrap(trusted), syncedRev: 0 };
   }
 }
 

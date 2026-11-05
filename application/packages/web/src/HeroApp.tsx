@@ -3,7 +3,7 @@ import type { KeyboardEvent, ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Book, Bookmarks, CalendarDots, Cake, Check, CheckCircle, CreditCard, Envelope, Eye, EyeSlash, FileAudio, FileImage, FilePdf, FileText, Folder, Key, LockSimple, Moon, Phone, Pill, Scissors, Shield, TerminalWindow, TrendUp, UserCheck } from './icons';
 import { moodColor } from './moodColors';
-import { formatInstant, weekdayLabel } from './intlFormat';
+import { formatInstant, weekdayDate, weekdayLabel } from './intlFormat';
 
 /** The window's sidebar, in the order of the pillar grid. */
 // Each tab's label is the key the app's own sidebar shows, where one exists.
@@ -298,7 +298,7 @@ function CalendarPanel() {
           const on = off === day;
           return (
             <button key={off} type="button" aria-pressed={on} onClick={() => setDay(off)} className="cursor-pointer rounded-md py-1 transition hover:bg-[var(--wl-tint)]">
-              <span className="block text-meta font-semibold text-[var(--wl-sub)]">{weekdayLabel(d, 'narrow')}</span>
+              <span className="block text-meta font-semibold text-[var(--wl-sub)]">{weekdayLabel(weekdayDate(d.getDay()), 'narrow')}</span>
               <span className={`mx-auto mt-0.5 flex h-6 w-6 items-center justify-center rounded-full text-meta font-bold transition ${on ? 'bg-[var(--wl-teal)] text-[var(--wl-tint-teal)]' : off === 0 ? 'text-[var(--wl-teal)]' : 'text-[var(--wl-ink)]'}`}>{d.getDate()}</span>
               <span className={`mx-auto mt-0.5 block h-1 w-1 rounded-full ${EVENTS[off] ? 'bg-[var(--wl-teal)]' : 'bg-transparent'}`} />
             </button>
@@ -431,7 +431,7 @@ function MoodWeek() {
         ))}
       </svg>
       <div className="mt-1 flex justify-between px-[4px] font-mono text-meta font-semibold text-[var(--wl-sub)]">
-        {WEEK.map((_, i) => <span key={i} className={`w-3 text-center ${i === WEEK.length - 1 ? 'text-[var(--wl-ink)]' : ''}`}>{weekdayLabel(dayFrom(i - WEEK.length + 1), 'narrow')}</span>)}
+        {WEEK.map((_, i) => <span key={i} className={`w-3 text-center ${i === WEEK.length - 1 ? 'text-[var(--wl-ink)]' : ''}`}>{weekdayLabel(weekdayDate(dayFrom(i - WEEK.length + 1).getDay()), 'narrow')}</span>)}
       </div>
       <div className="mt-2.5 flex items-center gap-1.5 rounded-lg bg-[var(--wl-tint-green)] px-2 py-1.5 text-meta font-semibold text-[var(--wl-emerald)]">
         <TrendUp weight="bold" className="shrink-0" />

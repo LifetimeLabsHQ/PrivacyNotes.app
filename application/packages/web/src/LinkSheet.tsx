@@ -18,6 +18,7 @@ import { createPortal } from 'react-dom';
 import { isImeComposing } from './imeComposing';
 import { useTranslation } from 'react-i18next';
 import { useEscapeToClose } from './useEscapeToClose';
+import { useKeyboardRect } from './useKeyboardOpen';
 import { usePopoverPosition } from './usePopoverPosition';
 import { CloseButton } from './ui/Button';
 import { getMarkRange } from '@tiptap/core';
@@ -40,6 +41,7 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const urlRef = useRef<HTMLInputElement | null>(null);
   const pos = usePopoverPosition(!isMobile, anchorRef, sheetRef, { align: 'start', gap: 6 });
+  const keyboard = useKeyboardRect(isMobile);
 
   // Existing link attributes (if cursor is inside a link).
   const existingHref: string =
@@ -267,7 +269,9 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
   );
 
   if (isMobile) {
-    // Bottom sheet - fixed to viewport bottom, above keyboard.
+    // Bottom sheet. With no keyboard it sits on the viewport bottom. iOS draws
+    // the keyboard over the page instead of shrinking it, so while one is up
+    // the sheet's bottom edge goes to the top of the keyboard (GitHub #695).
     return (
       <>
         {/* Backdrop */}
@@ -278,7 +282,15 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
         {/* Sheet */}
         <div
           ref={sheetRef}
-          className="fixed bottom-0 inset-x-0 z-50 bg-surface-2 border-t border-divider rounded-t-xl px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]"
+          className={`fixed bottom-0 inset-x-0 z-50 bg-surface-2 border-t border-divider rounded-t-xl px-4 pt-3 ${
+            keyboard ? 'pb-4 overflow-y-auto' : 'pb-[max(1rem,env(safe-area-inset-bottom))]'
+          }`}
+          style={keyboard ? {
+            top: keyboard.top + keyboard.height,
+            bottom: 'auto',
+            transform: 'translateY(-100%)',
+            maxHeight: keyboard.height,
+          } : undefined}
           role="dialog"
           aria-label={isEditing ? t('editor:link.menuEdit') : t('editor:toolbar.addLink')}
         >

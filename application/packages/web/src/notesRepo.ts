@@ -8,6 +8,7 @@ import { changesContent } from './editStamp';
 import { recordLedgerWrite, type LedgerWrite } from './dayLedger';
 import { withoutSourceIdentity } from './schedule';
 import { storedHoldIds } from './massDelete';
+import { clipGraphemes } from './clipText';
 
 /**
  * Pure Dexie CRUD. No network, and no crypto of its own: wire
@@ -19,22 +20,29 @@ import { storedHoldIds } from './massDelete';
 /** Max characters allowed in a single tag. Prevents layout blowouts and abuse. */
 export const TAG_MAX_LENGTH = 30;
 
+/** The comma a keyboard types between tags: the Latin one, the Arabic one,
+ *  and the ideographic and full-width ones of the ja and zh keyboards. */
+export const TAG_COMMA = /[,،、，]/;
+/** A run of tag separators: any of those commas, or the hash of an inline tag. */
+export const TAG_SEPARATOR_RUN = /[,،、，#]+/;
+
 /**
  * Normalize a tag string: trim, strip leading #, remove control chars
- * and delimiters (comma, #), collapse whitespace, enforce length limit.
+ * and delimiters (the commas of every keyboard, #), collapse whitespace,
+ * enforce the length limit without cutting an emoji in half.
  * Preserves case and allows most printable characters (spaces, dots,
  * @, etc.) so tags from imports (Standard Notes, Obsidian) survive
  * without mangling.
  */
 export function normalizeTag(raw: string): string {
-  return raw
+  const clean = raw
     .trim()
     .replace(/^#+/, '')
-    .replace(/[,#]/g, '')           // strip delimiters
+    .split(TAG_SEPARATOR_RUN).join('') // strip delimiters
     .replace(/[\x00-\x1f\x7f]/g, '') // strip control chars
     .replace(/\s+/g, ' ')           // collapse whitespace runs
-    .trim()                          // re-trim after stripping
-    .slice(0, TAG_MAX_LENGTH);
+    .trim();                         // re-trim after stripping
+  return clipGraphemes(clean, TAG_MAX_LENGTH);
 }
 
 export { sortTags } from './tagOrder';

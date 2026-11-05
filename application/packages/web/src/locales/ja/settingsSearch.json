@@ -67,6 +67,7 @@
     "appearance_contentWidth": "列の幅, 幅, ワイド, 全幅, 余白, マージン",
     "appearance_editor": "Markdown, マークダウン, リッチテキスト, WYSIWYG, エディタモード, 編集モード",
     "appearance_defaultApps": "既定のアプリ, デフォルトアプリ, このアプリケーションで開く, ダブルクリック, finder, エクスプローラー, markdown, md, txt, テキストファイル",
+    "appearance_tray": "システムトレイ, タスクトレイ, トレイ, 通知領域, 最小化, 閉じる, バックグラウンド, バックグラウンドで実行, 常駐, タスクバー",
     "appearance_copyFormat": "コピー, クリップボード, プレーンテキスト, 貼り付け, チェックボックス",
     "appearance_pasteFormat": "貼り付け, ペースト, クリップボード, プレーンテキスト, 書式, 書式なし, スタイルに合わせる",
     "appearance_favicons": "ファビコン, サイトアイコン, ロゴ",

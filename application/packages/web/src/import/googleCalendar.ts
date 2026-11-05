@@ -67,12 +67,12 @@ async function readFiles(file: File): Promise<CalendarFile[]> {
   const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
   const isZip = head[0] === 0x50 && head[1] === 0x4b;
   if (!isZip) {
-    if (file.size > TOTAL_BYTES) throw new ImportTooLargeError('This calendar file is larger than 64 MB.');
+    if (file.size > TOTAL_BYTES) throw new ImportTooLargeError(msg('fileTooLarge'));
     return [{ name: file.name, bytes: new Uint8Array(await file.arrayBuffer()) }];
   }
   const zip = await JSZip.loadAsync(file);
   const entries = Object.values(zip.files).filter((e) => !e.dir && /\.ics$/i.test(e.name) && !e.name.split('/').some((s) => s.startsWith('__MACOSX')));
-  if (entries.length === 0) throw new Error('This .zip holds no .ics file. Use the .zip from Google Calendar > Settings > Import & export > Export, or one .ics file.');
+  if (entries.length === 0) throw new Error(msg('noIcs'));
   const out: CalendarFile[] = [];
   let left = TOTAL_BYTES;
   for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
@@ -231,6 +231,8 @@ const linkText = (v: string) => `<${safeUrl(v)}>`;
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+$/.test(v);
 const isWebLink = (v: string) => /^(https?:\/\/|mailto:)\S+$/i.test(v.trim());
 const label = (key: string) => i18n.t(`importExport:importCalendar.${key}`);
+const msg = (key: string, options?: Record<string, unknown>): string =>
+  i18n.t(`importExport:importLog.googleCalendar.${key}`, options);
 
 // ── Alerts ─────────────────────────────────────────────────────────
 
@@ -643,7 +645,7 @@ export function parseCalendarFiles(
     for (const cal of parseIcs(unfoldBytes(f.bytes))) {
       if (cal.type !== 'VCALENDAR') continue;
       components += 1 + cal.children.length;
-      if (components > ICS_LIMITS.components) throw new ImportTooLargeError(`The calendar files hold more than ${ICS_LIMITS.components} entries.`);
+      if (components > ICS_LIMITS.components) throw new ImportTooLargeError(msg('tooManyEntries', { max: ICS_LIMITS.components }));
       const events = cal.children.filter((c) => c.type === 'VEVENT');
       if (events.length === 0) {
         counts.emptyCalendars++;
@@ -653,7 +655,7 @@ export function parseCalendarFiles(
     }
   }
   if (calendars.length === 0 && counts.emptyCalendars === 0) {
-    throw new Error('Not a calendar file - expected BEGIN:VCALENDAR with events.');
+    throw new Error(msg('notCalendar'));
   }
 
   const { folders, dirToFolderId } = buildFolderTree(calendars.map((c) => c.name));
@@ -762,22 +764,21 @@ export function parseCalendarFiles(
 
   const warnings: string[] = [];
   const transforms: string[] = [];
-  const n = (k: number, one: string, many: string) => `${k} ${k === 1 ? one : many}`;
-  if (folders.length) transforms.push(`Each calendar became a folder (${n(folders.length, 'folder', 'folders')}).`);
-  if (counts.repeating) transforms.push(counts.repeating === 1 ? '1 repeating event keeps its rule.' : `${counts.repeating} repeating events keep their rule.`);
-  if (counts.alertsKept) transforms.push(`${n(counts.alertsKept, 'reminder', 'reminders')} kept.`);
-  if (counts.repaired) transforms.push(`Repaired garbled characters in ${n(counts.repaired, 'event', 'events')}.`);
-  if (counts.emptyCalendars) warnings.push(`${n(counts.emptyCalendars, 'calendar was', 'calendars were')} empty and skipped.`);
-  if (counts.cancelled) warnings.push(`${n(counts.cancelled, 'cancelled event was', 'cancelled events were')} skipped.`);
-  if (counts.declined) warnings.push(`${n(counts.declined, 'invitation you declined was', 'invitations you declined were')} skipped.`);
-  if (counts.noStart) warnings.push(`${n(counts.noStart, 'event has', 'events have')} no start and ${counts.noStart === 1 ? 'was' : 'were'} skipped.`);
-  if (counts.refusedRules) warnings.push(`${n(counts.refusedRules, 'repeat rule', 'repeat rules')} could not be kept: the first occurrence is imported and the rule is in the event's text.`);
-  if (counts.keptInZone) warnings.push(`${n(counts.keptInZone, 'monthly or yearly event keeps', 'monthly or yearly events keep')} the day and time of ${counts.keptInZone === 1 ? 'its' : 'their'} own time zone.`);
-  if (counts.drifting) warnings.push(`${n(counts.drifting, 'repeating event is', 'repeating events are')} set in a time zone that changes its clocks on other dates, so ${counts.drifting === 1 ? 'it' : 'they'} can be an hour off for part of the year.`);
-  if (counts.spansCut) warnings.push(`${n(counts.spansCut, 'event lasts', 'events last')} longer than a year: the end is in the text.`);
-  if (counts.alertsDropped) warnings.push(`${n(counts.alertsDropped, 'reminder', 'reminders')} could not be kept.`);
-  if (counts.comingWithoutAlert) warnings.push(`${n(counts.comingWithoutAlert, 'coming event has', 'coming events have')} no reminder in the file. Google leaves out reminders that come from a calendar's defaults.`);
-  if (counts.noUid) warnings.push(`${n(counts.noUid, 'event has', 'events have')} no id, so importing the file again adds ${counts.noUid === 1 ? 'it' : 'them'} again.`);
+  if (folders.length) transforms.push(msg('folders', { count: folders.length }));
+  if (counts.repeating) transforms.push(msg('repeating', { count: counts.repeating }));
+  if (counts.alertsKept) transforms.push(msg('alertsKept', { count: counts.alertsKept }));
+  if (counts.repaired) transforms.push(msg('repaired', { count: counts.repaired }));
+  if (counts.emptyCalendars) warnings.push(msg('emptyCalendars', { count: counts.emptyCalendars }));
+  if (counts.cancelled) warnings.push(msg('cancelled', { count: counts.cancelled }));
+  if (counts.declined) warnings.push(msg('declined', { count: counts.declined }));
+  if (counts.noStart) warnings.push(msg('noStart', { count: counts.noStart }));
+  if (counts.refusedRules) warnings.push(msg('refusedRules', { count: counts.refusedRules }));
+  if (counts.keptInZone) warnings.push(msg('keptInZone', { count: counts.keptInZone }));
+  if (counts.drifting) warnings.push(msg('drifting', { count: counts.drifting }));
+  if (counts.spansCut) warnings.push(msg('spansCut', { count: counts.spansCut }));
+  if (counts.alertsDropped) warnings.push(msg('alertsDropped', { count: counts.alertsDropped }));
+  if (counts.comingWithoutAlert) warnings.push(msg('comingWithoutAlert', { count: counts.comingWithoutAlert }));
+  if (counts.noUid) warnings.push(msg('noUid', { count: counts.noUid }));
 
   const uniqueTags = new Set(notes.flatMap((x) => x.tags));
   return {
@@ -796,8 +797,8 @@ export function parseCalendarFiles(
 }
 
 export async function parseGoogleCalendar(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
-  onProgress?.('Reading calendar…');
+  onProgress?.(msg('readingCalendar'));
   const files = await readFiles(file);
-  onProgress?.('Reading events…');
+  onProgress?.(msg('readingEvents'));
   return parseCalendarFiles(files);
 }

@@ -972,8 +972,20 @@ export const FX_CSS = `
 .pn-fx-ninja-caret{animation:pn-ninja-blink 1s steps(1) infinite}
 .pn-seen{display:block;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
 .pn-seen:hover,.pn-seen:focus-visible{transform:translateY(-4px) scale(1.06)}
-.pn-receipt-wrap{filter:drop-shadow(0 1px 1px rgba(0,0,0,.08)) drop-shadow(0 6px 14px rgba(0,0,0,.08));transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
-.pn-receipt-wrap:hover{transform:rotate(0deg)}
+.pn-receipt-wrap{filter:drop-shadow(0 1px 1px rgba(0,0,0,.08)) drop-shadow(0 6px 14px rgba(0,0,0,.08));transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.pn-receipt-wrap[data-cancelled]{transform:rotate(0deg) translateY(-3px)}
+.pn-receipt-line{position:relative;animation:pn-print .32s cubic-bezier(.22,1,.36,1) both;transition:color .2s ease calc(var(--i)*70ms)}
+.pn-receipt-line::after{content:"";position:absolute;inset-inline:-3px;top:52%;height:2px;border-radius:1px;background:var(--wl-cost);transform:scaleX(0);transform-origin:left;transition:transform .16s ease-out calc(var(--i)*70ms)}
+[dir=rtl] .pn-receipt-line::after{transform-origin:right}
+.pn-receipt-wrap[data-cancelled] .pn-receipt-line{color:var(--wl-muted)}
+.pn-receipt-wrap[data-cancelled] .pn-receipt-line::after{transform:scaleX(1)}
+.pn-receipt-total,.pn-receipt-total-sum{transition:background-color .3s ease,color .3s ease}
+.pn-receipt-wrap[data-cancelled] .pn-receipt-total{background:var(--wl-tint-green);transition-delay:var(--settle)}
+.pn-receipt-wrap[data-cancelled] .pn-receipt-total-sum{color:var(--wl-emerald);transition-delay:var(--settle)}
+.pn-receipt-stamp{position:absolute;inset-inline:0;top:38%;display:flex;justify-content:center;pointer-events:none}
+.pn-receipt-stamp>span{color:var(--wl-emerald);border:3px double currentColor;border-radius:6px;padding:3px 12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;background:color-mix(in srgb,var(--wl-paper) 70%,transparent);opacity:0;transform:rotate(-14deg) scale(2.4);transition:transform .2s cubic-bezier(.34,1.56,.64,1),opacity .12s}
+.pn-receipt-wrap[data-cancelled] .pn-receipt-stamp>span{opacity:.92;transform:rotate(-10deg) scale(1);transition-delay:var(--settle)}
+@keyframes pn-print{from{opacity:0;max-height:0;transform:translateY(-6px)}to{opacity:1;max-height:2em}}
 .pn-receipt{position:relative;margin-bottom:9px}
 .pn-receipt::after{content:"";position:absolute;inset-inline:0;top:100%;height:9px;background:linear-gradient(135deg,var(--wl-paper) 50%,transparent 50%) 0 0/14px 9px repeat-x,linear-gradient(225deg,var(--wl-paper) 50%,transparent 50%) 0 0/14px 9px repeat-x}
 .pn-receipt-code{background:repeating-linear-gradient(90deg,var(--wl-ink) 0 2px,transparent 2px 4px,var(--wl-ink) 4px 5px,transparent 5px 8px,var(--wl-ink) 8px 11px,transparent 11px 13px);opacity:.75}
@@ -1019,7 +1031,7 @@ export const FX_CSS = `
    halves of those rules (the gradient, the scanlines) stay; they cost one
    paint, not a frame budget. */
 @media (hover:none){.pn-fx-conic-btn:hover,.group:hover .pn-fx-conic-btn,.pn-fx-conic-tile:hover,.pn-fx-ants:hover,.pn-fx-cal:hover .pn-fx-cal-bell{animation:none!important}}
-@media (prefers-reduced-motion:reduce){.pn-sticky,.pn-fx-conic-btn,.pn-fx-conic-tile,.pn-fx-popmix>span,.pn-fx-shake:hover,.pn-fx-slab,.pn-fx-stamp::after,.pn-fx-peek,.pn-fx-peek::after,.pn-fx-rank-bar,.pn-fx-next-arrow,.pn-fx-dose-dot,.pn-fx-hand-chip,.pn-fx-type:hover .pn-fx-icons svg,.pn-fx-ants:hover,.pn-fx-seal-chip,.pn-fx-fill,.pn-fx-cal-pill,.pn-fx-cal-bell,.pn-fx-meds-cap,.pn-fx-meds-fill,.pn-fx-meds-due,.pn-fx-meds-done,.pn-fx-meds-next,.pn-fx-meds-row,.pn-fx-meds-ring,.pn-fx-meds-ring svg,.pn-fx-meds-seg,.pn-fx-ninja-caret,.pn-seen,.pn-hero-in,.pn-hero-totp,.pn-hero-mood-line,.pn-hero-mood-area,.pn-hero-mood-dot,.pn-hero-mood-pulse{animation:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){.pn-sticky,.pn-fx-conic-btn,.pn-fx-conic-tile,.pn-fx-popmix>span,.pn-fx-shake:hover,.pn-fx-slab,.pn-fx-stamp::after,.pn-fx-peek,.pn-fx-peek::after,.pn-fx-rank-bar,.pn-fx-next-arrow,.pn-fx-dose-dot,.pn-fx-hand-chip,.pn-fx-type:hover .pn-fx-icons svg,.pn-fx-ants:hover,.pn-fx-seal-chip,.pn-fx-fill,.pn-fx-cal-pill,.pn-fx-cal-bell,.pn-fx-meds-cap,.pn-fx-meds-fill,.pn-fx-meds-due,.pn-fx-meds-done,.pn-fx-meds-next,.pn-fx-meds-row,.pn-fx-meds-ring,.pn-fx-meds-ring svg,.pn-fx-meds-seg,.pn-fx-ninja-caret,.pn-seen,.pn-receipt-wrap,.pn-receipt-line,.pn-receipt-line::after,.pn-receipt-total,.pn-receipt-total-sum,.pn-receipt-stamp>span,.pn-hero-in,.pn-hero-totp,.pn-hero-mood-line,.pn-hero-mood-area,.pn-hero-mood-dot,.pn-hero-mood-pulse{animation:none!important;transition:none!important}}
 `;
 
 export function LandingPage({
@@ -2551,7 +2563,7 @@ export function LandingPage({
           <h2 className="text-display-2 sm:text-display-4 font-black tracking-tight text-[var(--wl-ink)] mb-6">
             {priceMath.heading}
           </h2>
-          <div className="pn-fx-slab rounded-2xl border-2 border-[var(--wl-edge)] overflow-hidden text-body">
+          <div className="rounded-2xl border-2 border-[var(--wl-edge)] overflow-hidden text-body">
             {priceMath.picker}
             <div className="grid border-t border-[var(--wl-line)] lg:grid-cols-2">
             {priceMath.result}

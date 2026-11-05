@@ -391,6 +391,7 @@
     "receiptCount_one": "{{count}} abonnement",
     "receiptCount_other": "{{count}} abonnements",
     "receiptRenews": "Renouvelé chaque année",
+    "receiptStamp": "Résilié",
     "perYear": "Total par an",
     "keepLabel": "Tu économises",
     "keepLine_one": "en {{count}} an, même si tu achètes Pro.",

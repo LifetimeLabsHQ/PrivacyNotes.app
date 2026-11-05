@@ -680,7 +680,11 @@ export function useSyncOrchestrator({
       if (!pe || pe.count === 0) {
         pushErrorsDismissedKey.current = null;
       }
-      setPushErrors(passErrors);
+      // A failure that repeats every pass keeps the same object, or each
+      // retry renders the whole view again (issue #643).
+      setPushErrors((prev) =>
+        prev && pe && prev.count === pe.count && prev.lastMessage === pe.lastMessage ? prev : passErrors,
+      );
       if (passRan) recordPassPushFailures(passFailures, Date.now(), passHalt);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

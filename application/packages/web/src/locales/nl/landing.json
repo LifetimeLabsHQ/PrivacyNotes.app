@@ -391,6 +391,7 @@
     "receiptCount_one": "{{count}} abonnement",
     "receiptCount_other": "{{count}} abonnementen",
     "receiptRenews": "Wordt elk jaar verlengd",
+    "receiptStamp": "Opgezegd",
     "perYear": "Totaal per jaar",
     "keepLabel": "Je bespaart",
     "keepLine_one": "in {{count}} jaar, zelfs als je Pro koopt.",

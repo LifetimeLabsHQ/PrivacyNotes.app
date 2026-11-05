@@ -187,6 +187,8 @@ export function ContextMenu({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
+  /** What had the focus when the keyboard opened the menu. */
+  const openerRef = useRef<HTMLElement | null>(null);
   // Outlives the listener effect below, which runs again on every render.
   const keyboardMovedAt = useRef(-Infinity);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
@@ -225,12 +227,22 @@ export function ContextMenu({
     if (!state) {
       setActiveIdx(-1);
       setPos(null);
+      // The focus goes back to where the keyboard opened the menu, unless the
+      // chosen row moved it on (a field, a window).
+      const opener = openerRef.current;
+      openerRef.current = null;
+      const now = document.activeElement;
+      if (opener?.isConnected && (!now || now === document.body || ref.current?.contains(now))) opener.focus({ preventScroll: true });
       return;
     }
     setActiveIdx(state.keyboard ? state.items.findIndex((it) => isSelectable(it) && !it.disabled) : -1);
     // Opened from the keyboard, the menu takes the focus, so Enter and the
     // arrows reach it and not the editor behind it.
-    if (state.keyboard) ref.current?.focus({ preventScroll: true });
+    if (state.keyboard) {
+      const now = document.activeElement;
+      if (now instanceof HTMLElement && !ref.current?.contains(now)) openerRef.current = now;
+      ref.current?.focus({ preventScroll: true });
+    }
     place(state);
   }, [state]);
 

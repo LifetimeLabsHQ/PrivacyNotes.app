@@ -7,7 +7,10 @@ import { addToContactMatchIndex, contactMatches, emptyContactMatchIndex } from '
 import { SOURCE_IDENTITY_KEY } from '../schedule';
 import { normalizeJournalTrackers } from '../trackerTypes';
 import { compareStamps } from '../noteMerge';
+import i18n from '../i18n';
 import type { ApplyResult, ImportedNote, ParsedImport, StagedBlob } from './types';
+
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.apply.${key}`, options);
 
 /**
  * Write a ParsedImport into the local Dexie store with dirty=1, so the next
@@ -300,7 +303,7 @@ export async function applyImport(
     errors.push(
       err instanceof Error
         ? err.message
-        : 'Unknown error while writing to local database.'
+        : msg('unknownWriteError')
     );
     return { imported: 0, errors, noteIds: [] };
   }

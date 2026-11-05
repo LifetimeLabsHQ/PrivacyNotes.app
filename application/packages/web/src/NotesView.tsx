@@ -367,6 +367,7 @@ import TasksList from './TasksList';
 import { offersDesktopApp, peekPendingShortcut, setShortcutOpener, shortcutNoun, shortcutUrl, takePendingShortcut, type ShortcutTarget } from './noteShortcut';
 import { useShortcutDeepLinks } from './useShortcutDeepLinks';
 import { takeLegacyImportDismissal } from './ImportPrompt';
+import { TRAY_SETTINGS_EVENT } from './trayMode';
 
 /** Does a plain note created from this pillar land somewhere the user can see
  *  it? A pillar that answers `false` renders something other than the notes
@@ -1392,7 +1393,12 @@ function AuthenticatedView({
       );
       setFirstSyncDone(true);
     })();
-  }, [refresh, runSync]);
+    // Once per mount. runSync gets a new identity whenever the auth context
+    // renders (about once a minute), and with it in the deps every one of
+    // those re-read the whole vault into new arrays, which old renders then
+    // kept alive: memory grew all day (issue #643).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // iOS standalone web apps can have their IndexedDB connection severed
   // while backgrounded; on resume the content area would otherwise stay
@@ -1612,6 +1618,12 @@ function AuthenticatedView({
     setSettingsCategory('design');
     setSettingsRow({ id: 'appearance.tintNotes' });
     setShowSettings(true);
+  }, []);
+  // Settings in the desktop tray menu (trayMode.ts).
+  useEffect(() => {
+    const open = () => setShowSettings(true);
+    window.addEventListener(TRAY_SETTINGS_EVENT, open);
+    return () => window.removeEventListener(TRAY_SETTINGS_EVENT, open);
   }, []);
   // The note whose icon picker is open. Icons are Pro; a note's color is free.
   const [noteIconId, setNoteIconId] = useState<string | null>(null);
@@ -2285,7 +2297,9 @@ function AuthenticatedView({
       void fetchQuotaUsage(supabase, auth.isPro ?? false).then((q) => {
         if (stale) return;
         quotaRef.current = { usedBytes: q.totalBytes + q.imageBytes, maxBytes: q.maxTotalBytes };
-        setViewQuota(q);
+        // The same numbers keep the same object, or this minute poll renders
+        // the whole view again (issue #643).
+        setViewQuota((prev) => (JSON.stringify(prev) === JSON.stringify(q) ? prev : q));
       }).catch(() => { /* retain the last successful quota */ }).finally(() => { busy = false; });
     };
     window.addEventListener('focus', readQuota);

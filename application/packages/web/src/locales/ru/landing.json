@@ -389,6 +389,7 @@
     "receipt": "Ваш счёт",
     "receiptCount_one": "{{count}} подписка",
     "receiptRenews": "Продлевается каждый год",
+    "receiptStamp": "Отменено",
     "perYear": "Итого за год",
     "keepLabel": "Вы экономите",
     "keepLine_one": "за {{count}} год, даже если купите Pro.",

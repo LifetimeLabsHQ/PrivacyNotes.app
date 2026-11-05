@@ -60,6 +60,7 @@ import {
   emptyContact,
   type Contact,
 } from '../contactBody';
+import i18n from '../i18n';
 import { sniffImageFormat } from '../imageMetadata';
 import { normalizeTag } from '../notesRepo';
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
@@ -767,12 +768,10 @@ function unfold(raw: string): { lines: string[]; orphans: number } {
   return { lines, orphans };
 }
 
-function count(n: number, singular: string, plural: string): string {
-  return `${n} ${n === 1 ? singular : plural}`;
-}
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.vcard.${key}`, options);
 
 export async function parseVcard(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
-  onProgress?.('Reading file…');
+  onProgress?.(i18n.t('importExport:status.readingFile'));
   const { lines, orphans } = unfold(fileBytes(new Uint8Array(await file.arrayBuffer())));
 
   // Cards, as raw lines. A card that never closes ends with the file.
@@ -797,7 +796,7 @@ export async function parseVcard(file: File, onProgress?: (msg: string) => void)
   }
   if (current) cards.push(current);
   if (cards.length === 0) {
-    throw new Error('Not a vCard file - expected at least one BEGIN:VCARD.');
+    throw new Error(msg('notVcard'));
   }
 
   const now = new Date().toISOString();
@@ -828,26 +827,26 @@ export async function parseVcard(file: File, onProgress?: (msg: string) => void)
       updatedAt: stamp,
       type: 'contact',
     });
-    if ((i + 1) % 200 === 0) onProgress?.(`Reading contacts… ${i + 1} of ${cards.length}`);
+    if ((i + 1) % 200 === 0) onProgress?.(msg('readingContacts', { current: i + 1, total: cards.length }));
   }
 
   const warnings: string[] = [];
   if (unread > 0) {
-    warnings.push(`${count(unread, 'line', 'lines')} could not be read and ${unread === 1 ? 'was' : 'were'} skipped.`);
+    warnings.push(msg('unreadLines', { count: unread }));
   }
   if (sink.failed > 0) {
     warnings.push(
-      `${count(sink.failed, 'photo', 'photos')} could not be decoded and ${sink.failed === 1 ? 'was' : 'were'} left out.`,
+      msg('photosFailed', { count: sink.failed }),
     );
   }
   if (sink.links > 0) {
     warnings.push(
-      `${count(sink.links, 'photo was a web link', 'photos were web links')}, not a picture. Nothing was downloaded; the link stays with the contact.`,
+      msg('photoLinks', { count: sink.links }),
     );
   }
   const transforms: string[] = [];
   if (sink.decoded > 0) {
-    transforms.push(`${count(sink.decoded, 'contact photo', 'contact photos')} decoded from the file.`);
+    transforms.push(msg('photosDecoded', { count: sink.decoded }));
   }
 
   return {

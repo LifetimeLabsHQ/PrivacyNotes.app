@@ -43,6 +43,7 @@ import { CALLOUT_BY_TYPE, canonicalCalloutType, type CalloutType } from './callo
 import { KanbanBoardView, KanbanColumnView, type KanbanOptions } from './KanbanBoard';
 import { BlockGrip } from './BlockGrip';
 import { isBoard, isColumn, kanbanNormalizePlugin } from './kanban';
+import { calloutSuggestion } from './CalloutSuggestion';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -562,6 +563,8 @@ export const Callout = Node.create<KanbanOptions>({
     return [
       new Plugin({ key: new PluginKey('calloutCopy'), props: { transformCopied: unwrapUntitledCallout } }),
       kanbanNormalizePlugin(),
+      // `[!` at the start of an empty line opens the type grid (#680).
+      calloutSuggestion(this.editor),
     ];
   },
 

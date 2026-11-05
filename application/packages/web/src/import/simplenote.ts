@@ -2,7 +2,11 @@ import JSZip from 'jszip';
 import { zipEntryText } from './zipEntry';
 import { normalizeTag } from '../notesRepo';
 import { linkifyMarkdown } from './linkify';
+import i18n from '../i18n';
 import type { Importer, ImportedNote, ParsedImport } from './types';
+
+const msg = (key: string, options?: Record<string, unknown>): string =>
+  i18n.t(`importExport:importLog.simplenote.${key}`, options);
 
 /**
  * Simplenote import adapter.
@@ -65,29 +69,25 @@ export const simplenoteImporter: Importer = {
   sourceTag: 'simplenote',
 
   async parse(file, onProgress) {
-    onProgress?.('Reading file…');
+    onProgress?.(i18n.t('importExport:status.readingFile'));
     const jsonText = await extractNotesJson(file, onProgress);
 
-    onProgress?.('Parsing JSON…');
+    onProgress?.(i18n.t('importExport:importLog.shared.parsingJson'));
     let data: SnExport;
     try {
       data = JSON.parse(jsonText) as SnExport;
     } catch {
-      throw new Error(
-        'That file is not valid JSON. Make sure you picked the Simplenote export zip or its notes.json file.'
-      );
+      throw new Error(msg('invalidJson'));
     }
 
     const active = Array.isArray(data?.activeNotes) ? data.activeNotes : [];
     const trashed = Array.isArray(data?.trashedNotes) ? data.trashedNotes : [];
 
     if (active.length === 0 && trashed.length === 0) {
-      throw new Error(
-        'No notes found. Expected a Simplenote export with "activeNotes" and/or "trashedNotes" arrays.'
-      );
+      throw new Error(msg('noNotes'));
     }
 
-    onProgress?.('Building notes…');
+    onProgress?.(i18n.t('importExport:importLog.shared.buildingNotes'));
     const notes: ImportedNote[] = [];
     const warnings: string[] = [];
 
@@ -180,36 +180,24 @@ export const simplenoteImporter: Importer = {
     // Transforms (accent-colored, positive).
     const transforms: string[] = [];
     if (linkifiedCount > 0) {
-      transforms.push(
-        `Made URLs clickable in ${linkifiedCount} note${linkifiedCount === 1 ? '' : 's'}.`
-      );
+      transforms.push(i18n.t('importExport:importLog.shared.linkifiedNotes', { count: linkifiedCount }));
     }
     if (starredCount > 0) {
-      transforms.push(
-        `Kept ${starredCount} pinned note${starredCount === 1 ? '' : 's'} as starred.`
-      );
+      transforms.push(i18n.t('importExport:importLog.shared.keptStarred', { count: starredCount }));
     }
     if (trashedImportCount > 0) {
-      transforms.push(
-        `Restored ${trashedImportCount} trashed note${trashedImportCount === 1 ? '' : 's'} into the trash.`
-      );
+      transforms.push(i18n.t('importExport:importLog.shared.restoredTrashed', { count: trashedImportCount }));
     }
     if (markdownCount > 0) {
-      transforms.push(
-        `${markdownCount} note${markdownCount === 1 ? '' : 's'} had Simplenote's markdown mode enabled.`
-      );
+      transforms.push(msg('markdownMode', { count: markdownCount }));
     }
 
     // Warnings (amber-colored, potential issues).
     if (blankGhostCount > 0) {
-      warnings.push(
-        `Skipped ${blankGhostCount} blank note${blankGhostCount === 1 ? '' : 's'} with no content.`
-      );
+      warnings.push(msg('blank', { count: blankGhostCount }));
     }
     if (collaboratorCount > 0) {
-      warnings.push(
-        `${collaboratorCount} note${collaboratorCount === 1 ? '' : 's'} had collaborators. Sharing info was not imported (PrivacyNotes has no collaboration feature).`
-      );
+      warnings.push(msg('collaborators', { count: collaboratorCount }));
     }
 
     const uniqueTags = new Set<string>();
@@ -242,7 +230,7 @@ async function extractNotesJson(
   const lowerName = file.name.toLowerCase();
 
   if (lowerName.endsWith('.zip')) {
-    onProgress?.('Unzipping…');
+    onProgress?.(i18n.t('importExport:importLog.shared.unzipping'));
     const zip = await JSZip.loadAsync(file);
 
     // Look for source/notes.json first (official export structure).
@@ -258,9 +246,7 @@ async function extractNotesJson(
     }
 
     if (!entry) {
-      throw new Error(
-        'This zip doesn\'t contain a "source/notes.json" file. Make sure you picked the Simplenote export zip.'
-      );
+      throw new Error(msg('noNotesJson'));
     }
     return zipEntryText(entry);
   }

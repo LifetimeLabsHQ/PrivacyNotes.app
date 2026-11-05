@@ -391,6 +391,7 @@
     "receiptCount_one": "{{count}} subscription",
     "receiptCount_other": "{{count}} subscriptions",
     "receiptRenews": "Renews every year",
+    "receiptStamp": "Cancelled",
     "perYear": "Total per year",
     "keepLabel": "You save",
     "keepLine_one": "in {{count}} year, even if you buy Pro.",

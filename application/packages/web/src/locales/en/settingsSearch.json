@@ -68,6 +68,7 @@
     "appearance_contentWidth": "column width, wide, full width, margins",
     "appearance_editor": "markdown, rich text, wysiwyg, editor mode",
     "appearance_defaultApps": "default app, open with, double-click, finder, file explorer, markdown, md, txt, text file",
+    "appearance_tray": "tray, system tray, notification area, minimize, close, background, run in background, taskbar",
     "appearance_copyFormat": "copy, clipboard, plain text, paste, checkbox",
     "appearance_pasteFormat": "paste, clipboard, plain text, formatting, unformatted, match style",
     "appearance_favicons": "favicon, site icons, logos",

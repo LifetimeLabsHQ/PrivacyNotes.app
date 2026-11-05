@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import type { LocalNote } from '../db';
 import { CaretLeft, CaretRight } from '../icons';
 import { MoodMark } from '../moodMark';
-import { formatDay, weekdayLabel } from '../intlFormat';
+import { formatDay, weekdayDate, weekdayLabel } from '../intlFormat';
+import { weekdayOf } from '../schedule';
 import { toLocalIso } from '../notesViewUtils';
 import { FIELD_CLASS, IconButton } from '../ui';
 import { visibleInUi } from '../trackerRegistry';
@@ -70,7 +71,7 @@ export function WeekRecap({ model, notes, reflection, onReflectionChange, bare =
   const logged = moods.filter((m) => m.v !== null);
   const best = logged.length >= 2 ? logged.reduce((a, b) => (b.v! > a.v! ? b : a)) : null;
   const worst = logged.length >= 2 ? logged.reduce((a, b) => (b.v! < a.v! ? b : a)) : null;
-  const dayName = (day: string) => weekdayLabel(new Date(`${day}T12:00:00`), 'long');
+  const dayName = (day: string) => weekdayLabel(weekdayDate(weekdayOf(day)), 'long');
 
   // The numeric trackers whose weekly average moved most against the week before, as a share of each one's spread.
   const changes = useMemo(() => {
@@ -118,7 +119,7 @@ export function WeekRecap({ model, notes, reflection, onReflectionChange, bare =
         {moods.map(({ day, v }) => (
           <div key={day} className="flex flex-col items-center gap-1">
             {v !== null ? <MoodMark mood={v} size={30} /> : <span className={`w-[30px] h-[30px] rounded-md ${day > today ? '' : 'border border-dashed border-divider'}`} />}
-            <span className="text-meta text-pn-muted">{weekdayLabel(new Date(`${day}T12:00:00`), 'narrow')}</span>
+            <span className="text-meta text-pn-muted">{weekdayLabel(weekdayDate(weekdayOf(day)), 'narrow')}</span>
           </div>
         ))}
       </div>

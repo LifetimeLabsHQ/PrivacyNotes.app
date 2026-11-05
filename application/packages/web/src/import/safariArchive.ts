@@ -14,7 +14,10 @@
  */
 
 import JSZip from 'jszip';
+import i18n from '../i18n';
 import { zipEntryText } from './zipEntry';
+
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.safariArchive.${key}`, options);
 
 /** Directories, hidden files and the junk a Mac leaves in a zip. */
 function isJunk(path: string): boolean {
@@ -34,13 +37,11 @@ export async function readArchiveEntry(file: File, want: string, ext: RegExp): P
     ([path, entry]) => !entry.dir && !isJunk(path) && ext.test(path)
   );
   if (candidates.length === 0) {
-    throw new Error(`No ${want} inside this zip.`);
+    throw new Error(msg('noEntry', { want }));
   }
   const named = candidates.find(([path]) => (path.split('/').pop() ?? '').toLowerCase() === want.toLowerCase());
   if (!named && candidates.length > 1) {
-    throw new Error(
-      `This zip holds more than one file that could be it, and none is named ${want}. Unzip it and drop ${want} in on its own.`
-    );
+    throw new Error(msg('ambiguous', { want }));
   }
   return zipEntryText((named ?? candidates[0]!)[1]);
 }

@@ -39,6 +39,17 @@ export function parseCardBody(body: string): CardData {
   }
 }
 
+/**
+ * The stored expiry year as a full year, or null when it is not two or four
+ * digits. The form stores two digits; the welcome card, the Bitwarden importer
+ * and a card from the extension store four, so every reader goes through here.
+ */
+export function cardExpiryYear(expYear: string): number | null {
+  const digits = expYear.trim();
+  if (!/^(\d{2}|\d{4})$/.test(digits)) return null;
+  return digits.length === 2 ? 2000 + Number(digits) : Number(digits);
+}
+
 /** `previous` is the stored body; keys a newer version wrote in it are kept. */
 export function serializeCardBody(data: CardData, previous = ''): string {
   return JSON.stringify({ ...storedVaultKeys(previous), ...data });

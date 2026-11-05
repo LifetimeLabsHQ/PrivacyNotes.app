@@ -21,6 +21,7 @@
  */
 
 import type { LocalNote } from './db';
+import { clipGraphemes } from './clipText';
 
 export interface FolderDef {
   id: string;
@@ -170,7 +171,7 @@ export const UNFILED_ID = '__unfiled__';
 
 /** Trim + collapse whitespace + cap length. Returns '' when unusable. */
 export function normalizeFolderName(raw: string): string {
-  return raw.trim().replace(/\s+/g, ' ').slice(0, FOLDER_NAME_MAX_LENGTH);
+  return clipGraphemes(raw.trim().replace(/\s+/g, ' '), FOLDER_NAME_MAX_LENGTH);
 }
 
 /**

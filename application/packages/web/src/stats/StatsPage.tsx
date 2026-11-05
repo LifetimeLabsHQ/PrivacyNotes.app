@@ -23,10 +23,10 @@ import { WeekRecap } from './WeekRecap';
 import { YearInPixels } from './YearInPixels';
 import { cardNumbers, chartSpecFor } from './TrackerCard';
 import { buildWellnessModel, formatDelta, formatNumber, hasData, standoutLabel, trackerName, type WellnessModel } from './wellnessModel';
-import { DayCalendar, EffectBarRow, MoodMix, StatPill, SureDots, TONE_TEXT, TrackerPill, TrackerTile, WeekdayChart, changeTone, weekdayAverages } from './statsParts';
+import { DayCalendar, EffectBarRow, MoodMix, StatPill, SureDots, TONE_TEXT, TrackerPill, TrackerTile, WEEK_ORDER, WeekdayChart, changeTone, weekdayAverages } from './statsParts';
 import { MoodMark } from '../moodMark';
 import { moodWord } from '../checkIn';
-import { formatDay, weekdayLabel } from '../intlFormat';
+import { formatDay, weekdayDate, weekdayLabel } from '../intlFormat';
 import { RANGE_IDS, readWellnessRange, savedWellnessRange, writeWellnessRange } from './wellnessRange';
 
 /** What the page shows: the one list, one tracker, or the medications. */
@@ -315,7 +315,7 @@ function YourWeek({ model }: { model: WellnessModel }) {
   if (known.length < 7) return null;
   const best = known.reduce((a, b) => (b.v > a.v ? b : a));
   const worst = known.reduce((a, b) => (b.v < a.v ? b : a));
-  const day = (i: number) => weekdayLabel(new Date(2024, 0, 1 + i, 12), 'long');
+  const day = (i: number) => weekdayLabel(weekdayDate(WEEK_ORDER[i]!), 'long');
   return (
     <div>
       <div className="flex items-center justify-between gap-2 mb-2">

@@ -399,6 +399,7 @@
     "receiptCount_many": "{{count}} اشتراكًا",
     "receiptCount_other": "{{count}} اشتراك",
     "receiptRenews": "يتجدد كل سنة",
+    "receiptStamp": "ملغاة",
     "perYear": "المجموع في السنة",
     "keepLabel": "توفّر",
     "keepLine_zero": "على مدى {{count}} سنوات، حتى لو اشتريت Pro.",

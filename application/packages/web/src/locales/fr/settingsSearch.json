@@ -68,6 +68,7 @@
     "appearance_contentWidth": "largeur de colonne, large, pleine largeur, marges",
     "appearance_editor": "Markdown, texte enrichi, WYSIWYG, mode d’édition, éditeur",
     "appearance_defaultApps": "app par défaut, ouvrir avec, double-clic, Finder, Explorateur de fichiers, markdown, md, txt, fichier texte",
+    "appearance_tray": "zone de notification, barre d'état système, tray, réduire, fermer, arrière-plan, exécuter en arrière-plan, barre des tâches",
     "appearance_copyFormat": "copier, presse-papiers, texte brut, coller, case à cocher",
     "appearance_pasteFormat": "coller, presse-papiers, texte brut, mise en forme, sans mise en forme, conserver le style",
     "appearance_favicons": "favicon, icônes de site, logos",

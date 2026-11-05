@@ -20,6 +20,7 @@ import { shouldPromptForAppLock, markAppUnlocked, clearPinUnlock, hasPin } from 
 import { clearPin, phraseMatches } from './pinRecovery';
 import { phraseOwnsThisDevice, switchWouldWipe } from './authStorage';
 import { clearManualLock, lockCurtainIsStale, manualLockArmed, startReLockWatch } from './appReLock';
+import { startTrayMode } from './trayMode';
 import { applyPrivacyScreen } from './privacyScreen';
 import { loadLocalSettings, saveLocalSettings } from './userSettings';
 import { hasStoredSession, isTrustedDevice } from './trustStorage';
@@ -297,6 +298,11 @@ export default function App() {
     applyPrivacyScreen(loadLocalSettings().appLockEnabled);
   }, []);
 
+  // Keep running in the tray: push the stored switch to the desktop shell.
+  useEffect(() => {
+    startTrayMode();
+  }, []);
+
   // Re-lock after the idle window the user picked. Armed only while the app is
   // open and signed in: locking a lock screen is a no-op, and locking a
   // half-booted session would fight the boot check above. The watch itself
@@ -305,6 +311,18 @@ export default function App() {
   useEffect(() => {
     if (locked || auth.status !== 'authenticated') return;
     return startReLockWatch(() => setLocked(true));
+  }, [locked, auth.status]);
+
+  // The lock screen replaces the notes view and its reminder timer: ring the
+  // view's last plan from here while the lock is up (GitHub #667). A dynamic
+  // import keeps it off the boot path; a plan exists only after the notes
+  // view ran, and that view loaded the module already.
+  useEffect(() => {
+    if (!locked || auth.status !== 'authenticated') return;
+    let stop: (() => void) | null = null;
+    let gone = false;
+    void import('./notesView/useReminders').then((m) => { if (!gone) stop = m.ringWhileLocked(); });
+    return () => { gone = true; stop?.(); };
   }, [locked, auth.status]);
 
   // A locked app shuts the PIN gate behind it, so the person who unlocks the

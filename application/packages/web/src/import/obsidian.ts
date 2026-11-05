@@ -7,9 +7,14 @@ import { ATTACHMENT_EXT, isBlobReferenced, mimeFromExt } from './blobImport';
 import { buildFolderTree, commonRootPrefix } from './folderImport';
 import { linkifyMarkdown } from './linkify';
 import { detailsToFold } from './detailsFold';
+import { parseFrontMatterDate } from './markdown';
 import { noteLinkTarget } from '../noteLinks';
+import i18n from '../i18n';
 import { isUntitledStem } from '../exportNames';
 import type { ImportedNote, ParsedImport } from './types';
+
+const msg = (key: string, options?: Record<string, unknown>): string =>
+  i18n.t(`importExport:importLog.obsidian.${key}`, options);
 
 /**
  * Obsidian vault importer.
@@ -84,9 +89,9 @@ function parseFrontMatter(content: string): {
         if (first) title = first;
       }
     } else if (key === 'created' || key === 'date' || key === 'date created') {
-      if (rawVal && !isNaN(Date.parse(rawVal))) createdAt = rawVal;
+      createdAt = parseFrontMatterDate(rawVal) ?? createdAt;
     } else if (key === 'updated' || key === 'modified' || key === 'date modified') {
-      if (rawVal && !isNaN(Date.parse(rawVal))) updatedAt = rawVal;
+      updatedAt = parseFrontMatterDate(rawVal) ?? updatedAt;
     }
   }
 
@@ -275,7 +280,7 @@ async function parseZip(
   folders: FolderDef[];
   blobs: Map<string, { data: Uint8Array; mime: string; name: string }>;
 }> {
-  onProgress?.('Reading zip...');
+  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
   const buf = await file.arrayBuffer();
   const zip = await JSZip.loadAsync(buf);
 
@@ -301,9 +306,7 @@ async function parseZip(
     }
   });
 
-  onProgress?.(
-    `Found ${mdFiles.length} note${mdFiles.length === 1 ? '' : 's'}...`
-  );
+  onProgress?.(i18n.t('importExport:importLog.shared.foundNotes', { count: mdFiles.length }));
 
   // Rebuild the vault's subfolder structure as a real folder tree. Each
   // note's folderId points at the deepest folder created for its path.
@@ -325,7 +328,7 @@ async function parseZip(
     }
     notes.push(note);
     if ((i + 1) % 50 === 0) {
-      onProgress?.(`Parsed ${i + 1} of ${mdFiles.length}...`);
+      onProgress?.(i18n.t('importExport:importLog.shared.parsed', { done: i + 1, total: mdFiles.length }));
     }
   }
 
@@ -344,7 +347,7 @@ async function parseZip(
       continue;
     }
     if (blobs.size % 10 === 0) {
-      onProgress?.(`Reading attachments... ${blobs.size + 1} of ${attachments.length}`);
+      onProgress?.(i18n.t('importExport:importLog.shared.readingAttachments', { done: blobs.size + 1, total: attachments.length }));
     }
     const data = await zipEntryMedia(entry);
     if (!data) {
@@ -382,9 +385,7 @@ export async function parseObsidian(
 
   const warnings: string[] = [];
   if (skippedAttachments > 0) {
-    warnings.push(
-      `Skipped ${skippedAttachments} attachment${skippedAttachments === 1 ? '' : 's'} that none of your notes link to.`
-    );
+    warnings.push(i18n.t('importExport:importLog.shared.skippedUnlinked', { count: skippedAttachments }));
   }
   if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   const transforms: string[] = [];
@@ -392,29 +393,23 @@ export async function parseObsidian(
     const images = [...blobs.values()].filter((b) => b.mime.startsWith('image/')).length;
     const files = blobs.size - images;
     const parts: string[] = [];
-    if (images > 0) parts.push(`${images} image${images === 1 ? '' : 's'}`);
-    if (files > 0) parts.push(`${files} file${files === 1 ? '' : 's'}`);
-    transforms.push(`Brought ${parts.join(' and ')} across from your vault.`);
+    if (images > 0) parts.push(i18n.t('importExport:importLog.shared.imageCount', { count: images }));
+    if (files > 0) parts.push(i18n.t('importExport:missing.files', { count: files }));
+    transforms.push(msg('broughtAcross', { parts: parts.length === 2 ? i18n.t('importExport:missing.both', { pictures: parts[0], files: parts[1] }) : parts[0] }));
   }
   if (folders.length > 0) {
     const filed = notes.filter((n) => n.folderId).length;
-    transforms.push(
-      `Rebuilt ${folders.length} folder${folders.length === 1 ? '' : 's'} from your vault (${filed} note${filed === 1 ? '' : 's'} filed).`
-    );
+    transforms.push(msg('foldersRebuilt', { count: folders.length, filed: i18n.t('importExport:importLog.shared.filedNotes', { count: filed }) }));
   }
   const withFm = notes.filter((n) => n.tags.length > 0).length;
   if (withFm > 0) {
-    transforms.push(
-      `Extracted tags from ${withFm} note${withFm === 1 ? '' : 's'} (frontmatter and inline #tags).`
-    );
+    transforms.push(msg('tagsExtracted', { count: withFm }));
   }
   const withLinks = notes.filter((n) => /\[\[.+?\]\]/.test(n.body)).length;
   if (withLinks > 0) {
-    transforms.push(
-      `Preserved [[note links]] in ${withLinks} note${withLinks === 1 ? '' : 's'}.`
-    );
+    transforms.push(msg('linksPreserved', { count: withLinks }));
   }
-  transforms.push('Made bare URLs clickable.');
+  transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
 
   return {
     notes,

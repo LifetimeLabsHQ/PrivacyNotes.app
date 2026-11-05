@@ -251,11 +251,13 @@ function card(t: ThemeCard, i: number, discussionsUrl: string): string {
   const thread = t.discussion ? `${discussionsUrl}/${t.discussion}` : undefined;
   const creditHref = thread ?? `https://github.com/${t.author}`;
   // Votes happen on the thread; the count is the snapshot the page was built with.
+  // It sits beside Copy code; after a copy, the nudge under them shows and the
+  // button pulses (static-pages.js, nudgeUpvote).
   const vote = thread
-    ? `<a class="vote" href="${thread}" target="_blank" rel="noopener noreferrer nofollow" data-thread="${t.discussion}" aria-label="${t.votes} ${t.votes === 1 ? 'vote' : 'votes'}, vote on GitHub">${glyph(P_ARROW_UP, 12)}<span class="vc">${t.votes}</span> &middot; Vote</a>`
+    ? `<a class="vote" href="${thread}" target="_blank" rel="noopener noreferrer nofollow" data-thread="${t.discussion}" aria-label="${t.votes} ${t.votes === 1 ? 'vote' : 'votes'}, upvote on GitHub">${glyph(P_ARROW_UP, 16)}Upvote<span class="vc">${t.votes}</span></a>`
     : '';
   const by = t.author
-    ? `<span>by <a href="${creditHref}" target="_blank" rel="noopener noreferrer nofollow">@${t.author}</a>${added}</span>${vote}`
+    ? `<span>by <a href="${creditHref}" target="_blank" rel="noopener noreferrer nofollow">@${t.author}</a>${added}</span>`
     : 'Made by the team, already in the app';
   const id = `theme-code-${i + 1}`;
   const dots = SWATCHES.map(
@@ -270,8 +272,8 @@ function card(t: ThemeCard, i: number, discussionsUrl: string): string {
 <div class="tc-body">
 <div class="tc-head"><h2 dir="auto">${esc(t.name)}</h2><ul class="sw" aria-label="Colors">${dots}</ul></div>
 ${t.description ? `<p class="desc" dir="auto">${esc(t.description)}</p>\n` : ''}<p class="by">${by}</p>
-<button class="cbtn" type="button" data-copy="${id}" data-copy-icon data-label-done="Copied" hidden>${COPY_ICON}${DONE_ICON}<span class="cl">Copy code</span></button>
-<details class="cd"><summary>Show code</summary><code id="${id}" class="code" dir="ltr">${esc(t.code)}</code></details>
+<div class="acts"><button class="cbtn" type="button" data-copy="${id}" data-copy-icon data-label-done="Copied" hidden>${COPY_ICON}${DONE_ICON}<span class="cl">Copy code</span></button>${vote}</div>
+${vote ? '<p class="nudge" role="status" hidden>Like it? An upvote on GitHub moves it up for everyone. It needs a free GitHub account, and the count updates within a day.</p>\n' : ''}<details class="cd"><summary>Show code</summary><code id="${id}" class="code" dir="ltr">${esc(t.code)}</code></details>
 </div>
 </article>`;
 }
@@ -280,7 +282,7 @@ const PAGE_CSS = `.hero{display:flex;align-items:flex-end;justify-content:space-
 .hero h1{margin-bottom:6px}
 .lead{color:var(--muted);font-size:var(--fs-title);margin:0;max-width:640px}
 .hero-cta{flex-shrink:0;display:inline-flex;align-items:center;gap:8px}
-.steps{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 14px;padding:0}
+.steps{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 14px;padding:0}
 .steps li{display:flex;flex-direction:column;gap:2px;border-radius:12px;background:var(--card);border:1px solid var(--line);padding:14px 16px}
 .steps li.lead-step{background:var(--imp-bg);border-color:transparent}
 .st-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
@@ -289,6 +291,9 @@ const PAGE_CSS = `.hero{display:flex;align-items:flex-end;justify-content:space-
 .lead-step .st-n{color:var(--mark-fg)}
 .st-t{display:block;font-size:var(--fs-row);font-weight:650;line-height:1.35;color:var(--fg)}
 .st-d{display:block;font-size:var(--fs-compact);line-height:1.45;color:var(--muted)}
+.steps li.vote-step{border-color:var(--mark-fg)}
+.vote-step .st-n{color:var(--mark-fg)}
+@media(max-width:900px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.steps{grid-template-columns:minmax(0,1fr);gap:8px}.steps li{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;padding:10px 12px}.st-top{grid-row:span 2;margin:0}.st-n{display:none}}
 .tfi{position:absolute;opacity:0;pointer-events:none}
 .filters{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px 32px;margin:0 0 22px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
@@ -332,8 +337,16 @@ const PAGE_CSS = `.hero{display:flex;align-items:flex-end;justify-content:space-
 .desc{margin:-4px 0 0;font-size:var(--fs-body);line-height:1.45;color:var(--fg);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .by{margin:-4px 0 0;font-size:var(--fs-compact);color:var(--muted);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 10px}
-.vote{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border:1px solid var(--line);border-radius:999px;font-size:var(--fs-small);font-weight:600;color:var(--muted);text-decoration:none}
-.vote:hover{color:var(--accent);border-color:var(--accent)}
+.acts{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.vote{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border:1px solid var(--mark-fg);border-radius:9px;background:var(--imp-bg);color:var(--mark-fg);font-size:var(--fs-body);font-weight:600;text-decoration:none}
+.vote:hover{background:var(--card)}
+.vote:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.vote .vc{padding-left:8px;margin-left:2px;border-left:1px solid currentColor;font-variant-numeric:tabular-nums}
+.vote.pulse{animation:vote-pulse .6s ease-out 2}
+@keyframes vote-pulse{30%{transform:scale(1.08)}60%{transform:scale(.98)}}
+@media(prefers-reduced-motion:reduce){.vote.pulse{animation:none}}
+.nudge{margin:-2px 0 0;padding:9px 12px;border-radius:9px;background:var(--imp-bg);color:var(--mark-fg);font-size:var(--fs-compact);line-height:1.45}
+.nudge[hidden]{display:none}
 .tgrid.by-community .tc{order:var(--ov)}
 #so-new:checked~.tgrid.by-community .tc{order:var(--on)}
 #mb-team:checked~.filters .by-order{display:none}
@@ -410,7 +423,8 @@ ${siteNav({ active: 'themes' })}
 <li class="lead-step"><div class="st-top"><span class="st-ic">${glyph(P_COPY)}</span><span class="st-n">Step 1</span></div><span class="st-t">Copy a code</span><span class="st-d">Press Copy code on any theme below.</span></li>
 <li><div class="st-top"><span class="st-ic">${glyph(P_CLIPBOARD)}</span><span class="st-n">Step 2</span></div><span class="st-t">Paste it in the app</span><span class="st-d">Settings &rsaquo; Appearance &rsaquo; Themes</span></li>
 <li><div class="st-top"><span class="st-ic">${glyph(P_DISK)}</span><span class="st-n">Step 3</span></div><span class="st-t">Save it</span><span class="st-d">It shows at once. Saving needs Pro.</span></li>
-</ol>
+${community.length > 0 ? `<li class="vote-step"><div class="st-top"><span class="st-ic">${glyph(P_ARROW_UP)}</span><span class="st-n">Step 4</span></div><span class="st-t">Upvote the ones you like</span><span class="st-d">Press Upvote, then the arrow on GitHub. The top themes come first.</span></li>
+` : ''}</ol>
 <input class="tfi" type="radio" name="tf" id="tf-all" checked>
 <input class="tfi" type="radio" name="tf" id="tf-light">
 <input class="tfi" type="radio" name="tf" id="tf-dark">
@@ -425,7 +439,7 @@ ${community.length > 0 ? `<input class="tfi" type="radio" name="mb" id="mb-all" 
 <div class="filter by-order" role="group" aria-label="Order"><span class="flbl" aria-hidden="true">Order</span><span class="seg"><label for="so-votes">Most votes</label><label for="so-new">Newest</label></span></div>
 </div>
 <h2 class="sec by-community">Community themes</h2>
-<p class="sec-d by-community">Made by people who use the app. Vote for the ones you like on their GitHub thread; the counts update once a day.</p>
+<p class="sec-d by-community">Made by people who use the app. Upvote the ones you like on their GitHub thread; the counts update once a day.</p>
 <div class="tgrid by-community" data-page="${PAGE_SIZE}">
 ${community.map((t, i) => card(t, i, discussionsUrl)).join('\n')}
 </div>

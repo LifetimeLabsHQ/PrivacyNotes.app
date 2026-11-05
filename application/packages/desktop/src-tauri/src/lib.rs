@@ -36,6 +36,8 @@ mod status_bar_tap;
 /// Spec: docs/contrib/color-themes.md (section 1, the Windows title bar)
 #[cfg(desktop)]
 mod title_bar;
+#[cfg(desktop)]
+mod tray;
 
 /// Links, text and files other apps shared into this one, waiting for the
 /// unlocked app to take them. Compiled everywhere so its tests run on the
@@ -46,6 +48,12 @@ use pasteboard::pasteboard_pictures;
 mod share_inbox;
 #[cfg(mobile)]
 use share_inbox::{share_inbox_list, share_inbox_read, share_inbox_remove, share_limit_set};
+/// AVIF pictures decoded for the Linux webview, which cannot (GitHub #687).
+/// Spec: docs/contrib/gotchas.md (AppImage AVIF)
+#[cfg(desktop)]
+mod avif;
+#[cfg(desktop)]
+use avif::decode_avif;
 /// The web clipper's download, on every native platform.
 /// Spec: docs/internal/specs/web-clipper-stage1.md (section 3.1)
 mod clip_fetch;
@@ -541,14 +549,13 @@ pub fn run() {
         builder
     } else {
         builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-        use tauri::{Emitter, Manager};
+        use tauri::Emitter;
         // A second launch carrying a file path is a double-click while we are
         // already running. The args were discarded here until file
         // associations existed; now they are the whole point of the callback.
         queue_from_args(args);
-        if let Some(window) = app.get_webview_window("main") {
-            let _ = window.set_focus();
-        }
+        // Also out of the tray, where the window is hidden (tray.rs).
+        tray::reveal(app);
             let _ = app.emit("markdown-open-pending", ());
         }))
     };
@@ -635,8 +642,13 @@ pub fn run() {
         set_capture_block,
         set_title_bar_colors,
         pasteboard_pictures,
-        clip_fetch
+        clip_fetch,
+        decode_avif,
+        tray::set_tray_mode
     ]);
+    // Close and minimize go to the tray while that switch is on (tray.rs).
+    #[cfg(desktop)]
+    let builder = builder.on_window_event(tray::on_window_event);
     #[cfg(mobile)]
     let builder = builder.invoke_handler(tauri::generate_handler![
         biometric_available,

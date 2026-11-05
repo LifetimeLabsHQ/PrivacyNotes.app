@@ -706,8 +706,8 @@
     function shotOf(l) {
       var card = l.closest('.tc');
       var code = card.querySelector('code.code');
-      var credit = card.querySelector('.by a:not(.vote)');
-      var vote = card.querySelector('.by .vote');
+      var credit = card.querySelector('.by a');
+      var vote = card.querySelector('.acts .vote');
       var desc = card.querySelector('.desc');
       return {
         src: l.getAttribute('href'),
@@ -1070,6 +1070,20 @@
     }, 2000);
   }
 
+  // /themes: a copy is the moment a person likes a theme, so the card shows
+  // its upvote nudge and the Upvote button pulses twice. Team cards have neither.
+  function nudgeUpvote(btn) {
+    var card = btn.closest('.tc');
+    var vote = card && card.querySelector('.vote');
+    var nudge = card && card.querySelector('.nudge');
+    if (!vote) return;
+    if (nudge) nudge.hidden = false;
+    vote.classList.remove('pulse');
+    // Reflow, so a second copy restarts the keyframe.
+    void vote.offsetWidth;
+    vote.classList.add('pulse');
+  }
+
   // /brand: reveal the copy buttons and wire them to their text blocks.
   // The buttons ship hidden; without JS the text stays selectable as-is.
   function initBrand() {
@@ -1084,6 +1098,7 @@
         navigator.clipboard.writeText(btn.hasAttribute('data-copy-icon') ? src.textContent : src.innerText).then(function () {
           if (btn.hasAttribute('data-copy-icon')) {
             showCopied(btn);
+            nudgeUpvote(btn);
             return;
           }
           var old = btn.textContent;

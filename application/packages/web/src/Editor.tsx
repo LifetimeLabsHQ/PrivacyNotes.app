@@ -54,6 +54,7 @@ import { WikiLink } from './NoteLink';
 import { AudioRecordingBanner, type AudioRecordingState } from './AudioRecorder';
 import { LinkSheet } from './LinkSheet';
 import { Callout, CalloutTitle } from './Callout';
+import { typeCalloutTrigger } from './CalloutSuggestion';
 import { proUnlocked } from './demo';
 import { stepKanban } from './kanban';
 import { Footnotes, carriedSection } from './footnotes';
@@ -858,6 +859,13 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         if (matchesKey(event, APP_KEYS.insertLink)) {
           event.preventDefault();
           askForLink();
+          return true;
+        }
+        // Desktop apps only (commandKeys.ts). Types `[!`, which opens the
+        // callout grid at the caret.
+        if (matchesKey(event, APP_KEYS.insertCallout)) {
+          event.preventDefault();
+          if (editor) typeCalloutTrigger(editor);
           return true;
         }
         // Tab inside the editor body must NEVER escape focus to the next

@@ -9,7 +9,7 @@ import {
 import { logAuthEvent } from './authDiag';
 import { recordSyncFault } from './syncFaults';
 import { ownsLocalData } from './authStorage';
-import { db, type LocalNote } from './db';
+import { db, notesWriteCount, type LocalNote } from './db';
 import { heartbeat } from './devices';
 import { isDemoMode } from './demo';
 import { assertMfaAccess, isMfaRefusal, MfaRequiredError } from './mfaStep';
@@ -894,9 +894,10 @@ export type SyncResult = {
   pushed?: number;
   /** Rows plus tombstones the pull phase applied locally this pass. */
   pulled?: number;
-  /** True when the pass moved data in either direction (rows pulled or
-   *  applied, or dirty rows pushed). A clean no-op poll tick reports
-   *  false so callers can skip vault-sized post-pass work. */
+  /** True when the pass wrote this device's notes: rows pulled or applied,
+   *  or a push that marked a row clean, deleted one or merged one. A poll
+   *  tick that wrote nothing reports false, a dirty note that cannot push
+   *  included, so callers can skip vault-sized post-pass work (#643). */
   changed: boolean;
   /** Set when the push stopped before it reached every dirty row. The stop
    *  raises no per-note error, so this is the only record the pass keeps
@@ -1628,13 +1629,18 @@ async function syncInner(
     });
   };
 
+  // The push changed this device only if it wrote a local row: a pushed row
+  // marked clean, a delete, an applied tombstone, a merge. A dirty row that
+  // cannot push (too large, or failing) writes nothing, and reporting it as a
+  // change made the caller re-read the whole vault every pass (issue #643).
+  const writesBeforePush = notesWriteCount();
+
   // anyOf, not equals(1): sealed unsynced rows carry dirty 2 so that
   // bundles without the seal reader cannot pick them up and push
   // gutted payloads. This bundle reads both and pushes both.
   const dirty = await db.notes.where('dirty').anyOf(1, 2).toArray();
   const toDelete = dirty.filter((n) => n.deleted === 1);
   const toUpsert = dirty.filter((n) => n.deleted !== 1);
-  if (dirty.length > 0) changed = true;
 
   // 2a. Batch tombstone - set deleted_at on the server. Other devices
   // see the tombstone via the changed_at pull sweep and bulkDelete locally.
@@ -2227,7 +2233,7 @@ async function syncInner(
   // above never costs the pull its progress.
   return {
     pullOk,
-    changed,
+    changed: changed || notesWriteCount() !== writesBeforePush,
     pushed: pushedCount,
     pulled: pulledCount,
     ...(pushEnded ? { halted: { reason: haltReason, unreached: unreachedIds.size } } : {}),

@@ -162,6 +162,15 @@ type Props = {
   moodOf?: (day: string) => number | 'written' | undefined;
 };
 
+/** The number beside a row of the month: the ISO week of the row's Thursday.
+ *  A row that starts on Sunday or Saturday holds one or two days of the week
+ *  before, and its first cell would number the row by them, not by the five
+ *  or six days that share the week (every row in a Sunday-first year was one
+ *  off). Thursday is in the ISO week of the row's majority for every start. */
+export function rowWeek(days: readonly string[], weekStart: number): number {
+  return isoWeek(days[(4 - weekStart + 7) % 7]!);
+}
+
 /** The ISO 8601 week number of a day. */
 function isoWeek(day: string): number {
   const d = dayAtNoon(day);
@@ -461,7 +470,7 @@ function LargeMonth({
           <div key={days[0]} role="row" className={`relative flex-1 ${weeks === 1 ? 'min-h-0' : 'min-h-[5.5rem]'} grid ${cols} border-b border-divider last:border-b-0`}>
             {weekNumbers && (
               <div role="rowheader" className="text-meta text-pn-muted text-center pt-1.5 tabular-nums border-e border-divider">
-                {isoWeek(days[0]!)}
+                {rowWeek(days, weekStart)}
               </div>
             )}
             {days.map((day) => {

@@ -389,6 +389,7 @@
     "receipt": "내 청구서",
     "receiptCount_other": "구독 {{count}}개",
     "receiptRenews": "매년 갱신",
+    "receiptStamp": "해지됨",
     "perYear": "연간 합계",
     "keepLabel": "아끼는 금액",
     "keepLine_other": "{{count}}년 동안, Pro를 사더라도요.",

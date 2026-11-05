@@ -68,6 +68,7 @@
     "appearance_contentWidth": "sütun genişliği, geniş, tam genişlik, kenar boşlukları",
     "appearance_editor": "markdown, zengin metin, wysiwyg, düzenleyici modu, editör",
     "appearance_defaultApps": "varsayılan uygulama, birlikte aç, çift tıklama, finder, dosya gezgini, markdown, md, txt, metin dosyası",
+    "appearance_tray": "tepsi, sistem tepsisi, bildirim alanı, simge durumuna küçült, küçült, kapat, arka plan, arka planda çalıştır, görev çubuğu, tray",
     "appearance_copyFormat": "kopyala, pano, düz metin, yapıştır, onay kutusu",
     "appearance_pasteFormat": "yapıştır, pano, düz metin, biçimlendirme, biçimsiz, stili eşleştir",
     "appearance_favicons": "favicon, site simgeleri, logolar",

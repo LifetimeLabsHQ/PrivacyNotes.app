@@ -838,5 +838,27 @@
       "bytes": 39236,
       "sha256": "c9410dd041c8a466d47092eabea82fb1143d6140464f50fd11e0e55afc648d15"
     }
+  },
+  "0.725": {
+    "callout-picker": {
+      "w": 1444,
+      "h": 978,
+      "bytes": 27086,
+      "sha256": "6023b3ece6371ca6fedebb03282b13a297cafede49b0c8ef068806364dc8e401"
+    },
+    "tray-setting": {
+      "w": 2000,
+      "h": 1033,
+      "bytes": 223872,
+      "sha256": "326c7cfcdcdd1af681432dfcda9a71f6ebe2b6bafec7b6b6980b58605056bd0c"
+    }
+  },
+  "0.726": {
+    "extension-settings": {
+      "w": 2000,
+      "h": 1530,
+      "bytes": 292798,
+      "sha256": "b1b90b7bd3e5e69d185749fdbffb8dd585441d8612b4533ee670b6134a098f40"
+    }
   }
 }

@@ -391,6 +391,7 @@
     "receiptCount_one": "{{count}} prenumeration",
     "receiptCount_other": "{{count}} prenumerationer",
     "receiptRenews": "Förnyas varje år",
+    "receiptStamp": "Avslutad",
     "perYear": "Totalt per år",
     "keepLabel": "Du sparar",
     "keepLine_one": "på {{count}} år, även om du köper Pro.",

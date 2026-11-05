@@ -389,6 +389,7 @@
     "receipt": "あなたの請求額",
     "receiptCount_other": "{{count}}件のサブスクリプション",
     "receiptRenews": "毎年更新",
+    "receiptStamp": "解約済み",
     "perYear": "年間合計",
     "keepLabel": "節約できる額",
     "keepLine_other": "{{count}}年間で。Proを購入した場合でもです。",

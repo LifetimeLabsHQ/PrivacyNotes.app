@@ -7,7 +7,7 @@ import { MoodMark } from '../moodMark';
 import { moodWord as moodWordOf } from '../checkIn';
 import { MOOD_COLORS, moodColor } from '../moodColors';
 import { compare, qualifiesForInsight } from '../trackerCompare';
-import { formatDay, weekdayLabel } from '../intlFormat';
+import { formatDay, weekdayDate, weekdayLabel } from '../intlFormat';
 import { toLocalIso } from '../notesViewUtils';
 import { Button, GlyphTile } from '../ui';
 import type { CompareResult, DaySeries, TrackerDescriptor, TrackerValue } from '../wellnessTypes';
@@ -202,7 +202,8 @@ export function EffectBarRow({ d, label, sub, delta, sure, share, text, tone, on
 }
 
 /** Monday first, in the week order of the page's weekday chart. */
-const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+/** Monday first: the order of `weekdayAverages` and of every weekday axis here. */
+export const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0] as const;
 
 /** The average of a numeric series per weekday, Monday first; null for a weekday with no value. */
 export function weekdayAverages(series: DaySeries): (number | null)[] {
@@ -216,9 +217,6 @@ export function weekdayAverages(series: DaySeries): (number | null)[] {
   }
   return WEEK_ORDER.map((wd) => (n[wd] ? sum[wd] / n[wd] : null));
 }
-
-/** A fixed Monday, so a weekday's short name comes from the locale. */
-const weekdayDate = (i: number) => new Date(2024, 0, 1 + i, 12);
 
 /** Seven bars, the highest one marked; `color` paints them all, or each takes its mood band. */
 export function WeekdayChart({ values, color, format }: { values: (number | null)[]; color?: string; format: (v: number) => string }) {
@@ -236,7 +234,7 @@ export function WeekdayChart({ values, color, format }: { values: (number | null
             className="block w-full rounded-t-md rounded-b-sm"
             style={{ height: v === null ? 3 : `${height(v)}%`, backgroundColor: v === null ? 'var(--pn-border, #d1d5db)' : color ?? MOOD_COLORS[Math.min(4, Math.max(0, Math.ceil(v / 2) - 1))], opacity: v === best ? 1 : 0.75 }}
           />
-          <span>{weekdayLabel(weekdayDate(i), 'narrow')}</span>
+          <span>{weekdayLabel(weekdayDate(WEEK_ORDER[i]!), 'narrow')}</span>
         </div>
       ))}
     </div>
@@ -306,7 +304,7 @@ function DayGrid({ title, days, mood, from, to, picked, onPick }: {
     <div className="min-w-0">
       <p className="text-body font-semibold text-pn mb-1.5">{title}</p>
       <div className="grid grid-cols-7 gap-1 text-center">
-        {Array.from({ length: 7 }, (_, i) => <span key={`h${i}`} className="text-meta text-pn-muted">{weekdayLabel(weekdayDate(i), 'narrow')}</span>)}
+        {WEEK_ORDER.map((wd, i) => <span key={`h${i}`} className="text-meta text-pn-muted">{weekdayLabel(weekdayDate(wd), 'narrow')}</span>)}
         {Array.from({ length: lead }, (_, i) => <span key={`p${i}`} />)}
         {days.map((day) => {
           const inRange = day >= from && day <= to;

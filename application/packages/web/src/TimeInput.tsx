@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
-import { isTime, parseTimeText } from './schedule';
+import { isTime } from './schedule';
 import { timeLabel } from './JournalCalendar';
 import { toLocalIso } from './intlFormat';
+import { parseTimeLabel } from './timeLabel';
 import { isTouchOnly } from './touchOnly';
 
 /** What a native time input's value commits: an `HH:MM` time, `null` for a
@@ -39,7 +40,7 @@ export function TimeInput({ value, onCommit, label, className, day, clearable = 
     setDraft(null);
     const next = native
       ? nativeTimeCommit(raw, clearable)
-      : raw.trim() === '' ? (clearable ? null : undefined) : parseTimeText(raw) ?? undefined;
+      : raw.trim() === '' ? (clearable ? null : undefined) : parseTimeLabel(raw) ?? undefined;
     if (next !== undefined && next !== (value ?? null)) onCommit(next);
   };
   const commit = () => commitRaw(draft);

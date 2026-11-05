@@ -9,7 +9,7 @@ import { useCopyToClipboard } from './clipboard';
 import { FIELD_CLASS, FieldLabel } from './formFields';
 
 export { parseCardBody, serializeCardBody, detectCardNetwork, type CardData } from './cardBody';
-import { parseCardBody, serializeCardBody, detectCardNetwork, type CardData } from './cardBody';
+import { cardExpiryYear, parseCardBody, serializeCardBody, detectCardNetwork, type CardData } from './cardBody';
 
 /** Max digit length by network: 15 for Amex, 16 for all others. */
 function maxDigitsForNetwork(digits: string): number {
@@ -96,13 +96,22 @@ export function CardForm({
   const isExpired = (() => {
     if (!data.expMonth || !data.expYear) return false;
     const now = new Date();
-    const expYearFull = 2000 + Number(data.expYear);
+    const expYearFull = cardExpiryYear(data.expYear);
+    if (expYearFull === null) return false;
     const expMonth = Number(data.expMonth);
     // Card expires at end of its expiry month.
     if (expYearFull < now.getFullYear()) return true;
     if (expYearFull === now.getFullYear() && expMonth < now.getMonth() + 1) return true;
     return false;
   })();
+
+  // The select lists two-digit years from this year on. A stored year is
+  // shown in that form, and one outside the list (an expired card, a far
+  // year) is added, so the field never shows a blank for a card that has one.
+  const storedYear = cardExpiryYear(data.expYear);
+  const expYearOption = storedYear === null ? data.expYear : String(storedYear).slice(-2);
+  const expYearOptions = Array.from({ length: 12 }, (_, i) => String(new Date().getFullYear() + i).slice(-2));
+  if (expYearOption && !expYearOptions.includes(expYearOption)) expYearOptions.unshift(expYearOption);
 
   const fieldClass = FIELD_CLASS;
 
@@ -196,16 +205,13 @@ export function CardForm({
                 })}
               </select>
               <select
-                value={data.expYear}
+                value={expYearOption}
                 onChange={(e) => updateBody({ expYear: e.target.value })}
                 disabled={locked}
                 className={`${fieldClass} appearance-none`}
               >
                 <option value="">{t('cardForm.yearPlaceholder')}</option>
-                {Array.from({ length: 12 }, (_, i) => {
-                  const y = String(new Date().getFullYear() + i).slice(-2);
-                  return <option key={y} value={y}>{y}</option>;
-                })}
+                {expYearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
           </div>

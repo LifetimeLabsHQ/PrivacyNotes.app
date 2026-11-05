@@ -137,12 +137,17 @@ export const TextAlignOurLeft = TextAlign.extend({
  * the same escape hatch serializeTableToMarkdown already takes for tables that
  * cannot be expressed as a pipe table - the cost is that an aligned block
  * shows as HTML in the markdown source view, which is honest about what it is.
+ *
+ * An HTML block runs on to the next blank line, so a block after it always
+ * gets one. A tight list item writes none between its paragraph and a nested
+ * list, and the child line `  - Child` was read back as text inside the `<p>`.
  */
-export function serializeAlignedBlock(state: any, node: any): boolean {
+export function serializeAlignedBlock(state: any, node: any, parent?: any, index?: number): boolean {
   const align = node.attrs?.textAlign;
   if (!align || align === 'left') return false;
   state.write(getHTMLFromFragment(Fragment.from(node), node.type.schema));
   state.closeBlock(node);
+  if (parent && index !== undefined && index + 1 < parent.childCount) state.flushClose(2);
   return true;
 }
 

@@ -76,6 +76,8 @@ export type RoadmapItem = {
   description: string;
   /** Card glyph on /roadmap. */
   icon: RoadmapIcon;
+  /** Turns the first `text` in the description into a link to `href` on /roadmap. */
+  link?: { text: string; href: string };
 };
 
 export const PUBLIC_ROADMAP: RoadmapItem[] = [
@@ -219,7 +221,7 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     title: 'Android app',
     status: 'shipped',
     description:
-      'A native Android app with the same on-device encryption, available now as a direct download (APK).',
+      'A native Android app with the same on-device encryption, first available as a direct download (APK).',
     icon: 'android',
   },
   {
@@ -378,11 +380,6 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     icon: 'github',
   },
   {
-    // Last of the `shipped` run, deliberately: renderItems() puts the "You are
-    // here" marker at the FIRST non-shipped item, so a shipped card placed
-    // below `adding-features` would render green, on the done-colored rail,
-    // underneath a marker saying the shipped work is above it. Newest shipped
-    // milestone, so it sits at the bottom of the run.
     id: 'ios',
     title: 'iOS app',
     status: 'shipped',
@@ -399,12 +396,42 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     icon: 'contacts',
   },
   {
+    id: 'google-play',
+    title: 'Google Play Store',
+    status: 'shipped',
+    description:
+      'The same Android app on Google Play, for one-tap install and automatic updates. The direct download stays for anyone who would rather skip the store.',
+    icon: 'store',
+  },
+  {
+    id: 'drawing',
+    title: 'Drawings',
+    status: 'shipped',
+    description:
+      'Sketch, diagram and lay out ideas on a canvas that is its own item type, beside your notes and with the same on-device encryption. Open it full screen when you need the room. Drawings are free on every plan.',
+    icon: 'pencil',
+  },
+  {
+    // Last of the `shipped` run, deliberately: renderItems() puts the "You are
+    // here" marker at the FIRST non-shipped item, so a shipped card placed
+    // below this one would render green, on the done-colored rail, underneath
+    // a marker saying the shipped work is above it. A new shipped card goes
+    // directly above this one. The id keeps its old slug so links still land.
     id: 'adding-features',
-    title: 'Adding features',
+    title: 'Adding main features',
+    status: 'shipped',
+    description:
+      'The big pieces the app was planned around are in place. New ones will be rare from here on, so the work turns to the features that are already here.',
+    icon: 'sparkles',
+  },
+  {
+    id: 'improvements',
+    title: 'Improvements and small features',
     status: 'in-progress',
     description:
-      'A release every week or two, and most of what goes into one started as somebody asking for it. The changelog is the full record.',
+      'A release every week or two, made of improvements to what is already here and the smaller features people ask for. Most of it started as somebody asking. The changelog is the full record.',
     icon: 'sparkles',
+    link: { text: 'changelog', href: '/changelog' },
   },
   {
     id: 'fixing-bugs',
@@ -413,13 +440,6 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     description:
       'Reports get triaged quickly and fixes ship in the next release rather than waiting for a milestone. Found something? The bug tracker is open.',
     icon: 'bug',
-  },
-  {
-    id: 'google-play',
-    title: 'Google Play Store',
-    status: 'in-progress',
-    description: 'The same Android app on Google Play, for one-tap install and automatic updates.',
-    icon: 'store',
   },
   {
     id: 'graph-view',

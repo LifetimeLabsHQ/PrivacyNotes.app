@@ -391,6 +391,7 @@
     "receiptCount_one": "{{count}} abonelik",
     "receiptCount_other": "{{count}} abonelik",
     "receiptRenews": "Her yıl yenilenir",
+    "receiptStamp": "İptal",
     "perYear": "Yıllık toplam",
     "keepLabel": "Tasarrufunuz",
     "keepLine_one": "{{count}} yılda, Pro alsanız bile.",

@@ -288,9 +288,20 @@ export const BlockMathWithMarkdown = BlockMath.extend({
 });
 
 /**
+ * Whether an inline run crosses a line other than at a hard break. The
+ * serializer keeps a mark open across Shift+Enter and writes the break as
+ * `\` + newline, so a highlight or spoiler over two lines saves as
+ * `==first\` / `second==`; a run must read that back, but not open across a
+ * plain line end. Shared with the spoiler rule (editorSpoiler.ts).
+ */
+export function crossesPlainLine(content: string): boolean {
+  return /(^|[^\\])\n/.test(content);
+}
+
+/**
  * markdown-it inline rule for ==highlight== (Obsidian's syntax). Guards
  * mirror the math rule: the run must hug its delimiters (no space just
- * inside), stay on one line, and be non-empty - so "a == b" comparisons
+ * inside), stay on one line (a hard break excepted), and be non-empty - so "a == b" comparisons
  * survive as text. Nested marks inside the run are not re-parsed on
  * load (single escaped token); the typing path (Highlight's own input
  * rule) supports nesting normally.
@@ -303,7 +314,7 @@ function highlightRule(state: MathParseState, silent: boolean): boolean {
   const end = src.indexOf('==', start);
   if (end < 0 || end === start) return false;
   const content = src.slice(start, end);
-  if (content.includes('\n')) return false;
+  if (crossesPlainLine(content)) return false;
   if (/\s/.test(src[end - 1] ?? '')) return false;
   if (silent) {
     state.pos = end + 2;

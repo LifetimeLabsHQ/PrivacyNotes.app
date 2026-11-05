@@ -3,7 +3,10 @@ import { formatFileSize } from '../attachmentValidation';
 import { contactPhotoOptions, currentImageOptions, processImage } from '../imageProcessing';
 import { withContactPhotoBytes } from '../contactBody';
 import { sniffImageFormat } from '../imageMetadata';
+import i18n from '../i18n';
 import type { ImportBlob, ImportedNote, StagedBlob } from './types';
+
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.blobImport.${key}`, options);
 
 /* ------------------------------------------------------------------ */
 /* SHA-256 helper (was duplicated in appleNotes, googleKeep, privacynotes) */
@@ -213,7 +216,7 @@ export async function importBlobs(
     // A processed picture is a decode per blob, so the line follows every
     // image rather than every tenth entry.
     if (isImage || (i + 1) % 10 === 0) {
-      onProgress?.(`Importing attachments... ${i + 1} of ${entries.length}`);
+      onProgress?.(msg('importingAttachments', { done: i + 1, total: entries.length }));
     }
   }
 
@@ -221,7 +224,7 @@ export async function importBlobs(
     return { images: 0, attachments: 0, notes, staged: [] };
   }
 
-  onProgress?.('Updating image references...');
+  onProgress?.(msg('updatingRefs'));
   const rewritten = notes.map((note) => {
     const body = rewriteBlobRefs(note.body, keyToUri, blobs);
     if (body === null) return note;

@@ -393,6 +393,7 @@
     "receiptCount_few": "{{count}} předplatná",
     "receiptCount_other": "{{count}} předplatných",
     "receiptRenews": "Obnovuje se každý rok",
+    "receiptStamp": "Zrušeno",
     "perYear": "Celkem za rok",
     "keepLabel": "Ušetříš",
     "keepLine_one": "za {{count}} rok, i když si koupíš Pro.",

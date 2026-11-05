@@ -67,6 +67,7 @@
     "appearance_contentWidth": "欄寬, 寬版, 全寬, 邊界",
     "appearance_editor": "Markdown, 富文本, 格式化文字, 所見即所得, WYSIWYG, 編輯器模式",
     "appearance_defaultApps": "預設應用程式, 打開檔案的應用程式, 開啟方式, 雙擊, finder, 檔案總管, markdown, md, txt, 文字檔",
+    "appearance_tray": "系統匣, 通知區域, 最小化, 關閉, 背景, 在背景執行, 工作列, tray, system tray",
     "appearance_copyFormat": "複製, 剪貼簿, 純文字, 貼上, 核取方塊",
     "appearance_pasteFormat": "貼上, 剪貼簿, 純文字, 格式, 無格式, 符合樣式, 保留格式",
     "appearance_favicons": "網站圖示, favicon, 標誌, 圖示",

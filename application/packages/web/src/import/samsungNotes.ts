@@ -1,7 +1,11 @@
 import JSZip from 'jszip';
 import { ImportTooLargeError, mediaTooLargeWarning, zipEntryBytes, zipEntryMedia, zipEntryText } from './zipEntry';
 import { linkifyMarkdown } from './linkify';
+import i18n from '../i18n';
 import type { ImportedNote, ParsedImport } from './types';
+
+const msg = (key: string, options?: Record<string, unknown>): string =>
+  i18n.t(`importExport:importLog.samsungNotes.${key}`, options);
 
 /**
  * Samsung Notes importer.
@@ -432,7 +436,7 @@ async function parseDocxFile(
   // Read document.xml
   const docFile = zip.file('word/document.xml');
   if (!docFile) {
-    throw new Error('Invalid .docx: missing word/document.xml');
+    throw new Error(msg('invalidDocx'));
   }
   const docXml = await zipEntryText(docFile);
   const result = docxToMarkdown(docXml, numDefs);
@@ -491,7 +495,7 @@ async function extractEntries(
 
   // Single .docx file
   if (lowerName.endsWith('.docx')) {
-    onProgress?.('Parsing Word document…');
+    onProgress?.(msg('parsingWordDocument'));
     const zip = await JSZip.loadAsync(file);
     const { body, meta, blobs } = await parseDocxFile(zip);
     return [{
@@ -506,7 +510,7 @@ async function extractEntries(
 
   // .zip archive - may contain .txt and/or .docx files
   if (lowerName.endsWith('.zip')) {
-    onProgress?.('Unzipping…');
+    onProgress?.(i18n.t('importExport:importLog.shared.unzipping'));
     const zip = await JSZip.loadAsync(file);
     const entries: SamsungEntry[] = [];
 
@@ -523,7 +527,7 @@ async function extractEntries(
 
     // Parse .docx files (richer format - preferred)
     if (docxFiles.length > 0) {
-      onProgress?.(`Parsing ${docxFiles.length} Word document${docxFiles.length === 1 ? '' : 's'}…`);
+      onProgress?.(msg('parsingWordDocuments', { count: docxFiles.length }));
       for (const entry of docxFiles) {
         try {
           const innerZip = await JSZip.loadAsync(await zipEntryBytes(entry));
@@ -546,7 +550,7 @@ async function extractEntries(
 
     // Parse .txt files
     if (txtFiles.length > 0) {
-      onProgress?.(`Reading ${txtFiles.length} text file${txtFiles.length === 1 ? '' : 's'}…`);
+      onProgress?.(msg('readingTextFiles', { count: txtFiles.length }));
       for (const entry of txtFiles) {
         const text = await zipEntryText(entry);
         entries.push({
@@ -580,16 +584,14 @@ export async function parseSamsungNotes(
   file: File,
   onProgress?: (msg: string) => void,
 ): Promise<ParsedImport> {
-  onProgress?.('Reading file…');
+  onProgress?.(i18n.t('importExport:status.readingFile'));
   const entries = await extractEntries(file, onProgress);
 
   if (entries.length === 0) {
-    throw new Error(
-      'No .txt or .docx files found. Expected a .zip containing Samsung Notes exports, or a single .txt/.docx file.',
-    );
+    throw new Error(msg('noFiles'));
   }
 
-  onProgress?.('Parsing notes…');
+  onProgress?.(i18n.t('importExport:importLog.shared.parsingNotes'));
   const notes: ImportedNote[] = [];
   const warnings: string[] = [];
 
@@ -680,56 +682,36 @@ export async function parseSamsungNotes(
   const transforms: string[] = [];
 
   if (docxCount > 0) {
-    transforms.push(
-      `Parsed ${docxCount} Word document${docxCount === 1 ? '' : 's'} with rich formatting.`,
-    );
+    transforms.push(msg('docx', { count: docxCount }));
   }
   if (formattingPreservedCount > 0) {
-    transforms.push(
-      `Preserved bold, italic, underline, and strikethrough in ${formattingPreservedCount} note${formattingPreservedCount === 1 ? '' : 's'}.`,
-    );
+    transforms.push(i18n.t('importExport:importLog.shared.preservedFormatting', { count: formattingPreservedCount }));
   }
   if (bulletConvertCount > 0) {
-    transforms.push(
-      `Converted list formatting in ${bulletConvertCount} note${bulletConvertCount === 1 ? '' : 's'}.`,
-    );
+    transforms.push(msg('lists', { count: bulletConvertCount }));
   }
   if (checkboxConvertCount > 0) {
-    transforms.push(
-      `Converted checkboxes to native task lists in ${checkboxConvertCount} note${checkboxConvertCount === 1 ? '' : 's'}.`,
-    );
+    transforms.push(msg('checkboxes', { count: checkboxConvertCount }));
   }
   if (allBlobs.size > 0) {
-    transforms.push(
-      `Found ${allBlobs.size} image${allBlobs.size === 1 ? '' : 's'} to import.`,
-    );
+    transforms.push(i18n.t('importExport:importLog.shared.foundImages', { count: allBlobs.size }));
   }
   if (linkifiedCount > 0) {
-    transforms.push(
-      `Made URLs clickable in ${linkifiedCount} note${linkifiedCount === 1 ? '' : 's'}.`,
-    );
+    transforms.push(i18n.t('importExport:importLog.shared.linkifiedNotes', { count: linkifiedCount }));
   }
   if (blankCollapseCount > 0) {
-    transforms.push(
-      `Cleaned up excess whitespace in ${blankCollapseCount} note${blankCollapseCount === 1 ? '' : 's'}.`,
-    );
+    transforms.push(msg('whitespace', { count: blankCollapseCount }));
   }
 
   if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   if (emptyCount > 0) {
-    warnings.push(
-      `Skipped ${emptyCount} empty note${emptyCount === 1 ? '' : 's'} with no title and no body.`,
-    );
+    warnings.push(msg('empty', { count: emptyCount }));
   }
   if (notes.length > 0) {
-    warnings.push(
-      'Samsung Notes exports do not include tags or folders. You can tag imported notes after import.',
-    );
+    warnings.push(msg('noTagsOrFolders'));
   }
   if (txtCount > 0 && docxCount === 0) {
-    warnings.push(
-      'Text exports lose formatting (bold, italic, etc.). For richer imports, export as Word (.docx) instead.',
-    );
+    warnings.push(msg('textLosesFormatting'));
   }
 
   const uniqueTags = new Set<string>();

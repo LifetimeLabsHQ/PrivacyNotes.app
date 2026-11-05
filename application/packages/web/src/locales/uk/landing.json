@@ -389,6 +389,7 @@
     "receipt": "Ваш рахунок",
     "receiptCount_one": "{{count}} підписка",
     "receiptRenews": "Поновлюється щороку",
+    "receiptStamp": "Скасовано",
     "perYear": "Разом за рік",
     "keepLabel": "Ви заощаджуєте",
     "keepLine_one": "за {{count}} рік, навіть якщо купите Pro.",

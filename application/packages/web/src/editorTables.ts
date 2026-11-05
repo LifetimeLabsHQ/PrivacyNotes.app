@@ -23,16 +23,24 @@ import { isFormulaText } from './tableFormula';
  * is correct markdown and round-trips cleanly, but "Show markdown" is a raw
  * view, and `=B2\*C2` reads as broken to the person who wrote `=B2*C2`.
  *
- * Writing it raw is safe because a formula's alphabet is closed: letters,
- * digits, and `. , : ( ) + - * / =`. None of them starts a block inside a
- * pipe cell, and `|` cannot appear at all, so `escapeCellPipes` has nothing
- * to do afterwards either.
+ * Writing it raw is safe only inside a formula's own alphabet: letters,
+ * digits, spaces and `. , : ( ) + - * / =`, the characters the formula
+ * tokenizer reads. None of them starts a block inside a pipe cell, and `|`
+ * cannot appear, so `escapeCellPipes` has nothing to do afterwards either.
+ * One more condition: at most one `*`. Two can pair as emphasis
+ * (`=A2*B2*2` read back as `=A2`, an italic `B2`, `2`), so such a cell, and a
+ * cell starting with `=` that holds any other character, goes through the
+ * escaping serializer like any text.
  */
+const FORMULA_ALPHABET = /^[A-Za-z0-9\s.,:()+\-*/=]*$/;
+
 function plainFormulaCell(cell: any): string | null {
   if (cell.type.name !== 'paragraph' || cell.childCount !== 1) return null;
   const text = cell.firstChild;
   if (!text?.isText || text.marks.length) return null;
-  return isFormulaText(text.text ?? '') ? (text.text as string) : null;
+  const value: string = text.text ?? '';
+  if (!isFormulaText(value) || !FORMULA_ALPHABET.test(value)) return null;
+  return value.indexOf('*') === value.lastIndexOf('*') ? value : null;
 }
 
 /**

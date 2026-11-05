@@ -46,9 +46,12 @@
 
 import { buildLinkBody, linkDomain } from '../linkBody';
 import { normalizeTag } from '../notesRepo';
+import i18n from '../i18n';
 import { buildFolderTree } from './folderImport';
 import { readArchiveEntry } from './safariArchive';
 import type { ImportedNote, ParsedImport } from './types';
+
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.browserBookmarks.${key}`, options);
 
 /** Root folder every imported bookmark lands under. */
 const ROOT_FOLDER = 'Bookmarks';
@@ -149,7 +152,7 @@ export async function parseBrowserBookmarks(file: File): Promise<ParsedImport> {
     ? await readArchiveEntry(file, 'Bookmarks.html', /\.html?$/i)
     : await file.text();
   if (!/<A\s[^>]*HREF\s*=/i.test(text) && !/<DL/i.test(text)) {
-    throw new Error('Not a bookmarks export - expected the bookmarks .html file a browser exports.');
+    throw new Error(msg('notBookmarks'));
   }
 
   const now = new Date().toISOString();
@@ -219,16 +222,14 @@ export async function parseBrowserBookmarks(file: File): Promise<ParsedImport> {
   }
 
   if (notes.length === 0) {
-    throw new Error('No bookmarks found in this file.');
+    throw new Error(msg('noBookmarks'));
   }
   if (skippedSchemes > 0) {
     // Firefox exports three or four of these on every account - its own
     // "Most Visited" and "Recent Tags" smart folders are place: rows. The
     // old wording ("entries were skipped") read as data loss.
     warnings.push(
-      skippedSchemes === 1
-        ? '1 browser-only shortcut was left out. It is something like Most Visited, which works only inside the browser.'
-        : `${skippedSchemes} browser-only shortcuts were left out. They are things like Most Visited, which work only inside the browser.`
+      msg('browserOnly', { count: skippedSchemes })
     );
   }
 

@@ -585,6 +585,49 @@ async function showNow(title: string, body: string, onClick: () => void) {
   };
 }
 
+/** Ring one alert: mark it rung (for every tab), light the Calendar row's
+ *  bell, and on a desktop or in a browser show the system notification. */
+function ringAlert(a: PlannedAlert & { title: string; body: string }, onClick: () => void) {
+  markFired(a.key);
+  // The bell is the Calendar row's; the check-in has no item there.
+  if (a.itemId !== CHECK_IN_REMINDER_ID && !a.itemId.startsWith(MEDICATION_REMINDER_PREFIX)) markUnseen(a.itemId);
+  if (!NATIVE_MOBILE) void showNow(a.title, a.body, onClick);
+}
+
+// ── While the app is locked ───────────────────────────────────────────
+
+/**
+ * The lock screen replaces the notes view, and the timer below goes with it,
+ * so a locked desktop or browser tab rang nothing (GitHub #667). The notes
+ * view leaves its plan here, in the form a lock screen may show: "Reminder"
+ * and the time, never a title. App.tsx rings from it while the lock is up;
+ * unlocking mounts the view again, which plans afresh. A change made while
+ * locked (a snooze, a new day) waits for the unlock, as on a phone. Memory
+ * only: it dies with the page, so a cold start that opens locked rings
+ * nothing until the first unlock.
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (section 8)
+ */
+let lockedPlan: readonly (PlannedAlert & { title: string; body: string })[] = [];
+
+/** Ring the last plan while the app is locked. Returns the teardown. A phone
+ *  needs none: its OS holds the alerts. */
+export function ringWhileLocked(): () => void {
+  if (NATIVE_MOBILE) return () => {};
+  let id: number | undefined;
+  const arm = () => {
+    const fired = firedAt();
+    const next = lockedPlan.find((a) => (fired[a.key] ?? -Infinity) < a.at - 60_000);
+    if (!next) return;
+    const wait = Math.max(0, next.at - Date.now());
+    id = window.setTimeout(() => {
+      if (wait <= MAX_TIMER_MS) ringAlert(next, () => window.focus());
+      arm();
+    }, Math.min(wait, MAX_TIMER_MS));
+  };
+  arm();
+  return () => window.clearTimeout(id);
+}
+
 // ── The hook ──────────────────────────────────────────────────────────
 
 const NO_ITEMS: readonly ReminderItem[] = [];
@@ -667,19 +710,30 @@ export function useReminders({
       const item = byId.get(a.itemId)!;
       // The check-in reminder carries the question and nothing else: no
       // title, no value, so the lock and the titles switch change nothing.
-      if (a.itemId === CHECK_IN_REMINDER_ID) return { ...a, plain: true, title: t('checkIn.prompt'), body: '' };
+      if (a.itemId === CHECK_IN_REMINDER_ID) {
+        const text = { title: t('checkIn.prompt'), body: '' };
+        return { ...a, plain: true, ...text, locked: text };
+      }
       // A medication reminder says what it is and when, never which one:
       // a lock screen is read over a shoulder.
       if (a.itemId.startsWith(MEDICATION_REMINDER_PREFIX)) {
-        return { ...a, plain: true, title: t('alerts.medication'), body: formatInstant(new Date(a.startsAt), 'time') };
+        const text = { title: t('alerts.medication'), body: formatInstant(new Date(a.startsAt), 'time') };
+        return { ...a, plain: true, ...text, locked: text };
       }
       const start = new Date(a.startsAt);
       const today = toLocalIso(start) === toLocalIso(new Date());
       const when = item.schedule.time ? formatInstant(start, today ? 'time' : 'row') : formatInstant(start, today ? 'weekday' : 'date');
       const plain = !titles || appLock || item.gated;
-      return { ...a, plain, ...reminderText(item, when, { titles: !plain, reminder: t('alerts.reminder'), untitled: t('common:state.untitled') }) };
+      const words = { reminder: t('alerts.reminder'), untitled: t('common:state.untitled') };
+      const text = reminderText(item, when, { ...words, titles: !plain });
+      return { ...a, plain, ...text, locked: plain ? text : reminderText(item, when, { ...words, titles: false }) };
     });
   }, [items, titles, appLock, t, tick]);
+
+  // The plan the lock screen rings from (ringWhileLocked).
+  useEffect(() => {
+    lockedPlan = plan.map((a) => ({ ...a, ...a.locked }));
+  }, [plan]);
 
   // The OS schedule on a phone, and the status line, from the items read.
   useEffect(() => {
@@ -768,11 +822,8 @@ export function useReminders({
       // Waited past its cap, or the zone changed since the plan was made.
       if (wait > MAX_TIMER_MS || zoneNow() !== planZone) { setTick((n) => n + 1); return; }
       firedHere.current.set(next.key, Date.now());
-      markFired(next.key);
-      // The bell is the Calendar row's; the check-in has no item there.
-      if (next.itemId !== CHECK_IN_REMINDER_ID && !next.itemId.startsWith(MEDICATION_REMINDER_PREFIX)) markUnseen(next.itemId);
+      ringAlert(next, () => onOpenRef.current(next.itemId, next.occurrence));
       setShown(next);
-      if (!NATIVE_MOBILE) void showNow(next.title, next.body, () => onOpenRef.current(next.itemId, next.occurrence));
       setTick((n) => n + 1);
     }, Math.min(wait, MAX_TIMER_MS));
     return () => window.clearTimeout(id);

@@ -47,6 +47,7 @@ import {
   splitFileName,
 } from './fileNames';
 import i18n from './i18n';
+import { drawablePicture } from './avifDisplay';
 import { InlineRenameField } from './InlineRenameField';
 
 // ------------------------------------------------------------------
@@ -336,32 +337,54 @@ function LabelledAction({ onClick, disabled, children }: {
  * answer gets 0, which leaves the slider disabled and the total hidden - an
  * elapsed-only readout is honest, a slider that cannot know where it is is
  * not.
+ *
+ * Each seek is let finish before the next one starts and before play, so a
+ * player that drops a seek made while another runs cannot lose the reset to
+ * 0. Written for #686, whose cause the Linux test VM did not confirm: there
+ * the probe runs only when GStreamer reads a length of 0, and playback then
+ * starts at 0, about 1.5 s late (docs/internal/linux-vm.md, section 5).
  */
-function resolveDuration(audio: HTMLAudioElement): Promise<number> {
+export function resolveDuration(audio: HTMLAudioElement): Promise<number> {
   if (Number.isFinite(audio.duration) && audio.duration > 0) {
     return Promise.resolve(audio.duration);
   }
   return new Promise<number>((resolve) => {
     let settled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
-    const finish = () => {
+    const finish = async () => {
       if (settled) return;
       settled = true;
       if (timer) clearTimeout(timer);
       audio.removeEventListener('durationchange', onDurationChange);
+      await seekSettled(audio);
       try { audio.currentTime = 0; } catch { /* not seekable */ }
+      await seekSettled(audio);
       resolve(Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 0);
     };
     const onDurationChange = () => {
-      if (Number.isFinite(audio.duration)) finish();
+      if (Number.isFinite(audio.duration)) void finish();
     };
     audio.addEventListener('durationchange', onDurationChange);
-    timer = setTimeout(finish, 1500);
+    timer = setTimeout(() => { void finish(); }, 1500);
     try {
       audio.currentTime = 1e101;
     } catch {
-      finish();
+      void finish();
     }
+  });
+}
+
+/** Resolves once a running seek ends (`seeked`), or after 1.5 s if it never says. */
+function seekSettled(audio: HTMLAudioElement): Promise<void> {
+  if (!audio.seeking) return Promise.resolve();
+  return new Promise<void>((resolve) => {
+    const done = () => {
+      clearTimeout(timer);
+      audio.removeEventListener('seeked', done);
+      resolve();
+    };
+    const timer = setTimeout(done, 1500);
+    audio.addEventListener('seeked', done);
   });
 }
 
@@ -430,6 +453,12 @@ function EncryptedAttachmentView({
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrlRef = useRef<string | null>(null);
+  // One load at a time, and none that outlives the chip: a second tap on
+  // Play while the file was still on its way started a second player over
+  // the first (Pause then stopped only one), and leaving the note during
+  // the load started a player nothing could reach.
+  const loadingRef = useRef(false);
+  const mountedRef = useRef(true);
 
   const uuid = src?.startsWith(FILE_URI_PREFIX)
     ? src.slice(FILE_URI_PREFIX.length)
@@ -500,7 +529,9 @@ function EncryptedAttachmentView({
 
   // Stop audio and free its blob URL on unmount (e.g. navigating to another note)
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.src = '';
@@ -663,10 +694,15 @@ function EncryptedAttachmentView({
       setPlaying(true);
       return;
     }
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     setError(null);
     try {
       const url = await fetchBlobUrl();
       if (!url) { setMissingRemote(true); return; }
+      // The chip is gone (the note was left while the file loaded): the
+      // unmount cleanup ran before there was a player to stop.
+      if (!mountedRef.current) { URL.revokeObjectURL(url); return; }
       setMissingRemote(false);
       audioUrlRef.current = url;
       const audio = document.createElement('audio');
@@ -700,6 +736,8 @@ function EncryptedAttachmentView({
       else if (msg === 'format') { setFormatUnsupported(true); setError(null); }
       else { setError(msg || t('attachment.playbackFailed')); }
       setPlaying(false);
+    } finally {
+      loadingRef.current = false;
     }
   }, [playing, mimetype, fetchBlobUrl, t]);
 
@@ -1097,9 +1135,10 @@ export async function readAttachmentUrl(uuid: string): Promise<string | null> {
   if (cached) return cached;
   const att = await readAttachmentData(uuid);
   if (!att) return null;
+  const drawable = await drawablePicture(att.data);
   const existing = attachmentUrlCache.get(uuid);
   if (existing) return existing;
-  const url = URL.createObjectURL(new Blob([att.data as BlobPart], { type: att.meta.mime || '' }));
+  const url = URL.createObjectURL(new Blob([drawable.bytes as BlobPart], { type: drawable.mime ?? (att.meta.mime || '') }));
   attachmentUrlCache.set(uuid, url);
   return url;
 }
