@@ -7855,6 +7855,8 @@ function AuthenticatedView({
         const del = q.kind === 'delete';
         return (
           <ConfirmModal
+            // Above the item's "..." menu, where the Schedule view asks it (#696).
+            layer="z-[60]"
             title={t(del ? 'shell:repeat.deleteTitle' : 'shell:repeat.changeTitle')}
             confirmLabel=""
             variant={del ? 'danger' : 'info'}

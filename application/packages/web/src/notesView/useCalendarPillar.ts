@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { toLocalIso } from '../intlFormat';
 import type { View } from '../views';
+import { useToday } from '../ListGroupHeader';
 
 /** The three layouts of the Calendar pillar's editor pane. */
 export type CalendarMode = 'day' | 'week' | 'month';
@@ -35,7 +36,16 @@ export function useCalendarPillar({ view, selectedId, setSelectedId, selectView 
   selectView: (view: View) => Promise<void> | void;
 }) {
   const [mode, setModeState] = useState<CalendarMode>(readMode);
-  const [focus, setFocus] = useState(() => toLocalIso(new Date()));
+  const today = useToday();
+  const [focus, setFocus] = useState(today);
+  // A pillar left on today moves on with it at midnight and when the app
+  // comes back, so a new event does not take yesterday (#693). A day the
+  // person went to stays.
+  const [focusToday, setFocusToday] = useState(today);
+  if (focusToday !== today) {
+    setFocusToday(today);
+    if (focus === focusToday) setFocus(today);
+  }
   const [opened, setOpened] = useState<{ id: string; day: string } | null>(null);
   // Another selection ends it, so coming back by another route does not revive it.
   if (opened && opened.id !== selectedId) setOpened(null);

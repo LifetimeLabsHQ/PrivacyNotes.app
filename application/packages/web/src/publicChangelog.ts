@@ -39,6 +39,7 @@ export const PUBLIC_CHANGELOG: ChangelogRelease[] = [
       { type: 'new', text: 'Add a login or make a password from the extension, press Alt+Shift+B to bookmark the page, or type pn in the address bar to search.' },
       { type: 'new', text: 'Connect a browser with a one-time code. If another browser uses your code, the app names it, and a new browser carries a New badge for a day.' },
       { type: 'improved', text: 'The Web clipper window points to the extension, which clips the open page as you see it.' },
+      { type: 'fixed', text: 'A click on a link in a note opens it once again, not twice, in the desktop app.', issues: [701] },
     ],
   },
   {

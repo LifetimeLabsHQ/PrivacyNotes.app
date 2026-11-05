@@ -4,6 +4,10 @@ import { timeLabel } from './JournalCalendar';
 import { toLocalIso } from './intlFormat';
 import { parseTimeLabel } from './timeLabel';
 import { isTouchOnly } from './touchOnly';
+import { detectDeviceOs } from './deviceFingerprint';
+
+/** iPhone and iPad draw the time as a wheel that reports every step. */
+const IOS_WHEEL = typeof navigator !== 'undefined' && ['iPhone', 'iPad'].includes(detectDeviceOs());
 
 /** What a native time input's value commits: an `HH:MM` time, `null` for a
  *  cleared field that may be cleared, or `undefined` for nothing to commit. */
@@ -17,7 +21,8 @@ export function nativeTimeCommit(raw: string, clearable: boolean): string | null
  * reads and writes the stored `HH:MM` and shows the device's 12 or 24 hour
  * clock. A pointer device gets a text field that shows the time as the clock
  * setting writes it and takes it as typed ("15:00", "3pm"). Both commit on
- * Enter, on the picker's change, or when the field loses focus.
+ * Enter, on the picker's change (not on iOS, whose wheel changes before its
+ * Done tick), or when the field loses focus.
  * Spec: docs/internal/issues/0550.md (Spec)
  */
 export function TimeInput({ value, onCommit, label, className, day, clearable = false }: {
@@ -49,9 +54,12 @@ export function TimeInput({ value, onCommit, label, className, day, clearable = 
   // The picker's own change event fires once a time is picked; React's
   // onChange follows every wheel step on iOS, which is too early to save.
   // This listener runs before React's, so it reads the value off the field.
+  // On iOS the change fires when the wheel settles, before the picker's Done
+  // tick, so a repeating event asked its question mid-pick (#696): there the
+  // time saves on blur, which Done and a tap outside both cause.
   useEffect(() => {
     const el = ref.current;
-    if (!native || !el) return;
+    if (!native || !el || IOS_WHEEL) return;
     const onChange = () => commitRef.current(el.value);
     el.addEventListener('change', onChange);
     return () => el.removeEventListener('change', onChange);

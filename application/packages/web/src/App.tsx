@@ -178,9 +178,15 @@ export default function App() {
       // Spec: docs/internal/specs/contacts-pillar.md (section 9, tap to call)
       if (!href || !/^(https?:|mailto:|tel:|sms:)/i.test(href)) return;
       // A mouse click on a link inside a note being written is opened by
-      // `editorLinks.ts`, which also knows a file link from an address.
-      // A finger keeps this route.
-      if (!isTouchPointer() && anchor?.closest('[contenteditable="true"]')) return;
+      // `editorLinks.ts` (on mouseup, before this click), which also knows a
+      // file link from an address. A finger keeps this route. The click is
+      // still cancelled: the opener plugin's own script opens every
+      // uncancelled `target="_blank"` click, so the link opened twice
+      // (GitHub #701).
+      if (!isTouchPointer() && anchor?.closest('[contenteditable="true"]')) {
+        e.preventDefault();
+        return;
+      }
       e.preventDefault();
       // "Open links with Cmd-click" covers a read-only note too (GitHub #633).
       if (readLinkModifier() && !isTouchPointer() && !isOpenLinkModifier(e) && anchor?.closest('.ProseMirror')) return;

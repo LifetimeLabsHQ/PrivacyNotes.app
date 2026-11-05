@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useEffect, useRef, type ComponentType, type ReactNode } from 'react';
+import { useEffect, useRef, type ComponentProps, type ComponentType, type ReactNode } from 'react';
 import type { IconProps } from '@phosphor-icons/react';
 import { isImeComposing } from './imeComposing';
 import { Info, Trash, Warning } from './icons';
@@ -62,6 +62,9 @@ type Props = {
   /** The title's glyph, in the variant's color, when the window is about one
    *  action (the trash for the Delete window). Without it the variant picks. */
   titleIcon?: ComponentType<IconProps>;
+  /** The stacking layer, as `Modal` takes it: a question that answers an
+   *  action in a menu or another window sits above it. */
+  layer?: ComponentProps<typeof Modal>['layer'];
 };
 
 /* ── Icon per variant ──────────────────────────────────── */
@@ -112,6 +115,7 @@ export function ConfirmModal({
   titleIcon,
   choices,
   confirmIcon,
+  layer,
 }: Props) {
   const ConfirmGlyph = confirmIcon ?? confirmGlyph[variant];
   const { t } = useTranslation('common');
@@ -165,7 +169,7 @@ export function ConfirmModal({
     </button>
   );
   return (
-    <Modal onClose={onClose} title={title} icon={<VariantIcon variant={variant} glyph={titleIcon} />} className="max-w-sm p-6 space-y-4">
+    <Modal onClose={onClose} layer={layer} title={title} icon={<VariantIcon variant={variant} glyph={titleIcon} />} className="max-w-sm p-6 space-y-4">
         {/* Body */}
         <div className="text-body text-pn-muted leading-relaxed">
           {children}
