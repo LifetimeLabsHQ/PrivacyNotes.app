@@ -58,7 +58,7 @@ use avif::decode_avif;
 /// Spec: docs/internal/specs/web-clipper-stage1.md (section 3.1)
 mod clip_fetch;
 use clip_fetch::clip_fetch;
-/// Install for `pn`, the command line tool (Settings > CLI).
+/// Install for `privacynotes`, the command line tool (Settings > CLI).
 /// Spec: docs/internal/plans/agent-cli.md (section 3.7)
 #[cfg(desktop)]
 mod cli_install;
@@ -749,7 +749,7 @@ pub fn run() {
                     let _ = std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o700));
                 }
             }
-            // An installed `pn` runs the copy in the app's data folder; bring
+            // An installed `privacynotes` runs the copy in the app's data folder; bring
             // it to this version off the main thread (cli_install.rs).
             #[cfg(desktop)]
             {

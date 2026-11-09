@@ -1,5 +1,5 @@
 /**
- * Whether Settings > CLI shows. `pn` reaches people through the desktop
+ * Whether Settings > CLI shows. `privacynotes` reaches people through the desktop
  * app's Install button (src-tauri/src/cli_install.rs), so the pane shows in
  * the desktop apps only. Before that button shipped (C9), the pane showed in
  * development builds only, so no release offered a command nobody could

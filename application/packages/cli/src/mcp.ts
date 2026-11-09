@@ -1,8 +1,8 @@
 /**
- * `pn mcp`: the same `pn`, as a Model Context Protocol server over stdio, so
+ * `privacynotes mcp`: the same `privacynotes`, as a Model Context Protocol server over stdio, so
  * an AI app with no terminal can call it as a tool. One JSON-RPC 2.0 message a
  * line on stdin, one answer a line on stdout; nothing else may reach stdout.
- * One tool, `save_note`, which does what `pn save` does through the same
+ * One tool, `save_note`, which does what `privacynotes save` does through the same
  * token: it can only add a note to the Agent folder.
  * Spec: docs/internal/plans/agent-cli.md (section 3.9)
  */
@@ -13,7 +13,7 @@ export const MCP_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'] as const;
 
 export interface McpDeps {
   version: string;
-  /** The saved connection, or null when `pn login` has not run. */
+  /** The saved connection, or null when `privacynotes login` has not run. */
   connection: () => Connection | null;
   /** Build, seal and send one note; resolves to its title. Throws a CliError. */
   save: (c: Connection, input: { markdown: string; title?: string; tags: string[] }) => Promise<string>;
@@ -31,7 +31,7 @@ const SAVE_TOOL = {
   name: 'save_note',
   title: 'Save a note to PrivacyNotes',
   description:
-    'Save Markdown as a new note in the PrivacyNotes Agent folder of the person who connected pn. The note is encrypted on this computer and shows in their apps after the next sync. Use it when they ask to save, keep or store something in their notes. It can only add notes: it cannot read, change or delete them.',
+    'Save Markdown as a new note in the PrivacyNotes Agent folder of the person who connected privacynotes. The note is encrypted on this computer and shows in their apps after the next sync. Use it when they ask to save, keep or store something in their notes. It can only add notes: it cannot read, change or delete them.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -85,7 +85,7 @@ export async function handleMcpLine(line: string, deps: McpDeps): Promise<object
       const tags = args.tags === undefined ? [] : args.tags;
       if (!Array.isArray(tags) || !tags.every((t) => typeof t === 'string')) return ok(id, text('tags must be a list of strings.', true));
       const c = deps.connection();
-      if (!c) return ok(id, text('pn is not connected. The person must run pn login in a terminal first, with a code from Settings > CLI.', true));
+      if (!c) return ok(id, text('privacynotes is not connected. The person must run privacynotes login in a terminal first, with a code from Settings > CLI.', true));
       try {
         const title = await deps.save(c, { markdown: args.markdown, ...(args.title !== undefined ? { title: args.title } : {}), tags: tags as string[] });
         return ok(id, text(`Saved "${title || 'Untitled'}" to the Agent folder. It shows in the PrivacyNotes apps after the next sync.`));

@@ -141,8 +141,8 @@
   "cli": {
     "kicker": "PrivacyNotes CLI, para agentes de IA",
     "heading": "Tus agentes de IA escriben. Tus notas lo guardan.",
-    "intro": "Pide a tu agente de IA que guarde el plan que acaba de escribir. Deja que un script entregue el informe de esta noche. Di \"guarda esto\" en un chat de IA. pn, la interfaz de línea de comandos de PrivacyNotes, pone cada cosa en tu carpeta Agent, en todos tus dispositivos, cifrada en tu ordenador.",
-    "tabsLabel": "Tres formas de usar pn",
+    "intro": "Pide a tu agente de IA que guarde el plan que acaba de escribir. Deja que un script entregue el informe de esta noche. Di \"guarda esto\" en un chat de IA. La línea de comandos de PrivacyNotes, privacynotes, pone cada cosa en tu carpeta Agent, en todos tus dispositivos, cifrada en tu ordenador.",
+    "tabsLabel": "Tres formas de usar privacynotes",
     "tabScript": "Un script",
     "tabAgent": "Un agente de programación con IA",
     "tabApp": "Una app de IA (MCP)",
@@ -156,7 +156,7 @@
     "sampleNote2": "Lista de lecturas",
     "factFolder": "Una carpeta",
     "factJson": "JSON para scripts",
-    "useHeading": "Lo que la gente guarda con pn",
+    "useHeading": "Lo que la gente guarda con privacynotes",
     "usePlanTitle": "Planes de tu agente de programación",
     "usePlanBody": "Pide a tu agente que guarde el plan, el resumen o la investigación que acaba de escribir. Llega con sus etiquetas, lista en tu móvil.",
     "useChatTitle": "Chats que vale la pena guardar",
@@ -168,8 +168,8 @@
     "useClipTitle": "Todo lo que copiaste",
     "useClipBody": "Envía el portapapeles, la salida de un comando o un mensaje de error directamente a tus notas.",
     "useToolsTitle": "Parte de tus propias herramientas",
-    "useToolsBody": "pn responde en JSON y termina con códigos de salida claros, así tus scripts saben que la nota se guardó.",
-    "howLink": "Lee cómo funciona pn"
+    "useToolsBody": "El comando responde en JSON y termina con códigos de salida claros, así tus scripts saben que la nota se guardó.",
+    "howLink": "Lee cómo funciona privacynotes"
   },
   "meds": {
     "tileName": "Registro de medicación",

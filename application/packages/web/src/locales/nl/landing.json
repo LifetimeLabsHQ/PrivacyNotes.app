@@ -141,8 +141,8 @@
   "cli": {
     "kicker": "PrivacyNotes CLI, voor AI-agents",
     "heading": "Je AI-agents schrijven. Je notities bewaren het.",
-    "intro": "Vraag je AI-agent het plan op te slaan dat hij net heeft geschreven. Laat een script het rapport van vanavond neerzetten. Zeg \"sla dit op\" in een AI-chat. pn, de opdrachtregelinterface van PrivacyNotes, zet elk ervan in je Agent-map, op al je apparaten, versleuteld op je computer.",
-    "tabsLabel": "Drie manieren om pn te gebruiken",
+    "intro": "Vraag je AI-agent het plan op te slaan dat hij net heeft geschreven. Laat een script het rapport van vanavond neerzetten. Zeg \"sla dit op\" in een AI-chat. De opdrachtregel van PrivacyNotes, privacynotes, zet elk ervan in je Agent-map, op al je apparaten, versleuteld op je computer.",
+    "tabsLabel": "Drie manieren om privacynotes te gebruiken",
     "tabScript": "Een script",
     "tabAgent": "Een AI-codeeragent",
     "tabApp": "Een AI-app (MCP)",
@@ -156,7 +156,7 @@
     "sampleNote2": "Leeslijst",
     "factFolder": "Eén map",
     "factJson": "JSON voor scripts",
-    "useHeading": "Wat mensen met pn opslaan",
+    "useHeading": "Wat mensen met privacynotes opslaan",
     "usePlanTitle": "Plannen van je codeeragent",
     "usePlanBody": "Vraag je agent het plan, de samenvatting of het onderzoek op te slaan dat hij net heeft geschreven. Het komt binnen met zijn tags, klaar op je telefoon.",
     "useChatTitle": "Chats die het bewaren waard zijn",
@@ -168,8 +168,8 @@
     "useClipTitle": "Alles wat je hebt gekopieerd",
     "useClipBody": "Stuur het klembord, de uitvoer van een opdracht of een foutmelding rechtstreeks naar je notities.",
     "useToolsTitle": "Onderdeel van je eigen tools",
-    "useToolsBody": "pn antwoordt in JSON en stopt met duidelijke exitcodes, zodat je scripts weten dat de notitie is opgeslagen.",
-    "howLink": "Lees hoe pn werkt"
+    "useToolsBody": "De opdracht antwoordt in JSON en stopt met duidelijke exitcodes, zodat je scripts weten dat de notitie is opgeslagen.",
+    "howLink": "Lees hoe privacynotes werkt"
   },
   "meds": {
     "tileName": "Medicatietracker",

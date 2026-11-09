@@ -141,8 +141,8 @@
   "cli": {
     "kicker": "PrivacyNotes CLI, pour les agents IA",
     "heading": "Tes agents IA écrivent. Tes notes le gardent.",
-    "intro": "Demande à ton agent IA d'enregistrer le plan qu'il vient d'écrire. Laisse un script déposer le rapport de ce soir. Dis \"enregistre ça\" dans une conversation avec une IA. pn, l'interface en ligne de commande de PrivacyNotes, place chacun d'eux dans ton dossier Agent, sur tous tes appareils, chiffré sur ton ordinateur.",
-    "tabsLabel": "Trois façons d'utiliser pn",
+    "intro": "Demande à ton agent IA d'enregistrer le plan qu'il vient d'écrire. Laisse un script déposer le rapport de ce soir. Dis \"enregistre ça\" dans une conversation avec une IA. La ligne de commande de PrivacyNotes, privacynotes, place chacun d'eux dans ton dossier Agent, sur tous tes appareils, chiffré sur ton ordinateur.",
+    "tabsLabel": "Trois façons d'utiliser privacynotes",
     "tabScript": "Un script",
     "tabAgent": "Un agent de code IA",
     "tabApp": "Une app d'IA (MCP)",
@@ -156,7 +156,7 @@
     "sampleNote2": "Liste de lecture",
     "factFolder": "Un seul dossier",
     "factJson": "JSON pour les scripts",
-    "useHeading": "Ce que l'on enregistre avec pn",
+    "useHeading": "Ce que l'on enregistre avec privacynotes",
     "usePlanTitle": "Les plans de ton agent de code",
     "usePlanBody": "Demande à ton agent d'enregistrer le plan, le résumé ou la recherche qu'il vient d'écrire. La note arrive avec ses étiquettes, prête sur ton téléphone.",
     "useChatTitle": "Les conversations à garder",
@@ -168,8 +168,8 @@
     "useClipTitle": "Tout ce que tu as copié",
     "useClipBody": "Envoie le presse-papiers, la sortie d'une commande ou un message d'erreur directement dans tes notes.",
     "useToolsTitle": "Un de tes propres outils",
-    "useToolsBody": "pn répond en JSON et se termine avec des codes clairs, pour que tes scripts sachent que la note a été enregistrée.",
-    "howLink": "Découvre comment fonctionne pn"
+    "useToolsBody": "La commande répond en JSON et se termine avec des codes clairs, pour que tes scripts sachent que la note a été enregistrée.",
+    "howLink": "Découvre comment fonctionne privacynotes"
   },
   "meds": {
     "tileName": "Suivi des médicaments",

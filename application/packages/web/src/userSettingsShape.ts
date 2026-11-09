@@ -166,7 +166,7 @@ export type UserSettings = {
    */
   taskConfetti: boolean;
   /**
-   * The folder the command line `pn` saves into (Settings > CLI),
+   * The folder the command line `privacynotes` saves into (Settings > CLI),
    * or null while that is off. A folder id that no longer exists reads as
    * off. Spec: docs/internal/plans/agent-cli.md (C4)
    */

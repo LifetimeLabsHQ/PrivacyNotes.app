@@ -141,8 +141,8 @@
   "cli": {
     "kicker": "PrivacyNotes CLI pro AI agenty",
     "heading": "Tvoji AI agenti píšou. Tvoje poznámky si to nechají.",
-    "intro": "Požádej svého AI agenta, ať uloží plán, který právě napsal. Nech skript odložit dnešní večerní report. Řekni v AI chatu „ulož to“. pn, příkazový řádek PrivacyNotes, uloží všechno z toho do tvé složky Agent, na všech tvých zařízeních, zašifrované na tvém počítači.",
-    "tabsLabel": "Tři způsoby, jak používat pn",
+    "intro": "Požádej svého AI agenta, ať uloží plán, který právě napsal. Nech skript odložit dnešní večerní report. Řekni v AI chatu „ulož to“. Příkazový řádek PrivacyNotes, privacynotes, uloží všechno z toho do tvé složky Agent, na všech tvých zařízeních, zašifrované na tvém počítači.",
+    "tabsLabel": "Tři způsoby, jak používat privacynotes",
     "tabScript": "Skript",
     "tabAgent": "AI agent pro programování",
     "tabApp": "AI aplikace (MCP)",
@@ -156,7 +156,7 @@
     "sampleNote2": "Seznam četby",
     "factFolder": "Jedna složka",
     "factJson": "JSON pro skripty",
-    "useHeading": "Co lidé ukládají přes pn",
+    "useHeading": "Co lidé ukládají přes privacynotes",
     "usePlanTitle": "Plány od tvého agenta pro programování",
     "usePlanBody": "Požádej agenta, ať uloží plán, shrnutí nebo rešerši, kterou právě napsal. Dorazí i se značkami, připravená v telefonu.",
     "useChatTitle": "Chaty, které stojí za to si nechat",
@@ -168,8 +168,8 @@
     "useClipTitle": "Cokoli ze schránky",
     "useClipBody": "Pošli schránku, výstup příkazu nebo chybovou hlášku rovnou do svých poznámek.",
     "useToolsTitle": "Součást tvých vlastních nástrojů",
-    "useToolsBody": "pn odpovídá v JSONu a končí jasnými návratovými kódy, takže tvoje skripty vědí, že se poznámka uložila.",
-    "howLink": "Přečti si, jak pn funguje"
+    "useToolsBody": "Příkaz odpovídá v JSONu a končí jasnými návratovými kódy, takže tvoje skripty vědí, že se poznámka uložila.",
+    "howLink": "Přečti si, jak privacynotes funguje"
   },
   "meds": {
     "tileName": "Sledování léků",

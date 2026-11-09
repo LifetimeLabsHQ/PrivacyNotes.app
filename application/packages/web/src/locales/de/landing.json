@@ -141,8 +141,8 @@
   "cli": {
     "kicker": "PrivacyNotes CLI, für KI-Agenten",
     "heading": "Deine KI-Agenten schreiben. Deine Notizen behalten es.",
-    "intro": "Bitte deinen KI-Agenten, den Plan zu speichern, den er gerade geschrieben hat. Lass ein Skript den Bericht von heute Abend ablegen. Sag „Speicher das“ in einem KI-Chat. pn, die Kommandozeilen-Schnittstelle von PrivacyNotes, legt alles in deinem Agent-Ordner ab, auf all deinen Geräten, verschlüsselt auf deinem Computer.",
-    "tabsLabel": "Drei Wege, pn zu nutzen",
+    "intro": "Bitte deinen KI-Agenten, den Plan zu speichern, den er gerade geschrieben hat. Lass ein Skript den Bericht von heute Abend ablegen. Sag „Speicher das“ in einem KI-Chat. Die Kommandozeile von PrivacyNotes, privacynotes, legt alles in deinem Agent-Ordner ab, auf all deinen Geräten, verschlüsselt auf deinem Computer.",
+    "tabsLabel": "Drei Wege, privacynotes zu nutzen",
     "tabScript": "Ein Skript",
     "tabAgent": "Ein KI-Coding-Agent",
     "tabApp": "Eine KI-App (MCP)",
@@ -156,7 +156,7 @@
     "sampleNote2": "Leseliste",
     "factFolder": "Ein Ordner",
     "factJson": "JSON für Skripte",
-    "useHeading": "Was Leute mit pn speichern",
+    "useHeading": "Was Leute mit privacynotes speichern",
     "usePlanTitle": "Pläne von deinem Coding-Agenten",
     "usePlanBody": "Bitte deinen Agenten, den Plan, die Zusammenfassung oder die Recherche zu speichern, die er gerade geschrieben hat. Die Notiz kommt mit ihren Tags an, bereit auf deinem Handy.",
     "useChatTitle": "Chats, die es wert sind",
@@ -168,8 +168,8 @@
     "useClipTitle": "Alles, was du kopiert hast",
     "useClipBody": "Schick die Zwischenablage, die Ausgabe eines Befehls oder eine Fehlermeldung direkt in deine Notizen.",
     "useToolsTitle": "Teil deiner eigenen Werkzeuge",
-    "useToolsBody": "pn antwortet in JSON und endet mit klaren Exit-Codes, damit deine Skripte wissen, dass die Notiz gespeichert ist.",
-    "howLink": "Lies, wie pn funktioniert"
+    "useToolsBody": "Der Befehl antwortet in JSON und endet mit klaren Exit-Codes, damit deine Skripte wissen, dass die Notiz gespeichert ist.",
+    "howLink": "Lies, wie privacynotes funktioniert"
   },
   "meds": {
     "tileName": "Medikamenten-Tracker",

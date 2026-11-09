@@ -30,7 +30,7 @@ export interface PairingInput {
   contentKey: Uint8Array;
   clips: boolean;
   logins: boolean;
-  /** A code for the command line `pn`: clips only, never logins.
+  /** A code for the command line `privacynotes`: clips only, never logins.
    *  Spec: docs/internal/plans/agent-cli.md (section 3.2) */
   client?: 'cli';
   readKeys: () => ExtensionKeys;

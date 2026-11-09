@@ -3,7 +3,7 @@ import { CopyButton } from './misc';
 
 /**
  * @catalog TerminalBlock
- * use: a command or a settings line a person copies into a terminal or an app (`echo "# Hello" | pn save`, an MCP entry): a dark block in every theme, a `$` prompt for a command, monospace text with its quoted strings in green, Copy at the end.
+ * use: a command or a settings line a person copies into a terminal or an app (`echo "# Hello" | privacynotes save`, an MCP entry): a dark block in every theme, a `$` prompt for a command, monospace text with its quoted strings in green, Copy at the end.
  * never: a beige or bordered code box of your own with a CopyButton beside it; commands in a <pre> or a body paragraph.
  */
 export function TerminalBlock({ value, prompt = false, copyLabel }: {

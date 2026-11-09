@@ -1,5 +1,5 @@
 /**
- * How `pn` draws a result: one framed card, the badge in the top border, the
+ * How `privacynotes` draws a result: one framed card, the badge in the top border, the
  * frame's color the outcome (brand for a prompt or a status, ok for done,
  * error for a problem), a table of details, and a footer that says what
  * happens next. Without color (a pipe, NO_COLOR, TERM=dumb) the same words
@@ -46,7 +46,7 @@ const TONE: Record<Tone, string> = {
   barEmpty: '38;5;238',
 };
 
-/** Columns a string takes. `pn` prints only single-width symbols. */
+/** Columns a string takes. `privacynotes` prints only single-width symbols. */
 export const width = (s: string): number => [...s].length;
 
 /** Cut to `max` columns, with an ellipsis when it was longer. */

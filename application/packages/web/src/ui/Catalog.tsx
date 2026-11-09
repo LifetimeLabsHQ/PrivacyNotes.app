@@ -704,8 +704,8 @@ export default function Catalog() {
 
         <Part name="TerminalBlock" note="a command or settings line to copy: dark in every theme, a $ prompt for a command">
           <div className="max-w-md space-y-2">
-            <TerminalBlock value='echo "# Hello" | pn save' prompt copyLabel="Copy" />
-            <TerminalBlock value='"privacynotes": { "command": "pn", "args": ["mcp"] }' copyLabel="Copy" />
+            <TerminalBlock value='echo "# Hello" | privacynotes save' prompt copyLabel="Copy" />
+            <TerminalBlock value='"privacynotes": { "command": "privacynotes", "args": ["mcp"] }' copyLabel="Copy" />
           </div>
         </Part>
 

@@ -18,6 +18,15 @@
 
 export type ImageFormat = 'jpeg' | 'png' | 'webp' | 'gif' | 'bmp' | 'tiff' | 'heic' | 'unknown';
 
+/** The type of the formats every webview draws; the others have none here. */
+export const IMAGE_FORMAT_MIME: Partial<Record<ImageFormat, string>> = {
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  gif: 'image/gif',
+  bmp: 'image/bmp',
+};
+
 const EXIF_PREFIX = ascii('Exif\0\0');
 const ICC_PROFILE = ascii('ICC_PROFILE\0');
 const PNG_SIGNATURE = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);

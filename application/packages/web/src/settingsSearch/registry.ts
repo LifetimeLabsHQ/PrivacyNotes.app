@@ -111,7 +111,7 @@ const SECTION_ENTRIES: SettingEntry[] = (Object.keys(SECTION_LABEL) as SectionId
   isSection: true,
   // Touch-only devices have no Hotkeys pane.
   ...(section === 'hotkeys' ? { shownOn: 'keyboard' as const } : {}),
-  // Settings > Command line shows where `pn` can be installed (cliRelease.ts).
+  // Settings > Command line shows where `privacynotes` can be installed (cliRelease.ts).
   ...(section === 'commandLine' ? { shownOn: 'commandLine' as const } : {}),
 }));
 

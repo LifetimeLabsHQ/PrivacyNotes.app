@@ -10,7 +10,7 @@
     "section_import": "import, export, backup, migrate, move, download",
     "section_plan": "plan, subscription, pro, billing, devices, sign out, log out",
     "section_storage": "storage, space, quota, disk, gigabytes, full",
-    "section_commandLine": "command line, terminal, shell, pn, cli, script, ai agent, automation",
+    "section_commandLine": "command line, terminal, shell, privacynotes, pn, cli, script, ai agent, automation",
     "section_browser": "browser extension, browser, add-on, connect, web clipper, password manager, chrome, firefox, edge",
     "storage_images": "images, photos, pictures, compression, quality",
     "section_security": "security, password, lock, privacy",

@@ -21,7 +21,7 @@
  */
 
 import { parseScene, serializeScene } from '../drawing/scene';
-import { sniffImageFormat } from '../imageMetadata';
+import { IMAGE_FORMAT_MIME, sniffImageFormat } from '../imageMetadata';
 import { isUntitledStem } from '../exportNames';
 import { oneLineTitle } from '../oneLineTitle';
 import i18n from '../i18n';
@@ -36,15 +36,6 @@ type SourceFile = { path: string; text: string; date: Date | null };
 const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.excalidraw.${key}`, options);
 
 const DRAWING_FILE = /\.excalidraw(?:\.md)?$/i;
-
-/** The picture formats the image store keeps and the canvas can draw. */
-const PICTURE_MIME = new Map<ReturnType<typeof sniffImageFormat>, string>([
-  ['jpeg', 'image/jpeg'],
-  ['png', 'image/png'],
-  ['webp', 'image/webp'],
-  ['gif', 'image/gif'],
-  ['bmp', 'image/bmp'],
-]);
 
 const noDrawing = (): string => msg('noDrawing');
 
@@ -143,7 +134,7 @@ export async function parseExcalidraw(file: File, onProgress?: (msg: string) => 
     for (const [id, entry] of Object.entries(rawFiles)) {
       if (!isRecord(entry) || typeof entry.dataURL !== 'string') continue;
       const bytes = dataUrlBytes(entry.dataURL);
-      const mime = bytes ? PICTURE_MIME.get(sniffImageFormat(bytes)) : undefined;
+      const mime = bytes ? IMAGE_FORMAT_MIME[sniffImageFormat(bytes)] : undefined;
       if (!bytes || !mime) {
         unreadablePictures++;
         continue;

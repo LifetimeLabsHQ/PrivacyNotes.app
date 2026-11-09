@@ -1,5 +1,5 @@
 /**
- * Install for `pn` from Settings > CLI, through the desktop app's two Tauri
+ * Install for `privacynotes` from Settings > CLI, through the desktop app's two Tauri
  * commands (`cli_status`, `install_cli` in src-tauri/src/cli_install.rs).
  * Outside the desktop app there is nothing to install from: the hook answers
  * null and the pane shows the help only.

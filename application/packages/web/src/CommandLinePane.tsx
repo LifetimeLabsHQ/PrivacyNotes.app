@@ -1,5 +1,5 @@
 /**
- * Settings > CLI: the `pn` command for scripts and AI agents. Off, it shows
+ * Settings > CLI: the `privacynotes` command for scripts and AI agents. Off, it shows
  * the pitch (`FeaturePitch`, the Markdown folder's shape) with Turn on (Pro),
  * which makes the Agent folder with the robot icon, and a link to the help
  * page. On, a banner, then three numbered steps (install, connect, save a
@@ -35,11 +35,11 @@ const ERROR_KEY: Record<string, string> = {
 };
 
 /** The first note the help page and the pane both suggest. */
-const TRY_IT = 'echo "# Hello" | pn save';
-/** Where `pn`'s one requirement comes from (agent-cli.md, C5). */
+const TRY_IT = 'echo "# Hello" | privacynotes save';
+/** Where the one requirement of `privacynotes` comes from (agent-cli.md, C5). */
 const NODE_DOWNLOAD = 'https://nodejs.org/en/download';
-/** What an AI app's MCP settings take to start `pn mcp` (agent-cli.md section 3.9). */
-const MCP_ENTRY = '"privacynotes": { "command": "pn", "args": ["mcp"] }';
+/** What an AI app's MCP settings take to start `privacynotes mcp` (agent-cli.md section 3.9). */
+const MCP_ENTRY = '"privacynotes": { "command": "privacynotes", "args": ["mcp"] }';
 
 export interface CommandLinePaneProps {
   extensionKeys: Pick<ExtensionAccess, 'readKeys' | 'saveKeys'>;
@@ -65,7 +65,7 @@ function CliExampleCards() {
             <p className="text-body font-medium text-pn">{t(cliExampleTitle(key))}</p>
           </div>
           <p className={SETTINGS_HELP}>{t(cliExampleBody(key))}</p>
-          <TerminalBlock value={command} prompt={command.startsWith('pn ') || command.includes(' | ')} copyLabel={t('common:actions.copy')} />
+          <TerminalBlock value={command} prompt={command.startsWith('privacynotes ') || command.includes(' | ')} copyLabel={t('common:actions.copy')} />
         </div>
       ))}
     </div>

@@ -7,6 +7,7 @@ import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view';
 import i18n from './i18n';
 import { commitWidths, dragColumn, dragTableWidth, dragWidths, effectiveWidths, mirrorEdge, widthsFromTableLines } from './tableColumnWidths';
 import { fillAt, tableFillsFromMarker, tableWidthFromMarker, type TableFills } from './tableDelimiterRow';
+import { readDomSelection } from './editorFocusCaret';
 
 /**
  * Column widths in the editor: reading them out of the markdown, drawing
@@ -230,12 +231,11 @@ export function clearTableWidths(view: EditorView, tablePos: number): void {
  * Turns the hover handle on or off. A click moves the caret in the DOM before
  * the editor reads it, and any transaction in that gap writes the editor's
  * older caret back over the click, so the pending DOM selection is read first.
- * `flush` is ProseMirror's own read of the DOM; it is not in the public types.
  */
 function setHandle(view: EditorView, handle: Handle | null): void {
   const current = resizeKey.getState(view.state)?.handle ?? null;
   if (current?.table === handle?.table && current?.border === handle?.border) return;
-  (view as unknown as { domObserver: { flush(): void } }).domObserver.flush();
+  readDomSelection(view);
   view.dispatch(view.state.tr.setMeta(resizeKey, { handle }));
 }
 

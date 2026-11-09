@@ -1,7 +1,7 @@
 /**
- * The command line `pn`, without its terminal: arguments, the note row, the
+ * The command line `privacynotes`, without its terminal: arguments, the note row, the
  * seal, the server calls and the config file. `pn.ts` wires it to the process.
- * `pn` never holds the content key or the inbox private key: it holds the
+ * `privacynotes` never holds the content key or the inbox private key: it holds the
  * account's inbox public key and a token that can only add notes.
  * Spec: docs/internal/plans/agent-cli.md (sections 3.2 to 3.5)
  */
@@ -25,7 +25,7 @@ const bytesToHex = (bytes: Uint8Array): string => Buffer.from(bytes).toString('h
 /** Exit codes. Spec: docs/internal/plans/agent-cli.md (section 3.5) */
 export const EXIT = { ok: 0, refused: 1, input: 2, notConnected: 3, network: 4 } as const;
 
-/** A refusal `pn` can explain: an exit code, a stable id for `--json`, the
+/** A refusal `privacynotes` can explain: an exit code, a stable id for `--json`, the
  *  badge, one line of detail and, where there is one, the fix. */
 export class CliError extends Error {
   constructor(
@@ -46,7 +46,7 @@ export interface Connection {
   account: string;
   inboxPublic: string;
   label: string;
-  /** The last note this computer saved, for `pn status`. */
+  /** The last note this computer saved, for `privacynotes status`. */
   lastSave?: { title: string; at: string };
 }
 
@@ -87,7 +87,7 @@ export function parseArgs(argv: string[]): Args {
       const eq = a.indexOf('=');
       if (eq > 0) return a.slice(eq + 1);
       const next = argv[++i];
-      if (next === undefined) throw new CliError(EXIT.input, 'bad_option', 'MISSING VALUE', `${name} needs a value.`, `pn save ${name} ...`);
+      if (next === undefined) throw new CliError(EXIT.input, 'bad_option', 'MISSING VALUE', `${name} needs a value.`, `privacynotes save ${name} ...`);
       return next;
     };
     if (a === '--json') out.json = true;
@@ -96,7 +96,7 @@ export function parseArgs(argv: string[]): Args {
     else if (a === '--title' || a.startsWith('--title=')) out.title = value('--title');
     else if (a === '--tag' || a.startsWith('--tag=') || a === '--tags' || a.startsWith('--tags=')) {
       out.tags.push(...value('--tag').split(',').map((t) => t.trim()).filter(Boolean));
-    } else if (a.startsWith('--')) throw new CliError(EXIT.input, 'bad_option', 'UNKNOWN OPTION', `pn does not know ${a}.`, 'pn --help');
+    } else if (a.startsWith('--')) throw new CliError(EXIT.input, 'bad_option', 'UNKNOWN OPTION', `privacynotes does not know ${a}.`, 'privacynotes --help');
     else if (out.command === null) out.command = a;
     else out.positional.push(a);
   }
@@ -113,10 +113,10 @@ export function titleOf(markdown: string): string {
   return [...first.trim()].slice(0, INBOX_NOTE_LIMITS.title).join('');
 }
 
-/** The note `pn save` sends. Throws a CliError with EXIT.input when the app
+/** The note `privacynotes save` sends. Throws a CliError with EXIT.input when the app
  *  would refuse it. */
 export function buildNote(markdown: string, opts: { title?: string; tags: string[]; id: string; now: Date }): InboxNote {
-  if (!markdown.trim()) throw new CliError(EXIT.input, 'empty', 'EMPTY NOTE', 'There is no text to save.', 'pn save note.md, or pipe Markdown in');
+  if (!markdown.trim()) throw new CliError(EXIT.input, 'empty', 'EMPTY NOTE', 'There is no text to save.', 'privacynotes save note.md, or pipe Markdown in');
   const bytes = new TextEncoder().encode(markdown).length;
   if (bytes > INBOX_NOTE_LIMITS.bodyBytes) {
     throw new CliError(EXIT.input, 'too_large', 'TOO LARGE', `${Math.ceil(bytes / 1024)} KB is over the ${INBOX_NOTE_LIMITS.bodyBytes / 1024} KB a note holds.`, 'split it into two notes');
@@ -176,7 +176,7 @@ async function call(
 }
 
 export const notConnected = () =>
-  new CliError(EXIT.notConnected, 'not_connected', 'NOT CONNECTED', 'This computer is not connected.', 'run pn login with a new code');
+  new CliError(EXIT.notConnected, 'not_connected', 'NOT CONNECTED', 'This computer is not connected.', 'run privacynotes login with a new code');
 
 const REFUSALS: Record<string, [title: string, detail: string, fix?: string]> = {
   invalid_code: ['CODE USED', 'This code is used or expired.', 'make a new one in Settings › CLI'],
@@ -208,7 +208,7 @@ export async function login(
   });
   const { account, id } = answer;
   if (typeof account !== 'string' || !/^[0-9a-f]{64}$/.test(account) || typeof id !== 'string') {
-    throw new CliError(EXIT.refused, 'unknown_answer', 'UNKNOWN ANSWER', 'The server gave an answer pn does not know.', 'update the PrivacyNotes app');
+    throw new CliError(EXIT.refused, 'unknown_answer', 'UNKNOWN ANSWER', 'The server gave an answer privacynotes does not know.', 'update the PrivacyNotes app');
   }
   return { v: 1, token: bytesToHex(token), tokenId: id, account, inboxPublic: bytesToBase64(code.inboxPublic), label };
 }
@@ -229,21 +229,23 @@ export async function forget(fetchFn: Fetch, base: string, connection: Connectio
   }
 }
 
-export const HELP = `pn - add notes to PrivacyNotes from a terminal or an AI agent
+export const HELP = `privacynotes - add notes to PrivacyNotes from a terminal or an AI agent
 
 Usage:
-  pn login                  Connect this computer. Make a code in
-                            Settings > CLI, then paste it here
-                            (or pipe it in: pn login < code.txt).
-  pn save [FILE] [options]  Add a note from FILE, or from stdin.
+  privacynotes login        Connect this computer. Make a code in
+                            Settings > CLI, then paste it here (or pipe
+                            it in: privacynotes login < code.txt).
+  privacynotes save [FILE] [options]
+                            Add a note from FILE, or from stdin.
       --title TEXT          The title. Default: the first # heading,
                             else the first line.
       --tag a,b             Tags (repeat or comma-separate).
-  pn mcp                    Run as an MCP server, so an AI app with no
+  privacynotes mcp          Run as an MCP server, so an AI app with no
                             terminal can save notes. In the app's MCP
-                            settings: "command": "pn", "args": ["mcp"]
-  pn status                 Show whether this computer is connected.
-  pn logout                 Disconnect this computer.
+                            settings:
+                            "command": "privacynotes", "args": ["mcp"]
+  privacynotes status       Show whether this computer is connected.
+  privacynotes logout       Disconnect this computer.
 
 Options for every command:
   --json                    Print the result as JSON.
@@ -251,7 +253,7 @@ Options for every command:
 
 Each note goes to your Agent folder. It shows in your apps after one of
 them opens and syncs. A note that no app picks up within 90 days is
-deleted from the server. pn can only add notes: it cannot open, change
+deleted from the server. privacynotes can only add notes: it cannot open, change
 or delete the notes you have.
 
 Exit codes: 0 done, 1 refused by the server, 2 bad input,

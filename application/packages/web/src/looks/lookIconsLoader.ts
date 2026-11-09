@@ -82,7 +82,10 @@ function useLazyModule<T>(box: ReturnType<typeof lazyModule<T>>, wanted: boolean
       live = false;
     };
   }, [box, mod, wanted]);
-  return mod;
+  // A part another component loaded counts too: the picker's grid asks for
+  // the paths of the recent logos alone, and with none it never loads the
+  // curated set itself, yet must draw it once the Logo tab has.
+  return mod ?? box.loaded;
 }
 
 /** The icon catalog once it is here, else null. `wanted` false never loads
@@ -94,6 +97,12 @@ export function useLookIcons(wanted = true): LookIconsModule | null {
 /** The logo catalog, the same way. */
 export function useLookLogos(wanted = true): LookLogosModule | null {
   return useLazyModule(logos, wanted);
+}
+
+/** Starts the logo catalog early, on a sign that the Logo tab comes next
+ *  (a pointer on the tab), so the tab draws at once on a cold start. */
+export function preloadLookLogos(): void {
+  logos.load().catch(() => {});
 }
 
 /** A logo's id; every other id is a look icon. */

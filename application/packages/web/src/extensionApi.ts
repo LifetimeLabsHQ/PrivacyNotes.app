@@ -11,7 +11,7 @@ import { readFnErrorBody, type FnError } from './devices';
 /** One connected extension, as the device list shows it. */
 export interface ExtensionRow {
   id: string;
-  /** A browser extension, or the command line `pn` (Settings > Command line).
+  /** A browser extension, or the command line `privacynotes` (Settings > Command line).
    *  Spec: docs/internal/plans/agent-cli.md (section 3.8) */
   client: 'browser' | 'cli';
   label: string;

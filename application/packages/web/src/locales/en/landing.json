@@ -141,8 +141,8 @@
   "cli": {
     "kicker": "PrivacyNotes CLI, for AI agents",
     "heading": "Your AI agents write. Your notes keep it.",
-    "intro": "Ask your AI agent to save the plan it just wrote. Let a script drop tonight's report. Say \"save this\" in an AI chat. pn, the PrivacyNotes command line interface, puts each one in your Agent folder, on all your devices, encrypted on your computer.",
-    "tabsLabel": "Three ways to use pn",
+    "intro": "Ask your AI agent to save the plan it just wrote. Let a script drop tonight's report. Say \"save this\" in an AI chat. The PrivacyNotes command line, privacynotes, puts each one in your Agent folder, on all your devices, encrypted on your computer.",
+    "tabsLabel": "Three ways to use privacynotes",
     "tabScript": "A script",
     "tabAgent": "An AI coding agent",
     "tabApp": "An AI app (MCP)",
@@ -156,7 +156,7 @@
     "sampleNote2": "Reading list",
     "factFolder": "One folder",
     "factJson": "JSON for scripts",
-    "useHeading": "What people save with pn",
+    "useHeading": "What people save with privacynotes",
     "usePlanTitle": "Plans from your coding agent",
     "usePlanBody": "Ask your agent to save the plan, the summary or the research it just wrote. It lands with its tags, ready on your phone.",
     "useChatTitle": "Chats worth keeping",
@@ -168,8 +168,8 @@
     "useClipTitle": "Anything you copied",
     "useClipBody": "Send the clipboard, a command's output or an error message straight to your notes.",
     "useToolsTitle": "Part of your own tools",
-    "useToolsBody": "pn answers in JSON and exits with clear codes, so your scripts know the note was saved.",
-    "howLink": "Read how pn works"
+    "useToolsBody": "The command answers in JSON and exits with clear codes, so your scripts know the note was saved.",
+    "howLink": "Read how privacynotes works"
   },
   "meds": {
     "tileName": "Medication Tracker",

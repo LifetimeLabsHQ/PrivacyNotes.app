@@ -20,7 +20,8 @@ import { matchesKey } from './shortcutMatch';
  * editable text (inputs, textareas, contenteditable) so copy/paste,
  * spellcheck, and dictionary lookups still work. The note body makes two
  * exceptions of its own in Editor.tsx: a link, and a click inside a
- * selection the reader made before the click.
+ * selection the reader made before the click. A picture in the desktop app
+ * is a third, in EncryptedImage.tsx (#719).
  *
  * On touch a long-press is the platform's own gesture (select + copy) and
  * the app's multi-select gesture on list rows, so it does not open this

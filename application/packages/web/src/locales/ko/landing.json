@@ -141,8 +141,8 @@
   "cli": {
     "kicker": "AI 에이전트를 위한 PrivacyNotes CLI",
     "heading": "AI 에이전트가 쓰고, 노트가 간직해요.",
-    "intro": "AI 에이전트에게 방금 작성한 계획을 저장하라고 하세요. 스크립트가 오늘 밤의 보고서를 남기게 하세요. AI 채팅에서 \"이거 저장해 줘\"라고 말하세요. PrivacyNotes 명령줄 인터페이스인 pn이 하나하나를 Agent 폴더에 넣어요. 모든 기기에서 보이고, 컴퓨터에서 암호화돼요.",
-    "tabsLabel": "pn을 쓰는 세 가지 방법",
+    "intro": "AI 에이전트에게 방금 작성한 계획을 저장하라고 하세요. 스크립트가 오늘 밤의 보고서를 남기게 하세요. AI 채팅에서 \"이거 저장해 줘\"라고 말하세요. PrivacyNotes 명령줄인 privacynotes가 하나하나를 Agent 폴더에 넣어요. 모든 기기에서 보이고, 컴퓨터에서 암호화돼요.",
+    "tabsLabel": "privacynotes를 쓰는 세 가지 방법",
     "tabScript": "스크립트",
     "tabAgent": "AI 코딩 에이전트",
     "tabApp": "AI 앱(MCP)",
@@ -156,7 +156,7 @@
     "sampleNote2": "읽을거리 목록",
     "factFolder": "폴더 하나",
     "factJson": "스크립트용 JSON",
-    "useHeading": "사람들이 pn으로 저장하는 것",
+    "useHeading": "사람들이 privacynotes로 저장하는 것",
     "usePlanTitle": "코딩 에이전트가 만든 계획",
     "usePlanBody": "에이전트에게 방금 작성한 계획, 요약, 리서치를 저장하라고 하세요. 태그와 함께 도착해서 휴대폰에서 바로 볼 수 있어요.",
     "useChatTitle": "간직할 만한 채팅",
@@ -168,8 +168,8 @@
     "useClipTitle": "복사한 무엇이든",
     "useClipBody": "클립보드, 명령어 출력, 오류 메시지를 바로 노트로 보내세요.",
     "useToolsTitle": "나만의 도구의 일부로",
-    "useToolsBody": "pn은 JSON으로 응답하고 명확한 종료 코드로 끝나서, 스크립트가 노트 저장 여부를 알 수 있어요.",
-    "howLink": "pn이 작동하는 방식 읽기"
+    "useToolsBody": "이 명령어는 JSON으로 응답하고 명확한 종료 코드로 끝나서, 스크립트가 노트 저장 여부를 알 수 있어요.",
+    "howLink": "privacynotes가 작동하는 방식 읽기"
   },
   "meds": {
     "tileName": "복약 트래커",

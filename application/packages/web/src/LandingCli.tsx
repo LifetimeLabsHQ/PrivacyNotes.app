@@ -1,9 +1,9 @@
 /**
- * The homepage section for the command line `pn` (owner, 2026-11-09): three
+ * The homepage section for the command line `privacynotes` (owner, 2026-11-09): three
  * tabs (a script, an AI coding agent, an AI app over MCP), a dark terminal
- * that types the command and shows pn's card, and a phone whose Agent folder
+ * that types the command and shows the command's card, and a phone whose Agent folder
  * takes the new note once the card is shown. With reduced motion the command
- * and the note show at once. pn prints English cards in every language, so
+ * and the note show at once. privacynotes prints English cards in every language, so
  * the terminal's command and card lines are constants (rule AB's reason);
  * the person's words, the agent's and the chat's are catalog copy.
  * Shown only while `cliMarketingShown()`: it ships with the Install button.
@@ -18,10 +18,10 @@ import { activeLocale } from './i18n';
 
 type Tab = 'script' | 'agent' | 'app';
 
-/** What pn itself prints, the same in every language. */
+/** What privacynotes itself prints, the same in every language. */
 const COMMAND: Record<Tab, string> = {
-  script: 'git log --oneline -15 | pn save --title "Recent commits" --tag dev',
-  agent: 'pn save --tag project,plan plan.md',
+  script: 'git log -15 | privacynotes save --title "Recent commits" --tag dev',
+  agent: 'privacynotes save --tag project,plan plan.md',
   app: '',
 };
 const CARD: Record<Tab, { title: string; tags: string[]; size: string }> = {
@@ -91,7 +91,7 @@ export function LandingCli({ kicker }: { kicker: ReactNode }) {
       </div>
 
       <div className="mt-4 grid gap-4 md:grid-cols-[1.4fr_1fr]">
-        {/* The terminal: the command typed, then pn's card. */}
+        {/* The terminal: the command typed, then the command's card. */}
         <div role="tabpanel" dir="ltr" className="overflow-hidden rounded-2xl md:min-h-72 border border-[var(--wl-ink-line)] bg-[var(--wl-ink-card)] p-5 font-mono text-small leading-relaxed text-[var(--wl-ink-text)]"> {/* rtl-ok: a terminal runs left to right */}
           <div aria-hidden="true" className="mb-4 flex gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-[var(--wl-ink-line)]" />

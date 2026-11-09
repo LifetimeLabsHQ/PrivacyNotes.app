@@ -1,7 +1,7 @@
 /**
- * `pn`: the process side. Reads stdin, files and the config file, draws each
+ * `privacynotes`: the process side. Reads stdin, files and the config file, draws each
  * result as a card (ui.ts), and exits with the codes of `core.ts`. The code
- * for `pn login` is read from a prompt or a pipe, never from the arguments,
+ * for `privacynotes login` is read from a prompt or a pipe, never from the arguments,
  * so it stays out of the shell history. The config file holds a token that
  * can only add notes; it is written with mode 0600.
  * Spec: docs/internal/plans/agent-cli.md (section 3.5)
@@ -66,7 +66,7 @@ async function readCode(): Promise<string> {
     return (await rl.question(wantsColor(process.stderr.isTTY, process.env) ? '  \u001b[38;5;141m›\u001b[0m ' : '> ')).trim();
   } catch {
     // The input ended before a line came (Ctrl+D, or a closed pipe).
-    throw new CliError(EXIT.input, 'no_code', 'NO CODE', 'No code was typed.', 'run pn login again and paste the code');
+    throw new CliError(EXIT.input, 'no_code', 'NO CODE', 'No code was typed.', 'run privacynotes login again and paste the code');
   } finally {
     rl.close();
   }
@@ -87,7 +87,7 @@ function show(json: boolean, value: Record<string, unknown>, card: Card): void {
 async function main(argv: string[], json: { on: boolean }): Promise<number> {
   const major = Number(process.versions.node.split('.')[0]);
   if (major < 20) {
-    throw new CliError(EXIT.input, 'old_node', 'NODE TOO OLD', `pn needs Node.js 20 or newer. This is ${process.versions.node}.`, 'update Node.js');
+    throw new CliError(EXIT.input, 'old_node', 'NODE TOO OLD', `privacynotes needs Node.js 20 or newer. This is ${process.versions.node}.`, 'update Node.js');
   }
   const args = parseArgs(argv);
   json.on = args.json;
@@ -109,7 +109,7 @@ async function main(argv: string[], json: { on: boolean }): Promise<number> {
       tone: 'ok',
       badge: '✓ CONNECTED',
       rows: [kv('computer', [c.label]), kv('folder', ['Agent']), kv('account', [shortId(c.account), 'dim'])],
-      footer: [['Try it: ', 'dim'], ['echo "# Hello" | pn save', 'accent']],
+      footer: [['Try it: ', 'dim'], ['echo "# Hello" | privacynotes save', 'accent']],
     });
     return EXIT.ok;
   }
@@ -157,12 +157,12 @@ async function main(argv: string[], json: { on: boolean }): Promise<number> {
       try {
         markdown = readFileSync(file, 'utf8');
       } catch {
-        throw new CliError(EXIT.input, 'cannot_read', 'CANNOT READ', `pn cannot read ${file}.`, 'check the path');
+        throw new CliError(EXIT.input, 'cannot_read', 'CANNOT READ', `privacynotes cannot read ${file}.`, 'check the path');
       }
     } else if (!process.stdin.isTTY) {
       markdown = await readStdin();
     } else {
-      throw new CliError(EXIT.input, 'no_input', 'NOTHING TO SAVE', 'Name a file, or pipe Markdown in.', 'pn save note.md');
+      throw new CliError(EXIT.input, 'no_input', 'NOTHING TO SAVE', 'Name a file, or pipe Markdown in.', 'privacynotes save note.md');
     }
     const note = await saveNote(c, { markdown, title: args.title, tags: args.tags });
     const bytes = new TextEncoder().encode(note.markdown).length;
@@ -189,11 +189,11 @@ async function main(argv: string[], json: { on: boolean }): Promise<number> {
     return EXIT.ok;
   }
 
-  throw new CliError(EXIT.input, 'unknown_command', 'UNKNOWN COMMAND', `pn does not know "${args.command}".`, 'pn --help');
+  throw new CliError(EXIT.input, 'unknown_command', 'UNKNOWN COMMAND', `privacynotes does not know "${args.command}".`, 'privacynotes --help');
 }
 
-/** Build, seal and send one note, then remember it for `pn status`. Shared
- *  by `pn save` and the `save_note` tool of `pn mcp`. */
+/** Build, seal and send one note, then remember it for `privacynotes status`. Shared
+ *  by `privacynotes save` and the `save_note` tool of `privacynotes mcp`. */
 async function saveNote(c: Connection, input: { markdown: string; title?: string; tags: string[] }) {
   const note = buildNote(input.markdown, { title: input.title, tags: input.tags, id: randomUUID(), now: new Date() });
   await save(fetchFn, FUNCTIONS_URL, c, note);
@@ -201,7 +201,7 @@ async function saveNote(c: Connection, input: { markdown: string; title?: string
   return note;
 }
 
-/** `pn mcp`: one JSON-RPC message a line, answered in order, until stdin
+/** `privacynotes mcp`: one JSON-RPC message a line, answered in order, until stdin
  *  closes. Only answers reach stdout.
  *  Spec: docs/internal/plans/agent-cli.md (section 3.9) */
 async function serveMcp(): Promise<void> {
@@ -224,9 +224,9 @@ const json = { on: process.argv.includes('--json') };
 main(process.argv.slice(2), json).then(
   (code) => process.exit(code),
   (err: unknown) => {
-    // PN_DEBUG=1 prints the cause of an error pn did not expect, on stderr only.
+    // PN_DEBUG=1 prints the cause of an error privacynotes did not expect, on stderr only.
     if (process.env.PN_DEBUG && !(err instanceof CliError)) process.stderr.write(`${err instanceof Error ? err.stack : String(err)}\n`);
-    const e = err instanceof CliError ? err : new CliError(EXIT.refused, 'internal', 'SOMETHING WENT WRONG', 'pn stopped on an error it did not expect.');
+    const e = err instanceof CliError ? err : new CliError(EXIT.refused, 'internal', 'SOMETHING WENT WRONG', 'privacynotes stopped on an error it did not expect.');
     if (json.on) {
       process.stderr.write(`${JSON.stringify({ error: e.id, message: e.detail, ...(e.fix ? { fix: e.fix } : {}) })}\n`);
     } else {

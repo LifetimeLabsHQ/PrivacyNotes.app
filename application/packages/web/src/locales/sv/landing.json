@@ -141,8 +141,8 @@
   "cli": {
     "kicker": "PrivacyNotes CLI, för AI-agenter",
     "heading": "Dina AI-agenter skriver. Dina anteckningar sparar det.",
-    "intro": "Be din AI-agent spara planen den just skrev. Låt ett skript lämna kvällens rapport. Säg \"spara det här\" i en AI-chatt. pn, kommandoradsgränssnittet för PrivacyNotes, lägger varje sak i din mapp Agent, på alla dina enheter, krypterad på din dator.",
-    "tabsLabel": "Tre sätt att använda pn",
+    "intro": "Be din AI-agent spara planen den just skrev. Låt ett skript lämna kvällens rapport. Säg \"spara det här\" i en AI-chatt. Kommandoraden för PrivacyNotes, privacynotes, lägger varje sak i din mapp Agent, på alla dina enheter, krypterad på din dator.",
+    "tabsLabel": "Tre sätt att använda privacynotes",
     "tabScript": "Ett skript",
     "tabAgent": "En AI-kodagent",
     "tabApp": "En AI-app (MCP)",
@@ -156,7 +156,7 @@
     "sampleNote2": "Läslista",
     "factFolder": "En mapp",
     "factJson": "JSON för skript",
-    "useHeading": "Vad folk sparar med pn",
+    "useHeading": "Vad folk sparar med privacynotes",
     "usePlanTitle": "Planer från din kodagent",
     "usePlanBody": "Be din agent spara planen, sammanfattningen eller researchen den just skrev. Den landar med sina taggar, redo på din telefon.",
     "useChatTitle": "Chattar värda att spara",
@@ -168,8 +168,8 @@
     "useClipTitle": "Allt du har kopierat",
     "useClipBody": "Skicka urklippet, utdata från ett kommando eller ett felmeddelande direkt till dina anteckningar.",
     "useToolsTitle": "En del av dina egna verktyg",
-    "useToolsBody": "pn svarar i JSON och avslutar med tydliga koder, så att dina skript vet att anteckningen sparades.",
-    "howLink": "Läs hur pn fungerar"
+    "useToolsBody": "Kommandot svarar i JSON och avslutar med tydliga koder, så att dina skript vet att anteckningen sparades.",
+    "howLink": "Läs hur privacynotes fungerar"
   },
   "meds": {
     "tileName": "Medicinspårning",

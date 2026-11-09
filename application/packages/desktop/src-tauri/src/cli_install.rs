@@ -1,16 +1,21 @@
-//! Install for `pn`, the command line tool (Settings > CLI, Install).
+//! Install for `privacynotes`, the command line tool (Settings > CLI, Install).
 //!
 //! The app's resources carry `pn.mjs` (packages/cli, `bundle.resources` in
 //! tauri.conf.json). The resource path is not stable: an AppImage mounts at a
 //! new `/tmp/.mount_*` each launch, a DMG run or App Translocation gives a
 //! temporary path, and Scoop uses a folder per version. So Install copies the
 //! file to `<app local data>/cli/pn.mjs`, and each launch refreshes that copy
-//! when the bundled file differs, which keeps `pn` at the app's version.
+//! when the bundled file differs, which keeps the command at the app's version.
 //!
-//! Then a small launcher goes where a terminal finds it: `~/.local/bin/pn` on
-//! macOS and Linux, `<app local data>\cli\bin\pn.cmd` on Windows, whose folder
-//! is added to the user PATH (never the system PATH). A launcher file that the
+//! Then a small launcher goes where a terminal finds it:
+//! `~/.local/bin/privacynotes` on macOS and Linux,
+//! `<app local data>\cli\bin\privacynotes.cmd` on Windows, whose folder is
+//! added to the user PATH (never the system PATH). A launcher file that the
 //! app did not write is never replaced: its second line carries `MARKER`.
+//!
+//! The command was `pn` at first, a name pnpm also installs (#677). At
+//! launch, an old `pn` launcher that this app wrote gets the new launcher
+//! beside it and keeps working, with a one-line notice in a terminal.
 //!
 //! Both commands take no arguments, so the only outcome a caller can force is
 //! the install itself (tools/entry-points.mjs).
@@ -26,7 +31,12 @@ use tauri::{AppHandle, Manager};
 const RESOURCE: &str = "pn.mjs";
 /// The second line of every launcher this app writes.
 const MARKER: &str = "privacynotes-pn: written by the PrivacyNotes app";
-const NODE_HELP: &str = "pn needs Node.js 20 or newer: https://nodejs.org/en/download";
+const NODE_HELP: &str = "privacynotes needs Node.js 20 or newer: https://nodejs.org/en/download";
+/// The launcher name, and the name it had at first (#677).
+const NAME: &str = "privacynotes";
+const OLD_NAME: &str = "pn";
+#[cfg(not(windows))]
+const RENAMED: &str = "pn is now called privacynotes, because pnpm also installs a pn command. pn still works here.";
 
 #[derive(Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -35,7 +45,7 @@ pub struct CliStatus {
     installed: bool,
     /// Where the launcher is (or would be).
     command: String,
-    /// A new terminal finds `pn` without a change to PATH.
+    /// A new terminal finds `privacynotes` without a change to PATH.
     on_path: bool,
     /// The one shell line that adds the launcher's folder to PATH, when
     /// `on_path` is false. A command, never translated.
@@ -50,19 +60,26 @@ struct Places {
     resource: PathBuf,
     stable: PathBuf,
     launcher: PathBuf,
+    /// The `pn` launcher of an install before the rename, if any.
+    old_launcher: PathBuf,
 }
 
 fn places(app: &AppHandle) -> Option<Places> {
     let resource = app.path().resource_dir().ok()?.join(RESOURCE);
     let cli = app.path().app_local_data_dir().ok()?.join("cli");
     #[cfg(windows)]
-    let launcher = cli.join("bin").join("pn.cmd");
+    let (bin, ext) = (cli.join("bin"), ".cmd");
     #[cfg(not(windows))]
-    let launcher = app.path().home_dir().ok()?.join(".local").join("bin").join("pn");
-    Some(Places { resource, stable: cli.join(RESOURCE), launcher })
+    let (bin, ext) = (app.path().home_dir().ok()?.join(".local").join("bin"), "");
+    Some(Places {
+        resource,
+        stable: cli.join(RESOURCE),
+        launcher: bin.join(format!("{NAME}{ext}")),
+        old_launcher: bin.join(format!("{OLD_NAME}{ext}")),
+    })
 }
 
-/// Whether `pn` is installed, and what the pane should say about PATH.
+/// Whether `privacynotes` is installed, and what the pane should say about PATH.
 #[tauri::command]
 pub async fn cli_status(app: AppHandle) -> Result<CliStatus, String> {
     let p = places(&app).ok_or(FAILED)?;
@@ -81,12 +98,32 @@ pub async fn install_cli(app: AppHandle) -> Result<CliStatus, String> {
     Ok(status_of(&p))
 }
 
-/// At launch: when `pn` is installed, bring the stable copy to the bundled
-/// version. Silent: a failure leaves the old copy, which still runs.
+/// At launch: when the command is installed, bring the stable copy to the
+/// bundled version, and move an install from before the rename to the new
+/// name. Silent: a failure leaves the old copy, which still runs.
 pub fn refresh_at_launch(app: &AppHandle) {
     let Some(p) = places(app) else { return };
     if p.stable.exists() {
         let _ = refresh_copy(&p.resource, &p.stable);
+        rename_old_launcher(&p);
+    }
+}
+
+/// An old `pn` launcher that this app wrote: write the new launcher when its
+/// place is free or ours, and turn `pn` into the same launcher with a notice,
+/// so scripts that call `pn` keep working. A `pn` the app did not write (pnpm's)
+/// is never touched.
+fn rename_old_launcher(p: &Places) {
+    let Ok(bytes) = fs::read(&p.old_launcher) else { return };
+    if !is_ours(&bytes) {
+        return;
+    }
+    if may_write(&p.launcher) && !fs::read(&p.launcher).is_ok_and(|b| b == launcher_text(&p.stable).as_bytes()) {
+        let _ = write_launcher(&p.launcher, &launcher_text(&p.stable));
+    }
+    let old = old_launcher_text(&p.stable);
+    if bytes != old.as_bytes() {
+        let _ = write_launcher(&p.old_launcher, &old);
     }
 }
 
@@ -113,7 +150,8 @@ fn is_ours(bytes: &[u8]) -> bool {
 }
 
 /// Copy `from` to `to` when the bytes differ, through a temporary file and a
-/// rename, so a terminal that starts `pn` meanwhile never reads half a file.
+/// rename, so a terminal that starts the command meanwhile never reads half a
+/// file.
 fn refresh_copy(from: &Path, to: &Path) -> std::io::Result<()> {
     let new = fs::read(from)?;
     if fs::read(to).is_ok_and(|old| old == new) {
@@ -145,9 +183,21 @@ fn write_launcher(launcher: &Path, text: &str) -> std::io::Result<()> {
 /// written as `'\''`, so no character in it reaches the shell.
 #[cfg(not(windows))]
 fn launcher_text(stable: &Path) -> String {
+    sh_launcher(stable, "")
+}
+
+/// The old `pn` launcher: the same, plus the rename notice on stderr, only
+/// when stderr is a terminal, so a script or an MCP app reads nothing new.
+#[cfg(not(windows))]
+fn old_launcher_text(stable: &Path) -> String {
+    sh_launcher(stable, &format!("[ -t 2 ] && echo '{RENAMED}' >&2\n"))
+}
+
+#[cfg(not(windows))]
+fn sh_launcher(stable: &Path, notice: &str) -> String {
     let path = stable.to_string_lossy().replace('\'', r"'\''");
     format!(
-        "#!/bin/sh\n# {MARKER}; Settings > CLI replaces it.\ncommand -v node >/dev/null 2>&1 || {{ echo '{NODE_HELP}' >&2; exit 127; }}\nexec node '{path}' \"$@\"\n"
+        "#!/bin/sh\n# {MARKER}; Settings > CLI replaces it.\n{notice}command -v node >/dev/null 2>&1 || {{ echo '{NODE_HELP}' >&2; exit 127; }}\nexec node '{path}' \"$@\"\n"
     )
 }
 
@@ -155,6 +205,18 @@ fn launcher_text(stable: &Path) -> String {
 /// does not read it as a variable.
 #[cfg(windows)]
 fn launcher_text(stable: &Path) -> String {
+    cmd_launcher(stable)
+}
+
+/// The old `pn.cmd`: the same launcher with no notice, because cmd cannot
+/// tell whether stderr is a terminal.
+#[cfg(windows)]
+fn old_launcher_text(stable: &Path) -> String {
+    cmd_launcher(stable)
+}
+
+#[cfg(windows)]
+fn cmd_launcher(stable: &Path) -> String {
     let path = stable.to_string_lossy().replace('%', "%%");
     format!(
         "@echo off\r\nrem {MARKER}; Settings > CLI replaces it.\r\nwhere node >nul 2>nul || (echo {NODE_HELP} 1>&2 & exit /b 127)\r\nnode \"{path}\" %*\r\nexit /b %errorlevel%\r\n"
@@ -350,7 +412,8 @@ mod tests {
         let resource = d.join("res").join(RESOURCE);
         fs::create_dir_all(resource.parent().unwrap()).unwrap();
         fs::write(&resource, "#!/usr/bin/env node\nconsole.log('v1')\n").unwrap();
-        Places { resource, stable: d.join("data").join("cli").join(RESOURCE), launcher: d.join("home").join(".local").join("bin").join("pn") }
+        let bin = d.join("home").join(".local").join("bin");
+        Places { resource, stable: d.join("data").join("cli").join(RESOURCE), launcher: bin.join(NAME), old_launcher: bin.join(OLD_NAME) }
     }
 
     #[test]
@@ -400,6 +463,45 @@ mod tests {
         refresh_copy(&p.resource, &p.stable).unwrap();
         assert_eq!(fs::read_to_string(&p.stable).unwrap(), "console.log('v2')\n");
         assert!(!p.stable.with_extension("tmp").exists());
+    }
+
+    #[test]
+    fn an_old_pn_launcher_gets_the_new_name_and_keeps_working() {
+        let d = temp("rename");
+        let p = places_in(&d);
+        refresh_copy(&p.resource, &p.stable).unwrap();
+        // What the app wrote before the rename: the plain launcher, named pn.
+        write_launcher(&p.old_launcher, &launcher_text(&p.stable)).unwrap();
+        rename_old_launcher(&p);
+        assert!(status_of(&p).installed);
+        let old = fs::read_to_string(&p.old_launcher).unwrap();
+        assert!(is_ours(old.as_bytes()));
+        assert!(old.contains(&launcher_path_text(&p.stable)));
+        #[cfg(not(windows))]
+        assert!(old.contains(RENAMED));
+        // A second launch changes nothing.
+        rename_old_launcher(&p);
+        assert_eq!(fs::read_to_string(&p.old_launcher).unwrap(), old);
+    }
+
+    #[test]
+    fn a_pn_the_app_did_not_write_is_left_alone() {
+        let d = temp("pnpm");
+        let p = places_in(&d);
+        refresh_copy(&p.resource, &p.stable).unwrap();
+        fs::create_dir_all(p.old_launcher.parent().unwrap()).unwrap();
+        fs::write(&p.old_launcher, "#!/bin/sh\nexec pnpm \"$@\"\n").unwrap();
+        rename_old_launcher(&p);
+        assert_eq!(fs::read_to_string(&p.old_launcher).unwrap(), "#!/bin/sh\nexec pnpm \"$@\"\n");
+        assert!(!p.launcher.exists());
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn the_old_launcher_is_valid_sh() {
+        let text = old_launcher_text(Path::new("/Users/o'neil/x/pn.mjs"));
+        let status = std::process::Command::new("/bin/sh").arg("-n").arg("-c").arg(&text).status().unwrap();
+        assert!(status.success());
     }
 
     #[cfg(not(windows))]

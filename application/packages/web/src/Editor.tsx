@@ -120,6 +120,7 @@ import {
   replaceBodyUndoably,
   InlineIcon,
 } from './editorExtensions';
+import { FocusClickCaret } from './editorFocusCaret';
 
 type Props = {
   /** Initial markdown content. Only read on mount - use a `key` prop to force reload. */
@@ -430,8 +431,9 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
     if (!href) {
       // Only a click inside a selection that existed before it gets the app
       // menu. A caret, an empty line, a word and a selected picture keep the
-      // browser menu, with its spelling, Look Up, Paste and Copy image.
-      // Spec: docs/internal/issues/archive/0414.md, docs/internal/issues/0488.md
+      // browser menu, with its spelling, Look Up, Paste and Copy image. In
+      // the desktop app the picture's own menu opens first (EncryptedImage.tsx).
+      // Spec: docs/internal/issues/archive/0414.md, docs/internal/issues/archive/0488.md
       const before = preClickRef.current;
       const sel = before?.selection;
       if (!before || !sel || sel.empty || before.doc !== ed.state.doc || at.pos < sel.from || at.pos > sel.to) return;
@@ -669,6 +671,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       Footnotes,
       TrailingParagraph,
       PlainEscape,
+      FocusClickCaret,
       MediaGapCleaner,
       NbspParagraphCleaner,
       MixedListSplitter,

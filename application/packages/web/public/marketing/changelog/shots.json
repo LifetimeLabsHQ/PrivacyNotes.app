@@ -913,20 +913,20 @@
     "cli-agent": {
       "w": 2000,
       "h": 1163,
-      "bytes": 114464,
-      "sha256": "5f3309132bac2bfbffa0df64df2e5c401bc811bb900b3e6d50064212c18ddc4e"
+      "bytes": 115976,
+      "sha256": "fca3371059d7b1426c790c328cade48a0dd2cff1bad4396ff716a0c773cb8454"
     },
     "cli-mcp": {
       "w": 2000,
       "h": 1163,
-      "bytes": 114852,
-      "sha256": "b92b2fa9304b85b149d73971f58aca745f0464ddb6c3abbc0937f29eae7e6d64"
+      "bytes": 114946,
+      "sha256": "e3c3e0b5ae642ef619b91e2fb72f94259c7a743f8b09d16974312faddcafe7a1"
     },
     "cli-script": {
       "w": 2000,
       "h": 1163,
-      "bytes": 103910,
-      "sha256": "b4c1c2b9d78aa4ea3f2d561da8ac1b6eb9b39fbe5c19bd8445585ff2137057a7"
+      "bytes": 104726,
+      "sha256": "763da50a4518ea75c0fb061d225872c886ec57083285b92f99411dbaf0b03167"
     }
   }
 }

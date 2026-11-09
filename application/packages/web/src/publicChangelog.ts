@@ -27,15 +27,29 @@ export type ChangelogRelease = {
 
 export const PUBLIC_CHANGELOG: ChangelogRelease[] = [
   {
+    version: '0.735',
+    date: '2026-11-09',
+    title: 'Copied pictures paste into other apps, and more fixes',
+    items: [
+      { type: 'new', text: 'In the desktop apps, a right click on a picture in a note opens Copy image, View image and Download image, and the picture viewer has Copy image and Download image.', issues: [719] },
+      { type: 'fixed', text: 'A picture you copy from a note pastes as the picture into Word, OnlyOffice, draw.io and other apps, not as an empty box.', issues: [719] },
+      { type: 'fixed', text: 'A click into a note from another app keeps the cursor where you click.', issues: [600] },
+      { type: 'fixed', text: 'The command line tool is now called privacynotes, so it can no longer start pnpm by mistake, and scripts that still call pn keep working.', issues: [677] },
+      { type: 'fixed', text: 'The Logo tab in the icon picker shows its logos the first time you open it.', issues: [718] },
+      { type: 'fixed', text: 'Save image as in the desktop apps saves a picture as an image file, not as a .txt file.' },
+      { type: 'fixed', text: 'An undo that brings back a deleted picture shows that picture again.' },
+    ],
+  },
+  {
     version: '0.734',
     date: '2026-11-09',
-    title: 'pn, a command line that lets scripts and AI agents add notes',
+    title: 'privacynotes, a command line that lets scripts and AI agents add notes',
     items: [
-      { type: 'new', text: 'pn, a command line tool, lets your scripts, scheduled jobs and AI coding agents add notes, and Settings > CLI in the desktop apps installs it with one button.', issues: [677], shot: ['cli-script', 'cli-agent', 'cli-mcp'] },
-      { type: 'new', text: 'pn can only add notes: it cannot open, change or delete the notes you have, and every note it sends goes into one Agent folder.' },
-      { type: 'new', text: 'Each note is encrypted on the computer that runs pn and waits sealed until one of your apps files it, and a note that no app opens in 90 days is deleted.' },
-      { type: 'new', text: 'AI apps without a terminal can save notes too, through the MCP tool in pn.' },
-      { type: 'new', text: 'Connect up to 5 computers with a one-time code, and remove any of them in Settings > CLI. pn is a Pro feature.' },
+      { type: 'new', text: 'privacynotes, a command line tool, lets your scripts, scheduled jobs and AI coding agents add notes, and Settings > CLI in the desktop apps installs it with one button.', issues: [677], shot: ['cli-script', 'cli-agent', 'cli-mcp'] },
+      { type: 'new', text: 'The command can only add notes: it cannot open, change or delete the notes you have, and every note it sends goes into one Agent folder.' },
+      { type: 'new', text: 'Each note is encrypted on the computer that runs it and waits sealed until one of your apps files it, and a note that no app opens in 90 days is deleted.' },
+      { type: 'new', text: 'AI apps without a terminal can save notes too, through the MCP tool in privacynotes.' },
+      { type: 'new', text: 'Connect up to 5 computers with a one-time code, and remove any of them in Settings > CLI. The command line is a Pro feature.' },
     ],
   },
   {

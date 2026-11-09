@@ -15,7 +15,10 @@ import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } f
 import { lazyPart } from './chunkLoad';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { CaretLeft, CaretRight, Download, MagnifyingGlassMinus, MagnifyingGlassPlus, X } from './icons';
+import { CaretLeft, CaretRight, Download, MagnifyingGlassMinus, MagnifyingGlassPlus, X, iconCopy, iconDownload } from './icons';
+import { ContextMenu, isTouchContextMenu, useContextMenu } from './ContextMenu';
+import { copyPictureToClipboard } from './EncryptedImage';
+import { detectPlatform } from './devices';
 import { useEscapeToClose } from './useEscapeToClose';
 import { HoverLabel, type positionClasses } from './HoverLabel';
 import { loadAttachmentData } from './EncryptedAttachment';
@@ -138,6 +141,26 @@ export function MediaViewer({ items, index: startIndex, onClose }: {
     }
   }, [item]);
 
+  // In the desktop app a right click on the picture opens the same menu as
+  // in the note, not the webview's, whose Copy image pastes a blank box in
+  // Word (#719). Spec: docs/internal/issues/archive/0488.md (Decisions)
+  const menu = useContextMenu();
+  const [failedCopy, setFailedCopy] = useState<string | null>(null);
+  const openPictureMenu = (e: React.MouseEvent) => {
+    const img = e.target;
+    if (!(img instanceof HTMLImageElement) || pdf || mail || !canSaveMedia(item)) return;
+    if (detectPlatform() !== 'desktop' || e.shiftKey || isTouchContextMenu(e)) return;
+    const url = img.currentSrc || img.src;
+    menu.open(e, [
+      {
+        label: t('image.copyAria'),
+        icon: iconCopy(),
+        onSelect: () => { void copyPictureToClipboard(item.src, url, item.name ?? '').then((ok) => setFailedCopy(ok ? null : item.src)); },
+      },
+      { label: t('image.downloadAria'), icon: iconDownload(), onSelect: () => { void save(); } },
+    ]);
+  };
+
   // A swipe is a finger's gesture; a mouse drag over a picture is not one.
   const onPointerDown = (e: React.PointerEvent) => {
     swipe.current = e.pointerType === 'mouse' || count < 2 || zoom > 1
@@ -187,8 +210,10 @@ export function MediaViewer({ items, index: startIndex, onClose }: {
         if (Math.hypot(e.clientX - press.x, e.clientY - press.y) > TAP_SLOP_PX) return;
         close();
       }}
+      onContextMenu={openPictureMenu}
       className="fixed inset-0 z-50 flex flex-col bg-black/95 text-white outline-none"
     >
+      <ContextMenu state={menu.state} onClose={menu.close} />
       <div className="shrink-0 pt-[env(safe-area-inset-top)]">
         <div className="h-14 flex items-center gap-1 px-2 sm:px-4">
           <h2 className="flex-1 min-w-0 px-2 text-body font-medium truncate" dir="auto">{title}</h2>
@@ -229,6 +254,9 @@ export function MediaViewer({ items, index: startIndex, onClose }: {
         </div>
         {failedSave === item.src && (
           <p className="px-4 pb-2 text-small text-red-400">{t('viewer.saveFailed')}</p>
+        )}
+        {failedCopy === item.src && (
+          <p className="px-4 pb-2 text-small text-red-400">{t('image.copyFailed')}</p>
         )}
       </div>
       <div data-backdrop="" className="flex-1 min-h-0 flex pb-[max(1rem,env(safe-area-inset-bottom))]">

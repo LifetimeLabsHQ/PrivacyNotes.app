@@ -141,8 +141,8 @@
   "cli": {
     "kicker": "PrivacyNotes CLI, yapay zekâ ajanları için",
     "heading": "Yapay zekâ ajanlarınız yazar. Notlarınız saklar.",
-    "intro": "Yapay zekâ ajanınızdan az önce yazdığı planı kaydetmesini isteyin. Bir betik bu gecenin raporunu bıraksın. Bir yapay zekâ sohbetinde \"bunu kaydet\" deyin. PrivacyNotes komut satırı arayüzü pn, her birini Agent klasörünüze koyar; tüm cihazlarınızda, bilgisayarınızda şifreli.",
-    "tabsLabel": "pn'i kullanmanın üç yolu",
+    "intro": "Yapay zekâ ajanınızdan az önce yazdığı planı kaydetmesini isteyin. Bir betik bu gecenin raporunu bıraksın. Bir yapay zekâ sohbetinde \"bunu kaydet\" deyin. PrivacyNotes komut satırı privacynotes, her birini Agent klasörünüze koyar; tüm cihazlarınızda, bilgisayarınızda şifreli.",
+    "tabsLabel": "privacynotes'u kullanmanın üç yolu",
     "tabScript": "Bir betik",
     "tabAgent": "Bir yapay zekâ kodlama ajanı",
     "tabApp": "Bir yapay zekâ uygulaması (MCP)",
@@ -156,7 +156,7 @@
     "sampleNote2": "Okuma listesi",
     "factFolder": "Tek klasör",
     "factJson": "Betikler için JSON",
-    "useHeading": "İnsanların pn ile kaydettikleri",
+    "useHeading": "İnsanların privacynotes ile kaydettikleri",
     "usePlanTitle": "Kodlama ajanınızdan planlar",
     "usePlanBody": "Ajanınızdan az önce yazdığı planı, özeti veya araştırmayı kaydetmesini isteyin. Etiketleriyle birlikte gelir, telefonunuzda hazırdır.",
     "useChatTitle": "Saklamaya değer sohbetler",
@@ -168,8 +168,8 @@
     "useClipTitle": "Kopyaladığınız her şey",
     "useClipBody": "Panoyu, bir komutun çıktısını veya bir hata iletisini doğrudan notlarınıza gönderin.",
     "useToolsTitle": "Kendi araçlarınızın bir parçası",
-    "useToolsBody": "pn JSON ile yanıt verir ve açık çıkış kodlarıyla sonlanır, böylece betikleriniz notun kaydedildiğini bilir.",
-    "howLink": "pn'in nasıl çalıştığını okuyun"
+    "useToolsBody": "Komut JSON ile yanıt verir ve açık çıkış kodlarıyla sonlanır, böylece betikleriniz notun kaydedildiğini bilir.",
+    "howLink": "privacynotes'un nasıl çalıştığını okuyun"
   },
   "meds": {
     "tileName": "İlaç takibi",

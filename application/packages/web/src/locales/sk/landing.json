@@ -141,8 +141,8 @@
   "cli": {
     "kicker": "PrivacyNotes CLI pre AI agentov",
     "heading": "Tvoji AI agenti píšu. Tvoje poznámky to uchovajú.",
-    "intro": "Požiadaj svojho AI agenta, nech uloží plán, ktorý práve napísal. Nechaj skript odložiť dnešný večerný report. Povedz v AI chate „ulož to“. pn, príkazový riadok PrivacyNotes, uloží každú z nich do tvojho priečinka Agent, na všetkých tvojich zariadeniach, šifrovanú na tvojom počítači.",
-    "tabsLabel": "Tri spôsoby, ako používať pn",
+    "intro": "Požiadaj svojho AI agenta, nech uloží plán, ktorý práve napísal. Nechaj skript odložiť dnešný večerný report. Povedz v AI chate „ulož to“. Príkazový riadok PrivacyNotes, privacynotes, uloží každú z nich do tvojho priečinka Agent, na všetkých tvojich zariadeniach, šifrovanú na tvojom počítači.",
+    "tabsLabel": "Tri spôsoby, ako používať privacynotes",
     "tabScript": "Skript",
     "tabAgent": "AI agent na programovanie",
     "tabApp": "AI aplikácia (MCP)",
@@ -156,7 +156,7 @@
     "sampleNote2": "Zoznam na čítanie",
     "factFolder": "Jeden priečinok",
     "factJson": "JSON pre skripty",
-    "useHeading": "Čo si ľudia ukladajú cez pn",
+    "useHeading": "Čo si ľudia ukladajú cez privacynotes",
     "usePlanTitle": "Plány od tvojho agenta na programovanie",
     "usePlanBody": "Požiadaj agenta, nech uloží plán, zhrnutie alebo prieskum, ktorý práve napísal. Príde aj so značkami, pripravený v tvojom telefóne.",
     "useChatTitle": "Chaty, ktoré stoja za uchovanie",
@@ -168,8 +168,8 @@
     "useClipTitle": "Čokoľvek skopírované",
     "useClipBody": "Pošli schránku, výstup príkazu alebo chybové hlásenie priamo do svojich poznámok.",
     "useToolsTitle": "Súčasť tvojich vlastných nástrojov",
-    "useToolsBody": "pn odpovedá v JSON a končí jasnými kódmi, takže tvoje skripty vedia, že sa poznámka uložila.",
-    "howLink": "Prečítaj si, ako pn funguje"
+    "useToolsBody": "Príkaz odpovedá v JSON a končí jasnými kódmi, takže tvoje skripty vedia, že sa poznámka uložila.",
+    "howLink": "Prečítaj si, ako privacynotes funguje"
   },
   "meds": {
     "tileName": "Sledovanie liekov",

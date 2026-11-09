@@ -141,8 +141,8 @@
   "cli": {
     "kicker": "PrivacyNotes CLI dla agentów AI",
     "heading": "Twoi agenci AI piszą. Twoje notatki to zachowują.",
-    "intro": "Poproś agenta AI, żeby zapisał plan, który właśnie napisał. Niech skrypt odłoży dzisiejszy raport. Powiedz \"zapisz to\" w czacie AI. pn, interfejs wiersza poleceń PrivacyNotes, umieszcza każdą z tych rzeczy w Twoim folderze Agent, na wszystkich Twoich urządzeniach, zaszyfrowaną na Twoim komputerze.",
-    "tabsLabel": "Trzy sposoby użycia pn",
+    "intro": "Poproś agenta AI, żeby zapisał plan, który właśnie napisał. Niech skrypt odłoży dzisiejszy raport. Powiedz \"zapisz to\" w czacie AI. Wiersz poleceń PrivacyNotes, privacynotes, umieszcza każdą z tych rzeczy w Twoim folderze Agent, na wszystkich Twoich urządzeniach, zaszyfrowaną na Twoim komputerze.",
+    "tabsLabel": "Trzy sposoby użycia privacynotes",
     "tabScript": "Skrypt",
     "tabAgent": "Agent AI do kodowania",
     "tabApp": "Aplikacja AI (MCP)",
@@ -156,7 +156,7 @@
     "sampleNote2": "Lista lektur",
     "factFolder": "Jeden folder",
     "factJson": "JSON dla skryptów",
-    "useHeading": "Co ludzie zapisują przez pn",
+    "useHeading": "Co ludzie zapisują przez privacynotes",
     "usePlanTitle": "Plany od Twojego agenta do kodowania",
     "usePlanBody": "Poproś agenta, żeby zapisał plan, podsumowanie lub research, który właśnie napisał. Trafia do notatek ze swoimi tagami, gotowy na Twoim telefonie.",
     "useChatTitle": "Czaty warte zachowania",
@@ -168,8 +168,8 @@
     "useClipTitle": "Wszystko, co skopiujesz",
     "useClipBody": "Wyślij schowek, wynik polecenia lub komunikat o błędzie prosto do swoich notatek.",
     "useToolsTitle": "Część Twoich własnych narzędzi",
-    "useToolsBody": "pn odpowiada w JSON i kończy działanie z jasnymi kodami, więc Twoje skrypty wiedzą, że notatka została zapisana.",
-    "howLink": "Przeczytaj, jak działa pn"
+    "useToolsBody": "Polecenie odpowiada w JSON i kończy działanie z jasnymi kodami, więc Twoje skrypty wiedzą, że notatka została zapisana.",
+    "howLink": "Przeczytaj, jak działa privacynotes"
   },
   "meds": {
     "tileName": "Tracker leków",

@@ -14,17 +14,9 @@
  */
 
 import { currentImageOptions } from '../imageProcessing';
-import { sniffImageFormat } from '../imageMetadata';
+import { IMAGE_FORMAT_MIME, sniffImageFormat } from '../imageMetadata';
 import { IMAGE_REF_PREFIX } from '../mediaRefs';
 import { loadEncryptedImageUrl, storePicture } from '../EncryptedImage';
-
-const FORMAT_MIME: Partial<Record<ReturnType<typeof sniffImageFormat>, string>> = {
-  jpeg: 'image/jpeg',
-  png: 'image/png',
-  webp: 'image/webp',
-  gif: 'image/gif',
-  bmp: 'image/bmp',
-};
 
 function readAsDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -46,7 +38,7 @@ export async function pictureDataUrl(src: string): Promise<string | null> {
   if (!url) return null;
   try {
     const bytes = new Uint8Array(await (await fetch(url)).arrayBuffer());
-    const mime = FORMAT_MIME[sniffImageFormat(bytes)];
+    const mime = IMAGE_FORMAT_MIME[sniffImageFormat(bytes)];
     if (!mime) return null;
     return await readAsDataUrl(new Blob([bytes], { type: mime }));
   } catch {

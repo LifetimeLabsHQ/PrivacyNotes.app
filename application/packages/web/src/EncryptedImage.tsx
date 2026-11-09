@@ -24,7 +24,9 @@ import { NodeSelection, Plugin, PluginKey, type Selection, type Transaction } fr
 import type { EditorView } from '@tiptap/pm/view';
 import type { Node as ProseMirrorNode, Slice } from '@tiptap/pm/model';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
-import { ArrowsOutSimple, Check, Copy, Download, Notches } from './icons';
+import { ArrowsOutSimple, Check, Copy, Download, Notches, iconCopy, iconDownload } from './icons';
+import { ContextMenu, isTouchContextMenu, useContextMenu } from './ContextMenu';
+import { detectPlatform } from './devices';
 import { DeleteButton, IconButton } from './ui';
 import { IMAGE_WIDTH_MAX, IMAGE_WIDTH_MIN, clampImageWidth } from './imageWidth';
 import { TextField } from './ui/fields';
@@ -40,6 +42,7 @@ import type { ImageStore } from './imageStore';
 import { saveBlob, type SaveResult } from './saveFile';
 import i18n from './i18n';
 import { drawablePicture } from './avifDisplay';
+import { IMAGE_FORMAT_MIME, sniffImageFormat } from './imageMetadata';
 import { intlLocale } from './languages';
 
 /** Prefix for our custom image URIs. */
@@ -99,6 +102,16 @@ function cachedSourceUrl(source: BlobSource | null): string | null {
 }
 
 /**
+ * An object URL for a stored picture, typed from its bytes because the store
+ * keeps no type: an untyped one is a text file to the webview's own "Save
+ * image as", which then offers it as `<uuid>.txt` (#719).
+ */
+function pictureObjectUrl(drawable: { bytes: Uint8Array; mime?: string }): string {
+  const type = drawable.mime ?? IMAGE_FORMAT_MIME[sniffImageFormat(drawable.bytes)];
+  return URL.createObjectURL(new Blob([drawable.bytes as BlobPart], type ? { type } : {}));
+}
+
+/**
  * Read a picture's bytes into a cached object URL. Null means "not here and
  * not on the server yet", which the node view retries; a throw is an error,
  * and a BlobDamagedError is bytes that arrived and do not open.
@@ -112,7 +125,7 @@ async function fetchSourceUrl(source: BlobSource): Promise<string | null> {
   const drawable = await drawablePicture(bytes);
   const existing = blobUrlCache.get(source.uuid);
   if (existing) return existing;
-  const url = URL.createObjectURL(new Blob([drawable.bytes as BlobPart], drawable.mime ? { type: drawable.mime } : {}));
+  const url = pictureObjectUrl(drawable);
   blobUrlCache.set(source.uuid, url);
   return url;
 }
@@ -344,7 +357,14 @@ const EncryptedImageView = memo(function EncryptedImageView({
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (cachedUrl) return;
+    // ProseMirror can hand this view another picture (an undo that brings a
+    // deleted one back reuses the view), so a cached picture is shown here
+    // too, not only at mount.
+    if (cachedUrl) {
+      setObjectUrl(cachedUrl);
+      setLoading(false);
+      return;
+    }
 
     let cancelled = false;
 
@@ -549,6 +569,25 @@ const EncryptedImageView = memo(function EncryptedImageView({
     deleteNode();
   }, [deleteNode]);
 
+  // In the desktop app a right click on a picture opens this menu, not the
+  // webview's. The webview's Copy image puts the picture's object URL in the
+  // copied HTML, which Word and other office apps paste as a blank box, and
+  // its Save image as names the file after that URL (#719). The rows run the
+  // picture bar's own handlers. Shift + right click and a browser keep the
+  // browser menu. Spec: docs/internal/issues/archive/0488.md (Decisions)
+  const menu = useContextMenu();
+  const handleContextMenu = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (detectPlatform() !== 'desktop' || e.shiftKey || isTouchContextMenu(e)) return;
+    const pos = getPos();
+    // Selected, so the bar shows and a failed copy or save can say so.
+    if (editor.isEditable && typeof pos === 'number') editor.commands.setNodeSelection(pos);
+    menu.open(e, [
+      { label: t('image.copyAria'), icon: iconCopy(), onSelect: handleCopy },
+      { label: t('image.viewAria'), icon: <ArrowsOutSimple size={14} />, onSelect: handleView },
+      { label: t('image.downloadAria'), icon: iconDownload(), onSelect: () => { void handleDownload(); } },
+    ]);
+  };
+
   // Own the tap on the image instead of leaving it to ProseMirror.
   //
   // A tap answers two questions at once. The node selection is the one the
@@ -720,8 +759,10 @@ const EncryptedImageView = memo(function EncryptedImageView({
             onClick={handleSelect}
             onPointerDown={handlePointerDown}
             onMouseDown={handleMouseDown}
+            onContextMenu={handleContextMenu}
           />
         )}
+        <ContextMenu state={menu.state} onClose={menu.close} />
         {(selected || tapped) && objectUrl && !error && editor.isEditable && (
           <>
             {/* A button so ProseMirror leaves its events alone (TipTap's
@@ -847,7 +888,7 @@ export async function loadEncryptedImageUrl(uuid: string): Promise<string | null
     const drawable = await drawablePicture(blob);
     const existing = blobUrlCache.get(uuid);
     if (existing) return existing;
-    const url = URL.createObjectURL(new Blob([drawable.bytes as BlobPart], drawable.mime ? { type: drawable.mime } : {}));
+    const url = pictureObjectUrl(drawable);
     blobUrlCache.set(uuid, url);
     return url;
   } catch {
@@ -1179,12 +1220,14 @@ export function isPictureSelection(sel: Selection): boolean {
   return sel instanceof NodeSelection && sel.node.type.name === 'image';
 }
 
-/** The `<img>` our Copy image writes beside the PNG. Its object URL is what a
- *  paste in this tab recognises (`htmlBeatsFiles`), and `data-pn-src` is what
- *  the sanitizer keeps, so the paste reuses the stored picture. */
-export function pictureClipboardHtml(ref: string, url: string, alt: string): string {
+/** The `<img>` our Copy image writes beside the PNG. `data-pn-src` is what a
+ *  paste in this app recognises (`htmlBeatsFiles`) and the sanitizer keeps, so
+ *  the paste reuses the stored picture. `src` is the PNG itself as a `data:`
+ *  URL: Word and other office apps paste the HTML before the PNG, and an
+ *  object URL only this page can read pasted there as a blank box (#719). */
+export function pictureClipboardHtml(ref: string, src: string, alt: string): string {
   const img = document.createElement('img');
-  img.setAttribute('src', url);
+  img.setAttribute('src', src);
   img.setAttribute(IMAGE_REF_ATTR, ref);
   if (alt) img.setAttribute('alt', alt);
   return img.outerHTML;
@@ -1212,11 +1255,15 @@ async function pictureAsPng(url: string): Promise<Blob> {
  */
 export async function copyPictureToClipboard(ref: string, url: string, alt: string): Promise<boolean> {
   if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) return false;
+  const png = pictureAsPng(url);
+  const html = png.then((blob) => new Promise<Blob>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(new Blob([pictureClipboardHtml(ref, String(reader.result), alt)], { type: 'text/html' }));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  }));
   try {
-    await navigator.clipboard.write([new ClipboardItem({
-      'image/png': pictureAsPng(url),
-      'text/html': new Blob([pictureClipboardHtml(ref, url, alt)], { type: 'text/html' }),
-    })]);
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': png, 'text/html': html })]);
     return true;
   } catch {
     return false;
@@ -1400,7 +1447,8 @@ function releaseLastReport(): void {
  */
 function htmlBeatsFiles(html: string): boolean {
   const doc = new DOMParser().parseFromString(html, 'text/html');
-  if (Array.from(doc.querySelectorAll('img')).some((img) => refForObjectUrl(img.getAttribute('src') ?? ''))) return true;
+  const ours = (img: Element) => isBlobRef(img.getAttribute(IMAGE_REF_ATTR) ?? '') || refForObjectUrl(img.getAttribute('src') ?? '');
+  if (Array.from(doc.querySelectorAll('img')).some(ours)) return true;
   return doc.body.textContent.trim() !== '';
 }
 

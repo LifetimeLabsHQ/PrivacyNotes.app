@@ -141,8 +141,8 @@
   "cli": {
     "kicker": "PrivacyNotes CLI, per a agents d'IA",
     "heading": "Els teus agents d'IA escriuen. Les teves notes ho guarden.",
-    "intro": "Demana al teu agent d'IA que desi el pla que acaba d'escriure. Deixa que un script hi deixi l'informe d'aquesta nit. Digues «desa això» en un xat d'IA. pn, la interfície de línia d'ordres de PrivacyNotes, posa cadascun a la teva carpeta Agent, a tots els teus dispositius, xifrat al teu ordinador.",
-    "tabsLabel": "Tres maneres de fer servir pn",
+    "intro": "Demana al teu agent d'IA que desi el pla que acaba d'escriure. Deixa que un script hi deixi l'informe d'aquesta nit. Digues «desa això» en un xat d'IA. La línia d'ordres de PrivacyNotes, privacynotes, posa cadascun a la teva carpeta Agent, a tots els teus dispositius, xifrat al teu ordinador.",
+    "tabsLabel": "Tres maneres de fer servir privacynotes",
     "tabScript": "Un script",
     "tabAgent": "Un agent de programació d'IA",
     "tabApp": "Una app d'IA (MCP)",
@@ -156,7 +156,7 @@
     "sampleNote2": "Llista de lectures",
     "factFolder": "Una carpeta",
     "factJson": "JSON per a scripts",
-    "useHeading": "Què desa la gent amb pn",
+    "useHeading": "Què desa la gent amb privacynotes",
     "usePlanTitle": "Plans del teu agent de programació",
     "usePlanBody": "Demana al teu agent que desi el pla, el resum o la recerca que acaba d'escriure. Arriba amb les seves etiquetes, a punt al teu mòbil.",
     "useChatTitle": "Xats que val la pena guardar",
@@ -168,8 +168,8 @@
     "useClipTitle": "Qualsevol cosa que hagis copiat",
     "useClipBody": "Envia el porta-retalls, la sortida d'una ordre o un missatge d'error directament a les teves notes.",
     "useToolsTitle": "Part de les teves pròpies eines",
-    "useToolsBody": "pn respon en JSON i surt amb codis clars, així els teus scripts saben que la nota s'ha desat.",
-    "howLink": "Llegeix com funciona pn"
+    "useToolsBody": "L'ordre respon en JSON i surt amb codis clars, així els teus scripts saben que la nota s'ha desat.",
+    "howLink": "Llegeix com funciona privacynotes"
   },
   "meds": {
     "tileName": "Seguiment de la medicació",

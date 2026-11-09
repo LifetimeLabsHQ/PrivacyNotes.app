@@ -141,8 +141,8 @@
   "cli": {
     "kicker": "PrivacyNotes CLI, para agentes de IA",
     "heading": "Seus agentes de IA escrevem. Suas notas guardam.",
-    "intro": "Peça ao seu agente de IA para salvar o plano que ele acabou de escrever. Deixe um script salvar o relatório desta noite. Diga \"salve isto\" em um chat de IA. O pn, a interface de linha de comando do PrivacyNotes, coloca cada um deles na sua pasta Agent, em todos os seus dispositivos, criptografado no seu computador.",
-    "tabsLabel": "Três formas de usar o pn",
+    "intro": "Peça ao seu agente de IA para salvar o plano que ele acabou de escrever. Deixe um script salvar o relatório desta noite. Diga \"salve isto\" em um chat de IA. A linha de comando do PrivacyNotes, privacynotes, coloca cada um deles na sua pasta Agent, em todos os seus dispositivos, criptografado no seu computador.",
+    "tabsLabel": "Três formas de usar o privacynotes",
     "tabScript": "Um script",
     "tabAgent": "Um agente de programação com IA",
     "tabApp": "Um app de IA (MCP)",
@@ -156,7 +156,7 @@
     "sampleNote2": "Lista de leitura",
     "factFolder": "Uma pasta",
     "factJson": "JSON para scripts",
-    "useHeading": "O que as pessoas salvam com o pn",
+    "useHeading": "O que as pessoas salvam com o privacynotes",
     "usePlanTitle": "Planos do seu agente de programação",
     "usePlanBody": "Peça ao seu agente para salvar o plano, o resumo ou a pesquisa que ele acabou de escrever. Chega com as etiquetas, pronto no seu celular.",
     "useChatTitle": "Chats que valem a pena guardar",
@@ -168,8 +168,8 @@
     "useClipTitle": "Tudo o que você copiou",
     "useClipBody": "Envie a área de transferência, a saída de um comando ou uma mensagem de erro direto para as suas notas.",
     "useToolsTitle": "Parte das suas próprias ferramentas",
-    "useToolsBody": "O pn responde em JSON e termina com códigos claros, para que seus scripts saibam que a nota foi salva.",
-    "howLink": "Leia como o pn funciona"
+    "useToolsBody": "O comando responde em JSON e termina com códigos claros, para que seus scripts saibam que a nota foi salva.",
+    "howLink": "Leia como o privacynotes funciona"
   },
   "meds": {
     "tileName": "Rastreador de medicação",

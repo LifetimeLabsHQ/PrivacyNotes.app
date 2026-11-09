@@ -141,8 +141,8 @@
   "cli": {
     "kicker": "PrivacyNotes CLI, per agenti IA",
     "heading": "I tuoi agenti IA scrivono. Le tue note lo conservano.",
-    "intro": "Chiedi al tuo agente IA di salvare il piano che ha appena scritto. Lascia che uno script depositi il report di stasera. Di' \"salva questo\" in una chat con un'IA. pn, l'interfaccia a riga di comando di PrivacyNotes, mette ognuno nella tua cartella Agent, su tutti i tuoi dispositivi, cifrato sul tuo computer.",
-    "tabsLabel": "Tre modi di usare pn",
+    "intro": "Chiedi al tuo agente IA di salvare il piano che ha appena scritto. Lascia che uno script depositi il report di stasera. Di' \"salva questo\" in una chat con un'IA. La riga di comando di PrivacyNotes, privacynotes, mette ognuno nella tua cartella Agent, su tutti i tuoi dispositivi, cifrato sul tuo computer.",
+    "tabsLabel": "Tre modi di usare privacynotes",
     "tabScript": "Uno script",
     "tabAgent": "Un agente IA per programmare",
     "tabApp": "Un'app di IA (MCP)",
@@ -156,7 +156,7 @@
     "sampleNote2": "Lista di letture",
     "factFolder": "Una cartella",
     "factJson": "JSON per gli script",
-    "useHeading": "Cosa si salva con pn",
+    "useHeading": "Cosa si salva con privacynotes",
     "usePlanTitle": "Piani dal tuo agente di programmazione",
     "usePlanBody": "Chiedi al tuo agente di salvare il piano, il riassunto o la ricerca che ha appena scritto. Arriva con i suoi tag, pronto sul tuo telefono.",
     "useChatTitle": "Chat da conservare",
@@ -168,8 +168,8 @@
     "useClipTitle": "Tutto ciò che hai copiato",
     "useClipBody": "Invia gli appunti, l'output di un comando o un messaggio di errore direttamente nelle tue note.",
     "useToolsTitle": "Parte dei tuoi strumenti",
-    "useToolsBody": "pn risponde in JSON ed esce con codici chiari, così i tuoi script sanno che la nota è stata salvata.",
-    "howLink": "Scopri come funziona pn"
+    "useToolsBody": "Il comando risponde in JSON ed esce con codici chiari, così i tuoi script sanno che la nota è stata salvata.",
+    "howLink": "Scopri come funziona privacynotes"
   },
   "meds": {
     "tileName": "Tracker dei farmaci",

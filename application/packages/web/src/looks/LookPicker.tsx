@@ -44,7 +44,7 @@ import {
 } from '../itemStyles';
 import { inkStyle, PathGlyph } from './LookGlyph';
 import { NoteColorExample } from './NoteColorExample';
-import { isLogoId, useLogoIndex, useLogoPaths, useLookIcons, useLookLogos, useLookPaths } from './lookIconsLoader';
+import { isLogoId, preloadLookLogos, useLogoIndex, useLogoPaths, useLookIcons, useLookLogos, useLookPaths } from './lookIconsLoader';
 import { recentLookIcons, searchLookIcons } from './lookIconSearch';
 import i18n, { activeLocale, ensureLooksLoaded } from '../i18n';
 import { isImeComposing } from '../imeComposing';
@@ -388,6 +388,9 @@ export function LookPicker({
             role="tab"
             aria-selected={tab === id}
             onClick={() => setTab(id)}
+            onPointerEnter={id === 'logo' ? preloadLookLogos : undefined}
+            onPointerDown={id === 'logo' ? preloadLookLogos : undefined}
+            onFocus={id === 'logo' ? preloadLookLogos : undefined}
             className={settingsTabClass(tab === id)}
           >
             <TabGlyph size={16} aria-hidden="true" />
