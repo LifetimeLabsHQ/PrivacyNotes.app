@@ -471,9 +471,32 @@
     "save-page-as-note": {
       "q": "Puc desar una pàgina web com a nota?",
       "a": [
-        "Sí. [Obre un marcador](/ca/help/bookmarks/) i tria Desa com a nota, o tria Retalla una pàgina al menú + i enganxa-hi un enllaç. El text principal de la pàgina es converteix en una nota normal a Notes, enllaçada al seu marcador, i fins a 20 de les seves imatges es desen amb la nota, xifrades com qualsevol imatge que hi afegeixis tu, tret que desactivis Desa les imatges a la finestra Retalla una pàgina. Desar pàgines és gratuït en qualsevol pla, i [les imatges compten per al teu emmagatzematge](/ca/help/storage-usage/).",
+        "Sí. [Obre un marcador](/ca/help/bookmarks/) i tria Desa com a nota, o tria Retalla una pàgina al menú + i enganxa-hi un enllaç. El text principal de la pàgina es converteix en una nota normal a Notes, enllaçada al marcador quan l’has desat des d’un, i fins a 20 de les seves imatges es desen amb la nota, xifrades com qualsevol imatge que hi afegeixis tu, tret que desactivis Desa les imatges a la finestra Retalla una pàgina. Desar pàgines és gratuït en qualsevol pla, i [les imatges compten per al teu emmagatzematge](/ca/help/storage-usage/).",
         "Les apps d’escriptori i de mòbil baixen la pàgina i les seves imatges directament des del teu dispositiu. L’app web les baixa a través del nostre servidor, que les fa arribar i no en conserva ni la pàgina, ni les imatges, ni les adreces. Les pàgines que requereixen iniciar la sessió i les pàgines construïdes amb scripts poden quedar buides: conserva-les com a marcador.",
         "Amb l’[extensió del navegador](/ca/help/browser-extension/) també pots desar la pàgina que estàs llegint, incloses les pàgines que requereixen iniciar la sessió."
+      ]
+    },
+    "command-line": {
+      "q": "Puc afegir notes des de la línia d'ordres (CLI) o des d'un agent d'IA?",
+      "a": [
+        "Sí, amb pn, la interfície de línia d'ordres (CLI) de PrivacyNotes. Qualsevol cosa que s'executi en un terminal pot fer-la servir: els teus propis scripts, tasques programades i agents de programació d'IA. Envia-hi Markdown, afegeix un títol i etiquetes, i la nota arriba a la carpeta Agent de les teves notes, a tots els teus dispositius després de la propera sincronització. pn només pot afegir notes: no pot obrir, canviar ni suprimir les que ja tens. Necessita [Node.js](https://nodejs.org/en/download) 20 o posterior, i forma part de Pro.",
+        "Per configurar-lo, obre Configuració > CLI a l'app d'escriptori i tria Activa. Tria Instal·la, que posa pn en aquest ordinador, i després Crea un codi. En un terminal nou, executa `pn login` i enganxa el codi. Després desa la teva primera nota:",
+        "`echo \"# Hello\" | pn save`",
+        "pn té poques ordres, perquè fa una sola feina. Cadascuna mostra una targeta breu per a una persona, o una línia de JSON amb `--json` per a un script:",
+        "- `pn login` connecta aquest ordinador amb un codi d'un sol ús de Configuració > CLI. Enganxa el codi, o envia'l per canonada.\n- `pn save note.md` afegeix una nota des d'un fitxer, i `pn save` sol llegeix el Markdown que li arriba per canonada. `--title` defineix el títol; si no, s'usa el primer encapçalament `#` o la primera línia. `--tag work,ideas` afegeix etiquetes.\n- `pn status` mostra si aquest ordinador està connectat i l'última nota que ha desat.\n- `pn logout` desconnecta aquest ordinador.\n- `pn mcp` executa pn com a eina per a una app d'IA sense terminal, vegeu [MCP](/ca/help/mcp/).\n- `pn help` (o `pn --help`) llista totes les ordres i opcions, i `pn --version` mostra la versió.",
+        "Amb un agent de programació d'IA, connecta pn una vegada a l'ordinador on s'executa l'agent i demana-ho amb paraules normals: «Desa aquest pla a les meves PrivacyNotes amb pn save, amb l'etiqueta project.» L'agent pot llegir `pn --help` per als detalls, escriu el Markdown i l'envia per canonada. La mateixa ordre funciona als teus scripts i tasques programades:",
+        "- `git log --oneline -20 | pn save --title \"Recent commits\"` desa els teus últims commits.\n- `pbpaste | pn save --tag inbox` desa el que has copiat, en un Mac.\n- `pn save --tag daily report.md` en una tasca nocturna desa un informe generat.",
+        "Una nota admet fins a 700 KB de Markdown, 20 etiquetes i un títol de 200 caràcters, i pn ho comprova abans d'enviar-la. Surt amb 0 quan la nota es desa, 1 quan el servidor la rebutja, 2 per una entrada incorrecta, 3 quan l'ordinador no està connectat i 4 quan no hi ha xarxa, de manera que un script pot reaccionar. Una nota desada espera, segellada, fins que s'obre una de les teves apps; si cap ho fa en 90 dies, se suprimeix. Per desconnectar un ordinador, tria Elimina al costat seu a Configuració > CLI. El que poden veure pn i un agent és a [Poden pn o un agent d'IA llegir les meves notes?](/ca/help/cli-security/)."
+      ]
+    },
+    "mcp": {
+      "q": "Pot una app d'IA desar notes a PrivacyNotes amb MCP?",
+      "a": [
+        "Sí. MCP (Model Context Protocol) és la manera estàndard que tenen les apps d'IA d'afegir eines, i pn, la interfície de línia d'ordres de PrivacyNotes, pot funcionar com una. Afegeix-lo una vegada, i en qualsevol xat pots demanar amb paraules normals: «Desa un resum d'aquest xat a les meves notes, amb l'etiqueta meeting.» L'app crida l'eina save_note de pn, i la nota va a la carpeta Agent de les teves notes, a tots els teus dispositius després de la propera sincronització. L'eina només pot afegir notes, de manera que un xat no pot obrir, canviar ni suprimir les que ja tens. Forma part de Pro.",
+        "Primer [configura pn](/ca/help/command-line/) al mateix ordinador i connecta'l amb `pn login`. Després obre la configuració de MCP de la teva app d'IA, una pantalla de configuració o un fitxer com mcp.json, afegeix aquesta entrada sota `mcpServers` i reinicia l'app:",
+        "`\"privacynotes\": { \"command\": \"pn\", \"args\": [\"mcp\"] }`",
+        "L'eina rep el Markdown, i opcionalment un títol i etiquetes, amb els mateixos límits que `pn save`: 700 KB, 20 etiquetes i un títol de 200 caràcters. Quan alguna cosa impedeix desar, l'eina ho explica a l'app amb paraules, perquè l'app t'ho pugui dir: pn encara no està connectat, la nota és massa gran o el servidor l'ha rebutjada.",
+        "Si l'app diu que no pot iniciar pn, indica la ruta completa com a ordre: la que mostra `which pn`, o `where pn` a Windows. Les apps iniciades des del Dock o el menú Inici sovint no veuen les rutes que veu el teu terminal. pn necessita [Node.js](https://nodejs.org/en/download) 20 o posterior en aquest ordinador."
       ]
     },
     "browser-extension": {
@@ -483,11 +506,18 @@
         "Obre Configuració > Extensió, afegeix l'extensió des de la botiga del navegador, tria què pot fer i després tria Crea un codi. Copia el codi d'un sol ús i enganxa'l a l'extensió. Per eliminar-la, tria Elimina al costat seu, a Extensions del navegador, a la mateixa pàgina. Una extensió no ocupa cap plaça de dispositiu. [Com protegeix les teves notes](/ca/help/browser-extension-security/)."
       ]
     },
+    "cli-security": {
+      "q": "Poden pn o un agent d'IA llegir les meves notes?",
+      "a": [
+        "No. pn té un token que només pot afegir notes i una clau pública que només pot segellar una nota per al teu compte, mai la clau que obre les teves notes. Una nota es xifra a l'ordinador que executa pn i espera al servidor, segellada, fins que una de les teves apps l'obre i la desa a la carpeta Agent. Així que un agent, o qualsevol que copiï el token, pot afegir notes però no pot obrir, canviar ni suprimir les que ja tens.",
+        "El token es guarda en un fitxer que només el teu compte d'usuari en aquest ordinador pot llegir. Per tallar l'accés d'un ordinador a l'instant, tria Elimina al costat seu a Configuració > CLI; Desactiva els desconnecta tots. El servidor veu que ha arribat una nota, quan, i la seva mida arrodonida cap amunt. Els detalls són al nostre [model d'amenaces](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "browser-extension-security": {
       "q": "L'extensió del navegador pot llegir les meves notes?",
       "a": [
         "No. L'extensió no té mai la clau que obre les teves notes. Bloqueja cada retall abans que surti del navegador, i una de les teves apps el converteix en nota en la sincronització següent.",
-        "Si actives els inicis de sessió, l'extensió veu els teus inicis de sessió, les teves targetes, la meitat pública de les teves claus SSH i els teus marcadors, mai el text d'una nota ni cap clau privada. Els protegeix un PIN o un codi d'accés que defineixes per a l'extensió, independent del de l'app. Després de 10 intents fallits el navegador es desconnecta, de manera que una còpia del teu navegador no es pot obrir a força de provar. Els inicis de sessió es bloquegen després de 5 minuts sense ús i quan es tanca el navegador. Els detalls són al nostre [model d'amenaces](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+        "Si actives els inicis de sessió, l'extensió veu els teus inicis de sessió, les teves targetes, la meitat pública de les teves claus SSH i els teus marcadors, mai el text d'una nota ni cap clau privada. Els protegeix un PIN o un codi d'accés que defineixes per a l'extensió, independent del de l'app. Després de 10 intents fallits el navegador es desconnecta, de manera que una còpia del teu navegador no es pot obrir a força de provar. Els inicis de sessió es bloquegen passat el temps que triïs a l'extensió (15 minuts sense ús si no el canvies), passats 7 dies com a màxim, i sempre que es tanca el navegador. Els detalls són al nostre [model d'amenaces](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
     "contacts": {

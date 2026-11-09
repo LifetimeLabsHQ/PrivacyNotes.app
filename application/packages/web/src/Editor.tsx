@@ -53,6 +53,7 @@ import { EncryptedAttachment, holdsOneFile, requestAttachmentRename } from './En
 import { WikiLink } from './NoteLink';
 import { AudioRecordingBanner, type AudioRecordingState } from './AudioRecorder';
 import { LinkSheet } from './LinkSheet';
+import { SLOT_PILL_HEIGHT } from './EditorSlotPill';
 import { Callout, CalloutTitle } from './Callout';
 import { typeCalloutTrigger } from './CalloutSuggestion';
 import { proUnlocked } from './demo';
@@ -67,7 +68,7 @@ import {
 import { Spoiler } from './editorSpoiler';
 import { InlineCodeCopy, inlineCodeHint } from './editorCodeCopy';
 import { AddLineBetweenBlocks } from './editorAddLine';
-import { LinkModifierOpen, MarkdownLinkTyping, SelfLinkTyping, linkHrefAt, linkSelectionIfUrl, openLinkHref } from './editorLinks';
+import { LINK_TITLE_ATTRIBUTE, LinkModifierOpen, MarkdownLinkTyping, SelfLinkTyping, linkHrefAt, linkSelectionIfUrl, openLinkHref } from './editorLinks';
 import { createLongPressGuard } from './softKeyboard';
 import { planLineSort } from './sortLines';
 import { activeLocale } from './i18n';
@@ -117,6 +118,7 @@ import {
   clipboardRenderer,
   markdownForClipboard,
   replaceBodyUndoably,
+  InlineIcon,
 } from './editorExtensions';
 
 type Props = {
@@ -161,6 +163,13 @@ type Props = {
    * itself.
    */
   bodyControls?: ReactNode;
+  /**
+   * One line over the body, on the row of the corner pills (the read-only
+   * hint). The pills keep their corner; the line ends where they begin, and
+   * the body loses its wrap-beside spacer because the line already clears
+   * them.
+   */
+  notice?: ReactNode;
   /**
    * The Connections pill and panel, drawn between the other pills and the
    * outline. Its open state lives here with the outline's, so the corner
@@ -260,7 +269,7 @@ export type EditorHandle = {
 const TOUCH_HANDLE_HEIGHT = 32;
 
 const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }>(function EditorInner(
-  { value, onChange, readOnly = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, cachedDoc, hideEncryptedMedia, onInsertFiles, bodyControls, connections, toolbarSlot, onShowMarkdown, onRenameFile, fileNote = false, preview = false, sinkCheckedTasks = true, typedSymbols = false, placeholder, onReady },
+  { value, onChange, readOnly = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, cachedDoc, hideEncryptedMedia, onInsertFiles, bodyControls, notice, connections, toolbarSlot, onShowMarkdown, onRenameFile, fileNote = false, preview = false, sinkCheckedTasks = true, typedSymbols = false, placeholder, onReady },
   ref
 ) {
   const { t } = useTranslation('editor');
@@ -571,6 +580,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         // link still get auto-linked - this only stops the mark from
         // silently bleeding into adjacent text.
         inclusive() { return false; },
+        addAttributes() { return { ...this.parent?.(), title: LINK_TITLE_ATTRIBUTE }; },
       }).configure({
         // Who opens a clicked link is decided in one place, and it is not
         // here: `LinkModifierOpen` reads the pointer, the modifier and
@@ -649,6 +659,8 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         filePreview: fileNote,
       }),
       WikiLink,
+      // :icon[name] / :logo[slug] - an icon or logo in the text (Insert > Icons & logos).
+      InlineIcon,
       CalloutTitle,
       Callout.configure({
         kanbanUnlocked: () => proUnlocked(isProRef.current),
@@ -1171,7 +1183,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
     <div
       ref={rootRef}
       // pn-editor-topgapped marks a note editor (not the history preview).
-      className={`relative flex flex-col min-h-0${preview ? '' : ' pn-editor-topgapped'}${showTopLine ? ' pn-top-line-pad' : ''}`}
+      className={`relative flex flex-col min-h-0${preview ? '' : ' pn-editor-topgapped'}${showTopLine ? ' pn-top-line-pad' : ''}${notice ? ' pn-editor-noticed' : ''}`}
       onMouseDownCapture={notePreClickState}
       onContextMenu={openBodyMenu}
     >
@@ -1276,6 +1288,14 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           </div>
         </div>
       )}
+      {notice && (
+        <div
+          className="flex min-w-0 items-center"
+          style={{ minHeight: SLOT_PILL_HEIGHT, paddingInlineEnd: 'var(--pn-outline-fw, 0px)' }}
+        >
+          {notice}
+        </div>
+      )}
       {audioState !== 'idle' && (
         <AudioRecordingBanner
           state={audioState}
@@ -1296,7 +1316,9 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
             tabIndex={isMobile ? -1 : undefined}
             onMouseDown={(e) => e.preventDefault()}
             onClick={addLineAtTop}
-            className="pn-top-line group absolute inset-x-0 top-0 z-[1] h-8 cursor-text outline-none"
+            // Under a notice line the zone also takes the line's empty lower
+            // edge, so the box below needs only 12px of padding (#712).
+            className={`pn-top-line group absolute inset-x-0 z-[1] ${notice ? '-top-3 h-6' : 'top-0 h-8'} cursor-text outline-none`}
           >
             <span className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center gap-1.5 opacity-0 transition-opacity [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-hover:delay-150 group-focus-visible:opacity-100">
               <span className="flex items-center gap-1 text-small leading-none text-pn-muted">

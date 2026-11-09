@@ -279,6 +279,10 @@
     "bodySingle": "<strong>{{filename}}</strong> bir markdown dosyasına benziyor. Okuyup düzenleyebilmek için not olarak mı içe aktarılsın, yoksa şifrelenmiş bir dosya eki olarak mı saklansın?",
     "bodyMulti": "Bu {{count}} dosya markdown gibi görünüyor. Okuyup düzenleyebilmek için not olarak mı içe aktarılsınlar, yoksa şifrelenmiş dosya ekleri olarak mı saklansınlar?"
   },
+  "archiveConfirm": {
+    "body_one": "<highlight>{{count}} öğe</highlight> arşivlensin mi? Öğe listelerinizden çıkar ve Arşiv görünümünde bekler. Arşivden çıkar seçeneği onu geri getirir.",
+    "body_other": "<highlight>{{count}} öğe</highlight> arşivlensin mi? Öğeler listelerinizden çıkar ve Arşiv görünümünde bekler. Arşivden çıkar seçeneği onları geri getirir."
+  },
   "bulkTrash": {
     "body_one": "<highlight>{{count}} öğe</highlight> silinsin mi? Sonradan geri yüklemek için çöp kutusuna taşıyın veya kalıcı olarak silin.",
     "body_other": "<highlight>{{count}} öğe</highlight> silinsin mi? Sonradan geri yüklemek için çöp kutusuna taşıyın veya kalıcı olarak silin.",

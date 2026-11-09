@@ -471,9 +471,32 @@
     "save-page-as-note": {
       "q": "Kan ik een webpagina als notitie opslaan?",
       "a": [
-        "Ja. [Open een bladwijzer](/nl/help/bookmarks/) en kies Opslaan als notitie, of kies Pagina clippen in het +-menu en plak een link. De hoofdtekst van de pagina wordt een gewone notitie in Notities, gekoppeld aan de bladwijzer, en tot 20 afbeeldingen van de pagina worden bij de notitie bewaard, versleuteld zoals elke afbeelding die je zelf toevoegt, tenzij je Afbeeldingen opslaan uitzet in het venster Pagina clippen. Pagina's opslaan is gratis in elk plan, en [de afbeeldingen tellen mee voor je opslag](/nl/help/storage-usage/).",
+        "Ja. [Open een bladwijzer](/nl/help/bookmarks/) en kies Opslaan als notitie, of kies Pagina clippen in het +-menu en plak een link. De hoofdtekst van de pagina wordt een gewone notitie in Notities, gekoppeld aan de bladwijzer als je de pagina vanuit een bladwijzer hebt opgeslagen, en tot 20 afbeeldingen van de pagina worden bij de notitie bewaard, versleuteld zoals elke afbeelding die je zelf toevoegt, tenzij je Afbeeldingen opslaan uitzet in het venster Pagina clippen. Pagina's opslaan is gratis in elk plan, en [de afbeeldingen tellen mee voor je opslag](/nl/help/storage-usage/).",
         "De desktop- en telefoonapps downloaden de pagina en de afbeeldingen rechtstreeks vanaf je apparaat. De webapp downloadt ze via onze server, die ze doorgeeft en de pagina, de afbeeldingen en hun adressen niet bewaart. Pagina's achter een login en pagina's die door scripts worden opgebouwd kunnen leeg terugkomen: bewaar die als bladwijzer.",
         "Met de [browserextensie](/nl/help/browser-extension/) kun je ook de pagina opslaan die je aan het lezen bent, ook pagina's achter een login."
+      ]
+    },
+    "command-line": {
+      "q": "Kan ik notities toevoegen vanaf de opdrachtregel (CLI) of met een AI-agent?",
+      "a": [
+        "Ja, met pn, de PrivacyNotes-opdrachtregelinterface (CLI). Alles wat in een terminal draait kan het gebruiken: je eigen scripts, geplande taken en AI-codeeragents. Pipe Markdown erin, voeg een titel en tags toe, en de notitie komt in de Agent-map van je notities, op al je apparaten na hun volgende synchronisatie. pn kan alleen notities toevoegen: het kan de notities die je hebt niet openen, wijzigen of verwijderen. Het vereist [Node.js](https://nodejs.org/en/download) 20 of nieuwer en is onderdeel van Pro.",
+        "Om het in te stellen open je Instellingen > CLI in de desktop-app en kies je Inschakelen. Kies Installeren, dat pn op deze computer zet, en daarna Code maken. Voer in een nieuwe terminal `pn login` uit en plak de code. Sla daarna je eerste notitie op:",
+        "`echo \"# Hello\" | pn save`",
+        "pn heeft weinig opdrachten, omdat het één taak doet. Elke opdracht toont een korte kaart voor een mens, of met `--json` één regel JSON voor een script:",
+        "- `pn login` verbindt deze computer met een eenmalige code uit Instellingen > CLI. Plak de code, of pipe hem erin.\n- `pn save note.md` voegt een notitie toe uit een bestand, en `pn save` alleen leest Markdown die erin gepiped wordt. `--title` stelt de titel in, anders wordt de eerste `#`-kop of de eerste regel gebruikt. `--tag work,ideas` voegt tags toe.\n- `pn status` toont of deze computer verbonden is en welke notitie als laatste is opgeslagen.\n- `pn logout` koppelt deze computer los.\n- `pn mcp` draait pn als hulpmiddel voor een AI-app zonder terminal, zie [MCP](/nl/help/mcp/).\n- `pn help` (of `pn --help`) toont elke opdracht en optie, en `pn --version` toont de versie.",
+        "Met een AI-codeeragent verbind je pn één keer op de computer waar de agent draait, en vraag je het daarna in gewone woorden: \"Sla dit plan op in mijn PrivacyNotes met pn save, met de tag project.\" De agent kan `pn --help` lezen voor de details, schrijft de Markdown en pipet die erin. Dezelfde opdracht werkt in je eigen scripts en geplande taken:",
+        "- `git log --oneline -20 | pn save --title \"Recent commits\"` slaat je laatste commits op.\n- `pbpaste | pn save --tag inbox` slaat op wat je hebt gekopieerd, op een Mac.\n- `pn save --tag daily report.md` in een nachtelijke taak slaat een gegenereerd rapport op.",
+        "Een notitie bevat maximaal 700 KB Markdown, 20 tags en een titel van 200 tekens, en pn controleert dit voordat het verstuurt. Het stopt met 0 als de notitie is opgeslagen, 1 als de server hem weigert, 2 bij ongeldige invoer, 3 als de computer niet verbonden is en 4 als er geen netwerk is, zodat een script kan reageren. Een opgeslagen notitie wacht, verzegeld, tot een van je apps opent; gebeurt dat binnen 90 dagen niet, dan wordt hij verwijderd. Om een computer los te koppelen kies je Verwijderen naast die computer in Instellingen > CLI. Wat pn en een agent kunnen zien staat in [Kunnen pn of een AI-agent mijn notities lezen?](/nl/help/cli-security/)."
+      ]
+    },
+    "mcp": {
+      "q": "Kan een AI-app notities opslaan in PrivacyNotes via MCP?",
+      "a": [
+        "Ja. MCP (Model Context Protocol) is de standaardmanier waarop AI-apps hulpmiddelen aansluiten, en pn, de PrivacyNotes-opdrachtregelinterface, kan als zo'n hulpmiddel draaien. Voeg het één keer toe en vraag in elke chat in gewone woorden: \"Sla een samenvatting van deze chat op in mijn notities, met de tag meeting.\" De app roept de save_note-tool van pn aan, en de notitie komt in de Agent-map van je notities, op al je apparaten na hun volgende synchronisatie. De tool kan alleen notities toevoegen, dus een chat kan de notities die je hebt niet openen, wijzigen of verwijderen. Het is onderdeel van Pro.",
+        "[Stel eerst pn in](/nl/help/command-line/) op dezelfde computer en verbind het met `pn login`. Open daarna de MCP-instellingen van je AI-app, een instellingenscherm of een bestand zoals mcp.json, voeg dit item toe onder `mcpServers` en start de app opnieuw:",
+        "`\"privacynotes\": { \"command\": \"pn\", \"args\": [\"mcp\"] }`",
+        "De tool neemt de Markdown aan, en eventueel een titel en tags, met dezelfde limieten als `pn save`: 700 KB, 20 tags en een titel van 200 tekens. Als iets een opslag tegenhoudt, vertelt de tool dat in woorden aan de app, zodat de app het aan jou kan vertellen: pn is nog niet verbonden, de notitie is te groot, of de server heeft hem geweigerd.",
+        "Als de app zegt dat hij pn niet kan starten, geef dan het volledige pad op als opdracht: het pad dat `which pn` toont, of `where pn` op Windows. Apps die je start vanuit het Dock of het Startmenu zien vaak niet de paden die je terminal ziet. pn vereist [Node.js](https://nodejs.org/en/download) 20 of nieuwer op die computer."
       ]
     },
     "browser-extension": {
@@ -483,11 +506,18 @@
         "Open Instellingen > Extensie, voeg de extensie toe vanuit de winkel van je browser, kies wat ze mag doen en kies dan Een code maken. Kopieer de eenmalige code en plak hem in de extensie. Om ze te verwijderen, kies je Verwijderen naast de extensie onder Browserextensies op dezelfde pagina. Een extensie gebruikt geen apparaatplek. [Hoe ze je notities veilig houdt](/nl/help/browser-extension-security/)."
       ]
     },
+    "cli-security": {
+      "q": "Kunnen pn of een AI-agent mijn notities lezen?",
+      "a": [
+        "Nee. pn heeft een token dat alleen notities kan toevoegen en een publieke sleutel die alleen een notitie voor jouw account kan verzegelen, nooit de sleutel waarmee je notities opengaan. Een notitie wordt versleuteld op de computer waarop pn draait en wacht, verzegeld, op de server tot een van je apps hem opent en in de Agent-map zet. Een agent, of wie dan ook die het token kopieert, kan dus notities toevoegen, maar kan de notities die je hebt niet openen, wijzigen of verwijderen.",
+        "Het token staat in een bestand dat alleen jouw gebruikersaccount op die computer kan lezen. Om één computer meteen af te sluiten kies je Verwijderen naast die computer in Instellingen > CLI; Uitzetten koppelt ze allemaal los. De server ziet dat er een notitie binnenkwam, wanneer, en de grootte naar boven afgerond. De details staan in ons [dreigingsmodel](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "browser-extension-security": {
       "q": "Kan de browserextensie mijn notities lezen?",
       "a": [
         "Nee. De extensie heeft nooit de sleutel die je notities opent. Ze vergrendelt elke clip voordat die je browser verlaat, en een van je apps maakt er bij de volgende synchronisatie een notitie van.",
-        "Als je logins aanzet, ziet de extensie je logins, je creditcards, de openbare helft van je SSH-sleutels en je bladwijzers, nooit de tekst van een notitie en nooit een privésleutel. Ze worden beschermd door een PIN of toegangscode die je voor de extensie instelt, los van die van de app. Na 10 foute pogingen wordt de browser losgekoppeld, zodat een kopie van je browser niet open te raden is. Logins worden na 5 minuten zonder gebruik vergrendeld en als de browser sluit. De details staan in ons [threat model](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+        "Als je logins aanzet, ziet de extensie je logins, je creditcards, de openbare helft van je SSH-sleutels en je bladwijzers, nooit de tekst van een notitie en nooit een privésleutel. Ze worden beschermd door een PIN of toegangscode die je voor de extensie instelt, los van die van de app. Na 10 foute pogingen wordt de browser losgekoppeld, zodat een kopie van je browser niet open te raden is. Logins worden vergrendeld na de tijd die je in de extensie kiest (15 minuten zonder gebruik, tenzij je dat aanpast), uiterlijk na 7 dagen, en altijd als de browser sluit. De details staan in ons [threat model](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
     "contacts": {

@@ -471,9 +471,32 @@
     "save-page-as-note": {
       "q": "Kan jag spara en webbsida som anteckning?",
       "a": [
-        "Ja. [Öppna ett bokmärke](/sv/help/bookmarks/) och välj Spara som anteckning, eller välj Klipp webbsida i +-menyn och klistra in en länk. Sidans huvudtext blir en vanlig anteckning i Anteckningar, länkad till sitt bokmärke, och upp till 20 av sidans bilder lagras med anteckningen, krypterade som alla bilder du lägger till själv, om du inte stänger av Spara bilder i fönstret Klipp webbsida. Att spara sidor är gratis i alla planer, och [bilderna räknas mot din lagring](/sv/help/storage-usage/).",
+        "Ja. [Öppna ett bokmärke](/sv/help/bookmarks/) och välj Spara som anteckning, eller välj Klipp webbsida i +-menyn och klistra in en länk. Sidans huvudtext blir en vanlig anteckning i Anteckningar, länkad till bokmärket när du sparade den från ett, och upp till 20 av sidans bilder lagras med anteckningen, krypterade som alla bilder du lägger till själv, om du inte stänger av Spara bilder i fönstret Klipp webbsida. Att spara sidor är gratis i alla planer, och [bilderna räknas mot din lagring](/sv/help/storage-usage/).",
         "Skrivbords- och mobilapparna laddar ner sidan och dess bilder direkt från din enhet. Webbappen laddar ner dem via vår server, som skickar dem vidare och varken behåller sidan, bilderna eller deras adresser. Sidor bakom en inloggning och sidor som byggs av skript kan komma tillbaka tomma: behåll dem som bokmärke.",
         "Med [webbläsartillägget](/sv/help/browser-extension/) kan du också spara sidan du läser, även sidor bakom en inloggning."
+      ]
+    },
+    "command-line": {
+      "q": "Kan jag lägga till anteckningar från kommandoraden (CLI) eller med en AI-agent?",
+      "a": [
+        "Ja, med pn, kommandoradsgränssnittet (CLI) för PrivacyNotes. Allt som kan köras i en terminal kan använda det: dina egna skript, schemalagda jobb och AI-kodningsagenter. Skicka in Markdown, lägg till en titel och taggar, så hamnar anteckningen i mappen Agent bland dina anteckningar, på alla dina enheter efter nästa synk. pn kan bara lägga till anteckningar: det kan inte öppna, ändra eller radera de anteckningar du har. Det kräver [Node.js](https://nodejs.org/en/download) 20 eller senare och ingår i Pro.",
+        "För att ställa in det öppnar du skrivbordsappen och sedan Inställningar > CLI och väljer Slå på. Välj Installera, som lägger pn på den här datorn, och sedan Skapa en kod. Kör `pn login` i en ny terminal och klistra in koden. Spara sedan din första anteckning:",
+        "`echo \"# Hello\" | pn save`",
+        "pn har få kommandon, eftersom det gör ett enda jobb. Varje kommando skriver ut en kort sammanställning för en person, eller en rad JSON med `--json` för ett skript:",
+        "- `pn login` ansluter den här datorn med en engångskod från Inställningar > CLI. Klistra in koden, eller skicka in den.\n- `pn save note.md` lägger till en anteckning från en fil, och `pn save` ensamt läser Markdown som skickas in. `--title` anger titeln, annars används den första `#`-rubriken eller den första raden. `--tag work,ideas` lägger till taggar.\n- `pn status` visar om den här datorn är ansluten och vilken anteckning den sparade senast.\n- `pn logout` kopplar från den här datorn.\n- `pn mcp` kör pn som ett verktyg för en AI-app utan terminal, se [MCP](/sv/help/mcp/).\n- `pn help` (eller `pn --help`) listar alla kommandon och alternativ, och `pn --version` skriver ut versionen.",
+        "Med en AI-kodningsagent ansluter du pn en gång på datorn där agenten körs och ber sedan med vanliga ord: \"Save this plan to my PrivacyNotes with pn save, tagged project.\" Agenten kan läsa `pn --help` för detaljerna, skriver Markdown och skickar in det. Samma kommando fungerar i dina egna skript och schemalagda jobb:",
+        "- `git log --oneline -20 | pn save --title \"Recent commits\"` sparar dina senaste commits.\n- `pbpaste | pn save --tag inbox` sparar det du kopierade, på en Mac.\n- `pn save --tag daily report.md` i ett nattligt jobb sparar en genererad rapport.",
+        "En anteckning rymmer upp till 700 KB Markdown, 20 taggar och en titel på 200 tecken, och pn kontrollerar detta innan det skickar. Det avslutar med 0 när anteckningen är sparad, 1 när servern vägrar den, 2 vid felaktig indata, 3 när datorn inte är ansluten och 4 när nätverk saknas, så att ett skript kan reagera. En sparad anteckning väntar, förseglad, tills någon av dina appar öppnas; om ingen gör det inom 90 dagar raderas den. För att koppla från en dator väljer du Ta bort bredvid den i Inställningar > CLI. Vad pn och en agent kan se står i [Kan pn eller en AI-agent läsa mina anteckningar?](/sv/help/cli-security/)."
+      ]
+    },
+    "mcp": {
+      "q": "Kan en AI-app spara anteckningar i PrivacyNotes via MCP?",
+      "a": [
+        "Ja. MCP (Model Context Protocol) är standardsättet för AI-appar att koppla in verktyg, och pn, kommandoradsgränssnittet för PrivacyNotes, kan köras som ett sådant. Lägg till det en gång, så kan du i vilken chatt som helst be med vanliga ord: \"Spara en sammanfattning av den här chatten i mina anteckningar, med taggen meeting.\" Appen anropar pns verktyg save_note, och anteckningen hamnar i mappen Agent bland dina anteckningar, på alla dina enheter efter nästa synk. Verktyget kan bara lägga till anteckningar, så en chatt kan inte öppna, ändra eller radera de anteckningar du har. Det ingår i Pro.",
+        "[Ställ först in pn](/sv/help/command-line/) på samma dator och anslut det med `pn login`. Öppna sedan din AI-apps MCP-inställningar, en inställningsskärm eller en fil som mcp.json, lägg till den här posten under `mcpServers` och starta om appen:",
+        "`\"privacynotes\": { \"command\": \"pn\", \"args\": [\"mcp\"] }`",
+        "Verktyget tar Markdown, och som tillval en titel och taggar, med samma gränser som `pn save`: 700 KB, 20 taggar och en titel på 200 tecken. När något hindrar en sparning berättar verktyget det för appen i ord, så att appen kan säga det till dig: pn är inte ansluten än, anteckningen är för stor eller servern vägrade den.",
+        "Om appen säger att den inte kan starta pn, ange hela sökvägen som kommando: den som `which pn` skriver ut, eller `where pn` i Windows. Appar som startas från Dock eller Start-menyn ser ofta inte de sökvägar som din terminal ser. pn kräver [Node.js](https://nodejs.org/en/download) 20 eller senare på den datorn."
       ]
     },
     "browser-extension": {
@@ -483,11 +506,18 @@
         "Öppna Inställningar > Tillägg, lägg till tillägget från webbläsarens butik, välj vad det får göra och välj sedan Skapa en kod. Kopiera engångskoden och klistra in den i tillägget. Vill du ta bort det väljer du Ta bort bredvid det under Webbläsartillägg på samma sida. Ett tillägg använder inte en av dina enhetsplatser. [Så skyddar det dina anteckningar](/sv/help/browser-extension-security/)."
       ]
     },
+    "cli-security": {
+      "q": "Kan pn eller en AI-agent läsa mina anteckningar?",
+      "a": [
+        "Nej. pn har en token som bara kan lägga till anteckningar och en publik nyckel som bara kan försegla en anteckning åt ditt konto, aldrig nyckeln som öppnar dina anteckningar. En anteckning krypteras på datorn som kör pn och väntar på servern, förseglad, tills någon av dina appar öppnar den och lägger den i mappen Agent. Så en agent, eller vem som helst som kopierar token, kan lägga till anteckningar men inte öppna, ändra eller radera de anteckningar du har.",
+        "Token förvaras i en fil som bara ditt användarkonto på den datorn kan läsa. För att direkt stänga ute en dator väljer du Ta bort bredvid den i Inställningar > CLI; Stäng av kopplar från alla. Servern ser att en anteckning kom, när, och dess storlek avrundad uppåt. Detaljerna finns i vår [hotmodell](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "browser-extension-security": {
       "q": "Kan webbläsartillägget läsa mina anteckningar?",
       "a": [
         "Nej. Tillägget har aldrig nyckeln som öppnar dina anteckningar. Det låser varje klipp innan det lämnar din webbläsare, och en av dina appar gör om det till en anteckning vid nästa synk.",
-        "Om du slår på inloggningar ser tillägget dina inloggningar, dina kort, den publika halvan av dina SSH-nycklar och dina bokmärken, aldrig en anteckningstext och aldrig en privat nyckel. De skyddas av en PIN-kod eller lösenkod som du ställer in för tillägget, skild från appens. Efter 10 felaktiga försök kopplas webbläsaren bort, så en kopia av din webbläsare går inte att gissa upp. Inloggningar låses efter 5 minuter utan användning och när webbläsaren stängs. Detaljerna finns i vår [hotmodell](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+        "Om du slår på inloggningar ser tillägget dina inloggningar, dina kort, den publika halvan av dina SSH-nycklar och dina bokmärken, aldrig en anteckningstext och aldrig en privat nyckel. De skyddas av en PIN-kod eller lösenkod som du ställer in för tillägget, skild från appens. Efter 10 felaktiga försök kopplas webbläsaren bort, så en kopia av din webbläsare går inte att gissa upp. Inloggningar låses efter den tid du väljer i tillägget (15 minuter utan användning om du inte ändrar det), senast efter 7 dagar, och alltid när webbläsaren stängs. Detaljerna finns i vår [hotmodell](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
     "contacts": {
@@ -774,7 +804,7 @@
     "print": {
       "q": "Kan jag skriva ut en anteckning eller spara den som PDF?",
       "a": [
-        "Ja. Högerklicka på en anteckning, eller öppna dess delningsmeny, och välj \"Skriv ut / spara som PDF\". Systemets utskriftsdialog öppnas, så du kan skicka till en skrivare eller spara en PDF därifrån. Sidan sätts rent på vitt med formateringen intakt, vilket tema du än använder i appen.",
+        "Ja. Högerklicka på en anteckning, eller öppna dess delningsmeny, och välj \"Skriv ut / Spara som PDF\". Systemets utskriftsdialog öppnas, så du kan skicka till en skrivare eller spara en PDF därifrån. Sidan sätts rent på vitt med formateringen intakt, vilket tema du än använder i appen.",
         "Den skapas på din enhet som varje annan [export](/sv/help/export/), så inget laddas upp för att göra den. För flera anteckningar på en gång: markera dem och exportera som HTML, då får du en utskrivbar sida per anteckning. [\"Läkar-PDF\" under Statistik](/sv/help/doctor-pdf/) är en separat välmåenderapport byggd för just det, och kräver Pro."
       ]
     },

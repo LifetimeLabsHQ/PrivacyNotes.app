@@ -69,6 +69,9 @@ interface UseNoteEditingReturn {
    *  restore from history): the next edit starts a new session, so the state
    *  it starts from is kept as a version. */
   restartVersionSession: (id: string) => void;
+  /** Resolves once every version save of the note started so far is done,
+   *  its queue write after a failure included. */
+  versionSavesSettled: (id: string) => Promise<void>;
   /** Flush any pending body edits into React state. Call on note switch
    *  and before sync so the notes array is current. */
   flushEditingBody: () => void;
@@ -778,6 +781,7 @@ export function useNoteEditing({
     contentHash,
     lastVersionHashRef,
     restartVersionSession,
+    versionSavesSettled,
     flushEditingBody,
     editingBodyRef,
   };

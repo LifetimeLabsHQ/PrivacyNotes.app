@@ -263,6 +263,9 @@
     "bodySingle": "<strong>{{filename}}</strong>はMarkdownファイルのようです。ノートとして読み込んで閲覧・編集できるようにしますか?それとも暗号化された添付ファイルとして保存しますか?",
     "bodyMulti": "これら{{count}}個のファイルはMarkdownのようです。ノートとして読み込んで閲覧・編集できるようにしますか?それとも暗号化された添付ファイルとして保存しますか?"
   },
+  "archiveConfirm": {
+    "body_other": "<highlight>{{count}}件のアイテム</highlight>をアーカイブしますか?リストから外れ、「アーカイブ」ビューに入ります。「アーカイブを解除」で元に戻せます。"
+  },
   "bulkTrash": {
     "body_other": "<highlight>{{count}}件のアイテム</highlight>を削除しますか?ゴミ箱に移動すれば後で復元できます。完全に削除することもできます。",
     "confirm": "ゴミ箱に移動",

@@ -263,6 +263,9 @@
     "bodySingle": "<strong>{{filename}}</strong> 看起來是 Markdown 檔。要匯入為筆記以便閱讀和編輯，還是儲存為加密檔案附件？",
     "bodyMulti": "這 {{count}} 個檔案看起來是 Markdown。要匯入為筆記以便閱讀和編輯，還是儲存為加密檔案附件？"
   },
+  "archiveConfirm": {
+    "body_other": "要封存 <highlight>{{count}} 個項目</highlight>嗎？它們會離開你的清單，放在「封存」檢視中。選擇「取消封存」就能把它們移回來。"
+  },
   "bulkTrash": {
     "body_other": "要刪除 <highlight>{{count}} 個項目</highlight>嗎？移至垃圾桶之後仍可還原，或者永久刪除。",
     "confirm": "移至垃圾桶",

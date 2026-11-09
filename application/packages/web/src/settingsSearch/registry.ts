@@ -28,6 +28,7 @@ export type SectionId =
   | 'date'
   | 'hotkeys'
   | 'browser'
+  | 'commandLine'
   | 'about'
   | 'help';
 
@@ -40,7 +41,7 @@ export type SettingEntry = {
   brand?: true;
   options?: readonly string[];
   keywords?: true;
-  shownOn?: 'storeBuild' | 'keyboard' | 'paneLayout' | 'realAccount' | 'desktopApp' | 'captureBlock' | 'extension' | 'extensionAccount';
+  shownOn?: 'storeBuild' | 'keyboard' | 'paneLayout' | 'realAccount' | 'desktopApp' | 'captureBlock' | 'commandLine';
   /** An entry for a whole section: it opens the pane and flashes nothing. */
   isSection?: true;
 };
@@ -62,6 +63,7 @@ export const SECTION_LABEL: Record<SectionId, string> = {
   date: 'notes:settings.dateLabel',
   hotkeys: 'landing:about.tabs.hotkeys',
   browser: 'shell:apps.railLabel',
+  commandLine: 'shell:cli.railLabel',
   about: 'notes:settings.aboutLabel',
   help: 'notes:settings.helpLabel',
 };
@@ -77,7 +79,7 @@ export const TAB_LABEL: Record<string, string> = {
   'import/restore': 'importExport:shell.tabRestore',
   'import/wellness': 'notes:settings.trackersLabel',
   'security/pin': 'security:modal.tabPin',
-  'security/biometric': 'security:modal.tabBiometric',
+  'security/biometric': 'security:modal.tabBiometricShort',
   'security/phrase': 'security:modal.tabPhrase',
   'security/twoFactor': 'security:modal.tabTwoFactor',
   'plan/connectedAccounts': 'security:accountTabs.accounts',
@@ -109,7 +111,8 @@ const SECTION_ENTRIES: SettingEntry[] = (Object.keys(SECTION_LABEL) as SectionId
   isSection: true,
   // Touch-only devices have no Hotkeys pane.
   ...(section === 'hotkeys' ? { shownOn: 'keyboard' as const } : {}),
-  ...(section === 'browser' ? { shownOn: 'extension' as const } : {}),
+  // Settings > Command line shows where `pn` can be installed (cliRelease.ts).
+  ...(section === 'commandLine' ? { shownOn: 'commandLine' as const } : {}),
 }));
 
 /** An importer row, named by its product. */
@@ -215,12 +218,12 @@ const ROW_ENTRIES: SettingEntry[] = [
   { id: 'security.pin', section: 'security', tab: 'pin', label: 'security:modal.tabPin', keywords: true },
   { id: 'security.setPin', section: 'security', tab: 'pin', label: 'security:pinTab.setPin', options: ['security:pinTab.updatePin'] },
   { id: 'security.removePin', section: 'security', tab: 'pin', label: 'security:pinTab.removePin' },
-  { id: 'security.reaskAfter', section: 'security', tab: 'pin', label: 'security:pinTab.reaskAfter', keywords: true },
-  { id: 'security.biometric', section: 'security', tab: 'biometric', label: 'security:modal.tabBiometric', keywords: true },
+    { id: 'security.biometric', section: 'security', tab: 'biometric', label: 'security:modal.tabBiometricShort', keywords: true },
   { id: 'security.enableBiometric', section: 'security', tab: 'biometric', label: 'security:biometricTab.enable' },
   { id: 'security.biometricSetUpAgain', section: 'security', tab: 'biometric', label: 'security:biometricTab.setUpAgain' },
   { id: 'security.appLock', section: 'security', tab: 'biometric', label: 'security:biometricTab.lockOnOpen', keywords: true },
-  { id: 'security.relockAfter', section: 'security', tab: 'biometric', label: 'security:biometricTab.relockAfter', keywords: true },
+  { id: 'security.relockAfter', section: 'security', tab: 'biometric', label: 'security:biometricTab.relockAgainAfter', keywords: true },
+  { id: 'security.reaskAfter', section: 'security', tab: 'biometric', label: 'security:biometricTab.reaskAfter', keywords: true },
   { id: 'security.blockCapture', section: 'security', tab: 'biometric', label: 'security:biometricTab.blockCapture', keywords: true, shownOn: 'captureBlock' },
   { id: 'security.phrase', section: 'security', tab: 'phrase', label: 'security:modal.tabPhrase', keywords: true },
   { id: 'security.twoFactor', section: 'security', tab: 'twoFactor', label: 'security:modal.tabTwoFactor', options: ['security:twoFactor.title', 'security:twoFactor.backupKey', 'security:twoFactor.start'], shownOn: 'realAccount' },
@@ -259,6 +262,7 @@ const ROW_ENTRIES: SettingEntry[] = [
   { id: 'appearance.startView', section: 'lists', label: 'settings:appearance.startViewTitle', keywords: true },
   { id: 'appearance.view', section: 'lists', label: 'settings:appearance.viewTitle', options: ['settings:appearance.viewList', 'settings:appearance.viewGrid'], keywords: true },
   { id: 'appearance.confirmTrash', section: 'editor', tab: 'behavior', label: 'settings:appearance.confirmTrashTitle', keywords: true },
+  { id: 'appearance.confirmArchive', section: 'editor', tab: 'behavior', label: 'settings:appearance.confirmArchiveTitle', keywords: true },
   { id: 'appearance.taskConfetti', section: 'editor', tab: 'behavior', label: 'settings:appearance.taskConfettiTitle', keywords: true },
   { id: 'appearance.sinkChecked', section: 'editor', tab: 'behavior', label: 'settings:appearance.sinkCheckedTitle', keywords: true },
   { id: 'appearance.defaultApps', section: 'editor', tab: 'display', label: 'settings:appearance.defaultAppsTitle', keywords: true, shownOn: 'desktopApp' },
@@ -297,9 +301,9 @@ const ROW_ENTRIES: SettingEntry[] = [
   { id: 'hotkeys.drawing', section: 'hotkeys', tab: 'drawing', label: 'notes:drawing.hotkeysTitle', shownOn: 'keyboard' },
 
   // Browser
-  { id: 'browser.install', section: 'browser', label: 'shell:apps.stepInstall', shownOn: 'extension' },
-  { id: 'browser.features', section: 'browser', label: 'shell:apps.stepFeatures', options: ['shell:extensionConnect.clips', 'shell:tagsRail.vault'], shownOn: 'extensionAccount' },
-  { id: 'browser.connect', section: 'browser', label: 'shell:apps.makeCode', shownOn: 'extensionAccount' },
+  { id: 'browser.install', section: 'browser', label: 'shell:apps.stepInstall' },
+  { id: 'browser.features', section: 'browser', label: 'shell:apps.stepFeatures', options: ['shell:extensionConnect.clips', 'shell:tagsRail.vault'], shownOn: 'realAccount' },
+  { id: 'browser.connect', section: 'browser', label: 'shell:apps.makeCode', shownOn: 'realAccount' },
 
   // About
   { id: 'about.about', section: 'about', tab: 'about', label: 'landing:about.tabs.about' },

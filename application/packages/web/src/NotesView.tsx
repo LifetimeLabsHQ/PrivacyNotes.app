@@ -2,7 +2,7 @@ import { setCustomHabitsStore } from './habitList';
 import { setTaskConfetti } from './checkboxConfetti';
 import { Suspense, useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo, useDeferredValue, useSyncExternalStore, type CSSProperties } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
-import { CaretRight, Folder, Fire, PILLAR_GLYPHS, Calendar as CalendarIcon, CalendarDot, CalendarPlus, CalendarX, ArrowRight as ArrowRightIcon, Copy, Stack, Pause, Play, iconTrash } from './icons';
+import { CaretRight, Folder, Fire, PILLAR_GLYPHS, Calendar as CalendarIcon, CalendarDot, CalendarPlus, CalendarX, ArrowRight as ArrowRightIcon, BoxArrowDown, Copy, Stack, Pause, Play, iconTrash } from './icons';
 import { SPACE_ICONS } from './SpaceSwitch';
 import { useAuth, type AuthState } from './auth';
 import type { SupabaseClient } from '@notes/shared';
@@ -4406,6 +4406,17 @@ function AuthenticatedView({
   });
   // The trash confirm's "Don't ask again" box, unticked each time it opens.
   const [skipTrashConfirm, setSkipTrashConfirm] = useState(false);
+  // The archive confirm (#713): how many items it archives, the archive to
+  // run on yes, and its own "Don't ask again" box.
+  const [archivePending, setArchivePending] = useState<{ count: number; run: () => Promise<void> } | null>(null);
+  const [skipArchiveConfirm, setSkipArchiveConfirm] = useState(false);
+
+  /** Ask first, or archive at once when the person turned the question off.
+   *  Only archiving asks: Unarchive puts an item back where it was. */
+  function askOrArchive(count: number, run: () => Promise<void>) {
+    if (userSettings.confirmArchive) setArchivePending({ count, run });
+    else void run();
+  }
 
   const {
     mergeImportedFolders,
@@ -4903,9 +4914,20 @@ function AuthenticatedView({
   /** Archive or unarchive a note. It leaves the list it sits in, and the
    *  auto-select moves on the same way it does after a trash. */
   async function handleToggleArchive(id: string, archived: boolean) {
-    await setArchived(id, archived);
-    await refresh();
-    scheduleSync();
+    const run = async () => {
+      await setArchived(id, archived);
+      await refresh();
+      scheduleSync();
+    };
+    if (archived) askOrArchive(1, run);
+    else await run();
+  }
+
+  /** The selection's Archive: a selection that is all archived unarchives
+   *  at once, anything else archives every item and asks first (#713). */
+  function requestBulkArchive() {
+    if (selectedIds.size === 0 || selectionAllArchived) void handleBulkArchive();
+    else askOrArchive(selectedIds.size, handleBulkArchive);
   }
 
   /** Open the Share & Burn After Reading modal, which creates the link. */
@@ -5306,7 +5328,7 @@ function AuthenticatedView({
       selectionAllProtected,
       onClearSelection: clearSelection,
       onBulkFavorite: () => void handleBulkFavorite(),
-      onBulkArchive: () => void handleBulkArchive(),
+      onBulkArchive: requestBulkArchive,
       onBulkMoveToFolder: handleBulkMoveToFolder,
       onBulkDuplicate: () => void handleBulkDuplicate(),
       onBulkExportMarkdown: () => void handleBulkExport(),
@@ -5993,7 +6015,7 @@ function AuthenticatedView({
       onClearSelection={clearSelection}
       onSelectAllVisible={selectAllVisible}
       onBulkFavorite={() => void handleBulkFavorite()}
-      onBulkArchive={() => void handleBulkArchive()}
+      onBulkArchive={requestBulkArchive}
       onBulkTag={applyBulkTag}
       onBulkMoveToFolder={handleBulkMoveToFolder}
       foldersUnlocked={foldersUnlocked}
@@ -6062,7 +6084,7 @@ function AuthenticatedView({
       onDeselectAll={deselectAll}
       onSelectAllVisible={selectAllVisible}
       onBulkFavorite={() => void handleBulkFavorite()}
-      onBulkArchive={() => void handleBulkArchive()}
+      onBulkArchive={requestBulkArchive}
       onBulkMoveToFolder={handleBulkMoveToFolder}
       foldersUnlocked={foldersUnlocked}
       onBulkExport={() => void handleBulkExport()}
@@ -6223,7 +6245,7 @@ function AuthenticatedView({
       onDeselectAll={deselectAll}
       onSelectAllVisible={selectAllVisible}
       onBulkFavorite={() => void handleBulkFavorite()}
-      onBulkArchive={() => void handleBulkArchive()}
+      onBulkArchive={requestBulkArchive}
       onBulkTag={applyBulkTag}
       onBulkMoveToFolder={handleBulkMoveToFolder}
       onBulkExport={() => void handleBulkExport()}
@@ -6302,7 +6324,7 @@ function AuthenticatedView({
       onDeselectAll={deselectAll}
       onSelectAllVisible={selectAllVisible}
       onBulkFavorite={() => void handleBulkFavorite()}
-      onBulkArchive={() => void handleBulkArchive()}
+      onBulkArchive={requestBulkArchive}
       onBulkTag={applyBulkTag}
       onBulkMoveToFolder={handleBulkMoveToFolder}
       onBulkExport={() => void handleBulkExport()}
@@ -6561,7 +6583,7 @@ function AuthenticatedView({
       onToggleSelected={toggleSelected}
       onRangeSelect={rangeSelect}
       onBulkFavorite={() => void handleBulkFavorite()}
-      onBulkArchive={() => void handleBulkArchive()}
+      onBulkArchive={requestBulkArchive}
       onBulkTag={applyBulkTag}
       onBulkMoveToFolder={handleBulkMoveToFolder}
       foldersUnlocked={foldersUnlocked}
@@ -7608,6 +7630,8 @@ function AuthenticatedView({
           onTypedSymbolsChange={(on) => mutateSettings((prev) => ({ ...prev, typedSymbols: on }))}
           confirmTrash={userSettings.confirmTrash}
           onConfirmTrashChange={(on) => mutateSettings((prev) => ({ ...prev, confirmTrash: on }))}
+          confirmArchive={userSettings.confirmArchive}
+          onConfirmArchiveChange={(on) => mutateSettings((prev) => ({ ...prev, confirmArchive: on }))}
           spaces={userSettings.spaces}
           onSpacesChange={(on) => mutateSettings((prev) => ({ ...prev, spaces: on }))}
           onOpenUpgrade={(trigger) => {
@@ -7933,6 +7957,37 @@ function AuthenticatedView({
             checked={skipTrashConfirm}
             onChange={(e) => setSkipTrashConfirm(e.target.checked)}
             // The window's body text, not the darker label of a settings row.
+            className="mt-4 !text-pn-muted"
+          />
+        </ConfirmModal>
+      )}
+      {archivePending && (
+        <ConfirmModal
+          title={t('shell:contextMenu.archive')}
+          confirmLabel={t('shell:contextMenu.archive')}
+          variant="info"
+          confirmIcon={BoxArrowDown}
+          titleIcon={BoxArrowDown}
+          enterConfirms
+          onConfirm={() => {
+            // "Don't ask again" turns the question off on every device; the
+            // Editor settings turn it back on (#713).
+            if (skipArchiveConfirm) mutateSettings((prev) => ({ ...prev, confirmArchive: false }));
+            setSkipArchiveConfirm(false);
+            void archivePending.run();
+          }}
+          onClose={() => { setSkipArchiveConfirm(false); setArchivePending(null); }}
+        >
+          <Trans
+            i18nKey="notes:archiveConfirm.body"
+            count={archivePending.count}
+            values={{ count: archivePending.count }}
+            components={{ highlight: <span className="font-medium text-pn" /> }}
+          />
+          <Checkbox
+            label={t('bulkTrash.dontAskAgain')}
+            checked={skipArchiveConfirm}
+            onChange={(e) => setSkipArchiveConfirm(e.target.checked)}
             className="mt-4 !text-pn-muted"
           />
         </ConfirmModal>

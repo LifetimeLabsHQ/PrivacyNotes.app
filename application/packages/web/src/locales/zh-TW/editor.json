@@ -216,6 +216,8 @@
     "textLabel": "連結文字",
     "textPlaceholder": "選填，留空則顯示 URL",
     "selectedTextHint": "將以選取的文字作為連結",
+    "titleLabel": "提示文字",
+    "titleHint": "指標停在連結上時顯示",
     "update": "更新",
     "menuOpen": "開啟連結",
     "menuCopy": "複製連結",

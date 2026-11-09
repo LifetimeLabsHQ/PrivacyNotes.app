@@ -44,6 +44,20 @@ export function linkHrefAt(state: EditorState, pos: number): string | null {
 }
 
 /**
+ * A link's hover text, the title in `[text](url "title")` (GitHub #702).
+ * In the editor it is `data-title`, never `title`: the house forbids the
+ * native tip (it waits a second and wears OS chrome), and
+ * `LinkAddressPill.tsx` shows this one as a house tip instead. It still
+ * reads `title`, which is what markdown-it and a pasted web page give it.
+ * The markdown serializer writes the attribute back as the quoted title.
+ */
+export const LINK_TITLE_ATTRIBUTE = {
+  default: null,
+  parseHTML: (el: HTMLElement) => el.getAttribute('data-title') || el.getAttribute('title') || null,
+  renderHTML: (attrs: { title?: string | null }) => (attrs.title ? { 'data-title': attrs.title } : {}),
+};
+
+/**
  * Whether this plugin opens the URL, or leaves it to the interceptor. Read
  * `view.editable` and the pointer at click time rather than at construction:
  * the editor is built once per note and then told to go read-only in place

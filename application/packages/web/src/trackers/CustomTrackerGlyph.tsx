@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { Heartbeat } from '../icons';
 import { PathGlyph } from '../looks/LookGlyph';
-import { useLookIcons } from '../looks/lookIconsLoader';
+import { useLookPaths } from '../looks/lookIconsLoader';
 
 /**
  * A custom tracker's own icon, from the look icon catalog that notes, folders
@@ -15,8 +15,7 @@ export function CustomTrackerGlyph({ icon, size = 12, className, style }: {
   className?: string;
   style?: CSSProperties;
 }) {
-  const catalog = useLookIcons(!!icon);
-  const paths = icon ? catalog?.LOOK_ICONS[icon] : undefined;
+  const paths = useLookPaths(icon);
   if (!paths) return <Heartbeat size={size} className={className} style={style} aria-hidden="true" />;
   return <PathGlyph paths={paths} size={size} className={className} style={style} />;
 }

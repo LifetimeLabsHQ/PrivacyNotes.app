@@ -9,11 +9,11 @@ import { FAQ_SOURCES, SOURCE_FILES, sourceUrl } from './src/faqSources.ts';
 import { relatedFaq } from './src/faqRelated.ts';
 import { PUBLISHED_DOCS, REPO_URL, docFiles, docMd, docSize, docSourceUrl, docUrl, docsIndexMd } from './publishedDocs.ts';
 import { VERSION } from './src/version.ts';
-import { hiddenFaqIds } from './src/extensionRelease.ts';
 import { foldText } from './src/textFold.ts';
 import { SEARCH_CORE_SCRIPT_TAG } from './search-core-script.ts';
 import { LANDING_PAGES_PUBLIC } from './landing-pages.ts';
 import { LANGUAGE_META } from './src/languageData.tsx';
+import { MENU_PATH_CSS, loadPathVocab, markPaths, restorePaths, type pathVocab } from './help-path-vocab.mjs';
 
 // Pre-renders the static Help center (formerly /faq; worker.ts 301s the
 // old URLs), once per locale, as a three-layer hybrid:
@@ -162,7 +162,7 @@ async function loadStructure(): Promise<{
   drawingHotkeyGroups = hotkeys.DRAWING_HOTKEY_GROUPS as HotkeyGroupData[];
   return {
     order: faq.FAQ_GROUP_ORDER as FaqGroupKey[],
-    rows: (faq.FAQ_STRUCTURE as FaqStructureRow[]).filter((r) => !hiddenFaqIds().includes(r.id)),
+    rows: faq.FAQ_STRUCTURE as FaqStructureRow[],
     guideOrder: guides.GUIDE_ORDER as string[],
     hotkeyGroups: hotkeys.HOTKEY_GROUPS as HotkeyGroupData[],
   };
@@ -171,24 +171,7 @@ async function loadStructure(): Promise<{
 function readCatalog(locale: HelpLocale): FaqCatalog | null {
   const file = path.join(LOCALES_DIR, locale, 'faq.json');
   if (!fs.existsSync(file)) return null;
-  return withoutHidden(JSON.parse(fs.readFileSync(file, 'utf8')) as FaqCatalog);
-}
-
-/**
- * An entry that is not released yet (src/extensionRelease.ts) leaves the
- * catalog, and so does every paragraph that links to it, so no page points
- * at a missing leaf. A paragraph that names one stands alone in faq.json.
- */
-function withoutHidden(cat: FaqCatalog): FaqCatalog {
-  const hidden = hiddenFaqIds();
-  if (hidden.length === 0) return cat;
-  const links = hidden.map((id) => `/help/${id}/`);
-  const entries: FaqCatalog['entries'] = {};
-  for (const [id, e] of Object.entries(cat.entries ?? {})) {
-    if (hidden.includes(id)) continue;
-    entries[id] = { ...e, a: Array.isArray(e.a) ? e.a.filter((p) => !links.some((l) => p.includes(l))) : e.a };
-  }
-  return { ...cat, entries };
+  return JSON.parse(fs.readFileSync(file, 'utf8')) as FaqCatalog;
 }
 
 function readGuides(locale: HelpLocale): GuidesCatalog | null {
@@ -276,14 +259,47 @@ function esc(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
-// Converts the two markups the catalogs support into HTML: [text](url)
-// links and **bold**. External links open a new tab; same-site paths
+/**
+ * The menu path vocabulary per locale, from the same code as
+ * `pnpm check:help-paths`, so a path is drawn exactly as far as the gate
+ * reads it. Built once per locale per render pass; `resetPathVocab` drops it
+ * so the dev server picks up an edited catalog.
+ */
+const pathVocabs = new Map<string, PathVocab | null>();
+type PathVocab = NonNullable<ReturnType<typeof pathVocab>>;
+
+function resetPathVocab(): void {
+  pathVocabs.clear();
+}
+
+function pathVocabFor(locale: HelpLocale): PathVocab | null {
+  if (!pathVocabs.has(locale)) pathVocabs.set(locale, loadPathVocab(path.resolve(__dirname, 'src'), locale));
+  return pathVocabs.get(locale) ?? null;
+}
+
+function markLocalePaths(s: string, locale: HelpLocale, drawn: string[]): string {
+  let v = pathVocabFor(locale);
+  // An entry not translated yet falls back to English text, which names the
+  // English menus.
+  if (locale !== 'en' && v && !s.includes(`${v.anchor} > `)) {
+    v = pathVocabFor('en');
+    locale = 'en';
+  }
+  return markPaths(s, v, locale, drawn);
+}
+
+// Converts the markups the catalogs support into HTML: [text](url) links,
+// **bold** and `code`. External links open a new tab; same-site paths
 // navigate in place. Bold exists for one job - naming a real UI label
 // inside an answer ("**Save to my notes**") - so keep it to that.
-// The .md twins carry both markups through unchanged, which is why the
-// syntax is markdown rather than anything of our own.
-function renderInline(s: string): string {
-  return esc(s)
+// The .md twins carry the markups through unchanged, which is why the
+// syntax is markdown rather than anything of our own. With a `locale`, our
+// own menu paths are drawn as breadcrumbs too (pathHtml); a per-app guide
+// passes none for the steps that walk the OTHER app's menus.
+function renderInline(s: string, locale?: HelpLocale): string {
+  const drawn: string[] = [];
+  const marked = locale ? markLocalePaths(s, locale, drawn) : s;
+  const html = esc(marked)
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, url) =>
       url.startsWith('/')
         ? `<a href="${url}">${text}</a>`
@@ -291,6 +307,7 @@ function renderInline(s: string): string {
     )
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/`([^`]+)`/g, '<code>$1</code>');
+  return restorePaths(html, drawn);
 }
 
 /**
@@ -368,7 +385,7 @@ const DOWNLOAD_PARA = /^\[([^\]]+)\]\((\/[^)\s]+\.[a-z0-9]{2,4})\)$/;
  * `askCopyShort` and `askCopied` are reused rather than adding a label of its
  * own, so a new copy row never costs a 17-locale batch.
  */
-function renderParagraph(par: string, p: Record<string, string>): string {
+function renderParagraph(par: string, p: Record<string, string>, locale: HelpLocale): string {
   const badge = BADGE_PARA.exec(par.trim());
   if (badge) {
     const [, alt, src, href] = badge;
@@ -381,11 +398,11 @@ function renderParagraph(par: string, p: Record<string, string>): string {
   }
   const lines = par.trim().split('\n');
   if (lines.length > 1 && lines.every((l) => l.startsWith('- '))) {
-    const items = lines.map((l) => `<li>${renderInline(l.slice(2))}</li>`).join('');
+    const items = lines.map((l) => `<li>${renderInline(l.slice(2), locale)}</li>`).join('');
     return `<ul class="lst">${items}</ul>`;
   }
   const code = CODE_PARA.exec(par.trim());
-  if (!code) return `<p>${renderInline(par)}</p>`;
+  if (!code) return `<p>${renderInline(par, locale)}</p>`;
   return `<div class="cbx"><code>${esc(code[1])}</code><button class="btn-ok js-cbx-copy" type="button" data-copied="${esc(p.askCopied)}" hidden><span class="ic ic-copy">${icon(COPY_PATH, 13)}</span><span class="ic ic-done">${icon(CHECK_PATH, 13)}</span><span class="lbl">${esc(p.askCopyShort)}</span></button></div>`;
 }
 
@@ -587,7 +604,7 @@ function renderSections(
         .map((e) => {
           // Same as the leaves: the showcase entry renders its demo section
           // inside the answer.
-          const paragraphs = e.a.map((par) => renderParagraph(par, cat.page)).join('');
+          const paragraphs = e.a.map((par) => renderParagraph(par, cat.page, locale)).join('');
           const extra = entryShowcase(e.id, cat.page);
           const hay = entryHaystack(e);
           const leaf = leafPath(locale, e.id);
@@ -1259,6 +1276,13 @@ details[open] .chev{transform:rotate(-135deg);margin-top:4px}
 .a{padding:0 0 22px}
 .a p{margin:0 0 12px;font-size:var(--fs-row);color:var(--muted)}\n.cbx{display:flex;flex-wrap:wrap;align-items:center;gap:9px 10px;margin:0 0 12px;padding:9px 10px 9px 13px;border:1px solid var(--line);border-radius:9px;background:var(--rail)}\n.cbx code{flex:1 1 210px;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-compact);line-height:1.5;color:var(--fg);word-break:break-all}\n.cbx .btn-ok{flex:none;margin-inline-start:auto}\n.lst{margin:0 0 14px;padding-inline-start:19px;list-style:disc}\n.lst li{margin:0 0 7px;font-size:var(--fs-row);color:var(--muted);line-height:1.65}\n.lst strong{color:var(--fg)}\n.lst code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-compact);color:var(--fg);word-break:break-all;direction:ltr;unicode-bidi:isolate}\n.bdg{display:block;width:max-content;max-width:100%;margin:0 0 14px;transition:opacity .15s ease}\n.bdg:hover{opacity:.82}\n.bdg img{display:block;height:48px;width:auto}\n.dlb{display:inline-flex;align-items:center;gap:8px;width:max-content;max-width:100%;margin:0 0 14px;padding:9px 14px;border:1px solid var(--line);border-radius:9px;background:var(--rail);color:var(--fg);font-size:var(--fs-body);font-weight:500;text-decoration:none;transition:border-color .15s ease}\n.dlb:hover{border-color:var(--accent);text-decoration:none}\n.dlb .ic{display:flex;flex:none;color:var(--accent)}
 .a p:last-child{margin-bottom:0}
+/* Inline code and menu paths inside prose. Code is a literal the reader
+   types or pastes, so it reads as a monospace chip; a menu path is a place
+   to click, so it reads as the app's own labels in a breadcrumb, never as
+   code (help-center.md rule 12). Both clone their box across a line break.
+   Spec: docs/internal/design/patterns/ (inline code and menu path) */
+:is(.a,.leaf-body,.guide-body) :is(p,li) code:not([class]){font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86em;color:var(--fg);background:var(--chip);border-radius:5px;padding:.12em .4em;overflow-wrap:anywhere;-webkit-box-decoration-break:clone;box-decoration-break:clone;direction:ltr;unicode-bidi:isolate}
+${MENU_PATH_CSS}
 /* The answer's own page and its link, always visible under an open answer.
    Until 2026-10-23 the page link was a chain icon in the question row that
    only appeared on hover, so most readers never found the leaf pages. */
@@ -1923,7 +1947,7 @@ export function renderLeafHtml(
   const related = relatedIds.filter((r) => cat.entries[r]?.q).map((r) => ({ id: r }));
   const showcase = entryShowcase(id, p);
   const showcaseCss = id === 'markdown-syntax' ? MD_SHOWCASE_CSS : '';
-  const paragraphs = entry.a.map((par) => renderParagraph(par, p)).join('\n');
+  const paragraphs = entry.a.map((par) => renderParagraph(par, p, locale)).join('\n');
   const relatedHtml = related.length
     ? `<div class="related">
 <h2 class="eyebrow">// ${esc(p.related)}</h2>
@@ -2041,7 +2065,7 @@ export function renderGuideHtml(
     })
     .join('\n');
   const importSteps = gp.importSteps
-    .map((st) => `<li>${renderInline(fill(st, { app: g.app }))}</li>`)
+    .map((st) => `<li>${renderInline(fill(st, { app: g.app }), locale)}</li>`)
     .join('\n');
   return `<!DOCTYPE html>
 <html lang="${locale}"${htmlDir(locale)}>
@@ -2425,6 +2449,7 @@ ${guideBlocks}
 type Rendered = { fileName: string; source: string };
 
 async function renderAll(): Promise<Rendered[]> {
+  resetPathVocab();
   const { order, rows, guideOrder, hotkeyGroups } = await loadStructure();
   const en = readCatalog('en');
   if (!en) throw new Error('help-page: src/locales/en/faq.json is missing');
@@ -2574,6 +2599,7 @@ export function helpPagePlugin(): Plugin {
             const cat = loadCatalog(locale, en);
             const guidesCat = loadGuides(locale, readGuides('en'));
             const suggest = JSON.stringify(suggestStrings());
+            resetPathVocab();
             const seg = (req.url ?? '/').split('?')[0].replace(/^\/+|\/+$/g, '');
             // Only set the HTML content type on responses this middleware
             // actually renders: /help/icons/*.svg also flows through this

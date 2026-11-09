@@ -279,6 +279,10 @@
     "bodySingle": "<strong>{{filename}}</strong> parece um arquivo markdown. Importar como nota para você poder ler e editar, ou guardar como anexo de arquivo criptografado?",
     "bodyMulti": "Estes {{count}} arquivos parecem markdown. Importá-los como notas para você poder ler e editar, ou guardá-los como anexos de arquivos criptografados?"
   },
+  "archiveConfirm": {
+    "body_one": "Arquivar <highlight>{{count}} item</highlight>? Ele sai das suas listas e fica esperando na visão Arquivo. Desarquivar o traz de volta.",
+    "body_other": "Arquivar <highlight>{{count}} itens</highlight>? Eles saem das suas listas e ficam esperando na visão Arquivo. Desarquivar os traz de volta."
+  },
   "bulkTrash": {
     "body_one": "Excluir <highlight>{{count}} item</highlight>? Mova-o para a lixeira para restaurá-lo depois, ou exclua-o para sempre.",
     "body_other": "Excluir <highlight>{{count}} itens</highlight>? Mova-os para a lixeira para restaurá-los depois, ou exclua-os para sempre.",

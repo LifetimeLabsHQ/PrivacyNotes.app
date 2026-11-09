@@ -25,7 +25,8 @@
       "passphrase": "Lösenfraser är en Pro-funktion. Skapa en fras av slumpmässiga ord som är lätt att skriva och att säga.",
       "default": "En uppgradering låser upp allt nedan. Engångsbetalning.",
       "alerts": "Påminnelser är en Pro-funktion. Varje enhet ringer för sig vid den tid du väljer, så ingen pushtjänst ser objektet.",
-      "vaultFiles": "Filer på valvobjekt är en Pro-funktion. Förvara återställningskoder, en reservnyckel eller en inskannad bild tillsammans med inloggningen, kortet eller nyckeln de hör till."
+      "vaultFiles": "Filer på valvobjekt är en Pro-funktion. Förvara återställningskoder, en reservnyckel eller en inskannad bild tillsammans med inloggningen, kortet eller nyckeln de hör till.",
+      "cli": "CLI:t är en Pro-funktion. Skript, AI-agenter och AI-appar lägger till anteckningar från en terminal eller en chatt, direkt i din mapp Agent."
     },
     "features": {
       "devices": "Synka obegränsat antal enheter, på alla plattformar",

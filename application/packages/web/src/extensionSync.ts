@@ -3,7 +3,7 @@
  * that pulled cleanly: adopt the sealed inbox, and keep the vault copy.
  *
  * Adoption. Each inbox row is hostile until it opens under the inbox key and
- * passes the shape check here. A clip becomes the note (and the bookmark) the
+ * passes the shape check here. A clip becomes the note, or the bookmark, the
  * in-app clipper makes, through the same `finishClip`; a login becomes a
  * vault login. The item id is derived from the row id (`inboxItemId`), so
  * two apps adopting one row make one item, and a row is deleted only once its
@@ -42,13 +42,14 @@ import {
   newLoginsKey,
   openInbox,
   parseCopyEntry,
+  parseInboxNote,
   serverHalf,
   unpackInboxPicture,
   type CopyEntry,
   type InboxKind,
 } from '@notes/shared/extension';
 import { db, notesWriteCount, type LocalNote } from './db';
-import { createNote, updateNote } from './notesRepo';
+import { createNote, normalizeTag, updateNote } from './notesRepo';
 import { buildLinkBody, buildLinkKeyMap, linkDedupeKey, parseLinkBody } from './linkBody';
 import { buildClipNoteMap, clipTrackers } from './clipLink';
 import { parseLoginBody, serializeLoginBody } from './loginBody';
@@ -176,6 +177,9 @@ export interface ExtensionSyncDeps {
   isCurrent: () => boolean;
   /** How a clip's pictures are stored; the app's own store by default. */
   storePicture?: StorePicture;
+  /** The folder a note from the command line goes into: the Agent folder
+   *  while it exists, else null (the root). Spec: docs/internal/plans/agent-cli.md (section 3.4) */
+  agentFolder?: () => string | null;
   now?: () => number;
 }
 
@@ -347,7 +351,7 @@ export function parseLogin(
   return { name: v.name, url, username: v.username, password: v.password, totp, notes };
 }
 
-const KNOWN_KINDS = new Set<string>(['clip', 'picture', 'login']);
+const KNOWN_KINDS = new Set<string>(['clip', 'picture', 'login', 'note']);
 
 /** Whether the item of a row is on the server: pushed, or deleted and the
  *  delete pushed. Only then may the row go. */
@@ -403,6 +407,28 @@ async function adoptInbox(deps: ExtensionSyncDeps): Promise<{ adopted: number; s
     if (row.kind === 'picture') continue;
     const itemId = inboxItemId(deps.inboxSecret, id);
     const existing = await db.notes.get(itemId);
+    if (row.kind === 'note') {
+      const note = parseInboxNote(decode(plain), id);
+      if (!note) {
+        refuse.push(id);
+        continue;
+      }
+      if (existing) {
+        if (onServer(existing)) settled.push(id);
+        continue;
+      }
+      if (!mine.has(id) || !deps.isCurrent()) continue;
+      const body = await inboxNoteBody(note.markdown);
+      if (body === null) {
+        refuse.push(id);
+        continue;
+      }
+      const tags = [...new Set(note.tags.map(normalizeTag).filter(Boolean))];
+      if (!deps.isCurrent()) continue;
+      await createNote(note.title.trim(), body, tags, false, 'note', deps.agentFolder?.() ?? null, { id: itemId, counted: false });
+      adopted += 1;
+      continue;
+    }
     if (row.kind === 'login') {
       const login = parseLogin(decode(plain), id);
       if (!login) {
@@ -435,11 +461,10 @@ async function adoptInbox(deps: ExtensionSyncDeps): Promise<{ adopted: number; s
     }
     const waiting = held.some((p) => !p) && now - Date.parse(row.created_at) < PICTURE_WAIT_MS;
     if (waiting || !mine.has(id) || !deps.isCurrent()) continue;
-    const outcome = await adoptClip(deps, clip, itemId, id, held);
+    const outcome = await adoptClip(deps, clip, itemId, held);
     if (outcome === 'stopped') break;
     if (outcome === 'created') adopted += 1;
-    // Nothing to create (the address is bookmarked already), or a clip the
-    // note checks refused: the bookmark is what it leaves.
+    // Nothing to create: the address is bookmarked already.
     else settled.push(id, ...rowsOf);
   }
 
@@ -449,31 +474,42 @@ async function adoptInbox(deps: ExtensionSyncDeps): Promise<{ adopted: number; s
 }
 
 /**
- * The clip as the in-app clipper saves it: the bookmark, then the note. A
- * bookmark row's item is the bookmark itself; a note row's item is the note,
- * and its bookmark has an id of its own, derived the same way. `none`: there
- * was nothing to create, or the note checks refused the clip. `stopped`: the
- * sign-in changed during the build; nothing more is written, nothing settles.
+ * The body of a note from the command line, or null when it is too long. The
+ * Markdown stands when it is only text and web links; a picture reference,
+ * raw HTML or another link scheme makes the whole note plain text, because
+ * only the app places a stored picture (the clip's rule in parseClipPage).
+ * Spec: docs/internal/plans/agent-cli.md (section 3.4)
+ */
+async function inboxNoteBody(markdown: string): Promise<string | null> {
+  const { bodyFits, isSafeMarkdown, plainMarkdown } = await import('@notes/clipper');
+  const safe = !/pn:img\/|pn-clip:/i.test(markdown) && isSafeMarkdown(markdown);
+  const body = safe ? markdown : plainMarkdown(markdown);
+  return bodyFits(body) ? body : null;
+}
+
+/**
+ * The clip as the in-app clipper saves it: a bookmark row makes the bookmark,
+ * a note row makes only the note, which names its page in `clipSource`
+ * (issue 703: a second bookmark item doubled every clip); when the note
+ * checks refuse it, the bookmark stands in. `none`: there was nothing to
+ * create. `stopped`: the sign-in changed during the build; nothing more is
+ * written, nothing settles.
  */
 async function adoptClip(
   deps: ExtensionSyncDeps,
   clip: ParsedClip,
   itemId: string,
-  rowId: string,
   held: ({ type: string; bytes: Uint8Array } | undefined)[],
 ): Promise<'created' | 'none' | 'stopped'> {
-  const links = await db.notes.where('type').equals('link').toArray();
-  const bookmarked = buildLinkKeyMap(links.filter((n) => n.deleted !== 1)).has(linkDedupeKey(clip.url));
-  if (!deps.isCurrent()) return 'stopped';
-  if (clip.mode === 'bookmark' || !clip.clip) {
+  const saveBookmark = async (): Promise<'created' | 'none' | 'stopped'> => {
+    const links = await db.notes.where('type').equals('link').toArray();
+    const bookmarked = buildLinkKeyMap(links.filter((n) => n.deleted !== 1)).has(linkDedupeKey(clip.url));
+    if (!deps.isCurrent()) return 'stopped';
     if (bookmarked) return 'none';
     await createNote(clip.title, buildLinkBody(clip.url), [], false, 'link', null, { id: itemId, counted: false });
     return 'created';
-  }
-  const bookmarkId = inboxItemId(deps.inboxSecret, `${rowId}:bookmark`);
-  if (!bookmarked && !(await db.notes.get(bookmarkId)) && deps.isCurrent()) {
-    await createNote('', buildLinkBody(clip.url), [], false, 'link', null, { id: bookmarkId, counted: false });
-  }
+  };
+  if (clip.mode === 'bookmark' || !clip.clip) return saveBookmark();
   const { finishClip } = await import('./clipPage');
   // Each picture is stored only while the sign-in is the one that opened the
   // clip; after a change the rest fail and the note is not written.
@@ -504,8 +540,8 @@ async function adoptClip(
     if (deps.isCurrent()) await updateNote(note.id, { trackers: clipTrackers(clip.url) }, undefined, { edit: false });
     return 'created';
   } catch {
-    // Too long for a note, or unsafe once placed: the bookmark stays.
-    return 'none';
+    // Too long for a note, or unsafe once placed: the bookmark stands in.
+    return saveBookmark();
   }
 }
 

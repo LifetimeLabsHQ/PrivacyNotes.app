@@ -40,7 +40,7 @@ import { intlLocale } from './languages';
 import { FONT_FAMILIES } from './editorColors';
 import { IconUpgrade, ProMark, type UpgradeTrigger } from './UpgradeModal';
 import { proUnlocked } from './demo';
-import { ArrowCounterClockwise, Folder, X, List, ListBullets, Palette, Star, Toolbox, SquaresFour, Sparkle, DotsThreeOutlineVertical, CaretDown, CaretRight, Globe, Plus, ClipboardText, ArrowSquareOut, PencilSimple, Copy, UserSwitch, TextT, Scribble, TextAlignJustify, FrameCorners, PencilLine, HouseLine, Layout, MagnifyingGlassPlus, Tabs, Paragraph, LinkSimple, Eye, Brain, TextAa, ListChecks, CheckSquare, Confetti, Tray, CircleHalf, PaintBucket, Sun, Moon, Files, DotsSixVertical, ArrowUp, ArrowDown, ArrowRight, PILLAR_GLYPHS, type Icon } from './icons';
+import { ArrowCounterClockwise, Folder, X, List, ListBullets, Palette, Star, Toolbox, SquaresFour, Sparkle, DotsThreeOutlineVertical, CaretDown, CaretRight, Globe, Plus, ClipboardText, ArrowSquareOut, PencilSimple, Copy, UserSwitch, TextT, Scribble, TextAlignJustify, FrameCorners, PencilLine, HouseLine, Layout, MagnifyingGlassPlus, Tabs, Paragraph, LinkSimple, Eye, Brain, TextAa, ListChecks, CheckSquare, Confetti, Tray, CircleHalf, PaintBucket, Sun, Moon, Files, DotsSixVertical, ArrowUp, ArrowDown, ArrowRight, BoxArrowDown, PILLAR_GLYPHS, type Icon } from './icons';
 import { DefaultAppSettingsRow } from './markdownFolder/MarkdownDefaultApp';
 import { markdownDefaultAppSupported } from './markdownFolder/defaultApp';
 import { setTrayMode, traySupported, useTrayMode } from './trayMode';
@@ -123,6 +123,8 @@ type Props = {
   onTypedSymbolsChange: (on: boolean) => void;
   confirmTrash: boolean;
   onConfirmTrashChange: (on: boolean) => void;
+  confirmArchive: boolean;
+  onConfirmArchiveChange: (on: boolean) => void;
   /** Lists only: which of its two tabs opens. */
   initialTab?: string;
   /** Personal and Work. Spec: docs/internal/specs/spaces.md */
@@ -327,7 +329,7 @@ const SEG_FILL = 'flex-1 px-3 lg:flex-none';
 
 export type AppearancePane = 'design' | 'editor' | 'formatBar' | 'lists';
 
-export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = false, viewMode, onViewModeChange, editorMode, onEditorModeChange, formatBar, lineSpacing, onLineSpacingChange, hiddenViews, hiddenInAll, archivedInAll, onToggleHidden, onViewOrderChange, startView, onStartViewChange, noteColors, onNoteColorsChange, sinkCheckedTasks, onSinkCheckedTasksChange, taskConfetti, onTaskConfettiChange, typedSymbols, onTypedSymbolsChange, confirmTrash, onConfirmTrashChange, initialTab, spaces, onSpacesChange, pane = 'design', onOpenAll, customThemes, onCustomThemesChange, onOpenThemeBuilder }: Props) {
+export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = false, viewMode, onViewModeChange, editorMode, onEditorModeChange, formatBar, lineSpacing, onLineSpacingChange, hiddenViews, hiddenInAll, archivedInAll, onToggleHidden, onViewOrderChange, startView, onStartViewChange, noteColors, onNoteColorsChange, sinkCheckedTasks, onSinkCheckedTasksChange, taskConfetti, onTaskConfettiChange, typedSymbols, onTypedSymbolsChange, confirmTrash, onConfirmTrashChange, confirmArchive, onConfirmArchiveChange, initialTab, spaces, onSpacesChange, pane = 'design', onOpenAll, customThemes, onCustomThemesChange, onOpenThemeBuilder }: Props) {
   const { t } = useTranslation('settings');
   // The table's row labels are the sidebar's own strings, so the pane and the
   // rail can never disagree in any language.
@@ -657,6 +659,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     onTaskConfettiChange(d.taskConfetti);
     onTypedSymbolsChange(d.typedSymbols);
     onConfirmTrashChange(d.confirmTrash);
+    onConfirmArchiveChange(d.confirmArchive);
   }
 
   function resetThemes() {
@@ -1294,6 +1297,19 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           description={t('appearance.confirmTrashDesc')}
           checked={confirmTrash}
           onChange={onConfirmTrashChange}
+          className="gap-x-5 py-3"
+        />
+
+        {/* Ask before archiving, the twin of the row above: the archive
+            confirm's "Don't ask again" box turns it off. Synced. (#713) */}
+        <Switch
+          setting="appearance.confirmArchive"
+          icon={<BoxArrowDown className="text-accent" />}
+          labelClassName={ROW_TITLE}
+          label={t('appearance.confirmArchiveTitle')}
+          description={t('appearance.confirmArchiveDesc')}
+          checked={confirmArchive}
+          onChange={onConfirmArchiveChange}
           className="gap-x-5 py-3"
         />
 

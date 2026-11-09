@@ -860,5 +860,73 @@
       "bytes": 292798,
       "sha256": "b1b90b7bd3e5e69d185749fdbffb8dd585441d8612b4533ee670b6134a098f40"
     }
+  },
+  "0.731": {
+    "archive-confirm": {
+      "w": 2000,
+      "h": 1250,
+      "bytes": 108860,
+      "sha256": "84f7a556c9212c6edd81e027ac17b97f854c339574869fb2aa3d39a623dc9b31"
+    },
+    "archived-line": {
+      "w": 1444,
+      "h": 902,
+      "bytes": 21670,
+      "sha256": "3cd5f8ee3f9d254aa3979827f357f33cd2c6372a142f4b0d025a30c07489107d"
+    },
+    "link-hover-text": {
+      "w": 1444,
+      "h": 648,
+      "bytes": 21466,
+      "sha256": "b3f55b5f8e9cbb1c9642596728a609a056d3672ef0118897182c71316a16f295"
+    },
+    "lock-tab": {
+      "w": 2000,
+      "h": 1524,
+      "bytes": 130148,
+      "sha256": "4e7874fa49906ba5869a6cc6405f4cddf99a96772cd106dae9736c0744f9fabf"
+    }
+  },
+  "0.732": {
+    "icons-menu": {
+      "w": 1762,
+      "h": 632,
+      "bytes": 139634,
+      "sha256": "a21e18ff8ccd5865d2e4a94db6aa95bf64c04d5edccd79a394516dbceb23e11f"
+    },
+    "logo-tab": {
+      "w": 830,
+      "h": 1338,
+      "bytes": 78096,
+      "sha256": "cc0cc7a0c18c66e598e806e3926266bca4f0cebbdabbca043d104576908d361f"
+    }
+  },
+  "0.733": {
+    "extension-browsers": {
+      "w": 1912,
+      "h": 830,
+      "bytes": 43774,
+      "sha256": "46648d432a7f0e1fc109f31bc11d7ce0be02978ea396906f283e5e9b8d661341"
+    }
+  },
+  "0.734": {
+    "cli-agent": {
+      "w": 2000,
+      "h": 1163,
+      "bytes": 114464,
+      "sha256": "5f3309132bac2bfbffa0df64df2e5c401bc811bb900b3e6d50064212c18ddc4e"
+    },
+    "cli-mcp": {
+      "w": 2000,
+      "h": 1163,
+      "bytes": 114852,
+      "sha256": "b92b2fa9304b85b149d73971f58aca745f0464ddb6c3abbc0937f29eae7e6d64"
+    },
+    "cli-script": {
+      "w": 2000,
+      "h": 1163,
+      "bytes": 103910,
+      "sha256": "b4c1c2b9d78aa4ea3f2d561da8ac1b6eb9b39fbe5c19bd8445585ff2137057a7"
+    }
   }
 }

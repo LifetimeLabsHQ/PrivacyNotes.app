@@ -96,6 +96,11 @@
   "badge": {
     "problem": "Coś wymaga twojej uwagi"
   },
+  "changeSecret": {
+    "titlePin": "Zmień PIN",
+    "titlePasscode": "Zmień kod dostępu",
+    "biometricAgain": "Odcisk palca lub twarz były powiązane ze starym. Skonfiguruj je ponownie, aby nadal z nich korzystać."
+  },
   "biometric": {
     "enrolled": "Odcisk palca lub twarz są skonfigurowane. Możesz zamknąć tę kartę.",
     "enrolledHere": "Odcisk palca lub twarz są skonfigurowane.",
@@ -107,7 +112,6 @@
     "searchKind": "Szukaj: {{kind}}",
     "unlockToSearch": "Odblokuj, aby szukać",
     "all": "Wszystkie elementy",
-    "more_one": "Jeszcze {{count}}. Pisz, aby go znaleźć.",
     "cardsHere": "Brak loginu dla tej strony. Twoje karty:",
     "noBookmarkHere": "Tej strony nie ma w zakładkach.",
     "noneAtAll": "W sejfie nie ma jeszcze nic.",
@@ -129,8 +133,13 @@
     "lockHeader": "Zablokuj sejf po",
     "unlockToCopy": "Odblokuj, aby skopiować",
     "omniboxDefault": "Szukaj %s w sejfie PrivacyNotes",
-    "omniboxUnlock": "Odblokuj PrivacyNotes, aby szukać",
-    "more_few": "Jeszcze {{count}}. Pisz, aby znaleźć ten właściwy.",
-    "more_many": "Jeszcze {{count}}. Pisz, aby znaleźć ten właściwy."
+    "omniboxUnlock": "Odblokuj PrivacyNotes, aby szukać"
+  },
+  "shortcuts": {
+    "notSet": "Nie ustawiono",
+    "addressBar": "Szukaj w sejfie z paska adresu",
+    "change": "Zmień skróty",
+    "changeHint": "Skróty klawiszowe przechowuje twoja przeglądarka. Zmień skrót tam albo przypisz klawisz akcji, która go nie ma.",
+    "loginHint": "<key/> kopiuje nazwę użytkownika, a potem hasło."
   }
 }

@@ -365,6 +365,17 @@
     .pn-top-line-pad &::before {
       height: max(0px, calc(var(--pn-outline-fh, 0px) - var(--pn-pills-clear, 0px)));
     }
+    /* With a notice line (Read-only, Archived #712) the line is the gap
+       between the toolbar and the note, and the pills sit beside it. The
+       body keeps a hairline of its own; a note that starts with a box keeps
+       12px, because the "Add a line at the top" zone (-top-3 h-6 in
+       Editor.tsx) also takes the line's empty lower edge. */
+    .pn-editor-noticed & {
+      padding-top: 4px;
+    }
+    .pn-editor-noticed.pn-top-line-pad & {
+      padding-top: 12px;
+    }
     /* A vault item's Files section (VaultFiles.tsx) is a list of file chips,
        not a page of writing: no tall minimum and no start-of-note gap. */
     .pn-vault-files & {
@@ -468,6 +479,11 @@
        picture's flex box may not overlap a float, so the spacer pushed it
        down or squeezed it. */
     &:has(> .node-image:first-child)::before {
+      display: none;
+    }
+    /* A notice line (the read-only hint) sits beside the pills already, so
+       the text under it needs no room kept for them. */
+    .pn-editor-noticed &::before {
       display: none;
     }
 
@@ -2630,7 +2646,10 @@
       left: 4px; /* rtl-ok: see above */
     }
   }
-  .pn-image-resize-button {
+  /* The plate of every corner resize handle: a picture's, a Home card's.
+     Phosphor `Notches` on it points at the bottom end corner as drawn; a
+     handle in another corner turns the glyph to point at its own. */
+  .pn-resize-plate {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2640,7 +2659,6 @@
     border: 1px solid rgb(var(--pn-divider));
     background: rgb(var(--pn-track));
     color: rgb(var(--pn-text-muted));
-    cursor: nesw-resize;
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
@@ -2648,6 +2666,14 @@
     &:hover {
       color: rgb(var(--pn-text));
     }
+    /* A larger target for a finger, with the same glyph. */
+    @media (pointer: coarse) {
+      width: 36px;
+      height: 36px;
+    }
+  }
+  .pn-image-resize-button {
+    cursor: nesw-resize;
     /* The glyph's notches point at the corner the handle sits in. */
     & svg {
       transform: scaleY(-1);
@@ -2658,11 +2684,6 @@
       & svg {
         transform: scale(-1, -1);
       }
-    }
-    /* A larger target for a finger, with the same glyph. */
-    @media (pointer: coarse) {
-      width: 36px;
-      height: 36px;
     }
   }
 

@@ -217,6 +217,8 @@
     "textLabel": "Länktext",
     "textPlaceholder": "Valfritt, lämna tomt för att visa URL:en",
     "selectedTextHint": "Den markerade texten används som länk",
+    "titleLabel": "Text vid hovring",
+    "titleHint": "Visas när du pekar på länken",
     "update": "Uppdatera",
     "menuOpen": "Öppna länk",
     "menuCopy": "Kopiera länk",

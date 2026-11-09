@@ -83,10 +83,10 @@ export function Divider({ vertical = false }: { vertical?: boolean }) {
  * use: copy a value with one click (a code, a link, an address): the copy glyph, a green check for two seconds after it worked, the label as the tooltip.
  * never: a copy button of your own with another check color or timing.
  */
-export function CopyButton({ value, label }: { value: string; label: string }) {
+export function CopyButton({ value, label, className }: { value: string; label: string; /** For a dark surface (TerminalBlock). */ className?: string }) {
   const { copy, copied } = useCopyToClipboard();
   return (
-    <IconButton label={label} onClick={() => copy(value, 'value')}>
+    <IconButton label={label} onClick={() => copy(value, 'value')} className={className}>
       {copied ? <Check className="text-success" aria-hidden="true" /> : <Copy aria-hidden="true" />}
     </IconButton>
   );

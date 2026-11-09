@@ -5,7 +5,7 @@ import { useCallback, useContext, useDeferredValue, useEffect, useLayoutEffect, 
 import type { UpgradeTrigger } from '../UpgradeModal';
 import type { Dispatch, ReactNode, RefObject, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowUUpLeft as Undo2Icon, ArrowUUpRight as Redo2Icon, X, ArrowLeft, ArrowCounterClockwise, Trash, DotsThreeOutlineVertical, CaretLeft, CaretRight, PencilSimpleSlash, MarkdownLogo, TextAa, ArticleMedium, Paragraph, MagnifyingGlass, FrameCorners, ArrowCircleUp, ArrowCircleDown, CalendarDots, CalendarPlus } from '../icons';
+import { ArrowUUpLeft as Undo2Icon, ArrowUUpRight as Redo2Icon, X, ArrowLeft, ArrowCounterClockwise, Trash, DotsThreeOutlineVertical, CaretLeft, CaretRight, MarkdownLogo, TextAa, ArticleMedium, Paragraph, MagnifyingGlass, FrameCorners, ArrowCircleUp, ArrowCircleDown, CalendarDots, CalendarPlus } from '../icons';
 import type { AuthState } from '../auth';
 import { captureAnchor, followAnchor, type ViewAnchor } from '../viewSwitchAnchor';
 import { noteAnchor, rememberNoteAnchor } from './listPlace';
@@ -56,6 +56,7 @@ import { isImeComposing } from '../imeComposing';
 import { convertTypedSymbol, undoTypedSymbol, type TypedSymbolChange } from '../typedSymbols';
 import type { JournalDays } from '../notesViewUtils';
 import type { ScheduleEdit } from '../schedule';
+import { ArchivedHint, ReadOnlyHint } from '../readOnlyNotice';
 
 type Authed = Extract<AuthState, { status: 'authenticated' }>;
 
@@ -1241,7 +1242,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
            row and the read-only hint are the ones every form item shows.
            Spec: docs/internal/specs/drawing.md (section 3) */
         <div className="flex min-h-0 flex-1 flex-col">
-          {!zenMode && view !== 'trash' && selected.locked !== 1 && (
+          {!zenMode && view !== 'trash' && (
             <div className="pn-content-col">
               <TagInput
                 key={`tags-${selected.id}`}
@@ -1251,18 +1252,15 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                 onChange={(tags) => handleTagsChange(selected.id, tags)}
                 onSelectTag={(tag) => void handleSelectTag(tag)}
                 leading={folderChipFor(selected)}
+                readOnly={selected.locked === 1}
               />
             </div>
           )}
           {selected.locked === 1 && view !== 'trash' && (
-            <div className="px-6 pt-3 flex items-center gap-2 text-compact text-warning">
-              <PencilSimpleSlash className="shrink-0" aria-hidden="true" />
-              <span className="truncate">{t('editor.readOnlyToggle')}</span>
-              <span className="inline-flex items-center gap-1 shrink-0">
-                <DotsThreeOutlineVertical aria-hidden="true" />
-                {t('editor.menu')}
-              </span>
-            </div>
+            <ReadOnlyHint className="px-6 pt-3" />
+          )}
+          {selected.archived === 1 && view !== 'trash' && (
+            <ArchivedHint className="px-6 pt-3" />
           )}
           {/* Keyed by the revision like the editors: a restore or a pull
               remounts the canvas from the new body (#9). */}
@@ -1284,7 +1282,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
            screens (2026-08-22 review). */
         <div className="flex-1 overflow-y-auto">
         <div ref={structuredColRef} className="pn-content-col flex min-h-full flex-col">
-          {!zenMode && view !== 'trash' && selected.locked !== 1 && (
+          {!zenMode && view !== 'trash' && (
             <TagInput
               key={`tags-${selected.id}`}
               ref={tagInputRef}
@@ -1294,19 +1292,16 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               onSelectTag={(tag) => void handleSelectTag(tag)}
               onTabOut={focusFirstField}
               leading={folderChipFor(selected)}
+              readOnly={selected.locked === 1}
             />
           )}
           {selected.locked === 1 && view !== 'trash' && (
             /* The same read-only hint the markdown editor shows - vault
                items and bookmarks were silently uneditable without it. */
-            <div className="px-6 pt-3 flex items-center gap-2 text-compact text-warning">
-              <PencilSimpleSlash className="shrink-0" aria-hidden="true" />
-              <span className="truncate">{t('editor.readOnlyToggle')}</span>
-              <span className="inline-flex items-center gap-1 shrink-0">
-                <DotsThreeOutlineVertical aria-hidden="true" />
-                {t('editor.menu')}
-              </span>
-            </div>
+            <ReadOnlyHint className="px-6 pt-3" />
+          )}
+          {selected.archived === 1 && view !== 'trash' && (
+            <ArchivedHint className="px-6 pt-3" />
           )}
           {selected.type === 'contact' ? (
             <ContactItem
@@ -1357,7 +1352,9 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               pn-content-col caps the reading width so nothing
               stretches edge-to-edge on ultrawide displays. */}
           <div className="pn-content-col flex min-h-full flex-col" data-content-col>
-          {!zenMode && view !== 'trash' && selected.locked !== 1 && (selected.type === 'note' || selected.type === 'journal' || selected.type === 'file' || selected.type === 'task') && (
+          {/* A read-only note keeps its folder and tags in view, as text that
+              does not change here (GitHub #706). */}
+          {!zenMode && view !== 'trash' && (selected.type === 'note' || selected.type === 'journal' || selected.type === 'file' || selected.type === 'task') && (
             <div ref={setStickyTagRow} className="pn-tagrow sticky top-0 z-20 bg-surface-1/95 backdrop-blur">
             <TagInput
               key={`tags-${selected.id}`}
@@ -1368,7 +1365,8 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               onSelectTag={(tag) => void handleSelectTag(tag)}
               onTabOut={focusBody}
               leading={folderChipFor(selected)}
-              trailing={
+              readOnly={selected.locked === 1}
+              trailing={selected.locked === 1 ? undefined : (
                 // Undo/redo and the toolbar toggle are all TipTap
                 // controls: they go through editorRef, and the
                 // formatting bar itself renders inside Editor.
@@ -1458,7 +1456,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                   </div>
                 </div>
                 )
-              }
+              )}
             />
             </div>
           )}
@@ -1496,17 +1494,13 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           {proUnlocked(auth.isPro) && selected.type === 'journal' && isWeekJournal(selected) && (
             <WeekInReview notes={notes} medications={userSettings.medications} isNoteLocked={isNoteLocked} />
           )}
-          {selected.locked === 1 && view !== 'trash' && (
-            <div className="mx-4 sm:mx-6 mt-1 mb-3 flex items-center gap-2 text-compact text-warning">
-              <PencilSimpleSlash className="shrink-0" aria-hidden="true" />
-              <span className="truncate">
-                {t('editor.readOnlyToggle')}
-              </span>
-              <span className="inline-flex items-center gap-1 shrink-0">
-                <DotsThreeOutlineVertical aria-hidden="true" />
-                {t('editor.menu')}
-              </span>
-            </div>
+          {/* The rich editor shows the hint itself, on the row of its corner
+              pills; the markdown source view has no pills, so it goes here. */}
+          {selected.locked === 1 && view !== 'trash' && selectedEditorMode === 'markdown' && (
+            <ReadOnlyHint className="mx-4 sm:mx-6 mt-1 mb-3" />
+          )}
+          {selected.archived === 1 && view !== 'trash' && selectedEditorMode === 'markdown' && (
+            <ArchivedHint className="mx-4 sm:mx-6 mt-1 mb-3" />
           )}
           <div className="px-4 sm:px-6 flex flex-1 flex-col min-w-0">
             {selectedEditorMode === 'markdown' ? (
@@ -1559,6 +1553,14 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                 sinkCheckedTasks={userSettings.sinkCheckedTasks}
                 typedSymbols={userSettings.typedSymbols}
                 placeholder={selected.type === 'event' ? t('editor:eventPlaceholder') : undefined}
+                // Read-only and Archived share the notice row, each when it
+                // applies (#712); neither shows in the Trash.
+                notice={view !== 'trash' && (selected.locked === 1 || selected.archived === 1) ? (
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-1">
+                    {selected.locked === 1 && <ReadOnlyHint className="min-w-0" />}
+                    {selected.archived === 1 && <ArchivedHint className="min-w-0" />}
+                  </div>
+                ) : undefined}
               />
             )}
             {/* 2-col footer: word/char counts left, editor-mode link right.

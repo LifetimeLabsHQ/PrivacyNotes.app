@@ -94,6 +94,11 @@
   "badge": {
     "problem": "Hi ha alguna cosa que requereix la teva atenció"
   },
+  "changeSecret": {
+    "titlePin": "Canvia el PIN",
+    "titlePasscode": "Canvia el codi d'accés",
+    "biometricAgain": "L'empremta o la cara feien servir l'anterior. Torna-les a configurar per continuar fent-les servir."
+  },
   "biometric": {
     "enrolled": "L'empremta o la cara ja estan configurades. Pots tancar aquesta pestanya.",
     "enrolledHere": "L'empremta o la cara ja estan configurades.",
@@ -105,7 +110,6 @@
     "searchKind": "Cerca a {{kind}}",
     "unlockToSearch": "Desbloqueja per cercar",
     "all": "Tots els elements",
-    "more_other": "{{count}} més. Escriu per trobar-ne un.",
     "cardsHere": "No hi ha cap inici de sessió per a aquest lloc. Les teves targetes:",
     "noBookmarkHere": "Aquesta pàgina no té marcador.",
     "noneAtAll": "Encara no hi ha res a la caixa forta.",
@@ -127,7 +131,13 @@
     "lockHeader": "Bloqueja la caixa forta al cap de",
     "unlockToCopy": "Desbloqueja per copiar",
     "omniboxDefault": "Cerca %s a la teva caixa forta de PrivacyNotes",
-    "omniboxUnlock": "Desbloqueja PrivacyNotes per cercar",
-    "more_one": "{{count}} més. Escriu per trobar-lo."
+    "omniboxUnlock": "Desbloqueja PrivacyNotes per cercar"
+  },
+  "shortcuts": {
+    "notSet": "Sense definir",
+    "addressBar": "Cerca a la caixa forta des de la barra d'adreces",
+    "change": "Canvia les dreceres",
+    "changeHint": "El teu navegador guarda les tecles. Canvia-hi una drecera, o assigna una tecla a la que no en tingui.",
+    "loginHint": "<key/> copia el nom d'usuari i després la contrasenya."
   }
 }

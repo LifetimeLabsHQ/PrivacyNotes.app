@@ -15,9 +15,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.722.0</string>
+	<string>0.734.4</string>
 	<key>CFBundleVersion</key>
-	<string>0.722.0</string>
+	<string>0.734.4</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -70,6 +70,10 @@
 		<string>ru</string>
 		<string>th</string>
 	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<true/>
+	<key>ITSEncryptionExportComplianceCode</key>
+	<string>d8a6a1dc-bd39-47e2-9dcd-1f6ab56c7afb</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

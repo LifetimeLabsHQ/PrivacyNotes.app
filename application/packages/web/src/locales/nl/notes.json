@@ -279,6 +279,10 @@
     "bodySingle": "<strong>{{filename}}</strong> lijkt een markdown-bestand. Wil je het als notitie importeren zodat je het kunt lezen en bewerken, of als versleutelde bijlage opslaan?",
     "bodyMulti": "Deze {{count}} bestanden lijken markdown. Wil je ze als notities importeren zodat je ze kunt lezen en bewerken, of als versleutelde bijlagen opslaan?"
   },
+  "archiveConfirm": {
+    "body_one": "<highlight>{{count}} item</highlight> archiveren? Het verdwijnt uit je lijsten en wacht in de weergave Archief. Uit archief halen zet het terug.",
+    "body_other": "<highlight>{{count}} items</highlight> archiveren? Ze verdwijnen uit je lijsten en wachten in de weergave Archief. Uit archief halen zet ze terug."
+  },
   "bulkTrash": {
     "body_one": "<highlight>{{count}} item</highlight> verwijderen? Verplaats het naar de prullenbak om het later te herstellen, of verwijder het definitief.",
     "body_other": "<highlight>{{count}} items</highlight> verwijderen? Verplaats ze naar de prullenbak om ze later te herstellen, of verwijder ze definitief.",

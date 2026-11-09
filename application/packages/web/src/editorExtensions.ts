@@ -12,3 +12,4 @@ export { TableWithMarkdown, stepTableCell } from './editorTables';
 export { indentListItem, indentText } from './editorIndent';
 export { clipboardRenderer, markdownForClipboard } from './editorClipboard';
 export { TypedSymbols } from './editorTypedSymbols';
+export { InlineIcon } from './editorIcon';

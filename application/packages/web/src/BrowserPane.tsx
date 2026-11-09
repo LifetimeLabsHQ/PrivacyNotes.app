@@ -20,7 +20,7 @@ import { marketingHomeHref } from './siteLinks';
 import { isTouchOnly } from './touchOnly';
 import { isDemoMode, DEMO_APP_URL } from './demo';
 import { ExtensionCallError, loadExtensionState, removeExtension, type ExtensionRow } from './extensionApi';
-import { EXTENSION_STORES, STORE_NAME, type ExtensionBrowser } from './extensionStores';
+import { installLinks, type InstallBrowser } from './extensionStores';
 import { hasUnpushedSettings, syncUserSettings } from './userSettings';
 import type { ExtensionKeys } from './extensionKeys';
 import type { DeviceRow } from './devices';
@@ -63,22 +63,17 @@ const CODE_LIFE_MS = 10 * 60 * 1000;
 /** A connected browser counts as new for one day. */
 const NEW_MS = 24 * 60 * 60 * 1000;
 
-/** Steps 2 and 3: the two switches, then the one-time code with Copy. */
-function ConnectSteps({ access, rows, reload }: { access: ExtensionAccess; rows: ExtensionRow[]; reload: () => void }) {
-  const { t } = useTranslation('shell');
-  const [clips, setClips] = useState(true);
-  const [logins, setLogins] = useState(true);
+/**
+ * The one-time code on screen, and the connection that used it. While a code
+ * shows, the list reloads every few seconds; the first row that was not there
+ * when the code was made is the one that used it, and its name replaces the
+ * code. Shared with Settings > Command line (agent-cli.md section 3.2).
+ */
+export function useCodeWatch(rows: ExtensionRow[], reload: () => void) {
   const [code, setCode] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  // The browsers connected when the code was made; one more is the one that used it.
+  // The connections when the code was made; one more is the one that used it.
   const [known, setKnown] = useState<Set<string> | null>(null);
   const [usedBy, setUsedBy] = useState<string | null>(null);
-
-  // Load the code builder and its crypto while the reader picks the switches.
-  useEffect(() => {
-    void import('./extensionPairing');
-  }, []);
 
   useEffect(() => {
     if (!code) return;
@@ -99,9 +94,56 @@ function ConnectSteps({ access, rows, reload }: { access: ExtensionAccess; rows:
     setUsedBy(added.label);
   }, [code, known, rows]);
 
+  const show = (next: string) => {
+    setCode(next);
+    setKnown(new Set(rows.map((r) => r.id)));
+  };
+  return { code, usedBy, show, clear: () => setCode(null), forget: () => setUsedBy(null) };
+}
+
+/** The code, Copy, its one-use line and New code. */
+export function PairingCodeBox({ code, label, busy, onNew }: { code: string; label: string; busy: boolean; onNew: () => void }) {
+  const { t } = useTranslation('shell');
+  return (
+    <div className="space-y-1.5">
+      <FieldLabel>{label}</FieldLabel>
+      <div className="flex items-start gap-2">
+        <textarea
+          readOnly
+          value={code}
+          rows={4}
+          dir="ltr"
+          aria-label={label}
+          onFocus={(e) => e.currentTarget.select()}
+          className={`${FIELD_CLASS} font-mono resize-none`}
+        />
+        <CopyButton value={code} label={t('common:actions.copy')} />
+      </div>
+      <p className={SETTINGS_HELP}>{t('extensionConnect.oneUse')}</p>
+      <Button icon={busy ? <Spinner size={15} /> : <ArrowsClockwise aria-hidden="true" />} onClick={onNew} disabled={busy}>
+        {t('extensionConnect.newCode')}
+      </Button>
+    </div>
+  );
+}
+
+/** Steps 2 and 3: the two switches, then the one-time code with Copy. */
+function ConnectSteps({ access, rows, reload }: { access: ExtensionAccess; rows: ExtensionRow[]; reload: () => void }) {
+  const { t } = useTranslation('shell');
+  const [clips, setClips] = useState(true);
+  const [logins, setLogins] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { code, usedBy, show, clear, forget } = useCodeWatch(rows, reload);
+
+  // Load the code builder and its crypto while the reader picks the switches.
+  useEffect(() => {
+    void import('./extensionPairing');
+  }, []);
+
   const change = (set: (on: boolean) => void) => (on: boolean) => {
     set(on);
-    setCode(null);
+    clear();
     setError(null);
   };
 
@@ -112,12 +154,11 @@ function ConnectSteps({ access, rows, reload }: { access: ExtensionAccess; rows:
     }
     setBusy(true);
     setError(null);
-    setUsedBy(null);
+    forget();
     try {
       const { makePairingCode } = await import('./extensionPairing');
       const pushKeys = () => pushSettingsNow(access);
-      setCode(await makePairingCode({ ...access, clips, logins, pushKeys }));
-      setKnown(new Set(rows.map((r) => r.id)));
+      show(await makePairingCode({ ...access, clips, logins, pushKeys }));
     } catch (err) {
       const reason = err instanceof ExtensionCallError ? ERROR_KEY[err.code] : undefined;
       setError(t(reason ?? 'extensionConnect.failed'));
@@ -142,25 +183,7 @@ function ConnectSteps({ access, rows, reload }: { access: ExtensionAccess; rows:
       <section className="min-w-0 space-y-3">
         <SectionEyebrow icon={Link} setting="browser.connect">{t('apps.stepConnect')}</SectionEyebrow>
         {code ? (
-          <div className="space-y-1.5">
-            <FieldLabel>{t('extensionConnect.codeLabel')}</FieldLabel>
-            <div className="flex items-start gap-2">
-              <textarea
-                readOnly
-                value={code}
-                rows={4}
-                dir="ltr"
-                aria-label={t('extensionConnect.codeLabel')}
-                onFocus={(e) => e.currentTarget.select()}
-                className={`${FIELD_CLASS} font-mono resize-none`}
-              />
-              <CopyButton value={code} label={t('common:actions.copy')} />
-            </div>
-            <p className={SETTINGS_HELP}>{t('extensionConnect.oneUse')}</p>
-            <Button icon={busy ? <Spinner size={15} /> : <ArrowsClockwise aria-hidden="true" />} onClick={make} disabled={busy}>
-              {t('extensionConnect.newCode')}
-            </Button>
-          </div>
+          <PairingCodeBox code={code} label={t('extensionConnect.codeLabel')} busy={busy} onNew={make} />
         ) : (
           <>
             {usedBy ? <Callout tone="success">{t('extensionConnect.usedBy', { name: usedBy })}</Callout> : <p className={SETTINGS_HELP}>{t('apps.connectHint')}</p>}
@@ -180,7 +203,14 @@ function ConnectSteps({ access, rows, reload }: { access: ExtensionAccess; rows:
  * the name, Remove in place. An extension takes no device slot. Remove
  * deletes its token, its PIN checker and its half of the logins key at once.
  */
-function ConnectedBrowsers({ rows, onRemoved }: { rows: ExtensionRow[]; onRemoved: (id: string) => void }) {
+function ConnectedBrowsers({ rows, onRemoved, heading, help, icon = PuzzlePiece }: {
+  rows: ExtensionRow[];
+  onRemoved: (id: string) => void;
+  /** Settings > Command line names its own list (agent-cli.md section 3.6). */
+  heading?: string;
+  help?: string;
+  icon?: typeof PuzzlePiece;
+}) {
   const { t } = useTranslation('settings');
   const { supabase, auth } = useAuth();
   const pubkey = auth.status === 'authenticated' ? auth.pubkey : '';
@@ -196,12 +226,12 @@ function ConnectedBrowsers({ rows, onRemoved }: { rows: ExtensionRow[]; onRemove
   };
   return (
     <section className="space-y-2">
-      <SectionEyebrow icon={PuzzlePiece}>{t('devices.extensionsHeading')}</SectionEyebrow>
-      <p className={SETTINGS_HELP}>{t('devices.extensionsNoSlot')}</p>
+      <SectionEyebrow icon={icon}>{heading ?? t('devices.extensionsHeading')}</SectionEyebrow>
+      <p className={SETTINGS_HELP}>{help ?? t('devices.extensionsNoSlot')}</p>
       <ul className="space-y-2">
         {rows.map((r) => {
           const fresh = Date.now() - Date.parse(r.created_at) < NEW_MS;
-          const scopes = [r.clips && t('devices.extensionClips'), r.logins && t('notes:vaultFilter.logins')].filter(Boolean).join(', ');
+          const scopes = r.client === 'cli' ? '' : [r.clips && t('devices.extensionClips'), r.logins && t('notes:vaultFilter.logins')].filter(Boolean).join(', ');
           const row: DeviceRow = {
             device_id: r.id, device_name: r.label, platform: 'web', created_at: r.created_at,
             last_seen_at: r.last_used_at ?? r.created_at, revoked_at: null, device_group: null, app_version: r.version,
@@ -216,7 +246,7 @@ function ConnectedBrowsers({ rows, onRemoved }: { rows: ExtensionRow[]; onRemove
                 meta={
                   <>
                     {scopes}
-                    {` · ${t('devices.added', { time: formatRelative(r.created_at) })}`}
+                    {`${scopes ? ' · ' : ''}${t('devices.added', { time: formatRelative(r.created_at) })}`}
                     {r.last_clip_at && ` · ${t('devices.lastClip', { time: formatRelative(r.last_clip_at) })}`}
                   </>
                 }
@@ -241,7 +271,9 @@ export function BrowserPane({ extensionKeys }: { extensionKeys: Pick<ExtensionAc
   const [rows, setRows] = useState<ExtensionRow[]>([]);
   const load = useCallback(() => {
     if (!pubkey) return;
-    loadExtensionState(supabase, pubkey).then((s) => setRows(s.extensions)).catch(() => {});
+    // A command line connection lives in Settings > Command line; here it
+    // is neither listed nor taken for the browser that used the code.
+    loadExtensionState(supabase, pubkey).then((s) => setRows(s.extensions.filter((r) => r.client !== 'cli'))).catch(() => {});
   }, [supabase, pubkey]);
   useEffect(load, [load]);
   // The code is redeemed in the extension, so the list catches up when the
@@ -250,7 +282,6 @@ export function BrowserPane({ extensionKeys }: { extensionKeys: Pick<ExtensionAc
     window.addEventListener('focus', load);
     return () => window.removeEventListener('focus', load);
   }, [load]);
-  const stores = Object.entries(EXTENSION_STORES) as [ExtensionBrowser, string | null][];
   const mine = currentBrowser();
 
   return (
@@ -260,10 +291,11 @@ export function BrowserPane({ extensionKeys }: { extensionKeys: Pick<ExtensionAc
 
       <section className="space-y-3">
         <SectionEyebrow icon={DownloadSimple} setting="browser.install">{t('apps.stepInstall')}</SectionEyebrow>
-        {/* Three cards only, so they share the row instead of the 9.5rem
-            columns a long source list takes; one column on a phone. */}
+        {/* Five cards, three to a row on a wide pane (the three stores,
+            then Brave and Vivaldi on the Chrome Web Store); one column on
+            a phone. */}
         <div className="grid gap-1.5 @md:grid-cols-3">
-          {stores.map(([browser, url]) => {
+          {installLinks().map(({ browser, url, store }) => {
             const body = (
               <>
                 <SettingsCardIcon src={`/help/icons/${browser.toLowerCase()}.svg`} />
@@ -272,7 +304,7 @@ export function BrowserPane({ extensionKeys }: { extensionKeys: Pick<ExtensionAc
                     {browser}
                     {browser === mine && <Badge tone="info">{t('apps.thisBrowser')}</Badge>}
                   </span>
-                  <span className="block truncate text-small text-pn-soft">{url ? STORE_NAME[browser] : t('noteOptionsMenu.comingSoon')}</span>
+                  <span className="block truncate text-small text-pn-soft">{url ? store : t('noteOptionsMenu.comingSoon')}</span>
                 </span>
               </>
             );
@@ -310,8 +342,11 @@ export function BrowserPane({ extensionKeys }: { extensionKeys: Pick<ExtensionAc
 }
 
 /** The browser this page runs in, when it is one the extension supports. */
-function currentBrowser(): ExtensionBrowser | null {
+function currentBrowser(): InstallBrowser | null {
   const ua = typeof navigator === 'undefined' ? '' : navigator.userAgent;
+  // Brave hides its name from the user agent but adds navigator.brave.
+  if (typeof navigator !== 'undefined' && 'brave' in navigator) return 'Brave';
+  if (/Vivaldi\//.test(ua)) return 'Vivaldi';
   if (/Edg\//.test(ua)) return 'Edge';
   if (/Firefox\//.test(ua)) return 'Firefox';
   if (/Chrome\//.test(ua)) return 'Chrome';

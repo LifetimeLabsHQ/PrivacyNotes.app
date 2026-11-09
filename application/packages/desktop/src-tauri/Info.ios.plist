@@ -44,31 +44,21 @@
 	     If iOS ever DOES learn to open files, delete `tauri.ios.conf.json` and the
 	     key below, and let the shared fileAssociations flow through.
 	     Spec: docs/internal/specs/markdown-folder-handoff.md (platform matrix) -->
-	<!-- ITSAppUsesNonExemptEncryption IS DELIBERATELY ABSENT. Do not add it back
-	     without reading this: setting it to true BREAKS the upload, and that was
-	     proven the hard way on 2026-08-16 with Transporter error 409, "Invalid
-	     Export Compliance Code. The export compliance key value [] in the app's
-	     Info.plist doesn't match the key value of the app's export compliance
-	     documentation."
-
-	     The mechanism is circular for this app. `true` obliges Apple to match it
-	     against ITSEncryptionExportComplianceCode, a UUID issued only when App
-	     Store Connect APPROVES an App Encryption Documentation upload. That upload
-	     asks whether the app ships in France; France is excluded from v1 (see
-	     docs/internal/mobile-manual-tasks.md section E-FR), so ASC answers "you don't
-	     need to upload any documents", no documentation record is created, and no
-	     code is ever issued. True then points at a document that cannot exist.
-
-	     `false` is the other way to silence it and is NOT available: it asserts an
-	     exemption applies, which is exactly the question the 15 CFR 742.15(b)
-	     filing of 2026-08-16 did not settle for a closed binary. Choosing it to
-	     quiet a dialog would be picking an answer for convenience over truth.
-
-	     So the key stays out, and App Store Connect asks the export question once
-	     per build instead. That costs about ten seconds and always works. Revisit
-	     ONLY if a documentation record with a real key value ever exists, which
-	     realistically means France being added back after an ANSSI filing.
+	<!-- Export compliance, answered here so App Store Connect stops asking at
+	     every upload. The app uses standard encryption (XChaCha20-Poly1305,
+	     Ed25519, AES-GCM) beyond the OS crypto, so the answer is YES, and YES must
+	     carry the key value of an APPROVED App Encryption Documentation record, or
+	     Transporter rejects the upload with error 409 "Invalid Export Compliance
+	     Code" (seen 2026-08-16, when no record existed). The record is the ANSSI
+	     declaration, uploaded 2026-11-02 and approved (App Store Connect > App
+	     Information > App Encryption Documentation). If Apple ever issues a new
+	     key value, replace it here. Never set the first key to false: that claims
+	     an exemption the app does not have.
 	     Spec: docs/internal/tsu-notification.md (the filing, and what is still open) -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<true/>
+	<key>ITSEncryptionExportComplianceCode</key>
+	<string>d8a6a1dc-bd39-47e2-9dcd-1f6ab56c7afb</string>
 	<!-- iOS 27 TERMINATES an app that has not adopted the scene life cycle. The
 	     check is _UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption and
 	     it kills the process during launch, so the app never draws a frame. The

@@ -26,6 +26,7 @@ import { orderFootnotes, replaceMarkers, scanFootnotes } from './footnoteScan';
 import { isSameOriginPath } from './sameOriginPath';
 import { calloutColorOf, canonicalCalloutType, type CalloutType } from './calloutKeywords';
 import { evaluateTable, formatFormulaValue, isFormulaText } from './tableFormula';
+import { INLINE_ICON_RE, inlineIconId } from './editorIconSyntax';
 
 // ─── Callout types ──────────────────────────────────────────────────────
 //
@@ -262,9 +263,21 @@ async function prepareCodeHighlight(md: string): Promise<void> {
   highlightCode = mod.highlightCode;
 }
 
+/** The paths of the `:icon[id]` icons the body holds, loaded by
+ *  prepareRender: the renderer itself is synchronous. */
+const inlineIconPaths = new Map<string, readonly string[]>();
+
+async function prepareInlineIcons(md: string): Promise<void> {
+  const ids = [...new Set([...md.matchAll(INLINE_ICON_RE)].map((m) => inlineIconId(m[1]!, m[2]!)))];
+  if (ids.length === 0) return;
+  const { loadLookPaths } = await import('./looks/lookIconsLoader');
+  const paths = await loadLookPaths(ids);
+  for (const [id, p] of paths) inlineIconPaths.set(id, p);
+}
+
 /** Everything the three export paths and the burn viewer await before renderMarkdown. */
 export async function prepareRender(md: string): Promise<void> {
-  await Promise.all([prepareMath(md), prepareCodeHighlight(md)]);
+  await Promise.all([prepareMath(md), prepareCodeHighlight(md), prepareInlineIcons(md)]);
 }
 
 function renderFenceCode(code: string, lang: string): string | null {
@@ -459,6 +472,16 @@ function renderInline(raw: string): string {
     },
   );
 
+  // :icon[name] and :logo[name] - the icon in the text's color, at the
+  // text's size, when prepareRender loaded it; an unknown one drops out, as
+  // in a list preview.
+  t = t.replace(INLINE_ICON_RE, (_run: string, kind: string, name: string) => {
+    const paths = inlineIconPaths.get(inlineIconId(kind, name));
+    if (!paths) return '';
+    const d = paths.map((p) => `<path d="${escapeHtml(p)}"/>`).join('');
+    return stash(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="1.1em" height="1.1em" fill="currentColor" style="vertical-align:-0.18em" aria-hidden="true">${d}</svg>`);
+  });
+
   // Note-links [[target]] or [[target|label]] - render as plain text
   // since note-to-note links can't work outside the app.
   // The second branch of each keeps a `[[` that opens none, up to where one
@@ -482,8 +505,23 @@ function renderInline(raw: string): string {
   // only passes that let a tag back through rebuild it from a fixed list
   // and validate every value, so a burn note cannot smuggle markup in
   // through a link label. Spec: GitHub #328.
+  // A link's hover text, `[text](url "hover text")` (GitHub #702), as the
+  // serializer quotes it: in "" or, when it holds a ", in ''. RENDER_LINK
+  // reads the target to the first space, so the title moves out first and
+  // its place in the target holds a sentinel the link pass reads back. It
+  // arrives HTML-escaped, so it is safe inside the attribute. Bounded, so a
+  // line of unclosed titles costs no more than its length.
+  const linkTitles: string[] = [];
+  t = t.replace(/\]\(([^\s)\]]+) (?:&quot;((?:(?!&quot;\))[^\n]){0,500})&quot;|'((?:(?!'\))[^\n]){0,500})')\)/g,
+    (_m: string, href: string, dq: string | undefined, sq: string | undefined) => {
+      linkTitles.push((dq ?? sq ?? '').replace(/\\(&quot;|')/g, '$1'));
+      return `](${href}\x01L${linkTitles.length - 1}\x01)`;
+    });
   t = replaceMatches(t, markdownLinks(t, RENDER_LINK),
-    ({ text: label, target: rawHref }) => {
+    ({ text: label, target: rawTarget }) => {
+      const titled = /\x01L(\d+)\x01$/.exec(rawTarget);
+      const rawHref = titled ? rawTarget.slice(0, titled.index) : rawTarget;
+      const titleAttr = titled ? ` title="${linkTitles[Number(titled[1])] ?? ''}"` : '';
       const href = attrText(rawHref);
       const domain = domainFromHref(href);
       const fav = domain && getFavicons() ? faviconUrl(domain) : '';
@@ -491,12 +529,14 @@ function renderInline(raw: string): string {
         ? `<img src="${fav}" width="14" height="14" style="display:inline-block;vertical-align:middle;margin:0 3px 0 0;border-radius:2px;max-width:none" onerror="this.style.display='none'" />`
         : '';
       return (
-        stash(`<a href="${sanitizeLinkHref(href)}" target="_blank" rel="noopener noreferrer">${favicon}`) +
+        stash(`<a href="${sanitizeLinkHref(href)}"${titleAttr} target="_blank" rel="noopener noreferrer">${favicon}`) +
         label +
         stash('</a>')
       );
     }
   );
+  // A titled target the link pass did not take (no link text) drops its title.
+  if (linkTitles.length) t = t.replace(/\x01L\d+\x01/g, '');
 
   // Autolinks <http://…>. They come in HTML-escaped as &lt;http…&gt;, which
   // means every `&` inside the URL reads `&amp;` here - so the character

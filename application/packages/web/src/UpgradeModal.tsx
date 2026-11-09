@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEscapeToClose } from './useEscapeToClose';
-import { ArrowsOutSimple, ClockCounterClockwise, Columns, Database, FileArrowUp, Folder, Key, Lock, MagnifyingGlass, Monitor, Palette, Password, Shapes, BellSimple, RocketLaunch } from './icons';
+import { ArrowsOutSimple, ClockCounterClockwise, Columns, Database, FileArrowUp, Folder, Key, Lock, MagnifyingGlass, Monitor, Palette, Password, Shapes, BellSimple, RocketLaunch, TerminalWindow } from './icons';
 import { isPaddleConfigured, isBetaPricing } from './paddle';
 import { startProCheckout, PRO_PRODUCT_ID, isNativeStoreBuild } from './billing';
 import { PRO_PRICE, EARLY_PRICE, COMPARE_YEARS, COMPETITOR_YEARLY } from './pricing';
@@ -30,7 +30,7 @@ type Props = {
 /** Which Pro feature opened the modal; picks the intro line. */
 export type UpgradeTrigger =
   | 'lock' | 'protect' | 'history' | 'devices' | 'zen' | 'theme' | 'storage'
-  | 'fileSize' | 'folders' | 'looks' | 'noteIcon' | 'spaces' | 'formatBar' | 'totp' | 'replace' | 'passphrase' | 'alerts' | 'vaultFiles' | null;
+  | 'fileSize' | 'folders' | 'looks' | 'noteIcon' | 'spaces' | 'formatBar' | 'totp' | 'replace' | 'passphrase' | 'alerts' | 'vaultFiles' | 'cli' | null;
 
 const FEATURES: Array<{ icon: React.JSX.Element; labelKey: string }> = [
   { icon: <IconDevices />, labelKey: 'upgrade.features.devices' },
@@ -79,6 +79,8 @@ function introKey(trigger: Props['trigger']): string {
       return 'upgrade.intro.alerts';
     case 'vaultFiles':
       return 'upgrade.intro.vaultFiles';
+    case 'cli':
+      return 'upgrade.intro.cli';
     case 'fileSize':
       // Reuse the already-translated upload upsell string (importExport ns)
       // so the file-size context doesn't need its own billing copy.
@@ -126,6 +128,8 @@ function triggerIcon(trigger: Props['trigger']): React.JSX.Element {
       return <BellSimple size={size} aria-hidden="true" />;
     case 'vaultFiles':
       return <FileArrowUp size={size} aria-hidden="true" />;
+    case 'cli':
+      return <TerminalWindow size={size} aria-hidden="true" />;
     default:
       return <IconUpgrade size={size} />;
   }
@@ -201,7 +205,11 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, trigger = nu
         {/* Celebration header - one-time payment is good news, so this
             reads as a win, not an error. */}
         <div className="relative bg-amber-50/80 dark:bg-amber-950/50 rounded-t-lg px-6 pt-5 pb-5">
-          <CloseButton onClick={onClose} className="absolute top-4 end-4" />
+          {/* The wrapper takes the position, so the tooltip anchors to the
+              X; on the button itself it anchored where the button used to be. */}
+          <div className="absolute top-4 end-4 z-10">
+            <CloseButton onClick={onClose} />
+          </div>
 
           <div className="flex items-center gap-2 text-compact font-semibold text-amber-700 dark:text-amber-300">
             <IconUpgrade size={16} />

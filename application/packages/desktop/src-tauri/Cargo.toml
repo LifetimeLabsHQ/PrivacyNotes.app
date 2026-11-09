@@ -1,6 +1,6 @@
 [package]
 name = "privacynotes"
-version = "0.726.7"
+version = "0.734.4"
 description = "PrivacyNotes - private notes, encrypted on your device"
 authors = ["Lifetime Labs LLC <hi@lifetimelabs.dev>"]
 homepage = "https://privacynotes.app"
@@ -132,6 +132,10 @@ windows = { version = "0.62", features = [
   # Spec: docs/internal/specs/markdown-folder.md (section 11)
   "Win32_UI_Shell",
   "Win32_UI_WindowsAndMessaging",
+  # src/cli_install.rs: the folder of the pn launcher goes on the user PATH
+  # (HKCU\Environment), then WM_SETTINGCHANGE tells running programs.
+  # Spec: docs/internal/plans/agent-cli.md (section 3.7)
+  "Win32_System_Registry",
 ] }
 windows-future = "0.3"
 # src/lib.rs disable_browser_accelerator_keys: the WebView2 settings interface

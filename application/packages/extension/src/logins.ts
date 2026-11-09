@@ -30,7 +30,11 @@ interface PullBody {
   rows: { id: string; ciphertext: string; nonce: string; deleted: boolean; changed_at: string }[];
 }
 
-export const LOCK_ALARM = 'lock-logins';
+/** While unlocked, a pull every 20 minutes keeps the server's ticket alive:
+ *  the server ends a ticket after 24 hours with no request (and 7 days in
+ *  all, migration 0112), so the lock time the person chose decides, and a
+ *  night of sleep does not lock the vault. */
+export const KEEP_ALARM = 'keep-ticket';
 /** Point the browser's idle detection at the chosen lock time. A choice
  *  that is not a time keeps the longest interval, since only the computer's
  *  lock (or nothing) ends it. */
@@ -82,6 +86,7 @@ export async function isUnlocked(): Promise<boolean> {
 export async function lockLogins(): Promise<void> {
   // A fingerprint set-up that never finished leaves nothing behind either.
   await browser.storage.session.remove([SESSION_KEY, 'enrollProof']);
+  await browser.alarms.clear(KEEP_ALARM);
 }
 
 export type UnlockResult =
@@ -116,6 +121,7 @@ export async function unlock(input: { secret: string } | { proof: Uint8Array }):
   // Not a secret: only whether the generator offers the passphrase while locked.
   await browser.storage.local.set({ [PRO_HINT_KEY]: answer.body.pro === true });
   await applyLockTime();
+  browser.alarms.create(KEEP_ALARM, { periodInMinutes: 20 });
   void pull();
   return { kind: 'ok' };
 }
@@ -124,7 +130,10 @@ async function readRows(): Promise<StoredRows | null> {
   return ((await browser.storage.local.get(ROWS_KEY))[ROWS_KEY] as StoredRows | undefined) ?? null;
 }
 
-export type PullResult = 'ok' | 'locked' | 'offline' | 'disconnected';
+/** `failed`: the server answered with an error that does not end the
+ *  unlock (a fault, a refusal of the request); the vault stays open and
+ *  the next pull tries again. */
+export type PullResult = 'ok' | 'locked' | 'offline' | 'disconnected' | 'failed';
 
 let pulling: Promise<PullResult> | null = null;
 
@@ -160,9 +169,13 @@ async function pullNow(): Promise<PullResult> {
         await forgetLocal();
         return 'disconnected';
       }
-      // The ticket ended (8 hours, or the key changed): unlock again.
-      await lockLogins();
-      return 'locked';
+      // Only the server's "locked" ends the unlock: the ticket ran out (24
+      // hours with no request, or 7 days) or another unlock replaced it.
+      if (answer.error === 'locked') {
+        await lockLogins();
+        return 'locked';
+      }
+      return 'failed';
     }
     const body: PullBody = answer.body;
     // A lock while the request was out wins: nothing is written back.

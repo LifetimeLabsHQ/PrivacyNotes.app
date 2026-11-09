@@ -525,6 +525,10 @@ export function useSyncOrchestrator({
               contentKey: auth.encryptionKey,
               deviceId: auth.deviceId,
               isCurrent: () => hasLiveSignIn() && !signedOutSince(signedInAt),
+              agentFolder: () => {
+                const { agentFolder, folders } = loadLocalSettings();
+                return agentFolder && folders.some((f) => f.id === agentFolder) ? agentFolder : null;
+              },
               pushKeys: async () => {
                 await syncUserSettings(supabase, auth.pubkey, auth.encryptionKey, undefined, signedInAt);
                 return !hasUnpushedSettings();

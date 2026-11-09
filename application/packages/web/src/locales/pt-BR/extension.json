@@ -94,6 +94,11 @@
   "badge": {
     "problem": "Algo precisa da sua atenção"
   },
+  "changeSecret": {
+    "titlePin": "Alterar PIN",
+    "titlePasscode": "Alterar código de acesso",
+    "biometricAgain": "A digital ou o rosto usava o antigo. Configure de novo para continuar usando."
+  },
   "biometric": {
     "enrolled": "Digital ou rosto configurado. Você pode fechar esta aba.",
     "enrolledHere": "Digital ou rosto configurado.",
@@ -105,8 +110,6 @@
     "searchKind": "Buscar em {{kind}}",
     "unlockToSearch": "Desbloqueie para buscar",
     "all": "Todos os itens",
-    "more_one": "Mais {{count}}. Digite para encontrá-lo.",
-    "more_other": "Mais {{count}}. Digite para encontrar um.",
     "cardsHere": "Nenhum login para este site. Seus cartões:",
     "noBookmarkHere": "Esta página não está nos marcadores.",
     "noneAtAll": "Ainda não há nada no cofre.",
@@ -129,5 +132,12 @@
     "unlockToCopy": "Desbloqueie para copiar",
     "omniboxDefault": "Buscar %s no seu cofre do PrivacyNotes",
     "omniboxUnlock": "Desbloqueie o PrivacyNotes para buscar"
+  },
+  "shortcuts": {
+    "notSet": "Não definido",
+    "addressBar": "Buscar no cofre pela barra de endereço",
+    "change": "Alterar atalhos",
+    "changeHint": "As teclas ficam no seu navegador. Altere uma lá ou defina uma tecla se ela não tiver nenhuma.",
+    "loginHint": "<key/> copia o nome de usuário e depois a senha."
   }
 }

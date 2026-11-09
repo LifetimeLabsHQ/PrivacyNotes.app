@@ -96,6 +96,11 @@
   "badge": {
     "problem": "Quelque chose demande ton attention"
   },
+  "changeSecret": {
+    "titlePin": "Changer le PIN",
+    "titlePasscode": "Changer le code d'accès",
+    "biometricAgain": "L'empreinte ou le visage utilisait l'ancien. Configure-le à nouveau pour continuer à t'en servir."
+  },
   "biometric": {
     "enrolled": "L'empreinte ou le visage est configuré. Tu peux fermer cet onglet.",
     "enrolledHere": "L'empreinte ou le visage est configuré.",
@@ -107,9 +112,6 @@
     "searchKind": "Rechercher : {{kind}}",
     "unlockToSearch": "Déverrouille pour rechercher",
     "all": "Tous les éléments",
-    "more_one": "Encore {{count}}. Tape pour le trouver.",
-    "more_many": "Encore {{count}}. Tape pour en trouver un.",
-    "more_other": "Encore {{count}}. Tape pour en trouver un.",
     "cardsHere": "Aucun identifiant pour ce site. Tes cartes :",
     "noBookmarkHere": "Cette page n'est pas dans tes signets.",
     "noneAtAll": "Rien dans le coffre pour l'instant.",
@@ -132,5 +134,12 @@
     "unlockToCopy": "Déverrouille pour copier",
     "omniboxDefault": "Rechercher %s dans ton coffre PrivacyNotes",
     "omniboxUnlock": "Déverrouille PrivacyNotes pour rechercher"
+  },
+  "shortcuts": {
+    "notSet": "Non défini",
+    "addressBar": "Rechercher dans le coffre depuis la barre d'adresse",
+    "change": "Modifier les raccourcis",
+    "changeHint": "C'est ton navigateur qui gère les touches. Modifie un raccourci là-bas, ou attribue une touche à un raccourci qui n'en a pas.",
+    "loginHint": "<key/> copie le nom d'utilisateur, puis le mot de passe."
   }
 }

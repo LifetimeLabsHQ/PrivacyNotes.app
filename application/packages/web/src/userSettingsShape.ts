@@ -166,6 +166,12 @@ export type UserSettings = {
    */
   taskConfetti: boolean;
   /**
+   * The folder the command line `pn` saves into (Settings > CLI),
+   * or null while that is off. A folder id that no longer exists reads as
+   * off. Spec: docs/internal/plans/agent-cli.md (C4)
+   */
+  agentFolder: string | null;
+  /**
    * Whether a typed pair such as `->` or `!=` turns into its symbol, in the
    * note body and the title field (`typedSymbols.ts`, #660). Synced like
    * editorMode, because it describes how somebody writes. Off by default.
@@ -176,6 +182,11 @@ export type UserSettings = {
    * confirm's "Don't ask again" box turns it off (#603).
    */
   confirmTrash: boolean;
+  /**
+   * Whether archiving items asks first. On by default; the confirm's
+   * "Don't ask again" box turns it off (#713). Unarchive never asks.
+   */
+  confirmArchive: boolean;
   /**
    * Whether the Personal and Work spaces are on (Pro). On by default; off
    * shows every item and hides the switch. Spec: docs/internal/specs/spaces.md
@@ -587,8 +598,10 @@ export function defaultSettings(): UserSettings {
     tasksShowDone: false,
     sinkCheckedTasks: true,
     taskConfetti: true,
+    agentFolder: null,
     typedSymbols: false,
     confirmTrash: true,
+    confirmArchive: true,
     spaces: true,
     autoProtectLogins: false,
     pinSalt: null,

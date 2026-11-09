@@ -92,6 +92,11 @@
   "badge": {
     "problem": "확인이 필요한 문제가 있어요"
   },
+  "changeSecret": {
+    "titlePin": "PIN 변경",
+    "titlePasscode": "패스코드 변경",
+    "biometricAgain": "지문이나 얼굴은 이전 것에 맞춰져 있었어요. 계속 쓰려면 다시 설정하세요."
+  },
   "biometric": {
     "enrolled": "지문이나 얼굴을 설정했어요. 이 탭은 닫아도 돼요.",
     "enrolledHere": "지문이나 얼굴을 설정했어요.",
@@ -103,7 +108,6 @@
     "searchKind": "{{kind}} 검색",
     "unlockToSearch": "잠금 해제하고 검색",
     "all": "모든 항목",
-    "more_other": "{{count}}개 더 있어요. 입력해서 찾으세요.",
     "cardsHere": "이 사이트의 로그인 항목이 없어요. 내 카드:",
     "noBookmarkHere": "이 페이지는 북마크되어 있지 않아요.",
     "noneAtAll": "보관함이 아직 비어 있어요.",
@@ -126,5 +130,12 @@
     "unlockToCopy": "잠금 해제하고 복사",
     "omniboxDefault": "PrivacyNotes 보관함에서 %s 검색",
     "omniboxUnlock": "검색하려면 PrivacyNotes 잠금을 해제하세요"
+  },
+  "shortcuts": {
+    "notSet": "설정 안 됨",
+    "addressBar": "주소 표시줄에서 보관함 검색",
+    "change": "단축키 변경",
+    "changeHint": "단축키는 브라우저가 관리해요. 브라우저에서 바꾸거나, 키가 없는 단축키에 키를 지정하세요.",
+    "loginHint": "<key/> 키는 사용자 이름을 복사한 다음 비밀번호를 복사해요."
   }
 }

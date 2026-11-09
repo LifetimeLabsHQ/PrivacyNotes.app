@@ -123,11 +123,17 @@ function hydrate(raw: unknown): UserSettings {
   if (typeof obj.taskConfetti === 'boolean') {
     base.taskConfetti = obj.taskConfetti;
   }
+  if (obj.agentFolder === null || (typeof obj.agentFolder === 'string' && obj.agentFolder.length <= 64)) {
+    base.agentFolder = obj.agentFolder;
+  }
   if (typeof obj.typedSymbols === 'boolean') {
     base.typedSymbols = obj.typedSymbols;
   }
   if (typeof obj.confirmTrash === 'boolean') {
     base.confirmTrash = obj.confirmTrash;
+  }
+  if (typeof obj.confirmArchive === 'boolean') {
+    base.confirmArchive = obj.confirmArchive;
   }
   if (typeof obj.spaces === 'boolean') {
     base.spaces = obj.spaces;
@@ -374,7 +380,7 @@ export function alertDefaults(s: Pick<UserSettings, 'calendar'>): { timed: Alert
  * stands. A merged collection needs no entry: its merge never reads absence
  * as a reset.
  */
-const NEWER_SCALARS = ['tintNotes', 'noteColorStyle', 'archivedInAll', 'includeSubfolders', 'sinkCheckedTasks', 'taskConfetti', 'typedSymbols', 'confirmTrash', 'spaces', 'dateOrder', 'clock', 'weekStart', 'viewOrder', 'journalTitlePattern', 'calendar', 'checkIn'] as const;
+const NEWER_SCALARS = ['tintNotes', 'noteColorStyle', 'archivedInAll', 'includeSubfolders', 'sinkCheckedTasks', 'taskConfetti', 'agentFolder', 'typedSymbols', 'confirmTrash', 'confirmArchive', 'spaces', 'dateOrder', 'clock', 'weekStart', 'viewOrder', 'journalTitlePattern', 'calendar', 'checkIn'] as const;
 
 /**
  * Whether the blob lacks a newer scalar this device holds at a value of its

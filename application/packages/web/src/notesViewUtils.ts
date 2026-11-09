@@ -27,6 +27,7 @@ import { DESKTOP_APP, KEY_OS } from './shortcutMatch';
 import { hasLoggedTrackers } from './trackerTypes';
 import { attachmentLinks } from './fileNames';
 import { ANY_PICTURE, FILE_LINK, markdownLinks } from './linkScan';
+import { INLINE_ICON_RE } from './editorIconSyntax';
 
 /** Parse a pre-formatted size string like "42.2 MB" back to bytes. */
 function parseSizeToBytes(s: string): number {
@@ -307,6 +308,9 @@ function stripInlineMarkdown(line: string): string {
     // ==highlight== -> highlight, with the guards of the parse rule in
     // editorInlineSyntax.ts, so "a == b" stays as typed.
     .replace(/==(?![\s=])([^\n]*?)==/g, (run, inner: string) => (inner && !/\s$/.test(inner) ? inner : run))
+    // :icon[name] and :logo[name] -> nothing: an icon in the text is a
+    // picture, not words.
+    .replace(INLINE_ICON_RE, '')
     // [text](url) -> text; an empty one ("[](url)", left when its text was a
     // picture, as a clipped page writes a linked image) -> "".
     .replace(/\[([^\]]*)\]\([^)]*\)|(\[[^\]]*)/g, '$1$2')

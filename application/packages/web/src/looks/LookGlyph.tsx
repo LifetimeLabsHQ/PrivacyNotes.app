@@ -30,7 +30,7 @@ import {
   type NoteColorStyle,
   type NoteLook,
 } from '../itemStyles';
-import { useLookIcons } from './lookIconsLoader';
+import { useLookPaths } from './lookIconsLoader';
 
 export interface LooksValue {
   styles: ItemStyles;
@@ -59,14 +59,12 @@ export function useNoteLook(noteId: string, tags: readonly string[], folderId: s
   );
 }
 
-/** The paths of the icon set on a note, or null while it has none (or the
- *  icon set has not loaded): the caller then draws the type icon. One hook
+/** The paths of the icon or logo set on a note, or null while it has none
+ *  (or its catalog has not loaded): the caller then draws the type icon. One hook
  *  for the row, the tile, the compact row and the tab. */
 export function useNoteIconPaths(noteId: string): readonly string[] | null {
   const { styles } = useContext(LooksContext);
-  const icon = noteOwnIcon(styles, noteId);
-  const catalog = useLookIcons(icon !== null);
-  return (icon && catalog?.LOOK_ICONS[icon]) || null;
+  return useLookPaths(noteOwnIcon(styles, noteId)) ?? null;
 }
 
 /** A color as a light background, drawn as an image so the background color
@@ -147,9 +145,9 @@ export function inkStyle(color: LookColor | null): CSSProperties | undefined {
 }
 
 /**
- * A look icon from its generated paths: Phosphor's own 256 box and bold
- * weight, filled with the current color like every Phosphor icon, and sized
- * by the caller the same way.
+ * A look icon or logo from its generated paths: Phosphor's own 256 box and
+ * bold weight (the logos are scaled into it), filled with the current color
+ * like every Phosphor icon, and sized by the caller the same way.
  */
 export function PathGlyph({
   paths,
@@ -191,9 +189,7 @@ export function FolderGlyph({
   className?: string;
 }) {
   const { styles } = useContext(LooksContext);
-  const icon = lookOf(styles, folderLookKey(folderId)).icon;
-  const catalog = useLookIcons(icon !== null);
-  const paths = icon ? catalog?.LOOK_ICONS[icon] : undefined;
+  const paths = useLookPaths(lookOf(styles, folderLookKey(folderId)).icon);
   const style = inkStyle(folderColor(folderId, styles));
   if (paths) return <PathGlyph paths={paths} size={size} className={className} style={style} />;
   return <Folder size={size} className={className} style={style} aria-hidden="true" />;
@@ -215,8 +211,7 @@ export function TagGlyph({
 }) {
   const { styles } = useContext(LooksContext);
   const look = lookOf(styles, tagLookKey(tag));
-  const catalog = useLookIcons(look.icon !== null);
-  const paths = look.icon ? catalog?.LOOK_ICONS[look.icon] : undefined;
+  const paths = useLookPaths(look.icon);
   const style = inkStyle(isLookColor(look.color) ? look.color : null);
   if (paths) return <PathGlyph paths={paths} size={size} className={className} style={style} />;
   if (favorite) {
@@ -232,8 +227,7 @@ export function TagGlyph({
 export function TagMark({ tag, size = 12 }: { tag: string; size?: number }) {
   const { styles } = useContext(LooksContext);
   const look = lookOf(styles, tagLookKey(tag));
-  const catalog = useLookIcons(look.icon !== null);
-  const paths = look.icon ? catalog?.LOOK_ICONS[look.icon] : undefined;
+  const paths = useLookPaths(look.icon);
   const style = inkStyle(isLookColor(look.color) ? look.color : null);
   if (paths) {
     return <PathGlyph paths={paths} size={size} className="shrink-0 self-center me-0.5" style={style} />;

@@ -25,7 +25,8 @@
       "passphrase": "As frases-passe são uma funcionalidade Pro. Gera uma frase de palavras aleatórias, fácil de escrever e de dizer.",
       "default": "Um upgrade desbloqueia tudo o que está abaixo. Pagamento único.",
       "alerts": "Os lembretes são uma funcionalidade Pro. Cada dispositivo toca por si à hora que escolheres, por isso nenhum serviço de notificações push vê o item.",
-      "vaultFiles": "Os ficheiros nos itens do cofre são uma funcionalidade Pro. Guarda códigos de recuperação, uma chave de backup ou uma digitalização junto do login, cartão ou chave a que pertencem."
+      "vaultFiles": "Os ficheiros nos itens do cofre são uma funcionalidade Pro. Guarda códigos de recuperação, uma chave de backup ou uma digitalização junto do login, cartão ou chave a que pertencem.",
+      "cli": "A CLI é uma funcionalidade Pro. Scripts, agentes de IA e apps de IA adicionam notas a partir de um terminal ou de um chat, diretamente na tua pasta Agent."
     },
     "features": {
       "devices": "Sincroniza dispositivos ilimitados, em todas as plataformas",

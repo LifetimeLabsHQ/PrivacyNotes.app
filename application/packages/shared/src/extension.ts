@@ -40,7 +40,7 @@ export function deriveInboxKeyPair(seed: Uint8Array): InboxKeyPair {
 }
 
 /** The row kinds the inbox carries. A reader leaves any other kind alone. */
-export type InboxKind = 'clip' | 'picture' | 'login';
+export type InboxKind = 'clip' | 'picture' | 'login' | 'note';
 
 export const INBOX_VERSION = 1;
 
@@ -359,6 +359,38 @@ export interface InboxLogin {
    *  older extension sends none. */
   totp?: string;
   notes?: string;
+}
+
+/** A note from the command line `pn`; the app adopts it into the Agent folder.
+ *  Spec: docs/internal/plans/agent-cli.md (section 3.3) */
+export interface InboxNote {
+  v: 1;
+  id: string;
+  title: string;
+  markdown: string;
+  tags: string[];
+  savedAt: string;
+}
+
+/** The limits both `pn` and the app hold a note row to. The body cap is the
+ *  clipper's `CLIP_MAX_BODY_BYTES` (tests/cliNote.test.ts keeps them equal).
+ *  Spec: docs/internal/plans/agent-cli.md (sections 3.3 and 3.4) */
+export const INBOX_NOTE_LIMITS = { bodyBytes: 700 * 1024, title: 200, tags: 20 } as const;
+
+/** The shape check of a `note` row, shared by `pn` (before it sends) and the
+ *  app (after it opens): the fields and their limits, nothing about the
+ *  Markdown itself. Tags are left as sent; the app normalizes them. */
+export function parseInboxNote(value: unknown, rowId: string): InboxNote | null {
+  if (!value || typeof value !== 'object') return null;
+  const v = value as Record<string, unknown>;
+  if (v.v !== 1 || v.id !== rowId) return null;
+  if (typeof v.title !== 'string' || [...v.title].length > INBOX_NOTE_LIMITS.title) return null;
+  if (typeof v.markdown !== 'string' || !v.markdown.trim()) return null;
+  if (utf8.encode(v.markdown).length > INBOX_NOTE_LIMITS.bodyBytes) return null;
+  if (!Array.isArray(v.tags) || v.tags.length > INBOX_NOTE_LIMITS.tags) return null;
+  if (!v.tags.every((t) => typeof t === 'string' && t.length <= 200)) return null;
+  if (typeof v.savedAt !== 'string' || Number.isNaN(Date.parse(v.savedAt))) return null;
+  return { v: 1, id: rowId, title: v.title, markdown: v.markdown, tags: v.tags as string[], savedAt: v.savedAt };
 }
 
 export interface InboxPictureHeader {

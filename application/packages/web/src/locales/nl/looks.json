@@ -7,6 +7,9 @@
   "applyToSubfolders": "Kleur toepassen op submappen",
   "icon": "Icoon",
   "searchPlaceholder": "Zoek iconen",
+  "searchLogos": "Zoek logo’s",
+  "moreLogos": "Meer logo’s",
+  "allLogos": "Alle logo’s, van A tot Z",
   "recent": "Recent gebruikt",
   "number": "Cijfer {{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "Sport",
     "tech": "Wetenschap en techniek",
     "signals": "Signalen",
-    "numbers": "Cijfers en rekenen"
+    "numbers": "Cijfers en rekenen",
+    "systems": "Systemen en apparaten",
+    "browsers": "Browsers en zoeken",
+    "office": "Notities en kantoor",
+    "dev": "Code en hosting",
+    "ai": "AI",
+    "chat": "Chat en e-mail",
+    "social": "Sociaal en makers",
+    "media": "Muziek, video en boeken",
+    "games": "Games",
+    "learning": "Leren en onderzoek",
+    "trips": "Reizen en fitness",
+    "privacy": "Privacy en beveiliging"
   },
   "icons": {
     "folder": "Map",

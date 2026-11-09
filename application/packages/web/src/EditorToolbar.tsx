@@ -1,5 +1,7 @@
 import {
   Fragment,
+  lazy,
+  Suspense,
   useCallback,
   useContext,
   useEffect,
@@ -84,6 +86,9 @@ import {
   useToolbarPopover,
 } from './editorToolbarParts';
 import { AlignPanel, CalloutPanel, FontPanel, HeadingPanel, HighlightPanel, TextColorPanel } from './editorToolbarPopovers';
+import { insertInlineIcon } from './editorIcon';
+
+const LookPicker = lazy(() => import('./looks/LookPicker').then((m) => ({ default: m.LookPicker })));
 
 // ------------------------------------------------------------------
 // Toolbar
@@ -399,6 +404,8 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
   // and math live in a labeled dropdown instead of growing the format
   // row. Same portal + outside-click pattern as the pickers above.
   const [insertOpen, setInsertOpen] = useState(false);
+  // Insert > Icons & logos: the look picker, whose pick goes into the text.
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const insertMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -815,6 +822,7 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
     subscript: { hint: null, active: isActive('subscript'), run: () => editor.chain().focus().toggleSubscript().run() },
     spoiler: { hint: '||x||', active: isActive('spoiler'), run: () => editor.chain().focus().toggleSpoiler().run() },
     footnote: { hint: '[^1]', active: false, run: () => insertFootnote(editor) },
+    icon: { hint: null, active: false, run: () => setIconPickerOpen(true) },
     // The touch home of the selection menu's "Copy as ..." entries (#546).
     copyAsPlain: { hint: null, active: false, run: () => copySelectionAs(editor, 'plain') },
     copyAsMarkdown: { hint: null, active: false, run: () => copySelectionAs(editor, 'markdown') },
@@ -1144,6 +1152,22 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
         className="hidden"
         onChange={handleAttachmentPick}
       />
+      {iconPickerOpen && (
+        <Suspense fallback={null}>
+          <LookPicker
+            target={{ kind: 'insert', lookKey: '', name: t('shell:noteOptionsMenu.icon') }}
+            styles={{}}
+            noteColors="off"
+            onNoteColors={() => {}}
+            onPick={(patch) => {
+              if (patch.icon) insertInlineIcon(editor, patch.icon);
+              setIconPickerOpen(false);
+            }}
+            onCancel={() => {}}
+            onClose={() => setIconPickerOpen(false)}
+          />
+        </Suspense>
+      )}
     </div>
     </TipSideContext.Provider>
   );

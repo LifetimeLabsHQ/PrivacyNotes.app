@@ -10,7 +10,9 @@
  * placed by usePopoverPosition like every other toolbar dropdown.
  *
  * Pre-fills "Link text" from the current selection. URL field validates
- * on submit. Supports edit + remove for existing links.
+ * on submit. Supports edit + remove for existing links. The hover text
+ * (GitHub #702) sits behind a fold that opens by itself on a link that
+ * has one, so the panel stays two fields for everyone who never uses it.
  */
 
 import { useEffect, useRef, useState, type RefObject } from 'react';
@@ -21,6 +23,8 @@ import { useEscapeToClose } from './useEscapeToClose';
 import { useKeyboardRect } from './useKeyboardOpen';
 import { usePopoverPosition } from './usePopoverPosition';
 import { CloseButton } from './ui/Button';
+import { TextField } from './ui';
+import { CaretDown, CaretRight } from './icons';
 import { getMarkRange } from '@tiptap/core';
 import { looksLikeUrl, normalizeUrl } from './editorLinks';
 import type { Editor } from '@tiptap/react';
@@ -46,6 +50,8 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
   // Existing link attributes (if cursor is inside a link).
   const existingHref: string =
     (editor.getAttributes('link').href as string | undefined) ?? '';
+  const existingTitle: string =
+    (editor.getAttributes('link').title as string | undefined) ?? '';
 
   // Selected text for pre-filling the link text field.
   const { from, to } = editor.state.selection;
@@ -66,6 +72,8 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
 
   const [url, setUrl] = useState(existingHref);
   const [text, setText] = useState(existingHref ? existingText : selectionText);
+  const [title, setTitle] = useState(existingHref ? existingTitle : '');
+  const [titleOpen, setTitleOpen] = useState(!!title);
   const [urlError, setUrlError] = useState('');
 
   // Focus the URL input on mount.
@@ -108,6 +116,8 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
     if (!validate()) return;
     const href = normalizeUrl(url);
     const linkText = text.trim();
+    // An emptied field removes the hover text: null, so nothing is written.
+    const attrs = { href, title: title.trim() || null };
 
     // Read fresh selection state from the editor - the component-body
     // `from`/`to` can go stale if ProseMirror processes transactions
@@ -125,7 +135,7 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
         .insertContent({
           type: 'text',
           text: linkText,
-          marks: [{ type: 'link', attrs: { href } }],
+          marks: [{ type: 'link', attrs }],
         })
         .run();
     } else if (!curHasSelection && !inLink) {
@@ -136,7 +146,7 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
         .insertContent({
           type: 'text',
           text: href,
-          marks: [{ type: 'link', attrs: { href } }],
+          marks: [{ type: 'link', attrs }],
         })
         .run();
     } else if (inLink && linkText && linkText !== existingText) {
@@ -151,7 +161,7 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
         .insertContent({
           type: 'text',
           text: linkText,
-          marks: [{ type: 'link', attrs: { href } }],
+          marks: [{ type: 'link', attrs }],
         })
         .run();
     } else {
@@ -160,7 +170,7 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
         .chain()
         .focus()
         .extendMarkRange('link')
-        .setLink({ href })
+        .setLink(attrs)
         .run();
     }
     onClose();
@@ -226,6 +236,34 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
         <p className="text-meta text-pn-muted mt-1">
           {t('link.selectedTextHint')}
         </p>
+      )}
+
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => setTitleOpen((o) => !o)}
+        aria-expanded={titleOpen}
+        className="mt-3 flex items-center gap-1 text-meta font-medium text-pn-muted hover:text-pn"
+      >
+        {titleOpen ? <CaretDown aria-hidden="true" /> : <CaretRight aria-hidden="true" className="rtl:-scale-x-100" />}
+        {t('link.titleLabel')}
+      </button>
+      {titleOpen && (
+        <div className="mt-1">
+          <TextField
+            autoComplete="off"
+            autoFocus={!existingTitle}
+            aria-label={t('link.titleLabel')}
+            hint={t('link.titleHint')}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (isImeComposing(e)) return;
+              if (e.key === 'Enter') { e.preventDefault(); apply(); }
+              if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); onClose(); }
+            }}
+          />
+        </div>
       )}
 
       <div className="flex gap-2 mt-4">

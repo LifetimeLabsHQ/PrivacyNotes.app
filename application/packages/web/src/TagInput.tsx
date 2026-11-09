@@ -50,6 +50,10 @@ type Props = {
   /** A click on a tag's name filters the list by that tag, as the sidebar
    *  does. The remove button beside it keeps its own job. Spec: issue #333. */
   onSelectTag?: (tag: string) => void;
+  /** Shows the tags without the remove buttons or the field: a read-only
+   *  note keeps its tags as they are (GitHub #706). A click on a name still
+   *  filters the list. With nothing to show, the row is not drawn. */
+  readOnly?: boolean;
 };
 
 export type TagInputHandle = {
@@ -59,7 +63,7 @@ export type TagInputHandle = {
 const MAX_SUGGESTIONS = 5;
 
 export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
-  { tags, onChange, allTags, onTabOut, trailing, leading, onSelectTag },
+  { tags, onChange, allTags, onTabOut, trailing, leading, onSelectTag, readOnly = false },
   ref
 ) {
   const { t } = useTranslation('common');
@@ -382,6 +386,8 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
       )
     : null;
 
+  if (readOnly && shown.length === 0 && !leading && !trailing) return null;
+
   return (
     <div
       ref={containerRef}
@@ -424,17 +430,17 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
               <TagMark tag={tag} size={11} />
               {tag}
             </span>
-            <button
+            {!readOnly && <button
               onClick={() => remove(tag)}
               className="text-accent/60 hover:text-danger transition text-meta leading-none"
               aria-label={t('tagInput.removeTag', { tag })}
               tabIndex={-1}
             >
               ×
-            </button>
+            </button>}
           </span>
         ))}
-        <input
+        {!readOnly && <input
           ref={inputRef}
           tabIndex={isMobile ? -1 : undefined}
           value={draft}
@@ -451,7 +457,7 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
           autoComplete="off"
           spellCheck={spellcheck ? undefined : false}
           className="flex-1 min-w-[80px] shrink-0 bg-transparent text-small focus:outline-none placeholder:text-pn-muted py-0.5"
-        />
+        />}
       </div>
       {trailing}
       {dropdown}

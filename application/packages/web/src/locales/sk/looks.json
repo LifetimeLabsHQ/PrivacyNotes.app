@@ -7,6 +7,9 @@
   "applyToSubfolders": "Použiť farbu aj na podpriečinky",
   "icon": "Ikona",
   "searchPlaceholder": "Hľadaj ikony",
+  "searchLogos": "Hľadaj logá",
+  "moreLogos": "Ďalšie logá",
+  "allLogos": "Všetky logá, od A po Z",
   "recent": "Nedávno použité",
   "number": "Číslo {{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "Šport",
     "tech": "Veda a technika",
     "signals": "Signály",
-    "numbers": "Čísla a matematika"
+    "numbers": "Čísla a matematika",
+    "systems": "Systémy a zariadenia",
+    "browsers": "Prehliadače a vyhľadávanie",
+    "office": "Poznámky a kancelária",
+    "dev": "Kód a hosting",
+    "ai": "AI",
+    "chat": "Chat a e-mail",
+    "social": "Sociálne siete a tvorcovia",
+    "media": "Hudba, video a knihy",
+    "games": "Hry",
+    "learning": "Vzdelávanie a výskum",
+    "trips": "Cestovanie a fitnes",
+    "privacy": "Súkromie a zabezpečenie"
   },
   "icons": {
     "folder": "Priečinok",

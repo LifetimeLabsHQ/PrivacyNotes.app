@@ -74,7 +74,9 @@ const WIDGET_DEFS = {
   onThisDay: { group: 'notes', w: [1, 1, 4], h: [2, 3, 12] },
   // Four tiles in a row from 512px of content (the card's @lg), else two by
   // two: measured 110px and 235px of tiles, plus the head and the padding.
-  week: { group: 'stats', w: [2, 2, 4], h: [2, 3, 6], heightAt: (px) => (px - 24 >= 512 ? 110 : 235) + 36 + 24 },
+  // The content box is the card less its 24px of padding and its 1px border
+  // each side; a card 536 to 537px wide lays its tiles out two by two.
+  week: { group: 'stats', w: [2, 2, 4], h: [2, 3, 6], heightAt: (px) => (px - 26 >= 512 ? 110 : 235) + 36 + 24 },
   streak: { group: 'stats', w: [1, 1, 2], h: [2, 2, 3] },
   checkInStreak: { group: 'stats', w: [1, 1, 2], h: [2, 2, 3] },
   // The heatmap is 406 by 112 and fills the card's width (24px of padding);

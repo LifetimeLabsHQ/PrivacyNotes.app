@@ -11,10 +11,10 @@ import type { ImportTarget } from '../import/destination';
 import type { ImageStore } from '../imageStore';
 import type { AppearancePane } from '../AppearanceSheet';
 import { exemptOpts } from '../i18nExempt';
-import { Calendar, ChartBar, CreditCard, Database, Info, Keyboard, Question, Repeat, ListBullets, Palette, Heartbeat, PencilLine, PuzzlePiece, Shield, Toolbox, Translate, User, type Icon } from '../icons';
+import { Calendar, ChartBar, CreditCard, Database, Info, Keyboard, Question, Repeat, ListBullets, Palette, Heartbeat, PencilLine, PuzzlePiece, Shield, TerminalWindow, Toolbox, Translate, User, type Icon } from '../icons';
 import { proUnlocked } from '../demo';
+import { commandLineShown } from '../cliRelease';
 import { isTouchOnly } from '../touchOnly';
-import { extensionOffered } from '../extensionRelease';
 import { activeLocale } from '../languages';
 import { helpPath } from '../localeRoutes';
 import { updateNote } from '../notesRepo';
@@ -36,6 +36,7 @@ export const AboutModal = lazyModal(() => import('../AboutModal').then((m) => m.
 const HotkeysPane = lazyModal(() => import('../HotkeysPane').then((m) => m.HotkeysPane));
 export const FeedbackModal = lazyModal(() => import('../FeedbackModal').then((m) => m.FeedbackModal));
 const BrowserPane = lazyModal(() => import('../BrowserPane').then((m) => m.BrowserPane));
+const CommandLinePane = lazyModal(() => import('../CommandLinePane').then((m) => m.CommandLinePane));
 export const SecurityModal = lazyModal(() => import('../SecurityModal').then((m) => m.SecurityModal));
 export const PasswordGeneratorModal = lazyModal(() => import('../PasswordGenerator').then((m) => m.PasswordGeneratorModal));
 export const SyncOptionsModal = lazyModal(() => import('../SyncOptionsModal').then((m) => m.SyncOptionsModal));
@@ -73,6 +74,7 @@ export const SETTINGS_SECTION_ICONS: Record<SectionId, Icon> = {
   date: Calendar,
   hotkeys: Keyboard,
   browser: PuzzlePiece,
+  commandLine: TerminalWindow,
   about: Info,
   help: Question,
 };
@@ -225,6 +227,8 @@ export function buildSettingsCategories({
       onTypedSymbolsChange={(on) => mutateSettings((prev) => ({ ...prev, typedSymbols: on }))}
       confirmTrash={userSettings.confirmTrash}
       onConfirmTrashChange={(on) => mutateSettings((prev) => ({ ...prev, confirmTrash: on }))}
+      confirmArchive={userSettings.confirmArchive}
+      onConfirmArchiveChange={(on) => mutateSettings((prev) => ({ ...prev, confirmArchive: on }))}
       spaces={userSettings.spaces}
       onSpacesChange={(on) => mutateSettings((prev) => ({ ...prev, spaces: on }))}
       onOpenUpgrade={(trigger) => { setShowSettings(false); setShowUpgrade({ trigger: trigger ?? 'theme' }); }}
@@ -545,14 +549,31 @@ export function buildSettingsCategories({
               render: ({ initialTab }: { initialTab?: string }) => <HotkeysPane initialTab={initialTab} />,
             }]),
             // Spec: docs/internal/plans/browser-extension-build.md (section 6)
-            // No Extension pane until the stores list it (extensionRelease.ts).
-            ...(extensionOffered() ? [{
+            {
               id: 'browser',
               label: t('shell:apps.railLabel'),
               title: t('shell:apps.title'),
               group: t('settings.groupBrand'),
               icon: railIcon('browser'),
               render: () => <BrowserPane extensionKeys={extensionKeys} />,
+            },
+            // Spec: docs/internal/plans/agent-cli.md (sections 3.6, C2, C9)
+            ...(commandLineShown() ? [{
+              id: 'commandLine',
+              label: t('shell:cli.railLabel'),
+              title: t('shell:cli.title'),
+              group: t('settings.groupBrand'),
+              icon: railIcon('commandLine'),
+              render: () => (
+                <CommandLinePane
+                  extensionKeys={extensionKeys}
+                  settings={userSettings}
+                  mutateSettings={mutateSettings}
+                  createFolder={createImportFolder}
+                  isPro={auth.isPro}
+                  onUpgrade={() => setShowUpgrade({ trigger: 'cli' })}
+                />
+              ),
             }] : []),
             {
               id: 'about',

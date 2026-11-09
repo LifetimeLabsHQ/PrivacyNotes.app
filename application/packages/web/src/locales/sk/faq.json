@@ -471,9 +471,32 @@
     "save-page-as-note": {
       "q": "Môžem uložiť webovú stránku ako poznámku?",
       "a": [
-        "Áno. [Otvor záložku](/sk/help/bookmarks/) a zvoľ Uložiť ako poznámku, alebo v ponuke + vyber Uložiť stránku a vlož odkaz. Hlavný text stránky sa stane bežnou poznámkou v sekcii Poznámky, prepojenou s jej záložkou, a až 20 jej obrázkov sa uloží s poznámkou, šifrovaných ako každý obrázok, ktorý pridáš ručne, pokiaľ v okne Uložiť stránku nevypneš Uložiť obrázky. Ukladanie stránok je zadarmo v každom tarife a [obrázky sa započítavajú do tvojho úložiska](/sk/help/storage-usage/).",
+        "Áno. [Otvor záložku](/sk/help/bookmarks/) a zvoľ Uložiť ako poznámku, alebo v ponuke + vyber Uložiť stránku a vlož odkaz. Hlavný text stránky sa stane bežnou poznámkou v sekcii Poznámky, prepojenou so záložkou, ak ju ukladáš zo záložky, a až 20 jej obrázkov sa uloží s poznámkou, šifrovaných ako každý obrázok, ktorý pridáš ručne, pokiaľ v okne Uložiť stránku nevypneš Uložiť obrázky. Ukladanie stránok je zadarmo v každom tarife a [obrázky sa započítavajú do tvojho úložiska](/sk/help/storage-usage/).",
         "Desktopové a mobilné aplikácie sťahujú stránku a jej obrázky priamo z tvojho zariadenia. Webová aplikácia ich sťahuje cez náš server, ktorý ich len odovzdá ďalej a neuchováva stránku, obrázky ani ich adresy. Stránky za prihlásením a stránky vytvárané skriptami sa môžu vrátiť prázdne: tie si ponechaj ako záložku.",
         "S [rozšírením prehliadača](/sk/help/browser-extension/) môžeš uložiť aj stránku, ktorú práve čítaš, vrátane stránok za prihlásením."
+      ]
+    },
+    "command-line": {
+      "q": "Môžem pridávať poznámky z príkazového riadka (CLI) alebo cez AI agenta?",
+      "a": [
+        "Áno, pomocou pn, príkazového riadka PrivacyNotes (CLI). Použiť ho môže všetko, čo beží v termináli: tvoje vlastné skripty, naplánované úlohy a AI agenti na programovanie. Pošli doň Markdown, pridaj názov a značky a poznámka pristane v priečinku Agent tvojich poznámok, na všetkých tvojich zariadeniach po ich ďalšej synchronizácii. pn vie poznámky iba pridávať: nemôže otvoriť, zmeniť ani odstrániť poznámky, ktoré máš. Vyžaduje [Node.js](https://nodejs.org/en/download) 20 alebo novší a je súčasťou Pro.",
+        "Nastavíš ho takto: v desktopovej aplikácii otvor Nastavenia > CLI a zvoľ Zapnúť. Zvoľ Nainštalovať, čím sa pn dostane na tento počítač, a potom Vytvoriť kód. V novom termináli spusti `pn login` a vlož kód. Potom ulož svoju prvú poznámku:",
+        "`echo \"# Hello\" | pn save`",
+        "pn má málo príkazov, pretože robí jednu vec. Každý vypíše krátku kartu pre človeka alebo jeden riadok JSON s `--json` pre skript:",
+        "- `pn login` pripojí tento počítač pomocou jednorazového kódu z Nastavenia > CLI. Kód vlož alebo ho pošli cez rúru.\n- `pn save note.md` pridá poznámku zo súboru a samotné `pn save` prečíta Markdown poslaný cez rúru. `--title` nastaví názov, inak sa použije prvý nadpis `#` alebo prvý riadok. `--tag work,ideas` pridá značky.\n- `pn status` ukáže, či je tento počítač pripojený, a poslednú poznámku, ktorú uložil.\n- `pn logout` odpojí tento počítač.\n- `pn mcp` spustí pn ako nástroj pre AI aplikáciu bez terminálu, pozri [MCP](/sk/help/mcp/).\n- `pn help` (alebo `pn --help`) vypíše všetky príkazy a voľby a `pn --version` vypíše verziu.",
+        "S AI agentom na programovanie pripoj pn raz na počítači, na ktorom agent beží, a potom povedz bežnými slovami: „Ulož tento plán do mojich PrivacyNotes cez pn save so značkou project.“ Agent si môže prečítať `pn --help` pre podrobnosti, napíše Markdown a pošle ho do pn. Ten istý príkaz funguje aj vo tvojich vlastných skriptoch a naplánovaných úlohách:",
+        "- `git log --oneline -20 | pn save --title \"Recent commits\"` uloží tvoje posledné commity.\n- `pbpaste | pn save --tag inbox` uloží, čo si skopíroval, na Macu.\n- `pn save --tag daily report.md` v nočnej úlohe uloží vygenerovaný report.",
+        "Poznámka môže mať až 700 KB Markdownu, 20 značiek a názov dlhý 200 znakov a pn to skontroluje ešte pred odoslaním. Skončí s kódom 0, keď je poznámka uložená, 1, keď ju server odmietne, 2 pri zlom vstupe, 3, keď počítač nie je pripojený, a 4, keď nie je sieť, takže skript môže zareagovať. Uložená poznámka čaká zapečatená, kým sa neotvorí niektorá z tvojich aplikácií; ak sa tak nestane do 90 dní, odstráni sa. Počítač odpojíš tak, že v Nastavenia > CLI zvolíš Odobrať vedľa neho. Čo môže pn a agent vidieť, je v časti [Môže pn alebo AI agent čítať moje poznámky?](/sk/help/cli-security/)."
+      ]
+    },
+    "mcp": {
+      "q": "Môže AI aplikácia ukladať poznámky do PrivacyNotes cez MCP?",
+      "a": [
+        "Áno. MCP (Model Context Protocol) je štandardný spôsob, akým AI aplikácie pripájajú nástroje, a pn, príkazový riadok PrivacyNotes, ho vie sprístupniť. Pridáš ho raz a v ktoromkoľvek chate potom môžeš povedať bežnými slovami: „Ulož zhrnutie tohto chatu do mojich poznámok so značkou meeting.“ Aplikácia zavolá nástroj save_note z pn a poznámka pristane v priečinku Agent tvojich poznámok, na všetkých tvojich zariadeniach po ich ďalšej synchronizácii. Nástroj vie poznámky iba pridávať, takže chat nemôže otvoriť, zmeniť ani odstrániť poznámky, ktoré máš. Je súčasťou Pro.",
+        "Najprv [nastav pn](/sk/help/command-line/) na tom istom počítači a pripoj ho cez `pn login`. Potom otvor nastavenia MCP vo svojej AI aplikácii, obrazovku nastavení alebo súbor ako mcp.json, pridaj tento záznam pod `mcpServers` a aplikáciu reštartuj:",
+        "`\"privacynotes\": { \"command\": \"pn\", \"args\": [\"mcp\"] }`",
+        "Nástroj prijíma Markdown a voliteľne názov a značky, s rovnakými limitmi ako `pn save`: 700 KB, 20 značiek a názov dlhý 200 znakov. Keď niečo uloženie zastaví, nástroj to povie aplikácii slovami, aby ti to mohla oznámiť: pn ešte nie je pripojený, poznámka je príliš veľká alebo ju server odmietol.",
+        "Ak aplikácia hlási, že pn nevie spustiť, zadaj ako príkaz úplnú cestu: tú, ktorú vypíše `which pn`, alebo `where pn` vo Windowse. Aplikácie spustené z Docku alebo z ponuky Štart často nevidia cesty, ktoré vidí tvoj terminál. pn na tom počítači vyžaduje [Node.js](https://nodejs.org/en/download) 20 alebo novší."
       ]
     },
     "browser-extension": {
@@ -483,11 +506,18 @@
         "Otvor Nastavenia > Rozšírenie, pridaj rozšírenie z obchodu svojho prehliadača, vyber, čo môže robiť, a potom zvoľ Vytvoriť kód. Skopíruj jednorazový kód a vlož ho do rozšírenia. Ak ho chceš odstrániť, zvoľ Odobrať vedľa neho v časti Rozšírenia prehliadača na tej istej stránke. Rozšírenie nezaberá jedno z tvojich miest pre zariadenie. [Ako chráni tvoje poznámky](/sk/help/browser-extension-security/)."
       ]
     },
+    "cli-security": {
+      "q": "Môže pn alebo AI agent čítať moje poznámky?",
+      "a": [
+        "Nie. pn drží token, ktorý vie iba pridávať poznámky, a verejný kľúč, ktorý vie iba zapečatiť poznámku pre tvoj účet, nikdy nie kľúč, ktorý tvoje poznámky otvára. Poznámka sa zašifruje na počítači, na ktorom pn beží, a čaká na serveri zapečatená, kým ju neotvorí niektorá z tvojich aplikácií a nezaradí do priečinka Agent. Agent alebo ktokoľvek, kto token skopíruje, teda môže poznámky pridávať, ale nemôže otvoriť, zmeniť ani odstrániť poznámky, ktoré máš.",
+        "Token je uložený v súbore, ktorý môže čítať iba tvoj používateľský účet na tom počítači. Ak chceš jeden počítač odpojiť okamžite, zvoľ v Nastavenia > CLI vedľa neho Odobrať; Vypnúť odpojí všetky. Server vidí, že poznámka prišla, kedy a jej veľkosť zaokrúhlenú nahor. Podrobnosti sú v našom [modeli hrozieb](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "browser-extension-security": {
       "q": "Môže rozšírenie prehliadača čítať moje poznámky?",
       "a": [
         "Nie. Rozšírenie nikdy nedrží kľúč, ktorý otvára tvoje poznámky. Každý uložený záznam zamkne skôr, než opustí tvoj prehliadač, a jedna z tvojich aplikácií ho pri najbližšej synchronizácii premení na poznámku.",
-        "Ak zapneš prihlasovacie údaje, rozšírenie vidí tvoje prihlasovacie údaje, karty, verejnú polovicu kľúčov SSH a záložky, nikdy text poznámky a nikdy súkromný kľúč. Chráni ich PIN alebo prístupový kód, ktorý pre rozšírenie nastavíš, oddelený od kódu aplikácie. Po 10 nesprávnych pokusoch sa prehliadač odpojí, takže kópiu tvojho prehliadača nemožno otvoriť hádaním. Prihlasovacie údaje sa zamknú po 5 minútach bez použitia a keď sa prehliadač zatvorí. Podrobnosti nájdeš v našom [modeli hrozieb](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+        "Ak zapneš prihlasovacie údaje, rozšírenie vidí tvoje prihlasovacie údaje, karty, verejnú polovicu kľúčov SSH a záložky, nikdy text poznámky a nikdy súkromný kľúč. Chráni ich PIN alebo prístupový kód, ktorý pre rozšírenie nastavíš, oddelený od kódu aplikácie. Po 10 nesprávnych pokusoch sa prehliadač odpojí, takže kópiu tvojho prehliadača nemožno otvoriť hádaním. Prihlasovacie údaje sa zamknú po čase, ktorý si vyberieš v rozšírení (15 minút bez použitia, ak to nezmeníš), najneskôr po 7 dňoch a vždy, keď sa prehliadač zatvorí. Podrobnosti nájdeš v našom [modeli hrozieb](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
     "contacts": {

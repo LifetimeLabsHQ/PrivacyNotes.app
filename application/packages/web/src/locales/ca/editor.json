@@ -218,6 +218,8 @@
     "textLabel": "Text de l'enllaç",
     "textPlaceholder": "Opcional; deixa-ho en blanc per mostrar l'URL",
     "selectedTextHint": "El text seleccionat es farà servir com a enllaç",
+    "titleLabel": "Text emergent",
+    "titleHint": "Es mostra quan passes el punter per sobre de l'enllaç",
     "update": "Actualitza",
     "menuOpen": "Obre l'enllaç",
     "menuCopy": "Copia l'enllaç",

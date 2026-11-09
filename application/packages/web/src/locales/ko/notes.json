@@ -263,6 +263,9 @@
     "bodySingle": "<strong>{{filename}}</strong> 파일은 markdown으로 보여요. 읽고 편집할 수 있게 노트로 가져올까요, 아니면 암호화된 첨부 파일로 보관할까요?",
     "bodyMulti": "이 파일 {{count}}개는 markdown으로 보여요. 읽고 편집할 수 있게 노트로 가져올까요, 아니면 암호화된 첨부 파일로 보관할까요?"
   },
+  "archiveConfirm": {
+    "body_other": "<highlight>항목 {{count}}개</highlight>를 아카이브할까요? 목록에서 빠지고 아카이브 보기에 모여요. 아카이브 해제하면 다시 돌아와요."
+  },
   "bulkTrash": {
     "body_other": "<highlight>항목 {{count}}개</highlight>를 삭제할까요? 휴지통으로 옮겨 나중에 복원하거나 영구 삭제할 수 있어요.",
     "confirm": "휴지통으로 이동",

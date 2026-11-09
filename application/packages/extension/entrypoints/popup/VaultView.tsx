@@ -11,14 +11,17 @@
  * Spec: docs/internal/plans/browser-extension-build.md (section 3.4, decisions E4, E8 and E13)
  */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { browser } from 'wxt/browser';
 import { generateTotpCode, parseTotpInput, totpSecondsRemaining } from '@notes/shared';
 import type { BookmarkCopyEntry, CardCopyEntry, CopyEntry, LoginCopyEntry, SshKeyCopyEntry } from '@notes/shared/extension';
 import { ArrowSquareOut, Check, Copy, CreditCard, Fingerprint, GlobeSimple, Key, LinkSimple, ListBullets, LockSimple, NotePencil, Plus, PushPin, User } from '@web/icons';
 import { Button, IconButton } from '@web/ui/Button';
-import { Callout, StatusLine } from '@web/ui/feedback';
+import { Badge, Callout, StatusLine } from '@web/ui/feedback';
+import { Kbd } from '@web/ui/misc';
+import { groupTotpCode } from '@web/TotpRing';
 import { SecretInput } from '@web/PasscodeInput';
+import { useProgressiveReveal } from '@web/useProgressiveReveal';
 import { SectionEyebrow, SETTINGS_HELP } from '@web/settingsUI';
 import { ProMark } from '@web/proMark';
 import type { ContextMenuItem } from '@web/ContextMenu';
@@ -30,8 +33,7 @@ import { byName, forSite, searchEntries } from '../../src/match';
 import { faviconOf, hostOf } from '../../src/favicon';
 import type { TypeFilter } from '../../src/prefs';
 
-/** How many rows "All items" shows before it asks for a search. */
-const ALL_CAP = 100;
+
 
 export type OpenMenu = (e: { clientX: number; clientY: number }, items: ContextMenuItem[]) => void;
 
@@ -274,6 +276,7 @@ function LoginRow({ login, pro, copy, menu, showSite }: { login: LoginCopyEntry;
     return () => clearInterval(timer);
   }, [totp, pro]);
   const code = totp && pro ? generateTotpCode(totp, now) : null;
+  const left = totp ? totpSecondsRemaining(totp.period, now) : 0;
   const site = login.urls[0] ? hostOf(login.urls[0]) : '';
   return (
     <Row
@@ -290,21 +293,40 @@ function LoginRow({ login, pro, copy, menu, showSite }: { login: LoginCopyEntry;
         </>
       }
     >
+      {/* The code line: under the name (ps-9 is the tile and its gap), a
+          "2FA" tag so the number says what it is, and the copy button at the
+          end, in the column of the row's other tools. Under it a 2px bar from
+          the name to the copy button drains over the code's period, red in
+          the last 5 seconds: it ties the code to its copy action (owner,
+          2026-11-06, mockups/extension-2fa-countdown-06nov2026.html, 2). */}
       {totp && (
-        <div className="flex items-center gap-2 text-small">
-          <span className="text-pn-muted">{t('security:mfaPrompt.codeLabel')}</span>
-          {code ? (
-            <>
-              <span className="font-mono text-pn tabular-nums" dir="ltr">{`${code.slice(0, 3)} ${code.slice(3)}`}</span>
-              <span className="text-meta text-pn-muted">{t('auth:loginForm.totpExpiresIn', { seconds: totpSecondsRemaining(totp.period, now) })}</span>
-              <CopyTool label={t('logins.copyCode')} done={t('logins.codeCopied')} value={code} copy={copy}><Copy aria-hidden="true" /></CopyTool>
-            </>
-          ) : (
-            // The live code is Pro, as in the app: the mark stays clickable
-            // and opens the item in the app, where the upgrade is.
-            <button type="button" onClick={() => openUrl(shortcutUrl(login.item))} className="inline-flex">
-              <ProMark />
-            </button>
+        <div className="-mt-0.5 ps-9">
+          <div className="flex items-center gap-2 text-small">
+            <Badge tone="info">{t('security:modal.tabTwoFactor')}</Badge>
+            {code ? (
+              <>
+                <span className={`font-mono font-medium tabular-nums ${left <= 5 ? 'text-danger' : 'text-pn'}`} dir="ltr">{groupTotpCode(code)}</span>
+                <span className="ms-auto">
+                  <CopyTool label={t('logins.copyCode')} done={t('logins.codeCopied')} value={code} copy={copy}><Copy aria-hidden="true" /></CopyTool>
+                </span>
+              </>
+            ) : (
+              // The live code is Pro, as in the app: the mark stays clickable
+              // and opens the item in the app, where the upgrade is.
+              <button type="button" onClick={() => openUrl(shortcutUrl(login.item))} className="inline-flex">
+                <ProMark />
+              </button>
+            )}
+          </div>
+          {code && (
+            <div aria-hidden="true" className="mt-1 h-0.5 overflow-hidden rounded-full bg-divider">
+              <div
+                // A new code starts a new bar, so the refill does not animate.
+                key={Math.floor(now / 1000 / totp.period)}
+                className={`h-full rounded-full transition-[width] duration-1000 ease-linear motion-reduce:transition-none ${left <= 5 ? 'bg-danger' : 'bg-accent'}`}
+                style={{ width: `${(left / totp.period) * 100}%` }}
+              />
+            </div>
           )}
         </div>
       )}
@@ -404,16 +426,34 @@ function Section({ icon, title, count, tools, children }: { icon: typeof GlobeSi
   );
 }
 
-export function VaultSections({ vault, url, query, typeFilter, onAdd, menu }: {
+export function VaultSections({ vault, url, query, typeFilter, onAdd, menu, loginKeys }: {
   vault: Vault;
   url: string;
   query: string;
   typeFilter: TypeFilter;
   onAdd: () => void;
   menu: OpenMenu;
+  /** The browser's key for Copy login, for the hint under one match. */
+  loginKeys?: string;
 }) {
   const { t } = useTranslation('extension');
   const [status, setStatus] = useState<{ tone?: 'danger' | 'success'; text: string } | null>(null);
+  // All items draws 100 rows, and 100 more as the window nears the end:
+  // the app's list reveal. Every item is already open in memory; the steps
+  // only keep the popup fast to open with a large vault. The popup scrolls
+  // the document, so the window's scroll drives it.
+  const reveal = useProgressiveReveal();
+  const total = useRef(0);
+  const { onScroll, reset } = reveal;
+  // Another type is another list: it starts at the top again.
+  useEffect(() => reset(), [typeFilter, reset]);
+  useEffect(() => {
+    const el = document.scrollingElement as HTMLElement | null;
+    if (!el) return;
+    const grow = () => onScroll(el, total.current);
+    window.addEventListener('scroll', grow, { passive: true });
+    return () => window.removeEventListener('scroll', grow);
+  }, [onScroll]);
 
   const copy: Copy = async (value, done, secret = true) => {
     if (!(await isUnlocked())) {
@@ -451,6 +491,7 @@ export function VaultSections({ vault, url, query, typeFilter, onAdd, menu }: {
   const cards = typeFilter === 'all' && here.length === 0 ? entries.filter((e) => e.kind === 'card').sort(byName).slice(0, 10) : [];
   const pinned = entries.filter((e) => e.pinned).sort(byName);
   const all = entries.sort(byName);
+  total.current = all.length;
   const site = hostOf(url);
   const tools = (
     <>
@@ -459,25 +500,27 @@ export function VaultSections({ vault, url, query, typeFilter, onAdd, menu }: {
           <Plus aria-hidden="true" />
         </IconButton>
       )}
-      <IconButton label={t('logins.lock')} onClick={() => void vault.lock()}>
-        <LockSimple aria-hidden="true" />
-      </IconButton>
     </>
   );
   const showHere = !!site && typeFilter !== 'card' && typeFilter !== 'ssh';
   return (
     <div className="p-3 space-y-4">
-      {showHere ? (
+      {showHere && (
         <Section icon={GlobeSimple} title={t('logins.forSite', { site })} tools={tools}>
           {here.length ? rows(here)
             : cards.length ? <><p className={SETTINGS_HELP}>{t('vault.cardsHere')}</p>{rows(cards)}</>
             : <p className={SETTINGS_HELP}>{typeFilter === 'bookmark' ? t('vault.noBookmarkHere') : t('logins.none')}</p>}
+          {/* The key copies only when one login matches; two or more open
+              this window, so the hint shows for exactly one. */}
+          {loginKeys && here.filter((e) => e.kind === 'login').length === 1 && (
+            <p className={SETTINGS_HELP}>
+              <Trans t={t} i18nKey="shortcuts.loginHint" components={{ key: <Kbd>{loginKeys}</Kbd> }} />
+            </p>
+          )}
           {here.length === 0 && typeFilter !== 'bookmark' && (
             <Button action="add" onClick={onAdd}>{t('menu.addLogin')}</Button>
           )}
         </Section>
-      ) : (
-        <div className="flex justify-end">{tools}</div>
       )}
       {feedback}
       {pinned.length > 0 && (
@@ -490,8 +533,7 @@ export function VaultSections({ vault, url, query, typeFilter, onAdd, menu }: {
           <p className={SETTINGS_HELP}>{t('vault.noneAtAll')}</p>
         ) : (
           <>
-            {rows(all.slice(0, ALL_CAP), true)}
-            {all.length > ALL_CAP && <p className={`${SETTINGS_HELP} pt-2`}>{t('vault.more', { count: all.length - ALL_CAP })}</p>}
+            {rows(all.slice(0, reveal.visible), true)}
           </>
         )}
         {checking}

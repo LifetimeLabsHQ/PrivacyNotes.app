@@ -216,6 +216,8 @@
     "textLabel": "リンクテキスト",
     "textPlaceholder": "任意。空欄の場合はURLを表示",
     "selectedTextHint": "選択中のテキストがリンクになります",
+    "titleLabel": "ホバー時のテキスト",
+    "titleHint": "リンクにポインタを合わせると表示されます",
     "update": "更新",
     "menuOpen": "リンクを開く",
     "menuCopy": "リンクをコピー",

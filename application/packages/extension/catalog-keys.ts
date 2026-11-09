@@ -4,6 +4,7 @@
 // Spec: docs/internal/plans/browser-extension-build.md (section 5, strings; decision E5)
 export const BORROWED_KEYS: readonly string[] = [
   'common:actions',
+  'common:palette.commands.help',
   'common:cardForm.notes',
   'notes:newMenu.note',
   'notes:newMenu.bookmark',
@@ -20,6 +21,7 @@ export const BORROWED_KEYS: readonly string[] = [
   'shell:tagsRail.vault',
   'shell:tagsRail.bookmarks',
   'security:timeout',
+  'security:modal.tabTwoFactor',
   'settingsSearch:resultCount',
   'common:sshKeyForm.copyPublicKey',
   'editor:noteLink.open',
@@ -29,7 +31,14 @@ export const BORROWED_KEYS: readonly string[] = [
   'security:pinInput',
   'security:pinTab.kindPin',
   'security:pinTab.kindPasscode',
+  'security:pinTab.kindGroup',
+  'security:pinTab.currentPin',
+  'security:pinTab.currentPasscode',
+  'security:pinTab.newPin',
+  'security:pinTab.newPasscode',
+  'security:pinTab.pinSaved',
+  'security:pinTab.passcodeSaved',
+  'common:state.saving',
   'security:passcodeInput',
-  'security:mfaPrompt.codeLabel',
   'security:connectedAccounts.disconnect',
 ];

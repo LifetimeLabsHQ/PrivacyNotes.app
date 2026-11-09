@@ -16,6 +16,7 @@ import { Button } from '@web/ui/Button';
 import { Callout, Spinner, StatusLine } from '@web/ui/feedback';
 import { Switch } from '@web/Switch';
 import { SETTINGS_HELP } from '@web/settingsUI';
+import { HoverLabel } from '@web/HoverLabel';
 import { capturePage, type CapturedPage } from '../../src/capture';
 import { buildClip, clippable, type ClipMode } from '../../src/clipping';
 import { readPrefs, writePrefs } from '../../src/prefs';
@@ -32,7 +33,7 @@ type Phase =
   | { at: 'saving' }
   | { at: 'done'; result: SaveResult; tooLong?: boolean };
 
-export function ClipView({ connection, bookmark }: { connection: Connection; bookmark: BookmarkCopyEntry | null }) {
+export function ClipView({ connection, bookmark, bookmarkKeys }: { connection: Connection; bookmark: BookmarkCopyEntry | null; bookmarkKeys?: string }) {
   const { t } = useTranslation('extension');
   const [phase, setPhase] = useState<Phase>({ at: 'reading' });
   const [pictures, setPictures] = useState(true);
@@ -124,9 +125,12 @@ export function ClipView({ connection, bookmark }: { connection: Connection; boo
                   {t('vault.bookmarked')}
                 </Button>
               ) : (
-                <Button icon={<BookmarkSimple aria-hidden="true" />} onClick={() => void saveBookmark(page)}>
-                  {t('notes:newMenu.bookmark')}
-                </Button>
+                // The tooltip names the key that does the same from any page.
+                <HoverLabel label={t('menu.savePageBookmark')} keys={bookmarkKeys} position="below">
+                  <Button icon={<BookmarkSimple aria-hidden="true" />} onClick={() => void saveBookmark(page)} className="w-full">
+                    {t('notes:newMenu.bookmark')}
+                  </Button>
+                </HoverLabel>
               )}
             </div>
             {bookmark?.note && (

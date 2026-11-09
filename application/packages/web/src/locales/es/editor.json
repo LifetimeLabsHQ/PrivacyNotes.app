@@ -217,6 +217,8 @@
     "textLabel": "Texto del enlace",
     "textPlaceholder": "Opcional, déjalo en blanco para mostrar la URL",
     "selectedTextHint": "El texto seleccionado se usará como enlace",
+    "titleLabel": "Texto emergente",
+    "titleHint": "Se muestra al pasar el puntero sobre el enlace",
     "update": "Actualizar",
     "menuOpen": "Abrir enlace",
     "menuCopy": "Copiar enlace",

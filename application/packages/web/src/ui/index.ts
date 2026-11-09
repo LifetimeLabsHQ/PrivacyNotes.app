@@ -15,6 +15,8 @@ export { Checkbox } from './Checkbox';
 export { TaskCheckbox } from './TaskCheckbox';
 export { Popover, Kbd, Divider, CopyButton, IconTile } from './misc';
 export { GridCard } from './GridCard';
+export { FeaturePitch, PitchBadge } from './FeaturePitch';
+export { TerminalBlock } from './TerminalBlock';
 
 /**
  * @catalog Switch

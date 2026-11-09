@@ -471,9 +471,32 @@
     "save-page-as-note": {
       "q": "Puis-je enregistrer une page web en note ?",
       "a": [
-        "Oui. [Ouvre un signet](/fr/help/bookmarks/) et choisis Enregistrer en note, ou choisis Capturer une page dans le menu + et colle un lien. Le texte principal de la page devient une note ordinaire dans Notes, liée à son signet, et jusqu’à 20 de ses images sont stockées avec la note, chiffrées comme toute image que tu ajoutes toi-même, sauf si tu désactives Enregistrer les images dans la fenêtre Capturer une page. L’enregistrement de pages est gratuit dans tous les forfaits, et [les images comptent dans ton stockage](/fr/help/storage-usage/).",
+        "Oui. [Ouvre un signet](/fr/help/bookmarks/) et choisis Enregistrer en note, ou choisis Capturer une page dans le menu + et colle un lien. Le texte principal de la page devient une note ordinaire dans Notes, liée au signet quand tu l’as enregistrée depuis un signet, et jusqu’à 20 de ses images sont stockées avec la note, chiffrées comme toute image que tu ajoutes toi-même, sauf si tu désactives Enregistrer les images dans la fenêtre Capturer une page. L’enregistrement de pages est gratuit dans tous les forfaits, et [les images comptent dans ton stockage](/fr/help/storage-usage/).",
         "Les apps pour ordinateur et téléphone téléchargent la page et ses images directement depuis ton appareil. L’app web les télécharge via notre serveur, qui les transmet sans conserver ni la page, ni les images, ni leurs adresses. Les pages derrière une connexion et les pages construites par des scripts peuvent revenir vides : garde-les plutôt comme signet.",
         "Avec l’[extension de navigateur](/fr/help/browser-extension/), tu peux aussi enregistrer la page que tu lis, y compris les pages derrière une connexion."
+      ]
+    },
+    "command-line": {
+      "q": "Puis-je ajouter des notes depuis la ligne de commande (CLI) ou avec un agent IA ?",
+      "a": [
+        "Oui, avec pn, l'interface en ligne de commande (CLI) de PrivacyNotes. Tout ce qui s'exécute dans un terminal peut l'utiliser : tes propres scripts, tes tâches planifiées et les agents IA de programmation. Envoie du Markdown, ajoute un titre et des étiquettes, et la note arrive dans le dossier Agent de tes notes, sur tous tes appareils après leur prochaine synchronisation. pn ne peut qu'ajouter des notes : il ne peut ni ouvrir, ni modifier, ni supprimer les notes que tu as. Il nécessite [Node.js](https://nodejs.org/en/download) 20 ou plus récent, et il fait partie de Pro.",
+        "Pour le configurer, ouvre Paramètres > CLI dans l'app de bureau et choisis Activer. Choisis Installer, qui place pn sur cet ordinateur, puis Créer un code. Dans un nouveau terminal, lance `pn login` et colle le code. Enregistre ensuite ta première note :",
+        "`echo \"# Hello\" | pn save`",
+        "pn a peu de commandes, parce qu'il fait une seule chose. Chacune affiche une courte fiche pour une personne, ou une ligne de JSON avec `--json` pour un script :",
+        "- `pn login` connecte cet ordinateur avec un code à usage unique venu de Paramètres > CLI. Colle le code, ou envoie-le par un tube.\n- `pn save note.md` ajoute une note depuis un fichier, et `pn save` seul lit le Markdown envoyé par un tube. `--title` définit le titre, sinon le premier titre `#` ou la première ligne est utilisé. `--tag work,ideas` ajoute des étiquettes.\n- `pn status` indique si cet ordinateur est connecté, et la dernière note qu'il a enregistrée.\n- `pn logout` déconnecte cet ordinateur.\n- `pn mcp` lance pn comme outil pour une app d'IA sans terminal, voir [MCP](/fr/help/mcp/).\n- `pn help` (ou `pn --help`) liste chaque commande et chaque option, et `pn --version` affiche la version.",
+        "Avec un agent IA de programmation, connecte pn une seule fois sur l'ordinateur où l'agent s'exécute, puis demande-lui en langage courant : « Enregistre ce plan dans mon PrivacyNotes avec pn save, avec l'étiquette project. » L'agent peut lire `pn --help` pour les détails, écrit le Markdown et l'envoie par un tube. La même commande fonctionne dans tes propres scripts et tes tâches planifiées :",
+        "- `git log --oneline -20 | pn save --title \"Recent commits\"` enregistre tes derniers commits.\n- `pbpaste | pn save --tag inbox` enregistre ce que tu as copié, sur un Mac.\n- `pn save --tag daily report.md` dans une tâche de nuit enregistre un rapport généré.",
+        "Une note peut contenir jusqu'à 700 Ko de Markdown, 20 étiquettes et un titre de 200 caractères, et pn le vérifie avant d'envoyer. Il se termine avec 0 quand la note est enregistrée, 1 quand le serveur la refuse, 2 pour une entrée incorrecte, 3 quand l'ordinateur n'est pas connecté et 4 quand il n'y a pas de réseau, pour qu'un script puisse réagir. Une note enregistrée attend, scellée, qu'une de tes apps s'ouvre ; si aucune ne s'ouvre dans les 90 jours, elle est supprimée. Pour déconnecter un ordinateur, choisis Retirer à côté de lui dans Paramètres > CLI. Ce que pn et un agent peuvent voir est expliqué dans [pn ou un agent IA peuvent-ils lire mes notes ?](/fr/help/cli-security/)."
+      ]
+    },
+    "mcp": {
+      "q": "Une app d'IA peut-elle enregistrer des notes dans PrivacyNotes via MCP ?",
+      "a": [
+        "Oui. MCP (Model Context Protocol) est la méthode standard pour brancher des outils dans les apps d'IA, et pn, l'interface en ligne de commande de PrivacyNotes, peut en jouer le rôle. Ajoute-le une fois, et dans n'importe quelle conversation tu peux demander en langage courant : « Enregistre un résumé de cette conversation dans mes notes, avec l'étiquette meeting. » L'app appelle l'outil save_note de pn, et la note va dans le dossier Agent de tes notes, sur tous tes appareils après leur prochaine synchronisation. L'outil ne peut qu'ajouter des notes, donc une conversation ne peut ni ouvrir, ni modifier, ni supprimer les notes que tu as. Il fait partie de Pro.",
+        "[Configure d'abord pn](/fr/help/command-line/) sur le même ordinateur et connecte-le avec `pn login`. Ouvre ensuite les paramètres MCP de ton app d'IA, un écran de paramètres ou un fichier comme mcp.json, ajoute cette entrée sous `mcpServers`, et redémarre l'app :",
+        "`\"privacynotes\": { \"command\": \"pn\", \"args\": [\"mcp\"] }`",
+        "L'outil prend le Markdown, et en option un titre et des étiquettes, avec les mêmes limites que `pn save` : 700 Ko, 20 étiquettes et un titre de 200 caractères. Quand quelque chose bloque un enregistrement, l'outil le dit à l'app en toutes lettres, pour qu'elle puisse te le dire : pn n'est pas encore connecté, la note est trop volumineuse, ou le serveur l'a refusée.",
+        "Si l'app dit qu'elle ne peut pas démarrer pn, donne le chemin complet comme commande : celui qu'affiche `which pn`, ou `where pn` sous Windows. Les apps lancées depuis le Dock ou le menu Démarrer ne voient souvent pas les chemins que voit ton terminal. pn nécessite [Node.js](https://nodejs.org/en/download) 20 ou plus récent sur cet ordinateur."
       ]
     },
     "browser-extension": {
@@ -483,11 +506,18 @@
         "Ouvre Paramètres > Extension, ajoute l’extension depuis la boutique de ton navigateur, choisis ce qu’elle a le droit de faire, puis choisis Créer un code. Copie le code à usage unique et colle-le dans l’extension. Pour la retirer, choisis Retirer à côté d’elle sous Extensions de navigateur, sur la même page. Une extension n’occupe aucune place d’appareil. [Comment elle protège tes notes](/fr/help/browser-extension-security/)."
       ]
     },
+    "cli-security": {
+      "q": "pn ou un agent IA peuvent-ils lire mes notes ?",
+      "a": [
+        "Non. pn détient un jeton qui ne peut qu'ajouter des notes et une clé publique qui ne peut que sceller une note pour ton compte, jamais la clé qui ouvre tes notes. Une note est chiffrée sur l'ordinateur qui exécute pn et attend sur le serveur, scellée, qu'une de tes apps l'ouvre et la range dans le dossier Agent. Un agent, ou quiconque copie le jeton, peut donc ajouter des notes mais ne peut ni ouvrir, ni modifier, ni supprimer les notes que tu as.",
+        "Le jeton est conservé dans un fichier que seul ton compte utilisateur sur cet ordinateur peut lire. Pour couper un ordinateur immédiatement, choisis Retirer à côté de lui dans Paramètres > CLI ; Désactiver les déconnecte tous. Le serveur voit qu'une note est arrivée, quand, et sa taille arrondie au-dessus. Les détails sont dans notre [modèle de menace](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "browser-extension-security": {
       "q": "L’extension de navigateur peut-elle lire mes notes ?",
       "a": [
         "Non. L’extension ne détient jamais la clé qui ouvre tes notes. Elle verrouille chaque capture avant qu’elle quitte ton navigateur, et l’une de tes apps la transforme en note à sa prochaine synchronisation.",
-        "Si tu actives les identifiants, l’extension voit tes identifiants, tes cartes bancaires, la moitié publique de tes clés SSH et tes signets, jamais le texte d’une note et jamais une clé privée. Ils sont protégés par un PIN ou un code d’accès que tu définis pour l’extension, distinct de celui de l’app. Après 10 essais ratés, le navigateur est déconnecté : une copie de ton navigateur ne peut donc pas être ouverte par tâtonnement. Les identifiants se verrouillent après 5 minutes sans utilisation et à la fermeture du navigateur. Les détails sont dans notre [modèle de menaces](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+        "Si tu actives les identifiants, l’extension voit tes identifiants, tes cartes bancaires, la moitié publique de tes clés SSH et tes signets, jamais le texte d’une note et jamais une clé privée. Ils sont protégés par un PIN ou un code d’accès que tu définis pour l’extension, distinct de celui de l’app. Après 10 essais ratés, le navigateur est déconnecté : une copie de ton navigateur ne peut donc pas être ouverte par tâtonnement. Les identifiants se verrouillent après le délai que tu choisis dans l’extension (15 minutes sans utilisation si tu ne le changes pas), au bout de 7 jours au plus tard, et toujours à la fermeture du navigateur. Les détails sont dans notre [modèle de menaces](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
     "contacts": {

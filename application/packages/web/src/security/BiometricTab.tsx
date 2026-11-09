@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Fingerprint, LockKey, ShieldSlash } from '../icons';
+import { AppWindow, Check, FileLock, Fingerprint, LockKey, ShieldSlash, Timer } from '../icons';
 import { ConfirmModal } from '../ConfirmModal';
-import { Button } from '../ui';
+import { Button, Callout, FeedbackButton, Select } from '../ui';
 import {
   answerBindingOffer,
   buildPinWrap,
@@ -35,7 +35,7 @@ import { signInStamp } from '../liveSignIn';
 import type { PinInputHandle } from '../PinInput';
 import { SecretInput } from '../PasscodeInput';
 import { secretReady } from '../secretKind';
-import { ROW_TITLE, SectionEyebrow, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, SETTINGS_SELECT, SettingsCallout } from '../settingsUI';
+import { ROW_TITLE, RowTitle, SectionEyebrow, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, SettingsCallout } from '../settingsUI';
 import { Switch } from '../Switch';
 import { isTrustedDevice } from '../trustStorage';
 import { isDemoMode } from '../demo';
@@ -47,9 +47,9 @@ import { TIMEOUT_OPTIONS } from './timeoutOptions';
 import { HelpChip } from '../HelpChip';
 
 /**
- * Biometric tab - enroll/disable WebAuthn platform authenticator
- * (Touch ID, Face ID, Windows Hello) plus the app-lock toggle and the
- * app lock's own re-lock window.
+ * Lock tab - both lock windows in one box at the top (#662), the app-lock
+ * toggle, then enroll/disable the WebAuthn platform authenticator
+ * (Touch ID, Face ID, Windows Hello).
  */
 /** True only where a backgrounded app leaves a picture behind. */
 const COVERS_ON_SWITCH = shouldArmPrivacyScreen(true, detectPlatform());
@@ -62,6 +62,8 @@ export function BiometricTab({
   onSettingsChange,
   timeoutMinutes,
   onTimeoutChange,
+  pinTimeoutMinutes,
+  onPinTimeoutChange,
   onSetUpPin,
 }: {
   phrase: string;
@@ -70,10 +72,14 @@ export function BiometricTab({
   /** `base` is the copy this surface was rendered with; the parent applies
    *  only the credential keys that differ between it and `next`. */
   onSettingsChange: (next: UserSettings, base: UserSettings) => void;
-  /** The app lock's own re-lock window. The PIN tab owns a separate one for
-   *  the phrase view and PIN-protected notes. */
+  /** The app lock's own re-lock window. */
   timeoutMinutes: number;
   onTimeoutChange: (minutes: number) => void;
+  /** The separate window for the phrase view and PIN-protected notes. It
+   *  sits beside the app lock's so the two cannot be mistaken for each
+   *  other (#662: a user set this one and expected the app lock to follow). */
+  pinTimeoutMinutes: number;
+  onPinTimeoutChange: (minutes: number) => void;
   /** Send the user to the PIN tab to create the credential the app lock
    *  needs. The parent brings them back here once it exists. */
   onSetUpPin: () => void;
@@ -136,6 +142,20 @@ export function BiometricTab({
   // here. A synced `pinHash` is not the question: a PIN this device has not
   // cached yet unwraps nothing.
   const lockReady = enrolled || hasPin() || hasPinWrappedPhrase();
+  // The app lock window shows only while the lock is armed, the same state
+  // the switch shows; the PIN window works only once this device has a PIN.
+  const appLockOn = lockReady && userSettings.appLockEnabled;
+  const pinSet = hasPin();
+  const appTimerId = useId();
+  const pinTimerId = useId();
+  const timeoutOptions = TIMEOUT_OPTIONS.map((opt) => (
+    <option key={opt.value} value={opt.value}>
+      {t(opt.labelKey)}
+    </option>
+  ));
+  // The fingerprint is offered in the setup card while it is the other way
+  // to unlock, so the section below does not offer it a second time.
+  const offerBiometric = deviceSupported === true && trusted && !enrolled;
 
   useEffect(() => {
     void canUseBiometric().then(setDeviceSupported);
@@ -339,13 +359,194 @@ export function BiometricTab({
 
   return (
     <div className="space-y-5">
-      <p className={SETTINGS_HELP}>
-        {t('biometricTab.description')}
-      </p>
+      {/* Three sections (#662). The app lock is one row: its switch, and
+          under it the window that brings the lock screen back, shown only
+          while the lock is on, so no timer points at a switch elsewhere.
+          Protected notes keep their own window. Every row that cannot work
+          yet says what it needs in the same help line. */}
+      {/* One question at the top while this device has no PIN, in place of
+          a "Set a PIN" line in every row (#662). A PIN opens all three
+          sections; a fingerprint or face opens only the app lock, so a
+          fingerprint alone still leaves the card, asking for the PIN that
+          protected notes need. */}
+      {!pinSet && (
+        <Callout
+          title={enrolled ? t('biometricTab.setupAddPinTitle') : t('biometricTab.setupTitle')}
+          action={
+            <>
+              <FeedbackButton icon={<LockKey aria-hidden="true" />} onClick={onSetUpPin}>
+                {t('modal.tabPin')}
+              </FeedbackButton>
+              {offerBiometric && (
+                <FeedbackButton icon={<Fingerprint aria-hidden="true" />} onClick={() => void handleEnroll()} disabled={busy}>
+                  {busy ? t('biometricTab.settingUp') : t('biometricTab.setupBiometrics')}
+                </FeedbackButton>
+              )}
+            </>
+          }
+        >
+          {enrolled ? t('pinTab.protectReason') : (
+            <>
+              {t('biometricTab.setupPin')}
+              {offerBiometric && <> {t('biometricTab.setupBiometric')}</>}
+            </>
+          )}
+        </Callout>
+      )}
 
-      {!trusted && (
-        <div className="rounded-md border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 p-3 text-body text-amber-800 dark:text-amber-200">
-          {t('biometricTab.trustFirst')}
+      <div className="space-y-3">
+        <SectionEyebrow icon={LockKey}>{t('biometricTab.appLockHeading')}</SectionEyebrow>
+
+        {!trusted && (
+          <div className="rounded-md border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 p-3 text-body text-amber-800 dark:text-amber-200">
+            {t('biometricTab.trustFirst')}
+          </div>
+        )}
+
+        {/* Not offered on a device the user marked untrusted: the wrap it
+            creates is a durable, offline-crackable copy of the master phrase,
+            which is the opposite of what that checkbox promises. A lock that
+            is already armed keeps its switch, so nobody is left without a way
+            to turn one off. */}
+        {(trusted || userSettings.appLockEnabled) && (
+          <div>
+            {/* The switch shows what this device does, not what the flag
+                says. The flag is this device's own (#662), but a first pull
+                copies the account's value, so it can sit true here with
+                nothing to open the lock with, where the lock never engages -
+                a switch reading "on" over a line explaining that it cannot
+                work is the confusing half of that state. */}
+            <Switch
+              setting="security.appLock"
+              icon={<AppWindow className="text-accent" />}
+              label={t('biometricTab.lockOnOpen')}
+              labelClassName={`${ROW_TITLE} ${lockReady ? 'text-pn' : 'text-pn-muted'}`}
+              description={
+                <>
+                  {t('biometricTab.lockOnOpenHint')}
+                  {/* Phone only. The desktop apps and the browser show no stored
+                      picture of a backgrounded app, so there is nothing to cover
+                      and the sentence would be untrue on three platforms.
+                      Spec: docs/internal/specs/app-switcher-privacy-screen.md */}
+                  {COVERS_ON_SWITCH && (
+                    <span className="block mt-0.5">{t('biometricTab.lockHidesOnSwitch')}</span>
+                  )}
+                </>
+              }
+              checked={appLockOn}
+              onChange={() => void handleAppLockToggle()}
+              disabled={!lockReady}
+            />
+            {appLockOn && (
+              <div data-setting="security.relockAfter" className="mt-3 space-y-1.5">
+                <label htmlFor={appTimerId}>
+                  <RowTitle icon={Timer}>{t('biometricTab.relockAgainAfter')}</RowTitle>
+                </label>
+                <Select
+                  id={appTimerId}
+                  size="sm"
+                  className="w-full"
+                  value={String(timeoutMinutes)}
+                  onChange={(e) => onTimeoutChange(Number(e.target.value))}
+                >
+                  {timeoutOptions}
+                </Select>
+              </div>
+            )}
+          </div>
+        )}
+
+        {pinConfirm && (
+          <div className="rounded-md border border-divider bg-surface-1 p-3 space-y-3">
+            <p className={`${SETTINGS_HELP} leading-relaxed`}>
+              {pinConfirmKind === 'passcode' ? t('biometricTab.confirmPasscodeForLock') : t('biometricTab.confirmPinForLock')}
+            </p>
+            {/* Same shape as the PIN tab's current-PIN step: eyebrow, compact
+                boxes, then the buttons. The keys live under pinTab because that
+                tab owns this wording; the control is the same control. */}
+            <div className="space-y-1.5">
+              <SectionEyebrow className="text-center">
+                {pinConfirmKind === 'passcode' ? t('pinTab.currentPasscode') : t('pinTab.currentPin')}
+              </SectionEyebrow>
+              <SecretInput
+                kind={pinConfirmKind}
+                ref={pinConfirmRef}
+                value={pinConfirmValue}
+                onChange={(v) => {
+                  setPinConfirmValue(v);
+                  setPinConfirmError(null);
+                }}
+                onComplete={(v) => void confirmPinForAppLock(v)}
+                autoFocus
+                compact
+                disabled={pinConfirmBusy}
+              />
+            </div>
+            {pinConfirmError && (
+              <p className="text-body text-danger text-center">
+                {pinConfirmError}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => void confirmPinForAppLock(pinConfirmValue)}
+                disabled={!secretReady(pinConfirmKind, pinConfirmValue) || pinConfirmBusy}
+                className={`flex-1 ${SETTINGS_BTN_PRIMARY}`}
+              >
+                {pinConfirmBusy ? t('security:lockScreen.checking') : t('pinTab.verify')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPinConfirm(false);
+                  setPinConfirmValue('');
+                  setPinConfirmError(null);
+                }}
+                className="flex-1 rounded-md border border-divider hover:bg-surface-2 px-3 py-2 text-body transition"
+              >
+                {t('common:actions.cancel')}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div data-setting="security.reaskAfter" className="pt-4 border-t border-divider space-y-1.5">
+        <SectionEyebrow icon={FileLock} className="mb-2">{t('biometricTab.notesHeading')}</SectionEyebrow>
+        <label htmlFor={pinTimerId}>
+          <RowTitle icon={Timer}>{t('biometricTab.reaskAfter')}</RowTitle>
+        </label>
+        <Select
+          id={pinTimerId}
+          size="sm"
+          className="w-full disabled:opacity-50"
+          value={String(pinTimeoutMinutes)}
+          onChange={(e) => onPinTimeoutChange(Number(e.target.value))}
+          disabled={!pinSet}
+        >
+          {timeoutOptions}
+        </Select>
+        <p className={`${SETTINGS_HELP} leading-relaxed`}>
+          {t('biometricTab.reaskHint')}
+        </p>
+      </div>
+
+      {/* Between the switch and the fingerprint buttons, the two controls
+          whose failures land here. */}
+      {error && (
+        <p className="text-body text-danger">{error}</p>
+      )}
+      {successFlash && (
+        <p className="text-body text-accent text-center">{t('biometricTab.enabledFlash')}</p>
+      )}
+
+      {!(offerBiometric && !pinSet) && (
+        <div className="pt-4 border-t border-divider space-y-2">
+          <SectionEyebrow icon={Fingerprint}>{t('biometricTab.biometricHeading')}</SectionEyebrow>
+          <p className={SETTINGS_HELP}>
+            {t('biometricTab.description')}
+          </p>
         </div>
       )}
 
@@ -355,14 +556,7 @@ export function BiometricTab({
         </div>
       )}
 
-      {error && (
-        <p className="text-body text-danger">{error}</p>
-      )}
-      {successFlash && (
-        <p className="text-body text-accent text-center">{t('biometricTab.enabledFlash')}</p>
-      )}
-
-      {deviceSupported && trusted && (
+      {deviceSupported && trusted && !(offerBiometric && !pinSet) && (
         enrolled ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between rounded-md border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/20 p-3">
@@ -379,7 +573,13 @@ export function BiometricTab({
             )}
             {/* Unbound, the wrap key sits in storage beside the phrase it opens:
                 a gate for people nearby, not a lock for a copy of the device. */}
-            {!bound && (
+            {/* One box for the weaker enrollment (#662 review). Where this
+                browser's passkey gave no PRF, one paragraph says the cause,
+                the weakness and the fix; otherwise the weakness alone, with
+                the set-up-again offer below it. */}
+            {cannotBind ? (
+              <SettingsCallout>{t('biometricTab.cannotBind')}</SettingsCallout>
+            ) : !bound && (
               <SettingsCallout>{t('biometricTab.unboundWeaker')}</SettingsCallout>
             )}
             {canAgain && (
@@ -417,9 +617,6 @@ export function BiometricTab({
                 )}
               </div>
             )}
-            {cannotBind && (
-              <SettingsCallout>{t('biometricTab.cannotBind')}</SettingsCallout>
-            )}
 
             {/* The quiet look: it only opens the confirm, which carries the danger. */}
             <Button icon={<ShieldSlash aria-hidden="true" className="shrink-0" />} className="w-full justify-center" onClick={() => setShowDisableConfirm(true)}>
@@ -439,137 +636,6 @@ export function BiometricTab({
             </button>
           </div>
         )
-      )}
-
-      {/* Not offered on a device the user marked untrusted: the wrap it
-          creates is a durable, offline-crackable copy of the master phrase,
-          which is the opposite of what that checkbox promises. A lock that
-          is already armed keeps its switch, so nobody is left without a way
-          to turn one off. */}
-      {(trusted || userSettings.appLockEnabled) && (
-        <div className="pt-4 border-t border-divider">
-          {/* The switch shows what this device does, not what the flag
-              says. The flag is this device's own (#662), but a first pull
-              copies the account's value, so it can sit true here with
-              nothing to open the lock with, where the lock never engages -
-              a switch reading "on" over a line explaining that it cannot
-              work is the confusing half of that state. */}
-          <Switch
-            setting="security.appLock"
-            icon={<LockKey className="text-accent" />}
-            label={t('biometricTab.lockOnOpen')}
-            labelClassName={`${ROW_TITLE} ${lockReady ? 'text-pn' : 'text-pn-muted'}`}
-            description={
-              <>
-                {t('biometricTab.lockOnOpenHint')}
-                {/* Phone only. The desktop apps and the browser show no stored
-                    picture of a backgrounded app, so there is nothing to cover
-                    and the sentence would be untrue on three platforms.
-                    Spec: docs/internal/specs/app-switcher-privacy-screen.md */}
-                {COVERS_ON_SWITCH && (
-                  <span className="block mt-0.5">{t('biometricTab.lockHidesOnSwitch')}</span>
-                )}
-              </>
-            }
-            checked={lockReady && userSettings.appLockEnabled}
-            onChange={() => void handleAppLockToggle()}
-            disabled={!lockReady}
-          />
-          {/* The switch used to be absent instead of dim, which left the tab
-              silent about the app lock on a device with neither credential -
-              nothing on screen said the feature existed or what it wanted. */}
-          {!lockReady && (
-            <SettingsCallout className="mt-2.5">
-              <span>{t('biometricTab.lockNeedsCredential')}</span>{' '}
-              <button
-                type="button"
-                onClick={onSetUpPin}
-                className="text-accent underline underline-offset-2 hover:no-underline"
-              >
-                {t('biometricTab.setUpPin')}
-              </button>
-            </SettingsCallout>
-          )}
-        </div>
-      )}
-
-      {pinConfirm && (
-        <div className="rounded-md border border-divider bg-surface-1 p-3 space-y-3">
-          <p className={`${SETTINGS_HELP} leading-relaxed`}>
-            {pinConfirmKind === 'passcode' ? t('biometricTab.confirmPasscodeForLock') : t('biometricTab.confirmPinForLock')}
-          </p>
-          {/* Same shape as the PIN tab's current-PIN step: eyebrow, compact
-              boxes, then the buttons. The keys live under pinTab because that
-              tab owns this wording; the control is the same control. */}
-          <div className="space-y-1.5">
-            <SectionEyebrow className="text-center">
-              {pinConfirmKind === 'passcode' ? t('pinTab.currentPasscode') : t('pinTab.currentPin')}
-            </SectionEyebrow>
-            <SecretInput
-              kind={pinConfirmKind}
-              ref={pinConfirmRef}
-              value={pinConfirmValue}
-              onChange={(v) => {
-                setPinConfirmValue(v);
-                setPinConfirmError(null);
-              }}
-              onComplete={(v) => void confirmPinForAppLock(v)}
-              autoFocus
-              compact
-              disabled={pinConfirmBusy}
-            />
-          </div>
-          {pinConfirmError && (
-            <p className="text-body text-danger text-center">
-              {pinConfirmError}
-            </p>
-          )}
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => void confirmPinForAppLock(pinConfirmValue)}
-              disabled={!secretReady(pinConfirmKind, pinConfirmValue) || pinConfirmBusy}
-              className={`flex-1 ${SETTINGS_BTN_PRIMARY}`}
-            >
-              {pinConfirmBusy ? t('security:lockScreen.checking') : t('pinTab.verify')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setPinConfirm(false);
-                setPinConfirmValue('');
-                setPinConfirmError(null);
-              }}
-              className="flex-1 rounded-md border border-divider hover:bg-surface-2 px-3 py-2 text-body transition"
-            >
-              {t('common:actions.cancel')}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {(enrolled || hasPin()) && userSettings.appLockEnabled && (
-        <div data-setting="security.relockAfter">
-          <label className="block">
-            <SectionEyebrow className="mb-2">
-              {t('biometricTab.relockAfter')}
-            </SectionEyebrow>
-            <select
-              value={String(timeoutMinutes)}
-              onChange={(e) => onTimeoutChange(Number(e.target.value))}
-              className={`w-full ${SETTINGS_SELECT}`}
-            >
-              {TIMEOUT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {t(opt.labelKey)}
-                </option>
-              ))}
-            </select>
-            <p className="text-small text-pn-soft mt-1.5 leading-relaxed">
-              {t('biometricTab.relockHint')}
-            </p>
-          </label>
-        </div>
       )}
 
       {/* Independent of the app lock and of trust: it stores no secret, and it

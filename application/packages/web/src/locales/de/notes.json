@@ -279,6 +279,10 @@
     "bodySingle": "<strong>{{filename}}</strong> sieht nach einer Markdown-Datei aus. Als Notiz importieren, damit du sie lesen und bearbeiten kannst, oder als verschlüsselten Dateianhang speichern?",
     "bodyMulti": "Diese {{count}} Dateien sehen nach Markdown aus. Als Notizen importieren, damit du sie lesen und bearbeiten kannst, oder als verschlüsselte Dateianhänge speichern?"
   },
+  "archiveConfirm": {
+    "body_one": "<highlight>{{count}} Eintrag</highlight> archivieren? Er verschwindet aus deinen Listen und wartet in der Ansicht Archiv. Mit „Archivierung aufheben“ holst du ihn zurück.",
+    "body_other": "<highlight>{{count}} Einträge</highlight> archivieren? Sie verschwinden aus deinen Listen und warten in der Ansicht Archiv. Mit „Archivierung aufheben“ holst du sie zurück."
+  },
   "bulkTrash": {
     "body_one": "<highlight>{{count}} Eintrag</highlight> löschen? Verschiebe ihn in den Papierkorb, um ihn später wiederherzustellen, oder lösche ihn endgültig.",
     "body_other": "<highlight>{{count}} Einträge</highlight> löschen? Verschiebe sie in den Papierkorb, um sie später wiederherzustellen, oder lösche sie endgültig.",

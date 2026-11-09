@@ -6,6 +6,7 @@ import { THEME_SCRIPT_TAG, THEME_TOGGLE_CSS, themeVarsCss, WASHI_DARK, WASHI_LIG
 import { SEARCH_CORE_SCRIPT_TAG } from './search-core-script.ts';
 import { foldText } from './src/textFold.ts';
 import { loadShots, type Shot } from './changelog-shots.ts';
+import { MENU_PATH_CSS, loadPathVocab, markPaths, restorePaths } from './help-path-vocab.mjs';
 import { LIGHTBOX_CSS, brandMark, BUG_ICON, CHROME_CSS, GITHUB_ICON, LINK_ICON, OG_IMAGE_TAGS, ogLocaleTag, RSS_ICON, SITE_FOOTER, siteNav, TEXT_ICON } from './static-page-chrome.ts';
 
 // Pre-renders a static /changelog page from the single source of
@@ -89,6 +90,27 @@ function esc(s: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+/**
+ * An item's text as HTML, with each "Settings > ..." path drawn as a
+ * breadcrumb like the help pages (UI pattern 170). The page is English only.
+ * Built once per render; a path that names a label the app no longer has
+ * stops there, and stays prose when its first label is gone.
+ */
+/**
+ * Labels that old items name and the app no longer shows: the changelog
+ * tells the past, so a path stays drawn after its label is renamed. Add one
+ * when a rename leaves an old item's path as prose.
+ */
+const PAST_LABELS = {
+  categories: ['Appearance', 'Journals', 'Date & Language'],
+  ui: ['Your Phrase', 'Text and layout'],
+};
+
+function itemHtml(text: string, vocab: ReturnType<typeof loadPathVocab>): string {
+  const drawn: string[] = [];
+  return restorePaths(esc(markPaths(text, vocab, 'en', drawn)), drawn);
 }
 
 function fmtDate(iso: string): string {
@@ -217,6 +239,7 @@ const TYPE_ICON: Record<ChangelogItem['type'], string> = {
 const ISSUES_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues';
 
 function renderReleases(releases: ChangelogRelease[], shotMap: ShotMap): string {
+  const vocab = loadPathVocab(path.resolve(__dirname, 'src'), 'en', PAST_LABELS);
   let prevMonth: string | null = null;
   return releases
     .map((r, index) => {
@@ -231,7 +254,7 @@ function renderReleases(releases: ChangelogRelease[], shotMap: ShotMap): string 
           const issues = (it.issues ?? [])
             .map((num) => ` <a class="issuechip" href="${ISSUES_URL}/${num}" target="_blank" rel="noopener noreferrer">#${num}</a>`)
             .join('');
-          return `<li class="item" data-t="${it.type}"${n < 0 ? '' : ' data-shot'}><span class="tag tag-${it.type}">${LABEL[it.type]}</span><span class="txt">${esc(it.text)}${issues}${chip}</span></li>`;
+          return `<li class="item" data-t="${it.type}"${n < 0 ? '' : ' data-shot'}><span class="tag tag-${it.type}">${LABEL[it.type]}</span><span class="txt">${itemHtml(it.text, vocab)}${issues}${chip}</span></li>`;
         })
         .join('');
       const gallery = shots.length ? renderGallery(shots) : '';
@@ -337,6 +360,7 @@ const PAGE_CSS = `.cl-month{margin:30px 0 4px;scroll-margin-top:16px}
 .release[hidden],li.item[hidden],.cl-month[hidden],.rail[hidden]{display:none}
 /* Revealed on hover like the Help leaves' perma, and always visible once
    focused so it is reachable from the keyboard. */
+${MENU_PATH_CSS}
 .perma{flex:0 0 auto;display:inline-flex;align-items:center;padding:2px;margin-top:2px;border:0;background:none;color:var(--faint);cursor:pointer;opacity:0;transition:opacity .12s ease}
 .perma[hidden]{display:none}
 .release:hover .perma,.perma:focus-visible{opacity:1}

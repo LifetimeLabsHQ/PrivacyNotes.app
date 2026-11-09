@@ -221,6 +221,8 @@
     "textLabel": "نص الرابط",
     "textPlaceholder": "اختياري، اتركه فارغًا لعرض الرابط",
     "selectedTextHint": "سيتم استخدام النص المحدد كرابط",
+    "titleLabel": "نص التلميح",
+    "titleHint": "يظهر عند وضع المؤشر على الرابط",
     "update": "تحديث",
     "menuOpen": "فتح الرابط",
     "menuCopy": "نسخ الرابط",

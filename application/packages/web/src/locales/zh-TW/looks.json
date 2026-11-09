@@ -7,6 +7,9 @@
   "applyToSubfolders": "將顏色套用到子資料夾",
   "icon": "圖示",
   "searchPlaceholder": "搜尋圖示",
+  "searchLogos": "搜尋標誌",
+  "moreLogos": "更多標誌",
+  "allLogos": "所有標誌（A 到 Z）",
   "recent": "最近使用",
   "number": "數字 {{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "運動",
     "tech": "科學與科技",
     "signals": "訊號",
-    "numbers": "數字與數學"
+    "numbers": "數字與數學",
+    "systems": "系統與裝置",
+    "browsers": "瀏覽器與搜尋",
+    "office": "筆記與辦公",
+    "dev": "程式碼與託管",
+    "ai": "AI",
+    "chat": "聊天與郵件",
+    "social": "社群與創作者",
+    "media": "音樂、影片與書籍",
+    "games": "遊戲",
+    "learning": "學習與研究",
+    "trips": "旅遊與健身",
+    "privacy": "隱私與安全"
   },
   "icons": {
     "folder": "資料夾",

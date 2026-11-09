@@ -32,6 +32,8 @@ export function useToolbarFit(strip: boolean, sig: string) {
   const itemWidthsRef = useRef<number[]>([]);
   const overflowRef = useRef(false);
   const [measuredSig, setMeasuredSig] = useState<string | null>(null);
+  // Bumped to measure every button again (see the broken-layout check).
+  const [remeasure, setRemeasure] = useState(0);
   useLayoutEffect(() => {
     const row = rowRef.current;
     const flexRow = row?.parentElement;
@@ -71,8 +73,20 @@ export function useToolbarFit(strip: boolean, sig: string) {
       if (kids.length > itemWidthsRef.current.length) {
         itemWidthsRef.current = kids.map((k) => k.getBoundingClientRect().width);
       } else {
-        kids.forEach((k, i) => {
-          itemWidthsRef.current[i] = Math.max(itemWidthsRef.current[i] ?? 0, k.getBoundingClientRect().width);
+        const now = kids.map((k) => k.getBoundingClientRect().width);
+        // A button at half the width it was measured at or less means that
+        // measure came from a broken layout: one frame without the
+        // stylesheet (a slow CSS load, a dev reload) draws every icon at its
+        // natural size, and the widest-ever rule would keep the row at one
+        // button for good. Start over: draw every button and measure again.
+        if (now.some((w, i) => w > 0 && w * 2 <= (itemWidthsRef.current[i] ?? 0))) {
+          itemWidthsRef.current = [];
+          setMeasuredSig(null);
+          setRemeasure((n) => n + 1);
+          return;
+        }
+        now.forEach((w, i) => {
+          itemWidthsRef.current[i] = Math.max(itemWidthsRef.current[i] ?? 0, w);
         });
       }
       const widths = itemWidthsRef.current;
@@ -115,7 +129,7 @@ export function useToolbarFit(strip: boolean, sig: string) {
     ro.observe(flexRow);
     if (clusterRef.current) ro.observe(clusterRef.current);
     return () => ro.disconnect();
-  }, [strip, sig]);
+  }, [strip, sig, remeasure]);
 
   return { rowRef, clusterRef, visibleCount, hasOverflow, measured: measuredSig === sig, expanded, setExpanded };
 }

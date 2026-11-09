@@ -141,7 +141,7 @@ export function useReminderPermission(): ReminderPermission {
 }
 
 /** Ask the OS, from a tap. */
-export async function askReminderPermission(): Promise<ReminderPermission> {
+async function askReminderPermission(): Promise<ReminderPermission> {
   try {
     localStorage.setItem(ASKED_KEY, '1');
   } catch {
@@ -170,7 +170,7 @@ export function askForRemindersOnce(): void {
 }
 
 /** The OS page for this app's notifications, where a denial is undone. */
-export async function openReminderSettings(): Promise<void> {
+async function openReminderSettings(): Promise<void> {
   const { invoke } = await import('@tauri-apps/api/core');
   await invoke('plugin:notification|open_settings');
 }

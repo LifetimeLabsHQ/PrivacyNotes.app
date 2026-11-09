@@ -2,7 +2,7 @@ import { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from '
 import { useTranslation } from 'react-i18next';
 import { usePointMenuPosition } from './usePopoverPosition';
 import { VERSION } from './version';
-import { isBetaHost } from './hosts';
+import { BETA_COMMITS_URL, isBetaHost } from './hosts';
 import { LogoIcon } from './LogoIcon';
 import { Brand } from './Brand';
 import { HoverLabel } from './HoverLabel';
@@ -825,14 +825,19 @@ export function TagsRail(props: TagsRailProps) {
         </h1>
         <HoverLabel label={t('common:updateToast.changelog')} position="end">
         <a
-          href={latestChangelogHref()}
+          href={isBetaHost() ? BETA_COMMITS_URL : latestChangelogHref()}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={t('common:updateToast.changelog')}
           data-type-exempt=""
-          className={`pn-sb-wide hidden lg:flex text-[9px] font-mono px-1 py-px rounded shrink-0 transition focus:outline-none focus:ring-2 ${isBetaHost() ? 'font-bold tracking-wider bg-amber-400 text-black hover:bg-amber-300 focus:ring-amber-400/40' : 'bg-accent/10 border border-accent/30 text-accent-strong hover:bg-accent/20 focus:ring-accent/40'}`} // type-scale: exempt - a stamp; at the meta size it pushes the brand out of the rail
+          className={`pn-sb-wide hidden lg:flex text-[9px] font-mono px-1 py-px rounded shrink-0 transition focus:outline-none focus:ring-2 ${isBetaHost() ? 'group font-bold tracking-wider bg-amber-400 text-black hover:bg-amber-300 focus:ring-amber-400/40' : 'bg-accent/10 border border-accent/30 text-accent-strong hover:bg-accent/20 focus:ring-accent/40'}`} // type-scale: exempt - a stamp; at the meta size it pushes the brand out of the rail
         >
-          {isBetaHost() ? 'BETA' : `v${VERSION}`}
+          {isBetaHost() ? (
+            <>
+              <span className="group-hover:hidden group-focus-visible:hidden">BETA</span>
+              <span className="hidden group-hover:inline group-focus-visible:inline">v{VERSION}</span>
+            </>
+          ) : `v${VERSION}`}
         </a>
         </HoverLabel>
         <button

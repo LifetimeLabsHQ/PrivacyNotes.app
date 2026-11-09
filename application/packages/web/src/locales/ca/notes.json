@@ -281,6 +281,10 @@
     "bodySingle": "<strong>{{filename}}</strong> sembla un fitxer markdown. Vols importar-lo com a nota per poder llegir-lo i editar-lo, o emmagatzemar-lo com a fitxer adjunt xifrat?",
     "bodyMulti": "Aquests {{count}} fitxers semblen markdown. Vols importar-los com a notes per poder llegir-los i editar-los, o emmagatzemar-los com a fitxers adjunts xifrats?"
   },
+  "archiveConfirm": {
+    "body_other": "Vols arxivar <highlight>{{count}} elements</highlight>? Surten de les teves llistes i esperen a la vista Arxiu. Desarxiva els recupera.",
+    "body_one": "Vols arxivar <highlight>{{count}} element</highlight>? Surt de les teves llistes i espera a la vista Arxiu. Desarxiva el recupera."
+  },
   "bulkTrash": {
     "body_one": "Vols suprimir <highlight>{{count}} element</highlight>? Mou-lo a la paperera per restaurar-lo més tard, o suprimeix-lo per sempre.",
     "body_other": "Vols suprimir <highlight>{{count}} elements</highlight>? Mou-los a la paperera per restaurar-los més tard, o suprimeix-los per sempre.",

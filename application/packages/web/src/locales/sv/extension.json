@@ -94,6 +94,11 @@
   "badge": {
     "problem": "Något behöver din uppmärksamhet"
   },
+  "changeSecret": {
+    "titlePin": "Byt PIN",
+    "titlePasscode": "Byt lösenkod",
+    "biometricAgain": "Fingeravtryck eller ansikte använde den gamla. Konfigurera det igen för att fortsätta använda det."
+  },
   "biometric": {
     "enrolled": "Fingeravtryck eller ansikte är konfigurerat. Du kan stänga den här fliken.",
     "enrolledHere": "Fingeravtryck eller ansikte är konfigurerat.",
@@ -105,8 +110,6 @@
     "searchKind": "Sök i {{kind}}",
     "unlockToSearch": "Lås upp för att söka",
     "all": "Alla objekt",
-    "more_one": "{{count}} till. Skriv för att hitta det.",
-    "more_other": "{{count}} till. Skriv för att hitta ett.",
     "cardsHere": "Ingen inloggning för den här webbplatsen. Dina kort:",
     "noBookmarkHere": "Den här sidan finns inte bland bokmärkena.",
     "noneAtAll": "Inget i valvet än.",
@@ -129,5 +132,12 @@
     "unlockToCopy": "Lås upp för att kopiera",
     "omniboxDefault": "Sök efter %s i ditt PrivacyNotes-valv",
     "omniboxUnlock": "Lås upp PrivacyNotes för att söka"
+  },
+  "shortcuts": {
+    "notSet": "Inte inställt",
+    "addressBar": "Sök i valvet från adressfältet",
+    "change": "Ändra kortkommandon",
+    "changeHint": "Webbläsaren håller tangenterna. Ändra en där, eller ge den en tangent om den saknar en.",
+    "loginHint": "<key/> kopierar användarnamnet och sedan lösenordet."
   }
 }

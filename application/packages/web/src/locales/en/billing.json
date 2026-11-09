@@ -25,7 +25,8 @@
       "passphrase": "Passphrases are a Pro feature. Generate a phrase of random words that is easy to type and to say.",
       "default": "One upgrade unlocks everything below. One-time payment.",
       "alerts": "Reminders are a Pro feature. Each device rings on its own at the time you pick, so no push service sees the item.",
-      "vaultFiles": "Files on vault items are a Pro feature. Keep recovery codes, a backup key or a scan with the login, card or key it belongs to."
+      "vaultFiles": "Files on vault items are a Pro feature. Keep recovery codes, a backup key or a scan with the login, card or key it belongs to.",
+      "cli": "The CLI is a Pro feature. Scripts, AI agents and AI apps add notes from a terminal or a chat, straight into your Agent folder."
     },
     "features": {
       "devices": "Sync unlimited devices, every platform",

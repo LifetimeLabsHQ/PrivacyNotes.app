@@ -58,6 +58,12 @@ use avif::decode_avif;
 /// Spec: docs/internal/specs/web-clipper-stage1.md (section 3.1)
 mod clip_fetch;
 use clip_fetch::clip_fetch;
+/// Install for `pn`, the command line tool (Settings > CLI).
+/// Spec: docs/internal/plans/agent-cli.md (section 3.7)
+#[cfg(desktop)]
+mod cli_install;
+#[cfg(desktop)]
+use cli_install::{cli_status, install_cli};
 
 /// Files the OS asked us to open before the webview was ready to hear about it.
 ///
@@ -644,6 +650,8 @@ pub fn run() {
         pasteboard_pictures,
         clip_fetch,
         decode_avif,
+        cli_status,
+        install_cli,
         tray::set_tray_mode
     ]);
     // Close and minimize go to the tray while that switch is on (tray.rs).
@@ -740,6 +748,13 @@ pub fn run() {
                     let _ = std::fs::DirBuilder::new().recursive(true).mode(0o700).create(&dir);
                     let _ = std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o700));
                 }
+            }
+            // An installed `pn` runs the copy in the app's data folder; bring
+            // it to this version off the main thread (cli_install.rs).
+            #[cfg(desktop)]
+            {
+                let handle = app.handle().clone();
+                std::thread::spawn(move || cli_install::refresh_at_launch(&handle));
             }
             #[cfg(target_os = "windows")]
             {
@@ -1199,7 +1214,8 @@ fn set_title_bar_colors(
 /// the overlay title bar puts the traffic lights over our themed background.
 /// The window cannot resize itself, so the height is sized by hand to the
 /// content: add or remove a link button in AboutWindow.tsx and this number
-/// moves with it (~41px per button, including the gap).
+/// moves with it (~41px per button, including the gap). The content starts
+/// 32px from the top (clear of the traffic lights) and ends 24px from the bottom.
 #[cfg(target_os = "macos")]
 fn open_about_window(app: &tauri::AppHandle) {
     use tauri::{Manager, TitleBarStyle, WebviewUrl, WebviewWindowBuilder};
@@ -1214,7 +1230,7 @@ fn open_about_window(app: &tauri::AppHandle) {
         WebviewUrl::App("index.html?about-window=1".into()),
     )
     .title("About PrivacyNotes")
-    .inner_size(280.0, 485.0)
+    .inner_size(280.0, 441.0)
     .resizable(false)
     .minimizable(false)
     .maximizable(false)

@@ -94,6 +94,11 @@
   "badge": {
     "problem": "İlgilenmeniz gereken bir şey var"
   },
+  "changeSecret": {
+    "titlePin": "PIN'i değiştir",
+    "titlePasscode": "Geçiş kodunu değiştir",
+    "biometricAgain": "Parmak izi veya yüz eskisini kullanıyordu. Kullanmaya devam etmek için yeniden ayarlayın."
+  },
   "biometric": {
     "enrolled": "Parmak izi veya yüz ayarlandı. Bu sekmeyi kapatabilirsiniz.",
     "enrolledHere": "Parmak izi veya yüz ayarlandı.",
@@ -105,7 +110,6 @@
     "searchKind": "{{kind}} içinde ara",
     "unlockToSearch": "Aramak için kilidi açın",
     "all": "Tüm öğeler",
-    "more_other": "{{count}} tane daha. Bulmak için yazın.",
     "cardsHere": "Bu site için giriş bilgisi yok. Kartlarınız:",
     "noBookmarkHere": "Bu sayfa yer imlerinde değil.",
     "noneAtAll": "Kasada henüz bir şey yok.",
@@ -127,7 +131,13 @@
     "lockHeader": "Kasayı şu süreden sonra kilitle",
     "unlockToCopy": "Kopyalamak için kilidi açın",
     "omniboxDefault": "PrivacyNotes kasanızda %s için arayın",
-    "omniboxUnlock": "Aramak için PrivacyNotes'un kilidini açın",
-    "more_one": "{{count}} tane daha. Bulmak için yazın."
+    "omniboxUnlock": "Aramak için PrivacyNotes'un kilidini açın"
+  },
+  "shortcuts": {
+    "notSet": "Ayarlanmadı",
+    "addressBar": "Adres çubuğundan kasada arayın",
+    "change": "Kısayolları değiştir",
+    "changeHint": "Tuşları tarayıcınız tutar. Birini orada değiştirin ya da tuşu olmayana bir tuş verin.",
+    "loginHint": "<key/> önce kullanıcı adını, ardından parolayı kopyalar."
   }
 }

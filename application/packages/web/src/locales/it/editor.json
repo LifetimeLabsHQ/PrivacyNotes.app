@@ -217,6 +217,8 @@
     "textLabel": "Testo del link",
     "textPlaceholder": "Facoltativo, lascia vuoto per mostrare l'URL",
     "selectedTextHint": "Il testo selezionato verrà usato come link",
+    "titleLabel": "Testo al passaggio del mouse",
+    "titleHint": "Compare quando passi il puntatore sul link",
     "update": "Aggiorna",
     "menuOpen": "Apri link",
     "menuCopy": "Copia link",

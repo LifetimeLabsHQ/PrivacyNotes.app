@@ -92,6 +92,11 @@
   "badge": {
     "problem": "確認が必要な項目があります"
   },
+  "changeSecret": {
+    "titlePin": "PIN を変更",
+    "titlePasscode": "パスコードを変更",
+    "biometricAgain": "指紋または顔認証は古いものを使っていました。引き続き使うには、もう一度設定してください。"
+  },
   "biometric": {
     "enrolled": "指紋または顔認証を設定しました。このタブは閉じてかまいません。",
     "enrolledHere": "指紋または顔認証を設定しました。",
@@ -103,7 +108,6 @@
     "searchKind": "{{kind}}を検索",
     "unlockToSearch": "ロックを解除して検索",
     "all": "すべてのアイテム",
-    "more_other": "ほかに{{count}}件あります。入力して探してください。",
     "cardsHere": "このサイトのログインはありません。あなたのカード:",
     "noBookmarkHere": "このページはブックマークされていません。",
     "noneAtAll": "保管庫にはまだ何もありません。",
@@ -126,5 +130,12 @@
     "unlockToCopy": "ロックを解除してコピー",
     "omniboxDefault": "PrivacyNotes の保管庫で %s を検索",
     "omniboxUnlock": "PrivacyNotes のロックを解除して検索"
+  },
+  "shortcuts": {
+    "notSet": "未設定",
+    "addressBar": "アドレスバーから保管庫を検索",
+    "change": "ショートカットを変更",
+    "changeHint": "キーはブラウザが管理しています。ブラウザ側で変更するか、キーが未設定なら割り当ててください。",
+    "loginHint": "<key/> でユーザー名をコピーし、続けてパスワードをコピーします。"
   }
 }

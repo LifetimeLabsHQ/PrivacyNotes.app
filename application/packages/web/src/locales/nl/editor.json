@@ -217,6 +217,8 @@
     "textLabel": "Linktekst",
     "textPlaceholder": "Optioneel, laat leeg om de URL te tonen",
     "selectedTextHint": "De geselecteerde tekst wordt de link",
+    "titleLabel": "Tekst bij aanwijzen",
+    "titleHint": "Verschijnt als je de link aanwijst",
     "update": "Bijwerken",
     "menuOpen": "Link openen",
     "menuCopy": "Link kopiëren",

@@ -94,6 +94,11 @@
   "badge": {
     "problem": "Er vraagt iets je aandacht"
   },
+  "changeSecret": {
+    "titlePin": "PIN wijzigen",
+    "titlePasscode": "Toegangscode wijzigen",
+    "biometricAgain": "Vingerafdruk of gezicht gebruikte de oude. Stel het opnieuw in om het te blijven gebruiken."
+  },
   "biometric": {
     "enrolled": "Vingerafdruk of gezicht is ingesteld. Je kunt dit tabblad sluiten.",
     "enrolledHere": "Vingerafdruk of gezicht is ingesteld.",
@@ -105,8 +110,6 @@
     "searchKind": "{{kind}} doorzoeken",
     "unlockToSearch": "Ontgrendel om te zoeken",
     "all": "Alle items",
-    "more_one": "Nog {{count}}. Typ om hem te vinden.",
-    "more_other": "Nog {{count}}. Typ om er een te vinden.",
     "cardsHere": "Geen login voor deze site. Je kaarten:",
     "noBookmarkHere": "Deze pagina heeft geen bladwijzer.",
     "noneAtAll": "Nog niets in de kluis.",
@@ -129,5 +132,12 @@
     "unlockToCopy": "Ontgrendel om te kopiëren",
     "omniboxDefault": "Je PrivacyNotes-kluis doorzoeken op %s",
     "omniboxUnlock": "Ontgrendel PrivacyNotes om te zoeken"
+  },
+  "shortcuts": {
+    "notSet": "Niet ingesteld",
+    "addressBar": "De kluis doorzoeken vanuit de adresbalk",
+    "change": "Sneltoetsen wijzigen",
+    "changeHint": "Je browser beheert de toetsen. Wijzig er daar een, of geef er een toets als hij er geen heeft.",
+    "loginHint": "<key/> kopieert de gebruikersnaam, daarna het wachtwoord."
   }
 }

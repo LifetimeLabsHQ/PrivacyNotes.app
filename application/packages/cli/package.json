@@ -1,0 +1,17 @@
+{
+  "name": "@notes/cli",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@notes/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "25.6.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.6"
+  }
+}

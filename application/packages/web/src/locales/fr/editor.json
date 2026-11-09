@@ -217,6 +217,8 @@
     "textLabel": "Texte du lien",
     "textPlaceholder": "Facultatif, laisse vide pour afficher l'URL",
     "selectedTextHint": "Le texte sélectionné sera utilisé comme lien",
+    "titleLabel": "Texte au survol",
+    "titleHint": "S'affiche quand tu survoles le lien",
     "update": "Mettre à jour",
     "menuOpen": "Ouvrir le lien",
     "menuCopy": "Copier le lien",

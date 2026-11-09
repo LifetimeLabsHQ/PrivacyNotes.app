@@ -25,7 +25,8 @@
       "passphrase": "Passphrasen sind eine Pro-Funktion. Erzeuge eine Phrase aus zufälligen Wörtern, die sich leicht tippen und aussprechen lässt.",
       "default": "Ein Upgrade schaltet alles unten frei. Einmalzahlung.",
       "alerts": "Erinnerungen sind eine Pro-Funktion. Jedes Gerät meldet sich selbst zu der Zeit, die du wählst, also sieht kein Push-Dienst den Eintrag.",
-      "vaultFiles": "Dateien an Tresor-Einträgen sind eine Pro-Funktion. Bewahre Wiederherstellungscodes, einen Backup-Schlüssel oder einen Scan bei dem Login, der Karte oder dem Schlüssel auf, zu dem sie gehören."
+      "vaultFiles": "Dateien an Tresor-Einträgen sind eine Pro-Funktion. Bewahre Wiederherstellungscodes, einen Backup-Schlüssel oder einen Scan bei dem Login, der Karte oder dem Schlüssel auf, zu dem sie gehören.",
+      "cli": "Die CLI ist eine Pro-Funktion. Skripte, KI-Agenten und KI-Apps fügen Notizen aus einem Terminal oder einem Chat hinzu, direkt in deinen Agent-Ordner."
     },
     "features": {
       "devices": "Unbegrenzt viele Geräte synchronisieren, jede Plattform",

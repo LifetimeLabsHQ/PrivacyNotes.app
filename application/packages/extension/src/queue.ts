@@ -7,6 +7,7 @@
  * Spec: docs/internal/plans/browser-extension-build.md (section 3.3, step 4)
  */
 import { browser } from 'wxt/browser';
+import { showMark, showQueueCount } from './badge';
 import type { InboxKind } from '@notes/shared/extension';
 import { call } from './api';
 import { forgetLocal, readConnection } from './connection';
@@ -61,9 +62,8 @@ export async function enqueue(rows: Queued[]): Promise<boolean> {
 
 async function showCount(items: Queued[]): Promise<void> {
   const n = groups(items);
-  await browser.action.setBadgeText({ text: n > 0 ? String(n) : '' });
+  await showQueueCount(n);
   if (n > 0) {
-    await browser.action.setBadgeBackgroundColor({ color: '#1E40AF' });
     browser.alarms.create(FLUSH_ALARM, { periodInMinutes: 1 });
   } else {
     await browser.alarms.clear(FLUSH_ALARM);
@@ -72,13 +72,7 @@ async function showCount(items: Queued[]): Promise<void> {
 
 /** A short mark on the icon: a tick for saved, ! for a problem. */
 export async function flashBadge(mark: 'saved' | 'problem'): Promise<void> {
-  await browser.action.setBadgeText({ text: mark === 'saved' ? '✓' : '!' });
-  await browser.action.setBadgeBackgroundColor({ color: mark === 'saved' ? '#006045' : '#C10007' });
-  if (mark === 'saved') {
-    setTimeout(() => {
-      void read().then(showCount);
-    }, 3000);
-  }
+  await showMark(mark, async () => showCount(await read()));
 }
 
 export type FlushResult = { sent: string[]; dropped: string[]; left: number; revoked: boolean };

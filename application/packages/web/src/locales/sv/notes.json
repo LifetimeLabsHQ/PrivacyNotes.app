@@ -279,6 +279,10 @@
     "bodySingle": "<strong>{{filename}}</strong> ser ut att vara en markdown-fil. Vill du importera den som en anteckning så att du kan läsa och redigera den, eller lagra den som en krypterad filbilaga?",
     "bodyMulti": "De här {{count}} filerna ser ut att vara markdown. Vill du importera dem som anteckningar så att du kan läsa och redigera dem, eller lagra dem som krypterade filbilagor?"
   },
+  "archiveConfirm": {
+    "body_one": "Arkivera <highlight>{{count}} objekt</highlight>? Det lämnar dina listor och väntar i vyn Arkiv. Ta ur arkivet hämtar tillbaka det.",
+    "body_other": "Arkivera <highlight>{{count}} objekt</highlight>? De lämnar dina listor och väntar i vyn Arkiv. Ta ur arkivet hämtar tillbaka dem."
+  },
   "bulkTrash": {
     "body_one": "Radera <highlight>{{count}} objekt</highlight>? Flytta det till papperskorgen för att återställa det senare, eller radera det för alltid.",
     "body_other": "Radera <highlight>{{count}} objekt</highlight>? Flytta dem till papperskorgen för att återställa dem senare, eller radera dem för alltid.",

@@ -11,6 +11,9 @@ import { readFnErrorBody, type FnError } from './devices';
 /** One connected extension, as the device list shows it. */
 export interface ExtensionRow {
   id: string;
+  /** A browser extension, or the command line `pn` (Settings > Command line).
+   *  Spec: docs/internal/plans/agent-cli.md (section 3.8) */
+  client: 'browser' | 'cli';
   label: string;
   version: string | null;
   clips: boolean;
@@ -44,7 +47,7 @@ export async function loadExtensionState(supabase: SupabaseClient, pubkey: strin
   const [tokens, account] = await Promise.all([
     supabase
       .from('extension_tokens')
-      .select('id, label, version, clips, logins, key_tag, created_at, last_used_at, last_clip_at')
+      .select('id, client, label, version, clips, logins, key_tag, created_at, last_used_at, last_clip_at')
       .eq('user_pubkey', pubkey)
       .order('created_at', { ascending: true }),
     supabase.from('extension_accounts').select('key_tag').eq('user_pubkey', pubkey).maybeSingle(),
@@ -74,7 +77,7 @@ async function invokePair(supabase: SupabaseClient, body: Record<string, unknown
 
 export function createPairingRow(
   supabase: SupabaseClient,
-  row: { secretHash: string; tokenId: string; clips: boolean; logins: boolean; ksrv?: string; keyTag?: string },
+  row: { secretHash: string; tokenId: string; clips: boolean; logins: boolean; ksrv?: string; keyTag?: string; client?: 'cli' },
 ): Promise<void> {
   return invokePair(supabase, { action: 'create', ...row });
 }

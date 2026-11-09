@@ -7,6 +7,7 @@
   "packages/web/src/PasswordText.tsx",
   "packages/web/src/PinInput.tsx",
   "packages/web/src/Switch.tsx",
+  "packages/web/src/TotpRing.tsx",
   "packages/web/src/arabicFold.ts",
   "packages/web/src/clipboard.ts",
   "packages/web/src/commandKeys.ts",
@@ -26,9 +27,11 @@
   "packages/web/src/textFold.ts",
   "packages/web/src/textMatch.ts",
   "packages/web/src/ui/Button.tsx",
-  "packages/web/src/ui/DeleteButton.tsx",
   "packages/web/src/ui/VaultFieldAction.tsx",
   "packages/web/src/ui/actions.ts",
   "packages/web/src/ui/feedback.tsx",
-  "packages/web/src/useEscapeToClose.ts"
+  "packages/web/src/ui/misc.tsx",
+  "packages/web/src/useEscapeToClose.ts",
+  "packages/web/src/usePopoverPosition.ts",
+  "packages/web/src/useProgressiveReveal.ts"
 ]

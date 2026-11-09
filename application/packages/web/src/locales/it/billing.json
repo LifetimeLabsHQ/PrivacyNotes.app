@@ -25,7 +25,8 @@
       "passphrase": "Le passphrase sono una funzione Pro. Genera una frase di parole casuali, facile da digitare e da dire.",
       "default": "Un upgrade sblocca tutto ciò che c'è qui sotto. Pagamento una tantum.",
       "alerts": "I promemoria sono una funzione Pro. Ogni dispositivo suona per conto suo all'ora che scegli, quindi nessun servizio di notifiche push vede l'elemento.",
-      "vaultFiles": "I file negli elementi della cassaforte sono una funzione Pro. Conserva codici di recupero, una chiave di backup o una scansione insieme all'accesso, alla carta o alla chiave a cui appartiene."
+      "vaultFiles": "I file negli elementi della cassaforte sono una funzione Pro. Conserva codici di recupero, una chiave di backup o una scansione insieme all'accesso, alla carta o alla chiave a cui appartiene.",
+      "cli": "La CLI è una funzione Pro. Script, agenti IA e app di IA aggiungono note da un terminale o da una chat, direttamente nella tua cartella Agent."
     },
     "features": {
       "devices": "Sincronizza dispositivi illimitati, su ogni piattaforma",

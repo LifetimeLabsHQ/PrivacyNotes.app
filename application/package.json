@@ -24,12 +24,12 @@
     "test:backup": "pnpm --filter shared --fail-if-no-match build && node --test tools/backup-kat.mjs"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.5.11",
-    "fake-indexeddb": "^6.2.6",
+    "@electric-sql/pglite": "0.5.15",
+    "fake-indexeddb": "^6.2.7",
     "jsdom": "^30.1.3",
-    "knip": "6.42.1",
-    "playwright-core": "^1.64.1",
-    "vitest": "^5.0.5"
+    "knip": "6.44.1",
+    "playwright-core": "^1.65.0",
+    "vitest": "^5.1.0"
   },
   "pnpm": {
     "overrides": {

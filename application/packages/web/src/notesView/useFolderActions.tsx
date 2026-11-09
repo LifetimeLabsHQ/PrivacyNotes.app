@@ -380,6 +380,26 @@ export function useFolderActions({
     const noteFolder = note.folderId
       ? userSettings.folders.find((f) => f.id === note.folderId)
       : undefined;
+    // A read-only note shows where it lives but does not move from here
+    // (GitHub #706): the same chip as plain text, with no caret.
+    if (note.locked === 1) {
+      return (
+        <span
+          className={`shrink-0 inline-flex items-center gap-1 text-small font-medium px-2 py-0.5 rounded-md border text-accent-strong ${
+            noteFolder ? 'border-accent/40 bg-accent/15' : 'border-dashed border-accent/40 bg-accent/8'
+          }`}
+        >
+          {noteFolder ? (
+            <FolderGlyph folderId={noteFolder.id} size={12} className="shrink-0 text-label" />
+          ) : (
+            <Folder className="shrink-0 text-label" />
+          )}
+          <span className="truncate max-w-[120px]">
+            {noteFolder ? noteFolder.name : t('shell:folders.chipUnfiled')}
+          </span>
+        </span>
+      );
+    }
     return (
       <button
         type="button"

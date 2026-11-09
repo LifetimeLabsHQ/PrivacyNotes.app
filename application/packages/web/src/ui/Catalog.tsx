@@ -24,6 +24,9 @@ import {
   ModalFooter,
   Badge,
   Banner,
+  FeaturePitch,
+  PitchBadge,
+  TerminalBlock,
   GridCard,
   Callout,
   Checkbox,
@@ -97,7 +100,7 @@ import {
 const patternGroups = {
   'Actions': ['Button', 'IconButton', 'DeleteButton', 'EditRow', 'Vault form actions', 'Vault field actions', 'Generation actions', 'Bookmark actions', 'useProGate', 'Class strings'],
   'Fields and settings': ['TextField and Select', 'FieldLabel, GroupHeading, FIELD_CLASS', 'Segmented', 'Setting row, Switch, heading', 'Tabs', 'ListSearchInput, InlineRenameField', 'ColorSwatch', 'Checkbox', 'TaskCheckbox', 'SettingsCallout, ResetDefaultsButton, HelpChip'],
-  'Content and trackers': ['StatTile', 'MoodScale', 'ScaleTiles', 'Tracker panel parts', 'MonthGrid, StorageBar', 'GridCard', 'Detail pane kit', 'Badge, IconTile, Kbd'],
+  'Content and trackers': ['StatTile', 'MoodScale', 'ScaleTiles', 'Tracker panel parts', 'MonthGrid, StorageBar', 'GridCard', 'Detail pane kit', 'Badge, IconTile, Kbd', 'FeaturePitch', 'TerminalBlock'],
   'Product flows': ['Guided tracker flow', 'Time input', 'Import workflow', 'Export progress', 'Upload progress', 'Flow reference map'],
   'Window contract': ['Window anatomy and behavior', 'Window sizing lab'],
   'App map': ['Replay recipes', 'Settings paths', 'Window implementation inventory'],
@@ -680,6 +683,29 @@ export default function Catalog() {
           <div className="flex flex-wrap items-center gap-3">
             <IconTile tone="danger"><Trash /></IconTile><IconTile tone="warning"><Warning /></IconTile><IconTile><Info /></IconTile><IconTile tone="success"><CheckCircle /></IconTile>
             <span className="text-body text-pn-muted">Press <Kbd>Esc</Kbd> to close, <Kbd>⌘</Kbd><Kbd>K</Kbd> to jump.</span>
+          </div>
+        </Part>
+
+        <Part name="FeaturePitch" note="the pitch of a feature not set up yet: banner, intro, chips, three uses, two facts, tagline">
+          <div className="max-w-md">
+            <FeaturePitch
+              banner={{ tone: 'info', icon: <Sparkle />, title: 'Example feature', sub: 'One line on what it is', badge: <PitchBadge>Free</PitchBadge> }}
+              intro="One centred sentence on how it works."
+              chips={[{ icon: <Scissors />, label: 'Chip one' }, { icon: <Globe />, label: 'Chip two' }, { icon: <Clock />, label: 'Chip three' }]}
+              uses={[{ icon: <Article />, label: 'A first use' }, { icon: <Bell />, label: 'A second use' }, { icon: <Folder />, label: 'A third use' }]}
+              facts={[
+                { icon: <CheckCircle className="text-success" />, title: 'A good fact', sub: 'What it means for you' },
+                { icon: <Warning className="text-danger" />, title: 'A limit', sub: 'Stated as a plain fact' },
+              ]}
+              tagline={{ icon: <Sparkle />, label: 'A short tagline' }}
+            />
+          </div>
+        </Part>
+
+        <Part name="TerminalBlock" note="a command or settings line to copy: dark in every theme, a $ prompt for a command">
+          <div className="max-w-md space-y-2">
+            <TerminalBlock value='echo "# Hello" | pn save' prompt copyLabel="Copy" />
+            <TerminalBlock value='"privacynotes": { "command": "pn", "args": ["mcp"] }' copyLabel="Copy" />
           </div>
         </Part>
 

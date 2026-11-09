@@ -94,6 +94,11 @@
   "badge": {
     "problem": "Etwas braucht deine Aufmerksamkeit"
   },
+  "changeSecret": {
+    "titlePin": "PIN ändern",
+    "titlePasscode": "Passcode ändern",
+    "biometricAgain": "Fingerabdruck oder Gesicht war an die alte PIN bzw. den alten Passcode gebunden. Richte es neu ein, um es weiter zu verwenden."
+  },
   "biometric": {
     "enrolled": "Fingerabdruck oder Gesicht ist eingerichtet. Du kannst diesen Tab schließen.",
     "enrolledHere": "Fingerabdruck oder Gesicht ist eingerichtet.",
@@ -105,7 +110,6 @@
     "searchKind": "{{kind}} durchsuchen",
     "unlockToSearch": "Zum Suchen entsperren",
     "all": "Alle Einträge",
-    "more_other": "Noch {{count}} weitere Einträge. Tippe, um einen zu finden.",
     "cardsHere": "Kein Login für diese Website. Deine Karten:",
     "noBookmarkHere": "Für diese Seite gibt es kein Lesezeichen.",
     "noneAtAll": "Noch nichts im Tresor.",
@@ -127,7 +131,13 @@
     "lockHeader": "Tresor sperren nach",
     "unlockToCopy": "Zum Kopieren entsperren",
     "omniboxDefault": "Deinen PrivacyNotes-Tresor nach %s durchsuchen",
-    "omniboxUnlock": "PrivacyNotes zum Suchen entsperren",
-    "more_one": "Noch {{count}} weiterer Eintrag. Tippe, um ihn zu finden."
+    "omniboxUnlock": "PrivacyNotes zum Suchen entsperren"
+  },
+  "shortcuts": {
+    "notSet": "Nicht festgelegt",
+    "addressBar": "Den Tresor über die Adressleiste durchsuchen",
+    "change": "Tastenkürzel ändern",
+    "changeHint": "Die Tasten verwaltet dein Browser. Ändere dort eine oder weise ein Tastenkürzel zu, wo noch keins festgelegt ist.",
+    "loginHint": "<key/> kopiert den Benutzernamen, dann das Passwort."
   }
 }

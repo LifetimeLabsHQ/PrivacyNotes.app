@@ -219,6 +219,8 @@
     "textLabel": "Text odkazu",
     "textPlaceholder": "Voliteľné, nechaj prázdne a zobrazí sa URL",
     "selectedTextHint": "Ako odkaz sa použije vybraný text",
+    "titleLabel": "Text pri prejdení myšou",
+    "titleHint": "Zobrazí sa, keď ukážeš na odkaz",
     "update": "Aktualizovať",
     "menuOpen": "Otvoriť odkaz",
     "menuCopy": "Kopírovať odkaz",

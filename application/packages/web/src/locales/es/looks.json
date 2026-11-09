@@ -7,6 +7,9 @@
   "applyToSubfolders": "Aplicar el color a las subcarpetas",
   "icon": "Icono",
   "searchPlaceholder": "Buscar iconos",
+  "searchLogos": "Buscar logos",
+  "moreLogos": "Más logos",
+  "allLogos": "Todos los logos, de la A a la Z",
   "recent": "Usados recientemente",
   "number": "Número {{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "Deporte",
     "tech": "Ciencia y tecnología",
     "signals": "Señales",
-    "numbers": "Números y matemáticas"
+    "numbers": "Números y matemáticas",
+    "systems": "Sistemas y dispositivos",
+    "browsers": "Navegadores y búsqueda",
+    "office": "Notas y oficina",
+    "dev": "Código y alojamiento",
+    "ai": "IA",
+    "chat": "Chat y correo",
+    "social": "Redes sociales y creadores",
+    "media": "Música, vídeo y libros",
+    "games": "Juegos",
+    "learning": "Aprendizaje e investigación",
+    "trips": "Viajes y deporte",
+    "privacy": "Privacidad y seguridad"
   },
   "icons": {
     "folder": "Carpeta",

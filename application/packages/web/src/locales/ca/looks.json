@@ -7,6 +7,9 @@
   "applyToSubfolders": "Aplica el color a les subcarpetes",
   "icon": "Icona",
   "searchPlaceholder": "Cerca icones",
+  "searchLogos": "Cerca logotips",
+  "moreLogos": "Més logotips",
+  "allLogos": "Tots els logotips, de la A a la Z",
   "recent": "Usades recentment",
   "number": "Número {{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "Esport",
     "tech": "Ciència i tecnologia",
     "signals": "Senyals",
-    "numbers": "Números i matemàtiques"
+    "numbers": "Números i matemàtiques",
+    "systems": "Sistemes i dispositius",
+    "browsers": "Navegadors i cercadors",
+    "office": "Notes i ofimàtica",
+    "dev": "Codi i allotjament",
+    "ai": "IA",
+    "chat": "Xat i correu",
+    "social": "Xarxes socials i creadors",
+    "media": "Música, vídeo i llibres",
+    "games": "Jocs",
+    "learning": "Aprenentatge i recerca",
+    "trips": "Viatges i fitness",
+    "privacy": "Privadesa i seguretat"
   },
   "icons": {
     "folder": "Carpeta",

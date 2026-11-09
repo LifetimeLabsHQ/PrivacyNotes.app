@@ -37,8 +37,10 @@ export function OptionsMenu({
   const ref = useRef<HTMLDivElement | null>(null);
   // Right-aligned dropdown under the "..." button. The hook measures the menu
   // (which changes height as items toggle) and keeps it on-screen, flipping
-  // above when there's no room below.
-  const pos = usePopoverPosition(true, anchorRef, ref, { align: 'end' });
+  // above when there's no room below. With room on neither side (a phone
+  // with its keyboard up) it takes the larger side and scrolls, instead of
+  // climbing under the status bar (GitHub #707).
+  const pos = usePopoverPosition(true, anchorRef, ref, { align: 'end', shrink: true });
 
   // Close on outside pointerdown. Anchor clicks are ignored so the
   // "..." button can toggle without a re-open flicker.
@@ -89,6 +91,7 @@ export function OptionsMenu({
       style={{
         top: pos?.top ?? 0,
         left: pos?.left ?? 0,
+        maxHeight: pos?.maxHeight,
         visibility: pos ? 'visible' : 'hidden',
       }}
     >

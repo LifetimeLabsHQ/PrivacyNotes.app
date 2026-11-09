@@ -42,6 +42,7 @@ import {
   FileMd,
   TextIndent,
   TextOutdent,
+  Shapes,
 } from './icons';
 
 /**
@@ -74,6 +75,8 @@ export const FORMAT_BAR_LOOK: Record<string, { Icon: Icon; label: string }> = {
   fromFiles: { Icon: Images, label: 'toolbar.pictureFromFiles' },
   date: { Icon: Calendar, label: 'toolbar.date' },
   dateTime: { Icon: Clock, label: 'toolbar.dateTime' },
+  // The note menu's own label, so the two read the same.
+  icon: { Icon: Shapes, label: 'shell:noteOptionsMenu.icon' },
   quote: { Icon: Quotes, label: 'toolbar.quote' },
   codeblock: { Icon: CodeBlock, label: 'toolbar.codeBlock' },
   copybox: { Icon: Copy, label: 'toolbar.copyBox' },

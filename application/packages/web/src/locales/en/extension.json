@@ -94,6 +94,11 @@
   "badge": {
     "problem": "Something needs your attention"
   },
+  "changeSecret": {
+    "titlePin": "Change PIN",
+    "titlePasscode": "Change passcode",
+    "biometricAgain": "Fingerprint or face used the old one. Set it up again to keep using it."
+  },
   "biometric": {
     "enrolled": "Fingerprint or face is set up. You can close this tab.",
     "enrolledHere": "Fingerprint or face is set up.",
@@ -105,8 +110,6 @@
     "searchKind": "Search {{kind}}",
     "unlockToSearch": "Unlock to search",
     "all": "All items",
-    "more_one": "{{count}} more. Type to find it.",
-    "more_other": "{{count}} more. Type to find one.",
     "cardsHere": "No login for this site. Your cards:",
     "noBookmarkHere": "This page is not bookmarked.",
     "noneAtAll": "Nothing in the vault yet.",
@@ -129,5 +132,12 @@
     "unlockToCopy": "Unlock to copy",
     "omniboxDefault": "Search your PrivacyNotes vault for %s",
     "omniboxUnlock": "Unlock PrivacyNotes to search"
+  },
+  "shortcuts": {
+    "notSet": "Not set",
+    "addressBar": "Search the vault from the address bar",
+    "change": "Change shortcuts",
+    "changeHint": "Your browser keeps the keys. Change one there, or give it a key if it has none.",
+    "loginHint": "<key/> copies the username, then the password."
   }
 }

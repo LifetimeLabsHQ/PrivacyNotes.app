@@ -79,7 +79,7 @@ export function themeNameOf(id: string, themes: CustomThemes): string | null {
 }
 
 /** Whether a gallery entry passes the Made by filter. */
-export function madeByShows(entry: CustomThemeEntry, filter: MadeBy): boolean {
+function madeByShows(entry: CustomThemeEntry, filter: MadeBy): boolean {
   if (filter === 'all') return true;
   if (filter === 'yours') return !entry.team;
   if (filter === 'community') return !!entry.community;

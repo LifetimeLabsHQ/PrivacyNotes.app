@@ -25,7 +25,8 @@
       "passphrase": "Les phrases secrètes sont une fonctionnalité Pro. Génère une phrase de mots aléatoires, facile à taper et à dire.",
       "default": "Une seule mise à niveau débloque tout ce qui suit. Paiement unique.",
       "alerts": "Les rappels sont une fonctionnalité Pro. Chaque appareil sonne de lui-même à l'heure que tu choisis, donc aucun service de notifications push ne voit l'élément.",
-      "vaultFiles": "Les fichiers sur les éléments du coffre sont une fonctionnalité Pro. Garde des codes de récupération, une clé de secours ou un scan avec l'identifiant, la carte ou la clé auquel il appartient."
+      "vaultFiles": "Les fichiers sur les éléments du coffre sont une fonctionnalité Pro. Garde des codes de récupération, une clé de secours ou un scan avec l'identifiant, la carte ou la clé auquel il appartient.",
+      "cli": "La CLI est une fonctionnalité Pro. Les scripts, les agents IA et les apps d'IA ajoutent des notes depuis un terminal ou une conversation, directement dans ton dossier Agent."
     },
     "features": {
       "devices": "Synchronise un nombre illimité d'appareils, sur toutes les plateformes",

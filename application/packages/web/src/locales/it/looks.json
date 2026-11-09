@@ -7,6 +7,9 @@
   "applyToSubfolders": "Applica il colore alle sottocartelle",
   "icon": "Icona",
   "searchPlaceholder": "Cerca icone",
+  "searchLogos": "Cerca loghi",
+  "moreLogos": "Altri loghi",
+  "allLogos": "Tutti i loghi, dalla A alla Z",
   "recent": "Usate di recente",
   "number": "Numero {{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "Sport",
     "tech": "Scienza e tecnologia",
     "signals": "Segnali",
-    "numbers": "Numeri e matematica"
+    "numbers": "Numeri e matematica",
+    "systems": "Sistemi e dispositivi",
+    "browsers": "Browser e ricerca",
+    "office": "Note e ufficio",
+    "dev": "Codice e hosting",
+    "ai": "IA",
+    "chat": "Chat e posta",
+    "social": "Social e creator",
+    "media": "Musica, video e libri",
+    "games": "Giochi",
+    "learning": "Studio e ricerca",
+    "trips": "Viaggi e fitness",
+    "privacy": "Privacy e sicurezza"
   },
   "icons": {
     "folder": "Cartella",

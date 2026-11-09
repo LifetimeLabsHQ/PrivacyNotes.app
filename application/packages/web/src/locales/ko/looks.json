@@ -7,6 +7,9 @@
   "applyToSubfolders": "하위 폴더에도 색상 적용",
   "icon": "아이콘",
   "searchPlaceholder": "아이콘 검색",
+  "searchLogos": "로고 검색",
+  "moreLogos": "로고 더 보기",
+  "allLogos": "모든 로고 (A-Z 순)",
   "recent": "최근 사용",
   "number": "숫자 {{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "스포츠",
     "tech": "과학과 기술",
     "signals": "신호",
-    "numbers": "숫자와 수학"
+    "numbers": "숫자와 수학",
+    "systems": "시스템과 기기",
+    "browsers": "브라우저와 검색",
+    "office": "노트와 오피스",
+    "dev": "코드와 호스팅",
+    "ai": "AI",
+    "chat": "채팅과 메일",
+    "social": "소셜과 크리에이터",
+    "media": "음악, 동영상과 책",
+    "games": "게임",
+    "learning": "학습과 연구",
+    "trips": "여행과 피트니스",
+    "privacy": "개인정보 보호와 보안"
   },
   "icons": {
     "folder": "폴더",

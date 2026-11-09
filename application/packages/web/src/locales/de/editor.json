@@ -217,6 +217,8 @@
     "textLabel": "Linktext",
     "textPlaceholder": "Optional, leer lassen, um die URL anzuzeigen",
     "selectedTextHint": "Der markierte Text wird als Link verwendet",
+    "titleLabel": "Tooltip-Text",
+    "titleHint": "Erscheint, wenn du auf den Link zeigst",
     "update": "Aktualisieren",
     "menuOpen": "Link öffnen",
     "menuCopy": "Link kopieren",

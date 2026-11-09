@@ -25,7 +25,8 @@
       "passphrase": "Les frases de pas són una funció Pro. Genera una frase de paraules a l'atzar, fàcil d'escriure i de dir.",
       "default": "Una sola millora desbloqueja tot això. Pagament únic.",
       "alerts": "Els recordatoris són una funció Pro. Cada dispositiu sona pel seu compte a l'hora que triïs, així que cap servei de notificacions push no veu l'element.",
-      "vaultFiles": "Els fitxers als elements de la caixa forta són una funció Pro. Guarda codis de recuperació, una clau de còpia de seguretat o un escaneig amb l'inici de sessió, la targeta o la clau a què pertanyen."
+      "vaultFiles": "Els fitxers als elements de la caixa forta són una funció Pro. Guarda codis de recuperació, una clau de còpia de seguretat o un escaneig amb l'inici de sessió, la targeta o la clau a què pertanyen.",
+      "cli": "La CLI és una funció Pro. Scripts, agents d'IA i apps d'IA afegeixen notes des d'un terminal o d'un xat, directament a la teva carpeta Agent."
     },
     "features": {
       "devices": "Sincronitza dispositius il·limitats, a totes les plataformes",

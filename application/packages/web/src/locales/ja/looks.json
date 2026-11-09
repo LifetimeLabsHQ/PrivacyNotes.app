@@ -7,6 +7,9 @@
   "applyToSubfolders": "サブフォルダにも色を適用",
   "icon": "アイコン",
   "searchPlaceholder": "アイコンを検索",
+  "searchLogos": "ロゴを検索",
+  "moreLogos": "その他のロゴ",
+  "allLogos": "すべてのロゴ (A～Z)",
   "recent": "最近使ったもの",
   "number": "数字の{{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "スポーツ",
     "tech": "科学とテクノロジー",
     "signals": "シグナル",
-    "numbers": "数字と算数"
+    "numbers": "数字と算数",
+    "systems": "OSとデバイス",
+    "browsers": "ブラウザと検索",
+    "office": "ノートとオフィス",
+    "dev": "コードとホスティング",
+    "ai": "AI",
+    "chat": "チャットとメール",
+    "social": "SNSとクリエイター",
+    "media": "音楽、動画、本",
+    "games": "ゲーム",
+    "learning": "学習とリサーチ",
+    "trips": "旅行とフィットネス",
+    "privacy": "プライバシーとセキュリティ"
   },
   "icons": {
     "folder": "フォルダ",

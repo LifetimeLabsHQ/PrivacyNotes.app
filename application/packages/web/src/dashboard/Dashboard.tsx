@@ -14,6 +14,7 @@
  */
 import { cloneElement, isValidElement, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactElement, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { HoverLabel } from '../HoverLabel';
 import type { LocalNote } from '../db';
 import { ItemList, useItemList } from '../itemList';
 import { proUnlocked } from '../demo';
@@ -22,7 +23,7 @@ import { ProMark } from '../UpgradeModal';
 import {
   Button, ContextMenu, DropLine, EmptyState, GridCard, IconButton, Snackbar, DRAG_SOURCE, halfOf, useContextMenu, usePointerReorder,
 } from '../ui';
-import { ArrowDown, ArrowDownRight, ArrowLeft, ArrowRight, ArrowUp, CalendarCheck, ClockClockwise, DotsSix, NotePencil, PenNib, Plus, SquaresFour, Trash, PILLAR_GLYPHS } from '../icons';
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CalendarCheck, ClockClockwise, DotsSix, NotePencil, Notches, PenNib, Plus, SquaresFour, Trash, PILLAR_GLYPHS } from '../icons';
 import { useSteppedWidth } from '../useElementSize';
 import { WIDGET_GLYPH, WidgetGlyph, widgetNameKey } from './widgetGlyphs';
 import { formatDay } from '../intlFormat';
@@ -56,16 +57,77 @@ const CENTRED: ReadonlySet<string> = new Set<WidgetKind>([...PAIRS as Set<Widget
 function columnsFor(width: number): { cols: number; narrow: boolean } {
   const pane = width + 32;
   const cols = pane < 260 ? 1 : pane < 700 ? 2 : pane < 1040 ? 3 : HOME_COLS;
-  return { cols, narrow: pane < 400 };
+  // Phones are 360 to 430 CSS px wide (Pixels and most Samsungs 412, the
+  // large iPhones 430); a step at 400 gave the widest of them two columns
+  // of 180px cards. Small tablets start at 600.
+  return { cols, narrow: pane < NARROW_PANE_PX };
+}
+/** Under this pane width Home is one widget per row. */
+// Spec: docs/internal/specs/dashboard.md (Columns)
+const NARROW_PANE_PX = 480;
+
+/** The two cards whose content opens in place and can outgrow their rows:
+ *  the check-in card's pass, the month card's day. */
+const GROWS: ReadonlySet<string> = new Set<WidgetKind>(['checkIn', 'calendar']);
+
+/**
+ * The rows the content of each of these cards needs right now, measured from
+ * the card. The check-in card opens its guided pass inside itself and the
+ * month card its day, as they do on Journals; a cell of only the saved
+ * height would let the pass or the day draw over the header and the
+ * neighbours. Measured, because the content is the
+ * card's own: Home only draws the box. Observed, so a pass that opens or
+ * closes re-packs at once. Never under the saved height: the caller takes
+ * the larger.
+ */
+function useContentRows(grid: HTMLElement | null, ids: readonly string[]): Record<string, number> {
+  const [rows, setRows] = useState<Record<string, number>>({});
+  const key = ids.join(',');
+  useLayoutEffect(() => {
+    if (!grid || !ids.length) return;
+    const cards = () => ids.map((id) => grid.querySelector<HTMLElement>(`[data-reorder-id="${CSS.escape(id)}"]`)).filter((li): li is HTMLElement => !!li);
+    const measure = () => {
+      const next: Record<string, number> = {};
+      for (const li of cards()) {
+        const cs = getComputedStyle(li);
+        const frame = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+        let content = 0;
+        // The content stacks; the grip, the corner and the drop line sit over it.
+        for (const child of li.children) {
+          if (getComputedStyle(child).position === 'absolute') continue;
+          content += (child as HTMLElement).offsetHeight;
+        }
+        next[li.dataset.reorderId!] = Math.ceil((content + frame + HOME_GAP_PX) / (HOME_ROW_PX + HOME_GAP_PX));
+      }
+      setRows((prev) => {
+        const keys = Object.keys(next);
+        return keys.length === Object.keys(prev).length && keys.every((k) => prev[k] === next[k]) ? prev : next;
+      });
+    };
+    const ro = new ResizeObserver(measure);
+    const watch = () => {
+      ro.disconnect();
+      for (const li of cards()) for (const child of li.children) ro.observe(child);
+    };
+    watch();
+    measure();
+    // A pass or a day opens as new children: watch them too.
+    const mo = new MutationObserver(() => { watch(); measure(); });
+    mo.observe(grid, { childList: true, subtree: true });
+    return () => { ro.disconnect(); mo.disconnect(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `key` names the ids
+  }, [grid, key]);
+  return rows;
 }
 
 /**
  * The size each widget shows at a grid width, before packing: held to the
  * column count; on a phone the whole row except two numbers side by side (a
  * number with no number beside it takes the row too); as wide as its
- * content needs (`minWidthPx`) and as tall as its width asks (`heightAt`).
+ * content needs (`minWidthPx`), as tall as its width asks (`heightAt`), and
+ * as tall as its open content measures (`grown`, the two cards in GROWS).
  */
-function sizeWidgets(widgets: readonly Widget[], width: number, resizing: { id: string; w: number; h: number } | null) {
+function sizeWidgets(widgets: readonly Widget[], width: number, resizing: { id: string; w: number; h: number } | null, grown: Record<string, number> = {}) {
   const { cols, narrow } = columnsFor(width);
   // One column and its gap, in pixels.
   const colStep = (width - (cols - 1) * HOME_GAP_PX) / cols + HOME_GAP_PX;
@@ -82,6 +144,7 @@ function sizeWidgets(widgets: readonly Widget[], width: number, resizing: { id: 
       const need = def.heightAt(wide * colStep - HOME_GAP_PX);
       high = Math.max(high, Math.ceil((need + HOME_GAP_PX) / (HOME_ROW_PX + HOME_GAP_PX)));
     }
+    if (GROWS.has(w.k)) high = Math.max(high, grown[w.i] ?? 0);
     return { id: w.i, w: wide, h: high };
   });
   return { cols, narrow, items };
@@ -97,7 +160,7 @@ export default function Dashboard({ widgets, onWrite }: {
   onWrite: (next: Widget[] | null) => void;
 }) {
   // Every namespace a key below names, so each is loaded before Home draws.
-  const { t } = useTranslation(['shell', 'common', 'editor', 'notes', 'stats']);
+  const { t } = useTranslation(['shell', 'common', 'editor', 'notes', 'stats', 'media']);
   const { t: tStats } = useTranslation('stats');
   const env = useDashboardEnv();
   const today = toLocalIso(new Date());
@@ -121,9 +184,11 @@ export default function Dashboard({ widgets, onWrite }: {
   });
   // The size a widget shows while its corner is dragged, before it is saved.
   const [resizing, setResizing] = useState<{ id: string; w: number; h: number } | null>(null);
+  // The rows the check-in card and the month card need for what is open in them.
+  const grown = useContentRows(gridEl, widgets.filter((w) => GROWS.has(w.k)).map((w) => w.i));
   // Home draws again only when a width step changes what it shows: the
   // columns, or the size of a card.
-  const sizeAt = (width: number) => sizeWidgets(widgets, width, resizing);
+  const sizeAt = (width: number) => sizeWidgets(widgets, width, resizing, grown);
   const [gridWidth, liveWidth] = useSteppedWidth(gridEl, (width) => sizeKey(sizeAt(width)));
   const sized = sizeAt(gridWidth);
   const { cols, narrow } = sized;
@@ -423,19 +488,24 @@ export default function Dashboard({ widgets, onWrite }: {
       last = next;
       setResizing({ id: w.i, ...next });
     };
-    // A release can come as pointerup, pointercancel, or only as the loss of
-    // the capture (a drag the browser took over): each ends it, once.
-    const events = ['pointerup', 'pointercancel', 'lostpointercapture'] as const;
+    // The moves and the release are read on the window, not the handle, and
+    // the loss of the capture is not a release. The cards are drawn in packed
+    // order, so a size that moves this card to another row or column moves
+    // its node in the DOM; the browser then drops the capture and fires
+    // lostpointercapture while the button is still down. The window still
+    // gets every move and the release, captured or not. A release the window
+    // cannot see (the window loses focus mid-drag) ends it too.
+    const events = ['pointerup', 'pointercancel', 'blur'] as const;
     const end = () => {
-      handle.removeEventListener('pointermove', move);
-      for (const type of events) handle.removeEventListener(type, end);
+      window.removeEventListener('pointermove', move);
+      for (const type of events) window.removeEventListener(type, end);
       setResizing(null);
       // A width held to a narrower pane is kept as it was saved.
       const wide = last.w === box.w ? w.w : last.w;
       if (wide !== w.w || last.h !== w.h) onWrite(resizeWidget(widgets, w.i, wide, last.h));
     };
-    handle.addEventListener('pointermove', move);
-    for (const type of events) handle.addEventListener(type, end);
+    window.addEventListener('pointermove', move);
+    for (const type of events) window.addEventListener(type, end);
   }
 
   /** The arrow keys on the corner: a column or a row at a time. */
@@ -462,6 +532,10 @@ export default function Dashboard({ widgets, onWrite }: {
     const name = t(widgetNameKey(kind));
     const place = placeOf(box);
     const target = def.target ? targetState(w) : { state: 'ok' as const };
+    // What the card is called in its head, its grip and its corner: the
+    // target of a note, tag, folder or tracker widget, so two tag widgets do
+    // not both read "Options for A tag" to a screen reader.
+    const label = def.target ? target.title ?? name : name;
     const dragTarget = drag?.target?.overId === w.i ? drag.target : null;
     const line = dragTarget && <DropLine edge={dragTarget.axis === 'y' ? (dragTarget.place === 'before' ? 'top' : 'bottom') : dragTarget.place === 'before' ? 'start' : 'end'} />;
     const sizing = resizing?.id === w.i;
@@ -477,7 +551,7 @@ export default function Dashboard({ widgets, onWrite }: {
           type="button"
           data-no-drag
           data-home-grip={w.i}
-          aria-label={t('editor:formatBar.optionsFor', { item: name })}
+          aria-label={t('editor:formatBar.optionsFor', { item: label })}
           {...pressProps(w.i, { grip: true })}
           onClick={(e) => openWidgetMenu(e, w)}
           className="pn-card-ctl pn-card-grip absolute -top-2.5 left-1/2 z-10 flex h-5 w-10 -translate-x-1/2 items-center justify-center rounded-full border border-divider bg-surface-2 text-pn-muted shadow-sm cursor-grab active:cursor-grabbing hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-accent"
@@ -489,17 +563,23 @@ export default function Dashboard({ widgets, onWrite }: {
             <span className="rounded-md bg-surface-1 px-2 py-0.5 text-small tabular-nums text-pn shadow-sm">{resizing.w} × {resizing.h}</span>
           </span>
         )}
-        <button
-          type="button"
-          data-no-drag
-          data-home-resize={w.i}
-          aria-label={t('dashboard.resize', { name })}
-          onPointerDown={(e) => startResize(e, w, asked)}
-          onKeyDown={(e) => keyResize(e, w, asked)}
-          className="pn-card-ctl pn-card-resize absolute bottom-1 end-1 z-10 flex h-7 w-7 touch-none items-center justify-center rounded-md bg-surface-2 text-pn-muted hover:bg-pn/5 hover:text-pn cursor-nwse-resize rtl:cursor-nesw-resize focus-visible:outline-2 focus-visible:outline-accent"
-        >
-          <ArrowDownRight aria-hidden="true" className="rtl:-scale-x-100" />
-        </button>
+        {/* The picture handle's plate and glyph (ui-patterns.md section 160),
+            in the bottom end corner with the notches turned to it. */}
+        <div className="pn-card-ctl pn-card-resize absolute bottom-1 end-1 z-10">
+          <HoverLabel label={t('media:image.resizeHint')} position="start" disabled={sizing}>
+            <button
+              type="button"
+              data-no-drag
+              data-home-resize={w.i}
+              aria-label={t('dashboard.resize', { name: label })}
+              onPointerDown={(e) => startResize(e, w, asked)}
+              onKeyDown={(e) => keyResize(e, w, asked)}
+              className="pn-resize-plate cursor-nwse-resize rtl:cursor-nesw-resize focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              <Notches aria-hidden="true" className="rtl:-scale-x-100" />
+            </button>
+          </HoverLabel>
+        </div>
       </>
     ) : line || undefined;
     const common = {
@@ -532,7 +612,7 @@ export default function Dashboard({ widgets, onWrite }: {
       );
       continue;
     }
-    const title = def.target ? target.title ?? name : PAIRS.has(kind) ? undefined : name;
+    const title = PAIRS.has(kind) ? undefined : label;
     let body: ReactNode;
     if (def.target && target.state !== 'ok') {
       body = (

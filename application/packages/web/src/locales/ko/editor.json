@@ -216,6 +216,8 @@
     "textLabel": "링크 텍스트",
     "textPlaceholder": "선택 사항, 비우면 URL이 표시돼요",
     "selectedTextHint": "선택한 텍스트가 링크로 사용돼요",
+    "titleLabel": "마우스 오버 텍스트",
+    "titleHint": "링크에 포인터를 올리면 보여요",
     "update": "업데이트",
     "menuOpen": "링크 열기",
     "menuCopy": "링크 복사",

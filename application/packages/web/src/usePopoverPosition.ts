@@ -40,6 +40,26 @@ export function visibleBottom(): number {
   return vv ? Math.min(window.innerHeight, vv.offsetTop + vv.height) : window.innerHeight;
 }
 
+let insetProbe: HTMLDivElement | null = null;
+
+/**
+ * The top of what can be seen: under the iOS status bar (the safe-area inset,
+ * 0 everywhere else), and under the part of the page iOS scrolled out of view
+ * to show a focused field over the keyboard. A menu that fits neither below
+ * nor above its button was pushed to the window's top edge, which sat under
+ * the clock (GitHub #707).
+ */
+function visibleTop(): number {
+  if (!insetProbe) {
+    insetProbe = document.createElement('div');
+    insetProbe.setAttribute('aria-hidden', 'true');
+    insetProbe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top);visibility:hidden;pointer-events:none';
+    document.body.appendChild(insetProbe);
+  }
+  const vv = window.visualViewport;
+  return Math.max(vv ? vv.offsetTop : 0, insetProbe.getBoundingClientRect().height);
+}
+
 /**
  * Place an editor suggestion list (`[[`, `=`) at the caret: below it, nudged
  * left off the right edge, and above it when it would not fit below (the
@@ -92,6 +112,7 @@ export function usePopoverPosition<A extends HTMLElement, P extends HTMLElement>
     const p = pop.getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = visibleBottom();
+    const minTop = visibleTop() + margin;
 
     // Horizontal: align to the trigger's chosen edge, then slide inward to fit.
     let left = align === 'end' ? a.right - p.width : align === 'center' ? a.left + (a.width - p.width) / 2 : a.left;
@@ -107,19 +128,19 @@ export function usePopoverPosition<A extends HTMLElement, P extends HTMLElement>
     let maxHeight: number | undefined;
     if (top + height > vh - margin) {
       const above = a.top - height - gap;
-      if (above >= margin) {
+      if (above >= minTop) {
         top = above;
       } else if (shrink) {
         const roomBelow = vh - margin - top;
-        const roomAbove = a.top - gap - margin;
+        const roomAbove = a.top - gap - minTop;
         if (roomBelow >= roomAbove) {
           maxHeight = roomBelow;
         } else {
-          top = margin;
+          top = minTop;
           maxHeight = roomAbove;
         }
       } else {
-        top = Math.max(margin, vh - p.height - margin);
+        top = Math.max(minTop, vh - p.height - margin);
       }
     }
 

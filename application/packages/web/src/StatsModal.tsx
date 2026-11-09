@@ -43,7 +43,7 @@ type Props = {
 
 /** Where Statistics opens: the one page, or one of the pages a row opens. */
 /** Where Statistics opens: a tab, or a page of the Trackers tab. */
-export type Tab = 'overview' | 'wellness' | 'writing' | 'medication' | 'mood';
+type Tab = 'overview' | 'wellness' | 'writing' | 'medication' | 'mood';
 
 /**
  * The Statistics pane: one page of days logged, what stands out, every

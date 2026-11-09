@@ -7,6 +7,9 @@
   "applyToSubfolders": "Apply color to subfolders",
   "icon": "Icon",
   "searchPlaceholder": "Search icons",
+  "searchLogos": "Search logos",
+  "moreLogos": "More logos",
+  "allLogos": "All logos, A to Z",
   "recent": "Recently used",
   "number": "Number {{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "Sport",
     "tech": "Science and tech",
     "signals": "Signals",
-    "numbers": "Numbers and math"
+    "numbers": "Numbers and math",
+    "systems": "Systems and devices",
+    "browsers": "Browsers and search",
+    "office": "Notes and office",
+    "dev": "Code and hosting",
+    "ai": "AI",
+    "chat": "Chat and mail",
+    "social": "Social and creators",
+    "media": "Music, video and books",
+    "games": "Games",
+    "learning": "Learning and research",
+    "trips": "Travel and fitness",
+    "privacy": "Privacy and security"
   },
   "icons": {
     "folder": "Folder",

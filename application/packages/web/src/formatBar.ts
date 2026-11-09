@@ -62,7 +62,7 @@ export const FORMAT_BAR_ITEMS: readonly FormatBarItem[] = [
   row('highlight', false), row('callout', false), row('strike'),
   menu('table', 'insert'), menu('hr', 'insert'), menu('bullets', 'insert'), menu('numbered', 'insert'),
   menu('indent', 'insert'), menu('outdent', 'insert'),
-  menu('fromFiles', 'insert', true), menu('date', 'insert'), menu('dateTime', 'insert'),
+  menu('fromFiles', 'insert', true), menu('date', 'insert'), menu('dateTime', 'insert'), menu('icon', 'insert'),
   menu('quote', 'blocks'), menu('codeblock', 'blocks'), menu('copybox', 'blocks'), menu('kanban', 'blocks'),
   menu('inlinecode', 'notation'), menu('math', 'notation'), menu('blockmath', 'notation'),
   menu('superscript', 'notation'), menu('subscript', 'notation'), menu('spoiler', 'notation'),

@@ -7,6 +7,9 @@
   "applyToSubfolders": "Použít barvu na podsložky",
   "icon": "Ikona",
   "searchPlaceholder": "Hledat ikony",
+  "searchLogos": "Hledat loga",
+  "moreLogos": "Další loga",
+  "allLogos": "Všechna loga, od A do Z",
   "recent": "Nedávno použité",
   "number": "Číslo {{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "Sporty",
     "tech": "Věda a technika",
     "signals": "Signály",
-    "numbers": "Čísla a matematika"
+    "numbers": "Čísla a matematika",
+    "systems": "Systémy a zařízení",
+    "browsers": "Prohlížeče a vyhledávání",
+    "office": "Poznámky a kancelář",
+    "dev": "Kód a hosting",
+    "ai": "AI",
+    "chat": "Chat a pošta",
+    "social": "Sociální sítě a tvůrci",
+    "media": "Hudba, video a knihy",
+    "games": "Hry",
+    "learning": "Vzdělávání a výzkum",
+    "trips": "Cestování a fitness",
+    "privacy": "Soukromí a zabezpečení"
   },
   "icons": {
     "folder": "Složka",

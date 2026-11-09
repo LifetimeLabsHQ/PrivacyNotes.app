@@ -471,9 +471,32 @@
     "save-page-as-note": {
       "q": "Posso salvare una pagina web come nota?",
       "a": [
-        "Sì. [Apri un segnalibro](/it/help/bookmarks/) e scegli Salva come nota, oppure scegli Salva pagina web nel menu + e incolla un link. Il testo principale della pagina diventa una normale nota in Note, collegata al suo segnalibro, e fino a 20 delle sue immagini vengono conservate con la nota, cifrate come qualsiasi immagine che aggiungi tu, a meno che tu non disattivi Salva le immagini nella finestra Salva pagina web. Salvare pagine è gratuito in ogni piano, e [le immagini contano sul tuo spazio di archiviazione](/it/help/storage-usage/).",
+        "Sì. [Apri un segnalibro](/it/help/bookmarks/) e scegli Salva come nota, oppure scegli Salva pagina web nel menu + e incolla un link. Il testo principale della pagina diventa una normale nota in Note, collegata al segnalibro quando l’hai salvata da uno, e fino a 20 delle sue immagini vengono conservate con la nota, cifrate come qualsiasi immagine che aggiungi tu, a meno che tu non disattivi Salva le immagini nella finestra Salva pagina web. Salvare pagine è gratuito in ogni piano, e [le immagini contano sul tuo spazio di archiviazione](/it/help/storage-usage/).",
         "Le app per desktop e telefono scaricano la pagina e le sue immagini direttamente dal tuo dispositivo. L’app web le scarica passando dal nostro server, che le inoltra e non conserva né la pagina, né le immagini, né i loro indirizzi. Le pagine dietro un accesso e quelle costruite da script possono risultare vuote: tienile come segnalibro.",
         "Con l’[estensione del browser](/it/help/browser-extension/) puoi anche salvare la pagina che stai leggendo, comprese le pagine dietro un accesso."
+      ]
+    },
+    "command-line": {
+      "q": "Posso aggiungere note dalla riga di comando (CLI) o da un agente IA?",
+      "a": [
+        "Sì, con pn, l'interfaccia a riga di comando (CLI) di PrivacyNotes. Può usarlo qualsiasi cosa giri in un terminale: i tuoi script, le attività pianificate e gli agenti IA per la programmazione. Passagli del Markdown, aggiungi un titolo e dei tag, e la nota arriva nella cartella Agent delle tue note, su tutti i tuoi dispositivi dopo la loro prossima sincronizzazione. pn può solo aggiungere note: non può aprire, modificare o eliminare quelle che hai. Richiede [Node.js](https://nodejs.org/en/download) 20 o successivo, ed è incluso in Pro.",
+        "Per configurarlo, apri Impostazioni > CLI nell'app desktop e scegli Attiva. Scegli Installa, che mette pn su questo computer, poi Crea un codice. In un nuovo terminale esegui `pn login` e incolla il codice. Poi salva la tua prima nota:",
+        "`echo \"# Hello\" | pn save`",
+        "pn ha pochi comandi, perché fa un solo lavoro. Ognuno stampa una breve scheda per una persona, oppure una riga di JSON con `--json` per uno script:",
+        "- `pn login` collega questo computer con un codice monouso di Impostazioni > CLI. Incolla il codice, oppure passalo in pipe.\n- `pn save note.md` aggiunge una nota da un file, mentre `pn save` da solo legge il Markdown passato in pipe. `--title` imposta il titolo, altrimenti si usa il primo titolo `#` o la prima riga. `--tag work,ideas` aggiunge dei tag.\n- `pn status` mostra se questo computer è collegato e l'ultima nota che ha salvato.\n- `pn logout` scollega questo computer.\n- `pn mcp` esegue pn come strumento per un'app di IA senza terminale, vedi [MCP](/it/help/mcp/).\n- `pn help` (o `pn --help`) elenca ogni comando e opzione, e `pn --version` stampa la versione.",
+        "Con un agente IA per la programmazione, collega pn una volta sul computer dove gira l'agente, poi chiedi a parole tue: \"Salva questo piano nel mio PrivacyNotes con pn save, con il tag project.\" L'agente può leggere `pn --help` per i dettagli, scrive il Markdown e lo passa in pipe. Lo stesso comando funziona nei tuoi script e nelle attività pianificate:",
+        "- `git log --oneline -20 | pn save --title \"Recent commits\"` salva i tuoi ultimi commit.\n- `pbpaste | pn save --tag inbox` salva ciò che hai copiato, su un Mac.\n- `pn save --tag daily report.md` in un'attività notturna salva un report generato.",
+        "Una nota può contenere fino a 700 KB di Markdown, 20 tag e un titolo di 200 caratteri, e pn lo controlla prima di inviarla. Esce con 0 quando la nota è salvata, 1 quando il server la rifiuta, 2 per input non valido, 3 quando il computer non è collegato e 4 quando non c'è rete, così uno script può reagire. Una nota salvata attende, sigillata, finché una delle tue app non si apre; se nessuna lo fa entro 90 giorni, viene eliminata. Per scollegare un computer, scegli Rimuovi accanto ad esso in Impostazioni > CLI. Cosa possono vedere pn e un agente è spiegato in [pn o un agente IA possono leggere le mie note?](/it/help/cli-security/)."
+      ]
+    },
+    "mcp": {
+      "q": "Un'app di IA può salvare note in PrivacyNotes tramite MCP?",
+      "a": [
+        "Sì. MCP (Model Context Protocol) è il modo standard in cui le app di IA collegano degli strumenti, e pn, l'interfaccia a riga di comando di PrivacyNotes, può funzionare come uno di essi. Aggiungilo una volta e in qualsiasi chat puoi chiedere a parole tue: \"Salva un riassunto di questa chat nelle mie note, con il tag meeting.\" L'app chiama lo strumento save_note di pn, e la nota va nella cartella Agent delle tue note, su tutti i tuoi dispositivi dopo la loro prossima sincronizzazione. Lo strumento può solo aggiungere note, quindi una chat non può aprire, modificare o eliminare quelle che hai. È incluso in Pro.",
+        "Prima [configura pn](/it/help/command-line/) sullo stesso computer e collegalo con `pn login`. Poi apri le impostazioni MCP della tua app di IA, una schermata delle impostazioni o un file come mcp.json, aggiungi questa voce sotto `mcpServers` e riavvia l'app:",
+        "`\"privacynotes\": { \"command\": \"pn\", \"args\": [\"mcp\"] }`",
+        "Lo strumento riceve il Markdown, e facoltativamente un titolo e dei tag, con gli stessi limiti di `pn save`: 700 KB, 20 tag e un titolo di 200 caratteri. Quando qualcosa blocca un salvataggio, lo strumento lo dice all'app a parole, così l'app può dirlo a te: pn non è ancora collegato, la nota è troppo grande oppure il server l'ha rifiutata.",
+        "Se l'app dice di non riuscire ad avviare pn, indica il percorso completo come comando: quello che stampa `which pn`, oppure `where pn` su Windows. Le app avviate dal Dock o dal menu Start spesso non vedono i percorsi che vede il tuo terminale. pn richiede [Node.js](https://nodejs.org/en/download) 20 o successivo su quel computer."
       ]
     },
     "browser-extension": {
@@ -483,11 +506,18 @@
         "Apri Impostazioni > Estensione, aggiungi l’estensione dallo store del tuo browser, scegli cosa può fare, poi scegli Crea un codice. Copia il codice monouso e incollalo nell’estensione. Per rimuoverla, scegli Rimuovi accanto a essa sotto Estensioni del browser, nella stessa pagina. Un’estensione non occupa uno slot dispositivo. [Come protegge le tue note](/it/help/browser-extension-security/)."
       ]
     },
+    "cli-security": {
+      "q": "pn o un agente IA possono leggere le mie note?",
+      "a": [
+        "No. pn conserva un token che può solo aggiungere note e una chiave pubblica che può solo sigillare una nota per il tuo account, mai la chiave che apre le tue note. Una nota è cifrata sul computer che esegue pn e attende sul server, sigillata, finché una delle tue app non la apre e la archivia nella cartella Agent. Quindi un agente, o chiunque copi il token, può aggiungere note ma non può aprire, modificare o eliminare quelle che hai.",
+        "Il token è conservato in un file che può leggere solo il tuo account utente su quel computer. Per escludere subito un computer, scegli Rimuovi accanto ad esso in Impostazioni > CLI; Disattiva li scollega tutti. Il server vede che è arrivata una nota, quando, e la sua dimensione arrotondata per eccesso. I dettagli sono nel nostro [modello delle minacce](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "browser-extension-security": {
       "q": "L’estensione del browser può leggere le mie note?",
       "a": [
         "No. L’estensione non possiede mai la chiave che apre le tue note. Blocca ogni pagina salvata prima che lasci il tuo browser, e una delle tue app la trasforma in nota alla sincronizzazione successiva.",
-        "Se attivi gli accessi, l’estensione vede i tuoi accessi, le tue carte, la metà pubblica delle tue chiavi SSH e i tuoi segnalibri, mai il testo di una nota e mai una chiave privata. Sono protetti da un PIN o da un codice di sblocco che imposti per l’estensione, separato da quello dell’app. Dopo 10 tentativi sbagliati il browser viene scollegato, così una copia del tuo browser non può essere aperta a tentativi. Gli accessi si bloccano dopo 5 minuti senza uso e alla chiusura del browser. I dettagli sono nel nostro [threat model](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+        "Se attivi gli accessi, l’estensione vede i tuoi accessi, le tue carte, la metà pubblica delle tue chiavi SSH e i tuoi segnalibri, mai il testo di una nota e mai una chiave privata. Sono protetti da un PIN o da un codice di sblocco che imposti per l’estensione, separato da quello dell’app. Dopo 10 tentativi sbagliati il browser viene scollegato, così una copia del tuo browser non può essere aperta a tentativi. Gli accessi si bloccano dopo il tempo che scegli nell’estensione (15 minuti senza uso, se non lo cambi), al massimo dopo 7 giorni, e sempre alla chiusura del browser. I dettagli sono nel nostro [threat model](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
     "contacts": {

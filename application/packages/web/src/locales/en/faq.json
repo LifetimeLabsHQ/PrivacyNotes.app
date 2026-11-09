@@ -471,9 +471,32 @@
     "save-page-as-note": {
       "q": "Can I save a web page as a note?",
       "a": [
-        "Yes. [Open a bookmark](/help/bookmarks/) and choose Save as note, or pick Clip page in the + menu and paste a link. The main text of the page becomes an ordinary note in Notes, linked to its bookmark, and up to 20 of its pictures are stored with the note, encrypted like any picture you add yourself, unless you switch off Save pictures in the Clip page window. Saving pages is free on every tier, and [the pictures count toward your storage](/help/storage-usage/).",
+        "Yes. [Open a bookmark](/help/bookmarks/) and choose Save as note, or pick Clip page in the + menu and paste a link. The main text of the page becomes an ordinary note in Notes, linked to the bookmark when you saved it from one, and up to 20 of its pictures are stored with the note, encrypted like any picture you add yourself, unless you switch off Save pictures in the Clip page window. Saving pages is free on every tier, and [the pictures count toward your storage](/help/storage-usage/).",
         "The desktop and phone apps download the page and its pictures directly from your device. The web app downloads them through our server, which passes them on and keeps neither the page, the pictures nor their addresses. Pages behind a login and pages built by scripts can come back empty: keep those as a bookmark.",
         "With the [browser extension](/help/browser-extension/), you can also save the page you are reading, including pages behind a login."
+      ]
+    },
+    "command-line": {
+      "q": "Can I add notes from the command line (CLI) or an AI agent?",
+      "a": [
+        "Yes, with pn, the PrivacyNotes command line interface (CLI). Anything that runs in a terminal can use it: your own scripts, scheduled jobs and AI coding agents. Pipe in Markdown, add a title and tags, and the note lands in the Agent folder of your notes, on all your devices after their next sync. pn can only add notes: it cannot open, change or delete the notes you have. It needs [Node.js](https://nodejs.org/en/download) 20 or newer, and it is part of Pro.",
+        "To set it up, open Settings > CLI in the desktop app and choose Turn on. Choose Install, which puts pn on this computer, then Make a code. In a new terminal, run `pn login` and paste the code. Then save your first note:",
+        "`echo \"# Hello\" | pn save`",
+        "pn has few commands, because it does one job. Each one prints a short card for a person, or one line of JSON with `--json` for a script:",
+        "- `pn login` connects this computer with a one-time code from Settings > CLI. Paste the code, or pipe it in.\n- `pn save note.md` adds a note from a file, and `pn save` alone reads Markdown piped in. `--title` sets the title, otherwise the first `#` heading or the first line is used. `--tag work,ideas` adds tags.\n- `pn status` shows whether this computer is connected, and the last note it saved.\n- `pn logout` disconnects this computer.\n- `pn mcp` runs pn as a tool for an AI app with no terminal, see [MCP](/help/mcp/).\n- `pn help` (or `pn --help`) lists every command and option, and `pn --version` prints the version.",
+        "With an AI coding agent, connect pn once on the computer where the agent runs, then ask in plain words: \"Save this plan to my PrivacyNotes with pn save, tagged project.\" The agent can read `pn --help` for the details, writes the Markdown and pipes it in. The same command works in your own scripts and scheduled jobs:",
+        "- `git log --oneline -20 | pn save --title \"Recent commits\"` saves your latest commits.\n- `pbpaste | pn save --tag inbox` saves what you copied, on a Mac.\n- `pn save --tag daily report.md` in a nightly job saves a generated report.",
+        "A note holds up to 700 KB of Markdown, 20 tags and a 200-character title, and pn checks this before it sends. It exits with 0 when the note is saved, 1 when the server refuses it, 2 for bad input, 3 when the computer is not connected and 4 when there is no network, so a script can react. A saved note waits, sealed, until one of your apps opens; if none does within 90 days, it is deleted. To disconnect a computer, choose Remove next to it in Settings > CLI. What pn and an agent can see is in [Can pn or an AI agent read my notes?](/help/cli-security/)."
+      ]
+    },
+    "mcp": {
+      "q": "Can an AI app save notes to PrivacyNotes over MCP?",
+      "a": [
+        "Yes. MCP (Model Context Protocol) is the standard way AI apps plug in tools, and pn, the PrivacyNotes command line interface, can run as one. Add it once, and in any chat you can ask in plain words: \"Save a summary of this chat to my notes, tagged meeting.\" The app calls pn's save_note tool, and the note goes to the Agent folder of your notes, on all your devices after their next sync. The tool can only add notes, so a chat cannot open, change or delete the notes you have. It is part of Pro.",
+        "First [set up pn](/help/command-line/) on the same computer and connect it with `pn login`. Then open your AI app's MCP settings, a settings screen or a file such as mcp.json, add this entry under `mcpServers`, and restart the app:",
+        "`\"privacynotes\": { \"command\": \"pn\", \"args\": [\"mcp\"] }`",
+        "The tool takes the Markdown, and optionally a title and tags, with the same limits as `pn save`: 700 KB, 20 tags and a 200-character title. When something stops a save, the tool tells the app in words, so the app can tell you: pn is not connected yet, the note is too large, or the server refused it.",
+        "If the app says it cannot start pn, give the full path as the command: the one that `which pn` prints, or `where pn` on Windows. Apps started from the Dock or the Start menu often do not see the paths your terminal sees. pn needs [Node.js](https://nodejs.org/en/download) 20 or newer on that computer."
       ]
     },
     "browser-extension": {
@@ -483,11 +506,18 @@
         "Open Settings > Extension, add the extension from your browser's store, pick what it may do, then choose Make a code. Copy the one-time code and paste it into the extension. To remove it, choose Remove next to it under Browser extensions on the same page. An extension does not use one of your device slots. [How it keeps your notes safe](/help/browser-extension-security/)."
       ]
     },
+    "cli-security": {
+      "q": "Can pn or an AI agent read my notes?",
+      "a": [
+        "No. pn holds a token that can only add notes and a public key that can only seal a note for your account, never the key that opens your notes. A note is encrypted on the computer that runs pn and waits on the server, sealed, until one of your apps opens it and files it in the Agent folder. So an agent, or anyone who copies the token, can add notes but cannot open, change or delete the notes you have.",
+        "The token is kept in a file that only your user account on that computer can read. To cut off one computer at once, choose Remove next to it in Settings > CLI; Turn off disconnects them all. The server sees that a note arrived, when, and its size rounded up. The details are in our [threat model](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "browser-extension-security": {
       "q": "Can the browser extension read my notes?",
       "a": [
         "No. The extension never holds the key that opens your notes. It locks each clip before it leaves your browser, and one of your apps turns it into a note at its next sync.",
-        "If you turn on logins, the extension sees your logins, your cards, the public half of your SSH keys and your bookmarks, never a note's text and never a private key. They are protected by a PIN or passcode you set for the extension, separate from the app's. After 10 wrong tries the browser is disconnected, so a copy of your browser cannot be guessed open. Logins lock after 5 minutes without use and when the browser closes. The details are in our [threat model](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+        "If you turn on logins, the extension sees your logins, your cards, the public half of your SSH keys and your bookmarks, never a note's text and never a private key. They are protected by a PIN or passcode you set for the extension, separate from the app's. After 10 wrong tries the browser is disconnected, so a copy of your browser cannot be guessed open. Logins lock after the time you choose in the extension (15 minutes without use unless you change it), after 7 days at the latest, and always when the browser closes. The details are in our [threat model](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
     "contacts": {

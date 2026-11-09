@@ -36,6 +36,11 @@ export async function readConnection(): Promise<Connection | null> {
   return got && got.v === 1 ? got : null;
 }
 
+/** Store the connection; a new PIN or passcode changes its salt and kind. */
+export async function saveConnection(connection: Connection): Promise<void> {
+  await browser.storage.local.set({ [KEY]: connection });
+}
+
 /** Forget everything this browser holds for the account. A password copied
  *  in the last 30 seconds is cleared first, while its marker still exists. */
 export async function forgetLocal(): Promise<void> {
@@ -119,7 +124,7 @@ export async function redeem(text: string, secret?: { value: string; kind: Secre
     salt: salt ? bytesToBase64(salt) : null,
     secretKind: secret?.kind ?? null,
   };
-  await browser.storage.local.set({ [KEY]: connection });
+  await saveConnection(connection);
   return { ok: true, connection, proof };
 }
 

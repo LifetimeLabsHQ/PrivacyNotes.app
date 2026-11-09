@@ -4,8 +4,11 @@
  * A note target shows the icon grid alone: its color keeps the note menu's
  * own view, which knows "take the tag's or folder's color" and "no color".
  *
- * Two tabs, Icon first, because the icon search needs the room: with the
- * colors above it, a phone keyboard left the hits no space at all.
+ * Tabs: Icon, Logo and Color (a note and a tracker have no Color tab). Icon
+ * comes first, because the icon search needs the room: with the colors above
+ * it, a phone keyboard left the hits no space at all. Logo is the same grid
+ * and search over the brand logos, a catalog of its own that loads with the
+ * tab (section 3.6).
  *
  * A window in the middle of the screen; a bottom sheet under `lg`, where the
  * sidebar is a drawer. While a soft keyboard is up, the sheet spans the
@@ -21,10 +24,10 @@
  * query, the icons the folders and tags already wear lead as one row.
  * Spec: docs/internal/specs/folder-tag-icons.md (section 6)
  */
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type UIEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { File, Folder, Globe, Hash, Heartbeat, Palette, Shapes, Star } from '../icons';
+import { AppWindow, File, Folder, Globe, Hash, Heartbeat, Palette, Shapes, Star } from '../icons';
 import { ColorSwatchRow } from '../ColorSwatch';
 import { useEscapeToClose } from '../useEscapeToClose';
 import { useIsMobile } from '../useIsMobile';
@@ -41,7 +44,7 @@ import {
 } from '../itemStyles';
 import { inkStyle, PathGlyph } from './LookGlyph';
 import { NoteColorExample } from './NoteColorExample';
-import { useLookIcons } from './lookIconsLoader';
+import { isLogoId, useLogoIndex, useLogoPaths, useLookIcons, useLookLogos, useLookPaths } from './lookIconsLoader';
 import { recentLookIcons, searchLookIcons } from './lookIconSearch';
 import i18n, { activeLocale, ensureLooksLoaded } from '../i18n';
 import { isImeComposing } from '../imeComposing';
@@ -49,8 +52,13 @@ import { isSoftKeyboardDevice } from '../softKeyboard';
 import { HeadlineRule, SETTINGS_HELP, SETTINGS_TRACK, SettingsTabStrip, settingsSegClass, settingsTabClass } from '../settingsUI';
 import { useKeyboardRect } from '../useKeyboardOpen';
 import { Switch } from '../Switch';
+import { useProgressiveReveal } from '../useProgressiveReveal';
 import { ListSearchInput } from '../ListSearchInput';
 import { Button, CloseButton, ModalFooter } from '../ui';
+
+/** The hits from all logos shown under the curated ones; each row of them
+ *  may load another shard, so the list stops here. */
+const MORE_LOGO_HITS = 48;
 
 // Search keywords per language, from Unicode CLDR (tools/gen-look-keywords.mjs).
 // Only the reader's language and English load, with the picker.
@@ -63,8 +71,10 @@ async function loadKeywords(): Promise<{ local: Record<string, string>; en: Reco
 }
 
 export interface LookTarget {
-  /** A tracker is icon-only, as a note is: its color has its own swatches. */
-  kind: 'folder' | 'tag' | 'note' | 'tracker';
+  /** A tracker is icon-only, as a note is: its color has its own swatches.
+   *  `insert` puts the pick into a note's text (Insert > Icons & logos): no
+   *  look of its own, so no "Use default". */
+  kind: 'folder' | 'tag' | 'note' | 'tracker' | 'insert';
   /** `folderLookKey(id)`, `tagLookKey(tag)` or `noteLookKey(id)`. */
   lookKey: string;
   /** The folder id, for a folder target. */
@@ -110,9 +120,16 @@ export function LookPicker({
   const panelRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-  const iconOnly = target.kind === 'note' || target.kind === 'tracker';
-  const [tab, setTab] = useState<'icon' | 'color'>('icon');
+  const iconOnly = target.kind === 'note' || target.kind === 'tracker' || target.kind === 'insert';
+  const [tab, setTab] = useState<'icon' | 'logo' | 'color'>(() => (isLogoId(lookOf(styles, target.lookKey).icon) ? 'logo' : 'icon'));
+  const logoCatalog = useLookLogos(tab === 'logo');
+  // The A to Z list of every other logo starts once the curated groups are
+  // scrolled near their end, so opening the tab loads the curated set alone.
+  const [browseAll, setBrowseAll] = useState(false);
+  const reveal = useProgressiveReveal();
+  const wornOther = !!logoCatalog && recentLookIcons(styles, isLogoId).some((id) => !logoCatalog.LOOK_LOGO_PATHS[id]);
   const [query, setQuery] = useState('');
+  const logoIndex = useLogoIndex(tab === 'logo' && (!!query.trim() || browseAll || wornOther));
   const keyboard = useKeyboardRect(isSheet);
   const [hoverIcon, setHoverIcon] = useState<string | null>(null);
   // The names load with the picker (i18n.ts, ensureLooksLoaded); the state
@@ -161,10 +178,11 @@ export function LookPicker({
   // Straight into the search field where a keyboard is already out; a phone
   // would otherwise raise its keyboard over the icons on open.
   useEffect(() => {
-    if (tab === 'icon' && !isSoftKeyboardDevice()) searchRef.current?.focus({ preventScroll: true });
+    if (tab !== 'color' && !isSoftKeyboardDevice()) searchRef.current?.focus({ preventScroll: true });
   }, [tab]);
 
   function iconName(id: string): string {
+    if (isLogoId(id)) return logoCatalog?.LOOK_LOGO_NAMES[id] ?? moreLogoNames.get(id) ?? '';
     const n = catalog?.lookIconNumber(id) ?? null;
     return n === null ? t(`icons.${id}`) : t('number', { n });
   }
@@ -172,7 +190,14 @@ export function LookPicker({
   // Every icon with the texts a query may match: the name in the UI language,
   // then in English, so a German reader finds the heart by "herz" and by
   // "heart", then the emoji keywords in both, then the group name.
+  // A logo's name is the brand's, the same in every language.
   const entries = useMemo(() => {
+    if (tab === 'logo') {
+      if (!logoCatalog || !namesReady) return [];
+      return logoCatalog.LOOK_LOGO_GROUPS.flatMap((group) =>
+        group.ids.map((id) => ({ id, texts: [logoCatalog.LOOK_LOGO_NAMES[id] ?? '', t(`groups.${group.key}`)] })),
+      );
+    }
     if (!catalog || !namesReady) return [];
     const tEn = i18n.getFixedT('en', 'looks');
     return catalog.LOOK_ICON_GROUPS.flatMap((group) =>
@@ -183,13 +208,33 @@ export function LookPicker({
         return { id, texts: [...names, ...words, t(`groups.${group.key}`)] };
       }),
     );
-  }, [catalog, namesReady, keywords, t]);
+  }, [tab, catalog, logoCatalog, namesReady, keywords, t]);
+  // Every other Simple Icons logo, searched by name under the curated hits.
+  const moreLogoEntries = useMemo(
+    () => (logoIndex?.logos ?? []).map(([id, name]) => ({ id, texts: [name] })),
+    [logoIndex],
+  );
+  const moreLogoNames = useMemo(() => new Map(logoIndex?.logos ?? []), [logoIndex]);
   const hits = query.trim() ? searchLookIcons(query, entries) : null;
-  const recent = catalog ? recentLookIcons(styles, (id) => id in catalog.LOOK_ICONS) : [];
+  const moreHits = tab === 'logo' && query.trim() ? searchLookIcons(query, moreLogoEntries).slice(0, MORE_LOGO_HITS) : [];
+  // The grid of the open tab, and its own recent row.
+  const shown = tab === 'logo' ? logoCatalog : catalog;
+  const recent = shown
+    ? recentLookIcons(styles, (id) => (tab === 'logo' ? isLogoId(id) : !!catalog && id in catalog.LOOK_ICONS))
+    : [];
+  const allLogos = browseAll && tab === 'logo' && !hits ? (logoIndex?.logos ?? []).slice(0, reveal.visible).map(([id]) => id) : [];
+  const logoPaths = useLogoPaths(tab === 'logo' ? [...recent, ...moreHits, ...allLogos] : []);
+  function onBodyScroll(e: UIEvent<HTMLDivElement>) {
+    if (tab !== 'logo' || hits) return;
+    const el = e.currentTarget;
+    if (browseAll) reveal.onScroll(el, logoIndex?.logos.length ?? 0);
+    else if (el.scrollHeight - el.scrollTop - el.clientHeight < el.clientHeight) setBrowseAll(true);
+  }
+  const pathsOf = (id: string) => (isLogoId(id) ? logoPaths(id) : catalog?.LOOK_ICONS[id]);
 
   const previewIcon = hoverIcon ?? look.icon;
-  const previewPaths = previewIcon ? catalog?.LOOK_ICONS[previewIcon] : undefined;
-  const DefaultGlyph = target.kind === 'folder' ? Folder : target.kind === 'note' ? File : target.kind === 'tracker' ? Heartbeat : target.favorite ? Star : Hash;
+  const previewPaths = useLookPaths(previewIcon);
+  const DefaultGlyph = target.kind === 'folder' ? Folder : target.kind === 'note' ? File : target.kind === 'tracker' ? Heartbeat : target.kind === 'insert' ? Shapes : target.favorite ? Star : Hash;
   const caption = hoverIcon
     ? iconName(hoverIcon)
     : target.kind === 'folder'
@@ -198,7 +243,9 @@ export function LookPicker({
         ? t('notes:newMenu.note')
         : target.kind === 'tracker'
           ? t('captionTracker')
-          : t('captionTag');
+          : target.kind === 'insert'
+            ? ''
+            : t('captionTag');
   // A note's color belongs to the note menu, so its reset leaves the color.
   const reset: Partial<Record<LookAttr, null>> = iconOnly ? { icon: null } : { icon: null, color: null };
   const resettable = iconOnly ? !!look.icon : !!look.icon || !!look.color;
@@ -252,7 +299,9 @@ export function LookPicker({
       // The field hands its value up after a short pause, so the hits are
       // read from what is typed now, not from the last value handed up.
       const typed = e.currentTarget.value;
-      const first = typed.trim() ? searchLookIcons(typed, entries)[0] : undefined;
+      const first = typed.trim()
+        ? (searchLookIcons(typed, entries)[0] ?? (tab === 'logo' ? searchLookIcons(typed, moreLogoEntries)[0] : undefined))
+        : undefined;
       if (!first) return;
       e.preventDefault();
       onPick({ icon: first });
@@ -266,8 +315,8 @@ export function LookPicker({
         value={query}
         onChange={setQuery}
         onKeyDown={onSearchKeyDown}
-        placeholder={t('searchPlaceholder')}
-        ariaLabel={t('searchPlaceholder')}
+        placeholder={t(tab === 'logo' ? 'searchLogos' : 'searchPlaceholder')}
+        ariaLabel={t(tab === 'logo' ? 'searchLogos' : 'searchPlaceholder')}
       />
     </div>
   );
@@ -301,14 +350,14 @@ export function LookPicker({
         </p>
         <p className="text-meta text-pn-muted truncate" aria-live="polite">{caption}</p>
       </div>
-      <button
+      {target.kind !== 'insert' && <button
         type="button"
         onClick={() => onPick(reset)}
         disabled={!resettable}
         className="shrink-0 text-small font-medium px-2 py-1 rounded-md text-accent hover:bg-accent/10 disabled:opacity-40 disabled:hover:bg-transparent transition"
       >
         {t('useDefault')}
-      </button>
+      </button>}
       <CloseButton onClick={onClose} className="shrink-0" />
     </div>
   );
@@ -330,8 +379,8 @@ export function LookPicker({
 
   const tabs = (
     <SettingsTabStrip role="tablist" aria-label={tShell('looks.menu')} className="mt-3">
-      {(['icon', 'color'] as const).map((id) => {
-        const TabGlyph = id === 'icon' ? Shapes : Palette;
+      {(iconOnly ? (['icon', 'logo'] as const) : (['icon', 'logo', 'color'] as const)).map((id) => {
+        const TabGlyph = id === 'icon' ? Shapes : id === 'logo' ? AppWindow : Palette;
         return (
           <button
             key={id}
@@ -342,7 +391,7 @@ export function LookPicker({
             className={settingsTabClass(tab === id)}
           >
             <TabGlyph size={16} aria-hidden="true" />
-            <span>{t(id)}</span>
+            <span>{id === 'logo' ? tSettings('appearance.custom.logoTitle') : t(id)}</span>
           </button>
         );
       })}
@@ -419,7 +468,7 @@ export function LookPicker({
   );
 
   function iconButton(id: string) {
-    if (!catalog) return null;
+    if (!shown) return null;
     const pressed = look.icon === id;
     return (
       <button
@@ -439,7 +488,7 @@ export function LookPicker({
             : 'text-pn-soft hover:bg-pn/5'
         }`}
       >
-        <PathGlyph paths={catalog.LOOK_ICONS[id] ?? []} size={20} />
+        <PathGlyph paths={pathsOf(id) ?? []} size={20} />
       </button>
     );
   }
@@ -459,14 +508,17 @@ export function LookPicker({
   }
 
   const grid = (
-    <div ref={gridRef} role="group" aria-label={t('icon')} onKeyDown={onGridKeyDown}>
-      {!catalog ? (
+    <div ref={gridRef} role="group" aria-label={tab === 'logo' ? tSettings('appearance.custom.logoTitle') : t('icon')} onKeyDown={onGridKeyDown}>
+      {!shown ? (
         // The catalog is a separate chunk. The sheet grows upward from
         // the bottom edge when it lands; the popover has a fixed height.
         <div className="h-64" aria-busy="true" />
       ) : hits ? (
-        hits.length > 0 ? (
-          <div className={`mt-2 ${cellGrid}`}>{hits.map(iconButton)}</div>
+        hits.length > 0 || moreHits.length > 0 ? (
+          <>
+            {hits.length > 0 && <div className={`mt-2 ${cellGrid}`}>{hits.map(iconButton)}</div>}
+            {moreHits.length > 0 && section('more', t('moreLogos'), moreHits)}
+          </>
         ) : (
           <p className="mt-4 text-center text-compact text-pn-muted" role="status">
             {tCommon('state.noResults')}
@@ -475,7 +527,12 @@ export function LookPicker({
       ) : (
         <>
           {recent.length > 0 && section('recent', t('recent'), recent)}
-          {catalog.LOOK_ICON_GROUPS.map((group) => section(group.key, t(`groups.${group.key}`), group.ids))}
+          {tab === 'logo' && logoCatalog
+            ? [
+                ...logoCatalog.LOOK_LOGO_GROUPS.map((group) => section(group.key, t(`groups.${group.key}`), group.ids)),
+                allLogos.length > 0 && section('all', t('allLogos'), allLogos),
+              ]
+            : catalog?.LOOK_ICON_GROUPS.map((group) => section(group.key, t(`groups.${group.key}`), group.ids))}
         </>
       )}
     </div>
@@ -485,11 +542,11 @@ export function LookPicker({
   const top = (
     <>
       {header}
-      {!iconOnly && tabs}
-      {tab === 'icon' && searchField}
+      {tabs}
+      {tab !== 'color' && searchField}
     </>
   );
-  const body = tab === 'icon' ? grid : colorSection;
+  const body = tab === 'color' ? colorSection : grid;
 
   if (isSheet) {
     return createPortal(
@@ -512,7 +569,7 @@ export function LookPicker({
             <div className="w-8 h-1 bg-pn-muted/35 rounded-full mx-auto mt-3 mb-3 shrink-0" />
           )}
           <div className={`px-4 shrink-0 ${keyboard ? 'pt-3' : ''}`}>{top}</div>
-          <div className="px-4 pt-1 pb-2 overflow-y-auto min-h-0 flex-1 overscroll-contain">{body}</div>
+          <div className="px-4 pt-1 pb-2 overflow-y-auto min-h-0 flex-1 overscroll-contain" onScroll={onBodyScroll}>{body}</div>
           {/* Done is the close button, which stays in the header. */}
           {!keyboard && footer}
         </div>
@@ -536,7 +593,7 @@ export function LookPicker({
         className="w-[380px] [@media(hover:none)]:w-[420px] max-w-full h-[min(640px,calc(100dvh-32px))] flex flex-col bg-surface-1 border border-divider rounded-xl shadow-xl pb-3"
       >
         <div className="px-4 pt-4 shrink-0">{top}</div>
-        <div className="px-4 pt-1 pb-3 overflow-y-auto min-h-0 flex-1 overscroll-contain">{body}</div>
+        <div className="px-4 pt-1 pb-3 overflow-y-auto min-h-0 flex-1 overscroll-contain" onScroll={onBodyScroll}>{body}</div>
         {footer}
       </div>
     </div>,

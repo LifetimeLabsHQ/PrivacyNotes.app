@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import type { CSSProperties, MouseEvent, ReactNode } from 'react';
 import { AddressBook, AndroidLogo, AppleLogo, Archive, ArrowLeft, ArrowLineRight, ArrowRight, ArrowUpRight, Bell, Book, Bookmarks, CalendarBlank, CalendarCheck, CalendarDots, CalendarPlus, CaretDown, ChartBar, Check, CheckCircle, Clock, ClockCounterClockwise, Copy, Cube, Export, Eye, FileText, Folder, GithubLogo, Hash, Image as ImageIcon, Key, LinkSimple, ListChecks, Lock, LockSimple, Megaphone, Moon, MusicNotes, Package, PencilSimple, Pill, Play, PlusCircle, Repeat, SealCheck, Shield, Smiley, Sparkle, Sun, TerminalWindow, UserCheck, VideoCamera, WindowsLogo, X } from './icons';
+import { LandingCli } from './LandingCli';
+import { cliMarketingShown } from './cliRelease';
 import { NinjaBox } from './NinjaBox';
 import { HeroApp } from './HeroApp';
 import { MarkdownDemo } from './MarkdownDemo';
@@ -10,6 +12,8 @@ import { NinjaShotsButton } from './NinjaGallery';
 import { KATANA_LINE, NinjaIcon } from './NinjaIcon';
 import { DEMO_HREF } from './footerData';
 import { KEY_OS } from './shortcutMatch';
+import { Kbd } from './ui';
+import { installLinks } from './extensionStores';
 import { LogoIcon } from './LogoIcon';
 import { TRACKER_ICONS } from './trackers/icons';
 import { Brand } from './Brand';
@@ -498,6 +502,17 @@ function TuxMark({ size = 46 }: { size?: number }) {
   );
 }
 
+/**
+ * The extension's three shortcuts, as the homepage's extension band shows
+ * them: the letter and the label key. Alt and Shift are the same for all
+ * three. Spec: packages/extension/wxt.config.ts (`commands`)
+ */
+const EXTENSION_KEYS = [
+  { key: 'S', label: 'downloads.extensionKeyOpen' },
+  { key: 'L', label: 'downloads.extensionKeyLogin' },
+  { key: 'B', label: 'downloads.extensionKeyBookmark' },
+] as const;
+
 function DownloadTile({
   href,
   icon,
@@ -508,6 +523,7 @@ function DownloadTile({
   expanded,
   version,
   note,
+  ariaLabel: ariaOverride,
 }: {
   href?: string;
   icon: ReactNode;
@@ -526,6 +542,9 @@ function DownloadTile({
    *  The App Store owns the iOS version and publishes no manifest we could
    *  poll, so that tile names the store instead of leaving the line blank. */
   note?: string;
+  /** The tile's name for a screen reader, in place of "Download for X",
+   *  which is wrong for a store listing (the browser extension row). */
+  ariaLabel?: string;
 }) {
   const { t } = useTranslation('landing');
   if (!href && !onClick) {
@@ -533,11 +552,12 @@ function DownloadTile({
       <div className="flex w-20 flex-col items-center gap-2.5">
         <span
           aria-hidden="true"
-          className="inline-flex h-[72px] w-[72px] items-center justify-center rounded-2xl border-2 border-dashed border-[var(--wl-ink)]/15 bg-[var(--wl-tint)] text-[var(--wl-sub)]"
+          className="inline-flex h-[72px] w-[72px] items-center justify-center rounded-2xl border-2 border-dashed border-[var(--wl-ink)]/15 bg-[var(--wl-tint)] text-[var(--wl-sub)] [&_img]:opacity-50"
         >
           {icon}
         </span>
         <span className="text-body font-semibold text-[var(--wl-sub)]">{name}</span>
+        {note && <span className="h-3.5 font-mono text-meta text-[var(--wl-muted)]">{note}</span>}
       </div>
     );
   }
@@ -545,7 +565,7 @@ function DownloadTile({
   // visible text ("macOS v0.448.0"), and "(v0.448.0)" breaks the substring.
   // Same rule for a note, which sits in the same slot and is equally visible.
   const suffix = version ? ` v${version}` : note ? ` ${note}` : '';
-  const ariaLabel = `${t('downloads.tileAria', { name })}${suffix}`;
+  const ariaLabel = `${ariaOverride ?? t('downloads.tileAria', { name })}${suffix}`;
   const tile = (
     <>
       <span
@@ -2217,8 +2237,44 @@ export function LandingPage({
           <p className="mt-8 text-body text-[var(--wl-sub)]">
             {t('downloads.availability')}
           </p>
+          {/* ── Browser extension, a band of its own under the apps ──
+              Under the routes, not between the tiles and the two pills: those
+              pills install the apps, and between them the extension read as
+              theirs. Its three shortcuts are the feature list, so the band
+              says clipper and password manager without a list of checks.
+              The keys are the manifest's defaults (`commands` in
+              packages/extension/wxt.config.ts), in this device's names.
+              Spec: docs/internal/design/patterns/161-170.md section 167 */}
+          <div className="-mx-5 sm:-mx-10 mt-10 border-t border-accent/20 bg-[var(--wl-card)]/60 px-5 pt-9 pb-8 sm:px-10">
+            <Kicker className="text-[var(--wl-sub)]">{t('shell:apps.title')}</Kicker>
+            <h3 className="text-display-2 sm:text-display-3 font-black tracking-tight text-[var(--wl-ink)]">{t('downloads.extensionHeading')}</h3>
+            <dl className="mx-auto mt-7 flex max-w-2xl flex-wrap justify-center gap-x-8 gap-y-5">
+              {EXTENSION_KEYS.map(({ key, label }) => (
+                <div key={key} className="flex flex-col-reverse items-center gap-1.5">
+                  <dt className="text-body text-[var(--wl-sub)]">{t(label)}</dt>
+                  <dd dir="ltr" className="flex gap-1">
+                    {(KEY_OS === 'mac' ? ['⌥', '⇧', key] : ['Alt', 'Shift', key]).map((k) => <Kbd key={k}>{k}</Kbd>)}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <div className="mx-auto mt-8 flex flex-wrap justify-center gap-5 sm:gap-7">
+              {installLinks().map(({ browser, url }) => (
+                <DownloadTile
+                  key={browser}
+                  href={url ?? undefined}
+                  name={browser}
+                  note={url ? undefined : t('shell:noteOptionsMenu.comingSoon')}
+                  ariaLabel={t('downloads.extensionAria', { name: browser })}
+                  tileBg="#EDE8D8"
+                  icon={<img src={`/help/icons/${browser.toLowerCase()}.svg`} alt="" width={40} height={40} loading="lazy" />}
+                />
+              ))}
+            </div>
+            <p className="mt-6 text-small text-[var(--wl-sub)]">{t('downloads.extensionNote')}</p>
+          </div>
           {/* ── CTA repeat, as the panel's footer ── */}
-          <div className="-mx-5 sm:-mx-10 mt-10 border-t border-accent/20 px-5 pt-9 sm:px-10">
+          <div className="-mx-5 sm:-mx-10 border-t border-accent/20 px-5 pt-9 sm:px-10">
             <CtaPair className="justify-center" label={t('ctaRepeat.getStarted')} onCreate={() => openAuth('create')} />
             <p className="text-center mt-3 text-small text-[var(--wl-sub)]">
               {t('hero.microcopy')}
@@ -2298,6 +2354,11 @@ export function LandingPage({
             </div>
           </div>
         </div>
+
+        {/* ── The command line pn: a terminal, a phone, three ways in.
+             Ships with the Install button (cliRelease.ts).
+             Spec: docs/internal/plans/agent-cli.md (section 3.10) ── */}
+        {cliMarketingShown() && <LandingCli kicker={<Kicker className="text-[var(--wl-emerald)]">{t('cli.kicker')}</Kicker>} />}
 
         {/* ── Mood & Wellness Tracker deep dive ─────────────── */}
         <div className="mx-auto mb-14">

@@ -25,7 +25,8 @@
       "passphrase": "Wachtwoordzinnen zijn een Pro-functie. Genereer een zin van willekeurige woorden die makkelijk te typen en te zeggen is.",
       "default": "Eén upgrade ontgrendelt alles hieronder. Eenmalige betaling.",
       "alerts": "Herinneringen zijn een Pro-functie. Elk apparaat gaat zelf af op het tijdstip dat je kiest, dus geen pushdienst ziet het item.",
-      "vaultFiles": "Bestanden bij kluisitems zijn een Pro-functie. Bewaar herstelcodes, een reservesleutel of een scan bij de login, kaart of sleutel waar hij bij hoort."
+      "vaultFiles": "Bestanden bij kluisitems zijn een Pro-functie. Bewaar herstelcodes, een reservesleutel of een scan bij de login, kaart of sleutel waar hij bij hoort.",
+      "cli": "De CLI is een Pro-functie. Scripts, AI-agents en AI-apps voegen notities toe vanuit een terminal of een chat, rechtstreeks in je Agent-map."
     },
     "features": {
       "devices": "Synchroniseer onbeperkt veel apparaten, op elk platform",

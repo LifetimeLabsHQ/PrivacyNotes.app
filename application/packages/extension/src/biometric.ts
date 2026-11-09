@@ -38,6 +38,12 @@ export async function biometricReady(): Promise<boolean> {
   return !!(await browser.storage.local.get(KEY))[KEY];
 }
 
+/** Forget the passkey's wrapped proof: after a new PIN or passcode it wraps
+ *  a proof the server no longer accepts. */
+export async function forgetBiometric(): Promise<void> {
+  await browser.storage.local.remove(KEY);
+}
+
 // The proof waits for the enrollment page this long, and a lock clears it.
 const STASH_MS = 2 * 60 * 1000;
 

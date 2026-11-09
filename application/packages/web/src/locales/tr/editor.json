@@ -217,6 +217,8 @@
     "textLabel": "Bağlantı metni",
     "textPlaceholder": "İsteğe bağlı, URL'yi göstermek için boş bırakın",
     "selectedTextHint": "Seçili metin bağlantı olarak kullanılacak",
+    "titleLabel": "İpucu metni",
+    "titleHint": "Bağlantının üzerine geldiğinizde görünür",
     "update": "Güncelle",
     "menuOpen": "Bağlantıyı aç",
     "menuCopy": "Bağlantıyı kopyala",

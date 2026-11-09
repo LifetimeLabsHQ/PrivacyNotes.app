@@ -7,6 +7,9 @@
   "applyToSubfolders": "Zastosuj kolor do podfolderów",
   "icon": "Ikona",
   "searchPlaceholder": "Szukaj ikon",
+  "searchLogos": "Szukaj logo",
+  "moreLogos": "Więcej logo",
+  "allLogos": "Wszystkie loga, od A do Z",
   "recent": "Ostatnio używane",
   "number": "Cyfra {{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "Sport",
     "tech": "Nauka i technika",
     "signals": "Sygnały",
-    "numbers": "Cyfry i matematyka"
+    "numbers": "Cyfry i matematyka",
+    "systems": "Systemy i urządzenia",
+    "browsers": "Przeglądarki i wyszukiwarki",
+    "office": "Notatki i biuro",
+    "dev": "Kod i hosting",
+    "ai": "AI",
+    "chat": "Czat i poczta",
+    "social": "Media społecznościowe i twórcy",
+    "media": "Muzyka, wideo i książki",
+    "games": "Gry",
+    "learning": "Nauka i badania",
+    "trips": "Podróże i fitness",
+    "privacy": "Prywatność i bezpieczeństwo"
   },
   "icons": {
     "folder": "Folder",

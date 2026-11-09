@@ -30,6 +30,9 @@ export interface PairingInput {
   contentKey: Uint8Array;
   clips: boolean;
   logins: boolean;
+  /** A code for the command line `pn`: clips only, never logins.
+   *  Spec: docs/internal/plans/agent-cli.md (section 3.2) */
+  client?: 'cli';
   readKeys: () => ExtensionKeys;
   saveKeys: (update: (keys: ExtensionKeys) => ExtensionKeys) => void;
   /** Push the settings now; true once the server holds them. */
@@ -44,8 +47,11 @@ export async function makePairingCode(input: PairingInput): Promise<string> {
   const secret = crypto.getRandomValues(new Uint8Array(PAIRING_SECRET_BYTES));
   const tokenId = crypto.randomUUID();
 
-  if (!input.logins) {
-    await createPairingRow(supabase, { secretHash: hashHex(secret), tokenId, clips: input.clips, logins: false });
+  if (input.client === 'cli' || !input.logins) {
+    await createPairingRow(supabase, {
+      secretHash: hashHex(secret), tokenId, clips: input.client === 'cli' ? true : input.clips, logins: false,
+      ...(input.client === 'cli' ? { client: 'cli' as const } : {}),
+    });
     resetExtensionSync();
     return encodePairingCode({ secret, inboxPublic, kext: null });
   }

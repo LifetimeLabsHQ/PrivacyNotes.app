@@ -7,6 +7,9 @@
   "applyToSubfolders": "Farbe auf Unterordner übertragen",
   "icon": "Symbol",
   "searchPlaceholder": "Symbole suchen",
+  "searchLogos": "Logos suchen",
+  "moreLogos": "Weitere Logos",
+  "allLogos": "Alle Logos, A bis Z",
   "recent": "Zuletzt verwendet",
   "number": "Zahl {{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "Sport",
     "tech": "Wissenschaft und Technik",
     "signals": "Signale",
-    "numbers": "Zahlen und Mathe"
+    "numbers": "Zahlen und Mathe",
+    "systems": "Systeme und Geräte",
+    "browsers": "Browser und Suche",
+    "office": "Notizen und Büro",
+    "dev": "Code und Hosting",
+    "ai": "KI",
+    "chat": "Chat und Mail",
+    "social": "Social Media und Creator",
+    "media": "Musik, Video und Bücher",
+    "games": "Spiele",
+    "learning": "Lernen und Forschung",
+    "trips": "Reisen und Fitness",
+    "privacy": "Datenschutz und Sicherheit"
   },
   "icons": {
     "folder": "Ordner",

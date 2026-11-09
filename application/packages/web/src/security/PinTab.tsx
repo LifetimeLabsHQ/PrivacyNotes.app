@@ -1,7 +1,7 @@
 import { Check, Minus, ShieldSlash, Timer, Warning } from '../icons';
 import { Button, Callout } from '../ui';
 import { useEffect, useId, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { useEscapeToClose } from '../useEscapeToClose';
 import {
   buildPinWrap,
@@ -46,30 +46,29 @@ import {
   secretReady,
   type SecretKind,
 } from '../secretKind';
-import { SectionEyebrow, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, SETTINGS_SELECT, SettingsCallout } from '../settingsUI';
+import { SectionEyebrow, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, SettingsCallout } from '../settingsUI';
 import { loadLocalSettings, saveCredential, takePinChangeLost, type UserSettings } from '../userSettings';
-import { TIMEOUT_OPTIONS } from './timeoutOptions';
 
 /**
  * PIN tab - set, change, or remove the account's secret inline, a 4-digit PIN
  * or a longer passcode, switch between the two, and pick how long an unlock
- * lasts. That window covers the phrase view and PIN-protected notes; the app
- * lock screen has its own, in the Biometric tab. A switch is a change: the
+ * lasts. That window covers the phrase view and PIN-protected notes; it is
+ * set in the Lock tab beside the app lock's own (#662), and this tab points
+ * there. A switch is a change: the
  * current secret first, then the new hash and wrap in one write.
  * Spec: docs/internal/plans/app-lock-passcode.md
  */
 export function PinTab({
   phrase,
-  timeoutMinutes,
-  onTimeoutChange,
+  onOpenLockTab,
   userSettings,
   onSettingsChange,
   reason,
   onPinCreated,
 }: {
   phrase: string;
-  timeoutMinutes: number;
-  onTimeoutChange: (minutes: number) => void;
+  /** Open the Lock tab, which holds the window this tab's PIN times. */
+  onOpenLockTab: () => void;
   userSettings: UserSettings;
   /** `base` is the copy this surface was rendered with; the parent applies
    *  only the credential keys that differ between it and `next`. */
@@ -569,31 +568,27 @@ export function PinTab({
         </>
       )}
 
-      {/* One window for the phrase view and every PIN-protected note, from
-          the moment of the unlock. Disabled when no PIN is set (nothing to
-          time). */}
-      <div data-setting="security.reaskAfter" className="pt-3 border-t border-divider">
-        <label className="block">
-          <SectionEyebrow className="mb-1.5" icon={Timer}>
-            {t('pinTab.reaskAfter')}
-          </SectionEyebrow>
-          <select
-            value={String(timeoutMinutes)}
-            onChange={(e) => onTimeoutChange(Number(e.target.value))}
-            disabled={!pinExists}
-            className={`w-full ${SETTINGS_SELECT} disabled:opacity-50`}
-          >
-            {TIMEOUT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {t(opt.labelKey)}
-              </option>
-            ))}
-          </select>
-          <p className={`${SETTINGS_HELP} mt-1.5 leading-relaxed`}>
-            {t('pinTab.reaskHint')}
-          </p>
-        </label>
-      </div>
+      {/* The window itself lives in the Lock tab, beside the app lock's, so
+          the two read as different things (#662). This line keeps the old
+          place from being a dead end. */}
+      <p className={`${SETTINGS_HELP} pt-3 border-t border-divider leading-relaxed flex items-start gap-1.5`}>
+        <Timer className="text-accent shrink-0 mt-0.5" aria-hidden="true" />
+        <span>
+          <Trans
+            t={t}
+            i18nKey="pinTab.timerMoved"
+            components={{
+              tab: (
+                <button
+                  type="button"
+                  onClick={onOpenLockTab}
+                  className="text-accent underline underline-offset-2 hover:no-underline"
+                />
+              ),
+            }}
+          />
+        </span>
+      </p>
 
       <HelpChip surface="pin" className="pt-3 border-t border-divider" />
 

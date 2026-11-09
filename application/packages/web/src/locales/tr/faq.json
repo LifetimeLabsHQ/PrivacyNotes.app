@@ -471,9 +471,32 @@
     "save-page-as-note": {
       "q": "Bir web sayfasını not olarak kaydedebilir miyim?",
       "a": [
-        "Evet. [Bir yer imini açıp](/tr/help/bookmarks/) Not olarak kaydet'i seçin ya da + menüsünde Sayfayı kırp'ı seçip bir bağlantı yapıştırın. Sayfanın ana metni, yer imine bağlı sıradan bir not olarak Notlar'a eklenir ve sayfanın en fazla 20 görseli, kendiniz eklediğiniz her görsel gibi şifreli olarak notla birlikte saklanır; Sayfayı kırp penceresinde Görselleri kaydet'i kapatırsanız saklanmaz. Sayfa kaydetmek her planda ücretsizdir ve [görseller depolama alanınızdan düşülür](/tr/help/storage-usage/).",
+        "Evet. [Bir yer imini açıp](/tr/help/bookmarks/) Not olarak kaydet'i seçin ya da + menüsünde Sayfayı kırp'ı seçip bir bağlantı yapıştırın. Sayfanın ana metni, bir yer iminden kaydettiyseniz o yer imine bağlı sıradan bir not olarak Notlar'a eklenir ve sayfanın en fazla 20 görseli, kendiniz eklediğiniz her görsel gibi şifreli olarak notla birlikte saklanır; Sayfayı kırp penceresinde Görselleri kaydet'i kapatırsanız saklanmaz. Sayfa kaydetmek her planda ücretsizdir ve [görseller depolama alanınızdan düşülür](/tr/help/storage-usage/).",
         "Masaüstü ve telefon uygulamaları sayfayı ve görsellerini doğrudan cihazınızdan indirir. Web uygulaması bunları sunucumuz üzerinden indirir; sunucu bunları yalnızca iletir ve ne sayfayı, ne görselleri ne de adreslerini saklar. Giriş gerektiren sayfalar ve betiklerle oluşturulan sayfalar boş gelebilir: bunları yer imi olarak tutun.",
         "[Tarayıcı uzantısıyla](/tr/help/browser-extension/) okuduğunuz sayfayı da kaydedebilirsiniz; giriş gerektiren sayfalar dahil."
+      ]
+    },
+    "command-line": {
+      "q": "Notları komut satırından (CLI) veya bir yapay zekâ ajanından ekleyebilir miyim?",
+      "a": [
+        "Evet, PrivacyNotes komut satırı arayüzü (CLI) olan pn ile. Terminalde çalışan her şey onu kullanabilir: kendi betikleriniz, zamanlanmış görevler ve yapay zekâ kodlama ajanları. Markdown'ı aktarın, bir başlık ve etiketler ekleyin; not, notlarınızın Agent klasörüne düşer ve sonraki eşitlemeden sonra tüm cihazlarınızda görünür. pn yalnızca not ekleyebilir: sahip olduğunuz notları açamaz, değiştiremez veya silemez. [Node.js](https://nodejs.org/en/download) 20 veya daha yenisi gerekir ve Pro'nun bir parçasıdır.",
+        "Kurmak için masaüstü uygulamasında Ayarlar > CLI'yı açın ve Etkinleştir'i seçin. pn komutunu bu bilgisayara kuran Kur'u, ardından Kod oluştur'u seçin. Yeni bir terminalde `pn login` komutunu çalıştırıp kodu yapıştırın. Sonra ilk notunuzu kaydedin:",
+        "`echo \"# Hello\" | pn save`",
+        "pn'in komutları azdır, çünkü tek bir iş yapar. Her biri bir kişi için kısa bir kart yazdırır; bir betik için `--json` ile tek satırlık JSON yazdırır:",
+        "- `pn login` bu bilgisayarı Ayarlar > CLI'dan aldığınız tek kullanımlık bir kodla bağlar. Kodu yapıştırın veya aktarın.\n- `pn save note.md` bir dosyadan not ekler, yalnız `pn save` ise aktarılan Markdown'ı okur. `--title` başlığı belirler, aksi halde ilk `#` başlığı veya ilk satır kullanılır. `--tag work,ideas` etiket ekler.\n- `pn status` bu bilgisayarın bağlı olup olmadığını ve kaydettiği son notu gösterir.\n- `pn logout` bu bilgisayarın bağlantısını keser.\n- `pn mcp` pn'i terminali olmayan bir yapay zekâ uygulaması için araç olarak çalıştırır, bkz. [MCP](/tr/help/mcp/).\n- `pn help` (veya `pn --help`) tüm komutları ve seçenekleri listeler, `pn --version` sürümü yazdırır.",
+        "Bir yapay zekâ kodlama ajanıyla, pn'i ajanın çalıştığı bilgisayarda bir kez bağlayın, sonra sade sözlerle isteyin: \"Bu planı pn save ile PrivacyNotes'ıma kaydet, project etiketiyle.\" Ajan ayrıntılar için `pn --help` çıktısını okuyabilir, Markdown'ı yazar ve aktarır. Aynı komut kendi betiklerinizde ve zamanlanmış görevlerinizde de çalışır:",
+        "- `git log --oneline -20 | pn save --title \"Recent commits\"` son commit'lerinizi kaydeder.\n- `pbpaste | pn save --tag inbox` Mac'te kopyaladığınızı kaydeder.\n- Gece çalışan bir görevde `pn save --tag daily report.md` üretilen bir raporu kaydeder.",
+        "Bir not en fazla 700 KB Markdown, 20 etiket ve 200 karakterlik bir başlık taşıyabilir; pn bunu göndermeden önce denetler. Not kaydedilince 0, sunucu reddedince 1, hatalı girdide 2, bilgisayar bağlı değilken 3 ve ağ yokken 4 koduyla çıkar; böylece bir betik buna göre davranabilir. Kaydedilen not, uygulamalarınızdan biri açılana kadar mühürlü bekler; 90 gün içinde hiçbiri açılmazsa silinir. Bir bilgisayarın bağlantısını kesmek için Ayarlar > CLI'da yanındaki Kaldır'ı seçin. pn'in ve bir ajanın neleri görebildiği [pn veya bir yapay zekâ ajanı notlarımı okuyabilir mi?](/tr/help/cli-security/) bölümünde."
+      ]
+    },
+    "mcp": {
+      "q": "Bir yapay zekâ uygulaması MCP üzerinden PrivacyNotes'a not kaydedebilir mi?",
+      "a": [
+        "Evet. MCP (Model Context Protocol), yapay zekâ uygulamalarına araç takmanın standart yoludur ve PrivacyNotes komut satırı arayüzü pn bunlardan biri olarak çalışabilir. Bir kez ekleyin; her sohbette sade sözlerle isteyebilirsiniz: \"Bu sohbetin bir özetini meeting etiketiyle notlarıma kaydet.\" Uygulama pn'in save_note aracını çağırır ve not, notlarınızın Agent klasörüne düşer, sonraki eşitlemeden sonra tüm cihazlarınızda görünür. Araç yalnızca not ekleyebilir; bu yüzden bir sohbet sahip olduğunuz notları açamaz, değiştiremez veya silemez. Pro'nun bir parçasıdır.",
+        "Önce aynı bilgisayarda [pn'i kurun](/tr/help/command-line/) ve `pn login` ile bağlayın. Sonra yapay zekâ uygulamanızın MCP ayarlarını, yani bir ayar ekranını veya mcp.json gibi bir dosyayı açın, `mcpServers` altına şu girdiyi ekleyin ve uygulamayı yeniden başlatın:",
+        "`\"privacynotes\": { \"command\": \"pn\", \"args\": [\"mcp\"] }`",
+        "Araç, Markdown'ı ve isteğe bağlı olarak bir başlık ile etiketleri alır; sınırlar `pn save` ile aynıdır: 700 KB, 20 etiket ve 200 karakterlik başlık. Bir şey kaydı durdurduğunda araç bunu uygulamaya kelimelerle bildirir, böylece uygulama size söyleyebilir: pn henüz bağlı değil, not çok büyük veya sunucu reddetti.",
+        "Uygulama pn'i başlatamadığını söylerse komut olarak tam yolu verin: `which pn` komutunun yazdırdığı yol, Windows'ta `where pn`. Dock'tan veya Başlat menüsünden açılan uygulamalar çoğu zaman terminalinizin gördüğü yolları görmez. pn'in o bilgisayarda [Node.js](https://nodejs.org/en/download) 20 veya daha yenisine ihtiyacı vardır."
       ]
     },
     "browser-extension": {
@@ -483,11 +506,18 @@
         "Ayarlar > Uzantı bölümünü açın, uzantıyı tarayıcınızın mağazasından ekleyin, neler yapabileceğini seçin, ardından Kod oluştur'u seçin. Tek kullanımlık kodu kopyalayıp uzantıya yapıştırın. Uzantıyı kaldırmak için aynı sayfada Tarayıcı uzantıları altında yanındaki Kaldır'ı seçin. Bir uzantı cihaz yuvalarınızdan birini kullanmaz. [Notlarınızı nasıl güvende tuttuğu](/tr/help/browser-extension-security/)."
       ]
     },
+    "cli-security": {
+      "q": "pn veya bir yapay zekâ ajanı notlarımı okuyabilir mi?",
+      "a": [
+        "Hayır. pn, yalnızca not ekleyebilen bir belirteç ve yalnızca hesabınız için bir notu mühürleyebilen bir açık anahtar tutar; notlarınızı açan anahtarı asla tutmaz. Not, pn'i çalıştıran bilgisayarda şifrelenir ve uygulamalarınızdan biri onu açıp Agent klasörüne koyana kadar sunucuda mühürlü bekler. Yani bir ajan ya da belirteci kopyalayan herhangi biri not ekleyebilir ama sahip olduğunuz notları açamaz, değiştiremez veya silemez.",
+        "Belirteç, yalnızca o bilgisayardaki kullanıcı hesabınızın okuyabildiği bir dosyada tutulur. Tek bir bilgisayarı hemen devre dışı bırakmak için Ayarlar > CLI'da yanındaki Kaldır'ı seçin; Kapat hepsinin bağlantısını keser. Sunucu, bir notun geldiğini, ne zaman geldiğini ve boyutunun yukarı yuvarlanmış halini görür. Ayrıntılar [tehdit modelimizde](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "browser-extension-security": {
       "q": "Tarayıcı uzantısı notlarımı okuyabilir mi?",
       "a": [
         "Hayır. Uzantı notlarınızı açan anahtara hiçbir zaman sahip olmaz. Her kırpmayı tarayıcınızdan çıkmadan önce kilitler ve uygulamalarınızdan biri onu bir sonraki eşitlemede nota dönüştürür.",
-        "Giriş bilgilerini açarsanız uzantı giriş bilgilerinizi, kartlarınızı, SSH anahtarlarınızın herkese açık yarısını ve yer imlerinizi görür; bir notun metnini ve özel bir anahtarı asla görmez. Bunlar, uzantı için belirlediğiniz ve uygulamanınkinden ayrı olan bir PIN veya geçiş koduyla korunur. 10 yanlış denemeden sonra tarayıcının bağlantısı kesilir, böylece tarayıcınızın bir kopyası tahmin yoluyla açılamaz. Giriş bilgileri 5 dakika kullanılmazsa ve tarayıcı kapanınca kilitlenir. Ayrıntılar [tehdit modelimizde](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md) yer alır."
+        "Giriş bilgilerini açarsanız uzantı giriş bilgilerinizi, kartlarınızı, SSH anahtarlarınızın herkese açık yarısını ve yer imlerinizi görür; bir notun metnini ve özel bir anahtarı asla görmez. Bunlar, uzantı için belirlediğiniz ve uygulamanınkinden ayrı olan bir PIN veya geçiş koduyla korunur. 10 yanlış denemeden sonra tarayıcının bağlantısı kesilir, böylece tarayıcınızın bir kopyası tahmin yoluyla açılamaz. Giriş bilgileri, uzantıda seçtiğiniz süre sonunda (değiştirmezseniz 15 dakika kullanılmazsa), en geç 7 gün sonra ve tarayıcı kapanınca her zaman kilitlenir. Ayrıntılar [tehdit modelimizde](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md) yer alır."
       ]
     },
     "contacts": {

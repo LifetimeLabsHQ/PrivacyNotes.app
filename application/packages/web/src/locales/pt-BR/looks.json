@@ -7,6 +7,9 @@
   "applyToSubfolders": "Aplicar cor às subpastas",
   "icon": "Ícone",
   "searchPlaceholder": "Buscar ícones",
+  "searchLogos": "Buscar logos",
+  "moreLogos": "Mais logos",
+  "allLogos": "Todos os logos, de A a Z",
   "recent": "Usados recentemente",
   "number": "Número {{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "Esportes",
     "tech": "Ciência e tecnologia",
     "signals": "Sinais",
-    "numbers": "Números e matemática"
+    "numbers": "Números e matemática",
+    "systems": "Sistemas e dispositivos",
+    "browsers": "Navegadores e busca",
+    "office": "Notas e escritório",
+    "dev": "Código e hospedagem",
+    "ai": "IA",
+    "chat": "Chat e e-mail",
+    "social": "Redes sociais e criadores",
+    "media": "Música, vídeo e livros",
+    "games": "Jogos",
+    "learning": "Aprendizado e pesquisa",
+    "trips": "Viagens e fitness",
+    "privacy": "Privacidade e segurança"
   },
   "icons": {
     "folder": "Pasta",

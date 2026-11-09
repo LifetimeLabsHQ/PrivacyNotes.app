@@ -25,7 +25,8 @@
       "passphrase": "Parola cümleleri bir Pro özelliğidir. Yazması ve söylemesi kolay, rastgele sözcüklerden bir cümle oluşturun.",
       "default": "Tek bir yükseltme aşağıdaki her şeyin kilidini açar. Tek seferlik ödeme.",
       "alerts": "Hatırlatıcılar bir Pro özelliğidir. Her cihaz seçtiğiniz saatte kendi başına çalar, böylece hiçbir anlık bildirim hizmeti öğeyi görmez.",
-      "vaultFiles": "Kasa öğelerindeki dosyalar bir Pro özelliğidir. Kurtarma kodlarını, bir yedek anahtarı veya bir taramayı ait olduğu giriş bilgisi, kart ya da anahtarla birlikte saklayın."
+      "vaultFiles": "Kasa öğelerindeki dosyalar bir Pro özelliğidir. Kurtarma kodlarını, bir yedek anahtarı veya bir taramayı ait olduğu giriş bilgisi, kart ya da anahtarla birlikte saklayın.",
+      "cli": "CLI bir Pro özelliğidir. Betikler, yapay zekâ ajanları ve yapay zekâ uygulamaları bir terminalden veya bir sohbetten doğrudan Agent klasörünüze not ekler."
     },
     "features": {
       "devices": "Sınırsız cihazda, her platformda eşitleme",

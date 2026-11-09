@@ -45,5 +45,5 @@ A published build that carries our name or our icon is passing itself off as us,
 
 ## Marks that are not ours either
 
-`application/packages/web/public/help/icons/` holds the logos of other products. They appear in the import guides to show which application each guide is about. They belong to their owners, they are not ours to license, and AGPL-3.0 does not reach them. A fork needs its own right to use them, or should remove them.
+`application/packages/web/public/help/icons/` holds the logos of other products. They appear in the import guides to show which application each guide is about. `application/packages/web/src/looks/lookLogos.gen.ts` holds more, drawn from Simple Icons and Phosphor, for the Logo tab of the icon picker. They belong to their owners, they are not ours to license, and AGPL-3.0 does not reach them. A fork needs its own right to use them, or should remove them.
 

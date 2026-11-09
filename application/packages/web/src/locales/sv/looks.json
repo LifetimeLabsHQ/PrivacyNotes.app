@@ -7,6 +7,9 @@
   "applyToSubfolders": "Använd färgen på undermappar",
   "icon": "Ikon",
   "searchPlaceholder": "Sök ikoner",
+  "searchLogos": "Sök logotyper",
+  "moreLogos": "Fler logotyper",
+  "allLogos": "Alla logotyper, A till Z",
   "recent": "Senast använda",
   "number": "Siffra {{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "Idrott",
     "tech": "Vetenskap och teknik",
     "signals": "Signaler",
-    "numbers": "Siffror och matte"
+    "numbers": "Siffror och matte",
+    "systems": "System och enheter",
+    "browsers": "Webbläsare och sök",
+    "office": "Anteckningar och kontor",
+    "dev": "Kod och hosting",
+    "ai": "AI",
+    "chat": "Chatt och e-post",
+    "social": "Sociala medier och kreatörer",
+    "media": "Musik, video och böcker",
+    "games": "Spel",
+    "learning": "Lärande och forskning",
+    "trips": "Resor och träning",
+    "privacy": "Integritet och säkerhet"
   },
   "icons": {
     "folder": "Mapp",

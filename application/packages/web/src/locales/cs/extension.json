@@ -96,6 +96,11 @@
   "badge": {
     "problem": "Něco vyžaduje tvou pozornost"
   },
+  "changeSecret": {
+    "titlePin": "Změnit PIN",
+    "titlePasscode": "Změnit přístupový kód",
+    "biometricAgain": "Otisk prstu nebo obličej používal ten starý. Nastav ho znovu, pokud ho chceš dál používat."
+  },
   "biometric": {
     "enrolled": "Otisk prstu nebo obličej je nastavený. Tuto kartu můžeš zavřít.",
     "enrolledHere": "Otisk prstu nebo obličej je nastavený.",
@@ -107,7 +112,6 @@
     "searchKind": "Hledat: {{kind}}",
     "unlockToSearch": "Odemkni a hledej",
     "all": "Všechny položky",
-    "more_other": "Ještě {{count}} položek. Začni psát a najdi tu svou.",
     "cardsHere": "Pro tento web nejsou přihlašovací údaje. Tvoje karty:",
     "noBookmarkHere": "Tato stránka není v záložkách.",
     "noneAtAll": "V trezoru zatím nic není.",
@@ -129,8 +133,13 @@
     "lockHeader": "Zamknout trezor po",
     "unlockToCopy": "Odemkni a kopíruj",
     "omniboxDefault": "Hledat %s v trezoru PrivacyNotes",
-    "omniboxUnlock": "Odemkni PrivacyNotes a hledej",
-    "more_one": "Ještě {{count}} položka. Začni psát a najdi ji.",
-    "more_few": "Ještě {{count}} položky. Začni psát a najdi tu svou."
+    "omniboxUnlock": "Odemkni PrivacyNotes a hledej"
+  },
+  "shortcuts": {
+    "notSet": "Nenastaveno",
+    "addressBar": "Hledat v trezoru z adresního řádku",
+    "change": "Změnit zkratky",
+    "changeHint": "Klávesy spravuje tvůj prohlížeč. Změň je tam, nebo přiřaď klávesu té zkratce, která žádnou nemá.",
+    "loginHint": "<key/> zkopíruje uživatelské jméno, potom heslo."
   }
 }

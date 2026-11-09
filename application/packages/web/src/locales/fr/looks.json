@@ -7,6 +7,9 @@
   "applyToSubfolders": "Appliquer la couleur aux sous-dossiers",
   "icon": "Icône",
   "searchPlaceholder": "Rechercher des icônes",
+  "searchLogos": "Rechercher des logos",
+  "moreLogos": "Plus de logos",
+  "allLogos": "Tous les logos, de A à Z",
   "recent": "Utilisées récemment",
   "number": "Chiffre {{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "Sports",
     "tech": "Sciences et technologie",
     "signals": "Signaux",
-    "numbers": "Chiffres et maths"
+    "numbers": "Chiffres et maths",
+    "systems": "Systèmes et appareils",
+    "browsers": "Navigateurs et recherche",
+    "office": "Notes et bureautique",
+    "dev": "Code et hébergement",
+    "ai": "IA",
+    "chat": "Messagerie et e-mail",
+    "social": "Réseaux sociaux et créateurs",
+    "media": "Musique, vidéo et livres",
+    "games": "Jeux",
+    "learning": "Apprentissage et recherche",
+    "trips": "Voyage et sport",
+    "privacy": "Confidentialité et sécurité"
   },
   "icons": {
     "folder": "Dossier",

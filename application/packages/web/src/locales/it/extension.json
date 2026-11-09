@@ -94,6 +94,11 @@
   "badge": {
     "problem": "Qualcosa richiede la tua attenzione"
   },
+  "changeSecret": {
+    "titlePin": "Cambia il PIN",
+    "titlePasscode": "Cambia il codice di sblocco",
+    "biometricAgain": "L'impronta digitale o il volto usavano quello vecchio. Configurali di nuovo per continuare a usarli."
+  },
   "biometric": {
     "enrolled": "Impronta digitale o volto configurati. Puoi chiudere questa scheda.",
     "enrolledHere": "Impronta digitale o volto configurati.",
@@ -105,7 +110,6 @@
     "searchKind": "Cerca {{kind}}",
     "unlockToSearch": "Sblocca per cercare",
     "all": "Tutti gli elementi",
-    "more_other": "Altri {{count}}. Scrivi per trovarne uno.",
     "cardsHere": "Nessun accesso per questo sito. Le tue carte:",
     "noBookmarkHere": "Questa pagina non è nei segnalibri.",
     "noneAtAll": "Ancora niente nella cassaforte.",
@@ -127,7 +131,13 @@
     "lockHeader": "Blocca la cassaforte dopo",
     "unlockToCopy": "Sblocca per copiare",
     "omniboxDefault": "Cerca %s nella tua cassaforte PrivacyNotes",
-    "omniboxUnlock": "Sblocca PrivacyNotes per cercare",
-    "more_one": "Ancora {{count}}. Scrivi per trovarlo."
+    "omniboxUnlock": "Sblocca PrivacyNotes per cercare"
+  },
+  "shortcuts": {
+    "notSet": "Non impostata",
+    "addressBar": "Cerca nella Cassaforte dalla barra degli indirizzi",
+    "change": "Cambia le scorciatoie",
+    "changeHint": "I tasti li gestisce il tuo browser. Cambiane uno lì, oppure assegna un tasto a una scorciatoia che non ne ha.",
+    "loginHint": "<key/> copia il nome utente, poi la password."
   }
 }

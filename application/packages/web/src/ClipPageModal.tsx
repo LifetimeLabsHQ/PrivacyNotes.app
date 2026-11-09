@@ -15,7 +15,6 @@ import { formatInstant } from './intlFormat';
 import { isTouchOnly } from './touchOnly';
 import { useAuth } from './auth';
 import { loadExtensionState } from './extensionApi';
-import { extensionOffered } from './extensionRelease';
 import { clipLabels, noticeFor, readClipPictures, writeClipPictures, type ClipNotice } from './clipMessages';
 
 /** How many characters of the note the preview renders. */
@@ -341,15 +340,14 @@ export default function ClipPageModal({
 }
 
 /**
- * The browser extension tip shows on a computer only, once the extension is
- * offered (extensionRelease.ts), until it is dismissed
+ * The browser extension tip shows on a computer only, until it is dismissed
  * (synced, once for every device) or a browser is connected. It waits for the
  * connected list, so it never shows and then vanishes.
  */
 function useExtensionTip(dismissed: boolean): boolean {
   const { supabase, auth } = useAuth();
   const pubkey = auth.status === 'authenticated' ? auth.pubkey : '';
-  const eligible = !dismissed && !isTouchOnly() && extensionOffered();
+  const eligible = !dismissed && !isTouchOnly();
   const [connected, setConnected] = useState<boolean | null>(null);
   useEffect(() => {
     if (!eligible) return;
@@ -357,7 +355,7 @@ function useExtensionTip(dismissed: boolean): boolean {
     if (!pubkey) { setConnected(false); return; }
     let live = true;
     loadExtensionState(supabase, pubkey)
-      .then((s) => { if (live) setConnected(s.extensions.length > 0); })
+      .then((s) => { if (live) setConnected(s.extensions.some((e) => e.client !== 'cli')); })
       .catch(() => { if (live) setConnected(true); });
     return () => { live = false; };
   }, [eligible, supabase, pubkey]);

@@ -9,7 +9,7 @@
   "dependencies": {
     "@mozilla/readability": "0.6.0",
     "markdown-it": "14.3.3",
-    "turndown": "7.2.4",
+    "turndown": "7.2.5",
     "turndown-plugin-gfm": "1.0.2"
   },
   "devDependencies": {

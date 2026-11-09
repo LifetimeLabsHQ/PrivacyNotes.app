@@ -7,6 +7,9 @@
   "applyToSubfolders": "Rengi alt klasörlere uygula",
   "icon": "Simge",
   "searchPlaceholder": "Simgelerde ara",
+  "searchLogos": "Logolarda ara",
+  "moreLogos": "Daha fazla logo",
+  "allLogos": "Tüm logolar, A'dan Z'ye",
   "recent": "Son kullanılanlar",
   "number": "Sayı {{n}}",
   "groups": {
@@ -24,7 +27,19 @@
     "sport": "Spor",
     "tech": "Bilim ve teknoloji",
     "signals": "İşaretler",
-    "numbers": "Sayılar ve matematik"
+    "numbers": "Sayılar ve matematik",
+    "systems": "Sistemler ve cihazlar",
+    "browsers": "Tarayıcılar ve arama",
+    "office": "Notlar ve ofis",
+    "dev": "Kod ve barındırma",
+    "ai": "Yapay zekâ",
+    "chat": "Sohbet ve e-posta",
+    "social": "Sosyal medya ve içerik üreticileri",
+    "media": "Müzik, video ve kitaplar",
+    "games": "Oyunlar",
+    "learning": "Öğrenme ve araştırma",
+    "trips": "Seyahat ve fitness",
+    "privacy": "Gizlilik ve güvenlik"
   },
   "icons": {
     "folder": "Klasör",

@@ -297,6 +297,11 @@
     "bodySingle": "<strong>{{filename}}</strong> vypadá jako soubor markdown. Importovat ho jako poznámku, kterou můžeš číst a upravovat, nebo ho uložit jako šifrovanou přílohu?",
     "bodyMulti": "Tyto soubory ({{count}}) vypadají jako markdown. Importovat je jako poznámky, které můžeš číst a upravovat, nebo je uložit jako šifrované přílohy?"
   },
+  "archiveConfirm": {
+    "body_one": "Archivovat <highlight>{{count}} položku</highlight>? Zmizí z tvých seznamů a počká v zobrazení Archiv. „Zrušit archivaci“ ji vrátí zpět.",
+    "body_few": "Archivovat <highlight>{{count}} položky</highlight>? Zmizí z tvých seznamů a počkají v zobrazení Archiv. „Zrušit archivaci“ je vrátí zpět.",
+    "body_other": "Archivovat <highlight>{{count}} položek</highlight>? Zmizí z tvých seznamů a počkají v zobrazení Archiv. „Zrušit archivaci“ je vrátí zpět."
+  },
   "bulkTrash": {
     "body_one": "Smazat <highlight>{{count}} položku</highlight>? Přesuň ji do koše, odkud ji můžeš později obnovit, nebo ji smaž navždy.",
     "body_other": "Smazat <highlight>{{count}} položek</highlight>? Přesuň je do koše, odkud je můžeš později obnovit, nebo je smaž navždy.",

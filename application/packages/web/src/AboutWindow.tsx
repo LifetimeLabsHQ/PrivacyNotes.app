@@ -48,10 +48,8 @@ export default function AboutWindow() {
   }, []);
 
   return (
-    <div className="flex h-dvh select-none flex-col items-center justify-center gap-1 bg-surface-1 px-6 text-center">
-      <div className="mb-2 flex h-[72px] w-[72px] items-center justify-center rounded-[18px] border border-pn/10 bg-surface-2 shadow-sm">
-        <LogoIcon size={44} />
-      </div>
+    <div className="flex h-dvh select-none flex-col items-center gap-1 bg-surface-1 px-6 pb-6 pt-8 text-center">
+      <LogoIcon size={88} className="mb-1" />
       <h1 className="text-heading text-pn">
         <Brand />
       </h1>
@@ -59,21 +57,24 @@ export default function AboutWindow() {
         {t('about.windowVersion', { version: VERSION })}
       </p>
       <p className="text-small text-pn-muted">© 2026 Lifetime Labs LLC</p>
-      {/* Roadmap reuses the tab-strip label rather than carrying a second key
-          for the same word; /changelog and /roadmap are English-only pages, so
-          only the help hub takes a locale slug. */}
+      {/* Labels reuse the site header keys. /changelog and /themes are
+          English-only pages, so only the homepage and the help hub take a
+          locale slug. */}
       <div className="mt-4 flex w-full max-w-[210px] flex-col gap-2">
         <button onClick={() => void openExternal(marketingHomeHref())} className={buttonClass}>
           PrivacyNotes.app
         </button>
-        <button onClick={() => void openExternal(siteHref(helpPath(activeLocale())))} className={buttonClass}>
-          {t('about.windowHelp')}
+        <button onClick={() => void openExternal(`${marketingHomeHref()}#downloads`)} className={buttonClass}>
+          {t('header.downloads')}
+        </button>
+        <button onClick={() => void openExternal(siteHref('/themes'))} className={buttonClass}>
+          {t('header.themes')}
         </button>
         <button onClick={() => void openExternal(siteHref('/changelog'))} className={buttonClass}>
-          {t('common:updateToast.changelog')}
+          {t('header.changelog')}
         </button>
-        <button onClick={() => void openExternal(siteHref('/roadmap'))} className={buttonClass}>
-          {t('header.roadmap')}
+        <button onClick={() => void openExternal(siteHref(helpPath(activeLocale())))} className={buttonClass}>
+          {t('about.windowHelp')}
         </button>
       </div>
     </div>

@@ -244,7 +244,9 @@ export function ListPrefsPopover({
       {/* Closing is one click away wherever the menu opens: beside the list it
           sits far from the button that opened it. Escape and a click outside
           still close it too. */}
-      <CloseButton onClick={onClose} className="absolute top-2 end-2 z-10" />
+      <div className="absolute top-2 end-2 z-10">
+        <CloseButton onClick={onClose} />
+      </div>
       {/* ── LAYOUT ───────────────────────────────────────────────── */}
       {layout && (
       <div className="px-4 pt-3 pb-3 border-b border-divider">

@@ -116,8 +116,7 @@ export function SecurityModal({
     {tab === 'pin' && (
       <PinTab
         phrase={phrase}
-        timeoutMinutes={pinTimeoutMinutes}
-        onTimeoutChange={onPinTimeoutChange}
+        onOpenLockTab={() => pickTab('biometric')}
         userSettings={userSettings}
         onSettingsChange={onSettingsChange}
         reason={reason}
@@ -137,6 +136,8 @@ export function SecurityModal({
         onSettingsChange={onSettingsChange}
         timeoutMinutes={appLockTimeoutMinutes}
         onTimeoutChange={onAppLockTimeoutChange}
+        pinTimeoutMinutes={pinTimeoutMinutes}
+        onPinTimeoutChange={onPinTimeoutChange}
         onSetUpPin={() => {
           setReturnToBiometric(true);
           setTab('pin');

@@ -1,8 +1,9 @@
 /**
  * The web clipper inside the app: Save as note on a bookmark, and the Clip
  * page window of the + menu. It holds the running clips (one per bookmark),
- * finds the note each bookmark was clipped into, and writes the bookmark and
- * the note through the ordinary note path.
+ * finds the note each bookmark was clipped into, and writes the note (or,
+ * when the page cannot be clipped, the bookmark) through the ordinary note
+ * path.
  * Spec: docs/internal/specs/web-clipper-stage1.md (section 5)
  */
 import { useCallback, useMemo, useState } from 'react';
@@ -128,12 +129,12 @@ export function useClipper({
     }
   }, [jobs, token, writeNote, flashToast]);
 
-  /** The window saved a clip: its bookmark first, so the pair is linked. */
+  /** The window saved a clip: only the note, which names its page in
+   *  `clipSource`; a second bookmark item doubled every clip (issue 703). */
   const saveFromWindow = useCallback(async (url: string, saved: SavedClip): Promise<void> => {
-    await ensureBookmark(url);
     const note = await writeNote(url, saved);
     revealNote(note);
-  }, [ensureBookmark, writeNote, revealNote]);
+  }, [writeNote, revealNote]);
 
   /** The page could not be clipped: the bookmark is kept as the fallback. */
   const keepBookmark = useCallback(async (url: string): Promise<void> => {

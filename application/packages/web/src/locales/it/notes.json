@@ -279,6 +279,10 @@
     "bodySingle": "<strong>{{filename}}</strong> sembra un file markdown. Vuoi importarlo come nota così da poterlo leggere e modificare, oppure archiviarlo come allegato cifrato?",
     "bodyMulti": "Questi {{count}} file sembrano markdown. Vuoi importarli come note così da poterli leggere e modificare, oppure archiviarli come allegati cifrati?"
   },
+  "archiveConfirm": {
+    "body_one": "Archiviare <highlight>{{count}} elemento</highlight>? Esce dai tuoi elenchi e ti aspetta nella vista Archivio. Togli dall’archivio lo riporta indietro.",
+    "body_other": "Archiviare <highlight>{{count}} elementi</highlight>? Escono dai tuoi elenchi e ti aspettano nella vista Archivio. Togli dall’archivio li riporta indietro."
+  },
   "bulkTrash": {
     "body_one": "Eliminare <highlight>{{count}} elemento</highlight>? Spostalo nel cestino per ripristinarlo in seguito, oppure eliminalo per sempre.",
     "body_other": "Eliminare <highlight>{{count}} elementi</highlight>? Spostali nel cestino per ripristinarli in seguito, oppure eliminali per sempre.",

@@ -219,6 +219,8 @@
     "textLabel": "Tekst linku",
     "textPlaceholder": "Opcjonalnie, zostaw puste, aby pokazać adres URL",
     "selectedTextHint": "Zaznaczony tekst zostanie użyty jako link",
+    "titleLabel": "Tekst po najechaniu",
+    "titleHint": "Pojawia się po najechaniu na link",
     "update": "Zaktualizuj",
     "menuOpen": "Otwórz link",
     "menuCopy": "Kopiuj link",

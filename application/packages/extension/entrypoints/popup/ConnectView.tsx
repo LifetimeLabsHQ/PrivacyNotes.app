@@ -12,6 +12,7 @@ import { Callout, StatusLine } from '@web/ui/feedback';
 import { FIELD_CLASS, FieldLabel } from '@web/formFields';
 import { SettingsSegmented, SETTINGS_HELP } from '@web/settingsUI';
 import { SecretInput } from '@web/PasscodeInput';
+import type { PinInputHandle } from '@web/PinInput';
 import { Switch } from '@web/Switch';
 import { PASSCODE_MIN_CHARS } from '@web/secretKind';
 import { HELP_URL } from '../../src/config';
@@ -36,6 +37,8 @@ export function ConnectView({ onConnected }: { onConnected: (c: Connection) => v
   const [fingerprint, setFingerprint] = useState(false);
   // The unlock proof, in memory only, for the passkey button of the done step.
   const proof = useRef<Uint8Array | null>(null);
+  // A full PIN hands the cursor to the repeat field; a passcode at Enter.
+  const repeatRef = useRef<PinInputHandle>(null);
   const [enrolled, setEnrolled] = useState<'no' | 'busy' | 'yes' | 'failed'>('no');
   useEffect(() => {
     void biometricPossible().then(setCanFingerprint);
@@ -126,11 +129,11 @@ export function ConnectView({ onConnected }: { onConnected: (c: Connection) => v
             { value: 'passcode', label: t('security:pinTab.kindPasscode') },
           ]}
         />
-        <SecretInput kind={kind} value={first} onChange={setFirst} autoFocus compact />
+        <SecretInput kind={kind} value={first} onChange={setFirst} onComplete={() => repeatRef.current?.focus()} autoFocus compact />
         {ready && (
           <div className="space-y-1">
             <FieldLabel>{t('protect.repeat')}</FieldLabel>
-            <SecretInput kind={kind} value={second} onChange={setSecond} onComplete={(v) => protect(v)} compact />
+            <SecretInput ref={repeatRef} kind={kind} value={second} onChange={setSecond} onComplete={(v) => protect(v)} autoFocus={kind === 'pin'} compact />
           </div>
         )}
         <p className={SETTINGS_HELP}>{t('protect.tries')}</p>

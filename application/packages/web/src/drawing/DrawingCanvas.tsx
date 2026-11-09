@@ -95,9 +95,9 @@ export type DrawingCanvasProps = {
 /** What the canvas reports to the toolbar: the tool, whether it stays,
  *  the zoom, and for the Style button the layout, whether a style applies
  *  (a selection, or a tool that draws), and whether the panel is open. */
-export type CanvasToolState = { tool: string; locked: boolean; zoom: number; phone: boolean; styled: boolean; styleOpen: boolean };
+type CanvasToolState = { tool: string; locked: boolean; zoom: number; phone: boolean; styled: boolean; styleOpen: boolean };
 
-export type DrawingCommands = { toggleStyle: () => void; clear: () => void; escape: () => void; closeMenu: () => void };
+type DrawingCommands = { toggleStyle: () => void; clear: () => void; escape: () => void; closeMenu: () => void };
 
 /** The tools whose next shape takes the panel's style. */
 const STYLED_TOOLS = new Set(['rectangle', 'diamond', 'ellipse', 'arrow', 'line', 'freedraw', 'text']);

@@ -90,6 +90,9 @@ export default defineConfig({
   publicDir: 'public',
   outDir: '.output',
   zip: {
+    // The store version, not package.json's 0.0.1, so each upload names its version.
+    artifactTemplate: `privacynotes-${VERSION}-{{browser}}.zip`,
+    sourcesTemplate: `privacynotes-${VERSION}-sources.zip`,
     sourcesRoot: resolve(__dirname, '../..'),
     includeSources: [
       'package.json',

@@ -297,6 +297,12 @@
     "bodySingle": "<strong>{{filename}}</strong> wygląda na plik markdown. Zaimportować go jako notatkę, żebyś mógł go czytać i edytować, czy zapisać jako zaszyfrowany załącznik?",
     "bodyMulti": "Te pliki ({{count}}) wyglądają na markdown. Zaimportować je jako notatki, żebyś mógł je czytać i edytować, czy zapisać jako zaszyfrowane załączniki?"
   },
+  "archiveConfirm": {
+    "body_one": "Zarchiwizować <highlight>{{count}} element</highlight>? Zniknie z Twoich list i poczeka w widoku Archiwum. Opcja Przywróć z archiwum go przywraca.",
+    "body_few": "Zarchiwizować <highlight>{{count}} elementy</highlight>? Znikną z Twoich list i poczekają w widoku Archiwum. Opcja Przywróć z archiwum je przywraca.",
+    "body_many": "Zarchiwizować <highlight>{{count}} elementów</highlight>? Znikną z Twoich list i poczekają w widoku Archiwum. Opcja Przywróć z archiwum je przywraca.",
+    "body_other": "Zarchiwizować <highlight>{{count}} elementu</highlight>? Znikną z Twoich list i poczekają w widoku Archiwum. Opcja Przywróć z archiwum je przywraca."
+  },
   "bulkTrash": {
     "body_one": "Usunąć <highlight>{{count}} element</highlight>? Przenieś go do kosza, aby później go przywrócić, albo usuń go na zawsze.",
     "body_other": "Usunąć <highlight>{{count}} elementu</highlight>? Przenieś je do kosza, aby później je przywrócić, albo usuń je na zawsze.",

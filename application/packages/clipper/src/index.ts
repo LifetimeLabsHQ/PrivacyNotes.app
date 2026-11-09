@@ -15,7 +15,7 @@ import { isSafeMarkdown, plainMarkdown } from './safety';
 
 export type { ClipImage } from './markdown';
 export { countFailures, placePictures, savePictures, CLIP_MAX_PICTURES, CLIP_MAX_PICTURE_BYTES } from './pictures';
-export { isSafeMarkdown } from './safety';
+export { isSafeMarkdown, plainMarkdown } from './safety';
 export type { PictureOutcome, PictureDeps, PictureFailure } from './pictures';
 
 /** `main`: the main text of the page (Readability). `page`: the whole

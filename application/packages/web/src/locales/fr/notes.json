@@ -279,6 +279,10 @@
     "bodySingle": "<strong>{{filename}}</strong> ressemble à un fichier markdown. L'importer comme note pour pouvoir le lire et le modifier, ou le stocker comme pièce jointe chiffrée ?",
     "bodyMulti": "Ces {{count}} fichiers ressemblent à du markdown. Les importer comme notes pour pouvoir les lire et les modifier, ou les stocker comme pièces jointes chiffrées ?"
   },
+  "archiveConfirm": {
+    "body_one": "Archiver <highlight>{{count}} élément</highlight> ? Il quitte tes listes et attend dans la vue Archives. Désarchiver le ramène.",
+    "body_other": "Archiver <highlight>{{count}} éléments</highlight> ? Ils quittent tes listes et attendent dans la vue Archives. Désarchiver les ramène."
+  },
   "bulkTrash": {
     "body_one": "Supprimer <highlight>{{count}} élément</highlight> ? Mets-le à la corbeille pour le restaurer plus tard, ou supprime-le définitivement.",
     "body_other": "Supprimer <highlight>{{count}} éléments</highlight> ? Mets-les à la corbeille pour les restaurer plus tard, ou supprime-les définitivement.",

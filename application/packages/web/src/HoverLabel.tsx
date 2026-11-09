@@ -132,6 +132,33 @@ function fitTip(tip: HTMLElement, host: HTMLElement) {
   }
 }
 
+type Box = { left: number; top: number; right: number; bottom: number };
+
+/**
+ * Where a fixed tip goes for a target that cannot hold a tip of its own: a
+ * link in the note text is document content, so no tip element can be hung
+ * inside it (`LinkAddressPill.tsx`). It lands under the target's line and
+ * after the pointer `x` (bottom right, bottom left in a right-to-left pane),
+ * where a native tip would land, so it covers neither the link nor the line
+ * being read. Like `fitTip` it goes to the other side, above, when there is
+ * no room below, and moves sideways to stay inside `box` (`visibleBox`).
+ */
+export function placeFixedTip(
+  target: Box,
+  x: number,
+  tip: { width: number; height: number },
+  box: Box,
+  rtl: boolean,
+): { top: number; left: number } {
+  const gap = 6;
+  let top = target.bottom + gap;
+  if (top + tip.height > box.bottom - EDGE && target.top - gap - tip.height >= box.top + EDGE) top = target.top - gap - tip.height;
+  let left = rtl ? x - tip.width : x;
+  if (left + tip.width > box.right - EDGE) left = box.right - EDGE - tip.width;
+  if (left < box.left + EDGE) left = box.left + EDGE;
+  return { top, left };
+}
+
 /**
  * Fits a tip the moment it gets a box, whatever showed it. A tip shows on
  * `:hover`, and `:hover` is not an event: a button that appears under a

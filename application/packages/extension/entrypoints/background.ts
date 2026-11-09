@@ -18,10 +18,12 @@ import { saveClip, saveLogin, type SaveResult } from '../src/save';
 import { readPrefs } from '../src/prefs';
 import { startI18n, t } from '../src/i18n';
 import { readConnection } from '../src/connection';
-import { allEntries, applyLockTime, copyLoginShortcut, isUnlocked, LOCK_ALARM, lockLogins, locksOn, ROWS_KEY, SESSION_KEY, shortcutUrl } from '../src/logins';
+import { allEntries, applyLockTime, copyLoginShortcut, isUnlocked, KEEP_ALARM, lockLogins, locksOn, pull, ROWS_KEY, SESSION_KEY, shortcutUrl } from '../src/logins';
 import { loginsOf, matchLogins, searchEntries } from '../src/match';
 import type { BackgroundMessage } from '../src/messages';
 import { ROUTE_KEY, type PopupRoute } from '../src/route';
+import { readShortcuts, withKeys } from '../src/shortcuts';
+import { clearSiteCounts, onMarkEnd, showSiteCount } from '../src/badge';
 
 const MENU_ROOT = 'pn';
 const COPY_MENU = 'login-copy';
@@ -35,7 +37,15 @@ const ALL_CONTEXTS: Context[] = ['page', 'selection', 'link', 'editable'];
 let copyMenuLogins = new Map<string, LoginCopyEntry>();
 
 function menuItem(id: string, title: string, contexts: Context[], parentId: string = MENU_ROOT): void {
-  browser.contextMenus.create({ id, parentId, title, contexts: contexts as never });
+  browser.contextMenus.create({ id, parentId, title, contexts: contexts as never }, readMenuError);
+}
+
+/** A create that finds its id taken leaves the item as it is. That happens
+ *  when two builds overlap, which the queue below cannot stop: an update or
+ *  a reload starts a new background while the old one may still build. Read
+ *  the error so Chrome does not list it as unchecked. */
+function readMenuError(): void {
+  void browser.runtime.lastError;
 }
 
 /**
@@ -47,9 +57,13 @@ function menuItem(id: string, title: string, contexts: Context[], parentId: stri
 async function buildMenus(): Promise<void> {
   await startI18n();
   await browser.contextMenus.removeAll();
-  browser.contextMenus.create({ id: MENU_ROOT, title: t('notes:settings.groupBrand'), contexts: ALL_CONTEXTS as never });
+  // A row that has a shortcut names it, so the menu teaches the key. Read
+  // on every build: the person may have changed it since (section 3.5).
+  const keys = await readShortcuts();
+  void browser.action.setTitle({ title: withKeys(t('notes:settings.groupBrand'), keys._execute_action) });
+  browser.contextMenus.create({ id: MENU_ROOT, title: t('notes:settings.groupBrand'), contexts: ALL_CONTEXTS as never }, readMenuError);
   menuItem('page-note', t('menu.savePageNote'), ['page']);
-  menuItem('page-bookmark', t('menu.savePageBookmark'), ['page']);
+  menuItem('page-bookmark', withKeys(t('menu.savePageBookmark'), keys['save-bookmark']), ['page']);
   menuItem('page-markdown', t('menu.copyPageMarkdown'), ['page']);
   // With text selected the page comes first, then the selection.
   menuItem('selection-page-note', t('menu.savePageNote'), ['selection']);
@@ -57,18 +71,25 @@ async function buildMenus(): Promise<void> {
   menuItem('link-bookmark', t('menu.saveLinkBookmark'), ['link']);
   menuItem('link-note', t('menu.saveLinkedPage'), ['link']);
   // The vault half: each opens the popup on its view, or copies at once.
-  browser.contextMenus.create({ id: 'logins-sep', parentId: MENU_ROOT, type: 'separator', contexts: ALL_CONTEXTS as never });
-  menuItem(COPY_MENU, t('menu.copyLogin'), ALL_CONTEXTS);
+  browser.contextMenus.create({ id: 'logins-sep', parentId: MENU_ROOT, type: 'separator', contexts: ALL_CONTEXTS as never }, readMenuError);
+  menuItem(COPY_MENU, withKeys(t('menu.copyLogin'), keys['copy-login']), ALL_CONTEXTS);
   menuItem('login-add', t('menu.addLogin'), ALL_CONTEXTS);
   menuItem('login-generate', t('menu.generatePassword'), ALL_CONTEXTS);
 
   copyMenuLogins = new Map();
   const connection = await readConnection();
-  if (!connection?.logins) return;
-  if (!(await isUnlocked())) return menuItem(`${COPY_MENU}:unlock`, t('vault.unlockToCopy'), ALL_CONTEXTS, COPY_MENU);
+  if (!connection?.logins) return void clearSiteCounts();
+  if (!(await isUnlocked())) {
+    void clearSiteCounts();
+    return menuItem(`${COPY_MENU}:unlock`, t('vault.unlockToCopy'), ALL_CONTEXTS, COPY_MENU);
+  }
   const [tab] = await browser.tabs.query({ active: true, lastFocusedWindow: true });
   const found = tab?.url ? await allEntries() : null;
-  const matches = found && tab?.url ? matchLogins(loginsOf(found.entries), tab.url).slice(0, COPY_MENU_MAX) : [];
+  const all = found && tab?.url ? matchLogins(loginsOf(found.entries), tab.url) : [];
+  // The badge: how many logins this site has, like Bitwarden. The tab's
+  // own text, so each tab keeps its number when the person switches.
+  if (tab?.id != null) void showSiteCount(tab.id, all.length);
+  const matches = all.slice(0, COPY_MENU_MAX);
   const valueRows = (parent: string, login: LoginCopyEntry) => {
     copyMenuLogins.set(parent, login);
     if (login.username) menuItem(`${parent}:username`, t('auth:loginForm.copyUsername'), ALL_CONTEXTS, parent);
@@ -303,6 +324,7 @@ export default defineBackground(() => {
     if ((area === 'session' && SESSION_KEY in changes) || (area === 'local' && (ROWS_KEY in changes || 'connection' in changes))) refreshMenus();
   });
   browser.runtime.onInstalled.addListener(() => refreshMenus());
+  onMarkEnd(refreshMenus);
   browser.runtime.onStartup.addListener(() => {
     refreshMenus();
     void flush();
@@ -330,7 +352,12 @@ export default defineBackground(() => {
   browser.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === FLUSH_ALARM) void flush();
     else if (alarm.name === CLEAR_ALARM) void clearIfStill();
-    else if (alarm.name === LOCK_ALARM) void lockLogins();
+    else if (alarm.name === KEEP_ALARM) {
+      void isUnlocked().then(async (open) => {
+        if (open) await pull();
+        else await browser.alarms.clear(KEEP_ALARM);
+      });
+    }
   });
   browser.commands.onCommand.addListener((command) => {
     if (command === 'copy-login') void copyLoginShortcut();

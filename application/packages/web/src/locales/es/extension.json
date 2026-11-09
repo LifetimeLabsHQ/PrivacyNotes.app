@@ -94,6 +94,11 @@
   "badge": {
     "problem": "Algo necesita tu atención"
   },
+  "changeSecret": {
+    "titlePin": "Cambiar PIN",
+    "titlePasscode": "Cambiar código de acceso",
+    "biometricAgain": "La huella o la cara usaba el anterior. Vuelve a configurarla para seguir usándola."
+  },
   "biometric": {
     "enrolled": "La huella o la cara está configurada. Puedes cerrar esta pestaña.",
     "enrolledHere": "La huella o la cara está configurada.",
@@ -105,7 +110,6 @@
     "searchKind": "Buscar en {{kind}}",
     "unlockToSearch": "Desbloquea para buscar",
     "all": "Todos los elementos",
-    "more_other": "{{count}} más. Escribe para encontrar uno.",
     "cardsHere": "No hay inicio de sesión para este sitio. Tus tarjetas:",
     "noBookmarkHere": "Esta página no está en tus marcadores.",
     "noneAtAll": "Todavía no hay nada en la bóveda.",
@@ -127,7 +131,13 @@
     "lockHeader": "Bloquear la bóveda tras",
     "unlockToCopy": "Desbloquea para copiar",
     "omniboxDefault": "Buscar %s en tu bóveda de PrivacyNotes",
-    "omniboxUnlock": "Desbloquea PrivacyNotes para buscar",
-    "more_one": "{{count}} más. Escribe para encontrarlo."
+    "omniboxUnlock": "Desbloquea PrivacyNotes para buscar"
+  },
+  "shortcuts": {
+    "notSet": "Sin asignar",
+    "addressBar": "Buscar en la bóveda desde la barra de direcciones",
+    "change": "Cambiar atajos",
+    "changeHint": "Tu navegador guarda las teclas. Cambia una allí, o asígnale una tecla si no tiene ninguna.",
+    "loginHint": "<key/> copia el nombre de usuario y luego la contraseña."
   }
 }

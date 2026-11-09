@@ -4,8 +4,8 @@ import i18n, { activeLocale } from '../i18n';
 import { isNativeStoreBuild } from '../devices';
 import { appZoomSupported } from '../appZoom';
 import { captureBlockSupported } from '../privacyScreen';
+import { commandLineShown } from '../cliRelease';
 import { isDemoMode } from '../demo';
-import { extensionOffered } from '../extensionRelease';
 import { exemptOpts } from '../i18nExempt';
 import { ArrowSquareOut } from '../icons';
 import { helpPath } from '../localeRoutes';
@@ -33,8 +33,7 @@ function isShown(entry: SettingEntry): boolean {
   if (entry.shownOn === 'realAccount') return !isDemoMode();
   if (entry.shownOn === 'desktopApp') return appZoomSupported();
   if (entry.shownOn === 'captureBlock') return captureBlockSupported();
-  if (entry.shownOn === 'extension') return extensionOffered();
-  if (entry.shownOn === 'extensionAccount') return extensionOffered() && !isDemoMode();
+  if (entry.shownOn === 'commandLine') return commandLineShown();
   return true;
 }
 

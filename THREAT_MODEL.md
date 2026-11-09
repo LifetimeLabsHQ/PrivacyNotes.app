@@ -1,6 +1,6 @@
 # Threat Model
 
-Last updated: 2026-10-31 (v0.714.0)
+Last updated: 2026-11-09 (v0.732.0)
 
 This document describes the security assumptions, trust boundaries, and known limitations of PrivacyNotes, for auditors, contributors, and users who want to know exactly what the system protects against and what it does not. It is the one place that says how each protection works and what it leaves open. [SECURITY.md](SECURITY.md) says what each protection does for you, [VERIFY.md](VERIFY.md) says how to check it, and the help answers link here instead of explaining it again.
 
@@ -14,6 +14,8 @@ PrivacyNotes is an end-to-end encrypted personal workspace (notes, tasks, journa
 Under self-custody, which every phrase sign-up uses, the phrase, private signing key, and encryption key never leave the client. The server stores ciphertext, nonces, and operational metadata: the pubkey, device rows with peppered fingerprint hashes (see "Devices and fingerprint hashes"), quota counters, and subscription records. The full user-facing accounting of that metadata, including the identifier-free import counters and the website-icon lookups, is SECURITY.md's "What we measure" section; this document does not repeat it. The server never stores plaintext content.
 
 **Browser extension.** The extension never holds the key that opens your notes: it locks each clip with a key only your apps can open, and one of your apps turns it into a note. The server learns that an account uses the extension, when a clip arrives, roughly how large it is, and the browser's IP address; it never learns the page. With logins turned on, the server also stores a second encrypted copy of the vault items the extension shows (logins, credit cards, SSH keys without their private keys) and of the account's bookmarks, under a separate key that opens nothing else, and it sees how many there are and when they change. It keeps half of that key and a checker for the extension's PIN or passcode, and counts wrong tries; neither opens the logins without the half that stays in the browser. Residual: the one-time pairing code is all a browser needs to connect, so whoever pastes it first, within its 10 minutes, sets the PIN or passcode and can read the copy. The app names the browser that used the code while the code is on screen and marks a newly connected browser in Settings > Extension; Remove ends that browser's access but not what it already read.
+
+**Command line.** The command line tool `pn` connects with a one-time code from Settings and holds only the account's inbox public key and a token that can add notes. It cannot open, change or delete notes. A note from `pn` is encrypted on the computer that runs it and waits on the server, sealed, until one of your apps opens it; a note that no app opens within 90 days is deleted. Anyone who copies the token can add notes to the account until you remove that computer in Settings. The server sees that a note arrived, its padded size and when.
 
 **One exception, offered at OAuth signup and preselected there.** In custodial mode the phrase is stored server-side, encrypted under a server-held key, which makes the server capable of decrypting that user's data. Everything below describes self-custody unless stated otherwise; the custodial deviations are specified in "OAuth users" and are the single largest trust boundary in the system.
 

@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 import { FileMd, Robot, Book, GitBranch, Sparkle, Eye, ListChecks, Tag, Table, Laptop, CloudSlash, Brain } from '../icons';
 import { useEscapeToClose } from '../useEscapeToClose';
 import { MarkdownDefaultAppRow } from './MarkdownDefaultApp';
-import { CloseButton } from '../ui';
+import { CloseButton, FeaturePitch, PitchBadge } from '../ui';
 
 /**
  * The pitch itself, without any modal chrome.
@@ -41,105 +41,44 @@ import { CloseButton } from '../ui';
  */
 export function MarkdownPitch({ actions }: { actions?: React.ReactNode }) {
   const { t } = useTranslation('shell');
-
-  const chips: [React.ReactNode, string][] = [
-    [<Eye key="a" />, t('markdown.chipPreview')],
-    [<ListChecks key="b" />, t('markdown.chipTasks')],
-    [<Tag key="c" />, t('shell:tagsRail.tags')],
-    [<Table key="d" />, t('markdown.chipTables')],
-  ];
-  const uses: [React.ReactNode, string][] = [
-    [<Robot key="a" />, t('markdown.useAgent')],
-    [<Book key="b" />, t('markdown.useObsidian')],
-    [<GitBranch key="c" />, t('markdown.useGit')],
-  ];
-
   return (
-    <>
-        <div className="flex items-center gap-2.5 rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 px-3 py-2.5 mb-3">
-          <Sparkle className="shrink-0 text-warning" />
-          <div className="flex-1 min-w-0">
-            <p className="text-compact font-semibold text-amber-900 dark:text-amber-300 leading-snug">
-              {t('markdown.bannerTitle')}
-            </p>
-            <p className="text-small text-amber-700 dark:text-amber-400/80 leading-snug">
-              {t('markdown.bannerSub')}
-            </p>
-          </div>
-          <span className="shrink-0 text-meta font-semibold uppercase tracking-wide bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 rounded-full px-2 py-0.5">
-            {t('markdown.bannerFree')}
-          </span>
-        </div>
-
-        <p className="text-small text-pn-muted text-center mb-3">
-          {t('markdown.explainIntro')}
-        </p>
-
-        <div className="flex flex-wrap justify-center gap-1.5 mb-4">
-          {chips.map(([icon, label]) => (
-            <span
-              key={label}
-              className="inline-flex items-center gap-1.5 rounded-full border border-divider px-2.5 py-1 text-small text-pn-soft"
-            >
-              <span className="text-pn-muted">{icon}</span>
-              {label}
-            </span>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-3 gap-2 mb-3">
-          {uses.map(([icon, label]) => (
-            <div key={label} className="rounded-md bg-surface-1 px-2 py-2.5 text-center">
-              <span className="flex justify-center text-pn-muted">{icon}</span>
-              <p className="mt-1.5 text-meta leading-snug text-pn-soft">{label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* The local/plaintext facts as one strip: a positive (your disk, your
-            eyes only) beside a negative (outside the vault), replacing the old
-            tick/cross warning list. */}
-        <div className="flex items-stretch gap-3 rounded-md border border-divider bg-surface-1 px-3 py-2.5 mb-4">
-          <div className="flex flex-1 items-center gap-2">
-            <Laptop className="shrink-0 text-success" />
-            <div className="min-w-0">
-              <p className="text-small font-medium text-pn leading-snug">{t('markdown.localTitle')}</p>
-              <p className="text-meta text-pn-muted leading-snug">{t('markdown.localSub')}</p>
-            </div>
-          </div>
-          <div className="border-s border-divider" />
-          <div className="flex flex-1 items-center gap-2">
-            <CloudSlash className="shrink-0 text-danger" />
-            <div className="min-w-0">
-              <p className="text-small font-medium text-pn leading-snug">{t('markdown.cloudTitle')}</p>
-              <p className="text-meta text-pn-muted leading-snug">{t('markdown.cloudSub')}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Two shapes from one row, decided by whether `actions` rides it. With
-            a button the line is a left-aligned label and `flex-1` pushes the
-            button to the end. Without one it is the last line of a centred card
-            - intro, chips and tiles above it are all centred - so it centres
-            too rather than sitting alone against the left edge. */}
-        <div className={`flex items-center gap-2 ${actions ? '' : 'justify-center'}`}>
-          <Brain className="shrink-0 text-pn-muted" />
-          <p className={`min-w-0 text-small text-pn-muted leading-snug ${actions ? 'flex-1' : 'text-center'}`}>
-            {t('markdown.secondBrain')}
-          </p>
-          {actions}
-        </div>
-
-        {/* Which app the OS opens .md files with. Renders nothing outside the
-            desktop app, and lands in BOTH of this component's homes for free -
-            the explainer modal and the no-folder empty state - which is the
-            whole reason it goes here rather than in either of them.
-            Below the second-brain line and not above it: everything above is the
-            pitch, and this is the one row that changes the machine rather than
-            describing the feature.
-            Spec: docs/internal/specs/markdown-folder.md (section 11) */}
-        <MarkdownDefaultAppRow />
-    </>
+    <FeaturePitch
+      banner={{
+        tone: 'amber',
+        icon: <Sparkle />,
+        title: t('markdown.bannerTitle'),
+        sub: t('markdown.bannerSub'),
+        badge: <PitchBadge>{t('markdown.bannerFree')}</PitchBadge>,
+      }}
+      intro={t('markdown.explainIntro')}
+      chips={[
+        { icon: <Eye />, label: t('markdown.chipPreview') },
+        { icon: <ListChecks />, label: t('markdown.chipTasks') },
+        { icon: <Tag />, label: t('shell:tagsRail.tags') },
+        { icon: <Table />, label: t('markdown.chipTables') },
+      ]}
+      uses={[
+        { icon: <Robot />, label: t('markdown.useAgent') },
+        { icon: <Book />, label: t('markdown.useObsidian') },
+        { icon: <GitBranch />, label: t('markdown.useGit') },
+      ]}
+      // The local/plaintext facts as one strip: a positive (your disk, your
+      // eyes only) beside a negative (outside the vault), replacing the old
+      // tick/cross warning list.
+      facts={[
+        { icon: <Laptop className="text-success" />, title: t('markdown.localTitle'), sub: t('markdown.localSub') },
+        { icon: <CloudSlash className="text-danger" />, title: t('markdown.cloudTitle'), sub: t('markdown.cloudSub') },
+      ]}
+      tagline={{ icon: <Brain />, label: t('markdown.secondBrain') }}
+      actions={actions}
+      // Which app the OS opens .md files with. Renders nothing outside the
+      // desktop app, and lands in BOTH of this component's homes for free -
+      // the explainer modal and the no-folder empty state. Below the tagline:
+      // everything above is the pitch, and this is the one row that changes
+      // the machine rather than describing the feature.
+      // Spec: docs/internal/specs/markdown-folder.md (section 11)
+      footer={<MarkdownDefaultAppRow />}
+    />
   );
 }
 

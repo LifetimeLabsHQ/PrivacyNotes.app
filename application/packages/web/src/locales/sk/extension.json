@@ -96,6 +96,11 @@
   "badge": {
     "problem": "Niečo potrebuje tvoju pozornosť"
   },
+  "changeSecret": {
+    "titlePin": "Zmeniť PIN",
+    "titlePasscode": "Zmeniť prístupový kód",
+    "biometricAgain": "Odtlačok prsta alebo tvár používali starý. Ak ich chceš používať ďalej, nastav ich znova."
+  },
   "biometric": {
     "enrolled": "Odtlačok prsta alebo tvár je nastavený. Túto kartu môžeš zavrieť.",
     "enrolledHere": "Odtlačok prsta alebo tvár je nastavený.",
@@ -107,9 +112,6 @@
     "searchKind": "Hľadať: {{kind}}",
     "unlockToSearch": "Odomkni a hľadaj",
     "all": "Všetky položky",
-    "more_one": "Ešte {{count}} položka. Začni písať a nájdeš ju.",
-    "more_few": "Ešte {{count}} položky. Začni písať a nájdeš tú pravú.",
-    "more_other": "Ešte {{count}} položiek. Začni písať a nájdeš tú pravú.",
     "cardsHere": "Pre tento web nemáš prihlasovacie údaje. Tvoje karty:",
     "noBookmarkHere": "Táto stránka nie je v záložkách.",
     "noneAtAll": "V trezore zatiaľ nič nie je.",
@@ -132,5 +134,12 @@
     "unlockToCopy": "Odomkni a kopíruj",
     "omniboxDefault": "Hľadať %s v trezore PrivacyNotes",
     "omniboxUnlock": "Odomkni PrivacyNotes a hľadaj"
+  },
+  "shortcuts": {
+    "notSet": "Nenastavené",
+    "addressBar": "Hľadať v trezore z panela s adresou",
+    "change": "Zmeniť skratky",
+    "changeHint": "Klávesy si pamätá tvoj prehliadač. Zmeň ich tam alebo priraď klávesy skratke, ktorá žiadne nemá.",
+    "loginHint": "<key/> skopíruje používateľské meno, potom heslo."
   }
 }

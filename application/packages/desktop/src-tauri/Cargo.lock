@@ -2940,7 +2940,7 @@ dependencies = [
 
 [[package]]
 name = "privacynotes"
-version = "0.726.7"
+version = "0.734.4"
 dependencies = [
  "block2",
  "image",
