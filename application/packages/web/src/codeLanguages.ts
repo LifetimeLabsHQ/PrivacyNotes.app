@@ -104,7 +104,7 @@ let closeOpen: (() => void) | null = null;
  * is a node view; it hangs off <body>, because the block's pre clips. A
  * search field on top filters through the shared matcher; arrows and Enter
  * pick from it, and Escape clears the search, then closes the menu.
- * `onPick(null)` means plain text.
+ * `onPick(null)` means plain text. `action` adds one row above the list.
  */
 const LAST_LANGUAGE_KEY = 'privacynotes.codeLanguage';
 
@@ -125,6 +125,7 @@ export function openCodeLanguageMenu(
   anchor: HTMLElement,
   current: string | null | undefined,
   onPick: (fence: string | null) => void,
+  action?: { label: string; run: () => void },
 ): void {
   closeOpen?.();
   const currentLabel = codeLanguageLabel(current);
@@ -152,6 +153,16 @@ export function openCodeLanguageMenu(
   list.className = 'overflow-y-auto max-h-72 pb-1';
   list.setAttribute('role', 'listbox');
   menu.append(field, list);
+  // One block action above the languages ("Add title" / "Remove title").
+  if (action) {
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = `${ROW} border-b border-divider hover:bg-pn/5`;
+    row.textContent = action.label;
+    row.addEventListener('mousedown', (e) => e.preventDefault());
+    row.addEventListener('click', () => { close(); action.run(); });
+    menu.insertBefore(row, list);
+  }
 
   type Row = { fence: string | null; label: string };
   const plain: Row = { fence: null, label: i18n.t('settings:appearance.copyFormatPlain') };

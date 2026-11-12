@@ -1,7 +1,7 @@
 import type { CustomHabitDef } from './habitList';
 import { DEFAULT_STORE as DEFAULT_LIST_PREFS_STORE, type ListPrefsStore } from './listPrefs';
 import { defaultTrackerSettings, type FactorDef, type TrackerSettings, type MedicationTemplate } from './trackerTypes';
-import type { ColorTheme, LineSpacing } from './theme';
+import type { ColorTheme, LineSpacing, NestedNumbers } from './theme';
 import type { JournalTitleFormat } from './notesViewUtils';
 import type { Clock, DateOrder, WeekStart } from './intlFormat';
 import type { View } from './views';
@@ -10,6 +10,7 @@ import type { ItemStyles, NoteColorStyle } from './itemStyles';
 import type { DeviceLabels } from './deviceLabels';
 import type { ExtensionKeys } from './extensionKeys';
 import type { CustomThemes } from './customThemes';
+import type { CalendarFeeds } from './calendarFeeds';
 import type { FormatBarSetting } from './formatBar';
 import type { DashboardSetting } from './dashboard/dashboardLayout';
 import { defaultPwGen, type PwGen } from './passwordGen';
@@ -350,6 +351,13 @@ export type UserSettings = {
    */
   lineSpacing: LineSpacing;
   /**
+   * How a numbered list inside a numbered list counts: 'flat' (1, 1, 1) or
+   * 'outline' (1.1, 1.1.1). Display only: the Markdown keeps plain `1.`
+   * items. Synced like lineSpacing, so a note counts the same everywhere.
+   * GitHub #689. Spec: theme.ts (Nested numbers axis)
+   */
+  nestedNumbers: NestedNumbers;
+  /**
    * Date shape new journal entry titles are born with. Synced like
    * viewMode: someone who prefers ISO dates prefers them on every
    * device. Only new entries are affected - existing titles are free
@@ -428,6 +436,14 @@ export type UserSettings = {
    * Spec: docs/contrib/color-themes.md (section 6)
    */
   customThemes: CustomThemes;
+  /**
+   * The calendars a person subscribes to (#619), one address per feed id.
+   * Merged per feed at every sync point; sealed in the device cache, since
+   * a private calendar address is a secret. Each device downloads them
+   * itself. See calendarFeeds.ts.
+   * Spec: docs/internal/specs/calendar-pillar-spec.md (section 14)
+   */
+  calendarFeeds: CalendarFeeds;
   /**
    * Pro: the format bar a person arranged, as one stamped register, merged at
    * every sync point like the looks. Empty or reset is the stock bar.
@@ -627,6 +643,7 @@ export function defaultSettings(): UserSettings {
     editorMode: 'formatted', // Spec: docs/internal/specs/editor-mode-toggle.md (default editor mode)
     // Spec: docs/internal/design-decisions.md (editor paragraph rhythm)
     lineSpacing: 'compact',
+    nestedNumbers: 'flat',
     // Spec: docs/internal/design-decisions.md (journal entry titles)
     journalTitleFormat: 'long',
     journalTitleSuffix: '',
@@ -640,6 +657,7 @@ export function defaultSettings(): UserSettings {
     deviceLabels: {},
     extensionKeys: {},
     customThemes: {},
+    calendarFeeds: {},
     formatBar: {},
     dashboard: {},
     // Spec: docs/internal/specs/folder-tag-icons.md (decision D10, on)

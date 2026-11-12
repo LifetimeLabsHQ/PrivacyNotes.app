@@ -1,25 +1,39 @@
 {
   "manifest": {
-    "extDescription": "웹 페이지를 암호화된 노트로 저장하고 로그인 정보를 복사하세요.",
+    "extDescription": "웹 페이지를 암호화된 노트로 저장하고 로그인 정보를 복사하거나 채우세요.",
     "commandOpen": "PrivacyNotes 열기",
-    "commandCopyLogin": "이 사이트의 로그인 정보 복사",
-    "commandSaveBookmark": "페이지를 북마크로 저장"
+    "commandCopyLogin": "이 사이트의 로그인 정보 채우기 또는 복사",
+    "commandSaveNote": "페이지를 노트로 저장",
+    "commandLock": "보관함 잠금",
+    "commandGenerate": "비밀번호 생성 후 복사",
+    "commandSaveBookmark": "페이지를 북마크로 저장",
+    "commandNewNote": "새 노트 쓰기"
   },
   "menu": {
     "savePageNote": "페이지를 노트로 저장",
     "savePageBookmark": "페이지를 북마크로 저장",
     "copyPageMarkdown": "페이지를 Markdown으로 복사",
     "saveSelection": "선택한 내용을 노트로 저장",
+    "newNoteFromSelection": "선택한 내용으로 새 노트",
     "saveLinkBookmark": "링크를 북마크로 저장",
     "saveLinkedPage": "링크된 페이지를 노트로 저장",
+    "fillLogin": "이 사이트의 로그인 정보 채우기",
     "copyLogin": "이 사이트의 로그인 정보 복사",
     "addLogin": "이 사이트의 로그인 항목 추가",
     "generatePassword": "비밀번호 생성"
   },
+  "note": {
+    "tagsPlaceholder": "#업무 #아이디어",
+    "tagsHelp": "태그 사이는 공백이나 쉼표로 구분하세요. #는 생략해도 돼요.",
+    "failed": "노트를 저장하지 못했어요. 다시 시도하세요."
+  },
   "connect": {
-    "title": "계정에 연결",
-    "body": "PrivacyNotes에서 설정 > 확장 프로그램을 열고 코드 만들기를 선택하세요. 그 코드를 여기에 붙여넣으세요.",
+    "title": "이 브라우저 연결",
+    "step1": "이 컴퓨터에서 PrivacyNotes를 열거나 use.privacynotes.app을 사용하세요.",
+    "step2": "설정 > 확장 프로그램을 열고 코드 만들기를 선택하세요.",
+    "step3": "여기에 코드를 붙여넣으세요.",
     "codeLabel": "앱에서 받은 코드",
+    "paste": "붙여넣기",
     "connect": "연결",
     "badCode": "코드가 완전하지 않아요. 앱에서 다시 복사하세요.",
     "usedCode": "이미 사용했거나 10분이 지난 코드예요. 앱에서 새 코드를 만드세요. 연결된 브라우저는 설정 > 확장 프로그램에서 볼 수 있어요.",
@@ -27,21 +41,23 @@
     "connected": "연결됨",
     "connectedClips": "스크랩을 사용할 수 있어요.",
     "connectedBoth": "스크랩과 로그인 항목을 사용할 수 있어요.",
-    "codeSpent": "이제 코드는 사용이 끝났어요. 코드를 찍은 스크린샷도 쓸모가 없어요.",
     "help": "작동 방식"
   },
   "protect": {
     "title": "로그인 항목 보호",
-    "body": "이 브라우저에서 쓸 PIN이나 패스코드를 정하세요. 앱의 것과는 별개예요.",
-    "tries": "10번 틀리면 이 브라우저의 연결이 해제돼요.",
-    "biometric": "지문이나 얼굴도 사용",
-    "biometricHelp": "이 브라우저가 지원하는 경우 Touch ID나 Windows Hello를 쓸 수 있어요. PIN이나 패스코드도 언제나 작동해요.",
+    "body": "이 브라우저에서 쓸 PIN이나 패스코드를 정하세요. 여기서 로그인 항목의 잠금을 해제할 때 필요해요. 앱의 것과는 별개예요.",
+    "biometric": "생체 인증 잠금 해제도 사용",
+    "biometricHelp": "PIN이나 패스코드에 더해 Touch ID나 Windows Hello를 쓸 수 있어요. PIN이나 패스코드도 언제나 작동해요.",
     "repeat": "한 번 더 입력하세요",
     "mismatch": "두 값이 일치하지 않아요. 다시 시도하세요."
   },
   "clip": {
     "selection": "선택한 내용",
+    "wholePage": "전체 페이지",
+    "whatToSave": "저장할 내용",
+    "picturesKept_other": "이미지 {{count}}개를 보관했어요.",
     "includePictures": "이미지 포함",
+    "includePicturesHelp": "사이트에 링크하지 않고 노트 안에 보관해요.",
     "savedBody": "앱 중 하나가 다음에 동기화할 때 노트에 나타나요. 앱 하나가 열려 있으면 보통 몇 분 안에 나타나요.",
     "closeHint": "팝업은 바로 닫아도 돼요.",
     "alreadySaved": "{{date}}에 이 페이지를 저장했어요.",
@@ -59,23 +75,21 @@
     "failed": "이 페이지를 저장하지 못했어요. 다시 시도하세요.",
     "reading": "페이지를 읽는 중",
     "copiedMarkdown": "페이지를 Markdown으로 복사했어요",
-    "off": "이 브라우저에서는 페이지 저장이 꺼져 있어요. 연결할 때 웹 클리퍼를 켜세요.",
-    "saving": "페이지를 저장하는 중"
+    "off": "이 브라우저에서는 페이지 저장이 꺼져 있어요. 연결할 때 웹 클리퍼를 켜세요."
   },
   "logins": {
     "unlockPin": "PIN을 입력하세요",
     "unlockPasscode": "패스코드를 입력하세요",
-    "useBiometric": "지문이나 얼굴 사용",
+    "useBiometric": "생체 인증 잠금 해제 사용",
     "wrong_other": "틀렸어요. {{count}}번 더 틀리면 이 브라우저의 연결이 해제돼요.",
     "forSite": "{{site}}용",
     "none": "이 사이트의 로그인 항목이 없어요.",
     "off": "이 브라우저에서는 로그인 항목이 꺼져 있어요. 연결할 때 보관함을 켜세요.",
     "copyCode": "2FA 코드 복사",
+    "fill": "채우기",
     "usernameCopied": "사용자 이름을 복사했어요",
     "passwordCopied": "비밀번호를 복사했어요",
     "codeCopied": "2FA 코드를 복사했어요",
-    "clears": "30초 뒤에도 클립보드에 남아 있으면 지워져요.",
-    "addSaved": "저장했어요. 앱 중 하나가 다음에 동기화할 때 보관함에 나타나요. 앱 하나가 열려 있으면 보통 몇 분 안에 나타나요.",
     "lock": "잠금",
     "unreachable": "잠금을 해제하려면 PrivacyNotes에 연결해야 하는데 연결할 수 없어요. 인터넷 연결을 확인하고 다시 시도하세요.",
     "lockSystem": "컴퓨터가 잠길 때",
@@ -95,13 +109,13 @@
   "changeSecret": {
     "titlePin": "PIN 변경",
     "titlePasscode": "패스코드 변경",
-    "biometricAgain": "지문이나 얼굴은 이전 것에 맞춰져 있었어요. 계속 쓰려면 다시 설정하세요."
+    "biometricAgain": "생체 인증 잠금 해제는 이전 것에 맞춰져 있었어요. 계속 쓰려면 다시 설정하세요."
   },
   "biometric": {
-    "enrolled": "지문이나 얼굴을 설정했어요. 이 탭은 닫아도 돼요.",
-    "enrolledHere": "지문이나 얼굴을 설정했어요.",
+    "enrolled": "생체 인증 잠금 해제를 설정했어요. 이 탭은 닫아도 돼요.",
+    "enrolledHere": "생체 인증 잠금 해제를 설정했어요.",
     "unlocked": "잠금을 해제했어요. 이 탭을 닫고 PrivacyNotes를 다시 여세요.",
-    "failed": "이 브라우저는 여기서 지문이나 얼굴을 사용할 수 없어요. PIN이나 패스코드는 전처럼 작동해요."
+    "failed": "이 브라우저는 여기서 생체 인증 잠금 해제를 사용할 수 없어요. PIN이나 패스코드는 전처럼 작동해요."
   },
   "vault": {
     "search": "보관함 검색",
@@ -129,13 +143,53 @@
     "lockHeader": "보관함 잠금 시간",
     "unlockToCopy": "잠금 해제하고 복사",
     "omniboxDefault": "PrivacyNotes 보관함에서 %s 검색",
-    "omniboxUnlock": "검색하려면 PrivacyNotes 잠금을 해제하세요"
+    "omniboxUnlock": "검색하려면 PrivacyNotes 잠금을 해제하세요",
+    "moreOptions": "옵션 더 보기"
   },
   "shortcuts": {
     "notSet": "설정 안 됨",
     "addressBar": "주소 표시줄에서 보관함 검색",
     "change": "단축키 변경",
     "changeHint": "단축키는 브라우저가 관리해요. 브라우저에서 바꾸거나, 키가 없는 단축키에 키를 지정하세요.",
-    "loginHint": "<key/> 키는 사용자 이름을 복사한 다음 비밀번호를 복사해요."
+    "loginHint": "<key/> 키는 이 로그인 정보를 채워요. 로그인 입력란이 없는 페이지에서는 사용자 이름을 복사한 다음 비밀번호를 복사해요.",
+    "loginHintMany": "<key/> 키는 맨 위의 로그인 정보를 채워요.<br/>3초 안에 다시 누르면 다음 로그인 정보를 채워요."
+  },
+  "tabs": {
+    "label": "스크랩 또는 보관함",
+    "clip": "스크랩"
+  },
+  "notice": {
+    "clearsIn": "{{seconds}}초 후 지워져요",
+    "copyFailed": "복사할 수 없어요",
+    "loginSaved": "로그인 항목을 저장했어요",
+    "vaultNextSync": "다음 동기화 때 보관함에 나타나요",
+    "noteSaved": "노트를 저장했어요",
+    "notesNextSync": "다음 동기화 때 노트에 나타나요",
+    "savedHere": "여기에 저장했어요",
+    "goesOutOnline": "온라인이 되면 전송돼요"
+  },
+  "fill": {
+    "notFilled": "채우지 않았어요",
+    "couldNot": "채울 수 없어요",
+    "nothing": "이 페이지에는 로그인 입력란이 없어요",
+    "signup": "이 양식은 새 비밀번호를 요구해요",
+    "insecure": "이 페이지는 안전하지 않아요(http)",
+    "otherAccount": "이 페이지는 다른 계정을 요구해요",
+    "tooLong": "페이지의 입력란이 너무 짧아요",
+    "copyInstead": "대신 값을 복사하세요",
+    "usernameOnly": "사용자 이름을 채웠어요",
+    "usernameOnlyNext": "비밀번호를 채우려면 채우기를 다시 선택하세요"
+  },
+  "settings": {
+    "codes": "2FA 코드",
+    "codesHelp": "2FA 키가 있는 각 로그인 항목 아래에 표시되는 실시간 코드예요.",
+    "bar": "카운트다운 막대",
+    "barHelp": "다음 코드까지 줄어드는 선이에요.",
+    "iconsHelp": "저희 프록시를 거쳐요. 프록시는 도메인만 보고 사용자는 절대 보지 못해요.",
+    "disconnect": "확장 프로그램 연결 해제",
+    "biometric": "생체 인증 잠금 해제",
+    "biometricPin": "설정하려면 PIN을 입력하세요.",
+    "biometricPasscode": "설정하려면 패스코드를 입력하세요.",
+    "biometricOff": "생체 인증 잠금 해제가 꺼져 있어요"
   }
 }

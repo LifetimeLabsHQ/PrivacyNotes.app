@@ -169,6 +169,8 @@
     "useClipBody": "Envoie le presse-papiers, la sortie d'une commande ou un message d'erreur directement dans tes notes.",
     "useToolsTitle": "Un de tes propres outils",
     "useToolsBody": "La commande répond en JSON et se termine avec des codes clairs, pour que tes scripts sachent que la note a été enregistrée.",
+    "useShortcutTitle": "Une note depuis un raccourci clavier",
+    "useShortcutBody": "Une touche que tu choisis dans les paramètres de ton système ouvre un champ pour une note rapide, même quand l'app est fermée. Elle arrive dans ton dossier Agent.",
     "howLink": "Découvre comment fonctionne privacynotes"
   },
   "meds": {
@@ -342,7 +344,7 @@
     "manualUpdates": "Mise à jour manuelle",
     "extensionHeading": "Capture web et gestionnaire de mots de passe",
     "extensionKeyOpen": "Ouvrir l'extension",
-    "extensionKeyLogin": "Copier l'identifiant de ce site",
+    "extensionKeyLogin": "Remplir l'identifiant de ce site",
     "extensionKeyBookmark": "Ajouter cette page aux signets",
     "extensionAria": "Ajouter l'extension à {{name}}",
     "extensionNote": "Sur ordinateur uniquement."

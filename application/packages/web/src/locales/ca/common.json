@@ -93,6 +93,18 @@
       "help": "Dreceres de teclat"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "Escriu-ne més aquí",
+    "hint": "Escriu / per a una carpeta, # per a una etiqueta",
+    "locked": "PrivacyNotes està bloquejat. La teva nota queda segellada i s'obre quan desbloquegis.",
+    "queued": "Desat. S'obre quan desbloquegis.",
+    "tooLong": "Aquesta nota és massa llarga. Divideix-la en dues notes.",
+    "full": "Hi ha massa notes en espera. Desbloqueja per afegir-les.",
+    "empty": "Primer escriu alguna cosa.",
+    "failed": "No s'ha pogut desar la nota. Obre PrivacyNotes i torna-ho a provar.",
+    "added_other": "{{count}} notes ràpides afegides",
+    "added_one": "{{count}} nota ràpida afegida"
+  },
   "quickSwitcher": {
     "label": "Ninja: troba un element o un ajust, afegeix qualsevol cosa, executa una ordre",
     "jumpTo": "Ninja",
@@ -130,7 +142,9 @@
     "actions": "accions",
     "back": "enrere",
     "actionsPlaceholder": "Filtra les accions",
-    "onlyCreate": "afegeix"
+    "onlyCreate": "afegeix",
+    "ninjaLockedTitle": "PrivacyNotes està bloquejat",
+    "ninjaLockedBody": "Obre PrivacyNotes i desbloqueja'l. Després Ninja troba les teves notes des de qualsevol app."
   },
   "cardForm": {
     "cardholderName": "Nom del titular",
@@ -292,8 +306,10 @@
         "detail": "Cada dia de l'any com un quadrat de color"
       },
       "importExport": {
-        "label": "Import & Export",
-        "detail": "Porta-hi notes, treu-ne una còpia de seguretat"
+        "detail": "Porta-hi notes o treu-les"
+      },
+      "backup": {
+        "detail": "Fes una còpia ara, còpies de seguretat automàtiques i restauració"
       },
       "generator": {
         "label": "Generador de contrasenyes",
@@ -309,6 +325,7 @@
     },
     "commands": {
       "syncResume": "Reprèn la sincronització",
+      "lockProtected": "Bloqueja aquesta nota",
       "changelog": "Novetats",
       "themesPage": "Temes de la comunitat",
       "website": "Lloc web de PrivacyNotes"

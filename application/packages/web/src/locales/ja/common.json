@@ -91,6 +91,17 @@
       "help": "キーボードショートカット"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "ここに続きを書く",
+    "hint": "/ でフォルダ、# でタグを指定",
+    "locked": "PrivacyNotes はロックされています。ノートは暗号化して保管され、ロック解除すると開きます。",
+    "queued": "保存しました。ロック解除すると開きます。",
+    "tooLong": "このノートは長すぎます。2つのノートに分けてください。",
+    "full": "待機中のノートが多すぎます。ロック解除して追加してください。",
+    "empty": "先に何か書いてください。",
+    "failed": "ノートを保存できませんでした。PrivacyNotes を開いて、もう一度お試しください。",
+    "added_other": "クイックノートを{{count}}件追加しました"
+  },
   "quickSwitcher": {
     "label": "Ninja: 項目や設定を探す、何でも追加、コマンドを実行",
     "jumpTo": "Ninja",
@@ -127,7 +138,9 @@
     "actions": "操作",
     "back": "戻る",
     "actionsPlaceholder": "操作を絞り込む",
-    "onlyCreate": "追加"
+    "onlyCreate": "追加",
+    "ninjaLockedTitle": "PrivacyNotes はロックされています",
+    "ninjaLockedBody": "PrivacyNotes を開いてロック解除してください。そうすれば、Ninja がどのアプリからでもノートを探せます。"
   },
   "cardForm": {
     "cardholderName": "カード名義人",
@@ -285,8 +298,10 @@
         "detail": "1年の毎日を、色付きの四角ひとつずつで表示"
       },
       "importExport": {
-        "label": "読み込みと書き出し",
-        "detail": "ノートを取り込み、バックアップを持ち出す"
+        "detail": "ノートを取り込んだり、持ち出したり"
+      },
+      "backup": {
+        "detail": "今すぐバックアップ、自動バックアップ、復元"
       },
       "generator": {
         "label": "パスワード生成",
@@ -302,6 +317,7 @@
     },
     "commands": {
       "syncResume": "同期を再開",
+      "lockProtected": "このノートをロック",
       "changelog": "新機能",
       "themesPage": "コミュニティテーマ",
       "website": "PrivacyNotesのウェブサイト"

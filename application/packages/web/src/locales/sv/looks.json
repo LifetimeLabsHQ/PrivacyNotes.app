@@ -5,6 +5,8 @@
   "useDefault": "Använd standard",
   "color": "Färg",
   "applyToSubfolders": "Använd färgen på undermappar",
+  "applyToFolderItems": "Använd på alla objekt i den här mappen",
+  "applyToTagItems": "Använd på alla objekt med den här taggen",
   "icon": "Ikon",
   "searchPlaceholder": "Sök ikoner",
   "searchLogos": "Sök logotyper",

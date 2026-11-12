@@ -31,5 +31,9 @@ Pasek u góry zmienia wygląd tekstu: **pogrubienie**, *kursywa*, nagłówki, li
 
 Ta fraza otwiera twoje notatki. Gdzie leży, decydujesz ty, i możesz to zmienić w każdej chwili. [[Jak chronione są twoje notatki]] opisuje trzy możliwości.
 
+## Więcej niż notatki
+
+Notatki, zadania, hasła, dziennik, pliki, kalendarz, kontakty i zakładki, a do tego śledzenie nastroju i leków. Jedna aplikacja, szyfrowana na twoim urządzeniu. Poza tym darmowy edytor markdownu dla folderów na twoim dysku, Ninja (⌘K), żeby dotrzeć do wszystkiego z klawiatury, i web clipper.
+
 > [!tip] Nic tu nie jest na zawsze
 > Każda notatka w tym sejfie jest przykładem, ta też. Zmień ją, przenieś albo usuń.

@@ -322,7 +322,7 @@ function Tab({
   const { Icon, color: glyphColor } = typeGlyph(n.type);
   // The note's own icon wins over its site icon, so a pinned tab can be told
   // apart from the next one.
-  const iconPaths = useNoteIconPaths(n.id);
+  const iconPaths = useNoteIconPaths(n.id, n);
   const domain = gated || iconPaths ? '' : noteFaviconDomain(n);
   // While a site has no icon to show, the tab draws its type glyph, as a
   // list row draws its themed placeholder; the Favicon stays mounted

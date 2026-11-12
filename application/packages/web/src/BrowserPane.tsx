@@ -12,13 +12,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SupabaseClient } from '@notes/shared';
-import { ArrowsClockwise, DownloadSimple, Link, Password, PuzzlePiece, Scissors, SlidersHorizontal, UserPlus } from './icons';
-import { Badge, Button, Callout, CopyButton, DeleteButton, FIELD_CLASS, FieldLabel, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, Spinner, Switch } from './ui';
+import { ArrowsClockwise, Check, Copy, DownloadSimple, Link, Password, PuzzlePiece, Scissors, SlidersHorizontal, UserPlus } from './icons';
+import { useCopyToClipboard } from './clipboard';
+import { Badge, Button, Callout, DeleteButton, FIELD_CLASS, FieldLabel, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, Spinner, Switch } from './ui';
 import { ROW_TITLE, SectionEyebrow, SETTINGS_CARD, SETTINGS_CARD_ON, SETTINGS_CARD_REST, SETTINGS_GROUP, SettingsCardIcon } from './settingsUI';
 import { useAuth } from './auth';
 import { marketingHomeHref } from './siteLinks';
 import { isTouchOnly } from './touchOnly';
-import { isDemoMode, DEMO_APP_URL } from './demo';
+import { isDemoMode, DEMO_APP_URL, proUnlocked } from './demo';
 import { ExtensionCallError, loadExtensionState, removeExtension, type ExtensionRow } from './extensionApi';
 import { installLinks, type InstallBrowser } from './extensionStores';
 import { hasUnpushedSettings, syncUserSettings } from './userSettings';
@@ -54,6 +55,8 @@ const ERROR_KEY: Record<string, string> = {
   too_many_extensions: 'extensionConnect.tooManyExtensions',
   key_elsewhere: 'extensionConnect.keyElsewhere',
   key_conflict: 'extensionConnect.keyElsewhere',
+  // A free account's second browser (migration 0117): a race with the door below.
+  not_pro: 'apps.secondBrowserPro',
 };
 
 /** How often the pane checks for the browser that used the shown code, and
@@ -101,34 +104,48 @@ export function useCodeWatch(rows: ExtensionRow[], reload: () => void) {
   return { code, usedBy, show, clear: () => setCode(null), forget: () => setUsedBy(null) };
 }
 
-/** The code, Copy, its one-use line and New code. */
+/** The code, its one-use line, then New code and Copy side by side: Copy is
+ *  the step the person takes next, so it is a full button, not an icon. */
 export function PairingCodeBox({ code, label, busy, onNew }: { code: string; label: string; busy: boolean; onNew: () => void }) {
   const { t } = useTranslation('shell');
+  const { copy, copied } = useCopyToClipboard();
   return (
     <div className="space-y-1.5">
       <FieldLabel>{label}</FieldLabel>
-      <div className="flex items-start gap-2">
-        <textarea
-          readOnly
-          value={code}
-          rows={4}
-          dir="ltr"
-          aria-label={label}
-          onFocus={(e) => e.currentTarget.select()}
-          className={`${FIELD_CLASS} font-mono resize-none`}
-        />
-        <CopyButton value={code} label={t('common:actions.copy')} />
-      </div>
+      <textarea
+        readOnly
+        value={code}
+        rows={4}
+        dir="ltr"
+        aria-label={label}
+        onFocus={(e) => e.currentTarget.select()}
+        className={`${FIELD_CLASS} font-mono resize-none`}
+      />
       <p className={SETTINGS_HELP}>{t('extensionConnect.oneUse')}</p>
-      <Button icon={busy ? <Spinner size={15} /> : <ArrowsClockwise aria-hidden="true" />} onClick={onNew} disabled={busy}>
-        {t('extensionConnect.newCode')}
-      </Button>
+      <div className="flex flex-wrap gap-2 pt-1">
+        <Button icon={busy ? <Spinner size={15} /> : <ArrowsClockwise aria-hidden="true" />} onClick={onNew} disabled={busy}>
+          {t('extensionConnect.newCode')}
+        </Button>
+        <Button
+          icon={copied ? <Check weight="bold" aria-hidden="true" className="text-success" /> : <Copy aria-hidden="true" />}
+          onClick={() => copy(code, 'code')}
+        >
+          {copied ? t('security:twoFactor.copied') : t('common:actions.copy')}
+        </Button>
+      </div>
     </div>
   );
 }
 
 /** Steps 2 and 3: the two switches, then the one-time code with Copy. */
-function ConnectSteps({ access, rows, reload }: { access: ExtensionAccess; rows: ExtensionRow[]; reload: () => void }) {
+function ConnectSteps({ access, rows, reload, gated, onUpgrade }: {
+  access: ExtensionAccess;
+  rows: ExtensionRow[];
+  reload: () => void;
+  /** One browser is connected and the account has no Pro: Make a code is the Pro door. */
+  gated: boolean;
+  onUpgrade: () => void;
+}) {
   const { t } = useTranslation('shell');
   const [clips, setClips] = useState(true);
   const [logins, setLogins] = useState(true);
@@ -186,8 +203,9 @@ function ConnectSteps({ access, rows, reload }: { access: ExtensionAccess; rows:
           <PairingCodeBox code={code} label={t('extensionConnect.codeLabel')} busy={busy} onNew={make} />
         ) : (
           <>
-            {usedBy ? <Callout tone="success">{t('extensionConnect.usedBy', { name: usedBy })}</Callout> : <p className={SETTINGS_HELP}>{t('apps.connectHint')}</p>}
-            <Button variant="primary" icon={busy ? <Spinner size={15} /> : <Link aria-hidden="true" />} onClick={make} disabled={busy}>
+            {usedBy ? <Callout tone="success">{t('extensionConnect.usedBy', { name: usedBy })}</Callout> : <p className={SETTINGS_HELP}>{gated ? t('apps.secondBrowserPro') : t('apps.connectHint')}</p>}
+            {/* Pro stays clickable: a free account's second code opens the upgrade window. */}
+            <Button variant="primary" pro={gated} icon={busy ? <Spinner size={15} /> : <Link aria-hidden="true" />} onClick={gated ? onUpgrade : make} disabled={busy}>
               {t('apps.makeCode')}
             </Button>
           </>
@@ -261,7 +279,12 @@ function ConnectedBrowsers({ rows, onRemoved, heading, help, icon = PuzzlePiece 
   );
 }
 
-export function BrowserPane({ extensionKeys }: { extensionKeys: Pick<ExtensionAccess, 'readKeys' | 'saveKeys'> }) {
+export function BrowserPane({ extensionKeys, isPro, onUpgrade }: {
+  extensionKeys: Pick<ExtensionAccess, 'readKeys' | 'saveKeys'>;
+  isPro: boolean | null | undefined;
+  /** The upgrade window, with the browsers reason. */
+  onUpgrade: () => void;
+}) {
   const { t } = useTranslation('shell');
   const { auth, supabase } = useAuth();
   const access: ExtensionAccess | null = isDemoMode() || auth.status !== 'authenticated'
@@ -320,7 +343,8 @@ export function BrowserPane({ extensionKeys }: { extensionKeys: Pick<ExtensionAc
 
       {access ? (
         <div className="grid gap-6 @2xl:grid-cols-2">
-          <ConnectSteps access={access} rows={rows} reload={load} />
+          {/* One browser free, more with Pro. Spec: docs/internal/plans/extension-pro-gate.md (section 5) */}
+          <ConnectSteps access={access} rows={rows} reload={load} gated={rows.length > 0 && !proUnlocked(isPro)} onUpgrade={onUpgrade} />
         </div>
       ) : (
         <a href={DEMO_APP_URL} className={`${SETTINGS_BTN_PRIMARY} inline-flex`}>

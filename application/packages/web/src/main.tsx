@@ -132,6 +132,7 @@ window.addEventListener('vite:preloadError', onPreloadError);
 const BurnNote = lazy(() => import('./BurnNote'));
 const CheckoutLauncher = lazy(() => import('./CheckoutLauncher'));
 const AboutWindow = lazy(() => import('./AboutWindow'));
+const NinjaWindow = lazy(() => import('./NinjaWindow'));
 const UiCatalog = lazy(() => import('./ui/Catalog'));
 const pathname = window.location.pathname.replace(/\/+$/, '');
 const isBurnRoute = pathname === '/burn';
@@ -146,6 +147,12 @@ const isUiCatalog = window.location.hash === '#ui-catalog' && (isDemoMode() || i
 // See desktop/src-tauri/src/lib.rs (open_about_window).
 const isAboutWindow =
   new URLSearchParams(window.location.search).has('about-window') &&
+  detectPlatform() === 'desktop';
+// The Ninja box the global key shows above any app (ninja.rs) loads this
+// bundle with ?ninja-window=1: it draws the main window's Ninja, no auth, no
+// app shell. Spec: docs/internal/plans/ninja-anywhere-694.md
+const isNinjaWindow =
+  new URLSearchParams(window.location.search).has('ninja-window') &&
   detectPlatform() === 'desktop';
 
 // Privacy policy and ToS live on lifetimelabs.dev - redirect legacy routes
@@ -335,6 +342,10 @@ const tree = (
         ) : isAboutWindow ? (
           <Suspense fallback={null}>
             <AboutWindow />
+          </Suspense>
+        ) : isNinjaWindow ? (
+          <Suspense fallback={null}>
+            <NinjaWindow />
           </Suspense>
         ) : isBurnRoute ? (
           <Suspense fallback={<LoadingScreen />}>

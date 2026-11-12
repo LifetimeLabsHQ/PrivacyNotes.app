@@ -1,5 +1,5 @@
 /**
- * The keyboard shortcuts, explained: the three commands with the keys this
+ * The keyboard shortcuts, explained: the commands with the keys this
  * browser has for them now, the `pn` address-bar keyword, and a button to
  * the browser's own page where the keys change. `useShortcuts` feeds the
  * same keys to the popup's tooltips and hints.
@@ -13,7 +13,7 @@ import { Kbd } from '@web/ui/misc';
 import { SETTINGS_HELP } from '@web/settingsUI';
 import { openShortcutSettings, readShortcuts, SHORTCUT_COMMANDS, type ShortcutCommand, type Shortcuts } from '../../src/shortcuts';
 
-/** The browser's keys for the three commands; empty until read. */
+/** The browser's keys for the commands; empty until read. */
 export function useShortcuts(): Shortcuts {
   const [keys, setKeys] = useState<Shortcuts>({});
   useEffect(() => {
@@ -25,7 +25,11 @@ export function useShortcuts(): Shortcuts {
 const LABELS: Record<ShortcutCommand, string> = {
   _execute_action: 'manifest.commandOpen',
   'copy-login': 'manifest.commandCopyLogin',
+  'save-note': 'manifest.commandSaveNote',
+  'lock-vault': 'manifest.commandLock',
+  'generate-password': 'manifest.commandGenerate',
   'save-bookmark': 'manifest.commandSaveBookmark',
+  'new-note': 'manifest.commandNewNote',
 };
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -54,7 +58,7 @@ export function ShortcutsView() {
         </Row>
       </div>
       <p className={SETTINGS_HELP}>{t('shortcuts.changeHint')}</p>
-      <Button icon={<Keyboard aria-hidden="true" />} onClick={() => void openShortcutSettings()} className="w-full">
+      <Button variant="primary" icon={<Keyboard aria-hidden="true" />} onClick={() => void openShortcutSettings()} className="w-full">
         {t('shortcuts.change')}
       </Button>
     </div>

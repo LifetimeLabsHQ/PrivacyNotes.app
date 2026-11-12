@@ -31,5 +31,9 @@ De balk hierboven verandert hoe tekst eruitziet: **vet**, *cursief*, koppen, tak
 
 Die herstelzin is wat je notities opent. Waar hij ligt, bepaal jij, en je kunt die keuze altijd veranderen. [[Hoe je notities beschermd zijn]] legt de drie opties uit.
 
+## Meer dan notities
+
+Notities, taken, wachtwoorden, een dagboek, bestanden, een agenda, contacten en bladwijzers, met het bijhouden van je stemming en medicatie. Eén app, versleuteld op je apparaat. Plus een gratis Markdown-editor voor de mappen op je schijf, Ninja (⌘K) om alles met het toetsenbord te bereiken, en een webclipper.
+
 > [!tip] Niets hier is voorgoed
 > Elke notitie in deze kluis is een voorbeeld, ook deze. Pas hem aan, verplaats hem of gooi hem weg.

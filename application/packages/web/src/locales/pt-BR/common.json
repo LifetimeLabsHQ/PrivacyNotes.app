@@ -92,6 +92,18 @@
       "help": "Atalhos de teclado"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "Escreva mais aqui",
+    "hint": "Digite / para uma pasta, # para uma etiqueta",
+    "locked": "O PrivacyNotes está bloqueado. Sua nota fica guardada com segurança e abre quando você desbloquear.",
+    "queued": "Salva. Ela abre quando você desbloquear.",
+    "tooLong": "Esta nota é longa demais. Divida-a em duas notas.",
+    "full": "Há notas demais esperando. Desbloqueie para adicioná-las.",
+    "empty": "Escreva algo primeiro.",
+    "failed": "Não foi possível salvar a nota. Abra o PrivacyNotes e tente novamente.",
+    "added_one": "{{count}} nota rápida adicionada",
+    "added_other": "{{count}} notas rápidas adicionadas"
+  },
   "quickSwitcher": {
     "label": "Ninja: encontre um item ou uma configuração, adicione qualquer coisa, rode um comando",
     "jumpTo": "Ninja",
@@ -129,7 +141,9 @@
     "actions": "ações",
     "back": "voltar",
     "actionsPlaceholder": "Filtrar as ações",
-    "onlyCreate": "adicionar"
+    "onlyCreate": "adicionar",
+    "ninjaLockedTitle": "O PrivacyNotes está bloqueado",
+    "ninjaLockedBody": "Abra o PrivacyNotes e desbloqueie-o. Depois o Ninja encontra suas notas a partir de qualquer app."
   },
   "cardForm": {
     "cardholderName": "Nome do Titular",
@@ -290,8 +304,10 @@
         "detail": "Cada dia do ano como um quadrado colorido"
       },
       "importExport": {
-        "label": "Import & Export",
-        "detail": "Traga notas para dentro, leve um backup para fora"
+        "detail": "Traga notas para dentro ou leve-as para fora"
+      },
+      "backup": {
+        "detail": "Fazer backup agora, backups automáticos e restauração"
       },
       "generator": {
         "label": "Gerador de senhas",
@@ -307,6 +323,7 @@
     },
     "commands": {
       "syncResume": "Retomar sincronização",
+      "lockProtected": "Bloquear esta nota",
       "changelog": "Novidades",
       "themesPage": "Temas da comunidade",
       "website": "Site do PrivacyNotes"

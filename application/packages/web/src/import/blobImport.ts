@@ -114,11 +114,15 @@ function blobKeyCandidates(key: string): string[] {
 }
 
 /** A markdown image or link whose target is `search`, angle brackets
- *  tolerated (`mdLinkTarget` in export.ts wraps a target holding a space). */
+ *  tolerated (`mdLinkTarget` in export.ts wraps a target holding a space),
+ *  and so is any run of `./` and `../` before it: a note in a folder
+ *  directory reaches the zip's images/ through `../` (the Notes only
+ *  export, #682). */
 function blobRefPattern(search: string, keepAlt: boolean): RegExp {
   const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const target = `<?(?:\\.{1,2}/)*${escaped}>?`;
   return new RegExp(
-    keepAlt ? `!\\[([^\\]]*)\\]\\(<?${escaped}>?\\)` : `!?\\[[^\\]]*\\]\\(<?${escaped}>?\\)`,
+    keepAlt ? `!\\[([^\\]]*)\\]\\(${target}\\)` : `!?\\[[^\\]]*\\]\\(${target}\\)`,
     'g',
   );
 }

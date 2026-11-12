@@ -167,3 +167,29 @@ export function sourceEdit(action: SourceAction, text: string, selStart: number,
     }
   }
 }
+
+/**
+ * A toolbar press on a text field: the edit above, written through the same
+ * change as typing, so the field's own undo takes it back in one step, then
+ * the selection the action leaves. The one function here that touches a
+ * field; the Markdown view and the vault Notes box both call it.
+ *
+ * Returns the new text when the browser had no typed change to make (no
+ * `execCommand`), because then no input event reports it and the caller must
+ * store it itself; null when the field's own input event already did.
+ */
+export function applySourceAction(el: HTMLTextAreaElement, action: SourceAction): string | null {
+  const edit = sourceEdit(action, el.value, el.selectionStart, el.selectionEnd);
+  el.focus();
+  el.setSelectionRange(edit.from, edit.to);
+  const typed = edit.insert === ''
+    ? document.execCommand?.('delete', false)
+    : document.execCommand?.('insertText', false, edit.insert);
+  let untyped: string | null = null;
+  if (!typed) {
+    el.setRangeText(edit.insert, edit.from, edit.to, 'end');
+    untyped = el.value;
+  }
+  el.setSelectionRange(edit.selFrom, edit.selTo);
+  return untyped;
+}

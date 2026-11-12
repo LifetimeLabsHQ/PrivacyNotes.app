@@ -94,6 +94,19 @@
       "help": "Klávesové skratky"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "Sem napíš viac",
+    "hint": "Napíš / pre priečinok, # pre značku",
+    "locked": "PrivacyNotes je zamknuté. Tvoja poznámka je zapečatená a otvorí sa, keď odomkneš.",
+    "queued": "Uložené. Otvorí sa, keď odomkneš.",
+    "tooLong": "Táto poznámka je príliš dlhá. Rozdeľ ju na dve poznámky.",
+    "full": "Čaká príliš veľa poznámok. Odomkni, aby sa pridali.",
+    "empty": "Najprv niečo napíš.",
+    "failed": "Poznámku sa nepodarilo uložiť. Otvor PrivacyNotes a skús to znova.",
+    "added_one": "Pridaná {{count}} rýchla poznámka",
+    "added_few": "Pridané {{count}} rýchle poznámky",
+    "added_other": "Pridaných {{count}} rýchlych poznámok"
+  },
   "quickSwitcher": {
     "label": "Ninja: nájdi položku alebo nastavenie, pridaj čokoľvek, spusti príkaz",
     "jumpTo": "Ninja",
@@ -133,7 +146,9 @@
     "actions": "akcie",
     "back": "späť",
     "actionsPlaceholder": "Filtrovať akcie",
-    "onlyCreate": "pridať"
+    "onlyCreate": "pridať",
+    "ninjaLockedTitle": "PrivacyNotes je zamknuté",
+    "ninjaLockedBody": "Otvor PrivacyNotes a odomkni ho. Potom Ninja nájde tvoje poznámky z akejkoľvek aplikácie."
   },
   "cardForm": {
     "cardholderName": "Meno držiteľa karty",
@@ -300,8 +315,10 @@
         "detail": "Každý deň roka ako jeden farebný štvorček"
       },
       "importExport": {
-        "label": "Import & Export",
-        "detail": "Prines poznámky dnu, odnes si zálohu von"
+        "detail": "Prines poznámky dnu alebo ich odnes von"
+      },
+      "backup": {
+        "detail": "Zálohovať teraz, automatické zálohy a obnova"
       },
       "generator": {
         "label": "Generátor hesiel",
@@ -317,6 +334,7 @@
     },
     "commands": {
       "syncResume": "Obnoviť synchronizáciu",
+      "lockProtected": "Zamknúť túto poznámku",
       "changelog": "Čo je nové",
       "themesPage": "Motívy komunity",
       "website": "Webová stránka PrivacyNotes"

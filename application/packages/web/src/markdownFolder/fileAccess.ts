@@ -207,7 +207,8 @@ export async function openPath(path: string): Promise<OpenedFileRef | null> {
 /* ── Folder ───────────────────────────────────────────────────────── */
 
 /** Rebuild a directory ref from a remembered desktop path - no picker, because
- *  the user already chose it and a path needs no permission. */
+ *  the user already chose it and the saved fs scope holds it. When the scope
+ *  does not, its scan is refused (`isScopeRefusal`). */
 export async function directoryFromPath(path: string): Promise<OpenedDirectoryRef> {
   const fs = await import('@tauri-apps/plugin-fs');
   const name = path.slice(Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1);
@@ -244,15 +245,14 @@ export function directoryFromHandle(dir: FileSystemDirectoryHandle): OpenedDirec
  * field, `remember`, and a ref assembled twice is a ref where the picked path
  * and the restored path quietly stop behaving alike.
  */
-export async function pickDirectory(): Promise<OpenedDirectoryRef | null> {
+export async function pickDirectory(defaultPath?: string): Promise<OpenedDirectoryRef | null> {
   if (detectPlatform() === 'desktop') {
     const { open } = await import('@tauri-apps/plugin-dialog');
     // `recursive` is what the picker passes to `allow_directory`, and it is the
     // difference between granting `<picked>/*` and `<picked>/**`. Without it a
-    // vault outside $HOME scans its top level and then fails on every
-    // subfolder, because the static capability scope does not cover it either.
-    // A vault inside $HOME works regardless, which is exactly how this hides.
-    const picked = await open({ multiple: false, directory: true, recursive: true });
+    // vault scans its top level and then fails on every subfolder, because the
+    // static capability grants carry no allow at all.
+    const picked = await open({ multiple: false, directory: true, recursive: true, defaultPath });
     if (typeof picked !== 'string') return null;
     return { ...await directoryFromPath(picked), remember: { kind: 'path', path: picked } };
   }
@@ -521,9 +521,10 @@ async function writeHandleAsset(
 /**
  * Where a desktop write is staged: beside its target, so the rename never
  * crosses a file system. Never dot-prefixed, although that would hide it:
- * with `requireLiteralLeadingDot` on, neither `$HOME/**` nor the `<root>/**`
- * a picked folder is granted reaches a name starting with a dot, so the write
- * would be refused. The scan skips it because `pn-tmp` is no extension it
+ * with `requireLiteralLeadingDot` on, the `<root>/**` a picked folder is
+ * granted does not reach a name starting with a dot, so the write would be
+ * refused. A double-clicked file is granted this name beside it
+ * (`take_pending_opens` in src-tauri/src/lib.rs). The scan skips it because `pn-tmp` is no extension it
  * opens. One fixed name per target, because nothing here may delete a file:
  * a copy a crash leaves behind is overwritten and renamed away by that file's
  * next save.
@@ -551,10 +552,11 @@ const writesInFlight = new Map<string, Promise<void>>();
  * (`isScannableFile`), so only a file opened by its path can be one.
  *
  * A file whose neighbours the scope does not cover is written in place, the
- * one write the ACL allows it. A file opened on its own is granted as that
- * single path, so outside `$HOME`, or with a dot-name anywhere on its path, its
- * staging path is refused; `exists` answers under the same scope, which makes
- * it the probe.
+ * one write the ACL allows it. A file picked on its own (`pickFile`) is
+ * granted as that single path, and the capability grants carry no static
+ * allow, so its staging path is refused; a double-clicked file is
+ * granted both, unless a dot-name on its path keeps the staging path out.
+ * `exists` answers under the same scope, which makes it the probe.
  */
 function replaceTauriFile(
   fs: TauriFs,
@@ -665,6 +667,13 @@ function decodeText(bytes: Uint8Array): string {
   } catch {
     throw new FileOpenError('notText');
   }
+}
+
+/** The fs plugin's own scope refusal ("forbidden path: ..."), which a new
+ *  pick of the same folder cures. An OS refusal (os error 1 or 13) is not
+ *  one: no pick changes it. */
+export function isScopeRefusal(err: unknown): boolean {
+  return /forbidden path/i.test(err instanceof Error ? err.message : String(err ?? ''));
 }
 
 /** A refusal of our own, so the message can say which one. */

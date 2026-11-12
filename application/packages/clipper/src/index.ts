@@ -124,11 +124,16 @@ export const CLIP_SHORT_TEXT = 300;
 /** Whether a clip holds less text than a reader would expect of a page.
  *  Pictures, link addresses and Markdown marks do not count; a Chinese,
  *  Japanese or Korean character counts three times, as it carries about a
- *  word. */
+ *  word.
+ *  Linear in the length of any input, so a page made of `![` or `](` cannot
+ *  freeze the clip: a run inside a picture's alt text stops at the next `[`,
+ *  and a run inside an address at the next `(`, so no opener rescans the rest
+ *  of the page. A clip writes those characters there with a backslash before
+ *  them (`escapeAlt`, `linkTarget`). */
 export function isShortText(markdown: string): boolean {
   const text = markdown
-    .replace(/!\[(?:\\.|[^\]\\])*\]\([^)]*\)/g, '')
-    .replace(/\]\((?:\\.|[^)\\])*\)/g, ']')
+    .replace(/!\[(?:\\.|[^[\]\\])*\]\((?:\\.|[^()\\])*\)/g, '')
+    .replace(/\]\((?:\\.|[^()\\])*\)/g, ']')
     .replace(/[\\#*_`[\]|>~=-]/g, '')
     .replace(/\s+/g, '');
   const dense = text.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu)?.length ?? 0;

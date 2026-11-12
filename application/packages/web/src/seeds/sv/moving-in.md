@@ -7,7 +7,7 @@ title: Flytten
 
 Du kan ta med dig fyra sorters saker: anteckningar, dagboksinlägg, bokmärken och lösenord.
 
-Alla börjar på samma ställe: **Inställningar > Import & Export**.
+Alla börjar på samma ställe: **Inställningar > Överföring**.
 
 ## Vad du kan ta med
 
@@ -41,7 +41,7 @@ Ett dagboksinlägg rymmer mer än text. Ovanför skrivytan sitter mätvärdena: 
 ## Bokmärken
 
 - [ ] Exportera din webbläsares bokmärken som en `.html`-fil
-- [ ] Importera den filen: **Inställningar > Import & Export > Importera > Webbläsarbokmärken**
+- [ ] Importera den filen: **Inställningar > Överföring > Importera > Webbläsarbokmärken**
 
 Du kan också klistra in en länk i en tom anteckning. Titeln och webbplatsikonen kommer av sig själva: [privacynotes.app/sv/help/import/browser-bookmarks](https://privacynotes.app/sv/help/import/browser-bookmarks)
 

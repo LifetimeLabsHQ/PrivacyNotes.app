@@ -9,12 +9,13 @@ import { extractInlineTags, normalizeTag } from '../notesRepo';
 import { oneLineTitle } from '../oneLineTitle';
 import { FRONT_MATTER, SUPPORTED_EXT } from '../markdownFolder/adapter';
 import { isUntitledStem } from '../exportNames';
-import { stripFrontMatterPadding, unescapeQuotes } from '../noteMarkdown';
+import { stripFrontMatterPadding, unescapeQuotes, unescapeSingleQuotes } from '../noteMarkdown';
 import { ATTACHMENT_EXT, isBlobReferenced, mimeFromExt } from './blobImport';
 import { buildFolderTree, commonRootPrefix, parseFolderPath } from './folderImport';
 import { linkifyMarkdown } from './linkify';
 import { detailsToFold } from './detailsFold';
 import type { ImportedNote, ParsedImport } from './types';
+import { FRONT_MATTER_LOCATION, FRONT_MATTER_LOCATION_NAME, LOCATION_KEY, parseFrontMatterLocation } from '../noteLocation';
 
 const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.markdown.${key}`, options);
 
@@ -83,7 +84,7 @@ function unquote(s: string | undefined): string {
   if (!s) return '';
   if (s.length < 2) return s;
   if (s.startsWith('"') && s.endsWith('"')) return unescapeQuotes(s.slice(1, -1));
-  if (s.startsWith("'") && s.endsWith("'")) return s.slice(1, -1);
+  if (s.startsWith("'") && s.endsWith("'")) return unescapeSingleQuotes(s.slice(1, -1));
   return s;
 }
 
@@ -188,13 +189,18 @@ function parseOneMd(
   // only fills the gap for a single dropped .md, which has no directory.
   const declaredFolder = parseFolderPath(meta['folder']);
   const isJournal = meta['type'] === 'journal' || (trackers !== undefined && !meta['type']);
+  // The place joins the trackers only after the journal test above: a note
+  // that has a place and nothing else is still a note.
+  // Spec: docs/internal/plans/note-location.md (section 6)
+  const place = parseFrontMatterLocation(meta[FRONT_MATTER_LOCATION], unquote(meta[FRONT_MATTER_LOCATION_NAME]));
+  const carried = place ? { ...trackers, [LOCATION_KEY]: place } : trackers;
   // A task list and an event name themselves; a note is the default.
   const isTask = meta['type'] === 'task';
   const isEvent = meta['type'] === 'event';
 
   const note: ImportedNote = {
     ...(declaredFolder.length ? { folderPath: declaredFolder } : {}),
-    ...(trackers ? { trackers } : {}),
+    ...(carried ? { trackers: carried } : {}),
     ...(isJournal ? { type: 'journal' as const } : isTask ? { type: 'task' as const } : isEvent ? { type: 'event' as const } : {}),
     title,
     // Bare URLs and emails come in as plain text: tiptap-markdown only builds

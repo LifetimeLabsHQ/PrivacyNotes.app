@@ -10,6 +10,7 @@ import {
   hashHex,
   INBOX_NOTE_LIMITS,
   padInboxJson,
+  inboxNoteTitle,
   parseInboxNote,
   sealInbox,
   type InboxNote,
@@ -105,13 +106,8 @@ export function parseArgs(argv: string[]): Args {
 
 // ── The note row ────────────────────────────────────────────────────
 
-/** The first `# ` heading, else the first line with text, cut to the limit. */
-export function titleOf(markdown: string): string {
-  const lines = markdown.split(/\r?\n/);
-  const heading = lines.find((l) => /^#\s+\S/.test(l));
-  const first = heading ? heading.replace(/^#\s+/, '') : (lines.find((l) => l.trim()) ?? '');
-  return [...first.trim()].slice(0, INBOX_NOTE_LIMITS.title).join('');
-}
+/** The title rule is shared with the extension's New note. */
+export const titleOf = inboxNoteTitle;
 
 /** The note `privacynotes save` sends. Throws a CliError with EXIT.input when the app
  *  would refuse it. */

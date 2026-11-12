@@ -1,25 +1,39 @@
 {
   "manifest": {
-    "extDescription": "Desa pàgines web com a notes xifrades i copia els teus inicis de sessió.",
+    "extDescription": "Desa pàgines web com a notes xifrades i copia o emplena els teus inicis de sessió.",
     "commandOpen": "Obre PrivacyNotes",
-    "commandCopyLogin": "Copia l'inici de sessió d'aquest lloc",
-    "commandSaveBookmark": "Desa la pàgina com a marcador"
+    "commandCopyLogin": "Emplena o copia l'inici de sessió d'aquest lloc",
+    "commandSaveNote": "Desa la pàgina com a nota",
+    "commandLock": "Bloqueja la caixa forta",
+    "commandGenerate": "Genera una contrasenya i copia-la",
+    "commandSaveBookmark": "Desa la pàgina com a marcador",
+    "commandNewNote": "Escriu una nota nova"
   },
   "menu": {
     "savePageNote": "Desa la pàgina com a nota",
     "savePageBookmark": "Desa la pàgina com a marcador",
     "copyPageMarkdown": "Copia la pàgina com a Markdown",
     "saveSelection": "Desa la selecció com a nota",
+    "newNoteFromSelection": "Nota nova a partir de la selecció",
     "saveLinkBookmark": "Desa l'enllaç com a marcador",
     "saveLinkedPage": "Desa la pàgina enllaçada com a nota",
+    "fillLogin": "Emplena l'inici de sessió d'aquest lloc",
     "copyLogin": "Copia l'inici de sessió d'aquest lloc",
     "addLogin": "Afegeix un inici de sessió per a aquest lloc",
     "generatePassword": "Genera una contrasenya"
   },
+  "note": {
+    "tagsPlaceholder": "#feina #idees",
+    "tagsHelp": "Un espai o una coma entre etiquetes. El # és opcional.",
+    "failed": "No s'ha pogut desar la nota. Torna-ho a provar."
+  },
   "connect": {
-    "title": "Connecta't al teu compte",
-    "body": "A PrivacyNotes, obre Configuració > Extensió i tria Crea un codi. Enganxa el codi aquí.",
+    "title": "Connecta aquest navegador",
+    "step1": "Obre PrivacyNotes en aquest ordinador o fes servir use.privacynotes.app.",
+    "step2": "Obre Configuració > Extensió i tria Crea un codi.",
+    "step3": "Enganxa el codi aquí.",
     "codeLabel": "Codi de l'app",
+    "paste": "Enganxa",
     "connect": "Connecta",
     "badCode": "Aquest codi no és complet. Torna'l a copiar de l'app.",
     "usedCode": "Aquest codi ja s'ha fet servir o té més de 10 minuts. Crea'n un de nou a l'app. Els teus navegadors connectats són a Configuració > Extensió.",
@@ -27,21 +41,24 @@
     "connected": "Connectat",
     "connectedClips": "Retalls a punt.",
     "connectedBoth": "Retalls i inicis de sessió a punt.",
-    "codeSpent": "El codi ja s'ha fet servir. Una captura de pantalla del codi ja no serveix de res.",
     "help": "Com funciona"
   },
   "protect": {
     "title": "Protegeix els teus inicis de sessió",
-    "body": "Tria un PIN o un codi d'accés per a aquest navegador. És independent del de l'app.",
-    "tries": "Després de 10 intents erronis, aquest navegador es desconnecta.",
-    "biometric": "Fes servir també l'empremta o la cara",
-    "biometricHelp": "Touch ID o Windows Hello, si aquest navegador ho admet. El PIN o el codi d'accés també funcionen sempre.",
+    "body": "Tria un PIN o un codi d'accés per a aquest navegador. El necessites per desbloquejar aquí els teus inicis de sessió. És independent del de l'app.",
+    "biometric": "Fes servir també el desbloqueig biomètric",
+    "biometricHelp": "Touch ID o Windows Hello, a més del PIN o el codi d'accés, que també funcionen sempre.",
     "repeat": "Torna'l a introduir",
     "mismatch": "No coincideixen. Torna-ho a provar."
   },
   "clip": {
     "selection": "Selecció",
+    "wholePage": "Pàgina sencera",
+    "whatToSave": "Què vols desar",
+    "picturesKept_one": "S'ha conservat {{count}} imatge.",
+    "picturesKept_other": "S'han conservat {{count}} imatges.",
     "includePictures": "Inclou les imatges",
+    "includePicturesHelp": "Es guarden a la nota, no enllaçades al lloc.",
     "savedBody": "Apareix a Notes a la propera sincronització de qualsevol de les teves apps. Si en tens una d'oberta, sol passar en pocs minuts.",
     "closeHint": "Ja pots tancar la finestra emergent.",
     "alreadySaved": "Vas desar aquesta pàgina el {{date}}.",
@@ -60,23 +77,21 @@
     "reading": "S'està llegint la pàgina",
     "copiedMarkdown": "Pàgina copiada com a Markdown",
     "off": "Desar pàgines està desactivat en aquest navegador. Activa Retallador web quan el connectis.",
-    "saving": "S'està desant la pàgina",
     "picturesFailed_one": "Desat. No s'ha pogut desar {{count}} imatge"
   },
   "logins": {
     "unlockPin": "Introdueix el teu PIN",
     "unlockPasscode": "Introdueix el teu codi d'accés",
-    "useBiometric": "Fes servir l'empremta o la cara",
+    "useBiometric": "Fes servir el desbloqueig biomètric",
     "wrong_other": "Incorrecte. Queden {{count}} intents abans que aquest navegador es desconnecti.",
     "forSite": "Per a {{site}}",
     "none": "No hi ha inicis de sessió per a aquest lloc.",
     "off": "Els inicis de sessió estan desactivats en aquest navegador. Activa Caixa forta quan el connectis.",
     "copyCode": "Copia el codi 2FA",
+    "fill": "Emplena",
     "usernameCopied": "Nom d'usuari copiat",
     "passwordCopied": "Contrasenya copiada",
     "codeCopied": "Codi 2FA copiat",
-    "clears": "S'esborra del porta-retalls al cap de 30 segons, si encara hi és.",
-    "addSaved": "Desat. Apareix a la teva Caixa forta a la propera sincronització de qualsevol de les teves apps. Si en tens una d'oberta, sol passar en pocs minuts.",
     "lock": "Bloqueja",
     "unreachable": "No es pot connectar amb PrivacyNotes per desbloquejar. Comprova la connexió i torna-ho a provar.",
     "lockSystem": "Quan l'ordinador es bloquegi",
@@ -97,13 +112,13 @@
   "changeSecret": {
     "titlePin": "Canvia el PIN",
     "titlePasscode": "Canvia el codi d'accés",
-    "biometricAgain": "L'empremta o la cara feien servir l'anterior. Torna-les a configurar per continuar fent-les servir."
+    "biometricAgain": "El desbloqueig biomètric feia servir l'anterior. Torna'l a configurar per continuar fent-lo servir."
   },
   "biometric": {
-    "enrolled": "L'empremta o la cara ja estan configurades. Pots tancar aquesta pestanya.",
-    "enrolledHere": "L'empremta o la cara ja estan configurades.",
+    "enrolled": "El desbloqueig biomètric ja està configurat. Pots tancar aquesta pestanya.",
+    "enrolledHere": "El desbloqueig biomètric ja està configurat.",
     "unlocked": "Desbloquejat. Pots tancar aquesta pestanya i tornar a obrir PrivacyNotes.",
-    "failed": "Aquest navegador no pot fer servir l'empremta o la cara aquí. El PIN o el codi d'accés funcionen com abans."
+    "failed": "Aquest navegador no pot fer servir el desbloqueig biomètric aquí. El PIN o el codi d'accés funcionen com abans."
   },
   "vault": {
     "search": "Cerca a la caixa forta",
@@ -131,13 +146,53 @@
     "lockHeader": "Bloqueja la caixa forta al cap de",
     "unlockToCopy": "Desbloqueja per copiar",
     "omniboxDefault": "Cerca %s a la teva caixa forta de PrivacyNotes",
-    "omniboxUnlock": "Desbloqueja PrivacyNotes per cercar"
+    "omniboxUnlock": "Desbloqueja PrivacyNotes per cercar",
+    "moreOptions": "Més opcions"
   },
   "shortcuts": {
     "notSet": "Sense definir",
     "addressBar": "Cerca a la caixa forta des de la barra d'adreces",
     "change": "Canvia les dreceres",
     "changeHint": "El teu navegador guarda les tecles. Canvia-hi una drecera, o assigna una tecla a la que no en tingui.",
-    "loginHint": "<key/> copia el nom d'usuari i després la contrasenya."
+    "loginHint": "<key/> emplena aquest inici de sessió. En una pàgina sense camp d'inici de sessió, copia el nom d'usuari i després la contrasenya.",
+    "loginHintMany": "<key/> emplena el primer inici de sessió de la llista.<br/>Torna-la a prémer en menys de 3 segons per emplenar el següent."
+  },
+  "tabs": {
+    "label": "Retalla o Caixa forta",
+    "clip": "Retalla"
+  },
+  "notice": {
+    "clearsIn": "S'esborra d'aquí a {{seconds}} s",
+    "copyFailed": "No s'ha pogut copiar",
+    "loginSaved": "Inici de sessió desat",
+    "vaultNextSync": "Apareix a la teva Caixa forta a la propera sincronització",
+    "noteSaved": "Nota desada",
+    "notesNextSync": "Apareix a Notes a la propera sincronització",
+    "savedHere": "Desat aquí",
+    "goesOutOnline": "S'envia quan estiguis en línia"
+  },
+  "fill": {
+    "notFilled": "No s'ha emplenat",
+    "couldNot": "No s'ha pogut emplenar",
+    "nothing": "No hi ha cap camp d'inici de sessió en aquesta pàgina",
+    "signup": "Aquest formulari demana una contrasenya nova",
+    "insecure": "Aquesta pàgina no és segura (http)",
+    "otherAccount": "La pàgina demana un altre compte",
+    "tooLong": "El camp de la pàgina és massa curt",
+    "copyInstead": "Copia els valors en lloc d'això",
+    "usernameOnly": "Nom d'usuari emplenat",
+    "usernameOnlyNext": "Tria Emplena una altra vegada per a la contrasenya"
+  },
+  "settings": {
+    "codes": "Codis 2FA",
+    "codesHelp": "El codi actual sota cada inici de sessió amb una clau 2FA.",
+    "bar": "Barra de compte enrere",
+    "barHelp": "Una línia que s'esgota fins al codi següent.",
+    "iconsHelp": "A través del nostre proxy: veu el domini, mai a tu.",
+    "disconnect": "Desconnecta l'extensió",
+    "biometric": "Desbloqueig biomètric",
+    "biometricPin": "Introdueix el teu PIN per configurar-lo.",
+    "biometricPasscode": "Introdueix el teu codi d'accés per configurar-lo.",
+    "biometricOff": "El desbloqueig biomètric està desactivat"
   }
 }

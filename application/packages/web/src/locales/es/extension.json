@@ -1,25 +1,39 @@
 {
   "manifest": {
-    "extDescription": "Guarda páginas web como notas cifradas y copia tus inicios de sesión.",
+    "extDescription": "Guarda páginas web como notas cifradas y copia o rellena tus inicios de sesión.",
     "commandOpen": "Abrir PrivacyNotes",
-    "commandCopyLogin": "Copiar el inicio de sesión de este sitio",
-    "commandSaveBookmark": "Guardar la página como marcador"
+    "commandCopyLogin": "Rellenar o copiar el inicio de sesión de este sitio",
+    "commandSaveNote": "Guardar la página como nota",
+    "commandLock": "Bloquear la bóveda",
+    "commandGenerate": "Generar una contraseña y copiarla",
+    "commandSaveBookmark": "Guardar la página como marcador",
+    "commandNewNote": "Escribir una nota nueva"
   },
   "menu": {
     "savePageNote": "Guardar página como nota",
     "savePageBookmark": "Guardar página como marcador",
     "copyPageMarkdown": "Copiar página como Markdown",
     "saveSelection": "Guardar selección como nota",
+    "newNoteFromSelection": "Nota nueva a partir de la selección",
     "saveLinkBookmark": "Guardar enlace como marcador",
     "saveLinkedPage": "Guardar página enlazada como nota",
+    "fillLogin": "Rellenar inicio de sesión de este sitio",
     "copyLogin": "Copiar inicio de sesión de este sitio",
     "addLogin": "Añadir un inicio de sesión para este sitio",
     "generatePassword": "Generar una contraseña"
   },
+  "note": {
+    "tagsPlaceholder": "#trabajo #ideas",
+    "tagsHelp": "Espacio o coma entre etiquetas. El # es opcional.",
+    "failed": "No se pudo guardar la nota. Vuelve a intentarlo."
+  },
   "connect": {
-    "title": "Conecta con tu cuenta",
-    "body": "En PrivacyNotes, abre Ajustes > Extensión y elige Generar un código. Pega el código aquí.",
+    "title": "Conecta este navegador",
+    "step1": "Abre PrivacyNotes en este ordenador o use.privacynotes.app.",
+    "step2": "Abre Ajustes > Extensión y elige Generar un código.",
+    "step3": "Pega el código aquí.",
     "codeLabel": "Código de la app",
+    "paste": "Pegar",
     "connect": "Conectar",
     "badCode": "Este código no está completo. Vuelve a copiarlo desde la app.",
     "usedCode": "Este código ya se usó o tiene más de 10 minutos. Genera uno nuevo en la app. Tus navegadores conectados están en Ajustes > Extensión.",
@@ -27,21 +41,24 @@
     "connected": "Conectado",
     "connectedClips": "Recortes listos.",
     "connectedBoth": "Recortes e inicios de sesión listos.",
-    "codeSpent": "El código ya está usado. Una captura de pantalla de él no sirve de nada.",
     "help": "Cómo funciona"
   },
   "protect": {
     "title": "Protege tus inicios de sesión",
-    "body": "Elige un PIN o un código de acceso para este navegador. Es distinto del de la app.",
-    "tries": "Tras 10 intentos fallidos, este navegador se desconecta.",
-    "biometric": "Usar también huella o cara",
-    "biometricHelp": "Touch ID o Windows Hello, donde este navegador lo admita. El PIN o el código de acceso siempre funcionan también.",
+    "body": "Elige un PIN o un código de acceso para este navegador. Lo necesitas para desbloquear aquí tus inicios de sesión. Es distinto del de la app.",
+    "biometric": "Usar también el desbloqueo biométrico",
+    "biometricHelp": "Touch ID o Windows Hello, además del PIN o el código de acceso, que siempre funcionan también.",
     "repeat": "Introdúcelo otra vez",
     "mismatch": "No coinciden. Vuelve a intentarlo."
   },
   "clip": {
     "selection": "Selección",
+    "wholePage": "Página completa",
+    "whatToSave": "Qué guardar",
+    "picturesKept_other": "Se conservan {{count}} imágenes.",
+    "picturesKept_one": "Se conserva {{count}} imagen.",
     "includePictures": "Incluir imágenes",
+    "includePicturesHelp": "Se guardan en la nota, no como enlaces al sitio.",
     "savedBody": "Aparece en Notas en la próxima sincronización de cualquiera de tus apps. Si tienes alguna abierta, suele tardar solo unos minutos.",
     "closeHint": "Puedes cerrar la ventana emergente ya.",
     "alreadySaved": "Guardaste esta página el {{date}}.",
@@ -60,23 +77,21 @@
     "reading": "Leyendo la página",
     "copiedMarkdown": "Página copiada como Markdown",
     "off": "Guardar páginas está desactivado en este navegador. Activa Recortes web cuando lo conectes.",
-    "saving": "Guardando la página",
     "picturesFailed_one": "Guardado. No se pudo guardar {{count}} imagen"
   },
   "logins": {
     "unlockPin": "Introduce tu PIN",
     "unlockPasscode": "Introduce tu código de acceso",
-    "useBiometric": "Usar huella o cara",
+    "useBiometric": "Usar el desbloqueo biométrico",
     "wrong_other": "Incorrecto. Quedan {{count}} intentos antes de que este navegador se desconecte.",
     "forSite": "Para {{site}}",
     "none": "No hay inicios de sesión para este sitio.",
     "off": "Los inicios de sesión están desactivados en este navegador. Activa Bóveda cuando lo conectes.",
     "copyCode": "Copiar código 2FA",
+    "fill": "Rellenar",
     "usernameCopied": "Nombre de usuario copiado",
     "passwordCopied": "Contraseña copiada",
     "codeCopied": "Código 2FA copiado",
-    "clears": "Se borra del portapapeles a los 30 segundos, si sigue ahí.",
-    "addSaved": "Guardado. Aparece en tu Bóveda en la próxima sincronización de cualquiera de tus apps. Si tienes alguna abierta, suele tardar solo unos minutos.",
     "lock": "Bloquear",
     "unreachable": "No se puede conectar con PrivacyNotes para desbloquear. Revisa tu conexión y vuelve a intentarlo.",
     "lockSystem": "Cuando se bloquee el ordenador",
@@ -97,13 +112,13 @@
   "changeSecret": {
     "titlePin": "Cambiar PIN",
     "titlePasscode": "Cambiar código de acceso",
-    "biometricAgain": "La huella o la cara usaba el anterior. Vuelve a configurarla para seguir usándola."
+    "biometricAgain": "El desbloqueo biométrico usaba el anterior. Vuelve a configurarlo para seguir usándolo."
   },
   "biometric": {
-    "enrolled": "La huella o la cara está configurada. Puedes cerrar esta pestaña.",
-    "enrolledHere": "La huella o la cara está configurada.",
+    "enrolled": "El desbloqueo biométrico está configurado. Puedes cerrar esta pestaña.",
+    "enrolledHere": "El desbloqueo biométrico está configurado.",
     "unlocked": "Desbloqueado. Puedes cerrar esta pestaña y volver a abrir PrivacyNotes.",
-    "failed": "Este navegador no puede usar la huella ni la cara aquí. El PIN o el código de acceso funcionan como antes."
+    "failed": "Este navegador no puede usar el desbloqueo biométrico aquí. El PIN o el código de acceso funcionan como antes."
   },
   "vault": {
     "search": "Buscar en la bóveda",
@@ -131,13 +146,53 @@
     "lockHeader": "Bloquear la bóveda tras",
     "unlockToCopy": "Desbloquea para copiar",
     "omniboxDefault": "Buscar %s en tu bóveda de PrivacyNotes",
-    "omniboxUnlock": "Desbloquea PrivacyNotes para buscar"
+    "omniboxUnlock": "Desbloquea PrivacyNotes para buscar",
+    "moreOptions": "Más opciones"
   },
   "shortcuts": {
     "notSet": "Sin asignar",
     "addressBar": "Buscar en la bóveda desde la barra de direcciones",
     "change": "Cambiar atajos",
     "changeHint": "Tu navegador guarda las teclas. Cambia una allí, o asígnale una tecla si no tiene ninguna.",
-    "loginHint": "<key/> copia el nombre de usuario y luego la contraseña."
+    "loginHint": "<key/> rellena este inicio de sesión. En una página sin campo de inicio de sesión, copia el nombre de usuario y luego la contraseña.",
+    "loginHintMany": "<key/> rellena el primer inicio de sesión de la lista.<br/>Vuelve a pulsarlo en menos de 3 segundos para rellenar el siguiente."
+  },
+  "tabs": {
+    "label": "Recortar o Bóveda",
+    "clip": "Recortar"
+  },
+  "notice": {
+    "clearsIn": "Se borra en {{seconds}} s",
+    "copyFailed": "No se pudo copiar",
+    "loginSaved": "Inicio de sesión guardado",
+    "vaultNextSync": "Aparece en tu Bóveda en la próxima sincronización",
+    "noteSaved": "Nota guardada",
+    "notesNextSync": "Aparece en Notas en la próxima sincronización",
+    "savedHere": "Guardado aquí",
+    "goesOutOnline": "Se envía cuando tengas conexión"
+  },
+  "fill": {
+    "notFilled": "No se rellenó",
+    "couldNot": "No se pudo rellenar",
+    "nothing": "No hay ningún campo de inicio de sesión en esta página",
+    "signup": "Este formulario pide una contraseña nueva",
+    "insecure": "Esta página no es segura (http)",
+    "otherAccount": "La página pide otra cuenta",
+    "tooLong": "El campo de la página es demasiado corto",
+    "copyInstead": "Copia los valores en su lugar",
+    "usernameOnly": "Nombre de usuario rellenado",
+    "usernameOnlyNext": "Elige Rellenar otra vez para la contraseña"
+  },
+  "settings": {
+    "codes": "Códigos 2FA",
+    "codesHelp": "El código actual bajo cada inicio de sesión con una clave 2FA.",
+    "bar": "Barra de cuenta atrás",
+    "barHelp": "Una línea que se agota hasta el siguiente código.",
+    "iconsHelp": "A través de nuestro proxy: ve el dominio, nunca a ti.",
+    "disconnect": "Desconectar la extensión",
+    "biometric": "Desbloqueo biométrico",
+    "biometricPin": "Introduce tu PIN para configurarlo.",
+    "biometricPasscode": "Introduce tu código de acceso para configurarlo.",
+    "biometricOff": "El desbloqueo biométrico está desactivado"
   }
 }

@@ -6,10 +6,10 @@
  * the command is what privacynotes takes, the same in every language.
  * Spec: docs/internal/plans/agent-cli.md (section 3.10)
  */
-import { BracketsCurly, ClipboardText, ClockCountdown, GitBranch, Plugs, Robot, type Icon } from './icons';
+import { BracketsCurly, ClipboardText, ClockCountdown, GitBranch, Keyboard, Plugs, Robot, type Icon } from './icons';
 
 export interface CliExample {
-  key: 'Plan' | 'Chat' | 'Nightly' | 'Git' | 'Clip' | 'Tools';
+  key: 'Plan' | 'Chat' | 'Nightly' | 'Git' | 'Clip' | 'Tools' | 'Shortcut';
   icon: Icon;
   command: string;
 }
@@ -21,6 +21,9 @@ export const CLI_EXAMPLES: readonly CliExample[] = [
   { key: 'Git', icon: GitBranch, command: 'git log --since=8am | privacynotes save' },
   { key: 'Clip', icon: ClipboardText, command: 'pbpaste | privacynotes save --tag inbox' },
   { key: 'Tools', icon: BracketsCurly, command: 'privacynotes save --json note.md' },
+  // The steps per system: the FAQ entry quick-note-shortcut.
+  // Spec: docs/internal/plans/quick-note-694.md (section 3.2)
+  { key: 'Shortcut', icon: Keyboard, command: 'zenity --text-info --editable | privacynotes save' },
 ];
 
 export const cliExampleTitle = (key: CliExample['key']) => `landing:cli.use${key}Title` as const;

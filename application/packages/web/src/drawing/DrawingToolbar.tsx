@@ -46,7 +46,7 @@ function keysOf(i18nKey: string | undefined, alt?: 0 | 1): string {
 /** The buttons a locked or trashed drawing keeps: it can only be looked at. */
 const READ_ONLY_KEYS = new Set(['zoomOut', 'zoomReset', 'zoomIn', 'hotkeys']);
 
-export function DrawingToolbar({ canvasRef, state, readOnly, onShowKeys, onStyle, onReset, slot }: {
+export function DrawingToolbar({ canvasRef, state, readOnly, onShowKeys, onStyle, onSteps, onReset, slot }: {
   /** The element around the canvas; the presses go to Excalidraw inside it. */
   canvasRef: RefObject<HTMLElement | null>;
   /** In the pane: the row under the scrolling column that holds the bar at
@@ -58,6 +58,8 @@ export function DrawingToolbar({ canvasRef, state, readOnly, onShowKeys, onStyle
   onShowKeys: () => void;
   /** Opens or closes Excalidraw's shape panel (the phone layout only). */
   onStyle: () => void;
+  /** Turns on the Steps tool, which has no Excalidraw key (DrawingCanvas). */
+  onSteps: () => void;
   /** Asks the app's confirm, then clears the canvas (DrawingItem). */
   onReset: () => void;
 }) {
@@ -94,6 +96,7 @@ export function DrawingToolbar({ canvasRef, state, readOnly, onShowKeys, onStyle
     const act = key === 'reset' ? onReset
       : key === 'hotkeys' ? onShowKeys
       : key === 'customize' ? () => onCustomizeDrawing?.()
+      : key === 'steps' ? onSteps
       : () => press(look.press as DrawingPress);
     return (
       <ToolbarBtn

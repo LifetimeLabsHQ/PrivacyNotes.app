@@ -9,7 +9,7 @@ export { InlineMathWithMarkdown, BlockMathWithMarkdown, HighlightWithMarkdown } 
 export { ALIGNMENT_VALUES, TextAlignOurLeft } from './editorAlignment';
 export { ParagraphWithMarkdown, HardBreakWithMarkdown, TextWithMarkdown, HeadingWithMarkdown } from './editorTextNodes';
 export { TableWithMarkdown, stepTableCell } from './editorTables';
-export { indentListItem, indentText } from './editorIndent';
+export { indentListItem, indentText, EmptyListItemEnter } from './editorIndent';
 export { clipboardRenderer, markdownForClipboard } from './editorClipboard';
 export { TypedSymbols } from './editorTypedSymbols';
 export { InlineIcon } from './editorIcon';

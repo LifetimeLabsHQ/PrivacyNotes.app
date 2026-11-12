@@ -169,6 +169,8 @@
     "useClipBody": "Envia a área de transferência, o resultado de um comando ou uma mensagem de erro diretamente para as tuas notas.",
     "useToolsTitle": "Parte das tuas próprias ferramentas",
     "useToolsBody": "O comando responde em JSON e termina com códigos claros, para que os teus scripts saibam que a nota foi guardada.",
+    "useShortcutTitle": "Uma nota a partir de um atalho de teclado",
+    "useShortcutBody": "Uma tecla que escolhes nas definições do teu sistema abre uma caixa para uma nota rápida, mesmo com a app fechada. A nota chega à tua pasta Agent.",
     "howLink": "Lê como funciona o privacynotes"
   },
   "meds": {
@@ -342,7 +344,7 @@
     "manualUpdates": "Atualização manual",
     "extensionHeading": "Recortador web e gestor de palavras-passe",
     "extensionKeyOpen": "Abrir a extensão",
-    "extensionKeyLogin": "Copiar o login deste site",
+    "extensionKeyLogin": "Preencher o login deste site",
     "extensionKeyBookmark": "Adicionar esta página aos marcadores",
     "extensionAria": "Adicionar a extensão ao {{name}}",
     "extensionNote": "Só em computadores."

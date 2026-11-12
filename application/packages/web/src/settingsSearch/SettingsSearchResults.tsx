@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useRef, type ReactNode } from 'react';
+import { canReadPosition } from '../currentPosition';
 import { Trans, useTranslation } from 'react-i18next';
 import i18n, { activeLocale } from '../i18n';
 import { isNativeStoreBuild } from '../devices';
@@ -34,6 +35,7 @@ function isShown(entry: SettingEntry): boolean {
   if (entry.shownOn === 'desktopApp') return appZoomSupported();
   if (entry.shownOn === 'captureBlock') return captureBlockSupported();
   if (entry.shownOn === 'commandLine') return commandLineShown();
+  if (entry.shownOn === 'phoneApp') return canReadPosition();
   return true;
 }
 

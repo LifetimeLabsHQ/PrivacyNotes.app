@@ -314,7 +314,7 @@ function renderRail(releases: ChangelogRelease[], shotMap: ShotMap): string {
         `<a class="ritem ct" href="#" data-t="${t}">${TYPE_ICON[t]}<span class="rlbl">${LABEL[t]}</span><span class="rct">${counts[t]}</span></a>`
     ),
     ...(shotItems
-      ? [`<a class="ritem ct" href="#" data-t="shots">${PHOTO_ICON.replace(/"14"/g, '"16"')}<span class="rlbl">With screenshots</span><span class="rct">${shotItems}</span></a>`]
+      ? [`<a class="ritem ct" href="#" data-t="shots">${PHOTO_ICON.replace(/"14"/g, '"16"')}<span class="rlbl">Screenshots</span><span class="rct">${shotItems}</span></a>`]
       : []),
   ].join('\n');
 

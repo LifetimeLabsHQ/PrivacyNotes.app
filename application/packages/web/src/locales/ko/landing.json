@@ -169,6 +169,8 @@
     "useClipBody": "클립보드, 명령어 출력, 오류 메시지를 바로 노트로 보내세요.",
     "useToolsTitle": "나만의 도구의 일부로",
     "useToolsBody": "이 명령어는 JSON으로 응답하고 명확한 종료 코드로 끝나서, 스크립트가 노트 저장 여부를 알 수 있어요.",
+    "useShortcutTitle": "키보드 단축키로 쓰는 노트",
+    "useShortcutBody": "시스템 설정에서 고른 키를 누르면 앱이 닫혀 있어도 빠른 노트 상자가 열려요. 노트는 Agent 폴더에 들어가요.",
     "howLink": "privacynotes가 작동하는 방식 읽기"
   },
   "meds": {
@@ -342,7 +344,7 @@
     "manualUpdates": "수동 업데이트",
     "extensionHeading": "웹 클리퍼와 비밀번호 관리자",
     "extensionKeyOpen": "확장 프로그램 열기",
-    "extensionKeyLogin": "이 사이트의 로그인 복사",
+    "extensionKeyLogin": "이 사이트의 로그인 채우기",
     "extensionKeyBookmark": "이 페이지 북마크",
     "extensionAria": "{{name}}에 확장 프로그램 추가",
     "extensionNote": "컴퓨터에서만 사용할 수 있어요."

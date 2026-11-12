@@ -119,6 +119,7 @@ const ICONS: Record<RoadmapIcon, string> = {
   qr: `${S}<rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.4"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.4"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.4"/><line x1="14" y1="14" x2="14" y2="17.5"/><line x1="17.5" y1="20.5" x2="20.5" y2="20.5"/><line x1="20.5" y1="14" x2="20.5" y2="17"/></svg>`,
   devices: `${S}<rect x="2.5" y="4.5" width="12" height="9" rx="1.8"/><line x1="5.5" y1="17.5" x2="11.5" y2="17.5"/><line x1="8.5" y1="13.5" x2="8.5" y2="17.5"/><rect x="16.5" y="9" width="5" height="11" rx="1.6"/></svg>`,
   database: `${S}<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>`,
+  map: `${S}<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>`,
   graph: `${S}<circle cx="5.5" cy="6.5" r="2.5"/><circle cx="18.5" cy="7.5" r="2.5"/><circle cx="12" cy="18" r="2.5"/><line x1="7.6" y1="8" x2="10.6" y2="15.7"/><line x1="16.9" y1="9.5" x2="13.6" y2="15.9"/><line x1="8" y1="6.9" x2="16" y2="7.2"/></svg>`,
   timer: `${S}<circle cx="12" cy="13.5" r="7.5"/><line x1="12" y1="9.5" x2="12" y2="13.5"/><line x1="12" y1="13.5" x2="15.2" y2="15.4"/><line x1="9.5" y1="2.8" x2="14.5" y2="2.8"/><line x1="12" y1="2.8" x2="12" y2="6"/></svg>`,
   bookmark: `${S}<path d="M6.5 3.5h11a1 1 0 0 1 1 1v16l-6.5-4.3-6.5 4.3v-16a1 1 0 0 1 1-1z"/></svg>`,

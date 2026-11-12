@@ -1,25 +1,39 @@
 {
   "manifest": {
-    "extDescription": "Zapisuj strony internetowe jako zaszyfrowane notatki i kopiuj swoje loginy.",
+    "extDescription": "Zapisuj strony internetowe jako zaszyfrowane notatki i kopiuj lub wypełniaj swoje loginy.",
     "commandOpen": "Otwórz PrivacyNotes",
-    "commandCopyLogin": "Kopiuj login dla tej strony",
-    "commandSaveBookmark": "Zapisz stronę jako zakładkę"
+    "commandCopyLogin": "Wypełnij lub kopiuj login dla tej strony",
+    "commandSaveNote": "Zapisz stronę jako notatkę",
+    "commandLock": "Zablokuj sejf",
+    "commandGenerate": "Wygeneruj hasło i skopiuj je",
+    "commandSaveBookmark": "Zapisz stronę jako zakładkę",
+    "commandNewNote": "Napisz nową notatkę"
   },
   "menu": {
     "savePageNote": "Zapisz stronę jako notatkę",
     "savePageBookmark": "Zapisz stronę jako zakładkę",
     "copyPageMarkdown": "Kopiuj stronę jako Markdown",
     "saveSelection": "Zapisz zaznaczenie jako notatkę",
+    "newNoteFromSelection": "Nowa notatka z zaznaczenia",
     "saveLinkBookmark": "Zapisz link jako zakładkę",
     "saveLinkedPage": "Zapisz stronę z linku jako notatkę",
+    "fillLogin": "Wypełnij login dla tej strony",
     "copyLogin": "Kopiuj login dla tej strony",
     "addLogin": "Dodaj login dla tej strony",
     "generatePassword": "Wygeneruj hasło"
   },
+  "note": {
+    "tagsPlaceholder": "#praca #pomysły",
+    "tagsHelp": "Oddzielaj tagi spacją lub przecinkiem. Znak # jest opcjonalny.",
+    "failed": "Nie udało się zapisać notatki. Spróbuj ponownie."
+  },
   "connect": {
-    "title": "Połącz ze swoim kontem",
-    "body": "W PrivacyNotes otwórz Ustawienia > Rozszerzenie i wybierz Utwórz kod. Wklej kod tutaj.",
+    "title": "Połącz tę przeglądarkę",
+    "step1": "Otwórz PrivacyNotes na tym komputerze albo use.privacynotes.app.",
+    "step2": "Otwórz Ustawienia > Rozszerzenie i wybierz Utwórz kod.",
+    "step3": "Wklej tutaj kod.",
     "codeLabel": "Kod z aplikacji",
+    "paste": "Wklej",
     "connect": "Połącz",
     "badCode": "Ten kod jest niepełny. Skopiuj go ponownie z aplikacji.",
     "usedCode": "Ten kod został już użyty albo ma więcej niż 10 minut. Utwórz nowy w aplikacji. Połączone przeglądarki znajdziesz w Ustawienia > Rozszerzenie.",
@@ -27,21 +41,25 @@
     "connected": "Połączono",
     "connectedClips": "Przechwytywanie gotowe.",
     "connectedBoth": "Przechwytywanie i loginy gotowe.",
-    "codeSpent": "Kod jest już zużyty. Jego zrzut ekranu nie jest nic wart.",
     "help": "Jak to działa"
   },
   "protect": {
     "title": "Chroń swoje loginy",
-    "body": "Wybierz PIN albo kod dostępu dla tej przeglądarki. Jest niezależny od tego w aplikacji.",
-    "tries": "Po 10 błędnych próbach ta przeglądarka zostanie odłączona.",
-    "biometric": "Używaj też odcisku palca lub twarzy",
-    "biometricHelp": "Touch ID albo Windows Hello, jeśli ta przeglądarka je obsługuje. PIN lub kod dostępu też zawsze działa.",
+    "body": "Wybierz PIN albo kod dostępu dla tej przeglądarki. Potrzebujesz go, aby odblokować tutaj swoje loginy. Jest niezależny od tego w aplikacji.",
+    "biometric": "Używaj też odblokowania biometrycznego",
+    "biometricHelp": "Touch ID albo Windows Hello, oprócz PIN-u lub kodu dostępu, który też zawsze działa.",
     "repeat": "Wpisz go ponownie",
     "mismatch": "Wpisy się nie zgadzają. Spróbuj ponownie."
   },
   "clip": {
     "selection": "Zaznaczenie",
+    "wholePage": "Cała strona",
+    "whatToSave": "Co zapisać",
+    "picturesKept_one": "Zachowano {{count}} obraz.",
+    "picturesKept_few": "Zachowano {{count}} obrazy.",
+    "picturesKept_many": "Zachowano {{count}} obrazów.",
     "includePictures": "Dołącz obrazy",
+    "includePicturesHelp": "Zapisane w notatce, a nie linkowane do strony.",
     "savedBody": "Pojawi się w Notatkach przy następnej synchronizacji dowolnej z twoich aplikacji. Gdy któraś jest otwarta, zwykle trwa to najwyżej kilka minut.",
     "closeHint": "Możesz od razu zamknąć okienko.",
     "alreadySaved": "Ta strona została zapisana {{date}}.",
@@ -60,24 +78,22 @@
     "reading": "Odczytywanie strony",
     "copiedMarkdown": "Skopiowano stronę jako Markdown",
     "off": "Zapisywanie stron jest wyłączone w tej przeglądarce. Włącz Web clipper przy jej łączeniu.",
-    "saving": "Zapisywanie strony",
     "picturesFailed_few": "Zapisano. Nie udało się zapisać {{count}} obrazów",
     "picturesFailed_many": "Zapisano. Nie udało się zapisać {{count}} obrazów"
   },
   "logins": {
     "unlockPin": "Wpisz swój PIN",
     "unlockPasscode": "Wpisz swój kod dostępu",
-    "useBiometric": "Użyj odcisku palca lub twarzy",
+    "useBiometric": "Użyj odblokowania biometrycznego",
     "wrong_one": "Błędnie. Została {{count}} próba, zanim ta przeglądarka zostanie odłączona.",
     "forSite": "Dla {{site}}",
     "none": "Brak loginów dla tej strony.",
     "off": "Loginy są wyłączone w tej przeglądarce. Włącz Sejf przy jej łączeniu.",
     "copyCode": "Kopiuj kod 2FA",
+    "fill": "Wypełnij",
     "usernameCopied": "Skopiowano nazwę użytkownika",
     "passwordCopied": "Skopiowano hasło",
     "codeCopied": "Skopiowano kod 2FA",
-    "clears": "Zniknie ze schowka po 30 sekundach, jeśli nadal tam będzie.",
-    "addSaved": "Zapisano. Pojawi się w Sejfie przy następnej synchronizacji dowolnej z twoich aplikacji. Gdy któraś jest otwarta, zwykle trwa to najwyżej kilka minut.",
     "lock": "Zablokuj",
     "unreachable": "Nie można połączyć się z PrivacyNotes, aby odblokować. Sprawdź połączenie i spróbuj ponownie.",
     "lockSystem": "Gdy komputer się zablokuje",
@@ -99,13 +115,13 @@
   "changeSecret": {
     "titlePin": "Zmień PIN",
     "titlePasscode": "Zmień kod dostępu",
-    "biometricAgain": "Odcisk palca lub twarz były powiązane ze starym. Skonfiguruj je ponownie, aby nadal z nich korzystać."
+    "biometricAgain": "Odblokowanie biometryczne było powiązane ze starym. Skonfiguruj je ponownie, aby nadal z niego korzystać."
   },
   "biometric": {
-    "enrolled": "Odcisk palca lub twarz są skonfigurowane. Możesz zamknąć tę kartę.",
-    "enrolledHere": "Odcisk palca lub twarz są skonfigurowane.",
+    "enrolled": "Odblokowanie biometryczne jest skonfigurowane. Możesz zamknąć tę kartę.",
+    "enrolledHere": "Odblokowanie biometryczne jest skonfigurowane.",
     "unlocked": "Odblokowano. Możesz zamknąć tę kartę i ponownie otworzyć PrivacyNotes.",
-    "failed": "Ta przeglądarka nie może tu użyć odcisku palca ani twarzy. PIN lub kod dostępu działa jak dotąd."
+    "failed": "Ta przeglądarka nie może tu użyć odblokowania biometrycznego. PIN lub kod dostępu działa jak dotąd."
   },
   "vault": {
     "search": "Szukaj w sejfie",
@@ -133,13 +149,53 @@
     "lockHeader": "Zablokuj sejf po",
     "unlockToCopy": "Odblokuj, aby skopiować",
     "omniboxDefault": "Szukaj %s w sejfie PrivacyNotes",
-    "omniboxUnlock": "Odblokuj PrivacyNotes, aby szukać"
+    "omniboxUnlock": "Odblokuj PrivacyNotes, aby szukać",
+    "moreOptions": "Więcej opcji"
   },
   "shortcuts": {
     "notSet": "Nie ustawiono",
     "addressBar": "Szukaj w sejfie z paska adresu",
     "change": "Zmień skróty",
     "changeHint": "Skróty klawiszowe przechowuje twoja przeglądarka. Zmień skrót tam albo przypisz klawisz akcji, która go nie ma.",
-    "loginHint": "<key/> kopiuje nazwę użytkownika, a potem hasło."
+    "loginHint": "<key/> wypełnia ten login. Na stronie bez pola logowania kopiuje nazwę użytkownika, a potem hasło.",
+    "loginHintMany": "<key/> wypełnia login na górze listy.<br/>Naciśnij ponownie w ciągu 3 sekund, aby wypełnić następny."
+  },
+  "tabs": {
+    "label": "Przechwyć lub Sejf",
+    "clip": "Przechwyć"
+  },
+  "notice": {
+    "clearsIn": "Wyczyszczenie za {{seconds}} s",
+    "copyFailed": "Nie udało się skopiować",
+    "loginSaved": "Zapisano login",
+    "vaultNextSync": "Pojawi się w Sejfie przy następnej synchronizacji",
+    "noteSaved": "Zapisano notatkę",
+    "notesNextSync": "Pojawi się w Notatkach przy następnej synchronizacji",
+    "savedHere": "Zapisano tutaj",
+    "goesOutOnline": "Wyśle się po połączeniu z internetem"
+  },
+  "fill": {
+    "notFilled": "Nie wypełniono",
+    "couldNot": "Nie udało się wypełnić",
+    "nothing": "Brak pola logowania na tej stronie",
+    "signup": "Ten formularz prosi o nowe hasło",
+    "insecure": "Ta strona nie jest bezpieczna (http)",
+    "otherAccount": "Strona prosi o inne konto",
+    "tooLong": "Pole na stronie jest za krótkie",
+    "copyInstead": "Zamiast tego skopiuj wartości",
+    "usernameOnly": "Wypełniono nazwę użytkownika",
+    "usernameOnlyNext": "Wybierz ponownie Wypełnij, aby wpisać hasło"
+  },
+  "settings": {
+    "codes": "Kody 2FA",
+    "codesHelp": "Bieżący kod pod każdym loginem z kluczem 2FA.",
+    "bar": "Pasek odliczania",
+    "barHelp": "Linia, która kurczy się do następnego kodu.",
+    "iconsHelp": "Przez nasze proxy: widzi domenę, nigdy ciebie.",
+    "disconnect": "Odłącz rozszerzenie",
+    "biometric": "Odblokowanie biometryczne",
+    "biometricPin": "Wpisz swój PIN, aby je skonfigurować.",
+    "biometricPasscode": "Wpisz swój kod dostępu, aby je skonfigurować.",
+    "biometricOff": "Odblokowanie biometryczne jest wyłączone"
   }
 }

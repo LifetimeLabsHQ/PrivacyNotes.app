@@ -7,6 +7,11 @@ Z hotelu o piątej. Dwie godziny pociągiem i miasta po prostu nie było.
 
 ![Góra Fudżi ze śniegiem na szczycie, w ramie z kwiatów wiśni.](/onboarding/fuji.webp)
 
+```map
+35.3606, 138.7274
+Fudżi
+```
+
 Nad jeziorem kwitły wiśnie. Fudżi stała za nimi, przez cały ranek bez jednej chmury. Tutaj mówią, że można przyjechać na tydzień i nigdy nie zobaczyć szczytu. My mieliśmy go przez sześć godzin.
 
 | Co | Kiedy |

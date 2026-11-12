@@ -17,8 +17,8 @@
     "android:icons": "bash scripts/apply-android-icons.sh",
     "android:dev": "tauri android dev --host --features devtools",
     "android:build": "tauri android build --aab",
-    "android:build:apk": "tauri android build --apk",
-    "android:build:direct": "VITE_ANDROID_DIST=direct tauri android build --apk"
+    "android:build:apk": "tauri android build --apk --target aarch64 armv7",
+    "android:build:direct": "VITE_ANDROID_DIST=direct pnpm android:build:apk"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.12.3"

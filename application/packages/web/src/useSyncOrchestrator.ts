@@ -14,8 +14,9 @@ import { hasSettingsPulled, hasUnpushedSettings, loadLocalSettings, syncUserSett
 import { syncPinCache } from './pin';
 import { syncPinWrap } from './pinRecovery';
 import { hasLiveSignIn, signInStamp, signedOutSince } from './liveSignIn';
-import { seedOnboardingNotes, SEED_MEDICATION, withSeedFactors } from './welcomeNote';
+import { seedOnboardingNotes } from './welcomeNote';
 import { isDemoMode } from './demo';
+import { ninjaKeySupported, QUICK_NOTES_ADDED_EVENT } from './ninjaShortcut';
 import { reconcileOrphanBlobs, sweepBlobGC } from './imageGC';
 import { drainVersionQueue } from './noteVersions';
 import { pullOpensTrashPurge } from './trashPurge';
@@ -183,6 +184,25 @@ export function useSyncOrchestrator({
     end();
     return all;
   }, []);
+
+  // The Ninja box's quick notes (#694 request 2): at every unlock keep the
+  // inbox public key for the next lock, then add the notes the box sealed
+  // while the app was locked. Desktop only, where the box exists.
+  // Spec: docs/internal/plans/quick-note-694.md (section 5.2 steps 6 and 7)
+  useEffect(() => {
+    if (!ninjaKeySupported() || isDemoMode()) return;
+    const signedInAt = signInStamp();
+    const current = () => hasLiveSignIn() && !signedOutSince(signedInAt);
+    void import('./quickNoteQueue')
+      .then(async (q) => {
+        await q.rememberInboxKey(auth.pubkey, auth.phrase);
+        const made = await q.adoptQuickNotes(auth.pubkey, auth.phrase, current);
+        if (!made.length || !current()) return;
+        await refresh();
+        window.dispatchEvent(new CustomEvent(QUICK_NOTES_ADDED_EVENT, { detail: made }));
+      })
+      .catch((err) => console.warn('[quickNote] unlock pass failed:', err instanceof Error ? err.message : 'unknown'));
+  }, [auth.pubkey, auth.phrase, refresh]);
 
   /**
    * An open editor's save was refused: its row holds a version that arrived
@@ -382,32 +402,17 @@ export function useSyncOrchestrator({
           setFreshVaultNotice(true);
         } else {
           try {
-            // Seeds all four onboarding notes (Welcome, Getting started,
-            // Tokyo journal, Wellness journal) so every pillar has a live
-            // example on first open. Each seed is individually idempotent.
+            // A real account gets one note: the joined welcome note. No
+            // example medication and no starter factors (GitHub #708).
             await seedOnboardingNotes(auth.pubkey);
-            // Seed the example medication template if not already present,
-            // adding the one field to whatever the cache holds. Seeding has
-            // just written the starter folder tree into that cache, and this
-            // used to save a whole settings object taken BEFORE the seed,
-            // which dropped every one of those folders a line later. The
-            // seeded journal entries reference this medication, so it has to
-            // exist before they are pushed.
-            merged = updateLocalSettings((prev) => {
-              const withMed = prev.medications?.some((m) => m.id === SEED_MEDICATION.id)
-                ? prev
-                : { ...prev, medications: [...(prev.medications ?? []), SEED_MEDICATION] };
-              return { ...withMed, factors: withSeedFactors(withMed.factors) };
-            });
             // Push the seeded notes to the server BEFORE marking seeding
             // as done. Without this, the flag can land on the server while
             // the notes themselves are still local-only (dirty: 1). If the
             // user signs out before the next sync pass, re-login sees the
             // flag, skips seeding, and the app is empty.
             await sync(supabase, auth.pubkey, auth.encryptionKey, auth.deviceId, undefined, onPushError);
-            // Against the cache, like every other settings write: seeding
-            // put the starter folder tree there, and a whole object taken
-            // before it would drop those folders.
+            // Against the cache, like every other settings write: a whole
+            // object taken before the sync above could drop what it pulled.
             effective = updateLocalSettings((prev) => ({ ...prev, welcomeNoteSeeded: true }));
             // Push the flag now that the notes are safely on the server.
             void syncUserSettings(supabase, auth.pubkey, auth.encryptionKey, undefined, signedInAt).catch(
@@ -529,6 +534,7 @@ export function useSyncOrchestrator({
                 const { agentFolder, folders } = loadLocalSettings();
                 return agentFolder && folders.some((f) => f.id === agentFolder) ? agentFolder : null;
               },
+              hasFolder: (id) => loadLocalSettings().folders.some((f) => f.id === id),
               pushKeys: async () => {
                 await syncUserSettings(supabase, auth.pubkey, auth.encryptionKey, undefined, signedInAt);
                 return !hasUnpushedSettings();

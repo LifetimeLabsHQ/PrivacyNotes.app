@@ -169,6 +169,8 @@
     "useClipBody": "把剪貼簿、指令的輸出或錯誤訊息直接送進你的筆記。",
     "useToolsTitle": "成為你自己工具的一部分",
     "useToolsBody": "這個指令以 JSON 回應，並以清楚的結束代碼退出，讓你的指令碼知道筆記已經存好。",
+    "useShortcutTitle": "用快速鍵寫一則筆記",
+    "useShortcutBody": "在系統設定中選一個按鍵，即使應用程式已關閉，也能開啟快速筆記的輸入框。筆記會存進你的「Agent」資料夾。",
     "howLink": "了解 privacynotes 如何運作"
   },
   "meds": {
@@ -342,7 +344,7 @@
     "manualUpdates": "手動更新",
     "extensionHeading": "網頁擷取工具與密碼管理器",
     "extensionKeyOpen": "開啟擴充功能",
-    "extensionKeyLogin": "複製這個網站的登入資訊",
+    "extensionKeyLogin": "填入這個網站的登入資訊",
     "extensionKeyBookmark": "將這個網頁加入書籤",
     "extensionAria": "將擴充功能加入 {{name}}",
     "extensionNote": "僅限電腦。"

@@ -31,5 +31,9 @@ Lišta nahoře mění, jak text vypadá: **tučně**, *kurzivou*, nadpisy, zašk
 
 Ta fráze je to, co tvoje poznámky otevírá. Kde bude ležet, rozhoduješ ty, a můžeš to kdykoli změnit. [[Jak jsou tvoje poznámky chráněné]] popisuje tři možnosti.
 
+## Víc než poznámky
+
+Poznámky, úkoly, hesla, deník, soubory, kalendář, kontakty a záložky, se sledováním nálady a léků. Jedna aplikace, šifrovaná na tvém zařízení. A k tomu markdownový editor zdarma pro složky na tvém disku, Ninja (⌘K), kterým se z klávesnice dostaneš ke všemu, a ukládání webových stránek.
+
 > [!tip] Nic tady není napořád
 > Každá poznámka v tomhle trezoru je ukázka, tahle taky. Uprav ji, přesuň ji nebo ji smaž.

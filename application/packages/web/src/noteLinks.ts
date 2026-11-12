@@ -157,6 +157,16 @@ export function parseNoteLinkTarget(
   return { note: whole, heading: null };
 }
 
+/**
+ * The target of a text that is one whole note-link and nothing else,
+ * `[[Note]]` or `[[Note|label]]`, or null. A drawing shape's link is such a
+ * text when it points at a note (`drawing/DrawingItem.tsx`, the canvas import).
+ */
+export function wholeNoteLink(text: string): string | null {
+  const m = /^\s*\[\[([^\]|]+?)(?:\|[^\]]*)?\]\]\s*$/.exec(text);
+  return m?.[1]?.trim() || null;
+}
+
 /** The text a link shows when it carries no label: "Note › Heading". */
 export function noteLinkDisplayText(target: string, hasNote?: (name: string) => boolean): string {
   const { note, heading } = parseNoteLinkTarget(target, hasNote);
@@ -237,8 +247,32 @@ export function retargetNoteLinks(
   const from = noteLinkKey(oldTitle);
   const to = noteLinkTarget(newTitle);
   if (!body || !from || !to || from === to.toLowerCase()) return null;
+  return mapNoteLinks(body, (target, label) => {
+    // Match the way navigation resolves, so this moves exactly the links a
+    // click would have followed - no more and no fewer.
+    const { note, heading } = parseNoteLinkTarget(
+      target,
+      (name) => noteLinkKey(name) === from || hasOtherNote(name),
+    );
+    if (noteLinkKey(note) !== from) return null;
+    const dest = heading === null ? to : `${to}#${heading}`;
+    return label ? `[[${dest}|${label}]]` : `[[${dest}]]`;
+  });
+}
+
+/**
+ * Rewrite the note-links of `body` one at a time. `rewrite` gets each link's
+ * target and label, as written, and returns the whole replacement link, or
+ * `null` to leave that link as it is. Code regions and `![[embeds]]` are never
+ * touched. Returns the new body and how many links changed, or `null` when
+ * none did.
+ */
+export function mapNoteLinks(
+  body: string,
+  rewrite: (target: string, label: string | undefined) => string | null,
+): { body: string; count: number } | null {
   // Cheap reject: most notes hold no note-link at all.
-  if (!body.includes('[[')) return null;
+  if (!body || !body.includes('[[')) return null;
 
   const parts: string[] = [];
   let count = 0;
@@ -263,17 +297,10 @@ export function retargetNoteLinks(
       // `![[x]]` is Obsidian's EMBED, a different thing from a note-link - the
       // same guard the editor's markdown-it rule carries.
       if (abs > 0 && body[abs - 1] === '!') continue;
-      // Match the way navigation resolves, so this moves exactly the links a
-      // click would have followed - no more and no fewer.
-      const { note, heading } = parseNoteLinkTarget(
-        m[1] ?? '',
-        (name) => noteLinkKey(name) === from || hasOtherNote(name),
-      );
-      if (noteLinkKey(note) !== from) continue;
-      const dest = heading === null ? to : `${to}#${heading}`;
-      const label = m[2]?.trim();
+      const next = rewrite(m[1] ?? '', m[2]?.trim() || undefined);
+      if (next === null) continue;
       parts.push(text.slice(last, start));
-      parts.push(label ? `[[${dest}|${label}]]` : `[[${dest}]]`);
+      parts.push(next);
       last = start + m[0].length;
       count += 1;
     }

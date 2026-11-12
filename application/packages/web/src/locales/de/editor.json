@@ -192,7 +192,9 @@
     "ariaLabel": "Notizgliederung",
     "hide": "Gliederung ausblenden",
     "copyHeadingLink": "Link zur Überschrift kopieren",
-    "copyHeadingShortcut": "Verknüpfung zur Überschrift kopieren"
+    "copyHeadingShortcut": "Verknüpfung zur Überschrift kopieren",
+    "copyCalloutLink": "Link zur Hinweisbox kopieren",
+    "copyCalloutShortcut": "Verknüpfung zur Hinweisbox kopieren"
   },
   "bodyMenu": {
     "cut": "Ausschneiden",
@@ -267,6 +269,11 @@
     "showLess": "Weniger anzeigen",
     "language": "Sprache des Codes: {{name}}",
     "searchLanguages": "Sprachen suchen",
+    "addTitle": "Titel hinzufügen",
+    "removeTitle": "Titel entfernen",
+    "titlePlaceholder": "Dateiname oder Titel",
+    "collapse": "Codeblock einklappen",
+    "expand": "Codeblock ausklappen",
     "placeholder": "Tippe oder füge Code ein. Für Farben wählst du oben eine Sprache."
   },
   "math": {

@@ -27,7 +27,8 @@ const WEB_SOURCES = [
   'packages/web/src/index.css',
   'packages/web/src/typeScale.css',
   'packages/web/src/ui/**',
-  ...['extension', 'notes', 'common', 'shell', 'auth', 'security', 'settingsSearch', 'editor'].map((ns) => `packages/web/src/locales/*/${ns}.json`),
+  // The extension's own catalog, and every namespace a borrowed key names.
+  ...[...new Set(['extension', ...BORROWED_KEYS.map((k) => k.split(':')[0]!)])].map((ns) => `packages/web/src/locales/*/${ns}.json`),
   ...(existsSync(LISTED) ? (JSON.parse(readFileSync(LISTED, 'utf8')) as string[]) : []),
 ];
 
@@ -48,6 +49,9 @@ function recordWebSources(): NonNullable<WxtViteConfig['plugins']>[number] {
 const LOCALES = /export const SUPPORTED_LOCALES = \[([\s\S]*?)\]/.exec(
   readFileSync(resolve(__dirname, '../web/src/i18n.ts'), 'utf8'),
 )?.[1]?.match(/'[A-Za-z-]+'/g)?.map((l) => l.slice(1, -1)) ?? ['en'];
+
+/** A plural form of a key, as i18next stores it: `resultCount_other`. */
+const PLURAL_FORM = /^(.+)_(zero|one|two|few|many|other)$/;
 
 /** Every locale's extension catalog, and the app keys of catalog-keys.mjs,
  *  as one small module: `virtual:pn-catalogs`. */
@@ -70,12 +74,17 @@ function catalogs(): NonNullable<WxtViteConfig['plugins']>[number] {
         for (const path of BORROWED_KEYS) {
           const [ns, key] = path.split(':') as [string, string];
           const parts = key.split('.');
-          let value: unknown = read(locale, ns);
-          for (const p of parts) value = (value as Record<string, unknown> | null)?.[p];
-          if (value === undefined) continue;
+          const last = parts[parts.length - 1]!;
+          let parent: unknown = read(locale, ns);
+          for (const p of parts.slice(0, -1)) parent = (parent as Record<string, unknown> | null)?.[p];
+          if (!parent || typeof parent !== 'object') continue;
+          // A plural key lives only as its forms (`resultCount_one`,
+          // `resultCount_other`): the path takes all of them.
+          const picked = Object.entries(parent).filter(([k]) => k === last || PLURAL_FORM.exec(k)?.[1] === last);
+          if (!picked.length) continue;
           let at = (res[ns] ??= {});
           for (const p of parts.slice(0, -1)) at = (at[p] ??= {}) as Record<string, unknown>;
-          at[parts[parts.length - 1]!] = value;
+          for (const [k, value] of picked) at[k] = value;
         }
         out[locale] = res;
       }
@@ -88,7 +97,11 @@ function catalogs(): NonNullable<WxtViteConfig['plugins']>[number] {
 export default defineConfig({
   entrypointsDir: 'entrypoints',
   publicDir: 'public',
-  outDir: '.output',
+  // The end-to-end test builds into a folder of its own: its build talks to
+  // a local test server, and a build in .output would replace the one a
+  // person has loaded in Chrome (the worker reads it at its next start, and
+  // a connect code goes to the test server).
+  outDir: process.env.PN_EXT_OUT_DIR || '.output',
   zip: {
     // The store version, not package.json's 0.0.1, so each upload names its version.
     artifactTemplate: `privacynotes-${VERSION}-{{browser}}.zip`,
@@ -147,22 +160,46 @@ export default defineConfig({
       'clipboardWrite',
       // Chrome and Edge hold 10 MB in storage.local without unlimitedStorage, less
       // than one sealed clip with all its pictures. It shows no install warning.
-      ...(browser === 'firefox' ? [] : ['offscreen', 'favicon', 'unlimitedStorage']),
+      ...(browser === 'firefox' ? [] : ['offscreen', 'unlimitedStorage']),
     ],
     host_permissions: ['<all_urls>'],
     action: { default_title: '__MSG_extName__' },
+    // Chrome and Edge take a default key for at most four commands, and
+    // opening the popup counts as one; Firefox has no limit. So Chrome and
+    // Edge get the four that do a job without the popup (Fill, Save as note,
+    // Lock, Generate), and Open, Bookmark and New note wait in the browser's
+    // shortcut page for a key the person sets. Firefox gets a key for each
+    // (owner, 2026-11-11, after Bitwarden's four plus keys to set).
+    // Spec: docs/internal/plans/browser-extension-build.md (section 3.5)
     commands: {
       _execute_action: {
-        suggested_key: { default: 'Alt+Shift+S' },
+        ...(browser === 'firefox' ? { suggested_key: { default: 'Alt+Shift+S' } } : {}),
         description: '__MSG_commandOpen__',
       },
       'copy-login': {
         suggested_key: { default: 'Alt+Shift+L' },
         description: '__MSG_commandCopyLogin__',
       },
+      'save-note': {
+        suggested_key: { default: 'Alt+Shift+P' },
+        description: '__MSG_commandSaveNote__',
+      },
+      'lock-vault': {
+        suggested_key: { default: 'Alt+Shift+K' },
+        description: '__MSG_commandLock__',
+      },
+      'generate-password': {
+        suggested_key: { default: 'Alt+Shift+G' },
+        description: '__MSG_commandGenerate__',
+      },
       'save-bookmark': {
-        suggested_key: { default: 'Alt+Shift+B' },
+        ...(browser === 'firefox' ? { suggested_key: { default: 'Alt+Shift+B' } } : {}),
         description: '__MSG_commandSaveBookmark__',
+      },
+      // Spec: docs/internal/plans/quick-note-694.md (section 4.1)
+      'new-note': {
+        ...(browser === 'firefox' ? { suggested_key: { default: 'Alt+Shift+N' } } : {}),
+        description: '__MSG_commandNewNote__',
       },
     },
     // "pn" in the address bar searches the local copy; nothing leaves the browser.

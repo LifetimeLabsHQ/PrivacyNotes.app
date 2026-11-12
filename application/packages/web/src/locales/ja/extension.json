@@ -1,25 +1,39 @@
 {
   "manifest": {
-    "extDescription": "Webページを暗号化されたノートとして保存し、ログイン情報をコピーできます。",
+    "extDescription": "Webページを暗号化されたノートとして保存し、ログイン情報をコピーまたは自動入力できます。",
     "commandOpen": "PrivacyNotes を開く",
-    "commandCopyLogin": "このサイトのログイン情報をコピー",
-    "commandSaveBookmark": "このページをブックマークとして保存"
+    "commandCopyLogin": "このサイトのログイン情報を自動入力またはコピー",
+    "commandSaveNote": "このページをノートとして保存",
+    "commandLock": "保管庫をロック",
+    "commandGenerate": "パスワードを生成してコピー",
+    "commandSaveBookmark": "このページをブックマークとして保存",
+    "commandNewNote": "新しいノートを書く"
   },
   "menu": {
     "savePageNote": "ページをノートとして保存",
     "savePageBookmark": "ページをブックマークとして保存",
     "copyPageMarkdown": "ページを Markdown としてコピー",
     "saveSelection": "選択範囲をノートとして保存",
+    "newNoteFromSelection": "選択範囲から新規ノート",
     "saveLinkBookmark": "リンクをブックマークとして保存",
     "saveLinkedPage": "リンク先のページをノートとして保存",
+    "fillLogin": "このサイトのログイン情報を自動入力",
     "copyLogin": "このサイトのログイン情報をコピー",
     "addLogin": "このサイトのログインを追加",
     "generatePassword": "パスワードを生成"
   },
+  "note": {
+    "tagsPlaceholder": "#仕事 #アイデア",
+    "tagsHelp": "タグの間はスペースかカンマで区切ります。# は省略できます。",
+    "failed": "ノートを保存できませんでした。もう一度お試しください。"
+  },
   "connect": {
-    "title": "アカウントに接続",
-    "body": "PrivacyNotes で 設定 > 拡張機能 を開き、「コードを作成」を選んでください。そのコードをここに貼り付けます。",
+    "title": "このブラウザを接続",
+    "step1": "このコンピューターで PrivacyNotes を開くか、use.privacynotes.app を開きます。",
+    "step2": "設定 > 拡張機能 を開き、「コードを作成」を選びます。",
+    "step3": "ここにコードを貼り付けます。",
     "codeLabel": "アプリのコード",
+    "paste": "貼り付け",
     "connect": "接続",
     "badCode": "このコードは不完全です。アプリからもう一度コピーしてください。",
     "usedCode": "このコードは使用済みか、10分以上経過しています。アプリで新しいコードを作成してください。接続済みのブラウザは 設定 > 拡張機能 で確認できます。",
@@ -27,21 +41,23 @@
     "connected": "接続しました",
     "connectedClips": "クリップの準備ができました。",
     "connectedBoth": "クリップとログインの準備ができました。",
-    "codeSpent": "このコードは使用済みになりました。スクリーンショットに残っていても役に立ちません。",
     "help": "仕組み"
   },
   "protect": {
     "title": "ログイン情報を保護",
-    "body": "このブラウザ用の PIN またはパスコードを決めてください。アプリのものとは別です。",
-    "tries": "10回間違えると、このブラウザの接続が解除されます。",
-    "biometric": "指紋または顔認証も使う",
-    "biometricHelp": "このブラウザが対応していれば、Touch ID または Windows Hello を使えます。PIN またはパスコードもいつでも使えます。",
+    "body": "このブラウザ用の PIN またはパスコードを決めてください。ここでログイン情報のロックを解除するのに必要です。アプリのものとは別です。",
+    "biometric": "生体認証によるロック解除も使う",
+    "biometricHelp": "Touch ID または Windows Hello を、PIN またはパスコードに加えて使えます。PIN またはパスコードもいつでも使えます。",
     "repeat": "もう一度入力",
     "mismatch": "2つが一致しません。もう一度お試しください。"
   },
   "clip": {
     "selection": "選択範囲",
+    "wholePage": "ページ全体",
+    "whatToSave": "保存する範囲",
+    "picturesKept_other": "{{count}}枚の画像を保存しました。",
     "includePictures": "画像を含める",
+    "includePicturesHelp": "サイトへのリンクではなく、ノート内に保存されます。",
     "savedBody": "いずれかのアプリが次に同期したときに、ノートに表示されます。アプリを開いていれば、たいてい数分以内です。",
     "closeHint": "ポップアップはすぐに閉じてかまいません。",
     "alreadySaved": "このページは{{date}}に保存済みです。",
@@ -59,23 +75,21 @@
     "failed": "このページを保存できませんでした。もう一度お試しください。",
     "reading": "ページを読み取り中",
     "copiedMarkdown": "ページを Markdown としてコピーしました",
-    "off": "このブラウザではページの保存がオフになっています。接続するときに「ウェブクリッパー」をオンにしてください。",
-    "saving": "ページを保存中"
+    "off": "このブラウザではページの保存がオフになっています。接続するときに「ウェブクリッパー」をオンにしてください。"
   },
   "logins": {
     "unlockPin": "PIN を入力",
     "unlockPasscode": "パスコードを入力",
-    "useBiometric": "指紋または顔認証を使う",
+    "useBiometric": "生体認証によるロック解除を使う",
     "wrong_other": "違います。あと{{count}}回間違えると、このブラウザの接続が解除されます。",
     "forSite": "{{site}} 用",
     "none": "このサイトのログイン情報はありません。",
     "off": "このブラウザではログインがオフになっています。接続するときに「保管庫」をオンにしてください。",
     "copyCode": "2FA コードをコピー",
+    "fill": "自動入力",
     "usernameCopied": "ユーザー名をコピーしました",
     "passwordCopied": "パスワードをコピーしました",
     "codeCopied": "2FA コードをコピーしました",
-    "clears": "クリップボードに残っていれば、30秒後に消去されます。",
-    "addSaved": "保存しました。いずれかのアプリが次に同期したときに、保管庫に表示されます。アプリを開いていれば、たいてい数分以内です。",
     "lock": "ロック",
     "unreachable": "ロック解除のために PrivacyNotes に接続できません。接続を確認して、もう一度お試しください。",
     "lockSystem": "コンピューターがロックされたとき",
@@ -95,13 +109,13 @@
   "changeSecret": {
     "titlePin": "PIN を変更",
     "titlePasscode": "パスコードを変更",
-    "biometricAgain": "指紋または顔認証は古いものを使っていました。引き続き使うには、もう一度設定してください。"
+    "biometricAgain": "生体認証によるロック解除は古いものを使っていました。引き続き使うには、もう一度設定してください。"
   },
   "biometric": {
-    "enrolled": "指紋または顔認証を設定しました。このタブは閉じてかまいません。",
-    "enrolledHere": "指紋または顔認証を設定しました。",
+    "enrolled": "生体認証によるロック解除を設定しました。このタブは閉じてかまいません。",
+    "enrolledHere": "生体認証によるロック解除を設定しました。",
     "unlocked": "ロックを解除しました。このタブを閉じて、PrivacyNotes をもう一度開いてください。",
-    "failed": "このブラウザでは、ここで指紋や顔認証を使えません。PIN またはパスコードはこれまでどおり使えます。"
+    "failed": "このブラウザでは、ここで生体認証によるロック解除を使えません。PIN またはパスコードはこれまでどおり使えます。"
   },
   "vault": {
     "search": "保管庫を検索",
@@ -129,13 +143,53 @@
     "lockHeader": "保管庫をロックするまでの時間",
     "unlockToCopy": "ロックを解除してコピー",
     "omniboxDefault": "PrivacyNotes の保管庫で %s を検索",
-    "omniboxUnlock": "PrivacyNotes のロックを解除して検索"
+    "omniboxUnlock": "PrivacyNotes のロックを解除して検索",
+    "moreOptions": "その他のオプション"
   },
   "shortcuts": {
     "notSet": "未設定",
     "addressBar": "アドレスバーから保管庫を検索",
     "change": "ショートカットを変更",
     "changeHint": "キーはブラウザが管理しています。ブラウザ側で変更するか、キーが未設定なら割り当ててください。",
-    "loginHint": "<key/> でユーザー名をコピーし、続けてパスワードをコピーします。"
+    "loginHint": "<key/> でこのログイン情報を自動入力します。ログイン欄のないページでは、ユーザー名をコピーし、続けてパスワードをコピーします。",
+    "loginHintMany": "<key/> で一番上のログイン情報を自動入力します。<br/>3秒以内にもう一度押すと、次のログイン情報を自動入力します。"
+  },
+  "tabs": {
+    "label": "クリップまたは保管庫",
+    "clip": "クリップ"
+  },
+  "notice": {
+    "clearsIn": "{{seconds}} 秒後に消去",
+    "copyFailed": "コピーできませんでした",
+    "loginSaved": "ログイン情報を保存しました",
+    "vaultNextSync": "次の同期で保管庫に表示されます",
+    "noteSaved": "ノートを保存しました",
+    "notesNextSync": "次の同期でノートに表示されます",
+    "savedHere": "ここに保存しました",
+    "goesOutOnline": "オンラインになると送信されます"
+  },
+  "fill": {
+    "notFilled": "自動入力していません",
+    "couldNot": "自動入力できませんでした",
+    "nothing": "このページにはログイン欄がありません",
+    "signup": "このフォームは新しいパスワードを求めています",
+    "insecure": "このページは安全ではありません (http)",
+    "otherAccount": "このページは別のアカウントを求めています",
+    "tooLong": "ページの入力欄が短すぎます",
+    "copyInstead": "代わりに値をコピーしてください",
+    "usernameOnly": "ユーザー名を自動入力しました",
+    "usernameOnlyNext": "パスワードは、もう一度「自動入力」を選んでください"
+  },
+  "settings": {
+    "codes": "2FA コード",
+    "codesHelp": "2FA キーのある各ログインの下に、現在のコードを表示します。",
+    "bar": "カウントダウンバー",
+    "barHelp": "次のコードまでの残り時間を示す線です。",
+    "iconsHelp": "当社のプロキシを経由します。プロキシにはドメインが見えますが、あなたは見えません。",
+    "disconnect": "拡張機能の接続を解除",
+    "biometric": "生体認証によるロック解除",
+    "biometricPin": "設定するには PIN を入力してください。",
+    "biometricPasscode": "設定するにはパスコードを入力してください。",
+    "biometricOff": "生体認証によるロック解除はオフです"
   }
 }

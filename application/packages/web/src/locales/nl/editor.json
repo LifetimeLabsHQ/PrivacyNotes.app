@@ -192,7 +192,9 @@
     "ariaLabel": "Notitie-overzicht",
     "hide": "Overzicht verbergen",
     "copyHeadingLink": "Link naar kop kopiëren",
-    "copyHeadingShortcut": "Snelkoppeling naar kop kopiëren"
+    "copyHeadingShortcut": "Snelkoppeling naar kop kopiëren",
+    "copyCalloutLink": "Link naar aandachtsblok kopiëren",
+    "copyCalloutShortcut": "Snelkoppeling naar aandachtsblok kopiëren"
   },
   "bodyMenu": {
     "cut": "Knippen",
@@ -267,6 +269,11 @@
     "showLess": "Minder tonen",
     "language": "Programmeertaal: {{name}}",
     "searchLanguages": "Talen zoeken",
+    "addTitle": "Titel toevoegen",
+    "removeTitle": "Titel verwijderen",
+    "titlePlaceholder": "Bestandsnaam of titel",
+    "collapse": "Codeblok inklappen",
+    "expand": "Codeblok uitklappen",
     "placeholder": "Typ of plak code. Kies hierboven een taal voor kleuren."
   },
   "math": {

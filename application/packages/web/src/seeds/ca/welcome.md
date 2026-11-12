@@ -31,5 +31,9 @@ La barra de dalt canvia l'aspecte del text: **negreta**, *cursiva*, títols, lli
 
 Aquesta frase és el que obre les teves notes. On viu ho decideixes tu, i pots canviar d'idea quan vulguis. [[Com estan protegides les teves notes]] explica les tres opcions.
 
+## Més que notes
+
+Notes, tasques, contrasenyes, un diari, fitxers, un calendari, contactes i marcadors, amb seguiment de l'ànim i de la medicació. Una sola app, xifrada al teu dispositiu. I a més, un editor de Markdown gratuït per a les carpetes del teu disc, Ninja (⌘K) per arribar a qualsevol cosa des del teclat, i un retallador web.
+
 > [!tip] Aquí res no és per sempre
 > Cada nota d'aquesta caixa forta és un exemple, aquesta inclosa. Edita-la, mou-la o esborra-la.

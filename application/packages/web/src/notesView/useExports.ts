@@ -7,8 +7,9 @@ import type { ExportSource } from '../adminEvents';
 import i18n from '../i18n';
 import { decodeZipBackup, BACKUP_TOO_SMALL } from '@notes/shared';
 import type { BulkExportResult, ExportStep, ExportStepName, MissingBlob } from '../export';
+import { setExportStep } from '../ExportProgressModal';
 import { RESTORE_WAIT_LINE, restoreGateNow } from '../pullState';
-import { remapFolderLooks, settingsAfterRestore } from '../backupRestore';
+import { carriedSettings, remapFolderLooks, settingsAfterRestore } from '../backupRestore';
 import type { ImageStore } from '../imageStore';
 import type { AttachmentStore } from '../attachmentStore';
 import type { UserSettings } from '../userSettings';
@@ -25,9 +26,9 @@ export interface ExportProgress {
   error?: string;
   /** Where a native save put the file, for Show in folder. */
   savedPath?: string;
-  /** The steps of a running bulk export, and the one it is on. */
+  /** The steps of a running bulk export. The one it is on goes to the
+   *  window alone (`setExportStep`), never through this state (#683). */
   steps?: readonly ExportStepName[];
-  step?: ExportStep;
 }
 
 export function useExports({
@@ -147,11 +148,13 @@ export function useExports({
     const controller = new AbortController();
     bulkAbortRef.current = controller;
     const { signal } = controller;
+    setExportStep(undefined);
     setExportProgress({ status: '', done: false });
     await runExport(format, async () => {
       const ex = await loadExport();
       signal.throwIfAborted();
-      const { missing, savedPath } = await run(signal, (step) => setExportProgress({ status: '', done: false, steps: steps(ex), step }));
+      setExportProgress({ status: '', done: false, steps: steps(ex) });
+      const { missing, savedPath } = await run(signal, setExportStep);
       setExportProgress({ status: ex.describeMissing(missing), done: true, savedPath });
     });
     if (bulkAbortRef.current === controller) bulkAbortRef.current = null;
@@ -162,12 +165,17 @@ export function useExports({
     bulkAbortRef.current = null;
     setExportProgress(null);
   };
-  const exportAllMarkdownZip = (ns: LocalNote[]) =>
+  // A picked set passes `privacynotes-selection`, so its file never reads
+  // as a full backup (#682).
+  const exportAllMarkdownZip = (ns: LocalNote[], fileStem?: string) =>
     runBulkExport('md-zip', (ex) => ex.FULL_BACKUP_STEPS, async (signal, onProgress) =>
-      (await loadExport()).exportAllMarkdownZip(ns, imageStoreRef.current, attachmentStoreRef.current, onProgress, userSettings.folders, { itemStyles: userSettings.itemStyles, customThemes: userSettings.customThemes, factors: userSettings.factors, customHabits: userSettings.customHabits, medications: userSettings.medications, customTrackers: userSettings.trackerSettings?.customTrackers }, signal));
+      (await loadExport()).exportAllMarkdownZip(ns, imageStoreRef.current, attachmentStoreRef.current, onProgress, userSettings.folders, carriedSettings(userSettings), signal, fileStem));
+  const exportNotesMarkdownZip = (ns: LocalNote[]) =>
+    runBulkExport('md-zip', (ex) => ex.FULL_BACKUP_STEPS, async (signal, onProgress) =>
+      (await loadExport()).exportNotesMarkdownZip(ns, imageStoreRef.current, attachmentStoreRef.current, onProgress, userSettings.folders, signal));
   const exportEncryptedFullBackup = (ns: LocalNote[]) =>
     runBulkExport('encrypted-zip', (ex) => ex.FULL_BACKUP_STEPS, async (signal, onProgress) =>
-      (await loadExport()).exportEncryptedFullBackup(ns, imageStoreRef.current, attachmentStoreRef.current, auth.encryptionKey, onProgress, userSettings.folders, { itemStyles: userSettings.itemStyles, customThemes: userSettings.customThemes, factors: userSettings.factors, customHabits: userSettings.customHabits, medications: userSettings.medications, customTrackers: userSettings.trackerSettings?.customTrackers }, signal));
+      (await loadExport()).exportEncryptedFullBackup(ns, imageStoreRef.current, attachmentStoreRef.current, auth.encryptionKey, onProgress, userSettings.folders, carriedSettings(userSettings), signal));
   /** Decrypt a picked .pnbackupz into the plain full-backup zip. The
    *  modal then runs it through the NORMAL zip restore flow - preview,
    *  quota preflight and blob restore all reuse. Errors arrive already
@@ -184,9 +192,9 @@ export function useExports({
       throw new Error(i18n.t('importExport:decryptErrors.notThisAccount'));
     }
   };
-  const exportAllHtmlZip = (ns: LocalNote[]) =>
+  const exportAllHtmlZip = (ns: LocalNote[], fileStem?: string) =>
     runBulkExport('html-zip', (ex) => ex.HTML_ARCHIVE_STEPS, async (signal, onProgress) =>
-      (await loadExport()).exportAllHtmlZip(ns, imageStoreRef.current, userSettings.folders, onProgress, attachmentStoreRef.current, signal));
+      (await loadExport()).exportAllHtmlZip(ns, imageStoreRef.current, userSettings.folders, onProgress, attachmentStoreRef.current, signal, fileStem));
   const exportAllJson = (ns: LocalNote[]) =>
     runExport('json', async () => (await loadExport()).exportAllJson(ns, userSettings.folders, userSettings.itemStyles, userSettings.customThemes, userSettings.factors, userSettings.customHabits));
   const exportEncryptedBackup = (ns: LocalNote[]) =>
@@ -260,7 +268,7 @@ export function useExports({
    *  .pnbackup restore merges them, with each folder look moved to the id its
    *  folder came back under. */
   const mergeRestoredSettings = (
-    settings: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown },
+    settings: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown },
     savedToFinal: ReadonlyMap<string, string>,
   ) =>
     mutateSettings((prev) =>
@@ -271,6 +279,12 @@ export function useExports({
         customHabits: settings.customHabits,
         medications: settings.medications,
         customTrackers: settings.customTrackers,
+        favoriteTags: settings.favoriteTags,
+        calendarFeeds: settings.calendarFeeds,
+        dashboard: settings.dashboard,
+        // The folder came back under a new id when the vault had lost it.
+        agentFolder: typeof settings.agentFolder === 'string' ? savedToFinal.get(settings.agentFolder) ?? settings.agentFolder : undefined,
+        trackerSetup: settings.trackerSetup,
       }),
     );
   return {
@@ -279,6 +293,7 @@ export function useExports({
     exportSingleHtml,
     exportDrawing,
     exportAllMarkdownZip,
+    exportNotesMarkdownZip,
     exportAllHtmlZip,
     closeExportProgress,
     exportAllJson,

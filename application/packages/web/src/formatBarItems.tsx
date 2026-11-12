@@ -43,6 +43,7 @@ import {
   TextIndent,
   TextOutdent,
   Shapes,
+  MapPin,
 } from './icons';
 
 /**
@@ -77,6 +78,8 @@ export const FORMAT_BAR_LOOK: Record<string, { Icon: Icon; label: string }> = {
   dateTime: { Icon: Clock, label: 'toolbar.dateTime' },
   // The note menu's own label, so the two read the same.
   icon: { Icon: Shapes, label: 'shell:noteOptionsMenu.icon' },
+  // A map of a place in the body (PlaceMapNode.tsx); the window is the note's place window.
+  location: { Icon: MapPin, label: 'notes:location.title' },
   quote: { Icon: Quotes, label: 'toolbar.quote' },
   codeblock: { Icon: CodeBlock, label: 'toolbar.codeBlock' },
   copybox: { Icon: Copy, label: 'toolbar.copyBox' },

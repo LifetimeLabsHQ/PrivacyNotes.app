@@ -7,7 +7,7 @@ title: Einzug
 
 Du kannst vier Arten von Dingen mitbringen: Notizen, Tagebucheinträge, Lesezeichen und Passwörter.
 
-Alle beginnen an derselben Stelle: **Einstellungen > Import & Export**.
+Alle beginnen an derselben Stelle: **Einstellungen > Transfer**.
 
 ## Was du mitbringen kannst
 
@@ -41,7 +41,7 @@ Ein Tagebucheintrag hält mehr als Text. Über dem Schreibfeld sitzen die Tracke
 ## Lesezeichen
 
 - [ ] Exportier die Lesezeichen deines Browsers als `.html`-Datei
-- [ ] Importier diese Datei: **Einstellungen > Import & Export > Import > Browser-Lesezeichen**
+- [ ] Importier diese Datei: **Einstellungen > Transfer > Import > Browser-Lesezeichen**
 
 Du kannst auch einen Link in eine leere Notiz einfügen. Titel und Website-Symbol kommen von allein: [privacynotes.app/de/help/import/browser-bookmarks](https://privacynotes.app/de/help/import/browser-bookmarks)
 

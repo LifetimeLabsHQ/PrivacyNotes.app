@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { BellSimple, CalendarDot, Columns, Download, Gift, GridNine, List, ListDashes, Repeat } from './icons';
+import { BellSimple, CalendarDot, Columns, Download, Gift, Globe, GridNine, List, ListDashes, Repeat } from './icons';
 import { SPACE_ICONS } from './SpaceSwitch';
 import { typeGlyph } from './NoteRow';
 import { Switch } from './Switch';
@@ -97,11 +97,12 @@ function InkBox({ entry, className, style, children }: { entry: DayEntry; classN
   return <div className={className} style={{ ...style, ...ink }}>{children}</div>;
 }
 
-/** The item's own icon, or its type's, in the item's own color when it has one. */
+/** The item's own icon, or its type's, in the item's own color when it has
+ *  one; a globe for an event of a subscribed calendar (#619). */
 function EntryGlyph({ entry, size = 12 }: { entry: DayEntry; size?: number }) {
   const { iconPaths, icon: style } = useEntryLook(entry);
   const { Icon } = typeGlyph(entry.kind);
-  const Glyph = entry.kind === 'contact' ? Gift : Icon;
+  const Glyph = entry.feed ? Globe : entry.kind === 'contact' ? Gift : Icon;
   const className = `shrink-0 ${dayKindColor(entry.kind)}`;
   return iconPaths
     ? <PathGlyph paths={iconPaths} size={size} className={className} style={style} />
@@ -130,11 +131,11 @@ function Chip({ entry, day, mixed, onOpen, onMenu }: { entry: DayEntry; day: str
     <button
       type="button"
       style={row}
-      draggable={entry.kind !== 'contact'}
+      draggable={entry.kind !== 'contact' && !entry.feed}
       onDragStart={(e) => writeCalDrag(e, { id: entry.id, occurrence: entry.occurrence, grab: day })}
       onClick={() => onOpen(entry)}
-      onContextMenu={onMenu ? (e) => onMenu(e, entry) : undefined}
-      aria-label={[when, title].filter(Boolean).join(' ')}
+      onContextMenu={onMenu && !entry.feed ? (e) => onMenu(e, entry) : undefined}
+      aria-label={[[when, title].filter(Boolean).join(' '), entry.feed].filter(Boolean).join(', ')}
       className="shrink-0 flex items-center gap-1 min-w-0 h-[17px] px-1 rounded text-meta leading-[15px] text-pn hover:bg-accent/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent text-start"
     >
       <span data-slot="icon" className="inline-flex shrink-0"><EntryGlyph entry={entry} /></span>
@@ -184,7 +185,7 @@ function Bars({ days, index, hidden, onOpen, onMenu, top, weekCol }: {
             >
               <button
                 type="button"
-                draggable
+                draggable={!b.entry.feed}
                 onDragStart={(e) => {
                   // The day under the pointer is the one grabbed, so a bar
                   // picked up by its middle keeps its length where it lands.
@@ -195,15 +196,15 @@ function Bars({ days, index, hidden, onOpen, onMenu, top, weekCol }: {
                   writeCalDrag(e, { id: b.entry.id, occurrence: b.entry.span?.start, grab: days[b.startCol + col]! });
                 }}
                 onClick={() => onOpen(b.entry)}
-                onContextMenu={onMenu ? (e) => onMenu(e, b.entry) : undefined}
-                aria-label={title}
+                onContextMenu={onMenu && !b.entry.feed ? (e) => onMenu(e, b.entry) : undefined}
+                aria-label={[title, b.entry.feed].filter(Boolean).join(', ')}
                 className="flex-1 min-w-0 h-full flex items-center gap-1 px-1.5 text-meta font-semibold text-pn text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent rounded"
               >
                 <span data-slot="icon" className="inline-flex shrink-0"><EntryGlyph entry={b.entry} size={11} /></span>
                 <span data-slot="title" dir="auto" className="min-w-0 truncate">{title}</span>
                 {b.entry.space === 'work' && <SPACE_ICONS.work size={10} aria-hidden="true" className="shrink-0 ms-auto text-pn-muted" />}
               </button>
-              {!b.contEnd && b.entry.kind !== 'contact' && (
+              {!b.contEnd && b.entry.kind !== 'contact' && !b.entry.feed && (
                 <span
                   draggable
                   data-drag-handle
@@ -279,9 +280,11 @@ type Props = {
   agenda?: { open: boolean; toggle: () => void };
   /** Opens the Import tab, where the calendar file and webcal rows are. */
   onImport?: () => void;
+  /** Opens the Subscribe window (#619). */
+  onSubscribe?: () => void;
 };
 
-export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayMenu, onAdd, onMove, onResize, onDropItems, otherSpace, weekNumbers, firstHour, onMenu, agenda, onImport }: Props) {
+export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayMenu, onAdd, onMove, onResize, onDropItems, otherSpace, weekNumbers, firstHour, onMenu, agenda, onImport, onSubscribe }: Props) {
   const { t } = useTranslation(['shell', 'notes']);
   const { mode, setMode, focus, setFocus } = pillar;
   const hiddenKinds = useHiddenKinds();
@@ -386,19 +389,36 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
   // Import mirrors the agenda button: the toolbar starts and ends with one
   // square tool. It opens the Import tab, where the calendar rows are. In a
   // header under 316px the top row has no room for it; Settings is the way in.
-  // Spec: docs/internal/issues/0548.md (Spec, the calendar's door)
-  const headerEnd = onImport ? (
+  // Subscribe sits beside it, in the same look, and needs one tool's more
+  // room: under 352px it hides first.
+  // Spec: docs/internal/issues/0548.md (Spec, the calendar's door), docs/internal/specs/calendar-pillar-spec.md (section 14)
+  const subscribeLabel = t('importExport:webcal.subscribeTitle');
+  const headerEnd = onImport || onSubscribe ? (
     <span className="flex items-center gap-2">
-      <HoverLabel label={t('calendar.importLabel')} position="below-end" className="hidden @min-[316px]/calhead:block">
-        <button
-          type="button"
-          onClick={onImport}
-          aria-label={t('calendar.importLabel')}
-          className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-md border border-divider text-pn-muted hover:border-accent hover:text-accent transition"
-        >
-          <Download aria-hidden="true" />
-        </button>
-      </HoverLabel>
+      {onImport && (
+        <HoverLabel label={t('calendar.importLabel')} position="below-end" className="hidden @min-[316px]/calhead:block">
+          <button
+            type="button"
+            onClick={onImport}
+            aria-label={t('calendar.importLabel')}
+            className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-md border border-divider text-pn-muted hover:border-accent hover:text-accent transition"
+          >
+            <Download aria-hidden="true" />
+          </button>
+        </HoverLabel>
+      )}
+      {onSubscribe && (
+        <HoverLabel label={subscribeLabel} position="below-end" className="hidden @min-[352px]/calhead:block">
+          <button
+            type="button"
+            onClick={onSubscribe}
+            aria-label={subscribeLabel}
+            className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-md border border-divider text-pn-muted hover:border-accent hover:text-accent transition"
+          >
+            <Globe aria-hidden="true" />
+          </button>
+        </HoverLabel>
+      )}
       {viewSwitch}
     </span>
   ) : viewSwitch;
@@ -553,11 +573,11 @@ function TimedCard({ block, day, onOpen, onMenu }: { block: TimedBlock; day: str
     <button
       style={ink}
       type="button"
-      draggable={!block.carried}
+      draggable={!block.carried && !e.feed}
       onDragStart={(ev) => writeCalDrag(ev, { id: e.id, occurrence: e.occurrence, grab: day })}
       onClick={() => onOpen(e)}
-      onContextMenu={onMenu ? (ev) => onMenu(ev, e) : undefined}
-      aria-label={[title, start && end ? `${start} - ${end}` : start].filter(Boolean).join(', ')}
+      onContextMenu={onMenu && !e.feed ? (ev) => onMenu(ev, e) : undefined}
+      aria-label={[title, start && end ? `${start} - ${end}` : start, e.feed].filter(Boolean).join(', ')}
       className={`pn-timed-card w-full h-full overflow-hidden rounded-md border-s-[3px] border-current bg-current/15 px-1.5 py-0.5 text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${dayKindColor(e.kind)}`}
     >
       <span className="flex items-center gap-1 text-meta font-semibold text-pn">

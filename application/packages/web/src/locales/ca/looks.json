@@ -5,6 +5,8 @@
   "useDefault": "Per defecte",
   "color": "Color",
   "applyToSubfolders": "Aplica el color a les subcarpetes",
+  "applyToFolderItems": "Aplica a tots els elements d'aquesta carpeta",
+  "applyToTagItems": "Aplica a tots els elements amb aquesta etiqueta",
   "icon": "Icona",
   "searchPlaceholder": "Cerca icones",
   "searchLogos": "Cerca logotips",

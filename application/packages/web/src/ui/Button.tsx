@@ -6,7 +6,7 @@ import { ACTIONS, type ActionName } from './actions';
 import { IconUpgrade } from '../proMark';
 import { SETTINGS_BTN, SETTINGS_BTN_DANGER, SETTINGS_BTN_PRIMARY, SETTINGS_BTN_UPGRADE } from '../settingsUI';
 
-type Variant = 'secondary' | 'accent' | 'primary' | 'danger' | 'dangerSoft' | 'upgrade';
+type Variant = 'secondary' | 'accent' | 'primary' | 'danger' | 'dangerSoft' | 'successSoft' | 'upgrade';
 
 // Settings callouts also use Button; read their tokens after modules initialize.
 function buttonLook(variant: Variant): string {
@@ -16,13 +16,14 @@ function buttonLook(variant: Variant): string {
     case 'primary': return SETTINGS_BTN_PRIMARY;
     case 'danger': return SETTINGS_BTN_DANGER;
     case 'dangerSoft': return `${SETTINGS_BTN} !border-danger/40 bg-danger/10 !text-danger hover:!bg-danger/15`;
+    case 'successSoft': return `${SETTINGS_BTN} !border-success/30 bg-success/10 hover:!bg-success/10 [&_svg]:text-success`;
     case 'upgrade': return SETTINGS_BTN_UPGRADE;
   }
 }
 
 /**
  * @catalog Button
- * use: every labeled action. Name it with `action` (save, add, create, done, confirm, apply, next, restore, delete, remove, cancel, back, edit, rename, copy, search, open): that brings the one icon, the label and the look of that action (`ui/actions.ts`), so a Save is the same everywhere. Words that say more ("Add medication") go in `children`; the icon stays. `icon` and `variant` only for an action the map does not have. One size for every button, everywhere; `pro` adds the rocket. The accent variant is a soft tint for a prominent secondary action beside a primary Save; dangerSoft is the same tint in red, for a destructive answer beside a safer primary one (Delete forever beside Move to Trash).
+ * use: every labeled action. Name it with `action` (save, add, create, done, confirm, apply, next, restore, delete, remove, cancel, back, edit, rename, copy, search, open): that brings the one icon, the label and the look of that action (`ui/actions.ts`), so a Save is the same everywhere. Words that say more ("Add medication") go in `children`; the icon stays. `icon` and `variant` only for an action the map does not have. One size for every button, everywhere; `pro` adds the rocket. The accent variant is a soft tint for a prominent secondary action beside a primary Save; dangerSoft is the same tint in red, for a destructive answer beside a safer primary one (Delete forever beside Move to Trash); successSoft, in green, is the done state of a button that saved (the browser extension's SaveButton, pattern 177).
  * never: a <button> with its own border, fill or padding classes; a Save, Add or Remove without its icon; a second icon for an action the map has; a smaller or larger button.
  */
 export function Button({
@@ -51,8 +52,10 @@ export function Button({
   const Glyph = spec?.icon;
   return (
     <button type={type} {...rest} className={`${buttonLook(look)}${className ? ` ${className}` : ''}`}>
-      {Glyph ? <Glyph aria-hidden="true" className="shrink-0" /> : icon}
+      {/* Next points the way it goes: its arrow follows the label ("Connect ->"). */}
+      {action !== 'next' && (Glyph ? <Glyph aria-hidden="true" className="shrink-0" /> : icon)}
       {children ?? (spec?.label ? t(`actions.${spec.label}`) : null)}
+      {action === 'next' && Glyph && <Glyph aria-hidden="true" className="shrink-0" />}
       {pro && <IconUpgrade size={12} onFill={look !== 'secondary'} />}
     </button>
   );
@@ -60,32 +63,37 @@ export function Button({
 
 /**
  * @catalog IconButton
- * use: a tool on a row or a bar (edit, delete, more, close), where words do not fit. The label is required: it names the button for screen readers and shows as the tooltip.
+ * use: a tool on a row or a bar (edit, delete, more, close), where words do not fit. The label is required: it names the button for screen readers and shows as the tooltip; `keys` adds the keyboard shortcut to the tooltip, as the app's toolbar shows it.
  * never: a primary action (Save, Add, Remove); a <button> with only an icon and no label.
  */
 export function IconButton({
   label,
   tone = 'quiet',
   position = 'above',
+  keys,
   className = '',
   type = 'button',
   children,
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   label: string;
+  /** The shortcut that does the same, shown in the tooltip. */
+  keys?: string;
   /** `danger` turns the glyph red on hover (delete). */
   tone?: 'quiet' | 'danger' | 'accent';
   position?: 'above' | 'below' | 'above-end' | 'below-end' | 'above-start' | 'below-start' | 'start' | 'end';
   children: ReactNode;
 }) {
-  const toneClass = tone === 'danger' ? 'hover:text-danger' : tone === 'accent' ? 'text-accent hover:text-accent' : 'hover:text-pn';
+  // One color class only: with two, the stylesheet's order picks the winner,
+  // and it picked the muted one over the accent.
+  const toneClass = tone === 'danger' ? 'text-pn-muted hover:text-danger' : tone === 'accent' ? 'text-accent hover:text-accent' : 'text-pn-muted hover:text-pn';
   return (
-    <HoverLabel label={label} position={position}>
+    <HoverLabel label={label} position={position} keys={keys}>
       <button
         type={type}
         aria-label={label}
         {...rest}
-        className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-pn-muted transition hover:bg-pn/10 disabled:opacity-40 ${toneClass}${className ? ` ${className}` : ''}`}
+        className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition hover:bg-pn/10 disabled:opacity-40 ${toneClass}${className ? ` ${className}` : ''}`}
       >
         {children}
       </button>

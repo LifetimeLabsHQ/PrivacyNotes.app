@@ -90,7 +90,7 @@ pub async fn cli_status(app: AppHandle) -> Result<CliStatus, String> {
 #[tauri::command]
 pub async fn install_cli(app: AppHandle) -> Result<CliStatus, String> {
     let p = places(&app).ok_or(FAILED)?;
-    install_into(&p)?;
+    install_into(&p, node_path().as_deref())?;
     #[cfg(windows)]
     if let Some(bin) = p.launcher.parent() {
         windows_path::add(bin).map_err(|_| FAILED)?;
@@ -118,22 +118,26 @@ fn rename_old_launcher(p: &Places) {
     if !is_ours(&bytes) {
         return;
     }
-    if may_write(&p.launcher) && !fs::read(&p.launcher).is_ok_and(|b| b == launcher_text(&p.stable).as_bytes()) {
-        let _ = write_launcher(&p.launcher, &launcher_text(&p.stable));
+    // Keep the Node path that Install recorded, so a launch never drops it.
+    let node = fs::read_to_string(&p.launcher).ok().and_then(|t| recorded_node(&t));
+    let new = launcher_text(&p.stable, node.as_deref());
+    if may_write(&p.launcher) && !fs::read(&p.launcher).is_ok_and(|b| b == new.as_bytes()) {
+        let _ = write_launcher(&p.launcher, &new);
     }
-    let old = old_launcher_text(&p.stable);
+    let old = old_launcher_text(&p.stable, node.as_deref());
     if bytes != old.as_bytes() {
         let _ = write_launcher(&p.old_launcher, &old);
     }
 }
 
-fn install_into(p: &Places) -> Result<(), String> {
+/// `node` is the full path of `node` that the login shell found, if any.
+fn install_into(p: &Places, node: Option<&str>) -> Result<(), String> {
     // Refuse before anything is written, so a refusal changes nothing.
     if !may_write(&p.launcher) {
         return Err(NOT_OURS.into());
     }
     refresh_copy(&p.resource, &p.stable).map_err(|_| FAILED)?;
-    write_launcher(&p.launcher, &launcher_text(&p.stable)).map_err(|_| FAILED)?;
+    write_launcher(&p.launcher, &launcher_text(&p.stable, node)).map_err(|_| FAILED)?;
     Ok(())
 }
 
@@ -181,38 +185,75 @@ fn write_launcher(launcher: &Path, text: &str) -> std::io::Result<()> {
 
 /// The `sh` launcher. The path is single-quoted, with a quote inside it
 /// written as `'\''`, so no character in it reaches the shell.
+///
+/// A system shortcut runs it with a short PATH (macOS Shortcuts:
+/// `/usr/bin:/bin:/usr/sbin:/sbin`), where a Homebrew or nvm Node is not
+/// found. So the launcher records the `node` the login shell found at
+/// install, quoted the same way, and falls back to `command -v node`. With
+/// no recorded path it is the launcher from before, which never reads `$NODE`
+/// from the environment.
+/// Spec: docs/internal/plans/quick-note-694.md (section 3.1, Q7)
 #[cfg(not(windows))]
-fn launcher_text(stable: &Path) -> String {
-    sh_launcher(stable, "")
+fn launcher_text(stable: &Path, node: Option<&str>) -> String {
+    sh_launcher(stable, node, "")
 }
 
 /// The old `pn` launcher: the same, plus the rename notice on stderr, only
 /// when stderr is a terminal, so a script or an MCP app reads nothing new.
 #[cfg(not(windows))]
-fn old_launcher_text(stable: &Path) -> String {
-    sh_launcher(stable, &format!("[ -t 2 ] && echo '{RENAMED}' >&2\n"))
+fn old_launcher_text(stable: &Path, node: Option<&str>) -> String {
+    sh_launcher(stable, node, &format!("[ -t 2 ] && echo '{RENAMED}' >&2\n"))
 }
 
 #[cfg(not(windows))]
-fn sh_launcher(stable: &Path, notice: &str) -> String {
-    let path = stable.to_string_lossy().replace('\'', r"'\''");
-    format!(
-        "#!/bin/sh\n# {MARKER}; Settings > CLI replaces it.\n{notice}command -v node >/dev/null 2>&1 || {{ echo '{NODE_HELP}' >&2; exit 127; }}\nexec node '{path}' \"$@\"\n"
-    )
+fn sh_quote(s: &str) -> String {
+    s.replace('\'', r"'\''")
+}
+
+#[cfg(not(windows))]
+fn sh_launcher(stable: &Path, node: Option<&str>, notice: &str) -> String {
+    let path = sh_quote(&stable.to_string_lossy());
+    let head = format!("#!/bin/sh\n# {MARKER}; Settings > CLI replaces it.\n{notice}");
+    match node {
+        Some(node) => format!(
+            "{head}NODE='{}'\n[ -x \"$NODE\" ] || NODE=$(command -v node) || {{ echo '{NODE_HELP}' >&2; exit 127; }}\nexec \"$NODE\" '{path}' \"$@\"\n",
+            sh_quote(node)
+        ),
+        None => format!(
+            "{head}command -v node >/dev/null 2>&1 || {{ echo '{NODE_HELP}' >&2; exit 127; }}\nexec node '{path}' \"$@\"\n"
+        ),
+    }
+}
+
+/// The Node path a launcher recorded, read back from its `NODE='...'` line.
+#[cfg(not(windows))]
+fn recorded_node(launcher: &str) -> Option<String> {
+    let quoted = launcher.lines().find_map(|l| l.strip_prefix("NODE='"))?.strip_suffix('\'')?;
+    Some(quoted.replace(r"'\''", "'"))
 }
 
 /// The `cmd` launcher. A Windows path holds no `"`; a `%` is doubled so cmd
 /// does not read it as a variable.
 #[cfg(windows)]
-fn launcher_text(stable: &Path) -> String {
+fn launcher_text(stable: &Path, _node: Option<&str>) -> String {
     cmd_launcher(stable)
 }
 
 /// The old `pn.cmd`: the same launcher with no notice, because cmd cannot
 /// tell whether stderr is a terminal.
 #[cfg(windows)]
-fn old_launcher_text(stable: &Path) -> String {
+fn old_launcher_text(stable: &Path, _node: Option<&str>) -> String {
     cmd_launcher(stable)
+}
+
+#[cfg(windows)]
+fn recorded_node(_launcher: &str) -> Option<String> {
+    None
+}
+
+#[cfg(windows)]
+fn node_path() -> Option<String> {
+    None
 }
 
 #[cfg(windows)]
@@ -252,7 +293,14 @@ fn dir_on_path(dir: &Path) -> bool {
 
 #[cfg(not(windows))]
 fn dir_on_path(dir: &Path) -> bool {
-    shell_path().is_some_and(|path| path_has(&path, dir))
+    ask_login_shell("\"$PATH\"").is_some_and(|path| path_has(&path, dir))
+}
+
+/// The full path of the `node` the login shell finds, for the launcher. An
+/// alias or a function is not a path, so only an absolute path counts.
+#[cfg(not(windows))]
+fn node_path() -> Option<String> {
+    ask_login_shell("\"$(command -v node)\"").filter(|p| p.starts_with('/'))
 }
 
 #[cfg(not(windows))]
@@ -262,15 +310,16 @@ fn path_has(path: &str, dir: &Path) -> bool {
     path.split(':').any(|p| p.trim_end_matches('/') == want)
 }
 
-/// The PATH of an interactive login shell, read with a 3 second limit. The
-/// value comes after a marker, so text a startup file prints is skipped.
+/// A value from an interactive login shell (`value` is a shell word, such as
+/// `"$PATH"`), read with a 3 second limit. The value comes after a marker, so
+/// text a startup file prints is skipped. An empty value is no answer.
 #[cfg(not(windows))]
-fn shell_path() -> Option<String> {
+fn ask_login_shell(value: &str) -> Option<String> {
     use std::process::{Command, Stdio};
     use std::time::{Duration, Instant};
     let shell = std::env::var("SHELL").ok().filter(|s| s.starts_with('/'))?;
     let mut child = Command::new(shell)
-        .args(["-l", "-i", "-c", "printf '\\n__PN_PATH__%s\\n' \"$PATH\""])
+        .args(["-l", "-i", "-c", &format!("printf '\\n__PN_PATH__%s\\n' {value}")])
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
@@ -290,7 +339,7 @@ fn shell_path() -> Option<String> {
     }
     let out = child.wait_with_output().ok()?;
     let text = String::from_utf8_lossy(&out.stdout).into_owned();
-    text.lines().rev().find_map(|l| l.strip_prefix("__PN_PATH__").map(str::to_owned))
+    text.lines().rev().find_map(|l| l.strip_prefix("__PN_PATH__").map(str::to_owned)).filter(|v| !v.is_empty())
 }
 
 /// The line for the person's shell that puts `~/.local/bin` on PATH.
@@ -420,7 +469,7 @@ mod tests {
     fn installs_the_copy_and_the_launcher() {
         let d = temp("fresh");
         let p = places_in(&d);
-        install_into(&p).unwrap();
+        install_into(&p, None).unwrap();
         assert_eq!(fs::read(&p.stable).unwrap(), fs::read(&p.resource).unwrap());
         let text = fs::read_to_string(&p.launcher).unwrap();
         assert!(is_ours(text.as_bytes()));
@@ -439,7 +488,7 @@ mod tests {
         let p = places_in(&d);
         fs::create_dir_all(p.launcher.parent().unwrap()).unwrap();
         fs::write(&p.launcher, "#!/bin/sh\necho someone else's pn\n").unwrap();
-        assert_eq!(install_into(&p), Err(NOT_OURS.to_string()));
+        assert_eq!(install_into(&p, None), Err(NOT_OURS.to_string()));
         assert_eq!(fs::read_to_string(&p.launcher).unwrap(), "#!/bin/sh\necho someone else's pn\n");
         assert!(!p.stable.exists());
         assert!(!status_of(&p).installed);
@@ -449,8 +498,8 @@ mod tests {
     fn a_second_install_replaces_its_own_launcher() {
         let d = temp("again");
         let p = places_in(&d);
-        install_into(&p).unwrap();
-        install_into(&p).unwrap();
+        install_into(&p, None).unwrap();
+        install_into(&p, None).unwrap();
         assert!(status_of(&p).installed);
     }
 
@@ -458,7 +507,7 @@ mod tests {
     fn the_launch_refresh_brings_the_copy_to_the_bundled_version() {
         let d = temp("refresh");
         let p = places_in(&d);
-        install_into(&p).unwrap();
+        install_into(&p, None).unwrap();
         fs::write(&p.resource, "console.log('v2')\n").unwrap();
         refresh_copy(&p.resource, &p.stable).unwrap();
         assert_eq!(fs::read_to_string(&p.stable).unwrap(), "console.log('v2')\n");
@@ -471,7 +520,7 @@ mod tests {
         let p = places_in(&d);
         refresh_copy(&p.resource, &p.stable).unwrap();
         // What the app wrote before the rename: the plain launcher, named pn.
-        write_launcher(&p.old_launcher, &launcher_text(&p.stable)).unwrap();
+        write_launcher(&p.old_launcher, &launcher_text(&p.stable, None)).unwrap();
         rename_old_launcher(&p);
         assert!(status_of(&p).installed);
         let old = fs::read_to_string(&p.old_launcher).unwrap();
@@ -499,7 +548,7 @@ mod tests {
     #[cfg(not(windows))]
     #[test]
     fn the_old_launcher_is_valid_sh() {
-        let text = old_launcher_text(Path::new("/Users/o'neil/x/pn.mjs"));
+        let text = old_launcher_text(Path::new("/Users/o'neil/x/pn.mjs"), Some("/opt/o'neil/bin/node"));
         let status = std::process::Command::new("/bin/sh").arg("-n").arg("-c").arg(&text).status().unwrap();
         assert!(status.success());
     }
@@ -507,7 +556,7 @@ mod tests {
     #[cfg(not(windows))]
     #[test]
     fn a_quote_in_the_path_cannot_reach_the_shell() {
-        let text = launcher_text(Path::new("/Users/o'neil/x/pn.mjs"));
+        let text = launcher_text(Path::new("/Users/o'neil/x/pn.mjs"), None);
         assert!(text.contains(r"exec node '/Users/o'\''neil/x/pn.mjs' "));
         let status = std::process::Command::new("/bin/sh").arg("-n").arg("-c").arg(&text).status().unwrap();
         assert!(status.success());
@@ -525,10 +574,83 @@ mod tests {
         let d = temp("run");
         let p = places_in(&d);
         fs::write(&p.resource, "console.log(JSON.stringify(process.argv.slice(2)))\n").unwrap();
-        install_into(&p).unwrap();
+        install_into(&p, None).unwrap();
         let out = std::process::Command::new(&p.launcher).args(["save", "a b", "--tag", "x'y"]).output().unwrap();
         assert!(out.status.success());
         assert_eq!(String::from_utf8_lossy(&out.stdout).trim(), r#"["save","a b","--tag","x'y"]"#);
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn the_recorded_node_path_is_quoted_and_read_back() {
+        let text = launcher_text(Path::new("/Users/o'neil/x/pn.mjs"), Some("/Users/o'neil/.nvm/bin/node"));
+        assert!(text.contains("\nNODE='/Users/o'\\''neil/.nvm/bin/node'\n"));
+        assert!(text.contains(r#"[ -x "$NODE" ] || NODE=$(command -v node) || "#));
+        assert!(text.contains(r#"exec "$NODE" '/Users/o'\''neil/x/pn.mjs' "$@""#));
+        assert!(is_ours(text.as_bytes()));
+        assert_eq!(recorded_node(&text).as_deref(), Some("/Users/o'neil/.nvm/bin/node"));
+        let status = std::process::Command::new("/bin/sh").arg("-n").arg("-c").arg(&text).status().unwrap();
+        assert!(status.success());
+    }
+
+    /// No answer from the login shell: the launcher from before, which never
+    /// reads `$NODE` from the environment.
+    #[cfg(not(windows))]
+    #[test]
+    fn with_no_node_answer_the_launcher_is_unchanged() {
+        let text = launcher_text(Path::new("/x/pn.mjs"), None);
+        assert!(!text.contains("NODE"));
+        assert!(text.contains("command -v node >/dev/null 2>&1 || "));
+        assert!(text.contains("exec node '/x/pn.mjs' \"$@\""));
+        assert_eq!(recorded_node(&text), None);
+    }
+
+    /// A launch keeps the Node path that Install recorded in the new launcher,
+    /// and gives the old `pn` the same one.
+    #[cfg(not(windows))]
+    #[test]
+    fn a_launch_keeps_the_recorded_node_path() {
+        let d = temp("keep-node");
+        let p = places_in(&d);
+        refresh_copy(&p.resource, &p.stable).unwrap();
+        write_launcher(&p.old_launcher, &launcher_text(&p.stable, None)).unwrap();
+        install_into(&p, Some("/opt/homebrew/bin/node")).unwrap();
+        let installed = fs::read_to_string(&p.launcher).unwrap();
+        rename_old_launcher(&p);
+        assert_eq!(fs::read_to_string(&p.launcher).unwrap(), installed);
+        assert_eq!(recorded_node(&fs::read_to_string(&p.old_launcher).unwrap()).as_deref(), Some("/opt/homebrew/bin/node"));
+    }
+
+    /// The launcher from a system shortcut, with a short PATH
+    /// (`env -i PATH=/usr/bin:/bin`): the recorded path finds a Node that PATH
+    /// does not, and a recorded path that is gone falls back to PATH. Skipped
+    /// where node is not installed.
+    #[cfg(not(windows))]
+    #[test]
+    fn the_launcher_runs_from_a_short_path() {
+        let found = std::process::Command::new("/bin/sh").args(["-c", "command -v node"]).output().ok().filter(|o| o.status.success());
+        let Some(found) = found else { return };
+        let node = String::from_utf8_lossy(&found.stdout).trim().to_owned();
+        let d = temp("short-path");
+        let p = places_in(&d);
+        fs::write(&p.resource, "console.log(JSON.stringify(process.argv.slice(2)))\n").unwrap();
+        let run = |p: &Places| {
+            std::process::Command::new("/usr/bin/env").args(["-i", "PATH=/usr/bin:/bin"]).arg(&p.launcher).args(["save", "a b"]).output().unwrap()
+        };
+        install_into(&p, Some(&node)).unwrap();
+        let out = run(&p);
+        assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        assert_eq!(String::from_utf8_lossy(&out.stdout).trim(), r#"["save","a b"]"#);
+        // A recorded Node that was removed: the launcher looks on PATH, and
+        // says where to get Node when PATH has none.
+        install_into(&p, Some("/nonexistent/bin/node")).unwrap();
+        let out = run(&p);
+        if Path::new("/usr/bin/node").exists() || Path::new("/bin/node").exists() {
+            assert!(out.status.success());
+        } else {
+            assert_eq!(out.status.code(), Some(127));
+            assert!(String::from_utf8_lossy(&out.stderr).contains(NODE_HELP));
+        }
     }
 
     #[cfg(not(windows))]

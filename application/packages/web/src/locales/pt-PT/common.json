@@ -92,6 +92,18 @@
       "help": "Atalhos de teclado"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "Escreve mais aqui",
+    "hint": "Escreve / para uma pasta, # para uma etiqueta",
+    "locked": "O PrivacyNotes está bloqueado. A tua nota fica selada e abre quando desbloqueares.",
+    "queued": "Guardada. Abre quando desbloqueares.",
+    "tooLong": "Esta nota é demasiado longa. Divide-a em duas notas.",
+    "full": "Há demasiadas notas à espera. Desbloqueia para as adicionar.",
+    "empty": "Escreve primeiro alguma coisa.",
+    "failed": "Não foi possível guardar a nota. Abre o PrivacyNotes e tenta novamente.",
+    "added_other": "{{count}} notas rápidas adicionadas",
+    "added_one": "{{count}} nota rápida adicionada"
+  },
   "quickSwitcher": {
     "label": "Ninja: encontra um item ou uma definição, adiciona o que quiseres, executa um comando",
     "jumpTo": "Ninja",
@@ -129,7 +141,9 @@
     "actions": "ações",
     "back": "voltar",
     "actionsPlaceholder": "Filtrar as ações",
-    "onlyCreate": "adicionar"
+    "onlyCreate": "adicionar",
+    "ninjaLockedTitle": "O PrivacyNotes está bloqueado",
+    "ninjaLockedBody": "Abre o PrivacyNotes e desbloqueia-o. Depois o Ninja encontra as tuas notas a partir de qualquer app."
   },
   "cardForm": {
     "cardholderName": "Nome do Titular",
@@ -290,8 +304,10 @@
         "detail": "Cada dia do ano como um quadrado colorido"
       },
       "importExport": {
-        "label": "Import & Export",
-        "detail": "Traz notas para dentro, leva um backup para fora"
+        "detail": "Traz notas para dentro ou leva-as para fora"
+      },
+      "backup": {
+        "detail": "Fazer backup agora, backups automáticos e restauro"
       },
       "generator": {
         "label": "Gerador de palavras-passe",
@@ -307,6 +323,7 @@
     },
     "commands": {
       "syncResume": "Retomar a sincronização",
+      "lockProtected": "Bloquear esta nota",
       "changelog": "Novidades",
       "themesPage": "Temas da comunidade",
       "website": "Site do PrivacyNotes"

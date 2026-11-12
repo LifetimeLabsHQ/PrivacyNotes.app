@@ -1,25 +1,39 @@
 {
   "manifest": {
-    "extDescription": "Bewaar webpagina's als versleutelde notities en kopieer je logins.",
+    "extDescription": "Bewaar webpagina's als versleutelde notities en kopieer of vul je logins in.",
     "commandOpen": "PrivacyNotes openen",
-    "commandCopyLogin": "De login voor deze site kopiëren",
-    "commandSaveBookmark": "De pagina als bladwijzer opslaan"
+    "commandCopyLogin": "De login voor deze site invullen of kopiëren",
+    "commandSaveNote": "De pagina als notitie opslaan",
+    "commandLock": "De kluis vergrendelen",
+    "commandGenerate": "Een wachtwoord genereren en kopiëren",
+    "commandSaveBookmark": "De pagina als bladwijzer opslaan",
+    "commandNewNote": "Een nieuwe notitie schrijven"
   },
   "menu": {
     "savePageNote": "Pagina als notitie opslaan",
     "savePageBookmark": "Pagina als bladwijzer opslaan",
     "copyPageMarkdown": "Pagina als Markdown kopiëren",
     "saveSelection": "Selectie als notitie opslaan",
+    "newNoteFromSelection": "Nieuwe notitie van selectie",
     "saveLinkBookmark": "Link als bladwijzer opslaan",
     "saveLinkedPage": "Gelinkte pagina als notitie opslaan",
+    "fillLogin": "Login voor deze site invullen",
     "copyLogin": "Login voor deze site kopiëren",
     "addLogin": "Een login voor deze site toevoegen",
     "generatePassword": "Een wachtwoord genereren"
   },
+  "note": {
+    "tagsPlaceholder": "#werk #ideeën",
+    "tagsHelp": "Een spatie of komma tussen tags. De # is optioneel.",
+    "failed": "Kan de notitie niet opslaan. Probeer het opnieuw."
+  },
   "connect": {
-    "title": "Verbinden met je account",
-    "body": "Open in PrivacyNotes Instellingen > Extensie en kies Code maken. Plak de code hier.",
+    "title": "Deze browser verbinden",
+    "step1": "Open PrivacyNotes op deze computer of ga naar use.privacynotes.app.",
+    "step2": "Open Instellingen > Extensie en kies Code maken.",
+    "step3": "Plak de code hier.",
     "codeLabel": "Code uit de app",
+    "paste": "Plakken",
     "connect": "Verbinden",
     "badCode": "Deze code is niet volledig. Kopieer hem opnieuw uit de app.",
     "usedCode": "Deze code is al gebruikt of ouder dan 10 minuten. Maak een nieuwe in de app. Je verbonden browsers staan in Instellingen > Extensie.",
@@ -27,21 +41,24 @@
     "connected": "Verbonden",
     "connectedClips": "Clips staan klaar.",
     "connectedBoth": "Clips en logins staan klaar.",
-    "codeSpent": "De code is nu opgebruikt. Een screenshot ervan is waardeloos.",
     "help": "Hoe het werkt"
   },
   "protect": {
     "title": "Beveilig je logins",
-    "body": "Kies een PIN of een toegangscode voor deze browser. Die staat los van die van de app.",
-    "tries": "Na 10 foute pogingen wordt deze browser losgekoppeld.",
-    "biometric": "Ook vingerafdruk of gezicht gebruiken",
-    "biometricHelp": "Touch ID of Windows Hello, waar deze browser dat ondersteunt. De PIN of toegangscode werkt ook altijd.",
+    "body": "Kies een PIN of een toegangscode voor deze browser. Je hebt die nodig om je logins hier te ontgrendelen. Die staat los van die van de app.",
+    "biometric": "Ook biometrisch ontgrendelen gebruiken",
+    "biometricHelp": "Touch ID of Windows Hello, naast de PIN of toegangscode, die ook altijd werkt.",
     "repeat": "Voer hem nog een keer in",
     "mismatch": "De twee komen niet overeen. Probeer het opnieuw."
   },
   "clip": {
     "selection": "Selectie",
+    "wholePage": "Hele pagina",
+    "whatToSave": "Wat je wilt opslaan",
+    "picturesKept_one": "{{count}} afbeelding bewaard.",
+    "picturesKept_other": "{{count}} afbeeldingen bewaard.",
     "includePictures": "Afbeeldingen meenemen",
+    "includePicturesHelp": "Bewaard in de notitie, niet gelinkt aan de site.",
     "savedBody": "Hij verschijnt in Notities bij de volgende synchronisatie van een van je apps. Staat er een open, dan is dat meestal binnen een paar minuten.",
     "closeHint": "Je kunt de pop-up meteen sluiten.",
     "alreadySaved": "Je hebt deze pagina op {{date}} opgeslagen.",
@@ -60,24 +77,22 @@
     "failed": "Kon deze pagina niet opslaan. Probeer het opnieuw.",
     "reading": "Pagina lezen",
     "copiedMarkdown": "Pagina gekopieerd als Markdown",
-    "off": "Pagina's opslaan staat uit voor deze browser. Zet Webclipper aan wanneer je hem verbindt.",
-    "saving": "Pagina opslaan"
+    "off": "Pagina's opslaan staat uit voor deze browser. Zet Webclipper aan wanneer je hem verbindt."
   },
   "logins": {
     "unlockPin": "Voer je PIN in",
     "unlockPasscode": "Voer je toegangscode in",
-    "useBiometric": "Vingerafdruk of gezicht gebruiken",
+    "useBiometric": "Biometrisch ontgrendelen gebruiken",
     "wrong_one": "Fout. Nog {{count}} poging voordat deze browser wordt losgekoppeld.",
     "wrong_other": "Fout. Nog {{count}} pogingen voordat deze browser wordt losgekoppeld.",
     "forSite": "Voor {{site}}",
     "none": "Geen logins voor deze site.",
     "off": "Logins staan uit voor deze browser. Zet Kluis aan wanneer je hem verbindt.",
     "copyCode": "2FA-code kopiëren",
+    "fill": "Invullen",
     "usernameCopied": "Gebruikersnaam gekopieerd",
     "passwordCopied": "Wachtwoord gekopieerd",
     "codeCopied": "2FA-code gekopieerd",
-    "clears": "Na 30 seconden wordt hij van het klembord gewist, als hij er dan nog staat.",
-    "addSaved": "Opgeslagen. Hij verschijnt in je Kluis bij de volgende synchronisatie van een van je apps. Staat er een open, dan is dat meestal binnen een paar minuten.",
     "lock": "Vergrendelen",
     "unreachable": "PrivacyNotes is niet bereikbaar om te ontgrendelen. Controleer je verbinding en probeer het opnieuw.",
     "lockSystem": "Wanneer de computer vergrendelt",
@@ -97,13 +112,13 @@
   "changeSecret": {
     "titlePin": "PIN wijzigen",
     "titlePasscode": "Toegangscode wijzigen",
-    "biometricAgain": "Vingerafdruk of gezicht gebruikte de oude. Stel het opnieuw in om het te blijven gebruiken."
+    "biometricAgain": "Biometrisch ontgrendelen gebruikte de oude. Stel het opnieuw in om het te blijven gebruiken."
   },
   "biometric": {
-    "enrolled": "Vingerafdruk of gezicht is ingesteld. Je kunt dit tabblad sluiten.",
-    "enrolledHere": "Vingerafdruk of gezicht is ingesteld.",
+    "enrolled": "Biometrisch ontgrendelen is ingesteld. Je kunt dit tabblad sluiten.",
+    "enrolledHere": "Biometrisch ontgrendelen is ingesteld.",
     "unlocked": "Ontgrendeld. Je kunt dit tabblad sluiten en PrivacyNotes opnieuw openen.",
-    "failed": "Deze browser kan hier geen vingerafdruk of gezicht gebruiken. De PIN of toegangscode werkt zoals voorheen."
+    "failed": "Deze browser kan hier geen biometrisch ontgrendelen gebruiken. De PIN of toegangscode werkt zoals voorheen."
   },
   "vault": {
     "search": "De kluis doorzoeken",
@@ -131,13 +146,53 @@
     "lockHeader": "De kluis vergrendelen na",
     "unlockToCopy": "Ontgrendel om te kopiëren",
     "omniboxDefault": "Je PrivacyNotes-kluis doorzoeken op %s",
-    "omniboxUnlock": "Ontgrendel PrivacyNotes om te zoeken"
+    "omniboxUnlock": "Ontgrendel PrivacyNotes om te zoeken",
+    "moreOptions": "Meer opties"
   },
   "shortcuts": {
     "notSet": "Niet ingesteld",
     "addressBar": "De kluis doorzoeken vanuit de adresbalk",
     "change": "Sneltoetsen wijzigen",
     "changeHint": "Je browser beheert de toetsen. Wijzig er daar een, of geef er een toets als hij er geen heeft.",
-    "loginHint": "<key/> kopieert de gebruikersnaam, daarna het wachtwoord."
+    "loginHint": "<key/> vult deze login in. Op een pagina zonder loginveld kopieert het de gebruikersnaam, daarna het wachtwoord.",
+    "loginHintMany": "<key/> vult de bovenste login in.<br/>Druk er binnen 3 seconden nog een keer op om de volgende in te vullen."
+  },
+  "tabs": {
+    "label": "Clippen of Kluis",
+    "clip": "Clippen"
+  },
+  "notice": {
+    "clearsIn": "Wordt gewist over {{seconds}} s",
+    "copyFailed": "Kopiëren mislukt",
+    "loginSaved": "Login opgeslagen",
+    "vaultNextSync": "Verschijnt in je Kluis bij de volgende synchronisatie",
+    "noteSaved": "Notitie opgeslagen",
+    "notesNextSync": "Verschijnt in Notities bij de volgende synchronisatie",
+    "savedHere": "Hier opgeslagen",
+    "goesOutOnline": "Wordt verstuurd zodra je online bent"
+  },
+  "fill": {
+    "notFilled": "Niet ingevuld",
+    "couldNot": "Invullen mislukt",
+    "nothing": "Geen loginveld op deze pagina",
+    "signup": "Dit formulier vraagt om een nieuw wachtwoord",
+    "insecure": "Deze pagina is niet beveiligd (http)",
+    "otherAccount": "De pagina vraagt om een ander account",
+    "tooLong": "Het veld op de pagina is te kort",
+    "copyInstead": "Kopieer de waarden in plaats daarvan",
+    "usernameOnly": "Gebruikersnaam ingevuld",
+    "usernameOnlyNext": "Kies nog een keer Invullen voor het wachtwoord"
+  },
+  "settings": {
+    "codes": "2FA-codes",
+    "codesHelp": "De actuele code onder elke login met een 2FA-sleutel.",
+    "bar": "Aftelbalk",
+    "barHelp": "Een lijn die afloopt tot de volgende code.",
+    "iconsHelp": "Via onze proxy: die ziet het domein, nooit jou.",
+    "disconnect": "Extensie loskoppelen",
+    "biometric": "Biometrisch ontgrendelen",
+    "biometricPin": "Voer je PIN in om het in te stellen.",
+    "biometricPasscode": "Voer je toegangscode in om het in te stellen.",
+    "biometricOff": "Biometrisch ontgrendelen staat uit"
   }
 }

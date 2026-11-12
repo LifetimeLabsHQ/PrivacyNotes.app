@@ -8,13 +8,13 @@ packages/web/icon/app-icon-glyph.svg; the blue and the fold are drawn here, so t
 formats (Android, Icon Composer) can carry them as separate layers. Each platform gets the
 shape its system expects:
 
-  iOS        square, no corners (the system masks it); light and dark both blue, tinted
+  iOS        square, no corners (the system masks it); light blue, dark on a dark ground, tinted
   Android    adaptive: the blue and the fold as the background layer, the glyph as the
              foreground, scaled so the launcher's 72dp viewport shows the whole avatar
   Windows    rounded tile that fills the canvas (the .ico has no system mask)
   Linux      the same tile as Windows
   macOS 11+  pre-rounded squircle on Apple's 824px grid with a soft shadow
-  macOS 26   glyph.png and fold.png for AppIcon.icon; the blue is its fill, in dark too
+  macOS 26   glyph.png and fold.png for AppIcon.icon; the blue is its fill, DARK_GROUND in dark
 
 Run from packages/desktop through `pnpm icon`. It does not build Assets.car, which
 still needs Icon Composer and actool (docs/internal/macos-icon.md).
@@ -37,6 +37,9 @@ GLYPH_SVG = HERE.parent / "web" / "icon" / "app-icon-glyph.svg"
 BLUE = (0x1E, 0x40, 0xAF)
 FOLD = (0x4F, 0x6B, 0xD5)
 FOLD_START = 0.5            # the fold line runs from (FOLD_START, 0) to (1, 1 - FOLD_START) of the frame
+# Spec: docs/internal/macos-icon.md (what ships where) - the dark icon style, GitHub #604
+DARK_GROUND = (0x18, 0x18, 0x1A)
+DARK_FOLD = (0x2E, 0x2E, 0x33)
 # Spec: docs/internal/macos-icon.md (what ships where)
 ANDROID_VIEW = 72 / 108     # share of the adaptive canvas that a launcher shows
 TILE_INSET = 16             # Windows / Linux tile margin at 1024px
@@ -53,7 +56,7 @@ def rasterize(svg: Path, tmp: Path) -> Image.Image:
     return Image.open(out / "2048x2048.png").convert("RGBA")
 
 
-def fold_layer(frame: int, canvas: int = 1024) -> Image.Image:
+def fold_layer(frame: int, canvas: int = 1024, color: tuple = FOLD) -> Image.Image:
     """The fold of a centered frame of side `frame`, carried out to the canvas edges.
 
     The frame offset cancels out of the line, so it is x - y = frame * FOLD_START in
@@ -61,7 +64,7 @@ def fold_layer(frame: int, canvas: int = 1024) -> Image.Image:
     """
     c, k = canvas * SS, frame * FOLD_START * SS
     big = Image.new("RGBA", (c, c), (0, 0, 0, 0))
-    ImageDraw.Draw(big).polygon([(k, 0), (c, 0), (c, c - k)], fill=FOLD + (255,))
+    ImageDraw.Draw(big).polygon([(k, 0), (c, 0), (c, c - k)], fill=color + (255,))
     return big.resize((canvas, canvas), Image.LANCZOS)
 
 
@@ -73,9 +76,9 @@ def glyph_at(src: Image.Image, frame: int, canvas: int = 1024) -> Image.Image:
     return out
 
 
-def avatar(src: Image.Image, side: int = 1024) -> Image.Image:
-    im = Image.new("RGBA", (side, side), BLUE + (255,))
-    im.alpha_composite(fold_layer(side, side))
+def avatar(src: Image.Image, side: int = 1024, ground: tuple = BLUE, fold: tuple = FOLD) -> Image.Image:
+    im = Image.new("RGBA", (side, side), ground + (255,))
+    im.alpha_composite(fold_layer(side, side, fold))
     im.alpha_composite(glyph_at(src, side, side))
     return im
 
@@ -101,12 +104,12 @@ def main() -> None:
         tmp = Path(t)
         src = rasterize(GLYPH_SVG, tmp)
 
-        # iOS: light and dark are the same opaque avatar, so the dark style keeps the brand
-        # blue instead of the system's black ground. Tinted stays transparent: the system
-        # recolors every icon in that style.
+        # iOS: light is the avatar; dark keeps the padlock and check on a dark ground with a
+        # gray fold, the same colors as the dark fill in AppIcon.icon. Tinted stays
+        # transparent: the system recolors every icon in that style.
         app = ICONS / "ios-appearances"
         avatar(src).convert("RGB").save(app / "AppIcon-light-1024.png")
-        avatar(src).convert("RGB").save(app / "AppIcon-dark-1024.png")
+        avatar(src, ground=DARK_GROUND, fold=DARK_FOLD).convert("RGB").save(app / "AppIcon-dark-1024.png")
         tinted = fold_layer(1024)
         tinted.alpha_composite(glyph_at(src, 1024))
         gray = tinted.convert("L").convert("RGBA")

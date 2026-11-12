@@ -13,6 +13,10 @@ Il testo può essere <span style="color: #e03131">rosso</span>, <span style="col
 
 Può essere ==evidenziato in giallo== o <mark style="background-color: rgba(64, 192, 87, 0.35)">in verde</mark>.
 
+Uno spoiler nasconde delle parole finché qualcuno non ci clicca sopra: il regalo è ||un giradischi||. Seleziona le parole e scegli **Spoiler** nel menu **Inserisci**, oppure scrivi due barre verticali da ogni lato.
+
+Un'icona o un logo può stare in una riga di testo, come :icon[gift] :icon[coffee] :icon[rocket-launch] o :logo[github]. Scegline uno da **Inserisci** > **Icone e loghi**.
+
 Il pulsante **Aa** cambia dimensione e carattere. Il testo può essere <span style="font-size: 0.85em">piccolo</span>, normale o <span style="font-size: 1.6em">grande</span>. Può essere <span style="font-family: ui-sans-serif, system-ui, sans-serif">semplice</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">con grazie</span> o <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">a spaziatura fissa</span>.
 
 ## Dove stanno le parole
@@ -51,12 +55,21 @@ L'allineamento sposta un intero paragrafo, mai una parola sola. Metti il cursore
 | Europa | 1.204 | 48 % |
 | Americhe | 902 | 36 % |
 | Asia | 401 | 16 % |
+<!-- table-fill: r0=blue r1c2=green r3c2=red -->
 
-La colonna centrale è centrata e l'ultima allineata a destra. Trascina il bordo di una colonna per allargarla.
+La colonna centrale è centrata e l'ultima allineata a destra. Trascina il bordo di una colonna per allargarla. Una cella o un'intera riga può prendere un colore dalla barra della tabella. La piccola freccia in una cella d'intestazione ordina le righe sotto di lei, e un secondo clic le ordina al contrario.
+
+Una tabella sa anche fare i conti. Scrivi `=` in una cella per scegliere una funzione. La cella mostra il risultato e la nota conserva la formula: clicca su un risultato per vedere come è stato ottenuto.
+
+| Voce | Q.tà | Prezzo | Totale |
+| --- | ---: | ---: | ---: |
+| Caffè | 2 | 3.50 | =B2*C2 |
+| Torta | 1 | 4.20 | =B3*C3 |
+|  |  | Somma | =SUM(D2:D3) |
 
 ## Riquadri
 
-Un riquadro è una scatola colorata per qualcosa che nessuno deve perdersi.
+Un riquadro è una scatola colorata per qualcosa che nessuno deve perdersi. Scrivi `[!` su una riga vuota per sceglierne uno.
 
 > [!tip]+ Suggerimento
 > Clicca sulla sua icona per chiuderlo.
@@ -136,7 +149,21 @@ export function isLongRead(stats) {
 }
 ```
 
-Un pezzo breve di codice dentro una frase si vede così: `questo`.
+Un blocco di codice può avere un titolo. Clicca sul nome del linguaggio e scegli **Aggiungi titolo**. La freccia accanto al titolo chiude il blocco in una sola riga, e la nota se lo ricorda.
+
+```bash title="backup.sh" fold
+#!/bin/sh
+# Copia la cartella delle note in un archivio con la data.
+tar -czf "notes-$(date +%F).tar.gz" "$HOME/Notes"
+```
+
+Un **Riquadro da copiare** contiene una sola cosa da copiare, come un indirizzo o un comando. Il suo pulsante la copia tutta con un clic.
+
+```copy
+ssh-keygen -t ed25519 -C "laptop"
+```
+
+Un pezzo breve di codice dentro una frase si vede così: `questo`. Tieni premuto Cmd (Ctrl su Windows e Linux) e cliccaci sopra per copiarlo.
 
 ## Matematica
 
@@ -150,11 +177,21 @@ $$i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi$$
 
 Trascina un'immagine in una nota, oppure incollala. Cliccala una volta per cambiarne la dimensione, o per spostarla a sinistra, al centro o a destra. Quella sopra è a metà larghezza e centrata.
 
+## Mappe
+
+```map
+35.3606, 138.7274
+Monte Fuji
+```
+
+Metti un luogo in una nota con **Inserisci** > **Posizione**. La mappa arriva dal nostro server, quindi nessuna azienda di mappe vede dove guardi. In qualsiasi altra app Markdown si legge come le coordinate e il nome.
+
 ## Link
 
 Ce ne sono due tipi, e sono diversi di proposito.
 
 - Un link web apre un sito: [privacynotes.app](https://privacynotes.app/it)
+- Un link web può avere un testo al passaggio del mouse. Punta [questo](https://privacynotes.app/it/help "Le nostre pagine di aiuto") e aspetta.
 - Un collegamento fra note apre un'altra delle tue note: [[Come sono protette le tue note]]
 
 Entrambi hanno un pulsante nella barra. La catena fa un link web. Le parentesi quadre fanno un link a una nota: elencano le tue note e scegli quella che vuoi. Digitare `[[` fa la stessa cosa.

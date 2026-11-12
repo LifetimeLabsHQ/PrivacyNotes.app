@@ -35,7 +35,7 @@ type SourceFile = { path: string; text: string; date: Date | null };
 
 const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.excalidraw.${key}`, options);
 
-const DRAWING_FILE = /\.excalidraw(?:\.md)?$/i;
+export const DRAWING_FILE = /\.excalidraw(?:\.md)?$/i;
 
 const noDrawing = (): string => msg('noDrawing');
 
@@ -73,6 +73,75 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/** What one drawing file came to. */
+export type DrawingRead = { note: ImportedNote; empty: boolean; outsidePictures: number; unreadablePictures: number } | 'compressed' | 'refused';
+
+/**
+ * One `.excalidraw` or Obsidian `.excalidraw.md` file as a drawing item,
+ * filed under the folder its path names. Its pictures go into `blobs`
+ * under placeholder keys the body names. The Obsidian vault import reads
+ * a vault's drawings through this too.
+ */
+export function readDrawing(path: string, text: string, date: Date | null, blobs: Map<string, ImportBlob>): DrawingRead {
+  const name = path.split('/').pop() ?? path;
+  let json: string | null = text;
+  if (/\.md$/i.test(name)) {
+    const found = obsidianScene(text);
+    if (found === 'compressed') return 'compressed';
+    json = found?.json ?? null;
+  }
+  // An empty text is an empty scene to `parseScene`, never a drawing here.
+  const scene = json?.trim() ? parseScene(json) : null;
+  if (!scene) return 'refused';
+  // parseScene has read this JSON, so it parses; the pictures' bytes are in it.
+  const raw = JSON.parse(json!) as unknown;
+  const rawFiles = isRecord(raw) && isRecord(raw.files) ? raw.files : {};
+
+  // Every picture with bytes gets a placeholder src, which the blob import
+  // turns into its reference. One the store cannot keep is left out.
+  const pictures: Record<string, { id: string; mimeType: string; created: number; src: string }> = {};
+  const placeholders = new Map<string, string>();
+  let unreadablePictures = 0;
+  for (const [id, entry] of Object.entries(rawFiles)) {
+    if (!isRecord(entry) || typeof entry.dataURL !== 'string') continue;
+    const bytes = dataUrlBytes(entry.dataURL);
+    const mime = bytes ? IMAGE_FORMAT_MIME[sniffImageFormat(bytes)] : undefined;
+    if (!bytes || !mime) {
+      unreadablePictures++;
+      continue;
+    }
+    const key = `excalidrawimg:${crypto.randomUUID()}`;
+    placeholders.set(key, id);
+    pictures[id] = { id, mimeType: mime, created: typeof entry.created === 'number' ? entry.created : Date.now(), src: key };
+    blobs.set(key, { data: bytes, mime, name: `${id.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40) || 'picture'}.${mime.slice('image/'.length)}` });
+  }
+  const live = scene.elements.filter((e) => e.isDeleted !== true);
+  const outsidePictures = live.filter((e) => e.type === 'image' && typeof e.fileId === 'string' && !Object.hasOwn(pictures, e.fileId)).length;
+
+  const body = serializeScene({ ...scene, files: {} }, scene.elements, scene.appState, pictures, (id) => (Object.hasOwn(pictures, id) ? pictures[id]!.src : undefined));
+  // A picture no live element shows never reaches the body: drop its bytes too.
+  for (const key of placeholders.keys()) {
+    if (!body.includes(key)) blobs.delete(key);
+  }
+  const stem = name.replace(DRAWING_FILE, '');
+  return { note: drawingNote(path, stem, body, date), empty: live.length === 0, outsidePictures, unreadablePictures };
+}
+
+/** A drawing item for a file: its name as the title, its folder from the path. */
+export function drawingNote(path: string, stem: string, body: string, date: Date | null): ImportedNote {
+  const stamp = stampOf(date);
+  const dir = path.split('/').slice(0, -1).filter(Boolean).join('/');
+  return {
+    title: isUntitledStem(stem) ? '' : oneLineTitle(stem),
+    body,
+    tags: [],
+    createdAt: stamp,
+    updatedAt: stamp,
+    type: 'drawing',
+    ...(dir ? { folderPath: dir.split('/') } : {}),
+  };
+}
+
 async function readFiles(file: File, onProgress?: (msg: string) => void): Promise<SourceFile[]> {
   const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
   if (!(head[0] === 0x50 && head[1] === 0x4b)) {
@@ -94,8 +163,6 @@ export async function parseExcalidraw(file: File, onProgress?: (msg: string) => 
   const files = await readFiles(file, onProgress);
   if (files.length === 0) throw new Error(noDrawing());
 
-  const dirOf = (path: string) => path.split('/').slice(0, -1).filter(Boolean).join('/');
-
   const notes: ImportedNote[] = [];
   const blobs = new Map<string, ImportBlob>();
   const refused: string[] = [];
@@ -107,65 +174,15 @@ export async function parseExcalidraw(file: File, onProgress?: (msg: string) => 
   for (const [i, f] of files.entries()) {
     onProgress?.(msg('readingDrawings', { current: i + 1, total: files.length }));
     const name = f.path.split('/').pop() ?? f.path;
-    const isMarkdown = /\.md$/i.test(name);
-    let json: string | null = f.text;
-    if (isMarkdown) {
-      const found = obsidianScene(f.text);
-      if (found === 'compressed') {
-        compressed.push(name);
-        continue;
-      }
-      json = found?.json ?? null;
+    const read = readDrawing(f.path, f.text, f.date, blobs);
+    if (read === 'compressed') compressed.push(name);
+    else if (read === 'refused') refused.push(name);
+    else {
+      notes.push(read.note);
+      if (read.empty) emptyNotes++;
+      outsidePictures += read.outsidePictures;
+      unreadablePictures += read.unreadablePictures;
     }
-    // An empty text is an empty scene to `parseScene`, never a drawing here.
-    const scene = json?.trim() ? parseScene(json) : null;
-    if (!scene) {
-      refused.push(name);
-      continue;
-    }
-    // parseScene has read this JSON, so it parses; the pictures' bytes are in it.
-    const raw = JSON.parse(json!) as unknown;
-    const rawFiles = isRecord(raw) && isRecord(raw.files) ? raw.files : {};
-
-    // Every picture with bytes gets a placeholder src, which the blob import
-    // turns into its reference. One the store cannot keep is left out.
-    const pictures: Record<string, { id: string; mimeType: string; created: number; src: string }> = {};
-    const placeholders = new Map<string, string>();
-    for (const [id, entry] of Object.entries(rawFiles)) {
-      if (!isRecord(entry) || typeof entry.dataURL !== 'string') continue;
-      const bytes = dataUrlBytes(entry.dataURL);
-      const mime = bytes ? IMAGE_FORMAT_MIME[sniffImageFormat(bytes)] : undefined;
-      if (!bytes || !mime) {
-        unreadablePictures++;
-        continue;
-      }
-      const key = `excalidrawimg:${crypto.randomUUID()}`;
-      placeholders.set(key, id);
-      pictures[id] = { id, mimeType: mime, created: typeof entry.created === 'number' ? entry.created : Date.now(), src: key };
-      blobs.set(key, { data: bytes, mime, name: `${id.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40) || 'picture'}.${mime.slice('image/'.length)}` });
-    }
-    const live = scene.elements.filter((e) => e.isDeleted !== true);
-    outsidePictures += live.filter((e) => e.type === 'image' && typeof e.fileId === 'string' && !Object.hasOwn(pictures, e.fileId)).length;
-
-    const body = serializeScene({ ...scene, files: {} }, scene.elements, scene.appState, pictures, (id) => (Object.hasOwn(pictures, id) ? pictures[id]!.src : undefined));
-    // A picture no live element shows never reaches the body: drop its bytes too.
-    for (const key of placeholders.keys()) {
-      if (!body.includes(key)) blobs.delete(key);
-    }
-
-    const stem = name.replace(DRAWING_FILE, '');
-    const stamp = stampOf(f.date);
-    if (live.length === 0) emptyNotes++;
-    const dir = dirOf(f.path);
-    notes.push({
-      title: isUntitledStem(stem) ? '' : oneLineTitle(stem),
-      body,
-      tags: [],
-      createdAt: stamp,
-      updatedAt: stamp,
-      type: 'drawing',
-      ...(dir ? { folderPath: dir.split('/') } : {}),
-    });
   }
 
   if (notes.length === 0) {
@@ -178,11 +195,7 @@ export async function parseExcalidraw(file: File, onProgress?: (msg: string) => 
     if (n.folderPath) n.folderId = dirToFolderId.get(n.folderPath.join('/')) ?? null;
   }
 
-  const warnings: string[] = [];
-  if (refused.length > 0) warnings.push(msg('refused', { count: refused.length, names: namesOf(refused) }));
-  if (compressed.length > 0) warnings.push(compressedLine(compressed));
-  if (outsidePictures > 0) warnings.push(msg('outsidePictures', { count: outsidePictures }));
-  if (unreadablePictures > 0) warnings.push(msg('unreadablePictures', { count: unreadablePictures }));
+  const warnings = drawingWarnings(refused, compressed, outsidePictures, unreadablePictures);
 
   const out: ParsedImport = {
     notes,
@@ -194,6 +207,16 @@ export async function parseExcalidraw(file: File, onProgress?: (msg: string) => 
   };
   if (folders.length > 0) out.folders = folders;
   return out;
+}
+
+/** The warnings for the drawing files an import read. */
+export function drawingWarnings(refused: string[], compressed: string[], outsidePictures: number, unreadablePictures: number): string[] {
+  const warnings: string[] = [];
+  if (refused.length > 0) warnings.push(msg('refused', { count: refused.length, names: namesOf(refused) }));
+  if (compressed.length > 0) warnings.push(compressedLine(compressed));
+  if (outsidePictures > 0) warnings.push(msg('outsidePictures', { count: outsidePictures }));
+  if (unreadablePictures > 0) warnings.push(msg('unreadablePictures', { count: unreadablePictures }));
+  return warnings;
 }
 
 function namesOf(names: string[]): string {

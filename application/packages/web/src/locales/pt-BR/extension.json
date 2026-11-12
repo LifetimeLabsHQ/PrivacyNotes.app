@@ -1,25 +1,39 @@
 {
   "manifest": {
-    "extDescription": "Salve páginas web como notas criptografadas e copie seus logins.",
+    "extDescription": "Salve páginas web como notas criptografadas e copie ou preencha seus logins.",
     "commandOpen": "Abrir o PrivacyNotes",
-    "commandCopyLogin": "Copiar o login deste site",
-    "commandSaveBookmark": "Salvar a página como marcador"
+    "commandCopyLogin": "Preencher ou copiar o login deste site",
+    "commandSaveNote": "Salvar a página como nota",
+    "commandLock": "Bloquear o cofre",
+    "commandGenerate": "Gerar uma senha e copiá-la",
+    "commandSaveBookmark": "Salvar a página como marcador",
+    "commandNewNote": "Escrever uma nova nota"
   },
   "menu": {
     "savePageNote": "Salvar página como nota",
     "savePageBookmark": "Salvar página como marcador",
     "copyPageMarkdown": "Copiar página como Markdown",
     "saveSelection": "Salvar seleção como nota",
+    "newNoteFromSelection": "Nova nota a partir da seleção",
     "saveLinkBookmark": "Salvar link como marcador",
     "saveLinkedPage": "Salvar página do link como nota",
+    "fillLogin": "Preencher login deste site",
     "copyLogin": "Copiar login deste site",
     "addLogin": "Adicionar um login para este site",
     "generatePassword": "Gerar uma senha"
   },
+  "note": {
+    "tagsPlaceholder": "#trabalho #ideias",
+    "tagsHelp": "Espaço ou vírgula entre as etiquetas. O # é opcional.",
+    "failed": "Não foi possível salvar a nota. Tente novamente."
+  },
   "connect": {
-    "title": "Conectar à sua conta",
-    "body": "No PrivacyNotes, abra Configurações > Extensão e escolha Gerar um código. Cole o código aqui.",
+    "title": "Conectar este navegador",
+    "step1": "Abra o PrivacyNotes neste computador ou use.privacynotes.app.",
+    "step2": "Abra Configurações > Extensão e escolha Gerar um código.",
+    "step3": "Cole o código aqui.",
     "codeLabel": "Código do app",
+    "paste": "Colar",
     "connect": "Conectar",
     "badCode": "Este código está incompleto. Copie-o de novo no app.",
     "usedCode": "Este código já foi usado ou tem mais de 10 minutos. Gere um novo no app. Seus navegadores conectados ficam em Configurações > Extensão.",
@@ -27,21 +41,24 @@
     "connected": "Conectado",
     "connectedClips": "Recortes prontos.",
     "connectedBoth": "Recortes e logins prontos.",
-    "codeSpent": "O código já foi usado. Uma captura de tela dele não serve para nada.",
     "help": "Como funciona"
   },
   "protect": {
     "title": "Proteja seus logins",
-    "body": "Escolha um PIN ou um código de acesso para este navegador. Ele é separado do PIN ou código do app.",
-    "tries": "Depois de 10 tentativas erradas, este navegador é desconectado.",
-    "biometric": "Usar também digital ou rosto",
-    "biometricHelp": "Touch ID ou Windows Hello, onde este navegador oferece suporte. O PIN ou o código de acesso sempre funciona também.",
+    "body": "Escolha um PIN ou um código de acesso para este navegador. Você precisa dele para desbloquear seus logins aqui. Ele é separado do PIN ou código do app.",
+    "biometric": "Usar também o desbloqueio biométrico",
+    "biometricHelp": "Touch ID ou Windows Hello, além do PIN ou do código de acesso, que sempre funciona também.",
     "repeat": "Digite de novo",
     "mismatch": "Os dois não coincidem. Tente novamente."
   },
   "clip": {
     "selection": "Seleção",
+    "wholePage": "Página inteira",
+    "whatToSave": "O que salvar",
+    "picturesKept_one": "{{count}} imagem mantida.",
+    "picturesKept_other": "{{count}} imagens mantidas.",
     "includePictures": "Incluir imagens",
+    "includePicturesHelp": "Guardadas na nota, sem link para o site.",
     "savedBody": "Ela aparece em Notas na próxima sincronização de qualquer um dos seus apps. Com um deles aberto, isso costuma levar poucos minutos.",
     "closeHint": "Você já pode fechar o pop-up.",
     "alreadySaved": "Você salvou esta página em {{date}}.",
@@ -60,24 +77,22 @@
     "failed": "Não foi possível salvar esta página. Tente novamente.",
     "reading": "Lendo a página",
     "copiedMarkdown": "Página copiada como Markdown",
-    "off": "Salvar páginas está desativado neste navegador. Ative Recorte web ao conectá-lo.",
-    "saving": "Salvando a página"
+    "off": "Salvar páginas está desativado neste navegador. Ative Recorte web ao conectá-lo."
   },
   "logins": {
     "unlockPin": "Digite seu PIN",
     "unlockPasscode": "Digite seu código de acesso",
-    "useBiometric": "Usar digital ou rosto",
+    "useBiometric": "Usar desbloqueio biométrico",
     "wrong_one": "Incorreto. Resta {{count}} tentativa antes de este navegador ser desconectado.",
     "wrong_other": "Incorreto. Restam {{count}} tentativas antes de este navegador ser desconectado.",
     "forSite": "Para {{site}}",
     "none": "Nenhum login para este site.",
     "off": "Os logins estão desativados neste navegador. Ative Cofre ao conectá-lo.",
     "copyCode": "Copiar código 2FA",
+    "fill": "Preencher",
     "usernameCopied": "Nome de usuário copiado",
     "passwordCopied": "Senha copiada",
     "codeCopied": "Código 2FA copiado",
-    "clears": "Ele sai da área de transferência após 30 segundos, se ainda estiver lá.",
-    "addSaved": "Salvo. Ele aparece no seu Cofre na próxima sincronização de qualquer um dos seus apps. Com um deles aberto, isso costuma levar poucos minutos.",
     "lock": "Bloquear",
     "unreachable": "Não foi possível acessar o PrivacyNotes para desbloquear. Verifique sua conexão e tente novamente.",
     "lockSystem": "Quando o computador for bloqueado",
@@ -97,13 +112,13 @@
   "changeSecret": {
     "titlePin": "Alterar PIN",
     "titlePasscode": "Alterar código de acesso",
-    "biometricAgain": "A digital ou o rosto usava o antigo. Configure de novo para continuar usando."
+    "biometricAgain": "O desbloqueio biométrico usava o antigo. Configure de novo para continuar usando."
   },
   "biometric": {
-    "enrolled": "Digital ou rosto configurado. Você pode fechar esta aba.",
-    "enrolledHere": "Digital ou rosto configurado.",
+    "enrolled": "Desbloqueio biométrico configurado. Você pode fechar esta aba.",
+    "enrolledHere": "Desbloqueio biométrico configurado.",
     "unlocked": "Desbloqueado. Você pode fechar esta aba e abrir o PrivacyNotes de novo.",
-    "failed": "Este navegador não pode usar digital ou rosto aqui. O PIN ou o código de acesso funciona como antes."
+    "failed": "Este navegador não pode usar o desbloqueio biométrico aqui. O PIN ou o código de acesso funciona como antes."
   },
   "vault": {
     "search": "Buscar no cofre",
@@ -131,13 +146,53 @@
     "lockHeader": "Bloquear o cofre após",
     "unlockToCopy": "Desbloqueie para copiar",
     "omniboxDefault": "Buscar %s no seu cofre do PrivacyNotes",
-    "omniboxUnlock": "Desbloqueie o PrivacyNotes para buscar"
+    "omniboxUnlock": "Desbloqueie o PrivacyNotes para buscar",
+    "moreOptions": "Mais opções"
   },
   "shortcuts": {
     "notSet": "Não definido",
     "addressBar": "Buscar no cofre pela barra de endereço",
     "change": "Alterar atalhos",
     "changeHint": "As teclas ficam no seu navegador. Altere uma lá ou defina uma tecla se ela não tiver nenhuma.",
-    "loginHint": "<key/> copia o nome de usuário e depois a senha."
+    "loginHint": "<key/> preenche este login. Em uma página sem campo de login, copia o nome de usuário e depois a senha.",
+    "loginHintMany": "<key/> preenche o login do topo da lista.<br/>Pressione de novo em até 3 segundos para preencher o próximo."
+  },
+  "tabs": {
+    "label": "Recortar ou Cofre",
+    "clip": "Recortar"
+  },
+  "notice": {
+    "clearsIn": "Limpa em {{seconds}} s",
+    "copyFailed": "Não foi possível copiar",
+    "loginSaved": "Login salvo",
+    "vaultNextSync": "Aparece no seu Cofre na próxima sincronização",
+    "noteSaved": "Nota salva",
+    "notesNextSync": "Aparece em Notas na próxima sincronização",
+    "savedHere": "Salvo aqui",
+    "goesOutOnline": "Será enviado quando você estiver online"
+  },
+  "fill": {
+    "notFilled": "Não preenchido",
+    "couldNot": "Não foi possível preencher",
+    "nothing": "Nenhum campo de login nesta página",
+    "signup": "Este formulário pede uma nova senha",
+    "insecure": "Esta página não é segura (http)",
+    "otherAccount": "A página pede outra conta",
+    "tooLong": "O campo da página é curto demais",
+    "copyInstead": "Copie os valores em vez disso",
+    "usernameOnly": "Nome de usuário preenchido",
+    "usernameOnlyNext": "Escolha Preencher de novo para a senha"
+  },
+  "settings": {
+    "codes": "Códigos 2FA",
+    "codesHelp": "O código atual abaixo de cada login com uma chave 2FA.",
+    "bar": "Barra de contagem regressiva",
+    "barHelp": "Uma linha que se esgota até o próximo código.",
+    "iconsHelp": "Pelo nosso proxy: ele vê o domínio, nunca você.",
+    "disconnect": "Desconectar a extensão",
+    "biometric": "Desbloqueio biométrico",
+    "biometricPin": "Digite seu PIN para configurá-lo.",
+    "biometricPasscode": "Digite seu código de acesso para configurá-lo.",
+    "biometricOff": "O desbloqueio biométrico está desativado"
   }
 }

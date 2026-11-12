@@ -97,15 +97,13 @@ const RENDER_TRANSLATED: Record<string, readonly string[]> = {
   // sk "Na stiahnutie" (13, two words) joins it too.
   'shell:tagsRail.downloads': allBut('fr', 'pt-PT', 'sv', 'sk', 'uk'),
 
-  // The footer Settings label, the sync-status pill beside it, and the settings
-  // rail "Import & Export" label are English in EVERY Latin locale (translated
-  // in CJK only). The footer row is too tight to translate reliably per-locale -
-  // long words wrap or crowd the sync icon at narrower window widths, so a
-  // measured allow list is fragile - and "Importeren & exporteren" wraps in nl.
-  // Keeping all three English in Latin is the robust, consistent call. Decided
-  // 2026-07-21; per-locale measurement was abandoned for these three slots.
+  // The footer Settings label and the sync-status pill beside it are English
+  // in EVERY Latin locale (translated in CJK only). The footer row is too
+  // tight to translate reliably per-locale - long words wrap or crowd the sync
+  // icon at narrower window widths, so a measured allow list is fragile.
+  // Decided 2026-07-21. The settings rail's "Import & Export" was on this list
+  // until it became the one-word "Transfer" (2026-11-11), which translates.
   'notes:footer.settings': CJK,
-  'notes:settings.importLabel': CJK,
   'settings:syncStatus.synced': CJK,
   'settings:syncStatus.notSaved': CJK,
   'settings:syncStatus.offline': CJK,

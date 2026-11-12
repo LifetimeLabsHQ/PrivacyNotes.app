@@ -13,6 +13,10 @@ Text kan vara <span style="color: #e03131">röd</span>, <span style="color: #197
 
 Den kan vara ==överstruken i gult== eller <mark style="background-color: rgba(64, 192, 87, 0.35)">i grönt</mark>.
 
+En spoiler döljer ord tills någon klickar på dem: presenten är ||en skivspelare||. Markera orden och välj **Spoiler** i menyn **Infoga**, eller skriv två lodräta streck på var sida.
+
+En ikon eller en logotyp kan sitta i en textrad, som :icon[gift] :icon[coffee] :icon[rocket-launch] eller :logo[github]. Välj en under **Infoga** > **Ikoner och logotyper**.
+
 Knappen **Aa** ändrar storlek och typsnitt. Text kan vara <span style="font-size: 0.85em">liten</span>, normal eller <span style="font-size: 1.6em">stor</span>. Den kan vara <span style="font-family: ui-sans-serif, system-ui, sans-serif">enkel</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">med seriffer</span> eller <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">med fast bredd</span>.
 
 ## Var orden sitter
@@ -51,12 +55,21 @@ Justering flyttar ett helt stycke, aldrig ett enda ord. Sätt markören i stycke
 | Europa | 1 204 | 48 % |
 | Amerika | 902 | 36 % |
 | Asien | 401 | 16 % |
+<!-- table-fill: r0=blue r1c2=green r3c2=red -->
 
-Mittenkolumnen är centrerad och den sista högerställd. Dra i en kolumnkant för att göra den bredare.
+Mittenkolumnen är centrerad och den sista högerställd. Dra i en kolumnkant för att göra den bredare. En cell eller en hel rad kan få en färg från tabellens verktygsfält. Den lilla pilen i en rubrikcell sorterar raderna under den, och ett andra klick sorterar dem åt andra hållet.
+
+En tabell kan också räkna. Skriv `=` i en cell för att välja en funktion. Cellen visar svaret och anteckningen behåller formeln, så klicka på ett svar för att se hur det räknades fram.
+
+| Vara | Antal | Pris | Totalt |
+| --- | ---: | ---: | ---: |
+| Kaffe | 2 | 3.50 | =B2*C2 |
+| Kaka | 1 | 4.20 | =B3*C3 |
+|  |  | Summa | =SUM(D2:D3) |
 
 ## Informationsrutor
 
-En informationsruta är en färgad ruta för något en läsare inte får missa.
+En informationsruta är en färgad ruta för något en läsare inte får missa. Skriv `[!` på en tom rad för att välja en.
 
 > [!tip]+ Tips
 > Klicka på ikonen för att fälla ihop den.
@@ -136,7 +149,21 @@ export function isLongRead(stats) {
 }
 ```
 
-En kort kodsnutt mitt i en mening ser ut så här i stället: `den här`.
+Ett kodblock kan ha en titel. Klicka på språknamnet och välj **Lägg till titel**. Pilen bredvid titeln fäller ihop blocket till en rad, och anteckningen kommer ihåg det.
+
+```bash title="backup.sh" fold
+#!/bin/sh
+# Copy the notes folder into a dated archive.
+tar -czf "notes-$(date +%F).tar.gz" "$HOME/Notes"
+```
+
+En **Kopieringsruta** rymmer en sak att kopiera, som en adress eller ett kommando. Dess knapp kopierar allt med ett klick.
+
+```copy
+ssh-keygen -t ed25519 -C "laptop"
+```
+
+En kort kodsnutt mitt i en mening ser ut så här i stället: `den här`. Håll ned Cmd (Ctrl på Windows och Linux) och klicka på den för att kopiera den.
 
 ## Matematik
 
@@ -150,11 +177,21 @@ $$i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi$$
 
 Dra in en bild i en anteckning, eller klistra in den. Klicka på den en gång för att ändra storlek, eller för att flytta den åt vänster, mitten eller höger. Den ovanför är halv bredd och centrerad.
 
+## Kartor
+
+```map
+35.3606, 138.7274
+Fuji
+```
+
+Lägg in en plats i en anteckning med **Infoga** > **Plats**. Kartan kommer från vår egen server, så inget kartföretag ser var du tittar. I alla andra Markdown-appar läses den som koordinaterna och namnet.
+
 ## Länkar
 
 Det finns två sorter, och de ser olika ut med flit.
 
 - En webblänk öppnar en sida: [privacynotes.app](https://privacynotes.app/sv)
+- En webblänk kan ha text vid hovring. Peka på [den här](https://privacynotes.app/sv/help "Våra hjälpsidor") och vänta.
 - En anteckningslänk öppnar en annan av dina anteckningar: [[Hur dina anteckningar skyddas]]
 
 Båda har en knapp i verktygsfältet. Kedjan gör en webblänk. Hakparenteserna gör en anteckningslänk: de listar dina anteckningar, och du väljer den du menar. Att skriva `[[` gör samma sak.

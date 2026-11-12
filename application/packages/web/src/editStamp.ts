@@ -9,6 +9,7 @@
  */
 import { BOOKKEEPING_KEYS, trackersEqual } from './trackerTypes';
 import { SCHEDULE_KEYS } from './schedule';
+import { LOCATION_KEY } from './noteLocation';
 
 /** What a person wrote into a note. */
 interface Content {
@@ -29,12 +30,15 @@ export function trackerContent(trackers: Record<string, unknown> | undefined): R
 /** `trackers` with its tracker values replaced by `values`: the entry's
  *  date, the backfill mark and its schedule (time, alerts) stay, as a
  *  restore from history needs. A restore brings back what was written, and
- *  the reminder the entry rings now is not part of that. */
+ *  the reminder the entry rings now is not part of that. The place on the
+ *  note stays too: only journal entries keep tracker values in a version, so
+ *  a restore that moved the place would do it for one type and not another.
+ *  Spec: docs/internal/plans/note-location.md (section 2, rule 4a) */
 export function withTrackerContent(
   trackers: Record<string, unknown> | undefined,
   values: Record<string, unknown>,
 ): Record<string, unknown> {
-  const kept = (key: string) => BOOKKEEPING_KEYS.has(key) || SCHEDULE_KEY_SET.has(key);
+  const kept = (key: string) => BOOKKEEPING_KEYS.has(key) || SCHEDULE_KEY_SET.has(key) || key === LOCATION_KEY;
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(values)) {
     if (!kept(key)) out[key] = value;

@@ -1,25 +1,39 @@
 {
   "manifest": {
-    "extDescription": "Ukládej webové stránky jako šifrované poznámky a kopíruj své přihlašovací údaje.",
+    "extDescription": "Ukládej webové stránky jako šifrované poznámky a kopíruj nebo vyplňuj své přihlašovací údaje.",
     "commandOpen": "Otevřít PrivacyNotes",
-    "commandCopyLogin": "Kopírovat přihlašovací údaje pro tento web",
-    "commandSaveBookmark": "Uložit stránku jako záložku"
+    "commandCopyLogin": "Vyplnit nebo kopírovat přihlašovací údaje pro tento web",
+    "commandSaveNote": "Uložit stránku jako poznámku",
+    "commandLock": "Zamknout trezor",
+    "commandGenerate": "Vygenerovat heslo a zkopírovat ho",
+    "commandSaveBookmark": "Uložit stránku jako záložku",
+    "commandNewNote": "Napsat novou poznámku"
   },
   "menu": {
     "savePageNote": "Uložit stránku jako poznámku",
     "savePageBookmark": "Uložit stránku jako záložku",
     "copyPageMarkdown": "Kopírovat stránku jako Markdown",
     "saveSelection": "Uložit výběr jako poznámku",
+    "newNoteFromSelection": "Nová poznámka z výběru",
     "saveLinkBookmark": "Uložit odkaz jako záložku",
     "saveLinkedPage": "Uložit odkazovanou stránku jako poznámku",
+    "fillLogin": "Vyplnit přihlašovací údaje pro tento web",
     "copyLogin": "Kopírovat přihlašovací údaje pro tento web",
     "addLogin": "Přidat přihlašovací údaje pro tento web",
     "generatePassword": "Vygenerovat heslo"
   },
+  "note": {
+    "tagsPlaceholder": "#práce #nápady",
+    "tagsHelp": "Značky odděl mezerou nebo čárkou. Znak # je nepovinný.",
+    "failed": "Poznámku se nepodařilo uložit. Zkus to znovu."
+  },
   "connect": {
-    "title": "Připojit k účtu",
-    "body": "V PrivacyNotes otevři Nastavení > Rozšíření a zvol Vytvořit kód. Kód sem vlož.",
+    "title": "Připojit tento prohlížeč",
+    "step1": "Otevři PrivacyNotes na tomto počítači nebo use.privacynotes.app.",
+    "step2": "Otevři Nastavení > Rozšíření a zvol Vytvořit kód.",
+    "step3": "Vlož kód sem.",
     "codeLabel": "Kód z aplikace",
+    "paste": "Vložit",
     "connect": "Připojit",
     "badCode": "Tento kód není úplný. Zkopíruj ho z aplikace znovu.",
     "usedCode": "Tento kód je už použitý nebo starší než 10 minut. Vytvoř v aplikaci nový. Připojené prohlížeče najdeš v Nastavení > Rozšíření.",
@@ -27,21 +41,25 @@
     "connected": "Připojeno",
     "connectedClips": "Ukládání stránek je připravené.",
     "connectedBoth": "Ukládání stránek a přihlašovací údaje jsou připravené.",
-    "codeSpent": "Kód je teď vyčerpaný. Snímek obrazovky s ním je k ničemu.",
     "help": "Jak to funguje"
   },
   "protect": {
     "title": "Chraň své přihlašovací údaje",
-    "body": "Zvol PIN nebo přístupový kód pro tento prohlížeč. Je oddělený od toho v aplikaci.",
-    "tries": "Po 10 špatných pokusech se tento prohlížeč odpojí.",
-    "biometric": "Používat i otisk prstu nebo obličej",
-    "biometricHelp": "Touch ID nebo Windows Hello, pokud je tento prohlížeč podporuje. PIN nebo přístupový kód funguje vždy taky.",
+    "body": "Zvol PIN nebo přístupový kód pro tento prohlížeč. Budeš ho potřebovat k odemknutí svých přihlašovacích údajů tady. Je oddělený od toho v aplikaci.",
+    "biometric": "Používat i biometrické odemknutí",
+    "biometricHelp": "Touch ID nebo Windows Hello, navíc k PINu nebo přístupovému kódu, který funguje vždy taky.",
     "repeat": "Zadej ho znovu",
     "mismatch": "Neshodují se. Zkus to znovu."
   },
   "clip": {
     "selection": "Výběr",
+    "wholePage": "Celá stránka",
+    "whatToSave": "Co uložit",
+    "picturesKept_one": "Uložen {{count}} obrázek.",
+    "picturesKept_few": "Uloženy {{count}} obrázky.",
+    "picturesKept_other": "Uloženo {{count}} obrázků.",
     "includePictures": "Včetně obrázků",
+    "includePicturesHelp": "Uloží se v poznámce, ne jako odkaz na web.",
     "savedBody": "V Poznámkách se objeví při příští synchronizaci kterékoli tvé aplikace. Když je některá otevřená, obvykle to trvá jen pár minut.",
     "closeHint": "Vyskakovací okno můžeš hned zavřít.",
     "alreadySaved": "Tuto stránku už máš uloženou ({{date}}).",
@@ -60,24 +78,22 @@
     "reading": "Čte se stránka",
     "copiedMarkdown": "Stránka zkopírována jako Markdown",
     "off": "Ukládání stránek je v tomto prohlížeči vypnuté. Zapni Ukládání stránek, až ho budeš připojovat.",
-    "saving": "Ukládá se stránka",
     "picturesFailed_one": "Uloženo. {{count}} obrázek se nepodařilo uložit",
     "picturesFailed_few": "Uloženo. {{count}} obrázky se nepodařilo uložit"
   },
   "logins": {
     "unlockPin": "Zadej svůj PIN",
     "unlockPasscode": "Zadej svůj přístupový kód",
-    "useBiometric": "Použít otisk prstu nebo obličej",
+    "useBiometric": "Použít biometrické odemknutí",
     "wrong_other": "Špatně. Zbývá {{count}} pokusů, než se tento prohlížeč odpojí.",
     "forSite": "Pro {{site}}",
     "none": "Pro tento web nejsou žádné přihlašovací údaje.",
     "off": "Přihlašovací údaje jsou v tomto prohlížeči vypnuté. Zapni Trezor, až ho budeš připojovat.",
     "copyCode": "Kopírovat kód 2FA",
+    "fill": "Vyplnit",
     "usernameCopied": "Uživatelské jméno zkopírováno",
     "passwordCopied": "Heslo zkopírováno",
     "codeCopied": "Kód 2FA zkopírován",
-    "clears": "Ze schránky zmizí po 30 sekundách, pokud tam ještě bude.",
-    "addSaved": "Uloženo. V Trezoru se objeví při příští synchronizaci kterékoli tvé aplikace. Když je některá otevřená, obvykle to trvá jen pár minut.",
     "lock": "Zamknout",
     "unreachable": "Nelze se spojit s PrivacyNotes a odemknout. Zkontroluj připojení a zkus to znovu.",
     "lockSystem": "Když se počítač zamkne",
@@ -99,13 +115,13 @@
   "changeSecret": {
     "titlePin": "Změnit PIN",
     "titlePasscode": "Změnit přístupový kód",
-    "biometricAgain": "Otisk prstu nebo obličej používal ten starý. Nastav ho znovu, pokud ho chceš dál používat."
+    "biometricAgain": "Biometrické odemknutí používalo ten starý. Nastav ho znovu, pokud ho chceš dál používat."
   },
   "biometric": {
-    "enrolled": "Otisk prstu nebo obličej je nastavený. Tuto kartu můžeš zavřít.",
-    "enrolledHere": "Otisk prstu nebo obličej je nastavený.",
+    "enrolled": "Biometrické odemknutí je nastavené. Tuto kartu můžeš zavřít.",
+    "enrolledHere": "Biometrické odemknutí je nastavené.",
     "unlocked": "Odemčeno. Tuto kartu můžeš zavřít a znovu otevřít PrivacyNotes.",
-    "failed": "Tento prohlížeč tady nemůže použít otisk prstu ani obličej. PIN nebo přístupový kód funguje jako dřív."
+    "failed": "Tento prohlížeč tady nemůže použít biometrické odemknutí. PIN nebo přístupový kód funguje jako dřív."
   },
   "vault": {
     "search": "Hledat v trezoru",
@@ -133,13 +149,53 @@
     "lockHeader": "Zamknout trezor po",
     "unlockToCopy": "Odemkni a kopíruj",
     "omniboxDefault": "Hledat %s v trezoru PrivacyNotes",
-    "omniboxUnlock": "Odemkni PrivacyNotes a hledej"
+    "omniboxUnlock": "Odemkni PrivacyNotes a hledej",
+    "moreOptions": "Další možnosti"
   },
   "shortcuts": {
     "notSet": "Nenastaveno",
     "addressBar": "Hledat v trezoru z adresního řádku",
     "change": "Změnit zkratky",
     "changeHint": "Klávesy spravuje tvůj prohlížeč. Změň je tam, nebo přiřaď klávesu té zkratce, která žádnou nemá.",
-    "loginHint": "<key/> zkopíruje uživatelské jméno, potom heslo."
+    "loginHint": "<key/> vyplní tyto přihlašovací údaje. Na stránce bez přihlašovacího pole zkopíruje uživatelské jméno, potom heslo.",
+    "loginHintMany": "<key/> vyplní první přihlašovací údaje v seznamu.<br/>Stiskni ji znovu do 3 sekund a vyplní další."
+  },
+  "tabs": {
+    "label": "Uložit stránku nebo Trezor",
+    "clip": "Uložit stránku"
+  },
+  "notice": {
+    "clearsIn": "Vymaže se za {{seconds}} s",
+    "copyFailed": "Nepodařilo se zkopírovat",
+    "loginSaved": "Přihlašovací údaje uloženy",
+    "vaultNextSync": "V Trezoru se objeví při příští synchronizaci",
+    "noteSaved": "Poznámka uložena",
+    "notesNextSync": "V Poznámkách se objeví při příští synchronizaci",
+    "savedHere": "Uloženo tady",
+    "goesOutOnline": "Odešle se, až budeš online"
+  },
+  "fill": {
+    "notFilled": "Nevyplněno",
+    "couldNot": "Nepodařilo se vyplnit",
+    "nothing": "Na této stránce není přihlašovací pole",
+    "signup": "Tento formulář žádá nové heslo",
+    "insecure": "Tato stránka není zabezpečená (http)",
+    "otherAccount": "Stránka žádá jiný účet",
+    "tooLong": "Pole na stránce je příliš krátké",
+    "copyInstead": "Místo toho zkopíruj hodnoty",
+    "usernameOnly": "Uživatelské jméno vyplněno",
+    "usernameOnlyNext": "Pro heslo zvol znovu Vyplnit"
+  },
+  "settings": {
+    "codes": "Kódy 2FA",
+    "codesHelp": "Aktuální kód pod každými přihlašovacími údaji s klíčem 2FA.",
+    "bar": "Odpočítávací pruh",
+    "barHelp": "Čára, která ubývá až do dalšího kódu.",
+    "iconsHelp": "Přes naše proxy: ta vidí doménu, nikdy tebe.",
+    "disconnect": "Odpojit rozšíření",
+    "biometric": "Biometrické odemknutí",
+    "biometricPin": "Zadej svůj PIN a nastav ho.",
+    "biometricPasscode": "Zadej svůj přístupový kód a nastav ho.",
+    "biometricOff": "Biometrické odemknutí je vypnuté"
   }
 }

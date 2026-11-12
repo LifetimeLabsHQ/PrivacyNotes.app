@@ -7,6 +7,11 @@ Sorti de l'hôtel à cinq heures. Deux heures de train, et la ville avait tout s
 
 ![Le mont Fuji, neige au sommet, encadré par des fleurs de cerisier.](/onboarding/fuji.webp)
 
+```map
+35.3606, 138.7274
+Mont Fuji
+```
+
 Les cerisiers étaient en fleurs au bord du lac. Le Fuji se tenait derrière, sans un nuage de toute la matinée. Ici, on dit qu'on peut venir une semaine sans jamais voir le sommet. Nous l'avons eu six heures.
 
 | Quoi | Quand |

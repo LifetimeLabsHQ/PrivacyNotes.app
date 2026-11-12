@@ -216,6 +216,51 @@
    ------------------------------------------------------------------ */
 :root[data-note-font='serif'] .ProseMirror { font-family: ui-serif, Georgia, Cambria, serif; }
 :root[data-note-font='mono'] .ProseMirror { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+/* A font from this device for the chosen note font (GitHub #716). theme.ts
+   writes the whole stack, the reader's font first and the stack above
+   behind it, so a font that is not installed falls back on its own. */
+:root[data-note-font-custom] .ProseMirror { font-family: var(--pn-note-font-custom); }
+
+/* ------------------------------------------------------------------
+   Nested numbers (GitHub #689). On 'outline' a numbered list inside a
+   numbered list counts the whole path, 1.1 and 1.1.1. The browser's own
+   list-item counter does the counting, so a list's start number holds;
+   ::marker keeps the number in the gutter where the plain one sits. A
+   numbered list inside a bullet or task list counts on its own (`ul ol`),
+   or a bullet's place would show up as a number. The gutter widens per
+   level so the longer number fits. NotesView paints the attribute from the
+   synced setting; every .prose surface follows it.
+   Spec: theme.ts (Nested numbers axis)
+   ------------------------------------------------------------------ */
+:root[data-nested-numbers='outline'] .prose ol:not(ul ol) > li::marker {
+  content: counters(list-item, '.') '. ';
+}
+:root[data-nested-numbers='outline'] .prose ol[data-numerals='persian']:not(ul ol) > li::marker {
+  content: counters(list-item, '.', persian) '. ';
+}
+:root[data-nested-numbers='outline'] .prose ol ol:not(ul ol) { --pn-list-pad: 2.925rem; }
+:root[data-nested-numbers='outline'] .prose ol ol ol:not(ul ol) { --pn-list-pad: 3.6rem; }
+:root[data-nested-numbers='outline'] .prose ol ol ol ol:not(ul ol) { --pn-list-pad: 4.275rem; }
+
+/* ------------------------------------------------------------------
+   The Ninja box (NinjaWindow.tsx, GitHub #694). The window is the box: the
+   copy of the main window's Ninja dialog fills it, with no frame of its own,
+   and the list takes the height the field and the footer leave.
+   Spec: docs/internal/plans/ninja-anywhere-694.md (section 3)
+   ------------------------------------------------------------------ */
+:root[data-ninja-window],
+:root[data-ninja-window] body,
+:root[data-ninja-window] #root { height: 100%; overflow: hidden; background: rgb(var(--pn-surface-2)); }
+:root[data-ninja-window] [role='dialog'] {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+:root[data-ninja-window] #pn-quick-switcher-list { flex: 1; max-height: none; }
 
 /* ------------------------------------------------------------------
    Editor content width - the ONLY place the reading column's cap lives.
@@ -990,26 +1035,95 @@
       white-space: pre-wrap;
       overflow-wrap: break-word;
     }
-    & .pn-codeblock-tools,
-    & .pn-codeblock-lang {
+    /* The head holds the tools on the right. The language label sits on the
+       left, its text in line with the code; on a block with a title the node
+       view moves it into the head, after the tools (GitHub #679: under a
+       title it read as a second title). The pre is an LTR island, so
+       physical sides are the right ones. */
+    & .pn-codeblock-head,
+    & .pn-codeblock > .pn-codeblock-lang,
+    & .pn-codeblock-title {
       position: absolute;
       top: 0.5rem;
       display: flex;
+      align-items: center;
       gap: 0.25rem;
       /* App chrome, not code: without these the buttons and the wrap tip
          inherit the pre's monospace and the editor's tall line height. */
       font-family: var(--font-sans);
       line-height: 1.5;
     }
-    /* The pre is an LTR island, so physical sides are the right ones. The
-       label's text lines up with the code under it. */
-    & .pn-codeblock-lang {
+    & .pn-codeblock-head {
+      right: 0.5rem; /* rtl-ok: the pre is an LTR island */
+      z-index: 1;
+    }
+    & .pn-codeblock > .pn-codeblock-lang {
       left: calc(1.1428571em - 0.5rem); /* rtl-ok: the pre is an LTR island */
     }
     & .pn-codeblock-tools {
-      inset-inline-end: 0.5rem;
+      display: flex;
+      gap: 0.25rem;
       opacity: 0;
       transition: opacity 0.12s ease;
+    }
+    /* The title band (#679): the chevron lines up with the code's left
+       edge, the title field runs up to the head, and a rule closes the band
+       off from the code. The band grows by the field's own height. */
+    & .pn-codeblock-titled {
+      --pn-code-band: 3rem;
+    }
+    & .pn-codeblock-title {
+      top: 0;
+      left: 0; /* rtl-ok: the pre is an LTR island */
+      right: 0; /* rtl-ok: the pre is an LTR island */
+      height: calc(var(--pn-code-band) - 0.5rem);
+      padding: 0 11rem 0 calc(1.1428571em - 0.5rem);
+      border-bottom: 1px solid #3a3a3a; /* theme-ok: the code panel is dark in every theme */
+    }
+    & .pn-codeblock-title[hidden] {
+      display: none;
+    }
+    & .pn-codeblock-title input {
+      flex: 1;
+      min-width: 0;
+      background: transparent;
+      border: 0;
+      outline: none;
+      padding: 0 0.25rem;
+      color: #e6e6e6; /* theme-ok: the code panel is dark in every theme */
+      font-family: var(--font-mono);
+      font-size: 1em;
+      font-weight: 500;
+    }
+    & .pn-codeblock-title input::placeholder {
+      color: #8b949e; /* theme-ok: the code panel is dark in every theme */
+      font-family: var(--font-sans);
+      font-weight: 400;
+    }
+    & .pn-codeblock-titled .pn-codeblock-head {
+      top: calc((var(--pn-code-band) - 0.5rem - 1.25rem) / 2);
+    }
+    & .pn-codeblock-title svg {
+      transition: transform 0.12s ease;
+    }
+    /* Closed: only the band shows, the chevron points right. */
+    & .pn-codeblock-closed .pn-codeblock-title {
+      border-bottom-color: transparent;
+    }
+    & .pn-codeblock-closed .pn-codeblock-title svg {
+      transform: rotate(-90deg);
+    }
+    & .pn-codeblock-closed .pn-codeblock-scroll {
+      height: calc(var(--pn-code-band) - 0.5rem);
+      padding: 0;
+      overflow: hidden;
+    }
+    & .pn-codeblock-closed .pn-codeblock-scroll code,
+    & .pn-codeblock-closed .pn-codeblock-fold {
+      visibility: hidden;
+    }
+    & .pn-codeblock-closed .pn-codeblock-fold {
+      display: none;
     }
     & .pn-codeblock:hover .pn-codeblock-tools,
     & .pn-codeblock-tools:focus-within {
@@ -1047,14 +1161,17 @@
         font-family: inherit;
         color: inherit;
       }
-      & .pn-codeblock-lang {
+      & .pn-codeblock-lang,
+      & .pn-codeblock-title {
         display: none;
       }
       /* The code block's tools in the code block's corner, less the 1px
          border. They stay shown: the copy button is what the box is for. */
-      & .pn-codeblock-tools {
+      & .pn-codeblock-head {
         top: calc(0.5rem - 1px);
-        inset-inline-end: calc(0.5rem - 1px);
+        right: calc(0.5rem - 1px); /* rtl-ok: the pre is an LTR island */
+      }
+      & .pn-codeblock-tools {
         opacity: 1;
       }
       &.is-empty::after {
@@ -1202,6 +1319,16 @@
     }
     & :where(ol:has(> li:nth-child(10000))):not(:where([class~='not-prose'] *)) {
       --pn-list-pad: 4.275rem;
+    }
+    /* A list's side comes from its own text: editorDirection.ts gives each
+       list, quote, callout and the footnotes a `dir` from its first letter,
+       and the gutter above is logical, so it follows. An Arabic-script
+       numbered list that writes Persian counts in Persian digits
+       (`listNumerals` in textDirection.ts, GitHub #725). Display only: the
+       markdown keeps 1. 2. 3.
+       Spec: docs/internal/design/patterns/061-070.md (section 67) */
+    & :where(ol[data-numerals='persian']):not(:where([class~='not-prose'] *)) {
+      list-style-type: persian;
     }
 
     /* Aligning a list item has to move its MARKER, not just its words.
@@ -1423,6 +1550,29 @@
   }
 }
 
+/* The Notes of a vault item, shown formatted (DetailNotes in detailPane.tsx).
+   The editor's heading ladder above sizes a heading for the top of a page;
+   here it is a label inside one item, so the levels stay under the hero's
+   title (text-heading) and close to the body copy (text-body). Same layer and
+   a more specific selector, because a Tailwind utility cannot beat this
+   layer. Spec: docs/internal/issues/0634.md */
+@layer editor {
+  .prose.pn-detail-notes {
+    & :where(h1, h2, h3, h4, h5, h6):not(:where([class~='not-prose'] *)) {
+      font-size: var(--fs-body);
+      line-height: 1.4;
+      margin-top: 1em;
+      margin-bottom: 0.25em;
+    }
+    & :where(h1):not(:where([class~='not-prose'] *)) {
+      font-size: var(--fs-title);
+    }
+    & :where(h2):not(:where([class~='not-prose'] *)) {
+      font-size: var(--fs-row);
+    }
+  }
+}
+
 @layer editor {
   .tableWrapper {
     /* ---------------------------------------------------------------
@@ -1582,8 +1732,8 @@
     right: 0;
     translate: none;
   }
-  /* The Appearance gallery's empty note, shown while the Made by filter
-     leaves a section without a card. */
+  /* The Appearance gallery's empty note, shown while the search leaves a
+     section without a card. */
   .pn-theme-gallery-empty {
     display: none;
   }
@@ -1934,6 +2084,14 @@
     }
     .ProseMirror & .pn-callout-caret {
       display: none;
+    }
+    /* The caret's mirror (icons.tsx, `rtl:`) reads the page's dir, but a
+       callout takes its own from its text (editorDirection.ts): an English
+       callout in an Arabic app reads left-to-right, so its folded caret
+       points right. :dir() reads the nearest dir, the callout's. A Fold
+       callout's caret sits in the toggle with no wrapper, hence any svg. */
+    .ProseMirror & svg:dir(ltr) {
+      scale: none;
     }
     .ProseMirror &:focus-visible .pn-callout-type-icon {
       display: none;
@@ -2717,6 +2875,41 @@
   /* The width follows the pointer with no easing while the handle drags. */
   .pn-image-container.pn-image-resizing {
     transition: none;
+  }
+
+  /* A map's corner handle in a note (PlaceMapNode.tsx): the bottom end
+     corner, above the credit line. Shown on hover and while the map is
+     selected; always on a touch screen, which has no hover. */
+  .pn-map-resize {
+    position: absolute;
+    bottom: 24px;
+    inset-inline-end: 6px;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 120ms;
+    .pn-place-map:hover &,
+    .pn-place-map.ProseMirror-selectednode &,
+    .pn-place-map:focus-within & {
+      opacity: 1;
+    }
+    @media (pointer: coarse) {
+      opacity: 1;
+    }
+  }
+  /* The width while the handle drags, beside it. */
+  .pn-map-resize-value {
+    position: absolute;
+    bottom: 28px;
+    inset-inline-end: 44px;
+    z-index: 2;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgb(var(--pn-track));
+    border: 1px solid rgb(var(--pn-divider));
+    font-size: var(--fs-small);
+    font-variant-numeric: tabular-nums;
+    color: rgb(var(--pn-text));
+    pointer-events: none;
   }
 }
 

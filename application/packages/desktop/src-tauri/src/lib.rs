@@ -38,6 +38,14 @@ mod status_bar_tap;
 mod title_bar;
 #[cfg(desktop)]
 mod tray;
+/// Ninja from any app: the global key and the small window it opens.
+/// Spec: docs/internal/plans/ninja-anywhere-694.md
+#[cfg(desktop)]
+mod ninja;
+/// Open at login: the sign-in entry and its `--autostart` start.
+/// Spec: docs/internal/plans/ninja-anywhere-694.md (section 7)
+#[cfg(desktop)]
+mod autostart;
 
 /// Links, text and files other apps shared into this one, waiting for the
 /// unlocked app to take them. Compiled everywhere so its tests run on the
@@ -58,6 +66,10 @@ use avif::decode_avif;
 /// Spec: docs/internal/specs/web-clipper-stage1.md (section 3.1)
 mod clip_fetch;
 use clip_fetch::clip_fetch;
+/// Where automatic backups go: the folder the person picked, held on this
+/// side, and the staged, checked write into it.
+/// Spec: docs/internal/plans/auto-backup.md (section 7)
+mod backup_dest;
 /// Install for `privacynotes`, the command line tool (Settings > CLI).
 /// Spec: docs/internal/plans/agent-cli.md (section 3.7)
 #[cfg(desktop)]
@@ -211,12 +223,14 @@ fn take_pending_opens(app: tauri::AppHandle) -> Vec<String> {
 
     let paths = std::mem::take(&mut *PENDING_OPEN.lock().unwrap());
     // Widen the fs scope to each path before the frontend ever sees it. The
-    // static capability grants stop at `$HOME/**` and the only runtime widening
-    // is the one `pickDirectory` gets for free from the dialog plugin - and a
-    // double-click never goes through a picker. Without this, a file on an
-    // external volume, in /tmp, or on a second Windows drive is ACL-denied the
-    // instant the frontend tries to read it, with nothing but a rejected promise
-    // in the webview console to say why.
+    // static capability grants carry no allow, and the only other
+    // runtime widening is the one the dialog plugin gives a picker - and a
+    // double-click never goes through a picker. Without this, every
+    // double-clicked file is ACL-denied the instant the frontend tries to read
+    // it, with nothing but a rejected promise in the webview console to say
+    // why. The staging path beside it (`stagingPath` in
+    // markdownFolder/fileAccess.ts) is granted too, so a save is staged and
+    // renamed over the file rather than written in place.
     // Widening happens HERE rather than at queue time because this is the first
     // point that has an AppHandle: the two queue sites are a plugin callback and
     // `std::env::args()`.
@@ -231,6 +245,7 @@ fn take_pending_opens(app: tauri::AppHandle) -> Vec<String> {
         // silently dropped here, which is the more debuggable of the two.
         if let Some(path) = paths.last() {
             let _ = scope.allow_file(path);
+            let _ = scope.allow_file(format!("{path}.pn-tmp"));
         }
     }
     paths
@@ -485,7 +500,7 @@ fn restart_without_non_unicode_args(
 /// the fallback timer in `setup`, whichever comes first. A later reload must not
 /// show a window the user has hidden since.
 #[cfg(desktop)]
-fn show_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
+pub(crate) fn show_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
     use std::sync::atomic::{AtomicBool, Ordering};
     use tauri::Manager;
     static SHOWN: AtomicBool = AtomicBool::new(false);
@@ -556,6 +571,11 @@ pub fn run() {
     } else {
         builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
         use tauri::Emitter;
+        // `--ninja` is the Ninja key on Wayland, bound in the system settings.
+        if ninja::wants_box(&args) {
+            ninja::summon(app);
+            return;
+        }
         // A second launch carrying a file path is a double-click while we are
         // already running. The args were discarded here until file
         // associations existed; now they are the whole point of the callback.
@@ -582,8 +602,14 @@ pub fn run() {
     // process plugin powers the updater's "Restart" button (relaunch()).
     // window-state persists the main window's size/position across launches;
     // the About window stays out so it always opens centered at its fixed size.
+    // persisted-scope restores the fs scope the folder picker, Save As and
+    // `take_pending_opens` widened in an earlier run. The capability grants
+    // carry no static allow, so without it a picked folder is
+    // refused after every restart. It must come after the fs plugin.
+    // Spec: docs/internal/plans/desktop-fs-casefold.md (section 2, option A)
     #[cfg(desktop)]
     let builder = builder
+        .plugin(tauri_plugin_persisted_scope::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .plugin(
@@ -591,13 +617,14 @@ pub fn run() {
             // `show_main_window` shows it, and a restored "visible" would show
             // it before the page paints.
             tauri_plugin_window_state::Builder::default()
-                .with_denylist(&["about"])
+                .with_denylist(&["about", "ninja"])
                 .with_state_flags(
                     tauri_plugin_window_state::StateFlags::all()
                         & !tauri_plugin_window_state::StateFlags::VISIBLE,
                 )
                 .build(),
-        );
+        )
+        .plugin(ninja::plugin());
 
     // Native in-app purchase (StoreKit on iOS, Play Billing on Android). One
     // plugin covers both; the desktop DMG never compiles it. The macOS App
@@ -605,6 +632,18 @@ pub fn run() {
     // Spec: docs/internal/billing-integration.md (also drives Android storage-tier upgrades via subscriptionReplacementMode)
     #[cfg(mobile)]
     let builder = builder.plugin(tauri_plugin_iap::init());
+
+    // One position reading for a note's place. Loading it asks nothing: the
+    // permission question comes from the first "Use my current location" tap.
+    // Spec: docs/internal/plans/note-location.md (section 3)
+    #[cfg(mobile)]
+    let builder = builder.plugin(tauri_plugin_geolocation::init());
+
+    // The backup folder on a phone (plugins/backup-folder). No capability
+    // entry: only src/backup_dest.rs reaches it, from Rust.
+    // Spec: docs/internal/plans/auto-backup.md (section 7)
+    #[cfg(mobile)]
+    let builder = builder.plugin(tauri_plugin_backup_folder::init());
 
     // In-app OAuth (ASWebAuthenticationSession sheet). iOS only - see the
     // Cargo.toml entry for why Android stays on the system browser.
@@ -652,11 +691,31 @@ pub fn run() {
         decode_avif,
         cli_status,
         install_cli,
-        tray::set_tray_mode
+        tray::set_tray_mode,
+        ninja::set_ninja_shortcut,
+        ninja::ninja_dismiss,
+        autostart::autostart_enabled,
+        autostart::set_autostart,
+        autostart::finish_login_start,
+        backup_dest::backup_dest_pick,
+        backup_dest::backup_dest_status,
+        backup_dest::backup_dest_begin,
+        backup_dest::backup_dest_chunk,
+        backup_dest::backup_dest_finish,
+        backup_dest::backup_dest_abort,
+        backup_dest::backup_dest_exists,
+        backup_dest::backup_dest_delete,
+        backup_dest::backup_dest_reveal,
+        backup_dest::backup_dest_clear,
+        backup_dest::backup_dest_metered
     ]);
     // Close and minimize go to the tray while that switch is on (tray.rs).
+    // The Ninja box closes when it loses the focus (ninja.rs).
     #[cfg(desktop)]
-    let builder = builder.on_window_event(tray::on_window_event);
+    let builder = builder.on_window_event(|window, event| {
+        tray::on_window_event(window, event);
+        ninja::on_window_event(window, event);
+    });
     #[cfg(mobile)]
     let builder = builder.invoke_handler(tauri::generate_handler![
         biometric_available,
@@ -672,7 +731,18 @@ pub fn run() {
         share_inbox_remove,
         share_limit_set,
         pasteboard_pictures,
-        clip_fetch
+        clip_fetch,
+        backup_dest::backup_dest_pick,
+        backup_dest::backup_dest_status,
+        backup_dest::backup_dest_begin,
+        backup_dest::backup_dest_chunk,
+        backup_dest::backup_dest_finish,
+        backup_dest::backup_dest_abort,
+        backup_dest::backup_dest_exists,
+        backup_dest::backup_dest_delete,
+        backup_dest::backup_dest_reveal,
+        backup_dest::backup_dest_clear,
+        backup_dest::backup_dest_metered
     ]);
 
     // A load can replace the web view's content view, so the iOS keyboard bar
@@ -688,11 +758,30 @@ pub fn run() {
                 keyboard_accessory::hide_in(webview);
                 status_bar_tap::listen_in(webview);
             }
+            // A start at sign-in waits for the web view (autostart.rs).
             #[cfg(desktop)]
-            if webview.label() == "main" {
+            if webview.label() == "main" && !autostart::started_at_login() {
                 use tauri::Manager;
                 show_main_window(webview.app_handle());
             }
+        }
+    });
+
+    // WebKitGTK denies a camera request that no handler answers, and wry
+    // connects `permission-request` only when one is set, so without this the
+    // QR sign-in scanner is dead on Linux. Allow the camera for the app's own
+    // pages only; every other kind, and any page that is not ours, keeps
+    // WebKit's default (deny). The microphone stays denied: its one user, the
+    // recorder, cannot run in this WebKitGTK, which has no MediaRecorder. The
+    // other platforms grant capture in wry or ask the OS, so they stay as they
+    // were.
+    // Spec: docs/contrib/gotchas.md (Camera or microphone dead with no prompt)
+    #[cfg(target_os = "linux")]
+    let builder = builder.on_permission_request(|webview, kind| {
+        use tauri::webview::{PermissionKind, PermissionResponse};
+        match kind {
+            PermissionKind::Camera if serves_app_origin(&webview) => PermissionResponse::Allow,
+            _ => PermissionResponse::Default,
         }
     });
 
@@ -725,7 +814,10 @@ pub fn run() {
                     let handle = app.handle().clone();
                     std::thread::spawn(move || {
                         std::thread::sleep(std::time::Duration::from_secs(5));
-                        show_main_window(&handle);
+                        // A start at sign-in that the web view already placed stays as it is.
+                        if !(autostart::started_at_login() && autostart::decided()) {
+                            show_main_window(&handle);
+                        }
                     });
                 }
             }
@@ -785,7 +877,8 @@ pub fn run() {
                 // could not be read anyway and would only fail later, in a
                 // place that does not name the cause.
                 queue_from_args(std::env::args_os().filter_map(|a| a.into_string().ok()));
-                if let Some(window) = app.get_webview_window("main") {
+                // A start at sign-in must not raise the window (autostart.rs).
+                if let Some(window) = app.get_webview_window("main").filter(|_| !autostart::started_at_login()) {
                     let _ = window.set_focus();
                 }
             }
@@ -1206,6 +1299,26 @@ fn set_title_bar_colors(
     dark: Option<bool>,
 ) {
     title_bar::paint(&window, caption, text, dark);
+}
+
+/// Whether the web view shows the app's own pages: `tauri://localhost` in a
+/// release build, and the configured dev server in a debug build. Every window
+/// opens on the app, but nothing stops a link from navigating one elsewhere,
+/// so a capture grant asks where the web view is now.
+#[cfg(target_os = "linux")]
+fn serves_app_origin<R: tauri::Runtime>(webview: &tauri::Webview<R>) -> bool {
+    let Ok(url) = webview.url() else { return false };
+    if url.scheme() == "tauri" && url.host_str() == Some("localhost") {
+        return true;
+    }
+    #[cfg(debug_assertions)]
+    {
+        use tauri::Manager;
+        if let Some(dev) = webview.app_handle().config().build.dev_url.as_ref() {
+            return url.origin() == dev.origin();
+        }
+    }
+    false
 }
 
 /// Opens (or focuses) the custom About window. The web bundle renders it:

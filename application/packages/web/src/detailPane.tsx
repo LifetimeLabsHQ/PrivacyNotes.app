@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useMemo, useState, type MouseEvent, type ReactNode } from 'react';
 import { HoverLabel } from './HoverLabel';
 import { AccentBar, HeadlineRule } from './settingsUI';
 import { openExternal } from './openExternal';
@@ -163,11 +163,65 @@ export function DetailLink({ href, children }: { href: string; children: string 
   );
 }
 
-/** The notes block: an eyebrow and the text as written, no italics. */
-export function DetailNotes({ heading, children }: { heading: string; children: string }) {
+/** The renderer, once loaded: it is the export chunk's, so the pane imports it
+ *  only when Markdown notes show, and after sign-in it is usually prefetched. */
+type RenderNotes = (md: string) => string;
+let renderNotes: RenderNotes | null = null;
+
+/** The notes as HTML, or null until the renderer has loaded (or for plain
+ *  notes). The function itself is the state, never a "loaded" flag beside the
+ *  module variable: the two could disagree, and the notes then stay raw. */
+function useNotesHtml(md: string | null): string | null {
+  const [render, setRender] = useState<RenderNotes | null>(() => renderNotes);
+  useEffect(() => {
+    if (md === null || render) return;
+    let live = true;
+    void import('./markdownRender').then((m) => {
+      renderNotes = m.renderMarkdownSafe;
+      if (live) setRender(() => m.renderMarkdownSafe);
+    });
+    return () => { live = false; };
+  }, [md, render]);
+  return useMemo(() => (md !== null && render ? render(md) : null), [md, render]);
+}
+
+/** A link in rendered notes opens the way DetailLink does, out of the app. */
+function openNotesLink(e: MouseEvent<HTMLDivElement>) {
+  const a = (e.target as HTMLElement).closest('a[href]');
+  if (!a) return;
+  e.preventDefault();
+  const href = a.getAttribute('href')!;
+  if (href !== '#') openExternal(href);
+}
+
+/**
+ * Notes text. With `markdown` (the vault items, whose Notes box writes
+ * Markdown) it shows formatted, through the same renderer as the export and
+ * the burn viewer, which sanitizes the text; until that loads, and for a
+ * contact, the text shows as written. Its headings stay under the hero's
+ * title (`.pn-detail-notes` in index.css): a heading here is a label inside
+ * one item, not the top of a page. The item view and the Notes box's
+ * "Show formatted" (NotesField.tsx) both draw it, so the two cannot differ.
+ */
+export function NotesText({ text, markdown, pad = 'py-2' }: { text: string; markdown?: boolean; pad?: string }) {
+  const html = useNotesHtml(markdown ? text : null);
+  return html !== null ? (
+    <div
+      className={`pn-detail-notes prose prose-pn max-w-none ${pad} text-body break-words [&>:first-child]:mt-0 [&>:last-child]:mb-0`}
+      dir="auto"
+      onClick={openNotesLink}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  ) : (
+    <div className={`${pad} text-body text-pn whitespace-pre-wrap break-words`} dir="auto">{text}</div>
+  );
+}
+
+/** The notes block: an eyebrow and the text (NotesText). */
+export function DetailNotes({ heading, children, markdown }: { heading: string; children: string; markdown?: boolean }) {
   return (
     <DetailGroup heading={heading}>
-      <div className="py-2 text-body text-pn whitespace-pre-wrap break-words" dir="auto">{children}</div>
+      <NotesText text={children} markdown={markdown} />
     </DetailGroup>
   );
 }

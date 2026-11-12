@@ -6,7 +6,7 @@ tags: tokyo
 folder: Travel
 order: 10
 journalDay: friday
-trackers: {"mood":6,"emotions":["tired","energetic","overwhelmed"],"sleep":{"quality":"poor","hours":3},"sleepScore":41,"activity":"moderate","energy":5,"focus":4,"steps":7200,"caffeine":3,"water":4,"screenTime":5.5,"heartRate":72,"social":2}
+trackers: {"location":{"lat":35.6812,"lng":139.7671,"label":"Tokyo"},"mood":6,"emotions":["tired","energetic","overwhelmed"],"sleep":{"quality":"poor","hours":3},"sleepScore":41,"activity":"moderate","energy":5,"focus":4,"steps":7200,"caffeine":3,"water":4,"screenTime":5.5,"heartRate":72,"social":2}
 ---
 
 Landed at noon on three hours of sleep.

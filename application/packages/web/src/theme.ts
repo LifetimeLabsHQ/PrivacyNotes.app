@@ -40,6 +40,7 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import { applyAppZoom, DEFAULT_APP_ZOOM } from './appZoom';
 import { paintCodeWrap, setCodeWrap } from './codeWrap';
+import { FONT_FAMILIES } from './editorColors';
 
 // ------------------------------------------------------------------
 // Light / dark axis
@@ -274,6 +275,7 @@ export function initTheme(): Theme {
   watchSystemTheme();
   initColorTheme();
   applyTextSize(getStoredTextSize());
+  activeCustomFonts = getStoredCustomFonts();
   applyNoteFont(getStoredNoteFont());
   applyContentWidth(getStoredContentWidth());
   paintCodeWrap();
@@ -353,6 +355,83 @@ function applyNoteFont(font: NoteFont): void {
   activeNoteFont = font;
   document.documentElement.dataset.noteFont = font;
   localStorage.setItem(NOTE_FONT_KEY, font);
+  paintCustomFont();
+}
+
+const CUSTOM_FONTS_KEY = 'privacynotes.noteFontCustom';
+
+/**
+ * A font installed on this device, named by the reader, for each note font
+ * (GitHub #716). The one for the chosen note font goes first in the stack,
+ * and the built-in stack stays behind it, so a font that is not here (or a
+ * typo) falls back to what the note font shows without one. Device-local:
+ * installed fonts differ from one computer to the next. Nothing is written
+ * into a note, and code keeps its own font.
+ * Spec: index.css (Note font)
+ */
+export type CustomFonts = Partial<Record<NoteFont, string>>;
+
+/** The longest name kept. Real family names stay far below it. */
+const CUSTOM_FONT_MAX = 100;
+
+/** A name as the stack can quote it: no quote, backslash or control
+ *  character, so it can never close the string it sits in. */
+export function cleanFontName(name: string): string {
+  // eslint-disable-next-line no-control-regex
+  return name.replace(/["\\\u0000-\u001f\u007f]/g, '').trim().slice(0, CUSTOM_FONT_MAX);
+}
+
+function getStoredCustomFonts(): CustomFonts {
+  try {
+    const raw: unknown = JSON.parse(localStorage.getItem(CUSTOM_FONTS_KEY) ?? '{}');
+    const out: CustomFonts = {};
+    if (raw && typeof raw === 'object') {
+      for (const font of NOTE_FONTS) {
+        const v = (raw as Record<string, unknown>)[font];
+        const name = typeof v === 'string' ? cleanFontName(v) : '';
+        if (name) out[font] = name;
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+let activeCustomFonts: CustomFonts = {};
+
+/** The full font-family value for a note font: the reader's font, if any,
+ *  in front of the built-in stack. */
+export function noteFontStack(font: NoteFont, custom: CustomFonts = activeCustomFonts): string {
+  const stack = FONT_FAMILIES.find((f) => f.name.toLowerCase() === font)?.value ?? 'sans-serif';
+  const name = custom[font];
+  return name ? `"${name}", ${stack}` : stack;
+}
+
+/** Paint the custom font of the chosen note font, or clear it. */
+function paintCustomFont(): void {
+  const root = document.documentElement;
+  if (activeCustomFonts[activeNoteFont]) {
+    root.style.setProperty('--pn-note-font-custom', noteFontStack(activeNoteFont));
+    root.dataset.noteFontCustom = '';
+  } else {
+    root.style.removeProperty('--pn-note-font-custom');
+    delete root.dataset.noteFontCustom;
+  }
+}
+
+/** Set (or, with an empty name, clear) one note font's custom font. */
+function applyCustomFont(font: NoteFont, name: string): void {
+  const clean = cleanFontName(name);
+  const next = { ...activeCustomFonts };
+  if (clean) next[font] = clean;
+  else delete next[font];
+  activeCustomFonts = next;
+  try {
+    if (Object.keys(next).length) localStorage.setItem(CUSTOM_FONTS_KEY, JSON.stringify(next));
+    else localStorage.removeItem(CUSTOM_FONTS_KEY);
+  } catch { /* ignore */ }
+  paintCustomFont();
 }
 
 // ------------------------------------------------------------------
@@ -421,6 +500,38 @@ export function paragraphGapCss(spacing: LineSpacing = readLineSpacing()): strin
  *  viewer. Keep it equal to `--pn-line-height` in index.css. */
 export function lineHeightCss(spacing: LineSpacing = readLineSpacing()): string {
   return spacing === 'tight' ? '1.4' : '1.7';
+}
+
+// ------------------------------------------------------------------
+// Nested numbers axis
+// ------------------------------------------------------------------
+
+/**
+ * How a numbered list inside a numbered list counts: 'flat' starts every
+ * level at 1, 'outline' writes the whole path, 1.1 and 1.1.1 (GitHub #689).
+ * Drives `data-nested-numbers` on <html>, which index.css reads. Nothing is
+ * written into a note: the Markdown keeps its plain `1.` items. Synced like
+ * the line spacing, so a note counts the same on every device and in its
+ * export; the value lives on UserSettings and this module only paints it.
+ * Spec: index.css (Nested numbers)
+ */
+export const NESTED_NUMBERS = ['flat', 'outline'] as const;
+export type NestedNumbers = (typeof NESTED_NUMBERS)[number];
+
+/** Type guard, for the settings blob's decode step. */
+export function isNestedNumbers(v: unknown): v is NestedNumbers {
+  return typeof v === 'string' && (NESTED_NUMBERS as readonly string[]).includes(v);
+}
+
+/** Paint the nested numbers on <html>. The caller owns the value. */
+export function applyNestedNumbers(style: NestedNumbers): void {
+  document.documentElement.dataset.nestedNumbers = style;
+}
+
+/** The style painted now, for the export stylesheet. Absent reads as flat. */
+export function readNestedNumbers(): NestedNumbers {
+  const painted = document.documentElement.dataset.nestedNumbers;
+  return isNestedNumbers(painted) ? painted : 'flat';
 }
 
 // ------------------------------------------------------------------
@@ -1132,6 +1243,7 @@ export function resetThemeAxes(): void {
  *  size emits on its own store, which this function's callers do not reach. */
 function applyStyleDefaults(): void {
   applyTextSize('md');
+  for (const font of NOTE_FONTS) applyCustomFont(font, '');
   applyNoteFont('sans');
   applyContentWidth('default');
   applyFavicons(true);
@@ -1145,6 +1257,7 @@ function applyStyleDefaults(): void {
 export function resetStyleAxes(): void {
   try {
     applyTextSize('md');
+    for (const font of NOTE_FONTS) applyCustomFont(font, '');
     applyNoteFont('sans');
     applyContentWidth('default');
     applyInvisibles(false);
@@ -1185,6 +1298,7 @@ function getCopyFormatSnapshot(): CopyFormat { return activeCopyFormat; }
 function getPasteFormatSnapshot(): PasteFormat { return activePasteFormat; }
 function getLinkModifierSnapshot(): boolean { return activeLinkModifier; }
 function getNoteFontSnapshot(): NoteFont { return activeNoteFont; }
+function getCustomFontsSnapshot(): CustomFonts { return activeCustomFonts; }
 
 /** Website icons only depend on their visibility preference, not the palette. */
 export function useFavicons(): boolean {
@@ -1257,6 +1371,7 @@ export function useTheme() {
   const pasteFormat = useSyncExternalStore(subscribeTheme, getPasteFormatSnapshot);
   const linkModifier = useSyncExternalStore(subscribeTheme, getLinkModifierSnapshot);
   const noteFont = useSyncExternalStore(subscribeTheme, getNoteFontSnapshot);
+  const customFonts = useSyncExternalStore(subscribeTheme, getCustomFontsSnapshot);
 
   /** Pin an explicit light/dark choice, replacing 'auto' if it was set. */
   const setTheme = useCallback((next: Theme) => {
@@ -1324,11 +1439,16 @@ export function useTheme() {
     emitThemeChange();
   }, []);
 
+  const setCustomFont = useCallback((font: NoteFont, name: string) => {
+    applyCustomFont(font, name);
+    emitThemeChange();
+  }, []);
+
   /** Show a palette in one slot without persisting. Reverts on reload. */
   const previewColor = useCallback((mode: Theme, next: ThemeChoice) => {
     previewColorTheme(mode, next);
     emitThemeChange();
   }, []);
 
-  return { theme, themeMode, toggle, setTheme, setThemeMode, colorTheme, lightTheme, darkTheme, setColorTheme, setCustomTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, cycleContentWidth, spellcheck, setSpellcheck, invisibles, setInvisibles, favicons, setFavicons, copyFormat, setCopyFormat, pasteFormat, setPasteFormat, linkModifier, setLinkModifier, noteFont, setNoteFont };
+  return { theme, themeMode, toggle, setTheme, setThemeMode, colorTheme, lightTheme, darkTheme, setColorTheme, setCustomTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, cycleContentWidth, spellcheck, setSpellcheck, invisibles, setInvisibles, favicons, setFavicons, copyFormat, setCopyFormat, pasteFormat, setPasteFormat, linkModifier, setLinkModifier, noteFont, setNoteFont, customFonts, setCustomFont };
 }

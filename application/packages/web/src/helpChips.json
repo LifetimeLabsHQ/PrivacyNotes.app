@@ -70,5 +70,8 @@
   ],
   "dms": [
     "dead-mans-switch"
+  ],
+  "noteFont": [
+    "note-font"
   ]
 }

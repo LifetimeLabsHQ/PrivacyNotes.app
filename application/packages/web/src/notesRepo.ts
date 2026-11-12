@@ -1,4 +1,5 @@
-import { db, reopenDb, requestPersistence, type LocalNote } from './db';
+import { db, QUICK_NOTE_INBOX_KEY, reopenDb, requestPersistence, type LocalNote } from './db';
+import { startAutoLocation } from './autoLocation';
 import { bumpNotesCreated } from './notesCreated';
 import { perfSpan } from './perf';
 import { clearFaviconCache } from './faviconQueue';
@@ -276,6 +277,8 @@ export async function createNote(
   if (counted) {
     bumpNotesCreated();
     recordLedgerWrite({ kind: 'create', body });
+    // The person's own new note or journal entry, on a phone with the switch on.
+    startAutoLocation(note.id, type);
   }
   return note;
 }
@@ -1012,6 +1015,12 @@ export async function clearLocalDatabase(opts?: { keepUnsyncedNotes?: boolean })
   // History versions still waiting are this account's; a forced sign-out
   // keeps them with the unsynced notes, for the same returning owner.
   await db.versionQueue.clear();
+  // Quick notes the Ninja box kept while the app was locked, and the key it
+  // sealed them to. A forced sign-out keeps both, like the unsynced notes;
+  // the rows name their account, so another one never adds them.
+  // Spec: docs/internal/plans/quick-note-694.md (section 5.2 step 8)
+  await db.quickNotes.clear();
+  await db.kv.delete(QUICK_NOTE_INBOX_KEY);
   // The favicon cache is a separate IndexedDB, so it is not covered by any
   // db.*.clear() above. It holds a per-domain record derived from the user's
   // links, so it must go on sign-out too. See clearFaviconCache.

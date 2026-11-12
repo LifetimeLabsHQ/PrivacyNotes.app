@@ -10,8 +10,10 @@ import { scheduleOf, type Schedule } from '../schedule';
 import { isDemoMode } from '../demo';
 import { CHECK_IN_REMINDER_ID, checkInReminderItem } from '../checkIn';
 import { MEDICATION_REMINDER_PREFIX } from '../medicationReminders';
+import { BACKUP_REMINDER_ID } from '../autoBackup/reminder';
 import { mayWriteUnstamped } from '../liveSignIn';
 import {
+  keepUnseen,
   markUnseen,
   planAlerts,
   plannedThrough,
@@ -590,7 +592,7 @@ async function showNow(title: string, body: string, onClick: () => void) {
 function ringAlert(a: PlannedAlert & { title: string; body: string }, onClick: () => void) {
   markFired(a.key);
   // The bell is the Calendar row's; the check-in has no item there.
-  if (a.itemId !== CHECK_IN_REMINDER_ID && !a.itemId.startsWith(MEDICATION_REMINDER_PREFIX)) markUnseen(a.itemId);
+  if (a.itemId !== CHECK_IN_REMINDER_ID && a.itemId !== BACKUP_REMINDER_ID && !a.itemId.startsWith(MEDICATION_REMINDER_PREFIX)) markUnseen(a.itemId);
   if (!NATIVE_MOBILE) void showNow(a.title, a.body, onClick);
 }
 
@@ -633,7 +635,7 @@ export function ringWhileLocked(): () => void {
 const NO_ITEMS: readonly ReminderItem[] = [];
 
 export function useReminders({
-  notes, loaded, titleOf, folderName, alertsUnlocked, titles, appLock, birthday, checkIn, medications = NO_ITEMS, onOpen,
+  notes, loaded, titleOf, folderName, alertsUnlocked, titles, appLock, birthday, checkIn, medications = NO_ITEMS, backup = null, onOpen,
 }: {
   notes: readonly LocalNote[];
   /** The first read of this device's items has landed. Before it the list is
@@ -661,6 +663,9 @@ export function useReminders({
    *  Pro, like the calendar alerts: with alerts locked they ring never. They
    *  never name the medication. */
   medications?: readonly ReminderItem[];
+  /** The overdue-backup notification of this device (autoBackup/reminder.ts).
+   *  Free, like the check-in; it names nothing. Opened under BACKUP_REMINDER_ID. */
+  backup?: ReminderItem | null;
   onOpen: (id: string, occurrence: string) => void;
 }): { toast: ReactNode } {
   const { t } = useTranslation('shell');
@@ -676,6 +681,7 @@ export function useReminders({
   const items = useMemo<ReminderItem[]>(() => {
     const out: ReminderItem[] = [];
     if (checkIn) out.push(checkInReminderItem(checkIn.time, toLocalIso(new Date()), checkIn.done));
+    if (backup) out.push(backup);
     if (!alertsUnlocked) return out;
     out.push(...medications);
     for (const n of notes) {
@@ -701,7 +707,7 @@ export function useReminders({
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [notes, alertsUnlocked, birthday?.days, birthday?.at, checkIn?.time, checkIn?.done, medications, tick]);
+  }, [notes, alertsUnlocked, birthday?.days, birthday?.at, checkIn?.time, checkIn?.done, backup?.schedule.day, backup?.schedule.time, medications, tick]);
 
   const plan = useMemo(() => {
     const raw = planAlerts(items, Date.now(), readSnoozes());
@@ -712,6 +718,10 @@ export function useReminders({
       // title, no value, so the lock and the titles switch change nothing.
       if (a.itemId === CHECK_IN_REMINDER_ID) {
         const text = { title: t('checkIn.prompt'), body: '' };
+        return { ...a, plain: true, ...text, locked: text };
+      }
+      if (a.itemId === BACKUP_REMINDER_ID) {
+        const text = { title: t('importExport:auto.toastDue'), body: '' };
         return { ...a, plain: true, ...text, locked: text };
       }
       // A medication reminder says what it is and when, never which one:
@@ -729,6 +739,17 @@ export function useReminders({
       return { ...a, plain, ...text, locked: plain ? text : reminderText(item, when, { ...words, titles: false }) };
     });
   }, [items, titles, appLock, t, tick]);
+
+  // An item that can no longer ring (deleted, trashed, archived, its alert
+  // removed, here or by sync) gives up the Calendar row's bell (GitHub #722).
+  // Its toast goes too: it has nothing to open. Not before the first read:
+  // the empty list then would clear every bell.
+  useEffect(() => {
+    if (!loaded) return;
+    const ids = new Set(items.map((i) => i.id));
+    keepUnseen(ids);
+    setShown((s) => (s && !ids.has(s.itemId) ? null : s));
+  }, [items, loaded]);
 
   // The plan the lock screen rings from (ringWhileLocked).
   useEffect(() => {

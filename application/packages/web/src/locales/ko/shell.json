@@ -391,6 +391,7 @@
     "modeRich": "서식",
     "modeSource": "Markdown",
     "reopenPrompt": "새로고침하고 나면 브라우저가 권한을 다시 물어봐요. 폴더는 기억해 두니까 한 번만 누르면 돼요.",
+    "reopenPromptDesktop": "앱이 다시 열 수 있도록 {{name}}을(를) 한 번 더 선택해 주세요. 폴더 안의 내용은 바뀌지 않았어요.",
     "reopenFolder": "{{name}} 다시 열기",
     "new": "새로 만들기",
     "saveToNotes": "내 노트에 저장",
@@ -686,7 +687,8 @@
       "sprint": "스프린트 계획",
       "bookClub": "독서 모임",
       "rent": "월세 내기"
-    }
+    },
+    "feedReadOnly": "{{name}}에서 가져온 일정이에요. 이 일정은 해당 캘린더에서만 변경할 수 있어요."
   },
   "repeat": {
     "changeTitle": "이 항목을 변경할까요?",
@@ -795,7 +797,8 @@
       "file": "파일 업로드",
       "contact": "새 연락처",
       "bookmark": "새 북마크",
-      "clip": "페이지 스크랩"
+      "clip": "페이지 스크랩",
+      "writeNote": "노트 쓰기"
     },
     "keepAsText": "텍스트로 두기",
     "placeholder": "제목, 날짜, 시간, 반복...",
@@ -948,6 +951,7 @@
     "stepConnect": "연결",
     "makeCode": "코드 만들기",
     "connectHint": "일회용 코드를 만들어 확장 프로그램에 붙여넣으세요.",
+    "secondBrowserPro": "브라우저 하나가 연결되어 있어요. 두 번째 브라우저에는 Pro가 필요해요.",
     "thisBrowser": "이 브라우저",
     "otherApps": "데스크톱 앱과 휴대폰 앱:",
     "desktopAll": "모든 다운로드",
@@ -1004,7 +1008,7 @@
   "extensionConnect": {
     "clips": "웹 클리퍼",
     "clipsHint": "웹사이트를 노트로 저장해요.",
-    "loginsHint": "지금 있는 사이트의 로그인 항목, 카드, SSH 키, 북마크를 복사만 할 수 있어요. 별도의 PIN이나 패스코드로 잠겨요.",
+    "loginsHint": "지금 있는 사이트의 로그인 항목, 카드, SSH 키, 북마크를 복사하거나 채울 수 있어요. 별도의 PIN이나 패스코드로 잠겨요.",
     "pickOne": "하나 이상 켜세요.",
     "codeLabel": "확장 프로그램용 코드",
     "oneUse": "10분 동안 한 번만 쓸 수 있어요.",

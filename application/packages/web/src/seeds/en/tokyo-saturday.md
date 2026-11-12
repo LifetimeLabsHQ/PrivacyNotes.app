@@ -13,6 +13,11 @@ Out of the hotel at five. Two hours on a train, and the city was simply gone.
 
 ![Mount Fuji with snow on the top, framed by cherry blossom.](/onboarding/fuji.webp)
 
+```map
+35.3606, 138.7274
+Mount Fuji
+```
+
 The blossom was out along the lake. Fuji stood behind it with no cloud on it all morning. People here say you can come for a week and never see the top. We had it for six hours.
 
 | What | When |

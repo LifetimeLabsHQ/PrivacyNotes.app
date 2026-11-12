@@ -16,6 +16,10 @@ Text can be <span style="color: #e03131">red</span>, <span style="color: #1971c2
 
 It can be ==highlighted in yellow== or <mark style="background-color: rgba(64, 192, 87, 0.35)">in green</mark>.
 
+A spoiler hides words until someone clicks them: the present is ||a record player||. Select the words and pick **Spoiler** in the **Insert** menu, or type two bars on each side.
+
+An icon or a logo can sit in a line of text, like :icon[gift] :icon[coffee] :icon[rocket-launch] or :logo[github]. Pick one from **Insert** > **Icons & logos**.
+
 The **Aa** button changes size and font. Text can be <span style="font-size: 0.85em">small</span>, normal, or <span style="font-size: 1.6em">large</span>. It can be <span style="font-family: ui-sans-serif, system-ui, sans-serif">plain</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">serif</span>, or <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">monospace</span>.
 
 ## Where the words sit
@@ -54,12 +58,21 @@ Alignment moves a whole paragraph, never a single word. Put the cursor in the pa
 | Europe | 1,204 | 48% |
 | Americas | 902 | 36% |
 | Asia | 401 | 16% |
+<!-- table-fill: r0=blue r1c2=green r3c2=red -->
 
-The middle column is centred and the last one is right-aligned. Click a column edge and drag to make it wider.
+The middle column is centred and the last one is right-aligned. Click a column edge and drag to make it wider. A cell or a whole row can take a colour from the table bar. The small arrow in a header cell sorts the rows under it, and a second click sorts them the other way.
+
+A table can also do sums. Type `=` in a cell to pick a function. The cell shows the answer and the note keeps the formula, so click an answer to see how it was made.
+
+| Item | Qty | Price | Total |
+| --- | ---: | ---: | ---: |
+| Coffee | 2 | 3.50 | =B2*C2 |
+| Cake | 1 | 4.20 | =B3*C3 |
+|  |  | Sum | =SUM(D2:D3) |
 
 ## Callouts
 
-A callout is a coloured box for something a reader must not miss.
+A callout is a coloured box for something a reader must not miss. Type `[!` on an empty line to pick one.
 
 > [!tip]+ Tip
 > Click its icon to fold it shut.
@@ -139,7 +152,21 @@ export function isLongRead(stats) {
 }
 ```
 
-A short piece of code inside a sentence looks like `this` instead.
+A code block can carry a title. Click the language name and pick **Add title**. The arrow beside the title folds the block down to one line, and the note remembers it.
+
+```bash title="backup.sh" fold
+#!/bin/sh
+# Copy the notes folder into a dated archive.
+tar -czf "notes-$(date +%F).tar.gz" "$HOME/Notes"
+```
+
+A **Copy box** holds one thing to copy, like an address or a command. Its button copies all of it in one click.
+
+```copy
+ssh-keygen -t ed25519 -C "laptop"
+```
+
+A short piece of code inside a sentence looks like `this` instead. Hold Cmd (Ctrl on Windows and Linux) and click it to copy it.
 
 ## Maths
 
@@ -153,11 +180,21 @@ $$i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi$$
 
 Drag an image into a note, or paste it. Click it once to change its size, or to move it left, centre or right. The one above is half width and centred.
 
+## Maps
+
+```map
+35.3606, 138.7274
+Mount Fuji
+```
+
+Put a place in a note with **Insert** > **Location**. The map comes from our own server, so no map company sees where you look. In any other Markdown app it reads as the coordinates and the name.
+
 ## Links
 
 There are two kinds, and they look different on purpose.
 
 - A web link opens a site: [privacynotes.app](https://privacynotes.app/en)
+- A web link can carry hover text. Point at [this one](https://privacynotes.app/help "Our help pages") and wait.
 - A note-link opens another of your notes: [[How your notes are protected]]
 
 Both have a toolbar button. The chain makes a web link. The brackets make a note-link: they list your notes, and you pick the one you mean. Typing `[[` does the same thing.

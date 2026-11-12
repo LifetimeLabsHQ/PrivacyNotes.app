@@ -7,6 +7,7 @@
  * Spec: docs/internal/specs/web-clipper-stage1.md (section 3.1)
  */
 import { isDemoMode } from './demo';
+import type { TokenSource } from './sessionToken';
 import { detectPlatform } from './devices';
 
 export type ClipKind = 'page' | 'image' | 'calendar';
@@ -32,8 +33,7 @@ export class ClipError extends Error {
   }
 }
 
-/** The session token a signed-in web app sends. Null outside a session. */
-export type TokenSource = () => Promise<string | null>;
+export type { TokenSource } from './sessionToken';
 
 export async function clipDownload(url: string, kind: ClipKind, token: TokenSource): Promise<Downloaded> {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new ClipError('offline');

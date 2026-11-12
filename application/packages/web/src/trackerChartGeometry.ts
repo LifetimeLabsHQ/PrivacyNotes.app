@@ -1,4 +1,5 @@
 import type { ChartSpec, DaySeries, TrackerValue } from './wellnessTypes';
+import { isHexColor } from './editorColors';
 
 /**
  * The pure geometry of a tracker chart: rects, path strings, circles and cells
@@ -239,7 +240,14 @@ export function barPath(b: { x: number; y: number; w: number; h: number }): stri
 
 export interface SvgLabel { x: number; y: number; text: string; anchor?: 'start' | 'middle' | 'end' }
 
-/** A filled square or circle for a value, a ring for a no, a faint mark for a day without an entry. */
+/** A paint value for an SVG attribute: a hex color, or the text color for
+ *  anything else, so a stored color can never close the attribute. */
+function paint(color: string): string {
+  return isHexColor(color) ? color : 'currentColor';
+}
+
+/** A filled square or circle for a value, a ring for a no, a faint mark for a
+ *  day without an entry. `color` is already a paint value. */
 function cellSvg(c: Geometry['cells'][number], color: string): string {
   if (c.round) {
     const r = c.size / 2;
@@ -252,26 +260,29 @@ function cellSvg(c: Geometry['cells'][number], color: string): string {
 }
 
 /**
- * The same picture as a standalone SVG string for the printable report. It
- * carries no user text: colors come from the descriptor and the only text is
- * the axis labels the caller passes in, already escaped.
+ * The same picture as a standalone SVG string for the printable report. The
+ * descriptor color is stored data (a custom tracker's color can come from a
+ * restored backup), so every paint attribute goes through `paint` and carries
+ * a hex value or `currentColor`. The only text is the axis labels the caller
+ * passes in, already escaped.
  */
 export function toSvgString(spec: ChartSpec, width: number, height: number, opts: { labels?: SvgLabel[]; average?: boolean } = {}): string {
   const g = chartGeometry(spec, width, height);
+  const color = paint(spec.color);
   const out: string[] = [`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" color="#737373">`];
   if (spec.form !== 'calendar' && spec.form !== 'strip') {
     out.push(`<line x1="0" y1="${height - 0.5}" x2="${width}" y2="${height - 0.5}" stroke="currentColor" stroke-opacity="0.3" stroke-width="1"/>`);
   }
-  for (const b of g.bars) out.push(`<path d="${barPath(b)}" fill="${b.fill}"/>`);
-  if (g.path) out.push(`<path d="${g.path}" fill="none" stroke="${spec.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`);
+  for (const b of g.bars) out.push(`<path d="${barPath(b)}" fill="${paint(b.fill)}"/>`);
+  if (g.path) out.push(`<path d="${g.path}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`);
   for (const d of g.dots) {
     out.push(d.filled
-      ? `<circle cx="${d.cx}" cy="${d.cy}" r="${d.r}" fill="${spec.color}"/>`
-      : `<circle cx="${d.cx}" cy="${d.cy}" r="${d.r - 0.75}" fill="none" stroke="${spec.color}" stroke-width="1.5"/>`);
+      ? `<circle cx="${d.cx}" cy="${d.cy}" r="${d.r}" fill="${color}"/>`
+      : `<circle cx="${d.cx}" cy="${d.cy}" r="${d.r - 0.75}" fill="none" stroke="${color}" stroke-width="1.5"/>`);
   }
   for (const c of g.cells) {
     if (c.state === 'outside') continue;
-    out.push(cellSvg(c, spec.color));
+    out.push(cellSvg(c, color));
   }
   if (opts.average) {
     const d = rollingLine(spec.series, width, height, g.lo, g.hi);

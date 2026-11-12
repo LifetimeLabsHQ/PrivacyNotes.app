@@ -391,10 +391,54 @@ export function markAppUnlocked(): void {
 }
 
 /** End both windows: the app locked, or the PIN changed hands. */
+/**
+ * "Lock" on one protected note (#723). The PIN window stays open for every
+ * other protected note and the phrase view; this note alone asks again,
+ * until the PIN opens it. Kept in sessionStorage beside the window's stamp,
+ * so a reload keeps it shut and closing the tab forgets it.
+ */
+const RELOCKED_KEY = credentialKey('privacynotes.relockedNotes');
+
+function readRelocked(): string[] {
+  try {
+    const raw = sessionStorage.getItem(RELOCKED_KEY);
+    const ids: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeRelocked(ids: string[]): void {
+  try {
+    if (ids.length) sessionStorage.setItem(RELOCKED_KEY, JSON.stringify(ids));
+    else sessionStorage.removeItem(RELOCKED_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Shut this one note now, whatever the window says. */
+export function relockNote(id: string): void {
+  const ids = readRelocked();
+  if (!ids.includes(id)) writeRelocked([...ids, id]);
+}
+
+/** The note was shut with Lock and the PIN has not opened it since. */
+export function isNoteRelocked(id: string): boolean {
+  return readRelocked().includes(id);
+}
+
+/** The PIN opened this note: it follows the shared window again. */
+export function clearNoteRelock(id: string): void {
+  writeRelocked(readRelocked().filter((x) => x !== id));
+}
+
 export function clearPinUnlock(): void {
   try {
     sessionStorage.removeItem(UNLOCKED_KEY);
     sessionStorage.removeItem(APP_UNLOCKED_KEY);
+    sessionStorage.removeItem(RELOCKED_KEY);
   } catch {
     /* ignore */
   }

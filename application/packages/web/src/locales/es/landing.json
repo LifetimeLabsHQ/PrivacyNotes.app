@@ -169,6 +169,8 @@
     "useClipBody": "Envía el portapapeles, la salida de un comando o un mensaje de error directamente a tus notas.",
     "useToolsTitle": "Parte de tus propias herramientas",
     "useToolsBody": "El comando responde en JSON y termina con códigos de salida claros, así tus scripts saben que la nota se guardó.",
+    "useShortcutTitle": "Una nota desde un atajo de teclado",
+    "useShortcutBody": "Una tecla que eliges en los ajustes de tu sistema abre un cuadro para una nota rápida, incluso con la app cerrada. La nota llega a tu carpeta Agent.",
     "howLink": "Lee cómo funciona privacynotes"
   },
   "meds": {
@@ -342,7 +344,7 @@
     "manualUpdates": "Actualización manual",
     "extensionHeading": "Recortes web y gestor de contraseñas",
     "extensionKeyOpen": "Abrir la extensión",
-    "extensionKeyLogin": "Copiar el inicio de sesión de este sitio",
+    "extensionKeyLogin": "Rellenar el inicio de sesión de este sitio",
     "extensionKeyBookmark": "Guardar esta página como marcador",
     "extensionAria": "Añadir la extensión a {{name}}",
     "extensionNote": "Solo en ordenadores."

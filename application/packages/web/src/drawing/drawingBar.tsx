@@ -14,7 +14,7 @@
 import type { Icon } from '../icons';
 import {
   ArrowUpRight, ArrowUUpLeft, ArrowUUpRight, BoundingBox, Circle, Crosshair, Diamond, Eraser, FolderOpen, Hand, Image,
-  Gear, Keyboard, LineSegment, LineVertical, LockSimpleOpen, MagnifyingGlass, MagnifyingGlassMinus, MagnifyingGlassPlus,
+  Gear, Hash, Keyboard, LineSegment, LineVertical, LockSimpleOpen, MagnifyingGlass, MagnifyingGlassMinus, MagnifyingGlassPlus,
   NavigationArrow, PencilSimple, Square, TextT, Trash,
 } from '../icons';
 import { createBarModel, type FormatBarItem } from '../formatBar';
@@ -27,7 +27,7 @@ const hidden = (key: string): FormatBarItem => ({ key, home: 'hidden', group: 'f
 export const DRAWING_BAR_ITEMS: readonly FormatBarItem[] = [
   bar('keepTool'), bar('separator1'),
   bar('hand'), bar('selection'), bar('rectangle'), bar('diamond'), bar('ellipse'), bar('arrow'), bar('line'),
-  bar('freedraw'), bar('text'), bar('image'), bar('eraser'), bar('frame'), bar('laser'),
+  bar('freedraw'), bar('text'), bar('steps'), bar('image'), bar('eraser'), bar('frame'), bar('laser'),
   bar('separator2'), bar('undo'), bar('redo'),
   bar('separator3'), bar('zoomOut'), bar('zoomReset'), bar('zoomIn'),
   end('open'), end('reset'), end('hotkeys'), end('customize'),
@@ -73,6 +73,8 @@ export const DRAWING_BAR_LOOK: Readonly<Record<string, DrawingBarLook>> = {
   line: tool('line', 'notes:drawing.tools.line', 'drawLine', 'l', 'KeyL', LineSegment),
   freedraw: tool('freedraw', 'notes:drawing.tools.pen', 'drawPen', 'p', 'KeyP', PencilSimple),
   text: tool('text', 'notes:drawing.tools.text', 'drawText', 't', 'KeyT', TextT),
+  // No key and no hotkey row: a custom tool of the canvas (steps.ts).
+  steps: { Icon: Hash, label: 'notes:drawing.tools.steps', tool: 'steps' },
   image: tool('image', 'editor:toolbar.image', 'drawPicture', '9', 'Digit9', Image),
   eraser: tool('eraser', 'notes:drawing.tools.eraser', 'drawEraser', 'e', 'KeyE', Eraser),
   frame: tool('frame', 'notes:drawing.frame', 'drawFrame', 'f', 'KeyF', BoundingBox),

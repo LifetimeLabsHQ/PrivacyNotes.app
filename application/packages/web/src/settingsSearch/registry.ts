@@ -15,6 +15,7 @@
 export type SectionId =
   | 'stats'
   | 'import'
+  | 'backup'
   | 'plan'
   | 'storage'
   | 'security'
@@ -27,6 +28,7 @@ export type SectionId =
   | 'language'
   | 'date'
   | 'hotkeys'
+  | 'system'
   | 'browser'
   | 'commandLine'
   | 'about'
@@ -41,7 +43,7 @@ export type SettingEntry = {
   brand?: true;
   options?: readonly string[];
   keywords?: true;
-  shownOn?: 'storeBuild' | 'keyboard' | 'paneLayout' | 'realAccount' | 'desktopApp' | 'captureBlock' | 'commandLine';
+  shownOn?: 'storeBuild' | 'keyboard' | 'paneLayout' | 'realAccount' | 'desktopApp' | 'captureBlock' | 'commandLine' | 'phoneApp';
   /** An entry for a whole section: it opens the pane and flashes nothing. */
   isSection?: true;
 };
@@ -50,6 +52,7 @@ export type SettingEntry = {
 export const SECTION_LABEL: Record<SectionId, string> = {
   stats: 'notes:settings.statsLabel',
   import: 'notes:settings.importLabel',
+  backup: 'notes:settings.backupLabel',
   plan: 'notes:settings.planLabel',
   storage: 'notes:settings.storageLabel',
   security: 'notes:settings.securityLabel',
@@ -62,6 +65,7 @@ export const SECTION_LABEL: Record<SectionId, string> = {
   language: 'notes:settings.languageLabel',
   date: 'notes:settings.dateLabel',
   hotkeys: 'landing:about.tabs.hotkeys',
+  system: 'settings:system.railLabel',
   browser: 'shell:apps.railLabel',
   commandLine: 'shell:cli.railLabel',
   about: 'notes:settings.aboutLabel',
@@ -76,7 +80,9 @@ export const TAB_LABEL: Record<string, string> = {
   'stats/mood': 'stats:wellness.mood.heading',
   'import/import': 'importExport:shell.tabImport',
   'import/export': 'importExport:shell.tabExport',
-  'import/restore': 'importExport:shell.tabRestore',
+  'backup/manual': 'importExport:shell.tabManual',
+  'backup/automatic': 'importExport:shell.tabAutomatic',
+  'backup/restore': 'importExport:shell.tabRestore',
   'import/wellness': 'notes:settings.trackersLabel',
   'security/pin': 'security:modal.tabPin',
   'security/biometric': 'security:modal.tabBiometricShort',
@@ -111,6 +117,8 @@ const SECTION_ENTRIES: SettingEntry[] = (Object.keys(SECTION_LABEL) as SectionId
   isSection: true,
   // Touch-only devices have no Hotkeys pane.
   ...(section === 'hotkeys' ? { shownOn: 'keyboard' as const } : {}),
+  // Settings > System is how the desktop app runs on the computer.
+  ...(section === 'system' ? { shownOn: 'desktopApp' as const } : {}),
   // Settings > Command line shows where `privacynotes` can be installed (cliRelease.ts).
   ...(section === 'commandLine' ? { shownOn: 'commandLine' as const } : {}),
 }));
@@ -166,6 +174,7 @@ const ROW_ENTRIES: SettingEntry[] = [
   importer('nextcloud-notes', 'Nextcloud Notes'),
   importer('notesnook', 'Notesnook'),
   importer('obsidian', 'Obsidian'),
+  importer('obsidian-canvas', 'Obsidian Canvas'),
   importer('samsung-notes', 'Samsung Notes'),
   importer('simplenote', 'Simplenote'),
   importer('standard-notes', 'Standard Notes'),
@@ -173,9 +182,10 @@ const ROW_ENTRIES: SettingEntry[] = [
   importer('upnote', 'UpNote'),
   importer('zettlr', 'Zettlr'),
   { id: 'import.export', section: 'import', tab: 'export', label: 'importExport:shell.tabExport', keywords: true },
-  { id: 'export.zipBackup', section: 'import', tab: 'export', label: 'importExport:export.zipBackupTitle', keywords: true },
-  { id: 'export.encryptedZip', section: 'import', tab: 'export', label: 'importExport:export.encryptedZipBackupTitle' },
-  { id: 'export.encryptedBackup', section: 'import', tab: 'export', label: 'importExport:export.encryptedBackupTitle' },
+  { id: 'export.zipBackup', section: 'backup', tab: 'manual', label: 'importExport:export.zipBackupTitle', keywords: true },
+  { id: 'export.encryptedZip', section: 'backup', tab: 'manual', label: 'importExport:export.encryptedZipBackupTitle' },
+  { id: 'export.encryptedBackup', section: 'backup', tab: 'manual', label: 'importExport:export.encryptedBackupTitle' },
+  { id: 'export.notesMarkdown', section: 'import', tab: 'export', label: 'importExport:export.notesMarkdownTitle' },
   { id: 'export.htmlArchive', section: 'import', tab: 'export', label: 'importExport:export.htmlArchiveTitle' },
   { id: 'export.textBackup', section: 'import', tab: 'export', label: 'importExport:export.textBackupTitle' },
   { id: 'export.bookmarks', section: 'import', tab: 'export', label: 'importExport:export.bookmarksExportTitle' },
@@ -183,9 +193,11 @@ const ROW_ENTRIES: SettingEntry[] = [
   { id: 'export.calendar', section: 'import', tab: 'export', label: 'importExport:export.calendarExportTitle' },
   { id: 'export.drawings', section: 'import', tab: 'export', label: 'importExport:export.drawingsExportTitle' },
   { id: 'export.vault', section: 'import', tab: 'export', label: 'importExport:export.vaultExportTitle' },
-  { id: 'import.restore', section: 'import', tab: 'restore', label: 'importExport:shell.tabRestore' },
-  { id: 'restore.fullBackup', section: 'import', tab: 'restore', label: 'importExport:restorePick.fullBackupTitle' },
-  { id: 'restore.encryptedBackup', section: 'import', tab: 'restore', label: 'importExport:restorePick.encryptedBackupTitle' },
+  { id: 'backup.manual', section: 'backup', tab: 'manual', label: 'importExport:shell.tabManual' },
+  { id: 'import.automatic', section: 'backup', tab: 'automatic', label: 'importExport:auto.title', keywords: true },
+  { id: 'import.restore', section: 'backup', tab: 'restore', label: 'importExport:shell.tabRestore' },
+  { id: 'restore.fullBackup', section: 'backup', tab: 'restore', label: 'importExport:restorePick.fullBackupTitle' },
+  { id: 'restore.encryptedBackup', section: 'backup', tab: 'restore', label: 'importExport:restorePick.encryptedBackupTitle' },
   { id: 'import.wellness', section: 'import', tab: 'wellness', label: 'stats:wellness.export.openExport', keywords: true },
   { id: 'wellness.aiPrompt', section: 'import', tab: 'wellness', label: 'stats:wellness.export.copyAIPrompt' },
   { id: 'wellness.doctorReport', section: 'import', tab: 'wellness', label: 'stats:wellness.export.doctorPDF' },
@@ -244,8 +256,8 @@ const ROW_ENTRIES: SettingEntry[] = [
   { id: 'appearance.openInTabs', section: 'lists', label: 'settings:appearance.openInTabsTitle', keywords: true, shownOn: 'paneLayout' },
   { id: 'appearance.mode', section: 'design', label: 'settings:appearance.modeTitle', options: ['settings:appearance.modeAuto', 'settings:appearance.light', 'settings:appearance.dark'], keywords: true },
   { id: 'appearance.theme', section: 'design', label: 'settings:appearance.lightThemes', options: ['settings:appearance.darkThemes'], keywords: true },
-  { id: 'appearance.customThemes', section: 'design', label: 'settings:appearance.custom.builderNew', options: ['settings:appearance.custom.pasteCode', 'settings:appearance.custom.websiteTitle'], keywords: true },
-  { id: 'appearance.appZoom', section: 'design', label: 'settings:appearance.appZoomTitle', keywords: true, shownOn: 'desktopApp' },
+  { id: 'appearance.customThemes', section: 'design', label: 'settings:appearance.custom.builderNew', options: ['settings:appearance.custom.pasteCode', 'settings:appearance.themeSearch', 'settings:appearance.madeBy.more'], keywords: true },
+  { id: 'appearance.appZoom', section: 'system', label: 'settings:appearance.appZoomTitle', keywords: true, shownOn: 'desktopApp' },
   { id: 'appearance.tintNotes', section: 'design', label: 'settings:appearance.noteColorsTitle', options: ['settings:appearance.custom.seed.background', 'settings:appearance.noteColorsAccent', 'settings:appearance.noteColorsOff'], keywords: true },
   { id: 'appearance.textSize', section: 'editor', label: 'settings:appearance.textSizeTitle', options: ['settings:appearance.textSizeSmallest', 'settings:appearance.textSizeSmall', 'settings:appearance.textSizeDefault', 'settings:appearance.textSizeLarge', 'settings:appearance.textSizeLargest'], keywords: true },
   { id: 'appearance.lineSpacing', section: 'editor', label: 'settings:appearance.lineSpacingTitle', options: ['settings:appearance.lineSpacingTight', 'settings:appearance.lineSpacingCompact', 'settings:appearance.lineSpacingNormal'], keywords: true },
@@ -257,16 +269,22 @@ const ROW_ENTRIES: SettingEntry[] = [
   { id: 'appearance.linkModifier', section: 'editor', tab: 'behavior', label: 'settings:appearance.linkModifierTitle', keywords: true },
   { id: 'appearance.typedSymbols', section: 'editor', tab: 'behavior', label: 'settings:appearance.typedSymbolsTitle', keywords: true },
   { id: 'appearance.noteFont', section: 'editor', label: 'settings:appearance.noteFontTitle', keywords: true },
+  { id: 'appearance.nestedNumbers', section: 'editor', label: 'settings:appearance.nestedNumbersTitle', options: ['settings:appearance.nestedNumbersFlat', 'settings:appearance.nestedNumbersOutline'], keywords: true },
   { id: 'appearance.favicons', section: 'lists', label: 'settings:appearance.faviconsTitle', keywords: true },
   { id: 'appearance.formatBar', section: 'formatBar', label: 'notes:settings.formatBarLabel', keywords: true },
   { id: 'appearance.startView', section: 'lists', label: 'settings:appearance.startViewTitle', keywords: true },
   { id: 'appearance.view', section: 'lists', label: 'settings:appearance.viewTitle', options: ['settings:appearance.viewList', 'settings:appearance.viewGrid'], keywords: true },
   { id: 'appearance.confirmTrash', section: 'editor', tab: 'behavior', label: 'settings:appearance.confirmTrashTitle', keywords: true },
   { id: 'appearance.confirmArchive', section: 'editor', tab: 'behavior', label: 'settings:appearance.confirmArchiveTitle', keywords: true },
+  { id: 'appearance.autoLocationNotes', section: 'editor', tab: 'behavior', label: 'settings:appearance.autoLocationTitle', keywords: true, shownOn: 'phoneApp' },
+  { id: 'appearance.autoLocationJournal', section: 'editor', tab: 'behavior', label: 'settings:appearance.autoLocationJournal', keywords: true, shownOn: 'phoneApp' },
   { id: 'appearance.taskConfetti', section: 'editor', tab: 'behavior', label: 'settings:appearance.taskConfettiTitle', keywords: true },
   { id: 'appearance.sinkChecked', section: 'editor', tab: 'behavior', label: 'settings:appearance.sinkCheckedTitle', keywords: true },
-  { id: 'appearance.defaultApps', section: 'editor', tab: 'display', label: 'settings:appearance.defaultAppsTitle', keywords: true, shownOn: 'desktopApp' },
-  { id: 'appearance.tray', section: 'editor', tab: 'behavior', label: 'settings:appearance.trayTitle', keywords: true, shownOn: 'desktopApp' },
+  { id: 'appearance.defaultApps', section: 'system', label: 'settings:appearance.defaultAppsTitle', keywords: true, shownOn: 'desktopApp' },
+  { id: 'system.openAtLogin', section: 'system', label: 'settings:system.openAtLoginTitle', keywords: true, shownOn: 'desktopApp' },
+  { id: 'system.startMinimized', section: 'system', label: 'settings:system.startMinimizedTitle', shownOn: 'desktopApp' },
+  { id: 'appearance.tray', section: 'system', label: 'settings:appearance.trayTitle', keywords: true, shownOn: 'desktopApp' },
+  { id: 'appearance.ninjaKey', section: 'system', label: 'settings:appearance.ninjaKeyTitle', keywords: true, shownOn: 'desktopApp' },
   { id: 'trackers.setup', section: 'trackers', tab: 'trackers', label: 'shell:checkIn.chooseTrackers', keywords: true },
   { id: 'trackers.habitQuestions', section: 'trackers', tab: 'questions', label: 'trackers:config.habitQuestions', keywords: true },
   { id: 'trackers.ownHabits', section: 'trackers', tab: 'questions', label: 'trackers:config.addHabit' },

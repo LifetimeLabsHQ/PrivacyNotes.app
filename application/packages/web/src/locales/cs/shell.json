@@ -406,6 +406,7 @@
     "modeRich": "Formátovaně",
     "modeSource": "Markdown",
     "reopenPrompt": "Po znovunačtení potřebuje tvůj prohlížeč oprávnění znovu. Složku si pamatuje, takže je to na jedno kliknutí.",
+    "reopenPromptDesktop": "Vyber {{name}} ještě jednou, aby ji aplikace mohla znovu otevřít. Ve složce se nic nezměnilo.",
     "reopenFolder": "Znovu otevřít {{name}}",
     "new": "Nový",
     "saveToNotes": "Uložit do mých poznámek",
@@ -720,7 +721,8 @@
       "sprint": "Plánování sprintu",
       "bookClub": "Čtenářský klub",
       "rent": "Zaplatit nájem"
-    }
+    },
+    "feedReadOnly": "Z kalendáře {{name}}. Tuhle událost můžeš změnit jen v tom kalendáři."
   },
   "repeat": {
     "changeTitle": "Změnit tuto položku?",
@@ -865,7 +867,8 @@
       "file": "Nahrát soubor",
       "contact": "Nový kontakt",
       "bookmark": "Nová záložka",
-      "clip": "Uložit stránku"
+      "clip": "Uložit stránku",
+      "writeNote": "Napsat poznámku"
     },
     "keepAsText": "Ponechat jako text",
     "placeholder": "Název, den, čas, opakování...",
@@ -1026,6 +1029,7 @@
     "stepConnect": "Připoj ho",
     "makeCode": "Vytvořit kód",
     "connectHint": "Vytvoř jednorázový kód a vlož ho do rozšíření.",
+    "secondBrowserPro": "Jeden prohlížeč je připojený. Druhý potřebuje Pro.",
     "thisBrowser": "Tento prohlížeč",
     "otherApps": "Aplikace pro počítač a telefon:",
     "desktopAll": "Všechny ke stažení",
@@ -1084,7 +1088,7 @@
   "extensionConnect": {
     "clips": "Ukládání stránek",
     "clipsHint": "Ukládej weby jako poznámky.",
-    "loginsHint": "Přihlašovací údaje, karty, SSH klíče a záložky pro web, na kterém jsi, jen ke kopírování. Zamčené vlastním PINem nebo přístupovým kódem.",
+    "loginsHint": "Přihlašovací údaje, karty, SSH klíče a záložky pro web, na kterém jsi, ke kopírování nebo k vyplnění. Zamčené vlastním PINem nebo přístupovým kódem.",
     "pickOne": "Zapni aspoň jednu možnost.",
     "codeLabel": "Kód pro rozšíření",
     "oneUse": "Funguje jednou, po dobu 10 minut.",

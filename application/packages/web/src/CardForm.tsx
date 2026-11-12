@@ -4,9 +4,10 @@ import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { hasPin } from './pin';
 import { PinInfoModal } from './PinInfoModal';
-import { Calendar, CreditCard, Info, Lock, MapPin, NotePencil, User } from './icons';
+import { Calendar, CreditCard, Info, Lock, MapPin, User } from './icons';
 import { useCopyToClipboard } from './clipboard';
 import { FIELD_CLASS, FieldLabel } from './formFields';
+import { NotesField } from './NotesField';
 
 export { parseCardBody, serializeCardBody, detectCardNetwork, type CardData } from './cardBody';
 import { cardExpiryYear, parseCardBody, serializeCardBody, detectCardNetwork, type CardData } from './cardBody';
@@ -253,17 +254,13 @@ export function CardForm({
         </div>
 
         {/* Notes */}
-        <div>
-          <FieldLabel icon={<NotePencil />}>{t('cardForm.notes')}</FieldLabel>
-          <textarea
-            value={data.notes}
-            onChange={(e) => updateBody({ notes: e.target.value })}
-            placeholder={t('cardForm.notesPlaceholder')}
-            disabled={locked}
-            rows={3}
-            className={`${fieldClass} resize-y`}
-          />
-        </div>
+        <NotesField
+          label={t('cardForm.notes')}
+          value={data.notes}
+          onChange={(notes) => updateBody({ notes })}
+          placeholder={t('cardForm.notesPlaceholder')}
+          disabled={locked}
+        />
 
         {/* PIN-protect toggle */}
         <label className={`flex items-center gap-2 pt-2 border-t border-divider ${!pinConfigured && !pinProtected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>

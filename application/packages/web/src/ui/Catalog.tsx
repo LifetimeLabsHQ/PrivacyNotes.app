@@ -7,7 +7,7 @@ import { TimeInput } from '../TimeInput';
 import { defaultTrackerSettings, type JournalTrackerData, type FactorDef, type MedicationTemplate } from '../trackerTypes';
 import { MonthGrid } from '../MonthGrid';
 import catalogIndex from './catalogIndex.json';
-import { AppWindow, ArrowSquareOut, Article, Bell, BookmarkSimple, ChatText, CheckCircle, CheckFat, Clock, Copy, Fire, Folder, Gear, Globe, HardDrives, Info, Moon, PencilSimple, Plus, PushPin, Scissors, SlidersHorizontal, Sparkle, Stethoscope, Sun, Trash, User, Warning } from '../icons';
+import { AppWindow, ArrowSquareOut, Article, Bell, BookmarkSimple, ChatText, CheckCircle, CheckFat, Clock, Copy, Fire, Folder, Gear, Globe, HardDrives, Info, MapPin, Moon, PencilSimple, Plus, PushPin, Scissors, SlidersHorizontal, Sparkle, Stethoscope, Sun, Trash, User, Warning } from '../icons';
 import {
   Button,
   FeedbackButton,
@@ -37,6 +37,7 @@ import {
   IconTile,
   Kbd,
   Popover,
+  RowChip,
   ProgressBar,
   Snackbar,
   Spinner,
@@ -100,7 +101,7 @@ import {
 const patternGroups = {
   'Actions': ['Button', 'IconButton', 'DeleteButton', 'EditRow', 'Vault form actions', 'Vault field actions', 'Generation actions', 'Bookmark actions', 'useProGate', 'Class strings'],
   'Fields and settings': ['TextField and Select', 'FieldLabel, GroupHeading, FIELD_CLASS', 'Segmented', 'Setting row, Switch, heading', 'Tabs', 'ListSearchInput, InlineRenameField', 'ColorSwatch', 'Checkbox', 'TaskCheckbox', 'SettingsCallout, ResetDefaultsButton, HelpChip'],
-  'Content and trackers': ['StatTile', 'MoodScale', 'ScaleTiles', 'Tracker panel parts', 'MonthGrid, StorageBar', 'GridCard', 'Detail pane kit', 'Badge, IconTile, Kbd', 'FeaturePitch', 'TerminalBlock'],
+  'Content and trackers': ['StatTile', 'MoodScale', 'ScaleTiles', 'Tracker panel parts', 'MonthGrid, StorageBar', 'GridCard', 'Detail pane kit', 'Badge, IconTile, Kbd', 'FeaturePitch', 'TerminalBlock', 'RowChip'],
   'Product flows': ['Guided tracker flow', 'Time input', 'Import workflow', 'Export progress', 'Upload progress', 'Flow reference map'],
   'Window contract': ['Window anatomy and behavior', 'Window sizing lab'],
   'App map': ['Replay recipes', 'Settings paths', 'Window implementation inventory'],
@@ -424,7 +425,7 @@ export default function Catalog() {
           source="ui/DeleteButton.tsx"
           usage="EncryptedAttachment.tsx: editor attachment controls; TrackerConfig.tsx: habit, factor and medication rows"
           gap="This fixture reports confirmation without deleting data. Editor caret preservation and each caller's deletion, persistence and failure handling need separate checks. The shared component has no busy or disabled prop.">
-          <p className={SETTINGS_HELP}>The first click only arms the button. Confirm within three seconds; Escape or timeout returns to the trash icon. Keyboard activation focuses the confirmation so Enter can confirm. Outside click and blur are not explicit cancellation handlers.</p>
+          <p className={SETTINGS_HELP}>The first click only arms the button. Confirm within six seconds; Escape or timeout returns to the trash icon. Keyboard activation focuses the confirmation so Enter can confirm. Outside click and blur are not explicit cancellation handlers.</p>
           <div className="flex max-w-md items-center gap-2 rounded-md border border-divider bg-surface-2 py-1.5 pe-1.5 ps-3">
             <span className="min-w-0 flex-1 truncate text-body font-medium">Multivitamin</span>
             <IconButton label="Edit"><PencilSimple aria-hidden="true" /></IconButton>
@@ -673,6 +674,17 @@ export default function Catalog() {
             <Banner tone="warning">Example: permission is needed before continuing.</Banner>
             <Banner tone="danger">Example: the operation failed. Your draft is still available.</Banner>
             <Banner tone="success">Example: the operation completed.</Banner>
+          </div>
+        </Part>
+
+        <Part name="RowChip" note="the one-per-note chip in the editor tag row: the folder, the place; dashed while empty; plain text on a locked note" source="ui/RowChip.tsx" usage="notesView/useFolderActions.tsx (folder), notesView/NoteLocationChip.tsx (place)">
+          <div className="flex flex-wrap items-center gap-2">
+            <RowChip icon={<Folder className="shrink-0 text-label" aria-hidden="true" />} onClick={() => {}} label="Move to folder">Travel</RowChip>
+            <RowChip icon={<Folder className="shrink-0 text-label" aria-hidden="true" />} empty onClick={() => {}} label="Move to folder">Unfiled</RowChip>
+            <RowChip icon={<MapPin className="shrink-0" aria-hidden="true" />} onClick={() => {}} label="Location: Taishikan hut">Taishikan hut</RowChip>
+            <RowChip icon={<MapPin className="shrink-0" aria-hidden="true" />} empty onClick={() => {}}>Location</RowChip>
+            <RowChip icon={<Folder className="shrink-0 text-label" aria-hidden="true" />}>Read-only note</RowChip>
+            <RowChip icon={<MapPin className="shrink-0" aria-hidden="true" />} onClick={() => {}}>A place with a very long name that the chip cuts short</RowChip>
           </div>
         </Part>
 

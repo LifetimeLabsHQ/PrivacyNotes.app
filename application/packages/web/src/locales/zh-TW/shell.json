@@ -391,6 +391,7 @@
     "modeRich": "排版",
     "modeSource": "Markdown",
     "reopenPrompt": "重新載入之後，瀏覽器會再要一次權限。你的資料夾已經記住了，所以按一下就好。",
+    "reopenPromptDesktop": "再選一次 {{name}}，讓應用程式可以重新開啟它。資料夾裡的內容都沒有變動。",
     "reopenFolder": "重新開啟 {{name}}",
     "new": "新增",
     "saveToNotes": "存進我的筆記",
@@ -686,7 +687,8 @@
       "sprint": "衝刺規劃",
       "bookClub": "讀書會",
       "rent": "繳房租"
-    }
+    },
+    "feedReadOnly": "來自 {{name}}。你只能在該日曆中變更這個活動。"
   },
   "repeat": {
     "changeTitle": "要變更這個項目嗎？",
@@ -795,7 +797,8 @@
       "file": "上傳檔案",
       "contact": "新增聯絡人",
       "bookmark": "新增書籤",
-      "clip": "擷取網頁"
+      "clip": "擷取網頁",
+      "writeNote": "寫一則筆記"
     },
     "keepAsText": "保留為文字",
     "placeholder": "標題、日期、時間、重複...",
@@ -948,6 +951,7 @@
     "stepConnect": "連結",
     "makeCode": "產生代碼",
     "connectHint": "產生一組一次性代碼，貼到擴充功能中。",
+    "secondBrowserPro": "已連結一個瀏覽器。第二個需要 Pro。",
     "thisBrowser": "這個瀏覽器",
     "otherApps": "桌面與手機應用程式：",
     "desktopAll": "所有下載",
@@ -1004,7 +1008,7 @@
   "extensionConnect": {
     "clips": "網頁擷取工具",
     "clipsHint": "把網站存成筆記。",
-    "loginsHint": "你所在網站的登入資訊、卡片、SSH 金鑰與書籤，僅供複製。以它自己的 PIN 碼或通行碼鎖定。",
+    "loginsHint": "你所在網站的登入資訊、卡片、SSH 金鑰與書籤，可以複製或填入。以它自己的 PIN 碼或通行碼鎖定。",
     "pickOne": "請至少開啟一項。",
     "codeLabel": "擴充功能的代碼",
     "oneUse": "只能使用一次，有效 10 分鐘。",

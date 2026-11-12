@@ -397,6 +397,7 @@
     "modeRich": "Con formato",
     "modeSource": "Markdown",
     "reopenPrompt": "Tu navegador vuelve a pedir permiso después de recargar. Tu carpeta se recuerda, así que es un solo clic.",
+    "reopenPromptDesktop": "Vuelve a elegir {{name}} para que la app pueda abrirla de nuevo. En la carpeta no ha cambiado nada.",
     "reopenFolder": "Volver a abrir {{name}}",
     "new": "Nuevo",
     "saveToNotes": "Guardar en mis notas",
@@ -698,6 +699,7 @@
       "bookClub": "Club de lectura",
       "rent": "Pagar el alquiler"
     },
+    "feedReadOnly": "De {{name}}. Solo puedes cambiar este evento en ese calendario.",
     "nothingFor_one": "Nada durante {{count}} día",
     "more_one": "+{{count}} más"
   },
@@ -826,7 +828,8 @@
       "file": "Subir un archivo",
       "contact": "Contacto nuevo",
       "bookmark": "Marcador nuevo",
-      "clip": "Recortar una página"
+      "clip": "Recortar una página",
+      "writeNote": "Escribir una nota"
     },
     "keepAsText": "Dejarlo como texto",
     "placeholder": "Título, día, hora, repetición...",
@@ -983,6 +986,7 @@
     "stepConnect": "Conecta",
     "makeCode": "Generar un código",
     "connectHint": "Genera un código de un solo uso y pégalo en la extensión.",
+    "secondBrowserPro": "Hay un navegador conectado. Para un segundo necesitas Pro.",
     "thisBrowser": "Este navegador",
     "otherApps": "Apps de escritorio y móvil:",
     "desktopAll": "Todas las descargas",
@@ -1040,7 +1044,7 @@
   "extensionConnect": {
     "clips": "Recortes web",
     "clipsHint": "Guarda sitios web como notas.",
-    "loginsHint": "Inicios de sesión, tarjetas, claves SSH y marcadores del sitio en el que estás, solo para copiar. Bloqueado con su propio PIN o código de acceso.",
+    "loginsHint": "Inicios de sesión, tarjetas, claves SSH y marcadores del sitio en el que estás, para copiar o rellenar. Bloqueado con su propio PIN o código de acceso.",
     "pickOne": "Activa al menos una.",
     "codeLabel": "Código para la extensión",
     "oneUse": "Funciona una vez, durante 10 minutos.",

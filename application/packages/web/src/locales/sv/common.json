@@ -92,6 +92,18 @@
       "help": "Kortkommandon"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "Skriv mer här",
+    "hint": "Skriv / för en mapp, # för en tagg",
+    "locked": "PrivacyNotes är låst. Din anteckning är förseglad och öppnas när du låser upp.",
+    "queued": "Sparad. Den öppnas när du låser upp.",
+    "tooLong": "Den här anteckningen är för lång. Dela upp den i två anteckningar.",
+    "full": "För många anteckningar väntar. Lås upp för att lägga till dem.",
+    "empty": "Skriv något först.",
+    "failed": "Det gick inte att spara anteckningen. Öppna PrivacyNotes och försök igen.",
+    "added_other": "{{count}} snabbanteckningar har lagts till",
+    "added_one": "{{count}} snabbanteckning har lagts till"
+  },
   "quickSwitcher": {
     "label": "Ninja: hitta ett objekt eller en inställning, lägg till vad som helst, kör ett kommando",
     "jumpTo": "Ninja",
@@ -129,7 +141,9 @@
     "actions": "åtgärder",
     "back": "tillbaka",
     "actionsPlaceholder": "Filtrera åtgärderna",
-    "onlyCreate": "lägg till"
+    "onlyCreate": "lägg till",
+    "ninjaLockedTitle": "PrivacyNotes är låst",
+    "ninjaLockedBody": "Öppna PrivacyNotes och lås upp det. Sedan hittar Ninja dina anteckningar från vilken app som helst."
   },
   "cardForm": {
     "cardholderName": "Kortinnehavarens namn",
@@ -290,8 +304,10 @@
         "detail": "Varje dag på året som en färgad ruta"
       },
       "importExport": {
-        "label": "Import & Export",
-        "detail": "Ta in anteckningar, ta ut en säkerhetskopia"
+        "detail": "Ta in anteckningar eller ta ut dem"
+      },
+      "backup": {
+        "detail": "Säkerhetskopiera nu, automatiska säkerhetskopior och återställning"
       },
       "generator": {
         "label": "Lösenordsgenerator",
@@ -307,6 +323,7 @@
     },
     "commands": {
       "syncResume": "Återuppta synk",
+      "lockProtected": "Lås den här anteckningen",
       "changelog": "Nyheter",
       "themesPage": "Communityteman",
       "website": "PrivacyNotes webbplats"

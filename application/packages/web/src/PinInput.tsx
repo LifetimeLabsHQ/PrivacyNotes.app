@@ -29,6 +29,10 @@ type Props = {
    *  there the PIN is the only thing on screen and the box is the target a
    *  thumb aims at. */
   compact?: boolean;
+  /** The boxes share the whole width of the row at the lock screen's height:
+   *  every PIN field of the browser extension, the same on every screen
+   *  (owner, 2026-11-11). The app keeps its centered boxes. */
+  fill?: boolean;
   /** Number of boxes. A PIN has 4; an authenticator code has 6. */
   length?: number;
   /** Paint the digits. Only for a one-time code, which expires in seconds and
@@ -85,6 +89,7 @@ export const PinInput = forwardRef<PinInputHandle, Props>(function PinInput(
     disabled = false,
     ariaLabel,
     compact = false,
+    fill = false,
     length: LENGTH = 4,
     reveal = false,
   },
@@ -193,12 +198,12 @@ export const PinInput = forwardRef<PinInputHandle, Props>(function PinInput(
       role="group"
       aria-label={groupLabel}
       dir="ltr"
-      className={`flex justify-center ${compact ? 'gap-2' : 'gap-3'}`}
+      className={fill ? `grid grid-flow-col auto-cols-fr ${compact ? 'gap-2' : 'gap-3'}` : `flex justify-center ${compact ? 'gap-2' : 'gap-3'}`}
     >
       {digits.map((d, i) => (
         <div
           key={i}
-          className={`relative ${compact ? 'w-11 h-12' : 'w-14 h-16 sm:w-16'} ${disabled ? 'opacity-40' : ''}`}
+          className={`relative ${fill ? (compact ? 'h-12' : 'h-16') : compact ? 'w-11 h-12' : 'w-14 h-16 sm:w-16'} ${disabled ? 'opacity-40' : ''}`}
         >
           <input
             ref={(el) => {

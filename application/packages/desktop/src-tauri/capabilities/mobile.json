@@ -1,7 +1,12 @@
 {
   "identifier": "mobile",
-  "description": "Mobile-only (iOS/Android) permissions: native in-app purchase",
+  "description": "Mobile-only (iOS/Android) permissions: native in-app purchase; one position reading for a note's place (no watch)",
   "platforms": ["iOS", "android"],
   "windows": ["main"],
-  "permissions": ["iap:default"]
+  "permissions": [
+    "iap:default",
+    "geolocation:allow-check-permissions",
+    "geolocation:allow-request-permissions",
+    "geolocation:allow-get-current-position"
+  ]
 }

@@ -23,17 +23,22 @@ import {
 } from './registers';
 import { sortTags } from './tagOrder';
 
-/** One register per attribute: an icon id or a color key. */
+/** One register per attribute: an icon id, a color key, or `notes`. */
 type ItemStyle = RegisterMap;
 export type ItemStyles = Record<string, ItemStyle>;
-export type LookAttr = 'icon' | 'color';
+/** `notes` is the switch "Show on notes" of a folder or a tag: `NOTES_ON`
+ *  while on, a reset while off. Spec: docs/internal/specs/folder-tag-icons.md (section 4.11) */
+export type LookAttr = 'icon' | 'color' | 'notes';
 /** Every register an entry can hold. `space` sits on a root folder only;
  *  spaces.ts reads it. */
 type StyleAttr = LookAttr | 'space';
 export interface Look {
   icon: string | null;
   color: string | null;
+  notes: string | null;
 }
+
+export const NOTES_ON = '1';
 
 /**
  * The colors of the editor's text and highlight pickers, by key. A key
@@ -204,7 +209,7 @@ export function importTagColors(
 
 export function lookOf(styles: ItemStyles, key: string): Look {
   const entry = styles[key];
-  return { icon: entry?.icon?.v ?? null, color: entry?.color?.v ?? null };
+  return { icon: entry?.icon?.v ?? null, color: entry?.color?.v ?? null, notes: entry?.notes?.v ?? null };
 }
 
 /** The looks of `keys` as they are now, for `restoreLooks`. */
@@ -220,7 +225,7 @@ export function snapshotLooks(styles: ItemStyles, keys: readonly string[]): Reco
 export function restoreLooks(styles: ItemStyles, before: Record<string, Look>): ItemStyles {
   let next = styles;
   for (const [key, look] of Object.entries(before)) {
-    next = setItemLook(next, key, { icon: look.icon, color: look.color });
+    next = setItemLook(next, key, { icon: look.icon, color: look.color, notes: look.notes });
   }
   return next;
 }
@@ -238,8 +243,9 @@ export function renameTagLook(styles: ItemStyles, oldTag: string, newTag: string
   const moved = setItemLook(styles, tagLookKey(newTag), {
     icon: to.icon ?? from.icon,
     color: to.color ?? from.color,
+    notes: to.icon ? to.notes : from.notes,
   });
-  return keepOld ? moved : setItemLook(moved, tagLookKey(oldTag), { icon: null, color: null });
+  return keepOld ? moved : setItemLook(moved, tagLookKey(oldTag), { icon: null, color: null, notes: null });
 }
 
 /** Drops the entries of folders that are gone for good. The merge drops them
@@ -452,4 +458,39 @@ export function resolveNoteLook(
   if (own && own !== NOTE_NO_COLOR) return { color: own, style: 'background' };
   const color = resolveNoteColor(noteId, tags, folderId, styles, tintNotes, filter);
   return color ? { color, style } : null;
+}
+
+/** The icon of a folder or tag whose "Show on notes" switch is on, else null. */
+function iconOnNotes(styles: ItemStyles, key: string): string | null {
+  const entry = styles[key];
+  return entry?.notes?.v === NOTES_ON ? (entry.icon?.v ?? null) : null;
+}
+
+/**
+ * The icon an item shows. Its own icon wins. Else the icon of its first tag
+ * with the "apply to all items" switch on, in the order its tag chips show
+ * (a tag is a choice about this item, as in `resolveItemColor`), then of the
+ * nearest folder with the switch on, from its own folder up through its
+ * parents. Else null: the type icon. Every item type takes it, as an own icon
+ * replaces every type icon; the type's box color still tells the type.
+ * `folderChain` is the item's folder followed by its ancestors, nearest first.
+ * Spec: docs/internal/specs/folder-tag-icons.md (section 4.11)
+ */
+export function resolveNoteIcon(
+  noteId: string,
+  tags: readonly string[],
+  folderChain: readonly string[],
+  styles: ItemStyles,
+): string | null {
+  const own = noteOwnIcon(styles, noteId);
+  if (own) return own;
+  for (const tag of sortTags([...tags])) {
+    const icon = iconOnNotes(styles, tagLookKey(tag));
+    if (icon) return icon;
+  }
+  for (const id of folderChain) {
+    const icon = iconOnNotes(styles, folderLookKey(id));
+    if (icon) return icon;
+  }
+  return null;
 }

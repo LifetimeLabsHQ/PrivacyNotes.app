@@ -192,7 +192,9 @@
     "ariaLabel": "Not ana hattı",
     "hide": "Ana hattı gizle",
     "copyHeadingLink": "Başlık bağlantısını kopyala",
-    "copyHeadingShortcut": "Başlık kısayolunu kopyala"
+    "copyHeadingShortcut": "Başlık kısayolunu kopyala",
+    "copyCalloutLink": "Bilgi kutusu bağlantısını kopyala",
+    "copyCalloutShortcut": "Bilgi kutusu kısayolunu kopyala"
   },
   "bodyMenu": {
     "cut": "Kes",
@@ -267,6 +269,11 @@
     "showLess": "Daha az göster",
     "language": "Kod dili: {{name}}",
     "searchLanguages": "Dil arayın",
+    "addTitle": "Başlık ekle",
+    "removeTitle": "Başlığı kaldır",
+    "titlePlaceholder": "Dosya adı veya başlık",
+    "collapse": "Kod bloğunu daralt",
+    "expand": "Kod bloğunu genişlet",
     "placeholder": "Kodu yazın veya yapıştırın. Renk için yukarıdan bir dil seçin."
   },
   "math": {

@@ -5,6 +5,8 @@
   "useDefault": "Скинути",
   "color": "Колір",
   "applyToSubfolders": "Застосовувати колір до підпапок",
+  "applyToFolderItems": "Застосовувати до всіх елементів у цій папці",
+  "applyToTagItems": "Застосовувати до всіх елементів із цим тегом",
   "icon": "Значок",
   "searchPlaceholder": "Пошук значків",
   "searchLogos": "Пошук логотипів",

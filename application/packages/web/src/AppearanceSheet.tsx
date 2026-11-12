@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { lazyPart } from './chunkLoad';
 import { usePopoverPosition } from './usePopoverPosition';
 import { Trans, useTranslation } from 'react-i18next';
@@ -27,23 +27,24 @@ import {
   NOTE_FONTS,
   CONTENT_WIDTHS,
   LINE_SPACINGS,
+  NESTED_NUMBERS,
   resetStyleAxes,
   resetThemeAxes,
+  noteFontStack,
+  cleanFontName,
   peekThemeMode,
   customIdOf,
   paintedSlot,
   themeSwatch,
   type LineSpacing,
+  type NestedNumbers,
+  type NoteFont,
 } from './theme';
-import { APP_ZOOM_LEVELS, DEFAULT_APP_ZOOM, appZoomSupported, useAppZoom } from './appZoom';
+import { allLocalFonts, canListAllFonts, fontInstalled, installedCandidates } from './localFonts';
 import { intlLocale } from './languages';
-import { FONT_FAMILIES } from './editorColors';
 import { IconUpgrade, ProMark, type UpgradeTrigger } from './UpgradeModal';
 import { proUnlocked } from './demo';
-import { ArrowCounterClockwise, Folder, X, List, ListBullets, Palette, Star, Toolbox, SquaresFour, Sparkle, DotsThreeOutlineVertical, CaretDown, CaretRight, Globe, Plus, ClipboardText, ArrowSquareOut, PencilSimple, Copy, UserSwitch, TextT, Scribble, TextAlignJustify, FrameCorners, PencilLine, HouseLine, Layout, MagnifyingGlassPlus, Tabs, Paragraph, LinkSimple, Eye, Brain, TextAa, ListChecks, CheckSquare, Confetti, Tray, CircleHalf, PaintBucket, Sun, Moon, Files, DotsSixVertical, ArrowUp, ArrowDown, ArrowRight, BoxArrowDown, PILLAR_GLYPHS, type Icon } from './icons';
-import { DefaultAppSettingsRow } from './markdownFolder/MarkdownDefaultApp';
-import { markdownDefaultAppSupported } from './markdownFolder/defaultApp';
-import { setTrayMode, traySupported, useTrayMode } from './trayMode';
+import { ArrowCounterClockwise, Folder, X, List, ListBullets, Palette, Star, Toolbox, SquaresFour, Sparkle, DotsThreeOutlineVertical, CaretDown, CaretRight, Globe, Plus, ClipboardText, ArrowSquareOut, PencilSimple, Copy, UserSwitch, TextT, Scribble, TextAlignJustify, FrameCorners, PencilLine, HouseLine, Layout, Tabs, Paragraph, LinkSimple, Eye, Brain, TextAa, ListNumbers, ListChecks, Check, ListMagnifyingGlass, CheckSquare, Confetti, CircleHalf, PaintBucket, Sun, Moon, DotsSixVertical, ArrowUp, ArrowDown, ArrowRight, BoxArrowDown, MapPin, PILLAR_GLYPHS, type Icon } from './icons';
 import type { BUILTIN_THEME_CODES } from './builtinThemeCodes';
 import type { CustomThemes } from './customThemes';
 import type { ThemeGalleryCtx } from './customThemeUI';
@@ -56,14 +57,17 @@ import { siteHref } from './siteLinks';
 
 // The team and custom theme cards and the paste field: a lazy chunk with
 // the theme code module, so none of it is on the boot path.
-import type { MadeBy } from './customThemeUI';
-import type { CommunitySort } from './communityShown';
+import { ListSearchInput } from './ListSearchInput';
+import { textMatcher } from './textMatch';
 const ExtraThemeCards = lazyPart(() => import('./customThemeUI').then((m) => m.ExtraThemeCards));
 const ThemePasteField = lazyPart(() => import('./customThemeUI').then((m) => m.ThemePasteField));
 const FormatBarBoard = lazyPart(() => import('./FormatBarBoard').then((m) => m.FormatBarBoard));
 import { exemptOpts } from './i18nExempt';
-import { AccentBar, EYEBROW_ICON_ROW, EyebrowGlyph, HeadlineRule, ROW_TITLE, ResetDefaultsButton, RowTitle, SectionEyebrow, SETTINGS_BTN, SETTINGS_EYEBROW, SETTINGS_HELP, SettingsTabStrip, settingsTabClass, SETTINGS_TRACK } from './settingsUI';
+import { AccentBar, EYEBROW_ICON_ROW, EyebrowGlyph, HeadlineRule, ROW_TITLE, ResetDefaultsButton, RowTitle, SectionEyebrow, SETTINGS_BTN, SETTINGS_EYEBROW, SETTINGS_HELP, SETTINGS_SELECT, SettingsTabStrip, settingsTabClass, SETTINGS_TRACK } from './settingsUI';
 import { Switch } from './Switch';
+import { canReadPosition } from './currentPosition';
+import { writeAutoLocation } from './autoLocation';
+import { AutoLocationSwitch } from './notesView/NoteLocationChip';
 import { useOpenItemsInTabs, useTabsFit } from './notesView/useOpenTabs';
 import { faviconUrl } from './favicon';
 import { ViewCheckBox } from './SidebarOptionsPopover';
@@ -72,7 +76,7 @@ import { ViewMenu } from './ViewMenu';
 import type { View } from './views';
 import { defaultSettings, isShownInAll } from './userSettings';
 import { NOTE_COLOR_CHOICES, NOTE_COLOR_LABEL, noteColorChoice, type NoteColorChoice } from './itemStyles';
-import { CloseButton } from './ui';
+import { Button, CloseButton, Popover } from './ui';
 import { NoteColorExample } from './looks/NoteColorExample';
 import { usePaneTab } from './settingsPaneTab';
 import { clearToolbarTab, readToolbarTab } from './toolbarSettingsTab';
@@ -95,6 +99,9 @@ type Props = {
   /** Gap between two paragraphs in a note body, and its setter. */
   lineSpacing: LineSpacing;
   onLineSpacingChange: (next: LineSpacing) => void;
+  /** How a numbered list inside a numbered list counts (#689), and its setter. */
+  nestedNumbers: NestedNumbers;
+  onNestedNumbersChange: (next: NestedNumbers) => void;
   /** Views switched off in the sidebar, and item types switched out of the
    *  All list. Both also live behind the rail's own two icons - this is the
    *  same field shown twice, like View. Spec: docs/internal/specs/sidebar-views.md */
@@ -308,6 +315,126 @@ function SidebarViewsBody({ hiddenViews, hiddenInAll, archivedInAll, onToggleHid
   );
 }
 
+/**
+ * A font from this device for the chosen note font (#716): the second line
+ * of the Note font group. The button reads like the pane's selects and
+ * shows the font in itself; it opens a Popover picker with a search field
+ * over the fonts this device draws, each row set in its own font. A name
+ * the list does not hold can still be used from the search ("Use ..."),
+ * for a font the measure cannot see. Chrome and Edge can list every
+ * installed font after the reader allows it. The line under the label
+ * warns when the chosen name is not a font this device draws.
+ */
+function CustomFontField({ font, name, onChange, className }: { font: NoteFont; name: string; onChange: (name: string) => void; className: string }) {
+  const { t } = useTranslation(['settings', 'editor']);
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [all, setAll] = useState<string[] | null>(null);
+  const [asking, setAsking] = useState(false);
+  const anchor = useRef<HTMLSpanElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const fontLabel = t(`editor:font.families.${font}`);
+  const fonts = useMemo(() => all ?? installedCandidates(font), [all, font]);
+  const shown = useMemo(() => {
+    const match = textMatcher(query.trim());
+    return query.trim() ? fonts.filter((f) => match(f)) : fonts;
+  }, [fonts, query]);
+  const typed = cleanFontName(query);
+  const offerTyped = typed !== '' && !fonts.some((f) => f.toLowerCase() === typed.toLowerCase());
+  const missing = name !== '' && !fontInstalled(name);
+  useEffect(() => {
+    if (open) searchRef.current?.focus();
+  }, [open]);
+  const pick = (next: string) => {
+    onChange(next);
+    setOpen(false);
+    setQuery('');
+  };
+  const option = (value: string, label: ReactNode, family: string) => (
+    <button
+      key={value || 'default'}
+      type="button"
+      role="option"
+      aria-selected={value === name}
+      onClick={() => pick(value)}
+      className={`w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-start text-body ${value === name ? 'bg-accent/10 text-accent-strong' : 'text-pn hover:bg-pn/5'}`}
+    >
+      <span className="min-w-0 flex-1 truncate" style={{ fontFamily: family }}>{label}</span>
+      {value === name && <Check className="shrink-0" aria-hidden="true" />}
+    </button>
+  );
+  return (
+    <div className={className}>
+      <div className="min-w-0">
+        <p className="text-body text-pn">{t('appearance.noteFontCustomLabel', { font: fontLabel })}</p>
+        <p className={`${SETTINGS_HELP} mt-0.5`} aria-live="polite">
+          {missing ? t('appearance.noteFontCustomMissing', { font: fontLabel }) : t('appearance.noteFontCustomHint')}
+        </p>
+      </div>
+      <span ref={anchor} className="inline-flex min-w-0">
+        <button
+          type="button"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+          className={`${SETTINGS_SELECT} inline-flex w-full lg:w-56 items-center justify-between gap-2 text-start`}
+        >
+          <span className="min-w-0 truncate" style={{ fontFamily: noteFontStack(font, name ? { [font]: name } : {}) }}>
+            {name || t('appearance.contentWidthDefault')}
+          </span>
+          <CaretDown className="shrink-0 text-pn-muted" aria-hidden="true" />
+        </button>
+      </span>
+      <Popover open={open} anchorRef={anchor} onClose={() => { setOpen(false); setQuery(''); }} align="end" className="w-72">
+        <ListSearchInput
+          value={query}
+          onChange={setQuery}
+          inputRef={searchRef}
+          placeholder={t('appearance.noteFontCustomSearch')}
+          onKeyDown={(e) => {
+            // The field reports its text after a short pause, so Enter reads
+            // the text itself: a fast Enter must not see an empty search.
+            const now = cleanFontName(e.currentTarget.value);
+            if (e.key !== 'Enter' || !now) return;
+            e.preventDefault();
+            const match = textMatcher(now);
+            // The exact name, else the first font that matches, else the
+            // name as typed.
+            pick(fonts.find((f) => f.toLowerCase() === now.toLowerCase()) ?? fonts.find((f) => match(f)) ?? now);
+          }}
+        />
+        <div role="listbox" aria-label={t('appearance.noteFontCustomLabel', { font: fontLabel })} className="mt-1 max-h-48 overflow-y-auto">
+          {!query.trim() && option('', t('appearance.contentWidthDefault'), noteFontStack(font, {}))}
+          {shown.map((f) => option(f, f, noteFontStack(font, { [font]: f })))}
+          {offerTyped && option(typed, t('appearance.noteFontCustomUse', { font: typed }), noteFontStack(font, { [font]: typed }))}
+        </div>
+        {/* What the list is, and the way to a font it does not show. The
+            help link is the one place the full story lives (#716). */}
+        <div className="mt-2 border-t border-divider px-2 pt-2">
+          <p className={SETTINGS_HELP}>{t('appearance.noteFontCustomListHint')}</p>
+          {canListAllFonts() && all === null && (
+            <Button
+              icon={<ListMagnifyingGlass aria-hidden="true" />}
+              disabled={asking}
+              onClick={() => {
+                setAsking(true);
+                void allLocalFonts().then((list) => {
+                  setAsking(false);
+                  if (list.length) setAll(list);
+                });
+              }}
+              className="mt-2 w-full justify-center"
+            >
+              {t('appearance.noteFontCustomShowAll')}
+            </Button>
+          )}
+          <HelpChip surface="noteFont" className="mt-2 mb-1" />
+        </div>
+      </Popover>
+    </div>
+  );
+}
+
 function IconWord({ icon: Glyph, children }: { icon: Icon; children?: ReactNode }) {
   return (
     <span className="inline-flex items-center gap-1.5">
@@ -329,7 +456,7 @@ const SEG_FILL = 'flex-1 px-3 lg:flex-none';
 
 export type AppearancePane = 'design' | 'editor' | 'formatBar' | 'lists';
 
-export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = false, viewMode, onViewModeChange, editorMode, onEditorModeChange, formatBar, lineSpacing, onLineSpacingChange, hiddenViews, hiddenInAll, archivedInAll, onToggleHidden, onViewOrderChange, startView, onStartViewChange, noteColors, onNoteColorsChange, sinkCheckedTasks, onSinkCheckedTasksChange, taskConfetti, onTaskConfettiChange, typedSymbols, onTypedSymbolsChange, confirmTrash, onConfirmTrashChange, confirmArchive, onConfirmArchiveChange, initialTab, spaces, onSpacesChange, pane = 'design', onOpenAll, customThemes, onCustomThemesChange, onOpenThemeBuilder }: Props) {
+export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = false, viewMode, onViewModeChange, editorMode, onEditorModeChange, formatBar, lineSpacing, onLineSpacingChange, nestedNumbers, onNestedNumbersChange, hiddenViews, hiddenInAll, archivedInAll, onToggleHidden, onViewOrderChange, startView, onStartViewChange, noteColors, onNoteColorsChange, sinkCheckedTasks, onSinkCheckedTasksChange, taskConfetti, onTaskConfettiChange, typedSymbols, onTypedSymbolsChange, confirmTrash, onConfirmTrashChange, confirmArchive, onConfirmArchiveChange, initialTab, spaces, onSpacesChange, pane = 'design', onOpenAll, customThemes, onCustomThemesChange, onOpenThemeBuilder }: Props) {
   const { t } = useTranslation('settings');
   // The table's row labels are the sidebar's own strings, so the pane and the
   // rail can never disagree in any language.
@@ -364,6 +491,8 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   // The Note colors example, closed until asked for, like the one above; a
   // click on an option opens it.
   const [noteExampleOpen, setNoteExampleOpen] = useState(false);
+  // The Nested numbers example, the same way.
+  const [numbersExampleOpen, setNumbersExampleOpen] = useState(false);
   // The popover renders no example, so nothing there should arm one: the note
   // is still on screen behind it and is the better demonstration.
   const revealExample = () => {
@@ -383,13 +512,11 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   const triggerRect = trigger?.getBoundingClientRect();
   const centred = !!triggerRect && triggerRect.left + triggerRect.width / 2 < window.innerWidth / 2;
   const popPos = usePopoverPosition(!!trigger, triggerRef, panelRef, { gap: 8, align: 'end', shrink: true });
-  const { theme, themeMode, setThemeMode, colorTheme, lightTheme, darkTheme, setColorTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, favicons, setFavicons, invisibles, setInvisibles, copyFormat, setCopyFormat, pasteFormat, setPasteFormat, linkModifier, setLinkModifier, noteFont, setNoteFont } = useTheme();
+  const { theme, themeMode, setThemeMode, colorTheme, lightTheme, darkTheme, setColorTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, favicons, setFavicons, invisibles, setInvisibles, copyFormat, setCopyFormat, pasteFormat, setPasteFormat, linkModifier, setLinkModifier, noteFont, setNoteFont, customFonts, setCustomFont } = useTheme();
   // Its own store rather than an axis of useTheme(): a level is handed to the
   // webview under the page, not to a CSS variable on <html>, and keeping it
   // out of theme.ts keeps that module free of a native import on the boot
   // path. Spec: docs/internal/design-decisions.md (app zoom)
-  const { appZoom, setAppZoom } = useAppZoom();
-  const trayMode = useTrayMode();
   const [openItemsInTabs, setOpenItemsInTabs] = useOpenItemsInTabs();
   // No strip below the pane layout, so no switch for it either.
   const tabsFit = useTabsFit();
@@ -484,11 +611,12 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     void import('./customThemeUI').then((m) => setDroppedFav({ mode, name: m.themeNameOf(id, customThemes) ?? '', before }));
   };
   const [pasteOpen, setPasteOpen] = useState(false);
-  // The gallery's Made by filter, the same one /themes has. Per visit.
-  const [madeBy, setMadeBy] = useState<MadeBy>('all');
-  // The order of the community themes under Community. Per visit.
-  // Newest first: an installed app's saved vote counts can be months old.
-  const [communitySort, setCommunitySort] = useState<CommunitySort>('newest');
+  // The gallery's search by name, and the galleries that show every theme.
+  // Per visit.
+  const [themeQuery, setThemeQuery] = useState('');
+  const themeNeedle = themeQuery.trim();
+  const themeMatch = useMemo(() => (themeNeedle ? textMatcher(themeNeedle) : null), [themeNeedle]);
+  const [allShown, setAllShown] = useState<Record<Theme, boolean>>({ light: false, dark: false });
   const [copiedName, setCopiedName] = useState<string | null>(null);
   // The built-in palettes' codes, for their card menus: off the boot path like
   // the rest of the theme code, and here long before a menu can open. Loaded
@@ -647,6 +775,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     const d = defaultSettings();
     resetStyleAxes();
     onLineSpacingChange(d.lineSpacing);
+    onNestedNumbersChange(d.nestedNumbers);
     onEditorModeChange(d.editorMode);
   }
 
@@ -660,12 +789,13 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     onTypedSymbolsChange(d.typedSymbols);
     onConfirmTrashChange(d.confirmTrash);
     onConfirmArchiveChange(d.confirmArchive);
+    writeAutoLocation('note', false);
+    writeAutoLocation('journal', false);
   }
 
   function resetThemes() {
     const d = defaultSettings();
     resetThemeAxes();
-    setAppZoom(DEFAULT_APP_ZOOM);
     onNoteColorsChange(noteColorChoice(d.tintNotes, d.noteColorStyle));
     savedThemesRef.current = { light: 'default', dark: 'default' };
   }
@@ -737,27 +867,6 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     </button>
   ));
 
-  // The level itself, because a percentage IS the label a browser already
-  // taught everybody, and a translated word per number would say less.
-  // Formatted per locale, so the sign lands where that language puts it.
-  //
-  // One fixed width for all of them, like the "A" row below, rather than
-  // padding to content: this is the widest control on the tab, and at the
-  // pane's own width a content-width row came out one pixel over the room
-  // beside its label and dropped to a line of its own, which is the drift
-  // the row layout above exists to prevent.
-  const appZoomButtons = APP_ZOOM_LEVELS.map((level) => (
-    <button
-      key={level}
-      onClick={() => setAppZoom(level)}
-      aria-pressed={appZoom === level}
-      className={`${embedded ? 'flex-1 lg:flex-none lg:w-12' : 'flex-auto'} inline-flex items-center justify-center py-1.5 rounded text-small transition ${
-        appZoom === level ? SEG_ACTIVE : SEG_IDLE
-      }`}
-    >
-      {level.toLocaleString(intlLocale(), { style: 'percent' })}
-    </button>
-  ));
 
   // Two words rather than a preview glyph, for the content-width reason: a
   // gap has nothing it can show at button size. The example block under the
@@ -841,20 +950,6 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           <div className={track}>{modeButtons}</div>
         </div>
 
-        {/* App size - the whole window, which is what the Editor pane's text
-            size deliberately is not. Desktop only: a browser already has
-            this on the same keys, and the mobile webviews have no equivalent,
-            so the row is absent rather than present and dead.
-            Spec: docs/internal/design-decisions.md (app zoom) */}
-        {appZoomSupported() && (
-          <div data-setting="appearance.appZoom" className={row}>
-            <div className="min-w-0">
-              <RowTitle icon={MagnifyingGlassPlus}>{t('appearance.appZoomTitle')}</RowTitle>
-              <p className={`${SETTINGS_HELP} mt-0.5`}>{t('appearance.appZoomDesc')}</p>
-            </div>
-            <div className={track}>{appZoomButtons}</div>
-          </div>
-        )}
 
         {/* The pair: one palette per mode, both always shown, so a choice for
             the other mode is made without switching to it. */}
@@ -904,54 +999,25 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
               </>
             )}
           </div>
-          {/* Made by, as on /themes: the built-in palettes count as the team's. */}
+          {/* One row: find a theme by name, or go to the website for more. */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            {/* Wraps, so a long word in any language never clips the last chip. */}
-            <div role="group" aria-label={t('appearance.madeBy.label')} className={`flex-wrap max-w-full ${SETTINGS_TRACK}`}>
-              {(['all', 'community', 'team', 'yours'] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMadeBy(m)}
-                  aria-pressed={madeBy === m}
-                  className={`inline-flex items-center justify-center px-3 py-1 rounded text-small transition ${madeBy === m ? SEG_ACTIVE : SEG_IDLE}`}
-                >
-                  {t(`appearance.madeBy.${m}`)}
-                </button>
-              ))}
+            <div className="flex min-w-0 grow basis-48 sm:max-w-xs">
+              <ListSearchInput
+                value={themeQuery}
+                onChange={setThemeQuery}
+                placeholder={t('appearance.themeSearch')}
+                ariaLabel={t('appearance.themeSearch')}
+              />
             </div>
-            {/* The order toggle applies to the community themes, so it shows
-                where they do; the website link sits at the end in every tab.
-                The group grows to the row's end, so on a narrow pane it takes
-                a line of its own: the toggle at the start, the link at the end.
-                On a phone the link wraps under the toggle and stays at the
-                start, like New theme and Paste theme code above it. */}
-            <div className="flex max-w-full grow flex-wrap items-center gap-2">
-              {(madeBy === 'all' || madeBy === 'community') && (
-                <div role="group" aria-label={t('appearance.madeBy.sortLabel')} className={`flex-wrap max-w-full ${SETTINGS_TRACK}`}>
-                  {(['newest', 'votes'] as const).map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setCommunitySort(s)}
-                      aria-pressed={communitySort === s}
-                      className={`inline-flex items-center justify-center px-3 py-1 rounded text-small transition ${communitySort === s ? SEG_ACTIVE : SEG_IDLE}`}
-                    >
-                      {t(s === 'votes' ? 'appearance.madeBy.sortVotes' : 'appearance.madeBy.sortNewest')}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <a
-                href={siteHref('/themes')}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`sm:ms-auto ${SETTINGS_BTN.replace('py-1.5', 'h-8')}`}
-              >
-                {t('appearance.madeBy.more')}
-                <ArrowSquareOut aria-hidden="true" />
-              </a>
-            </div>
+            <a
+              href={siteHref('/themes')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`ms-auto ${SETTINGS_BTN}`}
+            >
+              {t('appearance.madeBy.more')}
+              <ArrowSquareOut aria-hidden="true" />
+            </a>
           </div>
           {(['light', 'dark'] as const).map((mode) => (
             <div key={mode}>
@@ -962,25 +1028,30 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                 {mode === 'dark' ? t('appearance.darkThemesDesc') : t('appearance.lightThemesDesc')}
               </p>
               <div className="pn-theme-gallery grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {(madeBy === 'all' || madeBy === 'team') &&
-                  (mode === 'dark' ? DARK_THEMES : LIGHT_THEMES).map((ct) =>
-                    themeCard(mode, ct, (mode === 'dark' ? darkTheme : lightTheme) === ct, false),
-                  )}
+                {(mode === 'dark' ? DARK_THEMES : LIGHT_THEMES)
+                  .filter((ct) => !themeMatch || themeMatch(THEME_DISPLAY_NAME[ct]))
+                  .map((ct) => themeCard(mode, ct, (mode === 'dark' ? darkTheme : lightTheme) === ct, false))}
                 <Suspense fallback={null}>
-                  <ExtraThemeCards mode={mode} compact={false} ctx={galleryCtx} madeBy={madeBy} sort={communitySort} />
+                  <ExtraThemeCards
+                    mode={mode}
+                    compact={false}
+                    ctx={galleryCtx}
+                    query={themeNeedle}
+                    builtinCount={(mode === 'dark' ? DARK_THEMES : LIGHT_THEMES).length}
+                    expanded={allShown[mode]}
+                    onExpand={(open) => setAllShown((prev) => ({ ...prev, [mode]: open }))}
+                  />
                 </Suspense>
               </div>
               {/* Shown by CSS while the grid above has no card (index.css). */}
               <p className={`pn-theme-gallery-empty ${SETTINGS_HELP} rounded-lg border border-dashed border-divider px-3 py-4 text-center`}>
-                {madeBy === 'community'
-                  ? t(mode === 'dark' ? 'appearance.madeBy.noDarkCommunity' : 'appearance.madeBy.noLightCommunity')
-                  : t('appearance.madeBy.none')}
+                {t('common:state.noResults')}
               </p>
             </div>
           ))}
-          {/* Reference text after the galleries, so the filters lead straight
+          {/* Reference text after the galleries, so the search leads straight
               to the themes. */}
-          <div className="space-y-1.5 border-t border-divider pt-3">
+          <div className="border-t border-divider pt-3">
             {/* What a star does, and the star a fourth one pushed out. */}
             <div>
               <p className={`${SETTINGS_HELP} flex items-center gap-1.5`}>
@@ -1000,21 +1071,6 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                 </p>
               )}
             </div>
-            {/* The app ships the themes of its build; /themes gets new ones and
-                the votes every day, so it is where to send people. */}
-            <p className={`${SETTINGS_HELP} flex flex-wrap items-center gap-x-2 gap-y-0.5`}>
-              <a
-                href={siteHref('/themes')}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 font-medium text-accent hover:underline"
-              >
-                <Globe aria-hidden="true" />
-                {t('appearance.custom.websiteTitle')}
-                <ArrowSquareOut aria-hidden="true" />
-              </a>
-              <span>{t('appearance.custom.websiteDesc')}</span>
-            </p>
           </div>
           {unlockNudge}
         </div>
@@ -1114,6 +1170,10 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           </div>
         </div>
 
+        {/* Note font and the font for it (#716), one group like Text size
+            and Line spacing, so no hairline cuts the font line off from the
+            choice it belongs to. */}
+        <div>
         {/* Note font - the typeface every note renders in (#615). Each
             button is set in its own font, so the row is its own example.
             Device-local, like the text size. Nothing is written into a note,
@@ -1129,7 +1189,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                 key={font}
                 onClick={() => setNoteFont(font)}
                 aria-pressed={noteFont === font}
-                style={{ fontFamily: FONT_FAMILIES.find((f) => f.name.toLowerCase() === font)?.value }}
+                style={{ fontFamily: noteFontStack(font, customFonts) }}
                 className={`${SEG_FILL} text-small py-1.5 rounded transition ${
                   noteFont === font ? SEG_ACTIVE : SEG_IDLE
                 }`}
@@ -1138,6 +1198,72 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
               </button>
             ))}
           </div>
+        </div>
+
+        <CustomFontField className={`${row} pt-0`} font={noteFont} name={customFonts[noteFont] ?? ''} onChange={(name) => setCustomFont(noteFont, name)} />
+        </div>
+
+        {/* Nested numbers (#689) - how a numbered list inside a numbered
+            list counts. Each button shows its own result, so the labels are
+            the numbers themselves, and the example under the row renders a
+            real nested list in the editor's own .prose, so it counts with the
+            CSS the notes use. Synced: a note counts the same everywhere.
+            The row and its example are one group, as above. */}
+        <div>
+        <div data-setting="appearance.nestedNumbers" className={row}>
+          <div className="min-w-0">
+            <RowTitle icon={ListNumbers}>{t('appearance.nestedNumbersTitle')}</RowTitle>
+            <p className={`${SETTINGS_HELP} mt-0.5`}>{t('appearance.nestedNumbersDesc')}</p>
+          </div>
+          <div className={track}>
+            {NESTED_NUMBERS.map((style) => (
+              <button
+                key={style}
+                onClick={() => {
+                  onNestedNumbersChange(style);
+                  if (embedded) setNumbersExampleOpen(true);
+                }}
+                aria-pressed={nestedNumbers === style}
+                className={`${SEG_FILL} text-small py-1.5 rounded transition ${
+                  nestedNumbers === style ? SEG_ACTIVE : SEG_IDLE
+                }`}
+              >
+                {t(style === 'flat' ? 'appearance.nestedNumbersFlat' : 'appearance.nestedNumbersOutline')}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="pb-3">
+          <button
+            type="button"
+            onClick={() => setNumbersExampleOpen((v) => !v)}
+            aria-expanded={numbersExampleOpen}
+            className="inline-flex items-center gap-1 text-small text-accent"
+          >
+            <CaretDown className={`shrink-0 transition-transform ${numbersExampleOpen ? '' : '-rotate-90'}`} aria-hidden="true" />
+            {t('appearance.lineSpacingExample')}
+          </button>
+          {numbersExampleOpen && (
+            <div className="prose prose-pn max-w-none mt-2 rounded-md bg-track px-3 py-2 text-[length:var(--pn-editor-body)] [&_ol]:my-0 [&_li]:my-0 [&_p]:my-0">
+              <ol>
+                <li>
+                  <p>{t('appearance.nestedNumbersExample1')}</p>
+                  <ol>
+                    <li>
+                      <p>{t('appearance.nestedNumbersExample2')}</p>
+                      <ol>
+                        <li><p>{t('appearance.nestedNumbersExample3')}</p></li>
+                        <li><p>{t('appearance.nestedNumbersExample4')}</p></li>
+                      </ol>
+                    </li>
+                    <li><p>{t('appearance.nestedNumbersExample5')}</p></li>
+                  </ol>
+                </li>
+                <li><p>{t('appearance.nestedNumbersExample6')}</p></li>
+              </ol>
+            </div>
+          )}
+        </div>
         </div>
 
         {/* Editor width - the cap on the note's reading column. Device-local
@@ -1194,17 +1320,6 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           onChange={setInvisibles}
           className="gap-x-5 py-3"
         />
-        {/* Open with PrivacyNotes - which app the OS opens a double-clicked
-            file with. Desktop app only. It stores nothing, so Reset to
-            defaults leaves it alone.
-            Spec: docs/internal/plans/default-app-settings.md */}
-        {markdownDefaultAppSupported() && (
-          <div data-setting="appearance.defaultApps" className="pt-4">
-            <SectionEyebrow icon={Files}>{t('appearance.defaultAppsTitle')}</SectionEyebrow>
-            <DefaultAppSettingsRow kind="text" />
-            <DefaultAppSettingsRow kind="markdown" />
-          </div>
-        )}
       </>
     );
 
@@ -1313,20 +1428,30 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           className="gap-x-5 py-3"
         />
 
-        {/* Close and minimize to the tray. A device setting: it never syncs.
-            Spec: docs/internal/specs/calendar-pillar-spec.md (section 8) */}
-        {traySupported() && (
-          <Switch
-            setting="appearance.tray"
-            icon={<Tray className="text-accent" />}
-            labelClassName={ROW_TITLE}
-            label={t('appearance.trayTitle')}
-            description={t('appearance.trayDesc')}
-            checked={trayMode}
-            onChange={setTrayMode}
-            className="gap-x-5 py-3"
-          />
+        {/* Automatically add my location: one switch per type, on this phone
+            only, off by default. Phones only: a desktop cannot read a
+            position. Spec: docs/internal/plans/note-location.md (section 3c) */}
+        {canReadPosition() && (
+          <div className="pt-4">
+            <SectionEyebrow icon={MapPin}>{t('appearance.autoLocationTitle')}</SectionEyebrow>
+            <p className={SETTINGS_HELP}>{t('appearance.autoLocationDesc')}</p>
+            <div className="divide-y divide-divider">
+              <AutoLocationSwitch
+                type="note"
+                setting="appearance.autoLocationNotes"
+                icon={<PILLAR_GLYPHS.notes className="text-accent" />}
+                label={t('appearance.autoLocationNotes')}
+              />
+              <AutoLocationSwitch
+                type="journal"
+                setting="appearance.autoLocationJournal"
+                icon={<PILLAR_GLYPHS.journals className="text-accent" />}
+                label={t('appearance.autoLocationJournal')}
+              />
+            </div>
+          </div>
         )}
+
 
         {/* Checkboxes - what a tick does, in a note and in the Tasks view
             alike. Both sync. */}

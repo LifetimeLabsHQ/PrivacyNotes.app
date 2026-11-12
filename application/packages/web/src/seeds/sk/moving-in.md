@@ -11,7 +11,7 @@ journalDay: today
 
 Preniesť sem môžeš štyri druhy vecí: poznámky, záznamy v denníku, záložky a heslá.
 
-Všetko sa začína na rovnakom mieste: **Nastavenia > Import & Export**.
+Všetko sa začína na rovnakom mieste: **Nastavenia > Prenos**.
 
 ## Čo si môžeš preniesť
 
@@ -45,7 +45,7 @@ Záznam v denníku obsahuje viac ako text. Nad plochou na písanie sú sledovan�
 ## Záložky
 
 - [ ] Exportuj záložky z prehliadača ako súbor `.html`
-- [ ] Importuj ten súbor: **Nastavenia > Import & Export > Import > Záložky z prehliadača**
+- [ ] Importuj ten súbor: **Nastavenia > Prenos > Import > Záložky z prehliadača**
 
 Môžeš aj vložiť odkaz do prázdnej poznámky. Názov a ikona stránky sa doplnia samy: [privacynotes.app/sk/help/import/browser-bookmarks](https://privacynotes.app/sk/help/import/browser-bookmarks)
 

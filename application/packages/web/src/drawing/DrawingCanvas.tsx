@@ -26,7 +26,7 @@ import './assetPath';
 import '@excalidraw/excalidraw/index.css';
 import './drawing.css';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CaptureUpdateAction, Excalidraw, getSceneVersion } from '@excalidraw/excalidraw';
+import { CaptureUpdateAction, convertToExcalidrawElements, Excalidraw, getCommonBounds, getSceneVersion } from '@excalidraw/excalidraw';
 import type {
   AppState,
   BinaryFileData,
@@ -35,6 +35,7 @@ import type {
   ExcalidrawProps,
 } from '@excalidraw/excalidraw/types';
 import type { DrawingScene, parseScene, serializeScene } from './scene';
+import { nextStep, STEPS_TOOL, stepSkeleton } from './steps';
 
 type SceneElements = Parameters<NonNullable<ExcalidrawProps['onChange']>>[0];
 
@@ -97,9 +98,11 @@ export type DrawingCanvasProps = {
  *  (a selection, or a tool that draws), and whether the panel is open. */
 type CanvasToolState = { tool: string; locked: boolean; zoom: number; phone: boolean; styled: boolean; styleOpen: boolean };
 
-type DrawingCommands = { toggleStyle: () => void; clear: () => void; escape: () => void; closeMenu: () => void };
+type DrawingCommands = { toggleStyle: () => void; clear: () => void; escape: () => void; closeMenu: () => void; steps: () => void; linkShapeHeight: () => number | null };
 
-/** The tools whose next shape takes the panel's style. */
+/** The tools whose next shape takes the panel's style. Not the Steps tool:
+ *  Excalidraw shows no panel for a custom tool; its markers take the style
+ *  the panel last set, and change like any shape once selected. */
 const STYLED_TOOLS = new Set(['rectangle', 'diamond', 'ellipse', 'arrow', 'line', 'freedraw', 'text']);
 
 export default function DrawingCanvas({
@@ -136,6 +139,9 @@ export default function DrawingCanvas({
   // Excalidraw's layout, as its last render saw it (`renderTopRightUI`).
   const phone = useRef(false);
   const openMenu = useRef<string | null>(null);
+  // The Steps tool turned Excalidraw's lock on, which was off: it goes off
+  // again with the next tool (`commands.steps`).
+  const stepsLocked = useRef(false);
 
   const save = useCallback(() => {
     pending.current = null;
@@ -176,6 +182,29 @@ export default function DrawingCanvas({
       // Excalidraw's hidden right-click menu, when the app's menu in its
       // place closes without a pick (DrawingMenu.tsx).
       closeMenu: () => api.current?.updateScene({ appState: { contextMenu: null } as never }),
+      // The height on screen of the one selected shape, whose link popup
+      // shows: the popup goes under it when there is no room above
+      // (linkPopup.ts).
+      linkShapeHeight: () => {
+        const now = api.current;
+        if (!now) return null;
+        const state = now.getAppState();
+        const ids = Object.keys(state.selectedElementIds);
+        const shape = ids.length === 1 ? now.getSceneElements().find((e) => e.id === ids[0]) : undefined;
+        if (!shape) return null;
+        const [, minY, , maxY] = getCommonBounds([shape]);
+        return (maxY - minY) * state.zoom.value;
+      },
+      // The Steps tool has no Excalidraw key: it is a custom tool, and a
+      // click on the canvas while it is on drops a marker (`onApi`). It
+      // stays on for the next click through Excalidraw's own lock, which
+      // `onChange` gives back when the person leaves the tool.
+      steps: () => {
+        const now = api.current?.getAppState();
+        if (!now) return;
+        if (!now.activeTool.locked) stepsLocked.current = true;
+        api.current?.setActiveTool({ type: 'custom', customType: STEPS_TOOL, locked: true });
+      },
       // What Escape does, for the Android back button: a panel or menu
       // closes, a text box is finished by its own Escape, and a shape being
       // drawn by the canvas's.
@@ -198,6 +227,14 @@ export default function DrawingCanvas({
   const onApi = useCallback((ready: ExcalidrawImperativeAPI) => {
     api.current = ready;
     dropMissingFonts();
+    // A click with the Steps tool drops the next numbered circle, one undo
+    // step each.
+    ready.onPointerDown((tool, pointer, event) => {
+      if (tool.type !== 'custom' || tool.customType !== STEPS_TOOL || event.button !== 0) return;
+      const elements = ready.getSceneElementsIncludingDeleted();
+      const marker = convertToExcalidrawElements([stepSkeleton(nextStep(elements), pointer.origin, ready.getAppState()) as never]);
+      ready.updateScene({ elements: [...elements, ...marker], captureUpdate: CaptureUpdateAction.IMMEDIATELY });
+    });
     for (const [id, file] of Object.entries(scene.current?.files ?? {})) {
       void loadPicture(file.src).then((dataURL) => {
         if (!dataURL || !api.current) return;
@@ -228,9 +265,20 @@ export default function DrawingCanvas({
       props.current.onEscapeOwnedChange?.(owned);
     }
     openMenu.current = appState.openMenu;
+    // The lock the Steps tool borrowed: off again with the next tool.
+    // Excalidraw's Keep the tool press, the one way to Select with the lock
+    // off, means the person asked for the lock: Steps stays on, and the lock
+    // is theirs from then on.
+    const active = appState.activeTool;
+    if (stepsLocked.current && !(active.type === 'custom' && active.customType === STEPS_TOOL)) {
+      stepsLocked.current = false;
+      if (active.type === 'selection' && !active.locked) api.current?.setActiveTool({ type: 'custom', customType: STEPS_TOOL, locked: true });
+      else api.current?.updateScene({ appState: { activeTool: { ...active, locked: false } } as never });
+    }
+    const name = (active.type === 'custom' ? active.customType : active.type) ?? '';
     const tool: CanvasToolState = {
-      tool: appState.activeTool.type, locked: appState.activeTool.locked, zoom: appState.zoom.value, phone: phone.current,
-      styled: Object.keys(appState.selectedElementIds).length > 0 || STYLED_TOOLS.has(appState.activeTool.type),
+      tool: name, locked: active.locked && !stepsLocked.current, zoom: appState.zoom.value, phone: phone.current,
+      styled: Object.keys(appState.selectedElementIds).length > 0 || STYLED_TOOLS.has(name),
       styleOpen: appState.openMenu === 'shape',
     };
     const toolKey = Object.values(tool).join('|');

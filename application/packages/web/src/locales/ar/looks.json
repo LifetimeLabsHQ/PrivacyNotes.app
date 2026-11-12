@@ -5,6 +5,8 @@
   "useDefault": "استخدام الافتراضي",
   "color": "اللون",
   "applyToSubfolders": "تطبيق اللون على المجلدات الفرعية",
+  "applyToFolderItems": "تطبيق على كل العناصر في هذا المجلد",
+  "applyToTagItems": "تطبيق على كل العناصر التي تحمل هذا الوسم",
   "icon": "الأيقونة",
   "searchPlaceholder": "ابحث عن أيقونة",
   "searchLogos": "ابحث عن شعار",

@@ -1,37 +1,86 @@
+import type { ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { Archive, DotsThreeOutlineVertical, PencilSimpleSlash } from './icons';
+import { Archive, LockSimpleOpen, PencilSimpleSlash } from './icons';
+import { HoverLabel } from './HoverLabel';
 
 /**
- * The line over a read-only item that says where the switch is. One copy for
- * the editor, the forms and the drawing; the caller sets the spacing.
+ * One state over an item, in the editor's notice row: its icon and name in the
+ * muted tone, then the one action that undoes it. Read-only, Archived and
+ * Unlocked all draw through this, so the three look and act alike (#723).
+ * Every action carries a short tip, opened start-aligned below it, so the
+ * three tips land the same way. The caller sets the spacing.
  */
-export function ReadOnlyHint({ className = '' }: { className?: string }) {
-  const { t } = useTranslation('notes');
+function StateHint({ icon, label, action, onAction, tip, className = '' }: {
+  icon: ReactNode;
+  label: string;
+  action: string;
+  onAction: () => void;
+  tip: string;
+  className?: string;
+}) {
+  const button = (
+    <button type="button" onClick={onAction} className="shrink-0 text-accent hover:underline">
+      {action}
+    </button>
+  );
   return (
-    <div className={`flex items-center gap-2 text-compact text-warning ${className}`}>
-      <PencilSimpleSlash className="shrink-0" aria-hidden="true" />
-      <span className="truncate">{t('editor.readOnlyToggle')}</span>
-      <span className="inline-flex items-center gap-1 shrink-0">
-        <DotsThreeOutlineVertical aria-hidden="true" />
-        {t('editor.menu')}
-      </span>
+    <div className={`flex items-center gap-1.5 text-compact text-pn-muted ${className}`}>
+      {icon}
+      <span className="truncate">{label}</span>
+      <span aria-hidden="true">·</span>
+      <HoverLabel label={tip} position="below-start">{button}</HoverLabel>
     </div>
   );
 }
 
+/** A read-only item, with Turn off. The caller runs the same Pro check as the
+ *  menu's switch. One copy for the editor, the forms and the drawing. */
+export function ReadOnlyHint({ onTurnOff, className }: { onTurnOff: () => void; className?: string }) {
+  const { t } = useTranslation(['notes', 'shell']);
+  return (
+    <StateHint
+      icon={<PencilSimpleSlash className="shrink-0" aria-hidden="true" />}
+      label={t('notes:noteRow.readOnly')}
+      action={t('shell:cli.turnOff')}
+      onAction={onTurnOff}
+      tip={t('notes:editor.turnOffHint')}
+      className={className}
+    />
+  );
+}
+
+/** An archived item, so a note reached by a note-link, a search or in Zen
+ *  says it is archived (#712), with Unarchive. */
+export function ArchivedHint({ onUnarchive, className }: { onUnarchive: () => void; className?: string }) {
+  const { t } = useTranslation(['notes', 'shell']);
+  return (
+    <StateHint
+      icon={<Archive className="shrink-0" aria-hidden="true" />}
+      label={t('notes:noteRow.archived')}
+      action={t('shell:contextMenu.unarchive')}
+      onAction={onUnarchive}
+      tip={t('notes:editor.unarchiveHint')}
+      className={className}
+    />
+  );
+}
+
 /**
- * The line over an archived item, in the read-only hint's slot, so a note
- * reached by a note-link, a search or in Zen says it is archived (#712).
- * Muted, not the warning tone: archived is a state, not a problem. No
- * button: Unarchive stays in the "..." menu beside Archive.
+ * An open PIN-protected item, with the way to shut it before the timer does
+ * (#723). A locked one shows the gate instead. One PIN window opens every
+ * protected item, so Lock shuts all of them, and its tip says so.
  */
-export function ArchivedHint({ className = '' }: { className?: string }) {
+export function UnlockedHint({ onLock, className }: { onLock: () => void; className?: string }) {
   const { t } = useTranslation('notes');
   return (
-    <div className={`flex items-center gap-2 text-compact text-pn-muted ${className}`}>
-      <Archive className="shrink-0" aria-hidden="true" />
-      <span className="truncate">{t('noteRow.archived')}</span>
-    </div>
+    <StateHint
+      icon={<LockSimpleOpen className="shrink-0" aria-hidden="true" />}
+      label={t('editor.unlocked')}
+      action={t('editor.lock')}
+      onAction={onLock}
+      tip={t('editor.lockNowHint')}
+      className={className}
+    />
   );
 }
 

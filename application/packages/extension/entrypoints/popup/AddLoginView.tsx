@@ -4,7 +4,8 @@
  * password has show, copy and the full generator; the 2FA key is checked as
  * it is typed; notes go with it. A login the site already has under the same
  * username is pointed out before it is saved twice. Save seals it into the
- * inbox, and the app adds it to the Vault at its next sync.
+ * inbox, and the app adds it to the Vault at its next sync. Save says Saved
+ * for a moment, then the footer says where the login went (pattern 177).
  * Spec: docs/internal/plans/browser-extension-build.md (section 3.4, Add login)
  */
 import { useMemo, useState } from 'react';
@@ -12,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { browser } from 'wxt/browser';
 import { parseTotpInput } from '@notes/shared';
 import type { LoginCopyEntry } from '@notes/shared/extension';
-import { Globe, Lock, NotePencil, Shield, Tag, User } from '@web/icons';
+import { FloppyDisk, Globe, Lock, NotePencil, Shield, Tag, User } from '@web/icons';
 import { Button } from '@web/ui/Button';
 import { Callout } from '@web/ui/feedback';
 import { VaultFieldAction } from '@web/ui/VaultFieldAction';
@@ -22,7 +23,9 @@ import { SETTINGS_HELP } from '@web/settingsUI';
 import { copyAndClear } from '../../src/copy';
 import { matchLogins } from '../../src/match';
 import type { SaveResult } from '../../src/save';
+import type { Notice } from './Footer';
 import { GeneratorView } from './GeneratorView';
+import { DONE_HOLD_MS, SaveButton } from './SaveButton';
 import { SheetHeader } from './Sheet';
 
 function originOf(url: string): string {
@@ -53,7 +56,8 @@ export function AddLoginView({ url, logins, pro, onDone }: {
   url: string;
   logins: LoginCopyEntry[];
   pro: boolean;
-  onDone: (text: string | null) => void;
+  /** Back to the popup, with the footer message of a save. */
+  onDone: (notice: Notice | null) => void;
 }) {
   const { t } = useTranslation('extension');
   const [name, setName] = useState(hostOf(url));
@@ -66,6 +70,7 @@ export function AddLoginView({ url, logins, pro, onDone }: {
   const [notes, setNotes] = useState('');
   const [generating, setGenerating] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const usernames = useMemo(() => knownUsernames(logins), [logins]);
@@ -78,7 +83,15 @@ export function AddLoginView({ url, logins, pro, onDone }: {
     const request = { name: name.trim(), url: originOf(site.trim()) || (site.trim() ? `https://${site.trim()}` : ''), username, password, totp: totp.trim(), notes };
     const result = (await browser.runtime.sendMessage({ type: 'saveLogin', request })) as SaveResult | null;
     setBusy(false);
-    if (result && (result.state === 'sent' || result.state === 'queued')) return onDone(t('logins.addSaved'));
+    if (result && (result.state === 'sent' || result.state === 'queued')) {
+      // Save says Saved for a moment, then the sheet closes and the footer says where it went.
+      setDone(true);
+      const sent = result.state === 'sent';
+      window.setTimeout(() => onDone(sent
+        ? { title: t('notice.loginSaved'), detail: t('notice.vaultNextSync') }
+        : { tone: 'info', title: t('notice.savedHere'), detail: t('notice.goesOutOnline') }), DONE_HOLD_MS);
+      return;
+    }
     setError(result?.state === 'full' ? t('clip.queueFull') : t('clip.failed'));
   };
 
@@ -102,7 +115,7 @@ export function AddLoginView({ url, logins, pro, onDone }: {
       className="space-y-3 p-3 pt-0 [&>header]:-mx-3"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!busy && (username || password) && !totpBad) void save();
+        if (!busy && !done && (username || password) && !totpBad) void save();
       }}
     >
       <SheetHeader title={t('menu.addLogin')} onBack={() => onDone(null)} />
@@ -130,7 +143,7 @@ export function AddLoginView({ url, logins, pro, onDone }: {
           {usernames.map((u) => <option key={u} value={u} />)}
         </datalist>
       </div>
-      {twin && <Callout tone="warning">{t('logins.duplicate')}</Callout>}
+      {twin && <Callout look="card" tone="warning">{t('logins.duplicate')}</Callout>}
       <div>
         <FieldLabel icon={<Lock />} htmlFor="pn-password">{t('auth:loginForm.passwordLabel')}</FieldLabel>
         <div className="flex gap-1.5">
@@ -178,10 +191,19 @@ export function AddLoginView({ url, logins, pro, onDone }: {
         <FieldLabel icon={<NotePencil />} htmlFor="pn-notes">{t('common:cardForm.notes')}</FieldLabel>
         <textarea id="pn-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={`${FIELD_CLASS} resize-y`} dir="auto" />
       </div>
-      {error && <Callout tone="danger">{error}</Callout>}
+      {error && <Callout look="card" tone="danger">{error}</Callout>}
       <div className="grid grid-cols-2 gap-2">
-        <Button action="cancel" onClick={() => onDone(null)} disabled={busy} />
-        <Button action="save" type="submit" disabled={busy || (!username && !password) || totpBad} />
+        <Button action="cancel" onClick={() => onDone(null)} disabled={busy || done} />
+        <SaveButton
+          type="submit"
+          variant="primary"
+          state={done ? 'done' : busy ? 'busy' : 'idle'}
+          disabled={(!username && !password) || totpBad}
+          icon={<FloppyDisk aria-hidden="true" />}
+          label={t('common:actions.save')}
+          busyLabel={t('common:state.saving')}
+          doneLabel={t('shell:checkIn.saved')}
+        />
       </div>
     </form>
   );

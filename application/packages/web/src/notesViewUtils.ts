@@ -985,6 +985,9 @@ export type DayEntry = {
   /** The item's tags and folder, for its color (useNoteLook). */
   tags?: readonly string[];
   folderId?: string | null;
+  /** The subscribed calendar a read-only event comes from (#619). Such an
+   *  entry is never dragged, selected or edited, and has no item behind it. */
+  feed?: string;
 };
 
 /** What a calendar reads: whether a day holds anything, and what. */
@@ -1216,6 +1219,9 @@ export function calendarIndex(
     spaceOf?: (n: LocalNote) => Space;
     open?: Space;
     openOnly?: boolean;
+    /** The calendar a subscribed event comes from, or null for an item.
+     *  Such an event shows in every space. Spec: docs/internal/specs/calendar-pillar-spec.md (section 14) */
+    feedOf?: (n: LocalNote) => string | null;
   },
 ): DayIndex {
   type Placed = { n: LocalNote; s: Schedule; start: string };
@@ -1226,7 +1232,7 @@ export function calendarIndex(
   const series: { n: LocalNote; s: Schedule; len: number }[] = [];
   for (const n of notes) {
     if (n.deleted !== 0 || n.trashed !== 0 || n.archived === 1) continue;
-    if (opts.openOnly && opts.spaceOf && opts.spaceOf(n) !== (opts.open ?? 'personal')) continue;
+    if (opts.openOnly && opts.spaceOf && !opts.feedOf?.(n) && opts.spaceOf(n) !== (opts.open ?? 'personal')) continue;
     if (n.type === 'contact') {
       if (opts.isGated(n)) continue;
       const c = parseContactBody(n.body);
@@ -1294,10 +1300,11 @@ export function calendarIndex(
     const entries = [
       ...placed.map(({ n, s, start }) => {
         const len = spanLength(s);
+        const feed = opts.feedOf?.(n) ?? null;
         const entry: DayEntry & { at: string } = {
           id: n.id,
           kind: n.type as DayKind,
-          space: opts.spaceOf ? opts.spaceOf(n) : null,
+          space: opts.spaceOf && !feed ? opts.spaceOf(n) : null,
           title: opts.titleOf(n),
           at: n.createdAt,
           tags: n.tags,
@@ -1311,6 +1318,7 @@ export function calendarIndex(
           entry.occurrence = start;
         }
         if (s.alerts?.length) entry.alerted = true;
+        if (feed) entry.feed = feed;
         return entry;
       }),
       ...contactDatesOn(day).map(({ n, label }): DayEntry & { at: string } => ({

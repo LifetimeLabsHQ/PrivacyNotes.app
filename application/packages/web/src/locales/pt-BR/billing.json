@@ -26,7 +26,8 @@
       "default": "Um upgrade libera tudo abaixo. Pagamento único.",
       "alerts": "Lembretes são um recurso Pro. Cada dispositivo toca sozinho no horário que você escolher, então nenhum serviço de notificações push vê o item.",
       "vaultFiles": "Arquivos em itens do cofre são um recurso Pro. Guarde códigos de recuperação, uma chave de backup ou uma digitalização junto com o login, o cartão ou a chave a que pertencem.",
-      "cli": "A CLI é um recurso Pro. Scripts, agentes de IA e apps de IA adicionam notas a partir de um terminal ou de um chat, direto na sua pasta Agent."
+      "cli": "A CLI é um recurso Pro. Scripts, agentes de IA e apps de IA adicionam notas a partir de um terminal ou de um chat, direto na sua pasta Agent.",
+      "browsers": "Um segundo navegador é um recurso Pro. O plano gratuito conecta uma extensão do navegador; o Pro conecta até 10, cada uma com seu próprio PIN."
     },
     "features": {
       "devices": "Sincronize dispositivos ilimitados, em todas as plataformas",

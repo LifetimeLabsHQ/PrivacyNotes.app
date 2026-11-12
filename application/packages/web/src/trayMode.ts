@@ -18,7 +18,7 @@ const KEY = 'privacynotes.trayMode';
 export const TRAY_SETTINGS_EVENT = 'pn:tray-settings';
 
 /** Every desktop app; never a phone or the browser. */
-export const traySupported = appZoomSupported;
+const traySupported = appZoomSupported;
 
 let on: boolean | null = null;
 

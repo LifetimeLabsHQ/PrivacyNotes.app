@@ -192,7 +192,9 @@
     "ariaLabel": "Struttura della nota",
     "hide": "Nascondi struttura",
     "copyHeadingLink": "Copia il link al titolo",
-    "copyHeadingShortcut": "Copia la scorciatoia al titolo"
+    "copyHeadingShortcut": "Copia la scorciatoia al titolo",
+    "copyCalloutLink": "Copia il link al riquadro",
+    "copyCalloutShortcut": "Copia la scorciatoia al riquadro"
   },
   "bodyMenu": {
     "cut": "Taglia",
@@ -268,6 +270,11 @@
     "showLess": "Mostra meno",
     "language": "Linguaggio del codice: {{name}}",
     "searchLanguages": "Cerca un linguaggio",
+    "addTitle": "Aggiungi titolo",
+    "removeTitle": "Rimuovi titolo",
+    "titlePlaceholder": "Nome del file o titolo",
+    "collapse": "Comprimi blocco di codice",
+    "expand": "Espandi blocco di codice",
     "placeholder": "Scrivi o incolla il codice. Per i colori, scegli un linguaggio qui sopra."
   },
   "math": {

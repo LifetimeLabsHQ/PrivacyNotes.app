@@ -5,6 +5,8 @@
   "useDefault": "恢復預設",
   "color": "顏色",
   "applyToSubfolders": "將顏色套用到子資料夾",
+  "applyToFolderItems": "套用到此資料夾中的所有項目",
+  "applyToTagItems": "套用到所有含此標籤的項目",
   "icon": "圖示",
   "searchPlaceholder": "搜尋圖示",
   "searchLogos": "搜尋標誌",

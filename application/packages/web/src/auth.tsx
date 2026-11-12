@@ -45,7 +45,7 @@ import { MfaPromptLayer } from './MfaPrompt';
 import { ensureLevel2, useMfaPrompt, dismissMfaPrompt, mfaSessionChanged, isMfaRefusal, MfaRequiredError, MfaCancelledError, mfaSessionIdentity, withMfaAwareTimeout } from './mfaStep';
 import { buildDemoAuthState } from './demoAuth';
 import { ConfirmModal } from './ConfirmModal';
-import { seedOnboardingNotes, SEED_MEDICATION, withSeedFactors } from './welcomeNote';
+import { seedOnboardingNotes } from './welcomeNote';
 import {
   trustAwareStorage,
   setTrustedDevice,
@@ -793,6 +793,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // palette among them can be a Pro one the arriving account has
       // not paid for.
       resetAppearance();
+      // Automatic backups go with them: one account never writes into
+      // another account's folder. Loaded on demand, off the boot path.
+      // Spec: docs/internal/plans/auto-backup.md (section 9, Whose backups)
+      void import('./autoBackup/runner').then((m) => m.forgetAutoBackup()).catch(() => {});
       try { localStorage.removeItem('privacynotes.lastSync'); } catch { /* ignore */ }
       try { sessionStorage.removeItem('privacynotes.lastSync'); } catch { /* ignore */ }
       // The marker moves with the data it describes. A marker naming the
@@ -1576,18 +1580,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // freshly generated pubkey cannot have existing server data; the
     // strict post-pull gate in NotesView remains the path for imported
     // phrases and the backstop if this fails (welcomeNoteSeeded stays
-    // false then). Mirrors the demo bootstrap, including the example
-    // medication template.
+    // false then). A real account gets no example medication and no
+    // starter factors: those are the demo's (GitHub #708).
     if (freshVault) {
       try {
         // Before the sign-in goes live, so the settings writes carry its
         // stamp and a sign-out meanwhile refuses them.
         await seedOnboardingNotes(pubkey, since);
-        const s = loadLocalSettings();
-        const withMed = s.medications?.some((m) => m.id === SEED_MEDICATION.id)
-          ? s
-          : { ...s, medications: [...(s.medications ?? []), SEED_MEDICATION] };
-        saveLocalSettings({ ...withMed, factors: withSeedFactors(withMed.factors), welcomeNoteSeeded: true }, since);
+        saveLocalSettings({ ...loadLocalSettings(), welcomeNoteSeeded: true }, since);
       } catch (err) {
         console.warn('[auth] fresh-vault seed failed (sync gate will retry):', err);
       }

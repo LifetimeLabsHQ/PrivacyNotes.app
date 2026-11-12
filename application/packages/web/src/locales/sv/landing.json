@@ -169,6 +169,8 @@
     "useClipBody": "Skicka urklippet, utdata från ett kommando eller ett felmeddelande direkt till dina anteckningar.",
     "useToolsTitle": "En del av dina egna verktyg",
     "useToolsBody": "Kommandot svarar i JSON och avslutar med tydliga koder, så att dina skript vet att anteckningen sparades.",
+    "useShortcutTitle": "En anteckning från ett kortkommando",
+    "useShortcutBody": "En tangent som du väljer i systemets inställningar öppnar en ruta för en snabbanteckning, även när appen är stängd. Den hamnar i mappen Agent.",
     "howLink": "Läs hur privacynotes fungerar"
   },
   "meds": {
@@ -342,7 +344,7 @@
     "manualUpdates": "Manuella uppdateringar",
     "extensionHeading": "Webbklippare och lösenordshanterare",
     "extensionKeyOpen": "Öppna tillägget",
-    "extensionKeyLogin": "Kopiera den här webbplatsens inloggning",
+    "extensionKeyLogin": "Fyll i den här webbplatsens inloggning",
     "extensionKeyBookmark": "Bokmärk den här sidan",
     "extensionAria": "Lägg till tillägget i {{name}}",
     "extensionNote": "Endast på datorer."

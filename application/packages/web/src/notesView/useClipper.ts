@@ -14,6 +14,7 @@ import { buildClipNoteMap, clipTrackers } from '../clipLink';
 import { buildLinkBody, buildLinkKeyMap, linkDedupeKey, parseLinkBody } from '../linkBody';
 import { createNote, updateNote } from '../notesRepo';
 import type { ClipErrorReason } from '../clipDownload';
+import { sessionTokenOf } from '../sessionToken';
 import type { ClipDraft, SavedClip } from '../clipPage';
 import { clipLabels, noticeFor, readClipPictures, resultText, type ClipJob, type ClipNotice } from '../clipMessages';
 
@@ -60,7 +61,7 @@ export function useClipper({
     [clipNotes],
   );
 
-  const token = useCallback(async () => (await supabase.auth.getSession()).data.session?.access_token ?? null, [supabase]);
+  const token = useMemo(() => sessionTokenOf(supabase), [supabase]);
 
   /** The bookmark for `url`, made when none is saved, as New Bookmark makes one. */
   const ensureBookmark = useCallback(async (url: string): Promise<void> => {

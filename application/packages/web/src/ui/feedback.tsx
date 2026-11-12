@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from 'react';
 import { CheckCircle, CircleNotch, Info, Warning, WarningCircle } from '../icons';
 import { Button } from './Button';
+import { IconTile } from './misc';
 
 /**
  * @catalog FeedbackButton
@@ -24,17 +25,34 @@ const GLYPH = { info: Info, warning: Warning, danger: WarningCircle, success: Ch
 
 /**
  * @catalog Callout
- * use: persistent feedback inside a pane, window or form: info for a fact, warning for a risk requiring attention, danger for a failed action with a recovery instruction, success for a confirmed result. Each tone owns its Phosphor icon. Danger announces an alert. Optional title and action (a Button with the matching action icon). Keep form errors beside the actions until corrected; never auto-dismiss them.
- * never: an amber, red or green box of your own; a red border-red-300 bg-red-50 box; a warning as a grey helper line.
+ * use: persistent feedback inside a pane, window or form: info for a fact, warning for a risk requiring attention, danger for a failed action with a recovery instruction, success for a confirmed result. Each tone owns its Phosphor icon. Danger announces an alert. Optional title and action (a Button with the matching action icon). Keep form errors beside the actions until corrected; never auto-dismiss them. `look="card"` is the browser extension's look: a raised card, the tone's icon in a small IconTile, no tint (owner 2026-11-11); the app keeps the tinted box.
+ * never: an amber, red or green box of your own; a red border-red-300 bg-red-50 box; a warning as a grey helper line; `look="card"` in the app.
  */
-export function Callout({ tone = 'info', title, action, className = '', children }: {
+export function Callout({ tone = 'info', title, action, look = 'tint', className = '', children }: {
   tone?: Tone;
   title?: ReactNode;
   action?: ReactNode;
+  /** `card`: the extension's raised card (pattern 177). The app uses the default tint. */
+  look?: 'tint' | 'card';
   className?: string;
   children?: ReactNode;
 }) {
   const Glyph = GLYPH[tone];
+  if (look === 'card') {
+    // The text starts at the tile's middle line; an action lines up under it.
+    return (
+      <div role={tone === 'danger' ? 'alert' : undefined} className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-divider bg-surface-2 px-3 py-2.5 text-small leading-relaxed text-pn-soft shadow-sm dark:bg-pn/[0.04]${className ? ` ${className}` : ''}`}>
+        <div className="flex min-w-0 flex-[1_1_12rem] items-start gap-3">
+          <IconTile tone={tone} size="sm"><Glyph aria-hidden="true" /></IconTile>
+          <div className="min-w-0 flex-1 pt-1">
+            {title && <p className="font-semibold text-pn">{title}</p>}
+            {children}
+          </div>
+        </div>
+        {action && <div className="ms-10 flex max-w-full flex-wrap items-center gap-2">{action}</div>}
+      </div>
+    );
+  }
   return (
     <div role={tone === 'danger' ? 'alert' : undefined} className={`flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-small leading-relaxed text-pn ${BOX[tone]}${className ? ` ${className}` : ''}`}>
       <div className="flex min-w-0 flex-[1_1_12rem] items-start gap-2">

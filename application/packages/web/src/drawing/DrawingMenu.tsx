@@ -64,6 +64,11 @@ const GLYPHS: Readonly<Record<string, Icon>> = {
  *  link and Copy as SVG. */
 const LEFT_OUT = new Set(['addToLibrary', 'zenMode', 'viewMode', 'stats', 'copyElementLink', 'copyAsSvg']);
 
+/** Rows whose key the canvas gives back to the app (`canvasActions` in
+ *  DrawingCanvas.tsx): Cmd+K opens the quick switcher, not the link editor,
+ *  so the row shows no key. */
+const NO_KEY = new Set(['hyperlink']);
+
 /** Excalidraw's open menu as the app's rows: one rule between groups, none
  *  at either end. */
 function rowsOf(list: Element, onPick: () => void): ContextMenuItem[] {
@@ -79,7 +84,7 @@ function rowsOf(list: Element, onPick: () => void): ContextMenuItem[] {
     items.push({
       label: row.querySelector('.context-menu-item__label')?.textContent ?? '',
       icon: Glyph ? <Glyph /> : undefined,
-      shortcut: keysOf(row.querySelector('.context-menu-item__shortcut')?.textContent ?? '') || undefined,
+      shortcut: NO_KEY.has(name) ? undefined : keysOf(row.querySelector('.context-menu-item__shortcut')?.textContent ?? '') || undefined,
       checked: row.querySelector('.checkmark') ? true : undefined,
       destructive: name === 'deleteSelectedElements' || undefined,
       onSelect: () => {

@@ -1,6 +1,6 @@
 [package]
 name = "privacynotes"
-version = "0.735.0"
+version = "0.757.0"
 description = "PrivacyNotes - private notes, encrypted on your device"
 authors = ["Lifetime Labs LLC <hi@lifetimelabs.dev>"]
 homepage = "https://privacynotes.app"
@@ -61,6 +61,14 @@ tokio = { version = "1", features = ["net", "time"] }
 # platform: a platform verifier may download a missing issuer certificate
 # from an address the site names, which no address check covers.
 webpki-roots = "1"
+# The hash of a staged backup and of the placed file read back
+# (src/backup_dest.rs). Already in the tree through tauri-codegen; this names
+# it directly.
+# Spec: docs/internal/plans/auto-backup.md (section 7)
+sha2 = "0.10"
+# A backup piece from Android's web view arrives as base64 text
+# (backup_dest_chunk). Already in the tree through tauri; this names it.
+base64 = "0.22"
 
 # Self-updater is desktop-only (macOS/Windows/Linux). iOS/Android update
 # through their app stores, and the plugin won't compile for those targets.
@@ -71,7 +79,25 @@ webpki-roots = "1"
 tauri-plugin-updater = "2"
 tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
 tauri-plugin-process = "2"
+# The Ninja key from any app (src/ninja.rs). Registered from Rust only: the
+# web view gets no permission of this plugin, so a script cannot take keys.
+# Spec: docs/internal/plans/ninja-anywhere-694.md (section 2)
+tauri-plugin-global-shortcut = "2"
+# Open at login (Settings > System, src/autostart.rs): a LaunchAgent on macOS,
+# the Run key on Windows, an autostart .desktop file on Linux. Called directly,
+# not through tauri-plugin-autostart, so the LaunchAgent names our bundle id
+# and macOS lists it as PrivacyNotes. Driven from Rust commands only.
+# Spec: docs/internal/plans/ninja-anywhere-694.md (section 7)
+auto-launch = "0.6"
 tauri-plugin-window-state = "2"
+# The fs grants carry no static allow, so the folder the user picked
+# lives only in the runtime scope; this saves that scope and restores it at
+# the next start. Exact pin: 2.4.1 and later need tauri-plugin-fs 2.7, and the
+# fs plugin moves together with @tauri-apps/plugin-fs and the copy of its
+# `is_forbidden` in tests/fs_scope_casefold.rs. No JS package: it has no
+# commands, and the webview gets no permission for it.
+# Spec: docs/internal/plans/desktop-fs-casefold.md (section 2, option A)
+tauri-plugin-persisted-scope = "=2.4.0"
 
 # Native biometric gate (src/biometric.rs). Embedded webviews expose no WebAuthn
 # platform authenticator, so that path is dead in every native build and the OS
@@ -81,6 +107,11 @@ tauri-plugin-window-state = "2"
 # Spec: docs/contrib/biometric-unlock.md, backlog #101
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "macros", "io-util"] }
+# tests/fs_scope_casefold.rs builds the fs plugin's scope on a mock app, and
+# matches deny globs the way the plugin does. Both are already in the tree.
+# Spec: docs/internal/plans/desktop-fs-casefold.md (section 4)
+tauri = { version = "~2.12", features = ["test"] }
+glob = "0.3"
 
 # AVIF pictures on Linux (src/avif.rs): WebKitGTK there has no AVIF decoder.
 # avif-native is dav1d, built from source and linked statically through
@@ -89,6 +120,10 @@ tokio = { version = "1", features = ["rt", "macros", "io-util"] }
 # Spec: docs/contrib/gotchas.md (AppImage AVIF)
 [target.'cfg(target_os = "linux")'.dependencies]
 image = { version = "0.25", default-features = false, features = ["avif-native", "png"] }
+# The Ninja box on GNOME (src/ninja.rs): a window shown again gets the focus
+# only with the X server's current time. Both are in the tree through Tauri.
+gtk = "0.18"
+gdkx11 = "0.18"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 # geteuid, for the single-instance rendezvous owner check in lib.rs.
@@ -166,6 +201,16 @@ tauri-plugin-biometric-key = { path = "plugins/biometric-key" }
 # Spec: docs/internal/billing-integration.md
 [target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
 tauri-plugin-iap = "0.9"
+# One position reading for "Use my current location" in a note's place
+# popover. Phones only: the plugin has no desktop build. It asks for the
+# permission inside the call, never when it loads, so nothing asks at launch.
+# Spec: docs/internal/plans/note-location.md (section 3)
+tauri-plugin-geolocation = "2.5"
+# The folder automatic backups go to on a phone: a tree URI on Android, a
+# security-scoped bookmark on iOS. Our own Kotlin and Swift, reached from
+# src/backup_dest.rs only; desktop writes the folder with std::fs.
+# Spec: docs/internal/plans/auto-backup.md (section 7)
+tauri-plugin-backup-folder = { path = "plugins/backup-folder" }
 
 # In-app OAuth presentation (ASWebAuthenticationSession). iOS only: App Review
 # guideline 4 rejects sign-in that bounces through the external browser

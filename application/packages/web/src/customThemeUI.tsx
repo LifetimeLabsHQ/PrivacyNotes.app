@@ -5,9 +5,8 @@ import { parseThemeCode, resolveTheme, serializeThemeCode, themePasses, withoutA
 import { canSaveCustomTheme, CUSTOM_THEME_MAX, deleteCustomTheme, liveCustomThemes, newCustomThemeId, saveCustomTheme, type CustomThemes } from './customThemes';
 import { TEAM_THEMES } from './teamThemes';
 import { COMMUNITY_THEMES, THEME_DISCUSSIONS_URL } from './communityThemes';
-import { COMMUNITY_VOTES } from './communityVotes';
-import { pickCommunity, type CommunitySort } from './communityShown';
 import { openExternal } from './openExternal';
+import { textMatcher } from './textMatch';
 import { customChoice, isFreeTheme, peekThemeMode, previewCustomTheme, type ColorTheme, type CustomSnapshot, type Theme, type ThemeChoice } from './theme';
 import { BUILTIN_THEME_CODES } from './builtinThemeCodes';
 import type { ContextMenuItem } from './ContextMenu';
@@ -15,7 +14,8 @@ import type { ThemeBuilderTarget } from './notesView/useThemeBuilder';
 import { ConfirmModal } from './ConfirmModal';
 import { CardMenuButton, CommunityCorner, ProCorner, QuickCorner, QuickStarButton } from './ThemeCardMenuButton';
 import { IconUpgrade } from './UpgradeModal';
-import { ArrowSquareOut, Copy, PencilSimple, Trash } from './icons';
+import { ArrowSquareOut, CaretDown, CaretUp, Copy, PencilSimple, Trash } from './icons';
+import { Button } from './ui';
 
 /**
  * The team and custom theme UI of Settings > Design and of
@@ -35,17 +35,14 @@ export interface CustomThemeEntry {
   team?: boolean;
   /** One of the community themes, credited by its code's `by=`. */
   community?: boolean;
-  /** A community theme's day of adding (YYYY-MM-DD). */
-  added?: string;
-  /** A community theme's discussion thread, and its upvotes there. */
+  /** A community theme's discussion thread. */
   discussion?: number;
-  votes?: number;
 }
 
-
-
-/** Who made a theme, for the gallery's Made by filter. */
-export type MadeBy = 'all' | 'community' | 'team' | 'yours';
+/** The extra cards a gallery shows before Show all: with the row of built-in
+ *  palettes, three rows of four.
+ *  Spec: docs/contrib/color-themes.md (section 6) */
+const EXTRA_COLLAPSED = 8;
 
 /** What a slot paints for a theme: its resolved colors, under its id. */
 export function snapshotOf(id: string, theme: CustomTheme): CustomSnapshot {
@@ -59,12 +56,11 @@ export function snapshotOf(id: string, theme: CustomTheme): CustomSnapshot {
  *  /themes may list newer ones. An entry is never removed: a slot that names
  *  a theme this version does not list goes back to Default (reconcileCustomSlots). */
 export function teamThemeEntries(): CustomThemeEntry[] {
-  const read = (list: { id: string; code: string; added?: string; discussion?: number }[], community: boolean) =>
-    list.flatMap(({ id, code, added, discussion }) => {
+  const read = (list: { id: string; code: string; discussion?: number }[], community: boolean) =>
+    list.flatMap(({ id, code, discussion }) => {
       const theme = parseThemeCode(code);
-      const votes = discussion ? (COMMUNITY_VOTES[discussion] ?? 0) : 0;
       return theme
-        ? [{ id, theme, snapshot: snapshotOf(id, theme), team: true, ...(community ? { community, added, discussion, votes } : {}) }]
+        ? [{ id, theme, snapshot: snapshotOf(id, theme), team: true, ...(community ? { community, discussion } : {}) }]
         : [];
     });
   // Community themes newest first.
@@ -76,14 +72,6 @@ export function teamThemeEntries(): CustomThemeEntry[] {
 export function themeNameOf(id: string, themes: CustomThemes): string | null {
   const entry = [...customThemeEntries(themes), ...teamThemeEntries()].find((e) => e.id === id);
   return entry?.theme.name ?? null;
-}
-
-/** Whether a gallery entry passes the Made by filter. */
-function madeByShows(entry: CustomThemeEntry, filter: MadeBy): boolean {
-  if (filter === 'all') return true;
-  if (filter === 'yours') return !entry.team;
-  if (filter === 'community') return !!entry.community;
-  return !!entry.team && !entry.community;
 }
 
 /** The listed themes this version can paint, sorted by name. */
@@ -123,14 +111,20 @@ export interface ThemeGalleryCtx {
   openBuilder?: (target: ThemeBuilderTarget) => void;
 }
 
-/** The team's themes and your own of one mode, as gallery cards. */
-export function ExtraThemeCards({ mode, compact, ctx, madeBy = 'all', sort = 'newest', only }: {
+/** Your own themes, the team's and the community's of one mode, as gallery
+ *  cards: the first EXTRA_COLLAPSED and the one the slot shows, every one
+ *  after Show all, or the ones a search finds by name or author. */
+export function ExtraThemeCards({ mode, compact, ctx, query = '', builtinCount = 0, expanded = false, onExpand, only }: {
   mode: Theme;
   compact: boolean;
   ctx: ThemeGalleryCtx;
-  madeBy?: MadeBy;
-  /** The order of the community themes under All and Community. */
-  sort?: CommunitySort;
+  /** The gallery's search, trimmed; it finds a name or an author. */
+  query?: string;
+  /** The built-in cards the gallery draws before these, for the Show all count. */
+  builtinCount?: number;
+  expanded?: boolean;
+  /** Draws the Show all button and takes its click. */
+  onExpand?: (open: boolean) => void;
   /** One theme by id, for the quick menu; it draws nothing when the theme is gone. */
   only?: string;
 }) {
@@ -139,17 +133,17 @@ export function ExtraThemeCards({ mode, compact, ctx, madeBy = 'all', sort = 'ne
   const own = useMemo(() => customThemeEntries(ctx.customThemes), [ctx.customThemes]);
   const [deleting, setDeleting] = useState<CustomThemeEntry | null>(null);
   const active = mode === 'dark' ? ctx.darkTheme : ctx.lightTheme;
+  // Your own first: they are the ones a person looks for.
+  const all = useMemo(() => [...own, ...team].filter((e) => e.snapshot.mode === mode), [own, team, mode]);
   const entries = useMemo(() => {
     if (only !== undefined) return [...team, ...own].filter((e) => e.id === only);
-    const shown = [...team, ...own].filter((e) => e.snapshot.mode === mode && madeByShows(e, madeBy));
-    const community = shown.filter((e) => e.community);
-    if (community.length === 0 || (madeBy !== 'all' && madeBy !== 'community')) return shown;
-    // The picked community themes, plus the one this slot shows.
-    const picked = pickCommunity(community.map((e) => ({ e, added: e.added ?? '', votes: e.votes ?? 0 })), madeBy, sort).map((p) => p.e);
-    const current = community.find((e) => active === customChoice(e.id));
-    if (current && !picked.includes(current)) picked.push(current);
-    return [...shown.filter((e) => !e.community), ...picked];
-  }, [team, own, only, mode, madeBy, sort, active]);
+    if (query) {
+      const match = textMatcher(query);
+      return all.filter((e) => match(e.theme.name) || (e.theme.author && match(e.theme.author)));
+    }
+    if (expanded) return all;
+    return all.filter((e, i) => i < EXTRA_COLLAPSED || active === customChoice(e.id));
+  }, [team, own, all, only, query, expanded, active]);
 
   function copyCode(entry: CustomThemeEntry) {
     void navigator.clipboard?.writeText(entry.snapshot.code).then(() => ctx.onCopied(entry.theme.name));
@@ -221,6 +215,16 @@ export function ExtraThemeCards({ mode, compact, ctx, madeBy = 'all', sort = 'ne
           onMenu={!compact && ctx.openBuilder ? (e) => openMenu(e, entry) : undefined}
         />
       ))}
+      {onExpand && !query && all.length > EXTRA_COLLAPSED && (
+        <Button
+          icon={expanded ? <CaretUp aria-hidden="true" /> : <CaretDown aria-hidden="true" />}
+          aria-expanded={expanded}
+          onClick={() => onExpand(!expanded)}
+          className="col-span-full justify-self-center"
+        >
+          {expanded ? t('editor:codeBlock.showLess') : t('appearance.showAllThemes', { count: builtinCount + all.length })}
+        </Button>
+      )}
       {deleting && (
         <ConfirmModal
           title={t('appearance.custom.deleteTitle', { name: deleting.theme.name })}

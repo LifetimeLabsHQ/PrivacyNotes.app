@@ -1,5 +1,6 @@
 import type { LocalNote } from './db';
 import { oneLineTitle } from './oneLineTitle';
+import { FRONT_MATTER_LOCATION, FRONT_MATTER_LOCATION_NAME, LOCATION_KEY, readLocation } from './noteLocation';
 
 /**
  * A front-matter value a reader would not hand back as the text it is: one
@@ -22,9 +23,10 @@ const READS_AS_DATA = /^(?:["'[{]|(?:true|false|-?\d+(?:\.\d+)?)$)/;
  * test from reaching an export that only a test consumes.
  *
  * The grammar, since three parsers depend on it:
- *   - `title` is always quoted and on one line (`oneLineTitle`), with each
- *     inner `"` backslash-escaped and nothing else (`unescapeQuotes` is the
- *     readers' inverse).
+ *   - `title` is always quoted and on one line (`oneLineTitle`), the way
+ *     `quoteTitle` says: double quotes with each inner `"` backslash-escaped
+ *     (`unescapeQuotes` is the readers' inverse), or single quotes with each
+ *     `'` doubled when the title holds a backslash (`unescapeSingleQuotes`).
  *   - `created` / `updated` are ISO strings.
  *   - `tags` is `[a, b]`, comma-joined and UNQUOTED. Safe because
  *     `normalizeTag` strips commas, so no tag can contain the separator.
@@ -32,6 +34,10 @@ const READS_AS_DATA = /^(?:["'[{]|(?:true|false|-?\d+(?:\.\d+)?)$)/;
  *     inside a name escaped with a backslash. It is quoted, inner `"`
  *     escaped, when it would read as anything but text (`READS_AS_DATA`).
  *     `parseFolderPath` in `import/folderImport.ts` is the exact inverse.
+ *   - `location` is `lat,lng` (the Obsidian Map View form) and `location_name`
+ *     is quoted like the title, in every mode. The place is taken out of the
+ *     `trackers` line, so it is written once; `parseFrontMatterLocation` in
+ *     `noteLocation.ts` reads it back for all three importers.
  *   - The fullMeta block is emitted only for the full backup zip, and only
  *     `import/privacynotes.ts` reads it. `folderId` and `trackers` are
  *     omitted entirely when absent rather than written empty.
@@ -45,8 +51,10 @@ export function noteToMarkdown(
   fullMeta = false,
   folderPath: string[] = [],
 ): string {
+  const place = readLocation(note.trackers);
+  const { [LOCATION_KEY]: _place, ...trackersLine } = note.trackers ?? {};
   const fm: string[] = ['---'];
-  fm.push(`title: "${oneLineTitle(note.title).replace(/"/g, '\\"')}"`);
+  fm.push(`title: ${quoteTitle(oneLineTitle(note.title))}`);
   fm.push(`created: ${note.createdAt}`);
   // The last edit, the date other apps read as "modified" (editedAtOf). A
   // restore compares it with the local sync stamp, so it overwrites less,
@@ -89,30 +97,58 @@ export function noteToMarkdown(
     fm.push(`type: ${note.type}`);
   } else if ((note.type ?? 'note') === 'note') {
     // A note is the default, so it names itself only when it carries trackers.
-    if (note.trackers && Object.keys(note.trackers).length > 0) fm.push('type: note');
+    if (Object.keys(trackersLine).length > 0) fm.push('type: note');
+  }
+  // The place goes on its own line, in the form Obsidian Map View reads, and
+  // never inside the trackers line, so it is written once.
+  // Spec: docs/internal/plans/note-location.md (section 6)
+  if (place) {
+    fm.push(`${FRONT_MATTER_LOCATION}: ${place.lat},${place.lng}`);
+    if (place.label) fm.push(`${FRONT_MATTER_LOCATION_NAME}: ${quoteTitle(oneLineTitle(place.label))}`);
   }
   // Written for every export, not only the full backup: trackers are the one
   // field a single exported journal entry would otherwise lose silently - the
   // body and tags round-trip intact, so nothing flags the missing mood, sleep
   // and step counts. A login's are the exception: the readable export already
   // prints its custom fields, and the raw map would print them a second time.
-  if (note.trackers && Object.keys(note.trackers).length > 0 && (fullMeta || note.type !== 'login')) {
-    fm.push(`trackers: ${JSON.stringify(note.trackers)}`);
+  if (Object.keys(trackersLine).length > 0 && (fullMeta || note.type !== 'login')) {
+    fm.push(`trackers: ${JSON.stringify(trackersLine)}`);
   }
   fm.push('---');
   return `${fm.join('\n')}\n\n${note.body}\n`;
 }
 
 /**
- * The inside of a quoted front-matter value with the writer's escape taken
- * off: each `\"` reads as `"`, and nothing else changes. That is the exact
- * inverse of the escape on a title above, which escapes a quote and never a
- * backslash, so a backslash the title holds for itself comes back as itself.
- * Not `JSON.parse`, which would read the `\n` of an exported `C:\notes` as a
- * line feed.
+ * A one-line title as a YAML string that every reader takes back as typed.
+ * Double quotes with each `"` escaped, unless the title holds a backslash:
+ * inside double quotes YAML reads a backslash as the start of an escape, so
+ * another app read `C:\notes` with a line feed in it, and `Drafts\` never
+ * closed its string. That title goes in single quotes, where a backslash is
+ * itself and only a `'` is doubled. Older exports hold double quotes only, so
+ * they read as before.
+ */
+function quoteTitle(title: string): string {
+  return title.includes('\\') ? `'${title.replace(/'/g, "''")}'` : `"${title.replace(/"/g, '\\"')}"`;
+}
+
+/**
+ * The inside of a double-quoted front-matter value with the writer's escape
+ * taken off: each `\"` reads as `"`, and nothing else changes. That is the
+ * exact inverse of `quoteTitle`'s double quotes. Older exports also put a
+ * title with a backslash there, escaping a quote and never a backslash, so a
+ * backslash the title holds for itself comes back as itself. Not
+ * `JSON.parse`, which would read the `\n` of an older `C:\notes` as a line
+ * feed.
  */
 export function unescapeQuotes(inner: string): string {
   return inner.replace(/\\"/g, '"');
+}
+
+/** The inside of a single-quoted front-matter value as YAML reads it: each
+ *  `''` is one `'`, and a backslash is itself. The inverse of `quoteTitle`'s
+ *  single quotes. */
+export function unescapeSingleQuotes(inner: string): string {
+  return inner.replace(/''/g, "'");
 }
 
 /**

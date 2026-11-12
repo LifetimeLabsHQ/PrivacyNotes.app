@@ -13,6 +13,10 @@ Tekst może być <span style="color: #e03131">czerwony</span>, <span style="colo
 
 Może być ==podświetlony na żółto== albo <mark style="background-color: rgba(64, 192, 87, 0.35)">na zielono</mark>.
 
+Spoiler ukrywa słowa, dopóki ktoś ich nie kliknie: prezent to ||gramofon||. Zaznacz słowa i wybierz **Spoiler** w menu **Wstaw** albo wpisz dwie kreski z każdej strony.
+
+Ikona albo logo może stać w linijce tekstu, jak :icon[gift] :icon[coffee] :icon[rocket-launch] albo :logo[github]. Wybierz je w **Wstaw** > **Ikony i loga**.
+
 Przycisk **Aa** zmienia rozmiar i krój. Tekst może być <span style="font-size: 0.85em">mały</span>, zwykły albo <span style="font-size: 1.6em">duży</span>. Może być <span style="font-family: ui-sans-serif, system-ui, sans-serif">bezszeryfowy</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">szeryfowy</span> albo <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">o stałej szerokości</span>.
 
 ## Gdzie stoją słowa
@@ -51,12 +55,21 @@ Wyrównanie przesuwa cały akapit, nigdy pojedyncze słowo. Postaw kursor w akap
 | Europa | 1204 | 48 % |
 | Ameryki | 902 | 36 % |
 | Azja | 401 | 16 % |
+<!-- table-fill: r0=blue r1c2=green r3c2=red -->
 
-Środkowa kolumna jest wyśrodkowana, a ostatnia wyrównana do prawej. Przeciągnij krawędź kolumny, żeby ją poszerzyć.
+Środkowa kolumna jest wyśrodkowana, a ostatnia wyrównana do prawej. Przeciągnij krawędź kolumny, żeby ją poszerzyć. Komórka albo cały wiersz może dostać kolor z paska tabeli. Mała strzałka w komórce nagłówka sortuje wiersze pod nią, a drugie kliknięcie sortuje je w odwrotnej kolejności.
+
+Tabela umie też liczyć. Wpisz `=` w komórce, żeby wybrać funkcję. Komórka pokazuje wynik, a notatka zachowuje formułę, więc kliknij wynik, żeby zobaczyć, jak powstał.
+
+| Pozycja | Ilość | Cena | Razem |
+| --- | ---: | ---: | ---: |
+| Kawa | 2 | 3.50 | =B2*C2 |
+| Ciasto | 1 | 4.20 | =B3*C3 |
+|  |  | Suma | =SUM(D2:D3) |
 
 ## Ramki
 
-Ramka to kolorowe pudełko na coś, czego czytelnik nie może przegapić.
+Ramka to kolorowe pudełko na coś, czego czytelnik nie może przegapić. Wpisz `[!` w pustej linijce, żeby ją wybrać.
 
 > [!tip]+ Wskazówka
 > Kliknij jej ikonę, żeby ją zwinąć.
@@ -136,7 +149,21 @@ export function isLongRead(stats) {
 }
 ```
 
-Krótki kawałek kodu w środku zdania wygląda tak: `to`.
+Blok kodu może mieć tytuł. Kliknij nazwę języka i wybierz **Dodaj tytuł**. Strzałka obok tytułu zwija blok do jednej linijki, a notatka to zapamiętuje.
+
+```bash title="backup.sh" fold
+#!/bin/sh
+# Skopiuj folder z notatkami do archiwum z datą.
+tar -czf "notes-$(date +%F).tar.gz" "$HOME/Notes"
+```
+
+**Pole do kopiowania** trzyma jedną rzecz do skopiowania, na przykład adres albo polecenie. Jego przycisk kopiuje całość jednym kliknięciem.
+
+```copy
+ssh-keygen -t ed25519 -C "laptop"
+```
+
+Krótki kawałek kodu w środku zdania wygląda tak: `to`. Przytrzymaj Cmd (Ctrl w Windows i Linuksie) i kliknij go, żeby go skopiować.
 
 ## Matematyka
 
@@ -150,11 +177,21 @@ $$i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi$$
 
 Przeciągnij obraz do notatki albo go wklej. Kliknij raz, żeby zmienić rozmiar, albo przesunąć go w lewo, na środek lub w prawo. Ten wyżej ma połowę szerokości i jest wyśrodkowany.
 
+## Mapy
+
+```map
+35.3606, 138.7274
+Fudżi
+```
+
+Umieść miejsce w notatce przez **Wstaw** > **Lokalizacja**. Mapa pochodzi z naszego własnego serwera, więc żadna firma mapowa nie widzi, gdzie patrzysz. W każdej innej aplikacji Markdown widać ją jako współrzędne i nazwę.
+
 ## Linki
 
 Są dwa rodzaje i celowo wyglądają inaczej.
 
 - Link internetowy otwiera stronę: [privacynotes.app](https://privacynotes.app/pl)
+- Link internetowy może mieć tekst po najechaniu. Najedź na [ten link](https://privacynotes.app/pl/help "Nasze strony pomocy") i poczekaj.
 - Link do notatki otwiera inną twoją notatkę: [[Jak chronione są twoje notatki]]
 
 Oba mają przycisk na pasku. Łańcuch robi link internetowy. Nawiasy kwadratowe robią link do notatki: wypisują twoje notatki, a ty wybierasz tę, o którą ci chodzi. Wpisanie `[[` działa tak samo.

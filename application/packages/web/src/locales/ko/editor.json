@@ -191,7 +191,9 @@
     "ariaLabel": "노트 개요",
     "hide": "개요 숨기기",
     "copyHeadingLink": "제목 링크 복사",
-    "copyHeadingShortcut": "제목 바로가기 복사"
+    "copyHeadingShortcut": "제목 바로가기 복사",
+    "copyCalloutLink": "콜아웃 링크 복사",
+    "copyCalloutShortcut": "콜아웃 바로가기 복사"
   },
   "bodyMenu": {
     "cut": "잘라내기",
@@ -262,6 +264,11 @@
     "showLess": "접기",
     "language": "코드 언어: {{name}}",
     "searchLanguages": "언어 검색",
+    "addTitle": "제목 추가",
+    "removeTitle": "제목 제거",
+    "titlePlaceholder": "파일 이름 또는 제목",
+    "collapse": "코드 블록 접기",
+    "expand": "코드 블록 펼치기",
     "placeholder": "코드를 입력하거나 붙여 넣어요. 색을 넣으려면 위에서 언어를 골라요."
   },
   "math": {

@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Terminal, X } from './icons';
 import { HoverLabel } from './HoverLabel';
 import { keyText } from './shortcutMatch';
+import { isImeComposing } from './imeComposing';
+import { hasOpenOverlay } from './useEscapeToClose';
 import { COMMAND_PREFIX, CommandPaletteContext } from './commandPalette';
 
 /**
@@ -106,7 +108,16 @@ export function ListSearchInput({
         onChange={(e) => handleChange(e.target.value)}
         placeholder={placeholder}
         aria-label={ariaLabel}
-        onKeyDown={onKeyDown}
+        onKeyDown={(e) => {
+          onKeyDown?.(e);
+          // In an overlay, Escape clears the text first; the Escape stack lets
+          // it through while the field has text (useEscapeToClose.ts). On the
+          // page, the app's Escape command clears and leaves the field.
+          if (e.key === 'Escape' && draft && hasOpenOverlay() && !e.defaultPrevented && !isImeComposing(e)) {
+            e.preventDefault();
+            clear();
+          }
+        }}
         enterKeyHint="search"
         className={`pn-search-well w-full h-10 rounded-md bg-surface-2 border border-divider ps-3 ${
           draft || commandsHere ? 'pe-10' : 'pe-3'

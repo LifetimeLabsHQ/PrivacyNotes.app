@@ -397,6 +397,7 @@
     "modeRich": "Biçimlendirilmiş",
     "modeSource": "Markdown",
     "reopenPrompt": "Sayfa yeniden yüklendikten sonra tarayıcınız yeniden izin ister. Klasörünüz hatırlandığı için bu tek tıkla biter.",
+    "reopenPromptDesktop": "Uygulamanın yeniden açabilmesi için {{name}} klasörünü bir kez daha seçin. Klasördeki hiçbir şey değişmedi.",
     "reopenFolder": "{{name}} klasörünü yeniden aç",
     "new": "Yeni",
     "saveToNotes": "Notlarıma kaydet",
@@ -698,6 +699,7 @@
       "bookClub": "Kitap kulübü",
       "rent": "Kirayı öde"
     },
+    "feedReadOnly": "{{name}} kaynağından. Bu etkinliği yalnızca o takvimde değiştirebilirsiniz.",
     "nothingFor_one": "{{count}} gün boyunca bir şey yok",
     "more_one": "+{{count}} daha"
   },
@@ -826,7 +828,8 @@
       "file": "Dosya yükle",
       "contact": "Yeni kişi",
       "bookmark": "Yeni yer imi",
-      "clip": "Sayfayı kırp"
+      "clip": "Sayfayı kırp",
+      "writeNote": "Not yaz"
     },
     "keepAsText": "Bunu metin olarak bırak",
     "placeholder": "Başlık, gün, saat, tekrar...",
@@ -983,6 +986,7 @@
     "stepConnect": "Bağlayın",
     "makeCode": "Kod oluştur",
     "connectHint": "Tek kullanımlık bir kod oluşturun ve uzantıya yapıştırın.",
+    "secondBrowserPro": "Bir tarayıcı bağlı. İkincisi için Pro gerekir.",
     "thisBrowser": "Bu tarayıcı",
     "otherApps": "Masaüstü ve telefon uygulamaları:",
     "desktopAll": "Tüm indirmeler",
@@ -1040,7 +1044,7 @@
   "extensionConnect": {
     "clips": "Web kırpıcı",
     "clipsHint": "Web sitelerini not olarak kaydedin.",
-    "loginsHint": "Bulunduğunuz site için giriş bilgileri, kartlar, SSH anahtarları ve yer imleri, yalnızca kopyalama. Kendi PIN'i veya geçiş koduyla kilitlenir.",
+    "loginsHint": "Bulunduğunuz site için giriş bilgileri, kartlar, SSH anahtarları ve yer imleri; kopyalamak veya doldurmak için. Kendi PIN'i veya geçiş koduyla kilitlenir.",
     "pickOne": "En az birini açın.",
     "codeLabel": "Uzantı için kod",
     "oneUse": "10 dakika boyunca bir kez çalışır.",

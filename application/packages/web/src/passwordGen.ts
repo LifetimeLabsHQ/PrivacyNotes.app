@@ -225,3 +225,26 @@ export function readPwGen(value: unknown): PwGen {
   if (typeof pg.addSymbol === 'boolean') out.addSymbol = pg.addSymbol;
   return out;
 }
+
+/** The password options a remembered setting means. */
+export function passwordOptions(g: PwGen): PasswordOptions {
+  return {
+    length: g.length,
+    lowercase: g.lowercase,
+    uppercase: g.uppercase,
+    digits: g.numbers ? g.exactNumbers : 0,
+    symbols: g.symbols ? g.exactSymbols : 0,
+  };
+}
+
+/** The passphrase options a remembered setting means. */
+export function passphraseOptions(g: PwGen): PassphraseOptions {
+  return { words: g.words, separator: g.separator, capitalize: g.capitalize, number: g.addNumber, symbol: g.addSymbol };
+}
+
+/** A new value from the remembered settings: the generator panel's, and the
+ *  browser extension's Generate password key. The word list is a parameter,
+ *  so a caller that only makes passwords does not load it. */
+export function generateFrom(g: PwGen, words: readonly string[]): string {
+  return g.mode === 'passphrase' ? generatePassphrase(passphraseOptions(g), words) : generatePassword(passwordOptions(g));
+}

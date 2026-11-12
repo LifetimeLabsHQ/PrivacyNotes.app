@@ -5,6 +5,8 @@
   "useDefault": "Przywróć domyślne",
   "color": "Kolor",
   "applyToSubfolders": "Zastosuj kolor do podfolderów",
+  "applyToFolderItems": "Zastosuj do wszystkich elementów w tym folderze",
+  "applyToTagItems": "Zastosuj do wszystkich elementów z tym tagiem",
   "icon": "Ikona",
   "searchPlaceholder": "Szukaj ikon",
   "searchLogos": "Szukaj logo",

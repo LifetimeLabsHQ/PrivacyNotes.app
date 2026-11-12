@@ -31,5 +31,9 @@ La barra de arriba cambia el aspecto del texto: **negrita**, *cursiva*, títulos
 
 Esa frase es lo que abre tus notas. Dónde se guarda lo decides tú, y puedes cambiar esa decisión cuando quieras. [[Cómo se protegen tus notas]] explica las tres opciones.
 
+## Más que notas
+
+Notas, tareas, contraseñas, un diario, archivos, un calendario, contactos y marcadores, con seguimiento del estado de ánimo y la medicación. Una sola app, cifrada en tu dispositivo. Y además, un editor de Markdown gratis para las carpetas de tu disco, Ninja (⌘K) para llegar a cualquier cosa desde el teclado, y recortes web.
+
 > [!tip] Aquí nada es permanente
 > Cada nota de esta bóveda es un ejemplo, esta incluida. Edítala, muévela o bórrala.

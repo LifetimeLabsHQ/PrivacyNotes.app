@@ -13,6 +13,10 @@ Tekst kan <span style="color: #e03131">rood</span>, <span style="color: #1971c2"
 
 Hij kan ==geel gemarkeerd== zijn of <mark style="background-color: rgba(64, 192, 87, 0.35)">groen</mark>.
 
+Een spoiler verbergt woorden tot iemand erop klikt: het cadeau is ||een platenspeler||. Selecteer de woorden en kies **Spoiler** in het menu **Invoegen**, of typ aan elke kant twee verticale strepen.
+
+Een icoon of een logo kan in een regel tekst staan, zoals :icon[gift] :icon[coffee] :icon[rocket-launch] of :logo[github]. Kies er een via **Invoegen** > **Iconen en logo’s**.
+
 De knop **Aa** verandert grootte en lettertype. Tekst kan <span style="font-size: 0.85em">klein</span>, normaal of <span style="font-size: 1.6em">groot</span> zijn. Hij kan <span style="font-family: ui-sans-serif, system-ui, sans-serif">gewoon</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">met schreef</span> of <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">monospace</span> zijn.
 
 ## Waar de woorden staan
@@ -51,12 +55,21 @@ Uitlijnen verplaatst een hele alinea, nooit één woord. Zet de cursor in de ali
 | Europa | 1.204 | 48 % |
 | Amerika | 902 | 36 % |
 | Azië | 401 | 16 % |
+<!-- table-fill: r0=blue r1c2=green r3c2=red -->
 
-De middelste kolom staat gecentreerd en de laatste rechts. Sleep aan de rand van een kolom om hem breder te maken.
+De middelste kolom staat gecentreerd en de laatste rechts. Sleep aan de rand van een kolom om hem breder te maken. Een cel of een hele rij krijgt een kleur via de tabelbalk. Het pijltje in een kopcel sorteert de rijen eronder, en een tweede klik sorteert ze andersom.
+
+Een tabel kan ook rekenen. Typ `=` in een cel om een functie te kiezen. De cel toont de uitkomst en de notitie bewaart de formule, dus klik op een uitkomst om te zien hoe die tot stand kwam.
+
+| Artikel | Aantal | Prijs | Totaal |
+| --- | ---: | ---: | ---: |
+| Koffie | 2 | 3.50 | =B2*C2 |
+| Taart | 1 | 4.20 | =B3*C3 |
+|  |  | Som | =SUM(D2:D3) |
 
 ## Aandachtsblokken
 
-Een aandachtsblok is een gekleurd vak voor iets dat een lezer niet mag missen.
+Een aandachtsblok is een gekleurd vak voor iets dat een lezer niet mag missen. Typ `[!` op een lege regel om er een te kiezen.
 
 > [!tip]+ Tip
 > Klik op het pictogram om het dicht te klappen.
@@ -136,7 +149,21 @@ export function isLongRead(stats) {
 }
 ```
 
-Een kort stukje code midden in een zin ziet er zo uit: `dit`.
+Een codeblok kan een titel hebben. Klik op de naam van de taal en kies **Titel toevoegen**. Met het pijltje naast de titel klap je het blok in tot één regel, en de notitie onthoudt dat.
+
+```bash title="backup.sh" fold
+#!/bin/sh
+# Kopieer de map met notities naar een archief met datum.
+tar -czf "notes-$(date +%F).tar.gz" "$HOME/Notes"
+```
+
+Een **Kopieervak** bevat één ding om te kopiëren, zoals een adres of een opdracht. De knop kopieert alles in één klik.
+
+```copy
+ssh-keygen -t ed25519 -C "laptop"
+```
+
+Een kort stukje code midden in een zin ziet er zo uit: `dit`. Houd Cmd (Ctrl op Windows en Linux) ingedrukt en klik erop om het te kopiëren.
 
 ## Wiskunde
 
@@ -150,11 +177,21 @@ $$i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi$$
 
 Sleep een afbeelding in een notitie, of plak er een. Klik erop om de grootte te veranderen, of om hem links, in het midden of rechts te zetten. Die hierboven is halve breedte en gecentreerd.
 
+## Kaarten
+
+```map
+35.3606, 138.7274
+Fuji
+```
+
+Zet een plaats in een notitie met **Invoegen** > **Locatie**. De kaart komt van onze eigen server, dus geen kaartenbedrijf ziet waar je kijkt. In elke andere Markdown-app lees je hem als de coördinaten en de naam.
+
 ## Links
 
 Er zijn twee soorten, en ze zien er met opzet anders uit.
 
 - Een weblink opent een site: [privacynotes.app](https://privacynotes.app/nl)
+- Een weblink kan een tekst tonen als je erboven zweeft. Wijs [deze](https://privacynotes.app/nl/help "Onze hulppagina's") aan en wacht even.
 - Een notitielink opent een andere notitie van jou: [[Hoe je notities beschermd zijn]]
 
 Allebei hebben een knop in de balk. De ketting maakt een weblink. De haakjes maken een notitielink: ze sommen je notities op, en jij kiest welke je bedoelt. `[[` typen doet hetzelfde.

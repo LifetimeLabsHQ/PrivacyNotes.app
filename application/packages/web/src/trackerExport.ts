@@ -1,6 +1,7 @@
 import { customHabitsNow, habitLabel } from './habitList';
 import i18n from './i18n';
 import { SCHEDULE_KEYS } from './schedule';
+import { LOCATION_KEY } from './noteLocation';
 import {
   EMOTION_TAGS,
   HABIT_IDS,
@@ -67,8 +68,10 @@ export interface TrackerRow {
 /** Bookkeeping the person did not log, and values printed by their own rule
  *  below. The week reflection is private prose, not a tracker value. The
  *  schedule keys share `trackers` and the export prints them as one line of
- *  their own under the title, so they are never tracker rows. */
-const SKIP_KEYS = new Set<string>(['backfilled', 'weekReflection', 'customTrackers', 'factors', 'habits', ...SCHEDULE_KEYS]);
+ *  their own under the title, so they are never tracker rows. The place on
+ *  the note is an object and would be skipped anyway; it is named so the next
+ *  reader sees it is not a tracker value. */
+const SKIP_KEYS = new Set<string>(['backfilled', 'weekReflection', 'customTrackers', 'factors', 'habits', LOCATION_KEY, ...SCHEDULE_KEYS]);
 
 interface SleepValue {
   quality: SleepQuality;

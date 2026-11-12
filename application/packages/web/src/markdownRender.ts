@@ -13,6 +13,8 @@
  */
 
 import { joinParagraphLinesHtml } from './paragraphLines';
+import { parseFenceInfo } from './codeFenceInfo';
+import { MAP_FENCE, formatCoordinates, osmUrl, parseMapFence } from './noteLocation';
 import type { LineSpacing } from './theme';
 import { faviconUrl } from './favicon';
 import { attachmentLinks, unescapeMarkdownText } from './fileNames';
@@ -27,6 +29,7 @@ import { isSameOriginPath } from './sameOriginPath';
 import { calloutColorOf, canonicalCalloutType, type CalloutType } from './calloutKeywords';
 import { evaluateTable, formatFormulaValue, isFormulaText } from './tableFormula';
 import { INLINE_ICON_RE, inlineIconId } from './editorIconSyntax';
+import { firstLetter, letterDirection, listNumerals, writesPersian } from './textDirection';
 
 // ─── Callout types ──────────────────────────────────────────────────────
 //
@@ -889,16 +892,17 @@ function renderTaskListHtml(block: string): string | null {
       : align === 'right' ? ';justify-content:flex-end'
       : '';
     return (
-      `<li style="list-style:none;display:flex;align-items:flex-start;gap:0.5em;margin:0.2em 0${justify}">` +
+      `<li${dirAttr(firstLetterOfHtml(inner))} style="list-style:none;display:flex;align-items:flex-start;gap:0.5em;margin:0.2em 0${justify}">` +
         taskCheckboxHtml(checked) +
         taskTextHtml(checked, inner, '') +
       `</li>`
     );
   });
-  // margin-left too: this path only runs for a list that HAS an aligned item,
-  // and the surrounding stylesheet's own list indent would otherwise shift
-  // the centring axis (see parseListBlock's closing tags for the long form).
-  return `<ul style="list-style:none;padding-left:0;margin-left:0">${items.join('')}</ul>`;
+  // The start margin too: this path only runs for a list that HAS an aligned
+  // item, and the surrounding stylesheet's own list indent would otherwise
+  // shift the centring axis (see parseListBlock's closing tags for the long form).
+  const body = items.join('');
+  return `<ul${dirAttr(firstLetterOfHtml(body))} style="list-style:none;padding-inline-start:0;margin-inline-start:0">${body}</ul>`;
 }
 
 /**
@@ -915,6 +919,39 @@ function renderTaskListHtml(block: string): string | null {
  * 1.828rem is Tailwind prose's own 1.625em at the list's 18px.
  */
 const LIST_GUTTER = '1.828rem';
+
+// ─── Block direction ──────────────────────────────────────────────────
+//
+// A list, quote, callout or the footnotes read the way their own text
+// does, as in the editor (editorDirection.ts): a Persian list puts its
+// bullets on the right in an English export, and an English list keeps
+// them on the left in the burn viewer of an Arabic app. A task row turns
+// on its own too, and inline code does not count, the same as there. The list gutters below are logical
+// (padding-inline-start), so they follow the dir.
+// Spec: docs/internal/design/patterns/061-070.md (section 67)
+
+// Whether the note being rendered writes Persian, set by the outermost
+// renderMarkdown call: a quote or callout renders its body with a nested
+// call, and a numbered list there counts the same way as one outside.
+let notePersian: boolean | null = null;
+
+const CODE_SPAN = /<code\b[^>]*>[\s\S]*?<\/code>/gi;
+const TAG = /<[^>]*>/g;
+const ENTITY = /&#?\w+;/g;
+
+/** The text of rendered HTML: tags, entities and inline code dropped. */
+function textOfHtml(html: string): string {
+  return html.replace(CODE_SPAN, ' ').replace(TAG, ' ').replace(ENTITY, ' ');
+}
+
+function firstLetterOfHtml(html: string): string | null {
+  return firstLetter(textOfHtml(html));
+}
+
+/** ` dir="rtl"` or ` dir="ltr"` from a first letter, or nothing without one. */
+function dirAttr(letter: string | null): string {
+  return letter ? ` dir="${letterDirection(letter)}"` : '';
+}
 
 // ─── Nested list parser ───────────────────────────────────────────────
 //
@@ -1058,7 +1095,7 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
     // is already stripped above, so nothing here has to be made inline.
     const itemAlign =
       align === 'center' || align === 'right'
-        ? `;list-style-position:inside;text-align:${align};margin-left:-${LIST_GUTTER}`
+        ? `;list-style-position:inside;text-align:${align};margin-inline-start:-${LIST_GUTTER}`
         : align === 'justify' ? ';text-align:justify'
         : '';
     if (align === 'center' || align === 'right') gutterPinned = true;
@@ -1066,7 +1103,7 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
     if (item.isTask) {
       hasTask = true;
       items.push(
-        `<li style="list-style:none;display:flex;align-items:flex-start;gap:0.5em;margin:0.2em 0${
+        `<li${dirAttr(firstLetterOfHtml(body))} style="list-style:none;display:flex;align-items:flex-start;gap:0.5em;margin:0.2em 0${
           align === 'center' ? ';justify-content:center' : align === 'right' ? ';justify-content:flex-end' : ''
         }">` +
           taskCheckboxHtml(item.checked) +
@@ -1078,20 +1115,28 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
     }
   }
 
-  // `margin-left:0` is not decoration. The export stylesheet indents lists
+  // `margin-inline-start:0` is not decoration. The export stylesheet indents lists
   // with `margin: 0 0 1em 1.5em` and Tailwind prose has its own; an aligned
   // item can only cancel the PADDING it can see, so whatever margin the
   // surrounding stylesheet adds shifts the centring axis right by that much
   // and the item lands off centre in the .html and the PDF while looking
   // correct in the editor. Pinned only for a list that holds an aligned
   // item, so ordinary exported lists keep the indent they have always had.
-  const gutter = gutterPinned ? ` style="padding-left:${LIST_GUTTER};margin-left:0"` : '';
-  if (isOrdered) return [`<ol${gutter}>${items.join('')}</ol>`, i];
-  if (hasTask) {
-    const taskStyle = `list-style:none;padding-left:0${gutterPinned ? ';margin-left:0' : ''}`;
-    return [`<ul style="${taskStyle}">${items.join('')}</ul>`, i];
+  const body = items.join('');
+  const letter = firstLetterOfHtml(body);
+  const dir = dirAttr(letter);
+  const styles = gutterPinned ? [`padding-inline-start:${LIST_GUTTER}`, 'margin-inline-start:0'] : [];
+  if (isOrdered) {
+    if (letter && letterDirection(letter) === 'rtl' && listNumerals(letter, () => textOfHtml(body), () => notePersian === true)) {
+      styles.push('list-style-type:persian');
+    }
+    return [`<ol${dir}${styles.length ? ` style="${styles.join(';')}"` : ''}>${body}</ol>`, i];
   }
-  return [`<ul${gutter}>${items.join('')}</ul>`, i];
+  if (hasTask) {
+    const taskStyle = `list-style:none;padding-inline-start:0${gutterPinned ? ';margin-inline-start:0' : ''}`;
+    return [`<ul${dir} style="${taskStyle}">${body}</ul>`, i];
+  }
+  return [`<ul${dir}${styles.length ? ` style="${styles.join(';')}"` : ''}>${body}</ul>`, i];
 }
 
 /**
@@ -1106,8 +1151,14 @@ export function renderMarkdown(md: string): string {
   // Strip control characters used as internal sentinels to prevent
   // crafted input from colliding with the stash/restore mechanism.
   const text = md.replace(/\r\n?/g, '\n').replace(/[\x01\x02]/g, '');
-  if (!/\[\^|\^\[/.test(text)) return renderBlocks(text);
-  return renderWithFootnotes(text);
+  const render = () => (/\[\^|\^\[/.test(text) ? renderWithFootnotes(text) : renderBlocks(text));
+  if (notePersian !== null) return render();
+  notePersian = writesPersian(text);
+  try {
+    return render();
+  } finally {
+    notePersian = null;
+  }
 }
 
 /**
@@ -1146,7 +1197,8 @@ function renderWithFootnotes(text: string): string {
     }
     return `<li id="${prefix}-${n}">${html}</li>`;
   });
-  return restore(`${bodyHtml}\n<section class="footnotes" role="doc-endnotes"><hr>\n<ol>\n${items.join('\n')}\n</ol>\n</section>`);
+  const notes = items.join('\n');
+  return restore(`${bodyHtml}\n<section class="footnotes" role="doc-endnotes"${dirAttr(firstLetterOfHtml(notes))}><hr>\n<ol>\n${notes}\n</ol>\n</section>`);
 }
 
 /** A table row split on each `|` that no backslash escapes. A backslash
@@ -1196,9 +1248,24 @@ function renderBlocks(text: string): string {
       const dedent = /^[ \t>]+$/.test(prefix) && lines.every((l) => l.startsWith(prefix) || l.trim() === '');
       const code = dedent ? lines.map((l) => l.slice(prefix.length)).join('\n') : lines.join('\n');
       fenceSource.push('```' + lang + '\n' + code + '\n```');
-      const langId = lang.trim().split(/\s+/)[0] ?? '';
-      const highlighted = renderFenceCode(code, langId);
-      fences.push(`<pre><code>${highlighted ?? escapeHtml(code)}</code></pre>`);
+      // A title (```bash title="x", codeFenceInfo.ts) heads the panel, set
+      // off by a rule as in the editor. A block saved closed prints open:
+      // a page cannot be clicked.
+      const info = parseFenceInfo(lang);
+      // A map from Insert > Location prints as a link to the place: a page,
+      // an export and a burn note load no map (note-location.md, section 4b).
+      const place = info.language === MAP_FENCE ? parseMapFence(code) : undefined;
+      if (place) {
+        const at = formatCoordinates(place);
+        const text = place.label ? `${escapeHtml(place.label)} (${at})` : at;
+        fences.push(`<p><a href="${escapeHtml(osmUrl(place.lat, place.lng))}">${text}</a></p>`);
+        return `\x02F${idx}\x02`;
+      }
+      const highlighted = renderFenceCode(code, info.language ?? '');
+      const title = info.title
+        ? `<span class="code-title" style="display:block;font-weight:600;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid #3a3a3a">${escapeHtml(info.title)}</span>`
+        : '';
+      fences.push(`<pre>${title}<code>${highlighted ?? escapeHtml(code)}</code></pre>`);
       return `\x02F${idx}\x02`;
     }
   );
@@ -1378,14 +1445,15 @@ function renderBlocks(text: string): string {
         // paper cannot be clicked.
         const folded = callout[3] === '-';
         out.push(
-          `<details class="pn-callout pn-callout-${canon}"${folded ? '' : ' open'} style="${detailsStyle}">` +
+          `<details class="pn-callout pn-callout-${canon}"${folded ? '' : ' open'}${dirAttr(firstLetterOfHtml(title ? `${titleHtml} ${bodyHtml}` : bodyHtml))} style="${detailsStyle}">` +
             `<summary class="pn-callout-summary" style="${summaryStyle}">${caret}<span>${titleHtml}</span></summary>` +
             `<div class="pn-callout-body" style="${canon === 'fold' ? 'padding-inline-start:1.4em' : canon === 'box' ? 'padding:0.5em 0.85em 0.55em;border-top:1px solid rgba(128,128,128,0.25)' : canon === 'kanban' ? KANBAN_BODY_STYLE : 'padding:0.15em 0.85em 0.55em'}">${bodyHtml}</div>` +
           `</details>`
         );
         continue;
       }
-      out.push(`<blockquote>${renderMarkdown(unplace(buf.join('\n')))}</blockquote>`);
+      const quoted = renderMarkdown(unplace(buf.join('\n')));
+      out.push(`<blockquote${dirAttr(firstLetterOfHtml(quoted))}>${quoted}</blockquote>`);
       continue;
     }
 

@@ -81,5 +81,13 @@
 	</dict>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<false/>
+	<!-- "Use my current location" in a note's place popover. iOS shows this
+	     text in its own question, and asks only when the person taps that
+	     button (currentPosition.ts), never at launch. When In Use only: there
+	     is no "Always" key, and the app never reads the position in the
+	     background. iOS-only here because the macOS bundle has no location
+	     feature. Spec: docs/internal/plans/note-location.md (section 3) -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>PrivacyNotes uses your location only when you tap Use my current location, to add that place to the note.</string>
 </dict>
 </plist>

@@ -216,7 +216,7 @@ export function MedicationEditor({ initial, remind: initialRemind, supply, runsO
                 <MarkTile color={color}>
                   <MedicationGlyph form={form || undefined} size={18} style={color ? { color } : undefined} className={color ? 'shrink-0' : 'shrink-0 text-pn-muted'} />
                 </MarkTile>
-                <TextField size="sm" aria-label={t('shell:filesList.sortName')} value={name} maxLength={MED_NAME_MAX} onChange={(e) => setName(e.target.value)} placeholder={t('medication.namePlaceholder')} className="w-full" autoFocus />
+                <TextField size="sm" aria-label={t('shell:filesList.sortName')} value={name} maxLength={MED_NAME_MAX} onChange={(e) => setName(e.target.value)} placeholder={t('medication.namePlaceholder')} className="w-full" autoFocus={!!onCancel} />
               </div>
             ),
           }}

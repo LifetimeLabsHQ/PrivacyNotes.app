@@ -9,7 +9,7 @@ import { proUnlocked } from './demo';
 import { SourceSearchBar } from './SourceSearchBar';
 import { replaceAllText, type TextMatch } from './markdownSourceSearch';
 import { MarkdownSourceBar } from './MarkdownSourceBar';
-import { sourceEdit, type SourceAction } from './markdownSourceFormat';
+import { applySourceAction, type SourceAction } from './markdownSourceFormat';
 
 type Props = {
   /** Initial markdown content. Only read on mount - use a `key` prop to force reload. */
@@ -100,17 +100,8 @@ export function MarkdownSourceEditor({ value, onChange, readOnly = false, search
   function format(action: SourceAction) {
     const el = ref.current;
     if (!el || readOnly) return;
-    const edit = sourceEdit(action, el.value, el.selectionStart, el.selectionEnd);
-    el.focus();
-    el.setSelectionRange(edit.from, edit.to);
-    const typed = edit.insert === ''
-      ? document.execCommand?.('delete', false)
-      : document.execCommand?.('insertText', false, edit.insert);
-    if (!typed) {
-      el.setRangeText(edit.insert, edit.from, edit.to, 'end');
-      change(el.value);
-    }
-    el.setSelectionRange(edit.selFrom, edit.selTo);
+    const untyped = applySourceAction(el, action);
+    if (untyped !== null) change(untyped);
   }
 
   // The find bar pins under the toolbar, as the rich editor's does.

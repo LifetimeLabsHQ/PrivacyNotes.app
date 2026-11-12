@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type HTMLAttributes, type
 import { useTranslation } from 'react-i18next';
 import { ClockClockwise, type Icon } from './icons';
 import { Callout } from './ui/feedback';
+import { ARMED_MS } from './ui/DeleteButton';
 
 /**
  * Settings pane typography tokens - the single source of truth.
@@ -129,7 +130,7 @@ export function StatTile({ label, value, sub, children, bare = false }: { label:
 
 /**
  * "Reset to defaults" at the foot of a pane. Armed, not immediate: the first
- * click turns it into a confirm for three seconds, because one stray click
+ * click turns it into a confirm for six seconds (`ARMED_MS`), because one stray click
  * would otherwise undo every choice on the pane at once.
  */
 export function ResetDefaultsButton({ onReset, className = 'pt-4' }: { onReset: () => void; /** Layout-only classes; the default spaces it under a pane's last row. */ className?: string }) {
@@ -146,7 +147,7 @@ export function ResetDefaultsButton({ onReset, className = 'pt-4' }: { onReset: 
       return;
     }
     setArmed(true);
-    timer.current = setTimeout(() => setArmed(false), 3000);
+    timer.current = setTimeout(() => setArmed(false), ARMED_MS);
   }
 
   return (

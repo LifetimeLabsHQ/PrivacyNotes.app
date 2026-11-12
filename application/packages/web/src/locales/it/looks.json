@@ -5,6 +5,8 @@
   "useDefault": "Usa predefinito",
   "color": "Colore",
   "applyToSubfolders": "Applica il colore alle sottocartelle",
+  "applyToFolderItems": "Applica a tutti gli elementi di questa cartella",
+  "applyToTagItems": "Applica a tutti gli elementi con questo tag",
   "icon": "Icona",
   "searchPlaceholder": "Cerca icone",
   "searchLogos": "Cerca loghi",

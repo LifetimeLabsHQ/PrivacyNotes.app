@@ -92,6 +92,18 @@
       "help": "Keyboard shortcuts"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "Write more here",
+    "hint": "Type / for a folder, # for a tag",
+    "locked": "PrivacyNotes is locked. Your note is sealed and opens when you unlock.",
+    "queued": "Saved. It opens when you unlock.",
+    "tooLong": "This note is too long. Split it into two notes.",
+    "full": "Too many notes wait. Unlock to add them.",
+    "empty": "Write something first.",
+    "failed": "Could not save the note. Open PrivacyNotes and try again.",
+    "added_one": "{{count}} quick note added",
+    "added_other": "{{count}} quick notes added"
+  },
   "quickSwitcher": {
     "label": "Ninja: find an item or a setting, add anything, run a command",
     "jumpTo": "Ninja",
@@ -129,7 +141,9 @@
     "actions": "actions",
     "back": "back",
     "actionsPlaceholder": "Filter the actions",
-    "onlyCreate": "add"
+    "onlyCreate": "add",
+    "ninjaLockedTitle": "PrivacyNotes is locked",
+    "ninjaLockedBody": "Open PrivacyNotes and unlock it. Then Ninja finds your notes from any app."
   },
   "cardForm": {
     "cardholderName": "Cardholder Name",
@@ -276,8 +290,10 @@
         "detail": "Each day of the year as one colored square"
       },
       "importExport": {
-        "label": "Import & Export",
-        "detail": "Bring notes in, take a backup out"
+        "detail": "Bring notes in, or take them out"
+      },
+      "backup": {
+        "detail": "Back up now, automatic backups and restore"
       },
       "generator": {
         "label": "Password generator",
@@ -293,6 +309,7 @@
     },
     "commands": {
       "syncResume": "Resume sync",
+      "lockProtected": "Lock this note",
       "changelog": "What is new",
       "themesPage": "Community themes",
       "website": "PrivacyNotes website"

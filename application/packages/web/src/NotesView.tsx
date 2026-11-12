@@ -25,6 +25,8 @@ import {
   duplicateNote,
   countUnsyncedNotes,
 } from './notesRepo';
+import { setAutoLocationWriter } from './autoLocation';
+import { LOCATION_KEY, readLocation } from './noteLocation';
 import { runAtRestSweep } from './localSweep';
 import { FolderPicker } from './FolderPicker';
 import { BookmarksList, type BookmarkDraft } from './BookmarksList';
@@ -86,7 +88,7 @@ import { Button, Checkbox, Kbd } from './ui';
 import { activeLocale, intlLocale } from './languages';
 import { UpgradeModal, type UpgradeTrigger } from './UpgradeModal';
 import { PinGateModal, type PinGatePurpose } from './ProtectedNoteGate';
-import { shouldPromptForPin, markPinUnlocked, hasPin, syncPinCache } from './pin';
+import { shouldPromptForPin, markPinUnlocked, relockNote, isNoteRelocked, clearNoteRelock, hasPin, syncPinCache } from './pin';
 import { syncPinWrap } from './pinRecovery';
 import { startPinKeepAlive } from './pinKeepAlive';
 import { hasBiometricCredential, unlockWithBiometric } from './biometric';
@@ -98,7 +100,7 @@ import { withTrackerContent } from './editStamp';
 import { HoverLabel } from './HoverLabel';
 import { useNoteEditing } from './useNoteEditing';
 import { useSyncOrchestrator } from './useSyncOrchestrator';
-import { useShellAppearance, applyLineSpacing, isFreeTheme, paintedSlot } from './theme';
+import { useShellAppearance, applyLineSpacing, applyNestedNumbers, isFreeTheme, paintedSlot } from './theme';
 import { formatDay, setDatePrefs } from './intlFormat';
 import { searchNotes, searchBodyTerms, searchSeedCandidates, isPhraseQuery, gatedSearchCopy, notesHolding } from './search';
 import { textMatcher } from './textMatch';
@@ -230,7 +232,27 @@ const DmsReturnModalLazy = lazyPart(() => import('./notesView/DmsReturnModal').t
 // Loaded only while the mass delete guard holds a pull for an answer.
 const MassDeleteModalLazy = lazyPart(() => import('./notesView/MassDeleteModal').then((m) => m.MassDeleteModal));
 const NoteIconPicker = lazyModal(() => import('./looks/NoteIconPicker').then((m) => m.NoteIconPicker));
+// Loaded only when an event of a subscribed calendar is opened (#619).
+const FeedEventModalLazy = lazyModal(() => import('./FeedEventModal').then((m) => m.default));
+// Loaded only when the calendar's Subscribe button is clicked (#619).
+const CalendarSubscribeModalLazy = lazyModal(() => import('./CalendarSubscribeModal').then((m) => m.default));
 const CalendarAgendaLazy = lazyPart(() => import('./CalendarAgenda').then((m) => m.default));
+// The automatic backup pane imports Settings parts (CommandLinePane's Step and
+// what it pulls), so its toast and its after-export line load only when shown.
+// Spec: docs/internal/plans/auto-backup.md (section 10)
+const AutoBackupToastLazy = lazyPart(() => import('./autoBackup/AutomaticPane').then((m) => m.AutoBackupToast));
+const AutomaticAfterExportLazy = lazyPart(() => import('./autoBackup/AutomaticPane').then((m) => m.AutomaticAfterExport));
+/** Mounts the backup toast only while there is a message, so NotesView itself
+ *  never renders again on a backup's progress. */
+function AutoBackupToastSlot({ onOpenSettings }: { onOpenSettings: () => void }) {
+  const { message, running } = useBackupLive();
+  if (!message || running) return null;
+  return (
+    <Suspense fallback={null}>
+      <AutoBackupToastLazy onOpenSettings={onOpenSettings} />
+    </Suspense>
+  );
+}
 // Home's widgets load when Home first draws. Spec: docs/internal/specs/dashboard.md (section 8)
 const DashboardLazy = lazyPart(() => import('./dashboard/Dashboard').then((m) => m.default));
 // Spec: docs/internal/specs/note-shortcuts.md (6.1): only a shortcut opened in a
@@ -289,6 +311,9 @@ import {
   journalDateOf,
   type DayEntry,
 } from './notesViewUtils';
+import { useCalendarFeeds } from './notesView/useCalendarFeeds';
+import { isFeedItemId, type CalendarFeeds } from './calendarFeeds';
+import { sessionTokenOf } from './sessionToken';
 import i18n from './i18n';
 import { kanbanEmptyBody } from './kanbanLayout';
 import { emptyDrawingBody } from './drawing/scene';
@@ -326,6 +351,11 @@ import { ProActivationPendingBanner } from './notesView/ProActivationPendingBann
 import { SnapshotForbiddenBanner } from './notesView/SnapshotForbiddenBanner';
 import { StoragePastDueBanner } from './notesView/StoragePastDueBanner';
 import { useExports, type ExportProgress } from './notesView/useExports';
+import { useAutoBackupRunner, useBackupLive } from './autoBackup/runner';
+import { BACKUP_REMINDER_ID, backupReminderItem } from './autoBackup/reminder';
+import { useAutoBackupState } from './autoBackup/store';
+import { isPhone as isPhoneApp } from './autoBackup/destination';
+import { deviceLabelOf } from './deviceLabels';
 import { createContextMenuBuilders } from './notesView/contextMenus';
 import { MobileDrawer } from './notesView/MobileDrawer';
 import { NoteEditorPane } from './notesView/NoteEditorPane';
@@ -367,7 +397,10 @@ import TasksList from './TasksList';
 import { offersDesktopApp, peekPendingShortcut, setShortcutOpener, shortcutNoun, shortcutUrl, takePendingShortcut, type ShortcutTarget } from './noteShortcut';
 import { useShortcutDeepLinks } from './useShortcutDeepLinks';
 import { takeLegacyImportDismissal } from './ImportPrompt';
-import { TRAY_SETTINGS_EVENT } from './trayMode';
+import { TRAY_SETTINGS_EVENT, useTrayMode } from './trayMode';
+import { NINJA_TOGGLE_EVENT, QUICK_NOTES_ADDED_EVENT } from './ninjaShortcut';
+import { hasLiveSignIn } from './liveSignIn';
+import { attachRemoteNinja, openBoxNoteMode, registerNinjaHost, remoteNinjaClosed } from './ninjaHost';
 
 /** Does a plain note created from this pillar land somewhere the user can see
  *  it? A pillar that answers `false` renders something other than the notes
@@ -653,12 +686,30 @@ function AuthenticatedView({
     setPinUnlockVersion((v) => v + 1);
     setJustProtectedIds(new Set());
   }
+  /** Lock (#723): shut this one protected note now. The PIN window stays
+   *  open for the others. Typed text goes into the notes array first, as on
+   *  an unlock, because the editor unmounts behind the gate. */
+  function lockNote(id: string) {
+    flushEditingBodyRef.current();
+    relockNote(id);
+    setPinUnlockVersion((v) => v + 1);
+  }
+  /** The PIN on a note's own gate: that note follows the window again, and
+   *  the window opens as on every unlock. A note another Lock shut stays shut. */
+  function unlockNote(id: string) {
+    clearNoteRelock(id);
+    markUnlocked();
+  }
   /** Gate a copy of a note the PIN guards right now until the next unlock.
    *  The copy carries the protection, and this keeps a note protected in
    *  this unlock window from being read through its copy. */
   function gateCopy(id: string) {
     setJustProtectedIds((cur) => new Set(cur).add(id));
   }
+  // The subscribed calendar's event open read-only, and the calendar's
+  // Subscribe window (#619).
+  const [feedEvent, setFeedEvent] = useState<{ id: string; occurrence?: string } | null>(null);
+  const [showSubscribe, setShowSubscribe] = useState(false);
   const [importExportModal, setImportExportModal] = useState<
     { open: false } | { open: true; tab: 'import' | 'export' | 'restore' }
   >({ open: false });
@@ -688,11 +739,15 @@ function AuthenticatedView({
   // ID & Sync pane runs the verification without a second click. Cleared
   // with the deep-link target below.
   const [settingsAutoVerify, setSettingsAutoVerify] = useState(false);
+  // Set when Protect needs a PIN first: the PIN tab says why. Cleared with
+  // the deep-link target below.
+  const [settingsSecurityReason, setSettingsSecurityReason] = useState<'protect' | undefined>(undefined);
   useEffect(() => {
     if (!showSettings) {
       setSettingsCategory(undefined);
       setSettingsRow(undefined);
       setSettingsAutoVerify(false);
+      setSettingsSecurityReason(undefined);
     }
   }, [showSettings]);
   /** "Synced" is a claim; this is how the user gets it checked. */
@@ -906,6 +961,7 @@ function AuthenticatedView({
   function isNoteLocked(n: LocalNote): boolean {
     if (n.pinProtected !== 1) return false;
     if (justProtectedIds.has(n.id)) return true;
+    if (isNoteRelocked(n.id)) return true;
     // No PIN set yet? Still gate the note. The bootstrap branch of
     // ProtectedNoteGate walks the user through setting one.
     if (!hasPin()) return true;
@@ -1607,6 +1663,17 @@ function AuthenticatedView({
     setSettingsSolo(true);
     setShowSettings(true);
   }, []);
+  // Protect with no PIN yet: Settings > Security on its own, at Set a PIN, at
+  // the width of the Settings window. The small Security dialog squeezed the
+  // PIN and passcode comparison into a narrow column.
+  const openSetPinForProtect = useCallback(() => {
+    setShowAppearance(false);
+    setSettingsCategory('security');
+    setSettingsRow({ id: 'security.setPin', tab: 'pin' });
+    setSettingsSecurityReason('protect');
+    setSettingsSolo(true);
+    setShowSettings(true);
+  }, []);
   // Settings > Storage > Images, from the storage dialog and the clipper.
   const openImageSettings = useCallback(() => {
     setSettingsCategory('storage');
@@ -1720,6 +1787,7 @@ function AuthenticatedView({
     exportContacts,
     exportDrawings,
     exportCalendar,
+    exportNotesMarkdownZip,
     printNote,
     importEncryptedBackup,
   } = useExports({
@@ -1730,6 +1798,18 @@ function AuthenticatedView({
     imageStoreRef,
     attachmentStoreRef,
     setExportProgress,
+  });
+  // Automatic backups (#566) read the vault through these at the moment a
+  // run starts. Spec: docs/internal/plans/auto-backup.md (section 6)
+  useAutoBackupRunner({
+    notes: () => notes,
+    loaded: () => localReadDone && !loadError,
+    encryptionKey: () => auth.encryptionKey,
+    imageStore: () => imageStoreRef.current,
+    attachmentStore: () => attachmentStoreRef.current,
+    settings: () => userSettings,
+    deviceName: () => deviceLabelOf(userSettings.deviceLabels, auth.deviceId) ?? '',
+    exporting: () => exportProgress !== null && !exportProgress.done,
   });
 
   // Mirror of pendingFocus for the Tasks quick-add input. Fires after the
@@ -2925,7 +3005,9 @@ function AuthenticatedView({
   // protected note is the open one, input carries the unlock window forward.
   // The watch ends when that note stops being the open one, which is when the
   // window starts running out again (issue #254).
-  const selectedIsProtected = selected?.pinProtected === 1;
+  // A note shut with Lock is not being worked in: input at its gate must not
+  // carry the window forward for the other protected notes (#723).
+  const selectedIsProtected = selected?.pinProtected === 1 && !isNoteRelocked(selected.id);
   useEffect(() => {
     if (!selectedIsProtected) return;
     return startPinKeepAlive(userSettings.pinTimeoutMinutes);
@@ -3120,10 +3202,20 @@ function AuthenticatedView({
   const openOccurrence = view === 'calendar' && selected
     ? liveOccurrence(selected.trackers as Record<string, unknown> | undefined, selected.type, calendar.occurrence)
     : null;
+  // The events of the subscribed calendars, downloaded by this device and
+  // held in memory only; they join the index read-only and are no items.
+  // Spec: docs/internal/specs/calendar-pillar-spec.md (section 14)
+  const feedToken = useMemo(() => sessionTokenOf(supabase), [supabase]);
+  const calendarFeeds = useCalendarFeeds(userSettings.calendarFeeds, feedToken);
+  const feedsControl = useMemo(
+    () => ({ list: userSettings.calendarFeeds, onChange: (update: (prev: CalendarFeeds) => CalendarFeeds) => mutateSettings((prev) => ({ ...prev, calendarFeeds: update(prev.calendarFeeds) })) }),
+    [userSettings.calendarFeeds, mutateSettings],
+  );
   // One index for every calendar: journal entries, notes and task lists on
   // their day, contacts on their birthday and other dates. Spec: docs/internal/specs/note-date.md (section 4)
   const calendarDays = useMemo(
-    () => calendarIndex(notes, {
+    () => calendarIndex(calendarFeeds.items.length ? [...notes, ...calendarFeeds.items] : notes, {
+      feedOf: calendarFeeds.feedOf,
       titleOf: (n) => noteLinkName(n, isNoteLocked(n)),
       isGated: isNoteLocked,
       dateTitle: (name, label) => t('shell:calendar.contactDate', { name, label: t(`shell:contacts.labels.${label}`, { defaultValue: label }) }),
@@ -3135,7 +3227,7 @@ function AuthenticatedView({
     }),
     // gatedIdsKey: the lock predicate is a fresh function each render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [notes, spacesOn, filterSpace, spaceOfFolder, activeSpace, gatedIdsKey, calendarShowsOther, t]
+    [notes, calendarFeeds, spacesOn, filterSpace, spaceOfFolder, activeSpace, gatedIdsKey, calendarShowsOther, t]
   );
   // The Calendar row counts the items today; zero draws nothing.
   const todayCount = calendarDays.entriesOf(toLocalIso(new Date())).length;
@@ -4023,6 +4115,10 @@ function AuthenticatedView({
   /** Open an item from a calendar: a journal entry in Journals, anything
    *  else in its own pillar, as a note-link does. */
   function openCalendarItem(id: string, occurrence?: string) {
+    if (isFeedItemId(id)) {
+      setFeedEvent({ id, occurrence });
+      return;
+    }
     const item = liveNotes.find((n) => n.id === id);
     if (!item) return;
     // In the Calendar an item opens in place of the month, with a Back row.
@@ -4911,10 +5007,11 @@ function AuthenticatedView({
     scheduleSync();
   }
 
-  /** Archive or unarchive a note. It leaves the list it sits in, and the
-   *  auto-select moves on the same way it does after a trash. */
+  /** Archive or unarchive a note. Archiving the open note moves on to the
+   *  next one, as a trash does, once the note has left the list (below). */
   async function handleToggleArchive(id: string, archived: boolean) {
     const run = async () => {
+      if (archived && selectedId === id) archiveMoveOn.current = { id, next: pickNextSelection(id) };
       await setArchived(id, archived);
       await refresh();
       scheduleSync();
@@ -4922,6 +5019,19 @@ function AuthenticatedView({
     if (archived) askOrArchive(1, run);
     else await run();
   }
+  // The open note was archived: once the refresh shows it archived, open the
+  // next one if this list no longer holds it. A list that shows archived
+  // items (the Archive view, All with archived shown) keeps it open.
+  const archiveMoveOn = useRef<{ id: string; next: string | null } | null>(null);
+  useEffect(() => {
+    const pending = archiveMoveOn.current;
+    if (!pending) return;
+    const n = notes.find((x) => x.id === pending.id);
+    if (n && n.archived !== 1) return;
+    archiveMoveOn.current = null;
+    if (selectedId !== pending.id || displayNotes.some((x) => x.id === pending.id)) return;
+    setSelectedId(pending.next);
+  }, [notes, displayNotes, selectedId]);
 
   /** The selection's Archive: a selection that is all archived unarchives
    *  at once, anything else archives every item and asks first (#713). */
@@ -4964,6 +5074,50 @@ function AuthenticatedView({
   // again (Quick add, command mode) runs in the same batch as the close, so
   // without a new key the old switcher stays mounted with the old query.
   const [quickSwitcherMount, setQuickSwitcherMount] = useState(0);
+  // Set while the switcher runs for the Ninja box above another app: it is
+  // invisible here, and the box draws it (ninjaHost.ts).
+  // Spec: docs/internal/plans/ninja-anywhere-694.md (section 3)
+  const [quickSwitcherRemote, setQuickSwitcherRemote] = useState(false);
+  useEffect(() => registerNinjaHost({
+    open: () => {
+      setQuickAddAt(null);
+      setQuickSwitcherRemote(true);
+      setQuickSwitcherQuery('');
+      setQuickSwitcherMount((n) => n + 1);
+    },
+    close: () => {
+      setQuickSwitcherRemote(false);
+      setQuickSwitcherQuery(null);
+      setQuickSwitcherMount((n) => n + 1);
+    },
+    // A note from the box's note mode, while this window is unlocked.
+    // Spec: docs/internal/plans/quick-note-694.md (section 5.2 step 4)
+    saveNote: async (input) => {
+      const answer = await import('./quickNoteQueue').then((q) => q.saveQuickNote(input, hasLiveSignIn));
+      if (answer === 'saved') await refresh();
+      return answer;
+    },
+  }), [refresh]);
+  // The notes the box kept while the app was locked are in: say so once.
+  useEffect(() => {
+    const added = (e: Event) => {
+      const ids = (e as CustomEvent<string[]>).detail ?? [];
+      if (ids.length) flashToast(t('common:quickNote.added', { count: ids.length }));
+    };
+    window.addEventListener(QUICK_NOTES_ADDED_EVENT, added);
+    return () => window.removeEventListener(QUICK_NOTES_ADDED_EVENT, added);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- flashToast only sets state
+  }, [t]);
+  // The Ninja key, pressed while this window has the focus: Ninja opens or closes here, as Mod+K does.
+  useEffect(() => {
+    const toggle = () => {
+      setQuickSwitcherRemote(false);
+      setQuickSwitcherQuery((q) => (q === null ? '' : null));
+      setQuickSwitcherMount((n) => n + 1);
+    };
+    window.addEventListener(NINJA_TOGGLE_EVENT, toggle);
+    return () => window.removeEventListener(NINJA_TOGGLE_EVENT, toggle);
+  }, []);
   useEffect(() => {
     // A failed load leaves the lazy path, which retries on the first open.
     const id = setTimeout(() => {
@@ -5125,6 +5279,11 @@ function AuthenticatedView({
     const ACTIONS: Record<NinjaAction, { available: boolean; run: () => void }> = {
       passwordGenerator: { available: true, run: () => setShowGenerator(true) },
       lock: { available: true, run: handleLockClick },
+      // Offered while the open note is protected and open.
+      lockProtected: {
+        available: Boolean(selected && selected.pinProtected === 1 && !isNoteLocked(selected)),
+        run: () => { if (selected) lockNote(selected.id); },
+      },
       syncNow: { available: signedIn && !syncPaused, run: () => void runSync() },
       syncPause: { available: signedIn, run: () => setSyncPaused(!syncPaused) },
       // Always offered, so it is found: an empty trash says so.
@@ -5255,6 +5414,7 @@ function AuthenticatedView({
     exportContacts: gateExportAll(freshAll(exportContacts), isNoteLocked, requestPinGate),
     exportCalendar: gateExportAll(freshAll(exportCalendar), isNoteLocked, requestPinGate),
     exportDrawings: gateExportAll(freshAll(exportDrawings), isNoteLocked, requestPinGate),
+    exportNotesMarkdownZip: gateExportAll(freshAll(exportNotesMarkdownZip), isNoteLocked, requestPinGate),
   };
   const freshEncryptedBackup = freshAll(exportEncryptedBackup);
   const freshEncryptedFullBackup = freshAll(exportEncryptedFullBackup);
@@ -5347,7 +5507,7 @@ function AuthenticatedView({
       handleSetLocked,
       handleSetPinProtected,
       requestRemoveProtection: (id: string) => void requestRemoveProtection(id),
-      onSetPin: () => setShowSecurity({ tab: 'pin', reason: 'protect' }),
+      onSetPin: openSetPinForProtect,
       handleDuplicate,
       handleTrash,
       requestTrash,
@@ -5464,6 +5624,18 @@ function AuthenticatedView({
       return copy?.id ?? null;
     },
   });
+
+  // "Automatically add my location" (autoLocation.ts) writes a new item's
+  // place through the same merge as the chip, so the chip shows at once, and
+  // never over a place set while the phone was still reading.
+  useEffect(() => {
+    setAutoLocationWriter(async (id, place) => {
+      const row = await getNote(id);
+      if (!row || readLocation(row.trackers as Record<string, unknown> | undefined)) return false;
+      return handleTrackersPatch(id, { [LOCATION_KEY]: place } as JournalTrackerData);
+    });
+    return () => setAutoLocationWriter(null);
+  }, [handleTrackersPatch]);
 
   // Every schedule write of the calendar: a move, an end day, a Schedule view
   // field, a drop, and the "Change this item?" question of a repeating event.
@@ -5594,6 +5766,13 @@ function AuthenticatedView({
   );
   // Reminders: this device plans and fires the alerts of the items it holds.
   // Spec: docs/internal/specs/calendar-pillar-spec.md (step 7)
+  const autoBackup = useAutoBackupState();
+  const trayModeOn = useTrayMode();
+  const openAutomaticBackups = useCallback(() => {
+    setSettingsCategory('backup');
+    setSettingsRow({ id: 'import.automatic', tab: 'automatic' });
+    setShowSettings(true);
+  }, []);
   const reminders = useReminders({
     notes,
     // A failed read leaves the list empty, which is no plan to act on.
@@ -5606,7 +5785,11 @@ function AuthenticatedView({
     birthday: userSettings.calendar.alertBirthday,
     checkIn: checkInReminderTime ? { time: checkInReminderTime, done: checkInIsDone } : null,
     medications: medicationReminders,
+    // A phone says so when a backup is overdue, and a computer too while the
+    // window sits in the tray; an open window shows the app's own message.
+    backup: isPhoneApp() || trayModeOn ? backupReminderItem(autoBackup.config) : null,
     onOpen: (id, occurrence) => {
+      if (id === BACKUP_REMINDER_ID) { openAutomaticBackups(); return; }
       if (id === CHECK_IN_REMINDER_ID || id.startsWith(MEDICATION_REMINDER_PREFIX)) { openCheckInHome(); return; }
       markSeen(id);
       void calendar.openAt(occurrence || toLocalIso(new Date())).then(() => calendar.openItem(id, occurrence || undefined));
@@ -5643,6 +5826,11 @@ function AuthenticatedView({
   useEffect(() => {
     applyLineSpacing(userSettings.lineSpacing);
   }, [userSettings.lineSpacing]);
+
+  // The synced nested numbers (#689), painted on <html> for the same reason.
+  useEffect(() => {
+    applyNestedNumbers(userSettings.nestedNumbers);
+  }, [userSettings.nestedNumbers]);
 
   // The synced date settings, for every date the app writes. A change made
   // here and one that arrives with the settings blob take the same path, and
@@ -5870,8 +6058,9 @@ function AuthenticatedView({
       tintNotes: userSettings.tintNotes,
       noteColorStyle: userSettings.noteColorStyle,
       filter: colorFilter,
+      parents: new Map(userSettings.folders.map((f) => [f.id, f.parentId])),
     }),
-    [userSettings.itemStyles, userSettings.tintNotes, userSettings.noteColorStyle, colorFilter],
+    [userSettings.itemStyles, userSettings.tintNotes, userSettings.noteColorStyle, colorFilter, userSettings.folders],
   );
   // The open note's background takes its color when the switch is on: its
   // first colored tag, else its folder. A layer over the pane's own surface,
@@ -6114,7 +6303,7 @@ function AuthenticatedView({
       listPrefsStore={userSettings.listPrefs}
       onListPrefsChange={handleListPrefsChange}
       onExplain={() => setMarkdownExplain(true)}
-      reopenName={markdownRestore.reopen?.name ?? null}
+      reopenName={markdownRestore.reopenName}
       // The remembered folder can be gone, renamed, or on an unmounted volume
       // by the time the user accepts the prompt, and the rejection is the only
       // signal that the reopen did not happen.
@@ -7147,6 +7336,7 @@ function AuthenticatedView({
                 onMenu={isMobile && notesListCollapsed ? () => setDrawerOpen(true) : undefined}
                 agenda={tabsShown ? { open: !notesListCollapsed, toggle: toggleCalendarAgenda } : undefined}
                 onImport={() => setImportExportModal({ open: true, tab: 'import' })}
+                onSubscribe={() => setShowSubscribe(true)}
               />
             </Suspense>
           ) : !selected ? (
@@ -7208,6 +7398,7 @@ function AuthenticatedView({
               folderChipFor={folderChipFor}
               refresh={refresh}
               onRevealNote={revealNote}
+              onOpenNoteLink={navigateToNoteByTitle}
               handleSelectTag={handleSelectTag}
               handleCloseEditor={handleCloseEditor}
               handleHistory={handleHistory}
@@ -7227,8 +7418,9 @@ function AuthenticatedView({
               setRemoveProtectionFor={setRemoveProtectionFor}
               openHistory={(n) => void behindGate(n, () => setHistoryForNoteId(n.id))}
               setShowUpgrade={setShowUpgrade}
-              setShowSecurity={setShowSecurity}
-              onPinUnlocked={markUnlocked}
+              onSetPinForProtect={openSetPinForProtect}
+              onPinUnlocked={unlockNote}
+              onLockProtected={lockNote}
               setFolderPicker={setFolderPicker}
               layout={{
                 gridMode,
@@ -7273,6 +7465,7 @@ function AuthenticatedView({
                 registerEditorBody,
                 handleTagsChange,
                 handleTrackersChange,
+                handleTrackersPatch,
                 handleVaultSave,
               }}
               noteMenu={{
@@ -7463,6 +7656,7 @@ function AuthenticatedView({
             onToggleHiddenView: handleToggleHiddenView,
             auth,
             settingsAutoVerify,
+            settingsSecurityReason,
             onOpenNote: openNoteById,
             setShowSettings,
             setShowUpgrade,
@@ -7530,8 +7724,9 @@ function AuthenticatedView({
           error={exportProgress.error}
           savedPath={exportProgress.savedPath}
           steps={exportProgress.steps}
-          step={exportProgress.step}
           onClose={closeExportProgress}
+          // A full backup made by hand is the moment to offer the automatic one.
+          afterDone={exportProgress.steps?.includes('files') ? <Suspense fallback={null}><AutomaticAfterExportLazy onOpen={() => { closeExportProgress(); openAutomaticBackups(); }} /></Suspense> : undefined}
         />
       )}
       {uploadEntries && (
@@ -7613,6 +7808,8 @@ function AuthenticatedView({
           onEditorModeChange={handleEditorModeChange}
           lineSpacing={userSettings.lineSpacing}
           onLineSpacingChange={(next) => mutateSettings((prev) => ({ ...prev, lineSpacing: next }))}
+          nestedNumbers={userSettings.nestedNumbers}
+          onNestedNumbersChange={(next) => mutateSettings((prev) => ({ ...prev, nestedNumbers: next }))}
           hiddenViews={userSettings.hiddenViews}
           hiddenInAll={userSettings.hiddenInAll}
           archivedInAll={userSettings.archivedInAll}
@@ -8130,6 +8327,7 @@ function AuthenticatedView({
         <MilestoneToast milestone={toast} onDismiss={() => setToast(null)} />
       )}
       {reminders.toast}
+      <AutoBackupToastSlot onOpenSettings={openAutomaticBackups} />
       {markdownExplain && <MarkdownExplainer onClose={() => setMarkdownExplain(false)} />}
       {markdownDelete && (
         <ConfirmModal
@@ -8168,6 +8366,7 @@ function AuthenticatedView({
           onClose={() => setImportExportModal({ open: false })}
           initialTab={importExportModal.tab}
           notes={notes}
+          calendarFeeds={feedsControl}
           onImportFolders={mergeImportedFolders}
           importTarget={importTarget}
           onCreateImportFolder={createImportFolder}
@@ -8185,6 +8384,7 @@ function AuthenticatedView({
           onExportContacts={gatedExportAll.exportContacts}
           onExportCalendar={gatedExportAll.exportCalendar}
           onExportDrawings={gatedExportAll.exportDrawings}
+          onExportNotesMdZip={(ns) => void gatedExportAll.exportNotesMarkdownZip(ns)}
           onImportEncrypted={importEncryptedBackup}
           onBlobsRestored={handleBlobsRestored}
           onImported={async (count, skippedDuplicates, repaired) => {
@@ -8376,6 +8576,20 @@ function AuthenticatedView({
           onConfirmSignOut={() => void confirmSignOut()}
         />
       )}
+      {showSubscribe && (
+        <Suspense fallback={null}>
+          <CalendarSubscribeModalLazy feeds={feedsControl} onClose={() => setShowSubscribe(false)} />
+        </Suspense>
+      )}
+      {feedEvent && (() => {
+        const item = calendarFeeds.items.find((n) => n.id === feedEvent.id);
+        const feed = item ? calendarFeeds.feedOf(item) : null;
+        return item && feed ? (
+          <Suspense fallback={null}>
+            <FeedEventModalLazy item={item} feed={feed} occurrence={feedEvent.occurrence} onClose={() => setFeedEvent(null)} />
+          </Suspense>
+        ) : null;
+      })()}
       {noteIconId !== null && (
         <Suspense fallback={null}>
           <NoteIconPicker
@@ -8509,6 +8723,8 @@ function AuthenticatedView({
                 contact: (name) => handleNewContact(name),
                 bookmark: (url) => (url ? void handleQuickBookmark(url) : handleNewBookmark()),
                 clip: (url) => clipper.openClipWindow(url),
+                // Only in the Ninja box: its note mode takes the text as the title line.
+                ...(quickSwitcherRemote ? { writeNote: (text: string) => openBoxNoteMode(text) } : {}),
               },
             }}
             bodyOf={(n) => (isNoteLocked(n) ? null : n.body)}
@@ -8529,7 +8745,16 @@ function AuthenticatedView({
                 if (id) void handleSelectFolder(id);
               },
             }}
-            onClose={() => { setQuickSwitcherQuery(null); setQuickAddAt(null); setQuickSwitcherMount((n) => n + 1); }}
+            remote={quickSwitcherRemote ? attachRemoteNinja : undefined}
+            onClose={() => {
+              setQuickSwitcherQuery(null);
+              setQuickAddAt(null);
+              setQuickSwitcherMount((n) => n + 1);
+              if (quickSwitcherRemote) {
+                setQuickSwitcherRemote(false);
+                remoteNinjaClosed();
+              }
+            }}
           />
         </Suspense>
       )}

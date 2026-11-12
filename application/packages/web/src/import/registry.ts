@@ -2,7 +2,7 @@ import type { Importer, ImporterId } from './types';
 import { standardNotesImporter } from './standardNotes';
 import { googleKeepImporter } from './googleKeep';
 import { parseMarkdown } from './markdown';
-import { parseObsidian } from './obsidian';
+import { parseObsidian, parseObsidianCanvas } from './obsidian';
 import { parseNotesnook } from './notesnook';
 import { parseJoplin } from './joplin';
 import { parseBear } from './bear';
@@ -100,6 +100,16 @@ export const IMPORTERS: Importer[] = [
     parse: parseExcalidraw,
   },
   {
+    id: 'obsidian-canvas',
+    label: 'Obsidian Canvas',
+    description:
+      'One .canvas file from your Obsidian vault, or the whole vault as a .zip to bring in every canvas. Each canvas becomes a drawing: cards, groups, arrows and colors come along, and pictures do too when they are in the .zip.',
+    accept: '.canvas,.zip',
+    enabled: true,
+    sourceTag: 'obsidian',
+    parse: parseObsidianCanvas,
+  },
+  {
     id: 'evernote',
     label: 'Evernote',
     description:
@@ -147,8 +157,8 @@ export const IMPORTERS: Importer[] = [
     id: 'obsidian',
     label: 'Obsidian',
     description:
-      'Import an Obsidian vault (.zip). Preserves tags, [[note links]], folder structure, inline #tags, and embedded images and files.',
-    accept: '.zip',
+      'Import an Obsidian vault (.zip). Preserves tags, note-links, folder structure, inline #tags, and embedded images and files. Canvases and Excalidraw drawings become drawings, and one .canvas file imports on its own too.',
+    accept: '.zip,.canvas',
     enabled: true,
     sourceTag: 'obsidian',
     parse: parseObsidian,

@@ -77,7 +77,7 @@ export function readCode(text: string): PasteResult {
 export type RedeemResult =
   /** `proof` with logins, for a fingerprint set up right after. */
   | { ok: true; connection: Connection; proof: Uint8Array | null }
-  | { ok: false; reason: 'bad' | 'used' | 'offline' | 'full' | 'failed' };
+  | { ok: false; reason: 'bad' | 'used' | 'offline' | 'full' | 'notPro' | 'failed' };
 
 /**
  * Redeem the code: a fresh token, and with logins the checker of the PIN or
@@ -108,6 +108,8 @@ export async function redeem(text: string, secret?: { value: string; kind: Secre
     if (answer.status === 0) return { ok: false, reason: 'offline' };
     if (answer.error === 'invalid_code') return { ok: false, reason: 'used' };
     if (answer.error === 'too_many_extensions') return { ok: false, reason: 'full' };
+    // A free account's second browser; the code stays usable (migration 0117).
+    if (answer.error === 'not_pro') return { ok: false, reason: 'notPro' };
     return { ok: false, reason: 'failed' };
   }
   const { account, id, clips, logins } = answer.body;

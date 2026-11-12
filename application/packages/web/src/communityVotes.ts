@@ -9,7 +9,7 @@
  */
 export const COMMUNITY_VOTES: Record<number, number> = {
   459: 2,
-  460: 4,
+  460: 5,
   462: 6,
   463: 5,
   464: 6,
@@ -51,4 +51,5 @@ export const COMMUNITY_VOTES: Record<number, number> = {
   670: 2,
   671: 1,
   678: 1,
+  724: 2,
 };

@@ -7,7 +7,7 @@ title: De verhuizing
 
 Je kunt vier soorten dingen meenemen: notities, dagboeknotities, bladwijzers en wachtwoorden.
 
-Ze beginnen allemaal op dezelfde plek: **Instellingen > Import & Export**.
+Ze beginnen allemaal op dezelfde plek: **Instellingen > Overzetten**.
 
 ## Wat je mee kunt nemen
 
@@ -41,7 +41,7 @@ Een dagboeknotitie bevat meer dan tekst. Boven het schrijfvak staan de trackers:
 ## Bladwijzers
 
 - [ ] Exporteer de bladwijzers van je browser als `.html`-bestand
-- [ ] Importeer dat bestand: **Instellingen > Import & Export > Importeren > Browserbladwijzers**
+- [ ] Importeer dat bestand: **Instellingen > Overzetten > Importeren > Browserbladwijzers**
 
 Je kunt ook een link in een lege notitie plakken. De titel en het site-icoon komen vanzelf: [privacynotes.app/nl/help/import/browser-bookmarks](https://privacynotes.app/nl/help/import/browser-bookmarks)
 

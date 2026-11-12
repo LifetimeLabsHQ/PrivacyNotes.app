@@ -24,6 +24,11 @@ const QUIT_ID: &str = "tray-quit";
 /// The Settings switch, as the web view last pushed it.
 static ON: AtomicBool = AtomicBool::new(false);
 
+/// The switch is on: a start at sign-in stays in the tray (autostart.rs).
+pub fn is_on() -> bool {
+    ON.load(Ordering::SeqCst)
+}
+
 /// Turn tray mode on or off. The menu labels come from the web view, which
 /// holds the translations. Pushed at start and on every change of the switch.
 #[tauri::command]

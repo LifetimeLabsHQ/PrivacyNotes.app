@@ -192,7 +192,9 @@
     "ariaLabel": "Plan de la note",
     "hide": "Masquer le plan",
     "copyHeadingLink": "Copier le lien vers le titre",
-    "copyHeadingShortcut": "Copier le raccourci vers le titre"
+    "copyHeadingShortcut": "Copier le raccourci vers le titre",
+    "copyCalloutLink": "Copier le lien vers l'encadré",
+    "copyCalloutShortcut": "Copier le raccourci vers l'encadré"
   },
   "bodyMenu": {
     "cut": "Couper",
@@ -268,6 +270,11 @@
     "showLess": "Afficher moins",
     "language": "Langage du code : {{name}}",
     "searchLanguages": "Rechercher un langage",
+    "addTitle": "Ajouter un titre",
+    "removeTitle": "Retirer le titre",
+    "titlePlaceholder": "Nom du fichier ou titre",
+    "collapse": "Replier le bloc de code",
+    "expand": "Déplier le bloc de code",
     "placeholder": "Tape ou colle du code. Pour les couleurs, choisis un langage au-dessus."
   },
   "math": {

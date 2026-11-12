@@ -231,6 +231,20 @@ interface QueuedVersion {
   queuedAt: string;
 }
 
+/** A quick note the Ninja box saved while the app was locked: sealed to the
+ *  inbox public key, so it is never sealed at rest a second time.
+ *  Spec: docs/internal/plans/quick-note-694.md (section 5.2) */
+interface QueuedQuickNote {
+  id: string;
+  /** The account whose inbox key sealed it, hex. */
+  account: string;
+  payload: string;
+  created: string;
+}
+
+/** The `db.kv` key of the inbox public key the Ninja box seals to. */
+export const QUICK_NOTE_INBOX_KEY = 'quickNoteInbox';
+
 interface KvEntry {
   key: string;
   value: string | CryptoKey;
@@ -248,6 +262,7 @@ class NotesDb extends Dexie {
   kv!: EntityTable<KvEntry, 'key'>;
   dayLedger!: EntityTable<LedgerRow, 'date'>;
   versionQueue!: EntityTable<QueuedVersion, 'id'>;
+  quickNotes!: EntityTable<QueuedQuickNote, 'id'>;
 
   constructor(raw = false) {
     // Demo mode uses a separate, throwaway database so demo data never
@@ -500,6 +515,25 @@ class NotesDb extends Dexie {
       kv: 'key',
       dayLedger: 'date',
       versionQueue: '++id, noteId, hash',
+    });
+
+    // v16 - quick notes the Ninja box saved behind the lock screen
+    // (quickNoteQueue.ts). Already sealed to the inbox key, so the at-rest
+    // seal does not cover the table. New table, nothing to back-fill.
+    // Spec: docs/internal/plans/quick-note-694.md (section 5.2)
+    this.version(16).stores({
+      notes: 'id, updatedAt, dirty, deleted, trashed, starred, type, folderId',
+      imageCache: 'id, cachedAt',
+      imageDedup: 'hash, uuid',
+      attachmentCache: 'id, cachedAt',
+      attachmentDedup: 'hash, uuid',
+      blobGC: 'uuid, enqueuedAt',
+      editorDocCache: 'noteId, cachedAt',
+      demoVersions: 'id, noteId, createdAt',
+      kv: 'key',
+      dayLedger: 'date',
+      versionQueue: '++id, noteId, hash',
+      quickNotes: 'id, account',
     });
 
     // The at-rest seal layer. Read surfaces open sealed rows wherever

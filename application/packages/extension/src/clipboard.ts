@@ -12,7 +12,7 @@ import type { OffscreenMessage } from './messages';
 export const CLEAR_ALARM = 'clear-clipboard';
 const CLEAR_KEY = 'clipboardHash';
 // Spec: docs/internal/plans/browser-extension-build.md (section 3.4, 30 seconds)
-const CLEAR_AFTER_MS = 30_000;
+export const CLEAR_AFTER_MS = 30_000;
 
 const hasDom = () => typeof document !== 'undefined' && typeof DOMParser === 'function';
 

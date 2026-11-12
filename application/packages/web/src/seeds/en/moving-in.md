@@ -11,7 +11,7 @@ journalDay: today
 
 You can bring four kinds of thing across: notes, journal entries, bookmarks and passwords.
 
-They all start in the same place: **Settings > Import & Export**.
+They all start in the same place: **Settings > Transfer**.
 
 ## What you can bring
 
@@ -45,7 +45,7 @@ A journal entry holds more than text. Above the writing area sit the trackers: m
 ## Bookmarks
 
 - [ ] Export your browser bookmarks as an `.html` file
-- [ ] Import that file: **Settings > Import & Export > Import > Browser bookmarks**
+- [ ] Import that file: **Settings > Transfer > Import > Browser bookmarks**
 
 You can also paste a link into an empty note. The title and the site icon arrive on their own: [privacynotes.app/help/import/browser-bookmarks](https://privacynotes.app/help/import/browser-bookmarks)
 

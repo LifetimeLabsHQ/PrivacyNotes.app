@@ -7,6 +7,11 @@ Fora de l'hotel a les cinc. Dues hores de tren, i la ciutat simplement havia des
 
 ![El mont Fuji amb neu al cim, emmarcat per flors de cirerer.](/onboarding/fuji.webp)
 
+```map
+35.3606, 138.7274
+Mont Fuji
+```
+
 Els cirerers eren florits vora el llac. El Fuji quedava al darrere, sense un núvol tot el matí. Aquí diuen que pots venir una setmana i no veure mai el cim. Nosaltres el vam tenir sis hores.
 
 | Què | Quan |

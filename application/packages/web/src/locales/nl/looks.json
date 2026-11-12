@@ -5,6 +5,8 @@
   "useDefault": "Standaard gebruiken",
   "color": "Kleur",
   "applyToSubfolders": "Kleur toepassen op submappen",
+  "applyToFolderItems": "Toepassen op alle items in deze map",
+  "applyToTagItems": "Toepassen op alle items met deze tag",
   "icon": "Icoon",
   "searchPlaceholder": "Zoek iconen",
   "searchLogos": "Zoek logo’s",

@@ -324,7 +324,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
         role="dialog"
         aria-modal="true"
         aria-label={t('shell:contextMenu.settings')}
-        className={`fixed inset-0 z-50 flex justify-center bg-black/20 dark:bg-black/20 ${isMobile ? 'items-stretch sm:items-center sm:p-4' : 'items-center p-4 sm:p-6'}`}
+        className={`fixed inset-0 z-50 flex justify-center bg-black/20 dark:bg-black/20 ${isMobile ? 'items-stretch sm:items-center sm:p-4' : wide ? 'items-stretch' : 'items-center p-4 sm:p-6'}`}
         onPointerDown={(e) => {
           if (mountReady && e.target === e.currentTarget) onClose();
         }}
@@ -339,8 +339,10 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
   );
 
   // ---- Mobile: push stack ------------------------------------------------
-  // A phone gets the whole screen, inside the safe areas, pinned to the top;
-  // a tablet below lg keeps the floating card. On iOS the keyboard covers the
+  // A phone gets the whole screen, inside the safe areas, pinned to the top.
+  // Below lg but from sm (a tablet, or a desktop window made narrower) only
+  // the rail goes: the card keeps the desktop window's height and the width
+  // of one pane, and the list and a page share that size, so nothing jumps. On iOS the keyboard covers the
   // page without resizing it, so the panel takes the height above the
   // keyboard (`--pn-app-h`) and the focused field scrolls into view inside it;
   // otherwise iOS scrolls the whole page to the field at each PIN digit. On
@@ -348,11 +350,11 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
   // took `--pn-app-h` made the keyboard close after every digit, so it fills
   // the overlay there.
   const phoneHeight = ANDROID_LIKE ? 'h-full' : 'h-[var(--pn-app-h,100%)]';
-  const phoneFill = `w-full flex flex-col text-pn bg-surface-2 ${phoneHeight} pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0 sm:max-w-md sm:max-h-[85vh] sm:rounded-lg sm:border sm:border-divider`;
+  const phoneFill = `w-full flex flex-col text-pn bg-surface-2 ${phoneHeight} pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0 sm:max-w-2xl sm:h-[92vh] sm:max-h-[960px] sm:rounded-lg sm:border sm:border-divider`;
   if (isMobile) {
     if (active) {
       return backdrop(
-        <div className={`${phoneFill} sm:h-[600px]`}>
+        <div className={phoneFill}>
           <div className="flex items-center gap-2 px-4 py-3 border-b border-divider">
             <button
               onClick={() => {
@@ -373,7 +375,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
       );
     }
     return backdrop(
-      <div className={`${phoneFill} sm:h-auto`}>
+      <div className={phoneFill}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-divider">
           <h2 className="text-heading font-semibold">{t('shell:contextMenu.settings')}</h2>
           {closeButton}
@@ -432,17 +434,19 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
   }
 
   // ---- Desktop: two-pane -------------------------------------------------
-  // The category rail holds 15 rows of 32px and 4 group headers, which need
-  // the whole rail of the 720px window (from an 800px screen) with nothing
-  // to spare. On a shorter screen the window is 656px and the rail scrolls.
-  // Adding a category means re-measuring the rail's list (scrollHeight
-  // against clientHeight). The search field lives in the header for the same
-  // reason: the rail has no row to spare. A large screen gets more room for
-  // the wide panes (the format bar board, the theme galleries): 1024px wide
-  // from a 1280px window, and 780px tall from a 920px screen, still under
-  // the 85vh cap.
+  // The window is 92% of the screen's height, at most 960px: "Use the full
+  // window" takes about 95%, so this stays a window. The category rail holds
+  // 20 rows and 5 group headers (2026-11-11, Backup added): about 770px at
+  // 32px a row from a 1000px screen, about 670px at 28px under it, and the
+  // window's header, footer and padding take 126px more. So the whole rail
+  // shows from a screen about 870px tall; a shorter screen scrolls it.
+  // Adding a category means re-measuring the rail's list (the last row's
+  // bottom against the list's height). The search field lives in the header
+  // for the same reason: the rail has no row to spare. Wide panes (the format
+  // bar board, the theme galleries) get 1024px of width from a 1280px window.
   return backdrop(
-    <div className={`bg-surface-2 border border-divider rounded-lg w-full flex flex-col text-pn ${
+    <div className={`bg-surface-2 w-full flex flex-col text-pn ${
+      // "Use the full window" fills the app edge to edge: no margin, no frame.
       wide && !NATIVE_PHONE
         ? 'h-full max-h-full'
       // Alone, the window fits its one pane: as tall as the pane and narrower,
@@ -452,8 +456,8 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
       // label shows. A pane taller than the screen scrolls inside the cap, so
       // the header stays on screen.
       : alone && activeId !== 'formatBar'
-        ? 'max-w-2xl max-h-[85vh]'
-        : 'max-w-4xl xl:max-w-5xl max-h-[85vh] h-[656px] [@media(min-height:800px)]:h-[720px] [@media(min-height:920px)]:h-[780px]'
+        ? 'border border-divider rounded-lg max-w-2xl max-h-[85vh]'
+        : 'border border-divider rounded-lg max-w-4xl xl:max-w-5xl h-[92vh] max-h-[960px]'
     }`}>
       <div className="flex items-center gap-4 px-5 py-3 border-b border-divider">
         {alone ? (
@@ -496,7 +500,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
               return (
                 <Fragment key={c.id}>
                   {showHeader && (
-                    <div className={`px-3 pt-2 pb-0.5 first:pt-1 ${SETTINGS_EYEBROW}`}>
+                    <div className={`px-3 pt-2 pb-0.5 first:pt-1 [@media(max-height:999px)]:pt-1.5 [@media(max-height:999px)]:pb-0 ${SETTINGS_EYEBROW}`}>
                       {c.group}
                     </div>
                   )}
@@ -505,7 +509,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
                       href={c.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-body text-start transition text-pn-soft hover:bg-surface-1 ${dim ? 'opacity-45' : ''}`}
+                      className={`w-full flex items-center gap-2.5 px-3 py-1.5 [@media(max-height:999px)]:py-1 rounded-md text-body text-start transition text-pn-soft hover:bg-surface-1 ${dim ? 'opacity-45' : ''}`}
                     >
                       <span className="shrink-0 text-accent">{c.icon}</span>
                       <span className="flex-1 inline-flex items-center gap-1.5">
@@ -519,7 +523,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
                       type="button"
                       onClick={() => openCategory(c.id)}
                       aria-current={on}
-                      className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-body text-start transition ${
+                      className={`w-full flex items-center gap-2.5 px-3 py-1.5 [@media(max-height:999px)]:py-1 rounded-md text-body text-start transition ${
                         on
                           ? 'bg-accent/10 text-accent-strong font-medium'
                           : 'text-pn-soft hover:bg-surface-1'

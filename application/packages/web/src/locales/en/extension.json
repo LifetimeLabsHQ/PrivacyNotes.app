@@ -1,25 +1,39 @@
 {
   "manifest": {
-    "extDescription": "Save web pages as encrypted notes and copy your logins.",
+    "extDescription": "Save web pages as encrypted notes and copy or fill your logins.",
     "commandOpen": "Open PrivacyNotes",
-    "commandCopyLogin": "Copy the login for this site",
-    "commandSaveBookmark": "Save the page as a bookmark"
+    "commandCopyLogin": "Fill or copy the login for this site",
+    "commandSaveNote": "Save the page as a note",
+    "commandLock": "Lock the vault",
+    "commandGenerate": "Generate a password and copy it",
+    "commandSaveBookmark": "Save the page as a bookmark",
+    "commandNewNote": "Write a new note"
   },
   "menu": {
     "savePageNote": "Save page as note",
     "savePageBookmark": "Save page as bookmark",
     "copyPageMarkdown": "Copy page as Markdown",
     "saveSelection": "Save selection as note",
+    "newNoteFromSelection": "New note from selection",
     "saveLinkBookmark": "Save link as bookmark",
     "saveLinkedPage": "Save linked page as note",
+    "fillLogin": "Fill login for this site",
     "copyLogin": "Copy login for this site",
     "addLogin": "Add a login for this site",
     "generatePassword": "Generate a password"
   },
+  "note": {
+    "tagsPlaceholder": "#work #ideas",
+    "tagsHelp": "Space or comma between tags. The # is optional.",
+    "failed": "Could not save the note. Try again."
+  },
   "connect": {
-    "title": "Connect to your account",
-    "body": "In PrivacyNotes, open Settings > Extension and choose Make a code. Paste the code here.",
+    "title": "Connect this browser",
+    "step1": "Open PrivacyNotes on this computer or use.privacynotes.app.",
+    "step2": "Open Settings > Extension and choose Make a code.",
+    "step3": "Paste the code here.",
     "codeLabel": "Code from the app",
+    "paste": "Paste",
     "connect": "Connect",
     "badCode": "This code is not complete. Copy it again from the app.",
     "usedCode": "This code is used up or older than 10 minutes. Make a new one in the app. Your connected browsers are in Settings > Extension.",
@@ -27,21 +41,24 @@
     "connected": "Connected",
     "connectedClips": "Clips ready.",
     "connectedBoth": "Clips and logins ready.",
-    "codeSpent": "The code is used up now. A screenshot of it is worthless.",
     "help": "How it works"
   },
   "protect": {
     "title": "Protect your logins",
-    "body": "Choose a PIN or a passcode for this browser. It is separate from the app's.",
-    "tries": "After 10 wrong tries, this browser is disconnected.",
-    "biometric": "Also use fingerprint or face",
-    "biometricHelp": "Touch ID or Windows Hello, where this browser supports it. The PIN or passcode always works too.",
+    "body": "Choose a PIN or a passcode for this browser. You need it to unlock your logins here. It is separate from the app's.",
+    "biometric": "Also use biometric unlock",
+    "biometricHelp": "Touch ID or Windows Hello, in addition to the PIN or passcode, which always works too.",
     "repeat": "Enter it again",
     "mismatch": "The two do not match. Try again."
   },
   "clip": {
     "selection": "Selection",
+    "wholePage": "Whole page",
+    "whatToSave": "What to save",
+    "picturesKept_one": "{{count}} picture kept.",
+    "picturesKept_other": "{{count}} pictures kept.",
     "includePictures": "Include pictures",
+    "includePicturesHelp": "Kept in the note, not linked to the site.",
     "savedBody": "It shows in Notes at the next sync of any of your apps. With one open, that is usually within a few minutes.",
     "closeHint": "You can close the popup at once.",
     "alreadySaved": "You saved this page on {{date}}.",
@@ -60,24 +77,22 @@
     "failed": "Could not save this page. Try again.",
     "reading": "Reading the page",
     "copiedMarkdown": "Page copied as Markdown",
-    "off": "Saving pages is off for this browser. Turn on Web clipper when you connect it.",
-    "saving": "Saving the page"
+    "off": "Saving pages is off for this browser. Turn on Web clipper when you connect it."
   },
   "logins": {
     "unlockPin": "Enter your PIN",
     "unlockPasscode": "Enter your passcode",
-    "useBiometric": "Use fingerprint or face",
+    "useBiometric": "Use biometric unlock",
     "wrong_one": "Wrong. {{count}} try left before this browser is disconnected.",
     "wrong_other": "Wrong. {{count}} tries left before this browser is disconnected.",
     "forSite": "For {{site}}",
     "none": "No logins for this site.",
     "off": "Logins are off for this browser. Turn on Vault when you connect it.",
     "copyCode": "Copy 2FA code",
+    "fill": "Fill",
     "usernameCopied": "Username copied",
     "passwordCopied": "Password copied",
     "codeCopied": "2FA code copied",
-    "clears": "It clears from the clipboard after 30 seconds, if it is still there.",
-    "addSaved": "Saved. It shows in your Vault at the next sync of any of your apps. With one open, that is usually within a few minutes.",
     "lock": "Lock",
     "unreachable": "Cannot reach PrivacyNotes to unlock. Check your connection and try again.",
     "lockSystem": "When the computer locks",
@@ -97,13 +112,13 @@
   "changeSecret": {
     "titlePin": "Change PIN",
     "titlePasscode": "Change passcode",
-    "biometricAgain": "Fingerprint or face used the old one. Set it up again to keep using it."
+    "biometricAgain": "Biometric unlock used the old one. Set it up again to keep using it."
   },
   "biometric": {
-    "enrolled": "Fingerprint or face is set up. You can close this tab.",
-    "enrolledHere": "Fingerprint or face is set up.",
+    "enrolled": "Biometric unlock is set up. You can close this tab.",
+    "enrolledHere": "Biometric unlock is set up.",
     "unlocked": "Unlocked. You can close this tab and open PrivacyNotes again.",
-    "failed": "This browser cannot use a fingerprint or face here. The PIN or passcode works as before."
+    "failed": "This browser cannot use biometric unlock here. The PIN or passcode works as before."
   },
   "vault": {
     "search": "Search the vault",
@@ -131,13 +146,53 @@
     "lockHeader": "Lock the vault after",
     "unlockToCopy": "Unlock to copy",
     "omniboxDefault": "Search your PrivacyNotes vault for %s",
-    "omniboxUnlock": "Unlock PrivacyNotes to search"
+    "omniboxUnlock": "Unlock PrivacyNotes to search",
+    "moreOptions": "More options"
   },
   "shortcuts": {
     "notSet": "Not set",
     "addressBar": "Search the vault from the address bar",
     "change": "Change shortcuts",
     "changeHint": "Your browser keeps the keys. Change one there, or give it a key if it has none.",
-    "loginHint": "<key/> copies the username, then the password."
+    "loginHint": "<key/> fills this login. On a page with no login field, it copies the username, then the password.",
+    "loginHintMany": "<key/> fills the login at the top.<br/>Press it again within 3 seconds to fill the next one."
+  },
+  "tabs": {
+    "label": "Clip or Vault",
+    "clip": "Clip"
+  },
+  "notice": {
+    "clearsIn": "Clears in {{seconds}} s",
+    "copyFailed": "Could not copy",
+    "loginSaved": "Login saved",
+    "vaultNextSync": "Shows in your Vault at the next sync",
+    "noteSaved": "Note saved",
+    "notesNextSync": "Shows in Notes at the next sync",
+    "savedHere": "Saved here",
+    "goesOutOnline": "Goes out when you are online"
+  },
+  "fill": {
+    "notFilled": "Not filled",
+    "couldNot": "Could not fill",
+    "nothing": "No login field on this page",
+    "signup": "This form asks for a new password",
+    "insecure": "This page is not secure (http)",
+    "otherAccount": "The page asks for another account",
+    "tooLong": "The page's field is too short",
+    "copyInstead": "Copy the values instead",
+    "usernameOnly": "Username filled",
+    "usernameOnlyNext": "Choose Fill again for the password"
+  },
+  "settings": {
+    "codes": "2FA codes",
+    "codesHelp": "The live code under each login with a 2FA key.",
+    "bar": "Countdown bar",
+    "barHelp": "A line that runs out until the next code.",
+    "iconsHelp": "Through our proxy: it sees the domain, never you.",
+    "disconnect": "Disconnect extension",
+    "biometric": "Biometric unlock",
+    "biometricPin": "Enter your PIN to set it up.",
+    "biometricPasscode": "Enter your passcode to set it up.",
+    "biometricOff": "Biometric unlock is off"
   }
 }

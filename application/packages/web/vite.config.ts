@@ -200,14 +200,19 @@ function phosphorTrimWeights(): Plugin {
 
 // The files under public/marketing/ (the homepage's live-demo screenshot),
 // og-image.png (the social-share preview crawlers fetch from the
-// canonical URL in index.html) and the Apple Pay domain association file
+// canonical URL in index.html), the Apple Pay domain association file
 // (fetched once by Apple's servers to verify the deployed hosts for
-// Paddle checkout) exist for the deployed site only. The native apps
-// boot straight into the auth card and never render the marketing page,
-// serve social previews or answer .well-known requests, so the files
-// would be dead weight in every binary. Vite copies publicDir into
-// dist/ after the bundle is written, so the app build removes them
-// again in closeBundle.
+// Paddle checkout) and the screenshots under public/help/img/ (the
+// export walkthroughs on the static /help site, named only from
+// guides.json, which i18n.ts keeps out of both globs because
+// help-page.ts reads it off disk at build time) exist for the deployed
+// site only. The native apps boot straight into the auth card and never
+// render the marketing page, serve social previews, answer .well-known
+// requests or show a guide, so the files would be dead weight in every
+// binary. public/help/icons/ stays: BrowserPane.tsx and LandingPage.tsx
+// name those by path at run time. Vite copies publicDir into dist/
+// after the bundle is written, so the app build removes them again in
+// closeBundle.
 // Spec: docs/contrib/bundle-size.md (static site out of the app payload)
 function stripMarketingAssets(): Plugin {
   return {
@@ -220,6 +225,7 @@ function stripMarketingAssets(): Plugin {
       fs.rmSync(path.resolve(__dirname, 'dist/.well-known/apple-developer-merchantid-domain-association'), {
         force: true,
       });
+      fs.rmSync(path.resolve(__dirname, 'dist/help/img'), { recursive: true, force: true });
     },
   };
 }
@@ -477,7 +483,7 @@ const BOOT_PATH_CEILING_KB = 1400;
 // is visible in review. They load on demand and do not count toward the boot
 // path. Rolldown names a chunk after one of its modules, so if a name flips,
 // the entry here has to follow it.
-const TRACKED_LAZY_CHUNKS = ['heic-to', 'PdfPages', 'katex', 'EncryptedAttachment'];
+const TRACKED_LAZY_CHUNKS = ['heic-to', 'PdfPages', 'katex', 'EncryptedAttachment', 'NoteLocationMap'];
 
 // The deploy and the release builds only warn: they run after review, on the
 // one build nobody can iterate on. WORKERS_CI and CF_PAGES are Cloudflare's;

@@ -13,6 +13,10 @@ Metin <span style="color: #e03131">kırmızı</span>, <span style="color: #1971c
 
 ==Sarıyla vurgulanabilir== ya da <mark style="background-color: rgba(64, 192, 87, 0.35)">yeşille</mark>.
 
+Sürprizbozan, biri tıklayana kadar kelimeleri gizler: hediye ||bir pikap||. Kelimeleri seçin ve **Ekle** menüsünde **Sürprizbozan** öğesini seçin ya da her iki yana iki dikey çizgi yazın.
+
+Bir simge ya da logo metin satırının içinde durabilir, örneğin :icon[gift] :icon[coffee] :icon[rocket-launch] veya :logo[github]. **Ekle** > **Simgeler ve logolar** altından birini seçin.
+
 **Aa** düğmesi boyutu ve yazı tipini değiştirir. Metin <span style="font-size: 0.85em">küçük</span>, normal ya da <span style="font-size: 1.6em">büyük</span> olabilir. <span style="font-family: ui-sans-serif, system-ui, sans-serif">Düz</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">tırnaklı</span> ya da <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">eş aralıklı</span> olabilir.
 
 ## Kelimeler nerede durur
@@ -51,12 +55,21 @@ Hizalama bir paragrafın tamamını taşır, tek bir kelimeyi asla. İmleci para
 | Avrupa | 1.204 | %48 |
 | Amerika | 902 | %36 |
 | Asya | 401 | %16 |
+<!-- table-fill: r0=blue r1c2=green r3c2=red -->
 
-Ortadaki sütun ortalanmış, sonuncusu sağa hizalanmış. Bir sütunun kenarını sürükleyerek genişletin.
+Ortadaki sütun ortalanmış, sonuncusu sağa hizalanmış. Bir sütunun kenarını sürükleyerek genişletin. Bir hücre ya da bütün bir satır, tablo çubuğundan bir renk alabilir. Başlık hücresindeki küçük ok, altındaki satırları sıralar; ikinci tıklama onları ters yönde sıralar.
+
+Tablo toplama da yapabilir. Bir işlev seçmek için hücreye `=` yazın. Hücre sonucu gösterir, not ise formülü saklar; sonucun nasıl çıktığını görmek için sonuca tıklayın.
+
+| Ürün | Adet | Fiyat | Toplam |
+| --- | ---: | ---: | ---: |
+| Kahve | 2 | 3.50 | =B2*C2 |
+| Kek | 1 | 4.20 | =B3*C3 |
+|  |  | Toplam | =SUM(D2:D3) |
 
 ## Bilgi kutuları
 
-Bilgi kutusu, okuyucunun kaçırmaması gereken bir şey için renkli bir kutudur.
+Bilgi kutusu, okuyucunun kaçırmaması gereken bir şey için renkli bir kutudur. Birini seçmek için boş bir satıra `[!` yazın.
 
 > [!tip]+ İpucu
 > Kapatmak için simgesine tıklayın.
@@ -136,7 +149,21 @@ export function isLongRead(stats) {
 }
 ```
 
-Cümlenin içindeki kısa bir kod parçası bunun yerine şöyle görünür: `bu`.
+Bir kod bloğu başlık taşıyabilir. Dil adına tıklayın ve **Başlık ekle** öğesini seçin. Başlığın yanındaki ok bloğu tek satıra katlar ve not bunu hatırlar.
+
+```bash title="backup.sh" fold
+#!/bin/sh
+# Copy the notes folder into a dated archive.
+tar -czf "notes-$(date +%F).tar.gz" "$HOME/Notes"
+```
+
+**Kopyalama kutusu**, bir adres ya da komut gibi kopyalanacak tek bir şeyi tutar. Düğmesi hepsini tek tıklamayla kopyalar.
+
+```copy
+ssh-keygen -t ed25519 -C "laptop"
+```
+
+Cümlenin içindeki kısa bir kod parçası bunun yerine şöyle görünür: `bu`. Kopyalamak için Cmd tuşunu (Windows ve Linux'ta Ctrl) basılı tutup üzerine tıklayın.
 
 ## Matematik
 
@@ -150,11 +177,21 @@ $$i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi$$
 
 Bir görseli nota sürükleyin ya da yapıştırın. Boyutunu değiştirmek ya da sola, ortaya veya sağa taşımak için bir kez tıklayın. Yukarıdaki yarım genişlikte ve ortalanmış.
 
+## Haritalar
+
+```map
+35.3606, 138.7274
+Fuji Dağı
+```
+
+Bir nota **Ekle** > **Konum** ile bir yer koyun. Harita kendi sunucumuzdan gelir, bu yüzden hiçbir harita şirketi nereye baktığınızı görmez. Başka herhangi bir Markdown uygulamasında koordinatlar ve ad olarak okunur.
+
 ## Bağlantılar
 
 İki tür var ve bilerek farklı görünürler.
 
 - Web bağlantısı bir siteyi açar: [privacynotes.app](https://privacynotes.app/tr)
+- Web bağlantısı bir ipucu metni taşıyabilir. [Bunun](https://privacynotes.app/tr/help "Yardım sayfalarımız") üzerine gelin ve bekleyin.
 - Not bağlantısı başka bir notunuzu açar: [[Notlarınız nasıl korunuyor]]
 
 İkisinin de çubukta düğmesi var. Zincir web bağlantısı yapar. Köşeli parantezler not bağlantısı yapar: notlarınızı listeler, siz de kastettiğinizi seçersiniz. `[[` yazmak da aynı şeyi yapar.

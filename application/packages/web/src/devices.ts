@@ -118,12 +118,12 @@ export function detectPlatform(): Platform {
 }
 
 /**
- * True only inside the native Linux app (Tauri/WebKitGTK), where wry never
- * wires WebKitGTK's `permission-request` signal, so getUserMedia (camera +
- * mic) is denied with no prompt. Linux *web* browsers are unaffected, so this
- * is scoped to the desktop (Tauri) build, not any Linux user.
+ * True only inside the native Linux app (Tauri/WebKitGTK), whose engine is
+ * not any browser's: it has no MediaRecorder, so the recorder is hidden, and
+ * its callers name their own reasons. Linux *web* browsers are unaffected, so
+ * this is scoped to the desktop (Tauri) build, not any Linux user.
  */
-// Spec: docs/contrib/gotchas.md (Linux WebKitGTK getUserMedia is dead - camera + mic denied with no prompt)
+// Spec: docs/contrib/gotchas.md (Camera or microphone dead with no prompt)
 export function isLinuxNative(): boolean {
   return detectPlatform() === 'desktop' && detectDeviceOs() === 'Linux';
 }

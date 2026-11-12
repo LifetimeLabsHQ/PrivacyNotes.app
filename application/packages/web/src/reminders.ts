@@ -242,6 +242,18 @@ export function markSeen(itemId: string) {
   unseenListeners.forEach((l) => l());
 }
 
+/** Drop the bell of every item that can no longer ring here: deleted,
+ *  trashed or archived (on this device or another), or its alert removed.
+ *  Nobody can open such an item from the bell, so before this it held the
+ *  bell until the next day (GitHub #722). `ids` are the items that can ring. */
+export function keepUnseen(ids: ReadonlySet<string>) {
+  const v = readUnseen();
+  const kept = v.ids.filter((id) => ids.has(id));
+  if (kept.length === v.ids.length) return;
+  writeJson(unseenKey(), { day: v.day, ids: kept });
+  unseenListeners.forEach((l) => l());
+}
+
 /** Whether a fired alert's item is still unopened today. */
 export function useUnseenAlerts(): boolean {
   const ids = useSyncExternalStore(

@@ -397,6 +397,7 @@
     "modeRich": "Enrichi",
     "modeSource": "Markdown",
     "reopenPrompt": "Ton navigateur redemande l'autorisation après un rechargement. Ton dossier est mémorisé, donc c'est un seul clic.",
+    "reopenPromptDesktop": "Choisis {{name}} encore une fois pour que l'app puisse le rouvrir. Rien n'a changé dans le dossier.",
     "reopenFolder": "Rouvrir {{name}}",
     "new": "Nouveau",
     "saveToNotes": "Enregistrer dans mes notes",
@@ -699,7 +700,8 @@
       "sprint": "Planification du sprint",
       "bookClub": "Club de lecture",
       "rent": "Payer le loyer"
-    }
+    },
+    "feedReadOnly": "Provient de {{name}}. Tu ne peux modifier cet événement que dans ce calendrier."
   },
   "repeat": {
     "changeTitle": "Modifier cet élément ?",
@@ -826,7 +828,8 @@
       "file": "Importer un fichier",
       "contact": "Nouveau contact",
       "bookmark": "Nouveau signet",
-      "clip": "Capturer une page"
+      "clip": "Capturer une page",
+      "writeNote": "Écrire une note"
     },
     "keepAsText": "Garder ceci comme texte",
     "placeholder": "Titre, jour, heure, répétition...",
@@ -986,6 +989,7 @@
     "stepConnect": "Connecter",
     "makeCode": "Créer un code",
     "connectHint": "Crée un code à usage unique et colle-le dans l'extension.",
+    "secondBrowserPro": "Un navigateur est connecté. Un deuxième nécessite Pro.",
     "thisBrowser": "Ce navigateur",
     "otherApps": "Apps de bureau et mobiles :",
     "desktopAll": "Tous les téléchargements",
@@ -1043,7 +1047,7 @@
   "extensionConnect": {
     "clips": "Capture web",
     "clipsHint": "Enregistre des sites web en notes.",
-    "loginsHint": "Identifiants, cartes, clés SSH et signets du site où tu te trouves, en copie seulement. Verrouillé par son propre PIN ou code d'accès.",
+    "loginsHint": "Identifiants, cartes, clés SSH et signets du site où tu te trouves, à copier ou à remplir. Verrouillé par son propre PIN ou code d'accès.",
     "pickOne": "Active au moins une option.",
     "codeLabel": "Code pour l'extension",
     "oneUse": "Fonctionne une seule fois, pendant 10 minutes.",

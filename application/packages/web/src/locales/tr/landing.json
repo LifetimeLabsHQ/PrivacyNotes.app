@@ -169,6 +169,8 @@
     "useClipBody": "Panoyu, bir komutun çıktısını veya bir hata iletisini doğrudan notlarınıza gönderin.",
     "useToolsTitle": "Kendi araçlarınızın bir parçası",
     "useToolsBody": "Komut JSON ile yanıt verir ve açık çıkış kodlarıyla sonlanır, böylece betikleriniz notun kaydedildiğini bilir.",
+    "useShortcutTitle": "Klavye kısayoluyla bir not",
+    "useShortcutBody": "Sisteminizin ayarlarında seçtiğiniz bir tuş, uygulama kapalıyken bile hızlı bir not için bir kutu açar. Not, Agent klasörünüze düşer.",
     "howLink": "privacynotes'un nasıl çalıştığını okuyun"
   },
   "meds": {
@@ -342,7 +344,7 @@
     "manualUpdates": "Elle güncellenir",
     "extensionHeading": "Web kırpıcı ve parola yöneticisi",
     "extensionKeyOpen": "Uzantıyı aç",
-    "extensionKeyLogin": "Bu sitenin giriş bilgisini kopyala",
+    "extensionKeyLogin": "Bu sitenin giriş bilgisini doldur",
     "extensionKeyBookmark": "Bu sayfayı yer imi olarak kaydet",
     "extensionAria": "Uzantıyı {{name}} tarayıcısına ekle",
     "extensionNote": "Yalnızca bilgisayarlarda."

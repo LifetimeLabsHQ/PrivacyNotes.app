@@ -169,6 +169,8 @@
     "useClipBody": "Send the clipboard, a command's output or an error message straight to your notes.",
     "useToolsTitle": "Part of your own tools",
     "useToolsBody": "The command answers in JSON and exits with clear codes, so your scripts know the note was saved.",
+    "useShortcutTitle": "A note from a keyboard shortcut",
+    "useShortcutBody": "A key you pick in your system's settings opens a box for a quick note, even while the app is closed. It lands in your Agent folder.",
     "howLink": "Read how privacynotes works"
   },
   "meds": {
@@ -342,7 +344,7 @@
     "manualUpdates": "Manual updates",
     "extensionHeading": "Web clipper and password manager",
     "extensionKeyOpen": "Open the extension",
-    "extensionKeyLogin": "Copy this site's login",
+    "extensionKeyLogin": "Fill this site's login",
     "extensionKeyBookmark": "Bookmark this page",
     "extensionAria": "Add the extension to {{name}}",
     "extensionNote": "On computers only."

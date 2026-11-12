@@ -7,6 +7,11 @@ Otelden beşte çıktım. İki saat tren, ve şehir öylece yok oldu.
 
 ![Zirvesinde kar olan Fuji Dağı, kiraz çiçekleriyle çerçevelenmiş.](/onboarding/fuji.webp)
 
+```map
+35.3606, 138.7274
+Fuji Dağı
+```
+
 Göl kıyısında kiraz çiçekleri açmıştı. Fuji arkalarında duruyordu, bütün sabah tek bir bulut yoktu. Buradakiler bir hafta gelip zirveyi hiç göremeyebileceğinizi söylüyor. Biz altı saat gördük.
 
 | Ne | Ne zaman |

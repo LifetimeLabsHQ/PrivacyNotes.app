@@ -92,6 +92,18 @@
       "help": "Scorciatoie da tastiera"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "Scrivi altro qui",
+    "hint": "Digita / per una cartella, # per un tag",
+    "locked": "PrivacyNotes è bloccato. La tua nota è sigillata e si apre quando sblocchi.",
+    "queued": "Salvata. Si apre quando sblocchi.",
+    "tooLong": "Questa nota è troppo lunga. Dividila in due note.",
+    "full": "Troppe note in attesa. Sblocca per aggiungerle.",
+    "empty": "Scrivi prima qualcosa.",
+    "failed": "Impossibile salvare la nota. Apri PrivacyNotes e riprova.",
+    "added_other": "{{count}} note rapide aggiunte",
+    "added_one": "{{count}} nota rapida aggiunta"
+  },
   "quickSwitcher": {
     "label": "Ninja: trova un elemento o un'impostazione, aggiungi qualsiasi cosa, esegui un comando",
     "jumpTo": "Ninja",
@@ -129,7 +141,9 @@
     "actions": "azioni",
     "back": "indietro",
     "actionsPlaceholder": "Filtra le azioni",
-    "onlyCreate": "aggiungi"
+    "onlyCreate": "aggiungi",
+    "ninjaLockedTitle": "PrivacyNotes è bloccato",
+    "ninjaLockedBody": "Apri PrivacyNotes e sbloccalo. Poi Ninja trova le tue note da qualsiasi app."
   },
   "cardForm": {
     "cardholderName": "Nome del titolare",
@@ -290,8 +304,10 @@
         "detail": "Ogni giorno dell'anno come un quadratino colorato"
       },
       "importExport": {
-        "label": "Import & Export",
-        "detail": "Porta dentro le note, porta fuori un backup"
+        "detail": "Porta dentro le note, o portale fuori"
+      },
+      "backup": {
+        "detail": "Fai il backup ora, backup automatici e ripristino"
       },
       "generator": {
         "label": "Generatore di password",
@@ -307,6 +323,7 @@
     },
     "commands": {
       "syncResume": "Riprendi la sincronizzazione",
+      "lockProtected": "Blocca questa nota",
       "changelog": "Novità",
       "themesPage": "Temi della community",
       "website": "Sito di PrivacyNotes"

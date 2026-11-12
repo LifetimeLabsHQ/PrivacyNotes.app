@@ -4,7 +4,7 @@ import { isMfaRefusal, MfaRequiredError } from './mfaStep';
 import { encryptJson, decryptJson, bytesToBase64, base64ToBytes, type SupabaseClient } from '@notes/shared';
 import { hydrateListPrefsStore } from './listPrefs';
 import { CAFFEINE_UNITS, defaultTrackerSettings, readFactors, readHabits, WATER_UNITS, type CaffeineUnit, WEIGHT_UNITS, type WaterUnit, type FactorDef, type TrackerSettings, type WeightUnit, type CustomTrackerTemplate, type MedicationTemplate } from './trackerTypes';
-import { isColorTheme, isLineSpacing } from './theme';
+import { isColorTheme, isLineSpacing, isNestedNumbers } from './theme';
 import { isJournalTitleFormat, JOURNAL_SUFFIX_MAX } from './notesViewUtils';
 import { isClock, isDateOrder, isWeekStart } from './intlFormat';
 import { credentialKey, isDemoMode } from './demo';
@@ -23,6 +23,7 @@ import { deletedFolderIds, isNoteColorStyle, itemStylesEqual, mergeItemStyles, v
 import { deviceLabelsEqual, mergeDeviceLabels, validateDeviceLabels } from './deviceLabels';
 import { extensionKeysEqual, mergeExtensionKeys, validateExtensionKeys } from './extensionKeys';
 import { customThemesEqual, mergeCustomThemes, validateCustomThemes } from './customThemes';
+import { calendarFeedsEqual, mergeCalendarFeeds, validateCalendarFeeds } from './calendarFeeds';
 import { formatBarSettingsEqual, mergeFormatBarSettings, validateFormatBarSetting } from './formatBar';
 import { dashboardSettingsEqual, mergeDashboardSettings, validateDashboardSetting } from './dashboard/dashboardLayout';
 import { CREDENTIAL_FIELDS, defaultCalendarSettings, defaultCheckInSettings, defaultSettings, type CalendarSettings, type CheckInSettings, type UserSettings } from './userSettingsShape';
@@ -231,6 +232,9 @@ function hydrate(raw: unknown): UserSettings {
   if (isLineSpacing(obj.lineSpacing)) {
     base.lineSpacing = obj.lineSpacing;
   }
+  if (isNestedNumbers(obj.nestedNumbers)) {
+    base.nestedNumbers = obj.nestedNumbers;
+  }
   if (isJournalTitleFormat(obj.journalTitleFormat)) {
     base.journalTitleFormat = obj.journalTitleFormat;
   }
@@ -269,6 +273,9 @@ function hydrate(raw: unknown): UserSettings {
   }
   if (obj.customThemes !== undefined) {
     base.customThemes = validateCustomThemes(obj.customThemes);
+  }
+  if (obj.calendarFeeds !== undefined) {
+    base.calendarFeeds = validateCalendarFeeds(obj.calendarFeeds);
   }
   if (obj.formatBar !== undefined) {
     base.formatBar = validateFormatBarSetting(obj.formatBar);
@@ -380,7 +387,7 @@ export function alertDefaults(s: Pick<UserSettings, 'calendar'>): { timed: Alert
  * stands. A merged collection needs no entry: its merge never reads absence
  * as a reset.
  */
-const NEWER_SCALARS = ['tintNotes', 'noteColorStyle', 'archivedInAll', 'includeSubfolders', 'sinkCheckedTasks', 'taskConfetti', 'agentFolder', 'typedSymbols', 'confirmTrash', 'confirmArchive', 'spaces', 'dateOrder', 'clock', 'weekStart', 'viewOrder', 'journalTitlePattern', 'calendar', 'checkIn'] as const;
+const NEWER_SCALARS = ['tintNotes', 'noteColorStyle', 'archivedInAll', 'includeSubfolders', 'sinkCheckedTasks', 'taskConfetti', 'agentFolder', 'typedSymbols', 'confirmTrash', 'confirmArchive', 'spaces', 'dateOrder', 'clock', 'weekStart', 'viewOrder', 'journalTitlePattern', 'calendar', 'checkIn', 'nestedNumbers'] as const;
 
 /**
  * Whether the blob lacks a newer scalar this device holds at a value of its
@@ -556,7 +563,7 @@ const LEGACY_PIN_GROUP = [...PIN_GROUP, 'appLockEnabled'] as const;
  *  maximum, a flag that never goes back), never by the per-key base. */
 const OWN_RULE_KEYS = new Set<string>([
   'settingsRev', 'notesCreated', 'folders', 'foldersDeleted', 'itemStyles', 'deviceLabels', 'extensionKeys',
-  'customThemes', 'formatBar', 'dashboard', 'factors', 'customHabits', 'medications', 'trackerSettings',
+  'customThemes', 'calendarFeeds', 'formatBar', 'dashboard', 'factors', 'customHabits', 'medications', 'trackerSettings',
   'favoriteTags', 'dismissedAnnouncements', 'welcomeNoteSeeded', 'importHintDismissed',
   'milestonesSeen', 'firstSeenAt', 'ratingDone', 'importPromptDismissed', 'clipperHintDismissed', ...PIN_GROUP,
   ...DEVICE_SETTINGS,
@@ -1445,7 +1452,7 @@ function mergeTrackerSettings(
 }
 
 /** The fields `mergeAtEverySyncPoint` owns. */
-type EntryMerged = 'folders' | 'foldersDeleted' | 'itemStyles' | 'deviceLabels' | 'extensionKeys' | 'customThemes' | 'formatBar' | 'dashboard' | 'factors' | 'customHabits';
+type EntryMerged = 'folders' | 'foldersDeleted' | 'itemStyles' | 'deviceLabels' | 'extensionKeys' | 'customThemes' | 'calendarFeeds' | 'formatBar' | 'dashboard' | 'factors' | 'customHabits';
 
 /**
  * The folder tree, the folder and tag looks, the device labels, the custom
@@ -1472,6 +1479,7 @@ function mergeAtEverySyncPoint(
     deviceLabels: mergeDeviceLabels(local.deviceLabels, remote.deviceLabels),
     extensionKeys: mergeExtensionKeys(local.extensionKeys, remote.extensionKeys),
     customThemes: mergeCustomThemes(local.customThemes, remote.customThemes),
+    calendarFeeds: mergeCalendarFeeds(local.calendarFeeds, remote.calendarFeeds),
     formatBar: mergeFormatBarSettings(local.formatBar, remote.formatBar),
     dashboard: mergeDashboardSettings(local.dashboard, remote.dashboard),
     factors: mergeTemplates<FactorDef>(local.factors, remote.factors, unstampedWinner),
@@ -1779,6 +1787,7 @@ export async function syncUserSettings(
           !deviceLabelsEqual(pulled.deviceLabels, remoteSettings.deviceLabels) ||
           !extensionKeysEqual(pulled.extensionKeys, remoteSettings.extensionKeys) ||
           !customThemesEqual(pulled.customThemes, remoteSettings.customThemes) ||
+          !calendarFeedsEqual(pulled.calendarFeeds, remoteSettings.calendarFeeds) ||
           !formatBarSettingsEqual(pulled.formatBar, remoteSettings.formatBar) ||
           !dashboardSettingsEqual(pulled.dashboard, remoteSettings.dashboard) ||
           JSON.stringify(pulled.factors) !== JSON.stringify(remoteSettings.factors) ||

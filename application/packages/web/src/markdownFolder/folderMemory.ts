@@ -4,9 +4,11 @@
  * The two platforms differ in what is even possible, and the difference is
  * visible to the user, so it is worth stating plainly:
  *
- *   - **Desktop** stores a path string. A path is just data; it survives a
- *     restart and needs no permission, so the folder reopens silently and
- *     completely.
+ *   - **Desktop** stores a path string. The fs grants carry no static
+ *     allow, so the path opens only while the fs scope holds it, which
+ *     `tauri-plugin-persisted-scope` restores at start: the folder reopens
+ *     silently and completely. A folder the saved scope lacks (one picked
+ *     before that change) is a one-click re-pick (`useFolderRestore`).
  *   - **Chromium browsers** store the `FileSystemDirectoryHandle` itself, which
  *     is structured-cloneable and therefore IndexedDB-storable. The handle
  *     survives - but the PERMISSION attached to it does not, by design. After a

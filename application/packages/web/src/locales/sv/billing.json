@@ -26,7 +26,8 @@
       "default": "En uppgradering låser upp allt nedan. Engångsbetalning.",
       "alerts": "Påminnelser är en Pro-funktion. Varje enhet ringer för sig vid den tid du väljer, så ingen pushtjänst ser objektet.",
       "vaultFiles": "Filer på valvobjekt är en Pro-funktion. Förvara återställningskoder, en reservnyckel eller en inskannad bild tillsammans med inloggningen, kortet eller nyckeln de hör till.",
-      "cli": "CLI:t är en Pro-funktion. Skript, AI-agenter och AI-appar lägger till anteckningar från en terminal eller en chatt, direkt i din mapp Agent."
+      "cli": "CLI:t är en Pro-funktion. Skript, AI-agenter och AI-appar lägger till anteckningar från en terminal eller en chatt, direkt i din mapp Agent.",
+      "browsers": "En andra webbläsare är en Pro-funktion. Gratisplanen ansluter ett webbläsartillägg; Pro ansluter upp till 10, var och en med sin egen PIN."
     },
     "features": {
       "devices": "Synka obegränsat antal enheter, på alla plattformar",

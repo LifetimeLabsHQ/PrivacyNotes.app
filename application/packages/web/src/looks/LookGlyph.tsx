@@ -22,6 +22,7 @@ import {
   isLookColor,
   lookOf,
   noteOwnIcon,
+  resolveNoteIcon,
   resolveNoteLook,
   tagLookKey,
   type ColorFilter,
@@ -41,6 +42,9 @@ export interface LooksValue {
   noteColorStyle: NoteColorStyle;
   /** The list's tag and folder filter, whose colors win (resolveItemColor). */
   filter?: ColorFilter;
+  /** Each folder's parent, for a folder icon shown on the notes below it
+   *  (resolveNoteIcon). */
+  parents?: ReadonlyMap<string, string | null>;
 }
 
 export const LooksContext = createContext<LooksValue>({ styles: {}, tintNotes: false, noteColorStyle: 'accent' });
@@ -59,12 +63,33 @@ export function useNoteLook(noteId: string, tags: readonly string[], folderId: s
   );
 }
 
-/** The paths of the icon or logo set on a note, or null while it has none
- *  (or its catalog has not loaded): the caller then draws the type icon. One hook
- *  for the row, the tile, the compact row and the tab. */
-export function useNoteIconPaths(noteId: string): readonly string[] | null {
-  const { styles } = useContext(LooksContext);
-  return useLookPaths(noteOwnIcon(styles, noteId)) ?? null;
+/** A folder followed by its parents, nearest first; a loop ends the walk. */
+function folderChain(folderId: string | null, parents: ReadonlyMap<string, string | null> | undefined): string[] {
+  const chain: string[] = [];
+  for (let id = folderId; id && !chain.includes(id); id = parents?.get(id) ?? null) chain.push(id);
+  return chain;
+}
+
+/** The icon id a note shows: its own, else one its tag or folder shows on its
+ *  notes (resolveNoteIcon). */
+function noteIconId(
+  { styles, parents }: LooksValue,
+  n: { id: string; tags: readonly string[]; folderId?: string | null },
+): string | null {
+  return resolveNoteIcon(n.id, n.tags, folderChain(n.folderId ?? null, parents), styles);
+}
+
+/** The paths of the icon or logo a note shows, or null while it has none (or
+ *  its catalog has not loaded): the caller then draws the type icon. One hook
+ *  for the row, the tile, the compact row, the tab and the quick switcher.
+ *  Without `n`, the note's own icon alone (the note menu's Icon row). */
+export function useNoteIconPaths(
+  noteId: string,
+  n?: { tags: readonly string[]; folderId?: string | null },
+): readonly string[] | null {
+  const looks = useContext(LooksContext);
+  const id = n ? noteIconId(looks, { id: noteId, ...n }) : noteOwnIcon(looks.styles, noteId);
+  return useLookPaths(id) ?? null;
 }
 
 /** A color as a light background, drawn as an image so the background color
@@ -120,10 +145,11 @@ export function itemLookDraw(look: NoteLook | null): ItemLookDraw {
   return look ? { look, row: noteLookStyle(look), icon: inkStyle(look.color) } : { look: null };
 }
 
-/** An item's look and its own icon (null without one), from the looks context. */
+/** An item's look and the icon it shows (null without one), from the looks
+ *  context: its own, else its tag's or folder's (resolveNoteIcon). */
 export function useItemLook(noteId: string, tags: readonly string[], folderId: string | null): ItemLookDraw & { iconPaths: readonly string[] | null } {
   const look = useNoteLook(noteId, tags, folderId);
-  const iconPaths = useNoteIconPaths(noteId);
+  const iconPaths = useNoteIconPaths(noteId, { tags, folderId });
   return { ...itemLookDraw(look), iconPaths };
 }
 

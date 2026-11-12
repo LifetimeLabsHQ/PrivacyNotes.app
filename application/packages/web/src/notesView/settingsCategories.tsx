@@ -8,10 +8,12 @@ import type { LocalNote } from '../db';
 import { journalOn } from '../notesViewUtils';
 import type { FolderDef } from '../folders';
 import type { ImportTarget } from '../import/destination';
+import type { ImportTab } from '../import/ImportModal';
 import type { ImageStore } from '../imageStore';
 import type { AppearancePane } from '../AppearanceSheet';
 import { exemptOpts } from '../i18nExempt';
-import { Calendar, ChartBar, CreditCard, Database, Info, Keyboard, Question, Repeat, ListBullets, Palette, Heartbeat, PencilLine, PuzzlePiece, Shield, TerminalWindow, Toolbox, Translate, User, type Icon } from '../icons';
+import { appZoomSupported } from '../appZoom';
+import { Archive, Calendar, ChartBar, CreditCard, Database, Desktop, Info, Keyboard, Question, Repeat, ListBullets, Palette, Heartbeat, PencilLine, PuzzlePiece, Shield, TerminalWindow, Toolbox, Translate, User, type Icon } from '../icons';
 import { proUnlocked } from '../demo';
 import { commandLineShown } from '../cliRelease';
 import { isTouchOnly } from '../touchOnly';
@@ -53,6 +55,7 @@ const LanguageSheet = lazyModal(() => import('../LanguageSheet').then((m) => m.L
 const DateSheet = lazyModal(() => import('../LanguageSheet').then((m) => m.DateSheet));
 const CalendarSettings = lazyModal(() => import('../CalendarSettings').then((m) => m.CalendarSettings));
 const DateTimePane = lazyModal(() => import('../DateTimePane').then((m) => m.DateTimePane));
+const SystemPane = lazyModal(() => import('../SystemPane').then((m) => m.SystemPane));
 const TrackerSettingsPane = lazyModal(() => import('../TrackerConfig').then((m) => m.TrackerSettingsPane));
 
 type Authed = Extract<AuthState, { status: 'authenticated' }>;
@@ -61,6 +64,7 @@ type Authed = Extract<AuthState, { status: 'authenticated' }>;
 export const SETTINGS_SECTION_ICONS: Record<SectionId, Icon> = {
   stats: ChartBar,
   import: Repeat,
+  backup: Archive,
   plan: CreditCard,
   storage: Database,
   security: Shield,
@@ -73,6 +77,7 @@ export const SETTINGS_SECTION_ICONS: Record<SectionId, Icon> = {
   language: Translate,
   date: Calendar,
   hotkeys: Keyboard,
+  system: Desktop,
   browser: PuzzlePiece,
   commandLine: TerminalWindow,
   about: Info,
@@ -102,6 +107,7 @@ export function buildSettingsCategories({
   onToggleHiddenView,
   auth,
   settingsAutoVerify,
+  settingsSecurityReason,
   onOpenNote,
   setShowSettings,
   setShowUpgrade,
@@ -124,6 +130,7 @@ export function buildSettingsCategories({
   exportContacts,
   exportCalendar,
   exportDrawings,
+  exportNotesMarkdownZip,
   importEncryptedBackup,
   imageStoreRef,
   attachmentStoreRef,
@@ -153,6 +160,8 @@ export function buildSettingsCategories({
   onToggleHiddenView: (field: 'hiddenViews' | 'hiddenInAll', key: View) => void;
   auth: Authed;
   settingsAutoVerify: boolean;
+  /** Why Security opened, when Protect sent the user to set a PIN. */
+  settingsSecurityReason?: 'protect';
   /** ID & Sync's "Open" for a note the last pass could not push. */
   onOpenNote: (id: string) => void;
   setShowSettings: Dispatch<SetStateAction<boolean>>;
@@ -184,6 +193,7 @@ export function buildSettingsCategories({
   exportCalendar: (ns: LocalNote[]) => Promise<void>;
   /** The gated drawings export; without it the Drawings card is not drawn. */
   exportDrawings?: (ns: LocalNote[]) => Promise<void>;
+  exportNotesMarkdownZip: (ns: LocalNote[]) => Promise<void>;
   importEncryptedBackup: (file: File) => Promise<{ imported: number; updated: number; unchanged: number }>;
   imageStoreRef: MutableRefObject<ImageStore | null>;
   attachmentStoreRef: MutableRefObject<AttachmentStore | null>;
@@ -210,6 +220,8 @@ export function buildSettingsCategories({
       formatBar={formatBarBoard}
       lineSpacing={userSettings.lineSpacing}
       onLineSpacingChange={(next) => mutateSettings((prev) => ({ ...prev, lineSpacing: next }))}
+      nestedNumbers={userSettings.nestedNumbers}
+      onNestedNumbersChange={(next) => mutateSettings((prev) => ({ ...prev, nestedNumbers: next }))}
       hiddenViews={userSettings.hiddenViews}
       hiddenInAll={userSettings.hiddenInAll}
       archivedInAll={userSettings.archivedInAll}
@@ -245,6 +257,74 @@ export function buildSettingsCategories({
     saveKeys: (update: (keys: UserSettings['extensionKeys']) => UserSettings['extensionKeys']) =>
       mutateSettings((prev) => ({ ...prev, extensionKeys: update(prev.extensionKeys) })),
   };
+
+  // Transfer and Backup are two pages of one window, each with its own tabs.
+  const importPane = (section: 'transfer' | 'backup', initialTab?: string) => (
+    <ImportModal
+      // Both pages draw this component in the same place: without the key,
+      // React keeps one page's open tab when the other opens.
+      key={section}
+      embedded
+      onClose={() => setShowSettings(false)}
+      section={section}
+      initialTab={initialTab as ImportTab | undefined}
+      notes={notes}
+      calendarFeeds={{ list: userSettings.calendarFeeds, onChange: (update) => mutateSettings((prev) => ({ ...prev, calendarFeeds: update(prev.calendarFeeds) })) }}
+      onImportFolders={mergeImportedFolders}
+      importTarget={importTarget}
+      onCreateImportFolder={createImportFolder}
+      onUndoImportFolders={undoImportedFolders}
+      onImportSettings={mergeRestoredSettings}
+      onImportTagColors={applyImportedTagColors}
+      onExportAllMdZip={(ns) => void exportAllMarkdownZip(ns)}
+      onExportAllHtmlZip={(ns) => void exportAllHtmlZip(ns)}
+      onExportAllJson={exportAllJson}
+      onExportEncrypted={exportEncryptedBackup}
+      onExportEncryptedZip={(ns) => void exportEncryptedFullBackup(ns)}
+      decryptFullBackup={decryptFullBackup}
+      onExportVault={exportVault}
+      onExportBookmarks={exportBookmarks}
+      onExportContacts={exportContacts}
+      onExportCalendar={exportCalendar}
+      onExportDrawings={exportDrawings && ((ns) => void exportDrawings(ns))}
+      onExportNotesMdZip={(ns) => void exportNotesMarkdownZip(ns)}
+      wellness={{
+        isNoteLocked,
+        trackerSettings: userSettings.trackerSettings,
+        factors: userSettings.factors,
+        medications: userSettings.medications,
+        isPro: auth.isPro,
+        onOpenUpgrade: () => { setShowSettings(false); setShowUpgrade({ trigger: null }); },
+      }}
+      onImportEncrypted={importEncryptedBackup}
+      onBlobsRestored={() => {
+        imageStoreRef.current?.processPendingUploads().catch((err) =>
+          console.warn('[imageStore] post-restore processPendingUploads failed:', err),
+        );
+        attachmentStoreRef.current?.processPendingUploads().catch((err) =>
+          console.warn('[attachmentStore] post-restore processPendingUploads failed:', err),
+        );
+      }}
+      onImported={async (count, skippedDuplicates, repaired) => {
+        // A restore of our own backup mostly matches what the
+        // vault already holds, so "imported N" would be true and
+        // useless. Say what it did to the notes it recognised.
+        setImportToast(
+          repaired && (repaired.updated > 0 || repaired.unchanged > 0)
+            ? t('toast.restoreSummary', { added: count, updated: repaired.updated, unchanged: repaired.unchanged })
+            : skippedDuplicates
+              ? `${t('toast.importedSyncing', { count })} ${t('shell:bookmarks.importSkipped', { count: skippedDuplicates })}`
+              : t('toast.importedSyncing', { count }),
+        );
+        mutateSettings((prev) =>
+          prev.importHintDismissed ? prev : { ...prev, importHintDismissed: true },
+        );
+        await refresh();
+        void runSync();
+        window.setTimeout(() => setImportToast(null), 4000);
+      }}
+    />
+  );
 
   return [
             {
@@ -282,67 +362,46 @@ export function buildSettingsCategories({
             },
             {
               id: 'import',
-              label: t('settings.importLabel', exemptOpts('notes:settings.importLabel')),
+              label: t('settings.importLabel'),
               group: t('settings.groupYourNotes'),
               icon: railIcon('import'),
+              render: ({ initialTab }) => importPane('transfer', initialTab),
+            },
+            {
+              id: 'backup',
+              label: t('settings.backupLabel'),
+              group: t('settings.groupYourNotes'),
+              icon: railIcon('backup'),
+              render: ({ initialTab }) => importPane('backup', initialTab),
+            },
+            {
+              id: 'storage',
+              label: t('settings.storageLabel'),
+              group: t('settings.groupYourNotes'),
+              icon: railIcon('storage'),
               render: ({ initialTab }) => (
-                <ImportModal
-                  embedded
-                  onClose={() => setShowSettings(false)}
-                  initialTab={initialTab === 'export' || initialTab === 'restore' || initialTab === 'wellness' ? initialTab : 'import'}
-                  notes={notes}
-                  onImportFolders={mergeImportedFolders}
-                  importTarget={importTarget}
-                  onCreateImportFolder={createImportFolder}
-                  onUndoImportFolders={undoImportedFolders}
-                  onImportSettings={mergeRestoredSettings}
-                  onImportTagColors={applyImportedTagColors}
-                  onExportAllMdZip={(ns) => void exportAllMarkdownZip(ns)}
-                  onExportAllHtmlZip={(ns) => void exportAllHtmlZip(ns)}
-                  onExportAllJson={exportAllJson}
-                  onExportEncrypted={exportEncryptedBackup}
-                  onExportEncryptedZip={(ns) => void exportEncryptedFullBackup(ns)}
-                  decryptFullBackup={decryptFullBackup}
-                  onExportVault={exportVault}
-                  onExportBookmarks={exportBookmarks}
-                  onExportContacts={exportContacts}
-                  onExportCalendar={exportCalendar}
-                  onExportDrawings={exportDrawings && ((ns) => void exportDrawings(ns))}
-                  wellness={{
-                    isNoteLocked,
-                    trackerSettings: userSettings.trackerSettings,
-                    factors: userSettings.factors,
-                    medications: userSettings.medications,
-                    isPro: auth.isPro,
-                    onOpenUpgrade: () => { setShowSettings(false); setShowUpgrade({ trigger: null }); },
-                  }}
-                  onImportEncrypted={importEncryptedBackup}
-                  onBlobsRestored={() => {
-                    imageStoreRef.current?.processPendingUploads().catch((err) =>
-                      console.warn('[imageStore] post-restore processPendingUploads failed:', err),
-                    );
-                    attachmentStoreRef.current?.processPendingUploads().catch((err) =>
-                      console.warn('[attachmentStore] post-restore processPendingUploads failed:', err),
-                    );
-                  }}
-                  onImported={async (count, skippedDuplicates, repaired) => {
-                    // A restore of our own backup mostly matches what the
-                    // vault already holds, so "imported N" would be true and
-                    // useless. Say what it did to the notes it recognised.
-                    setImportToast(
-                      repaired && (repaired.updated > 0 || repaired.unchanged > 0)
-                        ? t('toast.restoreSummary', { added: count, updated: repaired.updated, unchanged: repaired.unchanged })
-                        : skippedDuplicates
-                          ? `${t('toast.importedSyncing', { count })} ${t('shell:bookmarks.importSkipped', { count: skippedDuplicates })}`
-                          : t('toast.importedSyncing', { count }),
-                    );
-                    mutateSettings((prev) =>
-                      prev.importHintDismissed ? prev : { ...prev, importHintDismissed: true },
-                    );
-                    await refresh();
-                    void runSync();
-                    window.setTimeout(() => setImportToast(null), 4000);
-                  }}
+                <StoragePane
+                  initialTab={initialTab}
+                  storage={(openImages) => (
+                    <SyncOptionsModal
+                      embedded
+                      tab="storage"
+                      onSyncNow={runSync}
+                      onOpenNote={onOpenNote}
+                      onOpenImageSettings={openImages}
+                      onClose={() => setShowSettings(false)}
+                      onOpenUpgrade={() => { setShowSettings(false); setShowUpgrade({ trigger: 'storage' }); }}
+                      onSignOut={handleSignOutClick}
+                    />
+                  )}
+                  images={
+                    <ImagesSheet
+                      spaceSaver={userSettings.imageSpaceSaver}
+                      stripMetadata={userSettings.imageStripMetadata}
+                      contactCeiling={userSettings.imageContactCeiling}
+                      onChange={(field, value) => mutateSettings((prev) => ({ ...prev, [field]: value }))}
+                    />
+                  }
                 />
               ),
             },
@@ -396,6 +455,15 @@ export function buildSettingsCategories({
               ),
             },
             {
+              id: 'language',
+              label: t('settings.languageLabel'),
+              // No shell description: the language grid's subtitle sits
+              // inside LanguageSheet, directly above the grid it describes.
+              group: t('settings.groupPreferences'),
+              icon: railIcon('language'),
+              render: () => <LanguageSheet embedded onClose={() => setShowSettings(false)} />,
+            },
+            {
               id: 'date',
               label: t('settings.dateLabel'),
               group: t('settings.groupPreferences'),
@@ -436,7 +504,7 @@ export function buildSettingsCategories({
             {
               id: 'plan',
               label: t('settings.planLabel'),
-              group: t('settings.groupAccount'),
+              group: t('settings.planLabel'),
               icon: railIcon('plan'),
               render: ({ navigate, initialTab }) => (
                 <SyncOptionsModal
@@ -465,13 +533,14 @@ export function buildSettingsCategories({
             {
               id: 'security',
               label: t('settings.securityLabel'),
-              group: t('settings.groupAccount'),
+              group: t('settings.planLabel'),
               icon: railIcon('security'),
               render: ({ initialTab, navigate }) => (
                 <SecurityModal
                   embedded
                   phrase={auth.phrase}
                   defaultTab={initialTab === 'biometric' || initialTab === 'phrase' || initialTab === 'twoFactor' ? initialTab : 'pin'}
+                  reason={settingsSecurityReason}
                   pinTimeoutMinutes={userSettings.pinTimeoutMinutes}
                   onPinTimeoutChange={(minutes) => {
                     mutateSettings((prev) => ({ ...prev, pinTimeoutMinutes: minutes }));
@@ -493,7 +562,7 @@ export function buildSettingsCategories({
             {
               id: 'me',
               label: t('settings.accountLabel', exemptOpts('notes:settings.accountLabel')),
-              group: t('settings.groupAccount'),
+              group: t('settings.planLabel'),
               icon: railIcon('me'),
               render: ({ initialTab }) => (
                 <SyncOptionsModal
@@ -509,45 +578,23 @@ export function buildSettingsCategories({
                 />
               ),
             },
-            {
-              id: 'storage',
-              label: t('settings.storageLabel'),
-              group: t('settings.groupAccount'),
-              icon: railIcon('storage'),
-              render: ({ initialTab }) => (
-                <StoragePane
-                  initialTab={initialTab}
-                  storage={(openImages) => (
-                    <SyncOptionsModal
-                      embedded
-                      tab="storage"
-                      onSyncNow={runSync}
-                      onOpenNote={onOpenNote}
-                      onOpenImageSettings={openImages}
-                      onClose={() => setShowSettings(false)}
-                      onOpenUpgrade={() => { setShowSettings(false); setShowUpgrade({ trigger: 'storage' }); }}
-                      onSignOut={handleSignOutClick}
-                    />
-                  )}
-                  images={
-                    <ImagesSheet
-                      spaceSaver={userSettings.imageSpaceSaver}
-                      stripMetadata={userSettings.imageStripMetadata}
-                      contactCeiling={userSettings.imageContactCeiling}
-                      onChange={(field, value) => mutateSettings((prev) => ({ ...prev, [field]: value }))}
-                    />
-                  }
-                />
-              ),
-            },
             // A touch-only device has no keyboard, so no Hotkeys pane.
             ...(isTouchOnly() ? [] : [{
               id: 'hotkeys',
               label: t('landing:about.tabs.hotkeys'),
-              group: t('settings.groupBrand'),
+              group: t('settings:devices.thisDevice'),
               icon: railIcon('hotkeys'),
               render: ({ initialTab }: { initialTab?: string }) => <HotkeysPane initialTab={initialTab} />,
             }]),
+            // How the desktop app runs on this computer: login, tray, the Ninja hotkey, Open with.
+            // Spec: docs/internal/plans/ninja-anywhere-694.md (section 7)
+            ...(appZoomSupported() ? [{
+              id: 'system',
+              label: t('settings:system.railLabel'),
+              group: t('settings:devices.thisDevice'),
+              icon: railIcon('system'),
+              render: () => <SystemPane />,
+            }] : []),
             // Spec: docs/internal/plans/browser-extension-build.md (section 6)
             {
               id: 'browser',
@@ -555,7 +602,7 @@ export function buildSettingsCategories({
               title: t('shell:apps.title'),
               group: t('settings.groupBrand'),
               icon: railIcon('browser'),
-              render: () => <BrowserPane extensionKeys={extensionKeys} />,
+              render: () => <BrowserPane extensionKeys={extensionKeys} isPro={auth.isPro} onUpgrade={() => setShowUpgrade({ trigger: 'browsers' })} />,
             },
             // Spec: docs/internal/plans/agent-cli.md (sections 3.6, C2, C9)
             ...(commandLineShown() ? [{
@@ -597,15 +644,6 @@ export function buildSettingsCategories({
               group: t('settings.groupBrand'),
               icon: railIcon('help'),
               href: siteHref(helpPath(activeLocale())),
-            },
-            {
-              id: 'language',
-              label: t('settings.languageLabel'),
-              // No shell description: the language grid's subtitle sits
-              // inside LanguageSheet, directly above the grid it describes.
-              group: t('settings.groupBrand'),
-              icon: railIcon('language'),
-              render: () => <LanguageSheet embedded onClose={() => setShowSettings(false)} />,
             },
           ] satisfies SettingsCategory[];
 }

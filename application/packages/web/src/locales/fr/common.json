@@ -92,6 +92,19 @@
       "help": "Raccourcis clavier"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "Écris la suite ici",
+    "hint": "Tape / pour un dossier, # pour une étiquette",
+    "locked": "PrivacyNotes est verrouillé. Ta note est scellée et s'ouvre quand tu déverrouilles.",
+    "queued": "Enregistrée. Elle s'ouvre quand tu déverrouilles.",
+    "tooLong": "Cette note est trop longue. Divise-la en deux notes.",
+    "full": "Trop de notes sont en attente. Déverrouille pour les ajouter.",
+    "empty": "Écris d'abord quelque chose.",
+    "failed": "Impossible d'enregistrer la note. Ouvre PrivacyNotes et réessaie.",
+    "added_one": "{{count}} note rapide ajoutée",
+    "added_many": "{{count}} notes rapides ajoutées",
+    "added_other": "{{count}} notes rapides ajoutées"
+  },
   "quickSwitcher": {
     "label": "Ninja : trouve un élément ou un paramètre, ajoute n'importe quoi, lance une commande",
     "jumpTo": "Ninja",
@@ -129,7 +142,9 @@
     "actions": "actions",
     "back": "retour",
     "actionsPlaceholder": "Filtrer les actions",
-    "onlyCreate": "ajouter"
+    "onlyCreate": "ajouter",
+    "ninjaLockedTitle": "PrivacyNotes est verrouillé",
+    "ninjaLockedBody": "Ouvre PrivacyNotes et déverrouille-le. Ninja trouvera alors tes notes depuis n'importe quelle app."
   },
   "cardForm": {
     "cardholderName": "Nom du titulaire",
@@ -290,8 +305,10 @@
         "detail": "Chaque jour de l'année en un carré de couleur"
       },
       "importExport": {
-        "label": "Import & Export",
-        "detail": "Fais entrer tes notes, sors une sauvegarde"
+        "detail": "Fais entrer tes notes, ou sors-les"
+      },
+      "backup": {
+        "detail": "Sauvegarder maintenant, sauvegardes automatiques et restauration"
       },
       "generator": {
         "label": "Générateur de mots de passe",
@@ -307,6 +324,7 @@
     },
     "commands": {
       "syncResume": "Reprendre la synchro",
+      "lockProtected": "Verrouiller cette note",
       "changelog": "Nouveautés",
       "themesPage": "Thèmes de la communauté",
       "website": "Site web de PrivacyNotes"

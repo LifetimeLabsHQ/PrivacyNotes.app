@@ -5,6 +5,8 @@
   "useDefault": "標準に戻す",
   "color": "色",
   "applyToSubfolders": "サブフォルダにも色を適用",
+  "applyToFolderItems": "このフォルダ内のすべての項目に適用",
+  "applyToTagItems": "このタグが付いたすべての項目に適用",
   "icon": "アイコン",
   "searchPlaceholder": "アイコンを検索",
   "searchLogos": "ロゴを検索",

@@ -26,7 +26,8 @@ import JSZip from 'jszip';
 import i18n from '../i18n';
 import { zipEntryMedia, zipEntryText } from './zipEntry';
 import type { BackupManifest, MissingBlob } from '../export';
-import { stripFrontMatterPadding, unescapeQuotes } from '../noteMarkdown';
+import { stripFrontMatterPadding, unescapeQuotes, unescapeSingleQuotes } from '../noteMarkdown';
+import { FRONT_MATTER_LOCATION, FRONT_MATTER_LOCATION_NAME, LOCATION_KEY, parseFrontMatterLocation, type NoteLocation } from '../noteLocation';
 import { FRONT_MATTER } from '../markdownFolder/adapter';
 import type { ParsedImport, ImportedNote } from './types';
 import type { NoteType } from '@notes/shared';
@@ -65,9 +66,8 @@ function parseFrontmatter(md: string): { meta: Record<string, unknown>; body: st
     // folder named 2024, true or [draft] is a name.
     if (key === 'folder') meta[key] = val;
     // Handle quoted strings
-    else if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-      meta[key] = unescapeQuotes(val.slice(1, -1));
-    }
+    else if (val.startsWith('"') && val.endsWith('"')) meta[key] = unescapeQuotes(val.slice(1, -1));
+    else if (val.startsWith("'") && val.endsWith("'")) meta[key] = unescapeSingleQuotes(val.slice(1, -1));
     // Handle YAML arrays [a, b, c]
     else if (val.startsWith('[') && val.endsWith(']')) {
       meta[key] = val.slice(1, -1).split(',').map((s) => s.trim()).filter(Boolean);
@@ -86,6 +86,15 @@ function parseFrontmatter(md: string): { meta: Record<string, unknown>; body: st
   }
 
   return { meta, body };
+}
+
+/** The trackers a note restores with, the place from its own `location` line
+ *  put back into them. Spec: docs/internal/plans/note-location.md (section 6) */
+function withPlace(
+  trackers: Record<string, unknown> | undefined,
+  place: NoteLocation | undefined,
+): Record<string, unknown> | undefined {
+  return place ? { ...trackers, [LOCATION_KEY]: place } : trackers;
 }
 
 // ─── Body rewriting (import direction) ────────────────────────────────
@@ -277,9 +286,12 @@ export async function parsePrivacyNotesBackup(
       locked: meta.locked === true,
       pinProtected: meta.pinProtected === true,
       archived: meta.archived === true,
-      trackers: (meta.trackers && typeof meta.trackers === 'object')
-        ? meta.trackers as Record<string, unknown>
-        : undefined,
+      trackers: withPlace(
+        (meta.trackers && typeof meta.trackers === 'object')
+          ? meta.trackers as Record<string, unknown>
+          : undefined,
+        parseFrontMatterLocation(meta[FRONT_MATTER_LOCATION], meta[FRONT_MATTER_LOCATION_NAME]),
+      ),
       folderId: typeof meta.folderId === 'string' && meta.folderId ? meta.folderId : null,
     };
 
@@ -344,7 +356,7 @@ export async function parsePrivacyNotesBackup(
   return {
     folders: rebuiltFolders,
     originalFolderIds: originalIds,
-    ...(carried ? { settings: { itemStyles: carried.itemStyles, customThemes: carried.customThemes, factors: carried.factors, customHabits: carried.customHabits, medications: carried.medications, customTrackers: carried.customTrackers } } : {}),
+    ...(carried ? { settings: { itemStyles: carried.itemStyles, customThemes: carried.customThemes, factors: carried.factors, customHabits: carried.customHabits, medications: carried.medications, customTrackers: carried.customTrackers, favoriteTags: carried.favoriteTags, calendarFeeds: carried.calendarFeeds, dashboard: carried.dashboard, agentFolder: carried.agentFolder, trackerSetup: carried.trackerSetup } } : {}),
     notes,
     warnings,
     transforms: [],

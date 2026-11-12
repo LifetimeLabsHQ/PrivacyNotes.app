@@ -35,5 +35,9 @@ The toolbar above changes how text looks: **bold**, *italic*, headings, checklis
 
 That phrase is what opens your notes. Where it is kept is your choice, and you can change that choice at any time. [[How your notes are protected]] lays out the three options.
 
+## More than notes
+
+Notes, tasks, passwords, a journal, files, a calendar, contacts and bookmarks, with mood and medication tracking. One app, encrypted on your device. Plus a free Markdown editor for the folders on your disk, Ninja (⌘K) to reach anything from the keyboard, and a web clipper.
+
 > [!tip] Nothing here is permanent
 > Every note in this vault is an example, this one included. Edit it, move it, or delete it.

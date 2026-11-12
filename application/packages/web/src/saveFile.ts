@@ -80,11 +80,25 @@ export function protectedFolder(path: string, home: string): string | null {
   return hit ? `${base}${sep}${hit.replaceAll('/', sep)}` : null;
 }
 
-/** The sentence for a failed save: why a protected folder refused it, or the caller's own. */
-export function saveFailureText(saved: { blockedFolder?: string }, fallback: string): string {
-  return saved.blockedFolder
-    ? i18n.t('importExport:saveErrors.protectedFolder', { folder: saved.blockedFolder })
-    : fallback;
+/** The longest system reason a failed save shows: a plugin error can quote a whole path. */
+const SAVE_REASON_MAX = 200;
+
+/**
+ * The sentence for a failed save: why a protected folder refused it, or the
+ * caller's own followed by what the system said. Without that reason a save
+ * that failed once could not be told apart from any other (#719).
+ */
+export function saveFailureText(saved: { blockedFolder?: string; error?: unknown }, fallback: string): string {
+  if (saved.blockedFolder) return i18n.t('importExport:saveErrors.protectedFolder', { folder: saved.blockedFolder });
+  const reason = saveFailureReason(saved.error);
+  return reason ? `${fallback} ${i18n.t('importExport:saveErrors.reason', { reason })}` : fallback;
+}
+
+/** The system's own words for a failed save, on one line, or '' when it gave none. */
+function saveFailureReason(error: unknown): string {
+  const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : '';
+  const line = raw.replace(/\s+/g, ' ').trim();
+  return line.length > SAVE_REASON_MAX ? `${line.slice(0, SAVE_REASON_MAX - 1)}\u2026` : line;
 }
 
 class BlockedFolderError extends Error {

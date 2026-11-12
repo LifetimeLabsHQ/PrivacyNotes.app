@@ -101,9 +101,10 @@ const TILE: Record<Tone, string> = {
 
 /**
  * @catalog IconTile
- * use: the round tinted tile with a 20px glyph at the start of a confirm, a toast or a short window head, in a tone.
+ * use: the round tinted tile with a 20px glyph at the start of a confirm, a toast or a short window head, in a tone. `size="sm"` is the 28px tile with a 16px glyph, for a callout card or a one-line message.
  * never: a round or square tint of your own; a fixed red-500 or amber-500.
  */
-export function IconTile({ tone = 'info', children }: { tone?: Tone; children: ReactNode }) {
-  return <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full [&>svg]:h-5 [&>svg]:w-5 ${TILE[tone]}`}>{children}</div>;
+export function IconTile({ tone = 'info', size = 'md', children }: { tone?: Tone; size?: 'md' | 'sm'; children: ReactNode }) {
+  const box = size === 'sm' ? 'h-7 w-7 [&>svg]:h-4 [&>svg]:w-4' : 'h-10 w-10 [&>svg]:h-5 [&>svg]:w-5';
+  return <div className={`flex shrink-0 items-center justify-center rounded-full ${box} ${TILE[tone]}`}>{children}</div>;
 }

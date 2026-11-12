@@ -5,6 +5,8 @@
   "useDefault": "기본값 사용",
   "color": "색상",
   "applyToSubfolders": "하위 폴더에도 색상 적용",
+  "applyToFolderItems": "이 폴더의 모든 항목에 적용",
+  "applyToTagItems": "이 태그가 있는 모든 항목에 적용",
   "icon": "아이콘",
   "searchPlaceholder": "아이콘 검색",
   "searchLogos": "로고 검색",

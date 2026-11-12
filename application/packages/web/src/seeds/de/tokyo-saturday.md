@@ -7,6 +7,11 @@ Um fünf aus dem Hotel. Zwei Stunden Zug, und die Stadt war einfach weg.
 
 ![Der Fuji mit Schnee auf dem Gipfel, gerahmt von Kirschblüten.](/onboarding/fuji.webp)
 
+```map
+35.3606, 138.7274
+Fuji
+```
+
 Am See standen die Kirschblüten. Der Fuji stand dahinter, den ganzen Vormittag ohne eine Wolke. Die Leute hier sagen, man kann eine Woche kommen und den Gipfel nie sehen. Wir hatten ihn sechs Stunden lang.
 
 | Was | Wann |

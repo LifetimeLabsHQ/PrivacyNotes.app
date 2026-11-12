@@ -425,7 +425,7 @@ function LoginViewMode({ note, onEdit, copy, copied, isPro, onOpenUpgrade, files
         </button>
       )}
 
-      {data.notes && <DetailNotes heading={t('common:cardForm.notes')}>{data.notes}</DetailNotes>}
+      {data.notes && <DetailNotes heading={t('common:cardForm.notes')} markdown>{data.notes}</DetailNotes>}
       {files}
     </div>
   );
@@ -522,7 +522,7 @@ function CardViewMode({ note, onEdit, copy, copied, files }: {
         )}
       </div>
 
-      {data.notes && <DetailNotes heading={t('common:cardForm.notes')}>{data.notes}</DetailNotes>}
+      {data.notes && <DetailNotes heading={t('common:cardForm.notes')} markdown>{data.notes}</DetailNotes>}
       {files}
     </div>
   );
@@ -632,7 +632,7 @@ function SshKeyViewMode({ note, onEdit, copy, copied, files }: {
         )}
       </div>
 
-      {data.notes && <DetailNotes heading={t('common:cardForm.notes')}>{data.notes}</DetailNotes>}
+      {data.notes && <DetailNotes heading={t('common:cardForm.notes')} markdown>{data.notes}</DetailNotes>}
       {files}
     </div>
   );

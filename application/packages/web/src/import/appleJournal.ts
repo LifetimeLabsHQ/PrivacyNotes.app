@@ -6,6 +6,7 @@ import { EMOTION_TAGS } from '../trackerTypes';
 import { toLocalIso } from '../notesViewUtils';
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 import i18n from '../i18n';
+import { LOCATION_KEY, MAP_FENCE, importedLocation, mapFenceBody, osmUrl, type NoteLocation } from '../noteLocation';
 
 const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.appleJournal.${key}`, options);
 
@@ -52,10 +53,10 @@ const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`
  *   everything else   -> the card's own overlay text as a text line
  *                        (contacts, workouts, motion, third-party media)
  *
- * Locations are the one thing Journal shows that we have no node for, so
- * they become links: a `visits` entry carries real coordinates and gets a
- * pin link, a bare `placeName` gets an OpenStreetMap search link. Both
- * land in a `Places` list at the end of the entry.
+ * Locations land in a `Places` part at the end of the entry. A `visits`
+ * entry carries real coordinates: it becomes a map block there, and the
+ * first one is the entry's own place (the chip). A bare `placeName` has
+ * nothing to pin, so it stays an OpenStreetMap search link.
  */
 
 /* ------------------------------------------------------------------ */
@@ -258,11 +259,13 @@ interface Place {
  */
 export function placeUrl(place: Place): string {
   const { latitude: lat, longitude: lon } = place;
-  if (typeof lat === 'number' && typeof lon === 'number') {
-    const at = `${lat}/${lon}`;
-    return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${at}`;
-  }
+  if (typeof lat === 'number' && typeof lon === 'number') return osmUrl(lat, lon);
   return `https://www.openstreetmap.org/search?query=${encodeURIComponent(place.label)}`;
+}
+
+/** A place with coordinates as a map place, or undefined for a bare name. */
+function placeOnMap(place: Place): NoteLocation | undefined {
+  return importedLocation(place.latitude, place.longitude, place.label);
 }
 
 /* ------------------------------------------------------------------ */
@@ -466,6 +469,10 @@ interface Counters {
   videos: number;
   audio: number;
   places: number;
+  /** Places with coordinates, now maps in their entry. */
+  maps: number;
+  /** Entries that got a place of their own. */
+  located: number;
   moods: number;
   cards: number;
   failedPhotos: number;
@@ -780,8 +787,16 @@ function assemble(grid: GridResult, body: string): string {
     blocks.push(`**Also in this entry**\n\n${grid.cards.map((c) => `- ${c}`).join('\n')}`);
   }
   if (grid.places.length > 0) {
-    const lines = grid.places.map((p) => `- [${p.label}](${placeUrl(p)})`);
-    blocks.push(`**Places**\n\n${lines.join('\n')}`);
+    // A place with coordinates is a map in the entry, as Journal shows it; a
+    // bare name has nothing to pin, so it stays a search link.
+    // Spec: docs/internal/plans/note-location.md (section 6)
+    const maps = grid.places.map(placeOnMap).filter((loc) => loc !== undefined);
+    const links = grid.places.filter((p) => !placeOnMap(p)).map((p) => `- [${p.label}](${placeUrl(p)})`);
+    const parts = [
+      ...maps.map((loc) => `\`\`\`${MAP_FENCE}\n${mapFenceBody(loc)}\n\`\`\``),
+      ...(links.length > 0 ? [links.join('\n')] : []),
+    ];
+    blocks.push(`**Places**\n\n${parts.join('\n\n')}`);
   }
   return blocks.join('\n\n');
 }
@@ -858,7 +873,7 @@ export async function parseAppleJournal(
   }
 
   const counters: Counters = {
-    photos: 0, converted: 0, videos: 0, audio: 0, places: 0,
+    photos: 0, converted: 0, videos: 0, audio: 0, places: 0, maps: 0, located: 0,
     moods: 0, cards: 0, failedPhotos: 0, missingAssets: 0, tooLarge: 0,
   };
   const flags: ConvFlags = {
@@ -892,7 +907,12 @@ export async function parseAppleJournal(
     }
 
     const grid = await readGrid(doc.querySelector('.assetGrid'), ctx);
-    counters.places += grid.places.length;
+    // The entry's own place: the first one Journal gives coordinates for.
+    const place = grid.places.map(placeOnMap).find((loc) => loc !== undefined);
+    const mapped = grid.places.filter((p) => placeOnMap(p)).length;
+    counters.maps += mapped;
+    counters.places += grid.places.length - mapped;
+    if (place) counters.located++;
     if (grid.mood !== null || grid.emotions.length > 0) counters.moods++;
 
     // Journal's markup is pasted inside a `<p><span>` wrapper, which the
@@ -921,6 +941,7 @@ export async function parseAppleJournal(
         journalDate: toLocalIso(when),
         ...(grid.mood !== null ? { mood: grid.mood } : {}),
         ...(grid.emotions.length > 0 ? { emotions: grid.emotions } : {}),
+        ...(place ? { [LOCATION_KEY]: place } : {}),
       },
     });
   }
@@ -963,6 +984,12 @@ export async function parseAppleJournal(
   }
   if (counters.audio > 0) {
     transforms.push(msg('foundAudio', { count: counters.audio }));
+  }
+  if (counters.located > 0) {
+    transforms.push(i18n.t('importExport:importLog.shared.places', { count: counters.located }));
+  }
+  if (counters.maps > 0) {
+    transforms.push(msg('turnedMaps', { count: counters.maps }));
   }
   if (counters.places > 0) {
     transforms.push(msg('turnedPlaces', { count: counters.places }));

@@ -24,10 +24,12 @@ import { isEditableTarget } from '../ContextMenu';
 import { pushEscapeHandler } from '../useEscapeToClose';
 import { useTheme } from '../theme';
 import { openExternal } from '../openExternal';
+import { wholeNoteLink } from '../noteLinks';
 import { deriveDisplayTitle } from '../notesViewUtils';
 import { stashPendingEdit } from '../flushStash';
 import { dataUrlToFile, pictureDataUrl, storeDrawingPicture } from './pictures';
 import { parseScene, serializeScene } from './scene';
+import { keepLinkPopupInView } from './linkPopup';
 import { useDrawingTips } from './DrawingTips';
 import { DrawingToolbar, type DrawingToolState } from './DrawingToolbar';
 
@@ -59,8 +61,11 @@ const noop = () => {};
 const noPicture = async () => null;
 const noFile = async (_url: string, name: string) => new File([], name);
 
-export function DrawingItem({ note, readOnly, onBodyChange, openFullScreenRef, flushRef, toolbarSlot }: {
+export function DrawingItem({ note, readOnly, onBodyChange, onOpenNoteLink, openFullScreenRef, flushRef, toolbarSlot }: {
   note: LocalNote;
+  /** Opens the note a shape's `[[Note]]` link names, as a click on a
+   *  note-link in a note does. */
+  onOpenNoteLink?: (target: string) => void;
   /** The pane's row under the scrolling column, for the toolbar at the
    *  bottom (the note editor's bar uses the same row). */
   toolbarSlot?: HTMLElement | null;
@@ -84,11 +89,12 @@ export function DrawingItem({ note, readOnly, onBodyChange, openFullScreenRef, f
   const tips = useDrawingTips();
   // What the toolbar shows: the canvas reports it on every change.
   const [toolState, setToolState] = useState<DrawingToolState>({ tool: 'selection', locked: false, zoom: 1, phone: false, styled: false, styleOpen: false });
-  const commands = useRef<{ toggleStyle: () => void; clear: () => void; escape: () => void; closeMenu: () => void } | null>(null);
+  const commands = useRef<{ toggleStyle: () => void; clear: () => void; escape: () => void; closeMenu: () => void; steps: () => void; linkShapeHeight: () => number | null } | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const paneRef = useRef<HTMLDivElement | null>(null);
   const windowRef = useRef<HTMLDivElement | null>(null);
   const latestBody = useRef(note.body);
+  useEffect(() => keepLinkPopupInView(fullScreen ? windowRef.current : paneRef.current, () => commands.current?.linkShapeHeight() ?? null), [fullScreen]);
   const flush = useRef<(() => void) | null>(null);
   const moveTo = (full: boolean) => {
     flush.current?.();
@@ -114,6 +120,13 @@ export function DrawingItem({ note, readOnly, onBodyChange, openFullScreenRef, f
     return pushEscapeHandler(() => commands.current?.escape(), false, false);
   }, [canvasOwnsEscape]);
   const id = note.id;
+  // A shape's link: `[[Note]]` opens that note, anything else goes to the
+  // browser (openExternal takes web, mail and phone links only).
+  const openLink = useCallback((link: string) => {
+    const target = wholeNoteLink(link);
+    if (target === null) openExternal(link);
+    else onOpenNoteLink?.(target);
+  }, [onOpenNoteLink]);
   // True while a closing or hidden tab writes the save still waiting.
   const leaving = useRef(false);
   const handleBody = useCallback((body: string) => {
@@ -159,7 +172,7 @@ export function DrawingItem({ note, readOnly, onBodyChange, openFullScreenRef, f
         loadPicture={pictureDataUrl}
         storePicture={storeDrawingPicture}
         toFile={dataUrlToFile}
-        onOpenLink={openExternal}
+        onOpenLink={openLink}
         onToolState={setToolState}
         onEscapeOwnedChange={setCanvasOwnsEscape}
         flushRef={flush}
@@ -172,7 +185,7 @@ export function DrawingItem({ note, readOnly, onBodyChange, openFullScreenRef, f
   // app's menu stays out of it (`data-no-app-menu`). Issue #681.
   return (
     <>
-      {!fullScreen && <DrawingToolbar canvasRef={paneRef} state={toolState} readOnly={readOnly} onShowKeys={keys.open} onStyle={() => commands.current?.toggleStyle()} onReset={() => setConfirmReset(true)} slot={toolbarSlot} />}
+      {!fullScreen && <DrawingToolbar canvasRef={paneRef} state={toolState} readOnly={readOnly} onShowKeys={keys.open} onStyle={() => commands.current?.toggleStyle()} onSteps={() => commands.current?.steps()} onReset={() => setConfirmReset(true)} slot={toolbarSlot} />}
       <div ref={paneRef} data-no-app-menu className="relative flex min-h-0 flex-1 flex-col" onKeyDownCapture={keys.onKeyDownCapture} onPointerOver={tips.onPointerOver} onPointerLeave={onPointerLeave} onPointerDown={tips.onPointerDown}>
         {!fullScreen && canvas('pane')}
       </div>
@@ -203,7 +216,7 @@ export function DrawingItem({ note, readOnly, onBodyChange, openFullScreenRef, f
           closeOnBackdrop={false}
           className="flex h-full max-w-none flex-col overflow-hidden"
         >
-          <DrawingToolbar canvasRef={windowRef} state={toolState} readOnly={readOnly} onShowKeys={keys.open} onStyle={() => commands.current?.toggleStyle()} onReset={() => setConfirmReset(true)} />
+          <DrawingToolbar canvasRef={windowRef} state={toolState} readOnly={readOnly} onShowKeys={keys.open} onStyle={() => commands.current?.toggleStyle()} onSteps={() => commands.current?.steps()} onReset={() => setConfirmReset(true)} />
           <div ref={windowRef} data-no-app-menu className="relative flex min-h-0 flex-1 flex-col" onKeyDownCapture={keys.onKeyDownCapture} onPointerOver={tips.onPointerOver} onPointerLeave={onPointerLeave} onPointerDown={tips.onPointerDown}>
             {canvas('window')}
           </div>

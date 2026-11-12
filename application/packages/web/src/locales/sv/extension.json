@@ -1,25 +1,39 @@
 {
   "manifest": {
-    "extDescription": "Spara webbsidor som krypterade anteckningar och kopiera dina inloggningar.",
+    "extDescription": "Spara webbsidor som krypterade anteckningar och kopiera eller fyll i dina inloggningar.",
     "commandOpen": "Öppna PrivacyNotes",
-    "commandCopyLogin": "Kopiera inloggningen för den här webbplatsen",
-    "commandSaveBookmark": "Spara sidan som bokmärke"
+    "commandCopyLogin": "Fyll i eller kopiera inloggningen för den här webbplatsen",
+    "commandSaveNote": "Spara sidan som anteckning",
+    "commandLock": "Lås valvet",
+    "commandGenerate": "Skapa ett lösenord och kopiera det",
+    "commandSaveBookmark": "Spara sidan som bokmärke",
+    "commandNewNote": "Skriv en ny anteckning"
   },
   "menu": {
     "savePageNote": "Spara sidan som anteckning",
     "savePageBookmark": "Spara sidan som bokmärke",
     "copyPageMarkdown": "Kopiera sidan som Markdown",
     "saveSelection": "Spara markeringen som anteckning",
+    "newNoteFromSelection": "Ny anteckning från markeringen",
     "saveLinkBookmark": "Spara länken som bokmärke",
     "saveLinkedPage": "Spara den länkade sidan som anteckning",
+    "fillLogin": "Fyll i inloggning för den här webbplatsen",
     "copyLogin": "Kopiera inloggning för den här webbplatsen",
     "addLogin": "Lägg till en inloggning för den här webbplatsen",
     "generatePassword": "Skapa ett lösenord"
   },
+  "note": {
+    "tagsPlaceholder": "#arbete #idéer",
+    "tagsHelp": "Mellanslag eller kommatecken mellan taggarna. # är valfritt.",
+    "failed": "Det gick inte att spara anteckningen. Försök igen."
+  },
   "connect": {
-    "title": "Anslut till ditt konto",
-    "body": "Öppna Inställningar > Tillägg i PrivacyNotes och välj Skapa en kod. Klistra in koden här.",
+    "title": "Anslut den här webbläsaren",
+    "step1": "Öppna PrivacyNotes på den här datorn eller använd use.privacynotes.app.",
+    "step2": "Öppna Inställningar > Tillägg och välj Skapa en kod.",
+    "step3": "Klistra in koden här.",
     "codeLabel": "Kod från appen",
+    "paste": "Klistra in",
     "connect": "Anslut",
     "badCode": "Koden är inte komplett. Kopiera den igen från appen.",
     "usedCode": "Koden är redan använd eller äldre än 10 minuter. Skapa en ny i appen. Dina anslutna webbläsare finns under Inställningar > Tillägg.",
@@ -27,21 +41,24 @@
     "connected": "Ansluten",
     "connectedClips": "Klippning är redo.",
     "connectedBoth": "Klippning och inloggningar är redo.",
-    "codeSpent": "Koden är förbrukad nu. En skärmbild av den är värdelös.",
     "help": "Så fungerar det"
   },
   "protect": {
     "title": "Skydda dina inloggningar",
-    "body": "Välj en PIN eller en lösenkod för den här webbläsaren. Den är skild från appens.",
-    "tries": "Efter 10 felaktiga försök kopplas den här webbläsaren bort.",
-    "biometric": "Använd även fingeravtryck eller ansikte",
-    "biometricHelp": "Touch ID eller Windows Hello, där den här webbläsaren stöder det. PIN-koden eller lösenkoden fungerar alltid också.",
+    "body": "Välj en PIN eller en lösenkod för den här webbläsaren. Du behöver den för att låsa upp dina inloggningar här. Den är skild från appens.",
+    "biometric": "Använd även biometrisk upplåsning",
+    "biometricHelp": "Touch ID eller Windows Hello, utöver PIN-koden eller lösenkoden, som alltid fungerar också.",
     "repeat": "Ange den igen",
     "mismatch": "De två stämmer inte överens. Försök igen."
   },
   "clip": {
     "selection": "Markering",
+    "wholePage": "Hela sidan",
+    "whatToSave": "Vad som ska sparas",
+    "picturesKept_other": "{{count}} bilder sparade.",
+    "picturesKept_one": "{{count}} bild sparad.",
     "includePictures": "Ta med bilder",
+    "includePicturesHelp": "Sparas i anteckningen, inte länkade till webbplatsen.",
     "savedBody": "Den visas i Anteckningar vid nästa synk i någon av dina appar. Om en av dem är öppen sker det oftast inom några minuter.",
     "closeHint": "Du kan stänga popupfönstret direkt.",
     "alreadySaved": "Du sparade den här sidan {{date}}.",
@@ -60,24 +77,22 @@
     "failed": "Det gick inte att spara sidan. Försök igen.",
     "reading": "Läser sidan",
     "copiedMarkdown": "Sidan kopierad som Markdown",
-    "off": "Att spara sidor är avstängt för den här webbläsaren. Slå på Webbklippare när du ansluter den.",
-    "saving": "Sparar sidan"
+    "off": "Att spara sidor är avstängt för den här webbläsaren. Slå på Webbklippare när du ansluter den."
   },
   "logins": {
     "unlockPin": "Ange din PIN",
     "unlockPasscode": "Ange din lösenkod",
-    "useBiometric": "Använd fingeravtryck eller ansikte",
+    "useBiometric": "Använd biometrisk upplåsning",
     "wrong_one": "Fel. {{count}} försök kvar innan den här webbläsaren kopplas bort.",
     "wrong_other": "Fel. {{count}} försök kvar innan den här webbläsaren kopplas bort.",
     "forSite": "För {{site}}",
     "none": "Inga inloggningar för den här webbplatsen.",
     "off": "Inloggningar är avstängda för den här webbläsaren. Slå på Valv när du ansluter den.",
     "copyCode": "Kopiera 2FA-kod",
+    "fill": "Fyll i",
     "usernameCopied": "Användarnamn kopierat",
     "passwordCopied": "Lösenord kopierat",
     "codeCopied": "2FA-kod kopierad",
-    "clears": "Det rensas från urklipp efter 30 sekunder, om det fortfarande finns där.",
-    "addSaved": "Sparad. Den visas i ditt Valv vid nästa synk i någon av dina appar. Om en av dem är öppen sker det oftast inom några minuter.",
     "lock": "Lås",
     "unreachable": "Det går inte att nå PrivacyNotes för att låsa upp. Kontrollera anslutningen och försök igen.",
     "lockSystem": "När datorn låses",
@@ -97,13 +112,13 @@
   "changeSecret": {
     "titlePin": "Byt PIN",
     "titlePasscode": "Byt lösenkod",
-    "biometricAgain": "Fingeravtryck eller ansikte använde den gamla. Konfigurera det igen för att fortsätta använda det."
+    "biometricAgain": "Biometrisk upplåsning använde den gamla. Ställ in den igen för att fortsätta använda den."
   },
   "biometric": {
-    "enrolled": "Fingeravtryck eller ansikte är konfigurerat. Du kan stänga den här fliken.",
-    "enrolledHere": "Fingeravtryck eller ansikte är konfigurerat.",
+    "enrolled": "Biometrisk upplåsning är inställd. Du kan stänga den här fliken.",
+    "enrolledHere": "Biometrisk upplåsning är inställd.",
     "unlocked": "Upplåst. Du kan stänga den här fliken och öppna PrivacyNotes igen.",
-    "failed": "Den här webbläsaren kan inte använda fingeravtryck eller ansikte här. PIN-koden eller lösenkoden fungerar som tidigare."
+    "failed": "Den här webbläsaren kan inte använda biometrisk upplåsning här. PIN-koden eller lösenkoden fungerar som tidigare."
   },
   "vault": {
     "search": "Sök i valvet",
@@ -131,13 +146,53 @@
     "lockHeader": "Lås valvet efter",
     "unlockToCopy": "Lås upp för att kopiera",
     "omniboxDefault": "Sök efter %s i ditt PrivacyNotes-valv",
-    "omniboxUnlock": "Lås upp PrivacyNotes för att söka"
+    "omniboxUnlock": "Lås upp PrivacyNotes för att söka",
+    "moreOptions": "Fler alternativ"
   },
   "shortcuts": {
     "notSet": "Inte inställt",
     "addressBar": "Sök i valvet från adressfältet",
     "change": "Ändra kortkommandon",
     "changeHint": "Webbläsaren håller tangenterna. Ändra en där, eller ge den en tangent om den saknar en.",
-    "loginHint": "<key/> kopierar användarnamnet och sedan lösenordet."
+    "loginHint": "<key/> fyller i den här inloggningen. På en sida utan inloggningsfält kopierar den användarnamnet och sedan lösenordet.",
+    "loginHintMany": "<key/> fyller i inloggningen överst.<br/>Tryck på den igen inom 3 sekunder för att fylla i nästa."
+  },
+  "tabs": {
+    "label": "Klipp eller Valv",
+    "clip": "Klipp"
+  },
+  "notice": {
+    "clearsIn": "Rensas om {{seconds}} s",
+    "copyFailed": "Det gick inte att kopiera",
+    "loginSaved": "Inloggning sparad",
+    "vaultNextSync": "Visas i ditt Valv vid nästa synk",
+    "noteSaved": "Anteckning sparad",
+    "notesNextSync": "Visas i Anteckningar vid nästa synk",
+    "savedHere": "Sparad här",
+    "goesOutOnline": "Skickas när du är online"
+  },
+  "fill": {
+    "notFilled": "Inte ifyllt",
+    "couldNot": "Det gick inte att fylla i",
+    "nothing": "Inget inloggningsfält på den här sidan",
+    "signup": "Formuläret ber om ett nytt lösenord",
+    "insecure": "Den här sidan är inte säker (http)",
+    "otherAccount": "Sidan ber om ett annat konto",
+    "tooLong": "Sidans fält är för kort",
+    "copyInstead": "Kopiera värdena i stället",
+    "usernameOnly": "Användarnamn ifyllt",
+    "usernameOnlyNext": "Välj Fyll i igen för lösenordet"
+  },
+  "settings": {
+    "codes": "2FA-koder",
+    "codesHelp": "Den aktuella koden under varje inloggning med en 2FA-nyckel.",
+    "bar": "Nedräkningsstapel",
+    "barHelp": "En linje som krymper fram till nästa kod.",
+    "iconsHelp": "Via vår proxy: den ser domänen, aldrig dig.",
+    "disconnect": "Koppla bort tillägget",
+    "biometric": "Biometrisk upplåsning",
+    "biometricPin": "Ange din PIN för att ställa in den.",
+    "biometricPasscode": "Ange din lösenkod för att ställa in den.",
+    "biometricOff": "Biometrisk upplåsning är av"
   }
 }

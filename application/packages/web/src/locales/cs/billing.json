@@ -26,7 +26,8 @@
       "default": "Jeden přechod na Pro odemkne všechno níže. Jednorázová platba.",
       "alerts": "Připomínky jsou funkce Pro. Každé zařízení zazvoní samo v čase, který si vybereš, takže položku nevidí žádná služba push oznámení.",
       "vaultFiles": "Soubory u položek trezoru jsou funkce Pro. Uchovej obnovovací kódy, záložní klíč nebo sken přímo u přihlašovacích údajů, karty nebo klíče, ke kterým patří.",
-      "cli": "CLI je funkce Pro. Skripty, AI agenti a AI aplikace přidávají poznámky z terminálu nebo z chatu, rovnou do tvé složky Agent."
+      "cli": "CLI je funkce Pro. Skripty, AI agenti a AI aplikace přidávají poznámky z terminálu nebo z chatu, rovnou do tvé složky Agent.",
+      "browsers": "Druhý prohlížeč je funkce Pro. Bezplatný tarif připojí jedno rozšíření prohlížeče, Pro jich připojí až 10, každé s vlastním PINem."
     },
     "features": {
       "devices": "Synchronizace neomezeného počtu zařízení, na každé platformě",

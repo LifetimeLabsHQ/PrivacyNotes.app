@@ -91,6 +91,17 @@
       "help": "키보드 단축키"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "여기에 더 쓰세요",
+    "hint": "/를 입력하면 폴더, #를 입력하면 태그",
+    "locked": "PrivacyNotes가 잠겨 있어요. 노트는 봉인되어 있고 잠금 해제하면 열려요.",
+    "queued": "저장했어요. 잠금 해제하면 열려요.",
+    "tooLong": "이 노트가 너무 길어요. 노트 두 개로 나누세요.",
+    "full": "대기 중인 노트가 너무 많아요. 잠금 해제해서 추가하세요.",
+    "empty": "먼저 내용을 쓰세요.",
+    "failed": "노트를 저장하지 못했어요. PrivacyNotes를 열고 다시 시도하세요.",
+    "added_other": "빠른 노트 {{count}}개를 추가했어요"
+  },
   "quickSwitcher": {
     "label": "Ninja: 항목이나 설정 찾기, 무엇이든 추가, 명령 실행",
     "jumpTo": "Ninja",
@@ -127,7 +138,9 @@
     "actions": "동작",
     "back": "뒤로",
     "actionsPlaceholder": "동작 필터링",
-    "onlyCreate": "추가"
+    "onlyCreate": "추가",
+    "ninjaLockedTitle": "PrivacyNotes가 잠겨 있어요",
+    "ninjaLockedBody": "PrivacyNotes를 열고 잠금 해제하세요. 그러면 Ninja가 어떤 앱에서든 노트를 찾아 줘요."
   },
   "cardForm": {
     "cardholderName": "카드 소유자 이름",
@@ -285,8 +298,10 @@
         "detail": "한 해의 하루하루를 색칠된 네모 하나로"
       },
       "importExport": {
-        "label": "가져오기/내보내기",
-        "detail": "노트를 가져오고, 백업을 내보내요"
+        "detail": "노트를 가져오거나 내보내요"
+      },
+      "backup": {
+        "detail": "지금 백업, 자동 백업, 복원"
       },
       "generator": {
         "label": "비밀번호 생성기",
@@ -302,6 +317,7 @@
     },
     "commands": {
       "syncResume": "동기화 재개",
+      "lockProtected": "이 노트 잠그기",
       "changelog": "새로운 기능",
       "themesPage": "커뮤니티 테마",
       "website": "PrivacyNotes 웹사이트"

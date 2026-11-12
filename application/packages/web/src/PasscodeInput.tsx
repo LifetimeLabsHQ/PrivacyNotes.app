@@ -15,6 +15,8 @@ type Props = {
   ariaLabel?: string;
   /** The settings pane size; the lock screen and the note gate keep the full one. */
   compact?: boolean;
+  /** PIN boxes only (PinInput): the passcode field fills its row already. */
+  fill?: boolean;
 };
 
 /**

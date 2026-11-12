@@ -30,11 +30,11 @@ function Page() {
     <main className="max-w-sm mx-auto p-6 space-y-4">
       <h1 className="text-title font-semibold text-pn m-0">{t('protect.biometric')}</h1>
       {state === 'ok' ? (
-        <Callout tone="success">{mode === 'enroll' ? t('biometric.enrolled') : t('biometric.unlocked')}</Callout>
+        <Callout look="card" tone="success">{mode === 'enroll' ? t('biometric.enrolled') : t('biometric.unlocked')}</Callout>
       ) : state === 'failed' ? (
-        <Callout tone="warning">{t('biometric.failed')}</Callout>
+        <Callout look="card" tone="warning">{t('biometric.failed')}</Callout>
       ) : (
-        <Button variant="primary" icon={<Fingerprint aria-hidden="true" />} onClick={() => void run()} disabled={state === 'busy'}>
+        <Button variant="primary" icon={<Fingerprint aria-hidden="true" />} onClick={() => void run()} disabled={state === 'busy'} className="w-full">
           {t('logins.useBiometric')}
         </Button>
       )}

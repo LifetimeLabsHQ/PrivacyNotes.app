@@ -128,7 +128,7 @@ export function useNoteItem(p: NoteRowProps): ListItem {
   const look = trashTint ? null : noteLook;
   // The icon set on the note wins over its type icon, its site icon and its
   // photo, in every layout; the trash keeps its amber type icons.
-  const iconPaths = useNoteIconPaths(n.id);
+  const iconPaths = useNoteIconPaths(n.id, n);
   const ownIcon = trashTint ? null : iconPaths;
   const isVault = n.type === 'login' || n.type === 'card' || n.type === 'ssh-key';
   const locale = activeLocale();

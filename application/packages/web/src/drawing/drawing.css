@@ -54,9 +54,8 @@
 }
 
 /* Excalidraw's tool island holds the hint ("To move canvas, hold ..."), so
-   the island stays without its tools or its panel look, and the hint wears
-   the app's help text, readable, where Excalidraw drew it ghosted. The
-   tools are the app's toolbar (DrawingToolbar.tsx). */
+   the island stays without its tools or its panel look. The tools are the
+   app's toolbar (DrawingToolbar.tsx). */
 .excalidraw .App-toolbar-container .App-toolbar {
   background: none;
   border: 0;
@@ -65,24 +64,40 @@
 .excalidraw .App-toolbar-container .App-toolbar > :not(.HintViewer) {
   display: none;
 }
-/* The hint hangs under the island, which is empty now and sits at the
-   canvas's centre: centre the hint on that point, as wide as its text, and
-   let it wrap only where the canvas is narrower (the canvas is the size
-   container, for `cqi` here and `cqh` in the phone panel; it takes its size
-   from the pane, never from what it holds). The phone layout and a touch-only screen show no
-   hint: Excalidraw puts it where the app's toolbar replaced its tools, and
-   its text names keys (Enter, Ctrl and an arrow). */
+/* The hint sits at the bottom centre of the canvas, a pill in the app's
+   help text, as wide as its text. Excalidraw hangs it under its toolbar at
+   the top centre, which is where a drawing opens: there it covered shapes
+   and their link icons, or their lines ran through its text. The empty
+   island and Excalidraw's wrapper around it (an inline `position:
+   relative`, for the welcome screen the app does not show) stop being its
+   containing block, so it takes the top bar's container, which is the
+   canvas less 1rem on each side. It wraps only where the canvas is
+   narrower (the canvas is the size container, for `cqi` here and `cqh` in
+   the phone panel; it takes its size from the pane, never from what it
+   holds). The phone layout and a touch-only screen show no hint:
+   Excalidraw puts it where the app's toolbar replaced its tools, and its
+   text names keys (Enter, Ctrl and an arrow). */
 .excalidraw {
   container-type: size;
 }
+.excalidraw .App-toolbar-container .App-toolbar,
+.excalidraw .shapes-section > div {
+  position: static !important;
+}
 .excalidraw .HintViewer {
+  top: auto;
+  bottom: 0;
   left: 50%;
   width: max-content;
   max-width: calc(100cqi - 2rem);
-  padding-right: 0;
+  margin: 0;
+  padding: 0.125rem 0.5rem;
   color: var(--color-pn-muted);
   font-size: var(--fs-help);
   transform: translateX(-50%);
+  background: var(--island-bg-color);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
 }
 .excalidraw.excalidraw--mobile .HintViewer {
   display: none;

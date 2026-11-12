@@ -5,7 +5,7 @@
 
 export { Button, IconButton, CloseButton } from './Button';
 export { VaultFieldAction } from './VaultFieldAction';
-export { TextField, Select } from './fields';
+export { TextField, Select, HotkeyField } from './fields';
 export { DeleteButton } from './DeleteButton';
 export { EditRow } from './EditRow';
 export { useProGate } from './proGate';
@@ -14,6 +14,7 @@ export { FeedbackButton, Callout, Banner, Snackbar, Badge, Spinner, ProgressBar,
 export { Checkbox } from './Checkbox';
 export { TaskCheckbox } from './TaskCheckbox';
 export { Popover, Kbd, Divider, CopyButton, IconTile } from './misc';
+export { RowChip } from './RowChip';
 export { GridCard } from './GridCard';
 export { FeaturePitch, PitchBadge } from './FeaturePitch';
 export { TerminalBlock } from './TerminalBlock';

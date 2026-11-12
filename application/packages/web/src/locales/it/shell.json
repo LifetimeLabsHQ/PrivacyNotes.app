@@ -397,6 +397,7 @@
     "modeRich": "Formattato",
     "modeSource": "Markdown",
     "reopenPrompt": "Dopo un ricaricamento il tuo browser chiede di nuovo il permesso. La cartella è memorizzata, quindi basta un clic.",
+    "reopenPromptDesktop": "Scegli {{name}} ancora una volta, così l'app può riaprirla. Nella cartella non è cambiato nulla.",
     "reopenFolder": "Riapri {{name}}",
     "new": "Nuovo",
     "saveToNotes": "Salva nelle mie note",
@@ -698,6 +699,7 @@
       "bookClub": "Club del libro",
       "rent": "Pagare l'affitto"
     },
+    "feedReadOnly": "Da {{name}}. Puoi modificare questo evento solo in quel calendario.",
     "nothingFor_one": "Niente per {{count}} giorno",
     "more_one": "+{{count}} altro"
   },
@@ -826,7 +828,8 @@
       "file": "Carica un file",
       "contact": "Nuovo contatto",
       "bookmark": "Nuovo segnalibro",
-      "clip": "Salva pagina web"
+      "clip": "Salva pagina web",
+      "writeNote": "Scrivi una nota"
     },
     "keepAsText": "Lascia questo come testo",
     "placeholder": "Titolo, giorno, ora, ripetizione...",
@@ -983,6 +986,7 @@
     "stepConnect": "Collega",
     "makeCode": "Crea un codice",
     "connectHint": "Crea un codice monouso e incollalo nell'estensione.",
+    "secondBrowserPro": "Un browser è collegato. Per un secondo serve Pro.",
     "thisBrowser": "Questo browser",
     "otherApps": "App per computer e telefono:",
     "desktopAll": "Tutti i download",
@@ -1040,7 +1044,7 @@
   "extensionConnect": {
     "clips": "Salva pagine web",
     "clipsHint": "Salva i siti web come note.",
-    "loginsHint": "Accessi, carte, chiavi SSH e segnalibri per il sito su cui sei, solo da copiare. Bloccata con un PIN o un codice di sblocco tutto suo.",
+    "loginsHint": "Accessi, carte, chiavi SSH e segnalibri per il sito su cui sei, da copiare o da compilare. Bloccata con un PIN o un codice di sblocco tutto suo.",
     "pickOne": "Attivane almeno uno.",
     "codeLabel": "Codice per l'estensione",
     "oneUse": "Funziona una sola volta, per 10 minuti.",

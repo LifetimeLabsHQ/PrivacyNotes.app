@@ -110,13 +110,13 @@ export default function CalendarAgenda({ index, onOpen, search, strip, dragPaylo
 
   /** The events in agenda order, once each, for a shift-click range. */
   const eventOrder = useMemo(
-    () => [...new Set(days.flatMap((d) => d.entries.filter((e) => e.kind === 'event').map((e) => e.id)))],
+    () => [...new Set(days.flatMap((d) => d.entries.filter((e) => e.kind === 'event' && !e.feed).map((e) => e.id)))],
     [days],
   );
 
   function openRow(entry: DayEntry, e: React.MouseEvent) {
     const open = () => onOpen(entry.id, entry.occurrence ?? entry.span?.start);
-    if (!selection || entry.kind !== 'event') {
+    if (!selection || entry.kind !== 'event' || entry.feed) {
       if (!selection?.mode) open();
       return;
     }
@@ -271,7 +271,7 @@ export default function CalendarAgenda({ index, onOpen, search, strip, dragPaylo
                           onOpen={openRow}
                           onMenu={onItemMenu}
                           dragProps={{
-                            ...(entry.kind === 'contact' || !dragPayload ? {} : {
+                            ...(entry.kind === 'contact' || entry.feed || !dragPayload ? {} : {
                               draggable: true,
                               onDragStart: (e: React.DragEvent<HTMLButtonElement>) => {
                                 const p = dragPayload(entry.id);
@@ -280,14 +280,14 @@ export default function CalendarAgenda({ index, onOpen, search, strip, dragPaylo
                               },
                             }),
                             // A long press selects, as in every list.
-                            ...(selection && entry.kind === 'event' ? {
+                            ...(selection && entry.kind === 'event' && !entry.feed ? {
                               onTouchStart: () => selection.longPress(entry.id),
                               onTouchEnd: selection.longPressEnd,
                               onTouchMove: selection.longPressEnd,
                               onTouchCancel: selection.longPressEnd,
                             } : {}),
                           }}
-                          select={selection?.mode && entry.kind === 'event' ? {
+                          select={selection?.mode && entry.kind === 'event' && !entry.feed ? {
                             selected: selection.ids.has(entry.id),
                             onToggle: (e) => (e.shiftKey ? selection.range(entry.id, eventOrder) : selection.toggle(entry.id)),
                           } : undefined}

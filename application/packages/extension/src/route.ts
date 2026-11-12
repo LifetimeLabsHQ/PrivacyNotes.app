@@ -1,6 +1,7 @@
 /**
  * A view the popup should open on, left by a context-menu item, the address
- * bar or a shortcut: Add login, the generator, or the search with a query.
+ * bar or a shortcut: Add login, the generator, the search with a query, or
+ * New note with text to start from.
  * Session storage only, and read once.
  * Spec: docs/internal/plans/browser-extension-build.md (section 3.3, menu)
  */
@@ -9,11 +10,11 @@ import { browser } from 'wxt/browser';
 export const ROUTE_KEY = 'popupRoute';
 
 export interface PopupRoute {
-  view: 'addLogin' | 'generator' | 'search';
+  view: 'addLogin' | 'generator' | 'search' | 'note';
   /** The page the menu was opened on: a popup that falls back to a window
    *  has no active tab of its own. */
   url: string;
-  /** The words to search for, with `search`. */
+  /** The words to search for with `search`; the text to start from with `note`. */
   query?: string;
   at: number;
 }

@@ -5,6 +5,8 @@
   "useDefault": "Použiť predvolené",
   "color": "Farba",
   "applyToSubfolders": "Použiť farbu aj na podpriečinky",
+  "applyToFolderItems": "Použiť na všetky položky v tomto priečinku",
+  "applyToTagItems": "Použiť na všetky položky s touto značkou",
   "icon": "Ikona",
   "searchPlaceholder": "Hľadaj ikony",
   "searchLogos": "Hľadaj logá",

@@ -94,6 +94,14 @@ export function registerMapsEqual(a: RegisterMap, b: RegisterMap): boolean {
   return true;
 }
 
+/** A fresh key for a map of registers: twelve lower-case letters and
+ *  digits. */
+export function newRegisterId(): string {
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const bytes = crypto.getRandomValues(new Uint8Array(12));
+  return [...bytes].map((b) => alphabet[b % alphabet.length]).join('');
+}
+
 /** A stamp later than `prev` and never earlier than now: the rule of
  *  `nextStamp` in notesRepo.ts. A new write then outranks the value it
  *  replaces even when another device's clock runs ahead. */

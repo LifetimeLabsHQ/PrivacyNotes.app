@@ -13,6 +13,7 @@
 @source '../../../web/src/ContextMenu.tsx';
 @source '../../../web/src/ListSearchInput.tsx';
 @source '../../../web/src/proMark.tsx';
+@source '../../../web/src/Brand.tsx';
 @source '../../src';
 @source '.';
 /* Build output is never a source, whether or not an ignore file says so (the
@@ -20,12 +21,35 @@
 @source not '../../.wxt';
 @source not '../../.output';
 
+/* Bitwarden's width (owner, 2026-11-11); the browser caps a popup at 800. */
 html,
 body {
-  width: 360px;
+  width: 480px;
   margin: 0;
   background: rgb(var(--pn-surface-2));
   color: rgb(var(--pn-text));
+}
+
+/* The body scrolls, not the page: Chrome draws the page's scrollbar beside
+   the 480 px and widens the popup by it (500 px with a classic scrollbar).
+   The body's own scrollbar sits inside the 480, and its space is always
+   kept, so the width never moves. Each screen is only as high as its
+   content, up to 600 px, a popup's tallest (owner, 2026-11-11). */
+html {
+  overflow: hidden;
+}
+body {
+  max-height: 600px;
+  overflow-y: auto;
+  /* both-edges: the same room on the left, so every screen sits centered
+     where the browser draws a classic scrollbar (owner, 2026-11-12: the
+     Change shortcuts button looked short on the right). */
+  scrollbar-gutter: stable both-edges;
+}
+#root {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* The browser sizes the popup to the document, so a tooltip that hangs past
@@ -36,4 +60,116 @@ body {
 html,
 body {
   overflow-x: clip;
+}
+
+/* A tooltip shows over a vault group's sticky heading (z-index 55), so the
+   tip of the first row under a heading is not cut off, and under the header
+   (z-index 60), which the list scrolls under. The app's tips are z-50. */
+#root .pn-tip {
+  z-index: 56;
+}
+
+/* The footer message and the done button (pattern 177). The rise and the
+   pop are the app's own pn-toast-in curve and pn-pop, so the popup moves
+   like the app. Less motion keeps the fades and the timer line only.
+   Spec: docs/internal/design/patterns/171-180.md (pattern 177) */
+.pn-foot-rest {
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+.pn-foot-rest.is-away {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+.pn-foot-msg {
+  animation: pn-foot-in 280ms cubic-bezier(0.2, 0.9, 0.3, 1.15) 50ms both;
+}
+.pn-foot-msg.is-danger {
+  animation: pn-foot-in 280ms cubic-bezier(0.2, 0.9, 0.3, 1.15) 50ms both, pn-foot-shake 360ms ease 340ms;
+}
+.pn-foot-msg.is-out {
+  animation: pn-foot-out 180ms ease forwards;
+}
+.pn-foot-tile {
+  animation: pn-pop 280ms cubic-bezier(0.34, 1.56, 0.64, 1) 110ms both;
+}
+.pn-foot-line {
+  transform-origin: left center;
+  animation: pn-foot-sweep 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both, pn-foot-drain 3680ms linear 320ms forwards;
+}
+[dir='rtl'] .pn-foot-line {
+  transform-origin: right center;
+}
+.pn-foot-msg.is-held .pn-foot-line {
+  animation-play-state: paused;
+}
+@keyframes pn-foot-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pn-foot-out {
+  to { opacity: 0; transform: translateY(8px); }
+}
+@keyframes pn-foot-shake {
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+@keyframes pn-foot-sweep {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes pn-foot-drain {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+.pn-roll {
+  display: inline-block;
+  animation: pn-roll-in 220ms cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+@keyframes pn-roll-in {
+  from { opacity: 0; transform: translateY(60%); }
+}
+.pn-save-done {
+  animation: pn-save-ring 700ms ease-out;
+}
+@keyframes pn-save-ring {
+  from { box-shadow: 0 0 0 0 rgb(var(--pn-success) / 0.35); }
+  to { box-shadow: 0 0 0 9px rgb(var(--pn-success) / 0); }
+}
+.pn-fade-in {
+  animation: pn-fade-in 240ms ease-out both;
+}
+@keyframes pn-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pn-foot-rest,
+  .pn-foot-rest.is-away {
+    transform: none;
+  }
+  .pn-foot-msg,
+  .pn-foot-msg.is-danger {
+    animation: pn-foot-fade 200ms ease-out both;
+  }
+  .pn-foot-msg.is-out {
+    animation: pn-foot-fade-out 180ms ease forwards;
+  }
+  .pn-foot-tile,
+  .pn-roll,
+  .pn-save-done {
+    animation: none;
+  }
+  .pn-foot-line {
+    animation: pn-foot-drain 4000ms linear forwards;
+  }
+  .pn-fade-in {
+    animation-name: pn-foot-fade;
+  }
+}
+@keyframes pn-foot-fade {
+  from { opacity: 0; }
+}
+@keyframes pn-foot-fade-out {
+  to { opacity: 0; }
 }

@@ -7,7 +7,7 @@ title: 搬家
 
 你可以搬四種東西過來：筆記、日誌紀錄、書籤和密碼。
 
-它們都從同一個地方開始：**設定 > 匯入與匯出**。
+它們都從同一個地方開始：**設定 > 轉移**。
 
 ## 可以搬什麼
 
@@ -41,7 +41,7 @@ title: 搬家
 ## 書籤
 
 - [ ] 把瀏覽器書籤匯出成 `.html` 檔
-- [ ] 匯入那個檔案：**設定 > 匯入與匯出 > 匯入 > 瀏覽器書籤**
+- [ ] 匯入那個檔案：**設定 > 轉移 > 匯入 > 瀏覽器書籤**
 
 你也可以把連結貼進一則空白筆記。標題和網站圖示會自己出現：[privacynotes.app/tw/help/import/browser-bookmarks](https://privacynotes.app/tw/help/import/browser-bookmarks)
 

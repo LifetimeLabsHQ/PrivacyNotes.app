@@ -36,7 +36,11 @@ export const HOTKEY_GROUPS: HotkeyGroup[] = [
     title: 'Navigation',
     i18nKey: 'navigation',
     rows: [
-      { commands: ['quickSwitcher'], label: 'Open Ninja: find an item, add anything, run a command', i18nKey: 'quickSwitcher' },
+      { commands: ['quickSwitcher'], label: 'Open Ninja: find, add or run anything', i18nKey: 'quickSwitcher' },
+      // The default global key (ninjaShortcut.ts). The person can change it
+      // or turn it off in Settings > System; a longer label wraps and pushes
+      // the printed desktop sheet onto a second page.
+      { commands: [], bindings: [{ alt: true, shift: true, key: 'Space', desktop: true }], label: 'Open Ninja from any app', i18nKey: 'ninjaGlobal' },
       { commands: ['focusSearch'], label: 'Focus search', i18nKey: 'focusSearch' },
       { commands: ['commandMode'], label: 'Commands (or type > in the search)', i18nKey: 'commandMode' },
       { commands: ['listDown', 'listUp'], label: 'Move down / up in the list', i18nKey: 'moveInList' },
@@ -58,6 +62,8 @@ export const HOTKEY_GROUPS: HotkeyGroup[] = [
     i18nKey: 'notes',
     rows: [
       { commands: ['newNote'], label: 'New note', i18nKey: 'newNote' },
+      // Inside the Ninja box the app's New note key opens its note mode (NinjaWindow.tsx).
+      { commands: [], bindings: [{ mod: true, key: 'n', desktop: true }], label: 'Quick note in the Ninja box', i18nKey: 'ninjaQuickNote' },
       { commands: ['newMenu'], label: 'New item, then its letter', i18nKey: 'newMenu' },
       { commands: ['quickAdd'], label: 'Quick add: a title with a day and a time', i18nKey: 'quickAdd' },
       // One row, so the printed sheet stays on one page.

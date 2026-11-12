@@ -191,7 +191,9 @@
     "ariaLabel": "ノートのアウトライン",
     "hide": "アウトラインを隠す",
     "copyHeadingLink": "見出しへのリンクをコピー",
-    "copyHeadingShortcut": "見出しへのショートカットをコピー"
+    "copyHeadingShortcut": "見出しへのショートカットをコピー",
+    "copyCalloutLink": "コールアウトへのリンクをコピー",
+    "copyCalloutShortcut": "コールアウトへのショートカットをコピー"
   },
   "bodyMenu": {
     "cut": "切り取り",
@@ -262,6 +264,11 @@
     "showLess": "折りたたむ",
     "language": "コードの言語: {{name}}",
     "searchLanguages": "言語を検索",
+    "addTitle": "タイトルを追加",
+    "removeTitle": "タイトルを削除",
+    "titlePlaceholder": "ファイル名またはタイトル",
+    "collapse": "コードブロックを折りたたむ",
+    "expand": "コードブロックを展開",
     "placeholder": "コードを入力するか貼り付けます。色を付けるには、上で言語を選びます。"
   },
   "math": {

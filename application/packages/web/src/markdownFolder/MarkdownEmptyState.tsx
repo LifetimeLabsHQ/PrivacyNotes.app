@@ -12,6 +12,7 @@ import { Download, SlidersHorizontal, Copy, Check, FileText, FolderOpen } from '
 import { Button } from '../ui';
 import { useCopyToClipboard } from '../clipboard';
 import { marketingHomeHref } from '../siteLinks';
+import { detectPlatform } from '../devices';
 import { MarkdownPitch } from './MarkdownExplainer';
 import { BRAVE_FLAG_NAME, BRAVE_FLAG_URL, type markdownSupport } from './capability';
 
@@ -27,7 +28,8 @@ export function MarkdownEmptyState({
   support: ReturnType<typeof markdownSupport>;
   error: string | null;
   busy: boolean;
-  /** Set when a folder is remembered but the browser dropped its permission. */
+  /** Set when a folder is remembered but the browser dropped its permission,
+   *  or, in the desktop app, the file scope no longer holds it. */
   reopenName: string | null;
   onReopen: () => void;
   onOpenFile: () => void;
@@ -145,7 +147,7 @@ export function MarkdownEmptyState({
         {reopenName && (
           <div className="rounded-lg border border-divider bg-surface-1 p-3 mt-4">
             <p className="text-compact text-pn-soft mb-2">
-              {t('markdown.reopenPrompt', { name: reopenName })}
+              {t(detectPlatform() === 'desktop' ? 'markdown.reopenPromptDesktop' : 'markdown.reopenPrompt', { name: reopenName })}
             </p>
             <button
               type="button"

@@ -8,12 +8,15 @@ import { browser } from 'wxt/browser';
 import { base64ToBytes } from '@notes/shared';
 import {
   hashHex,
+  inboxNoteTitle,
   packInboxPicture,
+  parseInboxNote,
   padInboxJson,
   sealInbox,
   type InboxClip,
   type InboxKind,
   type InboxLogin,
+  type InboxNote,
 } from '@notes/shared/extension';
 import type { Clip } from '@notes/clipper';
 import { readConnection, type Connection } from './connection';
@@ -114,6 +117,41 @@ export async function saveLogin(req: LoginRequest): Promise<SaveResult> {
   try {
     const state = await sendRows([seal(connection, 'login', id, padInboxJson(payload))], id);
     return state === 'sent' || state === 'queued' ? { state, failedPictures: 0 } : { state };
+  } catch {
+    return { state: 'failed' };
+  }
+}
+
+export interface NoteRequest {
+  /** Empty: the first heading or line of the text, as `privacynotes save`. */
+  title: string;
+  markdown: string;
+  tags: string[];
+}
+
+export type NoteResult = { state: 'sent' | 'queued' } | { state: 'tooLong' | 'full' | 'notConnected' | 'notAllowed' | 'revoked' | 'failed' };
+
+/**
+ * A note typed in the popup: sealed as the inbox kind `note`, with `from`
+ * set so the app puts it at the root, not in the Agent folder. It needs the
+ * clips permission, not the vault unlock, and waits in the queue offline.
+ * Spec: docs/internal/plans/quick-note-694.md (section 4.2)
+ */
+export async function saveNote(req: NoteRequest): Promise<NoteResult> {
+  const connection = await readConnection();
+  if (!connection) return { state: 'notConnected' };
+  if (!connection.clips) return { state: 'notAllowed' };
+  const id = crypto.randomUUID();
+  const title = req.title.trim() || inboxNoteTitle(req.markdown);
+  const note: InboxNote = { v: 1, id, title, markdown: req.markdown, tags: [...new Set(req.tags)], savedAt: new Date().toISOString(), from: 'browser' };
+  // The app runs the same check: a note it would refuse is never sent.
+  if (!parseInboxNote(note, id)) return { state: 'tooLong' };
+  const row = seal(connection, 'note', id, padInboxJson(note));
+  if (row.payload.length > ROW_MAX) return { state: 'tooLong' };
+  try {
+    const state = await sendRows([row], id);
+    if (state === 'sent') await flashBadge('saved');
+    return { state };
   } catch {
     return { state: 'failed' };
   }

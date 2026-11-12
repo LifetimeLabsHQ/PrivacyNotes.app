@@ -7,6 +7,11 @@ Ut från hotellet klockan fem. Två timmar på tåg, och stan var helt enkelt bo
 
 ![Fuji med snö på toppen, inramad av körsbärsblom.](/onboarding/fuji.webp)
 
+```map
+35.3606, 138.7274
+Fuji
+```
+
 Blomningen var i gång längs sjön. Fuji stod bakom, utan ett moln hela förmiddagen. Folk här säger att man kan komma en vecka och aldrig se toppen. Vi hade den i sex timmar.
 
 | Vad | När |

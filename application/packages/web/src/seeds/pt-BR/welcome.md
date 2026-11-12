@@ -31,5 +31,9 @@ A barra acima muda a aparência do texto: **negrito**, *itálico*, títulos, lis
 
 Essa frase é o que abre suas notas. Onde ela fica é você quem decide, e dá para mudar de ideia quando quiser. [[Como suas notas são protegidas]] explica as três opções.
 
+## Mais do que notas
+
+Notas, tarefas, senhas, um diário, arquivos, um calendário, contatos e marcadores, com rastreamento de humor e de medicação. Um app, criptografado no seu dispositivo. E ainda um editor de Markdown gratuito para as pastas do seu disco, o Ninja (⌘K) para chegar a qualquer coisa pelo teclado e o Recorte web.
+
 > [!tip] Aqui nada é definitivo
 > Cada nota deste cofre é um exemplo, esta inclusive. Edite, mova ou apague.

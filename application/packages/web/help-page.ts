@@ -21,11 +21,11 @@ import { MENU_PATH_CSS, loadPathVocab, markPaths, restorePaths, type pathVocab }
 //  1. The HUB (/help, /de/help, ...): every FAQ entry on one page with
 //     live search, the topic rail, native <details>, and a strip linking
 //     the import guides. The page users browse.
-//  2. One FAQ LEAF per entry (/help/<id>/, /de/help/<id>/, ...): a
+//  2. One FAQ LEAF per entry (/help/<id>, /de/help/<id>, ...): a
 //     focused landing page whose <title>, H1, and meta description are
 //     the question itself. The pages search engines rank for long-tail
 //     queries; "copy link" on the hub hands out leaf URLs.
-//  3. IMPORT GUIDES (/help/import/<app>/): step-by-step export+import
+//  3. IMPORT GUIDES (/help/import/<app>): step-by-step export+import
 //     tutorials per source app. English-only for now: a guide page is
 //     only emitted when the guides catalog contains it, so a missing
 //     translation can never publish a wrong-language page.
@@ -373,7 +373,7 @@ const BADGE_H = 48;
  * reader then has nothing to import.
  *
  * The href must name a file, which is what keeps an ordinary one-link
- * paragraph (a `/help/<id>/` pointer) out of it. Standard markdown on
+ * paragraph (a `/help/<id>` pointer) out of it. Standard markdown on
  * purpose, like the other rows, so the .md twins and llms-full.txt carry it
  * through as a link and `stripMd` reduces it to its label.
  * // Spec: docs/contrib/help-center.md (the template)
@@ -417,7 +417,7 @@ function stripMd(s: string): string {
 }
 
 /**
- * Same-site links in the catalogs are relative (`/help/remove-device/`),
+ * Same-site links in the catalogs are relative (`/help/remove-device`),
  * which is right inside a page and ambiguous inside a standalone .md file
  * an agent fetched on its own. Absolutize them so every link resolves
  * without the reader knowing where the file came from.
@@ -917,6 +917,8 @@ function feedbackBlock(prompt: string): string {
  */
 const CONTENT_BASELINE = '2026-08-26';
 const CONTENT_UPDATED: Record<string, string> = {
+  'backup-strategy': '2026-11-11',
+  'trackers-in-backup': '2026-11-11',
   'ninja-quick-add': '2026-10-23',
   'ninja-dates': '2026-10-23',
   'ninja-add-to-list': '2026-10-23',
@@ -928,7 +930,8 @@ const CONTENT_UPDATED: Record<string, string> = {
   'tasks': '2026-10-23',
   'bookmarks': '2026-10-31',
   'save-page-as-note': '2026-10-31',
-  'browser-extension': '2026-10-31',
+  'browser-extension': '2026-11-10',
+  'quick-note-shortcut': '2026-11-10',
   'browser-extension-security': '2026-10-31',
   'custom-themes': '2026-10-23',
   'keyboard-shortcuts': '2026-10-23',
@@ -1133,6 +1136,27 @@ const KEY_BOLD =
   'M196,76a16,16,0,1,1-16-16A16,16,0,0,1,196,76Zm48,22.74A84.3,84.3,0,0,1,160.11,180H160a83.52,83.52,0,0,1-23.65-3.38l-7.86,7.87A12,12,0,0,1,120,188H108v12a12,12,0,0,1-12,12H84v12a12,12,0,0,1-12,12H40a20,20,0,0,1-20-20V187.31a19.86,19.86,0,0,1,5.86-14.14l53.52-53.52A84,84,0,1,1,244,98.74ZM202.43,53.57A59.48,59.48,0,0,0,158,36c-32,1-58,27.89-58,59.89a59.69,59.69,0,0,0,4.2,22.19,12,12,0,0,1-2.55,13.21L44,189v23H60V200a12,12,0,0,1,12-12H84V176a12,12,0,0,1,12-12h19l9.65-9.65a12,12,0,0,1,13.22-2.55A59.58,59.58,0,0,0,160,156h.08c32,0,58.87-26.07,59.89-58A59.55,59.55,0,0,0,202.43,53.57Z';
 
 const TOPIC_ICON: Record<string, string> = {
+  /** Phosphor PuzzlePiece, bold: the Extension & AI topic. */
+  extensionAi:
+    'M222.41,155.16a12,12,0,0,0-11.56-.69A16,16,0,0,1,188,139,16.2,16.2,0,0,1,202.8,124a15.83,15.83,0,0,1,8,1.5A12,12,0,0,0,228,114.7V72a20,20,0,0,0-20-20H176a40.15,40.15,0,0,0-12.62-29.16,39.67,39.67,0,0,0-29.94-10.76,40.08,40.08,0,0,0-37.34,37C96,50.07,96,51,96,52H64A20,20,0,0,0,44,72v28a40.15,40.15,0,0,0-29.16,12.62A40,40,0,0,0,41.1,179.9a28.3,28.3,0,0,0,2.9.1v28a20,20,0,0,0,20,20H208a20,20,0,0,0,20-20V165.31A12,12,0,0,0,222.41,155.16ZM204,204H68V165.31a12,12,0,0,0-17.15-10.84A15.9,15.9,0,0,1,42.8,156,16.2,16.2,0,0,1,28,141.06a16,16,0,0,1,22.82-15.52A12,12,0,0,0,68,114.7V76h42.7a12,12,0,0,0,10.83-17.15A15.9,15.9,0,0,1,120,50.8,16.19,16.19,0,0,1,134.94,36a16,16,0,0,1,15.53,22.81A12,12,0,0,0,161.31,76H204v24c-1,0-1.93,0-2.9.11A40,40,0,0,0,204,180h0Z',
+  /** Phosphor PencilSimpleLine, bold: the Writing topic. */
+  writing:
+    'M230.15,70.54,185.46,25.86a20,20,0,0,0-28.28,0L33.86,149.17A19.86,19.86,0,0,0,28,163.31V208a20,20,0,0,0,20,20H216a12,12,0,0,0,0-24H125L230.15,98.83A20,20,0,0,0,230.15,70.54ZM91,204H52V165l84-84,39,39ZM192,103,153,64l18.34-18.34,39,39Z',
+  /** Phosphor CalendarCheck, bold: the Tasks & calendar topic. */
+  tasksCalendar:
+    'M208,28H188V24a12,12,0,0,0-24,0v4H92V24a12,12,0,0,0-24,0v4H48A20,20,0,0,0,28,48V208a20,20,0,0,0,20,20H208a20,20,0,0,0,20-20V48A20,20,0,0,0,208,28ZM68,52a12,12,0,0,0,24,0h72a12,12,0,0,0,24,0h16V76H52V52ZM52,204V100H204V204Zm120.49-84.49a12,12,0,0,1,0,17l-48,48a12,12,0,0,1-17,0l-24-24a12,12,0,0,1,17-17L116,159l39.51-39.52A12,12,0,0,1,172.49,119.51Z',
+  /** Phosphor Lock, bold: the Vault & bookmarks topic. */
+  vaultBookmarks:
+    'M208,76H180V56A52,52,0,0,0,76,56V76H48A20,20,0,0,0,28,96V208a20,20,0,0,0,20,20H208a20,20,0,0,0,20-20V96A20,20,0,0,0,208,76ZM100,56a28,28,0,0,1,56,0V76H100ZM204,204H52V100H204Zm-60-52a16,16,0,1,1-16-16A16,16,0,0,1,144,152Z',
+  /** Phosphor Keyboard, bold: the Shortcuts & look topic. */
+  shortcutsLook:
+    'M224,44H32A20,20,0,0,0,12,64V192a20,20,0,0,0,20,20H224a20,20,0,0,0,20-20V64A20,20,0,0,0,224,44Zm-4,144H36V68H220ZM52,128a12,12,0,0,1,12-12H192a12,12,0,0,1,0,24H64A12,12,0,0,1,52,128Zm0-36A12,12,0,0,1,64,80H192a12,12,0,0,1,0,24H64A12,12,0,0,1,52,92Zm0,72a12,12,0,0,1,12-12h8a12,12,0,0,1,0,24H64A12,12,0,0,1,52,164Zm108,0a12,12,0,0,1-12,12H108a12,12,0,0,1,0-24h40A12,12,0,0,1,160,164Zm44,0a12,12,0,0,1-12,12h-8a12,12,0,0,1,0-24h8A12,12,0,0,1,204,164Z',
+  /** Phosphor HardDrives, bold: the Storage & files topic. */
+  storageFiles:
+    'M208,36H48A20,20,0,0,0,28,56V200a20,20,0,0,0,20,20H208a20,20,0,0,0,20-20V56A20,20,0,0,0,208,36Zm-4,24v56H52V60ZM52,196V140H204v56ZM160,88a16,16,0,1,1,16,16A16,16,0,0,1,160,88Zm32,80a16,16,0,1,1-16-16A16,16,0,0,1,192,168Z',
+  /** Phosphor Pill, bold: the Medications topic. */
+  medications:
+    'M219.26,36.77a57.28,57.28,0,0,0-81,0L36.77,138.26a57.26,57.26,0,0,0,81,81L219.26,117.74A57.33,57.33,0,0,0,219.26,36.77ZM100.78,202.26a33.26,33.26,0,1,1-47-47L96,113l47,47Zm101.5-101.49L160,143,113,96l42.27-42.26a33.26,33.26,0,0,1,47,47Zm-9.77-25.26a12,12,0,0,1,0,17l-24,24a12,12,0,1,1-17-17l24-24A12,12,0,0,1,192.51,75.51Z',
   gettingStarted:
     'M40.14,46.88A12,12,0,0,0,36,56V224a12,12,0,0,0,24,0V181.72c22.84-17.12,42.1-9.12,70.68,5,16.23,8,34.74,17.2,54.8,17.2,14.72,0,30.28-4.94,46.38-18.88A12,12,0,0,0,236,176V56a12,12,0,0,0-19.86-9.07c-24.71,21.41-44.53,13.31-74.82-1.68C113.19,31.27,78.17,13.94,40.14,46.88ZM212,170.26c-22.84,17.13-42.1,9.11-70.68-5C118.16,153.76,90.33,140,60,153.87V61.69c22.84-17.12,42.1-9.12,70.68,5,16.23,8,34.74,17.2,54.8,17.2A63,63,0,0,0,212,78.08Z',
   /** Phosphor Heartbeat, bold: the Statistics & trackers topic, the icon of
@@ -1146,6 +1170,10 @@ const TOPIC_ICON: Record<string, string> = {
     'M228,48V96a12,12,0,0,1-12,12H168a12,12,0,0,1,0-24h19l-7.8-7.8a75.55,75.55,0,0,0-53.32-22.26h-.43A75.49,75.49,0,0,0,72.39,75.57,12,12,0,1,1,55.61,58.41a99.38,99.38,0,0,1,69.87-28.47H126A99.42,99.42,0,0,1,196.2,59.23L204,67V48a12,12,0,0,1,24,0ZM183.61,180.43a75.49,75.49,0,0,1-53.09,21.63h-.43A75.55,75.55,0,0,1,76.77,179.8L69,172H88a12,12,0,0,0,0-24H40a12,12,0,0,0-12,12v48a12,12,0,0,0,24,0V189l7.8,7.8A99.42,99.42,0,0,0,130,226.06h.56a99.38,99.38,0,0,0,69.87-28.47,12,12,0,0,0-16.78-17.16Z',
   yourData:
     'M196,35.52C177.62,25.51,153.48,20,128,20S78.38,25.51,60,35.52C39.37,46.79,28,62.58,28,80v96c0,17.42,11.37,33.21,32,44.48,18.35,10,42.49,15.52,68,15.52s49.62-5.51,68-15.52c20.66-11.27,32-27.06,32-44.48V80C228,62.58,216.63,46.79,196,35.52ZM204,128c0,17-31.21,36-76,36s-76-19-76-36v-8.46a88.9,88.9,0,0,0,8,4.94c18.35,10,42.49,15.52,68,15.52s49.62-5.51,68-15.52a88.9,88.9,0,0,0,8-4.94ZM128,44c44.79,0,76,19,76,36s-31.21,36-76,36S52,97,52,80,83.21,44,128,44Zm0,168c-44.79,0-76-19-76-36v-8.46a88.9,88.9,0,0,0,8,4.94c18.35,10,42.49,15.52,68,15.52s49.62-5.51,68-15.52a88.9,88.9,0,0,0,8-4.94V176C204,193,172.79,212,128,212Z',
+  /** Phosphor ClockCounterClockwise, bold: the Backup & restore topic, the
+   *  icon of Settings > Backup > Automatic in the app. */
+  backupRestore:
+    'M140,80v41.21l34.17,20.5a12,12,0,1,1-12.34,20.58l-40-24A12,12,0,0,1,116,128V80a12,12,0,0,1,24,0ZM128,28A99.38,99.38,0,0,0,57.24,57.34c-4.69,4.74-9,9.37-13.24,14V64a12,12,0,0,0-24,0v40a12,12,0,0,0,12,12H72a12,12,0,0,0,0-24H57.77C63,86,68.37,80.22,74.26,74.26a76,76,0,1,1,1.58,109,12,12,0,0,0-16.48,17.46A100,100,0,1,0,128,28Z',
   pricingPro:
     'M227.85,46.89a20,20,0,0,0-18.74-18.74c-13.13-.77-46.65.42-74.48,28.24L131,60H74.36a19.83,19.83,0,0,0-14.14,5.86L25.87,100.19a20,20,0,0,0,11.35,33.95l37.14,5.18,42.32,42.32,5.19,37.18A19.88,19.88,0,0,0,135.34,235a20.13,20.13,0,0,0,6.37,1,19.9,19.9,0,0,0,14.1-5.87l34.34-34.35A19.85,19.85,0,0,0,196,181.64V125l3.6-3.59C227.43,93.54,228.62,60,227.85,46.89ZM76,84h31L75.75,115.28l-27.23-3.8ZM151.6,73.37A72.27,72.27,0,0,1,204,52a72.17,72.17,0,0,1-21.38,52.41L128,159,97,128ZM172,180l-27.49,27.49-3.8-27.23L172,149Zm-72,22c-8.71,11.85-26.19,26-60,26a12,12,0,0,1-12-12c0-33.84,14.12-51.32,26-60A12,12,0,1,1,68.18,175.3C62.3,179.63,55.51,187.8,53,203c15.21-2.51,23.37-9.3,27.7-15.18A12,12,0,1,1,100,202Z',
   appsPlatforms:
@@ -1357,6 +1385,10 @@ ${MENU_PATH_CSS}
 .fb-links{display:flex;gap:8px;flex-wrap:wrap}
 /* The published-document rows. A monospace file name is the whole point of the block, so it takes the weight the topic labels take and drops a step in size to stay on one line inside the 208px rail: THREAT_MODEL.md is the longest name we ship and it fits at 12.5px. It carries dir="auto" like every other file name the app renders, and therefore must NOT stretch the way a topic label does: a stretched box under dir=rtl aligns its LTR name to the far edge and leaves a hole beside the icon. Shrink-wrapping puts the name against its mark in both directions. Spec: docs/internal/design/ui-patterns.md (section 67, dir=auto convention) */
 .rlbl-mono{flex:0 1 auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--fs-compact);font-weight:600}
+/* A topic label wraps to a second line rather than losing its end: a translation runs longer than the English, and a cut topic name is a topic nobody can read. The icon and the count stay on the first line. */
+.ritem.rt{align-items:flex-start}
+.ritem.rt svg,.ritem.rt .rct{margin-block-start:2px}
+.ritem.rt .rlbl{white-space:normal;overflow:visible;line-height:1.3;overflow-wrap:anywhere}
 .rail-note{margin:8px 10px 0;font-size:var(--fs-small);line-height:1.5;color:var(--faint)}
 /* The page shell (.wrap width, .pcols grid, .rail-col, .ritem, .search,
    .count, mark) lives in CHROME_CSS - every static page uses it now, not
@@ -1587,9 +1619,9 @@ function renderCheatSheetHtml(hotkeyGroups: HotkeyGroupData[]): string {
   const legend = 'On Windows and Linux, ⌘ is Ctrl and ⌥ is Alt.';
   const legendPc = 'On a Mac, Ctrl is ⌘ and Alt is ⌥.';
   // The rule the app's key matcher follows (shortcutMatch.ts), said once for
-  // anybody whose keyboard is not a US one.
-  const layoutNote =
-    'Shortcuts follow the characters your keyboard types, not US key positions: press the key that types the character shown (on a non-Latin layout, the key in its US place). A key that types a character with AltGr always types it.';
+  // anybody whose keyboard is not a US one. It shares the legend's line: the
+  // footer is what tips the desktop sheet onto a second A4 page.
+  const layoutNote = 'Keys follow the characters your keyboard types, not US key positions.';
   // Groups and rows render the English source labels straight from
   // hotkeysData; only the typing note is shared with the app's catalog.
   const typingNote = readTypingNote();
@@ -1780,10 +1812,9 @@ kbd.s-cap,.s-g h2,.sheet .pn-mark-a{-webkit-print-color-adjust:exact;print-color
 </header>
 ${sets}
 <footer class="s-foot">
-<p data-legend="mac">${esc(legend)}</p>
-<p data-legend="pc">${esc(legendPc)}</p>
+<p data-legend="mac">${esc(legend)} ${esc(layoutNote)}</p>
+<p data-legend="pc">${esc(legendPc)} ${esc(layoutNote)}</p>
 ${typingNote ? `<p>${esc(typingNote)}</p>` : ''}
-<p>${esc(layoutNote)}</p>
 </footer>
 </main>
 </body>
@@ -1968,6 +1999,7 @@ ${HELP_SHARED_CSS}
 h1{font-size:var(--fs-display-2)}
 .leaf-body p{margin:0 0 14px;font-size:var(--fs-title);color:var(--muted);line-height:1.65}
 .leaf-body p:first-child{margin-top:2px}
+.leaf-body .lst li{font-size:var(--fs-title)}
 .related{margin-top:34px}
 .related .eyebrow{margin:0 0 4px}
 .rel-q{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 2px;border-top:1px solid var(--line);font-size:var(--fs-row);font-weight:600;color:var(--fg);text-decoration:none;letter-spacing:-.01em}
@@ -2350,7 +2382,7 @@ server can read, how to verify any of it, or how sync resolves a conflict -
 fetch ${ORIGIN}/docs/index.md instead. It lists the published
 security documents and the sections inside each one.${docList}
 
-The same answers exist in ${HELP_LOCALES.length} languages under ${ORIGIN}/<language-slug>/help/,
+The same answers exist in ${HELP_LOCALES.length} languages under ${ORIGIN}/<language-slug>/help,
 as pages rather than as plain text. Answer in the reader's language from these.
 
 ${faq}${guideList}

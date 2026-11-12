@@ -1,25 +1,39 @@
 {
   "manifest": {
-    "extDescription": "把網頁存成加密筆記，並複製你的登入資訊。",
+    "extDescription": "把網頁存成加密筆記，並複製或填入你的登入資訊。",
     "commandOpen": "開啟 PrivacyNotes",
-    "commandCopyLogin": "複製這個網站的登入資訊",
-    "commandSaveBookmark": "把網頁存成書籤"
+    "commandCopyLogin": "填入或複製這個網站的登入資訊",
+    "commandSaveNote": "把網頁存成筆記",
+    "commandLock": "鎖定保險庫",
+    "commandGenerate": "產生密碼並複製",
+    "commandSaveBookmark": "把網頁存成書籤",
+    "commandNewNote": "寫一則新筆記"
   },
   "menu": {
     "savePageNote": "把網頁存成筆記",
     "savePageBookmark": "把網頁存成書籤",
     "copyPageMarkdown": "將網頁複製為 Markdown",
     "saveSelection": "把選取內容存成筆記",
+    "newNoteFromSelection": "用選取內容建立新筆記",
     "saveLinkBookmark": "把連結存成書籤",
     "saveLinkedPage": "把連結的網頁存成筆記",
+    "fillLogin": "填入這個網站的登入資訊",
     "copyLogin": "複製這個網站的登入資訊",
     "addLogin": "為這個網站新增登入資訊",
     "generatePassword": "產生密碼"
   },
+  "note": {
+    "tagsPlaceholder": "#工作 #點子",
+    "tagsHelp": "標籤之間用空格或逗號分開。# 可加可不加。",
+    "failed": "無法儲存筆記。請再試一次。"
+  },
   "connect": {
-    "title": "連結到你的帳號",
-    "body": "在 PrivacyNotes 中開啟 設定 > 擴充功能，選擇「產生代碼」，再把代碼貼到這裡。",
+    "title": "連結這個瀏覽器",
+    "step1": "在這台電腦上開啟 PrivacyNotes，或前往 use.privacynotes.app。",
+    "step2": "開啟 設定 > 擴充功能，然後選擇「產生代碼」。",
+    "step3": "把代碼貼到這裡。",
     "codeLabel": "應用程式提供的代碼",
+    "paste": "貼上",
     "connect": "連結",
     "badCode": "這組代碼不完整。請從應用程式重新複製。",
     "usedCode": "這組代碼已經用過，或已超過 10 分鐘。請在應用程式中產生新的代碼。已連結的瀏覽器在 設定 > 擴充功能 中。",
@@ -27,21 +41,23 @@
     "connected": "已連結",
     "connectedClips": "擷取功能已就緒。",
     "connectedBoth": "擷取與登入資訊功能已就緒。",
-    "codeSpent": "這組代碼現在已經用掉了，就算有人截圖也沒有用。",
     "help": "運作方式"
   },
   "protect": {
     "title": "保護你的登入資訊",
-    "body": "為這個瀏覽器設定 PIN 碼或通行碼。它和應用程式的 PIN 碼或通行碼是分開的。",
-    "tries": "輸入錯誤 10 次後，這個瀏覽器就會中斷連結。",
-    "biometric": "同時使用指紋或臉部辨識",
-    "biometricHelp": "在這個瀏覽器支援的情況下使用 Touch ID 或 Windows Hello。PIN 碼或通行碼也一律可以使用。",
+    "body": "為這個瀏覽器設定 PIN 碼或通行碼。在這裡解鎖你的登入資訊時需要它。它和應用程式的 PIN 碼或通行碼是分開的。",
+    "biometric": "同時使用生物辨識解鎖",
+    "biometricHelp": "Touch ID 或 Windows Hello，再加上 PIN 碼或通行碼，後者也一律可以使用。",
     "repeat": "再輸入一次",
     "mismatch": "兩次輸入不一致。請再試一次。"
   },
   "clip": {
     "selection": "選取內容",
+    "wholePage": "整個網頁",
+    "whatToSave": "要儲存的內容",
+    "picturesKept_other": "已保留 {{count}} 張圖片。",
     "includePictures": "包含圖片",
+    "includePicturesHelp": "保存在筆記中，而不是連結到網站。",
     "savedBody": "任何一個應用程式下次同步時，它就會出現在「筆記」中。只要有一個開著，通常幾分鐘內就會出現。",
     "closeHint": "你可以馬上關閉這個彈出視窗。",
     "alreadySaved": "你已在 {{date}} 儲存過這個網頁。",
@@ -59,23 +75,21 @@
     "failed": "無法儲存這個網頁。請再試一次。",
     "reading": "正在讀取網頁",
     "copiedMarkdown": "已將網頁複製為 Markdown",
-    "off": "這個瀏覽器已關閉儲存網頁功能。連結時請開啟「網頁擷取工具」。",
-    "saving": "正在儲存網頁"
+    "off": "這個瀏覽器已關閉儲存網頁功能。連結時請開啟「網頁擷取工具」。"
   },
   "logins": {
     "unlockPin": "輸入你的 PIN 碼",
     "unlockPasscode": "輸入你的通行碼",
-    "useBiometric": "使用指紋或臉部辨識",
+    "useBiometric": "使用生物辨識解鎖",
     "wrong_other": "錯誤。再錯 {{count}} 次，這個瀏覽器就會中斷連結。",
     "forSite": "{{site}} 的項目",
     "none": "這個網站沒有登入資訊。",
     "off": "這個瀏覽器已關閉登入資訊功能。連結時請開啟「保險庫」。",
     "copyCode": "複製 2FA 驗證碼",
+    "fill": "填入",
     "usernameCopied": "已複製使用者名稱",
     "passwordCopied": "已複製密碼",
     "codeCopied": "已複製 2FA 驗證碼",
-    "clears": "30 秒後，如果它還在剪貼簿中，就會被清除。",
-    "addSaved": "已儲存。任何一個應用程式下次同步時，它就會出現在你的保險庫中。只要有一個開著，通常幾分鐘內就會出現。",
     "lock": "鎖定",
     "unreachable": "無法連上 PrivacyNotes 進行解鎖。請檢查網路連線後再試一次。",
     "lockSystem": "電腦鎖定時",
@@ -95,13 +109,13 @@
   "changeSecret": {
     "titlePin": "變更 PIN 碼",
     "titlePasscode": "變更通行碼",
-    "biometricAgain": "指紋或臉部辨識使用的是舊的設定。請重新設定，才能繼續使用。"
+    "biometricAgain": "生物辨識解鎖使用的是舊的設定。請重新設定，才能繼續使用。"
   },
   "biometric": {
-    "enrolled": "指紋或臉部辨識已設定完成。你可以關閉這個分頁。",
-    "enrolledHere": "指紋或臉部辨識已設定完成。",
+    "enrolled": "生物辨識解鎖已設定完成。你可以關閉這個分頁。",
+    "enrolledHere": "生物辨識解鎖已設定完成。",
     "unlocked": "已解鎖。你可以關閉這個分頁，再重新開啟 PrivacyNotes。",
-    "failed": "這個瀏覽器無法在這裡使用指紋或臉部辨識。PIN 碼或通行碼照常可以使用。"
+    "failed": "這個瀏覽器無法在這裡使用生物辨識解鎖。PIN 碼或通行碼照常可以使用。"
   },
   "vault": {
     "search": "搜尋保險庫",
@@ -129,13 +143,53 @@
     "lockHeader": "在多久後鎖定保險庫",
     "unlockToCopy": "解鎖後即可複製",
     "omniboxDefault": "在你的 PrivacyNotes 保險庫中搜尋 %s",
-    "omniboxUnlock": "解鎖 PrivacyNotes 即可搜尋"
+    "omniboxUnlock": "解鎖 PrivacyNotes 即可搜尋",
+    "moreOptions": "更多選項"
   },
   "shortcuts": {
     "notSet": "未設定",
     "addressBar": "從網址列搜尋保險庫",
     "change": "變更快速鍵",
     "changeHint": "按鍵由你的瀏覽器管理。請在瀏覽器中變更，或為還沒有按鍵的項目指定一個。",
-    "loginHint": "<key/> 會先複製使用者名稱，再複製密碼。"
+    "loginHint": "<key/> 會填入這筆登入資訊。在沒有登入欄位的網頁上，它會先複製使用者名稱，再複製密碼。",
+    "loginHintMany": "<key/> 會填入最上方的登入資訊。<br/>在 3 秒內再按一次，即可填入下一筆。"
+  },
+  "tabs": {
+    "label": "擷取或保險庫",
+    "clip": "擷取"
+  },
+  "notice": {
+    "clearsIn": "{{seconds}} 秒後清除",
+    "copyFailed": "無法複製",
+    "loginSaved": "已儲存登入資訊",
+    "vaultNextSync": "下次同步時會出現在你的「保險庫」中",
+    "noteSaved": "已儲存筆記",
+    "notesNextSync": "下次同步時會出現在「筆記」中",
+    "savedHere": "已儲存在這裡",
+    "goesOutOnline": "連上網路時就會送出"
+  },
+  "fill": {
+    "notFilled": "未填入",
+    "couldNot": "無法填入",
+    "nothing": "這個網頁沒有登入欄位",
+    "signup": "這個表單要求設定新密碼",
+    "insecure": "這個網頁不安全（http）",
+    "otherAccount": "這個網頁要求的是另一個帳號",
+    "tooLong": "網頁的欄位太短",
+    "copyInstead": "改為複製這些值",
+    "usernameOnly": "已填入使用者名稱",
+    "usernameOnlyNext": "再選一次「填入」即可填入密碼"
+  },
+  "settings": {
+    "codes": "2FA 驗證碼",
+    "codesHelp": "每筆有 2FA 金鑰的登入資訊下方會顯示即時驗證碼。",
+    "bar": "倒數進度條",
+    "barHelp": "一條會逐漸縮短、直到下一組驗證碼出現的線。",
+    "iconsHelp": "透過我們的代理伺服器載入：它只看得到網域，絕不會看到你。",
+    "disconnect": "中斷連結擴充功能",
+    "biometric": "生物辨識解鎖",
+    "biometricPin": "輸入你的 PIN 碼以進行設定。",
+    "biometricPasscode": "輸入你的通行碼以進行設定。",
+    "biometricOff": "生物辨識解鎖已關閉"
   }
 }

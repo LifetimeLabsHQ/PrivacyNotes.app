@@ -1,4 +1,4 @@
-import { cloneElement, isValidElement, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties, type ReactElement, type ReactNode } from 'react';
+import { cloneElement, isValidElement, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactElement, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LocalNote } from './db';
 import type { FileItem } from './FilesList';
@@ -20,10 +20,11 @@ import { activeLocale, ensureSettingsSearchLoaded } from './i18n';
 import { NEW_GLYPHS, ArrowElbowDownRight, ArrowSquareOut, ArrowsHorizontal, BellSimple, Briefcase, CalendarBlank, CalendarDot, Check, Clock, DotsThreeOutlineVertical, ArrowLeft, Folder, Hash, ListChecks, PencilSimple, Compass, MagnifyingGlass, Palette, Plus, Repeat, Sparkle, Terminal, X, type Icon, type IconProps } from './icons';
 import { HoverLabel } from './HoverLabel';
 import { KATANA_LINE, NinjaIcon } from './NinjaIcon';
+import { isNinjaDragHandle } from './ninjaHost';
 import { helpPath } from './localeRoutes';
 import { openExternal } from './openExternal';
 import { siteHref } from './siteLinks';
-import { APP_KEYS, KEY_OS, matchesKey } from './shortcutMatch';
+import { APP_KEYS, KEY_OS, keyText, matchesKey } from './shortcutMatch';
 import { COMMAND_PREFIX, GROUP_ORDER, matchEntries, type PaletteEntry, type PaletteGroup } from './commandPalette';
 import type { SectionId, SettingEntry } from './settingsSearch/registry';
 import { railLabels, runSettingsSearch, tabOf } from './settingsSearch/SettingsSearchResults';
@@ -172,6 +173,9 @@ type Snippet = { text: string; start: number; end: number } | null;
  * not offered. Spec: docs/internal/specs/keyboard-shortcuts.md (section 8.3, item 5)
  */
 const MAKERS = [
+  // The Ninja box only: its note mode, with the text as the title line.
+  // Spec: docs/internal/plans/quick-note-694.md (section 5.1)
+  { id: 'writeNote', glyph: PencilSimple, tone: 'note', takes: 'name' },
   { id: 'kanban', glyph: NEW_GLYPHS.kanban, tone: 'task', takes: 'name' },
   { id: 'drawing', glyph: NEW_GLYPHS.drawing, tone: 'drawing', takes: 'name' },
   { id: 'login', glyph: NEW_GLYPHS.login, tone: 'login', takes: 'name' },
@@ -295,10 +299,17 @@ export default function QuickSwitcher({
   onGoToDay,
   daySection,
   themes,
+  remote,
   onClose,
 }: {
   /** ">" opens it in command mode, "+" in the quick add. */
   initialQuery?: string;
+  /**
+   * The Ninja box above another app shows this switcher (ninjaHost.ts): the
+   * overlay is invisible here, and the dialog goes to this ref.
+   * Spec: docs/internal/plans/ninja-anywhere-694.md (section 3)
+   */
+  remote?: (dialog: HTMLDivElement | null) => void;
   notes: LocalNote[];
   /** The body an item's snippet and a ">>" may read; null behind the PIN. */
   bodyOf: (n: LocalNote) => string | null;
@@ -432,6 +443,25 @@ export default function QuickSwitcher({
   // after the name makes it. Ends with the prefix.
   const [creatingFilter, setCreatingFilter] = useState(false);
   const [active, setActive] = useState(0);
+  // Dragged by anything that is not a control, as the box above other apps is
+  // (ninja.rs). The place is not kept: the next open is centred again. A drag
+  // that ends over the backdrop must not close the switcher.
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const dragged = useRef(false);
+  const startDrag = (e: ReactPointerEvent) => {
+    if (remote || e.pointerType !== 'mouse' || e.button !== 0 || !isNinjaDragHandle(e.target)) return;
+    const from = { x: e.clientX - offset.x, y: e.clientY - offset.y };
+    const move = (ev: PointerEvent) => {
+      dragged.current = true;
+      setOffset({ x: ev.clientX - from.x, y: ev.clientY - from.y });
+    };
+    const end = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', end);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', end);
+  };
   // A row picks the pointer only when the pointer moves. The panel opens under
   // a still pointer (a click on a calendar cell), and the browser sends a move
   // at the same place when a row lands under it; that must not take the
@@ -1037,6 +1067,13 @@ export default function QuickSwitcher({
       setActive(0);
       return;
     }
+    // The box keeps the screen: it hands over before the close, which then
+    // neither hides the box nor brings the main window forward (ninjaHost.ts).
+    if (row.kind === 'make' && row.maker.id === 'writeNote') {
+      quickAdd!.makers.writeNote?.(row.text);
+      onClose();
+      return;
+    }
     const link = linkAt(i);
     onClose();
     if (row.kind === 'action') row.item.onSelect();
@@ -1260,7 +1297,7 @@ export default function QuickSwitcher({
         maker.glyph,
         linkRow ? type : text ? tShell('quickAdd.createNamed', { type, title: text }) : type,
         linkRow ? tShell(`quickAdd.linkDetail.${maker.id}`) : null,
-        { tone: toneOf(maker.tone), strong: true },
+        { tone: toneOf(maker.tone), strong: true, ...(maker.id === 'writeNote' ? { keys: keyText('newNote') } : {}) },
       );
     }
     if (row.kind === 'action') {
@@ -1457,15 +1494,19 @@ export default function QuickSwitcher({
 
   let index = 0;
   return (
-    // Centred on the screen at its full height (the 48px field, the 50vh
+    // Centred on the screen at its full height (the 72px field, the 50vh
     // list, the 37px footer and the borders); as a query shortens the list
     // it shrinks from the bottom, so the field never moves under the typing.
     // A touch screen keeps it high, above the on-screen keyboard.
     <div
-      className="fixed inset-0 z-50 bg-black/50 dark:bg-black/70 flex justify-center items-start pt-[12vh] [@media(hover:hover)]:pt-[max(1rem,calc(25dvh-44px))] px-4"
-      onClick={onClose}
+      className={`fixed inset-0 z-50 bg-black/50 dark:bg-black/70 flex justify-center items-start pt-[12vh] [@media(hover:hover)]:pt-[max(1rem,calc(25dvh-56px))] px-4${remote ? ' invisible' : ''}`}
+      onClick={() => {
+        if (dragged.current) dragged.current = false;
+        else onClose();
+      }}
     >
       <div
+        ref={remote}
         role="dialog"
         aria-modal="true"
         aria-label={t('quickSwitcher.label')}
@@ -1475,9 +1516,17 @@ export default function QuickSwitcher({
         onMouseDown={(e) => {
           if (!(e.target as HTMLElement).closest('input, button, a')) e.preventDefault();
         }}
-        className="w-full max-w-xl bg-surface-2 border border-divider rounded-lg shadow-xl overflow-hidden"
+        onPointerDown={startDrag}
+        // 640px, the width of the box above other apps (WIDTH in ninja.rs), so
+        // the placeholder fits whole in both. Spec: docs/internal/plans/ninja-anywhere-694.md (section 3)
+        style={offset.x || offset.y ? { transform: `translate(${offset.x}px, ${offset.y}px)` } : undefined}
+        className="w-full max-w-[40rem] bg-surface-2 border border-divider rounded-lg shadow-xl overflow-hidden"
       >
-        <div className="flex items-center gap-2.5 px-3.5 border-b border-divider">
+        {/* A launcher's field, as Alfred's: a large query on a tall header,
+            the same in the app and in the box above other apps (owner,
+            2026-11-10). The placeholder keeps a smaller size, so its whole
+            hint fits. */}
+        <div className="flex items-center gap-3.5 px-4.5 border-b border-divider">
           {/* The mark in its real colors, where the rows below show theirs:
               the box says its own name. Spec: docs/internal/design/patterns/145-150.md
               section 146 */}
@@ -1485,7 +1534,7 @@ export default function QuickSwitcher({
               the box opens: the animation runs on mount. */}
           <span className="pn-ninja-open relative flex shrink-0 overflow-hidden rounded-md" aria-hidden="true">
             <span className="pn-jump-charge" />
-            <NinjaIcon size={28} tone="real" />
+            <NinjaIcon size={40} tone="real" />
           </span>
           {/* Commands, dates and names, not prose: no red lines, no autocorrect. */}
           <input
@@ -1562,7 +1611,7 @@ export default function QuickSwitcher({
             aria-expanded
             aria-controls="pn-quick-switcher-list"
             aria-activedescendant={count ? optionId(at) : undefined}
-            className="flex-1 min-w-0 h-12 bg-transparent text-heading font-medium text-pn placeholder:text-row placeholder:font-normal placeholder:text-pn-muted outline-none"
+            className="flex-1 min-w-0 h-18 bg-transparent text-display-3 font-medium text-pn placeholder:text-display placeholder:font-normal placeholder:text-pn-muted outline-none"
           />
           {/* Always shown: it clears the query, and with no query it closes
               the switcher, so a pointer never needs Escape. */}

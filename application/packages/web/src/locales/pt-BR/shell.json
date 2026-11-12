@@ -397,6 +397,7 @@
     "modeRich": "Formatado",
     "modeSource": "Markdown",
     "reopenPrompt": "Seu navegador precisa de permissão de novo depois de recarregar. Sua pasta fica memorizada, então é um clique só.",
+    "reopenPromptDesktop": "Escolha a pasta {{name}} mais uma vez para o app poder abri-la de novo. Nada na pasta foi alterado.",
     "reopenFolder": "Reabrir {{name}}",
     "new": "Novo",
     "saveToNotes": "Salvar nas minhas notas",
@@ -699,7 +700,8 @@
       "sprint": "Planejamento da sprint",
       "bookClub": "Clube do livro",
       "rent": "Pagar o aluguel"
-    }
+    },
+    "feedReadOnly": "De {{name}}. Você só pode alterar este evento naquele calendário."
   },
   "repeat": {
     "changeTitle": "Alterar este item?",
@@ -826,7 +828,8 @@
       "file": "Enviar um arquivo",
       "contact": "Novo contato",
       "bookmark": "Novo marcador",
-      "clip": "Recortar página"
+      "clip": "Recortar página",
+      "writeNote": "Escrever uma nota"
     },
     "keepAsText": "Manter como texto",
     "placeholder": "Título, dia, horário, repetição...",
@@ -983,6 +986,7 @@
     "stepConnect": "Conecte",
     "makeCode": "Gerar um código",
     "connectHint": "Gere um código de uso único e cole-o na extensão.",
+    "secondBrowserPro": "Um navegador está conectado. Um segundo precisa do Pro.",
     "thisBrowser": "Este navegador",
     "otherApps": "Apps para computador e celular:",
     "desktopAll": "Todos os downloads",
@@ -1040,7 +1044,7 @@
   "extensionConnect": {
     "clips": "Recorte web",
     "clipsHint": "Salve sites como notas.",
-    "loginsHint": "Logins, cartões, chaves SSH e marcadores do site em que você está, só para copiar. Bloqueado com PIN ou código de acesso próprio.",
+    "loginsHint": "Logins, cartões, chaves SSH e marcadores do site em que você está, para copiar ou preencher. Bloqueado com PIN ou código de acesso próprio.",
     "pickOne": "Ative pelo menos um.",
     "codeLabel": "Código para a extensão",
     "oneUse": "Funciona uma vez, por 10 minutos.",

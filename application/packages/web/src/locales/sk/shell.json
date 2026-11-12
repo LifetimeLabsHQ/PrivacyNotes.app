@@ -409,6 +409,7 @@
     "modeRich": "Formátovaný",
     "modeSource": "Markdown",
     "reopenPrompt": "Po opätovnom načítaní prehliadač znova potrebuje povolenie. Tvoj priečinok je zapamätaný, takže stačí jedno kliknutie.",
+    "reopenPromptDesktop": "Vyber priečinok {{name}} ešte raz, aby ho aplikácia mohla znova otvoriť. V priečinku sa nič nezmenilo.",
     "reopenFolder": "Znova otvoriť {{name}}",
     "new": "Nový",
     "saveToNotes": "Uložiť do mojich poznámok",
@@ -725,7 +726,8 @@
       "sprint": "Plánovanie šprintu",
       "bookClub": "Knižný klub",
       "rent": "Zaplatiť nájom"
-    }
+    },
+    "feedReadOnly": "Z kalendára {{name}}. Túto udalosť môžeš zmeniť iba v tom kalendári."
   },
   "repeat": {
     "changeTitle": "Zmeniť túto položku?",
@@ -886,7 +888,8 @@
       "file": "Nahrať súbor",
       "contact": "Nový kontakt",
       "bookmark": "Nová záložka",
-      "clip": "Uložiť stránku"
+      "clip": "Uložiť stránku",
+      "writeNote": "Napísať poznámku"
     },
     "keepAsText": "Ponechať ako text",
     "placeholder": "Názov, deň, čas, opakovanie…",
@@ -1047,6 +1050,7 @@
     "stepConnect": "Pripojenie",
     "makeCode": "Vytvoriť kód",
     "connectHint": "Vytvor jednorazový kód a vlož ho do rozšírenia.",
+    "secondBrowserPro": "Jeden prehliadač je pripojený. Druhý potrebuje Pro.",
     "thisBrowser": "Tento prehliadač",
     "otherApps": "Aplikácie pre počítač a telefón:",
     "desktopAll": "Všetky na stiahnutie",
@@ -1105,7 +1109,7 @@
   "extensionConnect": {
     "clips": "Ukladanie stránok",
     "clipsHint": "Ukladaj webové stránky ako poznámky.",
-    "loginsHint": "Prihlasovacie údaje, karty, kľúče SSH a záložky pre web, na ktorom práve si, iba na kopírovanie. Zamknuté vlastným PIN-om alebo prístupovým kódom.",
+    "loginsHint": "Prihlasovacie údaje, karty, kľúče SSH a záložky pre web, na ktorom práve si, na kopírovanie alebo vyplnenie. Zamknuté vlastným PIN-om alebo prístupovým kódom.",
     "pickOne": "Zapni aspoň jedno.",
     "codeLabel": "Kód pre rozšírenie",
     "oneUse": "Funguje raz, 10 minút.",

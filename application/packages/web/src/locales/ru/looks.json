@@ -5,6 +5,8 @@
   "useDefault": "Сбросить",
   "color": "Цвет",
   "applyToSubfolders": "Применять цвет к подпапкам",
+  "applyToFolderItems": "Применять ко всем элементам в этой папке",
+  "applyToTagItems": "Применять ко всем элементам с этим тегом",
   "icon": "Значок",
   "searchPlaceholder": "Поиск значков",
   "searchLogos": "Поиск логотипов",

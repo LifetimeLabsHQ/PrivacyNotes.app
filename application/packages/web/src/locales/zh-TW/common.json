@@ -91,6 +91,17 @@
       "help": "鍵盤快速鍵"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "在這裡多寫一些",
+    "hint": "輸入 / 選擇資料夾，輸入 # 加上標籤",
+    "locked": "PrivacyNotes 已鎖定。你的筆記已加密封存，解鎖後就會開啟。",
+    "queued": "已儲存。解鎖後就會開啟。",
+    "tooLong": "這則筆記太長了。請把它拆成兩則筆記。",
+    "full": "等待中的筆記太多了。請解鎖以加入它們。",
+    "empty": "請先寫點東西。",
+    "failed": "無法儲存筆記。請開啟 PrivacyNotes 再試一次。",
+    "added_other": "已新增 {{count}} 則快速筆記"
+  },
   "quickSwitcher": {
     "label": "Ninja：尋找項目或設定、新增任何內容、執行指令",
     "jumpTo": "Ninja",
@@ -127,7 +138,9 @@
     "actions": "動作",
     "back": "返回",
     "actionsPlaceholder": "篩選動作",
-    "onlyCreate": "新增"
+    "onlyCreate": "新增",
+    "ninjaLockedTitle": "PrivacyNotes 已鎖定",
+    "ninjaLockedBody": "請開啟 PrivacyNotes 並解鎖。之後 Ninja 就能在任何應用程式中找到你的筆記。"
   },
   "cardForm": {
     "cardholderName": "持卡人姓名",
@@ -285,8 +298,10 @@
         "detail": "一年中的每一天各是一個彩色方格"
       },
       "importExport": {
-        "label": "匯入與匯出",
-        "detail": "把筆記帶進來，把備份帶出去"
+        "detail": "把筆記帶進來，或帶出去"
+      },
+      "backup": {
+        "detail": "立即備份、自動備份與還原"
       },
       "generator": {
         "label": "密碼產生器",
@@ -302,6 +317,7 @@
     },
     "commands": {
       "syncResume": "恢復同步",
+      "lockProtected": "鎖定這篇筆記",
       "changelog": "新功能",
       "themesPage": "社群佈景主題",
       "website": "PrivacyNotes 網站"

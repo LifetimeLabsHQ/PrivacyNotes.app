@@ -7,7 +7,7 @@ title: Stěhování
 
 Přenést sem můžeš čtyři druhy věcí: poznámky, deníkové zápisy, záložky a hesla.
 
-Všechny začínají na stejném místě: **Nastavení > Import & Export**.
+Všechny začínají na stejném místě: **Nastavení > Přenos**.
 
 ## Co můžeš přenést
 
@@ -41,7 +41,7 @@ Záznam v deníku obsahuje víc než text. Nad psacím polem sedí sledované ho
 ## Záložky
 
 - [ ] Vyexportuj záložky z prohlížeče jako soubor `.html`
-- [ ] Naimportuj ten soubor: **Nastavení > Import & Export > Import > Záložky prohlížeče**
+- [ ] Naimportuj ten soubor: **Nastavení > Přenos > Import > Záložky prohlížeče**
 
 Můžeš taky vložit odkaz do prázdné poznámky. Název a ikona stránky dorazí samy: [privacynotes.app/cs/help/import/browser-bookmarks](https://privacynotes.app/cs/help/import/browser-bookmarks)
 

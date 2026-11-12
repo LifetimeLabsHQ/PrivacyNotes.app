@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEscapeToClose } from './useEscapeToClose';
-import { ArrowsOutSimple, ClockCounterClockwise, Columns, Database, FileArrowUp, Folder, Key, Lock, MagnifyingGlass, Monitor, Palette, Password, Shapes, BellSimple, RocketLaunch, TerminalWindow } from './icons';
+import { ArrowsOutSimple, ClockCounterClockwise, Columns, Database, FileArrowUp, Folder, Key, Lock, MagnifyingGlass, Monitor, Palette, Password, Shapes, BellSimple, RocketLaunch, Browsers, TerminalWindow } from './icons';
 import { isPaddleConfigured, isBetaPricing } from './paddle';
 import { startProCheckout, PRO_PRODUCT_ID, isNativeStoreBuild } from './billing';
 import { PRO_PRICE, EARLY_PRICE, COMPARE_YEARS, COMPETITOR_YEARLY } from './pricing';
@@ -30,7 +30,7 @@ type Props = {
 /** Which Pro feature opened the modal; picks the intro line. */
 export type UpgradeTrigger =
   | 'lock' | 'protect' | 'history' | 'devices' | 'zen' | 'theme' | 'storage'
-  | 'fileSize' | 'folders' | 'looks' | 'noteIcon' | 'spaces' | 'formatBar' | 'totp' | 'replace' | 'passphrase' | 'alerts' | 'vaultFiles' | 'cli' | null;
+  | 'fileSize' | 'folders' | 'looks' | 'noteIcon' | 'spaces' | 'formatBar' | 'totp' | 'replace' | 'passphrase' | 'alerts' | 'vaultFiles' | 'cli' | 'browsers' | null;
 
 const FEATURES: Array<{ icon: React.JSX.Element; labelKey: string }> = [
   { icon: <IconDevices />, labelKey: 'upgrade.features.devices' },
@@ -81,6 +81,8 @@ function introKey(trigger: Props['trigger']): string {
       return 'upgrade.intro.vaultFiles';
     case 'cli':
       return 'upgrade.intro.cli';
+    case 'browsers':
+      return 'upgrade.intro.browsers';
     case 'fileSize':
       // Reuse the already-translated upload upsell string (importExport ns)
       // so the file-size context doesn't need its own billing copy.
@@ -130,6 +132,8 @@ function triggerIcon(trigger: Props['trigger']): React.JSX.Element {
       return <FileArrowUp size={size} aria-hidden="true" />;
     case 'cli':
       return <TerminalWindow size={size} aria-hidden="true" />;
+    case 'browsers':
+      return <Browsers size={size} aria-hidden="true" />;
     default:
       return <IconUpgrade size={size} />;
   }

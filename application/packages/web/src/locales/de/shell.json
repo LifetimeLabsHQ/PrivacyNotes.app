@@ -397,6 +397,7 @@
     "modeRich": "Formatiert",
     "modeSource": "Markdown",
     "reopenPrompt": "Dein Browser braucht nach einem Neuladen wieder eine Berechtigung. Wir haben uns deinen Ordner gemerkt, es ist also nur ein Klick.",
+    "reopenPromptDesktop": "Wähle {{name}} noch einmal aus, damit die App ihn wieder öffnen kann. Im Ordner hat sich nichts geändert.",
     "reopenFolder": "{{name}} erneut öffnen",
     "new": "Neu",
     "saveToNotes": "In meinen Notizen speichern",
@@ -698,6 +699,7 @@
       "bookClub": "Buchclub",
       "rent": "Miete zahlen"
     },
+    "feedReadOnly": "Aus {{name}}. Du kannst diesen Termin nur in diesem Kalender ändern.",
     "nothingFor_one": "{{count}} Tag lang nichts",
     "more_one": "+{{count}} weiterer"
   },
@@ -826,7 +828,8 @@
       "file": "Datei hochladen",
       "contact": "Neuer Kontakt",
       "bookmark": "Neues Lesezeichen",
-      "clip": "Seite clippen"
+      "clip": "Seite clippen",
+      "writeNote": "Notiz schreiben"
     },
     "keepAsText": "Als Text behalten",
     "placeholder": "Titel, Tag, Uhrzeit, Wiederholung...",
@@ -983,6 +986,7 @@
     "stepConnect": "Verbinden",
     "makeCode": "Code erstellen",
     "connectHint": "Erstelle einen Einmalcode und füge ihn in der Erweiterung ein.",
+    "secondBrowserPro": "Ein Browser ist verbunden. Für einen zweiten brauchst du Pro.",
     "thisBrowser": "Dieser Browser",
     "otherApps": "Desktop- und Handy-Apps:",
     "desktopAll": "Alle Downloads",
@@ -1040,7 +1044,7 @@
   "extensionConnect": {
     "clips": "Web-Clipper",
     "clipsHint": "Speichere Websites als Notizen.",
-    "loginsHint": "Logins, Karten, SSH-Schlüssel und Lesezeichen für die Website, auf der du bist, nur zum Kopieren. Mit eigener PIN oder eigenem Passcode gesperrt.",
+    "loginsHint": "Logins, Karten, SSH-Schlüssel und Lesezeichen für die Website, auf der du bist, zum Kopieren oder Ausfüllen. Mit eigener PIN oder eigenem Passcode gesperrt.",
     "pickOne": "Schalte mindestens eine Funktion ein.",
     "codeLabel": "Code für die Erweiterung",
     "oneUse": "Funktioniert einmal, 10 Minuten lang.",

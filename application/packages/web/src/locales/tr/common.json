@@ -92,6 +92,18 @@
       "help": "Klavye kısayolları"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "Buraya daha fazlasını yazın",
+    "hint": "Klasör için /, etiket için # yazın",
+    "locked": "PrivacyNotes kilitli. Notunuz mühürlendi ve kilidi açtığınızda açılır.",
+    "queued": "Kaydedildi. Kilidi açtığınızda açılır.",
+    "tooLong": "Bu not çok uzun. İki nota bölün.",
+    "full": "Bekleyen çok fazla not var. Eklemek için kilidi açın.",
+    "empty": "Önce bir şey yazın.",
+    "failed": "Not kaydedilemedi. PrivacyNotes'u açıp tekrar deneyin.",
+    "added_other": "{{count}} hızlı not eklendi",
+    "added_one": "{{count}} hızlı not eklendi"
+  },
   "quickSwitcher": {
     "label": "Ninja: bir öğe veya ayar bulun, her şeyi ekleyin, bir komut çalıştırın",
     "jumpTo": "Ninja",
@@ -129,7 +141,9 @@
     "actions": "eylemler",
     "back": "geri",
     "actionsPlaceholder": "Eylemleri süzün",
-    "onlyCreate": "ekle"
+    "onlyCreate": "ekle",
+    "ninjaLockedTitle": "PrivacyNotes kilitli",
+    "ninjaLockedBody": "PrivacyNotes'u açın ve kilidini açın. Ardından Ninja notlarınızı her uygulamadan bulur."
   },
   "cardForm": {
     "cardholderName": "Kart sahibinin adı",
@@ -290,8 +304,10 @@
         "detail": "Yılın her günü tek bir renkli kare olarak"
       },
       "importExport": {
-        "label": "Import & Export",
-        "detail": "Notları içe aktarın, yedeği dışa aktarın"
+        "detail": "Notları içe aktarın veya dışa aktarın"
+      },
+      "backup": {
+        "detail": "Şimdi yedekle, otomatik yedekler ve geri yükleme"
       },
       "generator": {
         "label": "Parola üretici",
@@ -307,6 +323,7 @@
     },
     "commands": {
       "syncResume": "Eşitlemeyi sürdür",
+      "lockProtected": "Bu notu kilitle",
       "changelog": "Yenilikler",
       "themesPage": "Topluluk temaları",
       "website": "PrivacyNotes web sitesi"

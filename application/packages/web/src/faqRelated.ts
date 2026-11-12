@@ -10,7 +10,7 @@
  * Three signals, added together:
  *
  * - A link between the two answers, in either direction. An author who wrote
- *   `[your storage](/help/storage-usage/)` already said the pages belong
+ *   `[your storage](/help/storage-usage)` already said the pages belong
  *   together, so it is the strongest signal and costs nothing to read.
  * - Word overlap: TF-IDF over the question (counted twice) and the answer,
  *   compared by cosine. Rare shared words such as "trash" or "dose" carry the

@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "description": "The Ninja box (ninja.rs, GitHub #694) loads the app bundle with ?ninja-window=1 and draws the Ninja that the main window runs hidden (NinjaWindow.tsx). It talks to the main window through events only, and it has no frame, so its grants are the events and the start of a drag: a script in that window reaches nothing on disk and no plugin. The global-shortcut plugin is granted to no window; Rust registers the key. Spec: docs/internal/plans/ninja-anywhere-694.md",
+  "identifier": "ninja",
+  "permissions": ["core:event:default", "core:window:allow-start-dragging"],
+  "platforms": ["macOS", "windows", "linux"],
+  "windows": ["ninja"]
+}

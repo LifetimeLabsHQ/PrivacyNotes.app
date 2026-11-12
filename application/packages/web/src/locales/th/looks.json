@@ -5,6 +5,8 @@
   "useDefault": "ใช้ค่าเริ่มต้น",
   "color": "สี",
   "applyToSubfolders": "ใช้สีกับโฟลเดอร์ย่อย",
+  "applyToFolderItems": "ใช้กับทุกรายการในโฟลเดอร์นี้",
+  "applyToTagItems": "ใช้กับทุกรายการที่มีแท็กนี้",
   "icon": "ไอคอน",
   "searchPlaceholder": "ค้นหาไอคอน",
   "searchLogos": "ค้นหาโลโก้",

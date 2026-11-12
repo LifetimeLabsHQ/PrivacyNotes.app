@@ -10,4 +10,4 @@ export const FUNCTIONS_URL: string =
 export const APP_URL = 'https://use.privacynotes.app';
 
 /** The help page the popup links. */
-export const HELP_URL = 'https://privacynotes.app/help/browser-extension/';
+export const HELP_URL = 'https://privacynotes.app/help/browser-extension';

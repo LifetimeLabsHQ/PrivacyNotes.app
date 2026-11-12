@@ -192,7 +192,9 @@
     "ariaLabel": "Anteckningens översikt",
     "hide": "Dölj översikt",
     "copyHeadingLink": "Kopiera länk till rubriken",
-    "copyHeadingShortcut": "Kopiera genväg till rubriken"
+    "copyHeadingShortcut": "Kopiera genväg till rubriken",
+    "copyCalloutLink": "Kopiera länk till informationsrutan",
+    "copyCalloutShortcut": "Kopiera genväg till informationsrutan"
   },
   "bodyMenu": {
     "cut": "Klipp ut",
@@ -267,6 +269,11 @@
     "showLess": "Visa mindre",
     "language": "Kodspråk: {{name}}",
     "searchLanguages": "Sök språk",
+    "addTitle": "Lägg till titel",
+    "removeTitle": "Ta bort titel",
+    "titlePlaceholder": "Filnamn eller titel",
+    "collapse": "Fäll ihop kodblocket",
+    "expand": "Fäll ut kodblocket",
     "placeholder": "Skriv eller klistra in kod. Välj ett språk ovanför för färger."
   },
   "math": {

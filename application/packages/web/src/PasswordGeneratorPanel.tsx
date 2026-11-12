@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BIP39_WORDS } from '@notes/shared';
 import { ArrowsClockwise, MinusCircle, PlusCircle, RocketLaunch } from './icons';
@@ -15,13 +15,12 @@ import {
   PASSPHRASE_WORDS,
   PASSWORD_LENGTH,
   SEPARATORS,
-  generatePassphrase,
-  generatePassword,
+  generateFrom,
   passphraseBits,
+  passphraseOptions,
   passwordBits,
+  passwordOptions,
   strengthOf,
-  type PassphraseOptions,
-  type PasswordOptions,
   type Strength,
   type PwGen,
 } from './passwordGen';
@@ -43,28 +42,10 @@ import {
  * ──────────────────────────────────────────────────────────────── */
 
 
+const generate = (g: PwGen) => generateFrom(g, BIP39_WORDS);
+
 const LENGTH_PRESETS = [12, 16, 20, 32, 64];
 const WORD_PRESETS = [4, 8, 12, 16, 20];
-
-function passwordOptions(g: PwGen): PasswordOptions {
-  return {
-    length: g.length,
-    lowercase: g.lowercase,
-    uppercase: g.uppercase,
-    digits: g.numbers ? g.exactNumbers : 0,
-    symbols: g.symbols ? g.exactSymbols : 0,
-  };
-}
-
-function passphraseOptions(g: PwGen): PassphraseOptions {
-  return { words: g.words, separator: g.separator, capitalize: g.capitalize, number: g.addNumber, symbol: g.addSymbol };
-}
-
-function generate(g: PwGen): string {
-  return g.mode === 'passphrase'
-    ? generatePassphrase(passphraseOptions(g), BIP39_WORDS)
-    : generatePassword(passwordOptions(g));
-}
 
 const PILL_ON = 'border-accent bg-accent/10 text-accent-strong font-medium';
 const PILL_OFF = 'border-divider text-pn-muted hover:bg-pn/5';
@@ -225,8 +206,9 @@ export function PasswordGenerator({ isPro, onOpenUpgrade, onGenerate, initial, o
    *  settings, or the extension's own storage. */
   initial: PwGen;
   onSave: (next: PwGen) => void;
-  /** Copies another way (the extension clears its clipboard after 30 s). */
-  onCopy?: (value: string) => void;
+  /** Copies another way (the extension clears its clipboard after 30 s).
+   *  It answers whether the copy worked, so Copy can say Copied. */
+  onCopy?: (value: string) => Promise<boolean>;
 }) {
   const { t } = useTranslation('auth');
   const unlocked = proUnlocked(isPro);
@@ -242,7 +224,15 @@ export function PasswordGenerator({ isPro, onOpenUpgrade, onGenerate, initial, o
   // Counts the regenerates: a new key on the arrows and the preview text
   // restarts their turn and pop.
   const [turnKey, setTurnKey] = useState(0);
-  const { copy, copied } = useCopyToClipboard();
+  const { copy, copied: copiedHere } = useCopyToClipboard();
+  // A copy through onCopy says Copied for the same two seconds.
+  const [copiedThere, setCopiedThere] = useState(false);
+  useEffect(() => {
+    if (!copiedThere) return;
+    const timer = setTimeout(() => setCopiedThere(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copiedThere]);
+  const copied = !!copiedHere || copiedThere;
 
   const update = (patch: Partial<PwGen>) => {
     const next = { ...gen, ...patch };
@@ -455,7 +445,7 @@ export function PasswordGenerator({ isPro, onOpenUpgrade, onGenerate, initial, o
               {t('loginForm.regenerate')}
             </Button>
           )}
-          <Button action={copied ? 'done' : 'copy'} variant={onGenerate ? 'secondary' : 'primary'} onClick={() => (onCopy ? onCopy(preview) : copy(preview, 'generated'))} className={copied ? '[&_svg]:text-success' : undefined}>
+          <Button action={copied ? 'done' : 'copy'} variant={onGenerate ? 'secondary' : 'primary'} onClick={() => (onCopy ? void onCopy(preview).then((ok) => setCopiedThere(ok)) : copy(preview, 'generated'))} className={copied ? '[&_svg]:text-success' : undefined}>
             {copied ? t('shell:vaultItem.copied') : t('common:actions.copy')}
           </Button>
           {onGenerate && (

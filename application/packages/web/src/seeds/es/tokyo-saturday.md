@@ -7,6 +7,11 @@ Fuera del hotel a las cinco. Dos horas de tren y la ciudad simplemente desaparec
 
 ![El monte Fuji con nieve en la cima, enmarcado por flores de cerezo.](/onboarding/fuji.webp)
 
+```map
+35.3606, 138.7274
+Monte Fuji
+```
+
 Los cerezos estaban en flor junto al lago. El Fuji se quedó detrás, sin una nube en toda la mañana. Aquí dicen que puedes venir una semana y no ver nunca la cima. Nosotros la tuvimos seis horas.
 
 | Qué | Cuándo |

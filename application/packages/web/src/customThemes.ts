@@ -17,6 +17,7 @@
  */
 import {
   mergeRegisterMaps,
+  newRegisterId,
   registerMapsEqual,
   stampAfter,
   validateRegisterMap,
@@ -43,9 +44,7 @@ export const customThemesEqual = registerMapsEqual;
 
 /** A fresh theme id: twelve lower-case letters and digits. */
 export function newCustomThemeId(): string {
-  const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  const bytes = crypto.getRandomValues(new Uint8Array(12));
-  return [...bytes].map((b) => alphabet[b % alphabet.length]).join('');
+  return newRegisterId();
 }
 
 /** The most themes of your own a person keeps, so the list stays tidy and

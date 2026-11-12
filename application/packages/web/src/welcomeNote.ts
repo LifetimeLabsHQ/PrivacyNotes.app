@@ -38,6 +38,7 @@ import type {
   FactorDef,
   MedicationTemplate,
 } from './trackerTypes';
+import { BUILTIN_TRACKER_COLORS } from './trackerTypes';
 import { isDemoMode } from './demo';
 import i18n from './i18n';
 import { TASK_LIST_EMPTY_BODY, toLocalIso } from './notesViewUtils';
@@ -205,8 +206,8 @@ async function seedDoc(pubkey: string, doc: SeedDoc, timestamp: string): Promise
     day ? new Date(`${day}T21:00:00`).toISOString() : timestamp,
     seedTrackers(doc),
     doc.type,
-    // A `folder:` in frontmatter files the note in every vault. Browsing
-    // the tree is free; the Pro gate sits on each folder ACTION.
+    // A `folder:` in frontmatter files the note in the demo's tree. The
+    // joined note of a real account carries none.
     doc.folder ? (SEED_FOLDERS[doc.folder]?.id ?? null) : null,
   );
 }
@@ -457,9 +458,11 @@ async function seedCardNote(
 }
 
 /**
- * Seed all onboarding notes (Welcome, Getting started, Tokyo journal,
- * Wellness journal, demo login, demo card) in parallel. Each is
- * individually idempotent, so re-running this function is safe.
+ * Seed a new vault. A real account gets one note, the welcome note joined
+ * with three other seeds (`seeds/accountWelcome.ts`). The demo gets every
+ * seed file, the starter folder tree, the Vault items, the bookmarks, the
+ * contacts and its calendar, in parallel. Each is individually idempotent,
+ * so re-running this function is safe.
  *
  * Timestamps are staggered one second apart down the `order` list, so the
  * starred Welcome note keeps the largest timestamp and stays pinned to the
@@ -474,8 +477,20 @@ export async function seedOnboardingNotes(
   /** The stamp of a sign-in that is not live yet, for its settings write. */
   since?: SignInStamp,
 ): Promise<void> {
-  const docs = (await loadSeeds()).filter((d) => !d.demoOnly || isDemoMode());
+  const seeds = await loadSeeds();
   const base = Date.now();
+
+  // A real account starts with one note and nothing else (GitHub #661,
+  // #708): no folder tree, no Vault items, bookmarks or contacts. The demo
+  // below keeps the full set.
+  if (!isDemoMode()) {
+    const { composeAccountWelcome } = await import('./seeds/accountWelcome');
+    const welcome = composeAccountWelcome(seeds);
+    if (welcome) await seedDoc(pubkey, welcome, new Date(base).toISOString());
+    return;
+  }
+
+  const docs = seeds;
 
   // The folder tree has to exist before its notes are filed into it.
   await seedFolderTree(since);
@@ -496,7 +511,9 @@ export async function seedOnboardingNotes(
 }
 
 /* ── Starter folder tree ────────────────────────────────────────────
- * Every new vault opens on this tree, the same one the public demo shows.
+ * The public demo opens on this tree. A real account seeded before the
+ * one-note start (GitHub #708) got it too and may still have it; a new
+ * real account does not.
  * The ids are in `folders.ts`, because the sidebar recognises a starter
  * folder by id to decide whether a free account may delete it; the names
  * and the nesting are here, where the seeding happens.
@@ -592,24 +609,15 @@ function seedFolderDefs(): FolderDef[] {
 }
 
 /**
- * Extra tracker pills switched on for the demo only.
+ * Every built-in tracker pill, switched on for the demo only.
  *
- * `defaultTrackerSettings()` deliberately ships seven pills, because a wall
- * of them is a bad first run for someone logging their own day. The demo has
- * the opposite job: the three Tokyo entries carry values for all of these,
- * and a pill that is off renders nothing, so the data would be invisible.
- * Real vaults keep the quieter default.
+ * `defaultTrackerSettings()` ships a short set, because a wall of pills is
+ * a bad first run for someone logging their own day (GitHub #708). The demo
+ * has the opposite job: its entries carry values for every built-in, and a
+ * pill that is off renders nothing, so the data would be invisible. Real
+ * vaults keep the quieter default.
  */
-const DEMO_EXTRA_TRACKERS: BuiltinTrackerId[] = [
-  'habits',
-  'sleepScore',
-  'steps',
-  'heartRate',
-  'water',
-  'caffeine',
-  'screenTime',
-  'social',
-];
+const DEMO_TRACKERS = Object.keys(BUILTIN_TRACKER_COLORS) as BuiltinTrackerId[];
 
 /**
  * Prepare the vault's settings: the starter folder tree and the icons of
@@ -638,7 +646,7 @@ async function seedFolderTree(since?: SignInStamp): Promise<void> {
 
   const active = settings.trackerSettings.activeBuiltins;
   const missingPills = isDemoMode()
-    ? DEMO_EXTRA_TRACKERS.filter((id) => !active.includes(id))
+    ? DEMO_TRACKERS.filter((id) => !active.includes(id))
     : [];
 
   // Icons for the starter folders still in the tree and for the seed tags.

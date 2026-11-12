@@ -1,25 +1,39 @@
 {
   "manifest": {
-    "extDescription": "Speichere Webseiten als verschlüsselte Notizen und kopiere deine Logins.",
+    "extDescription": "Speichere Webseiten als verschlüsselte Notizen und kopiere oder fülle deine Logins aus.",
     "commandOpen": "PrivacyNotes öffnen",
-    "commandCopyLogin": "Login für diese Website kopieren",
-    "commandSaveBookmark": "Seite als Lesezeichen speichern"
+    "commandCopyLogin": "Login für diese Website ausfüllen oder kopieren",
+    "commandSaveNote": "Seite als Notiz speichern",
+    "commandLock": "Tresor sperren",
+    "commandGenerate": "Passwort erzeugen und kopieren",
+    "commandSaveBookmark": "Seite als Lesezeichen speichern",
+    "commandNewNote": "Neue Notiz schreiben"
   },
   "menu": {
     "savePageNote": "Seite als Notiz speichern",
     "savePageBookmark": "Seite als Lesezeichen speichern",
     "copyPageMarkdown": "Seite als Markdown kopieren",
     "saveSelection": "Auswahl als Notiz speichern",
+    "newNoteFromSelection": "Neue Notiz aus Auswahl",
     "saveLinkBookmark": "Link als Lesezeichen speichern",
     "saveLinkedPage": "Verlinkte Seite als Notiz speichern",
+    "fillLogin": "Login für diese Website ausfüllen",
     "copyLogin": "Login für diese Website kopieren",
     "addLogin": "Login für diese Website hinzufügen",
     "generatePassword": "Passwort erzeugen"
   },
+  "note": {
+    "tagsPlaceholder": "#arbeit #ideen",
+    "tagsHelp": "Leerzeichen oder Komma zwischen Tags. Das # ist optional.",
+    "failed": "Die Notiz konnte nicht gespeichert werden. Versuch es noch einmal."
+  },
   "connect": {
-    "title": "Mit deinem Konto verbinden",
-    "body": "Öffne in PrivacyNotes Einstellungen > Erweiterung und wähle Code erstellen. Füge den Code hier ein.",
+    "title": "Diesen Browser verbinden",
+    "step1": "Öffne PrivacyNotes auf diesem Computer oder use.privacynotes.app.",
+    "step2": "Öffne Einstellungen > Erweiterung und wähle Code erstellen.",
+    "step3": "Füge den Code hier ein.",
     "codeLabel": "Code aus der App",
+    "paste": "Einfügen",
     "connect": "Verbinden",
     "badCode": "Dieser Code ist unvollständig. Kopiere ihn noch einmal aus der App.",
     "usedCode": "Dieser Code ist verbraucht oder älter als 10 Minuten. Erstelle in der App einen neuen. Deine verbundenen Browser findest du unter Einstellungen > Erweiterung.",
@@ -27,21 +41,24 @@
     "connected": "Verbunden",
     "connectedClips": "Clips bereit.",
     "connectedBoth": "Clips und Logins bereit.",
-    "codeSpent": "Der Code ist jetzt verbraucht. Ein Screenshot davon ist wertlos.",
     "help": "So funktioniert es"
   },
   "protect": {
     "title": "Schütze deine Logins",
-    "body": "Wähle für diesen Browser eine eigene PIN oder einen eigenen Passcode, getrennt von der App.",
-    "tries": "Nach 10 Fehlversuchen wird dieser Browser getrennt.",
-    "biometric": "Auch Fingerabdruck oder Gesicht verwenden",
-    "biometricHelp": "Touch ID oder Windows Hello, wo dieser Browser es unterstützt. PIN oder Passcode funktionieren immer auch.",
+    "body": "Wähle für diesen Browser eine PIN oder einen Passcode. Damit entsperrst du hier deine Logins. Sie ist getrennt von PIN oder Passcode der App.",
+    "biometric": "Auch biometrische Entsperrung verwenden",
+    "biometricHelp": "Touch ID oder Windows Hello, zusätzlich zur PIN oder zum Passcode, die immer auch funktionieren.",
     "repeat": "Noch einmal eingeben",
     "mismatch": "Die beiden stimmen nicht überein. Versuch es noch einmal."
   },
   "clip": {
     "selection": "Auswahl",
+    "wholePage": "Ganze Seite",
+    "whatToSave": "Was speichern",
+    "picturesKept_one": "{{count}} Bild mitgespeichert.",
+    "picturesKept_other": "{{count}} Bilder mitgespeichert.",
     "includePictures": "Bilder mitspeichern",
+    "includePicturesHelp": "In der Notiz gespeichert, nicht mit der Website verlinkt.",
     "savedBody": "Sie erscheint in Notizen, sobald eine deiner Apps das nächste Mal synchronisiert. Ist eine davon geöffnet, dauert das meist nur wenige Minuten.",
     "closeHint": "Du kannst das Popup sofort schließen.",
     "alreadySaved": "Du hast diese Seite am {{date}} gespeichert.",
@@ -60,23 +77,21 @@
     "reading": "Seite wird gelesen",
     "copiedMarkdown": "Seite als Markdown kopiert",
     "off": "Das Speichern von Seiten ist für diesen Browser aus. Schalte Web-Clipper ein, wenn du ihn verbindest.",
-    "saving": "Seite wird gespeichert",
     "picturesFailed_one": "Gespeichert. {{count}} Bild konnte nicht gespeichert werden"
   },
   "logins": {
     "unlockPin": "Gib deine PIN ein",
     "unlockPasscode": "Gib deinen Passcode ein",
-    "useBiometric": "Fingerabdruck oder Gesicht verwenden",
+    "useBiometric": "Biometrische Entsperrung verwenden",
     "wrong_other": "Falsch. Noch {{count}} Versuche, bevor dieser Browser getrennt wird.",
     "forSite": "Für {{site}}",
     "none": "Keine Logins für diese Website.",
     "off": "Logins sind für diesen Browser aus. Schalte Tresor ein, wenn du ihn verbindest.",
     "copyCode": "2FA-Code kopieren",
+    "fill": "Ausfüllen",
     "usernameCopied": "Benutzername kopiert",
     "passwordCopied": "Passwort kopiert",
     "codeCopied": "2FA-Code kopiert",
-    "clears": "Die Zwischenablage wird nach 30 Sekunden geleert, falls der Inhalt noch dort ist.",
-    "addSaved": "Gespeichert. Der Eintrag erscheint in deinem Tresor, sobald eine deiner Apps das nächste Mal synchronisiert. Ist eine davon geöffnet, dauert das meist nur wenige Minuten.",
     "lock": "Sperren",
     "unreachable": "PrivacyNotes ist zum Entsperren nicht erreichbar. Prüfe deine Verbindung und versuch es noch einmal.",
     "lockSystem": "Wenn der Computer gesperrt wird",
@@ -97,13 +112,13 @@
   "changeSecret": {
     "titlePin": "PIN ändern",
     "titlePasscode": "Passcode ändern",
-    "biometricAgain": "Fingerabdruck oder Gesicht war an die alte PIN bzw. den alten Passcode gebunden. Richte es neu ein, um es weiter zu verwenden."
+    "biometricAgain": "Die biometrische Entsperrung war an die alte PIN bzw. den alten Passcode gebunden. Richte sie neu ein, um sie weiter zu verwenden."
   },
   "biometric": {
-    "enrolled": "Fingerabdruck oder Gesicht ist eingerichtet. Du kannst diesen Tab schließen.",
-    "enrolledHere": "Fingerabdruck oder Gesicht ist eingerichtet.",
+    "enrolled": "Die biometrische Entsperrung ist eingerichtet. Du kannst diesen Tab schließen.",
+    "enrolledHere": "Die biometrische Entsperrung ist eingerichtet.",
     "unlocked": "Entsperrt. Du kannst diesen Tab schließen und PrivacyNotes wieder öffnen.",
-    "failed": "Dieser Browser kann hier weder Fingerabdruck noch Gesicht verwenden. PIN oder Passcode funktionieren wie bisher."
+    "failed": "Dieser Browser kann hier keine biometrische Entsperrung verwenden. PIN oder Passcode funktionieren wie bisher."
   },
   "vault": {
     "search": "Tresor durchsuchen",
@@ -131,13 +146,53 @@
     "lockHeader": "Tresor sperren nach",
     "unlockToCopy": "Zum Kopieren entsperren",
     "omniboxDefault": "Deinen PrivacyNotes-Tresor nach %s durchsuchen",
-    "omniboxUnlock": "PrivacyNotes zum Suchen entsperren"
+    "omniboxUnlock": "PrivacyNotes zum Suchen entsperren",
+    "moreOptions": "Weitere Optionen"
   },
   "shortcuts": {
     "notSet": "Nicht festgelegt",
     "addressBar": "Den Tresor über die Adressleiste durchsuchen",
     "change": "Tastenkürzel ändern",
     "changeHint": "Die Tasten verwaltet dein Browser. Ändere dort eine oder weise ein Tastenkürzel zu, wo noch keins festgelegt ist.",
-    "loginHint": "<key/> kopiert den Benutzernamen, dann das Passwort."
+    "loginHint": "<key/> füllt diesen Login aus. Auf einer Seite ohne Login-Feld kopiert es den Benutzernamen, dann das Passwort.",
+    "loginHintMany": "<key/> füllt den ersten Login der Liste aus.<br/>Drück es innerhalb von 3 Sekunden erneut, um den nächsten auszufüllen."
+  },
+  "tabs": {
+    "label": "Clippen oder Tresor",
+    "clip": "Clippen"
+  },
+  "notice": {
+    "clearsIn": "Wird in {{seconds}} s geleert",
+    "copyFailed": "Kopieren fehlgeschlagen",
+    "loginSaved": "Login gespeichert",
+    "vaultNextSync": "Erscheint bei der nächsten Synchronisierung in deinem Tresor",
+    "noteSaved": "Notiz gespeichert",
+    "notesNextSync": "Erscheint bei der nächsten Synchronisierung in Notizen",
+    "savedHere": "Hier gespeichert",
+    "goesOutOnline": "Wird gesendet, sobald du online bist"
+  },
+  "fill": {
+    "notFilled": "Nicht ausgefüllt",
+    "couldNot": "Ausfüllen fehlgeschlagen",
+    "nothing": "Kein Login-Feld auf dieser Seite",
+    "signup": "Dieses Formular fragt nach einem neuen Passwort",
+    "insecure": "Diese Seite ist nicht sicher (http)",
+    "otherAccount": "Die Seite fragt nach einem anderen Konto",
+    "tooLong": "Das Feld der Seite ist zu kurz",
+    "copyInstead": "Kopiere die Werte stattdessen",
+    "usernameOnly": "Benutzername ausgefüllt",
+    "usernameOnlyNext": "Wähle noch einmal Ausfüllen für das Passwort"
+  },
+  "settings": {
+    "codes": "2FA-Codes",
+    "codesHelp": "Der aktuelle Code unter jedem Login mit einem 2FA-Schlüssel.",
+    "bar": "Countdown-Balken",
+    "barHelp": "Eine Linie, die bis zum nächsten Code abläuft.",
+    "iconsHelp": "Über unseren Proxy: Er sieht die Domain, nie dich.",
+    "disconnect": "Erweiterung trennen",
+    "biometric": "Biometrische Entsperrung",
+    "biometricPin": "Gib deine PIN ein, um sie einzurichten.",
+    "biometricPasscode": "Gib deinen Passcode ein, um sie einzurichten.",
+    "biometricOff": "Biometrische Entsperrung ist aus"
   }
 }

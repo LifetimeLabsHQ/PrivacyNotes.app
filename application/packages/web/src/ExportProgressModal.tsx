@@ -9,17 +9,40 @@
  * Spec: docs/internal/design/patterns/151-160.md section 156
  */
 
-import { useRef } from 'react';
+import { useRef, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEscapeToClose } from './useEscapeToClose';
 import { Button, Callout, CloseButton, ProgressBar } from './ui';
 import { Check, FolderOpen } from './icons';
+import type { ReactNode } from 'react';
 import type { ExportStep, ExportStepName } from './export';
 import { detectPlatform } from './devices';
 
+// The running export's step, outside React state. The HTML archive reports
+// once per note, and as NotesView state every report rendered the whole app
+// twice; in the Linux app such an export ended in React's "Maximum update
+// depth exceeded" (#683). Only this window reads the step, so a report
+// renders the window and nothing else (the syncingStore.ts pattern).
+let runningStep: ExportStep | undefined;
+const stepListeners = new Set<() => void>();
+
+/** Report the running export's step; undefined before its first step. */
+export function setExportStep(step: ExportStep | undefined): void {
+  if (step === runningStep) return;
+  runningStep = step;
+  for (const listener of stepListeners) listener();
+}
+
+function subscribeStep(listener: () => void) {
+  stepListeners.add(listener);
+  return () => stepListeners.delete(listener);
+}
+
+const readStep = () => runningStep;
+
 // Step names reuse labels the app already shows, already translated: the
 // Files pane's filters and the Notes pillar. Only Zip is this window's own.
-const STEP_LABELS: Record<ExportStepName, string> = {
+export const STEP_LABELS: Record<ExportStepName, string> = {
   pictures: 'notes:settings.imagesLabel',
   files: 'shell:filesList.filterFiles',
   notes: 'shell:tagsRail.notes',
@@ -38,15 +61,21 @@ interface Props {
   /** Where a native save put the file. Desktop offers Show in folder for it;
    *  a phone's path is a document URI no file manager opens. */
   savedPath?: string;
-  /** The steps of the running export, in order, and the one it is on. */
+  /** The steps of the running export, in order. */
   steps?: readonly ExportStepName[];
+  /** The step it is on. The app leaves it out, and the window reads the
+   *  running export's step (`setExportStep`); the catalog fixture passes one. */
   step?: ExportStep;
   /** Closes the window. While the export runs, it cancels the export too. */
   onClose: () => void;
+  /** Shown under a finished export that worked: the way to automatic backups. */
+  afterDone?: ReactNode;
 }
 
-export function ExportProgressModal({ status, done, error, savedPath, steps, step, onClose }: Props) {
+export function ExportProgressModal({ status, done, error, savedPath, steps, step: fixedStep, onClose, afterDone }: Props) {
   const { t } = useTranslation('importExport');
+  const runningStepNow = useSyncExternalStore(subscribeStep, readStep);
+  const step = fixedStep ?? runningStepNow;
   useEscapeToClose(onClose);
   const overlayRef = useRef<HTMLDivElement | null>(null);
   // The file was saved, short of something. It never reads as complete.
@@ -106,10 +135,10 @@ export function ExportProgressModal({ status, done, error, savedPath, steps, ste
                 value={done ? 1 : step?.total ? (step.done ?? 0) / step.total : undefined}
                 tone={incomplete ? 'warning' : done ? 'success' : 'info'}
               />
-              {!done && steps && (
+              {!done && steps && step && (
                 <ol className="mt-3 flex flex-wrap items-center gap-x-1.5 text-small text-pn-muted">
                   {steps.map((name, i) => {
-                    const at = step ? steps.indexOf(step.step) : -1;
+                    const at = steps.indexOf(step.step);
                     return (
                       <li key={name} className="flex items-center gap-1.5">
                         {i > 0 && <span aria-hidden="true">·</span>}
@@ -127,6 +156,7 @@ export function ExportProgressModal({ status, done, error, savedPath, steps, ste
               )}
             </>
           )}
+          {done && !error && afterDone}
         </div>
 
         {/* Footer */}

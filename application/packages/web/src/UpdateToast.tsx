@@ -61,7 +61,9 @@ export function UpdateToast({
       style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
     >
       <div
-        className={`flex items-center gap-3 rounded-lg border border-divider border-s-[3px] border-e-[3px] bg-surface-2 px-3 py-2.5 shadow-2xl ${
+        // Two buttons leave a phone toast no room for its text: below sm the
+        // buttons take their own line below the text and the close X.
+        className={`flex items-center gap-3 ${secondary ? 'flex-wrap sm:flex-nowrap' : ''} rounded-lg border border-divider border-s-[3px] border-e-[3px] bg-surface-2 px-3 py-2.5 shadow-2xl ${
           required
             ? 'border-l-amber-500 border-r-amber-500'
             : 'border-l-accent border-r-accent'
@@ -103,6 +105,7 @@ export function UpdateToast({
             </div>
           )}
         </div>
+        <div className={`flex shrink-0 items-center gap-3 ${secondary ? 'order-last basis-full justify-end sm:order-none sm:basis-auto' : ''}`}>
         {secondary && (
           <button
             type="button"
@@ -120,6 +123,7 @@ export function UpdateToast({
           {!icon && <ArrowClockwise className="w-3.5 h-3.5" aria-hidden="true" />}
           {actionLabel}
         </button>
+        </div>
         {onDismiss && (
           <button
             type="button"

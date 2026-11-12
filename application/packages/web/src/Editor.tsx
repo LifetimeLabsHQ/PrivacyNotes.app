@@ -19,7 +19,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import { LinkAddressPill } from './LinkAddressPill';
-import { findHeadingPos, headingPosByCode } from './noteHeadings';
+import { findHeadingPos, headingCaretPos, headingPosByCode } from './noteHeadings';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
@@ -47,6 +47,7 @@ declare module '@tiptap/core' {
 }
 import { invisibleCharacterBuilders, LazyInvisibleCharacters } from './editorInvisibles';
 import { FaviconChips, refreshFavicons } from './editorFavicons';
+import { BlockDirection } from './editorDirection';
 import { EncryptedImage, isPictureSelection, sanitizePastedHtml } from './EncryptedImage';
 import { ClipboardSpacing, copySelectionAs } from './clipboardSpacing';
 import { EncryptedAttachment, holdsOneFile, requestAttachmentRename } from './EncryptedAttachment';
@@ -55,6 +56,8 @@ import { AudioRecordingBanner, type AudioRecordingState } from './AudioRecorder'
 import { LinkSheet } from './LinkSheet';
 import { SLOT_PILL_HEIGHT } from './EditorSlotPill';
 import { Callout, CalloutTitle } from './Callout';
+import { PlaceMapNode } from './PlaceMapNode';
+import type { NoteLocation } from './noteLocation';
 import { typeCalloutTrigger } from './CalloutSuggestion';
 import { proUnlocked } from './demo';
 import { stepKanban } from './kanban';
@@ -113,6 +116,7 @@ import {
   stepTableCell,
   indentListItem,
   indentText,
+  EmptyListItemEnter,
   NbspParagraphCleaner,
   MixedListSplitter,
   clipboardRenderer,
@@ -184,6 +188,8 @@ type Props = {
   toolbarSlot?: HTMLElement | null;
   /** The format bar's "Show markdown"; absent where the note has no Markdown view. */
   onShowMarkdown?: () => void;
+  /** The note's own place: Insert > Location opens prefilled with it. */
+  place?: NoteLocation;
   /**
    * Called when a file chip in this note is renamed and that note's name
    * lives outside the document too. Only fires for a note holding exactly
@@ -270,7 +276,7 @@ export type EditorHandle = {
 const TOUCH_HANDLE_HEIGHT = 32;
 
 const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }>(function EditorInner(
-  { value, onChange, readOnly = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, cachedDoc, hideEncryptedMedia, onInsertFiles, bodyControls, notice, connections, toolbarSlot, onShowMarkdown, onRenameFile, fileNote = false, preview = false, sinkCheckedTasks = true, typedSymbols = false, placeholder, onReady },
+  { value, onChange, readOnly = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, cachedDoc, hideEncryptedMedia, onInsertFiles, bodyControls, notice, connections, toolbarSlot, onShowMarkdown, place, onRenameFile, fileNote = false, preview = false, sinkCheckedTasks = true, typedSymbols = false, placeholder, onReady },
   ref
 ) {
   const { t } = useTranslation('editor');
@@ -619,6 +625,8 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         },
         sinkChecked: () => sinkCheckedRef.current,
       }),
+      // Enter on an empty item that holds a sub-list ends the list (#709).
+      EmptyListItemEnter,
       TaskListInputRule,
       TypedSymbols.configure({ enabled: () => typedSymbolsRef.current }),
       TableWithMarkdown.configure({
@@ -679,6 +687,8 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       // defaultLanguage 'plaintext': an untagged fence stays plain instead
       // of lowlight auto-guessing a grammar and tinting random words.
       CodeBlockWithCopy.configure({ lowlight, defaultLanguage: 'plaintext' }),
+      // A ```map fence: Insert > Location's map in the body (note-location.md, section 4b).
+      PlaceMapNode,
       CodeBlockPlainCopy,
       SearchHighlight,
       // ==highlight== mark; input + paste rules ship with the extension.
@@ -723,6 +733,10 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       // Website icons on links. Decorations only, and only for icons that
       // actually downloaded - see editorFavicons.
       FaviconChips,
+      // A list, quote, callout or the footnotes read the way their own text
+      // does, so the bullets, numbers and checkboxes sit on that side (#725).
+      // Decorations only - see editorDirection.
+      BlockDirection,
       // One draw of the note on mount instead of two - see editorNodeViewMount.
       NodeViewMount,
       Markdown.configure({
@@ -1120,7 +1134,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           const pos = findHeadingPos(editor.state.doc, heading);
           // The caret goes to the heading's start, so typing continues there
           // and not wherever the note was last left.
-          if (pos >= 0) editor.commands.setTextSelection(pos + 1);
+          if (pos >= 0) editor.commands.setTextSelection(headingCaretPos(editor.state.doc, pos));
           return pos;
         }, 'start', onMissing);
       },
@@ -1128,7 +1142,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         if (!editor) return;
         revealNode(() => {
           const pos = headingPosByCode(editor.state.doc, itemId, code);
-          if (pos >= 0) editor.commands.setTextSelection(pos + 1);
+          if (pos >= 0) editor.commands.setTextSelection(headingCaretPos(editor.state.doc, pos));
           return pos;
         }, 'start');
       },
@@ -1203,6 +1217,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         // makes for the keyboard.
         <Toolbar
           editor={editor}
+          place={place}
           mobileTabIndex={isMobile ? -1 : undefined}
           onOpenLinkPopover={askForLink}
           linkBtnRef={linkBtnRef}
@@ -1217,6 +1232,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       {!readOnly && toolbarVisible && !barAtBottom && (
         <Toolbar
           editor={editor}
+          place={place}
           mobileTabIndex={isMobile ? -1 : undefined}
           onOpenLinkPopover={askForLink}
           linkBtnRef={linkBtnRef}

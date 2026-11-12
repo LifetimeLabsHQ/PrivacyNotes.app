@@ -194,7 +194,9 @@
     "ariaLabel": "Konspekt notatki",
     "hide": "Ukryj konspekt",
     "copyHeadingLink": "Kopiuj link do nagłówka",
-    "copyHeadingShortcut": "Kopiuj skrót do nagłówka"
+    "copyHeadingShortcut": "Kopiuj skrót do nagłówka",
+    "copyCalloutLink": "Kopiuj link do ramki",
+    "copyCalloutShortcut": "Kopiuj skrót do ramki"
   },
   "bodyMenu": {
     "cut": "Wytnij",
@@ -277,6 +279,11 @@
     "showLess": "Pokaż mniej",
     "language": "Język kodu: {{name}}",
     "searchLanguages": "Szukaj języków",
+    "addTitle": "Dodaj tytuł",
+    "removeTitle": "Usuń tytuł",
+    "titlePlaceholder": "Nazwa pliku lub tytuł",
+    "collapse": "Zwiń blok kodu",
+    "expand": "Rozwiń blok kodu",
     "placeholder": "Wpisz lub wklej kod. Aby dodać kolory, wybierz język powyżej."
   },
   "math": {

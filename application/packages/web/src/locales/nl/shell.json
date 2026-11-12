@@ -397,6 +397,7 @@
     "modeRich": "Opgemaakt",
     "modeSource": "Markdown",
     "reopenPrompt": "Je browser vraagt na het herladen opnieuw om toestemming. Je map is onthouden, dus dit is één klik.",
+    "reopenPromptDesktop": "Kies {{name}} nog een keer, zodat de app de map weer kan openen. Er is niets in de map veranderd.",
     "reopenFolder": "{{name}} opnieuw openen",
     "new": "Nieuw",
     "saveToNotes": "Opslaan in mijn notities",
@@ -698,6 +699,7 @@
       "bookClub": "Leesclub",
       "rent": "Huur betalen"
     },
+    "feedReadOnly": "Van {{name}}. Je kunt deze afspraak alleen in die agenda wijzigen.",
     "nothingFor_one": "Niets gepland voor {{count}} dag",
     "more_one": "+{{count}} meer"
   },
@@ -826,7 +828,8 @@
       "file": "Een bestand uploaden",
       "contact": "Nieuw contact",
       "bookmark": "Nieuwe bladwijzer",
-      "clip": "Een pagina clippen"
+      "clip": "Een pagina clippen",
+      "writeNote": "Een notitie schrijven"
     },
     "keepAsText": "Als tekst houden",
     "placeholder": "Titel, dag, tijd, herhaling...",
@@ -983,6 +986,7 @@
     "stepConnect": "Verbinden",
     "makeCode": "Code maken",
     "connectHint": "Maak een eenmalige code en plak die in de extensie.",
+    "secondBrowserPro": "Er is één browser verbonden. Voor een tweede heb je Pro nodig.",
     "thisBrowser": "Deze browser",
     "otherApps": "Desktop- en telefoonapps:",
     "desktopAll": "Alle downloads",
@@ -1040,7 +1044,7 @@
   "extensionConnect": {
     "clips": "Webclipper",
     "clipsHint": "Websites als notities opslaan.",
-    "loginsHint": "Logins, kaarten, SSH-sleutels en bladwijzers voor de site waarop je bent, alleen kopiëren. Vergrendeld met een eigen PIN of toegangscode.",
+    "loginsHint": "Logins, kaarten, SSH-sleutels en bladwijzers voor de site waarop je bent, om te kopiëren of in te vullen. Vergrendeld met een eigen PIN of toegangscode.",
     "pickOne": "Zet er minstens één aan.",
     "codeLabel": "Code voor de extensie",
     "oneUse": "Werkt één keer, 10 minuten lang.",

@@ -31,5 +31,9 @@ La barra in alto cambia l'aspetto del testo: **grassetto**, *corsivo*, titoli, l
 
 Quella frase è ciò che apre le tue note. Dove vive lo decidi tu, e puoi cambiare idea quando vuoi. [[Come sono protette le tue note]] spiega le tre opzioni.
 
+## Più che note
+
+Note, attività, password, un diario, file, un calendario, contatti e segnalibri, con il monitoraggio dell'umore e dei farmaci. Una sola app, cifrata sul tuo dispositivo. In più un editor Markdown gratuito per le cartelle sul tuo disco, Ninja (⌘K) per raggiungere tutto dalla tastiera e il salvataggio di pagine web.
+
 > [!tip] Qui niente è per sempre
 > Ogni nota in questa cassaforte è un esempio, questa compresa. Modificala, spostala o eliminala.

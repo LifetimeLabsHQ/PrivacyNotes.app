@@ -405,6 +405,7 @@
     "modeRich": "Sformatowane",
     "modeSource": "Markdown",
     "reopenPrompt": "Po przeładowaniu Twoja przeglądarka znowu potrzebuje uprawnienia. Folder jest zapamiętany, więc to jedno kliknięcie.",
+    "reopenPromptDesktop": "Wybierz folder {{name}} jeszcze raz, aby aplikacja mogła go znowu otworzyć. W folderze nic się nie zmieniło.",
     "reopenFolder": "Otwórz ponownie {{name}}",
     "new": "Nowy",
     "saveToNotes": "Zapisz w moich notatkach",
@@ -718,6 +719,7 @@
       "bookClub": "Klub książki",
       "rent": "Zapłać czynsz"
     },
+    "feedReadOnly": "Z kalendarza {{name}}. To wydarzenie możesz zmienić tylko w tamtym kalendarzu.",
     "nothingFor_few": "Nic przez {{count}} dni",
     "nothingFor_many": "Nic przez {{count}} dni",
     "more_few": "+{{count}} więcej",
@@ -866,7 +868,8 @@
       "file": "Prześlij plik",
       "contact": "Nowy kontakt",
       "bookmark": "Nowa zakładka",
-      "clip": "Przechwyć stronę"
+      "clip": "Przechwyć stronę",
+      "writeNote": "Napisz notatkę"
     },
     "keepAsText": "Zostaw jako tekst",
     "placeholder": "Tytuł, dzień, godzina, powtarzanie...",
@@ -1027,6 +1030,7 @@
     "stepConnect": "Połącz",
     "makeCode": "Utwórz kod",
     "connectHint": "Utwórz jednorazowy kod i wklej go w rozszerzeniu.",
+    "secondBrowserPro": "Jedna przeglądarka jest połączona. Druga wymaga Pro.",
     "thisBrowser": "Ta przeglądarka",
     "otherApps": "Aplikacje na komputer i telefon:",
     "desktopAll": "Wszystkie pobrania",
@@ -1085,7 +1089,7 @@
   "extensionConnect": {
     "clips": "Web clipper",
     "clipsHint": "Zapisuj strony internetowe jako notatki.",
-    "loginsHint": "Loginy, karty, klucze SSH i zakładki dla strony, na której jesteś, tylko do kopiowania. Zablokowane własnym PIN-em lub kodem dostępu.",
+    "loginsHint": "Loginy, karty, klucze SSH i zakładki dla strony, na której jesteś, do kopiowania lub wypełniania. Zablokowane własnym PIN-em lub kodem dostępu.",
     "pickOne": "Włącz co najmniej jedno.",
     "codeLabel": "Kod dla rozszerzenia",
     "oneUse": "Działa raz, przez 10 minut.",

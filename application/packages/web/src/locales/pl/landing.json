@@ -169,6 +169,8 @@
     "useClipBody": "Wyślij schowek, wynik polecenia lub komunikat o błędzie prosto do swoich notatek.",
     "useToolsTitle": "Część Twoich własnych narzędzi",
     "useToolsBody": "Polecenie odpowiada w JSON i kończy działanie z jasnymi kodami, więc Twoje skrypty wiedzą, że notatka została zapisana.",
+    "useShortcutTitle": "Notatka ze skrótu klawiszowego",
+    "useShortcutBody": "Klawisz, który wybierzesz w ustawieniach systemu, otwiera pole na szybką notatkę, nawet gdy aplikacja jest zamknięta. Notatka trafia do Twojego folderu Agent.",
     "howLink": "Przeczytaj, jak działa privacynotes"
   },
   "meds": {
@@ -342,7 +344,7 @@
     "manualUpdates": "Ręczne aktualizacje",
     "extensionHeading": "Web clipper i menedżer haseł",
     "extensionKeyOpen": "Otwórz rozszerzenie",
-    "extensionKeyLogin": "Kopiuj login tej strony",
+    "extensionKeyLogin": "Wypełnij login tej strony",
     "extensionKeyBookmark": "Dodaj tę stronę do zakładek",
     "extensionAria": "Dodaj rozszerzenie do {{name}}",
     "extensionNote": "Tylko na komputerach."

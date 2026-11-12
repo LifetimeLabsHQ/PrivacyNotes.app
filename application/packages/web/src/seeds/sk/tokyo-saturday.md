@@ -13,6 +13,11 @@ Z hotela o piatej. Dve hodiny vlakom a mesto bolo jednoducho preč.
 
 ![Hora Fudži so snehom na vrchole, orámovaná čerešňovými kvetmi.](/onboarding/fuji.webp)
 
+```map
+35.3606, 138.7274
+Hora Fudži
+```
+
 Pri jazere kvitli čerešne. Fudži stála za nimi celé dopoludnie bez jediného mráčika. Ľudia tu hovoria, že môžeš prísť na týždeň a vrchol nikdy neuvidíš. My sme ho mali šesť hodín.
 
 | Čo | Kedy |

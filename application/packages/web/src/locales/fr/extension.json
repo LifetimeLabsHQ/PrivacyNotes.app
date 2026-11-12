@@ -1,25 +1,39 @@
 {
   "manifest": {
-    "extDescription": "Enregistre des pages web en notes chiffrées et copie tes identifiants.",
+    "extDescription": "Enregistre des pages web en notes chiffrées et copie ou remplis tes identifiants.",
     "commandOpen": "Ouvrir PrivacyNotes",
-    "commandCopyLogin": "Copier l'identifiant de ce site",
-    "commandSaveBookmark": "Enregistrer la page en signet"
+    "commandCopyLogin": "Remplir ou copier l'identifiant de ce site",
+    "commandSaveNote": "Enregistrer la page en note",
+    "commandLock": "Verrouiller le coffre",
+    "commandGenerate": "Générer un mot de passe et le copier",
+    "commandSaveBookmark": "Enregistrer la page en signet",
+    "commandNewNote": "Écrire une nouvelle note"
   },
   "menu": {
     "savePageNote": "Enregistrer la page en note",
     "savePageBookmark": "Enregistrer la page en signet",
     "copyPageMarkdown": "Copier la page en Markdown",
     "saveSelection": "Enregistrer la sélection en note",
+    "newNoteFromSelection": "Nouvelle note à partir de la sélection",
     "saveLinkBookmark": "Enregistrer le lien en signet",
     "saveLinkedPage": "Enregistrer la page liée en note",
+    "fillLogin": "Remplir l'identifiant de ce site",
     "copyLogin": "Copier l'identifiant de ce site",
     "addLogin": "Ajouter un identifiant pour ce site",
     "generatePassword": "Générer un mot de passe"
   },
+  "note": {
+    "tagsPlaceholder": "#travail #idées",
+    "tagsHelp": "Un espace ou une virgule entre les étiquettes. Le # est facultatif.",
+    "failed": "Impossible d'enregistrer la note. Réessaie."
+  },
   "connect": {
-    "title": "Connecte-toi à ton compte",
-    "body": "Dans PrivacyNotes, ouvre Paramètres > Extension et choisis Créer un code. Colle le code ici.",
+    "title": "Connecte ce navigateur",
+    "step1": "Ouvre PrivacyNotes sur cet ordinateur ou use.privacynotes.app.",
+    "step2": "Ouvre Paramètres > Extension et choisis Créer un code.",
+    "step3": "Colle le code ici.",
     "codeLabel": "Code de l'app",
+    "paste": "Coller",
     "connect": "Connecter",
     "badCode": "Ce code est incomplet. Copie-le à nouveau depuis l'app.",
     "usedCode": "Ce code a déjà servi ou date de plus de 10 minutes. Crées-en un nouveau dans l'app. Tes navigateurs connectés se trouvent dans Paramètres > Extension.",
@@ -27,21 +41,25 @@
     "connected": "Connecté",
     "connectedClips": "Captures prêtes.",
     "connectedBoth": "Captures et identifiants prêts.",
-    "codeSpent": "Le code a maintenant servi. Une capture d'écran de ce code ne vaut plus rien.",
     "help": "Comment ça marche"
   },
   "protect": {
     "title": "Protège tes identifiants",
-    "body": "Choisis un PIN ou un code d'accès pour ce navigateur. Il est distinct de celui de l'app.",
-    "tries": "Après 10 essais erronés, ce navigateur est déconnecté.",
-    "biometric": "Utiliser aussi l'empreinte ou le visage",
-    "biometricHelp": "Touch ID ou Windows Hello, là où ce navigateur les prend en charge. Le PIN ou le code d'accès fonctionne toujours aussi.",
+    "body": "Choisis un PIN ou un code d'accès pour ce navigateur. Tu en as besoin pour déverrouiller tes identifiants ici. Il est distinct de celui de l'app.",
+    "biometric": "Utiliser aussi le déverrouillage biométrique",
+    "biometricHelp": "Touch ID ou Windows Hello, en plus du PIN ou du code d'accès, qui fonctionne toujours aussi.",
     "repeat": "Saisis-le à nouveau",
     "mismatch": "Les deux ne correspondent pas. Réessaie."
   },
   "clip": {
     "selection": "Sélection",
+    "wholePage": "Page entière",
+    "whatToSave": "Quoi enregistrer",
+    "picturesKept_one": "{{count}} image conservée.",
+    "picturesKept_many": "{{count}} images conservées.",
+    "picturesKept_other": "{{count}} images conservées.",
     "includePictures": "Inclure les images",
+    "includePicturesHelp": "Conservées dans la note, sans lien vers le site.",
     "savedBody": "Elle apparaît dans Notes à la prochaine synchronisation de l'une de tes apps. Si l'une d'elles est ouverte, c'est en général en quelques minutes.",
     "closeHint": "Tu peux fermer la fenêtre tout de suite.",
     "alreadySaved": "Tu as enregistré cette page le {{date}}.",
@@ -61,13 +79,12 @@
     "failed": "Impossible d'enregistrer cette page. Réessaie.",
     "reading": "Lecture de la page",
     "copiedMarkdown": "Page copiée en Markdown",
-    "off": "L'enregistrement des pages est désactivé pour ce navigateur. Active Capture web quand tu le connectes.",
-    "saving": "Enregistrement de la page"
+    "off": "L'enregistrement des pages est désactivé pour ce navigateur. Active Capture web quand tu le connectes."
   },
   "logins": {
     "unlockPin": "Saisis ton PIN",
     "unlockPasscode": "Saisis ton code d'accès",
-    "useBiometric": "Utiliser l'empreinte ou le visage",
+    "useBiometric": "Utiliser le déverrouillage biométrique",
     "wrong_one": "Erroné. Il reste {{count}} essai avant que ce navigateur soit déconnecté.",
     "wrong_many": "Erroné. Il reste {{count}} essais avant que ce navigateur soit déconnecté.",
     "wrong_other": "Erroné. Il reste {{count}} essais avant que ce navigateur soit déconnecté.",
@@ -75,11 +92,10 @@
     "none": "Aucun identifiant pour ce site.",
     "off": "Les identifiants sont désactivés pour ce navigateur. Active Coffre quand tu le connectes.",
     "copyCode": "Copier le code 2FA",
+    "fill": "Remplir",
     "usernameCopied": "Nom d'utilisateur copié",
     "passwordCopied": "Mot de passe copié",
     "codeCopied": "Code 2FA copié",
-    "clears": "Il s'efface du presse-papiers après 30 secondes, s'il y est encore.",
-    "addSaved": "Enregistré. Il apparaît dans ton Coffre à la prochaine synchronisation de l'une de tes apps. Si l'une d'elles est ouverte, c'est en général en quelques minutes.",
     "lock": "Verrouiller",
     "unreachable": "Impossible de joindre PrivacyNotes pour déverrouiller. Vérifie ta connexion et réessaie.",
     "lockSystem": "Quand l'ordinateur se verrouille",
@@ -99,13 +115,13 @@
   "changeSecret": {
     "titlePin": "Changer le PIN",
     "titlePasscode": "Changer le code d'accès",
-    "biometricAgain": "L'empreinte ou le visage utilisait l'ancien. Configure-le à nouveau pour continuer à t'en servir."
+    "biometricAgain": "Le déverrouillage biométrique utilisait l'ancien. Configure-le à nouveau pour continuer à t'en servir."
   },
   "biometric": {
-    "enrolled": "L'empreinte ou le visage est configuré. Tu peux fermer cet onglet.",
-    "enrolledHere": "L'empreinte ou le visage est configuré.",
+    "enrolled": "Le déverrouillage biométrique est configuré. Tu peux fermer cet onglet.",
+    "enrolledHere": "Le déverrouillage biométrique est configuré.",
     "unlocked": "Déverrouillé. Tu peux fermer cet onglet et rouvrir PrivacyNotes.",
-    "failed": "Ce navigateur ne peut pas utiliser d'empreinte ni de visage ici. Le PIN ou le code d'accès fonctionne comme avant."
+    "failed": "Ce navigateur ne peut pas utiliser le déverrouillage biométrique ici. Le PIN ou le code d'accès fonctionne comme avant."
   },
   "vault": {
     "search": "Rechercher dans le coffre",
@@ -133,13 +149,53 @@
     "lockHeader": "Verrouiller le coffre après",
     "unlockToCopy": "Déverrouille pour copier",
     "omniboxDefault": "Rechercher %s dans ton coffre PrivacyNotes",
-    "omniboxUnlock": "Déverrouille PrivacyNotes pour rechercher"
+    "omniboxUnlock": "Déverrouille PrivacyNotes pour rechercher",
+    "moreOptions": "Plus d'options"
   },
   "shortcuts": {
     "notSet": "Non défini",
     "addressBar": "Rechercher dans le coffre depuis la barre d'adresse",
     "change": "Modifier les raccourcis",
     "changeHint": "C'est ton navigateur qui gère les touches. Modifie un raccourci là-bas, ou attribue une touche à un raccourci qui n'en a pas.",
-    "loginHint": "<key/> copie le nom d'utilisateur, puis le mot de passe."
+    "loginHint": "<key/> remplit cet identifiant. Sur une page sans champ de connexion, il copie le nom d'utilisateur, puis le mot de passe.",
+    "loginHintMany": "<key/> remplit l'identifiant en haut de la liste.<br/>Appuie à nouveau dans les 3 secondes pour remplir le suivant."
+  },
+  "tabs": {
+    "label": "Capture ou Coffre",
+    "clip": "Capture"
+  },
+  "notice": {
+    "clearsIn": "Effacé dans {{seconds}} s",
+    "copyFailed": "Impossible de copier",
+    "loginSaved": "Identifiant enregistré",
+    "vaultNextSync": "Apparaît dans ton Coffre à la prochaine synchronisation",
+    "noteSaved": "Note enregistrée",
+    "notesNextSync": "Apparaît dans Notes à la prochaine synchronisation",
+    "savedHere": "Enregistré ici",
+    "goesOutOnline": "Envoyé une fois en ligne"
+  },
+  "fill": {
+    "notFilled": "Non rempli",
+    "couldNot": "Impossible de remplir",
+    "nothing": "Aucun champ de connexion sur cette page",
+    "signup": "Ce formulaire demande un nouveau mot de passe",
+    "insecure": "Cette page n'est pas sécurisée (http)",
+    "otherAccount": "La page demande un autre compte",
+    "tooLong": "Le champ de la page est trop court",
+    "copyInstead": "Copie plutôt les valeurs",
+    "usernameOnly": "Nom d'utilisateur rempli",
+    "usernameOnlyNext": "Choisis à nouveau Remplir pour le mot de passe"
+  },
+  "settings": {
+    "codes": "Codes 2FA",
+    "codesHelp": "Le code en cours sous chaque identifiant doté d'une clé 2FA.",
+    "bar": "Barre de compte à rebours",
+    "barHelp": "Une ligne qui diminue jusqu'au code suivant.",
+    "iconsHelp": "Via notre proxy : il voit le domaine, jamais toi.",
+    "disconnect": "Déconnecter l'extension",
+    "biometric": "Déverrouillage biométrique",
+    "biometricPin": "Saisis ton PIN pour le configurer.",
+    "biometricPasscode": "Saisis ton code d'accès pour le configurer.",
+    "biometricOff": "Le déverrouillage biométrique est désactivé"
   }
 }

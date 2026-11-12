@@ -191,7 +191,9 @@
     "ariaLabel": "เค้าโครงของโน้ต",
     "hide": "ซ่อนเค้าโครง",
     "copyHeadingLink": "คัดลอกลิงก์ไปยังหัวเรื่อง",
-    "copyHeadingShortcut": "คัดลอกทางลัดไปยังหัวเรื่อง"
+    "copyHeadingShortcut": "คัดลอกทางลัดไปยังหัวเรื่อง",
+    "copyCalloutLink": "คัดลอกลิงก์ไปยังกล่องเน้นข้อความ",
+    "copyCalloutShortcut": "คัดลอกทางลัดไปยังกล่องเน้นข้อความ"
   },
   "bodyMenu": {
     "cut": "ตัด",
@@ -262,6 +264,11 @@
     "showLess": "แสดงน้อยลง",
     "language": "ภาษาของโค้ด: {{name}}",
     "searchLanguages": "ค้นหาภาษา",
+    "addTitle": "เพิ่มชื่อ",
+    "removeTitle": "นำชื่อออก",
+    "titlePlaceholder": "ชื่อไฟล์หรือชื่อเรื่อง",
+    "collapse": "ย่อบล็อกโค้ด",
+    "expand": "ขยายบล็อกโค้ด",
     "placeholder": "พิมพ์หรือวางโค้ด เลือกภาษาด้านบนเพื่อให้มีสี"
   },
   "math": {

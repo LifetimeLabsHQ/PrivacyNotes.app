@@ -7,6 +7,11 @@ Saí do hotel às cinco. Duas horas de comboio, e a cidade tinha simplesmente de
 
 ![O monte Fuji com neve no topo, emoldurado por flores de cerejeira.](/onboarding/fuji.webp)
 
+```map
+35.3606, 138.7274
+Monte Fuji
+```
+
 As cerejeiras estavam em flor à beira do lago. O Fuji ficou por trás, sem uma nuvem a manhã toda. Aqui dizem que se pode vir uma semana e nunca ver o cume. Nós tivemo-lo seis horas.
 
 | O quê | Quando |

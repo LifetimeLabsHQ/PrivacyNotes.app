@@ -137,7 +137,7 @@ export interface ParsedImport {
    * Our own full backup only: the looks of folders, tags and notes and the
    * custom themes, as the manifest holds them. Validated at apply time.
    */
-  settings?: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown };
+  settings?: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown };
 }
 
 /** Importer identifiers - add new ones here as adapters land. */
@@ -170,7 +170,10 @@ export type ImporterId =
   | 'browser-passwords'
   | 'vcard'
   | 'google-calendar'
-  | 'excalidraw';
+  | 'excalidraw'
+  // Obsidian's canvases alone, from the Drawings group: same parser as
+  // obsidian, which skips the vault's notes for it.
+  | 'obsidian-canvas';
 
 export interface Importer {
   id: ImporterId;

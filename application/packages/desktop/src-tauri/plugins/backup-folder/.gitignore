@@ -1,0 +1,2 @@
+# The iOS build copies the Tauri API package here.
+/.tauri

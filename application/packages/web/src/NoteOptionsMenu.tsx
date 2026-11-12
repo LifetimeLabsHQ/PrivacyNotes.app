@@ -9,7 +9,7 @@ import { formatInstant } from './intlFormat';
 import { prepareBurnPayload } from './burnShare';
 import { ColorSwatchRow } from './ColorSwatch';
 import { NOTE_NO_COLOR, type LookColor, type NoteOwnColor } from './itemStyles';
-import { PencilSimpleSlash, Shield, ClockCounterClockwise, PushPin, Export, Trash, Repeat, Copy, Folder, Fire, ArrowCounterClockwise, ArticleMedium, TextAa, Swap, ListChecks, Broom, SortAscending, Palette, Shapes, Info, CaretLeft, Calendar, Check, iconArchive } from './icons';
+import { PencilSimpleSlash, Shield, LockSimple, ClockCounterClockwise, PushPin, Export, Trash, Repeat, Copy, Folder, Fire, ArrowCounterClockwise, ArticleMedium, TextAa, Swap, ListChecks, Broom, SortAscending, Palette, Shapes, MapPin, Info, CaretLeft, Calendar, Check, iconArchive } from './icons';
 import { typeGlyph } from './NoteRow';
 import { PathGlyph, useNoteIconPaths } from './looks/LookGlyph';
 import { CONVERT_TARGETS, isConvertSource, type ConvertTarget } from './noteTypes';
@@ -69,6 +69,9 @@ type Props = NoteActionGuardDeps & {
   onTrash?: () => void;
   /** Archive or unarchive. */
   onToggleArchive?: () => void;
+  /** Lock this protected note now (#723). Passed only while this protected
+   *  note is open. */
+  onLockProtected?: () => void;
   /** Open share/export UI. Passed only where the header hides its own copy. */
   onShare?: () => void;
   /** Share and Burn After Reading. */
@@ -132,6 +135,9 @@ type Props = NoteActionGuardDeps & {
   /** Opens the icon picker on this note. Pro: the caller sends a free
    *  account to the upgrade window. Absent where a note has no color. */
   onPickIcon?: () => void;
+  /** Opens the place popover in the tag row. Passed only where the note can
+   *  take a place and has none yet. Spec: docs/internal/plans/note-location.md (section 4) */
+  onAddLocation?: () => void;
   /** Trash view: the menu carries only the two trash actions. */
   isTrash?: boolean;
   onRestore?: () => void;
@@ -172,6 +178,7 @@ export function NoteOptionsMenu({
   onOpenHistory,
   onToggleStar,
   onToggleArchive,
+  onLockProtected,
   onTrash,
   onShare,
   onBurn,
@@ -194,6 +201,7 @@ export function NoteOptionsMenu({
   onSetColor,
   onOpenColorSettings,
   onPickIcon,
+  onAddLocation,
   isTrash,
   onRestore,
   onDeleteForever,
@@ -400,6 +408,16 @@ export function NoteOptionsMenu({
             </Group>
           )}
 
+          {onAddLocation && (
+            <Group>
+              <ActionItem
+                label={t('notes:location.add')}
+                icon={<MapPin aria-hidden="true" />}
+                onClick={() => { onClose(); onAddLocation(); }}
+              />
+            </Group>
+          )}
+
           {(showModeRow || showReplaceRow || showTaskRows) && (
             <Group>
               {showModeRow && (
@@ -510,6 +528,13 @@ export function NoteOptionsMenu({
               pro={!isPro}
               onClick={act.toggleProtect}
             />
+            {onLockProtected && (
+              <ActionItem
+                label={t('notes:editor.lockNow')}
+                icon={<LockSimple aria-hidden="true" />}
+                onClick={() => { onClose(); onLockProtected(); }}
+              />
+            )}
             {onToggleArchive && (
               <ActionItem
                 label={note.archived === 1 ? t('shell:contextMenu.unarchive') : t('shell:contextMenu.archive')}

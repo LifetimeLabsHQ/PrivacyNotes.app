@@ -192,7 +192,9 @@
     "ariaLabel": "Note outline",
     "hide": "Hide outline",
     "copyHeadingLink": "Copy link to heading",
-    "copyHeadingShortcut": "Copy shortcut to heading"
+    "copyHeadingShortcut": "Copy shortcut to heading",
+    "copyCalloutLink": "Copy link to callout",
+    "copyCalloutShortcut": "Copy shortcut to callout"
   },
   "bodyMenu": {
     "cut": "Cut",
@@ -267,6 +269,11 @@
     "showLess": "Show less",
     "language": "Code language: {{name}}",
     "searchLanguages": "Search languages",
+    "addTitle": "Add title",
+    "removeTitle": "Remove title",
+    "titlePlaceholder": "File name or title",
+    "collapse": "Collapse code block",
+    "expand": "Expand code block",
     "placeholder": "Type or paste code. For colors, pick a language above."
   },
   "math": {

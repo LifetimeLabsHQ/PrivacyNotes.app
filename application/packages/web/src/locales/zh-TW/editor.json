@@ -191,7 +191,9 @@
     "ariaLabel": "筆記大綱",
     "hide": "隱藏大綱",
     "copyHeadingLink": "複製標題連結",
-    "copyHeadingShortcut": "複製標題捷徑"
+    "copyHeadingShortcut": "複製標題捷徑",
+    "copyCalloutLink": "複製標註連結",
+    "copyCalloutShortcut": "複製標註捷徑"
   },
   "bodyMenu": {
     "cut": "剪下",
@@ -262,6 +264,11 @@
     "showLess": "收合",
     "language": "程式碼語言：{{name}}",
     "searchLanguages": "搜尋語言",
+    "addTitle": "新增標題",
+    "removeTitle": "移除標題",
+    "titlePlaceholder": "檔案名稱或標題",
+    "collapse": "收合程式碼區塊",
+    "expand": "展開程式碼區塊",
     "placeholder": "輸入或貼上程式碼。若要上色，請在上方選擇語言。"
   },
   "math": {

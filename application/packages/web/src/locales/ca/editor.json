@@ -193,7 +193,9 @@
     "ariaLabel": "Esquema de la nota",
     "hide": "Amaga l'esquema",
     "copyHeadingLink": "Copia l'enllaç a l'encapçalament",
-    "copyHeadingShortcut": "Copia la drecera a l'encapçalament"
+    "copyHeadingShortcut": "Copia la drecera a l'encapçalament",
+    "copyCalloutLink": "Copia l'enllaç al requadre destacat",
+    "copyCalloutShortcut": "Copia la drecera al requadre destacat"
   },
   "bodyMenu": {
     "cut": "Retalla",
@@ -272,6 +274,11 @@
     "showLess": "Mostra’n menys",
     "language": "Llenguatge del codi: {{name}}",
     "searchLanguages": "Cerca llenguatges",
+    "addTitle": "Afegeix un títol",
+    "removeTitle": "Elimina el títol",
+    "titlePlaceholder": "Nom del fitxer o títol",
+    "collapse": "Replega el bloc de codi",
+    "expand": "Desplega el bloc de codi",
     "placeholder": "Escriu o enganxa codi. Per tenir colors, tria un llenguatge a dalt."
   },
   "math": {

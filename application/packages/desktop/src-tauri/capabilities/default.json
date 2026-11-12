@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permissions every platform needs. The Markdown folder pillar's own filesystem and dialog grants moved to desktop.json, because that pillar reports itself unavailable on iOS and Android. The three that stayed are the ones `saveBlob` uses on every native platform, since the webview has no download handler anywhere: a Save As dialog, the write, and the stat that confirms the bytes are really there (Android's create-document flow makes an empty file the moment the user taps Save, so an unverified write hands somebody a backup that will not restore). `opener:allow-open-path` was granted here until 2026-08-14 for the row menu's Reveal in folder / Open in default app; both were removed as dead controls, so the grant went with them. The opener plugin is used for `openUrl` and, on desktop, for `revealItemInDir` (Show in folder after a backup export, on the path the Save As dialog returned); `opener:default` covers both. `opener:default` opens http(s), mailto: and tel:; the one scope added beside it is sms:, which a contact's Message action hands to the messages app (every scheme the app opens must be listed, because the ACL refuses silently). `notification:default` is the calendar reminders: the webview schedules, cancels and lists its own local notifications and asks for the permission once; it carries no network or file access.",
+  "description": "Permissions every platform needs. The Markdown folder pillar's own filesystem and dialog grants moved to desktop.json, because that pillar reports itself unavailable on iOS and Android. The three that stayed are the ones `saveBlob` uses on every native platform, since the webview has no download handler anywhere: a Save As dialog, the write, and the stat that confirms the bytes are really there (Android's create-document flow makes an empty file the moment the user taps Save, so an unverified write hands somebody a backup that will not restore). `opener:allow-open-path` was granted here until 2026-08-14 for the row menu's Reveal in folder / Open in default app; both were removed as dead controls, so the grant went with them. The opener plugin is used for `openUrl` and, on desktop, for `revealItemInDir` (Show in folder after a backup export, on the path the Save As dialog returned); `opener:default` covers both. `opener:default` opens http(s), mailto: and tel:; the one scope added beside it is sms:, which a contact's Message action hands to the messages app (every scheme the app opens must be listed, because the ACL refuses silently). `notification:default` is the calendar reminders: the webview schedules, cancels and lists its own local notifications and asks for the permission once; it carries no network or file access. The two fs grants carry no allow: the Save As dialog widens the runtime scope to the one path the user chose, and the deny list below stays as a second layer. A static $HOME/** allow left the deny list as the only guard, and a deny glob folds ASCII case only, so on APFS a folded spelling of LaunchAgents reached it. The deny list holds only $HOME paths, because this file also reaches the phone builds, where a path that does not resolve fails the whole grant.",
   "windows": [
     "main"
   ],
@@ -23,11 +23,6 @@
     "dialog:allow-save",
     {
       "identifier": "fs:allow-write-file",
-      "allow": [
-        {
-          "path": "$HOME/**"
-        }
-      ],
       "deny": [
         {
           "path": "$HOME/.ssh/**"
@@ -69,22 +64,43 @@
           "path": "$HOME/bin/**"
         },
         {
+          "path": "$HOME/AppData"
+        },
+        {
           "path": "$HOME/AppData/**"
+        },
+        {
+          "path": "$HOME/Documents/WindowsPowerShell"
         },
         {
           "path": "$HOME/Documents/WindowsPowerShell/**"
         },
         {
+          "path": "$HOME/Documents/PowerShell"
+        },
+        {
           "path": "$HOME/Documents/PowerShell/**"
+        },
+        {
+          "path": "$HOME/Library/Application Support/app.privacynotes"
         },
         {
           "path": "$HOME/Library/Application Support/app.privacynotes/**"
         },
         {
+          "path": "$HOME/Library/Caches/app.privacynotes"
+        },
+        {
           "path": "$HOME/Library/Caches/app.privacynotes/**"
         },
         {
+          "path": "$HOME/Library/Logs/app.privacynotes"
+        },
+        {
           "path": "$HOME/Library/Logs/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/Library/WebKit"
         },
         {
           "path": "$HOME/Library/WebKit/**"
@@ -93,11 +109,6 @@
     },
     {
       "identifier": "fs:allow-stat",
-      "allow": [
-        {
-          "path": "$HOME/**"
-        }
-      ],
       "deny": [
         {
           "path": "$HOME/.ssh/**"
@@ -139,22 +150,43 @@
           "path": "$HOME/bin/**"
         },
         {
+          "path": "$HOME/AppData"
+        },
+        {
           "path": "$HOME/AppData/**"
+        },
+        {
+          "path": "$HOME/Documents/WindowsPowerShell"
         },
         {
           "path": "$HOME/Documents/WindowsPowerShell/**"
         },
         {
+          "path": "$HOME/Documents/PowerShell"
+        },
+        {
           "path": "$HOME/Documents/PowerShell/**"
+        },
+        {
+          "path": "$HOME/Library/Application Support/app.privacynotes"
         },
         {
           "path": "$HOME/Library/Application Support/app.privacynotes/**"
         },
         {
+          "path": "$HOME/Library/Caches/app.privacynotes"
+        },
+        {
           "path": "$HOME/Library/Caches/app.privacynotes/**"
         },
         {
+          "path": "$HOME/Library/Logs/app.privacynotes"
+        },
+        {
           "path": "$HOME/Library/Logs/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/Library/WebKit"
         },
         {
           "path": "$HOME/Library/WebKit/**"

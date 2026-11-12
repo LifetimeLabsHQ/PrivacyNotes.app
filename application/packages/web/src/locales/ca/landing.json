@@ -169,6 +169,8 @@
     "useClipBody": "Envia el porta-retalls, la sortida d'una ordre o un missatge d'error directament a les teves notes.",
     "useToolsTitle": "Part de les teves pròpies eines",
     "useToolsBody": "L'ordre respon en JSON i surt amb codis clars, així els teus scripts saben que la nota s'ha desat.",
+    "useShortcutTitle": "Una nota des d'una drecera de teclat",
+    "useShortcutBody": "Una tecla que tries a la configuració del sistema obre un quadre per a una nota ràpida, fins i tot amb l'app tancada. Arriba a la teva carpeta Agent.",
     "howLink": "Llegeix com funciona privacynotes"
   },
   "meds": {
@@ -342,7 +344,7 @@
     "manualUpdates": "Actualització manual",
     "extensionHeading": "Retallador web i gestor de contrasenyes",
     "extensionKeyOpen": "Obre l'extensió",
-    "extensionKeyLogin": "Copia l'inici de sessió d'aquest lloc",
+    "extensionKeyLogin": "Emplena l'inici de sessió d'aquest lloc",
     "extensionKeyBookmark": "Desa aquesta pàgina com a marcador",
     "extensionAria": "Afegeix l'extensió a {{name}}",
     "extensionNote": "Només en ordinadors."

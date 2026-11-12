@@ -169,6 +169,8 @@
     "useClipBody": "Stuur het klembord, de uitvoer van een opdracht of een foutmelding rechtstreeks naar je notities.",
     "useToolsTitle": "Onderdeel van je eigen tools",
     "useToolsBody": "De opdracht antwoordt in JSON en stopt met duidelijke exitcodes, zodat je scripts weten dat de notitie is opgeslagen.",
+    "useShortcutTitle": "Een notitie via een sneltoets",
+    "useShortcutBody": "Een toets die je in de instellingen van je systeem kiest, opent een vak voor een snelle notitie, ook als de app gesloten is. Hij komt in je Agent-map terecht.",
     "howLink": "Lees hoe privacynotes werkt"
   },
   "meds": {
@@ -342,7 +344,7 @@
     "manualUpdates": "Handmatig bijwerken",
     "extensionHeading": "Webclipper en wachtwoordmanager",
     "extensionKeyOpen": "De extensie openen",
-    "extensionKeyLogin": "De login van deze site kopiëren",
+    "extensionKeyLogin": "De login van deze site invullen",
     "extensionKeyBookmark": "Deze pagina als bladwijzer opslaan",
     "extensionAria": "De extensie toevoegen aan {{name}}",
     "extensionNote": "Alleen op computers."

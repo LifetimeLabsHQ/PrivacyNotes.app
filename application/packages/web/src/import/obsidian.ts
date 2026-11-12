@@ -11,7 +11,10 @@ import { parseFrontMatterDate } from './markdown';
 import { noteLinkTarget } from '../noteLinks';
 import i18n from '../i18n';
 import { isUntitledStem } from '../exportNames';
-import type { ImportedNote, ParsedImport } from './types';
+import { DRAWING_FILE, drawingNote, drawingWarnings, readDrawing } from './excalidraw';
+import { CANVAS_PICTURE_EXT, canvasFilePaths, canvasToDrawing } from './jsonCanvas';
+import type { ImportBlob, ImportedNote, ParsedImport } from './types';
+import { FRONT_MATTER_LOCATION, FRONT_MATTER_LOCATION_NAME, LOCATION_KEY, parseFrontMatterLocation, type NoteLocation } from '../noteLocation';
 
 const msg = (key: string, options?: Record<string, unknown>): string =>
   i18n.t(`importExport:importLog.obsidian.${key}`, options);
@@ -34,6 +37,10 @@ const msg = (key: string, options?: Record<string, unknown>): string =>
  *   - Attachments (images, PDFs, audio) imported through the shared blob
  *     pipeline, including `![[embeds]]`; anything no note links to is
  *     skipped and counted, because an orphan blob is pure quota burn
+ *   - Drawings: each `.canvas` (JSON Canvas, `jsonCanvas.ts`) and each
+ *     Excalidraw plugin drawing (`.excalidraw.md`, `excalidraw.ts`) becomes
+ *     a drawing item in its folder; a picture a canvas shows comes from the
+ *     vault. One `.canvas` file on its own imports too.
  */
 
 /* ------------------------------------------------------------------ */
@@ -45,6 +52,7 @@ interface FrontMatter {
   title: string;
   createdAt: string | null;
   updatedAt: string | null;
+  place?: NoteLocation;
 }
 
 function parseFrontMatter(content: string): {
@@ -66,6 +74,8 @@ function parseFrontMatter(content: string): {
   let title = '';
   let createdAt: string | null = null;
   let updatedAt: string | null = null;
+  let location: unknown;
+  let locationName = '';
 
   // Tags come from the shared parser in notesRepo - the Markdown folder
   // adapter needs the same grammar and had its own copy until v0.400.0.
@@ -92,10 +102,28 @@ function parseFrontMatter(content: string): {
       createdAt = parseFrontMatterDate(rawVal) ?? createdAt;
     } else if (key === 'updated' || key === 'modified' || key === 'date modified') {
       updatedAt = parseFrontMatterDate(rawVal) ?? updatedAt;
+    } else if (key === FRONT_MATTER_LOCATION) {
+      // Map View's `location:` in any of the forms Obsidian writes: inline
+      // (`40.68,-74.04` or `[40.68, -74.04]`), or the block list its
+      // Properties panel makes, one `- value` line per number.
+      // Spec: docs/internal/plans/note-location.md (section 6)
+      if (rawVal) {
+        location = rawVal;
+      } else {
+        const items: string[] = [];
+        while (i + 1 < lines.length && /^\s*-\s+/.test(lines[i + 1]!)) {
+          items.push(lines[i + 1]!.replace(/^\s*-\s+/, '').trim());
+          i++;
+        }
+        location = items;
+      }
+    } else if (key === FRONT_MATTER_LOCATION_NAME) {
+      locationName = rawVal.replace(/^["']|["']$/g, '');
     }
   }
 
-  return { meta: { tags, title, createdAt, updatedAt }, body };
+  const place = parseFrontMatterLocation(location, locationName);
+  return { meta: { tags, title, createdAt, updatedAt, ...(place ? { place } : {}) }, body };
 }
 
 /* ------------------------------------------------------------------ */
@@ -246,6 +274,7 @@ function parseOneObsidian(
     tags: allTags,
     createdAt,
     updatedAt,
+    ...(meta.place ? { trackers: { [LOCATION_KEY]: meta.place } } : {}),
   };
 }
 
@@ -269,16 +298,43 @@ function shouldSkip(path: string): boolean {
 }
 
 const MD_EXT = /\.md$/i;
+const CANVAS_EXT = /\.canvas$/i;
+
+/** What the vault's drawings came to, for the warnings. */
+type DrawingCounts = {
+  refused: string[];
+  compressed: string[];
+  outsidePictures: number;
+  unreadablePictures: number;
+  refusedCanvases: string[];
+  canvasPicturesMissing: number;
+};
+
+const noDrawingCounts = (): DrawingCounts => ({ refused: [], compressed: [], outsidePictures: 0, unreadablePictures: 0, refusedCanvases: [], canvasPicturesMissing: 0 });
+
+/** One `.canvas` text as a drawing item, or null when it is not a canvas. */
+function canvasNote(path: string, text: string, date: Date | null, pictureOf: Parameters<typeof canvasToDrawing>[1], counts: DrawingCounts): ImportedNote | null {
+  const drawing = canvasToDrawing(text, pictureOf);
+  const name = path.split('/').pop() ?? path;
+  if (!drawing) {
+    counts.refusedCanvases.push(name);
+    return null;
+  }
+  counts.canvasPicturesMissing += drawing.outsidePictures;
+  return drawingNote(path, name.replace(CANVAS_EXT, ''), drawing.body, date);
+}
 
 async function parseZip(
   file: File,
   onProgress?: (msg: string) => void,
+  canvasOnly = false,
 ): Promise<{
   notes: ImportedNote[];
   skippedAttachments: number;
   tooLarge: number;
   folders: FolderDef[];
-  blobs: Map<string, { data: Uint8Array; mime: string; name: string }>;
+  blobs: Map<string, ImportBlob>;
+  counts: DrawingCounts;
 }> {
   onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
   const buf = await file.arrayBuffer();
@@ -294,12 +350,20 @@ async function parseZip(
   const prefix = commonRootPrefix(allPaths);
 
   const mdFiles: [string, JSZip.JSZipObject][] = [];
+  const drawingFiles: [string, JSZip.JSZipObject][] = [];
+  const canvasFiles: [string, JSZip.JSZipObject][] = [];
   const attachments: [string, JSZip.JSZipObject][] = [];
 
   zip.forEach((path, entry) => {
     if (entry.dir || shouldSkip(path)) return;
     const rel = prefix ? path.slice(prefix.length) : path;
-    if (MD_EXT.test(rel)) {
+    if (CANVAS_EXT.test(rel)) {
+      canvasFiles.push([rel, entry]);
+    } else if (canvasOnly && !ATTACHMENT_EXT.test(rel)) {
+      return;
+    } else if (DRAWING_FILE.test(rel)) {
+      drawingFiles.push([rel, entry]);
+    } else if (MD_EXT.test(rel)) {
       mdFiles.push([rel, entry]);
     } else if (ATTACHMENT_EXT.test(rel)) {
       attachments.push([rel, entry]);
@@ -313,7 +377,7 @@ async function parseZip(
   const dirOf = (rel: string) =>
     rel.split('/').slice(0, -1).filter(Boolean).join('/');
   const { folders, dirToFolderId } = buildFolderTree(
-    mdFiles.map(([rel]) => dirOf(rel)),
+    [...mdFiles, ...drawingFiles, ...canvasFiles].map(([rel]) => dirOf(rel)),
   );
 
   const notes: ImportedNote[] = [];
@@ -332,16 +396,59 @@ async function parseZip(
     }
   }
 
+  // Drawings: the Excalidraw plugin's files, then the canvases. A picture
+  // a canvas shows is read from the vault by its path, once per path.
+  const blobs = new Map<string, ImportBlob>();
+  const counts = noDrawingCounts();
+  const drawings: ImportedNote[] = [];
+  for (const [rel, entry] of drawingFiles) {
+    const read = readDrawing(rel, await zipEntryText(entry), entry.date ?? null, blobs);
+    const name = rel.split('/').pop() ?? rel;
+    if (read === 'compressed') counts.compressed.push(name);
+    else if (read === 'refused') counts.refused.push(name);
+    else {
+      drawings.push(read.note);
+      counts.outsidePictures += read.outsidePictures;
+      counts.unreadablePictures += read.unreadablePictures;
+    }
+  }
+  const attachmentAt = new Map(attachments);
+  const canvasPictures = new Map<string, { key: string; mime: string } | null>();
+  for (const [rel, entry] of canvasFiles) {
+    const text = await zipEntryText(entry);
+    for (const path of canvasFilePaths(text)) {
+      if (canvasPictures.has(path) || !CANVAS_PICTURE_EXT.test(path)) continue;
+      const source = attachmentAt.get(path);
+      const data = source ? await zipEntryMedia(source) : null;
+      if (!data) {
+        canvasPictures.set(path, null);
+        continue;
+      }
+      const key = `canvasimg:${crypto.randomUUID()}`;
+      blobs.set(key, { data, mime: mimeFromExt(path), name: path.split('/').pop() ?? path });
+      canvasPictures.set(path, { key, mime: mimeFromExt(path) });
+    }
+    const note = canvasNote(rel, text, entry.date ?? null, (path) => canvasPictures.get(path) ?? null, counts);
+    if (note) drawings.push(note);
+  }
+  for (const note of drawings) {
+    const dir = note.folderPath?.join('/');
+    if (dir) note.folderId = dirToFolderId.get(dir) ?? null;
+    notes.push(note);
+  }
+
   // Attachments, read AFTER the notes because only a referenced file is
   // worth carrying: a working vault accumulates images nothing links to any
   // more, and every one of those would be charged against the user's storage
   // quota to render nowhere. The predicate is the shared one the rewrite
   // itself uses, so "shipped" and "rewritten" cannot drift apart.
-  const bodies = notes.map((n) => n.body).join('\n');
-  const blobs = new Map<string, { data: Uint8Array; mime: string; name: string }>();
+  const bodies = notes.filter((n) => n.type !== 'drawing').map((n) => n.body).join('\n');
   let skippedAttachments = 0;
   let tooLarge = 0;
   for (const [rel, entry] of attachments) {
+    // A picture a canvas shows is in `blobs` already; the canvas card
+    // reads no other file.
+    if (canvasOnly || canvasPictures.get(rel)) continue;
     if (!isBlobReferenced(rel, bodies)) {
       skippedAttachments++;
       continue;
@@ -361,7 +468,7 @@ async function parseZip(
     });
   }
 
-  return { notes, skippedAttachments, tooLarge, folders, blobs };
+  return { notes, skippedAttachments, tooLarge, folders, blobs, counts };
 }
 
 /* ------------------------------------------------------------------ */
@@ -372,10 +479,27 @@ export async function parseObsidian(
   file: File,
   onProgress?: (msg: string) => void,
 ): Promise<ParsedImport> {
-  const { notes, skippedAttachments, tooLarge, folders, blobs } = await parseZip(
+  return parseVault(file, onProgress, false);
+}
+
+/** The Drawings group's Obsidian Canvas card: only a vault's canvases. */
+export async function parseObsidianCanvas(
+  file: File,
+  onProgress?: (msg: string) => void,
+): Promise<ParsedImport> {
+  return parseVault(file, onProgress, true);
+}
+
+async function parseVault(file: File, onProgress: ((msg: string) => void) | undefined, canvasOnly: boolean): Promise<ParsedImport> {
+  const source = canvasOnly ? 'obsidian-canvas' : 'obsidian';
+  const head = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+  if (!(head[0] === 0x50 && head[1] === 0x4b)) return { ...(await parseOneCanvas(file)), source };
+  const { notes, skippedAttachments, tooLarge, folders, blobs, counts } = await parseZip(
     file,
-    onProgress
+    onProgress,
+    canvasOnly,
   );
+  if (canvasOnly && notes.length === 0) throw new Error(msg(counts.refusedCanvases.length > 0 ? 'noCanvasRead' : 'noCanvas'));
 
   const uniqueTags = new Set(notes.flatMap((n) => n.tags));
   const emptyNotes = notes.filter(
@@ -388,7 +512,10 @@ export async function parseObsidian(
     warnings.push(i18n.t('importExport:importLog.shared.skippedUnlinked', { count: skippedAttachments }));
   }
   if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
+  warnings.push(...drawingCountWarnings(counts));
   const transforms: string[] = [];
+  const drawingCount = notes.filter((n) => n.type === 'drawing').length;
+  if (drawingCount > 0) transforms.push(msg('drawingsMade', { count: drawingCount }));
   if (blobs.size > 0) {
     const images = [...blobs.values()].filter((b) => b.mime.startsWith('image/')).length;
     const files = blobs.size - images;
@@ -405,11 +532,11 @@ export async function parseObsidian(
   if (withFm > 0) {
     transforms.push(msg('tagsExtracted', { count: withFm }));
   }
-  const withLinks = notes.filter((n) => /\[\[.+?\]\]/.test(n.body)).length;
+  const withLinks = notes.filter((n) => n.type !== 'drawing' && /\[\[.+?\]\]/.test(n.body)).length;
   if (withLinks > 0) {
     transforms.push(msg('linksPreserved', { count: withLinks }));
   }
-  transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
+  if (!canvasOnly) transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
 
   return {
     notes,
@@ -421,8 +548,34 @@ export async function parseObsidian(
       untaggedNotes,
       uniqueTags: uniqueTags.size,
     },
-    source: 'obsidian',
+    source,
     folders,
     blobs: blobs.size > 0 ? blobs : undefined,
+  };
+}
+
+function drawingCountWarnings(counts: DrawingCounts): string[] {
+  const warnings = drawingWarnings(counts.refused, counts.compressed, counts.outsidePictures, counts.unreadablePictures);
+  if (counts.refusedCanvases.length > 0) {
+    const names = counts.refusedCanvases;
+    warnings.push(msg('canvasRefused', { count: names.length, names: names.length > 5 ? `${names.slice(0, 5).join(', ')}, ...` : names.join(', ') }));
+  }
+  if (counts.canvasPicturesMissing > 0) warnings.push(msg('canvasPicturesMissing', { count: counts.canvasPicturesMissing }));
+  return warnings;
+}
+
+/** One `.canvas` file on its own: one drawing. Its pictures are outside it. */
+async function parseOneCanvas(file: File): Promise<ParsedImport> {
+  const counts = noDrawingCounts();
+  const note = CANVAS_EXT.test(file.name)
+    ? canvasNote(file.name, await file.text(), file.lastModified ? new Date(file.lastModified) : null, undefined, counts)
+    : null;
+  if (!note) throw new Error(msg('notVaultOrCanvas'));
+  return {
+    notes: [note],
+    warnings: drawingCountWarnings(counts),
+    transforms: [msg('drawingsMade', { count: 1 })],
+    stats: { totalNotes: 1, emptyNotes: 0, untaggedNotes: 1, uniqueTags: 0 },
+    source: 'obsidian',
   };
 }

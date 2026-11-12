@@ -194,7 +194,9 @@
     "ariaLabel": "Osnova poznámky",
     "hide": "Skrýt osnovu",
     "copyHeadingLink": "Kopírovat odkaz na nadpis",
-    "copyHeadingShortcut": "Kopírovat zástupce nadpisu"
+    "copyHeadingShortcut": "Kopírovat zástupce nadpisu",
+    "copyCalloutLink": "Kopírovat odkaz na callout",
+    "copyCalloutShortcut": "Kopírovat zástupce calloutu"
   },
   "bodyMenu": {
     "cut": "Vyjmout",
@@ -277,6 +279,11 @@
     "showLess": "Zobrazit méně",
     "language": "Jazyk kódu: {{name}}",
     "searchLanguages": "Hledat jazyky",
+    "addTitle": "Přidat titulek",
+    "removeTitle": "Odstranit titulek",
+    "titlePlaceholder": "Název souboru nebo titulek",
+    "collapse": "Sbalit blok kódu",
+    "expand": "Rozbalit blok kódu",
     "placeholder": "Napiš nebo vlož kód. Pro barvy vyber nahoře jazyk."
   },
   "math": {

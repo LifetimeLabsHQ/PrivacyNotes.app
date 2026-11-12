@@ -31,5 +31,9 @@ Die Leiste oben ändert, wie Text aussieht: **fett**, *kursiv*, Überschriften, 
 
 Diese Phrase öffnet deine Notizen. Wo sie liegt, entscheidest du, und du kannst das jederzeit ändern. [[Wie deine Notizen geschützt sind]] erklärt die drei Möglichkeiten.
 
+## Mehr als Notizen
+
+Notizen, Aufgaben, Passwörter, ein Tagebuch, Dateien, ein Kalender, Kontakte und Lesezeichen, dazu Stimmungs- und Medikamenten-Tracking. Eine App, verschlüsselt auf deinem Gerät. Außerdem ein kostenloser Markdown-Editor für die Ordner auf deiner Festplatte, Ninja (⌘K), mit dem du alles über die Tastatur erreichst, und ein Web-Clipper.
+
 > [!tip] Nichts hier ist für immer
 > Jede Notiz in diesem Tresor ist ein Beispiel, diese eingeschlossen. Ändere sie, verschieb sie oder lösch sie.

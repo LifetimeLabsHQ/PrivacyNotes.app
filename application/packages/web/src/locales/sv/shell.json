@@ -397,6 +397,7 @@
     "modeRich": "Formaterad",
     "modeSource": "Markdown",
     "reopenPrompt": "Din webbläsare behöver behörighet igen efter en omladdning. Mappen finns sparad, så det räcker med ett klick.",
+    "reopenPromptDesktop": "Välj {{name}} en gång till så att appen kan öppna den igen. Inget i mappen har ändrats.",
     "reopenFolder": "Öppna {{name}} igen",
     "new": "Ny",
     "saveToNotes": "Spara i mina anteckningar",
@@ -698,6 +699,7 @@
       "bookClub": "Bokcirkel",
       "rent": "Betala hyran"
     },
+    "feedReadOnly": "Från {{name}}. Du kan bara ändra den här händelsen i den kalendern.",
     "nothingFor_one": "Inget på {{count}} dag",
     "more_one": "+{{count}} till"
   },
@@ -826,7 +828,8 @@
       "file": "Ladda upp en fil",
       "contact": "Ny kontakt",
       "bookmark": "Nytt bokmärke",
-      "clip": "Klipp webbsida"
+      "clip": "Klipp webbsida",
+      "writeNote": "Skriv en anteckning"
     },
     "keepAsText": "Behåll som text",
     "placeholder": "Titel, dag, tid, upprepning...",
@@ -983,6 +986,7 @@
     "stepConnect": "Anslut",
     "makeCode": "Skapa en kod",
     "connectHint": "Skapa en engångskod och klistra in den i tillägget.",
+    "secondBrowserPro": "En webbläsare är ansluten. En andra kräver Pro.",
     "thisBrowser": "Den här webbläsaren",
     "otherApps": "Appar för dator och telefon:",
     "desktopAll": "Alla nedladdningar",
@@ -1040,7 +1044,7 @@
   "extensionConnect": {
     "clips": "Webbklippare",
     "clipsHint": "Spara webbplatser som anteckningar.",
-    "loginsHint": "Inloggningar, kort, SSH-nycklar och bokmärken för webbplatsen du är på, bara kopiering. Låst med en egen PIN eller lösenkod.",
+    "loginsHint": "Inloggningar, kort, SSH-nycklar och bokmärken för webbplatsen du är på, att kopiera eller fylla i. Låst med en egen PIN eller lösenkod.",
     "pickOne": "Slå på minst en.",
     "codeLabel": "Kod till tillägget",
     "oneUse": "Fungerar en gång, i 10 minuter.",

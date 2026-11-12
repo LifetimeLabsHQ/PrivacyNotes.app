@@ -25,6 +25,8 @@ const SEALED_SETTINGS = [
   'deviceLabels',
   'extensionKeys',
   'customThemes',
+  // A private calendar address is a secret. Spec: docs/internal/specs/calendar-pillar-spec.md (section 14)
+  'calendarFeeds',
   // Home's layout names tags. Spec: docs/internal/specs/dashboard.md (section 7)
   'dashboard',
   'factors',

@@ -16,7 +16,7 @@ import type { LocalNote } from '../db';
 import { missingItemsLabel } from '../export';
 import type { FolderDef } from '../folders';
 import { destinationGroups, existingImportFolder, fileUnfiled, type ImportDestination, type ImportTarget } from './destination';
-import { Archive, ArrowCounterClockwise, Heartbeat, BookmarkSimple, BookOpenText, BracketsCurly, CalendarDots, Check, CircleNotch, Download, FileHtml, FileText, FileZip, Globe, Key, Lock, LockOpen, Note, Upload, AddressBook, NEW_GLYPHS } from '../icons';
+import { Archive, ArrowCounterClockwise, ClockCounterClockwise, Heartbeat, BookmarkSimple, BookOpenText, BracketsCurly, CalendarDots, CalendarPlus, Check, CircleNotch, Download, FileHtml, FileText, FileZip, Globe, Key, Lock, LockOpen, Note, Upload, AddressBook, NEW_GLYPHS, EXPORT_GLYPHS } from '../icons';
 import { goesToCalendarFile } from '../schedule';
 import { fetchQuotaUsage, recalculateQuota } from '../devices';
 import { estimateNoteStoredBytes, estimateBlobBytes } from '../notesViewUtils';
@@ -31,7 +31,9 @@ import { contactPhotoOptions, processImage } from '../imageProcessing';
 import { SETTINGS_BTN, SETTINGS_HELP, SectionEyebrow, SettingsCallout, SettingsTabStrip, StatTile, settingsTabClass, ROW_TITLE, SETTINGS_CARD as CARD, SETTINGS_CARD_GRID as CARD_GRID, SETTINGS_CARD_REST as CARD_REST, SettingsCardIcon as RowIcon } from '../settingsUI';
 import { Button, Callout, Checkbox, ListSearchInput, Modal, Select, Spinner, TextField } from '../ui';
 import { calendarFeedUrl, downloadCalendarFeed } from './calendarFeed';
-import { ClipError, type ClipErrorReason } from '../clipDownload';
+import { ClipError } from '../clipDownload';
+import { sessionTokenOf } from '../sessionToken';
+import { FEED_ERROR, SubscribedFeeds, useFeedSubscribe, type FeedsControl } from '../calendarFeedUI';
 import { activeLocale } from '../languages';
 import { helpPath } from '../localeRoutes';
 import { siteHref } from '../siteLinks';
@@ -39,6 +41,7 @@ import { HelpChip } from '../HelpChip';
 import { WellnessExportTab } from '../stats/WellnessExport';
 import { IconUpgrade } from '../UpgradeModal';
 import { usePaneTab } from '../settingsPaneTab';
+import { AutomaticCallout, AutomaticPane } from '../autoBackup/AutomaticPane';
 
 /**
  * The `accept` list to hand the file picker, widened on Android.
@@ -158,6 +161,11 @@ function importerIdToSource(id: string): ImportSource | null {
   return (known as string[]).includes(id) ? (id as ImportSource) : null;
 }
 
+/** Every tab of the window; each Settings page shows its own subset. */
+export type ImportTab = 'import' | 'export' | 'wellness' | 'manual' | 'automatic' | 'restore';
+const TRANSFER_TABS: readonly ImportTab[] = ['import', 'export', 'wellness'];
+const BACKUP_TABS: readonly ImportTab[] = ['manual', 'automatic', 'restore'];
+
 /**
  * Import / Export modal - tabbed shell.
  *
@@ -166,9 +174,10 @@ function importerIdToSource(id: string): ImportSource | null {
  *   2. parse  → user picks a file; we read, parse, show preview + warnings
  *   3. apply  → user confirms; we write to Dexie, close, parent triggers sync
  *
- * Export tab - the whole-set exports (.zip of md, .zip of html, .json
- * backup, encrypted variants), plus the bookmarks-only and vault-only
- * writers when there is something for them to write. Callbacks come from
+ * Export tab - the portable whole-set exports (.zip of md, .zip of html,
+ * .json), plus the bookmarks-only and vault-only writers when there is
+ * something for them to write. The full backups (.pnbackupz, .pnbackup,
+ * .zip) are the Manual tab of the Backup page. Callbacks come from
  * the parent so the telemetry wrapper stays in one place.
  *
  * The parent wires an `onImported` callback that refreshes the notes
@@ -178,7 +187,8 @@ function importerIdToSource(id: string): ImportSource | null {
 export function ImportModal({
   onClose,
   onImported,
-  initialTab = 'import',
+  section = 'transfer',
+  initialTab,
   notes,
   onExportAllMdZip,
   onExportAllHtmlZip,
@@ -189,6 +199,7 @@ export function ImportModal({
   onExportContacts,
   onExportCalendar,
   onExportDrawings,
+  onExportNotesMdZip,
   onImportEncrypted,
   onExportEncryptedZip,
   decryptFullBackup,
@@ -201,6 +212,7 @@ export function ImportModal({
   onUndoImportFolders,
   embedded = false,
   wellness,
+  calendarFeeds,
 }: {
   onClose: () => void;
   onImported: (count: number, skippedDuplicates?: number, repaired?: RestoreCounts) => void;
@@ -208,7 +220,10 @@ export function ImportModal({
   embedded?: boolean;
   /** The tracker data for the Wellness tab; without it the tab is not shown. */
   wellness?: Omit<ComponentProps<typeof WellnessExportTab>, 'notes' | 'Row'>;
-  initialTab?: 'import' | 'export' | 'restore' | 'wellness';
+  /** Which Settings page this is: Transfer (Import, Export, Trackers) or
+   *  Backup (Manual, Automatic, Restore). */
+  section?: 'transfer' | 'backup';
+  initialTab?: ImportTab;
   notes: LocalNote[];
   onExportAllMdZip: (ns: LocalNote[]) => void;
   onExportAllHtmlZip: (ns: LocalNote[]) => void;
@@ -221,6 +236,8 @@ export function ImportModal({
   /** Every drawing as a .excalidraw file in one .zip; the card shows only
    *  when this is wired (behind the export-all PIN gate). */
   onExportDrawings?: (ns: LocalNote[]) => void;
+  /** Only the notes, as Markdown files in one .zip (#682). */
+  onExportNotesMdZip: (ns: LocalNote[]) => void;
   onImportEncrypted: (file: File) => Promise<RestoreCounts & { imported: number }>;
   onExportEncryptedZip: (ns: LocalNote[]) => void;
   /** Decrypts a .pnbackupz into the plain full-backup zip; the modal
@@ -257,6 +274,8 @@ export function ImportModal({
     settings: { itemStyles?: unknown; customThemes?: unknown },
     savedToFinal: ReadonlyMap<string, string>,
   ) => void;
+  /** The subscribed calendars and their one writer, for the Webcal panel (#619). */
+  calendarFeeds?: FeedsControl;
 }) {
   const { t } = useTranslation('importExport');
   const { auth, supabase } = useAuth();
@@ -268,7 +287,12 @@ export function ImportModal({
     | { kind: 'applying'; importer: Importer }
     | { kind: 'error'; importer: Importer; message: string };
 
-  const [tab, setTab] = usePaneTab<'import' | 'export' | 'restore' | 'wellness'>('importExport', initialTab);
+  const backup = section === 'backup';
+  const tabs = backup ? BACKUP_TABS : TRANSFER_TABS;
+  const [tab, setTab] = usePaneTab<ImportTab>(
+    backup ? 'backup' : 'importExport',
+    initialTab && tabs.includes(initialTab) ? initialTab : tabs[0] ?? 'import',
+  );
   const [phase, setPhase] = useState<Phase>({ kind: 'pick' });
   const restoreGate = useRestoreGate();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -667,22 +691,26 @@ export function ImportModal({
       embedded={embedded}
       embeddedClassName="flex-1 min-h-0 flex flex-col text-pn"
       onClose={onClose}
-      title={tab === 'import' ? t('shell.importTitle') : tab === 'export' || tab === 'wellness' ? t('shell.exportTitle') : t('shell.restoreTitle')}
+      title={tab === 'import' ? t('shell.importTitle') : tab === 'export' || tab === 'wellness' ? t('shell.exportTitle') : tab === 'restore' ? t('shell.restoreTitle') : t('shell.backupTitle')}
       header="bar"
-      className="max-w-lg max-h-[85vh] flex flex-col"
+      // The width of a one-page Settings window, which the source tiles were
+      // laid out for: at max-w-lg they squeezed into a narrow column.
+      className="max-w-2xl max-h-[85vh] flex flex-col"
     >
         <SettingsTabStrip
           role="tablist"
-          aria-label={t('shell.tablistLabel')}
+          aria-label={backup ? t('shell.backupTablistLabel') : t('shell.tablistLabel')}
           className="shrink-0 px-4 sm:px-6"
         >
           {([
             { id: 'import' as const, setting: 'import.import', label: t('shell.tabImport'), icon: <Download aria-hidden="true" /> },
             { id: 'export' as const, setting: 'import.export', label: t('shell.tabExport'), icon: <Upload aria-hidden="true" /> },
+            { id: 'manual' as const, setting: 'backup.manual', label: t('shell.tabManual'), icon: <Archive aria-hidden="true" /> },
+            { id: 'automatic' as const, setting: 'import.automatic', label: t('shell.tabAutomatic'), icon: <ClockCounterClockwise aria-hidden="true" /> },
             { id: 'restore' as const, setting: 'import.restore', label: t('shell.tabRestore'), icon: <ArrowCounterClockwise aria-hidden="true" /> },
             // Shown when the pane has the tracker data to export.
             ...(wellness ? [{ id: 'wellness' as const, setting: 'import.wellness', label: t('notes:settings.trackersLabel'), icon: <Heartbeat aria-hidden="true" /> }] : []),
-          ]).map((tb) => (
+          ]).filter((tb) => tabs.includes(tb.id)).map((tb) => (
             <button
               key={tb.id}
               data-setting={tb.setting}
@@ -703,6 +731,7 @@ export function ImportModal({
               {phase.kind === 'pick' && (
                   <ImportPickPhase
                     onPick={handlePickImporter}
+                    calendarFeeds={calendarFeeds}
                     onCalendarFeed={(file) => {
                       const calendar = IMPORTERS.find((i) => i.id === 'google-calendar');
                       // The Google Calendar importer reads any .ics; the
@@ -817,6 +846,16 @@ export function ImportModal({
                 <ErrorPhase importerLabel={sourceLabel(phase.importer, t)} message={phase.message} />
               )}
             </>
+          ) : tab === 'automatic' ? (
+            <AutomaticPane />
+          ) : tab === 'manual' ? (
+            <ManualBackupPanel
+              notes={notes}
+              onExportAllMdZip={onExportAllMdZip}
+              onExportEncrypted={onExportEncrypted}
+              onExportEncryptedZip={onExportEncryptedZip}
+              automatic={<AutomaticCallout onOpen={() => setTab('automatic')} />}
+            />
           ) : tab === 'wellness' && wellness ? (
             <WellnessExportTab notes={notes} {...wellness} Row={ActionRow} />
           ) : (
@@ -824,15 +863,13 @@ export function ImportModal({
             // more than one backup, and the progress window sits above it.
             <ExportPanel
               notes={notes}
-              onExportAllMdZip={onExportAllMdZip}
               onExportAllHtmlZip={onExportAllHtmlZip}
               onExportAllJson={onExportAllJson}
-              onExportEncrypted={onExportEncrypted}
-              onExportEncryptedZip={onExportEncryptedZip}
               onExportBookmarks={onExportBookmarks}
               onExportContacts={onExportContacts}
               onExportCalendar={onExportCalendar}
               onExportDrawings={onExportDrawings}
+              onExportNotesMdZip={onExportNotesMdZip}
               onExportVault={onExportVault}
             />
           )}
@@ -841,7 +878,7 @@ export function ImportModal({
         {/* A picking tab needs no footer: the X closes the window, and a lone
             line there reads as stray text. The footer comes back while an
             import runs, for Back and Import. */}
-        {!(tab === 'export' || tab === 'wellness' || phase.kind === 'pick') && (
+        {!(tab === 'export' || tab === 'manual' || tab === 'automatic' || tab === 'wellness' || phase.kind === 'pick') && (
         <div className="px-6 py-3 border-t border-divider flex items-center justify-between gap-3">
           {phase.kind === 'preview' ? (
             <>
@@ -906,6 +943,7 @@ const IMPORT_ICON: Record<string, string> = {
   'simplenote': '/help/icons/simplenote.svg',
   'standard-notes': '/help/icons/standard-notes.webp',
   'obsidian': '/help/icons/obsidian.svg',
+  'obsidian-canvas': '/help/icons/obsidian.svg',
   'notesnook': '/help/icons/notesnook.svg',
   'joplin': '/help/icons/joplin.svg',
   'upnote': '/help/icons/upnote.svg',
@@ -917,7 +955,7 @@ const IMPORT_ICON: Record<string, string> = {
   'nextcloud-notes': '/help/icons/nextcloud-notes.svg',
 };
 
-/** Maps importer ids to their /help/import/<slug>/ guide slug. Slugs match
+/** Maps importer ids to their /help/import/<slug> guide slug. Slugs match
  *  ids 1:1 except markdown-folder, whose guide lives under "markdown". */
 const GUIDE_SLUG: Record<string, string> = {
   'apple-journal': 'apple-journal',
@@ -988,6 +1026,7 @@ const SOURCE_DESC_KEY: Record<string, string> = {
   'simplenote': 'sourceDesc.simplenote',
   'standard-notes': 'sourceDesc.standardNotes',
   'obsidian': 'sourceDesc.obsidian',
+  'obsidian-canvas': 'sourceDesc.obsidianCanvas',
   'notesnook': 'sourceDesc.notesnook',
   'joplin': 'sourceDesc.joplin',
   'upnote': 'sourceDesc.upnote',
@@ -1065,7 +1104,7 @@ function SourcePanel({ id, label, desc, children }: { id: string; label: string;
 }
 
 /** The panel actions of one importer: Import opens the file picker, Guide
- *  opens its /help/import/<slug>/ page when one exists. */
+ *  opens its /help/import/<slug> page when one exists. */
 function ImporterActions({ imp, onPick }: { imp: Importer; onPick: (imp: Importer) => void }) {
   const { t } = useTranslation('importExport');
   const guideSlug = GUIDE_SLUG[imp.id];
@@ -1090,51 +1129,42 @@ function ImporterActions({ imp, onPick }: { imp: Importer; onPick: (imp: Importe
   );
 }
 
-/** The message for a calendar address that did not download. */
-const FEED_ERROR: Record<ClipErrorReason, string> = {
-  'refused': 'webcal.errors.refused',
-  'wrong-type': 'webcal.errors.wrongType',
-  'too-large': 'webcal.errors.tooLarge',
-  'timeout': 'webcal.errors.timeout',
-  'blocked': 'webcal.errors.blocked',
-  'offline': 'webcal.errors.offline',
-  'limit': 'webcal.errors.limit',
-  'demo-limit': 'webcal.errors.limit',
-  'failed': 'webcal.errors.failed',
-};
-
-/** The Webcal form: a calendar address, downloaded once and handed to the
- *  calendar import as a file. It sits in the Webcal tile's panel. The address is never kept or shown back in a
- *  message. Spec: docs/internal/issues/0548.md (Spec, design A) */
-function CalendarFeedForm({ onFile }: { onFile: (file: File) => void }) {
+/** The Webcal form: a calendar address, either downloaded once and handed
+ *  to the calendar import as a file, or subscribed to (#619): kept in the
+ *  synced settings and shown read-only in the calendars, downloaded again by
+ *  each device. Under the field, the subscribed calendars with Remove. The
+ *  address is never shown back in a message.
+ *  Spec: docs/internal/issues/0548.md (Spec, design A), docs/internal/specs/calendar-pillar-spec.md (section 14) */
+function CalendarFeedForm({ onFile, feeds }: { onFile: (file: File) => void; feeds?: FeedsControl }) {
   const { t } = useTranslation('importExport');
   const { supabase } = useAuth();
   const [address, setAddress] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const sub = useFeedSubscribe(feeds);
+  const busy = importing || sub.busy;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const url = calendarFeedUrl(address);
     if (!url) {
-      setError(t('webcal.errors.invalid'));
+      sub.setError(t('webcal.errors.invalid'));
       return;
     }
-    setBusy(true);
-    setError(null);
+    setImporting(true);
+    sub.setError(null);
     try {
-      const file = await downloadCalendarFeed(url, async () => (await supabase.auth.getSession()).data.session?.access_token ?? null);
+      const file = await downloadCalendarFeed(url, sessionTokenOf(supabase));
       onFile(file);
     } catch (err) {
-      setError(t(FEED_ERROR[err instanceof ClipError ? err.reason : 'failed']));
-      setBusy(false);
+      sub.setError(t(FEED_ERROR[err instanceof ClipError ? err.reason : 'failed']));
+      setImporting(false);
     }
   }
 
   return (
-    <form onSubmit={submit} noValidate className="min-w-0 flex-1">
-      <div className="flex items-start gap-2">
-        <div className="min-w-0 flex-1">
+    <div className="min-w-0 flex-1 basis-full space-y-3">
+      <form onSubmit={submit} noValidate className="flex flex-wrap items-start gap-2">
+        <div className="min-w-48 flex-1">
           <TextField
             size="sm"
             type="url"
@@ -1146,17 +1176,28 @@ function CalendarFeedForm({ onFile }: { onFile: (file: File) => void }) {
             value={address}
             onChange={(e) => {
               setAddress(e.target.value);
-              setError(null);
+              sub.setError(null);
             }}
-            error={error ?? undefined}
+            error={sub.error ?? undefined}
             className="w-full"
           />
         </div>
-        <Button type="submit" variant="primary" icon={busy ? <Spinner size={15} className="text-current" /> : <Download aria-hidden="true" />} disabled={busy || !address.trim()}>
-          {busy ? t('webcal.downloading') : t('webcal.import')}
+        <Button type="submit" variant="primary" icon={importing ? <Spinner size={15} className="text-current" /> : <Download aria-hidden="true" />} disabled={busy || !address.trim()}>
+          {importing ? t('webcal.downloading') : t('webcal.import')}
         </Button>
-      </div>
-    </form>
+        {feeds && (
+          <Button
+            type="button"
+            icon={sub.busy ? <Spinner size={15} className="text-current" /> : <CalendarPlus aria-hidden="true" />}
+            disabled={busy || !address.trim()}
+            onClick={() => void sub.subscribe(address).then((ok) => ok && setAddress(''))}
+          >
+            {sub.busy ? t('webcal.downloading') : t('webcal.subscribe')}
+          </Button>
+        )}
+      </form>
+      {feeds && <SubscribedFeeds feeds={feeds} />}
+    </div>
   );
 }
 
@@ -1181,7 +1222,8 @@ const FILE_TYPES: Record<string, string> = {
   'markdown-folder': '.md, .txt, .zip',
   'nextcloud-notes': '.zip',
   'notesnook': '.zip',
-  'obsidian': '.zip',
+  'obsidian': '.zip, .canvas',
+  'obsidian-canvas': '.canvas, .zip',
   'samsung-notes': '.docx, .txt, .zip',
   'simplenote': '.zip, .json',
   'standard-notes': '.zip, .txt',
@@ -1197,7 +1239,7 @@ const FILE_TYPES: Record<string, string> = {
  *  The search reads the name and the file types, so ".enex" finds Evernote.
  *  The descriptions live in the panel a card opens.
  *  Spec: docs/internal/design/patterns/151-160.md (section 157) */
-function ImportPickPhase({ onPick, onCalendarFeed }: { onPick: (imp: Importer) => void; onCalendarFeed: (file: File) => void }) {
+function ImportPickPhase({ onPick, onCalendarFeed, calendarFeeds }: { onPick: (imp: Importer) => void; onCalendarFeed: (file: File) => void; calendarFeeds?: FeedsControl }) {
   const { t } = useTranslation('importExport');
   const importerMap = Object.fromEntries(IMPORTERS.map((i) => [i.id, i]));
   const [openId, setOpenId] = useState<string | null>(null);
@@ -1207,9 +1249,12 @@ function ImportPickPhase({ onPick, onCalendarFeed }: { onPick: (imp: Importer) =
   const toggle = (id: string) => setOpenId((cur) => (cur === id ? null : id));
   // The password importers had a tab of their own that people did not find,
   // and then sat among the general sources (#608); they get a group of their
-  // own. Each group is alphabetical.
+  // own. Drawings too: Excalidraw is no note app. Obsidian sits in both:
+  // its vault with the notes, its canvases alone as Obsidian Canvas. Each
+  // group is alphabetical.
   const groups = [
-    { key: 'notes', icon: Note, title: t('shell:tagsRail.notes'), ids: ['apple-journal', 'apple-notes', 'bear', 'evernote', 'excalidraw', 'google-keep', 'ia-writer', 'joplin', 'markdown-folder', 'nextcloud-notes', 'notesnook', 'obsidian', 'samsung-notes', 'simplenote', 'standard-notes', 'typora', 'upnote', 'zettlr'] },
+    { key: 'notes', icon: Note, title: t('shell:tagsRail.notes'), ids: ['apple-journal', 'apple-notes', 'bear', 'evernote', 'google-keep', 'ia-writer', 'joplin', 'markdown-folder', 'nextcloud-notes', 'notesnook', 'obsidian', 'samsung-notes', 'simplenote', 'standard-notes', 'typora', 'upnote', 'zettlr'] },
+    { key: 'drawings', icon: NEW_GLYPHS.drawing, title: t('shell:tagsRail.drawings'), ids: ['excalidraw', 'obsidian-canvas'] },
     { key: 'calendar', icon: CalendarDots, title: t('importPick.groupCalendar'), ids: ['browser-bookmarks', 'vcard', 'google-calendar', WEBCAL_ID] },
     { key: 'passwords', icon: Key, title: t('shell.tabVault'), ids: ['bitwarden', 'browser-passwords'] },
   ];
@@ -1238,7 +1283,7 @@ function ImportPickPhase({ onPick, onCalendarFeed }: { onPick: (imp: Importer) =
           />
           {open && (
             <SourcePanel id={panelId(id)} label={t('webcal.title')} desc={t('webcal.desc')}>
-              <CalendarFeedForm onFile={onCalendarFeed} />
+              <CalendarFeedForm onFile={onCalendarFeed} feeds={calendarFeeds} />
             </SourcePanel>
           )}
         </Fragment>
@@ -1397,12 +1442,14 @@ function computeTypeCounts(notes: ImportedNote[]): { label: string; count: numbe
   return parts;
 }
 
-/** Format type counts for the confirm button label. */
+/** Format type counts for the confirm button label. Several types read as
+ *  one total: the stat tiles above the button already show each type, and a
+ *  list of seven types made a button of two lines. */
 function formatTypeCountsShort(notes: ImportedNote[]): string {
   const parts = computeTypeCounts(notes);
   if (parts.length === 0) return i18n.t('importExport:counts.zeroItems');
   if (parts.length === 1) return `${parts[0]!.count} ${parts[0]!.label}`;
-  return parts.map((p) => `${p.count} ${p.label}`).join(', ');
+  return i18n.t('common:quickSwitcher.tagItems', { count: parts.reduce((sum, p) => sum + p.count, 0) });
 }
 
 /** The "Add to" row: where the import puts its items. */
@@ -1787,30 +1834,27 @@ function ErrorPhase({
  */
 function ExportPanel({
   notes,
-  onExportAllMdZip,
   onExportAllHtmlZip,
   onExportAllJson,
-  onExportEncrypted,
-  onExportEncryptedZip,
   onExportVault,
   onExportBookmarks,
   onExportContacts,
   onExportCalendar,
   onExportDrawings,
+  onExportNotesMdZip,
 }: {
   notes: LocalNote[];
-  onExportAllMdZip: (ns: LocalNote[]) => void;
   onExportAllHtmlZip: (ns: LocalNote[]) => void;
   onExportAllJson: (ns: LocalNote[]) => void;
-  onExportEncrypted: (ns: LocalNote[]) => void;
-  onExportEncryptedZip: (ns: LocalNote[]) => void;
   onExportVault: (ns: LocalNote[]) => void;
   onExportBookmarks: (ns: LocalNote[]) => void;
   onExportContacts: (ns: LocalNote[]) => void;
   onExportCalendar: (ns: LocalNote[]) => void;
   onExportDrawings?: (ns: LocalNote[]) => void;
+  onExportNotesMdZip: (ns: LocalNote[]) => void;
 }) {
   const { t } = useTranslation('importExport');
+  const hasNotes = notes.some((n) => n.type === 'note' && n.deleted !== 1 && n.trashed !== 1);
   const hasDrawings = notes.some((n) => n.type === 'drawing' && n.deleted !== 1 && n.trashed !== 1);
   const hasCalendar = notes.some(goesToCalendarFile);
   const hasContacts = notes.some((n) => n.type === 'contact' && n.trashed !== 1);
@@ -1821,15 +1865,11 @@ function ExportPanel({
     (n) => n.type === 'link' && n.deleted !== 1 && n.trashed !== 1,
   );
   const [openId, setOpenId] = useState<string | null>(null);
-  const fullBackups: { setting: string; title: string; desc: string; locked?: boolean; unlocked?: boolean; glyph?: ReactNode; src?: string; run: () => void }[] = [
-    { setting: 'export.encryptedZip', title: t('export.encryptedZipBackupTitle'), desc: t('export.encryptedZipBackupDesc'), locked: true, src: PN_ICON, run: () => onExportEncryptedZip(notes) },
-    { setting: 'export.encryptedBackup', title: t('export.encryptedBackupTitle'), desc: t('export.encryptedBackupDesc'), locked: true, src: PN_ICON, run: () => onExportEncrypted(notes) },
-    { setting: 'export.zipBackup', title: t('export.zipBackupTitle'), desc: t('export.zipBackupDesc'), unlocked: true, glyph: <FileZip size={20} aria-hidden="true" />, run: () => onExportAllMdZip(notes) },
-  ];
   // The one-kind files (bookmarks, contacts, calendar, drawings, vault) sit with the
   // portable formats: each had a section of one row. Each appears once there
   // is something for it to write.
   const portable: ExportEntry[] = [
+    ...(hasNotes ? [{ setting: 'export.notesMarkdown', title: t('export.notesMarkdownTitle'), desc: t('export.notesMarkdownDesc'), icon: <RowIcon glyph={<EXPORT_GLYPHS.markdown size={20} aria-hidden="true" />} />, run: () => onExportNotesMdZip(notes) }] : []),
     { setting: 'export.htmlArchive', title: t('export.htmlArchiveTitle'), desc: t('export.htmlArchiveDesc'), icon: <RowIcon glyph={<FileHtml size={20} aria-hidden="true" />} />, run: () => onExportAllHtmlZip(notes) },
     { setting: 'export.textBackup', title: t('export.textBackupTitle'), desc: t('export.textBackupDesc'), icon: <RowIcon glyph={<BracketsCurly size={20} aria-hidden="true" />} />, run: () => onExportAllJson(notes) },
     ...(hasBookmarks ? [{ setting: 'export.bookmarks', title: t('export.bookmarksExportTitle'), desc: t('export.bookmarksExportDesc'), icon: <RowIcon glyph={<BookmarkSimple size={20} aria-hidden="true" />} />, run: () => onExportBookmarks(notes) }] : []),
@@ -1869,9 +1909,44 @@ function ExportPanel({
       <p className={SETTINGS_HELP}>
         {t('export.intro')}
       </p>
+      <SourceGroup icon={FileText} title={t('export.portableHeading')}>{portable.map(cells)}</SourceGroup>
 
-      {/* Full backup keeps the Restore rows: their names are long, so a
-          card would cut them. */}
+      {/* Help links sit at the foot of a settings pane, after the last
+          section: the question you arrive with, then the one you leave with. */}
+      <HelpChip surface="export" />
+      <HelpChip surface="exportEnd" />
+    </div>
+  );
+}
+
+/**
+ * The Manual tab of Backup: the three full backups, each one file of
+ * everything. They keep the Restore rows: their names are long, so a card
+ * would cut them. The automatic backups callout sits above them.
+ */
+function ManualBackupPanel({
+  notes,
+  onExportAllMdZip,
+  onExportEncrypted,
+  onExportEncryptedZip,
+  automatic,
+}: {
+  notes: LocalNote[];
+  onExportAllMdZip: (ns: LocalNote[]) => void;
+  onExportEncrypted: (ns: LocalNote[]) => void;
+  onExportEncryptedZip: (ns: LocalNote[]) => void;
+  automatic: ReactNode;
+}) {
+  const { t } = useTranslation('importExport');
+  const fullBackups: { setting: string; title: string; desc: string; locked?: boolean; unlocked?: boolean; glyph?: ReactNode; src?: string; run: () => void }[] = [
+    { setting: 'export.encryptedZip', title: t('export.encryptedZipBackupTitle'), desc: t('export.encryptedZipBackupDesc'), locked: true, src: PN_ICON, run: () => onExportEncryptedZip(notes) },
+    { setting: 'export.encryptedBackup', title: t('export.encryptedBackupTitle'), desc: t('export.encryptedBackupDesc'), locked: true, src: PN_ICON, run: () => onExportEncrypted(notes) },
+    { setting: 'export.zipBackup', title: t('export.zipBackupTitle'), desc: t('export.zipBackupDesc'), unlocked: true, glyph: <FileZip size={20} aria-hidden="true" />, run: () => onExportAllMdZip(notes) },
+  ];
+  return (
+    <div className="space-y-3">
+      <p className={SETTINGS_HELP}>{t('export.manualIntro')}</p>
+      {automatic}
       <section className="space-y-1.5">
         <SectionEyebrow icon={Archive} className="pt-1">{t('export.fullBackupHeading')}</SectionEyebrow>
         {fullBackups.map((e) => {
@@ -1879,12 +1954,7 @@ function ExportPanel({
           return <ActionRow key={e.setting} setting={e.setting} title={name} type={type} description={e.desc} locked={e.locked} unlocked={e.unlocked} glyph={e.glyph} src={e.src} onClick={e.run} />;
         })}
       </section>
-      <SourceGroup icon={FileText} title={t('export.portableHeading')}>{portable.map(cells)}</SourceGroup>
-
-      {/* Help links sit at the foot of a settings pane, after the last
-          section: the question you arrive with, then the one you leave with. */}
       <HelpChip surface="export" />
-      <HelpChip surface="exportEnd" />
     </div>
   );
 }

@@ -60,6 +60,10 @@ import { useEscapeToClose } from './useEscapeToClose';
 import { bindingKeyText, keyText } from './shortcutMatch';
 import { insertDateText } from './editorCommands';
 import { insertKanbanBoard } from './KanbanBoard';
+import { LocationPanel } from './notesView/NoteLocationChip';
+import { Popover } from './ui';
+import { PlaceMapNode } from './PlaceMapNode';
+import type { NoteLocation } from './noteLocation';
 import { FormatBarContext } from './formatBarContext';
 import { formatBarItem } from './formatBar';
 import { FORMAT_BAR_LOOK } from './formatBarItems';
@@ -96,6 +100,8 @@ const LookPicker = lazy(() => import('./looks/LookPicker').then((m) => ({ defaul
 
 type ToolbarProps = {
   editor: TipTapEditor | null;
+  /** The note's own place: Insert > Location opens prefilled with it. */
+  place?: NoteLocation;
   /** Pass -1 on mobile to remove toolbar buttons from iOS form-assistant chain. */
   mobileTabIndex?: number;
   /** Opens the URL link popover (chain icon / Cmd+K). */
@@ -135,7 +141,7 @@ type ToolbarProps = {
 // The heading button's glyph for the level the caret is in, 0 for body text.
 const HEADING_ICONS = [TextH, TextHOne, TextHTwo, TextHThree, TextHFour, TextHFive, TextHSix] as const;
 
-export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef, onAudioStateChange, audioStopRef, hideEncryptedMedia = false, onInsertFiles, onShowMarkdown }: ToolbarProps) {
+export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, linkBtnRef, onAudioStateChange, audioStopRef, hideEncryptedMedia = false, onInsertFiles, onShowMarkdown }: ToolbarProps) {
   const { t } = useTranslation('editor');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
@@ -406,6 +412,7 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
   const [insertOpen, setInsertOpen] = useState(false);
   // Insert > Icons & logos: the look picker, whose pick goes into the text.
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
   const insertMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -823,6 +830,8 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
     spoiler: { hint: '||x||', active: isActive('spoiler'), run: () => editor.chain().focus().toggleSpoiler().run() },
     footnote: { hint: '[^1]', active: false, run: () => insertFootnote(editor) },
     icon: { hint: null, active: false, run: () => setIconPickerOpen(true) },
+    // The note's place window, prefilled; Insert map puts a map block at the caret.
+    location: { hint: null, active: false, run: () => setLocationOpen(true) },
     // The touch home of the selection menu's "Copy as ..." entries (#546).
     copyAsPlain: { hint: null, active: false, run: () => copySelectionAs(editor, 'plain') },
     copyAsMarkdown: { hint: null, active: false, run: () => copySelectionAs(editor, 'markdown') },
@@ -857,7 +866,7 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
   // The recording and "from Files" buttons only make an encrypted blob, which
   // a Markdown folder note cannot hold; the picture and file buttons stay when
   // the folder takes their files (`onInsertFiles`). The Linux app has no
-  // recorder (getUserMedia is dead in WebKitGTK; docs/contrib/gotchas.md). An item
+  // recorder (its WebKitGTK has no MediaRecorder; docs/contrib/gotchas.md). An item
   // this editor does not offer is left out wherever it was placed.
   const MEDIA = new Set(onInsertFiles ? ['audio', 'fromFiles'] : ['image', 'attach', 'audio', 'fromFiles']);
   // "Customize toolbar" is the door to Settings > Toolbar, where this bar is
@@ -1152,6 +1161,29 @@ export function Toolbar({ editor, mobileTabIndex, onOpenLinkPopover, linkBtnRef,
         className="hidden"
         onChange={handleAttachmentPick}
       />
+      {editor && (
+        <Popover
+          open={locationOpen}
+          anchorRef={rightClusterRef}
+          onClose={() => setLocationOpen(false)}
+          title={t('notes:location.title')}
+          align="end"
+          className="w-80"
+        >
+          <LocationPanel
+            key={locationOpen ? 'open' : 'closed'}
+            place={place}
+            readOnly={false}
+            startEditing
+            saveText={t('notes:location.insertMap')}
+            onDone={() => setLocationOpen(false)}
+            onSave={async (loc) => editor.chain().focus().insertContent({
+              type: PlaceMapNode.name,
+              attrs: { lat: loc.lat, lng: loc.lng, label: loc.label ?? null },
+            }).run()}
+          />
+        </Popover>
+      )}
       {iconPickerOpen && (
         <Suspense fallback={null}>
           <LookPicker

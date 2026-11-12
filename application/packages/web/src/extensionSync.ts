@@ -47,6 +47,7 @@ import {
   unpackInboxPicture,
   type CopyEntry,
   type InboxKind,
+  type InboxNote,
 } from '@notes/shared/extension';
 import { db, notesWriteCount, type LocalNote } from './db';
 import { createNote, normalizeTag, updateNote } from './notesRepo';
@@ -87,7 +88,8 @@ export interface CopyWrite {
 
 /** The server calls of one pass, so the sync simulator can run the real pass. */
 export interface ExtensionStore {
-  listInbox(): Promise<InboxRow[]>;
+  /** One page of the inbox, oldest first; `after` continues past the last row of the page before. */
+  listInbox(after?: Pick<InboxRow, 'id' | 'created_at'>): Promise<InboxRow[]>;
   deleteInbox(ids: string[]): Promise<void>;
   state(): Promise<ExtensionState>;
   listCopy(): Promise<CopyRow[]>;
@@ -100,6 +102,8 @@ export interface ExtensionStore {
 
 // Spec: docs/internal/plans/browser-extension-build.md (section 4, inbox and copy caps)
 const INBOX_PAGE = 100;
+// The inbox holds 500 rows at most (extension_inbox_post), so five pages read it all.
+const INBOX_PAGES = 5;
 const COPY_PAGE = 1000;
 
 export function supabaseExtensionStore(supabase: SupabaseClient, pubkey: string): ExtensionStore {
@@ -107,12 +111,15 @@ export function supabaseExtensionStore(supabase: SupabaseClient, pubkey: string)
     if (error) throw new ExtensionCallError(code);
   };
   return {
-    async listInbox() {
-      const { data, error } = await supabase
+    async listInbox(after) {
+      let query = supabase
         .from('extension_inbox')
         .select('id, kind, payload, created_at')
-        .eq('user_pubkey', pubkey)
+        .eq('user_pubkey', pubkey);
+      if (after) query = query.or(`created_at.gt."${after.created_at}",and(created_at.eq."${after.created_at}",id.gt.${after.id})`);
+      const { data, error } = await query
         .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
         .limit(INBOX_PAGE);
       fail('inbox_read', error);
       return (data ?? []) as InboxRow[];
@@ -180,6 +187,9 @@ export interface ExtensionSyncDeps {
   /** The folder a note from the command line goes into: the Agent folder
    *  while it exists, else null (the root). Spec: docs/internal/plans/agent-cli.md (section 3.4) */
   agentFolder?: () => string | null;
+  /** Whether a folder id is in the tree: a quick note's folder may be gone
+   *  by the time the app opens it. Spec: docs/internal/plans/quick-note-694.md (Q3) */
+  hasFolder?: (id: string) => boolean;
   now?: () => number;
 }
 
@@ -359,12 +369,34 @@ function onServer(n: LocalNote | undefined): boolean {
   return !!n && n.dirty === 0 && (n.deleted === 1 || !!n.syncedNonce);
 }
 
+/** Every page of the inbox, not only the first: a row that waits (a newer
+ *  app's version, another app's claim, a clip's missing picture) must never
+ *  hide the rows behind it. The pictures of a clip may sit on the page before. */
 async function adoptInbox(deps: ExtensionSyncDeps): Promise<{ adopted: number; settled: number }> {
-  const rows = await deps.store.listInbox();
-  if (!rows.length) return { adopted: 0, settled: 0 };
+  const out = { adopted: 0, settled: 0 };
+  const pictures = new Map<string, { clip: string; type: string; bytes: Uint8Array }>();
+  let after: InboxRow | undefined;
+  for (let page = 0; page < INBOX_PAGES; page++) {
+    const rows = await deps.store.listInbox(after);
+    if (!rows.length) break;
+    const got = await adoptPage(deps, rows, pictures);
+    out.adopted += got.adopted;
+    out.settled += got.settled;
+    if (got.stopped || rows.length < INBOX_PAGE || !deps.isCurrent()) break;
+    after = rows[rows.length - 1];
+  }
+  return out;
+}
+
+async function adoptPage(
+  deps: ExtensionSyncDeps,
+  rows: InboxRow[],
+  pictures: Map<string, { clip: string; type: string; bytes: Uint8Array }>,
+): Promise<{ adopted: number; settled: number; stopped: boolean }> {
   const now = deps.now?.() ?? Date.now();
   const opened = new Map<string, { row: InboxRow; plain: Uint8Array }>();
   const refuse: string[] = [];
+  let stopped = false;
   for (const row of rows) {
     // A newer app's row waits for that app.
     if (!KNOWN_KINDS.has(row.kind) || inboxRowVersion(row.payload) !== INBOX_VERSION) continue;
@@ -378,7 +410,6 @@ async function adoptInbox(deps: ExtensionSyncDeps): Promise<{ adopted: number; s
     }
   }
 
-  const pictures = new Map<string, { clip: string; type: string; bytes: Uint8Array }>();
   for (const [id, { row, plain }] of opened) {
     if (row.kind !== 'picture') continue;
     const p = parsePicture(plain, id);
@@ -418,15 +449,9 @@ async function adoptInbox(deps: ExtensionSyncDeps): Promise<{ adopted: number; s
         continue;
       }
       if (!mine.has(id) || !deps.isCurrent()) continue;
-      const body = await inboxNoteBody(note.markdown);
-      if (body === null) {
-        refuse.push(id);
-        continue;
-      }
-      const tags = [...new Set(note.tags.map(normalizeTag).filter(Boolean))];
-      if (!deps.isCurrent()) continue;
-      await createNote(note.title.trim(), body, tags, false, 'note', deps.agentFolder?.() ?? null, { id: itemId, counted: false });
-      adopted += 1;
+      const made = await createInboxNote(note, itemId, deps);
+      if (made === 'refused') refuse.push(id);
+      else if (made === 'created') adopted += 1;
       continue;
     }
     if (row.kind === 'login') {
@@ -462,7 +487,10 @@ async function adoptInbox(deps: ExtensionSyncDeps): Promise<{ adopted: number; s
     const waiting = held.some((p) => !p) && now - Date.parse(row.created_at) < PICTURE_WAIT_MS;
     if (waiting || !mine.has(id) || !deps.isCurrent()) continue;
     const outcome = await adoptClip(deps, clip, itemId, held);
-    if (outcome === 'stopped') break;
+    if (outcome === 'stopped') {
+      stopped = true;
+      break;
+    }
     if (outcome === 'created') adopted += 1;
     // Nothing to create: the address is bookmarked already.
     else settled.push(id, ...rowsOf);
@@ -470,7 +498,37 @@ async function adoptInbox(deps: ExtensionSyncDeps): Promise<{ adopted: number; s
 
   const done = [...new Set([...settled, ...refuse])];
   if (done.length && deps.isCurrent()) await deps.store.deleteInbox(done);
-  return { adopted, settled: done.length };
+  for (const id of done) pictures.delete(id);
+  return { adopted, settled: done.length, stopped };
+}
+
+/**
+ * Where an inbox note goes. From the command line: the Agent folder. From the
+ * extension's New note or the Ninja box: the root, as New note with no folder
+ * open, or the folder the box read from the title line while it still exists.
+ * Spec: docs/internal/plans/quick-note-694.md (Q3)
+ */
+function inboxNoteFolder(note: InboxNote, deps: Pick<ExtensionSyncDeps, 'agentFolder' | 'hasFolder'>): string | null {
+  if (!note.from) return deps.agentFolder?.() ?? null;
+  return note.folder && deps.hasFolder?.(note.folder) ? note.folder : null;
+}
+
+/**
+ * Make the item of an opened `note` row, or of a quick note the Ninja box
+ * queued while the app was locked (quickNoteQueue.ts). `refused`: the body
+ * is too long; `stopped`: the sign-in ended first.
+ */
+export async function createInboxNote(
+  note: InboxNote,
+  itemId: string,
+  deps: Pick<ExtensionSyncDeps, 'agentFolder' | 'hasFolder' | 'isCurrent'>,
+): Promise<'created' | 'refused' | 'stopped'> {
+  const body = await inboxNoteBody(note.markdown);
+  if (body === null) return 'refused';
+  const tags = [...new Set(note.tags.map(normalizeTag).filter(Boolean))];
+  if (!deps.isCurrent()) return 'stopped';
+  await createNote(note.title.trim(), body, tags, false, 'note', inboxNoteFolder(note, deps), { id: itemId, counted: false });
+  return 'created';
 }
 
 /**

@@ -1,6 +1,6 @@
 import type { SettingEntry } from './settingsSearch/registry';
 import type { TrackerSetupTab } from './TrackerConfig';
-import { ArrowsClockwise, ChartBar, GridFour, Heartbeat, LockSimple, Megaphone, PaintBrush, Palette, Password, Pill, Plus, Question, Repeat, Trash, Globe, type Icon } from './icons';
+import { Archive, ArrowsClockwise, ChartBar, GridFour, Heartbeat, LockSimple, Megaphone, PaintBrush, Palette, Password, Pill, Plus, Question, Repeat, Shield, Trash, Globe, type Icon } from './icons';
 
 /**
  * Ninja's doors to the features that sit deep in Settings or in a dialog:
@@ -17,7 +17,7 @@ import { ArrowsClockwise, ChartBar, GridFour, Heartbeat, LockSimple, Megaphone, 
  * Spec: docs/internal/specs/ninja-features.md
  */
 
-export type NinjaAction = 'passwordGenerator' | 'lock' | 'syncNow' | 'syncPause' | 'emptyTrash';
+export type NinjaAction = 'passwordGenerator' | 'lock' | 'lockProtected' | 'syncNow' | 'syncPause' | 'emptyTrash';
 type NinjaPage = '/' | '/changelog' | '/help' | '/themes';
 
 export type NinjaDoor = {
@@ -44,7 +44,8 @@ export const NINJA_DOORS: readonly NinjaDoor[] = [
   { id: 'feature:trackers', group: 'features', label: 'notes:settings.trackersLabel', detail: 'common:ninja.features.trackers.detail', icon: Heartbeat, to: { kind: 'tracker', tab: 'trackers', entry: 'trackers.setup' } },
   { id: 'feature:medication', group: 'features', label: 'common:ninja.features.medication.label', detail: 'common:ninja.features.medication.detail', icon: Pill, to: { kind: 'tracker', tab: 'medications', entry: 'trackers.medications' } },
   { id: 'feature:yearInPixels', group: 'features', label: 'common:ninja.features.yearInPixels.label', detail: 'common:ninja.features.yearInPixels.detail', icon: GridFour, to: { kind: 'settings', entry: 'stats.yearInPixels' } },
-  { id: 'feature:importExport', group: 'features', label: 'common:ninja.features.importExport.label', detail: 'common:ninja.features.importExport.detail', icon: Repeat, to: { kind: 'settings', entry: 'section.import' } },
+  { id: 'feature:importExport', group: 'features', label: 'notes:settings.importLabel', detail: 'common:ninja.features.importExport.detail', icon: Repeat, to: { kind: 'settings', entry: 'section.import' } },
+  { id: 'feature:backup', group: 'features', label: 'notes:settings.backupLabel', detail: 'common:ninja.features.backup.detail', icon: Archive, to: { kind: 'settings', entry: 'section.backup' } },
   { id: 'feature:generator', group: 'features', label: 'common:ninja.features.generator.label', detail: 'common:ninja.features.generator.detail', icon: Password, to: { kind: 'action', id: 'passwordGenerator' } },
   { id: 'feature:themes', group: 'features', label: 'common:palette.groups.themes', detail: 'common:ninja.features.themes.detail', icon: Palette, to: { kind: 'settings', entry: 'appearance.theme' } },
 
@@ -52,6 +53,7 @@ export const NINJA_DOORS: readonly NinjaDoor[] = [
   { id: 'new:customTracker', group: 'new', label: 'common:ninja.new.customTracker', icon: Plus, pro: true, inCreate: true, to: { kind: 'tracker', tab: 'custom', entry: 'trackers.custom' } },
 
   { id: 'cmd:lock', group: 'commands', label: 'notes:footer.lockApp', icon: LockSimple, to: { kind: 'action', id: 'lock' } },
+  { id: 'cmd:lockProtected', group: 'commands', label: 'common:ninja.commands.lockProtected', icon: Shield, to: { kind: 'action', id: 'lockProtected' } },
   { id: 'cmd:syncNow', group: 'commands', label: 'settings:syncPanel.syncNow', icon: ArrowsClockwise, to: { kind: 'action', id: 'syncNow' } },
   // Its label and icon follow the switch: Pause sync or Resume sync.
   { id: 'cmd:syncPause', group: 'commands', label: 'settings:syncPanel.pauseSync', icon: ArrowsClockwise, to: { kind: 'action', id: 'syncPause' } },

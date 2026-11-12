@@ -92,6 +92,18 @@
       "help": "Sneltoetsen"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "Schrijf hier meer",
+    "hint": "Typ / voor een map, # voor een tag",
+    "locked": "PrivacyNotes is vergrendeld. Je notitie is verzegeld en opent zodra je ontgrendelt.",
+    "queued": "Opgeslagen. Hij opent zodra je ontgrendelt.",
+    "tooLong": "Deze notitie is te lang. Splits hem in twee notities.",
+    "full": "Er wachten te veel notities. Ontgrendel om ze toe te voegen.",
+    "empty": "Schrijf eerst iets.",
+    "failed": "Kan de notitie niet opslaan. Open PrivacyNotes en probeer het opnieuw.",
+    "added_other": "{{count}} snelle notities toegevoegd",
+    "added_one": "{{count}} snelle notitie toegevoegd"
+  },
   "quickSwitcher": {
     "label": "Ninja: een item of instelling vinden, iets toevoegen, een opdracht uitvoeren",
     "jumpTo": "Ninja",
@@ -129,7 +141,9 @@
     "actions": "acties",
     "back": "terug",
     "actionsPlaceholder": "Acties filteren",
-    "onlyCreate": "toevoegen"
+    "onlyCreate": "toevoegen",
+    "ninjaLockedTitle": "PrivacyNotes is vergrendeld",
+    "ninjaLockedBody": "Open PrivacyNotes en ontgrendel het. Dan vindt Ninja je notities vanuit elke app."
   },
   "cardForm": {
     "cardholderName": "Naam kaarthouder",
@@ -290,8 +304,10 @@
         "detail": "Elke dag van het jaar als één gekleurd vakje"
       },
       "importExport": {
-        "label": "Import & Export",
-        "detail": "Notities binnenhalen, een back-up meenemen"
+        "detail": "Notities binnenhalen of meenemen"
+      },
+      "backup": {
+        "detail": "Nu een back-up maken, automatische back-ups en herstellen"
       },
       "generator": {
         "label": "Wachtwoordgenerator",
@@ -307,6 +323,7 @@
     },
     "commands": {
       "syncResume": "Synchronisatie hervatten",
+      "lockProtected": "Deze notitie vergrendelen",
       "changelog": "Wat is er nieuw",
       "themesPage": "Communitythema's",
       "website": "Website van PrivacyNotes"

@@ -1,25 +1,39 @@
 {
   "manifest": {
-    "extDescription": "Ukladaj webové stránky ako šifrované poznámky a kopíruj svoje prihlasovacie údaje.",
+    "extDescription": "Ukladaj webové stránky ako šifrované poznámky a kopíruj alebo vypĺňaj svoje prihlasovacie údaje.",
     "commandOpen": "Otvoriť PrivacyNotes",
-    "commandCopyLogin": "Kopírovať prihlasovacie údaje pre tento web",
-    "commandSaveBookmark": "Uložiť stránku ako záložku"
+    "commandCopyLogin": "Vyplniť alebo kopírovať prihlasovacie údaje pre tento web",
+    "commandSaveNote": "Uložiť stránku ako poznámku",
+    "commandLock": "Zamknúť trezor",
+    "commandGenerate": "Vygenerovať heslo a skopírovať ho",
+    "commandSaveBookmark": "Uložiť stránku ako záložku",
+    "commandNewNote": "Napísať novú poznámku"
   },
   "menu": {
     "savePageNote": "Uložiť stránku ako poznámku",
     "savePageBookmark": "Uložiť stránku ako záložku",
     "copyPageMarkdown": "Kopírovať stránku ako Markdown",
     "saveSelection": "Uložiť výber ako poznámku",
+    "newNoteFromSelection": "Nová poznámka z výberu",
     "saveLinkBookmark": "Uložiť odkaz ako záložku",
     "saveLinkedPage": "Uložiť odkazovanú stránku ako poznámku",
+    "fillLogin": "Vyplniť prihlasovacie údaje pre tento web",
     "copyLogin": "Kopírovať prihlasovacie údaje pre tento web",
     "addLogin": "Pridať prihlasovacie údaje pre tento web",
     "generatePassword": "Vygenerovať heslo"
   },
+  "note": {
+    "tagsPlaceholder": "#práca #nápady",
+    "tagsHelp": "Značky oddeľ medzerou alebo čiarkou. Znak # je voliteľný.",
+    "failed": "Poznámku sa nepodarilo uložiť. Skús to znova."
+  },
   "connect": {
-    "title": "Pripojenie k účtu",
-    "body": "V PrivacyNotes otvor Nastavenia > Rozšírenie a zvoľ Vytvoriť kód. Kód vlož sem.",
+    "title": "Pripojenie tohto prehliadača",
+    "step1": "Otvor PrivacyNotes na tomto počítači alebo use.privacynotes.app.",
+    "step2": "Otvor Nastavenia > Rozšírenie a vyber Vytvoriť kód.",
+    "step3": "Vlož kód sem.",
     "codeLabel": "Kód z aplikácie",
+    "paste": "Vložiť",
     "connect": "Pripojiť",
     "badCode": "Tento kód nie je úplný. Skopíruj ho z aplikácie znova.",
     "usedCode": "Tento kód je už použitý alebo starší ako 10 minút. Vytvor v aplikácii nový. Pripojené prehliadače nájdeš v Nastavenia > Rozšírenie.",
@@ -27,21 +41,25 @@
     "connected": "Pripojené",
     "connectedClips": "Ukladanie stránok je pripravené.",
     "connectedBoth": "Ukladanie stránok aj prihlasovacie údaje sú pripravené.",
-    "codeSpent": "Kód je teraz použitý. Snímka obrazovky s ním je bezcenná.",
     "help": "Ako to funguje"
   },
   "protect": {
     "title": "Chráň svoje prihlasovacie údaje",
-    "body": "Zvoľ PIN alebo prístupový kód pre tento prehliadač. Je oddelený od toho v aplikácii.",
-    "tries": "Po 10 nesprávnych pokusoch sa tento prehliadač odpojí.",
-    "biometric": "Používať aj odtlačok prsta alebo tvár",
-    "biometricHelp": "Touch ID alebo Windows Hello, ak ich tento prehliadač podporuje. PIN alebo prístupový kód vždy funguje tiež.",
+    "body": "Zvoľ PIN alebo prístupový kód pre tento prehliadač. Potrebuješ ho na odomknutie prihlasovacích údajov tu. Je oddelený od toho v aplikácii.",
+    "biometric": "Používať aj biometrické odomknutie",
+    "biometricHelp": "Touch ID alebo Windows Hello, popri PIN-e alebo prístupovom kóde, ktorý vždy funguje tiež.",
     "repeat": "Zadaj ho znova",
     "mismatch": "Tieto dva sa nezhodujú. Skús to znova."
   },
   "clip": {
     "selection": "Výber",
+    "wholePage": "Celá stránka",
+    "whatToSave": "Čo uložiť",
+    "picturesKept_one": "{{count}} obrázok zachovaný.",
+    "picturesKept_few": "{{count}} obrázky zachované.",
+    "picturesKept_other": "{{count}} obrázkov zachovaných.",
     "includePictures": "Vrátane obrázkov",
+    "includePicturesHelp": "Uložia sa do poznámky, nie ako odkazy na web.",
     "savedBody": "V Poznámkach sa zobrazí pri najbližšej synchronizácii ktorejkoľvek z tvojich aplikácií. Keď je niektorá otvorená, zvyčajne to trvá najviac pár minút.",
     "closeHint": "Okno rozšírenia môžeš hneď zavrieť.",
     "alreadySaved": "Táto stránka bola uložená {{date}}.",
@@ -61,13 +79,12 @@
     "failed": "Túto stránku sa nepodarilo uložiť. Skús to znova.",
     "reading": "Číta sa stránka",
     "copiedMarkdown": "Stránka skopírovaná ako Markdown",
-    "off": "Ukladanie stránok je pre tento prehliadač vypnuté. Zapni Ukladanie stránok, keď ho budeš pripájať.",
-    "saving": "Ukladá sa stránka"
+    "off": "Ukladanie stránok je pre tento prehliadač vypnuté. Zapni Ukladanie stránok, keď ho budeš pripájať."
   },
   "logins": {
     "unlockPin": "Zadaj svoj PIN",
     "unlockPasscode": "Zadaj svoj prístupový kód",
-    "useBiometric": "Použiť odtlačok prsta alebo tvár",
+    "useBiometric": "Použiť biometrické odomknutie",
     "wrong_one": "Nesprávne. Zostáva {{count}} pokus, potom sa tento prehliadač odpojí.",
     "wrong_few": "Nesprávne. Zostávajú {{count}} pokusy, potom sa tento prehliadač odpojí.",
     "wrong_other": "Nesprávne. Zostáva {{count}} pokusov, potom sa tento prehliadač odpojí.",
@@ -75,11 +92,10 @@
     "none": "Pre tento web nemáš žiadne prihlasovacie údaje.",
     "off": "Prihlasovacie údaje sú pre tento prehliadač vypnuté. Zapni Trezor, keď ho budeš pripájať.",
     "copyCode": "Kopírovať kód 2FA",
+    "fill": "Vyplniť",
     "usernameCopied": "Používateľské meno skopírované",
     "passwordCopied": "Heslo skopírované",
     "codeCopied": "Kód 2FA skopírovaný",
-    "clears": "Po 30 sekundách sa zo schránky vymaže, ak tam ešte je.",
-    "addSaved": "Uložené. V Trezore sa zobrazí pri najbližšej synchronizácii ktorejkoľvek z tvojich aplikácií. Keď je niektorá otvorená, zvyčajne to trvá najviac pár minút.",
     "lock": "Zamknúť",
     "unreachable": "PrivacyNotes sa nedá dosiahnuť, a tak sa nedá odomknúť. Skontroluj pripojenie a skús to znova.",
     "lockSystem": "Keď sa počítač zamkne",
@@ -99,13 +115,13 @@
   "changeSecret": {
     "titlePin": "Zmeniť PIN",
     "titlePasscode": "Zmeniť prístupový kód",
-    "biometricAgain": "Odtlačok prsta alebo tvár používali starý. Ak ich chceš používať ďalej, nastav ich znova."
+    "biometricAgain": "Biometrické odomknutie používalo starý. Ak ho chceš používať ďalej, nastav ho znova."
   },
   "biometric": {
-    "enrolled": "Odtlačok prsta alebo tvár je nastavený. Túto kartu môžeš zavrieť.",
-    "enrolledHere": "Odtlačok prsta alebo tvár je nastavený.",
+    "enrolled": "Biometrické odomknutie je nastavené. Túto kartu môžeš zavrieť.",
+    "enrolledHere": "Biometrické odomknutie je nastavené.",
     "unlocked": "Odomknuté. Túto kartu môžeš zavrieť a znova otvoriť PrivacyNotes.",
-    "failed": "Tento prehliadač tu nemôže použiť odtlačok prsta ani tvár. PIN alebo prístupový kód funguje ako predtým."
+    "failed": "Tento prehliadač tu nemôže použiť biometrické odomknutie. PIN alebo prístupový kód funguje ako predtým."
   },
   "vault": {
     "search": "Hľadať v trezore",
@@ -133,13 +149,53 @@
     "lockHeader": "Zamknúť trezor po",
     "unlockToCopy": "Odomkni a kopíruj",
     "omniboxDefault": "Hľadať %s v trezore PrivacyNotes",
-    "omniboxUnlock": "Odomkni PrivacyNotes a hľadaj"
+    "omniboxUnlock": "Odomkni PrivacyNotes a hľadaj",
+    "moreOptions": "Ďalšie možnosti"
   },
   "shortcuts": {
     "notSet": "Nenastavené",
     "addressBar": "Hľadať v trezore z panela s adresou",
     "change": "Zmeniť skratky",
     "changeHint": "Klávesy si pamätá tvoj prehliadač. Zmeň ich tam alebo priraď klávesy skratke, ktorá žiadne nemá.",
-    "loginHint": "<key/> skopíruje používateľské meno, potom heslo."
+    "loginHint": "<key/> vyplní tieto prihlasovacie údaje. Na stránke bez poľa na prihlásenie skopíruje používateľské meno, potom heslo.",
+    "loginHintMany": "<key/> vyplní prihlasovacie údaje na vrchu zoznamu.<br/>Stlač znova do 3 sekúnd a vyplnia sa ďalšie."
+  },
+  "tabs": {
+    "label": "Ukladanie stránok alebo Trezor",
+    "clip": "Ukladanie stránok"
+  },
+  "notice": {
+    "clearsIn": "Vymaže sa o {{seconds}} s",
+    "copyFailed": "Nepodarilo sa skopírovať",
+    "loginSaved": "Prihlasovacie údaje uložené",
+    "vaultNextSync": "Zobrazí sa v Trezore pri najbližšej synchronizácii",
+    "noteSaved": "Poznámka uložená",
+    "notesNextSync": "Zobrazí sa v Poznámkach pri najbližšej synchronizácii",
+    "savedHere": "Uložené tu",
+    "goesOutOnline": "Odošle sa, keď budeš online"
+  },
+  "fill": {
+    "notFilled": "Nevyplnené",
+    "couldNot": "Nepodarilo sa vyplniť",
+    "nothing": "Na tejto stránke nie je pole na prihlásenie",
+    "signup": "Tento formulár žiada nové heslo",
+    "insecure": "Táto stránka nie je zabezpečená (http)",
+    "otherAccount": "Stránka žiada iný účet",
+    "tooLong": "Pole na stránke je príliš krátke",
+    "copyInstead": "Namiesto toho skopíruj hodnoty",
+    "usernameOnly": "Používateľské meno vyplnené",
+    "usernameOnlyNext": "Pre heslo znova vyber Vyplniť"
+  },
+  "settings": {
+    "codes": "Kódy 2FA",
+    "codesHelp": "Aktuálny kód pod každými prihlasovacími údajmi s kľúčom 2FA.",
+    "bar": "Odpočítavací pruh",
+    "barHelp": "Čiara, ktorá sa skracuje až do ďalšieho kódu.",
+    "iconsHelp": "Cez náš proxy server: vidí doménu, nikdy nie teba.",
+    "disconnect": "Odpojiť rozšírenie",
+    "biometric": "Biometrické odomknutie",
+    "biometricPin": "Na nastavenie zadaj svoj PIN.",
+    "biometricPasscode": "Na nastavenie zadaj svoj prístupový kód.",
+    "biometricOff": "Biometrické odomknutie je vypnuté"
   }
 }

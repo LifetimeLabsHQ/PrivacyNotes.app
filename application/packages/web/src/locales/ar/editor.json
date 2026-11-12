@@ -196,7 +196,9 @@
     "ariaLabel": "مخطط الملاحظة",
     "hide": "إخفاء المخطط التفصيلي",
     "copyHeadingLink": "نسخ رابط العنوان",
-    "copyHeadingShortcut": "نسخ اختصار العنوان"
+    "copyHeadingShortcut": "نسخ اختصار العنوان",
+    "copyCalloutLink": "نسخ رابط التنبيه",
+    "copyCalloutShortcut": "نسخ اختصار التنبيه"
   },
   "bodyMenu": {
     "cut": "قص",
@@ -287,6 +289,11 @@
     "showLess": "عرض أقل",
     "language": "لغة الشفرة: {{name}}",
     "searchLanguages": "ابحث عن لغة",
+    "addTitle": "إضافة عنوان",
+    "removeTitle": "إزالة العنوان",
+    "titlePlaceholder": "اسم الملف أو العنوان",
+    "collapse": "طي كتلة الكود",
+    "expand": "توسيع كتلة الكود",
     "placeholder": "اكتب الشفرة أو الصقها. للألوان، اختر لغة في الأعلى."
   },
   "math": {

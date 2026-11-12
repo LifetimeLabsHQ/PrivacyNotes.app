@@ -3,7 +3,7 @@ import { Button } from './ui/Button';
 import { VaultFormActions } from './ui/VaultFormActions';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe, Info, Lock, NotePencil, Plus, Shield, Tag, Trash, User } from './icons';
+import { Globe, Info, Lock, Plus, Shield, Tag, Trash, User } from './icons';
 import { hasPin } from './pin';
 import { PinInfoModal } from './PinInfoModal';
 import { HoverLabel } from './HoverLabel';
@@ -12,6 +12,7 @@ import { parseTotpInput, generateTotpCode, totpSecondsRemaining } from '@notes/s
 import { proUnlocked } from './demo';
 import { PasswordField } from './PasswordText';
 import { FIELD_BUTTON, FIELD_CLASS, FieldLabel } from './formFields';
+import { NotesField } from './NotesField';
 import { PasswordGeneratorModal } from './PasswordGenerator';
 import type { UpgradeTrigger } from './UpgradeModal';
 import { newLoginField, type LoginExtras, type LoginField } from './loginExtras';
@@ -400,17 +401,13 @@ export function LoginForm({
         )}
 
         {/* Notes */}
-        <div>
-          <FieldLabel icon={<NotePencil />}>{t('common:cardForm.notes')}</FieldLabel>
-          <textarea
-            value={data.notes}
-            onChange={(e) => updateBody({ notes: e.target.value })}
-            placeholder={t('common:cardForm.notesPlaceholder')}
-            disabled={locked}
-            rows={3}
-            className={`${fieldClass} resize-y`}
-          />
-        </div>
+        <NotesField
+          label={t('common:cardForm.notes')}
+          value={data.notes}
+          onChange={(notes) => updateBody({ notes })}
+          placeholder={t('common:cardForm.notesPlaceholder')}
+          disabled={locked}
+        />
 
         {/* PIN-protect toggle */}
         <label className={`flex items-center gap-2 pt-2 border-t border-divider ${!pinConfigured && !pinProtected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>

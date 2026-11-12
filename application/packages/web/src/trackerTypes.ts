@@ -8,9 +8,10 @@
  * See docs/internal/mood-wellness-tracker.md for the full feature spec.
  */
 
-import { PALETTE, TEXT_COLORS } from './editorColors';
+import { isHexColor, PALETTE, TEXT_COLORS } from './editorColors';
 import { mergeLoginExtras } from './loginExtras';
 import { CLIP_SOURCE_KEY, SCHEDULE_KEYS, SOURCE_IDENTITY_KEY, type Repeat } from './schedule';
+import { LOCATION_KEY } from './noteLocation';
 
 // ------------------------------------------------------------------
 // Emotion tags - 24 fixed tags, clinically validated (PANAS-X, PHQ-9, GAD-7)
@@ -235,7 +236,7 @@ export function readMedicationTemplates(raw: unknown): MedicationTemplate[] {
       startedAt: str(m.startedAt) ? m.startedAt : new Date(0).toISOString(),
       dosageHistory: listOf(m.dosageHistory, (h) => (str(h.dosage) && str(h.changedAt) ? { dosage: h.dosage, changedAt: h.changedAt } : null)),
       ...((MEDICATION_FORMS as readonly string[]).includes(m.form as string) ? { form: m.form as MedicationForm } : {}),
-      ...(str(m.color) ? { color: m.color } : {}),
+      ...(isHexColor(m.color) ? { color: m.color } : {}),
       ...(typeof m.asNeeded === 'boolean' ? { asNeeded: m.asNeeded } : {}),
       ...(num(m.maxPerDay) ? { maxPerDay: m.maxPerDay } : {}),
       ...(repeat ? { repeat } : {}),
@@ -276,7 +277,7 @@ export function readCustomTrackerTemplates(raw: unknown): CustomTrackerTemplate[
       id: c.id,
       name: c.name,
       type: c.type as CustomTrackerType,
-      color: str(c.color) ? c.color : (TRACKER_COLORS[0] ?? ''),
+      color: isHexColor(c.color) ? c.color : (TRACKER_COLORS[0] ?? ''),
       createdAt: str(c.createdAt) ? c.createdAt : new Date(0).toISOString(),
       ...(str(c.stoppedAt) ? { stoppedAt: c.stoppedAt } : {}),
       ...(typeof c.startFromLast === 'boolean' ? { startFromLast: c.startFromLast } : {}),
@@ -772,8 +773,8 @@ export const BOOKKEEPING_KEYS: ReadonlySet<string> = new Set(['journalDate', 'ba
 
 /** Keys on a journal entry that say when it is or where it came from, never
  *  what the person logged: the bookkeeping, the schedule, an import's source
- *  identity and a clipped page's address. */
-const NOT_LOGGED: ReadonlySet<string> = new Set([...BOOKKEEPING_KEYS, ...SCHEDULE_KEYS, SOURCE_IDENTITY_KEY, CLIP_SOURCE_KEY]);
+ *  identity, a clipped page's address and the place set on the note. */
+const NOT_LOGGED: ReadonlySet<string> = new Set([...BOOKKEEPING_KEYS, ...SCHEDULE_KEYS, SOURCE_IDENTITY_KEY, CLIP_SOURCE_KEY, LOCATION_KEY]);
 
 /** Whether one tracker value holds anything: an empty list or an empty
  *  string is a cleared pill, not a value. A zero and a false are values. */
@@ -1027,10 +1028,12 @@ export interface TrackerSettings {
 
 export function defaultTrackerSettings(): TrackerSettings {
   return {
-    // sleepScore and heartRate available but off by default - users enable in config.
-    // Every built-in on: the guided pass shows what the app can track, and
-    // the gear at the start of the row turns off what a person does not want.
-    activeBuiltins: ['mood', 'emotions', 'factors', 'habits', 'sleep', 'sleepScore', 'heartRate', 'activity', 'medication', 'energy', 'focus', 'weight', 'steps', 'water', 'screenTime', 'caffeine', 'pain', 'social'],
+    // A short set on a new account: a wall of pills is a bad first run on a
+    // phone (GitHub #708). Settings > Trackers turns on the rest; the demo
+    // turns on every built-in (`seedFolderTree` in welcomeNote.ts). An
+    // account that has a list keeps it: this is only the fallback.
+    // Spec: docs/internal/mood-wellness-tracker.md section 22b (Default set)
+    activeBuiltins: ['mood', 'sleep', 'energy', 'activity', 'medication'],
     customTrackers: [],
     archivedMedications: [],
     habits: [...DEFAULT_HABITS],

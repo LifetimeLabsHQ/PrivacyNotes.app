@@ -1,4 +1,5 @@
 import type { Editor as TipTapEditor } from '@tiptap/react';
+import { Extension } from '@tiptap/core';
 
 /**
  * Indent (dir 1) or outdent (dir -1) the list item the cursor sits in,
@@ -62,3 +63,33 @@ export function indentText(editor: TipTapEditor, dir: number): boolean {
   if (run === 0) return false;
   return editor.chain().focus().deleteRange({ from: $from.pos - run, to: $from.pos }).run();
 }
+
+/**
+ * Enter on the empty first line of a list item that still holds more, such
+ * as a sub-list, lifts the item one level (#709). Enter at the end of an item
+ * with a sub-list makes a new empty item, and the sub-list moves into it.
+ * TipTap's `splitListItem` lifts an empty item only when the empty line is
+ * the item's LAST child, so it split again on every Enter and the list never
+ * ended. Word ends it here: the line leaves the list, and the sub-list stays
+ * below it. Any other Enter falls through to the stock rule.
+ */
+function liftEmptyListItem(editor: TipTapEditor): boolean {
+  const { selection } = editor.state;
+  if (!selection.empty) return false;
+  const { $from } = selection;
+  if ($from.depth < 2 || !$from.parent.isTextblock || $from.parent.content.size > 0) return false;
+  const item = $from.node(-1);
+  const name = item.type.name;
+  if (name !== 'listItem' && name !== 'taskItem') return false;
+  if ($from.index(-1) !== 0 || item.childCount < 2) return false;
+  return editor.commands.liftListItem(name);
+}
+
+/** Runs `liftEmptyListItem` before the list items' own Enter. */
+export const EmptyListItemEnter = Extension.create({
+  name: 'emptyListItemEnter',
+  priority: 1000,
+  addKeyboardShortcuts() {
+    return { Enter: () => liftEmptyListItem(this.editor) };
+  },
+});

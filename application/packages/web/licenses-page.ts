@@ -26,19 +26,33 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ORIGIN = 'https://privacynotes.app';
 const REPO_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app';
 const CARGO_LOCK = path.resolve(__dirname, '../desktop/src-tauri/Cargo.lock');
+/** The license of the word lists the browser extension's fill script takes from Chromium. */
+const CHROMIUM_WORDS_LICENSE = path.resolve(__dirname, '../extension/src/fill/LICENSE-chromium.txt');
 const EXCALIDRAW_FONTS = path.join(
   path.dirname(fs.realpathSync(path.resolve(__dirname, 'node_modules/@excalidraw/excalidraw/package.json'))),
   'dist/prod/fonts'
 );
 const OUR_PACKAGES = /^@notes\//;
 
-// Packages that ship without a license file. The MIT text below, with the
-// holder named in the upstream repository's LICENSE. Anything else without a
-// file falls back to its package.json author.
+// Packages that ship without a license file. The MIT or BSD-3-Clause text
+// below, with the holder named in the upstream repository's LICENSE. Anything
+// else without a file falls back to its package.json author.
 const MISSING_TEXT_HOLDER: Array<[RegExp, string]> = [
   [/^@excalidraw\//, 'Copyright (c) 2020 Excalidraw'],
   [/^@radix-ui\//, 'Copyright (c) 2022 WorkOS'],
+  [/^pmtiles$/, 'Copyright 2021 Protomaps LLC'],
+  [/^@protomaps\/basemaps$/, 'Copyright 2019-2023 Protomaps LLC, Kelso Cartography'],
 ];
+
+const BSD3_TEXT = `Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.`;
 
 const MIT_TEXT = `Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -107,9 +121,9 @@ export function collectPackages(moduleIds: Iterable<string>): Pkg[] {
       .map((f) => fs.readFileSync(path.join(dir, f), 'utf8').trim());
     let text = texts.join('\n\n');
     const license = licenseId(pkg, text);
-    if (!text && /^MIT$/.test(license)) {
+    if (!text && /^(MIT|BSD-3-Clause)$/.test(license)) {
       const holder = MISSING_TEXT_HOLDER.find(([re]) => re.test(name))?.[1] ?? (authorName(pkg) ? `Copyright (c) ${authorName(pkg)}` : null);
-      if (holder) text = `MIT License\n\n${holder}\n\n${MIT_TEXT}`;
+      if (holder) text = license === 'MIT' ? `MIT License\n\n${holder}\n\n${MIT_TEXT}` : `BSD 3-Clause License\n\n${holder}\n\n${BSD3_TEXT}`;
     }
     pkgs.set(key, { name, version, license, url: repoUrl(pkg, name), text });
   }
@@ -237,6 +251,8 @@ ${rows}
 <p class="eyebrow rail-sep">// More</p>
 <a class="ritem" href="#fonts"><span class="rlbl">Fonts</span><span class="rct">${fonts.length}</span></a>
 ${crates.length ? `<a class="ritem" href="#crates"><span class="rlbl">Rust crates</span><span class="rct">${crates.length}</span></a>` : ''}
+<a class="ritem" href="#map-data"><span class="rlbl">Map data</span><span class="rct">${MAP_DATA.length}</span></a>
+<a class="ritem" href="#extension"><span class="rlbl">Browser extension</span><span class="rct">1</span></a>
 </nav>
 <div class="rail rail-extra">
 <a class="ritem" href="${REPO_URL}" target="_blank" rel="noopener noreferrer">${GITHUB_ICON}<span class="rlbl">Source code</span></a>
@@ -273,6 +289,53 @@ ${fonts
     }<pre>${esc([f.copyright, f.license].filter(Boolean).join('\n\n'))}</pre></details>`
   )
   .join('\n')}
+</section>`;
+}
+
+/**
+ * The data behind a note's place and its maps. Not in the bundle, so nothing
+ * reads it from the build: the map host serves it (note-location.md). The map
+ * itself credits OpenStreetMap under every map; the town search credits
+ * GeoNames here only, which its CC BY licence allows ("any reasonable manner").
+ */
+const MAP_DATA: Array<{ name: string; url: string; text: string }> = [
+  {
+    name: 'OpenStreetMap',
+    url: 'https://www.openstreetmap.org/copyright',
+    text: 'Map data © OpenStreetMap contributors, available under the Open Database License (ODbL). Drawn from a Protomaps build of OpenStreetMap, served from our own host.',
+  },
+  {
+    name: 'Wikidata',
+    url: 'https://www.wikidata.org/',
+    text: 'The place search uses well-known places from Wikidata (mountains, lakes, islands, parks, buildings, regions), dedicated to the public domain (CC0).',
+  },
+  {
+    name: 'GeoNames',
+    url: 'https://www.geonames.org/',
+    text: 'The place search uses the GeoNames list of towns of 5,000 people or more, licensed under Creative Commons Attribution 4.0 (CC BY 4.0).',
+  },
+];
+
+function renderMapData(): string {
+  return `<section class="lic" id="map-data">
+<h2 class="eyebrow">// Map data</h2>
+${MAP_DATA.map(
+  (d) => `<details class="lp"><summary><span class="lp-name">${esc(d.name)}</span></summary><a class="lp-link" href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.url.replace(/^https?:\/\//, ''))}</a><pre>${esc(d.text)}</pre></details>`
+).join('\n')}
+</section>`;
+}
+
+/**
+ * The browser extension ships its own bundle, so nothing of it is found in
+ * this build's chunks. What it takes from others by hand is listed here: the
+ * word lists of its fill script (packages/extension/src/fill/wordsChromium.ts).
+ */
+function renderExtension(): string {
+  const url = 'https://chromium.googlesource.com/chromium/src/+/main/components/autofill/content/renderer/html_based_username_detector_vocabulary.h';
+  const text = fs.readFileSync(CHROMIUM_WORDS_LICENSE, 'utf8').trim();
+  return `<section class="lic" id="extension">
+<h2 class="eyebrow">// Browser extension</h2>
+<details class="lp"><summary><span class="lp-name">Chromium word lists</span><span class="lp-ver">BSD-3-Clause</span></summary><a class="lp-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(url.replace(/^https:\/\//, ''))}</a><pre>${esc(`The words for "password", "username" and "user" in many languages, which the extension uses to find the fields of a login form.\n\n${text}`)}</pre></details>
 </section>`;
 }
 
@@ -343,11 +406,13 @@ ${siteNav({})}
 ${renderRail(groups, fonts, crates)}
 <div class="col-head">
 <h1>Third-party licenses</h1>
-<p class="sub">${brandMark()} is open source and built on other open source software. These are the packages, fonts and crates it includes, each with its license. Select a package to read its license.</p>
+<p class="sub">${brandMark()} is open source and built on other open source software. These are the packages, fonts, map data and crates it includes, each with its license. Select a package to read its license.</p>
 </div>
 <div class="col-body">
 ${renderPackages(groups)}
 ${renderFonts(fonts)}
+${renderMapData()}
+${renderExtension()}
 ${renderCrates(crates)}
 </div>
 </div>

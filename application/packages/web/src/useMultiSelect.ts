@@ -19,6 +19,9 @@ import { gcOnNotesDelete } from './imageGC';
 import { routeItemClick } from './itemList';
 import type { PinGatePurpose } from './ProtectedNoteGate';
 
+/** File name start of a selection export (#682). */
+const SELECTION_FILE_STEM = 'privacynotes-selection';
+
 interface UseMultiSelectArgs {
   notes: LocalNote[];
   selectedId: string | null;
@@ -36,8 +39,8 @@ interface UseMultiSelectArgs {
    *  rendering the pre-delete total until the view is left and re-entered. */
   refreshStorage: () => void;
   handleSelectNote: (id: string) => Promise<void>;
-  exportAllMarkdownZip: (notes: LocalNote[]) => Promise<void>;
-  exportAllHtmlZip: (notes: LocalNote[]) => Promise<void>;
+  exportAllMarkdownZip: (notes: LocalNote[], fileStem?: string) => Promise<void>;
+  exportAllHtmlZip: (notes: LocalNote[], fileStem?: string) => Promise<void>;
   /** Returns true if the note is currently PIN-locked. */
   isNoteLocked: (n: LocalNote) => boolean;
   /** Show the PIN modal, worded for `purpose`; runs `action` once the PIN
@@ -407,6 +410,8 @@ export function useMultiSelect({
   /** A selection holding a note the PIN guards leaves the device only after
    *  the PIN, the same bar Trash sets for it. Tested in
    *  tests/lockGateReads.test.ts. */
+  // The file of a picked set is named for what it is: the full-backup name
+  // made a few notes look like a backup of everything (#682).
   async function exportPicked(picked: LocalNote[], exportZip: (notes: LocalNote[]) => Promise<void>) {
     if (picked.length === 0) return;
     if (picked.some(isNoteLocked)) {
@@ -417,11 +422,11 @@ export function useMultiSelect({
   }
 
   async function handleBulkExport() {
-    await exportPicked(notes.filter((n) => selectedIds.has(n.id)), exportAllMarkdownZip);
+    await exportPicked(notes.filter((n) => selectedIds.has(n.id)), (ns) => exportAllMarkdownZip(ns, SELECTION_FILE_STEM));
   }
 
   async function handleBulkExportHtml() {
-    await exportPicked(notes.filter((n) => selectedIds.has(n.id)), exportAllHtmlZip);
+    await exportPicked(notes.filter((n) => selectedIds.has(n.id)), (ns) => exportAllHtmlZip(ns, SELECTION_FILE_STEM));
   }
 
   async function handleAddTagTo(ids: string[], tag: string): Promise<number> {

@@ -5,6 +5,8 @@
   "useDefault": "Standard verwenden",
   "color": "Farbe",
   "applyToSubfolders": "Farbe auf Unterordner übertragen",
+  "applyToFolderItems": "Auf alle Einträge in diesem Ordner übertragen",
+  "applyToTagItems": "Auf alle Einträge mit diesem Tag übertragen",
   "icon": "Symbol",
   "searchPlaceholder": "Symbole suchen",
   "searchLogos": "Logos suchen",

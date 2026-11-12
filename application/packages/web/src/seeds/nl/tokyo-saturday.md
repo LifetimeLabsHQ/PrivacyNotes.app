@@ -7,6 +7,11 @@ Om vijf uur het hotel uit. Twee uur in de trein, en de stad was gewoon weg.
 
 ![De Fuji met sneeuw op de top, omlijst door kersenbloesem.](/onboarding/fuji.webp)
 
+```map
+35.3606, 138.7274
+Fuji
+```
+
 De bloesem stond langs het meer. De Fuji stond erachter, de hele ochtend zonder een wolk. Mensen hier zeggen dat je een week kunt komen en de top nooit ziet. Wij hadden hem zes uur.
 
 | Wat | Wanneer |

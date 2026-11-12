@@ -29,6 +29,10 @@ export const APEX_ORIGIN = 'https://privacynotes.app';
 /** The release files: update manifests and floors for every platform. */
 export const RELEASES_ORIGIN = 'https://releases.privacynotes.app';
 
+/** The world map and the town lists for a note's place: the privacynotes-maps R2 bucket.
+ *  Read only after that click. Spec: docs/internal/plans/note-location.md (section 5) */
+export const MAP_ORIGIN = 'https://maps.privacynotes.app';
+
 /**
  * The sync host of the official builds. The CSP of every official build
  * (worker.ts, tauri.conf.json) allows only this sync host, so a build whose

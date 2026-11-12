@@ -31,5 +31,9 @@ Verktygsfältet ovanför ändrar hur texten ser ut: **fet**, *kursiv*, rubriker,
 
 Den frasen är det som öppnar dina anteckningar. Var den ligger bestämmer du, och du kan ändra dig när som helst. [[Hur dina anteckningar skyddas]] går igenom de tre alternativen.
 
+## Mer än anteckningar
+
+Anteckningar, uppgifter, lösenord, en dagbok, filer, en kalender, kontakter och bokmärken, med uppföljning av humör och mediciner. En app, krypterad på din enhet. Dessutom en gratis markdown-redigerare för mapparna på din disk, Ninja (⌘K) för att nå allt från tangentbordet, och en webbklippare.
+
 > [!tip] Inget här är för alltid
 > Varje anteckning i det här valvet är ett exempel, den här också. Ändra den, flytta den eller släng den.

@@ -94,6 +94,19 @@
       "help": "Klávesové zkratky"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "Sem napiš víc",
+    "hint": "Napiš / pro složku, # pro značku",
+    "locked": "Aplikace PrivacyNotes je zamčená. Tvoje poznámka je zapečetěná a otevře se, až odemkneš.",
+    "queued": "Uloženo. Otevře se, až odemkneš.",
+    "tooLong": "Tahle poznámka je moc dlouhá. Rozděl ji na dvě poznámky.",
+    "full": "Čeká příliš mnoho poznámek. Odemkni, aby se přidaly.",
+    "empty": "Nejdřív něco napiš.",
+    "failed": "Poznámku se nepodařilo uložit. Otevři PrivacyNotes a zkus to znovu.",
+    "added_other": "Přidáno {{count}} rychlých poznámek",
+    "added_one": "Přidána {{count}} rychlá poznámka",
+    "added_few": "Přidány {{count}} rychlé poznámky"
+  },
   "quickSwitcher": {
     "label": "Ninja: najdi položku nebo nastavení, přidej cokoli, spusť příkaz",
     "jumpTo": "Ninja",
@@ -132,7 +145,9 @@
     "actions": "akce",
     "back": "zpět",
     "actionsPlaceholder": "Filtrovat akce",
-    "onlyCreate": "přidat"
+    "onlyCreate": "přidat",
+    "ninjaLockedTitle": "Aplikace PrivacyNotes je zamčená",
+    "ninjaLockedBody": "Otevři aplikaci PrivacyNotes a odemkni ji. Pak Ninja najde tvoje poznámky z jakékoli aplikace."
   },
   "cardForm": {
     "cardholderName": "Jméno držitele karty",
@@ -299,8 +314,10 @@
         "detail": "Každý den roku jako jeden barevný čtvereček"
       },
       "importExport": {
-        "label": "Import & Export",
-        "detail": "Přenes si poznámky sem, odnes si zálohu ven"
+        "detail": "Přenes si poznámky sem, nebo je odnes ven"
+      },
+      "backup": {
+        "detail": "Zálohovat teď, automatické zálohy a obnovení"
       },
       "generator": {
         "label": "Generátor hesel",
@@ -316,6 +333,7 @@
     },
     "commands": {
       "syncResume": "Obnovit synchronizaci",
+      "lockProtected": "Zamknout tuto poznámku",
       "changelog": "Co je nového",
       "themesPage": "Témata komunity",
       "website": "Web PrivacyNotes"

@@ -370,12 +370,30 @@ export interface InboxNote {
   markdown: string;
   tags: string[];
   savedAt: string;
+  /** Where it was written: absent for `privacynotes` (the Agent folder), else
+   *  the extension's New note or the Ninja box. Either lands at the root.
+   *  Spec: docs/internal/plans/quick-note-694.md (Q3) */
+  from?: InboxNoteFrom;
+  /** The folder id the Ninja box read from the title line, `from: 'quick'` only. */
+  folder?: string;
 }
+
+export type InboxNoteFrom = 'browser' | 'quick';
 
 /** The limits both `privacynotes` and the app hold a note row to. The body cap is the
  *  clipper's `CLIP_MAX_BODY_BYTES` (tests/cliNote.test.ts keeps them equal).
  *  Spec: docs/internal/plans/agent-cli.md (sections 3.3 and 3.4) */
 export const INBOX_NOTE_LIMITS = { bodyBytes: 700 * 1024, title: 200, tags: 20 } as const;
+
+/** A note's title when none is given: the first `# ` heading, else the first
+ *  line with text, cut to the limit. `privacynotes save` and the extension's
+ *  New note use it. */
+export function inboxNoteTitle(markdown: string): string {
+  const lines = markdown.split(/\r?\n/);
+  const heading = lines.find((l) => /^#\s+\S/.test(l));
+  const first = heading ? heading.replace(/^#\s+/, '') : (lines.find((l) => l.trim()) ?? '');
+  return [...first.trim()].slice(0, INBOX_NOTE_LIMITS.title).join('');
+}
 
 /** The shape check of a `note` row, shared by `privacynotes` (before it sends) and the
  *  app (after it opens): the fields and their limits, nothing about the
@@ -390,7 +408,12 @@ export function parseInboxNote(value: unknown, rowId: string): InboxNote | null 
   if (!Array.isArray(v.tags) || v.tags.length > INBOX_NOTE_LIMITS.tags) return null;
   if (!v.tags.every((t) => typeof t === 'string' && t.length <= 200)) return null;
   if (typeof v.savedAt !== 'string' || Number.isNaN(Date.parse(v.savedAt))) return null;
-  return { v: 1, id: rowId, title: v.title, markdown: v.markdown, tags: v.tags as string[], savedAt: v.savedAt };
+  const note: InboxNote = { v: 1, id: rowId, title: v.title, markdown: v.markdown, tags: v.tags as string[], savedAt: v.savedAt };
+  // An older app drops both fields and puts the note in the Agent folder:
+  // a value this one does not know is dropped the same way.
+  if (v.from === 'browser' || v.from === 'quick') note.from = v.from;
+  if (note.from === 'quick' && typeof v.folder === 'string' && v.folder.length > 0 && v.folder.length <= 200) note.folder = v.folder;
+  return note;
 }
 
 export interface InboxPictureHeader {

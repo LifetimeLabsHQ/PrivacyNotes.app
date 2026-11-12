@@ -8,6 +8,8 @@ import { Plugin, PluginKey, TextSelection, type EditorState } from '@tiptap/pm/s
 import { getCodeWrap, setCodeWrap, subscribeCodeWrap } from './codeWrap';
 import { codeLanguageLabel, lastCodeLanguage, openCodeLanguageMenu, rememberCodeLanguage } from './codeLanguages';
 import { TIP_PILL, positionClasses } from './HoverLabel';
+import { isImeComposing } from './imeComposing';
+import { cleanFenceTitle, formatFenceInfo, parseFenceInfo, parseFenceSize } from './codeFenceInfo';
 
 /**
  * When the user copies text whose selection sits entirely inside a single
@@ -60,7 +62,9 @@ export const CodeBlockPlainCopy = Extension.create({
  *
  * The scroller reserves a band above the first line, so nothing covers
  * code: the language label sits in it on the left, always visible, and the
- * tools on the right, on hover where there is one and always on touch. Copy
+ * tools on the right, on hover where there is one and always on touch. A
+ * block with a title (codeFenceInfo.ts) shows the title on the left and
+ * moves the label to the right end, after the tools. Copy
  * writes the node's raw text; the wrap toggle flips one device-wide setting
  * (codeWrap.ts), so every block follows; the label opens the language menu
  * (codeLanguages.ts).
@@ -117,9 +121,9 @@ const CODE_TOOL_BTN =
  * A block longer than FOLD_MIN_LINES opens folded to its first
  * FOLD_SHOWN_LINES, with a button under it (GitHub #427). The gap between the
  * two numbers is deliberate: a fold that hides three lines costs more than it
- * saves. The fold is a view state and is never saved, because a fence stores
- * a language and nothing else (the same limit codeWrap.ts records), so every
- * open starts folded. A cursor or a find match that lands in the hidden part
+ * saves. The fold is a view state and is never saved, so every open starts
+ * folded. (Closing a titled block to its title band is a different thing,
+ * and is saved: `fold` in the fence, codeFenceInfo.ts.) A cursor or a find match that lands in the hidden part
  * opens the block, so nothing is typed or found out of sight.
  * Spec: docs/internal/design-decisions.md (long code blocks fold)
  */
@@ -214,6 +218,10 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
     // lines leaves the fold alone, so a click to copy line 3 does not unroll
     // 500. Layout is read only for a block that is folded.
     const revealIfHidden = (block: Node | null | undefined, bottom: () => number) => {
+      if (block instanceof HTMLElement && block.classList.contains('pn-codeblock-closed')) {
+        unfolders.get(block)?.();
+        return;
+      }
       if (!(block instanceof HTMLElement) || !block.classList.contains('pn-codeblock-folded')) return;
       const scroller = block.querySelector('.pn-codeblock-scroll');
       if (!scroller) return;
@@ -270,8 +278,7 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
         // backtick longer than any fence line inside the code, so a block
         // holding markdown keeps its ``` lines. A trailing newline gets a line
         // of its own, which the parse strips back to one. The language is
-        // written only with the characters an info string can carry. No `parse` key: the
-        // library's parse half is merged underneath and must stay.
+        // written only with the characters an info string can carry.
         serialize(state: any, node: ProseMirrorNode) {
           const text = node.textContent;
           const runs = text.match(/^ {0,3}`{3,}/gm) ?? [];
@@ -280,14 +287,73 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
           // The parse takes any class after `language-`, so a pasted block can
           // carry a language with a backtick, which no backtick fence's info
           // string may hold, or a space, which ends it. Neither is written.
-          const language = String(node.attrs['language'] || '').replace(/[`\s]/g, '');
-          state.write(fence + language + '\n');
+          // A title and its fold state follow the language (codeFenceInfo.ts).
+          const info = formatFenceInfo(
+            node.attrs['language'] as string | null,
+            node.attrs['title'] as string | null,
+            !!node.attrs['folded'],
+          );
+          state.write(fence + info + '\n');
           state.text(text, false);
           if (text.endsWith('\n')) state.out += '\n';
           state.ensureNewLine();
           state.write(fence);
           state.closeBlock(node);
         },
+        // The library's parse half, which our key replaces (a shallow merge),
+        // plus the title: markdown-it's fence writes only the first word of
+        // the info string, so the title and `fold` go onto the pre as data
+        // attributes the node's parseHTML reads.
+        parse: {
+          setup(md: any) {
+            md.set({ langPrefix: 'language-' });
+            if (md.__pnFenceTitle) return;
+            md.__pnFenceTitle = true;
+            const fence = md.renderer.rules.fence;
+            md.renderer.rules.fence = (tokens: any[], idx: number, options: unknown, env: unknown, self: any) => {
+              const token = tokens[idx];
+              const info = token.info as string;
+              const parsed = parseFenceInfo(info);
+              token.info = parsed.language ?? '';
+              let html: string = fence(tokens, idx, options, env, self);
+              token.info = info;
+              if (parsed.title !== null) {
+                const attrs = ` data-title="${md.utils.escapeHtml(parsed.title)}"` + (parsed.folded ? ' data-folded=""' : '');
+                html = html.replace(/^<pre/, '<pre' + attrs);
+              }
+              // A map block's size (PlaceMapNode.tsx), numbers only.
+              const size = parseFenceSize(info);
+              if (size.width !== null) html = html.replace(/^<pre/, `<pre data-width="${size.width}"`);
+              if (size.height !== null) html = html.replace(/^<pre/, `<pre data-height="${size.height}"`);
+              return html;
+            };
+          },
+          updateDOM(element: HTMLElement) {
+            element.innerHTML = element.innerHTML.replace(/\n<\/code><\/pre>/g, '</code></pre>');
+          },
+        },
+      },
+    };
+  },
+
+  // A title over the code and whether the block is saved closed under it.
+  // Both ride on the pre, so a copy and paste inside the app keeps them.
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      title: {
+        default: null,
+        parseHTML: (el: HTMLElement) => {
+          const raw = el.getAttribute('data-title');
+          return raw === null ? null : cleanFenceTitle(raw);
+        },
+        renderHTML: (attrs: Record<string, unknown>) =>
+          attrs['title'] === null || attrs['title'] === undefined ? {} : { 'data-title': attrs['title'] },
+      },
+      folded: {
+        default: false,
+        parseHTML: (el: HTMLElement) => el.hasAttribute('data-folded'),
+        renderHTML: (attrs: Record<string, unknown>) => (attrs['folded'] ? { 'data-folded': '' } : {}),
       },
     };
   },
@@ -394,10 +460,15 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
       });
 
       tools.append(wrapTip, copyTip);
-      pre.appendChild(tools);
 
       // The language, always on show in the band above the first line, so a
       // plain block says why it has no colours and offers the fix in place.
+      // On the left, as it always was; on a block with a title it moves into
+      // the head at the right end, after the tools, since the title takes the
+      // left and a label under it read as a second title (GitHub #679).
+      const head = document.createElement('span');
+      head.className = 'pn-codeblock-head';
+      head.contentEditable = 'false';
       const lang = document.createElement('span');
       lang.className = 'pn-codeblock-lang';
       lang.contentEditable = 'false';
@@ -411,7 +482,8 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
       langBtn.append(langName);
       langBtn.insertAdjacentHTML('beforeend', CARET_ICON);
       lang.appendChild(langBtn);
-      pre.appendChild(lang);
+      head.append(tools);
+      pre.append(head, lang);
       let langShown: string | null | undefined;
       const paintLang = () => {
         const language = current.attrs['language'] as string | null;
@@ -428,16 +500,117 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
         e.preventDefault();
         e.stopPropagation();
         if (!editor.isEditable) return;
+        const titled = current.attrs['title'] !== null;
         openCodeLanguageMenu(langBtn, current.attrs['language'] as string | null, (language) => {
-          const pos = typeof getPos === 'function' ? getPos() : undefined;
-          if (typeof pos !== 'number') return;
           // setNodeMarkup, not setNodeAttribute: the lowlight plugin only
           // re-highlights a block a step's from/to range covers, and an
           // attribute step has none, so the old colours stayed.
-          editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, { ...current.attrs, language }));
+          if (!setAttrs({ language })) return;
           if (language !== COPY_BOX_LANGUAGE) rememberCodeLanguage(language);
           editor.view.focus();
+        }, {
+          label: i18n.t(titled ? 'editor:codeBlock.removeTitle' : 'editor:codeBlock.addTitle'),
+          run: () => {
+            if (titled) {
+              setAttrs({ title: null, folded: false });
+              editor.view.focus();
+            } else if (setAttrs({ title: '' })) {
+              titleInput.focus();
+            }
+          },
         });
+      });
+
+      const setAttrs = (attrs: Record<string, unknown>): boolean => {
+        const pos = typeof getPos === 'function' ? getPos() : undefined;
+        if (typeof pos !== 'number') return false;
+        editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, { ...current.attrs, ...attrs }));
+        return true;
+      };
+
+      // The title band: a chevron that closes the block to the band, and the
+      // title as a field (GitHub #679). Shown only on a block with a title;
+      // "Add title" in the language menu gives a block an empty one. A
+      // closed block is saved closed (`fold` in the fence). A cursor or a
+      // find match that lands in it opens it on screen without an edit.
+      const titleBar = document.createElement('span');
+      titleBar.className = 'pn-codeblock-title';
+      titleBar.contentEditable = 'false';
+      const chevron = document.createElement('button');
+      chevron.type = 'button';
+      chevron.className =
+        `${CODE_TOOL_BTN} w-6 shrink-0 [@media(hover:none)]:w-8 ` +
+        // theme-ok: the code block toolbar is dark in every theme
+        'text-neutral-300 hover:bg-neutral-700/80 hover:text-neutral-100';
+      chevron.innerHTML = CARET_ICON;
+      const titleInput = document.createElement('input');
+      titleInput.type = 'text';
+      titleInput.spellcheck = false;
+      titleInput.autocomplete = 'off';
+      titleInput.placeholder = i18n.t('editor:codeBlock.titlePlaceholder');
+      titleInput.setAttribute('aria-label', titleInput.placeholder);
+      titleBar.append(chevron, titleInput);
+      pre.appendChild(titleBar);
+
+      // Open on screen although the node says closed, until the node changes
+      // its fold state.
+      let openedHere = false;
+      let titleShown: string | null | undefined;
+      let foldedShown: boolean | undefined;
+      const paintTitle = () => {
+        const title = current.attrs['title'] as string | null;
+        const folded = !!current.attrs['folded'];
+        if (folded !== foldedShown) openedHere = false;
+        foldedShown = folded;
+        const closed = title !== null && folded && !openedHere;
+        pre.classList.toggle('pn-codeblock-titled', title !== null);
+        if (title !== null) head.appendChild(lang);
+        else pre.appendChild(lang);
+        pre.classList.toggle('pn-codeblock-closed', closed);
+        titleBar.hidden = title === null;
+        chevron.setAttribute('aria-expanded', String(!closed));
+        chevron.setAttribute('aria-label', i18n.t(closed ? 'editor:codeBlock.expand' : 'editor:codeBlock.collapse'));
+        titleInput.readOnly = !editor.isEditable;
+        if (title !== titleShown && document.activeElement !== titleInput) titleInput.value = title ?? '';
+        titleShown = title;
+      };
+      chevron.addEventListener('mousedown', (e) => e.preventDefault());
+      chevron.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const closed = pre.classList.contains('pn-codeblock-closed');
+        if (!editor.isEditable) {
+          openedHere = closed;
+          pre.classList.toggle('pn-codeblock-closed', !closed);
+          chevron.setAttribute('aria-expanded', String(closed));
+          return;
+        }
+        openedHere = false;
+        setAttrs({ folded: !closed });
+      });
+      const commitTitle = () => {
+        // An empty field keeps the band: only "Remove title" takes it away.
+        const value = cleanFenceTitle(titleInput.value);
+        titleInput.value = value;
+        if (current.attrs['title'] === null) return;
+        if (value !== current.attrs['title']) setAttrs({ title: value });
+      };
+      titleInput.addEventListener('blur', commitTitle);
+      titleInput.addEventListener('keydown', (e) => {
+        if (isImeComposing(e)) return;
+        e.stopPropagation();
+        if (e.key === 'Enter' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          commitTitle();
+          const pos = typeof getPos === 'function' ? getPos() : undefined;
+          if (typeof pos !== 'number') return;
+          editor.view.dispatch(editor.state.tr.setSelection(TextSelection.create(editor.state.doc, pos + 1)));
+          editor.view.focus();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          titleInput.value = (current.attrs['title'] as string | null) ?? '';
+          editor.view.focus();
+        }
       });
 
       const fold = document.createElement('span');
@@ -466,7 +639,13 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
         if (label !== foldLabel) foldBtn.textContent = foldLabel = label;
       };
       paintFold();
+      paintTitle();
       unfolders.set(pre, () => {
+        if (pre.classList.contains('pn-codeblock-closed')) {
+          openedHere = true;
+          paintTitle();
+          return;
+        }
         if (expanded || !pre.classList.contains('pn-codeblock-folded')) return;
         expanded = true;
         paintFold();
@@ -491,15 +670,20 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
           current = next;
           paintFold();
           paintLang();
+          paintTitle();
           return true;
         },
         // The tools, the language label and the fold button are not document
         // content: their clicks, label changes and class flips are not edits
         // for ProseMirror to read back, and neither is the fold class on the
         // pre.
-        stopEvent: (e: Event) => [tools, lang, fold].some((el) => el.contains(e.target as Node)),
+        stopEvent: (e: Event) => [head, lang, titleBar, fold].some((el) => el.contains(e.target as Node)),
         ignoreMutation: (m: { type: string; target: Node }) =>
-          [tools, lang, fold].some((el) => el.contains(m.target)) || (m.type === 'attributes' && m.target === pre),
+          [head, lang, titleBar, fold].some((el) => el.contains(m.target)) ||
+          (m.type === 'attributes' && m.target === pre) ||
+          // Moving the label between the pre and the head is a childList
+          // change on the pre itself.
+          (m.type === 'childList' && m.target === pre && [...((m as MutationRecord).addedNodes ?? []), ...((m as MutationRecord).removedNodes ?? [])].every((n) => n === lang)),
         destroy: unsubscribe,
       };
     };

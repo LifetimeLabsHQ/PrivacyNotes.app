@@ -169,6 +169,8 @@
     "useClipBody": "Schick die Zwischenablage, die Ausgabe eines Befehls oder eine Fehlermeldung direkt in deine Notizen.",
     "useToolsTitle": "Teil deiner eigenen Werkzeuge",
     "useToolsBody": "Der Befehl antwortet in JSON und endet mit klaren Exit-Codes, damit deine Skripte wissen, dass die Notiz gespeichert ist.",
+    "useShortcutTitle": "Eine Notiz per Tastenkürzel",
+    "useShortcutBody": "Eine Taste, die du in den Einstellungen deines Systems wählst, öffnet ein Feld für eine Schnellnotiz, auch wenn die App geschlossen ist. Sie landet in deinem Agent-Ordner.",
     "howLink": "Lies, wie privacynotes funktioniert"
   },
   "meds": {
@@ -342,7 +344,7 @@
     "manualUpdates": "Manuelle Updates",
     "extensionHeading": "Web-Clipper und Passwort-Manager",
     "extensionKeyOpen": "Erweiterung öffnen",
-    "extensionKeyLogin": "Login für diese Website kopieren",
+    "extensionKeyLogin": "Login für diese Website ausfüllen",
     "extensionKeyBookmark": "Seite als Lesezeichen speichern",
     "extensionAria": "Erweiterung zu {{name}} hinzufügen",
     "extensionNote": "Nur auf Computern."

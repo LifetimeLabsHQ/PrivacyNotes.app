@@ -35,6 +35,7 @@ import {
   folderLookKey,
   isLookColor,
   lookOf,
+  NOTES_ON,
   NOTE_COLOR_CHOICES,
   NOTE_COLOR_LABEL,
   type ItemStyles,
@@ -247,7 +248,7 @@ export function LookPicker({
             ? ''
             : t('captionTag');
   // A note's color belongs to the note menu, so its reset leaves the color.
-  const reset: Partial<Record<LookAttr, null>> = iconOnly ? { icon: null } : { icon: null, color: null };
+  const reset: Partial<Record<LookAttr, null>> = iconOnly ? { icon: null } : { icon: null, color: null, notes: null };
   const resettable = iconOnly ? !!look.icon : !!look.icon || !!look.color;
 
   /** Arrow keys walk the grid by position, across the group headings. */
@@ -362,6 +363,20 @@ export function LookPicker({
     </div>
   );
 
+  // A folder or tag icon can show on its notes: on the Icon and Logo tabs
+  // only, pinned above the footer so the scrolling grid never hides it.
+  // Off and greyed while there is no icon to show.
+  // Spec: docs/internal/specs/folder-tag-icons.md (section 4.11)
+  const onNotesSwitch = !iconOnly && tab !== 'color' && (
+    <Switch
+      className="shrink-0 border-t border-divider px-4 py-2.5"
+      label={t(target.kind === 'folder' ? 'applyToFolderItems' : 'applyToTagItems')}
+      checked={!!look.icon && look.notes === NOTES_ON}
+      disabled={!look.icon}
+      onChange={(on) => onPick({ notes: on ? NOTES_ON : null })}
+    />
+  );
+
   const footer = (
     <div className="shrink-0 border-t border-divider px-4 pt-1">
       <ModalFooter>
@@ -446,25 +461,25 @@ export function LookPicker({
               </button>
             ))}
           </div>
-          {ownColor && (
-            <div className="mt-2 rounded-md bg-track p-2">
-              <NoteColorExample
-                choice={noteColors}
-                color={ownColor}
-                title={tSettings('appearance.noteColorsExampleTitle')}
-                source={
-                  <>
-                    {target.kind === 'folder' ? (
-                      <Folder weight="fill" style={inkStyle(ownColor)} aria-hidden="true" />
-                    ) : (
-                      <Hash style={inkStyle(ownColor)} aria-hidden="true" />
-                    )}
-                    <span className="truncate">{target.name}</span>
-                  </>
-                }
-              />
-            </div>
-          )}
+          {/* Always shown, so the choice can be seen before a color is
+              picked: with no color yet, it draws the sample's own green. */}
+          <div className="mt-2 rounded-md bg-track p-2">
+            <NoteColorExample
+              choice={noteColors}
+              color={ownColor ?? 'green'}
+              title={tSettings('appearance.noteColorsExampleTitle')}
+              source={
+                <>
+                  {target.kind === 'folder' ? (
+                    <Folder weight="fill" style={inkStyle(ownColor ?? 'green')} aria-hidden="true" />
+                  ) : (
+                    <Hash style={inkStyle(ownColor ?? 'green')} aria-hidden="true" />
+                  )}
+                  <span className="truncate">{target.name}</span>
+                </>
+              }
+            />
+          </div>
         </div>
       </div>
     </>
@@ -574,6 +589,7 @@ export function LookPicker({
           <div className={`px-4 shrink-0 ${keyboard ? 'pt-3' : ''}`}>{top}</div>
           <div className="px-4 pt-1 pb-2 overflow-y-auto min-h-0 flex-1 overscroll-contain" onScroll={onBodyScroll}>{body}</div>
           {/* Done is the close button, which stays in the header. */}
+          {!keyboard && onNotesSwitch}
           {!keyboard && footer}
         </div>
       </>,
@@ -597,6 +613,7 @@ export function LookPicker({
       >
         <div className="px-4 pt-4 shrink-0">{top}</div>
         <div className="px-4 pt-1 pb-3 overflow-y-auto min-h-0 flex-1 overscroll-contain" onScroll={onBodyScroll}>{body}</div>
+        {onNotesSwitch}
         {footer}
       </div>
     </div>,

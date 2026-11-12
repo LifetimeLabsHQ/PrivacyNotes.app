@@ -13,6 +13,10 @@ O texto pode ser <span style="color: #e03131">vermelho</span>, <span style="colo
 
 Pode ficar ==destacado em amarelo== ou <mark style="background-color: rgba(64, 192, 87, 0.35)">em verde</mark>.
 
+Um spoiler esconde palavras até alguém clicar nelas: o presente é ||uma vitrola||. Selecione as palavras e escolha **Spoiler** no menu **Inserir**, ou digite duas barras de cada lado.
+
+Um ícone ou um logo pode ficar no meio do texto, como :icon[gift] :icon[coffee] :icon[rocket-launch] ou :logo[github]. Escolha um em **Inserir** > **Ícones e logos**.
+
 O botão **Aa** muda o tamanho e a fonte. O texto pode ser <span style="font-size: 0.85em">pequeno</span>, normal ou <span style="font-size: 1.6em">grande</span>. Pode ser <span style="font-family: ui-sans-serif, system-ui, sans-serif">simples</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">com serifa</span> ou <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">monoespaçado</span>.
 
 ## Onde as palavras ficam
@@ -51,12 +55,21 @@ O alinhamento move um parágrafo inteiro, nunca uma palavra sozinha. Ponha o cur
 | Europa | 1.204 | 48 % |
 | Américas | 902 | 36 % |
 | Ásia | 401 | 16 % |
+<!-- table-fill: r0=blue r1c2=green r3c2=red -->
 
-A coluna do meio está centralizada e a última alinhada à direita. Arraste a borda de uma coluna para deixá-la mais larga.
+A coluna do meio está centralizada e a última alinhada à direita. Arraste a borda de uma coluna para deixá-la mais larga. Uma célula ou uma linha inteira pode ganhar uma cor pela barra da tabela. A setinha em uma célula de cabeçalho ordena as linhas abaixo dela, e um segundo clique ordena na ordem inversa.
+
+Uma tabela também faz contas. Digite `=` em uma célula para escolher uma função. A célula mostra o resultado e a nota guarda a fórmula, então clique em um resultado para ver como ele foi calculado.
+
+| Item | Qtd. | Preço | Total |
+| --- | ---: | ---: | ---: |
+| Café | 2 | 3.50 | =B2*C2 |
+| Bolo | 1 | 4.20 | =B3*C3 |
+|  |  | Soma | =SUM(D2:D3) |
 
 ## Avisos
 
-Um aviso é uma caixa colorida para algo que ninguém pode deixar passar.
+Um aviso é uma caixa colorida para algo que ninguém pode deixar passar. Digite `[!` em uma linha vazia para escolher um.
 
 > [!tip]+ Dica
 > Clique no ícone para fechá-lo.
@@ -136,7 +149,21 @@ export function isLongRead(stats) {
 }
 ```
 
-Um pedaço curto de código dentro de uma frase aparece assim: `isto`.
+Um bloco de código pode ter um título. Clique no nome da linguagem e escolha **Adicionar título**. A seta ao lado do título recolhe o bloco em uma linha só, e a nota se lembra disso.
+
+```bash title="backup.sh" fold
+#!/bin/sh
+# Copia a pasta de notas para um arquivo compactado com data.
+tar -czf "notes-$(date +%F).tar.gz" "$HOME/Notes"
+```
+
+Uma **Caixa de cópia** guarda uma coisa para copiar, como um endereço ou um comando. O botão dela copia tudo com um clique.
+
+```copy
+ssh-keygen -t ed25519 -C "laptop"
+```
+
+Um pedaço curto de código dentro de uma frase aparece assim: `isto`. Segure Cmd (Ctrl no Windows e no Linux) e clique nele para copiá-lo.
 
 ## Matemática
 
@@ -150,11 +177,21 @@ $$i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi$$
 
 Arraste uma imagem para dentro de uma nota, ou cole. Clique uma vez nela para mudar o tamanho, ou para movê-la à esquerda, ao centro ou à direita. A de cima está com metade da largura e centralizada.
 
+## Mapas
+
+```map
+35.3606, 138.7274
+Monte Fuji
+```
+
+Coloque um lugar em uma nota com **Inserir** > **Localização**. O mapa vem do nosso próprio servidor, então nenhuma empresa de mapas vê para onde você olha. Em qualquer outro app de Markdown, ele aparece como as coordenadas e o nome.
+
 ## Links
 
 São dois tipos, e eles são diferentes de propósito.
 
 - Um link da web abre um site: [privacynotes.app](https://privacynotes.app/br)
+- Um link da web pode ter um texto ao passar o mouse. Aponte para [este aqui](https://privacynotes.app/br/help "Nossas páginas de ajuda") e espere.
 - Um link entre notas abre outra nota sua: [[Como suas notas são protegidas]]
 
 Os dois têm botão na barra. A corrente faz um link da web. Os colchetes fazem um link entre notas: listam suas notas e você escolhe qual quer. Digitar `[[` faz a mesma coisa.

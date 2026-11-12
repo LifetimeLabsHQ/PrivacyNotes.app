@@ -39,7 +39,7 @@ import { FILE_REF_PREFIX, openMediaViewerInDoc, type MediaRef } from './mediaRef
 import { validateAttachment } from './attachmentValidation';
 import { suppressSoftKeyboard } from './softKeyboard';
 import type { ImageStore } from './imageStore';
-import { saveBlob, type SaveResult } from './saveFile';
+import { saveBlob, saveFailureText, type SaveResult } from './saveFile';
 import i18n from './i18n';
 import { drawablePicture } from './avifDisplay';
 import { IMAGE_FORMAT_MIME, sniffImageFormat } from './imageMetadata';
@@ -339,7 +339,7 @@ const EncryptedImageView = memo(function EncryptedImageView({
   const [damaged, setDamaged] = useState(false);
   // A failed native save can leave an empty or partial file, so the message
   // stays until a save succeeds; a dismissed dialog changes nothing.
-  const [saveFailed, setSaveFailed] = useState(false);
+  const [saveFailed, setSaveFailed] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
   const [loading, setLoading] = useState(!cachedUrl);
@@ -545,8 +545,8 @@ const EncryptedImageView = memo(function EncryptedImageView({
     } else {
       saved = await saveStoredImage(source.uuid, alt);
     }
-    if (saved?.ok) setSaveFailed(false);
-    else if (saved?.reason === 'failed') setSaveFailed(true);
+    if (saved?.ok) setSaveFailed(null);
+    else if (saved?.reason === 'failed') setSaveFailed(saveFailureText(saved, t('media:viewer.saveFailed')));
   }, [src, alt]);
 
   // The clipboard write starts inside the click, which WebKit requires.
@@ -811,7 +811,7 @@ const EncryptedImageView = memo(function EncryptedImageView({
           />
         )}
         {(selected || tapped) && saveFailed && (
-          <p className="mt-1 text-small text-danger">{t('media:viewer.saveFailed')}</p>
+          <p className="mt-1 text-small text-danger">{saveFailed}</p>
         )}
         {(selected || tapped) && copyFailed && (
           <p className="mt-1 text-small text-danger">{t('image.copyFailed')}</p>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowsOutSimple, BellSimple, Calendar, Gift, Repeat } from './icons';
+import { ArrowsOutSimple, BellSimple, Calendar, Gift, Globe, Repeat } from './icons';
 import { SPACE_ICONS } from './SpaceSwitch';
 import { typeGlyph } from './NoteRow';
 import { HoverLabel } from './HoverLabel';
@@ -177,7 +177,8 @@ export function CalendarItemRow({ entry, day, mixed, onOpen, onMenu, onKeyDown, 
   const { t } = useTranslation(['shell', 'common', 'notes']);
   const { Icon: TypeGlyph } = typeGlyph(entry.kind);
   const color = dayKindColor(entry.kind);
-  const Glyph = entry.kind === 'contact' ? Gift : TypeGlyph;
+  // An event of a subscribed calendar wears a globe (#619).
+  const Glyph = entry.feed ? Globe : entry.kind === 'contact' ? Gift : TypeGlyph;
   // The item's own color and icon, as its list row shows them: the icon
   // takes the color, and a background look also tints the row under its hover.
   const { row, icon: ink, iconPaths } = useEntryLook(entry);
@@ -201,9 +202,9 @@ export function CalendarItemRow({ entry, day, mixed, onOpen, onMenu, onKeyDown, 
       ref={rowRef}
       type="button"
       onClick={(e) => onOpen(entry, e)}
-      onContextMenu={onMenu ? (e) => onMenu(e, entry) : undefined}
+      onContextMenu={onMenu && !entry.feed ? (e) => onMenu(e, entry) : undefined}
       onKeyDown={onKeyDown}
-      aria-label={[title, when, spaceLabel].filter(Boolean).join(', ')}
+      aria-label={[title, when, spaceLabel, entry.feed].filter(Boolean).join(', ')}
       aria-pressed={select ? select.selected : undefined}
       {...dragProps}
       style={select?.selected ? undefined : row}

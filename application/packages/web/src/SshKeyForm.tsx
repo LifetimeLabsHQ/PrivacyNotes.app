@@ -3,12 +3,13 @@ import { Button } from './ui/Button';
 import { VaultFormActions } from './ui/VaultFormActions';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Info, Key, Lock, NotePencil, Shield, Tag } from './icons';
+import { Info, Key, Lock, Shield, Tag } from './icons';
 import { hasPin } from './pin';
 import { PinInfoModal } from './PinInfoModal';
 import { useCopyToClipboard } from './clipboard';
 import { PasswordField } from './PasswordText';
 import { FIELD_CLASS, FieldLabel } from './formFields';
+import { NotesField } from './NotesField';
 import { saveFailureText } from './saveFile';
 import { detectPlatform } from './devices';
 
@@ -286,17 +287,13 @@ export function SshKeyForm({
         </div>
 
         {/* Notes */}
-        <div>
-          <FieldLabel icon={<NotePencil />}>{t('common:cardForm.notes')}</FieldLabel>
-          <textarea
-            value={data.notes}
-            onChange={(e) => updateBody({ notes: e.target.value })}
-            placeholder={t('common:cardForm.notesPlaceholder')}
-            disabled={locked}
-            rows={3}
-            className={`${fieldClass} resize-y`}
-          />
-        </div>
+        <NotesField
+          label={t('common:cardForm.notes')}
+          value={data.notes}
+          onChange={(notes) => updateBody({ notes })}
+          placeholder={t('common:cardForm.notesPlaceholder')}
+          disabled={locked}
+        />
 
         {/* PIN-protect toggle */}
         <label className={`flex items-center gap-2 pt-2 border-t border-divider ${!pinConfigured && !pinProtected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>

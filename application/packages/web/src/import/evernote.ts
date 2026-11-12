@@ -8,6 +8,7 @@ import { importBlobs } from './blobImport';
 import type { ImportedNote, ParsedImport } from './types';
 import { toLocalIso } from '../notesViewUtils';
 import i18n from '../i18n';
+import { LOCATION_KEY, importedLocation, type NoteLocation } from '../noteLocation';
 
 const msg = (key: string, options?: Record<string, unknown>): string =>
   i18n.t(`importExport:importLog.evernote.${key}`, options);
@@ -364,13 +365,14 @@ interface ConvFlags {
   transcripts: number;
   reminders: number;
   sourceUrls: number;
+  places: number;
 }
 
 function emptyFlags(): ConvFlags {
   return {
     underline: 0, checklists: 0, tables: 0, codeBlocks: 0, formulas: 0,
     highlights: 0, colors: 0, droppedStyling: 0, noteLinks: 0, taskBlocks: 0,
-    encrypted: 0, transcripts: 0, reminders: 0, sourceUrls: 0,
+    encrypted: 0, transcripts: 0, reminders: 0, sourceUrls: 0, places: 0,
   };
 }
 
@@ -917,6 +919,7 @@ interface EnexNote {
   createdAt: string | null;
   updatedAt: string | null;
   sourceUrl: string;
+  place: NoteLocation | undefined;
   reminderTime: string | null;
   reminderDone: string | null;
   reminderOrder: string | null;
@@ -977,6 +980,9 @@ function parseNoteChunk(chunk: string): EnexNote | null {
     createdAt: parseEnexDate(text('created')),
     updatedAt: parseEnexDate(text('updated')),
     sourceUrl: attr('source-url'),
+    // The place Evernote recorded when the note was made, with its name when
+    // it has one. Spec: docs/internal/plans/note-location.md (section 6)
+    place: importedLocation(attr('latitude'), attr('longitude'), attr('place-name')),
     reminderTime: parseEnexDate(attr('reminder-time')),
     reminderDone: parseEnexDate(attr('reminder-done-time')),
     reminderOrder: attr('reminder-order') || null,
@@ -1112,7 +1118,9 @@ export async function parseEvernote(
         tags: parsed.tags,
         createdAt,
         updatedAt: parsed.updatedAt ?? createdAt,
+        ...(parsed.place ? { trackers: { [LOCATION_KEY]: parsed.place } } : {}),
       };
+      if (parsed.place) flags.places++;
 
       if (enex.notebook) {
         note.folderId = dirToFolderId.get(enex.notebook) ?? null;
@@ -1183,6 +1191,9 @@ export async function parseEvernote(
     transforms.push(
       msg('reminders', { count: flags.reminders })
     );
+  }
+  if (flags.places > 0) {
+    transforms.push(i18n.t('importExport:importLog.shared.places', { count: flags.places }));
   }
   if (flags.tables > 0) {
     transforms.push(

@@ -31,7 +31,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowSquareOut, CheckCircle, FileMd, FileText } from '../icons';
 import { useEscapeToClose } from '../useEscapeToClose';
-import { Badge, Button, RowTitle, SETTINGS_HELP, SETTINGS_ROW, StatusLine } from '../ui';
+import { Button, RowTitle, SETTINGS_HELP, SETTINGS_ROW, StatusLine } from '../ui';
 import {
   claimDefaultApp,
   markDefaultAppOurs,
@@ -447,12 +447,12 @@ export function DefaultAppSettingsRow({ kind }: { kind: AssocKind }) {
           </div>
         )}
       </div>
+      {/* "Default" is the button's place and size, inactive, so the two rows
+          weigh the same whether the app is the default or not. */}
       {assoc && !(!isOurs && assoc.finderOnly) && (isOurs ? (
-        <div>
-          <Badge tone="success" icon={<CheckCircle weight="fill" aria-hidden="true" />}>
-            {t('appearance.defaultAppsIsDefault')}
-          </Badge>
-        </div>
+        <Button icon={<CheckCircle weight="fill" aria-hidden="true" className="shrink-0 text-success" />} disabled>
+          {t('appearance.defaultAppsIsDefault')}
+        </Button>
       ) : (
         <Button
           icon={assoc.settable

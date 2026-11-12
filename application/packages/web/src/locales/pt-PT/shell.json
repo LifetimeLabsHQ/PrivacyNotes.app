@@ -397,6 +397,7 @@
     "modeRich": "Formatado",
     "modeSource": "Markdown",
     "reopenPrompt": "O teu browser precisa de autorização outra vez depois de recarregares. A tua pasta fica memorizada, por isso é só um clique.",
+    "reopenPromptDesktop": "Escolhe a pasta {{name}} mais uma vez para que a app a possa abrir de novo. Nada na pasta foi alterado.",
     "reopenFolder": "Reabrir {{name}}",
     "new": "Novo",
     "saveToNotes": "Guardar nas minhas notas",
@@ -698,6 +699,7 @@
       "bookClub": "Clube do livro",
       "rent": "Pagar a renda"
     },
+    "feedReadOnly": "De {{name}}. Só podes alterar este evento nesse calendário.",
     "nothingFor_one": "Nada durante {{count}} dia",
     "more_one": "+{{count}} mais"
   },
@@ -826,7 +828,8 @@
       "file": "Carregar um ficheiro",
       "contact": "Novo contacto",
       "bookmark": "Novo marcador",
-      "clip": "Recortar uma página"
+      "clip": "Recortar uma página",
+      "writeNote": "Escrever uma nota"
     },
     "keepAsText": "Manter como texto",
     "placeholder": "Título, dia, hora, repetição...",
@@ -983,6 +986,7 @@
     "stepConnect": "Liga",
     "makeCode": "Criar um código",
     "connectHint": "Cria um código de utilização única e cola-o na extensão.",
+    "secondBrowserPro": "Está ligado um navegador. Um segundo precisa do Pro.",
     "thisBrowser": "Este navegador",
     "otherApps": "Apps para computador e telemóvel:",
     "desktopAll": "Todas as transferências",
@@ -1040,7 +1044,7 @@
   "extensionConnect": {
     "clips": "Recortador web",
     "clipsHint": "Guarda sites como notas.",
-    "loginsHint": "Logins, cartões, chaves SSH e marcadores do site onde estás, só para copiar. Bloqueado com o seu próprio PIN ou código de acesso.",
+    "loginsHint": "Logins, cartões, chaves SSH e marcadores do site onde estás, para copiar ou preencher. Bloqueado com o seu próprio PIN ou código de acesso.",
     "pickOne": "Liga pelo menos um.",
     "codeLabel": "Código para a extensão",
     "oneUse": "Funciona uma vez, durante 10 minutos.",

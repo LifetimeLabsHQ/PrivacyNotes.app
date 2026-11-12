@@ -795,6 +795,14 @@ export function NotesList({
               <EmptyState icon={<PILLAR_GLYPHS.drawings aria-hidden="true" />} title={t('empty.drawings')}>
                 {t('empty.drawingsLine')}
               </EmptyState>
+            ) : !search.trim() && (view === 'home' || view === 'all' || view === 'journal' || view === 'vault') ? (
+              /* A new real account starts with one note (GitHub #708), so
+                 these lists are often empty on day one: the standard empty
+                 state, not a grey line that reads as a failed load. */
+              <EmptyState
+                icon={view === 'journal' ? <PILLAR_GLYPHS.journals aria-hidden="true" /> : view === 'vault' ? <PILLAR_GLYPHS.vault aria-hidden="true" /> : <PILLAR_GLYPHS.notes aria-hidden="true" />}
+                title={view === 'journal' ? t('empty.journal') : view === 'vault' ? t('empty.vault') : t('empty.notes')}
+              />
             ) : (
               <p className="p-4 text-compact text-pn-muted text-center">
                 {search.trim() ? t('empty.noMatches') : view === 'vault' ? t('empty.vault') : view === 'archive' ? t('empty.archive') : view === 'trash' ? t('empty.trash') : t('empty.notes')}

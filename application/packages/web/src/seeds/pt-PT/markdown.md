@@ -13,6 +13,10 @@ O texto pode ser <span style="color: #e03131">vermelho</span>, <span style="colo
 
 Pode estar ==realçado a amarelo== ou <mark style="background-color: rgba(64, 192, 87, 0.35)">a verde</mark>.
 
+Um spoiler esconde palavras até alguém clicar nelas: o presente é ||um gira-discos||. Seleciona as palavras e escolhe **Spoiler** no menu **Inserir**, ou escreve duas barras de cada lado.
+
+Um ícone ou um logótipo pode ficar numa linha de texto, como :icon[gift] :icon[coffee] :icon[rocket-launch] ou :logo[github]. Escolhe um em **Inserir** > **Ícones e logótipos**.
+
 O botão **Aa** muda o tamanho e o tipo de letra. O texto pode ser <span style="font-size: 0.85em">pequeno</span>, normal ou <span style="font-size: 1.6em">grande</span>. Pode ser <span style="font-family: ui-sans-serif, system-ui, sans-serif">simples</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">com serifa</span> ou <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">monoespaçado</span>.
 
 ## Onde ficam as palavras
@@ -51,12 +55,21 @@ O alinhamento move um parágrafo inteiro, nunca uma palavra só. Põe o cursor n
 | Europa | 1204 | 48 % |
 | Américas | 902 | 36 % |
 | Ásia | 401 | 16 % |
+<!-- table-fill: r0=blue r1c2=green r3c2=red -->
 
-A coluna do meio está ao centro e a última alinhada à direita. Arrasta a borda de uma coluna para a alargar.
+A coluna do meio está ao centro e a última alinhada à direita. Arrasta a borda de uma coluna para a alargar. Uma célula ou uma linha inteira pode receber uma cor na barra da tabela. A pequena seta numa célula de cabeçalho ordena as linhas por baixo dela, e um segundo clique ordena-as no sentido inverso.
+
+Uma tabela também faz contas. Escreve `=` numa célula para escolher uma função. A célula mostra o resultado e a nota guarda a fórmula, por isso clica num resultado para veres como foi obtido.
+
+| Artigo | Qtd. | Preço | Total |
+| --- | ---: | ---: | ---: |
+| Café | 2 | 3.50 | =B2*C2 |
+| Bolo | 1 | 4.20 | =B3*C3 |
+|  |  | Soma | =SUM(D2:D3) |
 
 ## Avisos
 
-Um aviso é uma caixa colorida para algo que ninguém deve perder de vista.
+Um aviso é uma caixa colorida para algo que ninguém deve perder de vista. Escreve `[!` numa linha vazia para escolher um.
 
 > [!tip]+ Dica
 > Clica no ícone para o fechar.
@@ -136,7 +149,21 @@ export function isLongRead(stats) {
 }
 ```
 
-Um bocado curto de código dentro de uma frase aparece assim: `isto`.
+Um bloco de código pode ter um título. Clica no nome da linguagem e escolhe **Adicionar título**. A seta ao lado do título recolhe o bloco numa só linha, e a nota lembra-se disso.
+
+```bash title="backup.sh" fold
+#!/bin/sh
+# Copia a pasta das notas para um arquivo com data.
+tar -czf "notes-$(date +%F).tar.gz" "$HOME/Notes"
+```
+
+Uma **Caixa de cópia** guarda uma coisa para copiar, como um endereço ou um comando. O botão dela copia tudo com um clique.
+
+```copy
+ssh-keygen -t ed25519 -C "laptop"
+```
+
+Um bocado curto de código dentro de uma frase aparece assim: `isto`. Mantém premido Cmd (Ctrl no Windows e no Linux) e clica nele para o copiar.
 
 ## Matemática
 
@@ -150,11 +177,21 @@ $$i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi$$
 
 Arrasta uma imagem para uma nota, ou cola-a. Clica nela uma vez para mudar o tamanho, ou para a pôr à esquerda, ao centro ou à direita. A de cima está a meia largura e ao centro.
 
+## Mapas
+
+```map
+35.3606, 138.7274
+Monte Fuji
+```
+
+Põe um local numa nota com **Inserir** > **Localização**. O mapa vem do nosso próprio servidor, por isso nenhuma empresa de mapas vê para onde olhas. Em qualquer outra app de Markdown, lê-se como as coordenadas e o nome.
+
 ## Ligações
 
 Há dois tipos, e são diferentes de propósito.
 
 - Uma ligação web abre um site: [privacynotes.app](https://privacynotes.app/pt)
+- Uma ligação web pode ter texto ao passar o rato. Aponta para [esta](https://privacynotes.app/pt/help "As nossas páginas de ajuda") e espera.
 - Uma ligação entre notas abre outra nota tua: [[Como as tuas notas estão protegidas]]
 
 Os dois têm botão na barra. A corrente faz uma ligação web. Os parênteses retos fazem uma ligação entre notas: listam as tuas notas e escolhes a que queres. Escrever `[[` faz o mesmo.

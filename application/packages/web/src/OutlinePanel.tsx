@@ -98,10 +98,11 @@ type Props = {
  * keeps it mutually exclusive with find. Collapsed it is a single toggle
  * button; open it is a Card panel listing the note's headings. Clicking a
  * heading scrolls it into view; a scroll-spy marks the section you're in.
- * A heading row carries a link icon with two copies: `[[Note#Heading]]`, the
- * note-link that opens this note at that heading, and the shortcut that
- * opens it from other apps. It shows on hover and on
- * the active row, and on every row of a touch screen, which has no hover.
+ * A heading or callout row carries a link icon with two copies:
+ * `[[Note#Heading]]`, the note-link that opens this note at that heading or
+ * callout, and the shortcut that opens it from other apps. It shows on
+ * hover and on the active row, and on every row of a touch screen, which
+ * has no hover.
  *
  * Renders nothing when the note has no headings - there is nothing to outline.
  */
@@ -190,9 +191,10 @@ export function OutlinePanel({ editor, open, onOpenChange }: Props) {
   if (headings.length === 0) return null;
   const outline = foldOutline(headings, folded);
   const currentPos = outline.shownAs(activePos);
-  // Only a heading a link can find gets the icon: not a callout, and not a
-  // heading inside a quote. Outside the notes app (a Markdown folder file)
-  // the editor names no note, so no row does.
+  // Only a row a link can find gets the icon: not a heading or callout
+  // inside a quote, a list or another callout, and not one with no text.
+  // Outside the notes app (a Markdown folder file) the editor names no
+  // note, so no row does.
   const linkNote = getWikiLinkCurrentNote(editor);
   const linkable = new Set(linkNote ? headingsFromDoc(editor.state.doc).map((h) => h.pos) : []);
 
@@ -269,14 +271,14 @@ export function OutlinePanel({ editor, open, onOpenChange }: Props) {
                       { clientX: rtl ? r.left : r.right, clientY: r.bottom + 4, preventDefault: () => e.preventDefault(), stopPropagation: () => e.stopPropagation() },
                       [
                         { label: t('shell:shortcut.copyNoteLink'), icon: <BracketsSquare aria-hidden="true" />, onSelect: () => copy(noteLink, String(h.pos)) },
-                        { label: t('outline.copyHeadingShortcut'), icon: <LinkSimple aria-hidden="true" />, onSelect: () => copy(shortcutUrl(linkNote.id, code), String(h.pos)) },
+                        { label: t(h.callout ? 'outline.copyCalloutShortcut' : 'outline.copyHeadingShortcut'), icon: <LinkSimple aria-hidden="true" />, onSelect: () => copy(shortcutUrl(linkNote.id, code), String(h.pos)) },
                       ],
                       e.detail === 0,
                       undefined,
                       true,
                     );
                   }}
-                  aria-label={isCopied ? t('auth:createPhrase.copied') : t('outline.copyHeadingLink')}
+                  aria-label={isCopied ? t('auth:createPhrase.copied') : t(h.callout ? 'outline.copyCalloutLink' : 'outline.copyHeadingLink')}
                   className={`absolute inset-y-0 end-1 flex w-6 items-center justify-center rounded transition outline-none focus-visible:opacity-100 [@media(hover:none)]:opacity-100 ${
                     isCopied
                       ? 'opacity-100 text-accent'

@@ -399,6 +399,7 @@
     "modeRich": "Amb format",
     "modeSource": "Markdown",
     "reopenPrompt": "El teu navegador torna a demanar permís després de recarregar. La carpeta es recorda, així que només és un clic.",
+    "reopenPromptDesktop": "Tria {{name}} una altra vegada perquè l'app la pugui tornar a obrir. A la carpeta no ha canviat res.",
     "reopenFolder": "Torna a obrir {{name}}",
     "new": "Nou",
     "saveToNotes": "Desa-ho a les meves notes",
@@ -702,6 +703,7 @@
       "bookClub": "Club de lectura",
       "rent": "Paga el lloguer"
     },
+    "feedReadOnly": "De {{name}}. Aquest esdeveniment només es pot canviar en aquell calendari.",
     "nothingFor_one": "Res durant {{count}} dia",
     "more_one": "+{{count}} més"
   },
@@ -830,7 +832,8 @@
       "file": "Puja un fitxer",
       "contact": "Contacte nou",
       "bookmark": "Marcador nou",
-      "clip": "Retalla una pàgina"
+      "clip": "Retalla una pàgina",
+      "writeNote": "Escriu una nota"
     },
     "keepAsText": "Deixa-ho com a text",
     "placeholder": "Títol, dia, hora, repetició...",
@@ -987,6 +990,7 @@
     "stepConnect": "Connecta",
     "makeCode": "Crea un codi",
     "connectHint": "Crea un codi d'un sol ús i enganxa'l a l'extensió.",
+    "secondBrowserPro": "Hi ha un navegador connectat. Un segon necessita Pro.",
     "thisBrowser": "Aquest navegador",
     "otherApps": "Apps d'escriptori i de mòbil:",
     "desktopAll": "Totes les baixades",
@@ -1044,7 +1048,7 @@
   "extensionConnect": {
     "clips": "Retallador web",
     "clipsHint": "Desa llocs web com a notes.",
-    "loginsHint": "Inicis de sessió, targetes, claus SSH i marcadors del lloc on ets, només per copiar. Bloquejat amb el seu propi PIN o codi d'accés.",
+    "loginsHint": "Inicis de sessió, targetes, claus SSH i marcadors del lloc on ets, per copiar o per emplenar. Bloquejat amb el seu propi PIN o codi d'accés.",
     "pickOne": "Activa'n almenys una.",
     "codeLabel": "Codi per a l'extensió",
     "oneUse": "Funciona una sola vegada, durant 10 minuts.",

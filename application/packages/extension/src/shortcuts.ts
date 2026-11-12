@@ -1,7 +1,8 @@
 /**
- * The extension's three keyboard shortcuts as this browser has them now.
- * The manifest only suggests Alt+Shift+S, L and B: a person can change or
- * clear each one in the browser's shortcut settings, and a key another
+ * The extension's keyboard shortcuts as this browser has them now.
+ * The manifest suggests a key for four commands in Chrome and Edge (their
+ * limit) and for each in Firefox: a person can set, change or clear each one
+ * in the browser's shortcut settings, and a key another
  * extension took first stays empty. So every hint reads the browser's own
  * list, in the browser's own spelling ("⌥⇧S" in Chrome on a Mac), and shows
  * nothing for a command with no key.
@@ -9,10 +10,10 @@
  */
 import { browser } from 'wxt/browser';
 
-export type ShortcutCommand = '_execute_action' | 'copy-login' | 'save-bookmark';
+export type ShortcutCommand = '_execute_action' | 'copy-login' | 'save-note' | 'lock-vault' | 'generate-password' | 'save-bookmark' | 'new-note';
 export type Shortcuts = Partial<Record<ShortcutCommand, string>>;
 
-export const SHORTCUT_COMMANDS: readonly ShortcutCommand[] = ['_execute_action', 'copy-login', 'save-bookmark'];
+export const SHORTCUT_COMMANDS: readonly ShortcutCommand[] = ['_execute_action', 'copy-login', 'save-note', 'save-bookmark', 'new-note', 'generate-password', 'lock-vault'];
 
 /** Each command's key, or no entry when it has none. Firefox names the
  *  toolbar command `_execute_action` like Chrome under Manifest V3. */

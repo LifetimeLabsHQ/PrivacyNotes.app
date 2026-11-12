@@ -94,6 +94,19 @@
       "help": "Skróty klawiszowe"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "Napisz tu więcej",
+    "hint": "Wpisz / dla folderu, # dla tagu",
+    "locked": "PrivacyNotes jest zablokowany. Twoja notatka jest zabezpieczona i otworzy się, gdy odblokujesz aplikację.",
+    "queued": "Zapisano. Otworzy się, gdy odblokujesz aplikację.",
+    "tooLong": "Ta notatka jest za długa. Podziel ją na dwie notatki.",
+    "full": "Czeka zbyt wiele notatek. Odblokuj aplikację, aby je dodać.",
+    "empty": "Najpierw coś napisz.",
+    "failed": "Nie udało się zapisać notatki. Otwórz PrivacyNotes i spróbuj ponownie.",
+    "added_one": "Dodano {{count}} szybką notatkę",
+    "added_few": "Dodano {{count}} szybkie notatki",
+    "added_many": "Dodano {{count}} szybkich notatek"
+  },
   "quickSwitcher": {
     "label": "Ninja: znajdź element lub ustawienie, dodaj cokolwiek, uruchom polecenie",
     "jumpTo": "Ninja",
@@ -131,6 +144,8 @@
     "back": "wstecz",
     "actionsPlaceholder": "Filtruj akcje",
     "onlyCreate": "dodaj",
+    "ninjaLockedTitle": "PrivacyNotes jest zablokowany",
+    "ninjaLockedBody": "Otwórz PrivacyNotes i odblokuj go. Wtedy Ninja znajdzie Twoje notatki z dowolnej aplikacji.",
     "tagItems_few": "{{count}} elementy",
     "tagItems_many": "{{count}} elementów"
   },
@@ -299,8 +314,10 @@
         "detail": "Każdy dzień roku jako jeden kolorowy kwadrat"
       },
       "importExport": {
-        "label": "Import & Export",
-        "detail": "Wczytaj notatki, wyjmij kopię zapasową"
+        "detail": "Wczytaj notatki albo je wyjmij"
+      },
+      "backup": {
+        "detail": "Utwórz kopię teraz, automatyczne kopie zapasowe i przywracanie"
       },
       "generator": {
         "label": "Generator haseł",
@@ -316,6 +333,7 @@
     },
     "commands": {
       "syncResume": "Wznów synchronizację",
+      "lockProtected": "Zablokuj tę notatkę",
       "changelog": "Nowości",
       "themesPage": "Motywy społeczności",
       "website": "Strona PrivacyNotes"

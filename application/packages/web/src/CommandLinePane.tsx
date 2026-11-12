@@ -74,7 +74,7 @@ function CliExampleCards() {
 
 /** One numbered setup step on a line that joins the steps: a ringed number,
  *  a solid green tick once done, and the line under a done step green too. */
-function Step({ n, done, last = false, title, hint, children }: { n: number; done: boolean; last?: boolean; title: string; hint?: ReactNode; children?: ReactNode }) {
+export function Step({ n, done, last = false, title, hint, children }: { n: number; done: boolean; last?: boolean; title: string; hint?: ReactNode; children?: ReactNode }) {
   return (
     <li className={`relative flex gap-3.5 ${last ? '' : 'pb-5'}`}>
       {!last && <span aria-hidden="true" className={`absolute start-[13px] top-8 bottom-1 w-0.5 rounded-full ${done ? 'bg-success/50' : 'bg-divider'}`} />}

@@ -4,18 +4,21 @@
  * items for this site (the page's logins and bookmarks; the cards when no
  * login matches), the pinned ones, then everything. A search replaces the
  * sections with results from the whole copy; the type pill narrows both.
- * Copy only: nothing is ever filled into a page. A copied secret is cleared
- * after 30 seconds if the clipboard still holds it. Every row opens its item
+ * A login for this site has a Fill tool: the background writes it into the
+ * page the window was opened for, and a full fill closes the window (nothing
+ * is ever filled when a page loads). A copied secret is cleared
+ * after 30 seconds if the clipboard still holds it; the copy icon turns into
+ * a check and the footer says what was copied (pattern 177). Every row opens its item
  * in the app through the app's note shortcut; a right-click copies that
  * shortcut. Add a login sends it to the Vault through the sealed inbox.
- * Spec: docs/internal/plans/browser-extension-build.md (section 3.4, decisions E4, E8 and E13)
+ * Spec: docs/internal/plans/browser-extension-build.md (section 3.4, decisions E4, E8 and E13); docs/internal/plans/click-to-fill.md (section 6)
  */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { browser } from 'wxt/browser';
 import { generateTotpCode, parseTotpInput, totpSecondsRemaining } from '@notes/shared';
-import type { BookmarkCopyEntry, CardCopyEntry, CopyEntry, LoginCopyEntry, SshKeyCopyEntry } from '@notes/shared/extension';
-import { ArrowSquareOut, Check, Copy, CreditCard, Fingerprint, GlobeSimple, Key, LinkSimple, ListBullets, LockSimple, NotePencil, Plus, PushPin, User } from '@web/icons';
+import type { BookmarkCopyEntry, CardCopyEntry, CopyEntry, CopyKind, LoginCopyEntry, SshKeyCopyEntry } from '@notes/shared/extension';
+import { ArrowSquareOut, BookmarkSimple, Check, Copy, CreditCard, DotsThreeOutlineVertical, Fingerprint, GlobeSimple, Key, LinkSimple, ListBullets, NotePencil, PushPin, Textbox, User } from '@web/icons';
 import { Button, IconButton } from '@web/ui/Button';
 import { Badge, Callout, StatusLine } from '@web/ui/feedback';
 import { Kbd } from '@web/ui/misc';
@@ -29,7 +32,15 @@ import { forgetLocal, type Connection } from '../../src/connection';
 import { allEntries, isUnlocked, lockLogins, pull, pullInFlight, ROWS_KEY, SESSION_KEY, shortcutUrl, unlock } from '../../src/logins';
 import { biometricReady, unlockWithBiometric } from '../../src/biometric';
 import { copyAndClear, copyPlain } from '../../src/copy';
+import { CLEAR_AFTER_MS } from '../../src/clipboard';
+import { clippable } from '../../src/clipping';
+import type { FillOutcome } from '../../src/fill/types';
+import type { BackgroundMessage } from '../../src/messages';
+import { useNotify, type Notice } from './Footer';
+import { TOTP_RED_S, TotpBar, useSecondTick } from './TotpBar';
+import { useViewPrefs } from './SettingsView';
 import { byName, forSite, searchEntries } from '../../src/match';
+import { byLastFill, readLastFill, type LastFill } from '../../src/lastFill';
 import { faviconOf, hostOf } from '../../src/favicon';
 import type { TypeFilter } from '../../src/prefs';
 
@@ -160,30 +171,26 @@ export function Unlock({ connection, onUnlocked, focusNonce }: { connection: Con
     setError({ tone: 'danger', text: t('logins.unreachable') });
   };
 
+  // The PIN boxes fill the width at the lock screen's height, the same on
+  // every PIN screen; fingerprint or face is a button with words, and the cost
+  // of wrong tries shows before the first one.
   return (
-    <div className="space-y-3" ref={box}>
-      <SectionEyebrow icon={LockSimple}>{t('shell:tagsRail.vault')}</SectionEyebrow>
-      <div className="text-body font-semibold text-pn">{kind === 'pin' ? t('logins.unlockPin') : t('logins.unlockPasscode')}</div>
-      <div className={`flex items-center gap-3 ${busy ? 'opacity-50' : ''}`}>
-        <SecretInput kind={kind} value={value} onChange={setValue} onComplete={(v) => void answer(() => unlock({ secret: v }))} autoFocus disabled={busy} compact />
-        {fingerprint && kind === 'pin' && (
-          <IconButton label={t('logins.useBiometric')} onClick={() => void answer(unlockWithBiometric)} disabled={busy}>
-            <Fingerprint aria-hidden="true" />
-          </IconButton>
-        )}
+    <div className="space-y-3 py-2" ref={box}>
+      <div className="text-center text-body font-semibold text-pn">{kind === 'pin' ? t('logins.unlockPin') : t('logins.unlockPasscode')}</div>
+      <div className={busy ? 'opacity-50' : undefined}>
+        <SecretInput kind={kind} value={value} onChange={setValue} onComplete={(v) => void answer(() => unlock({ secret: v }))} autoFocus disabled={busy} fill />
       </div>
       {kind === 'passcode' && (
-        <div className="flex gap-2">
-          <Button action="next" onClick={() => void answer(() => unlock({ secret: value }))} disabled={busy || !value} />
-          {fingerprint && (
-            <Button icon={<Fingerprint aria-hidden="true" />} onClick={() => void answer(unlockWithBiometric)} disabled={busy}>
-              {t('logins.useBiometric')}
-            </Button>
-          )}
-        </div>
+        <Button action="next" onClick={() => void answer(() => unlock({ secret: value }))} disabled={busy || !value} className="w-full" />
       )}
+      {fingerprint && (
+        <Button icon={<Fingerprint aria-hidden="true" />} onClick={() => void answer(unlockWithBiometric)} disabled={busy} className="w-full">
+          {t('logins.useBiometric')}
+        </Button>
+      )}
+      {/* The tries left show only after a wrong PIN, in its message (owner, 2026-11-11). */}
       {busy && <StatusLine busy>{t('vault.unlocking')}</StatusLine>}
-      {error && <Callout tone={error.tone}>{error.text}</Callout>}
+      {error && <Callout look="card" tone={error.tone}>{error.text}</Callout>}
     </div>
   );
 }
@@ -196,16 +203,25 @@ function openUrl(url: string): void {
   void browser.tabs.create({ url });
 }
 
+/** The row menu (More options and right-click) is hidden for now: the owner
+ *  was not sure it is useful (2026-11-12). True brings both back. */
+const ROW_MENU = false;
+
 /** The row's right-click: the item in the app, its shortcut, its site. */
-function rowMenu(entry: CopyEntry, t: (k: string) => string, copy: Copy): ContextMenuItem[] {
-  const site = entry.kind === 'login' ? entry.urls.find((u) => /^https?:\/\//i.test(u)) : entry.kind === 'bookmark' ? entry.url : undefined;
+function rowMenu(entry: CopyEntry, t: (k: string) => string, copy: Copy, code?: string | null): ContextMenuItem[] {
+  // The site has its own button on the row, so the menu does not repeat it.
   const items: ContextMenuItem[] = [
-    { label: t('vault.openInApp'), icon: <ArrowSquareOut />, onSelect: () => openUrl(shortcutUrl(entry.item)) },
+    ...(code ? [{ label: t('logins.copyCode'), icon: <Copy />, onSelect: () => void copy(code, t('logins.codeCopied')) }] : []),
     { label: t('vault.copyShortcut'), icon: <LinkSimple />, onSelect: () => void copy(shortcutUrl(entry.item), t('vault.shortcutCopied'), false) },
+    { label: t('vault.openInApp'), icon: <ArrowSquareOut />, onSelect: () => openUrl(shortcutUrl(entry.item)) },
   ];
-  if (site) items.push({ label: t('logins.openSite'), icon: <GlobeSimple />, onSelect: () => openUrl(site) });
   if (entry.kind === 'bookmark' && entry.note) items.push({ label: t('editor:noteLink.open'), icon: <NotePencil />, onSelect: () => openUrl(shortcutUrl(entry.note!)) });
   return items;
+}
+
+/** The site a row opens: a login's first web address, a bookmark's page. */
+function siteOf(entry: CopyEntry): string | undefined {
+  return entry.kind === 'login' ? entry.urls.find((u) => /^https?:\/\//i.test(u)) : entry.kind === 'bookmark' ? entry.url : undefined;
 }
 
 /** A copy tool on a row: the glyph turns into a check for two seconds. */
@@ -218,13 +234,57 @@ function CopyTool({ label, done, value, copy, children }: { label: string; done:
   }, [copied]);
   return (
     <IconButton label={label} disabled={!value} className={copied ? 'text-success hover:text-success' : ''} onClick={() => void copy(value, done).then((ok) => setCopied(ok))}>
-      {copied ? <Check aria-hidden="true" /> : children}
+      {copied ? <Check aria-hidden="true" className="pn-pop" /> : children}
     </IconButton>
   );
 }
 
-function Tile({ url, letter, glyph }: { url?: string; letter: string; glyph?: ReactNode }) {
-  const icon = url ? faviconOf(url) : null;
+/** Fill on a row of this site: the background writes the login into the
+ *  page. The tool rests while a fill runs, so a second click starts nothing. */
+function FillTool({ onFill, keys }: { onFill: () => Promise<void>; keys?: string }) {
+  const { t } = useTranslation('extension');
+  const [busy, setBusy] = useState(false);
+  return (
+    <IconButton
+      label={t('logins.fill')}
+      keys={keys}
+      tone="accent"
+      disabled={busy}
+      onClick={() => {
+        setBusy(true);
+        void onFill().finally(() => setBusy(false));
+      }}
+    >
+      <Textbox aria-hidden="true" />
+    </IconButton>
+  );
+}
+
+/** What the footer says when a fill wrote nothing, or not all of the login. */
+function fillNotice(outcome: FillOutcome, t: (k: string) => string): Notice {
+  switch (outcome) {
+    case 'usernameOnly':
+      return { title: t('fill.usernameOnly'), detail: t('fill.usernameOnlyNext') };
+    case 'signup':
+      return { tone: 'danger', title: t('fill.notFilled'), detail: t('fill.signup') };
+    case 'insecure':
+      return { tone: 'danger', title: t('fill.notFilled'), detail: t('fill.insecure') };
+    case 'otherAccount':
+      return { tone: 'danger', title: t('fill.notFilled'), detail: t('fill.otherAccount') };
+    case 'tooLong':
+      return { tone: 'danger', title: t('fill.notFilled'), detail: t('fill.tooLong') };
+    case 'readonly':
+    case 'refused':
+      return { tone: 'danger', title: t('fill.couldNot'), detail: t('fill.copyInstead') };
+    default:
+      return { tone: 'danger', title: t('fill.notFilled'), detail: t('fill.nothing') };
+  }
+}
+
+/** A row's tile: the site's favicon, or a letter or glyph. The Clip tab's page card uses it too. */
+export function Tile({ url, letter, glyph }: { url?: string; letter: string; glyph?: ReactNode }) {
+  const { favicons } = useViewPrefs();
+  const icon = url && favicons ? faviconOf(url) : null;
   const [broken, setBroken] = useState(false);
   if (icon && !broken) return <img src={icon} alt="" className="w-7 h-7 shrink-0 rounded-md" onError={() => setBroken(true)} />;
   return (
@@ -234,47 +294,79 @@ function Tile({ url, letter, glyph }: { url?: string; letter: string; glyph?: Re
   );
 }
 
-function Row({ entry, tile, title, meta, tools, children, copy, menu }: {
+// A row is a grid of three columns: the tile, the words, the tools. A login
+// adds a second line under them: its site under the username, and the 2FA
+// block under the tools, as wide as the tools or as its own one line,
+// whichever is wider; the words give way (owner, 2026-11-12, option A).
+function Row({ entry, tile, title, meta, tools, sub, side, copy, menu, code }: {
   entry: CopyEntry;
   tile: ReactNode;
   title: string;
   meta: string;
   tools: ReactNode;
-  children?: ReactNode;
+  /** A second line under the words: a login's site. */
+  sub?: ReactNode;
+  /** Under the tools: a login's 2FA block. */
+  side?: ReactNode;
   copy: Copy;
   menu: OpenMenu;
+  /** A 2FA code the row does not show: its menu copies it. */
+  code?: string | null;
 }) {
   const { t } = useTranslation('extension');
+  const site = siteOf(entry);
+  const items = () => rowMenu(entry, t, copy, code);
   return (
-    <li className="py-2 space-y-1.5" onContextMenu={(e) => { e.preventDefault(); menu(e, rowMenu(entry, t, copy)); }}>
-      <div className="flex items-center gap-2">
-        {tile}
-        <div className="min-w-0 flex-1">
-          <div className="text-body font-medium text-pn truncate" dir="auto">
-            {entry.pinned && <PushPin aria-hidden="true" className="inline-block me-1 text-pn-muted align-[-2px]" weight="fill" />}
-            {title}
-          </div>
-          <div className="text-meta text-pn-muted truncate" dir="auto">{meta}</div>
+    <li className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-0.5 py-2" onContextMenu={ROW_MENU ? (e) => { e.preventDefault(); menu(e, items()); } : undefined}>
+      {/* The icon opens the site too, as the open button does (owner,
+          2026-11-12). Out of the tab order: the open button is the stop. */}
+      {site ? (
+        <button type="button" tabIndex={-1} aria-label={t('logins.openSite')} onClick={() => openUrl(site)} className="shrink-0 rounded-md cursor-pointer hover:opacity-80">
+          {tile}
+        </button>
+      ) : tile}
+      <div className="min-w-0">
+        <div className="text-body font-medium text-pn truncate" dir="auto">
+          {entry.pinned && <PushPin aria-hidden="true" className="inline-block me-1 text-pn-muted align-[-2px]" weight="fill" />}
+          {title}
         </div>
-        {tools}
-        <IconButton label={t('vault.openInApp')} onClick={() => openUrl(shortcutUrl(entry.item))}>
-          <ArrowSquareOut aria-hidden="true" />
-        </IconButton>
+        <div className="text-meta text-pn-muted truncate" dir="auto">{meta}</div>
       </div>
-      {children}
+      <div className="flex items-center justify-end gap-2">
+        {tools}
+        {site && (
+          <IconButton label={t('logins.openSite')} onClick={() => openUrl(site)}>
+            <ArrowSquareOut aria-hidden="true" />
+          </IconButton>
+        )}
+        {ROW_MENU && (
+          <IconButton
+            label={t('vault.moreOptions')}
+            aria-haspopup="menu"
+            onClick={(e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              menu({ clientX: r.left, clientY: r.bottom + 4 }, items());
+            }}
+          >
+            <DotsThreeOutlineVertical aria-hidden="true" />
+          </IconButton>
+        )}
+      </div>
+      {(sub || side) && (
+        <>
+          <div className="col-start-2 min-w-0 self-start">{sub}</div>
+          <div className="col-start-3 min-w-0 self-start">{side}</div>
+        </>
+      )}
     </li>
   );
 }
 
-function LoginRow({ login, pro, copy, menu, showSite }: { login: LoginCopyEntry; pro: boolean; copy: Copy; menu: OpenMenu; showSite: boolean }) {
+function LoginRow({ login, pro, copy, menu, onFill, fillKeys }: { login: LoginCopyEntry; pro: boolean; copy: Copy; menu: OpenMenu; onFill?: () => Promise<void>; fillKeys?: string }) {
   const { t } = useTranslation('extension');
+  const { showTotp, totpBar } = useViewPrefs();
   const totp = login.totp ? parseTotpInput(login.totp) : null;
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    if (!totp || !pro) return;
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, [totp, pro]);
+  const now = useSecondTick(!!totp && pro);
   const code = totp && pro ? generateTotpCode(totp, now) : null;
   const left = totp ? totpSecondsRemaining(totp.period, now) : 0;
   const site = login.urls[0] ? hostOf(login.urls[0]) : '';
@@ -283,30 +375,40 @@ function LoginRow({ login, pro, copy, menu, showSite }: { login: LoginCopyEntry;
       entry={login}
       tile={<Tile url={login.urls[0]} letter={login.name || login.username} glyph={login.urls[0] ? undefined : <GlobeSimple />} />}
       title={login.name || login.username}
-      meta={showSite && site ? [login.username, site].filter(Boolean).join(' · ') : login.username}
+      // The username; the site on the line under it only beside a 2FA block,
+      // where it fills the line's empty start (alone it looked orphaned,
+      // owner 2026-11-12).
+      meta={login.username || site}
+      sub={login.username && site && totp && showTotp ? (
+        <div className="flex h-8 items-center text-meta text-pn-muted" dir="auto">
+          <span className="truncate">{site}</span>
+        </div>
+      ) : undefined}
       copy={copy}
       menu={menu}
+      code={showTotp ? null : code}
       tools={
         <>
+          {onFill && <FillTool onFill={onFill} keys={fillKeys} />}
           <CopyTool label={t('auth:loginForm.copyUsername')} done={t('logins.usernameCopied')} value={login.username} copy={copy}><User aria-hidden="true" /></CopyTool>
           <CopyTool label={t('auth:loginForm.copyPassword')} done={t('logins.passwordCopied')} value={login.password} copy={copy}><Key aria-hidden="true" /></CopyTool>
         </>
       }
-    >
-      {/* The code line: under the name (ps-9 is the tile and its gap), a
-          "2FA" tag so the number says what it is, and the copy button at the
-          end, in the column of the row's other tools. Under it a 2px bar from
-          the name to the copy button drains over the code's period, red in
-          the last 5 seconds: it ties the code to its copy action (owner,
-          2026-11-06, mockups/extension-2fa-countdown-06nov2026.html, 2). */}
-      {totp && (
-        <div className="-mt-0.5 ps-9">
-          <div className="flex items-center gap-2 text-small">
+      // The 2FA block under the tools: a "2FA" tag so the number says what
+      // it is, the code on one line, and Copy under the open button. Under
+      // it a 2px bar drains over the code's period, red in the last 5
+      // seconds (owner, 2026-11-06, mockups/extension-2fa-countdown-06nov2026.html,
+      // variant 2; moved under the tools 2026-11-12).
+      side={totp && showTotp ? (
+        <div>
+          <div className="flex h-8 items-center gap-2 whitespace-nowrap text-small">
             <Badge tone="info">{t('security:modal.tabTwoFactor')}</Badge>
             {code ? (
               <>
-                <span className={`font-mono font-medium tabular-nums ${left <= 5 ? 'text-danger' : 'text-pn'}`} dir="ltr">{groupTotpCode(code)}</span>
-                <span className="ms-auto">
+                {/* The code takes the room between the tag and Copy and sits
+                    in its middle, however wide the tools make the block. */}
+                <span className={`flex-1 text-center font-mono font-medium tabular-nums ${left <= TOTP_RED_S ? 'text-danger' : 'text-pn'}`} dir="ltr">{groupTotpCode(code)}</span>
+                <span>
                   <CopyTool label={t('logins.copyCode')} done={t('logins.codeCopied')} value={code} copy={copy}><Copy aria-hidden="true" /></CopyTool>
                 </span>
               </>
@@ -318,19 +420,10 @@ function LoginRow({ login, pro, copy, menu, showSite }: { login: LoginCopyEntry;
               </button>
             )}
           </div>
-          {code && (
-            <div aria-hidden="true" className="mt-1 h-0.5 overflow-hidden rounded-full bg-divider">
-              <div
-                // A new code starts a new bar, so the refill does not animate.
-                key={Math.floor(now / 1000 / totp.period)}
-                className={`h-full rounded-full transition-[width] duration-1000 ease-linear motion-reduce:transition-none ${left <= 5 ? 'bg-danger' : 'bg-accent'}`}
-                style={{ width: `${(left / totp.period) * 100}%` }}
-              />
-            </div>
-          )}
+          {code && totpBar && <TotpBar period={totp.period} now={now} className="mt-0.5" />}
         </div>
-      )}
-    </Row>
+      ) : undefined}
+    />
   );
 }
 
@@ -384,9 +477,6 @@ function BookmarkRow({ bookmark, copy, menu }: { bookmark: BookmarkCopyEntry; co
       menu={menu}
       tools={
         <>
-          <IconButton label={t('logins.openSite')} onClick={() => openUrl(bookmark.url)}>
-            <GlobeSimple aria-hidden="true" />
-          </IconButton>
           {bookmark.note && (
             <IconButton label={t('editor:noteLink.open')} onClick={() => openUrl(shortcutUrl(bookmark.note!))}>
               <NotePencil aria-hidden="true" />
@@ -398,10 +488,10 @@ function BookmarkRow({ bookmark, copy, menu }: { bookmark: BookmarkCopyEntry; co
   );
 }
 
-function EntryRow({ entry, pro, copy, menu, showSite }: { entry: CopyEntry; pro: boolean; copy: Copy; menu: OpenMenu; showSite: boolean }) {
+function EntryRow({ entry, pro, copy, menu, fill, fillKeys }: { entry: CopyEntry; pro: boolean; copy: Copy; menu: OpenMenu; fill?: (item: string) => Promise<void>; fillKeys?: string }) {
   switch (entry.kind) {
     case 'login':
-      return <LoginRow login={entry} pro={pro} copy={copy} menu={menu} showSite={showSite} />;
+      return <LoginRow login={entry} pro={pro} copy={copy} menu={menu} onFill={fill && (() => fill(entry.item))} fillKeys={fillKeys} />;
     case 'card':
       return <CardRow card={entry} copy={copy} menu={menu} />;
     case 'ssh':
@@ -413,46 +503,75 @@ function EntryRow({ entry, pro, copy, menu, showSite }: { entry: CopyEntry; pro:
 
 // ── The sections ─────────────────────────────────────────────────────
 
+/** The kinds in the type menu's order; the vault lists them in the same
+ *  order, each under its own heading (owner, 2026-11-11). */
+export const KIND_ORDER: readonly CopyKind[] = ['login', 'card', 'ssh', 'bookmark'];
+export const TYPE_ICONS = { all: ListBullets, login: GlobeSimple, card: CreditCard, ssh: Key, bookmark: BookmarkSimple } as const;
+
+/** The type menu's words for a kind, and the heading of its group. */
+export function typeLabel(f: TypeFilter, t: (key: string) => string): string {
+  return f === 'all' ? t('notes:vaultFilter.all') : f === 'login' ? t('notes:vaultFilter.logins') : f === 'card' ? t('notes:vaultFilter.cards') : f === 'ssh' ? t('notes:vaultFilter.keys') : t('shell:tagsRail.bookmarks');
+}
+
+/** By kind in the menu's order. */
+function byKind(a: CopyEntry, b: CopyEntry): number {
+  return KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind);
+}
+
+/** By kind in the menu's order, then by name. */
+function byKindThenName(a: CopyEntry, b: CopyEntry): number {
+  return byKind(a, b) || byName(a, b);
+}
+
+// Each heading sticks under the header while its group scrolls, on a band
+// with a line under it, so the kind in view is always named and the change
+// to the next kind is plain (owner, 2026-11-11). z-[55]: over the rows,
+// under their tooltips (56, style.css) and the header (z-[60]).
 function Section({ icon, title, count, tools, children }: { icon: typeof GlobeSimple; title: string; count?: number; tools?: ReactNode; children: ReactNode }) {
   return (
-    <section className="space-y-1">
-      <div className="flex items-center gap-2">
+    <section>
+      <div className="sticky top-[var(--pn-head,0px)] z-[55] -mx-3 flex items-center gap-2 border-b border-divider bg-surface-1 px-3 py-2">
         <SectionEyebrow icon={icon} className="flex-1 min-w-0">{title}</SectionEyebrow>
         {count !== undefined && <span className="text-meta text-pn-muted tabular-nums">{count.toLocaleString()}</span>}
         {tools}
       </div>
-      {children}
+      <div className="space-y-1 pt-1">{children}</div>
     </section>
   );
 }
 
-export function VaultSections({ vault, url, query, typeFilter, onAdd, menu, loginKeys }: {
+export function VaultSections({ vault, url, tabId, query, typeFilter, menu, loginKeys }: {
   vault: Vault;
   url: string;
+  /** The tab the window was opened for; without it no row offers Fill. */
+  tabId: number | null;
   query: string;
   typeFilter: TypeFilter;
-  onAdd: () => void;
   menu: OpenMenu;
   /** The browser's key for Copy login, for the hint under one match. */
   loginKeys?: string;
 }) {
   const { t } = useTranslation('extension');
-  const [status, setStatus] = useState<{ tone?: 'danger' | 'success'; text: string } | null>(null);
+  const notify = useNotify();
+  // The login filled last comes first under For this site, the one the key
+  // fills. Read once: a fill closes the window, so the order never changes
+  // under the pointer.
+  const [lastFill, setLastFill] = useState<LastFill>({});
+  useEffect(() => void readLastFill().then(setLastFill), []);
   // All items draws 100 rows, and 100 more as the window nears the end:
   // the app's list reveal. Every item is already open in memory; the steps
   // only keep the popup fast to open with a large vault. The popup scrolls
-  // the document, so the window's scroll drives it.
+  // its body (style.css), so the body's scroll drives it.
   const reveal = useProgressiveReveal();
   const total = useRef(0);
   const { onScroll, reset } = reveal;
   // Another type is another list: it starts at the top again.
   useEffect(() => reset(), [typeFilter, reset]);
   useEffect(() => {
-    const el = document.scrollingElement as HTMLElement | null;
-    if (!el) return;
+    const el = document.body;
     const grow = () => onScroll(el, total.current);
-    window.addEventListener('scroll', grow, { passive: true });
-    return () => window.removeEventListener('scroll', grow);
+    el.addEventListener('scroll', grow, { passive: true });
+    return () => el.removeEventListener('scroll', grow);
   }, [onScroll]);
 
   const copy: Copy = async (value, done, secret = true) => {
@@ -461,83 +580,95 @@ export function VaultSections({ vault, url, query, typeFilter, onAdd, menu, logi
       return false;
     }
     const ok = secret ? await copyAndClear(value) : await copyPlain(value);
-    setStatus(ok ? { tone: 'success', text: secret ? `${done}. ${t('logins.clears')}` : done } : { tone: 'danger', text: t('clip.failed') });
+    // The words go to the footer, so the list never moves under the pointer.
+    notify(ok
+      ? { title: done, clearsAt: secret ? Date.now() + CLEAR_AFTER_MS : undefined }
+      : { tone: 'danger', title: t('notice.copyFailed'), detail: t('auth:signIn.tryAgain') });
     return ok;
   };
 
+  // Fill is for the logins of this site only, so there is no doubt which
+  // page it means. The background checks the match again before it writes.
+  const fill = tabId != null && clippable(url)
+    ? async (item: string): Promise<void> => {
+        const message: BackgroundMessage = { type: 'fill', item, tabId };
+        const outcome = (await browser.runtime.sendMessage(message).catch(() => 'nothing')) as FillOutcome | null;
+        // A full fill: the window goes, and the cursor is in the page's field.
+        if (outcome === 'filled' || outcome === 'waiting') return window.close();
+        if (outcome === 'locked') return void (await vault.lock());
+        notify(fillNotice(outcome ?? 'nothing', t));
+      }
+    : undefined;
+
   const entries = filterByType(vault.entries, typeFilter);
-  const rows = (list: CopyEntry[], showSite = false) => (
+  const rows = (list: CopyEntry[], canFill = false) => (
     <ul className="divide-y divide-divider">
-      {list.map((e) => <EntryRow key={e.item} entry={e} pro={vault.pro} copy={copy} menu={menu} showSite={showSite} />)}
+      {list.map((e) => <EntryRow key={e.item} entry={e} pro={vault.pro} copy={copy} menu={menu} fill={canFill ? fill : undefined} fillKeys={loginKeys} />)}
     </ul>
   );
   const checking = vault.pulling && <StatusLine busy>{t('vault.checking')}</StatusLine>;
-  const feedback = status && <StatusLine tone={status.tone}>{status.text}</StatusLine>;
 
   if (query.trim()) {
     const found = searchEntries(entries, query);
     return (
-      <div className="p-3 space-y-3">
+      <div className="px-3 pb-3 space-y-3">
         <Section icon={ListBullets} title={t('settingsSearch:resultCount', { count: found.length })}>
-          {found.length ? rows(found, true) : <p className={SETTINGS_HELP}>{t('logins.noMatch')}</p>}
+          {found.length ? rows(found) : <p className={SETTINGS_HELP}>{t('logins.noMatch')}</p>}
         </Section>
-        {feedback}
         {checking}
       </div>
     );
   }
 
-  const here = url ? forSite(entries, url) : [];
+  const here = url ? forSite(entries, url).sort((a, b) => byKind(a, b) || byLastFill(lastFill)(a, b) || byName(a, b)) : [];
   const cards = typeFilter === 'all' && here.length === 0 ? entries.filter((e) => e.kind === 'card').sort(byName).slice(0, 10) : [];
-  const pinned = entries.filter((e) => e.pinned).sort(byName);
-  const all = entries.sort(byName);
+  const pinned = entries.filter((e) => e.pinned).sort(byKindThenName);
+  const all = entries.sort(byKindThenName);
   total.current = all.length;
+  // All items, one group a kind. The reveal counts rows across the groups,
+  // so a group shows once its first row is revealed.
+  let budget = reveal.visible;
+  const groups = KIND_ORDER.map((kind) => {
+    const list = all.filter((e) => e.kind === kind);
+    const shown = list.slice(0, Math.max(0, budget));
+    budget -= shown.length;
+    return { kind, count: list.length, shown };
+  }).filter((g) => g.shown.length > 0);
   const site = hostOf(url);
-  const tools = (
-    <>
-      {site && typeFilter !== 'card' && typeFilter !== 'ssh' && (
-        <IconButton label={t('menu.addLogin')} onClick={onAdd}>
-          <Plus aria-hidden="true" />
-        </IconButton>
-      )}
-    </>
-  );
   const showHere = !!site && typeFilter !== 'card' && typeFilter !== 'ssh';
   return (
-    <div className="p-3 space-y-4">
+    <div className="px-3 pb-3 space-y-3">
       {showHere && (
-        <Section icon={GlobeSimple} title={t('logins.forSite', { site })} tools={tools}>
-          {here.length ? rows(here)
+        <Section icon={GlobeSimple} title={t('logins.forSite', { site })}>
+          {here.length ? rows(here, true)
             : cards.length ? <><p className={SETTINGS_HELP}>{t('vault.cardsHere')}</p>{rows(cards)}</>
             : <p className={SETTINGS_HELP}>{typeFilter === 'bookmark' ? t('vault.noBookmarkHere') : t('logins.none')}</p>}
-          {/* The key copies only when one login matches; two or more open
-              this window, so the hint shows for exactly one. */}
-          {loginKeys && here.filter((e) => e.kind === 'login').length === 1 && (
+          {/* One login: the key fills it, or copies it. Two or more: it fills
+              the top row, and a second press the next (fillRun.ts). */}
+          {loginKeys && here.some((e) => e.kind === 'login') && (
             <p className={SETTINGS_HELP}>
-              <Trans t={t} i18nKey="shortcuts.loginHint" components={{ key: <Kbd>{loginKeys}</Kbd> }} />
+              <Trans t={t} i18nKey={here.filter((e) => e.kind === 'login').length === 1 ? 'shortcuts.loginHint' : 'shortcuts.loginHintMany'} components={{ key: <Kbd>{loginKeys}</Kbd>, br: <br /> }} />
             </p>
           )}
-          {here.length === 0 && typeFilter !== 'bookmark' && (
-            <Button action="add" onClick={onAdd}>{t('menu.addLogin')}</Button>
-          )}
         </Section>
       )}
-      {feedback}
       {pinned.length > 0 && (
         <Section icon={PushPin} title={t('shell:tagsRail.pinned')} count={pinned.length}>
-          {rows(pinned, true)}
+          {rows(pinned)}
         </Section>
       )}
-      <Section icon={ListBullets} title={t('vault.all')} count={all.length}>
-        {all.length === 0 && vault.loaded && !vault.pulling ? (
+      {all.length === 0 && vault.loaded && !vault.pulling ? (
+        <Section icon={ListBullets} title={t('vault.all')} count={0}>
           <p className={SETTINGS_HELP}>{t('vault.noneAtAll')}</p>
-        ) : (
-          <>
-            {rows(all.slice(0, reveal.visible), true)}
-          </>
-        )}
-        {checking}
-      </Section>
+        </Section>
+      ) : (
+        groups.map((g) => (
+          <Section key={g.kind} icon={TYPE_ICONS[g.kind]} title={typeLabel(g.kind, t)} count={g.count}>
+            {rows(g.shown)}
+          </Section>
+        ))
+      )}
+      {checking}
     </div>
   );
 }

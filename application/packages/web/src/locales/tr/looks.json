@@ -5,6 +5,8 @@
   "useDefault": "Varsayılanı kullan",
   "color": "Renk",
   "applyToSubfolders": "Rengi alt klasörlere uygula",
+  "applyToFolderItems": "Bu klasördeki tüm öğelere uygula",
+  "applyToTagItems": "Bu etiketi taşıyan tüm öğelere uygula",
   "icon": "Simge",
   "searchPlaceholder": "Simgelerde ara",
   "searchLogos": "Logolarda ara",

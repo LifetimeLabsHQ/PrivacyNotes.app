@@ -26,7 +26,8 @@
       "default": "Una sola mejora desbloquea todo lo de abajo. Pago único.",
       "alerts": "Los recordatorios son una función Pro. Cada dispositivo suena por su cuenta a la hora que elijas, así que ningún servicio de notificaciones push ve el elemento.",
       "vaultFiles": "Los archivos en los elementos de la bóveda son una función Pro. Guarda códigos de recuperación, una clave de respaldo o un escaneo junto al inicio de sesión, la tarjeta o la clave a la que pertenece.",
-      "cli": "La CLI es una función Pro. Scripts, agentes de IA y apps de IA añaden notas desde un terminal o un chat, directamente a tu carpeta Agent."
+      "cli": "La CLI es una función Pro. Scripts, agentes de IA y apps de IA añaden notas desde un terminal o un chat, directamente a tu carpeta Agent.",
+      "browsers": "Un segundo navegador es una función Pro. El plan gratuito conecta una extensión del navegador; Pro conecta hasta 10, cada una con su propio PIN."
     },
     "features": {
       "devices": "Sincroniza dispositivos ilimitados, en todas las plataformas",

@@ -397,6 +397,7 @@
     "modeRich": "Rich",
     "modeSource": "Markdown",
     "reopenPrompt": "Your browser needs permission again after a reload. Your folder is remembered, so this is one click.",
+    "reopenPromptDesktop": "Choose {{name}} once more so the app can open it again. Nothing in the folder has changed.",
     "reopenFolder": "Reopen {{name}}",
     "new": "New",
     "saveToNotes": "Save to my notes",
@@ -699,7 +700,8 @@
       "sprint": "Sprint planning",
       "bookClub": "Book club",
       "rent": "Pay rent"
-    }
+    },
+    "feedReadOnly": "From {{name}}. You can change this event only in that calendar."
   },
   "repeat": {
     "changeTitle": "Change this item?",
@@ -826,7 +828,8 @@
       "file": "Upload a file",
       "contact": "New contact",
       "bookmark": "New bookmark",
-      "clip": "Clip a page"
+      "clip": "Clip a page",
+    "writeNote": "Write a note"
     },
     "keepAsText": "Keep this as text",
     "placeholder": "Title, day, time, repeat...",
@@ -983,6 +986,7 @@
     "stepConnect": "Connect",
     "makeCode": "Make a code",
     "connectHint": "Make a one-time code and paste it in the extension.",
+    "secondBrowserPro": "One browser is connected. A second one needs Pro.",
     "thisBrowser": "This browser",
     "otherApps": "Desktop and phone apps:",
     "desktopAll": "All downloads",
@@ -1040,7 +1044,7 @@
   "extensionConnect": {
     "clips": "Web clipper",
     "clipsHint": "Save websites as notes.",
-    "loginsHint": "Logins, cards, SSH keys and bookmarks for the site you are on, copy only. Locked with its own PIN or passcode.",
+    "loginsHint": "Logins, cards, SSH keys and bookmarks for the site you are on, to copy or to fill. Locked with its own PIN or passcode.",
     "pickOne": "Turn on at least one.",
     "codeLabel": "Code for the extension",
     "oneUse": "Works once, for 10 minutes.",

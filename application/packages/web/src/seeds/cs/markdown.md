@@ -13,6 +13,10 @@ Text může být <span style="color: #e03131">červený</span>, <span style="col
 
 Může být ==zvýrazněný žlutě== nebo <mark style="background-color: rgba(64, 192, 87, 0.35)">zeleně</mark>.
 
+Spoiler skryje slova, dokud na ně někdo neklikne: dárek je ||gramofon||. Označ slova a v nabídce **Vložit** vyber **Spoiler**, nebo napiš dvě svislé čáry na každou stranu.
+
+Ikona nebo logo můžou stát v řádku textu, třeba :icon[gift] :icon[coffee] :icon[rocket-launch] nebo :logo[github]. Vyber si v **Vložit** > **Ikony a loga**.
+
 Tlačítko **Aa** mění velikost a písmo. Text může být <span style="font-size: 0.85em">malý</span>, normální nebo <span style="font-size: 1.6em">velký</span>. Může být <span style="font-family: ui-sans-serif, system-ui, sans-serif">bezpatkový</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">patkový</span> nebo <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">neproporcionální</span>.
 
 ## Kde slova sedí
@@ -51,12 +55,21 @@ Zarovnání hýbe celým odstavcem, nikdy jedním slovem. Dej kurzor do odstavce
 | Evropa | 1 204 | 48 % |
 | Amerika | 902 | 36 % |
 | Asie | 401 | 16 % |
+<!-- table-fill: r0=blue r1c2=green r3c2=red -->
 
-Prostřední sloupec je na střed a poslední zarovnaný doprava. Zatáhni za okraj sloupce a rozšíříš ho.
+Prostřední sloupec je na střed a poslední zarovnaný doprava. Klikni na okraj sloupce a zatáhni, a rozšíříš ho. Buňka nebo celý řádek můžou dostat barvu z lišty tabulky. Malá šipka v buňce záhlaví seřadí řádky pod ní a druhé kliknutí je seřadí opačně.
+
+Tabulka umí i počítat. Napiš do buňky `=` a vyber funkci. Buňka ukáže výsledek a poznámka si nechá vzorec, takže klikni na výsledek a uvidíš, jak vznikl.
+
+| Položka | Množství | Cena | Celkem |
+| --- | ---: | ---: | ---: |
+| Káva | 2 | 3.50 | =B2*C2 |
+| Dort | 1 | 4.20 | =B3*C3 |
+|  |  | Součet | =SUM(D2:D3) |
 
 ## Callouty
 
-Callout je barevná krabička na něco, co čtenář nesmí minout.
+Callout je barevná krabička na něco, co čtenář nesmí minout. Napiš `[!` na prázdný řádek a nějaký vyber.
 
 > [!tip]+ Tip
 > Klikni na jeho ikonu a zavře se.
@@ -136,7 +149,21 @@ export function isLongRead(stats) {
 }
 ```
 
-Krátký kousek kódu uvnitř věty vypadá takhle: `tohle`.
+Blok kódu může mít titulek. Klikni na název jazyka a vyber **Přidat titulek**. Šipka vedle titulku sbalí blok na jeden řádek a poznámka si to zapamatuje.
+
+```bash title="backup.sh" fold
+#!/bin/sh
+# Zkopíruje složku s poznámkami do archivu s datem.
+tar -czf "notes-$(date +%F).tar.gz" "$HOME/Notes"
+```
+
+**Pole ke kopírování** drží jednu věc ke zkopírování, třeba adresu nebo příkaz. Jeho tlačítko ji celou zkopíruje jedním kliknutím.
+
+```copy
+ssh-keygen -t ed25519 -C "laptop"
+```
+
+Krátký kousek kódu uvnitř věty vypadá takhle: `tohle`. Podrž Cmd (Ctrl ve Windows a Linuxu) a klikni na něj, a zkopíruješ ho.
 
 ## Matematika
 
@@ -150,11 +177,21 @@ $$i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi$$
 
 Přetáhni obrázek do poznámky, nebo ho vlož. Klikni na něj a změň mu velikost, nebo ho posuň doleva, na střed či doprava. Ten nahoře je na poloviční šířku a na střed.
 
+## Mapy
+
+```map
+35.3606, 138.7274
+Hora Fudži
+```
+
+Místo dáš do poznámky přes **Vložit** > **Poloha**. Mapa pochází z našeho vlastního serveru, takže žádná mapová společnost nevidí, kam se díváš. V jakékoli jiné aplikaci pro Markdown se zobrazí jako souřadnice a název.
+
 ## Odkazy
 
 Jsou dva druhy a schválně vypadají jinak.
 
 - Webový odkaz otevře stránku: [privacynotes.app](https://privacynotes.app/cs)
+- Webový odkaz může mít text při najetí. Najeď ukazatelem na [tenhle](https://privacynotes.app/cs/help "Naše stránky nápovědy") a chvilku počkej.
 - Odkaz na poznámku otevře jinou tvoji poznámku: [[Jak jsou tvoje poznámky chráněné]]
 
 Oba mají tlačítko na liště. Řetěz udělá webový odkaz. Hranaté závorky udělají odkaz na poznámku: vypíšou tvoje poznámky a ty si vybereš tu, kterou myslíš. Napsat `[[` udělá totéž.

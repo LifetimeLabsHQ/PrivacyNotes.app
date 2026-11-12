@@ -1,6 +1,7 @@
 /**
  * The popup's remembered choices, in this browser only: Include pictures,
- * when the vault locks, the type filter, and the generator's options.
+ * when the vault locks, the type filter, the generator's options, and the
+ * tab used last.
  * Spec: docs/internal/plans/browser-extension-build.md (section 3.4, lock time)
  */
 import { browser } from 'wxt/browser';
@@ -19,11 +20,24 @@ const LOCK_DEFAULT: LockAfter = 900;
 /** The type pill: every kind, or one of them. */
 export type TypeFilter = 'all' | CopyKind;
 
+/** The popup's two tabs. It always opens on the one used last (owner,
+ *  2026-11-11); a menu item, the address bar or a shortcut opens the one its
+ *  job needs without changing this. */
+export type PopupTab = 'clip' | 'vault';
+
 export interface Prefs {
   pictures: boolean;
   lockAfter: LockAfter;
   typeFilter: TypeFilter;
   pwGen: PwGen;
+  tab: PopupTab;
+  /** The 2FA code lines under the logins; off hides them, and the row's
+   *  menu still copies a code (owner, 2026-11-11). */
+  showTotp: boolean;
+  /** The moving bar under a 2FA code; off keeps the code and its seconds still. */
+  totpBar: boolean;
+  /** Website icons through our favicon proxy; off shows the letter. */
+  favicons: boolean;
 }
 
 const KEY = 'prefs';
@@ -37,6 +51,10 @@ export async function readPrefs(): Promise<Prefs> {
     lockAfter: lock === 'popup' ? 60 : LOCK_CHOICES.includes(lock as LockAfter) ? (lock as LockAfter) : LOCK_DEFAULT,
     typeFilter: (COPY_KINDS as readonly string[]).includes(got?.typeFilter as string) ? (got!.typeFilter as TypeFilter) : 'all',
     pwGen: readPwGen(got?.pwGen),
+    tab: got?.tab === 'vault' ? 'vault' : 'clip',
+    showTotp: got?.showTotp !== false,
+    totpBar: got?.totpBar !== false,
+    favicons: got?.favicons !== false,
   };
 }
 

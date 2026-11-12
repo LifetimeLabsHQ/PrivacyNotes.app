@@ -13,6 +13,10 @@ Le texte peut être <span style="color: #e03131">rouge</span>, <span style="colo
 
 Il peut être ==surligné en jaune== ou <mark style="background-color: rgba(64, 192, 87, 0.35)">en vert</mark>.
 
+Un spoiler cache des mots jusqu'à ce qu'on clique dessus : le cadeau est ||un tourne-disque||. Sélectionne les mots et choisis **Spoiler** dans le menu **Insérer**, ou tape deux barres de chaque côté.
+
+Une icône ou un logo peut se glisser dans une ligne de texte, comme :icon[gift] :icon[coffee] :icon[rocket-launch] ou :logo[github]. Choisis-en un dans **Insérer** > **Icônes et logos**.
+
 Le bouton **Aa** change la taille et la police. Le texte peut être <span style="font-size: 0.85em">petit</span>, normal ou <span style="font-size: 1.6em">grand</span>. Il peut être <span style="font-family: ui-sans-serif, system-ui, sans-serif">simple</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">avec empattements</span> ou <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">à chasse fixe</span>.
 
 ## Où se placent les mots
@@ -51,12 +55,21 @@ L'alignement déplace un paragraphe entier, jamais un mot seul. Mets le curseur 
 | Europe | 1 204 | 48 % |
 | Amériques | 902 | 36 % |
 | Asie | 401 | 16 % |
+<!-- table-fill: r0=blue r1c2=green r3c2=red -->
 
-La colonne du milieu est centrée et la dernière alignée à droite. Fais glisser le bord d'une colonne pour l'élargir.
+La colonne du milieu est centrée et la dernière alignée à droite. Fais glisser le bord d'une colonne pour l'élargir. Une cellule ou une ligne entière peut prendre une couleur depuis la barre du tableau. La petite flèche dans une cellule d'en-tête trie les lignes en dessous, et un deuxième clic les trie dans l'autre sens.
+
+Un tableau sait aussi calculer. Tape `=` dans une cellule pour choisir une fonction. La cellule affiche le résultat et la note garde la formule : clique sur un résultat pour voir comment il a été obtenu.
+
+| Article | Qté | Prix | Total |
+| --- | ---: | ---: | ---: |
+| Café | 2 | 3.50 | =B2*C2 |
+| Gâteau | 1 | 4.20 | =B3*C3 |
+|  |  | Somme | =SUM(D2:D3) |
 
 ## Encadrés
 
-Un encadré est une boîte colorée pour ce qu'il ne faut surtout pas rater.
+Un encadré est une boîte colorée pour ce qu'il ne faut surtout pas rater. Tape `[!` sur une ligne vide pour en choisir un.
 
 > [!tip]+ Astuce
 > Clique sur son icône pour le replier.
@@ -136,7 +149,21 @@ export function isLongRead(stats) {
 }
 ```
 
-Un bout de code court au milieu d'une phrase ressemble plutôt à `ceci`.
+Un bloc de code peut porter un titre. Clique sur le nom du langage et choisis **Ajouter un titre**. La flèche à côté du titre replie le bloc sur une seule ligne, et la note s'en souvient.
+
+```bash title="backup.sh" fold
+#!/bin/sh
+# Copie le dossier des notes dans une archive datée.
+tar -czf "notes-$(date +%F).tar.gz" "$HOME/Notes"
+```
+
+Un **Bloc à copier** contient une seule chose à copier, comme une adresse ou une commande. Son bouton copie tout en un clic.
+
+```copy
+ssh-keygen -t ed25519 -C "laptop"
+```
+
+Un bout de code court au milieu d'une phrase ressemble plutôt à `ceci`. Maintiens Cmd (Ctrl sous Windows et Linux) et clique dessus pour le copier.
 
 ## Maths
 
@@ -150,11 +177,21 @@ $$i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi$$
 
 Fais glisser une image dans une note, ou colle-la. Clique dessus une fois pour changer sa taille, ou pour la placer à gauche, au centre ou à droite. Celle du dessus est à mi-largeur et centrée.
 
+## Cartes
+
+```map
+35.3606, 138.7274
+Mont Fuji
+```
+
+Place un lieu dans une note avec **Insérer** > **Lieu**. La carte vient de notre propre serveur, donc aucune entreprise de cartographie ne voit où tu regardes. Dans toute autre app Markdown, elle se lit comme les coordonnées et le nom.
+
 ## Liens
 
 Il y en a deux sortes, et elles ne se ressemblent pas, exprès.
 
 - Un lien web ouvre un site : [privacynotes.app](https://privacynotes.app/fr)
+- Un lien web peut porter un texte au survol. Pointe [celui-ci](https://privacynotes.app/fr/help "Nos pages d'aide") et attends.
 - Un lien de note ouvre une autre de tes notes : [[Comment tes notes sont protégées]]
 
 Les deux ont un bouton dans la barre. La chaîne fait un lien web. Les crochets font un lien de note : ils listent tes notes et tu choisis celle que tu veux. Taper `[[` fait la même chose.

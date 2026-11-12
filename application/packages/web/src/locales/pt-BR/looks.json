@@ -5,6 +5,8 @@
   "useDefault": "Usar padrão",
   "color": "Cor",
   "applyToSubfolders": "Aplicar cor às subpastas",
+  "applyToFolderItems": "Aplicar a todos os itens desta pasta",
+  "applyToTagItems": "Aplicar a todos os itens com esta etiqueta",
   "icon": "Ícone",
   "searchPlaceholder": "Buscar ícones",
   "searchLogos": "Buscar logos",

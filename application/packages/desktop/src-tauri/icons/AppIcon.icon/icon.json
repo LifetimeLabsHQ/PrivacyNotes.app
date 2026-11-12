@@ -8,7 +8,7 @@
     {
       "appearance" : "dark",
       "value" : {
-        "solid" : "extended-srgb:0.11765,0.25098,0.68627,1.00000"
+        "solid" : "extended-srgb:0.09412,0.09412,0.10196,1.00000"
       }
     }
   ],
@@ -20,6 +20,14 @@
           "name" : "glyph"
         },
         {
+          "fill-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "extended-srgb:0.18039,0.18039,0.20000,1.00000"
+              }
+            }
+          ],
           "image-name" : "fold.png",
           "name" : "fold"
         }

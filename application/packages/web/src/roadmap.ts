@@ -65,7 +65,8 @@ export type RoadmapIcon =
   | 'contacts'
   | 'sidebar'
   | 'robot'
-  | 'coin';
+  | 'coin'
+  | 'map';
 
 export type RoadmapItem = {
   /** Stable slug, used as the anchor id on the /roadmap page. */
@@ -412,6 +413,22 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     icon: 'pencil',
   },
   {
+    id: 'places-and-maps',
+    title: 'Places and maps',
+    status: 'shipped',
+    description:
+      'Give a note a place: type a town, paste coordinates or a map link, or use where your phone is. Open it on a map, or put a map right in the text and drag its corner to size it. The maps come from our own server, so no map company sees where you look.',
+    icon: 'map',
+  },
+  {
+    id: 'automatic-backups',
+    title: 'Automatic backups',
+    status: 'shipped',
+    description:
+      'Pick a folder and a rhythm, and a fresh encrypted copy of everything is written there without you thinking about it. Free on every plan. Sync is not a backup, it mirrors deletions as faithfully as edits, so a copy on your own disk is the one thing no server event can undo.',
+    icon: 'database',
+  },
+  {
     // Last of the `shipped` run, deliberately: renderItems() puts the "You are
     // here" marker at the FIRST non-shipped item, so a shipped card placed
     // below this one would render green, on the done-colored rail, underneath
@@ -442,20 +459,13 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     icon: 'bug',
   },
   {
+    // The id stays: links to #graph-view still land here.
     id: 'graph-view',
-    title: 'Graph view',
+    title: 'Maps & graph view',
     status: 'up-next',
     description:
-      'See how your notes connect. Every note-link drawn as a map you can pan and follow, so the shape of what you have written becomes something you can navigate.',
+      'Two ways to see your notes as a whole. The graph draws every note-link as a web you can pan and follow, so the shape of what you have written becomes something you can navigate. The map puts every note with a place on one map, so a trip or a year of journal entries shows where it happened. Tap a pin or a dot to open the note.',
     icon: 'graph',
-  },
-  {
-    id: 'automatic-backups',
-    title: 'Automatic backups',
-    status: 'up-next',
-    description:
-      'You can already export everything in one file, but only when you remember to. This makes it automatic: pick a folder and a rhythm, and a fresh copy is written without you thinking about it. Sync is not a backup, it mirrors deletions as faithfully as edits, so a copy on your own disk is the one thing no server event can undo.',
-    icon: 'database',
   },
   {
     id: 'app-polish',

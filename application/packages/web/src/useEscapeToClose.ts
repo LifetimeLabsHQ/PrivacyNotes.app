@@ -5,8 +5,8 @@ import { isImeComposing } from './imeComposing';
  * Global Escape-to-close hook for modals.
  *
  * Attaches a capture-phase keydown listener so modals close before any
- * other Escape handler (search clear, selection-mode exit, etc.) can
- * claim the event. Capture phase also means the hook works even when
+ * other Escape handler (selection-mode exit, etc.) can claim the event.
+ * The one exception is a shared search field with text, which clears first. Capture phase also means the hook works even when
  * focus is inside an input/textarea within the modal.
  *
  * Nested modals: handlers are tracked in a LIFO stack and only the
@@ -74,6 +74,10 @@ export function pushEscapeHandler(onEscape: () => void, inline = false, key = tr
     // An Escape that cancels a conversion belongs to the input method.
     if (isImeComposing(e)) return;
     if (e.defaultPrevented) return;
+    // A search field with text takes its own Escape: it clears, and the next
+    // Escape closes the overlay. The overlay listens in the capture phase, so
+    // the field can never claim the key first (tests/escapeStack.test.ts).
+    if (e.target instanceof HTMLInputElement && e.target.hasAttribute('data-search-field') && e.target.value) return;
     // Only the topmost open handler responds.
     if (escStack[escStack.length - 1]?.id !== id) return;
     e.stopPropagation();

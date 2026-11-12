@@ -1,6 +1,7 @@
 // jszip is ~95 KB minified and only needed when the user actually
 // exports a zip, so it is imported dynamically inside the two zip
 // functions instead of statically here.
+import type { CarriedSettings } from './backupRestore';
 import type { CustomHabitDef } from './habitList';
 import {
   buildBackupPayload,
@@ -41,7 +42,7 @@ import type { CustomTrackerTemplate, FactorDef, MedicationTemplate } from './tra
 import { linkExportMarkdown } from './linkBody';
 import { slugify, zipEntryStems } from './exportNames';
 import { parseScene, toExcalidrawFile } from './drawing/scene';
-import { lineHeightCss, paragraphGapCss, readLineSpacing } from './theme';
+import { lineHeightCss, paragraphGapCss, readLineSpacing, readNestedNumbers } from './theme';
 import { isSameOriginPath } from './sameOriginPath';
 import { contactDisplayName, contactFullName, contactInitialsFor, formatAddressLines, formatContactDate, parseContactBody, telHref, type Contact } from './contactBody';
 
@@ -375,7 +376,7 @@ export interface BackupManifest {
   /** The looks of folders, tags and notes, the custom themes and the factor
    *  names, the settings the notes alone cannot carry. Written only when there
    *  is something to carry; the restore validates each. */
-  settings?: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown };
+  settings?: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown };
 }
 
 /**
@@ -386,18 +387,21 @@ function rewriteBodyForExport(
   body: string,
   resolvedImageExts: Map<string, string>,
   attachmentMap: Map<string, { path: string; name: string }>,
+  /** `../` once per folder level, for a note filed in a folder directory
+   *  (the Notes only zip); empty for a note at the top of the zip. */
+  up = '',
 ): string {
   // Rewrite images: pn:img/<uuid> → images/<uuid>.<ext> (jpg or png)
   let result = body.replace(IMAGE_URI_RE, (match, uuid: string) => {
     const ext = resolvedImageExts.get(uuid);
     if (!ext) return match;
-    return `images/${uuid}.${ext}`;
+    return `${up}images/${uuid}.${ext}`;
   });
   // Pictures placed from Files point at the upload's file in the zip, and
   // the restore maps that path back (import/privacynotes.ts).
   result = replaceMatches(result, filePictures(result), ({ alt, uuid }) => {
     const info = attachmentMap.get(uuid);
-    return info ? `![${alt}](${mdLinkTarget(info.path)})` : null;
+    return info ? `![${alt}](${mdLinkTarget(up + info.path)})` : null;
   });
   // Rewrite attachments: [name|size|mime](pn:file/<uuid>) → [name](<folder/original name.ext>)
   return replaceMatches(result, attachmentLinks(result), (link) => {
@@ -405,7 +409,7 @@ function rewriteBodyForExport(
     // Each reference keeps its OWN label. One file can be referenced from
     // two notes under two names, so collapsing them onto the first-seen
     // name would throw one of them away.
-    return info ? `[${link.name || info.name}](${mdLinkTarget(info.path)})` : null;
+    return info ? `[${link.name || info.name}](${mdLinkTarget(up + info.path)})` : null;
   });
 }
 
@@ -498,8 +502,12 @@ async function buildFullBackupZip(
   attachmentStore?: AttachmentStore | null,
   onProgress?: (at: ExportStep) => void,
   folders: FolderDef[] = [],
-  settings: { itemStyles?: ItemStyles; customThemes?: CustomThemes; factors?: FactorDef[]; customHabits?: CustomHabitDef[]; medications?: MedicationTemplate[]; customTrackers?: CustomTrackerTemplate[] } = {},
+  settings: CarriedSettings = {},
   signal?: AbortSignal,
+  /** The Notes only zip (#682): each note in its folder's directory, and no
+   *  manifest.json or calendar.ics. The Restore tab reads only top-level
+   *  files, so this zip is for reading; Import > Markdown reads it back. */
+  reading = false,
 ): Promise<{ blob: Blob; missing: MissingBlob[] }> {
   // A cancelled export stops at its next step. A read that hangs cannot be
   // interrupted, but the window has already closed and nothing gets saved.
@@ -614,8 +622,20 @@ async function buildFullBackupZip(
     // A vault item keeps its pn:file links: its body is JSON, which the text
     // rewrite would break, and the restore puts each file back under the
     // same uuid (manifest.attachments), so the links still resolve.
-    const body = hasVaultFiles(note.type) ? note.body : rewriteBodyForExport(note.body, resolvedImageExts, attachmentMap);
-    zip.file(`${stem}.md`, noteToMarkdown({ ...note, body }, true, folderNamePath(folders, note.folderId)));
+    const folderPath = folderNamePath(folders, note.folderId);
+    // A folder name becomes a safe directory name: no separators, no
+    // characters Windows refuses, no leading dot. The note keeps its real
+    // folder names in its `folder:` line.
+    const dirs = reading ? folderPath.map((name) => safeAttachmentName(name, '')) : [];
+    const up = '../'.repeat(dirs.length);
+    const body = hasVaultFiles(note.type) ? note.body : rewriteBodyForExport(note.body, resolvedImageExts, attachmentMap, up);
+    zip.file([...dirs, `${stem}.md`].join('/'), noteToMarkdown({ ...note, body }, true, folderPath));
+  }
+  if (reading) {
+    progress({ step: 'zip' });
+    const blob = await zip.generateAsync({ type: 'blob' });
+    signal?.throwIfAborted();
+    return { blob, missing };
   }
 
   // The calendar as one .ics for other apps. A restore reads only the
@@ -645,6 +665,14 @@ async function buildFullBackupZip(
     // medication to draw them (external report, 2026-10-24, bug report 6).
     ...((settings.medications ?? []).length > 0 ? { medications: settings.medications } : {}),
     ...((settings.customTrackers ?? []).length > 0 ? { customTrackers: settings.customTrackers } : {}),
+    // The rest of what a person set up by hand, so "everything" holds
+    // (owner, 2026-11-11). The lock, the device list and the wrapped keys
+    // stay out: tests/backupSettingsInventory.test.ts names each one.
+    ...((settings.favoriteTags ?? []).length > 0 ? { favoriteTags: settings.favoriteTags } : {}),
+    ...(Object.keys(settings.calendarFeeds ?? {}).length > 0 ? { calendarFeeds: settings.calendarFeeds } : {}),
+    ...(Object.keys(settings.dashboard ?? {}).length > 0 ? { dashboard: settings.dashboard } : {}),
+    ...(settings.agentFolder ? { agentFolder: settings.agentFolder } : {}),
+    ...(settings.trackerSetup ? { trackerSetup: settings.trackerSetup } : {}),
   };
   if (Object.keys(carried).length > 0) manifest.settings = carried;
   zip.file('manifest.json', JSON.stringify(manifest, null, 2));
@@ -666,12 +694,37 @@ export async function exportAllMarkdownZip(
   attachmentStore?: AttachmentStore | null,
   onProgress?: (at: ExportStep) => void,
   folders: FolderDef[] = [],
-  settings: { itemStyles?: ItemStyles; customThemes?: CustomThemes; factors?: FactorDef[]; customHabits?: CustomHabitDef[]; medications?: MedicationTemplate[]; customTrackers?: CustomTrackerTemplate[] } = {},
+  settings: CarriedSettings = {},
   signal?: AbortSignal,
+  /** `privacynotes-selection` for a picked set, so it never passes for a
+   *  full backup (#682). */
+  fileStem = 'privacynotes-backup',
 ): Promise<BulkExportResult> {
   const { blob, missing } = await buildFullBackupZip(notes, imageStore, attachmentStore, onProgress, folders, settings, signal);
   const stamp = toLocalIso(new Date());
-  return { missing, savedPath: await downloadBlob(blob, `privacynotes-backup-${stamp}.zip`) };
+  return { missing, savedPath: await downloadBlob(blob, `${fileStem}-${stamp}.zip`) };
+}
+
+/**
+ * Only the notes, as Markdown files in a zip (#682): no tasks, journal
+ * entries, events, vault items, bookmarks, contacts or drawings, and nothing
+ * from the trash. Each note sits in its folder's directory, with its
+ * pictures and files beside the full backup's images/ and files/ folders.
+ * It is a reading copy: no manifest.json, so the Restore tab does not take
+ * it; Import > Markdown reads it back, folders included.
+ */
+export async function exportNotesMarkdownZip(
+  notes: LocalNote[],
+  imageStore?: ImageStore | null,
+  attachmentStore?: AttachmentStore | null,
+  onProgress?: (at: ExportStep) => void,
+  folders: FolderDef[] = [],
+  signal?: AbortSignal,
+): Promise<BulkExportResult> {
+  const only = notes.filter((n) => n.type === 'note' && n.deleted !== 1 && n.trashed !== 1);
+  const { blob, missing } = await buildFullBackupZip(only, imageStore, attachmentStore, onProgress, folders, {}, signal, true);
+  const stamp = toLocalIso(new Date());
+  return { missing, savedPath: await downloadBlob(blob, `privacynotes-notes-${stamp}.zip`) };
 }
 
 /**
@@ -688,17 +741,40 @@ export async function exportEncryptedFullBackup(
   encryptionKey: Uint8Array,
   onProgress?: (at: ExportStep) => void,
   folders: FolderDef[] = [],
-  settings: { itemStyles?: ItemStyles; customThemes?: CustomThemes; factors?: FactorDef[]; customHabits?: CustomHabitDef[]; medications?: MedicationTemplate[]; customTrackers?: CustomTrackerTemplate[] } = {},
+  settings: BackupSettings = {},
   signal?: AbortSignal,
 ): Promise<BulkExportResult> {
-  const { blob, missing } = await buildFullBackupZip(notes, imageStore, attachmentStore, onProgress, folders, settings, signal);
-  const sealed = encodeZipBackup(new Uint8Array(await blob.arrayBuffer()), encryptionKey);
+  const { sealed, missing } = await buildEncryptedFullBackup(notes, imageStore, attachmentStore, encryptionKey, onProgress, folders, settings, signal);
   const stamp = toLocalIso(new Date());
   const savedPath = await downloadBlob(
     new Blob([sealed as BlobPart], { type: 'application/octet-stream' }),
     `privacynotes-backup-${stamp}.pnbackupz`,
   );
   return { missing, savedPath };
+}
+
+/** The settings a full backup carries beside the items. */
+type BackupSettings = CarriedSettings;
+
+/**
+ * The bytes of a .pnbackupz, with no save: the manual export above and the
+ * automatic backup (autoBackup/runner.ts) both build through here, so they
+ * cannot drift apart. `zip` is the plain zip that went into the seal, which
+ * the automatic backup compares with the seal opened again.
+ */
+export async function buildEncryptedFullBackup(
+  notes: LocalNote[],
+  imageStore: ImageStore | null,
+  attachmentStore: AttachmentStore | null,
+  encryptionKey: Uint8Array,
+  onProgress?: (at: ExportStep) => void,
+  folders: FolderDef[] = [],
+  settings: BackupSettings = {},
+  signal?: AbortSignal,
+): Promise<{ sealed: Uint8Array; zip: Uint8Array; missing: MissingBlob[] }> {
+  const { blob, missing } = await buildFullBackupZip(notes, imageStore, attachmentStore, onProgress, folders, settings, signal);
+  const zip = new Uint8Array(await blob.arrayBuffer());
+  return { sealed: encodeZipBackup(zip, encryptionKey), zip, missing };
 }
 
 /**
@@ -1195,17 +1271,22 @@ export function buildNoteHtmlDocument(note: LocalNote, folderPath: string[] = []
   .content p {
     margin: ${paragraphGapCss()} 0;
   }
+  /* Logical sides: a list or quote takes its dir from its own text
+     (markdownRender.ts), so a Persian list indents and puts its bullets on
+     the right, as in the editor (GitHub #725). */
   .content ul, .content ol {
-    margin: 0 0 1em 1.5em;
+    margin: 0 0 1em;
+    margin-inline-start: 1.5em;
     padding: 0;
   }
   .content li {
     margin-bottom: 0.25em;
   }
-  .content blockquote {
-    border-left: 3px solid #ccc;
+${nestedNumbersCss()}  .content blockquote {
+    border-inline-start: 3px solid #ccc;
     margin: 0 0 1em;
-    padding: 0.1em 0 0.1em 1em;
+    padding-block: 0.1em;
+    padding-inline: 1em 0;
     color: #444;
     font-style: italic;
   }
@@ -1649,6 +1730,7 @@ export async function exportAllHtmlZip(
   onProgress?: (at: ExportStep) => void,
   attachmentStore?: AttachmentStore | null,
   signal?: AbortSignal,
+  fileStem = 'privacynotes-backup',
 ): Promise<BulkExportResult> {
   const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
@@ -1677,7 +1759,7 @@ export async function exportAllHtmlZip(
   const blob = await zip.generateAsync({ type: 'blob' });
   signal?.throwIfAborted();
   const stamp = toLocalIso(new Date());
-  return { missing: [...missing.values()], savedPath: await downloadBlob(blob, `privacynotes-backup-${stamp}-html.zip`) };
+  return { missing: [...missing.values()], savedPath: await downloadBlob(blob, `${fileStem}-${stamp}-html.zip`) };
 }
 
 declare global {
@@ -1742,7 +1824,8 @@ export async function printNote(
   // Inline favicons so they appear in the printed/PDF output.
   html = await inlineRenderedFavicons(html);
 
-  if (await printViaOs(html, note.title.trim() || 'Untitled')) return;
+  const jobName = note.title.trim() || 'Untitled';
+  if (await printViaOs(html, jobName)) return;
 
   // Use a hidden iframe so the print dialog targets only the note,
   // not the app itself.
@@ -1779,10 +1862,19 @@ export async function printNote(
     if (printed) return;
     printed = true;
     if (safetyTimer) clearTimeout(safetyTimer);
+    // Chromium (Chrome, Edge, the Windows app's WebView2) names the "Save as
+    // PDF" file after the TOP document's title, not the printed iframe's, so
+    // every PDF came out as "PrivacyNotes.pdf" (#720). Lend the note title to
+    // the app for the length of the print.
+    const appTitle = document.title;
+    document.title = jobName;
     try {
       iframe.contentWindow?.print();
     } finally {
-      setTimeout(() => document.body.removeChild(iframe), 1000);
+      setTimeout(() => {
+        document.title = appTitle;
+        document.body.removeChild(iframe);
+      }, 1000);
     }
   };
 
@@ -1840,13 +1932,27 @@ export async function exportEncryptedBackup(
   /** The person's own habit questions (userSettings.customHabits). */
   customHabits: CustomHabitDef[] = [],
 ): Promise<void> {
-  const out = encodeBackup(buildBackupPayload(notes, folders, undefined, itemStyles, customThemes, factors, customHabits), encryptionKey);
+  const out = buildEncryptedTextBackup(notes, encryptionKey, folders, itemStyles, customThemes, factors, customHabits);
 
   const stamp = toLocalIso(new Date());
   await downloadBlob(
     new Blob([out as BlobPart], { type: 'application/octet-stream' }),
     `privacynotes-backup-${stamp}.pnbackup`
   );
+}
+
+/** The bytes of a .pnbackup, with no save; shared with the automatic backup
+ *  like buildEncryptedFullBackup. */
+export function buildEncryptedTextBackup(
+  notes: LocalNote[],
+  encryptionKey: Uint8Array,
+  folders: FolderDef[] = [],
+  itemStyles: ItemStyles = {},
+  customThemes: CustomThemes = {},
+  factors: FactorDef[] = [],
+  customHabits: CustomHabitDef[] = [],
+): Uint8Array {
+  return encodeBackup(buildBackupPayload(notes, folders, undefined, itemStyles, customThemes, factors, customHabits), encryptionKey);
 }
 
 /** Decoded .pnbackup contents. Alias of the shared format type; kept under
@@ -2084,4 +2190,19 @@ export async function exportVaultBitwarden(notes: LocalNote[], folders: FolderDe
   });
   const stamp = toLocalIso(new Date());
   await downloadBlob(blob, `privacynotes-vault-${stamp}.json`);
+}
+
+/**
+ * The reader's nested numbers (#689) for the export stylesheet: on
+ * 'outline', 1.1 and 1.1.1, as in the editor. markdownRender writes a
+ * Persian list's numerals as an inline list-style-type, which the marker
+ * content would hide, so that list counts in Persian here too.
+ * Spec: index.css (Nested numbers)
+ */
+function nestedNumbersCss(): string {
+  if (readNestedNumbers() !== 'outline') return '';
+  return `  .content ol:not(ul ol) > li::marker { content: counters(list-item, '.') '. '; }
+  .content ol[style*="persian"]:not(ul ol) > li::marker { content: counters(list-item, '.', persian) '. '; }
+  .content ol ol:not(ul ol) { margin-inline-start: 2.5em; }
+`;
 }

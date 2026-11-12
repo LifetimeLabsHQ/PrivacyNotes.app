@@ -169,6 +169,8 @@
     "useClipBody": "クリップボード、コマンドの出力、エラーメッセージを、そのままノートに送れます。",
     "useToolsTitle": "自分のツールの一部に",
     "useToolsBody": "このコマンドは JSON で応答し、わかりやすい終了コードを返すので、スクリプトはノートが保存されたことを確認できます。",
+    "useShortcutTitle": "キーボードショートカットからノートを",
+    "useShortcutBody": "システムの設定で選んだキーを押すと、アプリを閉じていてもクイックノート用のボックスが開きます。ノートは「Agent」フォルダに入ります。",
     "howLink": "privacynotes の仕組みを読む"
   },
   "meds": {
@@ -342,7 +344,7 @@
     "manualUpdates": "手動更新",
     "extensionHeading": "ウェブクリッパーとパスワードマネージャー",
     "extensionKeyOpen": "拡張機能を開く",
-    "extensionKeyLogin": "このサイトのログイン情報をコピー",
+    "extensionKeyLogin": "このサイトのログイン情報を自動入力",
     "extensionKeyBookmark": "このページをブックマーク",
     "extensionAria": "{{name}} に拡張機能を追加",
     "extensionNote": "パソコンのみ対応です。"

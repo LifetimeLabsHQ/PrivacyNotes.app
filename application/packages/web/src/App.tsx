@@ -21,6 +21,9 @@ import { clearPin, phraseMatches } from './pinRecovery';
 import { phraseOwnsThisDevice, switchWouldWipe } from './authStorage';
 import { clearManualLock, lockCurtainIsStale, manualLockArmed, startReLockWatch } from './appReLock';
 import { startTrayMode } from './trayMode';
+import { ninjaKeySupported, startNinjaShortcut } from './ninjaShortcut';
+import { startNinjaHost } from './ninjaHost';
+import { finishLoginStart } from './openAtLogin';
 import { applyPrivacyScreen } from './privacyScreen';
 import { loadLocalSettings, saveLocalSettings } from './userSettings';
 import { hasStoredSession, isTrustedDevice } from './trustStorage';
@@ -305,8 +308,15 @@ export default function App() {
   }, []);
 
   // Keep running in the tray: push the stored switch to the desktop shell.
+  // Ninja from any app: push the key, and answer the box (#694). A start at
+  // sign-in shows as Start minimized says (Settings > System).
   useEffect(() => {
     startTrayMode();
+    if (ninjaKeySupported()) {
+      startNinjaShortcut();
+      startNinjaHost();
+      finishLoginStart();
+    }
   }, []);
 
   // Re-lock after the idle window the user picked. Armed only while the app is

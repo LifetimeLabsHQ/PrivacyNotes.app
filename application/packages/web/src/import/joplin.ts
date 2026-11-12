@@ -11,6 +11,7 @@ import { mapOutsideCode } from './codeSegments';
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 import { toLocalIso } from '../notesViewUtils';
 import i18n from '../i18n';
+import { LOCATION_KEY, importedLocation } from '../noteLocation';
 
 const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.joplin.${key}`, options);
 
@@ -47,6 +48,7 @@ const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`
  *   `<ins>`, `++text++`  -> underline (the Rich Text editor writes `<ins>`)
  *   is_todo              -> a checkbox line in front of the body
  *   markup_language 2    -> an HTML note, through the Notesnook converter
+ *   latitude, longitude  -> the note's place (0, 0 is none)
  *   deleted_time         -> trashed
  *   user_*_time          -> the dates the user sees, over the sync dates
  */
@@ -380,6 +382,7 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
   let linkifiedCount = 0;
   let emptyCount = 0;
   let untaggedCount = 0;
+  let placeCount = 0;
 
   for (const raw of notesRaw) {
     const p = raw.props;
@@ -420,6 +423,10 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
 
     const createdAt = isoOr(p.user_created_time, isoOr(p.created_time, now));
     const parent = p.parent_id ?? '';
+    // Joplin's phone apps record where a note was made (0 when they could not).
+    // Spec: docs/internal/plans/note-location.md (section 6)
+    const place = importedLocation(p.latitude, p.longitude);
+    if (place) placeCount++;
     notes.push({
       title: raw.title.trim(),
       body: linked,
@@ -430,6 +437,7 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
       folderId: folderIdMap.get(parent) ?? null,
       ...(folderPathOf.has(parent) ? { folderPath: folderPathOf.get(parent)! } : {}),
       ...(type ? { type } : {}),
+      ...(place ? { trackers: { [LOCATION_KEY]: place } } : {}),
     });
   }
 
@@ -444,6 +452,7 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
   if (folderDefs.length > 0) transforms.push(msg('rebuiltNotebooks', { count: folderDefs.length }));
   if (blobs.size > 0) transforms.push(i18n.t('importExport:importLog.shared.attachments', { count: blobs.size }));
   if (todoCount > 0) transforms.push(msg('turnedTodos', { count: todoCount }));
+  if (placeCount > 0) transforms.push(i18n.t('importExport:importLog.shared.places', { count: placeCount }));
   if (htmlCount > 0) transforms.push(msg('convertedHtml', { count: htmlCount }));
   if (trashedCount > 0) transforms.push(i18n.t('importExport:importLog.shared.restoredTrashed', { count: trashedCount }));
   if (linkifiedCount > 0) transforms.push(i18n.t('importExport:importLog.shared.linkifiedNotes', { count: linkifiedCount }));

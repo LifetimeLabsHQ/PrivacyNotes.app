@@ -4,6 +4,7 @@ import type { LocalNote } from './db';
 import { HoverLabel } from './HoverLabel';
 import { useIsTouchDevice } from './useIsMobile';
 import { DotsThreeOutlineVertical, PencilSimple, Trash } from './icons';
+import { ARMED_MS } from './ui/DeleteButton';
 
 /**
  * The edit / delete pair a bookmark row wears on hover.
@@ -16,7 +17,7 @@ import { DotsThreeOutlineVertical, PencilSimple, Trash } from './icons';
  * 2026-08-25.
  *
  * Delete is armed, not immediate: the first click swaps the pair for a
- * labelled confirm pill, a second click inside three seconds does it, and
+ * labelled confirm pill, a second click inside six seconds (`ARMED_MS`) does it, and
  * silence disarms. Each row owns that state, so arming one never disturbs
  * another.
  *
@@ -74,7 +75,7 @@ export function BookmarkRowActions({
       return;
     }
     setArmed(true);
-    timer.current = setTimeout(() => setArmed(false), 3000);
+    timer.current = setTimeout(() => setArmed(false), ARMED_MS);
   }
 
   if (armed) {

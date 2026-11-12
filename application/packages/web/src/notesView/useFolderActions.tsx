@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { CaretDown, Folder } from '../icons';
 import { FolderGlyph } from '../looks/LookGlyph';
 import { IconUpgrade } from '../UpgradeModal';
+import { RowChip } from '../ui';
 import type { LocalNote } from '../db';
 import {
   applyFolderPlacement,
@@ -382,68 +383,42 @@ export function useFolderActions({
       : undefined;
     // A read-only note shows where it lives but does not move from here
     // (GitHub #706): the same chip as plain text, with no caret.
-    if (note.locked === 1) {
-      return (
-        <span
-          className={`shrink-0 inline-flex items-center gap-1 text-small font-medium px-2 py-0.5 rounded-md border text-accent-strong ${
-            noteFolder ? 'border-accent/40 bg-accent/15' : 'border-dashed border-accent/40 bg-accent/8'
-          }`}
-        >
-          {noteFolder ? (
-            <FolderGlyph folderId={noteFolder.id} size={12} className="shrink-0 text-label" />
-          ) : (
-            <Folder className="shrink-0 text-label" />
-          )}
-          <span className="truncate max-w-[120px]">
-            {noteFolder ? noteFolder.name : t('shell:folders.chipUnfiled')}
-          </span>
-        </span>
-      );
-    }
+    // The folder is the ONE place a note lives, the tags are however many
+    // labels it carries, and RowChip's square shape carries that split. The
+    // chip stays ACCENT like everything else in the row - only the folder
+    // GLYPH is amber, which is the app's mark for a folder in the tree and the
+    // picker too. Unfiled is RowChip's dashed "nothing here yet".
+    // Spec: docs/internal/design/ui-patterns.md (editor tag row)
+    // The sidebar's folder mark, unchanged: same amber, same default weight.
+    // One folder looks like a folder everywhere, and the chip is not the place
+    // to fork that.
+    const glyph = noteFolder ? (
+      <FolderGlyph folderId={noteFolder.id} size={12} className="shrink-0 text-label" />
+    ) : (
+      <Folder className="shrink-0 text-label" />
+    );
+    const name = noteFolder ? noteFolder.name : t('shell:folders.chipUnfiled');
+    if (note.locked === 1) return <RowChip icon={glyph} empty={!noteFolder}>{name}</RowChip>;
     return (
-      <button
-        type="button"
+      <RowChip
+        icon={glyph}
+        empty={!noteFolder}
         onClick={() =>
           setFolderPicker({ mode: 'note', noteIds: [note.id], currentFolderId: note.folderId ?? null })
         }
-        aria-label={t('shell:contextMenu.moveToFolder')}
-        /* Square corners and a border, against the round accent pills the
-           tags use: the folder is the ONE place a note lives, the tags are
-           however many labels it carries, and the shape carries that split.
-           The chip itself stays ACCENT like everything else in the row - only
-           the folder GLYPH is amber, which is the app's mark for a folder in
-           the tree and the picker too. Both states draw a border, so filing a
-           note no longer changes the chip's height. Unfiled keeps a DASHED
-           border for "no folder yet" but in accent rather than grey - a grey
-           dashed ghost read as a disabled control.
-           Spec: docs/internal/design/ui-patterns.md (editor tag row) */
-        className={`shrink-0 inline-flex items-center gap-1 text-small font-medium px-2 py-0.5 rounded-md border transition ${
-          noteFolder
-            ? 'border-accent/40 bg-accent/15 text-accent-strong hover:bg-accent/25'
-            : 'border-dashed border-accent/40 bg-accent/8 text-accent-strong hover:bg-accent/15 hover:border-accent/60'
-        }`}
+        label={t('shell:contextMenu.moveToFolder')}
+        trailing={
+          <>
+            <CaretDown size={9} className="shrink-0 opacity-70" />
+            {/* Same trailing gold rocket the Folders segment carries in the
+                sidebar rail. Only the demo reaches it: the demo unlocks folders
+                as a teaser and still labels them Pro. */}
+            {!isPro && <span className="shrink-0 inline-flex"><IconUpgrade size={11} /></span>}
+          </>
+        }
       >
-        {/* The sidebar's folder mark, unchanged: same amber, same default
-            weight. One folder looks like a folder everywhere, and the chip
-            is not the place to fork that. */}
-        {noteFolder ? (
-          <FolderGlyph
-            folderId={noteFolder.id}
-            size={12}
-            className="shrink-0 text-label"
-          />
-        ) : (
-          <Folder className="shrink-0 text-label" />
-        )}
-        <span className="truncate max-w-[120px]">
-          {noteFolder ? noteFolder.name : t('shell:folders.chipUnfiled')}
-        </span>
-        <CaretDown size={9} className="shrink-0 opacity-70" />
-        {/* Same trailing gold rocket the Folders segment carries in the
-            sidebar rail. Only the demo reaches it: the demo unlocks folders
-            as a teaser and still labels them Pro. */}
-        {!isPro && <span className="shrink-0 inline-flex"><IconUpgrade size={11} /></span>}
-      </button>
+        {name}
+      </RowChip>
     );
   };
 

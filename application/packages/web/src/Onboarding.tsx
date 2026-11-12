@@ -13,7 +13,7 @@ import { QrScannerModal } from './QrScannerModal';
 import { TurnstileWidget } from './TurnstileWidget';
 import { readResumablePhrase } from './phraseAtRest';
 import { isTrustedDevice } from './trustStorage';
-import { detectPlatform, isLinuxNative, warmAuthEdgeFunctions } from './devices';
+import { detectPlatform, warmAuthEdgeFunctions } from './devices';
 import { isAppHost } from './hosts';
 import { applyStoredTheme } from './theme';
 import { ConfirmModal } from './ConfirmModal';
@@ -1048,8 +1048,8 @@ function ImportPhrase({
 
   // Upload path: decode a QR out of a chosen image file and fill the
   // textarea (same review-before-commit rationale as handleScanned). No
-  // camera needed, so this also covers Linux native, where getUserMedia
-  // is dead. Reuses the same qr-scanner scanImage decode the modal uses.
+  // camera needed, so it also covers a computer without one. Reuses the
+  // same qr-scanner scanImage decode the modal uses.
   async function handleUploadFile(file: File) {
     setScanning(true);
     setError(null);
@@ -1094,11 +1094,7 @@ function ImportPhrase({
         className="w-full rounded-md bg-[var(--wl-bg)] border border-[var(--wl-line)] text-[var(--wl-ink)] focus:border-accent p-3 text-body font-mono focus:outline-none placeholder:text-[var(--wl-muted)]"
         autoFocus
       />
-      <div
-        className={`grid gap-2 ${
-          isLinuxNative() ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'
-        }`}
-      >
+      <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
@@ -1108,16 +1104,14 @@ function ImportPhrase({
           <Upload />
           {scanning ? t('qrScanner.readingImage') : t('importPhrase.uploadQr')}
         </button>
-        {!isLinuxNative() && (
-          <button
-            type="button"
-            onClick={() => setShowScanner(true)}
-            className="w-full rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-3 py-2 text-body transition flex items-center justify-center gap-2"
-          >
-            <Scan />
-            {t('importPhrase.scanQr')}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setShowScanner(true)}
+          className="w-full rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-3 py-2 text-body transition flex items-center justify-center gap-2"
+        >
+          <Scan />
+          {t('importPhrase.scanQr')}
+        </button>
       </div>
       <input
         ref={fileInputRef}

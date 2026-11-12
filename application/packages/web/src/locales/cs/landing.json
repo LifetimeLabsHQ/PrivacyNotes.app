@@ -169,6 +169,8 @@
     "useClipBody": "Pošli schránku, výstup příkazu nebo chybovou hlášku rovnou do svých poznámek.",
     "useToolsTitle": "Součást tvých vlastních nástrojů",
     "useToolsBody": "Příkaz odpovídá v JSONu a končí jasnými návratovými kódy, takže tvoje skripty vědí, že se poznámka uložila.",
+    "useShortcutTitle": "Poznámka z klávesové zkratky",
+    "useShortcutBody": "Klávesa, kterou si zvolíš v nastavení systému, otevře okénko pro rychlou poznámku, i když je aplikace zavřená. Poznámka skončí ve tvé složce Agent.",
     "howLink": "Přečti si, jak privacynotes funguje"
   },
   "meds": {
@@ -342,7 +344,7 @@
     "manualUpdates": "Ruční aktualizace",
     "extensionHeading": "Ukládání stránek a správce hesel",
     "extensionKeyOpen": "Otevřít rozšíření",
-    "extensionKeyLogin": "Kopírovat přihlašovací údaje tohoto webu",
+    "extensionKeyLogin": "Vyplnit přihlašovací údaje tohoto webu",
     "extensionKeyBookmark": "Přidat tuto stránku do záložek",
     "extensionAria": "Přidat rozšíření do prohlížeče {{name}}",
     "extensionNote": "Jen na počítačích."

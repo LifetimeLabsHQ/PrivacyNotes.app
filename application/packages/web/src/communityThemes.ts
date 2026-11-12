@@ -24,8 +24,8 @@
 export interface CommunityTheme {
   id: string;
   code: string;
-  /** The day it was added (YYYY-MM-DD). The app's gallery picks by it and by
-   *  votes (communityShown.ts); /themes lists every one. */
+  /** The day it was added (YYYY-MM-DD). The app's gallery and /themes show
+   *  the newest first. */
   added: string;
   /** The number of the theme's thread in the public repository's Themes
    *  discussions, where people leave feedback. /themes links the credit to it;
@@ -44,6 +44,7 @@ export interface CommunityTheme {
 export const THEME_DISCUSSIONS_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app/discussions';
 
 export const COMMUNITY_THEMES: CommunityTheme[] = [
+  { id: 'cybergridole', code: 'pn1:CyberGrid OLED:000000,000000,000000,E9FFFE,ECFFE9,AB47F2:list=0A0A0A,well=0F0A1A,soft=C792EA,fill=7928CA,fillhover=6217A7,danger=B4EDB7,warning=FFB84D,success=00F5D4,by=Rainb0wJagu4r', added: '2026-11-10', discussion: 724, description: "The author's favorite color: true black for OLED screens with a vivid purple accent and soft lavender text." },
   { id: 'hoth00000000', code: 'pn1:Hoth:EBEBEB,E0E9F0,7D9CBA,444444,606060,4B5B67:by=plaidski', added: '2026-11-02', discussion: 678, description: "Star Wars: the ice planet Hoth, crisp as a fresh sheet of copy paper under office light, with an icy blue border and a slate accent." },
   { id: 'jedi00000000', code: 'pn1:Jedi:F4EEE2,D5C9B0,C5B599,4D3C3A,5F5345,206225:by=privacytoolsIO', added: '2026-10-30', discussion: 671, description: "Star Wars: the cream and tan of Jedi robes with the green of Luke's lightsaber." },
   { id: 'deathstar000', code: 'pn1:Death Star:2A2E33,171112,4D494E,E9ECEE,A39CA1,5DE1E4:by=privacytoolsIO', added: '2026-10-30', discussion: 670, description: "Star Wars: the gunmetal grey of the Death Star with a cyan hologram glow." },

@@ -15,8 +15,9 @@
  *   type       note | task | journal | link | event  (default note)
  *   tags       comma separated, no leading #         (default none)
  *   starred    true pins it to the top of the list   (default false)
- *   folder     folder name. Files the note in every vault: the starter
- *              tree seeds for everyone, and browsing it is free. The name
+ *   folder     folder name. Files the note in the demo, the only vault
+ *              the starter tree seeds in (a real account gets one joined
+ *              note, `accountWelcome.ts`). The name
  *              must be a key of SEED_FOLDERS in welcomeNote.ts, which
  *              `tools/check-seeds.mjs` enforces.
  *   demoOnly   true seeds it only in the public demo (default false)

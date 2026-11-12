@@ -26,7 +26,8 @@
       "default": "Jedno przejście na Pro odblokowuje wszystko poniżej. Płatność jednorazowa.",
       "alerts": "Przypomnienia to funkcja Pro. Każde urządzenie dzwoni samodzielnie o wybranej godzinie, więc żadna usługa powiadomień push nie widzi elementu.",
       "vaultFiles": "Pliki w elementach sejfu to funkcja Pro. Trzymaj kody odzyskiwania, klucz zapasowy albo skan razem z loginem, kartą lub kluczem, do którego należą.",
-      "cli": "CLI to funkcja Pro. Skrypty, agenci AI i aplikacje AI dodają notatki z terminala lub z czatu, prosto do Twojego folderu Agent."
+      "cli": "CLI to funkcja Pro. Skrypty, agenci AI i aplikacje AI dodają notatki z terminala lub z czatu, prosto do Twojego folderu Agent.",
+      "browsers": "Druga przeglądarka to funkcja Pro. Plan darmowy łączy jedno rozszerzenie przeglądarki; Pro łączy do 10, każde z własnym PIN-em."
     },
     "features": {
       "devices": "Synchronizacja nieograniczonej liczby urządzeń, każda platforma",

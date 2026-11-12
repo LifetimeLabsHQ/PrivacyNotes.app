@@ -13,6 +13,10 @@ El text pot ser <span style="color: #e03131">vermell</span>, <span style="color:
 
 Pot anar ==ressaltat en groc== o <mark style="background-color: rgba(64, 192, 87, 0.35)">en verd</mark>.
 
+Un espòiler amaga paraules fins que algú hi fa clic: el regal és ||un tocadiscos||. Selecciona les paraules i tria **Espòiler** al menú **Insereix**, o escriu dues barres a cada costat.
+
+Una icona o un logotip poden anar dins d'una línia de text, com :icon[gift] :icon[coffee] :icon[rocket-launch] o :logo[github]. Tria'n un a **Insereix** > **Icones i logotips**.
+
 El botó **Aa** canvia la mida i la tipografia. El text pot ser <span style="font-size: 0.85em">petit</span>, normal o <span style="font-size: 1.6em">gran</span>. Pot ser <span style="font-family: ui-sans-serif, system-ui, sans-serif">senzill</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">amb serifa</span> o <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">monoespaiat</span>.
 
 ## On seuen les paraules
@@ -51,12 +55,21 @@ L'alineació mou un paràgraf sencer, mai una sola paraula. Posa el cursor al pa
 | Europa | 1.204 | 48 % |
 | Amèrica | 902 | 36 % |
 | Àsia | 401 | 16 % |
+<!-- table-fill: r0=blue r1c2=green r3c2=red -->
 
-La columna del mig està centrada i l'última alineada a la dreta. Arrossega la vora d'una columna per eixamplar-la.
+La columna del mig està centrada i l'última alineada a la dreta. Fes clic a la vora d'una columna i arrossega-la per eixamplar-la. Una cel·la o una fila sencera poden agafar un color de la barra de la taula. La fletxa petita d'una cel·la de capçalera ordena les files de sota, i un segon clic les ordena a l'inrevés.
+
+Una taula també pot fer sumes. Escriu `=` en una cel·la per triar una funció. La cel·la mostra el resultat i la nota guarda la fórmula, així que fes clic en un resultat per veure com s'ha calculat.
+
+| Article | Quantitat | Preu | Total |
+| --- | ---: | ---: | ---: |
+| Cafè | 2 | 3.50 | =B2*C2 |
+| Pastís | 1 | 4.20 | =B3*C3 |
+|  |  | Suma | =SUM(D2:D3) |
 
 ## Requadres
 
-Un requadre és una caixa de color per a una cosa que ningú no ha de perdre's.
+Un requadre és una caixa de color per a una cosa que ningú no ha de perdre's. Escriu `[!` en una línia buida per triar-ne un.
 
 > [!tip]+ Consell
 > Fes clic a la icona per plegar-lo.
@@ -136,7 +149,21 @@ export function isLongRead(stats) {
 }
 ```
 
-Un tros curt de codi dins d'una frase es veu així: `això`.
+Un bloc de codi pot portar un títol. Fes clic al nom del llenguatge i tria **Afegeix un títol**. La fletxa del costat del títol plega el bloc en una sola línia, i la nota se'n recorda.
+
+```bash title="backup.sh" fold
+#!/bin/sh
+# Copia la carpeta de notes en un arxiu amb data.
+tar -czf "notes-$(date +%F).tar.gz" "$HOME/Notes"
+```
+
+Un **Quadre per copiar** guarda una sola cosa per copiar, com una adreça o una ordre. El seu botó ho copia tot d'un sol clic.
+
+```copy
+ssh-keygen -t ed25519 -C "laptop"
+```
+
+Un tros curt de codi dins d'una frase es veu així: `això`. Mantén premuda la tecla Cmd (Ctrl a Windows i Linux) i fes-hi clic per copiar-lo.
 
 ## Matemàtiques
 
@@ -150,11 +177,21 @@ $$i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi$$
 
 Arrossega una imatge a una nota, o enganxa-la. Fes-hi clic un cop per canviar-ne la mida, o per moure-la a l'esquerra, al centre o a la dreta. La de dalt està a mitja amplada i centrada.
 
+## Mapes
+
+```map
+35.3606, 138.7274
+Mont Fuji
+```
+
+Posa un lloc en una nota amb **Insereix** > **Ubicació**. El mapa ve del nostre propi servidor, així que cap empresa de mapes veu on mires. En qualsevol altra app de Markdown es llegeix com les coordenades i el nom.
+
 ## Enllaços
 
 N'hi ha de dues menes, i es veuen diferents a propòsit.
 
 - Un enllaç web obre un lloc: [privacynotes.app](https://privacynotes.app/ca)
+- Un enllaç web pot portar un text emergent. Passa el punter per sobre d'[aquest](https://privacynotes.app/ca/help "Les nostres pàgines d'ajuda") i espera.
 - Un enllaç de nota obre una altra nota teva: [[Com estan protegides les teves notes]]
 
 Tots dos tenen botó a la barra. La cadena fa un enllaç web. Els claudàtors fan un enllaç de nota: llisten les teves notes i tries la que vols. Escriure `[[` fa el mateix.

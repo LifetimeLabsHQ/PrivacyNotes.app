@@ -1,0 +1,23 @@
+# The phone half of automatic backups: the folder the person picked, held as
+# a tree URI on Android (Storage Access Framework) and as a security-scoped
+# bookmark on iOS. The app's own Rust (src/backup_dest.rs) stages the sealed
+# bytes and checks them; this plugin only picks the folder and places, finds
+# and deletes one file in it. It declares no command in build.rs, so no
+# permission exists that a capability could grant: the web view cannot call
+# it, and only src/backup_dest.rs does.
+# Spec: docs/internal/plans/auto-backup.md (section 7)
+[package]
+name = "tauri-plugin-backup-folder"
+version = "0.1.0"
+description = "The backup folder on Android and iOS, reached from Rust only"
+edition = "2021"
+rust-version = "1.77"
+links = "tauri-plugin-backup-folder"
+publish = false
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+
+[build-dependencies]
+tauri-plugin = { version = "2", features = ["build"] }

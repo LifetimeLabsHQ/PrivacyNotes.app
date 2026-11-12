@@ -31,5 +31,9 @@ La barre du haut change l'apparence du texte : **gras**, *italique*, titres, lis
 
 Cette phrase est ce qui ouvre tes notes. C'est toi qui décides où elle vit, et tu peux changer d'avis à tout moment. [[Comment tes notes sont protégées]] présente les trois options.
 
+## Plus que des notes
+
+Notes, tâches, mots de passe, un journal, des fichiers, un calendrier, des contacts et des signets, avec le suivi de l'humeur et des médicaments. Une seule app, chiffrée sur ton appareil. En plus, un éditeur Markdown gratuit pour les dossiers de ton disque, le Ninja (⌘K) pour tout atteindre au clavier, et un outil de capture web.
+
 > [!tip] Rien ici n'est définitif
 > Chaque note de ce coffre est un exemple, celle-ci comprise. Modifie-la, déplace-la ou supprime-la.

@@ -18,6 +18,11 @@ export const TEXT_COLORS: { name: string; value: string }[] = [
 ];
 
 
+/** A hex color value and nothing else. A stored color can come from a backup
+ *  file that is not the person's own, and the printable report writes it into
+ *  an attribute, so anything that is not a hex value is never written. */
+export const isHexColor = (v: unknown): v is string => typeof v === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(v);
+
 /** The palette by name, for a surface that needs one fixed color of it (a
  *  chart's bars) and must not carry a hex of its own. */
 export const PALETTE = Object.fromEntries(TEXT_COLORS.map((c) => [c.name.toLowerCase(), c.value])) as Record<

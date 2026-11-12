@@ -86,6 +86,8 @@ export const FAQ_SOURCES: Readonly<Record<string, readonly FaqSource[]>> = {
     { doc: 'verify', heading: 'Tier 1: one minute, no tools' },
   ],
   'phrase-vs-password': [{ doc: 'threatModel', heading: 'Key derivation' }],
+  // The download path of a subscribed calendar, and its residual.
+  'calendar-subscribe': [{ doc: 'threatModel', heading: 'System overview' }],
   'threat-model-levels': [
     { doc: 'threatModel', heading: 'OAuth users' },
     { doc: 'security', heading: 'OAuth and custodial mode' },

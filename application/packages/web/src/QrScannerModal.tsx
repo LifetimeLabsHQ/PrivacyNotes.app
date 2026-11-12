@@ -24,12 +24,7 @@ export function QrScannerModal({
   // "upload image" path doesn't re-import (and so it works even when
   // the live camera path errored out).
   const qrScannerModRef = useRef<any>(null);
-  // Native Linux (WebKitGTK) never grants getUserMedia, so skip the camera
-  // entirely and open straight into the upload-only path. See docs/contrib/gotchas.md.
-  const linuxNative = isLinuxNative();
-  const [status, setStatus] = useState<
-    'loading' | 'running' | 'error' | 'uploadOnly'
-  >(linuxNative ? 'uploadOnly' : 'loading');
+  const [status, setStatus] = useState<'loading' | 'running' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
   // Non-fatal hint shown under the viewfinder. Used for two cases:
   //   - "We saw a QR but it isn't a PrivacyNotes sign-in code"
@@ -50,9 +45,6 @@ export function QrScannerModal({
     let cancelled = false;
 
     async function boot() {
-      // Linux native: camera is dead at the webview layer, so don't even
-      // try - the upload-image path below works without it.
-      if (linuxNative) return;
       try {
         // Dynamic import so the ~30KB scanner + worker aren't pulled
         // into the critical onboarding bundle.
@@ -60,6 +52,16 @@ export function QrScannerModal({
         if (cancelled) return;
 
         if (!videoRef.current) return;
+
+        // The Linux app's WebKitGTK has requestVideoFrameCallback but never
+        // calls it for a camera stream, and qr-scanner prefers it to
+        // requestAnimationFrame when it exists, so the live scan loop would
+        // never run: the picture shows and no code is ever read. Without it
+        // the library falls back. Nothing else in the app uses it.
+        // Spec: docs/contrib/gotchas.md (Camera or microphone dead with no prompt)
+        if (isLinuxNative() && 'requestVideoFrameCallback' in HTMLVideoElement.prototype) {
+          delete (HTMLVideoElement.prototype as { requestVideoFrameCallback?: unknown }).requestVideoFrameCallback;
+        }
 
         // Fail loudly if the device has no camera at all (desktop
         // without webcam, iframe with camera permission blocked, etc).
@@ -152,7 +154,7 @@ export function QrScannerModal({
       }
       scannerRef.current = null;
     };
-  }, [onScanned, linuxNative]);
+  }, [onScanned]);
 
 
   async function handleImageFile(file: File) {
@@ -209,16 +211,6 @@ export function QrScannerModal({
                 {t('qrScanner.cameraUnavailable')}
               </div>
               <div /* theme-ok: on the dark camera well */ className="text-small text-neutral-400">{error}</div>
-            </div>
-          )}
-          {status === 'uploadOnly' && (
-            <div /* theme-ok: the camera well is dark in every theme */ className="absolute inset-0 bg-neutral-900 flex flex-col items-center justify-center text-center p-6 text-body text-neutral-200">
-              <div className="mb-2 font-medium">
-                {t('qrScanner.uploadOnlyTitle')}
-              </div>
-              <div /* theme-ok: on the dark camera well */ className="text-small text-neutral-400">
-                {t('qrScanner.uploadOnlyBody')}
-              </div>
             </div>
           )}
           {scanningImage && (

@@ -92,6 +92,18 @@
       "help": "Tastenkürzel"
     }
   },
+  "quickNote": {
+    "bodyPlaceholder": "Schreib hier mehr",
+    "hint": "Tippe / für einen Ordner, # für ein Tag",
+    "locked": "PrivacyNotes ist gesperrt. Deine Notiz ist versiegelt und öffnet sich, wenn du entsperrst.",
+    "queued": "Gespeichert. Sie öffnet sich, wenn du entsperrst.",
+    "tooLong": "Diese Notiz ist zu lang. Teile sie auf zwei Notizen auf.",
+    "full": "Zu viele Notizen warten. Entsperre, um sie hinzuzufügen.",
+    "empty": "Schreib zuerst etwas.",
+    "failed": "Die Notiz konnte nicht gespeichert werden. Öffne PrivacyNotes und versuch es noch einmal.",
+    "added_other": "{{count}} Schnellnotizen hinzugefügt",
+    "added_one": "{{count}} Schnellnotiz hinzugefügt"
+  },
   "quickSwitcher": {
     "label": "Ninja: Eintrag oder Einstellung finden, alles hinzufügen, Befehl ausführen",
     "jumpTo": "Ninja",
@@ -129,7 +141,9 @@
     "actions": "Aktionen",
     "back": "zurück",
     "actionsPlaceholder": "Aktionen filtern",
-    "onlyCreate": "hinzufügen"
+    "onlyCreate": "hinzufügen",
+    "ninjaLockedTitle": "PrivacyNotes ist gesperrt",
+    "ninjaLockedBody": "Öffne PrivacyNotes und entsperre es. Dann findet Ninja deine Notizen aus jeder App."
   },
   "cardForm": {
     "cardholderName": "Karteninhaber",
@@ -290,8 +304,10 @@
         "detail": "Jeder Tag des Jahres als ein farbiges Quadrat"
       },
       "importExport": {
-        "label": "Import & Export",
-        "detail": "Notizen hereinholen, ein Backup mitnehmen"
+        "detail": "Notizen hereinholen oder mitnehmen"
+      },
+      "backup": {
+        "detail": "Jetzt sichern, automatische Backups und Wiederherstellung"
       },
       "generator": {
         "label": "Passwortgenerator",
@@ -307,6 +323,7 @@
     },
     "commands": {
       "syncResume": "Synchronisierung fortsetzen",
+      "lockProtected": "Diese Notiz sperren",
       "changelog": "Was ist neu",
       "themesPage": "Community-Designs",
       "website": "PrivacyNotes-Website"

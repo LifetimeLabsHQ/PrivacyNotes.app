@@ -50,13 +50,15 @@ import { editorCommands, registerEditorCommand } from '../editorCommands';
 import type { JournalTrackerData } from '../trackerTypes';
 import { ShareMenu } from './ShareMenu';
 import { NoteQuickActions, HeaderDivider, type QuickActionsTier } from './NoteQuickActions';
-import type { NoteActionGuardDeps } from '../noteActionGuards';
+import { noteActionGuards, type NoteActionGuardDeps } from '../noteActionGuards';
 import { WeekInReview } from './WeekInReview';
 import { isImeComposing } from '../imeComposing';
 import { convertTypedSymbol, undoTypedSymbol, type TypedSymbolChange } from '../typedSymbols';
 import type { JournalDays } from '../notesViewUtils';
 import type { ScheduleEdit } from '../schedule';
-import { ArchivedHint, ReadOnlyHint } from '../readOnlyNotice';
+import { ArchivedHint, ReadOnlyHint, UnlockedHint } from '../readOnlyNotice';
+import { NoteLocationChip } from './NoteLocationChip';
+import { readLocation } from '../noteLocation';
 
 type Authed = Extract<AuthState, { status: 'authenticated' }>;
 
@@ -207,6 +209,8 @@ interface NoteEditorEditing {
   registerEditorBody: (editorKey: string, body: string) => void;
   handleTagsChange: (id: string, tags: string[]) => Promise<void>;
   handleTrackersChange: (id: string, trackers: JournalTrackerData) => Promise<void>;
+  /** Merges keys into the stored trackers (undefined removes one); refuses a read-only note. */
+  handleTrackersPatch: (id: string, patch: JournalTrackerData) => Promise<boolean>;
   handleVaultSave: (id: string, body: string, trackers?: Record<string, unknown>) => Promise<boolean>;
 }
 
@@ -313,6 +317,8 @@ export interface NoteEditorPaneProps {
   refresh: () => Promise<LocalNote[]>;
   /** Open a note in the pillar that lists it, clearing a filter that hides it. */
   onRevealNote: (note: LocalNote) => void;
+  /** A drawing shape's `[[Note]]` link: `navigateToNoteByTitle`. */
+  onOpenNoteLink?: (target: string) => void;
 
   handleSelectTag: (tag: string | null) => Promise<void>;
 
@@ -343,8 +349,12 @@ export interface NoteEditorPaneProps {
    *  the note is gated, so no version is listed past the gate. */
   openHistory: (n: LocalNote) => void;
   setShowUpgrade: Dispatch<SetStateAction<null | { trigger: UpgradeTrigger }>>;
-  setShowSecurity: Dispatch<SetStateAction<null | { tab: 'pin' | 'phrase' | 'biometric'; reason?: 'protect' }>>;
-  onPinUnlocked: () => void;
+  /** Protect with no PIN yet: open Settings at Set a PIN. */
+  onSetPinForProtect: () => void;
+  /** The PIN on this note's own gate opened it. */
+  onPinUnlocked: (id: string) => void;
+  /** Shut this one protected note now (#723). */
+  onLockProtected: (id: string) => void;
   setFolderPicker: Dispatch<SetStateAction<
     | { mode: 'note'; noteIds: string[]; currentFolderId: string | null | undefined; space?: Space }
     | { mode: 'folder'; folderId: string }
@@ -403,6 +413,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     folderChipFor,
     refresh,
     onRevealNote,
+    onOpenNoteLink,
     handleSelectTag,
     handleCloseEditor,
     handleHistory,
@@ -422,8 +433,9 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     setRemoveProtectionFor,
     openHistory,
     setShowUpgrade,
-    setShowSecurity,
+    onSetPinForProtect,
     onPinUnlocked,
+    onLockProtected,
     setFolderPicker,
     layout: { gridMode, isMobile, mobileTabIndex, mobileEditing, footerVisible, keyboardUp, noteJump },
     zen: { zenMode, setZenMode, zenToolbar, setZenToolbar },
@@ -434,7 +446,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     },
     editing: {
       handleTitleChange, handleTitleFocus, handleTitleBlur, handleBodyChange, registerEditorBody,
-      handleTagsChange, handleTrackersChange, handleVaultSave,
+      handleTagsChange, handleTrackersChange, handleTrackersPatch, handleVaultSave,
     },
     noteMenu: {
       noteColor, onSetNoteColor, onOpenColorSettings, onPickNoteIcon, handleToggleStar, handleToggleArchive, setJournalDate, setNoteDate,
@@ -613,6 +625,9 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
   // The view the "..." menu opens on: the header's convert button opens it
   // straight on the type list, the "..." button on the main view.
   const [optionsStartView, setOptionsStartView] = useState<NoteOptionsView>('main');
+  // The note whose place popover is open, so it closes when another note opens.
+  // Spec: docs/internal/plans/note-location.md (section 4)
+  const [locationOpenFor, setLocationOpenFor] = useState<string | null>(null);
   // The Schedule row the event card asked for (Repeat, Alert, Ends).
   const [scheduleSub, setScheduleSub] = useState<'ends' | 'repeat' | 'alerts' | undefined>(undefined);
   const openScheduleAt = (row: ScheduleRow) => {
@@ -666,11 +681,22 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
       setShowNoteOptions(false);
       openHistory(selected);
     },
-    onSetPin: () => setShowSecurity({ tab: 'pin', reason: 'protect' }),
+    onSetPin: onSetPinForProtect,
     onMoveToFolder: () => {
       setShowNoteOptions(false);
       setFolderPicker({ mode: 'note', noteIds: [selected.id], currentFolderId: selected.folderId ?? null });
     },
+  };
+  // The notice row's actions (#723): Turn off runs the menu switch's own Pro
+  // check; Unarchive is the menu's action.
+  const turnOffReadOnly = () => noteActionGuards(noteGuards).toggleLock();
+  /** Unarchive keeps this note open: it follows the note to the pillar that
+   *  lists it, as a convert does, instead of moving on to the next one. */
+  const unarchive = async () => {
+    const id = selected.id;
+    await handleToggleArchive(id, false);
+    const fresh = (await refresh()).find((n) => n.id === id);
+    if (fresh) onRevealNote(fresh);
   };
   /**
    * The only control left in the editor's top-right slot, beside the
@@ -1113,7 +1139,11 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               onToggleStar={() =>
                 void handleToggleStar(selected.id, selected.starred !== 1)
               }
-              onToggleArchive={() => void handleToggleArchive(selected.id, selected.archived !== 1)}
+              onToggleArchive={() => void (selected.archived === 1 ? unarchive() : handleToggleArchive(selected.id, true))}
+              // Only on an open protected note: a locked one shows the gate.
+              {...(selected.pinProtected === 1 && view !== 'trash' && !isNoteLocked(selected)
+                ? { onLockProtected: () => onLockProtected(selected.id) }
+                : {})}
               // Share is the one strip cell that comes and goes, because it
               // is the one action still in the header: two copies at one
               // width would read as the same control drawn twice. Zen and a
@@ -1141,6 +1171,13 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                     onOpenColorSettings,
                     onPickIcon: () => onPickNoteIcon(selected.id),
                   }
+                : {})}
+              // Where the tag row draws the place chip (not in zen, not behind
+              // the PIN gate), while the note can change and has no place yet;
+              // the chip edits one it has.
+              {...(view !== 'trash' && !zenMode && selected.locked !== 1 && !isNoteLocked(selected) && !readLocation(selected.trackers as Record<string, unknown> | undefined)
+                && (selected.type === 'note' || selected.type === 'journal' || selected.type === 'file' || selected.type === 'task')
+                ? { onAddLocation: () => setLocationOpenFor(selected.id) }
                 : {})}
               {...(canSwitchEditorMode
                 ? { editorMode: selectedEditorMode, onToggleEditorMode: toggleEditorMode }
@@ -1212,7 +1249,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-0 pb-6">
           <ProtectedNoteGate
             phrase={auth.phrase}
-            onUnlock={onPinUnlocked}
+            onUnlock={() => onPinUnlocked(selected.id)}
             initialIntent={removingProtection ? 'remove' : 'unlock'}
             onExitRemove={() => setRemoveProtectionFor(null)}
             onRemoveProtection={() => {
@@ -1257,10 +1294,13 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
             </div>
           )}
           {selected.locked === 1 && view !== 'trash' && (
-            <ReadOnlyHint className="px-6 pt-3" />
+            <ReadOnlyHint onTurnOff={turnOffReadOnly} className="px-6 pt-3" />
           )}
           {selected.archived === 1 && view !== 'trash' && (
-            <ArchivedHint className="px-6 pt-3" />
+            <ArchivedHint onUnarchive={() => void unarchive()} className="px-6 pt-3" />
+          )}
+          {selected.pinProtected === 1 && view !== 'trash' && (
+            <UnlockedHint onLock={() => onLockProtected(selected.id)} className="px-6 pt-3" />
           )}
           {/* Keyed by the revision like the editors: a restore or a pull
               remounts the canvas from the new body (#9). */}
@@ -1272,6 +1312,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
             toolbarSlot={barSlot}
             readOnly={view === 'trash' || selected.locked === 1}
             onBodyChange={(id, body) => void handleBodyChange(id, body, editorKey)}
+            onOpenNoteLink={onOpenNoteLink}
           />
           {barRow}
         </div>
@@ -1298,10 +1339,13 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           {selected.locked === 1 && view !== 'trash' && (
             /* The same read-only hint the markdown editor shows - vault
                items and bookmarks were silently uneditable without it. */
-            <ReadOnlyHint className="px-6 pt-3" />
+            <ReadOnlyHint onTurnOff={turnOffReadOnly} className="px-6 pt-3" />
           )}
           {selected.archived === 1 && view !== 'trash' && (
-            <ArchivedHint className="px-6 pt-3" />
+            <ArchivedHint onUnarchive={() => void unarchive()} className="px-6 pt-3" />
+          )}
+          {selected.pinProtected === 1 && view !== 'trash' && (
+            <UnlockedHint onLock={() => onLockProtected(selected.id)} className="px-6 pt-3" />
           )}
           {selected.type === 'contact' ? (
             <ContactItem
@@ -1364,7 +1408,19 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               onChange={(tags) => handleTagsChange(selected.id, tags)}
               onSelectTag={(tag) => void handleSelectTag(tag)}
               onTabOut={focusBody}
-              leading={folderChipFor(selected)}
+              leading={(
+                <>
+                  {folderChipFor(selected)}
+                  <NoteLocationChip
+                    trackers={selected.trackers as Record<string, unknown> | undefined}
+                    readOnly={selected.locked === 1}
+                    open={locationOpenFor === selected.id}
+                    onOpenChange={(o) => setLocationOpenFor(o ? selected.id : null)}
+                    onPatch={(patch) => handleTrackersPatch(selected.id, patch as JournalTrackerData)}
+                    {...(selected.type === 'note' || selected.type === 'journal' ? { autoType: selected.type } : {})}
+                  />
+                </>
+              )}
               readOnly={selected.locked === 1}
               trailing={selected.locked === 1 ? undefined : (
                 // Undo/redo and the toolbar toggle are all TipTap
@@ -1497,10 +1553,13 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           {/* The rich editor shows the hint itself, on the row of its corner
               pills; the markdown source view has no pills, so it goes here. */}
           {selected.locked === 1 && view !== 'trash' && selectedEditorMode === 'markdown' && (
-            <ReadOnlyHint className="mx-4 sm:mx-6 mt-1 mb-3" />
+            <ReadOnlyHint onTurnOff={turnOffReadOnly} className="mx-4 sm:mx-6 mt-1 mb-3" />
           )}
           {selected.archived === 1 && view !== 'trash' && selectedEditorMode === 'markdown' && (
-            <ArchivedHint className="mx-4 sm:mx-6 mt-1 mb-3" />
+            <ArchivedHint onUnarchive={() => void unarchive()} className="mx-4 sm:mx-6 mt-1 mb-3" />
+          )}
+          {selected.pinProtected === 1 && view !== 'trash' && selectedEditorMode === 'markdown' && (
+            <UnlockedHint onLock={() => onLockProtected(selected.id)} className="mx-4 sm:mx-6 mt-1 mb-3" />
           )}
           <div className="px-4 sm:px-6 flex flex-1 flex-col min-w-0">
             {selectedEditorMode === 'markdown' ? (
@@ -1530,6 +1589,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                 ref={editorRef}
                 noteId={selected.id}
                 value={selected.body}
+                place={readLocation(selected.trackers as Record<string, unknown> | undefined)}
                 onChange={(body) => { handleBodyChange(selected.id, body, editorKey); setWcBody(body); }}
                 readOnly={view === 'trash' || selected.locked === 1}
                 onFocusChange={setEditorFocused}
@@ -1553,12 +1613,13 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                 sinkCheckedTasks={userSettings.sinkCheckedTasks}
                 typedSymbols={userSettings.typedSymbols}
                 placeholder={selected.type === 'event' ? t('editor:eventPlaceholder') : undefined}
-                // Read-only and Archived share the notice row, each when it
-                // applies (#712); neither shows in the Trash.
-                notice={view !== 'trash' && (selected.locked === 1 || selected.archived === 1) ? (
+                // Read-only, Archived and Unlocked share the notice row, each
+                // when it applies (#712, #723); none shows in the Trash.
+                notice={view !== 'trash' && (selected.locked === 1 || selected.archived === 1 || selected.pinProtected === 1) ? (
                   <div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-1">
-                    {selected.locked === 1 && <ReadOnlyHint className="min-w-0" />}
-                    {selected.archived === 1 && <ArchivedHint className="min-w-0" />}
+                    {selected.locked === 1 && <ReadOnlyHint onTurnOff={turnOffReadOnly} className="min-w-0" />}
+                    {selected.archived === 1 && <ArchivedHint onUnarchive={() => void unarchive()} className="min-w-0" />}
+                    {selected.pinProtected === 1 && <UnlockedHint onLock={() => onLockProtected(selected.id)} className="min-w-0" />}
                   </div>
                 ) : undefined}
               />

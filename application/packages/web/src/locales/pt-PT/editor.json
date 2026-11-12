@@ -192,7 +192,9 @@
     "ariaLabel": "Estrutura da nota",
     "hide": "Ocultar estrutura",
     "copyHeadingLink": "Copiar ligação para o título",
-    "copyHeadingShortcut": "Copiar atalho para o título"
+    "copyHeadingShortcut": "Copiar atalho para o título",
+    "copyCalloutLink": "Copiar ligação para o aviso",
+    "copyCalloutShortcut": "Copiar atalho para o aviso"
   },
   "bodyMenu": {
     "cut": "Cortar",
@@ -268,6 +270,11 @@
     "showLess": "Mostrar menos",
     "language": "Linguagem do código: {{name}}",
     "searchLanguages": "Procurar linguagens",
+    "addTitle": "Adicionar título",
+    "removeTitle": "Remover título",
+    "titlePlaceholder": "Nome do ficheiro ou título",
+    "collapse": "Recolher bloco de código",
+    "expand": "Expandir bloco de código",
     "placeholder": "Escreve ou cola código. Para ter cores, escolhe uma linguagem acima."
   },
   "math": {

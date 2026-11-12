@@ -7,6 +7,11 @@ Fuori dall'hotel alle cinque. Due ore di treno, e la città era semplicemente sp
 
 ![Il monte Fuji con la neve in cima, incorniciato dai fiori di ciliegio.](/onboarding/fuji.webp)
 
+```map
+35.3606, 138.7274
+Monte Fuji
+```
+
 I ciliegi erano in fiore lungo il lago. Il Fuji stava dietro, senza una nuvola per tutta la mattina. Qui dicono che puoi venire una settimana e non vedere mai la cima. Noi l'abbiamo avuta per sei ore.
 
 | Cosa | Quando |

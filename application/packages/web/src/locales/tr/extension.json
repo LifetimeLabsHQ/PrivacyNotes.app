@@ -1,25 +1,39 @@
 {
   "manifest": {
-    "extDescription": "Web sayfalarını şifreli not olarak kaydedin ve giriş bilgilerinizi kopyalayın.",
+    "extDescription": "Web sayfalarını şifreli not olarak kaydedin, giriş bilgilerinizi kopyalayın veya doldurun.",
     "commandOpen": "PrivacyNotes'u aç",
-    "commandCopyLogin": "Bu sitenin giriş bilgisini kopyala",
-    "commandSaveBookmark": "Sayfayı yer imi olarak kaydet"
+    "commandCopyLogin": "Bu sitenin giriş bilgisini doldur veya kopyala",
+    "commandSaveNote": "Sayfayı not olarak kaydet",
+    "commandLock": "Kasayı kilitle",
+    "commandGenerate": "Parola oluştur ve kopyala",
+    "commandSaveBookmark": "Sayfayı yer imi olarak kaydet",
+    "commandNewNote": "Yeni bir not yaz"
   },
   "menu": {
     "savePageNote": "Sayfayı not olarak kaydet",
     "savePageBookmark": "Sayfayı yer imi olarak kaydet",
     "copyPageMarkdown": "Sayfayı Markdown olarak kopyala",
     "saveSelection": "Seçimi not olarak kaydet",
+    "newNoteFromSelection": "Seçimden yeni not",
     "saveLinkBookmark": "Bağlantıyı yer imi olarak kaydet",
     "saveLinkedPage": "Bağlantı verilen sayfayı not olarak kaydet",
+    "fillLogin": "Bu sitenin giriş bilgisini doldur",
     "copyLogin": "Bu sitenin giriş bilgisini kopyala",
     "addLogin": "Bu site için giriş bilgisi ekle",
     "generatePassword": "Parola oluştur"
   },
+  "note": {
+    "tagsPlaceholder": "#iş #fikirler",
+    "tagsHelp": "Etiketler arasında boşluk veya virgül kullanın. # isteğe bağlıdır.",
+    "failed": "Not kaydedilemedi. Tekrar deneyin."
+  },
   "connect": {
-    "title": "Hesabınıza bağlanın",
-    "body": "PrivacyNotes'ta Ayarlar > Uzantı'yı açın ve Kod oluştur'u seçin. Kodu buraya yapıştırın.",
+    "title": "Bu tarayıcıyı bağlayın",
+    "step1": "Bu bilgisayarda PrivacyNotes'u veya use.privacynotes.app adresini açın.",
+    "step2": "Ayarlar > Uzantı bölümünü açın ve Kod oluştur'u seçin.",
+    "step3": "Kodu buraya yapıştırın.",
     "codeLabel": "Uygulamadan alınan kod",
+    "paste": "Yapıştır",
     "connect": "Bağlan",
     "badCode": "Bu kod eksik. Uygulamadan tekrar kopyalayın.",
     "usedCode": "Bu kod kullanılmış veya 10 dakikadan eski. Uygulamada yeni bir kod oluşturun. Bağlı tarayıcılarınız Ayarlar > Uzantı bölümünde.",
@@ -27,21 +41,24 @@
     "connected": "Bağlandı",
     "connectedClips": "Kırpmalar hazır.",
     "connectedBoth": "Kırpmalar ve giriş bilgileri hazır.",
-    "codeSpent": "Kod artık kullanıldı. Ekran görüntüsünün hiçbir değeri yok.",
     "help": "Nasıl çalışır"
   },
   "protect": {
     "title": "Giriş bilgilerinizi koruyun",
-    "body": "Bu tarayıcı için bir PIN veya geçiş kodu seçin. Uygulamanınkinden ayrıdır.",
-    "tries": "10 yanlış denemeden sonra bu tarayıcının bağlantısı kesilir.",
-    "biometric": "Parmak izi veya yüz de kullan",
-    "biometricHelp": "Bu tarayıcının desteklediği yerlerde Touch ID veya Windows Hello. PIN veya geçiş kodu da her zaman çalışır.",
+    "body": "Bu tarayıcı için bir PIN veya geçiş kodu seçin. Buradaki giriş bilgilerinizin kilidini açmak için ona ihtiyacınız olur. Uygulamanınkinden ayrıdır.",
+    "biometric": "Biyometrik kilit açmayı da kullan",
+    "biometricHelp": "Touch ID veya Windows Hello; her zaman çalışan PIN veya geçiş koduna ek olarak.",
     "repeat": "Tekrar girin",
     "mismatch": "İkisi eşleşmiyor. Tekrar deneyin."
   },
   "clip": {
     "selection": "Seçim",
+    "wholePage": "Sayfanın tamamı",
+    "whatToSave": "Neyi kaydedeceksiniz",
+    "picturesKept_one": "{{count}} görsel saklandı.",
+    "picturesKept_other": "{{count}} görsel saklandı.",
     "includePictures": "Görselleri dahil et",
+    "includePicturesHelp": "Siteye bağlantı olarak değil, notun içinde saklanır.",
     "savedBody": "Uygulamalarınızdan herhangi birinin bir sonraki eşitlemesinde Notlar'da görünür. Biri açıksa bu genellikle birkaç dakika içinde olur.",
     "closeHint": "Açılır pencereyi hemen kapatabilirsiniz.",
     "alreadySaved": "Bu sayfayı {{date}} tarihinde kaydettiniz.",
@@ -60,23 +77,21 @@
     "reading": "Sayfa okunuyor",
     "copiedMarkdown": "Sayfa Markdown olarak kopyalandı",
     "off": "Bu tarayıcıda sayfa kaydetme kapalı. Bağlarken Web kırpıcı seçeneğini açın.",
-    "saving": "Sayfa kaydediliyor",
     "picturesFailed_one": "Kaydedildi. {{count}} görsel kaydedilemedi"
   },
   "logins": {
     "unlockPin": "PIN'inizi girin",
     "unlockPasscode": "Geçiş kodunuzu girin",
-    "useBiometric": "Parmak izi veya yüz kullan",
+    "useBiometric": "Biyometrik kilit açmayı kullan",
     "wrong_other": "Yanlış. Bu tarayıcının bağlantısı kesilmeden önce {{count}} deneme hakkı kaldı.",
     "forSite": "{{site}} için",
     "none": "Bu site için giriş bilgisi yok.",
     "off": "Bu tarayıcıda giriş bilgileri kapalı. Bağlarken Kasa seçeneğini açın.",
     "copyCode": "2FA kodunu kopyala",
+    "fill": "Doldur",
     "usernameCopied": "Kullanıcı adı kopyalandı",
     "passwordCopied": "Parola kopyalandı",
     "codeCopied": "2FA kodu kopyalandı",
-    "clears": "Hâlâ oradaysa 30 saniye sonra panodan temizlenir.",
-    "addSaved": "Kaydedildi. Uygulamalarınızdan herhangi birinin bir sonraki eşitlemesinde Kasa'nızda görünür. Biri açıksa bu genellikle birkaç dakika içinde olur.",
     "lock": "Kilitle",
     "unreachable": "Kilidi açmak için PrivacyNotes'a ulaşılamıyor. Bağlantınızı kontrol edip tekrar deneyin.",
     "lockSystem": "Bilgisayar kilitlendiğinde",
@@ -97,13 +112,13 @@
   "changeSecret": {
     "titlePin": "PIN'i değiştir",
     "titlePasscode": "Geçiş kodunu değiştir",
-    "biometricAgain": "Parmak izi veya yüz eskisini kullanıyordu. Kullanmaya devam etmek için yeniden ayarlayın."
+    "biometricAgain": "Biyometrik kilit açma eskisini kullanıyordu. Kullanmaya devam etmek için yeniden ayarlayın."
   },
   "biometric": {
-    "enrolled": "Parmak izi veya yüz ayarlandı. Bu sekmeyi kapatabilirsiniz.",
-    "enrolledHere": "Parmak izi veya yüz ayarlandı.",
+    "enrolled": "Biyometrik kilit açma ayarlandı. Bu sekmeyi kapatabilirsiniz.",
+    "enrolledHere": "Biyometrik kilit açma ayarlandı.",
     "unlocked": "Kilit açıldı. Bu sekmeyi kapatıp PrivacyNotes'u yeniden açabilirsiniz.",
-    "failed": "Bu tarayıcı burada parmak izi veya yüz kullanamıyor. PIN veya geçiş kodu eskisi gibi çalışır."
+    "failed": "Bu tarayıcı burada biyometrik kilit açmayı kullanamıyor. PIN veya geçiş kodu eskisi gibi çalışır."
   },
   "vault": {
     "search": "Kasada ara",
@@ -131,13 +146,53 @@
     "lockHeader": "Kasayı şu süreden sonra kilitle",
     "unlockToCopy": "Kopyalamak için kilidi açın",
     "omniboxDefault": "PrivacyNotes kasanızda %s için arayın",
-    "omniboxUnlock": "Aramak için PrivacyNotes'un kilidini açın"
+    "omniboxUnlock": "Aramak için PrivacyNotes'un kilidini açın",
+    "moreOptions": "Diğer seçenekler"
   },
   "shortcuts": {
     "notSet": "Ayarlanmadı",
     "addressBar": "Adres çubuğundan kasada arayın",
     "change": "Kısayolları değiştir",
     "changeHint": "Tuşları tarayıcınız tutar. Birini orada değiştirin ya da tuşu olmayana bir tuş verin.",
-    "loginHint": "<key/> önce kullanıcı adını, ardından parolayı kopyalar."
+    "loginHint": "<key/> bu giriş bilgisini doldurur. Giriş alanı olmayan bir sayfada önce kullanıcı adını, ardından parolayı kopyalar.",
+    "loginHintMany": "<key/> en üstteki giriş bilgisini doldurur.<br/>Sonrakini doldurmak için 3 saniye içinde tekrar basın."
+  },
+  "tabs": {
+    "label": "Kırp veya Kasa",
+    "clip": "Kırp"
+  },
+  "notice": {
+    "clearsIn": "{{seconds}} sn içinde temizlenir",
+    "copyFailed": "Kopyalanamadı",
+    "loginSaved": "Giriş bilgisi kaydedildi",
+    "vaultNextSync": "Bir sonraki eşitlemede Kasanızda görünür",
+    "noteSaved": "Not kaydedildi",
+    "notesNextSync": "Bir sonraki eşitlemede Notlar'da görünür",
+    "savedHere": "Burada kaydedildi",
+    "goesOutOnline": "Çevrimiçi olduğunuzda gönderilir"
+  },
+  "fill": {
+    "notFilled": "Doldurulmadı",
+    "couldNot": "Doldurulamadı",
+    "nothing": "Bu sayfada giriş alanı yok",
+    "signup": "Bu form yeni bir parola istiyor",
+    "insecure": "Bu sayfa güvenli değil (http)",
+    "otherAccount": "Sayfa başka bir hesap istiyor",
+    "tooLong": "Sayfadaki alan çok kısa",
+    "copyInstead": "Bunun yerine değerleri kopyalayın",
+    "usernameOnly": "Kullanıcı adı dolduruldu",
+    "usernameOnlyNext": "Parola için yeniden Doldur'u seçin"
+  },
+  "settings": {
+    "codes": "2FA kodları",
+    "codesHelp": "2FA anahtarı olan her giriş bilgisinin altındaki canlı kod.",
+    "bar": "Geri sayım çubuğu",
+    "barHelp": "Bir sonraki koda kadar azalan bir çizgi.",
+    "iconsHelp": "Proxy sunucumuz üzerinden: alan adını görür, sizi asla.",
+    "disconnect": "Uzantının bağlantısını kes",
+    "biometric": "Biyometrik kilit açma",
+    "biometricPin": "Ayarlamak için PIN'inizi girin.",
+    "biometricPasscode": "Ayarlamak için geçiş kodunuzu girin.",
+    "biometricOff": "Biyometrik kilit açma kapalı"
   }
 }

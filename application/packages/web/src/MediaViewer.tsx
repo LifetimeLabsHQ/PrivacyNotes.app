@@ -23,6 +23,7 @@ import { useEscapeToClose } from './useEscapeToClose';
 import { HoverLabel, type positionClasses } from './HoverLabel';
 import { loadAttachmentData } from './EncryptedAttachment';
 import { canSaveMedia, loadPictureUrl, saveMedia } from './mediaUrls';
+import { saveFailureText } from './saveFile';
 import { FILE_REF_PREFIX, isDocumentRef, isMailRef, isPdfRef, type MediaRef } from './mediaRefs';
 import { clampPan, fittedBase, toTransform, zoomAround, type Size, type ZoomView } from './viewerZoom';
 
@@ -74,7 +75,8 @@ export function MediaViewer({ items, index: startIndex, onClose }: {
   // The item whose save failed. A failed native save can leave an empty or
   // partial file, so the message stays until a save succeeds; a dismissed
   // dialog changes nothing.
-  const [failedSave, setFailedSave] = useState<string | null>(null);
+  /** The item whose save failed, and the sentence that says why. */
+  const [failedSave, setFailedSave] = useState<{ src: string; text: string } | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const backdropPress = useRef<{ x: number; y: number } | null>(null);
   const swipe = useRef<{ x: number; y: number; id: number } | null>(null);
@@ -135,7 +137,7 @@ export function MediaViewer({ items, index: startIndex, onClose }: {
     try {
       const saved = await saveMedia(item);
       if (saved?.ok) setFailedSave(null);
-      else if (saved?.reason === 'failed') setFailedSave(item.src);
+      else if (saved?.reason === 'failed') setFailedSave({ src: item.src, text: saveFailureText(saved, t('viewer.saveFailed')) });
     } finally {
       setSaving(false);
     }
@@ -252,8 +254,8 @@ export function MediaViewer({ items, index: startIndex, onClose }: {
             <X size={20} />
           </StageButton>
         </div>
-        {failedSave === item.src && (
-          <p className="px-4 pb-2 text-small text-red-400">{t('viewer.saveFailed')}</p>
+        {failedSave?.src === item.src && (
+          <p className="px-4 pb-2 text-small text-red-400">{failedSave.text}</p>
         )}
         {failedCopy === item.src && (
           <p className="px-4 pb-2 text-small text-red-400">{t('image.copyFailed')}</p>

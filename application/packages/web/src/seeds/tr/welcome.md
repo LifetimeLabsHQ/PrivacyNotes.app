@@ -31,5 +31,9 @@ Yukarıdaki çubuk metnin görünüşünü değiştirir: **kalın**, *italik*, b
 
 O ifade notlarınızı açan şeydir. Nerede duracağına siz karar verirsiniz ve bu kararı istediğiniz zaman değiştirebilirsiniz. [[Notlarınız nasıl korunuyor]] üç seçeneği anlatır.
 
+## Notlardan fazlası
+
+Notlar, görevler, parolalar, bir günlük, dosyalar, bir takvim, kişiler ve yer imleri, ayrıca ruh hali ve ilaç takibi. Tek uygulama, cihazınızda şifreli. Üstelik diskinizdeki klasörler için ücretsiz bir Markdown düzenleyici, her şeye klavyeden ulaşmak için Ninja (⌘K) ve bir web kırpıcı.
+
 > [!tip] Burada hiçbir şey kalıcı değil
 > Bu kasadaki her not bir örnektir, bu da dahil. Düzenleyin, taşıyın ya da silin.

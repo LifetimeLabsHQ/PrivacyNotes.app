@@ -4,12 +4,14 @@ import { Trash, type Icon } from '../icons';
 import { useEscapeToClose } from '../useEscapeToClose';
 import { IconButton } from './Button';
 
-/** How long the armed "Delete?" waits for the second click. */
-const ARMED_MS = 3000;
+/** How long an armed confirm waits for the second click: "Delete?" here,
+ *  the bookmark row's pill and "Reset to defaults". Six seconds, because a
+ *  person with a tremor or on a phone needs time to find it (GitHub #708). */
+export const ARMED_MS = 6000;
 
 /**
  * @catalog DeleteButton
- * use: removing one item from a row (a file, a medication, a habit, a field): a trash button that turns into a red "Delete?" (or "Remove?" with `kind="remove"`) in the same place for three seconds; a second click there deletes, Escape or the time disarms it. It always sits in the row itself. `icon` swaps the trash for another end, the same two steps (SignOut for the extension's Disconnect).
+ * use: removing one item from a row (a file, a medication, a habit, a field): a trash button that turns into a red "Delete?" (or "Remove?" with `kind="remove"`) in the same place for six seconds; a second click there deletes, Escape or the time disarms it. It always sits in the row itself. `icon` swaps the trash for another end, the same two steps (SignOut for the extension's Disconnect).
  * never: a delete or remove row in a "..." or context menu when the row has this button; a confirm that opens somewhere else (a menu, a second row, a window) for a time-limited arm; a red confirm row of your own.
  */
 export function DeleteButton({ label, onConfirm, kind = 'delete', confirmLabel, position, icon: Glyph = Trash }: {
