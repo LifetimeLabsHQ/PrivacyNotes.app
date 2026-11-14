@@ -24,6 +24,8 @@
  * format bar off the screen (GitHub #449). With the shell cut to the visible
  * area the page has nothing to move: it is put back at the top, and the
  * caret is kept in view by scrolling the note instead.
+ * In the iOS app the native side also pins the page (`scroll_pin.rs`): the
+ * move and the reset here made the whole view jump in a short note (GitHub #767).
  * Spec: docs/internal/specs/format-bar.md (section 7)
  */
 

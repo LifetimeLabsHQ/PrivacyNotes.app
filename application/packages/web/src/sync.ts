@@ -36,6 +36,7 @@ import {
   type SyncBase,
 } from './noteMerge';
 import { nextStamp } from './notesRepo';
+import { rememberUnsyncedDeletes } from './unsyncedDeletes';
 import { normalizeSchedule } from './schedule';
 import { sameContent } from './editStamp';
 import { isServerWriteBlocked } from './syncPause';
@@ -1816,6 +1817,10 @@ async function syncInner(
         // under a session whose pubkey link is broken looks exactly like
         // a successful no-op from here.
         const unaccounted = chunk.filter((id) => !confirmed.has(id));
+        // The confirmed ids the server held no live row for: tombstoned by
+        // another device, or never pushed. A never-pushed one leaves no record
+        // of its delete but this list (unsyncedDeletes.ts, issue 769).
+        const noRow: string[] = [];
         if (unaccounted.length > 0) {
           const { data: survivors, error: checkErr, status: checkStatus } = await supabase
             .from('notes')
@@ -1837,7 +1842,10 @@ async function syncInner(
           } else {
             const stillAlive = new Set((survivors ?? []).map((r) => r.id as string));
             for (const id of unaccounted) {
-              if (!stillAlive.has(id)) confirmed.add(id);
+              if (!stillAlive.has(id)) {
+                confirmed.add(id);
+                noRow.push(id);
+              }
             }
             if (stillAlive.size > 0) recordSyncFault({ step: 'push', code: 'delete-refused' });
             if (stillAlive.size > 0 && onPushError) {
@@ -1848,7 +1856,10 @@ async function syncInner(
           }
         }
         if (confirmed.size > 0) {
-          await db.notes.bulkDelete([...confirmed]);
+          await db.transaction('rw', db.notes, db.kv, async () => {
+            await rememberUnsyncedDeletes(noRow);
+            await db.notes.bulkDelete([...confirmed]);
+          });
           pushedCount += confirmed.size;
         }
       } else {

@@ -671,8 +671,10 @@ mod windows_hello {
     // it. Hello accepts its own PIN as well as a biometric, as the presence gate
     // above does. Removing Windows Hello deletes every key credential, which
     // `OpenAsync` reports as NotFound: Gone. Enrollment shows two prompts
-    // (create, then sign). There is no window-parented entry point for these
-    // calls in a Win32 process, so the dialog is the system's own.
+    // (create, then sign). The windows crate has no window-parented entry
+    // point for these calls (the `ForWindow` versions are Windows 11 24H2
+    // only), so the dialog is the system's own and can open behind other
+    // windows (#768); `in_front` brings it forward while the app has the focus.
     // Spec: docs/internal/plans/biometric-key-binding.md (section 8.2)
     use super::{from_hex, to_hex, KeyFailure};
     use windows::Security::Credentials::{
@@ -680,6 +682,14 @@ mod windows_hello {
     };
     use windows::Security::Cryptography::CryptographicBuffer;
     use windows::Storage::Streams::IBuffer;
+    use windows::core::{w, PCWSTR};
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::UI::WindowsAndMessaging::{
+        FindWindowW, GetForegroundWindow, GetWindowThreadProcessId, SetForegroundWindow,
+    };
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::Arc;
+    use std::time::Duration;
 
     const NAME_PREFIX: &str = "PrivacyNotes-bio-";
     /// The random part of a name: 16 bytes as lower-case hex.
@@ -709,11 +719,9 @@ mod windows_hello {
         }
     }
 
-    fn sign(credential: &KeyCredential, challenge: &[u8]) -> Result<Vec<u8>, KeyFailure> {
+    fn sign(app: &tauri::AppHandle, credential: &KeyCredential, challenge: &[u8]) -> Result<Vec<u8>, KeyFailure> {
         let data = CryptographicBuffer::CreateFromByteArray(challenge).map_err(|_| KeyFailure::Failed)?;
-        let result = credential
-            .RequestSignAsync(&data)
-            .and_then(|op| op.join())
+        let result = in_front(app, || credential.RequestSignAsync(&data).and_then(|op| op.join()))
             .map_err(|_| KeyFailure::Failed)?;
         let status = result.Status().map_err(|_| KeyFailure::Failed)?;
         if status != KeyCredentialStatus::Success {
@@ -724,6 +732,51 @@ mod windows_hello {
             return Err(KeyFailure::Failed);
         }
         Ok(signature)
+    }
+
+    /// The class of the Windows Hello dialog's window, from Chromium's
+    /// workaround for the same bug (`crypto/user_verifying_key_win.cc`).
+    const HELLO_DIALOG_CLASS: PCWSTR = w!("Credential Dialog Xaml Host");
+    const DIALOG_POLL: Duration = Duration::from_millis(100);
+
+    /// Runs a key credential call while a second thread waits for its dialog
+    /// and brings it to the front once, at a moment when a window of this app
+    /// is the foreground window. Windows refuses the move while another app
+    /// has the focus, so then the dialog comes forward when the user returns
+    /// to the app. Windows also refuses it from a thread that does not own the
+    /// focused window, so the move itself runs on the main (UI) thread. The
+    /// waiting thread stops when the call returns.
+    fn in_front<T>(app: &tauri::AppHandle, call: impl FnOnce() -> T) -> T {
+        let done = Arc::new(AtomicBool::new(false));
+        let watcher = {
+            let done = Arc::clone(&done);
+            let app = app.clone();
+            std::thread::spawn(move || {
+                let own = std::process::id();
+                while !done.load(Ordering::Relaxed) {
+                    if let Ok(dialog) = unsafe { FindWindowW(HELLO_DIALOG_CLASS, PCWSTR::null()) } {
+                        let front = unsafe { GetForegroundWindow() };
+                        if front == dialog {
+                            return;
+                        }
+                        let mut owner = 0u32;
+                        unsafe { GetWindowThreadProcessId(front, Some(&mut owner)) };
+                        if owner == own {
+                            // HWND is not Send; the raw value crosses the thread.
+                            let raw = dialog.0 as isize;
+                            let _ = app.run_on_main_thread(move || unsafe {
+                                let _ = SetForegroundWindow(HWND(raw as *mut _));
+                            });
+                        }
+                    }
+                    std::thread::sleep(DIALOG_POLL);
+                }
+            })
+        };
+        let result = call();
+        done.store(true, Ordering::Relaxed);
+        let _ = watcher.join();
+        result
     }
 
     /// Only a name this app made can be deleted.
@@ -746,7 +799,7 @@ mod windows_hello {
     }
 
     pub fn key_create(
-        _app: &tauri::AppHandle,
+        app: &tauri::AppHandle,
         _reason: String,
         _cancel_label: String,
     ) -> Result<(String, String), KeyFailure> {
@@ -759,11 +812,13 @@ mod windows_hello {
         }
         let name = format!("{NAME_PREFIX}{}", to_hex(&random(16)?));
         let challenge = random(CHALLENGE_BYTES)?;
-        let created = KeyCredentialManager::RequestCreateAsync(
-            &HSTRING::from(&name),
-            KeyCredentialCreationOption::FailIfExists,
-        )
-        .and_then(|op| op.join())
+        let created = in_front(app, || {
+            KeyCredentialManager::RequestCreateAsync(
+                &HSTRING::from(&name),
+                KeyCredentialCreationOption::FailIfExists,
+            )
+            .and_then(|op| op.join())
+        })
         .map_err(|_| KeyFailure::Failed)?;
         let status = created.Status().map_err(|_| KeyFailure::Failed)?;
         if status != KeyCredentialStatus::Success {
@@ -775,7 +830,7 @@ mod windows_hello {
             });
         }
         let credential = created.Credential().map_err(|_| KeyFailure::Failed)?;
-        match sign(&credential, &challenge) {
+        match sign(app, &credential, &challenge) {
             Ok(signature) => Ok((
                 format!("{HANDLE_PREFIX}{name}.{}", to_hex(&challenge)),
                 to_hex(&signature),
@@ -792,7 +847,7 @@ mod windows_hello {
     }
 
     pub fn key_open(
-        _app: &tauri::AppHandle,
+        app: &tauri::AppHandle,
         handle: String,
         _reason: String,
         _cancel_label: String,
@@ -807,7 +862,7 @@ mod windows_hello {
             return Err(status_failure(status));
         }
         let credential = opened.Credential().map_err(|_| KeyFailure::Failed)?;
-        sign(&credential, &challenge).map(|signature| to_hex(&signature))
+        sign(app, &credential, &challenge).map(|signature| to_hex(&signature))
     }
 
     pub fn key_delete(_app: &tauri::AppHandle, handle: String) {

@@ -95,7 +95,7 @@ import { syncPinWrap } from './pinRecovery';
 import { startPinKeepAlive } from './pinKeepAlive';
 import { hasBiometricCredential, unlockWithBiometric } from './biometric';
 import { canLockNow, lockAppNow, rememberOpenNote, takeReopenNote } from './appReLock';
-import { readLastOpen, rememberSelection, rememberedSelection, writeLastOpen } from './notesView/listPlace';
+import { clearLastOpen, readLastOpen, rememberSelection, rememberedSelection, writeLastOpen } from './notesView/listPlace';
 import { createNoteVersion } from './noteVersions';
 import { keepCurrentText } from './replacedCopies';
 import { loginExtrasOf, withLoginExtras } from './loginExtras';
@@ -3000,6 +3000,7 @@ function AuthenticatedView({
     onCloseLast: () => {
       closedScopeRef.current = listScope;
       if (placeScope !== null) rememberSelection(placeScope, null);
+      clearLastOpen();
       setSelectedId(null);
     },
   });
@@ -3411,6 +3412,7 @@ function AuthenticatedView({
    */
   async function handleCloseEditor() {
     const previousId = selectedId;
+    clearLastOpen();
     setSelectedId(null);
     const discarded = await discardIfEmpty(previousId);
     if (discarded) {

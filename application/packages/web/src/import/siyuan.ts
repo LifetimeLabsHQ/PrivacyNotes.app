@@ -364,7 +364,7 @@ function renderDoc(doc: SyDoc, env: RenderEnv): DocResult {
         else if (text === href && !title && !/[\s<>\x00-\x1f\x7f]/.test(href)) {
           links++;
           core = autolink(href);
-        } else core = `[${label}](${linkTarget(href)}${title ? ` "${title.replace(/"/g, '\\"')}"` : ''})`;
+        } else core = `[${label}](${linkTarget(href)}${title ? ` "${title.replace(/[\\"]/g, '\\$&')}"` : ''})`;
       } else if (types.has('file-annotation-ref')) {
         const file = str(n.TextMarkFileAnnotationRefID).replace(/\/[^/]*$/, '');
         core = (env.assets.has(assetPath(file) ?? '') ? assetLink(text, file, false) : null) ?? escapeMarkdownText(text);

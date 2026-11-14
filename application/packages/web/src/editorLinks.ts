@@ -84,7 +84,7 @@ export const LINK_MARKDOWN = {
       state.inAutolink = undefined;
       if (inAutolink) return '>';
       const { href, title } = mark.attrs as { href: string; title?: string | null };
-      return `](${href.replace(/[()"]/g, '\\$&')}${title ? ` "${title.replace(/[\\"]/g, '\\$&')}"` : ''})`;
+      return `](${href.replace(/[\\()"]/g, '\\$&')}${title ? ` "${title.replace(/[\\"]/g, '\\$&')}"` : ''})`;
     },
     mixable: true,
   },

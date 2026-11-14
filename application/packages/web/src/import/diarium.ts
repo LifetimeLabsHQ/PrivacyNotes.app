@@ -155,7 +155,7 @@ export async function parseDiarium(file: File, onProgress?: (msg: string) => voi
     // Entry links become placeholders the converter keeps, then note-links.
     const links: string[] = [];
     const html = str(e.html).replace(ENTRY_LINK_RE, (_all, ticks: string, label: string) => {
-      links.push(`${ticks}\u0000${label.replace(/<[^>]*>/g, '').trim()}`);
+      links.push(`${ticks}\u0000${label.replace(/<[^>]*>/g, '').replace(/[<>]/g, '').trim()}`);
       return `zzdiariumlink${links.length - 1}zz`;
     });
     let body = html.trim() ? htmlNoteToMarkdown(html) : '';

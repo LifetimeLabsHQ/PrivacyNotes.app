@@ -31,6 +31,9 @@ mod keyboard_accessory;
 /// Tap the iOS status bar to take the note or list to the top (GitHub #617).
 #[cfg(target_os = "ios")]
 mod status_bar_tap;
+/// The iOS page stays put when the keyboard opens; only columns scroll (GitHub #767).
+#[cfg(target_os = "ios")]
+mod scroll_pin;
 
 /// The Windows title bar painted in the app's theme colors.
 /// Spec: docs/contrib/color-themes.md (section 1, the Windows title bar)
@@ -752,7 +755,8 @@ pub fn run() {
 
     // A load can replace the web view's content view, so the iOS keyboard bar
     // is taken off again after each one. The status bar tap rides along: it
-    // needs the web view, and adding it again does nothing. On desktop the
+    // needs the web view, and adding it again does nothing; so does the page
+    // scroll pin (scroll_pin.rs). On desktop the
     // first finished load shows the main window (see `show_main_window`).
     // One handler for both: a second `on_page_load` replaces the first.
     #[cfg(any(target_os = "ios", desktop))]
@@ -762,6 +766,7 @@ pub fn run() {
             {
                 keyboard_accessory::hide_in(webview);
                 status_bar_tap::listen_in(webview);
+                scroll_pin::pin_in(webview);
             }
             // A start at sign-in waits for the web view (autostart.rs).
             #[cfg(desktop)]

@@ -935,6 +935,7 @@ const ACCOUNT_KV_KEYS = [
   'trashSeenAt', // trashPurge.ts
   'imageSizesByUuid', // imageStore.ts
   'pullRetryIds', // sync.ts
+  'unsyncedDeletes', // unsyncedDeletes.ts
   'pullCursorEpoch', // sync.ts
   'reencryptPassDone', // reencryptPass.ts
   'reencryptFilesDone', // reencryptPass.ts

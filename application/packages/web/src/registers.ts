@@ -13,6 +13,7 @@
  * `deviceLabels.ts` keeps one map for the whole account.
  */
 import { TOMBSTONE_RETENTION_MS } from './folders';
+import { randomIndex } from './passwordGen';
 
 interface Register {
   /** The value; null is "back to the default". */
@@ -101,8 +102,7 @@ export const REGISTER_ID = /^[a-z0-9]{12}$/;
  *  digits. */
 export function newRegisterId(): string {
   const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  const bytes = crypto.getRandomValues(new Uint8Array(12));
-  return [...bytes].map((b) => alphabet[b % alphabet.length]).join('');
+  return Array.from({ length: 12 }, () => alphabet[randomIndex(alphabet.length)]).join('');
 }
 
 /** A stamp later than `prev` and never earlier than now: the rule of

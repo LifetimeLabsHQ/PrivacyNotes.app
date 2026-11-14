@@ -27,6 +27,21 @@ export type ChangelogRelease = {
 
 export const PUBLIC_CHANGELOG: ChangelogRelease[] = [
   {
+    version: '0.781',
+    date: '2026-11-14',
+    title: 'Fixes, security upkeep and more crypto coins',
+    items: [
+      { type: 'new', text: 'Pay for Pro with Litecoin, Bitcoin Cash, Dogecoin or TON too.' },
+      { type: 'improved', text: 'The editor, the map and other parts run on updated libraries, after a fresh code scan.' },
+      { type: 'fixed', text: 'A note you closed no longer opens again when the app starts.', issues: [770] },
+      { type: 'fixed', text: 'A web clip you delete stays deleted, also when you delete it before it syncs.', issues: [769] },
+      { type: 'fixed', text: 'The Windows Hello prompt opens in front of the app.', issues: [768] },
+      { type: 'fixed', text: 'On iPhone, the note no longer jumps when the keyboard opens.', issues: [767] },
+      { type: 'fixed', text: 'The cards in a narrow notes list fit: the medication buttons, the calendar month and the Work items switch.' },
+      { type: 'fixed', text: 'A link address that ends in a backslash stays a link, and SiYuan and Diarium imports keep clean link text.' },
+    ],
+  },
+  {
     version: '0.780',
     date: '2026-11-14',
     title: 'Smart connections: offline AI finds notes with the same meaning',

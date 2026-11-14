@@ -7,7 +7,10 @@
  * in-app clipper makes, through the same `finishClip`; a login becomes a
  * vault login. The item id is derived from the row id (`inboxItemId`), so
  * two apps adopting one row make one item, and a row is deleted only once its
- * item is on the server: pushed, or deleted after a push. A row of an unknown
+ * item is on the server: pushed, or deleted after a push. A deleted item may
+ * be gone from this device already, so the server's tombstone settles its row
+ * too: built again, the item met the tombstone and came back as a new note
+ * under a fresh id, once a pass (issue 769). A row of an unknown
  * version or kind stays for a newer app.
  *
  * The vault copy. While an extension shows logins, each vault item the
@@ -66,6 +69,7 @@ import { loadExtensionState, rekeyLogins, ExtensionCallError, type ExtensionStat
 import type { StorePicture } from './clipPage';
 import { isDemoMode } from './demo';
 import { isUuid } from './uuid';
+import { unsyncedDeletes } from './unsyncedDeletes';
 
 // ── The server, as this module needs it ─────────────────────────────
 
@@ -102,6 +106,8 @@ export interface ExtensionStore {
   rekey(oldTag: string, newTag: string | null, ksrv: Record<string, string>): Promise<void>;
   /** Claim rows for this device; returns the ids it may adopt now. */
   claimInbox(ids: string[], deviceId: string): Promise<string[]>;
+  /** The item ids among these that the server holds as tombstones. */
+  tombstonedItems(ids: string[]): Promise<Set<string>>;
 }
 
 // Spec: docs/internal/plans/browser-extension-build.md (section 4, inbox and copy caps)
@@ -167,6 +173,17 @@ export function supabaseExtensionStore(supabase: SupabaseClient, pubkey: string)
       const { data, error } = await supabase.rpc('extension_inbox_claim', { p_ids: ids, p_device: deviceId });
       fail('inbox_claim', error);
       return Array.isArray(data) ? (data as string[]) : [];
+    },
+    async tombstonedItems(ids) {
+      if (!ids.length) return new Set();
+      const { data, error } = await supabase
+        .from('notes')
+        .select('id')
+        .eq('user_pubkey', pubkey)
+        .in('id', ids)
+        .not('deleted_at', 'is', null);
+      fail('inbox_tombstones', error);
+      return new Set(((data ?? []) as { id: string }[]).map((r) => r.id));
     },
   };
 }
@@ -461,12 +478,17 @@ async function adoptPage(
     else refuse.push(id);
   }
 
-  // Claim the rows whose item does not exist here yet, so one app builds it;
-  // another app's claim lasts 10 minutes.
-  const unbuilt: string[] = [];
+  // The rows whose item does not exist here yet. An item the server holds as
+  // a tombstone, or one this device deleted before it reached the server,
+  // was deleted: its row settles and is never built again. The others are
+  // claimed, so one app builds each; another app's claim lasts 10 minutes.
+  const missing = new Map<string, string>();
   for (const [id, { row, itemId }] of opened) {
-    if (row.kind !== 'picture' && !(await db.notes.get(itemId))) unbuilt.push(id);
+    if (row.kind !== 'picture' && !(await db.notes.get(itemId))) missing.set(id, itemId);
   }
+  const gone = await deps.store.tombstonedItems([...missing.values()]);
+  if (missing.size) for (const id of await unsyncedDeletes(now)) gone.add(id);
+  const unbuilt = [...missing].filter(([, itemId]) => !gone.has(itemId)).map(([id]) => id);
   const mine = new Set(await deps.store.claimInbox(unbuilt, deps.deviceId));
 
   let adopted = 0;
@@ -480,6 +502,10 @@ async function adoptPage(
   };
   for (const [id, { row, plain, itemId }] of opened) {
     if (row.kind === 'picture') continue;
+    if (gone.has(itemId)) {
+      settled.push(id, ...[...pictures].filter(([, p]) => p.clip === id).map(([pid]) => pid));
+      continue;
+    }
     const existing = await db.notes.get(itemId);
     if (row.kind === 'note') {
       const note = parseInboxNote(decode(plain), id);

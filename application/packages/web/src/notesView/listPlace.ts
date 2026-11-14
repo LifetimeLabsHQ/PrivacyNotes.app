@@ -112,8 +112,14 @@ export function readLastOpen(): string | null {
   }
 }
 
-/** Only an id is written, never cleared on a close: a switch to a view with
- *  nothing open must not forget the note a cold start brings back. */
+/** A switch to a view with nothing open keeps the id: the note a cold start
+ *  brings back is the one still open when the app went away. */
 export function writeLastOpen(id: string): void {
   try { store().setItem(LAST_OPEN_KEY, id); } catch { /* storage unavailable */ }
+}
+
+/** A close the person made forgets the note, so a cold start after it shows
+ *  the list (#770). Spec: docs/internal/specs/keep-my-place.md (section 3) */
+export function clearLastOpen(): void {
+  try { store().removeItem(LAST_OPEN_KEY); } catch { /* storage unavailable */ }
 }

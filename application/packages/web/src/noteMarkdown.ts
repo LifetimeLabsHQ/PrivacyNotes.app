@@ -128,7 +128,7 @@ export function noteToMarkdown(
  * they read as before.
  */
 function quoteTitle(title: string): string {
-  return title.includes('\\') ? `'${title.replace(/'/g, "''")}'` : `"${title.replace(/"/g, '\\"')}"`;
+  return title.includes('\\') ? `'${title.replace(/'/g, "''")}'` : `"${title.replace(/[\\"]/g, '\\$&')}"`;
 }
 
 /**
