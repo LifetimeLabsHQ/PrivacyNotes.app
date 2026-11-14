@@ -89,12 +89,15 @@ export function Segmented<T extends string>({ options, value, onPick, tone = 'ac
             type="button"
             aria-pressed={on}
             onClick={() => onPick(o.key)}
-            className={`flex-1 inline-flex items-center justify-center gap-1.5 ${size === 'sm' ? 'px-2.5 h-7 text-small' : 'px-3 h-8 [@media(hover:none)]:h-9 text-small'} font-medium transition-colors ${i > 0 ? 'border-s border-divider' : ''} ${
+            title={o.icon ? o.label : undefined}
+            className={`flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 ${size === 'sm' ? 'px-2.5 h-7 text-small' : 'px-3 h-8 [@media(hover:none)]:h-9 text-small'} font-medium transition-colors ${i > 0 ? 'border-s border-divider' : ''} ${
               on ? fill : 'bg-surface-2 text-pn-muted hover:bg-pn/5 hover:text-pn'
             }`}
           >
             {o.icon}
-            {o.label}
+            {/* In a container too narrow for the words, a segment with an
+                icon keeps the icon alone; screen readers still hear the label. */}
+            {o.icon ? <span className="@max-[11.5rem]:sr-only">{o.label}</span> : o.label}
           </button>
         );
       })}

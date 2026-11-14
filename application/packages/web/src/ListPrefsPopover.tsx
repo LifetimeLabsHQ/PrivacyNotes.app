@@ -304,7 +304,9 @@ export function ListPrefsPopover({
                 onChange={setJournalCalendarMood}
               />
             )}
-            {calendarShown && otherSpace && (
+            {/* Not under calendarShown: the switch also governs the Calendar
+                pane and its rail count, which stay when this card is off. */}
+            {otherSpace && (
               <ToggleRow
                 label={(
                   // The space's name in bold: the one word that changes with the open space.

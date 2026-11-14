@@ -390,12 +390,18 @@ export function MonthGrid({
           </button>
         </HoverLabel>
         <span className={`flex shrink-0 items-center @max-[207.98px]/month:[&_button]:w-7 ${picking ? 'invisible' : ''}`}>
+          {/* The extra buttons step aside before the month name truncates:
+              a host's button under 256 px, the week switch under 224 px
+              (measured with the short name and its year, plus room for the
+              longer short names of other languages). */}
           {onToggleWeeks && (
+            <span className="contents @max-[223.98px]/month:hidden">
             <HoverLabel label={t(weeks === 6 ? 'monthGrid.showOneWeek' : 'monthGrid.showWholeMonth')} position="below" disabled={picking}>
               <button type="button" onClick={onToggleWeeks} aria-expanded={weeks === 6} aria-label={t(weeks === 6 ? 'monthGrid.showOneWeek' : 'monthGrid.showWholeMonth')} className={navBtn}>
                 {weeks === 6 ? <CalendarDot aria-hidden="true" /> : <CalendarDots aria-hidden="true" />}
               </button>
             </HoverLabel>
+            </span>
           )}
           <HoverLabel label={t(weeks === 1 ? 'monthGrid.previousWeek' : 'monthGrid.previousMonth')} position="below" disabled={picking}>
             <button type="button" onClick={() => setFocus(step(-1))} aria-label={t(weeks === 1 ? 'monthGrid.previousWeek' : 'monthGrid.previousMonth')} className={navBtn}>
@@ -407,7 +413,7 @@ export function MonthGrid({
               <CaretRight aria-hidden="true" />
             </button>
           </HoverLabel>
-          {headerEnd}
+          {headerEnd && <span className="contents @max-[255.98px]/month:hidden">{headerEnd}</span>}
         </span>
       </div>
       {picking && <MonthYearPanel focus={focus} onPick={(day) => { setFocus(day); closePicker(); }} onClose={closePicker} />}

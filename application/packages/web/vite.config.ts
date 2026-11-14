@@ -1,4 +1,4 @@
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, normalizePath, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -694,7 +694,10 @@ function moduleRoots(): Plugin {
       return p;
     }
   };
-  const roots = [REPO_ROOT, realOrSelf(REPO_ROOT), path.dirname(realOrSelf(path.join(REPO_ROOT, 'node_modules')))].map((r) => r + path.sep);
+  const roots = [REPO_ROOT, realOrSelf(REPO_ROOT), path.dirname(realOrSelf(path.join(REPO_ROOT, 'node_modules')))].map(
+    // Module ids use forward slashes on every OS, the roots use backslashes on Windows.
+    (r) => normalizePath(r) + '/'
+  );
   return {
     name: 'pn-module-roots',
     apply: 'build',
@@ -704,7 +707,7 @@ function moduleRoots(): Plugin {
         if (chunk.type !== 'chunk') continue;
         for (const id of Object.keys(chunk.modules)) {
           if (id.startsWith('\0') || !path.isAbsolute(id)) continue;
-          const file = id.split('?')[0]!;
+          const file = normalizePath(id.split('?')[0]!);
           if (!roots.some((root) => file.startsWith(root))) outside.add(file);
         }
       }
