@@ -188,9 +188,9 @@ PrivacyNotes is shaped by the people who report bugs and ask for features in our
 <a href="https://github.com/scamidge" title="scamidge, 28 shipped"><img src="https://github.com/scamidge.png?size=112" width="56" height="56" alt="scamidge"></a>
 <a href="https://github.com/Real-Fruit-Snacks" title="Real-Fruit-Snacks, 27 shipped"><img src="https://github.com/Real-Fruit-Snacks.png?size=112" width="56" height="56" alt="Real-Fruit-Snacks"></a>
 <a href="https://github.com/AndreFeliciano" title="AndreFeliciano, 20 shipped"><img src="https://github.com/AndreFeliciano.png?size=112" width="56" height="56" alt="AndreFeliciano"></a>
-<a href="https://github.com/MrJarvisHere" title="MrJarvisHere, 12 shipped"><img src="https://github.com/MrJarvisHere.png?size=112" width="56" height="56" alt="MrJarvisHere"></a>
 <a href="https://github.com/les-incompetent" title="les-incompetent, 11 shipped"><img src="https://github.com/les-incompetent.png?size=112" width="56" height="56" alt="les-incompetent"></a>
 <a href="https://github.com/mburr" title="mburr, 11 shipped"><img src="https://github.com/mburr.png?size=112" width="56" height="56" alt="mburr"></a>
+<a href="https://github.com/MrJarvisHere" title="MrJarvisHere, 11 shipped"><img src="https://github.com/MrJarvisHere.png?size=112" width="56" height="56" alt="MrJarvisHere"></a>
 <a href="https://github.com/laulaugaby" title="laulaugaby, 11 shipped"><img src="https://github.com/laulaugaby.png?size=112" width="56" height="56" alt="laulaugaby"></a>
 <a href="https://github.com/Tobias1000" title="Tobias1000, 11 shipped"><img src="https://github.com/Tobias1000.png?size=112" width="56" height="56" alt="Tobias1000"></a>
 <a href="https://github.com/block6791" title="block6791, 10 shipped"><img src="https://github.com/block6791.png?size=112" width="56" height="56" alt="block6791"></a>
@@ -203,6 +203,7 @@ PrivacyNotes is shaped by the people who report bugs and ask for features in our
 <a href="https://github.com/snogglefromp" title="snogglefromp, 6 shipped"><img src="https://github.com/snogglefromp.png?size=112" width="56" height="56" alt="snogglefromp"></a>
 <a href="https://github.com/thecoffeebin" title="thecoffeebin, 6 shipped"><img src="https://github.com/thecoffeebin.png?size=112" width="56" height="56" alt="thecoffeebin"></a>
 <a href="https://github.com/gijs-epping" title="gijs-epping, 5 shipped"><img src="https://github.com/gijs-epping.png?size=112" width="56" height="56" alt="gijs-epping"></a>
+<a href="https://github.com/KamikazeWolf" title="KamikazeWolf, 4 shipped"><img src="https://github.com/KamikazeWolf.png?size=112" width="56" height="56" alt="KamikazeWolf"></a>
 <a href="https://github.com/michaeldurland" title="michaeldurland, 4 shipped"><img src="https://github.com/michaeldurland.png?size=112" width="56" height="56" alt="michaeldurland"></a>
 <a href="https://github.com/ajgraves" title="ajgraves, 4 shipped"><img src="https://github.com/ajgraves.png?size=112" width="56" height="56" alt="ajgraves"></a>
 <a href="https://github.com/FrostyLime" title="FrostyLime, 4 shipped"><img src="https://github.com/FrostyLime.png?size=112" width="56" height="56" alt="FrostyLime"></a>
@@ -211,7 +212,6 @@ PrivacyNotes is shaped by the people who report bugs and ask for features in our
 <a href="https://github.com/BackupSFG" title="BackupSFG, 3 shipped"><img src="https://github.com/BackupSFG.png?size=112" width="56" height="56" alt="BackupSFG"></a>
 <a href="https://github.com/tactfuljeer" title="tactfuljeer, 3 shipped"><img src="https://github.com/tactfuljeer.png?size=112" width="56" height="56" alt="tactfuljeer"></a>
 <a href="https://github.com/825i" title="825i, 3 shipped"><img src="https://github.com/825i.png?size=112" width="56" height="56" alt="825i"></a>
-<a href="https://github.com/KamikazeWolf" title="KamikazeWolf, 3 shipped"><img src="https://github.com/KamikazeWolf.png?size=112" width="56" height="56" alt="KamikazeWolf"></a>
 <a href="https://github.com/thediamondgeezer" title="thediamondgeezer, 3 shipped"><img src="https://github.com/thediamondgeezer.png?size=112" width="56" height="56" alt="thediamondgeezer"></a>
 <a href="https://github.com/ylnztrkk" title="ylnztrkk, 3 shipped"><img src="https://github.com/ylnztrkk.png?size=112" width="56" height="56" alt="ylnztrkk"></a>
 <a href="https://github.com/ameetjeeva" title="ameetjeeva, 3 shipped"><img src="https://github.com/ameetjeeva.png?size=112" width="56" height="56" alt="ameetjeeva"></a>
