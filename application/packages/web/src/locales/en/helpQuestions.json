@@ -9,7 +9,7 @@
   "device-limit": "What does \"Device limit reached\" mean?",
   "enable-2fa": "How do I turn on two-factor authentication (2FA)?",
   "forgot-pin": "I forgot my PIN or passcode. How do I get back in?",
-  "guess-phrase": "Can someone guess my 12 words or end up with the same ones?",
+  "guess-phrase": "Can someone guess my recovery phrase or end up with the same one?",
   "image-quality": "Does PrivacyNotes change or compress my images?",
   "journal": "How does the journal work, and what can I track?",
   "leaving": "How do I leave PrivacyNotes completely?",

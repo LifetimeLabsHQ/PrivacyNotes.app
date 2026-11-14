@@ -43,7 +43,7 @@
     },
     "subhead": "노트, 할 일, 비밀번호, 저널, 파일, 캘린더, 연락처, 북마크에 기분과 복약 기록까지. 하나의 비공개 앱이에요.",
     "tryDemo": "데모 체험하기",
-    "microcopy": "평생 무료. 신용카드 불필요. Google, Apple, GitHub 또는 12단어 문구만으로 로그인.",
+    "microcopy": "평생 무료. 신용카드 불필요. Google, Apple, GitHub 또는 복구 문구만으로 로그인.",
     "alreadyHaveVault": "이미 보관함이 있나요? 로그인",
     "trustSigned": "GitHub의 서명된 릴리스"
   },
@@ -167,8 +167,6 @@
     "useGitBody": "하루를 마치며 그날 만든 커밋을 노트로 저장하세요. 다음 달에도 다시 찾을 수 있어요.",
     "useClipTitle": "복사한 무엇이든",
     "useClipBody": "클립보드, 명령어 출력, 오류 메시지를 바로 노트로 보내세요.",
-    "useToolsTitle": "나만의 도구의 일부로",
-    "useToolsBody": "이 명령어는 JSON으로 응답하고 명확한 종료 코드로 끝나서, 스크립트가 노트 저장 여부를 알 수 있어요.",
     "useShortcutTitle": "키보드 단축키로 쓰는 노트",
     "useShortcutBody": "시스템 설정에서 고른 키를 누르면 앱이 닫혀 있어도 빠른 노트 상자가 열려요. 노트는 Agent 폴더에 들어가요.",
     "howLink": "privacynotes가 작동하는 방식 읽기"
@@ -359,14 +357,15 @@
     "freeVault": "50 MB 저장 공간, 파일당 5 MB",
     "freeImport": "가져오기와 내보내기, Keep과 Obsidian 포함",
     "freeAnon": "익명 로그인, 이메일 없이",
-    "earlyAdopterBadge": "얼리어답터"
+    "earlyAdopterBadge": "얼리어답터",
+    "payMethods": "카드로 결제하거나 Bitcoin, Ethereum, Lightning, USDC 또는 USDT로 결제하세요."
   },
   "underHood": {
     "heading": "내부 들여다보기",
     "cipherTerm": "xchacha20poly1305",
     "cipherDesc": "키는 클라이언트에서 파생",
     "phraseTerm": "BIP-39 문구",
-    "phraseDesc": "12단어, Ed25519 서명",
+    "phraseDesc": "내 기기에서 생성, Ed25519 서명",
     "rlsDesc": "당신의 공개키에 연결된 RLS",
     "trackingTerm": "추적기 제로",
     "trackingDesc": "픽셀도, 서드파티 추적기도 없음",
@@ -390,6 +389,7 @@
       "sleep": "좋음, 7.5시간",
       "sleepScore": "82",
       "heartRate": "61 bpm",
+      "bloodPressure": "118/76 mmHg",
       "activity": "보통",
       "medication": "복용",
       "energy": "6 / 10",
@@ -526,7 +526,7 @@
       "hotkeys": "단축키",
       "rating": "평가"
     },
-    "intro": "<brand/>는 노트, 할 일, 비밀번호, 저널, 파일, 캘린더, 연락처, 북마크를 한곳에 모아 두고, 기분과 복약 기록도 함께해요. 모든 데이터는 12단어로 만든 키로 기기에서 암호화되고, <nowrap>스위스</nowrap>에 있는 저희 서버에서도 암호화된 상태로 유지돼요. 오프라인에서도 작동하고, 앱은 오픈소스예요.",
+    "intro": "<brand/>는 노트, 할 일, 비밀번호, 저널, 파일, 캘린더, 연락처, 북마크를 한곳에 모아 두고, 기분과 복약 기록도 함께해요. 모든 데이터는 복구 문구로 만든 키로 기기에서 암호화되고, <nowrap>스위스</nowrap>에 있는 저희 서버에서도 암호화된 상태로 유지돼요. 오프라인에서도 작동하고, 앱은 오픈소스예요.",
     "versionHeading": "버전",
     "windowVersion": "버전 {{version}}",
     "windowHelp": "도움말 센터",

@@ -15,6 +15,7 @@ import type { Space } from './spaces';
 import { dayNumber } from './schedule';
 import { PathGlyph, useItemLook } from './looks/LookGlyph';
 import { SelectBox, itemStateClass } from './listItem';
+import { useToday } from './ListGroupHeader';
 
 /**
  * Everything the calendar of dated items does, in one module: the pick rule,
@@ -480,15 +481,19 @@ function useRoomForMonth(on: boolean, boxed: boolean): { ref: (el: HTMLLIElement
 export type CalendarCardExtras = {
   onExpand?: (month: string) => void;
   drop?: { accepts: (e: React.DragEvent) => boolean; onDrop: (day: string, e: React.DragEvent) => void };
+  /** The synced `calendar.weekNumbers`. */
+  weekNumbers?: boolean;
 };
 
-export function JournalCalendarCard({ grid, home = false, onExpand, drop, moodOf, style, controls, reorderId, ...handlers }: DayHandlers & CalendarCardExtras & {
+export function JournalCalendarCard({ grid, home = false, onExpand, drop, weekNumbers, moodOf, style, className, controls, reorderId, ...handlers }: DayHandlers & CalendarCardExtras & {
   grid: boolean;
   /** On Home: the layout sets the tile's box, and the month shows when it fits there. */
   home?: boolean;
   moodOf?: (day: string) => number | 'written' | undefined;
   /** Home's placement of the tile in its grid. */
   style?: CSSProperties;
+  /** Home's state of the tile: the fade while it is dragged, the ring while it is resized. */
+  className?: string;
   /** Home's arranging tools (the grip tab, the resize corner), drawn in the tile. */
   controls?: ReactNode;
   /** Home's id for the tile, which its reorder finds by. */
@@ -497,7 +502,17 @@ export function JournalCalendarCard({ grid, home = false, onExpand, drop, moodOf
   const { t } = useTranslation('shell');
   const [weeks, setWeeks] = useState<1 | 6>(readSize);
   const [choosing, setChoosing] = useState<string | null>(null);
-  const [month, setMonth] = useState(() => toLocalIso(new Date()));
+  const today = useToday();
+  const [month, setMonth] = useState(today);
+  // A card left on today moves on with it at midnight and when the app comes
+  // back, as the Calendar pillar does (`useCalendarPillar`), so the week
+  // shown holds the ringed day. A week the person went to stays, and an
+  // unfolded day holds the card until it folds.
+  const [monthToday, setMonthToday] = useState(today);
+  if (monthToday !== today && !choosing) {
+    setMonthToday(today);
+    if (month === monthToday) setMonth(today);
+  }
   // Beside an open check-in card the month shows without a click, in one
   // row; a click on the title folds it to the week until the card closes.
   // Elsewhere the month is a choice that spans two rows.
@@ -530,7 +545,7 @@ export function JournalCalendarCard({ grid, home = false, onExpand, drop, moodOf
       data-reorder-id={reorderId}
       className={
         grid
-          ? `pn-grid-cal rounded-xl border border-divider bg-surface-2 p-2 ${home ? 'relative flex flex-col justify-center' : weeks === 6 && !roomy.fits ? 'row-span-2' : ''}`
+          ? `pn-grid-cal rounded-xl border border-divider bg-surface-2 p-2 ${home ? 'relative flex flex-col justify-center' : weeks === 6 && !roomy.fits ? 'row-span-2' : ''} ${className ?? ''}`
           : 'px-4 pt-1 pb-1.5 md:pt-2 md:pb-3 bg-surface-2 border-b border-divider'
       }
     >
@@ -541,8 +556,10 @@ export function JournalCalendarCard({ grid, home = false, onExpand, drop, moodOf
         wide={!grid}
         weeks={shown}
         onToggleWeeks={toggle}
+        focus={month}
         onFocusChange={setMonth}
         drop={drop}
+        weekNumbers={weekNumbers}
         moodOf={moodOf}
         headerEnd={onExpand && (
           <HoverLabel label={t('calendar.open')} position="below-end">

@@ -169,7 +169,7 @@ function llmsTxt(): string {
 
 > An end-to-end encrypted notes, tasks, journal and vault app: your notes are encrypted on your device, before they are stored or synced. The server holds ciphertext, which under self-custody it cannot read. Hosted in Switzerland, with no trackers and no analytics of what you write.
 
-Signing up needs no email address: a new account is a generated 12-word recovery phrase and nothing else. Google, Apple and GitHub sign-in are available for people who want them, and the encryption key is still generated on the reader's own device either way.
+Signing up needs no email address: a new account is a generated recovery phrase and nothing else. Google, Apple and GitHub sign-in are available for people who want them, and the encryption key is still generated on the reader's own device either way.
 
 The free tier is a real tier, not a trial: 2 devices and 50 MB of storage, with no time limit. Pro is a one-time payment of $${proPrice} for unlimited devices and 500 MB, with extra storage sold separately as a yearly add-on. There is no subscription for the app itself.
 

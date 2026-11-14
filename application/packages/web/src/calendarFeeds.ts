@@ -12,6 +12,7 @@
 import {
   mergeRegisterMaps,
   newRegisterId,
+  REGISTER_ID,
   registerMapsEqual,
   stampAfter,
   validateRegisterMap,
@@ -24,11 +25,10 @@ export type CalendarFeeds = RegisterMap;
 const URL_MAX = 2048;
 /** The most calendars one account subscribes to. */
 export const CALENDAR_FEED_MAX = 20;
-const ID_PATTERN = /^[a-z0-9]{12}$/;
 
 /** Sanitize a raw map from a settings blob. */
 export function validateCalendarFeeds(raw: unknown, now = Date.now()): CalendarFeeds {
-  return validateRegisterMap(raw, (id) => ID_PATTERN.test(id), URL_MAX, now);
+  return validateRegisterMap(raw, (id) => REGISTER_ID.test(id), URL_MAX, now);
 }
 
 export function mergeCalendarFeeds(local: CalendarFeeds, remote: CalendarFeeds, now = Date.now()): CalendarFeeds {
@@ -52,7 +52,7 @@ export function addCalendarFeed(feeds: CalendarFeeds, url: string, id = newRegis
   const live = liveCalendarFeeds(feeds);
   const held = live.find((f) => f.url === url);
   if (held) return { feeds, id: held.id };
-  if (live.length >= CALENDAR_FEED_MAX || url.length > URL_MAX || !ID_PATTERN.test(id)) return 'full';
+  if (live.length >= CALENDAR_FEED_MAX || url.length > URL_MAX || !REGISTER_ID.test(id)) return 'full';
   // After every stamp the list holds, so the new feed sorts last.
   const latest = Object.values(feeds).reduce((m, r) => (r.at > m ? r.at : m), '');
   return { feeds: { ...feeds, [id]: { v: url, at: stampAfter(latest || undefined) } }, id };

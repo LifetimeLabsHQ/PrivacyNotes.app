@@ -18,7 +18,7 @@ import {
   type InboxLogin,
   type InboxNote,
 } from '@notes/shared/extension';
-import type { Clip } from '@notes/clipper';
+import { inboxNoteFits, type Clip } from '@notes/clipper';
 import { readConnection, type Connection } from './connection';
 import { enqueue, flashBadge, flush, type Queued } from './queue';
 import { fetchPictures } from './pictures';
@@ -145,7 +145,7 @@ export async function saveNote(req: NoteRequest): Promise<NoteResult> {
   const title = req.title.trim() || inboxNoteTitle(req.markdown);
   const note: InboxNote = { v: 1, id, title, markdown: req.markdown, tags: [...new Set(req.tags)], savedAt: new Date().toISOString(), from: 'browser' };
   // The app runs the same check: a note it would refuse is never sent.
-  if (!parseInboxNote(note, id)) return { state: 'tooLong' };
+  if (!parseInboxNote(note, id) || !inboxNoteFits(note.markdown)) return { state: 'tooLong' };
   const row = seal(connection, 'note', id, padInboxJson(note));
   if (row.payload.length > ROW_MAX) return { state: 'tooLong' };
   try {

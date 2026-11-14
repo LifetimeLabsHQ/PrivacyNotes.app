@@ -138,7 +138,7 @@ export async function fill(doc: Document, request: FillRequest): Promise<FrameRe
   if (next.code?.length && request.code) {
     const els = next.code.map((f) => f.el);
     const one = els[0];
-    note('code', els.length === 1 && one ? await writeField(one, request.code) : await writeBoxes(els, request.code), els);
+    note('code', els.length === 1 && one ? await writeField(one, request.code, true) : await writeBoxes(els, request.code), els);
   }
 
   // The cursor ends where the person goes on: the password, so Enter signs in.

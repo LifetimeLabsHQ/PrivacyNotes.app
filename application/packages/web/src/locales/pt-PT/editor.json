@@ -361,5 +361,47 @@
     "moveTo": "Mover para",
     "cardCount_one": "{{count}} cartão",
     "columnCount_one": "{{count}} coluna"
+  },
+  "doodle": {
+    "title": "Rabisco",
+    "clear": "Limpar",
+    "paper": "Papel",
+    "paperNone": "Sem cor: a nota vê-se por baixo.",
+    "settings": "Definições da caneta",
+    "stroke": "Traço",
+    "thinning": "Afinamento",
+    "streamline": "Estabilização",
+    "smoothing": "Suavização",
+    "easingLabel": "Atenuação",
+    "start": "Início",
+    "end": "Fim",
+    "taperStart": "Afunilar no início",
+    "capStart": "Remate no início",
+    "easingStart": "Atenuação no início",
+    "taperEnd": "Afunilar no fim",
+    "capEnd": "Remate no fim",
+    "easingEnd": "Atenuação no fim",
+    "fill": "Preenchimento",
+    "outline": "Contorno",
+    "easing": {
+      "linear": "Linear",
+      "in": "Entrada suave, {{curve}}",
+      "out": "Saída suave, {{curve}}",
+      "inOut": "Entrada e saída suaves, {{curve}}"
+    },
+    "curve": {
+      "quad": "quadrática",
+      "cubic": "cúbica",
+      "quart": "quártica",
+      "quint": "quíntica",
+      "sine": "sinusoidal",
+      "expo": "exponencial"
+    },
+    "colors": {
+      "black": "Preto",
+      "white": "Branco",
+      "cyan": "Ciano",
+      "lightGray": "Cinzento-claro"
+    }
   }
 }

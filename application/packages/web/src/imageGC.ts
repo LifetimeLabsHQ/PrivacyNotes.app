@@ -33,7 +33,8 @@
  *   reference re-check against every local note row, including
  *   trashed and not-yet-confirmed tombstoned ones (an unconfirmed
  *   tombstone means the server may still be serving that note
- *   elsewhere). Still-referenced entries are cancelled and their quota
+ *   elsewhere), and against every History version of the account.
+ *   Still-referenced entries are cancelled and their quota
  *   re-credited; the rest have their Storage object actually removed,
  *   along with any local rows phase 1 kept.
  *
@@ -63,6 +64,7 @@ import type { AttachmentStore } from './attachmentStore';
 import { hasQueuedVersions, listNoteVersions } from './noteVersions';
 import { decryptNote, base64ToBytes, type SupabaseClient } from '@notes/shared';
 import { db } from './db';
+import { openWithRing } from './keyRing';
 import { isDemoMode } from './demo';
 import { isServerWriteBlocked } from './syncPause';
 import { fetchQuotaUsage, recalculateQuota } from './devices';
@@ -83,12 +85,13 @@ let sweepInFlight = false;
 const BLOB_GC_GRACE_MS = 24 * 60 * 60 * 1000;
 
 /** How old an unreferenced object must be before the orphan reconcile takes
- *  it, by the server's clock. Longer than the queue's grace: the reconcile
- *  cannot see another device's unsent note, and a note pushed a day after its
- *  picture (a browser closed right after the insert, a conflict left open, a
- *  phone app killed) lost the picture at 24h (external report, 2026-10-24).
- *  An orphan only costs quota until then. Spec: docs/internal/design-decisions.md
- *  (deferred blob GC). */
+ *  it, by the server's clock: the queue's 24 hours. The reconcile cannot see
+ *  another device's unsent note, so a note pushed a day after its picture can
+ *  still lose the object; a longer grace would only move that window, and
+ *  the device that holds the bytes uploads them again after its own listing
+ *  (uploadAgainWhatIsMissing). An orphan only costs quota until then.
+ *  Spec: docs/internal/design-decisions.md (deferred blob GC; the orphan
+ *  reconcile reads the server's clock). */
 const RECONCILE_GRACE_MS = BLOB_GC_GRACE_MS;
 
 /**
@@ -362,9 +365,11 @@ async function dropLocalCopies(uuids: string[]): Promise<void> {
  * it removes their objects; or another device cancelled first. Either way the
  * notes still use the blob, so a copy this device holds goes up again: the
  * retry sweep uploads it, and an object that is still there answers 409 and
- * settles through the recount without a second charge.
+ * settles through the recount without a second charge. A restore calls it too,
+ * for a blob whose bytes already have an upload row under another id
+ * (`restoreBlobs` in import/privacynotes.ts).
  */
-async function uploadAgainWhatThePurgeTook(uuids: string[]): Promise<void> {
+export async function uploadAgainWhatThePurgeTook(uuids: string[]): Promise<void> {
   for (const uuid of uuids) {
     const table = (await db.imageCache.get(uuid)) ? db.imageDedup : (await db.attachmentCache.get(uuid)) ? db.attachmentDedup : null;
     if (!table) continue;
@@ -418,13 +423,15 @@ async function uploadAgainWhatIsMissing(inBucket: ReadonlySet<string>): Promise<
 /**
  * Phase 2 of deferred blob GC: actually remove Storage objects for
  * queue entries that have cleared the grace period, after re-checking
- * references against the full local mirror. Must only be called right
+ * references against the full local mirror and the account's History
+ * versions (`history`: the session and key that read them). Must only be called right
  * after a sync pass whose pull completed cleanly - that's what makes
  * the reference re-check trustworthy (see module doc comment).
  */
 export async function sweepBlobGC(
   imageStore: ImageStore,
   attachmentStore: AttachmentStore | null,
+  history: { supabase: SupabaseClient; pubkey: string; encryptionKey: Uint8Array },
 ): Promise<void> {
   // Below the release floor server writes pause (see sync.ts) - and GC
   // deletes are the most dangerous write of all here, because an old client
@@ -447,15 +454,34 @@ export async function sweepBlobGC(
     if (entries.length === 0) return;
 
     const uuids = entries.map((e) => e.uuid);
+    const activity = versionActivity;
     const referenced = await findRefsAnywhere(uuids);
+    // A version in another note's History can show a blob no live note
+    // names: a delete queues it without asking (gcOnNotesDelete), and the
+    // body-change GC keeps such a blob for exactly this reason. The same
+    // read as the orphan reconcile's gate 4; an account without History
+    // answers one count. A History that cannot be read removes nothing.
+    let historyKnown = true;
+    if (uuids.some((id) => !referenced.has(id))) {
+      const versionRefs = await collectVersionBlobRefs(history.supabase, history.pubkey, history.encryptionKey);
+      if (versionRefs) {
+        for (const id of uuids) if (versionRefs.has(id)) referenced.add(id);
+      } else {
+        historyKnown = false;
+      }
+    }
 
     // Still-referenced entries: the deletion is cancelled below, once the
     // server has dropped their pending rows.
     const cancelled = entries.filter((e) => referenced.has(e.uuid));
 
     // Not referenced: actually remove the Storage objects, grouped by kind.
-    // One a version on its way names stays queued for a later pass.
-    const toRemove = entries.filter((e) => !referenced.has(e.uuid) && !heldForVersion(e.uuid));
+    // One a version on its way names stays queued for a later pass, and so
+    // does everything when a version was saved while the History was read.
+    const mayRemove = historyKnown && versionActivity === activity;
+    const toRemove = mayRemove
+      ? entries.filter((e) => !referenced.has(e.uuid) && !heldForVersion(e.uuid))
+      : [];
     const imgUuids = toRemove.filter((e) => e.kind === 'image').map((e) => e.uuid);
     const attUuids = toRemove.filter((e) => e.kind === 'attachment').map((e) => e.uuid);
 
@@ -836,11 +862,9 @@ async function collectVersionBlobRefs(
     for (const row of rows) {
       let body: string;
       try {
-        body = decryptNote(
-          base64ToBytes(row.ciphertext),
-          base64ToBytes(row.nonce),
-          encryptionKey,
-        ).body ?? '';
+        const ct = base64ToBytes(row.ciphertext);
+        const nonce = base64ToBytes(row.nonce);
+        body = openWithRing('sync', encryptionKey, (key) => decryptNote(ct, nonce, key)).body ?? '';
       } catch {
         // A snapshot we cannot read is a reference we cannot rule out.
         return null;

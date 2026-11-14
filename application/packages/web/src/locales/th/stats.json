@@ -241,6 +241,8 @@
       "unknown": "ตัวติดตามที่ไม่รู้จัก {{id}}",
       "sleepHours": "ชั่วโมงการนอน",
       "sleepQuality": "คุณภาพการนอน",
+      "bpSystolic": "ความดันโลหิต ตัวบน",
+      "bpDiastolic": "ความดันโลหิต ตัวล่าง",
       "avgDays_other": "เฉลี่ย, {{count}} วัน",
       "sumDays_other": "รวม, {{count}} วัน",
       "daysLogged_other": "บันทึก {{count}} วัน",

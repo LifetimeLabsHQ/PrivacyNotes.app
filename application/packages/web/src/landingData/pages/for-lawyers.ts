@@ -39,7 +39,7 @@ export default {
       },
       {
         q: '"If an account at the firm gets phished, what walks out the door?"',
-        a: 'With self-custody, nothing readable: notes only decrypt with the 12-word phrase, which never touches a server, so a stolen password is not a stolen key. Turn on two-factor sign-in either way.',
+        a: 'With self-custody, nothing readable: notes only decrypt with your recovery phrase, which never touches a server, so a stolen password is not a stolen key. Turn on two-factor sign-in either way.',
       },
       {
         q: '"I draft on the train, in chambers, in a courthouse basement with no signal."',
@@ -50,7 +50,7 @@ export default {
   mechanism: {
     kicker: 'The mechanism, not a promise',
     h2: 'Zero knowledge is architecture, not policy',
-    lead: 'A privacy policy is a promise that can change with an acquisition or a court order. Key custody cannot. With self-custody, your key is derived from your 12-word phrase, on your device, and never leaves it.',
+    lead: 'A privacy policy is a promise that can change with an acquisition or a court order. Key custody cannot. With self-custody, your key is derived from your recovery phrase, on your device, and never leaves it.',
     plain: '"Client call: settlement floor is 40k, do not open below 60."',
     cap: 'With self-custody, lose the phrase and even you cannot recover the notes. That is the proof, not a flaw: a provider who could reset your access could also open your files.',
   },

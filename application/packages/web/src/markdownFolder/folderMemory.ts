@@ -26,7 +26,7 @@
  * Spec: docs/internal/specs/markdown-folder.md (section 5)
  */
 
-import { isDemoMode } from '../demo';
+import { createKeyStore } from '../keyStore';
 
 const DB_NAME = 'privacynotes-markdown';
 // `?demo=1` runs on the same origin as a real install, so the demo keeps its
@@ -40,35 +40,9 @@ export type StoredFolder =
   | { kind: 'path'; path: string }
   | { kind: 'handle'; handle: FileSystemDirectoryHandle };
 
-function open(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(isDemoMode() ? DEMO_DB : DB_NAME, 1);
-    req.onupgradeneeded = () => {
-      if (!req.result.objectStoreNames.contains(STORE)) req.result.createObjectStore(STORE);
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function withStore<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T>): Promise<T | null> {
-  try {
-    const db = await open();
-    return await new Promise<T | null>((resolve) => {
-      const req = fn(db.transaction(STORE, mode).objectStore(STORE));
-      // `close()` waits for the pending transaction to commit, so calling it
-      // here is safe and keeps each call from leaving a live connection behind
-      // for the rest of the session.
-      const settle = (value: T | null) => { db.close(); resolve(value); };
-      req.onsuccess = () => settle(req.result ?? null);
-      req.onerror = () => settle(null);
-    });
-  } catch {
-    // Private-mode browsers and blocked storage both land here. Forgetting the
-    // folder is a downgrade, never a failure - the picker still works.
-    return null;
-  }
-}
+// A failed read or write forgets the folder: a downgrade, never a failure,
+// the picker still works.
+const withStore = createKeyStore(DB_NAME, DEMO_DB, STORE);
 
 export async function rememberFolder(folder: StoredFolder): Promise<void> {
   await withStore('readwrite', (s) => s.put(folder, KEY) as IDBRequest<unknown>);

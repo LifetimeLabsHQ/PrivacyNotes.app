@@ -363,5 +363,47 @@
     "cardCount_many": "{{count}} tarjetas",
     "columnCount_one": "{{count}} columna",
     "columnCount_many": "{{count}} columnas"
+  },
+  "doodle": {
+    "title": "Garabato",
+    "clear": "Borrar",
+    "paper": "Papel",
+    "paperNone": "Sin color: se ve la nota de fondo.",
+    "settings": "Ajustes del lápiz",
+    "stroke": "Trazo",
+    "thinning": "Adelgazamiento",
+    "streamline": "Estabilización",
+    "smoothing": "Suavizado",
+    "easingLabel": "Aceleración",
+    "start": "Inicio",
+    "end": "Final",
+    "taperStart": "Afilado inicial",
+    "capStart": "Remate inicial",
+    "easingStart": "Aceleración inicial",
+    "taperEnd": "Afilado final",
+    "capEnd": "Remate final",
+    "easingEnd": "Aceleración final",
+    "fill": "Relleno",
+    "outline": "Contorno",
+    "easing": {
+      "linear": "Lineal",
+      "in": "Entrada suave, {{curve}}",
+      "out": "Salida suave, {{curve}}",
+      "inOut": "Entrada y salida suaves, {{curve}}"
+    },
+    "curve": {
+      "quad": "cuadrática",
+      "cubic": "cúbica",
+      "quart": "cuártica",
+      "quint": "quíntica",
+      "sine": "sinusoidal",
+      "expo": "exponencial"
+    },
+    "colors": {
+      "black": "Negro",
+      "white": "Blanco",
+      "cyan": "Cian",
+      "lightGray": "Gris claro"
+    }
   }
 }

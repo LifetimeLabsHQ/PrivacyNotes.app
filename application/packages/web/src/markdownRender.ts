@@ -13,7 +13,8 @@
  */
 
 import { joinParagraphLinesHtml } from './paragraphLines';
-import { parseFenceInfo } from './codeFenceInfo';
+import { parseFenceInfo, parseFenceSize } from './codeFenceInfo';
+import { DOODLE_FENCE, looksLikeDoodle } from './doodle/doodleFence';
 import { MAP_FENCE, formatCoordinates, osmUrl, parseMapFence } from './noteLocation';
 import type { LineSpacing } from './theme';
 import { faviconUrl } from './favicon';
@@ -26,10 +27,12 @@ import { cellFillColor } from './editorColors';
 import { noteLinkDisplayText } from './noteLinks';
 import { orderFootnotes, replaceMarkers, scanFootnotes } from './footnoteScan';
 import { isSameOriginPath } from './sameOriginPath';
+import { allowedImageSource } from './markdownFolder/assetSource';
 import { calloutColorOf, canonicalCalloutType, type CalloutType } from './calloutKeywords';
 import { evaluateTable, formatFormulaValue, isFormulaText } from './tableFormula';
 import { INLINE_ICON_RE, inlineIconId } from './editorIconSyntax';
 import { firstLetter, letterDirection, listNumerals, writesPersian } from './textDirection';
+import { escapeHtml } from './escapeHtml';
 
 // ─── Callout types ──────────────────────────────────────────────────────
 //
@@ -57,14 +60,6 @@ const KANBAN_BODY_STYLE = 'padding:0.15em 0.85em 0.7em;display:grid;grid-templat
 // the right caret mirrors in a right-to-left document.
 const CALLOUT_CARET_DOWN = 'M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z';
 const CALLOUT_CARET_RIGHT = 'M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128,87.51,56.49a12,12,0,1,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z';
-
-export function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
 
 /**
  * Allowlist a CSS color for the inline color spans emitted by the
@@ -147,11 +142,13 @@ function sanitizeLinkHref(href: string): string {
 /**
  * Same idea for `<img src>`. Allow http(s), relative paths, our own
  * `pn:img/` scheme, and `data:image/…` (used by the inliner). Reject
- * everything else.
+ * everything else, and a desktop asset address the Markdown folder resolver
+ * did not make (`markdownFolder/assetSource.ts`, beta issue 86).
  */
 function sanitizeImageSrc(src: string): string | null {
   const trimmed = src.trim();
   if (trimmed === '') return null;
+  if (!allowedImageSource(trimmed)) return null;
   if (/^data:image\//i.test(trimmed)) return trimmed;
   if (/^pn:img\//i.test(trimmed)) return trimmed;
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
@@ -280,7 +277,17 @@ async function prepareInlineIcons(md: string): Promise<void> {
 
 /** Everything the three export paths and the burn viewer await before renderMarkdown. */
 export async function prepareRender(md: string): Promise<void> {
-  await Promise.all([prepareMath(md), prepareCodeHighlight(md), prepareInlineIcons(md)]);
+  await Promise.all([prepareMath(md), prepareCodeHighlight(md), prepareInlineIcons(md), prepareDoodles(md)]);
+}
+
+/** A doodle block's drawing, loaded by prepareRender only for a body that
+ *  holds one: the stroke engine stays off the boot path. Without it a block
+ *  prints as its name. */
+let doodleHtml: ((text: string, height: number | null) => string | null) | null = null;
+
+async function prepareDoodles(md: string): Promise<void> {
+  if (doodleHtml || !md.includes('```' + DOODLE_FENCE)) return;
+  doodleHtml = (await import('./doodle/doodleExport')).doodleHtml;
 }
 
 function renderFenceCode(code: string, lang: string): string | null {
@@ -442,6 +449,10 @@ function renderInline(raw: string): string {
       const alt = attrText(rawAlt);
       const clean = sanitizeImageSrc(attrText(src));
       if (clean === null) return null; // leave raw - safer than emitting a broken <img>
+      // The escapes come back after this pass, so `\\\\asset.localhost\\x.png`
+      // reaches the page as `\\asset.localhost\x.png`, which the web view reads
+      // as `//asset.localhost/x.png`. Ask again of what the page will get.
+      if (!allowedImageSource(clean.replace(/\x01E(\d+)\x01/g, (_m: string, i: string) => bsEscapes[Number(i)] ?? ''))) return null;
       // Parse width from {width=N} attribute block if present. The editor
       // stores image width as a percentage of the container (any whole
       // percent from 10 to 100, imageWidth.ts) and serializes it as a bare
@@ -769,7 +780,26 @@ const KEPT_CLASSES = new Set(['pn-spoiler', 'pn-spoiler-text']);
 // none of them.
 const TOP_LAYER_ATTRS = new Set(['popover', 'popovertarget', 'popovertargetaction', 'command', 'commandfor', 'interestfor']);
 
+// How often a block is cleaned before it is given up on. An editor block is
+// stable after the first pass, so the second one only confirms it.
+const CLEAN_PASSES = 8;
+
+/**
+ * The page parses the returned string again, so a block is cleaned until a
+ * pass changes nothing: the tree that is drawn is then the tree that was
+ * cleaned. A block that does not settle is shown as text.
+ */
 function sanitizeEditorHtml(html: string): string {
+  let current = html;
+  for (let pass = 0; pass < CLEAN_PASSES; pass++) {
+    const next = cleanEditorHtml(current);
+    if (next === current) return next;
+    current = next;
+  }
+  return escapeHtml(html);
+}
+
+function cleanEditorHtml(html: string): string {
   const doc = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html');
   // `noscript` is here for a reason the others are not: this parser runs with
   // scripting disabled, so it reads the element's content as markup and an
@@ -781,15 +811,21 @@ function sanitizeEditorHtml(html: string): string {
   // enters, and a file opened from disk activates a declarative shadow root,
   // so a form or a handler inside one came back whole in an HTML export.
   // `dialog` opens in the top layer like a popover.
+  //
+  // The second line holds what the editor never writes in a block: foreign
+  // content (`svg`, `math`), the elements whose content is read as text
+  // (`xmp`, `noembed`, `noframes`, `plaintext`, `textarea`, `title`), and an
+  // image map, whose `area` is a link that is not an `a`.
   doc.body
     .querySelectorAll(
-      'script,style,iframe,object,embed,link,meta,base,form,input[type="image"],noscript,template,dialog',
+      'script,style,iframe,object,embed,link,meta,base,form,input[type="image"],noscript,template,dialog,' +
+        'svg,math,xmp,noembed,noframes,plaintext,textarea,title,map,area',
     )
     .forEach((el) => el.remove());
   doc.body.querySelectorAll('*').forEach((el) => {
     for (const attr of [...el.attributes]) {
       const name = attr.name.toLowerCase();
-      if (name.startsWith('on') || TOP_LAYER_ATTRS.has(name)) {
+      if (name.startsWith('on') || name === 'usemap' || TOP_LAYER_ATTRS.has(name)) {
         el.removeAttribute(attr.name);
       } else if (
         (name === 'href' || name === 'src' || name === 'xlink:href') &&
@@ -830,7 +866,7 @@ function sanitizeEditorHtml(html: string): string {
     // `rel="opener"` hands the page a link opens a handle on this tab, which
     // it can send to a copy of the sign-in. Every link gets the rel the
     // renderer writes on its own.
-    if (el.tagName === 'A' || el.tagName === 'AREA') el.setAttribute('rel', 'noopener noreferrer');
+    if (el.tagName === 'A') el.setAttribute('rel', 'noopener noreferrer');
   });
   return doc.body.innerHTML;
 }
@@ -1009,6 +1045,11 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
   // neither). So a list that contains an aligned item states its own.
   let gutterPinned = false;
   const items: string[] = [];
+  // A blank line between two items of this list. The editor writes every
+  // list that way, so the HTML stays tight; `data-loose` only lets a view
+  // whose text a person typed (a vault item's Notes, .pn-detail-notes) keep
+  // the space they put between items. Spec: docs/internal/issues/0634.md
+  let loose = false;
   let i = startI;
 
   while (i < lines.length) {
@@ -1022,6 +1063,7 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
       while (ahead < lines.length && (lines[ahead] ?? '').trim() === '') ahead++;
       const next = ahead < lines.length ? detectListItem(lines[ahead]!) : null;
       if (!next || next.indent !== baseIndent || next.ordered !== isOrdered || next.isTask !== firstIsTask) break;
+      loose = true;
       i = ahead;
       continue;
     }
@@ -1124,7 +1166,7 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
   // item, so ordinary exported lists keep the indent they have always had.
   const body = items.join('');
   const letter = firstLetterOfHtml(body);
-  const dir = dirAttr(letter);
+  const dir = dirAttr(letter) + (loose ? ' data-loose' : '');
   const styles = gutterPinned ? [`padding-inline-start:${LIST_GUTTER}`, 'margin-inline-start:0'] : [];
   if (isOrdered) {
     if (letter && letterDirection(letter) === 'rtl' && listNumerals(letter, () => textOfHtml(body), () => notePersian === true)) {
@@ -1254,6 +1296,15 @@ function renderBlocks(text: string): string {
       const info = parseFenceInfo(lang);
       // A map from Insert > Location prints as a link to the place: a page,
       // an export and a burn note load no map (note-location.md, section 4b).
+      // A doodle block prints as its drawing (doodleExport.ts), never as its
+      // stroke data; a fence that is no doodle prints as code.
+      const doodle = info.language === DOODLE_FENCE && looksLikeDoodle(code)
+        ? (doodleHtml ? doodleHtml(code, parseFenceSize(lang).height) : '<p><em>Doodle</em></p>')
+        : null;
+      if (doodle) {
+        fences.push(doodle);
+        return `\x02F${idx}\x02`;
+      }
       const place = info.language === MAP_FENCE ? parseMapFence(code) : undefined;
       if (place) {
         const at = formatCoordinates(place);

@@ -12,7 +12,7 @@
   },
   "moveScreen": {
     "title": "De app is verhuisd naar use.privacynotes.app",
-    "bodySignIn": "Meld je daar aan met je herstelzin van 12 woorden of via \"{{scanQr}}\". Dit apparaat synchroniseert eerst, dus al je notities staan daar klaar, en hier wordt niets verwijderd.",
+    "bodySignIn": "Meld je daar aan met je herstelzin of via \"{{scanQr}}\". Dit apparaat synchroniseert eerst, dus al je notities staan daar klaar, en hier wordt niets verwijderd.",
     "openNotes": "Open je notities hier één keer om dit op te lossen",
     "showPhrase": "Mijn herstelzin tonen",
     "website": "Bekijk in plaats daarvan de website"
@@ -46,7 +46,7 @@
     "signInAgain": "Opnieuw aanmelden"
   },
   "signOutConfirm": {
-    "title": "Heb je je 12-woordenzin opgeslagen?",
+    "title": "Heb je je herstelzin opgeslagen?",
     "body": "Je herstelzin is de <only>enige</only> manier om weer binnen te komen. Geen e-mailherstel, geen helpdesk. Heb je hem nog niet opgeschreven, tik dan op <action>Nee, toon herstelzin</action> en we openen hem meteen voor je.",
     "unsyncedWarn_one": "1 notitie op dit apparaat is nog niet gesynchroniseerd. Die gaat definitief verloren als uploaden tijdens het afmelden mislukt.",
     "unsyncedWarn_other": "{{count}} notities op dit apparaat zijn nog niet gesynchroniseerd. Die gaan definitief verloren als uploaden tijdens het afmelden mislukt.",
@@ -139,7 +139,8 @@
     "offline": "Je bent offline. Burn-links hebben contact met de server nodig. Probeer het opnieuw zodra je weer online bent.",
     "demo": "Burn-links worden op een server opgeslagen, en de demo neemt met geen enkele server contact op. Meld je aan om echte burn-links te maken.",
     "tooLarge": "De notitie is te groot om via een burn-link te delen ({{size}}KB). Maximaal is {{max}}KB.",
-    "storeFailed": "Kon de burn-notitie niet op de server opslaan."
+    "storeFailed": "Kon de burn-notitie niet op de server opslaan.",
+    "rateLimited": "Er zijn te veel burn-links gemaakt vanaf deze internetverbinding. Probeer het later opnieuw."
   },
   "dms": {
     "returnTitle": "Je kopie op de server is verwijderd",
@@ -152,7 +153,9 @@
     "title": "Notities verwijderd op een ander apparaat",
     "body_one": "{{count}} notitie die dit apparaat nog heeft, is verwijderd door jou of door een ander apparaat van je. Deed jij dat, verwijder hem dan hier ook. Was jij het niet, dan heeft iemand misschien toegang tot je account: bewaar hem om hem terug te zetten op al je apparaten.",
     "body_other": "{{count}} notities die dit apparaat nog heeft, zijn verwijderd door jou of door een ander apparaat van je. Deed jij dat, verwijder ze dan hier ook. Was jij het niet, dan heeft iemand misschien toegang tot je account: bewaar ze om ze terug te zetten op al je apparaten.",
-    "keep": "Mijn notities bewaren",
-    "delete": "Hier ook verwijderen"
+    "refusedTitle": "Je notities zijn terug",
+    "refusedBody_one": "{{count}} notitie is van de server verwijderd, maar door geen van je apparaten. Dit apparaat heeft het verwijderen niet geaccepteerd en heeft de notitie teruggezet op al je apparaten. Controleer je apparaten en verwijder apparaten die je niet kent.",
+    "refusedBody_other": "{{count}} notities zijn van de server verwijderd, maar door geen van je apparaten. Dit apparaat heeft het verwijderen niet geaccepteerd en heeft ze teruggezet op al je apparaten. Controleer je apparaten en verwijder apparaten die je niet kent.",
+    "showDevices": "Apparaten tonen"
   }
 }

@@ -7,13 +7,13 @@ import { isUntouchedKanbanBody } from './kanbanLayout';
 import type { NoteType } from '@notes/shared';
 import type { LocalNote } from './db';
 import type { Space } from './spaces';
-import { indexedBodyText, isPhraseQuery } from './search';
+import { indexedBodyText, indexedPlaceText, isPhraseQuery } from './search';
 import { foldForMatch, textMatcher } from './textMatch';
 import { MARKDOWN_NOTE_TYPES, isKnownNoteType } from './noteTypes';
 import { SCHEDULE_KEYS, dayNumber, occurrencesOf, scheduleOf, shiftDay, spanLength, withSchedule, type Schedule } from './schedule';
 export { MARKDOWN_NOTE_TYPES, isKnownNoteType } from './noteTypes';
 import type { ListPrefs } from './listPrefs';
-import { formatBytes } from './formatBytes';
+import { formatBytes, parseSizeToBytes } from './formatBytes';
 import i18n from './i18n';
 import { formatDay, formatInstant, formatPattern, toLocalIso, writtenDateLocale } from './intlFormat';
 import { parseLinkBody, linkDomain } from './linkBody';
@@ -26,19 +26,9 @@ import { bindingCaps, bindingText, visibleBindings } from './commandKeys';
 import { DESKTOP_APP, KEY_OS } from './shortcutMatch';
 import { hasLoggedTrackers } from './trackerTypes';
 import { attachmentLinks } from './fileNames';
-import { ANY_PICTURE, FILE_LINK, markdownLinks } from './linkScan';
+import { ANY_PICTURE, FILE_LINK, MEDIA_PICTURE, markdownLinks } from './linkScan';
 import { INLINE_ICON_RE } from './editorIconSyntax';
-
-/** Parse a pre-formatted size string like "42.2 MB" back to bytes. */
-function parseSizeToBytes(s: string): number {
-  const n = parseFloat(s) || 0;
-  if (!n) return 0;
-  const lower = s.toLowerCase();
-  if (lower.includes('gb')) return n * 1000 * 1000 * 1000;
-  if (lower.includes('mb')) return n * 1000 * 1000;
-  if (lower.includes('kb')) return n * 1000;
-  return n;
-}
+import { withoutDoodleData } from './doodle/doodleFence';
 
 // ── Server-cost estimation ────────────────────────────────────────
 //
@@ -254,6 +244,13 @@ export function fileCount(body: string): number {
   return markdownLinks(body, FILE_LINK).length;
 }
 
+/** Count the stored pictures in a note body (`pn:img/` or `pn:file/`), the
+ *  inline ones `fileCount` leaves out. A picture from a web address is not
+ *  stored with the note and does not count. Spec: issue #759. */
+export function pictureCount(body: string): number {
+  return markdownLinks(body, MEDIA_PICTURE).length;
+}
+
 // Extract a human-friendly label from the first image in markdown body.
 // Returns e.g. "IMG7461.jpeg|3.4 MB|image/jpeg" or just the alt text.
 // Used as a last-resort excerpt when the body is image-only.
@@ -312,8 +309,11 @@ function stripInlineMarkdown(line: string): string {
     // picture, not words.
     .replace(INLINE_ICON_RE, '')
     // [text](url) -> text; an empty one ("[](url)", left when its text was a
-    // picture, as a clipped page writes a linked image) -> "".
-    .replace(/\[([^\]]*)\]\([^)]*\)|(\[[^\]]*)/g, '$1$2')
+    // picture, as a clipped page writes a linked image) -> "". The hover text
+    // of [text](url "hover text") goes whole: a `"` inside it is escaped on
+    // save, so the next `"` closes it, and a `)` before that is not the end.
+    // A `"` that opens no hover text reads to the first `)`, as before.
+    .replace(/\[([^\]]*)\]\([^)"]*(?:"[^"]*"\s*|"[^)]*)?\)|(\[[^\]]*)/g, '$1$2')
     // "](url)" with no "[" on this line: a link whose text began on the line
     // before, as a clipped heading writes one. A typed "]" is escaped on save.
     .replace(/\]\((?:https?:|mailto:|#|\/)[^)\s]*\)/g, '')
@@ -418,7 +418,7 @@ export function stripToPlainText(line: string): string {
 export function noteSaysPhrase(n: LocalNote, query: string): boolean {
   if (!isPhraseQuery(query)) return false;
   const says = textMatcher(query);
-  if (says(n.title)) return true;
+  if (says(n.title) || says(indexedPlaceText(n))) return true;
   for (const line of indexedBodyText(n).split(/\r?\n/)) {
     if (says(stripToPlainText(line)) || says(line)) return true;
   }
@@ -435,7 +435,7 @@ const FENCE_LINE = /^(?:`{3,}[^`]*|~{3,}.*)$/;
 // that has a body string but no note to hand it to.
 export function firstBodyLine(body: string): string {
   if (!body) return '';
-  const lines = body.split(/\r?\n/);
+  const lines = withoutDoodleData(body).split(/\r?\n/);
   for (const line of lines) {
     const t = line.trim();
     if (!t || FENCE_LINE.test(t)) continue;
@@ -834,7 +834,7 @@ export function deriveExcerpt(n: LocalNote, long = false): string {
   // skipped here rather than said twice.
   let skipped = !!explicitTitle && explicitTitle !== 'Untitled';
   const lines: string[] = [];
-  for (const line of n.body.split(/\r?\n/)) {
+  for (const line of withoutDoodleData(n.body).split(/\r?\n/)) {
     const t = line.trim();
     // A table's dash row and its marker lines say nothing, and with column
     // widths the dash row can run to dozens of dashes.
@@ -1216,6 +1216,9 @@ export function calendarIndex(
     isGated: (n: LocalNote) => boolean;
     /** The title of a contact date other than the birthday, from the contact's title and the row's label. */
     dateTitle?: (name: string, label: string) => string;
+    /** The title of a birthday whose row has the year of birth, from the
+     *  contact's title and the age that day ("Anna turns 30", #750). */
+    birthdayTitle?: (name: string, age: number) => string;
     spaceOf?: (n: LocalNote) => Space;
     open?: Space;
     openOnly?: boolean;
@@ -1225,8 +1228,8 @@ export function calendarIndex(
   },
 ): DayIndex {
   type Placed = { n: LocalNote; s: Schedule; start: string };
-  // A contact date: the label is null for the birthday.
-  type Dated = { n: LocalNote; label: string | null };
+  // A contact date: the label is null for the birthday, `born` its year when known.
+  type Dated = { n: LocalNote; label: string | null; born?: number | null };
   const byDay = new Map<string, Placed[]>();
   const byDate = new Map<string, Dated[]>();
   const series: { n: LocalNote; s: Schedule; len: number }[] = [];
@@ -1237,11 +1240,11 @@ export function calendarIndex(
       if (opts.isGated(n)) continue;
       const c = parseContactBody(n.body);
       const b = contactBirthday(c);
-      const dates = [...(b ? [{ label: null, ...b }] : []), ...contactOtherDates(c)];
+      const dates = [...(b ? [{ label: null, born: b.year, ...b }] : []), ...contactOtherDates(c)];
       for (const d of dates) {
         const key = `${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`;
         const list = byDate.get(key) ?? [];
-        if (!list.some((x) => x.n === n)) byDate.set(key, [...list, { n, label: d.label }]);
+        if (!list.some((x) => x.n === n)) byDate.set(key, [...list, { n, label: d.label, born: 'born' in d ? d.born : null }]);
       }
       continue;
     }
@@ -1321,11 +1324,13 @@ export function calendarIndex(
         if (feed) entry.feed = feed;
         return entry;
       }),
-      ...contactDatesOn(day).map(({ n, label }): DayEntry & { at: string } => ({
+      ...contactDatesOn(day).map(({ n, label, born }): DayEntry & { at: string } => ({
         id: n.id,
         kind: 'contact',
         space: opts.spaceOf ? opts.spaceOf(n) : null,
-        title: label === null ? opts.titleOf(n) : dateTitle(opts.titleOf(n), label),
+        title: label !== null ? dateTitle(opts.titleOf(n), label)
+          : born && opts.birthdayTitle && Number(day.slice(0, 4)) > born ? opts.birthdayTitle(opts.titleOf(n), Number(day.slice(0, 4)) - born)
+          : opts.titleOf(n),
         at: n.createdAt,
         tags: n.tags,
         folderId: n.folderId ?? null,

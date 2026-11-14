@@ -22,6 +22,26 @@ import {
   type SupabaseClient,
 } from '@notes/shared';
 import { registerLocalDataKey, clearLocalDataKey } from './localKey';
+import {
+  bindSessionEpoch,
+  BindRefusedError,
+  clearIdentityBinding,
+  forgetResolveAnswers,
+  identityForSignIn,
+  ownIdentity,
+  phraseSignsFor,
+  PhraseReplacedError,
+  phraseWasReplaced,
+  readIdentityBinding,
+  registerIdentityClient,
+  resolveSigningKey,
+  writeIdentityBinding,
+  type SignInIdentity,
+} from './identity';
+import { holdPhraseReplacedReports, onPhraseReplaced, reportPhraseReplaced, type PhraseReplacedSource } from './phraseReplaced';
+import { currentKeyEpoch } from './keyRing';
+import { phraseChangeEnv } from './phraseChangeEnv';
+import type { ChangeActor, ChangeState, KeepList, PreparedChange } from './phraseChange';
 import { clearMassDeleteState } from './massDelete';
 import { clearLocalDatabase, countUnsyncedNotes, dropReferencesToBlobsOnlyHere } from './notesRepo';
 import { db } from './db';
@@ -49,6 +69,7 @@ import { seedOnboardingNotes } from './welcomeNote';
 import {
   trustAwareStorage,
   setTrustedDevice,
+  isTrustedDevice,
 } from './trustStorage';
 import {
   adoptCustodyServer,
@@ -108,12 +129,18 @@ import {
   markRegistered,
   clearRegistrationMarker,
   jwtPayloadPubkey,
+  jwtPayloadSessionId,
   sessionBelongsElsewhere,
   jwtPayloadAal,
   clearSupabaseAuthKeys,
   readOwnerMirror,
   writeOwnerMirror,
   readAccountFlagsMirror,
+  markReplacedAccount,
+  wasReplacedAccount,
+  clearReplacedAccount,
+  hasPendingPhraseChange,
+  removePendingPhraseChange,
 } from './authStorage';
 import { dropProThemes, resetAppearance } from './theme';
 import { logAuthEvent } from './authDiag';
@@ -122,6 +149,23 @@ import { useCustody } from './authCustody';
 import { useOAuthFlows } from './authOAuth';
 import { isRefusedPhrase } from './refusedPhrases';
 import { accountOAuthFetch, detectAutomaticOAuthSession, supabaseAuthStorageKey } from './accountOAuth';
+
+// Only an account that changed its phrase needs the key ring, so it loads
+// on demand and stays off the boot path.
+const takeCachedKeyRing = (...a: Parameters<typeof import('./keyRingStore').takeCachedKeyRing>) =>
+  import('./keyRingStore').then((m) => m.takeCachedKeyRing(...a));
+const takeKeyRing = (...a: Parameters<typeof import('./keyRingStore').takeKeyRing>) =>
+  import('./keyRingStore').then((m) => m.takeKeyRing(...a));
+// The phrase change's client side: loaded when a change is made or a change
+// this device did not finish is found, never by an ordinary boot.
+// Spec: docs/internal/plans/phrase-change.md (section 5, 6.6)
+const phraseChangeImport = () => import('./phraseChange');
+// With the boot functions it uses (phraseChangeEnv.ts says why they travel this way).
+async function phraseChangeModule(): Promise<Awaited<ReturnType<typeof phraseChangeImport>>> {
+  const m = await phraseChangeImport();
+  m.registerChangeEnv({ ...phraseChangeEnv, writeIdentityBinding });
+  return m;
+}
 
 const NATIVE_MOBILE = __PN_BUILD_PLATFORM__ === 'ios' || __PN_BUILD_PLATFORM__ === 'android';
 
@@ -152,10 +196,11 @@ async function cancelPhoneReminders(): Promise<void> {
  * level could keylog it instead. Untrusted devices clear it on tab
  * close.
  *
- * When biometric unlock is enabled, the phrase is instead wrapped with
- * a random AES-GCM key in localStorage and the device-key envelope is
- * removed. The biometric gesture (WebAuthn presence check) gates access
- * to the wrapped copy. See biometric.ts for details.
+ * When biometric unlock is enabled, the phrase is instead wrapped and the
+ * device-key envelope is removed. Where the device can bind, the key is
+ * never stored: a WebAuthn PRF output gives it, or the device's secure
+ * hardware releases it after the biometric check. Elsewhere it is a random
+ * AES-GCM key in localStorage behind a presence check only. See biometric.ts.
  */
 
 // Same routing rule for the Supabase auth session: trusted devices keep
@@ -194,6 +239,10 @@ const supabase =
     },
   );
 if (import.meta.env.DEV) hmrGlobal.__pnSupabase = supabase;
+// The account-switch question asks the server which account a typed phrase
+// signs for, through this client, and every such question goes out with the
+// anon key rather than the session. Spec: docs/internal/plans/phrase-change.md (4.6)
+registerIdentityClient(supabase, import.meta.env.VITE_SUPABASE_ANON_KEY ?? null);
 
 // Breadcrumb every lifecycle event supabase-js emits - including the
 // SIGNED_OUT that fires when a definitive refresh failure removes the
@@ -257,7 +306,10 @@ export type AuthState =
       // - this state is entirely in memory.
       method: AuthMethod;
       phrase: string;
+      /** The account id. After a phrase change it is not the signing key. */
       pubkey: string;
+      /** The public key the phrase signs with (identity.ts). */
+      signingPubkey: string;
       encryptionKey: Uint8Array;
       signingPrivateKey: Uint8Array;
       /** Per-user device-fingerprint pepper. Spec: docs/internal/specs/device-fingerprint-hash.md (derived client-side from the seed, never sent to the server) */
@@ -267,10 +319,44 @@ export type AuthState =
       devices: DeviceRow[];
     }
   | {
+      /**
+       * The account changed its recovery phrase on another device, and this
+       * device holds an earlier one (phrase change, section 7): a write the
+       * key-epoch gate refused, the heartbeat, a settings row of a later key
+       * epoch, or link-pubkey `resolve` at sign-in said so. Sync is stopped
+       * and nothing is wiped. App.tsx renders PhraseReplacedScreen: enter the
+       * new phrase, sign in with a provider (custodial accounts), export the
+       * notes on this device, or sign out. Unsynced edits stay and push once
+       * the new phrase is in.
+       * Spec: docs/internal/plans/phrase-change.md (2.4, section 7)
+       */
+      status: 'phrase_replaced';
+      method: AuthMethod;
+      /** The replaced phrase, held as the open vault held it: a sign-out
+       *  removes its stored copy. */
+      phrase: string;
+      /** The account id whose data this device holds under the replaced
+       *  phrase; null when the data here is not that phrase's (or there is none). */
+      pubkey: string | null;
+      /** The replaced phrase's sync key, which seals the export of this
+       *  device's notes; null with `pubkey`. */
+      encryptionKey: Uint8Array | null;
+      /** The account keeps its phrase with us, so a provider sign-in brings the new one. */
+      isCustodial: boolean;
+    }
+  | {
       status: 'authenticated';
       method: AuthMethod;
       phrase: string;
-      pubkey: string; // hex
+      /**
+       * The account id (hex): every row, claim, device id and cache is keyed
+       * on it. It is the public key of the account's FIRST phrase, so after a
+       * phrase change it is not the key the phrase signs with.
+       * Spec: docs/internal/plans/phrase-change.md (4.6)
+       */
+      pubkey: string;
+      /** The public key the phrase signs with; equal to `pubkey` until a phrase change. */
+      signingPubkey: string;
       encryptionKey: Uint8Array;
       signingPrivateKey: Uint8Array;
       /** Per-user device-fingerprint pepper. Spec: docs/internal/specs/device-fingerprint-hash.md (derived client-side from the seed, never sent to the server) */
@@ -286,6 +372,13 @@ export type AuthState =
     };
 
 export type OAuthProvider = 'google' | 'apple' | 'github';
+
+/** What a phrase change came to on this device (AuthContextValue.changePhrase). */
+export type PhraseChangeOutcome =
+  | { ok: true; epoch: number }
+  | { ok: false; reason: 'refused'; code: string }
+  | { ok: false; reason: 'unknown' }
+  | { ok: false; reason: 'sign_in'; error: string };
 
 type AuthContextValue = {
   auth: AuthState;
@@ -310,7 +403,14 @@ type AuthContextValue = {
      * has the widget.
      * Spec: docs/internal/design-decisions.md (Turnstile is web-only, enforced at link-pubkey)
      */
-    captchaToken?: string
+    captchaToken?: string,
+    /**
+     * Whether the person signed in on this device by hand (the phrase typed
+     * or scanned). Defaults to true; the lock screen's unlock and the
+     * "carry on" of a stored phrase pass false, so a device the owner
+     * removed is signed out instead of coming back (register-device).
+     */
+    byHand?: boolean,
   ) => Promise<
     | { ok: true }
     /**
@@ -318,8 +418,56 @@ type AuthContextValue = {
      * not that anything is wrong with the phrase. The caller renders
      * the Turnstile widget and retries with the token it produces.
      */
-    | { ok: false; error: string; captchaRequired?: boolean }
+    | { ok: false; error: string; captchaRequired?: boolean; phraseReplaced?: boolean }
   >;
+  /**
+   * From the `phrase_replaced` state: sign in with the account's new phrase.
+   * The phrase must be the current one of the account this device holds;
+   * a phrase of another account answers `switch` until the caller asked
+   * today's account-switch question and passes `switchConfirmed`. Older
+   * tabs of this browser end before the sign-in (section 6.6). On success
+   * the state goes to `authenticated` without the account-switch wipe.
+   * Spec: docs/internal/plans/phrase-change.md (section 7)
+   */
+  adoptNewPhrase: (
+    phrase: string,
+    trust: boolean,
+    opts?: { switchConfirmed?: boolean },
+  ) => Promise<{ ok: true } | { ok: false; reason: 'invalid' | 'replaced' | 'switch' | 'failed'; error?: string }>;
+  /**
+   * The open vault's session and keys, for the phrase change's client calls
+   * (phraseChange.ts: readChangeState, prepareChange). Null when no vault is
+   * open, in the demo, or when the session is not this vault's.
+   * Spec: docs/internal/plans/phrase-change.md (section 5)
+   */
+  phraseChangeActor: () => Promise<ChangeActor | null>;
+  /** The phrase change module (phraseChange.ts), loaded on first use with
+   *  the boot functions it needs registered, for the wizard's own calls. */
+  loadPhraseChange: () => ReturnType<typeof phraseChangeModule>;
+  /**
+   * Send a prepared phrase change and move this device to the new phrase
+   * (section 6.6): sync stops, the change goes out, and once the server took
+   * it the replaced phrase stops being the live sign-in, the new doors land,
+   * older tabs end, and the new phrase signs in. `unknown`: the answer was
+   * lost and the change may have landed; `continuePhraseChange` asks again.
+   * `sign_in`: the change landed and the sign-in with the new phrase failed;
+   * `continuePhraseChange` tries it again. Until either ends, sync stays
+   * stopped in this tab. A refusal changes nothing and sync resumes.
+   */
+  changePhrase: (prepared: PreparedChange, keep: KeepList, state: ChangeState) => Promise<PhraseChangeOutcome>;
+  continuePhraseChange: (prepared: PreparedChange) => Promise<PhraseChangeOutcome>;
+  /** The wizard is gone (closed, or unmounted by the idle re-lock) while its
+   *  change is `unknown` or at `sign_in`: the tab stops waiting for it. */
+  leavePhraseChange: () => void;
+  /** The lock screen's half of an unfinished change (LockScreen.tsx
+   *  onPendingPhraseChange): the new phrase from the record's PIN wrap, once
+   *  the server confirms the change landed; null otherwise. */
+  finishPhraseChangeWithPin: (pin: string) => Promise<string | null>;
+  /** From the `phrase_replaced` state of a custodial account: end older tabs,
+   *  then the provider sign-in, which brings the new phrase from custody. */
+  adoptWithProvider: (
+    provider: OAuthProvider,
+  ) => Promise<{ ok: true; awaitPastedCode?: boolean } | { ok: false; error: string }>;
   /**
    * Authenticate the app-lock screen from this device's own data.
    *
@@ -387,6 +535,8 @@ type AuthContextValue = {
    */
   completeCustodyChoice: (
     choice: 'custodial' | 'self-custody',
+    /** The phrase length; only the self-custody path offers 24. */
+    words?: 12 | 24,
   ) => Promise<{ ok: true; phrase: string } | { ok: false; error: string }>;
   /**
    * From an `oauth_hydrate_failed` state: re-run hydration against the
@@ -474,6 +624,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // older than this authentication must not cancel it, and another tab
   // taking the storage for a different account must.
   const authenticatingRef = useRef<{ stamp: SignInStamp; pubkey: string | null } | null>(null);
+  // A removed device met at an automatic start (register-device answered
+  // `device_revoked`): the account it went live as, once, so the sign-out
+  // below runs from that live state, as a false heartbeat's does.
+  const revokedAtRegister = useRef<string | null>(null);
+  // Whether the handshake that parked at the device limit was a sign-in made
+  // by hand; the retry from the limit screen carries it to register-device.
+  const parkedByHand = useRef(true);
+  useEffect(() => {
+    if (auth.status !== 'authenticated' || revokedAtRegister.current !== auth.pubkey) return;
+    revokedAtRegister.current = null;
+    void forceSignOut('device_revoked');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth]);
   // The prior account's wipe an account switch put off at the device limit,
   // with the owner marker the switch found. The retry from the limit runs it
   // once a freed slot or a purchase registers this device.
@@ -584,7 +747,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRemintBlocked(0);
         return;
       }
-      void authenticateWithPhrase(phrase, method, undefined, undefined, false, undefined, startedAt)
+      void authenticateWithPhrase(phrase, method, undefined, undefined, false, undefined, startedAt, false)
         .then((ran) => {
           // `false` means the concurrency mutex swallowed the call, so
           // nothing was proven - come back round rather than treating
@@ -599,6 +762,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .catch((err) => {
           if (err instanceof RateLimitedError) {
             scheduleRemintRetry(phrase, method, startedAt);
+            return;
+          }
+          if (err instanceof PhraseReplacedError && err.status === 'retired') {
+            phraseReplacedBehindVault(phrase, 'sign-in');
             return;
           }
           console.warn('[auth] re-mint retry failed:', err);
@@ -625,6 +792,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
      *  work of its own ahead of this call passes it, so a sign-out during
      *  that work still stops this authentication going live. */
     startedAt?: SignInStamp,
+    /** A sign-in the person made on this device by hand: the phrase typed or
+     *  scanned, a provider sign-in they started. Only then does a device the
+     *  owner removed come back (register-device `reactivate`). */
+    byHand?: boolean,
   ) {
     // Returns false when the StrictMode/concurrency mutex swallowed the
     // call, so a caller that goes on to persist something derived from
@@ -633,7 +804,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (authInFlight.current) return false;
     authInFlight.current = true;
     try {
-      await _authenticateWithPhrase(phrase, method, custodial, oauthSession, freshVault, captchaToken, startedAt);
+      await _authenticateWithPhrase(phrase, method, custodial, oauthSession, freshVault, captchaToken, startedAt, byHand);
       // Any successful full authentication proves the session is live
       // again - clear the boot-revalidation flag so the modal never
       // outlives the problem. #118
@@ -668,6 +839,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     captchaToken?: string,
     /** See the wrapper above. */
     startedAt?: SignInStamp,
+    /** See the wrapper above. */
+    byHand?: boolean,
   ) {
     // A previous sign-out (or stale-tab bailout) may have suspended
     // sync; a new authentication always re-enables it, so a failed
@@ -681,7 +854,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const since = startedAt ?? signInStamp();
     authenticatingRef.current = { stamp: since, pubkey: null };
     const goLive = async () => {
-      if (adoptLiveSignIn(phrase, since)) return;
+      if (adoptLiveSignIn(phrase, since)) {
+        // A sign-in that goes live ends a change this tab held open: its
+        // wizard may be gone (an idle re-lock), and the record stays for the
+        // next start. Spec: docs/internal/plans/phrase-change.md (6.6)
+        releaseChangeHold();
+        return;
+      }
       logAuthEvent('auth:signin-overtaken');
       await dropCreatedSession();
       sessionRef.current = null;
@@ -692,14 +871,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const seed = phraseToSeed(phrase);
     const { privateKey: signingPrivateKey, publicKey } = await deriveSigningKey(seed);
     const encryptionKey = deriveEncryptionKey(seed);
-    // Registered at derivation time, not at setAuth: the fresh-vault
-    // seed writes notes before the auth state exists, and those writes
-    // must already be sealable. Spec: docs/internal/specs/local-at-rest.md (section 3.1)
-    registerLocalDataKey(deriveLocalDataKey(seed));
     // Spec: docs/internal/specs/device-fingerprint-hash.md (derived client-side from the seed, never sent to the server)
     const fpPepper = deriveFpPepper(seed);
-    const pubkey = bytesToHex(publicKey);
+    const signingPubkey = bytesToHex(publicKey);
+    // The account this phrase signs in as. For every account that never
+    // changed its phrase it is the phrase's own key, and a returning device,
+    // a new vault and a provider session carrying that key settle it with no
+    // request. Otherwise the device's record or the server answers, and a
+    // replaced phrase throws here, before anything is minted or wiped.
+    // `pubkey` is the account id from here on: the owner marker, the session
+    // claim, the device id and every cache are keyed on it.
+    // Spec: docs/internal/plans/phrase-change.md (4.3, 4.6)
+    // The marker, then its IndexedDB mirror, as the wipe below reads them: a
+    // phrase whose key is the account the data here belongs to asks nothing,
+    // so no server answer can make a device take its own data for another
+    // account's.
+    let ownerHint: string | null = null;
+    try { ownerHint = localStorage.getItem(PUBKEY_OWNER_KEY); } catch { /* unread: the mirror answers */ }
+    if (ownerHint === null) ownerHint = await readOwnerMirror();
+    const sessionClaim = oauthSession ? jwtPayloadPubkey(oauthSession.accessToken) : null;
+    const identity: SignInIdentity = await identityForSignIn({
+      supabase,
+      seed,
+      signingPubkey,
+      signingPrivateKey,
+      owner: sessionClaim === signingPubkey ? signingPubkey : ownerHint,
+      freshVault,
+    });
+    const pubkey = identity.accountId;
     authenticatingRef.current = { stamp: since, pubkey };
+    // The local-data key is registered before anything here reads or writes
+    // local data, not at setAuth: the fresh-vault seed writes notes before
+    // the auth state exists, and those writes must already be sealable.
+    // Spec: docs/internal/specs/local-at-rest.md (section 3.1)
+    // A changed account's key comes with its key ring, in one step, so no
+    // reader meets the new key without the ring (keyRingStore.ts): the ring
+    // this device keeps opens now, else the server's once the session is
+    // bound below. Until then the key this device held stays, so a sign-in
+    // that fails on the way leaves every local row readable, and exportable,
+    // under it. Spec: docs/internal/plans/phrase-change.md (6.1, 6.6)
+    const localKey = deriveLocalDataKey(seed);
+    let ringTaken = identity.epoch === 1;
+    if (ringTaken) registerLocalDataKey(localKey);
+    else ringTaken = await takeCachedKeyRing({ account: pubkey, epoch: identity.epoch, syncKey: encryptionKey, localKey });
 
     // Pubkey-owner check: if a different user's data is sitting in
     // IndexedDB, wipe it before we touch sync. Catches phrase swap
@@ -767,6 +981,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await clearLocalDatabase();
       clearLocalSettings();
       clearCachedAccountFlags();
+      clearReplacedAccount();
       // Drop the settings-panel figures (device list, quota, storage
       // subs) alongside the other account-scoped caches. Keyed by pubkey
       // so a stale entry could not be read by another account anyway,
@@ -1123,6 +1338,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error(
             `Sign-in failed: ${pwError?.message ?? 'no session returned'}`,
           );
+        }
+        // The credential is refused. A phrase its account replaced, or the
+        // phrase of an account deleted after a change, never gets an account
+        // of its own, so the server is asked before an anonymous user exists
+        // (once: the answer is remembered for a minute).
+        // Spec: docs/internal/plans/phrase-change.md (4.3)
+        // No answer (a blip, a 503) is today's path: the anonymous mint, and
+        // link-pubkey refuses a replaced key there. Failing here instead would
+        // cost a legacy account with no stored credential its re-mint and
+        // buy no security.
+        if (pwCode === 'invalid_credentials' && identity.source === 'own') {
+          const answer = await resolveSigningKey(supabase, signingPubkey, signingPrivateKey);
+          if (answer?.status === 'retired' || answer?.status === 'deleted') throw new PhraseReplacedError(answer.status);
+          if (answer?.status === 'current') throw new Error('Sign-in failed: the account of this phrase is not the one this device holds.');
+        }
+        // The record of a phrase this device adopted outlives a later change
+        // made elsewhere: the account changed its phrase again, and the
+        // server says so the same way.
+        // A retired phrase keeps its record: it still signed for this account,
+        // and the screen of a replaced phrase finds the account's notes by it.
+        // A deleted account takes it.
+        if (pwCode === 'invalid_credentials' && identity.source === 'record') {
+          const answer = await resolveSigningKey(supabase, signingPubkey, signingPrivateKey);
+          if (answer?.status === 'retired' || answer?.status === 'deleted') {
+            if (answer.status === 'deleted') await clearIdentityBinding();
+            throw new PhraseReplacedError(answer.status);
+          }
         }
       }
 
@@ -1490,6 +1732,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authUid = verifiedSession.user.id;
     sessionRef.current = { accessToken, authUid };
 
+    // A changed account writes only from a session that proved its current
+    // signing key (the key-epoch write gate); a refresh keeps the binding.
+    // Every account that never changed its phrase has nothing to bind and
+    // makes no request for it. Spec: docs/internal/plans/phrase-change.md (4.4)
+    if (identity.epoch >= 2) {
+      const sessionId = jwtPayloadSessionId(accessToken);
+      try {
+        if (!sessionId) throw new Error('bind-session failed: the session carries no id');
+        await bindSessionEpoch(supabase, { accessToken, authUid, sessionId, accountId: pubkey }, signingPrivateKey, identity.epoch);
+      } catch (err) {
+        // A record the server no longer stands behind goes, and so does any
+        // remembered answer, so the next sign-in asks again instead of trusting either.
+        if (err instanceof BindRefusedError) {
+          forgetResolveAnswers();
+          if (identity.source === 'record') await clearIdentityBinding();
+        }
+        return failHandshake(err as Error);
+      }
+    }
+    // The ring the server gives a bound session, when this device keeps none.
+    // A ring that does not open fails the handshake with nothing swapped.
+    if (!ringTaken) {
+      try {
+        await takeKeyRing({ supabase, account: pubkey, epoch: identity.epoch, syncKey: encryptionKey, localKey });
+      } catch (err) {
+        return failHandshake(err as Error);
+      }
+    }
+    // This device held the account's data under a phrase the account
+    // replaced, met the change, and now proved the new one (section 7). Its
+    // biometric record and its PIN wrap hold the replaced phrase, and opening
+    // either would only sign that phrase in again, so both go, as in
+    // adoptWithProvider. The account's PIN wrap arrives with the settings
+    // row at the first pass (syncPinWrap).
+    // Spec: docs/internal/plans/phrase-change.md (6.5, section 7)
+    // Only on a device that met the change for this account: a lost record
+    // alone also gives a server identity, and its biometric record can wrap
+    // the current phrase. Any sign-in of the account that gets this far
+    // proved its current phrase, so the mark goes with it either way.
+    if (wasReplacedAccount(pubkey)) {
+      if (identity.source === 'server' && !wipePrior && ownerHint === pubkey) {
+        logAuthEvent('auth:phrase-adopted', { epoch: identity.epoch });
+        removeBiometricCredential();
+        removePinWrappedPhrase();
+      }
+      clearReplacedAccount();
+    }
+
     // Register this device. For free-tier users past the 2-device limit
     // this comes back with the current device list so we can park in
     // the `device_limit_reached` state and let the user choose.
@@ -1518,6 +1808,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           pubkey,
           signingPrivateKey,
           fpPepper,
+          reactivate: byHand === true,
         });
       } catch (err) {
         if (isMfaRefusal(err) || (err as Error).message === 'register-device failed: mfa_required') throw new MfaRequiredError();
@@ -1527,6 +1818,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (registerResult.status === 'limit_reached') {
+        parkedByHand.current = byHand === true;
         await goLive();
         // The prior account's data stays until this device registers, which
         // from here happens only in doRetryRegistrationFromLimit.
@@ -1536,6 +1828,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           method,
           phrase,
           pubkey,
+          signingPubkey,
           encryptionKey,
           signingPrivateKey,
           fpPepper,
@@ -1560,18 +1853,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ));
       }
 
-      markRegistered(pubkey, deviceId);
-      isPro = registerResult.isPro;
-      // A fresh server answer, never the cached flags: a refunded account
-      // loses the Pro theme it had picked.
-      if (!isPro) dropProThemes();
-      earlySup = isPro ? await checkEarlySupporter(supabase) : false;
+      if (registerResult.status === 'revoked') {
+        // The owner removed this device, and this start was not a sign-in made
+        // on it by hand. It goes live only so the removed-device sign-out can
+        // run as a false heartbeat runs it, with the unsynced notes kept
+        // (the effect on revokedAtRegister below).
+        const cached = readCachedAccountFlags(pubkey);
+        isPro = cached?.isPro ?? false;
+        earlySup = cached?.isEarlySupporter ?? false;
+        revokedAtRegister.current = pubkey;
+      } else {
+        markRegistered(pubkey, deviceId);
+        isPro = registerResult.isPro;
+        // A fresh server answer, never the cached flags: a refunded account
+        // loses the Pro theme it had picked.
+        if (!isPro) dropProThemes();
+        earlySup = isPro ? await checkEarlySupporter(supabase) : false;
+      }
     }
 
     // The arriving account is proved, so this is where the prior one's
     // data goes. It runs before the fresh-vault seed below, which the
     // wipe would otherwise take with it.
     if (wipePrior) await wipePriorLocalData();
+    // The device keeps what the server said about this phrase, sealed under
+    // the phrase's own local key, so its next boot knows the account without
+    // asking. bind-session above verified this phrase's signature under the
+    // account's current key. Spec: docs/internal/plans/phrase-change.md (4.6)
+    if (identity.source === 'server') await writeIdentityBinding(seed, identity);
 
     // Fresh vault: seed the onboarding notes NOW, before setAuth, so
     // NotesView's very first Dexie read already contains them - no
@@ -1617,6 +1926,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       method,
       phrase,
       pubkey,
+      signingPubkey,
       encryptionKey,
       signingPrivateKey,
       fpPepper,
@@ -1657,9 +1967,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const seed = phraseToSeed(phrase);
       const { privateKey: signingPrivateKey, publicKey } = await deriveSigningKey(seed);
       const encryptionKey = deriveEncryptionKey(seed);
-      registerLocalDataKey(deriveLocalDataKey(seed));
       const fpPepper = deriveFpPepper(seed);
-      const pubkey = bytesToHex(publicKey);
+      const signingPubkey = bytesToHex(publicKey);
+      // Offline, as this whole path is: this device's record of a phrase
+      // change, else the phrase's own key. The owner checks below compare
+      // the account id. Spec: docs/internal/plans/phrase-change.md (4.6)
+      const identity = (await readIdentityBinding(seed, signingPubkey)) ?? ownIdentity(signingPubkey);
+      const pubkey = identity.accountId;
+      // A changed account opens only with the key ring this device keeps,
+      // installed with its key in one step (keyRingStore.ts); without one the
+      // full sign-in takes it from the server. Spec: docs/internal/plans/phrase-change.md (6.1)
+      const localKey = deriveLocalDataKey(seed);
+      if (identity.epoch === 1) {
+        registerLocalDataKey(localKey);
+      } else if (!(await takeCachedKeyRing({ account: pubkey, epoch: identity.epoch, syncKey: encryptionKey, localKey }))) {
+        logAuthEvent('auth:fast-boot-no-key-ring');
+        return false;
+      }
 
       let owner: string | null = null;
       let ownerReadFailed = false;
@@ -1711,11 +2035,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logAuthEvent('auth:signin-overtaken');
         return false;
       }
+      releaseChangeHold();
       setAuth({
         status: 'authenticated',
         method,
         phrase,
         pubkey,
+        signingPubkey,
         encryptionKey,
         signingPrivateKey,
         fpPepper,
@@ -1829,7 +2155,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         pubkey: auth.pubkey,
         signingPrivateKey: auth.signingPrivateKey,
         fpPepper: auth.fpPepper,
+        reactivate: parkedByHand.current,
       });
+
+      // The owner removed this device meanwhile, and the sign-in that parked
+      // here was not made by hand: the removed-device sign-out, from here.
+      if (retry.status === 'revoked') {
+        await forceSignOut('device_revoked');
+        return { ok: false, error: '' };
+      }
 
       // Both setAuth calls below are functional updates guarded on the
       // device-limit state still standing for this pubkey: the register
@@ -1847,6 +2181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 method: auth.method,
                 phrase: auth.phrase,
                 pubkey: auth.pubkey,
+                signingPubkey: auth.signingPubkey,
                 encryptionKey: auth.encryptionKey,
                 signingPrivateKey: auth.signingPrivateKey,
                 fpPepper: auth.fpPepper,
@@ -1896,6 +2231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               method: auth.method,
               phrase: auth.phrase,
               pubkey: auth.pubkey,
+              signingPubkey: auth.signingPubkey,
               encryptionKey: auth.encryptionKey,
               signingPrivateKey: auth.signingPrivateKey,
               fpPepper: auth.fpPepper,
@@ -1928,7 +2264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Everything this boot authenticates goes live only if no sign-out
     // began after this line (liveSignIn.ts).
-    const bootStamp = signInStamp();
+    let bootStamp = signInStamp();
     // Demo mode: skip all auth, storage, and OAuth handling. Derive
     // ephemeral keys from a fixed phrase, seed sample content into the
     // throwaway demo DB, and mark the session authenticated. No network,
@@ -1989,7 +2325,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // wiped (a storage hiccup is not a verdict, session audit
         // section 0).
         let phrase: string;
-        if (isWrappedEnvelope(stored)) {
+        // A phrase change this device sent and did not finish (a reload
+        // between the server's answer and the new phrase's sign-in): once
+        // the server confirms it landed, the new phrase replaces the stored
+        // one before anything signs in. Spec: docs/internal/plans/phrase-change.md (6.6)
+        const changed = hasPendingPhraseChange()
+          ? await phraseChangeModule()
+            .then((m) => m.finishPendingPhraseChange(supabase, { writeStoredPhrase: true }))
+            .catch(() => null)
+          : null;
+        if (changed) {
+          phrase = changed;
+          // Older tabs of this browser still hold the replaced phrase: the
+          // notice ends them, and this boot goes on under a stamp taken
+          // after it, as the changing tab does (6.6).
+          announceSignOut();
+          bootStamp = signInStamp();
+        } else if (isWrappedEnvelope(stored)) {
           const opened = await unwrapStoredEnvelope(stored);
           if (!opened || !isValidPhrase(opened)) {
             logAuthEvent('auth:boot-demoted', { name: 'PhraseUnwrapFailed' });
@@ -2015,7 +2367,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // refreshes the session, registers the device and updates Pro
         // flags (or transitions to device_limit_reached) when it lands.
         if (fastBooted) {
-          authenticateWithPhrase(phrase, method, undefined, undefined, false, undefined, bootStamp).catch((err) => {
+          authenticateWithPhrase(phrase, method, undefined, undefined, false, undefined, bootStamp, false).catch((err) => {
+            // The account replaced this phrase: the vault fast boot opened
+            // gives way to the screen that asks for the new one.
+            if (err instanceof PhraseReplacedError && err.status === 'retired') {
+              phraseReplacedBehindVault(phrase, 'sign-in');
+              return;
+            }
             // A CAPTCHA rejection is a definitive server "no" - the dead
             // session cannot be re-minted without the widget, and sync's
             // own auth detection never fires (with no session at all,
@@ -2046,11 +2404,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // user on the loading screen indefinitely.
         const AUTH_TIMEOUT_MS = 15_000;
         withMfaAwareTimeout(
-          authenticateWithPhrase(phrase, method, undefined, undefined, false, undefined, bootStamp),
+          authenticateWithPhrase(phrase, method, undefined, undefined, false, undefined, bootStamp, false),
           AUTH_TIMEOUT_MS,
           () => { throw new Error('Auth timed out - network may be unreachable.'); },
-        ).catch((err) => {
+        ).catch(async (err) => {
           console.error('Auto sign-in failed:', err);
+          // The account replaced this phrase. Not the sign-in screen: that
+          // would offer a fresh start beside this device's own notes.
+          if (err instanceof PhraseReplacedError && err.status === 'retired' && (await enterPhraseReplacedFor(phrase, method, bootStamp))) {
+            return;
+          }
           // Same taxonomy as the fast-boot branch above (session audit
           // 2026-08-25): a rate limit is "not now", never "sign in
           // again" - arm the backoff so the session re-mints by itself
@@ -2115,6 +2478,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     trust: boolean,
     freshVault = false,
     captchaToken?: string,
+    byHand = true,
   ) {
     // The demo authenticates itself from a fixed phrase and holds no server
     // session, so every server call it could make is guarded at its own site.
@@ -2177,10 +2541,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // app_metadata at a different vault.
       let oauthSession: { accessToken: string; authUid: string } | undefined;
       try {
-        const { publicKey } = await deriveSigningKey(phraseToSeed(trimmed));
-        const derivedPubkey = bytesToHex(publicKey);
         const { data } = await supabase.auth.getSession();
         const session = data.session;
+        // The phrase signs for the account this session carries: its own key
+        // until a phrase change, the device's record or the server after one.
+        // Spec: docs/internal/plans/phrase-change.md (4.6)
+        const claim = session?.access_token ? jwtPayloadPubkey(session.access_token) : null;
+        const phraseIsAccount = claim !== null && (await phraseSignsFor(trimmed, claim, true));
         const provider = session?.user?.app_metadata?.provider;
         const isOAuth =
           provider === 'google' || provider === 'apple' || provider === 'github';
@@ -2191,13 +2558,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // code. The server confirms the session is still live first.
         const verifiedForVault = Boolean(session?.access_token && !isOAuth &&
           jwtPayloadAal(session.access_token) === 'aal2' &&
-          jwtPayloadPubkey(session.access_token) === derivedPubkey &&
+          phraseIsAccount &&
           (await supabase.auth.getUser()).data.user?.id === session.user?.id);
         if (
           session?.access_token &&
           session.user?.id &&
           (isOAuth || verifiedForVault) &&
-          jwtPayloadPubkey(session.access_token) === derivedPubkey
+          phraseIsAccount
         ) {
           oauthSession = {
             accessToken: session.access_token,
@@ -2214,7 +2581,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // still consumes the phraseImport marker separately - that gate is
       // safe because it runs after the pull, when the client knows
       // whether the server actually had data.
-      const ran = await authenticateWithPhrase(trimmed, 'phrase', false, oauthSession, freshVault, captchaToken, startedAt);
+      const ran = await authenticateWithPhrase(trimmed, 'phrase', false, oauthSession, freshVault, captchaToken, startedAt, byHand);
       // A swallowed call (mutex held by a concurrent handshake) must
       // not read as success: the persist below writes shared storage
       // over whatever that handshake is signing in, and the caller
@@ -2253,6 +2620,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       trustAwareStorage.removeItem(OAUTH_FLAG_KEY);
       return { ok: true as const };
     } catch (err) {
+      // The account replaced this phrase: the screen that asks for the new
+      // one takes over, with this device's notes kept. A phrase of an account
+      // deleted after a change only says so.
+      if (err instanceof PhraseReplacedError) {
+        if (err.status === 'deleted') return { ok: false as const, error: i18n.t('auth:phraseReplaced.accountDeleted') };
+        await enterPhraseReplacedFor(trimmed, 'phrase', startedAt);
+        return { ok: false as const, error: i18n.t('auth:phraseReplaced.title'), phraseReplaced: true };
+      }
       // Surface "the server wants a CAPTCHA token" as a flag rather than
       // a message: the sign-in screens react to it by mounting the
       // Turnstile widget, and matching on error text would break the
@@ -2264,6 +2639,140 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
     }
   }
+
+  // ── A phrase the account replaced (phrase change, section 7) ──────
+  //
+  // Sync, the heartbeat and the settings pass report it (phraseReplaced.ts),
+  // and so does `resolve` at sign-in (PhraseReplacedError). The vault gives
+  // way to the screen that asks for the new phrase; nothing is wiped.
+  // Spec: docs/internal/plans/phrase-change.md (2.4, section 7)
+  type ReplacedState = Extract<AuthState, { status: 'phrase_replaced' }>;
+
+  /** The state of an open vault whose phrase was replaced: its own keys
+   *  stay registered, so its notes still read and export. */
+  function replacedStateOf(open: Extract<AuthState, { status: 'authenticated' }>): ReplacedState {
+    return { status: 'phrase_replaced', method: open.method, phrase: open.phrase, pubkey: open.pubkey, encryptionKey: open.encryptionKey, isCustodial: open.isCustodial };
+  }
+
+  /**
+   * The state for a replaced phrase met at sign-in, from this device's own
+   * data: whose notes are here, and the phrase's sync key and local key for
+   * their export. The notes are this phrase's only when the owner marker (or
+   * its mirror) names the account the phrase signed for. Registers nothing:
+   * the caller does, once it knows no sign-out began meanwhile.
+   */
+  async function replacedStateFor(phrase: string, method: AuthMethod): Promise<{ state: ReplacedState; localKey: Uint8Array | null; epoch: number }> {
+    const none = { state: { status: 'phrase_replaced', method, phrase, pubkey: null, encryptionKey: null, isCustodial: false } as ReplacedState, localKey: null, epoch: 1 };
+    try {
+      const seed = phraseToSeed(phrase);
+      const { publicKey } = await deriveSigningKey(seed);
+      const signingPubkey = bytesToHex(publicKey);
+      const identity = (await readIdentityBinding(seed, signingPubkey)) ?? ownIdentity(signingPubkey);
+      const accountId = identity.accountId;
+      let owner: string | null = null;
+      try { owner = localStorage.getItem(PUBKEY_OWNER_KEY); } catch { /* unread: the mirror answers */ }
+      if (owner === null) owner = await readOwnerMirror();
+      if (owner !== accountId) return none;
+      return {
+        epoch: identity.epoch,
+        state: {
+          status: 'phrase_replaced',
+          method,
+          phrase,
+          pubkey: accountId,
+          encryptionKey: deriveEncryptionKey(seed),
+          isCustodial: readCachedAccountFlags(accountId)?.isCustodial === true,
+        },
+        localKey: deriveLocalDataKey(seed),
+      };
+    } catch {
+      return none;
+    }
+  }
+
+  // The stamp taken as this tab met the change. A sign-out notice after it
+  // means another tab signed out or adopted the new phrase, and this tab no
+  // longer acts for the shared storage.
+  const replacedStampRef = useRef<SignInStamp | null>(null);
+
+  function enterPhraseReplaced(next: ReplacedState, source: string): void {
+    logAuthEvent('auth:phrase-replaced', { source, held: next.pubkey !== null });
+    // Nothing more goes out under the replaced phrase: sync stops, a pending
+    // re-mint stands down, and the phrase stops being the live sign-in, so
+    // work that began before this cannot write it back (liveSignIn.ts).
+    suspendSync();
+    cancelRemintRetry();
+    dismissMfaPrompt();
+    setRevalidationExpired(false);
+    endLiveSignIn();
+    replacedStampRef.current = signInStamp();
+    if (next.pubkey !== null) markReplacedAccount(next.pubkey);
+    setAuth(next);
+  }
+
+  /**
+   * A replaced phrase met by a sign-in that `since` stamped. A tab already on
+   * the screen for this device's notes keeps that state (a failed adoption
+   * says so on the screen instead), and a sign-out during the derivation
+   * keeps the signed-out screen with no key registered. Answers whether the
+   * state was entered or kept.
+   */
+  async function enterPhraseReplacedFor(phrase: string, method: AuthMethod, since: SignInStamp): Promise<boolean> {
+    const held = authStateRef.current;
+    if (held.status === 'phrase_replaced' && held.pubkey !== null) return true;
+    const { state, localKey, epoch } = await replacedStateFor(phrase, method);
+    if (signedOutSince(since)) return false;
+    if (localKey) {
+      // A phrase of a later epoch opens the earlier rows through the ring this
+      // device keeps, when it keeps one; without it the rows of the phrase's
+      // own epoch still open, and the screen writes nothing.
+      const ringOpened = epoch >= 2 && state.pubkey !== null && state.encryptionKey !== null &&
+        (await takeCachedKeyRing({ account: state.pubkey, epoch, syncKey: state.encryptionKey, localKey }));
+      if (signedOutSince(since)) return false;
+      if (!ringOpened) registerLocalDataKey(localKey);
+    }
+    enterPhraseReplaced(state, 'sign-in');
+    return true;
+  }
+
+  // The listeners below are registered once, so they read the state here.
+  const authStateRef = useRef(auth);
+  authStateRef.current = auth;
+
+  /** A replaced phrase met by a background sign-in of the vault that is open:
+   *  only while it is still that phrase's vault. */
+  function phraseReplacedBehindVault(phrase: string, source: string): void {
+    const open = authStateRef.current;
+    if (open.status === 'authenticated' && open.phrase === phrase) enterPhraseReplaced(replacedStateOf(open), source);
+  }
+
+  /**
+   * A report that the account replaced this phrase (phraseReplaced.ts). Each
+   * one is a server answer (a refused write, the heartbeat, resolve) except
+   * the settings pass's, which only read a row's `key_epoch` above this
+   * device's. That column is a label the client writes, and a session without
+   * the phrase could raise it on a server before migration 0127, which would
+   * end every device's sign-in at its next pass. So that report ends the
+   * sign-in only once resolve says the server retired this phrase; meanwhile
+   * the pass keeps stopping before any write (userSettings.ts rowEpochUnknown).
+   */
+  function onReplacedReport(source: PhraseReplacedSource): void {
+    const open = authStateRef.current;
+    if (open.status !== 'authenticated') return;
+    if (source !== 'settings') {
+      enterPhraseReplaced(replacedStateOf(open), source);
+      return;
+    }
+    void phraseWasReplaced(open.phrase).then((replaced) => {
+      if (replaced) phraseReplacedBehindVault(open.phrase, source);
+    });
+  }
+
+  useEffect(
+    () => onPhraseReplaced(onReplacedReport),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   // Cross-tab account switch. localStorage is shared between tabs, so
   // another tab authenticating a different account silently takes
@@ -2291,8 +2800,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // this tab's own account takes nothing away.
       const mine = openPubkeyRef.current ?? authenticatingRef.current?.pubkey ?? null;
       if (mine !== null && mine !== e.newValue) endLiveSignIn();
+      // The screen of a replaced phrase acts for the shared storage too (its
+      // adoption signs older tabs out and its provider path removes the
+      // doors), so it lets go the same way.
       setAuth((prev) =>
-        (prev.status === 'authenticated' || prev.status === 'device_limit_reached') && prev.pubkey !== e.newValue
+        (prev.status === 'authenticated' || prev.status === 'device_limit_reached' || prev.status === 'phrase_replaced') && prev.pubkey !== e.newValue
           ? { status: 'onboarding' }
           : prev,
       );
@@ -2337,7 +2849,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // frozen, and by then a newer sign-in can own the doors on disk.
       dropDoorsLeftBySignOut();
       setAuth((prev) =>
-        prev.status === 'authenticated' || prev.status === 'device_limit_reached'
+        prev.status === 'authenticated' || prev.status === 'device_limit_reached' || prev.status === 'phrase_replaced'
           ? { status: 'onboarding' }
           : prev,
       );
@@ -2369,12 +2881,264 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   /**
+   * Older tabs of this browser still hold the replaced phrase: the sign-out
+   * notice ends them, and the sign-in that follows takes its stamp after the
+   * notice, because the notice moves this tab's own stamp too (liveSignIn.ts).
+   * Spec: docs/internal/plans/phrase-change.md (6.6)
+   */
+  function endOlderTabs(): void {
+    endLiveSignIn();
+    announceSignOut();
+    // This tab's own notice: it still holds the account, so a failed
+    // adoption can be tried again.
+    replacedStampRef.current = signInStamp();
+  }
+
+  /**
+   * Whether this tab still acts for the replaced phrase's account: the shared
+   * storage is that account's, and no other tab signed out or adopted the new
+   * phrase since this tab met the change. A stale tab must not sign another
+   * account's tabs out or remove its doors.
+   */
+  function holdsReplacedAccount(): boolean {
+    return auth.status === 'phrase_replaced' && auth.pubkey !== null && ownsLocalData(auth.pubkey) &&
+      replacedStampRef.current !== null && !signedOutSince(replacedStampRef.current);
+  }
+
+  async function adoptNewPhrase(phrase: string, trust: boolean, opts?: { switchConfirmed?: boolean }) {
+    if (auth.status !== 'phrase_replaced') return { ok: false as const, reason: 'failed' as const };
+    // With this account's notes here, only while the storage is still its.
+    const holds = holdsReplacedAccount();
+    if (auth.pubkey !== null && !holds) return { ok: false as const, reason: 'failed' as const };
+    const trimmed = phrase.trim().toLowerCase();
+    if (!isValidPhrase(trimmed)) return { ok: false as const, reason: 'invalid' as const };
+    if (await isRefusedPhrase(trimmed)) return { ok: false as const, reason: 'invalid' as const, error: i18n.t('auth:signIn.publicPhrase') };
+    // A fresh answer: the phrase must be the account's current one, and the
+    // answers of a minute ago can predate the change. No answer is a retry,
+    // never the switch question, which would then speak on no evidence.
+    forgetResolveAnswers();
+    let answer: Awaited<ReturnType<typeof resolveSigningKey>> = null;
+    try {
+      const { privateKey, publicKey } = await deriveSigningKey(phraseToSeed(trimmed));
+      answer = await resolveSigningKey(supabase, bytesToHex(publicKey), privateKey);
+    } catch {
+      answer = null;
+    }
+    if (answer === null) return { ok: false as const, reason: 'failed' as const };
+    if (answer.status === 'retired' || answer.status === 'deleted') return { ok: false as const, reason: 'replaced' as const };
+    // A phrase of another account, or a new one, takes this device's data
+    // away: today's account-switch question comes first, with today's words.
+    if (!opts?.switchConfirmed && (await switchWouldWipe(trimmed))) return { ok: false as const, reason: 'switch' as const };
+    // Older tabs end only for this account's own storage.
+    if (holds) endOlderTabs();
+    const result = await signInWithPhrase(trimmed, trust);
+    // A change this device sent and could not finish (its record holds the
+    // new phrase only inside a door it cannot open now) is finished by this.
+    if (result.ok && hasPendingPhraseChange()) {
+      try {
+        (await phraseChangeModule()).discardPendingPhraseChange();
+      } catch {
+        removePendingPhraseChange();
+      }
+    }
+    if (result.ok) return { ok: true as const };
+    return { ok: false as const, reason: result.phraseReplaced ? ('replaced' as const) : ('failed' as const), error: result.error };
+  }
+
+  async function adoptWithProvider(provider: OAuthProvider) {
+    if (!holdsReplacedAccount()) return { ok: false as const, error: i18n.t('auth:signIn.failedUnexpectedly') };
+    endOlderTabs();
+    // The replaced phrase's doors open nothing the account takes, and a
+    // phrase at rest is what the boot reads before a provider's return (the
+    // mount order, refactor-auth.md), so they go before the redirect. The
+    // notes, the settings and the owner marker stay: the provider brings the
+    // new phrase from custody, and the first settings pass brings the PIN wrap.
+    trustAwareStorage.removeItem(PHRASE_STORAGE_KEY);
+    removeBiometricCredential();
+    removePinWrappedPhrase();
+    return signInWithOAuth(provider);
+  }
+
+  // The screen of a replaced phrase over a change this device sent and did
+  // not finish: the record holds the new phrase (no armed lock), so it is
+  // finished and adopted here instead of asked for. Once per entry; a record
+  // under an armed lock waits for the PIN at the lock screen.
+  // Spec: docs/internal/plans/phrase-change.md (2.4, 6.6)
+  const replacedPubkey = auth.status === 'phrase_replaced' ? auth.pubkey : null;
+  useEffect(() => {
+    if (replacedPubkey === null || !hasPendingPhraseChange()) return;
+    void (async () => {
+      let phrase: string | null = null;
+      try {
+        phrase = await (await phraseChangeModule()).finishPendingPhraseChange(supabase, { writeStoredPhrase: true });
+      } catch {
+        phrase = null;
+      }
+      if (phrase && authStateRef.current.status === 'phrase_replaced') await adoptNewPhrase(phrase, isTrustedDevice());
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [replacedPubkey]);
+
+  // ── The phrase change on this device (section 5, 6.6) ──────────────
+
+  // While a sent change waits for the sign-in with its new phrase: the hold
+  // on this tab's replaced-phrase reports, which the server's answers to the
+  // change itself would raise (phraseReplaced.ts). Released by that sign-in,
+  // by a refusal, and by a sign-out.
+  const changeHoldRef = useRef<(() => void) | null>(null);
+  // Where a change that did not finish stopped: its answer was lost, or the
+  // sign-in with the new phrase failed.
+  const changeStageRef = useRef<'unknown' | 'sign_in' | null>(null);
+
+  function releaseChangeHold(): void {
+    changeHoldRef.current?.();
+    changeHoldRef.current = null;
+    changeStageRef.current = null;
+  }
+
+  async function phraseChangeActor(): Promise<ChangeActor | null> {
+    const open = authStateRef.current;
+    if (open.status !== 'authenticated' || isDemoMode()) return null;
+    const { data } = await supabase.auth.getSession();
+    const session = data.session;
+    if (!session || jwtPayloadPubkey(session.access_token) !== open.pubkey) return null;
+    const sessionId = jwtPayloadSessionId(session.access_token);
+    if (!sessionId) return null;
+    return {
+      supabase,
+      accessToken: session.access_token,
+      authUid: session.user.id,
+      sessionId,
+      accountId: open.pubkey,
+      epoch: currentKeyEpoch(),
+      phrase: open.phrase,
+      signingPrivateKey: open.signingPrivateKey,
+      encryptionKey: open.encryptionKey,
+    };
+  }
+
+  async function changePhrase(prepared: PreparedChange, keep: KeepList, state: ChangeState): Promise<PhraseChangeOutcome> {
+    const pc = await phraseChangeModule();
+    // A handover record left by a change the wizard gave up on: the boot or
+    // the replaced screen settles that one first.
+    if (changeStageRef.current !== null || hasPendingPhraseChange()) return { ok: false, reason: 'refused', code: 'phrase_change_in_progress' };
+    const actor = await phraseChangeActor();
+    if (!actor || actor.accountId !== prepared.accountId) return { ok: false, reason: 'refused', code: 'account_auth_required' };
+    // Nothing more goes out under the replaced phrase from this tab, and the
+    // server's answers to this tab's own change are not news of another's.
+    releaseChangeHold();
+    changeHoldRef.current = holdPhraseReplacedReports();
+    suspendSync();
+    cancelRemintRetry();
+    let sent: Awaited<ReturnType<typeof pc.sendChange>>;
+    try {
+      sent = await pc.sendChange(actor, prepared, keep, state);
+    } catch (err) {
+      releaseChangeHold();
+      resumeSync();
+      return { ok: false, reason: 'refused', code: err instanceof pc.PhraseChangeError ? err.code : 'phrase_change_unavailable_now' };
+    }
+    if (sent.status === 'unknown') {
+      changeStageRef.current = 'unknown';
+      return { ok: false, reason: 'unknown' };
+    }
+    return finishChangeHere(prepared, sent.epoch);
+  }
+
+  /**
+   * The change landed: the sequence of 6.6. The replaced phrase stops being
+   * the live sign-in (a pass still running cannot write it back), the doors
+   * of the new phrase land under a stamp taken after that, older tabs hear
+   * the sign-out notice and leave, and the new phrase signs in with a stamp
+   * taken after the notice. The handover record goes once it is live.
+   */
+  async function finishChangeHere(prepared: PreparedChange, epoch: number): Promise<PhraseChangeOutcome> {
+    const pc = await phraseChangeModule();
+    endLiveSignIn();
+    pc.commitLocalDoors(prepared, signInStamp(), prepared.newSigningPubkey);
+    // The binding record, before the sign-in that would write it: a sign-in
+    // that fails here still leaves an armed lock that knows the new phrase.
+    await pc.bindNewPhrase(prepared.newPhrase, { accountId: prepared.accountId, signingPubkey: prepared.newSigningPubkey, epoch: prepared.toEpoch });
+    announceSignOut();
+    forgetResolveAnswers();
+    // The session the change revoked is not reused for the new phrase.
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch {
+      /* the password grant below replaces it */
+    }
+    return signInAfterChange(prepared, epoch);
+  }
+
+  async function signInAfterChange(prepared: PreparedChange, epoch: number): Promise<PhraseChangeOutcome> {
+    const result = await signInWithPhrase(prepared.newPhrase, isTrustedDevice());
+    if (!result.ok) {
+      changeStageRef.current = 'sign_in';
+      return { ok: false, reason: 'sign_in', error: result.error };
+    }
+    removePendingPhraseChange();
+    releaseChangeHold();
+    logAuthEvent('auth:phrase-changed', { epoch });
+    return { ok: true, epoch };
+  }
+
+  /**
+   * The wizard left while its change waited (review of v0.763.2, finding 12).
+   * At `sign_in` the change landed: the hold goes and the tab reports its
+   * phrase replaced, so the replaced screen finishes the change from the
+   * handover record (or the PIN does, under an armed lock). Sync stays
+   * stopped, as the replaced phrase must not write. At `unknown` the answer
+   * was lost: the hold goes and sync resumes, so a change that landed meets
+   * the tab at its next request or heartbeat, and one that did not leaves the
+   * tab as it was. The handover record stays for the boot to settle.
+   */
+  function leavePhraseChange(): void {
+    const stage = changeStageRef.current;
+    if (stage === null) return;
+    releaseChangeHold();
+    if (stage === 'sign_in') reportPhraseReplaced('sign-in');
+    else resumeSync();
+  }
+
+  async function finishPhraseChangeWithPin(pin: string): Promise<string | null> {
+    if (!hasPendingPhraseChange()) return null;
+    let phrase: string | null = null;
+    try {
+      phrase = await (await phraseChangeModule()).finishPendingPhraseChange(supabase, { pin });
+    } catch {
+      return null;
+    }
+    // Older tabs still hold the replaced phrase; the unlock's sign-in takes
+    // its stamp after this notice (6.6).
+    if (phrase) announceSignOut();
+    return phrase;
+  }
+
+  async function continuePhraseChange(prepared: PreparedChange): Promise<PhraseChangeOutcome> {
+    const pc = await phraseChangeModule();
+    if (changeStageRef.current === 'sign_in') return signInAfterChange(prepared, prepared.toEpoch);
+    if (changeStageRef.current !== 'unknown') return { ok: false, reason: 'refused', code: 'phrase_change_not_sent' };
+    let sent: Awaited<ReturnType<typeof pc.confirmPendingChange>>;
+    try {
+      sent = await pc.confirmPendingChange(supabase, prepared);
+    } catch (err) {
+      releaseChangeHold();
+      resumeSync();
+      return { ok: false, reason: 'refused', code: err instanceof pc.PhraseChangeError ? err.code : 'phrase_change_unavailable_now' };
+    }
+    if (sent.status === 'unknown') return { ok: false, reason: 'unknown' };
+    changeStageRef.current = null;
+    return finishChangeHere(prepared, sent.epoch);
+  }
+
+  /**
    * Complete the custody choice for a new OAuth user.
    * Called from the KeyCustodyChoice onboarding component.
    * Spec: docs/contrib/custodial-key-spec.md (server encrypts the phrase with AES-256-GCM, key held outside the database)
    */
   async function completeCustodyChoice(
     choice: 'custodial' | 'self-custody',
+    words: 12 | 24 = 12,
   ): Promise<{ ok: true; phrase: string } | { ok: false; error: string }> {
     if (auth.status !== 'oauth_custody_choice') {
       return { ok: false, error: 'Not in custody choice state.' };
@@ -2385,7 +3149,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const startedAt = signInStamp();
 
     try {
-      const phrase = generatePhrase();
+      // The length is the person's choice on the self-custody path; a
+      // custodial account keeps the default (phrase-change.md, 2.2).
+      const phrase = generatePhrase(isCustodial ? 12 : words);
       // A phrase generated this second owns nothing, so this asks
       // whether the account already on the device may be cleared. An
       // empty error is a decline rather than a failure: the choice
@@ -2409,7 +3175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const authenticated = await authenticateWithPhrase(phrase, 'oauth', false, {
         accessToken,
         authUid,
-      }, true, undefined, startedAt);
+      }, true, undefined, startedAt, true);
       // A swallowed call (mutex held by a concurrent handshake) must not
       // read as success: sessionRef would still carry the OTHER
       // handshake's token, and the store-custodial-phrase call below
@@ -2433,6 +3199,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // pubkey is linked and the signature the endpoint now demands
         // can be produced. Derive the signing key from the phrase
         // rather than plumbing it out of the auth state.
+        // The phrase was generated this second, so it is its own account
+        // (identity.ts, freshVault): its key is the account id the cache
+        // and the state below are keyed on, and the server checks that the
+        // stored phrase derives the account's current signing key.
+        // Spec: docs/internal/plans/phrase-change.md (4.6)
         const { privateKey: storeSigningKey, publicKey: storePublicKey } = await deriveSigningKey(
           phraseToSeed(phrase),
         );
@@ -2506,7 +3277,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // screen's Back button carries none and ran the full wipe on data it
     // never owned.
     const tabPubkey =
-      auth.status === 'authenticated' || auth.status === 'device_limit_reached'
+      auth.status === 'authenticated' || auth.status === 'device_limit_reached' || auth.status === 'phrase_replaced'
         ? auth.pubkey
         : null;
     if (tabPubkey === null || !ownsLocalData(tabPubkey)) {
@@ -2538,6 +3309,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // not through getSession, which answers null for an expired session it
       // cannot refresh while that session stays on disk. The prior account's
       // data, wraps and tabs are not this status's to touch.
+      // The screen of a replaced phrase whose notes are not here (or not any
+      // more): its stored copy would only bring the screen back at the next
+      // start. Only while that copy is still this phrase.
+      if (auth.status === 'phrase_replaced') {
+        const { phrase } = auth;
+        await removeMatchingCopies(PHRASE_STORAGE_KEY, async (value) =>
+          (isWrappedEnvelope(value) ? await unwrapStoredEnvelope(value).catch(() => null) : value) === phrase);
+      }
       if (auth.status === 'device_limit_reached' && pendingSwitchWipe.current?.pubkey === auth.pubkey) {
         pendingSwitchWipe.current = null;
         const { phrase, pubkey } = auth;
@@ -2551,6 +3330,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await supabase.auth.admin.signOut(storedAccessToken(value)!, 'local').catch(() => {});
         }
       }
+      // The PIN wrap an untrusted tab keeps in its own sessionStorage is this
+      // tab's account's, whoever owns the shared storage now.
+      clearTabPinWrapCopy();
       sessionRef.current = null;
       // This return shows the sign-in screen WITHOUT clearing the phrase, so
       // it is one of the two ways an install ends up holding a phrase it is
@@ -2579,6 +3361,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     trustAwareStorage.removeItem(PHRASE_STORAGE_KEY);
     removeBiometricCredential();
     removePinWrappedPhrase();
+    // A phrase change this device did not finish holds the new phrase.
+    removePendingPhraseChange();
+    releaseChangeHold();
     // Again, now that the credentials are gone: it reaches a tab that read
     // the phrase between the two lines, and it lands where a full store
     // refused the first one, because the removals freed the room.
@@ -2675,11 +3460,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // zeroed key would push undecryptable ciphertext over a good server
     // copy. Dropping the state releases the buffers for GC instead
     // (same trade as the stale-tab path at the top of this function).
+    // A sign-out that keeps the unsynced notes keeps a settings change the
+    // server has not seen too (folders, trackers, lists): it exists nowhere
+    // else. Read before the local data key goes.
+    const keepSettings = !!opts?.keepUnsyncedNotes && hasUnpushedSettings();
     if (flushSettled && (auth.status === 'authenticated' || auth.status === 'device_limit_reached')) {
       auth.encryptionKey.fill(0);
       auth.signingPrivateKey.fill(0);
       // Same guard: a still-running flush updates note rows, and under
       // sealed writes those updates need the local data key.
+      clearLocalDataKey();
+    }
+    // A replaced phrase flushes nothing: the server takes no write from it.
+    if (auth.status === 'phrase_replaced') {
+      auth.encryptionKey?.fill(0);
       clearLocalDataKey();
     }
 
@@ -2710,6 +3504,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // goes too so the next sign-in re-registers properly.
       clearCachedAccountFlags();
       clearRegistrationMarker();
+      clearReplacedAccount();
       // Drop the settings-panel figures (device list, quota, storage
       // subs) alongside the other account-scoped caches. Keyed by pubkey
       // so a stale entry could not be read by another account anyway,
@@ -2746,8 +3541,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Also clear the cached user-settings blob. Without this, signing
       // in as a different user in the same browser inherits the previous
       // user's `welcomeNoteSeeded: true` flag from localStorage, and the
-      // welcome note never seeds for the new account.
-      clearLocalSettings();
+      // welcome note never seeds for the new account. Another account's
+      // sign-in still takes a kept cache with the owner-mismatch wipe. A kept
+      // cache loses its PIN fields, and the tab's copy of them goes either way.
+      clearLocalSettings(keepSettings);
       sessionRef.current = null;
       // scope MUST be 'local'. The supabase-js default is 'global',
       // which revokes the user's sessions on EVERY device server-side.
@@ -2780,7 +3577,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       trustAwareStorage.removeItem(PHRASE_STORAGE_KEY);
       removeBiometricCredential();
       removePinWrappedPhrase();
-      clearLocalSettings();
+      removePendingPhraseChange();
+      clearLocalSettings(keepSettings);
       setAuth({ status: 'onboarding' });
     } finally {
       resumeSync();
@@ -2828,6 +3626,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         abandonOAuthHydration,
         releaseCustody,
         adoptCustody,
+        adoptNewPhrase,
+        adoptWithProvider,
+        phraseChangeActor,
+        loadPhraseChange: phraseChangeModule,
+        changePhrase,
+        continuePhraseChange,
+        leavePhraseChange,
+        finishPhraseChangeWithPin,
       }}
     >
       {children}

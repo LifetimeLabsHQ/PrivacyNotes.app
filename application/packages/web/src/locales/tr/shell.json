@@ -301,8 +301,10 @@
     "dayWithMood": "{{date}}, ruh hali {{mood}}",
     "previousWeek": "Önceki hafta",
     "nextWeek": "Sonraki hafta",
-    "showMonth": "{{month}}, tüm ayı göster",
-    "showWeek": "{{month}}, bir hafta göster"
+    "pickMonth": "{{month}}, ay ve yıl seçin",
+    "pickMonthTip": "Ay ve yıl seç",
+    "showWholeMonth": "Tüm ayı göster",
+    "showOneWeek": "Bir hafta göster"
   },
   "contextMenu": {
     "newNote": "Yeni not",
@@ -548,6 +550,13 @@
     "itemNameParts": "İkinci ad, ön ek, son ek",
     "itemPhonetic": "Fonetik ad",
     "itemNote": "Not",
+    "addSection": "Bölüm ekle",
+    "sectionName": "Bölüm adı",
+    "removeSection": "Bölümü kaldır",
+    "removeSectionNamed": "{{name}} bölümünü kaldır",
+    "addFieldTo": "{{name}} bölümüne alan ekle",
+    "addFieldToSection": "Bu bölüme alan ekle",
+    "hiddenFieldsNote": "Gizli değerler siz gösterene kadar maskeli kalır ve arama onları hiçbir zaman bulmaz.",
     "labels": {
       "mobile": "Cep",
       "home": "Ev",
@@ -676,6 +685,8 @@
     },
     "birthdays": "Doğum günleri",
     "contactDate": "{{name}}: {{label}}",
+    "birthdayAge_one": "{{name}} {{count}} yaşına giriyor",
+    "birthdayAge_other": "{{name}} {{count}} yaşına giriyor",
     "dragEnd": "Bitiş gününü değiştirmek için sürükleyin",
     "previousDay": "Önceki gün",
     "nextDay": "Sonraki gün",

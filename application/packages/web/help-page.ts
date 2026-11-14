@@ -9,6 +9,7 @@ import { FAQ_SOURCES, SOURCE_FILES, sourceUrl } from './src/faqSources.ts';
 import { relatedFaq } from './src/faqRelated.ts';
 import { PUBLISHED_DOCS, REPO_URL, docFiles, docMd, docSize, docSourceUrl, docUrl, docsIndexMd } from './publishedDocs.ts';
 import { VERSION } from './src/version.ts';
+import { hiddenFaqIds } from './src/cryptoRelease.ts';
 import { foldText } from './src/textFold.ts';
 import { SEARCH_CORE_SCRIPT_TAG } from './search-core-script.ts';
 import { LANDING_PAGES_PUBLIC } from './landing-pages.ts';
@@ -162,7 +163,7 @@ async function loadStructure(): Promise<{
   drawingHotkeyGroups = hotkeys.DRAWING_HOTKEY_GROUPS as HotkeyGroupData[];
   return {
     order: faq.FAQ_GROUP_ORDER as FaqGroupKey[],
-    rows: faq.FAQ_STRUCTURE as FaqStructureRow[],
+    rows: (faq.FAQ_STRUCTURE as FaqStructureRow[]).filter((r) => !hiddenFaqIds().includes(r.id)),
     guideOrder: guides.GUIDE_ORDER as string[],
     hotkeyGroups: hotkeys.HOTKEY_GROUPS as HotkeyGroupData[],
   };

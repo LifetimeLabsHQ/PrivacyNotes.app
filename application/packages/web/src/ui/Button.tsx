@@ -23,7 +23,7 @@ function buttonLook(variant: Variant): string {
 
 /**
  * @catalog Button
- * use: every labeled action. Name it with `action` (save, add, create, done, confirm, apply, next, restore, delete, remove, cancel, back, edit, rename, copy, search, open): that brings the one icon, the label and the look of that action (`ui/actions.ts`), so a Save is the same everywhere. Words that say more ("Add medication") go in `children`; the icon stays. `icon` and `variant` only for an action the map does not have. One size for every button, everywhere; `pro` adds the rocket. The accent variant is a soft tint for a prominent secondary action beside a primary Save; dangerSoft is the same tint in red, for a destructive answer beside a safer primary one (Delete forever beside Move to Trash); successSoft, in green, is the done state of a button that saved (the browser extension's SaveButton, pattern 177).
+ * use: every labeled action. Name it with `action` (save, add, create, done, confirm, apply, next, restore, delete, remove, cancel, back, edit, rename, copy, search, open): that brings the one icon, the label and the look of that action (`ui/actions.ts`), so a Save is the same everywhere. Words that say more ("Add medication") go in `children`; the icon stays. `icon` and `variant` only for an action the map does not have. One size for every button, everywhere; `pro` adds the rocket; `iconEnd` puts the glyph after the label, as Next's arrow, for a button that moves a flow on to its next step (a Done that opens the next step of a wizard). The accent variant is a soft tint for a prominent secondary action beside a primary Save; dangerSoft is the same tint in red, for a destructive answer beside a safer primary one (Delete forever beside Move to Trash); successSoft, in green, is the done state of a button that saved (the browser extension's SaveButton, pattern 177).
  * never: a <button> with its own border, fill or padding classes; a Save, Add or Remove without its icon; a second icon for an action the map has; a smaller or larger button.
  */
 export function Button({
@@ -31,6 +31,7 @@ export function Button({
   variant,
   icon,
   pro = false,
+  iconEnd = false,
   className = '',
   type = 'button',
   children,
@@ -39,6 +40,9 @@ export function Button({
   variant?: Variant;
   /** Shows the Pro rocket after the label (a free account's Pro door). */
   pro?: boolean;
+  /** The glyph follows the label, as Next's arrow does: for a button that
+   *  moves a flow on to its next step. */
+  iconEnd?: boolean;
   children?: ReactNode;
 } & (
   /** The action this button does: its icon, label and look come from the map. */
@@ -50,12 +54,14 @@ export function Button({
   const spec = action ? ACTIONS[action] : null;
   const look = variant ?? spec?.variant ?? 'secondary';
   const Glyph = spec?.icon;
+  const after = action === 'next' || iconEnd;
   return (
     <button type={type} {...rest} className={`${buttonLook(look)}${className ? ` ${className}` : ''}`}>
-      {/* Next points the way it goes: its arrow follows the label ("Connect ->"). */}
-      {action !== 'next' && (Glyph ? <Glyph aria-hidden="true" className="shrink-0" /> : icon)}
+      {/* Next points the way it goes: its arrow follows the label ("Connect ->"),
+          and so does the glyph of any button that moves a flow on (iconEnd). */}
+      {!after && (Glyph ? <Glyph aria-hidden="true" className="shrink-0" /> : icon)}
       {children ?? (spec?.label ? t(`actions.${spec.label}`) : null)}
-      {action === 'next' && Glyph && <Glyph aria-hidden="true" className="shrink-0" />}
+      {after && (Glyph ? <Glyph aria-hidden="true" className="shrink-0" /> : icon)}
       {pro && <IconUpgrade size={12} onFill={look !== 'secondary'} />}
     </button>
   );

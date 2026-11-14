@@ -156,6 +156,12 @@ export function usePopoverPosition<A extends HTMLElement, P extends HTMLElement>
     const onScroll = () => compute();
     window.addEventListener('resize', compute);
     window.addEventListener('scroll', onScroll, true);
+    // The iOS keyboard opens and closes without a window resize. A menu
+    // placed while it was up kept its short maxHeight after it closed, and
+    // its last rows were cut off (GitHub #745).
+    const vv = window.visualViewport;
+    vv?.addEventListener('resize', compute);
+    vv?.addEventListener('scroll', compute);
     // Re-place when the popover's own size changes (e.g. a menu whose items
     // toggle while open) so it stays anchored and on-screen without callers
     // wiring content into the dep array.
@@ -167,6 +173,8 @@ export function usePopoverPosition<A extends HTMLElement, P extends HTMLElement>
     return () => {
       window.removeEventListener('resize', compute);
       window.removeEventListener('scroll', onScroll, true);
+      vv?.removeEventListener('resize', compute);
+      vv?.removeEventListener('scroll', compute);
       ro?.disconnect();
     };
   }, [open, compute, popoverRef]);

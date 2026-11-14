@@ -81,7 +81,7 @@
     "need-email": {
       "q": "Necessito una adreça electrònica per registrar-me?",
       "a": [
-        "No. Una caixa forta nova és una [frase de recuperació de 12 paraules](/ca/help/phrase-vs-password) acabada de generar, i res més. Sense correu electrònic, sense nom d'usuari, sense número de telèfon, sense pas de verificació. Si inicies la sessió amb la frase, no et podríem enviar cap correu ni que volguéssim, perquè mai no arribem a saber qui ets.",
+        "No. Una caixa forta nova és una [frase de recuperació](/ca/help/phrase-vs-password) acabada de generar, i res més. Sense correu electrònic, sense nom d'usuari, sense número de telèfon, sense pas de verificació. Si inicies la sessió amb la frase, no et podríem enviar cap correu ni que volguéssim, perquè mai no arribem a saber qui ets.",
         "Prefereixes un procés familiar? [També pots iniciar la sessió amb Google, Apple o GitHub](/ca/help/signup-options). Aquesta via ens revela necessàriament l'adreça electrònica vinculada a aquell inici de sessió, però les teves notes es mantenen xifrades al teu dispositiu igualment, i sota el capó també tens una frase."
       ]
     },
@@ -139,9 +139,9 @@
     "phrase-vs-password": {
       "q": "Per què una frase de recuperació en lloc d'un nom d'usuari i una contrasenya?",
       "a": [
-        "D'entrada pot semblar al revés del que toca, però una única frase de recuperació és la construcció més sòlida. Amb nom d'usuari i contrasenya, el nom d'usuari no és cap secret (surt a totes les filtracions), de manera que tota la seguretat recau en la contrasenya, i les contrasenyes triades per persones ronden de mitjana els 30 o 40 bits d'entropia. [La teva frase de 12 paraules són 128 bits garantits](/ca/help/twelve-word-phrase), generats pel teu dispositiu, mai triats per una persona i mai reutilitzats d'un altre lloc web.",
+        "D'entrada pot semblar al revés del que toca, però una única frase de recuperació és la construcció més sòlida. Amb nom d'usuari i contrasenya, el nom d'usuari no és cap secret (surt a totes les filtracions), de manera que tota la seguretat recau en la contrasenya, i les contrasenyes triades per persones ronden de mitjana els 30 o 40 bits d'entropia. [La teva frase de recuperació són 128 bits garantits, o més](/ca/help/twelve-word-phrase), generats pel teu dispositiu, mai triats per una persona i mai reutilitzats d'un altre lloc web.",
         "A més, nosaltres no tenim cap contrasenya que puguem perdre. Un inici de sessió amb contrasenya vol dir que el servidor guarda com a mínim un resum (hash) de la contrasenya, que es pot filtrar, trencar o robar amb phishing. [Amb l'autocustòdia](/ca/help/threat-model-levels), la teva frase no surt mai del teu dispositiu: en deriva les claus de xifratge localment, i el servidor només veu dades xifrades. No hi ha cap hash per robar ni cap procés de restabliment de contrasenya que un atacant pugui explotar.",
-        "Si escriure 12 paraules et sembla feixuc: pots desar la frase al teu gestor de contrasenyes amb un sol toc (Configuració > Seguretat > Frase), i iniciar la sessió és com qualsevol altre inici de sessió. Prefereixes un procés familiar? [També pots iniciar la sessió amb Google, Apple o GitHub](/ca/help/signup-options): sota el capó igualment tens una frase, i tries tu si es queda al teu dispositiu o si te la guardem nosaltres."
+        "Si escriure la frase et sembla feixuc: pots desar-la al teu gestor de contrasenyes amb un sol toc (Configuració > Seguretat > Frase), i iniciar la sessió és com qualsevol altre inici de sessió. Prefereixes un procés familiar? [També pots iniciar la sessió amb Google, Apple o GitHub](/ca/help/signup-options): sota el capó igualment tens una frase, i tries tu si es queda al teu dispositiu o si te la guardem nosaltres."
       ]
     },
     "threat-model-levels": {
@@ -150,7 +150,7 @@
         "Sí, i és volgut. No tothom es defensa de les mateixes amenaces, així que el model de comptes és una escala, no pas un dogma únic. A tots els esglaons les teves notes es mantenen xifrades al teu dispositiu; el que canvia és qui té la clau i què sabem de tu.",
         "L'extrem còmode: inicia la sessió amb Google, Apple o GitHub i deixa seleccionat «Mantén-ho simple i còmode» quan se't pregunti, que és l'opció inicial de la pantalla. Desem la frase de recuperació per tu, xifrada al nostre servidor, perquè un dispositiu nou pugui obrir les notes després d'iniciar la sessió amb el proveïdor i [introduir un codi de l'autenticador si 2FA està activat](/ca/help/enable-2fa). A canvi, sabem el correu electrònic d'aquest inici de sessió i el nostre servidor pot desxifrar la frase. Desa la frase per si perds el compte del proveïdor i conserva la clau de còpia de seguretat de 2FA si actives l'inici de sessió en dos passos.",
         "El punt mitjà: inicia la sessió amb Google, Apple o GitHub però tria «Màxima seguretat i privadesa». La teva frase no toca mai els nostres servidors, així que el servidor no guarda res que pugui obrir les teves notes; els dispositius nous necessiten la frase o [escanejar un codi QR des d'un dispositiu que ja tingui la sessió iniciada](/ca/help/add-second-device). Continuem sabent el correu d'aquell inici de sessió, i una ordre legal o una bretxa del nostre servidor pot arribar a aquest correu, mai al contingut de les teves notes.",
-        "L'extrem privat: prescindeix del tot d'aquests inicis de sessió i fes servir només la frase de 12 paraules. Sense correu, sense nom, sense identitat, i combinat amb una [compra de Pro anònima](/ca/help/buy-pro-anonymously), ni tan sols pagar deixa cap nom enlloc. A canvi, la custòdia de la clau és tota teva: si perds la frase sense cap dispositiu amb la sessió iniciada, ningú no et podrà ajudar.",
+        "L'extrem privat: prescindeix del tot d'aquests inicis de sessió i fes servir només la frase de recuperació. Sense correu, sense nom, sense identitat, i combinat amb una [compra de Pro anònima](/ca/help/buy-pro-anonymously), ni tan sols pagar deixa cap nom enlloc. A canvi, la custòdia de la clau és tota teva: si perds la frase sense cap dispositiu amb la sessió iniciada, ningú no et podrà ajudar.",
         "Configuració > Compte > Custòdia de la clau mostra els dos modes amb els seus avantatges i inconvenients i et permet canviar-los. En deixar la custòdia del servidor, eliminem la còpia que guardem després que confirmis tres paraules de la frase desada. Tornar-hi a canviar puja la frase una altra vegada i requereix una decisió explícita. Els canvis en qualsevol sentit se signen amb la clau del teu compte i necessiten un codi nou de l'autenticador si 2FA està activat. [Un compte de frase pot connectar un proveïdor](/ca/help/connected-logins) a Configuració > Compte > Comptes i després triar la custòdia del servidor per separat; connectar el proveïdor no puja la frase. Tots els modes també poden utilitzar el bloqueig de l'app amb PIN, el desbloqueig biomètric i la [protecció de notes individuals](/ca/help/locked-vs-protected)."
       ]
     },
@@ -164,18 +164,18 @@
       ]
     },
     "guess-phrase": {
-      "q": "Algú pot endevinar les meves 12 paraules o acabar tenint les mateixes?",
+      "q": "Algú pot endevinar la meva frase de recuperació o acabar tenint-ne la mateixa?",
       "a": [
-        "No. Ningú no pot endevinar les teves 12 paraules, i ningú més no acaba tenint les mateixes: cap ordinador que existeixi, o que puguem preveure, s'hi acosta. Només pot iniciar la sessió qui aconsegueixi les teves paraules reals, així que guarda-les bé.",
-        "El teu dispositiu tria la frase a l'atzar, i el nombre de frases possibles té 39 xifres. Endevinar la teva al primer intent és menys probable que guanyar quatre vegades seguides el primer premi d'una loteria d'1 entre 300 milions. Un ordinador que provés un trilió de frases cada segon encara necessitaria uns 10 bilions d'anys per provar-les totes, molt més temps del que fa que existeix l'univers. Fins i tot si cadascuna de les 8.000 milions de persones de la Terra tingués una frase, la probabilitat que dues coincidissin seria menor que guanyar aquest premi dues vegades seguides.",
-        "La força ve d'aquest atzar, no de l'aspecte de les paraules. No t'inventis una frase ni hi afegeixis símbols: fes servir les 12 paraules exactament com te les dona l'aplicació. Les majúscules no importen. L'última paraula serveix de comprovació, així que l'aplicació rebutja una frase mal escrita o inventada."
+        "No. Ningú no pot endevinar la teva frase de recuperació, i ningú més no acaba tenint-ne la mateixa: cap ordinador que existeixi, o que puguem preveure, s'hi acosta. Només pot iniciar la sessió qui aconsegueixi les teves paraules reals, així que guarda-les bé.",
+        "El teu dispositiu tria la frase a l'atzar. Per a una frase de 12 paraules, el nombre de frases possibles té 39 xifres, i per a una de 24 paraules, 78. Endevinar una frase de 12 paraules al primer intent és menys probable que guanyar quatre vegades seguides el primer premi d'una loteria d'1 entre 300 milions. Un ordinador que provés un trilió de frases cada segon encara necessitaria uns 10 bilions d'anys per provar-les totes, molt més temps del que fa que existeix l'univers. Fins i tot si cadascuna de les 8.000 milions de persones de la Terra tingués una frase, la probabilitat que dues coincidissin seria menor que guanyar aquest premi dues vegades seguides.",
+        "La força ve d'aquest atzar, no de l'aspecte de les paraules. No t'inventis una frase ni hi afegeixis símbols: fes servir les paraules exactament com te les dona l'aplicació. Les majúscules no importen. L'última paraula serveix de comprovació, així que l'aplicació rebutja una frase mal escrita o inventada."
       ]
     },
     "same-phrase": {
       "q": "Algú altre pot tenir la mateixa frase de recuperació que jo?",
       "a": [
         "No, a la pràctica no. El teu dispositiu tria la frase a l'atzar entre un nombre enorme de frases possibles. Encara que totes les persones de la Terra es fessin un compte, que dues frases coincidissin seria menys probable que guanyar dues vegades seguides el primer premi d'una loteria d'1 entre 300 milions. Els mateixos números expliquen per què [ningú no pot endevinar la teva frase](/ca/help/guess-phrase).",
-        "El teu ID del compte surt de la frase. Per tant, [si suprimeixes un compte](/ca/help/delete-account) i tornes a iniciar la sessió amb les mateixes 12 paraules, obtens una caixa forta nova i buida amb el mateix ID del compte. No torna res de la caixa forta suprimida. [Quan passis a una frase nova](/ca/help/phrase-compromised), treu l'antiga del gestor de contrasenyes, perquè no iniciïs mai la sessió al compte antic per error."
+        "El teu ID del compte surt de la frase. Per tant, [si suprimeixes un compte](/ca/help/delete-account) i tornes a iniciar la sessió amb la mateixa frase, obtens una caixa forta nova i buida amb el mateix ID del compte. No torna res de la caixa forta suprimida. [Quan passis a una frase nova](/ca/help/phrase-compromised), treu l'antiga del gestor de contrasenyes, perquè no iniciïs mai la sessió al compte antic per error."
       ]
     },
     "enable-2fa": {
@@ -204,8 +204,8 @@
     "no-ai": {
       "q": "PrivacyNotes fa servir IA amb les meves notes?",
       "a": [
-        "No. Ninja, el quadre de Cmd+K que entén les teves dates i troba les teves paraules, és codi senzill que s'executa al teu dispositiu. No hi ha funcions d'IA a l'aplicació, cap processament d'IA en segon pla ni cap entrenament de models amb el teu contingut. [Les teves notes estan sempre xifrades, al teu dispositiu i de camí al servidor](/ca/help/what-can-you-see), i res als nostres sistemes llegeix el contingut de les notes per alimentar res.",
-        "Si mai llancem alguna funció en aquesta direcció, hauria d'executar-se íntegrament al teu dispositiu i ser estrictament opcional. Enviar notes en text clar a un model al núvol les trauria del xifratge del teu dispositiu, així que està descartat."
+        "Cap IA llegeix les teves notes si no l'actives, i res del que escrius no va mai a cap servei d'IA. No hi ha cap xatbot, cap escriptura amb IA, cap IA als nostres servidors ni cap entrenament amb el teu contingut. Ninja i la cerca són codi senzill al teu dispositiu. [Les teves notes estan sempre xifrades, al teu dispositiu i de camí al servidor](/ca/help/what-can-you-see), i una IA al núvol les trauria d'aquest xifratge, així que cap nota no va mai a cap.",
+        "L'única excepció és opcional i es queda al teu dispositiu. Connexions intel·ligents troba notes amb el mateix significat, fins i tot amb altres paraules o en una altra llengua. Fa servir IA fora de línia ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)) que s'executa només en aquest dispositiu. No escriu res ni respon res: converteix cada nota en una llista de números i els compara. La baixes una sola vegada a Configuració > Editor > Comportament > Connexions intel·ligents, i després funciona sense connexió. El seu interruptor la desactiva, i Elimina la treu del dispositiu. Res del que dedueix d'una nota es desa ni s'envia."
       ]
     },
     "burn-notes": {
@@ -249,7 +249,7 @@
     "oauth-recovery": {
       "q": "Inicio la sessió amb Google, Apple o GitHub. I si perdo l'accés a aquell compte?",
       "a": [
-        "Sota el capó també tens una frase de 12 paraules, i [la frase per si sola et permet iniciar la sessió en qualsevol dispositiu](/ca/help/add-second-device) - sense Google, Apple ni GitHub. Obre Configuració > Seguretat > Frase i desa-la al teu gestor de contrasenyes.",
+        "Sota el capó també tens una frase de recuperació, i [la frase per si sola et permet iniciar la sessió en qualsevol dispositiu](/ca/help/add-second-device) - sense Google, Apple ni GitHub. Obre Configuració > Seguretat > Frase i desa-la al teu gestor de contrasenyes.",
         "Fes-ho un cop i perdre el compte de Google, Apple o GitHub no et costarà res: senzillament, inicia la sessió amb la frase."
       ]
     },
@@ -257,7 +257,7 @@
       "q": "He oblidat el PIN o el codi d'accés. Com hi torno a entrar?",
       "a": [
         "No es perd res, i pots esborrar tu mateix el PIN o el codi d'accés amb la teva frase de recuperació. És un pany de pantalla, no una clau de xifratge: les teves notes estan xifrades amb claus derivades de la frase, així que és la frase la que les obre. Lligar el xifratge al PIN faria que un PIN oblidat destruís dades. Aquí no passa mai.",
-        "Allà on l'aplicació el demani, tria **Has oblidat el PIN?** o **Has oblidat el codi d'accés?** i escriu les teves 12 paraules. Hi és a la pantalla de bloqueig, [en una nota protegida](/ca/help/locked-vs-protected) i a **Configuració > Seguretat > PIN**. S'esborra a tots els teus dispositius i en pots establir un de nou tot seguit. [El desbloqueig biomètric no es veu afectat](/ca/help/biometric-unlock). Un dispositiu amb una versió més antiga de l'aplicació continua demanant 4 xifres encara que hagis establert un codi d'accés; allà, **Has oblidat el PIN?** funciona igual."
+        "Allà on l'aplicació el demani, tria **Has oblidat el PIN?** o **Has oblidat el codi d'accés?** i escriu la teva frase de recuperació. Hi és a la pantalla de bloqueig, [en una nota protegida](/ca/help/locked-vs-protected) i a **Configuració > Seguretat > PIN**. S'esborra a tots els teus dispositius i en pots establir un de nou tot seguit. [El desbloqueig biomètric no es veu afectat](/ca/help/biometric-unlock). Un dispositiu amb una versió més antiga de l'aplicació continua demanant 4 xifres encara que hagis establert un codi d'accés; allà, **Has oblidat el PIN?** funciona igual."
       ]
     },
     "delete-account": {
@@ -292,7 +292,7 @@
       "q": "Com puc eliminar un dispositiu que ja no faig servir?",
       "a": [
         "Configuració > Compte llista tots els dispositius registrats. Elimina el que estiguis retirant: la plaça s'allibera a l'instant (útil en [el pla gratuït de 2 dispositius](/ca/help/device-limit)), i al dispositiu eliminat se li tanca la sessió el pròxim cop que intenti sincronitzar-se. Queda visible a «Eliminats fa poc» durant 72 hores perquè puguis confirmar que ja no hi és.",
-        "L'eliminació allibera la plaça i tanca la sessió d'aquell dispositiu; qui mana en l'accés és la frase. Qualsevol que tingui les teves 12 paraules pot tornar a iniciar la sessió, així que [si un dispositiu s'ha perdut o l'han robat](/ca/help/lost-device), protegeix primer la frase i deixa activat el bloqueig de l'aplicació (PIN o biometria). És això el que evita que un dispositiu trobat sigui una porta oberta."
+        "L'eliminació allibera la plaça i tanca la sessió d'aquell dispositiu; qui mana en l'accés és la frase. Qualsevol que tingui la teva frase pot tornar a iniciar la sessió, així que [si un dispositiu s'ha perdut o l'han robat](/ca/help/lost-device), protegeix primer la frase i deixa activat el bloqueig de l'aplicació (PIN o biometria). És això el que evita que un dispositiu trobat sigui una porta oberta."
       ]
     },
     "data-location": {
@@ -358,7 +358,7 @@
     "one-time-pricing": {
       "q": "Com pot un pagament únic finançar un servei de sincronització per sempre?",
       "a": [
-        "Perquè el servei és deliberadament barat de mantenir. L'aplicació és local primer i les notes són petits blobs xifrats, així que el servidor no fa gaire més que desar-los i passar-los entre els teus dispositius. Cap analítica del que escrius, cap píxel ni rastrejador de tercers, cap funció d'IA cremant capacitat de càlcul, cap departament de suport.",
+        "Perquè el servei és deliberadament barat de mantenir. L'aplicació és local primer i les notes són petits blobs xifrats, així que el servidor no fa gaire més que desar-los i passar-los entre els teus dispositius. Cap analítica del que escrius, cap píxel ni rastrejador de tercers, cap IA als nostres servidors, cap departament de suport.",
         "L'únic cost que sí que creix amb el temps és l'emmagatzematge, i per això té el preu que té: l'emmagatzematge addicional, més enllà dels 500 MB inclosos, és [un petit complement anual](/ca/help/storage-addons). Els costos únics es paguen un cop; els costos recurrents es repeteixen. El model només s'ha de sostenir a si mateix, i ho fa."
       ]
     },
@@ -379,7 +379,7 @@
     "refunds": {
       "q": "Quina és la política de reemborsaments?",
       "a": [
-        "30 dies, sense preguntes. Si Pro no és per a tu, demana el reemborsament complet dins dels 30 dies posteriors a la compra i tornarà al mètode de pagament original. Els clients de la UE conserven, a més, el dret legal de desistiment de 14 dies.",
+        "30 dies, sense preguntes, per a una compra amb targeta o a una botiga d'aplicacions. Si Pro no és per a tu, demana el reemborsament complet dins dels 30 dies posteriors a la compra i tornarà al mètode de pagament original. Els clients de la UE conserven, a més, el dret legal de desistiment de 14 dies. Els [pagaments amb cripto](/ca/help/pay-with-crypto) són definitius i no es reemborsen.",
         "Els pagaments els processa Paddle, [el nostre venedor oficial (merchant of record)](/ca/help/paddle-privacy), així que els reemborsaments els gestiona Paddle directament: respon al correu del rebut de compra o visita [paddle.net](https://paddle.net). La política completa és a les [condicions del servei](https://lifetimelabs.dev/terms/#refunds)."
       ]
     },
@@ -387,7 +387,15 @@
       "q": "Què sabeu de mi quan pago?",
       "a": [
         "Menys del que et pensaries. El pagament passa per [Paddle](https://www.paddle.com), el nostre venedor oficial (merchant of record): el teu nom, el número de la targeta i l'adreça de facturació van a Paddle per al pagament i els impostos, i no toquen mai els nostres servidors.",
-        "Paddle guarda les teves dades de facturació; el que arriba a la nostra base de dades és la teva clau pública, l'import i l'identificador de la comanda, i [en el cas de l'emmagatzematge addicional, la seva mida i les dates de renovació](/ca/help/storage-addons). El nostre compte de Paddle pot veure les dues bandes, però no busquem qui ets. Per mantenir el teu nom fora de la compra, paga amb un [àlies de correu i una targeta emmascarada](/ca/help/buy-pro-anonymously)."
+        "Paddle guarda les teves dades de facturació; el que arriba a la nostra base de dades és la teva clau pública, l'import i l'identificador de la comanda, i [en el cas de l'emmagatzematge addicional, la seva mida i les dates de renovació](/ca/help/storage-addons). El nostre compte de Paddle pot veure les dues bandes, però no busquem qui ets. Per mantenir el teu nom fora de la compra, paga amb un [àlies de correu i una targeta emmascarada](/ca/help/buy-pro-anonymously). [Amb cripto](/ca/help/pay-with-crypto), BlockBee gestiona el pagament i no rep mai el teu ID del compte; nosaltres guardem la teva clau pública, l'import i l'identificador de pagament de BlockBee."
+      ]
+    },
+    "pay-with-crypto": {
+      "q": "Puc pagar Pro amb Bitcoin o altres criptomonedes?",
+      "a": [
+        "Sí, a la web i a l'aplicació d'escriptori. A la finestra Millora, tria Paga amb criptomonedes i paga amb Bitcoin, Ethereum, Lightning, USDC o USDT. El preu és el de la targeta, pagat una sola vegada. Les [versions de les botigues d'aplicacions](/ca/help/store-purchases) venen Pro només a través d'Apple i Google.",
+        "[BlockBee](https://blockbee.io) gestiona la pàgina de pagament. No demana cap nom ni cap adreça electrònica, i no rep mai el teu ID del compte. Un pagament amb cripto és públic a la seva cadena de blocs. Amb Bitcoin, Pro s'activa quan la xarxa confirma el pagament, normalment en 10 a 60 minuts, i amb Ethereum i la majoria de monedes estables triga aproximadament un minut. Un bàner a l'aplicació mostra en quin punt és el pagament.",
+        "Els pagaments amb cripto són definitius: no hi ha reemborsament. En pagar, acceptes que Pro comenci a l'instant, cosa que posa fi al dret de desistiment de 14 dies de la UE, així que prova primer el pla gratuït. La pàgina posterior al pagament és la teva confirmació de compra. Desa-la com a PDF, perquè no tenim cap adreça electrònica on enviar-te-la."
       ]
     },
     "buy-pro-anonymously": {
@@ -395,7 +403,7 @@
       "a": [
         "Sí, amb dues eines estàndard. Per al rebut, fes servir un àlies de correu: [Apple Hide My Email](https://support.apple.com/105078), [DuckDuckGo Email Protection](https://duckduckgo.com/email), [SimpleLogin](https://simplelogin.io), [Firefox Relay](https://relay.firefox.com) o [addy.io](https://addy.io) reenvien tots a la teva bústia real sense exposar-la. Per al pagament, fes servir una targeta emmascarada: [privacy.com](https://privacy.com) als EUA genera targetes virtuals que funcionen amb qualsevol nom que hi escriguis, i a la resta de llocs una targeta de prepagament que funcioni en línia, comprada en efectiu, fa la mateixa feina sense cap nom.",
         "[En pagar, Paddle demana](/ca/help/paddle-privacy) una adreça electrònica, un mètode de pagament i un país (més un codi postal en algunes regions) per calcular els impostos. L'àlies rep el rebut, la targeta emmascarada porta el nom que li hagis posat, i la ubicació fiscal només t'acota a una regió, res més. Això sí, mantén l'àlies viu: el correu del rebut és la teva prova de compra i [el teu canal per a un reemborsament](/ca/help/refunds).",
-        "[Combinat amb un compte amb frase](/ca/help/signup-options), cap part no acaba tenint la imatge completa: el teu banc veu una recàrrega de targeta, Paddle veu un àlies i una targeta emmascarada, i nosaltres veiem una clau pública que ha passat a ser Pro, al costat d'aquest àlies al nostre compte de Paddle."
+        "[Combinat amb un compte amb frase](/ca/help/signup-options), cap part no acaba tenint la imatge completa: el teu banc veu una recàrrega de targeta, Paddle veu un àlies i una targeta emmascarada, i nosaltres veiem una clau pública que ha passat a ser Pro, al costat d'aquest àlies al nostre compte de Paddle. [Pagar amb cripto](/ca/help/pay-with-crypto) no necessita cap adreça electrònica, però el pagament en si és públic a la seva cadena de blocs."
       ]
     },
     "platforms": {
@@ -412,7 +420,7 @@
         "Sovint pocs dies. Les peticions petites i els informes de bugs solen entrar a la versió següent, i publiquem una versió gairebé cada setmana en lloc de dues o tres vegades l'any. El [changelog](/changelog) n'és la prova: cada entrada té data, està escrita en llenguatge clar i diu què ha canviat. Llegeix-ne un mes i sabràs exactament què pots esperar de nosaltres abans de confiar res a l'aplicació.",
         "Aquest ritme surt de com està repartida la feina. El nucli de xifratge, el protocol de sincronització i l'inici de sessió els van escriure persones, fora de la feina, molt abans que l'app tingués nom, i el nucli criptogràfic encara es manté així; res d'automatitzat s'hi acosta. Quan aquesta base va ser sòlida, la primavera del 2026, vam començar a fer servir eines d'IA per programar sota un protocol fix: primer per a les [traduccions](/ca/help/translation-quality), després els articles d'ajuda, després funcions d'interfície i correccions de bugs no crítics, on són bones acotant casos rars que altrament durien setmanes, i escrivint els scripts de prova que obliguen diversos desenvolupadors a un mateix estàndard. Per això val la pena desenvolupar el que demana una sola persona en comptes de fer-ho esperar darrere de les peticions que encapçalen la llista.",
         "Tot el que toca el xifratge, la sincronització o l'inici de sessió es queda en mans de desenvolupadors experimentats que escriuen cada línia, i aquest codi és [públic](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) perquè el puguis llegir en comptes de creure'ns. Més sobre l'equip i com treballem a la nostra [pàgina sobre nosaltres](https://lifetimelabs.dev/about).",
-        "L'aplicació en si no té funcions d'IA i no envia mai les teves notes enlloc ([detalls](/ca/help/no-ai)). Aquesta promesa va a part, i no canvia."
+        "L'aplicació en si no lliura mai les teves notes a cap IA, i l'única funció d'IA que té s'executa només al teu dispositiu, si l'actives ([detalls](/ca/help/no-ai)). Aquesta promesa va a part, i no canvia."
       ]
     },
     "android-updates": {
@@ -491,7 +499,7 @@
         "Per configurar-lo, obre Configuració > CLI a l'app d'escriptori i tria Activa. Tria Instal·la, que posa l'ordre `privacynotes` en aquest ordinador, i després Crea un codi. En un terminal nou, executa `privacynotes login` i enganxa el codi. Després desa la teva primera nota:",
         "`echo \"# Hello\" | privacynotes save`",
         "`privacynotes` té poques ordres, perquè fa una sola feina. Cadascuna mostra una targeta breu per a una persona, o una línia de JSON amb `--json` per a un script:",
-        "- `privacynotes login` connecta aquest ordinador amb un codi d'un sol ús de Configuració > CLI. Enganxa el codi, o envia'l per canonada.\n- `privacynotes save note.md` afegeix una nota des d'un fitxer, i `privacynotes save` sol llegeix el Markdown que li arriba per canonada. `--title` defineix el títol; si no, s'usa el primer encapçalament `#` o la primera línia. `--tag work,ideas` afegeix etiquetes.\n- `privacynotes status` mostra si aquest ordinador està connectat i l'última nota que ha desat.\n- `privacynotes logout` desconnecta aquest ordinador.\n- `privacynotes mcp` executa l'ordre com a eina per a una app d'IA sense terminal, vegeu [MCP](/ca/help/mcp).\n- `privacynotes help` (o `privacynotes --help`) llista totes les ordres i opcions, i `privacynotes --version` mostra la versió.",
+        "- `privacynotes login` connecta aquest ordinador amb un codi d'un sol ús de Configuració > CLI. Enganxa el codi, o envia'l per canonada.\n- `privacynotes save note.md` afegeix una nota des d'un fitxer, i `privacynotes save` sol llegeix el Markdown que li arriba per canonada. `--title` defineix el títol; si no, s'usa el primer encapçalament `#` o la primera línia. `--tag work,ideas` afegeix etiquetes.\n- `privacynotes status` mostra la connexió desada en aquest ordinador i l'última nota que ha desat. No pregunta al servidor: després d'eliminar l'ordinador a Configuració > CLI, continua apareixent com a connectat fins que es rebutja un desament.\n- `privacynotes logout` desconnecta aquest ordinador.\n- `privacynotes mcp` executa l'ordre com a eina per a una app d'IA sense terminal, vegeu [MCP](/ca/help/mcp).\n- `privacynotes help` (o `privacynotes --help`) llista totes les ordres i opcions, i `privacynotes --version` mostra la versió.",
         "Amb un agent de programació d'IA, connecta `privacynotes` una vegada a l'ordinador on s'executa l'agent i demana-ho amb paraules normals: «Desa aquest pla a les meves PrivacyNotes amb privacynotes save, amb l'etiqueta project.» L'agent pot llegir `privacynotes --help` per als detalls, escriu el Markdown i l'envia per canonada. La mateixa ordre funciona als teus scripts i tasques programades:",
         "- `git log --oneline -20 | privacynotes save --title \"Recent commits\"` desa els teus últims commits.\n- `pbpaste | privacynotes save --tag inbox` desa el que has copiat, en un Mac.\n- `privacynotes save --tag daily report.md` en una tasca nocturna desa un informe generat.\n- Una tecla que triïs a la configuració del sistema també pot executar `privacynotes save`, vegeu [Puc afegir una nota amb una drecera de teclat, sense obrir l'app?](/ca/help/quick-note-shortcut)",
         "Una nota admet fins a 700 KB de Markdown, 20 etiquetes i un títol de 200 caràcters, i `privacynotes` ho comprova abans d'enviar-la. Surt amb 0 quan la nota es desa, 1 quan el servidor la rebutja, 2 per una entrada incorrecta, 3 quan l'ordinador no està connectat i 4 quan no hi ha xarxa, de manera que un script pot reaccionar. Una nota desada espera, segellada, fins que s'obre una de les teves apps; si cap ho fa en 90 dies, o elimines l'ordinador abans, se suprimeix. Per desconnectar un ordinador, tria Elimina al costat seu a Configuració > CLI. El que poden veure l'ordre i un agent és a [Pot l'eina de línia d'ordres o un agent d'IA llegir les meves notes?](/ca/help/cli-security)."
@@ -570,7 +578,7 @@
       "q": "Puc fer servir el meu propi agent d'IA per obtenir ajuda amb PrivacyNotes?",
       "a": [
         "Sí, i hem fet el centre d'ajuda pensant-hi. Cada resposta es publica en un únic fitxer de text a [llms-full.txt](https://privacynotes.app/llms-full.txt), així un assistent ho llegeix tot de cop. El quadre del final de qualsevol pàgina d'ajuda copia un prompt ja preparat: enganxa'l a ChatGPT, Claude, Gemini o l'assistent que ja facis servir, i pregunta en la teva llengua.",
-        "Enviar-te a una eina en què ja confies ens en deixa completament fora, i mai no sabem què has preguntat. Un xatbot propi voldria dir que les teves preguntes acaben als nostres servidors, i les preguntes sobre una app de notes solen portar a dins el contingut de les notes. Això és a part de l'app, que no té cap funció d'IA ([detalls](/ca/help/no-ai)).",
+        "Enviar-te a una eina en què ja confies ens en deixa completament fora, i mai no sabem què has preguntat. Un xatbot propi voldria dir que les teves preguntes acaben als nostres servidors, i les preguntes sobre una app de notes solen portar a dins el contingut de les notes. Això és a part de l'app, que no envia mai les teves notes a cap IA ([detalls](/ca/help/no-ai)).",
         "No enganxis mai la teva frase de recuperació, el teu PIN ni el text d'una nota a un assistent. Cap resposta no els necessita, el prompt copiat diu a l'assistent que els rebutgi, i tot el que escrius a la finestra de xat d'algú altre ja ha sortit del teu dispositiu."
       ]
     },
@@ -600,7 +608,7 @@
       "q": "He perdut un dispositiu. Com protegeixo les meves notes?",
       "a": [
         "Des de qualsevol dispositiu amb la sessió iniciada, obre Configuració > Compte > «Dispositius registrats» i [elimina el que has perdut](/ca/help/remove-device). El pròxim cop que aquell dispositiu es connecti, se li tanca la sessió i se n'esborren les dades locals, aproximadament un minut després del seu pròxim ús. Queda a la llista de «Eliminats fa poc» durant 72 hores perquè puguis confirmar que ja no hi és.",
-        "Activa el bloqueig de l'aplicació (PIN o biometria) en tot allò portàtil i deixa activat el bloqueig de pantalla del teu sistema operatiu. Un dispositiu s'esborra tan bon punt es torna a connectar, així que fins llavors són aquestes barreres locals les que hi ha entre un telèfon perdut i les teves notes. La clau de debò és la frase: qualsevol que tingui les teves 12 paraules pot tornar a iniciar la sessió. Si sospites que és la mateixa frase la que s'ha filtrat, segueix més aviat el [protocol per a una frase filtrada](/ca/help/phrase-compromised)."
+        "Activa el bloqueig de l'aplicació (PIN o biometria) en tot allò portàtil i deixa activat el bloqueig de pantalla del teu sistema operatiu. Un dispositiu s'esborra tan bon punt es torna a connectar, així que fins llavors són aquestes barreres locals les que hi ha entre un telèfon perdut i les teves notes. La clau de debò és la frase: qualsevol que la tingui pot tornar a iniciar la sessió. Si sospites que és la mateixa frase la que s'ha filtrat, segueix més aviat el [protocol per a una frase filtrada](/ca/help/phrase-compromised)."
       ]
     },
     "device-limit": {
@@ -664,7 +672,7 @@
       "q": "Algú pot obrir el meu fitxer de còpia de seguretat sense la meva frase de recuperació?",
       "a": [
         "No, si és xifrat. Un fitxer «Tot, xifrat (.pnbackupz)» o «Només text, xifrat (.pnbackup)» està xifrat amb la clau de la teva frase, així que només s'obre al teu compte. Qui trobi el fitxer en veu el nom, la mida i la data, i res de dins.",
-        "Un «Tot, sense xifrar (.zip)» de la pestanya Exporta és l'excepció: s'obre en qualsevol ordinador, sense frase. Les còpies de seguretat automàtiques mai no fan aquest tipus ([per què no](/ca/help/backup-unencrypted))."
+        "Un «Tot, sense xifrar (.zip)» de Configuració > Còpia de seguretat > Manuals és l'excepció: s'obre en qualsevol ordinador, sense frase. Les còpies de seguretat automàtiques mai no fan aquest tipus ([per què no](/ca/help/backup-unencrypted))."
       ]
     },
     "backup-unencrypted": {
@@ -791,7 +799,7 @@
     "pro-not-active": {
       "q": "He pagat Pro però no està actiu. I ara què?",
       "a": [
-        "Dona-li un minut i després torna a carregar l'aplicació. Després del pagament, l'aplicació ho comprova durant uns 20 segons i es desbloqueja sola, i una recàrrega torna a comprovar l'estat de Pro en arrencar. Si el pagament ha entrat però l'activació va endarrerida, un avís diu «Hem rebut el pagament, però l'activació de Pro triga més de l'habitual» - aquest estat es resol sol en gairebé tots els casos. [A les versions de botiga](/ca/help/store-purchases), una compra que no es valida es torna a intentar quan reinicies l'aplicació, i una compra que no s'arriba a activar mai la reemborsa automàticament la botiga en un termini de 3 dies.",
+        "Dona-li un minut i després torna a carregar l'aplicació. Després del pagament, l'aplicació ho comprova durant uns 20 segons i es desbloqueja sola, i una recàrrega torna a comprovar l'estat de Pro en arrencar. Un [pagament amb cripto](/ca/help/pay-with-crypto) triga més, i un bàner mostra en quin punt és. Si el pagament ha entrat però l'activació va endarrerida, un avís diu «Hem rebut el pagament, però l'activació de Pro triga més de l'habitual» - aquest estat es resol sol en gairebé tots els casos. [A les versions de botiga](/ca/help/store-purchases), una compra que no es valida es torna a intentar quan reinicies l'aplicació, i una compra que no s'arriba a activar mai la reemborsa automàticament la botiga en un termini de 3 dies.",
         "Encara bloquejat? Gairebé sempre és un desajust de compte: Pro s'associa al compte que tenia la sessió iniciada en el moment de la compra, així que una frase diferent - o un inici de sessió amb Google, Apple o GitHub en lloc de la teva caixa forta amb frase - és un compte diferent. Compara l'ID del compte a Configuració > ID & Sync al dispositiu que el va comprar. Si de debò s'ha encallat, [informa'n](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues) i inclou aquest ID del compte: identifica la compra i no revela res de les teves notes."
       ]
     },
@@ -814,7 +822,7 @@
       "q": "Obtainium, APK directe o Google Play: quina baixada d'Android?",
       "a": [
         "Agafa Google Play si vols el camí habitual: instal·la i actualitza l'app com qualsevol altra, i les compres dins l'app les factura Google. Agafa [Obtainium](/ca/help/obtainium) si vols que l'app es mantingui al dia sola sense cap compte de Google, i [l'APK directe](/ca/help/android-updates) si prefereixes no fer córrer una segona app per a això. Obtainium i l'APK et donen el mateix fitxer signat amb la mateixa clau, així que pots moure't entre aquests dos quan vulguis: Obtainium adopta un APK que ja havies instal·lat per sideload, i l'APK del web s'instal·la sobre un d'Obtainium. La versió de Play està signada amb una clau diferent, així que passar de Play a qualsevol dels altres dos, o al revés, obliga a desinstal·lar primer.",
-        "Més endavant pots canviar d'idea sense complicacions. Abans de qualsevol canvi que obligui a desinstal·lar primer, confirma que l'app mostra \"Synced\" i tingues a mà les teves 12 paraules o [un QR d'inici de sessió d'un altre dispositiu](/ca/help/add-second-device), perquè desinstal·lar esborra la còpia local."
+        "Més endavant pots canviar d'idea sense complicacions. Abans de qualsevol canvi que obligui a desinstal·lar primer, confirma que l'app mostra \"Synced\" i tingues a mà la teva frase de recuperació o [un QR d'inici de sessió d'un altre dispositiu](/ca/help/add-second-device), perquè desinstal·lar esborra la còpia local."
       ]
     },
     "markdown-folder": {
@@ -883,7 +891,7 @@
     "add-second-device": {
       "q": "Com inicio la sessió en un segon dispositiu?",
       "a": [
-        "Al dispositiu que ja fas servir, obre Configuració > Seguretat > Frase. Hi trobaràs les teves 12 paraules i un codi QR d'inici de sessió. Al dispositiu nou tria \"Accés amb frase\" i escaneja aquest QR amb la càmera, puja'n una foto, o tecleja les paraules. Les teves notes hi arriben en segons.",
+        "Al dispositiu que ja fas servir, obre Configuració > Seguretat > Frase. Hi trobaràs les paraules de la teva frase i un codi QR d'inici de sessió. Al dispositiu nou tria \"Accés amb frase\" i escaneja aquest QR amb la càmera, puja'n una foto, o tecleja les paraules. Les teves notes hi arriben en segons.",
         "[Un compte gratuït cobreix 2 dispositius](/ca/help/device-limit) i Pro tants com vulguis, i dos navegadors al mateix ordinador compten com un sol dispositiu. Tracta el QR exactament com la frase que porta: no l'ensenyis a ningú i no deixis mai que acabi en una fototeca que se sincronitza al núvol d'algú altre."
       ]
     },
@@ -904,15 +912,15 @@
     "clear-browser-data": {
       "q": "Què passa si esborro les dades del navegador o les galetes?",
       "a": [
-        "L'app web guarda les teves notes a l'emmagatzematge del navegador, així que esborrar les dades de lloc de PrivacyNotes elimina la còpia local i et tanca la sessió. Tot el que ja s'havia sincronitzat és fora de perill: inicia la sessió amb la teva frase de 12 paraules i torna. El que encara no s'havia sincronitzat es perd, perquè nosaltres no en vam tenir mai cap còpia.",
+        "L'app web guarda les teves notes a l'emmagatzematge del navegador, així que esborrar les dades de lloc de PrivacyNotes elimina la còpia local i et tanca la sessió. Tot el que ja s'havia sincronitzat és fora de perill: inicia la sessió amb la teva frase de recuperació i torna. El que encara no s'havia sincronitzat es perd, perquè nosaltres no en vam tenir mai cap còpia.",
         "Per tant fes dues coses. Comprova que el peu de pàgina diu \"Synced\" abans d'esborrar res, i guarda la teva frase en un gestor de contrasenyes, perquè un navegador buidat no te la pot demanar amablement. [Les apps d'escriptori i mòbil](/ca/help/platforms) no s'hi veuen afectades gens: [tenen el seu propi emmagatzematge](/ca/help/data-on-disk), que una neteja del navegador no toca mai."
       ]
     },
     "android-backup": {
       "q": "Les meves notes són a la còpia de seguretat del telèfon Android?",
       "a": [
-        "No. L'app d'Android manté les seves dades fora de la còpia de seguretat al núvol del telèfon, així que no n'arriba res a Google Drive. El motiu és la clau, no pas les notes: allà on has triat **Confia en aquest dispositiu**, les teves 12 paraules queden en aquell dispositiu per mantenir la sessió iniciada, i una còpia al núvol no és lloc per a la clau que desxifra les teves notes.",
-        "Un telèfon nou comença, doncs, buit: instal·la l'app, [inicia la sessió amb les teves 12 paraules](/ca/help/add-second-device) i arriba tot el que s'havia sincronitzat. La restauració espera aquesta primera sincronització, de manera que una còpia que portis es fa coincidir amb el que ja té el compte en lloc d'afegir-se dues vegades. El que no s'ha sincronitzat mai només viu al telèfon vell, així que comprova primer que el peu de pàgina diu \"Synced\", o emporta't un «Tot, sense xifrar (.zip)» des de Configuració > Còpia de seguretat > Manuals ([quina còpia fer](/ca/help/backup-strategy)).",
+        "No. L'app d'Android manté les seves dades fora de la còpia de seguretat al núvol del telèfon, així que no n'arriba res a Google Drive. El motiu és la clau, no pas les notes: allà on has triat **Confia en aquest dispositiu**, la teva frase de recuperació queda en aquell dispositiu per mantenir la sessió iniciada, i una còpia al núvol no és lloc per a la clau que desxifra les teves notes.",
+        "Un telèfon nou comença, doncs, buit: instal·la l'app, [inicia la sessió amb la teva frase](/ca/help/add-second-device) i arriba tot el que s'havia sincronitzat. La restauració espera aquesta primera sincronització, de manera que una còpia que portis es fa coincidir amb el que ja té el compte en lloc d'afegir-se dues vegades. El que no s'ha sincronitzat mai només viu al telèfon vell, així que comprova primer que el peu de pàgina diu \"Synced\", o emporta't un «Tot, sense xifrar (.zip)» des de Configuració > Còpia de seguretat > Manuals ([quina còpia fer](/ca/help/backup-strategy)).",
         "Una transferència directa de telèfon a telèfon durant la configuració és una altra cosa: alguns telèfons hi mouen les dades de les apps, i Android no dona a cap app una manera fiable de negar-s'hi. Aquesta còpia no surt mai dels teus dos dispositius, així que esborra el telèfon vell després."
       ]
     },
@@ -947,7 +955,7 @@
     "family-sharing": {
       "q": "La meva família pot compartir un compte o una compra de Pro?",
       "a": [
-        "La resposta són dos comptes, i obrir-ne un segon no costa res: [cadascun rep 2 dispositius i 50 MB gratis](/ca/help/free-vs-pro). Un compte és una frase de 12 paraules, i qui té aquesta frase ho té tot a dins: cada nota, cada entrada de la caixa forta, a cada dispositiu. Són els comptes separats els que donen a cada persona les seves pròpies notes privades. Pro es compra per compte.",
+        "La resposta són dos comptes, i obrir-ne un segon no costa res: [cadascun rep 2 dispositius i 50 MB gratis](/ca/help/free-vs-pro). Un compte és una frase de recuperació, i qui té aquesta frase ho té tot a dins: cada nota, cada entrada de la caixa forta, a cada dispositiu. Són els comptes separats els que donen a cada persona les seves pròpies notes privades. Pro es compra per compte.",
         "Per passar una cosa concreta, envia una [burn note](/ca/help/burn-notes) en comptes de la teva frase. Un compte de casa compartit funciona bé si és realment el que vols: guarda la frase en una entrada compartida del gestor de contrasenyes, i dona per fet que qui l'hagi tinguda alguna vegada ho ha vist tot."
       ]
     },
@@ -969,7 +977,7 @@
       "q": "Quina opció de registre hauria de triar?",
       "a": [
         "La que encaixi amb el teu nivell d'amenaça. N'hi ha tres. Un: iniciar la sessió amb Google, Apple o GitHub, amb la teva clau desada al nostre servidor. Dos: el mateix inici de sessió, però la clau es queda només al teu dispositiu. Tres: \"Genera una frase\", sense correu, sense nom i sense cap inici de sessió. Tots tres mantenen les teves notes xifrades al teu dispositiu, i el que els separa és qui té la clau i quant aprenem de tu.",
-        "Si inicies la sessió amb Google, Apple o GitHub, l'app et pregunta on vols guardar la clau i comença amb «Mantén-ho simple i còmode». Aquesta opció desa la frase xifrada al nostre servidor, perquè un dispositiu nou pugui obrir les notes després d'iniciar la sessió amb el proveïdor i introduir un codi de l'autenticador si 2FA està activat. Desa la frase per si perds el compte del proveïdor i conserva la clau de còpia de seguretat de 2FA si actives l'inici de sessió en dos passos. «Màxima seguretat i privadesa» manté la frase al dispositiu, així que el servidor no té res que obri les teves notes, i un dispositiu nou necessita les teves 12 paraules o [escanejar un QR des d'un que ja tingui la sessió iniciada](/ca/help/add-second-device).",
+        "Si inicies la sessió amb Google, Apple o GitHub, l'app et pregunta on vols guardar la clau i comença amb «Mantén-ho simple i còmode». Aquesta opció desa la frase xifrada al nostre servidor, perquè un dispositiu nou pugui obrir les notes després d'iniciar la sessió amb el proveïdor i introduir un codi de l'autenticador si 2FA està activat. Desa la frase per si perds el compte del proveïdor i conserva la clau de còpia de seguretat de 2FA si actives l'inici de sessió en dos passos. «Màxima seguretat i privadesa» manté la frase al dispositiu, així que el servidor no té res que obri les teves notes, i un dispositiu nou necessita la teva frase o [escanejar un QR des d'un que ja tingui la sessió iniciada](/ca/help/add-second-device).",
         "L'opció de només frase no té cap correu electrònic ni nom que vinculi el compte a una persona. A canvi, només tu tens la frase, així que, si la perds i no queda cap dispositiu desbloquejat, ningú no te la pot recuperar. Configuració > Compte > Custòdia de la clau mostra el mode actual i et permet canviar-lo. [Un compte de frase primer ha de connectar un proveïdor](/ca/help/connected-logins) a Configuració > Compte > Comptes abans de triar la custòdia del servidor; connectar-lo no canvia la custòdia. Tots els modes poden afegir un bloqueig amb PIN o biomètric i [l'inici de sessió en dos passos opcional](/ca/help/enable-2fa). Tens la comparació completa a [l'escala de nivells d'amenaça](/ca/help/threat-model-levels)."
       ]
     },
@@ -1052,7 +1060,7 @@
     "ninja": {
       "q": "Què puc fer amb Ninja, el quadre de Cmd+K?",
       "a": [
-        "Ninja obre qualsevol element, n'afegeix de nous i executa ordres, tot des d'un sol quadre. Prem Cmd+K en un Mac o Ctrl+K a Windows i Linux, K de Katana (Cmd+P o Ctrl+P també funciona), o fes clic a **Ninja** a la barra lateral o a la capçalera de la llista. Escriu una part d'un títol per trobar notes, tasques, esdeveniments, entrades de diari, elements de la Caixa forta, marcadors, contactes, fitxers, ajustos, etiquetes i carpetes. Sota els títols, **Al text** mostra la línia d'una nota que conté les teves paraules.",
+        "Ninja obre qualsevol element, n'afegeix de nous i executa ordres, tot des d'un sol quadre. Prem Cmd+K en un Mac o Ctrl+K a Windows i Linux, K de Katana (Cmd+P o Ctrl+P també funciona), o fes clic a **Ninja** a la barra lateral o a la capçalera de la llista. Escriu una part d'un títol per trobar notes, tasques, esdeveniments, entrades de diari, elements de la Caixa forta, marcadors, contactes, fitxers, ajustos, etiquetes i carpetes. Sota els títols, **Al text** mostra la línia d'una nota que conté les teves paraules, o el nom de la seva ubicació.",
         "El primer signe que escrius defineix el mode: `+` [afegeix un element amb paraules normals](/ca/help/ninja-quick-add), `>` executa una ordre, `#` llista les teves etiquetes i `/` les teves carpetes, i `>>` després d'un text [l'afegeix a una llista que ja tens](/ca/help/ninja-add-to-list). Prem Tab sobre una fila per veure el menú d'aquell element, Option+Retorn o Alt+Retorn per obrir-lo en una pestanya, i Q a qualsevol lloc per obrir el quadre amb `+` ja escrit. [La coincidència es fa al teu dispositiu](/ca/help/search-local), i Ninja és gratuït."
       ]
     },
@@ -1124,7 +1132,7 @@
       "q": "Puc connectar més d'un mètode d'inici de sessió al meu compte?",
       "a": [
         "Sí. Obre Configuració > Compte > Comptes i connecta Google, Apple o GitHub per afegir un mètode d'inici de sessió que obre la mateixa caixa forta. En pots connectar diversos, fins i tot dos comptes del mateix proveïdor, i [la teva frase de recuperació continua funcionant al costat](/ca/help/oauth-recovery). Connectar o desconnectar un compte no canvia ni les teves notes ni el teu xifratge.",
-        "Un mètode d'inici de sessió que ja pertany a una altra caixa forta no es pot connectar, perquè les caixes fortes no es fusionen mai. **Desconnecta** et demana primer les teves 12 paraules. Si et guardem la frase nosaltres, l'últim compte connectat es queda fins que en connectis un altre o desis la frase i [passis a l'autocustòdia](/ca/help/threat-model-levels). Amb autocustòdia, un dispositiu nou continua demanant-te les 12 paraules. Els comptes connectats són en beta."
+        "Un mètode d'inici de sessió que ja pertany a una altra caixa forta no es pot connectar, perquè les caixes fortes no es fusionen mai. **Desconnecta** et demana primer la teva frase de recuperació. Si et guardem la frase nosaltres, l'últim compte connectat es queda fins que en connectis un altre o desis la frase i [passis a l'autocustòdia](/ca/help/threat-model-levels). Amb autocustòdia, un dispositiu nou continua demanant-te la frase. Els comptes connectats són en beta."
       ]
     },
     "calendar": {

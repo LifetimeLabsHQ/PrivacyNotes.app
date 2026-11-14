@@ -2,6 +2,7 @@ import { getNote, updateNoteFrom } from './notesRepo';
 import type { LocalNote } from './db';
 import { sealedWritesOn } from './localSeal';
 import { localDataKeyCopy } from './localKey';
+import { currentKeyEpoch, epochMarker, epochOf, holdsEpoch, KeyEpochUnknown, openWithRing } from './keyRing';
 import {
   encryptJsonAad,
   decryptJsonAad,
@@ -11,6 +12,7 @@ import {
 } from '@notes/shared';
 import { logAuthEvent } from './authDiag';
 import { credentialKey, isDemoMode } from './demo';
+import { readStringList } from './localStore';
 
 /**
  * Last-chance durable copy of an in-flight body edit.
@@ -55,6 +57,15 @@ import { credentialKey, isDemoMode } from './demo';
  * The seal runs synchronously (noble), which is what makes sealing
  * possible inside pagehide at all.
  *
+ * Every sealed shape carries the key epoch `e` of the local key that sealed
+ * it (keyRing.ts), none for epoch 1, so an account that never changed its
+ * phrase writes the slots as before. A stash opens with the key of its own
+ * epoch. A stash of an epoch this device holds no key for is not damaged,
+ * and dropping it would lose the typing it holds: it moves to a third slot,
+ * the waiting list, which no close writes, and stays there until a boot
+ * holds its key or its note is gone from this device.
+ * Spec: docs/internal/plans/phrase-change.md (6.2, flush stash; 6.6)
+ *
  * Which rule decides. A stash is written while the page is being torn
  * down, when the stored row cannot be read. What the page still knows is
  * the body the editor was showing before the typing it stashes, so a v4
@@ -83,6 +94,12 @@ import { credentialKey, isDemoMode } from './demo';
 // or drop the real account's pending edit or kept text.
 export const STASH_KEY = credentialKey('privacynotes.flushStash');
 export const KEPT_STASH_KEY = credentialKey('privacynotes.flushStash.kept');
+/** Stashes sealed under a key epoch this device holds no key for yet: a JSON
+ *  list of the stashes as they were stored, oldest first. Only a boot writes
+ *  it. Spec: docs/internal/plans/phrase-change.md (6.2, flush stash) */
+const WAITING_STASH_KEY = credentialKey('privacynotes.flushStash.waiting');
+/** The waiting list keeps this many stashes; a longer one loses its oldest. */
+const WAITING_MAX = 8;
 const STASH_AAD_PREFIX = 'pn-local-v1:stash:';
 const KEPT_AAD_PREFIX = 'pn-local-v1:stash-kept:';
 const BASED_AAD_PREFIX = 'pn-local-v1:stash-based:';
@@ -91,7 +108,7 @@ const BASED_AAD_PREFIX = 'pn-local-v1:stash-based:';
  *  during page teardown. Matches the adaptive-debounce ceiling. */
 const MAX_STASH_BYTES = 2_000_000;
 
-type Stash = { v?: number; noteId?: string; body?: string; sealed?: string; at?: string; tab?: string; seq?: number };
+type Stash = { v?: number; noteId?: string; body?: string; sealed?: string; at?: string; tab?: string; seq?: number; e?: unknown };
 
 /** `"<b64 nonce>:<b64 ct>"` under the local key, or null when none is registered. */
 function seal(value: unknown, aad: string): string | null {
@@ -142,6 +159,13 @@ export function setEditorBaseLookup(lookup: ((noteId: string) => string | undefi
   editorBaseOf = lookup ?? (() => undefined);
 }
 
+/** The body the open editor of a note last loaded or wrote, or undefined
+ *  when no editor of the note is known. A sync pass reads it to tell a pull
+ *  that rewrote the row from the editor's own save (useSyncOrchestrator). */
+export function openEditorBody(noteId: string): string | undefined {
+  return editorBaseOf(noteId);
+}
+
 /** This tab, and the number of the newest stash it wrote. A save reads the
  *  number before its write (stashGeneration), and once that write commits it
  *  settles only a stash of this tab numbered at or below it: a stash written
@@ -173,7 +197,7 @@ export function stashPendingEdit(noteId: string, body: string): void {
       }
       localStorage.setItem(
         STASH_KEY,
-        JSON.stringify({ v: base === undefined ? 2 : 4, noteId, sealed, ...stamp }),
+        JSON.stringify({ v: base === undefined ? 2 : 4, noteId, sealed, ...stamp, ...epochMarker() }),
       );
       return;
     }
@@ -243,6 +267,30 @@ function readSlot(slot: string, clear: boolean): string | null {
   return raw;
 }
 
+/** The waiting list as stored; an unreadable list reads as empty. */
+function readWaiting(): string[] {
+  return readStringList(WAITING_STASH_KEY);
+}
+
+/** Store the waiting list when it changed; false when the storage refused
+ *  the write, which leaves the list as it was. */
+function writeWaiting(before: string[], next: string[]): boolean {
+  const list = [...new Set(next)];
+  if (list.length > WAITING_MAX) {
+    list.splice(0, list.length - WAITING_MAX);
+    logAuthEvent('seal:stash-wait-dropped');
+  }
+  if (list.length === before.length && list.every((s, i) => s === before[i])) return true;
+  try {
+    if (list.length === 0) localStorage.removeItem(WAITING_STASH_KEY);
+    else localStorage.setItem(WAITING_STASH_KEY, JSON.stringify(list));
+    return true;
+  } catch {
+    logAuthEvent('seal:stash-wait-lost');
+    return false;
+  }
+}
+
 /** Keeps a stashed text as a copy of the note it was typed into, beside the
  *  version the note holds now. Resolves true once the copy exists. */
 type KeepCopy = (note: LocalNote, text: string) => Promise<boolean>;
@@ -250,8 +298,9 @@ type KeepCopy = (note: LocalNote, text: string) => Promise<boolean>;
 /** The text a stash holds and what is sealed beside it (the mark of v4, the
  *  fingerprint of v3), or null when it cannot be opened: a shape this build
  *  does not know, no key, or a seal that does not open (wrong account's key,
- *  or corruption, which leaves a breadcrumb). */
-function openStash(stash: Stash): [string, string?] | null {
+ *  or corruption, which leaves a breadcrumb). `waits`: sealed under a key
+ *  epoch this device holds no key for yet, so the stash keeps its slot. */
+function openStash(stash: Stash): [string, string?] | null | 'waits' {
   if (typeof stash.body === 'string') {
     // Legacy plaintext shape - written by reader-mode builds, and
     // honored exactly once so the last pre-writer session's in-flight
@@ -264,13 +313,76 @@ function openStash(stash: Stash): [string, string?] | null {
   try {
     const [n = '', ct = ''] = stash.sealed.split(':');
     const prefix = stash.v === 3 ? KEPT_AAD_PREFIX : stash.v === 4 ? BASED_AAD_PREFIX : STASH_AAD_PREFIX;
-    const payload = decryptJsonAad<string | [string, string]>(base64ToBytes(ct), base64ToBytes(n), key, `${prefix}${stash.noteId}`);
+    const aad = `${prefix}${stash.noteId}`;
+    const payload = openWithRing('local', key, (k) => decryptJsonAad<string | [string, string]>(base64ToBytes(ct), base64ToBytes(n), k, aad), epochOf(stash.e));
     return stash.v === 2 ? [payload as string] : (payload as [string, string]);
-  } catch {
+  } catch (err) {
+    if (err instanceof KeyEpochUnknown) {
+      logAuthEvent('seal:stash-waits-epoch');
+      return 'waits';
+    }
     logAuthEvent('seal:stash-open-failed');
     return null;
   } finally {
     key.fill(0);
+  }
+}
+
+/** A stored stash sealed again under the current local key, or null when it
+ *  needs nothing: plain, already current, of an epoch this device holds no
+ *  key for, or a shape this build does not know. */
+function resealStash(raw: string): string | null {
+  let stash: Stash;
+  try {
+    stash = JSON.parse(raw) as Stash;
+  } catch {
+    return null;
+  }
+  if (!((stash.v === 2 || stash.v === 3 || stash.v === 4) && stash.sealed && stash.noteId)) return null;
+  const epoch = epochOf(stash.e);
+  if (epoch === currentKeyEpoch() || !holdsEpoch(epoch)) return null;
+  const key = localDataKeyCopy();
+  if (!key) return null;
+  try {
+    const [n = '', ct = ''] = stash.sealed.split(':');
+    const prefix = stash.v === 3 ? KEPT_AAD_PREFIX : stash.v === 4 ? BASED_AAD_PREFIX : STASH_AAD_PREFIX;
+    const aad = `${prefix}${stash.noteId}`;
+    const payload = openWithRing('local', key, (k) => decryptJsonAad<unknown>(base64ToBytes(ct), base64ToBytes(n), k, aad), epoch);
+    const sealed = seal(payload, aad);
+    if (!sealed) return null;
+    const rest: Stash = { ...stash };
+    delete rest.e;
+    return JSON.stringify({ ...rest, sealed, ...epochMarker() });
+  } catch {
+    return null;
+  } finally {
+    key.fill(0);
+  }
+}
+
+/**
+ * The kept slot and the waiting list, sealed again under the current local
+ * key after a phrase change. Each is written only over the text this read,
+ * so a boot that settled a slot meanwhile is not undone. The fresh slot is
+ * left alone: only a closing page writes it, and the next boot settles it
+ * through the ring. Spec: docs/internal/plans/phrase-change.md (6.4, item 1)
+ */
+export function resealStashSlots(): void {
+  if (isDemoMode() || !sealedWritesOn()) return;
+  try {
+    const kept = localStorage.getItem(KEPT_STASH_KEY);
+    const next = kept ? resealStash(kept) : null;
+    if (next && localStorage.getItem(KEPT_STASH_KEY) === kept) localStorage.setItem(KEPT_STASH_KEY, next);
+  } catch {
+    /* the slot stays as it was, and opens through the ring */
+  }
+  const waiting = readWaiting();
+  const resealed = waiting.map((raw) => resealStash(raw) ?? raw);
+  if (resealed.every((raw, i) => raw === waiting[i])) return;
+  try {
+    if (localStorage.getItem(WAITING_STASH_KEY) === JSON.stringify(waiting)) writeWaiting(waiting, resealed);
+  } catch {
+    /* as above */
   }
 }
 
@@ -307,17 +419,29 @@ async function settleBased(raw: string, noteId: string, at: string, body: string
   // fingerprinted against the body this refusal saw.
   if (sealedWritesOn()) {
     const sealed = seal([body, await fingerprint(row.body)], `${KEPT_AAD_PREFIX}${noteId}`);
-    if (sealed) return { keep: JSON.stringify({ v: 3, noteId, sealed, at }) };
+    if (sealed) return { keep: JSON.stringify({ v: 3, noteId, sealed, at, ...epochMarker() }) };
   }
   return { keep: raw };
 }
 
-/** One stash against its note: written in, dropped, or the form to keep. */
-async function settle(raw: string, keepCopy?: KeepCopy): Promise<'applied' | 'dropped' | { keep: string }> {
+/** One stash against its note: written in, dropped, the form to keep, or
+ *  `waits` for the key of its epoch. */
+async function settle(raw: string, keepCopy?: KeepCopy): Promise<'applied' | 'dropped' | 'waits' | { keep: string }> {
   try {
     const stash = JSON.parse(raw) as Stash;
     if (!stash.noteId || !stash.at) return 'dropped';
     const opened = openStash(stash);
+    if (opened === 'waits') {
+      // A note gone from this device takes nothing, as below: a waiting
+      // stash of an account this device no longer holds does not wait forever.
+      try {
+        const note = await getNote(stash.noteId);
+        if (!note || note.deleted === 1) return 'dropped';
+      } catch {
+        /* the note is there and does not open yet: it waits with it */
+      }
+      return 'waits';
+    }
     if (!opened) return 'dropped';
     const [body, base] = opened;
     if (stash.v === 4) return await settleBased(raw, stash.noteId, stash.at, body, base, keepCopy);
@@ -348,7 +472,7 @@ async function settle(raw: string, keepCopy?: KeepCopy): Promise<'applied' | 'dr
     // this refusal saw the first time and byte for byte after that.
     if (base === undefined && sealedWritesOn()) {
       const sealed = seal([body, await fingerprint(note.body)], `${KEPT_AAD_PREFIX}${stash.noteId}`);
-      if (sealed) return { keep: JSON.stringify({ v: 3, noteId: stash.noteId, sealed, at: stash.at }) };
+      if (sealed) return { keep: JSON.stringify({ v: 3, noteId: stash.noteId, sealed, at: stash.at, ...epochMarker() }) };
     }
     return { keep: raw };
   } catch {
@@ -374,18 +498,31 @@ export async function reconcileFlushStash(keepCopy?: KeepCopy): Promise<boolean>
   // it waits across boots by design, and a tab closed mid-boot must not
   // lose it.
   const kept = readSlot(KEPT_STASH_KEY, false);
+  // The waiting list, like the kept slot, stays on disk until this boot
+  // knows what becomes of each stash in it.
+  const waiting = readWaiting();
   let applied = false;
   let keep: string | null = null;
   let displaced = false;
-  for (const raw of [fresh, kept]) {
+  // The stashes that wait for the key of their epoch, by where they were.
+  const waits: string[][] = [[], [], []];
+  for (const [slot, raw] of [fresh, kept, ...waiting].entries()) {
     if (!raw) continue;
     const outcome = await settle(raw, keepCopy);
     if (outcome === 'applied') applied = true;
     else if (outcome === 'dropped') continue;
+    else if (outcome === 'waits') waits[Math.min(slot, 2)]!.push(raw);
     else if (keep === null) keep = outcome.keep;
     else displaced = true;
   }
+  // Oldest first: the list as it was, then the kept text, then the fresh one.
+  const listed = writeWaiting(waiting, [...waits[2]!, ...waits[1]!, ...waits[0]!]);
   if (keep === kept) return applied;
+  // A kept text that waits leaves its slot only once the list holds it.
+  if (!listed && waits[1]!.length > 0) {
+    if (keep !== null) logAuthEvent('seal:stash-kept-lost');
+    return applied;
+  }
   if (keep === null) {
     try {
       localStorage.removeItem(KEPT_STASH_KEY);

@@ -24,9 +24,11 @@ const PASSCODE_SALT_BYTES = 24;
 export const PASSCODE_MIN_CHARS = 8;
 export const PASSCODE_MAX_CHARS = 256;
 
-/** Whether the PIN tab offers a passcode. Checking one is never gated, so an
- *  account's passcode can always be opened, changed or replaced by a PIN. */
-export const PASSCODE_SETUP_ENABLED = true;
+/** The PBKDF2 count of a PIN wrap written before the count was recorded
+ *  beside the blob; such a blob is a legacy one, and the lock screen
+ *  re-wraps it at the current count once it opens.
+ *  Spec: docs/contrib/biometric-unlock.md */
+export const LEGACY_PIN_WRAP_ITERATIONS = 100_000;
 
 /** The kind of a secret, from the secret itself. */
 export function isPasscode(secret: string): boolean {

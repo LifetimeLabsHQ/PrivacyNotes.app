@@ -15,7 +15,7 @@ That is our live database in Zurich, not a drawing of one. Your note goes in the
 
 ## What happens when you write a note
 
-1. Your 12-word phrase becomes a key. This happens on your device.
+1. Your recovery phrase becomes a key. This happens on your device.
 2. The note is encrypted with that key, on your device. That is how it is saved on your own disk, and how it travels to us.
 3. We receive the encrypted note and store it. The screenshot above is what that looks like.
 4. Any device with the same phrase makes the same key and opens the note.

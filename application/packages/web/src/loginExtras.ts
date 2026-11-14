@@ -7,12 +7,15 @@
  * map through unchanged. The first website stays `body.url`, which every
  * client already reads.
  *
- * Only a field whose type is exactly `text` is public (searchable, shown
- * unmasked). Every other type, including one a newer client may add, is
- * treated as hidden.
+ * Only a field whose type is in `PUBLIC_FIELD_TYPES` is public (searchable,
+ * shown unmasked). Every other type, including one a newer client may add, is
+ * treated as hidden. Contacts keep the same field shape in their sections
+ * (`contactBody.ts`), with two more public types.
  *
  * Spec: docs/internal/issues/archive/0289.md
  */
+
+import { isRecord } from './isRecord';
 
 export interface LoginField {
   id: string;
@@ -28,10 +31,6 @@ export interface LoginExtras {
 
 const EMPTY_LOGIN_EXTRAS: LoginExtras = { extraUrls: [], fields: [] };
 
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return v !== null && typeof v === 'object' && !Array.isArray(v);
-}
-
 /** Read the extras from a stored `trackers.login` value. Anything malformed
  *  reads as absent rather than throwing. */
 function parseLoginExtras(raw: unknown): LoginExtras {
@@ -39,8 +38,13 @@ function parseLoginExtras(raw: unknown): LoginExtras {
   const extraUrls = Array.isArray(raw.extraUrls)
     ? raw.extraUrls.filter((u): u is string => typeof u === 'string')
     : [];
-  const fields = Array.isArray(raw.fields)
-    ? raw.fields.filter(
+  return { extraUrls, fields: parseFieldList(raw.fields) };
+}
+
+/** The well-formed fields of a stored list; a malformed entry is dropped. */
+export function parseFieldList(raw: unknown): LoginField[] {
+  return Array.isArray(raw)
+    ? raw.filter(
         (f): f is LoginField =>
           isRecord(f) &&
           typeof f.id === 'string' &&
@@ -49,7 +53,6 @@ function parseLoginExtras(raw: unknown): LoginExtras {
           typeof f.type === 'string',
       )
     : [];
-  return { extraUrls, fields };
 }
 
 export function loginExtrasOf(trackers: Record<string, unknown> | undefined): LoginExtras {
@@ -60,12 +63,16 @@ export function hasLoginExtras(e: LoginExtras): boolean {
   return e.extraUrls.length > 0 || e.fields.length > 0;
 }
 
+/** The field types a value is shown unmasked and indexed for. A login only
+ *  ever writes `text` and `hidden`; a contact also writes `number` and `yesno`. */
+const PUBLIC_FIELD_TYPES = new Set(['text', 'number', 'yesno']);
+
 /** Whether a field's value may be shown unmasked and indexed. */
 export function isPublicField(f: LoginField): boolean {
-  return f.type === 'text';
+  return PUBLIC_FIELD_TYPES.has(f.type);
 }
 
-export function newLoginField(type: 'text' | 'hidden', label = '', value = ''): LoginField {
+export function newLoginField(type: string, label = '', value = ''): LoginField {
   return { id: crypto.randomUUID(), label, value, type };
 }
 

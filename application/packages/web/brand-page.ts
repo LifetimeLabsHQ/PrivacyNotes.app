@@ -131,7 +131,7 @@ const COPY: CopyBlock[] = [
   {
     id: 'cp-short',
     label: 'Short',
-    text: 'A workspace for notes, tasks, passwords, journal, files, calendar, contacts and bookmarks, with mood and medication tracking, encrypted on your device, plus a free Markdown editor for folders on your disk. Self-custody: a 12-word key only you hold. No trackers, no ads.',
+    text: 'A workspace for notes, tasks, passwords, journal, files, calendar, contacts and bookmarks, with mood and medication tracking, encrypted on your device, plus a free Markdown editor for folders on your disk. Self-custody: a key only you hold. No trackers, no ads.',
   },
   {
     id: 'cp-meta',
@@ -141,7 +141,7 @@ const COPY: CopyBlock[] = [
   {
     id: 'cp-boiler',
     label: 'Boilerplate, press',
-    text: 'PrivacyNotes is an encrypted workspace for your notes, tasks, passwords, journal, files, calendar, contacts and bookmarks, with mood and medication tracking, and a free Markdown editor for the folders already on your disk. Everything you store is always encrypted, on your device and on the way to the server, under a key from a 12-word recovery phrase that, with self-custody, never leaves your hands. Lifetime Labs keeps your notes only as ciphertext and, with self-custody, holds nothing that opens them. There are no trackers, no ads and no analytics of what you write. PrivacyNotes runs on the web and as native apps, and its apps are open source: the clients, the encryption layer and the threat model are all published for review. The free tier is free forever; Pro is a one-time purchase.',
+    text: 'PrivacyNotes is an encrypted workspace for your notes, tasks, passwords, journal, files, calendar, contacts and bookmarks, with mood and medication tracking, and a free Markdown editor for the folders already on your disk. Everything you store is always encrypted, on your device and on the way to the server, under a key from a recovery phrase that, with self-custody, never leaves your hands. Lifetime Labs keeps your notes only as ciphertext and, with self-custody, holds nothing that opens them. There are no trackers, no ads and no analytics of what you write. PrivacyNotes runs on the web and as native apps, and its apps are open source: the clients, the encryption layer and the threat model are all published for review. The free tier is free forever; Pro is a one-time purchase.',
   },
 ];
 
@@ -216,7 +216,7 @@ const FACTS: Array<[string, string]> = [
   ['Platforms', 'Web, macOS, Windows, Linux, iOS, Android'],
   ['Stack', 'React + TypeScript, local-first storage'],
   ['Source', 'Open source: <a href="https://github.com/LifetimeLabsHQ/PrivacyNotes.app" target="_blank" rel="noopener noreferrer">github.com/LifetimeLabsHQ/PrivacyNotes.app</a>'],
-  ['Encryption', 'XChaCha20-Poly1305, BIP-39 12-word phrase, encrypted on the device'],
+  ['Encryption', 'XChaCha20-Poly1305, BIP-39 recovery phrase, encrypted on the device'],
   ['Press contact', '<a href="https://lifetimelabs.dev/contact/" target="_blank" rel="noopener noreferrer">LifetimeLabs.Dev/contact</a>'],
   ['Established', 'App in development since early 2025. Lifetime Labs LLC est. April 2026.'],
 ];

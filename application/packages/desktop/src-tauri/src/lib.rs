@@ -47,6 +47,9 @@ mod ninja;
 #[cfg(desktop)]
 mod autostart;
 
+/// Every window stays on the app's own pages (beta issue 85).
+mod navigation;
+
 /// Links, text and files other apps shared into this one, waiting for the
 /// unlocked app to take them. Compiled everywhere so its tests run on the
 /// host; only the mobile builds expose its commands.
@@ -561,10 +564,12 @@ pub fn run() {
     let builder = tauri::Builder::default();
 
     // single-instance MUST be the first plugin registered. With the
-    // deep-link feature it forwards a privacynotes:// callback caught by a
-    // second on-disk copy of the app to the already-running instance,
-    // instead of letting that copy launch fresh and swallow the OAuth
-    // redirect. Desktop only. Spec: docs/internal/macos-ios-setup.md (native OAuth)
+    // deep-link feature it forwards a privacynotes:// link (a note shortcut,
+    // `privacynotes://note/<id>`) or a file path caught by a second launch to
+    // the running instance, instead of letting that copy start fresh. The
+    // desktop sign-in no longer returns through the scheme: it ends on a page
+    // that shows a code the person pastes (web/auth-desktop-page.ts).
+    // Desktop only.
     #[cfg(desktop)]
     let builder = if !rendezvous_is_ours(context.config()) {
         builder
@@ -803,7 +808,8 @@ pub fn run() {
                     .find(|w| w.label == "main")
                     .cloned()
                     .ok_or("tauri.conf.json has no main window")?;
-                let builder = tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?;
+                let builder = tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?
+                    .on_navigation(navigation::guard(app.handle()));
                 #[cfg(desktop)]
                 let builder = builder.visible(false);
                 builder.build()?;
@@ -1303,22 +1309,12 @@ fn set_title_bar_colors(
 
 /// Whether the web view shows the app's own pages: `tauri://localhost` in a
 /// release build, and the configured dev server in a debug build. Every window
-/// opens on the app, but nothing stops a link from navigating one elsewhere,
-/// so a capture grant asks where the web view is now.
+/// opens on the app and `navigation::guard` keeps it there; a capture grant
+/// still asks where the web view is now.
 #[cfg(target_os = "linux")]
 fn serves_app_origin<R: tauri::Runtime>(webview: &tauri::Webview<R>) -> bool {
     let Ok(url) = webview.url() else { return false };
-    if url.scheme() == "tauri" && url.host_str() == Some("localhost") {
-        return true;
-    }
-    #[cfg(debug_assertions)]
-    {
-        use tauri::Manager;
-        if let Some(dev) = webview.app_handle().config().build.dev_url.as_ref() {
-            return url.origin() == dev.origin();
-        }
-    }
-    false
+    navigation::is_app_url(&url, navigation::dev_url(webview).as_ref())
 }
 
 /// Opens (or focuses) the custom About window. The web bundle renders it:
@@ -1342,6 +1338,7 @@ fn open_about_window(app: &tauri::AppHandle) {
         "about",
         WebviewUrl::App("index.html?about-window=1".into()),
     )
+    .on_navigation(crate::navigation::guard(app))
     .title("About PrivacyNotes")
     .inner_size(280.0, 441.0)
     .resizable(false)

@@ -35,6 +35,7 @@
 import type { FolderDef } from './folders';
 import { linkDomain, parseLinkBody } from './linkBody';
 import { normalizeTag } from './notesRepo';
+import { escapeHtml } from './escapeHtml';
 
 /** The minimum a bookmark row needs to be written out. */
 export interface ExportableBookmark {
@@ -48,14 +49,6 @@ export interface ExportableBookmark {
 /** Root folder name the importer creates. Mirrors ROOT_FOLDER there. */
 const IMPORT_ROOT = 'Bookmarks';
 
-function esc(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
 /** ISO 8601 to unix seconds. '' when the date is missing or unparseable. */
 function unixSeconds(iso: string): string {
   const ms = Date.parse(iso);
@@ -65,7 +58,7 @@ function unixSeconds(iso: string): string {
 function attrs(pairs: Array<[string, string]>): string {
   return pairs
     .filter(([, v]) => v !== '')
-    .map(([k, v]) => ` ${k}="${esc(v)}"`)
+    .map(([k, v]) => ` ${k}="${escapeHtml(v)}"`)
     .join('');
 }
 
@@ -132,13 +125,13 @@ export function buildBookmarksHtml(
       ['SHORTCUTURL', keyword],
       ['TAGS', b.tags.filter((t) => !keywordTag || t !== keywordTag).join(',')],
     ]);
-    out.push(`${indent}<DT><A${a}>${esc(name)}</A>`);
+    out.push(`${indent}<DT><A${a}>${escapeHtml(name)}</A>`);
   };
 
   const writeFolder = (f: FolderDef, depth: number) => {
     if (!occupied.has(f.id)) return;
     const indent = '    '.repeat(depth);
-    out.push(`${indent}<DT><H3>${esc(f.name)}</H3>`);
+    out.push(`${indent}<DT><H3>${escapeHtml(f.name)}</H3>`);
     out.push(`${indent}<DL><p>`);
     for (const b of inFolder.get(f.id) ?? []) writeBookmark(b, indent + '    ');
     for (const child of childrenOf.get(f.id) ?? []) writeFolder(child, depth + 1);

@@ -50,7 +50,7 @@ const end = (key: string, menuAllowed = true): FormatBarItem => ({ key, home: 'e
 const attached = (key: string, menuAllowed = true): FormatBarItem => ({ key, home: 'attachMenu', group: 'insert', menuAllowed, attachAllowed: true });
 // A separator is a thin line on the bar. Each key exists once, so a person
 // who wants more than one line takes the next one.
-const separator = (key: string): FormatBarItem => ({ key, home: 'hidden', group: 'format', menuAllowed: false, attachAllowed: false });
+export const separator = (key: string): FormatBarItem => ({ key, home: 'hidden', group: 'format', menuAllowed: false, attachAllowed: false });
 // Hidden until a person places it, on the bar or in the menu.
 const offered = (key: string, group: FormatBarGroup): FormatBarItem => ({ key, home: 'hidden', group, menuAllowed: true, attachAllowed: false });
 
@@ -62,7 +62,7 @@ export const FORMAT_BAR_ITEMS: readonly FormatBarItem[] = [
   row('highlight', false), row('callout', false), row('strike'),
   menu('table', 'insert'), menu('hr', 'insert'), menu('bullets', 'insert'), menu('numbered', 'insert'),
   menu('indent', 'insert'), menu('outdent', 'insert'),
-  menu('fromFiles', 'insert', true), menu('date', 'insert'), menu('dateTime', 'insert'), menu('icon', 'insert'), menu('location', 'insert'),
+  menu('fromFiles', 'insert', true), menu('date', 'insert'), menu('dateTime', 'insert'), menu('icon', 'insert'), menu('location', 'insert'), menu('doodle', 'insert'),
   menu('quote', 'blocks'), menu('codeblock', 'blocks'), menu('copybox', 'blocks'), menu('kanban', 'blocks'),
   menu('inlinecode', 'notation'), menu('math', 'notation'), menu('blockmath', 'notation'),
   menu('superscript', 'notation'), menu('subscript', 'notation'), menu('spoiler', 'notation'),

@@ -608,7 +608,8 @@ export function MarkdownFilePane({
           scroll-fading. The only addition is the open padlock, which is the
           whole point of this pillar.
           Spec: docs/internal/design/ui-patterns.md (editor header) */}
-      <div className="flex justify-center min-h-11 sm:min-h-14 py-1.5 sm:py-0 sm:h-14 border-b border-divider shrink-0">
+      {/* data-pn-dock-header: the docked Settings panel starts below it (#741). */}
+      <div data-pn-dock-header className="flex justify-center min-h-11 sm:min-h-14 py-1.5 sm:py-0 sm:h-14 border-b border-divider shrink-0">
         <div className="flex items-center gap-2 px-4 sm:px-6 pn-content-col">
           {/* The way back, in the one slot every editor in this app puts it.
               Both variants are `NoteEditorPane`'s, class for class: below md the

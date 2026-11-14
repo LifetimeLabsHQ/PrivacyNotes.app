@@ -18,7 +18,8 @@ export function SleepScorePill({
   value?: number;
   expanded: boolean;
   onToggle: () => void;
-  onChange: (v: number) => void;
+  /** `undefined` removes the value. */
+  onChange: (v: number | undefined) => void;
   readOnly?: boolean;
 }) {
   const { t } = useTranslation('trackers');
@@ -35,7 +36,7 @@ export function SleepScorePill({
     >
       <div className="max-w-[420px]">
         <PanelQuestion>{t('sleepScore.prompt')}</PanelQuestion>
-        <NumberStepper value={value} onChange={onChange} min={0} max={100} step={1} quick={QUICK_SCORES} start={last} placeholder="75" expanded={expanded} />
+        <NumberStepper value={value} onChange={onChange} onClear={() => onChange(undefined)} min={0} max={100} step={1} quick={QUICK_SCORES} start={last} placeholder="75" expanded={expanded} />
       </div>
     </PillShell>
   );

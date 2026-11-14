@@ -365,5 +365,47 @@
     "moveTo": "Mou a",
     "cardCount_one": "{{count}} targeta",
     "columnCount_one": "{{count}} columna"
+  },
+  "doodle": {
+    "title": "Gargot",
+    "clear": "Esborra",
+    "paper": "Paper",
+    "paperNone": "Sense color: la nota es veu a través.",
+    "settings": "Configuració de la ploma",
+    "stroke": "Traç",
+    "thinning": "Aprimament",
+    "streamline": "Estabilització",
+    "smoothing": "Suavitzat",
+    "easingLabel": "Acceleració",
+    "start": "Inici",
+    "end": "Final",
+    "taperStart": "Afuament inicial",
+    "capStart": "Remat inicial",
+    "easingStart": "Acceleració inicial",
+    "taperEnd": "Afuament final",
+    "capEnd": "Remat final",
+    "easingEnd": "Acceleració final",
+    "fill": "Emplenament",
+    "outline": "Contorn",
+    "easing": {
+      "linear": "Lineal",
+      "in": "Entrada suau, {{curve}}",
+      "out": "Sortida suau, {{curve}}",
+      "inOut": "Entrada i sortida suaus, {{curve}}"
+    },
+    "curve": {
+      "quad": "quadràtica",
+      "cubic": "cúbica",
+      "quart": "quàrtica",
+      "quint": "quíntica",
+      "sine": "sinusoidal",
+      "expo": "exponencial"
+    },
+    "colors": {
+      "black": "Negre",
+      "white": "Blanc",
+      "cyan": "Cian",
+      "lightGray": "Gris clar"
+    }
   }
 }

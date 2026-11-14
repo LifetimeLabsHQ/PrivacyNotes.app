@@ -5,6 +5,7 @@ import { isDemoMode } from './demo';
 import type { LocalNote } from './db';
 import { journalDateOf } from './notesViewUtils';
 import { toLocalIso } from './intlFormat';
+import { createListeners } from './listeners';
 import { shiftDay } from './schedule';
 import type { ReminderItem } from './reminders';
 import {
@@ -146,7 +147,7 @@ export function checkInParts(data: JournalTrackerData, settings: TrackerSettings
 function skipKey(): string {
   return isDemoMode() ? 'privacynotes.demo.checkInSkipped' : 'privacynotes.checkInSkipped';
 }
-const listeners = new Set<() => void>();
+const { subscribe, notify } = createListeners();
 /** The skip when storage refuses it (a private window): this page only. */
 let pageSkip: string | null = null;
 function readSkipped(): string | null {
@@ -155,10 +156,6 @@ function readSkipped(): string | null {
   } catch {
     return pageSkip;
   }
-}
-function subscribe(l: () => void): () => void {
-  listeners.add(l);
-  return () => { listeners.delete(l); };
 }
 
 /** Whether the card is skipped for `today` on this device. A skip of an
@@ -176,7 +173,7 @@ export function setCheckInSkipped(on: boolean): void {
   } catch {
     // Storage refused (a private window): `pageSkip` holds it for this page.
   }
-  listeners.forEach((l) => l());
+  notify();
 }
 
 // ------------------------------------------------------------------

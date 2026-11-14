@@ -248,6 +248,8 @@
       "unknown": "Okänt mätvärde {{id}}",
       "sleepHours": "Sömntimmar",
       "sleepQuality": "Sömnkvalitet",
+      "bpSystolic": "Blodtryck, övre",
+      "bpDiastolic": "Blodtryck, nedre",
       "avgDays_one": "snitt, {{count}} dag",
       "avgDays_other": "snitt, {{count}} dagar",
       "sumDays_one": "totalt, {{count}} dag",

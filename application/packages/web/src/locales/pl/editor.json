@@ -372,5 +372,47 @@
     "cardCount_many": "{{count}} kart",
     "columnCount_few": "{{count}} kolumny",
     "columnCount_many": "{{count}} kolumn"
+  },
+  "doodle": {
+    "title": "Szkic odręczny",
+    "clear": "Wyczyść",
+    "paper": "Papier",
+    "paperNone": "Bez koloru: widać przez niego notatkę.",
+    "settings": "Ustawienia pióra",
+    "stroke": "Kreska",
+    "thinning": "Zwężanie",
+    "streamline": "Wygładzanie ruchu",
+    "smoothing": "Wygładzanie krawędzi",
+    "easingLabel": "Krzywa nacisku",
+    "start": "Początek",
+    "end": "Koniec",
+    "taperStart": "Zwężenie na początku",
+    "capStart": "Zaokrąglenie na początku",
+    "easingStart": "Krzywa na początku",
+    "taperEnd": "Zwężenie na końcu",
+    "capEnd": "Zaokrąglenie na końcu",
+    "easingEnd": "Krzywa na końcu",
+    "fill": "Wypełnienie",
+    "outline": "Kontur",
+    "easing": {
+      "linear": "Liniowa",
+      "in": "Przyspieszanie, {{curve}}",
+      "out": "Zwalnianie, {{curve}}",
+      "inOut": "Przyspieszanie i zwalnianie, {{curve}}"
+    },
+    "curve": {
+      "quad": "kwadratowa",
+      "cubic": "sześcienna",
+      "quart": "czwartego stopnia",
+      "quint": "piątego stopnia",
+      "sine": "sinusoidalna",
+      "expo": "wykładnicza"
+    },
+    "colors": {
+      "black": "Czarny",
+      "white": "Biały",
+      "cyan": "Cyjan",
+      "lightGray": "Jasnoszary"
+    }
   }
 }

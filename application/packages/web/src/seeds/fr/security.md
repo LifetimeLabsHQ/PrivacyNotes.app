@@ -12,7 +12,7 @@ Voilà notre vraie base de données à Zurich, pas un dessin. Ta note va dans la
 
 ## Ce qui se passe quand tu écris une note
 
-1. Ta phrase de 12 mots devient une clé. Cela se passe sur ton appareil.
+1. Ta phrase de récupération devient une clé. Cela se passe sur ton appareil.
 2. La note est chiffrée avec cette clé, sur ton appareil. C'est ainsi qu'elle est enregistrée sur ton propre disque, et ainsi qu'elle voyage jusqu'à nous.
 3. Nous recevons la note chiffrée et la stockons. L'image ci-dessus montre à quoi cela ressemble.
 4. N'importe quel appareil avec la même phrase refabrique la même clé et ouvre la note.

@@ -25,6 +25,7 @@ import { HoverLabel } from './HoverLabel';
 import { ArrowSquareOut, At, Cake, Calendar, CaretDown, ChatCircle, EnvelopeSimple, Globe, MapPin, Phone, User, Users } from './icons';
 import { DETAIL_COLUMN, DETAIL_TILE_PX, DetailAction, DetailCopyAction, DetailGroup, DetailHero, DetailLink, DetailNotes, DetailRow } from './detailPane';
 import { openMediaViewer } from './mediaRefs';
+import { CustomFieldRow } from './CustomFields';
 
 
 /** A stored contact with nothing in it: the New state. */
@@ -42,6 +43,7 @@ function isContactEmpty(c: Contact): boolean {
     c.dates.length === 0 &&
     c.related.length === 0 &&
     !c.notes.trim() &&
+    c.sections.length === 0 &&
     c.extras.length === 0
   );
 }
@@ -359,6 +361,13 @@ function ContactView({ note, contact, locked, onEdit }: {
       {nameRows.length > 0 && group(t('shell:contacts.menuName'), nameRows)}
 
       {contact.notes.trim() && <DetailNotes heading={t('shell:contacts.itemNote')}>{contact.notes}</DetailNotes>}
+
+      {/* The owner's own sections (#757), in the order the form keeps them. */}
+      {contact.sections.map((sec) => (
+        <DetailGroup key={sec.id} heading={sec.title || t('auth:loginForm.customFieldsLabel')}>
+          {sec.fields.map((f) => <CustomFieldRow key={f.id} field={f} copy={copy} copied={copied} />)}
+        </DetailGroup>
+      ))}
 
       {contact.extras.length > 0 && (
         <div className="mt-5 rounded-md border border-divider">

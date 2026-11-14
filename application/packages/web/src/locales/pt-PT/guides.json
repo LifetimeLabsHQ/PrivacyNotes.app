@@ -10,6 +10,35 @@
     "otherGuides": "Outros guias de importação"
   },
   "guides": {
+    "1password": {
+      "app": "1Password",
+      "title": "Exporta o teu cofre do 1Password",
+      "metaTitle": "Como exportar o teu cofre do 1Password - PrivacyNotes",
+      "lead": "A app 1Password exporta a tua conta num único ficheiro .1pux, e o PrivacyNotes transforma os logins, os cartões, as notas e as identidades em itens do Cofre e em notas.",
+      "sections": [
+        {
+          "h": "Exporta a partir do 1Password",
+          "steps": [
+            "Abre a app 1Password no teu computador e desbloqueia-a.",
+            "Escolhe File > Export e seleciona a tua conta.",
+            "Introduz a palavra-passe da tua conta, mantém o formato 1PUX e guarda o ficheiro."
+          ]
+        },
+        {
+          "h": "1PUX ou CSV",
+          "p": [
+            "Escolhe 1PUX. A exportação em CSV guarda apenas logins: sem cartões, notas nem identidades, e sem campos personalizados."
+          ]
+        },
+        {
+          "h": "Onde as coisas vão parar",
+          "p": [
+            "Cada login passa a [login do Cofre](/pt/help/vault) com a sua chave 2FA, por isso [os teus códigos continuam a funcionar](/pt/help/vault-totp), e os sites extra e os campos personalizados também vêm. Um cartão passa a cartão, e uma nota segura ou uma identidade passa a nota. As etiquetas continuam etiquetas, as aninhadas também, os favoritos chegam fixados e os itens arquivados vão para o arquivo. Os ficheiros anexados ficam para trás: guarda-os a partir do 1Password e anexa-os aqui.",
+            "O ficheiro exportado contém as tuas palavras-passe em texto simples. Importa-o, confirma que chegou tudo e depois apaga o ficheiro."
+          ]
+        }
+      ]
+    },
     "google-calendar": {
       "app": "Google Calendar",
       "title": "Exporta o teu Google Calendar",
@@ -159,6 +188,53 @@
         }
       ]
     },
+    "siyuan": {
+      "app": "SiYuan",
+      "title": "Exporta as tuas notas do SiYuan",
+      "metaTitle": "Como exportar as tuas notas do SiYuan em Data.zip - PrivacyNotes",
+      "lead": "O SiYuan exporta o teu espaço de trabalho inteiro num único Data.zip. Esse ficheiro traz todos os cadernos com os documentos aninhados, as etiquetas, as referências de bloco, os recursos e as datas.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/siyuan-export.webp",
+            "alt": "A janela Data migration do SiYuan com a linha Data.zip selecionada e o botão Export em destaque.",
+            "width": 1576,
+            "height": 1076
+          },
+          "h": "Exporta o espaço de trabalho como Data.zip",
+          "steps": [
+            "Abre o SiYuan no teu computador.",
+            "Clica no menu SiYuan, no canto superior esquerdo, e escolhe \"Data migration\".",
+            "Em SiYuan, aponta para \"Data.zip\" e clica em Export.",
+            "Escolhe uma pasta. O SiYuan escreve um único .zip com todos os cadernos do espaço de trabalho.",
+            "Larga esse .zip tal como está."
+          ],
+          "p": [
+            "Para mudar só um caderno, clica nele com o botão direito no painel Documents e escolhe Export > \"SiYuan .sy.zip\". Lemos esse ficheiro da mesma forma."
+          ]
+        },
+        {
+          "h": "Desbloqueia os cadernos encriptados e exporta-os à parte",
+          "p": [
+            "O Data.zip mantém um caderno encriptado como está, por isso não o conseguimos ler. Ignoramos esse caderno e a pré-visualização da importação indica o nome dele. Desbloqueia o caderno no SiYuan, exporta-o como \"SiYuan .sy.zip\" e larga também esse ficheiro: essa exportação é legível."
+          ]
+        },
+        {
+          "h": "Escolhe Data.zip, não Markdown",
+          "p": [
+            "A exportação em .zip de Markdown guarda o texto, mas deixa de fora as etiquetas e as datas dos documentos, e escreve as referências de bloco como texto simples ou notas de rodapé. Lemos esse ficheiro se for tudo o que tens, e cada nota fica com a data da importação."
+          ]
+        },
+        {
+          "h": "O que vem contigo",
+          "p": [
+            "Cada caderno passa a ser uma pasta, e os documentos aninhados passam a pastas aninhadas. Um documento com subdocumentos e texto próprio passa a ser uma nota dentro da pasta com o mesmo nome. Cada nota mantém as suas etiquetas e as datas de criação e de atualização guardadas pelo SiYuan.",
+            "Títulos, listas, listas de tarefas, citações, código com a sua linguagem, tabelas com o seu alinhamento, matemática, avisos, realces e cores do texto chegam como estavam. [As referências de bloco passam a ligações entre notas](/pt/help/note-links), as imagens e os ficheiros são importados para o teu armazenamento, e os documentos marcados como favoritos chegam fixados.",
+            "Uma base de dados passa a ser uma tabela com as suas colunas visíveis, os separadores passam a secções recolhíveis e um mapa mental passa a uma lista aninhada. Os flashcards ficam como texto simples e uma consulta incorporada é mantida como código. O SiYuan não tem Lixo nas exportações, por isso os documentos eliminados ficam no histórico dele."
+          ]
+        }
+      ]
+    },
     "standard-notes": {
       "app": "Standard Notes",
       "title": "Exporta as tuas notas do Standard Notes",
@@ -256,6 +332,29 @@
           "p": [
             "Os logins passam a [entradas de login do Cofre](/pt/help/vault) (com os ícones dos sites), os cartões passam a entradas de cartão, as chaves SSH passam a entradas de chave SSH, e as notas seguras mais as identidades chegam como notas legíveis. As pastas do Bitwarden passam a etiquetas, e os favoritos chegam com estrela. As chaves de autenticação (TOTP) vêm também, por isso [os teus códigos 2FA continuam a funcionar](/pt/help/vault-totp).",
             "O ficheiro exportado contém as tuas palavras-passe em texto simples, por isso importa-o, confirma que chegou tudo e depois apaga o ficheiro em condições. Dentro do PrivacyNotes tudo volta a ficar encriptado, no teu dispositivo e a caminho do servidor."
+          ]
+        }
+      ]
+    },
+    "enpass": {
+      "app": "Enpass",
+      "title": "Exporta o teu cofre do Enpass",
+      "metaTitle": "Como exportar o teu cofre do Enpass - PrivacyNotes",
+      "lead": "O Enpass exporta um cofre num único ficheiro .json, e o PrivacyNotes transforma os logins, os cartões, as notas e as identidades em itens do Cofre e em notas.",
+      "sections": [
+        {
+          "h": "Exporta a partir do Enpass",
+          "steps": [
+            "Abre o Enpass no teu computador e desbloqueia-o.",
+            "Escolhe File > Export, seleciona o cofre e o formato .json.",
+            "Guarda o ficheiro e depois introduz a tua palavra-passe mestra. Exporta cada cofre em separado."
+          ]
+        },
+        {
+          "h": "Onde as coisas vão parar",
+          "p": [
+            "Cada login passa a [login do Cofre](/pt/help/vault) com a sua chave 2FA, por isso [os teus códigos continuam a funcionar](/pt/help/vault-totp), e os sites extra e os campos personalizados também vêm. Um cartão passa a cartão, e uma nota segura ou uma identidade passa a nota. As pastas passam a etiquetas, as aninhadas também, os favoritos chegam fixados e os itens arquivados vão para o arquivo. Os itens do lixo do Enpass e os ficheiros anexados ficam para trás.",
+            "O ficheiro exportado contém as tuas palavras-passe em texto simples. Importa-o, confirma que chegou tudo e depois apaga o ficheiro."
           ]
         }
       ]
@@ -863,6 +962,332 @@
           "h": "Importa o mesmo ficheiro outra vez quando quiseres",
           "p": [
             "Uma segunda importação ignora as pessoas que já tens. Associa cada cartão pelo seu ID, depois pelo nome mais um número de telefone em comum e depois por um endereço de e-mail em comum. Os contactos que já guardaste não são alterados, por isso as edições que fizeste aqui ficam a salvo."
+          ]
+        }
+      ]
+    },
+    "anytype": {
+      "app": "Anytype",
+      "title": "Exporta o teu espaço do Anytype",
+      "metaTitle": "Como exportar o teu espaço do Anytype - PrivacyNotes",
+      "lead": "O Anytype exporta um espaço inteiro de uma só vez, num único zip no formato JSON Any-Block. Esse ficheiro traz as tuas páginas com as etiquetas, as coleções, as tarefas, as ligações e os ficheiros.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/anytype-export.webp",
+            "alt": "Definições do espaço do Anytype, página Export, Any-Block v1 com File Format JSON e Zip archive, com Include files data e Include archived objects ativados.",
+            "width": 1576,
+            "height": 800
+          },
+          "h": "Exporta o espaço como JSON Any-Block",
+          "steps": [
+            "Abre o Anytype no teu computador e vai ao espaço que queres mudar.",
+            "Escolhe File > Export. O Anytype abre as definições do espaço na página Export. As versões mais recentes chamam canal a um espaço, por isso a página diz \"Export Channel\".",
+            "Escolhe \"Any-Block v1\" e deixa File Format em JSON.",
+            "Ativa \"Zip archive\", \"Include files data\" e \"Include archived objects\".",
+            "Clica em \"Export data\" e escolhe uma pasta. O Anytype escreve um único .zip com o nome do espaço e a data.",
+            "Larga esse .zip tal como está."
+          ],
+          "p": [
+            "Uma exportação contém um espaço. Se guardas notas em vários espaços, exporta cada um e larga os zips um a seguir ao outro."
+          ]
+        },
+        {
+          "h": "Escolhe JSON Any-Block, não Markdown nem Protobuf",
+          "p": [
+            "A exportação em Markdown guarda o texto, mas perde o sublinhado, as cores, os avisos, o alinhamento e as linguagens do código, e deixa as coleções de fora. Lemos esse ficheiro se for tudo o que tens, e a pré-visualização da importação diz o que se perdeu.",
+            "O Any-Block também oferece o formato de ficheiro Protobuf. Guarda os mesmos dados numa forma binária que não lemos, por isso pedimos antes a exportação em JSON. O Any-Block v2 está marcado como pré-visualização pelo Anytype e não é um backup."
+          ]
+        },
+        {
+          "h": "O que vem contigo",
+          "p": [
+            "As páginas, as notas, as tarefas e os marcadores passam a notas com as suas etiquetas e as datas de criação e de atualização guardadas pelo Anytype. O Anytype não tem pastas, por isso uma página numa coleção vai para uma pasta com o nome da coleção, e todas as outras páginas ficam ao nível de topo.",
+            "Títulos, listas, listas de tarefas, citações, código com a sua linguagem, tabelas, matemática e diagramas Mermaid chegam como estavam. Os blocos recolhíveis passam a secções recolhíveis e os destaques passam a avisos. [As ligações e as menções entre páginas passam a ligações entre notas](/pt/help/note-links), e as imagens e os ficheiros são importados para o teu armazenamento.",
+            "Uma tarefa chega como nota de tarefa, assinalada quando estava concluída. As propriedades personalizadas são escritas numa lista curta no topo da nota. As páginas do lixo do Anytype vão para o teu Lixo, onde as podes restaurar ou eliminar.",
+            "Os ícones e as capas das páginas ficam para trás, e a pré-visualização da importação diz quantos. Os favoritos não fazem parte da exportação, por isso volta a fixar essas notas depois da importação."
+          ]
+        }
+      ]
+    },
+    "apple-calendar": {
+      "app": "Calendário da Apple",
+      "title": "Exporta o teu Calendário da Apple",
+      "metaTitle": "Como exportar o teu Calendário da Apple - PrivacyNotes",
+      "lead": "O Calendário num Mac exporta um calendário de cada vez para um ficheiro .ics, e o PrivacyNotes lê esse ficheiro tal como está. Cada calendário passa a ser uma pasta.",
+      "sections": [
+        {
+          "h": "Exporta um calendário a partir do Calendário num Mac",
+          "steps": [
+            "Abre o Calendário e mostra a lista de calendários à esquerda (Visualização > Mostrar Lista de Calendários).",
+            "Clica no calendário que queres trazer.",
+            "Escolhe Ficheiro > Exportar > \"Exportar...\" e guarda o ficheiro .ics.",
+            "Faz o mesmo para cada um dos outros calendários que quiseres. Cada um é um ficheiro próprio."
+          ]
+        },
+        {
+          "h": "O que vem contigo",
+          "p": [
+            "Cada evento chega com o seu dia, a sua hora e a sua duração, incluindo os eventos de dia inteiro e os que duram vários dias. Os eventos com repetição mantêm a sua regra.",
+            "Os alertas predefinidos de um calendário ficam nas definições do Calendário, não nos eventos, por isso a exportação deixa-os de fora, e o passo de verificação diz-te quantos eventos futuros chegam sem lembrete. Um alerta que definiste num evento também vem. Importar o mesmo ficheiro outra vez ignora os eventos que já tens."
+          ]
+        }
+      ]
+    },
+    "keepass": {
+      "app": "KeePass",
+      "title": "Exporta a tua base de dados do KeePass",
+      "metaTitle": "Como exportar a tua base de dados do KeePass - PrivacyNotes",
+      "lead": "O KeePass exporta a tua base de dados inteira num único ficheiro KeePass XML, e o PrivacyNotes transforma cada entrada num login ou numa nota. O XML guarda mais do que a exportação em CSV.",
+      "sections": [
+        {
+          "h": "Exporta a partir do KeePass",
+          "steps": [
+            "Abre a tua base de dados no KeePass e desbloqueia-a.",
+            "Escolhe File > Export.",
+            "Escolhe \"KeePass XML (2.x)\" e guarda o ficheiro .xml."
+          ]
+        },
+        {
+          "h": "Escolhe o XML, não o .kdbx",
+          "p": [
+            "O teu ficheiro de base de dados .kdbx está bloqueado com a tua chave mestra, por isso o PrivacyNotes não o consegue ler, e a importação di-lo se o largares lá. A exportação em CSV do KeePass também serve, mas guarda apenas o título, o nome de utilizador, a palavra-passe, o site e as notas."
+          ]
+        },
+        {
+          "h": "Onde as coisas vão parar",
+          "p": [
+            "Uma entrada com nome de utilizador, palavra-passe, site ou chave 2FA passa a [login do Cofre](/pt/help/vault), e qualquer outra entrada passa a nota segura. Os sites extra e os teus campos próprios também vêm, um campo protegido continua escondido, e a data de validade passa a campo. A chave 2FA também vem, por isso [os teus códigos continuam a funcionar](/pt/help/vault-totp). Os ficheiros anexados também vêm, na secção Ficheiros do login ou no fim da nota. Os grupos e as etiquetas passam a etiquetas. As entradas do Recycle Bin e as versões antigas de uma entrada ficam para trás.",
+            "O ficheiro exportado contém as tuas palavras-passe em texto simples. Importa-o, confirma que chegou tudo e depois apaga o ficheiro."
+          ]
+        }
+      ]
+    },
+    "keepassxc": {
+      "app": "KeePassXC",
+      "title": "Exporta a tua base de dados do KeePassXC",
+      "metaTitle": "Como exportar a tua base de dados do KeePassXC - PrivacyNotes",
+      "lead": "O KeePassXC exporta a tua base de dados num ficheiro XML ou num ficheiro CSV, e o PrivacyNotes lê ambos. A exportação em XML guarda tudo o que o CSV deixa de fora.",
+      "sections": [
+        {
+          "h": "Exporta a partir do KeePassXC",
+          "steps": [
+            "Abre a tua base de dados no KeePassXC e desbloqueia-a.",
+            "Escolhe Database > Export > \"XML File...\".",
+            "Confirma o aviso sobre o ficheiro não encriptado e guarda-o."
+          ]
+        },
+        {
+          "h": "XML ou CSV",
+          "p": [
+            "Escolhe o XML. O CSV guarda o título, o nome de utilizador, a palavra-passe, o site, as notas, a chave 2FA, as datas e o grupo, mas não as etiquetas, nem os campos personalizados, nem um segundo site, nem a data de validade, nem os ficheiros anexados. O teu ficheiro .kdbx está bloqueado, por isso o PrivacyNotes não o consegue ler."
+          ]
+        },
+        {
+          "h": "Onde as coisas vão parar",
+          "p": [
+            "Uma entrada com nome de utilizador, palavra-passe, site ou chave 2FA passa a [login do Cofre](/pt/help/vault), e qualquer outra entrada passa a nota segura. Os campos personalizados chegam como campos, um protegido continua escondido, e a chave 2FA também vem, por isso [os teus códigos continuam a funcionar](/pt/help/vault-totp). Os ficheiros anexados também vêm, na secção Ficheiros do login ou no fim da nota. Os grupos e as etiquetas passam a etiquetas. As entradas do Recycle Bin e as versões antigas de uma entrada ficam para trás.",
+            "O ficheiro exportado contém as tuas palavras-passe em texto simples. Importa-o, confirma que chegou tudo e depois apaga o ficheiro."
+          ]
+        }
+      ]
+    },
+    "lastpass": {
+      "app": "LastPass",
+      "title": "Exporta o teu cofre do LastPass",
+      "metaTitle": "Como exportar o teu cofre do LastPass - PrivacyNotes",
+      "lead": "O LastPass exporta o teu cofre num único ficheiro .csv, e o PrivacyNotes transforma as palavras-passe em logins e as notas seguras em notas ou cartões.",
+      "sections": [
+        {
+          "h": "Exporta a partir do LastPass",
+          "steps": [
+            "Inicia sessão no teu cofre do LastPass num navegador.",
+            "Escolhe Advanced options > Export.",
+            "Escolhe \"Export data for use anywhere\" e confirma com a tua palavra-passe mestra. O LastPass guarda um ficheiro .csv."
+          ]
+        },
+        {
+          "h": "Onde as coisas vão parar",
+          "p": [
+            "Cada palavra-passe passa a [login do Cofre](/pt/help/vault) com a sua chave 2FA, por isso [os teus códigos continuam a funcionar](/pt/help/vault-totp). Uma nota segura passa a nota, e uma nota de cartão de pagamento passa a cartão. As pastas passam a etiquetas, as aninhadas também, e os favoritos chegam fixados. O ficheiro não tem datas, por isso cada item fica com o dia em que o importas.",
+            "O ficheiro exportado contém as tuas palavras-passe em texto simples. Importa-o, confirma que chegou tudo e depois apaga o ficheiro."
+          ]
+        }
+      ]
+    },
+    "nordpass": {
+      "app": "NordPass",
+      "title": "Exporta o teu cofre do NordPass",
+      "metaTitle": "Como exportar o teu cofre do NordPass - PrivacyNotes",
+      "lead": "O NordPass exporta o teu cofre num único ficheiro .csv, e o PrivacyNotes transforma as palavras-passe, as notas, os cartões e os dados pessoais em itens do Cofre.",
+      "sections": [
+        {
+          "h": "Exporta a partir do NordPass",
+          "steps": [
+            "Abre o NordPass e desbloqueia-o.",
+            "Vai a Settings e escolhe \"Export Items\".",
+            "Confirma com a tua palavra-passe mestra e guarda o ficheiro .csv."
+          ]
+        },
+        {
+          "h": "Onde as coisas vão parar",
+          "p": [
+            "Cada palavra-passe passa a [login do Cofre](/pt/help/vault) com os seus sites extra e campos personalizados, um campo escondido continua escondido. As notas chegam como notas, os cartões como cartões, e os dados pessoais como uma nota com cada detalhe na sua própria linha. A pasta de cada item passa a etiqueta. O ficheiro indica apenas a pasta onde um item está, não as pastas acima dela.",
+            "No plano gratuito o NordPass não guarda chaves 2FA, por isso o ficheiro não tem nenhuma. O ficheiro exportado contém as tuas palavras-passe em texto simples. Importa-o, confirma que chegou tudo e depois apaga o ficheiro."
+          ]
+        }
+      ]
+    },
+    "proton-pass": {
+      "app": "Proton Pass",
+      "title": "Exporta o teu cofre do Proton Pass",
+      "metaTitle": "Como exportar o teu cofre do Proton Pass - PrivacyNotes",
+      "lead": "O Proton Pass exporta os teus cofres num .zip, num .csv ou num ficheiro encriptado com PGP. O PrivacyNotes lê o .zip e o .csv, e o .zip é o que guarda mais.",
+      "sections": [
+        {
+          "h": "Exporta a partir do Proton Pass",
+          "steps": [
+            "Abre o Proton Pass e vai a Settings > Export.",
+            "Em File format, escolhe ZIP.",
+            "Clica em Export e confirma com a tua palavra-passe do Proton."
+          ]
+        },
+        {
+          "h": "Escolhe ZIP, não o encriptado com PGP",
+          "p": [
+            "O ficheiro encriptado com PGP está bloqueado com a tua frase-passe, por isso o PrivacyNotes não o consegue ler, e a importação di-lo. O .csv também serve, mas não tem campos personalizados."
+          ]
+        },
+        {
+          "h": "Onde as coisas vão parar",
+          "p": [
+            "Cada login passa a [login do Cofre](/pt/help/vault) com os seus sites extra, campos personalizados e datas. A chave 2FA também vem, por isso [os teus códigos continuam a funcionar](/pt/help/vault-totp). Quando um item tem email e nome de utilizador, o nome de utilizador preenche o login e o email passa a campo. As notas chegam como notas, os cartões como cartões, e as identidades como notas com cada detalhe na sua própria linha. Cada alias hide-my-email passa a nota com o seu endereço, para manteres a lista de que endereço deste a que site; o Proton continua a reencaminhar o correio enquanto a tua conta Proton estiver aberta. Com mais do que um cofre, cada cofre passa a etiqueta. Os itens no lixo ficam para trás.",
+            "O ficheiro exportado contém as tuas palavras-passe em texto simples. Importa-o, confirma que chegou tudo e depois apaga o ficheiro."
+          ]
+        }
+      ]
+    },
+    "dashlane": {
+      "app": "Dashlane",
+      "title": "Exporta o teu cofre do Dashlane",
+      "metaTitle": "Como exportar o teu cofre do Dashlane - PrivacyNotes",
+      "lead": "O Dashlane exporta o teu cofre num .zip de ficheiros CSV, e o PrivacyNotes transforma os logins, as notas seguras e os cartões de pagamento em itens do Cofre e em notas.",
+      "sections": [
+        {
+          "h": "Exporta a partir do Dashlane",
+          "steps": [
+            "Abre o teu cofre do Dashlane na extensão do navegador ou na app web.",
+            "Escolhe Settings > Export data.",
+            "Escolhe o formato CSV e guarda o ficheiro .zip."
+          ]
+        },
+        {
+          "h": "CSV, não .dash",
+          "p": [
+            "Escolhe CSV. Uma exportação .dash está bloqueada com uma palavra-passe própria, e o PrivacyNotes di-lo se a largares lá."
+          ]
+        },
+        {
+          "h": "Onde as coisas vão parar",
+          "p": [
+            "Cada login passa a [login do Cofre](/pt/help/vault) com a sua chave 2FA, por isso [os teus códigos continuam a funcionar](/pt/help/vault-totp). Uma nota segura passa a nota e um cartão de pagamento passa a cartão. Os documentos de identificação e os dados pessoais passam a notas com os seus detalhes. As categorias passam a etiquetas, as aninhadas também. O Dashlane guarda um site por login, por isso um segundo site não está no ficheiro.",
+            "O ficheiro exportado contém as tuas palavras-passe em texto simples. Importa-o, confirma que chegou tudo e depois apaga o ficheiro."
+          ]
+        }
+      ]
+    },
+    "daylio": {
+      "app": "Daylio",
+      "title": "Exporta as tuas entradas do Daylio",
+      "metaTitle": "Como exportar o teu backup do Daylio - PrivacyNotes",
+      "lead": "O Daylio exporta um backup .daylio em More > Backup & Restore. O PrivacyNotes lê esse ficheiro e recria cada entrada como uma entrada de diário, com o respetivo humor, atividades e fotos.",
+      "sections": [
+        {
+          "h": "Exporta o backup .daylio",
+          "steps": [
+            "Fecha o Daylio por completo e abre-o de novo. Um backup feito logo depois de uma entrada nova pode não incluir essa entrada até a app ser reiniciada.",
+            "Escolhe More > Backup & Restore > Advanced Options > Export.",
+            "O Daylio abre uma folha de partilha, não uma janela de guardar. Guarda o ficheiro nos teus ficheiros ou numa drive na nuvem que consigas abrir neste dispositivo.",
+            "O ficheiro .daylio que guardaste é o ficheiro a importar."
+          ]
+        },
+        {
+          "h": "Escolhe o backup, não o CSV",
+          "p": [
+            "More > Export Entries cria um CSV, uma funcionalidade Premium do Daylio. O PrivacyNotes também o lê, mas o CSV não tem fotos, notas de voz nem grupos de humor, por isso um humor a que deste nome ou que renomeaste fica na entrada como texto em vez de ir para o registo de humor. Usa o backup .daylio sempre que puderes."
+          ]
+        },
+        {
+          "h": "O que vem junto",
+          "p": [
+            "[Cada entrada vai parar aos Diários](/pt/help/journal), no dia e à hora que o Daylio mostra, e duas entradas no mesmo dia continuam a ser duas entradas. Cada humor preenche [o registo de humor](/pt/help/choose-trackers) a partir do respetivo grupo de humor do Daylio, por isso um humor renomeado mantém o seu lugar na escala, e um humor a que deste nome também aparece no início da entrada.",
+            "As atividades passam a [fatores](/pt/help/factors), e um fator novo mantém o seu grupo do Daylio. Escalas como Energy ou Stress chegam como uma lista no fim da entrada. Os títulos das notas, o negrito, o itálico, o sublinhado, o rasurado e as listas sobrevivem, as fotos são importadas como imagens, as notas de voz como anexos, e uma entrada com estrela continua com estrela. Os objetivos e os dias importantes ficam para trás, e o resumo da importação conta-os."
+          ]
+        }
+      ]
+    },
+    "diarium": {
+      "app": "Diarium",
+      "title": "Exporta o teu diário do Diarium",
+      "metaTitle": "Como exportar o teu diário do Diarium - PrivacyNotes",
+      "lead": "O Diarium exporta o teu diário em JSON a partir do menu Export. O PrivacyNotes lê essa exportação e recria cada entrada como uma entrada de diário, com a respetiva classificação, etiquetas e anexos.",
+      "sections": [
+        {
+          "h": "Exporta JSON com anexos",
+          "steps": [
+            "Abre o Diarium e escolhe Export no menu.",
+            "Escolhe JSON como formato e ativa Attachments.",
+            "Escolhe Save to local storage e seleciona uma pasta. O Diarium guarda um .zip que contém o JSON e as tuas fotos e ficheiros.",
+            "Esse .zip é o ficheiro a importar."
+          ]
+        },
+        {
+          "h": "Mantém Attachments ativo",
+          "p": [
+            "Com Attachments desativado, o Diarium guarda apenas um .json. O PrivacyNotes importa o texto, mas todas as fotos e ficheiros ficam para trás, e o resumo da importação conta-os. Exporta outra vez com Attachments ativo e larga o .zip em vez disso.",
+            "Create separate file for each entry não faz diferença: o PrivacyNotes lê todos os ficheiros JSON do .zip. As exportações DOCX, TXT, HTML e PDF e o backup .diary não são importados, por isso escolhe JSON."
+          ]
+        },
+        {
+          "h": "O que vem junto",
+          "p": [
+            "[Cada entrada vai parar aos Diários](/pt/help/journal), no dia e à hora que o Diarium mostra. A classificação por estrelas preenche [o registo de humor](/pt/help/choose-trackers). As etiquetas passam a etiquetas de nota e a [fatores](/pt/help/factors), e as pessoas passam a fatores num grupo Pessoas.",
+            "O negrito, o itálico, o sublinhado, o rasurado, os destaques, as cores do texto, as listas e as ligações sobrevivem, e uma ligação a outra entrada passa a [ligação entre notas](/pt/help/note-links) quando essa entrada está na mesma exportação. Os registos chegam como uma lista no fim da entrada, o tempo, o sol e a lua como uma linha no topo, e uma localização passa a ser o local da entrada. As fotos são importadas como imagens, e os vídeos, o áudio e os PDF como anexos."
+          ]
+        }
+      ]
+    },
+    "google-journal": {
+      "app": "Google Journal",
+      "title": "Exporta as tuas entradas do Google Journal",
+      "metaTitle": "Como exportar as tuas entradas do Google Journal - PrivacyNotes",
+      "lead": "O Google Journal exporta através do Google Takeout depois de o backup estar ativo. O PrivacyNotes lê o .zip do Takeout e recria cada entrada como uma entrada de diário, com as respetivas fotos e vídeos.",
+      "sections": [
+        {
+          "h": "Ativa primeiro o backup",
+          "p": [
+            "O Takeout não mostra o Journal enquanto o Journal não fizer backup para a tua conta Google. Ativa primeiro o backup, ou não vais encontrar o Journal na lista do Takeout."
+          ],
+          "steps": [
+            "Abre o Journal no teu Pixel e vai a Settings.",
+            "Ativa Back up your journal.",
+            "Espera alguns minutos. O Journal só aparece no Takeout depois de o backup estar ativo."
+          ]
+        },
+        {
+          "h": "Exporta o Journal a partir do Google Takeout",
+          "steps": [
+            "Abre takeout.google.com e inicia sessão com a mesma conta Google.",
+            "Clica em Deselect all (desmarcar tudo) e assinala apenas Journal (\"Your journal entries and attachments from Journal\").",
+            "Clica em Next step, mantém o tipo de ficheiro .zip e clica em Create export.",
+            "A Google envia-te um link quando o arquivo estiver pronto. Transfere o .zip: esse é o ficheiro a importar."
+          ]
+        },
+        {
+          "h": "O que vem junto",
+          "p": [
+            "[Cada entrada vai parar aos Diários](/pt/help/journal), no dia que escolheste para ela no Journal. Cada entrada mantém o título e o texto, e as fotos e os vídeos são importados como imagens e anexos. Um mapa numa entrada vem como imagem.",
+            "O Takeout não inclui nomes de locais, sugestões de escrita, marcadores nem as reflexões do Journal, por isso ficam no Journal. O resumo da importação di-lo."
           ]
         }
       ]

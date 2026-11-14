@@ -30,7 +30,7 @@ import { perFileLimit } from '../attachmentValidation';
 import { formatBytes } from '../formatBytes';
 import i18n from '../i18n';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.zipEntry.${key}`, options);
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:zipEntry.${key}`, options);
 
 /** The most text one zip entry may expand to before the import refuses it. */
 const ZIP_TEXT_ENTRY_LIMIT = 256 * 1024 * 1024;
@@ -43,6 +43,20 @@ type EntryStream = {
 function declaredSize(entry: JSZip.JSZipObject): number | null {
   const internal = (entry as unknown as { _data?: { uncompressedSize?: number } })._data;
   return typeof internal?.uncompressedSize === 'number' ? internal.uncompressedSize : null;
+}
+
+/**
+ * A zip that cannot be opened, or an entry that cannot be inflated. The
+ * message is a plain sentence for the person; `detail` keeps the reader's own
+ * text ("End of data reached ... Corrupted zip ?"), which the import screen
+ * shows under it as a technical detail for a bug report (#758).
+ */
+export class ImportFileError extends Error {
+  readonly detail: string;
+  constructor(cause: unknown) {
+    super(msg('unreadable'));
+    this.detail = cause instanceof Error ? cause.message : String(cause);
+  }
 }
 
 /** Thrown before or during an inflation that would exceed the limit; an importer must not swallow it. */
@@ -89,7 +103,7 @@ function inflateBounded(entry: JSZip.JSZipObject, limit: number): Promise<Uint8A
       .on('error', (err) => {
         if (settled) return;
         settled = true;
-        reject(err);
+        reject(new ImportFileError(err));
       })
       .on('end', () => {
         if (settled) return;
@@ -143,7 +157,7 @@ export function mediaTooLargeWarning(count: number): string {
 
 /**
  * Gunzip through the platform's DecompressionStream, decoding and counting the
- * output and refusing past `limit`. jsdom and some older embedders lack
+ * output and refusing past `limit` (`gunzipBounded`). jsdom and some older embedders lack
  * Blob.stream(), so the source is a hand-rolled ReadableStream rather than
  * blob.stream(). The reader is drained by hand rather than through
  * `new Response(stream).text()`, because a throw inside a piped transform
@@ -155,6 +169,28 @@ export async function gunzipText(
   name: string,
   limit = ZIP_TEXT_ENTRY_LIMIT,
 ): Promise<string> {
+  return new TextDecoder().decode(await gunzipBounded(data, name, limit));
+}
+
+/**
+ * The bytes of one gzip-compressed picture or file (a KeePass attachment), or
+ * null when it produces more than the largest upload, as `zipEntryMedia`.
+ */
+export async function gunzipMedia(data: Uint8Array<ArrayBuffer>, name: string): Promise<Uint8Array<ArrayBuffer> | null> {
+  try {
+    return await gunzipBounded(data, name, mediaEntryLimit());
+  } catch (err) {
+    if (err instanceof ImportTooLargeError) return null;
+    throw err;
+  }
+}
+
+/** True when a file of this many bytes is past the largest upload. */
+export function mediaTooLarge(bytes: number): boolean {
+  return bytes > mediaEntryLimit();
+}
+
+async function gunzipBounded(data: Uint8Array<ArrayBuffer>, name: string, limit: number): Promise<Uint8Array<ArrayBuffer>> {
   const src = new ReadableStream<BufferSource>({
     start(controller) {
       controller.enqueue(data);
@@ -162,8 +198,7 @@ export async function gunzipText(
     },
   });
   const reader = src.pipeThrough(new DecompressionStream('gzip')).getReader();
-  const decoder = new TextDecoder();
-  let out = '';
+  const chunks: Uint8Array[] = [];
   let total = 0;
   try {
     for (;;) {
@@ -171,10 +206,16 @@ export async function gunzipText(
       if (done) break;
       total += value.byteLength;
       if (total > limit) throw tooLarge(name, limit);
-      out += decoder.decode(value, { stream: true });
+      chunks.push(value);
     }
   } finally {
     await reader.cancel().catch(() => {});
   }
-  return out + decoder.decode();
+  const out = new Uint8Array(total);
+  let at = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, at);
+    at += chunk.byteLength;
+  }
+  return out;
 }

@@ -5,12 +5,10 @@ import {
   type SetStateAction,
 } from 'react';
 import {
-  bytesToHex,
-  deriveSigningKey,
   isValidPhrase,
-  phraseToSeed,
   type SupabaseClient,
 } from '@notes/shared';
+import { phraseSignsFor } from './identity';
 import {
   trustAwareStorage,
   setTrustedDevice,
@@ -37,31 +35,31 @@ import type { AuthState, AuthMethod, OAuthProvider } from './auth';
 
 /**
  * A signed-in install holds a phrase under PHRASE_STORAGE_KEY, either plain
- * or as a wrapped envelope. Presence and shape only; the value never opens
- * here. Shared by the native deep-link gate and the cold-start replay skip,
- * so both answer "is someone signed in" the same way.
+ * or as a wrapped envelope. Unlike hasStoredPhrase in biometric.ts (presence
+ * in either store), this reads the trust-aware store only and checks the
+ * shape, so a stray value does not count; the value never opens here.
+ * Shared by the native deep-link gate and the cold-start replay skip, so
+ * both answer "is someone signed in" the same way.
  */
-function hasStoredPhrase(): boolean {
+function hasWellFormedStoredPhrase(): boolean {
   const stored = trustAwareStorage.getItem(PHRASE_STORAGE_KEY);
   return !!stored && (isWrappedEnvelope(stored) || isValidPhrase(stored));
 }
 
 /**
- * True when `phrase` derives `expectedPubkey`, i.e. the phrase provably
- * belongs to the account that carries that key. A value the derivation
- * refuses - the wrong word count throws in phraseToSeed - is not a match
- * either, so anything unprovable answers false.
+ * True when `phrase` signs for the account `expectedPubkey`, i.e. the phrase
+ * provably belongs to the account that carries that key: its own key until
+ * a phrase change, and after one the device's record or the server's answer
+ * for the key it derives (identity.ts). A value the derivation refuses - the
+ * wrong word count throws in phraseToSeed - is not a match either, so
+ * anything unprovable answers false.
+ * Spec: docs/internal/plans/phrase-change.md (4.6)
  */
 export async function custodialPhraseMatchesAccount(
   phrase: string,
   expectedPubkey: string,
 ): Promise<boolean> {
-  try {
-    const { publicKey } = await deriveSigningKey(phraseToSeed(phrase));
-    return bytesToHex(publicKey) === expectedPubkey;
-  } catch {
-    return false;
-  }
+  return phraseSignsFor(phrase, expectedPubkey, true);
 }
 
 /**
@@ -125,6 +123,7 @@ export function useOAuthFlows({
     freshVault?: boolean,
     captchaToken?: string,
     startedAt?: SignInStamp,
+    byHand?: boolean,
   ) => Promise<boolean>;
   /**
    * Asks the person whether the account already on this device may be
@@ -273,7 +272,7 @@ export function useOAuthFlows({
           if (h2 === '' || h2 === '#' || h2.includes('access_token=')) {
             history.replaceState(null, '', window.location.pathname + window.location.search || '/');
           }
-          hydrateFromOAuthSession(session.access_token, /*trust*/ true).catch(
+          hydrateFromOAuthSession(session.access_token, /*trust*/ true, undefined, undefined, false).catch(
             (err) => {
               console.error('OAuth session hydrate failed:', err);
               // Re-arm so a retry can hydrate without restarting.
@@ -319,7 +318,11 @@ export function useOAuthFlows({
    *
    * Spec: docs/contrib/custodial-key-spec.md, docs/internal/specs/oauth-zk-fix.md
    */
-  async function hydrateFromOAuthSession(accessToken: string, trust: boolean, verifiedProvider?: AccountOAuthProvider, expectedGeneration?: number) {
+  // `byHand`: a provider sign-in the person started on this device. The start
+  // with a stored session and the retry after a failed one pass false, so a
+  // device the owner removed is signed out instead of coming back
+  // (register-device `reactivate`).
+  async function hydrateFromOAuthSession(accessToken: string, trust: boolean, verifiedProvider?: AccountOAuthProvider, expectedGeneration?: number, byHand = true) {
     // Abort marker: true once the user has started their own phrase
     // sign-in (or one is mid-flight). Checked before every side effect
     // below - a superseded hydration must neither sign out the session
@@ -440,7 +443,7 @@ export function useOAuthFlows({
           const ran = await authenticateWithPhrase(custodialPhrase, 'oauth', true, {
             accessToken,
             authUid,
-          }, false, undefined, startedAt);
+          }, false, undefined, startedAt, byHand);
           // A swallowed call (mutex held by a concurrent handshake)
           // must not persist anything: the phrase write below lands in
           // shared storage and would stomp the account the OTHER
@@ -731,7 +734,7 @@ export function useOAuthFlows({
     // and lands the person on the sign-in screen, and reading the blob alone
     // refused every provider button there for ever, in silence.
     // Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.8)
-    const signedIn = hasStoredPhrase() && vaultOpenRef.current;
+    const signedIn = hasWellFormedStoredPhrase() && vaultOpenRef.current;
     if (gate !== 'ok' || signedIn) {
       const reason = signedIn ? 'signed-in' : gate;
       logAuthEvent('auth:oauth-callback-refused', { reason });
@@ -835,7 +838,7 @@ export function useOAuthFlows({
       current.searchParams.delete('code'); current.searchParams.delete('sb_flow_id');
       history.replaceState(null, '', current.pathname + current.search + current.hash);
     };
-    const localAccount = hasStoredPhrase() || vaultOpenRef.current || !!trustAwareStorage.getItem(PUBKEY_OWNER_KEY);
+    const localAccount = hasWellFormedStoredPhrase() || vaultOpenRef.current || !!trustAwareStorage.getItem(PUBKEY_OWNER_KEY);
     if (url.pathname !== '/' || (localAccount && webGate !== 'ok')) {
       clearCode();
       logAuthEvent('auth:oauth-callback-refused', { reason: 'no-current-intent' });
@@ -931,7 +934,7 @@ export function useOAuthFlows({
         // resume check below would process the very link this guard exists
         // to avoid.
         if (initialUrl) seen = initialUrl;
-        if (initialUrl && !hasStoredPhrase()) {
+        if (initialUrl && !hasWellFormedStoredPhrase()) {
           await handleNativeOAuthCallback(initialUrl);
         }
         // A shortcut is never a sign-in return: useShortcutDeepLinks takes it,
@@ -1005,7 +1008,7 @@ export function useOAuthFlows({
       if (session?.access_token) {
         const verified = brokerProvider.current;
         await hydrateFromOAuthSession(session.access_token, trust,
-          verified?.identity === mfaSessionIdentity(session) ? verified.provider : undefined);
+          verified?.identity === mfaSessionIdentity(session) ? verified.provider : undefined, undefined, false);
         return;
       }
     } catch (err) {

@@ -307,8 +307,10 @@
     "dayWithItems_many": "{{date}}, {{count}} elementów",
     "previousWeek": "Poprzedni tydzień",
     "nextWeek": "Następny tydzień",
-    "showMonth": "{{month}}, pokaż cały miesiąc",
-    "showWeek": "{{month}}, pokaż jeden tydzień"
+    "pickMonth": "{{month}}, wybierz miesiąc i rok",
+    "pickMonthTip": "Wybierz miesiąc i rok",
+    "showWholeMonth": "Pokaż cały miesiąc",
+    "showOneWeek": "Pokaż jeden tydzień"
   },
   "contextMenu": {
     "newNote": "Nowa notatka",
@@ -566,6 +568,13 @@
     "itemNameParts": "Drugie imię, tytuł, przyrostek",
     "itemPhonetic": "Imię i nazwisko fonetycznie",
     "itemNote": "Notatka",
+    "addSection": "Dodaj sekcję",
+    "sectionName": "Nazwa sekcji",
+    "removeSection": "Usuń sekcję",
+    "removeSectionNamed": "Usuń sekcję {{name}}",
+    "addFieldTo": "Dodaj pole do sekcji {{name}}",
+    "addFieldToSection": "Dodaj pole do tej sekcji",
+    "hiddenFieldsNote": "Ukryte wartości pozostają zamaskowane, dopóki ich nie pokażesz, a wyszukiwanie nigdy ich nie znajduje.",
     "labels": {
       "mobile": "Komórka",
       "home": "Dom",
@@ -696,6 +705,9 @@
     },
     "birthdays": "Urodziny",
     "contactDate": "{{name}}: {{label}}",
+    "birthdayAge_one": "{{name}} kończy {{count}} rok",
+    "birthdayAge_few": "{{name}} kończy {{count}} lata",
+    "birthdayAge_many": "{{name}} kończy {{count}} lat",
     "dragEnd": "Przeciągnij, aby zmienić dzień końca",
     "previousDay": "Poprzedni dzień",
     "nextDay": "Następny dzień",

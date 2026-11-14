@@ -26,16 +26,11 @@ export const STORAGE_PACKAGES: StoragePackage[] = [
 ];
 
 /**
- * The yearly fees the upgrade modal charts against the one-time price, over
- * COMPARE_YEARS. Web and desktop only: a store build shows its own localized
- * price and has nothing in USD to chart against it.
- * Spec: docs/internal/design-decisions.md (Pro anchored against subscription competitors)
+ * The years the homepage price calculator sets the yearly fees of other apps
+ * against the one-time Pro price.
+ * Spec: docs/internal/design/patterns/151-160.md section 154
  */
 export const COMPARE_YEARS = 5;
-export const COMPETITOR_YEARLY = [
-  { name: 'Obsidian Sync', perYear: 48 },
-  { name: 'Standard Notes', perYear: 90 },
-] as const;
 
 /**
  * The apps the homepage price calculator offers, by the pillar or feature

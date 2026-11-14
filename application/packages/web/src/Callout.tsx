@@ -33,7 +33,7 @@
 
 import { Node, mergeAttributes, InputRule } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewWrapper, NodeViewContent, type NodeViewProps } from '@tiptap/react';
-import { Fragment, Slice, type Node as ProseMirrorNode } from '@tiptap/pm/model';
+import { Fragment, Slice, type Node as ProseMirrorNode, type NodeType } from '@tiptap/pm/model';
 import { Plugin, PluginKey, Selection, TextSelection, type EditorState } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { GapCursor } from '@tiptap/pm/gapcursor';
@@ -114,6 +114,40 @@ function isBlankParagraph(node: ProseMirrorNode): boolean {
     if (!child.isText || child.text!.replace(/ /g, '').length !== 0) blank = false;
   });
   return blank;
+}
+
+// Spec: docs/contrib/callouts.md (With text selected, `insertCallout` WRAPS it)
+const SELECTION_TITLE_MAX = 80;
+
+/**
+ * A selection that becomes a callout gives its first line to the title and the
+ * rest to the body (#740), when the first line looks like a title: a heading,
+ * or a line of at most SELECTION_TITLE_MAX characters, with more after it. The
+ * first line is the first paragraph or heading up to its first line break;
+ * blank lines before it are skipped. Anything else (one paragraph, a long first
+ * line, a selection that starts in a list, a table, a code block or another
+ * box) keeps the old rule: all of it is the body.
+ * Spec: docs/contrib/callouts.md (With text selected, `insertCallout` WRAPS it)
+ */
+function splitSelectionTitle(slice: Slice, titleType: NodeType): { title: Fragment; body: Slice } | null {
+  let content = slice.content;
+  while (content.childCount > 1 && isBlankParagraph(content.firstChild!)) content = content.cut(content.firstChild!.nodeSize);
+  const first = content.firstChild;
+  if (!first || (first.type.name !== 'paragraph' && first.type.name !== 'heading')) return null;
+  let breakAt = -1;
+  first.forEach((child, offset) => {
+    if (breakAt < 0 && child.type.name === 'hardBreak') breakAt = offset;
+  });
+  const title = breakAt < 0 ? first.content : first.content.cut(0, breakAt);
+  if (title.size === 0 || !titleType.validContent(title)) return null;
+  if (first.type.name !== 'heading' && [...title.textBetween(0, title.size, ' ', ' ')].length > SELECTION_TITLE_MAX) return null;
+  let rest = content.cut(first.nodeSize);
+  if (breakAt >= 0 && breakAt + 1 < first.content.size) {
+    rest = rest.addToStart(first.copy(first.content.cut(breakAt + 1)));
+  }
+  if (rest.size === 0) return null;
+  // Cut from the front only, so the slice's open end still describes its tail.
+  return { title, body: new Slice(rest, 0, slice.openEnd) };
 }
 
 /**
@@ -460,18 +494,21 @@ export const Callout = Node.create<KanbanOptions>({
           const titleType = schema.nodes.calloutTitle;
           const paragraph = schema.nodes.paragraph;
           if (!titleType || !paragraph) return false;
-          const title = titleType.createAndFill();
+          // Selected text goes into the callout instead of being thrown away -
+          // dropping an EMPTY box over the selection would read as data loss.
+          // A first line that looks like a title becomes the title (#740).
+          // Grabbed from `state` because the transaction below deletes the
+          // selection before we can use it.
+          const split = state.selection.empty ? null : splitSelectionTitle(state.selection.content(), titleType);
+          const wrapped = split ? split.body : state.selection.empty ? null : state.selection.content();
+          const title = split ? titleType.create(null, split.title) : titleType.createAndFill();
           const body = paragraph.createAndFill();
           if (!title || !body) return false;
-          const callout = this.type.create({ type, folded: false }, Fragment.fromArray([title, body]));
-          // Selected text becomes the callout's body instead of being thrown
-          // away - dropping an EMPTY box over the selection would read as
-          // data loss. Grabbed from `state` because the transaction below
-          // deletes the selection before we can use it.
-          const wrapped = state.selection.empty ? null : state.selection.content();
+          const callout = this.type.create({ type, folded: false }, [title, body]);
+          const replaceSelected = !state.selection.empty;
           if (dispatch) {
             const from = tr.selection.from;
-            if (wrapped) {
+            if (replaceSelected) {
               // replaceRange, not replaceSelectionWith: a selection that
               // covers a whole block leaves that block behind EMPTY under
               // replaceSelectionWith, so wrapping a heading left a blank
@@ -505,8 +542,8 @@ export const Callout = Node.create<KanbanOptions>({
               tr.replaceSelection(wrapped);
             }
             // Title last: it sits before the body, so the paste above never
-            // moves it, and the user lands where the name goes.
-            if (titlePos >= 0) tr.setSelection(TextSelection.create(tr.doc, titlePos));
+            // moves it, and the user lands at the end of the name.
+            if (titlePos >= 0) tr.setSelection(TextSelection.create(tr.doc, titlePos + title.content.size));
             tr.scrollIntoView();
             dispatch(tr);
           }

@@ -18,6 +18,8 @@
  * Spec: docs/internal/specs/drawing.md (sections 2 and 7)
  */
 
+import { isRecord } from '../isRecord';
+
 /** A picture of the drawing as the body stores it. */
 type DrawingFile = {
   id: string;
@@ -62,10 +64,6 @@ export function emptyScene(): DrawingScene {
 /** The body a new drawing is born with. */
 export function emptyDrawingBody(): string {
   return JSON.stringify(emptyScene());
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**

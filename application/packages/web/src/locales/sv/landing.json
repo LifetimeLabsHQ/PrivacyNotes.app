@@ -43,7 +43,7 @@
     },
     "subhead": "Anteckningar, uppgifter, lösenord, dagbok, filer, kalender, kontakter och bokmärken, med uppföljning av humör och medicin. En privat app.",
     "tryDemo": "Testa demot",
-    "microcopy": "Gratis för alltid. Inget kreditkort. Logga in med Google, Apple, GitHub eller bara en fras på 12 ord.",
+    "microcopy": "Gratis för alltid. Inget kreditkort. Logga in med Google, Apple, GitHub eller bara en återställningsfras.",
     "alreadyHaveVault": "Har du redan ett valv? Logga in",
     "trustSigned": "Signerade utgåvor på GitHub"
   },
@@ -167,8 +167,6 @@
     "useGitBody": "Avsluta dagen med dina commits, sparade som en anteckning du hittar igen nästa månad.",
     "useClipTitle": "Allt du har kopierat",
     "useClipBody": "Skicka urklippet, utdata från ett kommando eller ett felmeddelande direkt till dina anteckningar.",
-    "useToolsTitle": "En del av dina egna verktyg",
-    "useToolsBody": "Kommandot svarar i JSON och avslutar med tydliga koder, så att dina skript vet att anteckningen sparades.",
     "useShortcutTitle": "En anteckning från ett kortkommando",
     "useShortcutBody": "En tangent som du väljer i systemets inställningar öppnar en ruta för en snabbanteckning, även när appen är stängd. Den hamnar i mappen Agent.",
     "howLink": "Läs hur privacynotes fungerar"
@@ -359,14 +357,15 @@
     "freeVault": "50 MB lagring, upp till 5 MB per fil",
     "freeImport": "Import och export, inklusive Keep och Obsidian",
     "freeAnon": "Anonym inloggning, utan e-post",
-    "earlyAdopterBadge": "Tidig användare"
+    "earlyAdopterBadge": "Tidig användare",
+    "payMethods": "Betala med kort, eller med Bitcoin, Ethereum, Lightning, USDC eller USDT."
   },
   "underHood": {
     "heading": "Under huven",
     "cipherTerm": "xchacha20poly1305",
     "cipherDesc": "Nycklar härleds på din enhet",
     "phraseTerm": "BIP-39-fraser",
-    "phraseDesc": "12 ord, signering med Ed25519",
+    "phraseDesc": "Skapas på din enhet, signering med Ed25519",
     "rlsDesc": "RLS knuten till din publika nyckel",
     "trackingTerm": "Noll spårare",
     "trackingDesc": "Inga pixlar, inga spårare från tredje part",
@@ -390,6 +389,7 @@
       "sleep": "Bra, 7,5 h",
       "sleepScore": "82",
       "heartRate": "61 slag/min",
+      "bloodPressure": "118/76 mmHg",
       "activity": "Måttlig",
       "medication": "Tagen",
       "energy": "6 / 10",
@@ -529,7 +529,7 @@
       "hotkeys": "Kortkommandon",
       "rating": "Betyg"
     },
-    "intro": "<brand/> samlar dina anteckningar, uppgifter, lösenord, dagbok, filer, kalender, kontakter och bokmärken på ett ställe, med uppföljning av humör och medicin. Allt krypteras på din enhet med en nyckel som skapas från dina 12 ord, och förblir krypterat på våra servrar i <nowrap>Schweiz</nowrap>. Det fungerar offline, och appen har öppen källkod.",
+    "intro": "<brand/> samlar dina anteckningar, uppgifter, lösenord, dagbok, filer, kalender, kontakter och bokmärken på ett ställe, med uppföljning av humör och medicin. Allt krypteras på din enhet med en nyckel som skapas från din återställningsfras, och förblir krypterat på våra servrar i <nowrap>Schweiz</nowrap>. Det fungerar offline, och appen har öppen källkod.",
     "versionHeading": "Version",
     "windowVersion": "Version {{version}}",
     "windowHelp": "Hjälpcenter",

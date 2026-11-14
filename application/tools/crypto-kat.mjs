@@ -148,6 +148,25 @@ test('generatePhrase produces 12 valid words with real entropy', () => {
   assert.notEqual(a, generatePhrase());
 });
 
+test('generatePhrase(24) produces 24 valid words with real entropy', () => {
+  const a = generatePhrase(24);
+  assert.equal(a.split(' ').length, 24);
+  assert.equal(isValidPhrase(a), true);
+  assert.notEqual(a, generatePhrase(24));
+});
+
+test('a 24-word phrase derives its seed by the published BIP-39 vector', () => {
+  // The all-zeros 256-bit entropy vector, empty passphrase, same trap as above:
+  //   python3 -c "import hashlib;m=' '.join(['abandon']*23+['art']);
+  //     print(hashlib.pbkdf2_hmac('sha512',m.encode(),b'mnemonic',2048,64).hex())"
+  const phrase24 = `${'abandon '.repeat(23)}art`;
+  assert.equal(isValidPhrase(phrase24), true);
+  assert.equal(
+    bytesToHex(phraseToSeed(phrase24)),
+    '408b285c123836004f4b8842c89324c1f01382450c0d439af345ba7fc49acf705489c6fc77dbd4e3dc1dd8cc6bc9f043db8ada1e243c4a0eafb290d399480840',
+  );
+});
+
 // ------------------------------------------------------------------------------------
 // HKDF key derivation. These two vectors are the load-bearing ones: the encryption key
 // IS the vault, and the signing pubkey IS the account identifier.

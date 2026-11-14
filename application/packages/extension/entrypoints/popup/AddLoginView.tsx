@@ -21,6 +21,7 @@ import { FIELD_CLASS, FieldLabel } from '@web/formFields';
 import { PasswordField } from '@web/PasswordText';
 import { SETTINGS_HELP } from '@web/settingsUI';
 import { copyAndClear } from '../../src/copy';
+import { displayHost } from '../../src/favicon';
 import { matchLogins } from '../../src/match';
 import type { SaveResult } from '../../src/save';
 import type { Notice } from './Footer';
@@ -32,14 +33,6 @@ function originOf(url: string): string {
   try {
     const u = new URL(url);
     return u.protocol === 'http:' || u.protocol === 'https:' ? u.origin : '';
-  } catch {
-    return '';
-  }
-}
-
-function hostOf(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '');
   } catch {
     return '';
   }
@@ -60,7 +53,7 @@ export function AddLoginView({ url, logins, pro, onDone }: {
   onDone: (notice: Notice | null) => void;
 }) {
   const { t } = useTranslation('extension');
-  const [name, setName] = useState(hostOf(url));
+  const [name, setName] = useState(displayHost(url));
   const [site, setSite] = useState(originOf(url));
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');

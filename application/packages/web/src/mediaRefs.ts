@@ -15,6 +15,7 @@
  * Spec: docs/internal/design/ui-patterns.md (section 98, the picture viewer)
  */
 import type { Node as PMNode } from '@tiptap/pm/model';
+import { allowedImageSource } from './markdownFolder/assetSource';
 
 export type MediaRef = {
   /** What the note stores: `pn:img/<uuid>`, `pn:file/<uuid>`, or a path. */
@@ -27,6 +28,8 @@ export type MediaRef = {
 
 export const IMAGE_REF_PREFIX = 'pn:img/';
 export const FILE_REF_PREFIX = 'pn:file/';
+/** Every `pn:img/<uuid>` in a body; global, so reset `lastIndex` before an exec loop. */
+export const IMAGE_REF_RE = /pn:img\/([0-9a-f-]{36})/g;
 
 /**
  * Formats every browser we ship on draws in an `<img>`. HEIC and TIFF are not
@@ -88,7 +91,8 @@ export function mediaInDoc(doc: PMNode): { refs: MediaRef[]; positions: number[]
     const name = node.type.name;
     if (name === 'image') {
       const src = typeof node.attrs.src === 'string' ? node.attrs.src : '';
-      if (src) {
+      // The image node shows no asset address that note text spelled, so the viewer does not either.
+      if (src && allowedImageSource(src)) {
         refs.push({ src, name: typeof node.attrs.alt === 'string' ? node.attrs.alt : '', mime: '' });
         positions.push(pos);
       }

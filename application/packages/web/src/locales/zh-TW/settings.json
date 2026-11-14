@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "所有設定",
+    "dockWindow": "停駐在側邊",
+    "dockOtherSide": "移到另一側",
     "fillWindow": "填滿整個視窗",
     "restoreWindow": "還原為一般大小"
   },
@@ -158,6 +160,8 @@
     "peekDark": "目前顯示你的深色佈景主題。關閉設定後，「自動」會再次跟隨系統。",
     "unlockThemes": "升級 Pro 解鎖所有佈景主題",
     "startViewTitle": "開啟時顯示",
+    "reopenLastOpenTitle": "重新開啟上次的項目",
+    "reopenLastOpenDesc": "應用程式啟動時，會開啟你結束時開著的項目。關閉時會從清單開始，不開啟任何項目。",
     "viewTitle": "項目顯示方式",
     "viewDesc": "「Auto」會依照螢幕寬度調整。",
     "openInTabsTitle": "在分頁中顯示開啟的項目",
@@ -188,6 +192,7 @@
     "linkModifierDesc": "一般點按只會放置游標。輕觸仍會開啟連結。僅套用於這台裝置。",
     "typedSymbolsTitle": "將輸入的符號轉換成箭頭與數學符號",
     "typedSymbolsDesc": "例如 -> 會變成 →，!= 會變成 ≠，>= 會變成 ≥。",
+    "linkSuggestionsDesc": "「關聯」也會列出主題相同、但你還沒連結的筆記。關閉後，只有含連結的筆記才會顯示「關聯」圖示。",
     "confirmTrashTitle": "刪除前先詢問",
     "confirmTrashDesc": "項目移至垃圾桶前先確認。",
     "confirmArchiveTitle": "封存前先詢問",
@@ -585,5 +590,18 @@
     "loadError": "無法載入失聯開關。請檢查網路連線後再試一次。",
     "confirmTitle": "要開啟失聯開關嗎？",
     "confirmBody": "如果你的所有裝置在 {{period}} 內都沒有上線，伺服器會刪除你的加密資料。此動作無法復原。你的裝置仍保有各自的筆記。"
+  },
+  "onDeviceAi": {
+    "title": "智慧關聯",
+    "desc": "找出意思相同的筆記，即使用的是不同的字詞或另一種語言也找得到。它使用只在這台裝置上執行的離線 AI（<model>bekko-static</model>）。",
+    "on": "已開啟。建議也會包含意思相同的筆記。離線 AI 在這台裝置上佔用 {{size}}。",
+    "kept": "已關閉。離線 AI 仍保留在這台裝置上，所以再次開啟時不需要下載。",
+    "downloadSize": "下載 · {{size}}",
+    "downloadingLabel": "離線 AI 下載",
+    "loading": "正在載入離線 AI",
+    "unavailable": "示範版無法下載離線 AI。",
+    "failed": "下載沒有完成。請再試一次。",
+    "remove": "從這台裝置移除（{{size}}）",
+    "howItWorks": "運作方式"
   }
 }

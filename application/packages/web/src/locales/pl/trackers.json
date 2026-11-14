@@ -7,6 +7,7 @@
     "sleep": "Sen",
     "sleepScore": "Wynik snu",
     "heartRate": "Tętno",
+    "bloodPressure": "Ciśnienie krwi",
     "activity": "Aktywność",
     "medication": "Leki",
     "meds": "Leki",
@@ -24,6 +25,7 @@
   "units": {
     "hoursSuffix": "h",
     "bpm": "ud./min",
+    "mmHg": "mmHg",
     "kg": "kg",
     "lb": "lb",
     "steps_one": "krok",
@@ -121,6 +123,10 @@
   },
   "heartRate": {
     "prompt": "Średnie tętno"
+  },
+  "bloodPressure": {
+    "systolic": "Górne ciśnienie (skurczowe)",
+    "diastolic": "Dolne ciśnienie (rozkurczowe)"
   },
   "activity": {
     "prompt": "Poziom aktywności dzisiaj?",
@@ -271,11 +277,13 @@
   "custom": {
     "yes": "Tak",
     "no": "Nie",
+    "unknownType": "Ten tracker wymaga nowszej wersji aplikacji.",
     "typeLabels": {
       "scale10": "Skala (0-10)",
       "scale5": "Skala (0-5)",
       "slider100": "Wynik (0-100)",
       "number": "Liczba",
+      "pair": "Dwie liczby",
       "yesno": "Tak / Nie"
     }
   },
@@ -291,6 +299,7 @@
     "medicationCard": "Karta leków",
     "medicationCardHelp": "„Czy udało Ci się przyjąć leki?” na tym urządzeniu, tylko w dniu, w którym przypada dawka leku.",
     "customHelp": "Trackery, które nazywasz samodzielnie: skala, liczba albo tak lub nie. Maksymalnie {{max}}.",
+    "customHelpPair": "Trackery, które nazywasz samodzielnie: skala, liczba, dwie liczby albo tak lub nie. Maksymalnie {{max}}.",
     "yourCustomTrackers": "Twoje własne trackery",
     "categoryMoodMind": "Nastrój i umysł",
     "categoryBodyHealth": "Ciało i zdrowie",
@@ -325,7 +334,13 @@
     "preview": "Podgląd",
     "startFromLast": "Pamiętaj ostatni wpis",
     "chooseIcon": "Wybierz ikonę",
-    "startFromLastHelp": "Przydatne przy rzeczach, które rzadko się zmieniają, jak waga czy codzienna dawka."
+    "startFromLastHelp": "Przydatne przy rzeczach, które rzadko się zmieniają, jak waga czy codzienna dawka.",
+    "pairFirst": "Pierwsza liczba",
+    "pairSecond": "Druga liczba",
+    "pairFirstPlaceholder": "Skurczowe",
+    "pairSecondPlaceholder": "Rozkurczowe",
+    "pairUnit": "Jednostka (opcjonalnie)",
+    "pairWaiting": "Zapisze się, gdy wpiszesz pierwszą liczbę."
   },
   "factors": {
     "prompt": "Co było częścią Twojego dnia?",

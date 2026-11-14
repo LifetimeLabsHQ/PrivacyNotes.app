@@ -11,7 +11,7 @@ import type { JournalTrackerData } from './trackerTypes';
 
 export type TrackerKind = 'scale' | 'measure' | 'yesno' | 'ordinal' | 'set' | 'medication';
 type TrackerSource = 'builtin' | 'custom' | 'medication';
-type TrackerUnit = 'h' | 'bpm' | 'kg' | 'lb' | 'steps' | 'glasses' | 'cups' | 'l' | 'oz' | 'mg';
+type TrackerUnit = 'h' | 'bpm' | 'mmHg' | 'kg' | 'lb' | 'steps' | 'glasses' | 'cups' | 'l' | 'oz' | 'mg';
 /** A logged value: a number, a yes or no, a level id, a medication status, or a tag set. */
 export type TrackerValue = number | boolean | string | readonly string[];
 
@@ -23,6 +23,10 @@ export interface TrackerDescriptor {
   labelKey?: string;
   /** User text: the custom template's name or the medication's name. */
   name?: string;
+  /** One number of a `pair` tracker: its own name (user text), or the
+   *  catalog key of the generic one; shown after `name`. */
+  part?: string;
+  partKey?: string;
   color: string;
   kind: TrackerKind;
   /** The declared range of a scale. */

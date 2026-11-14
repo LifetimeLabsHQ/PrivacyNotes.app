@@ -1,17 +1,13 @@
 import { Extension } from '@tiptap/core';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
-/** Attributes ProseMirror itself puts on a node view's element. */
-const VIEW_ATTRS = new Set(['contenteditable', 'draggable']);
-
 /** What `ReactNodeViewRenderer` draws while `EditorContent` is not mounted:
- *  an empty span that carries nothing beyond ProseMirror's own attributes. */
+ *  an empty span. Its attributes say nothing: ProseMirror puts its own on
+ *  it, and so does every node decoration (the `dir` of a callout, see
+ *  editorDirection). A React node view that can render is told apart by the
+ *  class its element has from the start. */
 function isPlaceholder(dom: Node | null): boolean {
-  return (
-    dom instanceof HTMLSpanElement &&
-    !dom.firstChild &&
-    [...dom.attributes].every((a) => VIEW_ATTRS.has(a.name))
-  );
+  return dom instanceof HTMLSpanElement && !dom.firstChild && !dom.classList.contains('react-renderer');
 }
 
 /**

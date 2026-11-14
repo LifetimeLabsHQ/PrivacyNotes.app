@@ -12,3 +12,14 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1000 * 1000 * 1000) return `${(bytes / (1000 * 1000)).toFixed(1)} MB`;
   return `${(bytes / (1000 * 1000 * 1000)).toFixed(2)} GB`;
 }
+
+/** A size string like "42.2 MB" back to bytes, in the same decimal units. */
+export function parseSizeToBytes(s: string): number {
+  const n = parseFloat(s) || 0;
+  if (!n) return 0;
+  const lower = s.toLowerCase();
+  if (lower.includes('gb')) return n * 1000 * 1000 * 1000;
+  if (lower.includes('mb')) return n * 1000 * 1000;
+  if (lower.includes('kb')) return n * 1000;
+  return n;
+}

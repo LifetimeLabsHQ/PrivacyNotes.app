@@ -16,10 +16,12 @@
  * switch. The toggle is the button in the code block (editorCodeBlock.ts).
  * Spec: docs/internal/design-decisions.md (code blocks wrap by default)
  */
+import { createListeners } from './listeners';
+
 const CODE_WRAP_KEY = 'privacynotes.codeWrap';
 
 let active: boolean | null = null;
-const listeners = new Set<() => void>();
+const { subscribe, notify } = createListeners();
 
 export function getCodeWrap(): boolean {
   if (active === null) {
@@ -37,11 +39,8 @@ export function setCodeWrap(on: boolean): void {
   active = on;
   paintCodeWrap();
   try { localStorage.setItem(CODE_WRAP_KEY, on ? '1' : '0'); } catch { /* the class still flipped */ }
-  listeners.forEach((cb) => cb());
+  notify();
 }
 
 /** Every mounted code block repaints its toggle through this. */
-export function subscribeCodeWrap(cb: () => void): () => void {
-  listeners.add(cb);
-  return () => { listeners.delete(cb); };
-}
+export const subscribeCodeWrap = subscribe;

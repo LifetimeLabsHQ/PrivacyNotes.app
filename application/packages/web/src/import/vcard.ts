@@ -768,7 +768,7 @@ function unfold(raw: string): { lines: string[]; orphans: number } {
   return { lines, orphans };
 }
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.vcard.${key}`, options);
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:vcard.${key}`, options);
 
 export async function parseVcard(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
   onProgress?.(i18n.t('importExport:status.readingFile'));

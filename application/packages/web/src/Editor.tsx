@@ -57,6 +57,7 @@ import { LinkSheet } from './LinkSheet';
 import { SLOT_PILL_HEIGHT } from './EditorSlotPill';
 import { Callout, CalloutTitle } from './Callout';
 import { PlaceMapNode } from './PlaceMapNode';
+import { DoodleNode } from './doodle/DoodleNode';
 import type { NoteLocation } from './noteLocation';
 import { typeCalloutTrigger } from './CalloutSuggestion';
 import { proUnlocked } from './demo';
@@ -71,7 +72,7 @@ import {
 import { Spoiler } from './editorSpoiler';
 import { InlineCodeCopy, inlineCodeHint } from './editorCodeCopy';
 import { AddLineBetweenBlocks } from './editorAddLine';
-import { LINK_TITLE_ATTRIBUTE, LinkModifierOpen, MarkdownLinkTyping, SelfLinkTyping, linkHrefAt, linkSelectionIfUrl, openLinkHref } from './editorLinks';
+import { LINK_MARKDOWN, LINK_TITLE_ATTRIBUTE, LinkModifierOpen, MarkdownLinkTyping, SelfLinkTyping, linkHrefAt, linkSelectionIfUrl, openLinkHref } from './editorLinks';
 import { createLongPressGuard } from './softKeyboard';
 import { planLineSort } from './sortLines';
 import { activeLocale } from './i18n';
@@ -589,6 +590,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         // silently bleeding into adjacent text.
         inclusive() { return false; },
         addAttributes() { return { ...this.parent?.(), title: LINK_TITLE_ATTRIBUTE }; },
+        addStorage() { return { ...this.parent?.(), markdown: LINK_MARKDOWN }; },
       }).configure({
         // Who opens a clicked link is decided in one place, and it is not
         // here: `LinkModifierOpen` reads the pointer, the modifier and
@@ -689,6 +691,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       CodeBlockWithCopy.configure({ lowlight, defaultLanguage: 'plaintext' }),
       // A ```map fence: Insert > Location's map in the body (note-location.md, section 4b).
       PlaceMapNode,
+      DoodleNode,
       CodeBlockPlainCopy,
       SearchHighlight,
       // ==highlight== mark; input + paste rules ship with the extension.

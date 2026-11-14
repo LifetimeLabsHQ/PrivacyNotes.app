@@ -12,7 +12,7 @@ Das ist unsere echte Datenbank in Zürich, keine Zeichnung davon. Deine Notiz la
 
 ## Was passiert, wenn du eine Notiz schreibst
 
-1. Deine 12-Wort-Phrase wird zu einem Schlüssel. Das passiert auf deinem Gerät.
+1. Deine Wiederherstellungsphrase wird zu einem Schlüssel. Das passiert auf deinem Gerät.
 2. Die Notiz wird mit diesem Schlüssel verschlüsselt, auf deinem Gerät. So wird sie auf deiner eigenen Festplatte gespeichert, und so reist sie zu uns.
 3. Wir bekommen die verschlüsselte Notiz und speichern sie. Das Bild oben zeigt, wie das aussieht.
 4. Jedes Gerät mit derselben Phrase erzeugt denselben Schlüssel und öffnet die Notiz.

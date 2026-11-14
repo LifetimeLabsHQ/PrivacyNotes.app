@@ -6,6 +6,7 @@ import { LoadingScreen } from './LoadingScreen';
 import { initTheme } from './theme';
 import { initAppZoom } from './appZoom';
 import { clearFreshDemoCredentials, isDemoMode } from './demo';
+import { cryptoCheckoutReleased } from './cryptoRelease';
 import { dropDoorsLeftBySignOut } from './biometric';
 import { logAuthEvent } from './authDiag';
 import { isAppHost } from './hosts';
@@ -131,12 +132,17 @@ window.addEventListener('vite:preloadError', onPreloadError);
 // Spec: docs/internal/specs/admin-split-handoff.md (admin panel: dash.privacynotes.app, gated by Cloudflare Access)
 const BurnNote = lazy(() => import('./BurnNote'));
 const CheckoutLauncher = lazy(() => import('./CheckoutLauncher'));
+// The crypto checkout is its own page and its own chunk: it shares no code
+// with the Paddle one beyond checkoutParts.tsx (crypto-payments.md, 3d).
+const CryptoCheckoutLauncher = lazy(() => import('./CryptoCheckoutLauncher'));
 const AboutWindow = lazy(() => import('./AboutWindow'));
 const NinjaWindow = lazy(() => import('./NinjaWindow'));
 const UiCatalog = lazy(() => import('./ui/Catalog'));
 const pathname = window.location.pathname.replace(/\/+$/, '');
 const isBurnRoute = pathname === '/burn';
 const isCheckoutRoute = pathname === '/checkout';
+// While the crypto release switch is off, the path opens the normal app.
+const isCryptoCheckoutRoute = pathname === '/crypto-checkout' && cryptoCheckoutReleased();
 // The UI catalog (every standard part in every state) for sessions and
 // reviews, in the demo and in a dev build only. Spec: docs/internal/design/design-system.md
 const isUiCatalog = window.location.hash === '#ui-catalog' && (isDemoMode() || import.meta.env.DEV);
@@ -354,6 +360,10 @@ const tree = (
         ) : isCheckoutRoute ? (
           <Suspense fallback={<LoadingScreen />}>
             <CheckoutLauncher />
+          </Suspense>
+        ) : isCryptoCheckoutRoute ? (
+          <Suspense fallback={<LoadingScreen />}>
+            <CryptoCheckoutLauncher />
           </Suspense>
         ) : (
           <AuthProvider>

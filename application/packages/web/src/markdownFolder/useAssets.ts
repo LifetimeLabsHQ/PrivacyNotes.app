@@ -20,6 +20,7 @@
  */
 import { useEffect, useState } from 'react';
 import type { OpenedDirectoryRef } from './fileAccess';
+import { decodePath } from './links';
 
 /** `![alt](path)` where the path is relative - not a URL, not one of our own
  *  `pn:img/` refs, which belong to the encrypted store and never appear here. */
@@ -156,24 +157,6 @@ export function useAssets(
  *  Joined on NUL because it is the one byte a path cannot contain. */
 function markdownIdentity(markdown: string): string {
   return imageRefs(markdown).join('\0');
-}
-
-/**
- * The path as the filesystem knows it. Percent-escapes are how a vault writes a
- * filename with a space, so the lookup has to decode - but only the lookup: the
- * map key stays verbatim so the file keeps its own spelling.
- *
- * A malformed escape falls back to the raw text rather than throwing. `%` is a
- * legal filename character, so `100%.png` is far more likely a real name than a
- * truncated escape, and `decodeURI` throws on it - a throw this module cannot
- * afford (see `resolveQuietly`).
- */
-function decodePath(path: string): string {
-  try {
-    return decodeURI(path);
-  } catch {
-    return path;
-  }
 }
 
 /**

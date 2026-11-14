@@ -74,6 +74,7 @@ export function hasData(series: DaySeries): boolean {
 /** The tracker's name in the language on screen; custom names are user text. */
 export function trackerName(d: TrackerDescriptor, t: TFunction): string {
   if (d.unknown) return t('stats:wellness.trackers.unknown', { id: d.id.slice(0, 8) });
+  if (d.name && (d.part || d.partKey)) return `${d.name}, ${d.part ?? t(d.partKey!)}`;
   if (d.name) return d.name;
   return d.labelKey ? t(d.labelKey) : d.id;
 }
@@ -93,11 +94,12 @@ export function formatNumber(n: number, digits = 1): string {
 
 /** A numeric value with its unit, the way the pills show it. */
 export function formatValue(d: TrackerDescriptor, v: number, t: TFunction, digits = 1): string {
-  // Steps and beats are counted, never fractional.
-  const n = formatNumber(v, d.unit === 'steps' || d.unit === 'bpm' ? 0 : digits);
+  // Steps, beats and millimetres of mercury are whole numbers.
+  const n = formatNumber(v, d.unit === 'steps' || d.unit === 'bpm' || d.unit === 'mmHg' ? 0 : digits);
   switch (d.unit) {
     case 'h': return `${n} ${t('trackers:units.hoursSuffix')}`;
     case 'bpm': return `${n} ${t('trackers:units.bpm')}`;
+    case 'mmHg': return `${n} ${t('trackers:units.mmHg')}`;
     case 'kg': return `${n} ${t('trackers:units.kg')}`;
     case 'lb': return `${n} ${t('trackers:units.lb')}`;
     case 'l': return `${n} ${t('trackers:units.water.l')}`;

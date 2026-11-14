@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CaretDown, Check, FloppyDisk, Scales, Warning, SignIn, Vault } from '../icons';
 import { PrivacyLadder } from '../PrivacyLadder';
+import { isValidPhrase } from '@notes/shared';
+import { PhraseWordCheck, usePhraseCheck } from './PhraseWordCheck';
 import { useAuth } from '../auth';
 import { SectionEyebrow, SETTINGS_BTN_PRIMARY, SETTINGS_HELP } from '../settingsUI';
 import { isDemoMode } from '../demo';
@@ -81,7 +83,6 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
   const accountLogins = useAccountLogins();
 
   const [selected, setSelected] = useState<Mode | null>(null);
-  const [answers, setAnswers] = useState<string[]>(['', '', '']);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Mode | null>(null);
@@ -103,11 +104,13 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
     if (adoptionBlocked) setSelected((previous) => previous === 'custodial' ? null : previous);
   }, [adoptionBlocked]);
 
+  const check = usePhraseCheck(phrase);
+  const resetCheck = check.reset;
   const resetRelease = useCallback(() => {
     setReleaseCheck(false);
-    setAnswers(['', '', '']);
+    resetCheck();
     onReleaseCheckChange(false);
-  }, [onReleaseCheckChange]);
+  }, [onReleaseCheckChange, resetCheck]);
 
   const acceptSession = useCallback((session: CustodySession | null) => {
     const next = classifySession(session, pubkey);
@@ -139,19 +142,7 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
     }
   }, [acceptSession, supabase]);
 
-  const words = useMemo(() => phrase.trim().split(/\s+/), [phrase]);
-
-  // Three distinct 1-based positions, drawn once per mount so the
-  // challenge cannot be rerolled by closing and reopening the panel.
-  const positions = useMemo(() => {
-    const pool = words.map((_, i) => i + 1);
-    const picked: number[] = [];
-    while (picked.length < 3 && pool.length > 0) {
-      const idx = Math.floor(Math.random() * pool.length);
-      picked.push(pool.splice(idx, 1)[0]!);
-    }
-    return picked.sort((a, b) => a - b);
-  }, [words]);
+  const phraseReady = useMemo(() => isValidPhrase(phrase), [phrase]);
 
   useEffect(() => {
     alive.current = true;
@@ -178,12 +169,9 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
 
   const pick = selected === 'custodial' && adoptionBlocked ? current : selected ?? current;
   const changing = pick !== current;
-  const allCorrect = positions.every(
-    (pos, i) =>
-      answers[i]!.trim().toLowerCase() === words[pos - 1]!.toLowerCase(),
-  );
+  const allCorrect = check.correct;
   // Adoption needs a confirmed connected account; release needs the saved phrase.
-  const canConfirm = changing && words.length === 12 && sessionState.kind === 'ready'
+  const canConfirm = changing && phraseReady && sessionState.kind === 'ready'
     && (pick === 'custodial' ? canAdopt : releaseCheck && allCorrect);
 
   function reset() {
@@ -400,8 +388,8 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
               {!releaseCheck ? (
                 <button
                   type="button"
-                  disabled={busy || words.length !== 12}
-                  onClick={() => { setReleaseCheck(true); onReleaseCheckChange(true); setAnswers(['', '', '']); }}
+                  disabled={busy || !phraseReady}
+                  onClick={() => { setReleaseCheck(true); onReleaseCheckChange(true); check.reset(); }}
                   className="rounded-md border border-divider px-3 py-2 text-body text-pn-soft hover:bg-surface-1 transition"
                 >
                   {t('custody.checkSavedPhrase')}
@@ -409,31 +397,7 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
               ) : (
                 <>
                 <p className={`${SETTINGS_HELP} leading-relaxed`}>{t('custody.hiddenChallengePrompt')}</p>
-                <div className="grid grid-cols-3 gap-2">
-                {positions.map((pos, i) => (
-                  <label key={pos} className="block">
-                    <span className={`block ${SETTINGS_HELP} mb-1`}>
-                      {t('custody.wordLabel', { position: pos })}
-                    </span>
-                    <input
-                      type="text"
-                      value={answers[i]}
-                      onChange={(e) => {
-                        const next = [...answers];
-                        next[i] = e.target.value;
-                        setAnswers(next);
-                        setError(null);
-                      }}
-                      disabled={busy}
-                      autoComplete="off"
-                      autoCapitalize="none"
-                      autoCorrect="off"
-                      spellCheck={false}
-                      className="w-full rounded-md border border-divider bg-track text-body font-mono px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-accent"
-                    />
-                  </label>
-                ))}
-                </div>
+                <PhraseWordCheck check={check} disabled={busy} onEdit={() => setError(null)} />
                 <button type="button" disabled={busy} className="text-body text-accent" onClick={resetRelease}>{t('common:actions.cancel')}</button>
                 </>
               )}

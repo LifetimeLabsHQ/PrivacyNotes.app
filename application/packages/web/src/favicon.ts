@@ -70,7 +70,7 @@ export function faviconUrl(domain: string): string {
   return `${base}/favicon?domain=${encodeURIComponent(d)}`;
 }
 
-/** Extract domain from a URL string (same logic as LoginForm.domainFromUrl). */
+/** The host of a URL string, without `www.`; a bare domain reads as https. */
 export function domainFromUrlString(raw: string): string {
   let s = raw.trim();
   if (!s) return '';

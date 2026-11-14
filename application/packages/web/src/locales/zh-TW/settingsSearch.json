@@ -54,7 +54,7 @@
     "security_appLock": "應用程式鎖, App 鎖, 啟動時鎖定, 鎖定畫面, 開啟時鎖定應用程式, 再次鎖定, 多久後再次鎖定",
     "security_relockAfter": "逾時, 自動鎖定, 多久後鎖定, 多久後再次鎖定, 鎖定畫面",
     "security_blockCapture": "截圖, 螢幕截圖, 螢幕錄影, 螢幕擷取, 螢幕分享, 隱私模式",
-    "security_phrase": "復原助憶詞, 助記詞, 復原短語, 秘密單字, 種子, 12 個單字, 復原金鑰",
+    "security_phrase": "復原助憶詞, 助記詞, 復原短語, 秘密單字, 種子, 12 個單字, 24 個單字, 二十四個單字, 復原金鑰",
     "security_custody": "託管, 自行保管, 金鑰保管",
     "me_pauseSync": "停止同步, 暫停同步, 離線",
     "me_filesWifiOnly": "Wi-Fi, 行動數據, 行動網路, 計量",
@@ -80,6 +80,7 @@
     "appearance_invisibles": "段落符號, 空白, 空格, 隱藏字元, 格式標記",
     "appearance_linkModifier": "連結, 超連結, url, 點按, 點擊, ctrl, cmd, command, 誤開",
     "appearance_typedSymbols": "連字, 箭頭, 符號, 數學, 不等於, 大於, 小於, 自動校正, 取代",
+    "appearance_linkSuggestions": "相關筆記, 相似筆記, 建議, 連結建議, 建議的關聯, 關聯, 反向連結, backlinks, 未連結, 主題",
     "appearance_noteFont": "字型, 字體, 等寬, monospace, mono, serif, sans, 預設字型, 自訂字型, 已安裝字型, 我的字型",
     "appearance_nestedNumbers": "編號清單, 巢狀清單, 大綱, 1.1, 1.1.1, 法律編號, 階層編號, 子編號, 多層清單",
     "appearance_confirmTrash": "刪除, 垃圾桶, 確認, 確認對話框, 對話框, 詢問, 提示, 不再詢問",
@@ -87,6 +88,7 @@
     "appearance_autoLocationNotes": "位置, 地點, 定位, GPS, 地圖, 地理標記, 自動, 在哪裡, 筆記",
     "appearance_autoLocationJournal": "位置, 地點, 定位, GPS, 地圖, 地理標記, 自動, 在哪裡, 日誌, 日記, 日誌紀錄, 紀錄",
     "appearance_startView": "起始頁, 首頁, 預設檢視, 開啟時",
+    "appearance_reopenLastOpen": "上次的筆記, 最近開啟, 還原, 記住, 重新開啟, 啟動, 開啟",
     "appearance_view": "格狀, 網格, 清單, 卡片, 版面",
     "trackers_setup": "追蹤項目, 追蹤, 身心, 健康, 心情, 睡眠, 活力, 步數, 飲水, 開啟, 關閉",
     "trackers_habitQuestions": "習慣, 問題, 冥想, 祈禱, 抽菸, 吸菸, 酒精, 喝酒, 你有沒有",
@@ -121,6 +123,7 @@
     "calendar_weekNumbers": "週數, 週次, ISO 週, 日曆",
     "calendar_hours": "時段, 工作時間, 上班時間, 日檢視, 週檢視, 早上",
     "me_dms": "失聯開關, 死人開關, dead man's switch, 不活動, 閒置, 未使用, 自動刪除, 期限後刪除, 清除, 放棄",
+    "appearance_smartConnections": "ai, AI, 離線, 離線 AI, 裝置端, 裝置端 AI, 本機 AI, 私人 AI, 模型, bekko, 意思, 意思相同, 智慧關聯, 相關筆記, 相似筆記, 建議的關聯, 連結建議, 語意, semantic, 嵌入, embeddings, 下載",
     "appearance_formatBar": "工具列, 格式列, 按鈕, 自訂, 排列, 項目符號清單, 刪除線, 齒輪"
   }
 }

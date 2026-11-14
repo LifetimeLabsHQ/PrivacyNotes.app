@@ -12,7 +12,7 @@
   },
   "moveScreen": {
     "title": "Aplikace se přestěhovala na use.privacynotes.app",
-    "bodySignIn": "Přihlas se tam svou obnovovací frází o 12 slovech nebo přes „{{scanQr}}“. Toto zařízení se nejdřív synchronizuje, takže tam na tebe čekají všechny tvoje poznámky, a tady se nic nemaže.",
+    "bodySignIn": "Přihlas se tam svou obnovovací frází nebo přes „{{scanQr}}“. Toto zařízení se nejdřív synchronizuje, takže tam na tebe čekají všechny tvoje poznámky, a tady se nic nemaže.",
     "openNotes": "Otevři tady jednou svoje poznámky a vyřeš to",
     "showPhrase": "Zobrazit moji obnovovací frázi",
     "website": "Prohlédnout si místo toho web"
@@ -52,7 +52,7 @@
     "signInAgain": "Přihlásit se znovu"
   },
   "signOutConfirm": {
-    "title": "Máš uloženou frázi z 12 slov?",
+    "title": "Máš uloženou obnovovací frázi?",
     "body": "Tvoje fráze je <only>jediná</only> cesta zpátky. Žádný reset e-mailem, žádná linka podpory. Jestli ji ještě nemáš zapsanou, klepni na <action>Ne, zobrazit frázi</action> a hned ti ji otevřeme.",
     "unsyncedWarn_one": "1 poznámka v tomto zařízení ještě není synchronizovaná. Pokud se ji při odhlášení nepodaří nahrát, bude nenávratně ztracena.",
     "unsyncedWarn_few": "{{count}} poznámky v tomto zařízení ještě nejsou synchronizované. Pokud se je při odhlášení nepodaří nahrát, budou nenávratně ztraceny.",
@@ -169,7 +169,8 @@
     "offline": "Jsi offline. Odkazy ke spálení potřebují komunikaci se serverem. Zkus to znovu, až budeš znovu online.",
     "demo": "Odkazy ke spálení se ukládají na server a demo se k žádnému nepřipojuje. Zaregistruj se a vytvářej opravdové odkazy ke spálení.",
     "tooLarge": "Poznámka je příliš velká na sdílení odkazem ke spálení ({{size}} KB). Maximum je {{max}} KB.",
-    "storeFailed": "Poznámku ke spálení se nepodařilo uložit na server."
+    "storeFailed": "Poznámku ke spálení se nepodařilo uložit na server.",
+    "rateLimited": "Z tohoto připojení vzniklo příliš mnoho odkazů ke spálení. Zkus to později."
   },
   "dms": {
     "returnTitle": "Tvoje kopie na serveru byla smazána",
@@ -182,8 +183,11 @@
   "massDelete": {
     "title": "Poznámky smazané na jiném zařízení",
     "body_other": "{{count}} poznámek, které toto zařízení pořád má, bylo smazáno tebou nebo jiným z tvých zařízení. Pokud to byl tvůj krok, smaž je i tady. Pokud ne, může mít k tvému účtu přístup někdo jiný: ponech si je a vrátí se na všechna tvá zařízení.",
-    "keep": "Ponechat moje poznámky",
-    "delete": "Smazat je i tady",
+    "refusedTitle": "Tvoje poznámky jsou zpět",
+    "refusedBody_one": "{{count}} poznámka byla smazána ze serveru, ale nesmazalo ji žádné z tvých zařízení. Toto zařízení smazání nepřijalo a vrátilo poznámku na všechna tvá zařízení. Zkontroluj svá zařízení a odeber ta, která neznáš.",
+    "refusedBody_few": "{{count}} poznámky byly smazány ze serveru, ale nesmazalo je žádné z tvých zařízení. Toto zařízení smazání nepřijalo a vrátilo je na všechna tvá zařízení. Zkontroluj svá zařízení a odeber ta, která neznáš.",
+    "refusedBody_other": "{{count}} poznámek bylo smazáno ze serveru, ale nesmazalo je žádné z tvých zařízení. Toto zařízení smazání nepřijalo a vrátilo je na všechna tvá zařízení. Zkontroluj svá zařízení a odeber ta, která neznáš.",
+    "showDevices": "Zobrazit zařízení",
     "body_one": "{{count}} poznámka, kterou toto zařízení pořád má, byla smazána tebou nebo jiným z tvých zařízení. Pokud to byl tvůj krok, smaž ji i tady. Pokud ne, může mít k tvému účtu přístup někdo jiný: ponech si ji a vrátí se na všechna tvá zařízení.",
     "body_few": "{{count}} poznámky, které toto zařízení pořád má, byly smazány tebou nebo jiným z tvých zařízení. Pokud to byl tvůj krok, smaž je i tady. Pokud ne, může mít k tvému účtu přístup někdo jiný: ponech si je a vrátí se na všechna tvá zařízení."
   }

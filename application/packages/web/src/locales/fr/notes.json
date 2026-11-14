@@ -141,6 +141,14 @@
   },
   "banner": {
     "proActivationPending": "Paiement reçu, mais l'activation de Pro prend plus de temps que d'habitude. Actualise dans une minute, ou contacte le support si ça ne s'active pas.",
+    "crypto": {
+      "waiting": "En attente de ton paiement en crypto. Pro s'active dès sa confirmation.",
+      "seen": "Paiement en crypto repéré. Pro s'active quand le réseau le confirme, en général en moins d'une heure pour Bitcoin.",
+      "partial": "Une partie de ton paiement en crypto est arrivée. Envoie le reste sur la page de paiement avant l'expiration du lien.",
+      "ended": "Ton lien de paiement en crypto a expiré avant l'arrivée d'un paiement complet.",
+      "paid": "Ton paiement en crypto est confirmé. Pro est actif.",
+      "openPayment": "Page de paiement"
+    },
     "snapshotPaused": "L'historique des notes est en pause. Ton abonnement Pro semble inactif. Les nouvelles modifications ne seront pas enregistrées tant que Pro n'est pas rétabli.",
     "restorePro": "Rétablir Pro",
     "storagePastDue": "Le paiement de ton abonnement de stockage a échoué. Mets à jour ta carte dans Paddle pour ne pas perdre la capacité supplémentaire.",
@@ -336,7 +344,24 @@
     "linksTo": "Liens sortants",
     "missing": "Pas encore créée",
     "protectedHidden_one": "{{count}} élément protégé par PIN non affiché",
-    "protectedHidden_other": "{{count}} éléments protégés par PIN non affichés"
+    "protectedHidden_other": "{{count}} éléments protégés par PIN non affichés",
+    "related": "Liens suggérés",
+    "relatedWords": "Les deux mentionnent {{words}}",
+    "relatedLinksTo": "Les deux renvoient vers {{title}}",
+    "relatedLinkedFrom": "Les deux sont liées depuis {{title}}",
+    "relatedTag": "Les deux ont l'étiquette {{tag}}",
+    "relatedMeaning": "Même sens",
+    "meaningDoor": "Liens intelligents : trouve les notes qui ont le même sens, grâce à l'IA hors ligne",
+    "meaningDoorNo": "Ne plus afficher",
+    "meaningDoorHidden": "Masqué dans toutes les notes. Les liens intelligents restent dans Paramètres > Éditeur > Comportement.",
+    "hideSuggestions": "Masquer les liens suggérés",
+    "notRelated": "Sans rapport",
+    "notRelatedDone": "N'est plus suggérée",
+    "notRelatedCount": "Sans rapport ({{n}})",
+    "restoreSuggestion": "Suggérer à nouveau",
+    "linkAtCursor": "Lier au curseur",
+    "linkNeedsCursor": "Clique d'abord dans la note",
+    "linkAsFootnote": "Lier en note de bas de page"
   },
   "drawing": {
     "fullScreen": "Plein écran",

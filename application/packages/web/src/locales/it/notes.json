@@ -141,6 +141,14 @@
   },
   "banner": {
     "proActivationPending": "Pagamento ricevuto, ma l'attivazione di Pro sta richiedendo più tempo del solito. Aggiorna tra un minuto, oppure contatta l'assistenza se non si attiva.",
+    "crypto": {
+      "waiting": "In attesa del pagamento in criptovalute. Pro si attiva quando viene confermato.",
+      "seen": "Pagamento in criptovalute rilevato. Pro si attiva quando la rete lo conferma, di solito entro un'ora per Bitcoin.",
+      "partial": "È arrivata solo una parte del pagamento in criptovalute. Invia il resto sulla pagina di pagamento prima che il link scada.",
+      "ended": "Il link di pagamento in criptovalute è scaduto prima che arrivasse il pagamento completo.",
+      "paid": "Il pagamento in criptovalute è confermato. Pro è attivo.",
+      "openPayment": "Pagina di pagamento"
+    },
     "snapshotPaused": "La cronologia delle note è in pausa. Il tuo piano Pro risulta inattivo. Le nuove modifiche non verranno salvate finché Pro non viene ripristinato.",
     "restorePro": "Ripristina Pro",
     "storagePastDue": "Il pagamento del tuo abbonamento allo spazio non è andato a buon fine. Aggiorna la carta su Paddle per non perdere la capacità extra.",
@@ -336,7 +344,24 @@
     "linksTo": "Collegamenti in uscita",
     "missing": "Non ancora creata",
     "protectedHidden_one": "{{count}} elemento protetto da PIN non mostrato",
-    "protectedHidden_other": "{{count}} elementi protetti da PIN non mostrati"
+    "protectedHidden_other": "{{count}} elementi protetti da PIN non mostrati",
+    "related": "Collegamenti suggeriti",
+    "relatedWords": "Entrambe citano {{words}}",
+    "relatedLinksTo": "Entrambe rimandano a {{title}}",
+    "relatedLinkedFrom": "Entrambe collegate da {{title}}",
+    "relatedTag": "Entrambe con il tag {{tag}}",
+    "relatedMeaning": "Stesso significato",
+    "meaningDoor": "Collegamenti intelligenti: trova note con lo stesso significato, con un'IA offline",
+    "meaningDoorNo": "Non mostrare più",
+    "meaningDoorHidden": "Nascosto in tutte le note. Collegamenti intelligenti resta in Impostazioni > Editor > Comportamento.",
+    "hideSuggestions": "Nascondi collegamenti suggeriti",
+    "notRelated": "Non correlata",
+    "notRelatedDone": "Non verrà più suggerita",
+    "notRelatedCount": "Non correlate ({{n}})",
+    "restoreSuggestion": "Suggerisci di nuovo",
+    "linkAtCursor": "Collega nel punto del cursore",
+    "linkNeedsCursor": "Prima fai clic nella nota",
+    "linkAsFootnote": "Collega come nota a piè di pagina"
   },
   "drawing": {
     "fullScreen": "Schermo intero",

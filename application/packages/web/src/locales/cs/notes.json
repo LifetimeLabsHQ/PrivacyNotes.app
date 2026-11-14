@@ -158,6 +158,14 @@
   },
   "banner": {
     "proActivationPending": "Platba byla přijata, ale aktivace Pro trvá déle než obvykle. Za minutu obnov stránku, nebo napiš podpoře, pokud se Pro nezapne.",
+    "crypto": {
+      "waiting": "Čekáme na tvou platbu kryptoměnou. Pro se zapne po jejím potvrzení.",
+      "seen": "Platba kryptoměnou zachycena. Pro se zapne, jakmile ji síť potvrdí, u Bitcoinu obvykle do hodiny.",
+      "partial": "Dorazila část tvé platby kryptoměnou. Zbytek pošli na platební stránce, než odkaz vyprší.",
+      "ended": "Platnost tvého platebního odkazu vypršela dřív, než dorazila celá platba.",
+      "paid": "Tvoje platba kryptoměnou je potvrzená. Pro je zapnuté.",
+      "openPayment": "Platební stránka"
+    },
     "snapshotPaused": "Historie poznámek je pozastavena. Tvůj tarif Pro vypadá jako neaktivní. Nové úpravy se nebudou ukládat do historie, dokud Pro neobnovíš.",
     "restorePro": "Obnovit Pro",
     "storagePastDue": "Platba za předplatné úložiště se nezdařila. Aktualizuj kartu v Paddle, ať nepřijdeš o rozšířenou kapacitu.",
@@ -370,7 +378,24 @@
     "missing": "Zatím nevytvořeno",
     "protectedHidden_one": "{{count}} položka chráněná PINem se nezobrazuje",
     "protectedHidden_few": "{{count}} položky chráněné PINem se nezobrazují",
-    "protectedHidden_other": "{{count}} položek chráněných PINem se nezobrazuje"
+    "protectedHidden_other": "{{count}} položek chráněných PINem se nezobrazuje",
+    "related": "Navrhovaná propojení",
+    "relatedWords": "Obě zmiňují {{words}}",
+    "relatedLinksTo": "Obě odkazují na {{title}}",
+    "relatedLinkedFrom": "Na obě odkazuje {{title}}",
+    "relatedTag": "Obě mají značku {{tag}}",
+    "relatedMeaning": "Stejný význam",
+    "meaningDoor": "Chytrá propojení: najdi poznámky se stejným významem pomocí offline AI",
+    "meaningDoorNo": "Už nezobrazovat",
+    "meaningDoorHidden": "Skryto ve všech poznámkách. Chytrá propojení zůstávají v Nastavení > Editor > Chování.",
+    "hideSuggestions": "Skrýt navrhovaná propojení",
+    "notRelated": "Nesouvisí",
+    "notRelatedDone": "Už se nenavrhuje",
+    "notRelatedCount": "Nesouvisí ({{n}})",
+    "restoreSuggestion": "Znovu navrhovat",
+    "linkAtCursor": "Vložit odkaz na místo kurzoru",
+    "linkNeedsCursor": "Nejdřív klikni do poznámky",
+    "linkAsFootnote": "Vložit odkaz jako poznámku pod čarou"
   },
   "drawing": {
     "fullScreen": "Celá obrazovka",

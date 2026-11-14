@@ -12,7 +12,7 @@
   },
   "moveScreen": {
     "title": "L'app si è trasferita su use.privacynotes.app",
-    "bodySignIn": "Accedi lì con la tua frase di recupero di 12 parole o con “{{scanQr}}”. Questo dispositivo sincronizza prima, così tutte le tue note ti aspettano lì, e qui non viene eliminato nulla.",
+    "bodySignIn": "Accedi lì con la tua frase di recupero o con “{{scanQr}}”. Questo dispositivo sincronizza prima, così tutte le tue note ti aspettano lì, e qui non viene eliminato nulla.",
     "openNotes": "Apri le tue note qui una volta per risolvere il problema",
     "showPhrase": "Mostra la mia frase di recupero",
     "website": "Sfoglia invece il sito"
@@ -46,7 +46,7 @@
     "signInAgain": "Accedi di nuovo"
   },
   "signOutConfirm": {
-    "title": "Hai salvato la tua frase di 12 parole?",
+    "title": "Hai salvato la tua frase di recupero?",
     "body": "La tua frase è l'<only>unico</only> modo per rientrare. Nessuna reimpostazione via email, nessuna linea di assistenza. Se non l'hai ancora annotata, tocca <action>No, mostra la frase</action> e te la apriamo subito.",
     "unsyncedWarn_one": "1 nota su questo dispositivo non è ancora sincronizzata. Andrà persa per sempre se non può essere caricata durante la disconnessione.",
     "unsyncedWarn_other": "{{count}} note su questo dispositivo non sono ancora sincronizzate. Andranno perse per sempre se non possono essere caricate durante la disconnessione.",
@@ -139,7 +139,8 @@
     "offline": "Sei offline. I burn link richiedono uno scambio con il server. Riprova quando sei di nuovo online.",
     "demo": "I burn link vengono salvati su un server, e la demo non ne contatta nessuno. Registrati per creare veri burn link.",
     "tooLarge": "La nota è troppo grande per essere condivisa tramite burn link ({{size}}KB). Il massimo è {{max}}KB.",
-    "storeFailed": "Impossibile archiviare la burn note sul server."
+    "storeFailed": "Impossibile archiviare la burn note sul server.",
+    "rateLimited": "Sono stati creati troppi burn link da questa connessione Internet. Riprova più tardi."
   },
   "dms": {
     "returnTitle": "La tua copia sul server è stata eliminata",
@@ -152,7 +153,9 @@
     "title": "Note eliminate su un altro dispositivo",
     "body_one": "{{count}} nota ancora presente su questo dispositivo è stata eliminata da te o da un altro dei tuoi dispositivi. Se l'hai fatto tu, eliminala anche qui. Se non l'hai fatto tu, qualcuno potrebbe avere accesso al tuo account: tienila per rimetterla su tutti i tuoi dispositivi.",
     "body_other": "{{count}} note ancora presenti su questo dispositivo sono state eliminate da te o da un altro dei tuoi dispositivi. Se l'hai fatto tu, eliminale anche qui. Se non l'hai fatto tu, qualcuno potrebbe avere accesso al tuo account: tienile per rimetterle su tutti i tuoi dispositivi.",
-    "keep": "Tieni le mie note",
-    "delete": "Eliminale anche qui"
+    "refusedTitle": "Le tue note sono tornate",
+    "refusedBody_one": "{{count}} nota è stata eliminata dal server, ma nessuno dei tuoi dispositivi l'ha eliminata. Questo dispositivo non ha accettato l'eliminazione e ha rimesso la nota su tutti i tuoi dispositivi. Controlla i tuoi dispositivi e rimuovi quelli che non riconosci.",
+    "refusedBody_other": "{{count}} note sono state eliminate dal server, ma nessuno dei tuoi dispositivi le ha eliminate. Questo dispositivo non ha accettato l'eliminazione e le ha rimesse su tutti i tuoi dispositivi. Controlla i tuoi dispositivi e rimuovi quelli che non riconosci.",
+    "showDevices": "Mostra dispositivi"
   }
 }

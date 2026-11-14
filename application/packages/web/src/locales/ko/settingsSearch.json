@@ -54,7 +54,7 @@
     "security_appLock": "앱 잠금, 시작 시 잠금, 잠금 화면, 앱 잠그기, 열 때 앱 잠금, 다시 잠금, 재잠금 시간",
     "security_relockAfter": "시간 초과, 자동 잠금, 잠금 시간, 다시 잠그기, 재잠금, 잠금 화면",
     "security_blockCapture": "스크린샷, 화면 녹화, 화면 캡처, 화면 공유, 개인정보 보호 모드",
-    "security_phrase": "시크릿 문구, 복구 문구, 비밀 단어, 시드, 12단어, 복구 키",
+    "security_phrase": "복구 문구, 시크릿 문구, 비밀 단어, 시드, 12단어, 열두 단어, 24단어, 스물네 단어, 복구 키",
     "security_custody": "수탁, 커스터디, 셀프 커스터디, 키 보관",
     "me_pauseSync": "동기화 중지, 일시 중지, 오프라인",
     "me_filesWifiOnly": "Wi-Fi, 와이파이, 모바일 데이터, 셀룰러, 데이터 요금",
@@ -80,6 +80,7 @@
     "appearance_invisibles": "단락 기호, 공백, 스페이스, 숨은 문자, 서식 기호",
     "appearance_linkModifier": "링크, 하이퍼링크, url, 클릭, ctrl, cmd, command, 커맨드, 실수로 열림",
     "appearance_typedSymbols": "합자, 리거처, 화살표, 기호, 수학, 같지 않음, 크다, 작다, 이상, 이하, 자동 고침, 자동 수정, 바꾸기",
+    "appearance_linkSuggestions": "관련 노트, 비슷한 노트, 유사한 노트, 제안, 링크 제안, 연결 제안, 연결, 백링크, 링크 안 됨, 링크되지 않은, 주제",
     "appearance_noteFont": "글꼴, 폰트, 서체, 고정폭, 모노스페이스, mono, 세리프, 산세리프, sans, 기본 글꼴, 사용자 지정 글꼴, 맞춤 글꼴, 설치된 글꼴, 내 글꼴, 내 폰트",
     "appearance_nestedNumbers": "번호 목록, 중첩 목록, 하위 목록, 개요, 1.1, 1.1.1, 법률식 번호, 하위 번호, 다단계 목록, 다수준 목록",
     "appearance_confirmTrash": "삭제, 휴지통, 확인, 확인 창, 대화상자, 묻기, 프롬프트, 다시 묻지 않기",
@@ -87,6 +88,7 @@
     "appearance_autoLocationNotes": "위치, 장소, GPS, 좌표, 지도, 지오태그, 자동, 어디, 노트",
     "appearance_autoLocationJournal": "위치, 장소, GPS, 좌표, 지도, 지오태그, 자동, 어디, 저널, 일기, 항목",
     "appearance_startView": "시작 페이지, 홈, 기본 보기, 처음 화면",
+    "appearance_reopenLastOpen": "마지막 노트, 마지막으로 연, 복원, 기억, 다시 열기, 시작, 실행",
     "appearance_view": "그리드, 목록, 카드, 레이아웃",
     "trackers_setup": "트래커, 웰니스, 버튼, 기분, 수면, 에너지, 걸음, 물, 켜기, 끄기",
     "trackers_habitQuestions": "습관, 질문, 명상, 기도, 흡연, 술, 알코올, 했나요",
@@ -121,6 +123,7 @@
     "calendar_weekNumbers": "주 번호, ISO 주, 캘린더, 달력",
     "calendar_hours": "시간, 근무 시간, 일 보기, 주 보기, 아침",
     "me_dms": "데드맨 스위치, dead man's switch, 비활성, 미사용, 이후 삭제, 자동 삭제, 지우기, 방치",
+    "appearance_smartConnections": "ai, AI, 인공지능, 오프라인, 오프라인 AI, 온디바이스, 온디바이스 AI, 로컬 AI, 비공개 AI, 모델, bekko, 의미, 같은 의미, 관련 노트, 비슷한 노트, 유사한 노트, 연결 제안, 링크 제안, 스마트 연결, 시맨틱, 의미 검색, 임베딩, 다운로드",
     "appearance_formatBar": "도구 막대, 서식 막대, 버튼, 사용자화, 정리, 글머리 기호 목록, 취소선, 톱니바퀴"
   }
 }

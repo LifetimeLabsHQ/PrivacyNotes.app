@@ -31,7 +31,7 @@ import { intlLocale } from '../languages';
 import { toLocalIso } from '../notesViewUtils';
 import { trackerName } from '../stats/wellnessModel';
 import {
-  HOME_COLS, HOME_GAP_PX, HOME_ROW_PX, LAYOUT_IDS, WIDGETS, addWidget, fillHoles, fitSize, fitsDashboard, isWidgetKind, layoutWidgets, moveWidget, packBoxes,
+  HOME_GAP_PX, HOME_ROW_PX, LAYOUT_IDS, WIDGETS, addWidget, columnsFor, fillHoles, fitSize, fitsDashboard, isWidgetKind, layoutWidgets, moveWidget, packBoxes,
   removeWidget, resizeWidget, retargetWidget, type Box, type LayoutId, type Widget, type WidgetDef, type WidgetKind,
 } from './dashboardLayout';
 import { useDashboardEnv } from './env';
@@ -44,27 +44,14 @@ import { WidgetCatalog, TargetChooser, type ChooserKind } from './WidgetCatalog'
 
 const fmt = (n: number) => n.toLocaleString(intlLocale());
 
-/** The widgets that are one number: they pair two to a row on a phone. */
-const PAIRS: ReadonlySet<string> = new Set<WidgetKind>(['streak', 'checkInStreak', 'milestone']);
+/** The widgets that are one number: a tile with its own label, no head. */
+const NUMBERS: ReadonlySet<string> = new Set<WidgetKind>(['streak', 'checkInStreak', 'milestone']);
+/** The numbers short enough for half a phone's width: two of them share a
+ *  row there. The milestone's "3,129 of 5,000" is not. */
+const PAIRS: ReadonlySet<string> = new Set<WidgetKind>(['streak', 'checkInStreak']);
 /** The widgets of a fixed height (a number, a recap): centred in a box made
  *  taller, where a list would start at the top. */
-const CENTRED: ReadonlySet<string> = new Set<WidgetKind>([...PAIRS as Set<WidgetKind>, 'weekRecap']);
-
-/** Columns for the pane's width: the steps of the list's tile grid
- *  (index.css), stopping at HOME_COLS. `narrow` is a phone's pane,
- *  where every widget takes the row except two numbers side by side.
- *  `width` is the grid's content box; the steps are for the pane, 32px more. */
-function columnsFor(width: number): { cols: number; narrow: boolean } {
-  const pane = width + 32;
-  const cols = pane < 260 ? 1 : pane < 700 ? 2 : pane < 1040 ? 3 : HOME_COLS;
-  // Phones are 360 to 430 CSS px wide (Pixels and most Samsungs 412, the
-  // large iPhones 430); a step at 400 gave the widest of them two columns
-  // of 180px cards. Small tablets start at 600.
-  return { cols, narrow: pane < NARROW_PANE_PX };
-}
-/** Under this pane width Home is one widget per row. */
-// Spec: docs/internal/specs/dashboard.md (Columns)
-const NARROW_PANE_PX = 480;
+const CENTRED: ReadonlySet<string> = new Set<WidgetKind>([...NUMBERS as Set<WidgetKind>, 'weekRecap']);
 
 /** The two cards whose content opens in place and can outgrow their rows:
  *  the check-in card's pass, the month card's day. */
@@ -123,22 +110,20 @@ function useContentRows(grid: HTMLElement | null, ids: readonly string[]): Recor
 /**
  * The size each widget shows at a grid width, before packing: held to the
  * column count; on a phone the whole row except two numbers side by side (a
- * number with no number beside it takes the row too); as wide as its
- * content needs (`minWidthPx`), as tall as its width asks (`heightAt`), and
- * as tall as its open content measures (`grown`, the two cards in GROWS).
+ * number with no number beside it takes the row too); as tall as its width
+ * asks (`heightAt`), and as tall as its open content measures (`grown`, the
+ * two cards in GROWS).
  */
 function sizeWidgets(widgets: readonly Widget[], width: number, resizing: { id: string; w: number; h: number } | null, grown: Record<string, number> = {}) {
   const { cols, narrow } = columnsFor(width);
   // One column and its gap, in pixels.
   const colStep = (width - (cols - 1) * HOME_GAP_PX) / cols + HOME_GAP_PX;
-  const span = (px: number) => Math.ceil((px + HOME_GAP_PX) / colStep);
   const shown = widgets.filter((w) => isWidgetKind(w.k));
   const items = shown.map((w, n) => {
     const live = resizing?.id === w.i ? resizing : w;
     const def: WidgetDef = WIDGETS[w.k as WidgetKind];
     const paired = PAIRS.has(w.k) && (PAIRS.has(shown[n - 1]?.k ?? '') || PAIRS.has(shown[n + 1]?.k ?? ''));
-    let wide = narrow ? (paired ? 1 : cols) : Math.min(live.w, cols);
-    if (def.minWidthPx) wide = Math.min(cols, Math.max(wide, span(def.minWidthPx)));
+    const wide = narrow ? (paired ? 1 : cols) : Math.min(live.w, cols);
     let high = live.h;
     if (def.heightAt) {
       const need = def.heightAt(wide * colStep - HOME_GAP_PX);
@@ -594,8 +579,8 @@ export default function Dashboard({ widgets, onWrite }: {
     if (kind === 'checkIn' || kind === 'calendar') {
       const card = kind === 'checkIn' ? env.checkInCard : env.calendarCard;
       if (isValidElement(card)) {
-        cards.push(cloneElement(card as ReactElement<{ style?: CSSProperties; controls?: ReactNode; reorderId?: string }>, {
-          key: w.i, style: place, controls, reorderId: w.i,
+        cards.push(cloneElement(card as ReactElement<{ style?: CSSProperties; className?: string; controls?: ReactNode; reorderId?: string }>, {
+          key: w.i, style: place, className: common.className, controls, reorderId: w.i,
         }));
       }
       continue;
@@ -604,7 +589,7 @@ export default function Dashboard({ widgets, onWrite }: {
     if (def.pro && !env.unlocked) {
       cards.push(
         <GridCard key={w.i} {...common} title={name}>
-          <div className="flex flex-col items-center gap-2 py-3 text-center">
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
             <ProMark />
             <Button action="open" pro onClick={env.onUpgrade}>{t('dashboard.proLocked')}</Button>
           </div>
@@ -612,11 +597,11 @@ export default function Dashboard({ widgets, onWrite }: {
       );
       continue;
     }
-    const title = PAIRS.has(kind) ? undefined : label;
+    const title = NUMBERS.has(kind) ? undefined : label;
     let body: ReactNode;
     if (def.target && target.state !== 'ok') {
       body = (
-        <div className="flex flex-col items-center gap-1 pb-2">
+        <div className="flex h-full flex-col items-center justify-center gap-2 [&>p]:p-0">
           <EmptyState compact>{t(target.state === 'gone' ? 'dashboard.gone' : 'dashboard.otherSpace')}</EmptyState>
           {canEdit && <Button action="edit" onClick={() => setChooser({ kind: def.target!, widgetId: w.i })}>{t('dashboard.choose')}</Button>}
         </div>
@@ -642,27 +627,37 @@ export default function Dashboard({ widgets, onWrite }: {
         gridTemplateRows: 'auto',
         gridAutoRows: `${HOME_ROW_PX}px`,
       }}>
-        <li style={{ gridRow: 1 }} className="col-span-full flex flex-wrap items-end gap-x-4 gap-y-2 px-1 pb-1">
-          {/* The date line never shrinks for the buttons: when both do not
-              fit side by side, the buttons wrap to a row of their own under
-              it. Only a line wider than the pane itself truncates. On a
-              phone the buttons are icons. */}
-          <div className="min-w-[min(100%,max-content)] flex-1">
+        {/* On a phone the date and the two icon buttons share the first
+            line and the summary takes the second, whole. */}
+        {narrow ? (
+          <li style={{ gridRow: 1 }} className="col-span-full grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 px-1 pb-1">
             <h2 className="text-heading font-semibold text-pn truncate">{formatDay(today, 'weekdayDate')}</h2>
-            {summary && <p className="text-small text-pn-muted truncate">{summary}</p>}
-          </div>
-          {canEdit && (narrow ? (
-            <div className="flex shrink-0 items-center gap-1">
-              <IconButton label={t('dashboard.addWidget')} data-home-add onClick={() => setCatalog(true)}><Plus aria-hidden="true" /></IconButton>
-              <IconButton label={t('dashboard.layouts')} onClick={pickLayout}><SquaresFour aria-hidden="true" /></IconButton>
+            {canEdit && (
+              <div className="flex shrink-0 items-center gap-1">
+                <IconButton label={t('dashboard.addWidget')} data-home-add onClick={() => setCatalog(true)}><Plus aria-hidden="true" /></IconButton>
+                <IconButton label={t('dashboard.layouts')} onClick={pickLayout}><SquaresFour aria-hidden="true" /></IconButton>
+              </div>
+            )}
+            {summary && <p className="col-span-2 text-small text-pn-muted truncate">{summary}</p>}
+          </li>
+        ) : (
+          <li style={{ gridRow: 1 }} className="col-span-full flex min-w-0 flex-wrap items-end gap-x-4 gap-y-2 px-1 pb-1">
+            {/* The date line never shrinks for the buttons: its base size is
+                its own text, so when both do not fit side by side the buttons
+                wrap to a row of their own under it. Only a line wider than
+                the pane itself shrinks, and truncates. */}
+            <div className="min-w-0 max-w-full flex-auto">
+              <h2 className="text-heading font-semibold text-pn truncate">{formatDay(today, 'weekdayDate')}</h2>
+              {summary && <p className="text-small text-pn-muted truncate">{summary}</p>}
             </div>
-          ) : (
-            <div className="flex shrink-0 items-center gap-2">
-              <Button action="add" data-home-add onClick={() => setCatalog(true)}>{t('dashboard.addWidget')}</Button>
-              <Button icon={<SquaresFour aria-hidden="true" />} onClick={pickLayout}>{t('dashboard.layouts')}</Button>
-            </div>
-          ))}
-        </li>
+            {canEdit && (
+              <div className="flex shrink-0 items-center gap-2">
+                <Button action="add" data-home-add onClick={() => setCatalog(true)}>{t('dashboard.addWidget')}</Button>
+                <Button icon={<SquaresFour aria-hidden="true" />} onClick={pickLayout}>{t('dashboard.layouts')}</Button>
+              </div>
+            )}
+          </li>
+        )}
         {cards}
       </ItemList>
       </MonthModelContext.Provider>

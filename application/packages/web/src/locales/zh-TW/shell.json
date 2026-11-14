@@ -297,8 +297,10 @@
     "dayWithMood": "{{date}}，心情 {{mood}}",
     "previousWeek": "上一週",
     "nextWeek": "下一週",
-    "showMonth": "{{month}}，顯示整個月",
-    "showWeek": "{{month}}，顯示一週"
+    "pickMonth": "{{month}}，選擇月份和年份",
+    "pickMonthTip": "選擇月份和年份",
+    "showWholeMonth": "顯示整個月",
+    "showOneWeek": "顯示一週"
   },
   "contextMenu": {
     "newNote": "新增筆記",
@@ -538,6 +540,13 @@
     "itemNameParts": "中間名、稱謂、後綴",
     "itemPhonetic": "拼音姓名",
     "itemNote": "備註",
+    "addSection": "新增區段",
+    "sectionName": "區段名稱",
+    "removeSection": "移除區段",
+    "removeSectionNamed": "移除區段「{{name}}」",
+    "addFieldTo": "新增欄位至「{{name}}」",
+    "addFieldToSection": "新增欄位至此區段",
+    "hiddenFieldsNote": "隱藏的值在你顯示之前都會遮住，搜尋也永遠找不到。",
     "labels": {
       "mobile": "手機",
       "home": "住家",
@@ -665,6 +674,7 @@
     },
     "birthdays": "生日",
     "contactDate": "{{name}}：{{label}}",
+    "birthdayAge_other": "{{name}} 滿 {{count}} 歲",
     "dragEnd": "拖曳以變更結束日",
     "previousDay": "前一天",
     "nextDay": "後一天",

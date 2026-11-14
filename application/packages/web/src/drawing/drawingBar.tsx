@@ -17,11 +17,10 @@ import {
   Gear, Hash, Keyboard, LineSegment, LineVertical, LockSimpleOpen, MagnifyingGlass, MagnifyingGlassMinus, MagnifyingGlassPlus,
   NavigationArrow, PencilSimple, Square, TextT, Trash,
 } from '../icons';
-import { createBarModel, type FormatBarItem } from '../formatBar';
+import { createBarModel, separator as hiddenSeparator, type FormatBarItem } from '../formatBar';
 
 const bar = (key: string): FormatBarItem => ({ key, home: 'bar', group: 'format', menuAllowed: false, attachAllowed: false });
 const end = (key: string): FormatBarItem => ({ key, home: 'end', group: 'format', menuAllowed: false, attachAllowed: false });
-const hidden = (key: string): FormatBarItem => ({ key, home: 'hidden', group: 'format', menuAllowed: false, attachAllowed: false });
 
 /** Stock order: the row, the end of the bar, hidden. */
 export const DRAWING_BAR_ITEMS: readonly FormatBarItem[] = [
@@ -31,7 +30,7 @@ export const DRAWING_BAR_ITEMS: readonly FormatBarItem[] = [
   bar('separator2'), bar('undo'), bar('redo'),
   bar('separator3'), bar('zoomOut'), bar('zoomReset'), bar('zoomIn'),
   end('open'), end('reset'), end('hotkeys'), end('customize'),
-  hidden('separator4'),
+  hiddenSeparator('separator4'),
 ];
 
 /** Not a button that keeps the bar usable: a line, the hotkeys button,

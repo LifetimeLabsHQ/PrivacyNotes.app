@@ -301,8 +301,10 @@
     "dayWithMood": "{{date}}, stemming {{mood}}",
     "previousWeek": "Vorige week",
     "nextWeek": "Volgende week",
-    "showMonth": "{{month}}, hele maand tonen",
-    "showWeek": "{{month}}, één week tonen"
+    "pickMonth": "{{month}}, kies een maand en jaar",
+    "pickMonthTip": "Kies een maand en jaar",
+    "showWholeMonth": "Hele maand tonen",
+    "showOneWeek": "Eén week tonen"
   },
   "contextMenu": {
     "newNote": "Nieuwe notitie",
@@ -548,6 +550,13 @@
     "itemNameParts": "Tweede naam, voorvoegsel, achtervoegsel",
     "itemPhonetic": "Fonetische naam",
     "itemNote": "Notitie",
+    "addSection": "Sectie toevoegen",
+    "sectionName": "Sectienaam",
+    "removeSection": "Sectie verwijderen",
+    "removeSectionNamed": "Sectie {{name}} verwijderen",
+    "addFieldTo": "Veld toevoegen aan {{name}}",
+    "addFieldToSection": "Veld toevoegen aan deze sectie",
+    "hiddenFieldsNote": "Verborgen waarden blijven afgeschermd tot je ze toont, en zoeken vindt ze nooit.",
     "labels": {
       "mobile": "Mobiel",
       "home": "Thuis",
@@ -676,6 +685,8 @@
     },
     "birthdays": "Verjaardagen",
     "contactDate": "{{name}}: {{label}}",
+    "birthdayAge_one": "{{name}} wordt {{count}} jaar",
+    "birthdayAge_other": "{{name}} wordt {{count}} jaar",
     "dragEnd": "Sleep om de einddag te wijzigen",
     "previousDay": "Vorige dag",
     "nextDay": "Volgende dag",

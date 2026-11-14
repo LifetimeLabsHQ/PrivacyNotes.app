@@ -13,6 +13,7 @@ import { TRACKER_ICONS } from './icons';
 import { CHIP_ADD, PanelQuestion, Segmented, chipClass } from './panelUI';
 import { Check, Gear, Pill, Plus, SkipForward, Warning, X } from '../icons';
 import { formatDay, toLocalIso } from '../intlFormat';
+import { hhmm } from '../localDate';
 import { timeLabel } from '../JournalCalendar';
 import { useTrackerHistory } from '../trackerLastLogged';
 import {
@@ -142,7 +143,7 @@ export function MedicationRows({
     // A Taken tap on today's entry records when; a tap on another day does
     // not, because the time it happened is unknown.
     // `ts` lets the merge keep the newer of two taps on one dose.
-    const entry: MedicationLogEntry = { medicationId: logId, status, ...(status === 'taken' && isToday ? { at: nowTime() } : {}), ts: new Date().toISOString() };
+    const entry: MedicationLogEntry = { medicationId: logId, status, ...(status === 'taken' && isToday ? { at: hhmm(new Date()) } : {}), ts: new Date().toISOString() };
     if (idx < 0) {
       onChange([...current, entry]);
       return;
@@ -172,7 +173,7 @@ export function MedicationRows({
   // An as-needed dose is a fact of its own, with its own id, so two devices
   // that each log one keep both.
   const logDose = (medId: string) => {
-    onChange([...(value ?? []), { medicationId: doseLogId(medId, newDoseId()), status: 'taken', ...(isToday ? { at: nowTime() } : {}), ts: new Date().toISOString() }]);
+    onChange([...(value ?? []), { medicationId: doseLogId(medId, newDoseId()), status: 'taken', ...(isToday ? { at: hhmm(new Date()) } : {}), ts: new Date().toISOString() }]);
   };
   const removeDose = (logId: string) => onChange((value ?? []).filter((e) => e.medicationId !== logId));
 
@@ -336,8 +337,3 @@ function strengthOn(med: MedicationTemplate, day: string): string {
   return at || med.dosage;
 }
 
-/** The local time now, `HH:MM`. */
-function nowTime(): string {
-  const d = new Date();
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}

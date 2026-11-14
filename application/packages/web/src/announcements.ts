@@ -5,6 +5,8 @@
 // new entry here plus its locale keys, not a feature.
 // Spec: docs/internal/backlog.md (#175, the general announcement banner)
 
+import { readStringList } from './localStore';
+
 type AnnouncementSurface = 'app' | 'site' | 'both';
 
 export type Announcement = {
@@ -45,15 +47,7 @@ export const ANNOUNCEMENTS: Announcement[] = [
 const SITE_DISMISS_KEY = 'privacynotes.announcementsDismissed';
 
 export function siteDismissedIds(): string[] {
-  try {
-    const raw = localStorage.getItem(SITE_DISMISS_KEY);
-    const parsed: unknown = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed)
-      ? parsed.filter((x): x is string => typeof x === 'string')
-      : [];
-  } catch {
-    return [];
-  }
+  return readStringList(SITE_DISMISS_KEY);
 }
 
 export function dismissOnSite(id: string): void {

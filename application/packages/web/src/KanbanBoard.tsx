@@ -4,13 +4,13 @@
  * export and the importers need nothing of their own. Every edit is a
  * function of kanban.ts, run as one transaction.
  *
- * The board menu holds Color, Columns (3, 4, Add column) and Remove board;
- * the column menu holds Move left, Move right and Delete column; a tap on a
+ * The board menu holds Color, Icons & logos, Columns (3, 4, Add column) and Remove board;
+ * the column menu holds Color, Icons & logos, Move left, Move right and Delete column; a tap on a
  * card's grip opens Move to. Add column is Pro.
  * Spec: docs/internal/issues/0270.md (Spec)
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps, type Editor as TipTapEditor } from '@tiptap/react';
@@ -21,7 +21,9 @@ import { ColorSwatchRow, IconButton } from './ui';
 import { BackRow } from './ui/BackRow';
 import { ActionItem, Group, OptionsMenu } from './OptionsMenu';
 import type { LookColor } from './itemStyles';
-import { ArrowLeft, ArrowRight, Check, Columns, DotsThree, Kanban, Palette, Plus, Trash, XSquare } from './icons';
+import { ArrowLeft, ArrowRight, Check, Columns, DotsThree, Kanban, Palette, Plus, Shapes, Trash, XSquare } from './icons';
+import { PathGlyph } from './looks/LookGlyph';
+import { useLookPaths } from './looks/lookIconsLoader';
 import { isColumnColor } from './calloutKeywords';
 import { BlockGrip } from './BlockGrip';
 import { writeKanbanPref } from './editorPrefs';
@@ -36,13 +38,18 @@ import {
   deleteColumn,
   isBoard,
   isPlaceholderTask,
+  leadIconOf,
   makeBoard,
   moveCard,
   moveColumn,
   removeBoard,
+  setBoardIcon,
   setColumnColor,
   setColumnCount,
+  setColumnIcon,
 } from './kanban';
+
+const LookPicker = lazy(() => import('./looks/LookPicker').then((m) => ({ default: m.LookPicker })));
 
 export interface KanbanOptions {
   /** True for Pro and the demo: Add column runs. */
@@ -55,13 +62,13 @@ export interface KanbanOptions {
 /** Inserts a new board where the caret is: the count and colors of the last
  *  board on this device, the default names in the reader's language. */
 export function insertKanbanBoard(editor: TipTapEditor, t: TFunction) {
-  const { names, colors } = startLayout(t);
+  const { names, colors, icons } = startLayout(t);
   const count = names.length as 3 | 4;
   editor
     .chain()
     .focus()
     .command(({ tr, state, dispatch }) => {
-      const board = makeBoard(state.schema, names, colors);
+      const board = makeBoard(state.schema, names, colors, icons);
       if (dispatch) {
         const from = tr.selection.from;
         tr.replaceSelectionWith(board);
@@ -124,9 +131,13 @@ export function KanbanBoardView({ node, editor, getPos, extension }: NodeViewPro
   const closeMenu = () => setMenu(null);
   const columns = columnsOf(node);
   const count = columns.length;
-  const titleEmpty = node.firstChild?.type.name === 'calloutTitle' && node.firstChild.content.size === 0;
+  // A title that holds only its icon still shows the "Kanban board" hint.
+  const titleEmpty = node.firstChild?.type.name === 'calloutTitle' && node.firstChild.textContent.trim() === '';
   const editable = editor.isEditable;
-
+  const [pickerOpen, setPickerOpen] = useState(false);
+  // An icon that leads the title stands in for the Kanban glyph.
+  const ownIcon = leadIconOf(node);
+  const iconPaths = useLookPaths(ownIcon);
 
   // A tap on a card's grip asks this board for the Move to menu.
   useEffect(() => {
@@ -202,6 +213,15 @@ export function KanbanBoardView({ node, editor, getPos, extension }: NodeViewPro
               chevron
               onClick={() => setMenu('color')}
             />
+            <ActionItem
+              label={t('shell:noteOptionsMenu.icon')}
+              icon={<Shapes aria-hidden="true" />}
+              value={iconPaths ? <PathGlyph paths={iconPaths} size={16} className="text-pn-soft" /> : undefined}
+              onClick={() => {
+                closeMenu();
+                setPickerOpen(true);
+              }}
+            />
           </Group>
           <Group>
             {([3, 4] as const).map((n) => (
@@ -247,16 +267,18 @@ export function KanbanBoardView({ node, editor, getPos, extension }: NodeViewPro
   return (
     <NodeViewWrapper
       as="div"
-      className={`pn-callout pn-callout-kanban${count > 0 ? ' pn-kanban-has-columns' : ''}`}
+      className={`pn-callout pn-callout-kanban${count > 0 ? ' pn-kanban-has-columns' : ''}${ownIcon ? ' pn-kanban-own-icon' : ''}`}
       data-callout=""
       data-type="kanban"
       role="group"
       aria-label={titleEmpty ? t('callout.types.kanban') : `${t('callout.types.kanban')}: ${node.firstChild?.textContent ?? ''}`}
       style={{ ['--kanban-cols' as string]: Math.max(1, count) } as React.CSSProperties}
     >
-      <span className="pn-kanban-icon" contentEditable={false} aria-hidden="true">
-        <Kanban weight="bold" />
-      </span>
+      {!ownIcon && (
+        <span className="pn-kanban-icon" contentEditable={false} aria-hidden="true">
+          <Kanban weight="bold" />
+        </span>
+      )}
       {titleEmpty && (
         <span className="pn-callout-placeholder pn-kanban-placeholder" contentEditable={false} aria-hidden="true">
           {t('callout.types.kanban')}
@@ -279,6 +301,22 @@ export function KanbanBoardView({ node, editor, getPos, extension }: NodeViewPro
       )}
       <NodeViewContent className="pn-callout-content" />
       {boardMenu}
+      {pickerOpen && (
+        <Suspense fallback={null}>
+          <LookPicker
+            target={{ kind: 'insert', lookKey: '', name: t('callout.types.kanban') }}
+            styles={{}}
+            noteColors="off"
+            onNoteColors={() => {}}
+            onPick={(patch) => {
+              if (patch.icon) edit((tr, pos) => setBoardIcon(tr, pos, patch.icon!));
+              setPickerOpen(false);
+            }}
+            onCancel={() => {}}
+            onClose={() => setPickerOpen(false)}
+          />
+        </Suspense>
+      )}
       <ContextMenu state={ctx.state} onClose={ctx.close} />
     </NodeViewWrapper>
   );
@@ -299,10 +337,15 @@ function cardCount(column: PMNode): number {
 
 export function KanbanColumnView({ node, editor, getPos }: NodeViewProps) {
   const { t } = useTranslation('editor');
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menu, setMenu] = useState<null | 'main' | 'color'>(null);
+  const closeMenu = () => setMenu(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const dotsRef = useRef<HTMLSpanElement | null>(null);
   // The theme's label tokens, the colors the swatches show: gray without a color.
-  const key = isColumnColor(node.attrs.meta as string | null) ? (node.attrs.meta as string) : 'gray';
+  const own = isColumnColor(node.attrs.meta as string | null) ? (node.attrs.meta as LookColor) : null;
+  const key = own ?? 'gray';
+  // The icon that leads the title, the one the Icons & logos row sets.
+  const iconPaths = useLookPaths(leadIconOf(node));
   const titleEmpty = node.firstChild?.type.name === 'calloutTitle' && node.firstChild.content.size === 0;
   const editable = editor.isEditable;
 
@@ -330,43 +373,88 @@ export function KanbanColumnView({ node, editor, getPos }: NodeViewProps) {
     rememberBoard(editor.state.doc.nodeAt(p.boardPos));
   };
 
-  const p = menuOpen ? place() : null;
+  const p = menu ? place() : null;
   const total = p ? columnsOf(p.board).length : 0;
   const pick = (edit: (tr: Transaction, boardPos: number, index: number) => boolean) => {
-    setMenuOpen(false);
+    closeMenu();
     run(edit);
   };
   const columnMenu = p && (
     <OptionsMenu
       anchorRef={dotsRef}
       label={t('formatBar.optionsFor', { item: columnName(node, t) })}
-      view="main"
-      onClose={() => setMenuOpen(false)}
-      className="w-max min-w-48"
+      view={menu ?? 'main'}
+      onClose={closeMenu}
+      onEscape={() => (menu === 'main' ? closeMenu() : setMenu('main'))}
+      // The Color view holds a row of ten swatches, as in the board menu.
+      className={menu === 'color' ? 'w-80' : 'w-max min-w-48'}
     >
-      <Group>
-        <ActionItem
-          label={t('formatBar.moveLeft')}
-          icon={<ArrowLeft aria-hidden="true" />}
-          disabled={p.index === 0}
-          onClick={() => pick((tr, b, i) => moveColumn(tr, b, i, -1))}
-        />
-        <ActionItem
-          label={t('formatBar.moveRight')}
-          icon={<ArrowRight aria-hidden="true" />}
-          disabled={p.index >= total - 1}
-          onClick={() => pick((tr, b, i) => moveColumn(tr, b, i, 1))}
-        />
-      </Group>
-      <Group>
-        <ActionItem
-          label={t('table.deleteColumn')}
-          icon={<Trash aria-hidden="true" />}
-          tone="danger"
-          disabled={total <= MIN_COLUMNS}
-          onClick={() => pick((tr, b, i) => deleteColumn(tr, b, i))}
-        />
-      </Group>
+      {menu === 'color' ? (
+        <>
+          <BackRow title={t('shell:noteOptionsMenu.color')} onBack={() => setMenu('main')} />
+          <div className="px-4 py-3">
+            <ColorSwatchRow
+              selected={isColumnColor(node.attrs.meta as string | null) ? (node.attrs.meta as LookColor) : 'none'}
+              noneLabel={t('color.remove')}
+              colorLabel={(c) => t(`color.names.${c}`)}
+              onPick={(c) => run((tr, b, i) => setColumnColor(tr, b, i, c))}
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          <Group>
+            <ActionItem
+              label={t('shell:noteOptionsMenu.color')}
+              icon={<Palette aria-hidden="true" />}
+              value={
+                <span className="inline-flex items-center gap-2 min-w-0">
+                  <span
+                    aria-hidden="true"
+                    className="shrink-0 w-4 h-4 rounded-full border border-divider"
+                    style={own ? { background: `var(--pn-label-${own}-ink)` } : undefined}
+                  />
+                  <span className="truncate">{own ? t(`color.names.${own}`) : t('shell:noteOptionsMenu.colorNone')}</span>
+                </span>
+              }
+              chevron
+              onClick={() => setMenu('color')}
+            />
+            <ActionItem
+              label={t('shell:noteOptionsMenu.icon')}
+              icon={<Shapes aria-hidden="true" />}
+              value={iconPaths ? <PathGlyph paths={iconPaths} size={16} className="text-pn-soft" /> : undefined}
+              onClick={() => {
+                closeMenu();
+                setPickerOpen(true);
+              }}
+            />
+          </Group>
+          <Group>
+            <ActionItem
+              label={t('formatBar.moveLeft')}
+              icon={<ArrowLeft aria-hidden="true" />}
+              disabled={p.index === 0}
+              onClick={() => pick((tr, b, i) => moveColumn(tr, b, i, -1))}
+            />
+            <ActionItem
+              label={t('formatBar.moveRight')}
+              icon={<ArrowRight aria-hidden="true" />}
+              disabled={p.index >= total - 1}
+              onClick={() => pick((tr, b, i) => moveColumn(tr, b, i, 1))}
+            />
+          </Group>
+          <Group>
+            <ActionItem
+              label={t('table.deleteColumn')}
+              icon={<Trash aria-hidden="true" />}
+              tone="danger"
+              disabled={total <= MIN_COLUMNS}
+              onClick={() => pick((tr, b, i) => deleteColumn(tr, b, i))}
+            />
+          </Group>
+        </>
+      )}
     </OptionsMenu>
   );
 
@@ -392,9 +480,9 @@ export function KanbanColumnView({ node, editor, getPos }: NodeViewProps) {
             label={t('formatBar.optionsFor', { item: columnName(node, t) })}
             position="start"
             aria-haspopup="dialog"
-            aria-expanded={menuOpen}
+            aria-expanded={!!menu}
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => setMenuOpen((o) => !o)}
+            onClick={() => setMenu((m) => (m ? null : 'main'))}
           >
             <DotsThree weight="bold" />
           </IconButton>
@@ -402,6 +490,22 @@ export function KanbanColumnView({ node, editor, getPos }: NodeViewProps) {
       </span>
       <NodeViewContent className="pn-callout-content" />
       {columnMenu}
+      {pickerOpen && (
+        <Suspense fallback={null}>
+          <LookPicker
+            target={{ kind: 'insert', lookKey: '', name: columnName(node, t) }}
+            styles={{}}
+            noteColors="off"
+            onNoteColors={() => {}}
+            onPick={(patch) => {
+              if (patch.icon) run((tr, b, i) => setColumnIcon(tr, b, i, patch.icon!));
+              setPickerOpen(false);
+            }}
+            onCancel={() => {}}
+            onClose={() => setPickerOpen(false)}
+          />
+        </Suspense>
+      )}
     </NodeViewWrapper>
   );
 }

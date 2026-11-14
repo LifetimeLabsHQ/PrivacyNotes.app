@@ -188,6 +188,23 @@ function isEmptyDefinition(def: ProseMirrorNode): boolean {
   return def.childCount === 1 && def.firstChild!.type.name === 'paragraph' && def.firstChild!.content.size === 0;
 }
 
+/**
+ * A definition that holds only note-links, as "Link as a footnote" makes it
+ * (a link suggestion in the Connections panel). Without its marker it says
+ * nothing, so it goes with the marker like an empty one: no typed text is lost.
+ * Spec: docs/internal/plans/related-notes.md
+ */
+function isLinkOnlyDefinition(def: ProseMirrorNode): boolean {
+  if (def.childCount !== 1 || def.firstChild!.type.name !== 'paragraph') return false;
+  let links = 0;
+  let other = false;
+  def.firstChild!.forEach((child) => {
+    if (child.type.name === 'wikiLink') links += 1;
+    else if (!(child.isText && !child.text!.trim())) other = true;
+  });
+  return links > 0 && !other;
+}
+
 /** Position at the end of the last textblock of a definition. */
 function endOfDefinition(doc: ProseMirrorNode, defPos: number): number {
   const def = doc.nodeAt(defPos)!;
@@ -623,8 +640,8 @@ function repairFootnotes(state: EditorState, trs: readonly Transaction[], old: E
 
 /**
  * A marker that an edit deleted takes its definition along while that
- * definition is still empty: there is no text to lose, and an empty unused
- * definition shows no remove button (#595). A definition the edit itself
+ * definition is still empty, or holds only note-links: there is no text to
+ * lose, and an empty unused definition shows no remove button (#595). A definition the edit itself
  * replaced, as when another note loads, is left alone.
  */
 function dropEmptyOrphans(tr: Transaction, trs: readonly Transaction[], old: EditorState): void {
@@ -633,7 +650,8 @@ function dropEmptyOrphans(tr: Transaction, trs: readonly Transaction[], old: Edi
   const gone: number[] = [];
   for (const [label, def] of after.defs) {
     const was = before.defs.get(label);
-    if (!was || !before.firstRef.has(label) || after.firstRef.has(label) || !isEmptyDefinition(def.node)) continue;
+    if (!was || !before.firstRef.has(label) || after.firstRef.has(label)) continue;
+    if (!isEmptyDefinition(def.node) && !isLinkOnlyDefinition(def.node)) continue;
     let pos = was.pos;
     const kept = trs.every((t) => {
       const r = t.mapping.mapResult(pos, 1);
@@ -734,14 +752,21 @@ function definitionAround(state: EditorState): { node: ProseMirrorNode; pos: num
 /**
  * The + menu's "Footnote": a marker after the selection with the next free
  * label, an empty definition at its sorted place, and the caret in it.
+ * A link suggestion's "Link as a footnote" passes `at` (where the marker
+ * goes) and `inline` (what the definition holds: the note-link).
  */
-export function insertFootnote(editor: TipTapEditor): boolean {
+export function insertFootnote(
+  editor: TipTapEditor,
+  { at = editor.state.selection.to, inline }: { at?: number; inline?: ProseMirrorNode[] } = {},
+): boolean {
   if (!editor.isEditable) return false;
   const { state, view } = editor;
   const label = nextFreeLabel(state.doc);
-  const at = state.selection.to;
   const tr = state.tr.insert(at, state.schema.nodes[REF]!.create({ label }));
-  const defAt = insertDefinition(tr, emptyDefinition(state.schema, label));
+  const definition = inline
+    ? state.schema.nodes[DEF]!.create({ label }, state.schema.nodes['paragraph']!.create(null, inline))
+    : emptyDefinition(state.schema, label);
+  const defAt = insertDefinition(tr, definition);
   tr.setSelection(TextSelection.create(tr.doc, endOfDefinition(tr.doc, defAt)));
   tr.setMeta(jumpKey, { backTo: at });
   view.dispatch(tr.scrollIntoView());

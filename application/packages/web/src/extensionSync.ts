@@ -50,6 +50,9 @@ import {
   type InboxNote,
 } from '@notes/shared/extension';
 import { db, notesWriteCount, type LocalNote } from './db';
+import { holdsEveryEpoch, onKeyEpochChange, openWithRing } from './keyRing';
+import { onLocalDataKeyCleared } from './localKey';
+import { hash53 } from './noteMerge';
 import { createNote, normalizeTag, updateNote } from './notesRepo';
 import { buildLinkBody, buildLinkKeyMap, linkDedupeKey, parseLinkBody } from './linkBody';
 import { buildClipNoteMap, clipTrackers } from './clipLink';
@@ -62,6 +65,7 @@ import { browserHalves, loginsKeyFor, withLoginsKey } from './extensionKeyring';
 import { loadExtensionState, rekeyLogins, ExtensionCallError, type ExtensionState } from './extensionApi';
 import type { StorePicture } from './clipPage';
 import { isDemoMode } from './demo';
+import { isUuid } from './uuid';
 
 // ── The server, as this module needs it ─────────────────────────────
 
@@ -209,12 +213,54 @@ export interface ExtensionSyncResult {
 const IDLE_CHECK_MS = 10 * 60 * 1000;
 let known: { pubkey: string; at: number; state: ExtensionState } | null = null;
 let running = false;
-let inboxKey: { pubkey: string; secret: Uint8Array } | null = null;
+let inboxKey: { pubkey: string; phraseMark: string; secret: Uint8Array } | null = null;
 
-/** The account's inbox secret, derived from the phrase once per sign-in. */
+/**
+ * The account's inbox secret, derived from the phrase once per sign-in. The
+ * cache is keyed by a mark of the phrase as well as the account id: a phrase
+ * change keeps the account id, and a caller still holding the old phrase must
+ * not leave its secret behind for a caller with the new one. The mark, not
+ * the phrase, so the cache keeps no second copy of the phrase. A new epoch
+ * and a sign-out forget the cache. Every phrase has its own inbox key; the
+ * earlier ones live in the key ring.
+ * Spec: docs/internal/plans/phrase-change.md (6.2, inbox key cache)
+ */
 export function inboxSecretOf(pubkey: string, phrase: string): Uint8Array {
-  if (inboxKey?.pubkey !== pubkey) inboxKey = { pubkey, secret: deriveInboxKeyPair(phraseToSeed(phrase)).secretKey };
+  const phraseMark = hash53(3, phrase);
+  if (inboxKey?.pubkey !== pubkey || inboxKey.phraseMark !== phraseMark) {
+    inboxKey = { pubkey, phraseMark, secret: deriveInboxKeyPair(phraseToSeed(phrase)).secretKey };
+  }
   return inboxKey.secret;
+}
+
+const forgetInboxKey = () => {
+  inboxKey = null;
+};
+onKeyEpochChange(forgetInboxKey);
+onLocalDataKeyCleared(forgetInboxKey);
+
+/**
+ * Open a sealed inbox row with the current inbox secret, then the secret of
+ * each earlier epoch in the key ring, and name the item it becomes from the
+ * secret that OPENED it: an extension or the command line seals to the key
+ * it holds, which is an earlier one until it connects again, and one row
+ * must become the same item on every device. Null when no secret this
+ * device holds opens the row.
+ * Spec: docs/internal/plans/phrase-change.md (6.2, inbox rows and item ids)
+ */
+export function openInboxRow(
+  payload: string,
+  currentSecret: Uint8Array,
+  ctx: { account: string; id: string; kind: InboxKind },
+): { plain: Uint8Array; itemId: string } | null {
+  try {
+    return openWithRing('inbox', currentSecret, (secret) => ({
+      plain: openInbox(payload, secret, ctx),
+      itemId: inboxItemId(secret, ctx.id),
+    }));
+  } catch {
+    return null;
+  }
 }
 
 /** One pass, never two at once. The demo has no extension and never adopts. */
@@ -254,7 +300,6 @@ export function resetExtensionSync(): void {
 
 // ── Adoption ───────────────────────────────────────────────────────
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const PICTURE_TYPES = /^image\/(png|jpeg|gif|webp|avif|bmp)$/;
 // Spec: docs/internal/specs/web-clipper-stage1.md (section 3.3, 20 pictures and 10 MB a clip)
 const MAX_PICTURES = 20;
@@ -324,7 +369,7 @@ function parseClipPage(v: Record<string, unknown>): Pick<ParsedClip, 'clip' | 'p
   const pictures = Array.isArray(v.pictures) ? (v.pictures as unknown[]) : [];
   if (pictures.length > images.length) return null;
   if (pictures.filter((p) => p !== null).length > MAX_PICTURES) return null;
-  if (pictures.some((p) => p !== null && !(typeof p === 'string' && UUID.test(p)))) return null;
+  if (pictures.some((p) => p !== null && !(typeof p === 'string' && isUuid(p)))) return null;
   return {
     clip: {
       title: c.title as string, byline: c.byline as string, siteName: c.siteName as string,
@@ -338,7 +383,7 @@ function parseClipPage(v: Record<string, unknown>): Pick<ParsedClip, 'clip' | 'p
 export function parsePicture(plain: Uint8Array, rowId: string): { clip: string; type: string; bytes: Uint8Array } | null {
   const got = unpackInboxPicture(plain);
   const h = got?.header as Record<string, unknown> | undefined;
-  if (!got || !h || h.v !== 1 || h.id !== rowId || typeof h.clip !== 'string' || !UUID.test(h.clip)) return null;
+  if (!got || !h || h.v !== 1 || h.id !== rowId || typeof h.clip !== 'string' || !isUuid(h.clip)) return null;
   if (typeof h.type !== 'string' || !PICTURE_TYPES.test(h.type)) return null;
   return { clip: h.clip, type: h.type, bytes: got.bytes };
 }
@@ -394,20 +439,19 @@ async function adoptPage(
   pictures: Map<string, { clip: string; type: string; bytes: Uint8Array }>,
 ): Promise<{ adopted: number; settled: number; stopped: boolean }> {
   const now = deps.now?.() ?? Date.now();
-  const opened = new Map<string, { row: InboxRow; plain: Uint8Array }>();
+  const opened = new Map<string, { row: InboxRow; plain: Uint8Array; itemId: string }>();
   const refuse: string[] = [];
   let stopped = false;
   for (const row of rows) {
     // A newer app's row waits for that app.
     if (!KNOWN_KINDS.has(row.kind) || inboxRowVersion(row.payload) !== INBOX_VERSION) continue;
-    try {
-      const plain = openInbox(row.payload, deps.inboxSecret, { account: deps.pubkey, id: row.id, kind: row.kind as InboxKind });
-      opened.set(row.id, { row, plain });
-    } catch {
-      // A row of a known version that does not open under this account's
-      // key is damaged or not ours: it can never become anything.
-      refuse.push(row.id);
-    }
+    const got = openInboxRow(row.payload, deps.inboxSecret, { account: deps.pubkey, id: row.id, kind: row.kind as InboxKind });
+    if (got) opened.set(row.id, { row, ...got });
+    // A row of a known version that opens under none of this account's keys
+    // is damaged or not ours: it can never become anything. Unless this
+    // device lacks the key of an epoch the account has had: then the row
+    // can be sealed to that key, and it waits for it.
+    else if (holdsEveryEpoch()) refuse.push(row.id);
   }
 
   for (const [id, { row, plain }] of opened) {
@@ -420,8 +464,8 @@ async function adoptPage(
   // Claim the rows whose item does not exist here yet, so one app builds it;
   // another app's claim lasts 10 minutes.
   const unbuilt: string[] = [];
-  for (const [id, { row }] of opened) {
-    if (row.kind !== 'picture' && !(await db.notes.get(inboxItemId(deps.inboxSecret, id)))) unbuilt.push(id);
+  for (const [id, { row, itemId }] of opened) {
+    if (row.kind !== 'picture' && !(await db.notes.get(itemId))) unbuilt.push(id);
   }
   const mine = new Set(await deps.store.claimInbox(unbuilt, deps.deviceId));
 
@@ -434,9 +478,8 @@ async function adoptPage(
       return null;
     }
   };
-  for (const [id, { row, plain }] of opened) {
+  for (const [id, { row, plain, itemId }] of opened) {
     if (row.kind === 'picture') continue;
-    const itemId = inboxItemId(deps.inboxSecret, id);
     const existing = await db.notes.get(itemId);
     if (row.kind === 'note') {
       const note = parseInboxNote(decode(plain), id);
@@ -515,34 +558,23 @@ function inboxNoteFolder(note: InboxNote, deps: Pick<ExtensionSyncDeps, 'agentFo
 
 /**
  * Make the item of an opened `note` row, or of a quick note the Ninja box
- * queued while the app was locked (quickNoteQueue.ts). `refused`: the body
- * is too long; `stopped`: the sign-in ended first.
+ * queued while the app was locked (quickNoteQueue.ts). The body rule is
+ * `inboxNoteBody` of the clip engine. `refused`: the body is too long even
+ * as one code block, which no sender that checks `inboxNoteFits` sends;
+ * `stopped`: the sign-in ended first.
  */
 export async function createInboxNote(
   note: InboxNote,
   itemId: string,
   deps: Pick<ExtensionSyncDeps, 'agentFolder' | 'hasFolder' | 'isCurrent'>,
 ): Promise<'created' | 'refused' | 'stopped'> {
-  const body = await inboxNoteBody(note.markdown);
+  const { inboxNoteBody } = await import('@notes/clipper');
+  const body = inboxNoteBody(note.markdown);
   if (body === null) return 'refused';
   const tags = [...new Set(note.tags.map(normalizeTag).filter(Boolean))];
   if (!deps.isCurrent()) return 'stopped';
   await createNote(note.title.trim(), body, tags, false, 'note', inboxNoteFolder(note, deps), { id: itemId, counted: false });
   return 'created';
-}
-
-/**
- * The body of a note from the command line, or null when it is too long. The
- * Markdown stands when it is only text and web links; a picture reference,
- * raw HTML or another link scheme makes the whole note plain text, because
- * only the app places a stored picture (the clip's rule in parseClipPage).
- * Spec: docs/internal/plans/agent-cli.md (section 3.4)
- */
-async function inboxNoteBody(markdown: string): Promise<string | null> {
-  const { bodyFits, isSafeMarkdown, plainMarkdown } = await import('@notes/clipper');
-  const safe = !/pn:img\/|pn-clip:/i.test(markdown) && isSafeMarkdown(markdown);
-  const body = safe ? markdown : plainMarkdown(markdown);
-  return bodyFits(body) ? body : null;
 }
 
 /**

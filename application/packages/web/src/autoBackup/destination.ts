@@ -16,9 +16,9 @@
  * Spec: docs/internal/plans/auto-backup.md (section 7)
  */
 import { bytesToBase64 } from '@notes/shared';
-import { isDemoMode } from '../demo';
+import { createKeyStore } from '../keyStore';
 import { detectPlatform } from '../devices';
-import { sha256hex } from '../import/blobImport';
+import { sha256Hex } from '../sha256Hex';
 import { saveBlob } from '../saveFile';
 import type { FailureCause } from './store';
 
@@ -123,30 +123,7 @@ type PermissionHandle = FileSystemDirectoryHandle & {
   requestPermission?: (d: { mode: 'readwrite' }) => Promise<PermissionState>;
 };
 
-function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(isDemoMode() ? DEMO_DB : DB_NAME, 1);
-    req.onupgradeneeded = () => {
-      if (!req.result.objectStoreNames.contains(STORE)) req.result.createObjectStore(STORE);
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function withStore<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T>): Promise<T | null> {
-  try {
-    const db = await openDb();
-    return await new Promise<T | null>((resolve) => {
-      const req = fn(db.transaction(STORE, mode).objectStore(STORE));
-      req.onsuccess = () => resolve(req.result ?? null);
-      req.onerror = () => resolve(null);
-      db.close();
-    });
-  } catch {
-    return null;
-  }
-}
+const withStore = createKeyStore(DB_NAME, DEMO_DB, STORE);
 
 const storedHandle = () => withStore<PermissionHandle>('readonly', (s) => s.get(KEY) as IDBRequest<PermissionHandle>);
 
@@ -177,7 +154,7 @@ async function placeInFolder(name: string, bytes: Uint8Array, hash: string): Pro
     await out.write(bytes as BufferSource);
     await out.close();
     const back = new Uint8Array(await (await file.getFile()).arrayBuffer());
-    if (back.length !== bytes.length || (await sha256hex(back)) !== hash) {
+    if (back.length !== bytes.length || (await sha256Hex(back)) !== hash) {
       await handle.removeEntry(name).catch(() => {});
       throw new DestinationError('mismatch');
     }
@@ -224,7 +201,7 @@ export async function requestFolderPermission(): Promise<boolean> {
 
 export async function placeBackup(name: string, bytes: Uint8Array, signal?: AbortSignal): Promise<Placed> {
   const kind = destinationKind();
-  const hash = await sha256hex(bytes);
+  const hash = await sha256Hex(bytes);
   signal?.throwIfAborted();
   if (kind === 'native') return placeNative(name, bytes, hash, signal);
   if (kind === 'folder') return placeInFolder(name, bytes, hash);

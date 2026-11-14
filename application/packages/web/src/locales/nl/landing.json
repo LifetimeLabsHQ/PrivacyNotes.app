@@ -43,7 +43,7 @@
     },
     "subhead": "Notities, taken, wachtwoorden, dagboek, bestanden, agenda, contacten en bladwijzers, en je houdt er ook je stemming en medicatie mee bij. Eén privé-app.",
     "tryDemo": "Probeer de demo",
-    "microcopy": "Voor altijd gratis. Geen creditcard. Meld je aan met Google, Apple, GitHub, of gewoon een zin van 12 woorden.",
+    "microcopy": "Voor altijd gratis. Geen creditcard. Meld je aan met Google, Apple, GitHub, of gewoon een herstelzin.",
     "alreadyHaveVault": "Heb je al een kluis? Aanmelden",
     "trustSigned": "Ondertekende releases op GitHub"
   },
@@ -167,8 +167,6 @@
     "useGitBody": "Sluit de dag af met de commits die je hebt gemaakt, opgeslagen als notitie die je volgende maand terugvindt.",
     "useClipTitle": "Alles wat je hebt gekopieerd",
     "useClipBody": "Stuur het klembord, de uitvoer van een opdracht of een foutmelding rechtstreeks naar je notities.",
-    "useToolsTitle": "Onderdeel van je eigen tools",
-    "useToolsBody": "De opdracht antwoordt in JSON en stopt met duidelijke exitcodes, zodat je scripts weten dat de notitie is opgeslagen.",
     "useShortcutTitle": "Een notitie via een sneltoets",
     "useShortcutBody": "Een toets die je in de instellingen van je systeem kiest, opent een vak voor een snelle notitie, ook als de app gesloten is. Hij komt in je Agent-map terecht.",
     "howLink": "Lees hoe privacynotes werkt"
@@ -359,14 +357,15 @@
     "freeVault": "50 MB opslag, tot 5 MB per bestand",
     "freeImport": "Importeren en exporteren, waaronder Keep en Obsidian",
     "freeAnon": "Anoniem aanmelden, zonder e-mail",
-    "earlyAdopterBadge": "Early Adopter"
+    "earlyAdopterBadge": "Early Adopter",
+    "payMethods": "Betaal met een kaart, of met Bitcoin, Ethereum, Lightning, USDC of USDT."
   },
   "underHood": {
     "heading": "Onder de motorkap",
     "cipherTerm": "xchacha20poly1305",
     "cipherDesc": "Sleutels afgeleid op je apparaat",
     "phraseTerm": "BIP-39-herstelzinnen",
-    "phraseDesc": "12 woorden, ondertekening met Ed25519",
+    "phraseDesc": "Gemaakt op je apparaat, ondertekening met Ed25519",
     "rlsDesc": "RLS gekoppeld aan je pubkey",
     "trackingTerm": "Nul trackers",
     "trackingDesc": "Geen pixels, geen trackers van derden",
@@ -390,6 +389,7 @@
       "sleep": "Goed, 7,5 u",
       "sleepScore": "82",
       "heartRate": "61 bpm",
+      "bloodPressure": "118/76 mmHg",
       "activity": "Gemiddeld",
       "medication": "Ingenomen",
       "energy": "6 / 10",
@@ -529,7 +529,7 @@
       "hotkeys": "Sneltoetsen",
       "rating": "Beoordeling"
     },
-    "intro": "<brand/> bewaart je notities, taken, wachtwoorden, dagboek, bestanden, agenda, contacten en bladwijzers op één plek, en houdt ook je stemming en medicatie bij. Alles wordt op je apparaat versleuteld met een sleutel uit je 12 woorden, en blijft versleuteld op onze servers in <nowrap>Zwitserland</nowrap>. Het werkt offline, en de app is open source.",
+    "intro": "<brand/> bewaart je notities, taken, wachtwoorden, dagboek, bestanden, agenda, contacten en bladwijzers op één plek, en houdt ook je stemming en medicatie bij. Alles wordt op je apparaat versleuteld met een sleutel uit je herstelzin, en blijft versleuteld op onze servers in <nowrap>Zwitserland</nowrap>. Het werkt offline, en de app is open source.",
     "versionHeading": "Versie",
     "windowVersion": "Versie {{version}}",
     "windowHelp": "Helpcentrum",

@@ -145,7 +145,7 @@ export default {
       },
       {
         title: 'Keep it, if it fits',
-        body: 'Create a vault with a 12-word phrase. From then on your notes encrypt on your device and follow you everywhere.',
+        body: 'Create a vault with a recovery phrase. From then on your notes encrypt on your device and follow you everywhere.',
       },
     ],
   },

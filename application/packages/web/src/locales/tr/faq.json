@@ -81,7 +81,7 @@
     "need-email": {
       "q": "Kayıt olmak için e-posta adresi gerekiyor mu?",
       "a": [
-        "Hayır. Yeni bir kasa, yeni üretilmiş [12 kelimelik bir kurtarma ifadesinden](/tr/help/phrase-vs-password) ibarettir, başka hiçbir şey yok. E-posta yok, kullanıcı adı yok, telefon numarası yok, doğrulama adımı yok. İfadeyle giriş yaparsanız, istesek bile size e-posta gönderemeyiz, çünkü kim olduğunuzu hiçbir zaman öğrenmeyiz.",
+        "Hayır. Yeni bir kasa, yeni üretilmiş bir [kurtarma ifadesinden](/tr/help/phrase-vs-password) ibarettir, başka hiçbir şey yok. E-posta yok, kullanıcı adı yok, telefon numarası yok, doğrulama adımı yok. İfadeyle giriş yaparsanız, istesek bile size e-posta gönderemeyiz, çünkü kim olduğunuzu hiçbir zaman öğrenmeyiz.",
         "Tanıdık bir akış mı istiyorsunuz? [Google, Apple veya GitHub ile giriş de var](/tr/help/signup-options). Bu yol doğal olarak o girişe bağlı e-postayı bize gösterir, ama notlarınız her iki durumda da cihazınızda şifreli kalır ve arka planda yine bir ifadeniz olur."
       ]
     },
@@ -139,9 +139,9 @@
     "phrase-vs-password": {
       "q": "Neden kullanıcı adı ve parola yerine kurtarma ifadesi?",
       "a": [
-        "İlk bakışta ters gelebilir, ama tek bir kurtarma ifadesi daha sağlam bir kurgudur. Kullanıcı adı ve parolada kullanıcı adı bir sır değildir (her sızıntı listesinde görünür), yani tüm güvenlik parolanın omzundadır ve insanların seçtiği parolalar ortalama 30 ila 40 bit entropi taşır. [12 kelimelik ifadeniz ise garanti 128 bittir](/tr/help/twelve-word-phrase): cihazınız üretir, hiçbir insan seçmez ve başka bir siteden devşirilmez.",
+        "İlk bakışta ters gelebilir, ama tek bir kurtarma ifadesi daha sağlam bir kurgudur. Kullanıcı adı ve parolada kullanıcı adı bir sır değildir (her sızıntı listesinde görünür), yani tüm güvenlik parolanın omzundadır ve insanların seçtiği parolalar ortalama 30 ila 40 bit entropi taşır. [Kurtarma ifadeniz ise garanti 128 bit ya da daha fazlasıdır](/tr/help/twelve-word-phrase): cihazınız üretir, hiçbir insan seçmez ve başka bir siteden devşirilmez.",
         "Ayrıca kaybedebileceğimiz bir parola da yok. Parolayla giriş, sunucunun en azından bir parola özeti saklaması demektir; bu özet sızdırılabilir, kırılabilir ya da oltalamayla alınabilir. [Kendi saklamada](/tr/help/threat-model-levels) ifadeniz cihazınızdan hiç çıkmaz: şifreleme anahtarlarınızı yerelde türetir ve sunucu yalnızca şifreli veriyi görür. Çalınacak bir özet yok, saldırganın istismar edeceği bir parola sıfırlama akışı da yok.",
-        "12 kelime yazmak zahmetli geliyorsa: ifadeyi tek dokunuşla parola yöneticinize kaydedebilirsiniz (Ayarlar > Güvenlik > İfade) ve giriş yapmak diğer tüm girişler gibi hissettirir. Tanıdık bir akış mı istiyorsunuz? [Google, Apple veya GitHub ile giriş de var](/tr/help/signup-options): arka planda yine bir ifadeniz olur ve cihazınızda mı kalacağını yoksa bizim mi saklayacağımızı siz seçersiniz."
+        "İfadenizi yazmak zahmetli geliyorsa: ifadeyi tek dokunuşla parola yöneticinize kaydedebilirsiniz (Ayarlar > Güvenlik > İfade) ve giriş yapmak diğer tüm girişler gibi hissettirir. Tanıdık bir akış mı istiyorsunuz? [Google, Apple veya GitHub ile giriş de var](/tr/help/signup-options): arka planda yine bir ifadeniz olur ve cihazınızda mı kalacağını yoksa bizim mi saklayacağımızı siz seçersiniz."
       ]
     },
     "threat-model-levels": {
@@ -150,7 +150,7 @@
         "Evet, bilerek öyle. Herkesin kendini korumaya çalıştığı tehditler aynı değil, bu yüzden hesap modeli tek bir dogma değil, bir merdiven. Her basamakta notlarınız cihazınızda şifrelenir; değişen şey, anahtarı kimin tuttuğu ve sizin hakkınızda ne bildiğimiz.",
         "Pratik uç: Google, Apple veya GitHub ile giriş yapın ve sorulduğunda başlangıçta seçili olan \"Basit ve pratik olsun\" seçeneğini koruyun. Kurtarma ifadenizi sunucumuzda şifreli saklarız. Böylece yeni bir cihaz, sağlayıcıyla giriş yaptıktan ve 2FA açıksa [doğrulama uygulamasının kodu](/tr/help/enable-2fa) girildikten sonra notlarınızı açabilir. Bunun karşılığında o hesabın e-postasını biliriz ve sunucumuz ifadenizin şifresini çözebilir. Sağlayıcı hesabınızı kaybetme ihtimaline karşı ifadenizi kaydedin; iki faktörlü girişi açarsanız 2FA yedek anahtarınızı da saklayın.",
         "Orta yol: Google, Apple veya GitHub ile giriş yapın ama “Azami güvenlik ve gizlilik”i seçin. İfadeniz sunucularımıza hiç uğramaz, bu yüzden sunucuda notlarınızı açacak hiçbir şey bulunmaz; yeni cihazlar ifadeyi ya da [zaten giriş yapmış bir cihazdan QR taramasını](/tr/help/add-second-device) ister. O girişin e-postasını yine biliriz; yasal bir talep ya da sunucumuzun ele geçirilmesi o e-postaya ulaşabilir, notlarınızın içeriğine asla.",
-        "Gizli uç: girişleri tamamen atlayın ve yalnızca 12 kelimelik ifadeyi kullanın. E-posta yok, isim yok, kimlik yok; [anonim bir Pro satın alımıyla](/tr/help/buy-pro-anonymously) birleştiğinde ödeme bile hiçbir yerde isim bırakmaz. Karşılığında anahtarın sorumluluğu tümüyle sizde: giriş yapmış bir cihaz kalmadan ifadeyi kaybederseniz kimse yardım edemez.",
+        "Gizli uç: girişleri tamamen atlayın ve yalnızca kurtarma ifadenizi kullanın. E-posta yok, isim yok, kimlik yok; [anonim bir Pro satın alımıyla](/tr/help/buy-pro-anonymously) birleştiğinde ödeme bile hiçbir yerde isim bırakmaz. Karşılığında anahtarın sorumluluğu tümüyle sizde: giriş yapmış bir cihaz kalmadan ifadeyi kaybederseniz kimse yardım edemez.",
         "Ayarlar > Hesap > Anahtar saklama iki modu avantajları ve bedelleriyle gösterir ve aralarında geçiş yapmanızı sağlar. Sunucuda saklamadan çıkarken, kaydettiğiniz ifadeden 3 kelimeyi doğruladıktan sonra kopyamızı sileriz. Geri dönmek ifadeyi yeniden yükler ve açıkça seçim yapmanızı gerektirir. Her iki yöndeki değişiklik de hesap anahtarınızla imzalanır ve 2FA açıksa doğrulama uygulamasından yeni bir kod gerektirir. İfadeyle açılan bir hesap, Hesap > Hesaplar altında [bir sağlayıcı bağlayıp](/tr/help/connected-logins) ardından sunucuda saklamayı ayrıca seçebilir; sağlayıcıyı bağlamak ifadeyi yüklemez. Her modda PIN uygulama kilidi, biyometrik kilit açma ve [tek tek not koruması](/tr/help/locked-vs-protected) da kullanılabilir."
       ]
     },
@@ -164,18 +164,18 @@
       ]
     },
     "guess-phrase": {
-      "q": "Biri 12 kelimemi tahmin edebilir ya da aynılarına sahip olabilir mi?",
+      "q": "Biri kurtarma ifademi tahmin edebilir ya da aynısına sahip olabilir mi?",
       "a": [
-        "Hayır. 12 kelimenizi kimse tahmin edemez ve başka hiç kimse aynı kelimelere sahip olmaz: var olan ya da öngörebildiğimiz hiçbir bilgisayar buna yaklaşamaz bile. Yalnızca gerçek kelimelerinizi ele geçiren biri giriş yapabilir, bu yüzden onları güvende tutun.",
-        "Cihazınız ifadenizi rastgele seçer ve olası ifadelerin sayısı 39 basamaklıdır. Sizinkini ilk denemede tahmin etmek, 300 milyonda bir şansı olan bir piyango ikramiyesini üst üste dört kez kazanmaktan daha düşük bir ihtimaldir. Saniyede milyar kere milyar ifade deneyen bir bilgisayarın bile hepsini denemesi yaklaşık 10 trilyon yıl sürerdi; bu, evrenin var olduğu süreden çok daha uzun. Dünyadaki 8 milyar insanın her birinin bir ifadesi olsa bile, herhangi ikisinin aynı olma ihtimali o ikramiyeyi üst üste iki kez kazanmaktan daha düşüktür.",
-        "Güç o rastgelelikten gelir, kelimelerin nasıl göründüğünden değil. Kendiniz bir ifade uydurmayın ve ona sembol eklemeyin: 12 kelimeyi uygulamanın size verdiği gibi birebir kullanın. Büyük harfler önemli değildir. Son kelime bir kontrol görevi görür, bu yüzden uygulama yanlış yazılmış ya da uydurulmuş bir ifadeyi reddeder."
+        "Hayır. Kurtarma ifadenizi kimse tahmin edemez ve başka hiç kimse aynısına sahip olmaz: var olan ya da öngörebildiğimiz hiçbir bilgisayar buna yaklaşamaz bile. Yalnızca gerçek kelimelerinizi ele geçiren biri giriş yapabilir, bu yüzden onları güvende tutun.",
+        "Cihazınız ifadenizi rastgele seçer. 12 kelimelik bir ifade için olası ifadelerin sayısı 39 basamaklıdır, 24 kelimelik bir ifade için 78. 12 kelimelik bir ifadeyi ilk denemede tahmin etmek, 300 milyonda bir şansı olan bir piyango ikramiyesini üst üste dört kez kazanmaktan daha düşük bir ihtimaldir. Saniyede milyar kere milyar ifade deneyen bir bilgisayarın bile hepsini denemesi yaklaşık 10 trilyon yıl sürerdi; bu, evrenin var olduğu süreden çok daha uzun. Dünyadaki 8 milyar insanın her birinin bir ifadesi olsa bile, herhangi ikisinin aynı olma ihtimali o ikramiyeyi üst üste iki kez kazanmaktan daha düşüktür.",
+        "Güç o rastgelelikten gelir, kelimelerin nasıl göründüğünden değil. Kendiniz bir ifade uydurmayın ve ona sembol eklemeyin: kelimeleri uygulamanın size verdiği gibi birebir kullanın. Büyük harfler önemli değildir. Son kelime bir kontrol görevi görür, bu yüzden uygulama yanlış yazılmış ya da uydurulmuş bir ifadeyi reddeder."
       ]
     },
     "same-phrase": {
       "q": "Başka biri benimle aynı kurtarma ifadesini alabilir mi?",
       "a": [
         "Hayır, pratikte değil. Cihazınız ifadenizi çok büyük sayıda olası ifade arasından rastgele seçer. Dünyadaki herkes bir hesap açsa bile iki ifadenin aynı çıkması, 300 milyonda bir şansı olan bir piyango ikramiyesini üst üste iki kez kazanmaktan daha düşük bir ihtimaldir. [Kimsenin ifadenizi tahmin edememesinin](/tr/help/guess-phrase) nedeni de aynı sayılardır.",
-        "Hesap kimliğiniz ifadeden türetilir. Bu yüzden [bir hesabı silip](/tr/help/delete-account) aynı 12 kelimeyle yeniden giriş yaparsanız, aynı Hesap kimliğine sahip yeni ve boş bir kasa elde edersiniz. Silinen kasadan hiçbir şey geri gelmez. [Yeni bir ifadeye geçtikten sonra](/tr/help/phrase-compromised) eskisini parola yöneticinizden silin, böylece yanlışlıkla eski hesaba asla giriş yapmazsınız."
+        "Hesap kimliğiniz ifadeden türetilir. Bu yüzden [bir hesabı silip](/tr/help/delete-account) aynı ifadeyle yeniden giriş yaparsanız, aynı Hesap kimliğine sahip yeni ve boş bir kasa elde edersiniz. Silinen kasadan hiçbir şey geri gelmez. [Yeni bir ifadeye geçtikten sonra](/tr/help/phrase-compromised) eskisini parola yöneticinizden silin, böylece yanlışlıkla eski hesaba asla giriş yapmazsınız."
       ]
     },
     "enable-2fa": {
@@ -204,8 +204,8 @@
     "no-ai": {
       "q": "PrivacyNotes notlarımda yapay zekâ kullanıyor mu?",
       "a": [
-        "Hayır. Ninja, tarihlerinizi okuyan ve sözcüklerinizi bulan Cmd+K kutusu, cihazınızda çalışan sade koddur. Uygulamada yapay zekâ özelliği yok, arka planda çalışan bir yapay zekâ işlemi yok ve içeriğinizle model eğitimi yok. [Notlarınız cihazınızda da sunucuya giderken de her zaman şifrelidir](/tr/help/what-can-you-see) ve sistemlerimizde hiçbir şey not içeriğini okuyup başka bir şeye beslemez.",
-        "Bu yönde bir özellik çıkarırsak, tamamen cihazınızda çalışması ve kesinlikle isteğe bağlı olması gerekir. Düz metin notları bir bulut modeline göndermek onları cihazınızdaki şifrelemenin dışına çıkarırdı, o yüzden gündemde değil."
+        "Siz açmadıkça hiçbir yapay zekâ notlarınızı okumaz ve yazdığınız hiçbir şey bir yapay zekâ hizmetine gitmez. Sohbet botu yok, yapay zekâyla yazma yok, sunucularımızda yapay zekâ yok ve içeriğinizle model eğitimi yok. Ninja ve arama, cihazınızda çalışan sade koddur. [Notlarınız cihazınızda da sunucuya giderken de her zaman şifrelidir](/tr/help/what-can-you-see) ve bulut tabanlı bir yapay zekâ onları bu şifrelemenin dışına çıkarırdı, bu yüzden hiçbir not böyle bir yapay zekâya gitmez.",
+        "Tek istisna isteğe bağlıdır ve cihazınızda kalır. Akıllı bağlantılar, başka kelimelerle veya başka bir dilde yazılmış olsalar bile aynı anlamdaki notları bulur. Yalnızca bu cihazda çalışan çevrimdışı yapay zekâyı ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)) kullanır. Hiçbir şey yazmaz, hiçbir şeyi yanıtlamaz: her notu bir sayı listesine çevirir ve bu listeleri karşılaştırır. Ayarlar > Düzenleyici > Davranış > Akıllı bağlantılar altından bir kez indirirsiniz, sonra bağlantı olmadan çalışır. Anahtarı onu kapatır, Kaldır ise cihazdan siler. Bir not hakkında çıkardığı hiçbir şey kaydedilmez veya gönderilmez."
       ]
     },
     "burn-notes": {
@@ -249,7 +249,7 @@
     "oauth-recovery": {
       "q": "Google, Apple veya GitHub ile giriş yapıyorum. O hesaba erişimimi kaybedersem ne olur?",
       "a": [
-        "Arka planda yine 12 kelimelik bir ifadeniz var ve [ifade tek başına sizi her cihazda içeri alır](/tr/help/add-second-device) - Google, Apple ya da GitHub gerekmez. Ayarlar > Güvenlik > İfade bölümünü açın ve parola yöneticinize kaydedin.",
+        "Arka planda yine bir kurtarma ifadeniz var ve [ifade tek başına sizi her cihazda içeri alır](/tr/help/add-second-device) - Google, Apple ya da GitHub gerekmez. Ayarlar > Güvenlik > İfade bölümünü açın ve parola yöneticinize kaydedin.",
         "Bunu bir kez yapın, Google, Apple ya da GitHub hesabını kaybetmek size hiçbir şeye mal olmaz: onun yerine ifadeyle giriş yaparsınız."
       ]
     },
@@ -257,7 +257,7 @@
       "q": "PIN'imi veya geçiş kodumu unuttum. Nasıl geri girerim?",
       "a": [
         "Hiçbir şey kaybolmaz ve PIN'i veya geçiş kodunu kurtarma ifadenizle kendiniz temizleyebilirsiniz. Bu bir ekran kilididir, şifreleme anahtarı değil: notlarınız kurtarma ifadesinden türetilen anahtarlarla şifrelenir, yani notları açan şey ifadedir. Şifrelemeyi PIN'e bağlamak, unutulan bir PIN'in veriyi yok etmesi demek olurdu. Burada bu asla olmaz.",
-        "Uygulama bunu sorduğu her yerde **PIN'inizi mi unuttunuz?** veya **Geçiş kodunuzu mu unuttunuz?** seçeneğini seçin ve 12 kelimenizi yazın. Kilit ekranında, [korumalı bir notta](/tr/help/locked-vs-protected) ve **Ayarlar > Güvenlik > PIN** altında bulunur. Tüm cihazlarınızda temizlenir ve hemen yenisini belirleyebilirsiniz. [Biyometrik kilit açma bundan etkilenmez](/tr/help/biometric-unlock). Uygulamanın eski bir sürümünü kullanan cihaz, geçiş kodu belirlemiş olsanız bile 4 hane ister; orada **PIN'inizi mi unuttunuz?** aynı şekilde çalışır."
+        "Uygulama bunu sorduğu her yerde **PIN'inizi mi unuttunuz?** veya **Geçiş kodunuzu mu unuttunuz?** seçeneğini seçin ve kurtarma ifadenizi yazın. Kilit ekranında, [korumalı bir notta](/tr/help/locked-vs-protected) ve **Ayarlar > Güvenlik > PIN** altında bulunur. Tüm cihazlarınızda temizlenir ve hemen yenisini belirleyebilirsiniz. [Biyometrik kilit açma bundan etkilenmez](/tr/help/biometric-unlock). Uygulamanın eski bir sürümünü kullanan cihaz, geçiş kodu belirlemiş olsanız bile 4 hane ister; orada **PIN'inizi mi unuttunuz?** aynı şekilde çalışır."
       ]
     },
     "delete-account": {
@@ -292,7 +292,7 @@
       "q": "Artık kullanmadığım bir cihazı nasıl kaldırırım?",
       "a": [
         "Ayarlar > Hesap kayıtlı her cihazı listeler. Emekliye ayırdığınızı kaldırın: yer hemen boşalır ([ücretsiz 2 cihazlık planda](/tr/help/device-limit) işe yarar) ve kaldırılan cihaz bir sonraki eşitleme denemesinde oturumdan çıkarılır. Gittiğini teyit edebilmeniz için 72 saat boyunca “Son kaldırılanlar” altında görünür kalır.",
-        "Kaldırma, yeri boşaltır ve o cihazın oturumunu kapatır; erişimi belirleyen şey ifadedir. 12 kelimenizi elinde tutan herkes yeniden giriş yapabilir, o yüzden [bir cihaz kaybolduysa ya da çalındıysa](/tr/help/lost-device) önce ifadeyi koruyun ve uygulama kilidini (PIN veya biyometri) açık bırakın. Bulunan bir cihazın açık kapıya dönüşmesini engelleyen şey odur."
+        "Kaldırma, yeri boşaltır ve o cihazın oturumunu kapatır; erişimi belirleyen şey ifadedir. Kurtarma ifadenizi elinde tutan herkes yeniden giriş yapabilir, o yüzden [bir cihaz kaybolduysa ya da çalındıysa](/tr/help/lost-device) önce ifadeyi koruyun ve uygulama kilidini (PIN veya biyometri) açık bırakın. Bulunan bir cihazın açık kapıya dönüşmesini engelleyen şey odur."
       ]
     },
     "data-location": {
@@ -358,7 +358,7 @@
     "one-time-pricing": {
       "q": "Tek seferlik bir ödeme bir eşitleme hizmetini nasıl sonsuza dek finanse edebilir?",
       "a": [
-        "Çünkü hizmetin işletme maliyeti bilinçli olarak düşük tutuluyor. Uygulama yerel öncelikli ve notlar küçük şifreli veri yığınları, yani sunucu bunları saklamak ve cihazlarınız arasında iletmekten fazlasını neredeyse hiç yapmıyor. Yazdıklarınız üzerinde analitik yok, piksel ya da üçüncü taraf izleyici yok, işlemci yakan yapay zekâ özellikleri yok, destek departmanı yok.",
+        "Çünkü hizmetin işletme maliyeti bilinçli olarak düşük tutuluyor. Uygulama yerel öncelikli ve notlar küçük şifreli veri yığınları, yani sunucu bunları saklamak ve cihazlarınız arasında iletmekten fazlasını neredeyse hiç yapmıyor. Yazdıklarınız üzerinde analitik yok, piksel ya da üçüncü taraf izleyici yok, sunucularımızda çalışan yapay zekâ yok, destek departmanı yok.",
         "Zamanla büyüyen tek maliyet depolama ve fiyatı da ona göre: dâhil olan 500 MB'ın üzerindeki alan, [küçük bir yıllık eklenti](/tr/help/storage-addons) olarak sunulur. Tek seferlik maliyetler bir kez fiyatlanır, tekrar eden maliyetler tekrar eder. Modelin tek yapması gereken kendini finanse etmek ve ediyor."
       ]
     },
@@ -379,7 +379,7 @@
     "refunds": {
       "q": "İade politikası nedir?",
       "a": [
-        "30 gün, soru sorulmadan. Pro size göre değilse satın alımdan sonraki 30 gün içinde tam iade isteyin, tutar asıl ödeme yöntemine geri döner. AB'deki müşteriler ayrıca yasal 14 günlük cayma hakkını korur.",
+        "30 gün, soru sorulmadan; kart veya mağaza satın alımları için geçerlidir. Pro size göre değilse satın alımdan sonraki 30 gün içinde tam iade isteyin, tutar asıl ödeme yöntemine geri döner. AB'deki müşteriler ayrıca yasal 14 günlük cayma hakkını korur. [Kripto ödemeleri](/tr/help/pay-with-crypto) kesindir ve iade edilmez.",
         "Ödemeler [kayıtlı satıcımız](/tr/help/paddle-privacy) Paddle tarafından işlenir, bu yüzden iadeleri doğrudan Paddle yürütür: satın alma makbuzu e-postanızı yanıtlayın ya da [paddle.net](https://paddle.net) adresini ziyaret edin. Politikanın tamamı [hizmet şartlarında](https://lifetimelabs.dev/terms/#refunds) yer alıyor."
       ]
     },
@@ -387,7 +387,15 @@
       "q": "Ödeme yaptığımda hakkımda ne öğreniyorsunuz?",
       "a": [
         "Sandığınızdan azını. Ödeme, kayıtlı satıcı [Paddle](https://www.paddle.com) üzerinden yürür: adınız, kart numaranız ve fatura adresiniz ödeme ve vergi amacıyla Paddle'a gider, sunucularımıza hiç uğramaz.",
-        "Fatura bilgileriniz Paddle'da durur; veritabanımıza ulaşan şey genel anahtarınız, tutar ve sipariş kimliğidir, bir de [depolama eklentisi için boyutu ve yenileme tarihleri](/tr/help/storage-addons). Paddle hesabımız iki tarafı da görebilir, ama kim olduğunuza bakmayız. Adınızın satın almayla ilişkilendirilmemesi için [bir e-posta takma adı ve maskeli bir kartla](/tr/help/buy-pro-anonymously) ödeyin."
+        "Fatura bilgileriniz Paddle'da durur; veritabanımıza ulaşan şey genel anahtarınız, tutar ve sipariş kimliğidir, bir de [depolama eklentisi için boyutu ve yenileme tarihleri](/tr/help/storage-addons). Paddle hesabımız iki tarafı da görebilir, ama kim olduğunuza bakmayız. Adınızın satın almayla ilişkilendirilmemesi için [bir e-posta takma adı ve maskeli bir kartla](/tr/help/buy-pro-anonymously) ödeyin. [Kripto ile](/tr/help/pay-with-crypto) ödemeyi BlockBee yürütür ve Hesap kimliğinizi hiç almaz; biz genel anahtarınızı, tutarı ve BlockBee'nin ödeme kimliğini saklarız."
+      ]
+    },
+    "pay-with-crypto": {
+      "q": "Pro için Bitcoin veya başka bir kriptoyla ödeme yapabilir miyim?",
+      "a": [
+        "Evet, web'de ve masaüstü uygulamasında. Yükselt penceresinde Kripto ile öde'yi seçin ve Bitcoin, Ethereum, Lightning, USDC veya USDT ile ödeyin. Fiyat kart fiyatıdır ve bir kez ödenir. [Mağaza sürümleri](/tr/help/store-purchases) Pro'yu yalnızca Apple ve Google üzerinden satar.",
+        "Ödeme sayfasını [BlockBee](https://blockbee.io) yürütür. Ad ya da e-posta istemez ve Hesap kimliğinizi hiç almaz. Kripto ödemesi kendi blokzincirinde herkese açıktır. Bitcoin'de Pro, ağ ödemeyi onayladığında açılır, bu genellikle 10 ile 60 dakika sürer; Ethereum ve çoğu stabil kripto para yaklaşık bir dakika alır. Uygulamadaki bir şerit ödemenin hangi aşamada olduğunu gösterir.",
+        "Kripto ödemeleri kesindir: iade yoktur. Ödeme sırasında Pro'nun hemen başlamasını kabul edersiniz; bu, AB'deki 14 günlük cayma hakkını sona erdirir, o yüzden önce ücretsiz planı deneyin. Ödemeden sonraki sayfa satın alma onayınızdır. Onu PDF olarak kaydedin, çünkü gönderebileceğimiz bir e-posta adresi yok."
       ]
     },
     "buy-pro-anonymously": {
@@ -395,7 +403,7 @@
       "a": [
         "Evet, iki standart araçla. Makbuz için bir e-posta takma adı kullanın: [Apple Hide My Email](https://support.apple.com/105078), [DuckDuckGo Email Protection](https://duckduckgo.com/email), [SimpleLogin](https://simplelogin.io), [Firefox Relay](https://relay.firefox.com) ve [addy.io](https://addy.io) gerçek gelen kutunuzu açığa çıkarmadan yönlendirir. Ödeme için maskeli bir kart kullanın: ABD'de [privacy.com](https://privacy.com) yazdığınız her isimle çalışan sanal kartlar üretir, başka yerlerde ise nakitle satın alınan, çevrimiçi kullanılabilen bir ön ödemeli kart aynı işi görür ve üzerinde hiç isim bulunmaz.",
         "[Ödeme sırasında Paddle](/tr/help/paddle-privacy), vergiyi hesaplamak için bir e-posta, bir ödeme yöntemi ve bir ülke (bazı bölgelerde ayrıca bir posta kodu) ister. Takma ad makbuzu alır, maskeli kart ona verdiğiniz ismi taşır ve vergi için alınan konum bilgisi yalnızca bulunduğunuz bölgeyi ortaya koyar. Yine de takma adı canlı tutun: makbuz e-postası hem satın alma kanıtınız hem de [iade kanalınızdır](/tr/help/refunds).",
-        "[İfadeyle açılmış bir hesapla birleştiğinde](/tr/help/signup-options) hiçbir taraf resmin tamamını görmez: bankanız bir kart yüklemesi görür, Paddle bir takma ad ve maskeli bir kart görür, biz ise Pro olan bir genel anahtarı, Paddle hesabımızda o takma adın yanında görürüz."
+        "[İfadeyle açılmış bir hesapla birleştiğinde](/tr/help/signup-options) hiçbir taraf resmin tamamını görmez: bankanız bir kart yüklemesi görür, Paddle bir takma ad ve maskeli bir kart görür, biz ise Pro olan bir genel anahtarı, Paddle hesabımızda o takma adın yanında görürüz. [Kripto ile ödeme](/tr/help/pay-with-crypto) hiç e-posta gerektirmez, ama ödemenin kendisi blokzincirinde herkese açıktır."
       ]
     },
     "platforms": {
@@ -412,7 +420,7 @@
         "Çoğu zaman birkaç gün. Küçük istekler ve hata bildirimleri genellikle bir sonraki sürüme giriyor ve sürümler yılda birkaç kez değil, neredeyse her hafta çıkıyor. [Changelog](/changelog) bunun kaydıdır: her madde tarihlidir, sade bir dille yazılmıştır ve neyin değiştiğini söyler. Bir aylık kısmını okuyun, uygulamaya bir şey emanet etmeden önce bizden ne bekleyeceğinizi tam olarak bilirsiniz.",
         "Bu hız, işin nasıl bölündüğünden geliyor. Şifreleme çekirdeği, eşitleme protokolü ve giriş akışı, uygulamanın daha adı yokken, insanlar tarafından günlük işlerinin yanında yazıldı ve kripto çekirdeğinin bakımı bugün de aynı şekilde yapılıyor; otomatik hiçbir şey yanına yaklaşmıyor. O temel 2026 baharında sağlamlaşınca, sabit bir protokol altında yapay zekâ kodlama araçlarını kullanmaya başladık: önce [çeviriler](/tr/help/translation-quality) için, sonra yardım makaleleri, sonra arayüz özellikleri ve kritik olmayan hata düzeltmeleri için; bu araçlar, aksi halde haftalar alacak nadir uç durumları saptamakta ve birden fazla geliştiriciyi tek bir standartta tutan test betiklerini yazmakta iyi. Bu yüzden, tek bir kişinin isteğini bile listenin üst sıralarındaki isteklerin arkasında bekletmek yerine hayata geçirmeye değer buluyoruz.",
         "Şifrelemeye, eşitlemeye veya girişe dokunan her şey, her satırı yazan deneyimli geliştiricilerin sorumluluğunda kalıyor ve bu kod [herkese açık](https://github.com/LifetimeLabsHQ/PrivacyNotes.app); bize inanmak yerine kendiniz okuyabilirsiniz. Ekip ve nasıl çalıştığımız hakkında daha fazlası [hakkımızda sayfasında](https://lifetimelabs.dev/about).",
-        "Uygulamanın kendisinde yapay zekâ özelliği yoktur ve notlarınızı hiçbir yere göndermez ([ayrıntılar](/tr/help/no-ai)). Bu söz ayrı durur ve değişmez."
+        "Uygulamanın kendisi notlarınızı asla bir yapay zekâya vermez ve sahip olduğu tek yapay zekâ özelliği, açarsanız yalnızca cihazınızda çalışır ([ayrıntılar](/tr/help/no-ai)). Bu söz ayrı durur ve değişmez."
       ]
     },
     "android-updates": {
@@ -491,7 +499,7 @@
         "Kurmak için masaüstü uygulamasında Ayarlar > CLI'yı açın ve Etkinleştir'i seçin. `privacynotes` komutunu bu bilgisayara kuran Kur'u, ardından Kod oluştur'u seçin. Yeni bir terminalde `privacynotes login` komutunu çalıştırıp kodu yapıştırın. Sonra ilk notunuzu kaydedin:",
         "`echo \"# Hello\" | privacynotes save`",
         "`privacynotes` komutlarının sayısı azdır, çünkü tek bir iş yapar. Her biri bir kişi için kısa bir kart yazdırır; bir betik için `--json` ile tek satırlık JSON yazdırır:",
-        "- `privacynotes login` bu bilgisayarı Ayarlar > CLI'dan aldığınız tek kullanımlık bir kodla bağlar. Kodu yapıştırın veya aktarın.\n- `privacynotes save note.md` bir dosyadan not ekler, yalnız `privacynotes save` ise aktarılan Markdown'ı okur. `--title` başlığı belirler, aksi halde ilk `#` başlığı veya ilk satır kullanılır. `--tag work,ideas` etiket ekler.\n- `privacynotes status` bu bilgisayarın bağlı olup olmadığını ve kaydettiği son notu gösterir.\n- `privacynotes logout` bu bilgisayarın bağlantısını keser.\n- `privacynotes mcp` komutu terminali olmayan bir yapay zekâ uygulaması için araç olarak çalıştırır, bkz. [MCP](/tr/help/mcp).\n- `privacynotes help` (veya `privacynotes --help`) tüm komutları ve seçenekleri listeler, `privacynotes --version` sürümü yazdırır.",
+        "- `privacynotes login` bu bilgisayarı Ayarlar > CLI'dan aldığınız tek kullanımlık bir kodla bağlar. Kodu yapıştırın veya aktarın.\n- `privacynotes save note.md` bir dosyadan not ekler, yalnız `privacynotes save` ise aktarılan Markdown'ı okur. `--title` başlığı belirler, aksi halde ilk `#` başlığı veya ilk satır kullanılır. `--tag work,ideas` etiket ekler.\n- `privacynotes status` bu bilgisayarda kayıtlı bağlantıyı ve kaydettiği son notu gösterir. Sunucuya sormaz: bilgisayarı Ayarlar > CLI'da kaldırdıktan sonra, bir kayıt reddedilene kadar bağlı görünür.\n- `privacynotes logout` bu bilgisayarın bağlantısını keser.\n- `privacynotes mcp` komutu terminali olmayan bir yapay zekâ uygulaması için araç olarak çalıştırır, bkz. [MCP](/tr/help/mcp).\n- `privacynotes help` (veya `privacynotes --help`) tüm komutları ve seçenekleri listeler, `privacynotes --version` sürümü yazdırır.",
         "Bir yapay zekâ kodlama ajanıyla, `privacynotes` komutunu ajanın çalıştığı bilgisayarda bir kez bağlayın, sonra sade sözlerle isteyin: \"Bu planı privacynotes save ile PrivacyNotes'ıma kaydet, project etiketiyle.\" Ajan ayrıntılar için `privacynotes --help` çıktısını okuyabilir, Markdown'ı yazar ve aktarır. Aynı komut kendi betiklerinizde ve zamanlanmış görevlerinizde de çalışır:",
         "- `git log --oneline -20 | privacynotes save --title \"Recent commits\"` son commit'lerinizi kaydeder.\n- `pbpaste | privacynotes save --tag inbox` Mac'te kopyaladığınızı kaydeder.\n- Gece çalışan bir görevde `privacynotes save --tag daily report.md` üretilen bir raporu kaydeder.\n- Sisteminizin ayarlarında seçtiğiniz bir tuş da `privacynotes save` komutunu çalıştırabilir, bkz. [Uygulamayı açmadan bir klavye kısayoluyla not ekleyebilir miyim?](/tr/help/quick-note-shortcut)",
         "Bir not en fazla 700 KB Markdown, 20 etiket ve 200 karakterlik bir başlık taşıyabilir; `privacynotes` bunu göndermeden önce denetler. Not kaydedilince 0, sunucu reddedince 1, hatalı girdide 2, bilgisayar bağlı değilken 3 ve ağ yokken 4 koduyla çıkar; böylece bir betik buna göre davranabilir. Kaydedilen not, uygulamalarınızdan biri açılana kadar mühürlü bekler; 90 gün içinde hiçbiri açılmazsa ya da bilgisayarı önce kaldırırsanız silinir. Bir bilgisayarın bağlantısını kesmek için Ayarlar > CLI'da yanındaki Kaldır'ı seçin. Komutun ve bir ajanın neleri görebildiği [Komut satırı aracı veya bir yapay zekâ ajanı notlarımı okuyabilir mi?](/tr/help/cli-security) bölümünde."
@@ -570,7 +578,7 @@
       "q": "PrivacyNotes hakkında yardım almak için kendi yapay zekâ ajanımı kullanabilir miyim?",
       "a": [
         "Evet, yardım merkezini bunun için kurduk. Her yanıt [llms-full.txt](https://privacynotes.app/llms-full.txt) adresinde tek bir düz metin dosyası olarak yayımlanıyor, böylece bir asistan hepsini bir kerede okuyor. Herhangi bir yardım sayfasının altındaki kutu hazır bir istemi kopyalar: ChatGPT, Claude, Gemini veya zaten kullandığınız asistana yapıştırın ve kendi dilinizde sorun.",
-        "Sizi zaten güvendiğiniz bir araca yönlendirmek bizi tamamen devre dışı bırakır ve ne sorduğunuzu asla öğrenmeyiz. Kendi sohbet botumuz, sorularınızın sunucularımıza düşmesi demek olurdu ve bir not uygulamasıyla ilgili sorular çoğu zaman notların içeriğini de taşır. Bu, uygulamanın kendisinden ayrı bir konu: uygulamada hiçbir yapay zekâ özelliği yok ([ayrıntılar](/tr/help/no-ai)).",
+        "Sizi zaten güvendiğiniz bir araca yönlendirmek bizi tamamen devre dışı bırakır ve ne sorduğunuzu asla öğrenmeyiz. Kendi sohbet botumuz, sorularınızın sunucularımıza düşmesi demek olurdu ve bir not uygulamasıyla ilgili sorular çoğu zaman notların içeriğini de taşır. Bu, uygulamanın kendisinden ayrı bir konu: uygulama notlarınızı asla bir yapay zekâya göndermez ([ayrıntılar](/tr/help/no-ai)).",
         "Kurtarma ifadenizi, PIN'inizi veya bir notun metnini asla bir asistana yapıştırmayın. Hiçbir yanıt bunları gerektirmez, kopyalanan istem asistana bunları reddetmesini söyler ve başkasının sohbet kutusuna yazdığınız her şey cihazınızdan çıkmış demektir."
       ]
     },
@@ -600,7 +608,7 @@
       "q": "Bir cihazımı kaybettim. Notlarımı nasıl korurum?",
       "a": [
         "Giriş yapmış herhangi bir cihazdan Ayarlar > Hesap > “Kayıtlı cihazlar”ı açın ve [kayıp olanı kaldırın](/tr/help/remove-device). O cihaz bir sonraki kez çevrimiçi olduğunda, sonraki kullanımından itibaren yaklaşık bir dakika içinde oturumu kapatılır ve yerel verisi silinir. Gittiğini teyit edebilmeniz için 72 saat boyunca “Son kaldırılanlar” altında listelenir.",
-        "Taşınabilir her şeyde uygulama kilidini (PIN veya biyometri) açın ve işletim sisteminizin ekran kilidini açık bırakın. Bir cihaz, bir sonraki bağlanışında silinir; o ana kadar kaybolan telefon ile notlarınız arasında duran şey bu yerel kapılardır. Asıl anahtar ifadedir: 12 kelimenizi elinde tutan herkes yeniden giriş yapabilir. İfadenin kendisinin sızdığından şüpheleniyorsanız bunun yerine [ifade sızıntısı el kitabını](/tr/help/phrase-compromised) izleyin."
+        "Taşınabilir her şeyde uygulama kilidini (PIN veya biyometri) açın ve işletim sisteminizin ekran kilidini açık bırakın. Bir cihaz, bir sonraki bağlanışında silinir; o ana kadar kaybolan telefon ile notlarınız arasında duran şey bu yerel kapılardır. Asıl anahtar ifadedir: kurtarma ifadenizi elinde tutan herkes yeniden giriş yapabilir. İfadenin kendisinin sızdığından şüpheleniyorsanız bunun yerine [ifade sızıntısı el kitabını](/tr/help/phrase-compromised) izleyin."
       ]
     },
     "device-limit": {
@@ -664,7 +672,7 @@
       "q": "Biri kurtarma ifadem olmadan yedek dosyamı açabilir mi?",
       "a": [
         "Hayır, şifreli olanı açamaz. “Her şey, şifreli (.pnbackupz)” ya da “Yalnızca metin, şifreli (.pnbackup)” dosyası ifade anahtarınızla şifrelidir, bu yüzden yalnızca hesabınızda açılır. Dosyayı bulan biri adını, boyutunu ve tarihini görür, içinde ise hiçbir şey göremez.",
-        "Dışa aktar sekmesinden alınan “Her şey, şifresiz (.zip)” bunun istisnasıdır: ifade gerekmeden her bilgisayarda açılır. Otomatik yedekler bu türü asla üretmez ([nedeni](/tr/help/backup-unencrypted))."
+        "Ayarlar > Yedekleme > Manuel bölümünden alınan “Her şey, şifresiz (.zip)” bunun istisnasıdır: ifade gerekmeden her bilgisayarda açılır. Otomatik yedekler bu türü asla üretmez ([nedeni](/tr/help/backup-unencrypted))."
       ]
     },
     "backup-unencrypted": {
@@ -791,7 +799,7 @@
     "pro-not-active": {
       "q": "Pro için ödeme yaptım ama etkin değil. Şimdi ne olacak?",
       "a": [
-        "Bir dakika verin, sonra uygulamayı yenileyin. Ödemeden sonra uygulama yaklaşık 20 saniye boyunca yoklama yapar ve kilidi kendiliğinden açar; yenileme de açılışta Pro durumunu tekrar kontrol eder. Ödeme geçtiyse ama etkinleştirme gecikiyorsa “Ödeme alındı ama Pro'nun etkinleşmesi her zamankinden uzun sürüyor” diyen bir şerit çıkar - bu durum neredeyse her seferinde kendiliğinden düzelir. [Mağaza sürümlerinde](/tr/help/store-purchases), doğrulanamayan bir satın alım uygulamayı yeniden başlattığınızda tekrar denenir ve hiç etkinleşmeyen bir satın alım 3 gün içinde mağaza tarafından otomatik olarak iade edilir.",
+        "Bir dakika verin, sonra uygulamayı yenileyin. Ödemeden sonra uygulama yaklaşık 20 saniye boyunca yoklama yapar ve kilidi kendiliğinden açar; yenileme de açılışta Pro durumunu tekrar kontrol eder. Bir [kripto ödemesi](/tr/help/pay-with-crypto) daha uzun sürer ve bir şerit ödemenin hangi aşamada olduğunu gösterir. Ödeme geçtiyse ama etkinleştirme gecikiyorsa “Ödeme alındı ama Pro'nun etkinleşmesi her zamankinden uzun sürüyor” diyen bir şerit çıkar - bu durum neredeyse her seferinde kendiliğinden düzelir. [Mağaza sürümlerinde](/tr/help/store-purchases), doğrulanamayan bir satın alım uygulamayı yeniden başlattığınızda tekrar denenir ve hiç etkinleşmeyen bir satın alım 3 gün içinde mağaza tarafından otomatik olarak iade edilir.",
         "Hâlâ kilitli mi? Neredeyse her zaman bir hesap uyuşmazlığıdır: Pro, satın alma sırasında giriş yapılmış hesaba bağlanır, yani farklı bir ifade - ya da ifade kasanız yerine bir Google, Apple veya GitHub girişi - farklı bir hesaptır. Satın alan cihazda Ayarlar > ID & Sync altındaki Hesap kimliğini karşılaştırın. Gerçekten takıldıysa [bildirin](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues) ve o Hesap kimliğini ekleyin: satın alımı tanımlar ve notlarınız hakkında hiçbir şey açığa çıkarmaz."
       ]
     },
@@ -814,7 +822,7 @@
       "q": "Obtainium, doğrudan APK veya Google Play: hangisini indirmeli?",
       "a": [
         "Alışılmış yolu istiyorsanız Google Play'i seçin: uygulamayı diğer uygulamalar gibi kurar ve günceller, uygulama içi satın alımların faturasını da Google keser. Uygulamanın bir Google hesabı olmadan kendini güncel tutmasını istiyorsanız [Obtainium](/tr/help/obtainium), bunun için ikinci bir uygulama çalıştırmak istemiyorsanız [doğrudan APK'yı](/tr/help/android-updates) seçin. Obtainium ve APK size aynı anahtarla imzalanmış aynı dosyayı verir, yani bu ikisi arasında istediğiniz zaman geçebilirsiniz: Obtainium daha önce elle kurduğunuz APK'yı devralır, sitedeki APK ise Obtainium'un kurduğunun üzerine kurulur. Play sürümü farklı bir anahtarla imzalanır, bu yüzden Play ile diğer ikisinden biri arasında geçiş yapmak için önce uygulamayı kaldırmanız gerekir.",
-        "Sonradan fikrinizi değiştirmek kolaydır. Önce kaldırmayı gerektiren her geçişten önce uygulamanın \"Synced\" gösterdiğini doğrulayın ve 12 kelimenizi ya da [başka bir cihazdan bir giriş QR kodunu](/tr/help/add-second-device) hazır bulundurun, çünkü kaldırma yerel kopyayı siler."
+        "Sonradan fikrinizi değiştirmek kolaydır. Önce kaldırmayı gerektiren her geçişten önce uygulamanın \"Synced\" gösterdiğini doğrulayın ve kurtarma ifadenizi ya da [başka bir cihazdan bir giriş QR kodunu](/tr/help/add-second-device) hazır bulundurun, çünkü kaldırma yerel kopyayı siler."
       ]
     },
     "markdown-folder": {
@@ -883,7 +891,7 @@
     "add-second-device": {
       "q": "İkinci bir cihazda nasıl oturum açarım?",
       "a": [
-        "Zaten kullandığınız cihazda Ayarlar > Güvenlik > İfade bölümünü açın. Orada 12 kelimeniz ve bir oturum açma QR kodu bulunur. Yeni cihazda \"İfadeyle giriş\"i seçin, sonra o QR'ı kamerayla tarayın, fotoğrafını yükleyin ya da kelimeleri yazın. Notlarınız saniyeler içinde gelir.",
+        "Zaten kullandığınız cihazda Ayarlar > Güvenlik > İfade bölümünü açın. Orada ifadenizin kelimeleri ve bir oturum açma QR kodu bulunur. Yeni cihazda \"İfadeyle giriş\"i seçin, sonra o QR'ı kamerayla tarayın, fotoğrafını yükleyin ya da kelimeleri yazın. Notlarınız saniyeler içinde gelir.",
         "[Ücretsiz hesap 2 cihazı kapsar](/tr/help/device-limit), Pro ise istediğiniz kadarını; aynı bilgisayardaki iki tarayıcı tek cihaz sayılır. QR koduna, taşıdığı ifadenin kendisi gibi davranın: kimseye göstermeyin ve başkasının bulutuna eşitlenen bir fotoğraf galerisine düşmesine asla izin vermeyin."
       ]
     },
@@ -904,15 +912,15 @@
     "clear-browser-data": {
       "q": "Tarayıcı verilerimi ya da çerezleri temizlersem ne olur?",
       "a": [
-        "Web uygulaması notlarınızı tarayıcının kendi deposunda tutar; bu yüzden PrivacyNotes için site verilerini temizlemek yerel kopyayı siler ve oturumunuzu kapatır. Halihazırda eşitlenmiş olan her şey güvendedir: 12 kelimelik ifadenizle oturum açın, geri gelir. Henüz eşitlenmemiş olan gider, çünkü onun bir kopyası bizde hiç olmadı.",
+        "Web uygulaması notlarınızı tarayıcının kendi deposunda tutar; bu yüzden PrivacyNotes için site verilerini temizlemek yerel kopyayı siler ve oturumunuzu kapatır. Halihazırda eşitlenmiş olan her şey güvendedir: kurtarma ifadenizle oturum açın, geri gelir. Henüz eşitlenmemiş olan gider, çünkü onun bir kopyası bizde hiç olmadı.",
         "Bu yüzden iki şey yapın. Bir şeyi temizlemeden önce alt bilgi çubuğunun \"Synced\" dediğinden emin olun ve ifadenizi bir parola yöneticisinde saklayın, çünkü boşaltılmış bir tarayıcı onu sizden kibarca isteyemez. [Masaüstü ve mobil uygulamalar](/tr/help/platforms) bundan hiç etkilenmez: [kendi depoları vardır](/tr/help/data-on-disk) ve bir tarayıcı temizliği onlara asla dokunmaz."
       ]
     },
     "android-backup": {
       "q": "Notlarım Android telefon yedeğime dahil mi?",
       "a": [
-        "Hayır. Android uygulaması kendi verisini telefonun bulut yedeğinin dışında tutar, yani hiçbiri Google Drive'a gitmez. Sebep notlar değil, anahtar: **Bu cihaza güven** dediğiniz cihazda oturumunuz açık kalsın diye 12 kelimeniz o cihazda durur ve notlarınızın şifresini çözen anahtarın yeri bir bulut yedeği değildir.",
-        "Yeni bir telefon bu yüzden boş başlar: uygulamayı kurun, [12 kelimenizle giriş yapın](/tr/help/add-second-device), eşitlenmiş olan her şey gelir. Geri yükleme bu ilk eşitlemeyi bekler; böylece getirdiğiniz bir yedek iki kez eklenmek yerine hesaptakilerle eşleştirilir. Hiç eşitlenmemiş olan yalnızca eski telefonda yaşar, o yüzden önce alt bilgi çubuğunun \"Synced\" dediğinden emin olun ya da Ayarlar > Yedekleme > Manuel altından bir “Her şey, şifresiz (.zip)” götürün ([hangi yedeği almalı](/tr/help/backup-strategy)).",
+        "Hayır. Android uygulaması kendi verisini telefonun bulut yedeğinin dışında tutar, yani hiçbiri Google Drive'a gitmez. Sebep notlar değil, anahtar: **Bu cihaza güven** dediğiniz cihazda oturumunuz açık kalsın diye kurtarma ifadeniz o cihazda durur ve notlarınızın şifresini çözen anahtarın yeri bir bulut yedeği değildir.",
+        "Yeni bir telefon bu yüzden boş başlar: uygulamayı kurun, [ifadenizle giriş yapın](/tr/help/add-second-device), eşitlenmiş olan her şey gelir. Geri yükleme bu ilk eşitlemeyi bekler; böylece getirdiğiniz bir yedek iki kez eklenmek yerine hesaptakilerle eşleştirilir. Hiç eşitlenmemiş olan yalnızca eski telefonda yaşar, o yüzden önce alt bilgi çubuğunun \"Synced\" dediğinden emin olun ya da Ayarlar > Yedekleme > Manuel altından bir “Her şey, şifresiz (.zip)” götürün ([hangi yedeği almalı](/tr/help/backup-strategy)).",
         "İlk kurulumdaki doğrudan telefondan telefona aktarım ayrı bir durum: bazı telefonlar orada uygulama verisini taşır ve Android bir uygulamaya bunu reddetmesi için güvenilir bir yol vermez. O kopya iki cihazınızdan hiç çıkmaz, o yüzden eski telefonu sonrasında silin."
       ]
     },
@@ -947,7 +955,7 @@
     "family-sharing": {
       "q": "Ailem tek bir hesabı ya da tek bir Pro satın alımını paylaşabilir mi?",
       "a": [
-        "Yanıt iki hesaptır ve ikincisini açmak hiçbir şeye mal olmaz: [her biri 2 cihaz ve 50 MB'ı ücretsiz alır](/tr/help/free-vs-pro). Bir hesap, 12 kelimelik bir ifadedir ve o ifadeye sahip olan içindeki her şeye sahiptir: her not, her kasa kaydı, her cihazda. Herkese kendi özel notlarını veren şey ayrı hesaplardır. Pro hesap başına satın alınır.",
+        "Yanıt iki hesaptır ve ikincisini açmak hiçbir şeye mal olmaz: [her biri 2 cihaz ve 50 MB'ı ücretsiz alır](/tr/help/free-vs-pro). Bir hesap, bir kurtarma ifadesidir ve o ifadeye sahip olan içindeki her şeye sahiptir: her not, her kasa kaydı, her cihazda. Herkese kendi özel notlarını veren şey ayrı hesaplardır. Pro hesap başına satın alınır.",
         "Tek bir şeyi devretmek için ifadeniz yerine bir [Burn note](/tr/help/burn-notes) gönderin. Paylaşılan bir ev hesabı gerçekten istediğiniz şeyse iyi işler: ifadeyi parola yöneticisinde paylaşılan bir kayıtta tutun ve onu bir kez bile eline almış herkesin içindeki her şeyi görmüş olduğunu varsayın."
       ]
     },
@@ -969,7 +977,7 @@
       "q": "Hangi kayıt seçeneğini seçmeliyim?",
       "a": [
         "Tehdit düzeyinize uyanı. Üç tane var. Bir: Google, Apple veya GitHub ile giriş, anahtarınız sunucumuzda saklanır. İki: aynı giriş, ama anahtar yalnızca cihazınızda kalır. Üç: \"Bir ifade oluştur\", ne e-posta, ne isim, ne de herhangi bir giriş. Üçünde de notlarınız cihazınızda şifrelenir; onları ayıran şey, anahtarı kimin tuttuğu ve sizin hakkınızda ne kadar şey öğrendiğimizdir.",
-        "Google, Apple veya GitHub ile giriş yaptıktan sonra anahtarınızın nerede saklanacağını sorarız; başlangıçta \"Basit ve pratik olsun\" seçilidir. Bu seçenek ifadenizi sunucumuzda şifreli saklar. Böylece yeni bir cihaz, sağlayıcıyla giriş yaptıktan ve 2FA açıksa doğrulama uygulamasının kodu girildikten sonra notlarınızı açabilir. Sağlayıcı hesabınızı kaybetme ihtimaline karşı ifadenizi kaydedin; iki faktörlü girişi açarsanız 2FA yedek anahtarınızı da saklayın. \"Azami güvenlik ve gizlilik\" ifadeyi cihazınızda tutar, bu yüzden sunucuda notlarınızı açan hiçbir şey bulunmaz ve yeni bir cihaz 12 kelimenizi ya da [zaten giriş yapılmış bir cihazdan QR taramasını](/tr/help/add-second-device) ister.",
+        "Google, Apple veya GitHub ile giriş yaptıktan sonra anahtarınızın nerede saklanacağını sorarız; başlangıçta \"Basit ve pratik olsun\" seçilidir. Bu seçenek ifadenizi sunucumuzda şifreli saklar. Böylece yeni bir cihaz, sağlayıcıyla giriş yaptıktan ve 2FA açıksa doğrulama uygulamasının kodu girildikten sonra notlarınızı açabilir. Sağlayıcı hesabınızı kaybetme ihtimaline karşı ifadenizi kaydedin; iki faktörlü girişi açarsanız 2FA yedek anahtarınızı da saklayın. \"Azami güvenlik ve gizlilik\" ifadeyi cihazınızda tutar, bu yüzden sunucuda notlarınızı açan hiçbir şey bulunmaz ve yeni bir cihaz ifadenizi ya da [zaten giriş yapılmış bir cihazdan QR taramasını](/tr/help/add-second-device) ister.",
         "Yalnızca ifadeyle kullanımda, hesabı bir kişiye bağlayan e-posta veya ad bulunmaz. Bunun karşılığında ifade yalnızca sizdedir; kilidi açık bir cihaz kalmadığında ifadeyi kaybederseniz kimse sizin için geri getiremez. Ayarlar > Hesap > Anahtar saklama mevcut modunuzu gösterir ve değiştirmenizi sağlar. Sunucuda saklamayı seçmeden önce [ifadeyle açılan bir hesap bir sağlayıcı bağlamalıdır](/tr/help/connected-logins); bu Ayarlar > Hesap > Hesaplar bölümünden yapılır. Yalnızca bağlamak saklama modunu değiştirmez. Her modda PIN veya biyometrik kilit ve [isteğe bağlı iki faktörlü giriş](/tr/help/enable-2fa) kullanılabilir. Tam karşılaştırma [tehdit düzeyleri merdiveninde](/tr/help/threat-model-levels)."
       ]
     },
@@ -1052,7 +1060,7 @@
     "ninja": {
       "q": "Cmd+K kutusu Ninja ile neler yapabilirim?",
       "a": [
-        "Ninja her öğeyi açar, yenilerini ekler ve komutları çalıştırır; hepsi tek bir kutudan. Mac'te Cmd+K, Windows ve Linux'ta Ctrl+K'ye basın (Katana için K; Cmd+P ya da Ctrl+P de çalışır) ya da kenar çubuğundaki veya liste başlığındaki **Ninja**'ya tıklayın. Notları, görevleri, etkinlikleri, günlük kayıtlarını, Kasa öğelerini, yer imlerini, kişileri, dosyaları, ayarları, etiketleri ve klasörleri bulmak için bir başlığın bir kısmını yazın. Başlıkların altında **Metnin içinde**, sözcüklerinizi taşıyan not içi satırı gösterir.",
+        "Ninja her öğeyi açar, yenilerini ekler ve komutları çalıştırır; hepsi tek bir kutudan. Mac'te Cmd+K, Windows ve Linux'ta Ctrl+K'ye basın (Katana için K; Cmd+P ya da Ctrl+P de çalışır) ya da kenar çubuğundaki veya liste başlığındaki **Ninja**'ya tıklayın. Notları, görevleri, etkinlikleri, günlük kayıtlarını, Kasa öğelerini, yer imlerini, kişileri, dosyaları, ayarları, etiketleri ve klasörleri bulmak için bir başlığın bir kısmını yazın. Başlıkların altında **Metnin içinde**, sözcüklerinizi taşıyan not içi satırı ya da notun konumunun adını gösterir.",
         "Yazdığınız ilk işaret kipi belirler: `+` [düz sözcüklerle bir öğe ekler](/tr/help/ninja-quick-add), `>` bir komut çalıştırır, `#` etiketlerinizi, `/` klasörlerinizi listeler; bir metinden sonra `>>` ise [onu zaten var olan bir listeye ekler](/tr/help/ninja-add-to-list). Bir satırda Tab o öğenin menüsünü açar, Option+Enter ya da Alt+Enter öğeyi sekmede açar, Q ise kutuyu her yerden `+` yazılı olarak açar. [Eşleştirme cihazınızda olur](/tr/help/search-local) ve Ninja ücretsizdir."
       ]
     },
@@ -1124,7 +1132,7 @@
       "q": "Hesabıma birden fazla giriş yöntemi bağlayabilir miyim?",
       "a": [
         "Evet. Ayarlar > Hesap > Hesaplar bölümünü açın ve aynı kasayı açan bir giriş yöntemi eklemek için Google, Apple ya da GitHub bağlayın. Birkaç tane, hatta aynı sağlayıcıdan iki hesap bağlayabilirsiniz; [kurtarma ifadeniz de bunların yanında çalışmaya devam eder](/tr/help/oauth-recovery). Bir hesabı bağlamak ya da bağlantısını kaldırmak notlarınızı ve şifrelemenizi değiştirmez.",
-        "Başka bir kasaya ait bir giriş yöntemi bağlanamaz, çünkü kasalar hiçbir zaman birleştirilmez. **Bağlantıyı kaldır** önce 12 kelimenizi ister. İfadenizi sizin için biz saklıyorsak, son bağlı hesap siz başka bir hesap bağlayana ya da ifadenizi kaydedip [kendi saklamaya geçene](/tr/help/threat-model-levels) kadar kalır. Kendi saklamada yeni bir cihaz yine 12 kelimenizi ister. Bağlı hesaplar beta aşamasındadır."
+        "Başka bir kasaya ait bir giriş yöntemi bağlanamaz, çünkü kasalar hiçbir zaman birleştirilmez. **Bağlantıyı kaldır** önce kurtarma ifadenizi ister. İfadenizi sizin için biz saklıyorsak, son bağlı hesap siz başka bir hesap bağlayana ya da ifadenizi kaydedip [kendi saklamaya geçene](/tr/help/threat-model-levels) kadar kalır. Kendi saklamada yeni bir cihaz yine ifadenizi ister. Bağlı hesaplar beta aşamasındadır."
       ]
     },
     "calendar": {

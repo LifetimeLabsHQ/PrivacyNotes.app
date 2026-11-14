@@ -105,6 +105,22 @@ export function isShrunk(items: number, previous: number | undefined): boolean {
   return items * 2 < previous;
 }
 
+/** The item count a new backup is measured against: the newest copy in the
+ *  list, or, while a warning waits for its answer, the count that warning
+ *  named. By the run after a shrunk backup the newest copy is the shrunk one,
+ *  and measured against it that run would look normal and prune. */
+export function shrinkBaseline(newest: number | undefined, pending: number | undefined): number | undefined {
+  return pending ?? newest;
+}
+
+/** The listed files that are still there. A copy the person deleted by hand
+ *  no longer counts toward Keep, so Keep the last 3 leaves 3 real copies.
+ *  Each listed file is asked about by its own name; the folder is never listed. */
+export async function stillThere(files: readonly PlacedFile[], exists: (ref: string) => Promise<boolean>): Promise<PlacedFile[]> {
+  const there = await Promise.all(files.map((f) => exists(f.ref)));
+  return files.filter((_, i) => there[i]);
+}
+
 /** The files that go so that `keep` stay, oldest first. Only files from this
  *  device's own list; the folder is never read to choose. */
 export function pruneList(files: readonly PlacedFile[], keep: BackupKeep): PlacedFile[] {

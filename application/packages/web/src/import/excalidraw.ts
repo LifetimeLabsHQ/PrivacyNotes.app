@@ -29,11 +29,12 @@ import { zipEntryText } from './zipEntry';
 import { shouldSkip } from './markdown';
 import { buildFolderTree, commonRootPrefix } from './folderImport';
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
+import { isRecord } from '../isRecord';
 
 /** A drawing file as read: its path inside the zip (or its name), text, date. */
 type SourceFile = { path: string; text: string; date: Date | null };
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.excalidraw.${key}`, options);
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:excalidraw.${key}`, options);
 
 export const DRAWING_FILE = /\.excalidraw(?:\.md)?$/i;
 
@@ -67,10 +68,6 @@ function dataUrlBytes(url: string): Uint8Array | null {
   } catch {
     return null;
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /** What one drawing file came to. */
@@ -147,9 +144,9 @@ async function readFiles(file: File, onProgress?: (msg: string) => void): Promis
   if (!(head[0] === 0x50 && head[1] === 0x4b)) {
     return [{ path: file.name, text: await file.text(), date: file.lastModified ? new Date(file.lastModified) : null }];
   }
-  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
-  const { default: JSZip } = await import('jszip');
-  const zip = await JSZip.loadAsync(file);
+  onProgress?.(i18n.t('importLog:shared.readingZip'));
+  const { openZip } = await import('./zipOpen');
+  const zip = await openZip(file);
   const entries = Object.values(zip.files).filter((e) => !e.dir && !shouldSkip(e.name) && DRAWING_FILE.test(e.name));
   const prefix = commonRootPrefix(entries.map((e) => e.name));
   const out: SourceFile[] = [];

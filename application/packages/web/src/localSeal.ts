@@ -3,8 +3,8 @@
  * content in the device's own IndexedDB.
  *
  * Formats, on the raw stored row:
- *  - JSON tables (notes, editorDocCache):
- *      sv: 1, sealed: { n: <base64 nonce>, ct: <base64 ciphertext> }
+ *  - JSON tables (notes, editorDocCache, replacedCopies):
+ *      sv: 1, sealed: { n: <base64 nonce>, ct: <base64 ciphertext>, e?: <key epoch> }
  *    The content fields live inside the ciphertext as one JSON payload.
  *    Base64 STRINGS on purpose: Dexie's liveQuery cache does not
  *    preserve Uint8Array fields.
@@ -13,6 +13,13 @@
  *    Its own envelope beside the blob, under its own AAD, and left
  *    sealed on reads (readSideField). A bundle without the field keeps
  *    the envelope on every write and still opens the row.
+ *  - The key epoch `e` (keyRing.ts) sits inside each envelope, beside `n`
+ *    and `ct`, never at the top of the row: the update path hands mutate a
+ *    merged row with a stale `sv` and no blob, and the blob decides. No `e`
+ *    is epoch 1, so an account that never changed its phrase writes every
+ *    envelope as before. A reader opens each envelope with the key of its
+ *    own epoch, so a row sealed half under one epoch and half under another
+ *    (a re-seal cut short) still opens.
  *  - Bytes tables (imageCache, attachmentCache):
  *      sv: 1, sealed: { n: Uint8Array, ct: Uint8Array }
  *    The data bytes seal RAW - a JSON detour would multiply a 50 MB
@@ -73,6 +80,7 @@ import {
   base64ToBytes,
 } from '@notes/shared';
 import { localDataKeyCopy, onLocalDataKeyCleared } from './localKey';
+import { currentKeyEpoch, epochMarker, epochOf, holdsEpoch, KeyEpochUnknown, openWithRing, openWithRingAt } from './keyRing';
 import { isDemoMode } from './demo';
 import { logAuthEvent } from './authDiag';
 
@@ -81,8 +89,8 @@ const AAD_PREFIX = 'pn-local-v1';
 
 type RawRow = Record<string, unknown> & {
   sv?: number;
-  sealed?: { n: unknown; ct: unknown };
-  metaSealed?: { n: string; ct: string };
+  sealed?: { n: unknown; ct: unknown; e?: unknown };
+  metaSealed?: { n: string; ct: string; e?: unknown };
 };
 
 interface TableSealConfig {
@@ -120,6 +128,8 @@ const SEALED_TABLES: Record<string, TableSealConfig> = {
   editorDocCache: { pk: 'noteId', aad: 'editorDocCache', mode: 'json', fields: ['body', 'json'] },
   imageCache: { pk: 'id', aad: 'img', mode: 'bytes', bytesField: 'data' },
   attachmentCache: { pk: 'id', aad: 'att', mode: 'bytes', bytesField: 'data', jsonField: 'meta' },
+  // The text a sync pull replaced (replacedCopies.ts): the note's own fields.
+  replacedCopies: { pk: 'id', aad: 'replaced', mode: 'json', fields: ['title', 'body', 'tags', 'trackers'] },
 };
 
 /** Thrown when a sealed row is read and no usable key is registered. */
@@ -127,6 +137,57 @@ export class LocalSealKeyMissing extends Error {
   constructor() {
     super('sealed row read with no local data key registered');
     this.name = 'LocalSealKeyMissing';
+  }
+}
+
+/**
+ * Thrown when a sealed row names a key epoch this device holds no key for
+ * (keyRing.ts). A missing key, not a damaged row: every caller that waits
+ * for a key waits for this one too, and no read drops the row from a list,
+ * so nothing that counts or scans the rows can act on a shorter list.
+ */
+export class LocalSealEpochUnknown extends LocalSealKeyMissing {
+  constructor(table: string, id: unknown) {
+    super();
+    this.name = 'LocalSealEpochUnknown';
+    this.message = `sealed row of an unknown key epoch: ${table}/${String(id)}`;
+  }
+}
+
+/** Open one envelope with the local key of its epoch. A missing current key
+ *  throws LocalSealKeyMissing, an epoch this device does not hold throws
+ *  LocalSealEpochUnknown, and anything else is the decrypt error itself. */
+function openLocal<T>(table: string, id: unknown, marker: unknown, open: (key: Uint8Array) => T): T {
+  const key = requireKey();
+  try {
+    const opened = openWithRingAt('local', key, open, epochOf(marker));
+    if (opened.epoch !== currentKeyEpoch()) noteStaleRead();
+    return opened.value;
+  } catch (err) {
+    if (err instanceof KeyEpochUnknown) throw new LocalSealEpochUnknown(table, id);
+    throw err;
+  } finally {
+    key.fill(0);
+  }
+}
+
+// A read opened an envelope with the key of an earlier epoch: the row is
+// sealed under a key the background pass replaces. localSweep.ts listens and
+// starts the re-seal sweep, so old rows that are read re-seal soon (lazy on
+// read), not only at the next session's sweep.
+// Spec: docs/internal/plans/phrase-change.md (6.4, item 1)
+let staleReadListener: (() => void) | null = null;
+
+/** The re-seal sweep's hook for a read that needed a ring key. */
+export function onStaleSealRead(cb: (() => void) | null): void {
+  staleReadListener = cb;
+}
+
+function noteStaleRead(): void {
+  try {
+    staleReadListener?.();
+  } catch {
+    /* the read itself never fails over the notice */
   }
 }
 
@@ -242,7 +303,7 @@ function sealSideField(cfg: TableSealConfig, row: RawRow): RawRow {
   const key = requireKey();
   try {
     const { ciphertext, nonce } = encryptJsonAad(value, key, sideAad(cfg, row[cfg.pk]));
-    out[sideSlot(f)] = { n: bytesToBase64(nonce), ct: bytesToBase64(ciphertext) };
+    out[sideSlot(f)] = { n: bytesToBase64(nonce), ct: bytesToBase64(ciphertext), ...epochMarker() };
   } finally {
     key.fill(0);
   }
@@ -264,7 +325,7 @@ function sealJsonPayload(
   key.fill(0);
   const n = bytesToBase64(nonce);
   const ct = bytesToBase64(ciphertext);
-  const out: RawRow = { ...row, sv: SEAL_VERSION, sealed: { n, ct } };
+  const out: RawRow = { ...row, sv: SEAL_VERSION, sealed: { n, ct, ...epochMarker() } };
   for (const f of cfg.fields!) delete out[f];
   if (cfg.fenceDirty && out.dirty === 1) out.dirty = 2;
   memoSet(table, row[cfg.pk], n, ct, payload);
@@ -278,14 +339,13 @@ function openJsonPayload(table: string, cfg: TableSealConfig, row: RawRow): Reco
   // nonce must fail like any tamper, never be papered over by a cache.
   const cached = memo.get(memoKey(table, row[cfg.pk]));
   if (cached && cached.n === n && cached.ct === ct) return cached.payload;
-  const key = requireKey();
   try {
-    const payload = decryptJsonAad<Record<string, unknown>>(
+    const payload = openLocal(table, row[cfg.pk], row.sealed!.e, (key) => decryptJsonAad<Record<string, unknown>>(
       base64ToBytes(row.sealed!.ct as string),
       base64ToBytes(n),
       key,
       aadFor(cfg, row[cfg.pk]),
-    );
+    ));
     // A payload that decrypts but does not fit this table's shape is a
     // read failure, never a bag of foreign fields spread onto the row.
     if (
@@ -301,8 +361,6 @@ function openJsonPayload(table: string, cfg: TableSealConfig, row: RawRow): Reco
   } catch (err) {
     if (err instanceof LocalSealKeyMissing) throw err;
     throw new LocalSealReadError(table, row[cfg.pk], err);
-  } finally {
-    key.fill(0);
   }
 }
 
@@ -316,11 +374,11 @@ function sealBytesRow(cfg: TableSealConfig, row: RawRow): RawRow {
     const out: RawRow = { ...row, sv: SEAL_VERSION };
     const data = row[cfg.bytesField!] as Uint8Array;
     const { ciphertext, nonce } = encryptBytesAad(data, key, aadFor(cfg, row[cfg.pk]));
-    out.sealed = { n: nonce, ct: ciphertext };
+    out.sealed = { n: nonce, ct: ciphertext, ...epochMarker() };
     delete out[cfg.bytesField!];
     if (cfg.jsonField && cfg.jsonField in row) {
       const meta = encryptJsonAad(row[cfg.jsonField!], key, aadFor(cfg, row[cfg.pk]));
-      out.metaSealed = { n: bytesToBase64(meta.nonce), ct: bytesToBase64(meta.ciphertext) };
+      out.metaSealed = { n: bytesToBase64(meta.nonce), ct: bytesToBase64(meta.ciphertext), ...epochMarker() };
       delete out[cfg.jsonField!];
     }
     return out;
@@ -330,32 +388,31 @@ function sealBytesRow(cfg: TableSealConfig, row: RawRow): RawRow {
 }
 
 function unsealBytesRow(table: string, cfg: TableSealConfig, row: RawRow): RawRow {
-  const key = requireKey();
+  const id = row[cfg.pk];
   try {
     const out: RawRow = { ...row };
-    out[cfg.bytesField!] = decryptBytesAad(
+    out[cfg.bytesField!] = openLocal(table, id, row.sealed!.e, (key) => decryptBytesAad(
       row.sealed!.ct as Uint8Array,
       row.sealed!.n as Uint8Array,
       key,
-      aadFor(cfg, row[cfg.pk]),
-    );
+      aadFor(cfg, id),
+    ));
     delete out.sealed;
-    if (cfg.jsonField && row.metaSealed) {
-      out[cfg.jsonField!] = decryptJsonAad(
-        base64ToBytes(row.metaSealed.ct),
-        base64ToBytes(row.metaSealed.n),
+    const meta = row.metaSealed;
+    if (cfg.jsonField && meta) {
+      out[cfg.jsonField!] = openLocal(table, id, meta.e, (key) => decryptJsonAad(
+        base64ToBytes(meta.ct),
+        base64ToBytes(meta.n),
         key,
-        aadFor(cfg, row[cfg.pk]),
-      );
+        aadFor(cfg, id),
+      ));
       delete out.metaSealed;
     }
     delete out.sv;
     return out;
   } catch (err) {
     if (err instanceof LocalSealKeyMissing) throw err;
-    throw new LocalSealReadError(table, row[cfg.pk], err);
-  } finally {
-    key.fill(0);
+    throw new LocalSealReadError(table, id, err);
   }
 }
 
@@ -423,13 +480,16 @@ export function readSideField(table: string, row: object): unknown {
   if (!cfg || !f) return undefined;
   const r = row as RawRow;
   if (r[f] !== undefined) return r[f];
-  const env = r[sideSlot(f)] as { n?: unknown; ct?: unknown } | undefined;
+  const env = r[sideSlot(f)] as { n?: unknown; ct?: unknown; e?: unknown } | undefined;
   if (!env || typeof env.n !== 'string' || typeof env.ct !== 'string') return undefined;
+  const { n, ct } = env;
   const key = localDataKeyCopy();
   if (!key) return undefined;
   try {
-    return decryptJsonAad(base64ToBytes(env.ct), base64ToBytes(env.n), key, sideAad(cfg, r[cfg.pk]));
+    return openWithRing('local', key, (k) => decryptJsonAad(base64ToBytes(ct), base64ToBytes(n), k, sideAad(cfg, r[cfg.pk])), epochOf(env.e));
   } catch {
+    // An epoch this device does not hold reads as absent too; the envelope
+    // stays on the row until a write replaces the base.
     logAuthEvent('seal:side-open-failed', { ref: String(r[cfg.pk]).slice(0, 8), message: table });
     return undefined;
   } finally {
@@ -446,6 +506,52 @@ export function unsealRow(table: string, row: RawRow): RawRow {
   const out: RawRow = { ...row, ...payload };
   delete out.sealed;
   return out;
+}
+
+/**
+ * A stored row sealed again under the current local key, or null when there
+ * is nothing to do: a row that is not sealed, sealed writes off (the reader
+ * release), every envelope already of the current epoch, or an envelope of
+ * an epoch this device holds no key for, which waits for its key whole. The
+ * plain fields stay as they are, so `updatedAt`, `syncedNonce` and the dirty
+ * value do not move; the side envelope is opened and sealed again with the
+ * rest. Throws what unsealRow throws for a row that does not open.
+ * Spec: docs/internal/plans/phrase-change.md (6.4, item 1)
+ */
+export function resealRow(table: string, row: RawRow): RawRow | null {
+  if (!resealPending(table, row)) return null;
+  const cfg = SEALED_TABLES[table]!;
+  const now = currentKeyEpoch();
+  const side = cfg.sideField ? (row[sideSlot(cfg.sideField)] as { e?: unknown } | undefined) : undefined;
+  const plain = unsealRow(table, row);
+  if (cfg.sideField && side && epochOf(side.e) !== now) {
+    const value = readSideField(table, row);
+    // A side envelope that does not open stays as it is: the field is
+    // advisory, and the next write of the base replaces it.
+    if (value !== undefined) {
+      plain[cfg.sideField] = value;
+      delete plain[sideSlot(cfg.sideField)];
+    }
+  }
+  return sealRow(table, plain);
+}
+
+/** True when resealRow would seal the row again: sealed writes on, and an
+ *  envelope an earlier epoch sealed whose key this device holds, with every
+ *  stale envelope's key held. Reads the markers only, no crypto. */
+export function resealPending(table: string, row: RawRow): boolean {
+  const cfg = SEALED_TABLES[table];
+  if (!cfg || !sealedWrites || !isSealedRow(row)) return false;
+  const now = currentKeyEpoch();
+  const side = cfg.sideField ? (row[sideSlot(cfg.sideField)] as { e?: unknown } | undefined) : undefined;
+  const envelopes = [row.sealed, row.metaSealed, side].filter((env): env is { e?: unknown } => !!env && typeof env === 'object');
+  const stale = envelopes.filter((env) => epochOf(env.e) !== now);
+  return stale.length > 0 && stale.every((env) => holdsEpoch(epochOf(env.e)));
+}
+
+/** The tables the seal covers, for the re-seal sweep. */
+export function sealedTableNames(): string[] {
+  return Object.keys(SEALED_TABLES);
 }
 
 /**

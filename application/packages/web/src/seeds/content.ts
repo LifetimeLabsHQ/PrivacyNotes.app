@@ -12,6 +12,7 @@
 
 import { activeLocale, normalizeLocale } from '../i18n';
 import type { SeedDoc, SeedType } from './index';
+import { parseTrackers } from '../noteMarkdown';
 
 /**
  * English: eager WITHIN this lazy chunk. It is the per-field fallback for
@@ -68,19 +69,6 @@ function splitFrontmatter(raw: string): { fields: Record<string, string>; body: 
     fields,
     body: raw.slice(fence[0].length).replace(/^\r?\n/, '').replace(/\n$/, ''),
   };
-}
-
-/** Tracker values ride as one line of JSON, the same shape the export writes. */
-function parseTrackers(raw: string | undefined): Record<string, unknown> | undefined {
-  if (!raw || !raw.trim().startsWith('{')) return undefined;
-  try {
-    const parsed: unknown = JSON.parse(raw.trim());
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return undefined;
-    const obj = parsed as Record<string, unknown>;
-    return Object.keys(obj).length > 0 ? obj : undefined;
-  } catch {
-    return undefined;
-  }
 }
 
 function toDoc(stem: string, raw: string): SeedDoc | null {

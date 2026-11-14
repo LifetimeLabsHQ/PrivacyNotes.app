@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "Tüm ayarlar",
+    "dockWindow": "Yana yerleştir",
+    "dockOtherSide": "Diğer tarafa taşı",
     "fillWindow": "Tüm pencereyi kullan",
     "restoreWindow": "Normal boyuta dön"
   },
@@ -168,6 +170,8 @@
     "peekDark": "Şimdilik koyu temanız gösteriliyor. Ayarları kapattığınızda Auto yeniden sisteminizi izler.",
     "unlockThemes": "Tüm temaları Pro ile aç",
     "startViewTitle": "Açılışta gösterilecek",
+    "reopenLastOpenTitle": "Son öğeyi yeniden aç",
+    "reopenLastOpenDesc": "Uygulama başladığında, çıkarken açık olan öğe karşınıza gelir. Kapalıyken uygulama listeyle, hiçbir şey açık olmadan başlar.",
     "viewTitle": "Öğeleri şu şekilde göster",
     "viewDesc": "Otomatik, ekran genişliğinizi izler.",
     "openInTabsTitle": "Açık öğeyi bir sekmede göster",
@@ -198,6 +202,7 @@
     "linkModifierDesc": "Normal bir tıklama imleci yerleştirir. Dokunmak bağlantıyı yine açar. Yalnızca bu cihazda.",
     "typedSymbolsTitle": "Yazılan sembolleri oklara ve matematik işaretlerine dönüştür",
     "typedSymbolsDesc": "Örneğin -> işareti →, != işareti ≠ ve >= işareti ≥ olur.",
+    "linkSuggestionsDesc": "Bağlantılar, henüz bağlantı vermediğiniz aynı konudaki notları da listeler. Bağlantılar simgesini yalnızca bağlantısı olan notlarda göstermek için bunu kapatın.",
     "confirmTrashTitle": "Silmeden önce sor",
     "confirmTrashDesc": "Bir öğe çöp kutusuna gitmeden önce onay ister.",
     "confirmArchiveTitle": "Arşivlemeden önce sor",
@@ -613,5 +618,18 @@
     "loadError": "Ölü adam düğmesi yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.",
     "confirmTitle": "Ölü adam düğmesi açılsın mı?",
     "confirmBody": "Cihazlarınızdan hiçbiri {{period}} boyunca çevrimiçi olmazsa sunucu şifreli verilerinizi siler. Bu işlem geri alınamaz. Cihazlarınız notlarını tutmaya devam eder."
+  },
+  "onDeviceAi": {
+    "title": "Akıllı bağlantılar",
+    "desc": "Başka kelimelerle veya başka bir dilde yazılmış olsalar bile aynı anlamdaki notları bulur. Yalnızca bu cihazda çalışan çevrimdışı yapay zekâyı (<model>bekko-static</model>) kullanır.",
+    "on": "Açık. Öneriler aynı anlamdaki notları da içerir. Çevrimdışı yapay zekâ bu cihazda {{size}} yer kaplar.",
+    "kept": "Kapalı. Çevrimdışı yapay zekâ bu cihazda kalır, bu yüzden yeniden açmak indirme gerektirmez.",
+    "downloadSize": "İndir · {{size}}",
+    "downloadingLabel": "Çevrimdışı yapay zekâ indirmesi",
+    "loading": "Çevrimdışı yapay zekâ yükleniyor",
+    "unavailable": "Demo, çevrimdışı yapay zekâyı indiremez.",
+    "failed": "İndirme tamamlanmadı. Yeniden deneyin.",
+    "remove": "Bu cihazdan kaldır ({{size}})",
+    "howItWorks": "Nasıl çalışır"
   }
 }

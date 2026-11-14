@@ -19,6 +19,7 @@ import {
 import { shouldPromptForAppLock, markAppUnlocked, clearPinUnlock, hasPin } from './pin';
 import { clearPin, phraseMatches } from './pinRecovery';
 import { phraseOwnsThisDevice, switchWouldWipe } from './authStorage';
+import { phraseSignsFor } from './identity';
 import { clearManualLock, lockCurtainIsStale, manualLockArmed, startReLockWatch } from './appReLock';
 import { startTrayMode } from './trayMode';
 import { ninjaKeySupported, startNinjaShortcut } from './ninjaShortcut';
@@ -26,7 +27,7 @@ import { startNinjaHost } from './ninjaHost';
 import { finishLoginStart } from './openAtLogin';
 import { applyPrivacyScreen } from './privacyScreen';
 import { loadLocalSettings, saveLocalSettings } from './userSettings';
-import { hasStoredSession, isTrustedDevice } from './trustStorage';
+import { isTrustedDevice } from './trustStorage';
 import { isDemoMode } from './demo';
 import { detectPlatform, isOpenLinkModifier, warmAuthEdgeFunctions } from './devices';
 import { isApexHost, usesOfficialServer } from './hosts';
@@ -85,6 +86,10 @@ const NotesView = lazy(() =>
 const DeviceLimitModal = lazy(() =>
   import('./DeviceLimitModal').then((m) => ({ default: m.DeviceLimitModal })),
 );
+// The account changed its recovery phrase elsewhere (phrase change, 2.4).
+const PhraseReplacedScreen = lazy(() =>
+  import('./PhraseReplacedScreen').then((m) => ({ default: m.PhraseReplacedScreen })),
+);
 const MoveScreen = lazy(() =>
   import('./MoveScreen').then((m) => ({ default: m.MoveScreen })),
 );
@@ -95,7 +100,7 @@ const MoveScreen = lazy(() =>
 // dedups this against the lazy() load above. On the retired apex a
 // session leads to the MoveScreen, never NotesView - preloading the
 // NotesView chunk there would also poison the retirement metric.
-if (hasStoredSession()) {
+if (hasStoredPhrase()) {
   if (APEX_APP_RETIRED) {
     void import('./MoveScreen');
   } else {
@@ -110,7 +115,7 @@ if (hasStoredSession()) {
 const ShortcutSignInCard = lazy(() => import('./ShortcutOffer').then((m) => ({ default: m.ShortcutSignInCard })));
 
 export default function App() {
-  const { auth, signInWithPhrase, unlockLocally } = useAuth();
+  const { auth, signInWithPhrase, unlockLocally, finishPhraseChangeWithPin } = useAuth();
 
   // Explicit per-language marketing URL (/de, /en, ...). Locale slugs are the
   // public marketing site and stay browsable at that URL for everyone -
@@ -128,7 +133,7 @@ export default function App() {
   // mount): a returning session that just opens /en stays on the browsable
   // marketing page - that visitor is moved on by the landing CTAs instead (the
   // handler passed to Onboarding below).
-  const hadSessionAtMount = useRef(hasStoredSession());
+  const hadSessionAtMount = useRef(hasStoredPhrase());
   useEffect(() => {
     if (
       marketingSlug &&
@@ -243,7 +248,7 @@ export default function App() {
   // local notes are confirmed, so the goal is to get OFF this screen as
   // fast as possible. The typewriter screen still covers the slow path
   // (first sync on a fresh device).
-  const hasSession = hasStoredSession();
+  const hasSession = hasStoredPhrase();
   // Native apps hold the loading screen through the whole auth-resolve
   // window (even with no stored phrase) so an incoming OAuth session
   // restore doesn't flash the onboarding auth card first. Web keeps the
@@ -441,9 +446,19 @@ export default function App() {
     // phrase sat wrapped, web origin only), fall through to
     // onboarding, which has the widget. Deliberate - not worth a
     // challenge on every lock-screen unlock.
-    const result = await signInWithPhrase(phrase, isTrustedDevice());
+    // An unlock is no sign-in made by hand: a device the owner removed is
+    // signed out, not brought back (register-device `reactivate`).
+    const result = await signInWithPhrase(phrase, isTrustedDevice(), false, undefined, false);
     if (result.ok) {
       if (unlockRecoverRef.current) await applyPinRecovery(phrase);
+      unlockPhraseRef.current = null;
+      setUnlockSignIn('idle');
+      setLocked(false);
+      return;
+    }
+    // The account replaced the phrase this lock opened: the person passed
+    // the lock, and the screen that asks for the new phrase takes over.
+    if (result.phraseReplaced) {
       unlockPhraseRef.current = null;
       setUnlockSignIn('idle');
       setLocked(false);
@@ -482,13 +497,26 @@ export default function App() {
     // holder into their own account and takes the local vault with it on the
     // owner-mismatch wipe. Signing in as somebody else stays available from
     // the signed-out screen, where it is the deliberate act it looks like.
+    // Over the screen of a replaced phrase, the new phrase belongs here too,
+    // and only the server can say so: this device has no record of it yet.
+    // A cold start asks the server too, once the offline test says no: an
+    // adopted device whose record went missing still takes its current phrase.
     const belongsHere =
       auth.status === 'authenticated'
         ? phraseMatches(phrase, auth.phrase)
-        : await phraseOwnsThisDevice(phrase);
+        : auth.status === 'phrase_replaced' && auth.pubkey !== null
+          ? await phraseSignsFor(phrase, auth.pubkey, true)
+          : await phraseOwnsThisDevice(phrase, true);
     if (!belongsHere) return false;
     markAppUnlocked();
     unlockRecoverRef.current = recover;
+    // The curtain was up over the screen of a replaced phrase: lift it, and
+    // that screen asks for the new phrase. Opening the vault with the
+    // replaced one would only meet the change again.
+    if (auth.status === 'phrase_replaced') {
+      setLocked(false);
+      return true;
+    }
     if (auth.status === 'authenticated') {
       if (recover) await applyPinRecovery(phrase);
       setLocked(false);
@@ -515,7 +543,7 @@ export default function App() {
       // own error reporting from here. signInWithPhrase skips the phrase
       // persist while the lock is armed, so this cannot write the phrase
       // back to disk and undo the lock.
-      void signInWithPhrase(phrase, isTrustedDevice());
+      void signInWithPhrase(phrase, isTrustedDevice(), false, undefined, false);
       return true;
     }
     // Nothing local to render (a wiped or brand-new device), so the
@@ -655,8 +683,10 @@ export default function App() {
         // hash, for a device that has a PIN but no wrap (Lock app with the app
         // lock off). The notes are already open behind it; this is the same
         // UI-only gate as the idle re-lock.
-        onPinVerified={auth.status === 'authenticated' ? () => { markAppUnlocked(); setLocked(false); } : undefined}
+        // Over the screen of a replaced phrase too: it opens no notes.
+        onPinVerified={auth.status === 'authenticated' || auth.status === 'phrase_replaced' ? () => { markAppUnlocked(); setLocked(false); } : undefined}
         onWrapUpgraded={applyPinWrapUpgrade}
+        onPendingPhraseChange={finishPhraseChangeWithPin}
         signInState={unlockSignIn}
         onRetrySignIn={() => {
           if (unlockPhraseRef.current) void runUnlockSignIn(unlockPhraseRef.current);
@@ -722,6 +752,10 @@ export default function App() {
     // Free-tier device cap hit - block the whole app until the user
     // either revokes a device or signs out. No notes rendered behind it.
     screen = <DeviceLimitModal />;
+  } else if (auth.status === 'phrase_replaced') {
+    // The account changed its recovery phrase on another device. No notes
+    // rendered behind it and nothing wiped: the screen asks for the new phrase.
+    screen = <PhraseReplacedScreen />;
   } else if (APEX_APP_RETIRED && !legacyNotesOpen) {
     // Apex retirement: a signed-in apex session gets the move screen,
     // not the notes app. See the constant above for the full story.

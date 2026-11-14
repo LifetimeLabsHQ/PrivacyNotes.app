@@ -393,3 +393,15 @@ export function mountTypewriter(host: HTMLElement, opts: {
     },
   };
 }
+
+/** Whether a set of lines starts paused: the device's saved choice under
+ *  `key`, or with none, the reduced-motion setting. */
+export function linesStartPaused(key: string): boolean {
+  try {
+    const saved = localStorage.getItem(key);
+    if (saved !== null) return saved === '1';
+  } catch {
+    /* storage refused: fall through to the motion setting */
+  }
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+}

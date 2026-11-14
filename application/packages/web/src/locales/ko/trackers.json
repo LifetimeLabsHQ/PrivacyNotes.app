@@ -7,6 +7,7 @@
     "sleep": "수면",
     "sleepScore": "수면 점수",
     "heartRate": "심박수",
+    "bloodPressure": "혈압",
     "activity": "활동",
     "medication": "복약",
     "meds": "약",
@@ -24,6 +25,7 @@
   "units": {
     "hoursSuffix": "시간",
     "bpm": "bpm",
+    "mmHg": "mmHg",
     "kg": "kg",
     "lb": "lb",
     "steps_other": "걸음",
@@ -112,6 +114,10 @@
   },
   "heartRate": {
     "prompt": "평균 심박수"
+  },
+  "bloodPressure": {
+    "systolic": "최고 혈압 (수축기)",
+    "diastolic": "최저 혈압 (이완기)"
   },
   "activity": {
     "prompt": "오늘 활동량은요?",
@@ -224,11 +230,13 @@
   "custom": {
     "yes": "네",
     "no": "아니요",
+    "unknownType": "이 트래커를 쓰려면 더 새로운 버전의 앱이 필요해요.",
     "typeLabels": {
       "scale10": "척도 (0-10)",
       "scale5": "척도 (0-5)",
       "slider100": "점수 (0-100)",
       "number": "숫자",
+      "pair": "숫자 두 개",
       "yesno": "네 / 아니요"
     }
   },
@@ -244,6 +252,7 @@
     "medicationCard": "복약 카드",
     "medicationCardHelp": "복용할 약이 있는 날에만 이 기기에서 \"약을 드셨나요?\"라고 물어요.",
     "customHelp": "직접 이름을 붙이는 트래커예요. 척도, 숫자, 네 또는 아니요 중에서 골라요. 최대 {{max}}개까지예요.",
+    "customHelpPair": "직접 이름을 붙이는 트래커예요. 척도, 숫자, 숫자 두 개, 네 또는 아니요 중에서 골라요. 최대 {{max}}개까지예요.",
     "yourCustomTrackers": "내 커스텀 트래커",
     "categoryMoodMind": "기분 & 마음",
     "categoryBodyHealth": "몸 & 건강",
@@ -278,7 +287,13 @@
     "preview": "미리 보기",
     "startFromLast": "마지막 기록 기억하기",
     "chooseIcon": "아이콘 선택",
-    "startFromLastHelp": "체중이나 매일 먹는 용량처럼 거의 바뀌지 않는 것에 좋아요."
+    "startFromLastHelp": "체중이나 매일 먹는 용량처럼 거의 바뀌지 않는 것에 좋아요.",
+    "pairFirst": "첫 번째 숫자",
+    "pairSecond": "두 번째 숫자",
+    "pairFirstPlaceholder": "수축기 혈압",
+    "pairSecondPlaceholder": "이완기 혈압",
+    "pairUnit": "단위(선택)",
+    "pairWaiting": "첫 번째 숫자를 입력하면 저장돼요."
   },
   "factors": {
     "prompt": "오늘 하루에는 무엇이 있었어요?",

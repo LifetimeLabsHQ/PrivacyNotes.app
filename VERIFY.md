@@ -55,9 +55,9 @@ You will see more than one host, so here is the complete list of what can appear
 - **`use.privacynotes.app`**, which served the app you are looking at.
 - **`sync.privacynotes.app`**, carrying the ciphertext from tier 1.
 - **`/favicon?domain=...`**, if your note contains a link. To draw the little site icon next to a link, the app asks our proxy for that icon by domain, so the DOMAIN you typed is in that URL. Not the note, not the link's path, just the domain. It is on by default and you can switch it off in Settings under Appearance. The browser extension asks the same proxy for the icons of its vault rows, by domain only, and its own Settings switch it off. Together with the map below, it is the only place where something from your notes leaves the device in readable form.
-- **`maps.privacynotes.app`**, our own map host, in three cases: when you open the window of a place you set on a note; whenever a note with a map you inserted into its text is open; and once for the list of places in your app language, when you open a place window to type a place. The map comes in pieces, so the host learns the area you look at, but never the note, its text or what you type into the place search. The demo calls it the same way. [THREAT_MODEL.md](THREAT_MODEL.md) has the details.
+- **`maps.privacynotes.app`**, our own map host, in four cases: when you open the window of a place you set on a note; whenever a note with a map you inserted into its text is open; once for the list of places in your app language, when you open a place window to type a place; and once for the Smart connections model, if you download it in Settings. The map comes in pieces, so the host learns the area you look at, but never the note, its text or what you type into the place search. The demo calls it the same way. [THREAT_MODEL.md](THREAT_MODEL.md) has the details.
 - **`challenges.cloudflare.com`**, only if the sign-up gate asked you to prove you are human. It is a bot check and it loads only when there is a challenge.
-- **Nothing from a payment processor.** Buying opens a separate checkout page on `privacynotes.app`, so Paddle's script runs there and never in the app you are inspecting. If you want to watch it, do that on the checkout tab; this tab stays clean.
+- **Nothing from a payment processor.** Buying opens a separate checkout page on `privacynotes.app`, so Paddle's script runs there and never in the app you are inspecting. Paying in crypto opens BlockBee's own site from a page of ours that loads no third-party script. If you want to watch it, do that on the checkout tab; this tab stays clean.
 
 No analytics host, no error reporter, and nothing else at all. The desktop and mobile apps do not load Turnstile. That check is harder to fake than the first one, and it takes about the same amount of time.
 
@@ -85,7 +85,7 @@ This step shows what sits on the disk. It does not show what a copy of the whole
 
 ## Tier 2: ten minutes, reading code
 
-About 590 lines decide everything. They are in [`crypto/crypto.ts`](crypto/crypto.ts), and these functions are the whole story:
+About 650 lines decide everything. They are in [`crypto/crypto.ts`](crypto/crypto.ts), and these functions are the whole story:
 
 | Function | What to check |
 | :--- | :--- |

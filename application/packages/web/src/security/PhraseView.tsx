@@ -62,7 +62,10 @@ export function PhraseView({
   hasPin?: boolean;
 }) {
   const { t } = useTranslation('security');
-  const words = phrase.split(' ');
+  const words = phrase.trim().split(/\s+/);
+  // A longer phrase gets a third column and a larger QR, so it keeps the
+  // module size a 12-word QR has at 180 px (measured on the longest words).
+  const long = words.length > 12;
   const [copied, setCopied] = useState(false);
   // The phrase files whose last save failed. A failed native save can leave an
   // empty or partial file, so a file's message stays until that same file
@@ -145,8 +148,8 @@ export function PhraseView({
   async function handleDownloadTxt() {
     const text = buildPhraseFile(phrase, {
       title: t('auth:createPhrase.txtTitle'),
-      oneLine: t('auth:createPhrase.txtOneLine'),
-      footer: t('auth:createPhrase.txtFooter'),
+      oneLine: t('auth:createPhrase.txtOneLine', { count: words.length }),
+      footer: t('auth:createPhrase.txtFooter', { count: words.length }),
     });
     // Direct local save, never navigator.share: the file decrypts the vault.
     const saved = await saveBlob(new Blob([text], { type: 'text/plain' }), PHRASE_FILE_NAME);
@@ -159,7 +162,7 @@ export function PhraseView({
         <div className="rounded-md border border-divider bg-track p-3 text-body leading-relaxed text-pn flex items-start gap-2.5">
           <Warning aria-hidden="true" className="shrink-0 mt-0.5 text-warning" />
           <span>
-            <Trans i18nKey="security:phraseView.calloutWords" components={{ strong: <strong /> }} />
+            <Trans i18nKey="security:phraseView.calloutWords" count={words.length} components={{ strong: <strong /> }} />
           </span>
         </div>
       )}
@@ -170,7 +173,7 @@ export function PhraseView({
           tone="warning"
           glyph={EyeSlash}
           heading={t('phraseView.sealedHeading')}
-          body={t('phraseView.sealedBody')}
+          body={t('phraseView.sealedBody', { count: words.length })}
           actionLabel={t('phraseView.sealedReveal')}
           footnote={hasPin ? t('phraseView.sealedFootnotePin') : t('phraseView.sealedFootnote')}
           onReveal={() => setSealed(false)}
@@ -182,7 +185,7 @@ export function PhraseView({
            reader is just as entitled to be asked about first. */
         <>
           {/* Words first: full-width 2-column grid so longer words never clip */}
-          <div dir="ltr" className="grid grid-cols-2 gap-1.5"> {/* rtl-ok: BIP-39 phrase is English, order is safety-critical, always LTR */}
+          <div dir="ltr" className={`grid gap-1.5 ${long ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'}`}> {/* rtl-ok: BIP-39 phrase is English, order is safety-critical, always LTR */}
             {words.map((w, i) => (
               <div
                 key={i}
@@ -263,7 +266,7 @@ export function PhraseView({
               ref={qrWrapperRef}
               className="flex items-center justify-center bg-white p-2 rounded-lg border border-divider dark:border-transparent"
             >
-              <QRCodeCanvas value={buildSignInUrl(phrase)} size={180} level="M" marginSize={4} />
+              <QRCodeCanvas value={buildSignInUrl(phrase)} size={long ? 240 : 180} level="M" marginSize={4} />
             </div>
           </div>
 

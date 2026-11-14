@@ -1,5 +1,5 @@
 import { withMfaAwareTimeout } from './mfaStep';
-import { useState, useEffect, useRef, type ReactNode } from 'react';
+import { lazy, Suspense, useState, useEffect, useRef, type ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { generatePhrase, isValidPhrase } from '@notes/shared';
 import { ArrowLeft, ArrowRight, CaretDown, Check, Copy, FileText, KeyReturn, Lock, Password, QrCode, Scales, Scan, Upload, Warning } from './icons';
@@ -23,15 +23,13 @@ import { LandingPage, FX_CSS } from './LandingPage';
 import { LogoIcon } from './LogoIcon';
 import { Brand } from './Brand';
 import { PrivacyLadder } from './PrivacyLadder';
+import { PHRASE_CHANGE_PREVIEW } from './phraseLaunch';
 import { Badge } from './ui';
 import { isImeComposing } from './imeComposing';
-import { AppleIcon, GithubIcon, GoogleIcon } from './providerIcons';
+import { AppleIcon, GithubIcon, GoogleIcon, PROVIDER_CONTINUE_KEY, PROVIDER_ORDER } from './providerIcons';
 
 /** Native (Tauri) build - desktop or mobile wrapper, not the web app. */
 const IS_DESKTOP = detectPlatform() !== 'web';
-
-/** Native iOS app: surface Sign in with Apple above Google (App Store expectation). */
-const IS_IOS = detectPlatform() === 'ios';
 
 type Mode = 'choose' | 'create' | 'import' | 'signin';
 
@@ -389,7 +387,9 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
     // Trust stays as this device already had it: the phrase is on disk
     // because a previous sign-in put it there, so carrying on is not a new
     // trust decision. A failure leaves the offer in place and says why.
-    const ok = await signInWithPhrase(resumable, isTrustedDevice());
+    // The stored phrase, not one typed: a device the owner removed is signed
+    // out rather than brought back (register-device `reactivate`).
+    const ok = await signInWithPhrase(resumable, isTrustedDevice(), false, undefined, false);
     setResumeBusy(false);
     if (!ok) setOauthError(t('chooseMode.resumeFailed'));
   }
@@ -590,15 +590,8 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
   );
 }
 
-/**
- * Sign-in order. Native iOS surfaces Sign in with Apple first (App Store
- * expectation); everywhere else Google leads. GitHub is last on both, and
- * `OAuthProvider` keys the map so adding a fourth provider is one entry
- * here plus one label in the catalog.
- */
-const OAUTH_ORDER: readonly OAuthProvider[] = IS_IOS
-  ? ['apple', 'google', 'github']
-  : ['google', 'apple', 'github'];
+/** Sign-in order: one list for every screen that offers the providers. */
+const OAUTH_ORDER = PROVIDER_ORDER;
 
 const OAUTH_META: Record<OAuthProvider, {
   Icon: () => ReactNode;
@@ -606,9 +599,9 @@ const OAUTH_META: Record<OAuthProvider, {
   /** The brand, printed untranslated in every language. */
   name: string;
 }> = {
-  google: { Icon: GoogleIcon, labelKey: 'chooseMode.continueGoogle', name: 'Google' },
-  apple: { Icon: AppleIcon, labelKey: 'chooseMode.continueApple', name: 'Apple' },
-  github: { Icon: GithubIcon, labelKey: 'chooseMode.continueGithub', name: 'GitHub' },
+  google: { Icon: GoogleIcon, labelKey: PROVIDER_CONTINUE_KEY.google, name: 'Google' },
+  apple: { Icon: AppleIcon, labelKey: PROVIDER_CONTINUE_KEY.apple, name: 'Apple' },
+  github: { Icon: GithubIcon, labelKey: PROVIDER_CONTINUE_KEY.github, name: 'GitHub' },
 };
 
 /**
@@ -647,6 +640,9 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
   const { t } = useTranslation('auth');
   const { completeCustodyChoice } = useAuth();
   const [choice, setChoice] = useState<'custodial' | 'self-custody'>('custodial');
+  // The phrase length, for self-custody only: a custodial person never
+  // writes the phrase down, so the default 12 words serve them.
+  const [words, setWords] = useState<12 | 24>(12);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const provider = useSessionProvider();
@@ -656,7 +652,7 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
       // Generate phrase and authenticate, then show backup screen.
       setBusy(true);
       setError(null);
-      const result = await completeCustodyChoice('self-custody');
+      const result = await completeCustodyChoice('self-custody', words);
       setBusy(false);
       if (!result.ok) {
         setError(result.error);
@@ -771,6 +767,9 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
           </div>
         </div>
       </button>
+      {choice === 'self-custody' && PHRASE_CHANGE_PREVIEW && (
+        <Suspense fallback={null}><PhraseLengthChoice words={words} onChange={setWords} /></Suspense>
+      )}
 
       {error && (
         <p className="text-body text-danger">{error}</p>
@@ -799,6 +798,12 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
   );
 }
 
+/**
+ * The length choice of a new account (security/PhraseLengthChoice.tsx), loaded
+ * only when it shows: onboarding is on the boot path, and before launch only a
+ * dev build shows the choice (phraseLaunch.ts).
+ */
+const PhraseLengthChoice = lazy(() => import('./security/PhraseLengthChoice').then((m) => ({ default: m.PhraseLengthChoice })));
 
 function TrustDeviceCheckbox({
   trustDevice,
@@ -838,7 +843,7 @@ function CreatePhrase({
   onTrustDeviceChange: (v: boolean) => void;
 }) {
   const { t } = useTranslation('auth');
-  const [phrase] = useState(() => generatePhrase());
+  const [phrase, setPhrase] = useState(() => generatePhrase());
   const [confirmed, setConfirmed] = useState(false);
   const [copied, setCopied] = useState(false);
   // The phrase files whose last save failed. A failed native save can leave an
@@ -848,6 +853,16 @@ function CreatePhrase({
   const qrWrapperRef = useRef<HTMLDivElement | null>(null);
 
   const words = phrase.split(' ');
+
+  // A new phrase of the picked length, in place: nothing was saved under the
+  // one on screen, so what the person confirmed or saved starts over.
+  function switchLength(length: 12 | 24) {
+    if (length === words.length) return;
+    setPhrase(generatePhrase(length));
+    setConfirmed(false);
+    setCopied(false);
+    setFailedFiles(new Set());
+  }
 
   async function copyPhrase() {
     try {
@@ -877,8 +892,8 @@ function CreatePhrase({
   async function handleDownloadTxt() {
     const text = buildPhraseFile(phrase, {
       title: t('createPhrase.txtTitle'),
-      oneLine: t('createPhrase.txtOneLine'),
-      footer: t('createPhrase.txtFooter'),
+      oneLine: t('createPhrase.txtOneLine', { count: phrase.split(' ').length }),
+      footer: t('createPhrase.txtFooter', { count: phrase.split(' ').length }),
     });
     await savePhraseFile(new Blob([text], { type: 'text/plain' }), PHRASE_FILE_NAME);
   }
@@ -906,6 +921,8 @@ function CreatePhrase({
         </span>
       </div>
 
+      {PHRASE_CHANGE_PREVIEW && <Suspense fallback={null}><PhraseLengthChoice words={words.length} onChange={switchLength} /></Suspense>}
+
       {/* Two columns below sm: at 375px a three-column cell holds 69px of
           content, and an eight-letter word plus its index needs 87px, so
           the longest words in the BIP-39 list painted over the cell border
@@ -922,6 +939,7 @@ function CreatePhrase({
           </div>
         ))}
       </div>
+
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <button

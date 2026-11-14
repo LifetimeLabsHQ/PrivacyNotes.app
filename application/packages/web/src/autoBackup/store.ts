@@ -9,6 +9,8 @@
  */
 import { useSyncExternalStore } from 'react';
 import { credentialKey } from '../demo';
+import { createListeners } from '../listeners';
+import { readJson, writeJson } from '../localStore';
 import type { BackupKeep, BackupPeriod, BackupType, PlacedFile } from './plan';
 
 export interface AutoBackupConfig {
@@ -70,41 +72,24 @@ function defaultConfig(phone: boolean): AutoBackupConfig {
     : { on: false, type: 'full', period: 'day', keep: 7, wifiOnly: false, notify: true };
 }
 
-function read<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function write(key: string, value: unknown): void {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    /* Storage refused: the state holds for this session only. */
-  }
-}
-
 let phoneDefault = false;
 let state: AutoBackupState | null = null;
-const listeners = new Set<() => void>();
+const { subscribe, notify } = createListeners();
 
 function load(): AutoBackupState {
   if (state) return state;
-  const stored = read<Partial<AutoBackupConfig> | null>(CONFIG_KEY(), null);
+  const stored = readJson<Partial<AutoBackupConfig> | null>(CONFIG_KEY(), null);
   state = {
     config: { ...defaultConfig(phoneDefault), ...(stored ?? {}) },
-    files: read<PlacedFile[]>(FILES_KEY(), []),
-    log: read<RunLogEntry[]>(LOG_KEY(), []),
+    files: readJson<PlacedFile[]>(FILES_KEY(), []),
+    log: readJson<RunLogEntry[]>(LOG_KEY(), []),
   };
   return state;
 }
 
 function publish(next: AutoBackupState): void {
   state = next;
-  listeners.forEach((cb) => cb());
+  notify();
 }
 
 /** Called once at start, before the first read, so a phone gets phone defaults. */
@@ -124,18 +109,18 @@ export function patchConfig(patch: Partial<AutoBackupConfig>): void {
   for (const key of Object.keys(config) as (keyof AutoBackupConfig)[]) {
     if (config[key] === undefined) delete config[key];
   }
-  write(CONFIG_KEY(), config);
+  writeJson(CONFIG_KEY(), config);
   publish({ ...prev, config });
 }
 
 export function setFiles(files: PlacedFile[]): void {
-  write(FILES_KEY(), files);
+  writeJson(FILES_KEY(), files);
   publish({ ...load(), files });
 }
 
 export function addLog(entry: RunLogEntry): void {
   const log = [entry, ...load().log].slice(0, LOG_MAX);
-  write(LOG_KEY(), log);
+  writeJson(LOG_KEY(), log);
   publish({ ...load(), log });
 }
 
@@ -162,13 +147,6 @@ if (typeof window !== 'undefined') {
     state = null;
     publish(load());
   });
-}
-
-function subscribe(cb: () => void): () => void {
-  listeners.add(cb);
-  return () => {
-    listeners.delete(cb);
-  };
 }
 
 export function useAutoBackupState(): AutoBackupState {

@@ -6,6 +6,7 @@ import { MoodMark } from '../moodMark';
 import { formatDay, weekdayDate, weekdayLabel } from '../intlFormat';
 import { weekdayOf } from '../schedule';
 import { toLocalIso } from '../notesViewUtils';
+import { addDays } from '../MonthGrid';
 import { FIELD_CLASS, IconButton } from '../ui';
 import { visibleInUi } from '../trackerRegistry';
 import type { TrackerDescriptor } from '../wellnessTypes';
@@ -18,12 +19,6 @@ const CHANGE_MIN_DAYS = 3;
 /** A change smaller than this share of the tracker's spread is not named. */
 const CHANGE_MIN_SHARE = 0.05;
 
-function shift(day: string, n: number): string {
-  const d = new Date(`${day}T12:00:00`);
-  d.setDate(d.getDate() + n);
-  return toLocalIso(d);
-}
-
 /** A sentence that opens with a weekday name, which many languages write in lowercase, still opens with a capital. */
 function upperFirst(text: string): string {
   return text.charAt(0).toLocaleUpperCase() + text.slice(1);
@@ -32,7 +27,7 @@ function upperFirst(text: string): string {
 /** The Monday of the week `day` falls in. */
 function mondayOf(day: string): string {
   const wd = (new Date(`${day}T12:00:00`).getDay() + 6) % 7;
-  return shift(day, -wd);
+  return addDays(day, -wd);
 }
 
 /**
@@ -55,9 +50,9 @@ export function WeekRecap({ model, notes, reflection, onReflectionChange, bare =
   const today = toLocalIso(new Date());
   const [back, setBack] = useState(0);
   const first = model.firstDay;
-  const monday = shift(mondayOf(today), -7 * back);
-  const days = Array.from({ length: 7 }, (_, i) => shift(monday, i));
-  const prevMonday = shift(monday, -7);
+  const monday = addDays(mondayOf(today), -7 * back);
+  const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+  const prevMonday = addDays(monday, -7);
   const canGoBack = first !== null && prevMonday >= mondayOf(first);
 
   const byDate = useMemo(() => new Map(model.entries.map((e) => [e.date, e.data])), [model.entries]);
@@ -78,7 +73,7 @@ export function WeekRecap({ model, notes, reflection, onReflectionChange, bare =
     const avgOver = (d: TrackerDescriptor, from: string) => {
       const vals: number[] = [];
       for (let i = 0; i < 7; i++) {
-        const data = byDate.get(shift(from, i));
+        const data = byDate.get(addDays(from, i));
         const v = data ? d.read(data) : undefined;
         if (typeof v === 'number') vals.push(v);
       }

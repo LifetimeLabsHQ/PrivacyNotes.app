@@ -28,6 +28,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { detectPlatform, type Platform } from './devices';
+import { createListeners } from './listeners';
 
 declare global {
   interface Window {
@@ -148,14 +149,7 @@ async function invokeNative(command: string, enabled: boolean): Promise<void> {
   }
 }
 
-const listeners = new Set<() => void>();
-
-function subscribe(cb: () => void): () => void {
-  listeners.add(cb);
-  return () => {
-    listeners.delete(cb);
-  };
-}
+const { subscribe, notify } = createListeners();
 
 /** Flip the capture block on this device and push it at once. */
 export function setCaptureBlock(on: boolean): void {
@@ -166,7 +160,7 @@ export function setCaptureBlock(on: boolean): void {
     /* Storage refused: the switch holds for this session only. */
   }
   applyPrivacyScreen(lastLock);
-  listeners.forEach((cb) => cb());
+  notify();
 }
 
 export function useCaptureBlock(): boolean {

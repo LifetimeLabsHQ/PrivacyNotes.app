@@ -12,7 +12,7 @@ Tohle je naše opravdová databáze v Curychu, ne kresba. Tvoje poznámka jde do
 
 ## Co se stane, když napíšeš poznámku
 
-1. Tvoje fráze z 12 slov se změní v klíč. Děje se to na tvém zařízení.
+1. Tvoje obnovovací fráze se změní v klíč. Děje se to na tvém zařízení.
 2. Poznámka se tím klíčem zašifruje, na tvém zařízení. Tak se ukládá na tvůj vlastní disk a tak putuje k nám.
 3. Dostaneme zašifrovanou poznámku a uložíme ji. Obrázek nahoře ukazuje, jak to vypadá.
 4. Jakékoli zařízení se stejnou frází vyrobí stejný klíč a poznámku otevře.

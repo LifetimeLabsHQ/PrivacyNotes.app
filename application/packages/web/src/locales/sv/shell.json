@@ -301,8 +301,10 @@
     "dayWithMood": "{{date}}, humör {{mood}}",
     "previousWeek": "Föregående vecka",
     "nextWeek": "Nästa vecka",
-    "showMonth": "{{month}}, visa hela månaden",
-    "showWeek": "{{month}}, visa en vecka"
+    "pickMonth": "{{month}}, välj månad och år",
+    "pickMonthTip": "Välj månad och år",
+    "showWholeMonth": "Visa hela månaden",
+    "showOneWeek": "Visa en vecka"
   },
   "contextMenu": {
     "newNote": "Ny anteckning",
@@ -548,6 +550,13 @@
     "itemNameParts": "Mellannamn, prefix, suffix",
     "itemPhonetic": "Fonetiskt namn",
     "itemNote": "Anteckning",
+    "addSection": "Lägg till avsnitt",
+    "sectionName": "Avsnittets namn",
+    "removeSection": "Ta bort avsnitt",
+    "removeSectionNamed": "Ta bort avsnittet {{name}}",
+    "addFieldTo": "Lägg till fält i {{name}}",
+    "addFieldToSection": "Lägg till fält i det här avsnittet",
+    "hiddenFieldsNote": "Dolda värden förblir maskerade tills du visar dem, och sökningen hittar dem aldrig.",
     "labels": {
       "mobile": "Mobil",
       "home": "Hem",
@@ -676,6 +685,8 @@
     },
     "birthdays": "Födelsedagar",
     "contactDate": "{{name}}: {{label}}",
+    "birthdayAge_one": "{{name}} fyller {{count}}",
+    "birthdayAge_other": "{{name}} fyller {{count}}",
     "dragEnd": "Dra för att ändra slutdagen",
     "previousDay": "Föregående dag",
     "nextDay": "Nästa dag",

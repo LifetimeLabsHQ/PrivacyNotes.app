@@ -43,7 +43,7 @@ export type SettingEntry = {
   brand?: true;
   options?: readonly string[];
   keywords?: true;
-  shownOn?: 'storeBuild' | 'keyboard' | 'paneLayout' | 'realAccount' | 'desktopApp' | 'captureBlock' | 'commandLine' | 'phoneApp';
+  shownOn?: 'storeBuild' | 'keyboard' | 'paneLayout' | 'realAccount' | 'desktopApp' | 'captureBlock' | 'commandLine' | 'phoneApp' | 'onDeviceAi';
   /** An entry for a whole section: it opens the pane and flashes nothing. */
   isSection?: true;
 };
@@ -160,9 +160,12 @@ const ROW_ENTRIES: SettingEntry[] = [
   { id: 'import.import', section: 'import', tab: 'import', label: 'importExport:shell.tabImport' },
   keyedImporter('browser-bookmarks', 'importExport:sourceLabel.browserBookmarks'),
   keyedImporter('vcard', 'importExport:sourceLabel.vcard'),
+  importer('anytype', 'Anytype'),
   importer('apple-journal', 'Apple Journal'),
   importer('apple-notes', 'Apple Notes'),
   importer('bear', 'Bear'),
+  importer('daylio', 'Daylio'),
+  importer('diarium', 'Diarium'),
   importer('evernote', 'Evernote'),
   importer('excalidraw', 'Excalidraw'),
   importer('google-calendar', 'Google Calendar'),
@@ -175,8 +178,10 @@ const ROW_ENTRIES: SettingEntry[] = [
   importer('notesnook', 'Notesnook'),
   importer('obsidian', 'Obsidian'),
   importer('obsidian-canvas', 'Obsidian Canvas'),
+  importer('google-journal', 'Google Journal'),
   importer('samsung-notes', 'Samsung Notes'),
   importer('simplenote', 'Simplenote'),
+  importer('siyuan', 'SiYuan'),
   importer('standard-notes', 'Standard Notes'),
   importer('typora', 'Typora'),
   importer('upnote', 'UpNote'),
@@ -203,7 +208,15 @@ const ROW_ENTRIES: SettingEntry[] = [
   { id: 'wellness.doctorReport', section: 'import', tab: 'wellness', label: 'stats:wellness.export.doctorPDF' },
   { id: 'wellness.json', section: 'import', tab: 'wellness', label: 'stats:wellness.export.downloadJSON' },
   { id: 'wellness.csv', section: 'import', tab: 'wellness', label: 'stats:wellness.export.downloadCSV' },
+  importer('1password', '1Password'),
   importer('bitwarden', 'Bitwarden'),
+  importer('dashlane', 'Dashlane'),
+  importer('enpass', 'Enpass'),
+  importer('keepass', 'KeePass'),
+  importer('keepassxc', 'KeePassXC'),
+  importer('lastpass', 'LastPass'),
+  importer('nordpass', 'NordPass'),
+  importer('proton-pass', 'Proton Pass'),
   // The Passwords tab's search words, kept on the row that took its place (#608).
   { ...keyedImporter('browser-passwords', 'importExport:sourceLabel.browserPasswords'), keywords: true },
 
@@ -253,6 +266,7 @@ const ROW_ENTRIES: SettingEntry[] = [
   { id: 'me.dms', section: 'me', tab: 'dms', label: 'settings:dms.tab', keywords: true },
 
   // Appearance
+  { id: 'appearance.reopenLastOpen', section: 'lists', label: 'settings:appearance.reopenLastOpenTitle', keywords: true },
   { id: 'appearance.openInTabs', section: 'lists', label: 'settings:appearance.openInTabsTitle', keywords: true, shownOn: 'paneLayout' },
   { id: 'appearance.mode', section: 'design', label: 'settings:appearance.modeTitle', options: ['settings:appearance.modeAuto', 'settings:appearance.light', 'settings:appearance.dark'], keywords: true },
   { id: 'appearance.theme', section: 'design', label: 'settings:appearance.lightThemes', options: ['settings:appearance.darkThemes'], keywords: true },
@@ -268,6 +282,9 @@ const ROW_ENTRIES: SettingEntry[] = [
   { id: 'appearance.invisibles', section: 'editor', label: 'settings:appearance.invisiblesTitle', keywords: true },
   { id: 'appearance.linkModifier', section: 'editor', tab: 'behavior', label: 'settings:appearance.linkModifierTitle', keywords: true },
   { id: 'appearance.typedSymbols', section: 'editor', tab: 'behavior', label: 'settings:appearance.typedSymbolsTitle', keywords: true },
+  { id: 'appearance.linkSuggestions', section: 'editor', tab: 'behavior', label: 'notes:connections.related', keywords: true },
+  // Behind the release switch in onDeviceAi.ts.
+  { id: 'appearance.smartConnections', section: 'editor', tab: 'behavior', label: 'settings:onDeviceAi.title', keywords: true, shownOn: 'onDeviceAi' },
   { id: 'appearance.noteFont', section: 'editor', label: 'settings:appearance.noteFontTitle', keywords: true },
   { id: 'appearance.nestedNumbers', section: 'editor', label: 'settings:appearance.nestedNumbersTitle', options: ['settings:appearance.nestedNumbersFlat', 'settings:appearance.nestedNumbersOutline'], keywords: true },
   { id: 'appearance.favicons', section: 'lists', label: 'settings:appearance.faviconsTitle', keywords: true },

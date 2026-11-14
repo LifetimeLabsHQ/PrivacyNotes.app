@@ -11,6 +11,7 @@ import { IconUpgrade } from '../UpgradeModal';
 import { hotkeyKeys, hotkeyLabel, isMacPlatform } from '../notesViewUtils';
 import { DESKTOP_APP, keyText } from '../shortcutMatch';
 import { intlLocale } from '../languages';
+import { useIsTouchDevice } from '../useIsMobile';
 
 // Desktop wrapper only (not web, not iOS/Android): the mini footer's lifted
 // bottom padding exists for phone home-indicator/gesture areas, which the
@@ -101,8 +102,12 @@ export function FullFooter({
   handleLockClick: () => void;
 }) {
   const { t } = useTranslation('notes');
+  // A tablet is wide enough for this footer but has no keyboard to press
+  // the new-note keys on, so it shows the word alone (GitHub #743).
+  const touch = useIsTouchDevice();
   return (
-      <footer className="hidden [@media(min-width:768px)_and_(min-height:501px)]:flex shrink-0 items-center border-t border-divider text-compact text-pn-muted">
+      // data-pn-dock-footer: the docked Settings panel ends above it (#741).
+      <footer data-pn-dock-footer className="hidden [@media(min-width:768px)_and_(min-height:501px)]:flex shrink-0 items-center border-t border-divider text-compact text-pn-muted">
         {/* Settings + Sync zone - matches sidebar width. It is a sidebar
             size container too (pn-sidebar in index.css), so a sidebar
             narrower than 230px drops the Settings word for a tip, the way
@@ -157,6 +162,7 @@ export function FullFooter({
                 className="inline-flex items-center gap-2 whitespace-nowrap text-body font-medium text-pn hover:text-accent transition cursor-pointer"
               >
               <span>{t('footer.newNote')}</span>
+              {!touch && (<>
               <span dir="ltr" className="hidden xl:inline-flex items-center gap-1"> {/* rtl-ok: modifier-key sequence never reorders */}
                 {hotkeyKeys.map((k) => (
                   <kbd
@@ -175,6 +181,7 @@ export function FullFooter({
                   ? t(isMacPlatform ? 'footer.newNoteHintMacDesktop' : 'footer.newNoteHintOtherDesktop')
                   : t(isMacPlatform ? 'footer.newNoteHintMac' : 'footer.newNoteHintOther')})
               </span>
+              </>)}
               </button>
             </HoverLabel>
           </div>

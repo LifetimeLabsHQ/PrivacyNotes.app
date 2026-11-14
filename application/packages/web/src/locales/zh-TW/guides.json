@@ -10,6 +10,35 @@
     "otherGuides": "其他匯入指南"
   },
   "guides": {
+    "1password": {
+      "app": "1Password",
+      "title": "匯出你的 1Password 保險庫",
+      "metaTitle": "如何匯出 1Password 保險庫 - PrivacyNotes",
+      "lead": "1Password 應用程式會把你的帳號匯出成一個 .1pux 檔案，PrivacyNotes 會把其中的登入資訊、卡片、筆記與身分變成保險庫項目與筆記。",
+      "sections": [
+        {
+          "h": "從 1Password 匯出",
+          "steps": [
+            "在電腦上開啟 1Password 應用程式並解鎖。",
+            "選擇「File > Export」，並選取你的帳號。",
+            "輸入你的帳號密碼，保持 1PUX 格式並儲存檔案。"
+          ]
+        },
+        {
+          "h": "1PUX 或 CSV",
+          "p": [
+            "請選 1PUX。CSV 匯出只包含登入資訊：沒有卡片、筆記或身分，也沒有自訂欄位。"
+          ]
+        },
+        {
+          "h": "東西會落在哪裡",
+          "p": [
+            "每筆登入資訊都會成為帶有 2FA 金鑰的[保險庫登入資訊](/tw/help/vault)，所以[你的驗證碼可以繼續使用](/tw/help/vault-totp)，額外的網站與自訂欄位也會一併帶過來。卡片會成為卡片，安全筆記或身分則會成為筆記。標籤仍是標籤，巢狀標籤也一樣，最愛項目匯入後會自動釘選，已封存的項目則會進入封存。附加的檔案不會帶過來：請從 1Password 儲存這些檔案，再附加到這裡。",
+            "匯出檔以明文保存你的密碼。匯入後請確認一切都已到齊，再把檔案刪除。"
+          ]
+        }
+      ]
+    },
     "google-calendar": {
       "app": "Google 日曆",
       "title": "匯出你的 Google 日曆",
@@ -159,6 +188,53 @@
         }
       ]
     },
+    "siyuan": {
+      "app": "SiYuan",
+      "title": "匯出你的 SiYuan 筆記",
+      "metaTitle": "如何將 SiYuan 筆記匯出為 Data.zip - PrivacyNotes",
+      "lead": "SiYuan 會把整個工作空間匯出成一個 Data.zip。這個檔案會帶著每個筆記本，連同巢狀文件、標籤、區塊引用、資源與日期一併過來。",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/siyuan-export.webp",
+            "alt": "SiYuan 的「Data migration」對話框，已選取 Data.zip 那一列，並標出其「Export」按鈕。",
+            "width": 1576,
+            "height": 1076
+          },
+          "h": "將工作空間匯出為 Data.zip",
+          "steps": [
+            "在電腦上開啟 SiYuan。",
+            "點按左上角的 SiYuan 選單，選擇「Data migration」。",
+            "在 SiYuan 底下，將指標停在「Data.zip」上，然後點按 Export。",
+            "選擇一個資料夾。SiYuan 會寫出一個 .zip，裡面包含工作空間中的每個筆記本。",
+            "把這個 .zip 原封不動拖進來。"
+          ],
+          "p": [
+            "如果只想搬一個筆記本，請在「Documents」面板中對它按一下右鍵，選擇 Export > 「SiYuan .sy.zip」。我們讀取那個檔案的方式相同。"
+          ]
+        },
+        {
+          "h": "解鎖加密的筆記本並單獨匯出",
+          "p": [
+            "Data.zip 會讓加密的筆記本維持加密，所以我們讀不了。我們會略過它，匯入預覽中會列出它的名稱。請在 SiYuan 中解鎖該筆記本，匯出為「SiYuan .sy.zip」，再把那個檔案也拖進來：這種匯出是可以讀取的。"
+          ]
+        },
+        {
+          "h": "請選 Data.zip，不要選 Markdown",
+          "p": [
+            "Markdown .zip 匯出會保留文字，但會漏掉文件標籤與日期，區塊引用也會寫成純文字或註腳。如果你只有這個，我們也能讀取，而每篇筆記的日期都會是匯入的日期。"
+          ]
+        },
+        {
+          "h": "會帶過來的內容",
+          "p": [
+            "每個筆記本會變成一個資料夾，巢狀文件會變成巢狀資料夾。同時有子文件和自己內文的文件，會變成同名資料夾內的一篇筆記。每篇筆記都會保留標籤，以及 SiYuan 所儲存的建立與更新日期。",
+            "標題、清單、核取清單、引用、附語言的程式碼、保留對齊的表格、數學式、標註、醒目標示與文字顏色都會原樣過來。[區塊引用會變成筆記連結](/tw/help/note-links)，圖片與檔案會匯入你的儲存空間，加了書籤的文件會以已釘選的狀態抵達。",
+            "資料庫會變成只含可見欄位的表格，頁籤會變成可收合的區段，心智圖會變成巢狀清單。閃卡維持純文字，嵌入查詢則以程式碼保留。SiYuan 的匯出不含垃圾桶，所以已刪除的文件會留在它的歷史記錄中。"
+          ]
+        }
+      ]
+    },
     "standard-notes": {
       "app": "Standard Notes",
       "title": "匯出你的 Standard Notes 筆記",
@@ -256,6 +332,29 @@
           "p": [
             "登入項目會成為[保險庫的登入資訊項目](/tw/help/vault)（連同網站圖示），卡片成為卡片項目，SSH 金鑰成為 SSH 金鑰項目，安全筆記與身分則會變成可讀的筆記。Bitwarden 的資料夾對應為標籤，最愛項目抵達時也保持標記。驗證金鑰（TOTP）也會一併帶過來，[你的 2FA 驗證碼可以繼續使用](/tw/help/vault-totp)。",
             "匯出檔以明文保存你的密碼，所以匯入、確認一切到齊之後，請把檔案徹底刪除。進到 PrivacyNotes 之後，一切又重新加密，無論是在你的裝置上，還是傳往伺服器的途中。"
+          ]
+        }
+      ]
+    },
+    "enpass": {
+      "app": "Enpass",
+      "title": "匯出你的 Enpass 保險庫",
+      "metaTitle": "如何匯出 Enpass 保險庫 - PrivacyNotes",
+      "lead": "Enpass 會把保險庫匯出成一個 .json 檔案，PrivacyNotes 會把其中的登入資訊、卡片、筆記與身分變成保險庫項目與筆記。",
+      "sections": [
+        {
+          "h": "從 Enpass 匯出",
+          "steps": [
+            "在電腦上開啟 Enpass 並解鎖。",
+            "選擇「File > Export」，選取保險庫與 .json 格式。",
+            "儲存檔案，然後輸入你的主密碼。每個保險庫要分別匯出。"
+          ]
+        },
+        {
+          "h": "東西會落在哪裡",
+          "p": [
+            "每筆登入資訊都會成為帶有 2FA 金鑰的[保險庫登入資訊](/tw/help/vault)，所以[你的驗證碼可以繼續使用](/tw/help/vault-totp)，額外的網站與自訂欄位也會一併帶過來。卡片會成為卡片，安全筆記或身分則會成為筆記。資料夾會變成標籤，巢狀資料夾也一樣，最愛項目匯入後會自動釘選，已封存的項目則會進入封存。Enpass 垃圾桶中的項目與附加的檔案不會帶過來。",
+            "匯出檔以明文保存你的密碼。匯入後請確認一切都已到齊，再把檔案刪除。"
           ]
         }
       ]
@@ -863,6 +962,332 @@
           "h": "隨時可以再次匯入同一個檔案",
           "p": [
             "第二次匯入會略過你已經有的人。它會先依 ID 比對每張名片，再依姓名加上相同的電話號碼，最後依相同的電子郵件地址。你已經儲存的聯絡人不會被更改，所以你在這裡做的修改都很安全。"
+          ]
+        }
+      ]
+    },
+    "anytype": {
+      "app": "Anytype",
+      "title": "匯出你的 Anytype 空間",
+      "metaTitle": "如何匯出你的 Anytype 空間 - PrivacyNotes",
+      "lead": "Anytype 會把整個空間一次匯出成一個採用 Any-Block JSON 格式的 zip。這個檔案會帶著你的頁面，連同標籤、集合、任務、連結與檔案一併過來。",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/anytype-export.webp",
+            "alt": "Anytype 空間設定的 Export 頁面，已選 Any-Block v1，File Format 為 JSON 與 Zip archive，並開啟 Include files data 與 Include archived objects。",
+            "width": 1576,
+            "height": 800
+          },
+          "h": "將空間匯出為 Any-Block JSON",
+          "steps": [
+            "在電腦上開啟 Anytype，進入你想搬移的空間。",
+            "選擇 File > Export。Anytype 會開啟空間設定的 Export 頁面。較新的版本把空間稱為頻道，所以頁面會顯示「Export Channel」。",
+            "選「Any-Block v1」，並讓 File Format 維持 JSON。",
+            "開啟「Zip archive」、「Include files data」與「Include archived objects」。",
+            "點按「Export data」並選擇一個資料夾。Anytype 會寫出一個以空間名稱與日期命名的 .zip。",
+            "把這個 .zip 原封不動拖進來。"
+          ],
+          "p": [
+            "一次匯出只包含一個空間。如果你的筆記分散在多個空間，請逐一匯出，再依序把 zip 拖進來。"
+          ]
+        },
+        {
+          "h": "請選 Any-Block JSON，不要選 Markdown 或 Protobuf",
+          "p": [
+            "Markdown 匯出會保留文字，但會漏掉底線、顏色、標註、對齊與程式碼語言，也不含集合。如果你只有這個，我們也能讀取，匯入預覽會告訴你漏掉了什麼。",
+            "Any-Block 也提供 Protobuf 檔案格式。它以我們不讀取的二進位形式存放同樣的資料，所以我們請你改用 JSON 匯出。Any-Block v2 被 Anytype 標為預覽版，不是備份。"
+          ]
+        },
+        {
+          "h": "會帶過來的內容",
+          "p": [
+            "頁面、筆記、任務與書籤會變成筆記，並保留標籤以及 Anytype 所儲存的建立與更新日期。Anytype 沒有資料夾，所以集合中的頁面會放進以該集合命名的資料夾，其他頁面則放在最上層。",
+            "標題、清單、核取清單、引用、附語言的程式碼、表格、數學式與 Mermaid 圖表都會原樣過來。切換區塊會變成可收合的區段，標註仍是標註。[頁面之間的連結與提及會變成筆記連結](/tw/help/note-links)，圖片與檔案會匯入你的儲存空間。",
+            "任務會以任務筆記的形式抵達，已完成的會打勾。自訂屬性會以簡短清單寫在筆記頂端。Anytype 回收桶中的頁面會進入你的垃圾桶，你可以在那裡還原或刪除。",
+            "頁面圖示與封面不會帶過來，匯入預覽會告訴你有多少。我的最愛不在匯出之內，所以匯入後請重新釘選這些筆記。"
+          ]
+        }
+      ]
+    },
+    "apple-calendar": {
+      "app": "Apple 行事曆",
+      "title": "匯出你的 Apple 行事曆",
+      "metaTitle": "如何匯出 Apple 行事曆 - PrivacyNotes",
+      "lead": "Mac 上的「行事曆」一次可以把一個日曆匯出成 .ics 檔案，PrivacyNotes 會直接讀取這個檔案。每個日曆會變成一個資料夾。",
+      "sections": [
+        {
+          "h": "從 Mac 上的「行事曆」匯出日曆",
+          "steps": [
+            "開啟「行事曆」，並在左側顯示日曆列表（顯示 > 顯示日曆列表）。",
+            "點選你想帶過來的日曆。",
+            "選擇「檔案 > 輸出 > 輸出⋯」，然後儲存 .ics 檔案。",
+            "對其他想帶過來的日曆重複同樣的步驟。每個日曆都是各自的檔案。"
+          ]
+        },
+        {
+          "h": "哪些內容會跟著過來",
+          "p": [
+            "每個活動都會保留日期、時間與持續時間，全天活動與跨多天的活動也不例外。重複活動會保留重複規則。",
+            "日曆的預設提醒存在「行事曆」的設定裡，而不在活動中，所以匯出檔不會包含它們，檢查步驟會告訴你有多少個即將到來的活動沒有提醒。你為單一活動設定的提醒則會一併過來。再次匯入同一個檔案時，已存在的活動會被略過。"
+          ]
+        }
+      ]
+    },
+    "keepass": {
+      "app": "KeePass",
+      "title": "匯出你的 KeePass 資料庫",
+      "metaTitle": "如何匯出 KeePass 資料庫 - PrivacyNotes",
+      "lead": "KeePass 會把整個資料庫匯出成一個 KeePass XML 檔，PrivacyNotes 會把每一筆項目變成登入資訊或筆記。XML 保留的內容比 CSV 匯出更多。",
+      "sections": [
+        {
+          "h": "從 KeePass 匯出",
+          "steps": [
+            "在 KeePass 中開啟你的資料庫並解鎖。",
+            "選擇「File > Export」。",
+            "選擇「KeePass XML (2.x)」，並儲存 .xml 檔案。"
+          ]
+        },
+        {
+          "h": "請選 XML，不要選 .kdbx",
+          "p": [
+            "你的 .kdbx 資料庫檔案以主金鑰鎖住，PrivacyNotes 無法讀取，如果你把它放進來，匯入時會告訴你這一點。KeePass 的 CSV 匯出也可以使用，但只保留標題、使用者名稱、密碼、網站與備註。"
+          ]
+        },
+        {
+          "h": "東西會落在哪裡",
+          "p": [
+            "有使用者名稱、密碼、網站或 2FA 金鑰的項目會成為[保險庫登入資訊](/tw/help/vault)，其他項目則成為安全筆記。額外的網站與你自訂的欄位都會一併帶過來，受保護的欄位會維持隱藏，到期日則會變成一個欄位。2FA 金鑰也會一併過來，所以[你的驗證碼可以繼續使用](/tw/help/vault-totp)。附加的檔案也會一併帶過來，放在登入資訊的「檔案」區段，或筆記的結尾。群組與標籤會變成標籤。Recycle Bin 中的項目與項目的舊版本不會帶過來。",
+            "匯出檔以明文保存你的密碼。匯入後請確認一切都已到齊，再把檔案刪除。"
+          ]
+        }
+      ]
+    },
+    "keepassxc": {
+      "app": "KeePassXC",
+      "title": "匯出你的 KeePassXC 資料庫",
+      "metaTitle": "如何匯出 KeePassXC 資料庫 - PrivacyNotes",
+      "lead": "KeePassXC 可以把資料庫匯出成 XML 檔或 CSV 檔，PrivacyNotes 兩種都能讀取。XML 匯出會保留 CSV 遺漏的所有內容。",
+      "sections": [
+        {
+          "h": "從 KeePassXC 匯出",
+          "steps": [
+            "在 KeePassXC 中開啟你的資料庫並解鎖。",
+            "選擇「Database > Export > XML File...」。",
+            "確認關於未加密檔案的警告，然後儲存檔案。"
+          ]
+        },
+        {
+          "h": "XML 或 CSV",
+          "p": [
+            "請選 XML。CSV 會保留標題、使用者名稱、密碼、網站、備註、2FA 金鑰、日期與群組，但沒有標籤、自訂欄位、第二個網站、到期日與附加的檔案。你的 .kdbx 檔案本身是鎖住的，PrivacyNotes 無法讀取。"
+          ]
+        },
+        {
+          "h": "東西會落在哪裡",
+          "p": [
+            "有使用者名稱、密碼、網站或 2FA 金鑰的項目會成為[保險庫登入資訊](/tw/help/vault)，其他項目則成為安全筆記。自訂欄位會成為欄位，受保護的欄位會維持隱藏，2FA 金鑰也會一併過來，所以[你的驗證碼可以繼續使用](/tw/help/vault-totp)。附加的檔案也會一併帶過來，放在登入資訊的「檔案」區段，或筆記的結尾。群組與標籤會變成標籤。Recycle Bin 中的項目與項目的舊版本不會帶過來。",
+            "匯出檔以明文保存你的密碼。匯入後請確認一切都已到齊，再把檔案刪除。"
+          ]
+        }
+      ]
+    },
+    "lastpass": {
+      "app": "LastPass",
+      "title": "匯出你的 LastPass 保險庫",
+      "metaTitle": "如何匯出 LastPass 保險庫 - PrivacyNotes",
+      "lead": "LastPass 會把你的保險庫匯出成一個 .csv 檔，PrivacyNotes 會把其中的密碼變成登入資訊，安全筆記則變成筆記或卡片。",
+      "sections": [
+        {
+          "h": "從 LastPass 匯出",
+          "steps": [
+            "在瀏覽器中登入你的 LastPass 保險庫。",
+            "選擇「Advanced options > Export」。",
+            "選擇「Export data for use anywhere」，並以你的主密碼確認。LastPass 會儲存一個 .csv 檔案。"
+          ]
+        },
+        {
+          "h": "東西會落在哪裡",
+          "p": [
+            "每個密碼都會成為帶有 2FA 金鑰的[保險庫登入資訊](/tw/help/vault)，所以[你的驗證碼可以繼續使用](/tw/help/vault-totp)。安全筆記會變成筆記，付款卡片筆記則變成卡片。資料夾會變成標籤，巢狀資料夾也一樣，最愛項目匯入後會自動釘選。檔案中沒有日期，所以每個項目都會以你匯入的那一天為準。",
+            "匯出檔以明文保存你的密碼。匯入後請確認一切都已到齊，再把檔案刪除。"
+          ]
+        }
+      ]
+    },
+    "nordpass": {
+      "app": "NordPass",
+      "title": "匯出你的 NordPass 保險庫",
+      "metaTitle": "如何匯出 NordPass 保險庫 - PrivacyNotes",
+      "lead": "NordPass 會把你的保險庫匯出成一個 .csv 檔，PrivacyNotes 會把其中的密碼、筆記、卡片與個人資訊變成保險庫項目。",
+      "sections": [
+        {
+          "h": "從 NordPass 匯出",
+          "steps": [
+            "開啟 NordPass 並解鎖。",
+            "前往「Settings」，並選擇「Export Items」。",
+            "以你的主密碼確認，然後儲存 .csv 檔案。"
+          ]
+        },
+        {
+          "h": "東西會落在哪裡",
+          "p": [
+            "每個密碼都會成為[保險庫登入資訊](/tw/help/vault)，連同額外的網站與自訂欄位，隱藏的欄位會維持隱藏。筆記會匯入為筆記，卡片匯入為卡片，個人資訊則成為一篇筆記，每項細節各佔一行。每個項目的資料夾會變成標籤。檔案只記錄項目所在的那個資料夾，不包含它上層的資料夾。",
+            "在免費方案中，NordPass 不保存 2FA 金鑰，所以檔案裡沒有。匯出檔以明文保存你的密碼。匯入後請確認一切都已到齊，再把檔案刪除。"
+          ]
+        }
+      ]
+    },
+    "proton-pass": {
+      "app": "Proton Pass",
+      "title": "匯出你的 Proton Pass 保險庫",
+      "metaTitle": "如何匯出 Proton Pass 保險庫 - PrivacyNotes",
+      "lead": "Proton Pass 可以把你的保險庫匯出成 .zip、.csv 或 PGP 加密檔。PrivacyNotes 能讀取 .zip 與 .csv，其中 .zip 保留的內容最多。",
+      "sections": [
+        {
+          "h": "從 Proton Pass 匯出",
+          "steps": [
+            "開啟 Proton Pass，前往「Settings > Export」。",
+            "在「File format」下選擇 ZIP。",
+            "點選「Export」，並以你的 Proton 密碼確認。"
+          ]
+        },
+        {
+          "h": "請選 ZIP，不要選 PGP 加密",
+          "p": [
+            "PGP 加密檔以你的密碼短語鎖住，PrivacyNotes 無法讀取，匯入時會告訴你這一點。.csv 也可以使用，但沒有自訂欄位。"
+          ]
+        },
+        {
+          "h": "東西會落在哪裡",
+          "p": [
+            "每個登入都會成為[保險庫登入資訊](/tw/help/vault)，連同額外的網站、自訂欄位與日期。它的 2FA 金鑰也會一併過來，所以[你的驗證碼可以繼續使用](/tw/help/vault-totp)。當一個項目同時有電子郵件與使用者名稱時，使用者名稱會填入登入資訊，電子郵件則成為一個欄位。筆記會匯入為筆記，卡片匯入為卡片，身分則成為筆記，每項細節各佔一行。每個 hide-my-email 別名都會成為一篇附有地址的筆記，讓你保有「哪個地址給了哪個網站」的清單；只要你的 Proton 帳號仍然有效，Proton 就會繼續轉寄它的郵件。如果有多個保險庫，每個保險庫都會變成一個標籤。垃圾桶中的項目不會帶過來。",
+            "匯出檔以明文保存你的密碼。匯入後請確認一切都已到齊，再把檔案刪除。"
+          ]
+        }
+      ]
+    },
+    "dashlane": {
+      "app": "Dashlane",
+      "title": "匯出你的 Dashlane 保險庫",
+      "metaTitle": "如何匯出 Dashlane 保險庫 - PrivacyNotes",
+      "lead": "Dashlane 會把你的保險庫匯出成一個內含 CSV 檔案的 .zip，PrivacyNotes 會把其中的登入資訊、安全筆記與付款卡片變成保險庫項目與筆記。",
+      "sections": [
+        {
+          "h": "從 Dashlane 匯出",
+          "steps": [
+            "在瀏覽器擴充功能或網頁版應用程式中開啟你的 Dashlane 保險庫。",
+            "選擇「Settings > Export data」。",
+            "選擇 CSV 格式並儲存 .zip 檔案。"
+          ]
+        },
+        {
+          "h": "請選 CSV，不要選 .dash",
+          "p": [
+            "請選 CSV。.dash 匯出檔以它自己的密碼鎖住，如果你把它放進來，PrivacyNotes 會告訴你這一點。"
+          ]
+        },
+        {
+          "h": "東西會落在哪裡",
+          "p": [
+            "每筆登入資訊都會成為帶有 2FA 金鑰的[保險庫登入資訊](/tw/help/vault)，所以[你的驗證碼可以繼續使用](/tw/help/vault-totp)。安全筆記會成為筆記，付款卡片則成為卡片。身分證件與個人資訊會成為帶有詳細內容的筆記。類別會變成標籤，巢狀類別也一樣。Dashlane 每筆登入資訊只保存一個網站，所以第二個網站不在檔案中。",
+            "匯出檔以明文保存你的密碼。匯入後請確認一切都已到齊，再把檔案刪除。"
+          ]
+        }
+      ]
+    },
+    "daylio": {
+      "app": "Daylio",
+      "title": "匯出你的 Daylio 紀錄",
+      "metaTitle": "如何匯出 Daylio 備份 - PrivacyNotes",
+      "lead": "Daylio 可以從「More」>「Backup & Restore」匯出 .daylio 備份。PrivacyNotes 會讀取這個檔案，把每一則紀錄重建成一則日誌紀錄，連同心情、活動與照片。",
+      "sections": [
+        {
+          "h": "匯出 .daylio 備份",
+          "steps": [
+            "完全關閉 Daylio，再重新開啟。剛新增紀錄後立刻做的備份，可能在應用程式重新啟動前漏掉那則紀錄。",
+            "依序點選「More」>「Backup & Restore」>「Advanced Options」>「Export」。",
+            "Daylio 會開啟分享選單，而不是儲存對話框。請把檔案存到你的檔案中，或存到這台裝置上能開啟的雲端硬碟。",
+            "你儲存的 .daylio 檔案就是要匯入的檔案。"
+          ]
+        },
+        {
+          "h": "選備份檔，不要選 CSV",
+          "p": [
+            "「More」>「Export Entries」會產生 CSV，這是 Daylio 的 Premium 功能。PrivacyNotes 也能讀取它，但 CSV 不含照片、語音備忘錄與心情群組，所以你命名或重新命名過的心情，會以文字形式放進紀錄，而不是進入心情追蹤項目。只要可以，請使用 .daylio 備份。"
+          ]
+        },
+        {
+          "h": "哪些內容會跟著過來",
+          "p": [
+            "[每一則紀錄都會進到「日誌」](/tw/help/journal)，日期與時間與 Daylio 顯示的相同，同一天的兩則紀錄仍是兩則紀錄。每個心情會依其 Daylio 心情群組[填入心情追蹤項目](/tw/help/choose-trackers)，所以重新命名的心情仍保有它在量表上的位置，而你自己命名的心情也會成為該則紀錄的開頭。",
+            "活動會變成[因素](/tw/help/factors)，新的活動會保留它的 Daylio 群組。像「Energy」或「Stress」這類量表，會以清單形式放在紀錄結尾。筆記標題、粗體、斜體、底線、刪除線與清單都會保留，照片會匯入成圖片，語音備忘錄會匯入成附件，加星號的紀錄仍保有星號。目標與重要日子不會帶過來，匯入摘要會列出它們的數量。"
+          ]
+        }
+      ]
+    },
+    "diarium": {
+      "app": "Diarium",
+      "title": "匯出你的 Diarium 日記",
+      "metaTitle": "如何匯出 Diarium 日記 - PrivacyNotes",
+      "lead": "Diarium 可以從「Export」選單把你的日記匯出成 JSON。PrivacyNotes 會讀取這份匯出內容，把每一則紀錄重建成一則日誌紀錄，連同評分、標籤與附件。",
+      "sections": [
+        {
+          "h": "匯出含附件的 JSON",
+          "steps": [
+            "開啟 Diarium，從選單選擇「Export」。",
+            "格式選擇 JSON，並開啟「Attachments」。",
+            "選擇「Save to local storage」並挑選一個資料夾。Diarium 會存成一個 .zip，裡面有 JSON 與你的照片和檔案。",
+            "那個 .zip 就是要匯入的檔案。"
+          ]
+        },
+        {
+          "h": "保持開啟「Attachments」",
+          "p": [
+            "關閉「Attachments」時，Diarium 只會存成單純的 .json。PrivacyNotes 會匯入其中的文字，但每張照片與每個檔案都不會帶過來，匯入摘要會列出它們的數量。請開啟「Attachments」重新匯出，改拖入 .zip。",
+            "「Create separate file for each entry」不影響結果：PrivacyNotes 會讀取 .zip 裡的每個 JSON 檔案。DOCX、TXT、HTML 與 PDF 匯出，以及 .diary 備份都無法匯入，所以請選 JSON。"
+          ]
+        },
+        {
+          "h": "哪些內容會跟著過來",
+          "p": [
+            "[每一則紀錄都會進到「日誌」](/tw/help/journal)，日期與時間與 Diarium 顯示的相同。星等評分會[填入心情追蹤項目](/tw/help/choose-trackers)。標籤會變成筆記標籤與[因素](/tw/help/factors)，人物則會成為「人物」群組中的因素。",
+            "粗體、斜體、底線、刪除線、螢光標記、文字顏色、清單與連結都會保留，指向另一則紀錄的連結，只要該紀錄在同一份匯出中，就會變成[筆記連結](/tw/help/note-links)。追蹤項目會以清單形式放在紀錄結尾，天氣、日出日落與月相會以一行放在最上方，位置則會成為該則紀錄的地點。照片會匯入成圖片，影片、音訊與 PDF 則匯入成附件。"
+          ]
+        }
+      ]
+    },
+    "google-journal": {
+      "app": "Google Journal",
+      "title": "匯出你的 Google Journal 紀錄",
+      "metaTitle": "如何匯出 Google Journal 紀錄 - PrivacyNotes",
+      "lead": "開啟備份後，Google Journal 可以透過 Google Takeout 匯出。PrivacyNotes 會讀取 Takeout 的 .zip，把每一則紀錄重建成一則日誌紀錄，連同照片與影片。",
+      "sections": [
+        {
+          "h": "先開啟備份",
+          "p": [
+            "在 Journal 備份到你的 Google 帳號之前，Takeout 不會顯示 Journal。請先開啟備份，否則你在 Takeout 清單中找不到 Journal。"
+          ],
+          "steps": [
+            "在你的 Pixel 上開啟 Journal，前往「Settings」。",
+            "開啟「Back up your journal」。",
+            "等待幾分鐘。備份開啟後，Journal 才會出現在 Takeout 中。"
+          ]
+        },
+        {
+          "h": "從 Google Takeout 匯出 Journal",
+          "steps": [
+            "開啟 takeout.google.com，並使用同一個 Google 帳號登入。",
+            "點選「Deselect all」，然後只勾選「Journal」（「Your journal entries and attachments from Journal」）。",
+            "點選「Next step」，保留 .zip 檔案類型，然後點選「Create export」。",
+            "封存檔準備好時，Google 會寄給你一個連結。下載那個 .zip：它就是要匯入的檔案。"
+          ]
+        },
+        {
+          "h": "哪些內容會跟著過來",
+          "p": [
+            "[每一則紀錄都會進到「日誌」](/tw/help/journal)，日期是你在 Journal 中為它選定的那一天。每則紀錄都保有標題與文字，照片與影片會匯入成圖片與附件。紀錄上的地圖會以圖片形式帶過來。",
+            "Takeout 不含地點名稱、寫作提示、書籤或 Journal 的回顧，所以這些內容會留在 Journal 中。匯入摘要會說明這一點。"
           ]
         }
       ]

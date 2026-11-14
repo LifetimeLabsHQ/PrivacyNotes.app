@@ -12,7 +12,7 @@ Dat is onze echte database in Zürich, geen tekening ervan. Je notitie komt in d
 
 ## Wat er gebeurt als je een notitie schrijft
 
-1. Je herstelzin van 12 woorden wordt een sleutel. Dat gebeurt op je apparaat.
+1. Je herstelzin wordt een sleutel. Dat gebeurt op je apparaat.
 2. De notitie wordt met die sleutel versleuteld, op je apparaat. Zo wordt hij op je eigen schijf bewaard, en zo reist hij naar ons.
 3. Wij krijgen de versleutelde notitie en bewaren hem. De afbeelding hierboven laat zien hoe dat eruitziet.
 4. Elk apparaat met dezelfde herstelzin maakt dezelfde sleutel en opent de notitie.

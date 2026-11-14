@@ -126,6 +126,14 @@
   },
   "banner": {
     "proActivationPending": "已收到款項，但 Pro 開通比平常慢。請一分鐘後重新整理；如果一直沒有解鎖，請聯絡支援。",
+    "crypto": {
+      "waiting": "正在等待你的加密貨幣付款。確認後就會啟用 Pro。",
+      "seen": "已偵測到加密貨幣付款。網路確認後就會啟用 Pro，Bitcoin 通常在一小時內完成。",
+      "partial": "已收到部分加密貨幣付款。請在連結過期前於付款頁面上補足餘額。",
+      "ended": "你的加密貨幣付款連結在收到全額付款前已過期。",
+      "paid": "你的加密貨幣付款已確認。Pro 已啟用。",
+      "openPayment": "付款頁面"
+    },
     "snapshotPaused": "筆記歷史已暫停。你的 Pro 方案看起來未生效，在 Pro 恢復前，新的編輯不會建立快照。",
     "restorePro": "恢復 Pro",
     "storagePastDue": "你的儲存空間訂閱扣款失敗。請到 Paddle 更新卡片資料，以免失去額外容量。",
@@ -311,7 +319,24 @@
     "linkedFrom": "被以下項目連結",
     "linksTo": "連結至",
     "missing": "尚未建立",
-    "protectedHidden_other": "有 {{count}} 個受 PIN 碼保護的項目未顯示"
+    "protectedHidden_other": "有 {{count}} 個受 PIN 碼保護的項目未顯示",
+    "related": "建議的關聯",
+    "relatedWords": "都提到 {{words}}",
+    "relatedLinksTo": "都連結至 {{title}}",
+    "relatedLinkedFrom": "都被 {{title}} 連結",
+    "relatedTag": "都有標籤 {{tag}}",
+    "relatedMeaning": "意思相同",
+    "meaningDoor": "智慧關聯：用離線 AI 找出意思相同的筆記",
+    "meaningDoorNo": "不再顯示",
+    "meaningDoorHidden": "已在所有筆記中隱藏。智慧關聯仍在設定 > 編輯器 > 行為中。",
+    "hideSuggestions": "隱藏建議的關聯",
+    "notRelated": "不相關",
+    "notRelatedDone": "不會再建議",
+    "notRelatedCount": "不相關（{{n}}）",
+    "restoreSuggestion": "重新建議",
+    "linkAtCursor": "在游標處連結",
+    "linkNeedsCursor": "請先在筆記中點一下",
+    "linkAsFootnote": "以註腳連結"
   },
   "drawing": {
     "fullScreen": "全螢幕",

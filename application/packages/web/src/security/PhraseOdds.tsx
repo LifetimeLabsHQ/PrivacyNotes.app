@@ -3,9 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { CurrencyBtc, GlobeHemisphereWest, Hourglass, LockKey, ShieldCheck } from '../icons';
 import { intlLocale } from '../languages';
 
-// A 12-word phrase carries 128 bits of entropy (generateMnemonic(wordlist, 128)
-// in packages/shared/src/crypto.ts), so this is the exact count of phrases.
-const PHRASE_COUNT = 2n ** 128n;
+// BIP-39 carries 32 bits of entropy per 3 words: 128 bits for 12 words, 256
+// for 24 (generatePhrase in packages/shared/src/crypto.ts). So this is the
+// exact count of phrases of the reader's own length.
+function phraseCount(words: number): bigint {
+  return 2n ** BigInt(Math.round((words * 32) / 3));
+}
 
 /**
  * The answer to "can somebody guess my phrase?", shown under the phrase in
@@ -14,8 +17,9 @@ const PHRASE_COUNT = 2n ** 128n;
  * The claims are the same ones the `guess-phrase` FAQ entry makes, so a
  * change to one belongs in the other.
  */
-export function PhraseOdds() {
+export function PhraseOdds({ words }: { words: number }) {
   const { t } = useTranslation('security');
+  const count = { count: words };
 
   return (
     <section className="@container rounded-xl border border-accent/25 bg-accent/[0.06] p-4 space-y-3.5">
@@ -33,9 +37,9 @@ export function PhraseOdds() {
       </div>
 
       <div className="rounded-lg border border-accent/20 bg-surface-2 px-4 py-3 text-center">
-        <p className="text-small text-accent mb-1.5">{t('phraseOdds.countLabel')}</p>
+        <p className="text-small text-accent mb-1.5">{t('phraseOdds.countLabel', count)}</p>
         <p dir="ltr" className="font-mono text-row font-semibold text-accent break-all leading-relaxed"> {/* rtl-ok: a number stays LTR */}
-          {PHRASE_COUNT.toLocaleString(intlLocale())}
+          {phraseCount(words).toLocaleString(intlLocale())}
         </p>
       </div>
 
@@ -44,12 +48,12 @@ export function PhraseOdds() {
           icon={<CurrencyBtc />}
           tone="bg-orange-100 text-orange-700 dark:bg-orange-950/50 dark:text-orange-400"
           title={t('phraseOdds.bitcoinTitle')}
-          body={t('phraseOdds.bitcoinBody')}
+          body={t('phraseOdds.bitcoinBody', count)}
         />
         <OddsTile
           icon={<Hourglass />}
           tone="bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400"
-          title={t('phraseOdds.universeTitle')}
+          title={words > 12 ? t('phraseOdds.universeTitleLonger') : t('phraseOdds.universeTitle')}
           body={t('phraseOdds.universeBody')}
         />
         <OddsTile
@@ -62,7 +66,7 @@ export function PhraseOdds() {
 
       <p className="flex items-start gap-2 text-help text-pn-soft">
         <LockKey className="shrink-0 mt-0.5 text-accent" />
-        {t('phraseOdds.keepPrivate')}
+        {t('phraseOdds.keepPrivate', count)}
       </p>
     </section>
   );

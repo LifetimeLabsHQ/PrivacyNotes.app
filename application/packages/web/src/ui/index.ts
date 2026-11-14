@@ -12,6 +12,7 @@ export { useProGate } from './proGate';
 export { Modal, ModalFooter } from './Modal';
 export { FeedbackButton, Callout, Banner, Snackbar, Badge, Spinner, ProgressBar, StatusLine, EmptyState } from './feedback';
 export { Checkbox } from './Checkbox';
+export { CompareTiles, type CompareTile } from './CompareTiles';
 export { TaskCheckbox } from './TaskCheckbox';
 export { Popover, Kbd, Divider, CopyButton, IconTile } from './misc';
 export { RowChip } from './RowChip';

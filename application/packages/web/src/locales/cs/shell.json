@@ -308,8 +308,10 @@
     "dayWithMood": "{{date}}, nálada {{mood}}",
     "previousWeek": "Předchozí týden",
     "nextWeek": "Další týden",
-    "showMonth": "{{month}}, zobrazit celý měsíc",
-    "showWeek": "{{month}}, zobrazit jeden týden"
+    "pickMonth": "{{month}}, vyber měsíc a rok",
+    "pickMonthTip": "Vyber měsíc a rok",
+    "showWholeMonth": "Zobrazit celý měsíc",
+    "showOneWeek": "Zobrazit jeden týden"
   },
   "contextMenu": {
     "newNote": "Nová poznámka",
@@ -566,6 +568,13 @@
     "itemNameParts": "Prostřední jméno, titul, přípona",
     "itemPhonetic": "Fonetické jméno",
     "itemNote": "Poznámka",
+    "addSection": "Přidat sekci",
+    "sectionName": "Název sekce",
+    "removeSection": "Odebrat sekci",
+    "removeSectionNamed": "Odebrat sekci {{name}}",
+    "addFieldTo": "Přidat pole do sekce {{name}}",
+    "addFieldToSection": "Přidat pole do této sekce",
+    "hiddenFieldsNote": "Skryté hodnoty zůstanou zamaskované, dokud je nezobrazíš, a vyhledávání je nikdy nenajde.",
     "labels": {
       "mobile": "Mobil",
       "home": "Domů",
@@ -699,6 +708,9 @@
     },
     "birthdays": "Narozeniny",
     "contactDate": "{{name}}: {{label}}",
+    "birthdayAge_one": "{{name}} má {{count}} rok",
+    "birthdayAge_few": "{{name}} má {{count}} roky",
+    "birthdayAge_other": "{{name}} má {{count}} let",
     "dragEnd": "Přetažením změníš poslední den",
     "previousDay": "Předchozí den",
     "nextDay": "Další den",

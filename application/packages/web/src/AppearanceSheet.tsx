@@ -44,7 +44,7 @@ import { allLocalFonts, canListAllFonts, fontInstalled, installedCandidates } fr
 import { intlLocale } from './languages';
 import { IconUpgrade, ProMark, type UpgradeTrigger } from './UpgradeModal';
 import { proUnlocked } from './demo';
-import { ArrowCounterClockwise, Folder, X, List, ListBullets, Palette, Star, Toolbox, SquaresFour, Sparkle, DotsThreeOutlineVertical, CaretDown, CaretRight, Globe, Plus, ClipboardText, ArrowSquareOut, PencilSimple, Copy, UserSwitch, TextT, Scribble, TextAlignJustify, FrameCorners, PencilLine, HouseLine, Layout, Tabs, Paragraph, LinkSimple, Eye, Brain, TextAa, ListNumbers, ListChecks, Check, ListMagnifyingGlass, CheckSquare, Confetti, CircleHalf, PaintBucket, Sun, Moon, DotsSixVertical, ArrowUp, ArrowDown, ArrowRight, BoxArrowDown, MapPin, PILLAR_GLYPHS, type Icon } from './icons';
+import { ArrowCounterClockwise, Folder, Intersect, X, List, ListBullets, Palette, Star, Toolbox, SquaresFour, Sparkle, DotsThreeOutlineVertical, CaretDown, CaretRight, Globe, Plus, ClipboardText, ArrowSquareOut, PencilSimple, Copy, UserSwitch, TextT, Scribble, TextAlignJustify, FrameCorners, PencilLine, HouseLine, ClockCounterClockwise, Layout, Tabs, Paragraph, LinkSimple, Eye, Brain, TextAa, ListNumbers, ListChecks, Check, ListMagnifyingGlass, CheckSquare, Confetti, CircleHalf, PaintBucket, Sun, Moon, DotsSixVertical, ArrowUp, ArrowDown, ArrowRight, BoxArrowDown, MapPin, PILLAR_GLYPHS, type Icon } from './icons';
 import type { BUILTIN_THEME_CODES } from './builtinThemeCodes';
 import type { CustomThemes } from './customThemes';
 import type { ThemeGalleryCtx } from './customThemeUI';
@@ -62,13 +62,17 @@ import { textMatcher } from './textMatch';
 const ExtraThemeCards = lazyPart(() => import('./customThemeUI').then((m) => m.ExtraThemeCards));
 const ThemePasteField = lazyPart(() => import('./customThemeUI').then((m) => m.ThemePasteField));
 const FormatBarBoard = lazyPart(() => import('./FormatBarBoard').then((m) => m.FormatBarBoard));
+// Loads the model code only when the Behavior tab opens: off the boot path.
+const SmartConnectionsRow = lazyPart(() => import('./SmartConnectionsRow').then((m) => m.SmartConnectionsRow));
 import { exemptOpts } from './i18nExempt';
 import { AccentBar, EYEBROW_ICON_ROW, EyebrowGlyph, HeadlineRule, ROW_TITLE, ResetDefaultsButton, RowTitle, SectionEyebrow, SETTINGS_BTN, SETTINGS_EYEBROW, SETTINGS_HELP, SETTINGS_SELECT, SettingsTabStrip, settingsTabClass, SETTINGS_TRACK } from './settingsUI';
 import { Switch } from './Switch';
+import { onDeviceAiShown } from './onDeviceAi';
 import { canReadPosition } from './currentPosition';
 import { writeAutoLocation } from './autoLocation';
 import { AutoLocationSwitch } from './notesView/NoteLocationChip';
 import { useOpenItemsInTabs, useTabsFit } from './notesView/useOpenTabs';
+import { useReopenLastOpen } from './notesView/listPlace';
 import { faviconUrl } from './favicon';
 import { ViewCheckBox } from './SidebarOptionsPopover';
 import { allViewRows, moveView, resolveStartView, sidebarViewRows, startViewRows } from './viewRows';
@@ -128,6 +132,8 @@ type Props = {
   onTaskConfettiChange: (on: boolean) => void;
   typedSymbols: boolean;
   onTypedSymbolsChange: (on: boolean) => void;
+  linkSuggestions: boolean;
+  onLinkSuggestionsChange: (on: boolean) => void;
   confirmTrash: boolean;
   onConfirmTrashChange: (on: boolean) => void;
   confirmArchive: boolean;
@@ -456,7 +462,7 @@ const SEG_FILL = 'flex-1 px-3 lg:flex-none';
 
 export type AppearancePane = 'design' | 'editor' | 'formatBar' | 'lists';
 
-export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = false, viewMode, onViewModeChange, editorMode, onEditorModeChange, formatBar, lineSpacing, onLineSpacingChange, nestedNumbers, onNestedNumbersChange, hiddenViews, hiddenInAll, archivedInAll, onToggleHidden, onViewOrderChange, startView, onStartViewChange, noteColors, onNoteColorsChange, sinkCheckedTasks, onSinkCheckedTasksChange, taskConfetti, onTaskConfettiChange, typedSymbols, onTypedSymbolsChange, confirmTrash, onConfirmTrashChange, confirmArchive, onConfirmArchiveChange, initialTab, spaces, onSpacesChange, pane = 'design', onOpenAll, customThemes, onCustomThemesChange, onOpenThemeBuilder }: Props) {
+export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = false, viewMode, onViewModeChange, editorMode, onEditorModeChange, formatBar, lineSpacing, onLineSpacingChange, nestedNumbers, onNestedNumbersChange, hiddenViews, hiddenInAll, archivedInAll, onToggleHidden, onViewOrderChange, startView, onStartViewChange, noteColors, onNoteColorsChange, sinkCheckedTasks, onSinkCheckedTasksChange, taskConfetti, onTaskConfettiChange, typedSymbols, onTypedSymbolsChange, linkSuggestions, onLinkSuggestionsChange, confirmTrash, onConfirmTrashChange, confirmArchive, onConfirmArchiveChange, initialTab, spaces, onSpacesChange, pane = 'design', onOpenAll, customThemes, onCustomThemesChange, onOpenThemeBuilder }: Props) {
   const { t } = useTranslation('settings');
   // The table's row labels are the sidebar's own strings, so the pane and the
   // rail can never disagree in any language.
@@ -518,6 +524,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   // out of theme.ts keeps that module free of a native import on the boot
   // path. Spec: docs/internal/design-decisions.md (app zoom)
   const [openItemsInTabs, setOpenItemsInTabs] = useOpenItemsInTabs();
+  const [reopenLastOpen, setReopenLastOpen] = useReopenLastOpen();
   // No strip below the pane layout, so no switch for it either.
   const tabsFit = useTabsFit();
   const exampleFavicon = faviconUrl('google.com');
@@ -787,6 +794,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     onSinkCheckedTasksChange(d.sinkCheckedTasks);
     onTaskConfettiChange(d.taskConfetti);
     onTypedSymbolsChange(d.typedSymbols);
+    onLinkSuggestionsChange(d.linkSuggestions);
     onConfirmTrashChange(d.confirmTrash);
     onConfirmArchiveChange(d.confirmArchive);
     writeAutoLocation('note', false);
@@ -806,6 +814,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     onStartViewChange(d.startView);
     onViewModeChange(d.viewMode);
     setOpenItemsInTabs(true);
+    setReopenLastOpen(true);
     for (const v of hiddenViews) onToggleHidden('hiddenViews', v);
     for (const v of hiddenInAll) onToggleHidden('hiddenInAll', v);
     if (archivedInAll) onToggleHidden('hiddenInAll', 'archive');
@@ -1402,6 +1411,32 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           className="gap-x-5 py-3"
         />
 
+        {/* Suggested connections and Smart connections under it: one element,
+            so the divided list draws no rule between them (ui-patterns 185). */}
+        <div>
+          {/* Link suggestions in the Connections panel: notes on the same topic
+              that no link joins. On by default. Synced.
+              Spec: docs/internal/plans/related-notes.md */}
+          <Switch
+            setting="appearance.linkSuggestions"
+            icon={<Intersect className="text-accent" />}
+            labelClassName={ROW_TITLE}
+            label={t('notes:connections.related')}
+            description={t('appearance.linkSuggestionsDesc')}
+            checked={linkSuggestions}
+            onChange={onLinkSuggestionsChange}
+            className="gap-x-5 py-3"
+          />
+          {/* Smart connections, the offline meaning model, right under the
+              suggestions it adds to. Per device. Behind the release switch
+              in onDeviceAi.ts. Spec: docs/internal/plans/related-notes.md (part 2) */}
+          {onDeviceAiShown() && (
+            <Suspense fallback={null}>
+              <SmartConnectionsRow isPro={isPro} parentOn={linkSuggestions} onParentOn={() => onLinkSuggestionsChange(true)} onUpgrade={() => { upgradeHandoffRef.current = true; onOpenUpgrade('smartConnections'); }} />
+            </Suspense>
+          )}
+        </div>
+
         {/* Ask before moving to trash. The trash confirm's "Don't ask
             again" box turns it off; this row turns it back on. Synced. (#603) */}
         <Switch
@@ -1520,6 +1555,20 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             />
           )}
         </div>
+
+        {/* Reopen the last item - what a cold start opens, next to where it
+            starts. Device-local, like the id it gates.
+            Spec: docs/internal/specs/keep-my-place.md (section 3) */}
+        <Switch
+          setting="appearance.reopenLastOpen"
+          icon={<ClockCounterClockwise className="text-accent" />}
+          labelClassName={ROW_TITLE}
+          label={t('appearance.reopenLastOpenTitle')}
+          description={t('appearance.reopenLastOpenDesc')}
+          checked={reopenLastOpen}
+          onChange={setReopenLastOpen}
+          className="gap-x-5 py-3"
+        />
 
         {/* View - list / grid / auto layout. */}
         <div data-setting="appearance.view" className={row}>

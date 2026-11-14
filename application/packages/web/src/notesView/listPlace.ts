@@ -9,7 +9,9 @@
  * open, which a cold start opens again.
  * Spec: docs/internal/specs/keep-my-place.md
  */
+import { useCallback, useSyncExternalStore } from 'react';
 import { isDemoMode } from '../demo';
+import { createListeners } from '../listeners';
 import type { ViewAnchor } from '../viewSwitchAnchor';
 
 type ListPlace = { top: number; revealed: number };
@@ -77,8 +79,31 @@ function store(): Storage {
   return isDemoMode() ? sessionStorage : localStorage;
 }
 
-/** The note open at the last quit, or null. */
+/**
+ * Settings > Lists > General, "Reopen the last item": on by default, per
+ * device like the id it gates. Off, a cold start shows the list with nothing
+ * open (#761). Only an explicit '0' is off.
+ * Spec: docs/internal/specs/keep-my-place.md (section 3)
+ */
+const REOPEN_KEY = 'privacynotes.reopenLastOpen';
+const reopenListeners = createListeners();
+
+function readReopen(): boolean {
+  try { return store().getItem(REOPEN_KEY) !== '0'; } catch { return true; }
+}
+
+export function useReopenLastOpen(): [boolean, (on: boolean) => void] {
+  const on = useSyncExternalStore(reopenListeners.subscribe, readReopen, () => true);
+  const set = useCallback((next: boolean) => {
+    try { store().setItem(REOPEN_KEY, next ? '1' : '0'); } catch { /* storage unavailable */ }
+    reopenListeners.notify();
+  }, []);
+  return [on, set];
+}
+
+/** The note open at the last quit, or null; null too when the setting is off. */
 export function readLastOpen(): string | null {
+  if (!readReopen()) return null;
   try {
     const id = store().getItem(LAST_OPEN_KEY);
     return id && id.length <= 64 ? id : null;

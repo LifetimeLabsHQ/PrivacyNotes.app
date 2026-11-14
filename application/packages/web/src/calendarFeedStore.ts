@@ -20,6 +20,7 @@ import type { LocalNote } from './db';
 import type { ClipErrorReason } from './clipDownload';
 import type { TokenSource } from './sessionToken';
 import { feedItemId } from './calendarFeeds';
+import { ensureImportLogLoaded } from './i18n';
 
 /** Why a feed shows no fresh events: a download refusal, or a file that is
  *  not a calendar the importer reads. */
@@ -147,6 +148,7 @@ async function download(id: string, url: string, token: TokenSource, mark: strin
   }
   try {
     const { parseCalendarFiles } = await import('./import/googleCalendar');
+    await ensureImportLogLoaded();
     const parsed = parseCalendarFiles([{ name: base.name || 'calendar', bytes }]);
     const name = parsed.folders?.[0]?.name || parsed.notes[0]?.folderPath?.[0] || feedHost(address);
     return done({ name, items: parsed.notes.map((e, n) => asItem(id, n, e)), error: null });

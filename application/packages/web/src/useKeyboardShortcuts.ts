@@ -48,6 +48,8 @@ export interface KeyboardShortcutHandlers {
   setSidebarCollapsed: (v: boolean | ((prev: boolean) => boolean)) => void;
   /** Open the nth section of the sidebar, counted from 1. */
   goToSection: (n: number) => void;
+  /** Personal to Work and back; All goes to Personal. A free account gets the upgrade window. */
+  switchSpace: () => void;
 
   // Theme and editor view
   toggleTheme: () => void;
@@ -328,6 +330,11 @@ function runShortcut(e: KeyboardEvent, h: KeyboardShortcutHandlers): boolean | t
   }
   if (is('newMenu') && !behind) {
     h.openNewMenu();
+    return true;
+  }
+  // Personal and Work, from the editor too. Spec: docs/internal/specs/spaces.md (section 6)
+  if (is('switchSpace')) {
+    if (!behind) h.switchSpace();
     return true;
   }
 

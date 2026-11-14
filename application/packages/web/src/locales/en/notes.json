@@ -141,6 +141,14 @@
   },
   "banner": {
     "proActivationPending": "Payment received but Pro activation is taking longer than usual. Refresh in a minute, or contact support if it doesn't flip on.",
+    "crypto": {
+      "waiting": "Waiting for your crypto payment. Pro turns on when it confirms.",
+      "seen": "Crypto payment seen. Pro turns on when the network confirms it, usually within an hour for Bitcoin.",
+      "partial": "Part of your crypto payment arrived. Send the rest on the payment page before the link expires.",
+      "ended": "Your crypto payment link expired before a full payment arrived.",
+      "paid": "Your crypto payment is confirmed. Pro is on.",
+      "openPayment": "Payment page"
+    },
     "snapshotPaused": "Note history is paused. Your Pro plan looks inactive. New edits won't be snapshotted until Pro is restored.",
     "restorePro": "Restore Pro",
     "storagePastDue": "Your storage subscription payment failed. Update your card in Paddle to avoid losing extra capacity.",
@@ -336,7 +344,24 @@
     "linksTo": "Links to",
     "missing": "Not created yet",
     "protectedHidden_one": "{{count}} PIN-protected item not shown",
-    "protectedHidden_other": "{{count}} PIN-protected items not shown"
+    "protectedHidden_other": "{{count}} PIN-protected items not shown",
+    "related": "Suggested connections",
+    "relatedWords": "Both mention {{words}}",
+    "relatedLinksTo": "Both link to {{title}}",
+    "relatedLinkedFrom": "Both linked from {{title}}",
+    "relatedTag": "Both tagged {{tag}}",
+    "relatedMeaning": "Same meaning",
+    "meaningDoor": "Smart connections: find notes with the same meaning, with offline AI",
+    "meaningDoorNo": "Don't show again",
+    "meaningDoorHidden": "Hidden in all notes. Smart connections stays in Settings > Editor > Behavior.",
+    "hideSuggestions": "Hide suggested connections",
+    "notRelated": "Not related",
+    "notRelatedDone": "Not suggested anymore",
+    "notRelatedCount": "Not related ({{n}})",
+    "restoreSuggestion": "Suggest again",
+    "linkAtCursor": "Link at the cursor",
+    "linkNeedsCursor": "Click in the note first",
+    "linkAsFootnote": "Link as a footnote"
   },
   "drawing": {
     "fullScreen": "Full screen",

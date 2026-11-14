@@ -9,6 +9,8 @@ import { perfSpan } from './perf';
 import { contactSearchText, parseContactBody } from './contactBody';
 import { parseScene, sceneText } from './drawing/scene';
 import { isPublicField, loginExtrasOf } from './loginExtras';
+import { withoutDoodleData } from './doodle/doodleFence';
+import { readLocation } from './noteLocation';
 
 /**
  * Client-side full-text search over decrypted notes.
@@ -36,6 +38,7 @@ type IndexedDoc = {
   title: string;
   body: string;
   tagsText: string;
+  place: string;
 };
 
 let index: MiniSearch<IndexedDoc> | null = null;
@@ -52,7 +55,7 @@ const indexedIds = new Set<string>();
 const foldedNotes = new Map<string, string>();
 
 function foldedCopy(doc: IndexedDoc, tags: readonly string[]): string {
-  return [doc.title, ...doc.body.split('\n'), ...tags].map(foldForMatch).join('\n');
+  return [doc.title, ...doc.body.split('\n'), ...tags, doc.place].map(foldForMatch).join('\n');
 }
 
 /**
@@ -76,7 +79,8 @@ export function indexedBodyText(n: LocalNote): string {
   // nor kept for the find bar, so a field a newer pillar keeps private is
   // not searchable on a build that cannot read it.
   if (!isKnownNoteType(n.type)) return '';
-  if (n.type !== 'login' && n.type !== 'card' && n.type !== 'ssh-key') return n.body;
+  // A doodle block's text is stroke data, never words.
+  if (n.type !== 'login' && n.type !== 'card' && n.type !== 'ssh-key') return withoutDoodleData(n.body);
   try {
     const d = JSON.parse(n.body);
     if (n.type === 'login') {
@@ -94,16 +98,26 @@ export function indexedBodyText(n: LocalNote): string {
 }
 
 /**
+ * The name the person gave the note's place ("Munich"), or empty: what the
+ * index, the phrase check and the switcher's place line read, so the three
+ * agree. Never the coordinates: a number finds too much (GitHub #753).
+ */
+export function indexedPlaceText(n: LocalNote): string {
+  return readLocation(n.trackers)?.label ?? '';
+}
+
+/**
  * The copy of a note the index reads while the PIN guards it: its stored
  * title and its tags, never its body, and so never a name its body spells (a
- * contact's email or number, a bookmark's domain). The view hands the index
+ * contact's email or number, a bookmark's domain), and never its place. The view hands the index
  * this in place of the note, so a word from a guarded body finds nothing and
  * the find bar is never seeded from one; the whole note goes back in once its
  * gate opens. Tested in tests/lockGateReads.test.ts.
  */
 export function gatedSearchCopy(n: LocalNote): LocalNote {
-  // A login's custom fields live in its trackers, so those go too.
-  return { ...n, body: '', ...(n.type === 'login' ? { trackers: undefined } : {}) };
+  // A login's custom fields and the place of any note live in its trackers,
+  // so those go too.
+  return { ...n, body: '', trackers: undefined };
 }
 
 function noteToDoc(n: LocalNote): IndexedDoc {
@@ -114,7 +128,7 @@ function noteToDoc(n: LocalNote): IndexedDoc {
   // that plain: the pillar's own search box matched tags, this index did not,
   // which is one reason the pane grew a private search (2026-08-22).
   const tagsText = n.tags.join(' ');
-  return { id: n.id, title: n.title, body: indexedBodyText(n), tagsText };
+  return { id: n.id, title: n.title, body: indexedBodyText(n), tagsText, place: indexedPlaceText(n) };
 }
 
 /**
@@ -129,9 +143,24 @@ function indexTerms(term: string): string | string[] {
   return bare ? [folded, bare] : folded;
 }
 
+/**
+ * The terms the index stores for a text, each with the word it came from:
+ * the same tokenizer and fold as the index, so the related notes of the
+ * Connections panel (`relatedNotes.ts`) split and fold every language the
+ * way search does, and can still show a shared word as the note spells it.
+ */
+export function termsWithWords(text: string): Array<[term: string, word: string]> {
+  const out: Array<[string, string]> = [];
+  for (const word of tokenize(text)) {
+    const terms = indexTerms(word);
+    for (const term of typeof terms === 'string' ? [terms] : terms) out.push([term, word]);
+  }
+  return out;
+}
+
 function createIndex(): MiniSearch<IndexedDoc> {
   return new MiniSearch<IndexedDoc>({
-    fields: ['title', 'body', 'tagsText'],
+    fields: ['title', 'body', 'tagsText', 'place'],
     // A hit carries the body text it was indexed from, so searchBodyTerms
     // can hand the find bar the note's own spelling of a folded word. It is
     // the indexedBodyText projection, so a vault password is never in it.
@@ -149,7 +178,8 @@ function createIndex(): MiniSearch<IndexedDoc> {
       // reader's to show. Prefix matching covers a word as it is typed.
       fuzzy: false,
       prefix: true,
-      boost: { title: 3, tagsText: 2 },
+      // A place name is a label the person typed, like a tag.
+      boost: { title: 3, tagsText: 2, place: 2 },
       // Every word of a query must match. A note that holds one word of
       // "encrypted on this device" is not what somebody typing that wants.
       // The phrase itself is the list's job (`noteSaysPhrase`), and this is

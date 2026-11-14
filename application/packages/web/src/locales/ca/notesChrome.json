@@ -12,7 +12,7 @@
   },
   "moveScreen": {
     "title": "L'aplicació s'ha traslladat a use.privacynotes.app",
-    "bodySignIn": "Inicia la sessió allà amb la teva frase de recuperació de 12 paraules o amb «{{scanQr}}». Aquest dispositiu sincronitza primer, així que totes les teves notes t'hi esperen, i aquí no s'esborra res.",
+    "bodySignIn": "Inicia la sessió allà amb la teva frase de recuperació o amb «{{scanQr}}». Aquest dispositiu sincronitza primer, així que totes les teves notes t'hi esperen, i aquí no s'esborra res.",
     "openNotes": "Obre les teves notes aquí un cop per resoldre-ho",
     "showPhrase": "Mostra la meva frase de recuperació",
     "website": "Explora el web en canvi"
@@ -49,7 +49,7 @@
     "signInAgain": "Torna a iniciar la sessió"
   },
   "signOutConfirm": {
-    "title": "Has desat la teva frase de 12 paraules?",
+    "title": "Has desat la teva frase de recuperació?",
     "body": "La teva frase és l'<only>única</only> manera de tornar a entrar. No hi ha restabliment per correu ni línia de suport. Si encara no l'has apuntada, toca <action>No, mostra la frase</action> i te l'obrirem ara mateix.",
     "unsyncedWarn_one": "1 nota d'aquest dispositiu encara no s'ha sincronitzat. Es perdrà per sempre si no es pot pujar en tancar la sessió.",
     "unsyncedWarn_many": "{{count}} notes d'aquest dispositiu encara no s'han sincronitzat. Es perdran per sempre si no es poden pujar en tancar la sessió.",
@@ -144,7 +144,8 @@
     "offline": "Ets fora de línia. Els enllaços burn requereixen una connexió amb el servidor. Torna-ho a provar quan tornis a estar en línia.",
     "demo": "Els enllaços burn es desen en un servidor, i la demo no en contacta cap. Registra't per crear enllaços burn reals.",
     "tooLarge": "La nota és massa gran per compartir-la amb un enllaç burn ({{size}}KB). El màxim és {{max}}KB.",
-    "storeFailed": "No s'ha pogut desar la nota burn al servidor."
+    "storeFailed": "No s'ha pogut desar la nota burn al servidor.",
+    "rateLimited": "S'han creat massa enllaços burn des d'aquesta connexió. Torna-ho a provar més tard."
   },
   "dms": {
     "returnTitle": "La còpia del servidor s'ha suprimit",
@@ -156,8 +157,10 @@
   "massDelete": {
     "title": "Notes suprimides en un altre dispositiu",
     "body_other": "{{count}} notes que aquest dispositiu encara té han estat suprimides per tu o per un altre dels teus dispositius. Si has estat tu, suprimeix-les també aquí. Si no has estat tu, potser algú té accés al teu compte: conserva-les per tornar-les a posar a tots els teus dispositius.",
-    "keep": "Conserva les meves notes",
-    "delete": "Suprimeix-les també aquí",
+    "refusedTitle": "Les teves notes han tornat",
+    "refusedBody_one": "{{count}} nota s'ha suprimit del servidor, però no l'ha suprimit cap dels teus dispositius. Aquest dispositiu no ha acceptat la supressió i ha tornat a posar la nota a tots els teus dispositius. Revisa els teus dispositius i elimina'n qualsevol que no coneguis.",
+    "refusedBody_other": "{{count}} notes s'han suprimit del servidor, però no les ha suprimit cap dels teus dispositius. Aquest dispositiu no ha acceptat la supressió i les ha tornat a posar a tots els teus dispositius. Revisa els teus dispositius i elimina'n qualsevol que no coneguis.",
+    "showDevices": "Mostra els dispositius",
     "body_one": "{{count}} nota que aquest dispositiu encara té ha estat suprimida per tu o per un altre dels teus dispositius. Si has estat tu, suprimeix-la també aquí. Si no has estat tu, potser algú té accés al teu compte: conserva-la per tornar-la a posar a tots els teus dispositius."
   }
 }

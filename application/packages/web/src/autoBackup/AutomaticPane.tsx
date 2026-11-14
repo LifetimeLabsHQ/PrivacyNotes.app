@@ -126,6 +126,8 @@ function folderHint(t: (key: string) => string): string {
 
 function runsHint(t: (key: string) => string): string {
   if (isPhone()) return t('auto.runsHintPhone');
+  // No folder to write to: nothing runs alone, the app can only say one is due.
+  if (destinationKind() === 'download') return t('auto.runsHintDownload');
   return detectPlatform() === 'desktop' ? t('auto.runsHintDesktop') : t('auto.runsHintWeb');
 }
 

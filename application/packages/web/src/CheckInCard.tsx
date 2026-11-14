@@ -55,6 +55,8 @@ type Props = {
   home?: boolean;
   /** Home's placement of the tile in its grid. */
   style?: CSSProperties;
+  /** Home's state of the tile: the fade while it is dragged, the ring while it is resized. */
+  className?: string;
   /** Home's arranging tools (the grip tab, the resize corner), drawn in the tile. */
   controls?: ReactNode;
   /** Home's id for the tile, which its reorder finds by. */
@@ -195,7 +197,7 @@ export function CheckInCard(p: Props) {
   }, [p.notes]);
 
   const shell = (children: ReactNode, line = false) => (
-    <Shell grid={p.grid} line={line && !p.home} rootRef={rootRef} onRoot={setRoot} style={p.style} center={p.home} reorderId={p.reorderId}>{children}{p.controls}</Shell>
+    <Shell grid={p.grid} line={line && !p.home} rootRef={rootRef} onRoot={setRoot} style={p.style} className={p.className} center={p.home} reorderId={p.reorderId}>{children}{p.controls}</Shell>
   );
 
   const noticeLine = notice && (
@@ -563,7 +565,7 @@ export function CardGear({ label, onClick }: { label: string; onClick: (e: React
  *  columns wide that the other tiles fill in around (the span is in
  *  index.css), and a one-line state is a strip across the grid, so a short
  *  line never sits in a tall empty tile. Home keeps the tile (`home`). */
-export function Shell({ grid, line, rootRef, onRoot, style, center = false, reorderId, children }: { grid: boolean; line: boolean; rootRef: RefObject<HTMLLIElement | null>; onRoot: (el: HTMLLIElement | null) => void; style?: CSSProperties; center?: boolean; reorderId?: string; children: ReactNode }) {
+export function Shell({ grid, line, rootRef, onRoot, style, className, center = false, reorderId, children }: { grid: boolean; line: boolean; rootRef: RefObject<HTMLLIElement | null>; onRoot: (el: HTMLLIElement | null) => void; style?: CSSProperties; className?: string; center?: boolean; reorderId?: string; children: ReactNode }) {
   return (
     <li
       style={style}
@@ -575,7 +577,7 @@ export function Shell({ grid, line, rootRef, onRoot, style, center = false, reor
       data-checkin-card=""
       className={
         grid
-          ? `${line ? 'col-span-full' : 'pn-grid-checkin flex flex-col'}${center ? ' relative justify-center' : ''} min-w-0 rounded-xl border border-divider bg-surface-2 px-3 py-2.5`
+          ? `${line ? 'col-span-full' : 'pn-grid-checkin flex flex-col'}${center ? ' relative justify-center' : ''} min-w-0 rounded-xl border border-divider bg-surface-2 px-3 py-2.5 ${className ?? ''}`
           : 'min-w-0 px-4 py-2.5 bg-surface-2 border-b border-divider'
       }
     >

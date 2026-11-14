@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "Všechna nastavení",
+    "dockWindow": "Ukotvit ke straně",
+    "dockOtherSide": "Přesunout na druhou stranu",
     "fillWindow": "Použít celé okno",
     "restoreWindow": "Zpět na běžnou velikost"
   },
@@ -188,6 +190,8 @@
     "peekDark": "Teď vidíš své tmavé téma. Auto se znovu řídí systémem, jakmile zavřeš Nastavení.",
     "unlockThemes": "Odemkni si všechna témata s Pro",
     "startViewTitle": "Zobrazit po otevření",
+    "reopenLastOpenTitle": "Znovu otevřít poslední položku",
+    "reopenLastOpenDesc": "Po spuštění aplikace dostaneš položku, která byla otevřená při jejím ukončení. Vypnutím začneš na seznamu, kde není nic otevřeného.",
     "viewTitle": "Zobrazit položky jako",
     "viewDesc": "Automaticky se řídí šířkou tvé obrazovky.",
     "openInTabsTitle": "Zobrazit otevřenou položku na kartě",
@@ -218,6 +222,7 @@
     "linkModifierDesc": "Obyčejné kliknutí umístí kurzor. Klepnutí odkaz otevře i nadále. Jen na tomto zařízení.",
     "typedSymbolsTitle": "Převádět psané symboly na šipky a matematická znaménka",
     "typedSymbolsDesc": "Například z -> bude →, z != bude ≠ a z >= bude ≥.",
+    "linkSuggestionsDesc": "Propojení ukazuje i poznámky na stejné téma, které ještě nemáš propojené odkazem. Když to vypneš, ikona Propojení se zobrazí jen u poznámek s odkazy.",
     "confirmTrashTitle": "Ptát se před smazáním",
     "confirmTrashDesc": "Vyžaduje potvrzení, než položka skončí v koši.",
     "confirmArchiveTitle": "Ptát se před archivací",
@@ -668,5 +673,18 @@
     "loadError": "Spínač mrtvého muže se nepodařilo načíst. Zkontroluj připojení a zkus to znovu.",
     "confirmTitle": "Zapnout spínač mrtvého muže?",
     "confirmBody": "Pokud žádné z tvých zařízení nebude online po dobu {{period}}, server smaže tvoje šifrovaná data. Nejde to vrátit zpět. Tvoje zařízení si poznámky ponechají."
+  },
+  "onDeviceAi": {
+    "title": "Chytrá propojení",
+    "desc": "Najde poznámky se stejným významem, i když jsou napsané jinými slovy nebo v jiném jazyce. Používá offline AI (<model>bekko-static</model>), která běží jen v tomto zařízení.",
+    "on": "Zapnuto. Návrhy zahrnují i poznámky se stejným významem. Offline AI zabírá v tomto zařízení {{size}}.",
+    "kept": "Vypnuto. Offline AI zůstává v tomto zařízení, takže opětovné zapnutí nevyžaduje žádné stahování.",
+    "downloadSize": "Stáhnout · {{size}}",
+    "downloadingLabel": "Stahování offline AI",
+    "loading": "Načítá se offline AI",
+    "unavailable": "Demo nemůže stáhnout offline AI.",
+    "failed": "Stahování se nedokončilo. Zkus to znovu.",
+    "remove": "Odebrat z tohoto zařízení ({{size}})",
+    "howItWorks": "Jak to funguje"
   }
 }

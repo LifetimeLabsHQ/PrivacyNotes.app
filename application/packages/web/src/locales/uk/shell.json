@@ -307,8 +307,10 @@
     "dayWithItems_many": "{{date}}, {{count}} елементів",
     "previousWeek": "Попередній тиждень",
     "nextWeek": "Наступний тиждень",
-    "showMonth": "{{month}}, показати весь місяць",
-    "showWeek": "{{month}}, показати один тиждень"
+    "pickMonth": "{{month}}, виберіть місяць і рік",
+    "pickMonthTip": "Виберіть місяць і рік",
+    "showWholeMonth": "Показати весь місяць",
+    "showOneWeek": "Показати один тиждень"
   },
   "contextMenu": {
     "newNote": "Нова нотатка",
@@ -566,6 +568,13 @@
     "itemNameParts": "По батькові, префікс, суфікс",
     "itemPhonetic": "Фонетичне ім’я",
     "itemNote": "Нотатка",
+    "addSection": "Додати розділ",
+    "sectionName": "Назва розділу",
+    "removeSection": "Прибрати розділ",
+    "removeSectionNamed": "Прибрати розділ «{{name}}»",
+    "addFieldTo": "Додати поле до розділу «{{name}}»",
+    "addFieldToSection": "Додати поле до цього розділу",
+    "hiddenFieldsNote": "Приховані значення залишаються замаскованими, доки ви їх не покажете, і пошук ніколи їх не знаходить.",
     "labels": {
       "mobile": "Мобільний",
       "home": "Домашній",
@@ -696,6 +705,9 @@
     },
     "birthdays": "Дні народження",
     "contactDate": "{{name}}: {{label}}",
+    "birthdayAge_one": "{{name}}: виповнюється {{count}} рік",
+    "birthdayAge_few": "{{name}}: виповнюється {{count}} роки",
+    "birthdayAge_many": "{{name}}: виповнюється {{count}} років",
     "dragEnd": "Перетягніть, щоб змінити день завершення",
     "previousDay": "Попередній день",
     "nextDay": "Наступний день",

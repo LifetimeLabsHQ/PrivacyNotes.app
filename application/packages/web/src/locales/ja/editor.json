@@ -353,5 +353,47 @@
     "addColumn": "列を追加",
     "removeBoard": "ボードを削除",
     "moveTo": "移動先"
+  },
+  "doodle": {
+    "title": "落書き",
+    "clear": "クリア",
+    "paper": "用紙",
+    "paperNone": "色なし: ノートが透けて見えます。",
+    "settings": "ペンの設定",
+    "stroke": "線",
+    "thinning": "細り",
+    "streamline": "手ぶれ補正",
+    "smoothing": "なめらかさ",
+    "easingLabel": "イージング",
+    "start": "始点",
+    "end": "終点",
+    "taperStart": "始点の先細り",
+    "capStart": "始点を丸める",
+    "easingStart": "始点のイージング",
+    "taperEnd": "終点の先細り",
+    "capEnd": "終点を丸める",
+    "easingEnd": "終点のイージング",
+    "fill": "塗りつぶし",
+    "outline": "輪郭線",
+    "easing": {
+      "linear": "リニア",
+      "in": "イーズイン、{{curve}}",
+      "out": "イーズアウト、{{curve}}",
+      "inOut": "イーズインアウト、{{curve}}"
+    },
+    "curve": {
+      "quad": "二次",
+      "cubic": "三次",
+      "quart": "四次",
+      "quint": "五次",
+      "sine": "正弦",
+      "expo": "指数"
+    },
+    "colors": {
+      "black": "黒",
+      "white": "白",
+      "cyan": "シアン",
+      "lightGray": "ライトグレー"
+    }
   }
 }

@@ -9,7 +9,7 @@ import { extractInlineTags, normalizeTag } from '../notesRepo';
 import { oneLineTitle } from '../oneLineTitle';
 import { FRONT_MATTER, SUPPORTED_EXT } from '../markdownFolder/adapter';
 import { isUntitledStem } from '../exportNames';
-import { stripFrontMatterPadding, unescapeQuotes, unescapeSingleQuotes } from '../noteMarkdown';
+import { parseTrackers, stripFrontMatterPadding, unescapeQuotes, unescapeSingleQuotes } from '../noteMarkdown';
 import { ATTACHMENT_EXT, isBlobReferenced, mimeFromExt } from './blobImport';
 import { buildFolderTree, commonRootPrefix, parseFolderPath } from './folderImport';
 import { linkifyMarkdown } from './linkify';
@@ -17,7 +17,7 @@ import { detailsToFold } from './detailsFold';
 import type { ImportedNote, ParsedImport } from './types';
 import { FRONT_MATTER_LOCATION, FRONT_MATTER_LOCATION_NAME, LOCATION_KEY, parseFrontMatterLocation } from '../noteLocation';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.markdown.${key}`, options);
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:markdown.${key}`, options);
 
 /**
  * Markdown importer - handles:
@@ -125,27 +125,6 @@ interface ParsedOne {
   hadInlineTags: boolean;
 }
 
-/**
- * Read the `trackers: {...}` front-matter line back into an object.
- *
- * Written by `noteToMarkdown` as a single line of `JSON.stringify` output,
- * which is why a nested object or an array survives a line-oriented reader:
- * the escaping puts no raw newline in the value. Anything unparsable is
- * dropped rather than guessed at - a half-read tracker set would show wrong
- * numbers, which is worse than showing none.
- */
-function parseTrackers(raw: string | undefined): Record<string, unknown> | undefined {
-  if (!raw || !raw.trim().startsWith('{')) return undefined;
-  try {
-    const parsed: unknown = JSON.parse(raw.trim());
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return undefined;
-    const obj = parsed as Record<string, unknown>;
-    return Object.keys(obj).length > 0 ? obj : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 function parseOneMd(
   content: string,
   filename: string,
@@ -243,10 +222,10 @@ async function parseZip(
   fmCount: number;
   inlineTagCount: number;
 }> {
-  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
-  const { default: JSZipLib } = await import('jszip');
+  onProgress?.(i18n.t('importLog:shared.readingZip'));
+  const { openZip } = await import('./zipOpen');
   const buf = await file.arrayBuffer();
-  const zip = await JSZipLib.loadAsync(buf);
+  const zip = await openZip(buf);
 
   const allPaths: string[] = [];
   zip.forEach((path, entry) => {
@@ -287,7 +266,7 @@ async function parseZip(
     }
     notes.push(note);
     if ((i + 1) % 50 === 0) {
-      onProgress?.(i18n.t('importExport:importLog.shared.parsed', { done: i + 1, total: mdFiles.length }));
+      onProgress?.(i18n.t('importLog:shared.parsed', { done: i + 1, total: mdFiles.length }));
     }
   }
 
@@ -303,7 +282,7 @@ async function parseZip(
       continue;
     }
     if (blobs.size % 10 === 0) {
-      onProgress?.(i18n.t('importExport:importLog.shared.readingAttachments', { done: blobs.size + 1, total: attachments.length }));
+      onProgress?.(i18n.t('importLog:shared.readingAttachments', { done: blobs.size + 1, total: attachments.length }));
     }
     const data = await zipEntryMedia(entry);
     if (!data) {
@@ -389,14 +368,14 @@ export async function parseMarkdown(
   if (folders.length > 0) {
     const filed = notes.filter((n) => n.folderId).length;
     transforms.push(
-      msg('rebuiltFolders', { count: folders.length, filed: i18n.t('importExport:importLog.shared.filedNotes', { count: filed }) })
+      msg('rebuiltFolders', { count: folders.length, filed: i18n.t('importLog:shared.filedNotes', { count: filed }) })
     );
   }
   if (blobs.size > 0) {
     const images = [...blobs.values()].filter((b) => b.mime.startsWith('image/')).length;
     const files = blobs.size - images;
     const parts: string[] = [];
-    if (images > 0) parts.push(i18n.t('importExport:importLog.shared.imageCount', { count: images }));
+    if (images > 0) parts.push(i18n.t('importLog:shared.imageCount', { count: images }));
     if (files > 0) parts.push(i18n.t('importExport:missing.files', { count: files }));
     transforms.push(msg('broughtAcross', { parts: parts.length === 2 ? i18n.t('importExport:missing.both', { pictures: parts[0], files: parts[1] }) : parts[0] }));
   }
@@ -404,7 +383,7 @@ export async function parseMarkdown(
   const warnings: string[] = [];
   if (skippedAttachments > 0) {
     warnings.push(
-      i18n.t('importExport:importLog.shared.skippedUnlinked', { count: skippedAttachments })
+      i18n.t('importLog:shared.skippedUnlinked', { count: skippedAttachments })
     );
   }
   if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));

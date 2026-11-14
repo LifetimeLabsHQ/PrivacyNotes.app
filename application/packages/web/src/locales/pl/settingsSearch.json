@@ -57,7 +57,7 @@
     "security_appLock": "blokada aplikacji, blokuj przy starcie, ekran blokady, blokuj aplikację przy uruchomieniu, zablokuj ponownie, blokuj ponownie po",
     "security_relockAfter": "limit czasu, automatyczna blokada, blokuj po, zablokuj ponownie po, ekran blokady",
     "security_blockCapture": "zrzut ekranu, nagrywanie ekranu, udostępnianie ekranu, tryb prywatności, ekran prywatności",
-    "security_phrase": "fraza odzyskiwania, tajne słowa, seed, dwanaście słów, klucz odzyskiwania",
+    "security_phrase": "fraza odzyskiwania, tajne słowa, seed, dwanaście słów, dwadzieścia cztery słowa, 24 słowa, klucz odzyskiwania",
     "security_custody": "przechowywanie klucza, samodzielne przechowywanie, custodial",
     "me_pauseSync": "zatrzymaj synchronizację, wstrzymaj, offline",
     "me_filesWifiOnly": "wifi, dane mobilne, sieć komórkowa, limit danych",
@@ -83,6 +83,7 @@
     "appearance_invisibles": "znak akapitu, białe znaki, spacje, ukryte znaki, znaki formatowania",
     "appearance_linkModifier": "linki, hiperłącza, url, kliknięcie, ctrl, cmd, command, przypadkowe otwarcie",
     "appearance_typedSymbols": "ligatury, strzałki, symbole, matematyka, nie równa się, różne, większe niż, mniejsze niż, autokorekta, zamiana",
+    "appearance_linkSuggestions": "powiązane notatki, podobne notatki, sugestie, sugestie linków, sugerowane powiązania, powiązania, linki przychodzące, backlinki, niepołączone, bez linku, temat",
     "appearance_noteFont": "czcionka, krój pisma, monospace, o stałej szerokości, szeryfowa, bezszeryfowa, domyślna czcionka, własna czcionka, niestandardowa czcionka, zainstalowana czcionka, moja czcionka",
     "appearance_nestedNumbers": "lista numerowana, lista zagnieżdżona, konspekt, 1.1, 1.1.1, numeracja prawnicza, numeracja wielopoziomowa, podnumery, lista wielopoziomowa",
     "appearance_confirmTrash": "usuń, kosz, potwierdź, potwierdzenie, okno dialogowe, pytaj, monit, nie pytaj ponownie",
@@ -90,6 +91,7 @@
     "appearance_autoLocationNotes": "lokalizacja, miejsce, gps, pozycja, mapa, geotag, automatycznie, gdzie, notatki",
     "appearance_autoLocationJournal": "lokalizacja, miejsce, gps, pozycja, mapa, geotag, automatycznie, gdzie, dziennik, pamiętnik, wpisy",
     "appearance_startView": "strona startowa, start, domyślny widok, otwieraj na",
+    "appearance_reopenLastOpen": "ostatnia notatka, ostatnio otwarte, przywróć, zapamiętaj, otwórz ponownie, start, uruchomienie",
     "appearance_view": "siatka, lista, karty, układ",
     "trackers_setup": "trackery, samopoczucie, przyciski, nastrój, sen, energia, kroki, woda, włącz, wyłącz",
     "trackers_habitQuestions": "nawyki, pytania, medytacja, modlitwa, palenie, alkohol, czy",
@@ -124,6 +126,7 @@
     "calendar_weekNumbers": "numer tygodnia, tydzień ISO, kalendarz",
     "calendar_hours": "godziny, godziny pracy, widok dnia, widok tygodnia, rano",
     "me_dms": "przełącznik bezczynności, dead man's switch, bezczynność, nieaktywność, usuń po, wymaż, porzucenie",
+    "appearance_smartConnections": "ai, sztuczna inteligencja, offline, na urządzeniu, lokalne ai, prywatne ai, model, bekko, znaczenie, to samo znaczenie, powiązane notatki, podobne notatki, sugerowane powiązania, sugestie linków, inteligentne powiązania, semantyczne, osadzenia, embeddingi, pobierz",
     "appearance_formatBar": "pasek narzędzi, pasek formatowania, przyciski, dostosuj, ułóż, lista punktowana, przekreślenie, koło zębate"
   }
 }

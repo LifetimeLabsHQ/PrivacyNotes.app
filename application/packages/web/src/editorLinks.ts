@@ -18,6 +18,7 @@
 
 import { Extension, InputRule, getMarkRange } from '@tiptap/core';
 import type { Editor } from '@tiptap/core';
+import type { Mark, Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorState } from '@tiptap/pm/state';
 import { detectPlatform, isOpenLinkModifier } from './devices';
@@ -49,12 +50,44 @@ export function linkHrefAt(state: EditorState, pos: number): string | null {
  * native tip (it waits a second and wears OS chrome), and
  * `LinkAddressPill.tsx` shows this one as a house tip instead. It still
  * reads `title`, which is what markdown-it and a pasted web page give it.
- * The markdown serializer writes the attribute back as the quoted title.
+ * `LINK_MARKDOWN` writes the attribute back as the quoted title.
  */
 export const LINK_TITLE_ATTRIBUTE = {
   default: null,
   parseHTML: (el: HTMLElement) => el.getAttribute('data-title') || el.getAttribute('title') || null,
   renderHTML: (attrs: { title?: string | null }) => (attrs.title ? { 'data-title': attrs.title } : {}),
+};
+
+type LinkMarkdownState = { inAutolink?: boolean };
+
+/**
+ * How a link is written to markdown: as prosemirror-markdown's link, which
+ * tiptap-markdown uses by default, writes it, except that the hover text
+ * escapes `\` as well as `"`. Unescaped, a hover text ending in a backslash
+ * took its closing quote with it and the link came back as text, and `\*`
+ * came back as `*`. Both escapes are CommonMark's, so every markdown reader
+ * gets the hover text as typed. `Editor.tsx` adds it to Link.
+ */
+export const LINK_MARKDOWN = {
+  serialize: {
+    open(state: LinkMarkdownState, mark: Mark, parent: ProseMirrorNode, index: number) {
+      const { href, title } = mark.attrs as { href: string; title?: string | null };
+      const content = parent.child(index);
+      // A bare address linked to itself is written `<address>`.
+      state.inAutolink = !title && /^\w+:/.test(href)
+        && content.isText && content.text === href && content.marks[content.marks.length - 1] === mark
+        && (index === parent.childCount - 1 || !mark.isInSet(parent.child(index + 1).marks));
+      return state.inAutolink ? '<' : '[';
+    },
+    close(state: LinkMarkdownState, mark: Mark) {
+      const { inAutolink } = state;
+      state.inAutolink = undefined;
+      if (inAutolink) return '>';
+      const { href, title } = mark.attrs as { href: string; title?: string | null };
+      return `](${href.replace(/[()"]/g, '\\$&')}${title ? ` "${title.replace(/[\\"]/g, '\\$&')}"` : ''})`;
+    },
+    mixable: true,
+  },
 };
 
 /**

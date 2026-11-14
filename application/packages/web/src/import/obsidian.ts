@@ -1,5 +1,6 @@
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
 import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
+import { openZip } from './zipOpen';
 import type { FolderDef } from '../folders';
 import { extractInlineTags, parseYamlTags } from '../notesRepo';
 import { FRONT_MATTER } from '../markdownFolder/adapter';
@@ -17,7 +18,7 @@ import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 import { FRONT_MATTER_LOCATION, FRONT_MATTER_LOCATION_NAME, LOCATION_KEY, parseFrontMatterLocation, type NoteLocation } from '../noteLocation';
 
 const msg = (key: string, options?: Record<string, unknown>): string =>
-  i18n.t(`importExport:importLog.obsidian.${key}`, options);
+  i18n.t(`importLog:obsidian.${key}`, options);
 
 /**
  * Obsidian vault importer.
@@ -336,9 +337,9 @@ async function parseZip(
   blobs: Map<string, ImportBlob>;
   counts: DrawingCounts;
 }> {
-  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
+  onProgress?.(i18n.t('importLog:shared.readingZip'));
   const buf = await file.arrayBuffer();
-  const zip = await JSZip.loadAsync(buf);
+  const zip = await openZip(buf);
 
   // Find the common root prefix. Many users zip a folder, so paths
   // look like "MyVault/note.md" - strip that prefix for cleaner tags.
@@ -370,7 +371,7 @@ async function parseZip(
     }
   });
 
-  onProgress?.(i18n.t('importExport:importLog.shared.foundNotes', { count: mdFiles.length }));
+  onProgress?.(i18n.t('importLog:shared.foundNotes', { count: mdFiles.length }));
 
   // Rebuild the vault's subfolder structure as a real folder tree. Each
   // note's folderId points at the deepest folder created for its path.
@@ -392,7 +393,7 @@ async function parseZip(
     }
     notes.push(note);
     if ((i + 1) % 50 === 0) {
-      onProgress?.(i18n.t('importExport:importLog.shared.parsed', { done: i + 1, total: mdFiles.length }));
+      onProgress?.(i18n.t('importLog:shared.parsed', { done: i + 1, total: mdFiles.length }));
     }
   }
 
@@ -454,7 +455,7 @@ async function parseZip(
       continue;
     }
     if (blobs.size % 10 === 0) {
-      onProgress?.(i18n.t('importExport:importLog.shared.readingAttachments', { done: blobs.size + 1, total: attachments.length }));
+      onProgress?.(i18n.t('importLog:shared.readingAttachments', { done: blobs.size + 1, total: attachments.length }));
     }
     const data = await zipEntryMedia(entry);
     if (!data) {
@@ -509,7 +510,7 @@ async function parseVault(file: File, onProgress: ((msg: string) => void) | unde
 
   const warnings: string[] = [];
   if (skippedAttachments > 0) {
-    warnings.push(i18n.t('importExport:importLog.shared.skippedUnlinked', { count: skippedAttachments }));
+    warnings.push(i18n.t('importLog:shared.skippedUnlinked', { count: skippedAttachments }));
   }
   if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   warnings.push(...drawingCountWarnings(counts));
@@ -520,13 +521,13 @@ async function parseVault(file: File, onProgress: ((msg: string) => void) | unde
     const images = [...blobs.values()].filter((b) => b.mime.startsWith('image/')).length;
     const files = blobs.size - images;
     const parts: string[] = [];
-    if (images > 0) parts.push(i18n.t('importExport:importLog.shared.imageCount', { count: images }));
+    if (images > 0) parts.push(i18n.t('importLog:shared.imageCount', { count: images }));
     if (files > 0) parts.push(i18n.t('importExport:missing.files', { count: files }));
     transforms.push(msg('broughtAcross', { parts: parts.length === 2 ? i18n.t('importExport:missing.both', { pictures: parts[0], files: parts[1] }) : parts[0] }));
   }
   if (folders.length > 0) {
     const filed = notes.filter((n) => n.folderId).length;
-    transforms.push(msg('foldersRebuilt', { count: folders.length, filed: i18n.t('importExport:importLog.shared.filedNotes', { count: filed }) }));
+    transforms.push(msg('foldersRebuilt', { count: folders.length, filed: i18n.t('importLog:shared.filedNotes', { count: filed }) }));
   }
   const withFm = notes.filter((n) => n.tags.length > 0).length;
   if (withFm > 0) {
@@ -536,7 +537,7 @@ async function parseVault(file: File, onProgress: ((msg: string) => void) | unde
   if (withLinks > 0) {
     transforms.push(msg('linksPreserved', { count: withLinks }));
   }
-  if (!canvasOnly) transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
+  if (!canvasOnly) transforms.push(i18n.t('importLog:shared.linkifiedBare'));
 
   return {
     notes,

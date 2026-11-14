@@ -7,6 +7,7 @@
     "sleep": "Sommeil",
     "sleepScore": "Score de sommeil",
     "heartRate": "Fréquence cardiaque",
+    "bloodPressure": "Tension artérielle",
     "activity": "Activité",
     "medication": "Médication",
     "meds": "Médocs",
@@ -24,6 +25,7 @@
   "units": {
     "hoursSuffix": "h",
     "bpm": "bpm",
+    "mmHg": "mmHg",
     "kg": "kg",
     "lb": "lb",
     "steps_one": "pas",
@@ -116,6 +118,10 @@
   },
   "heartRate": {
     "prompt": "Fréquence cardiaque moyenne"
+  },
+  "bloodPressure": {
+    "systolic": "Chiffre du haut (systolique)",
+    "diastolic": "Chiffre du bas (diastolique)"
   },
   "activity": {
     "prompt": "Niveau d'activité aujourd'hui ?",
@@ -243,11 +249,13 @@
   "custom": {
     "yes": "Oui",
     "no": "Non",
+    "unknownType": "Ce suivi nécessite une version plus récente de l'application.",
     "typeLabels": {
       "scale10": "Échelle (0-10)",
       "scale5": "Échelle (0-5)",
       "slider100": "Score (0-100)",
       "number": "Nombre",
+      "pair": "Deux nombres",
       "yesno": "Oui / Non"
     }
   },
@@ -263,6 +271,7 @@
     "medicationCard": "Carte des médicaments",
     "medicationCardHelp": "« As-tu pris tes médicaments ? » sur cet appareil, seulement un jour où un médicament est prévu.",
     "customHelp": "Des suivis que tu nommes toi-même : une échelle, un nombre ou un oui ou non. Jusqu'à {{max}}.",
+    "customHelpPair": "Des suivis que tu nommes toi-même : une échelle, un nombre, deux nombres ou un oui ou non. Jusqu'à {{max}}.",
     "yourCustomTrackers": "Tes suivis personnalisés",
     "categoryMoodMind": "Humeur et esprit",
     "categoryBodyHealth": "Corps et santé",
@@ -297,7 +306,13 @@
     "preview": "Aperçu",
     "startFromLast": "Reprendre la dernière saisie",
     "chooseIcon": "Choisir une icône",
-    "startFromLastHelp": "Pratique pour ce qui change rarement, comme ton poids ou une dose quotidienne."
+    "startFromLastHelp": "Pratique pour ce qui change rarement, comme ton poids ou une dose quotidienne.",
+    "pairFirst": "Premier nombre",
+    "pairSecond": "Second nombre",
+    "pairFirstPlaceholder": "Systolique",
+    "pairSecondPlaceholder": "Diastolique",
+    "pairUnit": "Unité (facultatif)",
+    "pairWaiting": "Enregistré dès que le premier nombre est saisi."
   },
   "factors": {
     "prompt": "Qu'est-ce qui a fait partie de ta journée ?",

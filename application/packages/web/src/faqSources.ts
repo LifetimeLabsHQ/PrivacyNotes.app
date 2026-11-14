@@ -99,7 +99,10 @@ export const FAQ_SOURCES: Readonly<Record<string, readonly FaqSource[]>> = {
   ],
   'enable-2fa': [{ doc: 'threatModel', heading: 'Two-factor sign-in' }],
   'bip39-wordlist': [{ doc: 'crypto' }],
-  'no-ai': [{ doc: 'verify', heading: 'Tier 1: one minute, no tools' }],
+  'no-ai': [
+    { doc: 'threatModel', heading: 'Smart connections' },
+    { doc: 'verify', heading: 'Tier 1: one minute, no tools' },
+  ],
   'burn-notes': [{ doc: 'threatModel', heading: 'Burn notes (one-time shares)' }],
   'share-with-someone': [{ doc: 'threatModel', heading: 'Burn notes (one-time shares)' }],
   'locked-vs-protected': [{ doc: 'threatModel', heading: 'Lock / PIN-protect notes' }],

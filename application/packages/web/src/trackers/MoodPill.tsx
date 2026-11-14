@@ -20,7 +20,8 @@ export function MoodPill({
   value?: number;
   expanded: boolean;
   onToggle: () => void;
-  onChange: (v: number) => void;
+  /** `undefined` removes the value. */
+  onChange: (v: number | undefined) => void;
   readOnly?: boolean;
 }) {
   const { t } = useTranslation('trackers');
@@ -38,7 +39,7 @@ export function MoodPill({
     >
       <div className="flex flex-col gap-2 items-start">
         <PanelQuestion>{t('mood.prompt')}</PanelQuestion>
-        <MoodScale value={value} onPick={(n) => { onChange(n); onToggle(); }} label={t('mood.prompt')} className="w-full max-w-[420px]" />
+        <MoodScale value={value} onPick={(n) => { onChange(n); onToggle(); }} onClear={() => onChange(undefined)} label={t('mood.prompt')} className="w-full max-w-[420px]" />
       </div>
     </PillShell>
   );

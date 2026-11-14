@@ -10,6 +10,35 @@
     "otherGuides": "Diğer içe aktarma rehberleri"
   },
   "guides": {
+    "1password": {
+      "app": "1Password",
+      "title": "1Password kasanızı dışa aktarın",
+      "metaTitle": "1Password kasası nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "1Password uygulaması hesabınızı tek bir .1pux dosyası olarak dışa aktarır, PrivacyNotes da içindeki giriş bilgilerini, kartları, notları ve kimlikleri Kasa kayıtlarına ve notlara dönüştürür.",
+      "sections": [
+        {
+          "h": "1Password'den dışa aktarın",
+          "steps": [
+            "Bilgisayarınızda 1Password uygulamasını açın ve kilidini açın.",
+            "File > Export yolunu izleyin ve hesabınızı seçin.",
+            "Hesap parolanızı girin, 1PUX biçimini değiştirmeyin ve dosyayı kaydedin."
+          ]
+        },
+        {
+          "h": "1PUX mu CSV mi",
+          "p": [
+            "1PUX'u seçin. CSV dışa aktarma yalnızca giriş bilgilerini tutar: kart, not ve kimlik yoktur, özel alanlar da yoktur."
+          ]
+        },
+        {
+          "h": "Neler nereye iniyor",
+          "p": [
+            "Her giriş bilgisi 2FA anahtarıyla birlikte bir [Kasa giriş bilgisi](/tr/help/vault) olur, böylece [kodlarınız çalışmaya devam eder](/tr/help/vault-totp); ek web siteleri ve özel alanlar da birlikte gelir. Bir kart kart olur, güvenli bir not ya da bir kimlik not olur. Etiketler etiket olarak kalır, iç içe olanlar da, favoriler sabitlenmiş olarak gelir ve arşivlenmiş kayıtlar arşive gider. Ekli dosyalar geride kalır: onları 1Password'den kaydedip buraya ekleyin.",
+            "Dışa aktarılan dosya parolalarınızı düz metin olarak tutar. İçe aktarın, her şeyin geldiğini kontrol edin, sonra dosyayı silin."
+          ]
+        }
+      ]
+    },
     "google-calendar": {
       "app": "Google Calendar",
       "title": "Google Calendar takvimlerinizi dışa aktarın",
@@ -159,6 +188,53 @@
         }
       ]
     },
+    "siyuan": {
+      "app": "SiYuan",
+      "title": "SiYuan notlarınızı dışa aktarın",
+      "metaTitle": "SiYuan notlarını Data.zip olarak dışa aktarma - PrivacyNotes",
+      "lead": "SiYuan, tüm çalışma alanınızı tek bir Data.zip olarak dışa aktarır. Bu dosya her defteri iç içe belgeleri, etiketleri, blok referansları, varlıkları ve tarihleriyle birlikte taşır.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/siyuan-export.webp",
+            "alt": "SiYuan Data migration penceresi: Data.zip satırı seçili ve Export düğmesi vurgulanmış.",
+            "width": 1576,
+            "height": 1076
+          },
+          "h": "Çalışma alanını Data.zip olarak dışa aktarın",
+          "steps": [
+            "SiYuan'ı bilgisayarınızda açın.",
+            "Sol üstteki SiYuan menüsüne tıklayın ve \"Data migration\"ı seçin.",
+            "SiYuan altında \"Data.zip\"in üzerine gelin ve Export'a tıklayın.",
+            "Bir klasör seçin. SiYuan, çalışma alanındaki tüm defterleri içeren tek bir .zip yazar.",
+            "O .zip'i olduğu gibi sürükleyip bırakın."
+          ],
+          "p": [
+            "Yalnızca tek bir defteri taşımak için Documents panelinde ona sağ tıklayın ve Export > \"SiYuan .sy.zip\" seçeneğini seçin. Bu dosyayı da aynı şekilde okuruz."
+          ]
+        },
+        {
+          "h": "Şifreli defterlerin kilidini açın ve tek başına dışa aktarın",
+          "p": [
+            "Data.zip şifreli bir defteri şifreli bırakır, bu yüzden onu okuyamayız. Defteri atlarız ve içe aktarma önizlemesi onu adıyla belirtir. Defterin kilidini SiYuan'da açın, \"SiYuan .sy.zip\" olarak dışa aktarın ve o dosyayı da sürükleyip bırakın: bu dışa aktarma okunabilir."
+          ]
+        },
+        {
+          "h": "Markdown'ı değil, Data.zip'i seçin",
+          "p": [
+            "Markdown .zip dışa aktarması metni korur ama belge etiketlerinizi ve tarihlerinizi dışarıda bırakır, blok referanslarını da düz metin ya da dipnot olarak yazar. Elinizdeki tek şey buysa onu da okuruz ve her not içe aktarma tarihini alır."
+          ]
+        },
+        {
+          "h": "Neler geliyor",
+          "p": [
+            "Her defter bir klasör olur, iç içe belgeler de iç içe klasörler olur. Alt belgeleri olan ve kendi metni de bulunan bir belge, aynı adlı klasörün içinde bir not olur. Her not, etiketlerini ve SiYuan'ın sakladığı oluşturulma ve güncellenme tarihlerini korur.",
+            "Başlıklar, listeler, onay listeleri, alıntılar, dili belli kod, hizalamalı tablolar, matematik, bilgi kutuları, vurgular ve metin renkleri olduğu gibi gelir. [Blok referansları not bağlantısı olur](/tr/help/note-links), görseller ve dosyalar depolamanıza aktarılır, yer imi eklenmiş belgeler de sabitlenmiş gelir.",
+            "Bir veritabanı görünen sütunlarından oluşan bir tablo olur, sekmeler katlanır bölüm olur, zihin haritası da iç içe bir liste olur. Flash kartlar düz metin olarak kalır, gömme sorgusu ise kod olarak saklanır. SiYuan'ın dışa aktarmalarında çöp kutusu yoktur, bu yüzden silinen belgeler onun geçmişinde kalır."
+          ]
+        }
+      ]
+    },
     "standard-notes": {
       "app": "Standard Notes",
       "title": "Standard Notes notlarınızı dışa aktarın",
@@ -256,6 +332,29 @@
           "p": [
             "Giriş bilgileri [Kasa'daki giriş kayıtlarına](/tr/help/vault) (site simgeleriyle birlikte), kartlar kart kayıtlarına, SSH anahtarları SSH anahtarı kayıtlarına dönüşür; güvenli notlar ve kimlikler ise okunabilir not olarak gelir. Bitwarden klasörleri etiketlere eşlenir, favoriler de yıldızlı gelir. Kimlik doğrulama anahtarları (TOTP) da birlikte gelir, böylece [2FA kodlarınız çalışmaya devam eder](/tr/help/vault-totp).",
             "Dışa aktarılan dosya parolalarınızı düz metin olarak tutar, bu yüzden içe aktarın, her şeyin geldiğini doğrulayın, sonra dosyayı düzgünce silin. PrivacyNotes içinde her şey yeniden şifrelenir, hem cihazınızda hem de sunucuya giderken."
+          ]
+        }
+      ]
+    },
+    "enpass": {
+      "app": "Enpass",
+      "title": "Enpass kasanızı dışa aktarın",
+      "metaTitle": "Enpass kasası nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "Enpass bir kasayı tek bir .json dosyası olarak dışa aktarır, PrivacyNotes da içindeki giriş bilgilerini, kartları, notları ve kimlikleri Kasa kayıtlarına ve notlara dönüştürür.",
+      "sections": [
+        {
+          "h": "Enpass'tan dışa aktarın",
+          "steps": [
+            "Bilgisayarınızda Enpass'ı açın ve kilidini açın.",
+            "File > Export yolunu izleyin, kasayı ve .json biçimini seçin.",
+            "Dosyayı kaydedin, sonra ana parolanızı girin. Her kasayı ayrı ayrı dışa aktarın."
+          ]
+        },
+        {
+          "h": "Neler nereye iniyor",
+          "p": [
+            "Her giriş bilgisi 2FA anahtarıyla birlikte bir [Kasa giriş bilgisi](/tr/help/vault) olur, böylece [kodlarınız çalışmaya devam eder](/tr/help/vault-totp); ek web siteleri ve özel alanlar da birlikte gelir. Bir kart kart olur, güvenli bir not ya da bir kimlik not olur. Klasörler etiket olur, iç içe olanlar da, favoriler sabitlenmiş olarak gelir ve arşivlenmiş kayıtlar arşive gider. Enpass çöp kutusundaki kayıtlar ve ekli dosyalar geride kalır.",
+            "Dışa aktarılan dosya parolalarınızı düz metin olarak tutar. İçe aktarın, her şeyin geldiğini kontrol edin, sonra dosyayı silin."
           ]
         }
       ]
@@ -863,6 +962,332 @@
           "h": "Aynı dosyayı istediğiniz zaman yeniden içe aktarın",
           "p": [
             "İkinci bir içe aktarma, zaten sahip olduğunuz kişileri atlar. Her kartı önce kimliğiyle, sonra ad ve ortak bir telefon numarasıyla, sonra da ortak bir e-posta adresiyle eşleştirir. Daha önce kaydettiğiniz kişiler değiştirilmez, bu yüzden burada yaptığınız düzenlemeler güvende kalır."
+          ]
+        }
+      ]
+    },
+    "anytype": {
+      "app": "Anytype",
+      "title": "Anytype alanınızı dışa aktarın",
+      "metaTitle": "Anytype alanını dışa aktarma - PrivacyNotes",
+      "lead": "Anytype, bir alanın tamamını Any-Block JSON biçiminde tek bir zip olarak dışa aktarır. Bu dosya sayfalarınızı etiketleri, koleksiyonları, görevleri, bağlantıları ve dosyalarıyla birlikte taşır.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/anytype-export.webp",
+            "alt": "Anytype alan ayarları, Export sayfası: Any-Block v1, File Format olarak JSON ve Zip archive seçili, Include files data ile Include archived objects açık.",
+            "width": 1576,
+            "height": 800
+          },
+          "h": "Alanı Any-Block JSON olarak dışa aktarın",
+          "steps": [
+            "Anytype'ı bilgisayarınızda açın ve taşımak istediğiniz alana gidin.",
+            "File > Export'u seçin. Anytype, alan ayarlarını Export sayfasında açar. Yeni sürümler alana kanal der, bu yüzden sayfada \"Export Channel\" yazar.",
+            "\"Any-Block v1\"i seçin ve File Format'ı JSON'da bırakın.",
+            "\"Zip archive\", \"Include files data\" ve \"Include archived objects\" seçeneklerini açın.",
+            "\"Export data\"ya tıklayın ve bir klasör seçin. Anytype, alanın adını ve tarihi taşıyan tek bir .zip yazar.",
+            "O .zip'i olduğu gibi sürükleyip bırakın."
+          ],
+          "p": [
+            "Bir dışa aktarma tek bir alanı içerir. Notlarınızı birkaç alanda tutuyorsanız her birini dışa aktarın ve zipleri art arda sürükleyip bırakın."
+          ]
+        },
+        {
+          "h": "Markdown ya da Protobuf'u değil, Any-Block JSON'u seçin",
+          "p": [
+            "Markdown dışa aktarması metni korur ama altı çizili metni, renkleri, bilgi kutularını, hizalamayı ve kod dillerini düşürür, koleksiyonları da dışarıda bırakır. Elinizdeki tek şey buysa onu da okuruz ve içe aktarma önizlemesi neyin kaybolduğunu söyler.",
+            "Any-Block ayrıca Protobuf dosya biçimi sunar. Aynı veriyi bizim okumadığımız ikili bir biçimde tutar, bu yüzden onun yerine JSON dışa aktarmasını isteriz. Any-Block v2, Anytype tarafından önizleme olarak işaretlenmiştir ve bir yedek değildir."
+          ]
+        },
+        {
+          "h": "Neler geliyor",
+          "p": [
+            "Sayfalar, notlar, görevler ve yer imleri; etiketleri ve Anytype'ın sakladığı oluşturulma ve güncellenme tarihleriyle not olur. Anytype'ta klasör yoktur, bu yüzden bir koleksiyondaki sayfa koleksiyonun adını taşıyan bir klasöre iner, diğer tüm sayfalar en üst düzeye iner.",
+            "Başlıklar, listeler, onay listeleri, alıntılar, dili belli kod, tablolar, matematik ve Mermaid diyagramları olduğu gibi gelir. Açılır başlıklar katlanır bölüm olur, bilgi kutuları bilgi kutusu olarak kalır. [Sayfalar arasındaki bağlantılar ve anmalar not bağlantısı olur](/tr/help/note-links), görseller ve dosyalar depolamanıza aktarılır.",
+            "Bir görev, yapıldıysa işaretli bir görev notu olarak gelir. Özel özellikler notun başına kısa bir liste olarak yazılır. Anytype'ın çöp kutusundaki sayfalar çöp kutunuza gider, böylece onları orada geri yükleyebilir ya da silebilirsiniz.",
+            "Sayfa simgeleri ve kapaklar geride kalır, içe aktarma önizlemesi kaç tane olduğunu söyler. Favoriler dışa aktarmanın parçası değildir, bu yüzden içe aktarmadan sonra o notları yeniden sabitleyin."
+          ]
+        }
+      ]
+    },
+    "apple-calendar": {
+      "app": "Apple Calendar",
+      "title": "Apple Calendar takviminizi dışa aktarın",
+      "metaTitle": "Apple Calendar nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "Mac'teki Takvim uygulaması takvimleri tek tek, bir .ics dosyası olarak dışa aktarır ve PrivacyNotes bu dosyayı olduğu gibi okur. Her takvim bir klasör olur.",
+      "sections": [
+        {
+          "h": "Mac'te Takvim'den bir takvimi dışa aktarın",
+          "steps": [
+            "Takvim'i açın ve soldaki takvim listesini gösterin (View > Show Calendar List).",
+            "Taşımak istediğiniz takvime tıklayın.",
+            "File > Export > \"Export...\" yolunu izleyin ve .ics dosyasını kaydedin.",
+            "İstediğiniz her diğer takvim için aynısını yapın. Her biri ayrı bir dosyadır."
+          ]
+        },
+        {
+          "h": "Neler geliyor",
+          "p": [
+            "Her etkinlik günüyle, saatiyle ve süresiyle gelir; tüm gün süren ve birkaç güne yayılan etkinlikler de dahil. Tekrarlayan etkinlikler kurallarını korur.",
+            "Bir takvimin varsayılan uyarıları etkinliklerde değil, Takvim'in ayarlarında durur; bu yüzden dışa aktarma onları dışarıda bırakır ve kontrol adımı, kaç yaklaşan etkinliğin hatırlatıcısız geldiğini söyler. Tek bir etkinliğe koyduğunuz uyarı birlikte gelir. Aynı dosyayı yeniden içe aktarırsanız zaten sahip olduğunuz etkinlikler atlanır."
+          ]
+        }
+      ]
+    },
+    "keepass": {
+      "app": "KeePass",
+      "title": "KeePass veritabanınızı dışa aktarın",
+      "metaTitle": "KeePass veritabanı nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "KeePass bütün veritabanınızı tek bir KeePass XML dosyası olarak dışa aktarır, PrivacyNotes da her kaydı bir giriş bilgisine ya da nota dönüştürür. XML, CSV dışa aktarmanın tuttuğundan fazlasını tutar.",
+      "sections": [
+        {
+          "h": "KeePass'ten dışa aktarın",
+          "steps": [
+            "Veritabanınızı KeePass'te açın ve kilidini açın.",
+            "File > Export yolunu izleyin.",
+            "\"KeePass XML (2.x)\" seçeneğini seçin ve .xml dosyasını kaydedin."
+          ]
+        },
+        {
+          "h": ".kdbx'i değil, XML'i seçin",
+          "p": [
+            ".kdbx veritabanı dosyanız ana anahtarınızla kilitlidir, bu yüzden PrivacyNotes dosyayı okuyamaz; dosyayı bırakırsanız içe aktarma size bunu bildirir. KeePass'in CSV dışa aktarması da işe yarar, ama yalnızca başlığı, kullanıcı adını, parolayı, web sitesini ve notları tutar."
+          ]
+        },
+        {
+          "h": "Neler nereye iniyor",
+          "p": [
+            "Kullanıcı adı, parola, web sitesi ya da 2FA anahtarı olan bir kayıt [Kasa'da giriş bilgisi](/tr/help/vault) olur, diğer her kayıt güvenli bir not olur. Ek web siteleri ve kendi alanlarınız birlikte gelir, korumalı bir alan gizli kalır ve son kullanma tarihi bir alana dönüşür. 2FA anahtarı da gelir, böylece [kodlarınız çalışmaya devam eder](/tr/help/vault-totp). Ekli dosyalar da gelir, giriş bilgisinin Dosyalar bölümünde ya da notun sonunda. Gruplar ve etiketler etiket olur. Recycle Bin'deki kayıtlar ile bir kaydın eski sürümleri geride kalır.",
+            "Dışa aktarılan dosya parolalarınızı düz metin olarak tutar. İçe aktarın, her şeyin geldiğini kontrol edin, sonra dosyayı silin."
+          ]
+        }
+      ]
+    },
+    "keepassxc": {
+      "app": "KeePassXC",
+      "title": "KeePassXC veritabanınızı dışa aktarın",
+      "metaTitle": "KeePassXC veritabanı nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "KeePassXC veritabanınızı bir XML dosyası ya da bir CSV dosyası olarak dışa aktarır ve PrivacyNotes ikisini de okur. XML dışa aktarma, CSV'nin dışarıda bıraktığı her şeyi tutar.",
+      "sections": [
+        {
+          "h": "KeePassXC'den dışa aktarın",
+          "steps": [
+            "Veritabanınızı KeePassXC'de açın ve kilidini açın.",
+            "Database > Export > \"XML File...\" yolunu izleyin.",
+            "Şifrelenmemiş dosya uyarısını onaylayın ve dosyayı kaydedin."
+          ]
+        },
+        {
+          "h": "XML mi CSV mi",
+          "p": [
+            "XML'i seçin. CSV başlığı, kullanıcı adını, parolayı, web sitesini, notları, 2FA anahtarını, tarihleri ve grubu tutar, ama etiketleri, özel alanları, ikinci bir web sitesini, son kullanma tarihini ve ekli dosyaları tutmaz. .kdbx dosyanızın kendisi kilitlidir, bu yüzden PrivacyNotes onu okuyamaz."
+          ]
+        },
+        {
+          "h": "Neler nereye iniyor",
+          "p": [
+            "Kullanıcı adı, parola, web sitesi ya da 2FA anahtarı olan bir kayıt [Kasa'da giriş bilgisi](/tr/help/vault) olur, diğer her kayıt güvenli bir not olur. Özel alanlar alan olarak gelir, korumalı olan gizli kalır ve 2FA anahtarı da gelir, böylece [kodlarınız çalışmaya devam eder](/tr/help/vault-totp). Ekli dosyalar da gelir, giriş bilgisinin Dosyalar bölümünde ya da notun sonunda. Gruplar ve etiketler etiket olur. Recycle Bin'deki kayıtlar ile bir kaydın eski sürümleri geride kalır.",
+            "Dışa aktarılan dosya parolalarınızı düz metin olarak tutar. İçe aktarın, her şeyin geldiğini kontrol edin, sonra dosyayı silin."
+          ]
+        }
+      ]
+    },
+    "lastpass": {
+      "app": "LastPass",
+      "title": "LastPass kasanızı dışa aktarın",
+      "metaTitle": "LastPass kasası nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "LastPass kasanızı tek bir .csv dosyası olarak dışa aktarır, PrivacyNotes da parolalarını giriş bilgilerine, güvenli notlarını notlara ya da kartlara dönüştürür.",
+      "sections": [
+        {
+          "h": "LastPass'ten dışa aktarın",
+          "steps": [
+            "LastPass kasanızda bir tarayıcıdan oturum açın.",
+            "Advanced options > Export yolunu izleyin.",
+            "\"Export data for use anywhere\" seçeneğini seçin ve ana parolanızla onaylayın. LastPass bir .csv dosyası kaydeder."
+          ]
+        },
+        {
+          "h": "Neler nereye iniyor",
+          "p": [
+            "Her parola, 2FA anahtarıyla birlikte bir [Kasa giriş bilgisi](/tr/help/vault) olur, böylece [kodlarınız çalışmaya devam eder](/tr/help/vault-totp). Güvenli bir not, not olur; ödeme kartı notu ise kart olur. Klasörler, iç içe olanlar da dahil, etiket olur; favoriler sabitlenmiş olarak gelir. Dosyada tarih yoktur, bu yüzden her kayıt içe aktardığınız günün tarihini alır.",
+            "Dışa aktarılan dosya parolalarınızı düz metin olarak tutar. İçe aktarın, her şeyin geldiğini kontrol edin, sonra dosyayı silin."
+          ]
+        }
+      ]
+    },
+    "nordpass": {
+      "app": "NordPass",
+      "title": "NordPass kasanızı dışa aktarın",
+      "metaTitle": "NordPass kasası nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "NordPass kasanızı tek bir .csv dosyası olarak dışa aktarır, PrivacyNotes da parolalarını, notlarını, kartlarını ve kişisel bilgilerini Kasa kayıtlarına dönüştürür.",
+      "sections": [
+        {
+          "h": "NordPass'ten dışa aktarın",
+          "steps": [
+            "NordPass'i açın ve kilidini açın.",
+            "Settings bölümüne gidin ve \"Export Items\" seçeneğini seçin.",
+            "Ana parolanızla onaylayın ve .csv dosyasını kaydedin."
+          ]
+        },
+        {
+          "h": "Neler nereye iniyor",
+          "p": [
+            "Her parola, ek web siteleri ve özel alanlarıyla birlikte bir [Kasa giriş bilgisi](/tr/help/vault) olur, gizli bir alan gizli kalır. Notlar not, kartlar kart olarak gelir; kişisel bilgiler ise her ayrıntısı kendi satırında olan bir not olur. Her kaydın klasörü bir etiket olur. Dosya yalnızca kaydın içinde durduğu klasörü belirtir, üstündeki klasörleri değil.",
+            "Ücretsiz planda NordPass 2FA anahtarı tutmaz, bu yüzden dosyada hiç yoktur. Dışa aktarılan dosya parolalarınızı düz metin olarak tutar. İçe aktarın, her şeyin geldiğini kontrol edin, sonra dosyayı silin."
+          ]
+        }
+      ]
+    },
+    "proton-pass": {
+      "app": "Proton Pass",
+      "title": "Proton Pass kasanızı dışa aktarın",
+      "metaTitle": "Proton Pass kasası nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "Proton Pass kasalarınızı bir .zip, bir .csv ya da PGP ile şifrelenmiş bir dosya olarak dışa aktarır. PrivacyNotes .zip ve .csv dosyalarını okur, en çok şeyi de .zip tutar.",
+      "sections": [
+        {
+          "h": "Proton Pass'ten dışa aktarın",
+          "steps": [
+            "Proton Pass'i açın ve Settings > Export bölümüne gidin.",
+            "File format altında ZIP'i seçin.",
+            "Export'a tıklayın ve Proton parolanızla onaylayın."
+          ]
+        },
+        {
+          "h": "PGP ile şifreli olanı değil, ZIP'i seçin",
+          "p": [
+            "PGP ile şifrelenmiş dosya parola ifadenizle kilitlidir, bu yüzden PrivacyNotes onu okuyamaz ve içe aktarma bunu söyler. .csv de işe yarar, ama özel alanları yoktur."
+          ]
+        },
+        {
+          "h": "Neler nereye iniyor",
+          "p": [
+            "Her giriş bilgisi, ek web siteleri, özel alanları ve tarihleriyle birlikte bir [Kasa giriş bilgisi](/tr/help/vault) olur. 2FA anahtarı da gelir, böylece [kodlarınız çalışmaya devam eder](/tr/help/vault-totp). Bir kaydın hem e-postası hem kullanıcı adı varsa giriş bilgisini kullanıcı adı doldurur, e-posta ise bir alan olur. Notlar not, kartlar kart olarak gelir; kimlikler her ayrıntısı kendi satırında olan notlar olur. Her hide-my-email takma adı, adresiyle birlikte bir not olur; böylece hangi adresi hangi siteye verdiğinizin listesi sizde kalır. Proton, Proton hesabınız açık olduğu sürece e-postaları iletmeye devam eder. Birden fazla kasa varsa her kasa bir etiket olur. Çöp kutusundaki kayıtlar geride kalır.",
+            "Dışa aktarılan dosya parolalarınızı düz metin olarak tutar. İçe aktarın, her şeyin geldiğini kontrol edin, sonra dosyayı silin."
+          ]
+        }
+      ]
+    },
+    "dashlane": {
+      "app": "Dashlane",
+      "title": "Dashlane kasanızı dışa aktarın",
+      "metaTitle": "Dashlane kasası nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "Dashlane kasanızı CSV dosyalarından oluşan bir .zip olarak dışa aktarır, PrivacyNotes da içindeki giriş bilgilerini, güvenli notları ve ödeme kartlarını Kasa kayıtlarına ve notlara dönüştürür.",
+      "sections": [
+        {
+          "h": "Dashlane'den dışa aktarın",
+          "steps": [
+            "Dashlane kasanızı tarayıcı uzantısında ya da web uygulamasında açın.",
+            "Settings > Export data yolunu izleyin.",
+            "CSV biçimini seçin ve .zip dosyasını kaydedin."
+          ]
+        },
+        {
+          "h": ".dash'i değil, CSV'yi seçin",
+          "p": [
+            "CSV'yi seçin. Bir .dash dışa aktarma kendi parolasıyla kilitlidir, onu bırakırsanız PrivacyNotes size bunu bildirir."
+          ]
+        },
+        {
+          "h": "Neler nereye iniyor",
+          "p": [
+            "Her giriş bilgisi 2FA anahtarıyla birlikte bir [Kasa giriş bilgisi](/tr/help/vault) olur, böylece [kodlarınız çalışmaya devam eder](/tr/help/vault-totp). Güvenli bir not not olur, bir ödeme kartı da kart olur. Kimlikler ve kişisel bilgiler ayrıntılarıyla birlikte not olur. Kategoriler etiket olur, iç içe olanlar da. Dashlane giriş bilgisi başına tek web sitesi tutar, bu yüzden ikinci bir web sitesi dosyada yoktur.",
+            "Dışa aktarılan dosya parolalarınızı düz metin olarak tutar. İçe aktarın, her şeyin geldiğini kontrol edin, sonra dosyayı silin."
+          ]
+        }
+      ]
+    },
+    "daylio": {
+      "app": "Daylio",
+      "title": "Daylio kayıtlarınızı dışa aktarın",
+      "metaTitle": "Daylio yedeği nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "Daylio, More > Backup & Restore bölümünden bir .daylio yedeği dışa aktarır. PrivacyNotes bu dosyayı okur ve her kaydı ruh hali, etkinlikleri ve fotoğraflarıyla bir günlük kaydı olarak yeniden kurar.",
+      "sections": [
+        {
+          "h": ".daylio yedeğini dışa aktarın",
+          "steps": [
+            "Daylio'yu tamamen kapatın, sonra yeniden açın. Yeni bir kayıttan hemen sonra alınan yedek, uygulama yeniden başlayana kadar o kaydı içermeyebilir.",
+            "More > Backup & Restore > Advanced Options > Export yolunu izleyin.",
+            "Daylio bir kaydetme penceresi değil, bir paylaşım sayfası açar. Dosyayı dosyalarınıza ya da bu cihazda açabileceğiniz bir bulut sürücüsüne kaydedin.",
+            "Kaydettiğiniz .daylio dosyası, içe aktarılacak dosyadır."
+          ]
+        },
+        {
+          "h": "CSV'yi değil, yedeği seçin",
+          "p": [
+            "More > Export Entries bir CSV yazar; bu, Daylio'da Premium bir özelliktir. PrivacyNotes onu da okur, ama CSV'de fotoğraf, sesli not ve ruh hali grubu yoktur; bu yüzden adlandırdığınız ya da yeniden adlandırdığınız bir ruh hali ruh hali takibine değil, kayda metin olarak girer. Mümkün olduğunda .daylio yedeğini kullanın."
+          ]
+        },
+        {
+          "h": "Neler geliyor",
+          "p": [
+            "[Her kayıt Günlükler'e iner](/tr/help/journal), Daylio'nun gösterdiği gün ve saatte; aynı güne ait iki kayıt iki kayıt olarak kalır. Her ruh hali, Daylio'daki ruh hali grubundan [ruh hali takibini](/tr/help/choose-trackers) doldurur; böylece yeniden adlandırılmış bir ruh hali ölçekteki yerini korur, kendi adlandırdığınız bir ruh hali ise kaydın başında da yer alır.",
+            "Etkinlikler [etkenlere](/tr/help/factors) dönüşür ve yeni olan Daylio grubunu korur. Energy ya da Stress gibi ölçekler kaydın sonunda bir liste olarak gelir. Not başlıkları, kalın, italik, altı çizili, üstü çizili ve listeler sağ çıkar, fotoğraflar görsel olarak, sesli notlar ek olarak içe aktarılır ve yıldızlı bir kayıt yıldızlı kalır. Hedefler ve önemli günler geride kalır; içe aktarma özeti onları sayar."
+          ]
+        }
+      ]
+    },
+    "diarium": {
+      "app": "Diarium",
+      "title": "Diarium günlüğünüzü dışa aktarın",
+      "metaTitle": "Diarium günlüğü nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "Diarium günlüğünüzü Export menüsünden JSON olarak dışa aktarır. PrivacyNotes bu dışa aktarmayı okur ve her kaydı puanı, etiketleri ve ekleriyle bir günlük kaydı olarak yeniden kurar.",
+      "sections": [
+        {
+          "h": "JSON'u eklerle dışa aktarın",
+          "steps": [
+            "Diarium'u açın ve menüden Export'u seçin.",
+            "Biçim olarak JSON'u seçin ve Attachments'ı açın.",
+            "Save to local storage'ı seçin ve bir klasör belirleyin. Diarium, JSON'u ve fotoğraflarınızla dosyalarınızı içeren bir .zip kaydeder.",
+            "O .zip, içe aktarılacak dosyadır."
+          ]
+        },
+        {
+          "h": "Attachments açık kalsın",
+          "p": [
+            "Attachments kapalıyken Diarium yalnızca bir .json kaydeder. PrivacyNotes onun metnini içe aktarır, ama her fotoğraf ve dosya geride kalır; içe aktarma özeti onları sayar. Attachments açıkken yeniden dışa aktarın ve onun yerine .zip dosyasını bırakın.",
+            "Create separate file for each entry fark etmez: PrivacyNotes, .zip içindeki her JSON dosyasını okur. DOCX, TXT, HTML ve PDF dışa aktarmaları ile .diary yedeği içe aktarılmaz; bu yüzden JSON'u seçin."
+          ]
+        },
+        {
+          "h": "Neler geliyor",
+          "p": [
+            "[Her kayıt Günlükler'e iner](/tr/help/journal), Diarium'un gösterdiği gün ve saatte. Yıldız puanı [ruh hali takibini](/tr/help/choose-trackers) doldurur. Etiketler not etiketlerine ve [etkenlere](/tr/help/factors) dönüşür, kişiler ise Kişiler grubunda etken olur.",
+            "Kalın, italik, altı çizili, üstü çizili, vurgular, metin renkleri, listeler ve bağlantılar sağ çıkar; başka bir kayda giden bağlantı, o kayıt aynı dışa aktarmadaysa bir [not bağlantısına](/tr/help/note-links) dönüşür. Takipler kaydın sonunda bir liste olarak, hava durumu, güneş ve ay en üstte tek bir satır olarak gelir; bir konum ise kaydın yeri olur. Fotoğraflar görsel olarak, videolar, ses dosyaları ve PDF'ler ek olarak içe aktarılır."
+          ]
+        }
+      ]
+    },
+    "google-journal": {
+      "app": "Google Journal",
+      "title": "Google Journal kayıtlarınızı dışa aktarın",
+      "metaTitle": "Google Journal kayıtları nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "Google Journal, yedeği açıldıktan sonra Google Takeout üzerinden dışa aktarır. PrivacyNotes Takeout .zip dosyasını okur ve her kaydı fotoğrafları ve videolarıyla bir günlük kaydı olarak yeniden kurar.",
+      "sections": [
+        {
+          "h": "Önce yedeği açın",
+          "p": [
+            "Journal, Google hesabınıza yedeklenmedikçe Takeout'ta Journal görünmez. Önce yedeği açın, yoksa Takeout listesinde Journal'ı bulamazsınız."
+          ],
+          "steps": [
+            "Pixel'inizde Journal'ı açın ve Settings'e gidin.",
+            "Back up your journal'ı açın.",
+            "Birkaç dakika bekleyin. Journal, Takeout'ta ancak yedek açıldıktan sonra görünür."
+          ]
+        },
+        {
+          "h": "Journal'ı Google Takeout'tan dışa aktarın",
+          "steps": [
+            "takeout.google.com adresini açın ve aynı Google hesabıyla oturum açın.",
+            "Deselect all'a tıklayın, sonra yalnızca Journal'ı işaretleyin (\"Your journal entries and attachments from Journal\").",
+            "Next step'e tıklayın, .zip dosya türünü olduğu gibi bırakın ve Create export'a tıklayın.",
+            "Arşiv hazır olduğunda Google size bir bağlantı gönderir. .zip dosyasını indirin: içe aktarılacak dosya odur."
+          ]
+        },
+        {
+          "h": "Neler geliyor",
+          "p": [
+            "[Her kayıt Günlükler'e iner](/tr/help/journal), Journal'da ona seçtiğiniz günde. Her kayıt başlığını ve metnini korur; fotoğraflar ve videolar görsel ve ek olarak içe aktarılır. Bir kayıttaki harita görsel olarak gelir.",
+            "Takeout yer adlarını, yazma önerilerini, yer imlerini ve Journal'ın düşünme önerilerini taşımaz; bu yüzden onlar Journal'da kalır. İçe aktarma özeti bunu belirtir."
           ]
         }
       ]

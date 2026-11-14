@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { NotePencil, TextAa } from './icons';
 import { FieldLabel } from './formFields';
@@ -9,6 +10,15 @@ import { NotesText } from './detailPane';
 import { applySourceAction, type SourceAction } from './markdownSourceFormat';
 import { useToolbarFit } from './useToolbarFit';
 import { useIsTouchDevice } from './useIsMobile';
+
+/**
+ * The row under a vault item's scrolling column (NoteEditorPane), on top of
+ * the on-screen keyboard; null while no keyboard is up. On a touch screen the Notes box moves
+ * its bar there while the person types, because Android's own selection menu
+ * (Cut, Copy, Select all) opens right above the selected text and covered the
+ * bar at the top of the box, the one moment the bar is needed (#765).
+ */
+export const NotesDockContext = createContext<HTMLElement | null>(null);
 
 const NOTES_BAR_SIG = NOTES_FIELD_BAR.join();
 
@@ -24,6 +34,10 @@ const NOTES_BAR_SIG = NOTES_FIELD_BAR.join();
  * view will (NotesText), and "Show markdown" goes back. A preview, not an
  * editor: the format buttons step aside meanwhile. The text area stays
  * mounted, only hidden, so its undo history survives the round trip.
+ *
+ * On a touch screen, while the box has the focus and the keyboard is up, the
+ * bar moves to the dock row on top of the keyboard (NotesDockContext), the
+ * place of the note editor's bar at the bottom, and comes back on blur.
  *
  * The imports are static on purpose: the bar's modules already sit on the
  * boot path through the Markdown view, and a lazy chunk measured 2.9 kB
@@ -53,7 +67,10 @@ export function NotesField({ label, value, onChange, placeholder, disabled }: {
   // would be cut off. The key changes when the strip comes or goes, so the
   // strip's fade attaches to the row that is there.
   const strip = useIsTouchDevice();
-  const { rowRef } = useToolbarFit(true, strip && !disabled && !formatted ? NOTES_BAR_SIG : '');
+  const dock = useContext(NotesDockContext);
+  const [focused, setFocused] = useState(false);
+  const docked = strip && !!dock && focused && !formatted && !disabled;
+  const { rowRef } = useToolbarFit(true, strip && !disabled && !formatted ? `${NOTES_BAR_SIG}${docked ? ':dock' : ''}` : '');
   const MarkdownIcon = FORMAT_BAR_LOOK.markdownView!.Icon;
 
   function toggleFormatted() {
@@ -69,6 +86,26 @@ export function NotesField({ label, value, onChange, placeholder, disabled }: {
     if (untyped !== null) onChange(untyped);
   }
 
+  // On touch: one row that scrolls sideways when the box is too narrow for
+  // every button, with a fade on the edge that has more (useToolbarFit). The
+  // Markdown view's bar makes the same split.
+  const bar = (
+    <TipSideContext.Provider value="above">
+      <div className={`flex items-center gap-1.5 px-1 py-0.5 ${docked ? '' : 'border-b border-divider'}`}>
+        <div ref={strip ? rowRef : undefined} className={`flex-1 min-w-0 flex items-center gap-0.5 ${strip ? 'pn-format-strip' : 'flex-wrap'}`}>
+          {!formatted && <SourceButtons items={NOTES_FIELD_BAR} onAction={format} />}
+        </div>
+        {!formatted && <span aria-hidden="true" className="shrink-0 mx-0.5 h-4 w-px bg-pn-muted/35" />}
+        <ToolbarBtn
+          onClick={toggleFormatted}
+          label={formatted ? t(`editor:${FORMAT_BAR_LOOK.markdownView!.label}`) : t('notes:editor.showFormatted')}
+        >
+          {formatted ? <MarkdownIcon size={TB_ICON} /> : <TextAa size={TB_ICON} />}
+        </ToolbarBtn>
+      </div>
+    </TipSideContext.Provider>
+  );
+
   return (
     <div>
       <FieldLabel icon={<NotePencil />}>{label}</FieldLabel>
@@ -79,6 +116,8 @@ export function NotesField({ label, value, onChange, placeholder, disabled }: {
           ref={ref}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           placeholder={placeholder}
           disabled={disabled}
           aria-label={label}
@@ -97,26 +136,9 @@ export function NotesField({ label, value, onChange, placeholder, disabled }: {
               : <div className="px-3 py-2 text-body text-pn-muted">{placeholder}</div>}
           </div>
         )}
-        {!disabled && (
-          <TipSideContext.Provider value="above">
-            {/* On touch: one row that scrolls sideways when the box is too
-                narrow for every button, with a fade on the edge that has more
-                (useToolbarFit). The Markdown view's bar makes the same split. */}
-            <div className="flex items-center gap-1.5 border-b border-divider px-1 py-0.5">
-              <div ref={strip ? rowRef : undefined} className={`flex-1 min-w-0 flex items-center gap-0.5 ${strip ? 'pn-format-strip' : 'flex-wrap'}`}>
-                {!formatted && <SourceButtons items={NOTES_FIELD_BAR} onAction={format} />}
-              </div>
-              {!formatted && <span aria-hidden="true" className="shrink-0 mx-0.5 h-4 w-px bg-pn-muted/35" />}
-              <ToolbarBtn
-                onClick={toggleFormatted}
-                label={formatted ? t(`editor:${FORMAT_BAR_LOOK.markdownView!.label}`) : t('notes:editor.showFormatted')}
-              >
-                {formatted ? <MarkdownIcon size={TB_ICON} /> : <TextAa size={TB_ICON} />}
-              </ToolbarBtn>
-            </div>
-          </TipSideContext.Provider>
-        )}
+        {!disabled && !docked && bar}
       </div>
+      {docked && createPortal(<div className="pn-content-col">{bar}</div>, dock)}
     </div>
   );
 }

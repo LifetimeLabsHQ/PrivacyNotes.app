@@ -71,16 +71,22 @@ export function focusField(el: HTMLInputElement): void {
   send(el, new FocusEvent('focus', { composed: true }));
 }
 
+/** A code field may show the code in groups ("960 350", "960-350"): the
+ *  same letters and digits in the same order are the same code. */
+const sameCode = (shown: string, code: string): boolean => shown.replace(/[^\p{L}\p{N}]/gu, '') === code;
+
 /**
  * Write `value` into `el`. A password is never cut to fit, a field that a
  * person cannot see or type into is never written, and a field that already
- * holds the value is left alone.
+ * holds the value is left alone. A username and a password must stand in the
+ * field letter for letter; a `code` may stand there in the page's grouping.
  */
-export async function writeField(el: HTMLInputElement, value: string): Promise<WriteResult> {
+export async function writeField(el: HTMLInputElement, value: string, code = false): Promise<WriteResult> {
+  const holds = (): boolean => el.value === value || (code && sameCode(el.value, value));
   if (!el.isConnected || !isUsable(el)) return 'readonly';
   el.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
   if (!isVisible(el).visible) return 'readonly';
-  if (el.value === value) return 'same';
+  if (holds()) return 'same';
   if (el.maxLength >= 0 && el.maxLength < value.length) return 'tooLong';
   if (el.type === 'number' && !/^\d+$/.test(value)) return 'refused';
 
@@ -88,15 +94,15 @@ export async function writeField(el: HTMLInputElement, value: string): Promise<W
   // One empty turn: a page built on promises settles its focus handlers.
   await Promise.resolve();
   typed(el, value);
-  if (el.value !== value) {
+  if (!holds()) {
     // A field that formats what it gets on a timer.
     await turn();
-    if (el.value !== value) {
+    if (!holds()) {
       setValue(el, value);
       send(el, new InputEvent('input', { bubbles: true, composed: true, inputType: 'insertText', data: value }));
       send(el, new Event('change', { bubbles: true, composed: true }));
     }
-    if (el.value !== value) return 'refused';
+    if (!holds()) return 'refused';
   }
   mark(el);
   return 'written';

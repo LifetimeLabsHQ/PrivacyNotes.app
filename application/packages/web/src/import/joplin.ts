@@ -1,5 +1,5 @@
-import JSZip from 'jszip';
 import { mediaTooLargeWarning, zipEntryBytes, zipEntryMedia } from './zipEntry';
+import { openZip } from './zipOpen';
 import { normalizeTag } from '../notesRepo';
 import { createFolder, type FolderDef } from '../folders';
 import { IMPORT_FOLDER_LIMIT } from './folderImport';
@@ -13,7 +13,7 @@ import { toLocalIso } from '../notesViewUtils';
 import i18n from '../i18n';
 import { LOCATION_KEY, importedLocation } from '../noteLocation';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.joplin.${key}`, options);
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:joplin.${key}`, options);
 
 /**
  * Joplin importer.
@@ -149,7 +149,7 @@ function readTar(buf: Uint8Array): Map<string, Uint8Array> {
 }
 
 async function readZip(file: File): Promise<{ files: Map<string, Uint8Array>; tooLarge: number }> {
-  const zip = await JSZip.loadAsync(file);
+  const zip = await openZip(file);
   const entries = Object.values(zip.files).filter((f) => !f.dir);
   // A zipped export directory usually has one folder around it.
   const roots = new Set(entries.map((f) => (f.name.includes('/') ? f.name.split('/')[0] : '')));
@@ -372,7 +372,7 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
         .replace(/(^|[^+\w])\+\+(?![\s+])([^+\n]{0,2000}?[^\s+])\+\+(?![+\w])/g, '$1<u>$2</u>'),
     );
 
-  onProgress?.(i18n.t('importExport:importLog.shared.buildingNotes'));
+  onProgress?.(i18n.t('importLog:shared.buildingNotes'));
   const now = new Date().toISOString();
   const notes: ImportedNote[] = [];
   let todoCount = 0;
@@ -450,12 +450,12 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
   const warnings: string[] = [];
   if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   if (folderDefs.length > 0) transforms.push(msg('rebuiltNotebooks', { count: folderDefs.length }));
-  if (blobs.size > 0) transforms.push(i18n.t('importExport:importLog.shared.attachments', { count: blobs.size }));
+  if (blobs.size > 0) transforms.push(i18n.t('importLog:shared.attachments', { count: blobs.size }));
   if (todoCount > 0) transforms.push(msg('turnedTodos', { count: todoCount }));
-  if (placeCount > 0) transforms.push(i18n.t('importExport:importLog.shared.places', { count: placeCount }));
+  if (placeCount > 0) transforms.push(i18n.t('importLog:shared.places', { count: placeCount }));
   if (htmlCount > 0) transforms.push(msg('convertedHtml', { count: htmlCount }));
-  if (trashedCount > 0) transforms.push(i18n.t('importExport:importLog.shared.restoredTrashed', { count: trashedCount }));
-  if (linkifiedCount > 0) transforms.push(i18n.t('importExport:importLog.shared.linkifiedNotes', { count: linkifiedCount }));
+  if (trashedCount > 0) transforms.push(i18n.t('importLog:shared.restoredTrashed', { count: trashedCount }));
+  if (linkifiedCount > 0) transforms.push(i18n.t('importLog:shared.linkifiedNotes', { count: linkifiedCount }));
   if (conflictCount > 0) {
     warnings.push(msg('conflict', { count: conflictCount }));
   }

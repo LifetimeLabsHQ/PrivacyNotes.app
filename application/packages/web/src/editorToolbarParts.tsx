@@ -3,6 +3,7 @@ import type { ChainedCommands, Editor as TipTapEditor } from '@tiptap/react';
 import { HoverLabel } from './HoverLabel';
 import { usePopoverPosition } from './usePopoverPosition';
 import { useEscapeToClose } from './useEscapeToClose';
+import { WORD_CHAR } from './textMatch';
 
 // The editor toolbar's building blocks: its button system, the colour strip,
 // the heading toggle and the popover hook. Toolbar (EditorToolbar.tsx)
@@ -57,8 +58,6 @@ export function endComposition(editor: TipTapEditor): void {
   view.dom.blur();
   view.focus();
 }
-
-const WORD_CHAR = /[\p{L}\p{N}\p{M}]/u;
 
 /**
  * Run a colour or highlight command the way a word processor does: a bare

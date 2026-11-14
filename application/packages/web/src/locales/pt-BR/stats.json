@@ -249,6 +249,8 @@
       "unknown": "Rastreador desconhecido {{id}}",
       "sleepHours": "Horas de sono",
       "sleepQuality": "Qualidade do sono",
+      "bpSystolic": "Pressão arterial, máxima",
+      "bpDiastolic": "Pressão arterial, mínima",
       "avgDays_one": "média, {{count}} dia",
       "avgDays_other": "média, {{count}} dias",
       "sumDays_one": "total, {{count}} dia",

@@ -55,7 +55,7 @@
     "security_appLock": "verrouillage de l’appli, verrouiller au démarrage, écran de verrouillage, verrouiller l'app à l'ouverture, verrouiller de nouveau, reverrouiller après",
     "security_relockAfter": "délai, verrouillage automatique, verrouiller après, reverrouiller après, écran de verrouillage",
     "security_blockCapture": "capture d'écran, enregistrement de l'écran, partage d'écran, mode confidentialité, écran de confidentialité",
-    "security_phrase": "phrase de récupération, mots secrets, seed, douze mots, clé de récupération",
+    "security_phrase": "phrase de récupération, mots secrets, seed, douze mots, vingt-quatre mots, 24 mots, clé de récupération",
     "security_custody": "dépositaire, garde, auto-garde, self-custody, stockage de la clé",
     "me_pauseSync": "arrêter la sync, suspendre la synchronisation, hors ligne",
     "me_filesWifiOnly": "wifi, Wi-Fi, données mobiles, réseau mobile, forfait limité",
@@ -81,6 +81,7 @@
     "appearance_invisibles": "pied-de-mouche, espaces, blancs, caractères invisibles, caractères cachés, marques de mise en forme",
     "appearance_linkModifier": "liens, hyperliens, url, clic, ctrl, cmd, commande, ouvrir par erreur",
     "appearance_typedSymbols": "ligatures, flèches, symboles, maths, mathématiques, différent de, supérieur ou égal, inférieur ou égal, plus grand que, plus petit que, correction automatique, remplacer",
+    "appearance_linkSuggestions": "notes associées, notes similaires, suggestions, suggestions de liens, liens suggérés, liens, connexions, rétroliens, liens entrants, non liées, sujet, thème",
     "appearance_noteFont": "police, police de caractères, fonte, monospace, chasse fixe, mono, serif, empattement, sans serif, police par défaut, police personnalisée, police installée, ma police",
     "appearance_nestedNumbers": "liste numérotée, liste imbriquée, plan, 1.1, 1.1.1, numérotation juridique, numérotation hiérarchique, sous-numéros, liste à plusieurs niveaux",
     "appearance_confirmTrash": "supprimer, corbeille, confirmer, confirmation, boîte de dialogue, demander, invite, ne plus demander",
@@ -88,6 +89,7 @@
     "appearance_autoLocationNotes": "localisation, lieu, position, gps, carte, géolocalisation, géotag, automatique, où, notes",
     "appearance_autoLocationJournal": "localisation, lieu, position, gps, carte, géolocalisation, géotag, automatique, où, journal, journal intime, entrées",
     "appearance_startView": "page de démarrage, accueil, vue par défaut, ouvrir sur",
+    "appearance_reopenLastOpen": "dernière note, dernier ouvert, restaurer, se souvenir, mémoriser, rouvrir, démarrage, lancement",
     "appearance_view": "grille, liste, cartes, mise en page, disposition",
     "trackers_setup": "suivis, bien-être, pastilles, humeur, sommeil, énergie, pas, eau, activer, désactiver",
     "trackers_habitQuestions": "habitudes, questions, méditer, prier, fumer, alcool, as-tu",
@@ -122,6 +124,7 @@
     "calendar_weekNumbers": "numéro de semaine, semaine ISO, calendrier",
     "calendar_hours": "heures, heures de travail, vue jour, vue semaine, matin",
     "me_dms": "dispositif d'homme mort, dead man's switch, inactivité, inactif, supprimer après, effacer, abandon",
+    "appearance_smartConnections": "ia, ai, hors ligne, sur l'appareil, ia locale, ia privée, modèle, bekko, sens, même sens, signification, notes associées, notes similaires, liens suggérés, suggestions de liens, liens intelligents, sémantique, embeddings, plongements, télécharger, téléchargement",
     "appearance_formatBar": "barre d'outils, barre de mise en forme, boutons, personnaliser, organiser, liste à puces, barré, engrenage"
   }
 }

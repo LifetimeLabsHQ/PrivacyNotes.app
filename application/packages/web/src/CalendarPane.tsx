@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { BellSimple, CalendarDot, Columns, Download, Gift, Globe, GridNine, List, ListDashes, Repeat } from './icons';
+import { BellSimple, Calendar, Columns, Download, Gift, Globe, GridNine, List, ListDashes, Repeat } from './icons';
 import { SPACE_ICONS } from './SpaceSwitch';
 import { typeGlyph } from './NoteRow';
 import { Switch } from './Switch';
@@ -113,7 +113,7 @@ function EntryGlyph({ entry, size = 12 }: { entry: DayEntry; size?: number }) {
  *  the title, then a bell, the repeat glyph and the briefcase of Work. */
 /** The views, each with the icon its switch shows. */
 const VIEW_MODES = [
-  { mode: 'day', Icon: CalendarDot, key: 'calendarDay' },
+  { mode: 'day', Icon: Calendar, key: 'calendarDay' },
   { mode: 'week', Icon: Columns, key: 'calendarWeek' },
   { mode: 'month', Icon: GridNine, key: 'calendarMonth' },
 ] as const;
@@ -529,6 +529,8 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
           end={headerEnd}
           below={legend}
           start={headerStart}
+          focus={focus}
+          onJump={setFocus}
         />
         <CalendarGrid
           days={days}

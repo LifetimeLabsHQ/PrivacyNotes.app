@@ -301,8 +301,10 @@
     "dayWithMood": "{{date}}, umore {{mood}}",
     "previousWeek": "Settimana precedente",
     "nextWeek": "Settimana successiva",
-    "showMonth": "{{month}}, mostra il mese intero",
-    "showWeek": "{{month}}, mostra una settimana"
+    "pickMonth": "{{month}}, scegli mese e anno",
+    "pickMonthTip": "Scegli mese e anno",
+    "showWholeMonth": "Mostra tutto il mese",
+    "showOneWeek": "Mostra una settimana"
   },
   "contextMenu": {
     "newNote": "Nuova nota",
@@ -548,6 +550,13 @@
     "itemNameParts": "Secondo nome, prefisso, suffisso",
     "itemPhonetic": "Nome fonetico",
     "itemNote": "Nota",
+    "addSection": "Aggiungi sezione",
+    "sectionName": "Nome della sezione",
+    "removeSection": "Rimuovi sezione",
+    "removeSectionNamed": "Rimuovi la sezione {{name}}",
+    "addFieldTo": "Aggiungi campo a {{name}}",
+    "addFieldToSection": "Aggiungi campo a questa sezione",
+    "hiddenFieldsNote": "I valori nascosti restano mascherati finché non li mostri, e la ricerca non li trova mai.",
     "labels": {
       "mobile": "Cellulare",
       "home": "Casa",
@@ -676,6 +685,8 @@
     },
     "birthdays": "Compleanni",
     "contactDate": "{{name}}: {{label}}",
+    "birthdayAge_one": "{{name}} compie {{count}} anno",
+    "birthdayAge_other": "{{name}} compie {{count}} anni",
     "dragEnd": "Trascina per cambiare il giorno di fine",
     "previousDay": "Giorno precedente",
     "nextDay": "Giorno successivo",

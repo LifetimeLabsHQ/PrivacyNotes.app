@@ -1,4 +1,4 @@
-import { db, QUICK_NOTE_INBOX_KEY, reopenDb, requestPersistence, type LocalNote } from './db';
+import { db, IDENTITY_BINDING_KEY, KEY_RING_CACHE_KEY, QUICK_NOTE_INBOX_KEY, reopenDb, requestPersistence, type LocalNote } from './db';
 import { startAutoLocation } from './autoLocation';
 import { bumpNotesCreated } from './notesCreated';
 import { perfSpan } from './perf';
@@ -352,7 +352,7 @@ export async function updateNoteFrom(
 }
 
 /** Restore a split and remove its child in one transaction, only while both
- * still match the split. Tested in tests/qa-2026-10-20/sync-storage-1.test.ts. */
+ * still match the split. Tested in tests/splitUndo.test.ts. */
 export async function undoNoteSplit({
   noteId, newId, head, tail, original, newUpdatedAt,
 }: {
@@ -927,6 +927,20 @@ export async function deleteTagEverywhere(tag: string, inScope?: (note: LocalNot
   return modifiedCount;
 }
 
+/** The `db.kv` records of one account that each wipe deletes, by the module
+ *  that writes them. The owner mirror, the phrase wrap key and the sweep stamp
+ *  belong to the install and stay. tests/signOutLeftovers.test.ts holds each
+ *  name to its module's constant. */
+const ACCOUNT_KV_KEYS = [
+  'trashSeenAt', // trashPurge.ts
+  'imageSizesByUuid', // imageStore.ts
+  'pullRetryIds', // sync.ts
+  'pullCursorEpoch', // sync.ts
+  'reencryptPassDone', // reencryptPass.ts
+  'reencryptFilesDone', // reencryptPass.ts
+  'atRestResealedEpoch', // localSweep.ts
+];
+
 /**
  * Wipe the notes table plus the decrypted blob caches that ride
  * alongside it. Used on sign-out and on pubkey-mismatch sign-in.
@@ -947,6 +961,18 @@ export async function clearLocalDatabase(opts?: { keepUnsyncedNotes?: boolean })
   // From here the copy stops holding what the last pull brought, so a restore
   // of our own backup waits for the next one (pullState.ts).
   resetPulledClean();
+  // The identity binding record goes with every wipe, a forced one too: one
+  // that outlives its account would skip the server question at the next
+  // sign-in. Rebuilding it costs one request.
+  // Spec: docs/internal/plans/phrase-change.md (4.6)
+  await db.kv.delete(IDENTITY_BINDING_KEY);
+  // The key ring this device kept goes with it: the next sign-in takes it
+  // from the server again. Spec: docs/internal/plans/phrase-change.md (6.1)
+  await db.kv.delete(KEY_RING_CACHE_KEY);
+  // The other records of this account, on every wipe: the sign-out removes
+  // the pull cursor, so the retry list and its epoch go with it, and the
+  // rest names this account's notes, files or key epochs.
+  await db.kv.bulkDelete(ACCOUNT_KV_KEYS);
   if (opts?.keepUnsyncedNotes) {
     // Forced sign-outs (device revoked, session expired) preserve rows
     // the server has not confirmed (either dirty value, pending
@@ -1015,6 +1041,9 @@ export async function clearLocalDatabase(opts?: { keepUnsyncedNotes?: boolean })
   // History versions still waiting are this account's; a forced sign-out
   // keeps them with the unsynced notes, for the same returning owner.
   await db.versionQueue.clear();
+  // The text sync pulls replaced (replacedCopies.ts) is this account's too, and
+  // a forced sign-out keeps it the same way: it may be the only copy left.
+  await db.replacedCopies.clear();
   // Quick notes the Ninja box kept while the app was locked, and the key it
   // sealed them to. A forced sign-out keeps both, like the unsynced notes;
   // the rows name their account, so another one never adds them.

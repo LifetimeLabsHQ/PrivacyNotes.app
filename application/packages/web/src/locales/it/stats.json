@@ -249,6 +249,8 @@
       "unknown": "Tracker sconosciuto {{id}}",
       "sleepHours": "Ore di sonno",
       "sleepQuality": "Qualità del sonno",
+      "bpSystolic": "Pressione sanguigna, massima",
+      "bpDiastolic": "Pressione sanguigna, minima",
       "avgDays_one": "media, {{count}} giorno",
       "avgDays_other": "media, {{count}} giorni",
       "sumDays_one": "totale, {{count}} giorno",

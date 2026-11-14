@@ -18,7 +18,8 @@ export function HeartRatePill({
   value?: number;
   expanded: boolean;
   onToggle: () => void;
-  onChange: (v: number) => void;
+  /** `undefined` removes the value. */
+  onChange: (v: number | undefined) => void;
   readOnly?: boolean;
 }) {
   const { t } = useTranslation('trackers');
@@ -35,7 +36,7 @@ export function HeartRatePill({
     >
       <div className="max-w-[420px]">
         <PanelQuestion>{t('heartRate.prompt')}</PanelQuestion>
-        <NumberStepper value={value} onChange={onChange} min={30} max={250} step={1} unit={t('units.bpm')} quick={QUICK_BPM} start={last} placeholder="72" expanded={expanded} />
+        <NumberStepper value={value} onChange={onChange} onClear={() => onChange(undefined)} min={30} max={250} step={1} unit={t('units.bpm')} quick={QUICK_BPM} start={last} placeholder="72" expanded={expanded} />
       </div>
     </PillShell>
   );

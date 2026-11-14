@@ -372,5 +372,47 @@
     "addColumn": "Pridať stĺpec",
     "removeBoard": "Odstrániť tabuľu",
     "moveTo": "Presunúť do"
+  },
+  "doodle": {
+    "title": "Náčrt",
+    "clear": "Vymazať",
+    "paper": "Papier",
+    "paperNone": "Bez farby: poznámka presvitá.",
+    "settings": "Nastavenia pera",
+    "stroke": "Ťah",
+    "thinning": "Stenčenie",
+    "streamline": "Vyrovnanie",
+    "smoothing": "Vyhladenie",
+    "easingLabel": "Priebeh",
+    "start": "Začiatok",
+    "end": "Koniec",
+    "taperStart": "Zúženie začiatku",
+    "capStart": "Zaoblený začiatok",
+    "easingStart": "Priebeh začiatku",
+    "taperEnd": "Zúženie konca",
+    "capEnd": "Zaoblený koniec",
+    "easingEnd": "Priebeh konca",
+    "fill": "Výplň",
+    "outline": "Obrys",
+    "easing": {
+      "linear": "Lineárny",
+      "in": "Pomalý začiatok, {{curve}}",
+      "out": "Pomalý koniec, {{curve}}",
+      "inOut": "Pomalý začiatok aj koniec, {{curve}}"
+    },
+    "curve": {
+      "quad": "kvadratický",
+      "cubic": "kubický",
+      "quart": "kvartický",
+      "quint": "kvintický",
+      "sine": "sínusový",
+      "expo": "exponenciálny"
+    },
+    "colors": {
+      "black": "Čierna",
+      "white": "Biela",
+      "cyan": "Azúrová",
+      "lightGray": "Svetlosivá"
+    }
   }
 }

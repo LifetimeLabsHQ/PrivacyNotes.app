@@ -360,5 +360,47 @@
     "addColumn": "Add column",
     "removeBoard": "Remove board",
     "moveTo": "Move to"
+  },
+  "doodle": {
+    "title": "Doodle",
+    "clear": "Clear",
+    "paper": "Paper",
+    "paperNone": "No color: the note shows through.",
+    "settings": "Pen settings",
+    "stroke": "Stroke",
+    "thinning": "Thinning",
+    "streamline": "Streamline",
+    "smoothing": "Smoothing",
+    "easingLabel": "Easing",
+    "start": "Start",
+    "end": "End",
+    "taperStart": "Taper start",
+    "capStart": "Cap start",
+    "easingStart": "Easing start",
+    "taperEnd": "Taper end",
+    "capEnd": "Cap end",
+    "easingEnd": "Easing end",
+    "fill": "Fill",
+    "outline": "Outline",
+    "easing": {
+      "linear": "Linear",
+      "in": "Ease in, {{curve}}",
+      "out": "Ease out, {{curve}}",
+      "inOut": "Ease in and out, {{curve}}"
+    },
+    "curve": {
+      "quad": "quadratic",
+      "cubic": "cubic",
+      "quart": "quartic",
+      "quint": "quintic",
+      "sine": "sine",
+      "expo": "exponential"
+    },
+    "colors": {
+      "black": "Black",
+      "white": "White",
+      "cyan": "Cyan",
+      "lightGray": "Light gray"
+    }
   }
 }

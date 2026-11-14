@@ -141,6 +141,14 @@
   },
   "banner": {
     "proActivationPending": "Pagamento recebido, mas a ativação do Pro está demorando mais que o normal. Atualize em um minuto ou contate o suporte se não ativar.",
+    "crypto": {
+      "waiting": "Aguardando seu pagamento em cripto. O Pro é ativado quando ele for confirmado.",
+      "seen": "Pagamento em cripto recebido. O Pro é ativado quando a rede o confirmar, geralmente em até uma hora para Bitcoin.",
+      "partial": "Parte do seu pagamento em cripto chegou. Envie o restante na página de pagamento antes que o link expire.",
+      "ended": "Seu link de pagamento em cripto expirou antes que um pagamento completo chegasse.",
+      "paid": "Seu pagamento em cripto foi confirmado. O Pro está ativo.",
+      "openPayment": "Página de pagamento"
+    },
     "snapshotPaused": "O histórico de notas está pausado. Seu plano Pro parece inativo. Novas edições não serão registradas até o Pro ser restaurado.",
     "restorePro": "Restaurar Pro",
     "storagePastDue": "O pagamento da sua assinatura de armazenamento falhou. Atualize seu cartão no Paddle para não perder a capacidade extra.",
@@ -336,7 +344,24 @@
     "linksTo": "Links de saída",
     "missing": "Ainda não criada",
     "protectedHidden_one": "{{count}} item protegido por PIN não exibido",
-    "protectedHidden_other": "{{count}} itens protegidos por PIN não exibidos"
+    "protectedHidden_other": "{{count}} itens protegidos por PIN não exibidos",
+    "related": "Conexões sugeridas",
+    "relatedWords": "As duas mencionam {{words}}",
+    "relatedLinksTo": "As duas têm link para {{title}}",
+    "relatedLinkedFrom": "As duas recebem link de {{title}}",
+    "relatedTag": "As duas têm a etiqueta {{tag}}",
+    "relatedMeaning": "Mesmo significado",
+    "meaningDoor": "Conexões inteligentes: encontre notas com o mesmo significado, com IA offline",
+    "meaningDoorNo": "Não mostrar novamente",
+    "meaningDoorHidden": "Oculto em todas as notas. As Conexões inteligentes continuam em Configurações > Editor > Comportamento.",
+    "hideSuggestions": "Ocultar conexões sugeridas",
+    "notRelated": "Não relacionada",
+    "notRelatedDone": "Não será mais sugerida",
+    "notRelatedCount": "Não relacionadas ({{n}})",
+    "restoreSuggestion": "Sugerir novamente",
+    "linkAtCursor": "Inserir link no cursor",
+    "linkNeedsCursor": "Clique na nota primeiro",
+    "linkAsFootnote": "Inserir link como nota de rodapé"
   },
   "drawing": {
     "fullScreen": "Tela cheia",

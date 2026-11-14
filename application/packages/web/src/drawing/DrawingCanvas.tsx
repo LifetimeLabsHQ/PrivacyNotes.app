@@ -26,7 +26,7 @@ import './assetPath';
 import '@excalidraw/excalidraw/index.css';
 import './drawing.css';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CaptureUpdateAction, convertToExcalidrawElements, Excalidraw, getCommonBounds, getSceneVersion } from '@excalidraw/excalidraw';
+import { CaptureUpdateAction, convertToExcalidrawElements, Excalidraw, getCommonBounds, getSceneVersion, newElementWith } from '@excalidraw/excalidraw';
 import type {
   AppState,
   BinaryFileData,
@@ -35,7 +35,7 @@ import type {
   ExcalidrawProps,
 } from '@excalidraw/excalidraw/types';
 import type { DrawingScene, parseScene, serializeScene } from './scene';
-import { nextStep, STEPS_TOOL, stepSkeleton } from './steps';
+import { nextStep, relabel, renumberSteps, stepCount, stepIds, STEPS_TOOL, stepSkeleton } from './steps';
 
 type SceneElements = Parameters<NonNullable<ExcalidrawProps['onChange']>>[0];
 
@@ -142,6 +142,11 @@ export default function DrawingCanvas({
   // The Steps tool turned Excalidraw's lock on, which was off: it goes off
   // again with the next tool (`commands.steps`).
   const stepsLocked = useRef(false);
+  // How many step markers the last change saw (null before the first).
+  const steps = useRef<number | null>(null);
+  // Every marker id the canvas has seen: a marker Undo brings back keeps
+  // its place, a pasted one goes to the end (`renumberSteps`).
+  const knownSteps = useRef(new Set<string>());
 
   const save = useCallback(() => {
     pending.current = null;
@@ -288,6 +293,33 @@ export default function DrawingCanvas({
     }
     dropMissingFonts();
     if (readOnly) return;
+    // A step marker deleted, pasted or brought back by Undo: the markers
+    // left read 1 to n again. Not undoable on its own: Undo of the delete
+    // brings the marker back, and this puts the numbers back in order.
+    const count = stepCount(elements);
+    const all = api.current?.getSceneElementsIncludingDeleted() ?? elements;
+    if (steps.current !== null && count !== steps.current) {
+      const moves = renumberSteps(all, knownSteps.current);
+      for (const id of stepIds(all)) knownSteps.current.add(id);
+      if (moves.length) {
+        const byId = new Map(all.map((e) => [e.id, e]));
+        const changed = new Map<string, (typeof all)[number]>();
+        for (const { id, from, to } of moves) {
+          const marker = byId.get(id);
+          if (!marker) continue;
+          changed.set(id, newElementWith(marker, { customData: { ...marker.customData, pnStep: to } }));
+          const textId = marker.boundElements?.find((b) => b.type === 'text')?.id;
+          const text = textId ? byId.get(textId) : undefined;
+          const label = text?.type === 'text' ? relabel(text, from, to) : null;
+          if (text && label) changed.set(text.id, newElementWith(text as never, label as never));
+        }
+        steps.current = count;
+        api.current?.updateScene({ elements: all.map((e) => changed.get(e.id) ?? e), captureUpdate: CaptureUpdateAction.NEVER });
+        return;
+      }
+    }
+    steps.current = count;
+    for (const id of stepIds(all)) knownSteps.current.add(id);
     latest.current = { elements, appState, files };
     const signature = `${getSceneVersion(elements)}|${appState.gridModeEnabled}|${appState.gridSize}|${appState.gridStep}`;
     // The first call is the scene as opened: never a change.

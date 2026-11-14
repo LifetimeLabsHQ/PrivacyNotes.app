@@ -12,7 +12,7 @@
   },
   "moveScreen": {
     "title": "L'application a déménagé sur use.privacynotes.app",
-    "bodySignIn": "Connecte-toi là-bas avec ta phrase de récupération de 12 mots ou via « {{scanQr}} ». Cet appareil synchronise d'abord, donc toutes tes notes t'y attendent, et rien n'est supprimé ici.",
+    "bodySignIn": "Connecte-toi là-bas avec ta phrase de récupération ou via « {{scanQr}} ». Cet appareil synchronise d'abord, donc toutes tes notes t'y attendent, et rien n'est supprimé ici.",
     "openNotes": "Ouvre tes notes ici une fois pour corriger le problème",
     "showPhrase": "Afficher ma phrase de récupération",
     "website": "Parcourir le site à la place"
@@ -46,7 +46,7 @@
     "signInAgain": "Se reconnecter"
   },
   "signOutConfirm": {
-    "title": "As-tu enregistré ta phrase de 12 mots ?",
+    "title": "As-tu enregistré ta phrase de récupération ?",
     "body": "Ta phrase est le <only>seul</only> moyen de revenir. Pas de réinitialisation par e-mail, pas de ligne d'assistance. Si tu ne l'as pas encore notée, appuie sur <action>Non, afficher la phrase</action> et on te l'affiche tout de suite.",
     "unsyncedWarn_one": "1 note sur cet appareil n'est pas encore synchronisée. Elle sera définitivement perdue si elle ne peut pas être envoyée pendant la déconnexion.",
     "unsyncedWarn_other": "{{count}} notes sur cet appareil ne sont pas encore synchronisées. Elles seront définitivement perdues si elles ne peuvent pas être envoyées pendant la déconnexion.",
@@ -139,7 +139,8 @@
     "offline": "Tu es hors ligne. Les liens burn nécessitent un aller-retour vers le serveur. Réessaie quand tu seras de nouveau en ligne.",
     "demo": "Les liens burn sont stockés sur un serveur, et la démo n'en contacte aucun. Inscris-toi pour créer de vrais liens burn.",
     "tooLarge": "La note est trop volumineuse pour être partagée via un lien burn ({{size}} Ko). Le maximum est de {{max}} Ko.",
-    "storeFailed": "Échec de l'enregistrement de la burn note sur le serveur."
+    "storeFailed": "Échec de l'enregistrement de la burn note sur le serveur.",
+    "rateLimited": "Trop de liens burn ont été créés depuis cette connexion Internet. Réessaie plus tard."
   },
   "dms": {
     "returnTitle": "Ta copie sur le serveur a été supprimée",
@@ -153,7 +154,9 @@
     "title": "Notes supprimées sur un autre appareil",
     "body_one": "{{count}} note encore présente sur cet appareil a été supprimée par toi ou par un autre de tes appareils. Si c'était toi, supprime-la ici aussi. Si ce n'était pas toi, quelqu'un a peut-être accès à ton compte : garde-la pour la remettre sur tous tes appareils.",
     "body_other": "{{count}} notes encore présentes sur cet appareil ont été supprimées par toi ou par un autre de tes appareils. Si c'était toi, supprime-les ici aussi. Si ce n'était pas toi, quelqu'un a peut-être accès à ton compte : garde-les pour les remettre sur tous tes appareils.",
-    "keep": "Garder mes notes",
-    "delete": "Les supprimer ici aussi"
+    "refusedTitle": "Tes notes sont de retour",
+    "refusedBody_one": "{{count}} note a été supprimée du serveur, mais par aucun de tes appareils. Cet appareil n'a pas accepté la suppression et a remis la note sur tous tes appareils. Vérifie tes appareils et supprime ceux que tu ne reconnais pas.",
+    "refusedBody_other": "{{count}} notes ont été supprimées du serveur, mais par aucun de tes appareils. Cet appareil n'a pas accepté la suppression et les a remises sur tous tes appareils. Vérifie tes appareils et supprime ceux que tu ne reconnais pas.",
+    "showDevices": "Afficher les appareils"
   }
 }

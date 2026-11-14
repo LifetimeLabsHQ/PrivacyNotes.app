@@ -5,8 +5,8 @@ import type { FileItem } from './FilesList';
 import type { DirectoryEntry } from './markdownFolder/fileAccess';
 import { editedAtOf, journalOn } from './notesViewUtils';
 import type { ContextMenuItem } from './ContextMenu';
-import { searchIndexReady, searchNotes } from './search';
-import { CREATE_PREFIX, FOLDER_PREFIX, TAG_PREFIX, appendLines, asWebAddress, dayOfQuery, emptyMessage, quotePart, readSwitcherQuery, splitAppend, textHit } from './switcherQuery';
+import { indexedPlaceText, searchIndexReady, searchNotes } from './search';
+import { CREATE_PREFIX, FOLDER_PREFIX, TAG_PREFIX, appendLines, asWebAddress, dayOfQuery, emptyMessage, quotePart, readSwitcherQuery, splitAppend, textHit, bodySnippet } from './switcherQuery';
 import { typeGlyph } from './NoteRow';
 import i18n from './i18n';
 import { intlLocale } from './languages';
@@ -16,8 +16,9 @@ import { useEscapeToClose } from './useEscapeToClose';
 import { isImeComposing } from './imeComposing';
 import { foldForMatch, textMatcher, type TextMatch } from './textMatch';
 import { formatDay, formatRelative, toLocalIso } from './intlFormat';
+import { hhmm } from './localDate';
 import { activeLocale, ensureSettingsSearchLoaded } from './i18n';
-import { NEW_GLYPHS, ArrowElbowDownRight, ArrowSquareOut, ArrowsHorizontal, BellSimple, Briefcase, CalendarBlank, CalendarDot, Check, Clock, DotsThreeOutlineVertical, ArrowLeft, Folder, Hash, ListChecks, PencilSimple, Compass, MagnifyingGlass, Palette, Plus, Repeat, Sparkle, Terminal, X, type Icon, type IconProps } from './icons';
+import { NEW_GLYPHS, ArrowElbowDownRight, ArrowSquareOut, ArrowsHorizontal, BellSimple, Briefcase, CalendarBlank, CalendarDot, Check, Clock, DotsThreeOutlineVertical, ArrowLeft, Folder, Hash, ListChecks, MapPin, PencilSimple, Compass, MagnifyingGlass, Palette, Plus, Repeat, Sparkle, Terminal, X, type Icon, type IconProps } from './icons';
 import { HoverLabel } from './HoverLabel';
 import { KATANA_LINE, NinjaIcon } from './NinjaIcon';
 import { isNinjaDragHandle } from './ninjaHost';
@@ -193,7 +194,7 @@ type BlockReason = 'trash' | 'pin' | 'readOnly' | 'board' | 'archived';
 
 type Row =
   | { kind: 'item'; n: LocalNote; m: Mark }
-  | { kind: 'text'; n: LocalNote; snippet: Snippet }
+  | { kind: 'text'; n: LocalNote; snippet: Snippet; place?: true }
   | { kind: 'day'; day: string }
   | { kind: 'append'; n: LocalNote; lines: string[]; asTasks: boolean }
   | { kind: 'appendNew'; title: string; lines: string[] }
@@ -213,11 +214,6 @@ type Row =
   | { kind: 'create'; type: QuickAddType; parsed: QuickAdd; lead: boolean }
   | { kind: 'syntax'; id: SyntaxId }
   | { kind: 'example'; n: number; text: string; parsed: QuickAdd };
-
-/** The clock as the quick add reads it: "HH:MM", local. */
-function clockOf(d: Date): string {
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}
 
 /** The example sentences of `quickAdd.examples`, numbered from 1. */
 const EXAMPLES = 6;
@@ -647,6 +643,14 @@ export default function QuickSwitcher({
       if (!n || n.trashed === 1 || titled.has(id)) continue;
       const body = bodyOfRef.current(n);
       if (body === null) continue;
+      // The name of its place first: it is short, and it says at once why
+      // the item is listed (GitHub #753).
+      const place = bodySnippet(indexedPlaceText(n), q);
+      if (place) {
+        out.push({ kind: 'text', n, snippet: place, place: true });
+        if (out.length >= TEXT_LIMIT) break;
+        continue;
+      }
       const hit = textHit(body, q, SNIPPET_TYPES.has(n.type));
       if (!hit) continue;
       out.push({ kind: 'text', n, snippet: hit.snippet });
@@ -793,7 +797,7 @@ export default function QuickSwitcher({
     // "+" leaves them behind, and a "+" typed again brings them back.
     const defaultDay = creating ? quickAdd.defaultDay : undefined;
     const now = new Date();
-    const ctx = { ...readCtx, today: toLocalIso(now), now: clockOf(now), defaultDay, folders: quickAdd.folders };
+    const ctx = { ...readCtx, today: toLocalIso(now), now: hhmm(now), defaultDay, folders: quickAdd.folders };
     // Each row reads the words for its own type, so it shows only what that
     // type keeps: a task list takes no repeat, a journal entry no span.
     const read = (as: QuickAddType): QuickAdd => {
@@ -1242,7 +1246,9 @@ export default function QuickSwitcher({
         `text:${row.n.id}`,
         <ItemIcon noteId={row.n.id} fallback={view?.icon} />,
         titleOf(row.n),
-        row.snippet
+        row.place && row.snippet
+          ? <><MapPin className="inline me-1 align-[-2px]" role="img" aria-label={t('notes:location.title')} /><Highlighted text={row.snippet.text} mark={row.snippet} /></>
+          : row.snippet
           ? <Highlighted text={row.snippet.text} mark={row.snippet} />
           : <>{view?.label}{view?.label ? ' · ' : ''}{formatRelative(editedAtOf(row.n))}</>,
         { tone: toneOf(row.n.type), ...lookOf(row.n), strong: true, more: moreFor(i), ownText: row.snippet ? 'both' : 'title' },

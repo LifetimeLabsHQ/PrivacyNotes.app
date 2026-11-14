@@ -43,7 +43,7 @@
     },
     "subhead": "Notlar, görevler, parolalar, günlük, dosyalar, takvim, kişiler ve yer imleri; ruh hali ve ilaç takibiyle birlikte. Tek bir özel uygulama.",
     "tryDemo": "Demoyu deneyin",
-    "microcopy": "Sonsuza kadar ücretsiz. Kredi kartı yok. Google, Apple, GitHub veya sadece 12 kelimelik bir ifadeyle giriş yapın.",
+    "microcopy": "Sonsuza kadar ücretsiz. Kredi kartı yok. Google, Apple, GitHub veya sadece bir kurtarma ifadesiyle giriş yapın.",
     "alreadyHaveVault": "Kasanız var mı? Giriş yapın",
     "trustSigned": "GitHub'da imzalı sürümler"
   },
@@ -167,8 +167,6 @@
     "useGitBody": "Günü yaptığınız commit'lerle kapatın; gelecek ay yeniden bulabileceğiniz bir not olarak kaydedilir.",
     "useClipTitle": "Kopyaladığınız her şey",
     "useClipBody": "Panoyu, bir komutun çıktısını veya bir hata iletisini doğrudan notlarınıza gönderin.",
-    "useToolsTitle": "Kendi araçlarınızın bir parçası",
-    "useToolsBody": "Komut JSON ile yanıt verir ve açık çıkış kodlarıyla sonlanır, böylece betikleriniz notun kaydedildiğini bilir.",
     "useShortcutTitle": "Klavye kısayoluyla bir not",
     "useShortcutBody": "Sisteminizin ayarlarında seçtiğiniz bir tuş, uygulama kapalıyken bile hızlı bir not için bir kutu açar. Not, Agent klasörünüze düşer.",
     "howLink": "privacynotes'un nasıl çalıştığını okuyun"
@@ -359,14 +357,15 @@
     "freeVault": "50 MB depolama, dosya başına 5 MB",
     "freeImport": "İçe ve dışa aktarma, Keep ve Obsidian dâhil",
     "freeAnon": "Anonim giriş, e-posta olmadan",
-    "earlyAdopterBadge": "Erken Kullanıcı"
+    "earlyAdopterBadge": "Erken Kullanıcı",
+    "payMethods": "Kartla veya Bitcoin, Ethereum, Lightning, USDC ya da USDT ile ödeyin."
   },
   "underHood": {
     "heading": "Kaputun altında",
     "cipherTerm": "xchacha20poly1305",
     "cipherDesc": "Anahtarlar istemci tarafında türetilir",
     "phraseTerm": "BIP-39 ifadeleri",
-    "phraseDesc": "12 kelime, Ed25519 imzalama",
+    "phraseDesc": "Cihazınızda oluşturulur, Ed25519 imzalama",
     "rlsDesc": "Genel anahtarınıza bağlı RLS",
     "trackingTerm": "Sıfır izleyici",
     "trackingDesc": "Piksel yok, üçüncü taraf izleyici yok",
@@ -390,6 +389,7 @@
       "sleep": "İyi, 7,5 sa",
       "sleepScore": "82",
       "heartRate": "61 atım/dk",
+      "bloodPressure": "118/76 mmHg",
       "activity": "Orta",
       "medication": "Alındı",
       "energy": "6 / 10",
@@ -529,7 +529,7 @@
       "hotkeys": "Kısayollar",
       "rating": "Değerlendirme"
     },
-    "intro": "<brand/>, notlarınızı, görevlerinizi, parolalarınızı, günlüğünüzü, dosyalarınızı, takviminizi, kişilerinizi ve yer imlerinizi tek bir yerde tutar; ruh hali ve ilaç takibiyle birlikte. Her şey cihazınızda 12 kelimenizden oluşturulan bir anahtarla şifrelenir ve <nowrap>İsviçre'deki</nowrap> sunucularımızda da şifreli kalır. Çevrimdışı çalışır ve uygulama açık kaynaktır.",
+    "intro": "<brand/>, notlarınızı, görevlerinizi, parolalarınızı, günlüğünüzü, dosyalarınızı, takviminizi, kişilerinizi ve yer imlerinizi tek bir yerde tutar; ruh hali ve ilaç takibiyle birlikte. Her şey cihazınızda kurtarma ifadenizden oluşturulan bir anahtarla şifrelenir ve <nowrap>İsviçre'deki</nowrap> sunucularımızda da şifreli kalır. Çevrimdışı çalışır ve uygulama açık kaynaktır.",
     "versionHeading": "Sürüm",
     "windowVersion": "Sürüm {{version}}",
     "windowHelp": "Yardım Merkezi",

@@ -363,5 +363,47 @@
     "addColumn": "Ajouter une colonne",
     "removeBoard": "Retirer le tableau",
     "moveTo": "Déplacer vers"
+  },
+  "doodle": {
+    "title": "Griffonnage",
+    "clear": "Effacer",
+    "paper": "Papier",
+    "paperNone": "Aucune couleur : la note transparaît.",
+    "settings": "Paramètres du stylo",
+    "stroke": "Trait",
+    "thinning": "Affinement",
+    "streamline": "Stabilisation",
+    "smoothing": "Lissage",
+    "easingLabel": "Courbe",
+    "start": "Début",
+    "end": "Fin",
+    "taperStart": "Effilement au début",
+    "capStart": "Bout arrondi au début",
+    "easingStart": "Courbe au début",
+    "taperEnd": "Effilement à la fin",
+    "capEnd": "Bout arrondi à la fin",
+    "easingEnd": "Courbe à la fin",
+    "fill": "Remplissage",
+    "outline": "Contour",
+    "easing": {
+      "linear": "Linéaire",
+      "in": "Accélération, {{curve}}",
+      "out": "Décélération, {{curve}}",
+      "inOut": "Accélération puis décélération, {{curve}}"
+    },
+    "curve": {
+      "quad": "quadratique",
+      "cubic": "cubique",
+      "quart": "quartique",
+      "quint": "quintique",
+      "sine": "sinusoïdale",
+      "expo": "exponentielle"
+    },
+    "colors": {
+      "black": "Noir",
+      "white": "Blanc",
+      "cyan": "Cyan",
+      "lightGray": "Gris clair"
+    }
   }
 }

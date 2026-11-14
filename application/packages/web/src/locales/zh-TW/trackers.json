@@ -7,6 +7,7 @@
     "sleep": "睡眠",
     "sleepScore": "睡眠分數",
     "heartRate": "心率",
+    "bloodPressure": "血壓",
     "activity": "活動",
     "medication": "藥物",
     "meds": "用藥",
@@ -24,6 +25,7 @@
   "units": {
     "hoursSuffix": "h",
     "bpm": "bpm",
+    "mmHg": "mmHg",
     "kg": "kg",
     "lb": "lb",
     "steps_other": "步",
@@ -112,6 +114,10 @@
   },
   "heartRate": {
     "prompt": "平均心率"
+  },
+  "bloodPressure": {
+    "systolic": "上方數值（收縮壓）",
+    "diastolic": "下方數值（舒張壓）"
   },
   "activity": {
     "prompt": "今天的活動量？",
@@ -224,11 +230,13 @@
   "custom": {
     "yes": "是",
     "no": "否",
+    "unknownType": "這個追蹤項目需要較新版本的應用程式。",
     "typeLabels": {
       "scale10": "量表（0-10）",
       "scale5": "量表（0-5）",
       "slider100": "分數（0-100）",
       "number": "數值",
+      "pair": "兩個數值",
       "yesno": "是／否"
     }
   },
@@ -244,6 +252,7 @@
     "medicationCard": "用藥卡片",
     "medicationCardHelp": "在這台裝置上詢問「你服藥了嗎？」，只在有藥物需要服用的日子顯示。",
     "customHelp": "你自己命名的追蹤項目：量表、數值，或是／否。最多 {{max}} 個。",
+    "customHelpPair": "你自己命名的追蹤項目：量表、數值、兩個數值，或是／否。最多 {{max}} 個。",
     "yourCustomTrackers": "你的自訂追蹤項目",
     "categoryMoodMind": "心情與心理",
     "categoryBodyHealth": "身體與健康",
@@ -278,7 +287,13 @@
     "preview": "預覽",
     "startFromLast": "記住上次的輸入",
     "chooseIcon": "選擇圖示",
-    "startFromLastHelp": "適合很少變動的項目，例如體重或每日劑量。"
+    "startFromLastHelp": "適合很少變動的項目，例如體重或每日劑量。",
+    "pairFirst": "第一個數值",
+    "pairSecond": "第二個數值",
+    "pairFirstPlaceholder": "收縮壓",
+    "pairSecondPlaceholder": "舒張壓",
+    "pairUnit": "單位（選填）",
+    "pairWaiting": "填入第一個數值後就會儲存。"
   },
   "factors": {
     "prompt": "今天有哪些事？",

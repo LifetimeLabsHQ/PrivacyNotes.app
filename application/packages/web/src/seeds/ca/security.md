@@ -12,7 +12,7 @@ Aquesta és la nostra base de dades de debò a Zuric, no un dibuix. La teva nota
 
 ## Què passa quan escrius una nota
 
-1. La teva frase de 12 paraules es converteix en una clau. Això passa al teu dispositiu.
+1. La teva frase de recuperació es converteix en una clau. Això passa al teu dispositiu.
 2. La nota es xifra amb aquesta clau, al teu dispositiu. Així es desa al teu propi disc, i així viatja fins a nosaltres.
 3. Rebem la nota xifrada i la guardem. La imatge de dalt és l'aspecte que té.
 4. Qualsevol dispositiu amb la mateixa frase fa la mateixa clau i obre la nota.

@@ -6,6 +6,7 @@ import { isNativeStoreBuild } from '../devices';
 import { appZoomSupported } from '../appZoom';
 import { captureBlockSupported } from '../privacyScreen';
 import { commandLineShown } from '../cliRelease';
+import { onDeviceAiShown } from '../onDeviceAi';
 import { isDemoMode } from '../demo';
 import { exemptOpts } from '../i18nExempt';
 import { ArrowSquareOut } from '../icons';
@@ -35,6 +36,7 @@ function isShown(entry: SettingEntry): boolean {
   if (entry.shownOn === 'desktopApp') return appZoomSupported();
   if (entry.shownOn === 'captureBlock') return captureBlockSupported();
   if (entry.shownOn === 'commandLine') return commandLineShown();
+  if (entry.shownOn === 'onDeviceAi') return onDeviceAiShown();
   if (entry.shownOn === 'phoneApp') return canReadPosition();
   return true;
 }

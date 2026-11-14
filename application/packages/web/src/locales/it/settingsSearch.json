@@ -55,7 +55,7 @@
     "security_appLock": "blocco app, blocca all’avvio, schermata di blocco, blocca l'app all'apertura, blocca di nuovo, riblocca dopo",
     "security_relockAfter": "timeout, blocco automatico, blocca dopo, riblocca dopo, schermata di blocco",
     "security_blockCapture": "screenshot, registrazione dello schermo, cattura schermo, condivisione schermo, modalità privacy, schermata privacy",
-    "security_phrase": "frase di recupero, parole segrete, seed, dodici parole, chiave di recupero",
+    "security_phrase": "frase di recupero, parole segrete, seed, dodici parole, ventiquattro parole, 24 parole, chiave di recupero",
     "security_custody": "custodia, custodiale, autocustodia, self custody, archiviazione della chiave",
     "me_pauseSync": "ferma sync, sospendi sincronizzazione, offline",
     "me_filesWifiOnly": "wifi, Wi-Fi, dati mobili, rete cellulare, connessione a consumo",
@@ -81,6 +81,7 @@
     "appearance_invisibles": "segno di paragrafo, pilcrow, spazi, spazi bianchi, caratteri nascosti, segni di formattazione",
     "appearance_linkModifier": "link, collegamenti, collegamenti ipertestuali, url, clic, ctrl, cmd, command, aperto per sbaglio",
     "appearance_typedSymbols": "legature, frecce, simboli, matematica, diverso da, maggiore di, minore di, maggiore o uguale, correzione automatica, sostituisci",
+    "appearance_linkSuggestions": "note correlate, note simili, suggerimenti, collegamenti suggeriti, suggerimenti di collegamento, collegamenti, backlink, non collegate, argomento",
     "appearance_noteFont": "font, carattere, tipo di carattere, monospazio, mono, serif, grazie, sans serif, bastoni, font predefinito, font personalizzato, font installato, il mio font",
     "appearance_nestedNumbers": "elenco numerato, elenco annidato, struttura, schema, 1.1, 1.1.1, numerazione legale, numerazione a più livelli, sottonumeri, elenco multilivello",
     "appearance_confirmTrash": "elimina, cestino, conferma, conferma eliminazione, finestra di dialogo, chiedi, richiesta, non chiedere più",
@@ -88,6 +89,7 @@
     "appearance_autoLocationNotes": "posizione, luogo, gps, localizzazione, mappa, geotag, automatico, dove, note",
     "appearance_autoLocationJournal": "posizione, luogo, gps, localizzazione, mappa, geotag, automatico, dove, diario, pagine, voci",
     "appearance_startView": "pagina iniziale, home, vista predefinita, apri su",
+    "appearance_reopenLastOpen": "ultima nota, ultimo aperto, ripristina, ricorda, riapri, avvio, apertura",
     "appearance_view": "griglia, elenco, lista, schede, layout",
     "trackers_setup": "tracker, benessere, pillole, umore, sonno, energia, passi, acqua, attiva, disattiva",
     "trackers_habitQuestions": "abitudini, domande, meditare, pregare, fumo, alcol, hai",
@@ -122,6 +124,7 @@
     "calendar_weekNumbers": "numero della settimana, settimana ISO, calendario",
     "calendar_hours": "ore, orario di lavoro, vista giorno, vista settimana, mattina",
     "me_dms": "dead man's switch, interruttore di sicurezza, inattività, inattivo, elimina dopo, cancella, cancellazione automatica, abbandono",
+    "appearance_smartConnections": "ia, ai, offline, sul dispositivo, ia locale, ia privata, modello, bekko, significato, stesso significato, note correlate, note simili, collegamenti suggeriti, collegamenti intelligenti, semantica, embedding, download, scarica",
     "appearance_formatBar": "barra degli strumenti, barra di formattazione, pulsanti, personalizzare, disporre, elenco puntato, barrato, ingranaggio"
   }
 }

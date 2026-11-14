@@ -17,6 +17,9 @@ import { linkDomain, linkExportMarkdown, parseLinkBody } from './linkBody';
 import { trackerHeading, trackerRows } from './trackerExport';
 import { trackerContent } from './editStamp';
 import { loadLocalSettings } from './userSettings';
+import { listReplacedCopies, REPLACED_COPY_DAYS } from './replacedCopies';
+import type { ReplacedCopy } from './db';
+import { computeSnapshotTotalSize } from './notesViewUtils';
 
 // Its own chunk: the vault rows pull in the vault forms and the detail
 // rows, which the plain note preview never needs.
@@ -29,6 +32,10 @@ const VaultVersionPreview = lazyPart(() => import('./VaultVersionPreview').then(
  * contents. Clicking Restore calls `onRestore` with the version; the
  * parent saves the current state as a version first and refuses to
  * restore when that save fails.
+ *
+ * The list also holds the text a sync pull replaced on this device
+ * (replacedCopies.ts), on every plan: without the server history unlocked it
+ * holds only those copies.
  *
  * A login, card, SSH key or contact previews as labelled rows, never as
  * its raw JSON body: a secret value stays out of the DOM until its row is
@@ -64,6 +71,29 @@ function versionName(type: NoteType, v: NoteVersion): string {
   return v.title.trim() || (type === 'link' ? linkDomain(parseLinkBody(v.body).url) : '');
 }
 
+/** The id prefix that tells a kept copy from a server version in one list. */
+const COPY_PREFIX = 'replaced:';
+
+function isReplacedCopyVersion(v: { id: string }): boolean {
+  return v.id.startsWith(COPY_PREFIX);
+}
+
+/** A copy a sync replaced, in the shape the list shows and Restore takes: a
+ *  login's extras and a journal entry's values as a version records them. */
+function copyAsVersion(c: ReplacedCopy, type: NoteType): NoteVersion {
+  return {
+    id: COPY_PREFIX + c.id,
+    noteId: c.noteId,
+    createdAt: c.at,
+    title: c.title,
+    body: c.body,
+    tags: c.tags,
+    ...(type === 'login' ? { login: c.trackers?.login ?? null } : {}),
+    ...(type === 'journal' && c.trackers ? { trackers: trackerContent(c.trackers) } : {}),
+    bodyBytes: computeSnapshotTotalSize(c.title, c.body, c.tags),
+  };
+}
+
 const DIFF_KEY = new PluginKey('pnHistoryDiff');
 
 function showDiff(editor: TipTapEditor, set: DecorationSet) {
@@ -81,6 +111,8 @@ type Props = {
   noteType: NoteType;
   supabase: SupabaseClient;
   encryptionKey: Uint8Array;
+  /** The server history is unlocked (Pro, or the demo's local path). */
+  serverHistory: boolean;
   onClose: () => void;
   /** Apply the selected version's content to the live note. */
   onRestore: (v: NoteVersion) => Promise<void> | void;
@@ -95,6 +127,7 @@ export function NoteHistoryModal({
   noteType,
   supabase,
   encryptionKey,
+  serverHistory,
   onClose,
   onRestore,
   drawingVersion,
@@ -125,20 +158,28 @@ export function NoteHistoryModal({
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const list = await listNoteVersions(supabase, encryptionKey, noteId);
-        if (cancelled) return;
-        setVersions(list);
-        setSelectedId(list[0]?.id ?? null);
-      } catch {
-        if (cancelled) return;
-        setLoadFailed(true);
-      }
+      // The copies are local, so a server read that fails still shows them.
+      let failed = false;
+      const [kept, server] = await Promise.all([
+        listReplacedCopies(noteId).catch(() => []),
+        serverHistory
+          ? listNoteVersions(supabase, encryptionKey, noteId).catch(() => {
+              failed = true;
+              return [] as NoteVersion[];
+            })
+          : Promise.resolve([] as NoteVersion[]),
+      ]);
+      if (cancelled) return;
+      const copies = kept.map((c) => copyAsVersion(c, noteType));
+      const list = [...server, ...copies].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      setLoadFailed(failed);
+      setVersions(list);
+      setSelectedId(list[0]?.id ?? null);
     })();
     return () => {
       cancelled = true;
     };
-  }, [noteId, supabase, encryptionKey]);
+  }, [noteId, noteType, supabase, encryptionKey, serverHistory]);
 
   useEffect(() => {
     if (!compare || current) return;
@@ -184,7 +225,7 @@ export function NoteHistoryModal({
     <Modal
       onClose={onClose}
       title={t('shell:noteOptionsMenu.noteHistory')}
-      subtitle={t('history.subtitle')}
+      subtitle={serverHistory ? t('history.subtitle') : t('history.replacedSubtitle', { days: REPLACED_COPY_DAYS })}
       header="bar"
       className={`max-w-3xl h-[90vh] sm:h-[80vh] flex flex-col overflow-hidden${compare && canCompare ? ' lg:max-w-6xl' : ''}`}
     >
@@ -199,7 +240,7 @@ export function NoteHistoryModal({
               boundary as the arithmetic allows, so the cut survives the row
               growing or shrinking with the script a locale is written in. */}
           <div className="max-h-52 sm:max-h-none sm:w-56 shrink-0 border-b sm:border-b-0 sm:border-e border-divider overflow-y-auto">
-            {versions === null && !err && !loadFailed && (
+            {versions === null && !err && (
               <div className="p-4 text-compact text-pn-muted">{t('common:state.loading')}</div>
             )}
             {loadFailed && (
@@ -208,7 +249,7 @@ export function NoteHistoryModal({
             {err && (
               <div className="p-4 text-compact text-danger">{err}</div>
             )}
-            {versions && versions.length === 0 && (
+            {versions && versions.length === 0 && !loadFailed && (
               <div className="p-4 text-compact text-pn-muted leading-relaxed">
                 {t('history.empty')}
               </div>
@@ -235,6 +276,9 @@ export function NoteHistoryModal({
                     <div className="text-meta text-pn-muted mt-0.5 truncate">
                       {versionName(noteType, v) || t('common:state.untitled')}
                     </div>
+                    {isReplacedCopyVersion(v) && (
+                      <div className="text-meta text-pn-muted mt-0.5">{t('history.replacedBySync')}</div>
+                    )}
                     <div className="text-meta text-pn-muted tabular-nums mt-0.5">
                       {formatBytes(v.bodyBytes)}
                     </div>
@@ -258,6 +302,7 @@ export function NoteHistoryModal({
                   <div className="flex items-start justify-between gap-3">
                     <div className="text-body text-pn-muted">
                       {formatInstant(selected.createdAt, 'dateTime')}
+                      {isReplacedCopyVersion(selected) && <> &middot; {t('history.replacedBySync')}</>}
                     </div>
                     {canCompare && (
                       <button

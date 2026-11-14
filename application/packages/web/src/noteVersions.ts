@@ -14,6 +14,8 @@
  */
 
 import {
+  encryptBlob,
+  decryptBlob,
   encryptNote,
   decryptNote,
   bytesToBase64,
@@ -21,6 +23,8 @@ import {
   type SupabaseClient,
 } from '@notes/shared';
 import { db, type LocalNote } from './db';
+import { currentKeyEpoch, epochOf, keyEpochColumn, KeyEpochUnknown, openWithRing } from './keyRing';
+import { isPhraseReplacedRefusal, reportPhraseReplaced } from './phraseReplaced';
 import { computeSnapshotTotalSize } from './notesViewUtils';
 import { isServerWriteBlocked } from './syncPause';
 import { isDemoMode } from './demo';
@@ -77,6 +81,9 @@ type RemoteRow = {
   ciphertext: string;
   nonce: string;
   created_at: string;
+  /** The key epoch of the ciphertext; absent before the column existed (1).
+   *  Spec: packages/supabase/migrations/history/0118_key_epoch.sql */
+  key_epoch?: number;
 };
 
 /**
@@ -134,7 +141,7 @@ export async function queueNoteVersion(note: LocalNote, encryptionKey: Uint8Arra
   if (!key) return;
   try {
     if (await db.versionQueue.where('hash').equals(hash).count()) return;
-    await db.versionQueue.add({ noteId: note.id, hash, ...sealVersion(note, key), queuedAt: new Date().toISOString() });
+    await db.versionQueue.add({ noteId: note.id, hash, ...sealVersion(note, key), queuedAt: new Date().toISOString(), ...keyEpochColumn() });
     const ids = await db.versionQueue.toCollection().primaryKeys();
     if (ids.length > QUEUE_MAX) await db.versionQueue.bulkDelete(ids.slice(0, ids.length - QUEUE_MAX));
   } catch (err) {
@@ -154,11 +161,40 @@ export async function hasQueuedVersions(): Promise<boolean> {
 }
 
 /**
+ * A queued version sealed under an earlier phrase, sealed again under the
+ * current key: the same plaintext bytes with a fresh nonce. Null when no key
+ * is given or none opens it; the version then waits. The background pass of
+ * a phrase change may have finished already and would not come back for it.
+ * Spec: docs/internal/plans/phrase-change.md (6.4)
+ */
+function resealQueued(v: { ciphertext: string; nonce: string; key_epoch?: number }, encryptionKey: Uint8Array | undefined): { ciphertext: string; nonce: string; key_epoch?: number } | null {
+  const key = encryptionKey ? liveKey(encryptionKey) : null;
+  if (!key) return null;
+  try {
+    const n = base64ToBytes(v.nonce);
+    const ct = base64ToBytes(v.ciphertext);
+    const combined = new Uint8Array(n.length + ct.length);
+    combined.set(n, 0);
+    combined.set(ct, n.length);
+    const plain = openWithRing('sync', key, (k) => decryptBlob(combined, k), epochOf(v.key_epoch));
+    const sealed = encryptBlob(plain, key);
+    plain.fill(0);
+    return { nonce: bytesToBase64(sealed.slice(0, 24)), ciphertext: bytesToBase64(sealed.slice(24)), ...keyEpochColumn() };
+  } catch {
+    return null;
+  } finally {
+    key.fill(0);
+  }
+}
+
+/**
  * Send the queued versions, oldest first, whose note the server holds. Stops
  * at the first request that fails for the network, to try again after the next
  * pass. A refusal for good (Pro lapsed, the note gone) drops that version.
+ * A version queued under an earlier phrase goes up sealed again under
+ * `encryptionKey`, never under the key it was queued with.
  */
-export async function drainVersionQueue(supabase: SupabaseClient, pubkey: string): Promise<void> {
+export async function drainVersionQueue(supabase: SupabaseClient, pubkey: string, encryptionKey?: Uint8Array): Promise<void> {
   if (isDemoMode() || isServerWriteBlocked()) return;
   const queued = await db.versionQueue.orderBy('id').toArray();
   for (const v of queued) {
@@ -168,12 +204,17 @@ export async function drainVersionQueue(supabase: SupabaseClient, pubkey: string
       continue;
     }
     if (note.syncedNonce == null) continue;
+    const sealed = epochOf(v.key_epoch) < currentKeyEpoch() ? resealQueued(v, encryptionKey) : v;
+    if (!sealed) continue;
     const { error } = await supabase.from(TABLE).insert({
       note_id: v.noteId,
       user_pubkey: pubkey,
-      ciphertext: v.ciphertext,
-      nonce: v.nonce,
+      ciphertext: sealed.ciphertext,
+      nonce: sealed.nonce,
+      ...(typeof sealed.key_epoch === 'number' ? { key_epoch: sealed.key_epoch } : {}),
     });
+    // The account changed its phrase: the version waits for the new one.
+    if (isPhraseReplacedRefusal(error)) reportPhraseReplaced('write');
     // 42501: Pro lapsed. 23503: the note left the server. 23514: over the
     // size cap. None of them passes on a retry.
     if (!error || ['42501', '23503', '23514'].includes(error.code ?? '')) {
@@ -238,7 +279,9 @@ export async function createNoteVersion(
       user_pubkey: pubkey,
       ciphertext,
       nonce,
+      ...keyEpochColumn(),
     });
+    if (isPhraseReplacedRefusal(error)) reportPhraseReplaced('write');
     if (error) {
       console.error('[note_versions] insert failed:', error);
       return { ok: false, code: error.code ?? '', message: error.message };
@@ -293,11 +336,9 @@ export async function listNoteVersions(
   const out: NoteVersion[] = [];
   for (const row of rows) {
     try {
-      const decrypted = decryptNote(
-        base64ToBytes(row.ciphertext),
-        base64ToBytes(row.nonce),
-        encryptionKey
-      );
+      const ct = base64ToBytes(row.ciphertext);
+      const nonce = base64ToBytes(row.nonce);
+      const decrypted = openWithRing('sync', encryptionKey, (key) => decryptNote(ct, nonce, key), epochOf(row.key_epoch));
       out.push({
         id: row.id,
         noteId: row.note_id,
@@ -312,6 +353,11 @@ export async function listNoteVersions(
         ),
       });
     } catch (err) {
+      // A version under a key epoch this device holds no key for is not
+      // damaged, and leaving it out would hand the blob clean-up a history
+      // without its references (imageGC.ts): the whole read fails instead.
+      // Spec: docs/internal/plans/phrase-change.md (6.2, 6.6)
+      if (err instanceof KeyEpochUnknown) throw err;
       console.error('[note_versions] decrypt failed for', row.id, err);
     }
   }

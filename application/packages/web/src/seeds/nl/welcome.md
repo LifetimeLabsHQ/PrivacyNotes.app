@@ -27,7 +27,7 @@ De balk hierboven verandert hoe tekst eruitziet: **vet**, *cursief*, koppen, tak
 
 ## Eén ding voor vandaag
 
-- [ ] Zoek je **<mark style="background-color: rgba(51, 154, 240, 0.35)">herstelzin van 12 woorden</mark>** op onder **Instellingen > Beveiliging > Herstelzin**, schrijf hem op papier en leg hem ergens veilig
+- [ ] Zoek je **<mark style="background-color: rgba(51, 154, 240, 0.35)">herstelzin</mark>** op onder **Instellingen > Beveiliging > Herstelzin**, schrijf hem op papier en leg hem ergens veilig
 
 Die herstelzin is wat je notities opent. Waar hij ligt, bepaal jij, en je kunt die keuze altijd veranderen. [[Hoe je notities beschermd zijn]] legt de drie opties uit.
 

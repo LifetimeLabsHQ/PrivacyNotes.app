@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "Všetky nastavenia",
+    "dockWindow": "Ukotviť na boku",
+    "dockOtherSide": "Presunúť na druhú stranu",
     "fillWindow": "Použiť celé okno",
     "restoreWindow": "Späť na normálnu veľkosť"
   },
@@ -188,6 +190,8 @@
     "peekDark": "Zatiaľ sa zobrazuje tvoj tmavý motív. Keď zavrieš Nastavenia, Auto sa znova bude riadiť systémom.",
     "unlockThemes": "Odomknúť všetky motívy s Pro",
     "startViewTitle": "Zobraziť po otvorení aplikácie",
+    "reopenLastOpenTitle": "Znova otvoriť poslednú položku",
+    "reopenLastOpenDesc": "Po spustení aplikácie sa zobrazí položka, ktorá bola otvorená pri jej ukončení. Keď je to vypnuté, aplikácia sa spustí na zozname a nič nebude otvorené.",
     "viewTitle": "Zobraziť položky ako",
     "viewDesc": "Auto sa riadi šírkou obrazovky.",
     "openInTabsTitle": "Zobraziť otvorenú položku na karte",
@@ -218,6 +222,7 @@
     "linkModifierDesc": "Obyčajné kliknutie umiestni kurzor. Ťuknutie odkaz stále otvorí. Iba toto zariadenie.",
     "typedSymbolsTitle": "Meniť napísané symboly na šípky a matematické znaky",
     "typedSymbolsDesc": "Napríklad -> sa zmení na →, != na ≠ a >= na ≥.",
+    "linkSuggestionsDesc": "Prepojenia zobrazujú aj poznámky na rovnakú tému, ktoré ešte nie sú prepojené. Po vypnutí sa ikona Prepojení zobrazí iba pri poznámkach s odkazmi.",
     "confirmTrashTitle": "Pýtať sa pred odstránením",
     "confirmTrashDesc": "Pred presunutím položky do koša žiadať o potvrdenie.",
     "confirmArchiveTitle": "Pýtať sa pred archiváciou",
@@ -668,5 +673,18 @@
     "loadError": "Spínač mŕtveho muža sa nepodarilo načítať. Skontroluj pripojenie a skús to znova.",
     "confirmTitle": "Zapnúť spínač mŕtveho muža?",
     "confirmBody": "Ak sa žiadne z tvojich zariadení {{period}} nepripojí online, server odstráni tvoje šifrované údaje. Toto sa nedá vrátiť späť. Tvoje zariadenia si svoje poznámky ponechajú."
+  },
+  "onDeviceAi": {
+    "title": "Inteligentné prepojenia",
+    "desc": "Nájdu poznámky s rovnakým významom, aj keď sú napísané inými slovami alebo v inom jazyku. Používajú offline AI (<model>bekko-static</model>), ktorá beží iba v tomto zariadení.",
+    "on": "Zapnuté. Návrhy zahŕňajú aj poznámky s rovnakým významom. Offline AI zaberá v tomto zariadení {{size}}.",
+    "kept": "Vypnuté. Offline AI zostáva v tomto zariadení, takže po opätovnom zapnutí nie je potrebné nič sťahovať.",
+    "downloadSize": "Stiahnuť · {{size}}",
+    "downloadingLabel": "Sťahovanie offline AI",
+    "loading": "Načítava sa offline AI",
+    "unavailable": "Demo nemôže stiahnuť offline AI.",
+    "failed": "Sťahovanie sa nedokončilo. Skús to znova.",
+    "remove": "Odstrániť z tohto zariadenia ({{size}})",
+    "howItWorks": "Ako to funguje"
   }
 }

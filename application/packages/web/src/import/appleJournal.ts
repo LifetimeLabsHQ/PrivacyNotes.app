@@ -1,5 +1,6 @@
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
 import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
+import { openZip } from './zipOpen';
 import { linkifyMarkdown } from './linkify';
 import { currentImageOptions, processImage } from '../imageProcessing';
 import { EMOTION_TAGS } from '../trackerTypes';
@@ -8,7 +9,7 @@ import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 import i18n from '../i18n';
 import { LOCATION_KEY, MAP_FENCE, importedLocation, mapFenceBody, osmUrl, type NoteLocation } from '../noteLocation';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.appleJournal.${key}`, options);
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:appleJournal.${key}`, options);
 
 /**
  * Apple Journal importer.
@@ -814,10 +815,10 @@ export async function parseAppleJournal(
   file: File,
   onProgress?: (msg: string) => void,
 ): Promise<ParsedImport> {
-  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
+  onProgress?.(i18n.t('importLog:shared.readingZip'));
   let zip: JSZip;
   try {
-    zip = await JSZip.loadAsync(await file.arrayBuffer());
+    zip = await openZip(await file.arrayBuffer());
   } catch {
     throw new Error(msg('notAZip', { hint: exportHint() }));
   }
@@ -828,7 +829,7 @@ export async function parseAppleJournal(
   zip.forEach((path, entry) => {
     if (!entry.dir && !shouldSkip(path)) paths.push(path);
   });
-  if (paths.length === 0) throw new Error(i18n.t('importExport:importLog.shared.zipEmpty'));
+  if (paths.length === 0) throw new Error(i18n.t('importLog:shared.zipEmpty'));
 
   const anyEntry = paths.find((p) => /(^|\/)Entries\/[^/]+\.html?$/i.test(p));
   if (!anyEntry) {
@@ -986,7 +987,7 @@ export async function parseAppleJournal(
     transforms.push(msg('foundAudio', { count: counters.audio }));
   }
   if (counters.located > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.places', { count: counters.located }));
+    transforms.push(i18n.t('importLog:shared.places', { count: counters.located }));
   }
   if (counters.maps > 0) {
     transforms.push(msg('turnedMaps', { count: counters.maps }));
@@ -1009,7 +1010,7 @@ export async function parseAppleJournal(
   if (flags.quotes > 0) {
     transforms.push(msg('preservedQuotes', { count: flags.quotes }));
   }
-  transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
+  transforms.push(i18n.t('importLog:shared.linkifiedBare'));
 
   return {
     notes,

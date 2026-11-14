@@ -46,6 +46,9 @@ type GuideSection = {
  * when no svg exists.
  */
 export const GUIDE_META: Record<string, { name: string; icon?: string }> = {
+  '1password': { name: '1Password', icon: '1password.webp' },
+  anytype: { name: 'Anytype', icon: 'anytype.webp' },
+  'apple-calendar': { name: 'Apple Calendar', icon: 'apple-calendar.webp' },
   'apple-journal': { name: 'Apple Journal', icon: 'apple-journal.webp' },
   'apple-notes': { name: 'Apple Notes', icon: 'apple-notes.svg' },
   bear: { name: 'Bear', icon: 'bear.webp' },
@@ -58,17 +61,28 @@ export const GUIDE_META: Record<string, { name: string; icon?: string }> = {
   // No icon either: a .vcf comes from every address book, so it wears the
   // AddressBook glyph the importer row uses.
   contacts: { name: 'Contacts (vCard)' },
+  dashlane: { name: 'Dashlane', icon: 'dashlane.svg' },
+  daylio: { name: 'Daylio', icon: 'daylio.webp' },
+  diarium: { name: 'Diarium', icon: 'diarium.webp' },
+  enpass: { name: 'Enpass', icon: 'enpass.svg' },
   evernote: { name: 'Evernote', icon: 'evernote.svg' },
   'google-calendar': { name: 'Google Calendar', icon: 'google-calendar.svg' },
   'google-keep': { name: 'Google Keep', icon: 'google-keep.svg' },
   'ia-writer': { name: 'iA Writer', icon: 'ia-writer.webp' },
   joplin: { name: 'Joplin', icon: 'joplin.svg' },
+  keepass: { name: 'KeePass', icon: 'keepass.webp' },
+  keepassxc: { name: 'KeePassXC', icon: 'keepassxc.svg' },
+  lastpass: { name: 'LastPass', icon: 'lastpass.svg' },
   markdown: { name: 'Markdown', icon: 'markdown.svg' },
   'nextcloud-notes': { name: 'Nextcloud Notes', icon: 'nextcloud-notes.svg' },
+  nordpass: { name: 'NordPass', icon: 'nordpass.webp' },
   notesnook: { name: 'Notesnook', icon: 'notesnook.svg' },
   obsidian: { name: 'Obsidian', icon: 'obsidian.svg' },
+  'google-journal': { name: 'Google Journal', icon: 'google-journal.webp' },
+  'proton-pass': { name: 'Proton Pass', icon: 'proton-pass.svg' },
   'samsung-notes': { name: 'Samsung Notes', icon: 'samsung-notes.webp' },
   simplenote: { name: 'Simplenote', icon: 'simplenote.svg' },
+  siyuan: { name: 'SiYuan', icon: 'siyuan.svg' },
   'standard-notes': { name: 'Standard Notes', icon: 'standard-notes.webp' },
   typora: { name: 'Typora', icon: 'typora.webp' },
   upnote: { name: 'UpNote', icon: 'upnote.svg' },

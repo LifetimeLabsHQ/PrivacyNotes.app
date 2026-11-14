@@ -42,6 +42,10 @@ function writeConnection(c: Connection): void {
   if (process.platform !== 'win32') chmodSync(path, 0o600);
 }
 
+function removeConnection(): void {
+  rmSync(configPath(), { force: true });
+}
+
 async function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];
   for await (const chunk of process.stdin) chunks.push(chunk as Buffer);
@@ -136,7 +140,7 @@ async function main(argv: string[], json: { on: boolean }): Promise<number> {
       return EXIT.ok;
     }
     const forgotten = await forget(fetchFn, FUNCTIONS_URL, c);
-    rmSync(configPath(), { force: true });
+    removeConnection();
     show(args.json, { connected: false, serverForgot: forgotten }, {
       tone: 'ok',
       badge: '✓ DISCONNECTED',
@@ -193,10 +197,12 @@ async function main(argv: string[], json: { on: boolean }): Promise<number> {
 }
 
 /** Build, seal and send one note, then remember it for `privacynotes status`. Shared
- *  by `privacynotes save` and the `save_note` tool of `privacynotes mcp`. */
+ *  by `privacynotes save` and the `save_note` tool of `privacynotes mcp`. A save the
+ *  server refuses with `not_connected` removes the config file, so the next
+ *  `privacynotes status` says not connected. */
 async function saveNote(c: Connection, input: { markdown: string; title?: string; tags: string[] }) {
   const note = buildNote(input.markdown, { title: input.title, tags: input.tags, id: randomUUID(), now: new Date() });
-  await save(fetchFn, FUNCTIONS_URL, c, note);
+  await save(fetchFn, FUNCTIONS_URL, c, note, removeConnection);
   writeConnection({ ...c, lastSave: { title: note.title, at: note.savedAt } });
   return note;
 }

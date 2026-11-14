@@ -27,6 +27,7 @@
 
 import { serializeScene, emptyScene } from '../drawing/scene';
 import { noteLinkTarget, noteLinkTargets } from '../noteLinks';
+import { isRecord } from '../isRecord';
 
 /** A picture a file node names, as the import holds it: its blob key and type. */
 export type CanvasPicture = { key: string; mime: string };
@@ -68,10 +69,6 @@ const LINE_HEIGHT = 1.35;
 const PADDING = 12;
 /** A coordinate past this is not a canvas a person drew. */
 const MAX_COORD = 1e7;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
 const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) && Math.abs(v) <= MAX_COORD ? v : null);

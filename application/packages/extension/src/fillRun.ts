@@ -18,6 +18,7 @@ import { allEntries, copyLoginShortcut, isUnlocked } from './logins';
 import { byLastFill, markFilled, nextFill, readLastFill, type Cycle } from './lastFill';
 import { loginsOf, matchLogins } from './match';
 import { flashBadge } from './queue';
+import { activeTab } from './tabs';
 
 // Spec: docs/internal/plans/click-to-fill.md (section 3.2, steps 4 and 8)
 const COLLECT_MS = 400;
@@ -191,7 +192,7 @@ export async function runFill(item: string, tabId: number): Promise<FillOutcome>
  * no match, or several and nothing to fill, the window opens.
  */
 export async function fillLoginShortcut(): Promise<void> {
-  const [tab] = await browser.tabs.query({ active: true, lastFocusedWindow: true });
+  const tab = await activeTab();
   const found = tab?.url && (await isUnlocked()) ? await allEntries() : null;
   const matches = found && tab?.url ? matchLogins(loginsOf(found.entries), tab.url) : [];
   if (matches.length && tab?.url && tab.id != null) {

@@ -14,7 +14,8 @@ const DEFAULT_HOURS = 7.5;
  * Sleep pill - the hours as a stepper (0 to 14, half hours), then the
  * quality as one choice. The hours save as they change; the quality tap
  * commits both and closes the panel, so it is the step that moves the pass
- * on. A quality without hours takes the default night.
+ * on. A quality without hours takes the default night. A tap on the chosen
+ * quality removes the night, hours and all.
  */
 export function SleepPill({
   value,
@@ -26,7 +27,8 @@ export function SleepPill({
   value?: { quality: SleepQuality; hours?: number };
   expanded: boolean;
   onToggle: () => void;
-  onChange: (v: { quality: SleepQuality; hours?: number }) => void;
+  /** `undefined` removes the night. */
+  onChange: (v: { quality: SleepQuality; hours?: number } | undefined) => void;
   readOnly?: boolean;
 }) {
   const { t } = useTranslation('trackers');
@@ -76,6 +78,7 @@ export function SleepPill({
             options={qualities}
             value={value?.quality}
             onPick={(q) => { write({ quality: q, hours: latest.current?.hours ?? DEFAULT_HOURS }); onToggle(); }}
+            onClear={() => { latest.current = undefined; onChange(undefined); }}
           />
         </div>
       </div>

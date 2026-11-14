@@ -41,7 +41,7 @@ import { TOTP_RED_S, TotpBar, useSecondTick } from './TotpBar';
 import { useViewPrefs } from './SettingsView';
 import { byName, forSite, searchEntries } from '../../src/match';
 import { byLastFill, readLastFill, type LastFill } from '../../src/lastFill';
-import { faviconOf, hostOf } from '../../src/favicon';
+import { displayHost, faviconOf } from '../../src/favicon';
 import type { TypeFilter } from '../../src/prefs';
 
 
@@ -369,7 +369,7 @@ function LoginRow({ login, pro, copy, menu, onFill, fillKeys }: { login: LoginCo
   const now = useSecondTick(!!totp && pro);
   const code = totp && pro ? generateTotpCode(totp, now) : null;
   const left = totp ? totpSecondsRemaining(totp.period, now) : 0;
-  const site = login.urls[0] ? hostOf(login.urls[0]) : '';
+  const site = login.urls[0] ? displayHost(login.urls[0]) : '';
   return (
     <Row
       entry={login}
@@ -470,9 +470,9 @@ function BookmarkRow({ bookmark, copy, menu }: { bookmark: BookmarkCopyEntry; co
   return (
     <Row
       entry={bookmark}
-      tile={<Tile url={bookmark.url} letter={bookmark.name || hostOf(bookmark.url)} />}
-      title={bookmark.name || hostOf(bookmark.url)}
-      meta={[hostOf(bookmark.url), bookmark.savedAt ? new Date(bookmark.savedAt).toLocaleDateString() : ''].filter(Boolean).join(' · ')}
+      tile={<Tile url={bookmark.url} letter={bookmark.name || displayHost(bookmark.url)} />}
+      title={bookmark.name || displayHost(bookmark.url)}
+      meta={[displayHost(bookmark.url), bookmark.savedAt ? new Date(bookmark.savedAt).toLocaleDateString() : ''].filter(Boolean).join(' · ')}
       copy={copy}
       menu={menu}
       tools={
@@ -634,7 +634,7 @@ export function VaultSections({ vault, url, tabId, query, typeFilter, menu, logi
     budget -= shown.length;
     return { kind, count: list.length, shown };
   }).filter((g) => g.shown.length > 0);
-  const site = hostOf(url);
+  const site = displayHost(url);
   const showHere = !!site && typeFilter !== 'card' && typeFilter !== 'ssh';
   return (
     <div className="px-3 pb-3 space-y-3">

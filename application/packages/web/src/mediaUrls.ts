@@ -4,10 +4,11 @@
  * Files picture picker. Both stores keep their own session cache of decrypted
  * object URLs, so a picture opened from any of them is decrypted once.
  */
-import { loadEncryptedImageUrl, saveStoredImage } from './EncryptedImage';
+import { fetchLocalPicture, loadEncryptedImageUrl, saveStoredImage } from './EncryptedImage';
 import { loadAttachmentData, loadAttachmentUrl } from './EncryptedAttachment';
 import { FILE_REF_PREFIX, IMAGE_REF_PREFIX, type MediaRef } from './mediaRefs';
 import { saveBlob, type SaveResult } from './saveFile';
+import { isSameOriginPath } from './sameOriginPath';
 
 /**
  * Null when the blob is neither here nor on the server. Any other source is
@@ -19,18 +20,28 @@ export async function loadPictureUrl(src: string): Promise<string | null> {
   return src;
 }
 
-/** Whether the viewer can save this item: it names a blob one of the stores holds. */
+/**
+ * Whether the viewer can save this item: it names a blob one of the stores
+ * holds, or a picture the app ships, which a starter note names by its path.
+ * Any other address is never fetched, so there is nothing to save. The
+ * picture bar in a note follows the same rule (`canSave` in EncryptedImage.tsx).
+ */
 export function canSaveMedia(ref: MediaRef): boolean {
-  return ref.src.startsWith(FILE_REF_PREFIX) || ref.src.startsWith(IMAGE_REF_PREFIX);
+  return ref.src.startsWith(FILE_REF_PREFIX) || ref.src.startsWith(IMAGE_REF_PREFIX) || isSameOriginPath(ref.src);
 }
 
 /**
  * Save the item under the name the note gives it, which is what its chip
- * saves too. Null when the blob cannot be read.
+ * saves too; a picture the app ships keeps its file name. Null when the
+ * bytes cannot be read.
  */
 export async function saveMedia(ref: MediaRef): Promise<SaveResult | null> {
   if (ref.src.startsWith(IMAGE_REF_PREFIX)) {
     return saveStoredImage(ref.src.slice(IMAGE_REF_PREFIX.length), ref.name);
+  }
+  if (isSameOriginPath(ref.src)) {
+    const file = await fetchLocalPicture(ref.src);
+    return file ? saveBlob(file, file.name) : null;
   }
   if (!ref.src.startsWith(FILE_REF_PREFIX)) return null;
   const att = await loadAttachmentData(ref.src.slice(FILE_REF_PREFIX.length));

@@ -1,6 +1,6 @@
-import { Check, Minus, ShieldSlash, Timer, Warning } from '../icons';
-import { Button, Callout } from '../ui';
-import { useEffect, useId, useRef, useState } from 'react';
+import { Check, ShieldSlash, Timer } from '../icons';
+import { Button, Callout, CompareTiles, type CompareTile } from '../ui';
+import { useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useEscapeToClose } from '../useEscapeToClose';
 import {
@@ -41,7 +41,6 @@ import {
   normalizeSecret,
   PASSCODE_MAX_CHARS,
   PASSCODE_MIN_CHARS,
-  PASSCODE_SETUP_ENABLED,
   passcodeRules,
   secretReady,
   type SecretKind,
@@ -88,12 +87,9 @@ export function PinTab({
   // Read once per opening of the tab, which clears it.
   const [changeLost] = useState(() => takePinChangeLost());
   // The kind the account holds, read from its hash salt, and the kind the
-  // new-secret step sets. Setting a passcode is behind PASSCODE_SETUP_ENABLED;
-  // checking one never is, so an older device can change an account's
-  // passcode back to a PIN.
+  // new-secret step sets.
   const [existingKind, setExistingKind] = useState<SecretKind>(() => (pinIsPasscode() ? 'passcode' : 'pin'));
-  const [newKind, setNewKind] = useState<SecretKind>(() =>
-    PASSCODE_SETUP_ENABLED && pinIsPasscode() ? 'passcode' : 'pin');
+  const [newKind, setNewKind] = useState<SecretKind>(() => (pinIsPasscode() ? 'passcode' : 'pin'));
   const [oldPinVerified, setOldPinVerified] = useState(false);
   // The phrase route out of a forgotten PIN, and the line that says it
   // worked. Spec: docs/internal/specs/pin-recovery.md
@@ -141,7 +137,7 @@ export function PinTab({
     const kind: SecretKind = pinIsPasscode() ? 'passcode' : 'pin';
     setPinExists(hasPin());
     setExistingKind(kind);
-    setNewKind(PASSCODE_SETUP_ENABLED ? kind : 'pin');
+    setNewKind(kind);
     setOldPinVerified(false);
     proved.current = null;
     setOldPin('');
@@ -450,7 +446,7 @@ export function PinTab({
             )}
             <p className={`${SETTINGS_HELP} leading-relaxed`}>
               {!pinExists
-                ? (PASSCODE_SETUP_ENABLED ? t('pinTab.chooseIntro') : t('pinTab.setIntro'))
+                ? t('pinTab.chooseIntro')
                 : newKind === 'passcode'
                   ? t('pinTab.replaceWithPasscode')
                   : existingKind === 'passcode'
@@ -459,20 +455,18 @@ export function PinTab({
             </p>
           </div>
 
-          {PASSCODE_SETUP_ENABLED && (
-            <SecretKindTiles
-              value={newKind}
-              appLock={userSettings.appLockEnabled}
-              disabled={busy}
-              onChange={(kind) => {
-                // Arrow keys move through the tiles, so a choice made there
-                // keeps the focus in the group instead of jumping to a field.
-                kindFromTiles.current = true;
-                setNewKind(kind);
-                reset();
-              }}
-            />
-          )}
+          <SecretKindTiles
+            value={newKind}
+            appLock={userSettings.appLockEnabled}
+            disabled={busy}
+            onChange={(kind) => {
+              // Arrow keys move through the tiles, so a choice made there
+              // keeps the focus in the group instead of jumping to a field.
+              kindFromTiles.current = true;
+              setNewKind(kind);
+              reset();
+            }}
+          />
           {biometricWeaker && (
             <SettingsCallout>{t('pinTab.biometricWeaker')}</SettingsCallout>
           )}
@@ -819,10 +813,8 @@ function NewPasscodeFields({
  * device's screen lock can do with the stored hash: try all 10,000 PINs, or
  * face a passcode's length and alphabet. That difference exists only while
  * the app lock is on: with it off, the app opens without asking for either
- * secret, so the row then reads the same in both tiles. Native radios keep
- * arrow-key moves and the group's name for screen readers. Each tile is a
- * subgrid of the group, so a row that wraps in one tile keeps the next row
- * level in both.
+ * secret, so the row then reads the same in both tiles. CompareTiles draws
+ * the native radios and keeps each row level across both tiles.
  * Spec: docs/public/THREAT_MODEL.md (PIN protection)
  */
 function SecretKindTiles({
@@ -837,86 +829,32 @@ function SecretKindTiles({
   disabled: boolean;
 }) {
   const { t } = useTranslation('security');
-  const name = useId();
-  const stolenNoLock: [string, 'meh', string] = [t('pinTab.rowStolen'), 'meh', t('pinTab.stolenNoLock')];
-  const tiles: { kind: SecretKind; title: string; badge: string; rows: [string, 'yes' | 'no' | 'meh', string][] }[] = [
+  const stolenNoLock = { label: t('pinTab.rowStolen'), mark: 'meh', text: t('pinTab.stolenNoLock') } as const;
+  const tiles: CompareTile<SecretKind>[] = [
     {
-      kind: 'pin',
+      value: 'pin',
       title: t('pinTab.kindPin'),
-      badge: t('pinTab.badgeDefault'),
+      badge: { label: t('pinTab.badgeDefault'), tone: 'info' },
       rows: [
-        [t('pinTab.rowTyping'), 'yes', t('pinTab.typingPin')],
-        [t('pinTab.rowNearby'), 'yes', t('pinTab.nearby')],
-        appLock ? [t('pinTab.rowStolen'), 'no', t('pinTab.stolenPin')] : stolenNoLock,
-        [t('pinTab.rowForgot'), 'yes', t('pinTab.forgot')],
+        { label: t('pinTab.rowTyping'), mark: 'yes', text: t('pinTab.typingPin') },
+        { label: t('pinTab.rowNearby'), mark: 'yes', text: t('pinTab.nearby') },
+        appLock ? { label: t('pinTab.rowStolen'), mark: 'no', text: t('pinTab.stolenPin') } : stolenNoLock,
+        { label: t('pinTab.rowForgot'), mark: 'yes', text: t('pinTab.forgot') },
       ],
     },
     {
-      kind: 'passcode',
+      value: 'passcode',
       title: t('pinTab.kindPasscode'),
-      badge: t('pinTab.badgeStronger'),
+      badge: { label: t('pinTab.badgeStronger'), tone: 'success' },
       rows: [
-        [t('pinTab.rowTyping'), 'meh', t('pinTab.typingPasscode', { min: PASSCODE_MIN_CHARS })],
-        [t('pinTab.rowNearby'), 'yes', t('pinTab.nearby')],
-        appLock ? [t('pinTab.rowStolen'), 'yes', t('pinTab.stolenPasscode')] : stolenNoLock,
-        [t('pinTab.rowForgot'), 'yes', t('pinTab.forgot')],
+        { label: t('pinTab.rowTyping'), mark: 'meh', text: t('pinTab.typingPasscode', { min: PASSCODE_MIN_CHARS }) },
+        { label: t('pinTab.rowNearby'), mark: 'yes', text: t('pinTab.nearby') },
+        appLock ? { label: t('pinTab.rowStolen'), mark: 'yes', text: t('pinTab.stolenPasscode') } : stolenNoLock,
+        { label: t('pinTab.rowForgot'), mark: 'yes', text: t('pinTab.forgot') },
       ],
     },
   ];
-  return (
-    <div role="radiogroup" aria-label={t('pinTab.kindGroup')} className="grid grid-cols-1 @lg:grid-cols-2 gap-2.5">
-      {tiles.map((tile) => {
-        const on = value === tile.kind;
-        return (
-          <label
-            key={tile.kind}
-            className={`relative grid grid-rows-subgrid row-span-5 gap-y-2.5 rounded-lg border bg-surface-1 px-3.5 py-3 cursor-pointer transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
-              on ? 'border-accent ring-1 ring-accent' : 'border-divider hover:border-pn-soft'
-            } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-          >
-            <input
-              type="radio"
-              name={name}
-              value={tile.kind}
-              checked={on}
-              disabled={disabled}
-              onChange={() => onChange(tile.kind)}
-              className="sr-only"
-            />
-            <span className="flex items-center justify-between gap-2 mb-0.5">
-              <span className="flex items-center gap-2 text-body font-medium text-pn">
-                <span
-                  aria-hidden="true"
-                  className={`grid place-items-center size-4 rounded-full border ${on ? 'border-accent' : 'border-pn-soft'}`}
-                >
-                  {on && <span className="size-2 rounded-full bg-accent-fill" />}
-                </span>
-                {tile.title}
-              </span>
-              <span
-                className={`rounded px-2 py-0.5 text-meta font-medium ${
-                  tile.kind === 'pin' ? 'bg-accent/10 text-accent' : 'bg-success/10 text-success'
-                }`}
-              >
-                {tile.badge}
-              </span>
-            </span>
-            {tile.rows.map(([label, mark, text]) => (
-              <span key={label} className="block">
-                <span className="block text-meta text-pn-soft">{label}</span>
-                <span className="flex items-start gap-1.5 text-small leading-relaxed text-pn">
-                  {mark === 'yes' && <Check aria-hidden="true" className="shrink-0 mt-0.5 text-success" />}
-                  {mark === 'no' && <Warning aria-hidden="true" className="shrink-0 mt-0.5 text-warning" />}
-                  {mark === 'meh' && <Minus aria-hidden="true" className="shrink-0 mt-0.5 text-pn-soft" />}
-                  <span>{text}</span>
-                </span>
-              </span>
-            ))}
-          </label>
-        );
-      })}
-    </div>
-  );
+  return <CompareTiles label={t('pinTab.kindGroup')} value={value} tiles={tiles} onChange={onChange} disabled={disabled} />;
 }
 
 // ---- Temporary, English only: the older-apps notice ---------------------------

@@ -14,6 +14,7 @@
 
 let current: Uint8Array | null = null;
 const clearListeners = new Set<() => void>();
+const replaceListeners = new Set<() => void>();
 
 /** Runs whenever the key is cleared. The seal layer drops its plaintext
  *  memo through this, so cached content can never outlive the key. */
@@ -21,8 +22,18 @@ export function onLocalDataKeyCleared(cb: () => void): void {
   clearListeners.add(cb);
 }
 
+/** Runs when a key registers in place of a different one: a sign-in with
+ *  another phrase, also after a sign-out that kept its key for a flush still
+ *  running. The key ring forgets that phrase's epochs through this
+ *  (keyRing.ts). The same key again (an unlock) keeps them. */
+export function onLocalDataKeyReplaced(cb: () => void): void {
+  replaceListeners.add(cb);
+}
+
 export function registerLocalDataKey(key: Uint8Array): void {
+  const same = current !== null && current.length === key.length && current.some((b) => b !== 0) && current.every((b, i) => b === key[i]);
   current = key;
+  if (!same) for (const cb of replaceListeners) cb();
 }
 
 export function clearLocalDataKey(): void {

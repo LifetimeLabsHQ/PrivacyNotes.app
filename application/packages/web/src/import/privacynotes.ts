@@ -22,9 +22,9 @@
  *      next sync uploads them to Supabase.
  */
 
-import JSZip from 'jszip';
 import i18n from '../i18n';
 import { zipEntryMedia, zipEntryText } from './zipEntry';
+import { openZip } from './zipOpen';
 import type { BackupManifest, MissingBlob } from '../export';
 import { stripFrontMatterPadding, unescapeQuotes, unescapeSingleQuotes } from '../noteMarkdown';
 import { FRONT_MATTER_LOCATION, FRONT_MATTER_LOCATION_NAME, LOCATION_KEY, parseFrontMatterLocation, type NoteLocation } from '../noteLocation';
@@ -32,12 +32,14 @@ import { FRONT_MATTER } from '../markdownFolder/adapter';
 import type { ParsedImport, ImportedNote } from './types';
 import type { NoteType } from '@notes/shared';
 import { db } from '../db';
+import { uploadAgainWhatThePurgeTook } from '../imageGC';
 import type { AttachmentMeta } from '../attachmentStore';
-import { sha256hex } from './blobImport';
+import { sha256Hex } from '../sha256Hex';
+import { formatBytes } from '../formatBytes';
 import { createFolder, type FolderDef } from '../folders';
 import { IMPORT_FOLDER_LIMIT, parseFolderPath } from './folderImport';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.privacynotes.${key}`, options);
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:privacynotes.${key}`, options);
 
 // ─── YAML frontmatter parser (minimal, no dependency) ────────────────
 
@@ -136,19 +138,12 @@ function rewriteAttachmentsForImport(
       if (!uuid) return match;
       if (bang) return `![${name}](pn:file/${uuid})`;
       const info = manifest.attachments[uuid]!;
-      const sizeStr = formatSize(info.size);
+      const sizeStr = formatBytes(info.size);
       // The link's own text first: one file can be referenced twice under
       // two names, and the manifest holds room for only one of them.
       return `[${name || info.name}|${sizeStr}|${info.mime}](pn:file/${uuid})`;
     },
   );
-}
-
-/** Format bytes as human-readable size (matching the app's format). */
-function formatSize(bytes: number): string {
-  if (bytes < 1000) return `${bytes} B`;
-  if (bytes < 1000 * 1000) return `${(bytes / 1000).toFixed(1)} KB`;
-  return `${(bytes / (1000 * 1000)).toFixed(1)} MB`;
 }
 
 /** File extension from a name, lowercased; 'bin' when absent. Mirrors the
@@ -158,7 +153,6 @@ function extFromName(name: string): string {
   return dot >= 0 ? name.slice(dot + 1).toLowerCase() : 'bin';
 }
 
-// sha256hex imported from blobImport.ts (shared across all importers)
 
 // ─── Folder tree (import direction) ───────────────────────────────────
 
@@ -224,7 +218,7 @@ export async function parsePrivacyNotesBackup(
   onProgress?: (msg: string) => void,
 ): Promise<ParsedImport> {
   onProgress?.(msg('readingBackup'));
-  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const zip = await openZip(await file.arrayBuffer());
 
   // Validate manifest
   const manifestFile = zip.file('manifest.json');
@@ -389,7 +383,7 @@ export async function restoreBlobs(
   file: File,
   onProgress?: (msg: string) => void,
 ): Promise<{ images: number; attachments: number; missing: Pick<MissingBlob, 'id' | 'kind'>[] }> {
-  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const zip = await openZip(await file.arrayBuffer());
   const manifestFile = zip.file('manifest.json');
   if (!manifestFile) return { images: 0, attachments: 0, missing: [] };
 
@@ -426,13 +420,19 @@ export async function restoreBlobs(
       missing.push({ id: uuid, kind: 'image' });
       continue;
     }
-    const hash = await sha256hex(data);
+    const hash = await sha256Hex(data);
 
     await db.imageCache.put({ id: uuid, data, cachedAt: now });
     // Keyed by hash, so the same rule applies one table over: a dedup row
-    // the account already has points at a blob it can actually read.
-    if (!(await db.imageDedup.get(hash))) {
+    // the account already has points at a blob it can actually read. When
+    // it names another id (the same picture pasted on two devices is two
+    // blobs), this id still needs its own upload row: the upload sweep, the
+    // pending counts and a forced sign-out read only these rows.
+    const known = await db.imageDedup.get(hash);
+    if (!known) {
       await db.imageDedup.put({ hash, uuid, encryptedSize: 0, pendingUpload: 1 });
+    } else if (known.uuid !== uuid) {
+      await uploadAgainWhatThePurgeTook([uuid]);
     }
     imgCount++;
     onProgress?.(msg('restoringImages', { done: imgCount, total: imageUuids.length }));
@@ -457,7 +457,7 @@ export async function restoreBlobs(
       missing.push({ id: uuid, kind: 'file' });
       continue;
     }
-    const hash = await sha256hex(data);
+    const hash = await sha256Hex(data);
     // The size is measured, not read from the manifest: the quota preflight
     // and the per-file ceiling both consume it, and the archive declares its
     // own number. `blobImport` measures the bytes it just read for the same
@@ -465,8 +465,11 @@ export async function restoreBlobs(
     const meta: AttachmentMeta = { name: info.name, mime: info.mime, size: data.length };
 
     await db.attachmentCache.put({ id: uuid, meta, data, cachedAt: now });
-    if (!(await db.attachmentDedup.get(hash))) {
+    const known = await db.attachmentDedup.get(hash);
+    if (!known) {
       await db.attachmentDedup.put({ hash, uuid, encryptedSize: 0, pendingUpload: 1 });
+    } else if (known.uuid !== uuid) {
+      await uploadAgainWhatThePurgeTook([uuid]);
     }
     attCount++;
     onProgress?.(msg('restoringFiles', { done: attCount, total: attEntries.length }));

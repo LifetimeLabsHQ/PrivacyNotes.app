@@ -360,5 +360,47 @@
     "addColumn": "Kolom toevoegen",
     "removeBoard": "Bord verwijderen",
     "moveTo": "Verplaatsen naar"
+  },
+  "doodle": {
+    "title": "Krabbel",
+    "clear": "Wissen",
+    "paper": "Papier",
+    "paperNone": "Geen kleur: de notitie schijnt erdoorheen.",
+    "settings": "Peninstellingen",
+    "stroke": "Lijn",
+    "thinning": "Verdunning",
+    "streamline": "Stroomlijnen",
+    "smoothing": "Afvlakking",
+    "easingLabel": "Verloop",
+    "start": "Begin",
+    "end": "Einde",
+    "taperStart": "Versmalling begin",
+    "capStart": "Afgerond begin",
+    "easingStart": "Verloop begin",
+    "taperEnd": "Versmalling einde",
+    "capEnd": "Afgerond einde",
+    "easingEnd": "Verloop einde",
+    "fill": "Vulling",
+    "outline": "Contour",
+    "easing": {
+      "linear": "Lineair",
+      "in": "Versnellen, {{curve}}",
+      "out": "Vertragen, {{curve}}",
+      "inOut": "Versnellen en vertragen, {{curve}}"
+    },
+    "curve": {
+      "quad": "kwadratisch",
+      "cubic": "kubisch",
+      "quart": "vierdegraads",
+      "quint": "vijfdegraads",
+      "sine": "sinus",
+      "expo": "exponentieel"
+    },
+    "colors": {
+      "black": "Zwart",
+      "white": "Wit",
+      "cyan": "Cyaan",
+      "lightGray": "Lichtgrijs"
+    }
   }
 }

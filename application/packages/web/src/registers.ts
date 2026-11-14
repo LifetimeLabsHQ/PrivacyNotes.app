@@ -94,6 +94,9 @@ export function registerMapsEqual(a: RegisterMap, b: RegisterMap): boolean {
   return true;
 }
 
+/** The shape of a key `newRegisterId` makes. */
+export const REGISTER_ID = /^[a-z0-9]{12}$/;
+
 /** A fresh key for a map of registers: twelve lower-case letters and
  *  digits. */
 export function newRegisterId(): string {

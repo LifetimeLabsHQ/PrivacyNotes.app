@@ -6,7 +6,10 @@
  * URL format: /burn#id=<uuid>&k=<hex>
  *
  * The key never leaves the client (fragments aren't sent over HTTP).
- * The server only ever sees opaque ciphertext. On reveal, the viewer
+ * The server only ever sees opaque ciphertext. The row goes through the
+ * `burn-create` edge function, which limits each caller address, so one
+ * caller cannot use up the ceiling every sender shares; no session is sent,
+ * so the row stays anonymous. On reveal, the viewer
  * calls `consume_burn_note(id)` which returns the ciphertext and
  * deletes the row atomically - one read, then it's gone.
  */
@@ -17,7 +20,7 @@ import { vaultContent, type VaultField } from './vaultFields';
 import { linkExportMarkdown } from './linkBody';
 import { hasMedia, stripMediaReferences } from './imageProcessing';
 import i18n from './i18n';
-import { detectPlatform } from './devices';
+import { detectPlatform, readFnErrorBody, type FnError } from './devices';
 import { isDemoMode } from './demo';
 import { APEX_ORIGIN } from './hosts';
 import { readLineSpacing } from './theme';
@@ -105,19 +108,25 @@ export async function createBurnLink(
   // Store as base64 on the server.
   const ciphertextB64 = bytesToBase64(combined);
 
-  // Generate UUID client-side so we don't need .select('id') after insert.
-  // PostgREST requires a SELECT RLS policy to return rows, but burn_notes
-  // intentionally has no SELECT policy (prevents enumerating all ciphertexts).
+  // The id is made here, so the link exists before the server answers and
+  // the server never returns a row (burn_notes has no SELECT policy).
   const id = crypto.randomUUID();
 
-  const { error } = await supabase
-    .from('burn_notes')
-    .insert({ id, ciphertext: ciphertextB64, lifetime_hours: lifetimeHours });
+  // One call, no retry: a lost answer to a stored row would come back as
+  // id_taken. The old direct insert on burn_notes stays open only for builds
+  // from before this function, and closes once none of them is supported.
+  // Spec: docs/contrib/supabase.md (Burn notes)
+  const { error } = await supabase.functions.invoke('burn-create', {
+    body: { id, ciphertext: ciphertextB64, lifetime_hours: lifetimeHours },
+  });
 
   if (error) {
+    const answer = (await readFnErrorBody(error as FnError)) as { error?: unknown } | null;
     return {
       ok: false,
-      error: error.message ?? i18n.t('notesChrome:burnShare.storeFailed'),
+      error: answer?.error === 'rate_limited'
+        ? i18n.t('notesChrome:burnShare.rateLimited')
+        : i18n.t('notesChrome:burnShare.storeFailed'),
     };
   }
 

@@ -7,6 +7,7 @@ import type { ListPrefs } from './listPrefs';
 import { isDemoMode } from './demo';
 import { intlLocale } from './languages';
 import { capitalize, monthName, relativeDayName, toLocalIso } from './intlFormat';
+import { parseDay } from './localDate';
 import { deriveDisplayTitle, editedAtOf, entryDayOf } from './notesViewUtils';
 import { CaretDown } from './icons';
 import { OTHER_KEY, PINNED_KEY, SYMBOL_KEY, buildGroups, groupBasis, type ListGroup } from './listGroups';
@@ -150,11 +151,6 @@ export function useToday(): string {
   return today;
 }
 
-function dayFromIso(iso: string): Date {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y!, m! - 1, d!);
-}
-
 /**
  * The grouped form of a sorted list, or null entries when it is not grouped:
  * the switch is off, the sort has no groups, or a search is on (its order is
@@ -195,10 +191,10 @@ export function useListGroups({
     const created = listPrefs.sortField === 'created';
     return buildGroups(notes, {
       basis,
-      now: dayFromIso(today),
+      now: parseDay(today),
       dateOf: (n) =>
         created
-          ? entryDays && n.type === 'journal' ? dayFromIso(entryDayOf(n)) : new Date(n.createdAt)
+          ? entryDays && n.type === 'journal' ? parseDay(entryDayOf(n)) : new Date(n.createdAt)
           : new Date(editedAtOf(n)),
       titleOf: (n) => deriveDisplayTitle(n, gatedRef.current(n)),
       isPinned: (n) => n.starred === 1,

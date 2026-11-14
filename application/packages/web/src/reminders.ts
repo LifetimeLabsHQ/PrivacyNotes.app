@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { toLocalIso } from './intlFormat';
 import { isDemoMode } from './demo';
+import { readJson, writeJson } from './localStore';
 import { occurrencesOf, shiftDay, type Alert, type Schedule } from './schedule';
 
 /**
@@ -181,22 +182,6 @@ export function reminderText(
 // The demo runs on the same origin as a real install, so it keeps its own keys.
 const snoozeKey = () => (isDemoMode() ? 'privacynotes.demo.reminderSnoozes' : 'privacynotes.reminderSnoozes');
 const unseenKey = () => (isDemoMode() ? 'privacynotes.demo.calendarUnseenAlerts' : 'privacynotes.calendarUnseenAlerts');
-
-function readJson<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-function writeJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Storage refused (a private window): the state lasts for this page.
-  }
-}
 
 export function readSnoozes(now = Date.now()): Record<string, number> {
   const all = readJson<Record<string, number>>(snoozeKey(), {});

@@ -262,6 +262,8 @@
       "unknown": "Nieznany tracker {{id}}",
       "sleepHours": "Godziny snu",
       "sleepQuality": "Jakość snu",
+      "bpSystolic": "Ciśnienie krwi, górne",
+      "bpDiastolic": "Ciśnienie krwi, dolne",
       "avgDays_one": "średnia, dni: {{count}}",
       "avgDays_few": "średnia, dni: {{count}}",
       "avgDays_many": "średnia, dni: {{count}}",

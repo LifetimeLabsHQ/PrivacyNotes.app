@@ -1,5 +1,5 @@
 /**
- * Crypto core. From a 12-word BIP-39 phrase, HKDF branches are
+ * Crypto core. From a BIP-39 phrase (12 or 24 words), HKDF branches are
  * derived, each under its own domain-separation info string:
  *   - ed25519 signing keypair - public key is the user ID.
  *   - xchacha20poly1305 symmetric key - encrypts note contents for sync.
@@ -39,8 +39,11 @@ const utf8Decoder = new TextDecoder();
 // ------------------------------------------------------------------
 
 // Spec: THREAT_MODEL.md (BIP-39 12-word phrase, client-generated, never touches server)
-export function generatePhrase(): string {
-  return generateMnemonic(wordlist, 128);
+// 24 words carry 256 bits. Every other function here takes any valid BIP-39
+// length, so a phrase of either length derives its keys the same way.
+// Spec: docs/internal/plans/phrase-change.md (section 3, the 12 or 24 word choice)
+export function generatePhrase(words: 12 | 24 = 12): string {
+  return generateMnemonic(wordlist, words === 24 ? 256 : 128);
 }
 
 /** True if the phrase is a valid BIP-39 mnemonic (checksum verified). */
@@ -125,6 +128,63 @@ export async function signAccountLoginsChallenge(privateKey: Uint8Array, challen
   return ed.signAsync(utf8.encode(`account-logins:${nonceId}:${authUid}:${sessionId}:${pubkey}:${operation}:${bodyDigest}`), privateKey);
 }
 
+/** 32 bytes as lower-case hex: a public key, an account id or a digest. */
+export const HEX32_KEY = /^[0-9a-f]{64}$/;
+const UUID_SHAPE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/**
+ * Sign `resolve:<signingPubkey>:<nonce>` for link-pubkey `resolve`, which
+ * answers which account a signing key belongs to after a phrase change. The
+ * text is built here from a nonce of digits, a dot and hex, so a server can
+ * never have this key sign another function's challenge.
+ * Spec: docs/internal/plans/phrase-change.md (4.3)
+ */
+export async function signResolveChallenge(
+  privateKey: Uint8Array,
+  signingPubkey: string,
+  nonce: string,
+): Promise<Uint8Array> {
+  if (!HEX32_KEY.test(signingPubkey) || !/^\d{1,12}\.[0-9a-f]{64}$/.test(nonce)) {
+    throw new Error('resolve challenge malformed');
+  }
+  return ed.signAsync(utf8.encode(`resolve:${signingPubkey}:${nonce}`), privateKey);
+}
+
+/**
+ * Sign `bind-session:<nonceId>:<authUid>:<sessionId>:<account>` for
+ * link-pubkey `bind-session`: this session proves the account's current
+ * signing key, and the key-epoch write gate lets it write.
+ * Spec: docs/internal/plans/phrase-change.md (4.4)
+ */
+export async function signBindSessionChallenge(privateKey: Uint8Array, challenge: {
+  nonceId: string; authUid: string; sessionId: string; account: string;
+}): Promise<Uint8Array> {
+  const { nonceId, authUid, sessionId, account } = challenge;
+  if (![nonceId, authUid, sessionId].every((v) => UUID_SHAPE.test(v)) || !HEX32_KEY.test(account)) {
+    throw new Error('bind-session challenge malformed');
+  }
+  return ed.signAsync(utf8.encode(`bind-session:${nonceId}:${authUid}:${sessionId}:${account}`), privateKey);
+}
+
+/**
+ * Sign `rotate-phrase:<nonceId>:<authUid>:<sessionId>:<account>:<epoch>:<newSigningPubkey>:<bodyDigest>`
+ * for the edge function `rotate-phrase`. The change signs it twice, with the
+ * account's current key and with the new phrase's key. The text is built here
+ * from checked parts, so a server can never have either key sign another
+ * function's challenge. Spec: docs/internal/plans/phrase-change.md (section 5)
+ */
+export async function signRotatePhraseChallenge(privateKey: Uint8Array, challenge: {
+  nonceId: string; authUid: string; sessionId: string; account: string;
+  epoch: number; newSigningPubkey: string; bodyDigest: string;
+}): Promise<Uint8Array> {
+  const { nonceId, authUid, sessionId, account, epoch, newSigningPubkey, bodyDigest } = challenge;
+  if (![nonceId, authUid, sessionId].every((v) => UUID_SHAPE.test(v)) || ![account, newSigningPubkey, bodyDigest].every((v) => HEX32_KEY.test(v))
+    || !Number.isSafeInteger(epoch) || epoch < 1) {
+    throw new Error('rotate-phrase challenge malformed');
+  }
+  return ed.signAsync(utf8.encode(`rotate-phrase:${nonceId}:${authUid}:${sessionId}:${account}:${epoch}:${newSigningPubkey}:${bodyDigest}`), privateKey);
+}
+
 // ------------------------------------------------------------------
 // Device identity
 // ------------------------------------------------------------------
@@ -146,7 +206,12 @@ export function generateDeviceSecret(): Uint8Array {
   return randomBytes(32);
 }
 
-/** Derive a stable 32-hex-char deviceId from (pubkey, deviceSecret). Idempotent on server. */
+/**
+ * Derive a stable 32-hex-char deviceId from (pubkey, deviceSecret). Idempotent on server.
+ * `pubkey` is the ACCOUNT ID, never the signing key: after a phrase change the
+ * two differ, and a signing key here would give every device a new id.
+ * Spec: docs/internal/plans/phrase-change.md (4.6)
+ */
 export function deriveDeviceId(
   pubkey: string,
   deviceSecret: Uint8Array,

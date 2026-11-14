@@ -2,11 +2,13 @@
  * Recovering an upload whose response was lost.
  *
  * A blob object is immutable by design. Its name carries a random uuid, and
- * the bucket's policies grant INSERT, SELECT and DELETE and no UPDATE, so
- * nothing can rewrite the bytes at a name once they are there. An upload sent
- * with `upsert: true` asks Storage for an UPDATE whenever the object already
- * exists, and that request is refused - the server log carries it as "new row
- * violates row-level security policy (USING expression) for table objects".
+ * the bucket's policies grant INSERT, SELECT and DELETE, and one UPDATE: an
+ * overwrite at the same path and the same size, which only the background
+ * pass of a phrase change sends (reencryptPass.ts, migration 0124). Before
+ * that policy an upload sent with `upsert: true` over an existing object was
+ * refused - the server log carried it as "new row violates row-level security
+ * policy (USING expression) for table objects" - and that is how this module
+ * came to be.
  *
  * The retry that triggers it is ordinary, not exotic. The upload commits, the
  * response is lost to a dead socket, or it arrives and the byte-accounting
@@ -17,8 +19,8 @@
  * transient it would keep the blob pending for good, retried on every boot and
  * every post-sync tick, re-sending the whole blob each time.
  *
- * So uploads are create-only, and a 409 is a signal rather than a failure: it
- * says a previous attempt of ours landed. Settling it needs two things, each
+ * So the stores upload create-only, and a 409 is a signal rather than a
+ * failure: it says a previous attempt of ours landed. Settling it needs two things, each
  * checked rather than assumed.
  *
  * First, the object has to be the intended one. Byte length does not establish

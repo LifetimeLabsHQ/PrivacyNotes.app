@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { activeLocale, deviceLocaleTags, intlLocale } from './languages';
+import { toLocalIso } from './localDate';
 
 /**
  * Every date the app shows a person goes through this file: list rows,
@@ -118,12 +119,8 @@ export function monthInitial(monthIndex: number): string {
   return fmt.format(new Date(Date.UTC(2024, monthIndex, 1)));
 }
 
-/** Local calendar date as `YYYY-MM-DD`. Never UTC: an entry belongs to
- *  the day the writer is living, not to the day in Greenwich. */
-export function toLocalIso(d: Date): string {
-  const pad = (n: number) => (n < 10 ? `0${n}` : String(n));
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
+// Its home is localDate.ts, which carries no i18n.
+export { toLocalIso };
 
 // ── The date settings ─────────────────────────────────────────────
 //

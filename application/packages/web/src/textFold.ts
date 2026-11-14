@@ -12,7 +12,7 @@ const PLAIN_LETTERS: Record<string, string> = { 'ł': 'l', 'ß': 'ss', 'ı': 'i'
 // Every character the accent pass can change: the Latin, Greek and Cyrillic
 // blocks with the combining marks between them, and Latin and Greek Extended.
 const MAY_CARRY_ACCENT = /[\u00c0-\u04ff\u1e00-\u1fff]/;
-const ASCII_ONLY = /^[\x00-\x7f]*$/;
+export const ASCII_ONLY = /^[\x00-\x7f]*$/;
 
 // One character without its accent marks, taken from NFD itself so the two
 // cannot drift, and remembered per character.

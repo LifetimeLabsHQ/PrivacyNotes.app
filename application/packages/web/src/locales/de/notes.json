@@ -141,6 +141,14 @@
   },
   "banner": {
     "proActivationPending": "Zahlung erhalten, aber die Pro-Aktivierung dauert länger als üblich. Lade in einer Minute neu oder kontaktiere den Support, falls Pro nicht aktiviert wird.",
+    "crypto": {
+      "waiting": "Warten auf deine Krypto-Zahlung. Pro wird aktiv, sobald sie bestätigt ist.",
+      "seen": "Krypto-Zahlung erkannt. Pro wird aktiv, sobald das Netzwerk sie bestätigt, bei Bitcoin meist innerhalb einer Stunde.",
+      "partial": "Ein Teil deiner Krypto-Zahlung ist angekommen. Sende den Rest auf der Zahlungsseite, bevor der Link abläuft.",
+      "ended": "Dein Krypto-Zahlungslink ist abgelaufen, bevor eine vollständige Zahlung angekommen ist.",
+      "paid": "Deine Krypto-Zahlung ist bestätigt. Pro ist aktiv.",
+      "openPayment": "Zahlungsseite"
+    },
     "snapshotPaused": "Der Notizverlauf ist pausiert. Dein Pro-Tarif scheint inaktiv. Neue Änderungen werden nicht versioniert, bis Pro wiederhergestellt ist.",
     "restorePro": "Pro wiederherstellen",
     "storagePastDue": "Die Zahlung für dein Speicher-Abo ist fehlgeschlagen. Aktualisiere deine Karte in Paddle, um zusätzlichen Speicher nicht zu verlieren.",
@@ -336,7 +344,24 @@
     "linksTo": "Verlinkt auf",
     "missing": "Noch nicht erstellt",
     "protectedHidden_one": "{{count}} PIN-geschütztes Element wird nicht angezeigt",
-    "protectedHidden_other": "{{count}} PIN-geschützte Elemente werden nicht angezeigt"
+    "protectedHidden_other": "{{count}} PIN-geschützte Elemente werden nicht angezeigt",
+    "related": "Vorgeschlagene Verknüpfungen",
+    "relatedWords": "Beide erwähnen {{words}}",
+    "relatedLinksTo": "Beide verlinken auf {{title}}",
+    "relatedLinkedFrom": "Beide verlinkt von {{title}}",
+    "relatedTag": "Beide mit Tag {{tag}}",
+    "relatedMeaning": "Dieselbe Bedeutung",
+    "meaningDoor": "Intelligente Verknüpfungen: Notizen mit derselben Bedeutung finden, mit Offline-KI",
+    "meaningDoorNo": "Nicht mehr anzeigen",
+    "meaningDoorHidden": "In allen Notizen ausgeblendet. Intelligente Verknüpfungen findest du weiter unter Einstellungen > Editor > Verhalten.",
+    "hideSuggestions": "Vorgeschlagene Verknüpfungen ausblenden",
+    "notRelated": "Kein Zusammenhang",
+    "notRelatedDone": "Wird nicht mehr vorgeschlagen",
+    "notRelatedCount": "Kein Zusammenhang ({{n}})",
+    "restoreSuggestion": "Wieder vorschlagen",
+    "linkAtCursor": "Am Cursor verlinken",
+    "linkNeedsCursor": "Klicke zuerst in die Notiz",
+    "linkAsFootnote": "Als Fußnote verlinken"
   },
   "drawing": {
     "fullScreen": "Vollbild",

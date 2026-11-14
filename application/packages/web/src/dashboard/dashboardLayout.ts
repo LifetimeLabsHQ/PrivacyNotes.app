@@ -37,9 +37,6 @@ export interface WidgetDef {
    *  heatmap): the card height in pixels it needs at a card width. Home
    *  draws it at least that many rows tall. */
   heightAt?: (widthPx: number) => number;
-  /** The narrowest card its content fits: in a pane whose columns are
-   *  narrower, Home draws it over as many columns as it needs. */
-  minWidthPx?: number;
   target?: WidgetTarget;
   /** Its content is Pro today. */
   pro?: boolean;
@@ -52,8 +49,13 @@ const MAX_ROWS = 12;
 // Spec: docs/internal/specs/dashboard.md (section 3, the grid)
 export const HOME_ROW_PX = 60;
 export const HOME_GAP_PX = 12;
-/** The calendar card's header (month, the arrows, expand) needs this width. */
-const CALENDAR_MIN_PX = 230;
+/** The narrowest column Home draws: the calendar card's header needs this
+ *  width on a touch screen (the short month, two arrows and expand at 40px
+ *  each); with a mouse it needs 230px. */
+export const HOME_MIN_COL_PX = 244;
+/** Under this content width two number cards do not fit side by side: a
+ *  streak tile needs 150px, or its last line is cut. */
+const PAIR_MIN_PX = 312;
 
 // Spec: docs/internal/specs/dashboard.md (section 5, the version 1 list)
 const WIDGET_DEFS = {
@@ -62,7 +64,7 @@ const WIDGET_DEFS = {
   // phone (288px to 382px of card; the days have one size), plus the card's
   // 16px of padding. An older 331px below 335px gave a five-row tile that
   // the month did not fit, and Home showed one week strip in it.
-  calendar: { group: 'today', w: [1, 1, 2], h: [5, 5, 6], heightAt: () => 361, minWidthPx: CALENDAR_MIN_PX },
+  calendar: { group: 'today', w: [1, 1, 2], h: [5, 5, 6], heightAt: () => 361 },
   upcoming: { group: 'today', w: [1, 1, 4], h: [2, 5, 12] },
   today: { group: 'today', w: [1, 2, 4], h: [2, 3, 8] },
   tasks: { group: 'today', w: [1, 1, 4], h: [2, 5, 12] },
@@ -296,6 +298,18 @@ export interface Box {
   y: number;
   w: number;
   h: number;
+}
+
+/** Columns for the grid's content width: as many as fit at HOME_MIN_COL_PX
+ *  each, up to HOME_COLS, so no column is narrower than the narrowest card.
+ *  `narrow` is a pane two such columns do not fit (every phone, 360 to 430
+ *  CSS px wide): every widget takes the row except two numbers side by side,
+ *  which is what its two columns are for; under PAIR_MIN_PX it has one. */
+// Spec: docs/internal/specs/dashboard.md (Columns)
+export function columnsFor(width: number): { cols: number; narrow: boolean } {
+  const fit = Math.floor((width + HOME_GAP_PX) / (HOME_MIN_COL_PX + HOME_GAP_PX));
+  if (fit < 2) return { cols: width < PAIR_MIN_PX ? 1 : 2, narrow: true };
+  return { cols: Math.min(HOME_COLS, fit), narrow: false };
 }
 
 /**

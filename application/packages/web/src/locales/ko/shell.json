@@ -297,8 +297,10 @@
     "dayWithMood": "{{date}}, 기분 {{mood}}",
     "previousWeek": "이전 주",
     "nextWeek": "다음 주",
-    "showMonth": "{{month}}, 한 달 전체 보기",
-    "showWeek": "{{month}}, 한 주 보기"
+    "pickMonth": "{{month}}, 연도와 월 선택",
+    "pickMonthTip": "연도와 월 선택",
+    "showWholeMonth": "한 달 전체 보기",
+    "showOneWeek": "한 주 보기"
   },
   "contextMenu": {
     "newNote": "새 노트",
@@ -538,6 +540,13 @@
     "itemNameParts": "중간 이름, 접두어, 접미어",
     "itemPhonetic": "발음 이름",
     "itemNote": "메모",
+    "addSection": "섹션 추가",
+    "sectionName": "섹션 이름",
+    "removeSection": "섹션 제거",
+    "removeSectionNamed": "{{name}} 섹션 제거",
+    "addFieldTo": "{{name}}에 항목 추가",
+    "addFieldToSection": "이 섹션에 항목 추가",
+    "hiddenFieldsNote": "숨긴 값은 직접 표시하기 전까지 가려져 있고, 검색에도 나타나지 않아요.",
     "labels": {
       "mobile": "휴대전화",
       "home": "집",
@@ -665,6 +674,7 @@
     },
     "birthdays": "생일",
     "contactDate": "{{name}}: {{label}}",
+    "birthdayAge_other": "{{name}}의 {{count}}번째 생일",
     "dragEnd": "드래그해서 종료일 변경",
     "previousDay": "이전 날",
     "nextDay": "다음 날",

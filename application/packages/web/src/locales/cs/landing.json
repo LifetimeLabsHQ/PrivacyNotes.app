@@ -43,7 +43,7 @@
     },
     "subhead": "Poznámky, úkoly, hesla, deník, soubory, kalendář, kontakty a záložky, se sledováním nálady a léků. Jedna soukromá aplikace.",
     "tryDemo": "Vyzkoušet demo",
-    "microcopy": "Navždy zdarma. Bez platební karty. Přihlas se přes Google, Apple, GitHub nebo jen frází z 12 slov.",
+    "microcopy": "Navždy zdarma. Bez platební karty. Přihlas se přes Google, Apple, GitHub nebo jen obnovovací frází.",
     "alreadyHaveVault": "Už máš trezor? Přihlas se",
     "trustSigned": "Podepsaná vydání na GitHubu"
   },
@@ -167,8 +167,6 @@
     "useGitBody": "Zakonči den dnešními commity, uloženými jako poznámka, kterou příští měsíc znovu najdeš.",
     "useClipTitle": "Cokoli ze schránky",
     "useClipBody": "Pošli schránku, výstup příkazu nebo chybovou hlášku rovnou do svých poznámek.",
-    "useToolsTitle": "Součást tvých vlastních nástrojů",
-    "useToolsBody": "Příkaz odpovídá v JSONu a končí jasnými návratovými kódy, takže tvoje skripty vědí, že se poznámka uložila.",
     "useShortcutTitle": "Poznámka z klávesové zkratky",
     "useShortcutBody": "Klávesa, kterou si zvolíš v nastavení systému, otevře okénko pro rychlou poznámku, i když je aplikace zavřená. Poznámka skončí ve tvé složce Agent.",
     "howLink": "Přečti si, jak privacynotes funguje"
@@ -359,14 +357,15 @@
     "freeVault": "50 MB místa, až 5 MB na soubor",
     "freeImport": "Import a export, včetně Keep a Obsidianu",
     "freeAnon": "Anonymní přihlášení, bez e-mailu",
-    "earlyAdopterBadge": "Zaváděcí cena"
+    "earlyAdopterBadge": "Zaváděcí cena",
+    "payMethods": "Plať kartou, nebo v Bitcoinu, Ethereu, přes Lightning, v USDC či USDT."
   },
   "underHood": {
     "heading": "Pod kapotou",
     "cipherTerm": "xchacha20poly1305",
     "cipherDesc": "Klíče se odvozují na straně klienta",
     "phraseTerm": "Fráze BIP-39",
-    "phraseDesc": "12 slov, podpisy Ed25519",
+    "phraseDesc": "Vzniká na tvém zařízení, podpisy Ed25519",
     "rlsDesc": "RLS vázané na tvůj veřejný klíč",
     "trackingTerm": "Nula sledovacích prvků",
     "trackingDesc": "Žádné pixely, žádné sledovací prvky třetích stran",
@@ -390,6 +389,7 @@
       "sleep": "Dobrý, 7,5 h",
       "sleepScore": "82",
       "heartRate": "61 tepů/min",
+      "bloodPressure": "118/76 mmHg",
       "activity": "Střední",
       "medication": "Vzato",
       "energy": "6 / 10",
@@ -532,7 +532,7 @@
       "hotkeys": "Zkratky",
       "rating": "Hodnocení"
     },
-    "intro": "<brand/> drží tvoje poznámky, úkoly, hesla, deník, soubory, kalendář, kontakty a záložky na jednom místě, se sledováním nálady a léků. Všechno se šifruje na tvém zařízení klíčem vytvořeným z tvých 12 slov a zůstává zašifrované i na našich serverech ve <nowrap>Švýcarsku</nowrap>. Funguje offline a aplikace je open source.",
+    "intro": "<brand/> drží tvoje poznámky, úkoly, hesla, deník, soubory, kalendář, kontakty a záložky na jednom místě, se sledováním nálady a léků. Všechno se šifruje na tvém zařízení klíčem vytvořeným z tvé obnovovací fráze a zůstává zašifrované i na našich serverech ve <nowrap>Švýcarsku</nowrap>. Funguje offline a aplikace je open source.",
     "versionHeading": "Verze",
     "windowVersion": "Verze {{version}}",
     "windowHelp": "Centrum nápovědy",

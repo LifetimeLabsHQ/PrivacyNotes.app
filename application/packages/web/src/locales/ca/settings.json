@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "Tota la configuració",
+    "dockWindow": "Acobla a un costat",
+    "dockOtherSide": "Mou a l'altre costat",
     "fillWindow": "Utilitza tota la finestra",
     "restoreWindow": "Torna a la mida normal"
   },
@@ -172,6 +174,8 @@
     "peekDark": "De moment veus el teu tema fosc. Auto torna a seguir el teu sistema quan tanques la Configuració.",
     "unlockThemes": "Desbloqueja tots els temes amb Pro",
     "startViewTitle": "Mostra en obrir",
+    "reopenLastOpenTitle": "Torna a obrir l'últim element",
+    "reopenLastOpenDesc": "Quan l'app s'inicia, tens l'element que estava obert quan en vas sortir. Si està desactivat, comença a la llista, sense res obert.",
     "viewTitle": "Mostra els elements com a",
     "viewDesc": "Auto segueix l'amplada de la teva pantalla.",
     "openInTabsTitle": "Mostra l'element obert en una pestanya",
@@ -202,6 +206,7 @@
     "linkModifierDesc": "Un clic normal hi col·loca el cursor. Un toc continua obrint l'enllaç. Només en aquest dispositiu.",
     "typedSymbolsTitle": "Converteix els símbols escrits en fletxes i signes matemàtics",
     "typedSymbolsDesc": "Per exemple, -> es converteix en →, != en ≠ i >= en ≥.",
+    "linkSuggestionsDesc": "Connexions també mostra notes sobre el mateix tema que encara no has enllaçat. Desactiva-ho perquè la icona de Connexions només surti a les notes amb enllaços.",
     "confirmTrashTitle": "Pregunta abans de suprimir",
     "confirmTrashDesc": "Demana confirmació abans que un element vagi a la paperera.",
     "confirmArchiveTitle": "Pregunta abans d'arxivar",
@@ -618,5 +623,18 @@
     "loadError": "No s'ha pogut carregar l'interruptor d'home mort. Comprova la connexió i torna-ho a provar.",
     "confirmTitle": "Vols activar l'interruptor d'home mort?",
     "confirmBody": "Si cap dels teus dispositius no es connecta durant {{period}}, el servidor suprimeix les teves dades xifrades. No es pot desfer. Els teus dispositius conserven les seves notes."
+  },
+  "onDeviceAi": {
+    "title": "Connexions intel·ligents",
+    "desc": "Troba notes amb el mateix significat, fins i tot amb altres paraules o en un altre idioma. Fa servir IA fora de línia (<model>bekko-static</model>) que només funciona en aquest dispositiu.",
+    "on": "Activat. Els suggeriments també inclouen notes amb el mateix significat. La IA fora de línia ocupa {{size}} en aquest dispositiu.",
+    "kept": "Desactivat. La IA fora de línia es queda en aquest dispositiu, així que tornar-la a activar no necessita cap baixada.",
+    "downloadSize": "Baixa · {{size}}",
+    "downloadingLabel": "Baixada de la IA fora de línia",
+    "loading": "S'està carregant la IA fora de línia",
+    "unavailable": "La demo no pot baixar la IA fora de línia.",
+    "failed": "La baixada no s'ha completat. Torna-ho a provar.",
+    "remove": "Elimina d'aquest dispositiu ({{size}})",
+    "howItWorks": "Com funciona"
   }
 }

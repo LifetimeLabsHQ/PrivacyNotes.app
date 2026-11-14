@@ -237,6 +237,8 @@ export function buildSettingsCategories({
       onTaskConfettiChange={(on) => mutateSettings((prev) => ({ ...prev, taskConfetti: on }))}
       typedSymbols={userSettings.typedSymbols}
       onTypedSymbolsChange={(on) => mutateSettings((prev) => ({ ...prev, typedSymbols: on }))}
+      linkSuggestions={userSettings.linkSuggestions}
+      onLinkSuggestionsChange={(on) => mutateSettings((prev) => ({ ...prev, linkSuggestions: on }))}
       confirmTrash={userSettings.confirmTrash}
       onConfirmTrashChange={(on) => mutateSettings((prev) => ({ ...prev, confirmTrash: on }))}
       confirmArchive={userSettings.confirmArchive}

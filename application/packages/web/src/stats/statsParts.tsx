@@ -22,8 +22,9 @@ import { formatNumber, formatValue, hasData, levelLabel, trackerName, type Welln
 
 /** Trackers where less is the better direction; a fall in them reads as good. */
 const LOWER_IS_BETTER = new Set(['caffeine', 'pain', 'screenTime', 'heartRate']);
-/** Trackers whose change is neither good nor bad on its own. */
-const NEUTRAL = new Set(['weight']);
+/** Trackers whose change is neither good nor bad on its own: a falling
+ *  blood pressure is good only down to a point the app does not judge. */
+const NEUTRAL = new Set(['weight', 'bpSystolic', 'bpDiastolic']);
 
 /** Days on the thinner side of a split for two dots, and for three. */
 const SURE_TWO = 14;
@@ -39,7 +40,7 @@ export const TONE_TEXT = { good: 'text-success', bad: 'text-danger', neutral: 't
 
 /** The journal pill's glyph of a tracker, at a size; a custom tracker has none. */
 function glyphOf(d: TrackerDescriptor, size: number): ReactNode {
-  const key = d.source === 'medication' ? 'medication' : d.id === 'sleepHours' || d.id === 'sleepQuality' ? 'sleep' : d.id;
+  const key = d.source === 'medication' ? 'medication' : d.id === 'sleepHours' || d.id === 'sleepQuality' ? 'sleep' : d.id === 'bpSystolic' || d.id === 'bpDiastolic' ? 'bloodPressure' : d.id;
   const icon = TRACKER_ICONS[key];
   return isValidElement(icon) ? cloneElement(icon as ReactElement<{ size?: number }>, { size }) : null;
 }
@@ -405,7 +406,7 @@ export function spreadOf(d: TrackerDescriptor, series: DaySeries): number {
 
 /** A difference written in a tracker's own unit, with its sign: "+1.8", "+1,740 steps". */
 export function signedValue(d: TrackerDescriptor, delta: number, t: TFunction): string {
-  const digits = d.unit === 'steps' || d.unit === 'bpm' ? 0 : 1;
+  const digits = d.unit === 'steps' || d.unit === 'bpm' || d.unit === 'mmHg' ? 0 : 1;
   const abs = Math.round(Math.abs(delta) * 10 ** digits) / 10 ** digits;
   const value = d.unit ? formatValue(d, abs, t, digits) : formatNumber(abs, digits);
   return `${delta >= 0 ? '+' : '-'}${value}`;

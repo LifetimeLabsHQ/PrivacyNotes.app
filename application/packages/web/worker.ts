@@ -198,6 +198,44 @@ const CSP_CHECKOUT = cspFor(true);
 /** The one path that may load Paddle. */
 const CHECKOUT_PATH = '/checkout';
 
+/**
+ * The crypto checkout: its own route and its own policy, because Paddle
+ * approved the crypto route on the condition that no Paddle flow is involved
+ * (docs/internal/plans/crypto-payments.md, section 3d). The page loads no
+ * third-party script at all. It talks to our own edge function and then
+ * leaves for BlockBee's hosted page as a top-level navigation, which a policy
+ * does not govern, so BlockBee needs no entry here. Narrower than the site
+ * policy: no Turnstile, no map or release host, no Paddle or Profitwell, and
+ * a form may submit nowhere.
+ * Spec: docs/internal/plans/crypto-payments.md (section 11b)
+ */
+const CSP_CRYPTO_CHECKOUT = [
+  "default-src 'none'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "connect-src 'self' https://sync.privacynotes.app",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "base-uri 'none'",
+  "form-action 'none'",
+  "frame-ancestors 'none'",
+].join('; ');
+
+/** The one path that opens a crypto checkout. */
+const CRYPTO_CHECKOUT_PATH = '/crypto-checkout';
+
+/**
+ * The crypto checkout's release switch, as the Worker sees it. A copy of
+ * CRYPTO_CHECKOUT_RELEASED in src/cryptoRelease.ts, because the Worker is a
+ * separate bundle that cannot read the app's build flags;
+ * tests/cryptoCheckoutReview.test.ts holds the two equal. While it is false
+ * the path is no app route (a 404, no policy of its own) and robots.txt does
+ * not name it. Spec: docs/internal/plans/crypto-payments.md (section 11d, release switch)
+ */
+const CRYPTO_CHECKOUT_RELEASED = true;
+
 /** Security headers applied to every HTML response. */
 const SECURITY_HEADERS: Record<string, string> = {
   'Content-Security-Policy': CSP,
@@ -264,7 +302,7 @@ function hashDomain(domain: string): number {
 const FAQ_TO_HELP = /^\/((?:de|fr|it|es|nl|pl|pt|br|ja|ko|tw|ca|cs|tr|sv|ar|en)\/)?faq(\/.*)?$/;
 
 // Every path the client-side app answers for. main.tsx branches on exactly
-// /burn and /checkout, and reads /note as a shortcut to one item before it
+// /burn, /checkout and /crypto-checkout, and reads /note as a shortcut to one item before it
 // rewrites the address to /; App.tsx renders marketing at the apex and at
 // each locale slug from src/localeRoutes.ts. Nothing else is a real route,
 // so anything not on this list and not backed by a pre-rendered asset is a
@@ -282,7 +320,7 @@ const FAQ_TO_HELP = /^\/((?:de|fr|it|es|nl|pl|pt|br|ja|ko|tw|ca|cs|tr|sv|ar|en)\
 // Split by host: the dedicated app host answers only the app routes;
 // the locale slugs are marketing pages and live on the apex (the app
 // host 301s them there before this fallback runs).
-const APP_ROUTES = new Set(['/', '/burn', '/checkout', '/note']);
+const APP_ROUTES = new Set(['/', '/burn', '/checkout', ...(CRYPTO_CHECKOUT_RELEASED ? [CRYPTO_CHECKOUT_PATH] : []), '/note']);
 const LOCALE_SLUGS = new Set([
   '/en',
   '/de',
@@ -362,7 +400,7 @@ const withEmptyFragment = (target: string): string => `${target}#`;
 const ROBOTS_APEX = `User-agent: *
 Disallow: /burn
 Disallow: /checkout
-
+${CRYPTO_CHECKOUT_RELEASED ? `Disallow: ${CRYPTO_CHECKOUT_PATH}\n` : ''}
 Sitemap: https://privacynotes.app/sitemap.xml
 `;
 
@@ -431,6 +469,7 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
     const p = url.pathname;
     if (
       p === CHECKOUT_PATH ||
+      p === CRYPTO_CHECKOUT_PATH ||
       LOCALE_SLUGS.has(p) ||
       p === '/help' ||
       (p.startsWith('/help/') && !p.startsWith('/help/icons/')) ||
@@ -451,7 +490,8 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
       p.startsWith('/sitemap')
     ) {
       const target = `${APEX_ORIGIN}${p}${url.search}`;
-      return Response.redirect(p === CHECKOUT_PATH ? withEmptyFragment(target) : target, 301);
+      const checkout = p === CHECKOUT_PATH || p === CRYPTO_CHECKOUT_PATH;
+      return Response.redirect(checkout ? withEmptyFragment(target) : target, 301);
     }
   }
 
@@ -610,6 +650,11 @@ function withSecurityHeaders(response: Response, url: URL, status?: number): Res
   // neither may widen its own script-src by being asked for /checkout.
   if (url.hostname === APEX_HOST && url.pathname === CHECKOUT_PATH) {
     headers.set('Content-Security-Policy', CSP_CHECKOUT);
+  }
+  // The crypto checkout gets its own, narrower policy on every host: it is
+  // never the Paddle one, and the demo host's copy of the page calls nothing.
+  if (CRYPTO_CHECKOUT_RELEASED && url.pathname === CRYPTO_CHECKOUT_PATH) {
+    headers.set('Content-Security-Policy', CSP_CRYPTO_CHECKOUT);
   }
   // Prevent edge cache from serving stale HTML without headers.
   headers.set('Cache-Control', 'no-cache');

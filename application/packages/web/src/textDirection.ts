@@ -16,7 +16,7 @@ const LETTER = /\p{L}/u;
 const RTL_LETTER =
   /[\p{Script=Hebrew}\p{Script=Arabic}\p{Script=Syriac}\p{Script=Thaana}\p{Script=Nko}\p{Script=Samaritan}\p{Script=Mandaic}\p{Script=Adlam}\p{Script=Hanifi_Rohingya}]/u;
 
-const ARABIC_LETTER = /\p{Script=Arabic}/u;
+export const ARABIC_LETTER = /\p{Script=Arabic}/u;
 
 // Letters and digits that Persian writes and Arabic does not: pe, che, zhe,
 // gaf, the Persian kaf and yeh, and the Persian digits. Arabic text uses its

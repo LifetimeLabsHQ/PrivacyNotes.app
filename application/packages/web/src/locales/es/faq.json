@@ -81,7 +81,7 @@
     "need-email": {
       "q": "¿Necesito un correo electrónico para registrarme?",
       "a": [
-        "No. Una bóveda nueva es una [frase de recuperación de 12 palabras](/es/help/phrase-vs-password) recién generada, nada más. Sin correo, sin nombre de usuario, sin número de teléfono, sin paso de verificación. Si inicias sesión con la frase, no podríamos escribirte ni aunque quisiéramos: nunca sabemos quién eres.",
+        "No. Una bóveda nueva es una [frase de recuperación](/es/help/phrase-vs-password) recién generada, nada más. Sin correo, sin nombre de usuario, sin número de teléfono, sin paso de verificación. Si inicias sesión con la frase, no podríamos escribirte ni aunque quisiéramos: nunca sabemos quién eres.",
         "¿Prefieres el camino conocido? [Iniciar sesión con Google, Apple o GitHub también funciona](/es/help/signup-options). Esa vía nos revela por fuerza el correo asociado a ese inicio de sesión, pero tus notas siguen cifradas en tu dispositivo en cualquier caso, y por debajo igualmente obtienes una frase."
       ]
     },
@@ -139,9 +139,9 @@
     "phrase-vs-password": {
       "q": "¿Por qué una frase de recuperación en vez de usuario y contraseña?",
       "a": [
-        "Al principio parece al revés, pero una única frase de recuperación es la construcción más fuerte. Con usuario y contraseña, el usuario no es un secreto (aparece en cada filtración), así que toda la seguridad descansa en la contraseña - y las contraseñas elegidas por humanos promedian quizá 30 o 40 bits de entropía. [Tu frase de 12 palabras son 128 bits garantizados](/es/help/twelve-word-phrase), generados por tu dispositivo, nunca elegidos por un humano y nunca reutilizados de otro sitio.",
+        "Al principio parece al revés, pero una única frase de recuperación es la construcción más fuerte. Con usuario y contraseña, el usuario no es un secreto (aparece en cada filtración), así que toda la seguridad descansa en la contraseña - y las contraseñas elegidas por humanos promedian quizá 30 o 40 bits de entropía. [Tu frase de recuperación tiene garantizados 128 bits o más](/es/help/twelve-word-phrase), generados por tu dispositivo, nunca elegidos por un humano y nunca reutilizados de otro sitio.",
         "Tampoco hay ninguna contraseña que podamos perder. Un inicio de sesión con contraseña implica que el servidor guarda al menos un hash de la contraseña, que puede filtrarse, romperse o caer en phishing. [Con autocustodia](/es/help/threat-model-levels), tu frase nunca sale de tu dispositivo: deriva tus claves de cifrado en local, y el servidor solo ve datos cifrados. No hay hash que robar ni flujo de restablecimiento del que un atacante pueda abusar.",
-        "Si teclear 12 palabras te parece engorroso: puedes guardar la frase en tu gestor de contraseñas con un toque (Ajustes > Seguridad > Frase), y el inicio de sesión es como cualquier otro. ¿Prefieres lo conocido? [Iniciar sesión con Google, Apple o GitHub también funciona](/es/help/signup-options): por debajo igualmente obtienes una frase, y tú eliges si se queda en tu dispositivo o la guardamos nosotros por ti."
+        "Si teclear tu frase te parece engorroso: puedes guardarla en tu gestor de contraseñas con un toque (Ajustes > Seguridad > Frase), y el inicio de sesión es como cualquier otro. ¿Prefieres lo conocido? [Iniciar sesión con Google, Apple o GitHub también funciona](/es/help/signup-options): por debajo igualmente obtienes una frase, y tú eliges si se queda en tu dispositivo o la guardamos nosotros por ti."
       ]
     },
     "threat-model-levels": {
@@ -150,7 +150,7 @@
         "Sí, y es deliberado. No todo el mundo se defiende de las mismas amenazas, así que el modelo de cuenta es una escalera, no un dogma único. En cada peldaño tus notas siguen cifradas en tu dispositivo; lo que cambia es quién guarda la llave y qué sabemos de ti.",
         "El extremo cómodo: inicia sesión con Google, Apple o GitHub y deja seleccionado \"Mantenlo simple y cómodo\" cuando se te pregunte, que es la opción inicial. Guardamos tu frase de recuperación, cifrada en reposo en nuestro servidor, para que un dispositivo nuevo pueda abrir tus notas tras iniciar sesión con el proveedor y, si tienes activada la 2FA, [introducir un código del autenticador](/es/help/enable-2fa). A cambio, conocemos el correo de ese inicio de sesión y nuestro servidor puede descifrar tu frase. Guarda tu frase por si pierdes la cuenta del proveedor y conserva la clave de respaldo de 2FA si activas el inicio de sesión en dos pasos.",
         "El medio: inicia sesión con Google, Apple o GitHub pero elige \"Máxima seguridad y privacidad\". Tu frase nunca toca nuestros servidores, así que el servidor no guarda nada que abra tus notas; un dispositivo nuevo requiere la frase o [un escaneo QR desde un dispositivo ya conectado](/es/help/add-second-device). Seguimos conociendo el correo detrás de ese inicio de sesión, y una orden legal o una brecha de nuestro servidor pueden llegar a ese correo, nunca al contenido de tus notas.",
-        "El extremo privado: prescinde de los inicios de sesión y usa solo la frase de 12 palabras. Sin correo, sin nombre, sin identidad - y combinado con una [compra de Pro anónima](/es/help/buy-pro-anonymously), ni siquiera pagar deja tu nombre en ninguna parte. A cambio, la custodia de la llave es toda tuya: pierde la frase sin ningún dispositivo con la sesión iniciada y nadie podrá ayudarte.",
+        "El extremo privado: prescinde de los inicios de sesión y usa solo tu frase de recuperación. Sin correo, sin nombre, sin identidad - y combinado con una [compra de Pro anónima](/es/help/buy-pro-anonymously), ni siquiera pagar deja tu nombre en ninguna parte. A cambio, la custodia de la llave es toda tuya: pierde la frase sin ningún dispositivo con la sesión iniciada y nadie podrá ayudarte.",
         "Ajustes > Cuenta > Custodia de claves muestra ambos modos con sus ventajas e inconvenientes y te permite cambiar. Al dejar la custodia del servidor, borramos nuestra copia después de que confirmes tres palabras de tu frase guardada. Volver a activarla sube la frase de nuevo y exige una decisión explícita. Ambos cambios se firman con la clave de tu cuenta y requieren un código actual del autenticador si la 2FA está activada. [Una cuenta de frase puede conectar un proveedor](/es/help/connected-logins) en Cuenta > Cuentas y elegir después la custodia del servidor; conectar el proveedor no sube la frase. Todos los modos admiten bloqueo de la app con PIN, desbloqueo biométrico y [protección por nota](/es/help/locked-vs-protected)."
       ]
     },
@@ -164,18 +164,18 @@
       ]
     },
     "guess-phrase": {
-      "q": "¿Alguien puede adivinar mis 12 palabras o acabar con las mismas?",
+      "q": "¿Alguien puede adivinar mi frase de recuperación o acabar con la misma?",
       "a": [
-        "No. Nadie puede adivinar tus 12 palabras, y nadie más acaba con las mismas: ningún ordenador que exista, o que podamos prever, se acerca siquiera. Solo puede iniciar sesión quien consiga tus palabras reales, así que guárdalas bien.",
-        "Tu dispositivo elige tu frase al azar, y el número de frases posibles tiene 39 cifras. Adivinar la tuya al primer intento es menos probable que ganar cuatro veces seguidas un premio de lotería con una probabilidad de 1 entre 300 millones. Un ordenador que probara un trillón de frases cada segundo seguiría necesitando unos 10 billones de años para probarlas todas, mucho más de lo que lleva existiendo el universo. Aunque cada una de las 8.000 millones de personas de la Tierra tuviera una frase, la probabilidad de que dos coincidan sería menor que ganar ese premio dos veces seguidas.",
-        "La fuerza viene de ese azar, no de cómo se ven las palabras. No te inventes una frase ni le añadas símbolos: usa las 12 palabras exactamente como te las da la app. Las mayúsculas no importan. La última palabra sirve de comprobación, así que la app rechaza una frase mal tecleada o inventada."
+        "No. Nadie puede adivinar tu frase de recuperación, y nadie más acaba con la misma: ningún ordenador que exista, o que podamos prever, se acerca siquiera. Solo puede iniciar sesión quien consiga tus palabras reales, así que guárdalas bien.",
+        "Tu dispositivo elige tu frase al azar. Para una frase de 12 palabras, el número de frases posibles tiene 39 cifras, y para una de 24 palabras, 78. Adivinar una frase de 12 palabras al primer intento es menos probable que ganar cuatro veces seguidas un premio de lotería con una probabilidad de 1 entre 300 millones. Un ordenador que probara un trillón de frases cada segundo seguiría necesitando unos 10 billones de años para probarlas todas, mucho más de lo que lleva existiendo el universo. Aunque cada una de las 8.000 millones de personas de la Tierra tuviera una frase, la probabilidad de que dos coincidan sería menor que ganar ese premio dos veces seguidas.",
+        "La fuerza viene de ese azar, no de cómo se ven las palabras. No te inventes una frase ni le añadas símbolos: usa las palabras exactamente como te las da la app. Las mayúsculas no importan. La última palabra sirve de comprobación, así que la app rechaza una frase mal tecleada o inventada."
       ]
     },
     "same-phrase": {
       "q": "¿Puede otra persona recibir la misma frase de recuperación que yo?",
       "a": [
         "No, en la práctica no. Tu dispositivo elige tu frase al azar entre una cantidad enorme de frases posibles. Aunque cada persona de la Tierra creara una cuenta, que dos frases coincidieran sería menos probable que ganar dos veces seguidas un premio de lotería con una probabilidad de 1 entre 300 millones. Por esos mismos números [nadie puede adivinar tu frase](/es/help/guess-phrase).",
-        "Tu ID de cuenta sale de la frase. Así que [si eliminas una cuenta](/es/help/delete-account) y vuelves a iniciar sesión con las mismas 12 palabras, obtienes una bóveda nueva y vacía con el mismo ID de cuenta. No vuelve nada de la bóveda eliminada. [Cuando te cambies a una frase nueva](/es/help/phrase-compromised), quita la antigua de tu gestor de contraseñas, para no iniciar nunca sesión en la cuenta antigua por error."
+        "Tu ID de cuenta sale de la frase. Así que [si eliminas una cuenta](/es/help/delete-account) y vuelves a iniciar sesión con la misma frase, obtienes una bóveda nueva y vacía con el mismo ID de cuenta. No vuelve nada de la bóveda eliminada. [Cuando te cambies a una frase nueva](/es/help/phrase-compromised), quita la antigua de tu gestor de contraseñas, para no iniciar nunca sesión en la cuenta antigua por error."
       ]
     },
     "enable-2fa": {
@@ -204,8 +204,8 @@
     "no-ai": {
       "q": "¿PrivacyNotes usa IA sobre mis notas?",
       "a": [
-        "No. Ninja, la casilla Cmd+K que lee tus fechas y encuentra tus palabras, es código normal que se ejecuta en tu dispositivo. No hay funciones de IA en la app, ni procesamiento de IA en segundo plano, ni entrenamiento de modelos con tu contenido. [Tus notas están siempre cifradas, en tu dispositivo y de camino al servidor](/es/help/what-can-you-see), y nada en nuestros sistemas lee el contenido de las notas para alimentar nada.",
-        "Si algún día construimos algo en esa dirección, tendría que ejecutarse por completo en tu dispositivo y ser estrictamente opcional. Enviar notas en claro a un modelo en la nube las sacaría del cifrado de tu dispositivo, así que está descartado."
+        "Ninguna IA lee tus notas a menos que tú la actives, y nada de lo que escribes va nunca a un servicio de IA. No hay chatbot, ni escritura con IA, ni IA en nuestros servidores, ni entrenamiento con tu contenido. Ninja y la búsqueda son código normal que se ejecuta en tu dispositivo. [Tus notas están siempre cifradas, en tu dispositivo y de camino al servidor](/es/help/what-can-you-see), y una IA en la nube las sacaría de ese cifrado, así que ninguna nota va nunca a una.",
+        "La única excepción es opcional y se queda en tu dispositivo. Conexiones inteligentes encuentra notas con el mismo significado, aunque estén escritas con otras palabras o en otro idioma. Usa IA sin conexión ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)) que se ejecuta solo en este dispositivo. No escribe nada ni responde nada: convierte cada nota en una lista de números y las compara. La descargas una vez en Ajustes > Editor > Comportamiento > Conexiones inteligentes y después funciona sin conexión. Su interruptor la apaga, y Quitar la elimina del dispositivo. Nada de lo que calcula sobre una nota se guarda ni se envía."
       ]
     },
     "burn-notes": {
@@ -249,7 +249,7 @@
     "oauth-recovery": {
       "q": "Inicio sesión con Google, Apple o GitHub. ¿Y si pierdo el acceso a esa cuenta?",
       "a": [
-        "Por debajo sigues teniendo una frase de 12 palabras, y [la frase por sí sola te da acceso en cualquier dispositivo](/es/help/add-second-device) - sin Google, Apple ni GitHub. Abre Ajustes > Seguridad > Frase y guárdala en tu gestor de contraseñas.",
+        "Por debajo sigues teniendo una frase de recuperación, y [la frase por sí sola te da acceso en cualquier dispositivo](/es/help/add-second-device) - sin Google, Apple ni GitHub. Abre Ajustes > Seguridad > Frase y guárdala en tu gestor de contraseñas.",
         "Hazlo una vez y perder la cuenta de Google, Apple o GitHub no te cuesta nada: simplemente inicias sesión con la frase en su lugar."
       ]
     },
@@ -257,7 +257,7 @@
       "q": "Olvidé mi PIN o mi código de acceso. ¿Cómo vuelvo a entrar?",
       "a": [
         "No se pierde nada, y puedes borrar el PIN o el código de acceso tú mismo con tu frase de recuperación. Es un candado de pantalla, no una clave de cifrado: tus notas están cifradas con claves derivadas de la frase, así que la frase es lo que las abre. Atar el cifrado al PIN haría que un PIN olvidado destruyera datos. Aquí nunca ocurre.",
-        "Allí donde la app lo pida, elige **¿Olvidaste tu PIN?** o **¿Olvidaste tu código de acceso?** y escribe tus 12 palabras. Está en la pantalla de bloqueo, [en una nota protegida](/es/help/locked-vs-protected) y en **Ajustes > Seguridad > PIN**. Se borra en todos tus dispositivos y puedes establecer uno nuevo enseguida. [El desbloqueo biométrico no se ve afectado](/es/help/biometric-unlock). Un dispositivo con una versión anterior de la app pide 4 dígitos incluso después de que establezcas un código de acceso; allí, **¿Olvidaste tu PIN?** funciona igual."
+        "Allí donde la app lo pida, elige **¿Olvidaste tu PIN?** o **¿Olvidaste tu código de acceso?** y escribe tu frase de recuperación. Está en la pantalla de bloqueo, [en una nota protegida](/es/help/locked-vs-protected) y en **Ajustes > Seguridad > PIN**. Se borra en todos tus dispositivos y puedes establecer uno nuevo enseguida. [El desbloqueo biométrico no se ve afectado](/es/help/biometric-unlock). Un dispositivo con una versión anterior de la app pide 4 dígitos incluso después de que establezcas un código de acceso; allí, **¿Olvidaste tu PIN?** funciona igual."
       ]
     },
     "delete-account": {
@@ -292,7 +292,7 @@
       "q": "¿Cómo quito un dispositivo que ya no uso?",
       "a": [
         "Ajustes > Cuenta lista cada dispositivo registrado. Quita el que estés retirando: la plaza se libera al instante (útil en [el plan gratuito de 2 dispositivos](/es/help/device-limit)), y el dispositivo eliminado queda desconectado en su siguiente intento de sincronización. Sigue visible 72 horas bajo \"Quitados recientemente\" para que confirmes que desapareció.",
-        "Quitarlo libera la plaza y cierra la sesión de ese dispositivo; el acceso lo controla la frase. Cualquiera con tus 12 palabras puede volver a entrar, así que [si un dispositivo se perdió o lo robaron](/es/help/lost-device), protege primero la frase y deja activo el bloqueo de la app (PIN o biometría). Eso es lo que evita que un dispositivo encontrado sea una puerta abierta."
+        "Quitarlo libera la plaza y cierra la sesión de ese dispositivo; el acceso lo controla la frase. Cualquiera con tu frase puede volver a entrar, así que [si un dispositivo se perdió o lo robaron](/es/help/lost-device), protege primero la frase y deja activo el bloqueo de la app (PIN o biometría). Eso es lo que evita que un dispositivo encontrado sea una puerta abierta."
       ]
     },
     "data-location": {
@@ -358,7 +358,7 @@
     "one-time-pricing": {
       "q": "¿Cómo puede un pago único financiar un servicio de sincronización para siempre?",
       "a": [
-        "Porque el servicio está diseñado para ser barato de operar. La app es local-first y las notas son pequeños blobs cifrados: el servidor apenas hace más que guardarlos y pasarlos entre tus dispositivos. Sin analíticas de lo que escribes, sin píxeles ni rastreadores de terceros, sin funciones de IA quemando cómputo, sin departamento de soporte.",
+        "Porque el servicio está diseñado para ser barato de operar. La app es local-first y las notas son pequeños blobs cifrados: el servidor apenas hace más que guardarlos y pasarlos entre tus dispositivos. Sin analíticas de lo que escribes, sin píxeles ni rastreadores de terceros, sin IA en nuestros servidores, sin departamento de soporte.",
         "El único coste que crece con el tiempo es el almacenamiento, y está tarifado en consecuencia: el espacio más allá de los 500 MB incluidos es [un pequeño complemento anual](/es/help/storage-addons). Los costes únicos se pagan una vez; los recurrentes, de forma recurrente. El modelo solo tiene que sostenerse a sí mismo, y lo hace."
       ]
     },
@@ -379,7 +379,7 @@
     "refunds": {
       "q": "¿Cuál es la política de reembolso?",
       "a": [
-        "30 días, sin preguntas. Si Pro no es para ti, pide el reembolso completo dentro de los 30 días posteriores a la compra y volverá al método de pago original. Los clientes de la UE conservan además su derecho legal de desistimiento de 14 días.",
+        "30 días, sin preguntas, para una compra con tarjeta o en una tienda de apps. Si Pro no es para ti, pide el reembolso completo dentro de los 30 días posteriores a la compra y volverá al método de pago original. Los clientes de la UE conservan además su derecho legal de desistimiento de 14 días. Los [pagos con cripto](/es/help/pay-with-crypto) son definitivos y no tienen reembolso.",
         "Los pagos los procesa Paddle, [nuestro merchant of record](/es/help/paddle-privacy), así que los reembolsos los gestiona Paddle directamente: responde al correo del recibo de compra o visita [paddle.net](https://paddle.net). La política completa está en los [términos del servicio](https://lifetimelabs.dev/terms/#refunds)."
       ]
     },
@@ -387,7 +387,15 @@
       "q": "¿Qué sabéis de mí cuando pago?",
       "a": [
         "Menos de lo que imaginas. El pago pasa por [Paddle](https://www.paddle.com), el merchant of record: tu nombre, número de tarjeta y dirección de facturación van a Paddle para el pago y los impuestos, y nunca tocan nuestros servidores.",
-        "Paddle guarda tus datos de facturación; lo que llega a nuestra base de datos es tu clave pública, el importe y el identificador del pedido, y [en un complemento de almacenamiento, su tamaño y sus fechas de renovación](/es/help/storage-addons). Nuestra cuenta de Paddle puede ver ambos lados, y no vamos a buscar quién eres. Para que tu nombre no quede ligado a la compra, paga con un [alias de correo y una tarjeta enmascarada](/es/help/buy-pro-anonymously)."
+        "Paddle guarda tus datos de facturación; lo que llega a nuestra base de datos es tu clave pública, el importe y el identificador del pedido, y [en un complemento de almacenamiento, su tamaño y sus fechas de renovación](/es/help/storage-addons). Nuestra cuenta de Paddle puede ver ambos lados, y no vamos a buscar quién eres. Para que tu nombre no quede ligado a la compra, paga con un [alias de correo y una tarjeta enmascarada](/es/help/buy-pro-anonymously). [Con cripto](/es/help/pay-with-crypto), BlockBee gestiona el pago y nunca recibe tu ID de cuenta; nosotros guardamos tu clave pública, el importe y el identificador de pago de BlockBee."
+      ]
+    },
+    "pay-with-crypto": {
+      "q": "¿Puedo pagar Pro con Bitcoin u otra cripto?",
+      "a": [
+        "Sí, en la web y en la app de escritorio. En la ventana Mejorar, elige Paga con criptomonedas y paga con Bitcoin, Ethereum, Lightning, USDC o USDT. El precio es el de la tarjeta, pagado una sola vez. Las [versiones de tienda](/es/help/store-purchases) venden Pro solo a través de Apple y Google.",
+        "[BlockBee](https://blockbee.io) gestiona la página de pago. No pide nombre ni correo, y nunca recibe tu ID de cuenta. Un pago con cripto es público en su blockchain. Bitcoin activa Pro cuando la red confirma el pago, normalmente en 10 a 60 minutos, y Ethereum y la mayoría de las stablecoins tardan alrededor de un minuto. Un banner en la app muestra en qué punto está el pago.",
+        "Los pagos con cripto son definitivos: no hay reembolso. Al pagar aceptas que Pro empiece de inmediato, lo que pone fin al derecho de desistimiento de 14 días de la UE, así que prueba antes el plan gratuito. La página posterior al pago es tu confirmación de compra. Guárdala como PDF, porque no tenemos ningún correo al que enviártela."
       ]
     },
     "buy-pro-anonymously": {
@@ -395,7 +403,7 @@
       "a": [
         "Sí, con dos herramientas estándar. Para el recibo, usa un alias de correo: [Apple Hide My Email](https://support.apple.com/105078), [DuckDuckGo Email Protection](https://duckduckgo.com/email), [SimpleLogin](https://simplelogin.io), [Firefox Relay](https://relay.firefox.com) o [addy.io](https://addy.io) reenvían todos a tu buzón real sin exponerlo. Para el pago, usa una tarjeta enmascarada: [privacy.com](https://privacy.com) en EE. UU. genera tarjetas virtuales que funcionan con cualquier nombre que teclees, y en cualquier otro lugar una tarjeta de prepago que funcione en línea, comprada en efectivo, cumple la misma función sin ningún nombre.",
         "[En el pago, Paddle pide](/es/help/paddle-privacy) un correo, un método de pago y un país (más un código postal en algunas regiones) para calcular impuestos. El alias recibe el recibo, la tarjeta enmascarada lleva el nombre que tú le pusiste, y la ubicación fiscal te sitúa como mucho en una región, nada más. Eso sí, mantén vivo el alias: el correo del recibo es tu prueba de compra y [tu canal para un reembolso](/es/help/refunds).",
-        "[Combinado con una cuenta de frase](/es/help/signup-options), al final ninguna parte tiene la imagen completa: tu banco ve una recarga de tarjeta, Paddle ve un alias y una tarjeta enmascarada, y nosotros vemos una clave pública que pasó a ser Pro, junto a ese alias en nuestra cuenta de Paddle."
+        "[Combinado con una cuenta de frase](/es/help/signup-options), al final ninguna parte tiene la imagen completa: tu banco ve una recarga de tarjeta, Paddle ve un alias y una tarjeta enmascarada, y nosotros vemos una clave pública que pasó a ser Pro, junto a ese alias en nuestra cuenta de Paddle. [Pagar con cripto](/es/help/pay-with-crypto) no necesita ningún correo, pero el pago en sí es público en su blockchain."
       ]
     },
     "platforms": {
@@ -412,7 +420,7 @@
         "A menudo unos días. Las peticiones pequeñas y los informes de errores suelen entrar en la siguiente versión, y publicamos versiones casi cada semana en lugar de dos o tres veces al año. El [changelog](/changelog) es la prueba: cada entrada lleva fecha, está escrita en lenguaje claro y dice qué cambió. Lee un mes y sabrás exactamente qué esperar de nosotros antes de confiarle nada a la aplicación.",
         "Ese ritmo viene de cómo repartimos el trabajo. El núcleo de cifrado, el protocolo de sincronización y el inicio de sesión los escribieron personas, al margen de sus trabajos, mucho antes de que la app tuviera nombre, y el núcleo criptográfico se sigue manteniendo así; nada automatizado se le acerca. Cuando esa base estuvo sólida, en la primavera de 2026, empezamos a usar herramientas de IA para programar bajo un protocolo fijo: primero para las [traducciones](/es/help/translation-quality), luego los artículos de ayuda, luego funciones de interfaz y correcciones de errores no críticos, donde se les da bien acotar casos raros que de otro modo llevarían semanas, y escribir los scripts de prueba que obligan a varios desarrolladores a seguir un mismo estándar. Por eso merece la pena implementar lo que pide una sola persona en vez de dejar su petición esperando detrás de las primeras de la lista.",
         "Todo lo que toca el cifrado, la sincronización o el inicio de sesión se queda en manos de desarrolladores con experiencia que escriben cada línea, y ese código es [público](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) para que puedas leerlo en vez de creernos. Más sobre el equipo y cómo trabajamos en nuestra [página de presentación](https://lifetimelabs.dev/about).",
-        "La aplicación en sí no tiene funciones de IA y nunca envía tus notas a ninguna parte ([detalles](/es/help/no-ai)). Esa promesa va aparte, y no cambia."
+        "La aplicación en sí nunca entrega tus notas a una IA, y la única función de IA que tiene se ejecuta solo en tu dispositivo, si la activas ([detalles](/es/help/no-ai)). Esa promesa va aparte, y no cambia."
       ]
     },
     "android-updates": {
@@ -491,7 +499,7 @@
         "Para configurarla, abre Ajustes > CLI en la app de escritorio y elige Activar. Elige Instalar, que pone el comando `privacynotes` en este ordenador, y luego Generar un código. En un terminal nuevo, ejecuta `privacynotes login` y pega el código. Después guarda tu primera nota:",
         "`echo \"# Hello\" | privacynotes save`",
         "`privacynotes` tiene pocos comandos, porque hace un solo trabajo. Cada uno muestra una ficha corta para una persona, o una línea de JSON con `--json` para un script:",
-        "- `privacynotes login` conecta este ordenador con un código de un solo uso de Ajustes > CLI. Pega el código o envíalo por una tubería.\n- `privacynotes save note.md` añade una nota desde un archivo, y `privacynotes save` a secas lee el Markdown que le envíes. `--title` fija el título; si no, se usa el primer encabezado `#` o la primera línea. `--tag work,ideas` añade etiquetas.\n- `privacynotes status` muestra si este ordenador está conectado y la última nota que guardó.\n- `privacynotes logout` desconecta este ordenador.\n- `privacynotes mcp` ejecuta el comando como herramienta para una app de IA sin terminal, consulta [MCP](/es/help/mcp).\n- `privacynotes help` (o `privacynotes --help`) lista todos los comandos y opciones, y `privacynotes --version` muestra la versión.",
+        "- `privacynotes login` conecta este ordenador con un código de un solo uso de Ajustes > CLI. Pega el código o envíalo por una tubería.\n- `privacynotes save note.md` añade una nota desde un archivo, y `privacynotes save` a secas lee el Markdown que le envíes. `--title` fija el título; si no, se usa el primer encabezado `#` o la primera línea. `--tag work,ideas` añade etiquetas.\n- `privacynotes status` muestra la conexión guardada en este ordenador y la última nota que guardó. No consulta al servidor: si quitas el ordenador en Ajustes > CLI, sigue apareciendo como conectado hasta que se rechace un guardado.\n- `privacynotes logout` desconecta este ordenador.\n- `privacynotes mcp` ejecuta el comando como herramienta para una app de IA sin terminal, consulta [MCP](/es/help/mcp).\n- `privacynotes help` (o `privacynotes --help`) lista todos los comandos y opciones, y `privacynotes --version` muestra la versión.",
         "Con un agente de IA para programar, conecta `privacynotes` una vez en el ordenador donde se ejecuta el agente y luego pídeselo con tus palabras: \"Guarda este plan en mi PrivacyNotes con privacynotes save, con la etiqueta project.\" El agente puede leer `privacynotes --help` para los detalles, escribe el Markdown y lo envía. El mismo comando funciona en tus propios scripts y tareas programadas:",
         "- `git log --oneline -20 | privacynotes save --title \"Recent commits\"` guarda tus últimos commits.\n- `pbpaste | privacynotes save --tag inbox` guarda lo que copiaste, en un Mac.\n- `privacynotes save --tag daily report.md` en una tarea nocturna guarda un informe generado.\n- Una tecla que elijas en los ajustes de tu sistema también puede ejecutar `privacynotes save`, consulta [¿Puedo añadir una nota con un atajo de teclado, sin abrir la app?](/es/help/quick-note-shortcut)",
         "Una nota admite hasta 700 KB de Markdown, 20 etiquetas y un título de 200 caracteres, y `privacynotes` lo comprueba antes de enviar. Termina con 0 cuando la nota se guarda, 1 cuando el servidor la rechaza, 2 si la entrada es incorrecta, 3 cuando el ordenador no está conectado y 4 cuando no hay red, para que un script pueda reaccionar. Una nota guardada espera, sellada, hasta que se abre una de tus apps; si ninguna lo hace en 90 días, o si quitas antes el ordenador, se elimina. Para desconectar un ordenador, elige Quitar junto a él en Ajustes > CLI. Lo que el comando y un agente pueden ver está en [¿Puede la herramienta de línea de comandos o un agente de IA leer mis notas?](/es/help/cli-security)."
@@ -570,7 +578,7 @@
       "q": "¿Puedo usar mi propio agente de IA para obtener ayuda con PrivacyNotes?",
       "a": [
         "Sí, y hemos construido el centro de ayuda para eso. Cada respuesta está publicada en un único archivo de texto en [llms-full.txt](https://privacynotes.app/llms-full.txt), así que un asistente lo lee todo de una vez. El recuadro al final de cualquier página de ayuda copia un prompt ya preparado: pégalo en ChatGPT, Claude, Gemini o el asistente que ya uses, y pregunta en tu propio idioma.",
-        "Mandarte a una herramienta en la que ya confías nos deja completamente al margen, y nunca sabemos qué has preguntado. Un chatbot propio supondría que tus preguntas acaben en nuestros servidores, y las preguntas sobre una app de notas suelen llevar dentro el contenido de las notas. Esto es aparte de la app, que no tiene ninguna función de IA ([detalles](/es/help/no-ai)).",
+        "Mandarte a una herramienta en la que ya confías nos deja completamente al margen, y nunca sabemos qué has preguntado. Un chatbot propio supondría que tus preguntas acaben en nuestros servidores, y las preguntas sobre una app de notas suelen llevar dentro el contenido de las notas. Esto es aparte de la app, que nunca envía tus notas a una IA ([detalles](/es/help/no-ai)).",
         "Nunca pegues tu frase de recuperación, tu PIN ni el texto de una nota en un asistente. Ninguna respuesta los necesita, el prompt copiado le dice al asistente que los rechace, y todo lo que escribes en el chat de otra persona ya ha salido de tu dispositivo."
       ]
     },
@@ -600,7 +608,7 @@
       "q": "Perdí un dispositivo. ¿Cómo protejo mis notas?",
       "a": [
         "Desde cualquier dispositivo con la sesión iniciada, abre Ajustes > Cuenta > \"Dispositivos registrados\" y [quita el perdido](/es/help/remove-device). La próxima vez que ese dispositivo se conecte, se cierra su sesión y se borran sus datos locales, en torno a un minuto después de su siguiente uso. Sigue apareciendo en \"Quitados recientemente\" durante 72 horas para que confirmes que desapareció.",
-        "Activa el bloqueo de la app (PIN o biometría) en todo lo portátil y deja puesto el bloqueo de pantalla de tu sistema operativo. Un dispositivo se borra en cuanto vuelve a conectarse, así que hasta entonces son esas barreras locales las que están entre un teléfono perdido y tus notas. La llave de verdad es la frase: cualquiera que tenga tus 12 palabras puede volver a entrar. Si sospechas que la frase misma se filtró, sigue en su lugar la [guía para una frase filtrada](/es/help/phrase-compromised)."
+        "Activa el bloqueo de la app (PIN o biometría) en todo lo portátil y deja puesto el bloqueo de pantalla de tu sistema operativo. Un dispositivo se borra en cuanto vuelve a conectarse, así que hasta entonces son esas barreras locales las que están entre un teléfono perdido y tus notas. La llave de verdad es la frase: cualquiera que la tenga puede volver a entrar. Si sospechas que la frase misma se filtró, sigue en su lugar la [guía para una frase filtrada](/es/help/phrase-compromised)."
       ]
     },
     "device-limit": {
@@ -664,7 +672,7 @@
       "q": "¿Puede alguien abrir mi archivo de copia de seguridad sin mi frase de recuperación?",
       "a": [
         "No, si está cifrado. Un archivo \"Todo, cifrado (.pnbackupz)\" o \"Solo texto, cifrado (.pnbackup)\" está cifrado con la clave de tu frase, así que solo se abre en tu cuenta. Quien encuentre el archivo ve su nombre, su tamaño y la fecha, y nada de lo que hay dentro.",
-        "Un \"Todo, sin cifrar (.zip)\" de la pestaña Exportar es la excepción: se abre en cualquier ordenador, sin frase. Las copias automáticas nunca hacen ese tipo ([por qué no](/es/help/backup-unencrypted))."
+        "Un \"Todo, sin cifrar (.zip)\" de Ajustes > Copia de seguridad > Manual es la excepción: se abre en cualquier ordenador, sin frase. Las copias automáticas nunca hacen ese tipo ([por qué no](/es/help/backup-unencrypted))."
       ]
     },
     "backup-unencrypted": {
@@ -791,7 +799,7 @@
     "pro-not-active": {
       "q": "Pagué por Pro pero no está activo. ¿Y ahora qué?",
       "a": [
-        "Dale un minuto y luego recarga la app. Tras el pago, la app consulta durante unos 20 segundos y se desbloquea sola, y una recarga vuelve a comprobar el estado de Pro al arrancar. Si el pago llegó pero la activación se retrasa, un banner dice \"Pago recibido, pero la activación de Pro está tardando más de lo habitual\" - ese estado se resuelve solo en casi todos los casos. [En las versiones de tienda](/es/help/store-purchases), una compra que no consigue validarse se reintenta al reiniciar la app, y una compra que nunca se activa la reembolsa la tienda automáticamente en un plazo de 3 días.",
+        "Dale un minuto y luego recarga la app. Tras el pago, la app consulta durante unos 20 segundos y se desbloquea sola, y una recarga vuelve a comprobar el estado de Pro al arrancar. Un [pago con cripto](/es/help/pay-with-crypto) tarda más, y un banner muestra en qué punto está. Si el pago llegó pero la activación se retrasa, un banner dice \"Pago recibido, pero la activación de Pro está tardando más de lo habitual\" - ese estado se resuelve solo en casi todos los casos. [En las versiones de tienda](/es/help/store-purchases), una compra que no consigue validarse se reintenta al reiniciar la app, y una compra que nunca se activa la reembolsa la tienda automáticamente en un plazo de 3 días.",
         "¿Sigue bloqueado? Casi siempre es un desajuste de cuenta: Pro se vincula a la cuenta que tenía la sesión iniciada al comprar, así que una frase distinta - o un inicio de sesión con Google, Apple o GitHub en vez de tu bóveda de frase - es una cuenta distinta. Compara el ID de cuenta en Ajustes > ID & Sync en el dispositivo que hizo la compra. Si está de verdad atascado, [repórtalo](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues) e incluye ese ID de cuenta: identifica la compra y no revela nada sobre tus notas."
       ]
     },
@@ -814,7 +822,7 @@
       "q": "Obtainium, APK directo o Google Play: ¿qué descarga de Android?",
       "a": [
         "Coge Google Play si quieres la vía habitual: instala y actualiza la app como cualquier otra, y las compras dentro de la app las cobra Google. Coge [Obtainium](/es/help/obtainium) si quieres que la app se mantenga al día sola y sin cuenta de Google, y [el APK directo](/es/help/android-updates) si prefieres no tener una segunda app para eso. Obtainium y el APK te entregan el mismo archivo firmado con la misma clave, así que puedes cambiar entre esos dos cuando quieras: Obtainium adopta un APK que ya instalaste por sideload, y el APK de la web se instala sobre uno de Obtainium. La versión de Play está firmada con otra clave, así que pasar de Play a cualquiera de los otros dos, o al revés, obliga a desinstalar primero.",
-        "Puedes cambiar de idea más adelante sin complicaciones. Antes de cualquier cambio que obligue a desinstalar primero, confirma que la app muestra \"Synced\" y ten a mano tus 12 palabras o [un QR de inicio de sesión de otro dispositivo](/es/help/add-second-device), porque desinstalar borra la copia local."
+        "Puedes cambiar de idea más adelante sin complicaciones. Antes de cualquier cambio que obligue a desinstalar primero, confirma que la app muestra \"Synced\" y ten a mano tu frase de recuperación o [un QR de inicio de sesión de otro dispositivo](/es/help/add-second-device), porque desinstalar borra la copia local."
       ]
     },
     "markdown-folder": {
@@ -883,7 +891,7 @@
     "add-second-device": {
       "q": "¿Cómo inicio sesión en un segundo dispositivo?",
       "a": [
-        "En el dispositivo que ya usas abre Ajustes > Seguridad > Frase. Ahí están tus 12 palabras y un código QR de acceso. En el dispositivo nuevo elige \"Acceso con frase\" y escanea ese QR con la cámara, sube una foto o teclea las palabras. Tus notas llegan en segundos.",
+        "En el dispositivo que ya usas abre Ajustes > Seguridad > Frase. Ahí están las palabras de tu frase y un código QR de acceso. En el dispositivo nuevo elige \"Acceso con frase\" y escanea ese QR con la cámara, sube una foto o teclea las palabras. Tus notas llegan en segundos.",
         "[Una cuenta gratuita cubre 2 dispositivos](/es/help/device-limit) y Pro tantos como quieras, y dos navegadores en el mismo ordenador cuentan como un solo dispositivo. Trata el QR igual que la frase que lleva dentro: no se lo enseñes a nadie y no dejes que acabe en una fototeca que se sincroniza con la nube de otra persona."
       ]
     },
@@ -904,15 +912,15 @@
     "clear-browser-data": {
       "q": "¿Qué pasa si borro los datos del navegador o las cookies?",
       "a": [
-        "La app web guarda tus notas en el almacenamiento del propio navegador, así que borrar los datos de sitio de PrivacyNotes elimina la copia local y cierra tu sesión. Todo lo que ya se sincronizó está a salvo: entra con tu frase de 12 palabras y vuelve. Lo que aún no se había sincronizado se pierde, porque nunca tuvimos una copia.",
+        "La app web guarda tus notas en el almacenamiento del propio navegador, así que borrar los datos de sitio de PrivacyNotes elimina la copia local y cierra tu sesión. Todo lo que ya se sincronizó está a salvo: entra con tu frase de recuperación y vuelve. Lo que aún no se había sincronizado se pierde, porque nunca tuvimos una copia.",
         "Así que haz dos cosas. Comprueba que el pie de página dice \"Synced\" antes de borrar nada, y guarda tu frase en un gestor de contraseñas, porque un navegador vaciado no puede pedírtela con educación. [Las apps de escritorio y móvil](/es/help/platforms) no se ven afectadas en absoluto: [tienen su propio almacenamiento](/es/help/data-on-disk), que una limpieza del navegador nunca toca."
       ]
     },
     "android-backup": {
       "q": "¿Mis notas están en la copia de seguridad de mi teléfono Android?",
       "a": [
-        "No. La app de Android mantiene sus datos fuera de la copia de seguridad en la nube del teléfono, así que nada de eso llega a Google Drive. El motivo es la clave, no las notas: donde elegiste **Confiar en este dispositivo**, tus 12 palabras se guardan en ese dispositivo para mantener tu sesión iniciada, y una copia en la nube no es sitio para la clave que descifra tus notas.",
-        "Un teléfono nuevo empieza por tanto vacío: instala la app, [inicia sesión con tus 12 palabras](/es/help/add-second-device) y llega todo lo que se sincronizó. La restauración espera a esa primera sincronización, así que una copia que traigas se empareja con lo que tiene la cuenta en lugar de añadirse dos veces. Lo que nunca se sincronizó vive solo en el teléfono viejo, así que comprueba primero que el pie de página dice \"Synced\", o llévate una copia \"Todo, sin cifrar (.zip)\" desde Ajustes > Copia de seguridad > Manual ([qué copia hacer](/es/help/backup-strategy)).",
+        "No. La app de Android mantiene sus datos fuera de la copia de seguridad en la nube del teléfono, así que nada de eso llega a Google Drive. El motivo es la clave, no las notas: donde elegiste **Confiar en este dispositivo**, tu frase de recuperación se guarda en ese dispositivo para mantener tu sesión iniciada, y una copia en la nube no es sitio para la clave que descifra tus notas.",
+        "Un teléfono nuevo empieza por tanto vacío: instala la app, [inicia sesión con tu frase](/es/help/add-second-device) y llega todo lo que se sincronizó. La restauración espera a esa primera sincronización, así que una copia que traigas se empareja con lo que tiene la cuenta en lugar de añadirse dos veces. Lo que nunca se sincronizó vive solo en el teléfono viejo, así que comprueba primero que el pie de página dice \"Synced\", o llévate una copia \"Todo, sin cifrar (.zip)\" desde Ajustes > Copia de seguridad > Manual ([qué copia hacer](/es/help/backup-strategy)).",
         "Una transferencia directa de teléfono a teléfono durante la configuración es otra cosa: algunos teléfonos mueven ahí los datos de las apps, y Android no da a una app ninguna forma fiable de negarse. Esa copia nunca sale de tus dos dispositivos, así que borra el teléfono viejo después."
       ]
     },
@@ -947,7 +955,7 @@
     "family-sharing": {
       "q": "¿Puede mi familia compartir una cuenta o una compra de Pro?",
       "a": [
-        "La respuesta son dos cuentas, y abrir la segunda no cuesta nada: [cada una recibe 2 dispositivos y 50 MB gratis](/es/help/free-vs-pro). Una cuenta es una frase de 12 palabras, y quien tiene esa frase lo tiene todo dentro: cada nota, cada entrada de la bóveda, en cada dispositivo. Son las cuentas separadas las que dan a cada persona sus propias notas privadas. Pro se compra por cuenta.",
+        "La respuesta son dos cuentas, y abrir la segunda no cuesta nada: [cada una recibe 2 dispositivos y 50 MB gratis](/es/help/free-vs-pro). Una cuenta es una frase de recuperación, y quien tiene esa frase lo tiene todo dentro: cada nota, cada entrada de la bóveda, en cada dispositivo. Son las cuentas separadas las que dan a cada persona sus propias notas privadas. Pro se compra por cuenta.",
         "Para entregar una sola cosa concreta, manda una [burn note](/es/help/burn-notes) en lugar de tu frase. Una cuenta compartida de casa funciona bien si es de verdad lo que quieres: guarda la frase en una entrada compartida del gestor de contraseñas, y da por hecho que quien la haya tenido alguna vez ha visto todo lo que hay dentro."
       ]
     },
@@ -969,7 +977,7 @@
       "q": "¿Qué opción de registro debería elegir?",
       "a": [
         "La que encaje con tu nivel de amenaza. Hay tres. Uno: iniciar sesión con Google, Apple o GitHub, con tu clave guardada en nuestro servidor. Dos: el mismo inicio de sesión, pero la clave se queda solo en tu dispositivo. Tres: \"Generar una frase\", sin correo, sin nombre y sin ningún inicio de sesión. Los tres mantienen tus notas cifradas en tu dispositivo, y lo que los separa es quién tiene la clave y cuánto aprendemos de ti.",
-        "Iniciar sesión con Google, Apple o GitHub pregunta después dónde vive tu clave, empezando por \"Mantenlo simple y cómodo\". Esa opción guarda tu frase cifrada en nuestro servidor, para que un dispositivo nuevo pueda abrir tus notas tras iniciar sesión con el proveedor y, si la 2FA está activada, introducir un código del autenticador. Guarda tu frase por si pierdes la cuenta del proveedor y conserva la clave de respaldo de 2FA si activas el inicio de sesión en dos pasos. \"Máxima seguridad y privacidad\" mantiene la frase en tu dispositivo, así que el servidor no guarda nada que abra tus notas, y un dispositivo nuevo necesita tus 12 palabras o [escanear un QR desde uno que ya tenga sesión](/es/help/add-second-device).",
+        "Iniciar sesión con Google, Apple o GitHub pregunta después dónde vive tu clave, empezando por \"Mantenlo simple y cómodo\". Esa opción guarda tu frase cifrada en nuestro servidor, para que un dispositivo nuevo pueda abrir tus notas tras iniciar sesión con el proveedor y, si la 2FA está activada, introducir un código del autenticador. Guarda tu frase por si pierdes la cuenta del proveedor y conserva la clave de respaldo de 2FA si activas el inicio de sesión en dos pasos. \"Máxima seguridad y privacidad\" mantiene la frase en tu dispositivo, así que el servidor no guarda nada que abra tus notas, y un dispositivo nuevo necesita tu frase o [escanear un QR desde uno que ya tenga sesión](/es/help/add-second-device).",
         "La vía de solo frase no tiene correo ni nombre que vincule la cuenta a una persona. A cambio, la frase es solo tuya: si la pierdes y no queda ningún dispositivo desbloqueado, nadie puede recuperarla por ti. Ajustes > Cuenta > Custodia de claves muestra tu modo actual y te permite cambiarlo. [Una cuenta de frase debe conectar primero un proveedor](/es/help/connected-logins) en Cuenta > Cuentas antes de elegir la custodia del servidor; conectarlo no cambia la custodia. Todos los modos admiten PIN, bloqueo biométrico e [inicio de sesión en dos pasos opcional](/es/help/enable-2fa). La comparación completa está en [la escalera de niveles de amenaza](/es/help/threat-model-levels)."
       ]
     },
@@ -1052,7 +1060,7 @@
     "ninja": {
       "q": "¿Qué puedo hacer con Ninja, la casilla Cmd+K?",
       "a": [
-        "Ninja abre cualquier elemento, añade nuevos y ejecuta comandos, todo desde una sola casilla. Pulsa Cmd+K en Mac o Ctrl+K en Windows y Linux, K para Katana (también sirve Cmd+P o Ctrl+P), o haz clic en **Ninja** en la barra lateral o en la cabecera de la lista. Escribe parte de un título para encontrar notas, tareas, eventos, entradas del diario, elementos de la Bóveda, marcadores, contactos, archivos, ajustes, etiquetas y carpetas. Debajo de los títulos, **En el texto** muestra la línea de una nota que contiene tus palabras.",
+        "Ninja abre cualquier elemento, añade nuevos y ejecuta comandos, todo desde una sola casilla. Pulsa Cmd+K en Mac o Ctrl+K en Windows y Linux, K para Katana (también sirve Cmd+P o Ctrl+P), o haz clic en **Ninja** en la barra lateral o en la cabecera de la lista. Escribe parte de un título para encontrar notas, tareas, eventos, entradas del diario, elementos de la Bóveda, marcadores, contactos, archivos, ajustes, etiquetas y carpetas. Debajo de los títulos, **En el texto** muestra la línea de una nota que contiene tus palabras, o el nombre de su ubicación.",
         "El primer signo que escribes fija el modo: `+` [añade un elemento con palabras normales](/es/help/ninja-quick-add), `>` ejecuta un comando, `#` lista tus etiquetas y `/` tus carpetas, y `>>` tras un texto [lo añade a una lista que ya tienes](/es/help/ninja-add-to-list). Pulsa Tab en una fila para ver el menú de ese elemento, Option+Intro o Alt+Intro para abrirlo en una pestaña, y Q en cualquier parte para abrir la casilla con `+` ya escrito. [La coincidencia se calcula en tu dispositivo](/es/help/search-local), y Ninja es gratis."
       ]
     },
@@ -1124,7 +1132,7 @@
       "q": "¿Puedo conectar más de un método de acceso a mi cuenta?",
       "a": [
         "Sí. Abre Ajustes > Cuenta > Cuentas y conecta Google, Apple o GitHub para añadir un método de acceso que abre la misma bóveda. Puedes conectar varios, incluso dos cuentas del mismo proveedor, y [tu frase de recuperación sigue funcionando junto a ellos](/es/help/oauth-recovery). Conectar o desconectar una cuenta no cambia tus notas ni tu cifrado.",
-        "Un método de acceso que ya pertenece a otra bóveda no se puede conectar, porque las bóvedas nunca se fusionan. **Desconectar** te pide primero tus 12 palabras. Si guardamos tu frase por ti, la última cuenta conectada se queda hasta que conectes otra o guardes tu frase y [pases a la autocustodia](/es/help/threat-model-levels). Con autocustodia, un dispositivo nuevo sigue pidiéndote tus 12 palabras. Las cuentas conectadas están en beta."
+        "Un método de acceso que ya pertenece a otra bóveda no se puede conectar, porque las bóvedas nunca se fusionan. **Desconectar** te pide primero tu frase de recuperación. Si guardamos tu frase por ti, la última cuenta conectada se queda hasta que conectes otra o guardes tu frase y [pases a la autocustodia](/es/help/threat-model-levels). Con autocustodia, un dispositivo nuevo sigue pidiéndote tu frase. Las cuentas conectadas están en beta."
       ]
     },
     "calendar": {

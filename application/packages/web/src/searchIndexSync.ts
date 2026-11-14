@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { LocalNote } from './db';
-import { buildSearchIndexSliced, searchIndexReady, updateSearchIndex, wantsFullBuild } from './search';
+import { buildSearchIndexSliced, indexedPlaceText, searchIndexReady, updateSearchIndex, wantsFullBuild } from './search';
 
 /**
  * Keeps the full-text index in lockstep with the notes STATE, which is
@@ -29,6 +29,33 @@ import { buildSearchIndexSliced, searchIndexReady, updateSearchIndex, wantsFullB
  * reads the fresh one.
  */
 export function useSearchIndexSync(notes: LocalNote[]): number {
+  return useIndexSync(notes, SEARCH_INDEX);
+}
+
+type Changed = { added: string[]; updated: string[]; removed: string[] };
+
+/** The four calls an in-memory index over the notes answers to. */
+export type NotesIndexOps = {
+  ready: () => boolean;
+  wantsFullBuild: (changed: Changed) => boolean;
+  update: (notes: LocalNote[], changed: Changed) => void;
+  buildSliced: (notes: LocalNote[]) => Promise<void>;
+};
+
+const SEARCH_INDEX: NotesIndexOps = {
+  ready: searchIndexReady,
+  wantsFullBuild,
+  update: updateSearchIndex,
+  buildSliced: buildSearchIndexSliced,
+};
+
+/**
+ * The sync loop above for any index over the notes (search, related notes):
+ * a sliced full build when most notes changed, direct updates otherwise, and
+ * the changes made during a build applied once it lands. `ops` must be a
+ * stable object.
+ */
+export function useIndexSync(notes: LocalNote[], ops: NotesIndexOps): number {
   const lastIndexed = useRef<Map<string, LocalNote>>(new Map());
   const building = useRef(false);
   const latest = useRef(notes);
@@ -50,16 +77,16 @@ export function useSearchIndexSync(notes: LocalNote[]): number {
       if (building.current) {
         // The build in flight reads an older snapshot; the old index takes
         // a small change now, and the build's own pass applies it after.
-        if (searchIndexReady() && !wantsFullBuild(changed)) {
-          updateSearchIndex(current, changed);
+        if (ops.ready() && !ops.wantsFullBuild(changed)) {
+          ops.update(current, changed);
           setVersion((v) => v + 1);
         }
         return;
       }
-      if (wantsFullBuild(changed)) {
+      if (ops.wantsFullBuild(changed)) {
         building.current = true;
         const snapshot = current;
-        void buildSearchIndexSliced(snapshot).then(() => {
+        void ops.buildSliced(snapshot).then(() => {
           building.current = false;
           lastIndexed.current = new Map(snapshot.map((n) => [n.id, n]));
           if (!mounted.current) return;
@@ -68,13 +95,13 @@ export function useSearchIndexSync(notes: LocalNote[]): number {
         });
         return;
       }
-      updateSearchIndex(current, changed);
+      ops.update(current, changed);
       for (const id of changed.removed) lastIndexed.current.delete(id);
       for (const n of current) lastIndexed.current.set(n.id, n);
       setVersion((v) => v + 1);
     };
     run(notes);
-  }, [notes]);
+  }, [notes, ops]);
 
   return version;
 }
@@ -84,6 +111,8 @@ function sameIndexedContent(a: LocalNote, b: LocalNote): boolean {
   if (a.title !== b.title || a.body !== b.body || a.type !== b.type) return false;
   // A login indexes its custom fields and extra websites too.
   if (a.type === 'login' && a.trackers?.login !== b.trackers?.login) return false;
+  // Any note indexes the name of its place.
+  if (indexedPlaceText(a) !== indexedPlaceText(b)) return false;
   if (a.tags.length !== b.tags.length) return false;
   return a.tags.every((t, i) => t === b.tags[i]);
 }

@@ -47,7 +47,10 @@ import {
   waterToCanonical,
   waterToDisplay,
   activeCustomTrackers,
+  bloodPressureText,
   customTrackerColor,
+  hasBloodPressure,
+  pairText,
   weightRange,
   weightToCanonical,
   weightToDisplay,
@@ -65,6 +68,7 @@ import { ScalePill } from './trackers/ScalePill';
 import { SleepPill } from './trackers/SleepPill';
 import { SleepScorePill } from './trackers/SleepScorePill';
 import { HeartRatePill } from './trackers/HeartRatePill';
+import { BloodPressurePill } from './trackers/BloodPressurePill';
 import { NumberInputPill } from './trackers/NumberInputPill';
 import { PillCloseOutsideContext, PillExpandContext } from './trackers/PillShell';
 import { proUnlocked } from './demo';
@@ -292,6 +296,9 @@ export function TrackerPills({
     if (activeBuiltins.includes('heartRate') && data.heartRate != null) {
       pills.push({ key: 'heartRate', color: BUILTIN_TRACKER_COLORS.heartRate, icon: TRACKER_ICONS.heartRate, label: `${data.heartRate}${t('units.bpm')}`, toggle: 'heartRate' });
     }
+    if (activeBuiltins.includes('bloodPressure') && hasBloodPressure(data.bloodPressure)) {
+      pills.push({ key: 'bloodPressure', color: BUILTIN_TRACKER_COLORS.bloodPressure, icon: TRACKER_ICONS.bloodPressure, label: bloodPressureText(data.bloodPressure), toggle: 'bloodPressure' });
+    }
     if (activeBuiltins.includes('activity') && data.activity) {
       pills.push({ key: 'activity', color: BUILTIN_TRACKER_COLORS.activity, icon: TRACKER_ICONS.activity, label: t(`activity.level.${data.activity as ActivityLevel}`), toggle: 'activity' });
     }
@@ -329,7 +336,8 @@ export function TrackerPills({
       for (const t of activeCustom) {
         const entry = data.customTrackers?.find((e) => e.trackerId === t.id);
         if (entry?.value != null) {
-          pills.push({ key: `c-${t.id}`, color: customTrackerColor(t) ?? '#888', icon: <CustomTrackerGlyph icon={t.icon} />, label: `${entry.value}`, toggle: `custom-${t.id}` });
+          const label = t.type === 'pair' && typeof entry.value === 'number' ? pairText(entry.value, entry.value2, t.unit) : `${entry.value}`;
+          pills.push({ key: `c-${t.id}`, color: customTrackerColor(t) ?? '#888', icon: <CustomTrackerGlyph icon={t.icon} />, label, toggle: `custom-${t.id}` });
         }
       }
     }
@@ -429,6 +437,16 @@ export function TrackerPills({
       readOnly={readOnly}
     />
   ));
+  if (activeBuiltins.includes('bloodPressure')) add('bloodPressure', hasBloodPressure(data.bloodPressure), (
+    <BloodPressurePill
+      key="bloodPressure"
+      value={data.bloodPressure}
+      expanded={expanded === 'bloodPressure'}
+      onToggle={() => toggle('bloodPressure')}
+      onChange={(bloodPressure) => update({ bloodPressure })}
+      readOnly={readOnly}
+    />
+  ));
   if (activeBuiltins.includes('activity')) add('activity', !!data.activity, (
     <ActivityPill
       key="activity"
@@ -485,7 +503,7 @@ export function TrackerPills({
       value={data.weight != null ? weightToDisplay(data.weight, weightUnit) : undefined}
       expanded={expanded === 'weight'}
       onToggle={() => toggle('weight')}
-      onChange={(v) => update({ weight: weightToCanonical(v, weightUnit) })}
+      onChange={(v) => update({ weight: v == null ? undefined : weightToCanonical(v, weightUnit) })}
       readOnly={readOnly}
       unit={t(`units.${weightUnit}`)}
       unitOptions={weightUnitOptions}
@@ -529,7 +547,7 @@ export function TrackerPills({
       filledText={waterLabel}
       expanded={expanded === 'water'}
       onToggle={() => toggle('water')}
-      onChange={(v) => update({ water: waterToCanonical(v, waterUnit) })}
+      onChange={(v) => update({ water: v == null ? undefined : waterToCanonical(v, waterUnit) })}
       readOnly={readOnly}
       unit={t(`units.water.${waterUnit}`)}
       unitOptions={waterUnitOptions}
@@ -572,7 +590,7 @@ export function TrackerPills({
       filledText={caffeineLabel}
       expanded={expanded === 'caffeine'}
       onToggle={() => toggle('caffeine')}
-      onChange={(v) => update({ caffeine: caffeineToCanonical(v, caffeineUnit) })}
+      onChange={(v) => update({ caffeine: v == null ? undefined : caffeineToCanonical(v, caffeineUnit) })}
       readOnly={readOnly}
       unit={t(`units.caffeine.${caffeineUnit}`)}
       unitOptions={caffeineUnitOptions}
@@ -620,20 +638,40 @@ export function TrackerPills({
       const entry = data.customTrackers?.find((e) => e.trackerId === ct.id);
       add(`custom-${ct.id}`, entry?.value != null, (
         <CustomPill
-          key={ct.id}
+          // A new day starts a new pill, so a number waiting in a Two numbers
+          // panel never lands in another day's entry.
+          key={`${ct.id}:${typeof data.journalDate === 'string' ? data.journalDate : ''}`}
           template={ct}
           value={entry?.value}
+          value2={entry?.value2}
           expanded={expanded === `custom-${ct.id}`}
           onToggle={() => toggle(`custom-${ct.id}`)}
           onChange={(value) => {
             const existing = data.customTrackers ?? [];
+            if (value === undefined) {
+              update({ customTrackers: existing.filter((e) => e.trackerId !== ct.id) });
+              return;
+            }
             const idx = existing.findIndex((e) => e.trackerId === ct.id);
             const next = [...existing];
             if (idx >= 0) {
-              next[idx] = { trackerId: ct.id, value };
+              // Keep what this version does not write (a pair's second number).
+              next[idx] = { ...existing[idx], trackerId: ct.id, value };
             } else {
               next.push({ trackerId: ct.id, value });
             }
+            update({ customTrackers: next });
+          }}
+          onPairChange={(first, second) => {
+            const rest = (data.customTrackers ?? []).filter((e) => e.trackerId !== ct.id);
+            const at = (data.customTrackers ?? []).findIndex((e) => e.trackerId === ct.id);
+            if (first === undefined) {
+              update({ customTrackers: rest });
+              return;
+            }
+            const entry = { trackerId: ct.id, value: first, ...(second !== undefined ? { value2: second } : {}) };
+            const next = [...rest];
+            next.splice(at >= 0 ? at : next.length, 0, entry);
             update({ customTrackers: next });
           }}
           readOnly={readOnly}

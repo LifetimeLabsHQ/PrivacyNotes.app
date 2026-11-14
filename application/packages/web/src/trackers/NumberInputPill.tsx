@@ -41,7 +41,8 @@ export function NumberInputPill({
   value?: number;
   expanded: boolean;
   onToggle: () => void;
-  onChange: (v: number) => void;
+  /** `undefined` removes the value. */
+  onChange: (v: number | undefined) => void;
   readOnly?: boolean;
   unit: string;
   placeholder?: string;
@@ -76,6 +77,7 @@ export function NumberInputPill({
         <NumberStepper
           value={value}
           onChange={onChange}
+          onClear={() => onChange(undefined)}
           min={min}
           max={max}
           step={step}

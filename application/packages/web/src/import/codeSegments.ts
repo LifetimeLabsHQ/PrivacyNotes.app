@@ -12,7 +12,7 @@
  * that cannot cross a line.
  */
 
-const FENCE = /^ {0,3}(`{3,}|~{3,})/;
+import { FENCE_LINE } from '../markdownFence';
 
 interface Segment {
   code: boolean;
@@ -32,12 +32,12 @@ function codeSegments(md: string): Segment[] {
   lines.forEach((line, i) => {
     const nl = i < lines.length - 1 ? '\n' : '';
     if (fence) {
-      const m = FENCE.exec(line);
+      const m = FENCE_LINE.exec(line);
       if (m && m[1]![0] === fence[0] && m[1]!.length >= fence.length && line.trim() === m[1]) fence = null;
       push(true, line + nl);
       return;
     }
-    const open = FENCE.exec(line);
+    const open = FENCE_LINE.exec(line);
     if (open && !(open[1]![0] === '`' && line.slice(open[0].length).includes('`'))) {
       fence = open[1]!;
       push(true, line + nl);

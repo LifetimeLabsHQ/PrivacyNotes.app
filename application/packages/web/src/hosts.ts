@@ -47,8 +47,15 @@ const OFFICIAL_SYNC_HOSTNAME = 'sync.privacynotes.app';
  * update checks): the person running it chose not to send us anything.
  */
 export function usesOfficialServer(): boolean {
+  return isOfficialSyncUrl(import.meta.env.VITE_SUPABASE_URL);
+}
+
+/** True when this address is on the official sync host. The extension asks
+ *  it of its own server address (WXT_FUNCTIONS_URL), which is not
+ *  VITE_SUPABASE_URL. */
+export function isOfficialSyncUrl(url: string | undefined): boolean {
   try {
-    return new URL(import.meta.env.VITE_SUPABASE_URL).hostname === OFFICIAL_SYNC_HOSTNAME;
+    return new URL(url ?? '').hostname === OFFICIAL_SYNC_HOSTNAME;
   } catch {
     return false;
   }

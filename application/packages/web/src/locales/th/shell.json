@@ -297,8 +297,10 @@
     "dayWithMood": "{{date}} อารมณ์ {{mood}}",
     "previousWeek": "สัปดาห์ก่อนหน้า",
     "nextWeek": "สัปดาห์ถัดไป",
-    "showMonth": "{{month}} แสดงทั้งเดือน",
-    "showWeek": "{{month}} แสดงหนึ่งสัปดาห์"
+    "pickMonth": "{{month}} เลือกเดือนและปี",
+    "pickMonthTip": "เลือกเดือนและปี",
+    "showWholeMonth": "แสดงทั้งเดือน",
+    "showOneWeek": "แสดงหนึ่งสัปดาห์"
   },
   "contextMenu": {
     "newNote": "โน้ตใหม่",
@@ -538,6 +540,13 @@
     "itemNameParts": "ชื่อกลาง คำนำหน้า คำต่อท้าย",
     "itemPhonetic": "ชื่อตามการออกเสียง",
     "itemNote": "โน้ต",
+    "addSection": "เพิ่มส่วน",
+    "sectionName": "ชื่อส่วน",
+    "removeSection": "นำส่วนออก",
+    "removeSectionNamed": "นำส่วน {{name}} ออก",
+    "addFieldTo": "เพิ่มช่องใน {{name}}",
+    "addFieldToSection": "เพิ่มช่องในส่วนนี้",
+    "hiddenFieldsNote": "ค่าที่ซ่อนจะถูกปิดบังไว้จนกว่าคุณจะกดแสดง และการค้นหาจะไม่พบค่าเหล่านี้เลย",
     "labels": {
       "mobile": "มือถือ",
       "home": "บ้าน",
@@ -665,6 +674,7 @@
     },
     "birthdays": "วันเกิด",
     "contactDate": "{{name}}: {{label}}",
+    "birthdayAge_other": "{{name}} อายุครบ {{count}} ปี",
     "dragEnd": "ลากเพื่อเปลี่ยนวันสิ้นสุด",
     "previousDay": "วันก่อนหน้า",
     "nextDay": "วันถัดไป",

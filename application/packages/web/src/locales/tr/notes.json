@@ -141,6 +141,14 @@
   },
   "banner": {
     "proActivationPending": "Ödeme alındı ama Pro'nun etkinleşmesi her zamankinden uzun sürüyor. Bir dakika sonra sayfayı yenileyin, açılmazsa destekle iletişime geçin.",
+    "crypto": {
+      "waiting": "Kripto ödemeniz bekleniyor. Onaylandığında Pro açılır.",
+      "seen": "Kripto ödemesi görüldü. Ağ onayladığında Pro açılır; Bitcoin için bu genellikle bir saat içinde olur.",
+      "partial": "Kripto ödemenizin bir kısmı ulaştı. Bağlantının süresi dolmadan kalanını ödeme sayfasında gönderin.",
+      "ended": "Kripto ödeme bağlantınızın süresi, tam bir ödeme ulaşmadan doldu.",
+      "paid": "Kripto ödemeniz onaylandı. Pro açık.",
+      "openPayment": "Ödeme sayfası"
+    },
     "snapshotPaused": "Not geçmişi duraklatıldı. Pro planınız etkin görünmüyor. Pro geri gelene kadar yeni düzenlemelerinizin anlık görüntüsü alınmayacak.",
     "restorePro": "Pro'yu geri getir",
     "storagePastDue": "Depolama aboneliğinizin ödemesi başarısız oldu. Ek kapasiteyi kaybetmemek için Paddle'daki kartınızı güncelleyin.",
@@ -336,7 +344,24 @@
     "linksTo": "Bağlantı verilenler",
     "missing": "Henüz oluşturulmadı",
     "protectedHidden_one": "PIN korumalı {{count}} öğe gösterilmiyor",
-    "protectedHidden_other": "PIN korumalı {{count}} öğe gösterilmiyor"
+    "protectedHidden_other": "PIN korumalı {{count}} öğe gösterilmiyor",
+    "related": "Önerilen bağlantılar",
+    "relatedWords": "İkisi de {{words}} konusundan bahsediyor",
+    "relatedLinksTo": "İkisi de {{title}} notuna bağlantı veriyor",
+    "relatedLinkedFrom": "İkisine de {{title}} notundan bağlantı veriliyor",
+    "relatedTag": "İkisi de {{tag}} etiketli",
+    "relatedMeaning": "Aynı anlam",
+    "meaningDoor": "Akıllı bağlantılar: aynı anlamdaki notları çevrimdışı yapay zekâ ile bulun",
+    "meaningDoorNo": "Bir daha gösterme",
+    "meaningDoorHidden": "Tüm notlarda gizlendi. Akıllı bağlantılar Ayarlar > Düzenleyici > Davranış altında kalır.",
+    "hideSuggestions": "Önerilen bağlantıları gizle",
+    "notRelated": "İlgisiz",
+    "notRelatedDone": "Artık önerilmiyor",
+    "notRelatedCount": "İlgisiz ({{n}})",
+    "restoreSuggestion": "Yeniden öner",
+    "linkAtCursor": "İmleç konumuna bağlantı ekle",
+    "linkNeedsCursor": "Önce nota tıklayın",
+    "linkAsFootnote": "Dipnot olarak bağlantı ekle"
   },
   "drawing": {
     "fullScreen": "Tam ekran",

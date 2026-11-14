@@ -12,6 +12,7 @@
 import { bytesToBase64, base64ToBytes } from '@notes/shared';
 import type { UserSettings } from './userSettings';
 import { credentialKey } from './demo';
+import { readStringList } from './localStore';
 import { normalizeSecret, saltBytesFor, saltIsPasscode } from './secretKind';
 import { trustAwareStorage } from './trustStorage';
 
@@ -390,7 +391,6 @@ export function markAppUnlocked(): void {
   stamp([APP_UNLOCKED_KEY]);
 }
 
-/** End both windows: the app locked, or the PIN changed hands. */
 /**
  * "Lock" on one protected note (#723). The PIN window stays open for every
  * other protected note and the phrase view; this note alone asks again,
@@ -399,15 +399,7 @@ export function markAppUnlocked(): void {
  */
 const RELOCKED_KEY = credentialKey('privacynotes.relockedNotes');
 
-function readRelocked(): string[] {
-  try {
-    const raw = sessionStorage.getItem(RELOCKED_KEY);
-    const ids: unknown = raw ? JSON.parse(raw) : [];
-    return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : [];
-  } catch {
-    return [];
-  }
-}
+const readRelocked = () => readStringList(RELOCKED_KEY, 'session');
 
 function writeRelocked(ids: string[]): void {
   try {
@@ -434,6 +426,7 @@ export function clearNoteRelock(id: string): void {
   writeRelocked(readRelocked().filter((x) => x !== id));
 }
 
+/** End both windows: the app locked, or the PIN changed hands. */
 export function clearPinUnlock(): void {
   try {
     sessionStorage.removeItem(UNLOCKED_KEY);

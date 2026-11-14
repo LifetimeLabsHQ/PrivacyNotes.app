@@ -43,7 +43,7 @@
     },
     "subhead": "Notatki, zadania, hasła, dziennik, pliki, kalendarz, kontakty i zakładki, ze śledzeniem nastroju i leków. Jedna prywatna aplikacja.",
     "tryDemo": "Wypróbuj demo",
-    "microcopy": "Darmowe na zawsze. Bez karty kredytowej. Zaloguj się przez Google, Apple, GitHub albo po prostu frazą z 12 słów.",
+    "microcopy": "Darmowe na zawsze. Bez karty kredytowej. Zaloguj się przez Google, Apple, GitHub albo po prostu frazą odzyskiwania.",
     "alreadyHaveVault": "Masz już sejf? Zaloguj się",
     "trustSigned": "Podpisane wydania na GitHubie"
   },
@@ -167,8 +167,6 @@
     "useGitBody": "Zakończ dzień listą swoich commitów, zapisaną jako notatka, którą znajdziesz znowu w przyszłym miesiącu.",
     "useClipTitle": "Wszystko, co skopiujesz",
     "useClipBody": "Wyślij schowek, wynik polecenia lub komunikat o błędzie prosto do swoich notatek.",
-    "useToolsTitle": "Część Twoich własnych narzędzi",
-    "useToolsBody": "Polecenie odpowiada w JSON i kończy działanie z jasnymi kodami, więc Twoje skrypty wiedzą, że notatka została zapisana.",
     "useShortcutTitle": "Notatka ze skrótu klawiszowego",
     "useShortcutBody": "Klawisz, który wybierzesz w ustawieniach systemu, otwiera pole na szybką notatkę, nawet gdy aplikacja jest zamknięta. Notatka trafia do Twojego folderu Agent.",
     "howLink": "Przeczytaj, jak działa privacynotes"
@@ -359,14 +357,15 @@
     "freeVault": "50 MB pamięci, do 5 MB na plik",
     "freeImport": "Import i eksport, w tym Keep i Obsidian",
     "freeAnon": "Anonimowe logowanie, bez e-maila",
-    "earlyAdopterBadge": "Wczesny użytkownik"
+    "earlyAdopterBadge": "Wczesny użytkownik",
+    "payMethods": "Zapłać kartą albo w Bitcoin, Ethereum, Lightning, USDC lub USDT."
   },
   "underHood": {
     "heading": "Pod maską",
     "cipherTerm": "xchacha20poly1305",
     "cipherDesc": "Klucze wyprowadzane po stronie klienta",
     "phraseTerm": "Frazy BIP-39",
-    "phraseDesc": "12 słów, podpisy Ed25519",
+    "phraseDesc": "Tworzone na Twoim urządzeniu, podpisy Ed25519",
     "rlsDesc": "RLS powiązane z Twoim kluczem publicznym",
     "trackingTerm": "Zero elementów śledzących",
     "trackingDesc": "Bez pikseli, bez elementów śledzących firm trzecich",
@@ -390,6 +389,7 @@
       "sleep": "Dobry, 7,5 h",
       "sleepScore": "82",
       "heartRate": "61 ud./min",
+      "bloodPressure": "118/76 mmHg",
       "activity": "Umiarkowana",
       "medication": "Przyjęte",
       "energy": "6 / 10",
@@ -532,7 +532,7 @@
       "hotkeys": "Skróty",
       "rating": "Ocena"
     },
-    "intro": "<brand/> trzyma Twoje notatki, zadania, hasła, dziennik, pliki, kalendarz, kontakty i zakładki w jednym miejscu, ze śledzeniem nastroju i leków. Wszystko jest szyfrowane na Twoim urządzeniu kluczem utworzonym z Twoich 12 słów i pozostaje zaszyfrowane na naszych serwerach w <nowrap>Szwajcarii</nowrap>. Działa offline, a aplikacja jest open source.",
+    "intro": "<brand/> trzyma Twoje notatki, zadania, hasła, dziennik, pliki, kalendarz, kontakty i zakładki w jednym miejscu, ze śledzeniem nastroju i leków. Wszystko jest szyfrowane na Twoim urządzeniu kluczem utworzonym z Twojej frazy odzyskiwania i pozostaje zaszyfrowane na naszych serwerach w <nowrap>Szwajcarii</nowrap>. Działa offline, a aplikacja jest open source.",
     "versionHeading": "Wersja",
     "windowVersion": "Wersja {{version}}",
     "windowHelp": "Centrum pomocy",

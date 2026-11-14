@@ -37,7 +37,7 @@ import { detectPlatform } from './devices';
 import { credentialKey } from './demo';
 import { isTrustedDevice } from './trustStorage';
 import { hasLiveSignIn, signInStamp, signedOutSince, type SignInStamp } from './liveSignIn';
-import { normalizeSecret, saltBytesFor, saltIsPasscode } from './secretKind';
+import { LEGACY_PIN_WRAP_ITERATIONS, normalizeSecret, saltBytesFor, saltIsPasscode } from './secretKind';
 import { settingsLocalKey } from './settingsLocalKey';
 
 // ── Constants ──────────────────────────────────────────────────
@@ -741,6 +741,129 @@ export async function setUpBiometricAgain(phrase: string): Promise<BiometricSetU
   }
 }
 
+// ── The phrase change: a record for the new phrase, prepared before ──
+//
+// A phrase change replaces the phrase every door opens to. Each door is
+// built and proven to open BEFORE the server changes anything, and stored
+// only after the server answered, so a failed change leaves every door as it
+// was and a landed one never leaves the device without one. One prepare step
+// and one commit step per kind:
+// - a browser record bound through PRF: one assertion with the enrolled
+//   passkey gives the PRF output, and the new phrase is wrapped under it;
+// - a native record: a fresh hardware key under a new name, as an enrollment
+//   makes one; the commit deletes the old key, a discard the new one;
+// - the presence gate: the native prompt (a browser presence passkey asks
+//   nothing), then a fresh random key, as storeWrappedPhrase makes one.
+// Spec: docs/internal/plans/phrase-change.md (6.5)
+
+/** A biometric record for a new phrase, proven to open, stored nowhere yet.
+ *  Plain JSON, so the handover record can keep it (phraseChange.ts). */
+export type PreparedBiometric =
+  | { kind: 'prf'; record: BoundEnrollment; startedFrom: string }
+  | { kind: 'native'; record: NativeBoundEnrollment; previousHandle: string | null; startedFrom: string }
+  | { kind: 'presence'; credentialId: string; wrapKey: string; iv: string; wrapped: string; startedFrom: string };
+
+export type BiometricPrepareResult =
+  /** `prepared` is null when this device holds no biometric record. */
+  | { ok: true; prepared: PreparedBiometric | null }
+  | { ok: false; reason: 'user_cancelled' | 'error'; message: string };
+
+/** Build this device's biometric record again for `phrase`, store nothing. */
+export async function prepareBiometricForPhrase(phrase: string, reason: string, cancelLabel: string): Promise<BiometricPrepareResult> {
+  const startedFrom = enrollmentStamp();
+  const record = readEnrollment();
+  const cancelled = { ok: false, reason: 'user_cancelled', message: 'Biometric verification was cancelled.' } as const;
+  try {
+    if (record?.v === 1) {
+      const salt = base64ToBytes(record.prfSalt);
+      const assertion = await assertWithPrf(base64urlToBytes(record.credentialId), salt);
+      const output = assertion ? prfOutput(prfResultsOf(assertion)?.results?.first) : null;
+      if (!output) return cancelled;
+      const built = await buildBoundEnrollment(phrase, { kind: 'prf', credentialId: base64urlToBytes(record.credentialId), salt, output });
+      return { ok: true, prepared: { kind: 'prf', record: built, startedFrom } };
+    }
+    if (record?.v === 2) {
+      let made: NativeKey;
+      try {
+        made = await nativeKeyCreate(reason, cancelLabel);
+      } catch (failure) {
+        if (failure === 'cancelled') return cancelled;
+        return { ok: false, reason: 'error', message: 'Biometric unlock could not be set up on this device.' };
+      }
+      try {
+        const built = await buildNativeEnrollment(phrase, made);
+        return { ok: true, prepared: { kind: 'native', record: built, previousHandle: record.handle, startedFrom } };
+      } catch (err) {
+        nativeKeyDelete(made.handle);
+        throw err;
+      }
+    }
+    let credentialId: string | null;
+    try {
+      credentialId = localStorage.getItem(BIO_WRAPPED) !== null ? localStorage.getItem(BIO_CREDENTIAL_ID) : null;
+    } catch {
+      credentialId = null;
+    }
+    if (!credentialId) return { ok: true, prepared: null };
+    if (credentialId === NATIVE_CREDENTIAL_ID && !(await nativeAuthenticate(reason, cancelLabel))) return cancelled;
+    const wrapKey = await crypto.subtle.generateKey({ name: 'AES-GCM', length: AES_KEY_BITS }, true, ['encrypt', 'decrypt']);
+    const { ciphertext, iv } = await aesGcmEncrypt(wrapKey, phrase);
+    if ((await aesGcmDecrypt(wrapKey, ciphertext, iv)) !== phrase) throw new Error('The new biometric wrap did not open.');
+    const rawKey = new Uint8Array(await crypto.subtle.exportKey('raw', wrapKey));
+    return {
+      ok: true,
+      prepared: { kind: 'presence', credentialId, wrapKey: bytesToBase64(rawKey), iv: bytesToBase64(iv), wrapped: bytesToBase64(ciphertext), startedFrom },
+    };
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'NotAllowedError') return cancelled;
+    return { ok: false, reason: 'error', message: err instanceof Error ? err.message : 'Biometric unlock could not be prepared.' };
+  }
+}
+
+/**
+ * Store a prepared record as this device's biometric unlock, after the
+ * server took the change. False, with nothing stored, when another tab
+ * changed the enrollment since the prepare or the store refused; the old
+ * record then wraps the replaced phrase, and the caller removes it. Throws
+ * when a sign-out began at `since`, as every enrollment does.
+ */
+export function commitPreparedBiometric(prepared: PreparedBiometric, since: SignInStamp): boolean {
+  if (prepared.kind === 'prf' || prepared.kind === 'native') {
+    let stands = false;
+    try {
+      stands = commitBoundEnrollment(prepared.record, since, prepared.startedFrom);
+    } finally {
+      if (prepared.kind === 'native') {
+        if (!stands) nativeKeyDelete(prepared.record.handle);
+        else if (prepared.previousHandle && prepared.previousHandle !== prepared.record.handle) nativeKeyDelete(prepared.previousHandle);
+      }
+    }
+    return stands;
+  }
+  if (signedOutSince(since)) throw new Error('Signed out during enrollment.');
+  if (enrollmentStamp() !== prepared.startedFrom) return false;
+  try {
+    localStorage.setItem(BIO_CREDENTIAL_ID, prepared.credentialId);
+    localStorage.setItem(BIO_WRAP_KEY, prepared.wrapKey);
+    localStorage.setItem(BIO_IV, prepared.iv);
+    localStorage.setItem(BIO_WRAPPED, prepared.wrapped);
+  } catch {
+    return false;
+  }
+  // Asked again once written, as storeWrappedPhrase does.
+  if (signedOutSince(since)) {
+    if (localStorage.getItem(BIO_WRAPPED) === prepared.wrapped) removeBiometricCredential();
+    throw new Error('Signed out during enrollment.');
+  }
+  return true;
+}
+
+/** Throw away a prepared record that will not be stored: a native one's new
+ *  hardware key goes. A hint, never awaited. */
+export function discardPreparedBiometric(prepared: PreparedBiometric): void {
+  if (prepared.kind === 'native') nativeKeyDelete(prepared.record.handle);
+}
+
 /** Tell the passkey provider a credential is no longer used, where the browser can. Never throws. */
 function signalCredentialGone(credentialId: string): void {
   try {
@@ -1124,7 +1247,6 @@ export function removeBiometricCredential(): void {
 
 // Spec: THREAT_MODEL.md (PBKDF2-SHA256 600k iterations per OWASP 2024)
 const PIN_PBKDF2_ITERATIONS = PBKDF2_ITERATIONS;
-const LEGACY_PIN_PBKDF2_ITERATIONS = 100_000;
 
 async function deriveKeyFromPin(
   pin: string,
@@ -1182,31 +1304,13 @@ export async function buildPinWrap(phrase: string, pin: string): Promise<PinWrap
 }
 
 /**
- * Build the blob and store it as this device's own wrap, in one step. The four
- * writes throw when the store refuses. The app's writers build, check and store
- * through storeBuiltPinWrap instead, so nothing in the app calls this.
- */
-export async function wrapPhraseWithPin(
-  phrase: string,
-  pin: string,
-  /** The stamp the caller took before its own first await: every caller
-   *  derives a PIN key first, about a second, and a sign-out inside that
-   *  second removed the wrap this would put back (liveSignIn.ts). */
-  startedAt?: SignInStamp,
-): Promise<PinWrapBlob> {
-  const since = startedAt ?? signInStamp();
-  const blob = await buildPinWrap(phrase, pin);
-  storeBuiltPinWrap(blob, since);
-  return blob;
-}
-
-/**
  * Store a wrap built in memory as this device's own, with no await between
  * the caller's last check and the writes. A caller that must first confirm
  * the secret is still the account's (pinCredentialStamp in pin.ts) builds
  * with `buildPinWrap`, checks, then stores here, so a wrap under a secret
- * replaced meanwhile never overwrites the newer one. Throws, like
- * `wrapPhraseWithPin`, when the store refuses or a sign-out began at `since`.
+ * replaced meanwhile never overwrites the newer one. Throws when the store
+ * refuses or a sign-out began at `since`: every caller derives a PIN key
+ * first, about a second, so `since` is the stamp taken before that.
  *
  * Answers a function that puts back the wrap this one replaced, for a caller
  * whose next write failed (the PIN tab's settings save). It does nothing once
@@ -1245,6 +1349,22 @@ export function storeBuiltPinWrap(blob: PinWrapBlob, since: SignInStamp): () => 
     if (signedOutSince(since)) return;
     if (localStorage.getItem(PIN_WRAPPED) === blob.pinWrapCiphertext) putBack();
   };
+}
+
+/**
+ * Open a PIN wrap held in memory, such as the account's wrap from a settings
+ * row: the phrase it holds, or null when the PIN does not open it. Reads and
+ * writes no storage. The phrase change proves the typed PIN on the account's
+ * own wrap, and its new wrap on itself, before anything is sent.
+ * Spec: docs/internal/plans/phrase-change.md (6.5)
+ */
+export async function openPinWrapBlob(blob: PinWrapBlob, pin: string): Promise<string | null> {
+  try {
+    const key = await deriveKeyFromPin(pin, base64ToBytes(blob.pinWrapSalt), blob.pinWrapIterations);
+    return await aesGcmDecrypt(key, base64ToBytes(blob.pinWrapCiphertext), base64ToBytes(blob.pinWrapIV));
+  } catch {
+    return null;
+  }
 }
 
 /** The local wrap's salt and ciphertext as one value. An unlock that starts
@@ -1303,7 +1423,7 @@ export function hydrateLocalPinWrap(blob: PinWrapBlob): void {
     localStorage.setItem(PIN_PBKDF2_SALT, blob.pinWrapSalt);
     localStorage.setItem(PIN_IV, blob.pinWrapIV);
     localStorage.setItem(PIN_WRAPPED, blob.pinWrapCiphertext);
-    localStorage.setItem(PIN_ITERATIONS_KEY, String(blob.pinWrapIterations ?? LEGACY_PIN_PBKDF2_ITERATIONS));
+    localStorage.setItem(PIN_ITERATIONS_KEY, String(blob.pinWrapIterations ?? LEGACY_PIN_WRAP_ITERATIONS));
   } catch {
     /* storage unavailable */
   }
@@ -1332,7 +1452,7 @@ export async function unwrapPhraseWithPin(
   if (!saltB64 || !ivB64 || !wrappedB64) return null;
   const wrapAtStart = pinWrapStamp();
 
-  const storedIterations = parseInt(localStorage.getItem(PIN_ITERATIONS_KEY) ?? '', 10) || LEGACY_PIN_PBKDF2_ITERATIONS;
+  const storedIterations = parseInt(localStorage.getItem(PIN_ITERATIONS_KEY) ?? '', 10) || LEGACY_PIN_WRAP_ITERATIONS;
   const salt = base64ToBytes(saltB64);
   const ciphertext = base64ToBytes(wrappedB64);
   const iv = base64ToBytes(ivB64);
@@ -1349,9 +1469,9 @@ export async function unwrapPhraseWithPin(
   } catch {
     // If stored iterations differ from legacy, also try legacy as fallback
     // (handles edge case where PIN_ITERATIONS_KEY was lost/corrupt).
-    if (storedIterations !== LEGACY_PIN_PBKDF2_ITERATIONS) {
+    if (storedIterations !== LEGACY_PIN_WRAP_ITERATIONS) {
       try {
-        const legacyKey = await deriveKeyFromPin(pin, salt, LEGACY_PIN_PBKDF2_ITERATIONS);
+        const legacyKey = await deriveKeyFromPin(pin, salt, LEGACY_PIN_WRAP_ITERATIONS);
         const phrase = await aesGcmDecrypt(legacyKey, ciphertext, iv);
         upgradeLegacyWrap(phrase, pin, wrapAtStart, startedAt, onUpgraded);
         return phrase;
@@ -1427,12 +1547,13 @@ export function removePinWrappedPhrase(): void {
 const PHRASE_STORAGE_KEY = credentialKey('privacynotes.phrase');
 
 /**
- * True while a phrase is stored on this device, i.e. this browser is
- * still signed in. Presence only - the value is a wrapped envelope
- * (phraseAtRest.ts), or legacy plaintext on a not-yet-migrated
- * install. Distinguishes "the user changed an app-lock setting" from
- * "another tab signed out", which removes the wrapped blobs and the
- * stored phrase together.
+ * True while a phrase is stored on this device (localStorage or
+ * sessionStorage), i.e. this browser is still signed in. Presence only -
+ * the value is a wrapped envelope (phraseAtRest.ts), or legacy plaintext
+ * on a not-yet-migrated install. Distinguishes "the user changed an
+ * app-lock setting" from "another tab signed out", which removes the
+ * wrapped blobs and the stored phrase together. App.tsx asks it at boot
+ * too: no stored phrase means no session to restore.
  */
 export function hasStoredPhrase(): boolean {
   try {

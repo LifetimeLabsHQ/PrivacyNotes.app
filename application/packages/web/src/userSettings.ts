@@ -29,8 +29,12 @@ import { dashboardSettingsEqual, mergeDashboardSettings, validateDashboardSettin
 import { CREDENTIAL_FIELDS, defaultCalendarSettings, defaultCheckInSettings, defaultSettings, type CalendarSettings, type CheckInSettings, type UserSettings } from './userSettingsShape';
 import { isTime, type Alert } from './schedule';
 import { fromLockedRead, pickSealed, readSealedSettings, removeSealedSettings, settingsSealOn, stripSealed, withPlaceholders, writeSealedSettings } from './settingsSeal';
+import { currentKeyEpoch, epochOf, holdsEpoch, keyEpochColumn, noteAccountEpoch, openWithRing } from './keyRing';
+import { isPhraseReplacedRefusal, PhraseReplacedError, phraseReplacedStop, reportPhraseReplaced } from './phraseReplaced';
 import { localDataKeyCopy } from './localKey';
 import { readPwGen } from './passwordGen';
+import { MAX_DISMISSED_SUGGESTIONS, mergeDismissedSuggestions } from './dismissedSuggestions';
+
 
 /**
  * Synced user settings.
@@ -52,8 +56,9 @@ import { readPwGen } from './passwordGen';
  *     paints instantly on reload, before the network sync lands. On a
  *     device the user marked untrusted it never carries the PIN wrap
  *     fields; see the note above LocalCache.
- *   - public.user_settings row on Supabase - remote truth, last-
- *     write-wins on updated_at (same merge rule as notes)
+ *   - public.user_settings row on Supabase - remote truth. A dirty
+ *     device merges key by key against its last synced base before it
+ *     pushes (perKeyMerge), and some settings merge by their own rule.
  *
  * All server I/O goes through `syncUserSettings`, which does a
  * pull-then-push pass just like notes/sync.ts. It's safe to call
@@ -83,6 +88,11 @@ function hydrate(raw: unknown): UserSettings {
   }
   if (Array.isArray(obj.favoriteTags)) {
     base.favoriteTags = obj.favoriteTags.filter((t): t is string => typeof t === 'string');
+  }
+  if (Array.isArray(obj.dismissedSuggestions)) {
+    base.dismissedSuggestions = obj.dismissedSuggestions
+      .filter((t): t is string => typeof t === 'string')
+      .slice(-MAX_DISMISSED_SUGGESTIONS);
   }
   if (Array.isArray(obj.dismissedAnnouncements)) {
     base.dismissedAnnouncements = obj.dismissedAnnouncements.filter(
@@ -129,6 +139,9 @@ function hydrate(raw: unknown): UserSettings {
   }
   if (typeof obj.typedSymbols === 'boolean') {
     base.typedSymbols = obj.typedSymbols;
+  }
+  if (typeof obj.linkSuggestions === 'boolean') {
+    base.linkSuggestions = obj.linkSuggestions;
   }
   if (typeof obj.confirmTrash === 'boolean') {
     base.confirmTrash = obj.confirmTrash;
@@ -387,7 +400,7 @@ export function alertDefaults(s: Pick<UserSettings, 'calendar'>): { timed: Alert
  * stands. A merged collection needs no entry: its merge never reads absence
  * as a reset.
  */
-const NEWER_SCALARS = ['tintNotes', 'noteColorStyle', 'archivedInAll', 'includeSubfolders', 'sinkCheckedTasks', 'taskConfetti', 'agentFolder', 'typedSymbols', 'confirmTrash', 'confirmArchive', 'spaces', 'dateOrder', 'clock', 'weekStart', 'viewOrder', 'journalTitlePattern', 'calendar', 'checkIn', 'nestedNumbers'] as const;
+const NEWER_SCALARS = ['tintNotes', 'noteColorStyle', 'archivedInAll', 'includeSubfolders', 'sinkCheckedTasks', 'taskConfetti', 'agentFolder', 'typedSymbols', 'linkSuggestions', 'confirmTrash', 'confirmArchive', 'spaces', 'dateOrder', 'clock', 'weekStart', 'viewOrder', 'journalTitlePattern', 'calendar', 'checkIn', 'nestedNumbers'] as const;
 
 /**
  * Whether the blob lacks a newer scalar this device holds at a value of its
@@ -524,7 +537,18 @@ type LocalCache = {
   // screen. Its settings are then placeholders, a write keeps the sealed part
   // as it is, and no settings pass runs. Never written to disk.
   sealedLocked?: boolean;
+  // The key epoch (keyRing.ts) of the server row these settings were last
+  // read from. Absent is epoch 1, so the cache of an account that never
+  // changed its phrase keeps its shape. syncPinWrap installs no wrap from a
+  // cache below the account's epoch: its wrap is one of an earlier phrase.
+  // Spec: docs/internal/plans/phrase-change.md (6.5, settings epoch)
+  keyEpoch?: number;
 };
+
+/** The cache field for a key epoch: none for epoch 1 or an unreadable one. */
+function epochField(epoch: number | undefined): { keyEpoch?: number } {
+  return epoch !== undefined && Number.isSafeInteger(epoch) && epoch > 1 ? { keyEpoch: epoch } : {};
+}
 
 /**
  * The lock settings each device keeps for itself (#662): a phone can lock
@@ -564,7 +588,7 @@ const LEGACY_PIN_GROUP = [...PIN_GROUP, 'appLockEnabled'] as const;
 const OWN_RULE_KEYS = new Set<string>([
   'settingsRev', 'notesCreated', 'folders', 'foldersDeleted', 'itemStyles', 'deviceLabels', 'extensionKeys',
   'customThemes', 'calendarFeeds', 'formatBar', 'dashboard', 'factors', 'customHabits', 'medications', 'trackerSettings',
-  'favoriteTags', 'dismissedAnnouncements', 'welcomeNoteSeeded', 'importHintDismissed',
+  'favoriteTags', 'dismissedAnnouncements', 'dismissedSuggestions', 'welcomeNoteSeeded', 'importHintDismissed',
   'milestonesSeen', 'firstSeenAt', 'ratingDone', 'importPromptDismissed', 'clipperHintDismissed', ...PIN_GROUP,
   ...DEVICE_SETTINGS,
 ]);
@@ -837,6 +861,7 @@ function readLocal(): LocalCache {
           : settings.settingsRev,
       ...(readSyncedKeys(parsed.syncedKeys)),
       ...(opened.locked ? { sealedLocked: true } : {}),
+      ...epochField(parsed.keyEpoch),
     };
     const view = viewFor(cache, parsed, trusted);
     // A cache that still holds the sealed settings in the clear, or that
@@ -1142,6 +1167,7 @@ export function saveLocalSettings(next: UserSettings, since?: SignInStamp): User
     // A save changes values, never the base they are measured against.
     ...(current.syncedKeys ? { syncedKeys: current.syncedKeys } : {}),
     ...(current.sealedLocked ? { sealedLocked: true } : {}),
+    ...epochField(current.keyEpoch),
   };
   writeLocal(cache);
   // Asked again once written: another tab's sign-out can fall between the
@@ -1191,8 +1217,27 @@ export function hasSettingsPulled(): boolean {
 }
 
 /** Clear any locally cached settings. Called on sign-out, and on a
- *  fresh demo session (where it clears only the demo bucket). */
-export function clearLocalSettings(): void {
+ *  fresh demo session (where it clears only the demo bucket).
+ *
+ *  `keepUnsent`: a forced sign-out keeps a cache that holds a change the
+ *  server has not seen (folders, trackers, lists exist nowhere else). It
+ *  stays without the PIN fields: on a signed-out device the wrap is a copy
+ *  of the phrase under a short secret, and the salt and hash beside it give
+ *  that secret up to an offline search. They go in the shape an untrusted
+ *  device writes (`wrapWithheld`), which every reader takes as unknown, never
+ *  as removed, so the next pass takes them from the server row again. */
+export function clearLocalSettings(keepUnsent = false): void {
+  const kept = keepUnsent ? readLocal() : null;
+  if (kept?.dirty) {
+    // A trusted envelope records no synced counter, and the one readLocal
+    // gives it counts the unsent saves too: the withheld cache would then
+    // read every row as a rollback and never push. No counter is known, so
+    // the next pass takes the fields from the row it reads.
+    const syncedRev = isTrustedDevice() && !kept.wrapWithheld ? 0 : kept.syncedRev;
+    writeLocal({ ...kept, wrapWithheld: true, syncedRev });
+    clearTabPinWrapCopy();
+    return;
+  }
   try {
     localStorage.removeItem(localKey());
   } catch {
@@ -1222,6 +1267,12 @@ export function clearTabPinWrapCopy(): void {
  */
 export function isPinWrapWithheld(): boolean {
   return readLocal().wrapWithheld;
+}
+
+/** The key epoch of the server row the settings cache was last read from;
+ *  1 for an account that never changed its phrase. */
+export function settingsKeyEpoch(): number {
+  return readLocal().keyEpoch ?? 1;
 }
 
 /**
@@ -1292,7 +1343,101 @@ type RemoteRow = {
   ciphertext: string;
   nonce: string;
   updated_at: string;
+  /** The key epoch of the ciphertext; absent before the column existed (1).
+   *  Spec: packages/supabase/migrations/history/0118_key_epoch.sql */
+  key_epoch?: number;
 };
+
+/** The settings rows of this tab's passes have named only key epochs this
+ *  device holds; set once a row of another one was logged. */
+let epochUnknownLogged = false;
+
+/**
+ * Whether a settings row is under a key epoch this device holds no key for.
+ * A row of a higher epoch is the sign that the account changed its phrase
+ * (section 7), not a damaged row: no pass may log it as a decrypt failure,
+ * refuse it as a rollback, or push this device's blob over it. The pass
+ * that reads one stops before any write.
+ * Spec: docs/internal/plans/phrase-change.md (6.2, the settings row)
+ */
+function rowEpochUnknown(row: { key_epoch?: number }): boolean {
+  const epoch = epochOf(row.key_epoch);
+  if (holdsEpoch(epoch)) return false;
+  noteAccountEpoch(epoch);
+  // Above this device's own keys: the account changed its phrase after this
+  // device took them. auth.tsx asks for the new one (phraseReplaced.ts).
+  if (epoch > currentKeyEpoch()) reportPhraseReplaced('settings');
+  if (!epochUnknownLogged) {
+    epochUnknownLogged = true;
+    logAuthEvent('settings:epoch-unknown', { epoch: Number.isFinite(epoch) ? epoch : null });
+  }
+  return true;
+}
+
+/**
+ * A conditional update of the settings row, also conditional on the key epoch
+ * of the row it was built from: a phrase change that lands between the read
+ * and this write replaces the row under a new epoch, and the update must miss
+ * it. Only once the column exists (the row read carried it), so an app that
+ * ships before migration 0118 sends the update it always sent.
+ * Spec: docs/internal/plans/phrase-change.md (6.2, the settings row)
+ */
+function onSameEpoch<Q extends { eq(column: string, value: number): Q }>(update: Q, built: { key_epoch?: number } | null | undefined): Q {
+  return typeof built?.key_epoch === 'number' ? update.eq('key_epoch', built.key_epoch) : update;
+}
+
+/**
+ * A conditional update of the settings row, also conditional on the row it
+ * was built from: its nonce, which every write of the blob replaces, as the
+ * notes push guards on the generation it read (sync.ts). With no row read
+ * there is nothing to match, and the update misses as it always did.
+ */
+function onRowRead<Q extends { eq(column: string, value: string): Q }>(update: Q, read: { nonce?: string } | null | undefined): Q {
+  return typeof read?.nonce === 'string' ? update.eq('nonce', read.nonce) : update;
+}
+
+/** Open a settings row with the key of its epoch (the current one, or an
+ *  earlier one from the key ring). */
+function openSettingsRow(row: { ciphertext: string; nonce: string; key_epoch?: number }, key: Uint8Array): unknown {
+  const ct = base64ToBytes(row.ciphertext);
+  const nonce = base64ToBytes(row.nonce);
+  return openWithRing('sync', key, (k) => decryptJson(ct, nonce, k), epochOf(row.key_epoch));
+}
+
+/**
+ * The account's settings row as the server holds it, opened, for the phrase
+ * change. The change sends one whole new blob built from this, never from
+ * the local cache: the cache can hold a withheld wrap (`wrapWithheld`), and a
+ * blob built from it would drop the PIN. This device's unsynced settings go
+ * up first, and a device that still holds some after that pass refuses
+ * (`settings_unsynced`): the wizard asks again once sync caught up.
+ * `plain` is the decrypted JSON as stored, unknown fields of newer clients
+ * included; null when the account has no row yet.
+ * Spec: docs/internal/plans/phrase-change.md (section 5, request)
+ */
+export async function readSettingsRowForChange(
+  supabase: SupabaseClient,
+  pubkey: string,
+  encryptionKey: Uint8Array,
+): Promise<{ nonce: string | null; keyEpoch: number; plain: Record<string, unknown> | null; localRev: number }> {
+  if (isDemoMode()) throw new Error('settings_unavailable');
+  if (hasUnpushedSettings()) await syncUserSettings(supabase, pubkey, encryptionKey);
+  if (hasUnpushedSettings()) throw new Error('settings_unsynced');
+  const { data, error } = await supabase.from('user_settings').select('*').eq('user_pubkey', pubkey).maybeSingle();
+  if (error) throw new Error(isPhraseReplacedRefusal(error) ? 'phrase_replaced' : 'settings_unavailable');
+  const localRev = readLocal().settings.settingsRev;
+  if (!data) return { nonce: null, keyEpoch: 1, plain: null, localRev };
+  const row = data as RemoteRow;
+  if (rowEpochUnknown(row)) throw new Error('settings_epoch_unknown');
+  let plain: unknown;
+  try {
+    plain = openSettingsRow(row, encryptionKey);
+  } catch {
+    throw new Error('settings_unreadable');
+  }
+  if (!plain || typeof plain !== 'object' || Array.isArray(plain)) throw new Error('settings_unreadable');
+  return { nonce: row.nonce, keyEpoch: epochOf(row.key_epoch), plain: plain as Record<string, unknown>, localRev };
+}
 
 /**
  * Union-merge two template arrays by ID with tombstone semantics.
@@ -1528,6 +1673,10 @@ function mergeSettings(
     ...new Set([...remote.dismissedAnnouncements, ...local.dismissedAnnouncements]),
   ];
 
+  // "Not related" pairs: the highest version of each pair wins, so a hide
+  // and a later restore both hold on every device (dismissedSuggestions.ts).
+  merged.dismissedSuggestions = mergeDismissedSuggestions(remote.dismissedSuggestions, local.dismissedSuggestions);
+
   // Boolean flags that should never regress from true → false.
   if (local.welcomeNoteSeeded) merged.welcomeNoteSeeded = true;
   if (local.importHintDismissed) merged.importHintDismissed = true;
@@ -1655,6 +1804,10 @@ export async function syncUserSettings(
     console.warn('[settings] sign-out in progress - sync deferred');
     return readLocal().settings;
   }
+  // The key epoch of passKey: every blob this pass writes carries it, and a
+  // cache it commits after a write records it.
+  const epochColumn = keyEpochColumn();
+  const passEpoch = epochColumn.key_epoch ?? 1;
   let local = readLocal();
   // The sealed settings are placeholders until the phrase opens: a pass now
   // would push them, or merge the server row over them. The next one runs.
@@ -1666,6 +1819,19 @@ export async function syncUserSettings(
     local = { ...local, syncedKeys: syncedKeysOf(local.settings, !local.wrapWithheld) };
     commit(local);
   }
+  // This device took the keys of a later epoch than the row its cache was
+  // built from: it adopted a new phrase. Its PIN wrap and its browser keys
+  // belong to the replaced phrase, so this pass takes the account's from the
+  // row, as a device that does not know the wrap does, and never merges its
+  // own back. Its other unsynced settings go over the row as a normal edit.
+  // In memory, on every read of the cache in this pass (a save during the
+  // pull, a refused rollback): the first cache the pass commits from the row
+  // records the new epoch, and the pass after it is an ordinary one.
+  // Spec: docs/internal/plans/phrase-change.md (6.5 settings epoch, section 7)
+  const adopting = (c: LocalCache) => (c.keyEpoch ?? 1) < passEpoch;
+  const asRead = (c: LocalCache): LocalCache =>
+    adopting(c) ? { ...c, settings: { ...c.settings, extensionKeys: {} }, wrapWithheld: true } : c;
+  local = asRead(local);
 
   try {
   // ── 1. PULL ────────────────────────────────────────────────────
@@ -1687,6 +1853,9 @@ export async function syncUserSettings(
   if (isMfaRefusal(pullErr)) throw new MfaRequiredError();
   if (pullErr) {
     console.error('[settings] pull failed:', pullErr);
+  } else if (remoteRow && rowEpochUnknown(remoteRow as RemoteRow)) {
+    if (report) report.readServer = false;
+    return local.settings;
   } else if (remoteRow) {
     const row = remoteRow as RemoteRow;
     // Remote wins iff it is strictly newer than our local copy AND we
@@ -1704,11 +1873,7 @@ export async function syncUserSettings(
       !local.dirty && (Date.parse(row.updated_at) !== Date.parse(local.updatedAt) || local.wrapWithheld);
     if (remoteWins) {
       try {
-        const remoteRaw = decryptJson(
-          base64ToBytes(row.ciphertext),
-          base64ToBytes(row.nonce),
-          passKey
-        );
+        const remoteRaw = openSettingsRow(row, passKey);
         // A device that has pulled keeps its own lock settings.
         const remoteSettings = local.everPulled
           ? withDeviceSettings(hydrateOver(local.settings, remoteRaw), local.settings)
@@ -1724,7 +1889,9 @@ export async function syncUserSettings(
         //
         // Strictly lower only. See the settingsRev field doc for why equality
         // is accepted, and for what that leaves uncovered.
-        if (remoteSettings.settingsRev < local.settings.settingsRev) {
+        // While it adopts, this device's counters belong to the earlier epoch,
+        // and only a holder of the new phrase writes a row of the new one.
+        if (remoteSettings.settingsRev < local.settings.settingsRev && !adopting(local)) {
           logAuthEvent('settings:rollback-refused');
           console.warn('[settings] refused a remote blob older than this device holds');
           throw new SettingsRollbackError();
@@ -1816,6 +1983,7 @@ export async function syncUserSettings(
           wrapWithheld: false,
           syncedRev: remoteSettings.settingsRev,
           syncedKeys: syncedKeysOf(remoteSettings, true),
+          ...epochField(epochOf(row.key_epoch)),
         };
         // A settings write that landed while the pull was in flight is newer
         // than anything this pass read, so it stands and the pass leaves the
@@ -1832,7 +2000,7 @@ export async function syncUserSettings(
           // remote blob here would push its scalars over the write that just
           // landed and show the user the settings they had just changed away.
           console.warn('[settings] local write landed mid-pull - keeping it');
-          effective = current;
+          effective = asRead(current);
         } else {
           commit(effective);
           pushIsRepair = effective.dirty;
@@ -1844,7 +2012,7 @@ export async function syncUserSettings(
         if (err instanceof SettingsRollbackError) {
           // The cache as it is now: a save that landed during the pull is
           // newer than `local`, and the push below has to carry it.
-          effective = { ...readLocal(), dirty: true };
+          effective = { ...asRead(readLocal()), dirty: true };
           commit(effective);
         } else {
           decryptFailed = true;
@@ -1887,9 +2055,11 @@ export async function syncUserSettings(
     // The row's lock settings, which the push carries instead of this
     // device's (DEVICE_SETTINGS). Null where no row was read.
     let account: UserSettings | null = null;
+    // Every column, so the row's key epoch comes with it once the column
+    // exists, and the read works the same before it does.
     const { data: preRow, error: preErr, status: preStatus } = await supabase
       .from('user_settings')
-      .select('ciphertext, nonce')
+      .select('*')
       .eq('user_pubkey', pubkey)
       .maybeSingle();
     // A never-pulled device may only push over a row it has actually
@@ -1911,15 +2081,23 @@ export async function syncUserSettings(
       console.error('[settings] pre-push read failed - push deferred:', preErr);
       return effective.settings;
     }
+    // A device that adopts a new epoch writes over the row of that epoch and
+    // nothing else: with no row read, its push would be an insert built from
+    // this device's own copy, which can still hold the replaced phrase's wrap.
+    if (!preRow && adopting(effective)) {
+      if (report) report.readServer = false;
+      return effective.settings;
+    }
+    // The account changed its phrase after the pull: no push over that row.
+    if (preRow && rowEpochUnknown(preRow as RemoteRow)) {
+      if (report) report.readServer = false;
+      return effective.settings;
+    }
     if (preRow) {
       try {
         const serverSettings = hydrateOver(
           effective.settings,
-          decryptJson(
-            base64ToBytes((preRow as RemoteRow).ciphertext),
-            base64ToBytes((preRow as RemoteRow).nonce),
-            passKey
-          )
+          openSettingsRow(preRow as RemoteRow, passKey),
         );
         account = serverSettings;
         if (!effective.everPulled) {
@@ -1998,7 +2176,7 @@ export async function syncUserSettings(
           // the same rollback rule as the pull: an older row is not one, and
           // the push waits for a pass that reads a current row.
           if (effective.wrapWithheld) {
-            if (serverSettings.settingsRev < effective.syncedRev) {
+            if (serverSettings.settingsRev < effective.syncedRev && !adopting(effective)) {
               console.warn('[settings] wrap unknown here and the server row is older - push deferred');
               return effective.settings;
             }
@@ -2037,22 +2215,31 @@ export async function syncUserSettings(
       ciphertext: bytesToBase64(ciphertext),
       nonce: bytesToBase64(nonce),
       updated_at: effective.updatedAt,
+      ...epochColumn,
     };
 
-    // Try a conditional update: only succeed if server row isn't newer.
-    const { data: updated, error: updateErr, status: updateStatus } = await supabase
-      .from('user_settings')
-      .update({
-        ciphertext: payload.ciphertext,
-        nonce: payload.nonce,
-        updated_at: payload.updated_at,
-      })
-      .eq('user_pubkey', pubkey)
-      .lte('updated_at', effective.updatedAt)
-      .select('user_pubkey');
+    // Try a conditional update: only succeed if server row isn't newer, and
+    // is still the row this push was built from. A row another device wrote
+    // after the read above can carry an older stamp than ours, and the stamp
+    // guard alone let this blob, which never saw it, replace it. A miss takes
+    // the conflict branch below, which merges with that row.
+    const { data: updated, error: updateErr, status: updateStatus } = await onSameEpoch(
+      onRowRead(supabase
+        .from('user_settings')
+        .update({
+          ciphertext: payload.ciphertext,
+          nonce: payload.nonce,
+          updated_at: payload.updated_at,
+          ...epochColumn,
+        })
+        .eq('user_pubkey', pubkey)
+        .lte('updated_at', effective.updatedAt), preRow as RemoteRow | null),
+      preRow as RemoteRow | null,
+    ).select('user_pubkey');
 
     if (updateErr) recordSyncFault({ step: 'settings', status: updateStatus, code: updateErr.code || undefined });
     if (isMfaRefusal(updateErr)) throw new MfaRequiredError();
+    if (isPhraseReplacedRefusal(updateErr)) throw phraseReplacedStop('write');
     if (updateErr) {
       console.error('[settings] push failed:', updateErr);
     } else if (!updated || updated.length === 0) {
@@ -2060,12 +2247,22 @@ export async function syncUserSettings(
       // row exists yet (first-time user). Check which.
       const { data: existing, error: existingErr, status: existingStatus } = await supabase
         .from('user_settings')
-        .select('ciphertext, nonce, updated_at')
+        .select('*')
         .eq('user_pubkey', pubkey)
         .maybeSingle();
       if (existingErr) recordSyncFault({ step: 'settings', status: existingStatus, code: existingErr.code || undefined });
       if (isMfaRefusal(existingErr)) throw new MfaRequiredError();
 
+      if (existing && rowEpochUnknown(existing as RemoteRow)) {
+        // The account changed its phrase during this pass: no merge over it.
+        if (report) report.readServer = false;
+        return effective.settings;
+      }
+      if (!existing && adopting(effective)) {
+        // The row went between the reads: an adopting device inserts nothing.
+        if (report) report.readServer = false;
+        return effective.settings;
+      }
       if (!existing) {
         // No row - first-time insert.
         const { error: insertErr, status: insertStatus } = await supabase
@@ -2073,6 +2270,7 @@ export async function syncUserSettings(
           .insert(payload);
         if (insertErr) recordSyncFault({ step: 'settings', status: insertStatus, code: insertErr.code || undefined });
         if (isMfaRefusal(insertErr)) throw new MfaRequiredError();
+        if (isPhraseReplacedRefusal(insertErr)) throw phraseReplacedStop('write');
         if (insertErr) {
           console.error('[settings] insert failed:', insertErr);
         } else {
@@ -2080,7 +2278,7 @@ export async function syncUserSettings(
           if (!savedSince(snapshot)) {
             // The insert proves the server held no row - nothing existed
             // for this device to have missed.
-            const cleaned: LocalCache = { ...current, dirty: false, everPulled: true, wrapWithheld: false, syncedRev: current.settings.settingsRev, syncedKeys: syncedKeysOf(current.settings, true) };
+            const cleaned: LocalCache = { ...current, dirty: false, everPulled: true, wrapWithheld: false, syncedRev: current.settings.settingsRev, syncedKeys: syncedKeysOf(current.settings, true), ...epochField(passEpoch) };
             commit(cleaned);
             effective = cleaned;
           }
@@ -2096,11 +2294,7 @@ export async function syncUserSettings(
         try {
           const serverSettings = hydrateOver(
             outgoing,
-            decryptJson(
-              base64ToBytes(existing.ciphertext),
-              base64ToBytes(existing.nonce),
-              passKey
-            )
+            openSettingsRow(existing as RemoteRow, passKey),
           );
           // The rollback rule belongs here as well as on the pull, and this is
           // the door the plan for it did not name. This branch adopts the
@@ -2111,7 +2305,7 @@ export async function syncUserSettings(
           // back to, and taking the server as its base is what stops it wiping
           // every other device.
           const rolledBack =
-            effective.everPulled && serverSettings.settingsRev < outgoing.settingsRev;
+            effective.everPulled && serverSettings.settingsRev < outgoing.settingsRev && !adopting(effective);
           if (rolledBack) {
             logAuthEvent('settings:rollback-refused');
             console.warn('[settings] conflict row is older than this device holds - keeping ours');
@@ -2124,8 +2318,10 @@ export async function syncUserSettings(
           // last sync and takes the server's for the rest; mergeSettings
           // alone took every plain setting from the server, this device's
           // own edits included.
+          // The wrap a device does not know (withheld, or the replaced
+          // phrase's) is the row's, even when the row's scalars are refused.
           const merged = rolledBack
-            ? { ...outgoing, ...mergeAtEverySyncPoint(outgoing, serverSettings, 'local') }
+            ? { ...outgoing, ...mergeAtEverySyncPoint(outgoing, serverSettings, 'local'), ...(effective.wrapWithheld ? pickWrap(serverSettings) : {}) }
             : effective.everPulled
               ? perKeyMerge(effective.settings, mergeSettings(outgoing, serverSettings, 'local'), serverSettings, effective.syncedKeys, effective.wrapWithheld)
               : mergeSettings(outgoing, serverSettings, 'remote');
@@ -2136,29 +2332,33 @@ export async function syncUserSettings(
           // merge in sync.ts: a device that wrote after the conflict read
           // would otherwise lose that write to a merge that never saw it.
           // No match leaves the cache dirty, and the next pass merges again.
-          const { data: mergedRows, error: mergeErr, status: mergeStatus } = await supabase
-            .from('user_settings')
-            .update({
-              ciphertext: bytesToBase64(enc.ciphertext),
-              nonce: bytesToBase64(enc.nonce),
-              updated_at: mergedAt,
-            })
-            .eq('user_pubkey', pubkey)
-            .lte('updated_at', existing.updated_at)
-            .select('user_pubkey');
+          const { data: mergedRows, error: mergeErr, status: mergeStatus } = await onSameEpoch(
+            onRowRead(supabase
+              .from('user_settings')
+              .update({
+                ciphertext: bytesToBase64(enc.ciphertext),
+                nonce: bytesToBase64(enc.nonce),
+                updated_at: mergedAt,
+                ...epochColumn,
+              })
+              .eq('user_pubkey', pubkey)
+              .lte('updated_at', existing.updated_at), existing as RemoteRow),
+            existing as RemoteRow,
+          ).select('user_pubkey');
           if (mergeErr) recordSyncFault({ step: 'settings', status: mergeStatus, code: mergeErr.code || undefined });
           if (isMfaRefusal(mergeErr)) throw new MfaRequiredError();
+          if (isPhraseReplacedRefusal(mergeErr)) throw phraseReplacedStop('write');
           if (mergeErr) {
             console.error('[settings] merge push failed:', mergeErr);
           } else if (!mergedRows || mergedRows.length === 0) {
             console.warn('[settings] the row changed again during the merge - the next pass retries');
           } else if (!savedSince(snapshot)) {
             // A save that landed during the merge stays in the cache, dirty.
-            effective = { settings: kept, updatedAt: mergedAt, dirty: false, everPulled: true, wrapWithheld: false, syncedRev: kept.settingsRev, syncedKeys: syncedKeysOf(kept, true) };
+            effective = { settings: kept, updatedAt: mergedAt, dirty: false, everPulled: true, wrapWithheld: false, syncedRev: kept.settingsRev, syncedKeys: syncedKeysOf(kept, true), ...epochField(passEpoch) };
             commit(effective);
           }
         } catch (err) {
-          if (err instanceof MfaRequiredError) throw err;
+          if (err instanceof MfaRequiredError || err instanceof PhraseReplacedError) throw err;
           decryptFailed = true;
           console.error('[settings] merge decrypt failed:', err);
           recordSyncFault({ step: 'settings', code: 'decrypt' });
@@ -2173,7 +2373,7 @@ export async function syncUserSettings(
       if (!savedSince(snapshot)) {
         // Either the pre-push merge above decrypted the server row, or no
         // row existed - both count as having seen the server.
-        const cleaned: LocalCache = { settings: outgoing, updatedAt: current.updatedAt, dirty: false, everPulled: true, wrapWithheld: false, syncedRev: outgoing.settingsRev, syncedKeys: syncedKeysOf(outgoing, true) };
+        const cleaned: LocalCache = { settings: outgoing, updatedAt: current.updatedAt, dirty: false, everPulled: true, wrapWithheld: false, syncedRev: outgoing.settingsRev, syncedKeys: syncedKeysOf(outgoing, true), ...epochField(passEpoch) };
         commit(cleaned);
         effective = cleaned;
       }

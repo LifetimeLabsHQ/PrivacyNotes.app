@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "Tous les paramètres",
+    "dockWindow": "Ancrer sur le côté",
+    "dockOtherSide": "Déplacer de l'autre côté",
     "fillWindow": "Utiliser toute la fenêtre",
     "restoreWindow": "Revenir à la taille normale"
   },
@@ -168,6 +170,8 @@
     "peekDark": "Ton thème sombre est affiché pour l'instant. Auto suit à nouveau ton système quand tu fermes les Paramètres.",
     "unlockThemes": "Débloque tous les thèmes avec Pro",
     "startViewTitle": "Afficher à l'ouverture",
+    "reopenLastOpenTitle": "Rouvrir le dernier élément",
+    "reopenLastOpenDesc": "Au démarrage de l'app, tu retrouves l'élément qui était ouvert quand tu l'as quittée. Désactivé, l'app démarre sur la liste, sans rien d'ouvert.",
     "viewTitle": "Afficher les éléments en",
     "viewDesc": "Auto suit la largeur de ton écran.",
     "openInTabsTitle": "Afficher l'élément ouvert dans un onglet",
@@ -198,6 +202,7 @@
     "linkModifierDesc": "Un clic simple place le curseur. Un toucher ouvre toujours le lien. Uniquement sur cet appareil.",
     "typedSymbolsTitle": "Transformer les symboles tapés en flèches et signes mathématiques",
     "typedSymbolsDesc": "Par exemple, -> devient →, != devient ≠ et >= devient ≥.",
+    "linkSuggestionsDesc": "Le panneau Liens affiche aussi les notes sur le même sujet que tu n'as pas encore liées. Désactive cette option pour n'afficher l'icône Liens que sur les notes qui ont des liens.",
     "confirmTrashTitle": "Demander avant de supprimer",
     "confirmTrashDesc": "Confirme avant qu'un élément aille à la corbeille.",
     "confirmArchiveTitle": "Demander avant d'archiver",
@@ -613,5 +618,18 @@
     "loadError": "Impossible de charger le dispositif d'homme mort. Vérifie ta connexion et réessaie.",
     "confirmTitle": "Activer le dispositif d'homme mort ?",
     "confirmBody": "Si aucun de tes appareils ne se connecte pendant {{period}}, le serveur supprime tes données chiffrées. C'est irréversible. Tes appareils gardent leurs notes."
+  },
+  "onDeviceAi": {
+    "title": "Liens intelligents",
+    "desc": "Trouve les notes qui ont le même sens, même dans d'autres mots ou une autre langue. Utilise une IA hors ligne (<model>bekko-static</model>) qui tourne uniquement sur cet appareil.",
+    "on": "Activé. Les suggestions incluent aussi les notes qui ont le même sens. L'IA hors ligne occupe {{size}} sur cet appareil.",
+    "kept": "Désactivé. L'IA hors ligne reste sur cet appareil, donc la réactiver ne demande aucun téléchargement.",
+    "downloadSize": "Télécharger · {{size}}",
+    "downloadingLabel": "Téléchargement de l'IA hors ligne",
+    "loading": "Chargement de l'IA hors ligne",
+    "unavailable": "La démo ne peut pas télécharger l'IA hors ligne.",
+    "failed": "Le téléchargement n'a pas abouti. Réessaie.",
+    "remove": "Retirer de cet appareil ({{size}})",
+    "howItWorks": "Comment ça marche"
   }
 }

@@ -81,7 +81,7 @@
     "need-email": {
       "q": "Potřebuju k registraci e-mailovou adresu?",
       "a": [
-        "Ne. Nový trezor je čerstvě vygenerovaná [obnovovací fráze z 12 slov](/cs/help/phrase-vs-password) a nic víc. Žádný e-mail, žádné uživatelské jméno, žádné telefonní číslo, žádné ověřování. Pokud se přihlašuješ frází, nemohli bychom ti napsat, ani kdybychom chtěli, protože nikdy nezjistíme, kdo jsi.",
+        "Ne. Nový trezor je čerstvě vygenerovaná [obnovovací fráze](/cs/help/phrase-vs-password) a nic víc. Žádný e-mail, žádné uživatelské jméno, žádné telefonní číslo, žádné ověřování. Pokud se přihlašuješ frází, nemohli bychom ti napsat, ani kdybychom chtěli, protože nikdy nezjistíme, kdo jsi.",
         "Máš radši známý postup? [Funguje i přihlášení přes Google, Apple nebo GitHub](/cs/help/signup-options). Tahle cesta nám nutně prozradí e-mail spojený s tímto přihlášením, ale tvoje poznámky zůstávají šifrované na tvém zařízení tak i tak a fráze na tebe pod povrchem čeká taky."
       ]
     },
@@ -139,9 +139,9 @@
     "phrase-vs-password": {
       "q": "Proč obnovovací fráze místo uživatelského jména a hesla?",
       "a": [
-        "Zpočátku to může působit obráceně, ale jedna obnovovací fráze je silnější konstrukce. U jména a hesla není jméno tajné (objeví se v každém uniklém seznamu), takže celá bezpečnost leží na heslu, a hesla vymyšlená lidmi mají v průměru možná 30 až 40 bitů entropie. [Tvoje fráze z 12 slov má garantovaných 128 bitů](/cs/help/twelve-word-phrase), vygenerovalo je tvoje zařízení, nevymýšlel je člověk a nikde jinde je nepoužíváš.",
+        "Zpočátku to může působit obráceně, ale jedna obnovovací fráze je silnější konstrukce. U jména a hesla není jméno tajné (objeví se v každém uniklém seznamu), takže celá bezpečnost leží na heslu, a hesla vymyšlená lidmi mají v průměru možná 30 až 40 bitů entropie. [Tvoje obnovovací fráze má garantovaných 128 bitů nebo víc](/cs/help/twelve-word-phrase), vygenerovalo ji tvoje zařízení, nevymýšlel ji člověk a nikde jinde ji nepoužíváš.",
         "A my nemáme žádné heslo, které bychom mohli ztratit. Přihlášení heslem znamená, že server ukládá aspoň hash hesla, a ten může uniknout, dá se prolomit nebo vyphishovat. [Při vlastní správě](/cs/help/threat-model-levels) tvoje fráze nikdy neopustí tvoje zařízení: šifrovací klíče z ní vznikají lokálně a server vždycky vidí jen šifrovaná data. Není tu žádný hash hesla, který by šlo ukrást, a není tu žádné obnovení hesla, které by šlo zneužít.",
-        "Pokud ti psaní 12 slov přijde nepraktické: frázi si můžeš jedním klepnutím uložit do správce hesel (Nastavení > Zabezpečení > Fráze) a přihlašování pak vypadá jako každé jiné. Máš radši známý postup? [Funguje i přihlášení přes Google, Apple nebo GitHub](/cs/help/signup-options): fráze na tebe pod povrchem čeká taky a ty si vybereš, jestli zůstane na tvém zařízení, nebo ji uložíme my."
+        "Pokud ti psaní fráze přijde nepraktické: frázi si můžeš jedním klepnutím uložit do správce hesel (Nastavení > Zabezpečení > Fráze) a přihlašování pak vypadá jako každé jiné. Máš radši známý postup? [Funguje i přihlášení přes Google, Apple nebo GitHub](/cs/help/signup-options): fráze na tebe pod povrchem čeká taky a ty si vybereš, jestli zůstane na tvém zařízení, nebo ji uložíme my."
       ]
     },
     "threat-model-levels": {
@@ -150,7 +150,7 @@
         "Ano, a záměrně. Ne každý se brání stejným hrozbám, takže model účtu je žebřík, ne jediné dogma. Na každé příčce se tvoje poznámky šifrují na tvém zařízení; mění se to, kdo drží klíč a co o tobě víme.",
         "Pohodlná varianta: přihlas se přes Google, Apple nebo GitHub a na příslušné obrazovce nech vybranou výchozí možnost „Ať je to jednoduché a pohodlné“. Obnovovací frázi uchováváme zašifrovanou na našem serveru, takže nové zařízení může otevřít poznámky po přihlášení přes poskytovatele a [zadání kódu z autentizátoru, pokud je 2FA zapnuté](/cs/help/enable-2fa). Výměnou za to známe e-mail použitý k přihlášení a náš server může frázi dešifrovat. Ulož si frázi pro případ ztráty účtu poskytovatele a při zapnutí dvoufaktorového přihlášení si uchovej záložní klíč 2FA.",
         "Uprostřed: přihlas se přes Google, Apple nebo GitHub, ale vyber „Maximální bezpečnost a soukromí“. Tvoje fráze se našich serverů nikdy nedotkne, takže server nedrží nic, co by otevřelo tvoje poznámky; nová zařízení potřebují frázi nebo [QR kód naskenovaný ze zařízení, které už je přihlášené](/cs/help/add-second-device). E-mail za tímto přihlášením dál známe a právní příkaz nebo průnik na náš server se může dostat k tomuto e-mailu, nikdy k obsahu tvých poznámek.",
-        "Soukromá strana: přihlášení vynech úplně a používej jen frázi z 12 slov. Žádný e-mail, žádné jméno, žádná identita, a ve spojení s [anonymním nákupem Pro](/cs/help/buy-pro-anonymously) po sobě ani platba nikde nenechá jméno. Na druhou stranu je správa klíče celá na tobě: když frázi ztratíš a nezůstane ti přihlášené žádné zařízení, nikdo ti nepomůže.",
+        "Soukromá strana: přihlášení vynech úplně a používej jen obnovovací frázi. Žádný e-mail, žádné jméno, žádná identita, a ve spojení s [anonymním nákupem Pro](/cs/help/buy-pro-anonymously) po sobě ani platba nikde nenechá jméno. Na druhou stranu je správa klíče celá na tobě: když frázi ztratíš a nezůstane ti přihlášené žádné zařízení, nikdo ti nepomůže.",
         "Nastavení > Účet > Správa klíče ukazuje oba režimy s jejich výhodami a nevýhodami a umožňuje mezi nimi přepínat. Po ukončení správy na serveru smažeme naši kopii, jakmile potvrdíš tři slova z uložené fráze. Přepnutí zpět frázi znovu nahraje a vyžaduje výslovnou volbu. Oba směry změny se podepisují klíčem tvého účtu a při zapnutém 2FA vyžadují nový kód z autentizátoru. [Účet s frází může propojit poskytovatele](/cs/help/connected-logins) v Nastavení > Účet > Účty a pak zvlášť zvolit správu na serveru; samotné propojení poskytovatele frázi nenahrává. Každý režim může používat i zámek aplikace s PINem, biometrické odemykání a [ochranu jednotlivých poznámek](/cs/help/locked-vs-protected)."
       ]
     },
@@ -164,18 +164,18 @@
       ]
     },
     "guess-phrase": {
-      "q": "Může někdo uhodnout mých 12 slov nebo dostat stejná?",
+      "q": "Může někdo uhodnout moji obnovovací frázi, nebo dostat stejnou?",
       "a": [
-        "Ne. Tvých 12 slov nikdo neuhodne a nikdo jiný nedostane stejná: žádný počítač, který existuje nebo jaký si dokážeme představit, se k tomu ani nepřiblíží. Přihlásit se může jen ten, kdo získá tvoje skutečná slova, tak je dobře ukryj.",
-        "Tvoje zařízení vybere frázi náhodně a počet možných frází má 39 číslic. Uhodnout tu tvoji na první pokus je méně pravděpodobné než čtyřikrát za sebou vyhrát loterijní jackpot se šancí 1 ku 300 milionům. Počítač, který by zkoušel miliardu miliard frází každou sekundu, by na vyzkoušení všech i tak potřeboval asi 10 bilionů let, mnohem déle, než existuje vesmír. I kdyby každý z 8 miliard lidí na Zemi měl svou frázi, šance, že se nějaké dvě shodují, je menší než vyhrát ten jackpot dvakrát za sebou.",
-        "Síla pochází z té náhodnosti, ne z toho, jak slova vypadají. Frázi si nevymýšlej a nepřidávej do ní symboly: používej 12 slov přesně tak, jak ti je aplikace dala. Na velikosti písmen nezáleží. Poslední slovo slouží jako kontrola, takže aplikace frázi s překlepem nebo vymyšlenou frázi odmítne."
+        "Ne. Tvoji obnovovací frázi nikdo neuhodne a nikdo jiný nedostane stejnou: žádný počítač, který existuje nebo jaký si dokážeme představit, se k tomu ani nepřiblíží. Přihlásit se může jen ten, kdo získá tvoje skutečná slova, tak je dobře ukryj.",
+        "Tvoje zařízení vybere frázi náhodně. U fráze z 12 slov má počet možných frází 39 číslic, u fráze z 24 slov 78. Uhodnout frázi z 12 slov na první pokus je méně pravděpodobné než čtyřikrát za sebou vyhrát loterijní jackpot se šancí 1 ku 300 milionům. Počítač, který by zkoušel miliardu miliard frází každou sekundu, by na vyzkoušení všech i tak potřeboval asi 10 bilionů let, mnohem déle, než existuje vesmír. I kdyby každý z 8 miliard lidí na Zemi měl svou frázi, šance, že se nějaké dvě shodují, je menší než vyhrát ten jackpot dvakrát za sebou.",
+        "Síla pochází z té náhodnosti, ne z toho, jak slova vypadají. Frázi si nevymýšlej a nepřidávej do ní symboly: používej slova přesně tak, jak ti je aplikace dala. Na velikosti písmen nezáleží. Poslední slovo slouží jako kontrola, takže aplikace frázi s překlepem nebo vymyšlenou frázi odmítne."
       ]
     },
     "same-phrase": {
       "q": "Může někdo jiný dostat stejnou obnovovací frázi jako já?",
       "a": [
         "Ne, v praxi ne. Tvoje zařízení vybere frázi náhodně z obrovského množství možných frází. I kdyby si účet založil každý člověk na Zemi, dvě stejné fráze by byly méně pravděpodobné než dvakrát za sebou vyhrát loterijní jackpot se šancí 1 ku 300 milionům. Ze stejných čísel plyne, proč [tvoji frázi nikdo neuhodne](/cs/help/guess-phrase).",
-        "Tvoje ID účtu vychází z fráze. [Když tedy účet smažeš](/cs/help/delete-account) a znovu se přihlásíš stejnými 12 slovy, dostaneš nový, prázdný trezor se stejným ID účtu. Nic ze smazaného trezoru se nevrátí. [Po přechodu na novou frázi](/cs/help/phrase-compromised) smaž tu starou ze správce hesel, ať se nikdy omylem nepřihlásíš do starého účtu."
+        "Tvoje ID účtu vychází z fráze. [Když tedy účet smažeš](/cs/help/delete-account) a znovu se přihlásíš stejnou frází, dostaneš nový, prázdný trezor se stejným ID účtu. Nic ze smazaného trezoru se nevrátí. [Po přechodu na novou frázi](/cs/help/phrase-compromised) smaž tu starou ze správce hesel, ať se nikdy omylem nepřihlásíš do starého účtu."
       ]
     },
     "enable-2fa": {
@@ -204,8 +204,8 @@
     "no-ai": {
       "q": "Používá PrivacyNotes na mých poznámkách AI?",
       "a": [
-        "Ne. Ninja, okno na Cmd+K, které čte tvoje data a hledá tvoje slova, je obyčejný kód, který běží na tvém zařízení. V aplikaci nejsou žádné funkce s AI, na pozadí neběží žádné zpracování AI a na tvém obsahu se netrénuje žádný model. [Tvoje poznámky jsou vždy zašifrované, na tvém zařízení i cestou na server](/cs/help/what-can-you-see) a nic v našich systémech nečte obsah poznámek, aby ho někam posílalo.",
-        "Kdybychom někdy něco v tomhle směru vydali, muselo by to běžet celé na tvém zařízení a být striktně dobrovolné. Posílat nezašifrované poznámky modelu do cloudu by je vyjmulo ze šifrování na tvém zařízení, takže to nepřipadá v úvahu."
+        "Ne, žádná AI tvoje poznámky nečte, dokud ji sám nezapneš, a nic, co napíšeš, nikdy neputuje do žádné AI služby. Není tu žádný chatbot, žádné psaní pomocí AI, žádná AI na našich serverech a žádné trénování na tvém obsahu. Ninja a hledání jsou obyčejný kód na tvém zařízení. [Tvoje poznámky jsou vždy zašifrované, na tvém zařízení i cestou na server](/cs/help/what-can-you-see) a cloudová AI by je z tohoto šifrování vyjmula, proto žádná poznámka do žádné nikdy nejde.",
+        "Jediná výjimka je dobrovolná a zůstává na tvém zařízení. Chytrá propojení najdou poznámky se stejným významem, i když jsou napsané jinými slovy nebo v jiném jazyce. Používají offline AI ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)), která běží jen v tomto zařízení. Nic nepíše a na nic neodpovídá: každou poznámku převede na seznam čísel a ta porovná. Stáhneš ji jednou v Nastavení > Editor > Chování > Chytrá propojení a pak funguje i bez připojení. Vypínač ji vypne a Odebrat ji z tohoto zařízení odstraní. Nic, co o poznámce zjistí, se neukládá ani neodesílá."
       ]
     },
     "burn-notes": {
@@ -249,7 +249,7 @@
     "oauth-recovery": {
       "q": "Přihlašuju se přes Google, Apple nebo GitHub. Co když o ten účet přijdu?",
       "a": [
-        "Pod povrchem máš i tak frázi z 12 slov a [samotná fráze tě přihlásí na jakémkoli zařízení](/cs/help/add-second-device) - Google, Apple ani GitHub k tomu nepotřebuješ. Otevři Nastavení > Zabezpečení > Fráze a ulož si ji do správce hesel.",
+        "Pod povrchem máš i tak obnovovací frázi a [samotná fráze tě přihlásí na jakémkoli zařízení](/cs/help/add-second-device) - Google, Apple ani GitHub k tomu nepotřebuješ. Otevři Nastavení > Zabezpečení > Fráze a ulož si ji do správce hesel.",
         "Udělej to jednou a ztráta účtu Google, Apple nebo GitHub tě nebude stát nic: prostě se přihlas frází."
       ]
     },
@@ -257,7 +257,7 @@
       "q": "Nepamatuju si PIN ani přístupový kód. Jak se dostanu zpátky?",
       "a": [
         "Nic se neztratí a PIN nebo přístupový kód můžeš smazat pomocí obnovovací fráze bez cizí pomoci. Je to zámek na obrazovce, ne šifrovací klíč: poznámky jsou šifrované klíči odvozenými z fráze, takže je otevírá fráze. Kdyby bylo šifrování svázané s PINem, zapomenutý PIN by ničil data. Tady se to nikdy nestane.",
-        "Kdekoli se aplikace ptá na PIN nebo přístupový kód, zvol **Nepamatuješ si PIN?** nebo **Nepamatuješ si přístupový kód?** a zadej svých 12 slov. Najdeš to na zamykací obrazovce, [u chráněné poznámky](/cs/help/locked-vs-protected) a v **Nastavení > Zabezpečení > PIN**. Smaže se na všech zařízeních a hned si můžeš nastavit nový. [Biometrické odemknutí zůstane beze změny](/cs/help/biometric-unlock). Zařízení se starší verzí aplikace se ptá na 4 číslice i po nastavení přístupového kódu; **Nepamatuješ si PIN?** tam funguje stejně."
+        "Kdekoli se aplikace ptá na PIN nebo přístupový kód, zvol **Nepamatuješ si PIN?** nebo **Nepamatuješ si přístupový kód?** a zadej obnovovací frázi. Najdeš to na zamykací obrazovce, [u chráněné poznámky](/cs/help/locked-vs-protected) a v **Nastavení > Zabezpečení > PIN**. Smaže se na všech zařízeních a hned si můžeš nastavit nový. [Biometrické odemknutí zůstane beze změny](/cs/help/biometric-unlock). Zařízení se starší verzí aplikace se ptá na 4 číslice i po nastavení přístupového kódu; **Nepamatuješ si PIN?** tam funguje stejně."
       ]
     },
     "delete-account": {
@@ -292,7 +292,7 @@
       "q": "Jak odeberu zařízení, které už nepoužívám?",
       "a": [
         "Nastavení > Účet vypisuje všechna registrovaná zařízení. Odeber to, které vyřazuješ: místo se uvolní okamžitě (užitečné u [bezplatného tarifu se 2 zařízeními](/cs/help/device-limit)) a odebrané zařízení se odhlásí, až se příště pokusí synchronizovat. Zůstane 72 hodin vidět pod „Nedávno odebraná“, ať si můžeš potvrdit, že je opravdu venku.",
-        "Odebrání uvolní místo a to zařízení odhlásí; o přístupu rozhoduje fráze. Kdokoli s tvými 12 slovy se může přihlásit znovu, takže [když se zařízení ztratí nebo ho někdo ukradne](/cs/help/lost-device), chraň nejdřív frázi a nech zapnutý zámek aplikace (PIN nebo biometrika). Právě ten brání nalezenému zařízení být otevřenými dveřmi."
+        "Odebrání uvolní místo a to zařízení odhlásí; o přístupu rozhoduje fráze. Kdokoli s tvou frází se může přihlásit znovu, takže [když se zařízení ztratí nebo ho někdo ukradne](/cs/help/lost-device), chraň nejdřív frázi a nech zapnutý zámek aplikace (PIN nebo biometrika). Právě ten brání nalezenému zařízení být otevřenými dveřmi."
       ]
     },
     "data-location": {
@@ -358,7 +358,7 @@
     "one-time-pricing": {
       "q": "Jak může jednorázová platba financovat synchronizační službu navždy?",
       "a": [
-        "Protože je ta služba záměrně levná na provoz. Aplikace je local-first a poznámky jsou malé šifrované bloky, takže server nedělá o mnoho víc, než že je uloží a přeposílá mezi tvými zařízeními. Žádná analytika toho, co píšeš, žádné pixely ani sledovací prvky třetích stran, žádné funkce s AI pálící výpočetní výkon, žádné oddělení podpory.",
+        "Protože je ta služba záměrně levná na provoz. Aplikace je local-first a poznámky jsou malé šifrované bloky, takže server nedělá o mnoho víc, než že je uloží a přeposílá mezi tvými zařízeními. Žádná analytika toho, co píšeš, žádné pixely ani sledovací prvky třetích stran, žádná AI běžící na našich serverech, žádné oddělení podpory.",
         "Jediná položka, která s časem roste, je úložiště, a je podle toho i zpoplatněná: úložiště nad zahrnutých 500 MB je [malý roční příplatek](/cs/help/storage-addons). Jednorázové náklady se platí jednou, opakované se opakují. Model se musí uživit jen sám, a to zvládá."
       ]
     },
@@ -379,7 +379,7 @@
     "refunds": {
       "q": "Jaká jsou pravidla pro vrácení peněz?",
       "a": [
-        "30 dní bez otázek. Pokud pro tebe Pro není, požádej do 30 dnů od nákupu o plné vrácení peněz a poputují zpátky na původní platební metodu. Zákazníci v EU mají navíc zákonné právo odstoupit od smlouvy do 14 dnů.",
+        "30 dní bez otázek, u nákupu kartou nebo v obchodě s aplikacemi. Pokud pro tebe Pro není, požádej do 30 dnů od nákupu o plné vrácení peněz a poputují zpátky na původní platební metodu. Zákazníci v EU mají navíc zákonné právo odstoupit od smlouvy do 14 dnů. [Platby kryptoměnou](/cs/help/pay-with-crypto) jsou konečné a vrátit se nedají.",
         "Platby zpracovává Paddle, [náš oficiální prodejce (merchant of record)](/cs/help/paddle-privacy), takže vrácení peněz řeší Paddle přímo: odpověz na e-mail s potvrzením nákupu nebo navštiv [paddle.net](https://paddle.net). Úplná pravidla jsou v [podmínkách služby](https://lifetimelabs.dev/terms/#refunds)."
       ]
     },
@@ -387,7 +387,15 @@
       "q": "Co se o mně dozvíte, když zaplatím?",
       "a": [
         "Méně, než by se dalo čekat. Platba jde přes [Paddle](https://www.paddle.com), oficiálního prodejce (merchant of record): tvoje jméno, číslo karty a fakturační adresa jdou do Paddlu kvůli platbě a daním a našich serverů se nikdy nedotknou.",
-        "Tvoje fakturační údaje drží Paddle; do naší databáze dorazí tvůj veřejný klíč, částka a ID objednávky, [u rozšíření úložiště i jeho velikost a data obnovení](/cs/help/storage-addons). Náš účet u Paddlu vidí obě strany a my si tě v něm nevyhledáváme. Aby tvoje jméno u nákupu nefigurovalo, zaplať s [e-mailovým aliasem a maskovanou kartou](/cs/help/buy-pro-anonymously)."
+        "Tvoje fakturační údaje drží Paddle; do naší databáze dorazí tvůj veřejný klíč, částka a ID objednávky, [u rozšíření úložiště i jeho velikost a data obnovení](/cs/help/storage-addons). Náš účet u Paddlu vidí obě strany a my si tě v něm nevyhledáváme. Aby tvoje jméno u nákupu nefigurovalo, zaplať s [e-mailovým aliasem a maskovanou kartou](/cs/help/buy-pro-anonymously). [U kryptoměny](/cs/help/pay-with-crypto) vede platbu BlockBee a tvé ID účtu nikdy nedostane; my si necháváme tvůj veřejný klíč, částku a ID platby od BlockBee."
+      ]
+    },
+    "pay-with-crypto": {
+      "q": "Můžu za Pro zaplatit bitcoinem nebo jinou kryptoměnou?",
+      "a": [
+        "Ano, na webu i v desktopové aplikaci. V okně Přejít na Pro zvol Zaplatit kryptoměnou a plať bitcoinem, etherem, Lightningem, USDC nebo USDT. Cena je stejná jako při platbě kartou a platí se jednou. [Verze z obchodů](/cs/help/store-purchases) prodávají Pro jen přes Apple a Google.",
+        "Platební stránku provozuje [BlockBee](https://blockbee.io). Nechce jméno ani e-mail a tvé ID účtu nikdy nedostane. Platba kryptoměnou je veřejná na své blockchainové síti. U bitcoinu se Pro zapne, jakmile síť platbu potvrdí, obvykle za 10 až 60 minut, u etherea a většiny stablecoinů to trvá asi minutu. Pruh v aplikaci ukazuje, jak platba pokročila.",
+        "Platby kryptoměnou jsou konečné: vrácení peněz neexistuje. U platby souhlasíš, že Pro začne hned, čímž zaniká 14denní právo EU odstoupit od smlouvy, takže si nejdřív vyzkoušej bezplatný tarif. Stránka po platbě je tvoje potvrzení o nákupu. Ulož si ji jako PDF, protože nemáme e-mailovou adresu, kam bychom ji poslali."
       ]
     },
     "buy-pro-anonymously": {
@@ -395,7 +403,7 @@
       "a": [
         "Ano, se dvěma běžnými nástroji. Na účtenku použij e-mailový alias: [Apple Hide My Email](https://support.apple.com/105078), [DuckDuckGo Email Protection](https://duckduckgo.com/email), [SimpleLogin](https://simplelogin.io), [Firefox Relay](https://relay.firefox.com) i [addy.io](https://addy.io) přeposílají do tvé skutečné schránky, aniž by ji odhalily. Na platbu použij maskovanou kartu: [privacy.com](https://privacy.com) v USA generuje virtuální karty, které fungují s jakýmkoli jménem, jež napíšeš, a jinde ve světě udělá stejnou službu předplacená karta použitelná online, koupená za hotovost, na které není vůbec žádné jméno.",
         "[U platby chce Paddle](/cs/help/paddle-privacy) e-mail, platební metodu a zemi (v některých regionech i PSČ) kvůli výpočtu daně. Alias dostane účtenku, maskovaná karta nese jméno podle tvého zadání a daňová lokalita tě zúží na region, nic víc. Alias ale nech žít: e-mail s účtenkou je tvůj doklad o nákupu a [kanál pro případné vrácení peněz](/cs/help/refunds).",
-        "[Ve spojení s účtem na frázi](/cs/help/signup-options) nikomu nezůstane celý obrázek: tvoje banka vidí dobití karty, Paddle vidí alias a maskovanou kartu a my vidíme veřejný klíč, ze kterého se stalo Pro, vedle toho aliasu v našem účtu u Paddlu."
+        "[Ve spojení s účtem na frázi](/cs/help/signup-options) nikomu nezůstane celý obrázek: tvoje banka vidí dobití karty, Paddle vidí alias a maskovanou kartu a my vidíme veřejný klíč, ze kterého se stalo Pro, vedle toho aliasu v našem účtu u Paddlu. [Platba kryptoměnou](/cs/help/pay-with-crypto) e-mail nepotřebuje vůbec, ale samotná platba je veřejná na své blockchainové síti."
       ]
     },
     "platforms": {
@@ -412,7 +420,7 @@
         "Často pár dní. Malá přání a hlášení chyb se obvykle dostanou do příští verze a nové verze vycházejí skoro každý týden, ne jen párkrát do roka. [Changelog](/changelog) je toho záznamem: každá položka má datum, je napsaná srozumitelně a říká, co se změnilo. Přečti si měsíc zpátky a budeš přesně vědět, co od nás čekat, ještě než aplikaci něco svěříš.",
         "To tempo vychází z toho, jak je práce rozdělená. Šifrovací jádro, synchronizační protokol a přihlašování napsali lidé vedle svých zaměstnání, dávno předtím, než aplikace měla jméno, a kryptografické jádro se tak udržuje dodnes; nic automatizovaného se k němu nepřiblíží. Když tenhle základ na jaře 2026 stál, začali jsme podle pevného protokolu používat nástroje AI pro psaní kódu: nejdřív na [překlady](/cs/help/translation-quality), pak na články nápovědy, pak na funkce rozhraní a opravy nekritických chyb, kde jsou dobré v dohledávání vzácných okrajových případů, které by jinak zabraly týdny, a v psaní testovacích skriptů, které drží víc vývojářů u jednoho standardu. Proto se vyplatí splnit i přání jediného člověka, místo aby čekalo za tím, co je na vrcholu seznamu.",
         "Všechno, co se dotýká šifrování, synchronizace nebo přihlašování, zůstává u zkušených vývojářů, kteří píšou každý řádek, a ten kód je [veřejný](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), aby sis ho mohl přečíst místo toho, abys nám věřil. Víc o týmu a o tom, jak pracujeme, najdeš na naší [stránce o nás](https://lifetimelabs.dev/about).",
-        "Samotná aplikace žádné funkce AI nemá a tvoje poznámky nikam neposílá ([podrobnosti](/cs/help/no-ai)). Ten slib stojí samostatně a nemění se."
+        "Samotná aplikace tvoje poznámky nikdy nepředá žádné AI a jediná funkce s AI, kterou má, běží jen na tvém zařízení, pokud ji zapneš ([podrobnosti](/cs/help/no-ai)). Ten slib stojí samostatně a nemění se."
       ]
     },
     "android-updates": {
@@ -491,7 +499,7 @@
         "Nastavíš ho takhle: v desktopové aplikaci otevři Nastavení > CLI a zvol Zapnout. Zvol Nainstalovat, což na tento počítač nainstaluje příkaz `privacynotes`, a pak Vytvořit kód. V novém terminálu spusť `privacynotes login` a kód vlož. Potom ulož svou první poznámku:",
         "`echo \"# Hello\" | privacynotes save`",
         "`privacynotes` má jen pár příkazů, protože dělá jednu věc. Každý vypíše krátkou kartu pro člověka, nebo s `--json` jeden řádek JSON pro skript:",
-        "- `privacynotes login` připojí tento počítač pomocí jednorázového kódu z Nastavení > CLI. Kód vlož, nebo ho pošli na vstup.\n- `privacynotes save note.md` přidá poznámku ze souboru a samotné `privacynotes save` přečte Markdown ze vstupu. `--title` nastaví název, jinak se použije první nadpis `#` nebo první řádek. `--tag work,ideas` přidá značky.\n- `privacynotes status` ukáže, jestli je tento počítač připojený, a poslední poznámku, kterou uložil.\n- `privacynotes logout` tento počítač odpojí.\n- `privacynotes mcp` spustí příkaz jako nástroj pro AI aplikaci bez terminálu, viz [MCP](/cs/help/mcp).\n- `privacynotes help` (nebo `privacynotes --help`) vypíše všechny příkazy a volby a `privacynotes --version` vypíše verzi.",
+        "- `privacynotes login` připojí tento počítač pomocí jednorázového kódu z Nastavení > CLI. Kód vlož, nebo ho pošli na vstup.\n- `privacynotes save note.md` přidá poznámku ze souboru a samotné `privacynotes save` přečte Markdown ze vstupu. `--title` nastaví název, jinak se použije první nadpis `#` nebo první řádek. `--tag work,ideas` přidá značky.\n- `privacynotes status` ukáže připojení uložené na tomto počítači a poslední poznámku, kterou uložil. Server se neptá: když počítač odebereš v Nastavení > CLI, zobrazí se jako připojený, dokud se uložení neodmítne.\n- `privacynotes logout` tento počítač odpojí.\n- `privacynotes mcp` spustí příkaz jako nástroj pro AI aplikaci bez terminálu, viz [MCP](/cs/help/mcp).\n- `privacynotes help` (nebo `privacynotes --help`) vypíše všechny příkazy a volby a `privacynotes --version` vypíše verzi.",
         "S AI agentem pro programování připoj `privacynotes` jednou na počítači, kde agent běží, a pak se zeptej normálně: „Ulož tenhle plán do mých PrivacyNotes přes privacynotes save se značkou project.“ Agent si podrobnosti přečte z `privacynotes --help`, napíše Markdown a pošle ho na vstup. Stejný příkaz funguje i ve tvých skriptech a plánovaných úlohách:",
         "- `git log --oneline -20 | privacynotes save --title \"Recent commits\"` uloží tvoje poslední commity.\n- `pbpaste | privacynotes save --tag inbox` uloží, co jsi zkopíroval, na Macu.\n- `privacynotes save --tag daily report.md` v noční úloze uloží vygenerovaný report.\n- Klávesa, kterou zvolíš v nastavení systému, umí spustit i `privacynotes save`, viz [Můžu přidat poznámku klávesovou zkratkou, aniž bych otevřel aplikaci?](/cs/help/quick-note-shortcut)",
         "Poznámka může mít až 700 KB Markdownu, 20 značek a název o 200 znacích a `privacynotes` to před odesláním zkontroluje. Skončí s kódem 0, když je poznámka uložená, 1, když ji server odmítne, 2 při špatném vstupu, 3, když počítač není připojený, a 4, když není síť, takže skript může zareagovat. Uložená poznámka čeká zapečetěná, dokud se neotevře některá z tvých aplikací; pokud se to do 90 dnů nestane, nebo počítač dřív odebereš, smaže se. Chceš-li počítač odpojit, zvol vedle něj Odebrat v Nastavení > CLI. Co příkaz a agent uvidí, je v otázce [Může nástroj příkazového řádku nebo AI agent číst moje poznámky?](/cs/help/cli-security)."
@@ -570,7 +578,7 @@
       "q": "Můžu na pomoc s PrivacyNotes použít vlastního AI agenta?",
       "a": [
         "Ano, a centrum nápovědy jsme na to postavili. Každá odpověď je zveřejněná jako jeden textový soubor na [llms-full.txt](https://privacynotes.app/llms-full.txt), takže si asistent přečte všechno najednou. Rámeček na konci každé stránky nápovědy zkopíruje hotový prompt: vlož ho do ChatGPT, Claude, Gemini nebo asistenta, kterého už používáš, a zeptej se ve svém jazyce.",
-        "Když tě pošleme k nástroji, kterému už věříš, jsme z toho úplně venku a nikdy se nedozvíme, na co ses ptal. Vlastní chatbot by znamenal, že tvoje dotazy končí na našich serverech, a dotazy k poznámkové aplikaci s sebou často nesou obsah poznámek. To je něco jiného než samotná aplikace, která žádné AI funkce nemá ([podrobnosti](/cs/help/no-ai)).",
+        "Když tě pošleme k nástroji, kterému už věříš, jsme z toho úplně venku a nikdy se nedozvíme, na co ses ptal. Vlastní chatbot by znamenal, že tvoje dotazy končí na našich serverech, a dotazy k poznámkové aplikaci s sebou často nesou obsah poznámek. To je něco jiného než samotná aplikace, která tvoje poznámky nikdy neposílá žádné AI ([podrobnosti](/cs/help/no-ai)).",
         "Nikdy nevkládej asistentovi obnovovací frázi, PIN ani text poznámky. Žádná odpověď je nepotřebuje, zkopírovaný prompt asistentovi říká, aby je odmítl, a všechno, co napíšeš do cizího chatu, už opustilo tvoje zařízení."
       ]
     },
@@ -600,7 +608,7 @@
       "q": "Ztratilo se mi zařízení. Jak ochráním poznámky?",
       "a": [
         "Z jakéhokoli přihlášeného zařízení otevři Nastavení > Účet > „Registrovaná zařízení“ a [to ztracené odeber](/cs/help/remove-device). Až se příště připojí, odhlásí se a jeho lokální data se vymažou, přibližně do minuty od dalšího použití. Zůstane 72 hodin vypsané pod „Nedávno odebraná“, ať si můžeš potvrdit, že je venku.",
-        "Zapni zámek aplikace (PIN nebo biometrika) na všem přenosném a nech zapnutý systémový zámek obrazovky. Zařízení se smaže, jakmile se příště připojí, takže do té doby stojí mezi ztraceným telefonem a tvými poznámkami právě tyhle lokální branky. Skutečným klíčem je fráze: kdokoli s tvými 12 slovy se může přihlásit znovu. Pokud máš podezření, že unikla samotná fráze, postupuj místo toho podle [postupu při úniku fráze](/cs/help/phrase-compromised)."
+        "Zapni zámek aplikace (PIN nebo biometrika) na všem přenosném a nech zapnutý systémový zámek obrazovky. Zařízení se smaže, jakmile se příště připojí, takže do té doby stojí mezi ztraceným telefonem a tvými poznámkami právě tyhle lokální branky. Skutečným klíčem je fráze: kdokoli s tvou frází se může přihlásit znovu. Pokud máš podezření, že unikla samotná fráze, postupuj místo toho podle [postupu při úniku fráze](/cs/help/phrase-compromised)."
       ]
     },
     "device-limit": {
@@ -664,7 +672,7 @@
       "q": "Může někdo otevřít můj soubor zálohy bez mé obnovovací fráze?",
       "a": [
         "Ne, šifrovaný ne. Soubor „Všechno, šifrovaně (.pnbackupz)“ nebo „Jen text, šifrovaně (.pnbackup)“ je zašifrovaný klíčem z tvojí fráze, takže se otevře jen v tvém účtu. Kdo soubor najde, uvidí jeho název, velikost a datum, a uvnitř nic.",
-        "Výjimkou je „Všechno, bez šifrování (.zip)“ z karty Export: otevře se na jakémkoli počítači, bez fráze. Automatické zálohy tento typ nikdy nevytvářejí ([proč ne](/cs/help/backup-unencrypted))."
+        "Výjimkou je „Všechno, bez šifrování (.zip)“ z Nastavení > Záloha > Ručně: otevře se na jakémkoli počítači, bez fráze. Automatické zálohy tento typ nikdy nevytvářejí ([proč ne](/cs/help/backup-unencrypted))."
       ]
     },
     "backup-unencrypted": {
@@ -791,7 +799,7 @@
     "pro-not-active": {
       "q": "Pro mám zaplacené, ale není aktivní. Co teď?",
       "a": [
-        "Dej tomu minutu a pak aplikaci obnov. Po platbě se aplikace asi 20 sekund dotazuje serveru a odemkne se sama, a obnovení stránky navíc zkontroluje stav Pro znovu při spuštění. Pokud platba dorazila, ale aktivace se vleče, ukáže se pruh s hláškou „Platba byla přijata, ale aktivace Pro trvá déle než obvykle“ - tenhle stav se skoro vždycky vyřeší sám. [Ve verzích z obchodů](/cs/help/store-purchases) se nákup, který se nepodaří ověřit, zkusí znovu po restartu aplikace, a peníze za nákup, který se nikdy neaktivuje, obchod automaticky vrátí do 3 dnů.",
+        "Dej tomu minutu a pak aplikaci obnov. Po platbě se aplikace asi 20 sekund dotazuje serveru a odemkne se sama, a obnovení stránky navíc zkontroluje stav Pro znovu při spuštění. [Platba kryptoměnou](/cs/help/pay-with-crypto) trvá déle a pruh ukazuje, jak pokročila. Pokud platba dorazila, ale aktivace se vleče, ukáže se pruh s hláškou „Platba byla přijata, ale aktivace Pro trvá déle než obvykle“ - tenhle stav se skoro vždycky vyřeší sám. [Ve verzích z obchodů](/cs/help/store-purchases) se nákup, který se nepodaří ověřit, zkusí znovu po restartu aplikace, a peníze za nákup, který se nikdy neaktivuje, obchod automaticky vrátí do 3 dnů.",
         "Pořád zamčeno? Skoro vždycky jde o záměnu účtů: Pro se váže na účet, který byl přihlášený při nákupu, takže jiná fráze - nebo přihlášení přes Google, Apple nebo GitHub místo tvého trezoru na frázi - je jiný účet. Porovnej ID účtu v Nastavení > ID & Sync na zařízení, kde nákup proběhl. Pokud to opravdu drhne, [nahlas to](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues) a přilož to ID účtu: identifikuje nákup a o tvých poznámkách neprozradí nic."
       ]
     },
@@ -814,7 +822,7 @@
       "q": "Obtainium, přímé APK, nebo Google Play: co si na Android stáhnout?",
       "a": [
         "Vezmi si Google Play, pokud chceš obvyklou cestu: aplikaci nainstaluje a aktualizuje jako každou jinou a nákupy v aplikaci účtuje Google. Vezmi si [Obtainium](/cs/help/obtainium), pokud chceš, aby se aplikace udržovala aktuální sama a bez účtu Google, a [přímý soubor APK](/cs/help/android-updates), pokud kvůli tomu radši nechceš mít druhou aplikaci. Obtainium a APK ti dají stejný soubor podepsaný stejným klíčem, takže mezi těmito dvěma můžeš kdykoli přejít: Obtainium převezme APK, které už máš nainstalované ručně, a APK z webu se nainstaluje přes to od Obtainia. Verze z Google Play je podepsaná jiným klíčem, takže přechod mezi Google Play a kteroukoli z těch dvou cest znamená nejdřív aplikaci odinstalovat.",
-        "Rozmyslet si to jinak můžeš i později, bez potíží. Před každým přechodem, který vyžaduje nejdřív odinstalovat, si ověř, že aplikace ukazuje „Synced“, a měj po ruce svých 12 slov nebo [přihlašovací QR kód z jiného zařízení](/cs/help/add-second-device), protože odinstalace smaže lokální kopii."
+        "Rozmyslet si to jinak můžeš i později, bez potíží. Před každým přechodem, který vyžaduje nejdřív odinstalovat, si ověř, že aplikace ukazuje „Synced“, a měj po ruce obnovovací frázi nebo [přihlašovací QR kód z jiného zařízení](/cs/help/add-second-device), protože odinstalace smaže lokální kopii."
       ]
     },
     "markdown-folder": {
@@ -883,7 +891,7 @@
     "add-second-device": {
       "q": "Jak se přihlásím na druhém zařízení?",
       "a": [
-        "Na zařízení, které už používáš, otevři Nastavení > Zabezpečení > Fráze. Najdeš tam svých 12 slov a přihlašovací QR kód. Na novém zařízení zvol „Přihlášení frází“ a naskenuj ten QR kód fotoaparátem, nahraj jeho fotku, nebo slova napiš. Tvoje poznámky dorazí během pár sekund.",
+        "Na zařízení, které už používáš, otevři Nastavení > Zabezpečení > Fráze. Najdeš tam slova své fráze a přihlašovací QR kód. Na novém zařízení zvol „Přihlášení frází“ a naskenuj ten QR kód fotoaparátem, nahraj jeho fotku, nebo slova napiš. Tvoje poznámky dorazí během pár sekund.",
         "[Bezplatný účet pokryje 2 zařízení](/cs/help/device-limit), Pro tolik, kolik chceš, a dva prohlížeče na jednom počítači se počítají jako jedno zařízení. Zacházej s QR kódem přesně jako s frází, kterou nese: nikomu ho neukazuj a nikdy ho nenech spadnout do fotogalerie, která se synchronizuje do cizího cloudu."
       ]
     },
@@ -904,15 +912,15 @@
     "clear-browser-data": {
       "q": "Co se stane, když smažu data prohlížeče nebo cookies?",
       "a": [
-        "Webová aplikace drží tvoje poznámky v úložišti samotného prohlížeče, takže smazání dat webu PrivacyNotes smaže místní kopii a odhlásí tě. Všechno, co už se zesynchronizovalo, je v bezpečí: přihlas se svou frází z 12 slov a vrátí se to. Co se ještě nezesynchronizovalo, je pryč, protože jsme o tom nikdy neměli kopii.",
+        "Webová aplikace drží tvoje poznámky v úložišti samotného prohlížeče, takže smazání dat webu PrivacyNotes smaže místní kopii a odhlásí tě. Všechno, co už se zesynchronizovalo, je v bezpečí: přihlas se obnovovací frází a vrátí se to. Co se ještě nezesynchronizovalo, je pryč, protože jsme o tom nikdy neměli kopii.",
         "Udělej tedy dvě věci. Zkontroluj, že patička říká „Synced“, než cokoli smažeš, a nech si frázi ve správci hesel, protože vyprázdněný prohlížeč si o ni slušně neřekne. [Desktopové a mobilní aplikace](/cs/help/platforms) se to netýká vůbec: [mají vlastní úložiště](/cs/help/data-on-disk), kterého se úklid prohlížeče nikdy nedotkne."
       ]
     },
     "android-backup": {
       "q": "Jsou moje poznámky v záloze telefonu s Androidem?",
       "a": [
-        "Ne. Aplikace pro Android drží svoje data mimo cloudovou zálohu telefonu, takže nic z nich nedojde na Google Disk. Důvodem je klíč, ne poznámky: tam, kde máš zvolené **Věřit tomuto zařízení**, zůstává tvých 12 slov na tom zařízení kvůli trvalému přihlášení, a cloudová záloha není místo pro klíč, který tvoje poznámky dešifruje.",
-        "Nový telefon proto začíná prázdný: nainstaluj aplikaci, [přihlas se svými 12 slovy](/cs/help/add-second-device) a přijde všechno, co se synchronizovalo. Obnova na tuto první synchronizaci počká, takže záloha, kterou si přineseš, se spáruje s tím, co účet obsahuje, místo aby se přidala dvakrát. Co se nikdy nesynchronizovalo, žije jen ve starém telefonu, takže nejdřív zkontroluj, že patička říká „Synced“, nebo si s sebou vezmi „Všechno, bez šifrování (.zip)“ z Nastavení > Záloha > Ručně ([jakou zálohu dělat](/cs/help/backup-strategy)).",
+        "Ne. Aplikace pro Android drží svoje data mimo cloudovou zálohu telefonu, takže nic z nich nedojde na Google Disk. Důvodem je klíč, ne poznámky: tam, kde máš zvolené **Věřit tomuto zařízení**, zůstává tvoje obnovovací fráze na tom zařízení kvůli trvalému přihlášení, a cloudová záloha není místo pro klíč, který tvoje poznámky dešifruje.",
+        "Nový telefon proto začíná prázdný: nainstaluj aplikaci, [přihlas se svou frází](/cs/help/add-second-device) a přijde všechno, co se synchronizovalo. Obnova na tuto první synchronizaci počká, takže záloha, kterou si přineseš, se spáruje s tím, co účet obsahuje, místo aby se přidala dvakrát. Co se nikdy nesynchronizovalo, žije jen ve starém telefonu, takže nejdřív zkontroluj, že patička říká „Synced“, nebo si s sebou vezmi „Všechno, bez šifrování (.zip)“ z Nastavení > Záloha > Ručně ([jakou zálohu dělat](/cs/help/backup-strategy)).",
         "Přímý přenos z telefonu na telefon při prvním nastavení je něco jiného: některé telefony při něm data aplikací přesunou a Android nedává aplikaci žádný spolehlivý způsob, jak to odmítnout. Ta kopie tvoje dvě zařízení nikdy neopustí, takže starý telefon potom smaž."
       ]
     },
@@ -947,7 +955,7 @@
     "family-sharing": {
       "q": "Může moje rodina sdílet jeden účet nebo jeden nákup Pro?",
       "a": [
-        "Odpovědí jsou dva účty a založit druhý nic nestojí: [každý dostane 2 zařízení a 50 MB zdarma](/cs/help/free-vs-pro). Účet je jedna fráze z 12 slov, a kdo tu frázi má, má všechno uvnitř: každou poznámku, každou položku trezoru, na každém zařízení. Právě oddělené účty dávají každému vlastní soukromé poznámky. Pro se kupuje na účet.",
+        "Odpovědí jsou dva účty a založit druhý nic nestojí: [každý dostane 2 zařízení a 50 MB zdarma](/cs/help/free-vs-pro). Účet je jedna obnovovací fráze, a kdo tu frázi má, má všechno uvnitř: každou poznámku, každou položku trezoru, na každém zařízení. Právě oddělené účty dávají každému vlastní soukromé poznámky. Pro se kupuje na účet.",
         "Když chceš předat jednu konkrétní věc, pošli [sebezničující poznámku](/cs/help/burn-notes) místo své fráze. Sdílený domácí účet funguje dobře, jestli je to opravdu to, co chceš: nech frázi ve sdílené položce správce hesel a počítej s tím, že kdokoli ji kdy držel, viděl všechno uvnitř."
       ]
     },
@@ -969,7 +977,7 @@
       "q": "Kterou možnost registrace si mám vybrat?",
       "a": [
         "Tu, která odpovídá tvé úrovni ohrožení. Jsou tři. Za prvé: přihlášení přes Google, Apple nebo GitHub, s klíčem uloženým na našem serveru. Za druhé: stejné přihlášení, ale klíč zůstane jen na tvém zařízení. Za třetí: „Vygenerovat frázi“, bez e-mailu, bez jména a úplně bez přihlášení. Ve všech třech se tvoje poznámky šifrují na tvém zařízení a liší se tím, kdo drží klíč a kolik se o tobě dozvíme.",
-        "Při přihlášení přes Google, Apple nebo GitHub se aplikace zeptá, kde má být klíč uložený, a začne možností „Ať je to jednoduché a pohodlné“. Ta uloží frázi zašifrovanou na náš server, takže nové zařízení může otevřít poznámky po přihlášení přes poskytovatele a zadání kódu z autentizátoru, pokud je 2FA zapnuté. Ulož si frázi pro případ ztráty účtu poskytovatele a při zapnutí dvoufaktorového přihlášení si uchovej záložní klíč 2FA. „Maximální bezpečnost a soukromí“ nechává frázi na tvém zařízení, takže server nedrží nic, co by poznámky otevřelo, a nové zařízení potřebuje tvých 12 slov nebo [naskenování QR kódu ze zařízení, které už je přihlášené](/cs/help/add-second-device).",
+        "Při přihlášení přes Google, Apple nebo GitHub se aplikace zeptá, kde má být klíč uložený, a začne možností „Ať je to jednoduché a pohodlné“. Ta uloží frázi zašifrovanou na náš server, takže nové zařízení může otevřít poznámky po přihlášení přes poskytovatele a zadání kódu z autentizátoru, pokud je 2FA zapnuté. Ulož si frázi pro případ ztráty účtu poskytovatele a při zapnutí dvoufaktorového přihlášení si uchovej záložní klíč 2FA. „Maximální bezpečnost a soukromí“ nechává frázi na tvém zařízení, takže server nedrží nic, co by poznámky otevřelo, a nové zařízení potřebuje tvoji frázi nebo [naskenování QR kódu ze zařízení, které už je přihlášené](/cs/help/add-second-device).",
         "Při používání pouze fráze účet nespojuje s člověkem žádný e-mail ani jméno. Frázi ale máš jen ty, takže pokud ji ztratíš a nezůstane žádné odemčené zařízení, nikdo ti ji nemůže obnovit. Nastavení > Účet > Správa klíče ukazuje aktuální režim a umožňuje ho změnit. [Účet s frází musí před zvolením správy na serveru nejdřív propojit poskytovatele](/cs/help/connected-logins) v Nastavení > Účet > Účty; samotné propojení správu nemění. Každý režim může přidat PIN nebo biometrický zámek a [volitelné dvoufaktorové přihlášení](/cs/help/enable-2fa). Úplné srovnání najdeš v [přehledu úrovní ohrožení](/cs/help/threat-model-levels)."
       ]
     },
@@ -1052,7 +1060,7 @@
     "ninja": {
       "q": "Co všechno zvládne Ninja, okno na Cmd+K?",
       "a": [
-        "Ninja otevře jakoukoli položku, přidá nové a spustí příkazy, všechno z jednoho okna. Stiskni Cmd+K na Macu nebo Ctrl+K na Windows a Linuxu, K jako Katana (funguje i Cmd+P nebo Ctrl+P), nebo klikni na **Ninja** v postranním panelu či v záhlaví seznamu. Napiš část názvu a najdeš poznámky, úkoly, události, záznamy v deníku, položky Trezoru, záložky, kontakty, soubory, nastavení, značky i složky. Pod názvy ukazuje **V textu** řádek uvnitř poznámky, který obsahuje tvoje slova.",
+        "Ninja otevře jakoukoli položku, přidá nové a spustí příkazy, všechno z jednoho okna. Stiskni Cmd+K na Macu nebo Ctrl+K na Windows a Linuxu, K jako Katana (funguje i Cmd+P nebo Ctrl+P), nebo klikni na **Ninja** v postranním panelu či v záhlaví seznamu. Napiš část názvu a najdeš poznámky, úkoly, události, záznamy v deníku, položky Trezoru, záložky, kontakty, soubory, nastavení, značky i složky. Pod názvy ukazuje **V textu** řádek uvnitř poznámky, který obsahuje tvoje slova, nebo název její polohy.",
         "Režim určí první znak, který napíšeš: `+` [přidá položku běžnými slovy](/cs/help/ninja-quick-add), `>` spustí příkaz, `#` vypíše tvoje značky a `/` tvoje složky a `>>` za textem [ho přidá do seznamu, který už máš](/cs/help/ninja-add-to-list). Tab na řádku otevře nabídku té položky, Option+Enter nebo Alt+Enter ji otevře v panelu a Q kdekoli otevře okno s už napsaným `+`. [Porovnávání probíhá na tvém zařízení](/cs/help/search-local) a Ninja je zdarma."
       ]
     },
@@ -1124,7 +1132,7 @@
       "q": "Můžu k účtu propojit víc způsobů přihlášení?",
       "a": [
         "Ano. Otevři Nastavení > Účet > Účty a propoj Google, Apple nebo GitHub, čímž přidáš způsob přihlášení, který otevře stejný trezor. Propojit jich můžeš víc, dokonce dva účty od jednoho poskytovatele, a [tvoje obnovovací fráze vedle nich funguje dál](/cs/help/oauth-recovery). Propojení ani odpojení účtu nezmění tvoje poznámky ani šifrování.",
-        "Způsob přihlášení, který už patří k jinému trezoru, propojit nejde, protože trezory se nikdy neslučují. **Odpojit** si nejdřív vyžádá tvých 12 slov. Pokud tvou frázi uchováváme my, poslední propojený účet zůstane, dokud nepropojíš jiný nebo si frázi neuložíš a ne[přejdeš na vlastní správu](/cs/help/threat-model-levels). Při vlastní správě se nové zařízení na tvých 12 slov ptá dál. Propojené účty jsou v betaverzi."
+        "Způsob přihlášení, který už patří k jinému trezoru, propojit nejde, protože trezory se nikdy neslučují. **Odpojit** si nejdřív vyžádá obnovovací frázi. Pokud tvou frázi uchováváme my, poslední propojený účet zůstane, dokud nepropojíš jiný nebo si frázi neuložíš a ne[přejdeš na vlastní správu](/cs/help/threat-model-levels). Při vlastní správě se nové zařízení na frázi ptá dál. Propojené účty jsou v betaverzi."
       ]
     },
     "calendar": {

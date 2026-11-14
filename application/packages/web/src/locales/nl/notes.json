@@ -141,6 +141,14 @@
   },
   "banner": {
     "proActivationPending": "Je betaling is binnen, maar het activeren van Pro duurt langer dan normaal. Ververs over een minuut, of neem contact op met support als Pro niet actief wordt.",
+    "crypto": {
+      "waiting": "Wachten op je cryptobetaling. Pro gaat aan zodra die bevestigd is.",
+      "seen": "Cryptobetaling gezien. Pro gaat aan zodra het netwerk die bevestigt, bij Bitcoin meestal binnen een uur.",
+      "partial": "Een deel van je cryptobetaling is binnen. Stuur de rest op de betaalpagina voordat de link verloopt.",
+      "ended": "Je crypto-betaallink is verlopen voordat er een volledige betaling binnenkwam.",
+      "paid": "Je cryptobetaling is bevestigd. Pro staat aan.",
+      "openPayment": "Betaalpagina"
+    },
     "snapshotPaused": "Notitiegeschiedenis is gepauzeerd. Je Pro-plan lijkt niet actief. Van nieuwe bewerkingen worden geen versies bewaard totdat Pro is hersteld.",
     "restorePro": "Pro herstellen",
     "storagePastDue": "De betaling voor je opslagabonnement is mislukt. Werk je kaart bij in Paddle om je extra ruimte niet te verliezen.",
@@ -336,7 +344,24 @@
     "linksTo": "Linkt naar",
     "missing": "Nog niet aangemaakt",
     "protectedHidden_one": "{{count}} met PIN beveiligd item niet getoond",
-    "protectedHidden_other": "{{count}} met PIN beveiligde items niet getoond"
+    "protectedHidden_other": "{{count}} met PIN beveiligde items niet getoond",
+    "related": "Voorgestelde verbanden",
+    "relatedWords": "Beide noemen {{words}}",
+    "relatedLinksTo": "Beide linken naar {{title}}",
+    "relatedLinkedFrom": "Beide gelinkt vanuit {{title}}",
+    "relatedTag": "Beide getagd met {{tag}}",
+    "relatedMeaning": "Dezelfde betekenis",
+    "meaningDoor": "Slimme verbanden: vind notities met dezelfde betekenis, met offline AI",
+    "meaningDoorNo": "Niet meer tonen",
+    "meaningDoorHidden": "Verborgen in alle notities. Slimme verbanden blijft in Instellingen > Editor > Gedrag.",
+    "hideSuggestions": "Voorgestelde verbanden verbergen",
+    "notRelated": "Niet gerelateerd",
+    "notRelatedDone": "Wordt niet meer voorgesteld",
+    "notRelatedCount": "Niet gerelateerd ({{n}})",
+    "restoreSuggestion": "Weer voorstellen",
+    "linkAtCursor": "Linken bij de cursor",
+    "linkNeedsCursor": "Klik eerst in de notitie",
+    "linkAsFootnote": "Linken als voetnoot"
   },
   "drawing": {
     "fullScreen": "Volledig scherm",

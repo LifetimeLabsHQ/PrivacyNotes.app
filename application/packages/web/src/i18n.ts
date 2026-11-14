@@ -64,7 +64,7 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number];
 // extension's catalog (packages/extension bundles it); the app never reads it.
 // Spec: docs/contrib/bundle-size.md (build-only catalogs)
 const enModules = import.meta.glob<{ default: Record<string, unknown> }>(
-  ['./locales/en/*.json', '!./locales/en/faq.json', '!./locales/en/guides.json', '!./locales/en/looks.json', '!./locales/en/settingsSearch.json', '!./locales/en/extension.json'],
+  ['./locales/en/*.json', '!./locales/en/faq.json', '!./locales/en/guides.json', '!./locales/en/looks.json', '!./locales/en/settingsSearch.json', '!./locales/en/importLog.json', '!./locales/en/extension.json'],
   { eager: true },
 );
 const localeModules = import.meta.glob<{ default: Record<string, unknown> }>([
@@ -74,6 +74,7 @@ const localeModules = import.meta.glob<{ default: Record<string, unknown> }>([
   '!./locales/*/guides.json',
   '!./locales/*/looks.json',
   '!./locales/*/settingsSearch.json',
+  '!./locales/*/importLog.json',
   '!./locales/*/extension.json',
 ]);
 // `looks` is the one namespace that loads on its own, English included: the
@@ -86,6 +87,12 @@ const looksLoaded = new Set<string>();
 // read only once the settings search field has been focused.
 const settingsSearchModules = import.meta.glob<{ default: Record<string, unknown> }>('./locales/*/settingsSearch.json');
 const settingsSearchLoaded = new Set<string>();
+// `importLog` loads the same way: the importers' progress lines, warnings and
+// errors (about 13 kB gzipped of English) are read only while an import runs.
+// Every path that runs an importer awaits ensureImportLogLoaded() first.
+// Spec: docs/contrib/bundle-size.md (late namespaces)
+const importLogModules = import.meta.glob<{ default: Record<string, unknown> }>('./locales/*/importLog.json');
+const importLogLoaded = new Set<string>();
 
 type Catalogs = Record<string, Record<string, unknown>>;
 
@@ -325,6 +332,24 @@ export async function ensureSettingsSearchLoaded(): Promise<void> {
       const mod = await load();
       i18n.addResourceBundle(lng, 'settingsSearch', mod.default, true, true);
       settingsSearchLoaded.add(lng);
+    }),
+  );
+}
+
+/**
+ * Load the `importLog` namespace for the language on screen and for English,
+ * as `ensureLooksLoaded` does for `looks`. Call it before an importer runs.
+ */
+export async function ensureImportLogLoaded(): Promise<void> {
+  const langs = [...new Set<string>(['en', activeLocale()])];
+  await Promise.all(
+    langs.map(async (lng) => {
+      if (importLogLoaded.has(lng)) return;
+      const load = importLogModules[`./locales/${lng}/importLog.json`];
+      if (!load) return;
+      const mod = await load();
+      i18n.addResourceBundle(lng, 'importLog', mod.default, true, true);
+      importLogLoaded.add(lng);
     }),
   );
 }

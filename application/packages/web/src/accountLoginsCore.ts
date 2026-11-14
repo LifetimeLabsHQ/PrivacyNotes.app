@@ -1,6 +1,8 @@
 import { authEmailForPubkey, bytesToHex, deriveAuthPassword, phraseToSeed, signAccountLoginsChallenge, type SupabaseClient } from '@notes/shared';
 import { ensureLevel2, isMfaRefusal, MfaCancelledError, MfaRequiredError, mfaSessionIdentity } from './mfaStep';
 import { signInManagedAccount, type AccountOAuthProvider } from './accountOAuth';
+import { sha256Hex } from './sha256Hex';
+import { isUuid } from './uuid';
 
 export type AccountLoginStatus = {
   managed: boolean; deleted: boolean; canonical_uid: string | null; wrong_login: boolean;
@@ -13,16 +15,15 @@ export type AccountLoginActor = {
   generation?: number;
   passwordSession: boolean;
 };
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const mutations = new WeakSet<SupabaseClient>();
 
 export function parseAccountLoginStatus(value: unknown): AccountLoginStatus {
   const row = value as AccountLoginStatus | null;
   if (!row || typeof row !== 'object' || ['managed', 'deleted', 'wrong_login', 'setup_enabled'].some((key) => typeof (row as unknown as Record<string, unknown>)[key] !== 'boolean') ||
       (typeof row.custodial !== 'boolean' && !((row.wrong_login || row.deleted) && row.custodial === undefined)) ||
-      (row.canonical_uid !== null && (typeof row.canonical_uid !== 'string' || !UUID.test(row.canonical_uid))) ||
+      (row.canonical_uid !== null && (typeof row.canonical_uid !== 'string' || !isUuid(row.canonical_uid))) ||
       (row.managed && !row.deleted && !row.canonical_uid) || !Array.isArray(row.connections) || row.connections.some((item) =>
-        !item || typeof item.id !== 'string' || !UUID.test(item.id) || !['google', 'apple', 'github'].includes(item.provider) ||
+        !item || typeof item.id !== 'string' || !isUuid(item.id) || !['google', 'apple', 'github'].includes(item.provider) ||
         (item.email !== null && typeof item.email !== 'string') || typeof item.active !== 'boolean')) {
     throw new Error('Account settings could not be checked. Try again.');
   }
@@ -80,9 +81,9 @@ export function createAccountLoginsAdapter(options: {
     return same(actor);
   }
   async function signed(actor: AccountLoginActor, operation: 'activate' | 'connect' | 'disconnect' | 'enroll-mfa' | 'unenroll-mfa', payload: Record<string, string | null>) {
-    const digest = bytesToHex(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(payload)))));
+    const digest = await sha256Hex(new TextEncoder().encode(JSON.stringify(payload)));
     const nonce = await invoke(actor, { action: 'nonce', operation, payload });
-    if (typeof nonce?.id !== 'string' || !UUID.test(nonce.id) || typeof nonce.expiresAt !== 'string') throw new Error('The account confirmation was invalid. Try again.');
+    if (typeof nonce?.id !== 'string' || !isUuid(nonce.id) || typeof nonce.expiresAt !== 'string') throw new Error('The account confirmation was invalid. Try again.');
     const expiresAt = Date.parse(nonce.expiresAt);
     const expected = `account-logins:${nonce.id}:${actor.userId}:${actor.sessionId}:${actor.pubkey}:${operation}:${digest}`;
     if (nonce.challenge !== expected || !Number.isFinite(expiresAt) || expiresAt <= Date.now() || expiresAt > Date.now() + 10 * 60_000) throw new Error('The account confirmation was invalid. Try again.');
@@ -110,7 +111,7 @@ export function createAccountLoginsAdapter(options: {
   }
   function authorizeFactor(operation: 'enroll-mfa' | 'unenroll-mfa', factorId: string) {
     return mutation(async () => {
-      if (!UUID.test(factorId)) throw new Error('That authenticator setup is invalid.');
+      if (!isUuid(factorId)) throw new Error('That authenticator setup is invalid.');
       const actor = await verified(undefined, operation === 'unenroll-mfa' ? factorId : undefined);
       const result = await signed(actor, operation, { factorId });
       if (result?.authorized !== true || typeof result.expires_at !== 'string' || !Number.isFinite(Date.parse(result.expires_at)) || Date.parse(result.expires_at) <= Date.now()) {
@@ -144,7 +145,7 @@ export function createAccountLoginsAdapter(options: {
     async connect(proof: { code: string; codeVerifier: string; expectedIdentity: string; expectedProvider: AccountOAuthProvider; replaceId?: string | null }) {
       return mutation(async () => {
         if (!proof.code || proof.code.length > 8192 || !['google', 'apple', 'github'].includes(proof.expectedProvider) || !/^[a-zA-Z0-9._~-]{43,128}$/.test(proof.codeVerifier) ||
-            (proof.replaceId != null && !UUID.test(proof.replaceId))) throw new Error('The connected account proof was invalid.');
+            (proof.replaceId != null && !isUuid(proof.replaceId))) throw new Error('The connected account proof was invalid.');
         let actor = await options.actor();
         if (actor.identity !== proof.expectedIdentity) throw new MfaCancelledError();
         // Replacement revokes sessions issued by the removed connection just
@@ -152,13 +153,13 @@ export function createAccountLoginsAdapter(options: {
         if (proof.replaceId && !actor.passwordSession) actor = await phraseSession(actor);
         actor = await verified(actor.identity);
         const ticket = await invoke(actor, { action: 'connect-proof', code: proof.code, codeVerifier: proof.codeVerifier });
-        if (typeof ticket?.ticketId !== 'string' || !UUID.test(ticket.ticketId) || ticket.provider !== proof.expectedProvider) throw new Error('The connected account proof was invalid.');
+        if (typeof ticket?.ticketId !== 'string' || !isUuid(ticket.ticketId) || ticket.provider !== proof.expectedProvider) throw new Error('The connected account proof was invalid.');
         return parseAccountLoginStatus(await signed(actor, 'connect', { ticketId: ticket.ticketId, replaceId: proof.replaceId ?? null }));
       });
     },
     async disconnect(connectionId: string) {
       return mutation(async () => {
-        if (!UUID.test(connectionId)) throw new Error('That connected account is invalid.');
+        if (!isUuid(connectionId)) throw new Error('That connected account is invalid.');
         let actor = await options.actor();
         if (!actor.passwordSession) {
           // Removing a provider revokes every session established through it,

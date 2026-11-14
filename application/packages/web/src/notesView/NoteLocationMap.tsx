@@ -10,7 +10,9 @@
  *
  * No MapLibre control is drawn, because each one brings English text of its
  * own: the zoom buttons are ours (the media viewer's strings), and the credit
- * line on the map is the caller's. In the place window every gesture moves
+ * line on the map is the caller's. The two parts MapLibre names itself, the
+ * canvas ("Map") and the pin ("Map marker"), get our names through `locale`.
+ * In the place window every gesture moves
  * the map. In a note's text MapLibre's cooperative gestures keep the note's
  * scroll: two fingers, or Ctrl/Cmd with the wheel, move the map, and its hint
  * speaks our strings.
@@ -36,11 +38,25 @@ let setUp = false;
 function ensureSetUp(): void {
   if (setUp) return;
   setWorkerUrl(workerUrl);
-  addProtocol('pmtiles', new Protocol().tile);
+  const reader = new Protocol();
+  // The reader keeps one archive for each address and, in it, the answer of
+  // every read of the file's header and directories, a failed one too. So a
+  // read that fails takes the archives out, and the next read (Try again, a
+  // place on another note, a map that is still open) asks the host again
+  // instead of getting the same failure until the app reloads. A removed
+  // map aborts its reads, which is no failure of the host.
+  addProtocol('pmtiles', async (request, abort) => {
+    try {
+      return await reader.tile(request, abort);
+    } catch (error) {
+      if ((error as { name?: string } | undefined)?.name !== 'AbortError') reader.tiles.clear();
+      throw error;
+    }
+  });
   setUp = true;
 }
 
-export default function NoteLocationMap({ lat, lng, dark, lang, source, label, scrollZoom, bleed, height, onFail }: {
+export default function NoteLocationMap({ lat, lng, dark, lang, source, label, pin, scrollZoom, bleed, height, onFail }: {
   lat: number;
   lng: number;
   dark: boolean;
@@ -49,6 +65,8 @@ export default function NoteLocationMap({ lat, lng, dark, lang, source, label, s
   source: MapSource;
   /** The accessible name of the map. */
   label: string;
+  /** The accessible name of the pin. */
+  pin: string;
   /** Every gesture moves the map (the place window). Off in a note's text, where one finger and the plain wheel scroll the note. */
   scrollZoom: boolean;
   /** Edge to edge with no frame: the place window, where the map spans the panel. */
@@ -103,6 +121,8 @@ export default function NoteLocationMap({ lat, lng, dark, lang, source, label, s
         scrollZoom: true,
         cooperativeGestures: !scrollZoom,
         locale: {
+          'Map.Title': label,
+          'Marker.Title': pin,
           'CooperativeGesturesHandler.WindowsHelpText': t('notes:location.gestureCtrl'),
           'CooperativeGesturesHandler.MacHelpText': t('notes:location.gestureMac'),
           'CooperativeGesturesHandler.MobileHelpText': t('notes:location.gestureTouch'),
@@ -139,7 +159,7 @@ export default function NoteLocationMap({ lat, lng, dark, lang, source, label, s
       mapRef.current = null;
       map?.remove();
     };
-  }, [lat, lng, dark, lang, scrollZoom, source.tiles, source.glyphs, source.sprite, t]);
+  }, [lat, lng, dark, lang, label, pin, scrollZoom, source.tiles, source.glyphs, source.sprite, t]);
 
   return (
     <div className={`relative${height === '100%' ? ' h-full' : ''}`}>

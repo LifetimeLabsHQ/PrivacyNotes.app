@@ -7,6 +7,7 @@
     "sleep": "Schlaf",
     "sleepScore": "Schlafwert",
     "heartRate": "Herzfrequenz",
+    "bloodPressure": "Blutdruck",
     "activity": "Aktivität",
     "medication": "Medikation",
     "meds": "Medis",
@@ -24,6 +25,7 @@
   "units": {
     "hoursSuffix": "h",
     "bpm": "bpm",
+    "mmHg": "mmHg",
     "kg": "kg",
     "lb": "lb",
     "steps_one": "Schritt",
@@ -116,6 +118,10 @@
   },
   "heartRate": {
     "prompt": "Durchschnittliche Herzfrequenz"
+  },
+  "bloodPressure": {
+    "systolic": "Oberer Wert (systolisch)",
+    "diastolic": "Unterer Wert (diastolisch)"
   },
   "activity": {
     "prompt": "Aktivitätslevel heute?",
@@ -243,11 +249,13 @@
   "custom": {
     "yes": "Ja",
     "no": "Nein",
+    "unknownType": "Dieser Tracker braucht eine neuere Version der App.",
     "typeLabels": {
       "scale10": "Skala (0-10)",
       "scale5": "Skala (0-5)",
       "slider100": "Wert (0-100)",
       "number": "Zahl",
+      "pair": "Zwei Zahlen",
       "yesno": "Ja / Nein"
     }
   },
@@ -263,6 +271,7 @@
     "medicationCard": "Medikationskarte",
     "medicationCardHelp": "„Hast du deine Medikamente genommen?“ auf diesem Gerät, nur an einem Tag, an dem ein Medikament fällig ist.",
     "customHelp": "Tracker, die du selbst benennst: eine Skala, eine Zahl oder ja oder nein. Bis zu {{max}}.",
+    "customHelpPair": "Tracker, die du selbst benennst: eine Skala, eine Zahl, zwei Zahlen oder ja oder nein. Bis zu {{max}}.",
     "yourCustomTrackers": "Deine eigenen Tracker",
     "categoryMoodMind": "Stimmung und Geist",
     "categoryBodyHealth": "Körper und Gesundheit",
@@ -297,7 +306,13 @@
     "preview": "Vorschau",
     "startFromLast": "Letzten Eintrag merken",
     "chooseIcon": "Symbol wählen",
-    "startFromLastHelp": "Gut für Dinge, die sich selten ändern, wie dein Gewicht oder eine tägliche Dosis."
+    "startFromLastHelp": "Gut für Dinge, die sich selten ändern, wie dein Gewicht oder eine tägliche Dosis.",
+    "pairFirst": "Erste Zahl",
+    "pairSecond": "Zweite Zahl",
+    "pairFirstPlaceholder": "Systolisch",
+    "pairSecondPlaceholder": "Diastolisch",
+    "pairUnit": "Einheit (optional)",
+    "pairWaiting": "Wird gespeichert, sobald die erste Zahl eingetragen ist."
   },
   "factors": {
     "prompt": "Was gehörte zu deinem Tag?",

@@ -13,6 +13,8 @@ import { useSyncExternalStore } from 'react';
 import { appZoomSupported } from './appZoom';
 import { setInTray } from './appReLock';
 import i18n from './i18n';
+import { createListeners } from './listeners';
+import { readFlag } from './localStore';
 
 const KEY = 'privacynotes.trayMode';
 export const TRAY_SETTINGS_EVENT = 'pn:tray-settings';
@@ -23,13 +25,7 @@ const traySupported = appZoomSupported;
 let on: boolean | null = null;
 
 function getTrayMode(): boolean {
-  if (on === null) {
-    try {
-      on = localStorage.getItem(KEY) === '1';
-    } catch {
-      on = false;
-    }
-  }
+  if (on === null) on = readFlag(KEY);
   return on;
 }
 
@@ -62,7 +58,7 @@ export function startTrayMode(): void {
   if (getTrayMode()) void push(true);
 }
 
-const listeners = new Set<() => void>();
+const { subscribe, notify } = createListeners();
 
 export function setTrayMode(next: boolean): void {
   on = next;
@@ -72,14 +68,9 @@ export function setTrayMode(next: boolean): void {
     /* Storage refused: the switch holds for this session only. */
   }
   void push(next);
-  listeners.forEach((cb) => cb());
+  notify();
 }
 
 export function useTrayMode(): boolean {
-  return useSyncExternalStore((cb) => {
-    listeners.add(cb);
-    return () => {
-      listeners.delete(cb);
-    };
-  }, getTrayMode);
+  return useSyncExternalStore(subscribe, getTrayMode);
 }

@@ -1,12 +1,13 @@
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
 import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
-import { normalizeTag } from '../notesRepo';
+import { openZip } from './zipOpen';
 import { linkifyMarkdown } from './linkify';
-import { importBlobs } from './blobImport';
+import { importBlobs, mimeFromExt } from './blobImport';
 import type { Importer, ImportedNote, ParsedImport } from './types';
 import i18n from '../i18n';
+import { normalizeTagList } from './importHelpers';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.googleKeep.${key}`, options);
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:googleKeep.${key}`, options);
 
 /**
  * Google Keep import adapter.
@@ -123,7 +124,7 @@ export const googleKeepImporter: Importer = {
       throw new Error(msg('noNotes'));
     }
 
-    onProgress?.(i18n.t('importExport:importLog.shared.parsingNotes'));
+    onProgress?.(i18n.t('importLog:shared.parsingNotes'));
     const notes: ImportedNote[] = [];
     const warnings: string[] = [];
     if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
@@ -300,20 +301,20 @@ export const googleKeepImporter: Importer = {
 
     const transforms: string[] = [];
     if (linkifiedCount > 0) {
-      transforms.push(i18n.t('importExport:importLog.shared.linkifiedNotes', { count: linkifiedCount }));
+      transforms.push(i18n.t('importLog:shared.linkifiedNotes', { count: linkifiedCount }));
     }
     if (starredCount > 0) {
-      transforms.push(i18n.t('importExport:importLog.shared.keptStarred', { count: starredCount }));
+      transforms.push(i18n.t('importLog:shared.keptStarred', { count: starredCount }));
     }
     if (trashedImportCount > 0) {
-      transforms.push(i18n.t('importExport:importLog.shared.restoredTrashed', { count: trashedImportCount }));
+      transforms.push(i18n.t('importLog:shared.restoredTrashed', { count: trashedImportCount }));
     }
     if (archivedCount > 0) {
-      transforms.push(i18n.t('importExport:importLog.shared.keptArchived', { count: archivedCount }));
+      transforms.push(i18n.t('importLog:shared.keptArchived', { count: archivedCount }));
     }
 
     if (formattedCount > 0) {
-      transforms.push(i18n.t('importExport:importLog.shared.preservedFormatting', { count: formattedCount }));
+      transforms.push(i18n.t('importLog:shared.preservedFormatting', { count: formattedCount }));
     }
     if (checklistNoteCount > 0) {
       const n = checklistNoteCount;
@@ -327,13 +328,13 @@ export const googleKeepImporter: Importer = {
       warnings.push(msg('skippedBlank', { count: blankGhostCount }));
     }
     if (missingTitleCount > 0) {
-      warnings.push(i18n.t('importExport:importLog.shared.missingTitle', { count: missingTitleCount }));
+      warnings.push(i18n.t('importLog:shared.missingTitle', { count: missingTitleCount }));
     }
     if (parseFailCount > 0) {
       warnings.push(msg('parseFailed', { count: parseFailCount }));
     }
     if (imageCount > 0) {
-      transforms.push(i18n.t('importExport:importLog.shared.foundImages', { count: imageCount }));
+      transforms.push(i18n.t('importLog:shared.foundImages', { count: imageCount }));
     }
     if (missingImageCount > 0) {
       warnings.push(msg('missingImages', { count: missingImageCount }));
@@ -371,16 +372,6 @@ interface KeepBlob {
 /** MIME types we can import as images. */
 const IMAGE_EXT = /\.(png|jpe?g|gif|webp|bmp|svg)$/i;
 
-function mimeFromExt(path: string): string {
-  const ext = path.split('.').pop()?.toLowerCase() ?? '';
-  const map: Record<string, string> = {
-    png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
-    gif: 'image/gif', webp: 'image/webp', bmp: 'image/bmp',
-    svg: 'image/svg+xml',
-  };
-  return map[ext] ?? 'application/octet-stream';
-}
-
 interface ExtractResult {
   noteBlobs: KeepBlob[];
   imageBlobs: Map<string, { data: Uint8Array; mime: string; name: string }>;
@@ -409,8 +400,8 @@ async function extractKeepNotes(
   const imageBlobs = new Map<string, { data: Uint8Array; mime: string; name: string }>();
 
   if (lowerName.endsWith('.zip')) {
-    onProgress?.(i18n.t('importExport:importLog.shared.unzipping'));
-    const zip = await JSZip.loadAsync(file);
+    onProgress?.(i18n.t('importLog:shared.unzipping'));
+    const zip = await openZip(file);
     const noteBlobs: KeepBlob[] = [];
     let tooLarge = 0;
 
@@ -479,36 +470,6 @@ function looksLikeKeepNote(text: string): boolean {
     /"(userEditedTimestampUsec|createdTimestampUsec)"\s*:/.test(text);
   const hasBody = /"(textContent|listContent|title)"\s*:/.test(text);
   return hasTimestamp && hasBody;
-}
-
-/**
- * Keep tags are a flat array of { name } strings. They can contain
- * spaces, dashes, dots, and the occasional leading `#` - same
- * normalization pipeline we use for Standard Notes so the tag space is
- * consistent across importers.
- *
- * `normalizeTag` KEEPS case and spaces (it strips `#` and `,`, drops
- * control characters, collapses whitespace runs and clamps the length),
- * so the label the user sees in Keep is the tag they get here:
- *
- * "Solar System" → "Solar System"
- * "#Dev"         → "Dev"
- *
- * Dedupe post-normalization, case-insensitively - "Dev" and "dev" are
- * one tag and we keep the first spelling.
- */
-function normalizeTagList(rawTags: string[]): string[] {
-  const out: string[] = [];
-  const seen = new Set<string>();
-  for (const raw of rawTags) {
-    const tag = normalizeTag(raw);
-    if (!tag) continue;
-    const key = tag.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(tag);
-  }
-  return out;
 }
 
 /**

@@ -10,6 +10,35 @@
     "otherGuides": "Altres guies d'importació"
   },
   "guides": {
+    "1password": {
+      "app": "1Password",
+      "title": "Exporta la teva caixa forta de 1Password",
+      "metaTitle": "Com exportar la teva caixa forta de 1Password - PrivacyNotes",
+      "lead": "L'app de 1Password exporta el teu compte en un sol fitxer .1pux, i PrivacyNotes converteix els inicis de sessió, les targetes, les notes i les identitats en elements de la Caixa forta i en notes.",
+      "sections": [
+        {
+          "h": "Exporta des de 1Password",
+          "steps": [
+            "Obre l'app de 1Password a l'ordinador i desbloqueja-la.",
+            "Tria File > Export i escull el teu compte.",
+            "Introdueix la contrasenya del teu compte, deixa el format 1PUX i desa el fitxer."
+          ]
+        },
+        {
+          "h": "1PUX o CSV",
+          "p": [
+            "Tria 1PUX. L'exportació en CSV només conté inicis de sessió: ni targetes, ni notes, ni identitats, ni camps personalitzats."
+          ]
+        },
+        {
+          "h": "On va a parar cada cosa",
+          "p": [
+            "Cada inici de sessió es converteix en un [inici de sessió de la Caixa forta](/ca/help/vault) amb la seva clau 2FA, així que [els teus codis continuen funcionant](/ca/help/vault-totp), i els seus llocs web addicionals i camps personalitzats hi arriben. Una targeta es converteix en una targeta, i una nota segura o una identitat en una nota. Les etiquetes es mantenen com a etiquetes, també les niades, els preferits arriben fixats i els elements arxivats van a l'arxiu. Els fitxers adjunts es queden enrere: desa'ls des de 1Password i adjunta'ls aquí.",
+            "L'exportació conté les teves contrasenyes en text clar. Importa-la, comprova que tot hagi arribat i després suprimeix el fitxer."
+          ]
+        }
+      ]
+    },
     "google-calendar": {
       "app": "Google Calendar",
       "title": "Exporta el teu Google Calendar",
@@ -159,6 +188,53 @@
         }
       ]
     },
+    "siyuan": {
+      "app": "SiYuan",
+      "title": "Exporta les teves notes de SiYuan",
+      "metaTitle": "Com exportar les teves notes de SiYuan com a Data.zip - PrivacyNotes",
+      "lead": "SiYuan exporta tot l'espai de treball en un sol Data.zip. Aquest fitxer porta tots els quaderns amb els seus documents niats, etiquetes, referències de bloc, recursos i dates.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/siyuan-export.webp",
+            "alt": "El diàleg Data migration de SiYuan amb la fila Data.zip seleccionada i el seu botó Export ressaltat.",
+            "width": 1576,
+            "height": 1076
+          },
+          "h": "Exporta l'espai de treball com a Data.zip",
+          "steps": [
+            "Obre SiYuan al teu ordinador.",
+            "Fes clic al menú SiYuan, a dalt a l'esquerra, i tria \"Data migration\".",
+            "A SiYuan, assenyala \"Data.zip\" i fes clic a Export.",
+            "Tria una carpeta. SiYuan escriu un sol .zip que conté tots els quaderns de l'espai de treball.",
+            "Deixa anar aquest .zip tal com és."
+          ],
+          "p": [
+            "Per moure només un quadern, fes-hi clic amb el botó dret al tauler Documents i tria Export > \"SiYuan .sy.zip\". Llegim aquest fitxer de la mateixa manera."
+          ]
+        },
+        {
+          "h": "Desbloqueja els quaderns xifrats i exporta'ls per separat",
+          "p": [
+            "Data.zip manté xifrat un quadern xifrat, i per això no el podem llegir. El saltem i la previsualització de la importació el nomena. Desbloqueja el quadern a SiYuan, exporta'l com a \"SiYuan .sy.zip\" i deixa anar també aquest fitxer: aquesta exportació sí que es pot llegir."
+          ]
+        },
+        {
+          "h": "Tria Data.zip, no Markdown",
+          "p": [
+            "L'exportació en .zip de Markdown conserva el text, però deixa fora les etiquetes i les dates dels documents, i escriu les referències de bloc com a text net o com a notes al peu. El llegim si és tot el que tens, i cada nota rep la data de la importació."
+          ]
+        },
+        {
+          "h": "Què hi arriba",
+          "p": [
+            "Cada quadern es converteix en una carpeta, i els documents niats es converteixen en carpetes niades. Un document que té subdocuments i text propi es converteix en una nota dins de la carpeta del mateix nom. Cada nota conserva les seves etiquetes i les dates de creació i d'actualització que SiYuan va desar.",
+            "Encapçalaments, llistes, llistes de tasques, citacions, codi amb el seu llenguatge, taules amb la seva alineació, matemàtiques, requadres destacats, ressaltats i colors de text arriben tal com eren. [Les referències de bloc es converteixen en enllaços entre notes](/ca/help/note-links), les imatges i els fitxers s'importen al teu emmagatzematge, i els documents marcats arriben fixats.",
+            "Una base de dades es converteix en una taula amb les seves columnes visibles, les pestanyes es converteixen en seccions plegables i un mapa mental es converteix en una llista niada. Les targetes de memorització es queden com a text net, i una consulta incrustada es conserva com a codi. SiYuan no té paperera a les exportacions, així que els documents suprimits es queden al seu historial."
+          ]
+        }
+      ]
+    },
     "standard-notes": {
       "app": "Standard Notes",
       "title": "Exporta les teves notes de Standard Notes",
@@ -256,6 +332,29 @@
           "p": [
             "Els inicis de sessió es converteixen en [entrades d'inici de sessió de la Caixa forta](/ca/help/vault) (amb la icona del lloc web), les targetes en entrades de targeta i les claus SSH en entrades de clau SSH, i les notes segures i les identitats arriben com a notes llegibles. Les carpetes de Bitwarden es transformen en etiquetes, i els preferits arriben amb estrella. Les claus d'autenticació (TOTP) també venen amb tu, així que [els teus codis 2FA continuen funcionant](/ca/help/vault-totp).",
             "El fitxer d'exportació conté les teves contrasenyes en text clar, així que importa'l, comprova que tot hagi arribat i després suprimeix el fitxer com cal. Dins de PrivacyNotes torna a quedar tot xifrat, al teu dispositiu i de camí al servidor."
+          ]
+        }
+      ]
+    },
+    "enpass": {
+      "app": "Enpass",
+      "title": "Exporta la teva caixa forta d'Enpass",
+      "metaTitle": "Com exportar la teva caixa forta d'Enpass - PrivacyNotes",
+      "lead": "Enpass exporta una caixa forta en un sol fitxer .json, i PrivacyNotes converteix els inicis de sessió, les targetes, les notes i les identitats en elements de la Caixa forta i en notes.",
+      "sections": [
+        {
+          "h": "Exporta des d'Enpass",
+          "steps": [
+            "Obre Enpass a l'ordinador i desbloqueja'l.",
+            "Tria File > Export, escull la caixa forta i el format .json.",
+            "Desa el fitxer i introdueix la contrasenya mestra. Exporta cada caixa forta per separat."
+          ]
+        },
+        {
+          "h": "On va a parar cada cosa",
+          "p": [
+            "Cada inici de sessió es converteix en un [inici de sessió de la Caixa forta](/ca/help/vault) amb la seva clau 2FA, així que [els teus codis continuen funcionant](/ca/help/vault-totp), i els seus llocs web addicionals i camps personalitzats hi arriben. Una targeta es converteix en una targeta, i una nota segura o una identitat en una nota. Les carpetes es converteixen en etiquetes, també les niades, els preferits arriben fixats i els elements arxivats van a l'arxiu. Els elements de la paperera d'Enpass i els fitxers adjunts es queden enrere.",
+            "L'exportació conté les teves contrasenyes en text clar. Importa-la, comprova que tot hagi arribat i després suprimeix el fitxer."
           ]
         }
       ]
@@ -863,6 +962,332 @@
           "h": "Importa el mateix fitxer de nou quan vulguis",
           "p": [
             "Una segona importació se salta les persones que ja tens. Compara cada fitxa pel seu ID, després pel nom més un telèfon en comú i després per una adreça de correu en comú. Els contactes que ja has desat no canvien, així que les teves edicions aquí estan segures."
+          ]
+        }
+      ]
+    },
+    "anytype": {
+      "app": "Anytype",
+      "title": "Exporta el teu espai d'Anytype",
+      "metaTitle": "Com exportar el teu espai d'Anytype - PrivacyNotes",
+      "lead": "Anytype exporta un espai sencer d'un sol cop en un zip amb el seu format JSON Any-Block. Aquest fitxer porta les teves pàgines amb les seves etiquetes, col·leccions, tasques, enllaços i fitxers.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/anytype-export.webp",
+            "alt": "Configuració de l'espai d'Anytype, pàgina Export, Any-Block v1 amb File Format JSON i Zip archive, amb Include files data i Include archived objects activats.",
+            "width": 1576,
+            "height": 800
+          },
+          "h": "Exporta l'espai com a JSON Any-Block",
+          "steps": [
+            "Obre Anytype al teu ordinador i ves a l'espai que vols moure.",
+            "Tria File > Export. Anytype obre la configuració de l'espai a la pàgina Export. Les versions més noves anomenen un espai canal, així que la pàgina diu \"Export Channel\".",
+            "Tria \"Any-Block v1\" i deixa File Format en JSON.",
+            "Activa \"Zip archive\", \"Include files data\" i \"Include archived objects\".",
+            "Fes clic a \"Export data\" i tria una carpeta. Anytype escriu un sol .zip amb el nom de l'espai i la data.",
+            "Deixa anar aquest .zip tal com és."
+          ],
+          "p": [
+            "Una exportació conté un espai. Si tens notes en diversos espais, exporta'ls un per un i deixa anar els zips l'un darrere l'altre."
+          ]
+        },
+        {
+          "h": "Tria JSON Any-Block, no Markdown ni Protobuf",
+          "p": [
+            "L'exportació en Markdown conserva el text, però perd el subratllat, els colors, els requadres destacats, l'alineació i els llenguatges del codi, i deixa fora les col·leccions. La llegim si és tot el que tens, i la previsualització de la importació diu què s'ha perdut.",
+            "Any-Block també ofereix un format de fitxer Protobuf. Conté les mateixes dades en forma binària que no llegim, així que et demanem l'exportació en JSON. Anytype marca Any-Block v2 com una versió preliminar i no és una còpia de seguretat."
+          ]
+        },
+        {
+          "h": "Què hi arriba",
+          "p": [
+            "Les pàgines, notes, tasques i marcadors es converteixen en notes amb les seves etiquetes i les dates de creació i d'actualització que Anytype va desar. Anytype no té carpetes, així que una pàgina d'una col·lecció acaba en una carpeta amb el nom de la col·lecció, i totes les altres pàgines acaben al nivell superior.",
+            "Encapçalaments, llistes, llistes de tasques, citacions, codi amb el seu llenguatge, taules, matemàtiques i diagrames Mermaid arriben tal com eren. Els desplegables es converteixen en seccions plegables i els requadres destacats continuen sent requadres destacats. [Els enllaços i les mencions entre pàgines es converteixen en enllaços entre notes](/ca/help/note-links), i les imatges i els fitxers s'importen al teu emmagatzematge.",
+            "Una tasca arriba com a nota de tasca, marcada si estava feta. Les propietats personalitzades s'escriuen com una llista curta a dalt de la nota. Les pàgines de la paperera d'Anytype van a la teva paperera, on les pots restaurar o suprimir.",
+            "Les icones i les portades de les pàgines es queden enrere, i la previsualització de la importació diu quantes. Els preferits no formen part de l'exportació, així que torna a fixar aquestes notes després de la importació."
+          ]
+        }
+      ]
+    },
+    "apple-calendar": {
+      "app": "Calendari d'Apple",
+      "title": "Exporta el teu Calendari d'Apple",
+      "metaTitle": "Com exportar el teu Calendari d'Apple - PrivacyNotes",
+      "lead": "L'app Calendari del Mac exporta els calendaris d'un en un en un fitxer .ics, i PrivacyNotes llegeix aquest fitxer tal com és. Cada calendari es converteix en una carpeta.",
+      "sections": [
+        {
+          "h": "Exporta un calendari des de Calendari en un Mac",
+          "steps": [
+            "Obre Calendari i mostra la llista de calendaris a l'esquerra (Visualitza > Mostra la llista de calendaris).",
+            "Fes clic al calendari que vulguis portar.",
+            "Tria Arxiu > Exporta > «Exporta...» i desa el fitxer .ics.",
+            "Fes el mateix amb cadascun dels altres calendaris que vulguis. Cadascun és un fitxer propi."
+          ]
+        },
+        {
+          "h": "Què hi arriba",
+          "p": [
+            "Cada esdeveniment arriba amb el seu dia, la seva hora i la seva durada, inclosos els esdeveniments de tot el dia i els que duren diversos dies. Els esdeveniments que es repeteixen conserven la seva regla.",
+            "Els avisos predeterminats d'un calendari són a la configuració de Calendari, no als esdeveniments, així que l'exportació els deixa fora, i el pas de comprovació et diu quants esdeveniments propers arriben sense cap recordatori. Un avís que has posat en un sol esdeveniment hi arriba. Si tornes a importar el mateix fitxer, s'ometen els esdeveniments que ja tens."
+          ]
+        }
+      ]
+    },
+    "keepass": {
+      "app": "KeePass",
+      "title": "Exporta la teva base de dades de KeePass",
+      "metaTitle": "Com exportar la teva base de dades de KeePass - PrivacyNotes",
+      "lead": "KeePass exporta tota la teva base de dades en un sol fitxer KeePass XML, i PrivacyNotes converteix cada entrada en un inici de sessió o una nota. L'XML conserva més coses que l'exportació en CSV.",
+      "sections": [
+        {
+          "h": "Exporta des de KeePass",
+          "steps": [
+            "Obre la teva base de dades a KeePass i desbloqueja-la.",
+            "Tria File > Export.",
+            "Escull «KeePass XML (2.x)» i desa el fitxer .xml."
+          ]
+        },
+        {
+          "h": "Tria l'XML, no el .kdbx",
+          "p": [
+            "El teu fitxer de base de dades .kdbx està bloquejat amb la teva clau mestra, així que PrivacyNotes no el pot llegir, i la importació t'ho diu si el deixes anar. L'exportació en CSV de KeePass també serveix, però només conserva el títol, el nom d'usuari, la contrasenya, el lloc web i les notes."
+          ]
+        },
+        {
+          "h": "On va a parar cada cosa",
+          "p": [
+            "Una entrada amb nom d'usuari, contrasenya, lloc web o clau 2FA es converteix en un [inici de sessió de la Caixa forta](/ca/help/vault), i qualsevol altra entrada en una nota segura. Els llocs web addicionals i els teus propis camps hi arriben, un camp protegit continua amagat, i la data de caducitat es converteix en un camp. La clau 2FA també hi arriba, així que [els teus codis continuen funcionant](/ca/help/vault-totp). Els fitxers adjunts també hi arriben, a la secció Fitxers de l'inici de sessió o al final de la nota. Els grups i les etiquetes es converteixen en etiquetes. Les entrades de la Recycle Bin i les versions anteriors d'una entrada es queden enrere.",
+            "L'exportació conté les teves contrasenyes en text clar. Importa-la, comprova que tot hagi arribat i després suprimeix el fitxer."
+          ]
+        }
+      ]
+    },
+    "keepassxc": {
+      "app": "KeePassXC",
+      "title": "Exporta la teva base de dades de KeePassXC",
+      "metaTitle": "Com exportar la teva base de dades de KeePassXC - PrivacyNotes",
+      "lead": "KeePassXC exporta la teva base de dades en un fitxer XML o en un fitxer CSV, i PrivacyNotes llegeix tots dos. L'exportació en XML conserva tot el que el CSV deixa fora.",
+      "sections": [
+        {
+          "h": "Exporta des de KeePassXC",
+          "steps": [
+            "Obre la teva base de dades a KeePassXC i desbloqueja-la.",
+            "Tria Database > Export > «XML File...».",
+            "Confirma l'avís sobre el fitxer sense xifrar i desa'l."
+          ]
+        },
+        {
+          "h": "XML o CSV",
+          "p": [
+            "Tria l'XML. El CSV conserva el títol, el nom d'usuari, la contrasenya, el lloc web, les notes, la clau 2FA, les dates i el grup, però no té etiquetes, ni camps personalitzats, ni un segon lloc web, ni data de caducitat, ni fitxers adjunts. El teu fitxer .kdbx està bloquejat, així que PrivacyNotes no el pot llegir."
+          ]
+        },
+        {
+          "h": "On va a parar cada cosa",
+          "p": [
+            "Una entrada amb nom d'usuari, contrasenya, lloc web o clau 2FA es converteix en un [inici de sessió de la Caixa forta](/ca/help/vault), i qualsevol altra entrada en una nota segura. Els camps personalitzats arriben com a camps, els protegits continuen amagats, i la clau 2FA també hi arriba, així que [els teus codis continuen funcionant](/ca/help/vault-totp). Els fitxers adjunts també hi arriben, a la secció Fitxers de l'inici de sessió o al final de la nota. Els grups i les etiquetes es converteixen en etiquetes. Les entrades de la Recycle Bin i les versions anteriors d'una entrada es queden enrere.",
+            "L'exportació conté les teves contrasenyes en text clar. Importa-la, comprova que tot hagi arribat i després suprimeix el fitxer."
+          ]
+        }
+      ]
+    },
+    "lastpass": {
+      "app": "LastPass",
+      "title": "Exporta la teva caixa forta de LastPass",
+      "metaTitle": "Com exportar la teva caixa forta de LastPass - PrivacyNotes",
+      "lead": "LastPass exporta la teva caixa forta en un sol fitxer .csv, i PrivacyNotes converteix les contrasenyes en inicis de sessió i les notes segures en notes o targetes.",
+      "sections": [
+        {
+          "h": "Exporta des de LastPass",
+          "steps": [
+            "Inicia la sessió a la teva caixa forta de LastPass en un navegador.",
+            "Tria Advanced options > Export.",
+            "Escull «Export data for use anywhere» i confirma-ho amb la teva contrasenya mestra. LastPass desa un fitxer .csv."
+          ]
+        },
+        {
+          "h": "On va a parar cada cosa",
+          "p": [
+            "Cada contrasenya es converteix en un [inici de sessió de la Caixa forta](/ca/help/vault) amb la seva clau 2FA, així que [els teus codis continuen funcionant](/ca/help/vault-totp). Una nota segura es converteix en una nota, i una nota de targeta de pagament en una targeta. Les carpetes es converteixen en etiquetes, també les niades, i els preferits arriben fixats. El fitxer no té dates, així que cada element agafa el dia en què l'importes.",
+            "L'exportació conté les teves contrasenyes en text clar. Importa-la, comprova que tot hagi arribat i després suprimeix el fitxer."
+          ]
+        }
+      ]
+    },
+    "nordpass": {
+      "app": "NordPass",
+      "title": "Exporta la teva caixa forta de NordPass",
+      "metaTitle": "Com exportar la teva caixa forta de NordPass - PrivacyNotes",
+      "lead": "NordPass exporta la teva caixa forta en un sol fitxer .csv, i PrivacyNotes converteix les contrasenyes, les notes, les targetes i la informació personal en elements de la Caixa forta.",
+      "sections": [
+        {
+          "h": "Exporta des de NordPass",
+          "steps": [
+            "Obre NordPass i desbloqueja'l.",
+            "Ves a Settings i tria «Export Items».",
+            "Confirma-ho amb la teva contrasenya mestra i desa el fitxer .csv."
+          ]
+        },
+        {
+          "h": "On va a parar cada cosa",
+          "p": [
+            "Cada contrasenya es converteix en un [inici de sessió de la Caixa forta](/ca/help/vault) amb els seus llocs web addicionals i camps personalitzats, i un camp amagat continua amagat. Les notes arriben com a notes, les targetes com a targetes, i la informació personal com una nota amb cada detall en la seva pròpia línia. La carpeta de cada element es converteix en una etiqueta. El fitxer només indica la carpeta on és l'element, no les carpetes que hi ha per damunt.",
+            "Amb el pla gratuït NordPass no desa claus 2FA, així que el fitxer no en té cap. L'exportació conté les teves contrasenyes en text clar. Importa-la, comprova que tot hagi arribat i després suprimeix el fitxer."
+          ]
+        }
+      ]
+    },
+    "proton-pass": {
+      "app": "Proton Pass",
+      "title": "Exporta la teva caixa forta de Proton Pass",
+      "metaTitle": "Com exportar la teva caixa forta de Proton Pass - PrivacyNotes",
+      "lead": "Proton Pass exporta les teves caixes fortes en un .zip, un .csv o un fitxer xifrat amb PGP. PrivacyNotes llegeix el .zip i el .csv, i el .zip és el que conserva més coses.",
+      "sections": [
+        {
+          "h": "Exporta des de Proton Pass",
+          "steps": [
+            "Obre Proton Pass i ves a Settings > Export.",
+            "A File format, tria ZIP.",
+            "Fes clic a Export i confirma-ho amb la teva contrasenya de Proton."
+          ]
+        },
+        {
+          "h": "Tria ZIP, no el xifrat amb PGP",
+          "p": [
+            "El fitxer xifrat amb PGP està bloquejat amb la teva frase de pas, així que PrivacyNotes no el pot llegir, i la importació t'ho diu. El .csv també serveix, però no té camps personalitzats."
+          ]
+        },
+        {
+          "h": "On va a parar cada cosa",
+          "p": [
+            "Cada inici de sessió es converteix en un [inici de sessió de la Caixa forta](/ca/help/vault) amb els seus llocs web addicionals, camps personalitzats i dates. La seva clau 2FA també hi arriba, així que [els teus codis continuen funcionant](/ca/help/vault-totp). Quan un element té tant un correu electrònic com un nom d'usuari, el nom d'usuari omple l'inici de sessió i el correu es converteix en un camp. Les notes arriben com a notes, les targetes com a targetes, i les identitats com a notes amb cada detall en la seva pròpia línia. Cada àlies hide-my-email es converteix en una nota amb la seva adreça, així que conserves la llista de quina adreça vas donar a cada lloc; Proton continua reenviant-ne el correu mentre el teu compte de Proton és obert. Si tens més d'una caixa forta, cadascuna es converteix en una etiqueta. Els elements de la paperera es queden enrere.",
+            "L'exportació conté les teves contrasenyes en text clar. Importa-la, comprova que tot hagi arribat i després suprimeix el fitxer."
+          ]
+        }
+      ]
+    },
+    "dashlane": {
+      "app": "Dashlane",
+      "title": "Exporta la teva caixa forta de Dashlane",
+      "metaTitle": "Com exportar la teva caixa forta de Dashlane - PrivacyNotes",
+      "lead": "Dashlane exporta la teva caixa forta en un .zip de fitxers CSV, i PrivacyNotes converteix els inicis de sessió, les notes segures i les targetes de pagament en elements de la Caixa forta i en notes.",
+      "sections": [
+        {
+          "h": "Exporta des de Dashlane",
+          "steps": [
+            "Obre la teva caixa forta de Dashlane a l'extensió del navegador o a l'app web.",
+            "Tria Settings > Export data.",
+            "Escull el format CSV i desa el fitxer .zip."
+          ]
+        },
+        {
+          "h": "CSV, no .dash",
+          "p": [
+            "Tria CSV. Una exportació .dash està bloquejada amb una contrasenya pròpia, i PrivacyNotes t'ho diu si la deixes anar aquí."
+          ]
+        },
+        {
+          "h": "On va a parar cada cosa",
+          "p": [
+            "Cada inici de sessió es converteix en un [inici de sessió de la Caixa forta](/ca/help/vault) amb la seva clau 2FA, així que [els teus codis continuen funcionant](/ca/help/vault-totp). Una nota segura es converteix en una nota i una targeta de pagament en una targeta. Els documents d'identitat i la informació personal es converteixen en notes amb els seus detalls. Les categories es converteixen en etiquetes, també les niades. Dashlane només guarda un lloc web per inici de sessió, així que el fitxer no inclou cap segon lloc web.",
+            "L'exportació conté les teves contrasenyes en text clar. Importa-la, comprova que tot hagi arribat i després suprimeix el fitxer."
+          ]
+        }
+      ]
+    },
+    "daylio": {
+      "app": "Daylio",
+      "title": "Exporta les teves entrades de Daylio",
+      "metaTitle": "Com exportar la còpia de seguretat de Daylio - PrivacyNotes",
+      "lead": "Daylio exporta una còpia de seguretat .daylio des de More > Backup & Restore. PrivacyNotes llegeix aquest fitxer i reconstrueix cada entrada com una entrada de diari, amb el seu estat d'ànim, les activitats i les fotos.",
+      "sections": [
+        {
+          "h": "Exporta la còpia de seguretat .daylio",
+          "steps": [
+            "Tanca Daylio del tot i torna'l a obrir. Una còpia de seguretat feta just després d'una entrada nova pot no incloure-la fins que l'app es reinicia.",
+            "Tria More > Backup & Restore > Advanced Options > Export.",
+            "Daylio obre un full per compartir, no un diàleg per desar. Desa el fitxer als teus fitxers o en un disc al núvol que puguis obrir des d'aquest dispositiu.",
+            "El fitxer .daylio que has desat és el fitxer que has d'importar."
+          ]
+        },
+        {
+          "h": "Tria la còpia de seguretat, no el CSV",
+          "p": [
+            "More > Export Entries escriu un CSV, una funció Premium de Daylio. PrivacyNotes també el llegeix, però el CSV no té fotos, ni notes de veu, ni grups d'estats d'ànim, de manera que un estat d'ànim que has creat o reanomenat arriba a l'entrada com a text i no al seguiment de l'estat d'ànim. Fes servir la còpia de seguretat .daylio sempre que puguis."
+          ]
+        },
+        {
+          "h": "Què hi arriba",
+          "p": [
+            "[Cada entrada va a Diaris](/ca/help/journal), el dia i a l'hora que mostra Daylio, i dues entrades del mateix dia continuen sent dues entrades. Cada estat d'ànim omple [el seguiment de l'estat d'ànim](/ca/help/choose-trackers) a partir del seu grup d'estats d'ànim de Daylio, de manera que un estat d'ànim reanomenat conserva el seu lloc a l'escala, i un estat d'ànim que has creat tu també obre l'entrada.",
+            "Les activitats es converteixen en [factors](/ca/help/factors), i un factor nou conserva el seu grup de Daylio. Les escales com Energy o Stress arriben com una llista al final de l'entrada. Els títols de les notes, la negreta, la cursiva, el subratllat, el text ratllat i les llistes es conserven, les fotos s'importen com a imatges, les notes de veu com a adjunts, i una entrada destacada continua destacada. Els objectius i els dies importants es queden a Daylio, i el resum de la importació els compta."
+          ]
+        }
+      ]
+    },
+    "diarium": {
+      "app": "Diarium",
+      "title": "Exporta el teu diari de Diarium",
+      "metaTitle": "Com exportar el teu diari de Diarium - PrivacyNotes",
+      "lead": "Diarium exporta el teu diari com a JSON des del seu menú Export. PrivacyNotes llegeix aquesta exportació i reconstrueix cada entrada com una entrada de diari, amb la seva valoració, les etiquetes i els adjunts.",
+      "sections": [
+        {
+          "h": "Exporta JSON amb adjunts",
+          "steps": [
+            "Obre Diarium i tria Export al menú.",
+            "Tria JSON com a format i activa Attachments.",
+            "Tria Save to local storage i escull una carpeta. Diarium desa un .zip que conté el JSON i les teves fotos i fitxers.",
+            "Aquest .zip és el fitxer que has d'importar."
+          ]
+        },
+        {
+          "h": "Deixa Attachments activat",
+          "p": [
+            "Amb Attachments desactivat, Diarium desa un .json sol. PrivacyNotes en importa el text, però totes les fotos i els fitxers es queden enrere, i el resum de la importació els compta. Torna a exportar amb Attachments activat i deixa anar el .zip.",
+            "Create separate file for each entry no canvia res: PrivacyNotes llegeix tots els fitxers JSON del .zip. Les exportacions a DOCX, TXT, HTML i PDF i la còpia de seguretat .diary no es poden importar, així que tria JSON."
+          ]
+        },
+        {
+          "h": "Què hi arriba",
+          "p": [
+            "[Cada entrada va a Diaris](/ca/help/journal), el dia i a l'hora que mostra Diarium. La valoració amb estrelles omple [el seguiment de l'estat d'ànim](/ca/help/choose-trackers). Les etiquetes es converteixen en etiquetes de nota i en [factors](/ca/help/factors), i les persones es converteixen en factors en un grup Persones.",
+            "La negreta, la cursiva, el subratllat, el text ratllat, els ressaltats, els colors del text, les llistes i els enllaços es conserven, i un enllaç a una altra entrada es converteix en un [enllaç entre notes](/ca/help/note-links) quan aquesta entrada és a la mateixa exportació. Els seguiments arriben com una llista al final de l'entrada, el temps, el sol i la lluna com una línia al començament, i una ubicació es converteix en el lloc de l'entrada. Les fotos s'importen com a imatges, i els vídeos, l'àudio i els PDF com a adjunts."
+          ]
+        }
+      ]
+    },
+    "google-journal": {
+      "app": "Google Journal",
+      "title": "Exporta les teves entrades de Google Journal",
+      "metaTitle": "Com exportar les teves entrades de Google Journal - PrivacyNotes",
+      "lead": "Google Journal exporta mitjançant Google Takeout un cop activada la seva còpia de seguretat. PrivacyNotes llegeix el .zip de Takeout i reconstrueix cada entrada com una entrada de diari, amb les fotos i els vídeos.",
+      "sections": [
+        {
+          "h": "Activa primer la còpia de seguretat",
+          "p": [
+            "Takeout no mostra cap Journal fins que Journal fa una còpia de seguretat al teu compte de Google. Activa primer la còpia de seguretat, o no trobaràs Journal a la llista de Takeout."
+          ],
+          "steps": [
+            "Obre Journal al teu Pixel i ves a Settings.",
+            "Activa Back up your journal.",
+            "Espera uns minuts. Journal apareix a Takeout només quan la còpia de seguretat està activada."
+          ]
+        },
+        {
+          "h": "Exporta Journal des de Google Takeout",
+          "steps": [
+            "Obre takeout.google.com i inicia la sessió amb el mateix compte de Google.",
+            "Fes clic a Deselect all i marca només Journal (\"Your journal entries and attachments from Journal\").",
+            "Fes clic a Next step, deixa el tipus de fitxer .zip i fes clic a Create export.",
+            "Google t'envia un enllaç quan l'arxiu és a punt. Baixa el .zip: aquest és el fitxer que has d'importar."
+          ]
+        },
+        {
+          "h": "Què hi arriba",
+          "p": [
+            "[Cada entrada va a Diaris](/ca/help/journal), el dia que li has assignat a Journal. Cada entrada conserva el seu títol i el seu text, i les fotos i els vídeos s'importen com a imatges i adjunts. Un mapa d'una entrada hi arriba com a imatge.",
+            "Takeout no inclou noms de llocs, suggeriments d'escriptura, marcadors ni les reflexions de Journal, així que es queden a Journal. El resum de la importació ho indica."
           ]
         }
       ]

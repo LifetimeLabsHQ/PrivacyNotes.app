@@ -17,14 +17,14 @@ import type { ImageStore } from '../imageStore';
 import type { AttachmentStore } from '../attachmentStore';
 import type { UserSettings } from '../userSettings';
 import type { ExportStep } from '../export';
-import { sha256hex } from '../import/blobImport';
+import { sha256Hex } from '../sha256Hex';
 import { backupSettingsKey, carriedSettings } from '../backupRestore';
 import { restoreGateNow } from '../pullState';
 import {
   backupExists, clearDestination, connectionIsMetered, DestinationError, destinationKind, destinationStatus,
   isPhone, placeBackup, removeBackup,
 } from './destination';
-import { backupName, deviceSlug, fingerprint, isDue, isOverdue, isShrunk, mayRetry, pruneList, SNOOZE_MS } from './plan';
+import { backupName, deviceSlug, fingerprint, isDue, isOverdue, isShrunk, mayRetry, pruneList, shrinkBaseline, SNOOZE_MS, stillThere } from './plan';
 import { addLog, clearAutoBackup, getAutoBackup, patchConfig, setFiles, setPhoneDefaults, type FailureCause } from './store';
 
 /** What the runner reads from the vault. Functions, so a run always sees
@@ -142,7 +142,7 @@ async function buildChecked(
   // The seal opened again with the key must be the zip that went in, and
   // the zip must list every item. A file that fails either is never placed.
   const opened = decodeZipBackup(sealed, key);
-  if (opened.length !== zip.length || (await sha256hex(opened)) !== (await sha256hex(zip))) throw new RunFailure('seal');
+  if (opened.length !== zip.length || (await sha256Hex(opened)) !== (await sha256Hex(zip))) throw new RunFailure('seal');
   const { default: JSZip } = await import('jszip');
   const manifest = (await JSZip.loadAsync(zip)).file('manifest.json');
   const listed = manifest ? (JSON.parse(await manifest.async('text')) as { noteCount?: number }).noteCount : undefined;
@@ -176,7 +176,7 @@ async function runOnce(d: AutoBackupDeps, manual: boolean, signal: AbortSignal):
     live: items,
     trashed: rows.length - items,
     newest: rows.reduce((max, n) => (n.updatedAt > max ? n.updatedAt : max), ''),
-    settings: await sha256hex(new TextEncoder().encode(backupSettingsKey(d.settings()))),
+    settings: await sha256Hex(new TextEncoder().encode(backupSettingsKey(d.settings()))),
   });
   const newest = files.reduce<(typeof files)[number] | undefined>((a, b) => (!a || b.at > a.at ? b : a), undefined);
   // Back up now checks too: an unchanged copy would push an older, different
@@ -196,13 +196,19 @@ async function runOnce(d: AutoBackupDeps, manual: boolean, signal: AbortSignal):
 
   // Two runs in one minute share a name, and the second replaces the first
   // file: one row per file, never two for one.
-  let kept = [...files.filter((f) => f.ref !== placed.ref), { ref: placed.ref, name: placed.name, at: now, bytes: placed.bytes, items }];
+  // A copy deleted by hand leaves the list here, before Keep counts it.
+  const older = await stillThere(files.filter((f) => f.ref !== placed.ref), backupExists);
+  let kept = [...older, { ref: placed.ref, name: placed.name, at: now, bytes: placed.bytes, items }];
   // A browser download is not ours to list or prune.
   if (kind === 'download') kept = [];
-  const shrunk = isShrunk(items, newest?.items);
+  // Until the person answers, every run is measured against the count the
+  // warning named, so the older copies stay for as long as it is unanswered.
+  // A vault that is back near that count ends the warning by itself.
+  const before = shrinkBaseline(newest?.items, config.shrunk?.previous);
+  const shrunk = isShrunk(items, before);
   if (shrunk && !config.shrinkAck) {
-    patchConfig({ shrunk: { items, previous: newest!.items } });
-    tell({ kind: 'shrunk', items, previous: newest!.items }, 'shrunk');
+    patchConfig({ shrunk: { items, previous: before! } });
+    tell({ kind: 'shrunk', items, previous: before! }, 'shrunk');
   } else {
     for (const old of pruneList(kept, config.keep)) {
       if (await removeBackup(old.ref)) kept = kept.filter((f) => f.ref !== old.ref);

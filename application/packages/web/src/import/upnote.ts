@@ -1,5 +1,6 @@
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
 import { gunzipText, ImportTooLargeError, mediaTooLargeWarning, zipEntryBytes, zipEntryMedia, zipEntryText } from './zipEntry';
+import { openZip } from './zipOpen';
 import type { FolderDef } from '../folders';
 import { normalizeTag } from '../notesRepo';
 import { TEXT_COLORS, HIGHLIGHT_COLORS } from '../editorColors';
@@ -10,9 +11,11 @@ import { noteLinkTarget } from '../noteLinks';
 import { mimeFromExt } from './blobImport';
 import type { ImportedNote, ParsedImport } from './types';
 import i18n from '../i18n';
+import { escapeHtml } from '../escapeHtml';
+import { ALIGN_RE } from './importHelpers';
 
 const msg = (key: string, options?: Record<string, unknown>): string =>
-  i18n.t(`importExport:importLog.upnote.${key}`, options);
+  i18n.t(`importLog:upnote.${key}`, options);
 
 /**
  * UpNote importer.
@@ -305,8 +308,6 @@ function isLocalRef(el: Element): boolean {
   return localFileBasename(href) !== null;
 }
 
-const ALIGN_RE = /text-align:\s*(center|right|justify)/i;
-
 /**
  * Can this aligned block be emitted as an aligned HTML block? Only simple
  * inline content qualifies: markdown inside an HTML block is not parsed,
@@ -336,19 +337,6 @@ function isSimpleAlignable(el: Element): boolean {
     if (!isSimpleAlignable(c)) return false;
   }
   return true;
-}
-
-function escapeHtml(s: string): string {
-  // Escapes the double quote as well, because this value is
-  // interpolated into an href attribute below (a <a href="...">).
-  // Without it a URL that passes the scheme test but carries a quote,
-  // for example https://x\" onmouseover=\"..., breaks out of the
-  // attribute. Matches the canonical escapeHtml in markdownRender.ts.
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
 /** Render simple inline content as sanitized HTML for an aligned block. */
@@ -1352,31 +1340,31 @@ async function parseSingleExports(
   const tagged = out.filter((n) => n.tags.length > 0).length;
   if (tagged > 0) transforms.push(msg('keptInlineTags', { count: tagged }));
   if (flags.noteLinks > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.noteLinks', { count: flags.noteLinks }));
+    transforms.push(i18n.t('importLog:shared.noteLinks', { count: flags.noteLinks }));
   }
   if (flags.checklists > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.checklists', { count: flags.checklists }));
+    transforms.push(i18n.t('importLog:shared.checklists', { count: flags.checklists }));
   }
   if (flags.callouts > 0) {
     transforms.push(msg('callouts', { count: flags.callouts }));
   }
-  if (flags.tables > 0) transforms.push(i18n.t('importExport:importLog.shared.tables', { count: flags.tables }));
+  if (flags.tables > 0) transforms.push(i18n.t('importLog:shared.tables', { count: flags.tables }));
   if (flags.codeBlocks > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.codeBlocks', { count: flags.codeBlocks }));
+    transforms.push(i18n.t('importLog:shared.codeBlocks', { count: flags.codeBlocks }));
   }
-  if (flags.math > 0) transforms.push(i18n.t('importExport:importLog.shared.math', { count: flags.math }));
-  if (flags.highlights > 0) transforms.push(i18n.t('importExport:importLog.shared.highlights'));
+  if (flags.math > 0) transforms.push(i18n.t('importLog:shared.math', { count: flags.math }));
+  if (flags.highlights > 0) transforms.push(i18n.t('importLog:shared.highlights'));
   if (flags.colors > 0) transforms.push(msg('colors'));
-  if (flags.underline > 0) transforms.push(i18n.t('importExport:importLog.shared.underline'));
-  if (flags.aligned > 0) transforms.push(i18n.t('importExport:importLog.shared.aligned'));
-  if (imageCount > 0) transforms.push(i18n.t('importExport:importLog.shared.foundImages', { count: imageCount }));
+  if (flags.underline > 0) transforms.push(i18n.t('importLog:shared.underline'));
+  if (flags.aligned > 0) transforms.push(i18n.t('importLog:shared.aligned'));
+  if (imageCount > 0) transforms.push(i18n.t('importLog:shared.foundImages', { count: imageCount }));
   if (attachmentCount > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.foundAttachments', { count: attachmentCount }));
+    transforms.push(i18n.t('importLog:shared.foundAttachments', { count: attachmentCount }));
   }
   if (mdCount > 0) {
     transforms.push(msg('repairedMarkdown'));
   }
-  transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
+  transforms.push(i18n.t('importLog:shared.linkifiedBare'));
 
   return {
     notes: out,
@@ -1420,11 +1408,11 @@ export async function parseUpNote(
     );
   }
 
-  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
+  onProgress?.(i18n.t('importLog:shared.readingZip'));
   const buf = await file.arrayBuffer();
   let zip: JSZip;
   try {
-    zip = await JSZip.loadAsync(buf);
+    zip = await openZip(buf);
   } catch {
     throw new Error(msg('zipUnreadable'));
   }
@@ -1451,7 +1439,7 @@ export async function parseUpNote(
     list.push({ ts: Number(m[2]), entry });
     snapshotsByRoot.set(m[1]!, list);
   });
-  if (!anyEntry) throw new Error(i18n.t('importExport:importLog.shared.zipEmpty'));
+  if (!anyEntry) throw new Error(i18n.t('importLog:shared.zipEmpty'));
 
   if (snapshotsByRoot.size === 0) {
     // Not a backup. The other shape UpNote produces is the per-note
@@ -1485,7 +1473,7 @@ export async function parseUpNote(
     if (noteFiles.length === 0) {
       for (const { entry: nz } of outerZips) {
         try {
-          const inner = await JSZip.loadAsync(await zipEntryBytes(nz));
+          const inner = await openZip(await zipEntryBytes(nz));
           inner.forEach((path, entry) => {
             if (entry.dir || isJunk(path)) return;
             classify(path, entry, false);
@@ -1563,7 +1551,7 @@ export async function parseUpNote(
   }
 
   const notes = [...snap.notes.values()];
-  onProgress?.(i18n.t('importExport:importLog.shared.foundNotes', { count: notes.length }));
+  onProgress?.(i18n.t('importLog:shared.foundNotes', { count: notes.length }));
 
   /* ---------------- attachments ---------------- */
 
@@ -1598,7 +1586,7 @@ export async function parseUpNote(
 
   const wanted = fileEntries.filter((f) => referenced.has(f.base.toLowerCase()));
   if (wanted.length > 0) {
-    onProgress?.(i18n.t('importExport:importLog.shared.extracting', { count: wanted.length }));
+    onProgress?.(i18n.t('importLog:shared.extracting', { count: wanted.length }));
   }
   let tooLarge = 0;
   for (let i = 0; i < wanted.length; i++) {
@@ -1621,7 +1609,7 @@ export async function parseUpNote(
     blobTokens.set(base.toLowerCase(), token);
     fileIdTokens.set(fileId.toLowerCase(), token);
     if ((i + 1) % 20 === 0) {
-      onProgress?.(i18n.t('importExport:importLog.shared.extracted', { done: i + 1, total: wanted.length }));
+      onProgress?.(i18n.t('importLog:shared.extracted', { done: i + 1, total: wanted.length }));
     }
   }
 
@@ -1749,7 +1737,7 @@ export async function parseUpNote(
     out.push(note);
 
     if ((i + 1) % 50 === 0) {
-      onProgress?.(i18n.t('importExport:importLog.shared.parsed', { done: i + 1, total: notes.length }));
+      onProgress?.(i18n.t('importLog:shared.parsed', { done: i + 1, total: notes.length }));
     }
   }
 
@@ -1788,14 +1776,14 @@ export async function parseUpNote(
   if (folders.length > 0) {
     const filed = out.filter((n) => n.folderId).length;
     transforms.push(
-      msg('rebuiltFolders', { count: folders.length, filed: i18n.t('importExport:importLog.shared.filedNotes', { count: filed }) })
+      msg('rebuiltFolders', { count: folders.length, filed: i18n.t('importLog:shared.filedNotes', { count: filed }) })
     );
   }
   if (multiHomed > 0) {
     transforms.push(msg('multiHomed', { count: multiHomed }));
   }
   const tagged = out.filter((n) => n.tags.length > 0).length;
-  if (tagged > 0) transforms.push(i18n.t('importExport:importLog.shared.tags', { count: tagged }));
+  if (tagged > 0) transforms.push(i18n.t('importLog:shared.tags', { count: tagged }));
   const starred = out.filter((n) => n.starred).length;
   if (starred > 0) {
     transforms.push(msg('pinned', { count: starred }));
@@ -1807,31 +1795,31 @@ export async function parseUpNote(
     transforms.push(msg('templates', { count: templates }));
   }
   if (flags.noteLinks > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.noteLinks', { count: flags.noteLinks }));
+    transforms.push(i18n.t('importLog:shared.noteLinks', { count: flags.noteLinks }));
   }
   if (flags.checklists > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.checklists', { count: flags.checklists }));
+    transforms.push(i18n.t('importLog:shared.checklists', { count: flags.checklists }));
   }
   if (flags.callouts > 0) {
     transforms.push(msg('callouts', { count: flags.callouts }));
   }
-  if (flags.tables > 0) transforms.push(i18n.t('importExport:importLog.shared.tables', { count: flags.tables }));
+  if (flags.tables > 0) transforms.push(i18n.t('importLog:shared.tables', { count: flags.tables }));
   if (flags.codeBlocks > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.codeBlocks', { count: flags.codeBlocks }));
+    transforms.push(i18n.t('importLog:shared.codeBlocks', { count: flags.codeBlocks }));
   }
-  if (flags.math > 0) transforms.push(i18n.t('importExport:importLog.shared.math', { count: flags.math }));
-  if (flags.highlights > 0) transforms.push(i18n.t('importExport:importLog.shared.highlights'));
+  if (flags.math > 0) transforms.push(i18n.t('importLog:shared.math', { count: flags.math }));
+  if (flags.highlights > 0) transforms.push(i18n.t('importLog:shared.highlights'));
   if (flags.colors > 0) transforms.push(msg('colors'));
-  if (flags.underline > 0) transforms.push(i18n.t('importExport:importLog.shared.underline'));
-  if (flags.aligned > 0) transforms.push(i18n.t('importExport:importLog.shared.aligned'));
+  if (flags.underline > 0) transforms.push(i18n.t('importLog:shared.underline'));
+  if (flags.aligned > 0) transforms.push(i18n.t('importLog:shared.aligned'));
   if (flags.droppedStyling > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.droppedAlign'));
+    transforms.push(i18n.t('importLog:shared.droppedAlign'));
   }
-  if (imageCount > 0) transforms.push(i18n.t('importExport:importLog.shared.foundImages', { count: imageCount }));
+  if (imageCount > 0) transforms.push(i18n.t('importLog:shared.foundImages', { count: imageCount }));
   if (attachmentCount > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.foundAttachments', { count: attachmentCount }));
+    transforms.push(i18n.t('importLog:shared.foundAttachments', { count: attachmentCount }));
   }
-  transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
+  transforms.push(i18n.t('importLog:shared.linkifiedBare'));
 
   return {
     notes: out,

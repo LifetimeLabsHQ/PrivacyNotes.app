@@ -7,6 +7,7 @@
     "sleep": "Son",
     "sleepScore": "Puntuació del son",
     "heartRate": "Freqüència cardíaca",
+    "bloodPressure": "Pressió arterial",
     "activity": "Activitat",
     "medication": "Medicació",
     "meds": "Medicació",
@@ -24,6 +25,7 @@
   "units": {
     "hoursSuffix": "h",
     "bpm": "ppm",
+    "mmHg": "mmHg",
     "kg": "kg",
     "lb": "lb",
     "steps_one": "pas",
@@ -117,6 +119,10 @@
   },
   "heartRate": {
     "prompt": "Freqüència cardíaca mitjana"
+  },
+  "bloodPressure": {
+    "systolic": "Valor superior (sistòlica)",
+    "diastolic": "Valor inferior (diastòlica)"
   },
   "activity": {
     "prompt": "Nivell d'activitat d'avui?",
@@ -245,11 +251,13 @@
   "custom": {
     "yes": "Sí",
     "no": "No",
+    "unknownType": "Aquest seguiment necessita una versió més nova de l'app.",
     "typeLabels": {
       "scale10": "Escala (0-10)",
       "scale5": "Escala (0-5)",
       "slider100": "Puntuació (0-100)",
       "number": "Número",
+      "pair": "Dos números",
       "yesno": "Sí / No"
     }
   },
@@ -265,6 +273,7 @@
     "medicationCard": "Targeta de medicació",
     "medicationCardHelp": "«Has pres la medicació?» en aquest dispositiu, només els dies que toca prendre un medicament.",
     "customHelp": "Seguiments als quals poses nom tu mateix: una escala, un número o un sí o no. Fins a {{max}}.",
+    "customHelpPair": "Seguiments als quals poses nom tu mateix: una escala, un número, dos números o un sí o no. Fins a {{max}}.",
     "yourCustomTrackers": "Els teus seguiments personalitzats",
     "categoryMoodMind": "Ànim i ment",
     "categoryBodyHealth": "Cos i salut",
@@ -299,7 +308,13 @@
     "preview": "Previsualització",
     "startFromLast": "Recorda l'última entrada",
     "chooseIcon": "Tria una icona",
-    "startFromLastHelp": "Útil per a coses que canvien poc, com el teu pes o una dosi diària."
+    "startFromLastHelp": "Útil per a coses que canvien poc, com el teu pes o una dosi diària.",
+    "pairFirst": "Primer número",
+    "pairSecond": "Segon número",
+    "pairFirstPlaceholder": "Sistòlica",
+    "pairSecondPlaceholder": "Diastòlica",
+    "pairUnit": "Unitat (opcional)",
+    "pairWaiting": "Es desa quan escriguis el primer número."
   },
   "factors": {
     "prompt": "Què ha format part del teu dia?",

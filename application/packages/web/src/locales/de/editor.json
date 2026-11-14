@@ -360,5 +360,47 @@
     "addColumn": "Spalte hinzufügen",
     "removeBoard": "Board entfernen",
     "moveTo": "Verschieben nach"
+  },
+  "doodle": {
+    "title": "Kritzelei",
+    "clear": "Leeren",
+    "paper": "Papier",
+    "paperNone": "Keine Farbe: Die Notiz scheint durch.",
+    "settings": "Stifteinstellungen",
+    "stroke": "Strich",
+    "thinning": "Ausdünnung",
+    "streamline": "Stabilisierung",
+    "smoothing": "Glättung",
+    "easingLabel": "Kurve",
+    "start": "Anfang",
+    "end": "Ende",
+    "taperStart": "Zuspitzung am Anfang",
+    "capStart": "Abgerundeter Anfang",
+    "easingStart": "Kurve am Anfang",
+    "taperEnd": "Zuspitzung am Ende",
+    "capEnd": "Abgerundetes Ende",
+    "easingEnd": "Kurve am Ende",
+    "fill": "Füllung",
+    "outline": "Kontur",
+    "easing": {
+      "linear": "Linear",
+      "in": "Sanfter Anfang, {{curve}}",
+      "out": "Sanftes Ende, {{curve}}",
+      "inOut": "Sanfter Anfang und sanftes Ende, {{curve}}"
+    },
+    "curve": {
+      "quad": "quadratisch",
+      "cubic": "kubisch",
+      "quart": "quartisch",
+      "quint": "quintisch",
+      "sine": "Sinus",
+      "expo": "exponentiell"
+    },
+    "colors": {
+      "black": "Schwarz",
+      "white": "Weiß",
+      "cyan": "Cyan",
+      "lightGray": "Hellgrau"
+    }
   }
 }

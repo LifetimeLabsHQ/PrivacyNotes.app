@@ -9,6 +9,8 @@
  */
 
 import { useSyncExternalStore } from 'react';
+import { createListeners } from './listeners';
+import { readFlag } from './localStore';
 
 const KEY = 'privacynotes.startMinimized';
 
@@ -16,17 +18,11 @@ let on: boolean | null = null;
 
 /** Off by default: a start at sign-in opens the window. Spec: docs/internal/plans/ninja-anywhere-694.md (N12) */
 function getStartMinimized(): boolean {
-  if (on === null) {
-    try {
-      on = localStorage.getItem(KEY) === '1';
-    } catch {
-      on = false;
-    }
-  }
+  if (on === null) on = readFlag(KEY);
   return on;
 }
 
-const listeners = new Set<() => void>();
+const { subscribe, notify } = createListeners();
 
 export function setStartMinimized(next: boolean): void {
   on = next;
@@ -35,16 +31,11 @@ export function setStartMinimized(next: boolean): void {
   } catch {
     /* Storage refused: the choice holds for this session only. */
   }
-  listeners.forEach((cb) => cb());
+  notify();
 }
 
 export function useStartMinimized(): boolean {
-  return useSyncExternalStore((cb) => {
-    listeners.add(cb);
-    return () => {
-      listeners.delete(cb);
-    };
-  }, getStartMinimized);
+  return useSyncExternalStore(subscribe, getStartMinimized);
 }
 
 /** At start, after the tray switch went to Rust: how a start at sign-in shows. Any other start ignores it. */

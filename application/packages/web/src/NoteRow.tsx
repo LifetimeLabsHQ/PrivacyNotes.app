@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { activeLocale } from './languages';
 import type { LocalNote } from './db';
 import type { ListPrefs } from './listPrefs';
-import { deriveDisplayTitle, deriveExcerpt, editedAtOf, emptyExcerptLabel, entryDayOf, journalDateOf, rowSizeLabel, fileCount, isCheckIn, noteLinkName } from './notesViewUtils';
+import { deriveDisplayTitle, deriveExcerpt, editedAtOf, emptyExcerptLabel, entryDayOf, journalDateOf, rowSizeLabel, fileCount, pictureCount, isCheckIn, noteLinkName } from './notesViewUtils';
 import { CheckInUnitsContext, checkInParts, moodWord } from './checkIn';
 import { CheckInGlyph, CheckInRowIcon } from './moodMark';
 import type { JournalTrackerData, TrackerSettings } from './trackerTypes';
@@ -12,7 +12,8 @@ import { formatDay, formatInstant, useDateFormatKey } from './intlFormat';
 import { noteLinkTarget } from './noteLinks';
 import { setItemDragImage, writeItemDrag, type ItemDragPayload } from './itemDrag';
 import { Favicon } from './VaultItem';
-import { parseLoginBody, domainFromUrl } from './LoginForm';
+import { parseLoginBody } from './LoginForm';
+import { domainFromUrlString } from './favicon';
 import { parseLinkBody, linkDomain } from './linkBody';
 import { contactHue, contactInitials, contactInitialsFor, parseContactBody } from './contactBody';
 import { loadEncryptedImageUrl } from './EncryptedImage';
@@ -149,9 +150,11 @@ export function useNoteItem(p: NoteRowProps): ListItem {
   const sizeText = rowSizeLabel(n, listPrefs.sortField) || null;
   // What the note holds, on the date line. The files come from the body, so
   // none while it is behind the PIN; the reminders are the alerts of its
-  // schedule. Spec: issue #627.
+  // schedule. The pictures are the inline ones, apart from the files.
+  // Spec: issues #627 and #759.
   const counts = useMemo(() => ({
     files: locked || n.type === 'file' ? 0 : fileCount(n.body),
+    pictures: locked || n.type === 'file' ? 0 : pictureCount(n.body),
     reminders: scheduleOf(n.trackers, n.type)?.alerts?.length ?? 0,
   }), [n, locked]);
   /** Favicon for the mini glyph - bookmarks and logins only, never in trash
@@ -288,7 +291,7 @@ export function noteFaviconDomain(note: LocalNote): string {
   if (note.type === 'link') return linkDomain(parseLinkBody(note.body).url);
   if (note.type === 'login') {
     try {
-      return domainFromUrl(parseLoginBody(note.body).url);
+      return domainFromUrlString(parseLoginBody(note.body).url);
     } catch {
       return '';
     }

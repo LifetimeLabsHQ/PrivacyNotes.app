@@ -353,5 +353,47 @@
     "addColumn": "新增欄",
     "removeBoard": "移除看板",
     "moveTo": "移至"
+  },
+  "doodle": {
+    "title": "塗鴉",
+    "clear": "清除",
+    "paper": "紙張",
+    "paperNone": "不填色：筆記會透出來。",
+    "settings": "畫筆設定",
+    "stroke": "筆畫",
+    "thinning": "粗細變化",
+    "streamline": "流線化",
+    "smoothing": "平滑",
+    "easingLabel": "緩動",
+    "start": "起筆",
+    "end": "收筆",
+    "taperStart": "起筆漸細",
+    "capStart": "起筆圓端",
+    "easingStart": "起筆緩動",
+    "taperEnd": "收筆漸細",
+    "capEnd": "收筆圓端",
+    "easingEnd": "收筆緩動",
+    "fill": "填色",
+    "outline": "外框",
+    "easing": {
+      "linear": "線性",
+      "in": "漸入，{{curve}}",
+      "out": "漸出，{{curve}}",
+      "inOut": "漸入漸出，{{curve}}"
+    },
+    "curve": {
+      "quad": "二次",
+      "cubic": "三次",
+      "quart": "四次",
+      "quint": "五次",
+      "sine": "正弦",
+      "expo": "指數"
+    },
+    "colors": {
+      "black": "黑色",
+      "white": "白色",
+      "cyan": "青色",
+      "lightGray": "淺灰色"
+    }
   }
 }

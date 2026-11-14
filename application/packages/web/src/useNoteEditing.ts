@@ -8,12 +8,13 @@ import { isDemoMode, proUnlocked } from './demo';
 import { gcOnBodyChange, holdBlobsForVersion, markVersionActivity } from './imageGC';
 import { noteLinkKey, retargetNoteLinks } from './noteLinks';
 import { attachmentLinks, fileNameForTitle, requestAttachmentName, unescapeMarkdownText } from './fileNames';
-import { hasStructuredBody, noteLinkName } from './notesViewUtils';
+import { fileCount, hasStructuredBody, noteLinkName, pictureCount } from './notesViewUtils';
 import { changesContent, trackerContent } from './editStamp';
 import { dropPendingEdit, setEditorBaseLookup, settlePendingEdit, stashGeneration } from './flushStash';
 import { isBigLoss, LOSS_GAP_MS, planVersion, type VersionSession } from './versionSchedule';
 import type { ImageStore } from './imageStore';
 import type { AttachmentStore } from './attachmentStore';
+import { sha256Hex } from './sha256Hex';
 
 interface UseNoteEditingArgs {
   auth: { isPro: boolean; pubkey: string; encryptionKey: Uint8Array };
@@ -229,11 +230,7 @@ export function useNoteEditing({
     // of what a version records.
     const extra = n.type === 'login' ? [n.trackers?.login ?? null] : n.type === 'journal' ? [trackerContent(n.trackers)] : [];
     const payload = JSON.stringify([n.title, n.body, n.tags, ...extra]);
-    const bytes = new TextEncoder().encode(payload);
-    const digest = await crypto.subtle.digest('SHA-256', bytes);
-    return Array.from(new Uint8Array(digest))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
+    return sha256Hex(new TextEncoder().encode(payload));
   }
 
   /**
@@ -696,7 +693,11 @@ export function useNoteEditing({
     // only caught up after switching pillars. Same type list, and the same
     // reasoning, as the note-link retarget skip above.
     const type = notes.find((n) => n.id === id)?.type;
-    if (hasStructuredBody(type)) {
+    // The row's file and picture icons read the notes array too, so a save
+    // that adds or removes one flushes as well. Typing leaves both counts
+    // alone and keeps the list still. Spec: issue #759.
+    const listBody = latestNotesRef.current.find((n) => n.id === id)?.body ?? '';
+    if (hasStructuredBody(type) || fileCount(listBody) !== fileCount(body) || pictureCount(listBody) !== pictureCount(body)) {
       flushEditingBody();
     }
     scheduleSync();

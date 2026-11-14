@@ -1,8 +1,9 @@
 /**
  * The background: the PrivacyNotes right-click submenu (with the logins of
  * the page under Copy login), the address-bar keyword, the queue's retry
- * alarm, the clipboard clear, the two keyboard shortcuts, the idle lock, and
- * the saves the popup hands over. It reads a page only when the person clips
+ * alarm, the clipboard clear, the keyboard commands (fill, save as note,
+ * bookmark, new note, lock, generate), the idle lock, and the saves the popup
+ * hands over. It reads a page only when the person clips
  * it, by injecting the capture script into that one tab, and writes into a
  * page only when the person fills a login (`src/fillRun.ts`).
  * Spec: docs/internal/plans/browser-extension-build.md (sections 3.3, 3.4 and 5)
@@ -13,10 +14,11 @@ import { BIP39_WORDS, generateTotpCode, parseTotpInput } from '@notes/shared';
 import { generateFrom } from '@web/passwordGen';
 import type { CopyEntry, LoginCopyEntry } from '@notes/shared/extension';
 import { capturePage, type CapturedPage } from '../src/capture';
-import { buildClip, clippable, type Built, type ClipMode } from '../src/clipping';
+import { buildClip, clippable, escapeMarkup, type Built, type ClipMode } from '../src/clipping';
 import { CLEAR_ALARM, clearIfStill, clearLater, copySecret, offscreen, writeClipboard } from '../src/clipboard';
 import { FLUSH_ALARM, flashBadge, flush } from '../src/queue';
 import { saveClip, saveLogin, saveNote, type SaveResult } from '../src/save';
+import { fetchPublic } from '../src/publicFetch';
 import { readPrefs } from '../src/prefs';
 import { startI18n, t } from '../src/i18n';
 import { readConnection } from '../src/connection';
@@ -28,6 +30,7 @@ import type { BackgroundMessage } from '../src/messages';
 import { ROUTE_KEY, type PopupRoute } from '../src/route';
 import { readShortcuts, withKeys } from '../src/shortcuts';
 import { clearSiteCounts, onMarkEnd, showSiteCount } from '../src/badge';
+import { activeTab } from '../src/tabs';
 
 const MENU_ROOT = 'pn';
 const COPY_MENU = 'login-copy';
@@ -104,7 +107,7 @@ async function buildMenus(): Promise<void> {
     fillMenuLocked = true;
     return menuItem(`${COPY_MENU}:unlock`, t('vault.unlockToCopy'), ALL_CONTEXTS, COPY_MENU);
   }
-  const [tab] = await browser.tabs.query({ active: true, lastFocusedWindow: true });
+  const tab = await activeTab();
   const found = tab?.url ? await allEntries() : null;
   // The login filled last here comes first, as in the window and for the key.
   const all = found && tab?.url ? matchLogins(loginsOf(found.entries), tab.url).sort(byLastFill(await readLastFill())) : [];
@@ -217,12 +220,13 @@ async function capture(tabId: number): Promise<CapturedPage | null> {
   }
 }
 
-/** A page the person never opened (a link): fetched without cookies. */
+/** A page the person never opened (a link): fetched without cookies, and
+ *  only from the public web (`fetchPublic`). */
 async function fetchPage(url: string): Promise<CapturedPage | null> {
   try {
-    const res = await fetch(url, { credentials: 'omit', referrerPolicy: 'no-referrer' });
-    const type = res.headers.get('content-type') ?? '';
-    if (!res.ok || !/text\/html|application\/xhtml/.test(type)) return null;
+    const res = await fetchPublic(url, { credentials: 'omit', referrerPolicy: 'no-referrer' }, true);
+    const type = res?.headers.get('content-type') ?? '';
+    if (!res?.ok || !/text\/html|application\/xhtml/.test(type)) return null;
     const html = (await res.text()).slice(0, 5_000_000);
     return { url: res.url || url, title: '', html, selectionHtml: '' };
   } catch {
@@ -242,10 +246,6 @@ async function savePage(page: CapturedPage | null, mode: ClipMode): Promise<void
   const { pictures } = await readPrefs();
   if (built.kind === 'clip') report(await saveClip({ mode, url: page.url, title: page.title || built.clip.title, clip: built.clip, pictures }));
   else report(await saveClip({ mode: 'bookmark', url: page.url, title: page.title }));
-}
-
-function activeTab(): Promise<Browser.tabs.Tab | undefined> {
-  return browser.tabs.query({ active: true, lastFocusedWindow: true }).then(([tab]) => tab);
 }
 
 /** The Generate key: a new value from the generator's remembered settings,
@@ -318,7 +318,6 @@ async function onMenu(info: Browser.contextMenus.OnClickData, tab?: Browser.tabs
 
 // ── The address bar: "pn <words>" ────────────────────────────────────
 
-const xml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]!);
 const UNLOCK_SUGGESTION = 'pn:unlock';
 
 function secondLine(e: CopyEntry): string {
@@ -341,16 +340,16 @@ function destination(e: CopyEntry): string {
 
 async function omniboxSuggestions(text: string): Promise<Browser.omnibox.SuggestResult[]> {
   await startI18n();
-  if (!(await isUnlocked())) return [{ content: UNLOCK_SUGGESTION, description: xml(t('vault.omniboxUnlock')) }];
+  if (!(await isUnlocked())) return [{ content: UNLOCK_SUGGESTION, description: escapeMarkup(t('vault.omniboxUnlock')) }];
   const found = await allEntries();
-  if (!found) return [{ content: UNLOCK_SUGGESTION, description: xml(t('vault.omniboxUnlock')) }];
+  if (!found) return [{ content: UNLOCK_SUGGESTION, description: escapeMarkup(t('vault.omniboxUnlock')) }];
   const seen = new Set<string>();
   const out: Browser.omnibox.SuggestResult[] = [];
   for (const e of searchEntries(found.entries, text, 12)) {
     const content = destination(e);
     if (seen.has(content)) continue;
     seen.add(content);
-    out.push({ content, description: xml([e.name, secondLine(e)].filter(Boolean).join(' · ')) });
+    out.push({ content, description: escapeMarkup([e.name, secondLine(e)].filter(Boolean).join(' · ')) });
     if (out.length === 6) break;
   }
   return out;
@@ -445,7 +444,7 @@ export default defineBackground(() => {
     void locksOn(state).then((lock) => (lock ? lockLogins() : undefined));
   });
   // The address bar: "pn" then words. Only the local copy is searched.
-  void startI18n().then(() => browser.omnibox.setDefaultSuggestion({ description: xml(t('vault.omniboxDefault')) }));
+  void startI18n().then(() => browser.omnibox.setDefaultSuggestion({ description: escapeMarkup(t('vault.omniboxDefault')) }));
   browser.omnibox.onInputChanged.addListener((text, suggest) => {
     void omniboxSuggestions(text).then(suggest, () => suggest([]));
   });

@@ -15,7 +15,7 @@
  */
 import type { CSSProperties, HTMLAttributes, ReactNode, RefCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Archive, Bell, Check, CloudSlash, Paperclip, PencilSimpleSlash, PushPin, Shield, Warning, type Icon } from './icons';
+import { Archive, Bell, Check, CloudSlash, Image, Paperclip, PencilSimpleSlash, PushPin, Shield, Warning, type Icon } from './icons';
 
 export type ItemFlag = 'notBackedUp' | 'pinned' | 'pinProtected' | 'readOnly' | 'archived' | 'localOnly';
 
@@ -31,12 +31,13 @@ const FLAGS: Record<ItemFlag, { Icon: Icon; label?: string; ns?: string; warn?: 
 };
 const FLAG_ORDER = Object.keys(FLAGS) as ItemFlag[];
 
-type ItemCountKind = 'files' | 'reminders';
+type ItemCountKind = 'files' | 'pictures' | 'reminders';
 
 /** What an item holds, shown as an icon on the date line when it holds one,
- *  with the number from two up. Spec: issue #627. */
+ *  with the number from two up. Spec: issues #627 and #759. */
 const COUNTS: Record<ItemCountKind, { Icon: Icon; label: string }> = {
   files: { Icon: Paperclip, label: 'shell:markdown.fileCount' },
+  pictures: { Icon: Image, label: 'importExport:missing.pictures' },
   reminders: { Icon: Bell, label: 'noteRow.reminders' },
 };
 
@@ -59,7 +60,7 @@ export interface ListItem {
   date: { label: string; row: string; tile: string } | null;
   size: string | null;
   flags: ItemFlag[];
-  /** The files and reminders the item holds; a zero is left out. */
+  /** The files, pictures and reminders the item holds; a zero is left out. */
   counts?: Partial<Record<ItemCountKind, number>>;
   /** The folder chip and the tag chips, or null when the row shows none. */
   chips: ReactNode;

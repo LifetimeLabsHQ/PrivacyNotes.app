@@ -1,5 +1,6 @@
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
 import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
+import { openZip } from './zipOpen';
 import { normalizeTag, parseYamlTags, TAG_MAX_LENGTH } from '../notesRepo';
 import { buildFolderTree } from './folderImport';
 import { FRONT_MATTER } from '../markdownFolder/adapter';
@@ -12,7 +13,7 @@ import { isBlobReferenced, mimeFromExt } from './blobImport';
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 
 const msg = (key: string, options?: Record<string, unknown>): string =>
-  i18n.t(`importExport:importLog.bear.${key}`, options);
+  i18n.t(`importLog:bear.${key}`, options);
 
 /**
  * Bear importer.
@@ -174,7 +175,7 @@ function infoDate(info: Record<string, unknown> | null, key: string): string | n
 }
 
 async function readNotes(file: File): Promise<{ notes: RawNote[]; files: Map<string, JSZip.JSZipObject> }> {
-  const zip = await JSZip.loadAsync(file);
+  const zip = await openZip(file);
   const files = new Map<string, JSZip.JSZipObject>();
   for (const entry of Object.values(zip.files)) {
     if (entry.dir || entry.name.startsWith('__MACOSX/') || /(^|\/)\.[^/]*$/.test(entry.name)) continue;
@@ -382,18 +383,18 @@ export async function parseBear(file: File, onProgress?: (msg: string) => void):
   const tagged = out.length - untagged;
   if (tagged > 0) transforms.push(msg('tagged', { count: tagged }));
   if (folders.length > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.foldersFromNestedTags', { count: folders.length }));
+    transforms.push(i18n.t('importLog:shared.foldersFromNestedTags', { count: folders.length }));
   }
-  if (blobs.size > 0) transforms.push(i18n.t('importExport:importLog.shared.attachments', { count: blobs.size }));
+  if (blobs.size > 0) transforms.push(i18n.t('importLog:shared.attachments', { count: blobs.size }));
   if (colored > 0) transforms.push(msg('colored', { count: colored }));
   if (underlined > 0) transforms.push(msg('underlined', { count: underlined }));
   if (headingLinks > 0) transforms.push(msg('headingLinks', { count: headingLinks }));
-  if (linkified > 0) transforms.push(i18n.t('importExport:importLog.shared.linkifiedNotes', { count: linkified }));
+  if (linkified > 0) transforms.push(i18n.t('importLog:shared.linkifiedNotes', { count: linkified }));
   if (droppedState > 0) {
     warnings.push(msg('droppedState', { count: droppedState }));
   }
   if (shortened > 0) {
-    warnings.push(i18n.t('importExport:importLog.shared.shortened', { count: shortened }));
+    warnings.push(i18n.t('importLog:shared.shortened', { count: shortened }));
   }
   if (missingFiles > 0) {
     warnings.push(msg('missingFiles', { count: missingFiles }));

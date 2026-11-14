@@ -17,9 +17,10 @@ import { Check, Copy, PencilSimple } from './icons';
 /**
  * The column. Every pane in the kit is a stack of label-and-value rows, so
  * at the editor column's full width the value sits stranded far from its
- * label. One number, shared by both panes and their edit forms.
+ * label. One number, shared by both panes and their edit forms. Wide enough
+ * that a long value keeps its line next to the wider label column (#747).
  */
-export const DETAIL_COLUMN = 'w-full max-w-[520px]';
+export const DETAIL_COLUMN = 'w-full max-w-[640px]';
 
 /** The hero tile's edge in px: a photo chip, a favicon tile or a type tile. */
 export const DETAIL_TILE_PX = 48;
@@ -98,9 +99,11 @@ export function DetailRow({ icon, label, children, actions, multiline = false }:
     // Under 384 px (a phone, a narrow editor pane) the label takes its own
     // line above the value, so an address keeps the width it needs.
     <div className={`@container/row flex flex-wrap ${multiline ? 'items-start' : 'items-center'} gap-x-3 gap-y-1 py-2 border-b border-divider last:border-b-0`}>
-      <span className="shrink-0 w-24 @max-[23.98rem]/row:w-full flex items-center gap-1.5 text-small text-pn-muted pt-0.5" dir="auto">
-        {icon && <span className="shrink-0 text-accent" aria-hidden="true">{icon}</span>}
-        <span className="truncate">{label}</span>
+      {/* A label wraps, never truncates: a translation or a label the user
+          typed can be longer than the column, and a cut label is unreadable (#747). */}
+      <span className="shrink-0 w-32 @max-[23.98rem]/row:w-full flex items-start gap-1.5 text-small text-pn-muted pt-0.5" dir="auto">
+        {icon && <span className="shrink-0 flex items-center h-[1lh] text-accent" aria-hidden="true">{icon}</span>}
+        <span className="min-w-0 break-words">{label}</span>
       </span>
       <div className="min-w-0 flex-1 text-body text-pn break-words" dir="auto">{children}</div>
       {actions && <span className="shrink-0 inline-flex items-center rounded-md border border-divider bg-surface-1">{actions}</span>}

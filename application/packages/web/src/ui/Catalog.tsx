@@ -7,6 +7,7 @@ import { TimeInput } from '../TimeInput';
 import { defaultTrackerSettings, type JournalTrackerData, type FactorDef, type MedicationTemplate } from '../trackerTypes';
 import { MonthGrid } from '../MonthGrid';
 import catalogIndex from './catalogIndex.json';
+import { PhraseChangeEnd } from '../security/PhraseChangeWizard';
 import { AppWindow, ArrowSquareOut, Article, Bell, BookmarkSimple, ChatText, CheckCircle, CheckFat, Clock, Copy, Fire, Folder, Gear, Globe, HardDrives, Info, MapPin, Moon, PencilSimple, Plus, PushPin, Scissors, SlidersHorizontal, Sparkle, Stethoscope, Sun, Trash, User, Warning } from '../icons';
 import {
   Button,
@@ -30,6 +31,7 @@ import {
   GridCard,
   Callout,
   Checkbox,
+  CompareTiles,
   TaskCheckbox,
   CopyButton,
   Divider,
@@ -100,9 +102,9 @@ import {
 
 const patternGroups = {
   'Actions': ['Button', 'IconButton', 'DeleteButton', 'EditRow', 'Vault form actions', 'Vault field actions', 'Generation actions', 'Bookmark actions', 'useProGate', 'Class strings'],
-  'Fields and settings': ['TextField and Select', 'FieldLabel, GroupHeading, FIELD_CLASS', 'Segmented', 'Setting row, Switch, heading', 'Tabs', 'ListSearchInput, InlineRenameField', 'ColorSwatch', 'Checkbox', 'TaskCheckbox', 'SettingsCallout, ResetDefaultsButton, HelpChip'],
+  'Fields and settings': ['TextField and Select', 'FieldLabel, GroupHeading, FIELD_CLASS', 'Segmented', 'Setting row, Switch, heading', 'Tabs', 'ListSearchInput, InlineRenameField', 'ColorSwatch', 'Checkbox', 'CompareTiles', 'TaskCheckbox', 'SettingsCallout, ResetDefaultsButton, HelpChip'],
   'Content and trackers': ['StatTile', 'MoodScale', 'ScaleTiles', 'Tracker panel parts', 'MonthGrid, StorageBar', 'GridCard', 'Detail pane kit', 'Badge, IconTile, Kbd', 'FeaturePitch', 'TerminalBlock', 'RowChip'],
-  'Product flows': ['Guided tracker flow', 'Time input', 'Import workflow', 'Export progress', 'Upload progress', 'Flow reference map'],
+  'Product flows': ['Guided tracker flow', 'Time input', 'Import workflow', 'Export progress', 'Phrase change, last screens', 'Upload progress', 'Flow reference map'],
   'Window contract': ['Window anatomy and behavior', 'Window sizing lab'],
   'App map': ['Replay recipes', 'Settings paths', 'Window implementation inventory'],
   'Public site': ['Marketing and documentation map'],
@@ -143,6 +145,7 @@ export default function Catalog() {
   const popAnchor = useRef<HTMLSpanElement | null>(null);
   const [pop, setPop] = useState(false);
   const [snack, setSnack] = useState(false);
+  const [compareKind, setCompareKind] = useState<'pin' | 'passcode'>('pin');
   const [ticked, setTicked] = useState(true);
   const [query, setQuery] = useState('');
   const [swatch, setSwatch] = useState<string | null>('blue');
@@ -459,6 +462,23 @@ export default function Catalog() {
           gap="Local fixtures only. No uploads, purchases or file deletion. Running finishes after three seconds. Storage messages use the real structured error codes; account-tier purchase doors need separate account verification.">
           <UploadProgressLab />
         </Part>
+        <Part name="Phrase change, last screens" note="The phrase change window's body while it runs and after it ends. The demo stops before the change, so these show here." source="security/PhraseChangeWizard.tsx (PhraseChangeEnd)" usage="security/PhraseChangeWizard.tsx">
+          <div className="grid gap-3 @container">
+            {([
+              { kind: 'running', stage: 'prepare' },
+              { kind: 'running', stage: 'send' },
+              { kind: 'failed', message: 'Your phrase changed three times in the last 24 hours. Try again later.' },
+              { kind: 'unknown' },
+              { kind: 'signIn' },
+              { kind: 'done', connections: true, twoFactorOff: true },
+            ] as const).map((end, i) => (
+              <div key={i} className="rounded-lg border border-divider p-4" data-phrase-end={end.kind}>
+                <PhraseChangeEnd end={end} onOpenTwoFactor={() => {}} />
+              </div>
+            ))}
+          </div>
+        </Part>
+
         <Part name="Export progress" note="The actual export window in running, complete, incomplete and failed states."
           source="ExportProgressModal.tsx; notesView/useExports.ts"
           gap="Local fixture only: no files exported. Running finishes after three seconds; Cancel, the X and Escape close it before then. The fixture has no saved path, so Show in folder (desktop only) does not appear. Product path: Settings > Import & Export > Export. Real disk/network failures require separate checks.">
@@ -731,6 +751,38 @@ export default function Catalog() {
           <Checkbox label="Also delete its subfolders" checked={ticked} onChange={(e) => setTicked(e.target.checked)} />
           <Checkbox label="I wrote my recovery phrase down" description="Nobody can recover a lost phrase." card />
           <Checkbox label="Require PIN to view" disabled />
+        </Part>
+
+        <Part name="CompareTiles" note="one choice between options, compared row by row; native radios, so a selection only stages it; footer is the strip with the cost and the one button" source="ui/CompareTiles.tsx" usage="security/PinTab.tsx (PIN or passcode), security/PhraseLength.tsx (12 or 24 words, with footer), Onboarding.tsx (12 or 24 words for a new account)">
+          <CompareTiles
+            label="Kind of secret"
+            value={compareKind}
+            onChange={setCompareKind}
+            tiles={[
+              { value: 'pin', title: '4-digit PIN', badge: { label: 'Default' }, rows: [
+                { label: 'Typing it', mark: 'yes', text: 'Four digits, fast on any keypad.' },
+                { label: 'If somebody unlocks this device', mark: 'no', text: 'All 10,000 PINs can be tried.' },
+              ] },
+              { value: 'passcode', title: 'Passcode', badge: { label: 'Stronger', tone: 'success' }, rows: [
+                { label: 'Typing it', mark: 'meh', text: 'At least 8 characters, a little slower.' },
+                { label: 'If somebody unlocks this device', mark: 'yes', text: 'Far too many to try, a row that wraps to a second line keeps the next row level.' },
+              ] },
+            ]}
+          />
+          <CompareTiles
+            label="Phrase length"
+            value="24"
+            onChange={() => {}}
+            tiles={[
+              { value: '12', title: '12 words', badge: { label: 'Default' }, rows: [{ label: 'Your phrase', mark: 'yes', text: 'The length you have now.' }] },
+              { value: '24', title: '24 words', badge: { label: 'Extra margin', tone: 'success' }, rows: [{ label: 'Your phrase', mark: 'meh', text: 'A switch makes a new phrase.' }] },
+            ]}
+            footer={{ note: 'The strip under the tiles: what acting on the staged choice costs, and the one button that acts.', button: <Button variant="primary" icon={<Sparkle />}>Switch to 24 words</Button> }}
+          />
+          <CompareTiles label="Disabled" value="pin" onChange={() => {}} disabled tiles={[
+            { value: 'pin', title: 'Disabled', rows: [{ label: 'Row', text: 'While a step runs.' }] },
+            { value: 'other', title: 'No badge', rows: [{ label: 'Row', text: 'A row with no mark.' }] },
+          ]} />
         </Part>
 
         <Part name="Spinner, ProgressBar, StatusLine" note="unknown length; a known job; one line about a running step">

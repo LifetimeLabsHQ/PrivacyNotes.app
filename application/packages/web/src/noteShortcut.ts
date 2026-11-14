@@ -19,11 +19,11 @@ import { isDemoMode } from './demo';
  * Spec: docs/internal/specs/note-shortcuts.md
  */
 
+import { UUID_PATTERN } from './uuid';
+
 export type ShortcutTarget = { id: string; heading?: string };
 
-const UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
-const TARGET = new RegExp(`^(${UUID})(?:/(h-[0-9a-f]{8}(?:-(?:[2-9]|[1-9][0-9]))?))?$`, 'i');
-const ID = new RegExp(`^${UUID}$`, 'i');
+const TARGET = new RegExp(`^(${UUID_PATTERN})(?:/(h-[0-9a-f]{8}(?:-(?:[2-9]|[1-9][0-9]))?))?$`, 'i');
 const PATH = '/note';
 
 /** The word the copy rows use for an item: "note" for the ones written in
@@ -31,11 +31,6 @@ const PATH = '/note';
  *  a file. */
 export function shortcutNoun(type: string | undefined): 'note' | 'item' {
   return !type || type === 'note' || type === 'task' || type === 'journal' ? 'note' : 'item';
-}
-
-/** True when the app would accept a shortcut to this id. */
-export function isShortcutId(id: string): boolean {
-  return ID.test(id);
 }
 
 function target(raw: string): ShortcutTarget | null {

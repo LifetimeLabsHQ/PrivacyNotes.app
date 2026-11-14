@@ -429,17 +429,26 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     icon: 'database',
   },
   {
-    // Last of the `shipped` run, deliberately: renderItems() puts the "You are
+    // Near the end of the `shipped` run: renderItems() puts the "You are
     // here" marker at the FIRST non-shipped item, so a shipped card placed
-    // below this one would render green, on the done-colored rail, underneath
-    // a marker saying the shipped work is above it. A new shipped card goes
-    // directly above this one. The id keeps its old slug so links still land.
+    // after a non-shipped one would render green, on the done-colored rail,
+    // underneath a marker saying the shipped work is above it. Keep every
+    // shipped card above `improvements`. The id keeps its old slug so links
+    // still land.
     id: 'adding-features',
     title: 'Adding main features',
     status: 'shipped',
     description:
       'The big pieces the app was planned around are in place. New ones will be rare from here on, so the work turns to the features that are already here.',
     icon: 'sparkles',
+  },
+  {
+    id: 'crypto-payments',
+    title: 'Paying in crypto',
+    status: 'shipped',
+    description:
+      'Pro can be paid with Bitcoin, Ethereum, Lightning, USDC or USDT, at the card price, on the web and in the desktop app. The payment page asks for no name and no email. Crypto payments are final, so try the free plan first. A way to pay, not a blockchain in the app.',
+    icon: 'coin',
   },
   {
     id: 'improvements',
@@ -490,14 +499,6 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     description:
       'Arrives together with full pricing: a price that is fair in one country can be a week of pay in another, so Pro will be priced to local purchasing power and shown in your currency, on the website, at checkout, and in the app stores. Buying today still beats waiting - the early adopter price is the lowest Pro will ever cost, in any country.',
     icon: 'globe',
-  },
-  {
-    id: 'crypto-payments',
-    title: 'Paying in crypto',
-    status: 'up-next',
-    description:
-      'Card and app store are the only ways to buy Pro today. Crypto is what people who signed up with a phrase and no email ask for, so we are working out the coins, the processor and the refunds. A way to pay, not a blockchain in the app.',
-    icon: 'coin',
   },
   {
     id: 'faster-everywhere',

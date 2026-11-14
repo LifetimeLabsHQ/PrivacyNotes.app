@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "Todas as configurações",
+    "dockWindow": "Encaixar na lateral",
+    "dockOtherSide": "Mover para o outro lado",
     "fillWindow": "Usar a janela inteira",
     "restoreWindow": "Voltar ao tamanho normal"
   },
@@ -168,6 +170,8 @@
     "peekDark": "Por enquanto você vê o seu tema escuro. O Auto volta a acompanhar o seu sistema quando você fecha as Configurações.",
     "unlockThemes": "Libere todos os temas com o Pro",
     "startViewTitle": "Mostrar ao abrir",
+    "reopenLastOpenTitle": "Reabrir o último item",
+    "reopenLastOpenDesc": "Quando o app inicia, você vê o item que estava aberto quando você saiu. Desligado começa na lista, sem nada aberto.",
     "viewTitle": "Mostrar itens como",
     "viewDesc": "Auto segue a largura da sua tela.",
     "openInTabsTitle": "Mostrar o item aberto em uma aba",
@@ -198,6 +202,7 @@
     "linkModifierDesc": "Um clique simples posiciona o cursor. Um toque ainda abre o link. Somente neste dispositivo.",
     "typedSymbolsTitle": "Transformar símbolos digitados em setas e sinais matemáticos",
     "typedSymbolsDesc": "Por exemplo, -> vira →, != vira ≠ e >= vira ≥.",
+    "linkSuggestionsDesc": "Conexões também lista notas sobre o mesmo assunto que você ainda não vinculou. Desative para mostrar o ícone de Conexões só em notas com links.",
     "confirmTrashTitle": "Perguntar antes de excluir",
     "confirmTrashDesc": "Pede confirmação antes de um item ir para a lixeira.",
     "confirmArchiveTitle": "Perguntar antes de arquivar",
@@ -613,5 +618,18 @@
     "loadError": "Não foi possível carregar a exclusão por inatividade. Verifique sua conexão e tente novamente.",
     "confirmTitle": "Ativar a exclusão por inatividade?",
     "confirmBody": "Se nenhum dos seus dispositivos ficar online durante {{period}}, o servidor apaga seus dados criptografados. Isso não pode ser desfeito. Seus dispositivos continuam com as notas deles."
+  },
+  "onDeviceAi": {
+    "title": "Conexões inteligentes",
+    "desc": "Encontram notas com o mesmo significado, mesmo em outras palavras ou em outro idioma. Usam IA offline (<model>bekko-static</model>) que roda só neste dispositivo.",
+    "on": "Ativado. As sugestões também incluem notas com o mesmo significado. A IA offline ocupa {{size}} neste dispositivo.",
+    "kept": "Desativado. A IA offline continua neste dispositivo, então ativá-la de novo não exige download.",
+    "downloadSize": "Baixar · {{size}}",
+    "downloadingLabel": "Download da IA offline",
+    "loading": "Carregando a IA offline",
+    "unavailable": "A demo não consegue baixar a IA offline.",
+    "failed": "O download não terminou. Tente novamente.",
+    "remove": "Remover deste dispositivo ({{size}})",
+    "howItWorks": "Como funciona"
   }
 }

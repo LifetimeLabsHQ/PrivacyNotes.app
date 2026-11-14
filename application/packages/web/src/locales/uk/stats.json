@@ -259,6 +259,8 @@
       "unknown": "Невідомий трекер {{id}}",
       "sleepHours": "Години сну",
       "sleepQuality": "Якість сну",
+      "bpSystolic": "Артеріальний тиск, верхній",
+      "bpDiastolic": "Артеріальний тиск, нижній",
       "avgDays_one": "сер., днів: {{count}}",
       "avgDays_few": "сер., днів: {{count}}",
       "avgDays_many": "сер., днів: {{count}}",

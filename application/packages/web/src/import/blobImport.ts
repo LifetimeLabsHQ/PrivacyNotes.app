@@ -1,24 +1,15 @@
 import { db } from '../db';
+import { sha256Hex } from '../sha256Hex';
 import { formatFileSize } from '../attachmentValidation';
 import { contactPhotoOptions, currentImageOptions, processImage } from '../imageProcessing';
 import { withContactPhotoBytes } from '../contactBody';
 import { sniffImageFormat } from '../imageMetadata';
+import { cleanFileName } from '../fileNames';
+import { hasVaultFiles, storedVaultKeys } from '../vaultBody';
 import i18n from '../i18n';
 import type { ImportBlob, ImportedNote, StagedBlob } from './types';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.blobImport.${key}`, options);
-
-/* ------------------------------------------------------------------ */
-/* SHA-256 helper (was duplicated in appleNotes, googleKeep, privacynotes) */
-/* ------------------------------------------------------------------ */
-
-export async function sha256hex(data: Uint8Array): Promise<string> {
-  const buf = await crypto.subtle.digest('SHA-256', data as ArrayBufferView<ArrayBuffer>);
-  const arr = new Uint8Array(buf);
-  let hex = '';
-  for (const b of arr) hex += b.toString(16).padStart(2, '0');
-  return hex;
-}
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:blobImport.${key}`, options);
 
 /* ------------------------------------------------------------------ */
 /* Shared MIME-from-extension lookup                                   */
@@ -195,7 +186,7 @@ export async function importBlobs(
     const [key, blob] = entries[i]!;
     const { mime, name } = blob;
     let data = blob.data;
-    const isImage = mime.startsWith('image/');
+    const isImage = !blob.file && mime.startsWith('image/');
     // Every importer's pictures obey the image switches here, in one place.
     // A picture the module cannot read is stored as it arrived.
     if (isImage && !blob.processed) {
@@ -203,7 +194,7 @@ export async function importBlobs(
       const result = await processImage(new File([data as BlobPart], name, { type: mime }), opts);
       if (result.ok) data = result.image.data;
     }
-    const hash = await sha256hex(data);
+    const hash = await sha256Hex(data);
     const existing = isImage
       ? await db.imageDedup.get(hash)
       : await db.attachmentDedup.get(hash);
@@ -230,7 +221,12 @@ export async function importBlobs(
 
   onProgress?.(msg('updatingRefs'));
   const rewritten = notes.map((note) => {
-    const body = rewriteBlobRefs(note.body, keyToUri, blobs);
+    // A login, card or SSH key body is JSON: its files are rewritten one
+    // entry at a time, never by the markdown patterns, whose `[` would match
+    // the array's own bracket or one in a password.
+    const body = hasVaultFiles(note.type)
+      ? rewriteVaultFiles(note.body, keyToUri, blobs)
+      : rewriteBlobRefs(note.body, keyToUri, blobs);
     if (body === null) return note;
     // A contact records its photo's stored size beside the reference.
     return {
@@ -261,6 +257,37 @@ export async function importBlobs(
     else attachments++;
   }
   return { images, attachments, notes: rewritten, staged };
+}
+
+/** One entry of a vault body's `files` list, `[name](KEY)` with nothing around it. */
+const VAULT_FILE_ENTRY = /^\[[^\]]*\]\(([^()\s]+)\)$/;
+
+/**
+ * Swap the blob keys in a login's, card's or SSH key's `files` list for the
+ * `[name|size|mime](pn:file/<uuid>)` link the Files section reads
+ * (`vaultFiles` in vaultBody.ts). An importer writes each file as
+ * `[name](KEY)`; only an exact key is swapped, and only for a file, never a
+ * picture, because the Files section holds files. Returns null when no
+ * entry changed.
+ * Spec: docs/internal/issues/0563.md
+ */
+function rewriteVaultFiles(
+  body: string,
+  keyToUri: Map<string, string>,
+  blobs: Map<string, ImportBlob>,
+): string | null {
+  const keys = storedVaultKeys(body);
+  if (!Array.isArray(keys.files)) return null;
+  let changed = false;
+  const files = keys.files.map((entry: unknown) => {
+    const key = typeof entry === 'string' ? VAULT_FILE_ENTRY.exec(entry)?.[1] : undefined;
+    const uri = key ? keyToUri.get(key) : undefined;
+    const blob = key ? blobs.get(key) : undefined;
+    if (!uri?.startsWith('pn:file/') || !blob) return entry;
+    changed = true;
+    return `[${cleanFileName(blob.name, 'Attachment')}|${formatFileSize(blob.data.length)}|${blob.mime}](${uri})`;
+  });
+  return changed ? JSON.stringify({ ...keys, files }) : null;
 }
 
 /**

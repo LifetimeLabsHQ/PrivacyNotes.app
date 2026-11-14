@@ -18,6 +18,7 @@ import android.webkit.WebViewClient
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.view.autofill.AutofillManager
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.ViewCompat
@@ -55,6 +56,13 @@ class MainActivity : TauriActivity() {
   private var captureBlocked = false
   // The black view laid over the content while the window has no focus.
   private var privacyCover: View? = null
+  // Whether an autofill service shows its fill prompt over the app (#754).
+  // The prompt takes window focus, and the cover must not black out the
+  // screen the user is filling in. See onFillUi().
+  private var fillUiShown = false
+  // An AutofillManager.AutofillCallback on API 26 and up, null below. Typed
+  // as Any so that loading this class on API 24 never resolves the class.
+  private var fillUiCallback: Any? = null
   // The app's web view, told when a share has landed in the inbox. See takeShare().
   private var mainWebView: WebView? = null
   // Copies shared files off the main thread, one share after another.
@@ -89,6 +97,7 @@ class MainActivity : TauriActivity() {
     webView.addJavascriptInterface(InstallerBridge(), "__pnInstaller")
     webView.addJavascriptInterface(PrivacyBridge(), "__pnPrivacy")
     mainWebView = webView
+    watchFillUi()
 
     onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
       override fun handleOnBackPressed() {
@@ -370,8 +379,58 @@ class MainActivity : TauriActivity() {
       hidePrivacyCover()
     } else if (privacyScreenArmed) {
       window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-      showPrivacyCover()
+      if (!fillUiShown) showPrivacyCover()
     }
+  }
+
+  /**
+   * A password manager's fill prompt takes window focus, and the cover then
+   * blacked out the PIN screen under the prompt (#754). The autofill system
+   * says when its prompt is up, so the cover stays down for that time.
+   *
+   * FLAG_SECURE still goes up on the focus loss, so the stored recents picture
+   * is still refused. What the prompt leaves open is the live window in an
+   * overview opened while the prompt shows; opening it closes the prompt,
+   * the hidden event arrives, and the cover goes up then.
+   *
+   * The events can come before or after the focus change, so each side
+   * checks the other. On a Pixel 10 (Android 16) the shown event came first,
+   * about 50 ms before the focus loss.
+   *
+   * Registered from onWebViewCreate, once the web view exists. Registered in
+   * onCreate, the callback did not fire in one device run, and every run
+   * from onWebViewCreate did.
+   * Spec: docs/internal/specs/app-switcher-privacy-screen.md (section 6.1)
+   */
+  private fun watchFillUi() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+    val manager = getSystemService(AutofillManager::class.java) ?: return
+    val callback = object : AutofillManager.AutofillCallback() {
+      override fun onAutofillEvent(view: View, event: Int) = onFillUi(event)
+      override fun onAutofillEvent(view: View, virtualId: Int, event: Int) = onFillUi(event)
+    }
+    manager.registerCallback(callback)
+    fillUiCallback = callback
+  }
+
+  private fun onFillUi(event: Int) {
+    runOnUiThread {
+      fillUiShown = event == AutofillManager.AutofillCallback.EVENT_INPUT_SHOWN
+      if (fillUiShown) {
+        hidePrivacyCover()
+      } else if (privacyScreenArmed && !hasWindowFocus()) {
+        showPrivacyCover()
+      }
+    }
+  }
+
+  override fun onDestroy() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      (fillUiCallback as? AutofillManager.AutofillCallback)?.let {
+        getSystemService(AutofillManager::class.java)?.unregisterCallback(it)
+      }
+    }
+    super.onDestroy()
   }
 
   /**

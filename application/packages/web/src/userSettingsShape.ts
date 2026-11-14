@@ -179,6 +179,19 @@ export type UserSettings = {
    */
   typedSymbols: boolean;
   /**
+   * Whether Connections lists link suggestions: notes on the same topic that
+   * no link joins (`relatedNotes.ts`). Off, the Connections icon shows only
+   * on notes with links, as before. Synced; on by default.
+   * Spec: docs/internal/plans/related-notes.md
+   */
+  linkSuggestions: boolean;
+  /**
+   * Link suggestions the user marked "Not related": each a pair of note ids,
+   * sorted and joined by "|" (`suggestionPairKey`). A union across devices,
+   * so a dismissal anywhere holds everywhere. Spec: docs/internal/plans/related-notes.md
+   */
+  dismissedSuggestions: string[];
+  /**
    * Whether moving items to the trash asks first. On by default; the
    * confirm's "Don't ask again" box turns it off (#603).
    */
@@ -616,6 +629,8 @@ export function defaultSettings(): UserSettings {
     taskConfetti: true,
     agentFolder: null,
     typedSymbols: false,
+    linkSuggestions: true,
+    dismissedSuggestions: [],
     confirmTrash: true,
     confirmArchive: true,
     spaces: true,

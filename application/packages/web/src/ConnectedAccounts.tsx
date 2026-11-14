@@ -1,6 +1,7 @@
 import { SignIn } from './icons';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { isValidPhrase } from '@notes/shared';
 import { SectionEyebrow, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, SettingsCallout } from './settingsUI';
 import { PROVIDER_ICON, PROVIDER_NAME } from './providerIcons';
 
@@ -68,7 +69,7 @@ export function ConnectedAccounts({
   const account = confirmation?.kind === 'disconnect'
     ? accounts?.find((entry) => entry.id === confirmation.accountId) : null;
   const lastCustodialAccount = Boolean(isCustodial && account && accounts?.length === 1);
-  const savedPhraseMatches = normalizedPhrase(phrase).split(' ').length === 12
+  const savedPhraseMatches = isValidPhrase(phrase)
     && normalizedPhrase(answer) === normalizedPhrase(phrase);
 
   useEffect(() => {

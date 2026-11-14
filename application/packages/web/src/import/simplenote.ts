@@ -1,12 +1,12 @@
-import JSZip from 'jszip';
 import { zipEntryText } from './zipEntry';
-import { normalizeTag } from '../notesRepo';
+import { openZip } from './zipOpen';
 import { linkifyMarkdown } from './linkify';
 import i18n from '../i18n';
 import type { Importer, ImportedNote, ParsedImport } from './types';
+import { isoOrNow, normalizeTagList } from './importHelpers';
 
 const msg = (key: string, options?: Record<string, unknown>): string =>
-  i18n.t(`importExport:importLog.simplenote.${key}`, options);
+  i18n.t(`importLog:simplenote.${key}`, options);
 
 /**
  * Simplenote import adapter.
@@ -72,7 +72,7 @@ export const simplenoteImporter: Importer = {
     onProgress?.(i18n.t('importExport:status.readingFile'));
     const jsonText = await extractNotesJson(file, onProgress);
 
-    onProgress?.(i18n.t('importExport:importLog.shared.parsingJson'));
+    onProgress?.(i18n.t('importLog:shared.parsingJson'));
     let data: SnExport;
     try {
       data = JSON.parse(jsonText) as SnExport;
@@ -87,7 +87,7 @@ export const simplenoteImporter: Importer = {
       throw new Error(msg('noNotes'));
     }
 
-    onProgress?.(i18n.t('importExport:importLog.shared.buildingNotes'));
+    onProgress?.(i18n.t('importLog:shared.buildingNotes'));
     const notes: ImportedNote[] = [];
     const warnings: string[] = [];
 
@@ -180,13 +180,13 @@ export const simplenoteImporter: Importer = {
     // Transforms (accent-colored, positive).
     const transforms: string[] = [];
     if (linkifiedCount > 0) {
-      transforms.push(i18n.t('importExport:importLog.shared.linkifiedNotes', { count: linkifiedCount }));
+      transforms.push(i18n.t('importLog:shared.linkifiedNotes', { count: linkifiedCount }));
     }
     if (starredCount > 0) {
-      transforms.push(i18n.t('importExport:importLog.shared.keptStarred', { count: starredCount }));
+      transforms.push(i18n.t('importLog:shared.keptStarred', { count: starredCount }));
     }
     if (trashedImportCount > 0) {
-      transforms.push(i18n.t('importExport:importLog.shared.restoredTrashed', { count: trashedImportCount }));
+      transforms.push(i18n.t('importLog:shared.restoredTrashed', { count: trashedImportCount }));
     }
     if (markdownCount > 0) {
       transforms.push(msg('markdownMode', { count: markdownCount }));
@@ -230,8 +230,8 @@ async function extractNotesJson(
   const lowerName = file.name.toLowerCase();
 
   if (lowerName.endsWith('.zip')) {
-    onProgress?.(i18n.t('importExport:importLog.shared.unzipping'));
-    const zip = await JSZip.loadAsync(file);
+    onProgress?.(i18n.t('importLog:shared.unzipping'));
+    const zip = await openZip(file);
 
     // Look for source/notes.json first (official export structure).
     let entry = zip.file('source/notes.json');
@@ -255,26 +255,3 @@ async function extractNotesJson(
   return file.text();
 }
 
-/**
- * Normalize tags through the shared pipeline with case-insensitive dedup.
- */
-function normalizeTagList(rawTags: string[]): string[] {
-  const out: string[] = [];
-  const seen = new Set<string>();
-  for (const raw of rawTags) {
-    const tag = normalizeTag(raw);
-    if (!tag) continue;
-    const key = tag.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(tag);
-  }
-  return out;
-}
-
-function isoOrNow(s: string | undefined): string {
-  if (!s) return new Date().toISOString();
-  const d = new Date(s);
-  if (Number.isNaN(d.getTime())) return new Date().toISOString();
-  return d.toISOString();
-}

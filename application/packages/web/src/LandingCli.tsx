@@ -6,12 +6,12 @@
  * and the note show at once. privacynotes prints English cards in every language, so
  * the terminal's command and card lines are constants (rule AB's reason);
  * the person's words, the agent's and the chat's are catalog copy.
- * Shown only while `cliMarketingShown()`: it ships with the Install button.
  * Spec: docs/internal/plans/agent-cli.md (section 3.10)
  */
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BracketsCurly, LockSimple, Plugs, Robot, ShieldCheck, TerminalWindow, ArrowUpRight, FolderSimple } from './icons';
+import { CmdBlock } from './LandingCmdBlock';
 import { CLI_EXAMPLES, cliExampleBody, cliExampleTitle } from './cliExamples';
 import { helpPath } from './localeRoutes';
 import { activeLocale } from './i18n';
@@ -150,7 +150,7 @@ export function LandingCli({ kicker }: { kicker: ReactNode }) {
         </div>
       </div>
 
-      {/* What it is for, in six moments people know: three cards a row on the
+      {/* What it is for, in six moments people know (the seventh, JSON for your own tools, is the fact chip below): three cards a row on the
           slab lift, like the medication section. */}
       <h3 className="mt-10 text-title font-extrabold text-[var(--wl-ink)]">{t('cli.useHeading')}</h3>
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -159,7 +159,7 @@ export function LandingCli({ kicker }: { kicker: ReactNode }) {
             <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--wl-tint-green)] text-[var(--wl-emerald)]"><Glyph size={20} weight="duotone" /></div>
             <div className="font-extrabold text-[var(--wl-ink)]">{t(cliExampleTitle(key))}</div>
             <p className="text-body leading-relaxed text-[var(--wl-sub)]">{t(cliExampleBody(key))}</p>
-            <p dir="ltr" className="truncate rounded-md bg-[var(--wl-ink-card)] px-2 py-1 font-mono text-meta text-[var(--wl-ink-text)]">{command}</p> {/* rtl-ok: a command runs left to right */}
+            <CmdBlock tone="dark" cmd={command} />
           </div>
         ))}
       </div>

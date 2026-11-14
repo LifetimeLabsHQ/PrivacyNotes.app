@@ -7,7 +7,7 @@
  */
 
 import { logAuthEvent } from './authDiag';
-import { credentialKey, isDemoMode } from './demo';
+import { isDemoMode } from './demo';
 import { assertSessionWrite } from './sessionWriteGuard';
 
 const TRUST_KEY = 'privacynotes.trusted';
@@ -28,25 +28,6 @@ export function setTrustedDevice(trusted: boolean): void {
   } catch {
     /* storage unavailable - nothing to persist, caller still gets in-memory session */
   }
-}
-
-/**
- * True when a session phrase is sitting in trust-aware storage (localStorage
- * or sessionStorage), meaning the app can auto-authenticate on mount.
- * Used by App.tsx to decide whether to show the loading screen: no stored
- * phrase = no session to restore = skip straight to onboarding.
- */
-export function hasStoredSession(): boolean {
-  // Local copy of the phrase key (authStorage would be an import
-  // cycle); same demo bucket as the canonical constant.
-  const key = credentialKey('privacynotes.phrase');
-  try {
-    if (sessionStorage.getItem(key)) return true;
-  } catch { /* ignore */ }
-  try {
-    if (localStorage.getItem(key)) return true;
-  } catch { /* ignore */ }
-  return false;
 }
 
 

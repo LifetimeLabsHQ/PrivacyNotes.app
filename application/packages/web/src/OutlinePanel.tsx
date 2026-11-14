@@ -4,7 +4,8 @@ import type { Editor as TipTapEditor } from '@tiptap/react';
 import type { Transaction } from '@tiptap/pm/state';
 import { BracketsSquare, CaretDown, Check, LinkSimple, ListBullets } from './icons';
 import { ContextMenu, useContextMenu } from './ContextMenu';
-import { shortcutUrl, isShortcutId } from './noteShortcut';
+import { shortcutUrl } from './noteShortcut';
+import { isUuid } from './uuid';
 import { useCopyToClipboard } from './clipboard';
 import { getWikiLinkCurrentNote } from './NoteLinkSuggestion';
 import { headingCodeAt, headingsFromDoc } from './noteHeadings';
@@ -257,7 +258,7 @@ export function OutlinePanel({ editor, open, onOpenChange }: Props) {
                   type="button"
                   onClick={(e) => {
                     const noteLink = `[[${noteLinkTarget(linkNote.title)}#${noteLinkTarget(h.text)}]]`;
-                    const code = isShortcutId(linkNote.id) ? headingCodeAt(editor.state.doc, linkNote.id, h.pos) : null;
+                    const code = isUuid(linkNote.id) ? headingCodeAt(editor.state.doc, linkNote.id, h.pos) : null;
                     if (!code) {
                       copy(noteLink, String(h.pos));
                       return;

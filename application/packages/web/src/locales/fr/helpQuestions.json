@@ -9,7 +9,7 @@
   "device-limit": "Que signifie \"Limite d'appareils atteinte\" ?",
   "enable-2fa": "Comment activer l’authentification à deux facteurs (2FA) ?",
   "forgot-pin": "J'ai oublié mon PIN ou mon code d'accès. Comment revenir dans l'app ?",
-  "guess-phrase": "Quelqu'un peut-il deviner mes 12 mots ou tomber sur les mêmes ?",
+  "guess-phrase": "Quelqu'un peut-il deviner ma phrase de récupération ou tomber sur la même ?",
   "image-quality": "PrivacyNotes modifie-t-il ou compresse-t-il mes images ?",
   "journal": "Comment fonctionne le journal, et que puis-je suivre ?",
   "leaving": "Comment quitter complètement PrivacyNotes ?",

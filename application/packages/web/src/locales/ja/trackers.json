@@ -7,6 +7,7 @@
     "sleep": "睡眠",
     "sleepScore": "睡眠スコア",
     "heartRate": "心拍数",
+    "bloodPressure": "血圧",
     "activity": "活動",
     "medication": "服薬",
     "meds": "薬",
@@ -24,6 +25,7 @@
   "units": {
     "hoursSuffix": "時間",
     "bpm": "bpm",
+    "mmHg": "mmHg",
     "kg": "kg",
     "lb": "lb",
     "steps_other": "歩",
@@ -112,6 +114,10 @@
   },
   "heartRate": {
     "prompt": "平均心拍数"
+  },
+  "bloodPressure": {
+    "systolic": "上の血圧(収縮期)",
+    "diastolic": "下の血圧(拡張期)"
   },
   "activity": {
     "prompt": "今日の活動量は?",
@@ -224,11 +230,13 @@
   "custom": {
     "yes": "はい",
     "no": "いいえ",
+    "unknownType": "このトラッカーを使うには、新しいバージョンのアプリが必要です。",
     "typeLabels": {
       "scale10": "スケール(0〜10)",
       "scale5": "スケール(0〜5)",
       "slider100": "スコア(0〜100)",
       "number": "数値",
+      "pair": "2つの数値",
       "yesno": "はい / いいえ"
     }
   },
@@ -244,6 +252,7 @@
     "medicationCard": "服薬カード",
     "medicationCardHelp": "このデバイスで「薬を飲みましたか?」と尋ねます。薬の予定がある日だけ表示されます。",
     "customHelp": "自分で名前を付けるトラッカーです。スケール、数値、はい/いいえから選べます。最大{{max}}個まで。",
+    "customHelpPair": "自分で名前を付けるトラッカーです。スケール、数値、2つの数値、はい/いいえから選べます。最大{{max}}個まで。",
     "yourCustomTrackers": "あなたのカスタムトラッカー",
     "categoryMoodMind": "気分とこころ",
     "categoryBodyHealth": "からだと健康",
@@ -278,7 +287,13 @@
     "preview": "プレビュー",
     "startFromLast": "前回の記録を引き継ぐ",
     "chooseIcon": "アイコンを選択",
-    "startFromLastHelp": "体重や毎日の服用量など、めったに変わらないものに便利です。"
+    "startFromLastHelp": "体重や毎日の服用量など、めったに変わらないものに便利です。",
+    "pairFirst": "1つ目の数値",
+    "pairSecond": "2つ目の数値",
+    "pairFirstPlaceholder": "収縮期血圧",
+    "pairSecondPlaceholder": "拡張期血圧",
+    "pairUnit": "単位(任意)",
+    "pairWaiting": "1つ目の数値を入力すると保存されます。"
   },
   "factors": {
     "prompt": "今日はどんな日でしたか?",

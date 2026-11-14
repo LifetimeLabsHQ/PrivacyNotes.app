@@ -307,8 +307,10 @@
     "dayWithItems_many": "{{date}}, {{count}} элементов",
     "previousWeek": "Предыдущая неделя",
     "nextWeek": "Следующая неделя",
-    "showMonth": "{{month}}, показать весь месяц",
-    "showWeek": "{{month}}, показать одну неделю"
+    "pickMonth": "{{month}}, выберите месяц и год",
+    "pickMonthTip": "Выберите месяц и год",
+    "showWholeMonth": "Показать весь месяц",
+    "showOneWeek": "Показать одну неделю"
   },
   "contextMenu": {
     "newNote": "Новая заметка",
@@ -566,6 +568,13 @@
     "itemNameParts": "Отчество, префикс, суффикс",
     "itemPhonetic": "Фонетическое имя",
     "itemNote": "Заметка",
+    "addSection": "Добавить раздел",
+    "sectionName": "Название раздела",
+    "removeSection": "Убрать раздел",
+    "removeSectionNamed": "Убрать раздел {{name}}",
+    "addFieldTo": "Добавить поле в раздел {{name}}",
+    "addFieldToSection": "Добавить поле в этот раздел",
+    "hiddenFieldsNote": "Скрытые значения замаскированы, пока вы их не покажете, и поиск их никогда не находит.",
     "labels": {
       "mobile": "Мобильный",
       "home": "Домашний",
@@ -696,6 +705,9 @@
     },
     "birthdays": "Дни рождения",
     "contactDate": "{{name}}: {{label}}",
+    "birthdayAge_one": "{{name}}: исполняется {{count}} год",
+    "birthdayAge_few": "{{name}}: исполняется {{count}} года",
+    "birthdayAge_many": "{{name}}: исполняется {{count}} лет",
     "dragEnd": "Перетащите, чтобы изменить день окончания",
     "previousDay": "Предыдущий день",
     "nextDay": "Следующий день",

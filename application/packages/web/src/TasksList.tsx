@@ -185,6 +185,7 @@ export default function TasksList({
       onEvent={calendar.onEvent}
       onExpand={calendar.onExpand}
       drop={calendar.drop}
+      weekNumbers={calendar.weekNumbers}
     />
   ) : null;
 

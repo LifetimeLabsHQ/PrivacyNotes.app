@@ -832,6 +832,7 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
     icon: { hint: null, active: false, run: () => setIconPickerOpen(true) },
     // The note's place window, prefilled; Insert map puts a map block at the caret.
     location: { hint: null, active: false, run: () => setLocationOpen(true) },
+    doodle: { hint: null, active: false, run: () => { void import('./doodle/insertDoodle').then((m) => m.insertDoodle(editor)); } },
     // The touch home of the selection menu's "Copy as ..." entries (#546).
     copyAsPlain: { hint: null, active: false, run: () => copySelectionAs(editor, 'plain') },
     copyAsMarkdown: { hint: null, active: false, run: () => copySelectionAs(editor, 'markdown') },

@@ -12,7 +12,7 @@ To nasza prawdziwa baza danych w Zurychu, nie rysunek. Twoja notatka trafia do k
 
 ## Co się dzieje, gdy piszesz notatkę
 
-1. Twoja fraza z 12 słów staje się kluczem. Dzieje się to na twoim urządzeniu.
+1. Twoja fraza odzyskiwania staje się kluczem. Dzieje się to na twoim urządzeniu.
 2. Notatka jest szyfrowana tym kluczem, na twoim urządzeniu. Tak zapisuje się na twoim własnym dysku i tak podróżuje do nas.
 3. Dostajemy zaszyfrowaną notatkę i przechowujemy ją. Obraz wyżej pokazuje, jak to wygląda.
 4. Dowolne urządzenie z tą samą frazą tworzy ten sam klucz i otwiera notatkę.

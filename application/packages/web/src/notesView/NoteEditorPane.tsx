@@ -11,6 +11,7 @@ import { captureAnchor, followAnchor, type ViewAnchor } from '../viewSwitchAncho
 import { noteAnchor, rememberNoteAnchor } from './listPlace';
 import type { LocalNote } from '../db';
 import { updateNote } from '../notesRepo';
+import { listReplacedCopies } from '../replacedCopies';
 import { Editor, type EditorHandle } from '../Editor';
 import { FormatBarContext } from '../formatBarContext';
 import { MarkdownSourceEditor, type MarkdownSourceHandle } from '../MarkdownSourceEditor';
@@ -34,9 +35,13 @@ import { TITLE_MAX_LENGTH, newEditorKey } from '../useNoteEditing';
 import { proUnlocked } from '../demo';
 import { usePushFailure } from '../pushFailures';
 import { VaultItem } from '../VaultItem';
+import { NotesDockContext } from '../NotesField';
 import { entryDayOf, hasStructuredBody, isKnownNoteType, isWeekJournal, noteLinkName, shareSurface, toLocalIso } from '../notesViewUtils';
 import { buildLinkIndex } from '../connectionsIndex';
 import { ConnectionsPill } from '../ConnectionsPill';
+import { linkInsertPoint, suggestionPairKey } from '../relatedLoader';
+import { setPairHidden } from '../dismissedSuggestions';
+import { insertFootnote } from '../footnotes';
 import { scheduleOf } from '../schedule';
 import { formatDay } from '../intlFormat';
 import { timeLabel } from '../JournalCalendar';
@@ -225,6 +230,8 @@ interface NoteEditorMenuActions {
   onSetNoteColor: (noteId: string, color: NoteOwnColor | null) => void;
   /** Opens Settings at the "Folder and tag colors" row. */
   onOpenColorSettings: () => void;
+  /** Opens Settings > Offline AI. */
+  onOpenOnDeviceAi: () => void;
   /** Opens the icon picker on a note (Pro). */
   onPickNoteIcon: (noteId: string) => void;
   handleToggleStar: (id: string, starred: boolean) => Promise<void>;
@@ -270,6 +277,8 @@ export interface NoteEditorPaneProps {
   selected: LocalNote;
   view: View;
   notes: LocalNote[];
+  /** Bumps after each write to the related-notes index (relatedNotes.ts). */
+  relatedIndexVersion: number;
   /** Every saved bookmark URL in the account (buildLinkKeyMap), for the
    *  bookmark body's duplicate guard. Owned by NotesView so the editor and
    *  the quick-add bar can never guard against different sets. */
@@ -373,6 +382,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
   const { t } = useTranslation('notes');
   const { position: barPosition } = useContext(FormatBarContext);
   const [barSlot, setBarSlot] = useState<HTMLDivElement | null>(null);
+  const [notesDock, setNotesDock] = useState<HTMLDivElement | null>(null);
   /** The name the contact form's draft spells, while it is still being typed.
    *  The title field shows it in grey below, so a new contact wears its name at
    *  the top before it has a title to wear. Nothing writes it: the form buffers
@@ -449,7 +459,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
       handleTagsChange, handleTrackersChange, handleTrackersPatch, handleVaultSave,
     },
     noteMenu: {
-      noteColor, onSetNoteColor, onOpenColorSettings, onPickNoteIcon, handleToggleStar, handleToggleArchive, setJournalDate, setNoteDate,
+      noteColor, onSetNoteColor, onOpenColorSettings, onOpenOnDeviceAi, onPickNoteIcon, handleToggleStar, handleToggleArchive, setJournalDate, setNoteDate,
       journalDays, requestTrash, handleRestore, handleDuplicate, splitNote, onOverSyncLimit, canUncheckAllTasks,
       handleUncheckAllTasks, canDeleteCheckedTasks, handleDeleteCheckedTasks,
       canSortTasksByStatus, handleSortTasksByStatus, handleSetLocked, handleSetPinProtected,
@@ -643,6 +653,17 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     setShowNoteOptions(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schedule.ask?.n, selected?.id]);
+  // Text a sync pull replaced on this device: its History window opens on
+  // every plan (replacedCopies.ts). Read again when a pull rewrites the note.
+  const [localHistory, setLocalHistory] = useState(false);
+  useEffect(() => {
+    if (!selected?.id) return;
+    let live = true;
+    void listReplacedCopies(selected.id)
+      .then((list) => { if (live) setLocalHistory(list.length > 0); })
+      .catch(() => { if (live) setLocalHistory(false); });
+    return () => { live = false; };
+  }, [selected?.id, selected?.updatedAt]);
   /**
    * Give this item another of the note-like types, then follow it to the
    * pillar that lists it. Only `type` changes, and no field is removed: a
@@ -681,6 +702,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
       setShowNoteOptions(false);
       openHistory(selected);
     },
+    localHistory,
     onSetPin: onSetPinForProtect,
     onMoveToFolder: () => {
       setShowNoteOptions(false);
@@ -747,11 +769,67 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     [liveNotes, lockedKey],
   );
   const bodyControls = findPill;
+
+  // The two link actions of a link suggestion (plan, "Link suggestions"):
+  // "Link at the cursor" needs a cursor the reader placed in this note (a
+  // focus since it opened); "Link as a footnote" puts its number at that
+  // cursor, or without one at the end of the last paragraph, and the
+  // note-link in the footnote list. The editor saves either like a typed change.
+  // Spec: docs/internal/plans/related-notes.md
+  const [cursorNoteId, setCursorNoteId] = useState('');
+  const cursorPlaced = cursorNoteId === selected.id;
+  const noteLinkNode = (n: LocalNote) => ({ type: 'wikiLink', attrs: { target: noteLinkName(n, isNoteLocked(n)), label: null } });
+  const linkAtCursor = (n: LocalNote) => {
+    const editor = editorRef.current?.getEditor();
+    if (!editor || !cursorPlaced) return;
+    const { $to } = editor.state.selection;
+    // One character per inline atom, so text offsets match document offsets.
+    const text = $to.parent.textBetween(0, $to.parent.content.size, undefined, '\ufffc');
+    const point = linkInsertPoint(text, $to.parentOffset);
+    const at = $to.start() + point.offset;
+    const before = point.spaceBefore ? [{ type: 'text', text: ' ' }] : [];
+    editor.chain().insertContentAt(at, [...before, noteLinkNode(n), { type: 'text', text: ' ' }]).run();
+  };
+  const linkAsFootnote = (n: LocalNote) => {
+    const editor = editorRef.current?.getEditor();
+    if (!editor) return;
+    let at = editor.state.selection.to;
+    if (!cursorPlaced) {
+      // The end of the last textblock outside the footnote list.
+      at = -1;
+      editor.state.doc.forEach((child, offset) => {
+        if (child.type.name === 'footnotes') return;
+        child.descendants((node, pos) => {
+          if (node.isTextblock) at = offset + 1 + pos + node.nodeSize - 1;
+          return !node.isTextblock;
+        });
+        if (child.isTextblock) at = offset + child.nodeSize - 1;
+      });
+      if (at < 0) return;
+    }
+    const link = editor.schema.nodeFromJSON(noteLinkNode(n));
+    insertFootnote(editor, { at, inline: [link] });
+  };
   const connections = (open: boolean, onOpenChange: (open: boolean) => void) => (
     <ConnectionsPill
       note={selected}
       notes={liveNotes}
       index={linkIndex}
+      relatedIndexVersion={props.relatedIndexVersion}
+      linkSuggestions={userSettings.linkSuggestions}
+      onHideSuggestions={() => mutateSettings((prev) => ({ ...prev, linkSuggestions: false }))}
+      dismissedSuggestions={userSettings.dismissedSuggestions}
+      liveBody={wcBody || selected.body}
+      linkActions={view === 'trash' || selected.locked === 1 ? undefined : { cursorPlaced, onAtCursor: linkAtCursor, onAsFootnote: linkAsFootnote }}
+      onDismissSuggestion={(n) => mutateSettings((prev) => ({
+        ...prev,
+        dismissedSuggestions: setPairHidden(prev.dismissedSuggestions, suggestionPairKey(selected.id, n.id), true),
+      }))}
+      onRestoreSuggestion={(n) => mutateSettings((prev) => ({
+        ...prev,
+        dismissedSuggestions: setPairHidden(prev.dismissedSuggestions, suggestionPairKey(selected.id, n.id), false),
+      }))}
+      meaningDoor={{ pro: !proUnlocked(auth.isPro), onOpen: onOpenOnDeviceAi }}
       isNoteLocked={isNoteLocked}
       onOpen={onRevealNote}
       open={open}
@@ -791,7 +869,8 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           never changes and the dividers stay aligned. In Zen the
           per-note actions collapse into the "..." menu and the
           markdown-toolbar + Exit Zen toggles sit at the row's end. */}
-      <div className={`flex justify-center min-h-11 sm:min-h-14 py-1.5 sm:py-0 sm:h-14 border-b border-divider shrink-0`}>
+      {/* data-pn-dock-header: the docked Settings panel starts below it (#741). */}
+      <div data-pn-dock-header className={`flex justify-center min-h-11 sm:min-h-14 py-1.5 sm:py-0 sm:h-14 border-b border-divider shrink-0`}>
         <div
           ref={setHeaderRow}
           // min-w-0 is load-bearing twice over. A flex item defaults to
@@ -1321,6 +1400,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
            header row wears pn-content-col already, so a left-hugging body
            under a centered title read as two different layouts on wide
            screens (2026-08-22 review). */
+        <NotesDockContext.Provider value={keyboardUp ? notesDock : null}>
         <div className="flex-1 overflow-y-auto">
         <div ref={structuredColRef} className="pn-content-col flex min-h-full flex-col">
           {!zenMode && view !== 'trash' && (
@@ -1384,6 +1464,12 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           )}
         </div>
         </div>
+        {/* The Notes box's bar while someone types in it on a touch screen,
+            on top of the keyboard and out of the scrolling column, like the
+            note editor's bar at the bottom (NotesField.tsx, #765). Empty,
+            and hidden, the rest of the time. */}
+        <div ref={setNotesDock} className="shrink-0 border-t border-divider bg-surface-2 empty:hidden" />
+        </NotesDockContext.Provider>
       ) : (
         <>
         <div ref={setScroller} className={`flex-1 overflow-y-auto overflow-x-hidden pt-0 ${footerVisible ? 'pb-2' : 'pb-[max(0.5rem,env(safe-area-inset-bottom))]'}`}>
@@ -1592,7 +1678,10 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                 place={readLocation(selected.trackers as Record<string, unknown> | undefined)}
                 onChange={(body) => { handleBodyChange(selected.id, body, editorKey); setWcBody(body); }}
                 readOnly={view === 'trash' || selected.locked === 1}
-                onFocusChange={setEditorFocused}
+                onFocusChange={(focused) => {
+                  setEditorFocused(focused);
+                  if (focused) setCursorNoteId(selected.id);
+                }}
                 toolbarVisible={zenMode ? zenToolbar : toolbarVisible}
                 isPro={auth.isPro ?? false}
                 onOpenUpgrade={(trigger) => setShowUpgrade({ trigger })}

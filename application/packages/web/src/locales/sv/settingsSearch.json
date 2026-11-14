@@ -55,7 +55,7 @@
     "security_appLock": "applås, applåsning, lås vid start, låsskärm, lås appen vid start, lås igen, lås igen efter",
     "security_relockAfter": "tidsgräns, autolås, automatiskt lås, lås efter, lås igen efter, låsskärm",
     "security_blockCapture": "skärmdump, skärminspelning, skärmdelning, sekretessläge, integritetsläge",
-    "security_phrase": "återställningsfras, hemliga ord, seed, tolv ord, återställningsnyckel",
+    "security_phrase": "återställningsfras, hemliga ord, seed, tolv ord, tjugofyra ord, 24 ord, återställningsnyckel",
     "security_custody": "förvaring, självförvaring, nyckelförvaring, custody",
     "me_pauseSync": "stoppa synk, pausa, offline",
     "me_filesWifiOnly": "wifi, mobildata, mobilnät, datapott",
@@ -81,6 +81,7 @@
     "appearance_invisibles": "stycketecken, blanktecken, mellanslag, dolda tecken, formateringstecken",
     "appearance_linkModifier": "länkar, hyperlänkar, url, klick, klicka, ctrl, cmd, command, öppnas av misstag",
     "appearance_typedSymbols": "ligaturer, pilar, symboler, matematik, inte lika med, större än, mindre än, autokorrigering, ersätt",
+    "appearance_linkSuggestions": "relaterade anteckningar, liknande anteckningar, förslag, länkförslag, föreslagna kopplingar, kopplingar, bakåtlänkar, backlinks, olänkade, inte länkade, ämne",
     "appearance_noteFont": "teckensnitt, typsnitt, font, monospace, mono, serif, sans, standardteckensnitt, eget teckensnitt, anpassat teckensnitt, installerat teckensnitt, mitt teckensnitt",
     "appearance_nestedNumbers": "numrerad lista, nästlad lista, kapslad lista, disposition, 1.1, 1.1.1, juridisk numrering, undernummer, flernivålista, lista i flera nivåer",
     "appearance_confirmTrash": "radera, papperskorgen, bekräfta, bekräftelse, dialogruta, fråga, uppmaning, fråga inte igen",
@@ -88,6 +89,7 @@
     "appearance_autoLocationNotes": "plats, ort, gps, position, karta, geotagg, automatisk, var, anteckningar",
     "appearance_autoLocationJournal": "plats, ort, gps, position, karta, geotagg, automatisk, var, dagbok, journal, inlägg",
     "appearance_startView": "startsida, hem, standardvy, öppna i",
+    "appearance_reopenLastOpen": "senaste anteckning, senast öppnad, återställ, kom ihåg, öppna igen, start, starta, uppstart",
     "appearance_view": "rutnät, lista, kort, layout",
     "trackers_setup": "mätvärden, välmående, spårning, humör, sömn, energi, steg, vatten, slå på, stäng av",
     "trackers_habitQuestions": "vanor, frågor, meditera, be, rökning, alkohol, gjorde du",
@@ -122,6 +124,7 @@
     "calendar_weekNumbers": "veckonummer, ISO-vecka, kalender",
     "calendar_hours": "timmar, arbetstid, dagvy, veckovy, morgon",
     "me_dms": "död mans grepp, dead man's switch, inaktivitet, inaktiv, radera efter, rensa, övergiven, överge",
+    "appearance_smartConnections": "ai, offline, offline-ai, på enheten, lokal ai, privat ai, modell, bekko, innebörd, betydelse, relaterade anteckningar, liknande anteckningar, föreslagna kopplingar, länkförslag, smarta kopplingar, semantisk, embeddings, inbäddningar, ladda ner, nedladdning",
     "appearance_formatBar": "verktygsfält, formatfält, knappar, anpassa, ordna, punktlista, genomstruken, kugghjul"
   }
 }

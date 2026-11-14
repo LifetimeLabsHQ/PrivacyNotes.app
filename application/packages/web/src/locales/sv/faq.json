@@ -81,7 +81,7 @@
     "need-email": {
       "q": "Behöver jag en e-postadress för att registrera mig?",
       "a": [
-        "Nej. Ett nytt valv är en nygenererad [återställningsfras på 12 ord](/sv/help/phrase-vs-password), inget annat. Ingen e-post, inget användarnamn, inget telefonnummer, inget verifieringssteg. Loggar du in med frasen kan vi inte mejla dig ens om vi ville, eftersom vi aldrig får veta vem du är.",
+        "Nej. Ett nytt valv är en nygenererad [återställningsfras](/sv/help/phrase-vs-password), inget annat. Ingen e-post, inget användarnamn, inget telefonnummer, inget verifieringssteg. Loggar du in med frasen kan vi inte mejla dig ens om vi ville, eftersom vi aldrig får veta vem du är.",
         "Vill du hellre ha ett välbekant flöde? [Inloggning med Google, Apple eller GitHub fungerar också](/sv/help/signup-options). Den vägen avslöjar förstås vilken e-postadress som hör till den inloggningen, men dina anteckningar är krypterade på din enhet i båda fallen, och du får fortfarande en fras under huven."
       ]
     },
@@ -139,9 +139,9 @@
     "phrase-vs-password": {
       "q": "Varför en återställningsfras i stället för användarnamn och lösenord?",
       "a": [
-        "Det kan kännas bakvänt först, men en enda återställningsfras är den starkare konstruktionen. Med användarnamn och lösenord är användarnamnet ingen hemlighet (det dyker upp i varje läcka), så hela säkerheten vilar på lösenordet, och lösenord som människor väljer landar på kanske 30 till 40 bitars entropi. [Din fras på 12 ord ger garanterat 128 bitar](/sv/help/twelve-word-phrase), genererade av din enhet, aldrig valda av en människa och aldrig återanvända från en annan sajt.",
+        "Det kan kännas bakvänt först, men en enda återställningsfras är den starkare konstruktionen. Med användarnamn och lösenord är användarnamnet ingen hemlighet (det dyker upp i varje läcka), så hela säkerheten vilar på lösenordet, och lösenord som människor väljer landar på kanske 30 till 40 bitars entropi. [Din återställningsfras ger garanterat 128 bitar eller mer](/sv/help/twelve-word-phrase), genererade av din enhet, aldrig valda av en människa och aldrig återanvända från en annan sajt.",
         "Det finns inte heller något lösenord för oss att förlora. En lösenordsinloggning innebär att servern lagrar åtminstone en lösenordshash, och den kan läcka, knäckas eller nätfiskas. [Med egen förvaring](/sv/help/threat-model-levels) lämnar din fras aldrig din enhet: den härleder dina krypteringsnycklar lokalt, och servern ser bara krypterade data. Det finns ingen hash att stjäla och inget flöde för lösenordsåterställning som en angripare kan utnyttja.",
-        "Känns det klumpigt att skriva 12 ord? Du kan spara frasen i din lösenordshanterare med ett tryck (Inställningar > Säkerhet > Fras), och då känns inloggningen som vilken annan som helst. Vill du hellre ha ett välbekant flöde? [Inloggning med Google, Apple eller GitHub fungerar också](/sv/help/signup-options): du får ändå en fras under huven, och du väljer själv om den stannar på din enhet eller om vi förvarar den åt dig."
+        "Känns det klumpigt att skriva in frasen? Du kan spara frasen i din lösenordshanterare med ett tryck (Inställningar > Säkerhet > Fras), och då känns inloggningen som vilken annan som helst. Vill du hellre ha ett välbekant flöde? [Inloggning med Google, Apple eller GitHub fungerar också](/sv/help/signup-options): du får ändå en fras under huven, och du väljer själv om den stannar på din enhet eller om vi förvarar den åt dig."
       ]
     },
     "threat-model-levels": {
@@ -150,7 +150,7 @@
         "Ja, helt medvetet. Alla försvarar sig inte mot samma hot, så kontomodellen är en stege snarare än en enda dogm. Varje steg håller dina anteckningar krypterade på din enhet; det som ändras är vem som har nyckeln och vad vi vet om dig.",
         "Den bekväma änden: logga in med Google, Apple eller GitHub och låt ”Håll det enkelt och bekvämt” vara valt när du får frågan. Det är förvalet på den skärmen. Vi förvarar din återställningsfras krypterad på vår server, så att en ny enhet kan öppna dina anteckningar efter inloggning hos leverantören och [en autentiseringskod om 2FA är aktiverat](/sv/help/enable-2fa). I utbyte känner vi till e-postadressen bakom inloggningen och vår server kan dekryptera din fras. Spara din fras ifall du förlorar leverantörskontot och behåll reservnyckeln för 2FA om du aktiverar tvåfaktorsinloggning.",
         "Mitten: logga in med Google, Apple eller GitHub men välj ”Maximal säkerhet och integritet”. Din fras rör aldrig våra servrar, så servern har inget som öppnar dina anteckningar; nya enheter behöver frasen eller [en QR-skanning från en enhet som redan är inloggad](/sv/help/add-second-device). Vi känner fortfarande till e-postadressen bakom den inloggningen, och en rättslig order eller ett intrång i vår server kan nå den e-postadressen, aldrig innehållet i dina anteckningar.",
-        "Den privata änden: hoppa över inloggningarna helt och använd bara frasen på 12 ord. Ingen e-post, inget namn, ingen identitet, och i kombination med ett [anonymt Pro-köp](/sv/help/buy-pro-anonymously) lämnar inte ens betalningen något namn någonstans. I utbyte ligger nyckelansvaret helt hos dig: tappar du frasen utan någon inloggad enhet kvar kan ingen hjälpa dig.",
+        "Den privata änden: hoppa över inloggningarna helt och använd bara din återställningsfras. Ingen e-post, inget namn, ingen identitet, och i kombination med ett [anonymt Pro-köp](/sv/help/buy-pro-anonymously) lämnar inte ens betalningen något namn någonstans. I utbyte ligger nyckelansvaret helt hos dig: tappar du frasen utan någon inloggad enhet kvar kan ingen hjälpa dig.",
         "Inställningar > Konto > Nyckelförvaring visar båda lägena med deras för- och nackdelar och låter dig byta. När du lämnar serverförvaring raderar vi vår kopia efter att du bekräftat tre ord från din sparade fras. Att byta tillbaka laddar upp frasen igen och kräver ett uttryckligt val. Båda ändringarna signeras med din kontonyckel och kräver en ny autentiseringskod om 2FA är aktiverat. [Ett fraskonto kan ansluta en leverantör](/sv/help/connected-logins) under Konto > Konton och sedan välja serverförvaring separat; anslutningen laddar inte upp frasen. Alla lägen kan också använda PIN-lås för appen, biometrisk upplåsning och [skydd per anteckning](/sv/help/locked-vs-protected)."
       ]
     },
@@ -164,18 +164,18 @@
       ]
     },
     "guess-phrase": {
-      "q": "Kan någon gissa mina 12 ord eller råka få samma?",
+      "q": "Kan någon gissa min återställningsfras eller råka få samma?",
       "a": [
-        "Nej. Ingen kan gissa dina 12 ord, och ingen annan får samma: ingen dator som finns, eller som vi kan förutse, kommer i närheten. Bara den som får tag i dina faktiska ord kan logga in, så förvara dem säkert.",
-        "Din enhet väljer din fras slumpmässigt, och antalet möjliga fraser har 39 siffror. Att gissa din på första försöket är mindre sannolikt än att vinna en jackpot med 1 chans på 300 miljoner fyra gånger i rad. En dator som provade en miljard miljarder fraser i sekunden skulle ändå behöva runt 10 biljoner år för att prova alla, långt längre än universum har funnits. Även om alla 8 miljarder människor på jorden hade var sin fras är chansen att två av dem är likadana mindre än att vinna den jackpotten två gånger i rad.",
-        "Styrkan kommer från den slumpen, inte från hur orden ser ut. Hitta inte på en egen fras och lägg inte till symboler: använd de 12 orden exakt som appen ger dig dem. Versaler spelar ingen roll. Sista ordet fungerar som en kontroll, så appen avvisar en felskriven eller påhittad fras."
+        "Nej. Ingen kan gissa din återställningsfras, och ingen annan får samma: ingen dator som finns, eller som vi kan förutse, kommer i närheten. Bara den som får tag i dina faktiska ord kan logga in, så förvara dem säkert.",
+        "Din enhet väljer din fras slumpmässigt. För en fras på 12 ord har antalet möjliga fraser 39 siffror, och för en fras på 24 ord 78. Att gissa en fras på 12 ord på första försöket är mindre sannolikt än att vinna en jackpot med 1 chans på 300 miljoner fyra gånger i rad. En dator som provade en miljard miljarder fraser i sekunden skulle ändå behöva runt 10 biljoner år för att prova alla, långt längre än universum har funnits. Även om alla 8 miljarder människor på jorden hade var sin fras är chansen att två av dem är likadana mindre än att vinna den jackpotten två gånger i rad.",
+        "Styrkan kommer från den slumpen, inte från hur orden ser ut. Hitta inte på en egen fras och lägg inte till symboler: använd orden exakt som appen ger dig dem. Versaler spelar ingen roll. Sista ordet fungerar som en kontroll, så appen avvisar en felskriven eller påhittad fras."
       ]
     },
     "same-phrase": {
       "q": "Kan någon annan få samma återställningsfras som jag?",
       "a": [
         "Nej, inte i praktiken. Din enhet väljer din fras slumpmässigt bland ett enormt antal möjliga fraser. Även om varje människa på jorden skapade ett konto vore två likadana fraser mindre sannolikt än att vinna en jackpot med 1 chans på 300 miljoner två gånger i rad. Samma siffror är skälet till att [ingen kan gissa din fras](/sv/help/guess-phrase).",
-        "Ditt konto-ID kommer från frasen. Om du [raderar ett konto](/sv/help/delete-account) och loggar in igen med samma 12 ord får du alltså ett nytt, tomt valv med samma konto-ID. Ingenting från det raderade valvet kommer tillbaka. [När du har flyttat till en ny fras](/sv/help/phrase-compromised), ta bort den gamla ur din lösenordshanterare, så att du aldrig loggar in på det gamla kontot av misstag."
+        "Ditt konto-ID kommer från frasen. Om du [raderar ett konto](/sv/help/delete-account) och loggar in igen med samma fras får du alltså ett nytt, tomt valv med samma konto-ID. Ingenting från det raderade valvet kommer tillbaka. [När du har flyttat till en ny fras](/sv/help/phrase-compromised), ta bort den gamla ur din lösenordshanterare, så att du aldrig loggar in på det gamla kontot av misstag."
       ]
     },
     "enable-2fa": {
@@ -204,8 +204,8 @@
     "no-ai": {
       "q": "Använder PrivacyNotes AI på mina anteckningar?",
       "a": [
-        "Nej. Ninja, rutan för Cmd+K som läser dina datum och hittar dina ord, är vanlig kod som körs på din enhet. Det finns inga AI-funktioner i appen, ingen AI-bearbetning som går i bakgrunden och ingen modellträning på ditt innehåll. [Dina anteckningar är alltid krypterade, på din enhet och på vägen till servern](/sv/help/what-can-you-see), och ingenting i våra system läser anteckningsinnehåll för att mata in det i något.",
-        "Om vi någon gång släpper en funktion i den riktningen måste den köras helt på din enhet och vara strikt frivillig. Att skicka anteckningar i klartext till en molnmodell skulle ta dem ur krypteringen på din enhet, så det är uteslutet."
+        "Ingen AI läser dina anteckningar om du inte slår på det, och ingenting du skriver går någonsin till en AI-tjänst. Det finns ingen chattbot, ingen AI som skriver åt dig, ingen AI på våra servrar och ingen träning på ditt innehåll. Ninja och sökningen är vanlig kod på din enhet. [Dina anteckningar är alltid krypterade, på din enhet och på vägen till servern](/sv/help/what-can-you-see), och en moln-AI skulle ta dem ur den krypteringen, så ingen anteckning går någonsin till en.",
+        "Det enda undantaget är frivilligt och stannar på din enhet. Smarta kopplingar hittar anteckningar med samma innebörd, även med andra ord eller på ett annat språk. Funktionen använder offline-AI ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)) som bara körs på den här enheten. Den skriver ingenting och svarar inte på något: den gör om varje anteckning till en lista med tal och jämför dem. Du laddar ner den en gång under Inställningar > Redigerare > Beteende > Smarta kopplingar, och sedan fungerar den utan uppkoppling. Med dess reglage stänger du av den, och Ta bort tar bort den från enheten. Inget den räknar ut om en anteckning sparas eller skickas."
       ]
     },
     "burn-notes": {
@@ -249,7 +249,7 @@
     "oauth-recovery": {
       "q": "Jag loggar in med Google, Apple eller GitHub. Vad händer om jag förlorar tillgången till det kontot?",
       "a": [
-        "Du har fortfarande en fras på 12 ord under huven, och [frasen ensam loggar in dig på vilken enhet som helst](/sv/help/add-second-device) - varken Google, Apple eller GitHub behövs. Öppna Inställningar > Säkerhet > Fras och spara den i din lösenordshanterare.",
+        "Du har fortfarande en återställningsfras under huven, och [frasen ensam loggar in dig på vilken enhet som helst](/sv/help/add-second-device) - varken Google, Apple eller GitHub behövs. Öppna Inställningar > Säkerhet > Fras och spara den i din lösenordshanterare.",
         "Gör det en gång så kostar det dig ingenting att förlora Google-, Apple- eller GitHub-kontot: logga bara in med frasen i stället."
       ]
     },
@@ -257,7 +257,7 @@
       "q": "Jag har glömt min PIN eller lösenkod. Hur kommer jag in igen?",
       "a": [
         "Inget går förlorat, och du kan ta bort PIN-koden eller lösenkoden själv med din återställningsfras. Det är ett lås på skärmen, inte en krypteringsnyckel: dina anteckningar krypteras med nycklar som härleds ur frasen, så det är frasen som öppnar dem. Att binda krypteringen till PIN-koden skulle betyda att en glömd PIN-kod förstör data. Här sker det aldrig.",
-        "Överallt där appen frågar efter den väljer du **Glömt din PIN?** eller **Glömt din lösenkod?** och skriver dina 12 ord. Den finns på låsskärmen, [på en skyddad anteckning](/sv/help/locked-vs-protected) och under **Inställningar > Säkerhet > PIN**. Den tas bort på alla dina enheter och du kan ange en ny direkt. [Biometrisk upplåsning påverkas inte](/sv/help/biometric-unlock). En enhet med en äldre version av appen frågar efter 4 siffror även när du har skapat en lösenkod. **Glömt din PIN?** fungerar på samma sätt där."
+        "Överallt där appen frågar efter den väljer du **Glömt din PIN?** eller **Glömt din lösenkod?** och skriver din återställningsfras. Den finns på låsskärmen, [på en skyddad anteckning](/sv/help/locked-vs-protected) och under **Inställningar > Säkerhet > PIN**. Den tas bort på alla dina enheter och du kan ange en ny direkt. [Biometrisk upplåsning påverkas inte](/sv/help/biometric-unlock). En enhet med en äldre version av appen frågar efter 4 siffror även när du har skapat en lösenkod. **Glömt din PIN?** fungerar på samma sätt där."
       ]
     },
     "delete-account": {
@@ -292,7 +292,7 @@
       "q": "Hur tar jag bort en enhet som jag inte använder längre?",
       "a": [
         "Inställningar > Konto listar alla registrerade enheter. Ta bort den du pensionerar: platsen frigörs direkt (praktiskt på [gratisplanens 2 enheter](/sv/help/device-limit)), och den borttagna enheten loggas ut nästa gång den försöker synka. Den syns kvar under ”Nyligen borttagna” i 72 timmar så att du kan bekräfta att den är borta.",
-        "Borttagningen frigör platsen och loggar ut den enheten; det är frasen som styr åtkomsten. Den som har dina 12 ord kan logga in igen, så [om en enhet tappats bort eller stulits](/sv/help/lost-device) skyddar du frasen först och låter applåset (PIN eller biometri) vara på. Det är det som hindrar en upphittad enhet från att stå på vid gavel."
+        "Borttagningen frigör platsen och loggar ut den enheten; det är frasen som styr åtkomsten. Den som har din fras kan logga in igen, så [om en enhet tappats bort eller stulits](/sv/help/lost-device) skyddar du frasen först och låter applåset (PIN eller biometri) vara på. Det är det som hindrar en upphittad enhet från att stå på vid gavel."
       ]
     },
     "data-location": {
@@ -358,7 +358,7 @@
     "one-time-pricing": {
       "q": "Hur kan en engångsbetalning finansiera en synktjänst för alltid?",
       "a": [
-        "För att tjänsten är medvetet billig att driva. Appen är lokal först och anteckningar är små krypterade block, så servern gör knappt mer än att lagra dem och skicka dem vidare mellan dina enheter. Ingen analys av det du skriver, inga pixlar eller spårare från tredje part, inga AI-funktioner som bränner beräkningskraft, ingen supportavdelning.",
+        "För att tjänsten är medvetet billig att driva. Appen är lokal först och anteckningar är små krypterade block, så servern gör knappt mer än att lagra dem och skicka dem vidare mellan dina enheter. Ingen analys av det du skriver, inga pixlar eller spårare från tredje part, ingen AI som körs på våra servrar, ingen supportavdelning.",
         "Den enda kostnaden som växer över tid är lagring, och den är prissatt därefter: lagring utöver de 500 MB som ingår är [ett litet årligt tillägg](/sv/help/storage-addons). Engångskostnader prissätts en gång, återkommande kostnader återkommer. Modellen behöver bara betala för sig själv, och det gör den."
       ]
     },
@@ -379,7 +379,7 @@
     "refunds": {
       "q": "Vad gäller för återbetalning?",
       "a": [
-        "30 dagar, inga frågor. Om Pro inte är något för dig begär du full återbetalning inom 30 dagar från köpet, så går pengarna tillbaka till samma betalsätt. Kunder i EU har dessutom kvar sin lagstadgade ångerrätt på 14 dagar.",
+        "30 dagar, inga frågor, för köp med kort eller i en appbutik. Om Pro inte är något för dig begär du full återbetalning inom 30 dagar från köpet, så går pengarna tillbaka till samma betalsätt. Kunder i EU har dessutom kvar sin lagstadgade ångerrätt på 14 dagar. [Kryptobetalningar](/sv/help/pay-with-crypto) är slutgiltiga och kan inte återbetalas.",
         "Betalningar hanteras av Paddle, [vår merchant of record](/sv/help/paddle-privacy), så återbetalningar sköts direkt av Paddle: svara på ditt kvittomejl eller besök [paddle.net](https://paddle.net). Hela policyn finns i [användarvillkoren](https://lifetimelabs.dev/terms/#refunds)."
       ]
     },
@@ -387,7 +387,15 @@
       "q": "Vad får ni veta om mig när jag betalar?",
       "a": [
         "Mindre än du kanske tror. Kassan går via [Paddle](https://www.paddle.com), vår merchant of record: ditt namn, kortnummer och fakturaadress går till Paddle av betalnings- och skatteskäl och rör aldrig våra servrar.",
-        "Paddle har dina betalningsuppgifter; det som når vår databas är din publika nyckel, beloppet och order-id:t, och [för ett lagringstillägg även dess storlek och förnyelsedatum](/sv/help/storage-addons). Vårt Paddle-konto kan se båda sidor, och vi slår inte upp dig. Vill du hålla ditt namn borta från köpet, betala med ett [e-postalias och ett maskerat kort](/sv/help/buy-pro-anonymously)."
+        "Paddle har dina betalningsuppgifter; det som når vår databas är din publika nyckel, beloppet och order-id:t, och [för ett lagringstillägg även dess storlek och förnyelsedatum](/sv/help/storage-addons). Vårt Paddle-konto kan se båda sidor, och vi slår inte upp dig. Vill du hålla ditt namn borta från köpet, betala med ett [e-postalias och ett maskerat kort](/sv/help/buy-pro-anonymously). [Med krypto](/sv/help/pay-with-crypto) sköter BlockBee betalningen och får aldrig ditt konto-ID; vi sparar din publika nyckel, beloppet och BlockBees betalnings-id."
+      ]
+    },
+    "pay-with-crypto": {
+      "q": "Kan jag betala för Pro med Bitcoin eller annan krypto?",
+      "a": [
+        "Ja, på webben och i skrivbordsappen. Välj Betala med krypto i uppgraderingsfönstret och betala med Bitcoin, Ethereum, Lightning, USDC eller USDT. Priset är kortpriset, betalat en gång. [Butiksversionerna](/sv/help/store-purchases) säljer Pro endast via Apple och Google.",
+        "[BlockBee](https://blockbee.io) driver betalningssidan. Den frågar inte efter något namn eller någon e-postadress och får aldrig ditt konto-ID. En kryptobetalning är offentlig på sin blockkedja. Bitcoin aktiverar Pro när nätverket bekräftar betalningen, vanligtvis inom 10 till 60 minuter, och Ethereum och de flesta stablecoins tar ungefär en minut. En banner i appen visar hur betalningen ligger till.",
+        "Kryptobetalningar är slutgiltiga: ingen återbetalning är möjlig. I kassan godkänner du att Pro startar direkt, vilket upphäver EU:s ångerrätt på 14 dagar, så testa gratisplanen först. Sidan efter betalningen är din köpbekräftelse. Spara den som PDF, eftersom vi inte har någon e-postadress att skicka den till."
       ]
     },
     "buy-pro-anonymously": {
@@ -395,7 +403,7 @@
       "a": [
         "Ja, med två standardverktyg. För kvittot, använd ett e-postalias: [Apple Hide My Email](https://support.apple.com/105078), [DuckDuckGo Email Protection](https://duckduckgo.com/email), [SimpleLogin](https://simplelogin.io), [Firefox Relay](https://relay.firefox.com) och [addy.io](https://addy.io) vidarebefordrar alla till din riktiga inkorg utan att avslöja den. För betalningen, använd ett maskerat kort: [privacy.com](https://privacy.com) i USA skapar virtuella kort som fungerar med vilket namn du än skriver, och på andra håll gör ett förbetalt kort som fungerar online, köpt med kontanter, samma jobb helt utan namn på.",
         "[I kassan ber Paddle](/sv/help/paddle-privacy) om en e-postadress, ett betalsätt och ett land (plus postnummer i vissa regioner) för att räkna ut skatten. Aliaset tar emot kvittot, det maskerade kortet bär vilket namn du än gav det, och skatteuppgiften placerar dig i en region, inte mer. Men håll aliaset vid liv: kvittomejlet är ditt köpbevis och [din väg till en återbetalning](/sv/help/refunds).",
-        "[Kombinerat med ett fraskonto](/sv/help/signup-options) är det ingen enskild part som sitter med hela bilden: din bank ser en kortpåfyllning, Paddle ser ett alias och ett maskerat kort, och vi ser en publik nyckel som blev Pro, bredvid det aliaset i vårt Paddle-konto."
+        "[Kombinerat med ett fraskonto](/sv/help/signup-options) är det ingen enskild part som sitter med hela bilden: din bank ser en kortpåfyllning, Paddle ser ett alias och ett maskerat kort, och vi ser en publik nyckel som blev Pro, bredvid det aliaset i vårt Paddle-konto. [Att betala med krypto](/sv/help/pay-with-crypto) kräver ingen e-postadress alls, men själva betalningen är offentlig på sin blockkedja."
       ]
     },
     "platforms": {
@@ -412,7 +420,7 @@
         "Ofta några dagar. Små önskemål och buggrapporter hamnar oftast i nästa version, och nya versioner släpps nästan varje vecka i stället för ett par gånger om året. [Changelog](/changelog) är beviset: varje post är daterad, skriven på enkelt språk och säger vad som har ändrats. Läs en månad bakåt så vet du precis vad du kan vänta dig av oss innan du anförtror appen något.",
         "Det tempot kommer av hur arbetet är uppdelat. Krypteringskärnan, synkprotokollet och inloggningen skrevs av människor, vid sidan av deras jobb, långt innan appen hade ett namn, och kryptokärnan underhålls fortfarande så; inget automatiserat kommer i närheten av den. När den grunden stod stadigt, våren 2026, började vi använda AI-verktyg för kod enligt ett fast protokoll: först för [översättningar](/sv/help/translation-quality), sedan hjälpartiklar, sedan gränssnittsfunktioner och rättningar av icke-kritiska buggar, där de är bra på att ringa in sällsynta specialfall som annars skulle ta veckor, och på att skriva testskripten som ser till att flera utvecklare följer samma standard. Det är därför det är värt att genomföra en enda persons önskemål i stället för att låta det vänta bakom de mest efterfrågade önskemålen.",
         "Allt som rör kryptering, synk eller inloggning stannar hos skickliga utvecklare som skriver varje rad, och den koden är [offentlig](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) så att du kan läsa den i stället för att tro oss. Mer om teamet och hur vi arbetar finns på vår [om oss-sida](https://lifetimelabs.dev/about).",
-        "Appen i sig har inga AI-funktioner och skickar aldrig dina anteckningar någonstans ([detaljer](/sv/help/no-ai)). Det löftet står för sig, och det ändras inte."
+        "Appen själv skickar aldrig dina anteckningar till en AI, och den enda AI-funktionen den har körs bara på din enhet, om du slår på den ([detaljer](/sv/help/no-ai)). Det löftet står för sig, och det ändras inte."
       ]
     },
     "android-updates": {
@@ -491,7 +499,7 @@
         "För att ställa in det öppnar du skrivbordsappen och sedan Inställningar > CLI och väljer Slå på. Välj Installera, som lägger kommandot `privacynotes` på den här datorn, och sedan Skapa en kod. Kör `privacynotes login` i en ny terminal och klistra in koden. Spara sedan din första anteckning:",
         "`echo \"# Hello\" | privacynotes save`",
         "`privacynotes` har få kommandon, eftersom det gör ett enda jobb. Varje kommando skriver ut en kort sammanställning för en person, eller en rad JSON med `--json` för ett skript:",
-        "- `privacynotes login` ansluter den här datorn med en engångskod från Inställningar > CLI. Klistra in koden, eller skicka in den.\n- `privacynotes save note.md` lägger till en anteckning från en fil, och `privacynotes save` ensamt läser Markdown som skickas in. `--title` anger titeln, annars används den första `#`-rubriken eller den första raden. `--tag work,ideas` lägger till taggar.\n- `privacynotes status` visar om den här datorn är ansluten och vilken anteckning den sparade senast.\n- `privacynotes logout` kopplar från den här datorn.\n- `privacynotes mcp` kör kommandot som ett verktyg för en AI-app utan terminal, se [MCP](/sv/help/mcp).\n- `privacynotes help` (eller `privacynotes --help`) listar alla kommandon och alternativ, och `privacynotes --version` skriver ut versionen.",
+        "- `privacynotes login` ansluter den här datorn med en engångskod från Inställningar > CLI. Klistra in koden, eller skicka in den.\n- `privacynotes save note.md` lägger till en anteckning från en fil, och `privacynotes save` ensamt läser Markdown som skickas in. `--title` anger titeln, annars används den första `#`-rubriken eller den första raden. `--tag work,ideas` lägger till taggar.\n- `privacynotes status` visar anslutningen som sparats på den här datorn och vilken anteckning den sparade senast. Det frågar inte servern: när du har tagit bort datorn i Inställningar > CLI visas den som ansluten tills en sparning nekas.\n- `privacynotes logout` kopplar från den här datorn.\n- `privacynotes mcp` kör kommandot som ett verktyg för en AI-app utan terminal, se [MCP](/sv/help/mcp).\n- `privacynotes help` (eller `privacynotes --help`) listar alla kommandon och alternativ, och `privacynotes --version` skriver ut versionen.",
         "Med en AI-kodningsagent ansluter du `privacynotes` en gång på datorn där agenten körs och ber sedan med vanliga ord: \"Save this plan to my PrivacyNotes with privacynotes save, tagged project.\" Agenten kan läsa `privacynotes --help` för detaljerna, skriver Markdown och skickar in det. Samma kommando fungerar i dina egna skript och schemalagda jobb:",
         "- `git log --oneline -20 | privacynotes save --title \"Recent commits\"` sparar dina senaste commits.\n- `pbpaste | privacynotes save --tag inbox` sparar det du kopierade, på en Mac.\n- `privacynotes save --tag daily report.md` i ett nattligt jobb sparar en genererad rapport.\n- En tangent som du väljer i systemets inställningar kan också köra `privacynotes save`, se [Kan jag lägga till en anteckning med ett kortkommando, utan att öppna appen?](/sv/help/quick-note-shortcut)",
         "En anteckning rymmer upp till 700 KB Markdown, 20 taggar och en titel på 200 tecken, och `privacynotes` kontrollerar detta innan det skickar. Det avslutar med 0 när anteckningen är sparad, 1 när servern vägrar den, 2 vid felaktig indata, 3 när datorn inte är ansluten och 4 när nätverk saknas, så att ett skript kan reagera. En sparad anteckning väntar, förseglad, tills någon av dina appar öppnas; om ingen gör det inom 90 dagar, eller om du tar bort datorn dessförinnan, raderas den. För att koppla från en dator väljer du Ta bort bredvid den i Inställningar > CLI. Vad kommandot och en agent kan se står i [Kan kommandoradsverktyget eller en AI-agent läsa mina anteckningar?](/sv/help/cli-security)."
@@ -570,7 +578,7 @@
       "q": "Kan jag använda min egen AI-agent för att få hjälp med PrivacyNotes?",
       "a": [
         "Ja, och vi har byggt hjälpcentret för det. Varje svar publiceras som en enda textfil på [llms-full.txt](https://privacynotes.app/llms-full.txt), så en assistent läser alltihop på en gång. Rutan längst ner på varje hjälpsida kopierar en färdig prompt: klistra in den i ChatGPT, Claude, Gemini eller den assistent du redan använder, och fråga på ditt eget språk.",
-        "Att skicka dig till ett verktyg du redan litar på håller oss helt utanför, och vi får aldrig veta vad du frågade om. En egen chattbot skulle innebära att dina frågor hamnar på våra servrar, och frågor om en anteckningsapp bär ofta med sig innehållet i anteckningarna. Det här är skilt från appen i sig, som inte har några AI-funktioner alls ([detaljer](/sv/help/no-ai)).",
+        "Att skicka dig till ett verktyg du redan litar på håller oss helt utanför, och vi får aldrig veta vad du frågade om. En egen chattbot skulle innebära att dina frågor hamnar på våra servrar, och frågor om en anteckningsapp bär ofta med sig innehållet i anteckningarna. Det här är skilt från appen i sig, som aldrig skickar dina anteckningar till en AI ([detaljer](/sv/help/no-ai)).",
         "Klistra aldrig in din återställningsfras, din PIN eller texten i en anteckning i en assistent. Inget svar kräver dem, den kopierade prompten säger åt assistenten att neka dem, och allt du skriver i någon annans chattruta har lämnat din enhet."
       ]
     },
@@ -600,7 +608,7 @@
       "q": "Jag har tappat bort en enhet. Hur skyddar jag mina anteckningar?",
       "a": [
         "Öppna Inställningar > Konto > ”Registrerade enheter” från valfri inloggad enhet och [ta bort den borttappade](/sv/help/remove-device). Nästa gång den enheten kommer online loggas den ut och dess lokala data raderas, inom ungefär en minut efter att den används igen. Den ligger kvar under ”Nyligen borttagna” i 72 timmar så att du kan bekräfta att den är borta.",
-        "Slå på applåset (PIN eller biometri) på allt som är bärbart och låt operativsystemets skärmlås vara på. En enhet raderas så fort den kopplar upp sig nästa gång, så fram till dess är det de lokala grindarna som står mellan en borttappad telefon och dina anteckningar. Den verkliga nyckeln är frasen: den som har dina 12 ord kan logga in igen. Misstänker du att själva frasen läckt, följ [handboken för läckt fras](/sv/help/phrase-compromised) i stället."
+        "Slå på applåset (PIN eller biometri) på allt som är bärbart och låt operativsystemets skärmlås vara på. En enhet raderas så fort den kopplar upp sig nästa gång, så fram till dess är det de lokala grindarna som står mellan en borttappad telefon och dina anteckningar. Den verkliga nyckeln är frasen: den som har den kan logga in igen. Misstänker du att själva frasen läckt, följ [handboken för läckt fras](/sv/help/phrase-compromised) i stället."
       ]
     },
     "device-limit": {
@@ -664,7 +672,7 @@
       "q": "Kan någon öppna min säkerhetskopia utan min återställningsfras?",
       "a": [
         "Nej, inte en krypterad. En ”Allt, krypterat (.pnbackupz)” eller ”Endast text, krypterad (.pnbackup)” är krypterad med din frasnyckel, så den öppnas bara i ditt konto. Den som hittar filen ser dess namn, dess storlek och datumet, och inget innehåll.",
-        "En ”Allt, inte krypterat (.zip)” från fliken Exportera är undantaget: den öppnas på vilken dator som helst, utan fras. Automatiska säkerhetskopior gör aldrig den typen ([varför inte](/sv/help/backup-unencrypted))."
+        "En ”Allt, inte krypterat (.zip)” från Inställningar > Säkerhetskopiering > Manuellt är undantaget: den öppnas på vilken dator som helst, utan fras. Automatiska säkerhetskopior gör aldrig den typen ([varför inte](/sv/help/backup-unencrypted))."
       ]
     },
     "backup-unencrypted": {
@@ -791,7 +799,7 @@
     "pro-not-active": {
       "q": "Jag har betalat för Pro men det är inte aktivt. Vad gör jag nu?",
       "a": [
-        "Ge det en minut och ladda sedan om appen. Efter kassan pollar appen i ungefär 20 sekunder och låser upp av sig själv, och en omladdning kontrollerar Pro-statusen på nytt vid start. Om betalningen gick igenom men aktiveringen släpar efter visas en banner: ”Betalningen är mottagen, men Pro-aktiveringen tar längre tid än vanligt” - det läget löser sig självt i nästan alla fall. [I butiksversioner](/sv/help/store-purchases) görs ett nytt försök när du startar om appen om ett köp inte kunde valideras, och ett köp som aldrig aktiveras återbetalas automatiskt av butiken inom 3 dagar.",
+        "Ge det en minut och ladda sedan om appen. Efter kassan pollar appen i ungefär 20 sekunder och låser upp av sig själv, och en omladdning kontrollerar Pro-statusen på nytt vid start. En [kryptobetalning](/sv/help/pay-with-crypto) tar längre tid, och en banner visar hur den ligger till. Om betalningen gick igenom men aktiveringen släpar efter visas en banner: ”Betalningen är mottagen, men Pro-aktiveringen tar längre tid än vanligt” - det läget löser sig självt i nästan alla fall. [I butiksversioner](/sv/help/store-purchases) görs ett nytt försök när du startar om appen om ett köp inte kunde valideras, och ett köp som aldrig aktiveras återbetalas automatiskt av butiken inom 3 dagar.",
         "Fortfarande låst? Det handlar nästan alltid om fel konto: Pro knyts till kontot som var inloggat vid köpet, så en annan fras - eller en Google-, Apple- eller GitHub-inloggning i stället för ditt frasvalv - är ett annat konto. Jämför konto-ID under Inställningar > ID & Sync på enheten där köpet gjordes. Har det verkligen fastnat, [rapportera det](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues) och ta med det konto-ID:t: det identifierar köpet och avslöjar ingenting om dina anteckningar."
       ]
     },
@@ -814,7 +822,7 @@
       "q": "Obtainium, direkt APK eller Google Play: vilken Android-nedladdning?",
       "a": [
         "Ta Google Play om du vill gå den vanliga vägen: den installerar och uppdaterar appen som vilken annan app som helst, och köp i appen faktureras av Google. Ta [Obtainium](/sv/help/obtainium) om du vill att appen ska hålla sig aktuell av sig själv utan ett Google-konto, och [den direkta APK-filen](/sv/help/android-updates) om du hellre slipper köra en andra app för det. Obtainium och APK-filen ger dig samma fil signerad med samma nyckel, så du kan byta mellan de två när som helst: Obtainium tar över en APK du redan sidoladdat, och webbplatsens APK installeras över en från Obtainium. Play-versionen är signerad med en annan nyckel, så ett byte mellan Play och någon av de andra två kräver att du avinstallerar först.",
-        "Du kan ändra dig senare utan krångel. Före varje byte som kräver att du avinstallerar först, bekräfta att appen visar \"Synced\" och ha dina 12 ord eller [en inloggnings-QR från en annan enhet](/sv/help/add-second-device) redo, för avinstallationen rensar den lokala kopian."
+        "Du kan ändra dig senare utan krångel. Före varje byte som kräver att du avinstallerar först, bekräfta att appen visar \"Synced\" och ha din återställningsfras eller [en inloggnings-QR från en annan enhet](/sv/help/add-second-device) redo, för avinstallationen rensar den lokala kopian."
       ]
     },
     "markdown-folder": {
@@ -883,7 +891,7 @@
     "add-second-device": {
       "q": "Hur loggar jag in på en andra enhet?",
       "a": [
-        "På enheten du redan använder, öppna Inställningar > Säkerhet > Fras. Där står dina 12 ord och en QR-kod för inloggning. På den nya enheten väljer du \"Logga in med fras\" och skannar QR-koden med kameran, laddar upp ett foto av den, eller skriver in orden. Dina anteckningar är på plats inom sekunder.",
+        "På enheten du redan använder, öppna Inställningar > Säkerhet > Fras. Där står orden i din fras och en QR-kod för inloggning. På den nya enheten väljer du \"Logga in med fras\" och skannar QR-koden med kameran, laddar upp ett foto av den, eller skriver in orden. Dina anteckningar är på plats inom sekunder.",
         "[Ett gratiskonto täcker 2 enheter](/sv/help/device-limit) och Pro hur många du vill, och två webbläsare på samma dator räknas som en enda enhet. Behandla QR-koden precis som frasen den bär: visa den inte för någon, och låt den aldrig hamna i ett fotobibliotek som synkar till någon annans moln."
       ]
     },
@@ -904,15 +912,15 @@
     "clear-browser-data": {
       "q": "Vad händer om jag rensar webbläsardata eller kakor?",
       "a": [
-        "Webbappen håller dina anteckningar i webbläsarens eget lagringsutrymme, så att rensa webbplatsdata för PrivacyNotes sopar bort den lokala kopian och loggar ut dig. Allt som redan synkat är i säkerhet: logga in med din fras på 12 ord så kommer det tillbaka. Det som inte hunnit synka är borta, för vi hade aldrig någon kopia av det.",
+        "Webbappen håller dina anteckningar i webbläsarens eget lagringsutrymme, så att rensa webbplatsdata för PrivacyNotes sopar bort den lokala kopian och loggar ut dig. Allt som redan synkat är i säkerhet: logga in med din återställningsfras så kommer det tillbaka. Det som inte hunnit synka är borta, för vi hade aldrig någon kopia av det.",
         "Gör därför två saker. Kolla att sidfoten säger \"Synced\" innan du rensar något, och håll frasen i en lösenordshanterare, för en tömd webbläsare kan inte be dig snällt om den. [Skrivbords- och mobilapparna](/sv/help/platforms) berörs inte alls: [de har eget lagringsutrymme](/sv/help/data-on-disk), som en webbläsarstädning aldrig rör."
       ]
     },
     "android-backup": {
       "q": "Ingår mina anteckningar i säkerhetskopian av min Android-telefon?",
       "a": [
-        "Nej. Android-appen håller sina data utanför telefonens molnsäkerhetskopia, så inget av det hamnar i Google Drive. Skälet är nyckeln, inte anteckningarna: där du valde **Lita på den här enheten** ligger dina 12 ord kvar på den enheten för att hålla dig inloggad, och en molnsäkerhetskopia är ingen plats för nyckeln som dekrypterar dina anteckningar.",
-        "En ny telefon börjar därför tom: installera appen, [logga in med dina 12 ord](/sv/help/add-second-device), och allt som synkats kommer in. Återställningen väntar på den första synkningen, så en säkerhetskopia du tar med matchas mot det kontot redan har i stället för att läggas till två gånger. Det som aldrig synkats finns bara på den gamla telefonen, så kolla först att sidfoten säger \"Synced\", eller ta med en ”Allt, inte krypterat (.zip)” från Inställningar > Säkerhetskopiering > Manuellt ([vilken säkerhetskopia du ska ta](/sv/help/backup-strategy)).",
+        "Nej. Android-appen håller sina data utanför telefonens molnsäkerhetskopia, så inget av det hamnar i Google Drive. Skälet är nyckeln, inte anteckningarna: där du valde **Lita på den här enheten** ligger din återställningsfras kvar på den enheten för att hålla dig inloggad, och en molnsäkerhetskopia är ingen plats för nyckeln som dekrypterar dina anteckningar.",
+        "En ny telefon börjar därför tom: installera appen, [logga in med din fras](/sv/help/add-second-device), och allt som synkats kommer in. Återställningen väntar på den första synkningen, så en säkerhetskopia du tar med matchas mot det kontot redan har i stället för att läggas till två gånger. Det som aldrig synkats finns bara på den gamla telefonen, så kolla först att sidfoten säger \"Synced\", eller ta med en ”Allt, inte krypterat (.zip)” från Inställningar > Säkerhetskopiering > Manuellt ([vilken säkerhetskopia du ska ta](/sv/help/backup-strategy)).",
         "En direkt överföring från telefon till telefon under installationen är något annat: vissa telefoner flyttar appdata då, och Android ger ingen app något pålitligt sätt att tacka nej. Den kopian lämnar aldrig dina två enheter, så radera den gamla telefonen efteråt."
       ]
     },
@@ -947,7 +955,7 @@
     "family-sharing": {
       "q": "Kan min familj dela ett konto eller ett Pro-köp?",
       "a": [
-        "Svaret är två konton, och att starta ett andra kostar ingenting: [vart och ett får 2 enheter och 50 MB gratis](/sv/help/free-vs-pro). Ett konto är en fras på 12 ord, och den som har frasen har allt i den: varje anteckning, varje valvpost, på varje enhet. Det är separata konton som ger varje person egna privata anteckningar. Pro köps per konto.",
+        "Svaret är två konton, och att starta ett andra kostar ingenting: [vart och ett får 2 enheter och 50 MB gratis](/sv/help/free-vs-pro). Ett konto är en återställningsfras, och den som har frasen har allt i den: varje anteckning, varje valvpost, på varje enhet. Det är separata konton som ger varje person egna privata anteckningar. Pro köps per konto.",
         "Ska du lämna över en enda specifik sak, skicka en [burn note](/sv/help/burn-notes) i stället för din fras. Ett delat hushållskonto fungerar bra om det verkligen är det du vill ha: håll frasen i en delad post i lösenordshanteraren, och utgå från att var och en som någon gång haft den har sett allt i den."
       ]
     },
@@ -969,7 +977,7 @@
       "q": "Vilket registreringsalternativ ska jag välja?",
       "a": [
         "Det som matchar din hotnivå. Det finns tre. Ett: logga in med Google, Apple eller GitHub, med din nyckel lagrad på vår server. Två: samma inloggning, men nyckeln stannar bara på din enhet. Tre: \"Skapa en fras\", utan e-post, utan namn och helt utan inloggning. Alla tre håller dina anteckningar krypterade på din enhet, och det som skiljer dem åt är vem som håller nyckeln och hur mycket vi får veta om dig.",
-        "När du loggar in med Google, Apple eller GitHub får du sedan välja var din nyckel ska förvaras, med ”Håll det enkelt och bekvämt” som förval. Det alternativet lagrar din fras krypterad på vår server, så att en ny enhet kan öppna dina anteckningar efter inloggning hos leverantören och en autentiseringskod om 2FA är aktiverat. Spara din fras ifall du förlorar leverantörskontot och behåll reservnyckeln för 2FA om du aktiverar tvåfaktorsinloggning. ”Maximal säkerhet och integritet” håller frasen på din enhet, så servern har inget som öppnar dina anteckningar, och en ny enhet behöver dina 12 ord eller [en QR-skanning från en redan inloggad enhet](/sv/help/add-second-device).",
+        "När du loggar in med Google, Apple eller GitHub får du sedan välja var din nyckel ska förvaras, med ”Håll det enkelt och bekvämt” som förval. Det alternativet lagrar din fras krypterad på vår server, så att en ny enhet kan öppna dina anteckningar efter inloggning hos leverantören och en autentiseringskod om 2FA är aktiverat. Spara din fras ifall du förlorar leverantörskontot och behåll reservnyckeln för 2FA om du aktiverar tvåfaktorsinloggning. ”Maximal säkerhet och integritet” håller frasen på din enhet, så servern har inget som öppnar dina anteckningar, och en ny enhet behöver din fras eller [en QR-skanning från en redan inloggad enhet](/sv/help/add-second-device).",
         "Med enbart frasen finns ingen e-postadress eller något namn som kopplar kontot till en person. I utbyte ansvarar du själv för frasen, så om du förlorar den utan någon upplåst enhet kvar kan ingen återställa den åt dig. Inställningar > Konto > Nyckelförvaring visar ditt aktuella läge och låter dig ändra det. [Ett fraskonto måste först ansluta en leverantör](/sv/help/connected-logins) under Konto > Konton innan du kan välja serverförvaring; anslutningen i sig ändrar inte förvaringen. Alla lägen kan lägga till PIN-lås eller biometriskt lås och [valfri tvåfaktorsinloggning](/sv/help/enable-2fa). Hela jämförelsen finns i [stegen över hotnivåer](/sv/help/threat-model-levels)."
       ]
     },
@@ -1052,7 +1060,7 @@
     "ninja": {
       "q": "Vad kan jag göra med Ninja, rutan för Cmd+K?",
       "a": [
-        "Ninja öppnar vilket objekt som helst, lägger till nya och kör kommandon, allt från en enda ruta. Tryck på Cmd+K på en Mac eller Ctrl+K på Windows och Linux, K som i Katana (Cmd+P eller Ctrl+P fungerar också), eller klicka på **Ninja** i sidofältet eller i listhuvudet. Skriv en del av en titel för att hitta anteckningar, uppgifter, händelser, dagboksinlägg, objekt i Valvet, bokmärken, kontakter, filer, inställningar, taggar och mappar. Under titlarna visar **I texten** raden i en anteckning som innehåller dina ord.",
+        "Ninja öppnar vilket objekt som helst, lägger till nya och kör kommandon, allt från en enda ruta. Tryck på Cmd+K på en Mac eller Ctrl+K på Windows och Linux, K som i Katana (Cmd+P eller Ctrl+P fungerar också), eller klicka på **Ninja** i sidofältet eller i listhuvudet. Skriv en del av en titel för att hitta anteckningar, uppgifter, händelser, dagboksinlägg, objekt i Valvet, bokmärken, kontakter, filer, inställningar, taggar och mappar. Under titlarna visar **I texten** raden i en anteckning som innehåller dina ord, eller namnet på dess plats.",
         "Det första tecknet du skriver avgör läget: `+` [lägger till ett objekt med vanliga ord](/sv/help/ninja-quick-add), `>` kör ett kommando, `#` listar dina taggar och `/` dina mappar, och `>>` efter en text [lägger till den i en lista du redan har](/sv/help/ninja-add-to-list). Tryck på Tab på en rad för objektets meny, Option+Enter eller Alt+Enter för att öppna det i en flik, och Q var som helst för att öppna rutan med `+` redan skrivet. [Matchningen sker på din enhet](/sv/help/search-local), och Ninja är gratis."
       ]
     },
@@ -1124,7 +1132,7 @@
       "q": "Kan jag ansluta fler än ett inloggningssätt till mitt konto?",
       "a": [
         "Ja. Öppna Inställningar > Konto > Konton och anslut Google, Apple eller GitHub för att lägga till ett inloggningssätt som öppnar samma valv. Du kan ansluta flera, till och med två konton från samma leverantör, och [din återställningsfras fungerar fortfarande vid sidan av dem](/sv/help/oauth-recovery). Att ansluta eller koppla bort ett konto lämnar dina anteckningar och din kryptering orörda.",
-        "Ett inloggningssätt som redan hör till ett annat valv kan inte anslutas, eftersom valv aldrig slås ihop. **Koppla bort** ber först om dina 12 ord. Om vi förvarar din fras åt dig stannar det sista anslutna kontot kvar tills du ansluter ett annat eller sparar din fras och [byter till egen förvaring](/sv/help/threat-model-levels). Med egen förvaring ber en ny enhet fortfarande om dina 12 ord. Anslutna konton är i beta."
+        "Ett inloggningssätt som redan hör till ett annat valv kan inte anslutas, eftersom valv aldrig slås ihop. **Koppla bort** ber först om din återställningsfras. Om vi förvarar din fras åt dig stannar det sista anslutna kontot kvar tills du ansluter ett annat eller sparar din fras och [byter till egen förvaring](/sv/help/threat-model-levels). Med egen förvaring ber en ny enhet fortfarande om din fras. Anslutna konton är i beta."
       ]
     },
     "calendar": {

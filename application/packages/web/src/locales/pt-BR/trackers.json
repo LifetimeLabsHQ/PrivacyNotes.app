@@ -7,6 +7,7 @@
     "sleep": "Sono",
     "sleepScore": "Pontuação do sono",
     "heartRate": "Frequência cardíaca",
+    "bloodPressure": "Pressão arterial",
     "activity": "Atividade",
     "medication": "Medicação",
     "meds": "Remédios",
@@ -24,6 +25,7 @@
   "units": {
     "hoursSuffix": "h",
     "bpm": "bpm",
+    "mmHg": "mmHg",
     "kg": "kg",
     "lb": "lb",
     "steps_one": "passo",
@@ -116,6 +118,10 @@
   },
   "heartRate": {
     "prompt": "Frequência cardíaca média"
+  },
+  "bloodPressure": {
+    "systolic": "Pressão máxima (sistólica)",
+    "diastolic": "Pressão mínima (diastólica)"
   },
   "activity": {
     "prompt": "Nível de atividade hoje?",
@@ -243,11 +249,13 @@
   "custom": {
     "yes": "Sim",
     "no": "Não",
+    "unknownType": "Este rastreador precisa de uma versão mais recente do app.",
     "typeLabels": {
       "scale10": "Escala (0-10)",
       "scale5": "Escala (0-5)",
       "slider100": "Pontuação (0-100)",
       "number": "Número",
+      "pair": "Dois números",
       "yesno": "Sim / Não"
     }
   },
@@ -263,6 +271,7 @@
     "medicationCard": "Cartão de medicação",
     "medicationCardHelp": "\"Você tomou sua medicação?\" neste dispositivo, só em um dia em que uma medicação está prevista.",
     "customHelp": "Rastreadores que você mesmo nomeia: uma escala, um número ou um sim ou não. Até {{max}}.",
+    "customHelpPair": "Rastreadores que você mesmo nomeia: uma escala, um número, dois números ou um sim ou não. Até {{max}}.",
     "yourCustomTrackers": "Seus rastreadores personalizados",
     "categoryMoodMind": "Humor e mente",
     "categoryBodyHealth": "Corpo e saúde",
@@ -297,7 +306,13 @@
     "preview": "Prévia",
     "startFromLast": "Lembrar o último registro",
     "chooseIcon": "Escolher ícone",
-    "startFromLastHelp": "Bom para coisas que mudam pouco, como seu peso ou uma dose diária."
+    "startFromLastHelp": "Bom para coisas que mudam pouco, como seu peso ou uma dose diária.",
+    "pairFirst": "Primeiro número",
+    "pairSecond": "Segundo número",
+    "pairFirstPlaceholder": "Sistólica",
+    "pairSecondPlaceholder": "Diastólica",
+    "pairUnit": "Unidade (opcional)",
+    "pairWaiting": "Salvo quando o primeiro número for preenchido."
   },
   "factors": {
     "prompt": "O que fez parte do seu dia?",

@@ -1,9 +1,11 @@
 /**
  * Sealed rows waiting to be sent. A clip is sealed before it is queued, so
  * the queue holds ciphertext only. Pictures are queued before their clip and
- * sent in order; a refusal that can pass (offline, busy, full) keeps the row
- * for the next try, a refusal that cannot drops it, and a revoked token
- * disconnects this browser. The badge shows how many clips wait.
+ * sent in order; a refusal the function names as final drops the clip's
+ * rows, a revoked token disconnects this browser, and every other answer
+ * (offline, busy, full, or a page from something in front of the function)
+ * keeps the row and stops the send until the next try. The badge shows how
+ * many clips wait.
  * Spec: docs/internal/plans/browser-extension-build.md (section 3.3, step 4)
  */
 import { browser } from 'wxt/browser';
@@ -75,6 +77,11 @@ export async function flashBadge(mark: 'saved' | 'problem'): Promise<void> {
   await showMark(mark, async () => showCount(await read()));
 }
 
+/** The refusals of clip-inbox that the same row can never pass, each only
+ *  as the code in the function's JSON body: an answer with none of these is
+ *  not the function's word on the row and drops nothing. */
+const FINAL_REFUSALS = new Set(['invalid_body', 'invalid_json', 'too_large', 'bad_kind', 'id_taken', 'not_allowed']);
+
 export type FlushResult = { sent: string[]; dropped: string[]; left: number; revoked: boolean };
 
 let flushing: Promise<FlushResult> | null = null;
@@ -106,8 +113,10 @@ async function flushOnce(): Promise<FlushResult> {
       await flashBadge('problem');
       return { sent, dropped, left: 0, revoked: true };
     }
-    // Offline, rate limited, full or down: the row waits for the next try.
-    if (answer.status === 0 || answer.status === 429 || answer.status >= 500 || answer.error === 'inbox_full') break;
+    // Offline, rate limited, full, down, or an answer the function did not
+    // write: the row waits for the next try.
+    const code = answer.body.error;
+    if (typeof code !== 'string' || !FINAL_REFUSALS.has(code)) break;
     // A refusal that can never pass: the clip's rows go together.
     dropped.push(item.group);
     await update((items) => ({ items: items.filter((r) => r.group !== item.group), result: null }));

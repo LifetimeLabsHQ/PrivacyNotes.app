@@ -229,6 +229,10 @@ interface QueuedVersion {
   ciphertext: string;
   nonce: string;
   queuedAt: string;
+  /** The key epoch of the sync key that sealed it, absent at epoch 1: a
+   *  version queued before a phrase change goes out under its own epoch.
+   *  Spec: docs/internal/plans/phrase-change.md (6.3) */
+  key_epoch?: number;
 }
 
 /** A quick note the Ninja box saved while the app was locked: sealed to the
@@ -244,6 +248,34 @@ interface QueuedQuickNote {
 
 /** The `db.kv` key of the inbox public key the Ninja box seals to. */
 export const QUICK_NOTE_INBOX_KEY = 'quickNoteInbox';
+
+/** The `db.kv` key of the identity binding record (identity.ts). */
+export const IDENTITY_BINDING_KEY = 'identityBinding';
+
+/** The `db.kv` key of the key ring this device keeps: the server's
+ *  ciphertext, which only the current phrase opens (keyRingStore.ts). */
+export const KEY_RING_CACHE_KEY = 'keyRingCache';
+
+/**
+ * The text of a clean note as it was before a sync pull replaced its title or
+ * body (replacedCopies.ts). A pull cannot tell another device's edit from a
+ * replayed older ciphertext, so this device keeps what it showed and the
+ * note's History window offers it back. The content fields are sealed at
+ * rest like a note's; the rest stays plain for the indexes and the purge.
+ * Spec: docs/contrib/sync-protocol.md (section 3, replaced copies)
+ */
+export interface ReplacedCopy {
+  id: string;
+  noteId: string;
+  /** When the pull replaced it, this device's clock (ISO). */
+  at: string;
+  /** The replaced row's own `updatedAt`. */
+  was: string;
+  title: string;
+  body: string;
+  tags: string[];
+  trackers?: Record<string, unknown>;
+}
 
 interface KvEntry {
   key: string;
@@ -263,6 +295,7 @@ class NotesDb extends Dexie {
   dayLedger!: EntityTable<LedgerRow, 'date'>;
   versionQueue!: EntityTable<QueuedVersion, 'id'>;
   quickNotes!: EntityTable<QueuedQuickNote, 'id'>;
+  replacedCopies!: EntityTable<ReplacedCopy, 'id'>;
 
   constructor(raw = false) {
     // Demo mode uses a separate, throwaway database so demo data never
@@ -534,6 +567,26 @@ class NotesDb extends Dexie {
       dayLedger: 'date',
       versionQueue: '++id, noteId, hash',
       quickNotes: 'id, account',
+    });
+
+    // v17 - the copies a sync pull replaced (replacedCopies.ts). Sealed at rest
+    // like the notes (localSeal.ts). New table, nothing to back-fill, so no
+    // upgrade reads a sealed row (see the rule above).
+    // Spec: docs/contrib/sync-protocol.md (section 3, replaced copies)
+    this.version(17).stores({
+      notes: 'id, updatedAt, dirty, deleted, trashed, starred, type, folderId',
+      imageCache: 'id, cachedAt',
+      imageDedup: 'hash, uuid',
+      attachmentCache: 'id, cachedAt',
+      attachmentDedup: 'hash, uuid',
+      blobGC: 'uuid, enqueuedAt',
+      editorDocCache: 'noteId, cachedAt',
+      demoVersions: 'id, noteId, createdAt',
+      kv: 'key',
+      dayLedger: 'date',
+      versionQueue: '++id, noteId, hash',
+      quickNotes: 'id, account',
+      replacedCopies: 'id, noteId, at',
     });
 
     // The at-rest seal layer. Read surfaces open sealed rows wherever

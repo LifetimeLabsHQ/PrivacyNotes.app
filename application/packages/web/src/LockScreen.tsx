@@ -32,6 +32,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { ArrowRight, Fingerprint, LockKeyOpen, Pause, Play } from './icons';
 import { Button, IconButton } from './ui';
 import { TypewriterRotation } from './LoadingScreen';
+import { linesStartPaused } from './typewriter';
 import {
   hasBiometricCredential,
   unlockWithBiometricDetailed,
@@ -54,6 +55,7 @@ import {
   verifyPin,
 } from './pin';
 import { isValidPhrase } from '@notes/shared';
+import { hasPendingPhraseChange } from './authStorage';
 import { Brand } from './Brand';
 
 type Props = {
@@ -85,6 +87,14 @@ type Props = {
    * the secret against its hash and calls this, instead of opening a wrap.
    */
   onPinVerified?: () => void;
+  /**
+   * A phrase change this device sent and did not finish: under an armed lock
+   * the new phrase is only inside its new PIN wrap. Given the PIN that just
+   * opened the old wrap, answers the new phrase once the server confirms the
+   * change landed, or null (auth.tsx, finishPhraseChangeWithPin).
+   * Spec: docs/internal/plans/phrase-change.md (6.6)
+   */
+  onPendingPhraseChange?: (pin: string) => Promise<string | null>;
 };
 
 type View = 'main' | 'phrase' | 'recover';
@@ -104,7 +114,7 @@ function kindNow(): SecretKind {
 // PIN is forgotten, not mistyped.
 const HARD_EXHAUSTION_THRESHOLD = 10;
 
-export function LockScreen({ onUnlock, signInState = 'idle', onRetrySignIn, onWrapUpgraded, onPinVerified }: Props) {
+export function LockScreen({ onUnlock, signInState = 'idle', onRetrySignIn, onWrapUpgraded, onPinVerified, onPendingPhraseChange }: Props) {
   const { t } = useTranslation('security');
   const [view, setView] = useState<View>('main');
   const [biometricAvailable, setBiometricAvailable] = useState(() => hasBiometricCredential());
@@ -267,6 +277,7 @@ export function LockScreen({ onUnlock, signInState = 'idle', onRetrySignIn, onWr
               onExhausted={() => setView('recover')}
               onForgotPin={() => setView('recover')}
               onWrapUpgraded={onWrapUpgraded}
+              onPendingPhraseChange={onPendingPhraseChange}
             />
           )}
           </div>
@@ -292,16 +303,6 @@ export function LockScreen({ onUnlock, signInState = 'idle', onRetrySignIn, onWr
  *  want the lines on a laptop and still on a phone. */
 const LINES_PAUSED_KEY = 'privacynotes.lockLinesPaused';
 
-function linesStartPaused(): boolean {
-  try {
-    const saved = localStorage.getItem(LINES_PAUSED_KEY);
-    if (saved !== null) return saved === '1';
-  } catch {
-    /* storage refused: fall through to the motion setting */
-  }
-  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-}
-
 /**
  * The loading screen's typewriter lines as the screen's opener, above the title,
  * so the lock screen is not a bare form (owner, 2026-10-22, variant C1 of the
@@ -311,7 +312,7 @@ function linesStartPaused(): boolean {
  */
 function LockLines() {
   const { t } = useTranslation('common');
-  const [paused, setPaused] = useState(linesStartPaused);
+  const [paused, setPaused] = useState(() => linesStartPaused(LINES_PAUSED_KEY));
   function toggle() {
     const next = !paused;
     setPaused(next);
@@ -371,6 +372,7 @@ function PinUnlock({
   onExhausted,
   onForgotPin,
   onWrapUpgraded,
+  onPendingPhraseChange,
 }: {
   kind: SecretKind;
   /** The field takes the focus when it is the first way in. */
@@ -383,6 +385,7 @@ function PinUnlock({
   onExhausted: () => void;
   onForgotPin: () => void;
   onWrapUpgraded?: (blob: PinWrapBlob) => void;
+  onPendingPhraseChange?: (pin: string) => Promise<string | null>;
 }) {
   const { t } = useTranslation('security');
   const [value, setValue] = useState('');
@@ -437,7 +440,7 @@ function PinUnlock({
     }
 
     const stamp = pinWrapStamp();
-    const phrase = await unwrapPhraseWithPin(pin, onWrapUpgraded);
+    let phrase = await unwrapPhraseWithPin(pin, onWrapUpgraded);
     // The wrap was replaced during the derivation (another tab changed the
     // secret), or this view was left: the answer opens nothing and counts for
     // nothing.
@@ -448,6 +451,13 @@ function PinUnlock({
       inputRef.current?.clear();
       return;
     }
+    // A phrase change this device sent and did not finish: once the server
+    // confirms it landed, the new phrase is the one to sign in with.
+    if (phrase && onPendingPhraseChange && hasPendingPhraseChange()) {
+      const changed = await onPendingPhraseChange(pin).catch(() => null);
+      if (changed) phrase = changed;
+    }
+    if (!alive.current) return;
     if (phrase) {
       // The PIN was right for the blob, whatever the blob turns out to hold,
       // so the backoff it earned is spent either way.

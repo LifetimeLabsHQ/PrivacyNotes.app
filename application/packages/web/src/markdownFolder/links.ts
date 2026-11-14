@@ -45,7 +45,17 @@ function normalize(path: string): string | null {
   return out.length > 0 ? out.join('/') : null;
 }
 
-function decode(path: string): string {
+/**
+ * The path as the filesystem knows it. Percent-escapes are how a vault writes a
+ * filename with a space, so the lookup has to decode - but only the lookup: the
+ * map key stays verbatim so the file keeps its own spelling.
+ *
+ * A malformed escape falls back to the raw text rather than throwing. `%` is a
+ * legal filename character, so `100%.png` is far more likely a real name than a
+ * truncated escape, and `decodeURI` throws on it - a throw neither the link
+ * resolver nor `resolveQuietly` in useAssets.ts can afford.
+ */
+export function decodePath(path: string): string {
   try {
     return decodeURI(path);
   } catch {
@@ -98,7 +108,7 @@ export function resolveRelativeLinkPath(
   href: string,
 ): string | null {
   if (!isLocalHref(href)) return null;
-  const bare = decode(href.split(/[?#]/)[0]!.trim());
+  const bare = decodePath(href.split(/[?#]/)[0]!.trim());
   if (!bare) return null;
   const fromDir = fromRelPath.includes('/') ? fromRelPath.slice(0, fromRelPath.lastIndexOf('/') + 1) : '';
   const path = normalize(bare.startsWith('/') ? bare : `${fromDir}${bare}`);

@@ -1,6 +1,6 @@
-import JSZip from 'jszip';
 import { zipEntryText } from './zipEntry';
-import { normalizeTag, TAG_MAX_LENGTH } from '../notesRepo';
+import { openZip } from './zipOpen';
+import { TAG_MAX_LENGTH } from '../notesRepo';
 import { createFolder, type FolderDef } from '../folders';
 import { IMPORT_FOLDER_LIMIT } from './folderImport';
 import { linkifyLiteralText, linkifyMarkdown } from './linkify';
@@ -9,9 +9,10 @@ import { escapeMarkdownText, guardMarkdownLineStart, superToMarkdown, type SnLin
 import { htmlNoteToMarkdown } from './notesnook';
 import { serializeLoginBody } from '../LoginForm';
 import i18n from '../i18n';
+import { isoOrNow, normalizeTagList } from './importHelpers';
 
 const msg = (key: string, options?: Record<string, unknown>): string =>
-  i18n.t(`importExport:importLog.standardNotes.${key}`, options);
+  i18n.t(`importLog:standardNotes.${key}`, options);
 
 /**
  * Standard Notes import adapter.
@@ -161,7 +162,7 @@ export const standardNotesImporter: Importer = {
     onProgress?.(i18n.t('importExport:status.readingFile'));
     const jsonText = await extractBackupJson(file, onProgress);
 
-    onProgress?.(i18n.t('importExport:importLog.shared.parsingJson'));
+    onProgress?.(i18n.t('importLog:shared.parsingJson'));
     let backup: SnBackup;
     try {
       backup = JSON.parse(jsonText) as SnBackup;
@@ -195,7 +196,7 @@ export const standardNotesImporter: Importer = {
     const legacyEditor = buildLegacyEditors(backup.items);
     const blobs = new Map<string, ImportBlob>();
 
-    onProgress?.(i18n.t('importExport:importLog.shared.buildingNotes'));
+    onProgress?.(i18n.t('importLog:shared.buildingNotes'));
     const notes: ImportedNote[] = [];
     let emptyCount = 0;
     let untaggedCount = 0;
@@ -399,22 +400,22 @@ export const standardNotesImporter: Importer = {
     const transforms: string[] = [];
     if (linkifiedCount > 0) {
       transforms.push(
-        i18n.t('importExport:importLog.shared.linkifiedNotes', { count: linkifiedCount })
+        i18n.t('importLog:shared.linkifiedNotes', { count: linkifiedCount })
       );
     }
     if (starredCount > 0) {
       transforms.push(
-        i18n.t('importExport:importLog.shared.keptStarred', { count: starredCount })
+        i18n.t('importLog:shared.keptStarred', { count: starredCount })
       );
     }
     if (trashedImportCount > 0) {
       transforms.push(
-        i18n.t('importExport:importLog.shared.restoredTrashed', { count: trashedImportCount })
+        i18n.t('importLog:shared.restoredTrashed', { count: trashedImportCount })
       );
     }
     if (archivedCount > 0) {
       transforms.push(
-        i18n.t('importExport:importLog.shared.keptArchived', { count: archivedCount })
+        i18n.t('importLog:shared.keptArchived', { count: archivedCount })
       );
     }
     if (checklistCount > 0) {
@@ -450,12 +451,12 @@ export const standardNotesImporter: Importer = {
     }
     if (tagIndex.folders.length > 0) {
       transforms.push(
-        i18n.t('importExport:importLog.shared.foldersFromNestedTags', { count: tagIndex.folders.length })
+        i18n.t('importLog:shared.foldersFromNestedTags', { count: tagIndex.folders.length })
       );
     }
     if (tagIndex.shortened > 0) {
       transforms.push(
-        i18n.t('importExport:importLog.shared.shortened', { count: tagIndex.shortened })
+        i18n.t('importLog:shared.shortened', { count: tagIndex.shortened })
       );
     }
     if (blobs.size > 0) {
@@ -491,7 +492,7 @@ export const standardNotesImporter: Importer = {
 
     if (missingTitleCount > 0) {
       warnings.push(
-        i18n.t('importExport:importLog.shared.missingTitle', { count: missingTitleCount })
+        i18n.t('importLog:shared.missingTitle', { count: missingTitleCount })
       );
     }
 
@@ -532,8 +533,8 @@ async function extractBackupJson(
   const lowerName = file.name.toLowerCase();
 
   if (lowerName.endsWith('.zip')) {
-    onProgress?.(i18n.t('importExport:importLog.shared.unzipping'));
-    const zip = await JSZip.loadAsync(file);
+    onProgress?.(i18n.t('importLog:shared.unzipping'));
+    const zip = await openZip(file);
     // Prefer the exact filename, but fall back to any .txt at the root
     // in case SN renames it in a future version.
     let entry = zip.file(BACKUP_FILENAME);
@@ -982,28 +983,3 @@ function pickFolder(tagIds: string[], index: TagIndex): { folderId?: string; fol
   return best ? { folderId: index.tagFolder.get(best)!, folderPath: index.tagPath.get(best)! } : {};
 }
 
-/**
- * Normalize imported Standard Notes tags. normalizeTag() preserves case
- * and allows spaces/dots/@/etc., so this is a pass-through with
- * case-insensitive dedup so "Dev" and "dev" don't create two tags.
- */
-function normalizeTagList(rawTags: string[]): string[] {
-  const out: string[] = [];
-  const seen = new Set<string>();
-  for (const raw of rawTags) {
-    const tag = normalizeTag(raw);
-    if (!tag) continue;
-    const key = tag.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(tag);
-  }
-  return out;
-}
-
-function isoOrNow(s: string | undefined): string {
-  if (!s) return new Date().toISOString();
-  const d = new Date(s);
-  if (Number.isNaN(d.getTime())) return new Date().toISOString();
-  return d.toISOString();
-}

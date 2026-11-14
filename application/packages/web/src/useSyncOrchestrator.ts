@@ -6,14 +6,17 @@ import type { SupabaseClient } from '@notes/shared';
 import { createNote, listNotes } from './notesRepo';
 import { db, type LocalNote } from './db';
 import { sync, pushConflictAnswer, writeConflictAnswer, CaptchaRequiredError, DeviceRevokedError, QuotaExceededError, SessionExpiredError, type NoteConflict, type PushHalt } from './sync';
+import { PhraseReplacedError } from './phraseReplaced';
+import { reportIfPhraseReplaced } from './identity';
 import { logAuthEvent } from './authDiag';
 import { verifyExpiredSession } from './sessionCheck';
 import { ensureLevel2, isMfaRefusal, MfaUnavailableError } from './mfaStep';
 import { fetchQuotaUsage } from './devices';
-import { hasSettingsPulled, hasUnpushedSettings, loadLocalSettings, syncUserSettings, updateLocalSettings, type UserSettings } from './userSettings';
+import { hasSettingsPulled, hasUnpushedSettings, loadLocalSettings, settingsKeyEpoch, syncUserSettings, updateLocalSettings, type UserSettings } from './userSettings';
 import { syncPinCache } from './pin';
 import { syncPinWrap } from './pinRecovery';
 import { hasLiveSignIn, signInStamp, signedOutSince } from './liveSignIn';
+import { currentKeyEpoch } from './keyRing';
 import { seedOnboardingNotes } from './welcomeNote';
 import { isDemoMode } from './demo';
 import { ninjaKeySupported, QUICK_NOTES_ADDED_EVENT } from './ninjaShortcut';
@@ -26,7 +29,7 @@ import { perfSpan } from './perf';
 import { beginSyncPass } from './syncingStore';
 import { recordSyncPass } from './syncLog';
 import { classifyPushFailure, recordPassPushFailures } from './pushFailures';
-import { reconcileFlushStash } from './flushStash';
+import { openEditorBody, reconcileFlushStash } from './flushStash';
 import type { ImageStore } from './imageStore';
 import type { AttachmentStore } from './attachmentStore';
 
@@ -96,7 +99,7 @@ export function useSyncOrchestrator({
   selectedId,
   editingBodyRef,
   setEditorRevision,
-  editorFocusedRef,
+  keepFocusOnRemount,
   isNoteLocked,
   gateCopy,
 }: {
@@ -111,7 +114,10 @@ export function useSyncOrchestrator({
   selectedId: string | null;
   editingBodyRef: { readonly current: Map<string, string> };
   setEditorRevision: Dispatch<SetStateAction<number>>;
-  editorFocusedRef: { readonly current: boolean };
+  /** Called right before a pass remounts the open editor for another
+   *  device's version: the view notes the caret, so a focused editor gets
+   *  its focus back where it was (#760). */
+  keepFocusOnRemount: () => void;
   /** The view's lock predicate, for the conflict copy below. */
   isNoteLocked: (n: LocalNote) => boolean;
   /** Keep a new copy gated until the next unlock, as a duplicate is. */
@@ -347,7 +353,7 @@ export function useSyncOrchestrator({
       // Carries the account's PIN wrap onto this device, and off it again
       // when the account no longer has one. The phrase goes with it so a
       // device the removal leaves with no door can put it back at rest.
-      await syncPinWrap(merged, auth.phrase);
+      await syncPinWrap(merged, auth.phrase, settingsKeyEpoch());
 
       // One-shot welcome-note seed. Runs exactly once per user, ever
       // - gated on the synced `welcomeNoteSeeded` flag so a second
@@ -475,20 +481,28 @@ export function useSyncOrchestrator({
         // showing pre-pull content: Editor reads `value` at construction
         // only, so editing the stale view forks from the newer server
         // body and manufactures avoidable conflicts (#142). Remount it
-        // via the revision key - but only while the editor is idle:
-        // never with the body focused, and never while editingBodyRef
-        // holds buffered keystrokes (an actively-edited note is dirty,
-        // the pull leaves its row alone, and the conflict path is the
-        // one that must engage - same contract as resolveConflict above).
+        // via the revision key, but never while editingBodyRef holds
+        // buffered keystrokes (an actively-edited note is dirty, the pull
+        // leaves its row alone, and the conflict path is the one that must
+        // engage - same contract as resolveConflict above). Focus alone is
+        // no reason to wait: a desktop window keeps the editor's focus
+        // while the person types on a phone, so the other device's text
+        // never showed until another note was opened (#760). The remount
+        // gives a focused editor its caret back.
         if (
           openNoteId &&
           openNoteId === selectedIdRef.current &&
           openNoteBefore &&
-          !editorFocusedRef.current &&
           !editingBodyRef.current.has(openNoteId)
         ) {
+          // A body the editor wrote itself during the pass is no reason:
+          // a drawing's canvas saves with no editor focus, and a remount
+          // under it left the new canvas one save behind its row, so its
+          // next save was refused and became a "(conflict)" copy.
           const after = all.find((n) => n.id === openNoteId);
-          if (after && after.body !== openNoteBefore.body) {
+          const shown = openEditorBody(openNoteId);
+          if (after && after.body !== openNoteBefore.body && after.body !== shown) {
+            keepFocusOnRemount();
             setEditorRevision((r) => r + 1);
           }
         }
@@ -515,7 +529,9 @@ export function useSyncOrchestrator({
           }
         }
         // History versions made while the server could not take them.
-        void drainVersionQueue(supabase, auth.pubkey).catch((err) =>
+        // The key lets the drain seal again a version queued under an earlier
+        // phrase (phrase-change-reviews.md 14.5, finding 8).
+        void drainVersionQueue(supabase, auth.pubkey, auth.encryptionKey).catch((err) =>
           console.warn('[note_versions] drain failed:', err),
         );
         // The browser extension: adopt its inbox, keep its logins copy. Only
@@ -560,7 +576,9 @@ export function useSyncOrchestrator({
         // empty (one indexed Dexie query), so no cooldown needed like the
         // pending-upload retry above.
         if (imageStoreRef.current) {
-          void sweepBlobGC(imageStoreRef.current, attachmentStoreRef.current).catch((err) =>
+          void sweepBlobGC(imageStoreRef.current, attachmentStoreRef.current, {
+            supabase, pubkey: auth.pubkey, encryptionKey: auth.encryptionKey,
+          }).catch((err) =>
             console.warn('[imageGC] sweepBlobGC failed:', err),
           );
           // Reclaim blobs nothing tracks any more - the backstop for every
@@ -571,6 +589,21 @@ export function useSyncOrchestrator({
           void reconcileOrphanBlobs(
             supabase, auth.pubkey, auth.encryptionKey, imageStoreRef.current,
           ).catch((err) => console.warn('[imageGC] reconcileOrphanBlobs failed:', err));
+        }
+        // After a phrase change, data written under an earlier phrase is
+        // encrypted again in the background, at most once in ten minutes and
+        // never again once it finished. An account that never changed its
+        // phrase loads nothing and asks nothing.
+        // Spec: docs/internal/plans/phrase-change.md (6.4)
+        if (currentKeyEpoch() > 1) {
+          void import('./reencryptPass')
+            .then((pass) => pass.startReencryptPass({
+              supabase,
+              pubkey: auth.pubkey,
+              syncKey: auth.encryptionKey,
+              isCurrent: () => hasLiveSignIn() && !signedOutSince(signedInAt),
+            }))
+            .catch((err) => console.warn('[reencrypt] pass failed:', err));
         }
       }
       // Refresh the quota snapshot so image pre-flight checks have
@@ -624,7 +657,14 @@ export function useSyncOrchestrator({
       // If the server told us this device was revoked elsewhere, blow
       // up the local session + IndexedDB copy and return the user to
       // onboarding. Any other error is just logged.
+      // A phrase change revokes every session of the account, and a revoked
+      // session of a managed account meets the two-factor gate, then dies
+      // at its refresh. Neither refusal names the change, so the server is
+      // asked about the phrase before either one is answered as itself.
+      // Spec: docs/internal/plans/phrase-change.md (section 7)
+      const replacedHere = () => reportIfPhraseReplaced(auth.phrase, 'sign-in');
       if (isMfaRefusal(err)) {
+        if (await replacedHere()) return;
         // A missing factor pauses server access, never the local vault.
         // Dismissal preserves notes and suppresses repeated background prompts.
         void ensureLevel2(supabase, { allowLocalUse: true, background: true }).then(
@@ -634,6 +674,12 @@ export function useSyncOrchestrator({
         return;
       }
       if (err instanceof MfaUnavailableError) return;
+      // The account changed its recovery phrase and this device holds an
+      // earlier one. The pass reported it before it stopped, and auth.tsx
+      // takes it from there: sync stops and the screen asks for the new
+      // phrase. Every unsynced edit stays for the pass after it.
+      // Spec: docs/internal/plans/phrase-change.md (section 7)
+      if (err instanceof PhraseReplacedError) return;
       if (err instanceof DeviceRevokedError) {
         await forceSignOut('device revoked');
         return;
@@ -668,7 +714,7 @@ export function useSyncOrchestrator({
         // token expired (sessionCheck.ts).
         try {
           const verdict = await verifyExpiredSession(supabase, auth.pubkey);
-          if (verdict === 'dead' || verdict === 'claim-mismatch') setSessionExpired(true);
+          if ((verdict === 'dead' || verdict === 'claim-mismatch') && !(await replacedHere())) setSessionExpired(true);
           return;
         } catch {
           // The verification itself blew up (offline mid-call): no
@@ -715,6 +761,7 @@ export function useSyncOrchestrator({
     // undecryptable ciphertext the server accepts as valid. (Sync passes
     // carry their own key copy for the same reason - see sync.ts.)
     const keySnapshot = new Uint8Array(auth.encryptionKey);
+    let keepQuestion = false;
     try {
       if (resolution === 'local') {
         if (keySnapshot.every((b) => b === 0)) {
@@ -743,7 +790,25 @@ export function useSyncOrchestrator({
         const row = await db.notes.get(noteId);
         const freshBody = buffered ?? row?.body ?? localNote.body;
         const freshTitle = row?.title ?? localNote.title;
-        const outcome = await writeConflictAnswer(supabase, auth.pubkey, keySnapshot, conflict, resolution);
+        // The "Keep both" copy is written in the transaction of the answer,
+        // before the answer replaces this device's text (sync.ts
+        // writeConflictAnswer): that text was never sent, so a copy written
+        // later held it in memory only. The copy holds this device's body,
+        // protected and read-only when either side was, and gated like a
+        // duplicate of a note behind a closed gate. It is deliberately a
+        // BODY fork with no tracker payload: the original already carries
+        // both sides' trackers, and copying them would give a journal entry
+        // a twin with the same `journalDate` - two entries for one calendar
+        // day, which every statistic then has to collapse.
+        const keepCopy = resolution === 'both'
+          ? async (local: LocalNote) => {
+            const suffix = ' (conflict)';
+            const dupTitle = (freshTitle || 'Untitled') + suffix;
+            const dup = await forkConflictCopy(conflict, local, dupTitle, freshBody);
+            if (isNoteLocked({ ...local, pinProtected: dup.pinProtected })) gateCopy(dup.id);
+          }
+          : undefined;
+        const outcome = await writeConflictAnswer(supabase, auth.pubkey, keySnapshot, conflict, resolution, keepCopy);
         if (outcome === 'written') {
           // The editor may still be holding a stale in-flight body for this
           // note in editingBodyRef - if we leave it, the next flush writes
@@ -763,30 +828,19 @@ export function useSyncOrchestrator({
           if (selectedId === noteId) {
             setEditorRevision((r) => r + 1);
           }
-          if (resolution === 'both') {
-            // The copy holds this device's body, protected and read-only
-            // when either side was, and gated like a duplicate of a note
-            // behind a closed gate. It is deliberately a BODY fork with no
-            // tracker payload: the original already carries both sides'
-            // trackers, and copying them would give a journal entry a twin
-            // with the same `journalDate` - two entries for one calendar
-            // day, which every statistic then has to collapse.
-            const suffix = ' (conflict)';
-            const dupTitle = (freshTitle || 'Untitled') + suffix;
-            const local = row ?? localNote;
-            const dup = await forkConflictCopy(conflict, local, dupTitle, freshBody);
-            if (isNoteLocked({ ...local, pinProtected: dup.pinProtected })) gateCopy(dup.id);
-          }
         }
       }
     } catch (err) {
       console.error('[conflict] resolution failed for', noteId, err);
+      // A "Keep both" that could not write its copy wrote nothing: the
+      // question stays, and this device's text with the note.
+      if (resolution === 'both') keepQuestion = true;
     } finally {
       keySnapshot.fill(0);
       resolvingConflictsRef.current.delete(noteId);
     }
     // Remove from queue.
-    setConflictQueue((q) => q.filter((c) => c.noteId !== noteId));
+    if (!keepQuestion) setConflictQueue((q) => q.filter((c) => c.noteId !== noteId));
     await refresh();
   }, [supabase, auth.pubkey, auth.encryptionKey, refresh, selectedId, isNoteLocked, gateCopy]);
 

@@ -115,14 +115,19 @@ interface Read {
   boxes: Field[] | null;
 }
 
-function passwordRoles(fields: readonly Field[]): Map<Field, PasswordRole> {
+/** `signIn`: the form's own words say sign in and not sign up. */
+function passwordRoles(fields: readonly Field[], signIn: boolean): Map<Field, PasswordRole> {
   const out = new Map<Field, PasswordRole>();
   const many = fields.length >= 2;
   const lone = fields.length === 1;
   for (const f of fields) {
     const current = words(f, VOCAB.passwordCurrent);
     if (f.auto.includes('current-password')) out.set(f, 'current');
-    else if (f.auto.includes('new-password')) out.set(f, lone && f.webauthn ? 'current' : 'new');
+    // Some sign-in forms mark their one password field `new-password` to keep
+    // the browser's own manager away. Read it as the current password when the
+    // form says sign in and the field itself does not say new password; a
+    // sign-up or reset form still gets nothing filled.
+    else if (f.auto.includes('new-password')) out.set(f, lone && (f.webauthn || (signIn && !words(f, VOCAB.passwordNew))) ? 'current' : 'new');
     else if (many && words(f, VOCAB.passwordConfirm)) out.set(f, 'confirm');
     else if (words(f, VOCAB.passwordNew) && !current) out.set(f, 'new');
     else if (current) out.set(f, 'current');
@@ -153,12 +158,14 @@ function readGroup(group: Group): Read {
 
   const all = group.fields.filter((f) => roles.get(f) === 'password' && !boxSet.has(f));
   const shown = all.filter(live);
-  const passwords = shown.length <= MAX_PASSWORDS ? passwordRoles(shown) : new Map<Field, PasswordRole>();
   const first = shown[0];
+  const firstContext = first ? contextOf(first) : null;
+  const signIn = !!firstContext && has(firstContext, VOCAB.login) && !has(firstContext, VOCAB.signup);
+  const passwords = shown.length <= MAX_PASSWORDS ? passwordRoles(shown, signIn) : new Map<Field, PasswordRole>();
   let signup = false;
   let current: Field | undefined;
-  if (first && passwords.size) {
-    const context = contextOf(first);
+  if (first && firstContext && passwords.size) {
+    const context = firstContext;
     const explicit = shown.some((f) => f.auto.includes('current-password') || words(f, VOCAB.passwordCurrent));
     const currents = shown.filter((f) => passwords.get(f) === 'current');
     const confirms = shown.filter((f) => passwords.get(f) === 'confirm').length;

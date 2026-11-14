@@ -7,6 +7,7 @@
     "sleep": "Slaap",
     "sleepScore": "Slaapscore",
     "heartRate": "Hartslag",
+    "bloodPressure": "Bloeddruk",
     "activity": "Activiteit",
     "medication": "Medicatie",
     "meds": "Medicijnen",
@@ -24,6 +25,7 @@
   "units": {
     "hoursSuffix": "u",
     "bpm": "bpm",
+    "mmHg": "mmHg",
     "kg": "kg",
     "lb": "lb",
     "steps_one": "stap",
@@ -116,6 +118,10 @@
   },
   "heartRate": {
     "prompt": "Gemiddelde hartslag"
+  },
+  "bloodPressure": {
+    "systolic": "Bovendruk (systolisch)",
+    "diastolic": "Onderdruk (diastolisch)"
   },
   "activity": {
     "prompt": "Activiteitsniveau vandaag?",
@@ -243,11 +249,13 @@
   "custom": {
     "yes": "Ja",
     "no": "Nee",
+    "unknownType": "Deze tracker heeft een nieuwere versie van de app nodig.",
     "typeLabels": {
       "scale10": "Schaal (0-10)",
       "scale5": "Schaal (0-5)",
       "slider100": "Score (0-100)",
       "number": "Getal",
+      "pair": "Twee getallen",
       "yesno": "Ja / Nee"
     }
   },
@@ -263,6 +271,7 @@
     "medicationCard": "Medicatiekaart",
     "medicationCardHelp": "\"Heb je je medicijnen ingenomen?\" op dit apparaat, alleen op een dag dat er een medicijn aan de beurt is.",
     "customHelp": "Trackers die je zelf een naam geeft: een schaal, een getal of ja of nee. Maximaal {{max}}.",
+    "customHelpPair": "Trackers die je zelf een naam geeft: een schaal, een getal, twee getallen of ja of nee. Maximaal {{max}}.",
     "yourCustomTrackers": "Je eigen trackers",
     "categoryMoodMind": "Stemming & geest",
     "categoryBodyHealth": "Lichaam & gezondheid",
@@ -297,7 +306,13 @@
     "preview": "Voorbeeld",
     "startFromLast": "Laatste invoer onthouden",
     "chooseIcon": "Pictogram kiezen",
-    "startFromLastHelp": "Handig voor dingen die zelden veranderen, zoals je gewicht of een dagelijkse dosis."
+    "startFromLastHelp": "Handig voor dingen die zelden veranderen, zoals je gewicht of een dagelijkse dosis.",
+    "pairFirst": "Eerste getal",
+    "pairSecond": "Tweede getal",
+    "pairFirstPlaceholder": "Systolisch",
+    "pairSecondPlaceholder": "Diastolisch",
+    "pairUnit": "Eenheid (optioneel)",
+    "pairWaiting": "Opgeslagen zodra het eerste getal is ingevuld."
   },
   "factors": {
     "prompt": "Wat hoorde bij je dag?",

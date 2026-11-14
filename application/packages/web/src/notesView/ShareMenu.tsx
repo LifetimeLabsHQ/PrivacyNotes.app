@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import type { LocalNote } from '../db';
 import { BracketsSquare, Export, EXPORT_GLYPHS, LinkSimple } from '../icons';
-import { isShortcutId, shortcutNoun } from '../noteShortcut';
+import { shortcutNoun } from '../noteShortcut';
+import { isUuid } from '../uuid';
 import { HoverLabel } from '../HoverLabel';
 import { usePopoverPosition } from '../usePopoverPosition';
 
@@ -123,7 +124,7 @@ export function ShareMenu({
               {/* The shortcut first: it is the one row here that shares
                   nothing, so its line says who can open it.
                   Spec: docs/internal/specs/note-shortcuts.md (4) */}
-              {isShortcutId(selected.id) && (
+              {isUuid(selected.id) && (
                 <button
                   onClick={() => {
                     onClose();

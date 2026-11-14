@@ -223,7 +223,7 @@ export function Change({ d, delta, long = false }: { d: TrackerDescriptor; delta
   const { t } = useTranslation('stats');
   const Arrow = delta >= 0 ? ArrowUp : ArrowDown;
   // Counted units (steps, beats) change in whole numbers.
-  const text = formatDelta(delta, d.unit === 'steps' || d.unit === 'bpm' ? 0 : 1);
+  const text = formatDelta(delta, d.unit === 'steps' || d.unit === 'bpm' || d.unit === 'mmHg' ? 0 : 1);
   return (
     <span className={`inline-flex items-center gap-0.5 text-meta font-medium tabular-nums ${TONE_TEXT[changeTone(d, delta)]}`}>
       <Arrow size={11} aria-hidden="true" />
@@ -461,7 +461,7 @@ function TrackerRows({ model, onOpen }: { model: WellnessModel; onOpen: (d: Trac
     const span = loggedSpan(series);
     const raw = changeOf(model, d, series);
     // A change that rounds to nothing is not shown.
-    const delta = raw !== null && Math.abs(raw) >= (d.unit === 'steps' || d.unit === 'bpm' ? 0.5 : 0.05) ? raw : null;
+    const delta = raw !== null && Math.abs(raw) >= (d.unit === 'steps' || d.unit === 'bpm' || d.unit === 'mmHg' ? 0.5 : 0.05) ? raw : null;
     return (
       <div key={d.id} className="@container min-w-0 rounded-lg border border-divider bg-surface-2 hover:border-pn-muted transition-colors">
       <button type="button" onClick={() => onOpen(d)} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-start min-w-0">

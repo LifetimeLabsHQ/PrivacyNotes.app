@@ -1,4 +1,3 @@
-import { bytesToHex, deriveSigningKey, phraseToSeed } from '@notes/shared';
 import { db } from './db';
 import {
   hasPinWrappedPhrase,
@@ -9,11 +8,33 @@ import { credentialKey, isDemoMode } from './demo';
 import { clearSyncLog } from './syncLog';
 import { clearSyncFaults } from './syncFaults';
 import { clearPlaces } from './notesView/listPlace';
+import { phraseSignsFor } from './identity';
+import { trustAwareStorage } from './trustStorage';
+import { settingsLocalKey } from './settingsLocalKey';
+import { forgetCryptoOrder } from './cryptoCheckout';
 
 // Demo-bucketed (see credentialKey in demo.ts): a demo session must
 // never read or write a real account's credential keys on the same
 // origin.
 export const PHRASE_STORAGE_KEY = credentialKey('privacynotes.phrase');
+
+// The handover record of a phrase change this device sent and has not
+// finished (phraseChange.ts). It holds the new phrase under the device's
+// wrap key, or only inside the new PIN wrap and biometric record, so it
+// lives where the phrase does (trust-aware: the tab's session storage on a
+// device the person did not trust) and a sign-out removes it with the other
+// credentials. The boot and the lock screen ask for it here, without
+// loading the change module.
+// Spec: docs/internal/plans/phrase-change.md (6.6)
+export const PHRASE_CHANGE_KEY = credentialKey('privacynotes.phraseChange');
+
+export function hasPendingPhraseChange(): boolean {
+  return trustAwareStorage.getItem(PHRASE_CHANGE_KEY) !== null;
+}
+
+export function removePendingPhraseChange(): void {
+  trustAwareStorage.removeItem(PHRASE_CHANGE_KEY);
+}
 
 // Sticky flag: "this session's phrase was seeded via OAuth, not typed".
 // Kept alongside the phrase in trust-aware storage so a reload still
@@ -86,18 +107,6 @@ export async function readOwnerMirror(): Promise<string | null> {
   }
 }
 
-/**
- * Does this phrase derive the account this device already holds?
- *
- * The marker first, then the mirror, because localStorage can be evicted
- * while the notes it vouches for survive. An install where both are gone
- * has no answer to give: refusing there would strand a user whose browser
- * cleared its storage, so an unknown owner answers true and leaves the
- * decision to whatever check comes next.
- *
- * A value that derives nothing at all answers false rather than throwing,
- * so a caller can treat this as one question with one answer.
- */
 /** The account this device holds, from the marker or from its mirror. */
 async function claimedOwner(): Promise<string | null> {
   // The demo never writes the marker, and a real account on the same origin
@@ -112,15 +121,28 @@ async function claimedOwner(): Promise<string | null> {
   return owner ?? (await readOwnerMirror());
 }
 
-export async function phraseOwnsThisDevice(phrase: string): Promise<boolean> {
+/**
+ * Does this phrase sign for the account this device already holds? Its own
+ * key is the account until a phrase change; after one, this device's record
+ * of the change says so (identity.ts).
+ *
+ * The marker first, then the mirror, because localStorage can be evicted
+ * while the notes it vouches for survive. An install where both are gone
+ * has no answer to give: refusing there would strand a user whose browser
+ * cleared its storage, so an unknown owner answers true and leaves the
+ * decision to whatever check comes next.
+ *
+ * A value that derives nothing at all answers false rather than throwing,
+ * so a caller can treat this as one question with one answer.
+ */
+export async function phraseOwnsThisDevice(phrase: string, online = false): Promise<boolean> {
   const owner = await claimedOwner();
   if (!owner) return true;
-  try {
-    const { publicKey } = await deriveSigningKey(phraseToSeed(phrase));
-    return bytesToHex(publicKey) === owner;
-  } catch {
-    return false;
-  }
+  // The phrase's own key, then this device's record of a phrase change, and
+  // the server only when `online` and both said no: a device whose record
+  // went missing still takes its current phrase.
+  // Spec: docs/internal/plans/phrase-change.md (4.6)
+  return phraseSignsFor(phrase, owner, online);
 }
 
 /**
@@ -147,14 +169,6 @@ export function ownsLocalData(pubkey: string): boolean {
   }
 }
 
-/**
- * Account-scoped UI state that is neither secret nor synced, but is
- * derived from one account's content and must not follow the user into
- * the next account on this browser: the expanded-folder set (folder
- * UUIDs) and the milestone high-water marks (note-count thresholds the
- * previous account had crossed). Both keys are cleared by every wipe
- * path; they live here so the two paths cannot drift apart.
- */
 /**
  * Remove GoTrue's own session keys from both stores.
  *
@@ -184,6 +198,14 @@ export function clearSupabaseAuthKeys(): void {
   }
 }
 
+/**
+ * Account-scoped UI state that is neither secret nor synced, but is
+ * derived from one account's content and must not follow the user into
+ * the next account on this browser: the expanded-folder set (folder
+ * UUIDs) and the milestone high-water marks (note-count thresholds the
+ * previous account had crossed). Both keys are cleared by every wipe
+ * path; they live here so the two paths cannot drift apart.
+ */
 export function clearAccountScopedUiState(): void {
   // When this account's last sync passes ran and which of its steps failed.
   // Outside the try below: neither throws, and a key that fails to clear
@@ -227,7 +249,19 @@ export function clearAccountScopedUiState(): void {
     localStorage.removeItem('privacynotes.reminderSnoozes'); // reminders.ts
     localStorage.removeItem('privacynotes.reminderFired'); // notesView/useReminders.tsx
     localStorage.removeItem('privacynotes.calendarUnseenAlerts'); // reminders.ts
+    // The reminders this account switched on here: the check-in time and its
+    // medication templates by id.
+    localStorage.removeItem('privacynotes.checkInReminder'); // checkIn.ts
+    localStorage.removeItem('privacynotes.medicationReminders'); // medicationReminders.ts
+    // The space this account had open, and the commands it ran last in ">".
+    localStorage.removeItem('privacynotes.ui.activeSpace'); // spaces.ts
+    localStorage.removeItem('privacynotes.ninja.recentCommands'); // ninjaFeatures.ts
+    // The sync pause and the folded list groups stay: they are this device's
+    // switch and layout, and name nothing of the account.
   } catch { /* ignore */ }
+  // A crypto order names the account and the order, and its status answers
+  // with the payment (cryptoCheckout.ts).
+  forgetCryptoOrder();
 }
 
 /**
@@ -250,7 +284,7 @@ export function clearAccountScopedUiState(): void {
  */
 export async function hasLocalAccountState(): Promise<boolean> {
   try {
-    if (localStorage.getItem('privacynotes.settings')) return true;
+    if (localStorage.getItem(settingsLocalKey())) return true;
   } catch { /* ignore */ }
   if (hasPin() || hasPinWrappedPhrase() || hasStoredPhrase()) return true;
   try {
@@ -278,6 +312,11 @@ export async function hasLocalAccountState(): Promise<boolean> {
  */
 export async function switchWouldWipe(phrase: string): Promise<boolean> {
   if (await phraseOwnsThisDevice(phrase)) return false;
+  // A phrase of a changed account this device has no record of yet: the
+  // server says which account it signs for, so the account this device
+  // holds never reads as another one. Spec: docs/internal/plans/phrase-change.md (4.6)
+  const owner = await claimedOwner();
+  if (owner && (await phraseSignsFor(phrase, owner, true))) return false;
   return hasLocalAccountState();
 }
 
@@ -328,6 +367,39 @@ export function writeCachedAccountFlags(flags: CachedAccountFlags): void {
     /* quota or privacy mode - the mirror below still carries the flags */
   }
   void writeAccountFlagsMirror(flags);
+}
+
+/**
+ * The account whose phrase this device met as replaced (phrase change,
+ * section 7), until the device adopts the new phrase or signs out. The
+ * adoption drops the biometric record only while this names the account: the
+ * record then wraps the replaced phrase. Not a secret. Demo-bucketed.
+ * Spec: docs/internal/plans/phrase-change.md (6.5, section 7)
+ */
+const REPLACED_ACCOUNT_KEY = credentialKey('privacynotes.replacedAccount');
+
+export function markReplacedAccount(account: string): void {
+  try {
+    localStorage.setItem(REPLACED_ACCOUNT_KEY, account);
+  } catch {
+    /* without it the adoption keeps the biometric record, which opens nothing the account takes */
+  }
+}
+
+export function wasReplacedAccount(account: string): boolean {
+  try {
+    return localStorage.getItem(REPLACED_ACCOUNT_KEY) === account;
+  } catch {
+    return false;
+  }
+}
+
+export function clearReplacedAccount(): void {
+  try {
+    localStorage.removeItem(REPLACED_ACCOUNT_KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
 export function clearCachedAccountFlags(): void {
@@ -381,27 +453,37 @@ export function patchCachedCustodial(pubkey: string, isCustodial: boolean): void
   writeCachedAccountFlags({ ...cached, isCustodial });
 }
 
+type JwtClaims = {
+  session_id?: unknown;
+  aal?: unknown;
+  app_metadata?: { custodial?: unknown; pubkey?: unknown } | null;
+};
+
 /**
- * Read the `app_metadata.custodial` claim off a JWT payload. Returns
- * null when the token is unreadable or carries no claim (a legacy
- * account that has not re-hydrated since the flag shipped), which is
- * distinct from an explicit `false`.
- *
- * No verification: the caller either got this token from supabase-js
- * or already validated it. The claim is a UI hint, and every action it
- * gates is independently authorized server-side.
+ * A JWT's payload (base64url JSON), or null when the token is unreadable.
+ * No verification: the caller either got this token from supabase-js or
+ * already validated it. Every claim read from it is a hint, and every
+ * action it gates is authorized again server-side.
  */
-export function jwtPayloadCustodial(token: string): boolean | null {
+function jwtPayload(token: string): JwtClaims | null {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
-    const b64 = parts[1]!.replace(/-/g, '+').replace(/_/g, '/');
-    const payload = JSON.parse(atob(b64));
-    const flag = payload?.app_metadata?.custodial;
-    return typeof flag === 'boolean' ? flag : null;
+    const payload: unknown = JSON.parse(atob(parts[1]!.replace(/-/g, '+').replace(/_/g, '/')));
+    return payload !== null && typeof payload === 'object' ? payload as JwtClaims : null;
   } catch {
     return null;
   }
+}
+
+/**
+ * The `app_metadata.custodial` claim. Null when the token is unreadable or
+ * carries no claim (a legacy account that has not re-hydrated since the
+ * flag shipped), which is distinct from an explicit `false`.
+ */
+export function jwtPayloadCustodial(token: string): boolean | null {
+  const flag = jwtPayload(token)?.app_metadata?.custodial;
+  return typeof flag === 'boolean' ? flag : null;
 }
 
 // Throttle marker for the register-device edge function. Registration is
@@ -462,37 +544,26 @@ export function invalidateDeviceRegistration(): void {
   clearRegistrationMarker();
 }
 
-/** The `aal` claim of a JWT payload, or null when unreadable. No verification. */
+/** The `session_id` claim, or null when unreadable. */
+export function jwtPayloadSessionId(token: string): string | null {
+  const id = jwtPayload(token)?.session_id;
+  return typeof id === 'string' ? id : null;
+}
+
+/** The `aal` claim, or null when unreadable. */
 export function jwtPayloadAal(token: string): string | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    const payload = JSON.parse(atob(parts[1]!.replace(/-/g, '+').replace(/_/g, '/')));
-    return typeof payload?.aal === 'string' ? payload.aal : null;
-  } catch {
-    return null;
-  }
+  const aal = jwtPayload(token)?.aal;
+  return typeof aal === 'string' ? aal : null;
 }
 
 /**
- * Decode a JWT's payload (no verification - caller already validated
- * the token via getUser()) and return the `app_metadata.pubkey` claim,
- * or null if absent/malformed. Used to detect whether link-pubkey +
- * refreshSession can be skipped for returning users.
+ * The `app_metadata.pubkey` claim, or null if absent or malformed. Used to
+ * detect whether link-pubkey + refreshSession can be skipped for returning
+ * users.
  */
 export function jwtPayloadPubkey(token: string): string | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    // Base64url → base64 → decode
-    const b64 = parts[1]!.replace(/-/g, '+').replace(/_/g, '/');
-    const json = atob(b64);
-    const payload = JSON.parse(json);
-    const pk = payload?.app_metadata?.pubkey;
-    return typeof pk === 'string' && pk.length === 64 ? pk : null;
-  } catch {
-    return null;
-  }
+  const pk = jwtPayload(token)?.app_metadata?.pubkey;
+  return typeof pk === 'string' && pk.length === 64 ? pk : null;
 }
 
 /**

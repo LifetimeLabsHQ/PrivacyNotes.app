@@ -47,7 +47,12 @@ export const INBOX_VERSION = 1;
 /** What a sealed row is bound to: a ciphertext moved to another account, id
  *  or kind fails to open. */
 export interface InboxContext {
-  /** The account's signing public key, hex. */
+  /**
+   * The account id, hex: the public key of the account's FIRST phrase. Never
+   * the signing key of the phrase in use, which a phrase change replaces;
+   * bound to it, every inbox row would fail to open after the change.
+   * Spec: docs/internal/plans/phrase-change.md (4.6)
+   */
   account: string;
   /** The row id, a uuid the sealer chose. */
   id: string;

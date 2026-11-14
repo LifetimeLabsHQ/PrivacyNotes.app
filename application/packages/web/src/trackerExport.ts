@@ -13,7 +13,10 @@ import {
   type CaffeineUnit,
   type WaterUnit,
   type WeightUnit,
+  bloodPressureText,
   caffeineToDisplay,
+  hasBloodPressure,
+  pairText,
   waterToDisplay,
   weightToDisplay,
 } from './trackerTypes';
@@ -147,6 +150,7 @@ export function trackerRows(
 
   add('sleepScore', d.sleepScore != null ? `${d.sleepScore}` : null);
   add('heartRate', d.heartRate != null ? `${d.heartRate}${t('units.bpm')}` : null);
+  add('bloodPressure', hasBloodPressure(d.bloodPressure) ? `${bloodPressureText(d.bloodPressure)} ${t('units.mmHg')}` : null);
   add('activity', d.activity ? t(`activity.level.${d.activity as ActivityLevel}`) : null);
   add('energy', d.energy != null ? `${d.energy}/10` : null);
   add('focus', d.focus != null ? `${d.focus}/10` : null);
@@ -171,6 +175,7 @@ export function trackerRows(
     const label = tpl?.name ?? entry.trackerId.slice(0, 8);
     let value: string;
     if (typeof v === 'boolean') value = v ? t('custom.yes') : t('custom.no');
+    else if (typeof v === 'number' && (tpl?.type === 'pair' || entry.value2 !== undefined)) value = pairText(v, entry.value2, tpl?.unit);
     else if (tpl?.type === 'scale10') value = `${v}/10`;
     else if (tpl?.type === 'scale5') value = `${v}/5`;
     else value = String(v);
@@ -181,7 +186,7 @@ export function trackerRows(
   // is printed under its own name rather than dropped, so a new value is
   // never invisible in an export just because this file has not caught up.
   const known = new Set([
-    'mood', 'emotions', 'sleep', 'sleepScore', 'heartRate', 'activity', 'energy',
+    'mood', 'emotions', 'sleep', 'sleepScore', 'heartRate', 'bloodPressure', 'activity', 'energy',
     'focus', 'pain', 'social', 'steps', 'weight', 'water', 'caffeine',
     'screenTime', 'medications',
   ]);

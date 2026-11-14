@@ -55,7 +55,7 @@
     "security_appLock": "app lock, lock on start, lock screen, lock app on open, lock again, re-lock after",
     "security_relockAfter": "timeout, auto lock, lock after, re-lock after, lock screen",
     "security_blockCapture": "screenshot, screen recording, screen capture, screen sharing, privacy mode, privacy screen",
-    "security_phrase": "recovery phrase, secret words, seed, twelve words, recovery key",
+    "security_phrase": "recovery phrase, secret words, seed, twelve words, twenty-four words, 24 words, recovery key",
     "security_custody": "custodial, self custody, key storage",
     "me_pauseSync": "stop sync, offline",
     "me_filesWifiOnly": "wifi, mobile data, cellular, metered",
@@ -82,6 +82,7 @@
     "appearance_invisibles": "pilcrow, whitespace, spaces, hidden characters, formatting marks",
     "appearance_linkModifier": "links, hyperlinks, url, click, ctrl, cmd, command, open by mistake",
     "appearance_typedSymbols": "ligatures, arrows, symbols, math, not equal, greater than, less than, autocorrect, replace",
+    "appearance_linkSuggestions": "related notes, similar notes, suggestions, link suggestions, connections, backlinks, unlinked, topic",
     "appearance_noteFont": "font, typeface, monospace, mono, serif, sans, default font, custom font, installed font, my font",
     "appearance_nestedNumbers": "numbered list, nested list, outline, 1.1, 1.1.1, legal numbering, sub numbers, multilevel list",
     "appearance_confirmTrash": "delete, trash, confirm, confirmation, dialog, ask, prompt, don't ask again",
@@ -89,6 +90,7 @@
     "appearance_autoLocationNotes": "location, place, gps, position, map, geotag, automatic, where, notes",
     "appearance_autoLocationJournal": "location, place, gps, position, map, geotag, automatic, where, journal, diary, entries",
     "appearance_startView": "start page, home, default view, open on",
+    "appearance_reopenLastOpen": "last note, last opened, restore, remember, reopen, start, launch",
     "appearance_view": "grid, list, cards, layout",
     "trackers_setup": "trackers, wellness, pills, mood, sleep, energy, steps, water, turn on, turn off",
     "trackers_habitQuestions": "habits, questions, meditate, pray, smoking, alcohol, did you",
@@ -122,6 +124,7 @@
     "calendar_where": "notification, permission, browser, phone, desktop, reminder",
     "calendar_weekNumbers": "week number, ISO week, calendar",
     "calendar_hours": "hours, working hours, day view, week view, morning",
-    "me_dms": "dead man's switch, inactivity, inactive, delete after, wipe, abandon"
+    "me_dms": "dead man's switch, inactivity, inactive, delete after, wipe, abandon",
+    "appearance_smartConnections": "ai, offline, on-device, local ai, private ai, model, bekko, meaning, related notes, similar notes, suggested connections, link suggestions, semantic, embeddings, download"
   }
 }

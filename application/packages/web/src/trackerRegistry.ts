@@ -16,6 +16,7 @@ import {
   type TrackerSettings,
 } from './trackerTypes';
 import type { JournalEntry } from './trackerStats';
+import { asNumber } from './trackerCompare';
 import type { TrackerDescriptor, TrackerValue } from './wellnessTypes';
 
 /**
@@ -30,12 +31,8 @@ type NumericField =
   | 'mood' | 'energy' | 'focus' | 'pain' | 'social' | 'sleepScore' | 'heartRate'
   | 'steps' | 'water' | 'screenTime' | 'caffeine';
 
-function num(v: unknown): number | undefined {
-  return typeof v === 'number' && Number.isFinite(v) ? v : undefined;
-}
-
 function field(key: NumericField) {
-  return (d: JournalTrackerData) => num(d[key]);
+  return (d: JournalTrackerData) => asNumber(d[key]);
 }
 
 function scale(id: NumericField, min: number, max: number, unit?: TrackerDescriptor['unit']): TrackerDescriptor {
@@ -106,7 +103,7 @@ function builtins(settings: TrackerSettings, factors: FactorDef[]): Record<strin
       {
         id: 'sleepHours', source: 'builtin', labelKey: 'stats:wellness.trackers.sleepHours',
         color: BUILTIN_TRACKER_COLORS.sleep, kind: 'measure', unit: 'h', aggregate: 'avg',
-        read: (d) => num(d.sleep?.hours),
+        read: (d) => asNumber(d.sleep?.hours),
       },
       {
         id: 'sleepQuality', source: 'builtin', labelKey: 'stats:wellness.trackers.sleepQuality',
@@ -116,6 +113,14 @@ function builtins(settings: TrackerSettings, factors: FactorDef[]): Record<strin
     ],
     sleepScore: [scale('sleepScore', 0, 100)],
     heartRate: [measure('heartRate', 'bpm')],
+    // One reading, two numbers: each is a measure of its own, as sleep's
+    // hours and quality are, so the charts and comparisons take either.
+    bloodPressure: (['systolic', 'diastolic'] as const).map((side): TrackerDescriptor => ({
+      id: side === 'systolic' ? 'bpSystolic' : 'bpDiastolic', source: 'builtin',
+      labelKey: `stats:wellness.trackers.${side === 'systolic' ? 'bpSystolic' : 'bpDiastolic'}`,
+      color: BUILTIN_TRACKER_COLORS.bloodPressure, kind: 'measure', unit: 'mmHg', aggregate: 'avg',
+      read: (d) => asNumber(d.bloodPressure?.[side]),
+    })),
     activity: [{
       id: 'activity', source: 'builtin', labelKey: 'trackers:labels.activity',
       color: BUILTIN_TRACKER_COLORS.activity, kind: 'ordinal', levels: ACTIVITY_LEVELS,
@@ -125,7 +130,7 @@ function builtins(settings: TrackerSettings, factors: FactorDef[]): Record<strin
       id: 'weight', source: 'builtin', labelKey: 'trackers:labels.weight',
       color: BUILTIN_TRACKER_COLORS.weight, kind: 'measure', unit, aggregate: 'avg',
       read: (d) => {
-        const kg = num(d.weight);
+        const kg = asNumber(d.weight);
         return kg === undefined ? undefined : weightToDisplay(kg, unit);
       },
     }],
@@ -135,7 +140,7 @@ function builtins(settings: TrackerSettings, factors: FactorDef[]): Record<strin
       id: 'water', source: 'builtin', labelKey: 'trackers:labels.water',
       color: BUILTIN_TRACKER_COLORS.water, kind: 'measure', unit: waterUnit, aggregate: 'avg',
       read: (d) => {
-        const glasses = num(d.water);
+        const glasses = asNumber(d.water);
         return glasses === undefined ? undefined : waterToDisplay(glasses, waterUnit);
       },
     }],
@@ -143,7 +148,7 @@ function builtins(settings: TrackerSettings, factors: FactorDef[]): Record<strin
       id: 'caffeine', source: 'builtin', labelKey: 'trackers:labels.caffeine',
       color: BUILTIN_TRACKER_COLORS.caffeine, kind: 'measure', unit: caffeineUnit, aggregate: 'avg',
       read: (d) => {
-        const cups = num(d.caffeine);
+        const cups = asNumber(d.caffeine);
         return cups === undefined ? undefined : caffeineToDisplay(cups, caffeineUnit);
       },
     }],
@@ -154,7 +159,7 @@ function builtins(settings: TrackerSettings, factors: FactorDef[]): Record<strin
 /** The built-in order of the tracker settings dialog; medication is listed per template, last. */
 const BUILTIN_ORDER = [
   'mood', 'emotions', 'factors', 'focus', 'pain', 'social',
-  'sleep', 'sleepScore', 'heartRate', 'activity', 'weight',
+  'sleep', 'sleepScore', 'heartRate', 'bloodPressure', 'activity', 'weight',
   'habits', 'energy', 'steps', 'water', 'caffeine', 'screenTime',
 ] as const;
 
@@ -166,6 +171,25 @@ const CUSTOM_RANGE: Partial<Record<CustomTrackerTemplate['type'], [number, numbe
 
 function customValue(d: JournalTrackerData, id: string): unknown {
   return d.customTrackers?.find((c) => c.trackerId === id)?.value;
+}
+
+/** A `pair` tracker as two measures, one per number, as the built-in blood
+ *  pressure is; `trackerName` shows the name and the number's own name,
+ *  "BP, Top", or the generic "First number" when it has none. */
+function pairDescriptors(t: CustomTrackerTemplate): TrackerDescriptor[] {
+  return ([0, 1] as const).map((i) => ({
+    id: `${t.id}~${i + 1}`, source: 'custom' as const,
+    name: t.name,
+    ...(t.pairLabels?.[i]?.trim()
+      ? { part: t.pairLabels[i]!.trim() }
+      : { partKey: i === 0 ? 'trackers:config.pairFirst' : 'trackers:config.pairSecond' }),
+    color: customTrackerColor(t), stoppedAt: t.stoppedAt, deletedAt: t.deletedAt,
+    kind: 'measure', aggregate: 'avg',
+    read: (d: JournalTrackerData) => {
+      const e = d.customTrackers?.find((c) => c.trackerId === t.id);
+      return asNumber(i === 0 ? e?.value : e?.value2);
+    },
+  }));
 }
 
 function customDescriptor(t: CustomTrackerTemplate): TrackerDescriptor {
@@ -190,7 +214,7 @@ function customDescriptor(t: CustomTrackerTemplate): TrackerDescriptor {
     max: range?.[1],
     // A free number is a count the person adds up (glasses, pages, euros).
     aggregate: range ? 'avg' : 'sum',
-    read: (d) => num(customValue(d, t.id)),
+    read: (d) => asNumber(customValue(d, t.id)),
   };
 }
 
@@ -229,7 +253,7 @@ export function buildRegistry(
   const customs = [...settings.customTrackers].sort((a, b) =>
     a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0,
   );
-  out.push(...customs.map(customDescriptor));
+  out.push(...customs.flatMap((t) => (t.type === 'pair' ? pairDescriptors(t) : [customDescriptor(t)])));
   if (entries) {
     const known = new Set(settings.customTrackers.map((t) => t.id));
     for (const e of entries) {

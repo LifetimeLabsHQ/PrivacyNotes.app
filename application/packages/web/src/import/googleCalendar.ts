@@ -1,4 +1,3 @@
-import JSZip from 'jszip';
 import i18n from '../i18n';
 import { escapeMarkdownText } from '../fileNames';
 import {
@@ -30,6 +29,7 @@ import { linkifyLiteralText, linkifyMarkdown } from './linkify';
 import { htmlNoteToMarkdown } from './notesnook';
 import type { ImportedNote, ParsedImport } from './types';
 import { ImportTooLargeError, zipEntryBytes } from './zipEntry';
+import { openZip } from './zipOpen';
 
 /**
  * Google Calendar importer, and through it any iCalendar (.ics) file: the
@@ -70,7 +70,7 @@ async function readFiles(file: File): Promise<CalendarFile[]> {
     if (file.size > TOTAL_BYTES) throw new ImportTooLargeError(msg('fileTooLarge'));
     return [{ name: file.name, bytes: new Uint8Array(await file.arrayBuffer()) }];
   }
-  const zip = await JSZip.loadAsync(file);
+  const zip = await openZip(file);
   const entries = Object.values(zip.files).filter((e) => !e.dir && /\.ics$/i.test(e.name) && !e.name.split('/').some((s) => s.startsWith('__MACOSX')));
   if (entries.length === 0) throw new Error(msg('noIcs'));
   const out: CalendarFile[] = [];
@@ -232,7 +232,7 @@ const isEmail = (v: string) => /^[^\s@]+@[^\s@]+$/.test(v);
 const isWebLink = (v: string) => /^(https?:\/\/|mailto:)\S+$/i.test(v.trim());
 const label = (key: string) => i18n.t(`importExport:importCalendar.${key}`);
 const msg = (key: string, options?: Record<string, unknown>): string =>
-  i18n.t(`importExport:importLog.googleCalendar.${key}`, options);
+  i18n.t(`importLog:googleCalendar.${key}`, options);
 
 // ── Alerts ─────────────────────────────────────────────────────────
 

@@ -504,7 +504,7 @@ function renderFor(p: any, all: LandingPage[]): string {
   const verify = `<section class="l-sec">${sectionHead(p.verify)}<div class="l-tblwrap"><table class="l-tbl l-vf"><thead><tr><th>The claim</th><th>What enforces it</th><th>How you check it</th></tr></thead><tbody>
 <tr><th>Notes are always encrypted, on the device and on the way to the server</th><td>XChaCha20-Poly1305 per note, keys derived from your phrase locally</td><td>Open the browser network tab while editing: every payload is ciphertext.</td></tr>
 <tr><th>The crypto is not a black box</th><td>Open source: the app, its encryption code and the threat model are published</td><td>Read the published source, or hand it to your IT for review.</td></tr>
-<tr><th>No identity is required</th><td>Sign-in with a 12-word phrase; email is optional, not a prerequisite</td><td>Create a vault without entering an email address. Takes under a minute.</td></tr>
+<tr><th>No identity is required</th><td>Sign-in with a recovery phrase; email is optional, not a prerequisite</td><td>Create a vault without entering an email address. Takes under a minute.</td></tr>
 <tr><th>With self-custody, there is no readable copy to produce</th><td>The phrase never reaches the server, so neither does anything that opens your notes</td><td>The threat model lists what we hold, for each custody choice.</td></tr>
 </tbody></table></div><div class="l-warn l-honesty"><b>${t(p.honesty.title)}</b><p>${t(p.honesty.body)}</p></div></section>`;
 

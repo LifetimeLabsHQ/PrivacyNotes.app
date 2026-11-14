@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type { LocalNote } from './db';
 import { journalDateOf } from './notesViewUtils';
+import { createListeners } from './listeners';
 import type { JournalTrackerData } from './trackerTypes';
 
 /**
@@ -13,7 +14,7 @@ import type { JournalTrackerData } from './trackerTypes';
  */
 
 let history: readonly JournalTrackerData[] = [];
-const listeners = new Set<() => void>();
+const { subscribe, notify } = createListeners();
 
 /** The tracker values of the journal entries in `notes`, newest day first.
  *  An entry behind its PIN gives nothing, or an open entry would show its
@@ -29,12 +30,7 @@ export function trackerHistoryOf(notes: readonly LocalNote[], isGated: (n: Local
 /** The tracker values of the live journal entries, newest day first. */
 export function setTrackerHistory(next: readonly JournalTrackerData[]): void {
   history = next;
-  listeners.forEach((l) => l());
-}
-
-function subscribe(l: () => void): () => void {
-  listeners.add(l);
-  return () => { listeners.delete(l); };
+  notify();
 }
 
 /** The newest value `read` finds in `days`, in the unit `read` returns. */

@@ -25,6 +25,7 @@ import { SETTINGS_TRACK, settingsSegClass } from '@web/settingsUI';
 import { disconnect, readConnection, type Connection } from '../../src/connection';
 import { LOCK_CHOICES, readPrefs, writePrefs, type LockAfter, type PopupTab, type TypeFilter } from '../../src/prefs';
 import { takeRoute } from '../../src/route';
+import { activeTab } from '../../src/tabs';
 import { bookmarkOfPage, loginsOf, matchLogins } from '../../src/match';
 import { ConnectView } from './ConnectView';
 import { Brand } from '@web/Brand';
@@ -96,7 +97,7 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    void Promise.all([readConnection(), takeRoute(), readPrefs(), browser.tabs.query({ active: true, lastFocusedWindow: true })]).then(([c, r, prefs, [active]]) => {
+    void Promise.all([readConnection(), takeRoute(), readPrefs(), activeTab()]).then(([c, r, prefs, active]) => {
       setTypeFilter(prefs.typeFilter);
       setViewPrefs({ showTotp: prefs.showTotp, totpBar: prefs.totpBar, favicons: prefs.favicons });
       setLockAfter(prefs.lockAfter);
@@ -137,8 +138,20 @@ export function App() {
   const openUnder = (el: HTMLElement | null, items: ContextMenuItem[]) => {
     const r = el?.getBoundingClientRect();
     if (!r) return;
-    menu.open({ clientX: r.right, clientY: r.bottom + 4, preventDefault() {}, stopPropagation() {} }, items, true, undefined, true);
+    // The menu's end edge sits at the button's end edge: its left edge in a
+    // right-to-left page.
+    const end = document.documentElement.dir === 'rtl' ? r.left : r.right;
+    menu.open({ clientX: end, clientY: r.bottom + 4, preventDefault() {}, stopPropagation() {} }, items, true, undefined, true);
   };
+
+  // The vault's search takes the keyboard whenever it shows: when the popup
+  // opens on the Vault tab, after an unlock, after a sheet and on a switch to
+  // the tab, so a person can type at once (Bitwarden; owner, 2026-11-12).
+  // Locked, the PIN field has it instead.
+  const searchShown = !!connection?.logins && view.kind === 'main' && vault.unlocked === true && (!connection.clips || tab === 'vault');
+  useEffect(() => {
+    if (searchShown) requestAnimationFrame(() => searchRef.current?.focus());
+  }, [searchShown]);
 
   if (connection === undefined) {
     return (

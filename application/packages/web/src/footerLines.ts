@@ -1,4 +1,4 @@
-import { buildPool, mountTypewriter, type TypewriterLook } from './typewriter.ts';
+import { buildPool, linesStartPaused, mountTypewriter, type TypewriterLook } from './typewriter.ts';
 
 // The typewriter lines as the site footer's closing line (owner, 2026-10-23,
 // variant B of the mockups, moved onto the seam 2026-10-23): a pill with the
@@ -91,16 +91,6 @@ export function footerLinesHtml(text: FooterLinesText): string {
   return `<div class="fl" style="--fl-ch:${longest([...text.lines, ...text.loadingOnly])}" data-footer-lines data-lines="${esc(JSON.stringify(text.lines))}" data-loading-lines="${esc(JSON.stringify(text.loadingOnly))}" data-pause="${esc(text.pause)}" data-play="${esc(text.play)}"><div class="fl-pill"><div class="fl-line" aria-hidden="true"></div><button type="button" class="fl-btn" aria-label="${esc(text.pause)}" aria-pressed="false">${PAUSE_ICON}</button></div></div>`;
 }
 
-function startPaused(): boolean {
-  try {
-    const saved = localStorage.getItem(PAUSED_KEY);
-    if (saved !== null) return saved === '1';
-  } catch {
-    /* storage refused: fall through to the motion setting */
-  }
-  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-}
-
 function strings(raw: string | undefined): string[] {
   try {
     const value: unknown = JSON.parse(raw ?? '[]');
@@ -118,7 +108,7 @@ export function mountFooterLines(root: HTMLElement): () => void {
   const host = root.querySelector<HTMLElement>('.fl-line');
   const button = root.querySelector<HTMLButtonElement>('.fl-btn');
   if (!host || !button) return () => {};
-  let paused = startPaused();
+  let paused = linesStartPaused(PAUSED_KEY);
   const engine = mountTypewriter(host, {
     pool: buildPool(strings(root.dataset.lines), strings(root.dataset.loadingLines)),
     look: FOOTER_LOOK,

@@ -15,7 +15,8 @@
 import type { Dispatch, MutableRefObject, ReactNode, SetStateAction } from 'react';
 import i18n from '../i18n';
 import { keyText } from '../shortcutMatch';
-import { isShortcutId, shortcutNoun } from '../noteShortcut';
+import { shortcutNoun } from '../noteShortcut';
+import { isUuid } from '../uuid';
 import type { ContextMenuItem } from '../ContextMenu';
 import type { LocalNote } from '../db';
 import {
@@ -529,7 +530,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
       {
         label: (s) => i18n.t(s.kind === 'one' && shortcutNoun(s.note.type) === 'item' ? 'shell:shortcut.copyItem' : 'shell:shortcut.copyNote'),
         icon: () => <LinkSimple aria-hidden="true" />,
-        when: (s) => s.kind === 'one' && isShortcutId(s.note.id),
+        when: (s) => s.kind === 'one' && isUuid(s.note.id),
         one: (n) => deps.onCopyShortcut(n),
         many: oneItemOnly('a shortcut opens one item'),
       },

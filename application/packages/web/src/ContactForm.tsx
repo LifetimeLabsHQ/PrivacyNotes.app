@@ -6,17 +6,25 @@ import { hasPin } from './pin';
 import { PinInfoModal } from './PinInfoModal';
 import {
   BIRTHDAY_LABEL,
+  CONTACT_FIELD_TYPES,
   CONTACT_LABELS,
   contactInitialsFor,
   isAddressEmpty,
+  newContactField,
+  newContactSection,
   type Contact,
   type ContactAddress,
+  type ContactField,
   type ContactLabelled,
+  type ContactSection,
 } from './contactBody';
+import { CustomFieldEditor } from './CustomFields';
+import { isPublicField } from './loginExtras';
+import { DeleteButton } from './ui/DeleteButton';
 import { ContactChip } from './NoteRow';
 import { storePicture } from './EncryptedImage';
 import { contactPhotoOptions } from './imageProcessing';
-import { Camera, CaretDown, iconTrash, Info, Minus, NotePencil, Plus, Spinner, User } from './icons';
+import { Camera, CaretDown, iconTrash, Info, Minus, NotePencil, Plus, Rows, Spinner, User } from './icons';
 import { FIELD_CLASS, FieldLabel, GroupHeading } from './formFields';
 import { isImeComposing } from './imeComposing';
 
@@ -30,6 +38,8 @@ import { isImeComposing } from './imeComposing';
  * or once "Add field" adds them, so a contact with a name and a number is
  * four rows. Everything the file carried that the app does not model is
  * listed read-only under "Also in this file" and written back on export.
+ * The owner's own sections (#757) come after the note: a name, then fields
+ * in the login custom-field editor, with a blank field dropped on save.
  *
  * Each repeating group keeps one blank row at the end, so a second number
  * is typing rather than clicking Add first; the blank row is dropped on
@@ -139,7 +149,6 @@ export function ContactForm({
   /** The row whose label is being typed as custom text: `kind:index`. */
   const [customLabel, setCustomLabel] = useState<string | null>(null);
   const [extrasOpen, setExtrasOpen] = useState(false);
-  const addFieldRef = useRef<HTMLButtonElement | null>(null);
   const photoInputRef = useRef<HTMLInputElement | null>(null);
   const photoButtonRef = useRef<HTMLButtonElement | null>(null);
   const [photoBusy, setPhotoBusy] = useState(false);
@@ -211,6 +220,20 @@ export function ContactForm({
     update({ [kind]: rows } as Partial<Contact>);
   }
 
+  function setSections(sections: ContactSection[]) {
+    update({ sections });
+  }
+
+  function patchSection(id: string, patch: Partial<ContactSection>) {
+    setSections(draft.sections.map((sec) => (sec.id === id ? { ...sec, ...patch } : sec)));
+  }
+
+  function patchSectionField(sectionId: string, fieldId: string, patch: Partial<ContactField>) {
+    const sec = draft.sections.find((x) => x.id === sectionId);
+    if (!sec) return;
+    patchSection(sectionId, { fields: sec.fields.map((f) => (f.id === fieldId ? { ...f, ...patch } : f)) });
+  }
+
   function setAddress(index: number, patch: Partial<ContactAddress>) {
     const rows = draft.addresses.map((a, i) => (i === index ? { ...a, ...patch } : a));
     update({ addresses: withTrailingBlankAddress(rows) });
@@ -249,9 +272,8 @@ export function ContactForm({
   const showDates = draft.dates.length > 0;
   const showRelated = draft.related.length > 0;
 
-  function openAddField() {
-    const rect = addFieldRef.current?.getBoundingClientRect();
-    if (!rect) return;
+  function openAddField(anchor: HTMLElement) {
+    const rect = anchor.getBoundingClientRect();
     const show = (key: string) => setAdded((prev) => new Set(prev).add(key));
     const items: ContextMenuItem[] = [
       { type: 'header', label: t('contacts.menuContact') },
@@ -491,16 +513,78 @@ export function ContactForm({
           </div>
         )}
 
-        <button
-          ref={addFieldRef}
-          type="button"
-          onClick={openAddField}
-          disabled={locked}
-          className="self-start inline-flex items-center gap-1.5 rounded-md border border-dashed border-divider px-3 py-1.5 text-compact text-accent hover:border-accent hover:bg-accent/8 transition disabled:opacity-60"
-        >
-          <Plus />
-          {t('contacts.addField')}
-        </button>
+        {/* The owner's own sections: each one a card, so its name, its fields
+            and its own add link read as one thing apart from the contact's
+            Add field and Add section below. ui-patterns.md section 187. */}
+        {draft.sections.map((sec) => {
+          const name = sec.title.trim();
+          return (
+            <div key={sec.id} className="rounded-lg border border-divider p-3">
+              <div className="flex items-center gap-1.5">
+                <Rows className="shrink-0 text-pn-muted" aria-hidden="true" />
+                <input
+                  value={sec.title}
+                  onChange={(e) => patchSection(sec.id, { title: e.target.value })}
+                  placeholder={t('contacts.sectionName')}
+                  aria-label={t('contacts.sectionName')}
+                  disabled={locked}
+                  maxLength={VALUE_MAX}
+                  autoComplete="off"
+                  dir="auto"
+                  className={`${fieldClass} font-medium`}
+                />
+                {!locked && (
+                  <DeleteButton
+                    kind="remove"
+                    label={name ? t('contacts.removeSectionNamed', { name }) : t('contacts.removeSection')}
+                    onConfirm={() => setSections(draft.sections.filter((x) => x.id !== sec.id))}
+                  />
+                )}
+              </div>
+              <div className="mt-1 flex flex-col divide-y divide-divider">
+                {sec.fields.map((f) => (
+                  <CustomFieldEditor
+                    key={f.id}
+                    field={f}
+                    types={CONTACT_FIELD_TYPES}
+                    locked={locked}
+                    plain
+                    nameMax={LABEL_MAX}
+                    valueMax={VALUE_MAX}
+                    onChange={(patch) => patchSectionField(sec.id, f.id, patch)}
+                    onRemove={() => patchSection(sec.id, { fields: sec.fields.filter((x) => x.id !== f.id) })}
+                  />
+                ))}
+              </div>
+              {sec.fields.some((f) => !isPublicField(f)) && (
+                <p className="mt-1 text-meta text-pn-muted">{t('contacts.hiddenFieldsNote')}</p>
+              )}
+              {!locked && (
+                <div className="mt-2 pt-2 border-t border-divider">
+                  <button
+                    type="button"
+                    onClick={() => patchSection(sec.id, { fields: [...sec.fields, newContactField('text')] })}
+                    className="inline-flex items-center gap-1.5 text-compact text-accent hover:underline"
+                  >
+                    <Plus />
+                    {/* The link names its section, so it never reads as the
+                        contact's own Add field; an unnamed section says so. */}
+                    <span dir="auto">{name ? t('contacts.addFieldTo', { name }) : t('contacts.addFieldToSection')}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        <div className="flex flex-wrap items-center gap-2 mt-1">
+          <Button variant="secondary" icon={<Plus aria-hidden="true" />} onClick={(e) => openAddField(e.currentTarget)} disabled={locked}>
+            {t('contacts.addField')}
+          </Button>
+          <Button variant="secondary" icon={<Rows aria-hidden="true" />} onClick={() => setSections([...draft.sections, newContactSection()])} disabled={locked}>
+            {t('contacts.addSection')}
+          </Button>
+        </div>
 
         {draft.extras.length > 0 && (
           <div className="rounded-md border border-divider">

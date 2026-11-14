@@ -19,6 +19,10 @@ export type NoteActionGuardDeps = {
   onRequestRemoveProtection: () => void;
   onOpenUpgrade: (trigger: NoteUpgradeTrigger) => void;
   onOpenHistory?: () => void;
+  /** The note has text a sync pull replaced on this device (replacedCopies.ts).
+   *  Its History window then opens on every plan, with those copies only when
+   *  the server history is not unlocked. */
+  localHistory?: boolean;
   /** Open Security > PIN so the user can set a PIN before protecting a note. */
   onSetPin?: () => void;
   onMoveToFolder?: () => void;
@@ -73,7 +77,7 @@ export function noteActionGuards(d: NoteActionGuardDeps) {
     },
 
     openHistory() {
-      if (!unlocked) {
+      if (!unlocked && !d.localHistory) {
         d.onOpenUpgrade('history');
         return;
       }

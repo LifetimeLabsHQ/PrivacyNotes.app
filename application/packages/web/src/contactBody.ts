@@ -19,11 +19,16 @@
  *     Apple writes the year 1604 to mean "none given".
  *   - Labels are free strings. The picker suggests a vocabulary; whatever
  *     the source said is kept, including a custom label.
+ *   - `sections` are the owner's own groups of fields (#757), each field the
+ *     login custom-field shape from `loginExtras.ts`. Builds before 0.509.0
+ *     drop the key on save; every later build carries it (`carried`).
  *
  * Spec: docs/internal/specs/contacts-pillar.md (section 5)
  */
 
 /** A labelled value: a phone, an email, a website, a profile, a date, a related name. */
+
+import { isPublicField, newLoginField, parseFieldList, type LoginField } from './loginExtras';
 export type ContactLabelled = { label: string; value: string };
 
 /**
@@ -39,6 +44,17 @@ export type ContactAddress = {
   postal: string;
   country: string;
 };
+
+/** A field the owner named: the login custom-field shape. `type` is one of
+ *  `CONTACT_FIELD_TYPES`; any other type reads as hidden (`isPublicField`). */
+export type ContactField = LoginField;
+
+/** A section the owner named, holding their own fields. */
+export type ContactSection = { id: string; title: string; fields: ContactField[] };
+
+/** The field types the contact form offers, in menu order. `yesno` stores
+ *  `yes` or `no`; a number is stored as typed, like a phone number. */
+export const CONTACT_FIELD_TYPES = ['text', 'number', 'yesno', 'hidden'] as const;
 
 /** One vCard line the app does not model, kept verbatim for the export. */
 type ContactExtra = { name: string; params: string; value: string };
@@ -71,6 +87,7 @@ type ContactBody = {
   dates?: ContactLabelled[];
   related?: ContactLabelled[];
   notes?: string;
+  sections?: ContactSection[];
   extras?: ContactExtra[];
   /** Import bookkeeping for the re-import matcher. Never rendered. */
   uid?: string;
@@ -99,6 +116,7 @@ export type Contact = {
   dates: ContactLabelled[];
   related: ContactLabelled[];
   notes: string;
+  sections: ContactSection[];
   extras: ContactExtra[];
   uid: string;
   /** Stored keys this version does not model, kept as they were read. A newer
@@ -112,7 +130,7 @@ export type Contact = {
 const MODELLED_KEYS = new Set([
   'first', 'last', 'phones', 'emails', 'photo', 'photoBytes', 'middle', 'prefix',
   'suffix', 'nickname', 'phonetic', 'org', 'department', 'jobTitle', 'addresses',
-  'urls', 'profiles', 'dates', 'related', 'notes', 'extras', 'uid',
+  'urls', 'profiles', 'dates', 'related', 'notes', 'sections', 'extras', 'uid',
 ]);
 
 /** Keys that are never carried, whatever a body holds: assigning one of them
@@ -148,6 +166,7 @@ export function emptyContact(): Contact {
     dates: [],
     related: [],
     notes: '',
+    sections: [],
     extras: [],
     uid: '',
     carried: {},
@@ -204,6 +223,47 @@ function extraList(v: unknown): ContactExtra[] {
   return out;
 }
 
+function sectionList(v: unknown): ContactSection[] {
+  if (!Array.isArray(v)) return [];
+  const out: ContactSection[] = [];
+  for (const row of v) {
+    if (!row || typeof row !== 'object') continue;
+    const r = row as Record<string, unknown>;
+    const fields = parseFieldList(r.fields);
+    if (typeof r.id !== 'string' || !fields.length) continue;
+    out.push({ id: r.id, title: str(r.title), fields });
+  }
+  return out;
+}
+
+/** A new, empty section with one text field, so the form has a row to type into. */
+export function newContactSection(): ContactSection {
+  return { id: crypto.randomUUID(), title: '', fields: [newContactField('text')] };
+}
+
+/** A new field; a yes-or-no field starts at `no`, so it is never blank. */
+export function newContactField(type: string): ContactField {
+  return newLoginField(type, '', type === 'yesno' ? 'no' : '');
+}
+
+/**
+ * The owner's sections as plain lines, for a file format that has no
+ * sections of its own (the vCard NOTE): a title line, then `label: value`
+ * per field. An export the owner asked for carries every value, hidden ones
+ * included, the rule `vaultFields.ts` keeps for a login.
+ */
+export function contactSectionsText(sections: ContactSection[], yes: string, no: string): string {
+  return sections
+    .map((sec) => [
+      sec.title,
+      ...sec.fields.map((f) => {
+        const value = f.type === 'yesno' ? (f.value === 'yes' ? yes : no) : f.value;
+        return f.label ? `${f.label}: ${value}` : value;
+      }),
+    ].filter(Boolean).join('\n'))
+    .join('\n\n');
+}
+
 /** Parse a stored body. A body that does not parse yields an empty contact. */
 export function parseContactBody(body: string): Contact {
   const c = emptyContact();
@@ -236,6 +296,7 @@ export function parseContactBody(body: string): Contact {
   c.dates = labelledList(data.dates);
   c.related = labelledList(data.related);
   c.notes = str(data.notes);
+  c.sections = sectionList(data.sections);
   c.extras = extraList(data.extras);
   c.uid = str(data.uid);
   for (const [key, value] of Object.entries(data)) {
@@ -316,6 +377,18 @@ export function buildContactBody(c: Contact): string {
   const related = packLabelled(c.related);
   if (related) body.related = related;
   put('notes', c.notes);
+  // A field with no value is dropped, and a section with no field left goes
+  // with it: empty is absent, the same as a blank phone row.
+  const sections = c.sections
+    .map((sec) => ({
+      id: sec.id,
+      title: sec.title.trim(),
+      fields: sec.fields
+        .map((f) => ({ id: f.id, label: f.label.trim(), value: f.value.trim(), type: f.type }))
+        .filter((f) => f.value),
+    }))
+    .filter((sec) => sec.fields.length);
+  if (sections.length) body.sections = sections;
   if (c.extras.length) body.extras = c.extras.map((e) => ({ name: e.name, params: e.params, value: e.value }));
   put('uid', c.uid);
   return JSON.stringify(body);
@@ -461,6 +534,9 @@ export function contactSearchText(c: Contact): string {
     ...c.profiles.map((p) => p.value),
     ...c.related.map((r) => r.value),
     c.notes,
+    // A hidden value is never indexed, the rule a login's custom field keeps,
+    // and a stored `yes` or `no` is not a word anybody searches for.
+    ...c.sections.flatMap((sec) => [sec.title, ...sec.fields.flatMap((f) => (isPublicField(f) && f.type !== 'yesno' ? [f.label, f.value] : [f.label]))]),
   ];
   return parts.filter(Boolean).join(' ');
 }
@@ -483,12 +559,12 @@ function parseContactDate(value: string): { year: number | null; month: number; 
 }
 
 /** The month and day of a contact's birthday row, or null when it has none
- *  or its value is in no known shape. The year is left out: a birthday
- *  comes back every year. */
-export function contactBirthday(c: Contact): { month: number; day: number } | null {
+ *  or its value is in no known shape. A birthday comes back every year; the
+ *  year of birth, when the row has one, is `year`, for the age (#750). */
+export function contactBirthday(c: Contact): { month: number; day: number; year: number | null } | null {
   const row = c.dates.find((d) => d.label === BIRTHDAY_LABEL && d.value.trim() !== '');
   const d = row ? parseContactDate(row.value) : null;
-  return d && d.month >= 1 && d.month <= 12 && d.day >= 1 && d.day <= 31 ? { month: d.month, day: d.day } : null;
+  return d && d.month >= 1 && d.month <= 12 && d.day >= 1 && d.day <= 31 ? { month: d.month, day: d.day, year: d.year } : null;
 }
 
 /** The month and day of every other labelled date row (an anniversary, a

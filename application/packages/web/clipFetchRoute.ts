@@ -26,6 +26,7 @@
  * holds an address or a size (tests/workerLogPrivacy.test.ts).
  * Spec: docs/internal/specs/web-clipper-stage1.md (section 3.1)
  */
+import { bareHost, isBlockedIp, isPrivateHost, parseIp } from '../clipper/src/address';
 
 /** One Durable Object per counted subject: an account, an address, or the
  *  demo as a whole. Typed by hand like the rest of the Worker's runtime. */
@@ -330,18 +331,12 @@ async function readCapped(res: Response, limit: number): Promise<Uint8Array<Arra
   return out;
 }
 
-const LOCAL_NAMES = /(?:^|\.)(?:localhost|local|internal|intranet|lan|home|corp|home\.arpa|localdomain)$/i;
-
 /** Refuse a host that is, or resolves to, an address outside the public web.
  *  Every answer of the lookup must be public. */
 async function checkHost(url: URL, signal: AbortSignal): Promise<void> {
-  const host = url.hostname.replace(/^\[|\]$/g, '').toLowerCase();
-  const literal = parseIp(host);
-  if (literal) {
-    if (isBlockedIp(literal)) throw new ClipRefusal(422, 'blocked-address');
-    return;
-  }
-  if (!host.includes('.') || LOCAL_NAMES.test(host)) throw new ClipRefusal(422, 'blocked-address');
+  if (isPrivateHost(url)) throw new ClipRefusal(422, 'blocked-address');
+  const host = bareHost(url);
+  if (parseIp(host)) return;
   const answers = await resolve(host, signal);
   if (answers.length === 0) throw new ClipRefusal(502, 'dns');
   for (const a of answers) {
@@ -368,36 +363,6 @@ async function resolve(host: string, signal: AbortSignal): Promise<string[]> {
   return out;
 }
 
-type Ip = { v: 4; parts: number[] } | { v: 6; parts: number[] };
-
-/** Parse a dotted IPv4 or a colon IPv6 address, or null. `URL` has already
- *  normalised every IPv4 spelling (octal, hex, short) to dotted decimal. */
-export function parseIp(text: string): Ip | null {
-  const v4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(text);
-  if (v4) {
-    const parts = v4.slice(1).map(Number);
-    return parts.every((p) => p <= 255) ? { v: 4, parts } : null;
-  }
-  if (!text.includes(':')) return null;
-  let s = text;
-  const tailV4 = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/.exec(s);
-  if (tailV4) {
-    const t = parseIp(tailV4[1]!);
-    if (!t || t.v !== 4) return null;
-    const [a, b, c, d] = t.parts as [number, number, number, number];
-    s = `${s.slice(0, -tailV4[1]!.length)}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
-  }
-  const halves = s.split('::');
-  if (halves.length > 2) return null;
-  const head = halves[0] ? halves[0].split(':') : [];
-  const tail = halves.length === 2 && halves[1] ? halves[1].split(':') : [];
-  const fill = halves.length === 2 ? 8 - head.length - tail.length : 0;
-  if (fill < 0 || (halves.length === 1 && head.length !== 8)) return null;
-  const groups = [...head, ...Array(fill).fill('0'), ...tail];
-  if (groups.length !== 8 || !groups.every((g) => /^[0-9a-f]{1,4}$/i.test(g))) return null;
-  return { v: 6, parts: groups.map((g) => parseInt(g, 16)) };
-}
-
 /** The ports the Fetch standard blocks, the same list `clip_fetch` refuses. */
 const BAD_PORTS = new Set([
   0, 1, 7, 9, 11, 13, 15, 17, 19, 20, 21, 22, 23, 25, 37, 42, 43, 53, 69, 77, 79, 87, 95, 101, 102, 103, 104, 109, 110,
@@ -405,41 +370,6 @@ const BAD_PORTS = new Set([
   540, 548, 554, 556, 563, 587, 601, 636, 989, 990, 993, 995, 1719, 1720, 1723, 2049, 3659, 4045, 4190, 5060, 5061,
   6000, 6566, 6665, 6666, 6667, 6668, 6669, 6679, 6697, 10080,
 ]);
-
-/** The same ranges `clip_fetch` refuses (clip_fetch.rs `is_blocked`). */
-export function isBlockedIp(ip: Ip): boolean {
-  if (ip.v === 4) {
-    const [a, b, c] = ip.parts as [number, number, number, number];
-    return (
-      a === 0 || a === 10 || a === 127 || a >= 224 ||
-      (a === 100 && b >= 64 && b <= 127) ||
-      (a === 169 && b === 254) ||
-      (a === 172 && b >= 16 && b <= 31) ||
-      (a === 192 && b === 168) ||
-      (a === 192 && b === 0 && (c === 0 || c === 2)) ||
-      (a === 198 && (b === 18 || b === 19)) ||
-      (a === 198 && b === 51 && c === 100) ||
-      (a === 203 && b === 0 && c === 113)
-    );
-  }
-  const p = ip.parts as [number, number, number, number, number, number, number, number];
-  const embedded = (hi: number, lo: number): Ip => ({ v: 4, parts: [hi >> 8, hi & 255, lo >> 8, lo & 255] });
-  if (p.slice(0, 5).every((x) => x === 0) && p[5] === 0xffff) return isBlockedIp(embedded(p[6], p[7]));
-  if (p.slice(0, 6).every((x) => x === 0)) return true; // ::, ::1 and the IPv4-compatible form
-  if (p.slice(0, 4).every((x) => x === 0) && p[4] === 0xffff && p[5] === 0) return isBlockedIp(embedded(p[6], p[7]));
-  if (p[0] === 0x64 && p[1] === 0xff9b && p[2] === 1) return true; // local NAT64 64:ff9b:1::/48, any layout
-  if (p[0] === 0x64 && p[1] === 0xff9b && p.slice(2, 6).every((x) => x === 0)) return isBlockedIp(embedded(p[6], p[7]));
-  if (p[0] === 0x2001 && p[1] === 0) return isBlockedIp(embedded(~p[6] & 0xffff, ~p[7] & 0xffff));
-  if (p[0] === 0x2002) return isBlockedIp(embedded(p[1], p[2]));
-  return (
-    (p[0] & 0xfe00) === 0xfc00 ||
-    (p[0] & 0xffc0) === 0xfe80 ||
-    (p[0] & 0xffc0) === 0xfec0 ||
-    (p[0] & 0xff00) === 0xff00 ||
-    (p[0] === 0x2001 && p[1] === 0x0db8) ||
-    (p[0] === 0x0100 && p[1] === 0 && p[2] === 0 && p[3] === 0)
-  );
-}
 
 // ── Session tokens ─────────────────────────────────────────────
 

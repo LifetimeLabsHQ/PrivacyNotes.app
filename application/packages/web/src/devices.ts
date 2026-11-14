@@ -30,6 +30,8 @@ import {
 } from '@notes/shared';
 import { collectFingerprint, detectDeviceOs, hashFingerprint } from './deviceFingerprint';
 import { isDemoMode } from './demo';
+import { isMfaRefusal } from './mfaStep';
+import { reportPhraseReplaced } from './phraseReplaced';
 import { recordSyncFault } from './syncFaults';
 import { db } from './db';
 import { VERSION } from './version';
@@ -54,7 +56,10 @@ export type DeviceRow = {
 
 export type RegisterResult =
   | { status: 'ok'; isPro: boolean }
-  | { status: 'limit_reached'; limit: number; devices: DeviceRow[] };
+  | { status: 'limit_reached'; limit: number; devices: DeviceRow[] }
+  // The owner removed this device and this was no sign-in made on it by
+  // hand: the caller signs out and wipes, as for a false heartbeat.
+  | { status: 'revoked' };
 
 // ------------------------------------------------------------------
 // Local install identity
@@ -368,6 +373,17 @@ export type RegisterDeviceArgs = {
    * Spec: docs/internal/specs/device-fingerprint-hash.md (four separate hashes keep server-side fuzzy matching working)
    */
   fpPepper: Uint8Array;
+  /**
+   * True only for a sign-in the person made on this device by hand: the
+   * phrase typed or scanned, a provider sign-in they started, the device
+   * list's re-register of this device. False for every automatic one (the
+   * start with a stored phrase or session, the lock screen's unlock, the
+   * 24-hour refresh). A removed device's row comes back only for true; for
+   * false the server answers `device_revoked`. A server before the field
+   * ignores it and brings the row back as it always did.
+   * Spec: docs/contrib/supabase.md (Edge functions, register-device)
+   */
+  reactivate: boolean;
 };
 
 /**
@@ -376,10 +392,11 @@ export type RegisterDeviceArgs = {
  *
  * If the free-tier limit is hit, returns { status: 'limit_reached' } with
  * the current device list so the caller can render the block modal
- * without an extra round-trip.
+ * without an extra round-trip. A removed device that asked without
+ * `reactivate` gets { status: 'revoked' }.
  */
 export async function registerDevice(args: RegisterDeviceArgs): Promise<RegisterResult> {
-  const { supabase, accessToken, authUid, pubkey, signingPrivateKey, fpPepper } = args;
+  const { supabase, accessToken, authUid, pubkey, signingPrivateKey, fpPepper, reactivate } = args;
   const deviceId = getDeviceId(pubkey);
   const signature = await signDeviceRegisterChallenge(
     signingPrivateKey,
@@ -399,6 +416,7 @@ export async function registerDevice(args: RegisterDeviceArgs): Promise<Register
       app_version: VERSION,
       signature: bytesToHex(signature),
       fingerprint_hashes: fingerprintHashes,
+      reactivate,
     },
   });
 
@@ -413,6 +431,7 @@ export async function registerDevice(args: RegisterDeviceArgs): Promise<Register
         devices: body.devices ?? [],
       };
     }
+    if (body?.error === 'device_revoked') return { status: 'revoked' };
     recordSyncFault({ step: 'device', status: (error as FnError).context?.status, code: body?.error ?? error.name });
     throw new Error(
       `register-device failed: ${body?.error ?? (error as Error).message}`,
@@ -749,6 +768,21 @@ export async function listDevices(supabase: SupabaseClient, pubkey: string): Pro
  * flakiness shouldn't kick the user off); revocation is a deliberate
  * server-side "row missing" signal.
  *
+ * `'phrase_replaced'`: the device is registered, but the account changed
+ * its recovery phrase and this session did not prove the new one (migration
+ * 0121). It is reported here, the one place that reads the answer, so both
+ * callers detect it: auth.tsx stops sync and asks for the new phrase. It is
+ * never a removal, and a caller that tests only for `false` reads it as
+ * "registered", as every client before it does.
+ * Spec: docs/internal/plans/phrase-change.md (section 7)
+ *
+ * `'mfa_required'`: the 2FA gate refused the session, which still fails
+ * open. A phrase change deletes every session of the account, and the gate
+ * of a managed account refuses a deleted one before the function reaches
+ * its key-epoch check. A quiet tab's pull touches no row and is never
+ * refused, so this is the request that meets the change: the caller asks
+ * whether the account replaced its phrase.
+ *
  * Throttled to once per 60 seconds. The UPDATE hits a single row by
  * (pubkey, device_id) - trivial even at scale. Keeping this short
  * ensures revoked devices are detected within ~1 minute of the next
@@ -765,7 +799,7 @@ export async function heartbeat(
    *  visibilitychange so revoked devices discover revocation the
    *  instant the user switches to the tab. */
   force = false,
-): Promise<boolean> {
+): Promise<boolean | 'phrase_replaced' | 'mfa_required'> {
   // Demo mode has no server-side device row - never call the server,
   // and report "still registered" so nothing triggers a sign-out.
   if (isDemoMode()) return true;
@@ -786,7 +820,7 @@ export async function heartbeat(
     // forced sign-out on no evidence costs the user their session for
     // what is usually a transient link problem the next boot repairs.
     console.error('[devices] heartbeat RPC failed', error);
-    return true;
+    return isMfaRefusal(error) ? 'mfa_required' : true;
   }
   // Only an explicit `false` from a caller the server could identify is
   // a revocation verdict: banned pubkey, or no live device row. Written
@@ -797,6 +831,10 @@ export async function heartbeat(
   // open on anything that is not the server's explicit no, matching the
   // error branch above and migration 0064's contract. Session audit
   // 2026-08-25.
+  if (data === 'phrase_replaced') {
+    reportPhraseReplaced('heartbeat');
+    return 'phrase_replaced';
+  }
   return data !== false;
 }
 

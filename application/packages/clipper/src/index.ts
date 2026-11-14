@@ -12,10 +12,13 @@ import { baseOf, cleanPage, httpAddress, parsePage } from './clean';
 import { readMetadata } from './metadata';
 import { IMAGE_TOKEN_SCHEME, escapeAlt, toMarkdown, type ClipImage } from './markdown';
 import { isSafeMarkdown, plainMarkdown } from './safety';
+import { CLIP_MAX_BODY_BYTES, bodyFits, fencedText, utf8Length as utf8 } from './noteBody';
 
 export type { ClipImage } from './markdown';
 export { countFailures, placePictures, savePictures, CLIP_MAX_PICTURES, CLIP_MAX_PICTURE_BYTES } from './pictures';
 export { isSafeMarkdown, plainMarkdown } from './safety';
+export { CLIP_MAX_BODY_BYTES, bodyFits, inboxNoteFits } from './noteBody';
+export { isBlockedIp, isPrivateHost, parseIp } from './address';
 export type { PictureOutcome, PictureDeps, PictureFailure } from './pictures';
 
 /** `main`: the main text of the page (Readability). `page`: the whole
@@ -90,15 +93,8 @@ export function refreshTarget(html: string, finalUrl: string): string | null {
   return httpAddress(m[2]!, finalUrl);
 }
 
-/** The largest note body a clip may save, in UTF-8 bytes. The encrypted row
- *  must stay under the server's 1 MiB row ceiling.
- *  Spec: docs/internal/specs/web-clipper-stage1.md (section 3.2, Size) */
-export const CLIP_MAX_BODY_BYTES = 700 * 1024;
-
 /** How many bytes a stored picture address adds over its token. */
 const STORED_GROWTH = 64;
-
-const utf8 = (s: string) => new TextEncoder().encode(s).length;
 
 /** Whether a clip's text stays under the cap whatever happens to its
  *  pictures: each token is counted as the larger of a stored address and the
@@ -140,9 +136,23 @@ export function isShortText(markdown: string): boolean {
   return [...text].length + dense * 2 < CLIP_SHORT_TEXT;
 }
 
-/** Whether a finished note body is under the cap. */
-export function bodyFits(body: string): boolean {
-  return utf8(body) <= CLIP_MAX_BODY_BYTES;
+/**
+ * The body of a note that came through the inbox (the command line, the
+ * extension's New note, a Ninja note queued behind the lock), or null when it
+ * is too long. The Markdown stands when it is only text and web links; a
+ * picture reference, raw HTML or another link scheme makes the whole note
+ * plain text, because only the app places a stored picture (the clip's rule
+ * in parseClipPage). Escaping makes plain text longer, so when that does not
+ * fit the note keeps its text as one code block, which needs no escaping:
+ * a note `inboxNoteFits` accepts is never refused here.
+ * Spec: docs/internal/plans/agent-cli.md (section 3.4)
+ */
+export function inboxNoteBody(markdown: string): string | null {
+  if (!/pn:img\/|pn-clip:/i.test(markdown) && isSafeMarkdown(markdown)) return bodyFits(markdown) ? markdown : null;
+  const plain = plainMarkdown(markdown);
+  if (bodyFits(plain)) return plain;
+  const fenced = fencedText(markdown);
+  return bodyFits(fenced) ? fenced : null;
 }
 
 /**

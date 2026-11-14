@@ -1,4 +1,5 @@
 import { occurrencesOf, shiftDay, weekdayOf, type Repeat } from './schedule';
+import { hhmm, toLocalIso } from './localDate';
 import type {
   MedicationDose,
   MedicationLogEntry,
@@ -23,12 +24,6 @@ const DOSE_SEP = '~';
 export const MAX_DOSES = 6;
 /** Below this many days of scheduled use, the supply reads as low. */
 export const LOW_SUPPLY_DAYS = 7;
-
-/** A local ISO day. Kept here so this module stays free of the i18n chain. */
-function toLocalIso(d: Date): string {
-  const pad = (n: number) => (n < 10 ? `0${n}` : String(n));
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
 
 const EVERY_DAY: Repeat = { every: 'day', interval: 1 };
 const ONE_DOSE: MedicationDose[] = [{ id: MAIN_DOSE, amount: 1 }];
@@ -190,11 +185,6 @@ export function asNeededOn(med: MedicationTemplate, day: string): boolean {
 /** The log entries of one medication in a day's list. */
 export function logsOf(logs: readonly MedicationLogEntry[] | undefined, medId: string): MedicationLogEntry[] {
   return (logs ?? []).filter((l) => logMedicationId(l.medicationId) === medId);
-}
-
-/** `HH:MM` of an instant. */
-function hhmm(d: Date): string {
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
 /** The doses of a day that are owed by now: on today, a dose with no log is

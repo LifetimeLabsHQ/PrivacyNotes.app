@@ -15,7 +15,8 @@ export function ActivityPill({
   value?: ActivityLevel;
   expanded: boolean;
   onToggle: () => void;
-  onChange: (v: ActivityLevel) => void;
+  /** `undefined` removes the value. */
+  onChange: (v: ActivityLevel | undefined) => void;
   readOnly?: boolean;
 }) {
   const { t } = useTranslation('trackers');
@@ -35,6 +36,7 @@ export function ActivityPill({
           options={ACTIVITY_LEVELS.map((level) => ({ key: level, label: t(`activity.level.${level}`) }))}
           value={value}
           onPick={(level) => { onChange(level); onToggle(); }}
+          onClear={() => onChange(undefined)}
         />
       </div>
     </PillShell>

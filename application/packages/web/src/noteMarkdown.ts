@@ -192,3 +192,24 @@ export function stripFrontMatterPadding(body: string): string {
   }
   return start === 0 && end === len ? body : body.slice(start, end);
 }
+
+/**
+ * Read the `trackers: {...}` front-matter line back into an object.
+ *
+ * Written by `noteToMarkdown` as a single line of `JSON.stringify` output,
+ * which is why a nested object or an array survives a line-oriented reader:
+ * the escaping puts no raw newline in the value. Anything unparsable is
+ * dropped rather than guessed at - a half-read tracker set would show wrong
+ * numbers, which is worse than showing none.
+ */
+export function parseTrackers(raw: string | undefined): Record<string, unknown> | undefined {
+  if (!raw || !raw.trim().startsWith('{')) return undefined;
+  try {
+    const parsed: unknown = JSON.parse(raw.trim());
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return undefined;
+    const obj = parsed as Record<string, unknown>;
+    return Object.keys(obj).length > 0 ? obj : undefined;
+  } catch {
+    return undefined;
+  }
+}

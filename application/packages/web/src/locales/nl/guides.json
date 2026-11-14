@@ -10,6 +10,35 @@
     "otherGuides": "Andere importgidsen"
   },
   "guides": {
+    "1password": {
+      "app": "1Password",
+      "title": "Je 1Password-kluis exporteren",
+      "metaTitle": "Een 1Password-kluis exporteren - PrivacyNotes",
+      "lead": "De 1Password-app exporteert je account als één .1pux-bestand, en PrivacyNotes maakt van de logins, kaarten, notities en identiteiten Kluis-items en notities.",
+      "sections": [
+        {
+          "h": "Exporteren uit 1Password",
+          "steps": [
+            "Open de 1Password-app op je computer en ontgrendel hem.",
+            "Kies File > Export en selecteer je account.",
+            "Voer je accountwachtwoord in, laat het 1PUX-formaat staan en bewaar het bestand."
+          ]
+        },
+        {
+          "h": "1PUX of CSV",
+          "p": [
+            "Kies 1PUX. De CSV-export bevat alleen logins: geen kaarten, notities of identiteiten, en geen aangepaste velden."
+          ]
+        },
+        {
+          "h": "Waar alles belandt",
+          "p": [
+            "Elke login wordt een [login in de Kluis](/nl/help/vault) met zijn 2FA-sleutel, dus [je codes blijven werken](/nl/help/vault-totp), en de extra websites en aangepaste velden komen mee. Een kaart wordt een kaart, en een beveiligde notitie of een identiteit wordt een notitie. Tags blijven tags, geneste ook, favorieten komen vastgezet binnen en gearchiveerde items gaan naar het Archief. Bijgevoegde bestanden blijven achter: bewaar ze vanuit 1Password en voeg ze hier als bijlage toe.",
+            "De export bevat je wachtwoorden in leesbare tekst. Importeer hem, controleer of alles is aangekomen en verwijder het bestand daarna."
+          ]
+        }
+      ]
+    },
     "google-calendar": {
       "app": "Google Calendar",
       "title": "Je Google Calendar exporteren",
@@ -159,6 +188,53 @@
         }
       ]
     },
+    "siyuan": {
+      "app": "SiYuan",
+      "title": "Je SiYuan-notities exporteren",
+      "metaTitle": "Je SiYuan-notities exporteren als Data.zip - PrivacyNotes",
+      "lead": "SiYuan exporteert je hele workspace als één Data.zip. Dat bestand neemt elk notitieboek mee, met geneste documenten, tags, blokverwijzingen, assets en datums.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/siyuan-export.webp",
+            "alt": "Het venster Data migration van SiYuan met de rij Data.zip geselecteerd en de knop Export gemarkeerd.",
+            "width": 1576,
+            "height": 1076
+          },
+          "h": "De workspace exporteren als Data.zip",
+          "steps": [
+            "Open SiYuan op je computer.",
+            "Klik linksboven op het SiYuan-menu en kies \"Data migration\".",
+            "Wijs onder SiYuan naar \"Data.zip\" en klik op Export.",
+            "Kies een map. SiYuan schrijft één .zip met elk notitieboek uit de workspace.",
+            "Sleep die .zip er zo in."
+          ],
+          "p": [
+            "Wil je maar één notitieboek verplaatsen, klik dan met de rechtermuisknop in het paneel Documents op het notitieboek en kies Export > \"SiYuan .sy.zip\". Dat bestand lezen we op dezelfde manier."
+          ]
+        },
+        {
+          "h": "Versleutelde notitieboeken ontgrendelen en los exporteren",
+          "p": [
+            "Data.zip houdt een versleuteld notitieboek versleuteld, dus we kunnen het niet lezen. We slaan het over en het importoverzicht noemt het. Ontgrendel het notitieboek in SiYuan, exporteer het als \"SiYuan .sy.zip\" en sleep dat bestand er ook in: die export is wel leesbaar."
+          ]
+        },
+        {
+          "h": "Kies Data.zip, geen Markdown",
+          "p": [
+            "De Markdown-.zip-export bewaart de tekst, maar laat je documenttags en datums weg en schrijft blokverwijzingen als gewone tekst of voetnoten. We lezen hem als dat alles is wat je hebt, en elke notitie krijgt de datum van de import."
+          ]
+        },
+        {
+          "h": "Wat er meekomt",
+          "p": [
+            "Elk notitieboek wordt een map en geneste documenten worden geneste mappen. Een document met subdocumenten en een eigen tekst wordt een notitie in de map met dezelfde naam. Elke notitie houdt haar tags en de aanmaak- en wijzigingsdatum die SiYuan bewaarde.",
+            "Koppen, lijsten, checklists, citaten, code met de taal erbij, tabellen met hun uitlijning, wiskunde, aandachtsblokken, markeringen en tekstkleuren komen mee zoals ze waren. [Blokverwijzingen worden notitielinks](/nl/help/note-links), afbeeldingen en bestanden worden in je opslag geïmporteerd en documenten met een bladwijzer komen vastgezet binnen.",
+            "Een database wordt een tabel met de zichtbare kolommen, tabbladen worden invouwbare blokken en een mindmap wordt een geneste lijst. Flashcards blijven gewone tekst en een embed-query blijft behouden als code. SiYuan heeft geen prullenbak in zijn exports, dus verwijderde documenten blijven achter in de geschiedenis van SiYuan."
+          ]
+        }
+      ]
+    },
     "standard-notes": {
       "app": "Standard Notes",
       "title": "Je Standard Notes exporteren",
@@ -256,6 +332,29 @@
           "p": [
             "Logins worden [login-items in de Kluis](/nl/help/vault) (met de icoontjes van hun site), kaarten worden kaartitems, SSH-sleutels worden SSH-sleutelitems, en beveiligde notities plus identiteiten komen binnen als leesbare notities. Bitwarden-mappen worden tags, en favorieten komen met een ster binnen. Authenticator-sleutels (TOTP) komen ook mee, dus [je 2FA-codes blijven werken](/nl/help/vault-totp).",
             "Het exportbestand bevat je wachtwoorden in leesbare tekst, dus importeer het, controleer of alles goed is aangekomen en verwijder het bestand daarna netjes. Binnen PrivacyNotes is alles weer versleuteld, op je apparaat en onderweg naar de server."
+          ]
+        }
+      ]
+    },
+    "enpass": {
+      "app": "Enpass",
+      "title": "Je Enpass-kluis exporteren",
+      "metaTitle": "Een Enpass-kluis exporteren - PrivacyNotes",
+      "lead": "Enpass exporteert een kluis als één .json-bestand, en PrivacyNotes maakt van de logins, kaarten, notities en identiteiten Kluis-items en notities.",
+      "sections": [
+        {
+          "h": "Exporteren uit Enpass",
+          "steps": [
+            "Open Enpass op je computer en ontgrendel het.",
+            "Kies File > Export, selecteer de kluis en het .json-formaat.",
+            "Bewaar het bestand en voer dan je hoofdwachtwoord in. Exporteer elke kluis apart."
+          ]
+        },
+        {
+          "h": "Waar alles belandt",
+          "p": [
+            "Elke login wordt een [login in de Kluis](/nl/help/vault) met zijn 2FA-sleutel, dus [je codes blijven werken](/nl/help/vault-totp), en de extra websites en aangepaste velden komen mee. Een kaart wordt een kaart, en een beveiligde notitie of een identiteit wordt een notitie. Mappen worden tags, geneste ook, favorieten komen vastgezet binnen en gearchiveerde items gaan naar het Archief. Items in de prullenbak van Enpass en bijgevoegde bestanden blijven achter.",
+            "De export bevat je wachtwoorden in leesbare tekst. Importeer hem, controleer of alles is aangekomen en verwijder het bestand daarna."
           ]
         }
       ]
@@ -863,6 +962,332 @@
           "h": "Importeer hetzelfde bestand altijd opnieuw",
           "p": [
             "Een tweede import slaat de mensen over die je al hebt. Elke kaart wordt vergeleken op zijn ID, dan op naam plus een gedeeld telefoonnummer, dan op een gedeeld e-mailadres. Contacten die je al hebt opgeslagen worden niet gewijzigd, dus je bewerkingen hier blijven veilig."
+          ]
+        }
+      ]
+    },
+    "anytype": {
+      "app": "Anytype",
+      "title": "Je Anytype-space exporteren",
+      "metaTitle": "Je Anytype-space exporteren - PrivacyNotes",
+      "lead": "Anytype exporteert een hele space in één keer als één zip in het Any-Block JSON-formaat. Dat bestand neemt je pagina's mee, met hun tags, collecties, taken, links en bestanden.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/anytype-export.webp",
+            "alt": "De space-instellingen van Anytype, pagina Export, Any-Block v1 met File Format JSON en Zip archive, met Include files data en Include archived objects aangezet.",
+            "width": 1576,
+            "height": 800
+          },
+          "h": "De space exporteren als Any-Block JSON",
+          "steps": [
+            "Open Anytype op je computer en ga naar de space die je wilt verplaatsen.",
+            "Kies File > Export. Anytype opent de space-instellingen op de pagina Export. Nieuwere versies noemen een space een channel, dus daar heet de pagina \"Export Channel\".",
+            "Kies \"Any-Block v1\" en laat File Format op JSON staan.",
+            "Zet \"Zip archive\", \"Include files data\" en \"Include archived objects\" aan.",
+            "Klik op \"Export data\" en kies een map. Anytype schrijft één .zip die naar de space en de datum is genoemd.",
+            "Sleep die .zip er zo in."
+          ],
+          "p": [
+            "Eén export bevat één space. Bewaar je notities in meerdere spaces, exporteer er dan elk apart en sleep de zips na elkaar erin."
+          ]
+        },
+        {
+          "h": "Kies Any-Block JSON, geen Markdown of Protobuf",
+          "p": [
+            "De Markdown-export bewaart de tekst, maar laat onderstreping, kleuren, aandachtsblokken, uitlijning en codetalen weg, en laat collecties buiten beschouwing. We lezen hem als dat alles is wat je hebt, en het importoverzicht zegt wat er verloren ging.",
+            "Any-Block biedt ook een Protobuf-bestandsformaat. Dat bevat dezelfde gegevens in een binaire vorm die we niet lezen, dus vragen we in plaats daarvan om de JSON-export. Any-Block v2 is door Anytype als preview aangemerkt en is geen back-up."
+          ]
+        },
+        {
+          "h": "Wat er meekomt",
+          "p": [
+            "Pagina's, notities, taken en bladwijzers worden notities met hun tags en de aanmaak- en wijzigingsdatum die Anytype bewaarde. Anytype heeft geen mappen, dus een pagina in een collectie komt in een map met de naam van de collectie terecht en elke andere pagina komt op het hoogste niveau.",
+            "Koppen, lijsten, checklists, citaten, code met de taal erbij, tabellen, wiskunde en Mermaid-diagrammen komen mee zoals ze waren. Toggles worden invouwbare blokken en callouts worden aandachtsblokken. [Links en vermeldingen tussen pagina's worden notitielinks](/nl/help/note-links), en afbeeldingen en bestanden worden in je opslag geïmporteerd.",
+            "Een taak komt binnen als taaknotitie, afgevinkt als hij klaar was. Eigen eigenschappen worden bovenaan de notitie als korte lijst geschreven. Pagina's in de bin van Anytype gaan naar je prullenbak, zodat je ze daar kunt herstellen of verwijderen.",
+            "Pagina-iconen en covers blijven achter, en het importoverzicht zegt hoeveel. Favorieten zitten niet in de export, dus zet die notities na de import opnieuw vast."
+          ]
+        }
+      ]
+    },
+    "apple-calendar": {
+      "app": "Apple Agenda",
+      "title": "Je Apple Agenda exporteren",
+      "metaTitle": "Apple Agenda exporteren - PrivacyNotes",
+      "lead": "Agenda op een Mac exporteert één agenda tegelijk als .ics-bestand, en PrivacyNotes leest dat bestand zoals het is. Elke agenda wordt een map.",
+      "sections": [
+        {
+          "h": "Een agenda exporteren uit Agenda op een Mac",
+          "steps": [
+            "Open Agenda en toon de lijst met agenda's links (Weergave > Toon agendalijst).",
+            "Klik op de agenda die je wilt overzetten.",
+            "Kies Archief > Exporteer > \"Exporteer...\" en bewaar het .ics-bestand.",
+            "Doe hetzelfde voor elke andere agenda die je wilt. Elke agenda is een eigen bestand."
+          ]
+        },
+        {
+          "h": "Wat er meekomt",
+          "p": [
+            "Elke afspraak komt binnen met zijn dag, zijn tijd en zijn duur, ook afspraken die de hele dag of meerdere dagen duren. Terugkerende afspraken behouden hun herhalingsregel.",
+            "De standaardmeldingen van een agenda staan in de instellingen van Agenda, niet in de afspraken, dus de export laat ze weg. De controlestap vertelt je hoeveel komende afspraken zonder herinnering binnenkomen. Een melding die je bij één afspraak hebt ingesteld, komt wel mee. Als je hetzelfde bestand opnieuw importeert, worden afspraken die je al hebt overgeslagen."
+          ]
+        }
+      ]
+    },
+    "keepass": {
+      "app": "KeePass",
+      "title": "Je KeePass-database exporteren",
+      "metaTitle": "Een KeePass-database exporteren - PrivacyNotes",
+      "lead": "KeePass exporteert je hele database als één KeePass XML-bestand, en PrivacyNotes maakt van elk item een login of een notitie. De XML bewaart meer dan de CSV-export.",
+      "sections": [
+        {
+          "h": "Exporteren uit KeePass",
+          "steps": [
+            "Open je database in KeePass en ontgrendel hem.",
+            "Kies File > Export.",
+            "Kies \"KeePass XML (2.x)\" en bewaar het .xml-bestand."
+          ]
+        },
+        {
+          "h": "Kies de XML, niet de .kdbx",
+          "p": [
+            "Je .kdbx-databasebestand is vergrendeld met je hoofdsleutel, dus PrivacyNotes kan het niet lezen, en de import zegt dat als je het erin sleept. De CSV-export van KeePass werkt ook, maar bewaart alleen de titel, gebruikersnaam, het wachtwoord, de website en de notities."
+          ]
+        },
+        {
+          "h": "Waar alles belandt",
+          "p": [
+            "Een item met een gebruikersnaam, wachtwoord, website of 2FA-sleutel wordt een [login in de Kluis](/nl/help/vault), en elk ander item een beveiligde notitie. Extra websites en je eigen velden komen mee, een beschermd veld blijft verborgen en de vervaldatum wordt een veld. De 2FA-sleutel komt ook mee, dus [je codes blijven werken](/nl/help/vault-totp). Bijgevoegde bestanden komen ook mee, in het onderdeel Bestanden van de login of aan het eind van de notitie. Groepen en tags worden tags. Items in de Recycle Bin en oudere versies van een item blijven achter.",
+            "De export bevat je wachtwoorden in leesbare tekst. Importeer hem, controleer of alles is aangekomen en verwijder het bestand daarna."
+          ]
+        }
+      ]
+    },
+    "keepassxc": {
+      "app": "KeePassXC",
+      "title": "Je KeePassXC-database exporteren",
+      "metaTitle": "Een KeePassXC-database exporteren - PrivacyNotes",
+      "lead": "KeePassXC exporteert je database als XML-bestand of als CSV-bestand, en PrivacyNotes leest allebei. De XML-export bewaart alles wat de CSV weglaat.",
+      "sections": [
+        {
+          "h": "Exporteren uit KeePassXC",
+          "steps": [
+            "Open je database in KeePassXC en ontgrendel hem.",
+            "Kies Database > Export > \"XML File...\".",
+            "Bevestig de waarschuwing over het onversleutelde bestand en bewaar het."
+          ]
+        },
+        {
+          "h": "XML of CSV",
+          "p": [
+            "Kies de XML. De CSV bevat de titel, gebruikersnaam, wachtwoord, website, notities, 2FA-sleutel, datums en groep, maar geen tags, geen aangepaste velden, geen tweede website, geen vervaldatum en geen bijgevoegde bestanden. Je .kdbx-bestand zelf is vergrendeld, dus PrivacyNotes kan het niet lezen."
+          ]
+        },
+        {
+          "h": "Waar alles belandt",
+          "p": [
+            "Een item met een gebruikersnaam, wachtwoord, website of 2FA-sleutel wordt een [login in de Kluis](/nl/help/vault), en elk ander item een beveiligde notitie. Aangepaste velden komen mee als velden, een beschermd veld blijft verborgen, en de 2FA-sleutel komt ook mee, dus [je codes blijven werken](/nl/help/vault-totp). Bijgevoegde bestanden komen ook mee, in het onderdeel Bestanden van de login of aan het eind van de notitie. Groepen en tags worden tags. Items in de Recycle Bin en oudere versies van een item blijven achter.",
+            "De export bevat je wachtwoorden in leesbare tekst. Importeer hem, controleer of alles is aangekomen en verwijder het bestand daarna."
+          ]
+        }
+      ]
+    },
+    "lastpass": {
+      "app": "LastPass",
+      "title": "Je LastPass-kluis exporteren",
+      "metaTitle": "Een LastPass-kluis exporteren - PrivacyNotes",
+      "lead": "LastPass exporteert je kluis als één .csv-bestand, en PrivacyNotes maakt van de wachtwoorden logins en zet de beveiligde notities om in notities of kaarten.",
+      "sections": [
+        {
+          "h": "Exporteren uit LastPass",
+          "steps": [
+            "Meld je in een browser aan bij je LastPass-kluis.",
+            "Kies Advanced options > Export.",
+            "Kies \"Export data for use anywhere\" en bevestig met je hoofdwachtwoord. LastPass bewaart een .csv-bestand."
+          ]
+        },
+        {
+          "h": "Waar alles belandt",
+          "p": [
+            "Elk wachtwoord wordt een [login in de Kluis](/nl/help/vault) met zijn 2FA-sleutel, dus [je codes blijven werken](/nl/help/vault-totp). Een beveiligde notitie wordt een notitie en een notitie met een betaalkaart wordt een kaart. Mappen worden tags, geneste ook, en favorieten komen vastgezet binnen. Het bestand bevat geen datums, dus elk item krijgt de dag waarop je importeert.",
+            "De export bevat je wachtwoorden in leesbare tekst. Importeer hem, controleer of alles is aangekomen en verwijder het bestand daarna."
+          ]
+        }
+      ]
+    },
+    "nordpass": {
+      "app": "NordPass",
+      "title": "Je NordPass-kluis exporteren",
+      "metaTitle": "Een NordPass-kluis exporteren - PrivacyNotes",
+      "lead": "NordPass exporteert je kluis als één .csv-bestand, en PrivacyNotes maakt van de wachtwoorden, notities, kaarten en persoonlijke gegevens items in de Kluis.",
+      "sections": [
+        {
+          "h": "Exporteren uit NordPass",
+          "steps": [
+            "Open NordPass en ontgrendel het.",
+            "Ga naar Settings en kies \"Export Items\".",
+            "Bevestig met je hoofdwachtwoord en bewaar het .csv-bestand."
+          ]
+        },
+        {
+          "h": "Waar alles belandt",
+          "p": [
+            "Elk wachtwoord wordt een [login in de Kluis](/nl/help/vault) met zijn extra websites en aangepaste velden, een verborgen veld blijft verborgen. Notities komen binnen als notities, kaarten als kaarten en persoonlijke gegevens als een notitie met elk detail op een eigen regel. De map van elk item wordt een tag. Het bestand noemt alleen de map waarin een item staat, niet de mappen erboven.",
+            "In het gratis plan van NordPass worden geen 2FA-sleutels bewaard, dus het bestand bevat er geen. De export bevat je wachtwoorden in leesbare tekst. Importeer hem, controleer of alles is aangekomen en verwijder het bestand daarna."
+          ]
+        }
+      ]
+    },
+    "proton-pass": {
+      "app": "Proton Pass",
+      "title": "Je Proton Pass-kluis exporteren",
+      "metaTitle": "Een Proton Pass-kluis exporteren - PrivacyNotes",
+      "lead": "Proton Pass exporteert je kluizen als .zip, als .csv of als PGP-versleuteld bestand. PrivacyNotes leest de .zip en de .csv, en de .zip bewaart het meest.",
+      "sections": [
+        {
+          "h": "Exporteren uit Proton Pass",
+          "steps": [
+            "Open Proton Pass en ga naar Settings > Export.",
+            "Kies onder File format de optie ZIP.",
+            "Klik op Export en bevestig met je Proton-wachtwoord."
+          ]
+        },
+        {
+          "h": "Kies ZIP, niet PGP-versleuteld",
+          "p": [
+            "Het PGP-versleutelde bestand is vergrendeld met je wachtzin, dus PrivacyNotes kan het niet lezen, en de import zegt dat. De .csv werkt ook, maar bevat geen aangepaste velden."
+          ]
+        },
+        {
+          "h": "Waar alles belandt",
+          "p": [
+            "Elke login wordt een [login in de Kluis](/nl/help/vault) met zijn extra websites, aangepaste velden en datums. De 2FA-sleutel komt mee, dus [je codes blijven werken](/nl/help/vault-totp). Als een item zowel een e-mailadres als een gebruikersnaam heeft, vult de gebruikersnaam de login en wordt het e-mailadres een veld. Notities komen binnen als notities, kaarten als kaarten en identiteiten als notities met elk detail op een eigen regel. Elke hide-my-email-alias wordt een notitie met zijn adres, zodat je de lijst houdt van welk adres je aan welke site hebt gegeven; Proton blijft de mail doorsturen zolang je Proton-account actief is. Bij meer dan één kluis wordt elke kluis een tag. Items in de prullenbak blijven achter.",
+            "De export bevat je wachtwoorden in leesbare tekst. Importeer hem, controleer of alles is aangekomen en verwijder het bestand daarna."
+          ]
+        }
+      ]
+    },
+    "dashlane": {
+      "app": "Dashlane",
+      "title": "Je Dashlane-kluis exporteren",
+      "metaTitle": "Een Dashlane-kluis exporteren - PrivacyNotes",
+      "lead": "Dashlane exporteert je kluis als een .zip met CSV-bestanden, en PrivacyNotes maakt van de logins, beveiligde notities en betaalkaarten Kluis-items en notities.",
+      "sections": [
+        {
+          "h": "Exporteren uit Dashlane",
+          "steps": [
+            "Open je Dashlane-kluis in de browserextensie of de web-app.",
+            "Kies Settings > Export data.",
+            "Kies het CSV-formaat en bewaar het .zip-bestand."
+          ]
+        },
+        {
+          "h": "CSV, niet .dash",
+          "p": [
+            "Kies CSV. Een .dash-export is vergrendeld met een eigen wachtwoord, en PrivacyNotes meldt dat als je hem erin sleept."
+          ]
+        },
+        {
+          "h": "Waar alles belandt",
+          "p": [
+            "Elke login wordt een [login in de Kluis](/nl/help/vault) met zijn 2FA-sleutel, dus [je codes blijven werken](/nl/help/vault-totp). Een beveiligde notitie wordt een notitie en een betaalkaart een kaart. ID's en persoonlijke gegevens worden notities met hun details. Categorieën worden tags, geneste ook. Dashlane bewaart één website per login, dus een tweede website zit niet in het bestand.",
+            "De export bevat je wachtwoorden in leesbare tekst. Importeer hem, controleer of alles is aangekomen en verwijder het bestand daarna."
+          ]
+        }
+      ]
+    },
+    "daylio": {
+      "app": "Daylio",
+      "title": "Je Daylio-items exporteren",
+      "metaTitle": "Je Daylio-back-up exporteren - PrivacyNotes",
+      "lead": "Daylio exporteert een .daylio-back-up via More > Backup & Restore. PrivacyNotes leest dat bestand en bouwt elk item opnieuw op als dagboeknotitie, met stemming, activiteiten en foto's.",
+      "sections": [
+        {
+          "h": "De .daylio-back-up exporteren",
+          "steps": [
+            "Sluit Daylio helemaal af en open het opnieuw. Een back-up die direct na een nieuw item is gemaakt, kan dat item missen totdat de app opnieuw is gestart.",
+            "Kies More > Backup & Restore > Advanced Options > Export.",
+            "Daylio opent een deelmenu, geen opslagvenster. Sla het bestand op bij je bestanden of in een clouddrive die je op dit apparaat kunt openen.",
+            "Het .daylio-bestand dat je hebt opgeslagen, is het bestand om te importeren."
+          ]
+        },
+        {
+          "h": "Kies de back-up, niet de CSV",
+          "p": [
+            "More > Export Entries maakt een CSV, een Premium-functie in Daylio. PrivacyNotes leest die ook, maar de CSV bevat geen foto's, geen spraakmemo's en geen stemmingsgroepen, dus een stemming die je zelf een naam gaf of hernoemde, komt als tekst in het item terecht in plaats van in de stemmingstracker. Gebruik waar mogelijk de .daylio-back-up."
+          ]
+        },
+        {
+          "h": "Wat er meekomt",
+          "p": [
+            "[Elk item belandt in Dagboeken](/nl/help/journal), op de dag en het tijdstip die Daylio toont, en twee items op één dag blijven twee items. Elke stemming vult [de stemmingstracker](/nl/help/choose-trackers) in vanuit de stemmingsgroep in Daylio, zodat een hernoemde stemming zijn plek op de schaal behoudt, en een stemming die je zelf een naam gaf, staat ook aan het begin van het item.",
+            "Activiteiten worden [factoren](/nl/help/factors), en een nieuwe behoudt zijn Daylio-groep. Schalen zoals Energy of Stress komen als lijst onder aan het item. Notitietitels, vet, cursief, onderstreept, doorgehaald en lijsten overleven, foto's worden geïmporteerd als afbeeldingen, spraakmemo's als bijlagen, en een item met een ster houdt zijn ster. Doelen en belangrijke dagen blijven achter, en de importsamenvatting telt ze."
+          ]
+        }
+      ]
+    },
+    "diarium": {
+      "app": "Diarium",
+      "title": "Je Diarium-dagboek exporteren",
+      "metaTitle": "Je Diarium-dagboek exporteren - PrivacyNotes",
+      "lead": "Diarium exporteert je dagboek als JSON via het menu Export. PrivacyNotes leest die export en bouwt elk item opnieuw op als dagboeknotitie, met beoordeling, tags en bijlagen.",
+      "sections": [
+        {
+          "h": "JSON exporteren met bijlagen",
+          "steps": [
+            "Open Diarium en kies Export in het menu.",
+            "Kies JSON als formaat en zet Attachments aan.",
+            "Kies Save to local storage en kies een map. Diarium slaat een .zip op met de JSON en je foto's en bestanden.",
+            "Die .zip is het bestand om te importeren."
+          ]
+        },
+        {
+          "h": "Laat Attachments aan staan",
+          "p": [
+            "Met Attachments uit slaat Diarium alleen een kaal .json-bestand op. PrivacyNotes importeert de tekst, maar elke foto en elk bestand blijft achter, en de importsamenvatting telt ze. Exporteer opnieuw met Attachments aan en sleep in plaats daarvan de .zip.",
+            "Create separate file for each entry maakt geen verschil: PrivacyNotes leest elk JSON-bestand in de .zip. De exports naar DOCX, TXT, HTML en PDF en de .diary-back-up kunnen niet worden geïmporteerd, dus kies JSON."
+          ]
+        },
+        {
+          "h": "Wat er meekomt",
+          "p": [
+            "[Elk item belandt in Dagboeken](/nl/help/journal), op de dag en het tijdstip die Diarium toont. De sterrenbeoordeling vult [de stemmingstracker](/nl/help/choose-trackers) in. Tags worden notitietags en [factoren](/nl/help/factors), en personen worden factoren in een groep Personen.",
+            "Vet, cursief, onderstreept, doorgehaald, markeringen, tekstkleuren, lijsten en links overleven, en een link naar een ander item wordt een [notitielink](/nl/help/note-links) wanneer dat item in dezelfde export zit. Trackers komen als lijst onder aan het item, weer, zon en maan als één regel bovenaan, en een locatie wordt de eigen locatie van het item. Foto's worden geïmporteerd als afbeeldingen, en video's, audio en pdf's als bijlagen."
+          ]
+        }
+      ]
+    },
+    "google-journal": {
+      "app": "Google Journal",
+      "title": "Je Google Journal-items exporteren",
+      "metaTitle": "Je Google Journal-items exporteren - PrivacyNotes",
+      "lead": "Google Journal exporteert via Google Takeout zodra de back-up aanstaat. PrivacyNotes leest de Takeout-.zip en bouwt elk item opnieuw op als dagboeknotitie, met foto's en video's.",
+      "sections": [
+        {
+          "h": "Zet eerst de back-up aan",
+          "p": [
+            "Takeout toont geen Journal totdat Journal een back-up naar je Google-account maakt. Zet eerst de back-up aan, anders vind je Journal niet in de Takeout-lijst."
+          ],
+          "steps": [
+            "Open Journal op je Pixel en ga naar Settings.",
+            "Zet Back up your journal aan.",
+            "Wacht een paar minuten. Journal verschijnt pas in Takeout als de back-up aanstaat."
+          ]
+        },
+        {
+          "h": "Journal exporteren vanuit Google Takeout",
+          "steps": [
+            "Open takeout.google.com en meld je aan met hetzelfde Google-account.",
+            "Klik op Deselect all en vink alleen Journal aan (\"Your journal entries and attachments from Journal\").",
+            "Klik op Next step, laat het bestandstype .zip staan en klik op Create export.",
+            "Google stuurt je een link wanneer het archief klaar is. Download de .zip: dat is het bestand om te importeren."
+          ]
+        },
+        {
+          "h": "Wat er meekomt",
+          "p": [
+            "[Elk item belandt in Dagboeken](/nl/help/journal), op de dag die je er in Journal voor hebt gekozen. Elk item behoudt zijn titel en tekst, en foto's en video's worden geïmporteerd als afbeeldingen en bijlagen. Een kaart bij een item komt mee als afbeelding.",
+            "Takeout bevat geen plaatsnamen, schrijfsuggesties, bladwijzers of reflecties van Journal, dus die blijven in Journal. De importsamenvatting meldt dat."
           ]
         }
       ]

@@ -22,7 +22,7 @@ SAVE PAGES
 - Save the page as a note, with its main text and pictures, or as a bookmark.
 - Save only the text you selected.
 - It reads the tab you have open, so it also saves pages behind a login.
-- Use the right-click menu, or the keyboard: Alt+Shift+P saves the page as a note, Alt+Shift+G makes a password and copies it, Alt+Shift+K locks the vault.
+- Use the right-click menu, or the keyboard: Alt+Shift+P (Alt+Shift+M on Windows) saves the page as a note, Alt+Shift+G makes a password and copies it, Alt+Shift+K locks the vault.
 
 YOUR VAULT IN THE BROWSER
 - See the logins, cards, SSH keys and bookmarks from your PrivacyNotes vault, with the ones for this site first.
@@ -36,7 +36,7 @@ HOW IT KEEPS YOUR NOTES SAFE
 The extension never holds the key that opens your notes. It locks each clip before it leaves your browser, with a key only your apps can open, and one of your apps turns it into a note at its next sync. Your logins reach the extension as a second encrypted copy under a separate key that opens nothing else.
 
 GET STARTED
-Open Settings > Extension in PrivacyNotes, pick what the extension may do, then choose Make a code. Paste the one-time code into the extension. It needs a PrivacyNotes account: a free account connects one browser, Pro connects up to 10.
+Open Settings > Extension in PrivacyNotes, pick what the extension may do, then choose Make a code. Paste the one-time code into the extension. It needs a PrivacyNotes account: https://privacynotes.app/
 ```
 
 ## Permission justifications (draft, not yet approved)

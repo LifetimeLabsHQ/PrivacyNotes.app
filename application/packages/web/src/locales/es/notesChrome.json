@@ -12,7 +12,7 @@
   },
   "moveScreen": {
     "title": "La app se ha mudado a use.privacynotes.app",
-    "bodySignIn": "Inicia sesión allí con tu frase de recuperación de 12 palabras o con \"{{scanQr}}\". Este dispositivo sincroniza primero, así que todas tus notas te esperan allí, y aquí no se borra nada.",
+    "bodySignIn": "Inicia sesión allí con tu frase de recuperación o con \"{{scanQr}}\". Este dispositivo sincroniza primero, así que todas tus notas te esperan allí, y aquí no se borra nada.",
     "openNotes": "Abre tus notas aquí una vez para solucionarlo",
     "showPhrase": "Mostrar mi frase de recuperación",
     "website": "Ver la web en su lugar"
@@ -46,7 +46,7 @@
     "signInAgain": "Iniciar sesión de nuevo"
   },
   "signOutConfirm": {
-    "title": "¿Guardaste tu frase de 12 palabras?",
+    "title": "¿Guardaste tu frase de recuperación?",
     "body": "Tu frase es la <only>única</only> forma de volver a entrar. Sin restablecimiento por correo, sin línea de soporte. Si aún no la has anotado, toca <action>No, mostrar frase</action> y te la mostraremos ahora mismo.",
     "unsyncedWarn_one": "1 nota de este dispositivo aún no se ha sincronizado. Se perderá para siempre si no se puede subir al cerrar sesión.",
     "unsyncedWarn_other": "{{count}} notas de este dispositivo aún no se han sincronizado. Se perderán para siempre si no se pueden subir al cerrar sesión.",
@@ -139,7 +139,8 @@
     "offline": "Estás sin conexión. Los enlaces de autodestrucción requieren una ida y vuelta al servidor. Inténtalo de nuevo cuando vuelvas a estar en línea.",
     "demo": "Los enlaces de autodestrucción se guardan en un servidor, y la demo no contacta con ninguno. Regístrate para crear enlaces reales.",
     "tooLarge": "La nota es demasiado grande para compartir mediante enlace de autodestrucción ({{size}}KB). El máximo es {{max}}KB.",
-    "storeFailed": "No se pudo guardar la nota en el servidor."
+    "storeFailed": "No se pudo guardar la nota en el servidor.",
+    "rateLimited": "Se crearon demasiados enlaces de autodestrucción desde esta conexión. Inténtalo de nuevo más tarde."
   },
   "dms": {
     "returnTitle": "Se eliminó tu copia del servidor",
@@ -153,7 +154,9 @@
     "title": "Notas eliminadas en otro dispositivo",
     "body_one": "{{count}} nota que este dispositivo todavía tiene fue eliminada por ti o por otro de tus dispositivos. Si fuiste tú, elimínala también aquí. Si no fuiste tú, puede que alguien tenga acceso a tu cuenta: consérvala para volver a ponerla en todos tus dispositivos.",
     "body_other": "{{count}} notas que este dispositivo todavía tiene fueron eliminadas por ti o por otro de tus dispositivos. Si fuiste tú, elimínalas también aquí. Si no fuiste tú, puede que alguien tenga acceso a tu cuenta: consérvalas para volver a ponerlas en todos tus dispositivos.",
-    "keep": "Conservar mis notas",
-    "delete": "Eliminarlas también aquí"
+    "refusedTitle": "Tus notas han vuelto",
+    "refusedBody_one": "{{count}} nota se eliminó del servidor, pero no la eliminó ninguno de tus dispositivos. Este dispositivo no aceptó la eliminación y volvió a poner la nota en todos tus dispositivos. Revisa tus dispositivos y quita los que no reconozcas.",
+    "refusedBody_other": "{{count}} notas se eliminaron del servidor, pero no las eliminó ninguno de tus dispositivos. Este dispositivo no aceptó la eliminación y volvió a ponerlas en todos tus dispositivos. Revisa tus dispositivos y quita los que no reconozcas.",
+    "showDevices": "Mostrar dispositivos"
   }
 }

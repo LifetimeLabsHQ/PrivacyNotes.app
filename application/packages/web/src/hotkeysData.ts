@@ -48,6 +48,7 @@ export const HOTKEY_GROUPS: HotkeyGroup[] = [
       { commands: ['previousInList', 'nextInList'], label: 'Previous / next in the list', i18nKey: 'listStep' },
       { commands: ['historyBack', 'historyForward'], label: 'Back / forward in history', i18nKey: 'history' },
       { commands: ['goToSection'], range: true, label: 'Sidebar section 1 to 9', i18nKey: 'goToSection' },
+      { commands: ['switchSpace'], label: 'Switch space: Personal / Work (Pro)', i18nKey: 'switchSpace' },
       { commands: ['nextPane', 'previousPane'], label: 'Next / previous pane', i18nKey: 'movePanes' },
       // Esc does five things, in this order: clear the list search, exit
       // zen, exit multi-select, clear the folder and tag filter, close the

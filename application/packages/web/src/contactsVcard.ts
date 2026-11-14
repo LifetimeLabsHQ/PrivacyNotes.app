@@ -16,7 +16,7 @@
  * already uses, so a re-emitted line never collides with a generated one.
  *
  * Written: the name, the organisation, every labelled row, the photo, the
- * notes, the tags as CATEGORIES, REV from the note's modified time, the
+ * notes with the owner's own sections after them, the tags as CATEGORIES, REV from the note's modified time, the
  * stored UID, and every `extras` line verbatim. Not written: PRODID from
  * the source, which would claim another app wrote this file.
  *
@@ -31,7 +31,8 @@
  */
 
 import { bytesToBase64 } from '@notes/shared';
-import { BIRTHDAY_LABEL, contactDisplayName, parseContactBody } from './contactBody';
+import i18n from './i18n';
+import { BIRTHDAY_LABEL, contactDisplayName, contactSectionsText, parseContactBody } from './contactBody';
 import { sniffImageFormat } from './imageMetadata';
 
 /** What the writer needs from a contact note. `photo` is absent unless the
@@ -262,7 +263,11 @@ function buildCard(source: VcardSource): string[] {
     else lines.push(`X-SOCIALPROFILE:${escapeText(p.value)}`);
   }
 
-  if (c.notes) lines.push(`NOTE:${escapeText(c.notes)}`);
+  // A phone has no place for the owner's own sections, so they follow the
+  // note as plain lines: nothing is lost, and the phone shows them.
+  const own = contactSectionsText(c.sections, i18n.t('trackers:custom.yes'), i18n.t('trackers:custom.no'));
+  const note = [c.notes, own].filter(Boolean).join('\n\n');
+  if (note) lines.push(`NOTE:${escapeText(note)}`);
   if (source.tags.length > 0) lines.push(`CATEGORIES:${source.tags.map(escapeText).join(',')}`);
   const rev = formatRev(source.updatedAt);
   if (rev) lines.push(`REV:${rev}`);

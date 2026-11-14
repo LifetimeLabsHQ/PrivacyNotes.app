@@ -15,7 +15,7 @@ Toto je naša živá databáza v Zürichu, nie jej nákres. Tvoja poznámka ide 
 
 ## Čo sa stane, keď napíšeš poznámku
 
-1. Z tvojej frázy z 12 slov sa stane kľúč. Deje sa to na tvojom zariadení.
+1. Z tvojej obnovovacej frázy sa stane kľúč. Deje sa to na tvojom zariadení.
 2. Poznámka sa týmto kľúčom zašifruje na tvojom zariadení. Takto sa ukladá na tvoj vlastný disk a takto putuje k nám.
 3. Zašifrovanú poznámku prijmeme a uložíme. Snímka obrazovky vyššie ukazuje, ako to vyzerá.
 4. Ktorékoľvek zariadenie s rovnakou frázou vytvorí rovnaký kľúč a poznámku otvorí.

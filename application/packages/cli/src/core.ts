@@ -15,6 +15,9 @@ import {
   sealInbox,
   type InboxNote,
 } from '@notes/shared/extension';
+// The clip engine's size rule only: the file imports nothing, so the bundle
+// stays free of the engine. Not a workspace dependency, so the path is relative.
+import { inboxNoteFits } from '../../clipper/src/noteBody';
 
 const base64ToBytes = (b64: string): Uint8Array => {
   if (!/^[A-Za-z0-9+/]*={0,2}$/.test(b64) || b64.length % 4 !== 0) throw new Error('not base64');
@@ -114,7 +117,9 @@ export const titleOf = inboxNoteTitle;
 export function buildNote(markdown: string, opts: { title?: string; tags: string[]; id: string; now: Date }): InboxNote {
   if (!markdown.trim()) throw new CliError(EXIT.input, 'empty', 'EMPTY NOTE', 'There is no text to save.', 'privacynotes save note.md, or pipe Markdown in');
   const bytes = new TextEncoder().encode(markdown).length;
-  if (bytes > INBOX_NOTE_LIMITS.bodyBytes) {
+  // The app's rule, which can keep a note as one code block: a note that
+  // passes it is never refused when the app adopts it.
+  if (bytes > INBOX_NOTE_LIMITS.bodyBytes || !inboxNoteFits(markdown)) {
     throw new CliError(EXIT.input, 'too_large', 'TOO LARGE', `${Math.ceil(bytes / 1024)} KB is over the ${INBOX_NOTE_LIMITS.bodyBytes / 1024} KB a note holds.`, 'split it into two notes');
   }
   const title = opts.title !== undefined ? opts.title.trim() : titleOf(markdown);
@@ -209,9 +214,18 @@ export async function login(
   return { v: 1, token: bytesToHex(token), tokenId: id, account, inboxPublic: bytesToBase64(code.inboxPublic), label };
 }
 
-/** Send one note. The row id is printed; the note id is the app's to make. */
-export async function save(fetchFn: Fetch, base: string, connection: Connection, note: InboxNote): Promise<void> {
-  await call(fetchFn, base, 'clip-inbox', { token: connection.token, id: note.id, kind: 'note', payload: sealNote(note, connection) });
+/** Send one note. The row id is printed; the note id is the app's to make.
+ *  A `not_connected` answer means the server no longer knows the token (the
+ *  computer was removed in Settings > CLI), so `forgetLocal` drops the saved
+ *  connection, as the browser extension does (`forgetLocal` in its queue.ts):
+ *  `privacynotes status` reads only that file. */
+export async function save(fetchFn: Fetch, base: string, connection: Connection, note: InboxNote, forgetLocal: () => void): Promise<void> {
+  try {
+    await call(fetchFn, base, 'clip-inbox', { token: connection.token, id: note.id, kind: 'note', payload: sealNote(note, connection) });
+  } catch (e) {
+    if (e instanceof CliError && e.id === 'not_connected') forgetLocal();
+    throw e;
+  }
 }
 
 /** Forget the token on the server too. A failure leaves the row in Settings,
@@ -240,7 +254,10 @@ Usage:
                             terminal can save notes. In the app's MCP
                             settings:
                             "command": "privacynotes", "args": ["mcp"]
-  privacynotes status       Show whether this computer is connected.
+  privacynotes status       Show the connection saved on this computer.
+                            It does not ask the server: a computer
+                            removed in Settings > CLI shows as connected
+                            until a save is refused.
   privacynotes logout       Disconnect this computer.
 
 Options for every command:

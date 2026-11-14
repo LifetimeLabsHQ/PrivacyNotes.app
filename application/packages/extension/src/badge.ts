@@ -11,6 +11,7 @@
  * Spec: docs/internal/plans/browser-extension-build.md (section 3.4, the badge)
  */
 import { browser } from 'wxt/browser';
+import { activeTab } from './tabs';
 
 const QUEUE_COLOR = '#1E40AF';
 const SAVED_COLOR = '#006045';
@@ -51,7 +52,7 @@ export async function showMark(mark: 'saved' | 'problem', after: () => Promise<v
   const color = mark === 'saved' ? SAVED_COLOR : PROBLEM_COLOR;
   await browser.action.setBadgeText({ text });
   await browser.action.setBadgeBackgroundColor({ color });
-  const [tab] = await browser.tabs.query({ active: true, lastFocusedWindow: true }).catch(() => []);
+  const tab = await activeTab().catch(() => undefined);
   if (tab?.id != null) {
     await browser.action.setBadgeText({ tabId: tab.id, text }).catch(() => undefined);
     await browser.action.setBadgeBackgroundColor({ tabId: tab.id, color }).catch(() => undefined);

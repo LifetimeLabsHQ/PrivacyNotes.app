@@ -1,11 +1,12 @@
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
 import { ImportTooLargeError, mediaTooLargeWarning, zipEntryBytes, zipEntryMedia, zipEntryText } from './zipEntry';
+import { openZip } from './zipOpen';
 import { linkifyMarkdown } from './linkify';
 import i18n from '../i18n';
 import type { ImportedNote, ParsedImport } from './types';
 
 const msg = (key: string, options?: Record<string, unknown>): string =>
-  i18n.t(`importExport:importLog.samsungNotes.${key}`, options);
+  i18n.t(`importLog:samsungNotes.${key}`, options);
 
 /**
  * Samsung Notes importer.
@@ -496,7 +497,7 @@ async function extractEntries(
   // Single .docx file
   if (lowerName.endsWith('.docx')) {
     onProgress?.(msg('parsingWordDocument'));
-    const zip = await JSZip.loadAsync(file);
+    const zip = await openZip(file);
     const { body, meta, blobs } = await parseDocxFile(zip);
     return [{
       name: file.name,
@@ -510,8 +511,8 @@ async function extractEntries(
 
   // .zip archive - may contain .txt and/or .docx files
   if (lowerName.endsWith('.zip')) {
-    onProgress?.(i18n.t('importExport:importLog.shared.unzipping'));
-    const zip = await JSZip.loadAsync(file);
+    onProgress?.(i18n.t('importLog:shared.unzipping'));
+    const zip = await openZip(file);
     const entries: SamsungEntry[] = [];
 
     // Collect all relevant files
@@ -530,7 +531,7 @@ async function extractEntries(
       onProgress?.(msg('parsingWordDocuments', { count: docxFiles.length }));
       for (const entry of docxFiles) {
         try {
-          const innerZip = await JSZip.loadAsync(await zipEntryBytes(entry));
+          const innerZip = await openZip(await zipEntryBytes(entry));
           const { body, meta, blobs } = await parseDocxFile(innerZip);
           entries.push({
             name: entry.name,
@@ -591,7 +592,7 @@ export async function parseSamsungNotes(
     throw new Error(msg('noFiles'));
   }
 
-  onProgress?.(i18n.t('importExport:importLog.shared.parsingNotes'));
+  onProgress?.(i18n.t('importLog:shared.parsingNotes'));
   const notes: ImportedNote[] = [];
   const warnings: string[] = [];
 
@@ -685,7 +686,7 @@ export async function parseSamsungNotes(
     transforms.push(msg('docx', { count: docxCount }));
   }
   if (formattingPreservedCount > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.preservedFormatting', { count: formattingPreservedCount }));
+    transforms.push(i18n.t('importLog:shared.preservedFormatting', { count: formattingPreservedCount }));
   }
   if (bulletConvertCount > 0) {
     transforms.push(msg('lists', { count: bulletConvertCount }));
@@ -694,10 +695,10 @@ export async function parseSamsungNotes(
     transforms.push(msg('checkboxes', { count: checkboxConvertCount }));
   }
   if (allBlobs.size > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.foundImages', { count: allBlobs.size }));
+    transforms.push(i18n.t('importLog:shared.foundImages', { count: allBlobs.size }));
   }
   if (linkifiedCount > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.linkifiedNotes', { count: linkifiedCount }));
+    transforms.push(i18n.t('importLog:shared.linkifiedNotes', { count: linkifiedCount }));
   }
   if (blankCollapseCount > 0) {
     transforms.push(msg('whitespace', { count: blankCollapseCount }));

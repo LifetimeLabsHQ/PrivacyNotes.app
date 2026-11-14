@@ -17,8 +17,10 @@ export type Built =
   /** Too long for one note: the bookmark stands in. */
   | { kind: 'tooLong' };
 
-function escapeHtml(text: string): string {
-  return text.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+/** Text made safe inside HTML or XML: the page title here, the address bar's
+ *  suggestions in the background. */
+export function escapeMarkup(text: string): string {
+  return text.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]!);
 }
 
 /** The clip of a captured page. `anyway` takes the whole page when the main
@@ -26,7 +28,7 @@ function escapeHtml(text: string): string {
 export function buildClip(page: CapturedPage, mode: ClipMode, anyway = false): Built {
   let clip: Clip | null;
   if (mode === 'selection') {
-    const html = `<!doctype html><html><head><title>${escapeHtml(page.title)}</title></head><body>${page.selectionHtml}</body></html>`;
+    const html = `<!doctype html><html><head><title>${escapeMarkup(page.title)}</title></head><body>${page.selectionHtml}</body></html>`;
     clip = clipHtml(html, page.url, 'page');
   } else {
     clip = clipHtml(page.html, page.url, 'main');

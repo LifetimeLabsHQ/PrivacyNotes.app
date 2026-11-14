@@ -12,7 +12,7 @@ Aquela é a nossa base de dados a sério em Zurique, não um desenho. A tua nota
 
 ## O que acontece quando escreves uma nota
 
-1. A tua frase de 12 palavras torna-se uma chave. Isso acontece no teu dispositivo.
+1. A tua frase de recuperação torna-se uma chave. Isso acontece no teu dispositivo.
 2. A nota é cifrada com essa chave, no teu dispositivo. É assim que fica guardada no teu próprio disco, e é assim que viaja até nós.
 3. Recebemos a nota cifrada e guardamo-la. A imagem acima é o aspeto que isso tem.
 4. Qualquer dispositivo com a mesma frase cria a mesma chave e abre a nota.

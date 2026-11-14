@@ -361,5 +361,47 @@
     "moveTo": "Sposta in",
     "cardCount_one": "{{count}} scheda",
     "columnCount_one": "{{count}} colonna"
+  },
+  "doodle": {
+    "title": "Scarabocchio",
+    "clear": "Cancella",
+    "paper": "Sfondo",
+    "paperNone": "Nessun colore: si vede la nota sotto.",
+    "settings": "Impostazioni della penna",
+    "stroke": "Tratto",
+    "thinning": "Assottigliamento",
+    "streamline": "Stabilizzazione",
+    "smoothing": "Levigatura",
+    "easingLabel": "Andamento",
+    "start": "Inizio",
+    "end": "Fine",
+    "taperStart": "Rastrematura iniziale",
+    "capStart": "Estremità iniziale",
+    "easingStart": "Andamento iniziale",
+    "taperEnd": "Rastrematura finale",
+    "capEnd": "Estremità finale",
+    "easingEnd": "Andamento finale",
+    "fill": "Riempimento",
+    "outline": "Contorno",
+    "easing": {
+      "linear": "Lineare",
+      "in": "Accelerazione, {{curve}}",
+      "out": "Decelerazione, {{curve}}",
+      "inOut": "Accelerazione e decelerazione, {{curve}}"
+    },
+    "curve": {
+      "quad": "quadratica",
+      "cubic": "cubica",
+      "quart": "quartica",
+      "quint": "quintica",
+      "sine": "sinusoidale",
+      "expo": "esponenziale"
+    },
+    "colors": {
+      "black": "Nero",
+      "white": "Bianco",
+      "cyan": "Ciano",
+      "lightGray": "Grigio chiaro"
+    }
   }
 }

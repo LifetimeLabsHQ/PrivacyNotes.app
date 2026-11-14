@@ -248,6 +248,8 @@
       "unknown": "Unbekannter Tracker {{id}}",
       "sleepHours": "Schlafstunden",
       "sleepQuality": "Schlafqualität",
+      "bpSystolic": "Blutdruck, oberer Wert",
+      "bpDiastolic": "Blutdruck, unterer Wert",
       "avgDays_one": "Schnitt, {{count}} Tag",
       "avgDays_other": "Schnitt, {{count}} Tage",
       "sumDays_one": "gesamt, {{count}} Tag",

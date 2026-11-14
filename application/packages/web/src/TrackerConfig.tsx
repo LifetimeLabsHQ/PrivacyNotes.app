@@ -11,8 +11,9 @@
 
 import { lazy, Suspense, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BellSimple, Check, Coffee, TextT, Eye, Heartbeat, ListChecks, Palette, Pause, Play, Shapes, Smiley, type Icon, Clock, ClockCounterClockwise, Gauge, Hash, Percent, Star, ToggleLeft, PencilSimple, Pill, Plus, PuzzlePiece, SlidersHorizontal } from './icons';
-import { CustomTrackerInput } from './trackers/CustomPill';
+import { BellSimple, Check, Coffee, TextT, Eye, Heartbeat, ListChecks, Palette, Pause, Play, Shapes, Smiley, type Icon, Clock, ClockCounterClockwise, Gauge, Hash, Percent, Star, ToggleLeft, PencilSimple, Pill, Plus, PuzzlePiece, SlidersHorizontal, SquareSplitHorizontal } from './icons';
+import { CustomTrackerInput, PairInput } from './trackers/CustomPill';
+import { PAIR_TRACKER_OFFERED } from './trackerLaunch';
 import { TEXT_COLORS } from './editorColors';
 import { starterSuggestions } from './trackers/FactorsPill';
 import { CustomTrackerGlyph, MarkTile } from './trackers/CustomTrackerGlyph';
@@ -48,7 +49,9 @@ import {
   type CustomTrackerType,
   type TrackerColor,
   BUILTIN_TRACKER_COLORS,
-  CUSTOM_TRACKER_TYPE_LABELS,
+  CUSTOM_TRACKER_TYPES,
+  PAIR_LABEL_MAX,
+  PAIR_UNIT_MAX,
   FACTOR_NAME_MAX,
   HABIT_IDS,
   WATCH_HABITS,
@@ -72,12 +75,13 @@ const CUSTOM_MAX = 20;
 
 /** The glyph of each custom tracker type in the setup's type chips: a gauge
  *  and stars for the two scales, a percent for the score, a hash for the
- *  number, a switch for yes or no. */
+ *  number, a split square for two numbers, a switch for yes or no. */
 const TYPE_GLYPHS: Record<CustomTrackerType, Icon> = {
   scale10: Gauge,
   scale5: Star,
   slider100: Percent,
   number: Hash,
+  pair: SquareSplitHorizontal,
   yesno: ToggleLeft,
 };
 
@@ -95,7 +99,7 @@ const CATEGORIES: { titleKey: string; icon: Icon; trackers: TrackerMeta[] }[] = 
   {
     titleKey: 'config.categoryBodyHealth',
     icon: Heartbeat,
-    trackers: [{ id: 'sleep' }, { id: 'sleepScore' }, { id: 'heartRate' }, { id: 'activity' }, { id: 'medication' }, { id: 'weight' }],
+    trackers: [{ id: 'sleep' }, { id: 'sleepScore' }, { id: 'heartRate' }, { id: 'bloodPressure' }, { id: 'activity' }, { id: 'medication' }, { id: 'weight' }],
   },
   {
     titleKey: 'config.categoryLifestyle',
@@ -427,7 +431,7 @@ function CustomTab({ settings, onChange, isPro, onOpenUpgrade }: TrackerSettings
     <TrackerListTab
       setting="trackers.custom"
       newTitle={t('common:ninja.new.customTracker')}
-      newHelp={t('config.customHelp', { max: CUSTOM_MAX })}
+      newHelp={t(PAIR_TRACKER_OFFERED ? 'config.customHelpPair' : 'config.customHelp', { max: CUSTOM_MAX })}
       form={canAddMore ? (
         <AddCustomView
           key={formKey}
@@ -912,8 +916,12 @@ function TrackerIconPicker({ name, icon, onPick, onClose }: { name: string; icon
 }
 
 /** The preview's input, holding its own value so a try never saves. */
-function PreviewInput({ name, type }: { name: string; type: CustomTrackerType }) {
+function PreviewInput({ name, type, pairLabels, unit }: { name: string; type: CustomTrackerType; pairLabels: [string, string]; unit: string }) {
   const [value, setValue] = useState<number | boolean | undefined>(undefined);
+  const [pair, setPair] = useState<[number | undefined, number | undefined]>([undefined, undefined]);
+  if (type === 'pair') {
+    return <PairInput labels={pairLabels} unit={unit.trim() || undefined} value={pair[0]} value2={pair[1]} onChange={(a, b) => setPair([a, b])} expanded />;
+  }
   return <CustomTrackerInput name={name} type={type} value={value} onChange={setValue} expanded />;
 }
 
@@ -940,10 +948,21 @@ function AddCustomView({
   const [type, setType] = useState<CustomTrackerType>(initial?.type ?? 'scale10');
   const [startFromLast, setStartFromLast] = useState(initial?.startFromLast !== false);
   const [icon, setIcon] = useState<string | undefined>(initial?.icon);
+  // A pair's names of its two numbers and its unit, all optional.
+  const [pairLabels, setPairLabels] = useState<[string, string]>(initial?.pairLabels ?? ['', '']);
+  const [unit, setUnit] = useState(initial?.unit ?? '');
+  const isPair = (initial?.type ?? type) === 'pair';
+  const pairFields = (): Partial<CustomTrackerTemplate> => {
+    const labels = pairLabels.map((l) => l.trim()) as [string, string];
+    return {
+      pairLabels: isPair && (labels[0] || labels[1]) ? labels : undefined,
+      unit: isPair && unit.trim() ? unit.trim() : undefined,
+    };
+  };
   // The note menu's icon picker, open over the form while choosing.
   const [picking, setPicking] = useState(false);
   // Only the two steppers have a starting number; tiles and yes or no do not.
-  const hasStart = type === 'number' || type === 'slider100';
+  const hasStart = type === 'number' || type === 'slider100' || type === 'pair';
   // The first palette color no live tracker has, past gray, so a new
   // tracker stands apart on the charts.
   const [color, setColor] = useState<TrackerColor>(
@@ -957,7 +976,7 @@ function AddCustomView({
       // Every field the form owns is set, undefined included: the row merges
       // this into the stored tracker, so a cleared icon or a switch turned
       // back on must overwrite the old value, not leave it.
-      onAdd({ ...initial, name: name.trim(), color, icon, startFromLast: hasStart && !startFromLast ? false : undefined });
+      onAdd({ ...initial, name: name.trim(), color, icon, startFromLast: hasStart && !startFromLast ? false : undefined, ...pairFields() });
       return;
     }
     onAdd({
@@ -968,6 +987,7 @@ function AddCustomView({
       createdAt: toLocalIso(new Date()),
       ...(icon ? { icon } : {}),
       ...(hasStart && !startFromLast ? { startFromLast: false } : {}),
+      ...Object.fromEntries(Object.entries(pairFields()).filter(([, v]) => v !== undefined)),
     });
   };
 
@@ -1007,7 +1027,7 @@ function AddCustomView({
               <TrackerMark icon={icon} color={color} size={16} />
               <span className={`truncate ${name.trim() ? '' : 'text-pn-muted font-normal'}`}>{name.trim() || t('config.trackerNamePlaceholder')}</span>
             </p>
-            <PreviewInput key={type} name={name.trim() || t('config.trackerNamePlaceholder')} type={type} />
+            <PreviewInput key={type} name={name.trim() || t('config.trackerNamePlaceholder')} type={type} pairLabels={pairLabels} unit={unit} />
           </div>
         </div>
 
@@ -1033,7 +1053,7 @@ function AddCustomView({
               {/* The chips of the Factors and Habits lists, one per type, each
                   with a glyph of its input; they wrap where the row is short. */}
               <div role="group" aria-label={t('config.typeLabel')} className="flex flex-wrap gap-1.5">
-                {(Object.keys(CUSTOM_TRACKER_TYPE_LABELS) as CustomTrackerType[]).map((k) => {
+                {CUSTOM_TRACKER_TYPES.filter((k) => k !== 'pair' || PAIR_TRACKER_OFFERED).map((k) => {
                   const Glyph = TYPE_GLYPHS[k];
                   return (
                     <button key={k} type="button" aria-pressed={type === k} onClick={() => setType(k)} className={`${settingsChipClass(type === k)} gap-1.5 whitespace-nowrap`}>
@@ -1046,6 +1066,35 @@ function AddCustomView({
             </div>
           )}
         </div>
+
+        {isPair && (
+          <div className="flex flex-wrap gap-3">
+            {([0, 1] as const).map((i) => (
+              <div key={i} className="flex min-w-[9rem] flex-1 flex-col gap-1.5">
+                <RowTitle icon={TextT}>{t(i === 0 ? 'config.pairFirst' : 'config.pairSecond')}</RowTitle>
+                <TextField
+                  size="sm"
+                  value={pairLabels[i]}
+                  onChange={(e) => setPairLabels((p) => (i === 0 ? [e.target.value, p[1]] : [p[0], e.target.value]))}
+                  maxLength={PAIR_LABEL_MAX}
+                  placeholder={t(i === 0 ? 'config.pairFirstPlaceholder' : 'config.pairSecondPlaceholder')}
+                  aria-label={t(i === 0 ? 'config.pairFirst' : 'config.pairSecond')}
+                />
+              </div>
+            ))}
+            <div className="flex min-w-[9rem] flex-1 flex-col gap-1.5">
+              <RowTitle icon={Hash}>{t('config.pairUnit')}</RowTitle>
+              <TextField
+                size="sm"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                maxLength={PAIR_UNIT_MAX}
+                placeholder={t('units.mmHg')}
+                aria-label={t('config.pairUnit')}
+              />
+            </div>
+          </div>
+        )}
 
         {hasStart && (
           <Switch

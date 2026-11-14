@@ -43,7 +43,7 @@
     },
     "subhead": "Notes, tasks, passwords, journal, files, calendar, contacts and bookmarks, with mood and medication tracking. One private app.",
     "tryDemo": "Try the demo",
-    "microcopy": "Free forever. No credit card. Sign in with Google, Apple, GitHub, or just a 12-word phrase.",
+    "microcopy": "Free forever. No credit card. Sign in with Google, Apple, GitHub, or just a recovery phrase.",
     "alreadyHaveVault": "Already have a vault? Log in",
     "trustSigned": "Signed releases on GitHub"
   },
@@ -167,8 +167,6 @@
     "useGitBody": "End the day with the commits you made, saved as a note you can find again next month.",
     "useClipTitle": "Anything you copied",
     "useClipBody": "Send the clipboard, a command's output or an error message straight to your notes.",
-    "useToolsTitle": "Part of your own tools",
-    "useToolsBody": "The command answers in JSON and exits with clear codes, so your scripts know the note was saved.",
     "useShortcutTitle": "A note from a keyboard shortcut",
     "useShortcutBody": "A key you pick in your system's settings opens a box for a quick note, even while the app is closed. It lands in your Agent folder.",
     "howLink": "Read how privacynotes works"
@@ -359,14 +357,15 @@
     "freeVault": "50 MB storage, 5 MB per file",
     "freeImport": "Import and export, including Keep and Obsidian",
     "freeAnon": "Anonymous sign-in, no email",
-    "earlyAdopterBadge": "Early Adopter"
+    "earlyAdopterBadge": "Early Adopter",
+    "payMethods": "Pay by card, or with Bitcoin, Ethereum, Lightning, USDC or USDT."
   },
   "underHood": {
     "heading": "Under the hood",
     "cipherTerm": "xchacha20poly1305",
     "cipherDesc": "Keys derived client-side",
     "phraseTerm": "BIP-39 phrases",
-    "phraseDesc": "12 words, Ed25519 signing",
+    "phraseDesc": "Made on your device, Ed25519 signing",
     "rlsDesc": "RLS keyed to your pubkey",
     "trackingTerm": "Zero trackers",
     "trackingDesc": "No pixels, no third-party trackers",
@@ -390,6 +389,7 @@
       "sleep": "Good, 7.5 h",
       "sleepScore": "82",
       "heartRate": "61 bpm",
+      "bloodPressure": "118/76 mmHg",
       "activity": "Moderate",
       "medication": "Taken",
       "energy": "6 / 10",
@@ -529,7 +529,7 @@
       "hotkeys": "Hotkeys",
       "rating": "Rating"
     },
-    "intro": "<brand/> keeps your notes, tasks, passwords, journal, files, calendar, contacts and bookmarks in one place, with mood and medication tracking. Everything is encrypted on your device with a key made from your 12 words, and it stays encrypted on our servers in <nowrap>Switzerland</nowrap>. It works offline, and the app is open source.",
+    "intro": "<brand/> keeps your notes, tasks, passwords, journal, files, calendar, contacts and bookmarks in one place, with mood and medication tracking. Everything is encrypted on your device with a key made from your recovery phrase, and it stays encrypted on our servers in <nowrap>Switzerland</nowrap>. It works offline, and the app is open source.",
     "versionHeading": "Version",
     "windowVersion": "Version {{version}}",
     "windowHelp": "Help Center",

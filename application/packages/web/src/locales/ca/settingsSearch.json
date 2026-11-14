@@ -55,7 +55,7 @@
     "security_appLock": "bloqueig de l'app, bloquejar en obrir, pantalla de bloqueig, bloquejar l'aplicació en obrir-la, tornar a bloquejar, bloquejar de nou després",
     "security_relockAfter": "temps d'espera, bloqueig automàtic, bloquejar després, tornar a bloquejar després, pantalla de bloqueig",
     "security_blockCapture": "captura de pantalla, enregistrament de pantalla, compartir pantalla, mode privadesa, pantalla de privadesa",
-    "security_phrase": "frase de recuperació, paraules secretes, llavor, seed, dotze paraules, clau de recuperació",
+    "security_phrase": "frase de recuperació, paraules secretes, llavor, seed, dotze paraules, vint-i-quatre paraules, 24 paraules, clau de recuperació",
     "security_custody": "custòdia, autocustòdia, emmagatzematge de claus",
     "me_pauseSync": "aturar la sincronització, pausa, fora de línia, offline",
     "me_filesWifiOnly": "wifi, dades mòbils, xarxa mòbil, connexió limitada",
@@ -81,6 +81,7 @@
     "appearance_invisibles": "calderó, espais en blanc, espais, caràcters ocults, marques de format",
     "appearance_linkModifier": "enllaços, hipervincles, url, clic, ctrl, cmd, command, obrir per error",
     "appearance_typedSymbols": "lligadures, fletxes, símbols, matemàtiques, diferent de, més gran que, més petit que, correcció automàtica, substituir",
+    "appearance_linkSuggestions": "notes relacionades, notes semblants, suggeriments, suggeriments d'enllaç, connexions, connexions suggerides, retroenllaços, enllaços entrants, sense enllaçar, tema, backlinks",
     "appearance_noteFont": "lletra, tipus de lletra, font, monoespai, mono, serif, sans, lletra predeterminada, lletra personalitzada, lletra instal·lada, la meva lletra",
     "appearance_nestedNumbers": "llista numerada, llista niuada, esquema, 1.1, 1.1.1, numeració legal, subnumeració, numeració multinivell, llista multinivell",
     "appearance_confirmTrash": "eliminar, paperera, confirmar, confirmació, diàleg, preguntar, avís, no ho tornis a preguntar",
@@ -88,6 +89,7 @@
     "appearance_autoLocationNotes": "ubicació, lloc, gps, posició, mapa, geoetiqueta, automàtic, on, notes",
     "appearance_autoLocationJournal": "ubicació, lloc, gps, posició, mapa, geoetiqueta, automàtic, on, diari, entrades",
     "appearance_startView": "pàgina d'inici, inici, vista per defecte, obrir a",
+    "appearance_reopenLastOpen": "última nota, últim obert, restaurar, recordar, tornar a obrir, iniciar, arrencar",
     "appearance_view": "quadrícula, llista, targetes, disseny",
     "trackers_setup": "seguiments, benestar, estat d'ànim, son, energia, passos, aigua, activar, desactivar",
     "trackers_habitQuestions": "hàbits, preguntes, meditar, resar, fumar, alcohol, has fet",
@@ -122,6 +124,7 @@
     "calendar_weekNumbers": "número de setmana, setmana ISO, calendari",
     "calendar_hours": "hores, horari laboral, vista de dia, vista de setmana, matí",
     "me_dms": "interruptor d'home mort, dead man's switch, inactivitat, inactiu, suprimeix després de, esborra, elimina, abandona",
+    "appearance_smartConnections": "ia, fora de línia, offline, al dispositiu, ia local, ia privada, model, bekko, significat, mateix significat, notes relacionades, notes semblants, connexions suggerides, suggeriments d'enllaç, connexions intel·ligents, semàntic, embeddings, incrustacions, baixada, baixa",
     "appearance_formatBar": "barra d'eines, barra de format, botons, personalitzar, organitzar, llista amb pics, ratllat, engranatge"
   }
 }

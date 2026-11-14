@@ -55,7 +55,7 @@
     "security_appLock": "app-vergrendeling, vergrendelen bij opstarten, vergrendelscherm, app vergrendelen bij openen, opnieuw vergrendelen, opnieuw vergrendelen na",
     "security_relockAfter": "time-out, automatisch vergrendelen, vergrendelen na, opnieuw vergrendelen na, vergrendelscherm",
     "security_blockCapture": "screenshot, schermopname, scherm delen, privacymodus, privacyscherm",
-    "security_phrase": "herstelzin, geheime woorden, seed, twaalf woorden, herstelsleutel",
+    "security_phrase": "herstelzin, geheime woorden, seed, twaalf woorden, vierentwintig woorden, 24 woorden, herstelsleutel",
     "security_custody": "bewaring, zelf bewaren, sleutelopslag, custodial",
     "me_pauseSync": "sync stoppen, synchronisatie pauzeren, offline",
     "me_filesWifiOnly": "wifi, mobiele data, 4g, 5g, bundel",
@@ -81,6 +81,7 @@
     "appearance_invisibles": "alineateken, witruimte, spaties, verborgen tekens, opmaaktekens",
     "appearance_linkModifier": "links, hyperlinks, url, klik, klikken, ctrl, cmd, command, per ongeluk openen",
     "appearance_typedSymbols": "ligaturen, pijlen, symbolen, wiskunde, niet gelijk aan, groter dan, kleiner dan, autocorrectie, automatisch verbeteren, vervangen",
+    "appearance_linkSuggestions": "gerelateerde notities, vergelijkbare notities, suggesties, linksuggesties, voorgestelde verbanden, verbanden, connections, backlinks, terugverwijzingen, niet gelinkt, ongelinkt, onderwerp",
     "appearance_noteFont": "lettertype, font, monospace, mono, schreef, serif, schreefloos, sans, standaardlettertype, eigen lettertype, aangepast lettertype, geïnstalleerd lettertype, mijn lettertype",
     "appearance_nestedNumbers": "genummerde lijst, geneste lijst, overzicht, outline, 1.1, 1.1.1, juridische nummering, subnummers, subnummering, lijst met meerdere niveaus, meerlaagse lijst",
     "appearance_confirmTrash": "verwijderen, prullenbak, bevestigen, bevestiging, dialoogvenster, vragen, prompt, niet meer vragen",
@@ -88,6 +89,7 @@
     "appearance_autoLocationNotes": "locatie, plaats, gps, positie, kaart, geotag, automatisch, waar, notities",
     "appearance_autoLocationJournal": "locatie, plaats, gps, positie, kaart, geotag, automatisch, waar, dagboek, journal, dagboeknotities",
     "appearance_startView": "startpagina, home, standaardweergave, openen met",
+    "appearance_reopenLastOpen": "laatste notitie, laatst geopend, herstellen, onthouden, opnieuw openen, starten, opstarten",
     "appearance_view": "raster, lijst, kaarten, indeling",
     "trackers_setup": "trackers, welzijn, knoppen, pillen, stemming, slaap, energie, stappen, water, aanzetten, uitzetten",
     "trackers_habitQuestions": "gewoonten, vragen, mediteren, bidden, roken, alcohol, heb je",
@@ -122,6 +124,7 @@
     "calendar_weekNumbers": "weeknummer, ISO-week, agenda, kalender",
     "calendar_hours": "uren, werktijden, dagweergave, weekweergave, ochtend",
     "me_dms": "dodemansknop, dead man's switch, inactiviteit, inactief, verwijderen na, wissen, achterlaten, niet meer gebruiken",
+    "appearance_smartConnections": "ai, kunstmatige intelligentie, offline, op het apparaat, on-device, lokale ai, privé-ai, model, bekko, betekenis, dezelfde betekenis, gerelateerde notities, vergelijkbare notities, voorgestelde verbanden, linksuggesties, slimme verbanden, smart connections, semantisch, embeddings, downloaden",
     "appearance_formatBar": "werkbalk, opmaakbalk, knoppen, aanpassen, indelen, opsommingslijst, doorhalen, tandwiel"
   }
 }

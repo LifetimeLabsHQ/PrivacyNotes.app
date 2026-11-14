@@ -5,15 +5,24 @@ import { parseMarkdown } from './markdown';
 import { parseObsidian, parseObsidianCanvas } from './obsidian';
 import { parseNotesnook } from './notesnook';
 import { parseJoplin } from './joplin';
+import { parseAnytype } from './anytype';
+import { parseSiyuan } from './siyuan';
 import { parseBear } from './bear';
 import { parseUpNote } from './upnote';
 import { parseAppleNotes } from './appleNotes';
 import { parseAppleJournal } from './appleJournal';
+import { parseDaylio } from './daylio';
+import { parseDiarium } from './diarium';
+import { parseGoogleJournal } from './googleJournal';
 import { parseEvernote } from './evernote';
 import { parseSamsungNotes } from './samsungNotes';
 import { parsePrivacyNotesBackup } from './privacynotes';
 import { bitwardenImporter } from './bitwarden';
-import { passwordCsvImporter } from './passwordCsv';
+import { keepassImporter, keepassxcImporter, passwordCsvImporter } from './passwordCsv';
+import { lastpassImporter, nordpassImporter, protonPassImporter } from './passwordManagers';
+import { onePasswordImporter } from './onePassword';
+import { enpassImporter } from './enpass';
+import { dashlaneImporter } from './dashlane';
 import { simplenoteImporter } from './simplenote';
 import { parseBrowserBookmarks } from './browserBookmarks';
 import { parseVcard } from './vcard';
@@ -140,6 +149,36 @@ export const IMPORTERS: Importer[] = [
     parse: parseAppleJournal,
   },
   {
+    id: 'daylio',
+    label: 'Daylio',
+    description:
+      'In Daylio choose More > Backup & Restore > Advanced Options > Export, then drop the .daylio file here. Each entry imports as a journal entry with its mood, activities, scales, photos and voice memos. The CSV from More > Export Entries works too, without photos.',
+    accept: '.daylio,.csv,.zip',
+    enabled: true,
+    sourceTag: 'daylio',
+    parse: parseDaylio,
+  },
+  {
+    id: 'diarium',
+    label: 'Diarium',
+    description:
+      'In Diarium choose Export, pick JSON with Attachments on, and save to local storage; drop the .zip or .json here. Entries import as journal entries with their rating as mood, tags, people, trackers, place and attachments.',
+    accept: '.zip,.json',
+    enabled: true,
+    sourceTag: 'diarium',
+    parse: parseDiarium,
+  },
+  {
+    id: 'google-journal',
+    label: 'Google Journal',
+    description:
+      'Turn on Back up your journal in Journal on your Pixel, then export Journal from Google Takeout and drop the .zip here. Entries keep their day, title, text, photos and videos.',
+    accept: '.zip',
+    enabled: true,
+    sourceTag: 'google-journal',
+    parse: parseGoogleJournal,
+  },
+  {
     id: 'samsung-notes',
     label: 'Samsung Notes',
     description:
@@ -153,6 +192,14 @@ export const IMPORTERS: Importer[] = [
   standardNotesImporter,
   bitwardenImporter,
   passwordCsvImporter,
+  keepassxcImporter,
+  keepassImporter,
+  lastpassImporter,
+  nordpassImporter,
+  protonPassImporter,
+  onePasswordImporter,
+  enpassImporter,
+  dashlaneImporter,
   {
     id: 'obsidian',
     label: 'Obsidian',
@@ -182,6 +229,26 @@ export const IMPORTERS: Importer[] = [
     enabled: true,
     sourceTag: 'joplin',
     parse: parseJoplin,
+  },
+  {
+    id: 'anytype',
+    label: 'Anytype',
+    description:
+      'In Anytype: space settings > Export > Any-Block v1, file format JSON, with zip, files and archived objects on. Drop the .zip here. Keeps tags, collections as folders, tasks, callouts, toggles, tables, note-links, and files.',
+    accept: '.zip',
+    enabled: true,
+    sourceTag: 'anytype',
+    parse: parseAnytype,
+  },
+  {
+    id: 'siyuan',
+    label: 'SiYuan',
+    description:
+      'In SiYuan: main menu > Data migration > Data.zip > Export, then drop the .zip here. A notebook exported as SiYuan .sy.zip works too. Keeps notebooks and nested documents as folders, tags, block references as note-links, callouts, math, tables, and assets.',
+    accept: '.zip',
+    enabled: true,
+    sourceTag: 'siyuan',
+    parse: parseSiyuan,
   },
   {
     id: 'bear',

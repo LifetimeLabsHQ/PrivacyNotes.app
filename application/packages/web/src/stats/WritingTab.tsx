@@ -6,6 +6,7 @@ import { SectionEyebrow, SettingsSegmented, StatTile as Tile } from '../settings
 import { BookOpen, Books, CalendarBlank, ChartLineUp, Check, Clock, FileText, Fire, Hash, PencilSimple, TextAa, Timer, Trophy } from '../icons';
 import { formatDay, weekdayDate, weekdayLabel } from '../intlFormat';
 import { toLocalIso } from '../notesViewUtils';
+import { addDays } from '../MonthGrid';
 import { backfillLedger, readLedger, type LedgerRow } from '../dayLedger';
 import { milestoneLabel, milestoneProgress } from '../milestones';
 import { countWords } from '../wordCountUtils';
@@ -28,12 +29,6 @@ const LONGEST_MAX = 3;
 const LENGTH_BUCKETS = [50, 200, 500, 1000, 5000, Infinity];
 const WRITING_GREEN = '#10b981';
 
-function shift(day: string, n: number): string {
-  const d = new Date(`${day}T12:00:00`);
-  d.setDate(d.getDate() + n);
-  return toLocalIso(d);
-}
-
 /**
  * The Writing tab: how much, when and what a person writes. Tiles that
  * follow the range, two facts for fun, words per day, the writing year,
@@ -55,9 +50,9 @@ export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeen
   const firstDay = stats.firstNoteDate ? toLocalIso(new Date(stats.firstNoteDate)) : today;
   const allDays = Math.max(1, Math.round((Date.parse(`${today}T12:00:00`) - Date.parse(`${firstDay}T12:00:00`)) / 86_400_000) + 1);
   const span = RANGES.find(([id]) => id === rangeId)![1] || allDays;
-  const from = shift(today, -(span - 1));
-  const prevFrom = shift(from, -span);
-  const days = useMemo(() => Array.from({ length: span }, (_, i) => shift(from, i)), [from, span]);
+  const from = addDays(today, -(span - 1));
+  const prevFrom = addDays(from, -span);
+  const days = useMemo(() => Array.from({ length: span }, (_, i) => addDays(from, i)), [from, span]);
 
   const [ledger, setLedger] = useState<LedgerRow[] | null>(null);
   useEffect(() => {
@@ -77,7 +72,7 @@ export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeen
     return s;
   };
   const words = sumWords(from, today);
-  const wordsBefore = sumWords(prevFrom, shift(from, -1));
+  const wordsBefore = sumWords(prevFrom, addDays(from, -1));
 
   const live = useMemo(() => notes.filter((n) => n.deleted === 0 && n.trashed === 0 && !isNoteLocked(n)), [notes, isNoteLocked]);
   const dayOf = (iso: string) => toLocalIso(new Date(iso));
@@ -100,7 +95,7 @@ export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeen
     if (!weekly) return { from, to: today, points: days.map((d) => ({ date: d, value: wordsByDay.get(d) ?? 0 })) };
     const weeks = new Map<string, number>();
     for (const d of days) {
-      const monday = shift(d, -((new Date(`${d}T12:00:00`).getDay() + 6) % 7));
+      const monday = addDays(d, -((new Date(`${d}T12:00:00`).getDay() + 6) % 7));
       weeks.set(monday, (weeks.get(monday) ?? 0) + (wordsByDay.get(d) ?? 0));
     }
     const points = [...weeks].map(([date, value]) => ({ date, value }));
@@ -132,9 +127,9 @@ export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeen
   // The writing year: 52 week columns, Monday first, ending this week.
   const year = useMemo(() => {
     const dow = (new Date(`${today}T12:00:00`).getDay() + 6) % 7;
-    const first = shift(shift(today, 6 - dow), -(YEAR_WEEKS * 7 - 1));
+    const first = addDays(addDays(today, 6 - dow), -(YEAR_WEEKS * 7 - 1));
     return Array.from({ length: YEAR_WEEKS * 7 }, (_, i) => {
-      const date = shift(first, i);
+      const date = addDays(first, i);
       return { date, edits: stats.heatmap[date] ?? 0, future: date > today };
     });
   }, [stats.heatmap, today]);

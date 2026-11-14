@@ -4,8 +4,7 @@ import type { SupabaseClient } from '@notes/shared';
 import type { LocalNote } from '../db';
 import { recordAdminEvent } from '../adminEvents';
 import type { ExportSource } from '../adminEvents';
-import i18n from '../i18n';
-import { decodeZipBackup, BACKUP_TOO_SMALL } from '@notes/shared';
+import i18n, { ensureImportLogLoaded } from '../i18n';
 import type { BulkExportResult, ExportStep, ExportStepName, MissingBlob } from '../export';
 import { setExportStep } from '../ExportProgressModal';
 import { RESTORE_WAIT_LINE, restoreGateNow } from '../pullState';
@@ -29,6 +28,9 @@ export interface ExportProgress {
   /** The steps of a running bulk export. The one it is on goes to the
    *  window alone (`setExportStep`), never through this state (#683). */
   steps?: readonly ExportStepName[];
+  /** A full backup of everything just finished. The window offers the
+   *  automatic one under it. */
+  fullBackup?: boolean;
 }
 
 export function useExports({
@@ -143,6 +145,7 @@ export function useExports({
     format: ExportSource,
     steps: (ex: typeof import('../export')) => readonly ExportStepName[],
     run: (signal: AbortSignal, onProgress: (at: ExportStep) => void) => Promise<BulkExportResult>,
+    fullBackup = false,
   ) => {
     bulkAbortRef.current?.abort();
     const controller = new AbortController();
@@ -155,7 +158,7 @@ export function useExports({
       signal.throwIfAborted();
       setExportProgress({ status: '', done: false, steps: steps(ex) });
       const { missing, savedPath } = await run(signal, setExportStep);
-      setExportProgress({ status: ex.describeMissing(missing), done: true, savedPath });
+      setExportProgress({ status: ex.describeMissing(missing), done: true, savedPath, fullBackup });
     });
     if (bulkAbortRef.current === controller) bulkAbortRef.current = null;
   };
@@ -169,28 +172,21 @@ export function useExports({
   // as a full backup (#682).
   const exportAllMarkdownZip = (ns: LocalNote[], fileStem?: string) =>
     runBulkExport('md-zip', (ex) => ex.FULL_BACKUP_STEPS, async (signal, onProgress) =>
-      (await loadExport()).exportAllMarkdownZip(ns, imageStoreRef.current, attachmentStoreRef.current, onProgress, userSettings.folders, carriedSettings(userSettings), signal, fileStem));
+      (await loadExport()).exportAllMarkdownZip(ns, imageStoreRef.current, attachmentStoreRef.current, onProgress, userSettings.folders, carriedSettings(userSettings), signal, fileStem), !fileStem);
   const exportNotesMarkdownZip = (ns: LocalNote[]) =>
     runBulkExport('md-zip', (ex) => ex.FULL_BACKUP_STEPS, async (signal, onProgress) =>
       (await loadExport()).exportNotesMarkdownZip(ns, imageStoreRef.current, attachmentStoreRef.current, onProgress, userSettings.folders, signal));
   const exportEncryptedFullBackup = (ns: LocalNote[]) =>
     runBulkExport('encrypted-zip', (ex) => ex.FULL_BACKUP_STEPS, async (signal, onProgress) =>
-      (await loadExport()).exportEncryptedFullBackup(ns, imageStoreRef.current, attachmentStoreRef.current, auth.encryptionKey, onProgress, userSettings.folders, carriedSettings(userSettings), signal));
+      (await loadExport()).exportEncryptedFullBackup(ns, imageStoreRef.current, attachmentStoreRef.current, auth.encryptionKey, onProgress, userSettings.folders, carriedSettings(userSettings), signal), true);
   /** Decrypt a picked .pnbackupz into the plain full-backup zip. The
    *  modal then runs it through the NORMAL zip restore flow - preview,
    *  quota preflight and blob restore all reuse. Errors arrive already
    *  translated, the decryptBackup precedent (issue #193). */
   const decryptFullBackup = async (file: File): Promise<File> => {
     const bytes = new Uint8Array(await file.arrayBuffer());
-    try {
-      const zip = decodeZipBackup(bytes, auth.encryptionKey);
-      return new File([zip as BlobPart], 'backup.zip', { type: 'application/zip' });
-    } catch (err) {
-      if (err instanceof Error && err.name === BACKUP_TOO_SMALL) {
-        throw new Error(i18n.t('importExport:decryptErrors.tooSmall', { size: bytes.length }));
-      }
-      throw new Error(i18n.t('importExport:decryptErrors.notThisAccount'));
-    }
+    const zip = (await loadExport()).decryptFullBackupZip(bytes, auth.encryptionKey);
+    return new File([zip as BlobPart], 'backup.zip', { type: 'application/zip' });
   };
   const exportAllHtmlZip = (ns: LocalNote[], fileStem?: string) =>
     runBulkExport('html-zip', (ex) => ex.HTML_ARCHIVE_STEPS, async (signal, onProgress) =>
@@ -255,6 +251,7 @@ export function useExports({
       stats: { totalNotes: backup.notes.length, emptyNotes: 0, untaggedNotes: 0, uniqueTags: 0 },
       source: 'markdown-folder' as const,
     };
+    await ensureImportLogLoaded();
     const result = await applyImport(parsed);
     if (result.errors.length > 0) throw new Error(result.errors.join('\n'));
     return {

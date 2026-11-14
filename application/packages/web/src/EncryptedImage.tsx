@@ -44,6 +44,8 @@ import i18n from './i18n';
 import { drawablePicture } from './avifDisplay';
 import { IMAGE_FORMAT_MIME, sniffImageFormat } from './imageMetadata';
 import { intlLocale } from './languages';
+import { isSameOriginPath } from './sameOriginPath';
+import { allowedImageSource } from './markdownFolder/assetSource';
 
 /** Prefix for our custom image URIs. */
 const IMAGE_URI_PREFIX = 'pn:img/';
@@ -235,7 +237,8 @@ const keepEditorFocus = (e: ReactPointerEvent) => { e.preventDefault(); e.stopPr
 /**
  * Floating toolbar shown above a selected image.
  * Provides size presets (25/50/75/100%), a percent field, copy, view,
- * download, and delete.
+ * download, and delete. `onDownload` is null for a picture the app cannot
+ * save, and the bar then has no Download.
  */
 function ImageToolbar({
   width,
@@ -251,7 +254,7 @@ function ImageToolbar({
   onCopy: () => void;
   copied: boolean;
   onView: () => void;
-  onDownload: () => void;
+  onDownload: (() => void) | null;
   onDelete: () => void;
 }) {
   const { t } = useTranslation('media');
@@ -294,14 +297,18 @@ function ImageToolbar({
       >
         <ArrowsOutSimple />
       </IconButton>
-      <div className="pn-image-toolbar-divider" />
-      <IconButton
-        label={t('image.downloadAria')}
-        onPointerDown={keepEditorFocus}
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDownload(); }}
-      >
-        <Download />
-      </IconButton>
+      {onDownload && (
+        <>
+          <div className="pn-image-toolbar-divider" />
+          <IconButton
+            label={t('image.downloadAria')}
+            onPointerDown={keepEditorFocus}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDownload(); }}
+          >
+            <Download />
+          </IconButton>
+        </>
+      )}
       <div className="pn-image-toolbar-divider" />
       <span onPointerDown={keepEditorFocus} className="inline-flex">
         <DeleteButton label={t('image.deleteAria')} onConfirm={onDelete} />
@@ -328,6 +335,10 @@ const EncryptedImageView = memo(function EncryptedImageView({
   const { t } = useTranslation('media');
   const { src, alt, width, textAlign } = node.attrs;
   const source = blobSource(src);
+  // What Download can save: a stored picture, or one the app ships, which a
+  // starter note names by its path. Any other address is never fetched, so
+  // it has no Download. The viewer follows the same rule (`canSaveMedia`).
+  const canSave = source !== null || isSameOriginPath(src);
   // One key per blob, whichever store holds it: the retry set below is shared.
   const imageId = source ? `${source.store}:${source.uuid}` : null;
   const cachedUrl = cachedSourceUrl(source);
@@ -369,7 +380,10 @@ const EncryptedImageView = memo(function EncryptedImageView({
     let cancelled = false;
 
     if (!source || !imageId) {
-      setObjectUrl(src);
+      // A desktop asset address that note text spelled loads a file from
+      // disk, a network path included (beta issue 86): shown only when the
+      // Markdown folder resolver made it.
+      setObjectUrl(allowedImageSource(src) ? src : null);
       setLoading(false);
       return;
     }
@@ -535,9 +549,14 @@ const EncryptedImageView = memo(function EncryptedImageView({
   }, [dragWidth, node.attrs.width, updateAttributes]);
 
   const handleDownload = useCallback(async () => {
-    if (!source) return;
+    if (!canSave) return;
     let saved: SaveResult | null;
-    if (source.store === 'file') {
+    if (!source) {
+      // A picture the app ships keeps its file name.
+      const file = await fetchLocalPicture(src);
+      if (!file) return;
+      saved = await saveBlob(file, file.name);
+    } else if (source.store === 'file') {
       // The upload keeps its own name and type; the alt text may be empty.
       const att = await loadAttachmentData(source.uuid);
       if (!att) return;
@@ -584,7 +603,7 @@ const EncryptedImageView = memo(function EncryptedImageView({
     menu.open(e, [
       { label: t('image.copyAria'), icon: iconCopy(), onSelect: handleCopy },
       { label: t('image.viewAria'), icon: <ArrowsOutSimple size={14} />, onSelect: handleView },
-      { label: t('image.downloadAria'), icon: iconDownload(), onSelect: () => { void handleDownload(); } },
+      ...(canSave ? [{ label: t('image.downloadAria'), icon: iconDownload(), onSelect: () => { void handleDownload(); } }] : []),
     ]);
   };
 
@@ -806,7 +825,7 @@ const EncryptedImageView = memo(function EncryptedImageView({
             onCopy={handleCopy}
             copied={copied}
             onView={handleView}
-            onDownload={handleDownload}
+            onDownload={canSave ? handleDownload : null}
             onDelete={handleDelete}
           />
         )}
@@ -1478,14 +1497,16 @@ async function readPasteboardPictures(): Promise<ArchivePicture[]> {
 function fileName(src: string, mime: string): string {
   const ext = mime.split('/')[1]?.replace('jpeg', 'jpg').replace('svg+xml', 'svg') ?? 'png';
   try {
-    const last = new URL(src).pathname.split('/').pop() ?? '';
+    const last = new URL(src, location.origin).pathname.split('/').pop() ?? '';
     if (/\.[a-z0-9]{2,5}$/i.test(last)) return decodeURIComponent(last);
   } catch { /* not a URL with a path */ }
   return `pasted-image.${ext}`;
 }
 
-/** The bytes of a `data:` or `blob:` picture, or null. */
-async function fetchLocalPicture(src: string): Promise<File | null> {
+/** The bytes of a picture this page can read by itself, or null: a `data:`
+ *  or `blob:` one, or a path the app serves, named after its file. */
+export async function fetchLocalPicture(src: string): Promise<File | null> {
+  if (!allowedImageSource(src)) return null;
   try {
     const res = await fetch(src);
     if (!res.ok) return null;

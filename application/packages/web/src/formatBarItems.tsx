@@ -44,6 +44,7 @@ import {
   TextOutdent,
   Shapes,
   MapPin,
+  ScribbleLoop,
 } from './icons';
 
 /**
@@ -80,6 +81,8 @@ export const FORMAT_BAR_LOOK: Record<string, { Icon: Icon; label: string }> = {
   icon: { Icon: Shapes, label: 'shell:noteOptionsMenu.icon' },
   // A map of a place in the body (PlaceMapNode.tsx); the window is the note's place window.
   location: { Icon: MapPin, label: 'notes:location.title' },
+  // A pen drawing saved as a picture (doodle/DoodlePad.tsx).
+  doodle: { Icon: ScribbleLoop, label: 'doodle.title' },
   quote: { Icon: Quotes, label: 'toolbar.quote' },
   codeblock: { Icon: CodeBlock, label: 'toolbar.codeBlock' },
   copybox: { Icon: Copy, label: 'toolbar.copyBox' },

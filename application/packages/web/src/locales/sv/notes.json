@@ -141,6 +141,14 @@
   },
   "banner": {
     "proActivationPending": "Betalningen är mottagen, men Pro-aktiveringen tar längre tid än vanligt. Ladda om om en minut, eller hör av dig till supporten om det inte slår på.",
+    "crypto": {
+      "waiting": "Väntar på din kryptobetalning. Pro slås på när den bekräftas.",
+      "seen": "Kryptobetalningen syns. Pro slås på när nätverket bekräftar den, oftast inom en timme för Bitcoin.",
+      "partial": "En del av din kryptobetalning har kommit fram. Skicka resten på betalningssidan innan länken går ut.",
+      "ended": "Din länk för kryptobetalning gick ut innan en fullständig betalning kom fram.",
+      "paid": "Din kryptobetalning är bekräftad. Pro är på.",
+      "openPayment": "Betalningssida"
+    },
     "snapshotPaused": "Anteckningshistoriken är pausad. Din Pro-plan verkar inaktiv. Nya ändringar sparas inte som versioner förrän Pro är återställt.",
     "restorePro": "Återställ Pro",
     "storagePastDue": "Betalningen för din lagringsprenumeration misslyckades. Uppdatera ditt kort i Paddle så att du inte förlorar extrautrymmet.",
@@ -336,7 +344,24 @@
     "linksTo": "Länkar till",
     "missing": "Inte skapad än",
     "protectedHidden_one": "{{count}} PIN-skyddat objekt visas inte",
-    "protectedHidden_other": "{{count}} PIN-skyddade objekt visas inte"
+    "protectedHidden_other": "{{count}} PIN-skyddade objekt visas inte",
+    "related": "Föreslagna kopplingar",
+    "relatedWords": "Båda nämner {{words}}",
+    "relatedLinksTo": "Båda länkar till {{title}}",
+    "relatedLinkedFrom": "Båda länkas från {{title}}",
+    "relatedTag": "Båda taggade {{tag}}",
+    "relatedMeaning": "Samma innebörd",
+    "meaningDoor": "Smarta kopplingar: hitta anteckningar med samma innebörd, med offline-AI",
+    "meaningDoorNo": "Visa inte igen",
+    "meaningDoorHidden": "Dolt i alla anteckningar. Smarta kopplingar finns kvar under Inställningar > Redigerare > Beteende.",
+    "hideSuggestions": "Dölj föreslagna kopplingar",
+    "notRelated": "Inte relaterad",
+    "notRelatedDone": "Föreslås inte längre",
+    "notRelatedCount": "Inte relaterade ({{n}})",
+    "restoreSuggestion": "Föreslå igen",
+    "linkAtCursor": "Länka vid markören",
+    "linkNeedsCursor": "Klicka i anteckningen först",
+    "linkAsFootnote": "Länka som fotnot"
   },
   "drawing": {
     "fullScreen": "Helskärm",

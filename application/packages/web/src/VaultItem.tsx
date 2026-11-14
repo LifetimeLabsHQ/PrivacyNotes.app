@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LocalNote } from './db';
-import { LoginForm, parseLoginBody, domainFromUrl } from './LoginForm';
+import { LoginForm, parseLoginBody } from './LoginForm';
 import { CardForm, parseCardBody, detectCardNetwork } from './CardForm';
 import { SshKeyForm, parseSshKeyBody } from './SshKeyForm';
 import { VAULT_EMPTY_BODIES } from './notesViewUtils';
@@ -9,7 +9,7 @@ import { faviconUrl, domainFromUrlString } from './favicon';
 import { prefetchFavicon } from './faviconQueue';
 import { HoverLabel } from './HoverLabel';
 import { exemptOpts } from './i18nExempt';
-import { Copy, Check, Download, Eye, EyeSlash, ArrowSquareOut, X, Key, CreditCard, Lock, Globe, User, Calendar, MapPin, Tag, Shield, RocketLaunch } from './icons';
+import { Copy, Check, Download, ArrowSquareOut, X, Key, CreditCard, Lock, Globe, User, Calendar, MapPin, Tag, Shield, RocketLaunch } from './icons';
 import { openExternal } from './openExternal';
 import { DETAIL_COLUMN, DetailAction, DetailCopyAction, DetailHero, DetailLink, DetailNotes, DetailRow, DetailTile } from './detailPane';
 import { useCopyToClipboard } from './clipboard';
@@ -17,11 +17,12 @@ import { useFavicons } from './theme';
 import { parseTotpInput, generateTotpCode, totpSecondsRemaining } from '@notes/shared';
 import { proUnlocked } from './demo';
 import { PasswordText } from './PasswordText';
-import { hasLoginExtras, isPublicField, loginExtrasOf, webHref, withLoginExtras, type LoginExtras, type LoginField } from './loginExtras';
+import { hasLoginExtras, loginExtrasOf, webHref, withLoginExtras, type LoginExtras, type LoginField } from './loginExtras';
 import type { UpgradeTrigger } from './UpgradeModal';
 import { mergeVaultDraft } from './vaultBody';
 import { saveFailureText } from './saveFile';
 import { TotpRing, groupTotpCode } from './TotpRing';
+import { CustomFieldRow, RevealAction } from './CustomFields';
 
 // Own chunk: it brings the editor's file chip, which only an item's Files section needs.
 const VaultFiles = lazy(() => import('./VaultFiles'));
@@ -236,16 +237,6 @@ function TotpField({ raw, isPro, onOpenUpgrade, copy, copied }: {
   );
 }
 
-/** The reveal cell a secret row carries. */
-function RevealAction({ shown, onToggle }: { shown: boolean; onToggle: () => void }) {
-  const { t } = useTranslation('shell');
-  return (
-    <DetailAction label={shown ? t('common:sshKeyForm.hide') : t('vaultItem.reveal')} onClick={onToggle}>
-      {shown ? <EyeSlash /> : <Eye />}
-    </DetailAction>
-  );
-}
-
 /** The copy cell's hover label: "Copied" while this row is the copied one. */
 function useCopyTip(copied: string | null) {
   const { t } = useTranslation('shell');
@@ -279,41 +270,6 @@ function ExtraUrlRow({ url, id, copy, copied }: {
         <DetailLink href={href}>{domainFromUrlString(url) || url}</DetailLink>
       ) : (
         <span dir="ltr" className="font-mono text-small break-all" /* rtl-ok: an address, never reordered */>{url}</span>
-      )}
-    </DetailRow>
-  );
-}
-
-/** A custom field. Anything but a text field is masked until revealed, and
- *  a masked value is not in the DOM at all. */
-function CustomFieldRow({ field, copy, copied }: {
-  field: LoginField;
-  copy: (text: string, label: string) => void;
-  copied: string | null;
-}) {
-  const { t } = useTranslation('shell');
-  const [shown, setShown] = useState(false);
-  const secret = !isPublicField(field);
-  const id = `field-${field.id}`;
-  const name = field.label || t('vaultItem.customField');
-  const tip = copied === id ? t('vaultItem.copied') : t('vaultItem.copyField', { label: name });
-  return (
-    <DetailRow
-      label={<span dir="auto">{name}</span>}
-      icon={secret ? <Lock /> : <Tag />}
-      actions={
-        field.value ? (
-          <>
-            {secret && <RevealAction shown={shown} onToggle={() => setShown(!shown)} />}
-            <DetailCopyAction value={field.value} id={id} copied={copied} onCopy={copy} label={tip} />
-          </>
-        ) : undefined
-      }
-    >
-      {secret && !shown ? (
-        <span dir="ltr" className="font-mono tracking-wider" /* rtl-ok: a mask, symbols only */>{field.value ? '••••••••' : ''}</span>
-      ) : (
-        <span dir="auto" className="whitespace-pre-wrap break-all">{field.value}</span>
       )}
     </DetailRow>
   );

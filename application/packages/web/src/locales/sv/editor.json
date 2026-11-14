@@ -360,5 +360,47 @@
     "addColumn": "Lägg till kolumn",
     "removeBoard": "Ta bort tavla",
     "moveTo": "Flytta till"
+  },
+  "doodle": {
+    "title": "Klotter",
+    "clear": "Rensa",
+    "paper": "Papper",
+    "paperNone": "Ingen färg: anteckningen syns igenom.",
+    "settings": "Penninställningar",
+    "stroke": "Streck",
+    "thinning": "Förtunning",
+    "streamline": "Stabilisering",
+    "smoothing": "Utjämning",
+    "easingLabel": "Övergångskurva",
+    "start": "Början",
+    "end": "Slut",
+    "taperStart": "Avsmalning i början",
+    "capStart": "Rundad början",
+    "easingStart": "Övergångskurva i början",
+    "taperEnd": "Avsmalning i slutet",
+    "capEnd": "Rundat slut",
+    "easingEnd": "Övergångskurva i slutet",
+    "fill": "Fyllning",
+    "outline": "Kontur",
+    "easing": {
+      "linear": "Linjär",
+      "in": "Mjuk start, {{curve}}",
+      "out": "Mjukt slut, {{curve}}",
+      "inOut": "Mjuk start och mjukt slut, {{curve}}"
+    },
+    "curve": {
+      "quad": "kvadratisk",
+      "cubic": "kubisk",
+      "quart": "kvartisk",
+      "quint": "kvintisk",
+      "sine": "sinus",
+      "expo": "exponentiell"
+    },
+    "colors": {
+      "black": "Svart",
+      "white": "Vit",
+      "cyan": "Cyan",
+      "lightGray": "Ljusgrå"
+    }
   }
 }

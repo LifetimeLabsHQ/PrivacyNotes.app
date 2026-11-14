@@ -12,7 +12,7 @@
   },
   "moveScreen": {
     "title": "Uygulama use.privacynotes.app adresine taşındı",
-    "bodySignIn": "Orada 12 kelimelik kurtarma ifadenizle ya da “{{scanQr}}” ile giriş yapın. Bu cihaz önce eşitlenir, böylece tüm notlarınız sizi orada bekler ve buradan hiçbir şey silinmez.",
+    "bodySignIn": "Orada kurtarma ifadenizle ya da “{{scanQr}}” ile giriş yapın. Bu cihaz önce eşitlenir, böylece tüm notlarınız sizi orada bekler ve buradan hiçbir şey silinmez.",
     "openNotes": "Bunu düzeltmek için notlarınızı burada bir kez açın",
     "showPhrase": "Kurtarma ifademi göster",
     "website": "Bunun yerine web sitesine göz atın"
@@ -46,7 +46,7 @@
     "signInAgain": "Tekrar giriş yap"
   },
   "signOutConfirm": {
-    "title": "12 kelimelik ifadenizi kaydettiniz mi?",
+    "title": "Kurtarma ifadenizi kaydettiniz mi?",
     "body": "İfadeniz geri dönmenin <only>tek</only> yolu. E-posta ile sıfırlama yok, destek hattı yok. Henüz bir yere yazmadıysanız <action>Hayır, ifadeyi göster</action> düğmesine dokunun, hemen açalım.",
     "unsyncedWarn_one": "Bu cihazdaki 1 not henüz eşitlenmedi. Çıkış sırasında yüklenemezse kalıcı olarak kaybolur.",
     "unsyncedWarn_other": "Bu cihazdaki {{count}} not henüz eşitlenmedi. Çıkış sırasında yüklenemezlerse kalıcı olarak kaybolur.",
@@ -139,7 +139,8 @@
     "offline": "Çevrimdışısınız. Yakma bağlantıları sunucuya gidip gelmeyi gerektirir. Yeniden çevrimiçi olduğunuzda tekrar deneyin.",
     "demo": "Yakma bağlantıları bir sunucuda saklanır, demo ise hiçbir sunucuya bağlanmaz. Gerçek yakma bağlantıları oluşturmak için kaydolun.",
     "tooLarge": "Not, yakma bağlantısıyla paylaşılamayacak kadar büyük ({{size}}KB). En fazla {{max}}KB olabilir.",
-    "storeFailed": "Burn note sunucuda saklanamadı."
+    "storeFailed": "Burn note sunucuda saklanamadı.",
+    "rateLimited": "Bu ağdan çok fazla yakma bağlantısı oluşturuldu. Daha sonra tekrar deneyin."
   },
   "dms": {
     "returnTitle": "Sunucudaki kopyanız silindi",
@@ -151,8 +152,10 @@
   "massDelete": {
     "title": "Notlar başka bir cihazda silindi",
     "body_other": "Siz ya da diğer cihazlarınızdan biri, bu cihazda hâlâ duran {{count}} notu sildi. Bunu siz yaptıysanız onları burada da silin. Siz değilseniz hesabınıza başka biri erişiyor olabilir: tüm cihazlarınıza geri gelmeleri için onları saklayın.",
-    "keep": "Notlarımı sakla",
-    "delete": "Bunları burada da sil",
+    "refusedTitle": "Notlarınız geri geldi",
+    "refusedBody_one": "{{count}} not sunucudan silindi, ancak bu silme işlemi cihazlarınızdan hiçbirinden gelmedi. Bu cihaz silmeyi kabul etmedi ve notu tüm cihazlarınıza geri koydu. Cihazlarınızı kontrol edin ve tanımadığınız her cihazı kaldırın.",
+    "refusedBody_other": "{{count}} not sunucudan silindi, ancak bu silme işlemi cihazlarınızdan hiçbirinden gelmedi. Bu cihaz silmeyi kabul etmedi ve notları tüm cihazlarınıza geri koydu. Cihazlarınızı kontrol edin ve tanımadığınız her cihazı kaldırın.",
+    "showDevices": "Cihazları göster",
     "body_one": "Siz ya da diğer cihazlarınızdan biri, bu cihazda hâlâ duran {{count}} notu sildi. Bunu siz yaptıysanız onu burada da silin. Siz değilseniz hesabınıza başka biri erişiyor olabilir: tüm cihazlarınıza geri gelmesi için onu saklayın."
   }
 }

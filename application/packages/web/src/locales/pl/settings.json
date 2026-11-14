@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "Wszystkie ustawienia",
+    "dockWindow": "Zadokuj z boku",
+    "dockOtherSide": "Przenieś na drugą stronę",
     "fillWindow": "Użyj całego okna",
     "restoreWindow": "Wróć do normalnego rozmiaru"
   },
@@ -188,6 +190,8 @@
     "peekDark": "Na razie widzisz swój ciemny motyw. Auto znów podąża za systemem, gdy zamkniesz Ustawienia.",
     "unlockThemes": "Odblokuj wszystkie motywy z Pro",
     "startViewTitle": "Pokaż po otwarciu",
+    "reopenLastOpenTitle": "Otwieraj ponownie ostatni element",
+    "reopenLastOpenDesc": "Po uruchomieniu aplikacji widzisz element, który był otwarty przy jej zamknięciu. Wyłączenie uruchamia aplikację na liście, bez otwartego elementu.",
     "viewTitle": "Pokaż elementy jako",
     "viewDesc": "Automatycznie dopasowuje się do szerokości twojego ekranu.",
     "openInTabsTitle": "Pokazuj otwarty element w karcie",
@@ -218,6 +222,7 @@
     "linkModifierDesc": "Zwykłe kliknięcie ustawia kursor. Dotknięcie nadal otwiera link. Tylko na tym urządzeniu.",
     "typedSymbolsTitle": "Zamieniaj wpisane symbole na strzałki i znaki matematyczne",
     "typedSymbolsDesc": "Na przykład -> zmienia się w →, != w ≠, a >= w ≥.",
+    "linkSuggestionsDesc": "Powiązania pokazują też notatki na ten sam temat, do których nie dodano jeszcze linków. Wyłącz to, aby ikona Powiązań pojawiała się tylko przy notatkach z linkami.",
     "confirmTrashTitle": "Pytaj przed usunięciem",
     "confirmTrashDesc": "Prosi o potwierdzenie, zanim element trafi do kosza.",
     "confirmArchiveTitle": "Pytaj przed archiwizacją",
@@ -668,5 +673,18 @@
     "loadError": "Nie udało się wczytać przełącznika bezczynności. Sprawdź połączenie i spróbuj ponownie.",
     "confirmTitle": "Włączyć przełącznik bezczynności?",
     "confirmBody": "Jeśli żadne z Twoich urządzeń nie połączy się z internetem przez {{period}}, serwer usunie Twoje zaszyfrowane dane. Tego nie da się cofnąć. Twoje urządzenia nadal przechowują swoje notatki."
+  },
+  "onDeviceAi": {
+    "title": "Inteligentne powiązania",
+    "desc": "Znajdują notatki o tym samym znaczeniu, nawet wyrażonym innymi słowami lub w innym języku. Korzystają z AI offline (<model>bekko-static</model>), które działa tylko na tym urządzeniu.",
+    "on": "Włączone. Sugestie obejmują też notatki o tym samym znaczeniu. AI offline zajmuje {{size}} na tym urządzeniu.",
+    "kept": "Wyłączone. AI offline zostaje na tym urządzeniu, więc ponowne włączenie nie wymaga pobierania.",
+    "downloadSize": "Pobierz · {{size}}",
+    "downloadingLabel": "Pobieranie AI offline",
+    "loading": "Wczytywanie AI offline",
+    "unavailable": "Wersja demo nie może pobrać AI offline.",
+    "failed": "Pobieranie nie zostało ukończone. Spróbuj ponownie.",
+    "remove": "Usuń z tego urządzenia ({{size}})",
+    "howItWorks": "Jak to działa"
   }
 }

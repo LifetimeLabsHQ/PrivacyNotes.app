@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "Alle Einstellungen",
+    "dockWindow": "An der Seite andocken",
+    "dockOtherSide": "Auf die andere Seite verschieben",
     "fillWindow": "Ganzes Fenster nutzen",
     "restoreWindow": "Zurück zur normalen Größe"
   },
@@ -168,6 +170,8 @@
     "peekDark": "Gerade siehst du dein dunkles Design. Auto folgt wieder deinem System, sobald du die Einstellungen schließt.",
     "unlockThemes": "Alle Designs mit Pro freischalten",
     "startViewTitle": "Beim Öffnen anzeigen",
+    "reopenLastOpenTitle": "Letztes Element wieder öffnen",
+    "reopenLastOpenDesc": "Beim Start der App siehst du das Element, das beim Beenden geöffnet war. Ist das aus, startet die App in der Liste, ohne geöffnetes Element.",
     "viewTitle": "Elemente anzeigen als",
     "viewDesc": "Auto richtet sich nach deiner Bildschirmbreite.",
     "openInTabsTitle": "Geöffnetes Element in einem Tab anzeigen",
@@ -198,6 +202,7 @@
     "linkModifierDesc": "Ein einfacher Klick setzt den Cursor. Ein Tippen öffnet den Link weiterhin. Gilt nur auf diesem Gerät.",
     "typedSymbolsTitle": "Getippte Symbole in Pfeile und Mathezeichen umwandeln",
     "typedSymbolsDesc": "Zum Beispiel wird -> zu →, != zu ≠ und >= zu ≥.",
+    "linkSuggestionsDesc": "Verknüpfungen zeigt auch Notizen zum selben Thema, die du noch nicht verlinkt hast. Schalte es aus, damit das Verknüpfungen-Symbol nur bei Notizen mit Links erscheint.",
     "confirmTrashTitle": "Vor dem Löschen fragen",
     "confirmTrashDesc": "Vor dem Verschieben eines Eintrags in den Papierkorb nachfragen.",
     "confirmArchiveTitle": "Vor dem Archivieren fragen",
@@ -613,5 +618,18 @@
     "loadError": "Der Totmannschalter konnte nicht geladen werden. Prüfe deine Verbindung und versuch es erneut.",
     "confirmTitle": "Totmannschalter einschalten?",
     "confirmBody": "Wenn keines deiner Geräte {{period}} lang online geht, löscht der Server deine verschlüsselten Daten. Das lässt sich nicht rückgängig machen. Deine Geräte behalten ihre Notizen."
+  },
+  "onDeviceAi": {
+    "title": "Intelligente Verknüpfungen",
+    "desc": "Findet Notizen mit derselben Bedeutung, auch in anderen Worten oder einer anderen Sprache. Dafür nutzt es Offline-KI (<model>bekko-static</model>), die nur auf diesem Gerät läuft.",
+    "on": "Ein. Vorschläge enthalten auch Notizen mit derselben Bedeutung. Die Offline-KI belegt {{size}} auf diesem Gerät.",
+    "kept": "Aus. Die Offline-KI bleibt auf diesem Gerät, zum erneuten Einschalten ist also kein Download nötig.",
+    "downloadSize": "Herunterladen · {{size}}",
+    "downloadingLabel": "Download der Offline-KI",
+    "loading": "Offline-KI wird geladen",
+    "unavailable": "Die Demo kann die Offline-KI nicht herunterladen.",
+    "failed": "Der Download wurde nicht abgeschlossen. Versuche es erneut.",
+    "remove": "Von diesem Gerät entfernen ({{size}})",
+    "howItWorks": "So funktioniert es"
   }
 }

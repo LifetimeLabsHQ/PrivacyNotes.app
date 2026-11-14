@@ -71,7 +71,8 @@ export function NoteLocationChip({ trackers, readOnly, open, onOpenChange, onPat
   const anchorRef = useRef<HTMLButtonElement | null>(null);
   // The place opens the way it was last shown on this device: the popup, or
   // the large map (owner, 2026-11-11). Edit from the large map drops back to
-  // the popup's form for that one opening.
+  // the popup's form for that one opening; Save and Cancel there go back to
+  // the large map.
   const [expanded, setExpanded] = useState(readExpandedPref);
   const [editNow, setEditNow] = useState(false);
   useEffect(() => { if (!open) setEditNow(false); }, [open]);
@@ -92,6 +93,7 @@ export function NoteLocationChip({ trackers, readOnly, open, onOpenChange, onPat
       {...(layout === 'sheet' ? { onEdit: () => setEditNow(true) } : {})}
       // Back to the view this device uses: the popup's map, or the large one.
       onSaved={() => setEditNow(false)}
+      {...(editNow ? { onCancel: () => setEditNow(false) } : {})}
       {...(autoType ? { autoType } : {})}
       onDone={() => onOpenChange(false)}
       onSave={(loc) => onPatch({ [LOCATION_KEY]: loc })}
@@ -148,7 +150,7 @@ function writeExpandedPref(on: boolean): void {
  * map into the body (`onSave`). One form for both, so a town, a paste and the
  * phone's position work the same way in each.
  */
-export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, startEditing = false, saveText, layout = 'popup', onExpand, onCollapse, onEdit, onSaved, autoType }: {
+export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, startEditing = false, saveText, layout = 'popup', onExpand, onCollapse, onEdit, onSaved, onCancel, autoType }: {
   place: NoteLocation | undefined;
   readOnly: boolean;
   onDone: () => void;
@@ -170,6 +172,8 @@ export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, start
   onEdit?: () => void;
   /** After a save the window shows the place instead of closing (the chip). */
   onSaved?: () => void;
+  /** Cancel in the form the large map's Edit opened: back to the large map instead of closing (the chip). */
+  onCancel?: () => void;
   /** The item's type when it can get a place on its own (the chip, on a phone). */
   autoType?: AutoLocationType;
 }) {
@@ -399,7 +403,7 @@ export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, start
         {saveText
           ? <Button type="submit" variant="primary" icon={<MapPin aria-hidden="true" />}>{saveText}</Button>
           : <Button action="save" type="submit" />}
-        <Button action="cancel" onClick={() => (place && !startEditing ? setEditing(false) : onDone())} />
+        <Button action="cancel" onClick={() => (place && !startEditing ? setEditing(false) : (onCancel ?? onDone)())} />
       </div>
       {/* Only the switch for this item's type, under a rule (owner, 2026-11-11). */}
       {autoType && canReadPosition() && (
@@ -432,6 +436,7 @@ export function ShownMap({ place, scrollZoom = false, bleed = false, height = MA
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const { theme } = useTheme();
+  const text = place.label ?? formatCoordinates(place, 2);
   const credit = (href: string, name: string) => (
     <a href={href} draggable={false} className="underline" onClick={(e) => { e.preventDefault(); openExternal(href); }}>{name}</a>
   );
@@ -466,7 +471,8 @@ export function ShownMap({ place, scrollZoom = false, bleed = false, height = MA
           dark={theme === 'dark'}
           lang={activeLocale()}
           source={mapSource()}
-          label={t('location.mapLabel', { place: place.label ?? formatCoordinates(place, 2) })}
+          label={t('location.mapLabel', { place: text })}
+          pin={t('location.chipLabel', { place: text })}
           scrollZoom={scrollZoom}
           bleed={bleed}
           height={height}

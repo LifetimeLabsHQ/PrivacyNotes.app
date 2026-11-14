@@ -248,7 +248,8 @@ async function seedBookmarkNotes(pubkey: string, baseTs: number): Promise<void> 
  * filled in, because the pillar's job on first sight is to show what a
  * contact holds. She is a joke with a point: the company's head of
  * security has never shown her face. Her birthday falls six days after the
- * seeding, so the first weeks of the calendar show a birthday.
+ * seeding, so the first weeks of the calendar show a birthday, and it has
+ * the year of birth, so the calendar shows her age that day (#750).
  *
  * Every value is a placeholder or one of our own public links. The photo
  * is a static asset rather than a stored blob, the way every other seeded
@@ -311,10 +312,10 @@ function contactSeeds(): { sentinel: string; title: string; tags: string[]; body
   ];
 }
 
-/** A birthday six days after today, as a yearless contact date (`--MM-DD`). */
+/** A birthday six days after today, on which she turns 30, as a contact date (`YYYY-MM-DD`). */
 function birthdaySoon(now = new Date()): string {
   const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 6, 12);
-  return `--${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return `${d.getFullYear() - 30}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 async function seedContactNotes(pubkey: string, baseTs: number): Promise<void> {

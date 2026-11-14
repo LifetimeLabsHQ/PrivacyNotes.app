@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "Alle instellingen",
+    "dockWindow": "Aan de zijkant docken",
+    "dockOtherSide": "Naar de andere kant verplaatsen",
     "fillWindow": "Volledig venster gebruiken",
     "restoreWindow": "Terug naar normale grootte"
   },
@@ -168,6 +170,8 @@
     "peekDark": "Je ziet nu even je donkere thema. Auto volgt je systeem weer zodra je de Instellingen sluit.",
     "unlockThemes": "Ontgrendel alle thema's met Pro",
     "startViewTitle": "Tonen bij openen",
+    "reopenLastOpenTitle": "Het laatste item weer openen",
+    "reopenLastOpenDesc": "Als de app start, krijg je het item dat open stond toen je afsloot. Staat dit uit, dan start de app op de lijst, zonder iets geopend.",
     "viewTitle": "Items tonen als",
     "viewDesc": "Auto volgt de breedte van je scherm.",
     "openInTabsTitle": "Het geopende item in een tabblad tonen",
@@ -198,6 +202,7 @@
     "linkModifierDesc": "Een gewone klik plaatst de cursor. Een tik opent de link nog steeds. Alleen op dit apparaat.",
     "typedSymbolsTitle": "Getypte symbolen omzetten in pijlen en wiskundige tekens",
     "typedSymbolsDesc": "Zo wordt -> een →, != een ≠ en >= een ≥.",
+    "linkSuggestionsDesc": "Verbanden toont ook notities over hetzelfde onderwerp die je nog niet hebt gelinkt. Zet dit uit om het pictogram Verbanden alleen te tonen bij notities met links.",
     "confirmTrashTitle": "Vragen voor verwijderen",
     "confirmTrashDesc": "Bevestig voordat een item naar de prullenbak gaat.",
     "confirmArchiveTitle": "Vragen voor archiveren",
@@ -613,5 +618,18 @@
     "loadError": "De dodemansknop kon niet worden geladen. Controleer je verbinding en probeer het opnieuw.",
     "confirmTitle": "Dodemansknop inschakelen?",
     "confirmBody": "Als geen van je apparaten gedurende {{period}} online komt, verwijdert de server je versleutelde gegevens. Dit kan niet ongedaan worden gemaakt. Je apparaten houden hun notities."
+  },
+  "onDeviceAi": {
+    "title": "Slimme verbanden",
+    "desc": "Vindt notities met dezelfde betekenis, ook in andere woorden of een andere taal. Het gebruikt offline AI (<model>bekko-static</model>) die alleen op dit apparaat draait.",
+    "on": "Aan. Suggesties bevatten ook notities met dezelfde betekenis. De offline AI gebruikt {{size}} op dit apparaat.",
+    "kept": "Uit. De offline AI blijft op dit apparaat staan, dus weer aanzetten vraagt geen download.",
+    "downloadSize": "Downloaden · {{size}}",
+    "downloadingLabel": "Offline AI downloaden",
+    "loading": "Offline AI wordt geladen",
+    "unavailable": "De demo kan de offline AI niet downloaden.",
+    "failed": "Het downloaden is niet voltooid. Probeer het opnieuw.",
+    "remove": "Verwijderen van dit apparaat ({{size}})",
+    "howItWorks": "Hoe het werkt"
   }
 }

@@ -1,24 +1,23 @@
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
 import i18n from '../i18n';
 import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
+import { openZip } from './zipOpen';
 import type { FolderDef } from '../folders';
 import { normalizeTag } from '../notesRepo';
 import { FRONT_MATTER } from '../markdownFolder/adapter';
 import { buildFolderTree } from './folderImport';
 import { BARE_LINKABLE_RE, linkifyLiteralText, linkifyMarkdown } from './linkify';
 import { escapeMarkdownText, guardMarkdownLineStart, markdownCodeSpan } from './standardNotesSuper';
-// Aliased: this file already has a `noteLinkTarget(ctx, href)` that resolves
-// an href to a note TITLE. The shared one sanitizes a title into a writable
-// link target. Two different jobs, one obvious name.
-import { noteLinkTarget as sanitizeLinkTarget } from '../noteLinks';
 import { isUntitledStem } from '../exportNames';
 import { DEFAULT_HIGHLIGHT, FONT_SIZES } from '../editorColors';
 import { nearestHighlight, nearestTextColor } from './paletteColor';
 import { importBlobs, mimeFromExtOrBytes } from './blobImport';
 import { IMAGE_WIDTH_MAX, clampImageWidth } from '../imageWidth';
 import type { ImportedNote, ParsedImport } from './types';
+import { escapeHtml } from '../escapeHtml';
+import { ALIGN_RE, isJunkEntry, noteLink } from './importHelpers';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.notesnook.${key}`, options);
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:notesnook.${key}`, options);
 
 /**
  * Notesnook importer.
@@ -71,15 +70,6 @@ const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`
 /* ------------------------------------------------------------------ */
 /* Shared helpers                                                     */
 /* ------------------------------------------------------------------ */
-
-/** Files and folders that are never note content. */
-function shouldSkip(path: string): boolean {
-  const lower = path.toLowerCase();
-  if (lower.startsWith('__macosx/') || lower.includes('/__macosx/')) return true;
-  const name = path.split('/').pop() ?? '';
-  if (name.startsWith('.')) return true;
-  return false;
-}
 
 const HTML_EXT = /\.html?$/i;
 const MD_EXT = /\.md$/i;
@@ -255,25 +245,6 @@ function attachmentToken(ctx: ConvCtx, href: string): string | null {
 }
 
 /**
- * Build a `[[target]]` / `[[target|label]]` note-link.
- *
- * The target goes through the shared sanitizer because a Notesnook title
- * can hold a pipe or a bracket, and writing one raw produces a link that
- * parses as a different target with different text. The sanitized target
- * still resolves: `noteLinkKey` compares it to the note's real title through
- * the same rule. Spec: packages/web/src/noteLinks.ts
- */
-function noteLink(target: string, label: string): string {
-  const t = sanitizeLinkTarget(target);
-  const l = label.replace(/[[\]]/g, '').trim();
-  if (!t) return l;
-  if (!l || l === t) return `[[${t}]]`;
-  return `[[${t}|${l}]]`;
-}
-
-const ALIGN_RE = /text-align:\s*(center|right|justify)/i;
-
-/**
  * The width of Notesnook's text column in pixels: the editor is capped at
  * 850px with 30px of padding on each side, and a picture is never drawn
  * wider. A stored `width` is pixels against this column (#663).
@@ -375,19 +346,6 @@ function renderCellHtml(node: Node, ctx: ConvCtx): string {
     }
   }
   return renderInlineHtml(node, ctx);
-}
-
-function escapeHtml(s: string): string {
-  // Escapes the double quote as well, because this value is
-  // interpolated into an href attribute below (a <a href="...">).
-  // Without it a URL that passes the scheme test but carries a quote,
-  // for example https://x\" onmouseover=\"..., breaks out of the
-  // attribute. Matches the canonical escapeHtml in markdownRender.ts.
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
 // `background-color` must not match as `color`: the group start keeps the `-` out.
@@ -780,7 +738,13 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
 
   function walk(node: Node, indent: string): string {
     if (node.nodeType === Node.TEXT_NODE) {
-      return literal(node.textContent ?? '');
+      const text = literal(node.textContent ?? '');
+      // Text after a line break, or at the top of the body or a div, starts a
+      // Markdown line: "# x" or "- x" typed there must stay text.
+      const prev = node.previousSibling;
+      const parent = node.parentElement?.tagName;
+      const lineStart = prev ? prev.nodeName === 'BR' : parent === 'BODY' || parent === 'DIV';
+      return lineStart ? guardMarkdownLineStart(text) : text;
     }
     if (node.nodeType !== Node.ELEMENT_NODE) return '';
 
@@ -1188,11 +1152,11 @@ async function parseZip(
   file: File,
   onProgress?: (msg: string) => void
 ): Promise<ParseZipResult> {
-  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
+  onProgress?.(i18n.t('importLog:shared.readingZip'));
   const buf = await file.arrayBuffer();
   let zip: JSZip;
   try {
-    zip = await JSZip.loadAsync(buf);
+    zip = await openZip(buf);
   } catch {
     throw new Error(msg('zipUnreadable'));
   }
@@ -1203,9 +1167,9 @@ async function parseZip(
   // zipped the export directory rather than its contents.
   const allPaths: string[] = [];
   zip.forEach((path, entry) => {
-    if (!entry.dir && !shouldSkip(path)) allPaths.push(path);
+    if (!entry.dir && !isJunkEntry(path)) allPaths.push(path);
   });
-  if (allPaths.length === 0) throw new Error(i18n.t('importExport:importLog.shared.zipEmpty'));
+  if (allPaths.length === 0) throw new Error(i18n.t('importLog:shared.zipEmpty'));
 
   let prefix = '';
   const firstSlash = allPaths[0]!.indexOf('/');
@@ -1219,7 +1183,7 @@ async function parseZip(
   const blobFiles: [string, JSZip.JSZipObject][] = [];
 
   zip.forEach((path, entry) => {
-    if (entry.dir || shouldSkip(path)) return;
+    if (entry.dir || isJunkEntry(path)) return;
     const rel = prefix ? path.slice(prefix.length) : path;
     if (!rel) return;
     if (ATTACHMENT_DIR.test(rel)) {
@@ -1239,7 +1203,7 @@ async function parseZip(
     throw new Error(msg('noNotes'));
   }
 
-  onProgress?.(i18n.t('importExport:importLog.shared.foundNotes', { count: noteFiles.length }));
+  onProgress?.(i18n.t('importLog:shared.foundNotes', { count: noteFiles.length }));
 
   // Attachments first: the note conversion needs the placeholder map.
   const blobs = new Map<string, { data: Uint8Array; mime: string; name: string }>();
@@ -1247,7 +1211,7 @@ async function parseZip(
   let tooLarge = 0;
 
   if (blobFiles.length > 0) {
-    onProgress?.(i18n.t('importExport:importLog.shared.extracting', { count: blobFiles.length }));
+    onProgress?.(i18n.t('importLog:shared.extracting', { count: blobFiles.length }));
   }
   for (let i = 0; i < blobFiles.length; i++) {
     const [rel, entry] = blobFiles[i]!;
@@ -1260,7 +1224,7 @@ async function parseZip(
     blobs.set(token, { data, mime: mimeFromExtOrBytes(rel, data), name: attachmentName(rel) });
     attachmentTokens.set(rel.toLowerCase(), token);
     if ((i + 1) % 20 === 0) {
-      onProgress?.(i18n.t('importExport:importLog.shared.extracted', { done: i + 1, total: blobFiles.length }));
+      onProgress?.(i18n.t('importLog:shared.extracted', { done: i + 1, total: blobFiles.length }));
     }
   }
 
@@ -1352,7 +1316,7 @@ async function parseZip(
     notes.push(note);
 
     if ((i + 1) % 50 === 0) {
-      onProgress?.(i18n.t('importExport:importLog.shared.parsed', { done: i + 1, total: raws.length }));
+      onProgress?.(i18n.t('importLog:shared.parsed', { done: i + 1, total: raws.length }));
     }
   }
 
@@ -1424,12 +1388,12 @@ export async function parseNotesnook(
   if (folders.length > 0) {
     const filed = notes.filter((n) => n.folderId).length;
     transforms.push(
-      i18n.t('importExport:importLog.shared.foldersFromNotebooks', { count: folders.length, filed: i18n.t('importExport:importLog.shared.filedNotes', { count: filed }) })
+      i18n.t('importLog:shared.foldersFromNotebooks', { count: folders.length, filed: i18n.t('importLog:shared.filedNotes', { count: filed }) })
     );
   }
   const tagged = notes.filter((n) => n.tags.length > 0).length;
   if (tagged > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.tags', { count: tagged }));
+    transforms.push(i18n.t('importLog:shared.tags', { count: tagged }));
   }
   const starred = notes.filter((n) => n.starred).length;
   if (starred > 0) {
@@ -1439,7 +1403,7 @@ export async function parseNotesnook(
   }
   if (flags.noteLinks > 0) {
     transforms.push(
-      i18n.t('importExport:importLog.shared.noteLinks', { count: flags.noteLinks })
+      i18n.t('importLog:shared.noteLinks', { count: flags.noteLinks })
     );
   }
   if (flags.callouts > 0) {
@@ -1449,29 +1413,29 @@ export async function parseNotesnook(
   }
   if (flags.checklists > 0) {
     transforms.push(
-      i18n.t('importExport:importLog.shared.checklists', { count: flags.checklists })
+      i18n.t('importLog:shared.checklists', { count: flags.checklists })
     );
   }
   if (flags.tables > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.tables', { count: flags.tables }));
+    transforms.push(i18n.t('importLog:shared.tables', { count: flags.tables }));
   }
   if (flags.codeBlocks > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.codeBlocks', { count: flags.codeBlocks }));
+    transforms.push(i18n.t('importLog:shared.codeBlocks', { count: flags.codeBlocks }));
   }
   if (flags.underline > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.underline'));
+    transforms.push(i18n.t('importLog:shared.underline'));
   }
   if (flags.highlights > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.highlights'));
+    transforms.push(i18n.t('importLog:shared.highlights'));
   }
   if (flags.math > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.math', { count: flags.math }));
+    transforms.push(i18n.t('importLog:shared.math', { count: flags.math }));
   }
   if (flags.aligned > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.aligned'));
+    transforms.push(i18n.t('importLog:shared.aligned'));
   }
   if (flags.droppedAlign > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.droppedAlign'));
+    transforms.push(i18n.t('importLog:shared.droppedAlign'));
   }
   if (flags.colors > 0) {
     transforms.push(msg('colors', { count: flags.colors }));
@@ -1486,14 +1450,14 @@ export async function parseNotesnook(
     transforms.push(msg('droppedStyling'));
   }
   if (imageCount > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.foundImages', { count: imageCount }));
+    transforms.push(i18n.t('importLog:shared.foundImages', { count: imageCount }));
   }
   if (attachmentCount > 0) {
     transforms.push(
-      i18n.t('importExport:importLog.shared.foundAttachments', { count: attachmentCount })
+      i18n.t('importLog:shared.foundAttachments', { count: attachmentCount })
     );
   }
-  transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
+  transforms.push(i18n.t('importLog:shared.linkifiedBare'));
 
   return {
     notes,

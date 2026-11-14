@@ -17,16 +17,21 @@ import { moodAnchor, moodInk } from './moodMark';
  * color instead (the check-in card at rest), and unset it to bring the bands
  * back.
  *
+ * A tap on the chosen tile clears it when the caller passes `onClear`, as
+ * a tap on the current medication status does (GitHub #733).
+ *
  * Under a mouse the row is a meter: the tile under the pointer and every tile
  * before it light up (`pn-scale-row` in index.css). It changes color only,
  * so a row squeezed into a narrow list never pushes a tile into its neighbor.
  * Spec: docs/internal/design/ui-patterns.md section 141
  */
-export function ScaleTiles({ min, max, value, onPick, label, tone = 'accent', ends, nameOf, className = '' }: {
+export function ScaleTiles({ min, max, value, onPick, onClear, label, tone = 'accent', ends, nameOf, className = '' }: {
   min: number;
   max: number;
   value: number | null | undefined;
   onPick: (n: number) => void;
+  /** Runs on a tap on the chosen tile; that tap picks it again when absent. */
+  onClear?: () => void;
   label: string;
   tone?: 'mood' | 'accent';
   /** The words under the two ends of the row. */
@@ -69,7 +74,7 @@ export function ScaleTiles({ min, max, value, onPick, label, tone = 'accent', en
               aria-checked={chosen}
               aria-label={nameOf ? nameOf(n) : String(n)}
               tabIndex={chosen || (value == null && n === min) ? 0 : -1}
-              onClick={() => onPick(n)}
+              onClick={() => (chosen && onClear ? onClear() : onPick(n))}
               className={`pn-scale-tile ${
                 mood
                   ? chosen ? '' : 'pn-scale-mood text-pn'
@@ -97,9 +102,10 @@ export function ScaleTiles({ min, max, value, onPick, label, tone = 'accent', en
 /** The one mood picker: 1 to 10 in the band colors, "1 · awful" and
  *  "10 · amazing" under the ends. The Mood pill and the check-in card both
  *  draw it. */
-export function MoodScale({ value, onPick, label, className = '' }: {
+export function MoodScale({ value, onPick, onClear, label, className = '' }: {
   value: number | null | undefined;
   onPick: (n: number) => void;
+  onClear?: () => void;
   label: string;
   className?: string;
 }) {
@@ -110,6 +116,7 @@ export function MoodScale({ value, onPick, label, className = '' }: {
       max={10}
       value={value}
       onPick={onPick}
+      onClear={onClear}
       label={label}
       tone="mood"
       ends={[`1 · ${t('mood.anchor.1')}`, `10 · ${t('mood.anchor.10')}`]}

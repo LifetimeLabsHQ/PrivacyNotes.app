@@ -7,6 +7,7 @@
     "sleep": "Uyku",
     "sleepScore": "Uyku puanı",
     "heartRate": "Kalp atış hızı",
+    "bloodPressure": "Kan basıncı",
     "activity": "Aktivite",
     "medication": "İlaç",
     "meds": "İlaçlar",
@@ -24,6 +25,7 @@
   "units": {
     "hoursSuffix": "sa",
     "bpm": "atım/dk",
+    "mmHg": "mmHg",
     "kg": "kg",
     "lb": "lb",
     "steps_one": "adım",
@@ -116,6 +118,10 @@
   },
   "heartRate": {
     "prompt": "Ortalama kalp atış hızı"
+  },
+  "bloodPressure": {
+    "systolic": "Üst değer (sistolik)",
+    "diastolic": "Alt değer (diyastolik)"
   },
   "activity": {
     "prompt": "Bugünkü aktivite düzeyiniz?",
@@ -243,11 +249,13 @@
   "custom": {
     "yes": "Evet",
     "no": "Hayır",
+    "unknownType": "Bu takip, uygulamanın daha yeni bir sürümünü gerektiriyor.",
     "typeLabels": {
       "scale10": "Ölçek (0-10)",
       "scale5": "Ölçek (0-5)",
       "slider100": "Puan (0-100)",
       "number": "Sayı",
+      "pair": "İki sayı",
       "yesno": "Evet / Hayır"
     }
   },
@@ -263,6 +271,7 @@
     "medicationCard": "İlaç kartı",
     "medicationCardHelp": "Bu cihazda, yalnızca ilaç alınması gereken bir günde \"İlacınızı aldınız mı?\" sorusu.",
     "customHelp": "Kendi adlandırdığınız takipler: bir ölçek, bir sayı ya da evet veya hayır. En fazla {{max}} tane.",
+    "customHelpPair": "Kendi adlandırdığınız takipler: bir ölçek, bir sayı, iki sayı ya da evet veya hayır. En fazla {{max}} tane.",
     "yourCustomTrackers": "Özel takipleriniz",
     "categoryMoodMind": "Ruh hali ve zihin",
     "categoryBodyHealth": "Beden ve sağlık",
@@ -297,7 +306,13 @@
     "preview": "Önizleme",
     "startFromLast": "Son girişi hatırla",
     "chooseIcon": "Simge seç",
-    "startFromLastHelp": "Kiloniz ya da günlük bir doz gibi nadiren değişen şeyler için uygundur."
+    "startFromLastHelp": "Kiloniz ya da günlük bir doz gibi nadiren değişen şeyler için uygundur.",
+    "pairFirst": "Birinci sayı",
+    "pairSecond": "İkinci sayı",
+    "pairFirstPlaceholder": "Sistolik",
+    "pairSecondPlaceholder": "Diyastolik",
+    "pairUnit": "Birim (isteğe bağlı)",
+    "pairWaiting": "Birinci sayı girilince kaydedilir."
   },
   "factors": {
     "prompt": "Gününüzün parçası neydi?",

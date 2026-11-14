@@ -12,7 +12,7 @@
  */
 import type { EncryptedPayload, NoteType } from '@notes/shared';
 import type { LocalNote } from './db';
-import { isMergedTrackerKey, mergeTrackers, trackersEqual } from './trackerTypes';
+import { canonical, isMergedTrackerKey, mergeTrackers, trackersEqual } from './trackerTypes';
 import { sameContent } from './editStamp';
 
 /** A note's encrypted payload with every field present, flags as booleans. */
@@ -84,7 +84,7 @@ export interface SyncBase {
  * field, at odds near 2^-53 per comparison. Not a security primitive, and
  * it needs none.
  */
-function hash53(seed: number, s: string): string {
+export function hash53(seed: number, s: string): string {
   let h1 = 0xdeadbeef ^ seed;
   let h2 = 0x41c6ce57 ^ seed;
   for (let i = 0; i < s.length; i++) {
@@ -97,17 +97,6 @@ function hash53(seed: number, s: string): string {
   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
   h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
-}
-
-/** Stable JSON: keys sorted and undefined members dropped, so key order
- *  never reads as a change. The same reading as trackersEqual. */
-function canonical(value: unknown): string {
-  if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null';
-  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
-  const entries = Object.entries(value as Record<string, unknown>)
-    .filter(([, v]) => v !== undefined)
-    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
-  return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${canonical(v)}`).join(',')}}`;
 }
 
 /** Strings hash as they are, with no copy of a long body; anything else

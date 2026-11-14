@@ -12,7 +12,7 @@
   },
   "moveScreen": {
     "title": "Die App ist umgezogen auf use.privacynotes.app",
-    "bodySignIn": "Melde dich dort mit deiner Wiederherstellungsphrase aus 12 Wörtern oder über \"{{scanQr}}\" an. Dieses Gerät synchronisiert zuerst, also warten alle deine Notizen dort auf dich, und hier wird nichts gelöscht.",
+    "bodySignIn": "Melde dich dort mit deiner Wiederherstellungsphrase oder über \"{{scanQr}}\" an. Dieses Gerät synchronisiert zuerst, also warten alle deine Notizen dort auf dich, und hier wird nichts gelöscht.",
     "openNotes": "Öffne deine Notizen einmal hier, um das zu beheben",
     "showPhrase": "Meine Wiederherstellungsphrase anzeigen",
     "website": "Stattdessen die Website ansehen"
@@ -46,7 +46,7 @@
     "signInAgain": "Erneut anmelden"
   },
   "signOutConfirm": {
-    "title": "Hast du deine 12-Wort-Phrase gespeichert?",
+    "title": "Hast du deine Wiederherstellungsphrase gespeichert?",
     "body": "Deine Phrase ist der <only>einzige</only> Weg zurück. Kein E-Mail-Reset, keine Support-Hotline. Falls du sie noch nicht aufgeschrieben hast, tippe auf <action>Nein, Phrase anzeigen</action>, und wir öffnen sie sofort für dich.",
     "unsyncedWarn_one": "1 Notiz auf diesem Gerät ist noch nicht synchronisiert. Sie geht dauerhaft verloren, wenn sie beim Abmelden nicht hochgeladen werden kann.",
     "unsyncedWarn_other": "{{count}} Notizen auf diesem Gerät sind noch nicht synchronisiert. Sie gehen dauerhaft verloren, wenn sie beim Abmelden nicht hochgeladen werden können.",
@@ -139,7 +139,8 @@
     "offline": "Du bist offline. Burn-Links erfordern einen Server-Roundtrip. Versuch es erneut, sobald du wieder online bist.",
     "demo": "Burn-Links werden auf einem Server gespeichert, und die Demo kontaktiert keinen. Registriere dich, um echte Burn-Links zu erstellen.",
     "tooLarge": "Die Notiz ist zu groß, um sie per Burn-Link zu teilen ({{size}} KB). Das Maximum sind {{max}} KB.",
-    "storeFailed": "Die Burn-Notiz konnte nicht auf dem Server gespeichert werden."
+    "storeFailed": "Die Burn-Notiz konnte nicht auf dem Server gespeichert werden.",
+    "rateLimited": "Von dieser Verbindung wurden zu viele Burn-Links erstellt. Versuch es später noch einmal."
   },
   "dms": {
     "returnTitle": "Deine Kopie auf dem Server wurde gelöscht",
@@ -152,7 +153,9 @@
     "title": "Notizen auf einem anderen Gerät gelöscht",
     "body_one": "Du oder ein anderes deiner Geräte hat {{count}} Notiz gelöscht, die dieses Gerät noch hat. Wenn du das warst, lösche sie auch hier. Wenn nicht du es warst, hat womöglich jemand Zugriff auf dein Konto: Behalte sie, um sie auf all deinen Geräten wiederherzustellen.",
     "body_other": "Du oder ein anderes deiner Geräte hat {{count}} Notizen gelöscht, die dieses Gerät noch hat. Wenn du das warst, lösche sie auch hier. Wenn nicht du es warst, hat womöglich jemand Zugriff auf dein Konto: Behalte sie, um sie auf all deinen Geräten wiederherzustellen.",
-    "keep": "Meine Notizen behalten",
-    "delete": "Auch hier löschen"
+    "refusedTitle": "Deine Notizen sind zurück",
+    "refusedBody_one": "{{count}} Notiz wurde auf dem Server gelöscht, aber von keinem deiner Geräte. Dieses Gerät hat das Löschen nicht angenommen und die Notiz auf all deinen Geräten wiederhergestellt. Prüfe deine Geräte und entferne alle, die du nicht kennst.",
+    "refusedBody_other": "{{count}} Notizen wurden auf dem Server gelöscht, aber von keinem deiner Geräte. Dieses Gerät hat das Löschen nicht angenommen und sie auf all deinen Geräten wiederhergestellt. Prüfe deine Geräte und entferne alle, die du nicht kennst.",
+    "showDevices": "Geräte anzeigen"
   }
 }

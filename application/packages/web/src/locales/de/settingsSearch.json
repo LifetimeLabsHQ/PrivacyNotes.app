@@ -55,7 +55,7 @@
     "security_appLock": "App-Sperre, beim Start sperren, Sperrbildschirm, App beim Öffnen sperren, App sperren, erneut sperren, erneut sperren nach",
     "security_relockAfter": "Zeitlimit, Timeout, automatisch sperren, Auto-Sperre, sperren nach, erneut sperren nach, Sperrbildschirm",
     "security_blockCapture": "Screenshot, Bildschirmaufnahme, Bildschirmfreigabe, Privatsphäre-Modus, Datenschutzbildschirm",
-    "security_phrase": "Wiederherstellungsphrase, geheime Wörter, Seed, zwölf Wörter, Wiederherstellungsschlüssel",
+    "security_phrase": "Wiederherstellungsphrase, geheime Wörter, Seed, zwölf Wörter, vierundzwanzig Wörter, 24 Wörter, Wiederherstellungsschlüssel",
     "security_custody": "Verwahrung, treuhänderisch, selbst verwahrt, Self-Custody, Schlüsselspeicherung",
     "me_pauseSync": "Sync stoppen, Synchronisierung anhalten, offline",
     "me_filesWifiOnly": "WLAN, WiFi, mobile Daten, Mobilfunk, getaktet",
@@ -81,6 +81,7 @@
     "appearance_invisibles": "Absatzmarke, Leerzeichen, Leerraum, versteckte Zeichen, Formatierungszeichen, Steuerzeichen",
     "appearance_linkModifier": "Links, Hyperlinks, URL, Klick, Strg, Ctrl, Cmd, Command, versehentlich öffnen",
     "appearance_typedSymbols": "Ligaturen, Pfeile, Symbole, Mathe, ungleich, größer als, kleiner als, Autokorrektur, ersetzen",
+    "appearance_linkSuggestions": "verwandte Notizen, ähnliche Notizen, Vorschläge, Link-Vorschläge, vorgeschlagene Verknüpfungen, Verknüpfungen, Rückverweise, Backlinks, nicht verlinkt, Thema",
     "appearance_noteFont": "Schrift, Schriftart, Font, Monospace, Mono, Serif, Serifen, Sans, Standardschrift, eigene Schrift, benutzerdefinierte Schrift, installierte Schrift, meine Schrift",
     "appearance_nestedNumbers": "nummerierte Liste, verschachtelte Liste, Gliederung, 1.1, 1.1.1, juristische Nummerierung, Unterpunkte, Unternummerierung, mehrstufige Liste, Mehrebenenliste",
     "appearance_confirmTrash": "löschen, Papierkorb, bestätigen, Bestätigung, Dialog, fragen, Rückfrage, nicht mehr fragen",
@@ -88,6 +89,7 @@
     "appearance_autoLocationNotes": "Standort, Ort, GPS, Position, Karte, Geotag, automatisch, wo, Notizen",
     "appearance_autoLocationJournal": "Standort, Ort, GPS, Position, Karte, Geotag, automatisch, wo, Tagebuch, Journal, Einträge",
     "appearance_startView": "Startseite, Start, Standardansicht, öffnen mit",
+    "appearance_reopenLastOpen": "letzte Notiz, zuletzt geöffnet, wiederherstellen, merken, wieder öffnen, Start, starten",
     "appearance_view": "Raster, Liste, Karten, Layout, Ansicht",
     "trackers_setup": "Tracker, Wohlbefinden, Stimmung, Schlaf, Energie, Schritte, Wasser, einschalten, ausschalten",
     "trackers_habitQuestions": "Gewohnheiten, Fragen, meditieren, beten, rauchen, Alkohol, hast du",
@@ -122,6 +124,7 @@
     "calendar_weekNumbers": "Kalenderwoche, KW, ISO-Woche, Wochennummer, Kalender",
     "calendar_hours": "Stunden, Arbeitszeit, Tagesansicht, Wochenansicht, Morgen",
     "me_dms": "Totmannschalter, Dead Man's Switch, Inaktivität, inaktiv, löschen nach, automatisch löschen, Löschung, verlassen, aufgeben",
+    "appearance_smartConnections": "KI, AI, offline, Offline-KI, auf dem Gerät, On-Device, lokale KI, private KI, Modell, bekko, Bedeutung, dieselbe Bedeutung, verwandte Notizen, ähnliche Notizen, vorgeschlagene Verknüpfungen, intelligente Verknüpfungen, Smart Connections, Link-Vorschläge, semantisch, Embeddings, Download, herunterladen",
     "appearance_formatBar": "Symbolleiste, Formatleiste, Schaltflächen, anpassen, anordnen, Aufzählung, Durchgestrichen, Zahnrad"
   }
 }

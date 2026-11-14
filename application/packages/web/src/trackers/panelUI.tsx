@@ -32,10 +32,12 @@ export function PanelQuestion({ children, className = 'mb-2' }: { children: Reac
  * activity, yes or no. A long word wraps inside its tile rather than
  * widening it, so five Czech levels fit where five English ones do.
  */
-export function ChoiceGrid<T extends string | boolean>({ options, value, onPick, size = 'md' }: {
+export function ChoiceGrid<T extends string | boolean>({ options, value, onPick, onClear, size = 'md' }: {
   options: readonly { key: T; label: string }[];
   value: T | null | undefined;
   onPick: (key: T) => void;
+  /** Runs on a tap on the chosen tile, as in `ScaleTiles`. */
+  onClear?: () => void;
   size?: 'md' | 'lg';
 }) {
   return (
@@ -50,7 +52,7 @@ export function ChoiceGrid<T extends string | boolean>({ options, value, onPick,
             type="button"
             role="radio"
             aria-checked={on}
-            onClick={() => onPick(o.key)}
+            onClick={() => (on && onClear ? onClear() : onPick(o.key))}
             className={`min-w-0 flex items-center justify-center rounded-lg px-1 text-center text-small font-medium leading-tight transition outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               size === 'lg' ? 'h-12' : 'h-10 [@media(hover:none)]:h-11'
             } ${on ? 'bg-accent-fill text-white' : 'bg-surface-0 text-pn-soft hover:bg-accent/15 hover:text-accent'}`}
@@ -115,11 +117,14 @@ function snap(n: number, min: number | undefined, step: number): number {
  * row of quick picks sets the usual values with one tap, and a tap on the
  * number itself opens the keyboard. Minus, plus and a quick pick save at
  * once; a typed number saves on Enter, on blur and when the panel closes,
- * so nothing typed is lost to a tap elsewhere.
+ * so nothing typed is lost to a tap elsewhere. With `onClear`, an emptied
+ * field and a tap on the chosen quick pick remove the value (GitHub #733).
  */
-export function NumberStepper({ value, onChange, min, max, step = 1, unit, unitKey, quick, placeholder, start, expanded, autoFocus, freeDecimals = false }: {
+export function NumberStepper({ value, onChange, onClear, min, max, step = 1, unit, unitKey, quick, placeholder, start, expanded, autoFocus, freeDecimals = false }: {
   value: number | null | undefined;
   onChange: (n: number) => void;
+  /** Removes the value: an emptied field, a tap on the chosen quick pick. */
+  onClear?: () => void;
   min?: number;
   max?: number;
   step?: number;
@@ -158,6 +163,7 @@ export function NumberStepper({ value, onChange, min, max, step = 1, unit, unitK
   const commitDraft = () => {
     if (!typed.current) return;
     typed.current = false;
+    if (!draft.trim() && onClear) { if (value != null) onClear(); return; }
     const n = parseFloat(draft.replace(',', '.'));
     if (isNaN(n)) { setDraft(value != null ? String(value) : ''); return; }
     onChange(typedValue(n));
@@ -223,7 +229,7 @@ export function NumberStepper({ value, onChange, min, max, step = 1, unit, unitK
                 key={q}
                 type="button"
                 aria-pressed={on}
-                onClick={() => { typed.current = false; onChange(q); }}
+                onClick={() => { typed.current = false; if (on && onClear) onClear(); else onChange(q); }}
                 className={`h-8 min-w-0 rounded-md text-meta @[16rem]/stepper:text-compact font-medium tabular-nums transition ${on ? 'bg-accent-fill text-white' : 'bg-surface-0 text-pn-soft hover:bg-accent/15 hover:text-accent'}`}
               >
                 {q}

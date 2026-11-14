@@ -106,6 +106,13 @@ export function vaultContent(note: Pick<LocalNote, 'type' | 'body' | 'trackers'>
     for (const d of c.dates) fields.push({ label: label(i18n.t('shell:contacts.groupDates'), d.label), value: formatContactDate(d.value, dateLocale()) });
     for (const r of c.related) fields.push({ label: label(i18n.t('shell:contacts.groupRelated'), r.label), value: r.value });
     if (c.nickname) fields.push({ label: i18n.t('shell:contacts.nickname'), value: c.nickname });
+    for (const sec of c.sections) {
+      for (const f of sec.fields) {
+        const name = f.label || i18n.t('shell:vaultItem.customField');
+        const value = f.type === 'yesno' ? i18n.t(f.value === 'yes' ? 'trackers:custom.yes' : 'trackers:custom.no') : f.value;
+        fields.push({ label: sec.title ? `${sec.title} (${name})` : name, value, secret: !isPublicField(f) });
+      }
+    }
     return { fields, notes: c.notes, notesLabel: i18n.t('shell:contacts.itemNote') };
   }
 

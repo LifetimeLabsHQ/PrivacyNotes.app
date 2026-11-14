@@ -10,7 +10,7 @@ import { compareStamps } from '../noteMerge';
 import i18n from '../i18n';
 import type { ApplyResult, ImportedNote, ParsedImport, StagedBlob } from './types';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.apply.${key}`, options);
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:apply.${key}`, options);
 
 /**
  * Write a ParsedImport into the local Dexie store with dirty=1, so the next
@@ -167,9 +167,14 @@ export async function applyImport(
   // second restore of the same file cannot find it by the backup's id and
   // would add it again. Its content still finds it: the same type, creation
   // time, title and body. A row the file names by its own id is left to
-  // that match.
-  const contentKey = (n: { type?: string; createdAt: string; title: string; body: string }) =>
-    [n.type || 'note', n.createdAt, n.title, n.body].join('\u0000');
+  // that match. The creation time is compared as an instant: a pulled row
+  // holds the server's spelling (`...T09:00:00+00:00`) and the file the
+  // app's (`...T09:00:00.000Z`) for the same moment; text that does not
+  // parse is compared as text.
+  const contentKey = (n: { type?: string; createdAt: string; title: string; body: string }) => {
+    const at = Date.parse(n.createdAt);
+    return [n.type || 'note', Number.isFinite(at) ? String(at) : n.createdAt, n.title, n.body].join('\u0000');
+  };
   const localByContent = new Map<string, LocalNote[]>();
   if (incoming.some((n) => n.id && !localById.has(n.id))) {
     const named = new Set(ownIds);
@@ -239,8 +244,9 @@ export async function applyImport(
       createdAt: n.createdAt || now,
       // A trashed note's updatedAt doubles as "when it was trashed" -
       // that is the invariant trashNote() establishes, and the auto-purge
-      // in NotesView reads updatedAt to decide what has outlived the
-      // retention window. Imported notes carry the source app's original
+      // (trashPurge.ts, run by useTrashAutoPurge.ts) reads updatedAt to
+      // decide what has outlived the retention window. Imported notes
+      // carry the source app's original
       // timestamp, which for anything the user deleted a while ago is
       // already past the window, so honoring it here permanently deletes
       // every imported trashed note seconds after the import lands (the

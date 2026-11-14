@@ -3,7 +3,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import type { CSSProperties, MouseEvent, ReactNode } from 'react';
 import { AddressBook, AndroidLogo, AppleLogo, Archive, ArrowLeft, ArrowLineRight, ArrowRight, ArrowUpRight, Bell, Book, Bookmarks, CalendarBlank, CalendarCheck, CalendarDots, CalendarPlus, CaretDown, ChartBar, Check, CheckCircle, Clock, ClockCounterClockwise, Copy, Cube, Export, Eye, FileText, Folder, GithubLogo, Hash, Image as ImageIcon, Key, LinkSimple, ListChecks, Lock, LockSimple, Megaphone, Moon, MusicNotes, Package, PencilSimple, Pill, Play, PlusCircle, Repeat, SealCheck, Shield, Smiley, Sparkle, Sun, TerminalWindow, UserCheck, VideoCamera, WindowsLogo, X } from './icons';
 import { LandingCli } from './LandingCli';
-import { cliMarketingShown } from './cliRelease';
+import { CmdBlock } from './LandingCmdBlock';
 import { NinjaBox } from './NinjaBox';
 import { HeroApp } from './HeroApp';
 import { MarkdownDemo } from './MarkdownDemo';
@@ -39,6 +39,7 @@ import { APP_ORIGIN, APP_STORE_URL, PLAY_STORE_URL, isAppHost, isApexHost } from
 import { captureSource, withSource } from './campaignSource';
 import { marketingHomeHref } from './siteLinks';
 import { GUIDE_META, GUIDE_ORDER } from './guides';
+import { cryptoCheckoutReleased } from './cryptoRelease';
 
 /** Native (Tauri) apps skip the marketing homepage and open on the auth card. */
 const IS_DESKTOP = detectPlatform() !== 'web';
@@ -289,38 +290,6 @@ function UpdatePill({ auto }: { auto: boolean }) {
 }
 
 /**
- * Rounded mono command block with a copy button glued to its right edge. The single way
- * /download presents a shell command: DebCmd and PkgCmd both render through it, so a
- * styling or behaviour change lands on every command at once. The button copies the
- * unwrapped one-line command, and flips to a check for a moment as feedback.
- */
-function CmdBlock({ cmd, className }: { cmd: string; className?: string }) {
-  const { t } = useTranslation('landing');
-  const [copied, setCopied] = useState(false);
-  return (
-    <div className={`flex items-center justify-between gap-2 rounded-lg bg-[var(--wl-ink)]/8 py-1 ps-2.5 pe-1 ${className ?? ''}`}>
-      <code className="min-w-0 whitespace-pre-wrap break-words py-0.5 font-mono text-small text-[var(--wl-ink)]">{cmd}</code>
-      <button
-        type="button"
-        aria-label={t('common:actions.copy')}
-        onClick={() => {
-          navigator.clipboard.writeText(cmd).then(
-            () => {
-              setCopied(true);
-              window.setTimeout(() => setCopied(false), 1500);
-            },
-            () => {},
-          );
-        }}
-        className="shrink-0 cursor-pointer rounded-md p-1.5 text-[var(--wl-sub)] transition hover:bg-[var(--wl-ink)]/8 hover:text-[var(--wl-ink)]"
-      >
-        {copied ? <Check weight="bold" /> : <Copy weight="bold" />}
-      </button>
-    </div>
-  );
-}
-
-/**
  * One `sudo apt install` line in the Linux disclosure's update footnote, labelled with the
  * architecture it belongs to. The label carries the same weight, size and accent colour as
  * the architecture heading in the artifact list above, because it names the same thing and a
@@ -459,7 +428,7 @@ function peekSide(e: MouseEvent<HTMLDivElement>) {
 /* The built-in trackers in the app's own pill order, the first a person
    meets at the top of a journal. A tracker added to TRACKER_ICONS belongs
    here too; the landing row is the one place outside the app that lists them. */
-const LANDING_TRACKERS = ['mood', 'emotions', 'sleep', 'sleepScore', 'heartRate', 'activity', 'medication', 'energy', 'focus', 'weight', 'steps', 'water', 'screenTime', 'caffeine', 'pain', 'social'] as const;
+const LANDING_TRACKERS = ['mood', 'emotions', 'sleep', 'sleepScore', 'heartRate', 'bloodPressure', 'activity', 'medication', 'energy', 'focus', 'weight', 'steps', 'water', 'screenTime', 'caffeine', 'pain', 'social'] as const;
 /* Two weeks of doses for the Medication card, two of them skipped. */
 const DOSE_DAYS = [true, true, true, false, true, true, true, true, true, false, true, true, true, true] as const;
 /* The medication tile and section: a day of plain supplements, catalog keys
@@ -2356,9 +2325,8 @@ export function LandingPage({
         </div>
 
         {/* ── The command line pn: a terminal, a phone, three ways in.
-             Ships with the Install button (cliRelease.ts).
              Spec: docs/internal/plans/agent-cli.md (section 3.10) ── */}
-        {cliMarketingShown() && <LandingCli kicker={<Kicker className="text-[var(--wl-emerald)]">{t('cli.kicker')}</Kicker>} />}
+        <LandingCli kicker={<Kicker className="text-[var(--wl-emerald)]">{t('cli.kicker')}</Kicker>} />
 
         {/* ── Mood & Wellness Tracker deep dive ─────────────── */}
         <div className="mx-auto mb-14">
@@ -2660,6 +2628,7 @@ export function LandingPage({
                   {isBetaPricing() && <span className="rounded-full bg-white/10 px-2 py-0.5 text-meta font-bold uppercase tracking-wider">{t('pricing.earlyAdopterBadge')}</span>}
                 </div>
                 <div className="mt-1.5 text-small leading-relaxed text-[var(--wl-slab-sub)]">{t('comparison.usProLine', { price: STORAGE_ADDON_PRICE.toFixed(2) })}</div>
+                {cryptoCheckoutReleased() && <div className="mt-1 text-small leading-relaxed text-[var(--wl-slab-sub)]">{t('pricing.payMethods')}</div>}
               </div>
               {/* The ask sits right under the answer. */}
               <CtaPair onSlab className="pt-7" label={t('ctaRepeat.getStarted')} onCreate={() => openAuth('create')} />

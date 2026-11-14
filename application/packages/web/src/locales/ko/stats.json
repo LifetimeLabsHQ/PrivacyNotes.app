@@ -241,6 +241,8 @@
       "unknown": "알 수 없는 트래커 {{id}}",
       "sleepHours": "수면 시간",
       "sleepQuality": "수면 질",
+      "bpSystolic": "혈압 (최고)",
+      "bpDiastolic": "혈압 (최저)",
       "avgDays_other": "평균, {{count}}일",
       "sumDays_other": "합계, {{count}}일",
       "daysLogged_other": "{{count}}일 기록",

@@ -7,6 +7,7 @@
     "sleep": "النوم",
     "sleepScore": "درجة النوم",
     "heartRate": "معدل ضربات القلب",
+    "bloodPressure": "ضغط الدم",
     "activity": "النشاط",
     "medication": "الدواء",
     "meds": "الأدوية",
@@ -24,6 +25,7 @@
   "units": {
     "hoursSuffix": "س",
     "bpm": "bpm",
+    "mmHg": "ملم زئبقي",
     "kg": "kg",
     "lb": "lb",
     "steps_zero": "خطوة",
@@ -132,6 +134,10 @@
   },
   "heartRate": {
     "prompt": "متوسط معدل ضربات القلب"
+  },
+  "bloodPressure": {
+    "systolic": "الرقم العلوي (الانقباضي)",
+    "diastolic": "الرقم السفلي (الانبساطي)"
   },
   "activity": {
     "prompt": "ما هو مستوى نشاطك اليوم؟",
@@ -319,11 +325,13 @@
   "custom": {
     "yes": "نعم",
     "no": "لا",
+    "unknownType": "يحتاج هذا المتتبع إلى إصدار أحدث من التطبيق.",
     "typeLabels": {
       "scale10": "مقياس (0-10)",
       "scale5": "مقياس (0-5)",
       "slider100": "درجة (0-100)",
       "number": "رقم",
+      "pair": "رقمان",
       "yesno": "نعم / لا"
     }
   },
@@ -339,6 +347,7 @@
     "medicationCard": "بطاقة الدواء",
     "medicationCardHelp": "«هل تناولت دواءك؟» على هذا الجهاز، فقط في يوم يحين فيه موعد دواء.",
     "customHelp": "متتبعات تسمّيها بنفسك: مقياس أو رقم أو نعم ولا. حتى {{max}}.",
+    "customHelpPair": "متتبعات تسمّيها بنفسك: مقياس أو رقم أو رقمان أو نعم ولا. حتى {{max}}.",
     "yourCustomTrackers": "متتبعاتك المخصصة",
     "categoryMoodMind": "المزاج والذهن",
     "categoryBodyHealth": "الجسد والصحة",
@@ -373,7 +382,13 @@
     "preview": "معاينة",
     "startFromLast": "تذكّر آخر إدخال",
     "chooseIcon": "اختيار أيقونة",
-    "startFromLastHelp": "مناسب لما نادرًا ما يتغير، مثل وزنك أو جرعة يومية."
+    "startFromLastHelp": "مناسب لما نادرًا ما يتغير، مثل وزنك أو جرعة يومية.",
+    "pairFirst": "الرقم الأول",
+    "pairSecond": "الرقم الثاني",
+    "pairFirstPlaceholder": "الانقباضي",
+    "pairSecondPlaceholder": "الانبساطي",
+    "pairUnit": "الوحدة (اختياري)",
+    "pairWaiting": "يُحفظ بعد إدخال الرقم الأول."
   },
   "factors": {
     "prompt": "ما الذي كان جزءًا من يومك؟",

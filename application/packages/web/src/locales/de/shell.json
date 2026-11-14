@@ -301,8 +301,10 @@
     "dayWithMood": "{{date}}, Stimmung {{mood}}",
     "previousWeek": "Vorherige Woche",
     "nextWeek": "Nächste Woche",
-    "showMonth": "{{month}}, ganzen Monat anzeigen",
-    "showWeek": "{{month}}, eine Woche anzeigen"
+    "pickMonth": "{{month}}, Monat und Jahr wählen",
+    "pickMonthTip": "Monat und Jahr wählen",
+    "showWholeMonth": "Ganzen Monat anzeigen",
+    "showOneWeek": "Eine Woche anzeigen"
   },
   "contextMenu": {
     "newNote": "Neue Notiz",
@@ -548,6 +550,13 @@
     "itemNameParts": "Zweiter Vorname, Titel, Zusatz",
     "itemPhonetic": "Phonetischer Name",
     "itemNote": "Notiz",
+    "addSection": "Abschnitt hinzufügen",
+    "sectionName": "Name des Abschnitts",
+    "removeSection": "Abschnitt entfernen",
+    "removeSectionNamed": "Abschnitt {{name}} entfernen",
+    "addFieldTo": "Feld zu {{name}} hinzufügen",
+    "addFieldToSection": "Feld zu diesem Abschnitt hinzufügen",
+    "hiddenFieldsNote": "Verborgene Werte bleiben maskiert, bis du sie anzeigst, und die Suche findet sie nie.",
     "labels": {
       "mobile": "Mobil",
       "home": "Privat",
@@ -676,6 +685,8 @@
     },
     "birthdays": "Geburtstage",
     "contactDate": "{{name}}: {{label}}",
+    "birthdayAge_one": "{{name}} wird {{count}}",
+    "birthdayAge_other": "{{name}} wird {{count}}",
     "dragEnd": "Ziehen, um den letzten Tag zu ändern",
     "previousDay": "Vorheriger Tag",
     "nextDay": "Nächster Tag",

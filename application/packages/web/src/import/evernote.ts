@@ -1,17 +1,17 @@
-import JSZip from 'jszip';
 import { zipEntryText } from './zipEntry';
+import { openZip } from './zipOpen';
 import { normalizeTag } from '../notesRepo';
 import { buildFolderTree } from './folderImport';
 import { linkifyMarkdown } from './linkify';
-import { noteLinkTarget } from '../noteLinks';
 import { importBlobs } from './blobImport';
 import type { ImportedNote, ParsedImport } from './types';
+import { isJunkEntry, noteLink } from './importHelpers';
 import { toLocalIso } from '../notesViewUtils';
 import i18n from '../i18n';
 import { LOCATION_KEY, importedLocation, type NoteLocation } from '../noteLocation';
 
 const msg = (key: string, options?: Record<string, unknown>): string =>
-  i18n.t(`importExport:importLog.evernote.${key}`, options);
+  i18n.t(`importLog:evernote.${key}`, options);
 
 /**
  * Evernote importer (.enex).
@@ -68,15 +68,6 @@ const msg = (key: string, options?: Record<string, unknown>): string =>
 /* ------------------------------------------------------------------ */
 
 const ENEX_EXT = /\.enex$/i;
-
-/** Files and folders that are never note content. */
-function shouldSkip(path: string): boolean {
-  const lower = path.toLowerCase();
-  if (lower.startsWith('__macosx/') || lower.includes('/__macosx/')) return true;
-  const name = path.split('/').pop() ?? '';
-  if (name.startsWith('.')) return true;
-  return false;
-}
 
 /** Notebook name from an .enex filename: "Work/Recipes.enex" -> "Recipes". */
 function notebookName(path: string): string {
@@ -382,23 +373,6 @@ interface ConvCtx {
   /** Blob token -> the resource's real filename and MIME. */
   blobs: Map<string, { data: Uint8Array; mime: string; name: string }>;
   flags: ConvFlags;
-}
-
-/**
- * Build a `[[target]]` / `[[target|label]]` note-link.
- *
- * The target goes through `noteLinkTarget` because an Evernote title really
- * can hold a pipe or a bracket, and writing one raw produces a link that
- * parses as a different target with different text. The sanitized target
- * still resolves: `noteLinkKey` compares it to the note's real title through
- * the same rule. Spec: packages/web/src/noteLinks.ts
- */
-function noteLink(target: string, label: string): string {
-  const t = noteLinkTarget(target);
-  const l = label.replace(/[[\]]/g, '').trim();
-  if (!t) return l;
-  if (!l || l === t) return `[[${t}]]`;
-  return `[[${t}|${l}]]`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -1015,10 +989,10 @@ async function readInput(
     throw new Error(msg('unrecognizedFile'));
   }
 
-  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
-  const zip = await JSZip.loadAsync(file);
+  onProgress?.(i18n.t('importLog:shared.readingZip'));
+  const zip = await openZip(file);
   const entries = Object.entries(zip.files).filter(
-    ([path, entry]) => !entry.dir && !shouldSkip(path) && ENEX_EXT.test(path)
+    ([path, entry]) => !entry.dir && !isJunkEntry(path) && ENEX_EXT.test(path)
   );
 
   if (entries.length === 0) {
@@ -1170,21 +1144,21 @@ export async function parseEvernote(
   if (folders.length > 0) {
     const filed = notes.filter((n) => n.folderId).length;
     transforms.push(
-      i18n.t('importExport:importLog.shared.foldersFromNotebooks', { count: folders.length, filed: i18n.t('importExport:importLog.shared.filedNotes', { count: filed }) })
+      i18n.t('importLog:shared.foldersFromNotebooks', { count: folders.length, filed: i18n.t('importLog:shared.filedNotes', { count: filed }) })
     );
   }
   const tagged = notes.filter((n) => n.tags.length > 0).length;
   if (tagged > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.tags', { count: tagged }));
+    transforms.push(i18n.t('importLog:shared.tags', { count: tagged }));
   }
   if (flags.noteLinks > 0) {
     transforms.push(
-      i18n.t('importExport:importLog.shared.noteLinks', { count: flags.noteLinks })
+      i18n.t('importLog:shared.noteLinks', { count: flags.noteLinks })
     );
   }
   if (flags.checklists > 0) {
     transforms.push(
-      i18n.t('importExport:importLog.shared.checklists', { count: flags.checklists })
+      i18n.t('importLog:shared.checklists', { count: flags.checklists })
     );
   }
   if (flags.reminders > 0) {
@@ -1193,7 +1167,7 @@ export async function parseEvernote(
     );
   }
   if (flags.places > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.places', { count: flags.places }));
+    transforms.push(i18n.t('importLog:shared.places', { count: flags.places }));
   }
   if (flags.tables > 0) {
     transforms.push(
@@ -1201,7 +1175,7 @@ export async function parseEvernote(
     );
   }
   if (flags.codeBlocks > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.codeBlocks', { count: flags.codeBlocks }));
+    transforms.push(i18n.t('importLog:shared.codeBlocks', { count: flags.codeBlocks }));
   }
   if (flags.formulas > 0) {
     transforms.push(
@@ -1217,7 +1191,7 @@ export async function parseEvernote(
     );
   }
   if (flags.underline > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.underline'));
+    transforms.push(i18n.t('importLog:shared.underline'));
   }
   if (flags.transcripts > 0) {
     transforms.push(
@@ -1230,11 +1204,11 @@ export async function parseEvernote(
     );
   }
   if (imageCount > 0) {
-    transforms.push(i18n.t('importExport:importLog.shared.foundImages', { count: imageCount }));
+    transforms.push(i18n.t('importLog:shared.foundImages', { count: imageCount }));
   }
   if (attachmentCount > 0) {
     transforms.push(
-      i18n.t('importExport:importLog.shared.foundAttachments', { count: attachmentCount })
+      i18n.t('importLog:shared.foundAttachments', { count: attachmentCount })
     );
   }
   if (flags.droppedStyling > 0) {
@@ -1242,7 +1216,7 @@ export async function parseEvernote(
       msg('droppedStyling')
     );
   }
-  transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
+  transforms.push(i18n.t('importLog:shared.linkifiedBare'));
 
   const uniqueTags = new Set(notes.flatMap((n) => n.tags));
 

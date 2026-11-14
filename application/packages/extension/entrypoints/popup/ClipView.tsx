@@ -26,8 +26,9 @@ import { buildClip, clippable, type Built, type ClipMode } from '../../src/clipp
 import { readPrefs, writePrefs } from '../../src/prefs';
 import { savedOn, type SaveRequest, type SaveResult } from '../../src/save';
 import type { Connection } from '../../src/connection';
-import { hostOf } from '../../src/favicon';
+import { displayHost } from '../../src/favicon';
 import { shortcutUrl } from '../../src/logins';
+import { activeTab } from '../../src/tabs';
 import { SaveButton } from './SaveButton';
 import { Tile } from './VaultView';
 
@@ -70,7 +71,7 @@ export function ClipView({ connection, bookmark, bookmarkKeys, noteKeys }: { con
   useEffect(() => {
     void readPrefs().then((p) => setPictures(p.pictures));
     void (async () => {
-      const [tab] = await browser.tabs.query({ active: true, lastFocusedWindow: true });
+      const tab = await activeTab();
       if (!tab?.id || !clippable(tab.url)) return setPhase({ at: 'cannot' });
       try {
         const [res] = await browser.scripting.executeScript({ target: { tabId: tab.id }, func: capturePage });
@@ -135,10 +136,10 @@ export function ClipView({ connection, bookmark, bookmarkKeys, noteKeys }: { con
   return (
     <div className="space-y-3">
       <div className="flex items-start gap-2.5 min-w-0">
-        <Tile url={p.url} letter={p.title || hostOf(p.url)} />
+        <Tile url={p.url} letter={p.title || displayHost(p.url)} />
         <div className="min-w-0">
-          <div className="text-body font-semibold text-pn line-clamp-2" dir="auto">{p.title || hostOf(p.url)}</div>
-          <div className="text-meta text-pn-muted truncate" dir="ltr">{hostOf(p.url)}</div>
+          <div className="text-body font-semibold text-pn line-clamp-2" dir="auto">{p.title || displayHost(p.url)}</div>
+          <div className="text-meta text-pn-muted truncate" dir="ltr">{displayHost(p.url)}</div>
           {shown && (
             <div className="pn-fade-in mt-0.5 flex flex-wrap gap-x-3 text-meta text-pn-muted">
               <span className="inline-flex items-center gap-1"><TextAlignLeft aria-hidden="true" />{t('editor:wordCount.words', { count: shown.words, formatted: shown.words.toLocaleString() })}</span>

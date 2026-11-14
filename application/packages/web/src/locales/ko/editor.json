@@ -353,5 +353,47 @@
     "addColumn": "열 추가",
     "removeBoard": "보드 제거",
     "moveTo": "이동할 열"
+  },
+  "doodle": {
+    "title": "낙서",
+    "clear": "지우기",
+    "paper": "종이",
+    "paperNone": "색 없음: 노트가 비쳐 보여요.",
+    "settings": "펜 설정",
+    "stroke": "획",
+    "thinning": "가늘어짐",
+    "streamline": "흔들림 보정",
+    "smoothing": "매끄럽게",
+    "easingLabel": "이징",
+    "start": "시작",
+    "end": "끝",
+    "taperStart": "시작 부분 가늘게",
+    "capStart": "시작 부분 둥글게",
+    "easingStart": "시작 부분 이징",
+    "taperEnd": "끝 부분 가늘게",
+    "capEnd": "끝 부분 둥글게",
+    "easingEnd": "끝 부분 이징",
+    "fill": "채우기",
+    "outline": "외곽선",
+    "easing": {
+      "linear": "선형",
+      "in": "이즈 인, {{curve}}",
+      "out": "이즈 아웃, {{curve}}",
+      "inOut": "이즈 인 아웃, {{curve}}"
+    },
+    "curve": {
+      "quad": "2차",
+      "cubic": "3차",
+      "quart": "4차",
+      "quint": "5차",
+      "sine": "사인",
+      "expo": "지수"
+    },
+    "colors": {
+      "black": "검정",
+      "white": "하양",
+      "cyan": "시안",
+      "lightGray": "연회색"
+    }
   }
 }

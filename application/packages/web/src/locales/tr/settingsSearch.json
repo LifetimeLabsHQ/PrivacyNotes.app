@@ -55,7 +55,7 @@
     "security_appLock": "uygulama kilidi, açılışta kilitle, kilit ekranı, uygulamayı kilitle, yeniden kilitle, sonra yeniden kilitle",
     "security_relockAfter": "zaman aşımı, otomatik kilit, sonra kilitle, sonra yeniden kilitle, kilit ekranı",
     "security_blockCapture": "ekran görüntüsü, ekran kaydı, ekran yakalama, ekran paylaşımı, gizlilik modu",
-    "security_phrase": "kurtarma ifadesi, gizli kelimeler, seed, on iki kelime, kurtarma anahtarı",
+    "security_phrase": "kurtarma ifadesi, gizli kelimeler, seed, on iki kelime, yirmi dört kelime, 24 kelime, kurtarma anahtarı",
     "security_custody": "emanet, kendi saklama, anahtar saklama, custody",
     "me_pauseSync": "eşitlemeyi durdur, duraklat, çevrimdışı, offline",
     "me_filesWifiOnly": "wifi, mobil veri, hücresel, sınırlı bağlantı",
@@ -81,6 +81,7 @@
     "appearance_invisibles": "paragraf işareti, boşluklar, beyaz alan, gizli karakterler, biçim işaretleri",
     "appearance_linkModifier": "bağlantılar, köprüler, url, tıklama, tıkla, ctrl, cmd, command, yanlışlıkla açılma",
     "appearance_typedSymbols": "bitişik harfler, ligatür, oklar, semboller, matematik, eşit değil, büyüktür, küçüktür, otomatik düzeltme, değiştir",
+    "appearance_linkSuggestions": "ilgili notlar, benzer notlar, öneriler, bağlantı önerileri, önerilen bağlantılar, bağlantılar, geri bağlantılar, bağlantısız, konu, related notes, link suggestions, backlinks",
     "appearance_noteFont": "yazı tipi, font, monospace, mono, serif, sans, varsayılan yazı tipi, özel yazı tipi, yüklü yazı tipi, yazı tipim",
     "appearance_nestedNumbers": "numaralı liste, iç içe liste, taslak, 1.1, 1.1.1, hukuki numaralandırma, alt numaralar, çok düzeyli liste",
     "appearance_confirmTrash": "sil, çöp kutusu, onayla, onay, iletişim kutusu, sor, uyarı, bir daha sorma",
@@ -88,6 +89,7 @@
     "appearance_autoLocationNotes": "konum, yer, gps, pozisyon, harita, coğrafi etiket, otomatik, nerede, notlar",
     "appearance_autoLocationJournal": "konum, yer, gps, pozisyon, harita, coğrafi etiket, otomatik, nerede, günlük, anı defteri, kayıtlar",
     "appearance_startView": "başlangıç sayfası, ana sayfa, varsayılan görünüm, açılış",
+    "appearance_reopenLastOpen": "son not, son açılan, geri yükle, hatırla, yeniden aç, başlat, açılış, başlangıç",
     "appearance_view": "ızgara, liste, kartlar, düzen",
     "trackers_setup": "takipler, sağlık, haplar, ruh hali, uyku, enerji, adım, su, aç, kapat",
     "trackers_habitQuestions": "alışkanlıklar, sorular, meditasyon, dua, sigara, alkol, yaptınız mı",
@@ -122,6 +124,7 @@
     "calendar_weekNumbers": "hafta numarası, ISO hafta, takvim",
     "calendar_hours": "saatler, çalışma saatleri, gün görünümü, hafta görünümü, sabah",
     "me_dms": "ölü adam düğmesi, dead man's switch, hareketsizlik, etkin değil, sonra sil, sil, temizle, terk et",
+    "appearance_smartConnections": "yapay zekâ, yapay zeka, ai, çevrimdışı, cihaz üzerinde, yerel yapay zekâ, özel yapay zekâ, model, bekko, anlam, aynı anlam, ilgili notlar, benzer notlar, önerilen bağlantılar, bağlantı önerileri, akıllı bağlantılar, anlamsal, semantic, embeddings, gömme, indir, smart connections",
     "appearance_formatBar": "araç çubuğu, biçim çubuğu, düğmeler, özelleştir, düzenle, madde işaretli liste, üstü çizili, dişli"
   }
 }

@@ -372,5 +372,47 @@
     "addColumn": "Přidat sloupec",
     "removeBoard": "Odebrat tabuli",
     "moveTo": "Přesunout do"
+  },
+  "doodle": {
+    "title": "Čmáranice",
+    "clear": "Vymazat",
+    "paper": "Papír",
+    "paperNone": "Bez barvy: poznámka prosvítá.",
+    "settings": "Nastavení pera",
+    "stroke": "Tah",
+    "thinning": "Ztenčení",
+    "streamline": "Vyrovnání",
+    "smoothing": "Vyhlazení",
+    "easingLabel": "Průběh",
+    "start": "Začátek",
+    "end": "Konec",
+    "taperStart": "Zúžení na začátku",
+    "capStart": "Zaoblit začátek",
+    "easingStart": "Průběh na začátku",
+    "taperEnd": "Zúžení na konci",
+    "capEnd": "Zaoblit konec",
+    "easingEnd": "Průběh na konci",
+    "fill": "Výplň",
+    "outline": "Obrys",
+    "easing": {
+      "linear": "Lineární",
+      "in": "Náběh, {{curve}}",
+      "out": "Doběh, {{curve}}",
+      "inOut": "Náběh i doběh, {{curve}}"
+    },
+    "curve": {
+      "quad": "kvadratický",
+      "cubic": "kubický",
+      "quart": "kvartický",
+      "quint": "kvintický",
+      "sine": "sinusový",
+      "expo": "exponenciální"
+    },
+    "colors": {
+      "black": "Černá",
+      "white": "Bílá",
+      "cyan": "Azurová",
+      "lightGray": "Světle šedá"
+    }
   }
 }

@@ -1,7 +1,8 @@
 import { useSyncExternalStore } from 'react';
+import { createListeners } from './listeners';
 
 const KEY = 'privacynotes.singleKeys';
-const listeners = new Set<() => void>();
+const { subscribe, notify } = createListeners();
 
 /**
  * Whether the shortcuts of one plain key (J, K, Q, / and ?, and the
@@ -28,12 +29,7 @@ export function setSingleKeys(on: boolean): void {
   } catch {
     // Storage refused (a private window): the switch holds for this page only.
   }
-  listeners.forEach((l) => l());
-}
-
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
+  notify();
 }
 
 export function useSingleKeys(): boolean {

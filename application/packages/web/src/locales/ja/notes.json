@@ -126,6 +126,14 @@
   },
   "banner": {
     "proActivationPending": "支払いは受領しましたが、Proの有効化に通常より時間がかかっています。1分ほどしてから再読み込みしてください。有効にならない場合はサポートにご連絡ください。",
+    "crypto": {
+      "waiting": "暗号資産での支払いを待っています。確認されるとProが有効になります。",
+      "seen": "暗号資産での支払いを検知しました。ネットワークで確認されるとProが有効になります。Bitcoinの場合、通常は1時間以内です。",
+      "partial": "暗号資産での支払いの一部が届きました。リンクの期限が切れる前に、支払いページで残りを送金してください。",
+      "ended": "全額の支払いが届く前に、暗号資産の支払いリンクの期限が切れました。",
+      "paid": "暗号資産での支払いが確認されました。Proが有効です。",
+      "openPayment": "支払いページ"
+    },
     "snapshotPaused": "ノート履歴は一時停止中です。Proプランが無効になっているようです。Proが復元されるまで、新しい編集のスナップショットは保存されません。",
     "restorePro": "Proを復元",
     "storagePastDue": "ストレージのサブスクリプションの支払いに失敗しました。追加容量を失わないよう、Paddleでカード情報を更新してください。",
@@ -311,7 +319,24 @@
     "linkedFrom": "このノートへのリンク",
     "linksTo": "このノートからのリンク",
     "missing": "未作成",
-    "protectedHidden_other": "PIN保護された{{count}}件の項目は表示されていません"
+    "protectedHidden_other": "PIN保護された{{count}}件の項目は表示されていません",
+    "related": "つながりの候補",
+    "relatedWords": "どちらも{{words}}に言及",
+    "relatedLinksTo": "どちらも{{title}}にリンク",
+    "relatedLinkedFrom": "どちらも{{title}}からリンクされています",
+    "relatedTag": "どちらもタグ{{tag}}付き",
+    "relatedMeaning": "同じ意味",
+    "meaningDoor": "スマートつながり：オフラインAIで同じ意味のノートを見つける",
+    "meaningDoorNo": "今後表示しない",
+    "meaningDoorHidden": "すべてのノートで非表示にしました。スマートつながりは引き続き 設定 > エディタ > 動作 にあります。",
+    "hideSuggestions": "つながりの候補を隠す",
+    "notRelated": "関係なし",
+    "notRelatedDone": "今後は候補に表示しません",
+    "notRelatedCount": "関係なし({{n}})",
+    "restoreSuggestion": "再び候補に表示",
+    "linkAtCursor": "カーソル位置にリンク",
+    "linkNeedsCursor": "先にノート内をクリックしてください",
+    "linkAsFootnote": "脚注としてリンク"
   },
   "drawing": {
     "fullScreen": "全画面",

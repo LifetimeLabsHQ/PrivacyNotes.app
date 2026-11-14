@@ -2,6 +2,7 @@ import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import type { LocalNote } from './db';
 import type { ImportedNote } from './import/types';
 import { NOTE_MAX_STORED_BYTES, storedNoteBytes } from './sync';
+import { FENCE_LINE } from './markdownFence';
 
 /**
  * Cutting a note that is too large to sync into parts that each fit.
@@ -20,7 +21,6 @@ function jsonCost(text: string): number {
   return utf8.encode(JSON.stringify(text)).length - 2;
 }
 
-const FENCE = /^ {0,3}(`{3,}|~{3,})/;
 const HEADING = /^ {0,3}#{1,6}(\s|$)/;
 
 /** The text cut into pieces before each line `cutBefore` names, outside code
@@ -37,7 +37,7 @@ function piecesAt(text: string, cutBefore: (line: string, prev: string | null) =
       current = '';
     }
     current += line;
-    const open = fences ? FENCE.exec(line) : null;
+    const open = fences ? FENCE_LINE.exec(line) : null;
     const mark = open?.[1]?.[0] ?? null;
     if (mark) {
       if (fence === null) fence = mark;
@@ -54,7 +54,7 @@ const LEVELS: Array<(text: string) => string[]> = [
   // A block starts after a blank line, and a code fence starts and ends one
   // even with no blank line around it.
   (text) => piecesAt(text, (line, prev) =>
-    line.trim() !== '' && prev !== null && (prev.trim() === '' || FENCE.test(line) || FENCE.test(prev))),
+    line.trim() !== '' && prev !== null && (prev.trim() === '' || FENCE_LINE.test(line) || FENCE_LINE.test(prev))),
   (text) => piecesAt(text, () => true, false),
   (text) => [...text],
 ];

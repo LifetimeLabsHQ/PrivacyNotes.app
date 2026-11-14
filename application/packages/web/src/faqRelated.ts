@@ -17,11 +17,15 @@
  *   weight; words every answer uses carry almost none.
  * - The same group, as a small bonus that breaks near ties.
  *
- * Runs at build time in Node, so nothing reaches the browser. Keep this
- * module import-free: `help-page.ts` evaluates it next to `faq.ts`.
+ * Runs at build time in Node, so nothing reaches the browser. Import only
+ * modules that are import-free themselves: `help-page.ts` evaluates this one
+ * next to `faq.ts`. The vector math is `relatedCore.ts`, shared with the
+ * Related group of the Connections panel.
  *
  * // Spec: docs/contrib/help-center.md (related questions)
  */
+
+import { cosine, documentFrequencies, termCounts, termVector } from './relatedCore.ts';
 
 type Entry = { q: string; a: string[] };
 type Row = { id: string; group: string };
@@ -68,38 +72,22 @@ function links(e: Entry): Set<string> {
  * question are skipped, as the leaf pages skip them.
  */
 export function relatedFaq(rows: ReadonlyArray<Row>, entries: Record<string, Entry | undefined>): Map<string, string[]> {
-  const nodes = rows.flatMap((r, order) => {
+  const present = rows.flatMap((r, order) => {
     const e = entries[r.id];
-    return e?.q ? [{ id: r.id, group: r.group, order, e, links: links(e), vec: new Map<string, number>() }] : [];
+    return e?.q ? [{ id: r.id, group: r.group, order, e, links: links(e) }] : [];
   });
 
-  // Term frequencies, then IDF, then unit-length TF-IDF vectors.
-  const tfs = nodes.map(({ e }) => {
-    const tf = new Map<string, number>();
-    for (const w of [...tokens(e.q), ...tokens(e.q), ...tokens(e.a.join(' '))]) tf.set(w, (tf.get(w) ?? 0) + 1);
-    return tf;
-  });
-  const df = new Map<string, number>();
-  for (const tf of tfs) for (const w of tf.keys()) df.set(w, (df.get(w) ?? 0) + 1);
-  nodes.forEach((node, i) => {
-    let norm = 0;
-    for (const [w, n] of tfs[i] ?? []) {
-      const x = (1 + Math.log(n)) * Math.log(nodes.length / (df.get(w) ?? 1));
-      node.vec.set(w, x);
-      norm += x * x;
-    }
-    norm = Math.sqrt(norm) || 1;
-    for (const [w, x] of node.vec) node.vec.set(w, x / norm);
-  });
+  // Term frequencies (the question counted twice), then unit-length TF-IDF vectors.
+  const tfs = present.map(({ e }) => termCounts([...tokens(e.q), ...tokens(e.q), ...tokens(e.a.join(' '))]));
+  const df = documentFrequencies(tfs);
+  const nodes = present.map((node, i) => ({ ...node, vec: termVector(tfs[i]!, df, present.length) }));
 
   const result = new Map<string, string[]>();
   for (const a of nodes) {
     const scored = nodes
       .filter((b) => b !== a)
       .map((b) => {
-        const [small, large] = a.vec.size < b.vec.size ? [a.vec, b.vec] : [b.vec, a.vec];
-        let score = 0;
-        for (const [w, x] of small) score += x * (large.get(w) ?? 0);
+        let score = cosine(a.vec, b.vec);
         const there = a.links.has(b.id);
         const back = b.links.has(a.id);
         if (there && back) score += LINK_BOTH_WAYS;

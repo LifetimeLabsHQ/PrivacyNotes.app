@@ -3,7 +3,7 @@ import type { ComponentProps, ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { isOversizeImport, splitImportedNote } from '../noteSplit';
-import i18n from '../i18n';
+import i18n, { ensureImportLogLoaded } from '../i18n';
 import { IMPORTERS } from './registry';
 import { applyImport } from './apply';
 import { withFolderPathTags } from './folderImport';
@@ -38,6 +38,7 @@ import { activeLocale } from '../languages';
 import { helpPath } from '../localeRoutes';
 import { siteHref } from '../siteLinks';
 import { HelpChip } from '../HelpChip';
+import { ImportFileError } from './zipEntry';
 import { WellnessExportTab } from '../stats/WellnessExport';
 import { IconUpgrade } from '../UpgradeModal';
 import { usePaneTab } from '../settingsPaneTab';
@@ -285,7 +286,7 @@ export function ImportModal({
     | { kind: 'parsing'; importer: Importer; status: string }
     | { kind: 'preview'; importer: Importer; parsed: ParsedImport; file: { name: string; size: number } }
     | { kind: 'applying'; importer: Importer }
-    | { kind: 'error'; importer: Importer; message: string };
+    | { kind: 'error'; importer: Importer; message: string; detail?: string };
 
   const backup = section === 'backup';
   const tabs = backup ? BACKUP_TABS : TRANSFER_TABS;
@@ -361,6 +362,8 @@ export function ImportModal({
     });
 
     try {
+      // The importers' messages load with the first import (i18n.ts).
+      await ensureImportLogLoaded();
       const parsed = await importer.parse(file, (msg) =>
         setPhase((prev) =>
           prev.kind === 'parsing' ? { ...prev, status: msg } : prev
@@ -444,9 +447,7 @@ export function ImportModal({
             : parsed,
       });
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : t('notesChrome:burnView.error.heading');
-      setPhase({ kind: 'error', importer, message });
+      setPhase({ kind: 'error', importer, ...importFailure(err, importer, file.size, t) });
     }
   }
 
@@ -669,12 +670,13 @@ export function ImportModal({
       onClose();
     } catch (err) {
       console.warn('Import failed:', err);
-      const detail = err instanceof Error ? err.message : String(err);
+      const { message, detail } = importFailure(err, importer, selectedFileRef.current?.size, t);
       if (!notesWritten) onUndoImportFolders?.(madeFolders);
       setPhase({
         kind: 'error',
         importer,
-        message: notesWritten ? detail : t('errors.importNothingChanged', { detail }),
+        message: notesWritten ? message : t('errors.importNothingChanged', { detail: message }),
+        detail,
       });
     }
   }
@@ -789,6 +791,7 @@ export function ImportModal({
                 <ErrorPhase
                   importerLabel={sourceLabel(phase.importer, t)}
                   message={phase.message}
+                  detail={phase.detail}
                 />
               )}
             </>
@@ -843,7 +846,7 @@ export function ImportModal({
                 <ParsingPhase importerLabel={sourceLabel(phase.importer, t)} status={t('status.writingNotes')} />
               )}
               {phase.kind === 'error' && (
-                <ErrorPhase importerLabel={sourceLabel(phase.importer, t)} message={phase.message} />
+                <ErrorPhase importerLabel={sourceLabel(phase.importer, t)} message={phase.message} detail={phase.detail} />
               )}
             </>
           ) : tab === 'automatic' ? (
@@ -915,9 +918,6 @@ export function ImportModal({
 /** Importers drawn with a phosphor glyph instead of a brand asset, for a
  *  source no single vendor owns. */
 const IMPORT_GLYPH: Record<string, ReactNode> = {
-  // A key, matching the sidebar's Vault pillar. No browser logo: the same
-  // .csv comes out of all of them.
-  'browser-passwords': <Key size={20} aria-hidden="true" />,
   // The address book, matching the Contacts pillar: every phone writes the
   // same .vcf, so no vendor's logo fits.
   'vcard': <AddressBook size={20} aria-hidden="true" />,
@@ -928,15 +928,14 @@ const IMPORT_GLYPH: Record<string, ReactNode> = {
 /** App icons for the note importers, reused from the /help import guides
  *  (public/help/icons). markdown-folder maps to the generic markdown mark. */
 const IMPORT_ICON: Record<string, string> = {
-  // Every browser writes the same bookmarks file, so this row's icon is
-  // the one that is not the source app's own logo: the Chrome mark stands
-  // in for "your browser" and the description names the other six. Same
-  // asset as the /help guide tile and the homepage import pill.
-  'browser-bookmarks': '/help/icons/browser-bookmarks.svg',
+  'anytype': '/help/icons/anytype.webp',
   'google-keep': '/help/icons/google-keep.svg',
   'google-calendar': '/help/icons/google-calendar.svg',
   'apple-notes': '/help/icons/apple-notes.svg',
   'apple-journal': '/help/icons/apple-journal.webp',
+  'daylio': '/help/icons/daylio.webp',
+  'diarium': '/help/icons/diarium.webp',
+  'google-journal': '/help/icons/google-journal.webp',
   'bear': '/help/icons/bear.webp',
   'evernote': '/help/icons/evernote.svg',
   'samsung-notes': '/help/icons/samsung-notes.webp',
@@ -946,9 +945,18 @@ const IMPORT_ICON: Record<string, string> = {
   'obsidian-canvas': '/help/icons/obsidian.svg',
   'notesnook': '/help/icons/notesnook.svg',
   'joplin': '/help/icons/joplin.svg',
+  'siyuan': '/help/icons/siyuan.svg',
   'upnote': '/help/icons/upnote.svg',
   'markdown-folder': '/help/icons/markdown.svg',
   'bitwarden': '/help/icons/bitwarden.svg',
+  'keepass': '/help/icons/keepass.webp',
+  'keepassxc': '/help/icons/keepassxc.svg',
+  'lastpass': '/help/icons/lastpass.svg',
+  '1password': '/help/icons/1password.webp',
+  'enpass': '/help/icons/enpass.svg',
+  'dashlane': '/help/icons/dashlane.svg',
+  'nordpass': '/help/icons/nordpass.webp',
+  'proton-pass': '/help/icons/proton-pass.svg',
   'typora': '/help/icons/typora.webp',
   'ia-writer': '/help/icons/ia-writer.webp',
   'zettlr': '/help/icons/zettlr.svg',
@@ -958,6 +966,7 @@ const IMPORT_ICON: Record<string, string> = {
 /** Maps importer ids to their /help/import/<slug> guide slug. Slugs match
  *  ids 1:1 except markdown-folder, whose guide lives under "markdown". */
 const GUIDE_SLUG: Record<string, string> = {
+  'anytype': 'anytype',
   'apple-journal': 'apple-journal',
   'browser-bookmarks': 'browser-bookmarks',
   'apple-notes': 'apple-notes',
@@ -965,19 +974,31 @@ const GUIDE_SLUG: Record<string, string> = {
   'bitwarden': 'bitwarden',
   'browser-passwords': 'browser-passwords',
   'vcard': 'contacts',
+  'daylio': 'daylio',
+  'diarium': 'diarium',
   'evernote': 'evernote',
   'google-keep': 'google-keep',
   'google-calendar': 'google-calendar',
+  'google-journal': 'google-journal',
   'joplin': 'joplin',
+  'keepass': 'keepass',
+  'keepassxc': 'keepassxc',
+  'lastpass': 'lastpass',
+  '1password': '1password',
+  'enpass': 'enpass',
+  'dashlane': 'dashlane',
   'markdown-folder': 'markdown',
   'typora': 'typora',
   'ia-writer': 'ia-writer',
   'zettlr': 'zettlr',
   'nextcloud-notes': 'nextcloud-notes',
+  'nordpass': 'nordpass',
   'notesnook': 'notesnook',
   'obsidian': 'obsidian',
+  'proton-pass': 'proton-pass',
   'samsung-notes': 'samsung-notes',
   'simplenote': 'simplenote',
+  'siyuan': 'siyuan',
   'standard-notes': 'standard-notes',
   'upnote': 'upnote',
 };
@@ -1012,6 +1033,30 @@ function sourceLabel(imp: Importer, t: TFunction): string {
   return key ? t(key) : imp.label;
 }
 
+/**
+ * The words an import failure shows (#758). An importer's own Error carries a
+ * sentence written for the person and is shown as it is, and a zip that would
+ * not open already has one (ImportFileError). A built-in error (a SyntaxError
+ * from JSON.parse, a TypeError, a RangeError, a DOMException) is the code or
+ * the device failing: its text means nothing to the person, so it gets a plain
+ * sentence, and its own text stays as the technical detail for a bug report.
+ */
+function importFailure(err: unknown, imp: Importer, size: number | undefined, t: TFunction): { message: string; detail?: string } {
+  if (err instanceof ImportFileError) return { message: err.message, detail: err.detail };
+  const builtIn =
+    err instanceof SyntaxError ||
+    err instanceof TypeError ||
+    err instanceof RangeError ||
+    err instanceof ReferenceError ||
+    err instanceof DOMException;
+  if (err instanceof Error && !builtIn) return { message: err.message };
+  const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+  if (err instanceof RangeError && size !== undefined && /memory|allocat/i.test(err.message)) {
+    return { message: t('errors.outOfMemory', { size: formatBytes(size) }), detail };
+  }
+  return { message: t('errors.unreadable', { importer: sourceLabel(imp, t) }), detail };
+}
+
 const SOURCE_DESC_KEY: Record<string, string> = {
   'browser-bookmarks': 'sourceDesc.browserBookmarks',
   'vcard': 'sourceDesc.vcard',
@@ -1020,6 +1065,9 @@ const SOURCE_DESC_KEY: Record<string, string> = {
   'excalidraw': 'sourceDesc.excalidraw',
   'apple-notes': 'sourceDesc.appleNotes',
   'apple-journal': 'sourceDesc.appleJournal',
+  'daylio': 'sourceDesc.daylio',
+  'diarium': 'sourceDesc.diarium',
+  'google-journal': 'sourceDesc.googleJournal',
   'bear': 'sourceDesc.bear',
   'evernote': 'sourceDesc.evernote',
   'samsung-notes': 'sourceDesc.samsungNotes',
@@ -1029,6 +1077,8 @@ const SOURCE_DESC_KEY: Record<string, string> = {
   'obsidian-canvas': 'sourceDesc.obsidianCanvas',
   'notesnook': 'sourceDesc.notesnook',
   'joplin': 'sourceDesc.joplin',
+  'anytype': 'sourceDesc.anytype',
+  'siyuan': 'sourceDesc.siyuan',
   'upnote': 'sourceDesc.upnote',
   'markdown-folder': 'sourceDesc.markdownFolder',
   // One shared line for the four markdown-app aliases: the parser is the
@@ -1041,6 +1091,14 @@ const SOURCE_DESC_KEY: Record<string, string> = {
   'nextcloud-notes': 'sourceDesc.markdownApp',
   'bitwarden': 'sourceDesc.bitwarden',
   'browser-passwords': 'sourceDesc.browserPasswords',
+  'keepass': 'sourceDesc.keepass',
+  'keepassxc': 'sourceDesc.keepassxc',
+  'lastpass': 'sourceDesc.lastpass',
+  '1password': 'sourceDesc.onePassword',
+  'enpass': 'sourceDesc.enpass',
+  'dashlane': 'sourceDesc.dashlane',
+  'nordpass': 'sourceDesc.nordpass',
+  'proton-pass': 'sourceDesc.protonPass',
 };
 
 /** The app's own mark, for the rows that read or write our own format. */
@@ -1105,9 +1163,11 @@ function SourcePanel({ id, label, desc, children }: { id: string; label: string;
 
 /** The panel actions of one importer: Import opens the file picker, Guide
  *  opens its /help/import/<slug> page when one exists. */
-function ImporterActions({ imp, onPick }: { imp: Importer; onPick: (imp: Importer) => void }) {
+function ImporterActions({ imp, onPick, guide }: { imp: Importer; onPick: (imp: Importer) => void; guide?: string | null }) {
   const { t } = useTranslation('importExport');
-  const guideSlug = GUIDE_SLUG[imp.id];
+  // `guide` overrides the importer's own guide: an alias card names its app's
+  // guide, or null when its family's guide is about another app.
+  const guideSlug = guide === undefined ? GUIDE_SLUG[imp.id] : guide ?? undefined;
   return (
     <>
       <Button variant="primary" icon={<Download aria-hidden="true" />} onClick={() => onPick(imp)}>
@@ -1209,6 +1269,9 @@ function CalendarFeedForm({ onFile, feeds }: { onFile: (file: File) => void; fee
 const FILE_TYPES: Record<string, string> = {
   'apple-journal': '.zip',
   'apple-notes': '.zip',
+  'daylio': '.daylio, .csv',
+  'diarium': '.zip, .json',
+  'google-journal': '.zip',
   'bear': '.bear2bk, .zip',
   'bitwarden': '.json',
   'browser-bookmarks': '.html, .zip',
@@ -1219,6 +1282,16 @@ const FILE_TYPES: Record<string, string> = {
   'google-keep': '.zip, .json',
   'ia-writer': '.zip',
   'joplin': '.jex, .zip',
+  'anytype': '.zip',
+  'siyuan': '.zip',
+  'keepass': '.xml, .csv',
+  'keepassxc': '.xml, .csv',
+  'lastpass': '.csv',
+  '1password': '.1pux, .csv',
+  'enpass': '.json',
+  'dashlane': '.zip, .csv',
+  'nordpass': '.csv',
+  'proton-pass': '.zip, .csv',
   'markdown-folder': '.md, .txt, .zip',
   'nextcloud-notes': '.zip',
   'notesnook': '.zip',
@@ -1234,8 +1307,57 @@ const FILE_TYPES: Record<string, string> = {
   webcal: 'webcal://',
 };
 
-/** Import tab: a search field over a card per source in three groups, the
- *  note apps first, then calendar, contacts and bookmarks, then passwords.
+/** Alias cards: an app whose export another importer already reads gets a
+ *  card of its own, so a person finds the name of their app. One card per
+ *  browser in the Bookmarks and Vault groups (every browser writes the same
+ *  bookmarks file and passwords .csv), Apple Passwords (Safari's .csv) and
+ *  Apple Calendar (one .ics, read by the calendar importer). Brand names,
+ *  not translated. Tile id: `<importer id>:<alias>`. */
+const ALIAS_NAME: Record<string, string> = {
+  'apple-calendar': 'Apple Calendar',
+  'apple-passwords': 'Apple Passwords',
+  brave: 'Brave',
+  chrome: 'Chrome',
+  edge: 'Edge',
+  firefox: 'Firefox',
+  safari: 'Safari',
+  vivaldi: 'Vivaldi',
+};
+const ALIAS_ICON: Record<string, string> = {
+  'apple-calendar': '/help/icons/apple-calendar.webp',
+  'apple-passwords': '/help/icons/apple-passwords.webp',
+  brave: '/help/icons/brave.svg',
+  chrome: '/help/icons/chrome.svg',
+  edge: '/help/icons/edge.svg',
+  firefox: '/help/icons/firefox.svg',
+  safari: '/help/icons/safari.webp',
+  vivaldi: '/help/icons/vivaldi.svg',
+};
+/** The browser cards of one family, alphabetical, as tile ids. */
+const browserTiles = (family: 'browser-bookmarks' | 'browser-passwords', browsers: string[]) =>
+  browsers.map((b) => `${family}:${b}`);
+/** A tile id as its importer id and its browser ('' for a plain source). */
+const splitTile = (id: string): [string, string] => {
+  const at = id.indexOf(':');
+  return at < 0 ? [id, ''] : [id.slice(0, at), id.slice(at + 1)];
+};
+/** An alias whose family's description names another app has its own. */
+const ALIAS_DESC_KEY: Record<string, string> = {
+  'apple-calendar': 'sourceDesc.appleCalendar',
+};
+/** An alias with a guide page of its own (`/help/import/<slug>`). */
+const ALIAS_GUIDE: Record<string, string> = {
+  'apple-calendar': 'apple-calendar',
+};
+/** Safari writes a .zip around both files; every other browser the bare file. */
+const aliasFileTypes = (family: string, alias: string): string => {
+  if (alias === 'apple-calendar') return '.ics';
+  if (alias === 'safari') return FILE_TYPES[family] ?? '';
+  return family === 'browser-bookmarks' ? '.html' : '.csv';
+};
+
+/** Import tab: a search field over a card per source in five groups, the
+ *  note apps, drawings, calendar and contacts, bookmarks, then passwords.
  *  The search reads the name and the file types, so ".enex" finds Evernote.
  *  The descriptions live in the panel a card opens.
  *  Spec: docs/internal/design/patterns/151-160.md (section 157) */
@@ -1253,15 +1375,28 @@ function ImportPickPhase({ onPick, onCalendarFeed, calendarFeeds }: { onPick: (i
   // its vault with the notes, its canvases alone as Obsidian Canvas. Each
   // group is alphabetical.
   const groups = [
-    { key: 'notes', icon: Note, title: t('shell:tagsRail.notes'), ids: ['apple-journal', 'apple-notes', 'bear', 'evernote', 'google-keep', 'ia-writer', 'joplin', 'markdown-folder', 'nextcloud-notes', 'notesnook', 'obsidian', 'samsung-notes', 'simplenote', 'standard-notes', 'typora', 'upnote', 'zettlr'] },
+    { key: 'notes', icon: Note, title: t('shell:tagsRail.notes'), ids: ['anytype', 'apple-journal', 'apple-notes', 'bear', 'daylio', 'diarium', 'evernote', 'google-journal', 'google-keep', 'ia-writer', 'joplin', 'markdown-folder', 'nextcloud-notes', 'notesnook', 'obsidian', 'samsung-notes', 'simplenote', 'siyuan', 'standard-notes', 'typora', 'upnote', 'zettlr'] },
     { key: 'drawings', icon: NEW_GLYPHS.drawing, title: t('shell:tagsRail.drawings'), ids: ['excalidraw', 'obsidian-canvas'] },
-    { key: 'calendar', icon: CalendarDots, title: t('importPick.groupCalendar'), ids: ['browser-bookmarks', 'vcard', 'google-calendar', WEBCAL_ID] },
-    { key: 'passwords', icon: Key, title: t('shell.tabVault'), ids: ['bitwarden', 'browser-passwords'] },
+    { key: 'calendar', icon: CalendarDots, title: t('importPick.groupCalendar'), ids: ['google-calendar:apple-calendar', 'vcard', 'google-calendar', WEBCAL_ID] },
+    { key: 'bookmarks', icon: BookmarkSimple, title: t('shell:tagsRail.bookmarks'), ids: browserTiles('browser-bookmarks', ['brave', 'chrome', 'edge', 'firefox', 'safari', 'vivaldi']) },
+    { key: 'passwords', icon: Key, title: t('shell.tabVault'), ids: [...browserTiles('browser-passwords', ['apple-passwords']), '1password', 'bitwarden', ...browserTiles('browser-passwords', ['brave', 'chrome']), 'dashlane', ...browserTiles('browser-passwords', ['edge']), 'enpass', ...browserTiles('browser-passwords', ['firefox']), 'keepass', 'keepassxc', 'lastpass', 'nordpass', 'proton-pass', ...browserTiles('browser-passwords', ['safari', 'vivaldi'])] },
   ];
-  const panelId = (id: string) => `import-panel-${id}`;
-  const labelOf = (id: string) => (id === WEBCAL_ID ? t('webcal.title') : importerMap[id] ? sourceLabel(importerMap[id], t) : '');
+  const panelId = (id: string) => `import-panel-${id.replace(':', '-')}`;
+  const labelOf = (id: string) => {
+    if (id === WEBCAL_ID) return t('webcal.title');
+    const [impId, browser] = splitTile(id);
+    if (browser) return ALIAS_NAME[browser] ?? '';
+    const imp = importerMap[impId];
+    return imp ? sourceLabel(imp, t) : '';
+  };
+  const typesOf = (id: string) => {
+    const [impId, browser] = splitTile(id);
+    return browser ? aliasFileTypes(impId, browser) : FILE_TYPES[id] ?? '';
+  };
   const match = query.trim() ? textMatcher(query) : null;
-  const matches = (id: string) => !match || !!match(labelOf(id)) || !!match(FILE_TYPES[id] ?? '');
+  // A search for the group's name ("bookmarks") keeps the whole group: its
+  // browser cards carry only the browser's name.
+  const matches = (id: string, groupTitle: string) => !match || !!match(labelOf(id)) || !!match(typesOf(id)) || !!match(groupTitle);
 
   // A card, then its panel right after it when open: the panel spans the
   // row, and `grid-flow-dense` fills the rest of the card's row from the
@@ -1289,30 +1424,40 @@ function ImportPickPhase({ onPick, onCalendarFeed, calendarFeeds }: { onPick: (i
         </Fragment>
       );
     }
-    const imp = importerMap[id];
+    const [impId, browser] = splitTile(id);
+    const imp = importerMap[impId];
     if (!imp) return null;
     const descKey = SOURCE_DESC_KEY[imp.id];
+    const ownDescKey = browser ? ALIAS_DESC_KEY[browser] : undefined;
     return (
       <Fragment key={id}>
         <SourceTile
+          // Every browser card of a family carries the family's marker; the
+          // settings search scrolls to the first one. An alias of another
+          // app (Apple Calendar) takes its own, or a search for Google
+          // Calendar would land on it.
           data-setting={`import.source.${imp.id}`}
-          icon={<RowIcon src={IMPORT_ICON[imp.id]} glyph={IMPORT_GLYPH[imp.id]} />}
-          label={sourceLabel(imp, t)}
-          detail={FILE_TYPES[imp.id] ?? ''}
+          {...(ownDescKey ? { 'data-setting': `import.alias.${browser}` } : {})}
+          icon={<RowIcon src={browser ? ALIAS_ICON[browser] : IMPORT_ICON[imp.id]} glyph={browser ? undefined : IMPORT_GLYPH[imp.id]} />}
+          label={labelOf(id)}
+          detail={typesOf(id)}
           open={open}
           panelId={panelId(id)}
           disabled={!imp.enabled}
           onToggle={() => toggle(id)}
         />
         {open && (
-          <SourcePanel id={panelId(id)} label={sourceLabel(imp, t)} desc={descKey ? t(descKey) : imp.description}>
-            <ImporterActions imp={imp} onPick={onPick} />
+          <SourcePanel id={panelId(id)} label={labelOf(id)} desc={ownDescKey ? t(ownDescKey) : descKey ? t(descKey) : imp.description}>
+            {/* An alias picks its family's importer under its own name, so the
+                check step says "Apple Calendar"; it shows its own guide, and an
+                alias described as another app never shows its family's guide. */}
+            <ImporterActions imp={browser ? { ...imp, label: labelOf(id) } : imp} onPick={onPick} guide={browser ? ALIAS_GUIDE[browser] ?? (ownDescKey ? null : undefined) : undefined} />
           </SourcePanel>
         )}
       </Fragment>
     );
   };
-  const shown = groups.map((g) => ({ ...g, ids: g.ids.filter(matches) })).filter((g) => g.ids.length > 0);
+  const shown = groups.map((g) => ({ ...g, ids: g.ids.filter((id) => matches(id, g.title)) })).filter((g) => g.ids.length > 0);
 
   return (
     <div className="space-y-3">
@@ -1810,15 +1955,18 @@ function PreviewPhase({
 function ErrorPhase({
   importerLabel,
   message,
+  detail,
 }: {
   importerLabel: string;
   message: string;
+  detail?: string;
 }) {
   const { t } = useTranslation('importExport');
   return (
     <div className="py-6">
       <Callout tone="danger" title={t('errorPhase.heading', { importer: importerLabel })}>
         <div className="whitespace-pre-wrap break-words">{message}</div>
+        {detail && <div className="mt-2 text-meta text-pn-muted break-words select-text">{t('errorPhase.detail', { detail })}</div>}
       </Callout>
     </div>
   );

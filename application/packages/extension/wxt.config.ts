@@ -170,6 +170,9 @@ export default defineConfig({
     // Lock, Generate), and Open, Bookmark and New note wait in the browser's
     // shortcut page for a key the person sets. Firefox gets a key for each
     // (owner, 2026-11-11, after Bitwarden's four plus keys to set).
+    // A Chromium browser on Windows does not give out Alt+Shift+P, and a
+    // command that suggests it gets no key at all, so Save as note suggests
+    // M there.
     // Spec: docs/internal/plans/browser-extension-build.md (section 3.5)
     commands: {
       _execute_action: {
@@ -181,7 +184,7 @@ export default defineConfig({
         description: '__MSG_commandCopyLogin__',
       },
       'save-note': {
-        suggested_key: { default: 'Alt+Shift+P' },
+        suggested_key: { default: 'Alt+Shift+P', windows: 'Alt+Shift+M' },
         description: '__MSG_commandSaveNote__',
       },
       'lock-vault': {

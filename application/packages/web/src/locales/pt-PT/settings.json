@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "Todas as definições",
+    "dockWindow": "Encaixar na lateral",
+    "dockOtherSide": "Mover para o outro lado",
     "fillWindow": "Usar a janela inteira",
     "restoreWindow": "Voltar ao tamanho normal"
   },
@@ -168,6 +170,8 @@
     "peekDark": "Por agora vês o teu tema escuro. O Auto volta a acompanhar o teu sistema quando fechares as Definições.",
     "unlockThemes": "Desbloqueia todos os temas com o Pro",
     "startViewTitle": "Mostrar ao abrir",
+    "reopenLastOpenTitle": "Reabrir o último item",
+    "reopenLastOpenDesc": "Quando a app arranca, vês o item que estava aberto quando saíste. Desligado, começa na lista, sem nada aberto.",
     "viewTitle": "Mostrar itens como",
     "viewDesc": "Auto segue a largura do teu ecrã.",
     "openInTabsTitle": "Mostrar o item aberto num separador",
@@ -198,6 +202,7 @@
     "linkModifierDesc": "Um clique simples coloca o cursor. Um toque continua a abrir a ligação. Apenas neste dispositivo.",
     "typedSymbolsTitle": "Transformar símbolos escritos em setas e sinais matemáticos",
     "typedSymbolsDesc": "Por exemplo, -> passa a →, != passa a ≠ e >= passa a ≥.",
+    "linkSuggestionsDesc": "As Conexões também mostram notas sobre o mesmo tema que ainda não ligaste. Desativa para mostrar o ícone das Conexões apenas em notas com ligações.",
     "confirmTrashTitle": "Perguntar antes de eliminar",
     "confirmTrashDesc": "Pede confirmação antes de um item ir para o lixo.",
     "confirmArchiveTitle": "Perguntar antes de arquivar",
@@ -613,5 +618,18 @@
     "loadError": "Não foi possível carregar o interruptor de homem morto. Verifica a tua ligação e tenta de novo.",
     "confirmTitle": "Ativar o interruptor de homem morto?",
     "confirmBody": "Se nenhum dos teus dispositivos ficar online durante {{period}}, o servidor elimina os teus dados encriptados. Isto não pode ser anulado. Os teus dispositivos continuam a ter as suas notas."
+  },
+  "onDeviceAi": {
+    "title": "Conexões inteligentes",
+    "desc": "Encontra notas com o mesmo significado, mesmo noutras palavras ou noutra língua. Usa uma IA offline (<model>bekko-static</model>) que funciona apenas neste dispositivo.",
+    "on": "Ativadas. As sugestões incluem também notas com o mesmo significado. A IA offline ocupa {{size}} neste dispositivo.",
+    "kept": "Desativadas. A IA offline fica neste dispositivo, por isso voltar a ativá-las não precisa de nenhuma transferência.",
+    "downloadSize": "Transferir · {{size}}",
+    "downloadingLabel": "Transferência da IA offline",
+    "loading": "A carregar a IA offline",
+    "unavailable": "A demonstração não consegue transferir a IA offline.",
+    "failed": "A transferência não terminou. Tenta novamente.",
+    "remove": "Remover deste dispositivo ({{size}})",
+    "howItWorks": "Como funciona"
   }
 }

@@ -9,7 +9,8 @@ import { linkifyMarkdown } from './linkify';
 import type { Importer, ImportedNote, ParsedImport } from './types';
 import i18n from '../i18n';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.bitwarden.${key}`, options);
+/** A Bitwarden import log line; the KeePass importer reuses the ones it shares. */
+export const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:bitwarden.${key}`, options);
 
 /**
  * Bitwarden import adapter.
@@ -52,7 +53,7 @@ interface BwCard {
   expYear?: string | null;
   code?: string | null;
 }
-interface BwIdentity {
+export interface BwIdentity {
   title?: string | null;
   firstName?: string | null;
   middleName?: string | null;
@@ -130,7 +131,7 @@ export const bitwardenImporter: Importer = {
     onProgress?.(i18n.t('importExport:status.readingFile'));
     const text = await file.text();
 
-    onProgress?.(i18n.t('importExport:importLog.shared.parsingJson'));
+    onProgress?.(i18n.t('importLog:shared.parsingJson'));
     let data: BwExport;
     try {
       data = JSON.parse(text) as BwExport;
@@ -376,7 +377,7 @@ export const bitwardenImporter: Importer = {
 
     // Build transform messages.
     if (loginCount > 0) {
-      transforms.push(i18n.t('importExport:importLog.shared.importedLogins', { count: loginCount }));
+      transforms.push(i18n.t('importLog:shared.importedLogins', { count: loginCount }));
     }
     if (cardCount > 0) {
       transforms.push(msg('importedCards', { count: cardCount }));
@@ -406,10 +407,10 @@ export const bitwardenImporter: Importer = {
       transforms.push(msg('markedPinProtected', { count: pinProtectedCount }));
     }
     if (linkifiedCount > 0) {
-      transforms.push(i18n.t('importExport:importLog.shared.linkifiedNotes', { count: linkifiedCount }));
+      transforms.push(i18n.t('importLog:shared.linkifiedNotes', { count: linkifiedCount }));
     }
     if (totpCount > 0) {
-      transforms.push(i18n.t('importExport:importLog.shared.keptTotp', { count: totpCount }));
+      transforms.push(i18n.t('importLog:shared.keptTotp', { count: totpCount }));
     }
 
     // Warnings.
@@ -518,7 +519,7 @@ function appendCustomFields(
  * no PN equivalent, so we render them as a structured note the user can
  * reference or copy fields from.
  */
-function formatIdentity(id: BwIdentity, itemNotes: string): string {
+export function formatIdentity(id: BwIdentity, itemNotes: string): string {
   const lines: string[] = [];
 
   // Personal details (matches Bitwarden's grouping order)

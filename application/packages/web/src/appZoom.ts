@@ -24,6 +24,7 @@
  */
 
 import { useCallback, useSyncExternalStore } from 'react';
+import { createListeners } from './listeners';
 
 const KEY = 'privacynotes.appZoom';
 
@@ -91,12 +92,7 @@ async function pushToWebview(level: AppZoom): Promise<void> {
   await getCurrentWebview().setZoom(level);
 }
 
-const listeners = new Set<() => void>();
-
-function subscribe(cb: () => void): () => void {
-  listeners.add(cb);
-  return () => { listeners.delete(cb); };
-}
+const { subscribe, notify } = createListeners();
 
 function snapshot(): AppZoom {
   return activeAppZoom;
@@ -107,7 +103,7 @@ export function applyAppZoom(level: AppZoom): void {
   activeAppZoom = level;
   try { localStorage.setItem(KEY, String(level)); } catch { /* private mode */ }
   if (appZoomSupported()) void pushToWebview(level).catch(() => { /* no webview */ });
-  listeners.forEach((cb) => cb());
+  notify();
 }
 
 /**

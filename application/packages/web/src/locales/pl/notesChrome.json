@@ -12,7 +12,7 @@
   },
   "moveScreen": {
     "title": "Aplikacja przeniosła się na use.privacynotes.app",
-    "bodySignIn": "Zaloguj się tam swoją 12-wyrazową frazą odzyskiwania albo przez „{{scanQr}}”. To urządzenie najpierw synchronizuje, więc wszystkie Twoje notatki tam na Ciebie czekają, a tutaj nic nie jest usuwane.",
+    "bodySignIn": "Zaloguj się tam swoją frazą odzyskiwania albo przez „{{scanQr}}”. To urządzenie najpierw synchronizuje, więc wszystkie Twoje notatki tam na Ciebie czekają, a tutaj nic nie jest usuwane.",
     "openNotes": "Otwórz tu raz swoje notatki, aby to naprawić",
     "showPhrase": "Pokaż moją frazę odzyskiwania",
     "website": "Zamiast tego przeglądaj stronę"
@@ -52,7 +52,7 @@
     "signInAgain": "Zaloguj się ponownie"
   },
   "signOutConfirm": {
-    "title": "Czy zapisałeś swoją frazę z 12 słów?",
+    "title": "Czy Twoja fraza odzyskiwania jest zapisana?",
     "body": "Twoja fraza to <only>jedyna</only> droga powrotu. Żadnego resetu przez e-mail, żadnej infolinii. Jeśli fraza nie jest jeszcze zapisana, wybierz <action>Nie, pokaż frazę</action>, a otworzymy ją teraz.",
     "unsyncedWarn_one": "1 notatka na tym urządzeniu nie została jeszcze zsynchronizowana. Zostanie bezpowrotnie utracona, jeśli nie uda się jej wysłać podczas wylogowania.",
     "unsyncedWarn_few": "{{count}} notatki na tym urządzeniu nie zostały jeszcze zsynchronizowane. Zostaną bezpowrotnie utracone, jeśli nie uda się ich wysłać podczas wylogowania.",
@@ -169,7 +169,8 @@
     "offline": "Jesteś offline. Linki do spalenia wymagają połączenia z serwerem. Spróbuj ponownie, gdy wrócisz online.",
     "demo": "Linki do spalenia są zapisywane na serwerze, a demo z żadnym się nie łączy. Zarejestruj się, aby tworzyć prawdziwe linki do spalenia.",
     "tooLarge": "Notatka jest za duża, aby udostępnić ją linkiem do spalenia ({{size}} KB). Maksimum to {{max}} KB.",
-    "storeFailed": "Nie udało się zapisać notatki do spalenia na serwerze."
+    "storeFailed": "Nie udało się zapisać notatki do spalenia na serwerze.",
+    "rateLimited": "Z tego połączenia utworzono zbyt wiele linków do spalenia. Spróbuj ponownie później."
   },
   "dms": {
     "returnTitle": "Twoja kopia na serwerze została usunięta",
@@ -182,8 +183,11 @@
   "massDelete": {
     "title": "Notatki usunięte na innym urządzeniu",
     "body_one": "Na innym Twoim urządzeniu usunięto {{count}} notatkę, którą to urządzenie wciąż ma. Jeśli to Ty, usuń ją też tutaj. Jeśli nie, ktoś może mieć dostęp do Twojego konta: zachowaj ją, żeby wróciła na wszystkie Twoje urządzenia.",
-    "keep": "Zachowaj moje notatki",
-    "delete": "Usuń je też tutaj",
+    "refusedTitle": "Twoje notatki wróciły",
+    "refusedBody_one": "Z serwera usunięto {{count}} notatkę, ale nie zrobiło tego żadne z Twoich urządzeń. To urządzenie nie przyjęło usunięcia i przywróciło notatkę na wszystkich Twoich urządzeniach. Sprawdź swoje urządzenia i usuń te, których nie znasz.",
+    "showDevices": "Pokaż urządzenia",
+    "refusedBody_few": "Z serwera usunięto {{count}} notatki, ale nie zrobiło tego żadne z Twoich urządzeń. To urządzenie nie przyjęło usunięcia i przywróciło je na wszystkich Twoich urządzeniach. Sprawdź swoje urządzenia i usuń te, których nie znasz.",
+    "refusedBody_many": "Z serwera usunięto {{count}} notatek, ale nie zrobiło tego żadne z Twoich urządzeń. To urządzenie nie przyjęło usunięcia i przywróciło je na wszystkich Twoich urządzeniach. Sprawdź swoje urządzenia i usuń te, których nie znasz.",
     "body_few": "Na innym Twoim urządzeniu usunięto {{count}} notatki, które to urządzenie wciąż ma. Jeśli to Ty, usuń je też tutaj. Jeśli nie, ktoś może mieć dostęp do Twojego konta: zachowaj je, żeby wróciły na wszystkie Twoje urządzenia.",
     "body_many": "Na innym Twoim urządzeniu usunięto {{count}} notatek, które to urządzenie wciąż ma. Jeśli to Ty, usuń je też tutaj. Jeśli nie, ktoś może mieć dostęp do Twojego konta: zachowaj je, żeby wróciły na wszystkie Twoje urządzenia."
   }

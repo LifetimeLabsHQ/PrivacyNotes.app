@@ -45,6 +45,8 @@ const ROW_BUTTON = 'flex w-full min-w-0 gap-2 rounded-md px-1 py-0.5 text-start 
 const MAX_ROWS = 30;
 /** Below this height a tracker draws its sparkline, above it the chart. */
 const CHART_MIN = 80;
+/** Below this height a tracker draws no chart: bars this short read as a line. */
+const SPARK_MIN = 24;
 const fmt = (n: number) => n.toLocaleString(intlLocale());
 
 /** The rows a widget draws: one line each, the title with its icon and
@@ -59,7 +61,9 @@ function useRowPrefs(): ListPrefs {
  * the card's box (GridCard's `data-card-body`), and every row after it, is
  * hidden, so a card never ends in half a row and a hidden row takes no Tab
  * stop. A day label left with no row under it hides too (`data-fit-label`).
- * When rows were hidden, the room left under the last one is shared out as
+ * The last row that shows is marked (`data-fit-last`): index.css takes its
+ * divider off, so no line stands alone over the card's edge. When rows were
+ * hidden, the room left under the last one is shared out as
  * padding over the rows that show, so the list ends on the card's edge. It
  * runs again when the box's height or the rows change.
  */
@@ -73,6 +77,7 @@ function useFitRows(): (el: HTMLElement | null) => void {
       for (const row of rows) {
         row.style.visibility = '';
         row.style.paddingBlock = '';
+        delete row.dataset.fitLast;
       }
       const bottom = box.getBoundingClientRect().bottom + 0.5;
       let cut = false;
@@ -86,7 +91,9 @@ function useFitRows(): (el: HTMLElement | null) => void {
         last.style.visibility = 'hidden';
         shown.pop();
       }
-      const end = shown.at(-1)?.getBoundingClientRect().bottom;
+      const final = shown.at(-1);
+      if (final) final.dataset.fitLast = '';
+      const end = final?.getBoundingClientRect().bottom;
       if (!cut || end === undefined) return;
       const share = (bottom - 0.5 - end) / shown.length / 2;
       if (share <= 0) return;
@@ -146,10 +153,11 @@ function Rows({ notes, prefs }: { notes: LocalNote[]; prefs?: ListPrefs }) {
   );
 }
 
-/** Nothing to show: said in the middle of the card. */
+/** Nothing to show: said in the middle of the card. The card pads it: the
+ *  line's own padding would cut a second line off in the smallest card. */
 function Empty({ children }: { children: string }) {
   return (
-    <div className="flex h-full items-center justify-center">
+    <div className="flex h-full items-center justify-center [&>p]:p-0">
       <EmptyState compact>{children}</EmptyState>
     </div>
   );
@@ -358,11 +366,15 @@ export function BirthdaysWidget() {
       const b = contactBirthday(c);
       if (!b) continue;
       const day = [env.birthdayIn(year, b.month, b.day), env.birthdayIn(year + 1, b.month, b.day)].find((d) => d && d >= today && d <= end);
-      if (day) out.push({ id: n.id, name: contactDisplayName(n.title, c), day });
+      if (!day) continue;
+      // The age that day, when the birthday row has the year of birth (#750).
+      const name = contactDisplayName(n.title, c);
+      const age = b.year ? Number(day.slice(0, 4)) - b.year : 0;
+      out.push({ id: n.id, name: age > 0 ? t('calendar.birthdayAge', { name, count: age }) : name, day });
     }
     return out.sort((a, b) => a.day.localeCompare(b.day)).slice(0, MAX_ROWS);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [env.pool, env.gatedKey, today]);
+  }, [env.pool, env.gatedKey, today, t]);
   if (!rows.length) return <Empty>{t('dashboard.empty.birthdays')}</Empty>;
   return (
     <ul ref={fit}>
@@ -502,9 +514,11 @@ export function useTrackerChoices(month: WellnessModel): WellnessModel['registry
   return useMemo(() => [...month.registry].filter(visibleInUi).sort((a, b) => (a.id === 'mood' ? -1 : b.id === 'mood' ? 1 : 0)), [month]);
 }
 
-/** One tracker: its number and change, and its days under them, the chart as
- *  tall as the card leaves: a sparkline of the logged span in a short card,
- *  the 30 days with their axis in a taller one. */
+/** One tracker: its number and change, and its days, the chart as tall as
+ *  the card leaves: a sparkline of the logged span in a short card, the 30
+ *  days with their axis in a taller one, none where bars would be a line.
+ *  The days sit under the number, and beside it in a card two columns wide,
+ *  where a short card would leave them no height. */
 export function TrackerWidget({ trackerId }: { trackerId: string }) {
   const { t } = useTranslation('stats');
   const { t: tShell } = useTranslation('shell');
@@ -521,15 +535,17 @@ export function TrackerWidget({ trackerId }: { trackerId: string }) {
   const delta = raw !== null && Math.abs(raw) >= (d.unit === 'steps' || d.unit === 'bpm' ? 0.5 : 0.05) ? raw : null;
   const span = loggedSpan(series);
   return (
-    <button type="button" onClick={env.openStats} className="flex h-full w-full min-w-0 flex-col text-start">
-      <span className="flex items-baseline gap-2 min-w-0">
-        <span className="text-display font-semibold tabular-nums truncate">{headline}</span>
-        {delta !== null && <Change d={d} delta={delta} />}
+    <button type="button" onClick={env.openStats} className="flex h-full w-full min-w-0 flex-col gap-2 text-start @md:flex-row @md:gap-4">
+      <span className="flex min-w-0 flex-col justify-center @md:max-w-[45%] @md:shrink-0">
+        <span className="flex items-baseline gap-2 min-w-0">
+          <span className="text-display font-semibold tabular-nums truncate">{headline}</span>
+          {delta !== null && <Change d={d} delta={delta} />}
+        </span>
+        <span className="block text-meta text-pn-muted truncate">{sub}</span>
       </span>
-      <span className="block text-meta text-pn-muted truncate">{sub}</span>
       {span && (
-        <span ref={setChartBox} aria-hidden={chartHeight < CHART_MIN} className="mt-2 block min-h-0 flex-1">
-          {chartHeight >= 16 && (
+        <span ref={setChartBox} aria-hidden={chartHeight < CHART_MIN} className="block min-h-0 min-w-0 flex-1">
+          {chartHeight >= SPARK_MIN && (
             <TrackerChart spec={chartSpecFor(d, chartHeight < CHART_MIN ? span : series, false)} height={Math.floor(chartHeight)} ariaLabel={`${trackerName(d, t)}: ${headline}`} />
           )}
         </span>

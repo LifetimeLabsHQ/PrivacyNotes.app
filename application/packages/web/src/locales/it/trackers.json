@@ -7,6 +7,7 @@
     "sleep": "Sonno",
     "sleepScore": "Punteggio del sonno",
     "heartRate": "Frequenza cardiaca",
+    "bloodPressure": "Pressione sanguigna",
     "activity": "Attività",
     "medication": "Farmaci",
     "meds": "Farmaci",
@@ -24,6 +25,7 @@
   "units": {
     "hoursSuffix": "h",
     "bpm": "bpm",
+    "mmHg": "mmHg",
     "kg": "kg",
     "lb": "lb",
     "steps_one": "passo",
@@ -116,6 +118,10 @@
   },
   "heartRate": {
     "prompt": "Frequenza cardiaca media"
+  },
+  "bloodPressure": {
+    "systolic": "Massima (sistolica)",
+    "diastolic": "Minima (diastolica)"
   },
   "activity": {
     "prompt": "Livello di attività oggi?",
@@ -243,11 +249,13 @@
   "custom": {
     "yes": "Sì",
     "no": "No",
+    "unknownType": "Questo tracker richiede una versione più recente dell'app.",
     "typeLabels": {
       "scale10": "Scala (0-10)",
       "scale5": "Scala (0-5)",
       "slider100": "Punteggio (0-100)",
       "number": "Numero",
+      "pair": "Due numeri",
       "yesno": "Sì / No"
     }
   },
@@ -263,6 +271,7 @@
     "medicationCard": "Scheda dei farmaci",
     "medicationCardHelp": "\"Hai preso i tuoi farmaci?\" su questo dispositivo, solo nei giorni in cui è prevista una dose.",
     "customHelp": "Tracker a cui dai tu il nome: una scala, un numero o un sì o no. Fino a {{max}}.",
+    "customHelpPair": "Tracker a cui dai tu il nome: una scala, un numero, due numeri o un sì o no. Fino a {{max}}.",
     "yourCustomTrackers": "I tuoi tracker personalizzati",
     "categoryMoodMind": "Umore e mente",
     "categoryBodyHealth": "Corpo e salute",
@@ -297,7 +306,13 @@
     "preview": "Anteprima",
     "startFromLast": "Ricorda l'ultimo valore",
     "chooseIcon": "Scegli l'icona",
-    "startFromLastHelp": "Utile per le cose che cambiano di rado, come il peso o una dose giornaliera."
+    "startFromLastHelp": "Utile per le cose che cambiano di rado, come il peso o una dose giornaliera.",
+    "pairFirst": "Primo numero",
+    "pairSecond": "Secondo numero",
+    "pairFirstPlaceholder": "Sistolica",
+    "pairSecondPlaceholder": "Diastolica",
+    "pairUnit": "Unità (facoltativa)",
+    "pairWaiting": "Salvato non appena inserisci il primo numero."
   },
   "factors": {
     "prompt": "Cosa ha fatto parte della tua giornata?",

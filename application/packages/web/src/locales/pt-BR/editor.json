@@ -361,5 +361,47 @@
     "addColumn": "Adicionar coluna",
     "removeBoard": "Remover quadro",
     "moveTo": "Mover para"
+  },
+  "doodle": {
+    "title": "Rabisco",
+    "clear": "Limpar",
+    "paper": "Papel",
+    "paperNone": "Sem cor: a nota aparece por baixo.",
+    "settings": "Configurações da caneta",
+    "stroke": "Traço",
+    "thinning": "Afinamento",
+    "streamline": "Estabilização",
+    "smoothing": "Suavização",
+    "easingLabel": "Atenuação",
+    "start": "Início",
+    "end": "Fim",
+    "taperStart": "Afunilar o início",
+    "capStart": "Arredondar o início",
+    "easingStart": "Atenuação do início",
+    "taperEnd": "Afunilar o fim",
+    "capEnd": "Arredondar o fim",
+    "easingEnd": "Atenuação do fim",
+    "fill": "Preenchimento",
+    "outline": "Contorno",
+    "easing": {
+      "linear": "Linear",
+      "in": "Início suave, {{curve}}",
+      "out": "Fim suave, {{curve}}",
+      "inOut": "Início e fim suaves, {{curve}}"
+    },
+    "curve": {
+      "quad": "quadrática",
+      "cubic": "cúbica",
+      "quart": "quártica",
+      "quint": "quíntica",
+      "sine": "senoidal",
+      "expo": "exponencial"
+    },
+    "colors": {
+      "black": "Preto",
+      "white": "Branco",
+      "cyan": "Ciano",
+      "lightGray": "Cinza-claro"
+    }
   }
 }

@@ -10,6 +10,35 @@
     "otherGuides": "Inne przewodniki importu"
   },
   "guides": {
+    "1password": {
+      "app": "1Password",
+      "title": "Wyeksportuj swój sejf 1Password",
+      "metaTitle": "Jak wyeksportować sejf 1Password - PrivacyNotes",
+      "lead": "Aplikacja 1Password eksportuje Twoje konto jako jeden plik .1pux, a PrivacyNotes zamienia jego loginy, karty, notatki i tożsamości we wpisy Sejfu i notatki.",
+      "sections": [
+        {
+          "h": "Wyeksportuj dane z 1Password",
+          "steps": [
+            "Otwórz aplikację 1Password na komputerze i odblokuj ją.",
+            "Wybierz File > Export i wskaż swoje konto.",
+            "Wpisz hasło do konta, zostaw format 1PUX i zapisz plik."
+          ]
+        },
+        {
+          "h": "1PUX czy CSV",
+          "p": [
+            "Wybierz 1PUX. Eksport do CSV zawiera tylko loginy: bez kart, notatek i tożsamości oraz bez pól własnych."
+          ]
+        },
+        {
+          "h": "Gdzie co trafia",
+          "p": [
+            "Każdy login staje się [wpisem typu Login w Sejfie](/pl/help/vault) razem z kluczem 2FA, więc [Twoje kody nadal działają](/pl/help/vault-totp), a dodatkowe strony i pola własne przychodzą razem z nim. Karta staje się kartą, a bezpieczna notatka lub tożsamość notatką. Tagi pozostają tagami, także zagnieżdżone, ulubione przychodzą przypięte, a zarchiwizowane elementy trafiają do archiwum. Załączone pliki nie są importowane: zapisz je z 1Password i dołącz tutaj.",
+            "Eksport zawiera Twoje hasła jawnym tekstem. Zaimportuj go, sprawdź, czy wszystko dotarło, a potem usuń plik."
+          ]
+        }
+      ]
+    },
     "google-calendar": {
       "app": "Google Calendar",
       "title": "Wyeksportuj swój Google Calendar",
@@ -159,6 +188,53 @@
         }
       ]
     },
+    "siyuan": {
+      "app": "SiYuan",
+      "title": "Wyeksportuj swoje notatki z SiYuan",
+      "metaTitle": "Jak wyeksportować notatki z SiYuan jako Data.zip - PrivacyNotes",
+      "lead": "SiYuan eksportuje całą przestrzeń roboczą jako jeden plik Data.zip. Ten plik przenosi każdy notes razem z zagnieżdżonymi dokumentami, tagami, odwołaniami do bloków, zasobami i datami.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/siyuan-export.webp",
+            "alt": "Okno Data migration w SiYuan z zaznaczonym wierszem Data.zip i podświetlonym przyciskiem Export.",
+            "width": 1576,
+            "height": 1076
+          },
+          "h": "Wyeksportuj przestrzeń roboczą jako Data.zip",
+          "steps": [
+            "Otwórz SiYuan na komputerze.",
+            "Kliknij menu SiYuan w lewym górnym rogu i wybierz „Data migration”.",
+            "Pod SiYuan najedź na „Data.zip” i kliknij Export.",
+            "Wybierz folder. SiYuan zapisze jeden plik .zip ze wszystkimi notesami z przestrzeni roboczej.",
+            "Upuść ten plik .zip bez zmian."
+          ],
+          "p": [
+            "Żeby przenieść tylko jeden notes, kliknij go prawym przyciskiem w panelu Documents i wybierz Export > „SiYuan .sy.zip”. Ten plik czytamy tak samo."
+          ]
+        },
+        {
+          "h": "Odblokuj zaszyfrowane notesy i wyeksportuj je osobno",
+          "p": [
+            "Data.zip zostawia zaszyfrowany notes zaszyfrowanym, więc nie możemy go odczytać. Pomijamy go, a podgląd importu podaje jego nazwę. Odblokuj notes w SiYuan, wyeksportuj go jako „SiYuan .sy.zip” i upuść też ten plik: ten eksport da się odczytać."
+          ]
+        },
+        {
+          "h": "Wybierz Data.zip, nie Markdown",
+          "p": [
+            "Eksport Markdown .zip zachowuje tekst, ale pomija tagi i daty dokumentów, a odwołania do bloków zapisuje jako zwykły tekst lub przypisy. Odczytamy go, jeśli nie masz nic innego, a każda notatka dostanie datę importu."
+          ]
+        },
+        {
+          "h": "Co przechodzi razem z notatkami",
+          "p": [
+            "Każdy notes staje się folderem, a zagnieżdżone dokumenty zagnieżdżonymi folderami. Dokument, który ma poddokumenty i własny tekst, staje się notatką w folderze o tej samej nazwie. Każda notatka zachowuje swoje tagi oraz daty utworzenia i aktualizacji zapisane przez SiYuan.",
+            "Nagłówki, listy, listy zadań, cytaty, kod z językiem, tabele z wyrównaniem, wzory, ramki, wyróżnienia i kolory tekstu przechodzą bez zmian. [Odwołania do bloków stają się linkami do notatek](/pl/help/note-links), obrazy i pliki trafiają do Twojej pamięci, a dokumenty dodane do zakładek przychodzą przypięte.",
+            "Baza danych staje się tabelą z jej widocznymi kolumnami, karty stają się zwijanymi sekcjami, a mapa myśli zagnieżdżoną listą. Fiszki zostają zwykłym tekstem, a zapytanie osadzone jest zachowane jako kod. Eksporty z SiYuan nie zawierają kosza, więc usunięte dokumenty zostają w jego historii."
+          ]
+        }
+      ]
+    },
     "standard-notes": {
       "app": "Standard Notes",
       "title": "Wyeksportuj swoje notatki ze Standard Notes",
@@ -256,6 +332,29 @@
           "p": [
             "Loginy stają się [wpisami typu Login w Sejfie](/pl/help/vault) (razem z ikonami stron), karty stają się wpisami kart, klucze SSH wpisami kluczy SSH, a bezpieczne notatki i tożsamości trafiają jako czytelne notatki. Foldery Bitwarden mapują się na tagi, a ulubione przychodzą z gwiazdką. Klucze uwierzytelniające (TOTP) też jadą z tobą, więc [twoje kody 2FA nadal działają](/pl/help/vault-totp).",
             "Plik eksportu zawiera Twoje hasła jawnym tekstem, więc zaimportuj go, sprawdź, czy wszystko dotarło, a potem porządnie go usuń. Wewnątrz PrivacyNotes wszystko jest znów zaszyfrowane, na Twoim urządzeniu i w drodze na serwer."
+          ]
+        }
+      ]
+    },
+    "enpass": {
+      "app": "Enpass",
+      "title": "Wyeksportuj swój sejf Enpass",
+      "metaTitle": "Jak wyeksportować sejf Enpass - PrivacyNotes",
+      "lead": "Enpass eksportuje sejf jako jeden plik .json, a PrivacyNotes zamienia jego loginy, karty, notatki i tożsamości we wpisy Sejfu i notatki.",
+      "sections": [
+        {
+          "h": "Wyeksportuj dane z Enpass",
+          "steps": [
+            "Otwórz Enpass na komputerze i odblokuj go.",
+            "Wybierz File > Export, wskaż sejf i format .json.",
+            "Zapisz plik, a potem wpisz swoje hasło główne. Każdy sejf eksportuj osobno."
+          ]
+        },
+        {
+          "h": "Gdzie co trafia",
+          "p": [
+            "Każdy login staje się [wpisem typu Login w Sejfie](/pl/help/vault) razem z kluczem 2FA, więc [Twoje kody nadal działają](/pl/help/vault-totp), a dodatkowe strony i pola własne przychodzą razem z nim. Karta staje się kartą, a bezpieczna notatka lub tożsamość notatką. Foldery stają się tagami, także zagnieżdżone, ulubione przychodzą przypięte, a zarchiwizowane elementy trafiają do archiwum. Elementy z kosza Enpass i załączone pliki nie są importowane.",
+            "Eksport zawiera Twoje hasła jawnym tekstem. Zaimportuj go, sprawdź, czy wszystko dotarło, a potem usuń plik."
           ]
         }
       ]
@@ -863,6 +962,332 @@
           "h": "Importuj ten sam plik ponownie w dowolnej chwili",
           "p": [
             "Kolejny import pomija osoby, które już masz. Dopasowuje każdą wizytówkę po jej ID, potem po imieniu i nazwisku razem ze wspólnym numerem telefonu, a potem po wspólnym adresie e-mail. Kontakty, które już zapisano, się nie zmieniają, więc Twoje zmiany tutaj są bezpieczne."
+          ]
+        }
+      ]
+    },
+    "anytype": {
+      "app": "Anytype",
+      "title": "Wyeksportuj swoją przestrzeń z Anytype",
+      "metaTitle": "Jak wyeksportować przestrzeń z Anytype - PrivacyNotes",
+      "lead": "Anytype eksportuje całą przestrzeń naraz jako jeden zip w formacie Any-Block JSON. Ten plik przenosi Twoje strony razem z tagami, kolekcjami, zadaniami, linkami i plikami.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/anytype-export.webp",
+            "alt": "Ustawienia przestrzeni w Anytype, strona Export, Any-Block v1 z formatem pliku JSON i archiwum Zip, z włączonymi opcjami Include files data i Include archived objects.",
+            "width": 1576,
+            "height": 800
+          },
+          "h": "Wyeksportuj przestrzeń jako Any-Block JSON",
+          "steps": [
+            "Otwórz Anytype na komputerze i przejdź do przestrzeni, którą chcesz przenieść.",
+            "Wybierz File > Export. Anytype otworzy ustawienia przestrzeni na stronie Export. Nowsze wersje nazywają przestrzeń kanałem, więc strona nosi tytuł „Export Channel”.",
+            "Wybierz „Any-Block v1” i zostaw File Format ustawiony na JSON.",
+            "Włącz „Zip archive”, „Include files data” i „Include archived objects”.",
+            "Kliknij „Export data” i wybierz folder. Anytype zapisze jeden plik .zip nazwany od przestrzeni i daty.",
+            "Upuść ten plik .zip bez zmian."
+          ],
+          "p": [
+            "Jeden eksport obejmuje jedną przestrzeń. Jeśli trzymasz notatki w kilku przestrzeniach, wyeksportuj każdą z nich i upuść pliki zip jeden po drugim."
+          ]
+        },
+        {
+          "h": "Wybierz Any-Block JSON, nie Markdown ani Protobuf",
+          "p": [
+            "Eksport Markdown zachowuje tekst, ale gubi podkreślenie, kolory, ramki, wyrównanie i języki kodu, a kolekcje pomija. Odczytamy go, jeśli nie masz nic innego, a podgląd importu powie, co zostało utracone.",
+            "Any-Block oferuje też format pliku Protobuf. Zawiera te same dane w postaci binarnej, której nie czytamy, więc prosimy o eksport JSON. Any-Block v2 Anytype oznacza jako wersję zapoznawczą i nie jest to kopia zapasowa."
+          ]
+        },
+        {
+          "h": "Co przechodzi razem z notatkami",
+          "p": [
+            "Strony, notatki, zadania i zakładki stają się notatkami z tagami oraz datami utworzenia i aktualizacji zapisanymi przez Anytype. Anytype nie ma folderów, więc strona w kolekcji trafia do folderu nazwanego od tej kolekcji, a każda inna strona ląduje na najwyższym poziomie.",
+            "Nagłówki, listy, listy zadań, cytaty, kod z językiem, tabele, wzory i diagramy Mermaid przechodzą bez zmian. Przełączniki stają się zwijanymi sekcjami, a ramki ramkami. [Linki i wzmianki między stronami stają się linkami do notatek](/pl/help/note-links), a obrazy i pliki trafiają do Twojej pamięci.",
+            "Zadanie przychodzi jako notatka zadania, odhaczona, jeśli było wykonane. Własne właściwości są zapisane jako krótka lista na górze notatki. Strony z kosza Anytype trafiają do Twojego kosza, więc możesz je tam przywrócić lub usunąć.",
+            "Ikony i okładki stron zostają w Anytype, a podgląd importu podaje, ile ich było. Ulubione nie wchodzą do eksportu, więc po imporcie przypnij te notatki ponownie."
+          ]
+        }
+      ]
+    },
+    "apple-calendar": {
+      "app": "Apple Calendar",
+      "title": "Wyeksportuj swój Apple Calendar",
+      "metaTitle": "Jak wyeksportować Apple Calendar - PrivacyNotes",
+      "lead": "Calendar na Macu eksportuje jeden kalendarz naraz jako plik .ics, a PrivacyNotes czyta ten plik bez zmian. Każdy kalendarz staje się folderem.",
+      "sections": [
+        {
+          "h": "Wyeksportuj kalendarz z Calendar na Macu",
+          "steps": [
+            "Otwórz Calendar i pokaż listę kalendarzy po lewej (View > Show Calendar List).",
+            "Kliknij kalendarz, który chcesz przenieść.",
+            "Wybierz File > Export > „Export...” i zapisz plik .ics.",
+            "Zrób to samo z każdym innym kalendarzem, który chcesz przenieść. Każdy z nich to osobny plik."
+          ]
+        },
+        {
+          "h": "Co przechodzi razem z wydarzeniami",
+          "p": [
+            "Każde wydarzenie przychodzi ze swoim dniem, godziną i czasem trwania, także wydarzenia całodniowe i trwające kilka dni. Wydarzenia cykliczne zachowują swoją regułę.",
+            "Domyślne alerty kalendarza są w ustawieniach Calendar, a nie w wydarzeniach, więc eksport ich pomija, a krok sprawdzania mówi, ile nadchodzących wydarzeń przychodzi bez przypomnienia. Alert ustawiony na jednym wydarzeniu przechodzi razem z nim. Ponowny import tego samego pliku pomija wydarzenia, które już masz."
+          ]
+        }
+      ]
+    },
+    "keepass": {
+      "app": "KeePass",
+      "title": "Wyeksportuj swoją bazę KeePass",
+      "metaTitle": "Jak wyeksportować bazę KeePass - PrivacyNotes",
+      "lead": "KeePass eksportuje całą Twoją bazę jako jeden plik KeePass XML, a PrivacyNotes zamienia każdy wpis w login albo notatkę. XML zachowuje więcej niż eksport do CSV.",
+      "sections": [
+        {
+          "h": "Wyeksportuj dane z KeePass",
+          "steps": [
+            "Otwórz swoją bazę w KeePass i odblokuj ją.",
+            "Wybierz File > Export.",
+            "Wybierz „KeePass XML (2.x)” i zapisz plik .xml."
+          ]
+        },
+        {
+          "h": "Wybierz XML, nie .kdbx",
+          "p": [
+            "Plik bazy .kdbx jest zablokowany Twoim kluczem głównym, więc PrivacyNotes nie może go odczytać, i import powie to wprost, jeśli go upuścisz. Eksport KeePass do CSV też działa, ale zachowuje tylko tytuł, nazwę użytkownika, hasło, stronę i notatki."
+          ]
+        },
+        {
+          "h": "Gdzie co trafia",
+          "p": [
+            "Wpis z nazwą użytkownika, hasłem, stroną lub kluczem 2FA staje się [wpisem typu Login w Sejfie](/pl/help/vault), a każdy inny wpis bezpieczną notatką. Dodatkowe strony i Twoje własne pola przychodzą razem z nim, pole chronione pozostaje ukryte, a data ważności staje się polem. Klucz 2FA też przychodzi, więc [Twoje kody nadal działają](/pl/help/vault-totp). Załączone pliki też przychodzą, w sekcji Pliki loginu albo na końcu notatki. Grupy i tagi stają się tagami. Wpisy z Recycle Bin i starsze wersje wpisu nie są importowane.",
+            "Eksport zawiera Twoje hasła jawnym tekstem. Zaimportuj go, sprawdź, czy wszystko dotarło, a potem usuń plik."
+          ]
+        }
+      ]
+    },
+    "keepassxc": {
+      "app": "KeePassXC",
+      "title": "Wyeksportuj swoją bazę KeePassXC",
+      "metaTitle": "Jak wyeksportować bazę KeePassXC - PrivacyNotes",
+      "lead": "KeePassXC eksportuje Twoją bazę jako plik XML albo CSV, a PrivacyNotes czyta oba. Eksport XML zachowuje wszystko, czego brakuje w CSV.",
+      "sections": [
+        {
+          "h": "Wyeksportuj dane z KeePassXC",
+          "steps": [
+            "Otwórz swoją bazę w KeePassXC i odblokuj ją.",
+            "Wybierz Database > Export > „XML File...”.",
+            "Potwierdź ostrzeżenie o niezaszyfrowanym pliku i zapisz go."
+          ]
+        },
+        {
+          "h": "XML czy CSV",
+          "p": [
+            "Wybierz XML. CSV zachowuje tytuł, nazwę użytkownika, hasło, stronę, notatki, klucz 2FA, daty i grupę, ale nie ma tagów, pól własnych, drugiej strony, daty ważności ani załączonych plików. Sam plik .kdbx jest zablokowany, więc PrivacyNotes nie może go odczytać."
+          ]
+        },
+        {
+          "h": "Gdzie co trafia",
+          "p": [
+            "Wpis z nazwą użytkownika, hasłem, stroną lub kluczem 2FA staje się [wpisem typu Login w Sejfie](/pl/help/vault), a każdy inny wpis bezpieczną notatką. Pola własne przychodzą jako pola, chronione pozostaje ukryte, a klucz 2FA też przychodzi, więc [Twoje kody nadal działają](/pl/help/vault-totp). Załączone pliki też przychodzą, w sekcji Pliki loginu albo na końcu notatki. Grupy i tagi stają się tagami. Wpisy z Recycle Bin i starsze wersje wpisu nie są importowane.",
+            "Eksport zawiera Twoje hasła jawnym tekstem. Zaimportuj go, sprawdź, czy wszystko dotarło, a potem usuń plik."
+          ]
+        }
+      ]
+    },
+    "lastpass": {
+      "app": "LastPass",
+      "title": "Wyeksportuj swój sejf LastPass",
+      "metaTitle": "Jak wyeksportować sejf LastPass - PrivacyNotes",
+      "lead": "LastPass eksportuje Twój sejf jako jeden plik .csv, a PrivacyNotes zamienia jego hasła w loginy, a bezpieczne notatki w notatki albo karty.",
+      "sections": [
+        {
+          "h": "Wyeksportuj dane z LastPass",
+          "steps": [
+            "Zaloguj się do swojego sejfu LastPass w przeglądarce.",
+            "Wybierz Advanced options > Export.",
+            "Wybierz „Export data for use anywhere” i potwierdź hasłem głównym. LastPass zapisze plik .csv."
+          ]
+        },
+        {
+          "h": "Gdzie co trafia",
+          "p": [
+            "Każde hasło staje się [wpisem typu Login w Sejfie](/pl/help/vault) razem z kluczem 2FA, więc [Twoje kody nadal działają](/pl/help/vault-totp). Bezpieczna notatka staje się notatką, a notatka z kartą płatniczą staje się kartą. Foldery stają się tagami, także zagnieżdżone, a ulubione przychodzą przypięte. W pliku nie ma dat, więc każdy element dostaje datę importu.",
+            "Eksport zawiera Twoje hasła jawnym tekstem. Zaimportuj go, sprawdź, czy wszystko dotarło, a potem usuń plik."
+          ]
+        }
+      ]
+    },
+    "nordpass": {
+      "app": "NordPass",
+      "title": "Wyeksportuj swój sejf NordPass",
+      "metaTitle": "Jak wyeksportować sejf NordPass - PrivacyNotes",
+      "lead": "NordPass eksportuje Twój sejf jako jeden plik .csv, a PrivacyNotes zamienia jego hasła, notatki, karty i dane osobowe we wpisy Sejfu.",
+      "sections": [
+        {
+          "h": "Wyeksportuj dane z NordPass",
+          "steps": [
+            "Otwórz NordPass i odblokuj go.",
+            "Przejdź do Settings i wybierz „Export Items”.",
+            "Potwierdź hasłem głównym i zapisz plik .csv."
+          ]
+        },
+        {
+          "h": "Gdzie co trafia",
+          "p": [
+            "Każde hasło staje się [wpisem typu Login w Sejfie](/pl/help/vault) razem z dodatkowymi stronami i polami własnymi, a ukryte pole pozostaje ukryte. Notatki przychodzą jako notatki, karty jako karty, a dane osobowe jako notatka, w której każdy szczegół ma własną linię. Folder każdego elementu staje się tagiem. Plik podaje tylko folder, w którym element leży, a nie foldery nad nim.",
+            "W planie darmowym NordPass nie przechowuje kluczy 2FA, więc w pliku ich nie ma. Eksport zawiera Twoje hasła jawnym tekstem. Zaimportuj go, sprawdź, czy wszystko dotarło, a potem usuń plik."
+          ]
+        }
+      ]
+    },
+    "proton-pass": {
+      "app": "Proton Pass",
+      "title": "Wyeksportuj swój sejf Proton Pass",
+      "metaTitle": "Jak wyeksportować sejf Proton Pass - PrivacyNotes",
+      "lead": "Proton Pass eksportuje Twoje sejfy jako plik .zip, .csv albo plik zaszyfrowany PGP. PrivacyNotes czyta .zip i .csv, a .zip zachowuje najwięcej.",
+      "sections": [
+        {
+          "h": "Wyeksportuj dane z Proton Pass",
+          "steps": [
+            "Otwórz Proton Pass i przejdź do Settings > Export.",
+            "W sekcji File format wybierz ZIP.",
+            "Kliknij Export i potwierdź swoim hasłem Proton."
+          ]
+        },
+        {
+          "h": "Wybierz ZIP, nie plik zaszyfrowany PGP",
+          "p": [
+            "Plik zaszyfrowany PGP jest zablokowany Twoją frazą hasłową, więc PrivacyNotes nie może go odczytać, i import powie to wprost. Plik .csv też działa, ale nie ma pól własnych."
+          ]
+        },
+        {
+          "h": "Gdzie co trafia",
+          "p": [
+            "Każdy login staje się [wpisem typu Login w Sejfie](/pl/help/vault) razem z dodatkowymi stronami, polami własnymi i datami. Jego klucz 2FA też przychodzi, więc [Twoje kody nadal działają](/pl/help/vault-totp). Gdy element ma i adres e-mail, i nazwę użytkownika, nazwa użytkownika wypełnia login, a e-mail staje się polem. Notatki przychodzą jako notatki, karty jako karty, a tożsamości jako notatki, w których każdy szczegół ma własną linię. Każdy alias hide-my-email staje się notatką z adresem, więc zachowujesz listę, który adres trafił do której strony; Proton nadal przekazuje jego pocztę, dopóki Twoje konto Proton jest otwarte. Przy więcej niż jednym sejfie każdy sejf staje się tagiem. Elementy z kosza nie są importowane.",
+            "Eksport zawiera Twoje hasła jawnym tekstem. Zaimportuj go, sprawdź, czy wszystko dotarło, a potem usuń plik."
+          ]
+        }
+      ]
+    },
+    "dashlane": {
+      "app": "Dashlane",
+      "title": "Wyeksportuj swój sejf Dashlane",
+      "metaTitle": "Jak wyeksportować sejf Dashlane - PrivacyNotes",
+      "lead": "Dashlane eksportuje Twój sejf jako plik .zip z plikami CSV, a PrivacyNotes zamienia jego loginy, bezpieczne notatki i karty płatnicze we wpisy Sejfu i notatki.",
+      "sections": [
+        {
+          "h": "Wyeksportuj dane z Dashlane",
+          "steps": [
+            "Otwórz swój sejf Dashlane w rozszerzeniu przeglądarki albo w aplikacji webowej.",
+            "Wybierz Settings > Export data.",
+            "Wybierz format CSV i zapisz plik .zip."
+          ]
+        },
+        {
+          "h": "CSV, nie .dash",
+          "p": [
+            "Wybierz CSV. Eksport .dash jest zablokowany własnym hasłem, a PrivacyNotes powie to wprost, jeśli go upuścisz."
+          ]
+        },
+        {
+          "h": "Gdzie co trafia",
+          "p": [
+            "Każdy login staje się [wpisem typu Login w Sejfie](/pl/help/vault) razem z kluczem 2FA, więc [Twoje kody nadal działają](/pl/help/vault-totp). Bezpieczna notatka staje się notatką, a karta płatnicza kartą. Dokumenty tożsamości i dane osobowe stają się notatkami z ich szczegółami. Kategorie stają się tagami, także zagnieżdżone. Dashlane trzyma jedną stronę na login, więc drugiej strony nie ma w pliku.",
+            "Eksport zawiera Twoje hasła jawnym tekstem. Zaimportuj go, sprawdź, czy wszystko dotarło, a potem usuń plik."
+          ]
+        }
+      ]
+    },
+    "daylio": {
+      "app": "Daylio",
+      "title": "Wyeksportuj swoje wpisy z Daylio",
+      "metaTitle": "Jak wyeksportować kopię zapasową Daylio - PrivacyNotes",
+      "lead": "Daylio eksportuje kopię zapasową .daylio z menu More > Backup & Restore. PrivacyNotes czyta ten plik i odtwarza każdy wpis jako wpis w dzienniku, razem z nastrojem, aktywnościami i zdjęciami.",
+      "sections": [
+        {
+          "h": "Wyeksportuj kopię zapasową .daylio",
+          "steps": [
+            "Zamknij Daylio całkowicie, a potem otwórz je ponownie. Kopia zapasowa zrobiona tuż po dodaniu nowego wpisu może go pominąć, dopóki aplikacja się nie uruchomi na nowo.",
+            "Wybierz More > Backup & Restore > Advanced Options > Export.",
+            "Daylio otwiera arkusz udostępniania, a nie okno zapisu. Zapisz plik w swoich plikach albo na dysku w chmurze, który otworzysz na tym urządzeniu.",
+            "Zapisany plik .daylio to plik do importu."
+          ]
+        },
+        {
+          "h": "Wybierz kopię zapasową, nie plik CSV",
+          "p": [
+            "More > Export Entries zapisuje plik CSV, a to funkcja Premium w Daylio. PrivacyNotes czyta go też, ale CSV nie zawiera zdjęć, notatek głosowych ani grup nastrojów, więc nastrój z Twoją własną lub zmienioną nazwą trafia do wpisu jako tekst, a nie do trackera nastroju. Gdy tylko możesz, używaj kopii zapasowej .daylio."
+          ]
+        },
+        {
+          "h": "Co przechodzi razem z wpisami",
+          "p": [
+            "[Każdy wpis ląduje w Dziennikach](/pl/help/journal), z dniem i godziną, które pokazuje Daylio, a dwa wpisy z jednego dnia pozostają dwoma wpisami. Każdy nastrój uzupełnia [tracker nastroju](/pl/help/choose-trackers) na podstawie jego grupy nastrojów z Daylio, więc zmieniona nazwa nastroju zachowuje swoje miejsce na skali, a nastrój nazwany przez Ciebie otwiera też wpis.",
+            "Aktywności stają się [czynnikami](/pl/help/factors), a nowy czynnik zachowuje swoją grupę z Daylio. Skale takie jak Energy czy Stress trafiają jako lista na końcu wpisu. Tytuły notatek, pogrubienie, kursywa, podkreślenie, przekreślenie i listy zostają, zdjęcia importują się jako obrazy, notatki głosowe jako załączniki, a wpis z gwiazdką zachowuje gwiazdkę. Cele i ważne dni zostają w Daylio, a podsumowanie importu je liczy."
+          ]
+        }
+      ]
+    },
+    "diarium": {
+      "app": "Diarium",
+      "title": "Wyeksportuj swój dziennik z Diarium",
+      "metaTitle": "Jak wyeksportować dziennik z Diarium - PrivacyNotes",
+      "lead": "Diarium eksportuje Twój dziennik jako JSON z menu Export. PrivacyNotes czyta ten eksport i odtwarza każdy wpis jako wpis w dzienniku, razem z oceną, tagami i załącznikami.",
+      "sections": [
+        {
+          "h": "Wyeksportuj JSON z załącznikami",
+          "steps": [
+            "Otwórz Diarium i wybierz Export z menu.",
+            "Wybierz JSON jako format i włącz Attachments.",
+            "Wybierz Save to local storage i wskaż folder. Diarium zapisze plik .zip z plikiem JSON oraz Twoimi zdjęciami i plikami.",
+            "Ten plik .zip to plik do importu."
+          ]
+        },
+        {
+          "h": "Zostaw opcję Attachments włączoną",
+          "p": [
+            "Przy wyłączonej opcji Attachments Diarium zapisuje sam plik .json. PrivacyNotes importuje jego tekst, ale każde zdjęcie i plik zostają w Diarium, a podsumowanie importu je liczy. Wyeksportuj ponownie z włączoną opcją Attachments i upuść plik .zip.",
+            "Opcja Create separate file for each entry nie ma znaczenia: PrivacyNotes czyta każdy plik JSON w pliku .zip. Eksporty DOCX, TXT, HTML i PDF oraz kopia zapasowa .diary nie importują się, więc wybierz JSON."
+          ]
+        },
+        {
+          "h": "Co przechodzi razem z wpisami",
+          "p": [
+            "[Każdy wpis ląduje w Dziennikach](/pl/help/journal), z dniem i godziną, które pokazuje Diarium. Ocena w gwiazdkach uzupełnia [tracker nastroju](/pl/help/choose-trackers). Tagi stają się tagami notatek i [czynnikami](/pl/help/factors), a osoby stają się czynnikami w grupie Osoby.",
+            "Pogrubienie, kursywa, podkreślenie, przekreślenie, podświetlenia, kolory tekstu, listy i linki zostają, a link do innego wpisu staje się [linkiem do notatki](/pl/help/note-links), gdy ten wpis jest w tym samym eksporcie. Trackery trafiają jako lista na końcu wpisu, pogoda, słońce i księżyc jako jedna linijka na górze, a lokalizacja staje się miejscem wpisu. Zdjęcia importują się jako obrazy, a filmy, nagrania audio i pliki PDF jako załączniki."
+          ]
+        }
+      ]
+    },
+    "google-journal": {
+      "app": "Google Journal",
+      "title": "Wyeksportuj swoje wpisy z Google Journal",
+      "metaTitle": "Jak wyeksportować wpisy z Google Journal - PrivacyNotes",
+      "lead": "Google Journal eksportuje przez Google Takeout, gdy włączona jest jego kopia zapasowa. PrivacyNotes czyta plik .zip z Takeout i odtwarza każdy wpis jako wpis w dzienniku, razem ze zdjęciami i filmami.",
+      "sections": [
+        {
+          "h": "Najpierw włącz kopię zapasową",
+          "p": [
+            "Takeout nie pokazuje Journal, dopóki Journal nie robi kopii zapasowej na Twoim koncie Google. Najpierw włącz kopię zapasową, bo inaczej nie znajdziesz Journal na liście w Takeout."
+          ],
+          "steps": [
+            "Otwórz Journal na swoim Pixelu i przejdź do Settings.",
+            "Włącz Back up your journal.",
+            "Poczekaj kilka minut. Journal pojawia się w Takeout dopiero po włączeniu kopii zapasowej."
+          ]
+        },
+        {
+          "h": "Wyeksportuj Journal z Google Takeout",
+          "steps": [
+            "Otwórz takeout.google.com i zaloguj się na to samo konto Google.",
+            "Kliknij Deselect all, a potem zaznacz tylko Journal („Your journal entries and attachments from Journal”).",
+            "Kliknij Next step, zostaw typ pliku .zip i kliknij Create export.",
+            "Gdy archiwum będzie gotowe, Google wyśle Ci link. Pobierz plik .zip: to plik do importu."
+          ]
+        },
+        {
+          "h": "Co przechodzi razem z wpisami",
+          "p": [
+            "[Każdy wpis ląduje w Dziennikach](/pl/help/journal), z dniem, który wybrano dla niego w Journal. Każdy wpis zachowuje tytuł i tekst, a zdjęcia i filmy importują się jako obrazy i załączniki. Mapa we wpisie przychodzi jako obraz.",
+            "Takeout nie zawiera nazw miejsc, podpowiedzi do pisania, zakładek ani refleksji z Journal, więc zostają w Journal. Podsumowanie importu o tym informuje."
           ]
         }
       ]

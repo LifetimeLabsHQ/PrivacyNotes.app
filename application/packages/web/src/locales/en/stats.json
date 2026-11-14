@@ -248,6 +248,8 @@
       "unknown": "Unknown tracker {{id}}",
       "sleepHours": "Sleep hours",
       "sleepQuality": "Sleep quality",
+      "bpSystolic": "Blood pressure, top",
+      "bpDiastolic": "Blood pressure, bottom",
       "avgDays_one": "avg, {{count}} day",
       "avgDays_other": "avg, {{count}} days",
       "sumDays_one": "total, {{count}} day",

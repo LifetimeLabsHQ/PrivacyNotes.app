@@ -27,24 +27,12 @@ export type LinkIndex = {
   outgoing: Map<string, { ids: string[]; missing: string[] }>;
 };
 
-export function buildLinkIndex<T extends Item>(
-  items: readonly T[],
-  {
-    nameOf,
-    isSource,
-  }: {
-    /** The name a note-link finds the item by (`noteLinkName`). */
-    nameOf: (item: T) => string;
-    /** False for an item whose body is not markdown. */
-    isSource: (item: T) => boolean;
-  },
-): LinkIndex {
-  const incoming = new Map<string, string[]>();
-  const protectedIncoming = new Map<string, number>();
-  const outgoing = new Map<string, { ids: string[]; missing: string[] }>();
-  // Two lookups in place of `resolveNoteLinkMatches`, with its two passes:
-  // the exact title (any case) first, then the key. A scan of every item per
-  // link costs half a second on a library of a few thousand notes.
+/**
+ * The resolver a click runs, built once over the items: the exact title (any
+ * case) first, then the key. A scan of every item per link costs half a
+ * second on a library of a few thousand notes, so it is two lookup maps.
+ */
+export function linkResolver<T extends Item>(items: readonly T[], nameOf: (item: T) => string) {
   const byExact = new Map<string, T[]>();
   const byKey = new Map<string, T[]>();
   const add = (map: Map<string, T[]>, k: string, n: T) => {
@@ -65,30 +53,62 @@ export function buildLinkIndex<T extends Item>(
     const key = noteLinkKey(note);
     return key ? byKey.get(key) ?? [] : [];
   };
+  return { hasNote, resolve };
+}
+
+/**
+ * The items one body links to, as a click resolves them, and the targets no
+ * item carries. A title two items share links to neither; a link to the
+ * source itself does not count.
+ */
+export function linksInBody<T extends Item>(
+  body: string,
+  sourceId: string,
+  { hasNote, resolve }: ReturnType<typeof linkResolver<T>>,
+): { ids: string[]; missing: string[] } {
+  const ids = new Set<string>();
+  const missing = new Map<string, string>();
+  for (const target of noteLinkTargets(body)) {
+    const { note } = parseNoteLinkTarget(target, hasNote);
+    // `[[#Heading]]` points into the note that holds it.
+    if (note === '') continue;
+    const matches = resolve(note);
+    if (matches.length === 0) {
+      const key = noteLinkKey(note);
+      if (key && !missing.has(key)) missing.set(key, note);
+      continue;
+    }
+    if (matches.length > 1) continue;
+    const match = matches[0]!;
+    if (match.id !== sourceId) ids.add(match.id);
+  }
+  return { ids: [...ids], missing: [...missing.values()] };
+}
+
+export function buildLinkIndex<T extends Item>(
+  items: readonly T[],
+  {
+    nameOf,
+    isSource,
+  }: {
+    /** The name a note-link finds the item by (`noteLinkName`). */
+    nameOf: (item: T) => string;
+    /** False for an item whose body is not markdown. */
+    isSource: (item: T) => boolean;
+  },
+): LinkIndex {
+  const incoming = new Map<string, string[]>();
+  const protectedIncoming = new Map<string, number>();
+  const outgoing = new Map<string, { ids: string[]; missing: string[] }>();
+  const resolver = linkResolver(items, nameOf);
 
   for (const source of items) {
     if (!isSource(source)) continue;
-    const targets = noteLinkTargets(source.body);
-    if (targets.length === 0) continue;
+    if (!source.body.includes('[[')) continue;
     const isProtected = source.pinProtected === 1;
-    const ids = new Set<string>();
-    const missing = new Map<string, string>();
-    for (const target of targets) {
-      const { note } = parseNoteLinkTarget(target, hasNote);
-      // `[[#Heading]]` points into the note that holds it.
-      if (note === '') continue;
-      const matches = resolve(note);
-      if (matches.length === 0) {
-        const key = noteLinkKey(note);
-        if (key && !missing.has(key)) missing.set(key, note);
-        continue;
-      }
-      if (matches.length > 1) continue;
-      const match = matches[0]!;
-      if (match.id !== source.id) ids.add(match.id);
-    }
-    outgoing.set(source.id, { ids: [...ids], missing: [...missing.values()] });
-    for (const id of ids) {
+    const out = linksInBody(source.body, source.id, resolver);
+    outgoing.set(source.id, out);
+    for (const id of out.ids) {
       if (isProtected) {
         protectedIncoming.set(id, (protectedIncoming.get(id) ?? 0) + 1);
       } else {

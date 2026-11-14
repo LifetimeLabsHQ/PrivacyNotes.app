@@ -89,6 +89,10 @@ export type ImportBlob = {
   processed?: boolean;
   /** A contact photo obeys the contact ceiling on top of the image switches. */
   ceiling?: 'contact';
+  /** An attached file (a password manager's): stored as a file with its own
+   *  bytes and name, a picture too, the way a vault item's Files section
+   *  attaches one. */
+  file?: boolean;
 };
 
 export interface ParsedImport {
@@ -147,10 +151,15 @@ export type ImporterId =
   | 'obsidian'
   | 'notesnook'
   | 'joplin'
+  | 'anytype'
+  | 'siyuan'
   | 'bear'
   | 'upnote'
   | 'apple-notes'
   | 'apple-journal'
+  | 'daylio'
+  | 'diarium'
+  | 'google-journal'
   | 'evernote'
   | 'samsung-notes'
   | 'simplenote'
@@ -168,6 +177,14 @@ export type ImporterId =
   | 'bitwarden'
   | 'browser-bookmarks'
   | 'browser-passwords'
+  | 'keepassxc'
+  | 'keepass'
+  | 'lastpass'
+  | '1password'
+  | 'enpass'
+  | 'dashlane'
+  | 'nordpass'
+  | 'proton-pass'
   | 'vcard'
   | 'google-calendar'
   | 'excalidraw'

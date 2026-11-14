@@ -126,6 +126,14 @@
   },
   "banner": {
     "proActivationPending": "결제는 받았지만 Pro 활성화가 평소보다 오래 걸리고 있어요. 1분 뒤에 새로고침하고, 그래도 안 켜지면 지원팀에 문의하세요.",
+    "crypto": {
+      "waiting": "암호화폐 결제를 기다리는 중이에요. 확인되면 Pro가 켜져요.",
+      "seen": "암호화폐 결제가 감지됐어요. 네트워크에서 확인되면 Pro가 켜져요. Bitcoin은 보통 1시간 이내예요.",
+      "partial": "암호화폐 결제 금액 중 일부가 도착했어요. 링크가 만료되기 전에 결제 페이지에서 나머지를 보내세요.",
+      "ended": "전체 금액이 도착하기 전에 암호화폐 결제 링크가 만료됐어요.",
+      "paid": "암호화폐 결제가 확인됐어요. Pro가 켜졌어요.",
+      "openPayment": "결제 페이지"
+    },
     "snapshotPaused": "노트 히스토리가 일시 중지됐어요. Pro 플랜이 비활성 상태로 보여요. Pro가 복구될 때까지 새 수정 내용은 스냅샷되지 않아요.",
     "restorePro": "Pro 복구",
     "storagePastDue": "저장 공간 구독 결제에 실패했어요. 추가 용량을 잃지 않으려면 Paddle에서 카드를 업데이트하세요.",
@@ -311,7 +319,24 @@
     "linkedFrom": "이 노트를 링크한 곳",
     "linksTo": "이 노트의 링크",
     "missing": "아직 만들지 않음",
-    "protectedHidden_other": "PIN 보호 항목 {{count}}개는 표시되지 않아요"
+    "protectedHidden_other": "PIN 보호 항목 {{count}}개는 표시되지 않아요",
+    "related": "연결 제안",
+    "relatedWords": "둘 다 {{words}}을(를) 언급해요",
+    "relatedLinksTo": "둘 다 {{title}}에 링크해요",
+    "relatedLinkedFrom": "둘 다 {{title}}에서 링크돼요",
+    "relatedTag": "둘 다 {{tag}} 태그가 있어요",
+    "relatedMeaning": "같은 의미",
+    "meaningDoor": "스마트 연결: 오프라인 AI로 같은 의미의 노트 찾기",
+    "meaningDoorNo": "다시 표시하지 않기",
+    "meaningDoorHidden": "모든 노트에서 숨겼어요. 스마트 연결은 설정 > 편집기 > 동작에 그대로 있어요.",
+    "hideSuggestions": "연결 제안 숨기기",
+    "notRelated": "관련 없음",
+    "notRelatedDone": "더 이상 제안하지 않아요",
+    "notRelatedCount": "관련 없음 ({{n}})",
+    "restoreSuggestion": "다시 제안",
+    "linkAtCursor": "커서 위치에 링크",
+    "linkNeedsCursor": "먼저 노트 안을 클릭하세요",
+    "linkAsFootnote": "각주로 링크"
   },
   "drawing": {
     "fullScreen": "전체 화면",

@@ -13,7 +13,7 @@ import type { ContextMenuItem } from './ContextMenu';
 import type { LocalNote } from './db';
 import type { ListPrefs, ListPrefsStore } from './listPrefs';
 import { resolvePrefs, setPillarPrefs } from './listPrefs';
-import { formatBytes } from './formatBytes';
+import { formatBytes, parseSizeToBytes } from './formatBytes';
 import { StorageBar } from './StorageBar';
 import { editedAtOf, mimeToLabel } from './notesViewUtils';
 import { formatInstant, useDateFormatKey } from './intlFormat';
@@ -36,13 +36,13 @@ import { ListPrefsPopover } from './ListPrefsPopover';
 import { IconUpgrade } from './UpgradeModal';
 import { proUnlocked } from './demo';
 import { LazyPdfCover, LazyPicture } from './LazyPicture';
-import { isMail, isPdf, isPictureMime, openMediaViewer, type MediaRef } from './mediaRefs';
+import { IMAGE_REF_RE, isMail, isPdf, isPictureMime, openMediaViewer, type MediaRef } from './mediaRefs';
 import { useQuotaBlockedUuids } from './usePendingUploads';
 import { unescapeMarkdownText } from './fileNames';
 import { noteFileLinks } from './vaultBody';
 import { textMatcher } from './textMatch';
 import { setItemDragImage, writeItemDrag } from './itemDrag';
-import { isShortcutId } from './noteShortcut';
+import { isUuid } from './uuid';
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -100,20 +100,8 @@ function fileCategory(item: FileItem): 'image' | 'audio' | 'document' {
 
 // Sort types are shared via listPrefs.ts (SortField / SortDir).
 
-/** Parse a pre-formatted size string like "42.2 MB" back to bytes. */
-function parseSizeToBytes(s: string): number {
-  const n = parseFloat(s) || 0;
-  if (!n) return 0;
-  const lower = s.toLowerCase();
-  if (lower.includes('gb')) return n * 1000 * 1000 * 1000;
-  if (lower.includes('mb')) return n * 1000 * 1000;
-  if (lower.includes('kb')) return n * 1000;
-  return n;
-}
-
 // ── Extraction ─────────────────────────────────────────────────────────
 
-const IMG_RE = /pn:img\/([0-9a-f-]{36})/g;
 /** Extract all file items from a set of notes. */
 export function extractFileItems(notes: LocalNote[]): FileItem[] {
   const items: FileItem[] = [];
@@ -124,8 +112,8 @@ export function extractFileItems(notes: LocalNote[]): FileItem[] {
     // Images - count per note so we can label "Image 1", "Image 2"
     let m: RegExpExecArray | null;
     let imgIdx = 0;
-    IMG_RE.lastIndex = 0;
-    while ((m = IMG_RE.exec(note.body)) !== null) {
+    IMAGE_REF_RE.lastIndex = 0;
+    while ((m = IMAGE_REF_RE.exec(note.body)) !== null) {
       imgIdx++;
       const name = imgIdx === 1 ? `Image, ${noteTitle}` : `Image ${imgIdx}, ${noteTitle}`;
       items.push({
@@ -684,7 +672,7 @@ export function FilesList({
           }]
         : []),
       // A file inside a note is part of that note, which has its own row.
-      ...(item.standalone && isShortcutId(item.noteId)
+      ...(item.standalone && isUuid(item.noteId)
         ? [{
             label: t('shell:shortcut.copyItem'),
             icon: <LinkSimple aria-hidden="true" />,

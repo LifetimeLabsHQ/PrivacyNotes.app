@@ -15,7 +15,7 @@
  * lost.
  * Spec: docs/internal/plans/note-location.md (section 4b)
  */
-import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { Node, mergeAttributes } from '@tiptap/core';
 import { NodeViewWrapper, ReactNodeViewRenderer, type NodeViewProps } from '@tiptap/react';
 import { useTranslation } from 'react-i18next';
@@ -35,6 +35,17 @@ function PlaceMapView({ node, selected, editor, updateAttributes }: NodeViewProp
   const place = makeLocation(attrs.lat, attrs.lng, attrs.label ?? undefined);
   const width = clampImageWidth(attrs.width ?? IMAGE_WIDTH_MAX) ?? IMAGE_WIDTH_MAX;
   const height = clampMapHeight(attrs.height ?? MAP_HEIGHT_DEFAULT) ?? MAP_HEIGHT_DEFAULT;
+  // Tracked, not read once, as a file chip does (EncryptedAttachment.tsx):
+  // Read-only switches the same editor, which draws no block again, so a
+  // handle read at render time stayed on a read-only note and stayed away
+  // once the note could be edited again. `setEditable` emits an update.
+  const [editable, setEditable] = useState(editor.isEditable);
+  useEffect(() => {
+    const sync = () => setEditable(editor.isEditable);
+    sync();
+    editor.on('update', sync);
+    return () => { editor.off('update', sync); };
+  }, [editor]);
 
   // The corner handle, as a picture's (EncryptedImage.tsx): the width is a
   // percent of the column, the height is pixels, both follow the pointer and
@@ -108,7 +119,7 @@ function PlaceMapView({ node, selected, editor, updateAttributes }: NodeViewProp
             onDragStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
           >
             <ShownMap place={place} height={shown.height} />
-            {editor.isEditable && (
+            {editable && (
               <>
                 {/* A button so ProseMirror leaves its events alone, out of
                     the Tab order like a picture's; above the credit line. */}

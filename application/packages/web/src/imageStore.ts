@@ -14,50 +14,17 @@
 
 import { encryptBlob, decryptBlob, type SupabaseClient } from '@notes/shared';
 import { db } from './db';
+import { openWithRing } from './keyRing';
 import { isDemoMode } from './demo';
-import { ownsLocalData } from './authStorage';
-import { logAuthEvent } from './authDiag';
 import { recordStorageFault, recordSyncFault } from './syncFaults';
 import { isServerWriteBlocked } from './syncPause';
 import { uploadsHeldForWifi } from './wifiOnly';
-import { fetchQuotaUsage, recalculateQuota } from './devices';
-import { claimRemoval, isAlreadyExists, markIfPending, sameBytes, settleUnlessClaimed } from './blobUploadRecovery';
+import { recalculateQuota } from './devices';
+import { claimRemoval, isAlreadyExists, markIfPending } from './blobUploadRecovery';
 import { PENDING_GC_WAIT_MS, settleWithin } from './pendingGcWait';
+import { BlobStoreBase, BUCKET, UPLOAD_REFUSED, isBlobQuotaError, isPermanentUploadError } from './blobStoreBase';
+import { sha256Hex } from './sha256Hex';
 import { BlobDamagedError } from './blobDamaged';
-
-const BUCKET = 'encrypted-images';
-
-/** SHA-256 hash of raw bytes, returned as hex string. */
-async function hashBytes(data: Uint8Array): Promise<string> {
-  const buf = await crypto.subtle.digest('SHA-256', data as ArrayBufferView<ArrayBuffer>);
-  const arr = new Uint8Array(buf);
-  let hex = '';
-  for (const b of arr) hex += b.toString(16).padStart(2, '0');
-  return hex;
-}
-
-/** Errors that will never succeed on retry - mark the row refused. */
-function isPermanentError(msg: string): boolean {
-  return (
-    msg.includes('exceeded the maximum allowed size') ||
-    msg.includes('Payload too large') ||
-    msg.includes('413')
-  );
-}
-
-/**
- * pendingUpload value for a blob the server refused for good. The retry
- * sweep and every pending count look for 1, so the row is never retried
- * or shown as waiting. The local cache still holds the only copy, and the
- * row's encryptedSize was never charged, so deferDelete keeps it the way
- * it keeps a pending blob.
- */
-const UPLOAD_REFUSED = 2;
-
-/** Quota failures are retryable (e.g. after the user frees space or upgrades). */
-function isQuotaError(msg: string): boolean {
-  return msg.includes('Quota exceeded');
-}
 
 /**
  * Encrypted blob sizes learned from a Storage listing, keyed by uuid.
@@ -107,7 +74,6 @@ function gcChunks(uuids: string[]): string[][] {
   for (let i = 0; i < uuids.length; i += GC_CHUNK) out.push(uuids.slice(i, i + GC_CHUNK));
   return out;
 }
-
 
 /**
  * Look up blob sizes in Storage and remember what the listing resolves.
@@ -161,75 +127,22 @@ export async function listImageSizes(
   return { sizes, absent: [...outstanding] };
 }
 
-export class ImageStore {
-  private supabase: SupabaseClient;
-  private encryptionKey: Uint8Array;
-  private pubkey: string;
+export class ImageStore extends BlobStoreBase<{ data: Uint8Array }> {
   /** Called when a background upload fails permanently. UI should show a toast. */
   onBackgroundError?: (error: string) => void;
-  /**
-   * UUIDs with an upload or a settle in flight in this instance. The
-   * post-sync retry sweep can reach a uuid whose first background upload is
-   * still running and whose dedup row still says pendingUpload === 1; both
-   * would send the same create-only upload, and the second would answer 409
-   * and settle an object whose first upload has not finished its own
-   * bookkeeping. The in-flight call owns the row, so a second caller for the
-   * same uuid returns.
-   */
-  private uploading = new Set<string>();
-  /**
-   * True while a processPendingUploads() sweep is running. The post-sync
-   * retry hook fires on a timer, and a sweep can still be walking the pending
-   * rows from the trigger before; a second sweep would only meet the guard
-   * above row by row.
-   */
-  private sweepRunning = false;
-  /** UUIDs whose object this instance already asked Storage about during a
-   *  sweep, so a row that does not fit costs one probe per app start. */
-  private probed = new Set<string>();
-
-  constructor(
-    supabase: SupabaseClient,
-    encryptionKey: Uint8Array,
-    pubkey: string,
-  ) {
-    this.supabase = supabase;
-    this.encryptionKey = encryptionKey;
-    this.pubkey = pubkey;
+  protected readonly logName = 'imageStore';
+  protected readonly noun = 'Image';
+  protected get dedup() {
+    return db.imageDedup;
   }
-
-  /**
-   * True when this browser's local storage no longer belongs to this
-   * store's account. An account switch rebuilds the stores, but an
-   * instance captured by an in-flight upload or a scheduled sweep
-   * survives it holding the OLD pubkey beside a client whose JWT is
-   * already the NEW account's. Storage RLS refuses its uploads, but
-   * adjust_blob_bytes derives its target from the JWT alone, so a stale
-   * instance would silently move the NEW account's quota. Every server
-   * write below checks this and skips; local rows need no care, the
-   * switch wipe owns them.
-   */
-  private ownershipLost(): boolean {
-    if (ownsLocalData(this.pubkey)) return false;
-    if (!this.ownershipLogged) {
-      this.ownershipLogged = true;
-      logAuthEvent('imageStore:ownership-lost', { expectedPk: this.pubkey.slice(0, 8) });
-    }
-    return true;
+  protected cached(uuid: string) {
+    return db.imageCache.get(uuid);
   }
-  private ownershipLogged = false;
-
-  /**
-   * Private copy of the key for one encrypt operation. signOut zeroes
-   * `this.encryptionKey` in place (the shared buffer passed into the
-   * constructor), so a copy that comes back all-zero means sign-out is
-   * already in progress - callers must bail rather than encrypt with a
-   * dead key. Same pattern as sync.ts.
-   */
-  private keyCopy(): Uint8Array | null {
-    const copy = new Uint8Array(this.encryptionKey);
-    if (copy.every((b) => b === 0)) return null;
-    return copy;
+  protected plaintextOf(cached: { data: Uint8Array }): Uint8Array {
+    return cached.data;
+  }
+  protected retryUpload(uuid: string, _cached: { data: Uint8Array }, encrypted: Uint8Array): Promise<void> {
+    return this._backgroundUpload(uuid, encrypted);
   }
 
   /**
@@ -242,7 +155,7 @@ export class ImageStore {
    */
   async uploadImage(data: Uint8Array): Promise<string> {
     // Content-hash dedup check.
-    const hashHex = await hashBytes(data);
+    const hashHex = await sha256Hex(data);
     const existing = await db.imageDedup.get(hashHex);
     if (existing) {
       return existing.uuid;
@@ -321,9 +234,9 @@ export class ImageStore {
         .from(BUCKET)
         .upload(path, encrypted, {
           contentType: 'application/octet-stream',
-          // Create-only. A blob object is immutable and the bucket grants no
-          // UPDATE, so an upsert over an earlier attempt is a refused write
-          // rather than an idempotent one. See blobUploadRecovery.ts.
+          // Create-only. A 409 says an earlier attempt of ours landed, which
+          // blobUploadRecovery.ts settles and counts once. The bucket's one
+          // UPDATE is the phrase change's same-size overwrite (reencryptPass.ts).
           upsert: false,
         });
 
@@ -334,7 +247,7 @@ export class ImageStore {
           return;
         }
         recordStorageFault('file-up', error, uuid);
-        if (isPermanentError(msg)) {
+        if (isPermanentUploadError(msg)) {
           // Keep local cache so restored/pasted images remain viewable offline,
           // and mark the row refused so the doomed upload is never retried.
           const dedup = await db.imageDedup.where('uuid').equals(uuid).first();
@@ -345,7 +258,7 @@ export class ImageStore {
           console.error('[imageStore] permanent upload failure, kept local cache:', uuid, msg);
           return;
         }
-        if (isQuotaError(msg)) {
+        if (isBlobQuotaError(msg)) {
           // Retryable - pendingUpload stays 1, but still toast the user now.
           // Mark the row so the retry sweep skips it while it cannot fit
           // and the status surfaces say "doesn't fit" (backlog #143).
@@ -361,7 +274,7 @@ export class ImageStore {
       if (rpcErr) {
         const msg = rpcErr.message || '';
         recordSyncFault({ step: 'file-up', status: rpcStatus, code: rpcErr.code || undefined, ref: uuid });
-        if (isQuotaError(msg)) {
+        if (isBlobQuotaError(msg)) {
           // Remove the remote blob we just uploaded (it must not sit in
           // Storage uncounted), but leave pendingUpload=1 so a later pass
           // retries the whole upload. quotaBlocked makes that later pass
@@ -375,7 +288,7 @@ export class ImageStore {
           console.error('[imageStore] quota exceeded, will retry:', uuid);
           return;
         }
-        if (isPermanentError(msg)) {
+        if (isPermanentUploadError(msg)) {
           // Remove the remote blob we just uploaded; the local cache stays,
           // refused, as the only copy.
           if (await claimRemoval(db.imageDedup, uuid)) {
@@ -407,197 +320,8 @@ export class ImageStore {
     }
   }
 
-  /**
-   * An earlier attempt at this uuid already committed. Prove the object is
-   * ours and our content, settle the byte accounting with a server recount,
-   * and only then clear the pending flag.
-   *
-   * Every way out that is not a proven match leaves the row pending and the
-   * local cache intact, so the blob stays viewable and nothing is charged or
-   * overwritten. A plaintext mismatch is the one case that stops retrying:
-   * the name is already taken by bytes that are not ours, no write of ours
-   * can ever land there, and the local copy becomes the only copy - the same
-   * standing as a blob the server refused on size.
-   */
-  private async _settleExistingObject(uuid: string, path: string, encrypted: Uint8Array | null, attemptAt: number): Promise<void> {
-    const cached = await db.imageCache.get(uuid);
-    const remote = await this._downloadWithRetry(path);
-    if (!remote) {
-      // The object answered 409 and will not download. Nothing is proven, so
-      // nothing is cleared; the next sweep asks again.
-      console.warn('[imageStore] existing blob could not be read back:', uuid);
-      return;
-    }
-    const remoteBytes = new Uint8Array(await remote.arrayBuffer());
-    // A probe has no ciphertext of its own to compare, only the plaintext.
-    let matches = encrypted !== null && sameBytes(remoteBytes, encrypted);
-    if (!matches && cached) {
-      // The retry re-encrypted with a fresh nonce, so identical plaintext
-      // produces different ciphertext. Compare what the bytes mean, through a
-      // key COPY like every other crypto call in this class: sign-out zeroes
-      // the live key in place, and decrypting with zeros would call a blob
-      // that is perfectly fine on the server a mismatch and refuse it for good.
-      const passKey = this.keyCopy();
-      if (!passKey) {
-        console.warn('[imageStore] sign-out in progress - blob settle deferred:', uuid);
-        return;
-      }
-      try {
-        matches = sameBytes(decryptBlob(remoteBytes, passKey), cached.data);
-      } catch {
-        matches = false;
-      } finally {
-        passKey.fill(0);
-      }
-    }
-    if (!matches) {
-      // The download and the decrypt were awaits: an account switch inside
-      // them would mark the next account's row.
-      if (this.ownershipLost()) return;
-      const dedup = await db.imageDedup.where('uuid').equals(uuid).first();
-      if (dedup) await db.imageDedup.update(dedup.hash, { pendingUpload: UPLOAD_REFUSED });
-      console.error('[imageStore] blob name holds different content, kept local cache:', uuid);
-      return;
-    }
-    // The object is right. Whether its bytes were ever counted is unknown, so
-    // ask the server to recount rather than posting the same delta a second
-    // time. A recount that did not run leaves the row pending.
-    if (!await recalculateQuota(this.supabase)) {
-      console.warn('[imageStore] recovered blob not cleared - no server recount:', uuid);
-      return;
-    }
-    // Two awaits have passed since the ownership check at the top of the
-    // upload, and an account switch inside that window would write this
-    // account's hash-to-uuid row into the next account's database.
-    if (this.ownershipLost()) return;
-    // A removal claimed meanwhile by the instance that uploaded the object
-    // leaves the row pending, and the next pass uploads again.
-    if (!await settleUnlessClaimed(db.imageDedup, uuid, attemptAt, { pendingUpload: 0, quotaBlocked: 0, encryptedSize: remoteBytes.length })) {
-      console.warn('[imageStore] recovered blob not cleared - its uploader is removing it:', uuid);
-    }
-  }
 
-  /**
-   * Settle an object an earlier attempt stored, without uploading again.
-   * True when the object is there, or when Storage did not answer, so the
-   * caller leaves the row unmarked and the next sweep asks again; false only
-   * when Storage says the object is not there.
-   */
-  private async _settleIfStored(uuid: string): Promise<boolean> {
-    if (this.uploading.has(uuid)) return true;
-    this.uploading.add(uuid);
-    try {
-      const path = `${this.pubkey}/${uuid}`;
-      const attemptAt = Date.now();
-      let stored: boolean;
-      try {
-        const { data } = await this.supabase.storage.from(BUCKET).exists(path);
-        stored = data === true;
-      } catch {
-        return true;
-      }
-      this.probed.add(uuid);
-      if (!stored) return false;
-      if (this.ownershipLost()) return true;
-      await this._settleExistingObject(uuid, path, null, attemptAt);
-      return true;
-    } finally {
-      this.uploading.delete(uuid);
-    }
-  }
 
-  /**
-   * Retry uploads that were cached locally but never made it to the server.
-   * Called once on store init. Re-encrypts from cached data.
-   */
-  async processPendingUploads(): Promise<void> {
-    // Blocked or held: pending rows survive and upload once the block lifts.
-    if (isDemoMode() || isServerWriteBlocked() || uploadsHeldForWifi()) return;
-    if (this.ownershipLost()) return;
-    // Single-flight: the post-sync retry hook can fire again before a
-    // previous sweep has finished walking the pending rows. Let the
-    // running sweep own the pass rather than starting a second one that
-    // would just re-race the uploading guard below.
-    if (this.sweepRunning) return;
-    this.sweepRunning = true;
-    try {
-      const pending = await db.imageDedup
-        .filter((r) => r.pendingUpload === 1)
-        .toArray();
-
-      // Quota preflight: a blob bigger than the free headroom can only be
-      // re-uploaded, fail the accounting RPC and be deleted server-side -
-      // a 45 MB blob was re-uploaded every boot and every retry tick that
-      // way (backlog #143). One quota read gates the whole pass; rows that
-      // cannot fit are marked quotaBlocked and cost zero wire traffic.
-      // isPro=true only shapes the fallback ceiling when every quota RPC
-      // fails - it must never underestimate a Pro cap into false blocks.
-      let freeBytes: number | null = null;
-      if (pending.length > 0) {
-        try {
-          const q = await fetchQuotaUsage(this.supabase, true);
-          freeBytes = Math.max(0, q.maxTotalBytes - q.totalBytes - q.imageBytes);
-        } catch {
-          freeBytes = null; // unknown - behave like before the preflight
-        }
-      }
-
-      // One key copy for the whole retry pass. If signOut zeroes
-      // this.encryptionKey before we can take this copy, bail entirely -
-      // rows keep pendingUpload=1 for the next authenticated pass to retry.
-      const passKey = this.keyCopy();
-      if (!passKey) {
-        console.warn('[imageStore] sign-out in progress - pending uploads deferred');
-        return;
-      }
-      try {
-        for (const record of pending) {
-          try {
-            // Already being uploaded by another in-flight call (e.g. the
-            // initial upload from uploadImage) - skip the pointless re-encrypt.
-            if (this.uploading.has(record.uuid)) continue;
-
-            const cached = await db.imageCache.get(record.uuid);
-            if (!cached) {
-              // Cache lost - remove orphan dedup record.
-              await db.imageDedup.delete(record.hash);
-              continue;
-            }
-
-            if (freeBytes !== null) {
-              if (cached.data.length > freeBytes) {
-                // Headroom is a question for a new upload. An earlier attempt
-                // can have stored this object and lost only its answer, so
-                // each row asks Storage once per store instance and settles
-                // what is there. Once per instance rather than once ever, so
-                // a wrong "not there" heals on the next start.
-                if (!this.probed.has(record.uuid) && await this._settleIfStored(record.uuid)) continue;
-                if (record.quotaBlocked !== 1) {
-                  await markIfPending(db.imageDedup, record.uuid, { quotaBlocked: 1 });
-                }
-                continue;
-              }
-              if (record.quotaBlocked === 1) {
-                await db.imageDedup.update(record.hash, { quotaBlocked: 0 });
-              }
-              // Reserve the headroom for this attempt so one pass cannot
-              // overshoot the cap with several large blobs.
-              freeBytes -= cached.data.length;
-            }
-
-            const encrypted = encryptBlob(cached.data, passKey);
-            await this._backgroundUpload(record.uuid, encrypted);
-          } catch (err) {
-            console.warn('[imageStore] pending retry failed:', record.uuid, err);
-          }
-        }
-      } finally {
-        passKey.fill(0);
-      }
-    } finally {
-      this.sweepRunning = false;
-    }
-  }
 
   /**
    * Get a decrypted image by UUID. Checks IndexedDB cache first,
@@ -619,7 +343,7 @@ export class ImageStore {
     // is cached or deleted for them. See blobDamaged.ts.
     let decrypted: Uint8Array;
     try {
-      decrypted = decryptBlob(encrypted, this.encryptionKey);
+      decrypted = openWithRing('sync', this.encryptionKey, (key) => decryptBlob(encrypted, key));
     } catch {
       throw new BlobDamagedError(uuid);
     }
@@ -630,88 +354,6 @@ export class ImageStore {
     return decrypted;
   }
 
-  /**
-   * Download a blob from Storage. If the error is "Bucket not found"
-   * (Supabase returns this for private buckets when the JWT is expired
-   * or invalid - it's an auth error, not a missing-file error), refresh
-   * the session once and retry. Returns null only when the object
-   * genuinely doesn't exist.
-   */
-  private async _downloadWithRetry(path: string): Promise<Blob | null> {
-    const { data, error } = await this.supabase.storage
-      .from(BUCKET)
-      .download(path);
-
-    if (!error) return data ?? null;
-
-    // "Bucket not found" = auth/session issue, not a missing file.
-    if (error.message?.includes('Bucket not found')) {
-      const { error: refreshErr } = await this.supabase.auth.refreshSession();
-      if (refreshErr) {
-        recordStorageFault('file-down', refreshErr, path.slice(path.lastIndexOf('/') + 1));
-        throw new Error(`Image download failed (session refresh failed): ${refreshErr.message}`);
-      }
-      const retry = await this.supabase.storage.from(BUCKET).download(path);
-      if (retry.error) {
-        if (retry.error.message?.includes('not found') || retry.error.message?.includes('404')) {
-          recordStorageFault('file-down', retry.error, path.slice(path.lastIndexOf('/') + 1));
-          return null;
-        }
-        recordStorageFault('file-down', retry.error, path.slice(path.lastIndexOf('/') + 1));
-        throw new Error(`Image download failed: ${retry.error.message}`);
-      }
-      return retry.data ?? null;
-    }
-
-    // Genuine "object not found".
-    if (error.message?.includes('not found') || error.message?.includes('404')) {
-      recordStorageFault('file-down', error, path.slice(path.lastIndexOf('/') + 1));
-      return null;
-    }
-
-    recordStorageFault('file-down', error, path.slice(path.lastIndexOf('/') + 1));
-    throw new Error(`Image download failed: ${error.message}`);
-  }
-
-  /**
-   * Delete an image from Supabase Storage and local cache.
-   */
-  async deleteImage(uuid: string): Promise<void> {
-    // Look up encrypted size before deleting dedup record.
-    const dedup = await db.imageDedup.where('uuid').equals(uuid).first();
-    const size = dedup?.encryptedSize ?? 0;
-
-    // Demo mode never uploaded the blob, so there is nothing remote to
-    // remove and no quota to decrement - only the local cache is real.
-    // Below the release floor the remote half pauses too (see sync.ts);
-    // reconcileOrphanBlobs cleans up the leftover object after the update.
-    const remote = !isDemoMode() && !isServerWriteBlocked();
-
-    const path = `${this.pubkey}/${uuid}`;
-    if (remote) {
-      const { error } = await this.supabase.storage
-        .from(BUCKET)
-        .remove([path]);
-
-      if (error) {
-        // Log but don't throw - image may already be gone.
-        recordStorageFault('file-delete', error, uuid);
-        console.warn(`Image delete failed for ${uuid}:`, error.message);
-      }
-    }
-
-    // Remove from local cache + dedup index.
-    await db.imageCache.delete(uuid);
-    await db.imageDedup.where('uuid').equals(uuid).delete();
-
-    // Decrement image_bytes quota (best-effort).
-    if (!this.ownershipLost() && remote && size > 0) {
-      this.supabase.rpc('adjust_blob_bytes', { delta: -size })
-        .then(({ error: rpcErr }) => {
-          if (rpcErr) console.warn('[imageStore] adjust_blob_bytes failed:', rpcErr.message);
-        });
-    }
-  }
 
   /**
    * Defer deletion of multiple images: remove local cache + dedup rows
@@ -770,7 +412,7 @@ export class ImageStore {
 
     // Decrement image_bytes quota (best-effort) - the blob still counts
     // against Storage until the sweep removes it, but the user's quota
-    // must reflect the delete now, matching deleteImages' UX.
+    // must reflect the delete now.
     if (!this.ownershipLost() && totalSize > 0) {
       this.supabase.rpc('adjust_blob_bytes', { delta: -totalSize })
         .then(({ error: rpcErr }) => {
@@ -906,50 +548,5 @@ export class ImageStore {
     recordStorageFault('file-delete', error);
     console.warn('[imageStore] sweepBlobGC remote removal failed:', error.message);
     return { removed: [], failed: uuids };
-  }
-
-  /**
-   * Delete multiple images at once, Storage object included. The GC never
-   * calls this: every removal waits in deferDelete's queue for the sweep.
-   */
-  async deleteImages(uuids: string[]): Promise<void> {
-    if (uuids.length === 0) return;
-
-    // Sum encrypted sizes before deleting dedup records.
-    let totalSize = 0;
-    for (const uuid of uuids) {
-      const dedup = await db.imageDedup.where('uuid').equals(uuid).first();
-      if (dedup?.encryptedSize) totalSize += dedup.encryptedSize;
-    }
-
-    // Demo mode never uploaded these blobs - local cache only. Below the
-    // release floor the remote half pauses too (see sync.ts).
-    const remote = !isDemoMode() && !isServerWriteBlocked();
-
-    if (remote) {
-      const paths = uuids.map((uuid) => `${this.pubkey}/${uuid}`);
-      const { error } = await this.supabase.storage
-        .from(BUCKET)
-        .remove(paths);
-
-      if (error) {
-        recordStorageFault('file-delete', error);
-        console.warn('Bulk image delete failed:', error.message);
-      }
-    }
-
-    // Remove from local cache + dedup index.
-    await db.imageCache.bulkDelete(uuids);
-    for (const uuid of uuids) {
-      await db.imageDedup.where('uuid').equals(uuid).delete();
-    }
-
-    // Decrement image_bytes quota (best-effort).
-    if (!this.ownershipLost() && remote && totalSize > 0) {
-      this.supabase.rpc('adjust_blob_bytes', { delta: -totalSize })
-        .then(({ error: rpcErr }) => {
-          if (rpcErr) console.warn('[imageStore] adjust_blob_bytes failed:', rpcErr.message);
-        });
-    }
   }
 }

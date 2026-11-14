@@ -13,11 +13,11 @@
  * Spec: docs/internal/specs/bookmarks-pillar.md (section 9.2)
  */
 
-import JSZip from 'jszip';
 import i18n from '../i18n';
 import { zipEntryText } from './zipEntry';
+import { openZip } from './zipOpen';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.safariArchive.${key}`, options);
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:safariArchive.${key}`, options);
 
 /** Directories, hidden files and the junk a Mac leaves in a zip. */
 function isJunk(path: string): boolean {
@@ -32,7 +32,7 @@ function isJunk(path: string): boolean {
  * name does not match exactly.
  */
 export async function readArchiveEntry(file: File, want: string, ext: RegExp): Promise<string> {
-  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const zip = await openZip(await file.arrayBuffer());
   const candidates = Object.entries(zip.files).filter(
     ([path, entry]) => !entry.dir && !isJunk(path) && ext.test(path)
   );

@@ -20,7 +20,7 @@ export interface CsvLabels {
 }
 
 /** The units a header carries; the others are English words in a translated sheet. */
-const HEADER_UNITS = new Set(['h', 'bpm', 'kg', 'lb']);
+const HEADER_UNITS = new Set(['h', 'bpm', 'mmHg', 'kg', 'lb']);
 
 /**
  * A value cell. A field is quoted only when the grammar needs it, with every

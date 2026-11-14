@@ -43,7 +43,7 @@
     },
     "subhead": "Notas, tarefas, senhas, diário, arquivos, calendário, contatos e marcadores, com controle de humor e medicação. Um só app privado.",
     "tryDemo": "Testar a demonstração",
-    "microcopy": "Grátis para sempre. Sem cartão de crédito. Entre com Google, Apple, GitHub ou só uma frase de 12 palavras.",
+    "microcopy": "Grátis para sempre. Sem cartão de crédito. Entre com Google, Apple, GitHub ou só uma frase de recuperação.",
     "alreadyHaveVault": "Já tem um cofre? Entre",
     "trustSigned": "Versões assinadas no GitHub"
   },
@@ -167,8 +167,6 @@
     "useGitBody": "Termine o dia com os commits que você fez, salvos como uma nota que você encontra de novo no mês que vem.",
     "useClipTitle": "Tudo o que você copiou",
     "useClipBody": "Envie a área de transferência, a saída de um comando ou uma mensagem de erro direto para as suas notas.",
-    "useToolsTitle": "Parte das suas próprias ferramentas",
-    "useToolsBody": "O comando responde em JSON e termina com códigos claros, para que seus scripts saibam que a nota foi salva.",
     "useShortcutTitle": "Uma nota a partir de um atalho de teclado",
     "useShortcutBody": "Uma tecla que você escolhe nas configurações do sistema abre uma caixa para uma nota rápida, mesmo com o app fechado. A nota vai para a sua pasta Agent.",
     "howLink": "Leia como o privacynotes funciona"
@@ -359,14 +357,15 @@
     "freeVault": "50 MB de armazenamento, até 5 MB por arquivo",
     "freeImport": "Importação e exportação, incluindo Keep e Obsidian",
     "freeAnon": "Login anônimo, sem e-mail",
-    "earlyAdopterBadge": "Adotante Inicial"
+    "earlyAdopterBadge": "Adotante Inicial",
+    "payMethods": "Pague com cartão ou com Bitcoin, Ethereum, Lightning, USDC ou USDT."
   },
   "underHood": {
     "heading": "Por dentro",
     "cipherTerm": "xchacha20poly1305",
     "cipherDesc": "Chaves derivadas no cliente",
     "phraseTerm": "Frases BIP-39",
-    "phraseDesc": "12 palavras, assinatura Ed25519",
+    "phraseDesc": "Criadas no seu dispositivo, assinatura Ed25519",
     "rlsDesc": "RLS vinculada à sua chave pública",
     "trackingTerm": "Zero rastreadores",
     "trackingDesc": "Sem pixels, sem rastreadores de terceiros",
@@ -390,6 +389,7 @@
       "sleep": "Bom, 7,5 h",
       "sleepScore": "82",
       "heartRate": "61 bpm",
+      "bloodPressure": "118/76 mmHg",
       "activity": "Moderado",
       "medication": "Tomado",
       "energy": "6 / 10",
@@ -529,7 +529,7 @@
       "hotkeys": "Atalhos",
       "rating": "Avaliação"
     },
-    "intro": "O <brand/> reúne suas notas, tarefas, senhas, diário, arquivos, calendário, contatos e marcadores em um só lugar, com controle de humor e medicação. Tudo é criptografado no seu dispositivo com uma chave criada a partir das suas 12 palavras, e continua criptografado nos nossos servidores na <nowrap>Suíça</nowrap>. Funciona offline, e o app é open source.",
+    "intro": "O <brand/> reúne suas notas, tarefas, senhas, diário, arquivos, calendário, contatos e marcadores em um só lugar, com controle de humor e medicação. Tudo é criptografado no seu dispositivo com uma chave criada a partir da sua frase de recuperação, e continua criptografado nos nossos servidores na <nowrap>Suíça</nowrap>. Funciona offline, e o app é open source.",
     "versionHeading": "Versão",
     "windowVersion": "Versão {{version}}",
     "windowHelp": "Central de ajuda",

@@ -15,6 +15,8 @@ import { isDemoMode } from './demo';
 import { assertMfaAccess, isMfaRefusal, MfaRequiredError } from './mfaStep';
 import { dmsGate, dropForeignDmsHold } from './dms';
 import { readSideField } from './localSeal';
+import { currentKeyEpoch, epochOf, keyEpochColumn, KeyEpochUnknown, openWithRing } from './keyRing';
+import { isPhraseReplacedRefusal, PhraseReplacedError, phraseReplacedStop, reportPhraseReplaced } from './phraseReplaced';
 import {
   buildSyncBase,
   compareStamps,
@@ -37,7 +39,10 @@ import { nextStamp } from './notesRepo';
 import { normalizeSchedule } from './schedule';
 import { sameContent } from './editStamp';
 import { isServerWriteBlocked } from './syncPause';
-import { heldTombstones, holdTombstones, releaseTombstoneHold } from './massDelete';
+import { heldTombstones, holdTombstones, noteRefusedDelete, releaseTombstoneHold } from './massDelete';
+import { keepReplacedCopies, type PullReplacement } from './replacedCopies';
+import { isUuid } from './uuid';
+import { checkTombstoneSeal, sealTombstone, type SealVerdict } from './tombstoneSeal';
 
 /* ── Conflict types ─────────────────────────────────────────────── */
 
@@ -75,6 +80,17 @@ const PULL_RETRY_KEY = 'pullRetryIds';
 /** Ids per request when the failed rows are fetched again, and the most kept. */
 const RETRY_CHUNK = 100;
 const RETRY_MAX = 1000;
+
+/**
+ * `db.kv` key of the key epoch the cursor and the retry list were built
+ * under. Absent is epoch 1, so an account that never changed its phrase
+ * stores nothing new. A device whose current key epoch differs (it took a
+ * new phrase) resets both and pulls everything again: an older pass may have
+ * moved the cursor past rows it could not open, and the retry list holds at
+ * most RETRY_MAX of them. Dirty rows stay, as on every pull.
+ * Spec: docs/internal/plans/phrase-change.md (6.6, pull cursor)
+ */
+const CURSOR_EPOCH_KEY = 'pullCursorEpoch';
 
 function readRetryIds(raw: unknown): string[] {
   try {
@@ -114,13 +130,6 @@ const UNRECORDED_GENERATION = 'unrecorded';
 const EPOCH_CURSOR = '1970-01-01T00:00:00Z';
 
 /**
- * The cursor is stored as `<changed_at>|<id>` so the sweep can resume
- * mid-tie. Values written before migration 0065 are a bare timestamp:
- * read those as "start of that instant, no id", which re-reads that one
- * instant and is harmless (re-applying a row is idempotent), where
- * guessing an id could skip one.
- */
-/**
  * The generation each note's last push sent, kept while its answer is not
  * known. A push whose reply was lost had landed, but this device never
  * recorded it, so the next pass read the server row as another device's
@@ -147,9 +156,14 @@ function rememberSent(noteId: string, nonce: string, grewFrom?: LocalNote): void
   sentNonces.set(noteId, [...(sentNonces.get(noteId) ?? []).slice(-4), { nonce, base }]);
 }
 
-/** A note id the server can store. */
-const HYPHENATED_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * The cursor is stored as `<changed_at>|<id>` so the sweep can resume
+ * mid-tie. Values written before migration 0065 are a bare timestamp:
+ * read those as "start of that instant, no id", which re-reads that one
+ * instant and is harmless (re-applying a row is idempotent), where
+ * guessing an id could skip one.
+ */
 function parseCursor(raw: string): [string, string | null] {
   const bar = raw.indexOf('|');
   if (bar === -1) return [raw, null];
@@ -216,18 +230,29 @@ async function applyTombstones(ids: string[]): Promise<void> {
 }
 
 /**
- * The tombstones of one pull, past the mass delete guard: when too many
- * would remove notes this device still shows, those wait in the hold and
- * the rest go. Answers how many went. Call it inside a transaction on
- * db.notes, like applyTombstones.
- * Spec: docs/contrib/sync-protocol.md (section 3, the mass delete guard)
+ * The tombstones of one pull, by their seals (tombstoneSeal.ts). Only a
+ * tombstone that would remove a note this device still shows is judged. A
+ * valid seal goes. A bad seal was not made with this account's key: the note
+ * stays and goes back to the server under keptId, and the person is told
+ * once. No seal (an app before 0130, or a session alone) meets the mass
+ * delete guard: past its limit those notes wait in the hold. Answers how
+ * many rows changed. Call it inside a transaction on db.notes, like
+ * applyTombstones.
+ * Spec: docs/contrib/sync-protocol.md (section 3, sealed deletes)
  */
-async function settleTombstones(pubkey: string, ids: string[]): Promise<number> {
+async function settleTombstones(pubkey: string, ids: string[], seals: ReadonlyMap<string, SealVerdict>): Promise<number> {
   const rows = await db.notes.bulkGet(ids);
-  const held = new Set(holdTombstones(pubkey, ids.filter((_, i) => removedByTombstone(rows[i]))));
-  const now = held.size === 0 ? ids : ids.filter((id) => !held.has(id));
+  const removable = ids.filter((_, i) => removedByTombstone(rows[i]));
+  const refused = new Set(removable.filter((id) => seals.get(id) === 'bad'));
+  const unsealed = removable.filter((id) => (seals.get(id) ?? 'none') === 'none');
+  const held = new Set(holdTombstones(pubkey, unsealed));
+  if (refused.size > 0) {
+    await keepUnderKeptIds([...refused]);
+    noteRefusedDelete(pubkey, refused.size);
+  }
+  const now = ids.filter((id) => !held.has(id) && !refused.has(id));
   if (now.length > 0) await applyTombstones(now);
-  return now.length;
+  return now.length + refused.size;
 }
 
 /**
@@ -268,21 +293,23 @@ function keptCopy(n: LocalNote): LocalNote {
  */
 export async function keepHeldNotes(pubkey: string): Promise<void> {
   const ids = heldTombstones(pubkey);
-  if (ids.length > 0) {
-    await db.transaction('rw', db.notes, async () => {
-      const held = (await db.notes.bulkGet(ids)).filter((n): n is LocalNote => n !== undefined && n.deleted !== 1);
-      const there = await db.notes.bulkGet(held.map((n) => keptId(n.id)));
-      const copies: LocalNote[] = [];
-      held.forEach((n, i) => {
-        const other = there[i];
-        if (!other) copies.push(keptCopy(n));
-        else if (other.deleted === 1 || !fieldsEqual(fieldsOfLocal(other), fieldsOfLocal(n))) copies.push(copyUnderNewId(n));
-      });
-      if (copies.length > 0) await db.notes.bulkAdd(copies);
-      await db.notes.bulkDelete(ids);
-    });
-  }
+  if (ids.length > 0) await db.transaction('rw', db.notes, () => keepUnderKeptIds(ids));
   releaseTombstoneHold();
+}
+
+/** Put tombstoned notes back as new notes under keptId (keepHeldNotes) and
+ *  remove the tombstoned ids. Call it inside a transaction on db.notes. */
+async function keepUnderKeptIds(ids: string[]): Promise<void> {
+  const held = (await db.notes.bulkGet(ids)).filter((n): n is LocalNote => n !== undefined && n.deleted !== 1);
+  const there = await db.notes.bulkGet(held.map((n) => keptId(n.id)));
+  const copies: LocalNote[] = [];
+  held.forEach((n, i) => {
+    const other = there[i];
+    if (!other) copies.push(keptCopy(n));
+    else if (other.deleted === 1 || !fieldsEqual(fieldsOfLocal(other), fieldsOfLocal(n))) copies.push(copyUnderNewId(n));
+  });
+  if (copies.length > 0) await db.notes.bulkAdd(copies);
+  await db.notes.bulkDelete(ids);
 }
 
 /** "Delete them here too": the held tombstones go as any other does, an
@@ -384,11 +411,12 @@ export async function pushConflictAnswer(
   // the kept version on this device under a green check.
   const { data: forced, error: forceErr } = await supabase
     .from('notes')
-    .update({ ciphertext, nonce, updated_at: stamp })
+    .update({ ciphertext, nonce, updated_at: stamp, ...keyEpochColumn() })
     .eq('id', noteId)
     .eq('user_pubkey', pubkey)
     .eq('nonce', serverNonce)
     .select('id');
+  if (isPhraseReplacedRefusal(forceErr)) reportPhraseReplaced('write');
   if (forceErr || !forced || forced.length === 0) {
     console.error('[conflict] keep-mine push did not land for', noteId, forceErr);
     return 'not-landed';
@@ -423,6 +451,12 @@ export async function pushConflictAnswer(
  * base, so the next push goes out on it (or merges, if the server moved
  * again). When the server cannot be read, the version the dialog showed
  * stands in, never recorded clean, so the next push settles it.
+ *
+ * `keepCopy` writes the "Keep both" copy of this device's text in the same
+ * transaction, before the answer replaces it: this device's text was never
+ * sent, so a copy written after the answer left it in memory only, and a
+ * closed tab or a failed write lost it. A copy that throws writes nothing,
+ * the answer included, and the error reaches the caller.
  */
 export async function writeConflictAnswer(
   supabase: SupabaseClient,
@@ -430,6 +464,7 @@ export async function writeConflictAnswer(
   encryptionKey: Uint8Array,
   conflict: NoteConflict,
   choice: 'server' | 'both',
+  keepCopy?: (cur: LocalNote) => Promise<void>,
 ): Promise<'stale' | 'written'> {
   const { noteId } = conflict;
   const shown = {
@@ -453,7 +488,9 @@ export async function writeConflictAnswer(
       if (data.nonce === shown.nonce) {
         current = shown;
       } else {
-        const payload = decryptNote(base64ToBytes(data.ciphertext), base64ToBytes(data.nonce), encryptionKey);
+        const ct = base64ToBytes(data.ciphertext);
+        const nonce = base64ToBytes(data.nonce);
+        const payload = openWithRing('sync', encryptionKey, (key) => decryptNote(ct, nonce, key));
         current = {
           fields: fieldsOfPayload(payload, shown.fields.archived),
           updatedAt: data.updated_at,
@@ -470,6 +507,7 @@ export async function writeConflictAnswer(
   const written = await db.transaction('rw', db.notes, async () => {
     const cur = await db.notes.get(noteId);
     if (!stillOpen(conflict, cur)) return false;
+    if (keepCopy) await keepCopy(cur);
     const { fields, sameAsServer, editedAt } = answerFields(cur, server, choice);
     await db.notes.update(noteId, {
       ...localPatchOf(fields),
@@ -692,10 +730,6 @@ function isAuthError(err: { code?: string; message?: string } | null): boolean {
   );
 }
 
-/** A genuine account-level storage rejection. The quota triggers RAISE
- * with "Quota exceeded: ..."; the 90-day freeze RAISEs "Sync frozen: ...".
- * Both carry SQLSTATE 23514, so match on the message - this is what
- * drives the account-level "Storage full" banner. */
 /** A row-level-security refusal is an identity verdict, not a transient
  *  fault: the server is saying this session may not write these rows at
  *  all, so retrying the same rows - or walking the rest of the queue
@@ -707,7 +741,12 @@ function isRlsError(err: { code?: string; message?: string } | null): boolean {
   return err.code === '42501' || (err.message ?? '').includes('row-level security');
 }
 
-function isQuotaError(err: { message?: string } | null): boolean {
+/** A genuine account-level storage rejection of a note write. The quota
+ * triggers RAISE with "Quota exceeded: ..."; the 90-day freeze RAISEs "Sync
+ * frozen: ...". Both carry SQLSTATE 23514, so match on the message - this is
+ * what drives the account-level "Storage full" banner. Also read by the
+ * phrase change's re-encrypt pass (reencryptPass.ts). */
+export function isQuotaError(err: { message?: string } | null): boolean {
   const msg = err?.message ?? '';
   return msg.includes('Quota exceeded') || msg.includes('Sync frozen');
 }
@@ -755,6 +794,9 @@ type RemoteRow = {
   updated_at: string;
   /** Tombstone timestamp. NULL = live row. Set by client on permanent delete. */
   deleted_at: string | null;
+  /** Migration 0130: the seal of a tombstone (tombstoneSeal.ts). Absent on a
+   *  server without 0130, NULL on a live row or an unsealed tombstone. */
+  delete_seal?: string | null;
   /**
    * Server-assigned arrival time (DEFAULT now(), never sent by the client).
    * Distinct from updated_at, which is client-authoritative and can be
@@ -772,6 +814,12 @@ type RemoteRow = {
    * Spec: packages/supabase/migrations/history/0066_notes_changed_at_server_assigned.sql
    */
   changed_at: string;
+  /**
+   * The key epoch the row's ciphertext was written under (keyRing.ts).
+   * Absent before the column existed, which is epoch 1 like its default.
+   * Spec: packages/supabase/migrations/history/0118_key_epoch.sql
+   */
+  key_epoch?: number;
 };
 
 /**
@@ -797,8 +845,9 @@ type RemoteRow = {
  *
  * If an offline device pushes an edit for a row that was tombstoned
  * elsewhere, the server-side BEFORE UPDATE trigger (migration 0034)
- * silently drops the write - the row stays deleted, the offline edit
- * is discarded, and the next pull tells the device the note is gone.
+ * silently drops the write and the row stays deleted. The next pull
+ * brings the tombstone, and the unsynced edit is kept as a new note
+ * under a fresh id (tombstoneCopy).
  */
 export async function sync(
   supabase: SupabaseClient,
@@ -1017,6 +1066,23 @@ async function syncInner(
   let lastSync =
     localStorage.getItem(LAST_SYNC_KEY) || '1970-01-01T00:00:00Z';
 
+  // The key epoch this pass reads under. A cursor built under another one is
+  // reset with its retry list before the pull, and a pass whose epoch
+  // changed before it ended keeps neither.
+  const passEpoch = currentKeyEpoch();
+  let cursorEpochMoved = false;
+  if (!flushOnly) {
+    const raw = (await db.kv.get(CURSOR_EPOCH_KEY))?.value;
+    const stored = epochOf(typeof raw === 'string' ? Number(raw) : undefined);
+    if (stored !== passEpoch) {
+      console.warn('[sync] key epoch changed - resetting the cursor for a full pull');
+      lastSync = EPOCH_CURSOR;
+      localStorage.removeItem(LAST_SYNC_KEY);
+      await db.kv.delete(PULL_RETRY_KEY);
+      cursorEpochMoved = true;
+    }
+  }
+
   // Heal flags are only committed after a clean sweep (see the persist
   // block after the pull). Setting them up front consumed the one-time
   // full re-read even when the healing pull failed or was aborted.
@@ -1036,9 +1102,10 @@ async function syncInner(
   // cursor past the backfill and the stranded rows stay hidden forever.
   // A flag is deterministic and does not care when the device upgrades.
   //
-  // Runs once per device. The full pull is safe: processBatch skips rows
-  // where local.dirty === 1 or local.updatedAt >= row.updated_at, so no
-  // pending local edit is clobbered and no note is duplicated.
+  // Runs once per device. The full pull is safe: processBatch skips a row
+  // whose local copy is dirty (1 or 2) or newer, and under an equal stamp
+  // applies it only when it carries another device's nonce, so no pending
+  // local edit is clobbered and no note is duplicated.
   if (!flushOnly && !localStorage.getItem(INGESTED_HEAL_KEY)) {
     if (lastSync > '1970-01-01T00:00:00Z') {
       console.warn('[sync] one-time full pull to recover backdated imported notes');
@@ -1060,9 +1127,9 @@ async function syncInner(
   // already behind this device's cursor - only a full re-read can.
   //
   // Same shape as the 0063 heal above, and safe for the same reason:
-  // processBatch skips rows where local.dirty === 1 or the local copy is
-  // already newer, so no pending edit is clobbered and nothing is
-  // duplicated. Costs one full pull, once per device, ever.
+  // processBatch skips a row whose local copy is dirty (1 or 2) or newer,
+  // so no pending edit is clobbered and nothing is duplicated. Costs one
+  // full pull, once per device, ever.
   if (!flushOnly && !localStorage.getItem(KEYSET_HEAL_KEY)) {
     if (lastSync > EPOCH_CURSOR) {
       console.warn('[sync] one-time full pull to recover rows stranded by offset paging');
@@ -1125,10 +1192,19 @@ async function syncInner(
   // Every tombstone this pull read, settled together once the sweep is
   // clean, so the mass delete guard sees the whole delete at once.
   const passTombstones: string[] = [];
+  // What each pulled tombstone's seal says, read in processBatch.
+  const passSeals = new Map<string, SealVerdict>();
   // Rows that did not decrypt in this pass. The cursor still moves past them
   // (a row that can never decrypt must not stall the sweep), so they are kept
   // by id and fetched again on the next pass (GitHub #655).
   const decryptFailed = new Set<string>();
+  // Set when the pull met a row of a key epoch this device holds no key for,
+  // in the sweep or on the retry list, so the pass reports no full pull. In
+  // the sweep the cursor stops before that row and the sweep ends there, so
+  // the row is read again until the keys arrive: such a row is not damaged,
+  // and no retry list may be the only thing that remembers it.
+  // Spec: docs/internal/plans/phrase-change.md (6.6, pull cursor)
+  let sweepHeld = false;
 
   // ── 1. PULL (two-phase ascending sweep) ─────────────────────────
   // Phase 1: apply the first page (PHASE1_SIZE rows) and render it
@@ -1178,42 +1254,36 @@ async function syncInner(
    * local dirty edits - the server says the note is gone, so the row
    * goes, and applyTombstones keeps an unsynced edit as a new note.
    */
+  /** A pulled row as processBatch writes it. */
+  type PulledRow = {
+    id: string; title: string; body: string; tags: string[];
+    createdAt: string; updatedAt: string;
+    dirty: 0 | 1; deleted: 0 | 1; trashed: 0 | 1; starred: 0 | 1;
+    locked: 0 | 1; pinProtected: 0 | 1;
+    type: import('@notes/shared').NoteType;
+    trackers?: Record<string, unknown>;
+    folderId: string | null;
+    archived: 0 | 1;
+    editedAt?: string;
+    syncedNonce: string;
+    syncBase: SyncBase;
+  };
+
   async function processBatch(rows: RemoteRow[]): Promise<{
-    toPut: Array<{
-      id: string; title: string; body: string; tags: string[];
-      createdAt: string; updatedAt: string;
-      dirty: 0 | 1; deleted: 0 | 1; trashed: 0 | 1; starred: 0 | 1;
-      locked: 0 | 1; pinProtected: 0 | 1;
-      type: import('@notes/shared').NoteType;
-      trackers?: Record<string, unknown>;
-      folderId: string | null;
-      archived: 0 | 1;
-      editedAt?: string;
-      syncedNonce: string;
-      syncBase: SyncBase;
-    }>;
+    toPut: PulledRow[];
     tombstoneIds: string[];
     /** Rows the base heal takes whatever their stamps, while still clean. */
     healIds: Set<string>;
     /** Rows that did not decrypt: fetched again by id on a later pass. */
     failedIds: string[];
+    /** Rows of a key epoch this device holds no key for. */
+    heldIds: Set<string>;
   }> {
-    const toPut: Array<{
-      id: string; title: string; body: string; tags: string[];
-      createdAt: string; updatedAt: string;
-      dirty: 0 | 1; deleted: 0 | 1; trashed: 0 | 1; starred: 0 | 1;
-      locked: 0 | 1; pinProtected: 0 | 1;
-      type: import('@notes/shared').NoteType;
-      trackers?: Record<string, unknown>;
-      folderId: string | null;
-      archived: 0 | 1;
-      editedAt?: string;
-      syncedNonce: string;
-      syncBase: SyncBase;
-    }> = [];
+    const toPut: PulledRow[] = [];
     const tombstoneIds: string[] = [];
     const healIds = new Set<string>();
     const failedIds: string[] = [];
+    const heldIds = new Set<string>();
     // Bulk-fetch local copies to avoid N sequential db.notes.get() calls.
     const ids = rows.map((r) => r.id);
     const locals = await db.notes.bulkGet(ids);
@@ -1227,6 +1297,7 @@ async function syncInner(
       // (applyTombstones), because the server kept none of it.
       if (row.deleted_at) {
         tombstoneIds.push(row.id);
+        passSeals.set(row.id, checkTombstoneSeal(row.delete_seal, pubkey, row.id, encryptionKey));
         continue;
       }
       const local = localMap.get(row.id);
@@ -1254,11 +1325,9 @@ async function syncInner(
         (local.syncedNonce == null || local.syncedNonce === row.nonce)
       ) continue;
       try {
-        const decrypted = decryptNote(
-          base64ToBytes(row.ciphertext),
-          base64ToBytes(row.nonce),
-          encryptionKey
-        );
+        const ct = base64ToBytes(row.ciphertext);
+        const nonce = base64ToBytes(row.nonce);
+        const decrypted = openWithRing('sync', encryptionKey, (key) => decryptNote(ct, nonce, key), epochOf(row.key_epoch));
         const pulled = fieldsOfPayload(decrypted, local?.archived === 1);
         // A writer that predates Archive dropped the flag this device holds.
         // Keeping it here is not enough: a device without the row, or one on
@@ -1307,12 +1376,17 @@ async function syncInner(
         });
       } catch (err) {
         healIds.delete(row.id);
+        if (err instanceof KeyEpochUnknown) {
+          heldIds.add(row.id);
+          console.warn('[sync] row of a key epoch this device does not hold yet:', row.id);
+          continue;
+        }
         failedIds.push(row.id);
         console.error('[sync] decrypt failed for', row.id, err);
         recordSyncFault({ step: 'pull', code: 'decrypt' });
       }
     }
-    return { toPut, tombstoneIds, healIds, failedIds };
+    return { toPut, tombstoneIds, healIds, failedIds, heldIds };
   }
 
   if (!flushOnly) {
@@ -1393,6 +1467,16 @@ async function syncInner(
     if (!stillRegistered) {
       throw new DeviceRevokedError();
     }
+    // The account changed its phrase and this device holds an earlier one
+    // (heartbeat() reported it): no pulled row is processed and nothing is
+    // written. Every unsynced edit stays for the pass after the new phrase.
+    // Spec: docs/internal/plans/phrase-change.md (section 7)
+    if (stillRegistered === 'phrase_replaced') throw new PhraseReplacedError('retired');
+    // The 2FA gate refused the heartbeat. A quiet pull touches no row and is
+    // never refused, so the pass stops here, as on a refused read: the sync
+    // catch asks whether the account replaced its phrase, then for a code.
+    // Spec: docs/internal/plans/phrase-change.md (section 7)
+    if (stillRegistered === 'mfa_required') throw new MfaRequiredError();
 
     const { data: phase1, error: p1Err, status: p1Status } = await phase1Promise;
 
@@ -1426,9 +1510,12 @@ async function syncInner(
         // way: local storage that another account now owns must not
         // receive this account's decrypted rows.
         if (generation !== syncGeneration || !ownsLocalData(pubkey)) return;
-        const { toPut, tombstoneIds, healIds, failedIds } = await processBatch(rows);
+        const { toPut, tombstoneIds, healIds, failedIds, heldIds } = await processBatch(rows);
         for (const row of rows) decryptFailed.delete(row.id);
         for (const id of failedIds) decryptFailed.add(id);
+        // A held row fetched by id stays on the retry list; one met by the
+        // sweep stops the cursor below.
+        if (!moveCursor) for (const id of heldIds) decryptFailed.add(id);
         if (toPut.length > 0 || tombstoneIds.length > 0) {
           // Re-check inside one transaction before writing: an autosave
           // can land between processBatch's bulkGet snapshot and this
@@ -1438,7 +1525,7 @@ async function syncInner(
           // (recordPushed's timestamp check); this is the pull side of
           // the same hazard. Tombstones wait for the end of the sweep
           // (settleTombstones below).
-          await db.transaction('rw', db.notes, async () => {
+          await db.transaction('rw', db.notes, db.replacedCopies, async () => {
             const current = await db.notes.bulkGet(toPut.map((n) => n.id));
             const safe = toPut.filter((n, i) => {
               const c = current[i];
@@ -1456,13 +1543,26 @@ async function syncInner(
                   c.syncedNonce !== n.syncedNonce)
               );
             });
+            // The clean text this write replaces stays on this device for 30
+            // days: a pull cannot tell another device's edit from an older
+            // ciphertext of the account replayed onto the row.
+            const taken = new Set(safe);
+            const replaced: PullReplacement[] = [];
+            toPut.forEach((n, i) => {
+              const c = current[i];
+              if (c && taken.has(n)) replaced.push({ old: c, next: n });
+            });
+            await keepReplacedCopies(replaced);
             if (safe.length > 0) await db.notes.bulkPut(safe);
             passTombstones.push(...tombstoneIds);
             if (safe.length > 0) changed = true;
             pulledCount += safe.length;
           });
         }
-        const last = rows[rows.length - 1];
+        if (heldIds.size > 0) sweepHeld = true;
+        // The cursor stops before the first held row, and the sweep ends.
+        const firstHeld = moveCursor ? rows.findIndex((r) => heldIds.has(r.id)) : -1;
+        const last = firstHeld >= 0 ? rows[firstHeld - 1] : rows[rows.length - 1];
         // A stamp this device cannot read never becomes the cursor.
         if (moveCursor && last && Number.isFinite(Date.parse(last.changed_at))) {
           cursorAt = last.changed_at;
@@ -1486,7 +1586,7 @@ async function syncInner(
       // just behind the cursor. Documented as accepted in
       // sync-protocol.md section 7 - do not treat this comment as a
       // no-window guarantee.
-      if (rows.length === PHASE1_SIZE) {
+      if (rows.length === PHASE1_SIZE && !sweepHeld) {
         // eslint-disable-next-line no-constant-condition
         while (true) {
           // Sign-out began mid-sweep: applyPage above has stopped
@@ -1517,7 +1617,7 @@ async function syncInner(
 
           await applyPage(chunkRows);
 
-          if (chunkRows.length < PHASE2_CHUNK) break;
+          if (chunkRows.length < PHASE2_CHUNK || sweepHeld) break;
         }
       }
 
@@ -1544,13 +1644,15 @@ async function syncInner(
     // pass reads them again.
     if (!batchHadError && passTombstones.length > 0 && generation === syncGeneration && ownsLocalData(pubkey)) {
       await db.transaction('rw', db.notes, async () => {
-        const settled = await settleTombstones(pubkey, passTombstones);
+        const settled = await settleTombstones(pubkey, passTombstones, passSeals);
         if (settled > 0) changed = true;
         pulledCount += settled;
       });
     }
 
-    pullOk = !batchHadError;
+    // A held pull keeps the cursor it reached, but it is not a full pull:
+    // the rows it held are not on this device.
+    pullOk = !batchHadError && !sweepHeld;
 
     // Persist pull progress NOW, before the push phase. A push that
     // throws (quota freeze, expired session) must not cost the pull its
@@ -1562,7 +1664,7 @@ async function syncInner(
     // what closes the skew gap from GitHub #127/#134. The generation
     // gate keeps a pass that outlived sign-out from re-creating the
     // cursor after the wipe removed it (see suspendSync).
-    if (pullOk && generation === syncGeneration && ownsLocalData(pubkey)) {
+    if (!batchHadError && generation === syncGeneration && ownsLocalData(pubkey) && currentKeyEpoch() === passEpoch) {
       const advanced = formatCursor(cursorAt, cursorId);
       if (advanced !== lastSync && cursorAt > EPOCH_CURSOR) {
         localStorage.setItem(LAST_SYNC_KEY, advanced);
@@ -1574,11 +1676,18 @@ async function syncInner(
       } else {
         await db.kv.delete(PULL_RETRY_KEY);
       }
+      // The cursor now belongs to this key epoch. Epoch 1 stores nothing.
+      if (cursorEpochMoved) {
+        if (passEpoch === 1) await db.kv.delete(CURSOR_EPOCH_KEY);
+        else await db.kv.put({ key: CURSOR_EPOCH_KEY, value: String(passEpoch) });
+      }
       // Heal flags commit only alongside a clean sweep - consuming them
       // on a failed or aborted heal would void the one-time full
-      // re-read they exist to guarantee.
-      for (const flag of healFlagsPending) {
-        localStorage.setItem(flag, '1');
+      // re-read they exist to guarantee. A held sweep did not read it all.
+      if (pullOk) {
+        for (const flag of healFlagsPending) {
+          localStorage.setItem(flag, '1');
+        }
       }
     }
   }
@@ -1610,7 +1719,10 @@ async function syncInner(
     const liveClaim = liveSession.session?.user?.app_metadata?.pubkey as
       | string
       | undefined;
-    return liveClaim !== pubkey;
+    // A phrase change landed mid-pass: this pass's key is the earlier
+    // epoch's, and buildRow would label its rows with the new one. Read
+    // after the await, so nothing moves between this and the write.
+    return liveClaim !== pubkey || currentKeyEpoch() !== passEpoch;
   };
   let pushEnded = false;
   // What the stop left behind, for SyncResult.halted: the first stop names
@@ -1650,6 +1762,32 @@ async function syncInner(
   // Chunked in groups of 50 to keep the `.in()` URL under server limits.
   // On chunk failure, continue pushing remaining chunks so one bad note
   // doesn't block others. Failed chunks stay in Dexie for retry. (#91)
+  // Each tombstone carries its seal (tombstoneSeal.ts), so the other
+  // devices can tell this delete from one made with a session alone. A
+  // server without migration 0130 answers PGRST202, and the rest of the
+  // pass sends the plain update with no seal, as an older app does.
+  // Spec: docs/contrib/sync-protocol.md (section 3, sealed deletes)
+  let sealedDeletes = true;
+  const sendTombstones = async (chunk: string[]) => {
+    if (sealedDeletes) {
+      const { data, error, status } = await supabase.rpc('tombstone_notes', {
+        p_ids: chunk,
+        p_seals: chunk.map((id) => sealTombstone(pubkey, id, encryptionKey)),
+      });
+      if (error?.code !== 'PGRST202') {
+        return { data: Array.isArray(data) ? data.map((id) => ({ id: String(id) })) : null, error, status };
+      }
+      sealedDeletes = false;
+    }
+    const { data, error, status } = await supabase
+      .from('notes')
+      .update({ deleted_at: new Date().toISOString() })
+      .in('id', chunk)
+      .is('deleted_at', null)
+      .select('id');
+    return { data: data as { id: string }[] | null, error, status };
+  };
+
   if (toDelete.length > 0) {
     const deleteIds = toDelete.map((n) => n.id);
     const TOMBSTONE_CHUNK = 50;
@@ -1666,12 +1804,7 @@ async function syncInner(
       // destroyed the only record that the delete was still pending -
       // the note stayed alive on the server, kept counting against the
       // quota, and came back on the next device to pull from epoch.
-      const { data: tombstoned, error, status: tombstoneStatus } = await supabase
-        .from('notes')
-        .update({ deleted_at: new Date().toISOString() })
-        .in('id', chunk)
-        .is('deleted_at', null)
-        .select('id');
+      const { data: tombstoned, error, status: tombstoneStatus } = await sendTombstones(chunk);
       if (!error) {
         const confirmed = new Set((tombstoned ?? []).map((r) => r.id as string));
         // Rows the UPDATE did not touch are not automatically failures.
@@ -1721,6 +1854,7 @@ async function syncInner(
       } else {
         recordSyncFault({ step: 'push', status: tombstoneStatus, code: error.code || undefined });
         if (isMfaRefusal(error)) throw new MfaRequiredError();
+        if (isPhraseReplacedRefusal(error)) throw phraseReplacedStop('write');
         if (isAuthError(error)) throw new SessionExpiredError();
         console.error('[sync] batch tombstone failed', error);
         if (onPushError) {
@@ -1745,6 +1879,7 @@ async function syncInner(
       nonce: bytesToBase64(nonce),
       created_at: note.createdAt,
       updated_at: note.updatedAt,
+      ...keyEpochColumn(),
     };
   };
 
@@ -1788,6 +1923,12 @@ async function syncInner(
   // else falls through to the per-note path completely unchanged, so
   // conflict detection for real edits is untouched.
   let pending = toUpsert;
+  // A quota refusal of a new note does not stop the edits: the server
+  // refuses only a write that grows the count or the bytes, so an account
+  // at its limit can still save every note it holds. The refusal is
+  // remembered, the per-note path runs for the rows the server already
+  // has, and it is thrown once that pool drains.
+  let bulkQuotaRefusal: QuotaExceededError | null = null;
   if (toUpsert.length > 1 && !pushEnded) {
     const PROBE_CHUNK = 200;
     const INSERT_CHUNK = 50;
@@ -1843,8 +1984,12 @@ async function syncInner(
         if (error) {
           recordSyncFault({ step: 'push', status: insertStatus, code: error.code || undefined });
           if (isMfaRefusal(error)) throw new MfaRequiredError();
+          if (isPhraseReplacedRefusal(error)) throw phraseReplacedStop('write');
           if (isAuthError(error)) throw new SessionExpiredError();
-          if (isQuotaError(error)) throw new QuotaExceededError(error.message);
+          if (isQuotaError(error)) {
+            bulkQuotaRefusal = new QuotaExceededError(error.message);
+            break;
+          }
           if (isRlsError(error)) {
             endPush('rls-refused', [...sendable, ...fresh.slice(i + INSERT_CHUNK)].map((n) => n.id));
             break;
@@ -1858,7 +2003,9 @@ async function syncInner(
         }
         await recordPushed(sendable.map((note, i) => ({ note, nonce: rows[i]!.nonce })));
       }
-      pending = toUpsert.filter((n) => known.has(n.id)).concat(retry);
+      // After a quota refusal the new notes wait, the ones retried per note
+      // included: each insert would only meet the same refusal.
+      pending = toUpsert.filter((n) => known.has(n.id)).concat(bulkQuotaRefusal ? [] : retry);
     }
   }
 
@@ -1894,6 +2041,7 @@ async function syncInner(
         ciphertext: row.ciphertext,
         nonce: row.nonce,
         updated_at: row.updated_at,
+        ...keyEpochColumn(),
       })
       .eq('id', note.id)
       .eq('user_pubkey', pubkey)
@@ -1904,6 +2052,7 @@ async function syncInner(
       // The too-large refusal is the "Not backed up" list's to report.
       if (!isNoteTooLargeError(updateErr)) recordSyncFault({ step: 'push', status: updateStatus, code: updateErr.code || undefined, ref: note.id });
       if (isMfaRefusal(updateErr)) throw new MfaRequiredError();
+      if (isPhraseReplacedRefusal(updateErr)) throw phraseReplacedStop('write');
       if (isAuthError(updateErr)) throw new SessionExpiredError();
       if (isQuotaError(updateErr)) throw new QuotaExceededError(updateErr.message);
       // One oversized note breaching the per-note 1 MB CHECK is not an
@@ -1917,7 +2066,7 @@ async function syncInner(
       // delete the local note so it stops retrying forever. Only when the id
       // really is not one: a server or proxy that sent this text for a valid
       // id deleted a note it never stored (report 9b).
-      if (updateErr.message?.includes('invalid input syntax for type uuid') && !HYPHENATED_UUID.test(note.id)) {
+      if (updateErr.message?.includes('invalid input syntax for type uuid') && !isUuid(note.id)) {
         console.warn('[sync] deleting note with invalid UUID:', note.id);
         await db.notes.delete(note.id);
         return;
@@ -1966,13 +2115,14 @@ async function syncInner(
       if (insertErr) {
         if (!isNoteTooLargeError(insertErr)) recordSyncFault({ step: 'push', status: insertStatus, code: insertErr.code || undefined, ref: note.id });
         if (isMfaRefusal(insertErr)) throw new MfaRequiredError();
+        if (isPhraseReplacedRefusal(insertErr)) throw phraseReplacedStop('write');
         if (isAuthError(insertErr)) throw new SessionExpiredError();
         if (isQuotaError(insertErr)) throw new QuotaExceededError(insertErr.message);
         if (isNoteTooLargeError(insertErr)) {
           if (onPushError) onPushError(note.id, NOTE_TOO_LARGE_MSG);
           return;
         }
-        if (insertErr.message?.includes('invalid input syntax for type uuid') && !HYPHENATED_UUID.test(note.id)) {
+        if (insertErr.message?.includes('invalid input syntax for type uuid') && !isUuid(note.id)) {
           console.warn('[sync] deleting note with invalid UUID:', note.id);
           await db.notes.delete(note.id);
           return;
@@ -1992,11 +2142,9 @@ async function syncInner(
     // ── Conflict: the server holds a generation this device never synced ──
     console.warn('[sync] conflict detected for note', note.id);
     try {
-      const serverPayload = decryptNote(
-        base64ToBytes(existing.ciphertext),
-        base64ToBytes(existing.nonce),
-        encryptionKey,
-      );
+      const existingCt = base64ToBytes(existing.ciphertext);
+      const existingNonce = base64ToBytes(existing.nonce);
+      const serverPayload = openWithRing('sync', encryptionKey, (key) => decryptNote(existingCt, existingNonce, key));
       const serverFields = fieldsOfPayload(serverPayload, note.archived === 1);
       // A note the mass delete guard restored (keepHeldNotes) that meets
       // another device's restore of the same note. Either can be the newer
@@ -2122,6 +2270,7 @@ async function syncInner(
           ciphertext: bytesToBase64(mergedCt),
           nonce: mergedNonce,
           updated_at: mergedAt,
+          ...keyEpochColumn(),
         })
         .eq('id', note.id)
         .eq('user_pubkey', pubkey)
@@ -2153,6 +2302,7 @@ async function syncInner(
       } else if (mergeErr) {
         if (!isNoteTooLargeError(mergeErr)) recordSyncFault({ step: 'push', status: mergeStatus, code: mergeErr.code || undefined, ref: note.id });
         if (isMfaRefusal(mergeErr)) throw new MfaRequiredError();
+        if (isPhraseReplacedRefusal(mergeErr)) throw phraseReplacedStop('write');
         console.error('[sync] auto-merge push failed for', note.id, mergeErr);
         if (onPushError) onPushError(note.id, mergeErr.message ?? 'auto-merge failed');
       } else {
@@ -2162,7 +2312,7 @@ async function syncInner(
         console.warn('[sync] auto-merge lost a second race for', note.id);
       }
     } catch (err) {
-      if (err instanceof MfaRequiredError) throw err;
+      if (err instanceof MfaRequiredError || err instanceof PhraseReplacedError) throw err;
       console.error('[sync] conflict resolution failed for', note.id, err);
       recordSyncFault({ step: 'push', code: 'merge', ref: note.id });
       if (onPushError) onPushError(note.id, 'conflict resolution failed');
@@ -2222,6 +2372,7 @@ async function syncInner(
     ),
   );
   if (pushAbort !== null) throw pushAbort;
+  if (bulkQuotaRefusal !== null) throw bulkQuotaRefusal;
   // A stop also leaves every note no worker claimed: the whole per-note
   // queue when an earlier stage stopped, since no worker starts after it.
   if (pushEnded) {

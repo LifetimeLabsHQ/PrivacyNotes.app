@@ -259,6 +259,8 @@
       "unknown": "Neznáma sledovaná hodnota {{id}}",
       "sleepHours": "Hodiny spánku",
       "sleepQuality": "Kvalita spánku",
+      "bpSystolic": "Krvný tlak, horný",
+      "bpDiastolic": "Krvný tlak, dolný",
       "avgDays_one": "priemer, dni: {{count}}",
       "avgDays_few": "priemer, dni: {{count}}",
       "avgDays_other": "priemer, dni: {{count}}",

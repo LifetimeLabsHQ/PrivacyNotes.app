@@ -7,6 +7,7 @@
     "sleep": "Sömn",
     "sleepScore": "Sömnpoäng",
     "heartRate": "Puls",
+    "bloodPressure": "Blodtryck",
     "activity": "Aktivitet",
     "medication": "Medicin",
     "meds": "Mediciner",
@@ -24,6 +25,7 @@
   "units": {
     "hoursSuffix": " tim",
     "bpm": "slag/min",
+    "mmHg": "mmHg",
     "kg": "kg",
     "lb": "lb",
     "steps_one": "steg",
@@ -116,6 +118,10 @@
   },
   "heartRate": {
     "prompt": "Genomsnittlig puls"
+  },
+  "bloodPressure": {
+    "systolic": "Övre värdet (systoliskt)",
+    "diastolic": "Nedre värdet (diastoliskt)"
   },
   "activity": {
     "prompt": "Aktivitetsnivå idag?",
@@ -243,11 +249,13 @@
   "custom": {
     "yes": "Ja",
     "no": "Nej",
+    "unknownType": "Det här mätvärdet kräver en nyare version av appen.",
     "typeLabels": {
       "scale10": "Skala (0-10)",
       "scale5": "Skala (0-5)",
       "slider100": "Poäng (0-100)",
       "number": "Tal",
+      "pair": "Två tal",
       "yesno": "Ja / Nej"
     }
   },
@@ -263,6 +271,7 @@
     "medicationCard": "Medicinkort",
     "medicationCardHelp": "\"Tog du din medicin?\" på den här enheten, bara en dag då en medicin ska tas.",
     "customHelp": "Mätvärden du namnger själv: en skala, ett tal eller ja eller nej. Upp till {{max}}.",
+    "customHelpPair": "Mätvärden du namnger själv: en skala, ett tal, två tal eller ja eller nej. Upp till {{max}}.",
     "yourCustomTrackers": "Dina egna mätvärden",
     "categoryMoodMind": "Humör och sinne",
     "categoryBodyHealth": "Kropp och hälsa",
@@ -297,7 +306,13 @@
     "preview": "Förhandsvisning",
     "startFromLast": "Kom ihåg senaste värdet",
     "chooseIcon": "Välj ikon",
-    "startFromLastHelp": "Bra för sådant som sällan ändras, som din vikt eller en daglig dos."
+    "startFromLastHelp": "Bra för sådant som sällan ändras, som din vikt eller en daglig dos.",
+    "pairFirst": "Första talet",
+    "pairSecond": "Andra talet",
+    "pairFirstPlaceholder": "Systoliskt",
+    "pairSecondPlaceholder": "Diastoliskt",
+    "pairUnit": "Enhet (valfritt)",
+    "pairWaiting": "Sparas när det första talet är ifyllt."
   },
   "factors": {
     "prompt": "Vad var en del av din dag?",

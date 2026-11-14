@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { ancestorIds, childrenOf, type FolderDef } from './folders';
+import { createListeners } from './listeners';
 
 /**
  * The folder tree's shared state and shape - the ONE source of truth the
@@ -67,7 +68,7 @@ function readToggled(): Set<string> {
 }
 
 let toggled: Set<string> = readToggled();
-const listeners = new Set<() => void>();
+const { subscribe, notify } = createListeners();
 
 function publish(next: Set<string>): void {
   if (next === toggled) return;
@@ -77,12 +78,7 @@ function publish(next: Set<string>): void {
   } catch {
     /* storage full / disabled - the tree just won't remember */
   }
-  for (const listener of listeners) listener();
-}
-
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
+  notify();
 }
 
 /** Top level open, nested closed, unless the user has said otherwise. */

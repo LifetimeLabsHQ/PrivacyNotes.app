@@ -141,6 +141,14 @@
   },
   "banner": {
     "proActivationPending": "Pago recibido, pero la activación de Pro está tardando más de lo habitual. Actualiza en un minuto, o contacta con soporte si no se activa.",
+    "crypto": {
+      "waiting": "Esperando tu pago con criptomonedas. Pro se activa cuando se confirme.",
+      "seen": "Pago con criptomonedas detectado. Pro se activa cuando la red lo confirme, normalmente en menos de una hora con Bitcoin.",
+      "partial": "Ha llegado parte de tu pago con criptomonedas. Envía el resto en la página de pago antes de que caduque el enlace.",
+      "ended": "Tu enlace de pago con criptomonedas caducó antes de que llegara el pago completo.",
+      "paid": "Tu pago con criptomonedas está confirmado. Pro está activo.",
+      "openPayment": "Página de pago"
+    },
     "snapshotPaused": "El historial de notas está en pausa. Tu plan Pro parece inactivo. Las nuevas ediciones no se guardarán como versiones hasta que restaures Pro.",
     "restorePro": "Restaurar Pro",
     "storagePastDue": "El pago de tu suscripción de almacenamiento falló. Actualiza tu tarjeta en Paddle para no perder la capacidad extra.",
@@ -336,7 +344,24 @@
     "linksTo": "Enlaza a",
     "missing": "Aún no creada",
     "protectedHidden_one": "{{count}} elemento protegido con PIN no se muestra",
-    "protectedHidden_other": "{{count}} elementos protegidos con PIN no se muestran"
+    "protectedHidden_other": "{{count}} elementos protegidos con PIN no se muestran",
+    "related": "Conexiones sugeridas",
+    "relatedWords": "Ambas mencionan {{words}}",
+    "relatedLinksTo": "Ambas enlazan a {{title}}",
+    "relatedLinkedFrom": "Ambas enlazadas desde {{title}}",
+    "relatedTag": "Ambas con la etiqueta {{tag}}",
+    "relatedMeaning": "Mismo significado",
+    "meaningDoor": "Conexiones inteligentes: encuentra notas con el mismo significado, con IA sin conexión",
+    "meaningDoorNo": "No volver a mostrar",
+    "meaningDoorHidden": "Oculto en todas las notas. Conexiones inteligentes sigue en Ajustes > Editor > Comportamiento.",
+    "hideSuggestions": "Ocultar conexiones sugeridas",
+    "notRelated": "No relacionada",
+    "notRelatedDone": "Ya no se sugiere",
+    "notRelatedCount": "No relacionadas ({{n}})",
+    "restoreSuggestion": "Volver a sugerir",
+    "linkAtCursor": "Enlazar en el cursor",
+    "linkNeedsCursor": "Primero haz clic en la nota",
+    "linkAsFootnote": "Enlazar como nota al pie"
   },
   "drawing": {
     "fullScreen": "Pantalla completa",

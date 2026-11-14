@@ -10,6 +10,35 @@
     "otherGuides": "Další návody k importu"
   },
   "guides": {
+    "1password": {
+      "app": "1Password",
+      "title": "Export trezoru z 1Password",
+      "metaTitle": "Jak exportovat trezor z 1Password - PrivacyNotes",
+      "lead": "Aplikace 1Password exportuje tvůj účet do jednoho souboru .1pux a PrivacyNotes z jeho přihlašovacích údajů, karet, poznámek a identit vytvoří položky Trezoru a poznámky.",
+      "sections": [
+        {
+          "h": "Export z 1Password",
+          "steps": [
+            "Otevři v počítači aplikaci 1Password a odemkni ji.",
+            "Vyber File > Export a zvol svůj účet.",
+            "Zadej heslo k účtu, nech formát 1PUX a soubor ulož."
+          ]
+        },
+        {
+          "h": "1PUX, nebo CSV",
+          "p": [
+            "Zvol 1PUX. Export do CSV obsahuje jen přihlašovací údaje: žádné karty, poznámky ani identity a žádná vlastní pole."
+          ]
+        },
+        {
+          "h": "Kam co přijde",
+          "p": [
+            "Každá položka s přihlašovacími údaji se stane [přihlašovacími údaji v Trezoru](/cs/help/vault) i s klíčem 2FA, takže [tvoje kódy fungují dál](/cs/help/vault-totp), a přenesou se i další weby a vlastní pole. Karta se stane kartou a zabezpečená poznámka nebo identita poznámkou. Značky zůstanou značkami, i vnořené, oblíbené položky dorazí připnuté a archivované půjdou do archivu. Přiložené soubory se nepřenesou: ulož si je z 1Password a připoj je tady.",
+            "Export obsahuje tvoje hesla v čitelné podobě. Naimportuj ho, zkontroluj, že všechno dorazilo, a pak soubor smaž."
+          ]
+        }
+      ]
+    },
     "google-calendar": {
       "app": "Google Calendar",
       "title": "Vyexportuj si Google Calendar",
@@ -159,6 +188,53 @@
         }
       ]
     },
+    "siyuan": {
+      "app": "SiYuan",
+      "title": "Export poznámek ze SiYuan",
+      "metaTitle": "Jak exportovat poznámky ze SiYuan jako Data.zip - PrivacyNotes",
+      "lead": "SiYuan exportuje celý pracovní prostor jako jeden soubor Data.zip. Ten přenese všechny zápisníky i s vnořenými dokumenty, značkami, odkazy na bloky, přílohami a daty.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/siyuan-export.webp",
+            "alt": "Dialog Data migration v SiYuan s vybraným řádkem Data.zip a zvýrazněným tlačítkem Export.",
+            "width": 1576,
+            "height": 1076
+          },
+          "h": "Exportuj pracovní prostor jako Data.zip",
+          "steps": [
+            "Otevři SiYuan na počítači.",
+            "Klikni vlevo nahoře na nabídku SiYuan a zvol „Data migration“.",
+            "V části SiYuan ukaž na „Data.zip“ a klikni na Export.",
+            "Vyber složku. SiYuan zapíše jeden soubor .zip se všemi zápisníky z pracovního prostoru.",
+            "Ten soubor .zip nahraj tak, jak je."
+          ],
+          "p": [
+            "Chceš-li přenést jen jeden zápisník, klikni na něj v panelu Documents pravým tlačítkem a zvol Export > „SiYuan .sy.zip“. Ten soubor přečteme stejně."
+          ]
+        },
+        {
+          "h": "Odemkni šifrované zápisníky a exportuj je zvlášť",
+          "p": [
+            "Data.zip nechá šifrovaný zápisník zašifrovaný, takže ho nepřečteme. Přeskočíme ho a náhled importu ho uvede jménem. Odemkni zápisník v SiYuan, exportuj ho jako „SiYuan .sy.zip“ a nahraj i ten soubor: takový export přečíst jde."
+          ]
+        },
+        {
+          "h": "Zvol Data.zip, ne Markdown",
+          "p": [
+            "Export do Markdownu (.zip) zachová text, ale vynechá značky a data dokumentů a odkazy na bloky zapíše jako prostý text nebo poznámky pod čarou. Přečteme ho, pokud nemáš nic jiného, a každá poznámka dostane datum importu."
+          ]
+        },
+        {
+          "h": "Co se přenese",
+          "p": [
+            "Každý zápisník se změní na složku a vnořené dokumenty na vnořené složky. Dokument, který má poddokumenty i vlastní text, se stane poznámkou uvnitř složky téhož jména. Každá poznámka si ponechá své značky a data vytvoření a úpravy, která SiYuan uložil.",
+            "Nadpisy, seznamy, zaškrtávací seznamy, citace, kód s jazykem, tabulky se zarovnáním, matematika, calloutty, zvýraznění a barvy textu se přenesou beze změny. [Odkazy na bloky se změní na odkazy na poznámky](/cs/help/note-links), obrázky a soubory se naimportují do tvého úložiště a dokumenty v záložkách dorazí připnuté.",
+            "Databáze se změní na tabulku z viditelných sloupců, karty na sbalitelné sekce a myšlenková mapa na vnořený seznam. Kartičky zůstanou prostým textem a dotaz na vložení se uloží jako kód. SiYuan ve svých exportech koš nemá, smazané dokumenty proto zůstanou v jeho historii."
+          ]
+        }
+      ]
+    },
     "standard-notes": {
       "app": "Standard Notes",
       "title": "Vyexportuj si poznámky ze Standard Notes",
@@ -256,6 +332,29 @@
           "p": [
             "Z přihlašovacích údajů se stanou [položky přihlašovacích údajů v Trezoru](/cs/help/vault) (i s ikonami webů), z karet položky karet, z SSH klíčů položky SSH klíčů a zabezpečené poznámky i identity dorazí jako čitelné poznámky. Složky z Bitwardenu se převedou na značky a oblíbené položky dorazí s hvězdičkou. Ověřovací klíče (TOTP) putují s sebou, takže [tvoje kódy 2FA fungují dál](/cs/help/vault-totp).",
             "Exportovaný soubor obsahuje tvoje hesla v čitelné podobě, takže ho naimportuj, zkontroluj, že všechno dorazilo, a pak ho pořádně smaž. V PrivacyNotes je pak všechno zase zašifrované, na tvém zařízení i cestou na server."
+          ]
+        }
+      ]
+    },
+    "enpass": {
+      "app": "Enpass",
+      "title": "Export trezoru z Enpassu",
+      "metaTitle": "Jak exportovat trezor z Enpassu - PrivacyNotes",
+      "lead": "Enpass exportuje trezor do jednoho souboru .json a PrivacyNotes z jeho přihlašovacích údajů, karet, poznámek a identit vytvoří položky Trezoru a poznámky.",
+      "sections": [
+        {
+          "h": "Export z Enpassu",
+          "steps": [
+            "Otevři v počítači Enpass a odemkni ho.",
+            "Vyber File > Export, zvol trezor a formát .json.",
+            "Soubor ulož a pak zadej své hlavní heslo. Každý trezor exportuj zvlášť."
+          ]
+        },
+        {
+          "h": "Kam co přijde",
+          "p": [
+            "Každá položka s přihlašovacími údaji se stane [přihlašovacími údaji v Trezoru](/cs/help/vault) i s klíčem 2FA, takže [tvoje kódy fungují dál](/cs/help/vault-totp), a přenesou se i další weby a vlastní pole. Karta se stane kartou a zabezpečená poznámka nebo identita poznámkou. Složky se stanou značkami, i vnořené, oblíbené položky dorazí připnuté a archivované půjdou do archivu. Položky v koši Enpassu a přiložené soubory se nepřenesou.",
+            "Export obsahuje tvoje hesla v čitelné podobě. Naimportuj ho, zkontroluj, že všechno dorazilo, a pak soubor smaž."
           ]
         }
       ]
@@ -863,6 +962,332 @@
           "h": "Stejný soubor můžeš kdykoli importovat znovu",
           "p": [
             "Druhý import přeskočí lidi, které už máš. Každou vizitku páruje nejdřív podle jejího ID, pak podle jména a shodného telefonního čísla a nakonec podle shodné e-mailové adresy. Kontakty, které už máš uložené, se nemění, takže tvoje úpravy tady zůstanou v bezpečí."
+          ]
+        }
+      ]
+    },
+    "anytype": {
+      "app": "Anytype",
+      "title": "Export prostoru z Anytype",
+      "metaTitle": "Jak exportovat prostor z Anytype - PrivacyNotes",
+      "lead": "Anytype exportuje celý prostor najednou jako jeden zip ve formátu Any-Block JSON. Ten přenese tvoje stránky i s jejich značkami, kolekcemi, úkoly, odkazy a soubory.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/anytype-export.webp",
+            "alt": "Nastavení prostoru v Anytype, stránka Export, Any-Block v1 s formátem souboru JSON a archivem Zip, zapnuté volby Include files data a Include archived objects.",
+            "width": 1576,
+            "height": 800
+          },
+          "h": "Exportuj prostor jako Any-Block JSON",
+          "steps": [
+            "Otevři Anytype na počítači a přejdi do prostoru, který chceš přenést.",
+            "Vyber File > Export. Anytype otevře nastavení prostoru na stránce Export. Novější verze říkají prostoru kanál, takže stránka se jmenuje „Export Channel“.",
+            "Zvol „Any-Block v1“ a File Format nech na JSON.",
+            "Zapni „Zip archive“, „Include files data“ a „Include archived objects“.",
+            "Klikni na „Export data“ a vyber složku. Anytype zapíše jeden soubor .zip pojmenovaný podle prostoru a data.",
+            "Ten soubor .zip nahraj tak, jak je."
+          ],
+          "p": [
+            "Jeden export obsahuje jeden prostor. Pokud máš poznámky ve více prostorech, exportuj každý z nich a zipy nahraj jeden po druhém."
+          ]
+        },
+        {
+          "h": "Zvol Any-Block JSON, ne Markdown ani Protobuf",
+          "p": [
+            "Export do Markdownu zachová text, ale vynechá podtržení, barvy, calloutty, zarovnání a jazyky kódu a kolekce do něj nepatří. Přečteme ho, pokud nemáš nic jiného, a náhled importu napíše, o co jsi přišel.",
+            "Any-Block nabízí i formát souboru Protobuf. Obsahuje stejná data v binární podobě, kterou nečteme, proto chceme export do JSON. Any-Block v2 Anytype označuje jako náhled a není to záloha."
+          ]
+        },
+        {
+          "h": "Co se přenese",
+          "p": [
+            "Stránky, poznámky, úkoly a záložky se změní na poznámky se svými značkami a daty vytvoření a úpravy, která Anytype uložil. Anytype složky nemá, takže stránka v kolekci skončí ve složce pojmenované podle kolekce a každá další stránka na nejvyšší úrovni.",
+            "Nadpisy, seznamy, zaškrtávací seznamy, citace, kód s jazykem, tabulky, matematika a diagramy Mermaid se přenesou beze změny. Přepínače se změní na sbalitelné sekce a calloutty na calloutty. [Odkazy a zmínky mezi stránkami se změní na odkazy na poznámky](/cs/help/note-links), obrázky a soubory se naimportují do tvého úložiště.",
+            "Úkol dorazí jako poznámka s úkolem, splněný, pokud byl hotový. Vlastní vlastnosti se zapíšou jako krátký seznam na začátku poznámky. Stránky z koše Anytype skončí v tvém koši, takže je tam můžeš obnovit nebo smazat.",
+            "Ikony a obálky stránek zůstanou pozadu a náhled importu napíše, kolik jich bylo. Oblíbené součástí exportu nejsou, proto ty poznámky po importu znovu připni."
+          ]
+        }
+      ]
+    },
+    "apple-calendar": {
+      "app": "Apple Calendar",
+      "title": "Vyexportuj si kalendář z Apple Calendar",
+      "metaTitle": "Export kalendáře z Apple Calendar - PrivacyNotes",
+      "lead": "Kalendář na Macu exportuje vždy jeden kalendář jako soubor .ics a PrivacyNotes ho přečte tak, jak je. Z každého kalendáře vznikne složka.",
+      "sections": [
+        {
+          "h": "Vyexportuj kalendář z Kalendáře na Macu",
+          "steps": [
+            "Otevři Kalendář a vlevo zobraz seznam kalendářů (Zobrazit > Zobrazit seznam kalendářů).",
+            "Klikni na kalendář, který chceš převést.",
+            "Zvol Soubor > Exportovat > „Exportovat...“ a ulož soubor .ics.",
+            "Stejně postupuj u každého dalšího kalendáře, který chceš. Každý je samostatný soubor."
+          ]
+        },
+        {
+          "h": "Co se přenese",
+          "p": [
+            "Každá událost dorazí se svým dnem, časem a délkou, včetně celodenních událostí a událostí na několik dní. Opakující se události si zachovají své pravidlo.",
+            "Výchozí upozornění kalendáře jsou v nastavení Kalendáře, ne v událostech, takže je export vynechá, a krok kontroly ti řekne, kolik nadcházejících událostí dorazí bez připomínky. Upozornění nastavené u jedné události se přenese. Když stejný soubor naimportuješ znovu, události, které už máš, se přeskočí."
+          ]
+        }
+      ]
+    },
+    "keepass": {
+      "app": "KeePass",
+      "title": "Vyexportuj si databázi z KeePassu",
+      "metaTitle": "Export databáze z KeePassu - PrivacyNotes",
+      "lead": "KeePass exportuje celou tvoji databázi jako jeden soubor KeePass XML a PrivacyNotes z každého záznamu udělá přihlašovací údaje nebo poznámku. XML zachová víc než export do CSV.",
+      "sections": [
+        {
+          "h": "Vyexportuj data z KeePassu",
+          "steps": [
+            "Otevři databázi v KeePassu a odemkni ji.",
+            "Zvol File > Export.",
+            "Vyber „KeePass XML (2.x)“ a ulož soubor .xml."
+          ]
+        },
+        {
+          "h": "Zvol XML, ne .kdbx",
+          "p": [
+            "Soubor databáze .kdbx je zamčený tvým hlavním klíčem, takže ho PrivacyNotes přečíst nemůže, a když ho do importu přetáhneš, import to řekne. Funguje i export do CSV z KeePassu, ale ten zachová jen název, uživatelské jméno, heslo, web a poznámky."
+          ]
+        },
+        {
+          "h": "Kam se co uloží",
+          "p": [
+            "Záznam s uživatelským jménem, heslem, webem nebo klíčem 2FA se stane [přihlašovacími údaji v Trezoru](/cs/help/vault), jakýkoli jiný záznam zabezpečenou poznámkou. Další weby a tvoje vlastní pole se přenesou, chráněné pole zůstane skryté a datum vypršení platnosti se stane polem. Klíč 2FA se přenese také, takže [tvoje kódy fungují dál](/cs/help/vault-totp). Přiložené soubory se přenesou také, a to do sekce Soubory u přihlašovacích údajů nebo na konec poznámky. Skupiny a značky se stanou značkami. Záznamy v Recycle Bin a starší verze záznamu se nepřenesou.",
+            "Export obsahuje tvoje hesla v čitelné podobě. Naimportuj ho, zkontroluj, že všechno dorazilo, a pak soubor smaž."
+          ]
+        }
+      ]
+    },
+    "keepassxc": {
+      "app": "KeePassXC",
+      "title": "Vyexportuj si databázi z KeePassXC",
+      "metaTitle": "Export databáze z KeePassXC - PrivacyNotes",
+      "lead": "KeePassXC exportuje tvoji databázi jako soubor XML nebo CSV a PrivacyNotes přečte oba. Export do XML zachová všechno, co CSV vynechá.",
+      "sections": [
+        {
+          "h": "Vyexportuj data z KeePassXC",
+          "steps": [
+            "Otevři databázi v KeePassXC a odemkni ji.",
+            "Zvol Database > Export > „XML File...“.",
+            "Potvrď varování o nešifrovaném souboru a ulož ho."
+          ]
+        },
+        {
+          "h": "XML, nebo CSV",
+          "p": [
+            "Zvol XML. CSV zachová název, uživatelské jméno, heslo, web, poznámky, klíč 2FA, data vytvoření a úprav a skupinu, ale žádné značky, žádná vlastní pole, žádný druhý web, žádné datum vypršení platnosti a žádné přiložené soubory. Samotný soubor .kdbx je zamčený, takže ho PrivacyNotes přečíst nemůže."
+          ]
+        },
+        {
+          "h": "Kam se co uloží",
+          "p": [
+            "Záznam s uživatelským jménem, heslem, webem nebo klíčem 2FA se stane [přihlašovacími údaji v Trezoru](/cs/help/vault), jakýkoli jiný záznam zabezpečenou poznámkou. Vlastní pole dorazí jako pole, chráněné zůstane skryté a klíč 2FA se přenese, takže [tvoje kódy fungují dál](/cs/help/vault-totp). Přiložené soubory se přenesou také, a to do sekce Soubory u přihlašovacích údajů nebo na konec poznámky. Skupiny a značky se stanou značkami. Záznamy v Recycle Bin a starší verze záznamu se nepřenesou.",
+            "Export obsahuje tvoje hesla v čitelné podobě. Naimportuj ho, zkontroluj, že všechno dorazilo, a pak soubor smaž."
+          ]
+        }
+      ]
+    },
+    "lastpass": {
+      "app": "LastPass",
+      "title": "Vyexportuj si trezor z LastPassu",
+      "metaTitle": "Export trezoru z LastPassu - PrivacyNotes",
+      "lead": "LastPass exportuje tvůj trezor jako jeden soubor .csv a PrivacyNotes z jeho hesel udělá přihlašovací údaje a ze zabezpečených poznámek poznámky nebo karty.",
+      "sections": [
+        {
+          "h": "Vyexportuj data z LastPassu",
+          "steps": [
+            "Přihlas se ke svému trezoru LastPass v prohlížeči.",
+            "Zvol Advanced options > Export.",
+            "Vyber „Export data for use anywhere“ a potvrď hlavním heslem. LastPass uloží soubor .csv."
+          ]
+        },
+        {
+          "h": "Kam se co uloží",
+          "p": [
+            "Každé heslo se stane [přihlašovacími údaji v Trezoru](/cs/help/vault) se svým klíčem 2FA, takže [tvoje kódy fungují dál](/cs/help/vault-totp). Zabezpečená poznámka se stane poznámkou a poznámka s platební kartou se stane kartou. Složky se stanou značkami, vnořené také, a oblíbené položky dorazí připnuté. Soubor neobsahuje žádné údaje o datu, takže každá položka dostane den, kdy ji naimportuješ.",
+            "Export obsahuje tvoje hesla v čitelné podobě. Naimportuj ho, zkontroluj, že všechno dorazilo, a pak soubor smaž."
+          ]
+        }
+      ]
+    },
+    "nordpass": {
+      "app": "NordPass",
+      "title": "Vyexportuj si trezor z NordPassu",
+      "metaTitle": "Export trezoru z NordPassu - PrivacyNotes",
+      "lead": "NordPass exportuje tvůj trezor jako jeden soubor .csv a PrivacyNotes z jeho hesel, poznámek, karet a osobních údajů udělá položky Trezoru.",
+      "sections": [
+        {
+          "h": "Vyexportuj data z NordPassu",
+          "steps": [
+            "Otevři NordPass a odemkni ho.",
+            "Přejdi do Settings a zvol „Export Items“.",
+            "Potvrď hlavním heslem a ulož soubor .csv."
+          ]
+        },
+        {
+          "h": "Kam se co uloží",
+          "p": [
+            "Každé heslo se stane [přihlašovacími údaji v Trezoru](/cs/help/vault) se svými dalšími weby a vlastními poli, skryté pole zůstane skryté. Poznámky dorazí jako poznámky, karty jako karty a osobní údaje jako poznámka s každým údajem na samostatném řádku. Složka každé položky se stane značkou. Soubor uvádí jen složku, ve které položka leží, ne složky nad ní.",
+            "V bezplatném tarifu NordPass klíče 2FA neukládá, takže je v souboru nenajdeš. Export obsahuje tvoje hesla v čitelné podobě. Naimportuj ho, zkontroluj, že všechno dorazilo, a pak soubor smaž."
+          ]
+        }
+      ]
+    },
+    "proton-pass": {
+      "app": "Proton Pass",
+      "title": "Vyexportuj si trezor z Proton Pass",
+      "metaTitle": "Export trezoru z Proton Pass - PrivacyNotes",
+      "lead": "Proton Pass exportuje tvoje trezory jako .zip, .csv nebo soubor šifrovaný PGP. PrivacyNotes přečte .zip i .csv a .zip zachová nejvíc.",
+      "sections": [
+        {
+          "h": "Vyexportuj data z Proton Pass",
+          "steps": [
+            "Otevři Proton Pass a přejdi do Settings > Export.",
+            "V části File format zvol ZIP.",
+            "Klikni na Export a potvrď heslem k účtu Proton."
+          ]
+        },
+        {
+          "h": "Zvol ZIP, ne soubor šifrovaný PGP",
+          "p": [
+            "Soubor šifrovaný PGP je zamčený tvou přístupovou frází, takže ho PrivacyNotes přečíst nemůže, a import to řekne. Funguje i .csv, ale nemá vlastní pole."
+          ]
+        },
+        {
+          "h": "Kam se co uloží",
+          "p": [
+            "Každá přihlašovací položka se stane [přihlašovacími údaji v Trezoru](/cs/help/vault) se svými dalšími weby, vlastními poli a daty vytvoření a úprav. Klíč 2FA se přenese, takže [tvoje kódy fungují dál](/cs/help/vault-totp). Když má položka e-mail i uživatelské jméno, uživatelské jméno vyplní přihlašovací údaje a e-mail se stane polem. Poznámky dorazí jako poznámky, karty jako karty a identity jako poznámky s každým údajem na samostatném řádku. Každý alias hide-my-email se stane poznámkou s jeho adresou, takže ti zůstane přehled, který web dostal kterou adresu; Proton na ni dál přeposílá poštu, dokud je tvůj účet Proton aktivní. Při více trezorech se každý trezor stane značkou. Položky v koši se nepřenesou.",
+            "Export obsahuje tvoje hesla v čitelné podobě. Naimportuj ho, zkontroluj, že všechno dorazilo, a pak soubor smaž."
+          ]
+        }
+      ]
+    },
+    "dashlane": {
+      "app": "Dashlane",
+      "title": "Export trezoru z Dashlane",
+      "metaTitle": "Jak exportovat trezor z Dashlane - PrivacyNotes",
+      "lead": "Dashlane exportuje tvůj trezor jako soubor .zip se soubory CSV a PrivacyNotes z jeho přihlašovacích údajů, zabezpečených poznámek a platebních karet vytvoří položky Trezoru a poznámky.",
+      "sections": [
+        {
+          "h": "Export z Dashlane",
+          "steps": [
+            "Otevři svůj trezor Dashlane v rozšíření prohlížeče nebo ve webové aplikaci.",
+            "Vyber Settings > Export data.",
+            "Zvol formát CSV a ulož soubor .zip."
+          ]
+        },
+        {
+          "h": "CSV, ne .dash",
+          "p": [
+            "Zvol CSV. Export .dash je zamčený vlastním heslem a PrivacyNotes ti to řekne, když ho do okna přetáhneš."
+          ]
+        },
+        {
+          "h": "Kam co přijde",
+          "p": [
+            "Každá položka s přihlašovacími údaji se stane [přihlašovacími údaji v Trezoru](/cs/help/vault) i s klíčem 2FA, takže [tvoje kódy fungují dál](/cs/help/vault-totp). Zabezpečená poznámka se stane poznámkou a platební karta kartou. Doklady totožnosti a osobní údaje se stanou poznámkami s jejich podrobnostmi. Kategorie se stanou značkami, i vnořené. Dashlane drží u každé položky s přihlašovacími údaji jen jeden web, takže druhý web v souboru není.",
+            "Export obsahuje tvoje hesla v čitelné podobě. Naimportuj ho, zkontroluj, že všechno dorazilo, a pak soubor smaž."
+          ]
+        }
+      ]
+    },
+    "daylio": {
+      "app": "Daylio",
+      "title": "Vyexportuj si záznamy z Daylio",
+      "metaTitle": "Jak exportovat zálohu z Daylia - PrivacyNotes",
+      "lead": "Daylio exportuje zálohu .daylio z More > Backup & Restore. PrivacyNotes tento soubor přečte a každý záznam znovu vytvoří jako záznam v deníku, s náladou, aktivitami a fotkami.",
+      "sections": [
+        {
+          "h": "Exportuj zálohu .daylio",
+          "steps": [
+            "Daylio úplně zavři a otevři ho znovu. Záloha vytvořená hned po novém záznamu může tento záznam vynechat, dokud se aplikace nerestartuje.",
+            "Vyber More > Backup & Restore > Advanced Options > Export.",
+            "Daylio otevře nabídku sdílení, ne dialog pro uložení. Ulož soubor mezi své soubory nebo na cloudové úložiště, které otevřeš na tomto zařízení.",
+            "Uložený soubor .daylio je ten, který budeš importovat."
+          ]
+        },
+        {
+          "h": "Vyber zálohu, ne CSV",
+          "p": [
+            "More > Export Entries vytvoří CSV, což je v Daylio funkce Premium. PrivacyNotes čte i to, jenže CSV neobsahuje fotky, hlasové poznámky ani skupiny nálad, takže vlastní nebo přejmenovaná nálada skončí v záznamu jako text, a ne ve sledované hodnotě nálady. Kdykoli to jde, použij zálohu .daylio."
+          ]
+        },
+        {
+          "h": "Co se přenese",
+          "p": [
+            "[Každý záznam skončí v Denících](/cs/help/journal), ve dni a čase, které ukazuje Daylio, a dva záznamy z jednoho dne zůstanou dvěma záznamy. Každá nálada vyplní [sledované hodnoty nálady](/cs/help/choose-trackers) podle své skupiny nálad v Daylio, takže přejmenovaná nálada si udrží své místo na škále, a vlastní nálada se navíc objeví na začátku záznamu.",
+            "Aktivity se změní na [faktory](/cs/help/factors) a nová aktivita si ponechá svou skupinu z Daylio. Škály jako Energy nebo Stress dorazí jako seznam na konci záznamu. Názvy poznámek, tučné písmo, kurzíva, podtržení, přeškrtnutí a seznamy se zachovají, fotky se importují jako obrázky, hlasové poznámky jako přílohy a záznam s hvězdičkou si hvězdičku ponechá. Cíle a důležité dny se nepřenesou a souhrn importu uvede jejich počet."
+          ]
+        }
+      ]
+    },
+    "diarium": {
+      "app": "Diarium",
+      "title": "Vyexportuj si deník z Diaria",
+      "metaTitle": "Jak exportovat deník z Diaria - PrivacyNotes",
+      "lead": "Diarium exportuje tvůj deník jako JSON z nabídky Export. PrivacyNotes tento export přečte a každý záznam znovu vytvoří jako záznam v deníku, s hodnocením, značkami a přílohami.",
+      "sections": [
+        {
+          "h": "Exportuj JSON s přílohami",
+          "steps": [
+            "Otevři Diarium a v nabídce vyber Export.",
+            "Jako formát vyber JSON a zapni Attachments.",
+            "Vyber Save to local storage a zvol složku. Diarium uloží soubor .zip, který obsahuje JSON a tvoje fotky a soubory.",
+            "Tento soubor .zip je ten, který budeš importovat."
+          ]
+        },
+        {
+          "h": "Nech Attachments zapnuté",
+          "p": [
+            "S vypnutými Attachments Diarium uloží holý soubor .json. PrivacyNotes importuje jeho text, ale fotky a soubory se nepřenesou a souhrn importu uvede jejich počet. Exportuj znovu se zapnutými Attachments a místo toho nahraj soubor .zip.",
+            "Volba Create separate file for each entry nic nemění: PrivacyNotes přečte každý soubor JSON v .zip. Exporty DOCX, TXT, HTML a PDF a záloha .diary se neimportují, proto vyber JSON."
+          ]
+        },
+        {
+          "h": "Co se přenese",
+          "p": [
+            "[Každý záznam skončí v Denících](/cs/help/journal), ve dni a čase, které ukazuje Diarium. Hodnocení hvězdičkami vyplní [sledované hodnoty nálady](/cs/help/choose-trackers). Značky se změní na značky poznámek a [faktory](/cs/help/factors) a lidé se stanou faktory ve skupině Lidé.",
+            "Tučné písmo, kurzíva, podtržení, přeškrtnutí, zvýraznění, barvy textu, seznamy a odkazy se zachovají a odkaz na jiný záznam se změní na [odkaz na poznámku](/cs/help/note-links), pokud je ten záznam ve stejném exportu. Sledované hodnoty dorazí jako seznam na konci záznamu, počasí, slunce a měsíc jako jeden řádek nahoře a poloha se uloží jako poloha záznamu. Fotky se importují jako obrázky a videa, zvuk a PDF jako přílohy."
+          ]
+        }
+      ]
+    },
+    "google-journal": {
+      "app": "Google Journal",
+      "title": "Vyexportuj si záznamy z Google Journalu",
+      "metaTitle": "Jak exportovat záznamy z Google Journalu - PrivacyNotes",
+      "lead": "Google Journal se exportuje přes Google Takeout, jakmile je zapnutá záloha. PrivacyNotes přečte soubor .zip z Takeoutu a každý záznam znovu vytvoří jako záznam v deníku, s fotkami a videi.",
+      "sections": [
+        {
+          "h": "Nejdřív zapni zálohu",
+          "p": [
+            "Takeout Journal nezobrazí, dokud se Journal nezálohuje do tvého účtu Google. Nejdřív zapni zálohu, jinak Journal v seznamu Takeoutu nenajdeš."
+          ],
+          "steps": [
+            "Otevři Journal na svém Pixelu a přejdi do Settings.",
+            "Zapni Back up your journal.",
+            "Počkej pár minut. Journal se v Takeoutu objeví, až když je záloha zapnutá."
+          ]
+        },
+        {
+          "h": "Exportuj Journal z Google Takeoutu",
+          "steps": [
+            "Otevři takeout.google.com a přihlas se stejným účtem Google.",
+            "Klikni na „Deselect all“ a pak zaškrtni jen Journal („Your journal entries and attachments from Journal“).",
+            "Klikni na „Next step“, nech typ souboru .zip a klikni na „Create export“.",
+            "Až bude archiv hotový, Google ti pošle odkaz. Stáhni .zip: to je soubor, který budeš importovat."
+          ]
+        },
+        {
+          "h": "Co se přenese",
+          "p": [
+            "[Každý záznam skončí v Denících](/cs/help/journal), ve dni, který je u něj v Journalu nastavený. Každý záznam si ponechá název a text a fotky a videa se importují jako obrázky a přílohy. Mapa u záznamu se přenese jako obrázek.",
+            "Takeout nepřenáší názvy míst, náměty k psaní, záložky ani reflexe z Journalu, takže zůstanou v Journalu. Souhrn importu to říká."
           ]
         }
       ]

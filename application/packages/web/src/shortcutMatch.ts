@@ -155,6 +155,8 @@ function matchesOne(e: KeyPress, b: KeyBinding, typing: boolean, apple: boolean,
   // digit needs Num Lock (Ctrl+Insert shares its key), and Alt plus a
   // keypad digit is a Windows Alt code.
   if (isDigit) return e.code === `Digit${b.key}` || (e.code === `Numpad${b.key}` && e.key === b.key);
+  // The space bar types " ", so a binding names it 'Space'.
+  if (b.key === 'Space') return e.key === ' ';
   return e.key === b.key;
 }
 

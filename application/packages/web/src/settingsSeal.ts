@@ -1,6 +1,7 @@
 import { base64ToBytes, bytesToBase64, decryptJsonAad, encryptJsonAad } from '@notes/shared';
 import { isDemoMode } from './demo';
 import { localDataKeyCopy, onLocalDataKeyCleared } from './localKey';
+import { currentKeyEpoch, epochMarker, epochOf, holdsEpoch, KeyEpochUnknown, openWithRing } from './keyRing';
 import { localAad, sealedWritesOn } from './localSeal';
 import { defaultSettings, type UserSettings } from './userSettingsShape';
 
@@ -14,7 +15,14 @@ import { defaultSettings, type UserSettings } from './userSettingsShape';
  * key exists stays in the readable cache (userSettings.ts writes both).
  * Demo mode stays plaintext, as the Dexie seal does: the demo phrase is a
  * public constant.
- * Spec: docs/internal/specs/local-at-rest.md (section 3.4)
+ *
+ * The envelope carries the key epoch `e` of the local key that sealed it
+ * (keyRing.ts), none for epoch 1. It opens with the key of that epoch, and an
+ * epoch this device holds no key for reads as `locked`, never `unreadable`:
+ * locked keeps the cache as it is, while unreadable resets it and loses an
+ * unpushed change.
+ * Spec: docs/internal/specs/local-at-rest.md (section 3.4);
+ * docs/internal/plans/phrase-change.md (6.2, sealed settings cache)
  */
 
 const SEALED_SETTINGS = [
@@ -72,8 +80,9 @@ export function readSealedSettings(): SealedRead {
   if (raw === null) return { state: 'absent' };
   let n: unknown;
   let ct: unknown;
+  let e: unknown;
   try {
-    ({ n, ct } = JSON.parse(raw) as { n?: unknown; ct?: unknown });
+    ({ n, ct, e } = JSON.parse(raw) as { n?: unknown; ct?: unknown; e?: unknown });
   } catch {
     return { state: 'unreadable' };
   }
@@ -81,8 +90,10 @@ export function readSealedSettings(): SealedRead {
   if (memo && memo.n === n && memo.ct === ct) return { state: 'open', fields: memo.fields, base: memo.base, dirty: memo.dirty };
   const key = localDataKeyCopy();
   if (!key) return { state: 'locked' };
+  const nonce = n;
+  const sealed = ct;
   try {
-    const fields = decryptJsonAad<unknown>(base64ToBytes(ct), base64ToBytes(n), key, AAD);
+    const fields = openWithRing('local', key, (k) => decryptJsonAad<unknown>(base64ToBytes(sealed), base64ToBytes(nonce), k, AAD), epochOf(e));
     if (!fields || typeof fields !== 'object' || Array.isArray(fields)) return { state: 'unreadable' };
     const own: Record<string, unknown> = {};
     for (const k of SEALED_SETTINGS) {
@@ -92,8 +103,8 @@ export function readSealedSettings(): SealedRead {
     const dirty = (fields as Record<string, unknown>)[DIRTY_FIELD] !== false;
     memo = { n, ct, fields: own, base, dirty };
     return { state: 'open', fields: own, base, dirty };
-  } catch {
-    return { state: 'unreadable' };
+  } catch (err) {
+    return err instanceof KeyEpochUnknown ? { state: 'locked' } : { state: 'unreadable' };
   } finally {
     key.fill(0);
   }
@@ -130,8 +141,51 @@ export function writeSealedSettings(settings: UserSettings, syncedKeys: Record<s
     const { ciphertext, nonce } = encryptJsonAad({ ...fields, [BASE_FIELD]: base, [DIRTY_FIELD]: dirty }, key, AAD);
     const n = bytesToBase64(nonce);
     const ct = bytesToBase64(ciphertext);
-    localStorage.setItem(SEALED_KEY, JSON.stringify({ n, ct }));
+    localStorage.setItem(SEALED_KEY, JSON.stringify({ n, ct, ...epochMarker() }));
     memo = { n, ct, fields, base, dirty };
+    return true;
+  } catch {
+    return false;
+  } finally {
+    key.fill(0);
+  }
+}
+
+/**
+ * The sealed part sealed again under the current local key after a phrase
+ * change, the plaintext as it was, and written only over the text this read.
+ * False when it needs nothing (absent, already current, or of an epoch this
+ * device holds no key for, which reads as locked until its key arrives) or
+ * did not open. Spec: docs/internal/plans/phrase-change.md (6.4, item 1)
+ */
+export function resealSealedSettings(): boolean {
+  if (!settingsSealOn()) return false;
+  let raw: string | null;
+  try {
+    raw = localStorage.getItem(SEALED_KEY);
+  } catch {
+    return false;
+  }
+  if (raw === null) return false;
+  let parsed: { n?: unknown; ct?: unknown; e?: unknown };
+  try {
+    parsed = JSON.parse(raw) as typeof parsed;
+  } catch {
+    return false;
+  }
+  const { n, ct } = parsed;
+  if (typeof n !== 'string' || typeof ct !== 'string') return false;
+  const epoch = epochOf(parsed.e);
+  if (epoch === currentKeyEpoch() || !holdsEpoch(epoch)) return false;
+  const key = localDataKeyCopy();
+  if (!key) return false;
+  try {
+    const fields = openWithRing('local', key, (k) => decryptJsonAad<unknown>(base64ToBytes(ct), base64ToBytes(n), k, AAD), epoch);
+    const { ciphertext, nonce } = encryptJsonAad(fields, key, AAD);
+    const next = JSON.stringify({ n: bytesToBase64(nonce), ct: bytesToBase64(ciphertext), ...epochMarker() });
+    if (localStorage.getItem(SEALED_KEY) !== raw) return false;
+    localStorage.setItem(SEALED_KEY, next);
+    memo = null;
     return true;
   } catch {
     return false;

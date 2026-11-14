@@ -6,9 +6,17 @@ import type { BookmarkCopyEntry, CopyEntry, LoginCopyEntry } from '@notes/shared
  * none, those for the registrable domain, with private suffixes on, so
  * one github.io site never sees another's. Logins and bookmarks match a
  * page; cards and keys never do.
+ *
+ * Only a web address has a host to match: `https://`, `http://`, a bare
+ * host, or a host with a port. An address of another scheme (an app id such
+ * as `androidapp://com.example.app`, `ftp://`, `mailto:`) matches no page.
  */
-function hostOf(u: string): string | null {
-  return getHostname(/^[a-z][a-z0-9+.-]*:/i.test(u) ? u : `https://${u}`);
+function matchableHost(u: string): string | null {
+  const scheme = /^([a-z][a-z0-9+.-]*):\/\//i.exec(u)?.[1];
+  if (scheme) return /^https?$/i.test(scheme) ? getHostname(u) : null;
+  // A scheme with no `//` (`mailto:name`), unless what follows is a port.
+  if (/^[a-z][a-z0-9+.-]*:(?!\d{1,5}(?:[/?#]|$))/i.test(u)) return null;
+  return getHostname(`https://${u}`);
 }
 
 function matchByHost<T>(items: readonly T[], hostsOf: (item: T) => string[], pageUrl: string): T[] {
@@ -21,8 +29,8 @@ function matchByHost<T>(items: readonly T[], hostsOf: (item: T) => string[], pag
   return items.filter((i) => hostsOf(i).some((h) => getDomain(h, { allowPrivateDomains: true }) === domain));
 }
 
-const loginHosts = (l: LoginCopyEntry) => l.urls.map(hostOf).filter(Boolean) as string[];
-const bookmarkHosts = (b: BookmarkCopyEntry) => [hostOf(b.url)].filter(Boolean) as string[];
+const loginHosts = (l: LoginCopyEntry) => l.urls.map(matchableHost).filter(Boolean) as string[];
+const bookmarkHosts = (b: BookmarkCopyEntry) => [matchableHost(b.url)].filter(Boolean) as string[];
 
 export function matchLogins(logins: readonly LoginCopyEntry[], pageUrl: string): LoginCopyEntry[] {
   return matchByHost(logins, loginHosts, pageUrl);

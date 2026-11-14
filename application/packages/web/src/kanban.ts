@@ -15,7 +15,7 @@
  */
 
 import type { Node as PMNode, Schema } from '@tiptap/pm/model';
-import { DEFAULT_COLORS } from './kanbanLayout';
+import { DEFAULT_COLORS, slotIcon } from './kanbanLayout';
 import { Plugin, PluginKey, Selection, TextSelection, type EditorState, type Transaction } from '@tiptap/pm/state';
 
 /** Event a tap on a card's grip sends to its board (kanbanDrag.ts). */
@@ -140,16 +140,20 @@ function emptyTaskList(schema: Schema): PMNode {
   return taskList!.create(null, taskItem!.create({ checked: false }, paragraph!.create()));
 }
 
-function makeColumn(schema: Schema, name: string, color: string | null): PMNode {
-  const title = schema.nodes.calloutTitle!.create(null, name ? schema.text(name) : undefined);
+/** A column; a default slot also gets its icon before the name, where the
+ *  schema has inline icons. */
+function makeColumn(schema: Schema, name: string, color: string | null, icon: string | null = null): PMNode {
+  const iconType = schema.nodes.inlineIcon;
+  const parts = icon && iconType ? [iconType.create({ id: icon }), ...(name ? [schema.text(` ${name}`)] : [])] : name ? [schema.text(name)] : [];
+  const title = schema.nodes.calloutTitle!.create(null, parts);
   return schema.nodes.callout!.create(
     { type: 'column', folded: false, keyword: null, meta: color },
     [title, emptyTaskList(schema)],
   );
 }
 
-export function makeBoard(schema: Schema, names: string[], colors: (string | null)[]): PMNode {
-  const columns = names.map((name, i) => makeColumn(schema, name, colors[i] ?? null));
+export function makeBoard(schema: Schema, names: string[], colors: (string | null)[], icons: (string | null)[] = []): PMNode {
+  const columns = names.map((name, i) => makeColumn(schema, name, colors[i] ?? null, icons[i] ?? null));
   return schema.nodes.callout!.create(
     { type: 'kanban', folded: false, keyword: null, meta: null },
     [schema.nodes.calloutTitle!.create(), ...columns],
@@ -182,6 +186,50 @@ export function setColumnColor(tr: Transaction, boardPos: number, index: number,
     offset += child.nodeSize;
   });
   return done;
+}
+
+/**
+ * Puts an icon or logo (a look id: `heart`, `logo:github`) at the start of
+ * the title of the callout at `pos`, as an inline icon and a space. An icon
+ * that already leads the title is replaced, so the menu row sets one icon.
+ * The stored form is the inline icon's own (`:icon[heart]`), so the export
+ * and the importers need nothing new. GitHub #752.
+ */
+function setLeadIcon(tr: Transaction, pos: number, node: PMNode, id: string): boolean {
+  const iconType = tr.doc.type.schema.nodes.inlineIcon;
+  const title = node.firstChild;
+  if (!iconType || title?.type.name !== 'calloutTitle') return false;
+  const start = pos + 2;
+  const icon = iconType.create({ id });
+  if (title.firstChild?.type === iconType) tr.replaceWith(start, start + 1, icon);
+  else tr.insert(start, [icon, tr.doc.type.schema.text(' ')]);
+  return true;
+}
+
+/** The icon of column `index`, before its name. */
+export function setColumnIcon(tr: Transaction, boardPos: number, index: number, id: string): boolean {
+  const board = boardAt(tr, boardPos);
+  if (!board) return false;
+  let offset = boardPos + 1;
+  let seen = -1;
+  let done = false;
+  board.forEach((child) => {
+    if (!done && isColumn(child) && ++seen === index) done = setLeadIcon(tr, offset, child, id);
+    offset += child.nodeSize;
+  });
+  return done;
+}
+
+/** The icon of the board, before its title, in place of the Kanban glyph. */
+export function setBoardIcon(tr: Transaction, boardPos: number, id: string): boolean {
+  const board = boardAt(tr, boardPos);
+  return !!board && setLeadIcon(tr, boardPos, board, id);
+}
+
+/** The look id of the inline icon that leads a callout's title, if any. */
+export function leadIconOf(node: PMNode): string | null {
+  const lead = node.firstChild?.type.name === 'calloutTitle' ? node.firstChild.firstChild : null;
+  return lead?.type.name === 'inlineIcon' ? (lead.attrs.id as string) : null;
 }
 
 /** Removes column `index`; its content joins the column on its left, or on
@@ -254,7 +302,7 @@ export function setColumnCount(
     const next = cols.slice();
     while (next.length < count) {
       const slot = next.length - 1;
-      next.splice(slot, 0, makeColumn(schema, slotNames(count, slot), palette[slot] ?? null));
+      next.splice(slot, 0, makeColumn(schema, slotNames(count, slot), palette[slot] ?? null, slotIcon(count, slot)));
     }
     replaceColumns(tr, boardPos, board, next);
   }

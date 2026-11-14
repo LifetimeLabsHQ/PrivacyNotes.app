@@ -1,14 +1,15 @@
-import { useState, type ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useId, useState, type ReactNode } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { useEscapeToClose } from './useEscapeToClose';
-import { ArrowsOutSimple, ClockCounterClockwise, Columns, Database, FileArrowUp, Folder, Key, Lock, MagnifyingGlass, Monitor, Palette, Password, Shapes, BellSimple, RocketLaunch, Browsers, TerminalWindow } from './icons';
+import { ArrowsOutSimple, ClockCounterClockwise, CreditCard, CurrencyBtc, Columns, Database, Folder, Lock, Monitor, Palette } from './icons';
 import { isPaddleConfigured, isBetaPricing } from './paddle';
-import { startProCheckout, PRO_PRODUCT_ID, isNativeStoreBuild } from './billing';
-import { PRO_PRICE, EARLY_PRICE, COMPARE_YEARS, COMPETITOR_YEARLY } from './pricing';
+import { startProCheckout, startCryptoProCheckout, cryptoCheckoutOffered, PRO_PRODUCT_ID, isNativeStoreBuild } from './billing';
+import { CRYPTO_TICKERS } from './cryptoCheckout';
+import { PRO_PRICE, EARLY_PRICE } from './pricing';
 import { useStorePrices } from './storePrices';
 import { isDemoMode, DEMO_APP_URL } from './demo';
 import { withSource } from './campaignSource';
-import { HelpChip } from './HelpChip';
+import { Callout } from './ui';
 import { CloseButton } from './ui/Button';
 
 type Props = {
@@ -19,146 +20,60 @@ type Props = {
    *  the "payment received, activation pending" banner (desktop return path,
    *  which fires whether or not the user actually paid). */
   onCheckoutComplete: (opts?: { silent?: boolean }) => void;
-  /**
-   * Optional context - which Pro feature triggered the upsell. Used
-   * to bias the intro copy so the user doesn't feel like they clicked
-   * a random Pro button.
-   */
-  trigger?: UpgradeTrigger;
 };
 
-/** Which Pro feature opened the modal; picks the intro line. */
-export type UpgradeTrigger =
-  | 'lock' | 'protect' | 'history' | 'devices' | 'zen' | 'theme' | 'storage'
-  | 'fileSize' | 'folders' | 'looks' | 'noteIcon' | 'spaces' | 'formatBar' | 'totp' | 'replace' | 'passphrase' | 'alerts' | 'vaultFiles' | 'cli' | 'browsers' | null;
-
-const FEATURES: Array<{ icon: React.JSX.Element; labelKey: string }> = [
-  { icon: <IconDevices />, labelKey: 'upgrade.features.devices' },
-  { icon: <IconFolders />, labelKey: 'upgrade.features.folders' },
-  { icon: <Columns aria-hidden="true" />, labelKey: 'upgrade.features.spaces' },
-  { icon: <IconLock />, labelKey: 'upgrade.features.lock' },
-  { icon: <IconHistory />, labelKey: 'upgrade.features.history' },
-  { icon: <IconPalette />, labelKey: 'upgrade.features.themes' },
-  { icon: <IconZen />, labelKey: 'upgrade.features.zen' },
-  { icon: <IconStorage />, labelKey: 'upgrade.features.storage' },
+/** What Pro adds, in the order of the pass. Every Pro gate opens the same
+ *  window, so the list is the whole offer. A label another screen already
+ *  says is that screen's key (rule AD). */
+const FEATURES: Array<{ icon: ReactNode; labelKey: string }> = [
+  { icon: <Monitor aria-hidden="true" />, labelKey: 'checkout.benefitDevices' },
+  { icon: <Folder aria-hidden="true" />, labelKey: 'upgrade.features.folders' },
+  { icon: <Columns aria-hidden="true" />, labelKey: 'settings:appearance.spacesTitle' },
+  { icon: <Lock aria-hidden="true" />, labelKey: 'upgrade.features.lock' },
+  { icon: <ClockCounterClockwise aria-hidden="true" />, labelKey: 'upgrade.features.history' },
+  { icon: <Palette aria-hidden="true" />, labelKey: 'upgrade.features.themes' },
+  { icon: <ArrowsOutSimple aria-hidden="true" />, labelKey: 'common:palette.commands.zen' },
+  { icon: <Database aria-hidden="true" />, labelKey: 'checkout.benefitStorage' },
 ];
 
-function introKey(trigger: Props['trigger']): string {
-  switch (trigger) {
-    case 'lock':
-      return 'upgrade.intro.lock';
-    case 'protect':
-      return 'upgrade.intro.protect';
-    case 'history':
-      return 'upgrade.intro.history';
-    case 'devices':
-      return 'upgrade.intro.devices';
-    case 'zen':
-      return 'upgrade.intro.zen';
-    case 'theme':
-      return 'upgrade.intro.theme';
-    case 'storage':
-      return 'upgrade.intro.storage';
-    case 'folders':
-      return 'upgrade.intro.folders';
-    case 'looks':
-      return 'upgrade.intro.looks';
-    case 'noteIcon':
-      return 'upgrade.intro.noteIcon';
-    case 'spaces':
-      return 'upgrade.intro.spaces';
-    case 'formatBar':
-      return 'upgrade.intro.formatBar';
-    case 'totp':
-      return 'upgrade.intro.totp';
-    case 'replace':
-      return 'upgrade.intro.replace';
-    case 'passphrase':
-      return 'upgrade.intro.passphrase';
-    case 'alerts':
-      return 'upgrade.intro.alerts';
-    case 'vaultFiles':
-      return 'upgrade.intro.vaultFiles';
-    case 'cli':
-      return 'upgrade.intro.cli';
-    case 'browsers':
-      return 'upgrade.intro.browsers';
-    case 'fileSize':
-      // Reuse the already-translated upload upsell string (importExport ns)
-      // so the file-size context doesn't need its own billing copy.
-      return 'importExport:upload.proPitch';
-    default:
-      return 'upgrade.intro.default';
-  }
-}
+/** The facts on the stub of the pass. */
+const PASS_FACTS = [
+  { labelKey: 'upgrade.pass.valid', valueKey: 'upgrade.pass.forever' },
+  { labelKey: 'upgrade.pass.renews', valueKey: 'upgrade.pass.never' },
+  { labelKey: 'upgrade.pass.devices', valueKey: 'upgrade.pass.unlimited' },
+] as const;
 
-/** The glyph in the tile beside the intro line: the feature the person
- *  tapped, drawn the way the app draws it elsewhere, so the modal answers
- *  "what did I just open?" before it names a price. */
-function triggerIcon(trigger: Props['trigger']): React.JSX.Element {
-  const size = 22;
-  switch (trigger) {
-    case 'lock':
-    case 'protect':
-      return <Lock size={size} aria-hidden="true" />;
-    case 'history':
-      return <ClockCounterClockwise size={size} aria-hidden="true" />;
-    case 'devices':
-      return <Monitor size={size} aria-hidden="true" />;
-    case 'zen':
-      return <ArrowsOutSimple size={size} aria-hidden="true" />;
-    case 'theme':
-    case 'looks':
-      return <Palette size={size} aria-hidden="true" />;
-    case 'noteIcon':
-      return <Shapes size={size} aria-hidden="true" />;
-    case 'storage':
-      return <Database size={size} aria-hidden="true" />;
-    case 'fileSize':
-      return <FileArrowUp size={size} aria-hidden="true" />;
-    case 'folders':
-      return <Folder size={size} aria-hidden="true" />;
-    case 'spaces':
-      return <Columns size={size} aria-hidden="true" />;
-    case 'totp':
-      return <Key size={size} aria-hidden="true" />;
-    case 'replace':
-      return <MagnifyingGlass size={size} aria-hidden="true" />;
-    case 'passphrase':
-      return <Password size={size} aria-hidden="true" />;
-    case 'alerts':
-      return <BellSimple size={size} aria-hidden="true" />;
-    case 'vaultFiles':
-      return <FileArrowUp size={size} aria-hidden="true" />;
-    case 'cli':
-      return <TerminalWindow size={size} aria-hidden="true" />;
-    case 'browsers':
-      return <Browsers size={size} aria-hidden="true" />;
-    default:
-      return <IconUpgrade size={size} />;
-  }
-}
+/** The pay buttons: a two-line row with the method and what it takes. */
+const PAY_ROW = 'w-full grid grid-cols-[auto_1fr] items-center gap-x-3 rounded-lg border px-4 py-3 text-start transition disabled:opacity-60 disabled:cursor-not-allowed';
 
-export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, trigger = null }: Props) {
+/**
+ * The Pro window: a lifetime pass. One window for every Pro gate, with no
+ * line about the feature that opened it. The headline carries the price,
+ * the stub carries what a subscription cannot claim, and each way to pay is
+ * one click. On a phone it is a sheet at the bottom of the screen.
+ * Spec: docs/internal/design/patterns/181-190.md section 189
+ */
+export function UpgradeModal({ onClose, pubkey, onCheckoutComplete }: Props) {
   const { t } = useTranslation('billing');
   useEscapeToClose(onClose);
+  const titleId = useId();
   const [loading, setLoading] = useState(false);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const configured = isPaddleConfigured();
-  const beta = isBetaPricing();
 
   const nativeStore = isNativeStoreBuild();
   const storePrices = useStorePrices();
   const storePro = storePrices?.[PRO_PRODUCT_ID]?.formatted ?? null;
 
   const demo = isDemoMode();
-
-  const ourPrice = beta ? EARLY_PRICE : PRO_PRICE;
-  const compareRows = [
-    { name: 'PrivacyNotes', total: ourPrice, us: true },
-    ...COMPETITOR_YEARLY.map((c) => ({ name: c.name, total: c.perYear * COMPARE_YEARS, us: false })),
-  ];
-  const compareMax = Math.max(...compareRows.map((r) => r.total));
+  // The price the person pays today: the store's own figure on a store build,
+  // else the Paddle price. No "was" price: the window names one number.
+  const price = storePro ?? (nativeStore ? '…' : `$${isBetaPricing() ? EARLY_PRICE : PRO_PRICE}`);
+  // A second way to pay only where it exists: never in the demo or a store build.
+  // Spec: docs/internal/plans/crypto-payments.md (11b)
+  const showCrypto = !demo && cryptoCheckoutOffered();
+  // The card line names the methods Paddle shows; a store and the demo have their own.
+  const showCardMethods = !demo && !nativeStore;
 
   async function handleUpgrade() {
     // Demo has no account to attach a purchase to - send the user to
@@ -199,146 +114,105 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, trigger = nu
       /* Stacked overlay, not the standard one: a Pro gate can sit inside
          another modal, and the pitch is always the thing to read on top.
          Spec: docs/internal/design/ui-patterns.md (z-index tier system) */
-      className="fixed inset-0 bg-black/40 dark:bg-black/40 flex items-center justify-center p-4 sm:p-6 z-[55]"
+      className="fixed inset-0 bg-black/40 dark:bg-black/40 flex items-end sm:items-center justify-center sm:p-6 z-[55]"
       onClick={onClose}
     >
       <div
-        className="bg-surface-2/85 backdrop-blur-xl border border-divider/80 text-pn rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative w-full sm:max-w-3xl max-h-[92vh] overflow-y-auto bg-surface-2 border border-divider text-pn rounded-t-2xl sm:rounded-xl grid sm:grid-cols-[1fr_12.5rem] pb-[env(safe-area-inset-bottom)]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Celebration header - one-time payment is good news, so this
-            reads as a win, not an error. */}
-        <div className="relative bg-amber-50/80 dark:bg-amber-950/50 rounded-t-lg px-6 pt-5 pb-5">
-          {/* The wrapper takes the position, so the tooltip anchors to the
-              X; on the button itself it anchored where the button used to be. */}
-          <div className="absolute top-4 end-4 z-10">
-            <CloseButton onClick={onClose} />
-          </div>
-
-          <div className="flex items-center gap-2 text-compact font-semibold text-amber-700 dark:text-amber-300">
-            <IconUpgrade size={16} />
-            {t('upgrade.header')}
-          </div>
-
-          {beta ? (
-            <div className="flex items-baseline gap-2 mt-2.5">
-              <span className="text-display-4 font-bold tracking-tight text-amber-900 dark:text-amber-100">{storePro ?? (nativeStore ? '…' : `$${EARLY_PRICE}`)}</span>
-              {/* The struck-through full price is a Paddle web figure. The stores
-                  have no "was" price and sell on their own fixed tiers, so on a
-                  native build it would compare the real charge against a number
-                  the user can never be billed. Badge stays: the price genuinely
-                  does rise later. */}
-              {!nativeStore && (
-                <span className="text-heading font-semibold line-through text-warning">${PRO_PRICE}</span>
-              )}
-              <span className="text-meta font-semibold text-amber-900 dark:text-amber-100 bg-amber-200 dark:bg-amber-800 rounded-md px-2 py-0.5">{t('upgrade.earlyAdopterBadge')}</span>
-            </div>
-          ) : (
-            <div className="flex items-baseline gap-2 mt-2.5">
-              <span className="text-display-4 font-bold tracking-tight text-amber-900 dark:text-amber-100">{storePro ?? (nativeStore ? '…' : `$${PRO_PRICE}`)}</span>
-              <span className="text-body font-medium text-amber-700/70 dark:text-amber-300/70">{t('upgrade.oneTime')}</span>
-            </div>
-          )}
-
-          {/* Web and desktop only, like the comparison sentence it replaced:
-              the fees are USD figures and a store build shows a localized
-              price with nothing to chart against it. */}
-          {!nativeStore && (
-            <div className="mt-4 space-y-1.5">
-              {compareRows.map((row) => (
-                <div key={row.name} className="grid grid-cols-[6.5rem_1fr_3.5rem] items-center gap-2 text-small">
-                  <span className="truncate text-amber-700 dark:text-amber-300">{row.name}</span>
-                  <div className="h-2.5 rounded-sm bg-amber-900/10 dark:bg-amber-100/10">
-                    <div
-                      className={row.us ? 'h-full rounded-sm bg-pro' : 'h-full rounded-sm bg-amber-800/30 dark:bg-amber-200/20'}
-                      style={{ width: `${Math.max(4, Math.round((row.total / compareMax) * 100))}%` }}
-                    />
-                  </div>
-                  <span className="text-end font-semibold text-amber-900 dark:text-amber-100">${row.total}</span>
-                </div>
-              ))}
-              <p className="text-small text-amber-700 dark:text-amber-300 pt-1">
-                {t('upgrade.compareCaption', { years: COMPARE_YEARS })}
-              </p>
-            </div>
-          )}
+        <div className="absolute top-3 end-3 z-10">
+          <CloseButton onClick={onClose} />
         </div>
 
-        <div className="p-6 space-y-5">
-          {trigger && (
-            <div className="flex items-start gap-3">
-              <span className="shrink-0 w-11 h-11 rounded-md bg-amber-50 dark:bg-amber-950/50 text-pro flex items-center justify-center">
-                {triggerIcon(trigger)}
-              </span>
-              <p className="text-body font-semibold text-pn leading-relaxed">
-                {/* The Spaces pitch reuses the Settings description, so the
-                    sentence is written and translated once. */}
-                {t(introKey(trigger), { desc: t('settings:appearance.spacesDesc') })}
-              </p>
-            </div>
-          )}
-
-          {purchaseError && (
-            <div className="rounded-md border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-body p-3">
-              {purchaseError}
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <button
-              type="button"
-              disabled={(!configured && !demo) || loading}
-              onClick={handleUpgrade}
-              className="w-full rounded-md bg-amber-700 text-white hover:bg-amber-800 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 px-3 py-2.5 text-body font-semibold transition"
-            >
-              <IconUpgrade size={16} onFill />
-              {demo
-                ? t('upgrade.ctaSignUp')
-                : loading
-                  ? t('upgrade.ctaOpening')
-                  : t('upgrade.ctaUnlockPrice', { price: storePro ?? (nativeStore ? '…' : `$${ourPrice}`) })}
-            </button>
-            <p className="text-meta text-pn-muted text-center">{t('upgrade.subscriptionPitch')}</p>
+        {/* The stub: a strip on top on a phone, the right end of the ticket
+            on a wider window. The dashed edge is the tear line. */}
+        <div className="relative bg-amber-50 dark:bg-amber-950/50 border-b-2 sm:border-b-0 sm:border-s-2 border-dashed border-amber-900/15 dark:border-amber-100/15 px-4 pt-5 pb-4 sm:px-5 sm:py-7 grid gap-3.5 sm:content-center sm:justify-items-center sm:text-center sm:order-2 rounded-t-2xl sm:rounded-none">
+          <div className="flex sm:flex-col items-center gap-2 pe-10 sm:pe-0">
+            <span className="text-meta font-bold uppercase tracking-[0.12em] text-amber-700 dark:text-amber-300">{t('upgrade.pass.label')}</span>
+            <span className="rounded px-1.5 py-0.5 text-meta font-extrabold uppercase tracking-wider bg-amber-700 text-white sm:bg-transparent sm:p-0 sm:text-display-3 sm:tracking-tight sm:text-amber-950 sm:dark:text-amber-50">{t('checkout.stepPro')}</span>
           </div>
+          <dl className="grid grid-cols-3 sm:grid-cols-1 sm:w-full sm:mt-2 sm:gap-1.5">
+            {PASS_FACTS.map((f, i) => (
+              <div
+                key={f.labelKey}
+                className={`grid gap-0.5 sm:flex sm:justify-between sm:gap-3 sm:pb-1.5 sm:last:pb-0 sm:border-b sm:last:border-b-0 sm:border-amber-900/15 sm:dark:border-amber-100/15 ${i > 0 ? 'ps-3 border-s border-amber-900/15 dark:border-amber-100/15 sm:ps-0 sm:border-s-0' : ''}`}
+              >
+                <dt className="text-meta font-bold uppercase tracking-wider sm:normal-case sm:tracking-normal sm:font-normal text-amber-700 dark:text-amber-300">{t(f.labelKey)}</dt>
+                <dd className="m-0 text-body font-bold text-amber-950 dark:text-amber-50">{t(f.valueKey)}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
 
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+        <div className="px-4 pt-5 pb-4 sm:p-7 grid gap-4 sm:gap-5 content-start">
+          <h2 id={titleId} className="m-0 text-display-5 font-black tracking-tighter text-pn">
+            <span className="block">
+              <Trans t={t} i18nKey="upgrade.headlinePrice" values={{ price }} components={{ price: <span className="text-pro" /> }} />
+            </span>
+            <span className="block">{t('upgrade.headlineLife')}</span>
+          </h2>
+
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-2">
             {FEATURES.map((f) => (
-              <li key={f.labelKey} className="flex items-start gap-3 text-body">
-                <span className="shrink-0 mt-0.5 text-warning">{f.icon}</span>
-                <span className="text-pn">{t(f.labelKey)}</span>
+              <li key={f.labelKey} className="flex items-center gap-2 text-compact">
+                <span className="shrink-0 text-pro">{f.icon}</span>
+                <span>{t(f.labelKey)}</span>
               </li>
             ))}
           </ul>
 
-          {/* After the pitch, not before it: two outbound links above a
-              payment CTA move a deciding reader off the decision. */}
-          <HelpChip surface="upgrade" />
+          {purchaseError && <Callout tone="danger">{purchaseError}</Callout>}
 
-          {/* Legal links on the purchase surface. App Review guideline
-              3.1.2 demands these for AUTO-RENEWABLE subscriptions, and Pro
-              is a one-time non-consumable, so this is not strictly
-              required here - it is on the Storage screen, which does sell
-              subscriptions. Carried anyway: it costs one line, the two
-              purchase surfaces should not disagree about where the terms
-              are, and a reviewer looking for the links on the screen with
-              the price finds them. Same labels as the About modal rather
-              than a second pair of strings. */}
-          <p className="text-meta text-pn-muted leading-relaxed">
-            <a
-              href="https://lifetimelabs.dev/terms/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent hover:underline"
+          <div className="grid gap-2">
+            <button
+              type="button"
+              disabled={(!configured && !demo) || loading}
+              onClick={handleUpgrade}
+              className={`${PAY_ROW} border-transparent bg-amber-700 text-white hover:bg-amber-800`}
             >
+              {demo ? <IconUpgrade size={18} onFill /> : <CreditCard size={20} aria-hidden="true" className={showCardMethods ? 'row-span-2' : ''} />}
+              <span className="text-body font-bold">
+                {demo
+                  ? t('upgrade.ctaSignUp')
+                  : loading
+                    ? t('upgrade.ctaOpening')
+                    : t('upgrade.ctaUnlockPrice', { price })}
+              </span>
+              {showCardMethods && <span className="col-start-2 text-meta text-white/80">{t('upgrade.cardMethods')}</span>}
+            </button>
+            {showCrypto && (
+              <button
+                type="button"
+                onClick={() => {
+                  startCryptoProCheckout(pubkey);
+                  onClose();
+                }}
+                className={`${PAY_ROW} border-divider bg-surface-1 text-pn hover:bg-amber-50 dark:hover:bg-amber-950/30`}
+              >
+                <CurrencyBtc size={20} aria-hidden="true" className="row-span-2 text-pro" />
+                <span className="text-body font-bold">{t('upgrade.payWithCrypto')}</span>
+                {/* Tickers, not names: a new coin is one more word on this line. */}
+                <span className="col-start-2 text-meta text-pn-muted tabular-nums">{CRYPTO_TICKERS.join(' · ')}</span>
+              </button>
+            )}
+          </div>
+
+          {/* Legal links on the purchase surface. Pro is a one-time
+              non-consumable, so App Review 3.1.2 does not demand them here,
+              but the two purchase surfaces should not disagree about where
+              the terms are. The refund line is Paddle's and BlockBee's;
+              a store build has its own. */}
+          <p className="text-meta text-pn-muted text-center leading-relaxed">
+            {showCardMethods && <>{showCrypto ? t('upgrade.refundNoteBoth') : t('upgrade.refundNoteCard')}{' · '}</>}
+            <a href="https://lifetimelabs.dev/terms/" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
               {t('landing:about.termsOfService')}
             </a>
             {' · '}
-            <a
-              href="https://lifetimelabs.dev/privacy/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent hover:underline"
-            >
+            <a href="https://lifetimelabs.dev/privacy/" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
               {t('landing:about.privacyPolicy')}
             </a>
           </p>
@@ -348,35 +222,14 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, trigger = nu
   );
 }
 
+/** Which Pro gate opened the window. The window itself shows the same pass
+ *  for every gate; NotesView keeps the value for what happens around it: the
+ *  zen preview behind the window and the theme builder's return after it. */
+export type UpgradeTrigger =
+  | 'lock' | 'protect' | 'history' | 'devices' | 'zen' | 'theme' | 'storage'
+  | 'fileSize' | 'folders' | 'looks' | 'noteIcon' | 'spaces' | 'formatBar' | 'totp' | 'replace' | 'passphrase' | 'alerts' | 'vaultFiles' | 'cli' | 'browsers' | 'smartConnections' | null;
+
 // The Pro mark lives in proMark.tsx, a leaf the UI parts import without this
 // window and its billing code.
 export { IconUpgrade, ProGlyph, ProMark } from './proMark';
 import { IconUpgrade } from './proMark';
-
-function IconDevices() {
-  return <Monitor aria-hidden="true" />;
-}
-
-function IconStorage() {
-  return <Database aria-hidden="true" />;
-}
-
-function IconLock() {
-  return <Lock aria-hidden="true" />;
-}
-
-function IconPalette() {
-  return <Palette aria-hidden="true" />;
-}
-
-function IconHistory() {
-  return <ClockCounterClockwise aria-hidden="true" />;
-}
-
-function IconZen() {
-  return <ArrowsOutSimple aria-hidden="true" />;
-}
-
-function IconFolders() {
-  return <Folder aria-hidden="true" />;
-}

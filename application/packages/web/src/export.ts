@@ -8,12 +8,15 @@ import {
   encodeBackup,
   decodeBackup,
   encodeZipBackup,
+  decodeZipBackup,
   BACKUP_TOO_SMALL,
+  bytesToBase64,
 } from '@notes/shared';
 import type { BackupPayload } from '@notes/shared';
 import i18n from './i18n';
 import { trackerRows, trackerHeading } from './trackerExport';
 import { loadLocalSettings } from './userSettings';
+import { openWithRing } from './keyRing';
 import { dateLocale, formatInstant } from './intlFormat';
 import { saveBlob } from './saveFile';
 import { detectPlatform } from './devices';
@@ -22,13 +25,18 @@ import { noteToMarkdown } from './noteMarkdown';
 import { editedAtOf, toLocalIso } from './notesViewUtils';
 import { scheduleOf } from './schedule';
 import { describeSchedule } from './scheduleText';
-import type { ImageStore } from './imageStore';
-import type { AttachmentStore } from './attachmentStore';
+import type { ImageStore as BlobImageStore } from './imageStore';
+import type { AttachmentStore as BlobAttachmentStore } from './attachmentStore';
+/** What an export reads of the blob stores: the store itself, or a reader of
+ *  this device's own cache alone (the screen of a replaced phrase, which has
+ *  no session to download with). */
+type ImageStore = Pick<BlobImageStore, 'getImage'>;
+type AttachmentStore = Pick<BlobAttachmentStore, 'getAttachment'>;
 import { attachmentLinks, unescapeMarkdownText } from './fileNames';
 import { FILE_PICTURE, markdownLinks, replaceMatches } from './linkScan';
 import { extractImageIds } from './imageProcessing';
-import { escapeHtml, renderMarkdown, renderNoteBody, prepareRender, inlineSameOriginImages, inlineRenderedFavicons } from './markdownRender';
-import { parseLoginBody, domainFromUrl } from './LoginForm';
+import { renderMarkdown, renderNoteBody, prepareRender, inlineSameOriginImages, inlineRenderedFavicons } from './markdownRender';
+import { parseLoginBody } from './LoginForm';
 import { isPublicField, loginExtrasOf } from './loginExtras';
 import { parseCardBody, detectCardNetwork } from './CardForm';
 import { parseSshKeyBody } from './SshKeyForm';
@@ -44,7 +52,9 @@ import { slugify, zipEntryStems } from './exportNames';
 import { parseScene, toExcalidrawFile } from './drawing/scene';
 import { lineHeightCss, paragraphGapCss, readLineSpacing, readNestedNumbers } from './theme';
 import { isSameOriginPath } from './sameOriginPath';
+import { IMAGE_REF_RE } from './mediaRefs';
 import { contactDisplayName, contactFullName, contactInitialsFor, formatAddressLines, formatContactDate, parseContactBody, telHref, type Contact } from './contactBody';
+import { escapeHtml } from './escapeHtml';
 
 /** Export helpers. All exports are generated client-side as Blob downloads. */
 
@@ -57,8 +67,6 @@ import { contactDisplayName, contactFullName, contactInitialsFor, formatAddressL
 //    exports (.md, .html) and JSON.
 // 2. Bundled files - `images/<uuid>.jpg` alongside the note in zip
 //    exports, with the body rewritten to use relative paths.
-
-const IMAGE_URI_RE = /pn:img\/([0-9a-f-]{36})/g;
 
 /**
  * A picture or file a note refers to that an export could not put in its
@@ -170,24 +178,15 @@ function sniffImageExt(bytes: Uint8Array): string {
   return mime === 'image/jpeg' ? 'jpg' : mime.slice('image/'.length);
 }
 
-/** Convert Uint8Array to base64 string. */
-function uint8ToBase64(bytes: Uint8Array): string {
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]!);
-  }
-  return btoa(binary);
-}
-
 /** Replace pn:img/<uuid> refs with data URIs in a body string. */
 function replaceWithDataUris(
   body: string,
   images: Map<string, Uint8Array>,
 ): string {
-  return body.replace(IMAGE_URI_RE, (match, uuid: string) => {
+  return body.replace(IMAGE_REF_RE, (match, uuid: string) => {
     const data = images.get(uuid);
     if (!data) return match; // leave as-is if unresolved
-    return `data:${sniffImageMime(data)};base64,${uint8ToBase64(data)}`;
+    return `data:${sniffImageMime(data)};base64,${bytesToBase64(data)}`;
   });
 }
 
@@ -237,7 +236,7 @@ async function resolveFilePictures(
     );
     if (!att) continue;
     const mime = att.meta.mime.startsWith('image/') ? att.meta.mime : sniffImageMime(att.data);
-    uris.set(uuid, `data:${mime};base64,${uint8ToBase64(att.data)}`);
+    uris.set(uuid, `data:${mime};base64,${bytesToBase64(att.data)}`);
   }
   return replaceMatches(body, filePictures(body), ({ alt, uuid }) => {
     const uri = uris.get(uuid);
@@ -392,7 +391,7 @@ function rewriteBodyForExport(
   up = '',
 ): string {
   // Rewrite images: pn:img/<uuid> → images/<uuid>.<ext> (jpg or png)
-  let result = body.replace(IMAGE_URI_RE, (match, uuid: string) => {
+  let result = body.replace(IMAGE_REF_RE, (match, uuid: string) => {
     const ext = resolvedImageExts.get(uuid);
     if (!ext) return match;
     return `${up}images/${uuid}.${ext}`;
@@ -484,11 +483,13 @@ export async function exportSingleMarkdown(
  *
  * Structure:
  *   manifest.json                    - format version, attachment metadata
- *   images/<uuid>.jpg                - all images
- *   audio/<uuid>.<ext>               - audio attachments
- *   video/<uuid>.<ext>               - video attachments
- *   docs/<uuid>.<ext>                - document attachments
- *   files/<uuid>.<ext>               - other file attachments
+ *   images/<uuid>.<ext>              - all images (extension from the bytes)
+ *   audio/<name>.<ext>               - audio attachments, under the name shown
+ *   video/<name>.<ext>               - video attachments
+ *   docs/<name>.<ext>                - document attachments
+ *   files/<name>.<ext>               - other file attachments
+ *                                      (a repeated name takes -2, -3; the
+ *                                      manifest maps each uuid to its file)
  *   <slug>.md                        - one markdown file per note (full frontmatter)
  *
  * Images and attachments are resolved one at a time (streamed) so peak
@@ -930,7 +931,7 @@ export async function exportDrawingsZip(
   for (const uuid of uuids) {
     progress({ step: 'pictures', done: ++done, total: uuids.size });
     const data = await readForExport(imageStore && (() => imageStore.getImage(uuid)), { id: uuid, kind: 'image' }, missing);
-    if (data) dataUris.set(`pn:img/${uuid}`, `data:${sniffImageMime(data)};base64,${uint8ToBase64(data)}`);
+    if (data) dataUris.set(`pn:img/${uuid}`, `data:${sniffImageMime(data)};base64,${bytesToBase64(data)}`);
   }
   progress({ step: 'zip' });
   const { default: JSZip } = await import('jszip');
@@ -1035,6 +1036,17 @@ function renderContactHtml(title: string, c: Contact): string {
   if (c.notes.trim()) {
     html += `<section class="contact-group"><h2 class="contact-group-title">${escapeHtml(t('itemNote'))}</h2><p class="contact-notes" dir="auto">${escapeHtml(c.notes)}</p></section>`;
   }
+  // The owner's own sections, after the note as in the app. A print is an
+  // export the owner asked for, so a hidden value is printed too.
+  for (const sec of c.sections) {
+    html += group(
+      sec.title || i18n.t('auth:loginForm.customFieldsLabel'),
+      sec.fields.map((f) => row(
+        f.label || i18n.t('shell:vaultItem.customField'),
+        escapeHtml(f.type === 'yesno' ? i18n.t(f.value === 'yes' ? 'trackers:custom.yes' : 'trackers:custom.no') : f.value),
+      )),
+    );
+  }
   return html;
 }
 
@@ -1053,7 +1065,7 @@ async function inlineContactPhoto(note: LocalNote, body: string): Promise<string
     if (!res.ok) return body;
     const bytes = new Uint8Array(await res.arrayBuffer());
     const raw = JSON.parse(body) as Record<string, unknown>;
-    raw.photo = `data:${sniffImageMime(bytes)};base64,${uint8ToBase64(bytes)}`;
+    raw.photo = `data:${sniffImageMime(bytes)};base64,${bytesToBase64(bytes)}`;
     return JSON.stringify(raw);
   } catch {
     return body;
@@ -1975,7 +1987,9 @@ export function decryptBackup(
   encryptionKey: Uint8Array
 ): DecryptedBackup {
   try {
-    return decodeBackup(data, encryptionKey);
+    // A backup made under an earlier phrase opens through the key ring; the
+    // error below is the current key's, as before the ring.
+    return openWithRing('sync', encryptionKey, (key) => decodeBackup(data, key));
   } catch (e) {
     // Truncated below one nonce + one tag. Our own check covers < 25 bytes;
     // noble rejects the 25..39 range with a length message of its own. Both
@@ -1985,6 +1999,21 @@ export function decryptBackup(
       throw new Error(
         i18n.t('importExport:decryptErrors.tooSmall', { size: data.length }),
       );
+    }
+    throw new Error(i18n.t('importExport:decryptErrors.notThisAccount'));
+  }
+}
+
+/** Decrypt a .pnbackupz file into the plain full-backup zip, which the
+ *  restore then reads like any zip. The same translated errors as
+ *  decryptBackup, and the same key ring: a backup made under an earlier
+ *  phrase opens with no extra step. */
+export function decryptFullBackupZip(bytes: Uint8Array, encryptionKey: Uint8Array): Uint8Array {
+  try {
+    return openWithRing('sync', encryptionKey, (key) => decodeZipBackup(bytes, key));
+  } catch (err) {
+    if (err instanceof Error && err.name === BACKUP_TOO_SMALL) {
+      throw new Error(i18n.t('importExport:decryptErrors.tooSmall', { size: bytes.length }));
     }
     throw new Error(i18n.t('importExport:decryptErrors.notThisAccount'));
   }

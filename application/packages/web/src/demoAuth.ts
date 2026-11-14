@@ -41,6 +41,8 @@ export async function buildDemoAuthState(): Promise<AuthState> {
     method: 'phrase',
     phrase: DEMO_PHRASE,
     pubkey,
+    // The demo phrase is its own account: it never changes.
+    signingPubkey: pubkey,
     encryptionKey,
     signingPrivateKey: privateKey,
     fpPepper,

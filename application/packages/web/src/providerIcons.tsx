@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { OAuthProvider } from './auth';
+import { detectPlatform } from './devices';
 
 /** The brand marks, drawn the same on the sign-in screen and in Settings. */
 export function AppleIcon() {
@@ -46,4 +47,22 @@ export const PROVIDER_NAME: Record<OAuthProvider, string> = {
   google: 'Google',
   apple: 'Apple',
   github: 'GitHub',
+};
+
+/**
+ * Sign-in order. Native iOS surfaces Sign in with Apple first (App Store
+ * expectation); everywhere else Google leads. GitHub is last on both, and
+ * `OAuthProvider` keys the maps so adding a fourth provider is one entry in
+ * each plus one label in the catalog. The sign-in screen and the screen of a
+ * replaced phrase list the providers in this order.
+ */
+export const PROVIDER_ORDER: readonly OAuthProvider[] = detectPlatform() === 'ios'
+  ? ['apple', 'google', 'github']
+  : ['google', 'apple', 'github'];
+
+/** The words of each provider's sign-in button (auth namespace). */
+export const PROVIDER_CONTINUE_KEY: Record<OAuthProvider, string> = {
+  google: 'chooseMode.continueGoogle',
+  apple: 'chooseMode.continueApple',
+  github: 'chooseMode.continueGithub',
 };

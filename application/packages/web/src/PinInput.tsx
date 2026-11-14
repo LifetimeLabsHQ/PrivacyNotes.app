@@ -78,7 +78,7 @@ function focusBox(el: HTMLInputElement | null | undefined): void {
 /**
  * One box per digit, for the 4-digit PIN and the 6-digit authenticator code.
  * Handles auto-advance, backspace, arrow navigation, paste, and iOS
- * one-time-code autofill.
+ * one-time-code autofill (the authenticator code only, never a PIN).
  */
 export const PinInput = forwardRef<PinInputHandle, Props>(function PinInput(
   {
@@ -212,7 +212,9 @@ export const PinInput = forwardRef<PinInputHandle, Props>(function PinInput(
             type={mask ? 'password' : 'text'}
             inputMode="numeric"
             pattern="[0-9]*"
-            autoComplete={i === 0 ? 'one-time-code' : 'off'}
+            // Only a real one-time code says so: a PIN is not one, and the
+            // hint invites a password manager to offer its codes (#754).
+            autoComplete={i === 0 && reveal ? 'one-time-code' : 'off'}
             // The first box takes a whole code, so a clipboard suggestion or
             // autofill that types instead of pasting is not cut to one digit.
             maxLength={i === 0 ? LENGTH : 1}

@@ -2,6 +2,7 @@ import { noteLinkTarget } from '../noteLinks';
 import { linkifyLiteralText } from './linkify';
 import type { ImportBlob } from './types';
 import { escapeMarkdownText, guardMarkdownLineStart } from '../markdownEscape';
+import { escapeHtml } from '../escapeHtml';
 
 // The importers reach the two escapes through this module, as before.
 export { escapeMarkdownText, guardMarkdownLineStart };
@@ -163,10 +164,6 @@ export function superToMarkdown(text: string, ctx: SuperContext): SuperResult | 
   }
 
   /* ---------------- inline ---------------- */
-
-  function escapeHtml(s: string): string {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
 
   /** The inline CSS our editor keeps, split into its text-style and highlight halves. */
   function styleParts(style: string | undefined): { span: string; mark: string } {

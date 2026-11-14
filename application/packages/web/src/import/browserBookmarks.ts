@@ -51,7 +51,7 @@ import { buildFolderTree } from './folderImport';
 import { readArchiveEntry } from './safariArchive';
 import type { ImportedNote, ParsedImport } from './types';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.browserBookmarks.${key}`, options);
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:browserBookmarks.${key}`, options);
 
 /** Root folder every imported bookmark lands under. */
 const ROOT_FOLDER = 'Bookmarks';

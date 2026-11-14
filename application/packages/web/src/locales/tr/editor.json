@@ -360,5 +360,47 @@
     "moveTo": "Şuraya taşı",
     "cardCount_one": "{{count}} kart",
     "columnCount_one": "{{count}} sütun"
+  },
+  "doodle": {
+    "title": "Karalama",
+    "clear": "Temizle",
+    "paper": "Kâğıt",
+    "paperNone": "Renk yok: not arkadan görünür.",
+    "settings": "Kalem ayarları",
+    "stroke": "Çizgi",
+    "thinning": "İncelme",
+    "streamline": "Akıcılık",
+    "smoothing": "Yumuşatma",
+    "easingLabel": "Geçiş eğrisi",
+    "start": "Başlangıç",
+    "end": "Bitiş",
+    "taperStart": "Başlangıçta sivrilme",
+    "capStart": "Başlangıçta yuvarlak uç",
+    "easingStart": "Başlangıç geçiş eğrisi",
+    "taperEnd": "Bitişte sivrilme",
+    "capEnd": "Bitişte yuvarlak uç",
+    "easingEnd": "Bitiş geçiş eğrisi",
+    "fill": "Dolgu",
+    "outline": "Kontur",
+    "easing": {
+      "linear": "Doğrusal",
+      "in": "Yavaş başlama, {{curve}}",
+      "out": "Yavaş bitiş, {{curve}}",
+      "inOut": "Yavaş başlama ve bitiş, {{curve}}"
+    },
+    "curve": {
+      "quad": "ikinci dereceden",
+      "cubic": "kübik",
+      "quart": "dördüncü dereceden",
+      "quint": "beşinci dereceden",
+      "sine": "sinüs",
+      "expo": "üstel"
+    },
+    "colors": {
+      "black": "Siyah",
+      "white": "Beyaz",
+      "cyan": "Camgöbeği",
+      "lightGray": "Açık gri"
+    }
   }
 }

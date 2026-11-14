@@ -1,6 +1,9 @@
 /** An open code fence: its character and how many of it opened the block. */
 export type Fence = { char: string; len: number };
 
+/** A line that opens or closes a top-level fence; group 1 is its run. */
+export const FENCE_LINE = /^ {0,3}(`{3,}|~{3,})/;
+
 /**
  * The code fence state after one markdown line, and whether the line is a
  * fence line itself. CommonMark's rule: three or more backticks or tildes

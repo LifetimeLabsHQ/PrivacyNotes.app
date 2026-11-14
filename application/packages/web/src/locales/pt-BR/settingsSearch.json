@@ -55,7 +55,7 @@
     "security_appLock": "bloqueio do app, bloquear ao abrir, tela de bloqueio, bloquear o app ao abrir, bloquear de novo, bloquear novamente após",
     "security_relockAfter": "tempo limite, bloqueio automático, bloquear depois de, bloquear de novo após, tela de bloqueio",
     "security_blockCapture": "captura de tela, print, gravação de tela, compartilhamento de tela, modo de privacidade, tela de privacidade",
-    "security_phrase": "frase de recuperação, palavras secretas, seed, doze palavras, chave de recuperação",
+    "security_phrase": "frase de recuperação, palavras secretas, seed, doze palavras, vinte e quatro palavras, 24 palavras, chave de recuperação",
     "security_custody": "custódia, autocustódia, armazenamento da chave",
     "me_pauseSync": "parar sincronização, pausar, offline",
     "me_filesWifiOnly": "wi-fi, dados móveis, rede celular, 4g, 5g",
@@ -81,6 +81,7 @@
     "appearance_invisibles": "marca de parágrafo, espaços em branco, espaços, caracteres ocultos, marcas de formatação",
     "appearance_linkModifier": "links, hiperlinks, url, clique, clicar, ctrl, cmd, command, abrir sem querer",
     "appearance_typedSymbols": "ligaduras, setas, símbolos, matemática, diferente, não igual, maior que, menor que, correção automática, substituir",
+    "appearance_linkSuggestions": "notas relacionadas, notas semelhantes, sugestões, sugestões de links, conexões sugeridas, conexões, backlinks, links de entrada, sem link, não vinculadas, assunto, tema",
     "appearance_noteFont": "fonte, tipo de letra, monoespaçada, mono, serifa, sem serifa, fonte padrão, fonte personalizada, fonte instalada, minha fonte",
     "appearance_nestedNumbers": "lista numerada, lista aninhada, estrutura de tópicos, 1.1, 1.1.1, numeração jurídica, subnúmeros, lista multinível",
     "appearance_confirmTrash": "excluir, apagar, lixeira, confirmar, confirmação, diálogo, perguntar, aviso, não perguntar novamente",
@@ -88,6 +89,7 @@
     "appearance_autoLocationNotes": "localização, lugar, gps, posição, mapa, geotag, automático, onde, notas",
     "appearance_autoLocationJournal": "localização, lugar, gps, posição, mapa, geotag, automático, onde, diário, entradas",
     "appearance_startView": "página inicial, início, visualização padrão, abrir em",
+    "appearance_reopenLastOpen": "última nota, último aberto, restaurar, lembrar, reabrir, iniciar, abrir",
     "appearance_view": "grade, lista, cartões, layout",
     "trackers_setup": "rastreadores, bem-estar, botões, humor, sono, energia, passos, água, ativar, desativar",
     "trackers_habitQuestions": "hábitos, perguntas, meditar, rezar, fumar, álcool, você",
@@ -122,6 +124,7 @@
     "calendar_weekNumbers": "número da semana, semana ISO, calendário",
     "calendar_hours": "horas, horário de trabalho, visão do dia, visão da semana, manhã",
     "me_dms": "exclusão por inatividade, dead man's switch, homem morto, inatividade, inativo, apagar após, excluir depois, limpar, abandonar",
+    "appearance_smartConnections": "ia, ai, offline, ia offline, no dispositivo, ia no dispositivo, ia local, ia privada, modelo, bekko, significado, mesmo significado, notas relacionadas, notas semelhantes, conexões sugeridas, sugestões de links, conexões inteligentes, semântica, semântico, embeddings, download, baixar",
     "appearance_formatBar": "barra de ferramentas, barra de formatação, botões, personalizar, organizar, lista com marcadores, tachado, engrenagem"
   }
 }

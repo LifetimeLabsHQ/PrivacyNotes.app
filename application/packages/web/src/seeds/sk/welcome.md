@@ -31,7 +31,7 @@ Lišta vyššie mení vzhľad textu: **tučné**, *kurzíva*, nadpisy, zoznamy �
 
 ## Jedna vec na dnes
 
-- [ ] Nájdi svoju **<mark style="background-color: rgba(51, 154, 240, 0.35)">frázu z 12 slov</mark>** v **Nastavenia > Zabezpečenie > Fráza**, napíš ju na papier a ulož ju na bezpečné miesto
+- [ ] Nájdi svoju **<mark style="background-color: rgba(51, 154, 240, 0.35)">obnovovaciu frázu</mark>** v **Nastavenia > Zabezpečenie > Fráza**, napíš ju na papier a ulož ju na bezpečné miesto
 
 Táto fráza otvára tvoje poznámky. Kde bude uložená, je tvoja voľba, a túto voľbu môžeš kedykoľvek zmeniť. [[Ako sú tvoje poznámky chránené]] opisuje tri možnosti.
 

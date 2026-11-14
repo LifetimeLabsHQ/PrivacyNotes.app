@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from 'react';
+import { flushSync } from 'react-dom';
 
 /** The content box, as a ResizeObserver reports it: the padding and the
  *  border left out. */
@@ -32,7 +33,10 @@ export function useElementHeight(el: HTMLElement | null): number {
  * An element's width, renewed only when `stepOf` gives a new key for it: a
  * pane dragged wider draws again at the steps where its layout changes, not
  * at every pixel. The ref holds the live width, for a gesture that needs it
- * between steps. `stepOf` is read fresh at each resize.
+ * between steps. `stepOf` is read fresh at each resize. A step is drawn
+ * inside the observer's own callback (`flushSync`), so the frame that has the
+ * new width has the new layout too: left to the scheduler, the old layout
+ * would be painted once at the new width.
  */
 export function useSteppedWidth(el: HTMLElement | null, stepOf: (width: number) => string): [number, RefObject<number>] {
   const [width, setWidth] = useState(0);
@@ -52,7 +56,7 @@ export function useSteppedWidth(el: HTMLElement | null, stepOf: (width: number) 
     key.current = null;
     read(contentSide(el, 'width'));
     if (typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver((entries) => read(entries[0]?.contentRect.width ?? 0));
+    const ro = new ResizeObserver((entries) => flushSync(() => read(entries[0]?.contentRect.width ?? 0)));
     ro.observe(el);
     return () => ro.disconnect();
   }, [el]);

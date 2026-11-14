@@ -21,6 +21,7 @@ import { copySecret } from './clipboard';
 import { loginsOf, matchLogins } from './match';
 import { readPrefs } from './prefs';
 import { deriveProof } from './proof';
+import { activeTab } from './tabs';
 
 interface PullBody {
   ksrv: string;
@@ -238,7 +239,7 @@ const SHORTCUT_KEY = 'shortcutStep';
  *  seconds on the same page, the password. With two or more matches it opens
  *  the popup instead of guessing. */
 export async function copyLoginShortcut(): Promise<void> {
-  const [tab] = await browser.tabs.query({ active: true, lastFocusedWindow: true });
+  const tab = await activeTab();
   const url = tab?.url;
   const found = url && (await isUnlocked()) ? await allEntries() : null;
   const matches = found && url ? matchLogins(loginsOf(found.entries), url) : [];

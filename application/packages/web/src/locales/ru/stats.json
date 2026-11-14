@@ -262,6 +262,8 @@
       "unknown": "Неизвестный трекер {{id}}",
       "sleepHours": "Часы сна",
       "sleepQuality": "Качество сна",
+      "bpSystolic": "Давление, верхнее",
+      "bpDiastolic": "Давление, нижнее",
       "avgDays_one": "ср., дней: {{count}}",
       "avgDays_few": "ср., дней: {{count}}",
       "avgDays_many": "ср., дней: {{count}}",

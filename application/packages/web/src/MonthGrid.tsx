@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CaretDown, CaretLeft, CaretRight, Plus } from './icons';
+import { CalendarDot, CalendarDots, CaretDown, CaretLeft, CaretRight, Plus } from './icons';
+import { HoverLabel, IconButton, Popover } from './ui';
 import { WEEK_START_DAY, formatInstant, toLocalIso, useDateFormatKey, weekStartSetting, weekdayDate, weekdayLabel, type WeekStart } from './intlFormat';
 import { intlLocale } from './languages';
 import type { Space } from './spaces';
@@ -122,7 +123,7 @@ type Props = {
   onPick: (day: string) => void;
   /** One week or the whole month (six weeks). The arrows step by the same unit. */
   weeks?: 1 | 6;
-  /** When set, the month title is a button that switches between week and month. */
+  /** When set, a button beside the arrows switches between week and month. */
   onToggleWeeks?: () => void;
   /** When set, a Today row heads the grid and calls this. */
   onToday?: () => void;
@@ -152,7 +153,7 @@ type Props = {
   headerBelow?: ReactNode;
   /** Large: before the title (the drawer button). */
   headerStart?: ReactNode;
-  /** Large: a narrow first column with the ISO week number. */
+  /** A narrow first column with the ISO week number (the synced setting). */
   weekNumbers?: boolean;
   /** Large: a list item dragged over a day, and dropped on it. */
   drop?: { accepts: (e: React.DragEvent) => boolean; onDrop: (day: string, e: React.DragEvent) => void };
@@ -179,6 +180,71 @@ function isoWeek(day: string): number {
   return 1 + Math.round(((thursday.getTime() - jan4.getTime()) / 86_400_000 - 3 + ((jan4.getDay() + 6) % 7)) / 7);
 }
 
+/**
+ * The month and year picker the title caret opens (#750): a year with its
+ * arrows, then the twelve months. A pick keeps the day of the month (clamped
+ * to the month's length), so a week or day view stays where it was in the
+ * month. The month shown is filled, the current month has a ring.
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (step 3), docs/internal/design/patterns/181-190.md (182)
+ */
+function MonthYearPanel({ focus, onPick, onClose }: { focus: string; onPick: (day: string) => void; onClose: () => void }) {
+  const { t } = useTranslation('shell');
+  const locale = intlLocale();
+  const shown = dayAtNoon(focus);
+  const now = new Date();
+  const [year, setYear] = useState(shown.getFullYear());
+  const months = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const box = months.current;
+    (box?.querySelector<HTMLButtonElement>('[aria-current="true"]') ?? box?.querySelector<HTMLButtonElement>('[data-month]'))?.focus();
+  }, []);
+  const name = new Intl.DateTimeFormat(locale, { month: 'short' }); // date-ok: a month name carries no day, so no date-order setting applies
+  const long = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }); // date-ok: the same, for the screen reader
+  return (
+    <div
+      onKeyDown={(e) => {
+        if (e.key !== 'Escape') return;
+        // Only the picker closes, not the menu or window the grid sits in.
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <IconButton label={t('stats:wellness.pixels.prevYear')} onClick={() => setYear((y) => y - 1)}>
+          <CaretLeft aria-hidden="true" />
+        </IconButton>
+        <span aria-live="polite" className="text-compact font-medium text-pn tabular-nums">{year}</span>
+        <IconButton label={t('stats:wellness.pixels.nextYear')} onClick={() => setYear((y) => y + 1)}>
+          <CaretRight aria-hidden="true" />
+        </IconButton>
+      </div>
+      <div ref={months} className="mt-1 grid grid-cols-3 gap-1">
+        {Array.from({ length: 12 }, (_, m) => {
+          const date = new Date(year, m, 1, 12);
+          const isShown = year === shown.getFullYear() && m === shown.getMonth();
+          const isNow = year === now.getFullYear() && m === now.getMonth();
+          return (
+            <button
+              key={m}
+              type="button"
+              data-month={m}
+              aria-current={isShown ? 'true' : undefined}
+              aria-label={long.format(date)}
+              onClick={() => onPick(addMonths(focus, (year - shown.getFullYear()) * 12 + m - shown.getMonth()))}
+              className={`h-9 [@media(hover:none)]:h-11 rounded-md text-compact transition ${
+                isShown ? 'bg-accent-fill text-white font-semibold' : isNow ? 'ring-[1.5px] ring-inset ring-accent text-accent font-semibold hover:bg-accent/10' : 'text-pn hover:bg-pn/5'
+              }`}
+            >
+              {name.format(date)}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function MonthGrid({
   marked, selected, initialMonth, onPick, weeks = 6, onToggleWeeks, onToday,
   size = 'small', wide = false, focus: heldFocus, onFocusChange, renderDay, renderWeek, onAdd, onDayMenu, headerEnd, headerBelow, headerStart, weekNumbers = false, drop, moodOf,
@@ -192,6 +258,12 @@ export function MonthGrid({
     onFocusChange?.(day);
   };
   const moved = useRef(false);
+  const [picking, setPicking] = useState(false);
+  const titleRef = useRef<HTMLButtonElement | null>(null);
+  const closePicker = () => {
+    setPicking(false);
+    titleRef.current?.focus();
+  };
   const [dropDay, setDropDay] = useState<string | null>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const locale = intlLocale();
@@ -202,12 +274,18 @@ export function MonthGrid({
   const shortTitle = new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' }).format(dayAtNoon(focus)); // date-ok: the same heading, short
   // A narrow host (a tight list pane, a grid tile) shows the short month, so
   // the heading never wraps beside the arrows; a screen reader always hears
-  // the long one. The breakpoint fits the longest long month with its year.
+  // the long one. The breakpoint fits the longest long month with its year;
+  // each extra header button (a host's, the week switch) moves it up 32px.
+  const extra = (headerEnd ? 1 : 0) + (onToggleWeeks ? 1 : 0);
+  const shortUpTo = ['@min-[208px]/month:hidden', '@min-[240px]/month:hidden', '@min-[272px]/month:hidden'][extra];
+  const longFrom = ['@min-[208px]/month:inline', '@min-[240px]/month:inline', '@min-[272px]/month:inline'][extra];
+  // Touch-size buttons (40px each) leave the long name room only from 280px, 40px more per extra button.
+  const touchShort = ['[@media(hover:none)]:@max-[279.98px]/month:inline', '[@media(hover:none)]:@max-[319.98px]/month:inline', '[@media(hover:none)]:@max-[359.98px]/month:inline'][extra];
+  const touchLong = ['[@media(hover:none)]:@max-[279.98px]/month:hidden', '[@media(hover:none)]:@max-[319.98px]/month:hidden', '[@media(hover:none)]:@max-[359.98px]/month:hidden'][extra];
   const heading = (
     <span aria-live="polite" className="min-w-0 truncate">
-      {/* Touch-size arrows (40px each) leave the long name room only from 280px. */}
-      <span aria-hidden="true" className="@min-[208px]/month:hidden [@media(hover:none)]:@max-[279.98px]/month:inline">{shortTitle}</span>
-      <span aria-hidden="true" className="hidden @min-[208px]/month:inline [@media(hover:none)]:@max-[279.98px]/month:hidden">{title}</span>
+      <span aria-hidden="true" className={`${shortUpTo} ${touchShort}`}>{shortTitle}</span>
+      <span aria-hidden="true" className={`hidden ${longFrom} ${touchLong}`}>{title}</span>
       <span className="sr-only">{title}</span>
     </span>
   );
@@ -256,6 +334,7 @@ export function MonthGrid({
         onKeyDown={onKeyDown}
         onPrev={() => setFocus(step(-1))}
         onNext={() => setFocus(step(1))}
+        onJump={setFocus}
         onToday={onToday}
         onPick={onPick}
         renderDay={renderDay}
@@ -277,6 +356,8 @@ export function MonthGrid({
   // tighten, so the arrows and a host's button still fit beside the title.
   // min-w-0: with touch-size arrows the long month name can be wider than
   // the room left; it truncates instead of pushing the arrows out.
+  const shortDays = Array.from({ length: 7 }, (_, i) => weekdayLabel(weekdayDate((weekStart + i) % 7), 'short'));
+  const shortFits = shortDays.every((name) => [...name].length <= 6);
   const titleClass = 'inline-flex min-w-0 items-center gap-1 rounded-md px-2 @max-[207.98px]/month:px-1 py-1 text-compact font-medium text-pn';
   return (
     <div className={`@container/month w-full ${wide ? '' : 'max-w-[240px]'} mx-auto select-none`}>
@@ -293,39 +374,56 @@ export function MonthGrid({
       {/* The month arrows sit together at the end, so they never read as the
           back arrow a menu puts at the start of the same row. */}
       <div className="flex items-center justify-between mb-1">
-        {onToggleWeeks ? (
+        {/* The title opens the month and year picker (#750); the week and
+            month switch is its own button beside the arrows. */}
+        <HoverLabel label={t('monthGrid.pickMonthTip')} position="below-start" disabled={picking} className="flex min-w-0">
           <button
+            ref={titleRef}
             type="button"
-            onClick={onToggleWeeks}
-            aria-expanded={weeks === 6}
-            aria-label={t(weeks === 6 ? 'monthGrid.showWeek' : 'monthGrid.showMonth', { month: title })}
+            onClick={() => setPicking((p) => !p)}
+            aria-expanded={picking}
+            aria-label={t('monthGrid.pickMonth', { month: title })}
             className={`${titleClass} hover:bg-pn/5 transition`}
           >
             {heading}
-            <CaretDown aria-hidden="true" className={`shrink-0 text-accent transition-transform ${weeks === 6 ? 'rotate-180' : ''}`} />
+            <CaretDown aria-hidden="true" className={`shrink-0 text-accent transition-transform ${picking ? 'rotate-180' : ''}`} />
           </button>
-        ) : (
-          <span className={titleClass}>
-            {heading}
-          </span>
-        )}
-        <span className="flex shrink-0 items-center @max-[207.98px]/month:[&_button]:w-7">
-          <button type="button" onClick={() => setFocus(step(-1))} aria-label={t(weeks === 1 ? 'monthGrid.previousWeek' : 'monthGrid.previousMonth')} className={navBtn}>
-            <CaretLeft aria-hidden="true" />
-          </button>
-          <button type="button" onClick={() => setFocus(step(1))} aria-label={t(weeks === 1 ? 'monthGrid.nextWeek' : 'monthGrid.nextMonth')} className={navBtn}>
-            <CaretRight aria-hidden="true" />
-          </button>
+        </HoverLabel>
+        <span className={`flex shrink-0 items-center @max-[207.98px]/month:[&_button]:w-7 ${picking ? 'invisible' : ''}`}>
+          {onToggleWeeks && (
+            <HoverLabel label={t(weeks === 6 ? 'monthGrid.showOneWeek' : 'monthGrid.showWholeMonth')} position="below" disabled={picking}>
+              <button type="button" onClick={onToggleWeeks} aria-expanded={weeks === 6} aria-label={t(weeks === 6 ? 'monthGrid.showOneWeek' : 'monthGrid.showWholeMonth')} className={navBtn}>
+                {weeks === 6 ? <CalendarDot aria-hidden="true" /> : <CalendarDots aria-hidden="true" />}
+              </button>
+            </HoverLabel>
+          )}
+          <HoverLabel label={t(weeks === 1 ? 'monthGrid.previousWeek' : 'monthGrid.previousMonth')} position="below" disabled={picking}>
+            <button type="button" onClick={() => setFocus(step(-1))} aria-label={t(weeks === 1 ? 'monthGrid.previousWeek' : 'monthGrid.previousMonth')} className={navBtn}>
+              <CaretLeft aria-hidden="true" />
+            </button>
+          </HoverLabel>
+          <HoverLabel label={t(weeks === 1 ? 'monthGrid.nextWeek' : 'monthGrid.nextMonth')} position={headerEnd ? 'below' : 'below-end'} disabled={picking}>
+            <button type="button" onClick={() => setFocus(step(1))} aria-label={t(weeks === 1 ? 'monthGrid.nextWeek' : 'monthGrid.nextMonth')} className={navBtn}>
+              <CaretRight aria-hidden="true" />
+            </button>
+          </HoverLabel>
           {headerEnd}
         </span>
       </div>
-      <div ref={gridRef} role="group" aria-label={title} onKeyDown={onKeyDown} className="grid grid-cols-7 gap-0.5 text-center">
-        {Array.from({ length: 7 }, (_, i) => (
-          <div key={i} aria-hidden="true" className={`text-meta text-pn-muted ${weeks === 1 ? 'py-0.5 md:py-1' : 'py-1'}`}>
-            {weekdayLabel(weekdayDate((weekStart + i) % 7), 'narrow')}
+      {picking && <MonthYearPanel focus={focus} onPick={(day) => { setFocus(day); closePicker(); }} onClose={closePicker} />}
+      <div ref={gridRef} role="group" aria-label={title} onKeyDown={onKeyDown} className={`${picking ? 'hidden' : 'grid'} ${weekNumbers ? 'grid-cols-[1.5rem_repeat(7,minmax(0,1fr))]' : 'grid-cols-7'} gap-0.5 text-center`}>
+        {weekNumbers && <div aria-hidden="true" />}
+        {/* A grid with room (a phone-wide strip, a list band) names the
+            weekdays as the large month does; a narrow one keeps one letter.
+            A locale whose short names are whole words (pt-PT "domingo")
+            keeps the letter too: seven of them do not fit a phone. */}
+        {shortDays.map((short, i) => (
+          <div key={i} aria-hidden="true" className={`min-w-0 truncate text-meta text-pn-muted ${weeks === 1 ? 'py-0.5 md:py-1' : 'py-1'}`}>
+            <span className={shortFits ? '@min-[320px]/month:hidden' : ''}>{weekdayLabel(weekdayDate((weekStart + i) % 7), 'narrow')}</span>
+            {shortFits && <span className="hidden @min-[320px]/month:inline">{short}</span>}
           </div>
         ))}
-        {cells.map((day) => {
+        {cells.map((day, n) => {
           const inMonth = weeks === 1 || sameMonth(day, focus);
           const isToday = day === today;
           const hasEntry = marked.has(day);
@@ -353,8 +451,13 @@ export function MonthGrid({
                   : `${inMonth ? 'text-pn' : 'text-pn-muted opacity-60'} group-hover:bg-pn/5`;
           const showDots = hasEntry && mood === undefined;
           return (
+            <Fragment key={day}>
+            {weekNumbers && n % 7 === 0 && (
+              <div aria-hidden="true" className="flex items-center justify-center text-meta text-pn-muted tabular-nums">
+                {rowWeek(cells.slice(n, n + 7), weekStart)}
+              </div>
+            )}
             <button
-              key={day}
               type="button"
               data-day={day}
               tabIndex={day === focus ? 0 : -1}
@@ -395,6 +498,7 @@ export function MonthGrid({
                 )}
               </span>
             </button>
+            </Fragment>
           );
         })}
       </div>
@@ -411,7 +515,7 @@ export function MonthGrid({
  * Spec: docs/internal/specs/calendar-pillar-spec.md (step 1)
  */
 function LargeMonth({
-  focus, today, title, cells, weekStart, weeks, gridRef, onKeyDown, onPrev, onNext, onToday, onPick,
+  focus, today, title, cells, weekStart, weeks, gridRef, onKeyDown, onPrev, onNext, onJump, onToday, onPick,
   renderDay, renderWeek, onAdd, onDayMenu, headerEnd, headerBelow, headerStart, shortTitle, weekNumbers, drop,
 }: {
   onDayMenu?: Props['onDayMenu'];
@@ -428,6 +532,7 @@ function LargeMonth({
   onKeyDown: (e: React.KeyboardEvent) => void;
   onPrev: () => void;
   onNext: () => void;
+  onJump: (day: string) => void;
   onToday?: () => void;
   onPick: (day: string) => void;
   renderDay?: Props['renderDay'];
@@ -454,6 +559,8 @@ function LargeMonth({
         nextLabel={t(weeks === 1 ? 'monthGrid.nextWeek' : 'monthGrid.nextMonth')}
         onToday={onToday}
         end={headerEnd}
+        focus={focus}
+        onJump={onJump}
       />
       {/* A row never goes below room for the number, two lanes of bars and a
           chip; a short window scrolls the month instead of cutting chips. */}
@@ -541,7 +648,10 @@ const HEADER_NAV = 'inline-flex items-center justify-center w-8 h-8 [@media(hove
  *  the arrows together, Today and the host's controls (the view switch) at
  *  the end; under them the host's second row (the legend), left-aligned. A
  *  narrow pane shows the short title, so row one never wraps. */
-export function CalendarHeader({ title, shortTitle, onPrev, onNext, prevLabel, nextLabel, onToday, end, below, start }: {
+export function CalendarHeader({ title, shortTitle, onPrev, onNext, prevLabel, nextLabel, onToday, end, below, start, focus, onJump }: {
+  /** With `onJump`: the day shown, for the month and year picker the title opens (#750). */
+  focus?: string;
+  onJump?: (day: string) => void;
   /** Before the title: the agenda button, and the drawer button where nothing else on screen opens it. */
   start?: ReactNode;
   title: string;
@@ -555,31 +665,64 @@ export function CalendarHeader({ title, shortTitle, onPrev, onNext, prevLabel, n
   below?: ReactNode;
 }) {
   const { t } = useTranslation('shell');
+  const [picking, setPicking] = useState(false);
+  const titleRef = useRef<HTMLButtonElement | null>(null);
+  const closePicker = () => {
+    setPicking(false);
+    titleRef.current?.focus();
+  };
+  const heading = shortTitle ? (
+    <>
+      <span aria-hidden="true" className="@min-[520px]/calhead:hidden">{shortTitle}</span>
+      <span aria-hidden="true" className="hidden @min-[520px]/calhead:inline">{title}</span>
+      <span className="sr-only">{title}</span>
+    </>
+  ) : title;
   return (
     <div className="@container/calhead shrink-0 flex flex-col gap-1 px-3 py-2 border-b border-divider">
       <div className="flex items-center gap-1.5 min-w-0">
         {start}
-        <h2 aria-live="polite" className="min-w-0 truncate text-title font-semibold text-pn me-1">
-          {shortTitle ? (
-            <>
-              <span aria-hidden="true" className="@min-[520px]/calhead:hidden">{shortTitle}</span>
-              <span aria-hidden="true" className="hidden @min-[520px]/calhead:inline">{title}</span>
-              <span className="sr-only">{title}</span>
-            </>
-          ) : title}
-        </h2>
-        <span className="shrink-0 flex items-center">
-          <button type="button" onClick={onPrev} aria-label={prevLabel} className={HEADER_NAV}>
-            <CaretLeft aria-hidden="true" />
-          </button>
-          <button type="button" onClick={onNext} aria-label={nextLabel} className={HEADER_NAV}>
-            <CaretRight aria-hidden="true" />
-          </button>
-        </span>
+        {/* Today and the arrows come before the title, so a longer or
+            shorter month, week or day name never moves them between two
+            clicks (#748). */}
         {onToday && (
           <button type="button" onClick={onToday} className="shrink-0 h-7 px-2.5 rounded-md border border-divider text-compact font-medium text-pn hover:border-accent hover:text-accent transition">
             {t('backfillPopover.today')}
           </button>
+        )}
+        <span className="shrink-0 flex items-center">
+          <HoverLabel label={prevLabel} position="below">
+            <button type="button" onClick={onPrev} aria-label={prevLabel} className={HEADER_NAV}>
+              <CaretLeft aria-hidden="true" />
+            </button>
+          </HoverLabel>
+          <HoverLabel label={nextLabel} position="below">
+            <button type="button" onClick={onNext} aria-label={nextLabel} className={HEADER_NAV}>
+              <CaretRight aria-hidden="true" />
+            </button>
+          </HoverLabel>
+        </span>
+        <h2 aria-live="polite" className="min-w-0 flex text-title font-semibold text-pn ms-1">
+          {focus && onJump ? (
+            <HoverLabel label={t('monthGrid.pickMonthTip')} position="below-start" disabled={picking} className="flex min-w-0 text-body font-normal">
+              <button
+                ref={titleRef}
+                type="button"
+                onClick={() => setPicking((p) => !p)}
+                aria-expanded={picking}
+                aria-label={t('monthGrid.pickMonth', { month: title })}
+                className="min-w-0 inline-flex items-center gap-1 rounded-md px-1 -mx-1 text-title font-semibold hover:bg-pn/5 transition"
+              >
+                <span className="min-w-0 truncate">{heading}</span>
+                <CaretDown aria-hidden="true" className={`shrink-0 text-accent transition-transform ${picking ? 'rotate-180' : ''}`} />
+              </button>
+            </HoverLabel>
+          ) : <span className="min-w-0 truncate">{heading}</span>}
+        </h2>
+        {focus && onJump && (
+          <Popover open={picking} anchorRef={titleRef} onClose={() => setPicking(false)} className="w-64">
+            <MonthYearPanel focus={focus} onPick={(day) => { onJump(day); closePicker(); }} onClose={closePicker} />
+          </Popover>
         )}
         <span className="flex-1" />
         {end && <span className="shrink-0">{end}</span>}

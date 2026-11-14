@@ -57,7 +57,7 @@
     "security_appLock": "zámek aplikace, zamknout při spuštění, zamykací obrazovka, zamknout aplikaci, znovu zamknout, znovu zamknout po",
     "security_relockAfter": "časový limit, automatické zamčení, zamknout po, znovu zamknout po, zamykací obrazovka",
     "security_blockCapture": "snímek obrazovky, screenshot, nahrávání obrazovky, sdílení obrazovky, režim soukromí",
-    "security_phrase": "obnovovací fráze, tajná slova, seed, dvanáct slov, klíč pro obnovení",
+    "security_phrase": "obnovovací fráze, tajná slova, seed, dvanáct slov, dvacet čtyři slov, 24 slov, klíč pro obnovení",
     "security_custody": "úschova, správa klíčů, vlastní úschova, uložení klíče",
     "me_pauseSync": "zastavit synchronizaci, pozastavit, offline",
     "me_filesWifiOnly": "wifi, mobilní data, datový tarif, měřené připojení",
@@ -83,6 +83,7 @@
     "appearance_invisibles": "znak odstavce, mezery, prázdné znaky, skryté znaky, formátovací značky",
     "appearance_linkModifier": "odkazy, hypertextové odkazy, url, kliknutí, klik, ctrl, cmd, command, otevřít omylem",
     "appearance_typedSymbols": "ligatury, šipky, symboly, matematika, nerovná se, větší než, menší než, automatické opravy, nahradit",
+    "appearance_linkSuggestions": "související poznámky, podobné poznámky, návrhy, návrhy odkazů, navrhovaná propojení, propojení, zpětné odkazy, backlinks, nepropojené, téma",
     "appearance_noteFont": "písmo, font, řez písma, neproporcionální, mono, patkové, bezpatkové, serif, sans, výchozí písmo, vlastní písmo, nainstalované písmo, moje písmo",
     "appearance_nestedNumbers": "číslovaný seznam, vnořený seznam, osnova, 1.1, 1.1.1, právní číslování, víceúrovňové číslování, podčíslování, víceúrovňový seznam",
     "appearance_confirmTrash": "smazat, koš, potvrdit, potvrzení, dialog, ptát se, výzva, příště se neptat",
@@ -90,6 +91,7 @@
     "appearance_autoLocationNotes": "poloha, místo, gps, pozice, mapa, geotag, automaticky, kde, poznámky",
     "appearance_autoLocationJournal": "poloha, místo, gps, pozice, mapa, geotag, automaticky, kde, deník, záznamy",
     "appearance_startView": "úvodní stránka, domů, výchozí zobrazení, otevřít na",
+    "appearance_reopenLastOpen": "poslední poznámka, naposledy otevřené, obnovit, zapamatovat, znovu otevřít, spuštění, start",
     "appearance_view": "mřížka, seznam, karty, rozložení",
     "trackers_setup": "sledování, sledované hodnoty, pohoda, štítky, nálada, spánek, energie, kroky, voda, zapnout, vypnout",
     "trackers_habitQuestions": "návyky, zvyky, otázky, meditace, modlitba, kouření, alkohol",
@@ -124,6 +126,7 @@
     "calendar_weekNumbers": "číslo týdne, týden ISO, kalendář",
     "calendar_hours": "hodiny, pracovní doba, zobrazení dne, zobrazení týdne, ráno",
     "me_dms": "spínač mrtvého muže, dead man's switch, nečinnost, neaktivní, smazat po, vymazat, opuštěný účet",
+    "appearance_smartConnections": "ai, umělá inteligence, offline, v zařízení, on-device, lokální ai, soukromá ai, model, bekko, význam, stejný význam, související poznámky, podobné poznámky, navrhovaná propojení, návrhy odkazů, chytrá propojení, sémantické, embeddings, stáhnout, stahování",
     "appearance_formatBar": "panel nástrojů, lišta formátování, tlačítka, upravit, uspořádat, odrážkový seznam, přeškrtnutí, ozubené kolo"
   }
 }

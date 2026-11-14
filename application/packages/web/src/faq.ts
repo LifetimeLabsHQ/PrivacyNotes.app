@@ -204,6 +204,7 @@ export const FAQ_STRUCTURE: ReadonlyArray<{ id: string; group: FaqGroupKey }> = 
   { id: 'family-sharing', group: 'pricingPro' },
   { id: 'business-use', group: 'pricingPro' },
   { id: 'paddle-privacy', group: 'pricingPro' },
+  { id: 'pay-with-crypto', group: 'pricingPro' },
   { id: 'buy-pro-anonymously', group: 'pricingPro' },
   { id: 'pro-after-leak', group: 'pricingPro' },
   { id: 'statistics', group: 'statsTrackers' },
@@ -229,32 +230,3 @@ export const FAQ_STRUCTURE: ReadonlyArray<{ id: string; group: FaqGroupKey }> = 
   { id: 'medication-supply', group: 'medications' },
   { id: 'dose-lens', group: 'medications' },
 ];
-
-/** A displayed entry, assembled from structure + a language catalog. */
-export type FaqEntry = {
-  /** Stable slug: the hub anchor id and the leaf URL segment. */
-  id: string;
-  /** Localized group headline. */
-  group: string;
-  question: string;
-  /** One string per paragraph. Markdown [text](url) links only. */
-  answer: string[];
-};
-
-/**
- * Assembles the ordered, grouped entry list from the structure and two
- * lookups. `entryStrings` returns null (or an empty/missing shape) to
- * skip an entry, which keeps group adjacency intact by construction.
- */
-export function assembleFaq(
-  groupLabel: (key: FaqGroupKey) => string,
-  entryStrings: (id: string) => { question: string; answer: string[] } | null,
-): FaqEntry[] {
-  const out: FaqEntry[] = [];
-  for (const row of FAQ_STRUCTURE) {
-    const s = entryStrings(row.id);
-    if (!s || !s.question || !Array.isArray(s.answer) || s.answer.length === 0) continue;
-    out.push({ id: row.id, group: groupLabel(row.group), question: s.question, answer: s.answer });
-  }
-  return out;
-}

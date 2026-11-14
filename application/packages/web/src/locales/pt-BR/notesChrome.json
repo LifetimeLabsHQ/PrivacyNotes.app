@@ -12,7 +12,7 @@
   },
   "moveScreen": {
     "title": "O app se mudou para use.privacynotes.app",
-    "bodySignIn": "Entre lá com a sua frase de recuperação de 12 palavras ou com \"{{scanQr}}\". Este dispositivo sincroniza primeiro, então todas as suas notas estarão esperando por você lá, e nada é apagado aqui.",
+    "bodySignIn": "Entre lá com a sua frase de recuperação ou com “{{scanQr}}”. Este dispositivo sincroniza primeiro, então todas as suas notas estarão esperando por você lá, e nada é apagado aqui.",
     "openNotes": "Abra suas notas aqui uma vez para resolver isso",
     "showPhrase": "Mostrar minha frase de recuperação",
     "website": "Ver o site em vez disso"
@@ -46,7 +46,7 @@
     "signInAgain": "Entrar de novo"
   },
   "signOutConfirm": {
-    "title": "Você salvou sua frase de 12 palavras?",
+    "title": "Você salvou sua frase de recuperação?",
     "body": "Sua frase é a <only>única</only> forma de voltar. Sem redefinição por e-mail, sem linha de suporte. Se você ainda não a anotou, toque em <action>Não, mostrar frase</action> que abrimos para você agora mesmo.",
     "unsyncedWarn_one": "1 nota neste dispositivo ainda não foi sincronizada. Ela será perdida para sempre se não puder ser enviada ao sair.",
     "unsyncedWarn_other": "{{count}} notas neste dispositivo ainda não foram sincronizadas. Elas serão perdidas para sempre se não puderem ser enviadas ao sair.",
@@ -139,7 +139,8 @@
     "offline": "Você está offline. Burn links exigem uma ida e volta ao servidor. Tente de novo quando estiver online.",
     "demo": "Burn links são armazenados em um servidor, e a demo não contata nenhum. Cadastre-se para criar burn links de verdade.",
     "tooLarge": "A nota é grande demais para compartilhar via burn link ({{size}}KB). O máximo é {{max}}KB.",
-    "storeFailed": "Falha ao armazenar a burn note no servidor."
+    "storeFailed": "Falha ao armazenar a burn note no servidor.",
+    "rateLimited": "Muitos burn links foram criados a partir desta conexão. Tente de novo mais tarde."
   },
   "dms": {
     "returnTitle": "Sua cópia no servidor foi excluída",
@@ -153,7 +154,9 @@
     "title": "Notas excluídas em outro dispositivo",
     "body_one": "Você, ou outro dos seus dispositivos, excluiu {{count}} nota que este dispositivo ainda tem. Se foi você, exclua-a aqui também. Se não foi você, alguém pode ter acesso à sua conta: mantenha-a para que ela volte a todos os seus dispositivos.",
     "body_other": "Você, ou outro dos seus dispositivos, excluiu {{count}} notas que este dispositivo ainda tem. Se foi você, exclua-as aqui também. Se não foi você, alguém pode ter acesso à sua conta: mantenha-as para que elas voltem a todos os seus dispositivos.",
-    "keep": "Manter minhas notas",
-    "delete": "Excluir aqui também"
+    "refusedTitle": "Suas notas voltaram",
+    "refusedBody_one": "{{count}} nota foi excluída do servidor, mas a exclusão não veio de nenhum dos seus dispositivos. Este dispositivo não aceitou a exclusão e devolveu a nota a todos os seus dispositivos. Verifique seus dispositivos e remova qualquer um que você não reconheça.",
+    "refusedBody_other": "{{count}} notas foram excluídas do servidor, mas a exclusão não veio de nenhum dos seus dispositivos. Este dispositivo não aceitou a exclusão e devolveu as notas a todos os seus dispositivos. Verifique seus dispositivos e remova qualquer um que você não reconheça.",
+    "showDevices": "Mostrar dispositivos"
   }
 }

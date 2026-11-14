@@ -251,6 +251,8 @@
       "unknown": "Seguiment desconegut {{id}}",
       "sleepHours": "Hores de son",
       "sleepQuality": "Qualitat del son",
+      "bpSystolic": "Pressió arterial, sistòlica",
+      "bpDiastolic": "Pressió arterial, diastòlica",
       "avgDays_one": "mitjana, {{count}} dia",
       "avgDays_other": "mitjana, {{count}} dies",
       "sumDays_one": "total, {{count}} dia",

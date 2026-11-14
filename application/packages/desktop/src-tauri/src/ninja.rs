@@ -142,7 +142,8 @@ fn show<R: Runtime>(window: &WebviewWindow<R>) {
 }
 
 fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<WebviewWindow<R>> {
-    let builder = WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("index.html?ninja-window=1".into()));
+    let builder = WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("index.html?ninja-window=1".into()))
+        .on_navigation(crate::navigation::guard(app));
     // Windows: every web view of the app shares one WebView2 environment, so
     // the box starts with the main window's browser options, or WebView2
     // refuses it (0x8007139F). A debug build adds the DevTools port there.

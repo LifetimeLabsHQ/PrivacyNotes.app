@@ -1,13 +1,15 @@
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
 import i18n from '../i18n';
 import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
+import { openZip } from './zipOpen';
 import { normalizeTag } from '../notesRepo';
 import { linkifyMarkdown } from './linkify';
 import { importBlobs } from './blobImport';
 import { isUntitledStem } from '../exportNames';
 import type { ImportedNote, ParsedImport } from './types';
+import { isJunkEntry } from './importHelpers';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importExport:importLog.appleNotes.${key}`, options);
+const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:appleNotes.${key}`, options);
 
 /**
  * Apple Notes importer.
@@ -32,15 +34,6 @@ const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`
 /* ------------------------------------------------------------------ */
 /* Helpers                                                            */
 /* ------------------------------------------------------------------ */
-
-/** Folders and files to skip. */
-function shouldSkip(path: string): boolean {
-  const lower = path.toLowerCase();
-  if (lower.startsWith('__macosx/') || lower.includes('/__macosx/')) return true;
-  const name = path.split('/').pop() ?? '';
-  if (name.startsWith('.')) return true;
-  return false;
-}
 
 /** Account labels the Exporter app writes as the top folder. */
 function looksLikeAccount(segment: string): boolean {
@@ -217,14 +210,14 @@ async function parseZip(
   file: File,
   onProgress?: (msg: string) => void,
 ): Promise<ParseZipResult> {
-  onProgress?.(i18n.t('importExport:importLog.shared.readingZip'));
+  onProgress?.(i18n.t('importLog:shared.readingZip'));
   const buf = await file.arrayBuffer();
-  const zip = await JSZip.loadAsync(buf);
+  const zip = await openZip(buf);
 
   // Collect all file paths, skipping hidden/system files
   const allPaths: string[] = [];
   zip.forEach((path, entry) => {
-    if (!entry.dir && !shouldSkip(path)) allPaths.push(path);
+    if (!entry.dir && !isJunkEntry(path)) allPaths.push(path);
   });
 
   // Detect common root prefix (the zip often wraps everything in one folder)
@@ -243,7 +236,7 @@ async function parseZip(
   const blobFiles: [string, JSZip.JSZipObject][] = [];
 
   zip.forEach((path, entry) => {
-    if (entry.dir || shouldSkip(path)) return;
+    if (entry.dir || isJunkEntry(path)) return;
     const rel = prefix ? path.slice(prefix.length) : path;
     if (MD_EXT.test(rel)) {
       mdFiles.push([rel, entry]);
@@ -252,7 +245,7 @@ async function parseZip(
     }
   });
 
-  onProgress?.(i18n.t('importExport:importLog.shared.foundNotes', { count: mdFiles.length }));
+  onProgress?.(i18n.t('importLog:shared.foundNotes', { count: mdFiles.length }));
 
   // Decide the account level ONCE, from every note path at once. Doing it per
   // path is what let the answer depend on how deep the zip was taken.
@@ -268,7 +261,7 @@ async function parseZip(
     if (parsed.hadUnderline) strippedUnderline++;
     notes.push(parsed);
     if ((i + 1) % 50 === 0) {
-      onProgress?.(i18n.t('importExport:importLog.shared.parsed', { done: i + 1, total: mdFiles.length }));
+      onProgress?.(i18n.t('importLog:shared.parsed', { done: i + 1, total: mdFiles.length }));
     }
   }
 
@@ -277,7 +270,7 @@ async function parseZip(
   let blobBytes = 0;
   let tooLarge = 0;
   if (blobFiles.length > 0) {
-    onProgress?.(i18n.t('importExport:importLog.shared.extracting', { count: blobFiles.length }));
+    onProgress?.(i18n.t('importLog:shared.extracting', { count: blobFiles.length }));
   }
   for (let i = 0; i < blobFiles.length; i++) {
     const [rel, entry] = blobFiles[i]!;
@@ -290,7 +283,7 @@ async function parseZip(
     blobs.set(rel, { data, mime: mimeFromExt(rel), name });
     blobBytes += data.length;
     if ((i + 1) % 20 === 0) {
-      onProgress?.(i18n.t('importExport:importLog.shared.extracted', { done: i + 1, total: blobFiles.length }));
+      onProgress?.(i18n.t('importLog:shared.extracted', { done: i + 1, total: blobFiles.length }));
     }
   }
 
@@ -350,15 +343,15 @@ export async function parseAppleNotes(
   }
   if (imageCount > 0) {
     transforms.push(
-      i18n.t('importExport:importLog.shared.foundImages', { count: imageCount })
+      i18n.t('importLog:shared.foundImages', { count: imageCount })
     );
   }
   if (attachmentCount > 0) {
     transforms.push(
-      i18n.t('importExport:importLog.shared.foundAttachments', { count: attachmentCount })
+      i18n.t('importLog:shared.foundAttachments', { count: attachmentCount })
     );
   }
-  transforms.push(i18n.t('importExport:importLog.shared.linkifiedBare'));
+  transforms.push(i18n.t('importLog:shared.linkifiedBare'));
 
   return {
     notes,

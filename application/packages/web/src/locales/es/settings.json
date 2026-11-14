@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "Todos los ajustes",
+    "dockWindow": "Acoplar a un lado",
+    "dockOtherSide": "Mover al otro lado",
     "fillWindow": "Usar toda la ventana",
     "restoreWindow": "Volver al tamaño normal"
   },
@@ -168,6 +170,8 @@
     "peekDark": "Por ahora ves tu tema oscuro. Auto vuelve a seguir tu sistema cuando cierras los Ajustes.",
     "unlockThemes": "Desbloquea todos los temas con Pro",
     "startViewTitle": "Mostrar al abrir la app",
+    "reopenLastOpenTitle": "Volver a abrir el último elemento",
+    "reopenLastOpenDesc": "Al iniciar la app, ves el elemento que estaba abierto cuando saliste. Si está desactivado, empieza en la lista, sin nada abierto.",
     "viewTitle": "Mostrar elementos como",
     "viewDesc": "Auto sigue el ancho de tu pantalla.",
     "openInTabsTitle": "Mostrar el elemento abierto en una pestaña",
@@ -198,6 +202,7 @@
     "linkModifierDesc": "Un clic normal coloca el cursor. Un toque sigue abriendo el enlace. Solo en este dispositivo.",
     "typedSymbolsTitle": "Convertir los símbolos escritos en flechas y signos matemáticos",
     "typedSymbolsDesc": "Por ejemplo, -> se convierte en →, != en ≠ y >= en ≥.",
+    "linkSuggestionsDesc": "Conexiones también muestra notas sobre el mismo tema que aún no has enlazado. Desactívalo para mostrar el icono de Conexiones solo en las notas con enlaces.",
     "confirmTrashTitle": "Preguntar antes de eliminar",
     "confirmTrashDesc": "Pide confirmación antes de que un elemento vaya a la papelera.",
     "confirmArchiveTitle": "Preguntar antes de archivar",
@@ -613,5 +618,18 @@
     "loadError": "No se pudo cargar el interruptor de hombre muerto. Comprueba tu conexión y vuelve a intentarlo.",
     "confirmTitle": "¿Activar el interruptor de hombre muerto?",
     "confirmBody": "Si ninguno de tus dispositivos se conecta durante {{period}}, el servidor elimina tus datos cifrados. Esto no se puede deshacer. Tus dispositivos conservan sus notas."
+  },
+  "onDeviceAi": {
+    "title": "Conexiones inteligentes",
+    "desc": "Encuentra notas con el mismo significado, aunque usen otras palabras u otro idioma. Usa IA sin conexión (<model>bekko-static</model>) que se ejecuta solo en este dispositivo.",
+    "on": "Activado. Las sugerencias también incluyen notas con el mismo significado. La IA sin conexión ocupa {{size}} en este dispositivo.",
+    "kept": "Desactivado. La IA sin conexión se queda en este dispositivo, así que volver a activarlo no necesita ninguna descarga.",
+    "downloadSize": "Descargar · {{size}}",
+    "downloadingLabel": "Descarga de la IA sin conexión",
+    "loading": "Cargando la IA sin conexión",
+    "unavailable": "La demo no puede descargar la IA sin conexión.",
+    "failed": "La descarga no terminó. Inténtalo de nuevo.",
+    "remove": "Quitar de este dispositivo ({{size}})",
+    "howItWorks": "Cómo funciona"
   }
 }

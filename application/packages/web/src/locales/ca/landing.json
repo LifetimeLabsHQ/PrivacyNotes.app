@@ -43,7 +43,7 @@
     },
     "subhead": "Notes, tasques, contrasenyes, diari, fitxers, calendari, contactes i marcadors, amb seguiment de l'estat d'ànim i de la medicació. Una sola app privada.",
     "tryDemo": "Prova la demo",
-    "microcopy": "Gratuït per sempre. Sense targeta de crèdit. Inicia la sessió amb Google, amb Apple, amb GitHub o només amb una frase de 12 paraules.",
+    "microcopy": "Gratuït per sempre. Sense targeta de crèdit. Inicia la sessió amb Google, amb Apple, amb GitHub o només amb una frase de recuperació.",
     "alreadyHaveVault": "Ja tens una caixa forta? Inicia la sessió",
     "trustSigned": "Versions signades a GitHub"
   },
@@ -167,8 +167,6 @@
     "useGitBody": "Acaba el dia amb els commits que has fet, desats com una nota que pots tornar a trobar el mes que ve.",
     "useClipTitle": "Qualsevol cosa que hagis copiat",
     "useClipBody": "Envia el porta-retalls, la sortida d'una ordre o un missatge d'error directament a les teves notes.",
-    "useToolsTitle": "Part de les teves pròpies eines",
-    "useToolsBody": "L'ordre respon en JSON i surt amb codis clars, així els teus scripts saben que la nota s'ha desat.",
     "useShortcutTitle": "Una nota des d'una drecera de teclat",
     "useShortcutBody": "Una tecla que tries a la configuració del sistema obre un quadre per a una nota ràpida, fins i tot amb l'app tancada. Arriba a la teva carpeta Agent.",
     "howLink": "Llegeix com funciona privacynotes"
@@ -359,14 +357,15 @@
     "freeVault": "50 MB d'emmagatzematge, fins a 5 MB per fitxer",
     "freeImport": "Importació i exportació, incloent-hi Keep i Obsidian",
     "freeAnon": "Inici de sessió anònim, sense correu",
-    "earlyAdopterBadge": "Pioner"
+    "earlyAdopterBadge": "Pioner",
+    "payMethods": "Paga amb targeta, o amb Bitcoin, Ethereum, Lightning, USDC o USDT."
   },
   "underHood": {
     "heading": "Sota el capó",
     "cipherTerm": "xchacha20poly1305",
     "cipherDesc": "Claus derivades al client",
     "phraseTerm": "Frases BIP-39",
-    "phraseDesc": "12 paraules, signatura Ed25519",
+    "phraseDesc": "Creades al teu dispositiu, signatura Ed25519",
     "rlsDesc": "RLS lligada a la teva clau pública",
     "trackingTerm": "Zero rastrejadors",
     "trackingDesc": "Sense píxels, sense rastrejadors de tercers",
@@ -390,6 +389,7 @@
       "sleep": "Bo, 7,5 h",
       "sleepScore": "82",
       "heartRate": "61 bpm",
+      "bloodPressure": "118/76 mmHg",
       "activity": "Moderada",
       "medication": "Presa",
       "energy": "6 / 10",
@@ -529,7 +529,7 @@
       "hotkeys": "Dreceres",
       "rating": "Valoració"
     },
-    "intro": "<brand/> reuneix les teves notes, tasques, contrasenyes, diari, fitxers, calendari, contactes i marcadors en un sol lloc, amb seguiment de l'estat d'ànim i de la medicació. Tot es xifra al teu dispositiu amb una clau creada a partir de les teves 12 paraules, i continua xifrat als nostres servidors a <nowrap>Suïssa</nowrap>. Funciona fora de línia, i l'app és de codi obert.",
+    "intro": "<brand/> reuneix les teves notes, tasques, contrasenyes, diari, fitxers, calendari, contactes i marcadors en un sol lloc, amb seguiment de l'estat d'ànim i de la medicació. Tot es xifra al teu dispositiu amb una clau creada a partir de la teva frase de recuperació, i continua xifrat als nostres servidors a <nowrap>Suïssa</nowrap>. Funciona fora de línia, i l'app és de codi obert.",
     "versionHeading": "Versió",
     "windowVersion": "Versió {{version}}",
     "windowHelp": "Centre d'ajuda",

@@ -10,6 +10,35 @@
     "otherGuides": "Andra importguider"
   },
   "guides": {
+    "1password": {
+      "app": "1Password",
+      "title": "Exportera ditt 1Password-valv",
+      "metaTitle": "Så exporterar du ditt 1Password-valv - PrivacyNotes",
+      "lead": "1Password-appen exporterar ditt konto som en enda .1pux-fil, och PrivacyNotes gör om inloggningar, kort, anteckningar och identiteter till objekt i Valvet och anteckningar.",
+      "sections": [
+        {
+          "h": "Exportera från 1Password",
+          "steps": [
+            "Öppna 1Password-appen på din dator och lås upp den.",
+            "Välj File > Export och välj ditt konto.",
+            "Ange ditt kontolösenord, behåll formatet 1PUX och spara filen."
+          ]
+        },
+        {
+          "h": "1PUX eller CSV",
+          "p": [
+            "Välj 1PUX. CSV-exporten innehåller bara inloggningar: inga kort, anteckningar eller identiteter, och inga egna fält."
+          ]
+        },
+        {
+          "h": "Var sakerna hamnar",
+          "p": [
+            "Varje inloggning blir en [inloggning i Valvet](/sv/help/vault) med sin 2FA-nyckel, så [dina koder fortsätter att fungera](/sv/help/vault-totp), och extra webbplatser och egna fält följer med. Ett kort blir ett kort, och en säker anteckning eller en identitet blir en anteckning. Taggar förblir taggar, även nästlade, favoriter kommer in som fästa och arkiverade objekt hamnar i arkivet. Bifogade filer följer inte med: spara dem från 1Password och bifoga dem här.",
+            "Exporten innehåller dina lösenord i klartext. Importera den, kontrollera att allt kom fram och radera sedan filen."
+          ]
+        }
+      ]
+    },
     "google-calendar": {
       "app": "Google Kalender",
       "title": "Exportera din Google Kalender",
@@ -159,6 +188,53 @@
         }
       ]
     },
+    "siyuan": {
+      "app": "SiYuan",
+      "title": "Exportera dina SiYuan-anteckningar",
+      "metaTitle": "Så exporterar du dina SiYuan-anteckningar som Data.zip - PrivacyNotes",
+      "lead": "SiYuan exporterar hela din arbetsyta som en enda Data.zip. Den filen tar med varje anteckningsbok med sina nästlade dokument, taggar, blockreferenser, tillgångar och datum.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/siyuan-export.webp",
+            "alt": "SiYuans dialogruta Data migration med raden Data.zip vald och knappen Export markerad.",
+            "width": 1576,
+            "height": 1076
+          },
+          "h": "Exportera arbetsytan som Data.zip",
+          "steps": [
+            "Öppna SiYuan på din dator.",
+            "Klicka på SiYuan-menyn uppe till vänster och välj \"Data migration\".",
+            "Peka på \"Data.zip\" under SiYuan och klicka på Export.",
+            "Välj en mapp. SiYuan skriver en .zip som innehåller varje anteckningsbok i arbetsytan.",
+            "Släpp in den .zip-filen som den är."
+          ],
+          "p": [
+            "Vill du flytta bara en anteckningsbok, högerklicka på den i panelen Documents och välj Export > \"SiYuan .sy.zip\". Vi läser den filen på samma sätt."
+          ]
+        },
+        {
+          "h": "Lås upp krypterade anteckningsböcker och exportera dem för sig",
+          "p": [
+            "Data.zip håller en krypterad anteckningsbok krypterad, så vi kan inte läsa den. Vi hoppar över den och importförhandsgranskningen nämner den. Lås upp anteckningsboken i SiYuan, exportera den som \"SiYuan .sy.zip\" och släpp in den filen också: den exporten går att läsa."
+          ]
+        },
+        {
+          "h": "Välj Data.zip, inte Markdown",
+          "p": [
+            "Markdown-exporten som .zip behåller texten men lämnar ut dina dokumenttaggar och datum, och den skriver blockreferenser som vanlig text eller fotnoter. Vi läser den om det är allt du har, och varje anteckning får importdatumet."
+          ]
+        },
+        {
+          "h": "Vad som följer med",
+          "p": [
+            "Varje anteckningsbok blir en mapp, och nästlade dokument blir nästlade mappar. Ett dokument som har underdokument och egen text blir en anteckning i mappen med samma namn. Varje anteckning behåller sina taggar och de skapande- och uppdateringsdatum som SiYuan sparade.",
+            "Rubriker, listor, checklistor, citat, kod med sitt språk, tabeller med sin justering, matematik, informationsrutor, markeringar och textfärger kommer med som de var. [Blockreferenser blir anteckningslänkar](/sv/help/note-links), bilder och filer importeras till din lagring, och dokument med bokmärke kommer in fästa.",
+            "En databas blir en tabell med sina synliga kolumner, flikar blir hopfällbara avsnitt och en tankekarta blir en nästlad lista. Flashcards förblir vanlig text, och en inbäddningsfråga behålls som kod. SiYuan har ingen papperskorg i sina exporter, så raderade dokument stannar kvar i dess historik."
+          ]
+        }
+      ]
+    },
     "standard-notes": {
       "app": "Standard Notes",
       "title": "Exportera dina Standard Notes",
@@ -256,6 +332,29 @@
           "p": [
             "Inloggningar blir [inloggningsposter i Valvet](/sv/help/vault) (med sina webbplatsikoner), kort blir kortposter, SSH-nycklar blir SSH-nyckelposter, och säkra anteckningar och identiteter kommer in som läsbara anteckningar. Mappar från Bitwarden blir taggar, och favoriter kommer in stjärnmärkta. Autentiseringsnycklar (TOTP) följer också med, så [dina 2FA-koder fortsätter att fungera](/sv/help/vault-totp).",
             "Exportfilen innehåller dina lösenord i klartext, så importera den, kontrollera att allt kom fram och radera sedan filen ordentligt. Inne i PrivacyNotes är alltihop krypterat igen, på din enhet och på vägen till servern."
+          ]
+        }
+      ]
+    },
+    "enpass": {
+      "app": "Enpass",
+      "title": "Exportera ditt Enpass-valv",
+      "metaTitle": "Så exporterar du ditt Enpass-valv - PrivacyNotes",
+      "lead": "Enpass exporterar ett valv som en enda .json-fil, och PrivacyNotes gör om inloggningar, kort, anteckningar och identiteter till objekt i Valvet och anteckningar.",
+      "sections": [
+        {
+          "h": "Exportera från Enpass",
+          "steps": [
+            "Öppna Enpass på din dator och lås upp det.",
+            "Välj File > Export, välj valvet och formatet .json.",
+            "Spara filen och ange sedan ditt huvudlösenord. Exportera varje valv för sig."
+          ]
+        },
+        {
+          "h": "Var sakerna hamnar",
+          "p": [
+            "Varje inloggning blir en [inloggning i Valvet](/sv/help/vault) med sin 2FA-nyckel, så [dina koder fortsätter att fungera](/sv/help/vault-totp), och extra webbplatser och egna fält följer med. Ett kort blir ett kort, och en säker anteckning eller en identitet blir en anteckning. Mappar blir taggar, även nästlade, favoriter kommer in som fästa och arkiverade objekt hamnar i arkivet. Objekt i Enpass papperskorg och bifogade filer följer inte med.",
+            "Exporten innehåller dina lösenord i klartext. Importera den, kontrollera att allt kom fram och radera sedan filen."
           ]
         }
       ]
@@ -863,6 +962,332 @@
           "h": "Importera samma fil igen när du vill",
           "p": [
             "En andra import hoppar över de personer du redan har. Den matchar varje kort efter dess ID, sedan efter namn plus ett gemensamt telefonnummer och sedan efter en gemensam e-postadress. Kontakter du redan har sparat ändras inte, så dina ändringar här är i säkerhet."
+          ]
+        }
+      ]
+    },
+    "anytype": {
+      "app": "Anytype",
+      "title": "Exportera ditt Anytype-utrymme",
+      "metaTitle": "Så exporterar du ditt Anytype-utrymme - PrivacyNotes",
+      "lead": "Anytype exporterar ett helt utrymme på en gång som en enda zip i formatet Any-Block JSON. Den filen tar med dina sidor med deras taggar, samlingar, uppgifter, länkar och filer.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/anytype-export.webp",
+            "alt": "Anytypes utrymmesinställningar, sidan Export, Any-Block v1 med File Format JSON och Zip archive, med Include files data och Include archived objects påslagna.",
+            "width": 1576,
+            "height": 800
+          },
+          "h": "Exportera utrymmet som Any-Block JSON",
+          "steps": [
+            "Öppna Anytype på din dator och gå till det utrymme du vill flytta.",
+            "Välj File > Export. Anytype öppnar utrymmesinställningarna på sidan Export. Nyare versioner kallar ett utrymme för en kanal, så sidan heter \"Export Channel\".",
+            "Välj \"Any-Block v1\" och låt File Format stå på JSON.",
+            "Slå på \"Zip archive\", \"Include files data\" och \"Include archived objects\".",
+            "Klicka på \"Export data\" och välj en mapp. Anytype skriver en .zip som är uppkallad efter utrymmet och datumet.",
+            "Släpp in den .zip-filen som den är."
+          ],
+          "p": [
+            "En export rymmer ett utrymme. Har du anteckningar i flera utrymmen, exportera vart och ett och släpp in zipfilerna en efter en."
+          ]
+        },
+        {
+          "h": "Välj Any-Block JSON, inte Markdown eller Protobuf",
+          "p": [
+            "Markdown-exporten behåller texten men tappar understrykning, färger, informationsrutor, justering och kodspråk, och den lämnar ut samlingar. Vi läser den om det är allt du har, och importförhandsgranskningen berättar vad som gick förlorat.",
+            "Any-Block erbjuder också filformatet Protobuf. Det rymmer samma data i en binär form som vi inte läser, så vi ber om JSON-exporten i stället. Any-Block v2 är markerad som en förhandsversion av Anytype och är ingen säkerhetskopia."
+          ]
+        },
+        {
+          "h": "Vad som följer med",
+          "p": [
+            "Sidor, anteckningar, uppgifter och bokmärken blir anteckningar med sina taggar och de skapande- och uppdateringsdatum som Anytype sparade. Anytype har inga mappar, så en sida i en samling hamnar i en mapp uppkallad efter samlingen, och alla andra sidor hamnar på översta nivån.",
+            "Rubriker, listor, checklistor, citat, kod med sitt språk, tabeller, matematik och Mermaid-diagram kommer med som de var. Växlingsblock blir hopfällbara avsnitt och informationsrutor blir informationsrutor. [Länkar och omnämnanden mellan sidor blir anteckningslänkar](/sv/help/note-links), och bilder och filer importeras till din lagring.",
+            "En uppgift kommer som en uppgiftsanteckning, avbockad om den var klar. Egna egenskaper skrivs som en kort lista överst i anteckningen. Sidor i Anytypes papperskorg hamnar i din papperskorg, så du kan återställa eller radera dem där.",
+            "Sidikoner och omslag stannar kvar, och importförhandsgranskningen berättar hur många. Favoriter ingår inte i exporten, så fäst de anteckningarna igen efter importen."
+          ]
+        }
+      ]
+    },
+    "apple-calendar": {
+      "app": "Apple Kalender",
+      "title": "Exportera din Apple Kalender",
+      "metaTitle": "Exportera din Apple Kalender - PrivacyNotes",
+      "lead": "Kalender på en Mac exporterar en kalender i taget som en .ics-fil, och PrivacyNotes läser filen som den är. Varje kalender blir en mapp.",
+      "sections": [
+        {
+          "h": "Exportera en kalender från Kalender på en Mac",
+          "steps": [
+            "Öppna Kalender och visa kalenderlistan till vänster (Visa > Visa kalenderlista).",
+            "Klicka på kalendern du vill ta med.",
+            "Välj Arkiv > Exportera > ”Exportera…” och spara .ics-filen.",
+            "Gör likadant för varje annan kalender du vill ha. Var och en är en egen fil."
+          ]
+        },
+        {
+          "h": "Vad som följer med",
+          "p": [
+            "Varje händelse kommer in med sin dag, sin tid och hur länge den varar, även heldagshändelser och händelser över flera dagar. Återkommande händelser behåller sin regel.",
+            "En kalenders standardaviseringar ligger i Kalenders inställningar, inte i händelserna, så exporten utelämnar dem, och kontrollsteget visar hur många kommande händelser som kommer in utan påminnelse. En avisering du har ställt in på en enskild händelse följer med. Om du importerar samma fil igen hoppar importen över de händelser du redan har."
+          ]
+        }
+      ]
+    },
+    "keepass": {
+      "app": "KeePass",
+      "title": "Exportera din KeePass-databas",
+      "metaTitle": "Exportera din KeePass-databas - PrivacyNotes",
+      "lead": "KeePass exporterar hela databasen som en enda KeePass XML-fil, och PrivacyNotes gör om varje post till en inloggning eller en anteckning. XML-filen behåller mer än CSV-exporten.",
+      "sections": [
+        {
+          "h": "Exportera från KeePass",
+          "steps": [
+            "Öppna din databas i KeePass och lås upp den.",
+            "Välj File > Export.",
+            "Välj ”KeePass XML (2.x)” och spara .xml-filen."
+          ]
+        },
+        {
+          "h": "Välj XML, inte .kdbx",
+          "p": [
+            "Din .kdbx-databasfil är låst med din huvudnyckel, så PrivacyNotes kan inte läsa den, och importen säger det om du släpper den här. KeePass CSV-export fungerar också, men den behåller bara titel, användarnamn, lösenord, webbplats och anteckningar."
+          ]
+        },
+        {
+          "h": "Var sakerna hamnar",
+          "p": [
+            "En post med användarnamn, lösenord, webbplats eller 2FA-nyckel blir en [inloggning i Valvet](/sv/help/vault), och alla andra poster blir en säker anteckning. Extra webbplatser och dina egna fält följer med, ett skyddat fält förblir dolt, och utgångsdatumet blir ett fält. 2FA-nyckeln följer också med, så [dina koder fortsätter att fungera](/sv/help/vault-totp). Bifogade filer följer också med, i inloggningens avsnitt Filer eller i slutet av anteckningen. Grupper och taggar blir taggar. Poster i Recycle Bin och äldre versioner av en post följer inte med.",
+            "Exporten innehåller dina lösenord i klartext. Importera den, kontrollera att allt kom fram och radera sedan filen."
+          ]
+        }
+      ]
+    },
+    "keepassxc": {
+      "app": "KeePassXC",
+      "title": "Exportera din KeePassXC-databas",
+      "metaTitle": "Exportera din KeePassXC-databas - PrivacyNotes",
+      "lead": "KeePassXC exporterar din databas som en XML-fil eller en CSV-fil, och PrivacyNotes läser båda. XML-exporten behåller allt som CSV-filen utelämnar.",
+      "sections": [
+        {
+          "h": "Exportera från KeePassXC",
+          "steps": [
+            "Öppna din databas i KeePassXC och lås upp den.",
+            "Välj Database > Export > ”XML File...”.",
+            "Bekräfta varningen om den okrypterade filen och spara den."
+          ]
+        },
+        {
+          "h": "XML eller CSV",
+          "p": [
+            "Välj XML. CSV-filen behåller titel, användarnamn, lösenord, webbplats, anteckningar, 2FA-nyckel, datum och grupp, men inga taggar, inga egna fält, ingen extra webbplats, inget utgångsdatum och inga bifogade filer. Själva .kdbx-filen är låst, så PrivacyNotes kan inte läsa den."
+          ]
+        },
+        {
+          "h": "Var sakerna hamnar",
+          "p": [
+            "En post med användarnamn, lösenord, webbplats eller 2FA-nyckel blir en [inloggning i Valvet](/sv/help/vault), och alla andra poster blir en säker anteckning. Egna fält kommer in som fält, ett skyddat fält förblir dolt, och 2FA-nyckeln följer med, så [dina koder fortsätter att fungera](/sv/help/vault-totp). Bifogade filer följer också med, i inloggningens avsnitt Filer eller i slutet av anteckningen. Grupper och taggar blir taggar. Poster i Recycle Bin och äldre versioner av en post följer inte med.",
+            "Exporten innehåller dina lösenord i klartext. Importera den, kontrollera att allt kom fram och radera sedan filen."
+          ]
+        }
+      ]
+    },
+    "lastpass": {
+      "app": "LastPass",
+      "title": "Exportera ditt LastPass-valv",
+      "metaTitle": "Exportera ditt LastPass-valv - PrivacyNotes",
+      "lead": "LastPass exporterar ditt valv som en enda .csv-fil, och PrivacyNotes gör om lösenorden till inloggningar och de säkra anteckningarna till anteckningar eller kort.",
+      "sections": [
+        {
+          "h": "Exportera från LastPass",
+          "steps": [
+            "Logga in på ditt LastPass-valv i en webbläsare.",
+            "Välj Advanced options > Export.",
+            "Välj ”Export data for use anywhere” och bekräfta med ditt huvudlösenord. LastPass sparar en .csv-fil."
+          ]
+        },
+        {
+          "h": "Var sakerna hamnar",
+          "p": [
+            "Varje lösenord blir en [inloggning i Valvet](/sv/help/vault) med sin 2FA-nyckel, så [dina koder fortsätter att fungera](/sv/help/vault-totp). En säker anteckning blir en anteckning, och en betalkortsanteckning blir ett kort. Mappar blir taggar, även nästlade, och favoriter blir fästa. Filen har inga datum, så varje post får dagen då du importerar den.",
+            "Exporten innehåller dina lösenord i klartext. Importera den, kontrollera att allt kom fram och radera sedan filen."
+          ]
+        }
+      ]
+    },
+    "nordpass": {
+      "app": "NordPass",
+      "title": "Exportera ditt NordPass-valv",
+      "metaTitle": "Exportera ditt NordPass-valv - PrivacyNotes",
+      "lead": "NordPass exporterar ditt valv som en enda .csv-fil, och PrivacyNotes gör om lösenord, anteckningar, kort och personlig information till poster i Valvet.",
+      "sections": [
+        {
+          "h": "Exportera från NordPass",
+          "steps": [
+            "Öppna NordPass och lås upp det.",
+            "Gå till Settings och välj ”Export Items”.",
+            "Bekräfta med ditt huvudlösenord och spara .csv-filen."
+          ]
+        },
+        {
+          "h": "Var sakerna hamnar",
+          "p": [
+            "Varje lösenord blir en [inloggning i Valvet](/sv/help/vault) med sina extra webbplatser och egna fält, ett dolt fält förblir dolt. Anteckningar kommer in som anteckningar, kort som kort och personlig information som en anteckning med varje uppgift på en egen rad. Varje posts mapp blir en tagg. Filen anger bara mappen en post ligger i, inte mapparna ovanför.",
+            "I gratisplanen sparar NordPass inga 2FA-nycklar, så filen har inga. Exporten innehåller dina lösenord i klartext. Importera den, kontrollera att allt kom fram och radera sedan filen."
+          ]
+        }
+      ]
+    },
+    "proton-pass": {
+      "app": "Proton Pass",
+      "title": "Exportera ditt Proton Pass-valv",
+      "metaTitle": "Exportera ditt Proton Pass-valv - PrivacyNotes",
+      "lead": "Proton Pass exporterar dina valv som en .zip-fil, en .csv-fil eller en PGP-krypterad fil. PrivacyNotes läser .zip- och .csv-filen, och .zip-filen behåller mest.",
+      "sections": [
+        {
+          "h": "Exportera från Proton Pass",
+          "steps": [
+            "Öppna Proton Pass och gå till Settings > Export.",
+            "Välj ZIP under File format.",
+            "Klicka på Export och bekräfta med ditt Proton-lösenord."
+          ]
+        },
+        {
+          "h": "Välj ZIP, inte PGP-encrypted",
+          "p": [
+            "Den PGP-krypterade filen är låst med din lösenfras, så PrivacyNotes kan inte läsa den, och importen säger det. .csv-filen fungerar också, men den har inga egna fält."
+          ]
+        },
+        {
+          "h": "Var sakerna hamnar",
+          "p": [
+            "Varje inloggning blir en [inloggning i Valvet](/sv/help/vault) med sina extra webbplatser, egna fält och datum. 2FA-nyckeln följer med, så [dina koder fortsätter att fungera](/sv/help/vault-totp). När en post har både en e-postadress och ett användarnamn fyller användarnamnet inloggningen och e-postadressen blir ett fält. Anteckningar kommer in som anteckningar, kort som kort och identiteter som anteckningar med varje uppgift på en egen rad. Varje hide-my-email-alias blir en anteckning med sin adress, så du behåller listan över vilken adress du gav till vilken webbplats. Proton fortsätter att vidarebefordra e-posten så länge ditt Proton-konto är öppet. Med fler än ett valv blir varje valv en tagg. Poster i papperskorgen följer inte med.",
+            "Exporten innehåller dina lösenord i klartext. Importera den, kontrollera att allt kom fram och radera sedan filen."
+          ]
+        }
+      ]
+    },
+    "dashlane": {
+      "app": "Dashlane",
+      "title": "Exportera ditt Dashlane-valv",
+      "metaTitle": "Så exporterar du ditt Dashlane-valv - PrivacyNotes",
+      "lead": "Dashlane exporterar ditt valv som en .zip med CSV-filer, och PrivacyNotes gör om inloggningar, säkra anteckningar och betalkort till objekt i Valvet och anteckningar.",
+      "sections": [
+        {
+          "h": "Exportera från Dashlane",
+          "steps": [
+            "Öppna ditt Dashlane-valv i webbläsartillägget eller webbappen.",
+            "Välj Settings > Export data.",
+            "Välj CSV-formatet och spara .zip-filen."
+          ]
+        },
+        {
+          "h": "CSV, inte .dash",
+          "p": [
+            "Välj CSV. En .dash-export är låst med ett eget lösenord, och PrivacyNotes säger det om du släpper den här."
+          ]
+        },
+        {
+          "h": "Var sakerna hamnar",
+          "p": [
+            "Varje inloggning blir en [inloggning i Valvet](/sv/help/vault) med sin 2FA-nyckel, så [dina koder fortsätter att fungera](/sv/help/vault-totp). En säker anteckning blir en anteckning och ett betalkort ett kort. ID-handlingar och personuppgifter blir anteckningar med sina uppgifter. Kategorier blir taggar, även nästlade. Dashlane har en webbplats per inloggning, så en andra webbplats finns inte i filen.",
+            "Exporten innehåller dina lösenord i klartext. Importera den, kontrollera att allt kom fram och radera sedan filen."
+          ]
+        }
+      ]
+    },
+    "daylio": {
+      "app": "Daylio",
+      "title": "Exportera dina Daylio-inlägg",
+      "metaTitle": "Så exporterar du din Daylio-säkerhetskopia - PrivacyNotes",
+      "lead": "Daylio exporterar en .daylio-säkerhetskopia från More > Backup & Restore. PrivacyNotes läser den filen och bygger upp varje inlägg som ett dagboksinlägg, med sitt humör, sina faktorer och sina foton.",
+      "sections": [
+        {
+          "h": "Exportera .daylio-säkerhetskopian",
+          "steps": [
+            "Stäng Daylio helt och öppna det sedan igen. En säkerhetskopia som görs direkt efter ett nytt inlägg kan sakna det inlägget tills appen har startats om.",
+            "Välj More > Backup & Restore > Advanced Options > Export.",
+            "Daylio öppnar ett delningsblad, inte en dialogruta för att spara. Spara filen bland dina filer eller i en molnlagring som du kan öppna på den här enheten.",
+            "Den .daylio-fil du sparade är filen du ska importera."
+          ]
+        },
+        {
+          "h": "Välj säkerhetskopian, inte CSV-filen",
+          "p": [
+            "More > Export Entries skriver en CSV, en Premium-funktion i Daylio. PrivacyNotes läser den också, men CSV-filen har inga foton, inga röstmemon och inga humörgrupper, så ett humör som du själv har namngett eller döpt om hamnar i inlägget som text i stället för i humörmätvärdet. Använd .daylio-säkerhetskopian när du kan."
+          ]
+        },
+        {
+          "h": "Vad som följer med",
+          "p": [
+            "[Varje inlägg hamnar i Dagböcker](/sv/help/journal), på den dag och vid den tid som Daylio visar, och två inlägg på samma dag förblir två inlägg. Varje humör fyller i [humörmätvärdet](/sv/help/choose-trackers) från sin Daylio-humörgrupp, så ett omdöpt humör behåller sin plats på skalan, och ett humör som du namngett själv inleder också inlägget.",
+            "Daylios Activities blir [faktorer](/sv/help/factors), och en ny faktor behåller sin Daylio-grupp. Skalor som Energy eller Stress kommer som en lista i slutet av inlägget. Anteckningstitlar, fet stil, kursiv, understrykning, genomstrykning och listor följer med, foton importeras som bilder, röstmemon som bilagor, och ett stjärnmärkt inlägg förblir stjärnmärkt. Mål och viktiga dagar stannar kvar, och importsammanfattningen räknar dem."
+          ]
+        }
+      ]
+    },
+    "diarium": {
+      "app": "Diarium",
+      "title": "Exportera din Diarium-dagbok",
+      "metaTitle": "Så exporterar du din Diarium-dagbok - PrivacyNotes",
+      "lead": "Diarium exporterar din dagbok som JSON från sin Export-meny. PrivacyNotes läser den exporten och bygger upp varje inlägg som ett dagboksinlägg, med sitt betyg, sina taggar och sina bilagor.",
+      "sections": [
+        {
+          "h": "Exportera JSON med bilagor",
+          "steps": [
+            "Öppna Diarium och välj Export i menyn.",
+            "Välj JSON som format och slå på Attachments.",
+            "Välj Save to local storage och välj en mapp. Diarium sparar en .zip som innehåller JSON-filen och dina foton och filer.",
+            "Den .zip-filen är filen du ska importera."
+          ]
+        },
+        {
+          "h": "Låt Attachments vara på",
+          "p": [
+            "Med Attachments av sparar Diarium en ren .json. PrivacyNotes importerar texten, men varje foto och fil stannar kvar, och importsammanfattningen räknar dem. Exportera igen med Attachments på och släpp in .zip-filen i stället.",
+            "Create separate file for each entry spelar ingen roll: PrivacyNotes läser varje JSON-fil i .zip-filen. Exporterna som DOCX, TXT, HTML och PDF samt .diary-säkerhetskopian går inte att importera, så välj JSON."
+          ]
+        },
+        {
+          "h": "Vad som följer med",
+          "p": [
+            "[Varje inlägg hamnar i Dagböcker](/sv/help/journal), på den dag och vid den tid som Diarium visar. Stjärnbetyget fyller i [humörmätvärdet](/sv/help/choose-trackers). Taggar blir anteckningstaggar och [faktorer](/sv/help/factors), och personer blir faktorer i en grupp som heter Personer.",
+            "Fet stil, kursiv, understrykning, genomstrykning, överstrykningar, textfärger, listor och länkar följer med, och en länk till ett annat inlägg blir en [anteckningslänk](/sv/help/note-links) när det inlägget finns i samma export. Diariums Trackers kommer som en lista i slutet av inlägget, väder, sol och måne som en rad överst, och en plats blir inläggets plats. Foton importeras som bilder, och videor, ljud och PDF-filer som bilagor."
+          ]
+        }
+      ]
+    },
+    "google-journal": {
+      "app": "Google Journal",
+      "title": "Exportera dina Google Journal-inlägg",
+      "metaTitle": "Så exporterar du dina Google Journal-inlägg - PrivacyNotes",
+      "lead": "Google Journal exporterar via Google Takeout när säkerhetskopieringen är på. PrivacyNotes läser .zip-filen från Takeout och bygger upp varje inlägg som ett dagboksinlägg, med sina foton och videor.",
+      "sections": [
+        {
+          "h": "Slå på säkerhetskopieringen först",
+          "p": [
+            "Takeout visar ingen Journal förrän Journal säkerhetskopieras till ditt Google-konto. Slå på säkerhetskopieringen först, annars hittar du inte Journal i Takeout-listan."
+          ],
+          "steps": [
+            "Öppna Journal på din Pixel och gå till Settings.",
+            "Slå på Back up your journal.",
+            "Vänta några minuter. Journal dyker upp i Takeout först när säkerhetskopieringen är på."
+          ]
+        },
+        {
+          "h": "Exportera Journal från Google Takeout",
+          "steps": [
+            "Öppna takeout.google.com och logga in med samma Google-konto.",
+            "Klicka på Deselect all och kryssa sedan bara i Journal (\"Your journal entries and attachments from Journal\").",
+            "Klicka på Next step, behåll filtypen .zip och klicka på Create export.",
+            "Google skickar en länk när arkivet är klart. Ladda ner .zip-filen: det är filen du ska importera."
+          ]
+        },
+        {
+          "h": "Vad som följer med",
+          "p": [
+            "[Varje inlägg hamnar i Dagböcker](/sv/help/journal), på den dag du valde för det i Journal. Varje inlägg behåller sin titel och sin text, och foton och videor importeras som bilder och bilagor. En karta på ett inlägg följer med som en bild.",
+            "Takeout innehåller inga platsnamn, skrivförslag, bokmärken eller Journals reflektioner, så de stannar kvar i Journal. Importsammanfattningen säger det."
           ]
         }
       ]

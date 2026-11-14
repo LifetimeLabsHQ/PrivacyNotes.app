@@ -20,6 +20,8 @@ import { detectPlatform, isNativeStoreBuild } from './devices';
 export { isNativeStoreBuild };
 import { isDemoMode } from './demo';
 import { APEX_ORIGIN } from './hosts';
+import { cryptoCheckoutPage, newCryptoOrderId, rememberCryptoOrder, reusableCryptoOrder } from './cryptoCheckout';
+import { cryptoCheckoutReleased } from './cryptoRelease';
 
 // The CheckoutLauncher page runs the Paddle overlay on an approved Paddle
 // domain. Desktop sends users here in their system browser.
@@ -165,6 +167,44 @@ export async function startProCheckout(
       }
       return startGooglePlayProPurchase(pubkey, onComplete, onError);
   }
+}
+
+/**
+ * Whether this build offers the crypto checkout. Not while its release
+ * switch is off (`cryptoRelease.ts`), and never on a store build:
+ * Apple and Google require their own billing for digital goods. Web, desktop
+ * and the direct APK open it like the card checkout.
+ * Spec: docs/internal/plans/crypto-payments.md (sections 8 and 11b)
+ */
+export function cryptoCheckoutOffered(): boolean {
+  return cryptoCheckoutReleased() && !isNativeStoreBuild();
+}
+
+/**
+ * Start a crypto purchase of Pro: the order this account is already waiting
+ * on while it is open, else a fresh order id, remembered so the app can wait
+ * on it, and the /crypto-checkout page in a new tab (web) or the system
+ * browser (desktop, direct APK). The waiting banner registers a new order
+ * with the session (CryptoPaymentBanner.tsx), so it can only pay for this
+ * account. A separate page from /checkout on purpose: Paddle approved the
+ * crypto route on the condition that it stays apart from theirs, so this path
+ * names nothing of Paddle's.
+ *
+ * Must stay synchronous on the web, inside the click, or a popup blocker eats
+ * the tab.
+ * Spec: docs/internal/plans/crypto-payments.md (section 11b)
+ */
+export function startCryptoProCheckout(pubkey: string): void {
+  if (isDemoMode() || !cryptoCheckoutOffered()) return;
+  const reused = reusableCryptoOrder(pubkey);
+  const order = reused?.order ?? newCryptoOrderId();
+  if (!reused) rememberCryptoOrder(order, pubkey);
+  const url = cryptoCheckoutPage(`order=${encodeURIComponent(order)}&pubkey=${encodeURIComponent(pubkey)}`);
+  if (detectPlatform() === 'web') {
+    window.open(url, '_blank', 'noopener,noreferrer');
+    return;
+  }
+  void import('@tauri-apps/plugin-opener').then(({ openUrl }) => openUrl(url));
 }
 
 /**

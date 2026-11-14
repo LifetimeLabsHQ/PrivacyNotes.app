@@ -9,6 +9,7 @@ import { proUnlocked } from '../demo';
 import { currentImageOptions, isSupportedImage, processImage } from '../imageProcessing';
 import type { LocalNote } from '../db';
 import { parseMarkdown } from '../import/markdown';
+import { ensureImportLogLoaded } from '../i18n';
 import { applyImport } from '../import/apply';
 import { fileUnfiled } from '../import/destination';
 import type { StagedBlob } from '../import/types';
@@ -144,6 +145,7 @@ export function useFilesUpload({
     for (const file of files) {
       let created: string[] = [];
       try {
+        await ensureImportLogLoaded();
         const parsed = await parseMarkdown(file);
         if (target === undefined) target = makeTarget?.() ?? null;
         let toApply = parsed;

@@ -249,6 +249,8 @@
       "unknown": "Registro desconocido {{id}}",
       "sleepHours": "Horas de sueño",
       "sleepQuality": "Calidad del sueño",
+      "bpSystolic": "Presión arterial, sistólica",
+      "bpDiastolic": "Presión arterial, diastólica",
       "avgDays_one": "media, {{count}} día",
       "avgDays_other": "media, {{count}} días",
       "sumDays_one": "total, {{count}} día",

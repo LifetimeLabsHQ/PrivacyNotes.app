@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { isBelowVersionFloor } from './versionFloor';
+import { createListeners } from './listeners';
+import { readFlag } from './localStore';
 
 /**
  * User-controlled sync pause, per device.
@@ -20,18 +22,9 @@ import { isBelowVersionFloor } from './versionFloor';
 
 const STORAGE_KEY = 'privacynotes.syncPaused';
 
-function readStored(): boolean {
-  try {
-    if (typeof localStorage === 'undefined') return false;
-    return localStorage.getItem(STORAGE_KEY) === '1';
-  } catch {
-    // Unreadable storage: fail open, sync runs.
-    return false;
-  }
-}
-
-let paused = readStored();
-const listeners = new Set<() => void>();
+// Unreadable storage reads as off: fail open, sync runs.
+let paused = readFlag(STORAGE_KEY);
+const { subscribe, notify } = createListeners();
 
 // A pause set in another tab reaches this one: the storage event fires in
 // every other tab of this origin, so the device stops talking to the server
@@ -40,10 +33,10 @@ const listeners = new Set<() => void>();
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   window.addEventListener('storage', (e) => {
     if (e.key !== STORAGE_KEY && e.key !== null) return;
-    const next = readStored();
+    const next = readFlag(STORAGE_KEY);
     if (next === paused) return;
     paused = next;
-    for (const cb of listeners) cb();
+    notify();
   });
 }
 
@@ -60,7 +53,7 @@ export function setSyncPaused(next: boolean): void {
   } catch {
     // Storage blocked - the in-memory flag still holds for this session.
   }
-  for (const cb of listeners) cb();
+  notify();
 }
 
 /**
@@ -76,7 +69,7 @@ let dmsHeld = false;
 export function setDmsHold(next: boolean): void {
   if (dmsHeld === next) return;
   dmsHeld = next;
-  for (const cb of listeners) cb();
+  notify();
 }
 
 /**
@@ -86,13 +79,6 @@ export function setDmsHold(next: boolean): void {
  */
 export function isServerWriteBlocked(): boolean {
   return isBelowVersionFloor() || isSyncPaused() || dmsHeld;
-}
-
-function subscribe(cb: () => void) {
-  listeners.add(cb);
-  return () => {
-    listeners.delete(cb);
-  };
 }
 
 /** Reactive isSyncPaused() for the pill and the sync panel. */

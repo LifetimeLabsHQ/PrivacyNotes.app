@@ -276,6 +276,8 @@
       "unknown": "متتبع غير معروف {{id}}",
       "sleepHours": "ساعات النوم",
       "sleepQuality": "جودة النوم",
+      "bpSystolic": "ضغط الدم، الانقباضي",
+      "bpDiastolic": "ضغط الدم، الانبساطي",
       "avgDays_zero": "المتوسط، عدد الأيام: {{count}}",
       "avgDays_one": "المتوسط، عدد الأيام: {{count}}",
       "avgDays_two": "المتوسط، عدد الأيام: {{count}}",

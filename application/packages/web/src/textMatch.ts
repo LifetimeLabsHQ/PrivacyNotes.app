@@ -1,5 +1,6 @@
 import { withoutArabicArticle } from './arabicFold';
-import { foldText } from './textFold';
+import { ASCII_ONLY, foldText } from './textFold';
+import { ARABIC_LETTER } from './textDirection';
 
 /**
  * One match of a query in a text. `rank` says where it starts: 3 at the start
@@ -10,10 +11,9 @@ export type TextMatch = { rank: 1 | 2 | 3; start: number; end: number };
 
 const WHITESPACE_RUN = /\s+/g;
 const WHITESPACE = /\s/;
-const WORD_CHAR = /[\p{L}\p{N}\p{M}]/u;
-const ARABIC = /\p{Script=Arabic}/u;
+/** A letter, a digit or a combining mark: a character inside a word. */
+export const WORD_CHAR = /[\p{L}\p{N}\p{M}]/u;
 const LETTER_OR_MARK = /[\p{L}\p{M}]/u;
-const ASCII_ONLY = /^[\x00-\x7f]*$/;
 
 // A filter runs on every keystroke, and the Tasks pillar matches whole note
 // bodies, so a long text is folded once and remembered. The memo forgets
@@ -64,7 +64,7 @@ function charFrom(s: string, i: number): string {
  * starts, so "امان" starts a word in "الأمان" here as it does in the index.
  */
 function afterArabicArticle(folded: string, at: number): boolean {
-  if (!ARABIC.test(charBefore(folded, at))) return false;
+  if (!ARABIC_LETTER.test(charBefore(folded, at))) return false;
   let start = at;
   for (let ch = charBefore(folded, start); ch && WORD_CHAR.test(ch); ch = charBefore(folded, start)) start -= ch.length;
   let end = at;
@@ -131,7 +131,7 @@ function originalRange(text: string, folded: string, from: number, to: number): 
     }
   }
   if (start < 0) start = Math.min(from, text.length);
-  if (ARABIC.test(text.slice(start, end))) {
+  if (ARABIC_LETTER.test(text.slice(start, end))) {
     for (let ch = charBefore(text, start); ch && LETTER_OR_MARK.test(ch); ch = charBefore(text, start)) start -= ch.length;
     for (let ch = charFrom(text, end); ch && LETTER_OR_MARK.test(ch); ch = charFrom(text, end)) end += ch.length;
   }

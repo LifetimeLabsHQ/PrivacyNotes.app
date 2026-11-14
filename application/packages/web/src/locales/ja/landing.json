@@ -43,7 +43,7 @@
     },
     "subhead": "ノート、タスク、パスワード、ジャーナル、ファイル、カレンダー、連絡先、ブックマーク、そして気分と服薬の記録。ひとつのプライベートなアプリです。",
     "tryDemo": "デモを試す",
-    "microcopy": "ずっと無料。クレジットカード不要。Google、Apple、GitHub、または12単語のフレーズだけでサインイン。",
+    "microcopy": "ずっと無料。クレジットカード不要。Google、Apple、GitHub、またはリカバリーフレーズだけでサインイン。",
     "alreadyHaveVault": "すでに保管庫をお持ちですか?ログイン",
     "trustSigned": "GitHubの署名済みリリース"
   },
@@ -167,8 +167,6 @@
     "useGitBody": "一日の終わりに、その日のコミットをノートとして保存。翌月になってもまた見つけられます。",
     "useClipTitle": "コピーしたものなら何でも",
     "useClipBody": "クリップボード、コマンドの出力、エラーメッセージを、そのままノートに送れます。",
-    "useToolsTitle": "自分のツールの一部に",
-    "useToolsBody": "このコマンドは JSON で応答し、わかりやすい終了コードを返すので、スクリプトはノートが保存されたことを確認できます。",
     "useShortcutTitle": "キーボードショートカットからノートを",
     "useShortcutBody": "システムの設定で選んだキーを押すと、アプリを閉じていてもクイックノート用のボックスが開きます。ノートは「Agent」フォルダに入ります。",
     "howLink": "privacynotes の仕組みを読む"
@@ -359,14 +357,15 @@
     "freeVault": "50 MBストレージ、1ファイル5 MBまで",
     "freeImport": "読み込みと書き出し（KeepやObsidianなど）",
     "freeAnon": "匿名サインイン、メールアドレス不要",
-    "earlyAdopterBadge": "アーリーアダプター"
+    "earlyAdopterBadge": "アーリーアダプター",
+    "payMethods": "カード、またはBitcoin、Ethereum、Lightning、USDC、USDTで支払えます。"
   },
   "underHood": {
     "heading": "内部の仕組み",
     "cipherTerm": "xchacha20poly1305",
     "cipherDesc": "鍵はクライアント側で導出",
     "phraseTerm": "BIP-39フレーズ",
-    "phraseDesc": "12単語、Ed25519署名",
+    "phraseDesc": "デバイス上で生成、Ed25519署名",
     "rlsDesc": "RLSはあなたの公開鍵に紐付け",
     "trackingTerm": "トラッカーゼロ",
     "trackingDesc": "ピクセルもサードパーティのトラッカーもなし",
@@ -390,6 +389,7 @@
       "sleep": "良い、7.5時間",
       "sleepScore": "82",
       "heartRate": "61 bpm",
+      "bloodPressure": "118/76 mmHg",
       "activity": "普通",
       "medication": "服用",
       "energy": "6 / 10",
@@ -526,7 +526,7 @@
       "hotkeys": "ショートカット",
       "rating": "評価"
     },
-    "intro": "<brand/>はノート、タスク、パスワード、ジャーナル、ファイル、カレンダー、連絡先、ブックマークをひとつにまとめ、気分と服薬も記録できます。すべては12単語から作られる鍵によってデバイス上で暗号化され、<nowrap>スイス</nowrap>にある私たちのサーバー上でも暗号化されたままです。オフラインでも動作し、アプリはオープンソースです。",
+    "intro": "<brand/>はノート、タスク、パスワード、ジャーナル、ファイル、カレンダー、連絡先、ブックマークをひとつにまとめ、気分と服薬も記録できます。すべてはリカバリーフレーズから作られる鍵によってデバイス上で暗号化され、<nowrap>スイス</nowrap>にある私たちのサーバー上でも暗号化されたままです。オフラインでも動作し、アプリはオープンソースです。",
     "versionHeading": "バージョン",
     "windowVersion": "バージョン{{version}}",
     "windowHelp": "ヘルプセンター",

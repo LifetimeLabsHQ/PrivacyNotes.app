@@ -1,4 +1,4 @@
-import { toLocalIso } from './intlFormat';
+import { parseDay, toLocalIso } from './localDate';
 import type { JournalEntry } from './trackerStats';
 import type {
   DayPoint,
@@ -15,11 +15,6 @@ import type {
  * so a day is the person's calendar day, never a UTC slice.
  * Spec: docs/internal/specs/wellness-statistics.md (section 5)
  */
-
-function parseDay(iso: string): Date {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y!, m! - 1, d!);
-}
 
 function addDays(iso: string, n: number): string {
   const d = parseDay(iso);

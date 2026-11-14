@@ -249,6 +249,8 @@
       "unknown": "Suivi inconnu {{id}}",
       "sleepHours": "Heures de sommeil",
       "sleepQuality": "Qualité du sommeil",
+      "bpSystolic": "Tension artérielle, haut",
+      "bpDiastolic": "Tension artérielle, bas",
       "avgDays_one": "moy., {{count}} jour",
       "avgDays_other": "moy., {{count}} jours",
       "sumDays_one": "total, {{count}} jour",

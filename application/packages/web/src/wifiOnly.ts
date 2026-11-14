@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { detectPlatform } from './devices';
+import { createListeners } from './listeners';
+import { readFlag } from './localStore';
 
 /**
  * "Files on wifi only" - Android only, device-local.
@@ -30,17 +32,8 @@ export function wifiOnlyAvailable(): boolean {
   return detectPlatform() === 'android' && connection() !== null;
 }
 
-function readStored(): boolean {
-  try {
-    if (typeof localStorage === 'undefined') return false;
-    return localStorage.getItem(STORAGE_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-let enabled = readStored();
-const listeners = new Set<() => void>();
+let enabled = readFlag(STORAGE_KEY);
+const { subscribe, notify } = createListeners();
 
 function isFilesWifiOnly(): boolean {
   return enabled;
@@ -68,10 +61,6 @@ export function uploadsHeldForWifi(): boolean {
   return connection()?.type === 'cellular';
 }
 
-function notify(): void {
-  for (const cb of listeners) cb();
-}
-
 // Re-evaluate on connection change so the pill flips live, and nudge the
 // upload queues the moment wifi returns instead of waiting out the
 // post-sync retry cooldown. Listener installed once at module load;
@@ -85,13 +74,6 @@ connection()?.addEventListener?.('change', () => {
   wasHeld = held;
   notify();
 });
-
-function subscribe(cb: () => void) {
-  listeners.add(cb);
-  return () => {
-    listeners.delete(cb);
-  };
-}
 
 /** Reactive [enabled, held] pair for the switch and the pill. */
 export function useFilesWifiOnly(): { enabled: boolean; held: boolean } {

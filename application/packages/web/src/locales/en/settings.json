@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "All settings",
+    "dockWindow": "Dock to the side",
+    "dockOtherSide": "Move to the other side",
     "fillWindow": "Use the full window",
     "restoreWindow": "Back to the normal size"
   },
@@ -168,6 +170,8 @@
     "peekDark": "Showing your dark theme for now. Auto follows your system again when you close Settings.",
     "unlockThemes": "Unlock all themes with Pro",
     "startViewTitle": "Show when app opens",
+    "reopenLastOpenTitle": "Reopen the last item",
+    "reopenLastOpenDesc": "When the app starts, you get the item that was open when you quit. Off starts on the list, with nothing open.",
     "viewTitle": "Show items as",
     "viewDesc": "Auto follows your screen width.",
     "openInTabsTitle": "Show the open item in a tab",
@@ -198,6 +202,7 @@
     "linkModifierDesc": "A plain click places the cursor. A tap still opens the link. This device only.",
     "typedSymbolsTitle": "Turn typed symbols into arrows and math signs",
     "typedSymbolsDesc": "For example, -> becomes →, != becomes ≠ and >= becomes ≥.",
+    "linkSuggestionsDesc": "Connections also lists notes on the same topic that you have not linked yet. Turn it off to show the Connections icon only on notes with links.",
     "confirmTrashTitle": "Ask before deleting",
     "confirmTrashDesc": "Confirm before an item goes to the trash.",
     "confirmArchiveTitle": "Ask before archiving",
@@ -613,5 +618,18 @@
     "loadError": "The dead man's switch could not be loaded. Check your connection and try again.",
     "confirmTitle": "Turn on the dead man's switch?",
     "confirmBody": "If none of your devices goes online for {{period}}, the server deletes your encrypted data. This cannot be undone. Your devices still hold their notes."
+  },
+  "onDeviceAi": {
+    "title": "Smart connections",
+    "desc": "Finds notes with the same meaning, even in other words or another language. It uses offline AI (<model>bekko-static</model>) that runs only on this device.",
+    "on": "On. Suggestions also include notes with the same meaning. The offline AI uses {{size}} on this device.",
+    "kept": "Off. The offline AI stays on this device, so turning it on again needs no download.",
+    "downloadSize": "Download · {{size}}",
+    "downloadingLabel": "Offline AI download",
+    "loading": "Loading the offline AI",
+    "unavailable": "The demo cannot download the offline AI.",
+    "failed": "The download did not finish. Try again.",
+    "remove": "Remove from this device ({{size}})",
+    "howItWorks": "How it works"
   }
 }

@@ -28,7 +28,8 @@ export function ScalePill({
   value?: number;
   expanded: boolean;
   onToggle: () => void;
-  onChange: (v: number) => void;
+  /** `undefined` removes the value. */
+  onChange: (v: number | undefined) => void;
   readOnly?: boolean;
   min?: number;
   max?: number;
@@ -59,6 +60,7 @@ export function ScalePill({
         max={max}
         value={value}
         onPick={(n) => { onChange(n); onToggle(); }}
+        onClear={() => onChange(undefined)}
         label={label}
         ends={[/\d/.test(low) ? low : `${min} · ${low}`, /\d/.test(high) ? high : `${max} · ${high}`]}
         className="w-full max-w-[420px]"

@@ -12,7 +12,7 @@ Bu bizim Zürih'teki gerçek veritabanımız, çizimi değil. Aşağıdaki seçe
 
 ## Bir not yazdığınızda ne olur
 
-1. 12 kelimelik ifadeniz bir anahtara dönüşür. Bu, cihazınızda olur.
+1. Kurtarma ifadeniz bir anahtara dönüşür. Bu, cihazınızda olur.
 2. Not, o anahtarla cihazınızda şifrelenir. Kendi diskinize de böyle kaydedilir, bize de böyle ulaşır.
 3. Şifreli notu alır ve saklarız. Yukarıdaki görsel bunun nasıl göründüğüdür.
 4. Aynı ifadeye sahip herhangi bir cihaz aynı anahtarı üretir ve notu açar.

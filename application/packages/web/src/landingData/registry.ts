@@ -38,7 +38,7 @@ export const BENEFITS = {
   'private-architecture': {
     icon: 'lock',
     title: 'Private by architecture',
-    body: 'Notes encrypt on your device with a key derived from your 12-word phrase. With self-custody, that key never leaves your devices.',
+    body: 'Notes encrypt on your device with a key derived from your recovery phrase. With self-custody, that key never leaves your devices.',
   },
   'note-links': {
     icon: 'graph',
@@ -93,7 +93,7 @@ export const VS_ROWS: Record<string, VsRow> = {
   },
   'no-account': {
     label: 'No email or account required',
-    small: 'Start and sync with a 12-word phrase alone',
+    small: 'Start and sync with a recovery phrase alone',
     group: 'privacy',
     us: { v: 'yes' },
   },
@@ -203,7 +203,7 @@ export const SHARED_FAQS = {
     a: 'You can check it instead. Notes are encrypted on your device with XChaCha20-Poly1305, keys derived from your phrase, and the encryption code and threat model are published. You can watch the ciphertext leave your own browser in the network tab. With self-custody, the key never reaches us either.',
   },
   'lose-phrase': {
-    q: 'What if I lose my 12-word phrase?',
+    q: 'What if I lose my recovery phrase?',
     a: 'With self-custody, nobody can recover the notes: a reset flow would also be a backdoor. If your account keeps a custodial copy of the phrase, a connected login restores it. Keep the phrase like a physical key: in a password manager or somewhere safe.',
   },
   'export-leave': {
@@ -212,6 +212,6 @@ export const SHARED_FAQS = {
   },
   'account-needed': {
     q: 'Do I need an account?',
-    a: 'Not to try it: the demo is a full app with no signup. To keep notes and sync them you create a vault, which needs a 12-word phrase, or a Google, Apple, or GitHub sign-in if you prefer. An email address is never required.',
+    a: 'Not to try it: the demo is a full app with no signup. To keep notes and sync them you create a vault, which needs a recovery phrase, or a Google, Apple, or GitHub sign-in if you prefer. An email address is never required.',
   },
 } as const;

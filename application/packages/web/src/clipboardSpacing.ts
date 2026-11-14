@@ -31,6 +31,7 @@ import type { EditorView } from '@tiptap/pm/view';
 import { paragraphGapCss, readLineSpacing, readPasteFormat, withCopyFormat, type CopyFormat } from './theme';
 import { END_BREAK_ATTR, LINES_ATTR, LINE_BREAK_ATTR, joinParagraphLines } from './paragraphLines';
 import { keepPaletteStyles } from './pasteStyles';
+import { keepWindowsPathBackslashes } from './pastedPaths';
 
 /** Elements that only group their children, so a paragraph inside one still
  *  sits in the main flow of the text. */
@@ -725,7 +726,8 @@ export const ClipboardSpacing = Extension.create({
             // Blank lines at either end are how the text was picked up, and
             // on this path a leading one parses as a line break before the
             // first word. Code keeps its text exactly (`plain` is set there).
-            const trimmed = text.replace(/^(?:[ \t]*\r?\n)+/, '').replace(/(?:\r?\n[ \t]*)+$/, '');
+            // A Windows path keeps its backslashes through the markdown read.
+            const trimmed = keepWindowsPathBackslashes(text.replace(/^(?:[ \t]*\r?\n)+/, '').replace(/(?:\r?\n[ \t]*)+$/, ''));
             const $from = view.state.selection.$from;
             return inFlow($from) ? blankRunsAsEmptyParagraphs(trimmed, readLineSpacing() === 'normal') : trimmed;
           },

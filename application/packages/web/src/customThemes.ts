@@ -18,6 +18,7 @@
 import {
   mergeRegisterMaps,
   newRegisterId,
+  REGISTER_ID,
   registerMapsEqual,
   stampAfter,
   validateRegisterMap,
@@ -28,8 +29,7 @@ export type CustomThemes = RegisterMap;
 
 /** The size of one register value: the longest code themeCode.ts reads. */
 const CODE_MAX = 512;
-const ID_PATTERN = /^[a-z0-9]{12}$/;
-const isCustomThemeId = (id: string) => ID_PATTERN.test(id);
+const isCustomThemeId = (id: string) => REGISTER_ID.test(id);
 
 /** Sanitize a raw map from a settings blob. */
 export function validateCustomThemes(raw: unknown, now = Date.now()): CustomThemes {

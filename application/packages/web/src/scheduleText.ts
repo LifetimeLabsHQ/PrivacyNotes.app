@@ -17,7 +17,8 @@ function weekdayName(w: number, width: 'long' | 'short' = 'long'): string {
   return weekdayLabel(weekdayDate(w), width);
 }
 
-function listOf(items: string[]): string {
+/** Items joined as the app language joins a list: "a, b and c". */
+export function listOf(items: string[]): string {
   try {
     return new Intl.ListFormat(intlLocale(), { type: 'conjunction' }).format(items);
   } catch {

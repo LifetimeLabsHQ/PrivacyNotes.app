@@ -17,6 +17,7 @@
  */
 import { createCodeLowlight } from './codeGrammars';
 import { EXTRA_GRAMMARS } from './codeGrammarsExtra';
+import { escapeHtml } from './escapeHtml';
 
 // This module is already a lazy chunk, so the extra grammars register here
 // at once rather than through loadExtraGrammars.
@@ -31,15 +32,11 @@ interface HastNode {
   children?: HastNode[];
 }
 
-function esc(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
 function hastToHtml(nodes: HastNode[]): string {
   let out = '';
   for (const n of nodes) {
     if (n.type === 'text') {
-      out += esc(n.value ?? '');
+      out += escapeHtml(n.value ?? '');
     } else if (n.type === 'element' && n.tagName === 'span') {
       out += `<span class="${(n.properties?.className ?? []).join(' ')}">${hastToHtml(n.children ?? [])}</span>`;
     } else if (n.children) {

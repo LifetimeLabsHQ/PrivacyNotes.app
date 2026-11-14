@@ -14,9 +14,11 @@
 import { hasCJK, segmentWords } from './cjkSegment';
 import { isDelimiterRow, isTableMarker } from './tableDelimiterRow';
 import { LINE_LINK, markdownLinks, replaceMatches } from './linkScan';
+import { withoutDoodleData } from './doodle/doodleFence';
 
 export function stripMarkdown(md: string): string {
-  const text = md
+  // A doodle block's text is stroke data, never words.
+  const text = withoutDoodleData(md)
     // A table's delimiter row carries no words, and its dash counts are the
     // column widths: left in, each column read as a word and every dash as a
     // character, so resizing a column changed the note's count. The marker

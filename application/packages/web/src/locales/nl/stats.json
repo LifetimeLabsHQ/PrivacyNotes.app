@@ -248,6 +248,8 @@
       "unknown": "Onbekende tracker {{id}}",
       "sleepHours": "Slaapuren",
       "sleepQuality": "Slaapkwaliteit",
+      "bpSystolic": "Bloeddruk, boven",
+      "bpDiastolic": "Bloeddruk, onder",
       "avgDays_one": "gem., {{count}} dag",
       "avgDays_other": "gem., {{count}} dagen",
       "sumDays_one": "totaal, {{count}} dag",

@@ -241,6 +241,8 @@
       "unknown": "未知的追蹤項目 {{id}}",
       "sleepHours": "睡眠時數",
       "sleepQuality": "睡眠品質",
+      "bpSystolic": "血壓（收縮壓）",
+      "bpDiastolic": "血壓（舒張壓）",
       "avgDays_other": "平均，{{count}} 天",
       "sumDays_other": "總計，{{count}} 天",
       "daysLogged_other": "已記錄 {{count}} 天",

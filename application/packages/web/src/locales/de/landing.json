@@ -43,7 +43,7 @@
     },
     "subhead": "Notizen, Aufgaben, Passwörter, Tagebuch, Dateien, Kalender, Kontakte und Lesezeichen, mit Stimmungs- und Medikamenten-Tracking. Eine private App.",
     "tryDemo": "Demo ausprobieren",
-    "microcopy": "Für immer kostenlos. Keine Kreditkarte. Anmeldung mit Google, Apple, GitHub oder einfach einer 12-Wort-Phrase.",
+    "microcopy": "Für immer kostenlos. Keine Kreditkarte. Anmeldung mit Google, Apple, GitHub oder einfach einer Wiederherstellungsphrase.",
     "alreadyHaveVault": "Du hast schon einen Tresor? Anmelden",
     "trustSigned": "Signierte Versionen auf GitHub"
   },
@@ -167,8 +167,6 @@
     "useGitBody": "Beende den Tag mit deinen Commits, gespeichert als Notiz, die du nächsten Monat wiederfindest.",
     "useClipTitle": "Alles, was du kopiert hast",
     "useClipBody": "Schick die Zwischenablage, die Ausgabe eines Befehls oder eine Fehlermeldung direkt in deine Notizen.",
-    "useToolsTitle": "Teil deiner eigenen Werkzeuge",
-    "useToolsBody": "Der Befehl antwortet in JSON und endet mit klaren Exit-Codes, damit deine Skripte wissen, dass die Notiz gespeichert ist.",
     "useShortcutTitle": "Eine Notiz per Tastenkürzel",
     "useShortcutBody": "Eine Taste, die du in den Einstellungen deines Systems wählst, öffnet ein Feld für eine Schnellnotiz, auch wenn die App geschlossen ist. Sie landet in deinem Agent-Ordner.",
     "howLink": "Lies, wie privacynotes funktioniert"
@@ -359,14 +357,15 @@
     "freeVault": "50 MB Speicher, bis 5 MB pro Datei",
     "freeImport": "Import und Export, darunter Keep und Obsidian",
     "freeAnon": "Anonyme Anmeldung, ohne E-Mail",
-    "earlyAdopterBadge": "Early Adopter"
+    "earlyAdopterBadge": "Early Adopter",
+    "payMethods": "Bezahle per Karte oder mit Bitcoin, Ethereum, Lightning, USDC oder USDT."
   },
   "underHood": {
     "heading": "Unter der Haube",
     "cipherTerm": "xchacha20poly1305",
     "cipherDesc": "Schlüssel werden clientseitig abgeleitet",
     "phraseTerm": "BIP-39-Phrasen",
-    "phraseDesc": "12 Wörter, Ed25519-Signatur",
+    "phraseDesc": "Auf deinem Gerät erzeugt, Ed25519-Signatur",
     "rlsDesc": "RLS an deinen Public Key gebunden",
     "trackingTerm": "Null Tracker",
     "trackingDesc": "Keine Pixel, keine Tracker von Drittanbietern",
@@ -390,6 +389,7 @@
       "sleep": "Gut, 7,5 h",
       "sleepScore": "82",
       "heartRate": "61 bpm",
+      "bloodPressure": "118/76 mmHg",
       "activity": "Mittel",
       "medication": "Eingenommen",
       "energy": "6 / 10",
@@ -529,7 +529,7 @@
       "hotkeys": "Tastenkürzel",
       "rating": "Bewertung"
     },
-    "intro": "<brand/> bündelt deine Notizen, Aufgaben, Passwörter, dein Tagebuch, deine Dateien, deinen Kalender, deine Kontakte und Lesezeichen an einem Ort, mit Stimmungs- und Medikamenten-Tracking. Alles wird auf deinem Gerät mit einem Schlüssel aus deinen 12 Wörtern verschlüsselt und bleibt auch auf unseren Servern in der <nowrap>Schweiz</nowrap> verschlüsselt. Es funktioniert offline, und die App ist Open Source.",
+    "intro": "<brand/> bündelt deine Notizen, Aufgaben, Passwörter, dein Tagebuch, deine Dateien, deinen Kalender, deine Kontakte und Lesezeichen an einem Ort, mit Stimmungs- und Medikamenten-Tracking. Alles wird auf deinem Gerät mit einem Schlüssel aus deiner Wiederherstellungsphrase verschlüsselt und bleibt auch auf unseren Servern in der <nowrap>Schweiz</nowrap> verschlüsselt. Es funktioniert offline, und die App ist Open Source.",
     "versionHeading": "Version",
     "windowVersion": "Version {{version}}",
     "windowHelp": "Hilfe-Center",

@@ -18,6 +18,7 @@ import type { TFunction } from 'i18next';
 import { detectPlatform } from '../devices';
 import { formatBytes } from '../formatBytes';
 import { SUPPORTED_EXTENSIONS, isSupportedFile } from './adapter';
+import { issueAssetUrl } from './assetSource';
 import type { StoredFolder } from './folderMemory';
 
 /** What we compare to decide whether a file changed under us. Deliberately not
@@ -392,7 +393,8 @@ async function resolveTauriAsset(
     return null;
   }
   const { convertFileSrc } = await import('@tauri-apps/api/core');
-  return convertFileSrc(full);
+  // The one place an asset address is made; the picture renderers load no other.
+  return issueAssetUrl(convertFileSrc(full));
 }
 
 /**

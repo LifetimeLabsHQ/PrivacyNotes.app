@@ -4,6 +4,7 @@ import { db } from './db';
 import { isMfaRefusal, MfaRequiredError } from './mfaStep';
 import { recordSyncFault } from './syncFaults';
 import { setDmsHold } from './syncPause';
+import { createListeners } from './listeners';
 
 /**
  * The dead man's switch, client side: the device gate that runs before a
@@ -70,12 +71,12 @@ function writeLocal(state: LocalState): void {
 }
 
 let pendingWipe: DmsWipe | null = null;
-const listeners = new Set<() => void>();
+const { subscribe, notify } = createListeners();
 
 function hold(wipe: DmsWipe | null): void {
   pendingWipe = wipe;
   setDmsHold(wipe !== null);
-  for (const cb of listeners) cb();
+  notify();
 }
 
 /** Drops a hold found for another account. Asked first by every sync and
@@ -85,10 +86,7 @@ export function dropForeignDmsHold(pubkey: string): void {
   if (pendingWipe && pendingWipe.pubkey !== pubkey) hold(null);
 }
 
-export function subscribeDmsWipe(cb: () => void): () => void {
-  listeners.add(cb);
-  return () => { listeners.delete(cb); };
-}
+export const subscribeDmsWipe = subscribe;
 
 export function getDmsWipe(): DmsWipe | null {
   return pendingWipe;

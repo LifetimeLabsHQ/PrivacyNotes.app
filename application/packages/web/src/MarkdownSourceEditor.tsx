@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from './theme';
 import { registerEditorCommand } from './editorCommands';
 import { formatInstant } from './intlFormat';
@@ -10,6 +11,9 @@ import { SourceSearchBar } from './SourceSearchBar';
 import { replaceAllText, type TextMatch } from './markdownSourceSearch';
 import { MarkdownSourceBar } from './MarkdownSourceBar';
 import { applySourceAction, type SourceAction } from './markdownSourceFormat';
+import { EditorSlotPill } from './EditorSlotPill';
+import { useCopyToClipboard } from './clipboard';
+import { Check, Copy } from './icons';
 
 type Props = {
   /** Initial markdown content. Only read on mount - use a `key` prop to force reload. */
@@ -60,6 +64,8 @@ export function MarkdownSourceEditor({ value, onChange, readOnly = false, search
   const rootRef = useRef<HTMLDivElement>(null);
   const { spellcheck } = useTheme();
   const [text, setText] = useState(value);
+  const { t } = useTranslation('editor');
+  const { copy: copyText, copied } = useCopyToClipboard();
 
   function change(markdown: string) {
     onChange(markdown);
@@ -316,12 +322,33 @@ export function MarkdownSourceEditor({ value, onChange, readOnly = false, search
   // the bar hidden or at the bottom, the sticky tag row.
   // min-h-[60vh] on the text's grid matches `.ProseMirror` in index.css so
   // toggling modes does not jump the page height.
+  // The gap clears the copy pill (SLOT_PILL_HEIGHT plus 8px), so the first
+  // line starts under it: a textarea cannot wrap beside a float the way the
+  // rich editor's text does. It stays when the pill hides, so typing into an
+  // empty note or opening find moves nothing.
   // The find bar takes the rich editor's slot: a zero-height sticky row
   // pinned under the toolbar, floating over the text.
   return (
     <div ref={rootRef}>
       {barAtTop && <div ref={sourceBarRef} className="sticky z-10 top-[var(--pn-tagrow-h,0px)]">{sourceBar}</div>}
       {showBar && toolbar.atBottom && toolbar.slot && createPortal(sourceBar, toolbar.slot)}
+      {/* The whole note as Markdown, for a chat or an email (#744). It has
+          the rich editor's top-right slot to itself and gives it to the find
+          bar while that is open. */}
+      {bar === 'none' && text.trim() !== '' && (
+        <div
+          className="sticky z-[5] flex h-0 items-start justify-end overflow-visible pointer-events-none"
+          style={{ top: 'calc(var(--pn-tagrow-h, 0px) + var(--pn-editor-toolbar-h, 0px))' }}
+        >
+          <EditorSlotPill
+            label={copied ? t('auth:createPhrase.copied') : t('bodyMenu.copyAsMarkdown')}
+            onClick={() => copyText(ref.current?.value ?? text, 'note')}
+            tabIndex={toolbar?.mobileTabIndex}
+          >
+            {copied ? <Check /> : <Copy />}
+          </EditorSlotPill>
+        </div>
+      )}
       {search && bar !== 'none' && (
         <div
           className="sticky z-[5] flex h-0 items-start justify-end overflow-visible pointer-events-none"
@@ -346,7 +373,7 @@ export function MarkdownSourceEditor({ value, onChange, readOnly = false, search
           />
         </div>
       )}
-      <div className="relative mt-4 grid min-h-[60vh]">
+      <div className="relative mt-11 grid min-h-[60vh]">
         {marks}
         {textarea}
       </div>

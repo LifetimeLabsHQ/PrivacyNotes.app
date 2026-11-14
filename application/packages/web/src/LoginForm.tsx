@@ -10,31 +10,22 @@ import { HoverLabel } from './HoverLabel';
 import { useCopyToClipboard } from './clipboard';
 import { parseTotpInput, generateTotpCode, totpSecondsRemaining } from '@notes/shared';
 import { proUnlocked } from './demo';
+import { domainFromUrlString } from './favicon';
 import { PasswordField } from './PasswordText';
 import { FIELD_BUTTON, FIELD_CLASS, FieldLabel } from './formFields';
 import { NotesField } from './NotesField';
 import { PasswordGeneratorModal } from './PasswordGenerator';
 import type { UpgradeTrigger } from './UpgradeModal';
 import { newLoginField, type LoginExtras, type LoginField } from './loginExtras';
+import { CustomFieldEditor } from './CustomFields';
+
+/** The types a login's custom field can take. */
+const LOGIN_FIELD_TYPES = ['text', 'hidden'] as const;
 
 // The body format lives in loginBody.ts, a leaf module for the readers that
 // need no form (exports, importers, the extension's logins copy).
 export { parseLoginBody, serializeLoginBody, type LoginData } from './loginBody';
 import { parseLoginBody, serializeLoginBody, type LoginData } from './loginBody';
-
-/** Extract a display-friendly domain from a URL string. */
-export function domainFromUrl(raw: string): string {
-  let s = raw.trim();
-  if (!s) return '';
-  // Add protocol if missing so URL() can parse it.
-  if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
-  try {
-    return new URL(s).hostname.replace(/^www\./, '');
-  } catch {
-    // Fallback: strip protocol + path by hand.
-    return raw.replace(/^https?:\/\//i, '').replace(/\/.*$/, '').replace(/^www\./, '');
-  }
-}
 
 /* ────────────────────────────────────────────────────────────────
  * LoginForm - the editor replacement for login-type notes.
@@ -92,7 +83,6 @@ export function LoginForm({
   const [showPassword, setShowPassword] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
   const urlRef = useRef<HTMLInputElement>(null);
-  const [revealed, setRevealed] = useState<Set<string>>(() => new Set());
   const setUrls = (extraUrls: string[]) => onExtrasChange({ ...extras, extraUrls });
   const setFields = (fields: LoginField[]) => onExtrasChange({ ...extras, fields });
   const patchField = (id: string, patch: Partial<LoginField>) =>
@@ -142,7 +132,7 @@ export function LoginForm({
   /** Auto-derive title from URL domain on blur, only if title is still empty. */
   const handleUrlBlur = useCallback(() => {
     if (!title.trim() && data.url.trim()) {
-      const domain = domainFromUrl(data.url);
+      const domain = domainFromUrlString(data.url);
       if (domain) onTitleChange(noteId, domain);
     }
   }, [noteId, title, data.url, onTitleChange]);
@@ -314,75 +304,18 @@ export function LoginForm({
           <div>
             <FieldLabel icon={<Tag />}>{t('loginForm.customFieldsLabel')}</FieldLabel>
             <div className="space-y-2">
-              {extras.fields.map((f) => {
-                const hidden = f.type !== 'text';
-                const shown = !hidden || revealed.has(f.id);
-                return (
-                  <div key={f.id} className="flex flex-col gap-1.5 rounded-md border border-divider p-2">
-                    <div className="flex gap-1.5">
-                      <input
-                        type="text"
-                        dir="auto"
-                        value={f.label}
-                        onChange={(e) => patchField(f.id, { label: e.target.value })}
-                        placeholder={t('loginForm.fieldNamePlaceholder')}
-                        aria-label={t('loginForm.fieldNamePlaceholder')}
-                        disabled={locked}
-                        autoComplete="off"
-                        className={`${fieldClass} min-w-0 flex-1`}
-                      />
-                      <select
-                        value={hidden ? 'hidden' : 'text'}
-                        onChange={(e) => patchField(f.id, { type: e.target.value })}
-                        disabled={locked}
-                        aria-label={t('loginForm.fieldTypeLabel')}
-                        className={`${fieldClass.replace('w-full', 'w-auto')} shrink-0`}
-                      >
-                        <option value="text">{t('loginForm.fieldTypeText')}</option>
-                        <option value="hidden">{t('loginForm.fieldTypeHidden')}</option>
-                      </select>
-                      {!locked && (
-                        <HoverLabel label={t('loginForm.removeField')} position="start">
-                          <button type="button" onClick={() => setFields(extras.fields.filter((x) => x.id !== f.id))} aria-label={t('loginForm.removeField')} className={FIELD_BUTTON}>
-                            <Trash />
-                          </button>
-                        </HoverLabel>
-                      )}
-                    </div>
-                    <div className="flex gap-1.5">
-                      {shown ? (
-                        <textarea
-                          value={f.value}
-                          onChange={(e) => patchField(f.id, { value: e.target.value })}
-                          placeholder={t('loginForm.fieldValuePlaceholder')}
-                          aria-label={t('loginForm.fieldValuePlaceholder')}
-                          disabled={locked}
-                          rows={1}
-                          spellCheck={!hidden}
-                          className={`${fieldClass} resize-y`}
-                        />
-                      ) : (
-                        <PasswordField
-                          value={f.value}
-                          onChange={(e) => patchField(f.id, { value: e.target.value })}
-                          revealed={false}
-                          disabled={locked}
-                          placeholder={t('loginForm.fieldValuePlaceholder')}
-                          fieldClass={fieldClass}
-                        />
-                      )}
-                      {hidden && (
-                        <VaultFieldAction kind="reveal" active={shown} title={shown ? t('loginForm.hidePassword') : t('loginForm.showPassword')} onClick={() => setRevealed((prev) => {
-                          const next = new Set(prev);
-                          if (!next.delete(f.id)) next.add(f.id);
-                          return next;
-                        })} />
-                      )}
-                      <VaultFieldAction kind="copy" onClick={() => copy(f.value, `field-${f.id}`)} active={copied === `field-${f.id}`} title={t('loginForm.copyField')} />
-                    </div>
-                  </div>
-                );
-              })}
+              {extras.fields.map((f) => (
+                <CustomFieldEditor
+                  key={f.id}
+                  field={f}
+                  types={LOGIN_FIELD_TYPES}
+                  locked={locked}
+                  onChange={(patch) => patchField(f.id, patch)}
+                  onRemove={() => setFields(extras.fields.filter((x) => x.id !== f.id))}
+                  copy={copy}
+                  copied={copied}
+                />
+              ))}
             </div>
             {!locked && (
               <button

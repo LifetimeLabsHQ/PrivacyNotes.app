@@ -297,8 +297,10 @@
     "dayWithMood": "{{date}}、気分 {{mood}}",
     "previousWeek": "前の週",
     "nextWeek": "次の週",
-    "showMonth": "{{month}}、月全体を表示",
-    "showWeek": "{{month}}、1週間を表示"
+    "pickMonth": "{{month}}、年と月を選択",
+    "pickMonthTip": "年と月を選択",
+    "showWholeMonth": "月全体を表示",
+    "showOneWeek": "1週間を表示"
   },
   "contextMenu": {
     "newNote": "新規ノート",
@@ -538,6 +540,13 @@
     "itemNameParts": "ミドルネーム、敬称、接尾辞",
     "itemPhonetic": "ふりがな",
     "itemNote": "メモ",
+    "addSection": "セクションを追加",
+    "sectionName": "セクション名",
+    "removeSection": "セクションを削除",
+    "removeSectionNamed": "セクション「{{name}}」を削除",
+    "addFieldTo": "{{name}} に項目を追加",
+    "addFieldToSection": "このセクションに項目を追加",
+    "hiddenFieldsNote": "非表示の値は表示するまで伏せられたままで、検索でも見つかりません。",
     "labels": {
       "mobile": "携帯",
       "home": "自宅",
@@ -665,6 +674,7 @@
     },
     "birthdays": "誕生日",
     "contactDate": "{{name}}: {{label}}",
+    "birthdayAge_other": "{{name}}の{{count}}歳の誕生日",
     "dragEnd": "ドラッグして終了日を変更",
     "previousDay": "前の日",
     "nextDay": "次の日",

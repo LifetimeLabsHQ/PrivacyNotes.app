@@ -76,6 +76,10 @@ export const COMMAND_KEYS = {
   ],
   // A browser keeps Mod+1 to 9 for its tabs.
   goToSection: [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => ({ mod: true, key: String(n), desktop: true })),
+  // Personal and Work (#738). No browser, OS or editor gives Mod+Shift+Space
+  // a meaning; an F-key is a media key on a Mac laptop.
+  // Spec: docs/internal/specs/spaces.md (section 6)
+  switchSpace: [{ mod: true, shift: true, key: 'Space' }],
   nextPane: [{ key: 'F6' }],
   previousPane: [{ shift: true, key: 'F6' }],
   escape: [{ key: 'Escape' }],

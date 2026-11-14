@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "Tutte le impostazioni",
+    "dockWindow": "Aggancia di lato",
+    "dockOtherSide": "Sposta sull'altro lato",
     "fillWindow": "Usa tutta la finestra",
     "restoreWindow": "Torna alla dimensione normale"
   },
@@ -168,6 +170,8 @@
     "peekDark": "Per ora vedi il tuo tema scuro. Auto torna a seguire il tuo sistema quando chiudi le Impostazioni.",
     "unlockThemes": "Sblocca tutti i temi con Pro",
     "startViewTitle": "Mostra all'apertura",
+    "reopenLastOpenTitle": "Riapri l'ultimo elemento",
+    "reopenLastOpenDesc": "Quando l'app si avvia, ritrovi l'elemento che era aperto quando l'hai chiusa. Se è disattivato, l'app parte dall'elenco, senza nulla di aperto.",
     "viewTitle": "Mostra gli elementi come",
     "viewDesc": "Auto segue la larghezza del tuo schermo.",
     "openInTabsTitle": "Mostra l'elemento aperto in una scheda",
@@ -198,6 +202,7 @@
     "linkModifierDesc": "Un clic semplice posiziona il cursore. Un tocco apre comunque il link. Solo su questo dispositivo.",
     "typedSymbolsTitle": "Trasforma i simboli digitati in frecce e segni matematici",
     "typedSymbolsDesc": "Per esempio, -> diventa →, != diventa ≠ e >= diventa ≥.",
+    "linkSuggestionsDesc": "Collegamenti elenca anche le note sullo stesso argomento che non hai ancora collegato. Disattivalo per mostrare l'icona Collegamenti solo nelle note che hanno collegamenti.",
     "confirmTrashTitle": "Chiedi prima di eliminare",
     "confirmTrashDesc": "Conferma prima che un elemento finisca nel cestino.",
     "confirmArchiveTitle": "Chiedi prima di archiviare",
@@ -613,5 +618,18 @@
     "loadError": "Non è stato possibile caricare il dead man's switch. Controlla la connessione e riprova.",
     "confirmTitle": "Attivare il dead man's switch?",
     "confirmBody": "Se nessuno dei tuoi dispositivi va online per {{period}}, il server elimina i tuoi dati cifrati. Non si può annullare. I tuoi dispositivi conservano le loro note."
+  },
+  "onDeviceAi": {
+    "title": "Collegamenti intelligenti",
+    "desc": "Trova note con lo stesso significato, anche scritte con altre parole o in un'altra lingua. Usa un'IA offline (<model>bekko-static</model>) che funziona solo su questo dispositivo.",
+    "on": "Attivo. I suggerimenti includono anche note con lo stesso significato. L'IA offline occupa {{size}} su questo dispositivo.",
+    "kept": "Disattivato. L'IA offline resta su questo dispositivo, quindi per riattivarlo non serve un nuovo download.",
+    "downloadSize": "Scarica · {{size}}",
+    "downloadingLabel": "Download dell'IA offline",
+    "loading": "Caricamento dell'IA offline",
+    "unavailable": "La demo non può scaricare l'IA offline.",
+    "failed": "Il download non è stato completato. Riprova.",
+    "remove": "Rimuovi da questo dispositivo ({{size}})",
+    "howItWorks": "Come funziona"
   }
 }

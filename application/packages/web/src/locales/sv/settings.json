@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "Alla inställningar",
+    "dockWindow": "Docka vid sidan",
+    "dockOtherSide": "Flytta till andra sidan",
     "fillWindow": "Använd hela fönstret",
     "restoreWindow": "Tillbaka till normal storlek"
   },
@@ -168,6 +170,8 @@
     "peekDark": "Just nu visas ditt mörka tema. Auto följer systemet igen när du stänger Inställningar.",
     "unlockThemes": "Lås upp alla teman med Pro",
     "startViewTitle": "Visa när appen öppnas",
+    "reopenLastOpenTitle": "Öppna det senaste objektet igen",
+    "reopenLastOpenDesc": "När appen startar får du objektet som var öppet när du avslutade. Av startar på listan, utan något öppet.",
     "viewTitle": "Visa objekt som",
     "viewDesc": "Auto följer din skärmbredd.",
     "openInTabsTitle": "Visa det öppna objektet i en flik",
@@ -198,6 +202,7 @@
     "linkModifierDesc": "Ett vanligt klick placerar markören. Ett tryck öppnar fortfarande länken. Bara den här enheten.",
     "typedSymbolsTitle": "Gör om skrivna symboler till pilar och matematiska tecken",
     "typedSymbolsDesc": "Till exempel blir -> till →, != till ≠ och >= till ≥.",
+    "linkSuggestionsDesc": "Kopplingar visar också anteckningar om samma ämne som du inte har länkat än. Stäng av det för att bara visa ikonen för Kopplingar på anteckningar med länkar.",
     "confirmTrashTitle": "Fråga innan något raderas",
     "confirmTrashDesc": "Ber om bekräftelse innan ett objekt flyttas till papperskorgen.",
     "confirmArchiveTitle": "Fråga innan något arkiveras",
@@ -613,5 +618,18 @@
     "loadError": "Död mans grepp kunde inte laddas. Kontrollera din anslutning och försök igen.",
     "confirmTitle": "Slå på död mans grepp?",
     "confirmBody": "Om ingen av dina enheter går online under {{period}} raderar servern dina krypterade data. Det går inte att ångra. Dina enheter behåller sina anteckningar."
+  },
+  "onDeviceAi": {
+    "title": "Smarta kopplingar",
+    "desc": "Hittar anteckningar med samma innebörd, även med andra ord eller på ett annat språk. Den använder offline-AI (<model>bekko-static</model>) som bara körs på den här enheten.",
+    "on": "På. Förslagen innehåller också anteckningar med samma innebörd. Offline-AI:n använder {{size}} på den här enheten.",
+    "kept": "Av. Offline-AI:n stannar på den här enheten, så du behöver inte ladda ner något när du slår på den igen.",
+    "downloadSize": "Ladda ner · {{size}}",
+    "downloadingLabel": "Nedladdning av offline-AI:n",
+    "loading": "Läser in offline-AI:n",
+    "unavailable": "Demon kan inte ladda ner offline-AI:n.",
+    "failed": "Nedladdningen blev inte klar. Försök igen.",
+    "remove": "Ta bort från den här enheten ({{size}})",
+    "howItWorks": "Så fungerar det"
   }
 }

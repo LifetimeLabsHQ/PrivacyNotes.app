@@ -12,7 +12,7 @@ Det där är vår riktiga databas i Zürich, inte en teckning av den. Din anteck
 
 ## Vad som händer när du skriver en anteckning
 
-1. Din fras på 12 ord blir en nyckel. Det sker på din enhet.
+1. Din återställningsfras blir en nyckel. Det sker på din enhet.
 2. Anteckningen krypteras med den nyckeln, på din enhet. Så sparas den på din egen disk, och så färdas den till oss.
 3. Vi tar emot den krypterade anteckningen och lagrar den. Bilden ovan är hur det ser ut.
 4. Vilken enhet som helst med samma fras gör samma nyckel och öppnar anteckningen.

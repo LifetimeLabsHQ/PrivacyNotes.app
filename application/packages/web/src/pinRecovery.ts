@@ -30,9 +30,11 @@ import {
   removeStoredPhrase,
 } from './biometric';
 import { isLivePhrase, signInStamp, signedOutSince, type SignInStamp } from './liveSignIn';
+import { LEGACY_PIN_WRAP_ITERATIONS } from './secretKind';
 import { persistStoredPhrase } from './phraseAtRest';
 import { clearPinFailures, clearPinFromSettings, syncPinCache } from './pin';
-import { isPinWrapWithheld, loadLocalSettings, type UserSettings } from './userSettings';
+import { isPinWrapWithheld, loadLocalSettings, settingsKeyEpoch, type UserSettings } from './userSettings';
+import { accountKeyEpoch, epochOf } from './keyRing';
 
 /**
  * Strip every PIN artifact this device holds and return the settings that
@@ -108,7 +110,7 @@ export async function restoreUnsavedClear(
 ): Promise<void> {
   const saved = loadLocalSettings();
   syncPinCache(saved);
-  await syncPinWrap(saved, phrase);
+  await syncPinWrap(saved, phrase, settingsKeyEpoch());
   if (cleared.wrotePhrase && hasPinWrappedPhrase() && !signedOutSince(cleared.since) && isLivePhrase(phrase)) {
     removeStoredPhrase();
   }
@@ -143,15 +145,24 @@ export async function restoreUnsavedClear(
  * The flag travels with the wrap, so the same pass is where a lock armed on
  * another device arrives here, and it strips the phrase as arming did there
  * (`stripPhraseUnderArmedLock`).
+ *
+ * `settingsEpoch` is the key epoch of the server row these settings were read
+ * from (`settingsKeyEpoch()`). Settings of an earlier epoch hold the wrap of
+ * an earlier phrase: installed, it would make the PIN open a replaced
+ * phrase, and their four nulls say nothing about the PIN the account holds
+ * now. So below the account's epoch this does nothing in either direction.
+ * Spec: docs/internal/plans/phrase-change.md (6.5, settings epoch)
  */
-export async function syncPinWrap(settings: UserSettings, phrase?: string): Promise<void> {
+export async function syncPinWrap(settings: UserSettings, phrase: string | undefined, settingsEpoch: number): Promise<void> {
+  // Written to fail closed: an epoch that is no number does nothing too.
+  if (!(epochOf(settingsEpoch) >= accountKeyEpoch())) return;
   if (settings.pinWrapSalt && settings.pinWrapIV && settings.pinWrapCiphertext) {
     const blob = {
       pinWrapSalt: settings.pinWrapSalt,
       pinWrapIV: settings.pinWrapIV,
       pinWrapCiphertext: settings.pinWrapCiphertext,
       // A blob written before the count was recorded is a legacy one.
-      pinWrapIterations: settings.pinWrapIterations ?? LEGACY_WRAP_ITERATIONS,
+      pinWrapIterations: settings.pinWrapIterations ?? LEGACY_PIN_WRAP_ITERATIONS,
     };
     // The account's wrap is the one this device must hold, not merely some
     // wrap: a PIN changed elsewhere re-wraps under the new PIN, and a device
@@ -206,10 +217,6 @@ function stripPhraseUnderArmedLock(settings: UserSettings, phrase?: string): voi
   if (settings.appLockEnabled !== true || !phrase || !isLivePhrase(phrase)) return;
   if (hasStoredPhrase()) removeStoredPhrase();
 }
-
-// Spec: docs/contrib/biometric-unlock.md (PIN wrap PBKDF2 count before it was
-// recorded alongside the blob)
-const LEGACY_WRAP_ITERATIONS = 100_000;
 
 /** Lowercase, and one space between words, so a pasted phrase with line
  *  breaks or a trailing newline still matches. */

@@ -6,17 +6,30 @@
  * The pull now asks here first. Only tombstones that would remove a note this
  * device still shows count: a note in the Trash or deleted here already goes
  * as before, and an unsynced edit is kept as a new note anyway (sync.ts,
- * applyTombstones). The Trash flag is inside the encrypted payload, so a
- * session without the key cannot make a note look trashed first: the normal
- * permanent delete, which empties the Trash, never reaches the count on a
- * device that saw the notes go to the Trash.
+ * applyTombstones). The normal permanent delete, which empties the Trash,
+ * never reaches the count on a device that saw the notes go to the Trash.
+ * The Trash flag is inside the encrypted payload, so a session without the
+ * key cannot set it, but it can copy an older payload that carries it onto
+ * other rows: the pull then moves those notes to the Trash, and their later
+ * delete is not counted. The pull keeps the text it replaced instead
+ * (replacedCopies.ts).
  *
  * Past the limit the notes stay, and the hold names them until the person
  * answers (keepHeldNotes or deleteHeldNotes in sync.ts, MassDeleteModal).
  * The count spans a day, not a pass, so a delete spread over many passes
  * cannot slip under it. Ids and counts only, per account.
+ *
+ * Since migration 0130 a delete carries a seal made with the key
+ * (tombstoneSeal.ts). A valid seal never reaches the count. Only a delete
+ * with no seal does: one from an app before 0130, or from a session without
+ * the key. A bad seal is never asked about: the pull puts the notes back on
+ * every device, and the refused count below tells the person once
+ * (RefusedDeleteModal).
  * Spec: docs/contrib/sync-protocol.md (section 3, the mass delete guard)
  */
+import { createListeners } from './listeners';
+// A refused write leaves the hold in memory for this run (`current` below).
+import { readJson, writeJson } from './localStore';
 
 // Spec: docs/contrib/sync-protocol.md (section 3, the mass delete guard)
 const MASS_DELETE_LIMIT = 10;
@@ -24,35 +37,20 @@ const MASS_DELETE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 const HOLD_KEY = 'privacynotes.tombstoneHold';
 const LOG_KEY = 'privacynotes.tombstoneLog';
+const REFUSED_KEY = 'privacynotes.tombstoneRefused';
 
 type Hold = { pubkey: string; ids: string[] };
+type Refused = { pubkey: string; count: number };
 type DeleteLog = { pubkey: string; deletes: Array<{ at: number; n: number }> };
 
-function readJson(key: string): unknown {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeJson(key: string, value: unknown): void {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    /* the hold then lives in memory for this run (`current` below) */
-  }
-}
-
 function readHold(pubkey: string): string[] {
-  const h = readJson(HOLD_KEY) as Partial<Hold> | null;
+  const h = readJson<Partial<Hold> | null>(HOLD_KEY, null);
   if (!h || h.pubkey !== pubkey || !Array.isArray(h.ids)) return [];
   return h.ids.filter((id): id is string => typeof id === 'string');
 }
 
 function recentDeletes(pubkey: string, now: number): DeleteLog['deletes'] {
-  const log = readJson(LOG_KEY) as Partial<DeleteLog> | null;
+  const log = readJson<Partial<DeleteLog> | null>(LOG_KEY, null);
   if (!log || log.pubkey !== pubkey || !Array.isArray(log.deletes)) return [];
   return log.deletes.filter(
     (d) => d && typeof d.at === 'number' && typeof d.n === 'number' && now - d.at < MASS_DELETE_WINDOW_MS && d.at <= now,
@@ -60,15 +58,13 @@ function recentDeletes(pubkey: string, now: number): DeleteLog['deletes'] {
 }
 
 let current: Hold | null = null;
-const listeners = new Set<() => void>();
+const { subscribe, notify } = createListeners();
 
 // The listeners run on a later task: the pull sets a hold inside its Dexie
 // transaction, and a render that reads the database must not run in it.
 function publish(hold: Hold | null): void {
   current = hold;
-  setTimeout(() => {
-    for (const cb of listeners) cb();
-  }, 0);
+  setTimeout(notify, 0);
 }
 
 /**
@@ -112,7 +108,7 @@ export function releaseTombstoneHold(): void {
 /** The ids any hold names, whatever the account: the notes a forced sign-out
  *  keeps, like an unsynced edit, because the server holds them no more. */
 export function storedHoldIds(): string[] {
-  const h = readJson(HOLD_KEY) as Partial<Hold> | null;
+  const h = readJson<Partial<Hold> | null>(HOLD_KEY, null);
   return h && Array.isArray(h.ids) ? h.ids.filter((id): id is string => typeof id === 'string') : [];
 }
 
@@ -124,22 +120,51 @@ export function clearMassDeleteState(): void {
   } catch {
     /* ignore */
   }
+  dismissRefusedDelete();
   releaseTombstoneHold();
 }
 
 /** For the dialog: the hold found at the start of this run, or since. */
 export function getTombstoneHold(): Hold | null {
   if (current) return current;
-  const h = readJson(HOLD_KEY) as Partial<Hold> | null;
+  const h = readJson<Partial<Hold> | null>(HOLD_KEY, null);
   if (h && typeof h.pubkey === 'string' && Array.isArray(h.ids) && h.ids.length > 0) {
     current = { pubkey: h.pubkey, ids: h.ids.filter((id): id is string => typeof id === 'string') };
   }
   return current;
 }
 
-export function subscribeTombstoneHold(cb: () => void): () => void {
-  listeners.add(cb);
-  return () => {
-    listeners.delete(cb);
-  };
+export const subscribeTombstoneHold = subscribe;
+
+let refused: Refused | null = null;
+
+/** A pull refused `n` deletes with a bad seal and put the notes back: the
+ *  notice counts them until the person closes it. */
+export function noteRefusedDelete(pubkey: string, n: number): void {
+  const before = getRefusedDelete();
+  const count = (before?.pubkey === pubkey ? before.count : 0) + n;
+  refused = { pubkey, count };
+  writeJson(REFUSED_KEY, refused);
+  setTimeout(notify, 0);
+}
+
+/** For the notice: the refused deletes not yet seen, or null. */
+export function getRefusedDelete(): Refused | null {
+  if (refused) return refused;
+  const r = readJson<Partial<Refused> | null>(REFUSED_KEY, null);
+  if (r && typeof r.pubkey === 'string' && typeof r.count === 'number' && r.count > 0) {
+    refused = { pubkey: r.pubkey, count: r.count };
+  }
+  return refused;
+}
+
+/** The notice is closed, or the notes it named left with a sign-out. */
+export function dismissRefusedDelete(): void {
+  try {
+    localStorage.removeItem(REFUSED_KEY);
+  } catch {
+    /* ignore */
+  }
+  refused = null;
+  setTimeout(notify, 0);
 }

@@ -6,14 +6,75 @@ import { APP_KEYS, keyText, matchesKey } from './shortcutMatch';
 import { useEscapeToClose } from './useEscapeToClose';
 import { useIsMobile } from './useIsMobile';
 import { detectPlatform } from './devices';
-import { ArrowLeft, ArrowSquareOut, ArrowsIn, ArrowsOut, CaretRight, X } from './icons';
+import { ArrowLeft, ArrowSquareOut, ArrowsIn, ArrowsLeftRight, ArrowsOut, CaretRight, SidebarSimple, X } from './icons';
 import { AccentBar, HeadlineRule, SETTINGS_EYEBROW } from './settingsUI';
 import { PaneTabMemory } from './settingsPaneTab';
 import type { SettingsShellProps as Props } from './SettingsShell';
 import { Button, CloseButton, IconButton } from './ui';
 
-/** Whether the desktop Settings window fills the app (device-local). */
-const WIDE_KEY = 'privacynotes.settings.wide';
+/** The desktop Settings window's size (device-local): the normal window,
+ *  the full app, or a panel docked at one edge beside the app (#741). */
+export type WindowSize = 'normal' | 'full' | 'side';
+const SIZE_KEY = 'privacynotes.settings.size';
+/** The edge the docked panel sits at (device-local): the end edge (the right)
+ *  until the person moves it. Its own key, so a panel moved to the other edge
+ *  docks there again after a trip to the normal size. */
+export type DockEdge = 'start' | 'end';
+const EDGE_KEY = 'privacynotes.settings.edge';
+
+export function readDockEdge(storage: Pick<Storage, 'getItem'>): DockEdge {
+  try {
+    return storage.getItem(EDGE_KEY) === 'start' ? 'start' : 'end';
+  } catch {
+    return 'end';
+  }
+}
+/** The earlier on/off key: `1` meant the full app. Read once, then removed. */
+const OLD_WIDE_KEY = 'privacynotes.settings.wide';
+
+export function readWindowSize(storage: Pick<Storage, 'getItem'>): WindowSize {
+  try {
+    const v = storage.getItem(SIZE_KEY);
+    if (v === 'normal' || v === 'full' || v === 'side') return v;
+    return storage.getItem(OLD_WIDE_KEY) === '1' ? 'full' : 'normal';
+  } catch {
+    return 'normal';
+  }
+}
+
+/** The docked panel's width, in px (the `w-[480px]` of its class). */
+const DOCK_WIDTH = 480;
+
+/**
+ * Where the docked panel starts and ends, so it covers neither the app's
+ * header row nor its footer (#741). The top is the lowest header under the
+ * panel's span: a row marked `data-pn-dock-header` (the editor's title row,
+ * under the tab strip), else the 3.5rem row every column draws (`h-14`). The
+ * bottom is the top of the footer marked `data-pn-dock-footer`.
+ */
+function dockInsets(edge: DockEdge): { top: number; bottom: number } {
+  const rtl = document.documentElement.dir === 'rtl';
+  const atRight = (edge === 'end') !== rtl;
+  const x0 = atRight ? window.innerWidth - DOCK_WIDTH : 0;
+  const x1 = x0 + DOCK_WIDTH;
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  let top = 3.5 * rem;
+  for (const el of document.querySelectorAll('[data-pn-dock-header]')) {
+    const r = el.getBoundingClientRect();
+    if (r.height > 0 && r.right > x0 && r.left < x1) top = Math.max(top, r.bottom);
+  }
+  let bottom = 0;
+  for (const el of document.querySelectorAll('[data-pn-dock-footer]')) {
+    const r = el.getBoundingClientRect();
+    if (r.height > 0) bottom = Math.max(bottom, window.innerHeight - r.top);
+  }
+  return { top: Math.round(top), bottom: Math.round(bottom) };
+}
+
+/** The pane open when Settings last closed, for this visit only: a plain
+ *  open (the gear, the shortcut) lands there again, so a setting being tried
+ *  out is one click away (#741). A deep link still lands where it points. */
+let lastPane: string | null = null;
 
 type SearchModule = typeof import('./settingsSearch/SettingsSearchResults');
 type Hit = import('./settingsSearch/SettingsSearchResults').SettingHit;
@@ -66,32 +127,50 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
   // The window can fill the app instead of its fixed size, for the wide
   // panes (statistics, the theme galleries, the format bar board). Kept on
   // this device only, like the other window and pane sizes.
-  const [wide, setWide] = useState(() => {
+  // Or it docks at an edge, so a change shows on the open note beside it
+  // (#741). The start edge keeps the note in view; the end edge keeps the
+  // sidebar and the list in view.
+  const [size, setSize] = useState<WindowSize>(() => readWindowSize(localStorage));
+  const [edge, setEdge] = useState<DockEdge>(() => readDockEdge(localStorage));
+  const flipEdge = () => {
+    const value = edge === 'start' ? 'end' : 'start';
+    setEdge(value);
     try {
-      return localStorage.getItem(WIDE_KEY) === '1';
+      localStorage.setItem(EDGE_KEY, value);
     } catch {
-      return false;
+      /* the panel still moves for this visit */
     }
-  });
-  const toggleWide = () => {
-    setWide((w) => {
-      try {
-        localStorage.setItem(WIDE_KEY, w ? '0' : '1');
-      } catch {
-        /* the size still changes for this visit */
-      }
-      return !w;
-    });
+  };
+  // A click on the size that is on goes back to the normal window.
+  const pickSize = (next: WindowSize) => {
+    const value = size === next ? 'normal' : next;
+    setSize(value);
+    try {
+      localStorage.setItem(SIZE_KEY, value);
+      localStorage.removeItem(OLD_WIDE_KEY);
+    } catch {
+      /* the size still changes for this visit */
+    }
   };
   const isMobile = useIsMobile();
-  // Desktop landing: deep-link wins, else the configured default, else the
-  // first real pane (link rows have no pane to land on).
+  const wide = size === 'full';
+  // Docked only on a desktop-wide screen; below it the window is the phone
+  // layout as before, and the stored size waits for a wider window.
+  const docked = size === 'side' && !isMobile && !NATIVE_PHONE;
+  // The docked panel is one pane wide, so it uses the phone's list-then-page stack.
+  const stacked = isMobile || docked;
+  // Desktop landing: deep-link wins, else the pane open at the last close,
+  // else the configured default, else the first real pane (link rows have
+  // no pane to land on).
   const desktopLanding =
-    initialCategory ?? defaultCategory ?? categories.find((c) => !c.href)?.id ?? null;
+    initialCategory ?? lastPane ?? defaultCategory ?? categories.find((c) => !c.href)?.id ?? null;
   // null = the mobile list view. Desktop always has a selection.
   const [activeId, setActiveId] = useState<string | null>(
     isMobile ? (initialCategory ?? null) : desktopLanding,
   );
+  useEffect(() => {
+    if (activeId && !isMobile) lastPane = activeId;
+  }, [activeId, isMobile]);
 
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState<SearchModule | null>(null);
@@ -166,13 +245,15 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
 
   // The quick switcher's key reaches this field while the window is open:
   // the field finds settings, as the switcher does. Capture phase, so the
-  // app's own shortcut never sees it.
+  // app's own shortcut never sees it. Docked, only while the focus is in the
+  // panel: from the app beside it, the key opens the app's own switcher.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      if (docked && !dockRef.current?.contains(document.activeElement)) return;
       if (matchesKey(e, APP_KEYS.quickSwitcher, true)) {
         e.preventDefault();
         e.stopPropagation();
-        if (isMobile && activeId) {
+        if (stacked && activeId) {
           setActiveId(null);
           setLanding(null);
         }
@@ -184,7 +265,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
     }
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [isMobile, activeId]);
+  }, [stacked, activeId, docked]);
 
   // Guard against the ghost click from the element that opened us landing
   // on the backdrop and dismissing immediately (mobile drawer pattern).
@@ -196,17 +277,59 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
 
   // Escape: a query clears first. Then, if a detail is open on mobile, back
   // to the list; else close.
-  useEscapeToClose(() => {
+  const onEscape = () => {
     if (query) clearSearch();
-    else if (isMobile && activeId) setActiveId(null);
+    else if (stacked && activeId) setActiveId(null);
     else onClose();
-  });
+  };
+  // Docked, the app beside the panel stays live (#741), so the panel is not
+  // on the overlay stack: the app's shortcuts and its own Escape keep working.
+  // Escape reaches the panel only from inside it (`onDockedKey`).
+  useEscapeToClose(onEscape, !docked);
+  const dockRef = useRef<HTMLDivElement | null>(null);
+  function onDockedKey(e: ReactKeyboardEvent<HTMLDivElement>) {
+    if (e.key !== 'Escape' || e.defaultPrevented || isImeComposing(e)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onEscape();
+  }
+  // The panel takes the focus when it docks or opens docked, so Escape and
+  // the search key answer at once; a click in the app takes it back.
+  useEffect(() => {
+    if (docked && !dockRef.current?.contains(document.activeElement)) dockRef.current?.focus();
+  }, [docked]);
+
+  // Docked, the panel sits between the app's header row and its footer. The
+  // tab strip, the panes and the window change those, so it measures again
+  // after a resize and after each click or key, once a frame.
+  const [insets, setInsets] = useState({ top: 0, bottom: 0 });
+  useEffect(() => {
+    if (!docked) return;
+    let frame = 0;
+    const measure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const next = dockInsets(edge);
+        setInsets((prev) => (prev.top === next.top && prev.bottom === next.bottom ? prev : next));
+      });
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    document.addEventListener('pointerup', measure, true);
+    document.addEventListener('keyup', measure, true);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', measure);
+      document.removeEventListener('pointerup', measure, true);
+      document.removeEventListener('keyup', measure, true);
+    };
+  }, [docked, edge]);
 
   // Resize across the breakpoint while open: desktop must never show an
   // empty detail, so adopt the default when crossing up from the list.
   useEffect(() => {
-    if (!isMobile && activeId === null) setActiveId(desktopLanding);
-  }, [isMobile, activeId, desktopLanding]);
+    if (!stacked && activeId === null) setActiveId(desktopLanding);
+  }, [stacked, activeId, desktopLanding]);
 
   const active = categories.find((c) => c.id === activeId && !c.href) ?? null;
 
@@ -321,10 +444,15 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
         // Settings is prose, not app chrome: the global right-click menu
         // only gets in the way of selecting text here. Spec: issue #208.
         data-no-app-menu
-        role="dialog"
-        aria-modal="true"
+        // Docked (#741): a panel beside a live app, not a modal. No tint, so
+        // the app shows each change in its own colors; the layer lets clicks
+        // through to the app, and sits under its windows and menus (z-50).
+        // The app's Escape stands down while a `role="dialog"` is open.
+        role={docked ? 'region' : 'dialog'}
+        aria-modal={docked ? undefined : 'true'}
         aria-label={t('shell:contextMenu.settings')}
-        className={`fixed inset-0 z-50 flex justify-center bg-black/20 dark:bg-black/20 ${isMobile ? 'items-stretch sm:items-center sm:p-4' : wide ? 'items-stretch' : 'items-center p-4 sm:p-6'}`}
+        style={docked ? { top: insets.top, bottom: insets.bottom } : undefined}
+        className={`fixed inset-0 flex ${docked ? `z-40 pointer-events-none ${edge === 'end' ? 'justify-end' : 'justify-start'} items-stretch` : `z-50 justify-center bg-black/20 dark:bg-black/20 ${isMobile ? 'items-stretch sm:items-center sm:p-4' : wide ? 'items-stretch' : 'items-center p-4 sm:p-6'}`}`}
         onPointerDown={(e) => {
           if (mountReady && e.target === e.currentTarget) onClose();
         }}
@@ -336,6 +464,38 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
 
   const closeButton = (
     <CloseButton onClick={onClose} />
+  );
+
+  // The window's sizes. As a window: dock it beside the app, or fill the app
+  // (a click on the size that is on goes back to the normal window). Docked:
+  // move the panel to the other edge, or go back to the normal window, where
+  // the full-window button was, so the way out is in the place it is looked
+  // for. Not on a phone, where Settings already takes the whole screen.
+  const sizeButtons = !NATIVE_PHONE && !isMobile && (
+    docked ? (
+      <>
+        <IconButton label={t('shell.dockOtherSide')} position="below" onClick={flipEdge}>
+          <ArrowsLeftRight aria-hidden="true" />
+        </IconButton>
+        <IconButton label={t('shell.restoreWindow')} position="below" onClick={() => pickSize('side')}>
+          <ArrowsIn aria-hidden="true" />
+        </IconButton>
+      </>
+    ) : (
+      <>
+        <IconButton label={t('shell.dockWindow')} position="start" onClick={() => pickSize('side')}>
+          <SidebarSimple aria-hidden="true" />
+        </IconButton>
+        <IconButton
+          label={wide ? t('shell.restoreWindow') : t('shell.fillWindow')}
+          position="start"
+          onClick={() => pickSize('full')}
+          aria-pressed={wide}
+        >
+          {wide ? <ArrowsIn aria-hidden="true" /> : <ArrowsOut aria-hidden="true" />}
+        </IconButton>
+      </>
+    )
   );
 
   // ---- Mobile: push stack ------------------------------------------------
@@ -350,11 +510,18 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
   // took `--pn-app-h` made the keyboard close after every digit, so it fills
   // the overlay there.
   const phoneHeight = ANDROID_LIKE ? 'h-full' : 'h-[var(--pn-app-h,100%)]';
-  const phoneFill = `w-full flex flex-col text-pn bg-surface-2 ${phoneHeight} pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0 sm:max-w-2xl sm:h-[92vh] sm:max-h-[960px] sm:rounded-lg sm:border sm:border-divider`;
-  if (isMobile) {
+  // Docked (#741): one pane wide at its edge, between the app's header row
+  // and its footer (`dockInsets`). At the start edge it covers the sidebar
+  // and the list, so the open note stays in view.
+  const phoneFill = docked
+    ? `pointer-events-auto w-[480px] max-w-full h-full flex flex-col text-pn bg-surface-2 ${edge === 'end' ? 'border-s' : 'border-e'} border-divider shadow-lg outline-none`
+    : `w-full flex flex-col text-pn bg-surface-2 ${phoneHeight} pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0 sm:max-w-2xl sm:h-[92vh] sm:max-h-[960px] sm:rounded-lg sm:border sm:border-divider`;
+  // The docked panel takes the focus and its own Escape (see `onDockedKey`).
+  const dockProps = docked ? { ref: dockRef, tabIndex: -1, onKeyDown: onDockedKey } : {};
+  if (stacked) {
     if (active) {
       return backdrop(
-        <div className={phoneFill}>
+        <div className={phoneFill} {...dockProps}>
           <div className="flex items-center gap-2 px-4 py-3 border-b border-divider">
             <button
               onClick={() => {
@@ -368,17 +535,17 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
               <ArrowLeft size={20} />
             </button>
             <h2 className="min-w-0 text-title font-semibold leading-tight">{active.title ?? active.label}</h2>
-            <div className="ms-auto flex">{closeButton}</div>
+            <div className="ms-auto flex items-center gap-1">{sizeButtons}{closeButton}</div>
           </div>
           {paneBody}
         </div>,
       );
     }
     return backdrop(
-      <div className={phoneFill}>
+      <div className={phoneFill} {...dockProps}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-divider">
           <h2 className="text-heading font-semibold">{t('shell:contextMenu.settings')}</h2>
-          {closeButton}
+          <div className="flex items-center gap-1">{sizeButtons}{closeButton}</div>
         </div>
         <div className="px-4 pt-3 pb-1 flex">{field}</div>
         {searching ? (
@@ -476,11 +643,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
           </>
         )}
         <div className="ms-auto flex items-center gap-1">
-          {!NATIVE_PHONE && (
-            <IconButton label={wide ? t('shell.restoreWindow') : t('shell.fillWindow')} position="start" onClick={toggleWide} aria-pressed={wide}>
-              {wide ? <ArrowsIn aria-hidden="true" /> : <ArrowsOut aria-hidden="true" />}
-            </IconButton>
-          )}
+          {sizeButtons}
           {closeButton}
         </div>
       </div>

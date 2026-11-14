@@ -176,6 +176,7 @@ export function NoteOptionsMenu({
   onOpenUpgrade,
   onRequestRemoveProtection,
   onOpenHistory,
+  localHistory,
   onToggleStar,
   onToggleArchive,
   onLockProtected,
@@ -217,7 +218,7 @@ export function NoteOptionsMenu({
   const unlocked = proUnlocked(isPro);
   const act = noteActionGuards({
     note, isPro, onClose, onSetLocked, onSetPinProtected, onRequestRemoveProtection,
-    onOpenUpgrade, onOpenHistory, onSetPin, onMoveToFolder,
+    onOpenUpgrade, onOpenHistory, localHistory, onSetPin, onMoveToFolder,
   });
 
   const showModeRow = !isTrash && !!onToggleEditorMode && !!editorMode;

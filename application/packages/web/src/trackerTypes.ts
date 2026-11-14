@@ -12,6 +12,7 @@ import { isHexColor, PALETTE, TEXT_COLORS } from './editorColors';
 import { mergeLoginExtras } from './loginExtras';
 import { CLIP_SOURCE_KEY, SCHEDULE_KEYS, SOURCE_IDENTITY_KEY, type Repeat } from './schedule';
 import { LOCATION_KEY } from './noteLocation';
+import { isRecord } from './isRecord';
 
 // ------------------------------------------------------------------
 // Emotion tags - 24 fixed tags, clinically validated (PANAS-X, PHQ-9, GAD-7)
@@ -272,7 +273,8 @@ export function readMedicationTemplates(raw: unknown): MedicationTemplate[] {
 /** The custom tracker definitions of a backup that the app can draw. */
 export function readCustomTrackerTemplates(raw: unknown): CustomTrackerTemplate[] {
   return listOf(raw, (c) => {
-    if (!str(c.id) || !c.id || !str(c.name) || !['scale10', 'scale5', 'slider100', 'number', 'yesno'].includes(c.type as string)) return null;
+    if (!str(c.id) || !c.id || !str(c.name) || !(CUSTOM_TRACKER_TYPES as readonly unknown[]).includes(c.type)) return null;
+    const labels = c.pairLabels;
     return {
       id: c.id,
       name: c.name,
@@ -282,6 +284,10 @@ export function readCustomTrackerTemplates(raw: unknown): CustomTrackerTemplate[
       ...(str(c.stoppedAt) ? { stoppedAt: c.stoppedAt } : {}),
       ...(typeof c.startFromLast === 'boolean' ? { startFromLast: c.startFromLast } : {}),
       ...(str(c.icon) ? { icon: c.icon } : {}),
+      ...(Array.isArray(labels) && labels.length === 2 && labels.every(str)
+        ? { pairLabels: [String(labels[0]).slice(0, PAIR_LABEL_MAX), String(labels[1]).slice(0, PAIR_LABEL_MAX)] as [string, string] }
+        : {}),
+      ...(str(c.unit) ? { unit: c.unit.slice(0, PAIR_UNIT_MAX) } : {}),
       ...(str(c.updatedAt) ? { updatedAt: c.updatedAt } : {}),
       ...(str(c.deletedAt) ? { deletedAt: c.deletedAt } : {}),
     };
@@ -319,15 +325,21 @@ export interface MedicationLogEntry {
 // Custom trackers
 // ------------------------------------------------------------------
 
-export type CustomTrackerType = 'scale10' | 'scale5' | 'slider100' | 'number' | 'yesno';
+/** The custom tracker types, in the order of the setup's type chips. A
+ *  `pair` is one reading of two numbers, such as a blood pressure of 120/80
+ *  (GitHub #746). Spec: docs/internal/mood-wellness-tracker.md section 16 */
+export const CUSTOM_TRACKER_TYPES = ['scale10', 'scale5', 'slider100', 'number', 'pair', 'yesno'] as const;
+export type CustomTrackerType = (typeof CUSTOM_TRACKER_TYPES)[number];
 
-export const CUSTOM_TRACKER_TYPE_LABELS: Record<CustomTrackerType, string> = {
-  scale10: 'Scale (0-10)',
-  scale5: 'Scale (0-5)',
-  slider100: 'Score (0-100)',
-  number: 'Number',
-  yesno: 'Yes / No',
-};
+/** A pair's reading as "120/80 mmHg", a dash for a second number not
+ *  logged yet; the unit only when the tracker has one. */
+export function pairText(value: number, value2: number | undefined, unit?: string): string {
+  return `${value}/${value2 ?? '-'}${unit ? ` ${unit}` : ''}`;
+}
+
+/** The longest name of one number of a pair, and of its unit. */
+export const PAIR_LABEL_MAX = 16;
+export const PAIR_UNIT_MAX = 10;
 
 /**
  * The colors a custom tracker can take: the editor's text colors, the one
@@ -375,6 +387,11 @@ export interface CustomTrackerTemplate {
   /** A look icon id (`looks/lookIcons.ts`), picked in the setup. Absent: the
    *  color dot marks the tracker, as before icons. */
   icon?: string;
+  /** A `pair`: the names of its first and second number ("Top", "Bottom").
+   *  Absent, or an empty name: the generic "First number", "Second number". */
+  pairLabels?: [string, string];
+  /** A `pair`: the unit after the reading ("mmHg"). */
+  unit?: string;
   /** Last edit to THIS template - see MedicationTemplate.updatedAt. */
   updatedAt?: string;
   /**
@@ -458,6 +475,10 @@ export function activeCustomTrackers(
 interface CustomTrackerEntry {
   trackerId: string;
   value: number | boolean | string;
+  /** A `pair`: the second number. `value` is the first; the entry exists
+   *  only while the first is logged, so an older client that knows no pairs
+   *  still reads and keeps it as a number. */
+  value2?: number;
 }
 
 // ------------------------------------------------------------------
@@ -543,6 +564,7 @@ export type BuiltinTrackerId =
   | 'sleep'
   | 'sleepScore'
   | 'heartRate'
+  | 'bloodPressure'
   | 'medication'
   | 'activity'
   | 'energy'
@@ -557,7 +579,7 @@ export type BuiltinTrackerId =
 
 /** The built-in trackers' colors, on the charts and the setup chips: the
  *  palette of the app (`PALETTE`, the editor's text colors) and nothing
- *  else. Eighteen trackers share nine hues; a chart shows one at a time. */
+ *  else. The trackers share nine hues; a chart shows one at a time. */
 export const BUILTIN_TRACKER_COLORS: Record<BuiltinTrackerId, string> = {
   mood: PALETTE.blue,
   emotions: PALETTE.purple,
@@ -566,6 +588,7 @@ export const BUILTIN_TRACKER_COLORS: Record<BuiltinTrackerId, string> = {
   sleep: PALETTE.purple,
   sleepScore: PALETTE.purple,
   heartRate: PALETTE.pink,
+  bloodPressure: PALETTE.red,
   medication: PALETTE.orange,
   activity: PALETTE.green,
   energy: PALETTE.yellow,
@@ -722,6 +745,28 @@ export function weightToCanonical(value: number, unit: WeightUnit): number {
 // Journal tracker data - the per-entry payload
 // ------------------------------------------------------------------
 
+/** A blood pressure reading in mmHg: the top number (systolic) and the
+ *  bottom number (diastolic). */
+export interface BloodPressure {
+  systolic?: number;
+  diastolic?: number;
+}
+
+/** The ranges the blood pressure pill accepts, in mmHg.
+ *  Spec: docs/internal/mood-wellness-tracker.md (section 2.2) */
+export const SYSTOLIC_RANGE = { min: 60, max: 260 } as const;
+export const DIASTOLIC_RANGE = { min: 30, max: 160 } as const;
+
+/** Whether a reading holds at least one of its two numbers. */
+export function hasBloodPressure(bp: BloodPressure | undefined): bp is BloodPressure {
+  return bp != null && (bp.systolic != null || bp.diastolic != null);
+}
+
+/** The reading as "120/80", with a dash for a side not logged yet. */
+export function bloodPressureText(bp: BloodPressure): string {
+  return `${bp.systolic ?? '-'}/${bp.diastolic ?? '-'}`;
+}
+
 /** Stored inside the encrypted note payload alongside title/body/tags. */
 export interface JournalTrackerData {
   mood?: number; // 1-10
@@ -734,6 +779,10 @@ export interface JournalTrackerData {
   activity?: ActivityLevel;
   sleepScore?: number; // 0-100 (Apple Watch, Fitbit, etc.)
   heartRate?: number; // average resting BPM
+  /** One reading in mmHg, the two numbers of one measurement (GitHub #746).
+   *  Either side can be missing while the person types the other; an
+   *  object with neither is no value. Merged whole, as one reading. */
+  bloodPressure?: BloodPressure;
   energy?: number; // 0-10
   focus?: number; // 0-10
   /** Kilograms, always. `trackerSettings.weightUnit` picks the unit the
@@ -807,20 +856,17 @@ const NUMBER_KEYS = [
 
 const MEDICATION_STATUSES: ReadonlySet<unknown> = new Set<MedicationStatus>(['taken', 'skipped', 'missed']);
 
-function isPlainRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v);
-}
-
 const optionalString = (v: unknown): boolean => v === undefined || typeof v === 'string';
 
 function isMedicationLog(v: unknown): boolean {
-  return isPlainRecord(v) && typeof v.medicationId === 'string' && MEDICATION_STATUSES.has(v.status)
+  return isRecord(v) && typeof v.medicationId === 'string' && MEDICATION_STATUSES.has(v.status)
     && optionalString(v.at) && optionalString(v.reason) && optionalString(v.ts);
 }
 
 function isCustomEntry(v: unknown): boolean {
-  return isPlainRecord(v) && typeof v.trackerId === 'string'
-    && (typeof v.value === 'boolean' || typeof v.value === 'string' || (typeof v.value === 'number' && Number.isFinite(v.value)));
+  return isRecord(v) && typeof v.trackerId === 'string'
+    && (typeof v.value === 'boolean' || typeof v.value === 'string' || (typeof v.value === 'number' && Number.isFinite(v.value)))
+    && (v.value2 === undefined || (typeof v.value2 === 'number' && Number.isFinite(v.value2)));
 }
 
 /**
@@ -853,16 +899,39 @@ export function normalizeJournalTrackers(trackers: Record<string, unknown>): Rec
   keepWhere('emotions', (v) => typeof v === 'string');
   keepWhere('factors', (v) => typeof v === 'string');
   keepWhere('medications', isMedicationLog);
-  keepWhere('customTrackers', isCustomEntry);
+  // A pair's second number that is not a number goes alone; the first stays.
+  const custom = trackers.customTrackers;
+  if (custom !== undefined) {
+    if (!Array.isArray(custom)) put('customTrackers', undefined);
+    else {
+      const finite2 = (c: unknown) => !isRecord(c) || c.value2 === undefined || (typeof c.value2 === 'number' && Number.isFinite(c.value2));
+      if (!custom.every((c) => finite2(c) && isCustomEntry(c))) {
+        put('customTrackers', custom
+          .map((c) => (finite2(c) ? c : (({ value2: _drop, ...rest }) => rest)(c as Record<string, unknown>)))
+          .filter(isCustomEntry));
+      }
+    }
+  }
   const sleep = trackers.sleep;
   if (sleep !== undefined) {
-    if (!isPlainRecord(sleep) || !(SLEEP_QUALITIES as readonly unknown[]).includes(sleep.quality)) put('sleep', undefined);
+    if (!isRecord(sleep) || !(SLEEP_QUALITIES as readonly unknown[]).includes(sleep.quality)) put('sleep', undefined);
     else if (sleep.hours !== undefined && !(typeof sleep.hours === 'number' && Number.isFinite(sleep.hours))) put('sleep', { quality: sleep.quality });
+  }
+  const bp = trackers.bloodPressure;
+  if (bp !== undefined) {
+    const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+    if (!isRecord(bp)) put('bloodPressure', undefined);
+    else if ((bp.systolic !== undefined && !finite(bp.systolic)) || (bp.diastolic !== undefined && !finite(bp.diastolic))) {
+      const kept: BloodPressure = {};
+      if (finite(bp.systolic)) kept.systolic = bp.systolic;
+      if (finite(bp.diastolic)) kept.diastolic = bp.diastolic;
+      put('bloodPressure', Object.keys(kept).length > 0 ? kept : undefined);
+    }
   }
   if (trackers.activity !== undefined && !(ACTIVITY_LEVELS as readonly unknown[]).includes(trackers.activity)) put('activity', undefined);
   const habits = trackers.habits;
   if (habits !== undefined) {
-    if (!isPlainRecord(habits)) put('habits', undefined);
+    if (!isRecord(habits)) put('habits', undefined);
     else if (!Object.values(habits).every((v) => typeof v === 'boolean')) {
       put('habits', Object.fromEntries(Object.entries(habits).filter(([, v]) => typeof v === 'boolean')));
     }
@@ -970,12 +1039,9 @@ export function mergeTrackers(
   return merged;
 }
 
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v);
-}
-
-/** Stable stringify so key order never reads as a difference. */
-function canonical(value: unknown): string {
+/** Stable JSON: keys sorted and undefined members dropped, so key order
+ *  never reads as a difference. */
+export function canonical(value: unknown): string {
   if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null';
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
   const entries = Object.entries(value as Record<string, unknown>)

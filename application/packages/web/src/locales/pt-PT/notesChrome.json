@@ -12,7 +12,7 @@
   },
   "moveScreen": {
     "title": "A app mudou-se para use.privacynotes.app",
-    "bodySignIn": "Inicia sessão lá com a tua frase de recuperação de 12 palavras ou com \"{{scanQr}}\". Este dispositivo sincroniza primeiro, por isso todas as tuas notas ficam à tua espera lá, e aqui nada é apagado.",
+    "bodySignIn": "Inicia sessão lá com a tua frase de recuperação ou com \"{{scanQr}}\". Este dispositivo sincroniza primeiro, por isso todas as tuas notas ficam à tua espera lá, e aqui nada é apagado.",
     "openNotes": "Abre as tuas notas aqui uma vez para resolver isto",
     "showPhrase": "Mostrar a minha frase de recuperação",
     "website": "Ver antes o site"
@@ -46,7 +46,7 @@
     "signInAgain": "Iniciar sessão de novo"
   },
   "signOutConfirm": {
-    "title": "Guardaste a tua frase de 12 palavras?",
+    "title": "Guardaste a tua frase de recuperação?",
     "body": "A tua frase é a <only>única</only> forma de voltar a entrar. Sem reposição por e-mail, sem linha de apoio. Se ainda não a anotaste, toca em <action>Não, mostrar frase</action> e abrimo-la já para ti.",
     "unsyncedWarn_one": "1 nota neste dispositivo ainda não foi sincronizada. Perde-se para sempre se não puder ser enviada ao terminar sessão.",
     "unsyncedWarn_other": "{{count}} notas neste dispositivo ainda não foram sincronizadas. Perdem-se para sempre se não puderem ser enviadas ao terminar sessão.",
@@ -139,7 +139,8 @@
     "offline": "Estás offline. Os burn links exigem uma ida e volta ao servidor. Tenta de novo quando estiveres online.",
     "demo": "Os burn links são guardados num servidor, e a demo não contacta nenhum. Regista-te para criares burn links reais.",
     "tooLarge": "A nota é demasiado grande para partilhar por burn link ({{size}}KB). O máximo é {{max}}KB.",
-    "storeFailed": "Falha ao armazenar a burn note no servidor."
+    "storeFailed": "Falha ao armazenar a burn note no servidor.",
+    "rateLimited": "Foram criados demasiados burn links a partir desta ligação à internet. Tenta de novo mais tarde."
   },
   "dms": {
     "returnTitle": "A tua cópia no servidor foi eliminada",
@@ -152,7 +153,9 @@
     "title": "Notas eliminadas noutro dispositivo",
     "body_one": "Tu, ou outro dos teus dispositivos, eliminou {{count}} nota que este dispositivo ainda tem. Se foste tu, elimina-a aqui também. Se não foste tu, alguém pode ter acesso à tua conta: mantém-na para a repor em todos os teus dispositivos.",
     "body_other": "Tu, ou outro dos teus dispositivos, eliminou {{count}} notas que este dispositivo ainda tem. Se foste tu, elimina-as aqui também. Se não foste tu, alguém pode ter acesso à tua conta: mantém-nas para as repor em todos os teus dispositivos.",
-    "keep": "Manter as minhas notas",
-    "delete": "Eliminá-las aqui também"
+    "refusedTitle": "As tuas notas estão de volta",
+    "refusedBody_one": "{{count}} nota foi eliminada do servidor, mas não por nenhum dos teus dispositivos. Este dispositivo não aceitou a eliminação e repôs a nota em todos os teus dispositivos. Verifica os teus dispositivos e remove os que não conheces.",
+    "refusedBody_other": "{{count}} notas foram eliminadas do servidor, mas não por nenhum dos teus dispositivos. Este dispositivo não aceitou a eliminação e repô-las em todos os teus dispositivos. Verifica os teus dispositivos e remove os que não conheces.",
+    "showDevices": "Mostrar dispositivos"
   }
 }

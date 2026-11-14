@@ -7,6 +7,7 @@
     "sleep": "Sleep",
     "sleepScore": "Sleep Score",
     "heartRate": "Heart Rate",
+    "bloodPressure": "Blood Pressure",
     "activity": "Activity",
     "medication": "Medication",
     "meds": "Meds",
@@ -24,6 +25,7 @@
   "units": {
     "hoursSuffix": "h",
     "bpm": "bpm",
+    "mmHg": "mmHg",
     "kg": "kg",
     "lb": "lb",
     "steps_one": "step",
@@ -116,6 +118,10 @@
   },
   "heartRate": {
     "prompt": "Average heart rate"
+  },
+  "bloodPressure": {
+    "systolic": "Top number (systolic)",
+    "diastolic": "Bottom number (diastolic)"
   },
   "activity": {
     "prompt": "Activity level today?",
@@ -243,11 +249,13 @@
   "custom": {
     "yes": "Yes",
     "no": "No",
+    "unknownType": "This tracker needs a newer version of the app.",
     "typeLabels": {
       "scale10": "Scale (0-10)",
       "scale5": "Scale (0-5)",
       "slider100": "Score (0-100)",
       "number": "Number",
+      "pair": "Two numbers",
       "yesno": "Yes / No"
     }
   },
@@ -263,6 +271,7 @@
     "medicationCard": "Medication card",
     "medicationCardHelp": "\"Did you take your medication?\" on this device, only on a day a medication is due.",
     "customHelp": "Trackers you name yourself: a scale, a number or a yes or no. Up to {{max}}.",
+    "customHelpPair": "Trackers you name yourself: a scale, a number, two numbers or a yes or no. Up to {{max}}.",
     "yourCustomTrackers": "Your custom trackers",
     "categoryMoodMind": "Mood & mind",
     "categoryBodyHealth": "Body & health",
@@ -297,7 +306,13 @@
     "preview": "Preview",
     "startFromLast": "Remember last entry",
     "chooseIcon": "Choose icon",
-    "startFromLastHelp": "Good for things that rarely change, like your weight or a daily dose."
+    "startFromLastHelp": "Good for things that rarely change, like your weight or a daily dose.",
+    "pairFirst": "First number",
+    "pairSecond": "Second number",
+    "pairFirstPlaceholder": "Systolic",
+    "pairSecondPlaceholder": "Diastolic",
+    "pairUnit": "Unit (optional)",
+    "pairWaiting": "Saved once the first number is in."
   },
   "factors": {
     "prompt": "What was part of your day?",

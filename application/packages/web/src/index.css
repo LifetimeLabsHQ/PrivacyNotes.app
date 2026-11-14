@@ -1570,6 +1570,19 @@
     & :where(h2):not(:where([class~='not-prose'] *)) {
       font-size: var(--fs-row);
     }
+    /* A blank line typed in the box is the only paragraph break the notes
+       have, so it always shows as a gap, also on the default line spacing,
+       whose paragraph gap is 0 because the editor shows an empty line as
+       its own paragraph (#765). The same gap between list items the user
+       typed apart: padding, because each item carries an inline margin
+       from the renderer. */
+    & :where(p):not(:where([class~='not-prose'] *)) {
+      margin-top: 0.75em;
+      margin-bottom: 0.75em;
+    }
+    & :where(ol, ul)[data-loose] > li + li {
+      padding-top: 0.75em;
+    }
   }
 }
 
@@ -2369,6 +2382,10 @@
       margin: 0;
       padding-inline: 1.75rem 3.4rem;
       color: rgb(var(--pn-text));
+    }
+    /* An icon that leads the title stands in for the Kanban glyph (#752). */
+    .ProseMirror &.pn-kanban-own-icon > .pn-callout-content > div > [data-callout-title] {
+      padding-inline-start: 0.05rem;
     }
     .ProseMirror & > .pn-callout-content > div > [data-callout-title] ~ * {
       margin: 0;
@@ -3699,11 +3716,12 @@
 /* Home (dashboard/Dashboard.tsx) is its own grid, not the tile grid above:
    its columns, its row height and every card's place are inline styles from
    the packer (packBoxes in dashboard/dashboardLayout.ts). The calendar card
-   keeps the sideways clip it has in the tile grid.
+   does not take the sideways clip it has in the tile grid: no Home column is
+   narrower than the month (HOME_MIN_COL_PX), and with the clip WebKit drew
+   the grip tab on the card's top edge cut in half.
    Spec: docs/internal/specs/dashboard.md (section 3) */
 .pn-home-grid .pn-grid-cal {
   min-width: 0;
-  overflow-x: clip;
 }
 /* A widget's arranging tools (Dashboard.tsx): the grip tab on the card's
    top edge and the resize corner. With a mouse they show while the card is
@@ -3731,6 +3749,15 @@
    the placeholder a lazy row has before it paints. */
 .pn-home-grid .pn-lazy-row {
   content-visibility: visible;
+}
+/* A widget's rows keep the compact row's padding at every window width, so
+   a small card shows more than one; the last row that shows has no divider,
+   which would stand alone over the card's edge. */
+.pn-home-grid .pn-row {
+  padding-block: 0.5rem;
+}
+.pn-home-grid .pn-row[data-fit-last] {
+  border-bottom-color: transparent;
 }
 
 /* A pick on the mood scale, and the check-in's "logged" mark: one short pop,

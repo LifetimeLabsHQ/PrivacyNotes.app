@@ -143,6 +143,14 @@
   },
   "banner": {
     "proActivationPending": "Hem rebut el pagament, però l'activació de Pro triga més de l'habitual. Actualitza d'aquí a un minut o contacta amb el suport si no s'activa.",
+    "crypto": {
+      "waiting": "S'està esperant el pagament amb criptomonedes. Pro s'activa quan es confirma.",
+      "seen": "Pagament amb criptomonedes detectat. Pro s'activa quan la xarxa el confirma, normalment en menys d'una hora amb Bitcoin.",
+      "partial": "Ha arribat una part del pagament amb criptomonedes. Envia la resta a la pàgina de pagament abans que caduqui l'enllaç.",
+      "ended": "L'enllaç de pagament amb criptomonedes ha caducat abans que arribés el pagament complet.",
+      "paid": "El pagament amb criptomonedes s'ha confirmat. Pro està activat.",
+      "openPayment": "Pàgina de pagament"
+    },
     "snapshotPaused": "L'historial de notes està en pausa. El teu pla Pro sembla inactiu. Les edicions noves no es desaran a l'historial fins que Pro es restauri.",
     "restorePro": "Restaura Pro",
     "storagePastDue": "El pagament de la teva subscripció d'emmagatzematge ha fallat. Actualitza la targeta a Paddle per no perdre la capacitat extra.",
@@ -345,7 +353,24 @@
     "linksTo": "Enllaça a",
     "missing": "Encara no creada",
     "protectedHidden_one": "{{count}} element protegit amb PIN no es mostra",
-    "protectedHidden_other": "{{count}} elements protegits amb PIN no es mostren"
+    "protectedHidden_other": "{{count}} elements protegits amb PIN no es mostren",
+    "related": "Connexions suggerides",
+    "relatedWords": "Totes dues mencionen {{words}}",
+    "relatedLinksTo": "Totes dues enllacen a {{title}}",
+    "relatedLinkedFrom": "Totes dues enllaçades des de {{title}}",
+    "relatedTag": "Totes dues amb l'etiqueta {{tag}}",
+    "relatedMeaning": "El mateix significat",
+    "meaningDoor": "Connexions intel·ligents: troba notes amb el mateix significat, amb IA fora de línia",
+    "meaningDoorNo": "No ho tornis a mostrar",
+    "meaningDoorHidden": "Amagat a totes les notes. Connexions intel·ligents continua a Configuració > Editor > Comportament.",
+    "hideSuggestions": "Amaga les connexions suggerides",
+    "notRelated": "No hi té relació",
+    "notRelatedDone": "Ja no se suggereix",
+    "notRelatedCount": "No hi té relació ({{n}})",
+    "restoreSuggestion": "Torna-la a suggerir",
+    "linkAtCursor": "Enllaça al cursor",
+    "linkNeedsCursor": "Primer fes clic a la nota",
+    "linkAsFootnote": "Enllaça com a nota a peu de pàgina"
   },
   "drawing": {
     "fullScreen": "Pantalla completa",

@@ -2,7 +2,7 @@ import { setCustomHabitsStore } from './habitList';
 import { setTaskConfetti } from './checkboxConfetti';
 import { Suspense, useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo, useDeferredValue, useSyncExternalStore, type CSSProperties } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
-import { CaretRight, Folder, Fire, PILLAR_GLYPHS, Calendar as CalendarIcon, CalendarDot, CalendarPlus, CalendarX, ArrowRight as ArrowRightIcon, BoxArrowDown, Copy, Stack, Pause, Play, iconTrash } from './icons';
+import { CaretRight, Folder, Fire, PILLAR_GLYPHS, Calendar as CalendarIcon, CalendarPlus, CalendarX, ArrowRight as ArrowRightIcon, BoxArrowDown, Copy, Stack, Pause, Play, iconTrash } from './icons';
 import { SPACE_ICONS } from './SpaceSwitch';
 import { useAuth, type AuthState } from './auth';
 import type { SupabaseClient } from '@notes/shared';
@@ -64,6 +64,7 @@ import { setDeviceLabel } from './deviceLabels';
 import { db, reopenDb, type LocalNote } from './db';
 import { ConflictModal } from './ConflictModal';
 import { detectPlatform, fetchQuotaUsage, heartbeat, recalculateQuota, type QuotaUsage } from './devices';
+import { reportIfPhraseReplaced } from './identity';
 import { type EditorHandle } from './Editor';
 import { readToolbarPref, writeToolbarPref } from './editorPrefs';
 import { DemoBanner } from './DemoBanner';
@@ -78,6 +79,7 @@ import { LogoIcon } from './LogoIcon';
 import { TypewriterLine } from './LoadingScreen';
 import { alertDefaults, toggleHiddenView,
   loadLocalSettings,
+  settingsKeyEpoch,
   updateLocalSettings,
   withCredentialChanges,
   type UserSettings,
@@ -95,6 +97,7 @@ import { hasBiometricCredential, unlockWithBiometric } from './biometric';
 import { canLockNow, lockAppNow, rememberOpenNote, takeReopenNote } from './appReLock';
 import { readLastOpen, rememberSelection, rememberedSelection, writeLastOpen } from './notesView/listPlace';
 import { createNoteVersion } from './noteVersions';
+import { keepCurrentText } from './replacedCopies';
 import { loginExtrasOf, withLoginExtras } from './loginExtras';
 import { withTrackerContent } from './editStamp';
 import { HoverLabel } from './HoverLabel';
@@ -104,7 +107,9 @@ import { useShellAppearance, applyLineSpacing, applyNestedNumbers, isFreeTheme, 
 import { formatDay, setDatePrefs } from './intlFormat';
 import { searchNotes, searchBodyTerms, searchSeedCandidates, isPhraseQuery, gatedSearchCopy, notesHolding } from './search';
 import { textMatcher } from './textMatch';
-import { useSearchIndexSync } from './searchIndexSync';
+import { useIndexSync, useSearchIndexSync } from './searchIndexSync';
+import { RELATED_INDEX, isRelatedSource } from './relatedLoader';
+import { MEANING_INDEX, restoreMeaning, useMeaningState } from './onDeviceAi';
 import { JournalCalendarCard, setCalendarShowsOther, useCalendarShowsOther, type CalendarCardExtras } from './JournalCalendar';
 import { addWidget, dashboardWidgets, writeDashboardSetting } from './dashboard/dashboardLayout';
 import { MARKDOWN_NOTE_TYPES } from './noteTypes';
@@ -348,6 +353,7 @@ import {
 } from './notesView/settingsCategories';
 import type { TrackerSetupTab } from './TrackerConfig';
 import { ProActivationPendingBanner } from './notesView/ProActivationPendingBanner';
+import { CryptoPaymentBanner } from './notesView/CryptoPaymentBanner';
 import { SnapshotForbiddenBanner } from './notesView/SnapshotForbiddenBanner';
 import { StoragePastDueBanner } from './notesView/StoragePastDueBanner';
 import { useExports, type ExportProgress } from './notesView/useExports';
@@ -367,7 +373,7 @@ import { isStorageConfigured } from './paddle';
 import { SyncErrorBanner } from './notesView/SyncErrorBanner';
 import { SessionExpiredModal } from './notesView/SessionExpiredModal';
 import { getDmsWipe, subscribeDmsWipe } from './dms';
-import { getTombstoneHold, subscribeTombstoneHold } from './massDelete';
+import { getRefusedDelete, getTombstoneHold, subscribeTombstoneHold } from './massDelete';
 import { lazyModal, lazyPart, prefetchChunk } from './chunkLoad';
 import { SignOutConfirmModal } from './notesView/SignOutConfirmModal';
 import { SignOutUnsentModal } from './notesView/SignOutUnsentModal';
@@ -505,6 +511,9 @@ const TRACKER_SETUP_ROW: Record<TrackerSetupTab, string> = {
   medications: 'trackers.medications',
   checkIn: 'calendar.checkInReminder',
 };
+/** The related index's input before the first note opens. */
+const NO_NOTES: LocalNote[] = [];
+
 export function NotesView() {
   const { auth, supabase, signOut, forceSignOut, refreshProStatus, revalidationExpired } = useAuth();
   if (auth.status !== 'authenticated') return null;
@@ -620,6 +629,8 @@ function AuthenticatedView({
   const dmsWipe = useSyncExternalStore(subscribeDmsWipe, getDmsWipe, () => null);
   // Notes a pull held back because too many were deleted at once (massDelete.ts).
   const tombstoneHold = useSyncExternalStore(subscribeTombstoneHold, getTombstoneHold, () => null);
+  // A delete with a bad seal that the pull refused, not yet told (massDelete.ts).
+  const refusedDelete = useSyncExternalStore(subscribeTombstoneHold, getRefusedDelete, () => null);
   // Note-options "..." menu state. `null` = closed.
   const [showNoteOptions, setShowNoteOptions] = useState(false);
   const noteOptionsButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -732,6 +743,9 @@ function AuthenticatedView({
   const [settingsCategory, setSettingsCategory] = useState<string | undefined>(undefined);
   // A row inside that pane to land on (the quick switcher opens a setting).
   const [settingsRow, setSettingsRow] = useState<{ id: string; tab?: string; flash?: boolean } | undefined>(undefined);
+  // Bumped by a door that can be used while Settings is open: the window
+  // reads its target once, so it starts again on the new one.
+  const [settingsLanding, setSettingsLanding] = useState(0);
   // Clear the deep-link target whenever Settings closes, so a later open
   // from the gear / shortcut lands on the default category. Closing can
   // happen from many embedded panes, so reset here rather than per-site.
@@ -863,16 +877,15 @@ function AuthenticatedView({
     // across accounts). syncPinCache also clears the stale cache when
     // the loaded settings carry no PIN.
     //
-    // Skip entirely in demo: ?demo=1 runs on the SAME origin as a real
-    // install, but the PIN cache and wrapped-phrase keys are NOT
-    // demo-bucketed. Calling syncPinCache with the demo blob (pinHash
-    // null) would wipe the real account's PIN cache off this origin.
+    // Skip entirely in demo: the PIN cache and wrapped-phrase keys are
+    // demo-bucketed (credentialKey, pin.ts and biometric.ts), and the demo
+    // keeps no synced PIN to follow.
     if (!isDemoMode()) {
       syncPinCache(loaded);
       // The wrap follows the cached settings the same way the hash cache
       // above does, in both directions. The phrase rides along so the
       // removal direction cannot leave this device with no door.
-      void syncPinWrap(loaded, auth.status === 'authenticated' ? auth.phrase : undefined);
+      void syncPinWrap(loaded, auth.status === 'authenticated' ? auth.phrase : undefined, settingsKeyEpoch());
     }
     return loaded;
   });
@@ -985,6 +998,29 @@ function AuthenticatedView({
     return notes.map((n) => (gated.has(n.id) ? gatedSearchCopy(n) : n));
   }, [notes, gatedIdsKey]);
   const searchIndexVersion = useSearchIndexSync(searchInput);
+
+  // The related notes of the Connections panel follow the same state, from
+  // the notes that may be listed there: live markdown notes, never one behind
+  // a PIN. The index starts with the first note opened, so a session that
+  // opens none never pays for it. Spec: docs/internal/plans/related-notes.md
+  const [relatedArmed, setRelatedArmed] = useState(false);
+  useEffect(() => {
+    if (selectedId) setRelatedArmed(true);
+  }, [selectedId]);
+  const relatedInput = useMemo(() => {
+    if (!relatedArmed || !userSettings.linkSuggestions) return NO_NOTES;
+    const gated = new Set(gatedIdsKey.split(' '));
+    return notes.filter((n) => isRelatedSource(n) && !gated.has(n.id));
+  }, [notes, gatedIdsKey, relatedArmed, userSettings.linkSuggestions]);
+  const deferredRelatedInput = useDeferredValue(relatedInput);
+  const relatedWordsVersion = useIndexSync(deferredRelatedInput, RELATED_INDEX);
+  // The meaning index (part 2, Smart connections): the same notes,
+  // once the user turned the on-device model on for this device.
+  const meaningOn = useMeaningState().status === 'on';
+  useEffect(restoreMeaning, []);
+  const meaningVersion = useIndexSync(meaningOn ? deferredRelatedInput : NO_NOTES, MEANING_INDEX);
+  // Both counters only grow, so their sum bumps whenever either index changes.
+  const relatedIndexVersion = relatedWordsVersion + meaningVersion;
 
   // ── UI layout (per-device, see notesView/useShellLayout.ts) ──────
   const {
@@ -1229,12 +1265,9 @@ function AuthenticatedView({
     retire();
   }, [pendingSearchTerm, selectedId, pinUnlockVersion]);
   const [editorFocused, setEditorFocused] = useState(false);
-  // Ref mirror for the sync orchestrator's idle check (#142): runSync fires
-  // from a poller whose closure would hold stale state, so it reads focus
-  // through this ref instead.
-  const editorFocusedRef = useRef(false);
   /** Where to put the caret once the editor remounts after a refused stale
-   *  save (#497), or null for a remount that leaves the focus alone. */
+   *  save (#497) or a pull of another device's version (#760), or null for a
+   *  remount that leaves the focus alone. */
   const refocusAfterRemountRef = useRef<{ source: boolean; at: number } | null>(null);
   /** The caret of the open note's editor, rich or source, when it has focus. */
   function caretInOpenEditor(noteId: string): { source: boolean; at: number } | null {
@@ -1246,7 +1279,6 @@ function AuthenticatedView({
     const editor = editorRef.current?.getEditor();
     return editor && editor.isFocused ? { source: false, at: editor.state.selection.from } : null;
   }
-  useEffect(() => { editorFocusedRef.current = editorFocused; }, [editorFocused]);
   const [titleFocused, setTitleFocused] = useState(false);
   // True when the editor header is too narrow to fit the pin/share/trash
   // shortcut icons without crowding the title; they collapse into the "..."
@@ -1412,7 +1444,10 @@ function AuthenticatedView({
     selectedId,
     editingBodyRef: { get current() { return editingBodyRef.current; } },
     setEditorRevision: (value) => setEditorRevision(value),
-    editorFocusedRef,
+    keepFocusOnRemount: () => {
+      const open = latestSelectedIdRef.current;
+      refocusAfterRemountRef.current = open ? caretInOpenEditor(open) : null;
+    },
     isNoteLocked,
     gateCopy,
   });
@@ -1593,6 +1628,11 @@ function AuthenticatedView({
       if (!navigator.onLine) return;
       const ok = await heartbeat(supabase, auth.deviceId, force);
       if (!ok) await forceSignOut('device revoked');
+      // The 2FA gate refused this session: it may be one a phrase change
+      // deleted. Asked here too, because the throttle lets only one of this
+      // timer and the sync pass send the heartbeat.
+      // Spec: docs/internal/plans/phrase-change.md (section 7)
+      else if (ok === 'mfa_required') await reportIfPhraseReplaced(auth.phrase, 'heartbeat');
     };
     const interval = setInterval(() => {
       if (!document.hidden) void check();
@@ -1605,7 +1645,7 @@ function AuthenticatedView({
       clearInterval(interval);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [supabase, auth.deviceId, forceSignOut]);
+  }, [supabase, auth.deviceId, auth.phrase, forceSignOut]);
 
   // Mutate + persist user settings locally. The next regular runSync
   // pass picks up the dirty flag and pushes to the server - no need
@@ -1684,6 +1724,13 @@ function AuthenticatedView({
     setShowAppearance(false);
     setSettingsCategory('design');
     setSettingsRow({ id: 'appearance.tintNotes' });
+    setShowSettings(true);
+  }, []);
+  // The "Also find notes by meaning" line in the Connections panel.
+  const openOnDeviceAiSettings = useCallback(() => {
+    setShowAppearance(false);
+    setSettingsCategory('editor');
+    setSettingsRow({ id: 'appearance.smartConnections', tab: 'behavior' });
     setShowSettings(true);
   }, []);
   // Settings in the desktop tray menu (trayMode.ts).
@@ -2831,7 +2878,13 @@ function AuthenticatedView({
     // The Calendar shows its month while nothing is open, so it never auto-opens.
     // Home lists no items either: an item opened from a widget stays open
     // until it is closed. Spec: docs/internal/specs/dashboard.md (section 2)
-    if (view === 'tasks' || view === 'files' || view === 'calendar' || view === 'dashboard') return;
+    // A cold start on one of these views drops the note open at quit: the
+    // person chose where to start, and a later switch to a list must show the
+    // list, not that note (#761). Spec: docs/internal/specs/keep-my-place.md (section 3)
+    if (view === 'tasks' || view === 'files' || view === 'calendar' || view === 'dashboard') {
+      lastOpenRef.current = null;
+      return;
+    }
     const isDesktop =
       typeof window !== 'undefined' &&
       window.matchMedia('(min-width: 768px)').matches;
@@ -3219,6 +3272,7 @@ function AuthenticatedView({
       titleOf: (n) => noteLinkName(n, isNoteLocked(n)),
       isGated: isNoteLocked,
       dateTitle: (name, label) => t('shell:calendar.contactDate', { name, label: t(`shell:contacts.labels.${label}`, { defaultValue: label }) }),
+      birthdayTitle: (name, age) => t('shell:calendar.birthdayAge', { name, count: age }),
       ...(spacesOn ? {
         openOnly: !!filterSpace && !calendarShowsOther,
         spaceOf: (n: LocalNote) => (n.folderId && spaceOfFolder.get(n.folderId) === 'work' ? 'work' as const : 'personal' as const),
@@ -5187,6 +5241,14 @@ function AuthenticatedView({
       const target = (['home', ...rows] as View[])[n - 1];
       if (target) void handleSelectView(target);
     },
+    // Spec: docs/internal/specs/spaces.md (section 6)
+    switchSpace: () => {
+      if (!foldersUnlocked) return setShowUpgrade({ trigger: 'spaces' });
+      if (!spacesOn) return;
+      const next: Space = storedSpace === 'personal' ? 'work' : 'personal';
+      setActiveSpace(next);
+      flashToast(t(next === 'work' ? 'shell:spaces.switchedToWork' : 'shell:spaces.switchedToPersonal'));
+    },
     toggleTheme,
     toggleInvisibles: () => setInvisibles(!invisibles),
     setShowSettings,
@@ -5717,7 +5779,7 @@ function AuthenticatedView({
     ctxMenu.open(e, [
       { type: 'header', label: formatDay(day, 'weekdayDate') },
       { label: tShell('calendar.newOnDay'), icon: <CalendarPlus />, onSelect: () => openQuickAdd({ defaultDay: day }) },
-      { label: tShell('calendar.showDay'), icon: <CalendarDot />, onSelect: () => { calendar.setFocus(day); calendar.setMode('day'); } },
+      { label: tShell('calendar.showDay'), icon: <CalendarIcon />, onSelect: () => { calendar.setFocus(day); calendar.setMode('day'); } },
     ]);
   };
   const calendarActions = useCalendarActions({
@@ -5772,6 +5834,7 @@ function AuthenticatedView({
     setSettingsCategory('backup');
     setSettingsRow({ id: 'import.automatic', tab: 'automatic' });
     setShowSettings(true);
+    setSettingsLanding((n) => n + 1);
   }, []);
   const reminders = useReminders({
     notes,
@@ -5803,6 +5866,7 @@ function AuthenticatedView({
   // list row dropped on a day takes that day.
   const calendarExtras: CalendarCardExtras = {
     onExpand: (month) => void calendar.openAt(month),
+    weekNumbers: userSettings.calendar.weekNumbers,
     drop: {
       accepts: (e) => isItemDrag(e.dataTransfer),
       onDrop: (day, e) => void calendarActions.scheduleItems(liveItemIds(readItemDrag(e.dataTransfer), liveNotes), day),
@@ -6814,6 +6878,7 @@ function AuthenticatedView({
             selection={{ mode: selectionMode, ids: selectedIds, toggle: toggleSelected, range: rangeSelect, longPress: beginLongPress, longPressEnd: cancelLongPress }}
             search={search}
             strip={!tabsShown}
+            weekNumbers={userSettings.calendar.weekNumbers}
             dragPayload={(id) => {
               const n = liveNotes.find((x) => x.id === id);
               return n ? itemDragSelection([n], isNoteLocked) : { ids: [id], linkText: '' };
@@ -6989,6 +7054,10 @@ function AuthenticatedView({
           onDismiss={() => setProActivationPending(false)}
         />
       )}
+
+      {/* A crypto payment confirms in minutes, not seconds, so it has a
+          wait of its own. Spec: docs/internal/plans/crypto-payments.md (11b) */}
+      <CryptoPaymentBanner pubkey={auth.pubkey} isPro={!!auth.isPro} onPaid={() => void refreshProStatus()} />
 
       {snapshotForbidden && !snapshotBannerDismissed && (
         <SnapshotForbiddenBanner
@@ -7372,6 +7441,7 @@ function AuthenticatedView({
               selected={selected}
               view={view}
               notes={notes}
+              relatedIndexVersion={relatedIndexVersion}
               bookmarkKeys={bookmarkKeys}
               bookmarkClip={bookmarkClip}
               auth={auth}
@@ -7472,6 +7542,7 @@ function AuthenticatedView({
                 noteColor: noteColorInfo,
                 onSetNoteColor: setNoteColor,
                 onOpenColorSettings: openNoteColorSettings,
+                onOpenOnDeviceAi: openOnDeviceAiSettings,
                 onPickNoteIcon: pickNoteIcon,
                 handleToggleStar,
                 handleToggleArchive,
@@ -7630,6 +7701,7 @@ function AuthenticatedView({
 
       {showSettings && (
         <SettingsShell
+          key={settingsLanding}
           onClose={() => setShowSettings(false)}
           solo={settingsSolo}
           initialCategory={settingsCategory}
@@ -7726,7 +7798,8 @@ function AuthenticatedView({
           steps={exportProgress.steps}
           onClose={closeExportProgress}
           // A full backup made by hand is the moment to offer the automatic one.
-          afterDone={exportProgress.steps?.includes('files') ? <Suspense fallback={null}><AutomaticAfterExportLazy onOpen={() => { closeExportProgress(); openAutomaticBackups(); }} /></Suspense> : undefined}
+          // Not the one the dead man's switch window asked for: its account is gone.
+          afterDone={exportProgress.fullBackup && !dmsWipe ? <Suspense fallback={null}><AutomaticAfterExportLazy onOpen={() => { closeExportProgress(); openAutomaticBackups(); }} /></Suspense> : undefined}
         />
       )}
       {uploadEntries && (
@@ -7825,6 +7898,8 @@ function AuthenticatedView({
           onTaskConfettiChange={(on) => mutateSettings((prev) => ({ ...prev, taskConfetti: on }))}
           typedSymbols={userSettings.typedSymbols}
           onTypedSymbolsChange={(on) => mutateSettings((prev) => ({ ...prev, typedSymbols: on }))}
+          linkSuggestions={userSettings.linkSuggestions}
+          onLinkSuggestionsChange={(on) => mutateSettings((prev) => ({ ...prev, linkSuggestions: on }))}
           confirmTrash={userSettings.confirmTrash}
           onConfirmTrashChange={(on) => mutateSettings((prev) => ({ ...prev, confirmTrash: on }))}
           confirmArchive={userSettings.confirmArchive}
@@ -7872,7 +7947,6 @@ function AuthenticatedView({
       )}
       {showUpgrade && (
         <UpgradeModal
-          trigger={showUpgrade.trigger}
           pubkey={auth.pubkey}
           onCheckoutComplete={refreshProStatus}
           onClose={() => {
@@ -7897,6 +7971,7 @@ function AuthenticatedView({
           drawingVersion={(body) => <DrawingVersion body={body} />}
           supabase={supabase}
           encryptionKey={auth.encryptionKey}
+          serverHistory={proUnlocked(auth.isPro)}
           onClose={() => setHistoryForNoteId(null)}
           onRestore={async (v) => {
             const id = historyNote.id;
@@ -7930,6 +8005,10 @@ function AuthenticatedView({
               if (!snap.ok) throw new Error(t('billing:history.restoreSnapshotFailed'));
               markVersionActivity();
               lastVersionHashRef.current.set(id, await contentHash(current));
+            } else {
+              // No server history: the current text stays on this device
+              // beside the copy it is restored from (replacedCopies.ts).
+              await keepCurrentText(current);
             }
             // Built from the row inside the write, and only while everything
             // the restore replaces is what the snapshot above kept: the title,
@@ -8508,8 +8587,8 @@ function AuthenticatedView({
           hidden={exportProgress !== null}
         />
       )}
-      {tombstoneHold && !dmsWipe && (
-        <MassDeleteModalLazy onAnswered={() => { void refresh(); void runSync(); }} hidden={exportProgress !== null} />
+      {(tombstoneHold || refusedDelete) && !dmsWipe && (
+        <MassDeleteModalLazy onAnswered={() => { void refresh(); void runSync(); }} onShowDevices={() => setShowSyncOptions(true)} hidden={exportProgress !== null} />
       )}
       {conflictQueue.length > 0 && conflictQueue[0] != null && (
         <ConflictModal

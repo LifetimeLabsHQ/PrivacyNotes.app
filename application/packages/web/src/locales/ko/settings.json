@@ -1,6 +1,8 @@
 {
   "shell": {
     "allSettings": "모든 설정",
+    "dockWindow": "측면에 도킹",
+    "dockOtherSide": "반대쪽으로 이동",
     "fillWindow": "창 전체 사용",
     "restoreWindow": "기본 크기로 돌아가기"
   },
@@ -158,6 +160,8 @@
     "peekDark": "지금은 다크 테마를 보여 주고 있어요. 설정을 닫으면 Auto가 다시 시스템을 따라가요.",
     "unlockThemes": "Pro로 모든 테마 잠금 해제",
     "startViewTitle": "앱을 열 때 표시",
+    "reopenLastOpenTitle": "마지막 항목 다시 열기",
+    "reopenLastOpenDesc": "앱을 시작하면 종료할 때 열려 있던 항목이 열려요. 끄면 아무것도 열지 않은 채 목록에서 시작해요.",
     "viewTitle": "항목 표시 방식",
     "viewDesc": "자동은 화면 너비를 따라요.",
     "openInTabsTitle": "열린 항목을 탭에 표시",
@@ -188,6 +192,7 @@
     "linkModifierDesc": "그냥 클릭하면 커서가 놓여요. 탭하면 여전히 링크가 열려요. 이 기기에서만 적용돼요.",
     "typedSymbolsTitle": "입력한 기호를 화살표와 수학 기호로 바꾸기",
     "typedSymbolsDesc": "예를 들어 ->는 →, !=는 ≠, >=는 ≥가 돼요.",
+    "linkSuggestionsDesc": "연결에 아직 링크하지 않은 같은 주제의 노트도 함께 보여 줘요. 끄면 링크가 있는 노트에만 연결 아이콘이 표시돼요.",
     "confirmTrashTitle": "삭제하기 전에 묻기",
     "confirmTrashDesc": "항목을 휴지통으로 옮기기 전에 확인해요.",
     "confirmArchiveTitle": "아카이브하기 전에 묻기",
@@ -585,5 +590,18 @@
     "loadError": "데드맨 스위치를 불러올 수 없어요. 연결을 확인하고 다시 시도하세요.",
     "confirmTitle": "데드맨 스위치를 켤까요?",
     "confirmBody": "{{period}} 동안 어떤 기기도 온라인에 연결되지 않으면 서버가 암호화된 데이터를 삭제해요. 이 작업은 되돌릴 수 없어요. 기기에는 노트가 그대로 남아 있어요."
+  },
+  "onDeviceAi": {
+    "title": "스마트 연결",
+    "desc": "다른 표현이나 다른 언어로 쓰였더라도 같은 의미의 노트를 찾아요. 이 기기에서만 실행되는 오프라인 AI(<model>bekko-static</model>)를 써요.",
+    "on": "켜짐. 제안에 같은 의미의 노트도 포함돼요. 오프라인 AI는 이 기기의 {{size}} 공간을 써요.",
+    "kept": "꺼짐. 오프라인 AI는 이 기기에 남아 있으므로 다시 켤 때 다운로드가 필요 없어요.",
+    "downloadSize": "다운로드 · {{size}}",
+    "downloadingLabel": "오프라인 AI 다운로드",
+    "loading": "오프라인 AI를 불러오는 중",
+    "unavailable": "데모에서는 오프라인 AI를 다운로드할 수 없어요.",
+    "failed": "다운로드가 끝나지 않았어요. 다시 시도하세요.",
+    "remove": "이 기기에서 제거 ({{size}})",
+    "howItWorks": "작동 방식"
   }
 }

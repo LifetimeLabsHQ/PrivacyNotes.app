@@ -1,12 +1,14 @@
 /**
  * A clip's pictures, fetched by the extension: the same per-clip limits as
  * the app (20 pictures, 10 MB as downloaded), only picture types the app
- * stores, no cookies sent. A picture larger than one inbox row allows is
+ * stores, no cookies sent, and never from the person's own computer or
+ * network (`fetchPublic`). A picture larger than one inbox row allows is
  * scaled down here; the app then runs its own picture settings on it when it
  * stores the clip.
  * Spec: docs/internal/plans/browser-extension-build.md (section 3.3, step 3)
  */
 import { CLIP_MAX_PICTURE_BYTES, CLIP_MAX_PICTURES } from '@notes/clipper';
+import { fetchPublic } from './publicFetch';
 
 const TYPES = /^image\/(png|jpeg|gif|webp|avif|bmp)$/;
 // A sealed row carries at most 1.5 MiB of base64, so a picture's bytes stay
@@ -23,8 +25,8 @@ async function fetchOne(src: string): Promise<Picture | null> {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), FETCH_MS);
   try {
-    const res = await fetch(src, { credentials: 'omit', referrerPolicy: 'no-referrer', signal: ctl.signal, cache: 'force-cache' });
-    if (!res.ok) return null;
+    const res = await fetchPublic(src, { credentials: 'omit', referrerPolicy: 'no-referrer', signal: ctl.signal, cache: 'force-cache' });
+    if (!res?.ok) return null;
     const type = (res.headers.get('content-type') ?? '').split(';')[0]!.trim().toLowerCase();
     if (!TYPES.test(type)) return null;
     const bytes = new Uint8Array(await res.arrayBuffer());

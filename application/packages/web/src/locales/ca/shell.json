@@ -302,8 +302,10 @@
     "dayWithMood": "{{date}}, estat d'ànim {{mood}}",
     "previousWeek": "Setmana anterior",
     "nextWeek": "Setmana següent",
-    "showMonth": "{{month}}, mostra el mes sencer",
-    "showWeek": "{{month}}, mostra una setmana"
+    "pickMonth": "{{month}}, tria un mes i un any",
+    "pickMonthTip": "Tria un mes i un any",
+    "showWholeMonth": "Mostra el mes sencer",
+    "showOneWeek": "Mostra una setmana"
   },
   "contextMenu": {
     "newNote": "Nota nova",
@@ -552,6 +554,13 @@
     "itemNameParts": "Segon nom, prefix, sufix",
     "itemPhonetic": "Nom fonètic",
     "itemNote": "Nota",
+    "addSection": "Afegeix una secció",
+    "sectionName": "Nom de la secció",
+    "removeSection": "Elimina la secció",
+    "removeSectionNamed": "Elimina la secció {{name}}",
+    "addFieldTo": "Afegeix un camp a {{name}}",
+    "addFieldToSection": "Afegeix un camp a aquesta secció",
+    "hiddenFieldsNote": "Els valors ocults queden emmascarats fins que els mostris, i la cerca no els troba mai.",
     "labels": {
       "mobile": "Mòbil",
       "home": "Casa",
@@ -680,6 +689,8 @@
     },
     "birthdays": "Aniversaris",
     "contactDate": "{{name}}: {{label}}",
+    "birthdayAge_one": "{{name}} fa {{count}} any",
+    "birthdayAge_other": "{{name}} fa {{count}} anys",
     "dragEnd": "Arrossega per canviar el dia final",
     "previousDay": "Dia anterior",
     "nextDay": "Dia següent",

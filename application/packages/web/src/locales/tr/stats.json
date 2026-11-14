@@ -248,6 +248,8 @@
       "unknown": "Bilinmeyen takip {{id}}",
       "sleepHours": "Uyku saati",
       "sleepQuality": "Uyku kalitesi",
+      "bpSystolic": "Kan basıncı, üst",
+      "bpDiastolic": "Kan basıncı, alt",
       "avgDays_one": "ortalama, {{count}} gün",
       "avgDays_other": "ortalama, {{count}} gün",
       "sumDays_one": "toplam, {{count}} gün",

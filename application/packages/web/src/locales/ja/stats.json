@@ -241,6 +241,8 @@
       "unknown": "不明なトラッカー {{id}}",
       "sleepHours": "睡眠時間",
       "sleepQuality": "睡眠の質",
+      "bpSystolic": "血圧(上)",
+      "bpDiastolic": "血圧(下)",
       "avgDays_other": "平均、{{count}}日",
       "sumDays_other": "合計、{{count}}日",
       "daysLogged_other": "{{count}}日記録",

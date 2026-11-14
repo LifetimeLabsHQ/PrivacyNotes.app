@@ -14,9 +14,10 @@
  * Spec: docs/internal/plans/quick-note-694.md (section 5.2)
  */
 import { bytesToBase64, base64ToBytes, phraseToSeed } from '@notes/shared';
-import { deriveInboxKeyPair, inboxItemId, openInbox, padInboxJson, parseInboxNote, sealInbox, type InboxNote } from '@notes/shared/extension';
+import { deriveInboxKeyPair, padInboxJson, parseInboxNote, sealInbox, type InboxNote } from '@notes/shared/extension';
 import { db, QUICK_NOTE_INBOX_KEY } from './db';
-import { createInboxNote, inboxSecretOf } from './extensionSync';
+import { createInboxNote, inboxSecretOf, openInboxRow } from './extensionSync';
+import { holdsEveryEpoch } from './keyRing';
 import { loadLocalSettings } from './userSettings';
 import { parseQuickAdd } from './quickAdd';
 import { quickAddContext } from './quickAddContext';
@@ -60,7 +61,7 @@ function readTitleLine(line: string): { title: string; tags: string[]; folderId:
  * the title, the title is the text and the title is left empty: the list
  * shows the first line, and an older app refuses a row with no text.
  */
-function quickInboxNote(input: QuickNoteInput, id: string): InboxNote | 'too_long' | 'empty' {
+async function quickInboxNote(input: QuickNoteInput, id: string): Promise<InboxNote | 'too_long' | 'empty'> {
   const { title, tags, folderId } = readTitleLine(input.title);
   const text = input.markdown.trim() ? input.markdown : title;
   if (!text.trim()) return 'empty';
@@ -68,7 +69,11 @@ function quickInboxNote(input: QuickNoteInput, id: string): InboxNote | 'too_lon
     v: 1, id, title: input.markdown.trim() ? title : '', markdown: text, tags, savedAt: new Date().toISOString(), from: 'quick',
     ...(folderId ? { folder: folderId } : {}),
   };
-  return parseInboxNote(note, id) ? note : 'too_long';
+  if (!parseInboxNote(note, id)) return 'too_long';
+  // The size rule the adoption runs (createInboxNote), so a note queued
+  // behind the lock is never refused at the next unlock.
+  const { inboxNoteFits } = await import('@notes/clipper');
+  return inboxNoteFits(note.markdown) ? note : 'too_long';
 }
 
 const hasFolder = (id: string) => loadLocalSettings().folders.some((f) => f.id === id);
@@ -79,7 +84,7 @@ const hasFolder = (id: string) => loadLocalSettings().folders.some((f) => f.id =
  */
 export async function saveQuickNote(input: QuickNoteInput, isCurrent: () => boolean): Promise<QuickNoteAnswer> {
   const id = crypto.randomUUID();
-  const note = quickInboxNote(input, id);
+  const note = await quickInboxNote(input, id);
   if (typeof note === 'string') return note;
   const made = await createInboxNote(note, id, { isCurrent, hasFolder });
   return made === 'created' ? 'saved' : made === 'refused' ? 'too_long' : 'failed';
@@ -113,7 +118,7 @@ export async function queueQuickNote(input: QuickNoteInput): Promise<QuickNoteAn
   if (!key) return 'locked';
   if ((await db.quickNotes.count()) >= QUICK_NOTE_MAX) return 'full';
   const id = crypto.randomUUID();
-  const note = quickInboxNote(input, id);
+  const note = await quickInboxNote(input, id);
   if (typeof note === 'string') return note;
   const payload = sealInbox(padInboxJson(note), base64ToBytes(key.inbox), { account: key.account, id, kind: 'note' });
   await db.quickNotes.add({ id, account: key.account, payload, created: note.savedAt });
@@ -122,10 +127,15 @@ export async function queueQuickNote(input: QuickNoteInput): Promise<QuickNoteAn
 
 /**
  * At unlock: add the waiting notes of this account, oldest first, and delete
- * each row once its note is in the local database. A row that does not open
- * or fails the shape check is deleted, as a bad inbox row is. Rows of another
- * account are left alone; a full sign-out deletes them. Returns the ids of
- * the notes it made.
+ * each row once its note is in the local database. A row opens with the
+ * current inbox secret or the secret of an earlier epoch (the key it was
+ * sealed to can be the one before a phrase change), and its note takes the
+ * id of the secret that opened it. A row that opens under none, or fails the
+ * shape check, is deleted, as a bad inbox row is; one that opens under none
+ * while this device lacks the key of an epoch the account has had waits for
+ * it. Rows of another account are left alone; a full sign-out deletes them.
+ * Returns the ids of the notes it made.
+ * Spec: docs/internal/plans/phrase-change.md (6.2, inbox rows)
  */
 export async function adoptQuickNotes(
   account: string,
@@ -138,14 +148,16 @@ export async function adoptQuickNotes(
   const made: string[] = [];
   for (const row of rows) {
     if (!isCurrent()) break;
+    const opened = openInboxRow(row.payload, secret, { account, id: row.id, kind: 'note' });
+    if (!opened && !holdsEveryEpoch()) continue;
     let note: InboxNote | null = null;
     try {
-      note = parseInboxNote(JSON.parse(new TextDecoder().decode(openInbox(row.payload, secret, { account, id: row.id, kind: 'note' }))), row.id);
+      note = opened ? parseInboxNote(JSON.parse(new TextDecoder().decode(opened.plain)), row.id) : null;
     } catch {
       note = null;
     }
-    const itemId = inboxItemId(secret, row.id);
-    if (note && !(await db.notes.get(itemId))) {
+    const itemId = opened?.itemId;
+    if (note && itemId && !(await db.notes.get(itemId))) {
       const result = await createInboxNote(note, itemId, { isCurrent, hasFolder });
       if (result === 'stopped') break;
       if (result === 'created') made.push(itemId);

@@ -19,7 +19,7 @@ import {
 } from './devices';
 import { groupDeviceSlots, shortDeviceId, type DeviceSlot } from './deviceSlots';
 import { readPanelCache, writePanelCache } from './accountPanelCache';
-import { ArrowsClockwise, Check, CreditCard, Database, Devices, Hourglass, Key, PencilSimple, SignIn, SignOut, User, X, HardDrives } from './icons';
+import { ArrowsClockwise, Check, CreditCard, Database, Devices, Hourglass, PencilSimple, SignIn, SignOut, User, Vault, X, HardDrives } from './icons';
 import { InlineRenameField } from './InlineRenameField';
 import { DEVICE_LABEL_MAX, deviceLabelOf, type DeviceLabels } from './deviceLabels';
 import { HoverLabel } from './HoverLabel';
@@ -441,6 +441,8 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
           pubkey: authed.pubkey,
           signingPrivateKey: authed.signingPrivateKey,
           fpPepper: authed.fpPepper,
+          // The person removed this device here by hand to clear ghost rows.
+          reactivate: true,
         };
         try {
           await registerDevice(registerArgs);
@@ -509,7 +511,7 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
           {([
             { section: 'overview', label: 'overview', Icon: Devices },
             { section: 'connectedAccounts', label: 'accounts', Icon: SignIn },
-            { section: 'keyCustody', label: 'keyCustody', Icon: Key },
+            { section: 'keyCustody', label: 'keyCustody', Icon: Vault },
           ] as const).map(({ section, label, Icon }) => <button key={section}
             type="button" aria-pressed={accountSection === section} onClick={() => setAccountSection(section)}
             className={settingsTabClass(accountSection === section)}>

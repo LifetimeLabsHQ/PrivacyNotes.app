@@ -1040,5 +1040,103 @@
       "bytes": 59590,
       "sha256": "8dde8931deb5b946e10c60148ac96d27e783efed73ba31ee53e9c6b9ce8b30f2"
     }
+  },
+  "0.770": {
+    "copy-markdown": {
+      "w": 1444,
+      "h": 840,
+      "bytes": 24022,
+      "sha256": "ba64a4c5fb61ac222a623428195b7976c921b7e87844029f5eaf9a9a38e16db2"
+    }
+  },
+  "0.771": {
+    "kanban-column-menu": {
+      "w": 1802,
+      "h": 1027,
+      "bytes": 48248,
+      "sha256": "3728e32aa7119ea333bc28604a5878e742e43136bba05700a6537f361a3ead93"
+    }
+  },
+  "0.772": {
+    "birthday-age": {
+      "w": 1444,
+      "h": 600,
+      "bytes": 21354,
+      "sha256": "f5aea1b202eb05eb3668a269907d4303ae43300f4fea4132aa63742658983615"
+    },
+    "month-picker": {
+      "w": 1444,
+      "h": 1600,
+      "bytes": 64626,
+      "sha256": "ed2b37dfdc0d5c37de3c48c31efe74d97c7556f28f76e8f8554352db32f10a0b"
+    }
+  },
+  "0.773": {
+    "contact-edit": {
+      "w": 1309,
+      "h": 1198,
+      "bytes": 31712,
+      "sha256": "1b6c8688a1de604da05cc78688f02bcfc89bf4afa27faa2e83de2dc94f77d829"
+    },
+    "contact-sections": {
+      "w": 1444,
+      "h": 1800,
+      "bytes": 48198,
+      "sha256": "8686555f802af2576aaad4e79b96ec7a12c7d53162b5d0c210512f45de474e72"
+    }
+  },
+  "0.774": {
+    "blood-pressure": {
+      "w": 1703,
+      "h": 1164,
+      "bytes": 48482,
+      "sha256": "49fc70785b6f0d853a6c7752cac2a0caef6018410660b70901eb20363e8099be"
+    }
+  },
+  "0.776": {
+    "settings-dock": {
+      "w": 2000,
+      "h": 1195,
+      "bytes": 229222,
+      "sha256": "9da643d5603b224edcf340cc46098566348e1f995750be9e65a7c024fdaee087"
+    }
+  },
+  "0.777": {
+    "importers": {
+      "w": 2000,
+      "h": 1722,
+      "bytes": 190434,
+      "sha256": "cc057fd91f6901e5e74b042b4674173515d96406f3f37596e7054783d4d248b0"
+    }
+  },
+  "0.778": {
+    "doodle": {
+      "w": 1444,
+      "h": 1584,
+      "bytes": 35662,
+      "sha256": "ef24c8f1869d14956b9991ebe07d282bd56c0a5a50d5c291a86fa758a3629c83"
+    }
+  },
+  "0.779": {
+    "crypto": {
+      "w": 1381,
+      "h": 1507,
+      "bytes": 144012,
+      "sha256": "9cbf7f9633fd0dda4997a8946bafee2aa5fa497d125af97e14c4187f27315c94"
+    }
+  },
+  "0.780": {
+    "smart-settings": {
+      "w": 2000,
+      "h": 753,
+      "bytes": 91212,
+      "sha256": "309462b170bfb9417320e41e74b3682cf1aa3e0498c99f015d293e9b94cd63d7"
+    },
+    "suggestions": {
+      "w": 1444,
+      "h": 720,
+      "bytes": 35078,
+      "sha256": "b35af167a9aabbe59199fae2291d3c66d38d8283469a758083ae8b4f17a49c52"
+    }
   }
 }

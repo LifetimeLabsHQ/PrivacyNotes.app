@@ -7,6 +7,7 @@
     "sleep": "Spánok",
     "sleepScore": "Skóre spánku",
     "heartRate": "Tep srdca",
+    "bloodPressure": "Krvný tlak",
     "activity": "Aktivita",
     "medication": "Lieky",
     "meds": "Lieky",
@@ -24,6 +25,7 @@
   "units": {
     "hoursSuffix": "h",
     "bpm": "úd./min",
+    "mmHg": "mmHg",
     "kg": "kg",
     "lb": "lb",
     "steps_one": "krok",
@@ -124,6 +126,10 @@
   },
   "heartRate": {
     "prompt": "Priemerný tep srdca"
+  },
+  "bloodPressure": {
+    "systolic": "Horný tlak (systolický)",
+    "diastolic": "Dolný tlak (diastolický)"
   },
   "activity": {
     "prompt": "Úroveň aktivity dnes?",
@@ -267,11 +273,13 @@
   "custom": {
     "yes": "Áno",
     "no": "Nie",
+    "unknownType": "Táto sledovaná hodnota vyžaduje novšiu verziu aplikácie.",
     "typeLabels": {
       "scale10": "Stupnica (0-10)",
       "scale5": "Stupnica (0-5)",
       "slider100": "Skóre (0-100)",
       "number": "Číslo",
+      "pair": "Dve čísla",
       "yesno": "Áno / Nie"
     }
   },
@@ -287,6 +295,7 @@
     "medicationCard": "Karta liekov",
     "medicationCardHelp": "„Sú dnešné lieky užité?“ na tomto zariadení, iba v deň, keď je nejaký liek na rade.",
     "customHelp": "Sledované hodnoty, ktoré si pomenuješ: stupnica, číslo alebo áno či nie. Najviac {{max}}.",
+    "customHelpPair": "Sledované hodnoty, ktoré si pomenuješ: stupnica, číslo, dve čísla alebo áno či nie. Najviac {{max}}.",
     "yourCustomTrackers": "Tvoje vlastné sledované hodnoty",
     "categoryMoodMind": "Nálada a myseľ",
     "categoryBodyHealth": "Telo a zdravie",
@@ -321,7 +330,13 @@
     "preview": "Náhľad",
     "startFromLast": "Pamätať si posledný záznam",
     "chooseIcon": "Vybrať ikonu",
-    "startFromLastHelp": "Hodí sa pre veci, ktoré sa menia len zriedka, napríklad tvoja váha alebo denná dávka."
+    "startFromLastHelp": "Hodí sa pre veci, ktoré sa menia len zriedka, napríklad tvoja váha alebo denná dávka.",
+    "pairFirst": "Prvé číslo",
+    "pairSecond": "Druhé číslo",
+    "pairFirstPlaceholder": "Systolický",
+    "pairSecondPlaceholder": "Diastolický",
+    "pairUnit": "Jednotka (voliteľné)",
+    "pairWaiting": "Uloží sa, keď zadáš prvé číslo."
   },
   "factors": {
     "prompt": "Čo patrilo k tvojmu dňu?",

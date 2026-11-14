@@ -6,6 +6,7 @@
  */
 import i18n from 'i18next';
 import resources from 'virtual:pn-catalogs';
+import { setPageLanguage } from './pageLanguage';
 
 let started: Promise<unknown> | null = null;
 
@@ -20,7 +21,7 @@ export function startI18n(plugins: Parameters<typeof i18n.use>[0][] = []): Promi
     ns: ['extension', 'common', 'shell', 'auth', 'notes', 'security', 'settingsSearch', 'editor'],
     defaultNS: 'extension',
     interpolation: { escapeValue: false },
-  });
+  }).then(() => setPageLanguage(i18n));
   return started;
 }
 

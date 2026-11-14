@@ -1,4 +1,4 @@
-import { toLocalIso } from './intlFormat';
+import { toLocalIso } from './localDate';
 import type { JournalEntry } from './trackerStats';
 import type { CompareResult, CompareRuleKind, DaySeries, RangeBounds, TrackerDescriptor, TrackerKind } from './wellnessTypes';
 
@@ -42,7 +42,8 @@ function nextDay(iso: string): string {
   return toLocalIso(day);
 }
 
-function asNumber(v: unknown): number | undefined {
+/** A finite number, else undefined. */
+export function asNumber(v: unknown): number | undefined {
   return typeof v === 'number' && Number.isFinite(v) ? v : undefined;
 }
 

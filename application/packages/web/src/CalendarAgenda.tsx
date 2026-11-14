@@ -36,6 +36,8 @@ type Props = {
   search: string;
   /** The week strip above the agenda, on a phone. */
   strip: boolean;
+  /** The strip's week numbers (the synced `calendar.weekNumbers`). */
+  weekNumbers?: boolean;
   /** What a row drags: its id and its note-link, for a drop on a day of a
    *  calendar, a folder or an editor. */
   dragPayload?: (id: string) => ItemDragPayload;
@@ -77,7 +79,7 @@ function dayHeader(day: string, today: string): { word: string | null; date: str
   return { word: null, date };
 }
 
-export default function CalendarAgenda({ index, onOpen, search, strip, dragPayload, onItemMenu, selection }: Props) {
+export default function CalendarAgenda({ index, onOpen, search, strip, weekNumbers, dragPayload, onItemMenu, selection }: Props) {
   const { t } = useTranslation('shell');
   const today = toLocalIso(new Date());
   const [ahead, setAhead] = useState(AHEAD_DAYS);
@@ -214,6 +216,8 @@ export default function CalendarAgenda({ index, onOpen, search, strip, dragPaylo
           <MonthGrid
             marked={index}
             selected={stripDay}
+            wide
+            weekNumbers={weekNumbers}
             weeks={weeks}
             onToggleWeeks={() => setWeeks((w) => (w === 6 ? 1 : 6))}
             onPick={(day) => { setStripDay(day); goTo(day); }}

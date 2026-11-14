@@ -17,7 +17,7 @@
  * lock removes this envelope.
  *
  * The envelope reuses the phrase's own storage key. Every presence
- * check (hasStoredSession, the app-lock gate, sign-out removal, the
+ * check (hasStoredPhrase, the app-lock gate, sign-out removal, the
  * demo credential sweep) keys on presence, not shape, so they all keep
  * working unchanged.
  *
@@ -32,7 +32,7 @@
  * non-extractable device key)
  */
 
-import { isValidPhrase } from '@notes/shared';
+import { base64ToBytes, bytesToBase64, isValidPhrase } from '@notes/shared';
 import { db, reopenDb } from './db';
 import { PHRASE_STORAGE_KEY } from './authStorage';
 import { trustAwareStorage } from './trustStorage';
@@ -82,19 +82,6 @@ export function storedPhraseUnwrapped(): boolean {
 
 function isCryptoKey(v: unknown): v is CryptoKey {
   return typeof CryptoKey !== 'undefined' && v instanceof CryptoKey;
-}
-
-function toB64(bytes: Uint8Array): string {
-  let s = '';
-  for (const b of bytes) s += String.fromCharCode(b);
-  return btoa(s);
-}
-
-function fromB64(b64: string): Uint8Array {
-  const s = atob(b64);
-  const out = new Uint8Array(s.length);
-  for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
-  return out;
 }
 
 /**
@@ -211,7 +198,7 @@ export async function persistStoredPhrase(phrase: string): Promise<boolean> {
     // brick the stored session where plaintext would have worked.
     const back = await aesGcmDecrypt(key, ciphertext, iv);
     if (back !== phrase) throw new Error('wrap round trip mismatch');
-    value = `${ENVELOPE_PREFIX}${toB64(iv)}:${toB64(ciphertext)}`;
+    value = `${ENVELOPE_PREFIX}${bytesToBase64(iv)}:${bytesToBase64(ciphertext)}`;
   } catch (err) {
     // Fallback IS the old behavior. Breadcrumbed so a device that
     // cannot wrap is visible in the auth log, never silent.
@@ -237,6 +224,26 @@ export async function persistStoredPhrase(phrase: string): Promise<boolean> {
 }
 
 /**
+ * The phrase sealed under this device's wrap key, as an envelope
+ * `unwrapStoredEnvelope` opens, or null when the device cannot wrap. Never
+ * the plaintext: the phrase change keeps its new phrase in a handover record
+ * with this, and a record must never hold a phrase in the clear.
+ * Spec: docs/internal/plans/phrase-change.md (6.6)
+ */
+export async function sealPhraseForDevice(phrase: string): Promise<string | null> {
+  try {
+    await getOrCreateWrapKey();
+    const key = await readWrapKey();
+    if (!key) return null;
+    const { ciphertext, iv } = await aesGcmEncrypt(key, phrase);
+    if ((await aesGcmDecrypt(key, ciphertext, iv)) !== phrase) return null;
+    return `${ENVELOPE_PREFIX}${bytesToBase64(iv)}:${bytesToBase64(ciphertext)}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Open a stored envelope back into the phrase. Returns null when the
  * envelope is malformed or the wrap key is gone (cleared IndexedDB
  * beside a surviving localStorage) - the caller treats null as "no
@@ -252,8 +259,8 @@ export async function unwrapStoredEnvelope(value: string): Promise<string | null
   let iv: Uint8Array;
   let ciphertext: Uint8Array;
   try {
-    iv = fromB64(parts[0]!);
-    ciphertext = fromB64(parts[1]!);
+    iv = base64ToBytes(parts[0]!);
+    ciphertext = base64ToBytes(parts[1]!);
   } catch {
     return null;
   }

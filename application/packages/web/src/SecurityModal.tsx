@@ -156,6 +156,7 @@ export function SecurityModal({
         onCancel={onClose}
         pinCredential={`${userSettings.pinHash ?? ''}:${userSettings.pinSalt ?? ''}`}
         onOpenCustody={isDemoMode() ? undefined : onOpenCustody}
+        onOpenTwoFactor={() => setTab('twoFactor')}
         recovery={{ phrase, userSettings, onSettingsChange }}
       />
     )}
