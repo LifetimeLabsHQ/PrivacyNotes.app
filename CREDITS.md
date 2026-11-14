@@ -1,10 +1,10 @@
-<!-- Generated from the public issues at each source publish. Do not edit by hand. -->
+<!-- Generated every day from the public issues by .github/workflows/credits.yml. Do not edit by hand. -->
 
 # Credits
 
 PrivacyNotes is shaped by the people who report bugs and ask for features in [our issues](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues). 104 people have opened an issue so far, and 436 reports are now fixed or built. Thank you.
 
-"Shipped" counts the bug reports and feature requests of a person that we closed as done. The list updates each time we publish the source. To leave the list, say so in any issue.
+"Shipped" counts the bug reports and feature requests of a person that we closed as done. The list updates every day. To leave the list, say so in any issue.
 
 ## 50 or more shipped
 
@@ -40,7 +40,7 @@ PrivacyNotes is shaped by the people who report bugs and ask for features in [ou
 
 ## Most active in the last 30 days
 
-[tech2-user](https://github.com/tech2-user) (28 issues) · [Real-Fruit-Snacks](https://github.com/Real-Fruit-Snacks) (17 issues) · [scamidge](https://github.com/scamidge) (16 issues) · [shriganesh](https://github.com/shriganesh) (11 issues) · [AndreFeliciano](https://github.com/AndreFeliciano) (10 issues) · [grub-basket](https://github.com/grub-basket) (10 issues) · [laulaugaby](https://github.com/laulaugaby) (10 issues) · [pdmcgeejr](https://github.com/pdmcgeejr) (6 issues) · [snogglefromp](https://github.com/snogglefromp) (6 issues) · [javaskript](https://github.com/javaskript) (5 issues) · [mburr](https://github.com/mburr) (5 issues) · [deftly1970](https://github.com/deftly1970) (4 issues) · [KamikazeWolf](https://github.com/KamikazeWolf) (4 issues) · [RuinTD](https://github.com/RuinTD) (4 issues) · [thediamondgeezer](https://github.com/thediamondgeezer) (4 issues) · [Xarcell](https://github.com/Xarcell) (4 issues) · [dnet890](https://github.com/dnet890) (3 issues) · [gijs-epping](https://github.com/gijs-epping) (3 issues) · [harishbewe](https://github.com/harishbewe) (3 issues) · [kocour](https://github.com/kocour) (3 issues) · [les-incompetent](https://github.com/les-incompetent) (3 issues) · [thecoffeebin](https://github.com/thecoffeebin) (3 issues)
+[tech2-user](https://github.com/tech2-user) (28 issues) · [Real-Fruit-Snacks](https://github.com/Real-Fruit-Snacks) (17 issues) · [scamidge](https://github.com/scamidge) (16 issues) · [shriganesh](https://github.com/shriganesh) (11 issues) · [AndreFeliciano](https://github.com/AndreFeliciano) (10 issues) · [grub-basket](https://github.com/grub-basket) (10 issues) · [laulaugaby](https://github.com/laulaugaby) (10 issues) · [pdmcgeejr](https://github.com/pdmcgeejr) (6 issues) · [snogglefromp](https://github.com/snogglefromp) (6 issues) · [javaskript](https://github.com/javaskript) (5 issues) · [mburr](https://github.com/mburr) (5 issues) · [RuinTD](https://github.com/RuinTD) (5 issues) · [deftly1970](https://github.com/deftly1970) (4 issues) · [KamikazeWolf](https://github.com/KamikazeWolf) (4 issues) · [thediamondgeezer](https://github.com/thediamondgeezer) (4 issues) · [Xarcell](https://github.com/Xarcell) (4 issues) · [dnet890](https://github.com/dnet890) (3 issues) · [gijs-epping](https://github.com/gijs-epping) (3 issues) · [harishbewe](https://github.com/harishbewe) (3 issues) · [kocour](https://github.com/kocour) (3 issues) · [les-incompetent](https://github.com/les-incompetent) (3 issues) · [thecoffeebin](https://github.com/thecoffeebin) (3 issues)
 
 ## Every report counts
 
