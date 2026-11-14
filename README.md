@@ -177,6 +177,20 @@ If you cannot use GitHub, email **sec@lifetimelabs.dev** as a backup. That addre
 
 ---
 
+<!-- credits:start -->
+## Credits
+
+PrivacyNotes is shaped by the people who report bugs and ask for features in our issues. 104 people have opened an issue, and 436 reports are now fixed or built.
+
+<table>
+<tr><td align="center" valign="top"><a href="https://github.com/tech2-user"><img src="https://github.com/tech2-user.png?size=128" width="64" height="64" alt=""><br><sub><b>tech2-user</b></sub></a><br><sub>78 shipped</sub></td><td align="center" valign="top"><a href="https://github.com/harishbewe"><img src="https://github.com/harishbewe.png?size=128" width="64" height="64" alt=""><br><sub><b>harishbewe</b></sub></a><br><sub>38 shipped</sub></td><td align="center" valign="top"><a href="https://github.com/scamidge"><img src="https://github.com/scamidge.png?size=128" width="64" height="64" alt=""><br><sub><b>scamidge</b></sub></a><br><sub>28 shipped</sub></td><td align="center" valign="top"><a href="https://github.com/Real-Fruit-Snacks"><img src="https://github.com/Real-Fruit-Snacks.png?size=128" width="64" height="64" alt=""><br><sub><b>Real-Fruit-Snacks</b></sub></a><br><sub>27 shipped</sub></td></tr>
+</table>
+
+Everyone, with their counts, is in [CREDITS.md](CREDITS.md).
+<!-- credits:end -->
+
+---
+
 ## License
 
 This repository is **AGPL-3.0**. Read it, audit it, build it, fork it. If you run a modified version as a network service, publish your changes.

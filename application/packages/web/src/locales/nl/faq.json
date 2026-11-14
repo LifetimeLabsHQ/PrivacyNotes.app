@@ -208,6 +208,17 @@
         "De enige uitzondering is optioneel en blijft op je apparaat. Slimme verbanden vindt notities met dezelfde betekenis, ook in andere woorden of een andere taal. Het gebruikt offline AI ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)) die alleen op dit apparaat draait. Ze schrijft niets en beantwoordt niets: ze zet elke notitie om in een lijst getallen en vergelijkt die. Je downloadt haar één keer bij Instellingen > Editor > Gedrag > Slimme verbanden, en daarna werkt ze zonder verbinding. Met de schakelaar zet je haar uit, en Verwijderen haalt haar van het apparaat. Niets wat ze over een notitie uitrekent wordt opgeslagen of verstuurd."
       ]
     },
+    "vibe-coded": {
+      "q": "Is PrivacyNotes gebouwd door AI of door ontwikkelaars?",
+      "a": [
+        "Door ontwikkelaars. PrivacyNotes is gebouwd door mensen die sinds eind jaren negentig voor het web schrijven en al meer dan tien jaar met privacy werken, onder meer bij [PrivacyTools.io](https://privacytools.io). Zij lezen en keuren elke regel goed voordat die live gaat. AI-codeertools helpen hen daarbij, zoals ze de meeste ontwikkelaars tegenwoordig helpen.",
+        "Eerst kwam het fundament, en dat is met de hand geschreven door mensen, voordat AI-codeertools goed genoeg waren om het aan toe te vertrouwen. De versleutelingskern, het synchronisatieprotocol en het aanmeldproces zijn naast een baan gebouwd, lang voordat de app een naam had. In het voorjaar van 2026, toen dat fundament stevig stond, zijn we AI-tools gaan gebruiken volgens een vast protocol: eerst voor [vertalingen](/nl/help/translation-quality), daarna hulpartikelen, en vervolgens interfacefuncties en bugfixes.",
+        "We gebruiken AI omdat een klein team zo kan bijblijven met wat mensen vragen. Een bug die één persoon meldt, is vaak al in de volgende versie opgelost, omdat de trage onderdelen van het werk sneller gaan: de oorzaak vinden van een zeldzame bug waar je met de hand weken over zou doen, interfaceonderdelen bouwen en elke taal bijhouden. Wat we bouwen komt nog steeds uit de verzoeken die mensen ons sturen, niet uit wat een tool voorstelt.",
+        "Elke wijziging volgt hetzelfde pad. Een persoon leest haar en keurt haar goed. Daarna draaien geautomatiseerde controles: typecontroles, tests en poorten voor de regels die we zelf hebben gesteld, van de woorden die de app gebruikt tot hoeveel code er bij het opstarten wordt geladen. AI heeft geholpen veel van die controles te schrijven, en ze leggen elke wijziging dezelfde norm op, wie haar ook schreef. AI leest elke wijziging ook een tweede keer en wijst op randgevallen die een vermoeide controleur kan missen. Die tweede lezing komt bovenop de menselijke controle en vervangt die nooit.",
+        "Wijzigingen aan versleuteling, synchronisatie en aanmelden krijgen de strengste controle, regel voor regel, en moeten dezelfde tests halen voordat ze live gaan. Het ontwerp van die code en de afwegingen die erin zijn gemaakt, staan beschreven in ons [dreigingsmodel](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md), zodat je de keuzes kunt beoordelen en niet alleen de code.",
+        "Dit alles kun je zelf controleren. De code van de app is [openbaar](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), elke versie heeft een datum in de [changelog](/changelog), en [VERIFY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md) laat zien hoe je onze belangrijkste beveiligingsclaim in je eigen browser controleert. Los daarvan stuurt de app je notities nooit naar een AI ([details](/nl/help/no-ai)). We krijgen deze vraag vaak. Deze pagina is het antwoord waar we achter staan."
+      ]
+    },
     "burn-notes": {
       "q": "Wat zijn burn-notities?",
       "a": [
@@ -333,6 +344,14 @@
         "Het geeft die handvol inloggegevens die anders verspreid over je notities belanden een nette, beschermde plek. [Combineer het met de app-vergrendeling en PIN-beveiliging](/nl/help/locked-vs-protected) voor een dubbele beveiliging van je gevoeligste items. [Een Bitwarden-import belandt hier automatisch](/nl/help/import/bitwarden)."
       ]
     },
+    "replace-password-manager": {
+      "q": "Kan de Kluis mijn wachtwoordmanager vervangen, zoals Bitwarden?",
+      "a": [
+        "Ja. De Kluis bewaart je logins, kaarten en SSH-sleutels, versleuteld op je apparaat. De gratis browserextensie vult een login alleen in op de site waar die bij hoort. [Een Bitwarden-import](/nl/help/import/bitwarden) zet je wachtwoorden in één stap over.",
+        "Je [herstelzin](/nl/help/phrase-vs-password) is de hoofdsleutel, niet je PIN. De PIN of toegangscode vergrendelt een apparaat waarop je al bent aangemeld, zoals de code van je telefoon. De extensie heeft een eigen PIN of toegangscode, los van die van de app. Na 10 foute pogingen koppelt de extensie die browser los.",
+        "Kies voor het sterkste slot een toegangscode in plaats van een PIN van 4 cijfers in Instellingen > Beveiliging > PIN, en kies ook voor de extensie een toegangscode. Houd de schijfversleuteling en schermvergrendeling van je computer aan. De details staan in ons [dreigingsmodel](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "note-size-limit": {
       "q": "Hoe lang mag één notitie zijn, en wat betekenen de waarschuwingen over de grootte?",
       "a": [
@@ -418,8 +437,8 @@
       "q": "Ik heb een functie gevraagd of een bug gemeld. Hoe lang duurt het voordat het er is?",
       "a": [
         "Vaak een paar dagen. Kleine verzoeken en bugmeldingen komen meestal in de volgende versie terecht, en we brengen bijna elke week een versie uit in plaats van een paar keer per jaar. De [changelog](/changelog) is het bewijs: elk item heeft een datum, staat in gewone taal en zegt wat er is veranderd. Lees een maand terug en je weet precies wat je van ons kunt verwachten voordat je de app iets toevertrouwt.",
-        "Dat tempo komt door hoe het werk verdeeld is. De versleutelingskern, het synchronisatieprotocol en het aanmeldproces zijn door mensen geschreven, naast hun baan, lang voordat de app een naam had, en de cryptokern wordt nog steeds zo onderhouden; niets geautomatiseerds komt erbij in de buurt. Toen dat fundament stond, in het voorjaar van 2026, zijn we AI-hulpmiddelen gaan gebruiken volgens een vast protocol: eerst voor [vertalingen](/nl/help/translation-quality), daarna hulpartikelen, daarna interfacefuncties en niet-kritieke bugfixes, waar ze goed zijn in het opsporen van zeldzame randgevallen die anders weken zouden kosten, en in het schrijven van de testscripts die meerdere ontwikkelaars aan één standaard houden. Daarom is ook een verzoek van één persoon de moeite waard om uit te voeren, in plaats van het te laten wachten tot de populairste verzoeken zijn afgehandeld.",
-        "Alles wat versleuteling, synchronisatie of aanmelden raakt, blijft bij ervaren ontwikkelaars die elke regel schrijven, en die code is [openbaar](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) zodat je hem kunt lezen in plaats van ons te geloven. Meer over het team en hoe we werken staat op onze [over-ons-pagina](https://lifetimelabs.dev/about).",
+        "Dat tempo komt door hoe het werk verdeeld is. De versleutelingskern, het synchronisatieprotocol en het aanmeldproces zijn door mensen geschreven, naast hun baan, lang voordat de app een naam had. Toen dat fundament stond, in het voorjaar van 2026, zijn we AI-codeertools gaan gebruiken volgens een vast protocol ([zo gebruiken we ze](/nl/help/vibe-coded)): eerst voor [vertalingen](/nl/help/translation-quality), daarna hulpartikelen, daarna interfacefuncties en niet-kritieke bugfixes, waar ze goed zijn in het opsporen van zeldzame randgevallen die anders weken zouden kosten, en in het schrijven van de testscripts die meerdere ontwikkelaars aan één standaard houden. Daarom is ook een verzoek van één persoon de moeite waard om uit te voeren, in plaats van het te laten wachten tot de populairste verzoeken zijn afgehandeld.",
+        "Een persoon leest en keurt elke regel goed voordat die live gaat, en wijzigingen aan versleuteling, synchronisatie of aanmelden krijgen de strengste controle. Die code is [openbaar](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) zodat je hem kunt lezen in plaats van ons te geloven. Meer over het team en hoe we werken staat op onze [over-ons-pagina](https://lifetimelabs.dev/about).",
         "De app zelf geeft je notities nooit aan een AI, en de ene AI-functie die hij heeft draait alleen op je apparaat, als je die aanzet ([details](/nl/help/no-ai)). Die belofte staat op zichzelf, en verandert niet."
       ]
     },
@@ -517,7 +536,7 @@
     "mcp": {
       "q": "Kan een AI-app notities opslaan in PrivacyNotes via MCP?",
       "a": [
-        "Ja. MCP (Model Context Protocol) is de standaardmanier waarop AI-apps hulpmiddelen aansluiten, en `privacynotes`, de PrivacyNotes-opdrachtregelinterface, kan als zo'n hulpmiddel draaien. Voeg het één keer toe en vraag in elke chat in gewone woorden: \"Sla een samenvatting van deze chat op in mijn notities, met de tag meeting.\" De app roept de save_note-tool van `privacynotes` aan, en de notitie komt in de Agent-map van je notities, op al je apparaten na hun volgende synchronisatie. De tool kan alleen notities toevoegen, dus een chat kan de notities die je hebt niet openen, wijzigen of verwijderen. Het is onderdeel van Pro.",
+        "Ja. MCP (Model Context Protocol) is de standaardmanier waarop AI-apps hulpmiddelen aansluiten, en `privacynotes`, de PrivacyNotes-opdrachtregelinterface, kan als zo'n hulpmiddel draaien. Voeg het één keer toe en vraag in elke chat in gewone woorden: \"Sla een samenvatting van deze chat op in mijn notities, met de tag meeting.\" De app roept de save_note-tool van `privacynotes` aan, en de notitie komt in de Agent-map van je notities, op al je apparaten na hun volgende synchronisatie. De tool kan alleen notities toevoegen, dus [een chat kan de notities die je hebt niet openen, wijzigen of verwijderen](/nl/help/no-ai). Het is onderdeel van Pro.",
         "[Stel eerst de opdracht `privacynotes` in](/nl/help/command-line) op dezelfde computer en verbind het met `privacynotes login`. Open daarna de MCP-instellingen van je AI-app, een instellingenscherm of een bestand zoals mcp.json, voeg dit item toe onder `mcpServers` en start de app opnieuw:",
         "`\"privacynotes\": { \"command\": \"privacynotes\", \"args\": [\"mcp\"] }`",
         "De tool neemt de Markdown aan, en eventueel een titel en tags, met dezelfde limieten als `privacynotes save`: 700 KB, 20 tags en een titel van 200 tekens. Als iets een opslag tegenhoudt, vertelt de tool dat in woorden aan de app, zodat de app het aan jou kan vertellen: de opdracht is nog niet verbonden, de notitie is te groot, of de server heeft hem geweigerd.",
@@ -637,7 +656,7 @@
       "q": "Hoe werken automatische back-ups?",
       "a": [
         "Je kiest een map en hoe vaak: elke dag, elke week of elke maand. Als er een back-up aan de beurt is, schrijft PrivacyNotes een nieuw bestand \"Alles, versleuteld (.pnbackupz)\" in die map, zonder klik. Het bewaart het aantal kopieën dat je kiest en verwijdert alleen oudere kopieën die dit apparaat zelf heeft gemaakt. Automatische back-ups zijn gratis in elk plan.",
-        "Zet ze aan onder Instellingen > Back-up > Automatisch: kies een map, kies hoe vaak, en druk dan op \"Aanzetten en nu back-up maken\". De eerste back-up draait meteen, zodat je ziet dat de map werkt. De instelling hoort alleen bij dit apparaat. Elk apparaat dat back-ups moet maken, heeft zijn eigen instelling nodig, [en elke app werkt net iets anders](/nl/help/automatic-backup-apps)."
+        "Zet ze aan onder Instellingen > Back-up > Automatisch: kies een map, kies hoe vaak, en druk dan op \"Aanzetten en nu back-up maken\". De eerste back-up draait meteen, [zodat je ziet dat de map werkt](/nl/help/backup-checked). De instelling hoort alleen bij dit apparaat. Elk apparaat dat back-ups moet maken, heeft zijn eigen instelling nodig, [en elke app werkt net iets anders](/nl/help/automatic-backup-apps)."
       ]
     },
     "automatic-backup-apps": {
@@ -671,7 +690,7 @@
     "backup-without-phrase": {
       "q": "Kan iemand mijn back-upbestand openen zonder mijn herstelzin?",
       "a": [
-        "Nee, een versleuteld bestand niet. Een bestand \"Alles, versleuteld (.pnbackupz)\" of \"Alleen tekst, versleuteld (.pnbackup)\" is versleuteld met de sleutel van je herstelzin, dus het opent alleen in jouw account. Wie het bestand vindt, ziet de naam, de grootte en de datum, en niets van de inhoud.",
+        "Nee, een versleuteld bestand niet. Een bestand \"Alles, versleuteld (.pnbackupz)\" of \"Alleen tekst, versleuteld (.pnbackup)\" is versleuteld met de sleutel van je herstelzin, dus [het opent alleen in jouw account](/nl/help/backup-lost-phrase). Wie het bestand vindt, ziet de naam, de grootte en de datum, en niets van de inhoud.",
         "Een \"Alles, niet versleuteld (.zip)\" uit Instellingen > Back-up > Handmatig is de uitzondering: hij opent op elke computer, zonder herstelzin. Automatische back-ups maken dat type nooit ([waarom niet](/nl/help/backup-unencrypted))."
       ]
     },
@@ -721,7 +740,7 @@
       "q": "Hoe herstel ik een automatische back-up op een nieuw apparaat?",
       "a": [
         "Meld je op het nieuwe apparaat aan met dezelfde herstelzin, of dezelfde Google-, Apple- of GitHub-login, en wacht tot de voettekst \"Synced\" zegt. De meeste van je notities zijn dan al terug, via synchronisatie.",
-        "Open daarna Instellingen > Back-up > Herstellen, kies \"Versleutelde back-up (.pnbackup, .pnbackupz)\" en kies het nieuwste bestand uit je back-upmap. Het herstel voegt toe wat het account mist en laat staan wat er al is ([hoe een herstel werkt](/nl/help/restore-backup)). Een versleutelde back-up opent alleen in het account dat hem heeft gemaakt."
+        "Open daarna Instellingen > Back-up > Herstellen, kies \"Versleutelde back-up (.pnbackup, .pnbackupz)\" en kies het nieuwste bestand uit [je back-upmap](/nl/help/automatic-backups). Het herstel voegt toe wat het account mist en laat staan wat er al is ([hoe een herstel werkt](/nl/help/restore-backup)). Een versleutelde back-up opent alleen in het account dat hem heeft gemaakt."
       ]
     },
     "backup-lost-phrase": {

@@ -208,6 +208,17 @@
         "Jediná výjimka je dobrovolná a zůstává na tvém zařízení. Chytrá propojení najdou poznámky se stejným významem, i když jsou napsané jinými slovy nebo v jiném jazyce. Používají offline AI ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)), která běží jen v tomto zařízení. Nic nepíše a na nic neodpovídá: každou poznámku převede na seznam čísel a ta porovná. Stáhneš ji jednou v Nastavení > Editor > Chování > Chytrá propojení a pak funguje i bez připojení. Vypínač ji vypne a Odebrat ji z tohoto zařízení odstraní. Nic, co o poznámce zjistí, se neukládá ani neodesílá."
       ]
     },
+    "vibe-coded": {
+      "q": "Vytvářejí PrivacyNotes AI, nebo vývojáři?",
+      "a": [
+        "Vývojáři. PrivacyNotes tvoří lidé, kteří píšou pro web od konce 90. let a víc než deset let se věnují soukromí, mimo jiné v [PrivacyTools.io](https://privacytools.io). Každý řádek si přečtou a schválí, než vyjde. Nástroje AI pro psaní kódu jim pomáhají, tak jako dnes pomáhají většině vývojářů.",
+        "Nejdřív vznikl základ a lidé ho psali ručně, v době, kdy nástroje AI pro psaní kódu ještě nebyly natolik dobré, aby se jim dal svěřit. Šifrovací jádro, synchronizační protokol a přihlašování vznikaly vedle zaměstnání, dávno předtím, než aplikace měla jméno. Na jaře 2026, když byl ten základ pevný, jsme začali používat nástroje AI podle pevného protokolu: nejdřív na [překlady](/cs/help/translation-quality), pak na články nápovědy, pak na funkce rozhraní a opravy chyb.",
+        "AI používáme, protože díky ní malý tým stíhá to, o co lidé žádají. Chyba, kterou nahlásí jediný člověk, bývá opravená už v další verzi, protože pomalé části práce jdou rychleji: hledání příčiny vzácné chyby, která by ručně zabrala týdny, tvorba částí rozhraní a udržování všech jazyků aktuálních. To, co stavíme, pořád vychází z přání, která nám lidé posílají, ne z toho, co navrhne nějaký nástroj.",
+        "Každá změna jde stejnou cestou. Člověk si ji přečte a schválí. Pak proběhnou automatické kontroly: kontroly typů, testy a brány pro pravidla, která si sami stanovujeme, od slov, která aplikace používá, až po to, kolik kódu se načte při startu. Řadu těchto kontrol pomáhala psát AI a drží každou změnu na stejné úrovni, ať ji napsal kdokoli. AI také čte každou změnu podruhé a upozorňuje na okrajové případy, které unavenému recenzentovi mohou uniknout. Toto druhé čtení lidskou kontrolu doplňuje a nikdy ji nenahrazuje.",
+        "Změny šifrování, synchronizace a přihlašování procházejí nejpřísnější kontrolou, řádek po řádku, a před vydáním musí projít stejnými testy. Návrh toho kódu i kompromisy, které dělá, jsou popsané v našem [modelu hrozeb](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md), takže můžeš posoudit rozhodnutí, a ne jen kód.",
+        "To všechno si můžeš ověřit sám nebo sama. Kód aplikace je [veřejný](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), každá verze má v [changelogu](/changelog) datum a [VERIFY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md) ukazuje, jak si v prohlížeči ověřit naše hlavní bezpečnostní tvrzení. Samostatně platí, že aplikace tvoje poznámky nikdy nepošle žádné AI ([podrobnosti](/cs/help/no-ai)). Tuhle otázku slýcháme často. Tahle stránka je odpověď, za kterou stojíme."
+      ]
+    },
     "burn-notes": {
       "q": "Co jsou sebezničující poznámky (burn notes)?",
       "a": [
@@ -333,6 +344,14 @@
         "Dává těm několika přihlašovacím údajům, které se jinak roztrousí po poznámkách, uklizený a chráněný domov. [Zkombinuj ho se zámkem aplikace a ochranou PINem](/cs/help/locked-vs-protected) a nejcitlivější záznamy dostanou druhou branku. [Import z Bitwardenu tady skončí automaticky](/cs/help/import/bitwarden)."
       ]
     },
+    "replace-password-manager": {
+      "q": "Může Trezor nahradit můj správce hesel, třeba Bitwarden?",
+      "a": [
+        "Ano. Trezor drží tvoje přihlašovací údaje, karty a klíče SSH, šifrované na tvém zařízení. Bezplatné rozšíření prohlížeče vyplní přihlašovací údaje jen na webu, ke kterému patří. [Import z Bitwardenu](/cs/help/import/bitwarden) přenese tvoje hesla jedním krokem.",
+        "Hlavním klíčem je tvoje [obnovovací fráze](/cs/help/phrase-vs-password), ne PIN. PIN nebo přístupový kód zamyká zařízení, kde už jsi přihlášený, podobně jako kód v telefonu. Rozšíření má vlastní PIN nebo přístupový kód, oddělený od toho v aplikaci. Po 10 chybných pokusech rozšíření ten prohlížeč odpojí.",
+        "Pro nejsilnější zámek zvol v Nastavení > Zabezpečení > PIN místo 4místného PINu přístupový kód a přístupový kód zvol i pro rozšíření. Nech zapnuté šifrování disku a zámek obrazovky počítače. Podrobnosti jsou v našem [modelu hrozeb](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "note-size-limit": {
       "q": "Jak dlouhá může být jedna poznámka a co znamenají varování o velikosti?",
       "a": [
@@ -418,8 +437,8 @@
       "q": "Za jak dlouho se v aplikaci objeví požadovaná funkce nebo oprava nahlášené chyby?",
       "a": [
         "Často pár dní. Malá přání a hlášení chyb se obvykle dostanou do příští verze a nové verze vycházejí skoro každý týden, ne jen párkrát do roka. [Changelog](/changelog) je toho záznamem: každá položka má datum, je napsaná srozumitelně a říká, co se změnilo. Přečti si měsíc zpátky a budeš přesně vědět, co od nás čekat, ještě než aplikaci něco svěříš.",
-        "To tempo vychází z toho, jak je práce rozdělená. Šifrovací jádro, synchronizační protokol a přihlašování napsali lidé vedle svých zaměstnání, dávno předtím, než aplikace měla jméno, a kryptografické jádro se tak udržuje dodnes; nic automatizovaného se k němu nepřiblíží. Když tenhle základ na jaře 2026 stál, začali jsme podle pevného protokolu používat nástroje AI pro psaní kódu: nejdřív na [překlady](/cs/help/translation-quality), pak na články nápovědy, pak na funkce rozhraní a opravy nekritických chyb, kde jsou dobré v dohledávání vzácných okrajových případů, které by jinak zabraly týdny, a v psaní testovacích skriptů, které drží víc vývojářů u jednoho standardu. Proto se vyplatí splnit i přání jediného člověka, místo aby čekalo za tím, co je na vrcholu seznamu.",
-        "Všechno, co se dotýká šifrování, synchronizace nebo přihlašování, zůstává u zkušených vývojářů, kteří píšou každý řádek, a ten kód je [veřejný](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), aby sis ho mohl přečíst místo toho, abys nám věřil. Víc o týmu a o tom, jak pracujeme, najdeš na naší [stránce o nás](https://lifetimelabs.dev/about).",
+        "To tempo vychází z toho, jak je práce rozdělená. Šifrovací jádro, synchronizační protokol a přihlašování napsali lidé vedle svých zaměstnání, dávno předtím, než aplikace měla jméno. Když tenhle základ na jaře 2026 stál, začali jsme podle pevného protokolu ([jak je používáme](/cs/help/vibe-coded)) používat nástroje AI pro psaní kódu: nejdřív na [překlady](/cs/help/translation-quality), pak na články nápovědy, pak na funkce rozhraní a opravy nekritických chyb, kde jsou dobré v dohledávání vzácných okrajových případů, které by jinak zabraly týdny, a v psaní testovacích skriptů, které drží víc vývojářů u jednoho standardu. Proto se vyplatí splnit i přání jediného člověka, místo aby čekalo za tím, co je na vrcholu seznamu.",
+        "Každý řádek si před vydáním přečte a schválí člověk a změny šifrování, synchronizace nebo přihlašování procházejí nejpřísnější kontrolou. Ten kód je [veřejný](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), aby sis ho mohl přečíst místo toho, abys nám věřil. Víc o týmu a o tom, jak pracujeme, najdeš na naší [stránce o nás](https://lifetimelabs.dev/about).",
         "Samotná aplikace tvoje poznámky nikdy nepředá žádné AI a jediná funkce s AI, kterou má, běží jen na tvém zařízení, pokud ji zapneš ([podrobnosti](/cs/help/no-ai)). Ten slib stojí samostatně a nemění se."
       ]
     },
@@ -517,7 +536,7 @@
     "mcp": {
       "q": "Může AI aplikace ukládat poznámky do PrivacyNotes přes MCP?",
       "a": [
-        "Ano. MCP (Model Context Protocol) je standardní způsob, jak AI aplikace připojují nástroje, a `privacynotes`, příkazový řádek PrivacyNotes, může jedním z nich být. Přidáš ho jednou a v libovolném chatu pak můžeš říct normálně: „Ulož shrnutí tohoto chatu do mých poznámek se značkou meeting.“ Aplikace zavolá nástroj save_note z `privacynotes` a poznámka skončí ve složce Agent mezi tvými poznámkami, na všech tvých zařízeních po jejich příští synchronizaci. Nástroj umí poznámky jen přidávat, takže chat nemůže otevřít, změnit ani smazat poznámky, které už máš. Je součástí Pro.",
+        "Ano. MCP (Model Context Protocol) je standardní způsob, jak AI aplikace připojují nástroje, a `privacynotes`, příkazový řádek PrivacyNotes, může jedním z nich být. Přidáš ho jednou a v libovolném chatu pak můžeš říct normálně: „Ulož shrnutí tohoto chatu do mých poznámek se značkou meeting.“ Aplikace zavolá nástroj save_note z `privacynotes` a poznámka skončí ve složce Agent mezi tvými poznámkami, na všech tvých zařízeních po jejich příští synchronizaci. Nástroj umí poznámky jen přidávat, takže [chat nemůže otevřít, změnit ani smazat poznámky, které už máš](/cs/help/no-ai). Je součástí Pro.",
         "Nejdřív [nastav příkaz `privacynotes`](/cs/help/command-line) na stejném počítači a připoj ho přes `privacynotes login`. Pak otevři nastavení MCP své AI aplikace, obrazovku nastavení nebo soubor jako mcp.json, přidej tuhle položku pod `mcpServers` a aplikaci restartuj:",
         "`\"privacynotes\": { \"command\": \"privacynotes\", \"args\": [\"mcp\"] }`",
         "Nástroj přijímá Markdown a volitelně název a značky, se stejnými limity jako `privacynotes save`: 700 KB, 20 značek a název o 200 znacích. Když něco uložení zastaví, nástroj to aplikaci sdělí slovy, aby ti to mohla říct: příkaz ještě není připojený, poznámka je příliš velká, nebo ji server odmítl.",
@@ -637,7 +656,7 @@
       "q": "Jak fungují automatické zálohy?",
       "a": [
         "Vybereš složku a jak často: každý den, každý týden nebo každý měsíc. Když je záloha na řadě, PrivacyNotes do té složky zapíše nový soubor „Všechno, šifrovaně (.pnbackupz)“, bez jediného kliknutí. Uchová tolik kopií, kolik si zvolíš, a maže jen starší kopie, které vytvořilo toto zařízení. Automatické zálohy jsou zdarma v každém tarifu.",
-        "Zapni je v Nastavení > Záloha > Automaticky: vyber složku, zvol, jak často, a stiskni „Zapnout a zálohovat teď“. První záloha proběhne okamžitě, takže hned vidíš, že složka funguje. Nastavení patří jen tomuto zařízení. Každé zařízení, které má zálohovat, potřebuje své vlastní nastavení, [a každá aplikace funguje trochu jinak](/cs/help/automatic-backup-apps)."
+        "Zapni je v Nastavení > Záloha > Automaticky: vyber složku, zvol, jak často, a stiskni „Zapnout a zálohovat teď“. První záloha proběhne okamžitě, takže [hned vidíš, že složka funguje](/cs/help/backup-checked). Nastavení patří jen tomuto zařízení. Každé zařízení, které má zálohovat, potřebuje své vlastní nastavení, [a každá aplikace funguje trochu jinak](/cs/help/automatic-backup-apps)."
       ]
     },
     "automatic-backup-apps": {
@@ -671,7 +690,7 @@
     "backup-without-phrase": {
       "q": "Může někdo otevřít můj soubor zálohy bez mé obnovovací fráze?",
       "a": [
-        "Ne, šifrovaný ne. Soubor „Všechno, šifrovaně (.pnbackupz)“ nebo „Jen text, šifrovaně (.pnbackup)“ je zašifrovaný klíčem z tvojí fráze, takže se otevře jen v tvém účtu. Kdo soubor najde, uvidí jeho název, velikost a datum, a uvnitř nic.",
+        "Ne, šifrovaný ne. Soubor „Všechno, šifrovaně (.pnbackupz)“ nebo „Jen text, šifrovaně (.pnbackup)“ je zašifrovaný klíčem z tvojí fráze, takže [se otevře jen v tvém účtu](/cs/help/backup-lost-phrase). Kdo soubor najde, uvidí jeho název, velikost a datum, a uvnitř nic.",
         "Výjimkou je „Všechno, bez šifrování (.zip)“ z Nastavení > Záloha > Ručně: otevře se na jakémkoli počítači, bez fráze. Automatické zálohy tento typ nikdy nevytvářejí ([proč ne](/cs/help/backup-unencrypted))."
       ]
     },
@@ -721,7 +740,7 @@
       "q": "Jak obnovím automatickou zálohu na novém zařízení?",
       "a": [
         "Přihlas se na novém zařízení stejnou obnovovací frází, nebo stejným přihlášením přes Google, Apple či GitHub, a počkej, až zápatí ukáže „Synced“. Většina tvých poznámek je v té chvíli už zpátky díky synchronizaci.",
-        "Pak otevři Nastavení > Záloha > Obnovit, vyber „Šifrovaná záloha (.pnbackup, .pnbackupz)“ a vyber nejnovější soubor ze složky se zálohami. Obnovení přidá to, co účtu chybí, a ponechá to, co už v něm je ([jak obnovení funguje](/cs/help/restore-backup)). Šifrovaná záloha se otevře jen v účtu, který ji vytvořil."
+        "Pak otevři Nastavení > Záloha > Obnovit, vyber „Šifrovaná záloha (.pnbackup, .pnbackupz)“ a vyber nejnovější soubor ze [složky se zálohami](/cs/help/automatic-backups). Obnovení přidá to, co účtu chybí, a ponechá to, co už v něm je ([jak obnovení funguje](/cs/help/restore-backup)). Šifrovaná záloha se otevře jen v účtu, který ji vytvořil."
       ]
     },
     "backup-lost-phrase": {

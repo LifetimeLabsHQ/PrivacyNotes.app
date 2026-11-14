@@ -208,6 +208,17 @@
         "Det enda undantaget är frivilligt och stannar på din enhet. Smarta kopplingar hittar anteckningar med samma innebörd, även med andra ord eller på ett annat språk. Funktionen använder offline-AI ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)) som bara körs på den här enheten. Den skriver ingenting och svarar inte på något: den gör om varje anteckning till en lista med tal och jämför dem. Du laddar ner den en gång under Inställningar > Redigerare > Beteende > Smarta kopplingar, och sedan fungerar den utan uppkoppling. Med dess reglage stänger du av den, och Ta bort tar bort den från enheten. Inget den räknar ut om en anteckning sparas eller skickas."
       ]
     },
+    "vibe-coded": {
+      "q": "Är PrivacyNotes byggt av AI eller av utvecklare?",
+      "a": [
+        "Av utvecklare. PrivacyNotes byggs av människor som har skrivit för webben sedan slutet av 1990-talet och arbetat med integritet i mer än ett decennium, bland annat på [PrivacyTools.io](https://privacytools.io). De läser och godkänner varje rad innan den släpps. AI-verktyg för kod hjälper dem, som de hjälper de flesta utvecklare i dag.",
+        "Grunden kom först, och människor skrev den för hand, innan AI-verktyg för kod var bra nog att lita på med den. Krypteringskärnan, synkprotokollet och inloggningen byggdes vid sidan av deras jobb, långt innan appen hade ett namn. Våren 2026, när den grunden stod stadigt, började vi använda AI-verktyg enligt ett fast protokoll: först för [översättningar](/sv/help/translation-quality), sedan hjälpartiklar, sedan gränssnittsfunktioner och buggrättningar.",
+        "Vi använder AI för att ett litet team ska hinna med det folk ber om. En bugg som en person rapporterar är ofta rättad i nästa version, eftersom de långsamma delarna av arbetet går snabbare: att hitta orsaken till en sällsynt bugg som för hand skulle ta veckor, att bygga delar av gränssnittet och att hålla alla språk uppdaterade. Det vi bygger kommer fortfarande från önskemålen folk skickar oss, inte från vad ett verktyg föreslår.",
+        "Varje ändring går samma väg. En person läser den och godkänner den. Sedan körs automatiska kontroller: typkontroller, tester och spärrar för reglerna vi satt upp själva, från orden appen använder till hur mycket kod som laddas vid start. AI har hjälpt till att skriva många av de kontrollerna, och de håller varje ändring till samma standard, oavsett vem som skrev den. AI läser också varje ändring en andra gång och pekar ut specialfall som en trött granskare kan missa. Den andra läsningen kommer utöver den mänskliga granskningen och ersätter den aldrig.",
+        "Ändringar i kryptering, synk och inloggning får den strängaste granskningen, rad för rad, och måste klara samma tester innan de släpps. Hur den koden är utformad, och vilka avvägningar den gör, står nedskrivet i vår [hotmodell](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md), så att du kan bedöma besluten och inte bara koden.",
+        "Allt det här kan du kontrollera själv. Appens kod är [offentlig](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), varje version är daterad i [changelog](/changelog), och [VERIFY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md) visar hur du kontrollerar vårt viktigaste säkerhetspåstående i din egen webbläsare. Separat från det skickar appen aldrig dina anteckningar till en AI ([detaljer](/sv/help/no-ai)). Vi får den här frågan ofta. Den här sidan är det svar vi står för."
+      ]
+    },
     "burn-notes": {
       "q": "Vad är burn notes?",
       "a": [
@@ -333,6 +344,14 @@
         "Det ger den handfull inloggningsuppgifter som annars hamnar utspridda i anteckningar ett prydligt och skyddat hem. [Kombinera det med applåset och PIN-skydd](/sv/help/locked-vs-protected) för en andra grind framför dina känsligaste poster. [En Bitwarden-import hamnar här automatiskt](/sv/help/import/bitwarden)."
       ]
     },
+    "replace-password-manager": {
+      "q": "Kan Valvet ersätta min lösenordshanterare, som Bitwarden?",
+      "a": [
+        "Ja. Valvet rymmer dina inloggningar, kort och SSH-nycklar, krypterade på din enhet. Det kostnadsfria webbläsartillägget fyller i en inloggning bara på den webbplats den hör till. [En Bitwarden-import](/sv/help/import/bitwarden) flyttar över dina lösenord i ett steg.",
+        "Din [återställningsfras](/sv/help/phrase-vs-password) är huvudnyckeln, inte din PIN-kod. PIN-koden eller lösenkoden låser en enhet där du redan är inloggad, som koden på din telefon. Tillägget har sin egen PIN-kod eller lösenkod, skild från appens. Efter 10 felaktiga försök kopplar tillägget bort den webbläsaren.",
+        "För det starkaste låset väljer du en lösenkod i stället för en fyrsiffrig PIN i Inställningar > Säkerhet > PIN, och väljer en lösenkod för tillägget också. Låt datorns diskkryptering och skärmlås vara på. Detaljerna finns i vår [hotmodell](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "note-size-limit": {
       "q": "Hur lång får en enskild anteckning vara, och vad betyder storleksvarningarna?",
       "a": [
@@ -418,8 +437,8 @@
       "q": "Jag har önskat en funktion eller rapporterat en bugg. Hur lång tid tar det innan den kommer?",
       "a": [
         "Ofta några dagar. Små önskemål och buggrapporter hamnar oftast i nästa version, och nya versioner släpps nästan varje vecka i stället för ett par gånger om året. [Changelog](/changelog) är beviset: varje post är daterad, skriven på enkelt språk och säger vad som har ändrats. Läs en månad bakåt så vet du precis vad du kan vänta dig av oss innan du anförtror appen något.",
-        "Det tempot kommer av hur arbetet är uppdelat. Krypteringskärnan, synkprotokollet och inloggningen skrevs av människor, vid sidan av deras jobb, långt innan appen hade ett namn, och kryptokärnan underhålls fortfarande så; inget automatiserat kommer i närheten av den. När den grunden stod stadigt, våren 2026, började vi använda AI-verktyg för kod enligt ett fast protokoll: först för [översättningar](/sv/help/translation-quality), sedan hjälpartiklar, sedan gränssnittsfunktioner och rättningar av icke-kritiska buggar, där de är bra på att ringa in sällsynta specialfall som annars skulle ta veckor, och på att skriva testskripten som ser till att flera utvecklare följer samma standard. Det är därför det är värt att genomföra en enda persons önskemål i stället för att låta det vänta bakom de mest efterfrågade önskemålen.",
-        "Allt som rör kryptering, synk eller inloggning stannar hos skickliga utvecklare som skriver varje rad, och den koden är [offentlig](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) så att du kan läsa den i stället för att tro oss. Mer om teamet och hur vi arbetar finns på vår [om oss-sida](https://lifetimelabs.dev/about).",
+        "Det tempot kommer av hur arbetet är uppdelat. Krypteringskärnan, synkprotokollet och inloggningen skrevs av människor, vid sidan av deras jobb, långt innan appen hade ett namn. När den grunden stod stadigt, våren 2026, började vi använda AI-verktyg för kod enligt ett fast protokoll ([så använder vi dem](/sv/help/vibe-coded)): först för [översättningar](/sv/help/translation-quality), sedan hjälpartiklar, sedan gränssnittsfunktioner och rättningar av icke-kritiska buggar, där de är bra på att ringa in sällsynta specialfall som annars skulle ta veckor, och på att skriva testskripten som ser till att flera utvecklare följer samma standard. Det är därför det är värt att genomföra en enda persons önskemål i stället för att låta det vänta bakom de mest efterfrågade önskemålen.",
+        "En person läser och godkänner varje rad innan den släpps, och ändringar i kryptering, synk eller inloggning får den strängaste granskningen. Den koden är [offentlig](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) så att du kan läsa den i stället för att tro oss. Mer om teamet och hur vi arbetar finns på vår [om oss-sida](https://lifetimelabs.dev/about).",
         "Appen själv skickar aldrig dina anteckningar till en AI, och den enda AI-funktionen den har körs bara på din enhet, om du slår på den ([detaljer](/sv/help/no-ai)). Det löftet står för sig, och det ändras inte."
       ]
     },
@@ -517,7 +536,7 @@
     "mcp": {
       "q": "Kan en AI-app spara anteckningar i PrivacyNotes via MCP?",
       "a": [
-        "Ja. MCP (Model Context Protocol) är standardsättet för AI-appar att koppla in verktyg, och `privacynotes`, kommandoradsgränssnittet för PrivacyNotes, kan köras som ett sådant. Lägg till det en gång, så kan du i vilken chatt som helst be med vanliga ord: \"Spara en sammanfattning av den här chatten i mina anteckningar, med taggen meeting.\" Appen anropar verktyget save_note i `privacynotes`, och anteckningen hamnar i mappen Agent bland dina anteckningar, på alla dina enheter efter nästa synk. Verktyget kan bara lägga till anteckningar, så en chatt kan inte öppna, ändra eller radera de anteckningar du har. Det ingår i Pro.",
+        "Ja. MCP (Model Context Protocol) är standardsättet för AI-appar att koppla in verktyg, och `privacynotes`, kommandoradsgränssnittet för PrivacyNotes, kan köras som ett sådant. Lägg till det en gång, så kan du i vilken chatt som helst be med vanliga ord: \"Spara en sammanfattning av den här chatten i mina anteckningar, med taggen meeting.\" Appen anropar verktyget save_note i `privacynotes`, och anteckningen hamnar i mappen Agent bland dina anteckningar, på alla dina enheter efter nästa synk. Verktyget kan bara lägga till anteckningar, så [en chatt kan inte öppna, ändra eller radera de anteckningar du har](/sv/help/no-ai). Det ingår i Pro.",
         "[Ställ först in kommandot `privacynotes`](/sv/help/command-line) på samma dator och anslut det med `privacynotes login`. Öppna sedan din AI-apps MCP-inställningar, en inställningsskärm eller en fil som mcp.json, lägg till den här posten under `mcpServers` och starta om appen:",
         "`\"privacynotes\": { \"command\": \"privacynotes\", \"args\": [\"mcp\"] }`",
         "Verktyget tar Markdown, och som tillval en titel och taggar, med samma gränser som `privacynotes save`: 700 KB, 20 taggar och en titel på 200 tecken. När något hindrar en sparning berättar verktyget det för appen i ord, så att appen kan säga det till dig: kommandot är inte anslutet än, anteckningen är för stor eller servern vägrade den.",
@@ -637,7 +656,7 @@
       "q": "Hur fungerar automatiska säkerhetskopior?",
       "a": [
         "Du väljer en mapp och hur ofta: varje dag, varje vecka eller varje månad. När en säkerhetskopia ska göras skriver PrivacyNotes en ny ”Allt, krypterat (.pnbackupz)” i mappen, utan ett klick. Appen sparar så många kopior som du väljer och raderar bara äldre kopior som den här enheten har gjort. Automatiska säkerhetskopior är gratis i alla planer.",
-        "Slå på dem under Inställningar > Säkerhetskopiering > Automatiskt: välj en mapp, välj hur ofta och tryck sedan på ”Slå på och säkerhetskopiera nu”. Den första säkerhetskopian körs direkt, så du ser att mappen fungerar. Inställningen gäller bara den här enheten. Varje enhet som ska göra säkerhetskopior behöver sin egen inställning, [och varje app fungerar lite olika](/sv/help/automatic-backup-apps)."
+        "Slå på dem under Inställningar > Säkerhetskopiering > Automatiskt: välj en mapp, välj hur ofta och tryck sedan på ”Slå på och säkerhetskopiera nu”. Den första säkerhetskopian körs direkt, så [du ser att mappen fungerar](/sv/help/backup-checked). Inställningen gäller bara den här enheten. Varje enhet som ska göra säkerhetskopior behöver sin egen inställning, [och varje app fungerar lite olika](/sv/help/automatic-backup-apps)."
       ]
     },
     "automatic-backup-apps": {
@@ -671,7 +690,7 @@
     "backup-without-phrase": {
       "q": "Kan någon öppna min säkerhetskopia utan min återställningsfras?",
       "a": [
-        "Nej, inte en krypterad. En ”Allt, krypterat (.pnbackupz)” eller ”Endast text, krypterad (.pnbackup)” är krypterad med din frasnyckel, så den öppnas bara i ditt konto. Den som hittar filen ser dess namn, dess storlek och datumet, och inget innehåll.",
+        "Nej, inte en krypterad. En ”Allt, krypterat (.pnbackupz)” eller ”Endast text, krypterad (.pnbackup)” är krypterad med din frasnyckel, så [den öppnas bara i ditt konto](/sv/help/backup-lost-phrase). Den som hittar filen ser dess namn, dess storlek och datumet, och inget innehåll.",
         "En ”Allt, inte krypterat (.zip)” från Inställningar > Säkerhetskopiering > Manuellt är undantaget: den öppnas på vilken dator som helst, utan fras. Automatiska säkerhetskopior gör aldrig den typen ([varför inte](/sv/help/backup-unencrypted))."
       ]
     },
@@ -721,7 +740,7 @@
       "q": "Hur återställer jag en automatisk säkerhetskopia på en ny enhet?",
       "a": [
         "Logga in på den nya enheten med samma återställningsfras, eller samma inloggning med Google, Apple eller GitHub, och vänta tills sidfoten visar ”Synced”. De flesta av dina anteckningar är då redan tillbaka, genom synk.",
-        "Öppna sedan Inställningar > Säkerhetskopiering > Återställ, välj ”Krypterad säkerhetskopia (.pnbackup, .pnbackupz)” och välj den senaste filen i din säkerhetskopiemapp. Återställningen lägger till det som kontot saknar och behåller det som redan finns ([så fungerar en återställning](/sv/help/restore-backup)). En krypterad säkerhetskopia öppnas bara i kontot som gjorde den."
+        "Öppna sedan Inställningar > Säkerhetskopiering > Återställ, välj ”Krypterad säkerhetskopia (.pnbackup, .pnbackupz)” och välj den senaste filen i [din säkerhetskopiemapp](/sv/help/automatic-backups). Återställningen lägger till det som kontot saknar och behåller det som redan finns ([så fungerar en återställning](/sv/help/restore-backup)). En krypterad säkerhetskopia öppnas bara i kontot som gjorde den."
       ]
     },
     "backup-lost-phrase": {

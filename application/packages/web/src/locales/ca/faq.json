@@ -208,6 +208,17 @@
         "L'única excepció és opcional i es queda al teu dispositiu. Connexions intel·ligents troba notes amb el mateix significat, fins i tot amb altres paraules o en una altra llengua. Fa servir IA fora de línia ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)) que s'executa només en aquest dispositiu. No escriu res ni respon res: converteix cada nota en una llista de números i els compara. La baixes una sola vegada a Configuració > Editor > Comportament > Connexions intel·ligents, i després funciona sense connexió. El seu interruptor la desactiva, i Elimina la treu del dispositiu. Res del que dedueix d'una nota es desa ni s'envia."
       ]
     },
+    "vibe-coded": {
+      "q": "PrivacyNotes l'ha fet una IA o l'han fet desenvolupadors?",
+      "a": [
+        "Desenvolupadors. PrivacyNotes l'han fet persones que escriuen per a la web des de finals dels anys 90 i que fa més d'una dècada que treballen en privadesa, també a [PrivacyTools.io](https://privacytools.io). Llegeixen i aproven cada línia abans que es publiqui. Les eines de programació amb IA els ajuden, com ajuden la majoria de desenvolupadors avui.",
+        "Primer va venir la base, i la van escriure persones a mà, abans que les eines de programació amb IA fossin prou bones per confiar-los aquesta part. El nucli de xifratge, el protocol de sincronització i l'inici de sessió es van construir al costat de feines de dia, molt abans que l'app tingués nom. La primavera del 2026, quan aquesta base ja era sòlida, vam començar a fer servir eines d'IA sota un protocol fix: primer per a les [traduccions](/ca/help/translation-quality), després els articles d'ajuda, i després funcions d'interfície i correccions de bugs.",
+        "Fem servir IA perquè permet que un equip petit segueixi el ritme del que demana la gent. Un bug que informa una sola persona sovint es corregeix a la versió següent, perquè les parts lentes de la feina van més de pressa: trobar la causa d'un bug estrany que a mà portaria setmanes, construir parts de la interfície i mantenir tots els idiomes al dia. El que construïm continua sortint de les peticions que ens envia la gent, no del que suggereix una eina.",
+        "Cada canvi segueix el mateix camí. Una persona el llegeix i l'aprova. Després s'executen comprovacions automàtiques: comprovacions de tipus, proves i barreres per a les regles que ens hem fixat nosaltres, des de les paraules que fa servir l'app fins a quant codi es carrega a l'inici. La IA ha ajudat a escriure moltes d'aquestes comprovacions, i obliguen tots els canvis a un mateix estàndard, sigui qui sigui qui els hagi escrit. La IA també llegeix cada canvi per segona vegada i assenyala els casos límit que un revisor cansat pot passar per alt. Aquesta segona lectura se suma a la revisió humana i mai no la substitueix.",
+        "Els canvis al xifratge, a la sincronització i a l'inici de sessió reben la revisió més estricta, línia per línia, i han de passar les mateixes proves abans de publicar-se. El disseny d'aquest codi, i els compromisos que implica, estan escrits al nostre [model d'amenaces](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md), perquè puguis jutjar les decisions i no només el codi.",
+        "Tot això ho pots comprovar tu mateix. El codi de l'app és [públic](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), cada versió té data al [changelog](/changelog), i [VERIFY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md) mostra com comprovar la nostra afirmació de seguretat principal al teu propi navegador. A part, l'app no envia mai les teves notes a cap IA ([detalls](/ca/help/no-ai)). Ens fan sovint aquesta pregunta. Aquesta pàgina és la resposta que defensem."
+      ]
+    },
     "burn-notes": {
       "q": "Què són les burn notes?",
       "a": [
@@ -333,6 +344,14 @@
         "Dona una llar endreçada i protegida al grapat de credencials que, altrament, acaben escampades per les notes. [Combina-la amb el bloqueig de l'aplicació i la protecció amb PIN](/ca/help/locked-vs-protected) per posar una segona barrera a les entrades més delicades. [Una importació de Bitwarden aterra aquí automàticament](/ca/help/import/bitwarden)."
       ]
     },
+    "replace-password-manager": {
+      "q": "La Caixa forta pot substituir el meu gestor de contrasenyes, com Bitwarden?",
+      "a": [
+        "Sí. La Caixa forta guarda els teus inicis de sessió, targetes i claus SSH, xifrats al teu dispositiu. L'extensió del navegador gratuïta omple un inici de sessió només al lloc al qual pertany. [Una importació de Bitwarden](/ca/help/import/bitwarden) hi porta les teves contrasenyes d'un sol pas.",
+        "La teva [frase de recuperació](/ca/help/phrase-vs-password) és la clau mestra, no el teu PIN. El PIN o el codi d'accés bloqueja un dispositiu on ja has iniciat la sessió, com el codi del mòbil. L'extensió té el seu propi PIN o codi d'accés, separat del de l'app. Després de 10 intents erronis, l'extensió desconnecta aquell navegador.",
+        "Per al bloqueig més fort, tria un codi d'accés en comptes d'un PIN de 4 xifres a Configuració > Seguretat > PIN, i tria també un codi d'accés per a l'extensió. Mantén activats el xifratge del disc i el bloqueig de pantalla de l'ordinador. Els detalls són al nostre [model d'amenaces](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "note-size-limit": {
       "q": "Com de llarga pot ser una sola nota, i què volen dir els avisos de mida?",
       "a": [
@@ -418,8 +437,8 @@
       "q": "He demanat una funció o he informat d'un bug. Quant triga a arribar?",
       "a": [
         "Sovint pocs dies. Les peticions petites i els informes de bugs solen entrar a la versió següent, i publiquem una versió gairebé cada setmana en lloc de dues o tres vegades l'any. El [changelog](/changelog) n'és la prova: cada entrada té data, està escrita en llenguatge clar i diu què ha canviat. Llegeix-ne un mes i sabràs exactament què pots esperar de nosaltres abans de confiar res a l'aplicació.",
-        "Aquest ritme surt de com està repartida la feina. El nucli de xifratge, el protocol de sincronització i l'inici de sessió els van escriure persones, fora de la feina, molt abans que l'app tingués nom, i el nucli criptogràfic encara es manté així; res d'automatitzat s'hi acosta. Quan aquesta base va ser sòlida, la primavera del 2026, vam començar a fer servir eines d'IA per programar sota un protocol fix: primer per a les [traduccions](/ca/help/translation-quality), després els articles d'ajuda, després funcions d'interfície i correccions de bugs no crítics, on són bones acotant casos rars que altrament durien setmanes, i escrivint els scripts de prova que obliguen diversos desenvolupadors a un mateix estàndard. Per això val la pena desenvolupar el que demana una sola persona en comptes de fer-ho esperar darrere de les peticions que encapçalen la llista.",
-        "Tot el que toca el xifratge, la sincronització o l'inici de sessió es queda en mans de desenvolupadors experimentats que escriuen cada línia, i aquest codi és [públic](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) perquè el puguis llegir en comptes de creure'ns. Més sobre l'equip i com treballem a la nostra [pàgina sobre nosaltres](https://lifetimelabs.dev/about).",
+        "Aquest ritme surt de com està repartida la feina. El nucli de xifratge, el protocol de sincronització i l'inici de sessió els van escriure persones, fora de la feina, molt abans que l'app tingués nom. Quan aquesta base va ser sòlida, la primavera del 2026, vam començar a fer servir eines d'IA per programar sota un protocol fix ([com les fem servir](/ca/help/vibe-coded)): primer per a les [traduccions](/ca/help/translation-quality), després els articles d'ajuda, després funcions d'interfície i correccions de bugs no crítics, on són bones acotant casos rars que altrament durien setmanes, i escrivint els scripts de prova que obliguen diversos desenvolupadors a un mateix estàndard. Per això val la pena desenvolupar el que demana una sola persona en comptes de fer-ho esperar darrere de les peticions que encapçalen la llista.",
+        "Una persona llegeix i aprova cada línia abans que es publiqui, i els canvis al xifratge, a la sincronització o a l'inici de sessió reben la revisió més estricta. Aquest codi és [públic](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) perquè el puguis llegir en comptes de creure'ns. Més sobre l'equip i com treballem a la nostra [pàgina sobre nosaltres](https://lifetimelabs.dev/about).",
         "L'aplicació en si no lliura mai les teves notes a cap IA, i l'única funció d'IA que té s'executa només al teu dispositiu, si l'actives ([detalls](/ca/help/no-ai)). Aquesta promesa va a part, i no canvia."
       ]
     },
@@ -517,7 +536,7 @@
     "mcp": {
       "q": "Pot una app d'IA desar notes a PrivacyNotes amb MCP?",
       "a": [
-        "Sí. MCP (Model Context Protocol) és la manera estàndard que tenen les apps d'IA d'afegir eines, i `privacynotes`, la interfície de línia d'ordres de PrivacyNotes, pot funcionar com una. Afegeix-lo una vegada, i en qualsevol xat pots demanar amb paraules normals: «Desa un resum d'aquest xat a les meves notes, amb l'etiqueta meeting.» L'app crida l'eina save_note de `privacynotes`, i la nota va a la carpeta Agent de les teves notes, a tots els teus dispositius després de la propera sincronització. L'eina només pot afegir notes, de manera que un xat no pot obrir, canviar ni suprimir les que ja tens. Forma part de Pro.",
+        "Sí. MCP (Model Context Protocol) és la manera estàndard que tenen les apps d'IA d'afegir eines, i `privacynotes`, la interfície de línia d'ordres de PrivacyNotes, pot funcionar com una. Afegeix-lo una vegada, i en qualsevol xat pots demanar amb paraules normals: «Desa un resum d'aquest xat a les meves notes, amb l'etiqueta meeting.» L'app crida l'eina save_note de `privacynotes`, i la nota va a la carpeta Agent de les teves notes, a tots els teus dispositius després de la propera sincronització. L'eina només pot afegir notes, de manera que [un xat no pot obrir, canviar ni suprimir les que ja tens](/ca/help/no-ai). Forma part de Pro.",
         "Primer [configura l'ordre `privacynotes`](/ca/help/command-line) al mateix ordinador i connecta'l amb `privacynotes login`. Després obre la configuració de MCP de la teva app d'IA, una pantalla de configuració o un fitxer com mcp.json, afegeix aquesta entrada sota `mcpServers` i reinicia l'app:",
         "`\"privacynotes\": { \"command\": \"privacynotes\", \"args\": [\"mcp\"] }`",
         "L'eina rep el Markdown, i opcionalment un títol i etiquetes, amb els mateixos límits que `privacynotes save`: 700 KB, 20 etiquetes i un títol de 200 caràcters. Quan alguna cosa impedeix desar, l'eina ho explica a l'app amb paraules, perquè l'app t'ho pugui dir: l'ordre encara no està connectada, la nota és massa gran o el servidor l'ha rebutjada.",
@@ -637,7 +656,7 @@
       "q": "Com funcionen les còpies de seguretat automàtiques?",
       "a": [
         "Tries una carpeta i la freqüència: cada dia, cada setmana o cada mes. Quan toca una còpia, PrivacyNotes escriu un fitxer «Tot, xifrat (.pnbackupz)» nou en aquesta carpeta, sense cap clic. Conserva el nombre de còpies que triïs i només suprimeix les còpies més antigues que ha fet aquest dispositiu. Les còpies de seguretat automàtiques són gratuïtes en qualsevol pla.",
-        "Activa-les a Configuració > Còpia de seguretat > Automàtiques: tria una carpeta, la freqüència i prem «Activa i fes una còpia ara». La primera còpia es fa a l'instant, així que veus que la carpeta funciona. L'ajust és només d'aquest dispositiu. Cada dispositiu que hagi de fer còpies necessita la seva configuració, [i cada app funciona una mica diferent](/ca/help/automatic-backup-apps)."
+        "Activa-les a Configuració > Còpia de seguretat > Automàtiques: tria una carpeta, la freqüència i prem «Activa i fes una còpia ara». La primera còpia es fa a l'instant, així que [veus que la carpeta funciona](/ca/help/backup-checked). L'ajust és només d'aquest dispositiu. Cada dispositiu que hagi de fer còpies necessita la seva configuració, [i cada app funciona una mica diferent](/ca/help/automatic-backup-apps)."
       ]
     },
     "automatic-backup-apps": {
@@ -671,7 +690,7 @@
     "backup-without-phrase": {
       "q": "Algú pot obrir el meu fitxer de còpia de seguretat sense la meva frase de recuperació?",
       "a": [
-        "No, si és xifrat. Un fitxer «Tot, xifrat (.pnbackupz)» o «Només text, xifrat (.pnbackup)» està xifrat amb la clau de la teva frase, així que només s'obre al teu compte. Qui trobi el fitxer en veu el nom, la mida i la data, i res de dins.",
+        "No, si és xifrat. Un fitxer «Tot, xifrat (.pnbackupz)» o «Només text, xifrat (.pnbackup)» està xifrat amb la clau de la teva frase, així que [només s'obre al teu compte](/ca/help/backup-lost-phrase). Qui trobi el fitxer en veu el nom, la mida i la data, i res de dins.",
         "Un «Tot, sense xifrar (.zip)» de Configuració > Còpia de seguretat > Manuals és l'excepció: s'obre en qualsevol ordinador, sense frase. Les còpies de seguretat automàtiques mai no fan aquest tipus ([per què no](/ca/help/backup-unencrypted))."
       ]
     },
@@ -721,7 +740,7 @@
       "q": "Com restauro una còpia de seguretat automàtica en un dispositiu nou?",
       "a": [
         "Inicia la sessió al dispositiu nou amb la mateixa frase de recuperació, o el mateix inici de sessió de Google, Apple o GitHub, i espera que el peu digui «Synced». En aquest punt, la majoria de les teves notes ja han tornat, per la sincronització.",
-        "Després obre Configuració > Còpia de seguretat > Restaura, tria «Còpia de seguretat xifrada (.pnbackup, .pnbackupz)» i escull el fitxer més nou de la carpeta de còpies. La restauració afegeix el que falta al compte i conserva el que ja hi és ([com funciona una restauració](/ca/help/restore-backup)). Una còpia xifrada només s'obre al compte que la va fer."
+        "Després obre Configuració > Còpia de seguretat > Restaura, tria «Còpia de seguretat xifrada (.pnbackup, .pnbackupz)» i escull el fitxer més nou de [la carpeta de còpies](/ca/help/automatic-backups). La restauració afegeix el que falta al compte i conserva el que ja hi és ([com funciona una restauració](/ca/help/restore-backup)). Una còpia xifrada només s'obre al compte que la va fer."
       ]
     },
     "backup-lost-phrase": {

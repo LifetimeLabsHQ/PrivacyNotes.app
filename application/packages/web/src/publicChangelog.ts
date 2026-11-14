@@ -31,6 +31,7 @@ export const PUBLIC_CHANGELOG: ChangelogRelease[] = [
     date: '2026-11-14',
     title: 'Fixes, security upkeep and more crypto coins',
     items: [
+      { type: 'new', text: 'A credits wall on GitHub thanks everyone whose reports and ideas shipped.' },
       { type: 'new', text: 'Pay for Pro with Litecoin, Bitcoin Cash, Dogecoin or TON too.' },
       { type: 'improved', text: 'The editor, the map and other parts run on updated libraries, after a fresh code scan.' },
       { type: 'fixed', text: 'A note you closed no longer opens again when the app starts.', issues: [770] },

@@ -208,6 +208,17 @@
         "Jedyny wyjątek jest opcjonalny i zostaje na twoim urządzeniu. Inteligentne powiązania znajdują notatki o tym samym znaczeniu, nawet wyrażonym innymi słowami lub w innym języku. Korzystają z AI offline ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)), które działa tylko na tym urządzeniu. Nic nie pisze i na nic nie odpowiada: zamienia każdą notatkę na listę liczb i porównuje je ze sobą. Pobierasz je raz w Ustawienia > Edytor > Zachowanie > Inteligentne powiązania, a potem działa bez połączenia. Przełącznik je wyłącza, a Usuń zdejmuje je z urządzenia. Nic, co zostanie z niego wyliczone o notatce, nie jest zapisywane ani wysyłane."
       ]
     },
+    "vibe-coded": {
+      "q": "Czy PrivacyNotes tworzy AI, czy programiści?",
+      "a": [
+        "Programiści. PrivacyNotes tworzą ludzie, którzy piszą dla internetu od końca lat 90. i od ponad dziesięciu lat zajmują się prywatnością, także w [PrivacyTools.io](https://privacytools.io). Czytają i zatwierdzają każdą linijkę, zanim trafi do wydania. Pomagają im narzędzia AI do kodowania, tak jak dziś pomagają większości programistów.",
+        "Najpierw powstał fundament, napisany ręcznie przez ludzi, zanim narzędzia AI do kodowania stały się na tyle dobre, żeby powierzyć im taką pracę. Rdzeń szyfrowania, protokół synchronizacji i logowanie powstały po godzinach pracy, na długo zanim aplikacja miała nazwę. Wiosną 2026, gdy ten fundament był solidny, zaczęliśmy używać narzędzi AI według stałego protokołu: najpierw do [tłumaczeń](/pl/help/translation-quality), potem do artykułów pomocy, potem do funkcji interfejsu i poprawek błędów.",
+        "Używamy AI, bo dzięki niemu mały zespół nadąża za tym, o co proszą ludzie. Błąd zgłoszony przez jedną osobę jest często naprawiony już w następnym wydaniu, bo wolniejsze części pracy idą szybciej: szukanie przyczyny rzadkiego błędu, które ręcznie zajęłoby tygodnie, budowanie elementów interfejsu i aktualizowanie każdego języka. To, co budujemy, nadal wynika z próśb, które do nas wysyłacie, a nie z tego, co podsunie narzędzie.",
+        "Każda zmiana przechodzi tę samą drogę. Człowiek ją czyta i zatwierdza. Potem uruchamiają się zautomatyzowane kontrole: kontrola typów, testy i bramki dla zasad, które sami ustaliliśmy, od słów używanych w aplikacji po ilość kodu ładowanego przy starcie. AI pomogło napisać wiele z tych kontroli, a one trzymają każdą zmianę tego samego standardu, bez względu na to, kto ją napisał. AI czyta też każdą zmianę po raz drugi i wskazuje przypadki brzegowe, które może przeoczyć zmęczony recenzent. To drugie czytanie uzupełnia przegląd przez człowieka i nigdy go nie zastępuje.",
+        "Zmiany w szyfrowaniu, synchronizacji i logowaniu przechodzą najsurowszy przegląd, linijka po linijce, i muszą przejść te same testy, zanim trafią do wydania. Projekt tego kodu i kompromisy, na które idzie, są opisane w naszym [modelu zagrożeń](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md), więc możesz ocenić decyzje, a nie tylko kod.",
+        "Możesz to wszystko sprawdzić samodzielnie. Kod aplikacji jest [jawny](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), każde wydanie ma datę w [Changelogu](/changelog), a [VERIFY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md) pokazuje, jak sprawdzić naszą główną obietnicę bezpieczeństwa we własnej przeglądarce. Osobną sprawą jest to, że aplikacja nigdy nie wysyła twoich notatek do AI ([szczegóły](/pl/help/no-ai)). Dostajemy to pytanie często. Ta strona to odpowiedź, za którą ręczymy."
+      ]
+    },
     "burn-notes": {
       "q": "Czym są notatki do spalenia?",
       "a": [
@@ -333,6 +344,14 @@
         "Daje to garstce danych logowania, które inaczej rozłażą się po notatkach, uporządkowany i chroniony dom. [Połącz go z blokadą aplikacji i ochroną PIN-em](/pl/help/locked-vs-protected), aby postawić drugą bramkę przed najwrażliwszymi wpisami. [Import z Bitwarden ląduje tu automatycznie](/pl/help/import/bitwarden)."
       ]
     },
+    "replace-password-manager": {
+      "q": "Czy Sejf może zastąpić mój menedżer haseł, na przykład Bitwarden?",
+      "a": [
+        "Tak. Sejf przechowuje twoje loginy, karty i klucze SSH, zaszyfrowane na twoim urządzeniu. Darmowe rozszerzenie przeglądarki wypełnia login tylko na stronie, do której należy. [Import z Bitwardena](/pl/help/import/bitwarden) przenosi twoje hasła jednym krokiem.",
+        "Twoja [fraza odzyskiwania](/pl/help/phrase-vs-password) jest kluczem głównym, a nie twój PIN. PIN lub kod dostępu blokuje urządzenie, na którym już jesteś zalogowany, jak kod w telefonie. Rozszerzenie ma własny PIN lub kod dostępu, osobny od aplikacji. Po 10 błędnych próbach rozszerzenie odłącza tę przeglądarkę.",
+        "Dla najmocniejszej blokady wybierz kod dostępu zamiast 4-cyfrowego PIN-u w Ustawienia > Bezpieczeństwo > PIN i wybierz kod dostępu także dla rozszerzenia. Zostaw włączone szyfrowanie dysku i blokadę ekranu w swoim komputerze. Szczegóły są w naszym [modelu zagrożeń](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "note-size-limit": {
       "q": "Jak długa może być pojedyncza notatka i co oznaczają ostrzeżenia o rozmiarze?",
       "a": [
@@ -418,8 +437,8 @@
       "q": "Poprosiłam o funkcję albo zgłosiłam błąd. Jak długo trzeba czekać?",
       "a": [
         "Często kilka dni. Drobne prośby i zgłoszenia błędów zwykle trafiają do następnego wydania, a wydania wychodzą niemal co tydzień, a nie kilka razy w roku. [Changelog](/changelog) jest na to dowodem: każdy wpis ma datę, jest napisany prostym językiem i mówi, co się zmieniło. Przeczytaj miesiąc wstecz, a będziesz dokładnie wiedzieć, czego się po nas spodziewać, zanim powierzysz aplikacji cokolwiek.",
-        "To tempo bierze się z tego, jak podzielona jest praca. Rdzeń szyfrowania, protokół synchronizacji i logowanie napisali ludzie, po godzinach pracy, na długo zanim aplikacja miała nazwę, a rdzeń kryptograficzny nadal jest tak utrzymywany; nic zautomatyzowanego się do niego nie zbliża. Kiedy ten fundament był solidny, wiosną 2026, zaczęliśmy używać narzędzi AI do kodowania według stałego protokołu: najpierw do [tłumaczeń](/pl/help/translation-quality), potem do artykułów pomocy, potem do funkcji interfejsu i poprawek niekrytycznych błędów, gdzie dobrze radzą sobie z namierzaniem rzadkich przypadków brzegowych, które inaczej zajęłyby tygodnie, i z pisaniem skryptów testowych, które pomagają kilku programistom przestrzegać wspólnego standardu. Dlatego warto realizować nawet prośbę jednej osoby, zamiast odkładać ją, aż przyjdzie jej kolej na liście.",
-        "Wszystko, co dotyka szyfrowania, synchronizacji lub logowania, zostaje w rękach doświadczonych programistów, którzy piszą każdą linijkę, a ten kod jest [jawny](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), żeby można było go przeczytać, zamiast nam wierzyć. Więcej o zespole i o tym, jak pracujemy, na naszej [stronie o nas](https://lifetimelabs.dev/about).",
+        "To tempo bierze się z tego, jak podzielona jest praca. Rdzeń szyfrowania, protokół synchronizacji i logowanie napisali ludzie, po godzinach pracy, na długo zanim aplikacja miała nazwę. Kiedy ten fundament był solidny, wiosną 2026, zaczęliśmy używać narzędzi AI do kodowania według stałego protokołu ([jak ich używamy](/pl/help/vibe-coded)): najpierw do [tłumaczeń](/pl/help/translation-quality), potem do artykułów pomocy, potem do funkcji interfejsu i poprawek niekrytycznych błędów, gdzie dobrze radzą sobie z namierzaniem rzadkich przypadków brzegowych, które inaczej zajęłyby tygodnie, i z pisaniem skryptów testowych, które pomagają kilku programistom przestrzegać wspólnego standardu. Dlatego warto realizować nawet prośbę jednej osoby, zamiast odkładać ją, aż przyjdzie jej kolej na liście.",
+        "Człowiek czyta i zatwierdza każdą linijkę, zanim trafi do wydania, a zmiany w szyfrowaniu, synchronizacji i logowaniu przechodzą najsurowszy przegląd. Ten kod jest [jawny](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), żeby można było go przeczytać, zamiast nam wierzyć. Więcej o zespole i o tym, jak pracujemy, na naszej [stronie o nas](https://lifetimelabs.dev/about).",
         "Sama aplikacja nigdy nie przekazuje twoich notatek żadnemu AI, a jedyna jej funkcja AI działa tylko na twoim urządzeniu, jeśli ją włączysz ([szczegóły](/pl/help/no-ai)). Ta obietnica stoi osobno i się nie zmienia."
       ]
     },
@@ -517,7 +536,7 @@
     "mcp": {
       "q": "Czy aplikacja AI może zapisywać notatki w PrivacyNotes przez MCP?",
       "a": [
-        "Tak. MCP (Model Context Protocol) to standardowy sposób, w jaki aplikacje AI podłączają narzędzia, a `privacynotes`, interfejs wiersza poleceń PrivacyNotes, może działać jako takie narzędzie. Dodaj go raz, a w każdym czacie możesz poprosić zwykłymi słowami: \"Zapisz podsumowanie tego czatu w moich notatkach z tagiem meeting.\" Aplikacja wywołuje narzędzie save_note z `privacynotes`, a notatka trafia do folderu Agent w Twoich notatkach, na wszystkich Twoich urządzeniach po ich następnej synchronizacji. Narzędzie potrafi tylko dodawać notatki, więc czat nie otworzy, nie zmieni ani nie usunie notatek, które już masz. Jest częścią Pro.",
+        "Tak. MCP (Model Context Protocol) to standardowy sposób, w jaki aplikacje AI podłączają narzędzia, a `privacynotes`, interfejs wiersza poleceń PrivacyNotes, może działać jako takie narzędzie. Dodaj go raz, a w każdym czacie możesz poprosić zwykłymi słowami: \"Zapisz podsumowanie tego czatu w moich notatkach z tagiem meeting.\" Aplikacja wywołuje narzędzie save_note z `privacynotes`, a notatka trafia do folderu Agent w Twoich notatkach, na wszystkich Twoich urządzeniach po ich następnej synchronizacji. Narzędzie potrafi tylko dodawać notatki, więc [czat nie otworzy, nie zmieni ani nie usunie notatek, które już masz](/pl/help/no-ai). Jest częścią Pro.",
         "Najpierw [skonfiguruj polecenie `privacynotes`](/pl/help/command-line) na tym samym komputerze i połącz je przez `privacynotes login`. Potem otwórz ustawienia MCP w swojej aplikacji AI, czyli ekran ustawień albo plik taki jak mcp.json, dodaj ten wpis w `mcpServers` i zrestartuj aplikację:",
         "`\"privacynotes\": { \"command\": \"privacynotes\", \"args\": [\"mcp\"] }`",
         "Narzędzie przyjmuje Markdown oraz opcjonalnie tytuł i tagi, z tymi samymi limitami co `privacynotes save`: 700 KB, 20 tagów i tytuł do 200 znaków. Gdy coś zatrzyma zapis, narzędzie mówi o tym aplikacji słowami, żeby aplikacja mogła powiedzieć Tobie: polecenie nie jest jeszcze połączone, notatka jest za duża albo serwer ją odrzucił.",
@@ -637,7 +656,7 @@
       "q": "Jak działają automatyczne kopie zapasowe?",
       "a": [
         "Wybierasz folder i częstotliwość: codziennie, co tydzień albo co miesiąc. Gdy przyjdzie czas na kopię, PrivacyNotes zapisuje w tym folderze nowy plik „Wszystko, zaszyfrowane (.pnbackupz)”, bez żadnego kliknięcia. Zachowuje tyle kopii, ile wybierzesz, i usuwa tylko starsze kopie, które utworzyło to urządzenie. Automatyczne kopie zapasowe są darmowe w każdym planie.",
-        "Włącz je w Ustawienia > Kopia zapasowa > Automatyczne: wybierz folder, ustaw częstotliwość, a potem naciśnij „Włącz i utwórz kopię teraz”. Pierwsza kopia powstaje od razu, więc widzisz, że folder działa. To ustawienie dotyczy tylko tego urządzenia. Każde urządzenie, które ma tworzyć kopie, wymaga własnej konfiguracji, [a każda aplikacja działa nieco inaczej](/pl/help/automatic-backup-apps)."
+        "Włącz je w Ustawienia > Kopia zapasowa > Automatyczne: wybierz folder, ustaw częstotliwość, a potem naciśnij „Włącz i utwórz kopię teraz”. Pierwsza kopia powstaje od razu, więc [widzisz, że folder działa](/pl/help/backup-checked). To ustawienie dotyczy tylko tego urządzenia. Każde urządzenie, które ma tworzyć kopie, wymaga własnej konfiguracji, [a każda aplikacja działa nieco inaczej](/pl/help/automatic-backup-apps)."
       ]
     },
     "automatic-backup-apps": {
@@ -671,7 +690,7 @@
     "backup-without-phrase": {
       "q": "Czy ktoś może otworzyć mój plik kopii zapasowej bez mojej frazy odzyskiwania?",
       "a": [
-        "Nie, jeśli jest zaszyfrowany. Plik „Wszystko, zaszyfrowane (.pnbackupz)” albo „Tylko tekst, zaszyfrowane (.pnbackup)” jest zaszyfrowany kluczem Twojej frazy, więc otwiera się tylko na Twoim koncie. Kto znajdzie plik, zobaczy jego nazwę, rozmiar i datę, a w środku nic.",
+        "Nie, jeśli jest zaszyfrowany. Plik „Wszystko, zaszyfrowane (.pnbackupz)” albo „Tylko tekst, zaszyfrowane (.pnbackup)” jest zaszyfrowany kluczem Twojej frazy, więc [otwiera się tylko na Twoim koncie](/pl/help/backup-lost-phrase). Kto znajdzie plik, zobaczy jego nazwę, rozmiar i datę, a w środku nic.",
         "Wyjątkiem jest „Wszystko, bez szyfrowania (.zip)” z Ustawienia > Kopia zapasowa > Ręczne: otwiera się na każdym komputerze, bez frazy. Automatyczne kopie zapasowe nigdy nie tworzą tego typu ([dlaczego](/pl/help/backup-unencrypted))."
       ]
     },
@@ -721,7 +740,7 @@
       "q": "Jak przywrócić automatyczną kopię zapasową na nowym urządzeniu?",
       "a": [
         "Zaloguj się na nowym urządzeniu tą samą frazą odzyskiwania albo tym samym loginem Google, Apple lub GitHub i poczekaj, aż stopka pokaże „Synced”. Większość Twoich notatek jest już wtedy z powrotem dzięki synchronizacji.",
-        "Potem otwórz Ustawienia > Kopia zapasowa > Przywracanie, wybierz „Zaszyfrowana kopia zapasowa (.pnbackup, .pnbackupz)” i wskaż najnowszy plik z folderu kopii zapasowych. Przywracanie dodaje to, czego brakuje na koncie, i zachowuje to, co już tam jest ([jak działa przywracanie](/pl/help/restore-backup)). Zaszyfrowana kopia zapasowa otwiera się tylko na koncie, które ją utworzyło."
+        "Potem otwórz Ustawienia > Kopia zapasowa > Przywracanie, wybierz „Zaszyfrowana kopia zapasowa (.pnbackup, .pnbackupz)” i wskaż najnowszy plik z [folderu kopii zapasowych](/pl/help/automatic-backups). Przywracanie dodaje to, czego brakuje na koncie, i zachowuje to, co już tam jest ([jak działa przywracanie](/pl/help/restore-backup)). Zaszyfrowana kopia zapasowa otwiera się tylko na koncie, które ją utworzyło."
       ]
     },
     "backup-lost-phrase": {

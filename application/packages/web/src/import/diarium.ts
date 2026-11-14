@@ -155,7 +155,10 @@ export async function parseDiarium(file: File, onProgress?: (msg: string) => voi
     // Entry links become placeholders the converter keeps, then note-links.
     const links: string[] = [];
     const html = str(e.html).replace(ENTRY_LINK_RE, (_all, ticks: string, label: string) => {
-      links.push(`${ticks}\u0000${label.replace(/<[^>]*>/g, '').replace(/[<>]/g, '').trim()}`);
+      // The label as text: an inert document drops every tag, then no
+      // decoded `<` or `>` is left to start one in the note Markdown.
+      const text = new DOMParser().parseFromString(label, 'text/html').body.textContent ?? '';
+      links.push(`${ticks}\u0000${text.replace(/[<>]/g, '').trim()}`);
       return `zzdiariumlink${links.length - 1}zz`;
     });
     let body = html.trim() ? htmlNoteToMarkdown(html) : '';

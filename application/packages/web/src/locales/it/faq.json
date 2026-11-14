@@ -208,6 +208,17 @@
         "L'unica eccezione è facoltativa e resta sul tuo dispositivo. I Collegamenti intelligenti trovano note con lo stesso significato, anche scritte con altre parole o in un'altra lingua. Usano un'IA offline ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)) che funziona solo su questo dispositivo. Non scrive nulla e non risponde a nulla: trasforma ogni nota in un elenco di numeri e li confronta. La scarichi una sola volta in Impostazioni > Editor > Comportamento > Collegamenti intelligenti, poi funziona senza connessione. Il suo interruttore la disattiva, e Rimuovi la toglie dal dispositivo. Niente di ciò che ricava da una nota viene salvato o inviato."
       ]
     },
+    "vibe-coded": {
+      "q": "PrivacyNotes è costruita dall'IA o da sviluppatori?",
+      "a": [
+        "Da sviluppatori. PrivacyNotes è costruita da persone che scrivono per il web dalla fine degli anni Novanta e lavorano nel campo della privacy da più di dieci anni, anche in [PrivacyTools.io](https://privacytools.io). Leggono e approvano ogni riga prima che venga pubblicata. Gli strumenti di IA per programmare le aiutano, come aiutano la maggior parte degli sviluppatori oggi.",
+        "Prima è nata la base, e l'hanno scritta a mano delle persone, quando gli strumenti di IA per programmare non erano ancora abbastanza affidabili da fidarsene. Il nucleo di cifratura, il protocollo di sincronizzazione e l'accesso sono stati costruiti accanto al lavoro di tutti i giorni, molto prima che l'app avesse un nome. Nella primavera del 2026, quando quella base era solida, abbiamo iniziato a usare strumenti di IA secondo un protocollo fisso: prima per le [traduzioni](/it/help/translation-quality), poi per gli articoli di aiuto, poi per le funzioni di interfaccia e le correzioni di bug.",
+        "Usiamo l'IA perché permette a una squadra piccola di tenere il passo con quello che le persone chiedono. Un bug segnalato da una sola persona spesso viene corretto nella versione successiva, perché le parti lente del lavoro vanno più veloci: trovare la causa di un bug raro che a mano richiederebbe settimane, costruire parti di interfaccia e tenere aggiornata ogni lingua. Quello che costruiamo nasce ancora dalle richieste che ci arrivano, non da ciò che suggerisce uno strumento.",
+        "Ogni modifica segue lo stesso percorso. Una persona la legge e la approva. Poi partono i controlli automatici: controlli sui tipi, test e verifiche per le regole che ci siamo dati, dalle parole che usa l'app alla quantità di codice caricata all'avvio. L'IA ha aiutato a scrivere molti di quei controlli, e tengono ogni modifica allo stesso standard, chiunque l'abbia scritta. L'IA legge anche ogni modifica una seconda volta e segnala i casi limite che un revisore stanco può perdere. Questa seconda lettura si aggiunge alla revisione umana e non la sostituisce mai.",
+        "Le modifiche a cifratura, sincronizzazione e accesso ricevono la revisione più severa, riga per riga, e devono superare gli stessi test prima di essere pubblicate. Il progetto di quel codice, e i compromessi che fa, sono scritti nel nostro [modello di minaccia](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md), così puoi giudicare le decisioni e non solo il codice.",
+        "Puoi verificare tutto questo da solo. Il codice dell'app è [pubblico](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), ogni versione è datata nel [changelog](/changelog), e [VERIFY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md) mostra come controllare nel tuo browser la nostra principale affermazione di sicurezza. A parte questo, l'app non invia mai le tue note a un'IA ([dettagli](/it/help/no-ai)). Ci fanno spesso questa domanda. Questa pagina è la risposta che sosteniamo."
+      ]
+    },
     "burn-notes": {
       "q": "Cosa sono le burn note?",
       "a": [
@@ -333,6 +344,14 @@
         "Dà una casa ordinata e protetta a quella manciata di credenziali che altrimenti finisce sparsa tra le note. [Abbinala al blocco dell'app e alla protezione PIN](/it/help/locked-vs-protected) per una seconda barriera davanti alle voci più sensibili. [Un'importazione da Bitwarden arriva qui in automatico](/it/help/import/bitwarden)."
       ]
     },
+    "replace-password-manager": {
+      "q": "La Cassaforte può sostituire il mio gestore di password, come Bitwarden?",
+      "a": [
+        "Sì. La Cassaforte contiene i tuoi accessi, le carte e le chiavi SSH, cifrati sul tuo dispositivo. L'estensione gratuita del browser compila un accesso solo sul sito a cui appartiene. [Un'importazione da Bitwarden](/it/help/import/bitwarden) sposta le tue password in un solo passaggio.",
+        "La tua [frase di recupero](/it/help/phrase-vs-password) è la chiave principale, non il tuo PIN. Il PIN o il codice di sblocco blocca un dispositivo su cui hai già fatto l'accesso, come il codice del telefono. L'estensione ha un suo PIN o codice di sblocco, separato da quello dell'app. Dopo 10 tentativi sbagliati, l'estensione scollega quel browser.",
+        "Per il blocco più forte, scegli un codice di sblocco al posto di un PIN di 4 cifre in Impostazioni > Sicurezza > PIN, e scegline uno anche per l'estensione. Tieni attivi la cifratura del disco e il blocco schermo del tuo computer. I dettagli sono nel nostro [modello di minaccia](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "note-size-limit": {
       "q": "Quanto può essere lunga una singola nota, e cosa significano gli avvisi sulla dimensione?",
       "a": [
@@ -418,8 +437,8 @@
       "q": "Ho chiesto una funzione o segnalato un bug. Quanto ci vuole prima che arrivi?",
       "a": [
         "Spesso pochi giorni. Le richieste piccole e le segnalazioni di bug di solito entrano nella versione successiva, e pubblichiamo una versione quasi ogni settimana invece di due o tre volte l'anno. Il [changelog](/changelog) è la prova: ogni voce è datata, scritta in linguaggio semplice, e dice che cosa è cambiato. Leggine un mese e saprai esattamente che cosa aspettarti da noi prima di affidare qualcosa all'app.",
-        "Questo ritmo nasce da come è diviso il lavoro. Il nucleo di cifratura, il protocollo di sincronizzazione e l'accesso li hanno scritti persone, accanto al loro lavoro, molto prima che l'app avesse un nome, e il nucleo crittografico si mantiene ancora così: niente di automatizzato gli si avvicina. Quando quella base è diventata solida, nella primavera del 2026, abbiamo iniziato a usare strumenti di IA per programmare secondo un protocollo fisso: prima per le [traduzioni](/it/help/translation-quality), poi per gli articoli di aiuto, poi per le funzioni di interfaccia e le correzioni di bug non critici, dove sono bravi a circoscrivere casi rari che altrimenti richiederebbero settimane, e a scrivere gli script di test che impongono lo stesso standard a più sviluppatori. Per questo vale la pena dare seguito alla richiesta di una sola persona invece di lasciarla in attesa dietro ai primi punti della lista.",
-        "Tutto ciò che tocca cifratura, sincronizzazione o accesso resta in mano a sviluppatori esperti che ne scrivono ogni riga, e quel codice è [pubblico](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) così puoi leggerlo invece di fidarti di noi. Altro sulla squadra e su come lavoriamo nella nostra [pagina Chi siamo](https://lifetimelabs.dev/about).",
+        "Questo ritmo nasce da come è diviso il lavoro. Il nucleo di cifratura, il protocollo di sincronizzazione e l'accesso li hanno scritti persone, accanto al loro lavoro, molto prima che l'app avesse un nome. Quando quella base è diventata solida, nella primavera del 2026, abbiamo iniziato a usare strumenti di IA per programmare secondo un protocollo fisso ([come li usiamo](/it/help/vibe-coded)): prima per le [traduzioni](/it/help/translation-quality), poi per gli articoli di aiuto, poi per le funzioni di interfaccia e le correzioni di bug non critici, dove sono bravi a circoscrivere casi rari che altrimenti richiederebbero settimane, e a scrivere gli script di test che impongono lo stesso standard a più sviluppatori. Per questo vale la pena dare seguito alla richiesta di una sola persona invece di lasciarla in attesa dietro ai primi punti della lista.",
+        "Una persona legge e approva ogni riga prima che venga pubblicata, e le modifiche a cifratura, sincronizzazione o accesso ricevono la revisione più severa. Quel codice è [pubblico](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) così puoi leggerlo invece di fidarti di noi. Altro sulla squadra e su come lavoriamo nella nostra [pagina Chi siamo](https://lifetimelabs.dev/about).",
         "L'app in sé non consegna mai le tue note a un'IA, e l'unica funzione di IA che ha gira solo sul tuo dispositivo, se la attivi ([dettagli](/it/help/no-ai)). Quella promessa vale a parte, e non cambia."
       ]
     },
@@ -517,7 +536,7 @@
     "mcp": {
       "q": "Un'app di IA può salvare note in PrivacyNotes tramite MCP?",
       "a": [
-        "Sì. MCP (Model Context Protocol) è il modo standard in cui le app di IA collegano degli strumenti, e `privacynotes`, l'interfaccia a riga di comando di PrivacyNotes, può funzionare come uno di essi. Aggiungilo una volta e in qualsiasi chat puoi chiedere a parole tue: \"Salva un riassunto di questa chat nelle mie note, con il tag meeting.\" L'app chiama lo strumento save_note di `privacynotes`, e la nota va nella cartella Agent delle tue note, su tutti i tuoi dispositivi dopo la loro prossima sincronizzazione. Lo strumento può solo aggiungere note, quindi una chat non può aprire, modificare o eliminare quelle che hai. È incluso in Pro.",
+        "Sì. MCP (Model Context Protocol) è il modo standard in cui le app di IA collegano degli strumenti, e `privacynotes`, l'interfaccia a riga di comando di PrivacyNotes, può funzionare come uno di essi. Aggiungilo una volta e in qualsiasi chat puoi chiedere a parole tue: \"Salva un riassunto di questa chat nelle mie note, con il tag meeting.\" L'app chiama lo strumento save_note di `privacynotes`, e la nota va nella cartella Agent delle tue note, su tutti i tuoi dispositivi dopo la loro prossima sincronizzazione. Lo strumento può solo aggiungere note, quindi [una chat non può aprire, modificare o eliminare quelle che hai](/it/help/no-ai). È incluso in Pro.",
         "Prima [configura il comando `privacynotes`](/it/help/command-line) sullo stesso computer e collegalo con `privacynotes login`. Poi apri le impostazioni MCP della tua app di IA, una schermata delle impostazioni o un file come mcp.json, aggiungi questa voce sotto `mcpServers` e riavvia l'app:",
         "`\"privacynotes\": { \"command\": \"privacynotes\", \"args\": [\"mcp\"] }`",
         "Lo strumento riceve il Markdown, e facoltativamente un titolo e dei tag, con gli stessi limiti di `privacynotes save`: 700 KB, 20 tag e un titolo di 200 caratteri. Quando qualcosa blocca un salvataggio, lo strumento lo dice all'app a parole, così l'app può dirlo a te: il comando non è ancora collegato, la nota è troppo grande oppure il server l'ha rifiutata.",
@@ -637,7 +656,7 @@
       "q": "Come funzionano i backup automatici?",
       "a": [
         "Scegli una cartella e la frequenza: ogni giorno, ogni settimana o ogni mese. Quando un backup è dovuto, PrivacyNotes scrive un nuovo file \"Tutto, cifrato (.pnbackupz)\" in quella cartella, senza che tu faccia clic. Conserva il numero di copie che scegli ed elimina solo le copie più vecchie fatte da questo dispositivo. I backup automatici sono gratuiti in ogni piano.",
-        "Attivali in Impostazioni > Backup > Automatico: scegli una cartella, imposta la frequenza, poi premi \"Attiva e fai il backup ora\". Il primo backup parte subito, così vedi che la cartella funziona. L'impostazione vale solo per questo dispositivo. Ogni dispositivo che deve fare backup ha bisogno della sua configurazione, [e ogni app funziona in modo un po' diverso](/it/help/automatic-backup-apps)."
+        "Attivali in Impostazioni > Backup > Automatico: scegli una cartella, imposta la frequenza, poi premi \"Attiva e fai il backup ora\". Il primo backup parte subito, [così vedi che la cartella funziona](/it/help/backup-checked). L'impostazione vale solo per questo dispositivo. Ogni dispositivo che deve fare backup ha bisogno della sua configurazione, [e ogni app funziona in modo un po' diverso](/it/help/automatic-backup-apps)."
       ]
     },
     "automatic-backup-apps": {
@@ -671,7 +690,7 @@
     "backup-without-phrase": {
       "q": "Qualcuno può aprire il mio file di backup senza la mia frase di recupero?",
       "a": [
-        "No, non se è cifrato. Un file \"Tutto, cifrato (.pnbackupz)\" o \"Solo testo, cifrato (.pnbackup)\" è cifrato con la chiave della tua frase, quindi si apre solo nel tuo account. Chi trova il file vede il nome, la dimensione e la data, e niente di quello che c'è dentro.",
+        "No, non se è cifrato. Un file \"Tutto, cifrato (.pnbackupz)\" o \"Solo testo, cifrato (.pnbackup)\" è cifrato con la chiave della tua frase, quindi [si apre solo nel tuo account](/it/help/backup-lost-phrase). Chi trova il file vede il nome, la dimensione e la data, e niente di quello che c'è dentro.",
         "Un \"Tutto, non cifrato (.zip)\" da Impostazioni > Backup > Manuale fa eccezione: si apre su qualsiasi computer, senza frase. I backup automatici non fanno mai quel tipo ([perché no](/it/help/backup-unencrypted))."
       ]
     },
@@ -721,7 +740,7 @@
       "q": "Come ripristino un backup automatico su un nuovo dispositivo?",
       "a": [
         "Accedi sul nuovo dispositivo con la stessa frase di recupero, o con lo stesso accesso Google, Apple o GitHub, e aspetta che il piè di pagina dica \"Synced\". A quel punto la maggior parte delle tue note è già tornata, tramite la sincronizzazione.",
-        "Poi apri Impostazioni > Backup > Ripristina, scegli \"Backup cifrato (.pnbackup, .pnbackupz)\" e seleziona il file più recente dalla tua cartella dei backup. Il ripristino aggiunge ciò che manca all'account e conserva ciò che c'è già ([come funziona un ripristino](/it/help/restore-backup)). Un backup cifrato si apre solo nell'account che l'ha fatto."
+        "Poi apri Impostazioni > Backup > Ripristina, scegli \"Backup cifrato (.pnbackup, .pnbackupz)\" e seleziona il file più recente [dalla tua cartella dei backup](/it/help/automatic-backups). Il ripristino aggiunge ciò che manca all'account e conserva ciò che c'è già ([come funziona un ripristino](/it/help/restore-backup)). Un backup cifrato si apre solo nell'account che l'ha fatto."
       ]
     },
     "backup-lost-phrase": {

@@ -208,6 +208,17 @@
         "Die eine Ausnahme ist optional und bleibt auf deinem Gerät. Intelligente Verknüpfungen findet Notizen mit derselben Bedeutung, auch in anderen Worten oder einer anderen Sprache. Dafür nutzt es Offline-KI ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)), die nur auf diesem Gerät läuft. Sie schreibt nichts und beantwortet nichts: Sie macht aus jeder Notiz eine Liste von Zahlen und vergleicht sie. Du lädst sie einmal unter Einstellungen > Editor > Verhalten > Intelligente Verknüpfungen herunter, danach funktioniert sie ohne Verbindung. Mit dem Schalter schaltest du sie aus, und Entfernen nimmt sie vom Gerät. Nichts, was sie über eine Notiz herausfindet, wird gespeichert oder gesendet."
       ]
     },
+    "vibe-coded": {
+      "q": "Wird PrivacyNotes von KI oder von Entwicklern gebaut?",
+      "a": [
+        "Von Entwicklern. PrivacyNotes wird von Menschen gebaut, die seit den späten 1990er-Jahren für das Web schreiben und seit über einem Jahrzehnt im Datenschutz arbeiten, unter anderem bei [PrivacyTools.io](https://privacytools.io). Sie lesen und genehmigen jede Zeile, bevor sie ausgeliefert wird. KI-Coding-Tools helfen ihnen dabei, so wie sie heute den meisten Entwicklern helfen.",
+        "Das Fundament kam zuerst, und Menschen haben es von Hand geschrieben, bevor KI-Coding-Tools gut genug waren, um ihnen so etwas anzuvertrauen. Der Verschlüsselungskern, das Sync-Protokoll und die Anmeldung entstanden neben dem Brotjob, lange bevor die App einen Namen hatte. Im Frühjahr 2026, als dieses Fundament stand, haben wir angefangen, KI-Tools nach einem festen Protokoll einzusetzen: zuerst für [Übersetzungen](/de/help/translation-quality), dann für Hilfeartikel, dann für Oberflächenfunktionen und Fehlerbehebungen.",
+        "Wir nutzen KI, weil ein kleines Team so mit dem Schritt halten kann, was sich Menschen wünschen. Ein Fehler, den eine einzelne Person meldet, ist oft schon im nächsten Release behoben, weil die langsamen Teile der Arbeit schneller gehen: die Ursache eines seltenen Fehlers finden, die von Hand Wochen dauern würde, Teile der Oberfläche bauen und alle Sprachen aktuell halten. Was wir bauen, kommt trotzdem aus den Wünschen, die uns Menschen schicken, nicht aus dem, was ein Tool vorschlägt.",
+        "Jede Änderung geht denselben Weg. Ein Mensch liest sie und genehmigt sie. Dann laufen automatische Prüfungen: Typprüfungen, Tests und Schranken für Regeln, die wir uns selbst gesetzt haben, von den Wörtern, die die App verwendet, bis zu der Menge an Code, die beim Start geladen wird. KI hat bei vielen dieser Prüfungen mitgeschrieben, und sie messen jede Änderung an einem einzigen Maßstab, egal wer sie geschrieben hat. KI liest außerdem jede Änderung ein zweites Mal und weist auf Randfälle hin, die ein müder Prüfer übersehen kann. Dieses zweite Lesen ergänzt die Prüfung durch Menschen und ersetzt sie nie.",
+        "Änderungen an Verschlüsselung, Sync und Anmeldung werden am strengsten geprüft, Zeile für Zeile, und müssen vor der Auslieferung dieselben Tests bestehen. Der Aufbau dieses Codes und die Abwägungen, die er trifft, stehen in unserem [Bedrohungsmodell](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md), damit du die Entscheidungen beurteilen kannst und nicht nur den Code.",
+        "Das alles kannst du selbst prüfen. Der Code der App ist [öffentlich](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), jedes Release ist im [Changelog](/changelog) datiert, und [VERIFY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md) zeigt, wie du unser wichtigstes Sicherheitsversprechen in deinem eigenen Browser nachprüfst. Davon getrennt gilt: Die App schickt deine Notizen nie an eine KI ([Details](/de/help/no-ai)). Diese Frage hören wir oft. Diese Seite ist die Antwort, zu der wir stehen."
+      ]
+    },
     "burn-notes": {
       "q": "Was sind Burn Notes?",
       "a": [
@@ -333,6 +344,14 @@
         "Er gibt der Handvoll Zugangsdaten, die sonst über Notizen verstreut landen, ein aufgeräumtes, geschütztes Zuhause. [Kombiniere ihn mit App-Sperre und PIN-Schutz](/de/help/locked-vs-protected) für eine zweite Hürde vor deinen sensibelsten Einträgen. [Ein Bitwarden-Import landet automatisch hier](/de/help/import/bitwarden)."
       ]
     },
+    "replace-password-manager": {
+      "q": "Kann der Tresor meinen Passwortmanager ersetzen, zum Beispiel Bitwarden?",
+      "a": [
+        "Ja. Der Tresor enthält deine Logins, Karten und SSH-Schlüssel, auf deinem Gerät verschlüsselt. Die kostenlose Browser-Erweiterung füllt einen Login nur auf der Seite aus, zu der er gehört. [Ein Bitwarden-Import](/de/help/import/bitwarden) bringt deine Passwörter in einem Schritt hinüber.",
+        "Deine [Wiederherstellungsphrase](/de/help/phrase-vs-password) ist der eigentliche Schlüssel zu deinem Konto, nicht deine PIN. Die PIN oder der Passcode sperrt ein Gerät, auf dem du bereits angemeldet bist, wie der Code auf deinem Handy. Die Erweiterung hat ihre eigene PIN oder ihren eigenen Passcode, getrennt von dem der App. Nach 10 falschen Versuchen trennt die Erweiterung diesen Browser.",
+        "Für die stärkste Sperre wähle unter Einstellungen > Sicherheit > PIN einen Passcode statt einer vierstelligen PIN, und wähle auch für die Erweiterung einen Passcode. Lass die Festplattenverschlüsselung und die Bildschirmsperre deines Computers eingeschaltet. Die Einzelheiten stehen in unserem [Bedrohungsmodell](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "note-size-limit": {
       "q": "Wie lang darf eine einzelne Notiz sein, und was bedeuten die Größen-Hinweise?",
       "a": [
@@ -418,8 +437,8 @@
       "q": "Ich habe eine Funktion vorgeschlagen oder einen Fehler gemeldet. Wann ist das fertig?",
       "a": [
         "Oft nur wenige Tage. Kleine Wünsche und Fehlermeldungen landen meist im nächsten Release, und Releases erscheinen fast jede Woche statt ein paar Mal im Jahr. Das [Changelog](/changelog) ist der Beleg: jeder Eintrag ist datiert, in klarer Sprache geschrieben und sagt, was sich geändert hat. Lies einen Monat davon, und du weißt genau, was du von uns erwarten kannst, bevor du der App irgendetwas anvertraust.",
-        "Dieses Tempo kommt daher, wie die Arbeit aufgeteilt ist. Der Verschlüsselungskern, das Sync-Protokoll und die Anmeldung wurden von Menschen geschrieben, neben dem Brotjob, lange bevor die App einen Namen hatte, und der Kryptokern wird bis heute so gepflegt; nichts Automatisiertes kommt in seine Nähe. Als dieses Fundament im Frühjahr 2026 stand, haben wir angefangen, KI-Werkzeuge nach einem festen Protokoll einzusetzen: zuerst für [Übersetzungen](/de/help/translation-quality), dann für Hilfeartikel, dann für Oberflächenfunktionen und unkritische Fehlerbehebungen, wo sie gut darin sind, seltene Randfälle einzukreisen, die sonst Wochen kosten würden, und Testskripte zu schreiben, die mehrere Entwickler auf einen Standard verpflichten. Deshalb lohnt es sich, den Wunsch einer einzelnen Person umzusetzen, statt ihn hinter den obersten Punkten der Liste warten zu lassen.",
-        "Alles, was Verschlüsselung, Sync oder Anmeldung berührt, bleibt bei erfahrenen Entwicklern, die jede Zeile schreiben, und dieser Code ist [öffentlich](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), damit du ihn lesen kannst, statt uns zu glauben. Mehr über das Team und unsere Arbeitsweise steht auf unserer [Über-uns-Seite](https://lifetimelabs.dev/about).",
+        "Dieses Tempo kommt daher, wie die Arbeit aufgeteilt ist. Der Verschlüsselungskern, das Sync-Protokoll und die Anmeldung wurden von Menschen geschrieben, neben dem Brotjob, lange bevor die App einen Namen hatte. Als dieses Fundament im Frühjahr 2026 stand, haben wir angefangen, KI-Coding-Tools nach einem festen Protokoll einzusetzen ([so nutzen wir sie](/de/help/vibe-coded)): zuerst für [Übersetzungen](/de/help/translation-quality), dann für Hilfeartikel, dann für Oberflächenfunktionen und unkritische Fehlerbehebungen, wo sie gut darin sind, seltene Randfälle einzukreisen, die sonst Wochen kosten würden, und Testskripte zu schreiben, die mehrere Entwickler auf einen Standard verpflichten. Deshalb lohnt es sich, den Wunsch einer einzelnen Person umzusetzen, statt ihn hinter den obersten Punkten der Liste warten zu lassen.",
+        "Ein Mensch liest und genehmigt jede Zeile, bevor sie ausgeliefert wird, und Änderungen an Verschlüsselung, Sync oder Anmeldung werden am strengsten geprüft. Dieser Code ist [öffentlich](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), damit du ihn lesen kannst, statt uns zu glauben. Mehr über das Team und unsere Arbeitsweise steht auf unserer [Über-uns-Seite](https://lifetimelabs.dev/about).",
         "Die App selbst gibt deine Notizen nie an eine KI weiter, und die eine KI-Funktion, die sie hat, läuft nur auf deinem Gerät, wenn du sie einschaltest ([Details](/de/help/no-ai)). Dieses Versprechen steht für sich, und daran ändert sich nichts."
       ]
     },
@@ -517,7 +536,7 @@
     "mcp": {
       "q": "Kann eine KI-App über MCP Notizen in PrivacyNotes speichern?",
       "a": [
-        "Ja. MCP (Model Context Protocol) ist der Standard, mit dem KI-Apps Werkzeuge einbinden, und `privacynotes`, die Kommandozeilen-Schnittstelle von PrivacyNotes, kann als ein solches Werkzeug laufen. Füge es einmal hinzu, und in jedem Chat kannst du in normalen Worten bitten: \"Speichere eine Zusammenfassung dieses Chats in meinen Notizen, mit dem Tag meeting.\" Die App ruft das Werkzeug save_note von `privacynotes` auf, und die Notiz landet im Agent-Ordner deiner Notizen, nach der nächsten Synchronisierung auf allen deinen Geräten. Das Werkzeug kann nur Notizen hinzufügen, also kann ein Chat keine deiner vorhandenen Notizen öffnen, ändern oder löschen. Es gehört zu Pro.",
+        "Ja. MCP (Model Context Protocol) ist der Standard, mit dem KI-Apps Werkzeuge einbinden, und `privacynotes`, die Kommandozeilen-Schnittstelle von PrivacyNotes, kann als ein solches Werkzeug laufen. Füge es einmal hinzu, und in jedem Chat kannst du in normalen Worten bitten: \"Speichere eine Zusammenfassung dieses Chats in meinen Notizen, mit dem Tag meeting.\" Die App ruft das Werkzeug save_note von `privacynotes` auf, und die Notiz landet im Agent-Ordner deiner Notizen, nach der nächsten Synchronisierung auf allen deinen Geräten. Das Werkzeug kann nur Notizen hinzufügen, also [kann ein Chat keine deiner vorhandenen Notizen öffnen, ändern oder löschen](/de/help/no-ai). Es gehört zu Pro.",
         "[Richte zuerst den Befehl `privacynotes` ein](/de/help/command-line), auf demselben Computer, und verbinde ihn mit `privacynotes login`. Öffne dann die MCP-Einstellungen deiner KI-App, einen Einstellungsbildschirm oder eine Datei wie mcp.json, füge diesen Eintrag unter `mcpServers` hinzu und starte die App neu:",
         "`\"privacynotes\": { \"command\": \"privacynotes\", \"args\": [\"mcp\"] }`",
         "Das Werkzeug nimmt das Markdown und optional einen Titel und Tags entgegen, mit denselben Grenzen wie `privacynotes save`: 700 KB, 20 Tags und ein Titel mit 200 Zeichen. Wenn etwas das Speichern verhindert, sagt das Werkzeug es der App in Worten, damit die App es dir sagen kann: Der Befehl ist noch nicht verbunden, die Notiz ist zu groß oder der Server hat sie abgelehnt.",
@@ -637,7 +656,7 @@
       "q": "Wie funktionieren automatische Backups?",
       "a": [
         "Du wählst einen Ordner und wie oft: jeden Tag, jede Woche oder jeden Monat. Ist ein Backup fällig, schreibt PrivacyNotes ohne Klick eine neue Datei \"Alles, verschlüsselt (.pnbackupz)\" in diesen Ordner. Es behält so viele Kopien, wie du festlegst, und löscht nur ältere Kopien, die dieses Gerät erstellt hat. Automatische Backups sind in jedem Tarif kostenlos.",
-        "Schalte sie unter Einstellungen > Backup > Automatisch ein: Wähle einen Ordner, lege fest, wie oft, und tippe dann auf \"Einschalten und jetzt sichern\". Das erste Backup läuft sofort, damit du siehst, dass der Ordner funktioniert. Die Einstellung gilt nur für dieses Gerät. Jedes Gerät, das Backups erstellen soll, braucht seine eigene Einrichtung, [und jede App funktioniert ein wenig anders](/de/help/automatic-backup-apps)."
+        "Schalte sie unter Einstellungen > Backup > Automatisch ein: Wähle einen Ordner, lege fest, wie oft, und tippe dann auf \"Einschalten und jetzt sichern\". Das erste Backup läuft sofort, [damit du siehst, dass der Ordner funktioniert](/de/help/backup-checked). Die Einstellung gilt nur für dieses Gerät. Jedes Gerät, das Backups erstellen soll, braucht seine eigene Einrichtung, [und jede App funktioniert ein wenig anders](/de/help/automatic-backup-apps)."
       ]
     },
     "automatic-backup-apps": {
@@ -671,7 +690,7 @@
     "backup-without-phrase": {
       "q": "Kann jemand meine Backup-Datei ohne meine Wiederherstellungsphrase öffnen?",
       "a": [
-        "Nein, eine verschlüsselte nicht. Eine Datei \"Alles, verschlüsselt (.pnbackupz)\" oder \"Nur Text, verschlüsselt (.pnbackup)\" ist mit deinem Phrasenschlüssel verschlüsselt und lässt sich daher nur in deinem Konto öffnen. Wer die Datei findet, sieht ihren Namen, ihre Größe und das Datum, aber nichts darin.",
+        "Nein, eine verschlüsselte nicht. Eine Datei \"Alles, verschlüsselt (.pnbackupz)\" oder \"Nur Text, verschlüsselt (.pnbackup)\" ist mit deinem Phrasenschlüssel verschlüsselt und [lässt sich daher nur in deinem Konto öffnen](/de/help/backup-lost-phrase). Wer die Datei findet, sieht ihren Namen, ihre Größe und das Datum, aber nichts darin.",
         "Eine Datei \"Alles, unverschlüsselt (.zip)\" aus Einstellungen > Backup > Manuell ist die Ausnahme: Sie lässt sich auf jedem Computer ohne Phrase öffnen. Automatische Backups erstellen diesen Typ nie ([warum nicht](/de/help/backup-unencrypted))."
       ]
     },
@@ -721,7 +740,7 @@
       "q": "Wie stelle ich ein automatisches Backup auf einem neuen Gerät wieder her?",
       "a": [
         "Melde dich auf dem neuen Gerät mit derselben Wiederherstellungsphrase oder demselben Google-, Apple- oder GitHub-Login an und warte, bis die Fußzeile \"Synced\" anzeigt. Die meisten deiner Notizen sind dann über die Synchronisierung bereits zurück.",
-        "Öffne dann Einstellungen > Backup > Wiederherstellung, wähle \"Verschlüsseltes Backup (.pnbackup, .pnbackupz)\" und nimm die neueste Datei aus deinem Backup-Ordner. Die Wiederherstellung fügt hinzu, was dem Konto fehlt, und behält, was schon da ist ([so funktioniert eine Wiederherstellung](/de/help/restore-backup)). Ein verschlüsseltes Backup lässt sich nur in dem Konto öffnen, das es erstellt hat."
+        "Öffne dann Einstellungen > Backup > Wiederherstellung, wähle \"Verschlüsseltes Backup (.pnbackup, .pnbackupz)\" und nimm die neueste Datei aus [deinem Backup-Ordner](/de/help/automatic-backups). Die Wiederherstellung fügt hinzu, was dem Konto fehlt, und behält, was schon da ist ([so funktioniert eine Wiederherstellung](/de/help/restore-backup)). Ein verschlüsseltes Backup lässt sich nur in dem Konto öffnen, das es erstellt hat."
       ]
     },
     "backup-lost-phrase": {

@@ -208,6 +208,17 @@
         "Tek istisna isteğe bağlıdır ve cihazınızda kalır. Akıllı bağlantılar, başka kelimelerle veya başka bir dilde yazılmış olsalar bile aynı anlamdaki notları bulur. Yalnızca bu cihazda çalışan çevrimdışı yapay zekâyı ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)) kullanır. Hiçbir şey yazmaz, hiçbir şeyi yanıtlamaz: her notu bir sayı listesine çevirir ve bu listeleri karşılaştırır. Ayarlar > Düzenleyici > Davranış > Akıllı bağlantılar altından bir kez indirirsiniz, sonra bağlantı olmadan çalışır. Anahtarı onu kapatır, Kaldır ise cihazdan siler. Bir not hakkında çıkardığı hiçbir şey kaydedilmez veya gönderilmez."
       ]
     },
+    "vibe-coded": {
+      "q": "PrivacyNotes'u yapay zekâ mı yapıyor, geliştiriciler mi?",
+      "a": [
+        "Geliştiriciler. PrivacyNotes, 1990'ların sonundan beri web için yazan ve on yıldan uzun süredir gizlilik alanında çalışan insanlar tarafından yapılıyor; bunlar arasında [PrivacyTools.io](https://privacytools.io) çalışması da var. Yayına çıkmadan önce her satırı okuyup onaylıyorlar. Yapay zekâ kodlama araçları, bugün çoğu geliştiriciye yardım ettiği gibi onlara da yardım ediyor.",
+        "Temel önce geldi ve yapay zekâ kodlama araçları buna güvenilecek kadar iyi olmadan önce elle, insanlar tarafından yazıldı. Şifreleme çekirdeği, eşitleme protokolü ve giriş akışı, uygulamanın daha adı yokken, günlük işlerin yanında geliştirildi. 2026 baharında bu temel sağlamlaşınca, sabit bir protokol altında yapay zekâ araçlarını kullanmaya başladık: önce [çeviriler](/tr/help/translation-quality) için, sonra yardım makaleleri, sonra arayüz özellikleri ve hata düzeltmeleri için.",
+        "Yapay zekâyı, küçük bir ekibin insanların isteklerine yetişebilmesini sağladığı için kullanıyoruz. Bir kişinin bildirdiği hata çoğu zaman bir sonraki sürümde düzeliyor, çünkü işin yavaş kısımları hızlanıyor: elle haftalar alacak nadir bir hatanın nedenini bulmak, arayüz parçaları geliştirmek ve her dili güncel tutmak. Geliştirdiğimiz şey yine bir aracın önerdiklerinden değil, bize gönderilen isteklerden çıkıyor.",
+        "Her değişiklik aynı yoldan geçer. Bir kişi okur ve onaylar. Ardından otomatik denetimler çalışır: tür denetimleri, testler ve kendi koyduğumuz kurallara ilişkin kapılar; uygulamanın kullandığı sözcüklerden başlangıçta ne kadar kod yüklendiğine kadar. Bu denetimlerin çoğunu yazarken yapay zekâ yardım etti ve bunlar, değişikliği kim yazmış olursa olsun, her değişikliği tek bir standarda bağlar. Yapay zekâ ayrıca her değişikliği ikinci kez okur ve yorgun bir gözden geçirenin kaçırabileceği uç durumları gösterir. Bu ikinci okuma insan incelemesine eklenir, onun yerini asla almaz.",
+        "Şifreleme, eşitleme ve girişe dokunan değişiklikler en sıkı incelemeden, satır satır geçer ve yayına çıkmadan önce aynı testleri geçmek zorundadır. Bu kodun tasarımı ve verdiği ödünler [tehdit modelimizde](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md) yazılıdır; böylece yalnızca kodu değil, kararları da değerlendirebilirsiniz.",
+        "Bunların hepsini kendiniz de denetleyebilirsiniz. Uygulamanın kodu [herkese açık](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), her sürüm [Changelog](/changelog) içinde tarihlidir ve [VERIFY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md) ana güvenlik iddiamızı kendi tarayıcınızda nasıl denetleyeceğinizi gösterir. Ayrıca uygulama notlarınızı asla bir yapay zekâya göndermez ([ayrıntılar](/tr/help/no-ai)). Bu soruyu sık duyuyoruz. Bu sayfa, arkasında durduğumuz yanıttır."
+      ]
+    },
     "burn-notes": {
       "q": "Burn note nedir?",
       "a": [
@@ -333,6 +344,14 @@
         "Yoksa notlara dağılıp giden birkaç kimlik bilgisine derli toplu, korumalı bir yuva verir. En hassas girdileriniz için ikinci bir kapı olarak [uygulama kilidi ve PIN korumasıyla birlikte kullanın](/tr/help/locked-vs-protected). [Bir Bitwarden içe aktarımı doğrudan buraya iner](/tr/help/import/bitwarden)."
       ]
     },
+    "replace-password-manager": {
+      "q": "Kasa, Bitwarden gibi parola yöneticimin yerini alabilir mi?",
+      "a": [
+        "Evet. Kasa; giriş bilgilerinizi, kartlarınızı ve SSH anahtarlarınızı cihazınızda şifreli olarak tutar. Ücretsiz tarayıcı uzantısı, bir giriş bilgisini yalnızca ait olduğu sitede doldurur. [Bitwarden'dan içe aktarma](/tr/help/import/bitwarden) parolalarınızı tek adımda taşır.",
+        "Ana anahtar PIN'iniz değil, [kurtarma ifadenizdir](/tr/help/phrase-vs-password). PIN veya geçiş kodu, telefonunuzdaki kod gibi, zaten giriş yapmış olduğunuz bir cihazı kilitler. Uzantının kendi PIN'i veya geçiş kodu vardır ve uygulamanınkinden ayrıdır. 10 yanlış denemeden sonra uzantı o tarayıcının bağlantısını keser.",
+        "En güçlü kilit için Ayarlar > Güvenlik > PIN bölümünde 4 haneli PIN yerine bir geçiş kodu seçin, uzantı için de geçiş kodu seçin. Bilgisayarınızın disk şifrelemesini ve ekran kilidini açık tutun. Ayrıntılar [tehdit modelimizde](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "note-size-limit": {
       "q": "Tek bir not ne kadar uzun olabilir ve boyut uyarıları ne anlama geliyor?",
       "a": [
@@ -418,8 +437,8 @@
       "q": "Bir özellik istedim ya da bir hata bildirdim. Ne kadar sürede geliyor?",
       "a": [
         "Çoğu zaman birkaç gün. Küçük istekler ve hata bildirimleri genellikle bir sonraki sürüme giriyor ve sürümler yılda birkaç kez değil, neredeyse her hafta çıkıyor. [Changelog](/changelog) bunun kaydıdır: her madde tarihlidir, sade bir dille yazılmıştır ve neyin değiştiğini söyler. Bir aylık kısmını okuyun, uygulamaya bir şey emanet etmeden önce bizden ne bekleyeceğinizi tam olarak bilirsiniz.",
-        "Bu hız, işin nasıl bölündüğünden geliyor. Şifreleme çekirdeği, eşitleme protokolü ve giriş akışı, uygulamanın daha adı yokken, insanlar tarafından günlük işlerinin yanında yazıldı ve kripto çekirdeğinin bakımı bugün de aynı şekilde yapılıyor; otomatik hiçbir şey yanına yaklaşmıyor. O temel 2026 baharında sağlamlaşınca, sabit bir protokol altında yapay zekâ kodlama araçlarını kullanmaya başladık: önce [çeviriler](/tr/help/translation-quality) için, sonra yardım makaleleri, sonra arayüz özellikleri ve kritik olmayan hata düzeltmeleri için; bu araçlar, aksi halde haftalar alacak nadir uç durumları saptamakta ve birden fazla geliştiriciyi tek bir standartta tutan test betiklerini yazmakta iyi. Bu yüzden, tek bir kişinin isteğini bile listenin üst sıralarındaki isteklerin arkasında bekletmek yerine hayata geçirmeye değer buluyoruz.",
-        "Şifrelemeye, eşitlemeye veya girişe dokunan her şey, her satırı yazan deneyimli geliştiricilerin sorumluluğunda kalıyor ve bu kod [herkese açık](https://github.com/LifetimeLabsHQ/PrivacyNotes.app); bize inanmak yerine kendiniz okuyabilirsiniz. Ekip ve nasıl çalıştığımız hakkında daha fazlası [hakkımızda sayfasında](https://lifetimelabs.dev/about).",
+        "Bu hız, işin nasıl bölündüğünden geliyor. Şifreleme çekirdeği, eşitleme protokolü ve giriş akışı, uygulamanın daha adı yokken, insanlar tarafından günlük işlerinin yanında yazıldı. O temel 2026 baharında sağlamlaşınca, sabit bir protokol altında yapay zekâ kodlama araçlarını kullanmaya başladık ([nasıl kullandığımız](/tr/help/vibe-coded)): önce [çeviriler](/tr/help/translation-quality) için, sonra yardım makaleleri, sonra arayüz özellikleri ve kritik olmayan hata düzeltmeleri için; bu araçlar, aksi halde haftalar alacak nadir uç durumları saptamakta ve birden fazla geliştiriciyi tek bir standartta tutan test betiklerini yazmakta iyi. Bu yüzden, tek bir kişinin isteğini bile listenin üst sıralarındaki isteklerin arkasında bekletmek yerine hayata geçirmeye değer buluyoruz.",
+        "Yayına çıkmadan önce her satırı bir kişi okur ve onaylar; şifreleme, eşitleme veya girişe dokunan değişiklikler en sıkı incelemeden geçer. Bu kod [herkese açık](https://github.com/LifetimeLabsHQ/PrivacyNotes.app); bize inanmak yerine kendiniz okuyabilirsiniz. Ekip ve nasıl çalıştığımız hakkında daha fazlası [hakkımızda sayfasında](https://lifetimelabs.dev/about).",
         "Uygulamanın kendisi notlarınızı asla bir yapay zekâya vermez ve sahip olduğu tek yapay zekâ özelliği, açarsanız yalnızca cihazınızda çalışır ([ayrıntılar](/tr/help/no-ai)). Bu söz ayrı durur ve değişmez."
       ]
     },
@@ -517,7 +536,7 @@
     "mcp": {
       "q": "Bir yapay zekâ uygulaması MCP üzerinden PrivacyNotes'a not kaydedebilir mi?",
       "a": [
-        "Evet. MCP (Model Context Protocol), yapay zekâ uygulamalarına araç takmanın standart yoludur ve PrivacyNotes komut satırı arayüzü `privacynotes` bunlardan biri olarak çalışabilir. Bir kez ekleyin; her sohbette sade sözlerle isteyebilirsiniz: \"Bu sohbetin bir özetini meeting etiketiyle notlarıma kaydet.\" Uygulama `privacynotes` komutunun save_note aracını çağırır ve not, notlarınızın Agent klasörüne düşer, sonraki eşitlemeden sonra tüm cihazlarınızda görünür. Araç yalnızca not ekleyebilir; bu yüzden bir sohbet sahip olduğunuz notları açamaz, değiştiremez veya silemez. Pro'nun bir parçasıdır.",
+        "Evet. MCP (Model Context Protocol), yapay zekâ uygulamalarına araç takmanın standart yoludur ve PrivacyNotes komut satırı arayüzü `privacynotes` bunlardan biri olarak çalışabilir. Bir kez ekleyin; her sohbette sade sözlerle isteyebilirsiniz: \"Bu sohbetin bir özetini meeting etiketiyle notlarıma kaydet.\" Uygulama `privacynotes` komutunun save_note aracını çağırır ve not, notlarınızın Agent klasörüne düşer, sonraki eşitlemeden sonra tüm cihazlarınızda görünür. Araç yalnızca not ekleyebilir; bu yüzden [bir sohbet sahip olduğunuz notları açamaz, değiştiremez veya silemez](/tr/help/no-ai). Pro'nun bir parçasıdır.",
         "Önce aynı bilgisayarda [`privacynotes` komutunu kurun](/tr/help/command-line) ve `privacynotes login` ile bağlayın. Sonra yapay zekâ uygulamanızın MCP ayarlarını, yani bir ayar ekranını veya mcp.json gibi bir dosyayı açın, `mcpServers` altına şu girdiyi ekleyin ve uygulamayı yeniden başlatın:",
         "`\"privacynotes\": { \"command\": \"privacynotes\", \"args\": [\"mcp\"] }`",
         "Araç, Markdown'ı ve isteğe bağlı olarak bir başlık ile etiketleri alır; sınırlar `privacynotes save` ile aynıdır: 700 KB, 20 etiket ve 200 karakterlik başlık. Bir şey kaydı durdurduğunda araç bunu uygulamaya kelimelerle bildirir, böylece uygulama size söyleyebilir: komut henüz bağlı değil, not çok büyük veya sunucu reddetti.",
@@ -637,7 +656,7 @@
       "q": "Otomatik yedekler nasıl çalışır?",
       "a": [
         "Bir klasör ve sıklık seçersiniz: her gün, her hafta ya da her ay. Yedek zamanı geldiğinde PrivacyNotes, tıklamanıza gerek kalmadan o klasöre yeni bir “Her şey, şifreli (.pnbackupz)” dosyası yazar. Seçtiğiniz sayıda kopyayı tutar ve yalnızca bu cihazın aldığı daha eski kopyaları siler. Otomatik yedekler her planda ücretsizdir.",
-        "Ayarlar > Yedekleme > Otomatik altından açın: bir klasör seçin, sıklığı belirleyin, sonra “Aç ve şimdi yedekle”ye basın. İlk yedek hemen çalışır, böylece klasörün işe yaradığını görürsünüz. Bu ayar yalnızca bu cihaza aittir. Yedek alacak her cihazın kendi kurulumu gerekir, [ve her uygulama biraz farklı çalışır](/tr/help/automatic-backup-apps)."
+        "Ayarlar > Yedekleme > Otomatik altından açın: bir klasör seçin, sıklığı belirleyin, sonra “Aç ve şimdi yedekle”ye basın. İlk yedek hemen çalışır, böylece [klasörün işe yaradığını görürsünüz](/tr/help/backup-checked). Bu ayar yalnızca bu cihaza aittir. Yedek alacak her cihazın kendi kurulumu gerekir, [ve her uygulama biraz farklı çalışır](/tr/help/automatic-backup-apps)."
       ]
     },
     "automatic-backup-apps": {
@@ -671,7 +690,7 @@
     "backup-without-phrase": {
       "q": "Biri kurtarma ifadem olmadan yedek dosyamı açabilir mi?",
       "a": [
-        "Hayır, şifreli olanı açamaz. “Her şey, şifreli (.pnbackupz)” ya da “Yalnızca metin, şifreli (.pnbackup)” dosyası ifade anahtarınızla şifrelidir, bu yüzden yalnızca hesabınızda açılır. Dosyayı bulan biri adını, boyutunu ve tarihini görür, içinde ise hiçbir şey göremez.",
+        "Hayır, şifreli olanı açamaz. “Her şey, şifreli (.pnbackupz)” ya da “Yalnızca metin, şifreli (.pnbackup)” dosyası ifade anahtarınızla şifrelidir, bu yüzden [yalnızca hesabınızda açılır](/tr/help/backup-lost-phrase). Dosyayı bulan biri adını, boyutunu ve tarihini görür, içinde ise hiçbir şey göremez.",
         "Ayarlar > Yedekleme > Manuel bölümünden alınan “Her şey, şifresiz (.zip)” bunun istisnasıdır: ifade gerekmeden her bilgisayarda açılır. Otomatik yedekler bu türü asla üretmez ([nedeni](/tr/help/backup-unencrypted))."
       ]
     },
@@ -721,7 +740,7 @@
       "q": "Otomatik bir yedeği yeni bir cihazda nasıl geri yüklerim?",
       "a": [
         "Yeni cihazda aynı kurtarma ifadesiyle ya da aynı Google, Apple veya GitHub girişiyle giriş yapın ve alt bilgi “Synced” diyene kadar bekleyin. Notlarınızın çoğu o noktada eşitleme yoluyla zaten geri gelmiştir.",
-        "Sonra Ayarlar > Yedekleme > Geri yükle'yi açın, “Şifreli yedek (.pnbackup, .pnbackupz)”i seçin ve yedek klasörünüzdeki en yeni dosyayı seçin. Geri yükleme hesapta eksik olanı ekler ve zaten var olanı korur ([geri yükleme nasıl çalışır](/tr/help/restore-backup)). Şifreli bir yedek yalnızca onu oluşturan hesapta açılır."
+        "Sonra Ayarlar > Yedekleme > Geri yükle'yi açın, “Şifreli yedek (.pnbackup, .pnbackupz)”i seçin ve [yedek klasörünüzdeki](/tr/help/automatic-backups) en yeni dosyayı seçin. Geri yükleme hesapta eksik olanı ekler ve zaten var olanı korur ([geri yükleme nasıl çalışır](/tr/help/restore-backup)). Şifreli bir yedek yalnızca onu oluşturan hesapta açılır."
       ]
     },
     "backup-lost-phrase": {

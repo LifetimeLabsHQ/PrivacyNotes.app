@@ -918,6 +918,9 @@ function feedbackBlock(prompt: string): string {
  */
 const CONTENT_BASELINE = '2026-08-26';
 const CONTENT_UPDATED: Record<string, string> = {
+  'replace-password-manager': '2026-11-15',
+  'vibe-coded': '2026-11-15',
+  'feature-requests': '2026-11-15',
   'backup-strategy': '2026-11-11',
   'trackers-in-backup': '2026-11-11',
   'ninja-quick-add': '2026-10-23',

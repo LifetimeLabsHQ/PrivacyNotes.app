@@ -208,6 +208,17 @@
         "The one exception is optional and stays on your device. Smart connections finds notes with the same meaning, even in other words or another language. It uses offline AI ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)) that runs only on this device. It writes nothing and answers nothing: it turns each note into a list of numbers and compares them. You download it once in Settings > Editor > Behavior > Smart connections, then it works without a connection. Its switch turns it off, and Remove takes it off the device. Nothing it works out about a note is saved or sent."
       ]
     },
+    "vibe-coded": {
+      "q": "Is PrivacyNotes built by AI or by developers?",
+      "a": [
+        "By developers. PrivacyNotes is built by people who have written for the web since the late 1990s and have worked in privacy for more than a decade, including at [PrivacyTools.io](https://privacytools.io). They read and approve every line before it ships. AI coding tools help them, as they help most developers today.",
+        "The foundation came first, and people wrote it by hand, before AI coding tools were good enough to trust with it. The encryption core, the sync protocol and the sign-in flow were built next to day jobs, long before the app had a name. In spring 2026, once that foundation was solid, we started to use AI tools under a fixed protocol: first for [translations](/help/translation-quality), then help articles, then interface features and bug fixes.",
+        "We use AI because it lets a small team keep up with what people ask for. A bug that one person reports is often fixed in the next release, because the slow parts of the work go faster: finding the cause of a rare bug that would take weeks by hand, building interface parts, and keeping every language up to date. What we build still comes from the requests people send us, not from what a tool suggests.",
+        "Every change follows the same path. A person reads it and approves it. Then automated checks run: type checks, tests, and gates for the rules we set ourselves, from the words the app uses to how much code loads at start. AI helped write many of those checks, and they hold every change to one standard, whoever wrote it. AI also reads each change a second time and points at the edge cases a tired reviewer can miss. That second read adds to the human review and never replaces it.",
+        "Changes to encryption, sync and sign-in get the strictest review, line by line, and must pass the same tests before they ship. The design of that code, and the trade-offs it makes, are written down in our [threat model](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md), so you can judge the decisions and not only the code.",
+        "You can check all of this yourself. The app's code is [public](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), every release is dated in the [changelog](/changelog), and [VERIFY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/VERIFY.md) shows how to check our main security claim in your own browser. Separately, the app never sends your notes to an AI ([details](/help/no-ai)). We get this question often. This page is the answer we stand behind."
+      ]
+    },
     "burn-notes": {
       "q": "What are burn notes?",
       "a": [
@@ -333,6 +344,14 @@
         "It gives the handful of credentials that otherwise end up scattered across notes a tidy, protected home. [Pair it with the app lock and PIN protection](/help/locked-vs-protected) for a second gate on your most sensitive entries. [A Bitwarden import lands here automatically](/help/import/bitwarden)."
       ]
     },
+    "replace-password-manager": {
+      "q": "Can the Vault replace my password manager, like Bitwarden?",
+      "a": [
+        "Yes. The Vault holds your logins, cards and SSH keys, encrypted on your device. The free browser extension fills a login only on the site it belongs to. [A Bitwarden import](/help/import/bitwarden) moves your passwords over in one step.",
+        "Your [recovery phrase](/help/phrase-vs-password) is the master key, not your PIN. The PIN or passcode locks a device where you are already signed in, like the code on your phone. The extension has its own PIN or passcode, separate from the app's. After 10 wrong tries, the extension disconnects that browser.",
+        "For the strongest lock, choose a passcode instead of a 4-digit PIN in Settings > Security > PIN, and choose a passcode for the extension too. Keep your computer's disk encryption and screen lock on. The details are in our [threat model](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+      ]
+    },
     "note-size-limit": {
       "q": "How long can a single note be, and what do the size warnings mean?",
       "a": [
@@ -418,8 +437,8 @@
       "q": "I asked for a feature or reported a bug. How long until it ships?",
       "a": [
         "Often days. Small requests and bug reports usually land in the next release, and releases go out most weeks rather than a few times a year. The [changelog](/changelog) is the record: every entry is dated, written in plain language, and says what changed. Read a month of it and you will know exactly what to expect from us before you commit anything to the app.",
-        "That pace comes from how the work is split. The encryption core, the sync protocol and the sign-in flow were written by people, next to day jobs, long before the app had a name, and the crypto core is still maintained that way; nothing automated goes near it. Once that foundation was solid, in spring 2026, we started using AI coding tools under a fixed protocol: first for [translations](/help/translation-quality), then help articles, then interface features and non-critical bug fixes, where they are good at pinning down rare edge cases that would otherwise take weeks, and at writing the test scripts that hold several developers to one standard. That is why a request from one person is worth building instead of waiting behind the top of the list.",
-        "Anything touching encryption, sync or sign-in stays with skilled developers who write every line, and that code is [public](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) so you can read it instead of trusting us. More on the team and how we work on our [about page](https://lifetimelabs.dev/about).",
+        "That pace comes from how the work is split. The encryption core, the sync protocol and the sign-in flow were written by people, next to day jobs, long before the app had a name. Once that foundation was solid, in spring 2026, we started using AI coding tools under a fixed protocol ([how we use them](/help/vibe-coded)): first for [translations](/help/translation-quality), then help articles, then interface features and non-critical bug fixes, where they are good at pinning down rare edge cases that would otherwise take weeks, and at writing the test scripts that hold several developers to one standard. That is why a request from one person is worth building instead of waiting behind the top of the list.",
+        "A person reads and approves every line before it ships, and changes to encryption, sync or sign-in get the strictest review. That code is [public](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) so you can read it instead of trusting us. More on the team and how we work on our [about page](https://lifetimelabs.dev/about).",
         "The app itself never hands your notes to an AI, and the one AI feature it has runs only on your device, if you turn it on ([details](/help/no-ai)). That promise is separate, and it does not change."
       ]
     },
@@ -517,7 +536,7 @@
     "mcp": {
       "q": "Can an AI app save notes to PrivacyNotes over MCP?",
       "a": [
-        "Yes. MCP (Model Context Protocol) is the standard way AI apps plug in tools, and `privacynotes`, the PrivacyNotes command line interface, can run as one. Add it once, and in any chat you can ask in plain words: \"Save a summary of this chat to my notes, tagged meeting.\" The app calls the save_note tool of `privacynotes`, and the note goes to the Agent folder of your notes, on all your devices after their next sync. The tool can only add notes, so a chat cannot open, change or delete the notes you have. It is part of Pro.",
+        "Yes. MCP (Model Context Protocol) is the standard way AI apps plug in tools, and `privacynotes`, the PrivacyNotes command line interface, can run as one. Add it once, and in any chat you can ask in plain words: \"Save a summary of this chat to my notes, tagged meeting.\" The app calls the save_note tool of `privacynotes`, and the note goes to the Agent folder of your notes, on all your devices after their next sync. The tool can only add notes, so [a chat cannot open, change or delete the notes you have](/help/no-ai). It is part of Pro.",
         "First [set up the `privacynotes` command](/help/command-line) on the same computer and connect it with `privacynotes login`. Then open your AI app's MCP settings, a settings screen or a file such as mcp.json, add this entry under `mcpServers`, and restart the app:",
         "`\"privacynotes\": { \"command\": \"privacynotes\", \"args\": [\"mcp\"] }`",
         "The tool takes the Markdown, and optionally a title and tags, with the same limits as `privacynotes save`: 700 KB, 20 tags and a 200-character title. When something stops a save, the tool tells the app in words, so the app can tell you: the command is not connected yet, the note is too large, or the server refused it.",
@@ -637,7 +656,7 @@
       "q": "How do automatic backups work?",
       "a": [
         "You pick a folder and how often: every day, every week or every month. When a backup is due, PrivacyNotes writes a new \"Everything, encrypted (.pnbackupz)\" file into that folder, with no click. It keeps the number of copies you choose and deletes only older copies that this device made. Automatic backups are free on every plan.",
-        "Turn them on in Settings > Backup > Automatic: choose a folder, pick how often, then press \"Turn on and back up now\". The first backup runs at once, so you see that the folder works. The setting belongs to this device only. Each device that should make backups needs its own setup, [and each app works a little differently](/help/automatic-backup-apps)."
+        "Turn them on in Settings > Backup > Automatic: choose a folder, pick how often, then press \"Turn on and back up now\". The first backup runs at once, so [you see that the folder works](/help/backup-checked). The setting belongs to this device only. Each device that should make backups needs its own setup, [and each app works a little differently](/help/automatic-backup-apps)."
       ]
     },
     "automatic-backup-apps": {
@@ -671,7 +690,7 @@
     "backup-without-phrase": {
       "q": "Can someone open my backup file without my recovery phrase?",
       "a": [
-        "No, not an encrypted one. A \"Everything, encrypted (.pnbackupz)\" or \"Text only, encrypted (.pnbackup)\" file is encrypted with your phrase key, so it opens only in your account. Someone who finds the file sees its name, its size and the date, and nothing inside.",
+        "No, not an encrypted one. A \"Everything, encrypted (.pnbackupz)\" or \"Text only, encrypted (.pnbackup)\" file is encrypted with your phrase key, so [it opens only in your account](/help/backup-lost-phrase). Someone who finds the file sees its name, its size and the date, and nothing inside.",
         "A \"Everything, not encrypted (.zip)\" from Settings > Backup > Manual is the exception: it opens on any computer, with no phrase. Automatic backups never make that type ([why not](/help/backup-unencrypted))."
       ]
     },
@@ -721,7 +740,7 @@
       "q": "How do I restore an automatic backup on a new device?",
       "a": [
         "Sign in on the new device with the same recovery phrase, or the same Google, Apple or GitHub login, and wait until the footer says \"Synced\". Most of your notes are already back at that point, through sync.",
-        "Then open Settings > Backup > Restore, choose \"Encrypted backup (.pnbackup, .pnbackupz)\", and pick the newest file from your backup folder. The restore adds what the account is missing and keeps what is already there ([how a restore works](/help/restore-backup)). An encrypted backup opens only in the account that made it."
+        "Then open Settings > Backup > Restore, choose \"Encrypted backup (.pnbackup, .pnbackupz)\", and pick the newest file from [your backup folder](/help/automatic-backups). The restore adds what the account is missing and keeps what is already there ([how a restore works](/help/restore-backup)). An encrypted backup opens only in the account that made it."
       ]
     },
     "backup-lost-phrase": {
