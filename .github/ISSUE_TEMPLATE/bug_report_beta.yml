@@ -1,0 +1,46 @@
+name: Bug report (beta)
+description: Something is broken on beta.privacynotes.app
+title: "[Beta]: "
+labels: [bug, beta]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing the beta. Quick heads up before you paste a screenshot: this is a
+        notes app, so a screenshot usually has your notes in it. Crop or blur them. Never post
+        your recovery phrase.
+
+        If the same bug also happens at [use.privacynotes.app](https://use.privacynotes.app),
+        use the normal bug report instead.
+
+  - type: textarea
+    attributes:
+      label: What happened?
+      description: What went wrong, and what did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: How do we make it happen?
+      description: The steps you took, so we can see it too.
+    validations:
+      required: true
+
+  # The beta changes several times a day, so the version tells us which build it was.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: >
+        Settings, then About. Leave it blank if you are not sure.
+    validations:
+      required: false
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: For example Firefox on Windows, or Safari on iPhone.
+    validations:
+      required: false
