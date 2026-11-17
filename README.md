@@ -180,18 +180,18 @@ If you cannot use GitHub, email **sec@lifetimelabs.dev** as a backup. That addre
 <!-- credits:start -->
 ## Credits
 
-PrivacyNotes is shaped by the people who report bugs and ask for features in our issues. 105 people have opened an issue, and 447 reports are now fixed or built.
+PrivacyNotes is shaped by the people who report bugs and ask for features in our issues. 106 people have opened an issue, and 448 reports are now fixed or built.
 
 <p align="center">
 <a href="https://github.com/tech2-user" title="tech2-user, 79 shipped"><img src="https://github.com/tech2-user.png?size=112" width="56" height="56" alt="tech2-user"></a>
 <a href="https://github.com/harishbewe" title="harishbewe, 38 shipped"><img src="https://github.com/harishbewe.png?size=112" width="56" height="56" alt="harishbewe"></a>
 <a href="https://github.com/scamidge" title="scamidge, 28 shipped"><img src="https://github.com/scamidge.png?size=112" width="56" height="56" alt="scamidge"></a>
 <a href="https://github.com/Real-Fruit-Snacks" title="Real-Fruit-Snacks, 27 shipped"><img src="https://github.com/Real-Fruit-Snacks.png?size=112" width="56" height="56" alt="Real-Fruit-Snacks"></a>
-<a href="https://github.com/AndreFeliciano" title="AndreFeliciano, 20 shipped"><img src="https://github.com/AndreFeliciano.png?size=112" width="56" height="56" alt="AndreFeliciano"></a>
+<a href="https://github.com/AndreFeliciano" title="AndreFeliciano, 21 shipped"><img src="https://github.com/AndreFeliciano.png?size=112" width="56" height="56" alt="AndreFeliciano"></a>
+<a href="https://github.com/MrJarvisHere" title="MrJarvisHere, 11 shipped"><img src="https://github.com/MrJarvisHere.png?size=112" width="56" height="56" alt="MrJarvisHere"></a>
 <a href="https://github.com/les-incompetent" title="les-incompetent, 11 shipped"><img src="https://github.com/les-incompetent.png?size=112" width="56" height="56" alt="les-incompetent"></a>
 <a href="https://github.com/mburr" title="mburr, 11 shipped"><img src="https://github.com/mburr.png?size=112" width="56" height="56" alt="mburr"></a>
 <a href="https://github.com/shriganesh" title="shriganesh, 11 shipped"><img src="https://github.com/shriganesh.png?size=112" width="56" height="56" alt="shriganesh"></a>
-<a href="https://github.com/MrJarvisHere" title="MrJarvisHere, 11 shipped"><img src="https://github.com/MrJarvisHere.png?size=112" width="56" height="56" alt="MrJarvisHere"></a>
 <a href="https://github.com/laulaugaby" title="laulaugaby, 11 shipped"><img src="https://github.com/laulaugaby.png?size=112" width="56" height="56" alt="laulaugaby"></a>
 <a href="https://github.com/Tobias1000" title="Tobias1000, 11 shipped"><img src="https://github.com/Tobias1000.png?size=112" width="56" height="56" alt="Tobias1000"></a>
 <a href="https://github.com/block6791" title="block6791, 10 shipped"><img src="https://github.com/block6791.png?size=112" width="56" height="56" alt="block6791"></a>
