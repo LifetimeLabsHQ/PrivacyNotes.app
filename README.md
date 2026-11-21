@@ -181,7 +181,7 @@ If you cannot use GitHub, email **sec@lifetimelabs.dev** as a backup. That addre
 <!-- credits:start -->
 ## Credits
 
-PrivacyNotes is shaped by the people who report bugs and ask for features in our issues. 112 people have opened an issue, and 502 reports are now fixed or built.
+PrivacyNotes is shaped by the people who report bugs and ask for features in our issues. 112 people have opened an issue, and 505 reports are now fixed or built.
 
 <p align="center">
 <a href="https://github.com/tech2-user" title="tech2-user, 82 shipped"><img src="https://github.com/tech2-user.png?size=112" width="56" height="56" alt="tech2-user"></a>
@@ -190,18 +190,18 @@ PrivacyNotes is shaped by the people who report bugs and ask for features in our
 <a href="https://github.com/scamidge" title="scamidge, 29 shipped"><img src="https://github.com/scamidge.png?size=112" width="56" height="56" alt="scamidge"></a>
 <a href="https://github.com/AndreFeliciano" title="AndreFeliciano, 24 shipped"><img src="https://github.com/AndreFeliciano.png?size=112" width="56" height="56" alt="AndreFeliciano"></a>
 <a href="https://github.com/MrJarvisHere" title="MrJarvisHere, 19 shipped"><img src="https://github.com/MrJarvisHere.png?size=112" width="56" height="56" alt="MrJarvisHere"></a>
-<a href="https://github.com/shriganesh" title="shriganesh, 13 shipped"><img src="https://github.com/shriganesh.png?size=112" width="56" height="56" alt="shriganesh"></a>
+<a href="https://github.com/shriganesh" title="shriganesh, 14 shipped"><img src="https://github.com/shriganesh.png?size=112" width="56" height="56" alt="shriganesh"></a>
 <a href="https://github.com/les-incompetent" title="les-incompetent, 11 shipped"><img src="https://github.com/les-incompetent.png?size=112" width="56" height="56" alt="les-incompetent"></a>
 <a href="https://github.com/mburr" title="mburr, 11 shipped"><img src="https://github.com/mburr.png?size=112" width="56" height="56" alt="mburr"></a>
 <a href="https://github.com/laulaugaby" title="laulaugaby, 11 shipped"><img src="https://github.com/laulaugaby.png?size=112" width="56" height="56" alt="laulaugaby"></a>
 <a href="https://github.com/Tobias1000" title="Tobias1000, 11 shipped"><img src="https://github.com/Tobias1000.png?size=112" width="56" height="56" alt="Tobias1000"></a>
 <a href="https://github.com/block6791" title="block6791, 10 shipped"><img src="https://github.com/block6791.png?size=112" width="56" height="56" alt="block6791"></a>
 <a href="https://github.com/javaskript" title="javaskript, 10 shipped"><img src="https://github.com/javaskript.png?size=112" width="56" height="56" alt="javaskript"></a>
+<a href="https://github.com/snogglefromp" title="snogglefromp, 10 shipped"><img src="https://github.com/snogglefromp.png?size=112" width="56" height="56" alt="snogglefromp"></a>
 <a href="https://github.com/deftly1970" title="deftly1970, 9 shipped"><img src="https://github.com/deftly1970.png?size=112" width="56" height="56" alt="deftly1970"></a>
 <a href="https://github.com/KamikazeWolf" title="KamikazeWolf, 9 shipped"><img src="https://github.com/KamikazeWolf.png?size=112" width="56" height="56" alt="KamikazeWolf"></a>
 <a href="https://github.com/amirhafez69" title="amirhafez69, 9 shipped"><img src="https://github.com/amirhafez69.png?size=112" width="56" height="56" alt="amirhafez69"></a>
 <a href="https://github.com/grub-basket" title="grub-basket, 9 shipped"><img src="https://github.com/grub-basket.png?size=112" width="56" height="56" alt="grub-basket"></a>
-<a href="https://github.com/snogglefromp" title="snogglefromp, 8 shipped"><img src="https://github.com/snogglefromp.png?size=112" width="56" height="56" alt="snogglefromp"></a>
 <a href="https://github.com/TheArtForm" title="TheArtForm, 8 shipped"><img src="https://github.com/TheArtForm.png?size=112" width="56" height="56" alt="TheArtForm"></a>
 <a href="https://github.com/thediamondgeezer" title="thediamondgeezer, 7 shipped"><img src="https://github.com/thediamondgeezer.png?size=112" width="56" height="56" alt="thediamondgeezer"></a>
 <a href="https://github.com/pdmcgeejr" title="pdmcgeejr, 7 shipped"><img src="https://github.com/pdmcgeejr.png?size=112" width="56" height="56" alt="pdmcgeejr"></a>
